@@ -1,0 +1,20 @@
+[package]
+name = "kentos-rc"
+version = "0.1.0"
+edition = "2024"
+description = "KentOS Rust Components: iced üzerine kurulu CBS ve CAD arayüz bileşenleri"
+publish = false
+
+[features]
+default = ["spatial"]
+# CBS/CAD bileşenleri: projeksiyon, katman modeli, model alanı, ViewCube.
+spatial = ["dep:glam", "dep:bytemuck"]
+
+[dependencies]
+iced = { version = "0.14", features = ["canvas", "advanced"] }
+glam = { version = "0.30", optional = true }
+bytemuck = { version = "1", features = ["derive"], optional = true }
+
+[workspace]
+members = ["examples/showcase"]
+default-members = [".", "examples/showcase"]

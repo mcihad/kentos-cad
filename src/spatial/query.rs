@@ -1,0 +1,261 @@
+//! Ekran noktasına göre sorgular: öğe seçimi (hit test) ve nesne yakalama.
+
+use iced::Point;
+
+use super::{FeatureRef, Geometry, Layer, LonLat, Viewport};
+
+/// Nokta öğelerin seçim yarıçapı (piksel).
+const POINT_TOLERANCE: f32 = 9.0;
+/// Çizgilerin seçim mesafesi (piksel).
+const LINE_TOLERANCE: f32 = 6.0;
+
+/// Varsayılan nesne yakalama mesafesi (piksel).
+pub const SNAP_TOLERANCE: f32 = 12.0;
+
+/// Ekran noktasının altındaki öğe. Listede önce gelen katman ve katman
+/// içinde sonra çizilen öğe önceliklidir.
+pub fn hit_test(layers: &[Layer], viewport: &Viewport, point: Point) -> Option<FeatureRef> {
+    layers
+        .iter()
+        .enumerate()
+        .filter(|(_, layer)| layer.is_interactive())
+        .find_map(|(layer_index, layer)| {
+            layer
+                .features
+                .iter()
+                .enumerate()
+                .rev()
+                .find(|(_, feature)| is_hit(&feature.geometry, viewport, point))
+                .map(|(feature_index, _)| FeatureRef::new(layer_index, feature_index))
+        })
+}
+
+/// Yakalanan noktanın türü; AutoCAD nesne yakalama işaretlerini izler.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SnapKind {
+    /// Nokta öğe.
+    Node,
+    /// Çizginin başı ya da sonu.
+    Endpoint,
+    /// Çizgi ara köşesi veya alan köşesi.
+    Vertex,
+}
+
+impl SnapKind {
+    pub fn label(self) -> &'static str {
+        match self {
+            SnapKind::Node => "Düğüm",
+            SnapKind::Endpoint => "Uç nokta",
+            SnapKind::Vertex => "Köşe",
+        }
+    }
+}
+
+/// Yakalanan nokta.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Snap {
+    pub location: LonLat,
+    pub kind: SnapKind,
+}
+
+/// İmlece `tolerance` piksel içindeki en yakın köşe (nokta öğe, çizgi ucu,
+/// çizgi veya alan köşesi).
+pub fn snap(layers: &[Layer], viewport: &Viewport, point: Point, tolerance: f32) -> Option<Snap> {
+    let mut best: Option<(f32, Snap)> = None;
+    let mut consider = |location: LonLat, kind: SnapKind| {
+        let distance = viewport.project(location).distance(point);
+
+        if distance <= tolerance && best.is_none_or(|(closest, _)| distance < closest) {
+            best = Some((distance, Snap { location, kind }));
+        }
+    };
+
+    for layer in layers.iter().filter(|layer| layer.is_interactive()) {
+        for feature in &layer.features {
+            match &feature.geometry {
+                Geometry::Point(location) => consider(*location, SnapKind::Node),
+                Geometry::Line(points) => {
+                    let last = points.len().saturating_sub(1);
+
+                    for (index, location) in points.iter().enumerate() {
+                        let kind = if index == 0 || index == last {
+                            SnapKind::Endpoint
+                        } else {
+                            SnapKind::Vertex
+                        };
+
+                        consider(*location, kind);
+                    }
+                }
+                Geometry::Polygon(points) => {
+                    for location in points {
+                        consider(*location, SnapKind::Vertex);
+                    }
+                }
+            }
+        }
+    }
+
+    best.map(|(_, snap)| snap)
+}
+
+fn is_hit(geometry: &Geometry, viewport: &Viewport, point: Point) -> bool {
+    match geometry {
+        Geometry::Point(location) => viewport.project(*location).distance(point) <= POINT_TOLERANCE,
+        Geometry::Line(points) => points.windows(2).any(|pair| {
+            distance_to_segment(point, viewport.project(pair[0]), viewport.project(pair[1]))
+                <= LINE_TOLERANCE
+        }),
+        Geometry::Polygon(points) => {
+            let screen: Vec<Point> = points
+                .iter()
+                .map(|location| viewport.project(*location))
+                .collect();
+
+            point_in_polygon(point, &screen)
+        }
+    }
+}
+
+fn distance_to_segment(point: Point, start: Point, end: Point) -> f32 {
+    let segment = end - start;
+    let length_squared = segment.x * segment.x + segment.y * segment.y;
+
+    if length_squared <= f32::EPSILON {
+        return point.distance(start);
+    }
+
+    let to_point = point - start;
+    let projection =
+        ((to_point.x * segment.x + to_point.y * segment.y) / length_squared).clamp(0.0, 1.0);
+
+    point.distance(start + segment * projection)
+}
+
+fn point_in_polygon(point: Point, polygon: &[Point]) -> bool {
+    if polygon.len() < 3 {
+        return false;
+    }
+
+    let mut inside = false;
+    let mut previous = polygon.len() - 1;
+
+    for current in 0..polygon.len() {
+        let a = polygon[current];
+        let b = polygon[previous];
+
+        let crosses = (a.y > point.y) != (b.y > point.y)
+            && point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y + f32::EPSILON) + a.x;
+
+        if crosses {
+            inside = !inside;
+        }
+
+        previous = current;
+    }
+
+    inside
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::spatial::Feature;
+    use iced::{Color, Size};
+
+    fn viewport() -> Viewport {
+        Viewport::new(LonLat::new(29.0, 41.0), 10.0, Size::new(800.0, 600.0))
+    }
+
+    fn layer(geometry: Geometry) -> Layer {
+        Layer::lines("Test", Color::BLACK).with_features([Feature::new("Öğe", geometry)])
+    }
+
+    #[test]
+    fn point_hit_is_within_tolerance() {
+        let viewport = viewport();
+        let location = LonLat::new(28.98, 41.01);
+        let layers = [layer(Geometry::Point(location))];
+
+        assert_eq!(
+            hit_test(&layers, &viewport, viewport.project(location)),
+            Some(FeatureRef::new(0, 0))
+        );
+
+        let somewhere_else = viewport.project(LonLat::new(33.0, 39.0));
+        assert_eq!(hit_test(&layers, &viewport, somewhere_else), None);
+    }
+
+    #[test]
+    fn polygon_hit_detects_inside_and_outside() {
+        let viewport = viewport();
+        let layers = [layer(Geometry::Polygon(vec![
+            LonLat::new(28.9, 40.9),
+            LonLat::new(29.1, 40.9),
+            LonLat::new(29.1, 41.1),
+            LonLat::new(28.9, 41.1),
+        ]))];
+
+        let inside = viewport.project(LonLat::new(29.0, 41.0));
+        let outside = viewport.project(LonLat::new(29.5, 41.0));
+
+        assert_eq!(
+            hit_test(&layers, &viewport, inside),
+            Some(FeatureRef::new(0, 0))
+        );
+        assert_eq!(hit_test(&layers, &viewport, outside), None);
+    }
+
+    #[test]
+    fn line_hit_uses_distance_to_segments() {
+        let viewport = viewport();
+        let layers = [layer(Geometry::Line(vec![
+            LonLat::new(28.9, 41.0),
+            LonLat::new(29.1, 41.0),
+        ]))];
+
+        let on_line = viewport.project(LonLat::new(29.0, 41.0));
+        let off_line = viewport.project(LonLat::new(29.0, 40.7));
+
+        assert_eq!(
+            hit_test(&layers, &viewport, on_line),
+            Some(FeatureRef::new(0, 0))
+        );
+        assert_eq!(hit_test(&layers, &viewport, off_line), None);
+    }
+
+    #[test]
+    fn invisible_layers_are_ignored() {
+        let viewport = viewport();
+        let location = LonLat::new(28.98, 41.01);
+
+        let mut hidden = layer(Geometry::Point(location));
+        hidden.visible = false;
+
+        let point = viewport.project(location);
+
+        assert_eq!(hit_test(&[hidden.clone()], &viewport, point), None);
+        assert_eq!(snap(&[hidden], &viewport, point, SNAP_TOLERANCE), None);
+    }
+
+    #[test]
+    fn snap_reports_endpoints_and_vertices() {
+        let viewport = viewport();
+        let start = LonLat::new(28.9, 41.0);
+        let middle = LonLat::new(29.0, 41.05);
+        let end = LonLat::new(29.1, 41.0);
+        let layers = [layer(Geometry::Line(vec![start, middle, end]))];
+
+        let near = |location: LonLat| viewport.project(location) + iced::Vector::new(3.0, -2.0);
+
+        let snapped_start = snap(&layers, &viewport, near(start), SNAP_TOLERANCE).expect("uç");
+        let snapped_middle = snap(&layers, &viewport, near(middle), SNAP_TOLERANCE).expect("köşe");
+
+        assert_eq!(snapped_start.kind, SnapKind::Endpoint);
+        assert_eq!(snapped_start.location, start);
+        assert_eq!(snapped_middle.kind, SnapKind::Vertex);
+
+        let far = viewport.project(start) + iced::Vector::new(40.0, 40.0);
+        assert_eq!(snap(&layers, &viewport, far, SNAP_TOLERANCE), None);
+    }
+}

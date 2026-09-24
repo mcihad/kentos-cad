@@ -1,0 +1,10 @@
+[package]
+name = "showcase"
+version = "0.1.0"
+edition = "2024"
+description = "KentOS CAD: kentos-rc bileşenlerinin vitrin uygulaması"
+publish = false
+
+[dependencies]
+kentos-rc = { path = "../.." }
+iced = { version = "0.14", features = ["canvas", "debug", "tokio"] }
