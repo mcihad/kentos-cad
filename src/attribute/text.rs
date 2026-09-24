@@ -1,5 +1,6 @@
 //! Türkçe metin karşılaştırma: arama için sadeleştirme ve alfabetik sıra.
 
+use std::borrow::Cow;
 use std::cmp::Ordering;
 
 /// Türkçe kurallarıyla küçük harfe çevirir: I → ı, İ → i.
@@ -32,6 +33,17 @@ pub fn fold(text: &str) -> String {
             other => other,
         })
         .collect()
+}
+
+/// Çok satırlı metnin ilk satırı; devamı varsa sonuna " …" eklenir. Tablo
+/// hücresi gibi tek satırlık yerler için.
+pub fn first_line(text: &str) -> Cow<'_, str> {
+    let text = text.trim();
+
+    match text.split_once('\n') {
+        Some((first, _)) => Cow::Owned(format!("{} …", first.trim_end())),
+        None => Cow::Borrowed(text),
+    }
 }
 
 /// `haystack`, sadeleştirilmiş hâliyle `needle`'ı içeriyor mu.
@@ -70,6 +82,14 @@ mod tests {
     fn dotted_and_dotless_i_are_lowercased_correctly() {
         assert_eq!(to_lowercase("İSTANBUL"), "istanbul");
         assert_eq!(to_lowercase("IĞDIR"), "ığdır");
+    }
+
+    #[test]
+    fn first_line_marks_the_rest() {
+        assert_eq!(first_line("Tek satır"), "Tek satır");
+        assert_eq!(first_line("Birinci.\nİkinci."), "Birinci. …");
+        assert_eq!(first_line("Birinci. \r\nİkinci."), "Birinci. …");
+        assert_eq!(first_line("  boşluklu  "), "boşluklu");
     }
 
     #[test]

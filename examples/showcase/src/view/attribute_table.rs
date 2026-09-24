@@ -8,7 +8,7 @@ use iced::widget::text::Wrapping;
 use iced::widget::{button, column, pick_list, row, space, tooltip};
 use iced::{Center, Element};
 
-use kentos_rc::attribute::FieldKind;
+use kentos_rc::attribute::{FieldKind, text};
 use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::{Feature, Layer};
@@ -197,7 +197,8 @@ impl Showcase {
         feature: &'a Feature,
         column: Column,
     ) -> Element<'a, Message> {
-        let content = column.text(&self.layers, layer, feature);
+        // Hücreler tek satırdır: çok satırlı metnin ilk satırı gösterilir.
+        let content = text::first_line(&column.text(&self.layers, layer, feature)).into_owned();
 
         if content.is_empty() {
             return label::caption("—").into();

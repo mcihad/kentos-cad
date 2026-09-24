@@ -4,6 +4,7 @@
 //! Örnekler aynı yapı envanterini paylaşır: tabloda tıklanan kayıt
 //! inceleyicide açılır, sorguya uyan kayıtlar tabloda vurgulanır.
 
+use iced::widget::text::Wrapping;
 use iced::widget::{column, container, row};
 use iced::{Center, Element, Fill};
 
@@ -315,22 +316,30 @@ impl Showcase {
             _ => field.format(value),
         };
 
+        // Hücreler tek satırdır: çok satırlı metnin (ör. Not) ilk satırı
+        // gösterilir, sütuna sığmayan metin kırpılır.
+        let content = text::first_line(&content).into_owned();
+
         if content.is_empty() {
             return label::caption("—").into();
         }
 
-        match field.kind {
-            FieldKind::Object { .. } => row![
-                icon(Icon::Link).size(12.0).tone(Tone::Muted),
-                label::body(content)
-            ]
-            .spacing(4)
-            .align_y(Center)
-            .into(),
-            FieldKind::Date | FieldKind::Time | FieldKind::DateTime => label::mono(content).into(),
-            _ if field.is_numeric() => label::mono(content).into(),
-            _ => label::body(content).into(),
-        }
+        let cell = match field.kind {
+            FieldKind::Object { .. } => {
+                return row![
+                    icon(Icon::Link).size(12.0).tone(Tone::Muted),
+                    label::body(content).wrapping(Wrapping::None)
+                ]
+                .spacing(4)
+                .align_y(Center)
+                .into();
+            }
+            FieldKind::Date | FieldKind::Time | FieldKind::DateTime => label::mono(content),
+            _ if field.is_numeric() => label::mono(content),
+            _ => label::body(content),
+        };
+
+        cell.wrapping(Wrapping::None).into()
     }
 
     fn demo_query(&self) -> Element<'_, Message> {
