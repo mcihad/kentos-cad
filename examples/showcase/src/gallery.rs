@@ -65,7 +65,7 @@ impl Page {
             Page::Icons => "16×16 ızgarada çizilmiş vektör ikon seti, boyutları ve tonları.",
             Page::Buttons => "Düğme stilleri, şerit düğmeleri ve ipuçları.",
             Page::Data => "Tablo, özellik ızgarası, panel ve giriş alanları.",
-            Page::Frame => "Durum çubuğu, komut satırı, gezinme çubuğu, menü ve iletişim kutuları.",
+            Page::Frame => "Durum çubuğu, komut kutusu, gezinme çubuğu, menü ve iletişim kutuları.",
             Page::Attributes => {
                 "Nesne inceleyici, öznitelik tablosu, sorgu oluşturucu ve alan türleri."
             }
@@ -87,6 +87,9 @@ pub enum Demo {
     CrsSelected(Crs),
     CommandChanged(String),
     CommandSubmitted,
+    /// Komut kutusu örneğinde öneri listesinden seçilen komut.
+    CommandRun(String),
+    CommandExpanded(bool),
     /// Öznitelikler sayfası: tabloda satır seçildi.
     RecordSelected(usize),
     Inspector(inspector::Event),
@@ -158,6 +161,7 @@ pub struct Gallery {
     pub crs: Option<Crs>,
     pub command: String,
     pub history: Vec<Entry>,
+    pub command_expanded: bool,
 
     /// Öznitelikler sayfasının örnek kayıtları: bütün alan türlerini
     /// kullanan bir yapı envanteri.
@@ -196,9 +200,14 @@ impl Default for Gallery {
             command: String::new(),
             history: vec![
                 Entry::Output("Galeri örneği: komutlar burada çalıştırılmaz.".to_owned()),
-                Entry::Input("CIZGI".to_owned()),
-                Entry::Output("Çizgi: Art arda doğru parçaları çizer.".to_owned()),
+                Entry::Input("ALAN".to_owned()),
+                Entry::Output(
+                    "Alan: Kapalı alan çizer. Sağ tık veya Esc alanı kapatır.".to_owned(),
+                ),
+                Entry::Input("merhaba".to_owned()),
+                Entry::Error("Bilinmeyen komut: MERHABA.".to_owned()),
             ],
+            command_expanded: false,
             schema: building_schema(),
             records: building_records(),
             record: 0,
@@ -230,6 +239,23 @@ impl Default for Gallery {
 }
 
 impl Gallery {
+    /// Komut kutusu örneğine yazılanı geçmişe ekler; komutlar yalnızca asıl
+    /// komut kutusunda çalışır.
+    fn echo(&mut self, command: &str) {
+        if command.is_empty() {
+            return;
+        }
+
+        self.history.push(Entry::Input(command.to_owned()));
+        self.history.push(Entry::Output(
+            "Bu kutu yalnızca bir örnek; komutlar sayfanın altındaki asıl komut kutusunda çalışır."
+                .to_owned(),
+        ));
+
+        let excess = self.history.len().saturating_sub(HISTORY_LIMIT);
+        self.history.drain(..excess);
+    }
+
     /// Örnek etkileşimini uygular. Uygulamanın komut satırına yazılacak bir
     /// satır döndürebilir.
     pub fn update(&mut self, demo: Demo) -> Option<String> {
@@ -248,19 +274,13 @@ impl Gallery {
             Demo::CommandChanged(command) => self.command = command,
             Demo::CommandSubmitted => {
                 let command = std::mem::take(&mut self.command);
-                let command = command.trim();
-
-                if !command.is_empty() {
-                    self.history.push(Entry::Input(command.to_owned()));
-                    self.history.push(Entry::Output(
-                        "Bu komut satırı yalnızca bir örnek; komutlar alttaki asıl komut satırında çalışır."
-                            .to_owned(),
-                    ));
-
-                    let excess = self.history.len().saturating_sub(HISTORY_LIMIT);
-                    self.history.drain(..excess);
-                }
+                self.echo(command.trim());
             }
+            Demo::CommandRun(command) => {
+                self.command.clear();
+                self.echo(&command);
+            }
+            Demo::CommandExpanded(expanded) => self.command_expanded = expanded,
             Demo::RecordSelected(record) => {
                 if record < self.records.len() {
                     self.record = record;

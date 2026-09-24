@@ -31,14 +31,16 @@ use iced::widget::{Column, column, container, row, stack};
 use iced::{Element, Fill};
 
 use kentos_rc::icon::Icon;
-use kentos_rc::spatial::{Layer, ModelSpace, ViewCube};
+use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
 use kentos_rc::style;
+use kentos_rc::widget::command_line::Prompt;
 use kentos_rc::widget::{
     CommandLine, ContextMenu, NavigationBar, horizontal_divider, vertical_divider,
 };
 
-use crate::app::{DRAWING_LAYER, Showcase};
-use crate::message::{Message, RibbonTab};
+use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
+use crate::command::{self, Command};
+use crate::message::{Keyword, Message, RibbonTab};
 
 impl Showcase {
     pub fn view(&self) -> Element<'_, Message> {
@@ -122,10 +124,105 @@ impl Showcase {
 
     fn command_line(&self) -> Element<'_, Message> {
         CommandLine::new(&self.history, &self.command_input)
-            .placeholder("Komut yazın, ör. CIZGI, SORGU, TABLO, YARDIM")
+            .id(COMMAND_INPUT)
+            .placeholder("Komut ya da enlem, boylam yazın")
+            .commands(command::catalog())
+            .prompt(self.prompt())
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)
+            .on_run(Message::CommandRun)
+            .expanded(self.command_expanded, |_| Message::CommandHistoryToggled)
             .into()
+    }
+
+    /// Etkin komutun istemi: haritadan seçim, çizim ya da ölçüm sürerken
+    /// beklenen adım ve seçenekleri. Seç ve Kaydır araçlarında istem yoktur.
+    pub(crate) fn prompt(&self) -> Option<Prompt<'static, Message>> {
+        let keyword = Message::Keyword;
+
+        if let Some(pick) = &self.picking {
+            return Some(
+                Prompt::new(pick.prompt.clone())
+                    .command("SEC")
+                    .option("İptal", keyword(Keyword::Cancel))
+                    .key("Esc")
+                    .description("Haritadan seçimi bırakır; alanın değeri değişmez."),
+            );
+        }
+
+        let points = match self.tool {
+            Tool::Measure => self.measurement.points().len(),
+            _ => self.draft.points().len(),
+        };
+
+        let (text, finish) = match (self.tool, points) {
+            (Tool::Select | Tool::Pan, _) => return None,
+            (Tool::Point, _) => ("Noktanın yerini belirtin".to_owned(), None),
+            (Tool::Measure, 0) => ("Ölçülecek ilk noktayı belirtin".to_owned(), None),
+            (Tool::Measure, _) => (
+                format!(
+                    "Sonraki noktayı belirtin; toplam {}",
+                    format::distance(self.measurement.total_meters())
+                ),
+                Some((
+                    "Temizle",
+                    Keyword::Clear,
+                    "Ölçümü siler; yeni ölçüm ilk noktadan başlar.",
+                )),
+            ),
+            (Tool::Polygon, 0) | (Tool::Rectangle, 0) => ("İlk köşeyi belirtin".to_owned(), None),
+            (Tool::Polygon, count) => (
+                "Sonraki köşeyi belirtin".to_owned(),
+                (count >= 3).then_some((
+                    "Kapat",
+                    Keyword::Close,
+                    "Son köşeyi ilk köşeye bağlayıp alanı tamamlar.",
+                )),
+            ),
+            (Tool::Rectangle, _) => ("Karşı köşeyi belirtin".to_owned(), None),
+            (Tool::Circle, 0) => ("Merkezi belirtin".to_owned(), None),
+            (Tool::Circle, _) => ("Çember üzerinde bir nokta belirtin".to_owned(), None),
+            (_, 0) => ("İlk noktayı belirtin".to_owned(), None),
+            (Tool::Polyline, count) => (
+                "Sonraki noktayı belirtin".to_owned(),
+                (count >= 2).then_some((
+                    "Bitir",
+                    Keyword::Finish,
+                    "Çoklu çizgiyi son noktada tamamlar.",
+                )),
+            ),
+            (_, _) => (
+                "Sonraki noktayı belirtin".to_owned(),
+                Some((
+                    "Bitir",
+                    Keyword::Finish,
+                    "Çizgi zincirini bitirir; sonraki çizgi yeni bir noktadan başlar.",
+                )),
+            ),
+        };
+
+        let mut prompt = Prompt::new(text)
+            .command(command::name(Command::Tool(self.tool)))
+            .placeholder("ya da enlem, boylam yazın");
+
+        if points > 0 {
+            prompt = prompt
+                .option("Geri al", keyword(Keyword::Undo))
+                .description("Son noktayı kaldırır.");
+        }
+
+        if let Some((label, choice, description)) = finish {
+            prompt = prompt.option(label, keyword(choice));
+
+            // Ölçümde boş Enter bir şey yapmaz; çizimde bitirir.
+            if choice != Keyword::Clear {
+                prompt = prompt.key("Enter");
+            }
+
+            prompt = prompt.description(description);
+        }
+
+        Some(prompt)
     }
 
     /// Katman seçim kutularının seçenekleri.

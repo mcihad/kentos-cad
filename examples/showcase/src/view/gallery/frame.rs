@@ -1,19 +1,20 @@
-//! Çerçeve sayfası: durum çubuğu, komut satırı, gezinme çubuğu, uygulama
+//! Çerçeve sayfası: durum çubuğu, komut kutusu, gezinme çubuğu, uygulama
 //! menüsü ve iletişim kutuları.
 
-use iced::widget::{button, column, container, row};
+use iced::widget::{button, column, container, row, space};
 use iced::{Center, Element, Fill, Theme};
 
 use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::model_space;
 use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::status_bar::Toggle;
+use kentos_rc::widget::command_line::Prompt;
+use kentos_rc::widget::status_bar::{Readout, Toggle};
 use kentos_rc::widget::{CommandLine, ContextMenu, Dialog, Menu, NavigationBar, StatusBar};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
+use crate::command;
 use crate::gallery::Demo;
 use crate::message::Message;
 
@@ -21,34 +22,94 @@ impl Showcase {
     pub(super) fn frame_page(&self) -> Vec<Element<'_, Message>> {
         let gallery = &self.gallery;
 
+        let coordinates = row![
+            label::mono("41.00820°"),
+            label::caption("K"),
+            space::horizontal().width(10),
+            label::mono("28.97840°"),
+            label::caption("D"),
+        ]
+        .spacing(3)
+        .align_y(Center);
+
         let status = StatusBar::new()
-            .push(label::mono(" 41.00820,  28.97840").width(156))
-            .separator()
-            .push(label::caption("MODEL").font(typography::UI_STRONG))
+            .push(
+                Readout::new(coordinates)
+                    .icon(Icon::Target)
+                    .width(170.0)
+                    .menu(|| {
+                        Menu::new()
+                            .header("Koordinat biçimi")
+                            .check("Ondalık derece", true, pressed("Ondalık derece"))
+                            .shortcut("41.00820° K")
+                            .check("Derece, dakika, saniye", false, pressed("DMS"))
+                            .shortcut("41°00'29.5\" K")
+                    }),
+            )
             .separator()
             .push(
+                Readout::new(label::body("2 seçili"))
+                    .icon(Icon::Select)
+                    .menu(|| {
+                        Menu::new()
+                            .item("Seçime odaklan", pressed("Seçime odaklan"))
+                            .icon(Icon::Target)
+                            .item("Seçimi kaldır", pressed("Seçimi kaldır"))
+                            .icon(Icon::ClearSelection)
+                            .shortcut("Esc")
+                    }),
+            )
+            .spacer()
+            .push(
                 Toggle::new("Izgara", gallery.toggles[0])
+                    .icon(Icon::Grid)
                     .shortcut("F7")
                     .on_press(Message::Gallery(Demo::Toggled(0))),
             )
             .push(
                 Toggle::new("Yakalama", gallery.toggles[1])
+                    .icon(Icon::Magnet)
                     .shortcut("F3")
                     .on_press(Message::Gallery(Demo::Toggled(1))),
             )
             .push(
                 Toggle::new("Etiketler", gallery.toggles[2])
+                    .icon(Icon::Type)
                     .on_press(Message::Gallery(Demo::Toggled(2))),
             )
-            .spacer()
-            .push(label::mono_caption("1:25.000").style(style::text::default))
             .separator()
-            .push(label::mono_caption("EPSG:3857"));
+            .push(Readout::new(label::mono("1:25.000")).menu(|| {
+                Menu::new()
+                    .header("Ölçek")
+                    .check("1:5.000", false, pressed("1:5.000"))
+                    .check("1:25.000", true, pressed("1:25.000"))
+                    .check("1:100.000", false, pressed("1:100.000"))
+            }))
+            .separator()
+            .push(
+                Readout::new(label::mono_caption("EPSG:3857"))
+                    .icon(Icon::Globe)
+                    .tip("WGS 84 / Pseudo-Mercator"),
+            );
 
         let command_line = CommandLine::new(&gallery.history, &gallery.command)
-            .placeholder("Bir komut deneyin")
+            .commands(command::catalog())
+            .prompt(
+                Prompt::new("Sonraki köşeyi belirtin")
+                    .command("ALAN")
+                    .option("Geri al", pressed("Geri al"))
+                    .description("Son köşeyi kaldırır.")
+                    .option("Kapat", pressed("Kapat"))
+                    .key("Enter")
+                    .description("Son köşeyi ilk köşeye bağlayıp alanı tamamlar.")
+                    .placeholder("bir komut deneyin"),
+            )
             .on_input(|command| Message::Gallery(Demo::CommandChanged(command)))
-            .on_submit(Message::Gallery(Demo::CommandSubmitted));
+            .on_submit(Message::Gallery(Demo::CommandSubmitted))
+            .on_run(|command| Message::Gallery(Demo::CommandRun(command)))
+            .expanded(gallery.command_expanded, |expanded| {
+                Message::Gallery(Demo::CommandExpanded(expanded))
+            });
 
         let navigation = container(
             NavigationBar::new()
@@ -91,26 +152,38 @@ impl Showcase {
             entry(
                 "Durum çubuğu",
                 "kentos_rc::widget::StatusBar",
-                "Öğeler soldan dizilir; spacer sonrakileri sağ uca iter. Anahtarların \
-                 ipucu durumu ve kısayolu gösterir. Anahtarlara tıklayın.",
+                "Göstergeler değer gösterir; menüsü olan gösterge tıklanınca yukarı doğru \
+                 açılır ve bunu sağındaki ok belli eder. Anahtarlar açıkken ikonlarıyla \
+                 vurgulanır; zemin yalnızca üzerine gelince belirir. Değişen değerler sabit \
+                 genişlikte durur, imleç hareket ettikçe çubuk kıpırdamaz.",
                 status,
                 Some(
-                    "StatusBar::new()\n    .push(label::mono(coordinates))\n    .separator()\n    \
-                     .push(Toggle::new(\"Izgara\", grid).shortcut(\"F7\").on_press(message))\n    \
-                     .spacer()\n    .push(label::mono_caption(\"EPSG:3857\"))",
+                    "StatusBar::new()\n    \
+                     .push(Readout::new(coordinates).icon(Icon::Target).width(170.0).menu(formats))\n    \
+                     .separator()\n    \
+                     .push(Toggle::new(\"Izgara\", grid).icon(Icon::Grid).shortcut(\"F7\").on_press(message))\n    \
+                     .spacer()\n    \
+                     .push(Readout::new(label::mono_caption(\"EPSG:3857\")).icon(Icon::Globe).tip(name))",
                 ),
             ),
             entry(
-                "Komut satırı",
+                "Komut kutusu",
                 "kentos_rc::widget::CommandLine",
-                "Son komutların geçmişi ve komut girişi. Kullanıcının yazdıkları \
-                 \"Komut:\" önekiyle, yanıtlar sönük gösterilir. Bu örneğe yazıp Enter'a \
-                 basın.",
+                "Geçmiş, istem ve giriş. Yazılan komutlar › işaretiyle ve eş aralıklı \
+                 yazıyla, yanıtlar düz yazıyla, hatalar kırmızıyla gösterilir; eski satırlar \
+                 soluklaşır. İstem etkin komutun adımını ve seçeneklerini gösterir. Yazmaya \
+                 başlayın: öneriler açılır; ↑ ↓ gezinir, Tab tamamlar, Enter çalıştırır. Giriş \
+                 boşken ↑ önceki komutları getirir, ↓ bütün komutları listeler.",
                 command_line,
                 Some(
-                    "CommandLine::new(&history, &input)\n    .placeholder(\"Komut yazın\")\n    \
+                    "CommandLine::new(&history, &input)\n    \
+                     .commands(CATALOG)\n    \
+                     .prompt(Prompt::new(\"Sonraki köşeyi belirtin\").command(\"ALAN\")\n        \
+                     .option(\"Geri al\", Message::Undo)\n        \
+                     .option(\"Kapat\", Message::Close).key(\"Enter\"))\n    \
                      .on_input(Message::CommandInput)\n    \
-                     .on_submit(Message::CommandSubmitted)",
+                     .on_submit(Message::CommandSubmitted)\n    \
+                     .on_run(Message::CommandRun)",
                 ),
             ),
             entry(

@@ -18,7 +18,8 @@ use iced::{Point, Size};
 use kentos_rc::attribute::query::Edit;
 use kentos_rc::attribute::{Combinator, Date, ObjectId, Operator, Value};
 use kentos_rc::snapshot::{Input, Snapshot};
-use kentos_rc::spatial::{FeatureRef, SelectionMode};
+use kentos_rc::spatial::model_space::Event as ModelSpace;
+use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode};
 use kentos_rc::widget::inspector::Event as Inspector;
 
 use crate::app::{Showcase, WINDOW_SIZE};
@@ -28,7 +29,7 @@ use crate::message::{Message, QueryPurpose, RibbonTab};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 9] = [
+const SCENARIOS: [(&str, &str); 11] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -49,6 +50,14 @@ const SCENARIOS: [(&str, &str); 9] = [
         "yollar filtrelenmiş, haritadan varlık seçimi sürüyor",
     ),
     ("yardim", "kısayollar penceresi"),
+    (
+        "cizim",
+        "çoklu çizgi sürüyor: istem ve seçenekleri; öneriler --tikla 300,854 --yaz ile açılır",
+    ),
+    (
+        "gecmis",
+        "komut geçmişi açık (F2): yazılan komutlar, yanıtlar ve bir hata",
+    ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
 
@@ -242,6 +251,33 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::Inspector(Inspector::Pick(5)));
         }
         "yardim" => send(Message::HelpToggled),
+        "cizim" | "gecmis" => {
+            send(Message::CommandInput("merhaba".to_owned()));
+            send(Message::CommandSubmitted);
+            send(Message::CommandRun("OLC".to_owned()));
+
+            for point in [LonLat::new(28.98, 41.01), LonLat::new(32.85, 39.93)] {
+                send(Message::ModelSpace(ModelSpace::PointPicked(point)));
+            }
+
+            send(Message::CommandRun("CCIZGI".to_owned()));
+
+            for point in [
+                LonLat::new(32.85, 39.93),
+                LonLat::new(35.48, 38.72),
+                LonLat::new(37.02, 39.75),
+            ] {
+                send(Message::ModelSpace(ModelSpace::PointPicked(point)));
+            }
+
+            send(Message::ModelSpace(ModelSpace::CursorMoved(LonLat::new(
+                38.4, 40.6,
+            ))));
+
+            if scenario == "gecmis" {
+                send(Message::CommandHistoryToggled);
+            }
+        }
         "galeri" => {
             let page = match page {
                 Some(name) => PAGES

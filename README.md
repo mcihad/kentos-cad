@@ -31,7 +31,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── dock.rs          yan panel yuvası ve başlıklı paneller
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
 │   ├── tree_view.rs     ağaç tablo: sınırsız derinlik, üç durumlu onay kutusu
-│   ├── context_menu.rs  sağ tık menüsü: alt menü, kısayol, işaret, klavye
+│   ├── context_menu.rs  sağ tık menüsü ve menü düğmesi: alt menü, kısayol, klavye
 │   ├── inspector.rs     nesne inceleyici: arama, kategoriler, geri alma, yardım
 │   ├── date_picker.rs   tarih, tarih-saat ve saat seçicileri (açılır takvim)
 │   ├── select.rs        aranabilir, açılır seçim kutusu
@@ -39,8 +39,8 @@ src/                     kentos-rc kütüphanesi
 │   ├── toolbar.rs       araç çubuğu: arama, eylemler, anahtarlar
 │   ├── segmented.rs     parçalı seçim
 │   ├── property_grid.rs salt okunur özellik ızgarası
-│   ├── command_line.rs  CAD komut satırı
-│   ├── status_bar.rs    durum çubuğu ve anahtarlar
+│   ├── command_line.rs  komut kutusu: geçmiş, istem, otomatik tamamlama
+│   ├── status_bar.rs    durum çubuğu: menülü göstergeler ve anahtarlar
 │   ├── navigation_bar.rs, dialog.rs, overlay.rs, tip.rs
 └── spatial/             CBS ve CAD (`spatial` özelliği, varsayılan açık)
     ├── projection.rs    LonLat, Bounds, Viewport (Web Mercator)
@@ -57,7 +57,7 @@ src/                     kentos-rc kütüphanesi
 examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
 ├── app.rs               durum ve güncelleme mantığı
 ├── message.rs           mesajlar, sekmeler, menü komutları
-├── command.rs           komut satırı çözümleyicisi
+├── command.rs           komut kataloğu ve yazılanın çözümlenmesi
 ├── gallery.rs           galeri sayfaları ve örneklerin durumu
 ├── table.rs             öznitelik tablosunun görünüm modeli: filtre, arama, sıralama
 ├── layer_tree.rs        katman ağacı: iç içe gruplar ve görünürlük
@@ -103,6 +103,68 @@ Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
   döndürülür. Alttaki yardım bölümü alanın türünü, kısıtlarını ve açıklamasını
   gösterir.
 
+## Komut kutusu ve durum çubuğu
+
+Pencerenin altı AutoCAD'deki gibi klavyeyle çalışır. Yazı tipinin bir anlamı
+vardır: yazılabilen her şey (komutlar, koordinatlar, ölçek) eş aralıklı Plex
+Mono ile, uygulamanın yanıtları ve talimatları Plex Sans ile yazılır.
+
+- **Her yerden yazılır.** Bir metin kutusu odakta değilken yazılanlar komut
+  kutusuna gider: `l` yazıp Enter'a basmak çizgi aracını seçer.
+- **Öneriler.** Yazarken komutlar adlarına, AutoCAD kısaltmalarına (L, PL, ZE)
+  ve Türkçe başlıklarına göre önerilir; eşleşen kısım vurgulanır, altta
+  komutun ne yaptığı yazar. ↑ ↓ gezinir, Tab tamamlar, Enter çalıştırır. Giriş
+  boşken ↑ önceki komutları getirir, ↓ bütün komutları listeler.
+- **İstem.** Çizim ve ölçüm sürerken kutu beklenen adımı ve seçenekleri
+  gösterir: `CCIZGI  Sonraki noktayı belirtin  [Geri al] [Bitir]`. Seçenekler
+  tıklanarak ya da yazılarak ("g", "geri") seçilir. "enlem, boylam" yazmak nokta
+  ekler; çizim yokken görünümü oraya ortalar. Boşken Enter çizimi bitirir, etkin
+  komut yokken son komutu yineler; Esc etkin komuttan çıkar.
+- **Geçmiş.** Yazılan komutlar `›` işaretiyle, hatalar kırmızıyla gösterilir;
+  eski satırlar soluklaşır. F2 bütün geçmişi açar.
+- **Durum çubuğu.** Göstergeler tıklanınca yukarı doğru menü açar: koordinat
+  biçimi (ondalık derece, DMS, Web Mercator metre) ve kopyalama, seçimle
+  yapılacak işler, standart harita ölçekleri (1:1.000 halihazırdan 1:5.000.000'a).
+  Anahtarlar açıkken ikonlarıyla vurgulanır. İmleç model alanından çıkınca son
+  koordinat soluk kalır; değerler sabit genişliktedir, çubuk kıpırdamaz.
+
+```rust
+use kentos_rc::widget::command_line::{self, CommandLine, Prompt};
+use kentos_rc::widget::status_bar::{Readout, Toggle};
+
+const CATALOG: &[command_line::Command] = &[
+    command_line::Command::new("CIZGI", "Çizgi")
+        .aliases(&["LINE", "L"])
+        .icon(Icon::Line)
+        .description("Art arda doğru parçaları çizer."),
+];
+
+CommandLine::new(&self.history, &self.input)
+    .id(COMMAND_INPUT)
+    .commands(CATALOG.iter().copied())
+    .prompt(
+        Prompt::new("Sonraki noktayı belirtin")
+            .command("CCIZGI")
+            .option("Geri al", Message::Undo)
+            .option("Bitir", Message::Finish)
+            .key("Enter"),
+    )
+    .on_input(Message::CommandInput)
+    .on_submit(Message::CommandSubmitted)
+    .on_run(Message::CommandRun)
+    .expanded(self.history_open, |_| Message::HistoryToggled)
+
+// Şeritteki "Komut listesi" düğmesi: kutuya odaklanıp bütün komutları açar.
+Message::CommandList => command_line::show_commands(COMMAND_INPUT),
+
+StatusBar::new()
+    .push(Readout::new(coordinates).icon(Icon::Target).width(214.0).menu(formats))
+    .separator()
+    .push(Toggle::new("Izgara", grid).icon(Icon::Grid).shortcut("F7").on_press(Message::Grid))
+    .spacer()
+    .push(Readout::new(label::mono(scale)).menu(standard_scales))
+```
+
 ## Ekransız görüntü
 
 `snapshot` özelliği arayüzü pencere açmadan çizip PNG'ye yazar. Ekran kapalı
@@ -121,6 +183,8 @@ cargo run -- snapshot menu.png --senaryo agac --sag-tikla 1233,329 --imlec 1100,
 cargo run -- snapshot takvim.png --senaryo yol --tikla 1418,778
 cargo run -- snapshot galeri.png --senaryo galeri --sayfa veri --boyut 1440x1500
 cargo run -- snapshot secim.png --senaryo secim --tema acik --olcek 2
+cargo run -- snapshot oneri.png --senaryo cizim --tikla 700,854 --yaz c
+cargo run -- snapshot olcek.png --senaryo cizim --tikla 1262,886
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 

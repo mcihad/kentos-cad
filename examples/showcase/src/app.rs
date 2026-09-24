@@ -13,13 +13,16 @@ use kentos_rc::spatial::{
     SelectionMode, Tool, Viewport, feature, format, query,
 };
 use kentos_rc::theme::{self, Mode};
-use kentos_rc::widget::command_line::Entry;
+use kentos_rc::widget::command_line::{self, Entry};
 use kentos_rc::widget::inspector;
 
 use crate::command::{self, Command};
 use crate::gallery::Gallery;
 use crate::layer_tree::{LayerTree, NodeId};
-use crate::message::{AppCommand, Message, QueryPurpose, RECENT_DRAWINGS, RibbonTab, Setting};
+use crate::message::{
+    AppCommand, CoordinateFormat, Keyword, Message, QueryPurpose, RECENT_DRAWINGS, RibbonTab,
+    Setting,
+};
 use crate::sample;
 use crate::table::{self, TableView};
 
@@ -31,6 +34,9 @@ pub const TIME_ZONE: i32 = 180;
 
 /// Pencerenin açılış boyutu.
 pub const WINDOW_SIZE: Size = Size::new(1440.0, 900.0);
+
+/// Komut kutusunun giriş kimliği: odaklamak ve komut listesini açmak için.
+pub const COMMAND_INPUT: &str = "komut-kutusu";
 
 const INITIAL_CENTER: LonLat = LonLat::new(32.0, 39.0);
 const INITIAL_ZOOM: f64 = 6.0;
@@ -58,7 +64,12 @@ pub struct Showcase {
     pub(crate) active_layer: usize,
     pub(crate) selection: Selection,
     pub(crate) hover: Option<FeatureRef>,
+    /// İmleç model alanındayken altındaki koordinat.
     pub(crate) cursor: Option<LonLat>,
+    /// İmlecin model alanındaki son konumu; imleç dışarıdayken durum
+    /// çubuğunda soluk gösterilir.
+    pub(crate) last_cursor: Option<LonLat>,
+    pub(crate) coordinate_format: CoordinateFormat,
     /// Basılı değiştirici tuşlar; tabloda Shift ve Ctrl ile seçim için.
     modifiers: Modifiers,
 
@@ -88,6 +99,8 @@ pub struct Showcase {
 
     pub(crate) command_input: String,
     pub(crate) history: Vec<Entry>,
+    /// Komut geçmişi açık mı (F2).
+    pub(crate) command_expanded: bool,
 
     pub(crate) gallery: Gallery,
 }
@@ -130,7 +143,8 @@ impl Showcase {
                 layers.len()
             )),
             Entry::Output(
-                "Komut yazın veya şeritten bir araç seçin. Komut listesi için YARDIM.".to_owned(),
+                "Komut için yazmaya başlayın. Komut kutusunda ↓ bütün komutları, ↑ öncekileri getirir."
+                    .to_owned(),
             ),
         ];
 
@@ -144,6 +158,8 @@ impl Showcase {
             selection: Selection::new(),
             hover: None,
             cursor: None,
+            last_cursor: None,
+            coordinate_format: CoordinateFormat::default(),
             modifiers: Modifiers::default(),
             inspector: inspector::State::new(),
             picking: None,
@@ -165,6 +181,7 @@ impl Showcase {
             help_open: false,
             command_input: String::new(),
             history,
+            command_expanded: false,
             gallery: Gallery::default(),
         }
     }
@@ -405,10 +422,9 @@ impl Showcase {
             }
             Message::HelpToggled => self.help_open = !self.help_open,
             Message::CommandListRequested => {
-                self.log(format!(
-                    "Komutlar: {}",
-                    command::names().collect::<Vec<_>>().join(", ")
-                ));
+                self.command_input.clear();
+
+                return command_line::show_commands(COMMAND_INPUT);
             }
 
             Message::GalleryPageSelected(page) => self.gallery.page = page,
@@ -421,21 +437,37 @@ impl Showcase {
             Message::CommandInput(value) => self.command_input = value,
             Message::CommandSubmitted => {
                 let input = std::mem::take(&mut self.command_input);
-                let input = input.trim();
 
-                if input.is_empty() {
+                return self.submit(input.trim());
+            }
+            Message::CommandRun(name) => {
+                self.command_input.clear();
+
+                return self.submit(&name);
+            }
+            Message::CommandTyped(text) => {
+                // Pencere ya da menü açıkken yazılanlar komut kutusuna gitmez.
+                if self.app_menu_open || self.query.is_some() || self.help_open {
                     return Task::none();
                 }
 
-                self.history.push(Entry::Input(input.to_owned()));
+                self.command_input.push_str(&text);
 
-                return match command::parse(input) {
-                    Some(command) => self.run_command(command),
-                    None => {
-                        self.log(format!("Bilinmeyen komut: {}", command::normalize(input)));
-                        Task::none()
-                    }
-                };
+                return Task::batch([
+                    iced::widget::operation::focus(COMMAND_INPUT),
+                    iced::widget::operation::move_cursor_to_end(COMMAND_INPUT),
+                ]);
+            }
+            Message::CommandHistoryToggled => self.command_expanded = !self.command_expanded,
+            Message::Keyword(keyword) => self.keyword(keyword),
+
+            Message::CoordinateFormatSelected(format) => self.coordinate_format = format,
+            Message::ScaleSelected(denominator) => {
+                self.viewport.set_scale(denominator);
+                self.log(format!(
+                    "Ölçek 1:{}.",
+                    format::integer(self.viewport.scale_denominator())
+                ));
             }
 
             Message::ModifiersChanged(modifiers) => self.modifiers = modifiers,
@@ -456,6 +488,7 @@ impl Showcase {
             model_space::Event::Resized(size) => self.viewport.size = size,
             model_space::Event::CursorMoved(location) => {
                 self.cursor = Some(location);
+                self.last_cursor = Some(location);
                 self.hover = self.hit(self.viewport.project(location));
             }
             model_space::Event::CursorLeft => {
@@ -465,6 +498,7 @@ impl Showcase {
             model_space::Event::Panned { delta, cursor } => {
                 self.viewport.pan_by(delta);
                 self.cursor = Some(cursor);
+                self.last_cursor = Some(cursor);
             }
             model_space::Event::Zoomed { delta, anchor } => self.viewport.zoom_by(delta, anchor),
             model_space::Event::Clicked {
@@ -1212,8 +1246,12 @@ impl Showcase {
             self.log("Haritadan seçim iptal edildi.");
         } else if !self.draft.is_empty() {
             self.finish_draft();
-        } else {
+        } else if self.tool == Tool::Measure && !self.measurement.is_empty() {
             self.measurement.clear();
+        } else if self.tool != Tool::Select {
+            // CAD'deki gibi: Esc etkin komuttan çıkar, seçime dönülür.
+            self.select_tool(Tool::Select);
+        } else {
             self.selection.clear();
             self.sync_inspector();
         }
@@ -1263,6 +1301,101 @@ impl Showcase {
                 "{}: dosya işlemleri bu sürümde henüz yok.",
                 command.label()
             ));
+        }
+    }
+
+    /// Komut kutusuna yazılanı çalıştırır: önce etkin istemin seçenekleri,
+    /// sonra "enlem, boylam", sonra komutlar. Boş Enter yarım kalan çizimi
+    /// bitirir; etkin komut yokken son komutu yineler (AutoCAD'deki gibi).
+    fn submit(&mut self, input: &str) -> Task<Message> {
+        if input.is_empty() {
+            if !self.draft.is_empty() {
+                self.finish_draft();
+            } else if self.prompt().is_none()
+                && let Some(command) = self.last_command()
+            {
+                self.push(Entry::Input(command::name(command).to_owned()));
+                return self.run_command(command);
+            }
+
+            return Task::none();
+        }
+
+        self.push(Entry::Input(input.to_owned()));
+
+        if let Some(keyword) = self.prompt().and_then(|prompt| prompt.find(input).cloned()) {
+            return self.update(keyword);
+        }
+
+        if let Some(location) = command::coordinates(input) {
+            self.enter_point(location);
+            return Task::none();
+        }
+
+        match command::parse(input) {
+            Some(command) => self.run_command(command),
+            None => {
+                self.error(format!(
+                    "Bilinmeyen komut: {}. Bütün komutlar için giriş boşken ↓ tuşuna basın.",
+                    command::normalize(input)
+                ));
+                Task::none()
+            }
+        }
+    }
+
+    /// Geçmişteki son geçerli komut.
+    fn last_command(&self) -> Option<Command> {
+        self.history.iter().rev().find_map(|entry| match entry {
+            Entry::Input(input) => command::parse(input),
+            _ => None,
+        })
+    }
+
+    /// Yazılan koordinat: haritadan seçim ya da çizim sürüyorsa nokta
+    /// girişidir, yoksa görünüm oraya ortalanır.
+    fn enter_point(&mut self, location: LonLat) {
+        if self.picking.is_some() {
+            self.complete_pick(self.viewport.project(location));
+        } else if self.tool.takes_points() {
+            self.handle_model_space(model_space::Event::PointPicked(location));
+        } else {
+            self.viewport.center = location;
+            self.log(format!(
+                "Görünüm {} noktasına ortalandı.",
+                format::decimal(location)
+            ));
+        }
+    }
+
+    /// İstemdeki seçenek.
+    fn keyword(&mut self, keyword: Keyword) {
+        match keyword {
+            Keyword::Undo => {
+                let removed = if self.tool == Tool::Measure {
+                    self.measurement.undo()
+                } else {
+                    self.draft.undo()
+                };
+
+                if removed {
+                    self.log("Son nokta geri alındı.");
+                }
+            }
+            Keyword::Finish | Keyword::Close => self.finish_draft(),
+            Keyword::Clear => {
+                self.measurement.clear();
+                self.log("Ölçüm temizlendi.");
+            }
+            Keyword::Cancel => {
+                if self.picking.is_some() {
+                    self.cancel_pick();
+                    self.log("Haritadan seçim iptal edildi.");
+                } else {
+                    self.draft.clear();
+                    self.log("Çizim iptal edildi.");
+                }
+            }
         }
     }
 
@@ -1353,7 +1486,15 @@ impl Showcase {
     }
 
     fn log(&mut self, output: impl Into<String>) {
-        self.history.push(Entry::Output(output.into()));
+        self.push(Entry::Output(output.into()));
+    }
+
+    fn error(&mut self, error: impl Into<String>) {
+        self.push(Entry::Error(error.into()));
+    }
+
+    fn push(&mut self, entry: Entry) {
+        self.history.push(entry);
 
         if self.history.len() > HISTORY_LIMIT {
             self.history.drain(..HISTORY_LIMIT / 2);
@@ -1402,15 +1543,34 @@ fn keyboard_event(event: Event, status: event::Status, _window: window::Id) -> O
 
     match event {
         keyboard::Event::ModifiersChanged(modifiers) => Some(Message::ModifiersChanged(modifiers)),
-        keyboard::Event::KeyPressed { key, modifiers, .. } if status == event::Status::Ignored => {
-            shortcut(key.as_ref(), modifiers)
+        keyboard::Event::KeyPressed {
+            key,
+            modifiers,
+            text,
+            ..
+        } if status == event::Status::Ignored => {
+            shortcut(key.as_ref(), modifiers).or_else(|| typed(text.as_deref(), modifiers))
         }
         _ => None,
     }
 }
 
-/// CAD kısayolları: Esc, Delete, Ctrl+A (tümünü seç), F1 (yardım), F3
-/// (yakalama), F7 (ızgara).
+/// CAD'deki gibi komut kutusu odakta değilken de yazılanlar komut kutusuna
+/// gider: "l" yazıp Enter'a basmak çizgi aracını seçer.
+fn typed(text: Option<&str>, modifiers: Modifiers) -> Option<Message> {
+    let text = text?;
+
+    let printable = !text.is_empty()
+        && text
+            .chars()
+            .all(|character| !character.is_control() && !character.is_whitespace());
+
+    (printable && !modifiers.command() && !modifiers.alt() && !modifiers.logo())
+        .then(|| Message::CommandTyped(text.to_owned()))
+}
+
+/// CAD kısayolları: Esc, Delete, Ctrl+A (tümünü seç), F1 (yardım), F2
+/// (komut geçmişi), F3 (yakalama), F7 (ızgara).
 fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
     use keyboard::Key;
     use keyboard::key::Named;
@@ -1419,9 +1579,78 @@ fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
         Key::Named(Named::Escape) => Some(Message::Escape),
         Key::Named(Named::Delete) => Some(Message::DeleteSelection),
         Key::Named(Named::F1) => Some(Message::HelpToggled),
+        Key::Named(Named::F2) => Some(Message::CommandHistoryToggled),
         Key::Named(Named::F3) => Some(Message::Toggle(Setting::Snap)),
         Key::Named(Named::F7) => Some(Message::Toggle(Setting::Grid)),
         Key::Character("a" | "A") if modifiers.command() => Some(Message::SelectAll),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn submit(app: &mut Showcase, input: &str) {
+        let _ = app.update(Message::CommandInput(input.to_owned()));
+        let _ = app.update(Message::CommandSubmitted);
+    }
+
+    fn picked(app: &mut Showcase, lon: f64, lat: f64) {
+        let _ = app.update(Message::ModelSpace(model_space::Event::PointPicked(
+            LonLat::new(lon, lat),
+        )));
+    }
+
+    #[test]
+    fn typed_keywords_answer_the_prompt() {
+        let mut app = Showcase::new();
+
+        submit(&mut app, "pl");
+        assert_eq!(app.tool, Tool::Polyline);
+
+        picked(&mut app, 32.85, 39.93);
+        picked(&mut app, 35.48, 38.72);
+        submit(&mut app, "g");
+        assert_eq!(app.draft.points().len(), 1);
+
+        // Boş Enter çizimi bitirir; tek noktalı çoklu çizgi atılır.
+        submit(&mut app, "");
+        assert!(app.draft.is_empty());
+
+        // Esc etkin komuttan çıkar.
+        let _ = app.update(Message::Escape);
+        assert_eq!(app.tool, Tool::Select);
+    }
+
+    #[test]
+    fn coordinates_add_points_or_center_the_view() {
+        let mut app = Showcase::new();
+
+        submit(&mut app, "39.92, 32.85");
+        assert_eq!(app.viewport.center, LonLat::new(32.85, 39.92));
+
+        submit(&mut app, "nokta");
+        submit(&mut app, "41,01 28,98");
+
+        let drawings = &app.layers[DRAWING_LAYER].features;
+        assert_eq!(drawings.len(), 1);
+    }
+
+    #[test]
+    fn unknown_commands_are_errors_and_enter_repeats_the_last_command() {
+        let mut app = Showcase::new();
+
+        submit(&mut app, "merhaba");
+        assert!(matches!(app.history.last(), Some(Entry::Error(_))));
+
+        let grid = app.options.grid;
+        submit(&mut app, "izgara");
+        submit(&mut app, "");
+        assert_eq!(app.options.grid, grid);
+        assert!(matches!(
+            &app.history[app.history.len() - 2],
+            Entry::Input(input) if input == "IZGARA"
+        ));
     }
 }

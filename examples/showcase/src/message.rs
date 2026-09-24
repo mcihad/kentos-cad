@@ -109,14 +109,70 @@ pub enum Message {
     GalleryPageSelected(Page),
     Gallery(Demo),
 
-    // Komut satırı
+    // Komut kutusu
     CommandInput(String),
     CommandSubmitted,
+    /// Öneri listesinden seçilen komut, adıyla.
+    CommandRun(String),
+    /// Komut kutusu odakta değilken yazılan metin; kutuya eklenir.
+    CommandTyped(String),
+    /// Komut geçmişini açar ya da kapatır (F2).
+    CommandHistoryToggled,
+    /// Etkin komutun istemindeki seçenek.
+    Keyword(Keyword),
+
+    // Durum çubuğu
+    CoordinateFormatSelected(CoordinateFormat),
+    /// Ölçeği 1:N yapar.
+    ScaleSelected(f64),
 
     ModifiersChanged(Modifiers),
     Escape,
     Tick,
     Quit,
+}
+
+/// Çizim ve ölçüm istemlerinin seçenekleri.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Keyword {
+    /// Son noktayı kaldırır.
+    Undo,
+    /// Çoklu çizgiyi tamamlar ya da çizgi zincirini bitirir.
+    Finish,
+    /// Alanı kapatır.
+    Close,
+    /// Ölçümü temizler.
+    Clear,
+    /// Haritadan seçimi ya da yarım kalan çizimi bırakır.
+    Cancel,
+}
+
+/// Durum çubuğundaki koordinatın biçimi.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CoordinateFormat {
+    /// 41.00820° K  28.97840° D
+    #[default]
+    Decimal,
+    /// 41°00'29.5" K  28°58'42.2" D
+    Dms,
+    /// Web Mercator düzlemi, metre: X 3.225.861  Y 5.013.551
+    Projected,
+}
+
+impl CoordinateFormat {
+    pub const ALL: [CoordinateFormat; 3] = [
+        CoordinateFormat::Decimal,
+        CoordinateFormat::Dms,
+        CoordinateFormat::Projected,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            CoordinateFormat::Decimal => "Ondalık derece",
+            CoordinateFormat::Dms => "Derece, dakika, saniye",
+            CoordinateFormat::Projected => "Web Mercator, metre",
+        }
+    }
 }
 
 /// Sorgu penceresinin amacı.
@@ -155,6 +211,16 @@ impl Setting {
             Setting::FullCrosshair => "Artı imleç",
             Setting::Labels => "Etiketler",
             Setting::ViewCube => "ViewCube",
+        }
+    }
+
+    pub fn icon(self) -> Icon {
+        match self {
+            Setting::Grid => Icon::Grid,
+            Setting::Snap => Icon::Magnet,
+            Setting::FullCrosshair => Icon::Crosshair,
+            Setting::Labels => Icon::Type,
+            Setting::ViewCube => Icon::Cube,
         }
     }
 

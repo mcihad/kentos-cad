@@ -44,13 +44,25 @@ impl Showcase {
             )
             .item(
                 "Esc",
-                "Pencereyi ya da haritadan seçimi kapatır; yoksa seçimi temizler",
+                "Pencereyi, haritadan seçimi ya da etkin komutu kapatır; yoksa seçimi temizler",
             )
             .item("Delete", "Seçili çizimleri siler")
-            .item("F1  F3  F7", "Kısayollar, nesne yakalama, ızgara")
             .item(
-                "Komut satırı",
-                "SORGU, FILTRE, TABLO, CIZGI, YARDIM ve diğerleri",
+                "F1  F2  F3  F7",
+                "Kısayollar, komut geçmişi, nesne yakalama, ızgara",
+            )
+            .item(
+                "Yazmaya başla",
+                "Komut kutusuna yazar; komut ya da \"enlem, boylam\" girilir",
+            )
+            .item("↑ ↓  Tab", "Önerilerde gezinir, öneriyi tamamlar")
+            .item(
+                "Boşken ↑ ↓",
+                "Önceki komutları getirir; bütün komutları listeler",
+            )
+            .item(
+                "Boşken Enter",
+                "Çizimi bitirir; etkin komut yokken son komutu yineler",
             );
 
         let dialog = Dialog::new("Kısayollar ve komutlar")
