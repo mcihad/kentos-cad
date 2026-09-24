@@ -16,6 +16,13 @@ pub const MAX_ZOOM: f64 = 18.0;
 
 const MAX_MERCATOR_LAT: f64 = 85.051_128_779_806_59;
 
+/// WGS 84 elipsoidinin büyük yarı ekseni; Web Mercator küre yarıçapı (metre).
+const EARTH_RADIUS: f64 = 6_378_137.0;
+/// Ekvator çevresi (metre).
+const EARTH_CIRCUMFERENCE: f64 = 2.0 * PI * EARTH_RADIUS;
+/// 96 DPI ekranda bir metredeki piksel sayısı.
+const PIXELS_PER_METER: f64 = 3_779.527_5;
+
 /// WGS 84 koordinatı (derece).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct LonLat {
@@ -38,6 +45,20 @@ impl LonLat {
         let y = (1.0 - (latitude.tan() + 1.0 / latitude.cos()).ln() / PI) / 2.0;
 
         (x, y)
+    }
+
+    /// Web Mercator (EPSG:3857) düzlem koordinatı, metre: doğuya X,
+    /// kuzeye Y.
+    pub fn web_mercator(self) -> (f64, f64) {
+        let latitude = self
+            .lat
+            .clamp(-MAX_MERCATOR_LAT, MAX_MERCATOR_LAT)
+            .to_radians();
+
+        (
+            EARTH_RADIUS * self.lon.to_radians(),
+            EARTH_RADIUS * (PI / 4.0 + latitude / 2.0).tan().ln(),
+        )
     }
 
     /// Normalize edilmiş Mercator koordinatından WGS 84'e dönüş.
@@ -214,14 +235,27 @@ impl Viewport {
 
     /// Merkez enlemindeki metre/piksel değeri.
     pub fn meters_per_pixel(&self) -> f64 {
-        const EARTH_CIRCUMFERENCE: f64 = 40_075_016.686;
         EARTH_CIRCUMFERENCE * self.center.lat.to_radians().cos().abs() / self.world_pixels()
     }
 
     /// Ekran ölçeğinin paydası (1:N), 96 DPI varsayımıyla.
     pub fn scale_denominator(&self) -> f64 {
-        const PIXELS_PER_METER: f64 = 3_779.527_5;
         self.meters_per_pixel() * PIXELS_PER_METER
+    }
+
+    /// Ölçeği 1:`denominator` yapacak yakınlaştırma seviyesi; sınırlara
+    /// kırpılmaz. Sonuç [`MIN_ZOOM`] ile [`MAX_ZOOM`] arasında değilse bu
+    /// enlemde o ölçeğe gelinemez.
+    pub fn zoom_for_scale(&self, denominator: f64) -> f64 {
+        let ground = EARTH_CIRCUMFERENCE * self.center.lat.to_radians().cos().abs();
+
+        (ground * PIXELS_PER_METER / (TILE_SIZE * denominator)).log2()
+    }
+
+    /// Merkezi koruyarak ölçeği 1:`denominator` yapar; yakınlaştırma
+    /// sınırlarına kırpılır.
+    pub fn set_scale(&mut self, denominator: f64) {
+        self.zoom = self.zoom_for_scale(denominator).clamp(MIN_ZOOM, MAX_ZOOM);
     }
 
     /// Izgara (graticule) çizgileri için derece adımı; çizgiler arası en az
@@ -331,6 +365,34 @@ mod tests {
         assert_eq!(bounds.north_east, LonLat::new(30.0, 41.0));
         assert_eq!(bounds.center(), LonLat::new(29.0, 40.0));
         assert!(Bounds::from_points([]).is_none());
+    }
+
+    #[test]
+    fn web_mercator_meters() {
+        let (x, y) = LonLat::new(0.0, 0.0).web_mercator();
+        assert!(x.abs() < 1e-6 && y.abs() < 1e-6);
+
+        let (x, y) = LonLat::new(180.0, MAX_MERCATOR_LAT).web_mercator();
+        assert!((x - 20_037_508.34).abs() < 0.01, "{x}");
+        assert!((y - 20_037_508.34).abs() < 0.01, "{y}");
+
+        // İstanbul, EPSG:3857 (pyproj ile doğrulanmış değerler).
+        let (x, y) = LonLat::new(28.9784, 41.0082).web_mercator();
+        assert!((x - 3_225_860.73).abs() < 0.01, "{x}");
+        assert!((y - 5_013_551.24).abs() < 0.01, "{y}");
+    }
+
+    #[test]
+    fn scale_can_be_set() {
+        let mut viewport = Viewport::new(LonLat::new(32.0, 39.0), 6.0, Size::new(900.0, 600.0));
+
+        viewport.set_scale(25_000.0);
+        assert!((viewport.scale_denominator() - 25_000.0).abs() < 0.5);
+
+        // Bu enlemde 1:100 ölçeğe gelinemez; en yakın seviyede kalır.
+        assert!(viewport.zoom_for_scale(100.0) > MAX_ZOOM);
+        viewport.set_scale(100.0);
+        assert_eq!(viewport.zoom, MAX_ZOOM);
     }
 
     #[test]

@@ -19,6 +19,12 @@ pub const UI_STRONG: Font = Font {
 /// Koordinatlar, ölçüler ve komut satırı için eş aralıklı yazı tipi.
 pub const MONO: Font = Font::with_name("IBM Plex Mono");
 
+/// Komut adları: yazılabilen anahtar sözcükler (ör. CIZGI).
+pub const MONO_STRONG: Font = Font {
+    weight: Weight::Semibold,
+    ..MONO
+};
+
 /// Açıklamalar, grup adları, tablo başlıkları, meta bilgisi.
 pub const CAPTION: f32 = 11.0;
 

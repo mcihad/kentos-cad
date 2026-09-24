@@ -54,6 +54,11 @@ impl Measurement {
         self.points.clear();
     }
 
+    /// Son noktayı kaldırır; kaldıracak nokta yoksa `false`.
+    pub fn undo(&mut self) -> bool {
+        self.points.pop().is_some()
+    }
+
     pub fn points(&self) -> &[LonLat] {
         &self.points
     }

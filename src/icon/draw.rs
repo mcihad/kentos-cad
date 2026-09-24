@@ -657,6 +657,65 @@ impl Pen {
                     self.line(frame, (6.0, y), (end, y));
                 }
             }
+            Icon::Magnet => {
+                // Ağzı yukarı bakan nal mıknatıs: dış ve iç kavis, kutup uçları.
+                let outer = Path::new(|builder| {
+                    builder.move_to(self.p(13.5, 2.0));
+                    builder.line_to(self.p(13.5, 8.25));
+                    self.arc(builder, (8.0, 8.25), 5.5, 0.0, PI);
+                    builder.line_to(self.p(2.5, 2.0));
+                });
+                let inner = Path::new(|builder| {
+                    builder.move_to(self.p(10.5, 2.0));
+                    builder.line_to(self.p(10.5, 8.25));
+                    self.arc(builder, (8.0, 8.25), 2.5, 0.0, PI);
+                    builder.line_to(self.p(5.5, 2.0));
+                });
+
+                frame.stroke(&outer, self.stroke());
+                frame.stroke(&inner, self.stroke());
+
+                for x in [2.5, 10.5] {
+                    self.line(frame, (x, 2.0), (x + 3.0, 2.0));
+                    self.line(frame, (x, 5.0), (x + 3.0, 5.0));
+                }
+            }
+            Icon::Crosshair => {
+                self.polyline(
+                    frame,
+                    &[(6.25, 6.25), (9.75, 6.25), (9.75, 9.75), (6.25, 9.75)],
+                    true,
+                );
+                self.line(frame, (1.0, 8.0), (6.25, 8.0));
+                self.line(frame, (9.75, 8.0), (15.0, 8.0));
+                self.line(frame, (8.0, 1.0), (8.0, 6.25));
+                self.line(frame, (8.0, 9.75), (8.0, 15.0));
+            }
+            Icon::Cube => {
+                self.polyline(
+                    frame,
+                    &[
+                        (8.0, 1.75),
+                        (13.75, 5.0),
+                        (13.75, 11.0),
+                        (8.0, 14.25),
+                        (2.25, 11.0),
+                        (2.25, 5.0),
+                    ],
+                    true,
+                );
+                self.polyline(frame, &[(2.25, 5.0), (8.0, 8.25), (13.75, 5.0)], false);
+                self.line(frame, (8.0, 8.25), (8.0, 14.25));
+            }
+            Icon::Layers => {
+                self.polyline(
+                    frame,
+                    &[(8.0, 1.75), (14.25, 5.25), (8.0, 8.75), (1.75, 5.25)],
+                    true,
+                );
+                self.polyline(frame, &[(1.75, 8.25), (8.0, 11.75), (14.25, 8.25)], false);
+                self.polyline(frame, &[(1.75, 11.25), (8.0, 14.75), (14.25, 11.25)], false);
+            }
             Icon::Measure => {
                 self.line(frame, (1.75, 4.0), (1.75, 12.0));
                 self.line(frame, (14.25, 4.0), (14.25, 12.0));

@@ -43,14 +43,25 @@
 //!
 //! Sarılan öğe sağ tıklamayı kendisi kullanırsa (ör. çizim aracının sağ
 //! tıkla bitirmesi) menü açılmaz.
+//!
+//! [`MenuButton`] aynı menüyü sol tıkla, öğenin altına (sığmazsa üstüne)
+//! hizalı açar; durum çubuğundaki göstergeler böyle çalışır:
+//!
+//! ```ignore
+//! MenuButton::new(label::mono(scale), || {
+//!     Menu::new()
+//!         .check("1:25.000", current == 25_000, Message::Scale(25_000.0))
+//!         .check("1:50.000", current == 50_000, Message::Scale(50_000.0))
+//! })
+//! ```
 
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::widget::{self, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Shell, overlay, renderer};
 use iced::widget::{Column, container, row, rule, space};
 use iced::{
-    Center, Element, Event, Fill, Length, Point, Rectangle, Renderer, Size, Theme, Vector,
-    keyboard, mouse, window,
+    Background, Center, Element, Event, Fill, Length, Point, Rectangle, Renderer, Size, Theme,
+    Vector, border, keyboard, mouse, window,
 };
 
 use crate::icon::{Icon, icon};
@@ -75,6 +86,8 @@ const MAX_WIDTH: f32 = 360.0;
 const SUBMENU_OVERLAP: f32 = 2.0;
 /// Menü imlecin bu kadar sağında ve altında açılır.
 const CURSOR_GAP: f32 = 2.0;
+/// Menü düğmesinin menüsüyle düğme arasındaki boşluk.
+const BUTTON_GAP: f32 = 3.0;
 
 /// Menünün komutları.
 #[derive(Debug, Clone)]
@@ -337,7 +350,17 @@ impl<Message> Default for Menu<Message> {
 pub struct ContextMenu<'a, Message> {
     content: Element<'a, Message>,
     menu: Box<dyn Fn(Point) -> Menu<Message> + 'a>,
+    trigger: Trigger,
     open: Option<Open<'a, Message>>,
+}
+
+/// Menüyü açan tıklama ve menünün yeri.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Trigger {
+    /// Sağ tık; menü imlecin yanında açılır.
+    Secondary,
+    /// Sol tık; menü öğenin altında ya da üstünde, sol kenarına hizalı açılır.
+    Primary,
 }
 
 /// Açık menünün bu kareki içeriği.
@@ -357,8 +380,33 @@ impl<'a, Message: Clone + 'a> ContextMenu<'a, Message> {
         Self {
             content: content.into(),
             menu: Box::new(menu),
+            trigger: Trigger::Secondary,
             open: None,
         }
+    }
+}
+
+/// Tıklanınca altında (sığmazsa üstünde) menü açan öğe; menü açıkken ya da
+/// üzerine gelinince hafif bir zeminle belirginleşir.
+pub struct MenuButton<'a, Message>(ContextMenu<'a, Message>);
+
+impl<'a, Message: Clone + 'a> MenuButton<'a, Message> {
+    /// `menu` her açılışta yeniden kurulur. Boş menü döndürülürse menü
+    /// açılmaz.
+    pub fn new(
+        content: impl Into<Element<'a, Message>>,
+        menu: impl Fn() -> Menu<Message> + 'a,
+    ) -> Self {
+        Self(ContextMenu {
+            trigger: Trigger::Primary,
+            ..ContextMenu::new(content, move |_| menu())
+        })
+    }
+}
+
+impl<'a, Message: Clone + 'a> From<MenuButton<'a, Message>> for Element<'a, Message> {
+    fn from(button: MenuButton<'a, Message>) -> Self {
+        Element::new(button.0)
     }
 }
 
@@ -376,6 +424,8 @@ struct State {
     hovered: Option<Target>,
     /// Açık alt menünün ana menüdeki sırası.
     submenu: Option<usize>,
+    /// İmleç menü düğmesinin üzerinde mi; değişince zemin yeniden çizilir.
+    over: bool,
 }
 
 impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'a, Message> {
@@ -440,11 +490,31 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
             viewport,
         );
 
+        // Menü düğmesinin üzerine gelme zemini: yalnızca imleç girip
+        // çıkınca yeniden çizilir.
+        if self.trigger == Trigger::Primary
+            && let Event::Mouse(mouse::Event::CursorMoved { .. } | mouse::Event::CursorLeft) = event
+        {
+            let over = cursor.is_over(layout.bounds());
+            let state = tree.state.downcast_mut::<State>();
+
+            if state.over != over {
+                state.over = over;
+                shell.request_redraw();
+            }
+        }
+
         if shell.is_event_captured() {
             return;
         }
 
-        if let Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)) = event
+        let button = match self.trigger {
+            Trigger::Secondary => mouse::Button::Right,
+            Trigger::Primary => mouse::Button::Left,
+        };
+
+        if let Event::Mouse(mouse::Event::ButtonPressed(pressed)) = event
+            && *pressed == button
             && let Some(position) = cursor.position_over(layout.bounds())
         {
             let anchor = position - layout.position();
@@ -453,8 +523,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
                 return;
             }
 
-            *tree.state.downcast_mut::<State>() = State {
+            let state = tree.state.downcast_mut::<State>();
+
+            *state = State {
                 anchor: Some(anchor),
+                over: state.over,
                 ..State::default()
             };
 
@@ -472,13 +545,22 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
-        self.content.as_widget().mouse_interaction(
+        let interaction = self.content.as_widget().mouse_interaction(
             &tree.children[0],
             layout,
             cursor,
             viewport,
             renderer,
-        )
+        );
+
+        if self.trigger == Trigger::Primary
+            && interaction == mouse::Interaction::None
+            && cursor.is_over(layout.bounds())
+        {
+            mouse::Interaction::Pointer
+        } else {
+            interaction
+        }
     }
 
     fn draw(
@@ -491,6 +573,31 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
         cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
+        if self.trigger == Trigger::Primary {
+            let open = tree.state.downcast_ref::<State>().anchor.is_some();
+            let t = Tokens::of(theme);
+
+            let alpha = if open {
+                Some(0.1)
+            } else if cursor.is_over(layout.bounds()) {
+                Some(0.06)
+            } else {
+                None
+            };
+
+            if let Some(alpha) = alpha {
+                renderer::Renderer::fill_quad(
+                    renderer,
+                    renderer::Quad {
+                        bounds: layout.bounds(),
+                        border: border::rounded(3.0),
+                        ..renderer::Quad::default()
+                    },
+                    Background::Color(t.layer(alpha)),
+                );
+            }
+        }
+
         self.content.as_widget().draw(
             &tree.children[0],
             renderer,
@@ -566,8 +673,19 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
                     sub_tree.diff(sub);
                 }
 
+                let (anchor, gap) = match self.trigger {
+                    Trigger::Secondary => (
+                        Rectangle::new(layout.position() + translation + anchor, Size::ZERO),
+                        Vector::new(CURSOR_GAP, CURSOR_GAP),
+                    ),
+                    Trigger::Primary => {
+                        (layout.bounds() + translation, Vector::new(0.0, BUTTON_GAP))
+                    }
+                };
+
                 Some(overlay::Element::new(Box::new(Overlay {
-                    anchor: layout.position() + translation + anchor,
+                    anchor,
+                    gap,
                     menu: &open.menu,
                     main: &mut open.main,
                     sub: open.sub.as_mut(),
@@ -599,8 +717,11 @@ impl<'a, Message: Clone + 'a> From<ContextMenu<'a, Message>> for Element<'a, Mes
 
 /// Açık menü: ana kutu ve varsa alt menü kutusu.
 struct Overlay<'a, 'b, Message> {
-    /// Sağ tıklanan noktanın penceredeki konumu.
-    anchor: Point,
+    /// Menünün yanında açıldığı alan: sağ tıklanan nokta ya da menü
+    /// düğmesinin sınırları (penceredeki konumuyla).
+    anchor: Rectangle,
+    /// Menüyle alan arasındaki yatay ve dikey boşluk.
+    gap: Vector,
     menu: &'b Menu<Message>,
     main: &'b mut Element<'a, Message>,
     sub: Option<&'b mut Element<'a, Message>>,
@@ -611,7 +732,10 @@ struct Overlay<'a, 'b, Message> {
 
 impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
     fn close(&mut self, shell: &mut Shell<'_, Message>) {
-        *self.state = State::default();
+        *self.state = State {
+            over: self.state.over,
+            ..State::default()
+        };
         shell.invalidate_layout();
         shell.request_redraw();
     }
@@ -759,16 +883,18 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             .layout(self.main_tree, renderer, &limits);
         let size = main.size();
 
-        // Sağa ya da aşağı sığmazsa imlecin soluna ya da üstüne açılır.
-        let x = if self.anchor.x + CURSOR_GAP + size.width <= bounds.width {
-            self.anchor.x + CURSOR_GAP
+        // Sağa ya da aşağı sığmazsa alanın soluna ya da üstüne açılır.
+        let anchor = self.anchor;
+        let x = if anchor.x + self.gap.x + size.width <= bounds.width {
+            anchor.x + self.gap.x
         } else {
-            self.anchor.x - size.width
+            anchor.x + anchor.width - size.width
         };
-        let y = if self.anchor.y + CURSOR_GAP + size.height <= bounds.height {
-            self.anchor.y + CURSOR_GAP
+        let below = anchor.y + anchor.height + self.gap.y;
+        let y = if below + size.height <= bounds.height {
+            below
         } else {
-            self.anchor.y - size.height
+            anchor.y - self.gap.y - size.height
         };
         let origin = Point::new(
             x.clamp(0.0, (bounds.width - size.width).max(0.0)),

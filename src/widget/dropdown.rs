@@ -518,7 +518,7 @@ fn prime<Local>(panel: &mut Element<'_, Local>, tree: &mut Tree, renderer: &Rend
 
 /// Yerel kabuğun durumunu (yakalama, yeniden çizim, yerleşim, yazı girişi)
 /// dış kabuğa aktarır; mesajlar aktarılmaz.
-fn propagate<A, B>(local: &Shell<'_, A>, shell: &mut Shell<'_, B>) {
+pub(crate) fn propagate<A, B>(local: &Shell<'_, A>, shell: &mut Shell<'_, B>) {
     if local.is_event_captured() {
         shell.capture_event();
     }

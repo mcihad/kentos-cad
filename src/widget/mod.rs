@@ -33,7 +33,7 @@ mod tip;
 
 pub use app_menu::AppMenu;
 pub use command_line::CommandLine;
-pub use context_menu::{ContextMenu, Menu};
+pub use context_menu::{ContextMenu, Menu, MenuButton};
 pub use date_picker::{DatePicker, TimePicker};
 pub use dialog::{Dialog, ShortcutList};
 pub use dock::{Dock, Panel};

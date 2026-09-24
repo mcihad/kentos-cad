@@ -119,6 +119,48 @@ pub fn menu_item(highlighted: bool, enabled: bool, danger: bool) -> impl Fn(&The
     }
 }
 
+/// Komut isteminde etkin komutun adı (ör. CIZGI): vurgu zemininde, vurgu
+/// renginde.
+pub fn token(theme: &Theme) -> Style {
+    let t = Tokens::of(theme);
+
+    Style {
+        text_color: Some(t.accent_hover),
+        background: Some(Background::Color(t.selection())),
+        border: border::rounded(3.0),
+        ..Style::default()
+    }
+}
+
+/// Klavye tuşu (ör. Tab, Enter): ince kenarlı küçük kutu.
+pub fn keycap(theme: &Theme) -> Style {
+    let t = Tokens::of(theme);
+
+    Style {
+        text_color: Some(t.muted),
+        border: Border {
+            color: t.border,
+            width: 1.0,
+            radius: 3.0.into(),
+        },
+        ..Style::default()
+    }
+}
+
+/// Otomatik tamamlama satırı: vurgulanan satır seçim zemininde.
+pub fn suggestion(highlighted: bool) -> impl Fn(&Theme) -> Style {
+    move |theme| {
+        let t = Tokens::of(theme);
+
+        Style {
+            text_color: Some(t.text),
+            background: highlighted.then(|| Background::Color(t.selection())),
+            border: border::rounded(RADIUS),
+            ..Style::default()
+        }
+    }
+}
+
 /// Model alanı üzerinde yüzen, yarı saydam araç çubukları.
 pub fn floating(theme: &Theme) -> Style {
     let t = Tokens::of(theme);

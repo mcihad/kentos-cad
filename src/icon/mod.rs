@@ -97,11 +97,16 @@ pub enum Icon {
     Lock,
     Undo,
     Open,
+    // Durum çubuğu
+    Magnet,
+    Crosshair,
+    Cube,
+    Layers,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 59] = [
+    pub const ALL: [Icon; 63] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -161,6 +166,10 @@ impl Icon {
         Icon::Lock,
         Icon::Undo,
         Icon::Open,
+        Icon::Magnet,
+        Icon::Crosshair,
+        Icon::Cube,
+        Icon::Layers,
     ];
 }
 

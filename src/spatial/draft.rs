@@ -40,6 +40,11 @@ impl Draft {
         self.points.clear();
     }
 
+    /// Son noktayı kaldırır; kaldıracak nokta yoksa `false`.
+    pub fn undo(&mut self) -> bool {
+        self.points.pop().is_some()
+    }
+
     /// Aracın nokta girişini ekler. Aracın geometrisi tamamlandıysa onu
     /// döndürür.
     ///
@@ -180,6 +185,20 @@ mod tests {
             let distance = center.distance(viewport.project(vertex));
             assert!((distance - radius).abs() < 0.5, "{distance} ≠ {radius}");
         }
+    }
+
+    #[test]
+    fn undo_removes_the_last_point() {
+        let viewport = viewport();
+        let mut draft = Draft::new();
+
+        draft.push(Tool::Polyline, A, &viewport);
+        draft.push(Tool::Polyline, B, &viewport);
+
+        assert!(draft.undo());
+        assert_eq!(draft.points(), &[A]);
+        assert!(draft.undo());
+        assert!(!draft.undo());
     }
 
     #[test]

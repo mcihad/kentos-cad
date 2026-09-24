@@ -111,6 +111,16 @@ impl Tokens {
             .scale_alpha(if self.is_dark { 0.22 } else { 0.14 })
     }
 
+    /// Zeminin ne olduğundan bağımsız, hafif bir durum katmanı: koyu temada
+    /// açık, aydınlık temada koyu. Üzerine gelinen ya da basılı öğeler için.
+    pub fn layer(&self, alpha: f32) -> Color {
+        if self.is_dark {
+            Color::from_rgba(1.0, 1.0, 1.0, alpha)
+        } else {
+            Color::from_rgba(0.0, 0.0, 0.0, alpha)
+        }
+    }
+
     /// Devre dışı öğelerin metni ve ikonları.
     pub fn disabled(&self) -> Color {
         self.muted.scale_alpha(0.55)

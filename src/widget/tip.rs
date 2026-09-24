@@ -63,6 +63,18 @@ impl Tip {
     }
 }
 
+impl From<String> for Tip {
+    fn from(title: String) -> Self {
+        Self::new(title)
+    }
+}
+
+impl From<&str> for Tip {
+    fn from(title: &str) -> Self {
+        Self::new(title)
+    }
+}
+
 /// `content`'e ipucu ekler.
 pub fn tip<'a, Message: 'a>(
     content: impl Into<Element<'a, Message>>,

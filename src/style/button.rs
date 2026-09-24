@@ -281,6 +281,63 @@ pub fn header(sorted: bool) -> impl Fn(&Theme, Status) -> Style {
     }
 }
 
+/// Zemini ve kenarı olmayan küçük ikon düğmesi (ör. komut kutusunun
+/// denetimleri): sönük ikon, üzerine gelince hafif bir katman ve tam renk.
+pub fn ghost(theme: &Theme, status: Status) -> Style {
+    let t = Tokens::of(theme);
+
+    let (background, text) = match status {
+        Status::Active => (Color::TRANSPARENT, t.muted),
+        Status::Hovered => (t.layer(0.07), t.text),
+        Status::Pressed => (t.layer(0.12), t.text),
+        Status::Disabled => (Color::TRANSPARENT, t.disabled()),
+    };
+
+    style(background, text, border::rounded(3.0))
+}
+
+/// Durum çubuğu anahtarı: açıkken ikonu vurgu renginde, metni tam renkte;
+/// kapalıyken ikisi de sönük. Zemin yalnızca üzerine gelince belirir.
+pub fn status_toggle(active: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+
+        let background = match status {
+            Status::Hovered => t.layer(0.06),
+            Status::Pressed => t.layer(0.1),
+            Status::Active | Status::Disabled => Color::TRANSPARENT,
+        };
+
+        style(
+            background,
+            if active { t.text } else { t.muted },
+            border::rounded(3.0),
+        )
+    }
+}
+
+/// Komut istemindeki seçenek (ör. "Geri al"): ince kenarlı; üzerine gelince
+/// vurgu kenarı alır.
+pub fn keyword(theme: &Theme, status: Status) -> Style {
+    let t = Tokens::of(theme);
+
+    let (background, edge) = match status {
+        Status::Active | Status::Disabled => (Color::TRANSPARENT, t.border),
+        Status::Hovered => (t.selection(), t.accent),
+        Status::Pressed => (t.accent.scale_alpha(0.35), t.accent),
+    };
+
+    style(
+        background,
+        t.text,
+        Border {
+            color: edge,
+            width: 1.0,
+            radius: 3.0.into(),
+        },
+    )
+}
+
 /// Durum çubuğundaki açık/kapalı anahtarlar.
 pub fn toggle(active: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
