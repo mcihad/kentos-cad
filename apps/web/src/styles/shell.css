@@ -203,6 +203,25 @@
   isolation: isolate;
 }
 
+/*
+ * The ribbon's shadow falls on the drawing only; the docked panels beside it
+ * stay flush with the ribbon (DESIGN.md §5.4). An edge just above the
+ * viewport casts it, wider than the viewport so it does not fade at the
+ * sides: the viewport's clipping cuts it square at the panels. It lies over
+ * the drawing, under the overlay (labels, cursor) and everything floating.
+ */
+.shell[data-shell='ribbon'] .viewport::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: -32px;
+  left: -32px;
+  right: -32px;
+  height: 32px;
+  box-shadow: var(--shadow-bar);
+  pointer-events: none;
+}
+
 .viewport__gl,
 .viewport__overlay {
   position: absolute;

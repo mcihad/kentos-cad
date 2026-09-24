@@ -197,6 +197,8 @@ Dok içine yerleşik paneller köşesizdir (0).
 
 Yalnızca **yüzen** öğeler gölge alır: araç kutusu (`--shadow-float`); menü, ipucu ve pencere (`--shadow-pop`). Paneller ve kartlar gölgesizdir; ayrım kenarlıkla yapılır.
 
+Tek istisna şeridin gölgesidir (§7.3.1): şeridin altında yalnız çizim alanına düşen hafif bir gölge (`--shadow-bar`) şeridi çizimin üstünde duran bir yüzey gibi ayırır. Yandaki paneller şeritle aynı düzlemdedir, gölge almaz. Koyu temada gölge daha yoğundur, çünkü koyu zeminde az görünür.
+
 ---
 
 ## 6. İkonografi
@@ -238,6 +240,7 @@ Menü çubuğu, araç çubuğu ve araç kutusunun sekmeli karşılığıdır; Uy
 - **Sekmeler:** Dosya, Giriş, Çizim, Değiştir, Harita, Görünüm, İşlemler, Araçlar. Açık sekme ana metin rengi, 600 ağırlık ve 2 px amber alt çizgidir (dok sekmeleriyle aynı, §7.5). Giriş gündelik araçları, pano, seçim, katmanlar ve geçerli özellikleri bir arada tutar; diğerleri menülerin karşılığıdır (Koordinat ve Analiz menüleri Harita sekmesindedir, Düzen'in geçmişi hızlı erişimde).
 - **Bağlamsal Seçim sekmesi:** yalnız seçili nesne varken sekmelerin sonunda görünür; seçimin rengindedir (amber metin, üstte amber çizgi, sayı yumuşak amber hapta). İçinde seçimin özeti (büyük amber sayı, “nesne seçili”, türlere göre sayılar), seçime uygulanan dönüştürme, dizi, nesne, alan, pano ve sembol komutları vardır. Seçim bitince kaybolur ve önceki sekmeye dönülür; kendiliğinden açılmaz.
 - **Çalışan araç noktası:** çalışan araç açık olmayan bir sekmede de bulunuyorsa o sekmenin sağ üstünde 5 px amber nokta vardır; ipucu aracın adını söyler.
+- **Alt kenar:** 1 px çizgi; altında yalnız çizim alanına düşen hafif gölge (`--shadow-bar`, §5.4), yan paneller gölgesizdir. Daraltılmışken sekme satırının altındadır.
 - **Paneller:** sekme başına başlıklı gruplar; aralarında 1 px çizgi, altta küçük (`--fs-2xs`) üçüncül başlık; varsa sağında pencere açıcı (↘: katman stili, proje ayarları, uygulama ayarlarının ilgili bölümü; Giriş'in araç panellerinde o ailenin sekmesi).
 - **Düğmeler:** büyük (28 px simge, altında en çok iki satır etiket), küçük (16 px simge ve tek satır etiket, sütunda üç tane), yalnız simge (dar pencere, hızlı erişim). Panelin ilk öğesi büyüktür; bir ya da iki öğeli panelde hepsi. Açılır düğmenin etiketi ▾ taşır. Etiket komutun kısa adıdır, sondaki “…” yazılmaz; tam ad ve kısayol ipucundadır.
 - **Durumlar:** çalışan araç **dolu amber** (araç kutusundaki gibi; hızlı erişimde yumuşak amber, çünkü dolu amber tek olmalı); açık anahtar komut (Kenetleme, Katman paneli) yumuşak amber; devre dışı %38; yapılmamış özelliğin simgesi %62 ve ipucunda “Geliştirme aşamasında”. Aramada bulunan düğme bir an 2 px amber çerçeve alır.
