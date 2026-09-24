@@ -254,6 +254,53 @@ pub fn signed_area2(ring: &[Vec2]) -> f64 {
     s
 }
 
+/// The app's spline (src/model/geom/spline.ts: centripetal Catmull-Rom
+/// through `pts`, evaluated with Barry–Goldman, phantom end points mirrored
+/// for open curves) as its cubic Bézier spans [start, control, control, end].
+/// Every span is a cubic polynomial, so this is the same curve, not a fit:
+/// the inner controls sit a third of the span's knot interval along the
+/// curve's derivative at each end. Fewer than three points are drawn by the
+/// app as straight segments, and come out as straight spans.
+pub fn catmull_rom_beziers(pts: &[Vec2], closed: bool) -> Vec<[Vec2; 4]> {
+    let n = pts.len();
+    let straight = |a: Vec2, b: Vec2| [a, v(a.x + (b.x - a.x) / 3.0, a.y + (b.y - a.y) / 3.0), v(b.x - (b.x - a.x) / 3.0, b.y - (b.y - a.y) / 3.0), b];
+    if n < 3 {
+        return pts.windows(2).map(|w| straight(w[0], w[1])).collect();
+    }
+    let at = |i: isize| -> Vec2 {
+        let last = n as isize - 1;
+        if closed {
+            pts[i.rem_euclid(n as isize) as usize]
+        } else if i < 0 {
+            v(2.0 * pts[0].x - pts[1].x, 2.0 * pts[0].y - pts[1].y)
+        } else if i > last {
+            v(2.0 * pts[n - 1].x - pts[n - 2].x, 2.0 * pts[n - 1].y - pts[n - 2].y)
+        } else {
+            pts[i as usize]
+        }
+    };
+    // Centripetal knot spacing, with the app's floor for coincident points.
+    let knot = |a: Vec2, b: Vec2| {
+        let d = dist(a, b).sqrt();
+        if d > 0.0 { d } else { 1e-6 }
+    };
+    let spans = if closed { n } else { n - 1 };
+    let mut out = Vec::with_capacity(spans);
+    for i in 0..spans as isize {
+        let (p0, p1, p2, p3) = (at(i - 1), at(i), at(i + 1), at(i + 2));
+        let (d01, d12, d23) = (knot(p0, p1), knot(p1, p2), knot(p2, p3));
+        // dC/dt at t1 and t2 from the differences (small numbers even at TM coordinates).
+        let (u01, u12, u23) = (v(p1.x - p0.x, p1.y - p0.y), v(p2.x - p1.x, p2.y - p1.y), v(p3.x - p2.x, p3.y - p2.y));
+        let (k0, k1) = (d12 / (d01 * (d01 + d12)), d01 / (d12 * (d01 + d12)));
+        let m1 = v(u01.x * k0 + u12.x * k1, u01.y * k0 + u12.y * k1);
+        let (k2, k3) = (d23 / (d12 * (d12 + d23)), d12 / (d23 * (d12 + d23)));
+        let m2 = v(u12.x * k2 + u23.x * k3, u12.y * k2 + u23.y * k3);
+        let h = d12 / 3.0;
+        out.push([p1, v(p1.x + m1.x * h, p1.y + m1.y * h), v(p2.x - m2.x * h, p2.y - m2.y * h), p2]);
+    }
+    out
+}
+
 /// Even-odd point in ring test.
 pub fn inside(p: Vec2, ring: &[Vec2]) -> bool {
     let mut odd = false;
@@ -319,6 +366,72 @@ mod tests {
         let (p0, p1) = (at(e.t0), at(e.t1));
         // Old t = 0 → (2, 0), old t = π/2 → (0, −1); the model's arc runs from (0, −1) to (2, 0).
         assert!(dist(p0, v(0.0, -1.0)) < 1e-12 && dist(p1, v(2.0, 0.0)) < 1e-12, "{p0:?} {p1:?}");
+    }
+
+    /// spline.ts's evaluation, line for line.
+    fn barry_goldman(p: [Vec2; 4], t: f64) -> Vec2 {
+        let knot = |a: Vec2, b: Vec2| {
+            let d = dist(a, b).sqrt();
+            if d > 0.0 { d } else { 1e-6 }
+        };
+        let t0 = 0.0;
+        let t1 = t0 + knot(p[0], p[1]);
+        let t2 = t1 + knot(p[1], p[2]);
+        let t3 = t2 + knot(p[2], p[3]);
+        let lerp = |a: Vec2, b: Vec2, ta: f64, tb: f64| {
+            let d = tb - ta;
+            let (u, w) = ((tb - t1 - t * (t2 - t1)) / d, (t1 + t * (t2 - t1) - ta) / d);
+            v(a.x * u + b.x * w, a.y * u + b.y * w)
+        };
+        let (a1, a2, a3) = (lerp(p[0], p[1], t0, t1), lerp(p[1], p[2], t1, t2), lerp(p[2], p[3], t2, t3));
+        let (b1, b2) = (lerp(a1, a2, t0, t2), lerp(a2, a3, t1, t3));
+        lerp(b1, b2, t1, t2)
+    }
+
+    fn bezier(b: &[Vec2; 4], s: f64) -> Vec2 {
+        let r = 1.0 - s;
+        let (c0, c1, c2, c3) = (r * r * r, 3.0 * r * r * s, 3.0 * r * s * s, s * s * s);
+        v(b[0].x * c0 + b[1].x * c1 + b[2].x * c2 + b[3].x * c3, b[0].y * c0 + b[1].y * c1 + b[2].y * c2 + b[3].y * c3)
+    }
+
+    #[test]
+    fn catmull_rom_spans_are_the_apps_curve() {
+        // Uneven spacing, a sharp turn and TM-sized coordinates.
+        let base = v(452000.0, 4412000.0);
+        let local = [v(0.0, 0.0), v(10.0, 2.0), v(12.0, 15.0), v(40.0, 16.0), v(41.0, 0.0)];
+        let pts: Vec<Vec2> = local.iter().map(|p| v(base.x + p.x, base.y + p.y)).collect();
+        for closed in [false, true] {
+            let spans = catmull_rom_beziers(&pts, closed);
+            assert_eq!(spans.len(), if closed { 5 } else { 4 });
+            let n = pts.len() as isize;
+            let at = |i: isize| -> Vec2 {
+                if closed {
+                    pts[i.rem_euclid(n) as usize]
+                } else if i < 0 {
+                    v(2.0 * pts[0].x - pts[1].x, 2.0 * pts[0].y - pts[1].y)
+                } else if i >= n {
+                    v(2.0 * pts[4].x - pts[3].x, 2.0 * pts[4].y - pts[3].y)
+                } else {
+                    pts[i as usize]
+                }
+            };
+            for (i, b) in spans.iter().enumerate() {
+                let i = i as isize;
+                // The spans join at the points.
+                assert_eq!((b[0], b[3]), (at(i), at(i + 1)));
+                for k in 0..=8 {
+                    let s = k as f64 / 8.0;
+                    let want = barry_goldman([at(i - 1), at(i), at(i + 1), at(i + 2)], s);
+                    let got = bezier(b, s);
+                    assert!(dist(want, got) < 1e-8, "span {i} s {s}: {want:?} {got:?}");
+                }
+            }
+        }
+        // Two points: one straight span.
+        let two = catmull_rom_beziers(&pts[..2], false);
+        assert_eq!(two.len(), 1);
+        assert!(dist(bezier(&two[0], 0.5), v(base.x + 5.0, base.y + 1.0)) < 1e-9);
+        assert!(catmull_rom_beziers(&pts[..1], false).is_empty());
     }
 
     #[test]

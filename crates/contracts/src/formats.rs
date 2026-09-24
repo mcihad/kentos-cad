@@ -254,6 +254,41 @@ pub struct DxfReadOptions {
     pub max_entities: u32,
 }
 
+/// A layer as the DXF writer receives it (DXF layers are flat; the writer
+/// makes the names unique and valid, and reports what it changed).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DxfWriteLayer {
+    /// What the objects' `layerId` holds.
+    pub id: String,
+    pub name: String,
+    /// Names of the groups above the layer, outermost first (they tell apart layers of the same name).
+    pub path: Vec<String>,
+    /// "#RRGGBB" or a theme token ("ink" is DXF colour 7).
+    pub color: String,
+    /// Visible and locked as the drawing shows them (inherited from the groups).
+    pub visible: bool,
+    pub locked: bool,
+    pub line_type: LineType,
+    /// Plot line weight in mm.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub line_weight: Option<f64>,
+}
+
+/// What `file.export.dxf` writes: objects (dimensions already exploded into
+/// lines and texts: their value text is the app's), their layers and the
+/// drawing scale.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct DxfWriteInput {
+    pub entities: Vec<Entity>,
+    pub layers: Vec<DxfWriteLayer>,
+    /// Denominator of the drawing scale (1000 for 1:1000): line type patterns are sized for paper at this scale.
+    pub scale: f64,
+}
+
 /// What a writer did besides writing: counts, and anything it could not write as it was.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, TS)]
 #[ts(export)]
