@@ -59,6 +59,29 @@ pub fn primary(theme: &Theme, status: Status) -> Style {
     style(background, text, border::rounded(RADIUS))
 }
 
+/// Yıkıcı birincil eylem (ör. "Tümünü sil"): kırmızı zemin.
+pub fn danger(theme: &Theme, status: Status) -> Style {
+    let t = Tokens::of(theme);
+
+    let (background, text) = match status {
+        Status::Active => (t.danger, t.on_accent),
+        Status::Hovered | Status::Pressed => (lighten(t.danger, 0.12), t.on_accent),
+        Status::Disabled => (t.danger.scale_alpha(0.3), t.on_accent.scale_alpha(0.5)),
+    };
+
+    style(background, text, border::rounded(RADIUS))
+}
+
+/// Rengi beyaza doğru `amount` kadar açar.
+fn lighten(color: Color, amount: f32) -> Color {
+    Color {
+        r: color.r + (1.0 - color.r) * amount,
+        g: color.g + (1.0 - color.g) * amount,
+        b: color.b + (1.0 - color.b) * amount,
+        a: color.a,
+    }
+}
+
 /// İkincil eylem: kenarlı, yüzey renginde düğme.
 pub fn secondary(theme: &Theme, status: Status) -> Style {
     let t = Tokens::of(theme);

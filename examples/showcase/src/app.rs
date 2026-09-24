@@ -24,8 +24,8 @@ use crate::gallery::{Demo, Gallery};
 use crate::jobs::{JobKind, Jobs, Outcome};
 use crate::layer_tree::{LayerTree, NodeId};
 use crate::message::{
-    AppCommand, CoordinateFormat, DockPanel, Keyword, Message, Pane, Pending, QueryPurpose,
-    RECENT_DRAWINGS, RibbonTab, Setting, SizeStep,
+    AppCommand, Confirmation, CoordinateFormat, DockPanel, Keyword, Message, Pane, Pending,
+    QueryPurpose, RECENT_DRAWINGS, RibbonTab, Setting, SizeStep,
 };
 use crate::sample;
 use crate::settings::{DockLayout, Settings};
@@ -135,6 +135,10 @@ pub struct Showcase {
     deleted: Vec<Feature>,
     /// Arka plandaki işler: dışa aktarma, dizin, içe aktarma.
     pub(crate) jobs: Jobs,
+    /// Onay bekleyen iş; onay kutusu açıktır.
+    pub(crate) confirm: Option<Confirmation>,
+    /// Örnek verinin salt okunur olduğunu anlatan şerit görünür mü.
+    pub(crate) read_only_notice: bool,
 }
 
 /// Koordinata git penceresinin alanları.
@@ -270,6 +274,8 @@ impl Showcase {
             toasts: Toasts::new(),
             deleted: Vec::new(),
             jobs: Jobs::default(),
+            confirm: None,
+            read_only_notice: false,
         }
     }
 
@@ -379,7 +385,15 @@ impl Showcase {
                 self.activate_layer(index);
                 self.table_open = true;
             }
-            Message::ClearDrawings => self.clear_drawings(),
+            Message::ClearDrawings => {
+                if self
+                    .layers
+                    .get(DRAWING_LAYER)
+                    .is_some_and(|layer| !layer.features.is_empty())
+                {
+                    self.confirm = Some(Confirmation::ClearDrawings);
+                }
+            }
 
             Message::SelectFeature(reference, mode) => {
                 self.selection.apply(mode, [reference]);
@@ -586,7 +600,11 @@ impl Showcase {
             }
             Message::CommandTyped(text) => {
                 // Pencere ya da menü açıkken yazılanlar komut kutusuna gitmez.
-                if self.app_menu_open || self.query.is_some() || self.help_open {
+                if self.app_menu_open
+                    || self.query.is_some()
+                    || self.help_open
+                    || self.confirm.is_some()
+                {
                     return Task::none();
                 }
 
@@ -714,7 +732,31 @@ impl Showcase {
             Message::Tick => {
                 self.cube_rotation = (self.cube_rotation + CUBE_SPEED) % std::f32::consts::TAU;
             }
-            Message::Quit => return window::latest().and_then(window::close),
+            Message::Quit => {
+                // Kaydedilmemiş çizim varken çıkış onay ister.
+                if self
+                    .layers
+                    .get(DRAWING_LAYER)
+                    .is_some_and(|layer| !layer.features.is_empty())
+                {
+                    self.app_menu_open = false;
+                    self.confirm = Some(Confirmation::Quit);
+                } else {
+                    return window::latest().and_then(window::close);
+                }
+            }
+            Message::ConfirmAccepted => match self.confirm.take() {
+                Some(Confirmation::ClearDrawings) => self.clear_drawings(),
+                Some(Confirmation::Quit) => return window::latest().and_then(window::close),
+                None => {}
+            },
+            Message::ConfirmCancelled => self.confirm = None,
+            Message::EnterPressed => {
+                if self.confirm.is_some() {
+                    return self.update(Message::ConfirmAccepted);
+                }
+            }
+            Message::BannerDismissed => self.read_only_notice = false,
         }
 
         Task::none()
@@ -1083,11 +1125,9 @@ impl Showcase {
             .partition(|item| item.layer == DRAWING_LAYER);
 
         if drawings.is_empty() {
+            // Süren bir durum: bildirim değil, haritanın üstünde şerit.
             self.log("Yalnızca Çizimler katmanındaki öğeler silinebilir.");
-            self.toasts.push(
-                Toast::warning("Örnek veri silinemez")
-                    .body("Yalnızca Çizimler katmanındaki öğeler silinebilir."),
-            );
+            self.read_only_notice = true;
             return;
         }
 
@@ -1618,6 +1658,10 @@ impl Showcase {
     /// Esc: önce açık menüyü, pencereyi ya da haritadan seçimi kapatır;
     /// sonra yarım çizimi bitirir; en son ölçümü ve seçimi temizler.
     fn escape(&mut self) {
+        if self.confirm.take().is_some() {
+            return;
+        }
+
         if let Some(pending) = self.pending.take() {
             let name = match pending {
                 Pending::Typeface => command::name(Command::Typeface),
@@ -2014,6 +2058,7 @@ fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
 
     match key {
         Key::Named(Named::Escape) => Some(Message::Escape),
+        Key::Named(Named::Enter) => Some(Message::EnterPressed),
         Key::Named(Named::Delete) => Some(Message::DeleteSelection),
         Key::Named(Named::F1) => Some(Message::HelpToggled),
         Key::Named(Named::F2) => Some(Message::CommandHistoryToggled),
@@ -2210,14 +2255,47 @@ mod tests {
         assert_eq!(ids, [ObjectId(1), ObjectId(2)]);
         assert_eq!(app.selection.len(), 2);
 
-        // Örnek veri silinmez; uyarı bildirimi çıkar.
+        // Örnek veri silinmez; haritanın üstünde salt okunur şeridi açılır.
         let _ = app.update(Message::SelectFeature(
             FeatureRef::new(1, ObjectId(1)),
             SelectionMode::New,
         ));
         let _ = app.update(Message::DeleteSelection);
-        let (_, toast, _) = app.toasts.iter().last().expect("bildirim yok");
-        assert_eq!(toast.severity(), kentos_rc::widget::Severity::Warning);
+        assert!(app.read_only_notice);
+
+        let _ = app.update(Message::BannerDismissed);
+        assert!(!app.read_only_notice);
+    }
+
+    #[test]
+    fn clearing_drawings_and_quitting_ask_for_confirmation() {
+        let mut app = Showcase::new();
+
+        // Çizim yokken sorulacak bir şey yok.
+        let _ = app.update(Message::ClearDrawings);
+        assert_eq!(app.confirm, None);
+
+        submit(&mut app, "nokta");
+        picked(&mut app, 32.85, 39.93);
+
+        let _ = app.update(Message::ClearDrawings);
+        assert_eq!(app.confirm, Some(Confirmation::ClearDrawings));
+
+        // Esc vazgeçer; çizim yerinde kalır.
+        let _ = app.update(Message::Escape);
+        assert_eq!(app.confirm, None);
+        assert_eq!(app.layers[DRAWING_LAYER].features.len(), 1);
+
+        // Enter onaylar.
+        let _ = app.update(Message::ClearDrawings);
+        let _ = app.update(Message::EnterPressed);
+        assert_eq!(app.confirm, None);
+        assert!(app.layers[DRAWING_LAYER].features.is_empty());
+
+        // Kaydedilmemiş çizim varken çıkış onay ister.
+        picked(&mut app, 35.48, 38.72);
+        let _ = app.update(Message::Quit);
+        assert_eq!(app.confirm, Some(Confirmation::Quit));
     }
 
     #[test]

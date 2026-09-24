@@ -169,6 +169,16 @@ pub enum Message {
     /// Uzamsal dizini yeniden oluşturur.
     IndexRequested,
 
+    // Onay ve uyarı şeridi
+    /// Açık onay kutusunu onaylar (Enter ya da onay düğmesi).
+    ConfirmAccepted,
+    /// Açık onay kutusundan vazgeçer.
+    ConfirmCancelled,
+    /// Enter: bir metin kutusu kullanmadıysa açık onay kutusunu onaylar.
+    EnterPressed,
+    /// Salt okunur veri şeridini kapatır.
+    BannerDismissed,
+
     // Yan panel
     /// Yan panelin yeni genişliği (12 piksellik gövde metnine göre).
     DockResized(f32),
@@ -255,6 +265,15 @@ impl Pane {
             Pane::Tasks => Placement::bottom_left(gap, gap),
         }
     }
+}
+
+/// Onay bekleyen iş.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Confirmation {
+    /// Çizimler katmanındaki bütün öğeleri silmek.
+    ClearDrawings,
+    /// Çizimler kaydedilmeden çıkmak.
+    Quit,
 }
 
 /// Yazı boyutunun adımı (Ctrl +, Ctrl −, Ctrl 0).

@@ -1,12 +1,15 @@
-//! Geri bildirim sayfası: bildirimler, ilerleme ve görevler.
+//! Geri bildirim sayfası: bildirimler, ilerleme ve görevler, onay kutusu,
+//! uyarı şeridi, boş ve hata durumları.
 
 use iced::widget::{Row, button, column, container, row};
 use iced::{Center, Element, Fill};
 
+use kentos_rc::icon::Icon;
 use kentos_rc::label;
 use kentos_rc::style;
 use kentos_rc::theme::typography;
 use kentos_rc::widget::progress::{self, State, Task, TaskList, Tint};
+use kentos_rc::widget::{Banner, Confirm, EmptyState};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
@@ -133,8 +136,140 @@ impl Showcase {
                  .push(Task::new(\"DXF olarak dışa aktar\").state(State::Failed).on_retry(Message::Retry(id)))",
                 ),
             ),
+            entry(
+                "Onay kutusu",
+                "kentos_rc::widget::Confirm",
+                "Başlık soru olarak yazılır; onay düğmesi işin adını taşır (\"Tamam\" değil, \
+                 \"Tümünü sil\"). Yıkıcı işte onay düğmesi kırmızıdır; geri alınabiliyorsa bu \
+                 söylenir. overlay::modal ile ortalanır; Enter onaylar, Esc vazgeçer. Vitrinde \
+                 Çizimler katmanının menüsündeki \"Çizimleri temizle\" ve çizim varken çıkış \
+                 onay ister.",
+                confirm_sample(),
+                Some(
+                    "overlay::modal(\n    \
+                     Confirm::new(\"Bütün çizimler silinsin mi?\", Message::Clear, Message::Cancel)\n        \
+                     .message(\"Çizimler katmanındaki 5 öğe silinecek.\")\n        \
+                     .confirm(\"Tümünü sil\")\n        \
+                     .destructive(),\n    \
+                     Message::Cancel,\n)",
+                ),
+            ),
+            entry(
+                "Uyarı şeridi",
+                "kentos_rc::widget::Banner",
+                "Bir alanın üstünde süren bir durumu anlatır: olay değil, hâl. Bildirimden farkı \
+                 kapatılana ya da durum değişene kadar yerinde kalmasıdır. Vitrinde örnek veri \
+                 silinmeye çalışılınca haritanın üstünde salt okunur şeridi açılır.",
+                banners(),
+                Some(
+                    "Banner::warning(\"Örnek veri katmanları salt okunur.\")\n    \
+                     .action(\"Çizimlere geç\", Message::ActivateDrawings)\n    \
+                     .on_dismiss(Message::BannerClosed)",
+                ),
+            ),
+            entry(
+                "Boş ve hata durumları",
+                "kentos_rc::widget::EmptyState",
+                "İçeriği olmayan alanın ortasında ne olduğu ve ne yapılabileceği; hata durumunda \
+                 neyin yapılamadığı ve nasıl düzeltileceği. Hata özür dilemez, neyin olduğunu \
+                 açıkça söyler. Vitrinde bütün katmanlar gizliyken harita ve satırı olmayan \
+                 öznitelik tablosu (filtre, arama, boş katman) böyle görünür.",
+                empty_states(),
+                Some(
+                    "EmptyState::new(Icon::Layers, \"Haritada görünür katman yok\")\n    \
+                     .description(\"Bütün katmanlar gizli.\")\n    \
+                     .primary(\"Tümünü göster\", Message::ShowAll)\n\n\
+                     EmptyState::error(\"parseller.csv okunamadı\")\n    \
+                     .description(reason)\n    \
+                     .primary(\"Yeniden dene\", Message::Retry)",
+                ),
+            ),
         ]
     }
+}
+
+/// Onay kutusu örneği; bir kaplama olmadan, yerinde.
+fn confirm_sample<'a>() -> Element<'a, Message> {
+    Confirm::new(
+        "Bütün çizimler silinsin mi?",
+        pressed("Tümünü sil"),
+        pressed("Vazgeç"),
+    )
+    .message("Çizimler katmanındaki 5 öğe silinecek.")
+    .detail("Silinen çizimler bildirimdeki Geri al ile geri getirilebilir.")
+    .confirm("Tümünü sil")
+    .destructive()
+    .into()
+}
+
+/// Üç önem düzeyinde uyarı şeridi.
+fn banners<'a>() -> Element<'a, Message> {
+    column![
+        banner(
+            Banner::info(
+                "Bu çizim KentOS CAD 0.1 ile kaydedilmiş; açılırken yeni sürüme yükseltildi."
+            )
+            .on_dismiss(pressed("Kapat")),
+        ),
+        banner(
+            Banner::warning(
+                "Örnek veri katmanları salt okunur: yalnızca Çizimler katmanı düzenlenir."
+            )
+            .action("Çizimlere geç", pressed("Çizimlere geç"))
+            .on_dismiss(pressed("Kapat")),
+        ),
+        banner(
+            Banner::error(
+                "Altlık harita sunucusuna ulaşılamıyor; önbellekteki paftalar gösteriliyor."
+            )
+            .action("Yeniden bağlan", pressed("Yeniden bağlan")),
+        ),
+    ]
+    .spacing(8)
+    .into()
+}
+
+/// Uyarı şeridi örneği: ince kenarlı bir alanın üstünde.
+fn banner<'a>(banner: Banner<'a, Message>) -> Element<'a, Message> {
+    container(column![
+        banner,
+        container(label::caption("…")).padding([10, 12])
+    ])
+    .padding(1)
+    .width(Fill)
+    .style(style::container::bordered)
+    .into()
+}
+
+/// Boş durum ve hata durumu yan yana.
+fn empty_states<'a>() -> Element<'a, Message> {
+    let stage = |state: EmptyState<'a, Message>| {
+        container(state)
+            .width(Fill)
+            .height(typography::scaled(250.0))
+            .style(style::container::field_box)
+    };
+
+    row![
+        stage(
+            EmptyState::new(Icon::Search, "\"Kadıköy\" için kayıt yok")
+                .description(
+                    "Arama bütün alanlarda, büyük küçük harf ve Türkçe karakter ayırmadan yapılır.",
+                )
+                .primary("Aramayı temizle", pressed("Aramayı temizle")),
+        ),
+        stage(
+            EmptyState::error("parseller.csv okunamadı")
+                .description(
+                    "12. satırda 5 sütun bekleniyordu, 4 var. Dosyayı düzeltip yeniden deneyin \
+                     ya da başka bir dosya seçin.",
+                )
+                .primary("Yeniden dene", pressed("Yeniden dene"))
+                .secondary("Başka dosya", pressed("Başka dosya")),
+        ),
+    ]
+    .spacing(12)
+    .into()
 }
 
 /// Ad, çubuk ve değerden oluşan örnek satırı.

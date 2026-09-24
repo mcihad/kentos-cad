@@ -11,11 +11,11 @@ use iced::{Center, Element};
 use kentos_rc::attribute::{FieldKind, text};
 use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
-use kentos_rc::spatial::{Feature, Layer};
+use kentos_rc::spatial::{Feature, Layer, Tool};
 use kentos_rc::style;
 use kentos_rc::theme::typography;
 use kentos_rc::widget::table::{self, Table};
-use kentos_rc::widget::{Panel, Tip, Toolbar, tip};
+use kentos_rc::widget::{EmptyState, Panel, Tip, Toolbar, tip};
 
 use super::LayerChoice;
 use crate::app::Showcase;
@@ -83,14 +83,19 @@ impl Showcase {
             )
         });
 
+        // Satır yokken tablonun yerinde nedeni ve yapılabilecek iş yazar.
         // Tablo model alanıyla aynı genişliktedir; dar tabloların başlığı ve
         // satır vurgusu da uçtan uca uzanır.
-        let table = Table::new(headers)
-            .extend(body)
-            .horizontal()
-            .min_width(self.viewport.size.width)
-            .height(iced::Fill)
-            .empty(empty_message(view, index == crate::app::DRAWING_LAYER));
+        let table: Element<'_, Message> = if rows.is_empty() {
+            empty_table(layer, view, index == crate::app::DRAWING_LAYER)
+        } else {
+            Table::new(headers)
+                .extend(body)
+                .horizontal()
+                .min_width(self.viewport.size.width)
+                .height(iced::Fill)
+                .into()
+        };
 
         let close = tip(
             button(icon(Icon::Close).size(12.0))
@@ -228,16 +233,43 @@ impl Showcase {
 }
 
 /// Satır yokken nedeni ve ne yapılabileceği.
-fn empty_message(view: &TableView, drawings: bool) -> &'static str {
-    if !view.filter.is_empty() || !view.search.trim().is_empty() {
-        "Filtreye ya da aramaya uyan kayıt yok."
+fn empty_table<'a>(layer: &'a Layer, view: &'a TableView, drawings: bool) -> Element<'a, Message> {
+    let search = view.search.trim();
+
+    let state = if !view.filter.is_empty() {
+        EmptyState::new(Icon::Filter, "Filtreye uyan kayıt yok")
+            .description(format!(
+                "{}: {}",
+                layer.name,
+                shorten(&view.filter.describe(&layer.schema), FILTER_SUMMARY)
+            ))
+            .primary("Filtreyi kaldır", Message::FilterCleared)
+            .secondary(
+                "Filtreyi düzenle",
+                Message::QueryOpened(QueryPurpose::Filter),
+            )
+    } else if !search.is_empty() {
+        EmptyState::new(Icon::Search, format!("\"{search}\" için kayıt yok"))
+            .description(
+                "Arama bütün alanlarda, büyük küçük harf ve Türkçe karakter ayırmadan yapılır.",
+            )
+            .primary("Aramayı temizle", Message::TableSearch(String::new()))
     } else if view.selected_only {
-        "Bu katmanda seçili kayıt yok."
+        EmptyState::new(Icon::Select, "Bu katmanda seçili kayıt yok")
+            .description("Haritada ya da tabloda kayıt seçin ya da bütün kayıtları gösterin.")
+            .primary("Bütün kayıtlar", Message::TableSelectedOnly)
     } else if drawings {
-        "Henüz çizim yok. Şeritteki çizim araçlarıyla ekleyebilirsiniz."
+        EmptyState::new(Icon::Polyline, "Henüz çizim yok")
+            .description(
+                "Şeritteki çizim araçlarıyla ya da komut kutusundan (CIZGI, ALAN) çizin; \
+                 çizimler bu tabloya eklenir.",
+            )
+            .primary("Çizgi çiz", Message::ToolSelected(Tool::Line))
     } else {
-        "Bu katmanda kayıt yok."
-    }
+        EmptyState::new(Icon::Table, "Bu katmanda kayıt yok")
+    };
+
+    state.into()
 }
 
 /// Uzun metni sonuna üç nokta koyarak kısaltır.

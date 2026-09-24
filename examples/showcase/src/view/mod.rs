@@ -39,12 +39,13 @@ use kentos_rc::style;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::widget::command_line::Prompt;
 use kentos_rc::widget::{
-    CommandLine, ContextMenu, Floating, NavigationBar, Toaster, horizontal_divider,
+    Banner, CommandLine, Confirm, ContextMenu, EmptyState, Floating, NavigationBar, Toaster,
+    horizontal_divider, overlay,
 };
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
 use crate::command::{self, Command};
-use crate::message::{Keyword, Message, Pending, RibbonTab};
+use crate::message::{Confirmation, Keyword, Message, Pending, RibbonTab};
 
 impl Showcase {
     pub fn view(&self) -> Element<'_, Message> {
@@ -53,7 +54,21 @@ impl Showcase {
                 .height(Fill)
                 .into()
         } else {
-            let mut drawing = Column::new().push(self.model_space());
+            let mut drawing = Column::new();
+
+            // Süren durumlar haritanın üstünde şerit olarak durur.
+            if self.read_only_notice {
+                drawing = drawing.push(
+                    Banner::warning(
+                        "Örnek veri katmanları salt okunur: yalnızca Çizimler katmanındaki \
+                         öğeler silinir ve düzenlenir.",
+                    )
+                    .action("Çizimlere geç", Message::LayerActivated(DRAWING_LAYER))
+                    .on_dismiss(Message::BannerDismissed),
+                );
+            }
+
+            drawing = drawing.push(self.model_space());
 
             if self.table_open {
                 drawing = drawing
@@ -76,7 +91,9 @@ impl Showcase {
             .height(Fill)
             .style(style::container::window);
 
-        let overlay = if self.app_menu_open {
+        let overlay = if let Some(confirmation) = self.confirm {
+            Some(self.confirmation(confirmation))
+        } else if self.app_menu_open {
             Some(self.app_menu())
         } else if let Some(dialog) = &self.query {
             Some(self.query_dialog(dialog))
@@ -126,6 +143,23 @@ impl Showcase {
         // ölçüm araçlarında model alanı sağ tıkı kendisi kullanır.
         let map = ContextMenu::new(model_space, move |position| self.map_menu(position));
 
+        // Görünür katman yokken harita boştur; ortada ne olduğu ve nasıl
+        // düzeltileceği yazar.
+        let map: Element<'_, Message> = if self.layers.iter().any(|layer| layer.visible) {
+            map.into()
+        } else {
+            stack![
+                map,
+                EmptyState::new(Icon::Layers, "Haritada görünür katman yok")
+                    .description(
+                        "Bütün katmanlar gizli. Katman ağacındaki kutularla tek tek ya da \
+                         buradan hepsini birden gösterin.",
+                    )
+                    .primary("Tümünü göster", Message::ShowAllLayers),
+            ]
+            .into()
+        };
+
         // Kayan araç pencereleri haritanın üstündedir; dışlarında harita
         // çalışmayı sürdürür. Bildirimler pencerelerin de üstünde, sağ alt
         // köşededir.
@@ -140,6 +174,39 @@ impl Showcase {
                 ..iced::Padding::new(8.0)
             })
             .into()
+    }
+
+    /// Onay bekleyen işin onay kutusu; Enter onaylar, Esc vazgeçer.
+    fn confirmation(&self, confirmation: Confirmation) -> Element<'_, Message> {
+        let drawings = self
+            .layers
+            .get(DRAWING_LAYER)
+            .map_or(0, |layer| layer.features.len());
+
+        let dialog = match confirmation {
+            Confirmation::ClearDrawings => Confirm::new(
+                "Bütün çizimler silinsin mi?",
+                Message::ConfirmAccepted,
+                Message::ConfirmCancelled,
+            )
+            .message(format!("Çizimler katmanındaki {drawings} öğe silinecek."))
+            .detail("Silinen çizimler bildirimdeki Geri al ile geri getirilebilir.")
+            .confirm("Tümünü sil")
+            .destructive(),
+            Confirmation::Quit => Confirm::new(
+                "Çizimler kaydedilmeden çıkılsın mı?",
+                Message::ConfirmAccepted,
+                Message::ConfirmCancelled,
+            )
+            .message(format!(
+                "Çizimler katmanında {drawings} öğe var. Kaydetme bu sürümde yok; çıkınca \
+                 çizimler kaybolur."
+            ))
+            .confirm("Kaydetmeden çık")
+            .destructive(),
+        };
+
+        overlay::modal(dialog, Message::ConfirmCancelled)
     }
 
     /// İçeriğin sağ alt köşesinde bildirimler.

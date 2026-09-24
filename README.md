@@ -32,6 +32,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
 │   ├── toast.rs         bildirimler: önem düzeyi, eylem, üst üste dizilme, süre
 │   ├── progress.rs      ilerleme çubuğu, dönen gösterge, iptal edilebilen görev listesi
+│   ├── notice.rs        uyarı şeridi, boş ve hata durumları
 │   ├── severity.rs      geri bildirimin önem düzeyleri (bilgi, başarı, uyarı, hata)
 │   ├── sash.rs          boyutlandırma tutamağı (sürükle, çift tıkla sıfırla)
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
@@ -46,7 +47,8 @@ src/                     kentos-rc kütüphanesi
 │   ├── property_grid.rs salt okunur özellik ızgarası
 │   ├── command_line.rs  komut kutusu: geçmiş, istem, otomatik tamamlama
 │   ├── status_bar.rs    durum çubuğu: menülü göstergeler ve anahtarlar
-│   ├── navigation_bar.rs, dialog.rs, overlay.rs, tip.rs
+│   ├── dialog.rs        iletişim kutusu, onay kutusu, kısayol listesi
+│   ├── navigation_bar.rs, overlay.rs, tip.rs
 └── spatial/             CBS ve CAD (`spatial` özelliği, varsayılan açık)
     ├── projection.rs    LonLat, Bounds, Viewport (Web Mercator)
     ├── feature.rs       Geometry, Feature, Layer, Sublayer, FeatureRef
@@ -176,9 +178,19 @@ Message::Window(event) => self.windows.update(event),
   durumlarıyla sıralar (sürüyor, sırada, bitti, başarısız, iptal edildi):
   süren ve sıradaki iş durdurulur, başarısız iş yeniden denenir, biten iş
   listeden kaldırılır.
+- **Onay kutusu.** Başlık soru olarak yazılır, onay düğmesi işin adını taşır
+  ("Tümünü sil"); yıkıcı işte kırmızıdır. Enter onaylar, Esc vazgeçer.
+- **Uyarı şeridi.** Bir alanın üstünde süren bir durumu anlatır; bildirimden
+  farkı kapatılana ya da durum değişene kadar yerinde kalmasıdır.
+- **Boş ve hata durumları.** İçeriği olmayan alanın ortasında ne olduğu ve ne
+  yapılabileceği; hata durumunda neyin yapılamadığı ve nasıl düzeltileceği.
 - **Vitrinde.** Çizim silmek geri alınabilir: bildirimdeki "Geri al" çizimleri
-  numaralarıyla geri koyar. Örnek veri silinmeye çalışılınca uyarı, ayarlar
-  yazılamayınca kalıcı hata bildirimi çıkar; kopyalamalar bilgi bildirir.
+  numaralarıyla geri koyar. Örnek veri silinmeye çalışılınca haritanın
+  üstünde salt okunur şeridi açılır; ayarlar yazılamayınca kalıcı hata
+  bildirimi çıkar; kopyalamalar bilgi bildirir. "Çizimleri temizle" ve çizim
+  varken çıkış onay ister. Bütün katmanlar gizliyken harita, satırı olmayan
+  öznitelik tablosu (filtre, arama, seçili yok, boş katman) nedenini ve
+  düzeltecek düğmeyi gösterir.
   Dışa aktarma (uygulama menüsü ya da Yönet sekmesi) ve dizin oluşturma arka
   planda sürer: durum çubuğunda dönen gösterge ve yüzde görünür, tıklanınca
   Görevler penceresi açılır; biten iş bildirilir. DXF'e dışa aktarma ilk
@@ -335,6 +347,8 @@ cargo run -- snapshot panel.png --senaryo secim --surukle 1077,400,877,400 --tik
 cargo run -- snapshot pencereler.png --senaryo pencereler --bas 400,158 --imlec 406,163
 cargo run -- snapshot bildirim.png --senaryo bildirimler --tikla 903,463
 cargo run -- snapshot gorevler.png --senaryo gorevler
+cargo run -- snapshot onay.png --senaryo onay
+cargo run -- snapshot bos.png --senaryo bos-durumlar
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 

@@ -76,7 +76,8 @@ impl Page {
                  kutuları."
             }
             Page::Feedback => {
-                "Bildirimler, ilerleme çubuğu, dönen gösterge ve iptal edilebilen görev listesi."
+                "Bildirimler, ilerleme ve görevler, onay kutusu, uyarı şeridi, boş ve hata \
+                 durumları."
             }
             Page::Attributes => {
                 "Nesne inceleyici, öznitelik tablosu, sorgu oluşturucu ve alan türleri."

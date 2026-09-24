@@ -30,7 +30,7 @@ use crate::message::{Message, Pane, QueryPurpose, RibbonTab};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 14] = [
+const SCENARIOS: [(&str, &str); 16] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -70,6 +70,14 @@ const SCENARIOS: [(&str, &str); 14] = [
     (
         "gorevler",
         "görevler penceresi: süren, sıradaki, biten, başarısız ve iptal edilen işler",
+    ),
+    (
+        "onay",
+        "çizimleri temizle: onay kutusu; Enter onaylar, Esc vazgeçer",
+    ),
+    (
+        "bos-durumlar",
+        "katmanlar gizli, örnek veri silinmeye çalışılmış: boş harita, salt okunur şeridi, boş tablo",
     ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
@@ -391,6 +399,29 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
 
             app.toasts.clear();
             return Ok(());
+        }
+        "onay" => {
+            send(Message::ToolSelected(Tool::Point));
+
+            for point in [
+                LonLat::new(30.52, 39.78),
+                LonLat::new(34.63, 36.8),
+                LonLat::new(38.3, 38.35),
+            ] {
+                send(Message::ModelSpace(ModelSpace::PointPicked(point)));
+            }
+
+            send(Message::ToolSelected(Tool::Select));
+            send(Message::ClearDrawings);
+        }
+        "bos-durumlar" => {
+            send(Message::SelectFeature(
+                FeatureRef::new(1, ObjectId(2)),
+                SelectionMode::New,
+            ));
+            send(Message::DeleteSelection);
+            send(Message::HideAllLayers);
+            send(Message::LayerActivated(DRAWING_LAYER));
         }
         "galeri" => {
             let page = match page {
