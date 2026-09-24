@@ -121,6 +121,12 @@ impl Tokens {
         }
     }
 
+    /// Yakalama işaretleri ve kılavuzları: model alanında nesne yakalaması,
+    /// kayan pencerelerde kenar yakalaması aynı sarıyla çizilir.
+    pub fn snap(&self) -> Color {
+        self.warning
+    }
+
     /// Devre dışı öğelerin metni ve ikonları.
     pub fn disabled(&self) -> Color {
         self.muted.scale_alpha(0.55)

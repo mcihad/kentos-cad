@@ -29,6 +29,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── ribbon/          şerit: sekmeler, gruplar, düğmeler, alanlar
 │   ├── app_menu.rs      uygulama menüsü (Office "Dosya" menüsü gibi)
 │   ├── dock.rs          yan panel yuvası: açılıp kapanan paneller, sürüklenen kenar
+│   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
 │   ├── sash.rs          boyutlandırma tutamağı (sürükle, çift tıkla sıfırla)
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
 │   ├── tree_view.rs     ağaç tablo: sınırsız derinlik, üç durumlu onay kutusu
@@ -109,6 +110,52 @@ Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
   kategoriler daraltılır. Değişen alanlar işaretlenir ve ilk değerine
   döndürülür. Alttaki yardım bölümü alanın türünü, kısıtlarını ve açıklamasını
   gösterir.
+
+## Kayan araç pencereleri
+
+Ölçüm, koordinata git ve katman stili harita üstünde kayan küçük
+pencerelerdir; arkadaki işi kilitlemezler. Ölçüm sürerken haritaya tıklanır,
+stil değişiklikleri haritaya anında yansır.
+
+- **Sürükle ve yakala.** Pencere başlığından sürüklenir. Alanın kenarlarına
+  ve öbür pencerelere yaklaşınca yakalanır: kenarlardan 8 piksel içeride durur,
+  komşusuyla hizalanır ya da 8 piksel arayla yanına oturur. Yakalanan kenarı,
+  model alanındaki nesne yakalamasının sarısıyla noktalı bir kılavuz gösterir.
+  Ctrl basılıyken yakalama olmaz.
+- **Öne gelme.** Tıklanan pencere öne gelir; öndeki pencerenin başlığının
+  üstünde, şeritteki seçili sekmede olduğu gibi vurgu çizgisi bulunur.
+- **Daraltma.** Başlığa çift tıklamak ya da ˄ düğmesi pencereyi başlığına
+  daraltır; başlık yerinde kalır. Başlıktaki bilgi (ölçümde toplam uzunluk)
+  daraltılmışken de okunur.
+- **Boyutlandırma.** İzin verilen pencereler kenarlarından ve köşelerinden
+  boyutlandırılır; sağ alt köşedeki noktalar bunu belli eder. Yalnızca yatay
+  kenar sürüklenirse yükseklik içeriğe göre kalır.
+- **Kenara tutunma.** Konum pencerenin yakın olduğu kenarlara göre saklanır:
+  sağ alta bırakılan pencere, yan panel genişleyince ya da tablo açılınca sağ
+  alt köşeyle birlikte kayar.
+- **Vitrinde.** Ölç aracı ölçüm penceresini açar; pencereyi kapatmak araçtan
+  çıkar. Koordinata git (`GIT`) enlem ve boylamı doğrular, görünümü ortalar ya
+  da süren çizime nokta ekler. Katman stili (`STIL`, katman menüsünde "Stil…")
+  rengi, opaklığı ve çizgi kalınlığını değiştirir. Pencereler Görünüm
+  sekmesindeki Pencereler grubundan açılıp kapanır.
+
+```rust
+use kentos_rc::widget::floating::{self, Floating, Placement, ToolWindow, Windows};
+
+// Durum: açık pencereler, konumları ve sıraları.
+self.windows.open(Pane::Measure, Placement::top_left(8.0, 8.0));
+
+Floating::new(map, &self.windows, Message::Window, |pane| match pane {
+    Pane::Measure => ToolWindow::new("Ölçüm", self.measure_body())
+        .icon(Icon::Measure)
+        .meta(total)          // daraltılmışken de görünür
+        .resizable(),
+    Pane::GoTo => ToolWindow::new("Koordinata git", self.go_to_body()),
+})
+
+// update: sürükleme, boyutlandırma, öne gelme, daraltma ve kapatma
+Message::Window(event) => self.windows.update(event),
+```
 
 ## Komut kutusu ve durum çubuğu
 
@@ -235,6 +282,7 @@ cargo run -- snapshot oneri.png --senaryo cizim --tikla 800,851 --yaz c
 cargo run -- snapshot olcek.png --senaryo cizim --tikla 1255,884
 cargo run -- snapshot yazi.png --senaryo secim --yazi inter --esaralikli jetbrains-mono --punto 15
 cargo run -- snapshot panel.png --senaryo secim --surukle 1077,400,877,400 --tikla 1140,483
+cargo run -- snapshot pencereler.png --senaryo pencereler --bas 400,158 --imlec 406,163
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 

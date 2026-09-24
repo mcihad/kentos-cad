@@ -8,8 +8,8 @@
 //! ```
 //!
 //! Senaryo uygulamayı mesajlarla hazırlar. Girdiler (`--imlec`, `--tikla`,
-//! `--sag-tikla`, `--tekerlek`, `--tus`, `--yaz`) ardından, verildikleri
-//! sırayla arayüze verilir; konumlar pencere koordinatıdır ve görüntüdeki
+//! `--sag-tikla`, `--tekerlek`, `--surukle`, `--bas`, `--birak`, `--tus`,
+//! `--yaz`) ardından, verildikleri sırayla arayüze verilir; konumlar pencere koordinatıdır ve görüntüdeki
 //! piksellerle aynıdır (ölçek 1 iken).
 
 use iced::keyboard::key::Named;
@@ -26,11 +26,11 @@ use kentos_rc::widget::inspector::Event as Inspector;
 use crate::app::{Showcase, WINDOW_SIZE};
 use crate::gallery::Page;
 use crate::layer_tree::NodeId;
-use crate::message::{Message, QueryPurpose, RibbonTab};
+use crate::message::{Message, Pane, QueryPurpose, RibbonTab};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 11] = [
+const SCENARIOS: [(&str, &str); 12] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -58,6 +58,10 @@ const SCENARIOS: [(&str, &str); 11] = [
     (
         "gecmis",
         "komut geçmişi açık (F2): yazılan komutlar, yanıtlar ve bir hata",
+    ),
+    (
+        "pencereler",
+        "kayan pencereler: ölçüm sürüyor, koordinata git ve katman stili açık",
     ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
@@ -93,6 +97,8 @@ Girdiler (verildikleri sırayla):
   --sag-tikla <x>,<y>   sağ tık
   --tekerlek <x>,<y>,<satır>
   --surukle <x>,<y>,<x>,<y>   sol tuşla sürükler (ör. yan panelin kenarı)
+  --bas <x>,<y>         sol tuşa basar ve tutar; ardından --imlec sürükler
+  --birak <x>,<y>       tutulan sol tuşu bırakır
   --tus <ad>            asagi, yukari, sag, sol, enter, esc, sekme, bosluk
   --yaz <metin>         metin yazar";
 
@@ -171,6 +177,8 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
                     Point::new(parse_number(x2)?, parse_number(y2)?),
                 ));
             }
+            "--bas" => inputs.push(Input::Press(parse_point(&value()?)?)),
+            "--birak" => inputs.push(Input::Release(parse_point(&value()?)?)),
             "--tus" => inputs.push(Input::Key(parse_key(&value()?)?)),
             "--yaz" => inputs.push(Input::Type(value()?)),
             path if !path.starts_with("--") && output.is_none() => output = Some(path.to_owned()),
@@ -314,6 +322,24 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             if scenario == "gecmis" {
                 send(Message::CommandHistoryToggled);
             }
+        }
+        "pencereler" => {
+            send(Message::CommandRun("OLC".to_owned()));
+
+            for point in [
+                LonLat::new(27.14, 38.42),
+                LonLat::new(29.06, 40.19),
+                LonLat::new(32.85, 39.93),
+                LonLat::new(35.48, 38.72),
+            ] {
+                send(Message::ModelSpace(ModelSpace::PointPicked(point)));
+            }
+
+            send(Message::PaneToggled(Pane::GoTo));
+            send(Message::StyleOpened(2));
+            send(Message::ModelSpace(ModelSpace::CursorMoved(LonLat::new(
+                36.2, 37.1,
+            ))));
         }
         "galeri" => {
             let page = match page {

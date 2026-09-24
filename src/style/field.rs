@@ -32,6 +32,25 @@ pub fn input(theme: &Theme, status: text_input::Status) -> text_input::Style {
     }
 }
 
+/// Doğrulanan metin girişi: değer geçersizken kenar kırmızıdır.
+pub fn validated(invalid: bool) -> impl Fn(&Theme, text_input::Status) -> text_input::Style {
+    move |theme, status| {
+        let style = input(theme, status);
+
+        if invalid {
+            text_input::Style {
+                border: Border {
+                    color: Tokens::of(theme).danger,
+                    ..style.border
+                },
+                ..style
+            }
+        } else {
+            style
+        }
+    }
+}
+
 /// Zeminsiz ve kenarsız metin girişi; içinde bulunduğu yüzeyle bütünleşir
 /// (ör. komut satırı).
 pub fn bare_input(theme: &Theme, status: text_input::Status) -> text_input::Style {

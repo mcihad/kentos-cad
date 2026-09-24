@@ -15,7 +15,7 @@ use kentos_rc::widget::{Tip, swatch, tip};
 use crate::app::Showcase;
 use crate::command::{self, Command};
 use crate::gallery::Page;
-use crate::message::{Message, QueryPurpose, RibbonTab, SizeStep};
+use crate::message::{Message, Pane, QueryPurpose, RibbonTab, SizeStep};
 use crate::view::family_note;
 
 impl Showcase {
@@ -41,6 +41,7 @@ impl Showcase {
         if self.ribbon_tab == RibbonTab::View {
             return ribbon
                 .group(view_group("Harita"))
+                .group(self.windows_group())
                 .group(self.theme_group())
                 .group(self.typeface_group())
                 .group(self.mono_group())
@@ -65,6 +66,40 @@ impl Showcase {
             .group(self.selection_group())
             .group(self.interface_group())
             .into()
+    }
+
+    /// Harita üstündeki kayan pencereler; açık olan vurgulanır. AutoCAD'in
+    /// Görünüm sekmesindeki "Paletler" grubu gibi.
+    fn windows_group(&self) -> Group<'_, Message> {
+        let pane = |pane: Pane, description: &'static str, command: Command| {
+            Button::small(pane.icon(), pane.title())
+                .active(self.windows.is_open(pane))
+                .on_press(Message::PaneToggled(pane))
+                .tip(
+                    Tip::new(pane.title())
+                        .body(description)
+                        .detail(format!("Komut: {}", command::name(command))),
+                )
+        };
+
+        Group::new("Pencereler").push(
+            Stack::new()
+                .push(pane(
+                    Pane::Measure,
+                    "Ölç aracını ve ölçüm penceresini açar.",
+                    Command::Tool(Tool::Measure),
+                ))
+                .push(pane(
+                    Pane::GoTo,
+                    "Enlem ve boylam yazıp görünümü ortalar ya da çizime nokta ekler.",
+                    Command::Pane(Pane::GoTo),
+                ))
+                .push(pane(
+                    Pane::Style,
+                    "Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştirir.",
+                    Command::Pane(Pane::Style),
+                )),
+        )
     }
 
     fn draw_group(&self) -> Group<'_, Message> {

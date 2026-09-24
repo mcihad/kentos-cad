@@ -2,13 +2,15 @@
 
 use std::fmt;
 
+use iced::Color;
 use iced::keyboard::Modifiers;
 
 use kentos_rc::attribute::query;
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::model_space;
 use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
-use kentos_rc::theme::typography::Typography;
+use kentos_rc::theme::typography::{self, Typography};
+use kentos_rc::widget::floating::{self, Placement};
 use kentos_rc::widget::inspector;
 
 use crate::gallery::{Demo, Page};
@@ -33,6 +35,9 @@ pub enum Message {
 
     // Katmanlar
     LayerOpacity(usize, f32),
+    LayerColor(usize, Color),
+    /// Çizgi ve alan kenarının kalınlığı (piksel).
+    LayerStroke(usize, f32),
     LayerActivated(usize),
     ZoomToLayer(usize),
     ShowAllLayers,
@@ -128,6 +133,24 @@ pub enum Message {
     /// Yazıyı bir adım büyütür, küçültür ya da varsayılana döndürür.
     TextSize(SizeStep),
 
+    // Kayan araç pencereleri
+    /// Pencere sürüklendi, boyutlandırıldı, öne geldi, daraltıldı ya da
+    /// kapandı.
+    Window(floating::Event<Pane>),
+    /// Pencereyi açar; açıksa kapatır.
+    PaneToggled(Pane),
+    /// Katman stili penceresini verilen katman için açar.
+    StyleOpened(usize),
+    /// Koordinata git penceresinin alanları.
+    GoToLatitude(String),
+    GoToLongitude(String),
+    /// Görünümü yazılan koordinata ortalar.
+    GoToCentered,
+    /// Yazılan koordinatı süren çizime nokta olarak ekler.
+    GoToPlaced,
+    /// Ölçümün kenarlarını ve toplamını panoya yazar.
+    CopyMeasurement,
+
     // Yan panel
     /// Yan panelin yeni genişliği (12 piksellik gövde metnine göre).
     DockResized(f32),
@@ -153,6 +176,59 @@ pub enum DockPanel {
     Layers,
     /// Özellikler (nesne inceleyici) ya da ölçüm.
     Details,
+}
+
+/// Harita üstündeki kayan araç pencereleri.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Pane {
+    /// Ölç aracının sonuçları; araçla birlikte açılır ve kapanır.
+    Measure,
+    /// Koordinata git: enlem ve boylam yazarak ortalar ya da nokta ekler.
+    GoTo,
+    /// Aktif katmanın rengi, opaklığı ve çizgi kalınlığı.
+    Style,
+}
+
+impl Pane {
+    pub fn title(self) -> &'static str {
+        match self {
+            Pane::Measure => "Ölçüm",
+            Pane::GoTo => "Koordinata git",
+            Pane::Style => "Katman stili",
+        }
+    }
+
+    pub fn icon(self) -> Icon {
+        match self {
+            Pane::Measure => Icon::Measure,
+            Pane::GoTo => Icon::Target,
+            Pane::Style => Icon::Drop,
+        }
+    }
+
+    /// Varsayılan genişlik, 12 piksellik gövde metnine göre.
+    pub fn width(self) -> f32 {
+        match self {
+            Pane::Measure => 248.0,
+            Pane::GoTo => 252.0,
+            Pane::Style => 268.0,
+        }
+    }
+
+    /// İlk açıldığı yer: ölçüm ve koordinata git üst kenar boyunca yan
+    /// yana, katman stili sağda; sağ üstteki ViewCube ve gezinme çubuğu
+    /// açıkta kalır.
+    pub fn placement(self) -> Placement {
+        let gap = floating::GAP;
+
+        match self {
+            Pane::Measure => Placement::top_left(gap, gap),
+            Pane::GoTo => {
+                Placement::top_left(2.0 * gap + typography::scaled(Pane::Measure.width()), gap)
+            }
+            Pane::Style => Placement::top_right(96.0, gap),
+        }
+    }
 }
 
 /// Yazı boyutunun adımı (Ctrl +, Ctrl −, Ctrl 0).

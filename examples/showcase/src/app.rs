@@ -16,13 +16,14 @@ use kentos_rc::spatial::{
 use kentos_rc::theme::typography::{self, Typography};
 use kentos_rc::theme::{self, Mode};
 use kentos_rc::widget::command_line::{self, Entry};
+use kentos_rc::widget::floating::{self, Windows};
 use kentos_rc::widget::inspector;
 
 use crate::command::{self, Command};
 use crate::gallery::Gallery;
 use crate::layer_tree::{LayerTree, NodeId};
 use crate::message::{
-    AppCommand, CoordinateFormat, DockPanel, Keyword, Message, Pending, QueryPurpose,
+    AppCommand, CoordinateFormat, DockPanel, Keyword, Message, Pane, Pending, QueryPurpose,
     RECENT_DRAWINGS, RibbonTab, Setting, SizeStep,
 };
 use crate::sample;
@@ -118,6 +119,57 @@ pub struct Showcase {
     pub(crate) pending: Option<Pending>,
 
     pub(crate) gallery: Gallery,
+
+    /// Harita üstündeki kayan araç pencereleri.
+    pub(crate) windows: Windows<Pane>,
+    /// Koordinata git penceresinde yazılanlar.
+    pub(crate) go_to: GoTo,
+}
+
+/// Koordinata git penceresinin alanları.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct GoTo {
+    pub latitude: String,
+    pub longitude: String,
+}
+
+impl GoTo {
+    /// Enlem: boşsa `Ok(None)`, hatalıysa nedeni.
+    pub fn latitude(&self) -> Result<Option<f64>, String> {
+        degrees(&self.latitude, "Enlem", 90.0)
+    }
+
+    pub fn longitude(&self) -> Result<Option<f64>, String> {
+        degrees(&self.longitude, "Boylam", 180.0)
+    }
+
+    /// İki alan da doğru yazıldıysa konum.
+    pub fn location(&self) -> Option<LonLat> {
+        match (self.latitude(), self.longitude()) {
+            (Ok(Some(lat)), Ok(Some(lon))) => Some(LonLat::new(lon, lat)),
+            _ => None,
+        }
+    }
+}
+
+/// Ondalık derece; virgül de ondalık ayırıcı sayılır.
+fn degrees(text: &str, name: &str, limit: f64) -> Result<Option<f64>, String> {
+    let text = text.trim();
+
+    if text.is_empty() {
+        return Ok(None);
+    }
+
+    let value: f64 = text
+        .replace(',', ".")
+        .parse()
+        .map_err(|_| format!("{name} ondalık derece olmalı (ör. 39.92)."))?;
+
+    if !value.is_finite() || value.abs() > limit {
+        return Err(format!("{name} −{limit} ile {limit} arasında olmalı."));
+    }
+
+    Ok(Some(value))
 }
 
 /// Haritadan varlık seçimi: nesne inceleyicideki bir başvuru alanının
@@ -202,6 +254,8 @@ impl Showcase {
             command_expanded: false,
             pending: None,
             gallery: Gallery::default(),
+            windows: Windows::new(),
+            go_to: GoTo::default(),
         }
     }
 
@@ -265,6 +319,16 @@ impl Showcase {
             Message::LayerOpacity(index, opacity) => {
                 if let Some(layer) = self.layers.get_mut(index) {
                     layer.opacity = opacity;
+                }
+            }
+            Message::LayerColor(index, color) => {
+                if let Some(layer) = self.layers.get_mut(index) {
+                    layer.color = color;
+                }
+            }
+            Message::LayerStroke(index, width) => {
+                if let Some(layer) = self.layers.get_mut(index) {
+                    layer.stroke_width = width;
                 }
             }
             Message::LayerActivated(index) => self.activate_layer(index),
@@ -507,6 +571,48 @@ impl Showcase {
                 });
             }
 
+            Message::Window(event) => {
+                let closed = event == floating::Event::Closed(Pane::Measure);
+
+                self.windows.update(event);
+
+                // Ölçüm penceresi Ölç aracının kendisidir: kapatmak araçtan
+                // çıkar.
+                if closed && self.tool == Tool::Measure {
+                    self.select_tool(Tool::Select);
+                }
+            }
+            Message::PaneToggled(pane) => self.toggle_pane(pane),
+            Message::StyleOpened(index) => {
+                self.activate_layer(index);
+                self.open_pane(Pane::Style);
+            }
+            Message::GoToLatitude(text) => self.go_to.latitude = text,
+            Message::GoToLongitude(text) => self.go_to.longitude = text,
+            Message::GoToCentered => {
+                if let Some(location) = self.go_to.location() {
+                    self.viewport.center = location;
+                    self.log(format!(
+                        "Görünüm {} noktasına ortalandı.",
+                        format::decimal(location)
+                    ));
+                }
+            }
+            Message::GoToPlaced => {
+                if let Some(location) = self.go_to.location()
+                    && self.tool.takes_points()
+                {
+                    self.handle_model_space(model_space::Event::PointPicked(location));
+                }
+            }
+            Message::CopyMeasurement => {
+                if !self.measurement.is_empty() {
+                    self.log("Ölçüm panoya kopyalandı.");
+
+                    return iced::clipboard::write(self.measurement_text());
+                }
+            }
+
             Message::DockResized(width) => self.dock.width = width,
             Message::DockResizeEnded => self.save_settings(),
             Message::PanelToggled(panel) => {
@@ -613,8 +719,12 @@ impl Showcase {
         // Çizim araçlarında tıklama nokta girişidir; haritadan seçim sürmez.
         self.cancel_pick();
 
-        if tool != Tool::Measure {
+        // Ölçüm penceresi Ölç aracıyla açılır, başka araca geçince kapanır.
+        if tool == Tool::Measure {
+            self.windows.open(Pane::Measure, Pane::Measure.placement());
+        } else {
             self.measurement.clear();
+            self.windows.close(Pane::Measure);
         }
 
         self.log(format!("{}: {}", tool.label(), tool.description()));
@@ -652,6 +762,63 @@ impl Showcase {
         self.selection.select(FeatureRef::new(DRAWING_LAYER, id));
         self.selection_changed(true);
         self.log(format!("{name} çizildi."));
+    }
+
+    // --- Kayan pencereler -----------------------------------------------
+
+    /// Pencereyi açar ya da kapatır. Ölçüm penceresi Ölç aracıyla birlikte
+    /// açılır ve kapanır.
+    fn toggle_pane(&mut self, pane: Pane) {
+        if self.windows.is_open(pane) {
+            if pane == Pane::Measure {
+                self.select_tool(Tool::Select);
+            } else {
+                self.windows.close(pane);
+            }
+        } else {
+            self.open_pane(pane);
+        }
+    }
+
+    /// Pencereyi açar ya da öne getirir. Koordinata git boşsa görünümün
+    /// merkeziyle dolar.
+    fn open_pane(&mut self, pane: Pane) {
+        match pane {
+            Pane::Measure => {
+                if self.tool == Tool::Measure {
+                    self.windows.raise(pane);
+                } else {
+                    self.select_tool(Tool::Measure);
+                }
+            }
+            Pane::GoTo => {
+                if self.go_to == GoTo::default() {
+                    let center = self.viewport.center;
+
+                    self.go_to = GoTo {
+                        latitude: format!("{:.5}", center.lat),
+                        longitude: format!("{:.5}", center.lon),
+                    };
+                }
+
+                self.windows.open(pane, pane.placement());
+            }
+            Pane::Style => self.windows.open(pane, pane.placement()),
+        }
+    }
+
+    /// Ölçümün kenarları ve toplamı, satır satır.
+    fn measurement_text(&self) -> String {
+        self.measurement
+            .segments()
+            .enumerate()
+            .map(|(index, meters)| format!("Kenar {}: {}", index + 1, format::distance(meters)))
+            .chain(std::iter::once(format!(
+                "Toplam: {}",
+                format::distance(self.measurement.total_meters())
+            )))
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     // --- Seçim -----------------------------------------------------------
@@ -1574,6 +1741,7 @@ impl Showcase {
                 self.log("Seçim ve ölçüm temizlendi.");
             }
             Command::New => self.run_app_command(AppCommand::New),
+            Command::Pane(pane) => self.open_pane(pane),
             Command::Typeface => self.pending = Some(Pending::Typeface),
             Command::TextSize => self.pending = Some(Pending::TextSize),
             Command::Help => {
@@ -1783,6 +1951,78 @@ mod tests {
 
         let _ = app.update(Message::PanelToggled(DockPanel::Layers));
         assert!(!app.dock.layers_collapsed);
+    }
+
+    #[test]
+    fn the_measure_window_follows_the_measure_tool() {
+        let mut app = Showcase::new();
+
+        submit(&mut app, "olc");
+        assert!(app.windows.is_open(Pane::Measure));
+
+        picked(&mut app, 32.85, 39.93);
+        picked(&mut app, 35.48, 38.72);
+        assert_eq!(app.measurement.segment_count(), 1);
+
+        // Pencereyi kapatmak araçtan çıkar ve ölçümü temizler.
+        let _ = app.update(Message::Window(floating::Event::Closed(Pane::Measure)));
+        assert_eq!(app.tool, Tool::Select);
+        assert!(app.measurement.is_empty());
+
+        // Başka araca geçmek de pencereyi kapatır.
+        let _ = app.update(Message::PaneToggled(Pane::Measure));
+        assert_eq!(app.tool, Tool::Measure);
+        let _ = app.update(Message::ToolSelected(Tool::Line));
+        assert!(!app.windows.is_open(Pane::Measure));
+    }
+
+    #[test]
+    fn go_to_validates_and_centers_or_adds_points() {
+        let mut app = Showcase::new();
+
+        // Açılınca görünümün merkeziyle dolar.
+        submit(&mut app, "git");
+        assert!(app.windows.is_open(Pane::GoTo));
+        assert_eq!(app.go_to.latitude, "39.00000");
+
+        let _ = app.update(Message::GoToLatitude("95".to_owned()));
+        assert!(app.go_to.latitude().is_err());
+        assert_eq!(app.go_to.location(), None);
+
+        let _ = app.update(Message::GoToLatitude("41,01".to_owned()));
+        let _ = app.update(Message::GoToLongitude("28.98".to_owned()));
+        let _ = app.update(Message::GoToCentered);
+        assert_eq!(app.viewport.center, LonLat::new(28.98, 41.01));
+
+        // Çizim aracı yokken nokta eklenmez; nokta aracında eklenir.
+        let _ = app.update(Message::GoToPlaced);
+        assert!(app.layers[DRAWING_LAYER].features.is_empty());
+
+        let _ = app.update(Message::ToolSelected(Tool::Point));
+        let _ = app.update(Message::GoToPlaced);
+        assert_eq!(app.layers[DRAWING_LAYER].features.len(), 1);
+    }
+
+    #[test]
+    fn the_style_window_edits_the_active_layer() {
+        let mut app = Showcase::new();
+
+        let _ = app.update(Message::StyleOpened(3));
+        assert!(app.windows.is_open(Pane::Style));
+        assert_eq!(app.active_layer, 3);
+
+        let red = iced::Color::from_rgb(1.0, 0.0, 0.0);
+        let _ = app.update(Message::LayerColor(3, red));
+        let _ = app.update(Message::LayerStroke(3, 3.0));
+        assert_eq!(app.layers[3].color, red);
+        assert_eq!(app.layers[3].stroke_width, 3.0);
+
+        // Ribbondaki düğme açık pencereyi kapatır; komut yalnızca açar.
+        let _ = app.update(Message::PaneToggled(Pane::Style));
+        assert!(!app.windows.is_open(Pane::Style));
+        submit(&mut app, "stil");
+        submit(&mut app, "stil");
+        assert!(app.windows.is_open(Pane::Style));
     }
 
     #[test]

@@ -10,8 +10,9 @@
 //! ├ Durum çubuğu ───────────────────────────┴──────────────┤
 //! ```
 //!
-//! Galeri sekmesinde model alanı ve yan paneller yerini bileşen kataloğuna
-//! bırakır. Üst katmanlar önceliğe göre tek tek açılır: uygulama menüsü,
+//! Model alanının üstünde kayan araç pencereleri (ölçüm, koordinata git,
+//! katman stili) durur. Galeri sekmesinde model alanı ve yan paneller yerini
+//! bileşen kataloğuna bırakır. Üst katmanlar önceliğe göre tek tek açılır: uygulama menüsü,
 //! sorgu penceresi, kısayollar.
 
 mod app_menu;
@@ -21,6 +22,7 @@ mod gallery;
 mod help;
 mod layers;
 mod menus;
+mod panes;
 mod query;
 mod ribbon;
 mod status;
@@ -35,7 +37,7 @@ use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
 use kentos_rc::style;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::widget::command_line::Prompt;
-use kentos_rc::widget::{CommandLine, ContextMenu, NavigationBar, horizontal_divider};
+use kentos_rc::widget::{CommandLine, ContextMenu, Floating, NavigationBar, horizontal_divider};
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
 use crate::command::{self, Command};
@@ -119,7 +121,14 @@ impl Showcase {
 
         // Seç ve Kaydır araçlarında sağ tık bağlam menüsünü açar; çizim ve
         // ölçüm araçlarında model alanı sağ tıkı kendisi kullanır.
-        ContextMenu::new(model_space, move |position| self.map_menu(position)).into()
+        let map = ContextMenu::new(model_space, move |position| self.map_menu(position));
+
+        // Kayan araç pencereleri haritanın üstündedir; dışlarında harita
+        // çalışmayı sürdürür.
+        Floating::new(map, &self.windows, Message::Window, move |pane| {
+            self.pane(pane)
+        })
+        .into()
     }
 
     fn command_line(&self) -> Element<'_, Message> {

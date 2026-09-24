@@ -1,21 +1,24 @@
-//! Çerçeve sayfası: durum çubuğu, komut kutusu, gezinme çubuğu, uygulama
-//! menüsü ve iletişim kutuları.
+//! Çerçeve sayfası: kayan araç pencereleri, durum çubuğu, komut kutusu,
+//! gezinme çubuğu, uygulama menüsü ve iletişim kutuları.
 
-use iced::widget::{button, column, container, row, space};
+use iced::widget::{Column, button, checkbox, column, container, row, space};
 use iced::{Center, Element, Fill, Theme};
 
 use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::model_space;
 use kentos_rc::style;
+use kentos_rc::theme::typography;
 use kentos_rc::widget::command_line::Prompt;
 use kentos_rc::widget::status_bar::{Readout, Toggle};
-use kentos_rc::widget::{CommandLine, ContextMenu, Dialog, Menu, NavigationBar, StatusBar};
+use kentos_rc::widget::{
+    CommandLine, ContextMenu, Dialog, Floating, Menu, NavigationBar, StatusBar, ToolWindow,
+};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
 use crate::command;
-use crate::gallery::Demo;
+use crate::gallery::{Demo, DemoPane, SNAP_KINDS};
 use crate::message::Message;
 
 impl Showcase {
@@ -150,6 +153,28 @@ impl Showcase {
 
         vec![
             entry(
+                "Kayan araç pencereleri",
+                "kentos_rc::widget::Floating",
+                "Harita üstünde sürüklenen, arkadaki işi kilitlemeyen pencereler. Başlıktan \
+                 sürükleyin: kenarlara ve birbirlerine yaklaşınca yakalanırlar, sarı kılavuz \
+                 nerede durduklarını gösterir (Ctrl yakalamayı kapatır). Tıklanan pencere öne \
+                 gelir ve üstünde vurgu çizgisi belirir. Başlığa çift tıklamak pencereyi \
+                 başlığına daraltır; başlıktaki bilgi daraltılmışken de okunur. Konum en yakın \
+                 kenara göre saklanır: alan daralınca pencere o kenarla birlikte kayar.",
+                self.floating_sample(),
+                Some(
+                    "Floating::new(map, &self.windows, Message::Window, |pane| match pane {\n    \
+                     Pane::Snap => ToolWindow::new(\"Nesne yakalama\", snaps)\n        \
+                     .icon(Icon::Magnet)\n        \
+                     .meta(\"3 açık\")\n        \
+                     .resizable(),\n    \
+                     Pane::Layer => ToolWindow::new(\"Katman\", summary),\n\
+                     })\n\n\
+                     // update\n\
+                     Message::Window(event) => self.windows.update(event),",
+                ),
+            ),
+            entry(
                 "Durum çubuğu",
                 "kentos_rc::widget::StatusBar",
                 "Göstergeler değer gösterir; menüsü olan gösterge tıklanınca yukarı doğru \
@@ -263,6 +288,89 @@ impl Showcase {
         ]
     }
 
+    /// İki kayan pencere ve arkalarında, pencereler açıkken de çalışan bir
+    /// düğme.
+    fn floating_sample(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+
+        let presses = match gallery.stage_presses {
+            0 => "Pencereler açıkken de arkadaki alan çalışır.".to_owned(),
+            count => format!("Arkadaki düğmeye {count} kez basıldı."),
+        };
+
+        let stage = container(
+            column![
+                button(label::body("Arkadaki düğme"))
+                    .on_press(Message::Gallery(Demo::StagePressed))
+                    .padding([4, 12])
+                    .style(style::button::secondary),
+                label::caption(presses),
+                button(label::caption("Pencereleri ilk yerlerine al").style(style::text::default))
+                    .on_press(Message::Gallery(Demo::PanesReset))
+                    .padding([2, 8])
+                    .style(style::button::flat),
+            ]
+            .spacing(8)
+            .align_x(Center),
+        )
+        .center_x(Fill)
+        .center_y(Fill)
+        .style(|theme: &Theme| {
+            style::container::solid(model_space::Style::of(theme).background)(theme)
+        });
+
+        let floating = Floating::new(
+            stage,
+            &gallery.panes,
+            |event| Message::Gallery(Demo::Window(event)),
+            move |pane| match pane {
+                DemoPane::Snap => {
+                    let snaps = SNAP_KINDS.iter().enumerate().map(|(index, name)| {
+                        checkbox(gallery.snaps[index])
+                            .label(*name)
+                            .size(13.0)
+                            .font(typography::ui())
+                            .text_size(typography::body())
+                            .on_toggle(move |_| Message::Gallery(Demo::SnapToggled(index)))
+                            .into()
+                    });
+
+                    let open = gallery.snaps.iter().filter(|snap| **snap).count();
+
+                    ToolWindow::new(
+                        "Nesne yakalama",
+                        Column::with_children(snaps).spacing(6).padding([10, 12]),
+                    )
+                    .icon(Icon::Magnet)
+                    .meta(format!("{open} açık"))
+                    .width(236.0)
+                    .min_size(iced::Size::new(180.0, 72.0))
+                    .resizable()
+                }
+                DemoPane::Layer => ToolWindow::new(
+                    "Katman",
+                    column![
+                        summary_row("Ad", "Parseller"),
+                        summary_row("Öğe", "1.284"),
+                        summary_row("Seçili", "12"),
+                        summary_row("Koordinat", "EPSG:5254"),
+                    ]
+                    .spacing(4)
+                    .padding([10, 12]),
+                )
+                .icon(Icon::Layers)
+                .meta("12 seçili")
+                .width(220.0),
+            },
+        )
+        .height(typography::scaled(260.0));
+
+        container(floating)
+            .padding(1)
+            .style(style::container::bordered)
+            .into()
+    }
+
     /// Sağ tıklanınca bütün komut türlerini gösteren örnek menü açan alan.
     fn context_menu_sample(&self) -> Element<'_, Message> {
         let gallery = &self.gallery;
@@ -318,4 +426,14 @@ impl Showcase {
         })
         .into()
     }
+}
+
+/// Katman özetinin satırı: sönük ad, eş aralıklı değer.
+fn summary_row<'a>(name: &'a str, value: &'a str) -> Element<'a, Message> {
+    row![
+        label::muted(name).width(typography::scaled(72.0)),
+        label::mono(value),
+    ]
+    .spacing(8)
+    .into()
 }

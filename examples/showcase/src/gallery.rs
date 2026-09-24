@@ -13,6 +13,7 @@ use kentos_rc::attribute::{
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::SelectionMode;
 use kentos_rc::widget::command_line::Entry;
+use kentos_rc::widget::floating::{self, Placement, Windows};
 use kentos_rc::widget::inspector;
 use kentos_rc::widget::table::SortOrder;
 
@@ -65,7 +66,10 @@ impl Page {
             Page::Icons => "16×16 ızgarada çizilmiş vektör ikon seti, boyutları ve tonları.",
             Page::Buttons => "Düğme stilleri, şerit düğmeleri ve ipuçları.",
             Page::Data => "Tablo, özellik ızgarası, panel ve giriş alanları.",
-            Page::Frame => "Durum çubuğu, komut kutusu, gezinme çubuğu, menü ve iletişim kutuları.",
+            Page::Frame => {
+                "Kayan pencereler, durum çubuğu, komut kutusu, gezinme çubuğu, menü ve iletişim \
+                 kutuları."
+            }
             Page::Attributes => {
                 "Nesne inceleyici, öznitelik tablosu, sorgu oluşturucu ve alan türleri."
             }
@@ -111,6 +115,39 @@ pub enum Demo {
     ProjectSelected(ProjectRow),
     /// Panel örneğinde paneli açar ya da kapatır.
     PanelToggled(usize),
+    /// Kayan pencere örneği.
+    Window(floating::Event<DemoPane>),
+    /// Kayan pencereleri ilk yerlerine döndürür, kapalıysa açar.
+    PanesReset,
+    /// Nesne yakalama penceresindeki bir yakalama türü.
+    SnapToggled(usize),
+    /// Kayan pencerelerin arkasındaki düğme.
+    StagePressed,
+}
+
+/// Kayan pencere örneğinin pencereleri.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DemoPane {
+    Snap,
+    Layer,
+}
+
+/// Nesne yakalama penceresindeki yakalama türleri.
+pub const SNAP_KINDS: [&str; 4] = ["Uç nokta", "Orta nokta", "Merkez", "Kesişim"];
+
+/// Kayan pencere örneğinin açılış düzeni.
+fn demo_panes() -> Windows<DemoPane> {
+    let mut panes = Windows::new();
+
+    panes.open(
+        DemoPane::Layer,
+        Placement::bottom_right(floating::GAP, floating::GAP),
+    );
+    panes.open(
+        DemoPane::Snap,
+        Placement::top_left(floating::GAP, floating::GAP),
+    );
+    panes
 }
 
 /// Ağaç örneğindeki satır: klasör ya da dosya.
@@ -189,6 +226,11 @@ pub struct Gallery {
     pub project_selected: Option<ProjectRow>,
     /// Panel örneğindeki panellerin kapalı olması.
     pub panels_collapsed: [bool; 2],
+    /// Kayan pencere örneği: pencereler, açık yakalama türleri ve arkadaki
+    /// düğmeye basılma sayısı.
+    pub panes: Windows<DemoPane>,
+    pub snaps: [bool; 4],
+    pub stage_presses: usize,
 }
 
 impl Default for Gallery {
@@ -239,6 +281,9 @@ impl Default for Gallery {
             project_checked: [true, true, true, false, true],
             project_selected: Some(ProjectRow::File(2)),
             panels_collapsed: [false, false],
+            panes: demo_panes(),
+            snaps: [true, true, false, true],
+            stage_presses: 0,
         }
     }
 }
@@ -359,6 +404,14 @@ impl Gallery {
                     *collapsed = !*collapsed;
                 }
             }
+            Demo::Window(event) => self.panes.update(event),
+            Demo::PanesReset => self.panes = demo_panes(),
+            Demo::SnapToggled(kind) => {
+                if let Some(snap) = self.snaps.get_mut(kind) {
+                    *snap = !*snap;
+                }
+            }
+            Demo::StagePressed => self.stage_presses += 1,
         }
 
         None

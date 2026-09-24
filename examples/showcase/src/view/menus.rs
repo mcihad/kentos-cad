@@ -66,7 +66,9 @@ impl Showcase {
             .item("Yalnızca bu katmanı göster", Message::ShowOnly(id))
             .icon(Icon::Eye)
             .submenu("Opaklık", opacity)
-            .icon(Icon::Contrast);
+            .icon(Icon::Contrast)
+            .item("Stil…", Message::StyleOpened(index))
+            .icon(Icon::Drop);
 
         if !layer.sublayers.is_empty() {
             let expanded = self

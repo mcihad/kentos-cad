@@ -10,7 +10,7 @@ use kentos_rc::spatial::{LonLat, Tool};
 use kentos_rc::theme::Mode;
 use kentos_rc::widget::command_line;
 
-use crate::message::Setting;
+use crate::message::{Pane, Setting};
 
 /// Çözümlenmiş komut.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -42,6 +42,8 @@ pub enum Command {
     Delete,
     /// Seçimi ve ölçümü temizler.
     Clear,
+    /// Kayan araç penceresini açar ya da öne getirir.
+    Pane(Pane),
     New,
     Help,
     /// Yazı ailesini seçtirir.
@@ -286,6 +288,22 @@ const COMMANDS: &[(Command, Info)] = &[
             .aliases(&["IPTAL"])
             .icon(Icon::ClearSelection)
             .description("Seçimi, ölçümü ve yarım kalan çizimi temizler."),
+    ),
+    (
+        Command::Pane(Pane::GoTo),
+        Info::new("GIT", "Koordinata git")
+            .aliases(&["KOORDINAT", "GOTO"])
+            .icon(Icon::Target)
+            .description(
+                "Enlem ve boylam yazıp görünümü ortalayan ya da çizime nokta ekleyen pencereyi açar.",
+            ),
+    ),
+    (
+        Command::Pane(Pane::Style),
+        Info::new("STIL", "Katman stili")
+            .aliases(&["STYLE", "SEMBOL"])
+            .icon(Icon::Drop)
+            .description("Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştiren pencereyi açar."),
     ),
     (
         Command::New,

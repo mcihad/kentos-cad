@@ -1,4 +1,5 @@
-//! Yan paneller: katmanlar ve özellikler (nesne inceleyici ya da ölçüm).
+//! Yan paneller: katmanlar ve özellikler (nesne inceleyici). Ölçüm, harita
+//! üstündeki kayan pencerededir.
 
 use iced::widget::{button, column, container, row, space, tooltip};
 use iced::{Center, Element, Fill, FillPortion};
@@ -6,24 +7,20 @@ use iced::{Center, Element, Fill, FillPortion};
 use kentos_rc::attribute::{DateTime, FieldKind, ObjectId, text};
 use kentos_rc::icon::{Icon, icon};
 use kentos_rc::label;
-use kentos_rc::spatial::{Geometry, Tool, format};
+use kentos_rc::spatial::{Geometry, format};
 use kentos_rc::style;
-use kentos_rc::widget::{Dock, Inspector, Panel, PropertyGrid, Tip, swatch, tip};
+use kentos_rc::widget::{Dock, Inspector, Panel, Tip, swatch, tip};
 
 use crate::app::{DOCK_WIDTH, Showcase, TIME_ZONE};
 use crate::message::{DockPanel, Message};
 
 impl Showcase {
     pub(super) fn dock(&self) -> Element<'_, Message> {
-        let details = if self.tool == Tool::Measure {
-            Panel::new("Ölçüm", self.measurement_properties())
-                .meta(format!("{} nokta", self.measurement.points().len()))
-        } else {
+        let details =
             Panel::new("Özellikler", self.inspector_panel()).meta(match self.selection.len() {
                 0 => "Seçim yok".to_owned(),
                 count => format!("{count} öğe seçili"),
-            })
-        };
+            });
 
         Dock::new(self.dock.width)
             .resizable(DOCK_WIDTH, Message::DockResized)
@@ -174,65 +171,6 @@ impl Showcase {
 
         candidates.sort_by(|(_, a), (_, b)| text::compare(a, b));
         candidates
-    }
-
-    /// Ölç aracında toplam uzunluk ve kenarlar.
-    fn measurement_properties(&self) -> Element<'_, Message> {
-        let measurement = &self.measurement;
-
-        let mut grid = PropertyGrid::new()
-            .category("Genel")
-            .figure("Nokta sayısı", measurement.points().len().to_string())
-            .figure("Kenar sayısı", measurement.segment_count().to_string())
-            .property(
-                "Yakalama",
-                if self.options.snap {
-                    "Açık"
-                } else {
-                    "Kapalı"
-                },
-            );
-
-        if measurement.segment_count() > 0 {
-            grid = measurement.segments().enumerate().fold(
-                grid.category("Kenarlar"),
-                |grid, (index, meters)| {
-                    grid.figure(format!("Kenar {}", index + 1), format::distance(meters))
-                },
-            );
-        }
-
-        let hint = if measurement.is_empty() {
-            "Sol tıkla nokta ekleyin; sağ tık ölçümü temizler."
-        } else {
-            "Toplam uzunluk"
-        };
-
-        column![
-            column![
-                label::caption(hint),
-                row![
-                    label::figure(format::distance(measurement.total_meters())).style(|theme| {
-                        iced::widget::text::Style {
-                            color: Some(kentos_rc::spatial::model_space::Style::of(theme).measure),
-                        }
-                    }),
-                    space::horizontal(),
-                    button(label::caption("Temizle").style(style::text::default))
-                        .on_press_maybe(
-                            (!measurement.is_empty()).then_some(Message::ClearMeasurement),
-                        )
-                        .padding([2, 8])
-                        .style(style::button::flat),
-                ]
-                .align_y(Center),
-            ]
-            .spacing(2)
-            .padding([8, 10]),
-            grid,
-        ]
-        .width(Fill)
-        .into()
     }
 }
 

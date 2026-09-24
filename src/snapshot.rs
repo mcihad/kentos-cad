@@ -67,6 +67,12 @@ pub enum Input {
     RightClick(Point),
     /// Sol tuşla bir noktadan ötekine sürükleme (ör. panel kenarı).
     Drag(Point, Point),
+    /// Sol tuşa basıp bırakmadan tutar; ardından [`Input::Move`] ile
+    /// sürüklenir. Sürüklemenin ortasındaki görünüm (ör. yakalama
+    /// kılavuzları) böyle çizilir.
+    Press(Point),
+    /// Tutulan sol tuşu bırakır.
+    Release(Point),
     /// Tekerlek: pozitif değer yukarı, satır sayısı.
     Scroll(Point, f32),
     /// Adlandırılmış tuş: ok, Enter, Esc, F1...
@@ -297,6 +303,14 @@ impl Snapshot {
                     Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
                 ]
             }
+            Input::Press(position) => vec![
+                pointer(self, position),
+                Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+            ],
+            Input::Release(position) => vec![
+                pointer(self, position),
+                Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
+            ],
             Input::RightClick(position) => vec![
                 pointer(self, position),
                 Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)),

@@ -354,6 +354,32 @@ pub fn keyword(theme: &Theme, status: Status) -> Style {
     )
 }
 
+/// Renk seçimindeki örneğin çerçevesi: seçili renk vurgu halkasıyla,
+/// üzerine gelinen renk ince kenarla gösterilir. İçine rengi gösteren
+/// küçük bir kutu konur.
+pub fn swatch(selected: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+
+        let (edge, width) = match (selected, is_hovered(status)) {
+            (true, _) => (t.accent, 2.0),
+            (false, true) => (t.muted, 1.0),
+            (false, false) => (Color::TRANSPARENT, 1.0),
+        };
+
+        Style {
+            background: None,
+            text_color: t.text,
+            border: Border {
+                color: edge,
+                width,
+                radius: 3.0.into(),
+            },
+            ..Style::default()
+        }
+    }
+}
+
 /// Durum çubuğundaki açık/kapalı anahtarlar.
 pub fn toggle(active: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
