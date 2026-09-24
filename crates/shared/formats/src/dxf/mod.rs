@@ -9,6 +9,7 @@
 //! gives back what a KentOS export could not say in DXF.
 
 pub mod aci;
+mod dimension;
 mod emit;
 mod entity;
 mod hatch;

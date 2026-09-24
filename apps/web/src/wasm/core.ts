@@ -5,6 +5,7 @@ import {
   cornerTexts as wasmCornerTexts,
   dist as wasmDist,
   distToSegment as wasmDistToSegment,
+  exprEvaluate as wasmExprEvaluate,
   FaceIndex,
   GeometryStore,
   hatchLinesXY as wasmHatchLinesXY,
@@ -317,6 +318,35 @@ export class CoreFaceIndex {
     if (!this.raw) throw new Error('Yüz dizini bırakıldı.');
     return this.raw;
   }
+}
+
+/** One expression's values for a table of objects (crates/shared/style-core/src/expr/rows.rs). */
+export interface ExprColumnData {
+  /** Per object: 0 empty, 1 number, 2 text, 3 true/false. */
+  readonly kinds: Uint8Array;
+  /** Per object: the number, 1/0 for true/false, NaN otherwise. */
+  readonly numbers: Float64Array;
+  /** The text values one after another, and their lengths (UTF-16 code units). */
+  readonly texts: string;
+  readonly textLengths: Uint32Array;
+}
+
+/**
+ * Evaluates the expression `source` for `n` objects in one call (docs/adr/0008
+ * “İfade dili”): the objects cross as the table `model/expression/expression.ts`
+ * builds, each value comes back as `want` asks (0 as it is, 1 a number, 2
+ * text, 3 true/false, 4 the number its text reads as). An expression that
+ * does not compile throws.
+ */
+export function exprEvaluate(source: string, n: number, texts: string, textLens: Int32Array, numbers: Float64Array, measures: Float64Array, scale: number, want: number): ExprColumnData {
+  return typed(() => {
+    const c = wasmExprEvaluate(source, n, texts, textLens, numbers, measures, scale, want);
+    try {
+      return { kinds: c.kinds, numbers: c.numbers, texts: c.texts, textLengths: c.textLengths };
+    } finally {
+      c.free();
+    }
+  });
 }
 
 /**

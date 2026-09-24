@@ -8,6 +8,7 @@ members = [
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/formats",
+    "crates/shared/style-core",
     # Browser bindings (wasm-bindgen) of the shared libraries.
     "crates/wasm/geometry-wasm",
     "crates/wasm/formats-wasm",

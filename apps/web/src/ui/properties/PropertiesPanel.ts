@@ -112,7 +112,7 @@ export class PropertiesPanel extends Panel {
             radio: true,
             checked: l.id === currentId,
             disabled: doc.layers.isLocked(l.id),
-            run: () => doc.transact('Katman değiştir', () => ids.forEach((id) => doc.update(id, { layerId: l.id }))),
+            run: () => doc.updateMany(ids.map((id) => ({ id, layerId: l.id })), 'Katman değiştir'),
           }),
         ),
     };
@@ -120,7 +120,7 @@ export class PropertiesPanel extends Panel {
 
   private colorEditor(ids: number[], current: string | undefined | null): PropRow['editor'] {
     const { doc } = this.ctx;
-    const set = (color: string | undefined) => doc.transact('Renk değiştir', () => ids.forEach((id) => doc.update(id, { color })));
+    const set = (color: string | undefined) => doc.updateMany(ids.map((id) => ({ id, color })), 'Renk değiştir');
     return {
       type: 'select',
       display: () => {

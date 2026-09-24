@@ -143,6 +143,8 @@ describe.skipIf(!loader)('formats WASM module', () => {
       { kind: 'text', id: 4, layerId: 'yazi', attrs: {}, color: '#FF0000', p: P(5, 60), text: 'Çınar ağacı ^ 100%', height: 2.5, rotation: 30 },
       { kind: 'point', id: 5, layerId: 'yazi', attrs: { Ad: 'P7' }, label: 'P7', p: P(1 / 3, 0.1 + 0.2), z: 0 },
       { kind: 'hatch', id: 6, layerId: 'parsel', attrs: {}, ring: [P(40, 0), P(60, 0), P(60, 20), P(40, 20)], holes: [[P(45, 5), P(50, 5), P(50, 10)]], pattern: { type: 'cross', angle: 30, spacing: 2 } },
+      { kind: 'dimension', id: 7, layerId: 'yazi', attrs: {}, a: P(0, 70), b: P(20, 75), offset: 3, height: 2, style: 'linear', angle: 0 },
+      { kind: 'dimension', id: 8, layerId: 'yazi', attrs: {}, a: P(30, 70), b: P(34, 73), offset: 1.5, height: 2, text: '%%c {5} \\ ^', style: 'diameter' },
     ];
     const input: DxfWriteInput = {
       entities,
@@ -154,6 +156,7 @@ describe.skipIf(!loader)('formats WASM module', () => {
       scale: 1000,
       lengthDecimals: 3,
       grads: true,
+      dimensionValues: { 7: '20.000' },
     };
     const out = w.writeDxf(JSON.stringify(input));
     const bytes = out.takeBytes();
@@ -161,7 +164,7 @@ describe.skipIf(!loader)('formats WASM module', () => {
     out.free();
     const head = '  0\r\nSECTION\r\n  2\r\nHEADER\r\n  9\r\n$ACADVER\r\n  1\r\nAC1021\r\n';
     expect(new TextDecoder().decode(bytes.subarray(0, head.length))).toBe(head);
-    expect(report.counts).toEqual({ polygon: 1, arc: 1, spline: 1, text: 1, point: 1, hatch: 1 });
+    expect(report.counts).toEqual({ polygon: 1, arc: 1, spline: 1, text: 1, point: 1, hatch: 1, dimension: 2 });
     expect(report.notes.map((n) => n.what)).toEqual(['Katman rengi', 'Adalı alan']);
     const back = JSON.parse(new TextDecoder().decode(w.readDxf(bytes, JSON.stringify({ maxEntities: 0 })))) as ImportResult;
     // The reader numbers nothing and names layers as the file does; everything else is the drawing's own.

@@ -1,4 +1,3 @@
-import { measuredOf, truthy } from '../../model/expression/expressionLib';
 import { defineTool } from '../types';
 
 /**
@@ -43,17 +42,11 @@ export const selectByExpression = defineTool({
   ],
   run: async (v, ctx, feedback) => {
     const list = v.input.entities;
-    // $alan, $uzunluk, $y, $x from the geometry store, for every object at once when the condition first asks.
-    const measured = measuredOf(() => ctx.geometry.measures(list.map((e) => e.id)));
+    feedback.progress(0, 'Koşul deneniyor');
+    // One call to the core for every object; $alan, $uzunluk, $y, $x from the geometry store when the condition asks.
+    const met = v.condition.evaluateAll({ entities: list, layerName: ctx.layerName, measures: () => ctx.geometry.measures(list.map((e) => e.id)) }, 'bool');
     const hits: number[] = [];
-    for (let i = 0; i < list.length; i++) {
-      if (truthy(v.condition.evaluate({ entity: list[i], index: i + 1, layerName: ctx.layerName, measured: () => measured(i) }))) hits.push(list[i].id);
-      if (i % 2000 === 1999) {
-        feedback.progress(i / list.length, 'Koşul deneniyor');
-        await feedback.yield();
-        if (feedback.canceled) return {};
-      }
-    }
+    for (let i = 0; i < list.length; i++) if (met.value(i) === true) hits.push(list[i].id);
     const current = ctx.selection;
     const hit = new Set(hits);
     const select = v.mode === 'new' ? hits : v.mode === 'add' ? [...current, ...hits] : v.mode === 'remove' ? current.filter((id) => !hit.has(id)) : current.filter((id) => hit.has(id));

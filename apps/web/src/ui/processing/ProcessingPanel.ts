@@ -2,7 +2,7 @@ import type { AppContext } from '../../app/context';
 import { modelCommandId, processingCommandId } from '../../app/processing';
 import { foldTurkish } from '../../core/text';
 import type { ProcessingModel } from '../../processing/model';
-import { DisposableStore, listen } from '../../core/disposable';
+import { listen, type Disposable } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import type { ProcessingCategory } from '../../processing/categories';
 import type { CategoryNode } from '../../processing/registry';
@@ -37,8 +37,6 @@ export class ProcessingPanel extends Panel {
   private readonly toolsView: HTMLElement;
   private readonly historyView = h('div', { class: 'phist', role: 'list', 'aria-label': 'İşlem geçmişi' });
   private readonly switcher = h('div', { class: 'panel__toolbar pproc__switch' });
-  /** Tooltips of the current rows, released on every rebuild (the store is reusable). */
-  private readonly rowSubs = new DisposableStore();
   private query = '';
 
   constructor(ctx: AppContext) {
@@ -141,7 +139,6 @@ export class ProcessingPanel extends Panel {
       const children = [...c.children.map(toNode), ...c.tools.map((tool): Node => ({ kind: 'tool', id: `tool:${tool.id}`, tool, children: [] }))];
       return { kind: 'category', id: c.category.id, category: c.category, children, count: children.reduce((s, n) => s + (n.kind === 'category' ? n.count : n.kind === 'tool' ? 1 : 0), 0) };
     };
-    this.rowSubs.dispose();
     const q = this.query ? foldTurkish(this.query) : '';
     const models = this.ctx.processing.models.value.filter((m) => !q || foldTurkish(`${m.label} ${m.description}`).includes(q));
     const modelNodes: Node[] = models.map((m) => ({ kind: 'model', id: `model:${m.id}`, model: m, children: [] }));
@@ -150,11 +147,12 @@ export class ProcessingPanel extends Panel {
     this.updateMeta();
   }
 
-  private renderRow(n: Node, row: HTMLElement): void {
+  /** Fills a row; the row's tooltip is returned, released when the row goes (the tree builds only rows in view). */
+  private renderRow(n: Node, row: HTMLElement): Disposable | void {
     row.parentElement?.toggleAttribute('data-group', n.kind === 'category');
     if (n.kind === 'category') {
       row.append(h('span', { class: 'tree__folder' }, icon(n.category.icon ?? 'folder', 15)), h('span', { class: 'tree__name' }, n.category.label), h('span', { class: 'tree__count num' }, String(n.count)));
-      if (n.category.description) this.rowSubs.add(tooltip(row, () => ({ title: n.category.label, description: n.category.description }), 'bottom'));
+      if (n.category.description) return tooltip(row, () => ({ title: n.category.label, description: n.category.description }), 'bottom');
       return;
     }
     if (n.kind === 'newModel') {
@@ -174,24 +172,21 @@ export class ProcessingPanel extends Panel {
       });
       row.append(h('span', { class: 'pproc__icon' }, icon('processing', 15)), h('span', { class: 'tree__name' }, m.label), edit);
       row.addEventListener('click', () => this.ctx.commands.execute(modelCommandId(m.id)));
-      this.rowSubs.add(tooltip(row, () => ({ title: m.label, description: m.description || undefined, note: `${m.steps.length} adım${builtin ? '; hazır model' : ''}` }), 'bottom'));
-      return;
+      return tooltip(row, () => ({ title: m.label, description: m.description || undefined, note: `${m.steps.length} adım${builtin ? '; hazır model' : ''}` }), 'bottom');
     }
     const t = n.tool;
     row.classList.add('pproc__tool');
     row.append(h('span', { class: 'pproc__icon' }, icon(t.icon ?? 'processing', 15)), h('span', { class: 'tree__name' }, t.label));
     // A single click opens the tool: the toolbox is a launcher, not a selection list.
     row.addEventListener('click', () => this.open(t));
-    this.rowSubs.add(
-      tooltip(
-        row,
-        () => ({
-          title: t.label,
-          description: t.description,
-          note: t.aliases?.length ? `Komut satırı: ${t.aliases.join(', ')}` : undefined,
-        }),
-        'bottom',
-      ),
+    return tooltip(
+      row,
+      () => ({
+        title: t.label,
+        description: t.description,
+        note: t.aliases?.length ? `Komut satırı: ${t.aliases.join(', ')}` : undefined,
+      }),
+      'bottom',
     );
   }
 
@@ -240,7 +235,7 @@ export class ProcessingPanel extends Panel {
   }
 
   override dispose(): void {
-    this.rowSubs.dispose();
+    this.tree.dispose();
     super.dispose();
   }
 }

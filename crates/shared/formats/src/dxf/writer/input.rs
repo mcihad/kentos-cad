@@ -305,6 +305,8 @@ struct Input {
     scale: f64,
     length_decimals: u32,
     grads: bool,
+    #[serde(default)]
+    dimension_values: BTreeMap<u32, String>,
 }
 
 /// A `DxfWriteInput` read with this module's visitor for the objects. The
@@ -322,6 +324,7 @@ impl<'de> Deserialize<'de> for WriteInput {
             scale: i.scale,
             length_decimals: i.length_decimals,
             grads: i.grads,
+            dimension_values: i.dimension_values,
         }))
     }
 }
@@ -360,7 +363,7 @@ mod tests {
 
     fn doc(objects: &str) -> String {
         format!(
-            r##"{{"entities":{objects},"layers":[{{"id":"a","name":"A","path":["G"],"color":"ink","visible":true,"locked":false,"lineType":"dashdot","lineWeight":0.25}}],"scale":1000,"lengthDecimals":3,"grads":true}}"##
+            r##"{{"entities":{objects},"layers":[{{"id":"a","name":"A","path":["G"],"color":"ink","visible":true,"locked":false,"lineType":"dashdot","lineWeight":0.25}}],"scale":1000,"lengthDecimals":3,"grads":true,"dimensionValues":{{"14":"45.0000g"}}}}"##
         )
     }
 

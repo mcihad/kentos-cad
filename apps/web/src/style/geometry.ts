@@ -115,9 +115,6 @@ export class DrawnReader {
   }
 }
 
-/** The expressions' geometry values of object `i` in a `CoreStore.measures` answer; the expression library reads them for processing too. */
-export { measuredAt } from '../model/expression/expressionLib';
-
 const drawnGeometry = op<(e: Entity, oriented: boolean, clip: Bounds | null) => number[]>('drawnGeometry');
 
 /**

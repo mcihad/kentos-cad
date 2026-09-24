@@ -127,10 +127,16 @@ pub enum Kind {
         bad_attribs: Vec<(String, u32)>,
     },
     Hatch(Box<Hatch>),
-    /// DIMENSION, ACAD_TABLE and others drawn by an anonymous block.
+    /// ACAD_TABLE and other entities drawn by an anonymous block.
     Block {
         block: String,
         what: &'static str,
+    },
+    /// A DIMENSION: drawn by its anonymous block; its definition points
+    /// give a KentOS dimension back (`dimension.rs`).
+    Dimension {
+        block: String,
+        groups: super::dimension::Groups,
     },
     Xline {
         p: P3,
@@ -473,7 +479,29 @@ pub fn parse(
         "HATCH" => Kind::Hatch(Box::new(
             parse_hatch(list, fit_data_in_hatch_splines).map_err(|r| bad(&r))?,
         )),
-        "DIMENSION" | "ARC_DIMENSION" | "LARGE_RADIAL_DIMENSION" => Kind::Block {
+        "DIMENSION" => {
+            // Only KentOS's read-back uses the definition points: one that
+            // cannot be read leaves the dimension to its block, as any other's.
+            let xy = |x: i32| {
+                g.point(x)
+                    .ok()
+                    .flatten()
+                    .map(|p| crate::geom::v(p[0], p[1]))
+            };
+            Kind::Dimension {
+                block: g.string(2),
+                groups: super::dimension::Groups {
+                    flags: g.int(70),
+                    p10: xy(10),
+                    p13: xy(13),
+                    p14: xy(14),
+                    p15: xy(15),
+                    angle: g.num(50).ok().flatten(),
+                    text: g.string(1),
+                },
+            }
+        }
+        "ARC_DIMENSION" | "LARGE_RADIAL_DIMENSION" => Kind::Block {
             block: g.string(2),
             what: "Ölçü (DIMENSION)",
         },

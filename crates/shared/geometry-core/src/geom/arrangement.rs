@@ -260,14 +260,6 @@ pub fn tight_box(e: &Edge) -> Bounds {
     bx
 }
 
-/// Direction leaving `e` at its start (or arriving back along it from its end), bent by curvature.
-pub fn leave_angle(e: &Edge, at_end: bool) -> f64 {
-    let from = point_at(e, if at_end { 1.0 } else { 0.0 });
-    // A point a little along the edge: the chord carries the curvature.
-    let q = point_at(e, if at_end { 1.0 - 1e-4 } else { 1e-4 });
-    atan2(q.y - from.y, q.x - from.x)
-}
-
 /// The angle a→b subtends at p. The cross product's sign, which decides the
 /// side, is exact (`orient2d`, CLAUDE.md §23.3); off near-collinear input it
 /// is the same rounded value as before.

@@ -162,7 +162,7 @@ class DxfExportDialog {
       list.length
         ? summaryLine('ok', `${list.length} nesne ${chosen.size} katmanla yazılacak: ${kindCounts(kinds)}.`)
         : summaryLine('warn', 'Yazılacak nesne yok. Başka bir kapsam ya da en az bir katman seçin.'),
-      dimensions ? summaryLine('info', `${dimensions} ölçü çizgi, yay ve yazılarına patlatılarak yazılır: DXF'te ölçü olarak düzenlenemez, KentOS'a da ölçü olarak geri okunmaz.`) : null,
+      dimensions ? summaryLine('info', `${dimensions} ölçü DXF ölçüsü olarak yazılır ve KentOS'taki gibi görünür; başka bir program ölçüyü düzenlerse kendi kurallarıyla yeniden çizer. KentOS'a ölçü olarak geri okunur.`) : null,
       islands ? summaryLine('info', `${islands} adalı alanın adaları ayrı kapalı çoklu çizgiler olarak yazılır; KentOS'a geri okununca yine adalı alan olur.`) : null,
       data ? summaryLine('info', 'Etiketler, öznitelikler ve semboller nesnelerle birlikte KentOS verisi olarak yazılır: başka programlar göstermez, KentOS geri okur.') : null,
       themed ? summaryLine('info', "Tema renkleri DXF'te sabit renk olur (ana mürekkep 7, ikincil 8); KentOS'a geri okununca yine tema rengidir.") : null,
@@ -188,18 +188,21 @@ class DxfExportDialog {
     const { ctx } = this;
     const chosen = this.chosen();
     const settings = ctx.doc.settings;
-    // A dimension without its own text is written with the value the drawing shows (project units).
-    const entities = [...chosen.values()].flat().map((e) => {
-      if (e.kind !== 'dimension' || e.text) return e;
+    const entities = [...chosen.values()].flat();
+    // What a dimension without its own text shows (project units): its block draws it, the dimension keeps no text.
+    const dimensionValues: Record<number, string> = {};
+    for (const e of entities) {
+      if (e.kind !== 'dimension' || e.text) continue;
       const l = layoutDimension(e);
-      return l ? { ...e, text: ctx.view.dimensionText(l) } : e;
-    });
+      if (l) dimensionValues[e.id] = ctx.view.dimensionText(l);
+    }
     const input: DxfWriteInput = {
       entities,
       layers: [...chosen.keys()].map((id) => this.layerInput(id)).filter((l) => !!l),
       scale: settings.plotScale.value,
       lengthDecimals: settings.lengthDecimals.value,
       grads: settings.angleUnit.value === 'grad',
+      dimensionValues,
     };
     this.writing = true;
     this.primary.disabled = true;

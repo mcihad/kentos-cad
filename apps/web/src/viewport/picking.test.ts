@@ -92,7 +92,7 @@ function edit(g: Gen, doc: CadDocument): void {
     const e = doc.get(id);
     if (e) doc.update(id, transformEntity(e, translation(g.num(-5, 5), g.num(-5, 5))));
   };
-  switch (g.int(0, 10)) {
+  switch (g.int(0, 12)) {
     case 0:
       doc.add(sceneEntity(g));
       break;
@@ -144,6 +144,20 @@ function edit(g: Gen, doc: CadDocument): void {
       if (doc.get(id)) doc.update(id, { attrs: { Not: String(g.int(0, 9)) } });
       break;
     }
+    case 10: {
+      // Many at once (move, stretch): one change, an object perhaps twice.
+      const patches: Entity[] = [];
+      for (const id of ids.filter(() => g.chance(0.05))) {
+        const e = doc.get(id);
+        if (e) patches.push(transformEntity(e, translation(g.num(-5, 5), g.num(-5, 5))));
+      }
+      if (patches.length) patches.push(transformEntity(patches[0], translation(0.5, 0.5)));
+      doc.updateMany(patches);
+      break;
+    }
+    case 11:
+      doc.addMany(Array.from({ length: g.int(1, 6) }, () => sceneEntity(g)));
+      break;
     default:
       doc.remove([some()]);
   }

@@ -10,45 +10,206 @@ use std::collections::HashMap;
 use crate::geom::arc::norm_angle;
 use crate::geom::arrangement::{
     Area, Built, DirPiece, Ring, Rule, Source, TOL, Vertices, build, classify, edge_box, edge_len,
-    leave_angle, translate_edge, winding,
+    reverse_edge, translate_edge, winding,
 };
 use crate::geom::bulge::{bulge_of_sweep, bulge_ring_area};
 use crate::geom::intersect::{Edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{TAU, js_cmp, js_hypot, js_max, js_min, js_sign, or, stable_sort};
+use crate::jsmath::{
+    PI, TAU, atan2, js_cmp, js_hypot, js_max, js_min, js_sign, or, sin, stable_sort,
+};
+use crate::predicates::orientation;
 use crate::vec2::Vec2;
 
 // ── Rings ─────────────────────────────────────────────────────────────
 
+/// How far from a vertex the order of the pieces leaving it is read: past
+/// the meeting points the arrangement leaves unresolved (within `TOL` of the
+/// vertex) and short of the ones it keeps (pieces run at least that far
+/// apart before they meet again).
+const RHO: f64 = 10.0 * TOL;
+/// Angles computed from difference vectors are good to a few ulps; two
+/// directions closer than this are one tangent.
+const SAME_TANGENT: f64 = 1e-14;
+
+/// How a directed piece leaves vertex `at` towards vertex `far`, in the
+/// ring's own geometry (vertex positions, and an arc's sweep: the bulge the
+/// ring is written with): the direction of the chord to the point `RHO`
+/// along it, and its signed curvature (+ turning left). Angles come from
+/// difference vectors, never from points placed along the piece, so they
+/// hold however short the piece or far the vertex from the origin (the
+/// chord to 1e-4 of the piece they replace lost its bits there).
+#[derive(Clone, Copy)]
+struct Leave {
+    angle: f64,
+    kappa: f64,
+    /// A straight piece's far vertex: straight directions are decided exactly.
+    far: Option<Vec2>,
+}
+
+fn leave(edge: &Edge, at: Vec2, far: Vec2) -> Leave {
+    let chord = atan2(far.y - at.y, far.x - at.x);
+    match *edge {
+        Edge::Seg { .. } => Leave {
+            angle: chord,
+            kappa: 0.0,
+            far: Some(far),
+        },
+        Edge::Arc { sweep, .. } => {
+            // The tangent turns from the chord by half the sweep; the radius follows from the chord.
+            let kappa = js_sign(sweep) * 2.0 * sin(sweep.abs() / 2.0)
+                / js_hypot(far.x - at.x, far.y - at.y);
+            Leave {
+                angle: chord - sweep / 2.0 + kappa * RHO / 2.0,
+                kappa,
+                far: None,
+            }
+        }
+    }
+}
+
+/// Where a way out lies turning clockwise from the way back: `group` 0 just
+/// clockwise of it (the same tangent, bending right of it), 1 anywhere
+/// else, 2 just counter-clockwise of it, 3 back along it (the same piece:
+/// a dead end, the last resort). `half` orders straight pieces exactly:
+/// 0 clockwise angle in (0, π], 1 in (π, 2π).
+struct Rank {
+    group: u8,
+    half: u8,
+    angle: f64,
+    leave: Leave,
+}
+
+/// A clockwise angle known (exactly) to lie in (0, π], held there if rounding put it outside.
+fn in_first_half(cw: f64) -> f64 {
+    if cw > 1.5 * PI || cw <= 0.0 {
+        f64::MIN_POSITIVE
+    } else if cw > PI {
+        PI
+    } else {
+        cw
+    }
+}
+
+/// A clockwise angle known to lie in (π, 2π), held there likewise.
+fn in_second_half(cw: f64) -> f64 {
+    if cw > PI {
+        cw
+    } else if cw < 0.5 * PI {
+        TAU - 1e-15
+    } else {
+        PI + 1e-15
+    }
+}
+
+fn sign(x: f64) -> i8 {
+    i8::from(x > 0.0) - i8::from(x < 0.0)
+}
+
+fn rank(v: Vec2, back: &Leave, o: &Leave, dead_end: bool) -> Rank {
+    let at = |group, half, angle| Rank {
+        group,
+        half,
+        angle,
+        leave: *o,
+    };
+    if dead_end {
+        return at(3, 0, TAU);
+    }
+    let cw = norm_angle(back.angle - o.angle);
+    if let (Some(r), Some(p)) = (back.far, o.far) {
+        // Both straight: the side of the way back is exact (§23.3); the angle, kept for
+        // comparing with arcs, is held on that side where rounding put it across.
+        return match orientation(v, r, p) {
+            s if s < 0 => at(1, 0, in_first_half(cw)),
+            s if s > 0 => at(1, 1, in_second_half(cw)),
+            // On the line of the way back: along it (a piece on top of it) or straight on (π).
+            _ if sign(r.x - v.x) == sign(p.x - v.x) && sign(r.y - v.y) == sign(p.y - v.y) => {
+                at(3, 0, TAU)
+            }
+            _ => at(1, 0, PI),
+        };
+    }
+    if cw <= SAME_TANGENT || cw >= TAU - SAME_TANGENT {
+        // The way back's own tangent: bending right of it is just clockwise, left just counter-clockwise.
+        return if o.kappa < back.kappa {
+            at(0, 0, 0.0)
+        } else if o.kappa > back.kappa {
+            at(2, 0, TAU)
+        } else {
+            at(3, 0, TAU)
+        };
+    }
+    at(1, 0, cw)
+}
+
+/// Whether `a` comes before `b` turning clockwise; on one tangent a piece
+/// bending left comes first (a curve bending right lies clockwise of it).
+fn before(v: Vec2, a: &Rank, b: &Rank, exact: bool) -> bool {
+    if a.group != b.group {
+        return a.group < b.group;
+    }
+    if a.group == 3 {
+        return false;
+    }
+    let (fa, fb) = (a.leave.far, b.leave.far);
+    if exact {
+        if a.half != b.half {
+            return a.half < b.half;
+        }
+        if let (Some(pa), Some(pb)) = (fa, fb) {
+            return orientation(v, pa, pb) < 0;
+        }
+    }
+    if a.group == 1 && (a.angle - b.angle).abs() > SAME_TANGENT {
+        return a.angle < b.angle;
+    }
+    if let (Some(pa), Some(pb)) = (fa, fb) {
+        return orientation(v, pa, pb) < 0;
+    }
+    a.leave.kappa > b.leave.kappa
+}
+
 /// Step 4: chains directed pieces into closed walks. Arriving at a vertex
 /// the walk leaves by the first piece clockwise from the way it came, which
-/// keeps the region on its left and never crosses itself.
-fn trace(dps: &[DirPiece], vertex_count: usize) -> Vec<Vec<DirPiece>> {
-    let mut outgoing: Vec<Vec<usize>> = vec![Vec::new(); vertex_count];
+/// keeps the region on its left and never crosses itself. The order is the
+/// ring's own (vertex positions and sweeps); between straight pieces it is
+/// exact (CLAUDE.md §23.3).
+fn trace(dps: &[DirPiece], verts: &Vertices) -> Vec<Vec<DirPiece>> {
+    let mut outgoing: Vec<Vec<usize>> = vec![Vec::new(); verts.pos.len()];
     for (i, d) in dps.iter().enumerate() {
         if let Some(list) = outgoing.get_mut(d.from) {
             list.push(i);
         }
     }
-    let leave: Vec<f64> = dps.iter().map(|d| leave_angle(&d.edge, false)).collect();
-    let back: Vec<f64> = dps.iter().map(|d| leave_angle(&d.edge, true)).collect();
+    let pos = |i: usize| verts.pos[i];
+    let out: Vec<Leave> = dps
+        .iter()
+        .map(|d| leave(&d.edge, pos(d.from), pos(d.to)))
+        .collect();
+    let back: Vec<Leave> = dps
+        .iter()
+        .map(|d| leave(&reverse_edge(&d.edge), pos(d.to), pos(d.from)))
+        .collect();
     let next = |cur: usize| -> Option<usize> {
-        let mut best = None;
-        let mut best_angle = f64::INFINITY;
+        let v = pos(dps[cur].to);
+        let b = &back[cur];
+        let mut best: Option<(usize, Rank)> = None;
         for &o in outgoing.get(dps[cur].to).into_iter().flatten() {
-            let mut cw = norm_angle(back[cur] - leave[o]);
-            // Straight back along the same piece is the last resort (a dead end). The twin
-            // is recognised as such, not by its angle: on a short arc the two angles come
-            // from tiny chords and may differ by 1e-12 or so (docs/adr/0008).
-            if cw < 1e-12 || twin(&dps[o], &dps[cur]) {
-                cw = TAU;
-            }
-            if cw < best_angle {
-                best_angle = cw;
-                best = Some(o);
+            // Straight back along the same piece is the last resort (a dead end).
+            let r = rank(v, b, &out[o], twin(&dps[o], &dps[cur]));
+            let exact = b.far.is_some() && r.leave.far.is_some();
+            let better = match &best {
+                None => true,
+                Some((_, cur_best)) => {
+                    before(v, &r, cur_best, exact && cur_best.leave.far.is_some())
+                }
+            };
+            if better {
+                best = Some((o, r));
             }
         }
-        best
+        best.map(|(o, _)| o)
     };
     let mut used = vec![false; dps.len()];
     let mut cycles = Vec::new();
@@ -235,7 +396,7 @@ fn to_ring(edges: Vec<Edge>, cycle_from: &[usize], verts: &Vertices, origin: Vec
 /// Walks → simple local rings.
 pub(crate) fn rings(dps: &[DirPiece], verts: &Vertices, origin: Vec2) -> Vec<LocalRing> {
     let mut out = Vec::new();
-    for walk in trace(dps, verts.pos.len()) {
+    for walk in trace(dps, verts) {
         let mut simple = Vec::new();
         split_at_repeats(remove_spikes(walk), &mut simple);
         for cycle in simple {
@@ -388,4 +549,239 @@ pub fn face_rings(sources: &[Source]) -> Vec<FaceRing> {
             }
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::jsmath::cos;
+
+    /// The order rule before §23.3: the chord to 1e-4 of each piece, its
+    /// angle taken from a point placed along the piece in local coordinates.
+    fn chord_angle(e: &Edge, at_end: bool) -> f64 {
+        let from = point_at(e, if at_end { 1.0 } else { 0.0 });
+        let q = point_at(e, if at_end { 1.0 - 1e-4 } else { 1e-4 });
+        atan2(q.y - from.y, q.x - from.x)
+    }
+
+    fn chord_cw(back: f64, leave: f64) -> f64 {
+        let cw = norm_angle(back - leave);
+        if cw < 1e-12 { TAU } else { cw }
+    }
+
+    struct Rnd(u64);
+    impl Rnd {
+        fn next(&mut self) -> f64 {
+            self.0 = self.0 * 16807 % 2147483647;
+            self.0 as f64 / 2147483647.0
+        }
+    }
+
+    /// Straight pieces leaving a vertex 1 500 km from the overlay's origin
+    /// within a few µrad of each other: the order turning clockwise from the
+    /// way back agrees pair by pair with exact integer arithmetic (2⁻³⁵ grid).
+    /// The chord rule, its bits lost to the large coordinates, got some wrong.
+    #[test]
+    fn straight_pieces_leave_a_far_vertex_in_the_exact_order() {
+        let v = Vec2::new(1_500_000.37, 250_000.11);
+        let r = Vec2::new(v.x - 100.25, v.y - 7.5);
+        let back = leave(&Edge::Seg { a: v, b: r }, v, r);
+        let k = |x: f64| (x * (1u64 << 35) as f64) as i128;
+        let cross = |a: Vec2, b: Vec2| {
+            (k(a.x) - k(v.x)) * (k(b.y) - k(v.y)) - (k(a.y) - k(v.y)) * (k(b.x) - k(v.x))
+        };
+        // Exact: clockwise half of the way back first, then clockwise order within the half.
+        let half = |p: Vec2| u8::from(cross(r, p) > 0);
+        let exact_before = |a: Vec2, b: Vec2| {
+            if half(a) != half(b) {
+                half(a) < half(b)
+            } else {
+                cross(a, b) < 0
+            }
+        };
+        let old_back = chord_angle(&Edge::Seg { a: r, b: v }, true);
+        let mut rnd = Rnd(11);
+        let (mut pairs, mut chord_wrong) = (0, 0);
+        for _ in 0..300 {
+            let theta0 = rnd.next() * TAU;
+            let pts: Vec<Vec2> = (0..6)
+                .map(|_| {
+                    let t = theta0 + (rnd.next() - 0.5) * 4e-6;
+                    let l = 0.5 + rnd.next() * 1.5;
+                    Vec2::new(v.x + l * cos(t), v.y + l * sin(t))
+                })
+                .collect();
+            for (i, &a) in pts.iter().enumerate() {
+                for &b in &pts[i + 1..] {
+                    if cross(a, b) == 0 || cross(r, a) == 0 || cross(r, b) == 0 {
+                        continue;
+                    }
+                    pairs += 1;
+                    let (la, lb) = (
+                        leave(&Edge::Seg { a: v, b: a }, v, a),
+                        leave(&Edge::Seg { a: v, b }, v, b),
+                    );
+                    let (ra, rb) = (rank(v, &back, &la, false), rank(v, &back, &lb, false));
+                    assert_eq!(before(v, &ra, &rb, true), exact_before(a, b), "{a:?} {b:?}");
+                    assert_eq!(before(v, &rb, &ra, true), exact_before(b, a), "{b:?} {a:?}");
+                    let (ca, cb) = (
+                        chord_cw(old_back, chord_angle(&Edge::Seg { a: v, b: a }, false)),
+                        chord_cw(old_back, chord_angle(&Edge::Seg { a: v, b }, false)),
+                    );
+                    if (ca < cb) != exact_before(a, b) {
+                        chord_wrong += 1;
+                    }
+                }
+            }
+        }
+        assert!(pairs > 4000, "{pairs}");
+        assert!(chord_wrong > 0, "the chord rule no longer loses bits here");
+        // Straight on (π) and along the way back.
+        let on = Vec2::new(v.x + (v.x - r.x), v.y + (v.y - r.y));
+        let ro = rank(v, &back, &leave(&Edge::Seg { a: v, b: on }, v, on), false);
+        assert_eq!((ro.group, ro.half, ro.angle), (1, 0, PI));
+        let along = Vec2::new(v.x - (v.x - r.x) / 2.0, v.y - (v.y - r.y) / 2.0);
+        assert_eq!(
+            rank(
+                v,
+                &back,
+                &leave(&Edge::Seg { a: v, b: along }, v, along),
+                false
+            )
+            .group,
+            3
+        );
+    }
+
+    /// A line through a vertex 100 km from the origin and two short arcs of
+    /// radius 1 leaving it on the line's tangent, one bending left, one
+    /// right. Coming back along the line, the left one comes first, then the
+    /// line, then the right one: the bend decides. The chord rule, on arcs
+    /// only a few centimetres long, often could not tell.
+    #[test]
+    fn a_short_arc_on_a_line_tangent_is_ordered_by_its_bend() {
+        let v = Vec2::new(100_000.37, 40_000.11);
+        let mut rnd = Rnd(5);
+        let mut chord_wrong = 0;
+        for _ in 0..400 {
+            let phi = rnd.next() * TAU;
+            let t = Vec2::new(cos(phi), sin(phi));
+            let (sweep, radius) = (0.005 + rnd.next() * 0.04, 0.5 + rnd.next());
+            let line = Vec2::new(v.x + 5.0 * t.x, v.y + 5.0 * t.y);
+            let r = Vec2::new(v.x - 5.0 * t.x, v.y - 5.0 * t.y);
+            let arc = |side: f64| {
+                let c = Vec2::new(v.x - side * radius * t.y, v.y + side * radius * t.x);
+                Edge::Arc {
+                    c,
+                    r: radius,
+                    a0: atan2(v.y - c.y, v.x - c.x),
+                    sweep: side * sweep,
+                }
+            };
+            let (left, right) = (arc(1.0), arc(-1.0));
+            let back = leave(&Edge::Seg { a: v, b: r }, v, r);
+            let ranks = [
+                rank(v, &back, &leave(&left, v, point_at(&left, 1.0)), false),
+                rank(
+                    v,
+                    &back,
+                    &leave(&Edge::Seg { a: v, b: line }, v, line),
+                    false,
+                ),
+                rank(v, &back, &leave(&right, v, point_at(&right, 1.0)), false),
+            ];
+            for i in 0..3 {
+                for j in 0..3 {
+                    if i != j {
+                        assert_eq!(
+                            before(v, &ranks[i], &ranks[j], false),
+                            i < j,
+                            "φ {phi} {i} {j}"
+                        );
+                    }
+                }
+            }
+            let old_back = chord_angle(&Edge::Seg { a: r, b: v }, true);
+            let old = [
+                chord_cw(old_back, chord_angle(&left, false)),
+                chord_cw(old_back, chord_angle(&Edge::Seg { a: v, b: line }, false)),
+                chord_cw(old_back, chord_angle(&right, false)),
+            ];
+            if !(old[0] < old[1] && old[1] < old[2]) {
+                chord_wrong += 1;
+            }
+        }
+        assert!(chord_wrong > 0, "the chord rule no longer loses bits here");
+    }
+
+    /// A fillet left untrimmed (the line goes on) 100 km from the overlay's
+    /// origin, crossed 3 cm from the tangent point: every point in the
+    /// frame lies in exactly one face, the thin ones between line and arc
+    /// included.
+    #[test]
+    fn faces_around_an_untrimmed_fillet_far_from_the_origin() {
+        let o = Vec2::new(486_512.34, 4_420_187.52);
+        let seg = |a: Vec2, b: Vec2| Edge::Seg { a, b };
+        let mut rnd = Rnd(3);
+        for _ in 0..40 {
+            let v = Vec2::new(o.x + 100_000.37 + rnd.next(), o.y + 40_000.11 + rnd.next());
+            let phi = rnd.next() * TAU;
+            let (t, n) = (
+                Vec2::new(cos(phi), sin(phi)),
+                Vec2::new(-sin(phi), cos(phi)),
+            );
+            let at = |a: f64, b: f64| Vec2::new(v.x + a * t.x + b * n.x, v.y + a * t.y + b * n.y);
+            let arc = |side: f64| {
+                let c = at(0.0, side);
+                Edge::Arc {
+                    c,
+                    r: 1.0,
+                    a0: atan2(v.y - c.y, v.x - c.x),
+                    sweep: side * 0.8,
+                }
+            };
+            let frame = [at(-2.0, -2.0), at(2.0, -2.0), at(2.0, 2.0), at(-2.0, 2.0)];
+            let sources = [
+                // Far away first: the overlay's origin.
+                Source {
+                    edges: vec![seg(o, Vec2::new(o.x + 1.0, o.y))],
+                    points: None,
+                    cut: None,
+                },
+                Source {
+                    edges: (0..4).map(|i| seg(frame[i], frame[(i + 1) % 4])).collect(),
+                    points: None,
+                    cut: None,
+                },
+                Source {
+                    edges: vec![
+                        seg(at(-2.0, 0.0), at(2.0, 0.0)),
+                        seg(at(0.03, -2.0), at(0.03, 2.0)),
+                    ],
+                    points: None,
+                    cut: None,
+                },
+                Source {
+                    edges: vec![arc(1.0), arc(-1.0)],
+                    points: None,
+                    cut: None,
+                },
+            ];
+            let faces: Vec<FaceRing> = face_rings(&sources)
+                .into_iter()
+                .filter(|f| f.area > 0.0)
+                .collect();
+            for _ in 0..300 {
+                // Mostly near the tangent point, where the thin faces are.
+                let (a, b) = if rnd.next() < 0.7 {
+                    (rnd.next() * 0.06 - 0.015, (rnd.next() - 0.5) * 0.004)
+                } else {
+                    ((rnd.next() - 0.5) * 3.9, (rnd.next() - 0.5) * 3.9)
+                };
+                let p = at(a, b);
+                let n = faces.iter().filter(|f| f.contains(p)).count();
+                assert_eq!(n, 1, "φ {phi}: ({a}, {b}) in {n} faces");
+            }
+        }
+    }
 }

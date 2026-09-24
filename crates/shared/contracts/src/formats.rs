@@ -16,7 +16,8 @@ use crate::layer::LineType;
 
 /// Version of this boundary; the WASM module reports the one it was built with.
 /// 2: `writeDxf` (`DxfWriteInput`), and the reader takes back KentOS's DXF data.
-pub const FORMATS_VERSION: u32 = 2;
+/// 3: dimensions are written as DXF dimensions (`dimensionValues`) and read back.
+pub const FORMATS_VERSION: u32 = 3;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -296,9 +297,7 @@ pub struct DxfWriteLayer {
     pub line_weight: f64,
 }
 
-/// What `file.export.dxf` writes (an AutoCAD 2007 DXF). The writer draws a
-/// dimension as its lines and text, so a dimension's `text` holds what it
-/// shows: the app fills in the measured value in the project's units.
+/// What `file.export.dxf` writes (an AutoCAD 2007 DXF).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
@@ -312,6 +311,12 @@ pub struct DxfWriteInput {
     pub length_decimals: u32,
     /// Angles are shown in grads, else in degrees ($AUNITS).
     pub grads: bool,
+    /// What each dimension without a text of its own shows, by object id:
+    /// the measured value as the app formats it (project units). The
+    /// dimension's block draws it; the DXF dimension keeps no text, so a
+    /// program that redraws it measures again.
+    #[serde(default)]
+    pub dimension_values: BTreeMap<u32, String>,
 }
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.

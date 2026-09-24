@@ -11,4 +11,5 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+kentos-style-core = { path = "../../shared/style-core" }
 wasm-bindgen = { workspace = true }

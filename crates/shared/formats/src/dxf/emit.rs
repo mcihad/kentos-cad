@@ -15,6 +15,7 @@ use kentos_contracts::{
 };
 
 use super::aci;
+use super::dimension;
 use super::entity::{Color, Kind, P3, Parsed, Vertex};
 use super::hatch::{Edge, Hatch, Path};
 use super::strings::{mtext_lines, text_codes};
@@ -608,6 +609,28 @@ impl<'l> Emitter<'l> {
             }
             Kind::Hatch(h) => self.hatch(ctx, ext, h, b(), e),
             Kind::Block { block, what } => self.anonymous_block(ctx, e, &layer, block, what),
+            Kind::Dimension { block, groups } => {
+                // A dimension KentOS wrote comes back as the same dimension, while nothing moved it
+                // (at the top of the file, in the plane); otherwise its block draws it, as any other's.
+                let own = e.meta.as_ref().and_then(|m| m.dimension.as_ref());
+                let flat = ctx.tf.is_identity() && ext == [0.0, 0.0, 1.0];
+                match own
+                    .filter(|_| flat)
+                    .and_then(|k| dimension::read_back(groups, k, b()))
+                {
+                    Some(d) => self.push(Entity::Dimension(d)),
+                    None => {
+                        if own.is_some() {
+                            self.note(
+                                "Ölçü (DIMENSION)",
+                                "KentOS ölçüsü başka bir programda değiştirilmiş; ölçü olarak geri alınamadı",
+                                e.line,
+                            );
+                        }
+                        self.anonymous_block(ctx, e, &layer, block, "Ölçü (DIMENSION)");
+                    }
+                }
+            }
             Kind::Xline { p, dir, ray } => {
                 let d = ctx.tf.linear(xy(*dir));
                 let l = hypot(d.x, d.y);

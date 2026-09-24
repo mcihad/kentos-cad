@@ -262,32 +262,28 @@ export class CadDocument {
   }
 
   /**
-   * Adds many objects as one change (a file import): each is its own
-   * undoable op, but listeners hear one event for all of them, not one
-   * per object (the layer panel recounts every object on each event).
+   * Adds many objects as one change (a file import, a copy, a paste): each
+   * is its own undoable op, but listeners hear one event for all of them,
+   * not one per object (the layer panel, the geometry store and cloud sync
+   * each take every event). Inside a transaction they join it.
    */
   addMany(inits: readonly NewEntity[], label = 'Ekle'): Entity[] {
     const entities = inits.map((init) => ({ ...init, id: this.nextId++ }) as Entity);
-    if (!entities.length) return entities;
-    const ops: Op[] = entities.map((entity) => ({ type: 'add', entity }));
-    if (this.pending) {
-      // One push per op: a spread of 10⁵ arguments overflows the stack.
-      for (const op of ops) this.pending.ops.push(op);
-      this.applyAll(ops);
-    } else {
-      this.applyAll(ops);
-      this.commit({ label, ops });
-    }
+    this.recordMany(entities.map((entity) => ({ type: 'add', entity })), label);
     return entities;
   }
 
+  /** Removes objects as one change (one event for all of them); unknown ids are skipped. */
   remove(ids: Iterable<number>): void {
-    this.transact('Sil', () => {
-      for (const id of ids) {
-        const entity = this.entities.get(id);
-        if (entity) this.record({ type: 'remove', entity }, 'Sil');
-      }
-    });
+    const ops: Op[] = [];
+    const seen = new Set<number>();
+    for (const id of ids) {
+      const entity = this.entities.get(id);
+      if (!entity || seen.has(id)) continue;
+      seen.add(id);
+      ops.push({ type: 'remove', entity });
+    }
+    this.recordMany(ops, 'Sil');
   }
 
   /** Changes a layer's style as one undoable step (the Layers panel, the layer style window). */
@@ -302,12 +298,28 @@ export class CadDocument {
   }
 
   update(id: number, patch: Partial<Entity>): void {
-    const before = this.entities.get(id);
-    if (!before) return;
-    const after = { ...before, ...patch, id } as Entity;
-    // Holes belong to polygons only: trimming or breaking one opens it into a polyline.
-    if (after.kind !== 'polygon' && 'holes' in after) delete (after as { holes?: unknown }).holes;
-    this.record({ type: 'update', before, after }, 'Değiştir');
+    const op = updateOp(this.entities.get(id), patch);
+    if (op) this.record(op, 'Değiştir');
+  }
+
+  /**
+   * Changes many objects as one change (move, stretch, a symbol or a layer
+   * for the selection): the same ops as `update` after `update`, but
+   * listeners hear one event for all of them. Inside a transaction they
+   * join it. Returns how many objects changed; unknown ids are skipped.
+   */
+  updateMany(patches: readonly (Partial<Entity> & { id: number })[], label = 'Değiştir'): number {
+    const ops: Op[] = [];
+    // An id given twice changes what its first patch made, as a second `update` would.
+    const latest = new Map<number, Entity>();
+    for (const patch of patches) {
+      const op = updateOp(latest.get(patch.id) ?? this.entities.get(patch.id), patch);
+      if (!op) continue;
+      latest.set(op.after.id, op.after);
+      ops.push(op);
+    }
+    this.recordMany(ops, label);
+    return ops.length;
   }
 
   /** Bulk load without history (file open, sample data). */
@@ -426,12 +438,19 @@ export class CadDocument {
   }
 
   private record(op: Op, label: string): void {
+    this.recordMany([op], label);
+  }
+
+  /** Applies ops as one change: one event of each kind, one undo step (or into the open transaction). */
+  private recordMany(ops: Op[], label: string): void {
+    if (!ops.length) return;
     if (this.pending) {
-      this.pending.ops.push(op);
-      this.applyAll([op]);
+      // One push per op: a spread of 10⁵ arguments overflows the stack.
+      for (const op of ops) this.pending.ops.push(op);
+      this.applyAll(ops);
     } else {
-      this.applyAll([op]);
-      this.commit({ label, ops: [op] });
+      this.applyAll(ops);
+      this.commit({ label, ops });
     }
   }
 
@@ -516,6 +535,14 @@ export class CadDocument {
     this.canUndo.set(this.undoStack.length > 0);
     this.canRedo.set(this.redoStack.length > 0);
   }
+}
+
+/** `before` with `patch` over it; holes belong to polygons only (trimming or breaking one opens it into a polyline). */
+function updateOp(before: Entity | undefined, patch: Partial<Entity>): Extract<Op, { type: 'update' }> | null {
+  if (!before) return null;
+  const after = { ...before, ...patch, id: before.id } as Entity;
+  if (after.kind !== 'polygon' && 'holes' in after) delete (after as { holes?: unknown }).holes;
+  return { type: 'update', before, after };
 }
 
 function invert(op: Op): Op {

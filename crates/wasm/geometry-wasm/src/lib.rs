@@ -23,17 +23,105 @@ fn points(xy: &[f64]) -> Vec<Vec2> {
 }
 
 /// The id of a core operation by its TypeScript name (`apps/web/src/wasm/core.ts`
-/// asks once per operation), or −1 when this build has no such operation.
+/// asks once per operation), or −1 when this build has no such operation. The
+/// style core's operations come after the geometry core's.
 #[wasm_bindgen(js_name = opId)]
 pub fn op_id(name: &str) -> i32 {
-    kentos_geometry_core::api::find(name).map_or(-1, |i| i as i32)
+    kentos_geometry_core::api::find(name)
+        .or_else(|| {
+            kentos_style_core::api::find(name).map(|i| kentos_geometry_core::api::all().len() + i)
+        })
+        .map_or(-1, |i| i as i32)
 }
 
 /// Runs a core operation on a JSON array of arguments; the result is JSON
 /// (docs/adr/0008). Unreadable arguments throw.
 #[wasm_bindgen(js_name = callOp)]
 pub fn call_op(id: u32, args: &str) -> Result<String, JsError> {
-    kentos_geometry_core::api::run(id as usize, args).map_err(|e| JsError::new(&e))
+    let geometry = kentos_geometry_core::api::all().len();
+    let id = id as usize;
+    if id < geometry {
+        kentos_geometry_core::api::run(id, args)
+    } else {
+        kentos_style_core::api::run(id - geometry, args)
+    }
+    .map_err(|e| JsError::new(&e))
+}
+
+/// One expression's values for a table of objects
+/// (`kentos_style_core::expr::rows` has the table's layout).
+#[wasm_bindgen]
+pub struct ExprColumn {
+    kinds: Vec<u8>,
+    numbers: Vec<f64>,
+    texts: String,
+    text_lens: Vec<u32>,
+}
+
+#[wasm_bindgen]
+impl ExprColumn {
+    /// Per object: 0 empty, 1 number, 2 text, 3 true/false.
+    #[wasm_bindgen(getter)]
+    pub fn kinds(&self) -> Vec<u8> {
+        self.kinds.clone()
+    }
+
+    /// Per object: the number, 1/0 for true/false, NaN otherwise.
+    #[wasm_bindgen(getter)]
+    pub fn numbers(&self) -> Vec<f64> {
+        self.numbers.clone()
+    }
+
+    /// The text values one after another…
+    #[wasm_bindgen(getter)]
+    pub fn texts(&self) -> String {
+        self.texts.clone()
+    }
+
+    /// …and their lengths in UTF-16 code units.
+    #[wasm_bindgen(getter, js_name = textLengths)]
+    pub fn text_lengths(&self) -> Vec<u32> {
+        self.text_lens.clone()
+    }
+}
+
+/// Evaluates an expression for `n` objects in one call (drawing a layer, a
+/// processing run), each value as `want` asks (0 as it is, 1 a number, 2
+/// text, 3 true/false, 4 the number its text reads as). The source is compiled again here: compiling costs
+/// microseconds, and no compiled expression lives on in the core's memory.
+#[allow(clippy::too_many_arguments)]
+#[wasm_bindgen(js_name = exprEvaluate)]
+pub fn expr_evaluate(
+    source: &str,
+    n: u32,
+    texts: &str,
+    text_lens: &[i32],
+    numbers: &[f64],
+    measures: &[f64],
+    scale: f64,
+    want: u8,
+) -> Result<ExprColumn, JsError> {
+    use kentos_style_core::expr::{compile, rows};
+    let e = compile(source).map_err(|e| JsError::new(&e.text()))?;
+    let c = rows::evaluate_rows(
+        &e,
+        &rows::RowsInput {
+            n: n as usize,
+            texts,
+            text_lens,
+            numbers,
+            measures,
+            scale,
+        },
+        rows::As::from_code(want),
+    )
+    .map_err(|e| JsError::new(&e))?;
+    Ok(ExprColumn {
+        kinds: c.kinds,
+        numbers: c.numbers,
+        texts: c.texts,
+        text_lens: c.text_lens,
+    })
 }
 
 /// Version of the core, to tell a stale WASM build from the app.

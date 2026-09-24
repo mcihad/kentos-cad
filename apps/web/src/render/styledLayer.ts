@@ -1,11 +1,10 @@
 import type { Entity } from '../model/entities';
-import type { Measured } from '../model/expression/expressionLib';
 import type { Bounds, Vec2 } from '../model/geometry';
 import type { LayerStyle } from '../model/layers';
 import type { LibraryAsset, Symbol, SymbolSet } from '../model/style';
-import { compileSymbol, type CompileEnv, type ExprCache } from '../style/compile';
+import { compileSymbol, ExprRun, type CompileEnv, type ExprCache } from '../style/compile';
 import { hatchSymbolOf, symbolsOfLayerStyle } from '../style/fromLayer';
-import { DrawnReader, measuredAt, type GeometryClass } from '../style/geometry';
+import { DrawnReader, type GeometryClass } from '../style/geometry';
 import { resolveRenderer, symbolOf, type ResolvedSet } from '../style/resolve';
 import type { CanvasPalette } from './color';
 import { StyledSink } from './styledSink';
@@ -32,7 +31,7 @@ export interface StyleSources {
 export interface GeometrySource {
   /** What these objects draw, one record each (style/geometry.ts `DrawnReader`); `oriented`: rings turned for the style engine; `clip`: the box construction lines are clipped to. */
   drawn(ids: readonly number[], oriented: boolean, clip?: Bounds): Float64Array;
-  /** Their geometry values for expressions (style/geometry.ts `measuredAt`). */
+  /** Their geometry values for expressions (model/expression/expressionLib.ts `measuredAt`). */
   measures(ids: readonly number[]): Float64Array;
 }
 
@@ -56,17 +55,17 @@ const SYMBOL_CLASS = { fill: 'fill', line: 'line', marker: 'marker' } as const;
 export function buildStyledLayer(id: string, entities: readonly Entity[], style: LayerStyle, opts: StyledBuildOptions): SceneLayer {
   const sink = new StyledSink({ origin: opts.origin, palette: opts.palette, plotScale: opts.plotScale, asset: (a) => opts.library.asset(a) });
   const ids = entities.map((e) => e.id);
-  // The expressions' geometry values come for the whole layer the first time one is asked for.
-  let values: Float64Array | null = null;
+  // Each expression is evaluated for the whole layer the first time an object needs it; its
+  // geometry values come from the store, for the whole layer, the first time one is read.
+  const run = new ExprRun(opts.exprs, { entities, layerName: opts.layerName, plotScale: opts.plotScale, measures: () => opts.geometry.measures(ids) });
   const env: CompileEnv = {
     plotScale: opts.plotScale,
     exprs: opts.exprs,
-    layerName: opts.layerName,
+    run,
     assetAspect: (a) => {
       const asset = opts.library.asset(a);
       return asset ? asset.height / asset.width : 1;
     },
-    measured: (index: number): Measured => measuredAt((values ??= opts.geometry.measures(ids)), index - 1),
   };
   const simple = new Map<string, SymbolSet>();
   const simpleFor = (color: string) => {

@@ -100,7 +100,7 @@ describe('FormatsClient', () => {
 
   it('sends the objects of a DXF export as a copy and passes the file and its report on', async () => {
     const { client, workers } = setup();
-    const input = { entities: [], layers: [], scale: 1000, lengthDecimals: 3, grads: true };
+    const input = { entities: [], layers: [], scale: 1000, lengthDecimals: 3, grads: true, dimensionValues: {} };
     const written = client.writeDxf(input);
     const w = workers[0];
     const sent = w.sent[0];

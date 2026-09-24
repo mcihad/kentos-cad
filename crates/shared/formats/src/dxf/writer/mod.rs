@@ -241,9 +241,17 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     };
     let layers = Layers::new(&input.layers, &mut report);
     let mut body = Out::default();
+    // The dimensions' own blocks and their block records.
+    let mut blocks = Out::default();
+    let mut records = Vec::new();
     let (extent, points) = {
         let mut w = Writer {
             out: &mut body,
+            blocks: &mut blocks,
+            records: &mut records,
+            values: &input.dimension_values,
+            decimals: input.length_decimals,
+            grads: input.grads,
             handles: &mut handles,
             layers: &layers,
             report: &mut report,
@@ -264,7 +272,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     template::style_view_ucs(&mut tables);
     template::appid_table(&mut tables);
     template::dimstyle_table(&mut tables);
-    template::block_record_table(&mut tables);
+    template::block_record_table(&mut tables, &records);
     tables.str(0, "ENDSEC");
 
     // The header is written last: it holds the next free handle.
@@ -281,7 +289,7 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     );
     template::classes(&mut out);
     out.s.push_str(&tables.s);
-    template::blocks(&mut out);
+    template::blocks(&mut out, &blocks.s);
     out.section("ENTITIES");
     out.s.push_str(&body.s);
     out.str(0, "ENDSEC");

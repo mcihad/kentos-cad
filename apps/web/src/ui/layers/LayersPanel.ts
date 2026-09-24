@@ -43,7 +43,7 @@ interface Row {
 export class LayersPanel extends Panel {
   private readonly ctx: AppContext;
   private readonly tree: TreeView<LayerNode>;
-  /** The rows on screen by node id; refilled by every render of the tree. */
+  /** The rows on the page by node id (the tree builds those in its scroll window). */
   private readonly rows = new Map<string, Row>();
   /** Object count of every node; a group's is the sum over all its layers. */
   private totals = new Map<string, number>();
@@ -68,6 +68,8 @@ export class LayersPanel extends Panel {
         setExpanded: (n, v) => layers.setExpanded(n.id, v),
         matches: (n, q) => n.name.toLocaleLowerCase('tr-TR').includes(q),
         renderRow: (n, row) => this.renderRow(n, row),
+        // Only the rows in view are built; one scrolled away takes no more writes.
+        releaseRow: (n) => this.rows.delete(n.id),
         onActivate: (n) => (n.type === 'layer' ? layers.setActive(n.id) : layers.setExpanded(n.id, !n.expanded)),
         onToggle: (n) => layers.toggleVisible(n.id),
         onRename: (n) => this.rename(n),
@@ -77,6 +79,7 @@ export class LayersPanel extends Panel {
     );
 
     this.body.append(h('div', { class: 'panel__toolbar' }, h('span', { class: 'field-icon' }, icon('search', 14)), filter), this.tree.el);
+    this.d.add(() => this.tree.dispose());
     this.d.add(
       listen(filter, 'input', () => {
         this.rows.clear();
@@ -270,6 +273,8 @@ export class LayersPanel extends Panel {
   }
 
   private rename(n: LayerNode): void {
+    // Scrolled into view first: a row out of view is not built.
+    this.tree.rowOf(n.id);
     const nameEl = this.rows.get(n.id)?.name;
     if (!nameEl?.isConnected) return;
     const input = h('input', { class: 'field field--inline', value: n.name, 'aria-label': 'Katman adı', spellcheck: 'false' });

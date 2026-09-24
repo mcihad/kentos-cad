@@ -2,7 +2,7 @@ import type { AppContext } from '../../app/context';
 import { foldTurkish } from '../../core/text';
 import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import type { Vec2 } from '../../model/geometry';
-import { EXPR_FUNCTIONS, EXPR_VARIABLES } from '../../model/expression/expressionLib';
+import { exprCatalog } from '../../model/expression/expressionLib';
 import { scopesOf } from '../../processing/parameters';
 import type { InputSummary } from '../../processing/runner';
 import type { FeaturesValue, LayerValue, ParamDef } from '../../processing/types';
@@ -287,8 +287,8 @@ function expressionField(def: Extract<ParamDef, { type: 'expression' }>, value: 
     h(
       'div',
       { class: 'pfield__exprmenus' },
-      menuButton('Değişkenler', () => EXPR_VARIABLES.map((v) => ({ label: `$${v.name}`, detail: v.description, run: () => insert(`$${v.name}`) }))),
-      menuButton('İşlevler', () => EXPR_FUNCTIONS.map((f) => ({ label: f.signature, detail: f.description, run: () => insert(`${f.name}(`) }))),
+      menuButton('Değişkenler', () => exprCatalog().variables.map((v) => ({ label: `$${v.name}`, detail: v.description, run: () => insert(`$${v.name}`) }))),
+      menuButton('İşlevler', () => exprCatalog().functions.map((f) => ({ label: f.signature, detail: f.description, run: () => insert(`${f.name}(`) }))),
     ),
   );
   refresh();

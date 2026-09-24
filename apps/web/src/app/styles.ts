@@ -138,20 +138,15 @@ export function registerStyleCommands(ctx: AppContext): void {
 export function assignSymbol(ctx: AppContext, id: string | undefined): void {
   const { doc } = ctx;
   const name = id ? (ctx.styles.library.get(id)?.name ?? id) : '';
-  let done = 0;
   let locked = 0;
-  doc.transact(id ? `Sembol: ${name}` : 'Sembolü kaldır', () => {
-    for (const eid of ctx.selection.ids.value) {
-      const e = doc.get(eid);
-      if (!e || e.symbol === id) continue;
-      if (doc.layers.isLocked(e.layerId)) {
-        locked++;
-        continue;
-      }
-      doc.update(eid, { symbol: id });
-      done++;
-    }
-  });
+  const patches: { id: number; symbol: string | undefined }[] = [];
+  for (const eid of ctx.selection.ids.value) {
+    const e = doc.get(eid);
+    if (!e || e.symbol === id) continue;
+    if (doc.layers.isLocked(e.layerId)) locked++;
+    else patches.push({ id: eid, symbol: id });
+  }
+  const done = doc.updateMany(patches, id ? `Sembol: ${name}` : 'Sembolü kaldır');
   const skipped = locked ? `; kilitli katmandaki ${locked} nesne atlandı` : '';
   if (id) ctx.log.info(`${done} nesneye “${name}” verildi${skipped}.`);
   else ctx.log.info(`${done} nesnenin sembolü kaldırıldı${skipped}.`);

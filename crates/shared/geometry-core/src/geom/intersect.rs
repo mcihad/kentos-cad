@@ -7,6 +7,7 @@ use crate::api::Op;
 use crate::geom::arc::{ON_ARC_EPS, norm_angle, on_arc};
 use crate::jsmath::{TAU, acos, atan2, cos, js_hypot, js_max, js_min, sin};
 use crate::op;
+use crate::predicates::cross_accurate;
 use crate::vec2::Vec2;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -46,24 +47,24 @@ crate::json_struct!(Hit { p, t, u });
 
 const EPS: f64 = 1e-12;
 
-fn cross(ax: f64, ay: f64, bx: f64, by: f64) -> f64 {
-    ax * by - ay * bx
-}
-
 /// Infinite-line intersection; t, u are parameters along a→b and c→d.
+/// The three cross products are taken accurately (`cross_accurate`: below
+/// 2⁻⁴¹ relative error however nearly parallel the lines are; the plain
+/// products, bit for bit, where they are good), so t and u are too: a
+/// crossing inside both segments always gives t and u in [0, 1] up to
+/// that error, never outside `seg_seg`'s band (CLAUDE.md §23.3). Lines
+/// within 1e-12 of parallel are parallel (a CAD tolerance, kept).
 pub fn line_line(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<Hit> {
     let rx = b.x - a.x;
     let ry = b.y - a.y;
     let sx = d.x - c.x;
     let sy = d.y - c.y;
-    let den = cross(rx, ry, sx, sy);
+    let den = cross_accurate(a, b, c, d);
     if den.abs() < EPS * js_max(1.0, js_hypot(rx, ry) * js_hypot(sx, sy)) {
         return None; // parallel
     }
-    let qx = c.x - a.x;
-    let qy = c.y - a.y;
-    let t = cross(qx, qy, sx, sy) / den;
-    let u = cross(qx, qy, rx, ry) / den;
+    let t = cross_accurate(a, c, c, d) / den;
+    let u = cross_accurate(a, c, a, b) / den;
     Some(Hit {
         p: Vec2::new(a.x + t * rx, a.y + t * ry),
         t,
@@ -71,6 +72,9 @@ pub fn line_line(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<Hit> {
     })
 }
 
+/// Two segments' crossing, touching counted: t and u within `eps` of
+/// [0, 1] (a CAD tolerance). With `line_line`'s accurate parameters the
+/// decision is exact but for crossings within 2⁻⁴¹·|t| of the band's edge.
 pub fn seg_seg(a: Vec2, b: Vec2, c: Vec2, d: Vec2, eps: f64) -> Option<Hit> {
     line_line(a, b, c, d)
         .filter(|h| h.t >= -eps && h.t <= 1.0 + eps && h.u >= -eps && h.u <= 1.0 + eps)
@@ -387,3 +391,129 @@ pub(crate) static OPS: &[Op] = &[
         tangent_points(p, c, r)
     }),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// What `line_line` computed before: the plain rounded cross products.
+    fn plain_line_line(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<Hit> {
+        let (rx, ry, sx, sy) = (b.x - a.x, b.y - a.y, d.x - c.x, d.y - c.y);
+        let den = rx * sy - ry * sx;
+        if den.abs() < EPS * js_max(1.0, js_hypot(rx, ry) * js_hypot(sx, sy)) {
+            return None;
+        }
+        let (qx, qy) = (c.x - a.x, c.y - a.y);
+        let t = (qx * sy - qy * sx) / den;
+        let u = (qx * ry - qy * rx) / den;
+        Some(Hit {
+            p: Vec2::new(a.x + t * rx, a.y + t * ry),
+            t,
+            u,
+        })
+    }
+
+    fn band(h: &Hit) -> bool {
+        let eps = 1e-9;
+        h.t >= -eps && h.t <= 1.0 + eps && h.u >= -eps && h.u <= 1.0 + eps
+    }
+
+    /// Deterministic random numbers (xorshift64*), the same on every target.
+    struct Rnd(u64);
+    impl Rnd {
+        fn next(&mut self) -> f64 {
+            self.0 ^= self.0 >> 12;
+            self.0 ^= self.0 << 25;
+            self.0 ^= self.0 >> 27;
+            (self.0.wrapping_mul(0x2545_f491_4f6c_dd1d) >> 11) as f64 / (1u64 << 53) as f64
+        }
+    }
+
+    /// Nearly parallel TM segments crossing near an end, where the rounded
+    /// products lose about ε/sin δ of t, and every fourth pair meeting at a
+    /// shared end (a sliver between two edges ending at one vertex: t = u = 1
+    /// exactly). Against exact integer arithmetic (every float64 there lies
+    /// on the 2⁻³⁵ grid): a crossing inside both segments is always found,
+    /// with t and u in [0, 1] up to 1e-12 and t within 1e-12 of the exact
+    /// value; one clearly outside the 1e-9 band (by another 1e-9) never is.
+    /// The plain products put t off by more than the band, and missed shared
+    /// ends.
+    #[test]
+    fn nearly_parallel_segments_decide_like_exact_arithmetic() {
+        let unit = (1u64 << 35) as f64;
+        let k = |x: f64| {
+            let s = x * unit;
+            assert!(s == s.trunc(), "{x} is off the grid");
+            s as i128
+        };
+        let cross = |p1: Vec2, p2: Vec2, q1: Vec2, q2: Vec2| {
+            (k(p2.x) - k(p1.x)) * (k(q2.y) - k(q1.y)) - (k(p2.y) - k(p1.y)) * (k(q2.x) - k(q1.x))
+        };
+        let positive = |n: i128, d: i128| if d < 0 { (-n, -d) } else { (n, d) };
+        // 0 ≤ n/d ≤ 1 exactly; n/d below −2e-9 or above 1 + 2e-9 exactly.
+        let inside = |n: i128, d: i128| {
+            let (n, d) = positive(n, d);
+            n >= 0 && n <= d
+        };
+        let clearly_out = |n: i128, d: i128| {
+            let (n, d) = positive(n, d);
+            1_000_000_000 * n < -2 * d || 1_000_000_000 * (n - d) > 2 * d
+        };
+        let base = Vec2::new(500_000.37, 4_400_000.11);
+        let mut g = Rnd(2026);
+        let (mut found, mut refused, mut plain_missed, mut plain_far) = (0, 0, 0, 0);
+        for n in 0..20_000 {
+            let a = Vec2::new(
+                base.x + (g.next() - 0.5) * 100.0,
+                base.y + (g.next() - 0.5) * 100.0,
+            );
+            let th = g.next() * TAU;
+            let l1 = 20.0 + g.next() * 180.0;
+            let b = Vec2::new(a.x + l1 * cos(th), a.y + l1 * sin(th));
+            // A turn of 1e-10 … 1e-6 and a crossing within 1e-7 of an end.
+            let sign = if g.next() < 0.5 { -1.0 } else { 1.0 };
+            let delta = sign * libm::pow(10.0, -6.0 - 4.0 * g.next());
+            let near = if n % 2 == 0 { 0.0 } else { 1.0 };
+            let t0 = near + (g.next() - 0.5) * 2.0 * libm::pow(10.0, -7.0 - 6.0 * g.next());
+            let x = Vec2::new(a.x + t0 * (b.x - a.x), a.y + t0 * (b.y - a.y));
+            let (l2, s0, phi) = (20.0 + g.next() * 180.0, 0.2 + 0.6 * g.next(), th + delta);
+            let c = Vec2::new(x.x - s0 * l2 * cos(phi), x.y - s0 * l2 * sin(phi));
+            let d = if n % 4 == 3 {
+                b
+            } else {
+                Vec2::new(
+                    x.x + (1.0 - s0) * l2 * cos(phi),
+                    x.y + (1.0 - s0) * l2 * sin(phi),
+                )
+            };
+            let den = cross(a, b, c, d);
+            // Within 2e-12 of parallel the parallel tolerance decides: skipped.
+            let sin = (den as f64 / unit / unit).abs() / (l1 * l2);
+            if sin < 2e-12 {
+                continue;
+            }
+            let (tn, un) = (cross(a, c, c, d), cross(a, c, a, b));
+            let got = seg_seg(a, b, c, d, 1e-9);
+            let plain = plain_line_line(a, b, c, d).filter(band);
+            if inside(tn, den) && inside(un, den) {
+                found += 1;
+                let h = got.unwrap_or_else(|| panic!("missed {a:?} {b:?} {c:?} {d:?}"));
+                assert!(h.t >= -1e-12 && h.t <= 1.0 + 1e-12 && h.u >= -1e-12 && h.u <= 1.0 + 1e-12);
+                let t = tn as f64 / den as f64;
+                assert!((h.t - t).abs() <= 1e-12, "t {} ≠ {t}", h.t);
+                plain_missed += usize::from(plain.is_none());
+                if let Some(p) = plain_line_line(a, b, c, d) {
+                    plain_far += usize::from((p.t - t).abs() > 1e-9);
+                }
+            } else if clearly_out(tn, den) || clearly_out(un, den) {
+                refused += 1;
+                assert!(got.is_none(), "took {a:?} {b:?} {c:?} {d:?}");
+            }
+        }
+        assert!(found > 3000 && refused > 3000, "{found} {refused}");
+        assert!(
+            plain_missed > 100 && plain_far > 1000,
+            "the plain products no longer fail here: {plain_missed} {plain_far}"
+        );
+    }
+}

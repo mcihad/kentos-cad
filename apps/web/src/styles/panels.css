@@ -133,10 +133,22 @@
 
 /* ── Tree ────────────────────────────────────────────────────────── */
 .tree {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow: auto;
   padding: 0 0 6px;
+}
+/* Only the rows in the scroll window are built (TreeView): spacers stand for the rest, */
+.tree__spacer {
+  pointer-events: none;
+}
+/* and a hidden row tells their height (--row-h follows the UI scale; after .tree__row by specificity). */
+.tree .tree__probe {
+  position: absolute;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 .tree:focus-visible {
   outline: none;

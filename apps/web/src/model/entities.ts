@@ -217,8 +217,8 @@ export const isClosedOutline = op<(e: EntityGeometry) => boolean>('isClosedOutli
 /** Box of an entity; construction lines count by their base point only (zoom extents ignores their reach). */
 export const entityBounds = op<(e: Entity) => Bounds>('entityBounds');
 
-/** Where a label or a value sits: a polygon's centroid, a line's middle, a circle's centre… */
-export const entityAnchor = op<(e: Entity) => Vec2>('entityAnchor');
+/** Where a label or a value ($y, $x) sits: a polygon's centroid, a line's middle, a circle's centre…; null for a path without vertices. */
+export const entityAnchor = op<(e: Entity) => Vec2 | null>('entityAnchor');
 
 /** Length (a polygon's perimeter includes its holes, as in GIS), or null. */
 export const entityLength = op<(e: Entity) => number | null>('entityLength');

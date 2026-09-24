@@ -303,15 +303,127 @@ fn objects() -> Vec<Entity> {
             },
         }),
     ]
+    .into_iter()
+    .chain(dimensions())
+    .collect()
+}
+
+/// A dimension of every style at TM coordinates (one without a style, two linear, with and without an angle).
+fn dimensions() -> Vec<Entity> {
+    let dim = |id: u32, style, a, b, offset, angle, c, text: Option<&str>| {
+        Entity::Dimension(DimensionEntity {
+            base: with("yazi", |b| {
+                b.id = id;
+                if id == 101 {
+                    b.label = Some("Ö1".into());
+                    b.attrs.insert("Not".into(), "yol ölçüsü".into());
+                    b.color = Some("#7fb2e5".into());
+                }
+            }),
+            a,
+            b,
+            offset,
+            height: 0.75,
+            text: text.map(str::to_string),
+            style,
+            angle,
+            c,
+        })
+    };
+    vec![
+        dim(
+            100,
+            None,
+            tm(0.0, 0.0),
+            tm(10.0, 0.0),
+            2.0,
+            None,
+            None,
+            None,
+        ),
+        dim(
+            101,
+            Some(DimensionStyle::Aligned),
+            tm(0.3, 20.1),
+            tm(12.7, 27.9),
+            -1.5,
+            None,
+            None,
+            Some("yol {kenar} \\ 45%%d ^"),
+        ),
+        dim(
+            102,
+            Some(DimensionStyle::Linear),
+            tm(20.0, 0.0),
+            tm(31.25, 7.5),
+            3.0,
+            Some(90.0),
+            None,
+            None,
+        ),
+        dim(
+            103,
+            Some(DimensionStyle::Linear),
+            tm(20.0, 10.0),
+            tm(31.25, 17.5),
+            2.5,
+            None,
+            None,
+            None,
+        ),
+        dim(
+            104,
+            Some(DimensionStyle::Angular),
+            tm(45.0, 0.0),
+            tm(40.0, 6.0),
+            4.5,
+            None,
+            Some(tm(40.0, 0.0)),
+            None,
+        ),
+        dim(
+            105,
+            Some(DimensionStyle::Radius),
+            tm(60.0, 0.0),
+            tm(62.5, 1.75),
+            1.0,
+            None,
+            None,
+            None,
+        ),
+        dim(
+            106,
+            Some(DimensionStyle::Diameter),
+            tm(70.0, 0.0),
+            tm(71.2, 3.3),
+            0.0,
+            None,
+            None,
+            Some("Ø 7,00"),
+        ),
+    ]
+}
+
+/// The value every dimension without a text of its own shows (the app formats it).
+fn shown(id: u32) -> String {
+    format!("{}.500", id - 90)
 }
 
 fn input(entities: Vec<Entity>) -> DxfWriteInput {
+    let dimension_values = entities
+        .iter()
+        .filter_map(|e| match e {
+            Entity::Dimension(d) if d.text.is_none() => Some((d.base.id, shown(d.base.id))),
+            _ => None,
+        })
+        .collect();
     DxfWriteInput {
         entities,
         layers: layers(),
         scale: 1000.0,
         length_decimals: 3,
         grads: true,
+        dimension_values,
     }
 }
 
@@ -341,6 +453,8 @@ fn expected(e: &Entity, layer_of: &dyn Fn(&str) -> String) -> Entity {
         Entity::Hatch(x) => &mut x.base,
     };
     b.layer_id = layer_of(&b.layer_id);
+    // The reader numbers nothing: the app gives imported objects their ids.
+    b.id = 0;
     e
 }
 
@@ -381,6 +495,7 @@ fn every_kind_reads_back_as_the_same_object() {
     let written: u32 = report.counts.values().sum();
     assert_eq!(written as usize, objects.len());
     assert_eq!(report.counts.get("hatch"), Some(&4));
+    assert_eq!(report.counts.get("dimension"), Some(&7));
     assert!(report.skipped.is_empty(), "{:?}", report.skipped);
     assert!(report.notes.iter().any(|n| n.what == "Adalı alan"));
 }
@@ -562,30 +677,123 @@ fn the_file_has_what_autocad_needs() {
     );
 }
 
+/// The groups of each entity of a kind, in the order the file has them.
+fn entities_of<'a>(p: &[(i32, &'a str)], kind: &str) -> Vec<Vec<(i32, &'a str)>> {
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < p.len() {
+        if p[i] == (0, kind) {
+            let end = p[i + 1..]
+                .iter()
+                .position(|x| x.0 == 0)
+                .map_or(p.len(), |k| i + 1 + k);
+            out.push(p[i..end].to_vec());
+            i = end;
+        } else {
+            i += 1;
+        }
+    }
+    out
+}
+
+fn group<'a>(e: &[(i32, &'a str)], code: i32) -> Option<&'a str> {
+    e.iter().find(|x| x.0 == code).map(|x| x.1)
+}
+
+/// Each dimension is a DIMENSION of its DXF type with a block of its own
+/// (a block record, BLOCK, the lines and ticks, the arc as an ARC, the
+/// value as MTEXT on layer 0 in the dimension's colour) and AutoCAD's style
+/// overrides; KentOS reads the same dimensions back (`every_kind_…`).
 #[test]
-fn a_dimension_is_written_as_its_lines_and_text() {
-    let d = Entity::Dimension(DimensionEntity {
-        base: with("yazi", |b| {
-            b.attrs
-                .insert("Not".into(), "ölçü".into())
-                .map_or((), |_| ())
-        }),
-        a: tm(0.0, 0.0),
-        b: tm(10.0, 0.0),
-        offset: 2.0,
-        height: 0.5,
-        text: Some("10.00".into()),
-        style: Some(DimensionStyle::Aligned),
-        angle: None,
-        c: None,
-    });
-    let (text, report) = write(&input(vec![d]));
-    let r = read(&text);
-    let lines = r
-        .entities
+fn a_dimension_is_a_dxf_dimension_with_a_block_of_its_own() {
+    let (text, report) = write(&input(dimensions()));
+    let p = pairs(&text);
+    let dims = entities_of(&p, "DIMENSION");
+    assert_eq!(dims.len(), 7);
+    let types: Vec<i64> = dims
         .iter()
-        .filter(|e| matches!(e, Entity::Line(_)))
-        .count();
+        .map(|d| group(d, 70).expect("70").parse::<i64>().expect("type") & 7)
+        .collect();
+    assert_eq!(types, [1, 1, 0, 0, 5, 4, 3]);
+    let records: HashSet<&str> = entities_of(&p, "BLOCK_RECORD")
+        .iter()
+        .filter_map(|r| group(r, 2))
+        .collect();
+    let blocks = entities_of(&p, "BLOCK");
+    let mtexts = entities_of(&p, "MTEXT");
+    for (k, d) in dims.iter().enumerate() {
+        let name = group(d, 2).expect("block name");
+        assert_eq!(name, format!("*D{}", k + 1));
+        assert!(records.contains(name), "{name}");
+        let block = blocks
+            .iter()
+            .find(|b| group(b, 2) == Some(name))
+            .expect("block");
+        assert_eq!(group(block, 70), Some("1"));
+        // AutoCAD's DSTYLE data: the text height is the dimension's.
+        let at = d
+            .iter()
+            .position(|x| *x == (1000, "DSTYLE"))
+            .expect("DSTYLE");
+        assert_eq!(d[at + 2..at + 4], [(1070, "140"), (1040, "0.75")]);
+    }
+    // Standard shows a redrawn value as KentOS does: DIMZIN and DIMAZIN keep
+    // trailing zeros, DIMDSEP is a point, DIMRND is left out (ezdxf rounds 0 to whole numbers).
+    let style = entities_of(&p, "DIMSTYLE");
+    assert_eq!(style.len(), 1);
+    assert_eq!(group(&style[0], 2), Some("Standard"));
+    assert_eq!(
+        [45, 78, 79, 278].map(|c| group(&style[0], c)),
+        [None, Some("0"), Some("0"), Some("46")]
+    );
+    // The values: the app's for dimensions without a text, the own text otherwise (in MTEXT's notation).
+    let values: Vec<&str> = mtexts.iter().map(|m| group(m, 1).expect("text")).collect();
+    assert_eq!(
+        values,
+        [
+            "10.500",
+            "yol \\{kenar\\} \\\\ 45%%%%%%d ^ ",
+            "12.500",
+            "13.500",
+            "14.500",
+            "15.500",
+            "Ø 7,00"
+        ]
+    );
+    assert!(
+        mtexts
+            .iter()
+            .all(|m| group(m, 8) == Some("0") && group(m, 62) == Some("0"))
+    );
+    // The own text is the dimension's text; the others have none (the measured value).
+    assert_eq!(group(&dims[1], 1), Some(values[1]));
+    assert_eq!(group(&dims[0], 1), Some(""));
+    // The angular dimension's arc is one ARC, not chords.
+    assert_eq!(entities_of(&p, "ARC").len(), 1);
+    assert_eq!(report.counts.get("dimension"), Some(&7));
+    assert!(
+        report.notes.iter().all(|n| n.what != "Ölçü"),
+        "{:?}",
+        report.notes
+    );
+    let r = read(&text);
+    assert!(r.entities.iter().all(|e| matches!(e, Entity::Dimension(_))));
+    assert!(r.report.notes.is_empty(), "{:?}", r.report.notes);
+}
+
+/// A dimension another program moved (its definition point is not where
+/// KentOS put it) is drawn by its block, as any other program's dimension.
+#[test]
+fn a_dimension_changed_elsewhere_is_drawn_by_its_block() {
+    let d = dimensions().remove(0);
+    let (text, _) = write(&input(vec![d]));
+    let at = text.find("  0\r\nDIMENSION\r\n").expect("DIMENSION");
+    let ten = at + text[at..].find(" 10\r\n").expect("group 10") + " 10\r\n".len();
+    let end = ten + text[ten..].find("\r\n").expect("value");
+    let moved = format!("{}{}{}", &text[..ten], "452345.5", &text[end..]);
+    let r = read(&moved);
+    assert!(!r.entities.iter().any(|e| matches!(e, Entity::Dimension(_))));
+    assert!(r.entities.iter().any(|e| matches!(e, Entity::Line(_))));
     let texts: Vec<&TextEntity> = r
         .entities
         .iter()
@@ -594,22 +802,22 @@ fn a_dimension_is_written_as_its_lines_and_text() {
             _ => None,
         })
         .collect();
-    assert!(lines >= 3, "{:#?}", r.entities);
     assert_eq!(texts.len(), 1);
-    assert_eq!(texts[0].text, "10.00");
-    // The pieces are on the dimension's layer, without its attributes (as Patlat does).
-    assert!(r.entities.iter().all(|e| match e {
-        Entity::Line(l) => l.base.layer_id == "Yazılar" && l.base.attrs.is_empty(),
-        Entity::Text(t) => t.base.layer_id == "Yazılar" && t.base.attrs.is_empty(),
-        _ => false,
-    }));
-    assert_eq!(report.counts.get("dimension"), Some(&1));
+    assert_eq!(texts[0].text, "10.500");
     assert!(
-        report
+        r.report
             .notes
             .iter()
-            .any(|n| n.what == "Ölçü" && n.reason.contains("patlatılarak"))
+            .any(|n| n.what == "Ölçü (DIMENSION)" && n.reason.contains("başka bir programda"))
     );
+    // A definition point that cannot be read leaves the dimension to its block too; nothing is refused.
+    let at13 = at + text[at..].find(" 13\r\n").expect("group 13") + " 13\r\n".len();
+    let end13 = at13 + text[at13..].find("\r\n").expect("value");
+    let broken = format!("{}{}{}", &text[..at13], "x", &text[end13..]);
+    let r = read(&broken);
+    assert!(!r.entities.iter().any(|e| matches!(e, Entity::Dimension(_))));
+    assert!(r.entities.iter().any(|e| matches!(e, Entity::Line(_))));
+    assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
 }
 
 #[test]
@@ -711,6 +919,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         scale: 500.0,
         length_decimals: 2,
         grads: false,
+        dimension_values: BTreeMap::new(),
     });
     let r = read(&text);
     // Long values came in pieces and control characters in caret notation: the attributes are back as they were.
@@ -762,6 +971,7 @@ fn nothing_to_write_is_still_a_file_autocad_opens() {
         scale: 1000.0,
         length_decimals: 3,
         grads: false,
+        dimension_values: BTreeMap::new(),
     });
     let r = read(&text);
     assert!(r.entities.is_empty() && r.layers.is_empty());

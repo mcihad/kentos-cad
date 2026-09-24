@@ -1,6 +1,5 @@
 import type { Entity } from '../model/entities';
-import { compileExpression, type CompiledExpression } from '../model/expression/expression';
-import { toNumber, toText, truthy, type ExprScope, type ExprValue, type Measured } from '../model/expression/expressionLib';
+import { compileExpression, type CompiledExpression, type ExprAs, type ExprColumn, type ExprObjects, type ExprValue } from '../model/expression/expression';
 import { offsetPath } from '../model/geom/offset';
 import type { Vec2 } from '../model/geometry';
 import { interiorPoint, placeAlong, wavePaths, type StyledGeometry } from './geometry';
@@ -36,50 +35,72 @@ export class ExprCache {
   }
 }
 
+/**
+ * The expressions of one build (a layer, a preview) evaluated for all its
+ * objects at once: the first object that needs an expression's value gets
+ * every object's, in one call to the core (docs/adr/0008 “İfade dili”).
+ */
+export class ExprRun {
+  private readonly exprs: ExprCache;
+  private readonly objects: ExprObjects;
+  private readonly columns = new Map<string, ExprColumn | null>();
+
+  constructor(exprs: ExprCache, objects: ExprObjects) {
+    this.exprs = exprs;
+    // The geometry values are asked for once, whichever expression first reads one.
+    const fetch = objects.measures;
+    let measures: Float64Array | null = null;
+    this.objects = fetch ? { ...objects, measures: () => (measures ??= fetch()) } : objects;
+  }
+
+  /** The value of `src` for the object at 1-based `index`, as `as` asks; null when it does not compile. */
+  value(src: string, index: number, as: ExprAs): ExprValue {
+    const key = `${as}\u0000${src}`;
+    let c = this.columns.get(key);
+    if (c === undefined) {
+      const e = this.exprs.get(src);
+      c = e ? e.evaluateAll(this.objects, as) : null;
+      this.columns.set(key, c);
+    }
+    return c ? c.value(index - 1) : null;
+  }
+}
+
 export interface CompileEnv {
   /** Denominator of the project's plot scale (1000 for 1:1000): 1 mm on paper = plotScale/1000 m. */
   readonly plotScale: number;
   readonly exprs: ExprCache;
-  layerName(id: string): string;
+  /** The data-defined values of this build's objects; `CompileTarget.index` is a position in them. */
+  readonly run: ExprRun;
   /** Height/width of an image asset (tiles keep their proportions); 1 when unknown. */
   assetAspect?(id: string): number;
-  /** The geometry values of the object at 1-based `index` in the layer (the geometry store); computed per object when absent. */
-  readonly measured?: (index: number) => Measured;
 }
 
-/** The object and its position in the run, as expressions see it. */
+/** The object and its 1-based position in the build (`CompileEnv.run`), as expressions see it. */
 export interface CompileTarget {
   readonly entity: Entity;
   readonly index: number;
 }
 
-function evaluate(v: { expr: string }, t: CompileTarget, env: CompileEnv): ExprValue {
-  const e = env.exprs.get(v.expr);
-  if (!e) return null;
-  const m = env.measured;
-  const scope: ExprScope = { entity: t.entity, index: t.index, layerName: env.layerName, plotScale: env.plotScale, measured: m && (() => m(t.index)) };
-  return e.evaluate(scope);
-}
-
 export function ddNumber(v: DataDefined<number> | undefined, t: CompileTarget, env: CompileEnv, fallback: number): number {
   if (v === undefined) return fallback;
   if (typeof v === 'number') return v;
-  const n = toNumber(evaluate(v, t, env));
+  const n = env.run.value(v.expr, t.index, 'number') as number | null;
   return n ?? v.fallback ?? fallback;
 }
 
 export function ddText(v: DataDefined<string> | undefined, t: CompileTarget, env: CompileEnv): string {
   if (v === undefined) return '';
   if (typeof v === 'string') return v;
-  const r = evaluate(v, t, env);
-  return r === null ? (v.fallback ?? '') : toText(r);
+  const r = env.run.value(v.expr, t.index, 'text') as string | null;
+  return r === null ? (v.fallback ?? '') : r;
 }
 
 export function ddBool(v: DataDefined<boolean> | undefined, t: CompileTarget, env: CompileEnv): boolean {
   if (v === undefined) return true;
   if (typeof v === 'boolean') return v;
-  const r = evaluate(v, t, env);
-  return r === null ? (v.fallback ?? true) : truthy(r);
+  const r = env.run.value(v.expr, t.index, 'bool');
+  return r === null ? (v.fallback ?? true) : r === true;
 }
 
 const COLOR = /^(#[0-9a-f]{6}([0-9a-f]{2})?|ink|paper|fg|fg-dim)$/i;
@@ -87,7 +108,7 @@ const COLOR = /^(#[0-9a-f]{6}([0-9a-f]{2})?|ink|paper|fg|fg-dim)$/i;
 export function ddColor(v: DataDefined<string> | null | undefined, t: CompileTarget, env: CompileEnv): string | null {
   if (v === undefined || v === null) return null;
   if (typeof v === 'string') return v;
-  const r = toText(evaluate(v, t, env)).trim();
+  const r = ((env.run.value(v.expr, t.index, 'text') as string | null) ?? '').trim();
   return COLOR.test(r) ? r : (v.fallback ?? null);
 }
 

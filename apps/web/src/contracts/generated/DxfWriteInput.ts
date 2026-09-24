@@ -3,9 +3,7 @@ import type { DxfWriteLayer } from "./DxfWriteLayer";
 import type { Entity } from "./Entity";
 
 /**
- * What `file.export.dxf` writes (an AutoCAD 2007 DXF). The writer draws a
- * dimension as its lines and text, so a dimension's `text` holds what it
- * shows: the app fills in the measured value in the project's units.
+ * What `file.export.dxf` writes (an AutoCAD 2007 DXF).
  */
 export type DxfWriteInput = { entities: Array<Entity>, layers: Array<DxfWriteLayer>, 
 /**
@@ -19,4 +17,11 @@ lengthDecimals: number,
 /**
  * Angles are shown in grads, else in degrees ($AUNITS).
  */
-grads: boolean, };
+grads: boolean, 
+/**
+ * What each dimension without a text of its own shows, by object id:
+ * the measured value as the app formats it (project units). The
+ * dimension's block draws it; the DXF dimension keeps no text, so a
+ * program that redraws it measures again.
+ */
+dimensionValues: { [key in number]: string }, };

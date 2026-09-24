@@ -119,7 +119,7 @@ describe('objects per layer', () => {
     expect(indexed(doc)).toEqual({ a: [], b: [theirs.id], c: [7, 4] });
   });
 
-  it('answers what a walk of the drawing finds after any mix of edits', () => {
+  it('answers what a walk of the drawing finds after any mix of edits, one by one or many at once', () => {
     let seed = 20260924;
     const rnd = (n: number) => (seed = (seed * 16807) % 2147483647) % n;
     const doc = makeDoc();
@@ -131,7 +131,7 @@ describe('objects per layer', () => {
       const layer = LAYERS[rnd(LAYERS.length)];
       const id = anyId();
       const e = id === null ? undefined : doc.get(id);
-      switch (rnd(12)) {
+      switch (rnd(15)) {
         case 0:
         case 1:
           doc.add(point(layer, step));
@@ -178,6 +178,28 @@ describe('objects per layer', () => {
         }
         case 11:
           if (rnd(8) === 0) doc.load([point(layer, step), point(LAYERS[rnd(LAYERS.length)], step)]);
+          break;
+        case 12: {
+          // Several objects to other layers in one change, an id perhaps twice.
+          const patches: { id: number; layerId: string }[] = [];
+          for (let k = 0; k < 5; k++) {
+            const j = anyId();
+            if (j !== null) patches.push({ id: j, layerId: LAYERS[rnd(LAYERS.length)] });
+          }
+          doc.updateMany(patches, 'Taşı');
+          break;
+        }
+        case 13: {
+          const ids: number[] = [];
+          for (let k = 0; k < 3; k++) {
+            const j = anyId();
+            if (j !== null) ids.push(j);
+          }
+          doc.remove(ids);
+          break;
+        }
+        case 14:
+          doc.addMany([point(layer, step), point(LAYERS[rnd(LAYERS.length)], step), point(layer, -step)]);
           break;
       }
       // Asking only now and then lets several moves pile up before the next read.

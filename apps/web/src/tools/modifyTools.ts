@@ -166,19 +166,13 @@ export abstract class SelectionFirstTool implements Tool {
     const ents = this.targets();
     const editable = copy ? ents : ents.filter((e) => !doc.layers.isLocked(e.layerId));
     if (editable.length < ents.length) log.warn(`${ents.length - editable.length} nesne kilitli katmanda olduğu için atlandı.`);
-    const created: number[] = [];
     // Every object by every affine, affine after affine, in one call to the
     // geometry store, which holds the objects: only their new geometry comes back.
     const moved = this.ctx.view.transformEntities(editable, ms);
-    doc.transact(label, () => {
-      for (const t of moved) {
-        if (copy) {
-          const { id: _id, ...rest } = t;
-          created.push(doc.add(rest as NewEntity).id);
-        } else doc.update(t.id, t);
-      }
-    });
-    return copy ? created.length : editable.length;
+    // One undo step and one change for all of them (the panels and the store hear it once).
+    if (copy) return doc.addMany(moved.map(({ id: _id, ...rest }) => rest as NewEntity), label).length;
+    doc.updateMany(moved, label);
+    return editable.length;
   }
 
   draw(g: CanvasRenderingContext2D, view: ViewTransform): void {

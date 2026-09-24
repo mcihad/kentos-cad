@@ -1,6 +1,5 @@
 import type { Entity } from '../model/entities';
-import { toNumber, toText, truthy, type Measured } from '../model/expression/expressionLib';
-import type { ExprCache } from './compile';
+import type { ExprRun } from './compile';
 import type { LayerRenderer, Rule, Symbol, SymbolRef, SymbolSet } from '../model/style';
 
 /**
@@ -18,16 +17,8 @@ export interface ResolvedSet {
 }
 
 export interface ResolveEnv {
-  readonly exprs: ExprCache;
-  layerName(id: string): string;
-  /** The geometry values of the object at 1-based `index` (the geometry store, while drawing a layer). */
-  readonly measured?: (index: number) => Measured;
-}
-
-function value(src: string, e: Entity, index: number, env: ResolveEnv) {
-  const x = env.exprs.get(src);
-  const m = env.measured;
-  return x ? x.evaluate({ entity: e, index, layerName: env.layerName, measured: m && (() => m(index)) }) : null;
+  /** The build's expressions, evaluated for all its objects at once; `index` is a 1-based position in them. */
+  readonly run: ExprRun;
 }
 
 const narrow = (a: { minScale?: number; maxScale?: number }, r: Rule) => ({
@@ -45,7 +36,7 @@ function matchRules(rules: readonly Rule[], e: Entity, index: number, env: Resol
   };
   for (const r of rules) {
     if (r.enabled === false || r.isElse) continue;
-    if (r.filter && !truthy(value(r.filter, e, index, env))) continue;
+    if (r.filter && env.run.value(r.filter, index, 'bool') !== true) continue;
     any = true;
     visit(r);
   }
@@ -58,13 +49,13 @@ export function resolveRenderer(renderer: LayerRenderer, e: Entity, index: numbe
     case 'single':
       return [{ symbols: renderer.symbols }];
     case 'categorized': {
-      const v = toText(value(renderer.expr, e, index, env));
+      const v = (env.run.value(renderer.expr, index, 'text') as string | null) ?? '';
       const c = renderer.categories.find((x) => x.enabled !== false && x.value === v);
       if (c) return [{ symbols: c.symbols }];
       return renderer.other ? [{ symbols: renderer.other }] : [];
     }
     case 'graduated': {
-      const n = toNumber(value(renderer.expr, e, index, env));
+      const n = env.run.value(renderer.expr, index, 'number') as number | null;
       if (n === null) return [];
       const last = renderer.classes.length - 1;
       const c = renderer.classes.find((k, i) => n >= k.min && (n < k.max || (i === last && n <= k.max)));

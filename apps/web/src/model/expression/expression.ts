@@ -1,392 +1,217 @@
-import { foldTurkish } from '../../core/text';
-import type { Entity } from '../entities';
-import { compare, equals, findFunction, findVariable, measuredOf, toNumber, toText, truthy, type ExprFunction, type ExprScope, type ExprValue, type ExprVariable } from './expressionLib';
+import { exprEvaluate, op, type ExprColumnData } from '../../wasm/core';
+import { ENTITY_KIND_LABEL, entityAnchor, entityArea, entityLength, type Entity } from '../entities';
+import { MEASURE_STRIDE, type ExprValue } from './expressionLib';
 
 /**
  * İfadeler: a small, safe expression language for processing tools
- * (select by expression, field calculator, filters). No eval: the source
- * is tokenized, parsed (precedence climbing) and compiled to closures.
+ * (select by expression, field calculator, filters) and the style engine
+ * (data-defined values, rule and category renderers).
  *
  *   Nitelik = 'Arsa' ve $alan > 500
  *   'P' || doldur($sıra, 5)
  *   yuvarla([Tapu alanı] - $alan, 2)
  *
- * Fields: bare names (Parsel) or in brackets ([Tapu alanı]). Text: '…' or
- * "…" (a doubled quote inside is one quote). Variables start with $ (see
- * expressionLib.ts). Keywords: ve/and, veya/or, değil/not, doğru/true,
- * yanlış/false, boş/null. Operators: = != <> < <= > >= + - * / % and ||
- * (joins text). Errors say what is wrong and where, for the dialog.
+ * The language is the Rust style core's (crates/shared/style-core/src/expr,
+ * docs/adr/0008 “İfade dili”): the server evaluates the same expressions
+ * the same way. This module builds the table of what an expression reads
+ * of each object and reads the answer back; an expression is evaluated for
+ * a whole list of objects in one call.
  */
+
+export type { ExprValue };
+
+/** The variables an expression reads, so only those are computed. */
+export interface ExprNeeds {
+  readonly measured: boolean;
+  readonly vertices: boolean;
+  readonly kind: boolean;
+  readonly layer: boolean;
+  readonly label: boolean;
+  readonly index: boolean;
+  readonly id: boolean;
+  readonly scale: boolean;
+}
+
+/** What an expression is evaluated on: objects in run order ($sıra is the position + 1). */
+export interface ExprObjects {
+  readonly entities: readonly Entity[];
+  layerName(id: string): string;
+  /** Denominator of the plot scale while drawing a symbol ($ölçek); absent elsewhere. */
+  readonly plotScale?: number;
+  /** The geometry store's `measures` answer for these objects (six numbers each); computed per object when absent. */
+  readonly measures?: () => Float64Array;
+}
+
+/**
+ * What the caller wants of each value: as it is, a number (empty when it is
+ * not one), text, true/false (empty stays empty for these two), or the number
+ * the value's text reads as (the style window's classes).
+ */
+export type ExprAs = 'value' | 'number' | 'text' | 'bool' | 'textNumber';
+
+/** An expression's values for a list of objects. */
+export interface ExprColumn {
+  readonly length: number;
+  value(i: number): ExprValue;
+}
 
 export interface CompiledExpression {
   readonly source: string;
   /** Attribute names the expression reads (to warn about missing ones). */
   readonly fields: readonly string[];
-  evaluate(scope: ExprScope): ExprValue;
+  readonly needs: ExprNeeds;
+  /** The value for each object, as `as` asks, in one call to the core. */
+  evaluateAll(objects: ExprObjects, as?: ExprAs): ExprColumn;
 }
 
 export type CompileResult = { ok: true; expr: CompiledExpression } | { ok: false; error: string; at: number };
 
-type Token =
-  | { t: 'num'; v: number; at: number }
-  | { t: 'str'; v: string; at: number }
-  | { t: 'field'; v: string; at: number }
-  | { t: 'var'; v: string; at: number }
-  | { t: 'word'; v: string; at: number }
-  | { t: 'op'; v: string; at: number }
-  | { t: 'end'; at: number };
-
-class ExprError extends Error {
-  readonly at: number;
-  constructor(message: string, at: number) {
-    super(message);
-    this.at = at;
-  }
-}
-
-const OPS = ['<=', '>=', '!=', '<>', '==', '||', '=', '<', '>', '+', '-', '*', '/', '%', '(', ')', ','];
-const WORD = /[\p{L}_][\p{L}\p{N}_]*/uy;
-
-function tokenize(src: string): Token[] {
-  const out: Token[] = [];
-  let i = 0;
-  while (i < src.length) {
-    const c = src[i];
-    if (/\s/.test(c)) {
-      i++;
-      continue;
-    }
-    const at = i + 1;
-    if (/\d/.test(c) || (c === '.' && /\d/.test(src[i + 1] ?? ''))) {
-      const m = /\d*\.?\d+(?:[eE][+-]?\d+)?|\d+\.?/y;
-      m.lastIndex = i;
-      const s = m.exec(src)![0];
-      out.push({ t: 'num', v: Number(s), at });
-      i += s.length;
-      continue;
-    }
-    if (c === "'" || c === '"') {
-      let s = '';
-      let j = i + 1;
-      for (;;) {
-        if (j >= src.length) throw new ExprError('Tırnak kapanmamış.', at);
-        if (src[j] === c) {
-          if (src[j + 1] === c) {
-            s += c;
-            j += 2;
-            continue;
-          }
-          break;
-        }
-        s += src[j++];
-      }
-      out.push({ t: 'str', v: s, at });
-      i = j + 1;
-      continue;
-    }
-    if (c === '[') {
-      const j = src.indexOf(']', i);
-      if (j < 0) throw new ExprError('“]” bekleniyordu: alan adı kapanmamış.', at);
-      const name = src.slice(i + 1, j).trim();
-      if (!name) throw new ExprError('Köşeli parantez içinde alan adı yok.', at);
-      out.push({ t: 'field', v: name, at });
-      i = j + 1;
-      continue;
-    }
-    if (c === '$') {
-      WORD.lastIndex = i + 1;
-      const m = WORD.exec(src);
-      if (!m) throw new ExprError('“$” işaretinden sonra değişken adı bekleniyordu.', at);
-      out.push({ t: 'var', v: m[0], at });
-      i += 1 + m[0].length;
-      continue;
-    }
-    WORD.lastIndex = i;
-    const w = WORD.exec(src);
-    if (w) {
-      out.push({ t: 'word', v: w[0], at });
-      i += w[0].length;
-      continue;
-    }
-    const op = OPS.find((o) => src.startsWith(o, i));
-    if (!op) throw new ExprError(`Anlaşılmayan karakter: “${c}”.`, at);
-    out.push({ t: 'op', v: op, at });
-    i += op.length;
-  }
-  out.push({ t: 'end', at: src.length + 1 });
-  return out;
-}
-
-type Node =
-  | { t: 'lit'; v: ExprValue }
-  | { t: 'field'; name: string }
-  | { t: 'var'; v: ExprVariable }
-  | { t: 'call'; f: ExprFunction; args: Node[] }
-  | { t: 'not' | 'neg'; a: Node }
-  | { t: 'bin'; op: string; a: Node; b: Node };
-
-const KEYWORDS: Record<string, string> = { VE: 'and', AND: 'and', VEYA: 'or', OR: 'or', DEGIL: 'not', NOT: 'not', DOGRU: 'true', TRUE: 'true', YANLIS: 'false', FALSE: 'false', BOS: 'null', NULL: 'null' };
-const keyword = (tok: Token) => (tok.t === 'word' ? KEYWORDS[foldTurkish(tok.v)] : undefined);
-const describe = (tok: Token) => (tok.t === 'end' ? 'ifadenin sonu' : tok.t === 'num' || tok.t === 'str' || tok.t === 'field' || tok.t === 'word' || tok.t === 'op' ? `“${tok.v}”` : `“$${tok.v}”`);
-
-/** Binary operators by precedence, loosest first. */
-const LEVELS: readonly (readonly string[])[] = [['or'], ['and'], ['=', '==', '!=', '<>', '<', '<=', '>', '>='], ['+', '-', '||'], ['*', '/', '%']];
-
-class Parser {
-  private readonly toks: Token[];
-  private i = 0;
-  readonly fields = new Set<string>();
-
-  constructor(toks: Token[]) {
-    this.toks = toks;
-  }
-
-  parse(): Node {
-    if (this.peek().t === 'end') throw new ExprError('İfade boş.', 1);
-    const n = this.binary(0);
-    const rest = this.peek();
-    if (rest.t !== 'end') throw new ExprError(`Beklenmeyen ${describe(rest)}; iki değer arasında işleç eksik olabilir.`, rest.at);
-    return n;
-  }
-
-  private peek(): Token {
-    return this.toks[this.i];
-  }
-
-  private next(): Token {
-    return this.toks[this.i++];
-  }
-
-  /** The operator at the cursor, words folded to and/or. */
-  private opAt(): string | undefined {
-    const tok = this.peek();
-    if (tok.t === 'op') return tok.v;
-    const k = keyword(tok);
-    return k === 'and' || k === 'or' ? k : undefined;
-  }
-
-  private binary(level: number): Node {
-    if (level === LEVELS.length) return this.unary();
-    let a = this.binary(level + 1);
-    for (let op = this.opAt(); op && LEVELS[level].includes(op); op = this.opAt()) {
-      this.next();
-      a = { t: 'bin', op, a, b: this.binary(level + 1) };
-    }
-    return a;
-  }
-
-  private unary(): Node {
-    const tok = this.peek();
-    if (keyword(tok) === 'not') {
-      this.next();
-      return { t: 'not', a: this.unary() };
-    }
-    if (tok.t === 'op' && (tok.v === '-' || tok.v === '+')) {
-      this.next();
-      const a = this.unary();
-      return tok.v === '-' ? { t: 'neg', a } : a;
-    }
-    return this.primary();
-  }
-
-  private primary(): Node {
-    const tok = this.next();
-    switch (tok.t) {
-      case 'num':
-      case 'str':
-        return { t: 'lit', v: tok.v };
-      case 'field':
-        this.fields.add(tok.v);
-        return { t: 'field', name: tok.v };
-      case 'var': {
-        const v = findVariable(tok.v);
-        if (!v) throw new ExprError(`Bilinmeyen değişken: $${tok.v}.`, tok.at);
-        return { t: 'var', v };
-      }
-      case 'word': {
-        const after = this.peek();
-        if (after.t === 'op' && after.v === '(') return this.call(tok);
-        const k = keyword(tok);
-        if (k === 'true' || k === 'false') return { t: 'lit', v: k === 'true' };
-        if (k === 'null') return { t: 'lit', v: null };
-        if (k) throw new ExprError(`${describe(tok)} burada kullanılamaz; önünde bir değer olmalı.`, tok.at);
-        this.fields.add(tok.v);
-        return { t: 'field', name: tok.v };
-      }
-      case 'op':
-        if (tok.v === '(') {
-          const n = this.binary(0);
-          this.expect(')', 'Parantez kapanmamış: “)” bekleniyordu.');
-          return n;
-        }
-        throw new ExprError(`Beklenmeyen ${describe(tok)}; burada bir değer, alan ya da işlev olmalı.`, tok.at);
-      case 'end':
-        throw new ExprError('İfade yarım kalmış: sonunda bir değer eksik.', tok.at);
-    }
-  }
-
-  private call(name: Extract<Token, { t: 'word' }>): Node {
-    const f = findFunction(name.v);
-    if (!f) throw new ExprError(`Bilinmeyen işlev: ${name.v}().`, name.at);
-    this.next(); // (
-    const args: Node[] = [];
-    const close = this.peek();
-    if (!(close.t === 'op' && close.v === ')')) {
-      for (;;) {
-        args.push(this.binary(0));
-        const sep = this.peek();
-        if (sep.t === 'op' && sep.v === ',') {
-          this.next();
-          continue;
-        }
-        break;
-      }
-    }
-    this.expect(')', `${f.name}(…) kapanmamış: “)” bekleniyordu.`);
-    const [min, max] = f.arity;
-    if (args.length < min || args.length > max) {
-      const want = min === max ? `${min}` : max === Infinity ? `en az ${min}` : `${min} ya da ${max}`;
-      throw new ExprError(`${f.name}() ${want} değer alır; ${args.length} verildi. Kullanım: ${f.signature}`, name.at);
-    }
-    return { t: 'call', f, args };
-  }
-
-  private expect(op: string, message: string): void {
-    const tok = this.peek();
-    if (tok.t === 'op' && tok.v === op) this.next();
-    else throw new ExprError(message, tok.at);
-  }
-}
-
-type Eval = (s: ExprScope) => ExprValue;
-
-function binaryOp(op: string, a: ExprValue, b: ExprValue): ExprValue {
-  switch (op) {
-    case 'or':
-      return truthy(a) || truthy(b);
-    case 'and':
-      return truthy(a) && truthy(b);
-    case '=':
-    case '==':
-      return equals(a, b);
-    case '!=':
-    case '<>':
-      return !equals(a, b);
-    case '<':
-    case '<=':
-    case '>':
-    case '>=': {
-      const c = compare(a, b);
-      if (c === null) return false;
-      return op === '<' ? c < 0 : op === '<=' ? c <= 0 : op === '>' ? c > 0 : c >= 0;
-    }
-    case '||':
-      return toText(a) + toText(b);
-    case '+': {
-      if (a === null || b === null) return null;
-      const na = toNumber(a);
-      const nb = toNumber(b);
-      return na !== null && nb !== null ? na + nb : toText(a) + toText(b);
-    }
-    default: {
-      const na = toNumber(a);
-      const nb = toNumber(b);
-      if (na === null || nb === null) return null;
-      if ((op === '/' || op === '%') && nb === 0) return null;
-      return op === '-' ? na - nb : op === '*' ? na * nb : op === '/' ? na / nb : na % nb;
-    }
-  }
-}
-
-function compileNode(n: Node): Eval {
-  switch (n.t) {
-    case 'lit': {
-      const v = n.v;
-      return () => v;
-    }
-    case 'field': {
-      const name = n.name;
-      return (s) => {
-        const v = s.entity.attrs[name];
-        return v === undefined ? null : v;
-      };
-    }
-    case 'var': {
-      const v = n.v;
-      return (s) => v.get(s);
-    }
-    case 'call': {
-      const f = n.f;
-      const args = n.args.map(compileNode);
-      return (s) => f.call(args.map((a) => a(s)));
-    }
-    case 'not': {
-      const a = compileNode(n.a);
-      return (s) => !truthy(a(s));
-    }
-    case 'neg': {
-      const a = compileNode(n.a);
-      return (s) => {
-        const v = toNumber(a(s));
-        return v === null ? null : -v;
-      };
-    }
-    case 'bin': {
-      const a = compileNode(n.a);
-      const b = compileNode(n.b);
-      const op = n.op;
-      return (s) => binaryOp(op, a(s), b(s));
-    }
-  }
-}
+type Compiled = { ok: true; fields: string[]; needs: ExprNeeds } | { ok: false; error: string; at: number };
+const exprCompile = op<(source: string) => Compiled>('exprCompile');
 
 export function compileExpression(source: string): CompileResult {
-  try {
-    const parser = new Parser(tokenize(source));
-    const fn = compileNode(parser.parse());
-    const expr: CompiledExpression = {
-      source,
-      fields: [...parser.fields],
-      evaluate: (s) => {
-        try {
-          const v = fn(s);
-          return typeof v === 'number' && !Number.isFinite(v) ? null : v;
-        } catch {
-          return null;
-        }
-      },
-    };
-    return { ok: true, expr };
-  } catch (e) {
-    if (e instanceof ExprError) return { ok: false, error: e.message, at: e.at };
-    throw e;
-  }
+  const r = exprCompile(source);
+  if (!r.ok) return { ok: false, error: r.error, at: r.at };
+  const { fields, needs } = r;
+  return { ok: true, expr: { source, fields, needs, evaluateAll: (objects, as = 'value') => evaluateAll(source, fields, needs, objects, as) } };
 }
 
 /** Message for the dialog: "12. karakterde: …". */
 export const expressionError = (r: Extract<CompileResult, { ok: false }>) => (r.at > 1 ? `${r.at}. karakterde: ${r.error}` : r.error);
 
+/** Corners of a path or area (holes included), for $köşe. */
+function vertexCount(e: Entity): number | null {
+  switch (e.kind) {
+    case 'polyline':
+      return e.pts.length;
+    case 'polygon': {
+      let n = e.pts.length;
+      for (const h of e.holes ?? []) n += h.pts.length;
+      return n;
+    }
+    case 'line':
+      return 2;
+    case 'spline':
+      return e.pts.length;
+    case 'point':
+      return 1;
+    default:
+      return null;
+  }
+}
+
+/** The geometry values of objects without a geometry store (tests, symbol previews): the core's measures, one object at a time. */
+function measuresOf(list: readonly Entity[]): Float64Array {
+  const out = new Float64Array(list.length * MEASURE_STRIDE);
+  list.forEach((e, i) => {
+    const k = i * MEASURE_STRIDE;
+    const length = entityLength(e);
+    const area = entityArea(e);
+    const at = entityAnchor(e);
+    // Flags: 1 length, 2 area, 4 anchor (crates/shared/style-core/src/expr/rows.rs).
+    out[k] = (length !== null ? 1 : 0) | (area !== null ? 2 : 0) | (at ? 4 : 0);
+    out[k + 1] = length ?? 0;
+    out[k + 2] = area ?? 0;
+    out[k + 3] = at?.x ?? 0;
+    out[k + 4] = at?.y ?? 0;
+  });
+  return out;
+}
+
+const WANT: Record<ExprAs, number> = { value: 0, number: 1, text: 2, bool: 3, textNumber: 4 };
+const NO_NUMBERS = new Float64Array(0);
+
+/**
+ * The table of what the expression reads (crates/shared/style-core/src/expr/rows.rs
+ * has the layout): text slots per object (the fields in order, then the label,
+ * the layer name and the kind label, each only when read; a missing value is
+ * length −1), number slots (the id, then the vertex count), and the geometry
+ * store's measures when a geometry value is read.
+ */
+function evaluateAll(source: string, fields: readonly string[], needs: ExprNeeds, o: ExprObjects, as: ExprAs): ExprColumn {
+  const list = o.entities;
+  // Text slots per object.
+  const n = fields.length + [needs.label, needs.layer, needs.kind].filter(Boolean).length;
+  // One text, joined as it goes (faster than joining a list of 100 000 at the end).
+  let texts = '';
+  const lens = new Int32Array(list.length * n);
+  const numbers = new Float64Array(list.length * [needs.id, needs.vertices].filter(Boolean).length);
+  let j = 0;
+  let k = 0;
+  const put = (v: string | null) => {
+    if (v === null) lens[j++] = -1;
+    else {
+      texts += v;
+      lens[j++] = v.length;
+    }
+  };
+  for (const e of list) {
+    // Own attributes only: a field named "constructor" is not the object's prototype.
+    for (const f of fields) put(Object.hasOwn(e.attrs, f) ? e.attrs[f] : null);
+    if (needs.label) put(e.label ?? null);
+    if (needs.layer) put(o.layerName(e.layerId));
+    if (needs.kind) put(ENTITY_KIND_LABEL[e.kind]);
+    if (needs.id) numbers[k++] = e.id;
+    if (needs.vertices) numbers[k++] = vertexCount(e) ?? NaN;
+  }
+  const measures = needs.measured ? (o.measures?.() ?? measuresOf(list)) : NO_NUMBERS;
+  return column(exprEvaluate(source, list.length, texts, lens, numbers, measures, o.plotScale ?? NaN, WANT[as]));
+}
+
+/** The core's answer read back: where each object's text starts, and its length, are found once. */
+function column(c: ExprColumnData): ExprColumn {
+  let spans: Int32Array | null = null;
+  const textSpans = () => {
+    const out = new Int32Array(c.kinds.length * 2);
+    let from = 0;
+    let j = 0;
+    for (let i = 0; i < c.kinds.length; i++)
+      if (c.kinds[i] === 2) {
+        out[2 * i] = from;
+        out[2 * i + 1] = c.textLengths[j];
+        from += c.textLengths[j++];
+      }
+    return out;
+  };
+  return {
+    length: c.kinds.length,
+    value(i: number): ExprValue {
+      switch (c.kinds[i]) {
+        case 1:
+          return c.numbers[i];
+        case 2: {
+          const s = (spans ??= textSpans());
+          return c.texts.slice(s[2 * i], s[2 * i] + s[2 * i + 1]);
+        }
+        case 3:
+          return c.numbers[i] === 1;
+        default:
+          return null;
+      }
+    },
+  };
+}
+
 /**
  * One line for the dialog: how the expression works out on the objects it
- * will read. `measures`: the geometry store's values of objects
- * (`measuredAt` records), asked once for all the previewed objects when the
- * expression first needs `$alan`, `$uzunluk`, `$y` or `$x`.
+ * will read. `measures`: the geometry store's values of objects, asked once
+ * for all the previewed objects when the expression needs `$alan`,
+ * `$uzunluk`, `$y` or `$x`.
  */
 export function previewExpression(expr: CompiledExpression, entities: readonly Entity[], kind: 'condition' | 'value', layerName: (id: string) => string, measures?: (entities: readonly Entity[]) => Float64Array): string {
   if (!entities.length) return 'Önizleme için uygun nesne yok.';
-  const missing = expr.fields.filter((f) => !entities.some((e) => f in e.attrs));
+  const missing = expr.fields.filter((f) => !entities.some((e) => Object.hasOwn(e.attrs, f)));
   const note = missing.length ? ` ${missing.map((f) => `“${f}”`).join(', ')} alanı bu nesnelerde yok.` : '';
-  const limit = Math.min(entities.length, 20000);
-  const measured = measures && measuredOf(() => measures(entities.slice(0, limit)));
-  const scope = (entity: Entity, index: number): ExprScope => ({ entity, index, layerName, measured: measured && (() => measured(index - 1)) });
+  const list = entities.slice(0, 20000);
+  const objects: ExprObjects = { entities: list, layerName, measures: measures && (() => measures(list)) };
   if (kind === 'condition') {
-    let hits = 0;
-    for (let i = 0; i < limit; i++) if (truthy(expr.evaluate(scope(entities[i], i + 1)))) hits++;
-    return `${hits} / ${limit} nesne koşulu sağlıyor.${note}`;
+    const c = expr.evaluateAll(objects, 'bool');
+    const hits = list.filter((_, i) => c.value(i) === true).length;
+    return `${hits} / ${list.length} nesne koşulu sağlıyor.${note}`;
   }
-  const first = expr.evaluate(scope(entities[0], 1));
-  let empty = 0;
-  for (let i = 0; i < limit; i++) if (expr.evaluate(scope(entities[i], i + 1)) === null) empty++;
+  const c = expr.evaluateAll(objects, 'text');
+  const first = c.value(0);
+  const empty = list.filter((_, i) => c.value(i) === null).length;
   const who = entities[0].label ? ` (${entities[0].label})` : '';
-  return `İlk nesnede${who}: ${first === null ? 'boş' : `“${toText(first)}”`}.${empty ? ` ${empty} nesnede sonuç boş.` : ''}${note}`;
+  return `İlk nesnede${who}: ${first === null ? 'boş' : `“${first}”`}.${empty ? ` ${empty} nesnede sonuç boş.` : ''}${note}`;
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Entity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
-import { compileSymbol, ExprCache, toDrawn, toWorld, type CompileEnv } from './compile';
+import { compileSymbol, ExprCache, ExprRun, toDrawn, toWorld, type CompileEnv } from './compile';
 import { exportStyles, importStyles, parseStyleFile, sanitizeSvg, svgAsset, validateSymbol } from './file';
 import { hatchSymbolOf, symbolsOfLayerStyle } from './fromLayer';
 import { geometryClassOf, interiorPoint, MAX_MARKERS_PER_PATH, placeAlong, styledGeometry, wavePaths } from './geometry';
@@ -11,7 +11,11 @@ import { resolveRenderer } from './resolve';
 import type { FillSymbol, LayerRenderer, LibraryItem, LineSymbol, MarkerSymbol } from '../model/style';
 
 const v = (x: number, y: number): Vec2 => ({ x, y });
-const env = (plotScale = 1000): CompileEnv => ({ plotScale, exprs: new ExprCache(), layerName: (id) => ({ a: 'Parseller' })[id] ?? id });
+// The build's objects are the one object compiled (the target's index is 1).
+const env = (plotScale = 1000, entity: Entity = line([])): CompileEnv => {
+  const exprs = new ExprCache();
+  return { plotScale, exprs, run: new ExprRun(exprs, { entities: [entity], layerName: (id) => ({ a: 'Parseller' })[id] ?? id, plotScale }) };
+};
 const polygon = (pts: Vec2[], attrs: Record<string, string> = {}, holes?: Vec2[][]): Entity => ({ id: 1, kind: 'polygon', layerId: 'a', pts, attrs, holes: holes?.map((h) => ({ pts: h })) });
 const line = (pts: Vec2[], attrs: Record<string, string> = {}): Entity => ({ id: 2, kind: 'polyline', layerId: 'a', pts, attrs });
 const square = (s: number) => [v(0, 0), v(s, 0), v(s, s), v(0, s)];
@@ -112,7 +116,7 @@ describe('compiling symbols', () => {
       const sym: LineSymbol = { type: 'line', layers: [{ id: 'l', type: 'simpleLine', color: 'ink', width: 0.3, unit, offset: { expr, fallback: 1 } }] };
       const e = line([v(0, 0), v(10, 0)], { Genişlik: '12' });
       const out = new PrimitiveList();
-      compileSymbol(sym, styledGeometry(e)!, { entity: e, index: 1 }, env(scale), out);
+      compileSymbol(sym, styledGeometry(e)!, { entity: e, index: 1 }, env(scale, e), out);
       return out.strokes[0].path[0].y;
     };
     expect(edges('m', '[Genişlik] / 2', 1000)).toBeCloseTo(6, 9);
@@ -229,7 +233,7 @@ describe('compiling symbols', () => {
     const cw = [v(0, 0), v(0, 20), v(20, 20), v(20, 0)];
     const e = polygon(cw, { Parsel: '12' });
     const out = new PrimitiveList();
-    compileSymbol(sym, styledGeometry(e)!, { entity: e, index: 1 }, env(1000), out);
+    compileSymbol(sym, styledGeometry(e)!, { entity: e, index: 1 }, env(1000, e), out);
     expect(out.fills.map((f) => f.paint.kind)).toEqual(['solid', 'hatch']);
     const hatch = out.fills[1].paint;
     expect(hatch.kind === 'hatch' && [hatch.spacing, hatch.width, close(hatch.angle, Math.PI / 4)]).toEqual([2, 0.1, true]);
@@ -251,12 +255,14 @@ describe('compiling symbols', () => {
     };
     const pt = (attrs: Record<string, string>): Entity => ({ id: 5, kind: 'point', layerId: 'a', p: v(1, 2), attrs });
     const out = new PrimitiveList();
-    compileSymbol(sym, styledGeometry(pt({ Boy: '9', Aci: '90', Tur: 'A' }))!, { entity: pt({ Boy: '9', Aci: '90', Tur: 'A' }), index: 1 }, env(), out);
+    const a = pt({ Boy: '9', Aci: '90', Tur: 'A' });
+    compileSymbol(sym, styledGeometry(a)!, { entity: a, index: 1 }, env(1000, a), out);
     expect(out.markers).toHaveLength(1);
     const m = out.markers[0].style;
     expect(m.kind === 'shape' && [m.size, m.common.unit, m.fill, close(m.common.rotation, Math.PI / 2)]).toEqual([9, 'px', '#FF0000', true]);
     const out2 = new PrimitiveList();
-    compileSymbol(sym, styledGeometry(pt({ Tur: 'B' }))!, { entity: pt({ Tur: 'B' }), index: 1 }, env(), out2);
+    const b = pt({ Tur: 'B' });
+    compileSymbol(sym, styledGeometry(b)!, { entity: b, index: 1 }, env(1000, b), out2);
     expect(out2.markers.map((x) => (x.style.kind === 'shape' ? [x.style.size, x.style.fill] : null))).toEqual([
       [1, '#0000FF'],
       [2, null],
@@ -356,15 +362,19 @@ describe('placement and waves', () => {
 describe('renderers', () => {
   const red: LineSymbol = { type: 'line', layers: [{ id: 'r', type: 'simpleLine', color: '#FF0000', width: 0.3 }] };
   const blue: LineSymbol = { type: 'line', layers: [{ id: 'b', type: 'simpleLine', color: '#0000FF', width: 0.3 }] };
-  const renv = () => ({ exprs: new ExprCache(), layerName: (id: string) => id });
   const e = (attrs: Record<string, string>) => line([v(0, 0), v(1, 0)], attrs);
+  // The build's objects are the one object resolved.
+  const resolve = (renderer: LayerRenderer, attrs: Record<string, string>) => {
+    const x = e(attrs);
+    return resolveRenderer(renderer, x, 1, { run: new ExprRun(new ExprCache(), { entities: [x], layerName: (id: string) => id }) });
+  };
   it('categorized, graduated and single', () => {
     const cat: LayerRenderer = { type: 'categorized', expr: 'Tur', categories: [{ value: 'yol', label: 'Yol', symbols: { line: red } }], other: { line: blue } };
-    expect(resolveRenderer(cat, e({ Tur: 'yol' }), 1, renv())[0].symbols.line).toBe(red);
-    expect(resolveRenderer(cat, e({ Tur: 'dere' }), 1, renv())[0].symbols.line).toBe(blue);
+    expect(resolve(cat, { Tur: 'yol' })[0].symbols.line).toBe(red);
+    expect(resolve(cat, { Tur: 'dere' })[0].symbols.line).toBe(blue);
     const grad: LayerRenderer = { type: 'graduated', expr: '$uzunluk * 10', classes: [{ min: 0, max: 5, label: 'kısa', symbols: { line: red } }, { min: 5, max: 10, label: 'uzun', symbols: { line: blue } }] };
-    expect(resolveRenderer(grad, e({}), 1, renv())[0].symbols.line).toBe(blue); // 10 is in the last class, max included
-    expect(resolveRenderer({ type: 'single', symbols: { line: red } }, e({}), 1, renv())).toHaveLength(1);
+    expect(resolve(grad, {})[0].symbols.line).toBe(blue); // 10 is in the last class, max included
+    expect(resolve({ type: 'single', symbols: { line: red } }, {})).toHaveLength(1);
   });
   it('rules: every match draws, children narrow the scale range, else catches the rest', () => {
     const r: LayerRenderer = {
@@ -375,14 +385,14 @@ describe('renderers', () => {
         { id: '3', label: 'Diğer', isElse: true, symbols: { line: red } },
       ],
     };
-    const ana = resolveRenderer(r, e({ Tur: 'ana' }), 1, renv());
+    const ana = resolve(r, { Tur: 'ana' });
     expect(ana.map((x) => [x.symbols.line === red ? 'red' : 'blue', x.minScale, x.maxScale])).toEqual([
       ['red', undefined, 5000],
       ['blue', 100, 2000],
       ['blue', undefined, undefined],
     ]);
     const elseOnly: LayerRenderer = { type: 'rules', rules: [{ id: 'x', label: 'x', filter: 'yanlış', symbols: { line: blue } }, { id: 'y', label: 'y', isElse: true, symbols: { line: red } }] };
-    expect(resolveRenderer(elseOnly, e({}), 1, renv()).map((x) => x.symbols.line)).toEqual([red]);
+    expect(resolve(elseOnly, {}).map((x) => x.symbols.line)).toEqual([red]);
   });
   it('turns a layer’s simple look and a hatch object into symbols', () => {
     const set = symbolsOfLayerStyle({ color: 'fg-dim', lineType: 'dashed', lineWeight: 0.18, fill: '#7FB2E52E' });

@@ -308,26 +308,33 @@ export class ProcessingRunner {
     const locked = (layerId: string) => doc.layers.isLocked(layerId);
     let skipped = 0;
     const added: number[] = [];
+    // Removals, then updates, then additions, each as one change (the panels and the store hear it once).
     doc.transact(tool.label, () => {
+      const gone: number[] = [];
       for (const id of ch.remove ?? []) {
         const e = doc.get(id);
         if (!e) continue;
         if (locked(e.layerId)) skipped++;
-        else doc.remove([id]);
+        else gone.push(id);
       }
+      doc.remove(gone);
+      const patches: (Partial<Entity> & { id: number })[] = [];
       for (const u of ch.update ?? []) {
         const e = doc.get(u.id);
         if (!e) continue;
         if (locked(e.layerId)) skipped++;
-        else doc.update(u.id, u.patch as Partial<Entity>);
+        else patches.push({ ...(u.patch as Partial<Entity>), id: u.id });
       }
+      doc.updateMany(patches);
+      const fresh: NewEntity[] = [];
       for (const n of ch.add ?? []) {
         if (!doc.layers.get(n.layerId) || locked(n.layerId)) {
           skipped++;
           continue;
         }
-        added.push(doc.add(n as NewEntity).id);
+        fresh.push(n as NewEntity);
       }
+      for (const e of doc.addMany(fresh)) added.push(e.id);
     });
     if (skipped) log?.('warn', `${skipped} değişiklik kilitli ya da olmayan katmanda olduğu için atlandı.`);
     return added;

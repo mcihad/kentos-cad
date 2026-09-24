@@ -191,6 +191,34 @@ for n in range(40):
             cy = math.nextafter(cy, math.inf if rnd.random() < 0.5 else -math.inf)
     orient_case(f"TM neredeyse aynı doğrultu #{n}", Pf(ax, ay), Pf(bx, by), Pf(cx, cy))
 
+# lineLine and segSeg on nearly parallel lines (CLAUDE.md §23.3): exact
+# parameters on the float64 values a reader gets. The plain rounded cross
+# products put t 3.6e-9 off here (the point 4e-7 m) and miss the touch at
+# the shared end (t 1 + 8.4e-9, outside the 1e-9 band).
+def cross_hit(a, b, c, d):
+    (A0, A1), (B0, B1), (C0, C1), (D0, D1) = [(F(p["x"]), F(p["y"])) for p in (a, b, c, d)]
+    rx, ry, sx, sy = B0 - A0, B1 - A1, D0 - C0, D1 - C1
+    den = rx * sy - ry * sx
+    qx, qy = C0 - A0, C1 - A1
+    t, u = (qx * sy - qy * sx) / den, (qx * ry - qy * rx) / den
+    return {"p": {"x": D(A0 + t * rx), "y": D(A1 + t * ry)}, "t": D(t), "u": D(u)}
+
+th, ax_, ay_ = 0.3, 486512.34, 4420187.52
+pa = {"x": ax_, "y": ay_}
+pb = {"x": ax_ + 120 * math.cos(th), "y": ay_ + 120 * math.sin(th)}
+xm, ym = ax_ + 0.6 * (pb["x"] - ax_), ay_ + 0.6 * (pb["y"] - ay_)
+ph = th + 2e-9
+pc = {"x": xm - 80 * math.cos(ph), "y": ym - 80 * math.sin(ph)}
+pd = {"x": xm + 90 * math.cos(ph), "y": ym + 90 * math.sin(ph)}
+case("TM neredeyse paralel iki doğru (2e-9 rad)", "lineLine", [pa, pb, pc, pd], cross_hit(pa, pb, pc, pd),
+     # t and u accurate to ~1e-12; the point then within an ulp of a TM coordinate.
+     "1e-9")
+ph = th + 3e-9
+pc = {"x": pb["x"] - 150 * math.cos(ph), "y": pb["y"] - 150 * math.sin(ph)}
+hit = cross_hit(pa, pb, pc, pb)
+assert F(hit["t"]) == 1 and F(hit["u"]) == 1
+case("TM ortak uçta 3e-9 rad açıyla birleşen iki kenar", "segSeg", [pa, pb, pc, pb], hit, "1e-9")
+
 doc = {
     "format": "kentos.geometry-call-reference",
     "version": 1,

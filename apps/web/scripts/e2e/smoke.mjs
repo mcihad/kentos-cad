@@ -447,6 +447,35 @@ try {
     eyeHidden && focusKept && (await b.eval(`window.kentos.doc.layers.get('kaldirim').visible && !window.__layerRows[0].hasAttribute('data-hidden')`)) && (await sameRows()) && `${await layerCounts()}` === `${c0},${g0}`,
   );
   await b.eval('delete window.__layerRows; delete window.__focusBefore');
+  // A long layer tree builds only the rows near its scroll window (TreeView, CLAUDE.md §6.3): with a
+  // 300-layer group the last layer has no row; End scrolls to it, builds it with its count and selects it.
+  const virtualTree = await b.eval(`(async () => {
+    const k = window.kentos, layers = k.doc.layers;
+    const saved = structuredClone(layers.tree), active = layers.active.value;
+    const g = layers.add({ name: 'Uzun grup', type: 'group' }, null);
+    const ids = Array.from({ length: 300 }, (_, i) => layers.add({ name: 'Uzun ' + i }, g.id).id);
+    k.doc.addMany([0, 1].map((i) => ({ kind: 'point', layerId: ids[299], p: { x: ${E} + i, y: ${N} - 300 }, attrs: {} })));
+    await new Promise((ok) => setTimeout(ok, 100));
+    const tree = document.querySelector('.panel--layers .tree');
+    const rows = () => tree.querySelectorAll('.tree__row:not(.tree__probe)').length;
+    const rowOf = (id) => tree.querySelector('.tree__row[data-id="' + id + '"]');
+    const out = { built: rows(), lastBefore: !!rowOf(ids[299]) };
+    tree.focus();
+    tree.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true, cancelable: true }));
+    await new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok)));
+    const last = rowOf(ids[299]);
+    const r = last?.getBoundingClientRect(), t = tree.getBoundingClientRect();
+    Object.assign(out, { selected: last?.getAttribute('aria-selected'), inView: !!r && r.top >= t.top - 1 && r.bottom <= t.bottom + 1, count: last?.querySelector('.tree__count')?.textContent, place: last?.getAttribute('aria-posinset') + '/' + last?.getAttribute('aria-setsize'), after: rows() });
+    k.commands.execute('edit.undo');
+    layers.reset(saved, active);
+    await new Promise((ok) => setTimeout(ok, 50));
+    return out;
+  })()`);
+  check(
+    'Layers panel: a long tree builds only the rows near its window; End scrolls to the last and builds it',
+    virtualTree.built < 80 && !virtualTree.lastBefore && virtualTree.selected === 'true' && virtualTree.inView && virtualTree.count === '2' && virtualTree.place === '300/300' && virtualTree.after < 130,
+    JSON.stringify(virtualTree),
+  );
 
   // Area operations (Alan işlemleri) on fresh squares east of everything else.
   const AX = E + 400;
@@ -1248,6 +1277,8 @@ try {
         { kind: 'text', p: P(0, 40), text: 'Çınar ağacı', height: 2, rotation: 15, attrs: {} },
         { kind: 'point', p: P(1 / 3, 0.1 + 0.2), z: 105.25, label: 'P7', attrs: { Ad: 'P7' } },
         { kind: 'line', a: P(0, -5), b: P(20, -5), color: '#FF0000', attrs: {} },
+        { kind: 'dimension', a: P(0, -10), b: P(20, -12), offset: 2, height: 1.5, attrs: {} },
+        { kind: 'dimension', a: P(40, 0), b: P(35, 6), c: P(35, 0), offset: 4.5, height: 1.5, style: 'angular', attrs: {} },
       ];
       const ids = [];
       k.doc.transact('DXF deneme', () => { for (const o of objects) ids.push(k.doc.add({ ...o, layerId: layer.id }).id); });
@@ -1260,7 +1291,7 @@ try {
     const summary = await b.eval(`document.querySelector('.dialog--io .io-summary')?.textContent ?? ''`);
     check(
       'DXF export: the window lists the selection by layer and says what DXF changes',
-      JSON.stringify(rows) === '[["DXF deneme","6"]]' && /6 nesne 1 katmanla yazılacak/.test(summary) && /adalı alan/.test(summary) && /KentOS verisi/.test(summary),
+      JSON.stringify(rows) === '[["DXF deneme","8"]]' && /8 nesne 1 katmanla yazılacak/.test(summary) && /2 ölçü DXF ölçüsü olarak yazılır/.test(summary) && /adalı alan/.test(summary) && /KentOS verisi/.test(summary),
       `${JSON.stringify(rows)} ${summary.slice(0, 200)}`,
     );
     await b.shot('io-dxf-export');
@@ -1269,8 +1300,8 @@ try {
     const dxf = await ioWritten();
     const kept = await b.eval(`({ dirty: window.kentos.doc.dirty.value, size: window.kentos.doc.size, open: !!document.querySelector('.dialog--io') })`);
     check(
-      'DXF export writes an AutoCAD 2007 DXF and leaves the drawing as it was',
-      !!dxf && /\.dxf$/.test(dxf.name) && dxf.text.includes('$ACADVER\r\n  1\r\nAC1021\r\n') && dxf.text.endsWith('  0\r\nEOF\r\n') && kept.dirty === made.dirty && kept.size === made.size && !kept.open,
+      'DXF export writes an AutoCAD 2007 DXF, with the dimensions as DXF dimensions, and leaves the drawing as it was',
+      !!dxf && /\.dxf$/.test(dxf.name) && dxf.text.includes('$ACADVER\r\n  1\r\nAC1021\r\n') && dxf.text.endsWith('  0\r\nEOF\r\n') && (dxf.text.match(/\r\n  0\r\nDIMENSION\r\n/g) ?? []).length === 2 && kept.dirty === made.dirty && kept.size === made.size && !kept.open,
       `${dxf?.name} ${dxf?.text.length} ${JSON.stringify(kept)}`,
     );
     await b.eval(`(() => {
@@ -1286,6 +1317,7 @@ try {
     check('DXF export → import: the file\'s layer goes back to the drawing\'s layer of the same name', where.length === 1 && where[0][0] === 'DXF deneme' && /katmanına eklenir/.test(where[0][1]), JSON.stringify(where));
     await ioPress('.dialog--io .dialog__foot .btn--primary', 'İçe aktar');
     await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
+    await b.shot('io-dxf-roundtrip');
     const back = await b.eval(`(() => {
       const k = window.kentos;
       // Key order and absent fields aside, JSON of every field: numbers print exactly, so equal text is equal bits.
@@ -1294,7 +1326,7 @@ try {
       const got = [...k.doc.all()].filter((e) => e.id > ${lastId}).map((e) => JSON.stringify(canon(e)));
       return { same: JSON.stringify(mine) === JSON.stringify(got), mine, got };
     })()`);
-    check('DXF export → import: the same objects come back, coordinates bit for bit, with labels and attributes', back.same, back.same ? '' : `${back.mine.join(' ')} ≠ ${back.got.join(' ')}`.slice(0, 600));
+    check('DXF export → import: the same objects come back (dimensions as dimensions), coordinates bit for bit, with labels and attributes', back.same, back.same ? '' : `${back.mine.join(' ')} ≠ ${back.got.join(' ')}`.slice(0, 600));
     await b.eval(`window.kentos.commands.execute('edit.undo')`);
     await b.eval(`window.kentos.commands.execute('edit.undo')`);
     const cleared = await b.eval('window.kentos.doc.size');

@@ -1,7 +1,7 @@
 import type { Entity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import type { Symbol } from '../model/style';
-import { compileSymbol, ExprCache, type CompileEnv } from '../style/compile';
+import { compileSymbol, ExprCache, ExprRun, type CompileEnv } from '../style/compile';
 import { styledGeometry } from '../style/geometry';
 import { PrimitiveList, type FillPaint, type MarkerStyle, type PrimUnit, type StrokeStyle, type TileSource } from '../style/primitives';
 import { drawShape } from './canvasShapes';
@@ -156,9 +156,18 @@ export function drawSymbolPreview(canvas: HTMLCanvasElement, symbol: Symbol, opt
     g.fillRect(0, 0, canvas.width, canvas.height);
   }
   const kind = opts.geometry ?? defaultGeometry(symbol);
-  const env: CompileEnv = { plotScale: 1000, exprs: new ExprCache(), layerName: () => 'Önizleme', assetAspect: (a) => { const x = opts.library.asset(a); return x ? x.height / x.width : 1; } };
+  const exprs = new ExprCache();
   const compile = (k: number) => {
     const entity = sampleEntity(kind, cssW / k, cssH / k, opts.attrs ?? SAMPLE_ATTRS);
+    const env: CompileEnv = {
+      plotScale: 1000,
+      exprs,
+      run: new ExprRun(exprs, { entities: [entity], layerName: () => 'Önizleme', plotScale: 1000 }),
+      assetAspect: (a) => {
+        const x = opts.library.asset(a);
+        return x ? x.height / x.width : 1;
+      },
+    };
     const geom = styledGeometry(entity);
     const out = new PrimitiveList();
     if (geom) compileSymbol(symbol, geom, { entity, index: 1 }, env, out);

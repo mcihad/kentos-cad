@@ -193,20 +193,15 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
 function applyToSelection(host: DetailsHost, item: Sourced): void {
   const { doc, selection } = host.ctx;
   const ids = [...selection.ids.value];
-  let done = 0;
   let locked = 0;
-  doc.transact(`Sembol: ${item.name}`, () => {
-    for (const id of ids) {
-      const e = doc.get(id);
-      if (!e) continue;
-      if (doc.layers.isLocked(e.layerId)) {
-        locked++;
-        continue;
-      }
-      doc.update(id, { symbol: item.id });
-      done++;
-    }
-  });
+  const patches: { id: number; symbol: string }[] = [];
+  for (const id of ids) {
+    const e = doc.get(id);
+    if (!e) continue;
+    if (doc.layers.isLocked(e.layerId)) locked++;
+    else patches.push({ id, symbol: item.id });
+  }
+  const done = doc.updateMany(patches, `Sembol: ${item.name}`);
   host.say(`${done} nesneye “${item.name}” verildi${locked ? `; kilitli katmandaki ${locked} nesne atlandı` : ''}.`, locked && !done ? 'warn' : 'ok');
 }
 

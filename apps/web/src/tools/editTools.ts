@@ -63,13 +63,14 @@ export class JoinTool extends SelectionActionTool {
       log.warn('Uçları birleşen çizgi, yay ya da açık çoklu çizgi bulunamadı. Toleransı artırmayı deneyin.');
       return;
     }
-    const created: number[] = [];
-    doc.transact('Birleştir', () => {
-      for (const g of groups) {
-        const first = doc.get(g.sources[0])!;
-        doc.remove(g.sources);
-        created.push(doc.add({ ...g.geometry, layerId: first.layerId, color: first.color, attrs: { ...first.attrs }, label: first.label } as NewEntity).id);
-      }
+    // Each chain takes its first object's layer, colour, attributes and label.
+    const joined = groups.map((g) => {
+      const first = doc.get(g.sources[0])!;
+      return { ...g.geometry, layerId: first.layerId, color: first.color, attrs: { ...first.attrs }, label: first.label } as NewEntity;
+    });
+    const created = doc.transact('Birleştir', () => {
+      doc.remove(groups.flatMap((g) => g.sources));
+      return doc.addMany(joined).map((e) => e.id);
     });
     selection.set(created);
     const kinds = groups.map((g) => ENTITY_KIND_LABEL[g.geometry.kind].toLocaleLowerCase('tr-TR'));
@@ -83,20 +84,22 @@ export class ExplodeTool extends SelectionActionTool {
 
   protected run(targets: Entity[]): void {
     const { doc, log, selection, format } = this.ctx;
-    const created: number[] = [];
-    let exploded = 0;
+    const gone: number[] = [];
+    const pieces: NewEntity[] = [];
     let firstError: string | null = null;
-    doc.transact('Patlat', () => {
-      for (const e of targets) {
-        const r = explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a) }));
-        if ('error' in r) {
-          firstError ??= r.error;
-          continue;
-        }
-        doc.remove([e.id]);
-        for (const piece of r.pieces) created.push(doc.add({ ...piece, layerId: e.layerId, color: e.color, attrs: {} } as NewEntity).id);
-        exploded++;
+    for (const e of targets) {
+      const r = explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a) }));
+      if ('error' in r) {
+        firstError ??= r.error;
+        continue;
       }
+      gone.push(e.id);
+      for (const piece of r.pieces) pieces.push({ ...piece, layerId: e.layerId, color: e.color, attrs: {} } as NewEntity);
+    }
+    const exploded = gone.length;
+    const created = doc.transact('Patlat', () => {
+      doc.remove(gone);
+      return doc.addMany(pieces).map((e) => e.id);
     });
     if (firstError && !exploded) return log.warn(firstError);
     selection.set(created);
@@ -210,13 +213,12 @@ export class StretchTool implements Tool {
     const dx = p.x - this.base.x;
     const dy = p.y - this.base.y;
     const { doc, log, format } = this.ctx;
-    let n = 0;
-    doc.transact('Esnet', () => {
-      for (const e of this.targets) {
-        const g = stretchEntity(e, this.window!, dx, dy);
-        if (g) doc.update(e.id, g as Partial<Entity>), n++;
-      }
-    });
+    const patches: (Partial<Entity> & { id: number })[] = [];
+    for (const e of this.targets) {
+      const g = stretchEntity(e, this.window!, dx, dy);
+      if (g) patches.push({ ...(g as Partial<Entity>), id: e.id });
+    }
+    const n = doc.updateMany(patches, 'Esnet');
     log.success(`${n} nesne esnetildi: ΔY ${format.length(dx, false)}  ΔX ${format.length(dy, false)}`);
     this.ctx.tools.exit();
   }
@@ -376,13 +378,12 @@ export function pasteEntities(ctx: AppContext, items: readonly NewEntity[], dx: 
   } finally {
     if (!store) own.dispose();
   }
-  const ids: number[] = [];
-  doc.transact('Yapıştır', () => {
-    for (const e of moved) {
-      const layerId = doc.layers.get(e.layerId) && !doc.layers.isLocked(e.layerId) ? e.layerId : active;
-      ids.push(doc.add({ ...e, layerId } as NewEntity).id);
-    }
-  });
+  const ids = doc
+    .addMany(
+      moved.map((e) => ({ ...e, layerId: doc.layers.get(e.layerId) && !doc.layers.isLocked(e.layerId) ? e.layerId : active }) as NewEntity),
+      'Yapıştır',
+    )
+    .map((e) => e.id);
   log.success(`${ids.length} nesne yapıştırıldı.`);
   return ids;
 }

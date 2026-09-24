@@ -1,7 +1,6 @@
 import type { AppContext } from '../../app/context';
 import type { Entity } from '../../model/entities';
 import { compileExpression } from '../../model/expression/expression';
-import { measuredOf, truthy } from '../../model/expression/expressionLib';
 import type { Rule } from '../../model/style';
 import type { GeometryClass } from '../../style/geometry';
 import { h, type Child } from '../dom';
@@ -37,12 +36,10 @@ export function rulesEditor(ctx: AppContext, rules: readonly Rule[], classes: re
     if (!filter?.trim()) return { n: entities.length };
     const c = compileExpression(filter);
     if (!c.ok) return { n: 0, error: c.error };
-    // Geometry values from the drawing's geometry store, for all the objects at once when the filter first asks.
-    const measured = measuredOf(() => ctx.view.measures(entities.map((e) => e.id)));
+    // One call to the core; geometry values from the drawing's geometry store when the filter asks.
+    const met = c.expr.evaluateAll({ entities, layerName, measures: () => ctx.view.measures(entities.map((e) => e.id)) }, 'bool');
     let n = 0;
-    entities.forEach((entity, i) => {
-      if (truthy(c.expr.evaluate({ entity, index: i + 1, layerName, measured: () => measured(i) }))) n++;
-    });
+    for (let i = 0; i < entities.length; i++) if (met.value(i) === true) n++;
     return { n };
   };
   const set = (path: Path, patch: Partial<Rule>) => onChange(updateAt(rules, path, (r) => ({ ...r, ...patch })));

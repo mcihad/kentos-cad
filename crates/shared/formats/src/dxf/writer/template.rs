@@ -266,7 +266,11 @@ pub fn appid_table(out: &mut Out) {
     out.str(0, "ENDTAB");
 }
 
-/// DIMSTYLE: the Standard style (the file has no dimension entities; AutoCAD needs the table).
+/// DIMSTYLE: the Standard style; each dimension overrides its sizes
+/// (`entities.rs`). Values are written as KentOS shows them: a point for the
+/// decimal separator (DIMDSEP 46), trailing zeros kept (DIMZIN, DIMAZIN 0).
+/// DIMRND is left out: AutoCAD takes 0 for "no rounding", ezdxf rounds a
+/// redrawn value to a whole number.
 pub fn dimstyle_table(out: &mut Out) {
     table(out, "DIMSTYLE", DIMSTYLE_TABLE, 1);
     out.str(100, "AcDbDimStyleTable");
@@ -287,7 +291,6 @@ pub fn dimstyle_table(out: &mut Out) {
             (42, "0.625"),
             (43, "3.75"),
             (44, "1.25"),
-            (45, "0.0"),
             (46, "0.0"),
             (47, "0.0"),
             (48, "0.0"),
@@ -310,8 +313,8 @@ pub fn dimstyle_table(out: &mut Out) {
             (75, "0"),
             (76, "0"),
             (77, "1"),
-            (78, "8"),
-            (79, "3"),
+            (78, "0"),
+            (79, "0"),
             (170, "0"),
             (171, "3"),
             (172, "1"),
@@ -329,7 +332,7 @@ pub fn dimstyle_table(out: &mut Out) {
             (275, "0"),
             (276, "0"),
             (277, "2"),
-            (278, "44"),
+            (278, "46"),
             (279, "0"),
             (280, "0"),
             (281, "0"),
@@ -348,9 +351,10 @@ pub fn dimstyle_table(out: &mut Out) {
     out.str(0, "ENDTAB");
 }
 
-/// BLOCK_RECORD: model space and paper space, each pointing to its layout.
-pub fn block_record_table(out: &mut Out) {
-    table(out, "BLOCK_RECORD", BLOCK_RECORD_TABLE, 2);
+/// BLOCK_RECORD: model space and paper space, each pointing to its
+/// layout, and the dimensions' anonymous blocks (handle, name).
+pub fn block_record_table(out: &mut Out, anonymous: &[(u64, String)]) {
+    table(out, "BLOCK_RECORD", BLOCK_RECORD_TABLE, 2 + anonymous.len());
     for (handle, name, layout) in [
         (MODEL_SPACE, "*Model_Space", "1A"),
         (PAPER_SPACE, "*Paper_Space", "1E"),
@@ -367,11 +371,23 @@ pub fn block_record_table(out: &mut Out) {
             &[(2, name), (340, layout), (70, "0"), (280, "1"), (281, "0")],
         );
     }
+    for (handle, name) in anonymous {
+        record(
+            out,
+            "BLOCK_RECORD",
+            *handle,
+            BLOCK_RECORD_TABLE,
+            "AcDbBlockTableRecord",
+        );
+        out.str(2, name);
+        fixed(out, &[(340, "0"), (70, "0"), (280, "1"), (281, "0")]);
+    }
     out.str(0, "ENDTAB");
 }
 
-/// BLOCKS: the model and paper space blocks (the drawing itself is in ENTITIES).
-pub fn blocks(out: &mut Out) {
+/// BLOCKS: the model and paper space blocks (the drawing itself is in
+/// ENTITIES), then the dimensions' own (`dimension_blocks`, written with them).
+pub fn blocks(out: &mut Out, dimension_blocks: &str) {
     out.section("BLOCKS");
     for (begin, end, owner, name) in [
         (0x18, 0x19, "17", "*Model_Space"),
@@ -407,6 +423,7 @@ pub fn blocks(out: &mut Out) {
             ],
         );
     }
+    out.s.push_str(dimension_blocks);
     out.str(0, "ENDSEC");
 }
 

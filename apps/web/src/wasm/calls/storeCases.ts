@@ -1,6 +1,7 @@
 import type { Entity } from '../../model/entities';
 import { ObjectStore, type CornerWalk } from '../../processing/geometry';
-import { DrawnReader, measuredAt } from '../../style/geometry';
+import { measuredAt } from '../../model/expression/expressionLib';
+import { DrawnReader } from '../../style/geometry';
 import { CoreStore } from '../core';
 import type { Tolerance } from './harness';
 

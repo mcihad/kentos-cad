@@ -1,7 +1,7 @@
 import type { AppContext } from '../../app/context';
 import type { Entity } from '../../model/entities';
 import type { LayerRenderer, Rule, SymbolSet } from '../../model/style';
-import { classesPresent, classLabel, equalCount, equalInterval, numericValues, plainSymbols, QUALITATIVE, RAMPS, rampColors, uniqueValues, valuesOf } from '../../style/classify';
+import { classesPresent, classLabel, equalCount, equalInterval, numbersOf, plainSymbols, QUALITATIVE, RAMPS, rampColors, uniqueValues, valuesOf } from '../../style/classify';
 import { symbolsOfLayerStyle } from '../../style/fromLayer';
 import type { GeometryClass } from '../../style/geometry';
 import { h, replaceChildren, type Child } from '../dom';
@@ -251,8 +251,7 @@ class LayerStyleDialog {
       this.graduated = { ...g, ...next };
       this.render();
     };
-    const { values, error } = g.expr ? valuesOf(this.entities, g.expr, this.exprScope) : { values: [] as (string | null)[], error: undefined };
-    const nums = numericValues(values);
+    const { values: nums, error } = g.expr ? numbersOf(this.entities, g.expr, this.exprScope) : { values: [] as number[], error: undefined };
     const countIn = (min: number, max: number, last: boolean) => nums.filter((v) => v >= min && (v < max || (last && v <= max))).length;
     const expr = this.exprField(g.expr, (v) => set({ expr: v }), 'Sayı veren ifade: $alan, "Kat"');
     if (error) expr.error.textContent = error;

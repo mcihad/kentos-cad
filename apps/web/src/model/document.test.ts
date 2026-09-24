@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Formatter } from '../app/format';
 import { CadDocument } from './document';
+import type { Entity, NewEntity } from './entities';
 import { LayerStore } from './layers';
 
 const makeDoc = () =>
@@ -137,6 +138,85 @@ describe('CadDocument history', () => {
     expect(doc.canUndo.value).toBe(false);
     expect(doc.canRedo.value).toBe(true);
     expect(doc.dirty.value).toBe(false);
+  });
+  it('changes many objects as one change and one undo step, as update after update would', () => {
+    const p = (x: number) => ({ kind: 'point' as const, layerId: 'a', p: { x, y: 0 }, attrs: {} });
+    const ring = { kind: 'polygon' as const, layerId: 'a', pts: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 0, y: 4 }], holes: [{ pts: [{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 1, y: 2 }] }], attrs: {} };
+    // The same drawing twice: one takes the patches one by one, the other all at once.
+    const [one, many] = [makeDoc(), makeDoc()];
+    for (const d of [one, many]) d.addMany([p(1), p(2), ring as unknown as NewEntity]);
+    const patches: (Partial<Entity> & { id: number })[] = [
+      { id: 1, p: { x: 10, y: 0 } },
+      { id: 2, attrs: { N: '1' } },
+      { id: 99, attrs: { N: 'yok' } },
+      // Twice: the second patch changes what the first made.
+      { id: 1, attrs: { K: '2' } },
+      // A polygon opened into a polyline loses its holes.
+      { id: 3, kind: 'polyline' } as Partial<Entity> & { id: number },
+    ];
+    one.transact('Tek tek', () => patches.forEach(({ id, ...patch }) => one.update(id, patch)));
+    const heard: string[] = [];
+    many.events.on('changed', (c) => heard.push(`changed ${[...c.layerIds].join(',')}`));
+    many.events.on('attrs', (a) => heard.push(`attrs ${a.ids.join(',')}`));
+    many.events.on('touched', (t) => heard.push(`touched ${t.ids.join(',')}`));
+    expect(many.updateMany(patches, 'Taşı')).toBe(4);
+    // The second patch of object 1 changes only its attributes, as a second update would.
+    expect(heard).toEqual(['changed a', 'attrs 2,1', 'touched 1,2,1,3']);
+    expect([...many.all()]).toEqual([...one.all()]);
+    expect('holes' in many.get(3)!).toBe(false);
+    expect(many.get(1)).toMatchObject({ p: { x: 10, y: 0 }, attrs: { K: '2' } });
+    // One undo step back to the start, one redo to the end.
+    const after = structuredClone([...many.all()]);
+    expect(many.undo()).toBe('Taşı');
+    expect(many.get(1)).toMatchObject({ p: { x: 1, y: 0 }, attrs: {} });
+    expect(many.get(3)!.kind).toBe('polygon');
+    expect('holes' in many.get(3)!).toBe(true);
+    many.redo();
+    expect([...many.all()]).toEqual(after);
+    expect(many.undo()).toBe('Taşı');
+    expect(many.undo()).toBe('Ekle');
+    expect(many.size).toBe(0);
+    // Nothing to change: no step, no event.
+    heard.length = 0;
+    expect(many.updateMany([{ id: 42, attrs: {} }])).toBe(0);
+    expect(heard).toEqual([]);
+  });
+  it('joins the open transaction with many changes, and a failure reverts them', () => {
+    const doc = makeDoc();
+    const [a, b] = doc.addMany([
+      { kind: 'point', layerId: 'a', p: { x: 1, y: 0 }, attrs: {} },
+      { kind: 'point', layerId: 'a', p: { x: 2, y: 0 }, attrs: {} },
+    ]);
+    doc.dirty.set(false);
+    expect(() =>
+      doc.transact('Yarım', () => {
+        doc.updateMany([{ id: a.id, p: { x: 5, y: 5 } }]);
+        doc.addMany([{ kind: 'point', layerId: 'a', p: { x: 3, y: 0 }, attrs: {} }]);
+        doc.remove([b.id]);
+        throw new Error('kural ihlali');
+      }),
+    ).toThrow('kural ihlali');
+    expect([...doc.all()]).toEqual([a, b]);
+    expect(doc.dirty.value).toBe(false);
+    doc.transact('Taşı ve sil', () => {
+      doc.updateMany([{ id: a.id, p: { x: 5, y: 5 } }]);
+      doc.remove([b.id]);
+    });
+    expect(doc.undo()).toBe('Taşı ve sil');
+    expect([...doc.all()]).toEqual([a, b]);
+  });
+  it('removes many objects as one change; unknown and repeated ids are skipped', () => {
+    const doc = makeDoc();
+    const ids = doc.addMany([1, 2, 3].map((x) => ({ kind: 'point', layerId: 'a', p: { x, y: 0 }, attrs: {} }) as NewEntity)).map((e) => e.id);
+    const touched: number[][] = [];
+    doc.events.on('touched', (t) => touched.push(t.ids));
+    doc.remove([ids[0], 77, ids[2], ids[0]]);
+    expect(touched).toEqual([[ids[0], ids[2]]]);
+    expect([...doc.all()].map((e) => e.id)).toEqual([ids[1]]);
+    expect(doc.undo()).toBe('Sil');
+    expect(doc.size).toBe(3);
+    doc.remove([55]);
+    expect(doc.undo()).toBe('Ekle');
   });
   it('marks the project dirty when project settings change', () => {
     const doc = makeDoc();

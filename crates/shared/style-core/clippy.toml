@@ -1,0 +1,25 @@
+# The style core must give the same bits and the same text on every target and
+# match the TypeScript it replaces (docs/adr/0008, CLAUDE.md §23.4): the std
+# transcendental functions call the platform's C library natively, so they
+# are forbidden here; use kentos_geometry_core::jsmath (libm and V8's Math.hypot).
+disallowed-methods = [
+  { path = "f64::sin", reason = "use jsmath::sin (libm)" },
+  { path = "f64::cos", reason = "use jsmath::cos (libm)" },
+  { path = "f64::tan", reason = "use jsmath::tan (libm)" },
+  { path = "f64::sin_cos", reason = "use jsmath::sin and jsmath::cos (libm)" },
+  { path = "f64::asin", reason = "use jsmath::asin (libm)" },
+  { path = "f64::acos", reason = "use jsmath::acos (libm)" },
+  { path = "f64::atan", reason = "use jsmath::atan (libm)" },
+  { path = "f64::atan2", reason = "use jsmath::atan2 (libm)" },
+  { path = "f64::hypot", reason = "use jsmath::js_hypot (V8's Math.hypot)" },
+  { path = "f64::exp", reason = "use jsmath::exp (libm)" },
+  { path = "f64::ln", reason = "use jsmath::log (libm)" },
+  { path = "f64::log10", reason = "use libm" },
+  { path = "f64::powf", reason = "use jsmath::pow (libm)" },
+  { path = "f64::powi", reason = "write the product, as the TypeScript did" },
+  { path = "f64::mul_add", reason = "the TypeScript core has no fused multiply-add" },
+  { path = "f64::round", reason = "use jsmath::js_round (Math.round rounds halves up)" },
+  { path = "f64::signum", reason = "use jsmath::js_sign (Math.sign keeps zeros and NaN)" },
+  { path = "f64::min", reason = "use jsmath::js_min (Math.min keeps NaN)" },
+  { path = "f64::max", reason = "use jsmath::js_max (Math.max keeps NaN)" },
+]

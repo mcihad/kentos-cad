@@ -123,16 +123,21 @@ it.runIf(!!process.env.TRANSFORM_BENCH)('measures move, copy and paste of 10 000
   row('yapıştır: aracın deposunu kurmak (ilk kare)', time(() => storeOf(clipboard).dispose()));
   row('yerine yapıştır: depo kurulup dönüşüm', time(pasteInPlace));
 
-  // The whole command: the transform and the document's undo step (undone, untimed, after each run).
-  const move = (moved: Entity[]) => doc.transact('Taşı', () => moved.forEach((t) => doc.update(t.id, t)));
-  const copy = (moved: Entity[]) =>
+  // The whole command: the transform and the document's undo step (undone, untimed, after each run),
+  // as the tools write it (one change for all the objects: `updateMany`, `addMany`) and, for
+  // comparison, object by object in a transaction (one change, so one round of events, per object).
+  const move = (moved: Entity[]) => doc.updateMany(moved, 'Taşı');
+  const copy = (moved: Entity[]) => doc.addMany(moved.map(({ id: _id, ...rest }) => rest as NewEntity), 'Kopyala');
+  const paste = (moved: NewEntity[]) => doc.addMany(moved, 'Yapıştır');
+  const moveOneByOne = (moved: Entity[]) => doc.transact('Taşı', () => moved.forEach((t) => doc.update(t.id, t)));
+  const copyOneByOne = (moved: Entity[]) =>
     doc.transact('Kopyala', () =>
       moved.forEach((t) => {
         const { id: _id, ...rest } = t;
         doc.add(rest as NewEntity);
       }),
     );
-  const paste = (moved: NewEntity[]) =>
+  const pasteOneByOne = (moved: NewEntity[]) =>
     doc.transact('Yapıştır', () => {
       for (const e of moved) doc.add(e);
     });
@@ -142,10 +147,13 @@ it.runIf(!!process.env.TRANSFORM_BENCH)('measures move, copy and paste of 10 000
   };
   row('taşı: komut, JSON', time(() => move(viaJson()), undo));
   row('taşı: komut, depodan paketli', time(() => move(viaStore()), undo));
+  row('taşı: komut, depodan, nesne nesne', time(() => moveOneByOne(viaStore()), undo));
   row('kopyala: komut, JSON', time(() => copy(viaJson()), undo));
   row('kopyala: komut, depodan paketli', time(() => copy(viaStore()), undo));
+  row('kopyala: komut, depodan, nesne nesne', time(() => copyOneByOne(viaStore()), undo));
   row('yapıştır: komut, JSON', time(() => paste(pasteJson()), undo));
   row('yapıştır: komut, aracın deposundan', time(() => paste(pasteTool()), undo));
+  row('yapıştır: komut, aracın deposundan, nesne nesne', time(() => pasteOneByOne(pasteTool()), undo));
   row('yerine yapıştır: komut, depo kurulup', time(() => paste(pasteInPlace()), undo));
 
   tool.dispose();

@@ -77,8 +77,11 @@
   grid-template-columns: calc(300px * var(--ui-scale)) minmax(0, 1fr) calc(340px * var(--ui-scale));
 }
 .smgr__tree {
+  /* The tree fills the column and scrolls itself (it builds only the rows in view). */
+  display: flex;
+  flex-direction: column;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   padding: 8px 6px;
   background: var(--c-panel-head);
   border-right: 1px solid var(--c-line);

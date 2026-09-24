@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Entity } from '../entities';
-import { compileExpression, expressionError, previewExpression } from './expression';
-import { toText, type ExprValue } from './expressionLib';
+import { compileExpression, expressionError, previewExpression, type ExprValue } from './expression';
 
 const parcel: Entity = {
   id: 7,
@@ -19,10 +18,11 @@ const parcel: Entity = {
 const line: Entity = { id: 8, kind: 'line', layerId: 'yol', a: { x: 0, y: 0 }, b: { x: 3, y: 4 }, attrs: {} };
 const layerName = (id: string) => ({ parsel: 'Parsel sınırı', yol: 'Yol ekseni' })[id] ?? id;
 
+/** The value for `entity` at 1-based position `index` of a run (the run repeats it). */
 function run(src: string, entity: Entity = parcel, index = 1): ExprValue {
   const r = compileExpression(src);
   if (!r.ok) throw new Error(expressionError(r));
-  return r.expr.evaluate({ entity, index, layerName });
+  return r.expr.evaluateAll({ entities: Array.from({ length: index }, () => entity), layerName }).value(index - 1);
 }
 const error = (src: string) => {
   const r = compileExpression(src);
@@ -57,7 +57,7 @@ describe('expressions', () => {
     expect(run('1 / 0')).toBeNull();
     expect(run('Nitelik * 2')).toBeNull();
     expect(run('Yok + 1')).toBeNull();
-    expect(toText(0.1 + 0.2)).toBe('0.3');
+    expect(run("0.1 + 0.2 || ''")).toBe('0.3');
   });
   it('compares and combines conditions in Turkish and English', () => {
     expect(run("Nitelik = 'Arsa' ve $alan > 500")).toBe(true);

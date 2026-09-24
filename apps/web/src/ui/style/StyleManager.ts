@@ -202,6 +202,7 @@ class StyleManager implements DetailsHost {
       stack: !!opts.pick || !!opts.stack,
     });
     this.d.add(() => this.thumbs.dispose());
+    this.d.add(() => this.tree.dispose());
     this.d.add(lib.version.subscribe(() => this.refreshAll()));
     this.d.add(ctx.selection.ids.subscribe(() => this.refreshDetails()));
     this.refreshAll();

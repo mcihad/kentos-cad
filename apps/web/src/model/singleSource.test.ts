@@ -14,10 +14,12 @@ import { describe, expect, it } from 'vitest';
  * UPPER_CASE stride or a `.length`. Unary `+` reads a number from typed
  * text. The few other exceptions are listed below with their reason.
  *
- * The style engine, the expression language and the SVG editor keep their
- * own geometry for now (a separate style-core slice, docs/DEVIR.md), so
- * `src/style` is not checked; screen-space drawing (pixel offsets on the
- * overlay) is presentation, not geometry.
+ * The expression language is the style core's (crates/shared/style-core,
+ * docs/adr/0008 “İfade dili”): its TypeScript only builds the table of what
+ * an expression reads and reads the answer back. The style engine and the
+ * SVG editor keep their own geometry for now (the next style-core slices,
+ * docs/DEVIR.md), so `src/style` is not checked; screen-space drawing
+ * (pixel offsets on the overlay) is presentation, not geometry.
  */
 
 /**
@@ -30,8 +32,10 @@ const SOURCES = import.meta.glob<string>(
   [
     './geom/*.ts',
     './ops/*.ts',
+    './expression/*.ts',
     '!./**/*.test.ts',
     '!./geom/goldenCases.ts',
+    '!./expression/cases.ts',
     './geometry.ts',
     './entities.ts',
     '../render/triangulate.ts',
@@ -52,6 +56,11 @@ const repoPath = (key: string) => new URL(key, 'file:///src/model/').pathname.sl
 const EXCEPTIONS: Record<string, Record<string, string>> = {
   'src/model/geometry.ts': {
     extendBounds: 'Growing a box by a point is bookkeeping (min, max and the padding the caller asks for), not geometry.',
+  },
+  'src/model/expression/expression.ts': {
+    put: 'Joining the table’s texts into the one text the core reads (text, not arithmetic).',
+    textSpans: 'Where each text starts in the core’s joined answer: a running sum of the lengths it gives (reading a flat buffer).',
+    value: 'Slicing an object’s text out of the core’s joined answer at the offset and length found once (reading a flat buffer).',
   },
 };
 

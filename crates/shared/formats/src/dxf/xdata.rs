@@ -17,6 +17,9 @@
 //! 1002 {  1000 arc      1040 <a0> 1040 <a1>      1002 }   the arc's angles in radians, exactly
 //! 1002 {  1000 pattern  1040 <angle> 1040 <gap>  1002 }   the hatch's angle and spacing, exactly
 //! 1002 {  1000 z                                 1002 }   the point has an elevation, even 0
+//! 1002 {  1000 dimension <style> 1040 <offset> 1040 <height>
+//!         [1002 { 1000 text <string> 1002 }] [1002 { 1000 center 1040 <x> 1040 <y> 1002 }]
+//!                                                1002 }   a DIMENSION is this KentOS dimension
 //! ```
 //!
 //! A string is one 1000 group, or its pieces in a nested 1002 list when it
@@ -57,6 +60,22 @@ pub struct Meta {
     pub pattern: Option<(f64, f64)>,
     /// The point's elevation is data even when it is 0.
     pub z: bool,
+    /// The DIMENSION is a KentOS dimension (`dimension.rs`).
+    pub dimension: Option<DimMeta>,
+}
+
+/// What a DXF dimension does not say of a KentOS dimension. The reader
+/// takes it only while the DIMENSION's own points agree with it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DimMeta {
+    /// The style as the app names it ("" when it has none: aligned).
+    pub style: String,
+    pub offset: f64,
+    pub height: f64,
+    /// The dimension's own text, exactly (group 1 holds it in MTEXT's notation).
+    pub text: Option<String>,
+    /// A diameter dimension's centre (the DIMENSION holds two points on the circle).
+    pub center: Option<(f64, f64)>,
 }
 
 impl Meta {
@@ -164,6 +183,22 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
     }
     if meta.z {
         item("z", &mut out, |_| {});
+    }
+    if let Some(d) = &meta.dimension {
+        item("dimension", &mut out, |o| {
+            string(&d.style, o);
+            o.push((1040, dxf_real(d.offset)));
+            o.push((1040, dxf_real(d.height)));
+            if let Some(t) = &d.text {
+                item("text", o, |o| string(t, o));
+            }
+            if let Some((x, y)) = d.center {
+                item("center", o, |o| {
+                    o.push((1040, dxf_real(x)));
+                    o.push((1040, dxf_real(y)));
+                });
+            }
+        });
     }
     out
 }
@@ -348,10 +383,33 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
                 }
             }
             "z" => m.z = true,
+            "dimension" => m.dimension = dimension(&values).or(m.dimension),
             _ => {}
         }
     }
     Some(m)
+}
+
+/// A "dimension" item: the style, offset and height, then tagged lists.
+fn dimension(values: &[Value]) -> Option<DimMeta> {
+    let mut d = DimMeta {
+        style: text(values.get(1))?,
+        offset: real(values.get(2))?,
+        height: real(values.get(3))?,
+        text: None,
+        center: None,
+    };
+    for v in values.iter().skip(4) {
+        let Value::List(inner) = v else { continue };
+        match inner.first() {
+            Some(Value::Str(tag)) if tag == "text" => d.text = text(inner.get(1)),
+            Some(Value::Str(tag)) if tag == "center" => {
+                d.center = real(inner.get(1)).zip(real(inner.get(2)));
+            }
+            _ => {}
+        }
+    }
+    Some(d)
 }
 
 #[cfg(test)]
@@ -378,6 +436,13 @@ mod tests {
             arc: Some((0.1 + 0.2, -1.0 / 3.0)),
             pattern: Some((45.0, 2.5e-3)),
             z: true,
+            dimension: Some(DimMeta {
+                style: "diameter".into(),
+                offset: 0.1 + 0.2,
+                height: 2.5,
+                text: Some("Ø {12} \\P ^".into()),
+                center: Some((452_345.123, 4_412_345.678)),
+            }),
         };
         let out = groups(&meta);
         assert_eq!(out[0], (1001, "KENTOS".to_string()));

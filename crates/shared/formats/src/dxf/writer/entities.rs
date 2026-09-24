@@ -7,27 +7,29 @@
 //! - a polygon's holes are closed polylines of their own, linked to it;
 //! - a spline is a cubic B-spline that is the app's curve span by span
 //!   (the shared core's Bézier form), with the app's points as fit points;
-//! - a dimension is drawn as its lines, arc and text (the core's explode):
-//!   a DXF dimension needs a block and a dimension style of its own, and
-//!   another program would redraw it by its own rules.
+//! - a dimension is a DXF DIMENSION drawn by an anonymous block of its own
+//!   (the app's lines and ticks, the value as MTEXT), with the definition
+//!   points another program measures from (`dimension.rs`).
+
+use std::collections::BTreeMap;
 
 use kentos_contracts::{
-    Bounds, DimensionStyle, Entity, EntityBase, HatchEntity, HatchPatternType, PathEntity,
+    Bounds, DimensionEntity, Entity, EntityBase, HatchEntity, HatchPatternType, PathEntity,
     SplineEntity, TextEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
-use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geom::spline::catmull_rom_beziers;
-use kentos_geometry_core::ops::curve_cuts::Cut;
-use kentos_geometry_core::ops::explode::explode_entity;
 
 use super::super::aci;
-use super::super::xdata::{self, Meta};
+use super::super::dimension::{self as dim, Definition};
+use super::super::xdata::{self, DimMeta, Meta};
 use super::layers::Layers;
 use super::template::MODEL_SPACE;
 use super::{Handles, Out};
 use crate::geom::v;
-use crate::math::{PI, TAU, deg, norm_angle, rad, sin_cos_deg};
+use crate::math::{PI, TAU, atan2, deg, hypot, norm_angle, rad, sin_cos_deg};
+use crate::num::dxf_real;
 use crate::report::Report;
 
 /// The app's name for a kind (the export report counts by it).
@@ -146,6 +148,14 @@ fn text_value(s: &str) -> (String, bool) {
 
 pub(super) struct Writer<'a> {
     pub out: &'a mut Out,
+    /// The dimensions' own blocks (BLOCKS section), and their block records.
+    pub blocks: &'a mut Out,
+    pub records: &'a mut Vec<(u64, String)>,
+    /// What a dimension without a text of its own shows, by object id.
+    pub values: &'a BTreeMap<u32, String>,
+    /// The project's length decimals and angle unit (a redrawn dimension's text).
+    pub decimals: u32,
+    pub grads: bool,
     pub handles: &'a mut Handles,
     pub layers: &'a Layers,
     pub report: &'a mut Report,
@@ -539,94 +549,216 @@ impl Writer<'_> {
         true
     }
 
-    /// A dimension as the lines, arc and text the app draws for it (the core's explode, with the value the app formatted).
-    fn dimension(&mut self, d: &kentos_contracts::DimensionEntity) -> bool {
-        let style = d.style.map(|s| {
-            match s {
-                DimensionStyle::Aligned => "aligned",
-                DimensionStyle::Linear => "linear",
-                DimensionStyle::Angular => "angular",
-                DimensionStyle::Radius => "radius",
-                DimensionStyle::Diameter => "diameter",
+    /// A dimension as a DXF DIMENSION: its drawing (the app's lines and
+    /// ticks, the dimension arc as an ARC, the value as MTEXT) in an
+    /// anonymous block of its own, the type and definition points a CAD
+    /// program measures from, and Standard's sizes overridden to the app's
+    /// (text height, oblique ticks, gaps, decimals), so a program that
+    /// redraws it stays close to it. KentOS's data gives the same dimension
+    /// back to KentOS.
+    fn dimension(&mut self, d: &DimensionEntity) -> bool {
+        if !(d.height > 0.0) {
+            self.report
+                .skip("Ölçü", "yazı yüksekliği sıfır ya da negatif; yazılmadı", 0);
+            return false;
+        }
+        let Some(l) = dim::layout(d) else {
+            self.report.skip(
+                "Ölçü",
+                "ölçülecek bir uzunluğu ya da açısı yok; yazılmadı",
+                0,
+            );
+            return false;
+        };
+        let def = dim::definition(d, &l);
+        let own = d.text.clone().filter(|t| !t.is_empty());
+        let shown = own.clone().or_else(|| self.values.get(&d.base.id).cloned());
+        let middle = dim::text_middle(&l, d.height);
+
+        // The block: the drawing on layer 0 in the dimension's colour (BYBLOCK), as AutoCAD writes it.
+        let record = self.handles.take();
+        let name = format!("*D{}", self.records.len() + 1);
+        self.records.push((record, name.clone()));
+        self.block_begin(record, &name);
+        let arc = match l.pick.first() {
+            Some(&Edge::Arc { c, r, a0, sweep }) => Some((app(c), r, a0, sweep)),
+            _ => None,
+        };
+        // The arc the layout draws as chords is one ARC.
+        let on_arc = |p: CoreVec2| {
+            arc.is_some_and(|(c, r, _, _)| {
+                (hypot(p.x - c.x, p.y - c.y) - r).abs() <= 1e-9 * r.max(1.0)
+            })
+        };
+        for [p, q] in &l.lines {
+            self.grow(app(*p));
+            self.grow(app(*q));
+            if on_arc(*p) && on_arc(*q) {
+                continue;
             }
-            .to_string()
-        });
-        let shape = Shape::Dimension {
-            a: core(d.a),
-            b: core(d.b),
+            self.block_line(record, app(*p), app(*q));
+        }
+        if let Some((c, r, a0, sweep)) = arc {
+            self.block_arc(record, c, r, a0, a0 + sweep);
+        }
+        match shown.as_deref() {
+            Some(t) if !t.trim().is_empty() => {
+                self.block_mtext(record, middle, d.height, l.rotation, t);
+                self.grow(middle);
+            }
+            _ => self.report.note(
+                "Ölçü",
+                "değer yazısı verilmediği için bloğu yazısız yazıldı",
+                0,
+            ),
+        }
+        self.block_end(record);
+
+        // The DIMENSION (its common groups, then its kind's).
+        self.begin("DIMENSION", &d.base);
+        self.out.str(100, "AcDbDimension");
+        self.out.str(2, &name);
+        self.out.xyz(10, def.p10);
+        self.out.xyz(11, middle);
+        self.out.int(70, def.kind | dim::OWN_BLOCK);
+        self.out.int(71, 5);
+        self.out.real(42, l.value);
+        self.out
+            .str(1, &own.as_deref().map(dim::mtext_value).unwrap_or_default());
+        self.out.str(3, "Standard");
+        self.dimension_kind(&def);
+        self.out
+            .xdata(&dim_overrides(d.height, self.decimals, self.grads));
+        let mut m = Self::base_meta(&d.base);
+        m.dimension = Some(DimMeta {
+            style: dim::style_name(d.style).unwrap_or("").to_string(),
             offset: d.offset,
             height: d.height,
-            text: d.text.clone(),
-            style,
-            angle: d.angle,
-            c: d.c.map(core),
-        };
-        let pieces = match explode_entity(&shape, "") {
-            Cut::Pieces(p) => p,
-            Cut::Error(e) => {
-                self.report.skip("Ölçü", &format!("{e} Yazılmadı."), 0);
-                return false;
+            // Only when MTEXT's notation cannot say it exactly (the reader compares).
+            text: own.filter(|t| dim::mtext_value(t) != *t),
+            center: (def.kind == dim::DIAMETER).then_some((d.a.x, d.a.y)),
+        });
+        self.end(m);
+        true
+    }
+
+    /// The groups of a dimension's kind (its subclass and points).
+    fn dimension_kind(&mut self, def: &Definition) {
+        let point = |out: &mut Out, code: i32, p: Option<Vec2>| {
+            if let Some(p) = p {
+                out.xyz(code, p);
             }
         };
-        // The pieces take the dimension's layer and colour, not its attributes (as Patlat does).
-        let base = EntityBase {
-            label: None,
-            attrs: Default::default(),
-            symbol: None,
-            ..d.base.clone()
-        };
-        let meta = || Meta {
-            color: Self::base_meta(&base).color,
-            ..Meta::default()
-        };
-        for piece in &pieces {
-            match &piece.shape {
-                Shape::Line { a, b } => {
-                    self.begin("LINE", &base);
-                    self.out.str(100, "AcDbLine");
-                    self.out.xyz(10, app(*a));
-                    self.out.xyz(11, app(*b));
-                    self.grow(app(*a));
-                    self.grow(app(*b));
-                    self.end(meta());
-                }
-                Shape::Arc { c, r, a0, a1 } => {
-                    let mut m = meta();
-                    self.arc(&base, app(*c), *r, *a0, *a1, &mut m);
-                    self.end(m);
-                }
-                Shape::Text {
-                    p,
-                    text,
-                    height,
-                    rotation,
-                } => {
-                    if text.trim().is_empty() {
-                        self.report.note(
-                            "Ölçü",
-                            "değer yazısı verilmediği için yazısız yazıldı",
-                            0,
-                        );
-                        continue;
+        match def.kind {
+            dim::ROTATED | dim::ALIGNED => {
+                self.out.str(100, "AcDbAlignedDimension");
+                point(self.out, 13, def.p13);
+                point(self.out, 14, def.p14);
+                if def.kind == dim::ROTATED {
+                    if let Some(a) = def.angle {
+                        self.out.real(50, a);
                     }
-                    let t = TextEntity {
-                        base: base.clone(),
-                        p: app(*p),
-                        text: text.clone(),
-                        height: *height,
-                        rotation: *rotation,
-                    };
-                    self.text(&t, &base, meta());
+                    self.out.str(100, "AcDbRotatedDimension");
+                } else if let (Some(a), Some(b)) = (def.p13, def.p14) {
+                    // AutoCAD takes an aligned dimension's direction from its points; ezdxf from group 50.
+                    self.out.real(50, deg(atan2(b.y - a.y, b.x - a.x)));
                 }
-                _ => {}
+            }
+            dim::ANGULAR_3P => {
+                self.out.str(100, "AcDb3PointAngularDimension");
+                point(self.out, 13, def.p13);
+                point(self.out, 14, def.p14);
+                point(self.out, 15, def.p15);
+            }
+            _ => {
+                self.out.str(
+                    100,
+                    if def.kind == dim::RADIUS {
+                        "AcDbRadialDimension"
+                    } else {
+                        "AcDbDiametricDimension"
+                    },
+                );
+                point(self.out, 15, def.p15);
+                self.out.real(40, def.leader.unwrap_or(0.0));
             }
         }
-        self.report.note(
-            "Ölçü",
-            "çizgi, yay ve yazılarına patlatılarak yazıldı (DXF'te ölçü nesnesi olmaz; KentOS'a ölçü olarak geri okunmaz)",
-            0,
-        );
-        true
+    }
+
+    /// A block entity's head: on layer 0, colour BYBLOCK, owned by the block.
+    fn block_head(&mut self, kind: &str, record: u64) {
+        let h = self.handles.take();
+        let o = &mut *self.blocks;
+        o.str(0, kind);
+        o.handle(5, h);
+        o.handle(330, record);
+        o.str(100, "AcDbEntity");
+        o.str(8, "0");
+        o.int(62, 0);
+    }
+
+    fn block_begin(&mut self, record: u64, name: &str) {
+        let h = self.handles.take();
+        let o = &mut *self.blocks;
+        o.str(0, "BLOCK");
+        o.handle(5, h);
+        o.handle(330, record);
+        o.str(100, "AcDbEntity");
+        o.str(8, "0");
+        o.str(100, "AcDbBlockBegin");
+        o.str(2, name);
+        // 1: anonymous.
+        o.int(70, 1);
+        o.xyz(10, v(0.0, 0.0));
+        o.str(3, name);
+        o.str(1, "");
+    }
+
+    fn block_end(&mut self, record: u64) {
+        let h = self.handles.take();
+        let o = &mut *self.blocks;
+        o.str(0, "ENDBLK");
+        o.handle(5, h);
+        o.handle(330, record);
+        o.str(100, "AcDbEntity");
+        o.str(8, "0");
+        o.str(100, "AcDbBlockEnd");
+    }
+
+    fn block_line(&mut self, record: u64, a: Vec2, b: Vec2) {
+        self.block_head("LINE", record);
+        self.blocks.str(100, "AcDbLine");
+        self.blocks.xyz(10, a);
+        self.blocks.xyz(11, b);
+    }
+
+    /// Counter-clockwise from a0 to a1 (radians).
+    fn block_arc(&mut self, record: u64, c: Vec2, r: f64, a0: f64, a1: f64) {
+        self.block_head("ARC", record);
+        let o = &mut *self.blocks;
+        o.str(100, "AcDbCircle");
+        o.xyz(10, c);
+        o.real(40, r);
+        o.str(100, "AcDbArc");
+        o.real(50, deg(norm_angle(a0)));
+        o.real(51, deg(norm_angle(a1)));
+    }
+
+    /// The value, centred on `middle` along `rotation` (degrees).
+    fn block_mtext(&mut self, record: u64, middle: Vec2, height: f64, rotation: f64, text: &str) {
+        self.block_head("MTEXT", record);
+        let (s, c) = sin_cos_deg(rotation);
+        let o = &mut *self.blocks;
+        o.str(100, "AcDbMText");
+        o.xyz(10, middle);
+        o.real(40, height);
+        o.real(41, 0.0);
+        // Middle centre, left to right.
+        o.int(71, 5);
+        o.int(72, 1);
+        mtext_chunks(o, &dim::mtext_value(text));
+        o.str(7, "Standard");
+        o.xyz(11, v(c, s));
     }
 
     /// A HATCH: the ring and its holes as polyline boundaries, solid or a
@@ -710,6 +842,54 @@ impl Writer<'_> {
         }
         self.out.int(97, 0);
     }
+}
+
+/// An MTEXT's text: 250-byte pieces in group 3, the rest in group 1 (never splitting a character or a caret pair).
+fn mtext_chunks(o: &mut Out, text: &str) {
+    let mut rest = text;
+    while rest.len() > 250 {
+        let mut cut = 250;
+        while !rest.is_char_boundary(cut) || rest[..cut].ends_with('^') {
+            cut -= 1;
+        }
+        o.str(3, &rest[..cut]);
+        rest = &rest[cut..];
+    }
+    o.str(1, rest);
+}
+
+/// Standard's sizes overridden to the app's for one dimension (AutoCAD's
+/// DSTYLE data): text height, oblique ticks, the extension lines' gap and
+/// overshoot, the text above the line with the app's gap, aligned with it,
+/// and the project's decimals and angle unit, for a program that redraws it.
+fn dim_overrides(height: f64, decimals: u32, grads: bool) -> Vec<(i32, String)> {
+    let mut g: Vec<(i32, String)> = vec![
+        (1001, "ACAD".into()),
+        (1000, "DSTYLE".into()),
+        (1002, "{".into()),
+    ];
+    let mut real = |code: &str, x: f64| {
+        g.push((1070, code.into()));
+        g.push((1040, dxf_real(x)));
+    };
+    real("140", height);
+    real("142", 0.6 * height * std::f64::consts::FRAC_1_SQRT_2);
+    real("42", 0.5 * height);
+    real("44", 0.5 * height);
+    real("147", 0.35 * height);
+    for (code, value) in [
+        ("77", 1),
+        ("73", 0),
+        ("74", 0),
+        ("271", i64::from(decimals.min(8))),
+        ("275", if grads { 2 } else { 0 }),
+        ("179", 4),
+    ] {
+        g.push((1070, code.into()));
+        g.push((1070, value.to_string()));
+    }
+    g.push((1002, "}".into()));
+    g
 }
 
 #[cfg(test)]

@@ -1,6 +1,5 @@
 import type { Entity } from '../model/entities';
-import { compileExpression } from '../model/expression/expression';
-import { measuredOf, toNumber, toText } from '../model/expression/expressionLib';
+import { compileExpression, type ExprAs } from '../model/expression/expression';
 import type { Color, Symbol, SymbolSet } from '../model/style';
 import { geometryClassOf, type GeometryClass } from './geometry';
 
@@ -22,18 +21,22 @@ type Scope = {
   measures?(entities: readonly Entity[]): Float64Array;
 };
 
-/** The expression's value per object (null when it gives nothing), or an error. */
-export function valuesOf(entities: readonly Entity[], expr: string, scope: Scope): { values: (string | null)[]; error?: string } {
+/** The expression's value per object, as `as` asks, in one call to the core; or an error. */
+function evaluated<T>(entities: readonly Entity[], expr: string, scope: Scope, as: ExprAs): { values: T[]; error?: string } {
   const c = compileExpression(expr);
   if (!c.ok) return { values: [], error: c.error };
   const measures = scope.measures;
-  const measured = measures && measuredOf(() => measures(entities));
-  return {
-    values: entities.map((entity, i) => {
-      const v = c.expr.evaluate({ entity, index: i + 1, layerName: scope.layerName, measured: measured && (() => measured(i)) });
-      return v === null ? null : toText(v);
-    }),
-  };
+  const col = c.expr.evaluateAll({ entities, layerName: scope.layerName, measures: measures && (() => measures(entities)) }, as);
+  return { values: entities.map((_, i) => col.value(i) as T) };
+}
+
+/** The expression's text per object (null when it gives nothing), or an error. */
+export const valuesOf = (entities: readonly Entity[], expr: string, scope: Scope) => evaluated<string | null>(entities, expr, scope, 'text');
+
+/** The numbers the expression's values read as (text that reads as a number counts), or an error. */
+export function numbersOf(entities: readonly Entity[], expr: string, scope: Scope): { values: number[]; error?: string } {
+  const r = evaluated<number | null>(entities, expr, scope, 'textNumber');
+  return { values: r.values.filter((v): v is number => v !== null && Number.isFinite(v)), error: r.error };
 }
 
 /** Distinct non-empty values with their counts, ordered naturally (numbers by value, text in Turkish order). */
@@ -69,10 +72,6 @@ export function equalCount(values: readonly number[], n: number): NumericClass[]
   for (let i = 0; i < bounds.length - 1; i++) if (bounds[i + 1] > bounds[i] || (i === bounds.length - 2 && !out.length)) out.push({ min: bounds[i], max: bounds[i + 1] });
   return out;
 }
-
-/** Numbers among the values (text that reads as a number counts). */
-export const numericValues = (values: readonly (string | null)[]): number[] =>
-  values.map((v) => (v === null ? null : toNumber(v))).filter((v): v is number => v !== null && Number.isFinite(v));
 
 // ── Colours ────────────────────────────────────────────────────────────
 

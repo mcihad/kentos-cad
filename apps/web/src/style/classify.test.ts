@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Entity } from '../model/entities';
 import { CoreStore } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
-import { classesPresent, classLabel, equalCount, equalInterval, numericValues, plainSymbols, rampColors, uniqueValues, valuesOf } from './classify';
+import { classesPresent, classLabel, equalCount, equalInterval, numbersOf, plainSymbols, rampColors, uniqueValues, valuesOf } from './classify';
 
 const poly = (attrs: Record<string, string>, id = 1): Entity => ({ id, kind: 'polygon', layerId: 'a', attrs, pts: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }] });
 const scope = { layerName: () => 'Parseller' };
@@ -59,7 +59,10 @@ describe('classify', () => {
     ]);
     expect(equalInterval([3, 3], 5)).toEqual([{ min: 3, max: 3 }]);
     expect(equalCount([], 3)).toEqual([]);
-    expect(numericValues(['12.5', 'abc', null, '7'])).toEqual([12.5, 7]);
+    // The numbers the values' text reads as: text that reads as a number counts, 12 significant digits.
+    const nums = [poly({ N: '12.5' }), poly({ N: 'abc' }), poly({}), poly({ N: '7' })];
+    expect(numbersOf(nums, 'N', scope).values).toEqual([12.5, 7]);
+    expect(numbersOf(nums.slice(0, 1), 'N / 3', scope).values).toEqual([4.16666666667]);
     expect(classLabel({ min: 1.234, max: 5 })).toBe('1.23 – 5');
   });
 

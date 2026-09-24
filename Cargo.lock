@@ -1263,6 +1263,7 @@ name = "kentos-geometry-wasm"
 version = "0.1.0"
 dependencies = [
  "kentos-geometry-core",
+ "kentos-style-core",
  "wasm-bindgen",
 ]
 
@@ -1273,6 +1274,14 @@ dependencies = [
  "sqlx",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "kentos-style-core"
+version = "0.1.0"
+dependencies = [
+ "kentos-geometry-core",
+ "serde_json",
 ]
 
 [[package]]
