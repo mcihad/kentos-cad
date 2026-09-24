@@ -14,7 +14,8 @@
     "e2e:cloud": "node scripts/wasm/ensure.mjs && cargo build -q -p kentos-api && node scripts/e2e/cloud.mjs",
     "rust:test": "cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings",
     "rust:wasm": "cargo build -p kentos-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir src/wasm/pkg target/wasm32-unknown-unknown/wasm/kentos_wasm.wasm",
-    "test:rust": "pnpm rust:test && pnpm wasm && vitest run src/wasm",
+    "rust:wasm:formats": "cargo build -p kentos-formats-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir src/io/pkg target/wasm32-unknown-unknown/wasm/kentos_formats_wasm.wasm",
+    "test:rust": "pnpm rust:test && pnpm wasm && vitest run src/wasm src/io",
     "api": "cargo run -q -p kentos-api --bin kentosd -- serve",
     "kentosd": "cargo run -q -p kentos-api --bin kentosd --",
     "db:setup": "cargo run -q -p kentos-api --bin kentosd -- db-setup && cargo run -q -p kentos-api --bin kentosd -- migrate && cargo run -q -p kentos-api --bin kentosd -- dev-seed"

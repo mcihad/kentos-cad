@@ -1,0 +1,21 @@
+import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
+import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
+
+/**
+ * Messages between the page and the formats worker (formatsWorker.ts).
+ * Files cross as ArrayBuffers, transferred (the page keeps its own copy
+ * when it still needs one); results come back as UTF-8 JSON bytes, also
+ * transferred, and the page parses them (CLAUDE.md §6.2 rule 6).
+ */
+
+export type FormatsRequest =
+  | { id: number; op: 'readCoords'; bytes: ArrayBuffer; options: CoordReadOptions }
+  | { id: number; op: 'writeCoords'; input: CoordWriteInput };
+
+export type FormatsReply =
+  /** A reader's result: JSON. */
+  | { id: number; ok: true; json: ArrayBuffer }
+  /** A writer's file and its report (ExportReport JSON). */
+  | { id: number; ok: true; file: ArrayBuffer; report: string }
+  /** `fatal`: the module trapped or did not load; the page starts a fresh worker. */
+  | { id: number; ok: false; message: string; fatal: boolean };

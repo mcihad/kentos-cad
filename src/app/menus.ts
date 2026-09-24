@@ -32,7 +32,7 @@ export const MAIN_MENU: TopMenu[] = [
       'cloud.conflicts',
       '-',
       { label: 'İçe aktar', icon: 'import', items: ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', '-', 'file.import.ncn'] },
-      { label: 'Dışa aktar', icon: 'export', items: ['file.export.dxf', 'file.export.geojson', 'file.export.pdf'] },
+      { label: 'Dışa aktar', icon: 'export', items: ['file.export.dxf', 'file.export.geojson', 'file.export.pdf', '-', 'file.export.ncn'] },
       '-',
       'file.print',
       '-',

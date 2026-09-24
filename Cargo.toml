@@ -1,8 +1,8 @@
 # KentOS Rust workspace (CLAUDE.md §14): the shared analytic core (native and
-# WASM), versioned contracts, and the server. The browser app stays in src/.
+# WASM), versioned contracts, the file formats, and the server. The browser app stays in src/.
 [workspace]
 resolver = "3"
-members = ["crates/contracts", "crates/geometry-core", "crates/wasm", "crates/postgres", "crates/application", "apps/api"]
+members = ["crates/contracts", "crates/geometry-core", "crates/wasm", "crates/formats", "crates/formats-wasm", "crates/postgres", "crates/application", "apps/api"]
 
 [workspace.package]
 version = "0.1.0"

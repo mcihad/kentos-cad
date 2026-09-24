@@ -913,6 +913,69 @@ try {
     await b.eval(`window.kentos.ui.dockTab.set('layers'); window.kentos.ui.processingTab.set('tools'); window.kentos.selection.clear()`);
   }
 
+  // File exchange (src/io, crates/formats): an in-memory picker hands files to the importers and takes the
+  // exported bytes; the Rust formats module runs in its own worker. Coordinates must arrive exactly.
+  const ioCenter = (sel, text = '') =>
+    b.eval(`(() => { const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.textContent.trim().startsWith(${JSON.stringify(text)})); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+  const ioPress = async (sel, text) => {
+    const p = await ioCenter(sel, text);
+    if (!p) throw new Error(`bulunamadı: ${sel} ${text ?? ''}`);
+    await b.click(...p);
+    await sleep(200);
+  };
+  const ioPicker = (name, text) =>
+    b.eval(`(() => {
+      const k = window.kentos;
+      const io = (window.__io ??= { original: k.files.picker });
+      io.written = null;
+      k.files.picker = {
+        open: async () => ({ name: ${JSON.stringify(name)}, getFile: async () => new Blob([${JSON.stringify(text)}]) }),
+        save: async (n) => ({ name: n, getFile: async () => new Blob([]), createWritable: async () => { const parts = []; return { write: async (d) => { parts.push(d); }, close: async () => { io.written = { name: n, parts }; } }; } }),
+      };
+    })()`);
+  const ioWritten = () => b.eval(`(() => { const w = window.__io.written; if (!w) return null; const bytes = w.parts.map((p) => (typeof p === 'string' ? new TextEncoder().encode(p) : p)); const all = new Uint8Array(bytes.reduce((s, p) => s + p.length, 0)); let at = 0; for (const p of bytes) { all.set(p, at); at += p.length; } return { name: w.name, text: new TextDecoder().decode(all) }; })()`);
+
+  // Coordinate lists (Netcad NCN): preview with the detected columns, the coordinate system question,
+  // one undo step, exact values; the export writes the same text back.
+  {
+    await ioPicker('deneme.ncn', '# deneme\r\n1001 487061.123 4420101.456 105.2\r\n1002 487071.5 4420111.25 106.75\r\nbozuk satır\r\n');
+    await b.eval('window.kentos.selection.clear()');
+    const n0 = await b.eval('window.kentos.doc.size');
+    await b.eval(`window.kentos.commands.execute('file.import.ncn')`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-table tbody tr')`, 20000).catch(() => {});
+    const preview = await b.eval(`({ cols: [...document.querySelectorAll('.dialog--io thead select')].map((s) => s.value), rows: document.querySelectorAll('.dialog--io tbody tr').length, bad: document.querySelectorAll('.dialog--io tbody tr[data-error]').length })`);
+    check('coordinate import: the preview reads the NCN as Ad Y X Z and marks the bad line', JSON.stringify(preview.cols) === '["name","y","x","z"]' && preview.rows === 3 && preview.bad === 1, JSON.stringify(preview));
+    await b.shot('io-coords-import');
+    // Another system than the project's blocks the import: nothing is reprojected silently.
+    const blocked = await b.eval(`(() => {
+      const s = document.querySelector('.dialog--io select[aria-label="Bu koordinatlar hangi sistemde?"]');
+      const primary = document.querySelector('.dialog--io .dialog__foot .btn--primary');
+      const keep = s.value;
+      s.value = '2322';
+      s.dispatchEvent(new Event('change'));
+      const r = { disabled: primary.disabled, warned: !!document.querySelector('.dialog--io .note--warn') };
+      s.value = keep;
+      s.dispatchEvent(new Event('change'));
+      return { ...r, after: primary.disabled };
+    })()`);
+    check('coordinate import: another coordinate system blocks it with a warning', blocked.disabled && blocked.warned && !blocked.after, JSON.stringify(blocked));
+    await ioPress('.dialog--io .dialog__foot .btn--primary', 'İçe aktar');
+    await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
+    const got = await b.eval(`[...window.kentos.doc.all()].filter((e) => e.kind === 'point' && (e.label === '1001' || e.label === '1002')).map((e) => [e.label, e.p.x, e.p.y, e.z, window.kentos.doc.layers.get(e.layerId)?.name, e.attrs.Ad])`);
+    check('coordinate import adds the points exactly, on a new layer named after the file', JSON.stringify(got) === JSON.stringify([['1001', 487061.123, 4420101.456, 105.2, 'deneme', '1001'], ['1002', 487071.5, 4420111.25, 106.75, 'deneme', '1002']]), JSON.stringify(got));
+    await b.eval(`window.kentos.commands.execute('edit.undo')`);
+    const undone = await b.eval('window.kentos.doc.size');
+    await b.eval(`window.kentos.commands.execute('edit.redo')`);
+    check('coordinate import is one undo step', undone === n0 && (await b.eval('window.kentos.doc.size')) === n0 + 2, `${n0} → ${undone}`);
+    await b.eval(`(() => { const k = window.kentos; k.selection.set([...k.doc.all()].filter((e) => e.kind === 'point' && (e.label === '1001' || e.label === '1002')).map((e) => e.id)); k.commands.execute('file.export.ncn'); })()`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-summary')`, 10000).catch(() => {});
+    await ioPress('.dialog--io .dialog__foot .btn--primary', 'Dışa aktar');
+    await b.waitFor(`window.__io.written`, 10000).catch(() => {});
+    const out = await ioWritten();
+    check('coordinate export writes the selected points back exactly (NCN)', out?.text === '1001 487061.123 4420101.456 105.2\r\n1002 487071.5 4420111.25 106.75\r\n' && /\.ncn$/.test(out.name), JSON.stringify(out));
+    await b.eval(`(() => { const k = window.kentos; k.files.picker = window.__io.original; k.selection.clear(); })()`);
+  }
+
   // Local .kcad files: Ctrl+S writes (dirty clears only after the write), Ctrl+O asks about unsaved changes and reopens it.
   // Headless Chrome has no native file dialogs, so an in-memory picker stands in for them.
   {

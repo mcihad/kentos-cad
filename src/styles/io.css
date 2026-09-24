@@ -1,0 +1,219 @@
+/* File exchange windows (ui/io/): coordinate list and DXF import and export.
+   Loaded with the dialogs, not at start-up (CLAUDE.md §20). */
+
+.dialog--io .dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 18px 18px;
+}
+/* Parts keep their height; the body scrolls when the window is short. */
+.dialog--io .dialog__body > * {
+  flex-shrink: 0;
+}
+
+/* The picked file: name, facts, and a way to pick another. */
+.io-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--c-panel-head);
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--r-md);
+}
+.io-file > svg {
+  flex: none;
+  color: var(--c-text-2);
+}
+.io-file__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.io-file__name {
+  overflow: hidden;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.io-file__meta {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* A labelled control: label above, control below. */
+.io-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.io-field__label {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.io-field > .seg {
+  align-self: flex-start;
+}
+.io-field__hint {
+  margin: 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+.io-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 18px;
+}
+.io-row > .io-field {
+  flex: 0 1 auto;
+}
+.io-row > .io-field--grow {
+  flex: 1 1 240px;
+}
+.io-row > .io-field--wide {
+  flex: 0 1 calc(340px * var(--ui-scale));
+}
+.io-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--ctl-h);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.io-check input {
+  accent-color: var(--c-accent);
+}
+
+/* Preview table: the first rows as written, a column role picker on each column. */
+.io-table-wrap {
+  max-height: calc(260px * var(--ui-scale));
+  overflow: auto;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.io-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+.io-table th,
+.io-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--c-line-soft);
+  text-align: left;
+  white-space: nowrap;
+}
+.io-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--c-panel-head);
+  font-weight: 500;
+  vertical-align: bottom;
+}
+.io-table thead .field {
+  min-width: calc(96px * var(--ui-scale));
+  height: calc(26px * var(--ui-scale));
+  font-size: var(--fs-xs);
+}
+.io-table__source {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--c-text-3);
+  font-weight: 400;
+}
+.io-table__line {
+  width: 1%;
+  color: var(--c-text-3);
+  text-align: right;
+}
+.io-table td.io-table__skip {
+  color: var(--c-text-3);
+}
+.io-table tr[data-error] td {
+  color: var(--c-text-3);
+}
+.io-table__status {
+  width: 1%;
+}
+.io-table__status svg {
+  vertical-align: -3px;
+}
+.io-table tr:not([data-error]) .io-table__status svg {
+  color: var(--c-ok);
+}
+.io-table tr[data-error] .io-table__status {
+  color: var(--c-warn);
+  white-space: normal;
+  min-width: calc(180px * var(--ui-scale));
+}
+
+/* Summary: what will be read (green check), what will not (amber warning), notes (info). */
+.io-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 10px;
+  font-size: var(--fs-xs);
+  background: var(--c-panel-head);
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--r-md);
+}
+.io-summary__line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.45;
+}
+.io-summary__line > svg {
+  flex: none;
+  margin-top: 1px;
+}
+.io-summary__line[data-kind='ok'] > svg {
+  color: var(--c-ok);
+}
+.io-summary__line[data-kind='warn'] > svg {
+  color: var(--c-warn);
+}
+.io-summary__line[data-kind='info'] > svg {
+  color: var(--c-info);
+}
+.io-summary__line[data-kind='error'] {
+  color: var(--c-danger);
+}
+.io-summary__list {
+  margin: 0;
+  padding-left: 26px;
+  color: var(--c-text-2);
+}
+.io-summary__list > li + li {
+  margin-top: 2px;
+}
+
+.io-empty {
+  margin: 0;
+  padding: 16px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+
+/* Status in the footer: progress while the worker reads, errors in red. */
+.io-status {
+  flex: 1;
+  min-width: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.io-status[data-kind='error'] {
+  color: var(--c-danger);
+}

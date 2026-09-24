@@ -243,6 +243,26 @@ export class CadDocument {
     return entity;
   }
 
+  /**
+   * Adds many objects as one change (a file import): each is its own
+   * undoable op, but listeners hear one event for all of them, not one
+   * per object (the layer panel recounts every object on each event).
+   */
+  addMany(inits: readonly NewEntity[], label = 'Ekle'): Entity[] {
+    const entities = inits.map((init) => ({ ...init, id: this.nextId++ }) as Entity);
+    if (!entities.length) return entities;
+    const ops: Op[] = entities.map((entity) => ({ type: 'add', entity }));
+    if (this.pending) {
+      // One push per op: a spread of 10⁵ arguments overflows the stack.
+      for (const op of ops) this.pending.ops.push(op);
+      this.applyAll(ops);
+    } else {
+      this.applyAll(ops);
+      this.commit({ label, ops });
+    }
+    return entities;
+  }
+
   remove(ids: Iterable<number>): void {
     this.transact('Sil', () => {
       for (const id of ids) {
@@ -397,7 +417,7 @@ export class CadDocument {
 
   private commit(tx: Transaction): void {
     if (this.group && tx !== this.group) {
-      this.group.ops.push(...tx.ops);
+      for (const op of tx.ops) this.group.ops.push(op);
       return;
     }
     this.undoStack.push(tx);

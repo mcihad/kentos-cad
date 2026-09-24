@@ -120,7 +120,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     pending(ctx, 'file.import.ncz', 'Netcad NCZ…', F),
     pending(ctx, 'file.import.shp', 'Shapefile…', F),
     pending(ctx, 'file.import.geojson', 'GeoJSON…', F),
-    pending(ctx, 'file.import.ncn', 'Koordinat listesi (NCN, TXT, CSV)…', F),
     pending(ctx, 'file.export.dxf', 'DXF…', F),
     pending(ctx, 'file.export.geojson', 'GeoJSON…', F),
     pending(ctx, 'file.export.pdf', 'PDF pafta…', F),
@@ -326,7 +325,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     { id: 'crs.set', title: 'Koordinat sistemi…', category: K, icon: 'crs', aliases: ['SRID', 'EPSG'], run: () => hooks.openProjectSettings('crs') },
     pending(ctx, 'crs.transform', 'Datum dönüşümü (ED50 ↔ TUREF)…', K),
     pending(ctx, 'crs.query', 'Koordinat sorgula', K),
-    pending(ctx, 'crs.points', 'Nokta listesi içe aktar…', K),
     pending(ctx, 'analysis.volume', 'Hacim hesabı…', A),
     pending(ctx, 'analysis.slope', 'Eğim analizi…', A),
 

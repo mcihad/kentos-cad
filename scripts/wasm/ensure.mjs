@@ -1,19 +1,23 @@
-// Builds the Rust geometry core's WASM package (src/wasm/pkg) when its
-// sources changed since the last build (docs/adr/0008). `pnpm dev`, `test`,
-// `build`, `e2e` and the perf scripts run this first: the app cannot start
-// without the core. The digest covers the crates the package is built from
-// and the toolchain pins; the build itself is `pnpm rust:wasm`, run niced
-// (one heavy process at a time, ADR 0001).
+// Builds the Rust WASM packages whose sources changed since their last build
+// (docs/adr/0008): the geometry core (src/wasm/pkg), which the app needs to
+// start, and the file formats (src/io/pkg), which the formats worker loads
+// only when a file is imported or exported (CLAUDE.md §20). `pnpm dev`,
+// `test`, `build`, `e2e` and the perf scripts run this first. Each package
+// has its own digest (the crates it is built from and the toolchain pins)
+// and stamp, so an edit to the formats never rebuilds the core and nothing
+// is built when nothing changed. Builds run niced (one heavy process at a
+// time, ADR 0001).
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const ROOT = new URL('../..', import.meta.url).pathname;
-const PKG = join(ROOT, 'src/wasm/pkg');
-const STAMP = join(PKG, '.stamp');
-const SOURCES = ['crates/geometry-core', 'crates/wasm', 'Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml'];
-const OUTPUTS = ['kentos_wasm.js', 'kentos_wasm.d.ts', 'kentos_wasm_bg.wasm'];
+const PINS = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml'];
+const PACKAGES = [
+  { label: 'Geometri çekirdeği', script: 'rust:wasm', out: 'src/wasm/pkg', lib: 'kentos_wasm', sources: ['crates/geometry-core', 'crates/wasm', ...PINS] },
+  { label: 'Dosya biçimleri', script: 'rust:wasm:formats', out: 'src/io/pkg', lib: 'kentos_formats_wasm', sources: ['crates/formats', 'crates/formats-wasm', 'crates/contracts', ...PINS] },
+];
 
 function files(path) {
   const full = join(ROOT, path);
@@ -25,9 +29,9 @@ function files(path) {
     .sort();
 }
 
-function digest() {
+function digest(sources) {
   const h = createHash('sha256');
-  for (const f of SOURCES.flatMap(files)) {
+  for (const f of sources.flatMap(files)) {
     h.update(relative(ROOT, f));
     h.update('\0');
     h.update(readFileSync(f));
@@ -36,15 +40,19 @@ function digest() {
   return h.digest('hex');
 }
 
-const want = digest();
-const have = existsSync(STAMP) ? readFileSync(STAMP, 'utf8').trim() : '';
-const complete = OUTPUTS.every((f) => existsSync(join(PKG, f)));
-if (want === have && complete) process.exit(0);
+for (const pkg of PACKAGES) {
+  const out = join(ROOT, pkg.out);
+  const stamp = join(out, '.stamp');
+  const want = digest(pkg.sources);
+  const have = existsSync(stamp) ? readFileSync(stamp, 'utf8').trim() : '';
+  const complete = [`${pkg.lib}.js`, `${pkg.lib}.d.ts`, `${pkg.lib}_bg.wasm`].every((f) => existsSync(join(out, f)));
+  if (want === have && complete) continue;
 
-console.log('Geometri çekirdeği (WASM) derleniyor…');
-const r = spawnSync('nice', ['-n', '10', 'pnpm', '-s', 'rust:wasm'], { cwd: ROOT, stdio: 'inherit' });
-if (r.status !== 0) {
-  console.error('WASM paketi derlenemedi. Rust araç zinciri kurulu mu? (rust-toolchain.toml, wasm-bindgen-cli 0.2.128; CLAUDE.md §2)');
-  process.exit(r.status ?? 1);
+  console.log(`${pkg.label} (WASM) derleniyor…`);
+  const r = spawnSync('nice', ['-n', '10', 'pnpm', '-s', pkg.script], { cwd: ROOT, stdio: 'inherit' });
+  if (r.status !== 0) {
+    console.error(`${pkg.label} WASM paketi derlenemedi. Rust araç zinciri kurulu mu? (rust-toolchain.toml, wasm-bindgen-cli 0.2.128; CLAUDE.md §2)`);
+    process.exit(r.status ?? 1);
+  }
+  writeFileSync(stamp, `${want}\n`);
 }
-writeFileSync(STAMP, `${want}\n`);

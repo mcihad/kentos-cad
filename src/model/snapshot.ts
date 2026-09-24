@@ -55,6 +55,22 @@ export function readSnapshot(text: string): ReadResult {
   }
 }
 
+/**
+ * Objects that come from outside a drawing file (a format import) checked
+ * exactly like a file's: every field, finite coordinates, lists long enough
+ * to draw, a layer among `layers`, unique positive ids. The objects are
+ * returned as given; `where` names them in the message ("Nesne 12 (arc) ›
+ * yarıçap: …").
+ */
+export function readEntityList(list: readonly unknown[], layers: ReadonlySet<string>, where = 'Nesne'): { ok: true; entities: Entity[] } | { ok: false; error: string } {
+  const ids = new Set<number>();
+  try {
+    return { ok: true, entities: list.map((e, i) => entity(e, `${where} ${i + 1}`, layers, ids)) };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 // ── Validation ─────────────────────────────────────────────────────────
 
 class Bad extends Error {}
@@ -133,7 +149,7 @@ function layer(v: unknown, where: string): LayerInit {
   };
 }
 
-function entity(v: unknown, where: string, layers: Set<string>, ids: Set<number>): Entity {
+function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set<number>): Entity {
   if (!isObj(v)) return fail(where, 'nesne olmalı');
   const kind = oneOf(v.kind, KINDS, `${where} › tür`);
   const w = `${where} (${kind})`;

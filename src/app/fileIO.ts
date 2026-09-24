@@ -20,13 +20,22 @@ import type { DocumentContent } from '../model/document';
 export interface DrawingFileHandle {
   readonly name: string;
   getFile(): Promise<Blob>;
-  createWritable(): Promise<{ write(data: string): Promise<void>; close(): Promise<void> }>;
+  createWritable(): Promise<{ write(data: string | Uint8Array): Promise<void>; close(): Promise<void> }>;
+}
+
+/**
+ * A kind of file for the file dialogs: a description and the accepted
+ * extensions by media type. Without one the dialogs ask for a drawing (.kcad).
+ */
+export interface FileKind {
+  description: string;
+  accept: Record<string, string[]>;
 }
 
 /** Asks for a file: a handle, null when the user cancels, undefined when the browser cannot. */
 export interface DrawingFilePicker {
-  save(suggestedName: string): Promise<DrawingFileHandle | null | undefined>;
-  open(): Promise<DrawingFileHandle | null | undefined>;
+  save(suggestedName: string, kind?: FileKind): Promise<DrawingFileHandle | null | undefined>;
+  open(kind?: FileKind): Promise<DrawingFileHandle | null | undefined>;
 }
 
 type FsaWindow = Window & {
@@ -34,25 +43,25 @@ type FsaWindow = Window & {
   showOpenFilePicker?: (o: unknown) => Promise<DrawingFileHandle[]>;
 };
 
-const TYPES = [{ description: 'KentOS çizimi', accept: { 'application/json': [DOCUMENT_EXTENSION] } }];
+const DRAWING: FileKind = { description: 'KentOS çizimi', accept: { 'application/json': [DOCUMENT_EXTENSION] } };
 
 /** The browser's own file dialogs (File System Access API), where available. */
 export const browserPicker: DrawingFilePicker = {
-  async save(suggestedName) {
+  async save(suggestedName, kind = DRAWING) {
     const w = window as FsaWindow;
     if (!w.showSaveFilePicker) return undefined;
     try {
-      return await w.showSaveFilePicker({ suggestedName, types: TYPES });
+      return await w.showSaveFilePicker({ suggestedName, types: [kind] });
     } catch (e) {
       if ((e as DOMException).name === 'AbortError') return null;
       throw e;
     }
   },
-  async open() {
+  async open(kind = DRAWING) {
     const w = window as FsaWindow;
     if (!w.showOpenFilePicker) return undefined;
     try {
-      const [handle] = await w.showOpenFilePicker({ types: TYPES, multiple: false });
+      const [handle] = await w.showOpenFilePicker({ types: [kind], multiple: false });
       return handle ?? null;
     } catch (e) {
       if ((e as DOMException).name === 'AbortError') return null;
@@ -60,6 +69,12 @@ export const browserPicker: DrawingFilePicker = {
     }
   },
 };
+
+/** A file picked for an import: its name and bytes. */
+export interface PickedFile {
+  name: string;
+  bytes: Uint8Array;
+}
 
 /** Puts a whole drawing on screen: select tool, no selection, the new content, its start view. */
 export function replaceDrawing(ctx: AppContext, content: DocumentContent): void {
@@ -121,6 +136,29 @@ export class DocumentFiles {
       }
       return this.load(text, handle, readOnly);
     });
+  }
+
+  /**
+   * Asks for a file to import (not the drawing's own file) and reads its
+   * bytes; null when the user cancels or it cannot be read (said in the log).
+   * Call it straight from the command: the dialog needs the user's click.
+   */
+  async pickForImport(kind: FileKind): Promise<PickedFile | null> {
+    let handle: DrawingFileHandle | null | undefined;
+    try {
+      handle = await this.picker.open(kind);
+    } catch (e) {
+      this.ctx.log.error(`Açma penceresi açılamadı: ${message(e)}. Tarayıcının dosya iznini denetleyin.`);
+      return null;
+    }
+    if (handle === undefined) handle = await pickWithInput(Object.values(kind.accept).flat().join(','));
+    if (!handle) return null;
+    try {
+      return { name: handle.name, bytes: new Uint8Array(await (await handle.getFile()).arrayBuffer()) };
+    } catch (e) {
+      this.ctx.log.error(`“${handle.name}” okunamadı: ${message(e)}.`);
+      return null;
+    }
   }
 
   /** Reads a drawing's text into the app; `handle` becomes the file Save writes to unless `readOnly`. */
@@ -239,9 +277,9 @@ export class DocumentFiles {
 }
 
 /** Where the browser has no open dialog API: a hidden file input. */
-function pickWithInput(): Promise<DrawingFileHandle | null> {
+function pickWithInput(accept = `${DOCUMENT_EXTENSION},application/json`): Promise<DrawingFileHandle | null> {
   return new Promise((resolve) => {
-    const input = h('input', { type: 'file', accept: `${DOCUMENT_EXTENSION},application/json`, style: 'display:none' });
+    const input = h('input', { type: 'file', accept, style: 'display:none' });
     input.addEventListener('change', () => {
       const file = input.files?.[0];
       input.remove();

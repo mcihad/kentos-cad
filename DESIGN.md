@@ -372,6 +372,19 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
   - **Dosya pencereleri** (üst üste açılır, `dialog--svgfile`): içe alma 820 px ve dışa aktarma 760 px iki sütun (solda kâğıt renginde önizleme ve altında boyut/ad satırı, sağda form); içe almada renkler küçük renk kutulu "çip"lerdir (seçili amber çerçeve), özet kutusunda alınanlar yeşil onay, atlananlar amber uyarı simgesiyle; PNG saydam zemin önizlemesi dama desenlidir. Bitmap izle 1000 px: solda 480 px önizleme (görüntü %30, iz mürekkep renginde) ve altında sayılar, sağda 320 px kaydırıcılar (etiket üstte, değer sağda tabular, altında tek satır açıklama). Belge özellikleri 500 px, Farklı kaydet 440 px, altlığın konumu 360 px.
 - **Üst üste pencere:** sembol seçici ve tasarımcı, açıldıkları pencerenin üstünde durur (`Dialog` `stack`); yalnızca en üstteki tuşları alır, kapanınca alttaki kaldığı yerden sürer.
 
+### 7.15 Dosya alışverişi pencereleri (içe ve dışa aktarma)
+
+- **Aile:** `dialog--io`, bulut pencereleriyle aynı dil: alan etiketi üstte ve ikincil renkte (`--fs-xs`), denetim altında, gerekiyorsa altında üçüncül bir ipucu satırı. Bir satırdaki alanlar üstten hizalanır. Stil dosyası (`styles/io.css`) pencerelerle birlikte yüklenir, başlangıçta değil.
+- **Dosya satırı:** en üstte panel başlığı tonunda kutu; açma simgesi, dosya adı (600) ve altında üçüncül bilgi satırı ("3 veri satırı, UTF-8, ilk satır başlık").
+- **Koordinat listesi içe aktar** (860 px):
+  - Seçenek satırı: Ayırıcı (açılır liste; "Otomatik: boşluk" bulduğunu söyler), Ondalık ayırıcı (Nokta | Virgül), İlk satır (Başlık kutusu), Sütun sırası (Ad Y X Z | Ad X Y Z | Y X Z | X Y Z; eşleşmeyen özel sırada hiçbiri seçili değildir).
+  - Önizleme tablosu: alan zemini, 260 px'e kadar, başlık yapışkan. Her sütunun başında rol seçici (Ad, Y (sağa), X (yukarı), Z (kot), Kod, Alınmaz); başlıklı dosyada seçicinin üstünde üçüncül renkte sütunun adı. Satır numarası üçüncül ve sağa dayalı, sayılar tabular; "Alınmaz" sütunu üçüncül. Durum sütununda nokta satırında yeşil onay, nokta olmayan satırda amber ⚠ ve nedeni; o satırın hücreleri üçüncül renkte.
+  - Özet kutusu (panel başlığı tonu): yeşil onayla "n nokta alınacak.", amber ⚠ ile nokta olmayan satırlar (ilk beşi numarasıyla), ⓘ ile aynı adlı noktalar ve kapsam ("Kapsam: Y (sağa) … – …, X (yukarı) … – …"), amber ⚠ ile ipuçları (Y ve X yer değiştirmiş olabilir, değerler derece gibi).
+  - "Bu koordinatlar hangi sistemde?": datuma göre gruplu açılır liste, projenin sistemi seçili ve ", projenin sistemi" ekli; altında üçüncül not "Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz." Başka bir sistem seçilince uyarı kutusu (**Koordinatlar dönüştürülemez.** …) çıkar ve birincil düğme devre dışı kalır.
+  - Hedef katman (Yeni katman ya da var olan katmanlar; kilitliler seçilemez ve "(kilitli)", gizliler "(gizli)" yazar) ve yeni katmanın adı (varsayılan dosya adı).
+  - Alt çubuk: solda hayalet "Başka dosya…", ortada durum ("Dosya okunuyor…", hata kırmızı), sağda "Vazgeç" ve birincil "İçe aktar".
+- **Koordinat listesi dışa aktar** (720 px): Yazılacak noktalar (Seçili | Görünen katmanlar | Tümü, sayılarıyla; boş kapsam seçilemez), Biçim (NCN, TXT, CSV `;`, CSV `,`), Sütun sırası, İlk satır (başlık), Karakter kodlaması (UTF-8 | Windows-1254); özet kutusunda yazılacak nokta sayısı ve kotsuz ya da adsız noktalar. Birincil düğme "Dışa aktar…" kaydetme penceresini açar.
+
 ### 7.13 Kontroller (genel)
 
 | Kontrol | Kural |

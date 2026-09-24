@@ -1,0 +1,21 @@
+# A file must read to the same coordinates on every target (the server's
+# import job natively, the browser's formats worker in WASM; CLAUDE.md §23.4,
+# docs/adr/0008): the std transcendental functions call the platform's C
+# library natively, so they are forbidden here; use crate::math (libm).
+disallowed-methods = [
+  { path = "f64::sin", reason = "use math::sin (libm)" },
+  { path = "f64::cos", reason = "use math::cos (libm)" },
+  { path = "f64::tan", reason = "use libm" },
+  { path = "f64::sin_cos", reason = "use math::sin and math::cos (libm)" },
+  { path = "f64::asin", reason = "use libm" },
+  { path = "f64::acos", reason = "use libm" },
+  { path = "f64::atan", reason = "use libm" },
+  { path = "f64::atan2", reason = "use math::atan2 (libm)" },
+  { path = "f64::hypot", reason = "use math::hypot (libm)" },
+  { path = "f64::exp", reason = "use libm" },
+  { path = "f64::ln", reason = "use libm" },
+  { path = "f64::log10", reason = "use libm" },
+  { path = "f64::powf", reason = "use libm" },
+  { path = "f64::powi", reason = "write the product" },
+  { path = "f64::mul_add", reason = "no fused multiply-add: both targets must round alike" },
+]
