@@ -92,6 +92,7 @@ Girdiler (verildikleri sırayla):
   --tikla <x>,<y>       sol tık
   --sag-tikla <x>,<y>   sağ tık
   --tekerlek <x>,<y>,<satır>
+  --surukle <x>,<y>,<x>,<y>   sol tuşla sürükler (ör. yan panelin kenarı)
   --tus <ad>            asagi, yukari, sag, sol, enter, esc, sekme, bosluk
   --yaz <metin>         metin yazar";
 
@@ -156,6 +157,19 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
                     .ok_or_else(|| format!("Tekerlek x,y,satır biçiminde olmalı: {value}"))?;
 
                 inputs.push(Input::Scroll(parse_point(point)?, parse_number(lines)?));
+            }
+            "--surukle" => {
+                let value = value()?;
+                let numbers: Vec<&str> = value.split(',').collect();
+
+                let [x1, y1, x2, y2] = numbers[..] else {
+                    return Err(format!("Sürükleme x,y,x,y biçiminde olmalı: {value}"));
+                };
+
+                inputs.push(Input::Drag(
+                    Point::new(parse_number(x1)?, parse_number(y1)?),
+                    Point::new(parse_number(x2)?, parse_number(y2)?),
+                ));
             }
             "--tus" => inputs.push(Input::Key(parse_key(&value()?)?)),
             "--yaz" => inputs.push(Input::Type(value()?)),

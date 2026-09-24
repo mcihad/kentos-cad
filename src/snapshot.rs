@@ -65,6 +65,8 @@ pub enum Input {
     Click(Point),
     /// Sağ tık (ör. bağlam menüsü).
     RightClick(Point),
+    /// Sol tuşla bir noktadan ötekine sürükleme (ör. panel kenarı).
+    Drag(Point, Point),
     /// Tekerlek: pozitif değer yukarı, satır sayısı.
     Scroll(Point, f32),
     /// Adlandırılmış tuş: ok, Enter, Esc, F1...
@@ -176,6 +178,12 @@ impl Snapshot {
         events: &[Event],
     ) {
         for event in events {
+            // İmleç olaylarla birlikte ilerler: sürüklemede basış başladığı
+            // yerde, bırakış bittiği yerde olur.
+            if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
+                self.cursor = mouse::Cursor::Available(*position);
+            }
+
             let messages = self.update(view(state), std::slice::from_ref(event));
 
             for message in messages {
@@ -278,6 +286,17 @@ impl Snapshot {
                 Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
                 Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
             ],
+            Input::Drag(from, to) => {
+                let middle = Point::new((from.x + to.x) / 2.0, (from.y + to.y) / 2.0);
+
+                vec![
+                    pointer(self, from),
+                    Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+                    pointer(self, middle),
+                    pointer(self, to),
+                    Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
+                ]
+            }
             Input::RightClick(position) => vec![
                 pointer(self, position),
                 Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right)),
