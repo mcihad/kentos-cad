@@ -3,7 +3,7 @@ import { crsBySrid } from '../geo/crs';
 import { sheetAround } from '../model/newProject';
 import { DOCUMENT_EXTENSION, readSnapshot, toSnapshot } from '../model/snapshot';
 import { h } from '../ui/dom';
-import { Dialog } from '../ui/widgets/Dialog';
+import { askUnsaved } from '../ui/widgets/confirm';
 import { projectStylesProblem } from './cloud/incoming';
 import type { AppContext } from './context';
 import type { DocumentContent } from '../model/document';
@@ -324,33 +324,13 @@ export class DocumentFiles {
 }
 
 /**
- * The question about unsaved changes. It stacks over a dialog that asked
- * for the replacement (Yeni proje), so staying goes back to that dialog.
+ * The question about unsaved changes (the app's confirm window). It stacks
+ * over a dialog that asked for the replacement (Yeni proje), so staying goes
+ * back to that dialog.
  */
-function askAboutUnsaved(name: string, after: string): Promise<DiscardChoice> {
-  return new Promise((resolve) => {
-    let answered = false;
-    const done = (v: DiscardChoice) => {
-      if (answered) return;
-      answered = true;
-      dialog.close();
-      resolve(v);
-    };
-    const save = h('button', { class: 'btn btn--primary', type: 'button' }, 'Kaydet ve devam et');
-    const drop = h('button', { class: 'btn', type: 'button' }, 'Kaydetmeden devam et');
-    const stay = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
-    const dialog = new Dialog({
-      title: 'Kaydedilmemiş değişiklikler',
-      width: 460,
-      stack: true,
-      content: [h('p', null, `“${name}” içinde kaydedilmemiş değişiklikler var. ${after}`)],
-      footer: [h('div', { class: 'dialog__foot-spacer' }), stay, drop, save],
-      onClose: () => done('stay'),
-    });
-    stay.addEventListener('click', () => done('stay'));
-    drop.addEventListener('click', () => done('drop'));
-    save.addEventListener('click', () => done('save'));
-  });
+async function askAboutUnsaved(name: string, after: string): Promise<DiscardChoice> {
+  const a = await askUnsaved({ name, after, verb: 'devam et' });
+  return a === 'discard' ? 'drop' : a;
 }
 
 /** Where the browser has no open dialog API: a hidden file input. */

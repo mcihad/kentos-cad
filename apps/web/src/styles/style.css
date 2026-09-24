@@ -254,17 +254,6 @@
   flex-wrap: wrap;
   gap: 6px;
 }
-.smgr__confirm {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  font-size: var(--fs-sm);
-  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--c-danger) 45%, transparent);
-  border-radius: var(--r-md);
-}
 .smgr__import {
   display: flex;
   flex-direction: column;

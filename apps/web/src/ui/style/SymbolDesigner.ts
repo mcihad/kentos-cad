@@ -5,6 +5,7 @@ import { sanitizeSvg, svgAsset, validateSymbol } from '../../style/file';
 import { newItemId } from '../../style/library';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
+import { askUnsaved } from '../widgets/confirm';
 import { Dialog } from '../widgets/Dialog';
 import { PopupMenu } from '../widgets/PopupMenu';
 import { segmented } from '../widgets/controls';
@@ -91,7 +92,10 @@ class SymbolDesigner {
   private selected: LayerPath = [0];
   private geometry: PreviewGeometry;
   private pxPerMm = 4;
+  /** The draft as saved, or as opened (a new symbol: the starting one): what `dirty` compares with. */
   private savedJson: string;
+  /** The unsaved-changes question is open. */
+  private asking = false;
   private readonly past: string[] = [];
   private readonly future: string[] = [];
   private lastEdit = { key: '', at: 0 };
@@ -103,7 +107,7 @@ class SymbolDesigner {
     this.original = original;
     this.opts = opts;
     this.geometry = GEOMETRIES[draft.symbol.type][0].value;
-    this.savedJson = original || opts.inline ? JSON.stringify(draft) : '';
+    this.savedJson = JSON.stringify(draft);
     this.list = h('div', { class: 'sdes__layers', role: 'listbox', 'aria-label': 'Sembol katmanları' });
     this.props = h('div', { class: 'sdes__props' });
     this.canvas = h('canvas', { class: 'sdes__canvas' });
@@ -473,17 +477,18 @@ class SymbolDesigner {
     return true;
   }
 
-  /** Unsaved changes: the footer asks instead of closing. */
+  /** Unsaved changes are asked about in a window over the designer (DESIGN.md §7.9.1); the answer closes or stays. */
   private confirmClose(): boolean {
     if (!this.dirty) return true;
-    const leave = h('button', { class: 'btn btn--small', type: 'button' }, 'Kaydetmeden kapat');
-    const stay = h('button', { class: 'btn btn--small', type: 'button' }, 'Vazgeç');
-    const both = h('button', { class: 'btn btn--small btn--primary', type: 'button' }, 'Kaydet ve kapat');
-    leave.addEventListener('click', () => this.dialog.close());
-    stay.addEventListener('click', () => this.say(''));
-    both.addEventListener('click', () => this.save(true));
-    this.status.dataset.kind = 'warn';
-    replaceChildren(this.status, h('span', null, 'Kaydedilmemiş değişiklikler var.'), leave, stay, both);
+    if (!this.asking) {
+      this.asking = true;
+      const name = this.opts.inline ? this.opts.inline.title : this.draft.name.trim() || 'Adsız sembol';
+      void askUnsaved({ name, after: 'Pencere kapanırsa bu değişiklikler kaybolur.', verb: 'kapat', apply: !!this.opts.inline }).then((a) => {
+        this.asking = false;
+        if (a === 'discard') this.dialog.close();
+        else if (a === 'save') this.save(true);
+      });
+    }
     return false;
   }
 

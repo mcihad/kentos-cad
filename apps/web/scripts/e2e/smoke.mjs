@@ -801,7 +801,7 @@ try {
     // Closes the editor the way a user does: Esc (selection, then the window), without saving when asked.
     const closeEditor = async () => {
       for (let i = 0; i < 5 && (await b.eval(`!!document.querySelector('.dialog--svge')`)); i++) {
-        const leave = await center('.dialog--svge .sdes__status .btn', 'Kaydetmeden kapat');
+        const leave = await center('.dialog--confirm .btn', 'Kaydetmeden kapat');
         if (leave) await b.click(...leave);
         else {
           await b.eval(`document.querySelector('.svge__stage')?.focus()`);
@@ -931,6 +931,104 @@ try {
     await b.key('Escape');
     await b.key('Escape');
     await closeEditor();
+
+    // Questions ask in a window of their own over the editor (ui/widgets/confirm.ts, DESIGN.md §7.9.1). An editor
+    // with nothing changed closes at once; with a change, × asks: Esc, Vazgeç and a second × go back to the work,
+    // "Kaydetmeden kapat" closes, "Kaydet ve kapat" saves first. Tab stays in the question.
+    const isOpen = (sel) => b.eval(`!!document.querySelector(${JSON.stringify(sel)})`);
+    const question = '.dialog--confirm[aria-label="Kaydedilmemiş değişiklikler"]';
+    const closeX = async (sel) => {
+      const p = await center(`${sel} .dialog__head .ibtn`);
+      if (!p) throw new Error(`bulunamadı: ${sel} ×`);
+      await b.click(...p);
+      await sleep(250);
+      return p;
+    };
+    await b.eval(`window.kentos.commands.execute('style.svgEditor')`);
+    await sleep(500);
+    await closeX('.dialog--svge');
+    check('an untouched SVG drawing closes without a question', !(await isOpen('.dialog--svge')) && !(await isOpen('.dialog--confirm')));
+    await b.eval(`window.kentos.commands.execute('style.svgEditor')`);
+    await sleep(500);
+    await b.eval(`document.querySelector('.svge__stage').focus()`);
+    await b.key('r');
+    await b.drag(...(await docPt(20, 20)), ...(await docPt(60, 50)));
+    const svgX = await closeX('.dialog--svge');
+    const asked = await b.eval(`(() => { const q = document.querySelector(${JSON.stringify(question)}); return q && { role: q.getAttribute('role'), focus: document.activeElement?.textContent, buttons: [...q.querySelectorAll('.dialog__foot .btn')].map((x) => x.textContent) }; })()`);
+    check(
+      'closing with a change asks in a window of its own, with Kaydet ve kapat focused',
+      asked?.role === 'alertdialog' && asked.focus === 'Kaydet ve kapat' && JSON.stringify(asked.buttons) === '["Kaydetmeden kapat","Vazgeç","Kaydet ve kapat"]',
+      JSON.stringify(asked),
+    );
+    await b.shot('confirm-unsaved');
+    const inQuestion = [];
+    for (let i = 0; i < 4; i++) {
+      await b.key('Tab');
+      inQuestion.push(await b.eval(`!!document.activeElement?.closest('.dialog--confirm')`));
+    }
+    await b.key('Escape');
+    await sleep(200);
+    const svgShapeCount = () => b.eval(`document.querySelectorAll('.svge__svg [data-id]').length`);
+    check('Tab stays in the question; Esc goes back to the drawing', inQuestion.every(Boolean) && (await isOpen('.dialog--svge')) && !(await isOpen('.dialog--confirm')) && (await svgShapeCount()) === 1, JSON.stringify(inQuestion));
+    await b.click(...svgX);
+    await sleep(250);
+    await press(`${question} .btn`, 'Vazgeç');
+    await b.click(...svgX);
+    await sleep(250);
+    // The second click lands on the question's backdrop: Vazgeç, never a close without saving.
+    await b.click(...svgX);
+    await sleep(250);
+    check('Vazgeç and a second × keep the editor and its drawing', (await isOpen('.dialog--svge')) && !(await isOpen('.dialog--confirm')) && (await svgShapeCount()) === 1);
+    await b.click(...svgX);
+    await sleep(250);
+    await press(`${question} .btn`, 'Kaydetmeden kapat');
+    check('Kaydetmeden kapat closes the editor and saves nothing', !(await isOpen('.dialog--svge')) && !(await b.eval(`window.kentos.styles.library.items('user').some((i) => i.kind === 'asset' && i.name === 'Yeni çizim')`)));
+    // The model designer: untouched closes; with an input, Kaydet ve kapat saves and closes.
+    await b.eval(`window.kentos.commands.execute('processing.newModel')`);
+    await sleep(300);
+    await closeX('.dialog--designer');
+    check('an untouched new model closes without a question', !(await isOpen('.dialog--designer')) && !(await isOpen('.dialog--confirm')));
+    await b.eval(`window.kentos.commands.execute('processing.newModel')`);
+    await sleep(300);
+    await press('.mpalette__input', 'Nesneler');
+    await closeX('.dialog--designer');
+    await press(`${question} .btn`, 'Kaydet ve kapat');
+    const kept = await b.eval(`window.kentos.processing.models.value.find((m) => m.label === 'Yeni model' && m.inputs.length === 1 && !m.steps.length)`);
+    check('Kaydet ve kapat saves the model, then closes', !!kept && !(await isOpen('.dialog--designer')) && !(await isOpen('.dialog--confirm')), JSON.stringify(kept?.inputs));
+    if (kept) await b.eval(`window.kentos.processing.removeModel(${JSON.stringify(kept.id)})`);
+    // The symbol designer: a new symbol closes untouched; renamed, its Vazgeç asks.
+    await b.eval(`window.kentos.commands.execute('style.manager')`);
+    await sleep(400);
+    await press('.dialog--styles .btn', 'Yeni sembol');
+    await press('.menu__item', '');
+    await sleep(300);
+    await closeX('.dialog--sdesign');
+    const plainClose = !(await isOpen('.dialog--sdesign')) && !(await isOpen('.dialog--confirm'));
+    await press('.dialog--styles .btn', 'Yeni sembol');
+    await press('.menu__item', '');
+    await sleep(300);
+    await b.eval(`(() => { const i = document.querySelector('.dialog--sdesign input[aria-label="Sembol adı"]'); i.focus(); i.select(); })()`);
+    await b.type('Adı değişen sembol');
+    await press('.dialog--sdesign .dialog__foot .btn', 'Vazgeç');
+    const renamedAsks = await isOpen(question);
+    await press(`${question} .btn`, 'Kaydetmeden kapat');
+    check('the symbol designer closes untouched and asks after a rename', plainClose && renamedAsks && !(await isOpen('.dialog--sdesign')) && (await isOpen('.dialog--styles')));
+    // Deleting from the library asks in the same window: Vazgeç has the focus, Esc keeps the symbol, Sil removes it.
+    const doomed = await b.eval(`(() => { const lib = window.kentos.styles.library; return lib.copy(lib.items('system').find((i) => i.kind === 'symbol').id, 'user', { name: 'Silinecek deneme' }).id; })()`);
+    await b.eval(`(() => { const f = document.querySelector('.dialog--styles input[type="search"], .dialog--styles .field'); f.focus(); })()`);
+    await b.type('Silinecek');
+    await sleep(400);
+    await press('.scard', 'Silinecek deneme');
+    await press('.smgr__actions .btn', 'Sil');
+    const del = await b.eval(`(() => { const q = document.querySelector('.dialog--confirm'); return q && { title: q.getAttribute('aria-label'), focus: document.activeElement?.textContent, danger: q.querySelector('.btn--danger')?.textContent }; })()`);
+    await b.key('Escape');
+    await sleep(200);
+    const stays = await b.eval(`!!window.kentos.styles.library.get(${JSON.stringify(doomed)})`);
+    await press('.smgr__actions .btn', 'Sil');
+    await press('.dialog--confirm .btn', 'Sil');
+    const removed = !(await b.eval(`!!window.kentos.styles.library.get(${JSON.stringify(doomed)})`));
+    check('deleting from the library asks in a window: Vazgeç focused, Esc keeps, Sil removes', del?.title === 'Kitaplıktan sil' && del.focus === 'Vazgeç' && del.danger === 'Sil' && stays && removed, JSON.stringify(del));
+    await closeX('.dialog--styles');
   }
 
   // İşlem araçları: open from the İşlemler menu, run from the dialog, one undo step

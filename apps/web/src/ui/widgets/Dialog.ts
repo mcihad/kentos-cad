@@ -4,10 +4,11 @@ import { icon } from '../icons';
 import { PopupMenu } from './PopupMenu';
 
 /**
- * Modal dialog with focus trap-lite, Esc to close and restored focus. A new
- * dialog replaces the open one, unless it is opened with `stack` (a symbol
- * picker over a style window): then it sits on top and only the top dialog
- * takes keys; closing it returns to the one below.
+ * Modal dialog: Tab goes round its controls, Esc closes, the focus returns
+ * where it was. A new dialog replaces the open one, unless it is opened
+ * with `stack` (a symbol picker over a style window, a question over an
+ * editor): then it sits on top and only the top dialog takes keys; closing
+ * it returns to the one below. Questions use `confirmDialog` (confirm.ts).
  */
 export class Dialog {
   private static readonly stack: Dialog[] = [];
@@ -62,10 +63,12 @@ export class Dialog {
             e.preventDefault();
             e.stopPropagation();
             this.request();
-          } else if (!card.contains(e.target as Node)) {
-            // Keep app shortcuts from firing behind the modal.
-            e.stopPropagation();
+            return;
           }
+          // Tab goes round the top window: what is behind the backdrop cannot take the focus.
+          if (e.key === 'Tab' && !e.ctrlKey && !e.altKey && !e.metaKey) wrapTab(card, e);
+          // Keep app shortcuts from firing behind the modal.
+          if (!card.contains(e.target as Node)) e.stopPropagation();
         },
         true,
       ),
@@ -86,4 +89,26 @@ export class Dialog {
     if (at >= 0) Dialog.stack.splice(at, 1);
     (this.returnFocus as HTMLElement | null)?.focus?.();
   }
+}
+
+/**
+ * Tab from the last control goes to the first, Shift+Tab from the first
+ * (or from the card) to the last, and a focus outside comes in. Anything
+ * else is the browser's own order; an open menu keeps its keys.
+ */
+function wrapTab(card: HTMLElement, e: KeyboardEvent): void {
+  if (PopupMenu.isOpen) return;
+  const all = [...card.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]')].filter(
+    (el) => el.tabIndex >= 0 && !(el as HTMLButtonElement).disabled && el.getClientRects().length > 0,
+  );
+  if (!all.length) return;
+  const active = document.activeElement as HTMLElement | null;
+  const at = active ? all.indexOf(active) : -1;
+  let next: HTMLElement | undefined;
+  if (!active || !card.contains(active)) next = e.shiftKey ? all.at(-1) : all[0];
+  else if (e.shiftKey && (active === card || at === 0)) next = all.at(-1);
+  else if (!e.shiftKey && at === all.length - 1) next = all[0];
+  if (!next) return;
+  e.preventDefault();
+  next.focus();
 }

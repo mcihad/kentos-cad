@@ -445,6 +445,47 @@
 .dialog__spacer {
   flex: 1;
 }
+/*
+ * The question window (ui/widgets/confirm.ts): as wide as its answers need
+ * at the UI scale (never a squeezed button), at least a comfortable reading
+ * width; the text takes no width of its own and wraps inside.
+ */
+.dialog--confirm {
+  width: fit-content;
+  min-width: min(calc(460px * var(--ui-scale)), 100%);
+  max-width: 100%;
+}
+.dialog--confirm .dialog__foot {
+  flex-wrap: wrap;
+}
+.dialog--confirm .dialog__foot .btn {
+  flex-shrink: 0;
+}
+/* Keeps the left answer apart from the others even when the window is just wide enough. */
+.dialog--confirm .dialog__spacer {
+  min-width: 16px;
+}
+.confirm__message,
+.confirm__details {
+  width: 0;
+  min-width: 100%;
+}
+.confirm__message {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--c-text);
+}
+.confirm__details {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--c-text-2);
+}
+.confirm__details > li + li {
+  margin-top: 4px;
+}
 
 /* ── Text buttons ────────────────────────────────────────────────── */
 .btn {

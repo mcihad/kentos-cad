@@ -8,6 +8,7 @@ import { svgText } from '../../style/svg/exportSvg';
 import { newDoc, shapeId, transformShape, type SvgDoc, type SvgShape } from '../../style/svg/svgModel';
 import { h } from '../dom';
 import { icon } from '../icons';
+import { askUnsaved } from '../widgets/confirm';
 import { segmented } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
@@ -50,6 +51,8 @@ export interface FileHost {
   open(doc: SvgDoc, asset: LibraryAsset | null, name: string): void;
   /** The drawing was saved as this library item (Farklı kaydet). */
   adopt(asset: LibraryAsset): void;
+  /** Kaydet; false when it refused (an empty drawing), and says why. */
+  saveDrawing(): boolean;
 }
 
 export const fileSlug = (s: string) =>
@@ -279,19 +282,16 @@ export class SvgFiles {
     return added.map((s) => s.id);
   }
 
-  /** Asks before a new drawing replaces unsaved work; runs `go` when it may. */
+  /**
+   * Asks before another drawing replaces unsaved work, in a window over the
+   * editor (DESIGN.md §7.9.1); runs `go` when it may. A drawing Kaydet would
+   * refuse (no visible shape) has nothing to lose.
+   */
   confirmReplace(go: () => void): void {
-    if (!this.host.dirty || !this.host.doc.shapes.length) return go();
-    const at = this.buttons[0].getBoundingClientRect();
-    PopupMenu.open(
-      [
-        { kind: 'header', label: 'Kaydedilmemiş değişiklikler var' },
-        { label: 'Kaydetmeden aç', icon: 'fileOpen', run: go },
-        { label: 'Vazgeç', icon: 'close', run: () => undefined },
-      ],
-      { x: at.left, y: at.bottom + 4 },
-      { minWidth: 240 },
-    );
+    if (!this.host.dirty || !this.host.doc.shapes.some((s) => !s.hidden)) return go();
+    void askUnsaved({ name: this.host.name, after: 'Başka bir çizim açılırsa bu değişiklikler kaybolur.', verb: 'devam et' }).then((a) => {
+      if (a === 'discard' || (a === 'save' && this.host.saveDrawing())) go();
+    });
   }
 
   private newDrawing(): void {

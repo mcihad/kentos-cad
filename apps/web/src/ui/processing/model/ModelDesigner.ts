@@ -6,6 +6,7 @@ import { addInput, addStep, autoLayout, copyModel, newModel, setSource, sourcesF
 import { PickPointTool } from '../../../tools/pickPointTool';
 import { h, replaceChildren } from '../../dom';
 import { icon } from '../../icons';
+import { askRemove, askUnsaved } from '../../widgets/confirm';
 import { Dialog } from '../../widgets/Dialog';
 import { PopupMenu, type MenuItem } from '../../widgets/PopupMenu';
 import { openModelDialog } from '../ToolDialog';
@@ -23,8 +24,10 @@ import { modelPalette } from './modelPalette';
 
 interface DesignerState {
   draft: ProcessingModel;
-  /** JSON of the draft as last saved; null when never saved (dirty). */
+  /** JSON of the draft as last saved; null while the model is not in the library. */
   saved: string | null;
+  /** JSON of the draft as last saved or as opened (a new model: the empty one; a copy: the copy): what `dirty` compares with. */
+  baseline: string;
   builtinCopy: boolean;
   selected: NodeRef | null;
 }
@@ -38,7 +41,8 @@ export function openModelDesigner(ctx: AppContext, modelId?: string): void {
   const builtin = !!source && ctx.processing.isBuiltinModel(source.id);
   const draft = source ? (builtin ? copyModel(source) : (JSON.parse(JSON.stringify(source)) as ProcessingModel)) : newModel();
   if (!draft.steps.every((s) => s.position) || !draft.inputs.every((i) => draft.inputPositions?.[i.name])) autoLayout(draft);
-  new ModelDesigner(ctx, { draft, saved: source && !builtin ? JSON.stringify(draft) : null, builtinCopy: builtin, selected: null });
+  const json = JSON.stringify(draft);
+  new ModelDesigner(ctx, { draft, saved: source && !builtin ? json : null, baseline: json, builtinCopy: builtin, selected: null });
 }
 
 const HISTORY = 100;
@@ -50,6 +54,7 @@ class ModelDesigner implements InspectorHost {
   model: ProcessingModel;
   problems: ModelIssue[] = [];
   private savedJson: string | null;
+  private baseline: string;
   readonly builtinCopy: boolean;
   private selected: NodeRef | null;
   private readonly past: string[] = [];
@@ -63,12 +68,14 @@ class ModelDesigner implements InspectorHost {
   private readonly inspector = h('aside', { class: 'mdesign__inspector', 'aria-label': 'Seçilen kutunun ayarları' });
   private readonly status = h('div', { class: 'ptool__status mdesign__status', role: 'status', 'aria-live': 'polite' });
   private readonly subs: Disposable[] = [];
-  private confirming = false;
+  /** The unsaved-changes question is open. */
+  private asking = false;
 
   constructor(ctx: AppContext, state: DesignerState) {
     this.ctx = ctx;
     this.model = state.draft;
     this.savedJson = state.saved;
+    this.baseline = state.baseline;
     this.builtinCopy = state.builtinCopy;
     this.selected = state.selected;
     this.canvas = new ModelCanvas(
@@ -168,7 +175,7 @@ class ModelDesigner implements InspectorHost {
 
   /** Closes the designer while the user shows a point, then opens it again on the same draft. */
   pickPoint(stepId: string, param: string): void {
-    const state: DesignerState = { draft: this.model, saved: this.savedJson, builtinCopy: this.builtinCopy, selected: { kind: 'step', id: stepId } };
+    const state: DesignerState = { draft: this.model, saved: this.savedJson, baseline: this.baseline, builtinCopy: this.builtinCopy, selected: { kind: 'step', id: stepId } };
     const def = this.lookup(this.model.steps.find((s) => s.id === stepId)?.tool ?? '')?.parameters.find((p) => p.name === param);
     this.dialog.close();
     const reopen = (p: Vec2 | null) =>
@@ -180,18 +187,13 @@ class ModelDesigner implements InspectorHost {
   }
 
   deleteModel(): void {
-    this.showConfirm(`“${this.model.label}” modeli silinsin mi? Bu geri alınamaz.`, [
-      { label: 'Vazgeç', run: () => this.hideConfirm() },
-      {
-        label: 'Modeli sil',
-        danger: true,
-        run: () => {
-          this.ctx.processing.removeModel(this.model.id);
-          this.ctx.log.info(`“${this.model.label}” modeli silindi.`);
-          this.dialog.close();
-        },
-      },
-    ]);
+    const label = this.model.label;
+    void askRemove({ title: 'Modeli sil', message: `“${label}” modeli silinsin mi? Bu geri alınamaz.`, action: 'Modeli sil' }).then((yes) => {
+      if (!yes) return;
+      this.ctx.processing.removeModel(this.model.id);
+      this.ctx.log.info(`“${label}” modeli silindi.`);
+      this.dialog.close();
+    });
   }
 
   // ── Rendering ──────────────────────────────────────────────────────────
@@ -209,7 +211,6 @@ class ModelDesigner implements InspectorHost {
   /** What changes while typing: the title and the status line. */
   private refresh(): void {
     this.dialog?.el.querySelector('.dialog__title')?.replaceChildren(`Model tasarımcısı: ${this.model.label || 'adsız'}${this.dirty ? ' •' : ''}`);
-    if (this.confirming) return;
     const n = this.problems.length;
     replaceChildren(
       this.status,
@@ -224,7 +225,7 @@ class ModelDesigner implements InspectorHost {
   }
 
   private get dirty(): boolean {
-    return this.savedJson !== JSON.stringify(this.model);
+    return this.baseline !== JSON.stringify(this.model);
   }
 
   private exists(ref: NodeRef): boolean {
@@ -305,54 +306,24 @@ class ModelDesigner implements InspectorHost {
       this.model.label = 'Adsız model';
     }
     this.ctx.processing.saveModel(this.model);
-    this.savedJson = JSON.stringify(this.model);
+    this.savedJson = this.baseline = JSON.stringify(this.model);
     this.ctx.log.success(`“${this.model.label}” modeli kaydedildi${this.problems.length ? `; ${this.problems.length} sorun giderilene kadar çalışmaz` : ''}.`);
     this.render();
     return true;
   }
 
+  /** Unsaved changes are asked about in a window over the designer (DESIGN.md §7.9.1); the answer closes or stays. */
   private beforeClose(): boolean {
-    if (!this.dirty || this.confirming) return true;
-    this.showConfirm('Kaydedilmemiş değişiklikler var.', [
-      {
-        label: 'Kaydetmeden kapat',
-        run: () => {
-          this.confirming = true;
-          this.dialog.close();
-        },
-      },
-      { label: 'Vazgeç', run: () => this.hideConfirm() },
-      {
-        label: 'Kaydet ve kapat',
-        primary: true,
-        run: () => {
-          this.save();
-          this.dialog.close();
-        },
-      },
-    ]);
+    if (!this.dirty) return true;
+    if (!this.asking) {
+      this.asking = true;
+      void askUnsaved({ name: this.model.label || 'Adsız model', after: 'Pencere kapanırsa bu değişiklikler kaybolur.', verb: 'kapat' }).then((a) => {
+        this.asking = false;
+        if (a === 'discard') this.dialog.close();
+        else if (a === 'save' && this.save()) this.dialog.close();
+      });
+    }
     return false;
-  }
-
-  private showConfirm(message: string, actions: { label: string; run: () => void; primary?: boolean; danger?: boolean }[]): void {
-    this.confirming = true;
-    this.status.dataset.kind = 'warn';
-    replaceChildren(
-      this.status,
-      icon('warning', 16),
-      h('span', { class: 'ptool__status-text' }, message),
-      actions.map((a) => {
-        const b = h('button', { class: `btn btn--small${a.primary ? '' : ' btn--ghost'}${a.danger ? ' mins__danger' : ''}`, type: 'button' }, a.label);
-        b.addEventListener('click', a.run);
-        return b;
-      }),
-    );
-    (this.status.querySelector('button:last-child') as HTMLElement | null)?.focus();
-  }
-
-  private hideConfirm(): void {
-    this.confirming = false;
-    this.refresh();
   }
 
   private undo(redo = false): void {

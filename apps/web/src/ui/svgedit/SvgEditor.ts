@@ -7,6 +7,7 @@ import { importSummary } from '../../style/svg/importSvg';
 import { newDoc, shapeId, transformShape, translate, type SvgDoc } from '../../style/svg/svgModel';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
+import { askUnsaved } from '../widgets/confirm';
 import { Dialog } from '../widgets/Dialog';
 import { readSvg } from './readSvg';
 import { EditActions, type ActionsHost, type Tab } from './svgActions';
@@ -91,7 +92,11 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
   private readonly future: string[] = [];
   private pending: string | null = null;
   private lastKey = { key: '', at: 0 };
+  /** The drawing, name and category as saved, or as opened: what `dirty` compares with. */
   private savedJson: string;
+  private savedMeta = '';
+  /** The unsaved-changes question is open. */
+  private asking = false;
 
   constructor(ctx: AppContext, doc: SvgDoc, original: LibraryAsset | null, opts: SvgEditorOptions, skipped: string[]) {
     this.ctx = ctx;
@@ -101,7 +106,7 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
     this.editable = !!original && ctx.styles.library.canEdit(original.id);
     const pal = ctx.view.palette;
     this.options = defaultOptions(doc, resolveColor('ink', pal), resolveColor('paper', pal));
-    this.savedJson = original ? JSON.stringify(doc) : '';
+    this.savedJson = JSON.stringify(doc);
     this.canvas = new SvgCanvas(this);
     this.canvas.el.dataset.escape = 'local';
     this.files = new SvgFiles(this);
@@ -115,6 +120,8 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
     const name = original ? (this.editable ? original.name : `${original.name} (kopya)`) : 'Yeni çizim';
     this.nameInput = h('input', { class: 'field', value: name, 'aria-label': 'Çizim adı', spellcheck: 'false' });
     this.pathInput = h('input', { class: 'field', value: (this.editable && original ? original.path : (opts.path ?? ['Çizimlerim'])).join(' / '), 'aria-label': 'Kategori', spellcheck: 'false' });
+    this.savedMeta = this.meta();
+    for (const f of [this.nameInput, this.pathInput]) f.addEventListener('input', () => this.renderTitle());
     const bar = (label: string, text: string, run: () => void) => {
       const b = h('button', { class: 'ibtn', type: 'button', title: label, 'aria-label': label }, text);
       b.addEventListener('click', run);
@@ -444,8 +451,18 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
     if (tool) this.setTool(tool.id);
   }
 
+  /** What Kaydet would write differs from what was saved or opened (a new drawing: from the blank one). */
   get dirty(): boolean {
-    return JSON.stringify(this.doc) !== this.savedJson;
+    return JSON.stringify(this.doc) !== this.savedJson || this.meta() !== this.savedMeta;
+  }
+
+  private meta(): string {
+    return `${this.nameInput.value}\n${this.pathInput.value}`;
+  }
+
+  /** Kaydet writes nothing without a visible shape (it says so); closing such a drawing loses nothing. */
+  private get savable(): boolean {
+    return this.doc.shapes.some((s) => !s.hidden);
   }
 
   private restore(json: string): void {
@@ -500,7 +517,8 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
     this.editable = !!asset && this.ctx.styles.library.canEdit(asset.id);
     this.nameInput.value = name;
     if (asset) this.pathInput.value = asset.path.join(' / ');
-    this.savedJson = asset ? JSON.stringify(doc) : '';
+    this.savedJson = JSON.stringify(doc);
+    this.savedMeta = this.meta();
     this.selection = new Set();
     this.nodeEdit = null;
     this.options = { ...this.options, grid: Math.max(1, Math.round(doc.width / 20)) };
@@ -515,13 +533,14 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
     this.nameInput.value = asset.name;
     this.pathInput.value = asset.path.join(' / ');
     this.savedJson = JSON.stringify(this.doc);
+    this.savedMeta = this.meta();
     this.renderTitle();
     this.opts.onSaved?.(asset.id);
   }
 
   private save(thenClose: boolean): boolean {
     const lib = this.ctx.styles.library;
-    if (!this.doc.shapes.some((s) => !s.hidden)) {
+    if (!this.savable) {
       this.status('Boş çizim kaydedilmez: önce bir şekil çizin.', 'warn');
       return false;
     }
@@ -540,6 +559,7 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
       this.editable = true;
     }
     this.savedJson = JSON.stringify(this.doc);
+    this.savedMeta = this.meta();
     this.renderTitle();
     this.status(`“${name}” kaydedildi.`);
     this.opts.onSaved?.(id);
@@ -547,16 +567,22 @@ class SvgEditor implements CanvasHost, PropsHost, FileHost, ActionsHost, MenuHos
     return true;
   }
 
+  /** Saves for the file actions (Yeni, Aç) before they replace the drawing; false when Kaydet refused. */
+  saveDrawing(): boolean {
+    return this.save(false);
+  }
+
+  /** Unsaved changes are asked about in a window over the editor (DESIGN.md §7.9.1); the answer closes or stays. */
   private confirmClose(): boolean {
-    if (!this.dirty) return true;
-    const leave = h('button', { class: 'btn btn--small', type: 'button' }, 'Kaydetmeden kapat');
-    const stay = h('button', { class: 'btn btn--small', type: 'button' }, 'Vazgeç');
-    const both = h('button', { class: 'btn btn--small btn--primary', type: 'button' }, 'Kaydet ve kapat');
-    leave.addEventListener('click', () => this.dialog.close());
-    stay.addEventListener('click', () => this.status(''));
-    both.addEventListener('click', () => this.save(true));
-    this.statusEl.dataset.kind = 'warn';
-    replaceChildren(this.statusEl, h('span', null, 'Kaydedilmemiş değişiklikler var.'), leave, stay, both);
+    if (!this.dirty || !this.savable) return true;
+    if (!this.asking) {
+      this.asking = true;
+      void askUnsaved({ name: this.name, after: 'Pencere kapanırsa bu değişiklikler kaybolur.', verb: 'kapat' }).then((a) => {
+        this.asking = false;
+        if (a === 'discard') this.dialog.close();
+        else if (a === 'save') this.save(true);
+      });
+    }
     return false;
   }
 }

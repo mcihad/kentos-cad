@@ -4,6 +4,7 @@ import type { PreviewGeometry } from '../../render/symbolPreview';
 import { importStyles, type ConflictMode, type StyleFile } from '../../style/file';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
+import { askRemove } from '../widgets/confirm';
 import { PopupMenu } from '../widgets/PopupMenu';
 import { note, segmented } from '../widgets/controls';
 import { downloadStyles } from './styleFiles';
@@ -169,19 +170,19 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
   list.push(copyBtn);
   list.push(btn('Dışa aktar', 'export', () => host.say(`${downloadStyles(ctx, [item.id], item.name)} öğe dışa aktarıldı.`)));
   if (editable) {
+    // Asked in a window (DESIGN.md §7.9.1): the library keeps no undo.
     const del = btn('Sil', 'trash', () => {
       const users = item.kind === 'asset' ? lib.usersOf(item.id).length : 0;
-      const ask = h(
-        'div',
-        { class: 'smgr__confirm' },
-        h('span', null, users ? `${users} sembol bu çizimi kullanıyor; silinirse onlarda boş kalır. Silinsin mi?` : `“${item.name}” silinsin mi?`),
-        btn('Sil', 'trash', () => {
-          lib.remove(item.id);
-          host.say(`“${item.name}” silindi.`);
-        }, { danger: true }),
-        btn('Vazgeç', 'close', () => host.refreshDetails()),
-      );
-      del.parentElement!.replaceWith(ask);
+      void askRemove({
+        title: 'Kitaplıktan sil',
+        message: `“${item.name}” ${item.source === 'project' ? 'projenin kitaplığından' : 'Kitaplığım’dan'} silinsin mi? Bu geri alınamaz.`,
+        details: users ? [`${users} sembol bu çizimi kullanıyor; silinirse onlarda boş kalır.`] : undefined,
+        action: 'Sil',
+      }).then((yes) => {
+        if (!yes || !lib.get(item.id)) return;
+        lib.remove(item.id);
+        host.say(`“${item.name}” silindi.`);
+      });
     }, { danger: true });
     list.push(del);
   }
