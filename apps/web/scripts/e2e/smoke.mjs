@@ -415,6 +415,39 @@ try {
   check('resizing a panel never flashes a black viewport', frames.length > 5 && blackFrames === 0, `${blackFrames}/${frames.length} kare siyah`);
   await b.eval('window.kentos.ui.dockWidth.set(312)');
 
+  // Layers panel: edits write the object counts into the rows in place instead of rebuilding the tree
+  // (CLAUDE.md §6.3). The layer's and its group's counts follow add, undo and redo, and the rows stay the
+  // same elements; the eye button hides the layer in the same row without taking the keyboard focus.
+  await b.eval(`window.kentos.ui.dockTab.set('layers')`);
+  const layerRows = `['kaldirim', 'g-ulasim'].map((id) => document.querySelector('.panel--layers .tree__row[data-id="' + id + '"]'))`;
+  const layerCounts = () => b.eval(`${layerRows}.map((r) => Number(r?.querySelector('.tree__count')?.textContent))`);
+  await b.eval(`window.__layerRows = ${layerRows}`);
+  const [c0, g0] = await layerCounts();
+  await b.eval(`(() => { const k = window.kentos; k.doc.transact('Ekle', () => { for (let i = 0; i < 3; i++) k.doc.add({ kind: 'line', layerId: 'kaldirim', a: { x: ${E} + i, y: ${N} - 200 }, b: { x: ${E} + i, y: ${N} - 190 }, attrs: {} }); }); })()`);
+  const countsAdded = await layerCounts();
+  await b.eval(`window.kentos.commands.execute('edit.undo')`);
+  const countsUndone = await layerCounts();
+  await b.eval(`window.kentos.commands.execute('edit.redo')`);
+  const countsRedone = await layerCounts();
+  const sameRows = () => b.eval(`window.__layerRows.every((r, i) => !!r && r === ${layerRows}[i])`);
+  check(
+    'Layers panel: counts follow add, undo and redo in the same row elements',
+    `${countsAdded}` === `${c0 + 3},${g0 + 3}` && `${countsUndone}` === `${c0},${g0}` && `${countsRedone}` === `${c0 + 3},${g0 + 3}` && (await sameRows()),
+    `${c0},${g0} → ${countsAdded} → ${countsUndone} → ${countsRedone}`,
+  );
+  await b.eval(`window.kentos.commands.execute('edit.undo')`);
+  const eyeAt = await b.eval(`(() => { const r = window.__layerRows[0].querySelector('.ibtn--row').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+  await b.eval('window.__focusBefore = document.activeElement');
+  await b.click(...eyeAt);
+  const eyeHidden = await b.eval(`!window.kentos.doc.layers.get('kaldirim').visible && window.__layerRows[0].hasAttribute('data-hidden')`);
+  const focusKept = await b.eval('document.activeElement === window.__focusBefore');
+  await b.click(...eyeAt);
+  check(
+    'Layers panel: the eye hides the layer in the same row and leaves the focus',
+    eyeHidden && focusKept && (await b.eval(`window.kentos.doc.layers.get('kaldirim').visible && !window.__layerRows[0].hasAttribute('data-hidden')`)) && (await sameRows()) && `${await layerCounts()}` === `${c0},${g0}`,
+  );
+  await b.eval('delete window.__layerRows; delete window.__focusBefore');
+
   // Area operations (Alan işlemleri) on fresh squares east of everything else.
   const AX = E + 400;
   await b.eval(`window.kentos.view.camera.fit({ minX: ${AX - 10}, minY: ${N - 60}, maxX: ${AX + 140}, maxY: ${N + 60} }, 20)`);

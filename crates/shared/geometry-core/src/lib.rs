@@ -29,6 +29,7 @@ pub mod jsmath;
 pub mod measure;
 pub mod numeric;
 pub mod ops;
+pub mod predicates;
 pub mod processing;
 pub mod store;
 pub mod tessellate;

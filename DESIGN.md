@@ -295,6 +295,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
   - **Etkin katman** solda 2 px amber çubuk ve kalın adla gösterilir.
   - Gizli katmanın adı %45 saydamdır. Kilitli katmanın kilidi amberdir.
   - Çift tıklama etkin yapar, Boşluk gizler, F2 yeniden adlandırır, sağ tık bağlam menüsünü açar.
+  - Göz, kilit ve renk düğmeleri tıklanınca klavye odağını almaz: Enter ve Boşluk ağaçta ya da çizimde kalır.
 - **Öznitelikler:**
   - Üstte özet: tür, etiket (amber, ör. parsel no) ve katman yolu.
   - Altında katlanabilir bölümler: Genel, Geometri, Öznitelik bilgileri.

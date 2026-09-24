@@ -77,6 +77,8 @@ interface LayerEvents {
   structure: void;
   /** Visibility / lock / style changed — carries affected leaf layer ids. */
   state: { ids: string[] };
+  /** A group was opened or closed in the tree: a view change, not an edit. */
+  expanded: { id: string };
 }
 
 let uid = 0;
@@ -218,6 +220,7 @@ export class LayerStore {
     const n = this.get(id);
     if (!n || n.expanded === expanded) return;
     n.expanded = expanded;
+    this.events.emit('expanded', { id });
     this.version.update((v) => v + 1);
   }
 

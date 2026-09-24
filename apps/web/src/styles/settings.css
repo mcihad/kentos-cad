@@ -697,7 +697,8 @@
 .settings__scope-detail {
   margin-top: 2px;
   font-size: var(--fs-xs);
-  word-break: break-all;
+  /* A long file name breaks anywhere; a sentence still wraps between words. */
+  overflow-wrap: anywhere;
 }
 
 .srow__value {

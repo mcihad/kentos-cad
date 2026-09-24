@@ -4,6 +4,7 @@
 use crate::api::Op;
 use crate::jsmath::{PI, atan2, js_hypot, js_max, js_min};
 use crate::op;
+use crate::predicates::orientation;
 use crate::vec2::Vec2;
 
 /// Axis-aligned box; empty when min > max (`emptyBounds`: ±∞).
@@ -93,7 +94,11 @@ pub fn centroid(pts: &[Vec2]) -> Vec2 {
     Vec2::new(cx / (6.0 * a), cy / (6.0 * a))
 }
 
-/// Even-odd point in ring test (a point exactly on an edge may fall either way).
+/// Even-odd point in ring test. For each edge crossing the horizontal
+/// through p, whether the crossing lies to p's right is decided exactly (p
+/// left of an upward edge, right of a downward one: `orientation`, CLAUDE.md
+/// §23.3), not by comparing p with a rounded crossing. A point exactly on an
+/// edge may still fall either way, but always the same way.
 pub fn point_in_polygon(p: Vec2, pts: &[Vec2]) -> bool {
     let mut inside = false;
     if pts.is_empty() {
@@ -103,8 +108,11 @@ pub fn point_in_polygon(p: Vec2, pts: &[Vec2]) -> bool {
     for i in 0..pts.len() {
         let a = pts[i];
         let b = pts[j];
-        if (a.y > p.y) != (b.y > p.y) && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x {
-            inside = !inside;
+        if (a.y > p.y) != (b.y > p.y) {
+            let side = orientation(a, b, p);
+            if if b.y > a.y { side > 0 } else { side < 0 } {
+                inside = !inside;
+            }
         }
         j = i;
     }
@@ -153,3 +161,79 @@ pub(crate) static OPS: &[Op] = &[
     op!("angleDeg", |a: Vec2, b: Vec2| angle_deg(a, b)),
     op!("bearingGrad", |a: Vec2, b: Vec2| bearing_grad(a, b)),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The test before §23.3: p compared with the rounded crossing x.
+    fn rounded_crossing(p: Vec2, pts: &[Vec2]) -> bool {
+        let mut inside = false;
+        let mut j = pts.len() - 1;
+        for i in 0..pts.len() {
+            let (a, b) = (pts[i], pts[j]);
+            if (a.y > p.y) != (b.y > p.y) && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x {
+                inside = !inside;
+            }
+            j = i;
+        }
+        inside
+    }
+
+    /// Whether p lies left of a→b, exactly: TM coordinates lie on the 2⁻³⁴
+    /// grid, so scaled they are integers and i128 holds the cross product.
+    fn exactly_left(a: Vec2, b: Vec2, p: Vec2) -> bool {
+        let k = |x: f64| (x * (1u64 << 34) as f64) as i128;
+        (k(b.x) - k(a.x)) * (k(p.y) - k(a.y)) - (k(b.y) - k(a.y)) * (k(p.x) - k(a.x)) > 0
+    }
+
+    fn step(x: f64, up: bool) -> f64 {
+        let bits = x.to_bits();
+        f64::from_bits(if (x > 0.0) == up { bits + 1 } else { bits - 1 })
+    }
+
+    /// Points within an ulp or two of a long parcel edge at TM coordinates:
+    /// inside exactly when they lie left of the counter-clockwise edge. The
+    /// rounded crossing misjudges some of them; the exact test none.
+    #[test]
+    fn points_next_to_an_edge_are_decided_exactly() {
+        let a = Vec2::new(486_512.34, 4_420_187.52);
+        let b = Vec2::new(486_931.87, 4_420_446.09);
+        let ring = [a, b, Vec2::new(486_600.11, 4_420_800.73)];
+        let mut rounded_wrong = 0;
+        for n in 0..20_000 {
+            let t = (f64::from(n) + 0.5) / 20_000.0 * 0.8 + 0.1;
+            let mut p = Vec2::new(a.x + t * (b.x - a.x), a.y + t * (b.y - a.y));
+            p = match n % 5 {
+                0 => p,
+                1 => Vec2::new(step(p.x, true), p.y),
+                2 => Vec2::new(step(p.x, false), p.y),
+                3 => Vec2::new(p.x, step(p.y, true)),
+                _ => Vec2::new(p.x, step(p.y, false)),
+            };
+            let want = exactly_left(a, b, p);
+            assert_eq!(point_in_polygon(p, &ring), want, "{p:?}");
+            if rounded_crossing(p, &ring) != want {
+                rounded_wrong += 1;
+            }
+        }
+        assert!(rounded_wrong > 0, "the edge no longer exercises rounding");
+    }
+
+    #[test]
+    fn plain_rings() {
+        let square = [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(1.0, 1.0),
+            Vec2::new(0.0, 1.0),
+        ];
+        assert!(point_in_polygon(Vec2::new(0.5, 0.5), &square));
+        assert!(!point_in_polygon(Vec2::new(1.5, 0.5), &square));
+        assert!(!point_in_polygon(Vec2::new(0.5, -0.5), &square));
+        assert!(!point_in_polygon(Vec2::new(0.5, 0.5), &[]));
+        // Clockwise rings count the same.
+        let cw: Vec<Vec2> = square.iter().rev().copied().collect();
+        assert!(point_in_polygon(Vec2::new(0.25, 0.75), &cw));
+    }
+}

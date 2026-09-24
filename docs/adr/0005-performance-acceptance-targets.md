@@ -26,7 +26,7 @@ Günlük 2D çizim, demo katalogu olmadan açılır.
 |---|---|
 | İlk sayfada istenen JS (gzip) | ≤ 350 KB |
 | İlk sayfada istenen CSS (gzip) | ≤ 40 KB |
-| Başlangıç WASM (gzip, eklendiğinde) | ≤ 300 KB |
+| Başlangıç WASM (gzip, eklendiğinde) | ≤ 350 KB (2026-09-24'e kadar 300 KB; aşağıda “Değişiklikler”) |
 | Etkileşime hazır (`kentos:interactive`), soğuk | ≤ 1,5 s |
 | Etkileşime hazır, ılık | ≤ 0,8 s |
 | Ana iş parçacığında script süresi, soğuk | ≤ 600 ms |
@@ -78,6 +78,10 @@ Büyük veri setleri betikle, tekrarlanabilir bir tohumla üretilir. Hangi alan�
 ### Eşzamanlılık
 
 Faz B–D yük testlerinde tek tenant'ta 25 eşzamanlı editör ve 200 görüntüleyici kullanılır. Bu sayı ilk hedeftir; müşteri yükü bilinince yeni ADR ile büyütülür.
+
+## Değişiklikler
+
+- **2026-09-24, başlangıç WASM 300 → 350 KB gzip (sahibinin kararı).** Ortak çekirdek (ADR 0008) uygulamanın bütün CAD hesabını tek pakette topladı; paket 297,9 KB'a ulaştı ve sıradaki çekirdek işleri (§23.3 sağlam kararlar, depoda dönüşüm) kod ekleyecek. Değerlendirilen seçenekler: işlev adları bölümünü üretim paketinden atmak (gzip 297 → 276 KB; bedeli, bir tuzağın yığın izinde adlar yerine numaralar), ağır işlemleri ilk kullanımda yüklenen ayrı bir pakete bölmek (geometri deposu tek modülde kalmak zorunda) ve sınırı yükseltmek. Sahip sınırı yükseltmeyi seçti; adlar pakette kalır. Öbür hedefler değişmedi.
 
 ## Onay
 

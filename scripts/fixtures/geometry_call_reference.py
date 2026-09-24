@@ -134,6 +134,63 @@ case("TM karesine 0° tarama (1 m)", "hatchLines", [[q[0] for q in sq], 0, 1], {
 case("TM hizalı ölçü değeri", "layoutDimension", [{"a": da, "b": db, "offset": 2, "height": 1}],
      {"value": format(sqrt((DB[0] - DA[0]) ** 2 + (DB[1] - DA[1]) ** 2), "f")}, "1e-9")
 
+# orientation: the exact side (CLAUDE.md §23.3). The predicate is exact on
+# the float64 values a reader gets, so the sign is taken on those exact
+# values (Fraction of the float), not on decimal text.
+import math
+import random
+
+def Pf(x, y):
+    """A point given as float64: (JSON args, exact value)."""
+    return {"x": x, "y": y}, (F(x), F(y))
+
+def side(A, B, C):
+    d = (A[0] - C[0]) * (B[1] - C[1]) - (A[1] - C[1]) * (B[0] - C[0])
+    return (d > 0) - (d < 0)
+
+def orient_case(name, a, b, c):
+    (ja, A), (jb, B), (jc, C) = a, b, c
+    case(name, "orientation", [ja, jb, jc], str(side(A, B, C)), "0")
+
+case("sol dönüş", "orientation", [P("0", "0")[0], P("1", "0")[0], P("0", "1")[0]], "1", "0")
+case("sağ dönüş", "orientation", [P("0", "0")[0], P("1", "0")[0], P("0", "-1")[0]], "-1", "0")
+case("aynı doğru üzerinde", "orientation", [P("0", "0")[0], P("1", "1")[0], P("2", "2")[0]], "0", "0")
+case("çakışık iki nokta", "orientation", [P("3", "4")[0], P("3", "4")[0], P("7", "-1")[0]], "0", "0")
+
+# Kettner et al.'s classroom grid: points a few ulps around (0.5, 0.5)
+# against the line through (12, 12) and (24, 24); the rounded determinant
+# misjudges many of them.
+u = 2.0 ** -53
+q, r = Pf(12.0, 12.0), Pf(24.0, 24.0)
+for i, j in [(0, 0), (1, 0), (0, 1), (1, 1), (2, 1), (1, 2), (3, 5), (5, 3), (7, 7), (8, 9),
+             (13, 12), (12, 13), (20, 21), (31, 30), (40, 40), (47, 50), (63, 1), (1, 63)]:
+    orient_case(f"sınıf ızgarası p=(0,5+{i}u, 0,5+{j}u)", Pf(0.5 + i * u, 0.5 + j * u), q, r)
+    orient_case(f"sınıf ızgarası döndürülmüş ({i}, {j})", q, r, Pf(0.5 + i * u, 0.5 + j * u))
+
+# One ulp off an exactly collinear TM point.
+a, b = Pf(486512.5, 4420187.25), Pf(486512.5 + 80.5, 4420187.25 + 60.25)
+mx, my = 486512.5 + 40.25, 4420187.25 + 30.125
+orient_case("TM doğrusu üzerinde", a, b, Pf(mx, my))
+for dx, dy, label in [(0, 1, "yukarı"), (0, -1, "aşağı"), (1, 0, "doğuya"), (-1, 0, "batıya")]:
+    x = math.nextafter(mx, math.inf * dx) if dx else mx
+    y = math.nextafter(my, math.inf * dy) if dy else my
+    orient_case(f"TM doğrusundan bir ulp {label}", a, b, Pf(x, y))
+
+# Random near-collinear TM triples: c on a→b rounded, then nudged by ulps.
+rnd = random.Random(20260924)
+for n in range(40):
+    ax, ay = rnd.uniform(400000, 600000), rnd.uniform(4200000, 4600000)
+    reach = 5.0 if n % 3 == 0 else 5000.0
+    bx, by = ax + rnd.uniform(-reach, reach), ay + rnd.uniform(-reach, reach)
+    t = rnd.uniform(-2, 3)
+    cx, cy = ax + t * (bx - ax), ay + t * (by - ay)
+    for _ in range(n % 4):
+        if rnd.random() < 0.5:
+            cx = math.nextafter(cx, math.inf if rnd.random() < 0.5 else -math.inf)
+        else:
+            cy = math.nextafter(cy, math.inf if rnd.random() < 0.5 else -math.inf)
+    orient_case(f"TM neredeyse aynı doğrultu #{n}", Pf(ax, ay), Pf(bx, by), Pf(cx, cy))
+
 doc = {
     "format": "kentos.geometry-call-reference",
     "version": 1,

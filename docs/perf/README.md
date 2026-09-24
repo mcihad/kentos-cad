@@ -64,7 +64,7 @@ Kaynaklar:
 |---|---|---|
 | İlk sayfa JS (gzip) | 258,4 KB | ≤ 350 KB |
 | İlk sayfa CSS (gzip) | 15,8 KB | ≤ 40 KB |
-| Başlangıç WASM | yok (uygulama WASM yüklemiyor) | ≤ 300 KB |
+| Başlangıç WASM | yok (uygulama WASM yüklemiyor) | ≤ 350 KB (2026-09-24'e kadar 300 KB) |
 | Etkileşime hazır, soğuk (ortanca) | 557 ms | ≤ 1,5 s |
 | Etkileşime hazır, ılık (ortanca) | 288 ms | ≤ 0,8 s |
 | Script süresi, soğuk | 177 ms | ≤ 600 ms |

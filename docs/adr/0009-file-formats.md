@@ -1,6 +1,6 @@
 # ADR 0009: Dosya biçimleri: Rust okuyucu/yazıcı, ayrı WASM modülü ve worker
 
-- **Durum:** önerildi; dal main'e göre yeniden kuruldu ve incelendi (2026-09-24), sahibinin onayını bekliyor
+- **Durum:** kabul edildi (2026-09-24, sahibinin onayı); dal main'e göre yeniden kuruldu ve incelendi
 - **Tarih:** 2026-09-24
 - **İnceleme:** biçimler, uygulamanın da hesapladığı geometriyi artık ortak çekirdekten alır (aşağıda); DXF okuyucusuna iş sınırları ve düzeltmeler eklendi. DXF yazıcısının başlangıcı (sözleşme, KentOS genişletilmiş verisi, Catmull-Rom → Bézier) yarım kaldığı için alınmadı (docs/DEVIR.md).
 - **Bağlam belgesi:** CLAUDE.md §5, §6.2 kural 6, §9.7, §14, §20, §23

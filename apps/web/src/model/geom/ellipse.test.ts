@@ -75,7 +75,8 @@ describe('ellipse', () => {
       expect(onEllipse(e, t)).toBe(true);
       expect(d(t)).toBeLessThanOrEqual(dense + 1e-9);
     }
-  });
+    // Half a million dense samples through WASM take ~4 s alone, more on a busy machine.
+  }, 30_000);
   it('finds the foot to full precision at TM coordinates', () => {
     const e: EllipseGeom = { c: v(486000.125, 4420000.375), major: v(18, 7), ratio: 0.4, t0: 0, t1: 0 };
     const p = v(486012.5, 4420021.25);

@@ -17,6 +17,7 @@ use crate::jsmath::{
     PI, TAU, atan2, cos, js_cmp, js_hypot, js_max, js_max_all, js_min, js_min_all, js_round,
     js_sign, sin, stable_sort,
 };
+use crate::predicates::{orient2d, orientation};
 use crate::vec2::Vec2;
 
 /// Closed boundary as vertices with DXF bulges (same form as a polygon entity).
@@ -267,12 +268,15 @@ pub fn leave_angle(e: &Edge, at_end: bool) -> f64 {
     atan2(q.y - from.y, q.x - from.x)
 }
 
+/// The angle a→b subtends at p. The cross product's sign, which decides the
+/// side, is exact (`orient2d`, CLAUDE.md §23.3); off near-collinear input it
+/// is the same rounded value as before.
 fn subtended(a: Vec2, b: Vec2, p: Vec2) -> f64 {
     let ax = a.x - p.x;
     let ay = a.y - p.y;
     let bx = b.x - p.x;
     let by = b.y - p.y;
-    atan2(ax * by - ay * bx, ax * bx + ay * by)
+    atan2(orient2d(a, b, p), ax * bx + ay * by)
 }
 
 /// Winding number of the closed edge set around `p` (angle summation). An
@@ -297,13 +301,19 @@ pub fn winding(edges: &[Edge], p: Vec2) -> f64 {
             }
             continue;
         }
+        // The side of the chord, exactly and the same as `subtended` takes it.
+        let side = orientation(a, b, p);
+        if side == 0 && (a.x - p.x) * (b.x - p.x) + (a.y - p.y) * (b.y - p.y) < 0.0 {
+            // p on the chord between the ends: the arc turns half a turn around it.
+            total += js_sign(sweep) * PI;
+            continue;
+        }
         total += subtended(a, b, p);
         if !in_disk {
             continue;
         }
         // A counter-clockwise arc bulges to the right of its chord a→b.
-        let side = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
-        if if sweep > 0.0 { side < 0.0 } else { side > 0.0 } {
+        if if sweep > 0.0 { side < 0 } else { side > 0 } {
             total += js_sign(sweep) * TAU;
         }
     }
@@ -390,10 +400,11 @@ impl<'a> WindingIndex<'a> {
                     if !(up || (ub <= uq && uq < ua)) {
                         continue;
                     }
-                    let s = (uq - ua) / (ub - ua);
-                    let x = a.x + (b.x - a.x) * s;
-                    let y = a.y + (b.y - a.y) * s;
-                    if (x - p.x) * RAY_X + (y - p.y) * RAY_Y > 0.0 {
+                    // The crossing lies ahead of p exactly when p is left of an
+                    // edge crossing the ray leftward (up in u), right of one
+                    // crossing it rightward: exact (§23.3), no rounded crossing.
+                    let side = orientation(a, b, p);
+                    if if up { side > 0 } else { side < 0 } {
                         w += if up { 1.0 } else { -1.0 };
                     }
                     continue;
@@ -826,6 +837,139 @@ mod tests {
             // `+ 0.0` folds the -0 the angle sum can round to.
             assert_eq!(index.winding(p) + 0.0, winding(&edges, p) + 0.0, "{p:?}");
         }
+    }
+
+    /// The angle sum of arc edges before §23.3: the chord's angle and its
+    /// side taken from two differently rounded cross products.
+    fn rounded_arc_winding(edges: &[Edge], p: Vec2) -> f64 {
+        let mut total = 0.0;
+        for e in edges {
+            if let Edge::Arc { c, r, sweep, .. } = *e {
+                let a = point_at(e, 0.0);
+                let b = point_at(e, 1.0);
+                let (ax, ay, bx, by) = (a.x - p.x, a.y - p.y, b.x - p.x, b.y - p.y);
+                total += atan2(ax * by - ay * bx, ax * bx + ay * by);
+                if js_hypot(p.x - c.x, p.y - c.y) < r {
+                    let side = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+                    if if sweep > 0.0 { side < 0.0 } else { side > 0.0 } {
+                        total += js_sign(sweep) * TAU;
+                    }
+                }
+            }
+        }
+        js_round(total / TAU)
+    }
+
+    fn step(x: f64, up: bool) -> f64 {
+        let bits = x.to_bits();
+        f64::from_bits(if (x > 0.0) == up { bits + 1 } else { bits - 1 })
+    }
+
+    /// A circle drawn as two half-circle arcs: every point on or next to the
+    /// diameter (both arcs' chords, off by sin π) lies deep inside, so it
+    /// winds once. The chord's side and its angle agree exactly now (§23.3);
+    /// a point exactly on a chord counts half a turn.
+    #[test]
+    fn points_on_or_next_to_an_arc_chord_wind_once() {
+        let mut rounded_wrong = 0;
+        for c in [Vec2::new(0.0, 0.0), Vec2::new(E, N)] {
+            let edges = [
+                Edge::Arc {
+                    c,
+                    r: 10.0,
+                    a0: 0.0,
+                    sweep: PI,
+                },
+                Edge::Arc {
+                    c,
+                    r: 10.0,
+                    a0: PI,
+                    sweep: PI,
+                },
+            ];
+            let a = point_at(&edges[0], 0.0);
+            let b = point_at(&edges[0], 1.0);
+            for n in 0..30_000 {
+                let t = (f64::from(n) + 0.5) / 30_000.0 * 0.9 + 0.05;
+                let on = Vec2::new(a.x + t * (b.x - a.x), a.y + t * (b.y - a.y));
+                let p = match n % 3 {
+                    0 => on,
+                    1 => Vec2::new(on.x, step(on.y, true)),
+                    _ => Vec2::new(on.x, step(on.y, false)),
+                };
+                assert_eq!(winding(&edges, p), 1.0, "{p:?}");
+                if rounded_arc_winding(&edges, p) != 1.0 {
+                    rounded_wrong += 1;
+                }
+            }
+            // Exactly on the first chord: its middle is a+b halved, exact here.
+            let m = Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
+            assert_eq!(orientation(a, b, m), 0);
+            assert_eq!(winding(&edges, m), 1.0);
+        }
+        assert!(rounded_wrong > 0, "the chords no longer exercise rounding");
+    }
+
+    /// Points within an ulp or two of a long straight edge at TM
+    /// coordinates: the index counts them inside exactly when they lie left
+    /// of the counter-clockwise edge (exact integer arithmetic on the 2⁻³⁴
+    /// grid). Placing the rounded crossing on the ray misjudged some.
+    #[test]
+    fn the_index_decides_points_next_to_an_edge_exactly() {
+        let v = Vec2::new;
+        let (a, b, c) = (
+            v(486_512.34, 4_420_187.52),
+            v(486_931.87, 4_420_446.09),
+            v(486_600.11, 4_420_800.73),
+        );
+        let edges = [
+            Edge::Seg { a, b },
+            Edge::Seg { a: b, b: c },
+            Edge::Seg { a: c, b: a },
+        ];
+        let index = WindingIndex::new(&edges);
+        let k = |x: f64| (x * (1u64 << 34) as f64) as i128;
+        let left = |p: Vec2| {
+            (k(b.x) - k(a.x)) * (k(p.y) - k(a.y)) - (k(b.y) - k(a.y)) * (k(p.x) - k(a.x)) > 0
+        };
+        // The segment rule before §23.3: the crossing point, rounded, placed on the ray.
+        let rounded = |p: Vec2| {
+            let uq = u_of(p.x, p.y);
+            let mut w = 0.0;
+            for e in &edges {
+                if let Edge::Seg { a, b } = *e {
+                    let (ua, ub) = (u_of(a.x, a.y), u_of(b.x, b.y));
+                    let up = ua <= uq && uq < ub;
+                    if !(up || (ub <= uq && uq < ua)) {
+                        continue;
+                    }
+                    let s = (uq - ua) / (ub - ua);
+                    let (x, y) = (a.x + (b.x - a.x) * s, a.y + (b.y - a.y) * s);
+                    if (x - p.x) * RAY_X + (y - p.y) * RAY_Y > 0.0 {
+                        w += if up { 1.0 } else { -1.0 };
+                    }
+                }
+            }
+            w
+        };
+        let mut rounded_wrong = 0;
+        for n in 0..20_000 {
+            let t = (f64::from(n) + 0.5) / 20_000.0 * 0.8 + 0.1;
+            let on = v(a.x + t * (b.x - a.x), a.y + t * (b.y - a.y));
+            let p = match n % 5 {
+                0 => on,
+                1 => v(step(on.x, true), on.y),
+                2 => v(step(on.x, false), on.y),
+                3 => v(on.x, step(on.y, true)),
+                _ => v(on.x, step(on.y, false)),
+            };
+            let want = if left(p) { 1.0 } else { 0.0 };
+            assert_eq!(index.winding(p), want, "{p:?}");
+            if rounded(p) != want {
+                rounded_wrong += 1;
+            }
+        }
+        assert!(rounded_wrong > 0, "the edge no longer exercises rounding");
     }
 
     #[test]

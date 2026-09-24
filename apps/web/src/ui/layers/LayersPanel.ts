@@ -11,11 +11,43 @@ import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { TreeView } from '../widgets/TreeView';
 import { colorSwatch, layerSwatch } from './swatch';
 
-/** Layer tree: visibility, lock, colour, active layer, groups, filter. */
+/**
+ * A row on screen: the cells that edits and layer state change, and what
+ * they show. A value is written only when it differs, so an update leaves
+ * the rows it does not change untouched.
+ */
+interface Row {
+  readonly node: LayerNode;
+  /** The tree item: carries data-active and data-hidden. */
+  readonly item: HTMLElement;
+  readonly name: HTMLElement;
+  readonly count: HTMLElement;
+  readonly eye: HTMLElement;
+  readonly lock: HTMLElement;
+  /** A layer's colour swatch; a group shows a folder. */
+  readonly swatch: HTMLElement | null;
+  readonly shown: { count?: number; visible?: boolean; locked?: boolean; hidden?: boolean; active?: boolean; color?: string };
+}
+
+/**
+ * Layer tree: visibility, lock, colour, active layer, groups, filter.
+ *
+ * The tree is rendered again only when its shape changes (layers added,
+ * renamed or replaced, a group opened or closed), once per task. An edit
+ * changes object counts and layer state a few cells (visibility, lock,
+ * colour, the active layer): both are written into the rows in place, so an
+ * edit costs the same beside 3 layers or 300 and a row stays the same
+ * element across edits, undo and redo (hover, focus and an open rename
+ * field survive them).
+ */
 export class LayersPanel extends Panel {
   private readonly ctx: AppContext;
   private readonly tree: TreeView<LayerNode>;
-  private counts = new Map<string, number>();
+  /** The rows on screen by node id; refilled by every render of the tree. */
+  private readonly rows = new Map<string, Row>();
+  /** Object count of every node; a group's is the sum over all its layers. */
+  private totals = new Map<string, number>();
+  private rebuildQueued = false;
 
   constructor(ctx: AppContext) {
     super({ title: 'Katmanlar', className: 'panel--layers', actions: [] });
@@ -45,59 +77,139 @@ export class LayersPanel extends Panel {
     );
 
     this.body.append(h('div', { class: 'panel__toolbar' }, h('span', { class: 'field-icon' }, icon('search', 14)), filter), this.tree.el);
-    this.d.add(listen(filter, 'input', () => this.tree.setFilter(filter.value)));
+    this.d.add(
+      listen(filter, 'input', () => {
+        this.rows.clear();
+        this.tree.setFilter(filter.value);
+      }),
+    );
 
-    const refresh = () => {
-      this.counts = ctx.doc.countByLayer();
-      this.tree.render(layers.tree);
-      this.setMeta(`${layers.leaves().length} katman`);
-    };
-    this.d.add(watchAll([layers.version, layers.active, ctx.ui.theme], refresh));
-    this.d.add(ctx.doc.events.on('changed', refresh));
-    refresh();
+    this.d.add(layers.events.on('structure', () => this.scheduleRebuild()));
+    this.d.add(layers.events.on('expanded', () => this.scheduleRebuild()));
+    this.d.add(layers.events.on('state', () => this.writeStates()));
+    this.d.add(watchAll([layers.active, ctx.ui.theme], () => this.writeStates()));
+    this.d.add(ctx.doc.events.on('changed', () => this.writeCounts()));
+    this.rebuild();
   }
 
-  private renderRow(n: LayerNode, row: HTMLElement): void {
+  /**
+   * Rebuilds once, at the end of the current task: a DXF import adds its
+   * layers one by one (300 for a large file), and each would otherwise
+   * render the whole growing tree again. Until then counts and layer state
+   * go to the old rows, which the rebuild replaces.
+   */
+  private scheduleRebuild(): void {
+    if (this.rebuildQueued) return;
+    this.rebuildQueued = true;
+    queueMicrotask(() => {
+      this.rebuildQueued = false;
+      this.rebuild();
+    });
+  }
+
+  /** Renders the whole tree again: its shape changed. */
+  private rebuild(): void {
+    this.totals = this.countTotals();
+    this.rows.clear();
+    this.tree.render(this.ctx.doc.layers.tree);
+    this.setMeta(`${this.ctx.doc.layers.leaves().length} katman`);
+  }
+
+  /**
+   * Object counts of every node, from the document's per-layer index (it
+   * does not walk the drawing). A group sums all its layers, also those a
+   * filter leaves out.
+   */
+  private countTotals(): Map<string, number> {
+    const counts = this.ctx.doc.countByLayer();
+    const totals = new Map<string, number>();
+    const walk = (n: LayerNode): number => {
+      let sum = 0;
+      if (n.type === 'layer') sum = counts.get(n.id) ?? 0;
+      else for (const child of n.children) sum += walk(child);
+      totals.set(n.id, sum);
+      return sum;
+    };
+    for (const n of this.ctx.doc.layers.tree) walk(n);
+    return totals;
+  }
+
+  /** Objects were added, removed or moved between layers: only the counts can differ. */
+  private writeCounts(): void {
+    this.totals = this.countTotals();
+    for (const r of this.rows.values()) this.writeCount(r);
+  }
+
+  private writeCount(r: Row): void {
+    const count = this.totals.get(r.node.id) ?? 0;
+    if (r.shown.count === count) return;
+    r.shown.count = count;
+    r.count.textContent = String(count);
+  }
+
+  /** Layer state, the active layer or the theme changed. */
+  private writeStates(): void {
+    for (const r of this.rows.values()) this.writeState(r);
+  }
+
+  /** Visibility, lock, hidden by a group, active layer and colour of one row. */
+  private writeState(r: Row): void {
+    const layers = this.ctx.doc.layers;
+    const { node: n, shown } = r;
+    if (shown.visible !== n.visible) {
+      shown.visible = n.visible;
+      r.eye.replaceChildren(icon(n.visible ? 'eye' : 'eyeOff', 15));
+      r.eye.setAttribute('aria-label', n.visible ? 'Gizle' : 'Göster');
+      r.eye.setAttribute('aria-pressed', String(!n.visible));
+    }
+    if (shown.locked !== n.locked) {
+      shown.locked = n.locked;
+      r.lock.replaceChildren(icon(n.locked ? 'lock' : 'unlock', 15));
+      r.lock.setAttribute('aria-label', n.locked ? 'Kilidi aç' : 'Kilitle');
+      r.lock.setAttribute('aria-pressed', String(n.locked));
+      r.lock.toggleAttribute('data-on', n.locked);
+    }
+    const hidden = !layers.isVisible(n.id);
+    if (shown.hidden !== hidden) {
+      shown.hidden = hidden;
+      r.item.toggleAttribute('data-hidden', hidden);
+    }
+    const active = layers.active.value === n.id;
+    if (shown.active !== active) {
+      shown.active = active;
+      r.item.toggleAttribute('data-active', active);
+    }
+    if (r.swatch) {
+      const color = layerSwatch(n, this.ctx.view.palette);
+      if (shown.color !== color) {
+        shown.color = color;
+        r.swatch.style.setProperty('--swatch', color);
+      }
+    }
+  }
+
+  private renderRow(n: LayerNode, content: HTMLElement): void {
     const layers = this.ctx.doc.layers;
     const isLayer = n.type === 'layer';
-    const active = layers.active.value === n.id;
-    const hidden = !layers.isVisible(n.id);
-    const count = isLayer ? (this.counts.get(n.id) ?? 0) : layers.leavesOf(n.id).reduce((s, l) => s + (this.counts.get(l.id) ?? 0), 0);
-    row.parentElement?.toggleAttribute('data-active', active);
-    row.parentElement?.toggleAttribute('data-hidden', hidden);
-    row.parentElement?.toggleAttribute('data-group', !isLayer);
+    const item = content.parentElement ?? content;
+    item.toggleAttribute('data-group', !isLayer);
 
-    const eye = h('button', { class: 'ibtn ibtn--row', type: 'button', 'aria-label': n.visible ? 'Gizle' : 'Göster', 'aria-pressed': String(!n.visible) }, icon(n.visible ? 'eye' : 'eyeOff', 15));
-    const lock = h(
-      'button',
-      { class: 'ibtn ibtn--row', type: 'button', 'aria-label': n.locked ? 'Kilidi aç' : 'Kilitle', 'aria-pressed': String(n.locked), 'data-on': n.locked ? '' : null },
-      icon(n.locked ? 'lock' : 'unlock', 15),
-    );
-    eye.addEventListener('click', (e) => {
-      e.stopPropagation();
-      layers.toggleVisible(n.id);
-    });
-    lock.addEventListener('click', (e) => {
-      e.stopPropagation();
-      layers.toggleLocked(n.id);
-    });
-
-    let lead: HTMLElement;
+    const eye = rowButton('ibtn ibtn--row', () => layers.toggleVisible(n.id));
+    const lock = rowButton('ibtn ibtn--row', () => layers.toggleLocked(n.id));
+    let swatch: HTMLElement | null = null;
     if (isLayer) {
-      lead = h('button', { class: 'swatch swatch--btn', type: 'button', style: `--swatch:${layerSwatch(n, this.ctx.view.palette)}`, 'aria-label': 'Katman rengi' });
-      lead.addEventListener('click', (e) => {
-        e.stopPropagation();
-        PopupMenu.open(this.colorItems(n), lead.getBoundingClientRect(), { minWidth: 180 });
-      });
-    } else lead = h('span', { class: 'tree__folder' }, icon('folder', 15));
+      const s = rowButton('swatch swatch--btn', () => PopupMenu.open(this.colorItems(n), s.getBoundingClientRect(), { minWidth: 180 }));
+      s.setAttribute('aria-label', 'Katman rengi');
+      swatch = s;
+    }
+    const name = h('span', { class: 'tree__name', title: layers.path(n.id) }, n.name);
+    const count = h('span', { class: 'tree__count num' });
+    content.append(swatch ?? h('span', { class: 'tree__folder' }, icon('folder', 15)), name, count, eye, lock);
 
-    row.append(
-      lead,
-      h('span', { class: 'tree__name', title: layers.path(n.id) }, n.name),
-      h('span', { class: 'tree__count num' }, String(count)),
-      eye,
-      lock,
-    );
+    const row: Row = { node: n, item, name, count, eye, lock, swatch, shown: {} };
+    this.rows.set(n.id, row);
+    this.writeCount(row);
+    this.writeState(row);
   }
 
   private colorItems(n: LayerNode): MenuItem[] {
@@ -158,9 +270,8 @@ export class LayersPanel extends Panel {
   }
 
   private rename(n: LayerNode): void {
-    const row = this.tree.rowOf(n.id);
-    const nameEl = row?.querySelector<HTMLElement>('.tree__name');
-    if (!nameEl) return;
+    const nameEl = this.rows.get(n.id)?.name;
+    if (!nameEl?.isConnected) return;
     const input = h('input', { class: 'field field--inline', value: n.name, 'aria-label': 'Katman adı', spellcheck: 'false' });
     nameEl.replaceWith(input);
     input.focus();
@@ -169,8 +280,9 @@ export class LayersPanel extends Panel {
     const finish = (commit: boolean) => {
       if (done) return;
       done = true;
+      // A new name rebuilds the tree (structure); otherwise the name goes back into the same row.
       if (commit && input.value.trim() && input.value !== n.name) this.ctx.doc.layers.rename(n.id, input.value);
-      else this.tree.render(this.ctx.doc.layers.tree);
+      else input.replaceWith(nameEl);
       this.tree.el.focus();
     };
     input.addEventListener('keydown', (e) => {
@@ -181,4 +293,19 @@ export class LayersPanel extends Panel {
     input.addEventListener('blur', () => finish(true));
     input.addEventListener('click', (e) => e.stopPropagation());
   }
+}
+
+/**
+ * An icon button in a row. A click leaves the keyboard focus where it was
+ * (the tree or the drawing): the row outlives the click now, and a focused
+ * button in it would take the next Enter or Space away from the drawing.
+ */
+function rowButton(className: string, run: () => void): HTMLButtonElement {
+  const b = h('button', { class: className, type: 'button' });
+  b.addEventListener('pointerdown', (e) => e.button === 0 && e.preventDefault());
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    run();
+  });
+  return b;
 }

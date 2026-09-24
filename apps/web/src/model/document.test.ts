@@ -176,6 +176,19 @@ describe('LayerStore', () => {
     doc.layers.toggleLocked('g');
     expect(doc.layers.isLocked('a')).toBe(true);
   });
+  it('tells when a group opens or closes, without making it an edit', () => {
+    // The Layers panel rebuilds its rows on this event only; the tree's shape is otherwise unchanged.
+    const doc = makeDoc();
+    const seen: string[] = [];
+    doc.layers.events.on('expanded', ({ id }) => seen.push(id));
+    doc.layers.events.on('structure', () => seen.push('structure'));
+    doc.layers.setExpanded('g', false);
+    doc.layers.setExpanded('g', false);
+    doc.layers.setExpanded('g', true);
+    expect(seen).toEqual(['g', 'g']);
+    expect(doc.layers.get('g')!.expanded).toBe(true);
+    expect(doc.dirty.value).toBe(false);
+  });
 });
 
 describe('Formatter', () => {
