@@ -42,6 +42,17 @@ Harita büroları veriyi Netcad koordinat listeleriyle (NCN, TXT, CSV) ve DXF il
 - Kodlama: BOM, geçerli UTF-8, yoksa Windows-1254 (Türkçe Windows).
 - Sütun önerisi: başlık adları (Türkçe adlar önce: Y sağa), yoksa Netcad sırası (Ad Y X Z). Türkiye'de TM/UTM sağa değerleri 10⁵–10⁶, yukarı değerleri 3,9–4,7·10⁶ m olduğu için sayıların büyüklüğü sıralamayı düzeltir ve bunu ipucuyla söyler. Öneri yalnız varsayılandır; kullanıcı önizlemede her sütunu seçer.
 
+### DXF okuma
+
+- Yalnız ASCII DXF. DWG kapalı (tescilli) bir biçimdir; okumak için ya lisanslı bir kitaplık (Open Design Alliance) ya da tersine mühendislikle yazılmış, lisansı ve doğruluğu bu proje için uygun olmayan kodlar gerekir. Kullanıcıya DWG'yi AutoCAD ya da Netcad'de DXF olarak kaydetmesi söylenir; bu her iki programda tek komuttur. İkili DXF de aynı biçimde reddedilir.
+- Okuyucu tek geçişte grup çiftlerini okur (`dxf/lexer.rs`), bölümleri modele alır (`entity.rs`), sonra model uzayındaki nesneleri bloklarıyla birlikte uygulamanın nesnelerine çevirir (`emit.rs`). Nesneleri tutmadan akıtmak mümkündü, ama bir INSERT kendinden sonra tanımlanan bloğa başvurabilir ve iki geçiş dosyayı iki kez okumak demekti; model, dosyanın baytlarından küçüktür.
+- **Bloklar patlatılır.** KentOS'ta blok nesnesi yok (§10'da planlı). INSERT dönüşümü tam uygulanır: `taban noktasına öteleme → ölçek → dizi ötelemesi → dönüş → ekleme noktasına öteleme → nesne koordinat sistemi → üst ekleme`. Benzerlik dönüşümünde şekil türü korunur (daire daire, bulge bulge); dörtte bir dönüşlerde sin/cos tam değerlidir (`math.rs`), böylece 90° dönmüş kapı bloğunun köşeleri tam sayı kalır. Eşit olmayan ölçek daireyi elipse, yaylı kenarı noktalara çevirir ve raporlanır.
+- **Renkler:** ACI dizini sabit tabloyla (`aci.rs`) hex'e, 7 `ink` jetonuna gider. Gerçek renk (420) önceliklidir. BYLAYER nesnede renk yazılmaz (katmandan alınır), BYBLOCK eklemenin rengini alır.
+- **Nesne koordinat sistemi** AutoCAD'in keyfî eksen algoritmasıyla hesaplanır. Yay, bulge ve elips parametresi yönleri düzlem aynalanınca çevrilir; uygulamanın kuralı (yay saat yönünün tersine) korunur.
+- **SPLINE:** geçiş noktası varsa uygulamanın eğrisine (Catmull-Rom) geçiş noktaları olarak gider; eğri noktalardan geçer ama aradaki biçim AutoCAD'inkinden farklı olabilir, bu raporlanır. Yalnız denetim noktası varsa NURBS de Boor ile, kiriş hatası 1 mm'yi aşmayacak biçimde örneklenir.
+- **HATCH:** sınır yolları halkalara çevrilir; iç içelik alan ve içerme sınamasıyla bulunur, çift derinlikte olanlar taranır, tek derinliktekiler ada olur (stil 0 "normal"; stil 1 "dış" yalnız dış halkaları tarar). Kenar yayları ve elipsleri 72 parça/tur. Desen: dolu, tek çizgi ailesi (açı ve aralık), dik iki aile → çapraz; diğerleri yaklaşık, raporlanır.
+- **Rapor:** her dönüşüm ve atlama türüyle, sayısıyla, nedeniyle ve ilk beş satır numarasıyla yazılır.
+
 ## Sonuçlar
 
 - Sunucunun içe aktarma işi aynı crate'i native çalıştırabilir; sonuçlar aynı bitlerdir.

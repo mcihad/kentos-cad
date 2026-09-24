@@ -4,6 +4,7 @@ import type { CoordRead } from '../contracts/generated/CoordRead';
 import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { ExportReport } from '../contracts/generated/ExportReport';
+import type { ImportResult } from '../contracts/generated/ImportResult';
 import { FORMATS_VERSION } from './version';
 
 /**
@@ -17,6 +18,7 @@ interface Formats {
   initSync(o: { module: BufferSource }): unknown;
   formatsVersion(): number;
   readCoords(bytes: Uint8Array, options: string): Uint8Array;
+  readDxf(bytes: Uint8Array, options: string): Uint8Array;
   writeCoords(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
 }
 
@@ -76,6 +78,31 @@ describe.skipIf(!loader)('formats WASM module', () => {
     ]);
     expect(bad.result).toBeUndefined();
     expect(bad.preview[1]).toEqual({ line: 2, fields: ['P2', 'abc', '4412345.3', '11'], error: 'Y (sağa) değeri “abc” sayı değil.' });
+  });
+
+  it('reads DXF: layers from the table, exploded blocks with exact coordinates, the report', async () => {
+    const w = await load();
+    const read = (name: string) => JSON.parse(new TextDecoder().decode(w.readDxf(fixture(name), JSON.stringify({ maxEntities: 0 })))) as ImportResult;
+    const e = read('entities.dxf');
+    expect(e.layers.map((l) => [l.name, l.color, l.visible, l.locked])).toEqual([
+      ['0', 'ink', true, false],
+      ['PARSEL', '#FF0000', true, false],
+      ['Yol ekseni', '#0000FF', false, false],
+      ['Kot', '#00FF00', true, true],
+      ['Yazı', '#FF00FF', false, false],
+    ]);
+    const line = e.entities[0];
+    expect(line.kind === 'line' && [line.a, line.b]).toEqual([
+      { x: 452000.125, y: 4412000.5 },
+      { x: 452010.25, y: 4412005.75 },
+    ]);
+    expect(e.report.skipped.map((s) => s.what)).toEqual(['IMAGE', 'Kâğıt uzayı nesnesi']);
+    const b = read('blocks.dxf');
+    const circle = b.entities.find((x) => x.kind === 'circle');
+    expect(circle?.kind === 'circle' && [circle.c, circle.r, circle.layerId]).toEqual([{ x: 1000, y: 2010 }, 1, 'KAPILAR']);
+    const point = b.entities.find((x) => x.kind === 'point');
+    expect(point?.kind === 'point' && [point.p, point.z]).toEqual([{ x: 996, y: 2003 }, 101.5]);
+    expect(() => w.readDxf(new TextEncoder().encode('AC1032\u0000binary'), '{"maxEntities":0}')).toThrow(/DWG dosyası/);
   });
 
   it('writes points that read back bit for bit', async () => {

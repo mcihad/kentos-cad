@@ -4,6 +4,7 @@
 //
 //   pnpm e2e            (CHROME_BIN overrides the browser binary)
 import http from 'node:http';
+import { readFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { launch, sleep, WEBGPU_ARGS } from './cdp.mjs';
 
@@ -973,6 +974,50 @@ try {
     await b.waitFor(`window.__io.written`, 10000).catch(() => {});
     const out = await ioWritten();
     check('coordinate export writes the selected points back exactly (NCN)', out?.text === '1001 487061.123 4420101.456 105.2\r\n1002 487071.5 4420111.25 106.75\r\n' && /\.ncn$/.test(out.name), JSON.stringify(out));
+    await b.eval(`(() => { const k = window.kentos; k.files.picker = window.__io.original; k.selection.clear(); })()`);
+  }
+
+  // DXF (fixtures/formats/v1/blocks.dxf, Windows-1254 bytes as they are): the file's layers become new layers in a
+  // group named after it, a layer the user leaves out stays out, nested inserts arrive exploded with exact
+  // coordinates, and the whole import is one undo step.
+  {
+    const raw = readFileSync(new URL('../../fixtures/formats/v1/blocks.dxf', import.meta.url)).toString('base64');
+    await b.eval(`(() => {
+      const k = window.kentos;
+      const bytes = Uint8Array.from(atob(${JSON.stringify(raw)}), (c) => c.charCodeAt(0));
+      window.__io ??= { original: k.files.picker };
+      k.files.picker = { open: async () => ({ name: 'kapi.dxf', getFile: async () => new Blob([bytes]) }), save: async () => null };
+      k.selection.clear();
+    })()`);
+    const n0 = await b.eval('window.kentos.doc.size');
+    await b.eval(`window.kentos.commands.execute('file.import.dxf')`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-table tbody tr')`, 20000).catch(() => {});
+    const rows = await b.eval(`[...document.querySelectorAll('.dialog--io tbody tr')].map((r) => r.children[1].textContent.trim())`);
+    const box = await b.eval(`(() => { const row = [...document.querySelectorAll('.dialog--io tbody tr')].find((r) => r.children[1].textContent.trim() === 'DIZI'); const e = row?.querySelector('input'); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    if (box) await b.click(...box);
+    await sleep(150);
+    await b.shot('io-dxf-import');
+    const summary = await b.eval(`document.querySelector('.dialog--io .io-summary')?.textContent ?? ''`);
+    check('DXF import: the layers table lists the file\'s layers and the report names what was left out', JSON.stringify(rows) === '["0","DETAY","DIZI","KAPILAR"]' && /8 nesne alınacak/.test(summary) && /kendini içeriyor/.test(summary), `${JSON.stringify(rows)} ${summary.slice(0, 160)}`);
+    await ioPress('.dialog--io .dialog__foot .btn--primary', 'İçe aktar');
+    await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
+    const got = await b.eval(`(() => {
+      const k = window.kentos;
+      const group = k.doc.layers.tree.find((n) => n.name === 'kapi.dxf');
+      const on = (name) => [...k.doc.all()].filter((e) => k.doc.layers.get(e.layerId)?.name === name);
+      const circle = on('KAPILAR').find((e) => e.kind === 'circle');
+      const point = on('KAPILAR').find((e) => e.kind === 'point');
+      return { layers: group ? group.children.map((c) => c.name) : null, circle: circle && [circle.c.x, circle.c.y, circle.r], point: point && [point.p.x, point.p.y, point.z], dizi: on('DIZI').length, added: k.doc.size - ${n0} };
+    })()`);
+    check(
+      'DXF import: new layers in a group named after the file, blocks exploded exactly, a left-out layer stays out',
+      JSON.stringify(got) === JSON.stringify({ layers: ['0', 'DETAY', 'KAPILAR'], circle: [1000, 2010, 1], point: [996, 2003, 101.5], dizi: 0, added: 8 }),
+      JSON.stringify(got),
+    );
+    await b.eval(`window.kentos.commands.execute('edit.undo')`);
+    const undone = await b.eval('window.kentos.doc.size');
+    await b.eval(`window.kentos.commands.execute('edit.redo')`);
+    check('DXF import is one undo step', undone === n0 && (await b.eval('window.kentos.doc.size')) === n0 + 8, `${n0} → ${undone}`);
     await b.eval(`(() => { const k = window.kentos; k.files.picker = window.__io.original; k.selection.clear(); })()`);
   }
 

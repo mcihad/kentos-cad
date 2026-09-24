@@ -116,7 +116,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isEnabled: () => !ctx.files.busy.value,
       watch: [ctx.files.busy],
     },
-    pending(ctx, 'file.import.dxf', 'DXF / DWG…', F),
     pending(ctx, 'file.import.ncz', 'Netcad NCZ…', F),
     pending(ctx, 'file.import.shp', 'Shapefile…', F),
     pending(ctx, 'file.import.geojson', 'GeoJSON…', F),

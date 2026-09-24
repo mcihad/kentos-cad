@@ -1,4 +1,4 @@
-import init, { formatsVersion, readCoords, writeCoords } from './pkg/kentos_formats_wasm.js';
+import init, { formatsVersion, readCoords, readDxf, writeCoords } from './pkg/kentos_formats_wasm.js';
 import wasmUrl from './pkg/kentos_formats_wasm_bg.wasm?url';
 import type { FormatsReply, FormatsRequest } from './protocol';
 import { FORMATS_VERSION } from './version';
@@ -39,8 +39,9 @@ scope.onmessage = (e) => {
       return;
     }
     try {
-      if (m.op === 'readCoords') {
-        const json = own(readCoords(new Uint8Array(m.bytes), JSON.stringify(m.options)));
+      if (m.op === 'readCoords' || m.op === 'readDxf') {
+        const read = m.op === 'readCoords' ? readCoords : readDxf;
+        const json = own(read(new Uint8Array(m.bytes), JSON.stringify(m.options)));
         scope.postMessage({ id: m.id, ok: true, json }, [json]);
       } else {
         const written = writeCoords(JSON.stringify(m.input));

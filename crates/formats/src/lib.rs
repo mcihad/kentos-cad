@@ -1,5 +1,5 @@
 //! File formats of KentOS (CLAUDE.md §9.7): coordinate lists (Netcad NCN,
-//! TXT, CSV). Readers turn a file's bytes into the
+//! TXT, CSV) and ASCII DXF. Readers turn a file's bytes into the
 //! app's objects (the versioned contracts, `kentos-contracts`) with a report
 //! of what was read, converted or left out; writers do the reverse. The
 //! browser runs this crate in a Web Worker (`kentos-formats-wasm`), the
@@ -18,9 +18,15 @@
     not(test),
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
+// `!(r > 0.0)` refuses NaN as well as r ≤ 0; that is the point of writing it so.
+#![allow(clippy::neg_cmp_op_on_partial_ord)]
 
 pub mod coords;
+pub mod dxf;
+pub mod geom;
+pub mod math;
 pub mod num;
+pub mod nurbs;
 pub mod report;
 pub mod text;
 

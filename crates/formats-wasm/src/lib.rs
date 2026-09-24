@@ -5,7 +5,7 @@
 //! `kentos_contracts::formats`), whose float64 values serde_json writes as
 //! the shortest round-trip decimal, so coordinates arrive bit for bit.
 
-use kentos_contracts::{CoordReadOptions, CoordWriteInput, FORMATS_VERSION};
+use kentos_contracts::{CoordReadOptions, CoordWriteInput, DxfReadOptions, FORMATS_VERSION};
 use wasm_bindgen::prelude::*;
 
 fn bad_input(what: &str, e: &serde_json::Error) -> JsError {
@@ -48,6 +48,15 @@ impl Written {
 pub fn read_coords(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
     let opts: CoordReadOptions = serde_json::from_str(options).map_err(|e| bad_input("Okuma seçenekleri", &e))?;
     to_json(&kentos_formats::coords::read(bytes, &opts))
+}
+
+/// Reads an ASCII DXF file: `options` is `DxfReadOptions`, the result `ImportResult` (JSON bytes).
+/// A file that is not a DXF (a DWG, a binary DXF, broken groups) throws the reason.
+#[wasm_bindgen(js_name = readDxf)]
+pub fn read_dxf(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
+    let opts: DxfReadOptions = serde_json::from_str(options).map_err(|e| bad_input("Okuma seçenekleri", &e))?;
+    let result = kentos_formats::dxf::read(bytes, &opts).map_err(|e| JsError::new(&e))?;
+    to_json(&result)
 }
 
 /// Writes a coordinate list from `CoordWriteInput` (JSON).

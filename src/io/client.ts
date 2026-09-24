@@ -1,6 +1,8 @@
 import type { CoordRead } from '../contracts/generated/CoordRead';
 import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
+import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
+import type { ImportResult } from '../contracts/generated/ImportResult';
 import type { ExportReport } from '../contracts/generated/ExportReport';
 import type { FormatsReply, FormatsRequest } from './protocol';
 
@@ -50,6 +52,11 @@ export class FormatsClient {
   async readCoords(bytes: Uint8Array, options: CoordReadOptions): Promise<CoordRead> {
     const copy = bytes.slice().buffer;
     return json<CoordRead>(await this.request({ op: 'readCoords', bytes: copy, options }, [copy]));
+  }
+
+  /** Reads a DXF file; the buffer is handed over to the worker (the caller no longer needs it). */
+  async readDxf(bytes: ArrayBuffer, options: DxfReadOptions): Promise<ImportResult> {
+    return json<ImportResult>(await this.request({ op: 'readDxf', bytes, options }, [bytes]));
   }
 
   async writeCoords(input: CoordWriteInput): Promise<WrittenFile> {

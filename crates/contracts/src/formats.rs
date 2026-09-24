@@ -244,6 +244,16 @@ pub struct CoordWriteInput {
     pub encoding: TextEncoding,
 }
 
+// ── DXF ─────────────────────────────────────────────────────────────────
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DxfReadOptions {
+    /// Stop after this many objects (0: one million); the rest is counted and reported.
+    pub max_entities: u32,
+}
+
 /// What a writer did besides writing: counts, and anything it could not write as it was.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, TS)]
 #[ts(export)]

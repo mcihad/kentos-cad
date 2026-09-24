@@ -383,6 +383,11 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
   - "Bu koordinatlar hangi sistemde?": datuma göre gruplu açılır liste, projenin sistemi seçili ve ", projenin sistemi" ekli; altında üçüncül not "Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz." Başka bir sistem seçilince uyarı kutusu (**Koordinatlar dönüştürülemez.** …) çıkar ve birincil düğme devre dışı kalır.
   - Hedef katman (Yeni katman ya da var olan katmanlar; kilitliler seçilemez ve "(kilitli)", gizliler "(gizli)" yazar) ve yeni katmanın adı (varsayılan dosya adı).
   - Alt çubuk: solda hayalet "Başka dosya…", ortada durum ("Dosya okunuyor…", hata kırmızı), sağda "Vazgeç" ve birincil "İçe aktar".
+- **DXF içe aktar** (900 px):
+  - Dosya satırının bilgi satırı dosyanın sürümünü, kodlamasını ve birimini söyler ("Sürüm: AutoCAD 2000 (AC1015), Karakter kodlaması: Windows-1254 (Türkçe), Birim ($INSUNITS): metre").
+  - Katman tablosu (önizleme tablosu gibi): başta bütün katmanları seçen ve her satırda katmanı alan onay kutusu, katman rengi örneği ve adı, nesne sayısı (tabular, sağa dayalı) ve "Nereye" sütunu üçüncül renkte: "“Parsel” katmanına eklenir", "yeni katman, gizli" ya da (satır hata tonunda, kutusu devre dışı) "“Parsel” katmanı kilitli; alınmaz. Kilidini Katmanlar panelinden açın.".
+  - Özet kutusu: yeşil onayla "n nesne alınacak: 12 çizgi, 3 yay …" ve kaç yeni katmanın dosya adlı grupta kurulacağı; ⓘ ile dönüştürülenler (bloklar patlatıldı, ölçüler çizgi ve yazıya patlatıldı, tarama yayları parçalandı …), amber ⚠ ile alınmayanlar (tür, sayı, neden ve ilk satır numaraları); kapsam satırı.
+  - Altında aynı "Bu koordinatlar hangi sistemde?" sorusu; alt çubuk koordinat listesindekiyle aynı.
 - **Koordinat listesi dışa aktar** (720 px): Yazılacak noktalar (Seçili | Görünen katmanlar | Tümü, sayılarıyla; boş kapsam seçilemez), Biçim (NCN, TXT, CSV `;`, CSV `,`), Sütun sırası, İlk satır (başlık), Karakter kodlaması (UTF-8 | Windows-1254); özet kutusunda yazılacak nokta sayısı ve kotsuz ya da adsız noktalar. Birincil düğme "Dışa aktar…" kaydetme penceresini açar.
 
 ### 7.13 Kontroller (genel)
