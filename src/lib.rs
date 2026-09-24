@@ -4,6 +4,8 @@
 //!
 //! Katmanlar alttan üste:
 //!
+//! - [`attribute`]: öznitelik veri modeli; türlü değerler, alanlar, tarih
+//!   ve saat, sorgular. Arayüzden bağımsızdır.
 //! - [`theme`]: renk belirteçleri ([`Tokens`](theme::Tokens)), tip ölçeği
 //!   ve iced teması. Bileşenler renklerini temadan okur.
 //! - [`style`]: iced bileşenleri için stil fonksiyonları.
@@ -32,6 +34,7 @@
 //!
 //! [iced]: https://github.com/iced-rs/iced
 
+pub mod attribute;
 pub mod icon;
 pub mod label;
 pub mod style;

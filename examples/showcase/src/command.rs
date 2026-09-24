@@ -25,7 +25,17 @@ pub enum Command {
     HideAllLayers,
     ListLayers,
     ActiveLayer,
-    /// Seçili çizimi siler.
+    /// Aktif katmanın tablodaki bütün kayıtlarını seçer.
+    SelectAll,
+    /// Aktif katmanda seçimi tersine çevirir.
+    InvertSelection,
+    /// Öznitelik tablosunu açar ya da kapatır.
+    AttributeTable,
+    /// "Öznitelikle seç" penceresini açar.
+    SelectByAttributes,
+    /// "Tabloyu filtrele" penceresini açar.
+    Filter,
+    /// Seçili çizimleri siler.
     Delete,
     /// Seçimi ve ölçümü temizler.
     Clear,
@@ -75,6 +85,11 @@ const COMMANDS: &[(Command, &[&str])] = &[
     (Command::HideAllLayers, &["KATGIZLE"]),
     (Command::ListLayers, &["KATMANLAR", "LAYERS"]),
     (Command::ActiveLayer, &["KATMAN", "AKTIFKATMAN"]),
+    (Command::SelectAll, &["TUMUNUSEC", "SELECTALL"]),
+    (Command::InvertSelection, &["TERSSEC", "INVERT"]),
+    (Command::AttributeTable, &["TABLO", "OZNITELIK", "TABLE"]),
+    (Command::SelectByAttributes, &["SORGU", "QSELECT"]),
+    (Command::Filter, &["FILTRE", "FILTER"]),
     (Command::Delete, &["SIL", "ERASE", "E"]),
     (Command::Clear, &["TEMIZLE", "IPTAL"]),
     (Command::New, &["YENI", "NEW"]),
@@ -146,6 +161,16 @@ mod tests {
         assert_eq!(parse("c"), Some(Command::Tool(Tool::Circle)));
         assert_eq!(parse("ze"), Some(Command::FitAll));
         assert_eq!(parse("osnap"), Some(Command::Toggle(Setting::Snap)));
+        assert_eq!(parse("qselect"), Some(Command::SelectByAttributes));
+    }
+
+    #[test]
+    fn attribute_commands() {
+        assert_eq!(parse("öznitelik"), Some(Command::AttributeTable));
+        assert_eq!(parse("tümünüseç"), Some(Command::SelectAll));
+        assert_eq!(parse("terssec"), Some(Command::InvertSelection));
+        assert_eq!(parse("filtre"), Some(Command::Filter));
+        assert_eq!(parse("sorgu"), Some(Command::SelectByAttributes));
     }
 
     #[test]

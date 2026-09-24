@@ -1,8 +1,9 @@
-//! Ekran noktasına göre sorgular: öğe seçimi (hit test) ve nesne yakalama.
+//! Ekrana göre sorgular: tıklanan öğe (hit test), seçim penceresindeki
+//! öğeler ve nesne yakalama.
 
-use iced::Point;
+use iced::{Point, Rectangle};
 
-use super::{FeatureRef, Geometry, Layer, LonLat, Viewport};
+use super::{Bounds, Feature, FeatureRef, Geometry, Layer, LonLat, Viewport};
 
 /// Nokta öğelerin seçim yarıçapı (piksel).
 const POINT_TOLERANCE: f32 = 9.0;
@@ -19,15 +20,127 @@ pub fn hit_test(layers: &[Layer], viewport: &Viewport, point: Point) -> Option<F
         .iter()
         .enumerate()
         .filter(|(_, layer)| layer.is_interactive())
-        .find_map(|(layer_index, layer)| {
+        .find_map(|(index, layer)| hit_layer(index, layer, viewport, point))
+}
+
+/// Yalnızca verilen katmanda, ekran noktasının altındaki öğe (ör. haritadan
+/// varlık seçerken hedef katman).
+pub fn hit_test_in(
+    layers: &[Layer],
+    layer: usize,
+    viewport: &Viewport,
+    point: Point,
+) -> Option<FeatureRef> {
+    layers
+        .get(layer)
+        .filter(|candidate| candidate.is_interactive())
+        .and_then(|candidate| hit_layer(layer, candidate, viewport, point))
+}
+
+fn hit_layer(index: usize, layer: &Layer, viewport: &Viewport, point: Point) -> Option<FeatureRef> {
+    layer
+        .features
+        .iter()
+        .rev()
+        .find(|feature| is_hit(&feature.geometry, viewport, point))
+        .map(|feature| FeatureRef::new(index, feature.id))
+}
+
+/// Seçim penceresindeki öğeler. Pencere seçiminde (`crossing` yanlış)
+/// yalnızca tamamı içeride kalan öğeler, kesişen seçimde pencereye değen
+/// ya da pencereyi içine alan öğeler de seçilir; AutoCAD'deki gibi.
+pub fn in_bounds(
+    layers: &[Layer],
+    viewport: &Viewport,
+    bounds: Bounds,
+    crossing: bool,
+) -> Vec<FeatureRef> {
+    let corner_a = viewport.project(bounds.south_west);
+    let corner_b = viewport.project(bounds.north_east);
+    let window = Rectangle {
+        x: corner_a.x.min(corner_b.x),
+        y: corner_a.y.min(corner_b.y),
+        width: (corner_a.x - corner_b.x).abs(),
+        height: (corner_a.y - corner_b.y).abs(),
+    };
+
+    layers
+        .iter()
+        .enumerate()
+        .filter(|(_, layer)| layer.is_interactive())
+        .flat_map(|(index, layer)| {
             layer
                 .features
                 .iter()
-                .enumerate()
-                .rev()
-                .find(|(_, feature)| is_hit(&feature.geometry, viewport, point))
-                .map(|(feature_index, _)| FeatureRef::new(layer_index, feature_index))
+                .filter(move |feature| is_in_window(feature, viewport, window, crossing))
+                .map(move |feature| FeatureRef::new(index, feature.id))
         })
+        .collect()
+}
+
+fn is_in_window(feature: &Feature, viewport: &Viewport, window: Rectangle, crossing: bool) -> bool {
+    let points: Vec<Point> = feature
+        .geometry
+        .vertices()
+        .iter()
+        .map(|location| viewport.project(*location))
+        .collect();
+
+    if points.is_empty() {
+        return false;
+    }
+
+    if !crossing {
+        return points.iter().all(|point| window.contains(*point));
+    }
+
+    if points.iter().any(|point| window.contains(*point)) {
+        return true;
+    }
+
+    let closed = matches!(feature.geometry, Geometry::Polygon(_));
+    let closing = closed.then(|| (points[points.len() - 1], points[0]));
+
+    let crosses_edge = points
+        .windows(2)
+        .map(|pair| (pair[0], pair[1]))
+        .chain(closing)
+        .any(|(start, end)| segment_crosses_rectangle(start, end, window));
+
+    // Pencere alanın tamamen içinde kalıyorsa kenarlar kesişmez.
+    crosses_edge || (closed && point_in_polygon(window.center(), &points))
+}
+
+/// Doğru parçası dikdörtgenin kenarlarından birini kesiyor mu.
+fn segment_crosses_rectangle(start: Point, end: Point, rectangle: Rectangle) -> bool {
+    let top_left = Point::new(rectangle.x, rectangle.y);
+    let top_right = Point::new(rectangle.x + rectangle.width, rectangle.y);
+    let bottom_left = Point::new(rectangle.x, rectangle.y + rectangle.height);
+    let bottom_right = Point::new(
+        rectangle.x + rectangle.width,
+        rectangle.y + rectangle.height,
+    );
+
+    [
+        (top_left, top_right),
+        (top_right, bottom_right),
+        (bottom_right, bottom_left),
+        (bottom_left, top_left),
+    ]
+    .into_iter()
+    .any(|(a, b)| segments_intersect(start, end, a, b))
+}
+
+fn segments_intersect(p1: Point, p2: Point, q1: Point, q2: Point) -> bool {
+    let cross =
+        |a: Point, b: Point, c: Point| (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+
+    let d1 = cross(q1, q2, p1);
+    let d2 = cross(q1, q2, p2);
+    let d3 = cross(p1, p2, q1);
+    let d4 = cross(p1, p2, q2);
+
+    ((d1 > 0.0) != (d2 > 0.0)) && ((d3 > 0.0) != (d4 > 0.0))
 }
 
 /// Yakalanan noktanın türü; AutoCAD nesne yakalama işaretlerini izler.
@@ -160,7 +273,7 @@ fn point_in_polygon(point: Point, polygon: &[Point]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spatial::Feature;
+    use crate::attribute::ObjectId;
     use iced::{Color, Size};
 
     fn viewport() -> Viewport {
@@ -168,8 +281,11 @@ mod tests {
     }
 
     fn layer(geometry: Geometry) -> Layer {
-        Layer::lines("Test", Color::BLACK).with_features([Feature::new("Öğe", geometry)])
+        Layer::lines("Test", Color::BLACK).with_features([Feature::new(geometry)])
     }
+
+    /// Katmandaki ilk (tek) öğenin adresi.
+    const FIRST: FeatureRef = FeatureRef::new(0, ObjectId(1));
 
     #[test]
     fn point_hit_is_within_tolerance() {
@@ -179,7 +295,7 @@ mod tests {
 
         assert_eq!(
             hit_test(&layers, &viewport, viewport.project(location)),
-            Some(FeatureRef::new(0, 0))
+            Some(FIRST)
         );
 
         let somewhere_else = viewport.project(LonLat::new(33.0, 39.0));
@@ -199,10 +315,7 @@ mod tests {
         let inside = viewport.project(LonLat::new(29.0, 41.0));
         let outside = viewport.project(LonLat::new(29.5, 41.0));
 
-        assert_eq!(
-            hit_test(&layers, &viewport, inside),
-            Some(FeatureRef::new(0, 0))
-        );
+        assert_eq!(hit_test(&layers, &viewport, inside), Some(FIRST));
         assert_eq!(hit_test(&layers, &viewport, outside), None);
     }
 
@@ -217,10 +330,7 @@ mod tests {
         let on_line = viewport.project(LonLat::new(29.0, 41.0));
         let off_line = viewport.project(LonLat::new(29.0, 40.7));
 
-        assert_eq!(
-            hit_test(&layers, &viewport, on_line),
-            Some(FeatureRef::new(0, 0))
-        );
+        assert_eq!(hit_test(&layers, &viewport, on_line), Some(FIRST));
         assert_eq!(hit_test(&layers, &viewport, off_line), None);
     }
 
@@ -257,5 +367,69 @@ mod tests {
 
         let far = viewport.project(start) + iced::Vector::new(40.0, 40.0);
         assert_eq!(snap(&layers, &viewport, far, SNAP_TOLERANCE), None);
+    }
+
+    #[test]
+    fn window_selects_whole_features_and_crossing_touching_ones() {
+        let viewport = viewport();
+        let line = layer(Geometry::Line(vec![
+            LonLat::new(28.95, 41.0),
+            LonLat::new(29.05, 41.0),
+        ]));
+        let layers = [line];
+
+        let around = Bounds {
+            south_west: LonLat::new(28.9, 40.95),
+            north_east: LonLat::new(29.1, 41.05),
+        };
+        let half = Bounds {
+            south_west: LonLat::new(29.0, 40.95),
+            north_east: LonLat::new(29.1, 41.05),
+        };
+        let beside = Bounds {
+            south_west: LonLat::new(29.2, 40.95),
+            north_east: LonLat::new(29.3, 41.05),
+        };
+
+        assert_eq!(in_bounds(&layers, &viewport, around, false), [FIRST]);
+        assert!(in_bounds(&layers, &viewport, half, false).is_empty());
+        assert_eq!(in_bounds(&layers, &viewport, half, true), [FIRST]);
+        assert!(in_bounds(&layers, &viewport, beside, true).is_empty());
+    }
+
+    #[test]
+    fn crossing_window_inside_a_polygon_selects_it() {
+        let viewport = viewport();
+        let layers = [layer(Geometry::Polygon(vec![
+            LonLat::new(28.8, 40.8),
+            LonLat::new(29.2, 40.8),
+            LonLat::new(29.2, 41.2),
+            LonLat::new(28.8, 41.2),
+        ]))];
+
+        let inside = Bounds {
+            south_west: LonLat::new(28.99, 40.99),
+            north_east: LonLat::new(29.01, 41.01),
+        };
+
+        assert_eq!(in_bounds(&layers, &viewport, inside, true), [FIRST]);
+        assert!(in_bounds(&layers, &viewport, inside, false).is_empty());
+    }
+
+    #[test]
+    fn hit_test_can_be_limited_to_a_layer() {
+        let viewport = viewport();
+        let location = LonLat::new(28.98, 41.01);
+        let layers = [
+            layer(Geometry::Point(location)),
+            layer(Geometry::Point(location)),
+        ];
+        let point = viewport.project(location);
+
+        assert_eq!(hit_test(&layers, &viewport, point), Some(FIRST));
+        assert_eq!(
+            hit_test_in(&layers, 1, &viewport, point),
+            Some(FeatureRef::new(1, ObjectId(1)))
+        );
     }
 }

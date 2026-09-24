@@ -9,7 +9,9 @@ use iced::{Color, Point, Size, Vector};
 use super::Style;
 use super::program::Program;
 use crate::spatial::query::SnapKind;
-use crate::spatial::{Feature, Geometry, Layer, LayerKind, LonLat, Tool, format, measure};
+use crate::spatial::{
+    Feature, FeatureRef, Geometry, Layer, LayerKind, LonLat, Tool, format, measure,
+};
 use crate::theme::typography::MONO;
 
 /// Seç aracında artı imlecin ortasındaki seçim kutusunun yarı boyu.
@@ -18,6 +20,9 @@ const PICKBOX: f32 = 5.0;
 const CROSSHAIR_ARM: f32 = 36.0;
 /// Seçili öğede tutamaç çizilecek en fazla köşe sayısı.
 const MAX_GRIPS: usize = 400;
+/// Bundan çok öğe seçiliyse tutamaçlar çizilmez; kalabalık seçimde yalnızca
+/// vurgu rengi yeterlidir.
+const MAX_GRIPPED_FEATURES: usize = 64;
 /// Ölçüm ve önizleme çizgilerinin kesik çizgi deseni.
 const DASH: [f32; 2] = [7.0, 6.0];
 
@@ -157,16 +162,17 @@ impl<Message> Program<'_, Message> {
                 continue;
             }
 
-            for (feature_index, feature) in layer.features.iter().enumerate() {
-                let reference = Some(crate::spatial::FeatureRef::new(layer_index, feature_index));
+            for feature in &layer.features {
+                let reference = FeatureRef::new(layer_index, feature.id);
 
                 self.draw_feature(
                     frame,
                     style,
                     layer,
                     feature,
-                    self.selection == reference,
-                    self.hover == reference,
+                    self.selection
+                        .is_some_and(|selection| selection.contains(&reference)),
+                    self.hover == Some(reference),
                 );
             }
         }
@@ -277,6 +283,13 @@ impl<Message> Program<'_, Message> {
 
     /// Seçili öğenin köşelerine AutoCAD tarzı kare tutamaçlar.
     fn draw_grips(&self, frame: &mut Frame, style: &Style, points: &[Point]) {
+        if self
+            .selection
+            .is_some_and(|selection| selection.len() > MAX_GRIPPED_FEATURES)
+        {
+            return;
+        }
+
         for point in points.iter().take(MAX_GRIPS) {
             let grip = Path::rectangle(*point - Vector::new(3.5, 3.5), Size::new(7.0, 7.0));
 
@@ -303,7 +316,7 @@ impl<Message> Program<'_, Message> {
                 };
 
                 frame.fill_text(Text {
-                    content: feature.name.clone(),
+                    content: layer.label(feature),
                     position: self.viewport.project(*location) + Vector::new(9.0, -9.0),
                     color: style.label.scale_alpha(layer.opacity.max(0.65)),
                     size: 12.0.into(),
@@ -494,10 +507,16 @@ impl<Message> Program<'_, Message> {
             );
         }
 
-        // Dinamik giriş: imlecin koordinatı ve nokta girişi sürerken son
-        // noktaya olan mesafe (dairede yarıçap).
+        // Dinamik giriş: varsa istem, imlecin koordinatı ve nokta girişi
+        // sürerken son noktaya olan mesafe (dairede yarıçap).
         let location = self.viewport.unproject(pointer);
-        let mut tags = vec![format::decimal(location)];
+        let mut tags = Vec::new();
+
+        if let Some(prompt) = self.prompt {
+            tags.push((prompt.to_owned(), style.selection));
+        }
+
+        tags.push((format::decimal(location), style.tag_text));
 
         let anchor = match self.tool {
             Tool::Measure => self.measurement.last(),
@@ -512,17 +531,24 @@ impl<Message> Program<'_, Message> {
                 "\u{0394}"
             };
 
-            tags.push(format!(
-                "{prefix} {}",
-                format::distance(measure::haversine_meters(*last, location))
+            tags.push((
+                format!(
+                    "{prefix} {}",
+                    format::distance(measure::haversine_meters(*last, location))
+                ),
+                style.tag_text,
             ));
         }
 
-        let x = (pointer.x + 18.0).min(size.width - 170.0);
+        let widest = tags
+            .iter()
+            .map(|(content, _)| tag_width(content))
+            .fold(170.0, f32::max);
+        let x = (pointer.x + 18.0).min(size.width - widest);
         let mut y = (pointer.y + 18.0).min(size.height - 22.0 * tags.len() as f32 - 6.0);
 
-        for tag in tags {
-            self.draw_tag(frame, style, tag, Point::new(x, y), style.tag_text);
+        for (content, color) in tags {
+            self.draw_tag(frame, style, content, Point::new(x, y), color);
             y += 22.0;
         }
     }
@@ -596,6 +622,34 @@ impl<Message> Program<'_, Message> {
             align_y: Vertical::Center,
             ..Text::default()
         });
+    }
+
+    /// Seçim penceresi: pencere seçiminde düz mavi, kesişen seçimde kesik
+    /// yeşil çerçeve; AutoCAD'deki gibi.
+    pub(super) fn draw_selection_window(
+        &self,
+        frame: &mut Frame,
+        style: &Style,
+        window: iced::Rectangle,
+        crossing: bool,
+    ) {
+        let color = if crossing {
+            style.crossing
+        } else {
+            style.window
+        };
+
+        let outline = Path::rectangle(window.position(), window.size());
+
+        frame.fill(&outline, color.scale_alpha(0.12));
+        frame.stroke(
+            &outline,
+            if crossing {
+                dashed(color, 1.2)
+            } else {
+                stroke(color, 1.2)
+            },
+        );
     }
 
     // --- Kenar süsleri --------------------------------------------------

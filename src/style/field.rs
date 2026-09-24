@@ -42,6 +42,49 @@ pub fn bare_input(theme: &Theme, status: text_input::Status) -> text_input::Styl
     }
 }
 
+/// Özellik ızgarası hücresindeki metin girişi: hücreyle bütünleşir, odakta
+/// vurgu kenarı alır; geçersiz değerde kenar kırmızıdır.
+pub fn cell(invalid: bool) -> impl Fn(&Theme, text_input::Status) -> text_input::Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+
+        let edge = match status {
+            _ if invalid => t.danger,
+            text_input::Status::Focused { .. } => t.accent,
+            _ => Color::TRANSPARENT,
+        };
+
+        text_input::Style {
+            background: Background::Color(Color::TRANSPARENT),
+            border: Border {
+                color: edge,
+                width: 1.0,
+                radius: RADIUS.into(),
+            },
+            ..input(theme, status)
+        }
+    }
+}
+
+/// Özellik ızgarası hücresindeki açılır liste: kenarsız, üzerine gelince
+/// belirginleşir.
+pub fn cell_pick_list(theme: &Theme, status: PickListStatus) -> PickListStyle {
+    let t = Tokens::of(theme);
+
+    PickListStyle {
+        background: Background::Color(Color::TRANSPARENT),
+        border: Border {
+            color: match status {
+                PickListStatus::Hovered | PickListStatus::Opened { .. } => t.accent,
+                PickListStatus::Active => Color::TRANSPARENT,
+            },
+            width: 1.0,
+            radius: RADIUS.into(),
+        },
+        ..pick_list(theme, status)
+    }
+}
+
 /// Açılır liste kutusu.
 pub fn pick_list(theme: &Theme, status: PickListStatus) -> PickListStyle {
     let t = Tokens::of(theme);

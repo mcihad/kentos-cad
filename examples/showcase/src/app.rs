@@ -2,27 +2,42 @@
 
 use std::time::Duration;
 
-use iced::{Event, Size, Subscription, Task, Theme, event, keyboard, window};
+use iced::keyboard::Modifiers;
+use iced::{Event, Point, Size, Subscription, Task, Theme, event, keyboard, window};
 
+use kentos_rc::attribute::query::Edit;
+use kentos_rc::attribute::{DateTime, Field, FieldKind, Query, Value, text};
 use kentos_rc::spatial::model_space::{self, Options};
 use kentos_rc::spatial::{
-    Draft, FeatureRef, Geometry, Layer, LonLat, Measurement, Tool, Viewport, feature, format, query,
+    Bounds, Draft, Feature, FeatureRef, Geometry, Layer, LonLat, Measurement, Selection,
+    SelectionMode, Tool, Viewport, feature, query,
 };
 use kentos_rc::theme::{self, Mode};
 use kentos_rc::widget::command_line::Entry;
+use kentos_rc::widget::inspector;
 
 use crate::command::{self, Command};
-use crate::message::{AppCommand, Message, RECENT_DRAWINGS, RibbonTab, Setting};
+use crate::gallery::Gallery;
+use crate::message::{AppCommand, Message, QueryPurpose, RECENT_DRAWINGS, RibbonTab, Setting};
 use crate::sample;
+use crate::table::TableView;
 
 /// Çizim araçlarının geometri eklediği katman; listenin en üstündedir.
 pub const DRAWING_LAYER: usize = 0;
+
+/// Yerel saat dilimi: Türkiye (UTC+3), dakika olarak.
+pub const TIME_ZONE: i32 = 180;
 
 const INITIAL_CENTER: LonLat = LonLat::new(32.0, 39.0);
 const INITIAL_ZOOM: f64 = 6.0;
 
 /// Yakınlaştır/uzaklaştır düğmelerinin adımı.
 const ZOOM_STEP: f64 = 0.8;
+
+/// Odaklanırken kenarlarda bırakılan boşluk ve noktalardaki en az
+/// yakınlaştırma.
+const FOCUS_PADDING: f32 = 140.0;
+const FOCUS_ZOOM: f64 = 12.0;
 
 /// Komut geçmişinde tutulan en fazla satır.
 const HISTORY_LIMIT: usize = 80;
@@ -35,9 +50,20 @@ pub struct Showcase {
     pub(crate) viewport: Viewport,
     pub(crate) layers: Vec<Layer>,
     pub(crate) active_layer: usize,
-    pub(crate) selection: Option<FeatureRef>,
+    pub(crate) selection: Selection,
     pub(crate) hover: Option<FeatureRef>,
     pub(crate) cursor: Option<LonLat>,
+    /// Basılı değiştirici tuşlar; tabloda Shift ve Ctrl ile seçim için.
+    modifiers: Modifiers,
+
+    pub(crate) inspector: inspector::State,
+    /// Haritadan varlık seçimi sürüyorsa ayrıntıları.
+    pub(crate) picking: Option<Pick>,
+    /// Katmanların tablo ayarları; katmanlarla aynı sırada.
+    pub(crate) tables: Vec<TableView>,
+    pub(crate) table_open: bool,
+    /// Açık "Öznitelikle seç" ya da "Tabloyu filtrele" penceresi.
+    pub(crate) query: Option<QueryDialog>,
 
     pub(crate) tool: Tool,
     pub(crate) measurement: Measurement,
@@ -56,6 +82,33 @@ pub struct Showcase {
 
     pub(crate) command_input: String,
     pub(crate) history: Vec<Entry>,
+
+    pub(crate) gallery: Gallery,
+}
+
+/// Haritadan varlık seçimi: nesne inceleyicideki bir başvuru alanının
+/// değeri, model alanında hedef katmandan bir öğeye tıklanarak seçilir.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Pick {
+    /// Değeri değişecek öğe.
+    pub subject: FeatureRef,
+    /// Başvuru alanı.
+    pub field: usize,
+    /// Seçilecek öğenin katmanı.
+    pub target: usize,
+    /// İmlecin yanında gösterilen istem.
+    pub prompt: String,
+}
+
+/// "Öznitelikle seç" ya da "Tabloyu filtrele" penceresi.
+#[derive(Debug, Clone, PartialEq)]
+pub struct QueryDialog {
+    pub purpose: QueryPurpose,
+    /// Sorgulanan katman.
+    pub layer: usize,
+    pub query: Query,
+    /// Bulunan öğelerin seçimle birleşme yöntemi; yalnızca seçimde.
+    pub mode: SelectionMode,
 }
 
 impl Showcase {
@@ -77,11 +130,17 @@ impl Showcase {
 
         Self {
             viewport: Viewport::new(INITIAL_CENTER, INITIAL_ZOOM, Size::new(900.0, 640.0)),
-            layers,
             active_layer: DRAWING_LAYER + 1,
-            selection: None,
+            selection: Selection::new(),
             hover: None,
             cursor: None,
+            modifiers: Modifiers::default(),
+            inspector: inspector::State::new(),
+            picking: None,
+            tables: vec![TableView::default(); layers.len()],
+            table_open: true,
+            query: None,
+            layers,
             tool: Tool::Select,
             measurement: Measurement::new(),
             draft: Draft::new(),
@@ -96,6 +155,7 @@ impl Showcase {
             help_open: false,
             command_input: String::new(),
             history,
+            gallery: Gallery::default(),
         }
     }
 
@@ -104,7 +164,7 @@ impl Showcase {
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
-        let keys = event::listen_with(keyboard_shortcut);
+        let keys = event::listen_with(keyboard_event);
 
         if self.view_cube {
             Subscription::batch([
@@ -132,7 +192,16 @@ impl Showcase {
                 self.viewport.center = INITIAL_CENTER;
                 self.viewport.zoom = INITIAL_ZOOM;
             }
-            Message::FocusSelection => self.focus_selection(),
+            Message::FocusSelection => {
+                if let Some(bounds) = bounds_of(&self.layers, self.selection.iter()) {
+                    self.viewport.focus(bounds, FOCUS_PADDING, FOCUS_ZOOM);
+                }
+            }
+            Message::FocusFeature(reference) => {
+                if let Some(bounds) = bounds_of(&self.layers, [reference]) {
+                    self.viewport.focus(bounds, FOCUS_PADDING, FOCUS_ZOOM);
+                }
+            }
 
             Message::LayerVisibility(index, visible) => {
                 if let Some(layer) = self.layers.get_mut(index) {
@@ -161,14 +230,79 @@ impl Showcase {
             Message::ShowAllLayers => self.set_all_layers_visible(true),
             Message::HideAllLayers => self.set_all_layers_visible(false),
 
-            Message::FeatureSelected(reference) => {
-                self.selection = Some(reference);
-                self.active_layer = reference.layer;
-                self.focus_selection();
+            Message::SelectAll => self.select_all(),
+            Message::InvertSelection => self.invert_selection(),
+            Message::ClearSelection => {
+                self.selection.clear();
+                self.sync_inspector();
             }
-            Message::ClearSelection => self.selection = None,
             Message::DeleteSelection => self.delete_selection(),
             Message::ClearMeasurement => self.measurement.clear(),
+            Message::SelectionStep(forward) => {
+                self.selection.step(forward);
+                self.selection_changed(true);
+            }
+            Message::Inspector(event) => {
+                if let Some(action) = self.inspector.update(event) {
+                    match action {
+                        inspector::Action::Change { id, value } => self.set_attribute(id, value),
+                        inspector::Action::Pick(field) => self.start_pick(field),
+                        inspector::Action::CancelPick => self.cancel_pick(),
+                    }
+                }
+            }
+
+            Message::TableToggled => self.table_open = !self.table_open,
+            Message::TableRowPressed(reference) => self.press_row(reference),
+            Message::TableSearch(search) => {
+                if let Some(table) = self.tables.get_mut(self.active_layer) {
+                    table.search = search;
+                }
+            }
+            Message::TableSelectedOnly => {
+                if let Some(table) = self.tables.get_mut(self.active_layer) {
+                    table.selected_only = !table.selected_only;
+                }
+            }
+            Message::TableSort(column) => {
+                if let Some(table) = self.tables.get_mut(self.active_layer) {
+                    table.sort_by(column);
+                }
+            }
+            Message::FilterCleared => {
+                if let Some(table) = self.tables.get_mut(self.active_layer) {
+                    table.filter = Query::default();
+                    self.log(format!(
+                        "{} tablosunun filtresi kaldırıldı.",
+                        self.active_layer_name()
+                    ));
+                }
+            }
+
+            Message::QueryOpened(purpose) => self.open_query(purpose, self.active_layer),
+            Message::QueryLayerSelected(index) => {
+                if let Some(dialog) = &mut self.query
+                    && dialog.layer != index
+                    && let Some(layer) = self.layers.get(index)
+                {
+                    dialog.layer = index;
+                    dialog.query = starter_query(&layer.schema);
+                }
+            }
+            Message::QueryEdited(edit) => {
+                if let Some(dialog) = &mut self.query
+                    && let Some(layer) = self.layers.get(dialog.layer)
+                {
+                    dialog.query.apply(edit, &layer.schema);
+                }
+            }
+            Message::QueryModeSelected(mode) => {
+                if let Some(dialog) = &mut self.query {
+                    dialog.mode = mode;
+                }
+            }
+            Message::QueryApplied => self.apply_query(),
+            Message::QueryClosed => self.query = None,
 
             Message::Toggle(setting) => {
                 let enabled = !self.setting(setting);
@@ -181,7 +315,17 @@ impl Showcase {
             }
             Message::ToggleTheme => self.set_mode(self.mode.toggled()),
 
-            Message::RibbonTabSelected(tab) => self.ribbon_tab = tab,
+            Message::RibbonTabSelected(tab) => {
+                self.ribbon_tab = tab;
+
+                // Galeride model alanı görünmez; imleç bilgisi eskimesin,
+                // haritadan seçim de sürmesin.
+                if tab == RibbonTab::Gallery {
+                    self.cursor = None;
+                    self.hover = None;
+                    self.cancel_pick();
+                }
+            }
             Message::AppMenuToggled => {
                 self.app_menu_open = !self.app_menu_open;
                 self.app_menu_hover = None;
@@ -219,6 +363,13 @@ impl Showcase {
                 ));
             }
 
+            Message::GalleryPageSelected(page) => self.gallery.page = page,
+            Message::Gallery(demo) => {
+                if let Some(output) = self.gallery.update(demo) {
+                    self.log(output);
+                }
+            }
+
             Message::CommandInput(value) => self.command_input = value,
             Message::CommandSubmitted => {
                 let input = std::mem::take(&mut self.command_input);
@@ -239,13 +390,8 @@ impl Showcase {
                 };
             }
 
-            Message::Escape => {
-                self.finish_draft();
-                self.measurement.clear();
-                self.selection = None;
-                self.help_open = false;
-                self.app_menu_open = false;
-            }
+            Message::ModifiersChanged(modifiers) => self.modifiers = modifiers,
+            Message::Escape => self.escape(),
             Message::Tick => {
                 self.cube_rotation = (self.cube_rotation + CUBE_SPEED) % std::f32::consts::TAU;
             }
@@ -262,11 +408,7 @@ impl Showcase {
             model_space::Event::Resized(size) => self.viewport.size = size,
             model_space::Event::CursorMoved(location) => {
                 self.cursor = Some(location);
-                self.hover = query::hit_test(
-                    &self.layers,
-                    &self.viewport,
-                    self.viewport.project(location),
-                );
+                self.hover = self.hit(self.viewport.project(location));
             }
             model_space::Event::CursorLeft => {
                 self.cursor = None;
@@ -277,15 +419,25 @@ impl Showcase {
                 self.cursor = Some(cursor);
             }
             model_space::Event::Zoomed { delta, anchor } => self.viewport.zoom_by(delta, anchor),
-            model_space::Event::Clicked(location) => {
-                self.selection = query::hit_test(
-                    &self.layers,
-                    &self.viewport,
-                    self.viewport.project(location),
-                );
+            model_space::Event::Clicked {
+                location,
+                modifiers,
+            } => {
+                let point = self.viewport.project(location);
 
-                if let Some(selection) = self.selection {
-                    self.active_layer = selection.layer;
+                if self.picking.is_some() {
+                    self.complete_pick(point);
+                } else {
+                    self.click_select(point, modifiers);
+                }
+            }
+            model_space::Event::BoxSelected {
+                bounds,
+                crossing,
+                modifiers,
+            } => {
+                if self.picking.is_none() {
+                    self.box_select(bounds, crossing, modifiers);
                 }
             }
             model_space::Event::PointPicked(location) => {
@@ -306,9 +458,20 @@ impl Showcase {
         }
     }
 
+    /// İmlecin altındaki öğe; haritadan seçim sürerken yalnızca hedef
+    /// katmanda aranır.
+    fn hit(&self, point: Point) -> Option<FeatureRef> {
+        match &self.picking {
+            Some(pick) => query::hit_test_in(&self.layers, pick.target, &self.viewport, point),
+            None => query::hit_test(&self.layers, &self.viewport, point),
+        }
+    }
+
     fn select_tool(&mut self, tool: Tool) {
         self.tool = tool;
         self.draft.clear();
+        // Çizim araçlarında tıklama nokta girişidir; haritadan seçim sürmez.
+        self.cancel_pick();
 
         if tool != Tool::Measure {
             self.measurement.clear();
@@ -331,44 +494,433 @@ impl Showcase {
             return;
         };
 
-        let (key, value) = match &geometry {
-            Geometry::Point(location) => ("Konum", format::decimal(*location)),
-            Geometry::Line(_) => ("Uzunluk", format::distance(geometry.length_meters())),
-            Geometry::Polygon(_) => ("Çevre", format::distance(geometry.length_meters())),
-        };
-
         self.drawn_count += 1;
         let name = format!("{} {}", self.tool.label(), self.drawn_count);
 
         layer.visible = true;
-        layer.features.push(
-            kentos_rc::spatial::Feature::new(name.clone(), geometry)
-                .with("Tür", self.tool.label())
-                .with(key, value),
-        );
+        let id = layer.insert(Feature::new(geometry).with_values([
+            Value::from(name.as_str()),
+            Value::from(self.tool.label()),
+            Value::from("Taslak"),
+            Value::DateTime(DateTime::now(TIME_ZONE)),
+            Value::Null,
+        ]));
 
-        self.selection = Some(FeatureRef::new(DRAWING_LAYER, layer.features.len() - 1));
-        self.active_layer = DRAWING_LAYER;
+        self.selection.select(FeatureRef::new(DRAWING_LAYER, id));
+        self.selection_changed(true);
         self.log(format!("{name} çizildi."));
     }
 
-    fn delete_selection(&mut self) {
-        let Some(selection) = self.selection else {
-            return;
+    // --- Seçim -----------------------------------------------------------
+
+    /// Seç aracında tıklama: Shift seçime ekler, Ctrl seçimden çıkarır;
+    /// değiştirici yoksa boş yere tıklamak seçimi kaldırır.
+    fn click_select(&mut self, point: Point, modifiers: Modifiers) {
+        let hit = query::hit_test(&self.layers, &self.viewport, point);
+        let mode = selection_mode(modifiers);
+
+        match hit {
+            Some(hit) => {
+                self.selection.apply(mode, [hit]);
+
+                if mode == SelectionMode::Add {
+                    self.selection.focus(hit);
+                }
+            }
+            None if mode == SelectionMode::New => self.selection.clear(),
+            None => return,
+        }
+
+        self.selection_changed(true);
+    }
+
+    /// Seçim penceresi: soldan sağa pencere, sağdan sola kesişen seçim.
+    fn box_select(&mut self, bounds: Bounds, crossing: bool, modifiers: Modifiers) {
+        let found = query::in_bounds(&self.layers, &self.viewport, bounds, crossing);
+        let count = found.len();
+        let mode = selection_mode(modifiers);
+
+        self.selection.apply(mode, found);
+        self.selection_changed(true);
+
+        let kind = if crossing {
+            "Kesişen seçim"
+        } else {
+            "Pencere seçimi"
         };
 
-        if selection.layer != DRAWING_LAYER {
+        self.log(match mode {
+            SelectionMode::New => format!("{kind}: {count} öğe seçildi."),
+            _ => format!(
+                "{kind} ({}): {count} öğe; toplam {} seçili.",
+                text::to_lowercase(&mode.to_string()),
+                self.selection.len()
+            ),
+        });
+    }
+
+    /// Tablo satırına tıklama: Shift birincil satırdan tıklanan satıra kadar
+    /// aralığı seçer, Ctrl satırı seçime ekler ya da çıkarır.
+    fn press_row(&mut self, reference: FeatureRef) {
+        if self.modifiers.shift()
+            && let Some(anchor) = self.selection.primary()
+        {
+            let rows = self.table_rows();
+            let position = |target: FeatureRef| rows.iter().position(|row| *row == target);
+
+            if let (Some(start), Some(end)) = (position(anchor), position(reference)) {
+                let range = rows[start.min(end)..=start.max(end)].to_vec();
+
+                self.selection.apply(SelectionMode::New, range);
+                self.selection.focus(anchor);
+                self.sync_inspector();
+                return;
+            }
+        }
+
+        if self.modifiers.command() {
+            self.selection.toggle(reference);
+        } else {
+            self.selection.select(reference);
+        }
+
+        self.sync_inspector();
+    }
+
+    /// Aktif katmanda filtreye ve aramaya uyan bütün kayıtları seçer; diğer
+    /// katmanlardaki seçim korunur.
+    fn select_all(&mut self) {
+        let rows = self.matching_rows();
+        let count = rows.len();
+
+        self.replace_in_active_layer(rows);
+        self.log(format!(
+            "{}: {count} öğe seçildi.",
+            self.active_layer_name()
+        ));
+    }
+
+    /// Aktif katmanda filtreye ve aramaya uyan kayıtlar arasında seçimi
+    /// tersine çevirir.
+    fn invert_selection(&mut self) {
+        let inverted: Vec<FeatureRef> = self
+            .matching_rows()
+            .into_iter()
+            .filter(|row| !self.selection.contains(row))
+            .collect();
+        let count = inverted.len();
+
+        self.replace_in_active_layer(inverted);
+        self.log(format!(
+            "{}: seçim tersine çevrildi, {count} öğe seçili.",
+            self.active_layer_name()
+        ));
+    }
+
+    /// Aktif katmandaki seçimi verilen öğelerle değiştirir; ilki birincil
+    /// olur.
+    fn replace_in_active_layer(&mut self, references: Vec<FeatureRef>) {
+        let layer = self.active_layer;
+
+        self.selection.retain(|item| item.layer != layer);
+        self.selection
+            .apply(SelectionMode::Add, references.iter().copied());
+
+        if let Some(first) = references.first() {
+            self.selection.focus(*first);
+        }
+
+        self.sync_inspector();
+    }
+
+    /// Seçim değişti: nesne inceleyiciyi birincil öğeye eşitler. `follow`
+    /// ise aktif katman da birincil öğenin katmanı olur; öznitelik tablosu
+    /// seçimi izler.
+    fn selection_changed(&mut self, follow: bool) {
+        if follow && let Some(primary) = self.selection.primary() {
+            self.active_layer = primary.layer;
+        }
+
+        self.sync_inspector();
+    }
+
+    /// Nesne inceleyici birincil öğeyi gösterir; öğe değişince yazılmakta
+    /// olan metinler ve haritadan seçim bırakılır.
+    fn sync_inspector(&mut self) {
+        let primary = self.selection.primary();
+        self.inspector.inspect(primary.map(inspector_key));
+
+        if self
+            .picking
+            .as_ref()
+            .is_some_and(|pick| Some(pick.subject) != primary)
+        {
+            self.picking = None;
+        }
+    }
+
+    /// Seçili çizimleri siler. Örnek veri katmanlarının öğeleri silinmez.
+    fn delete_selection(&mut self) {
+        if self.selection.is_empty() {
+            self.log("Silinecek seçili öğe yok.");
+            return;
+        }
+
+        let (drawings, others): (Vec<FeatureRef>, Vec<FeatureRef>) = self
+            .selection
+            .iter()
+            .partition(|item| item.layer == DRAWING_LAYER);
+
+        if drawings.is_empty() {
             self.log("Yalnızca Çizimler katmanındaki öğeler silinebilir.");
             return;
         }
 
-        if let Some(layer) = self.layers.get_mut(DRAWING_LAYER)
-            && selection.feature < layer.features.len()
+        if let Some(layer) = self.layers.get_mut(DRAWING_LAYER) {
+            for drawing in &drawings {
+                layer.remove(drawing.id);
+            }
+        }
+
+        self.selection.retain(|item| item.layer != DRAWING_LAYER);
+        self.hover = None;
+        self.sync_inspector();
+
+        let mut output = format!("{} çizim silindi.", drawings.len());
+
+        if !others.is_empty() {
+            output.push_str(&format!(
+                " Diğer katmanlardaki {} öğe silinmedi: yalnızca çizimler silinebilir.",
+                others.len()
+            ));
+        }
+
+        self.log(output);
+    }
+
+    // --- Öznitelikler ----------------------------------------------------
+
+    /// Nesne inceleyicideki değişikliği birincil öğeye uygular.
+    fn set_attribute(&mut self, field: usize, value: Value) {
+        if let Some(subject) = self.selection.primary() {
+            self.set_value(subject, field, value);
+        }
+    }
+
+    /// Öğenin alanını değiştirir. Alan salt okunursa ya da değer alanın
+    /// kısıtlarına uymuyorsa değiştirmez ve nedenini komut satırına yazar.
+    fn set_value(&mut self, subject: FeatureRef, field: usize, value: Value) -> bool {
+        let Some(definition) = self
+            .layers
+            .get(subject.layer)
+            .and_then(|layer| layer.schema.get(field))
+        else {
+            return false;
+        };
+
+        let check = if definition.editable {
+            definition.validate(&value)
+        } else {
+            Err("Bu alan salt okunur.".to_owned())
+        };
+
+        if let Err(error) = check {
+            let name = definition.name.clone();
+            self.log(format!("{name}: {error}"));
+            return false;
+        }
+
+        self.layers
+            .get_mut(subject.layer)
+            .and_then(|layer| layer.feature_mut(subject.id))
+            .and_then(|feature| feature.values.get_mut(field))
+            .map(|slot| *slot = value)
+            .is_some()
+    }
+
+    /// Başvuru alanının değerini haritadan seçmeye başlar (varlık seçici).
+    fn start_pick(&mut self, field: usize) {
+        let pick = self.selection.primary().and_then(|subject| {
+            let (layer, _) = subject.resolve(&self.layers)?;
+            let definition = layer.schema.get(field)?;
+            let FieldKind::Object { target } = &definition.kind else {
+                return None;
+            };
+            let index = self.layers.iter().position(|layer| &layer.name == target)?;
+
+            Some((subject, index, definition.name.clone(), target.clone()))
+        });
+
+        let Some((subject, target, name, target_name)) = pick else {
+            self.inspector.stop_picking();
+            return;
+        };
+
+        // Tıklamalar yalnızca Seç ve Kaydır araçlarında seçimdir.
+        if self.tool.takes_points() {
+            self.tool = Tool::Select;
+            self.draft.clear();
+            self.measurement.clear();
+        }
+
+        if let Some(layer) = self.layers.get_mut(target)
+            && !layer.visible
         {
-            let removed = layer.features.remove(selection.feature);
-            self.selection = None;
-            self.hover = None;
-            self.log(format!("{} silindi.", removed.name));
+            layer.visible = true;
+            self.log(format!("{target_name} katmanı gösterildi."));
+        }
+
+        self.picking = Some(Pick {
+            subject,
+            field,
+            target,
+            prompt: format!("{target_name} katmanından bir öğe seçin"),
+        });
+        self.hover = None;
+        self.log(format!(
+            "{name}: haritada {target_name} katmanından bir öğe seçin. İptal için Esc."
+        ));
+    }
+
+    /// Haritadan seçimi tıklanan öğeyle tamamlar; hedef katmanda öğe yoksa
+    /// seçim sürer.
+    fn complete_pick(&mut self, point: Point) {
+        let Some(pick) = self.picking.clone() else {
+            return;
+        };
+
+        let Some(hit) = query::hit_test_in(&self.layers, pick.target, &self.viewport, point) else {
+            let target = self
+                .layers
+                .get(pick.target)
+                .map_or("", |layer| layer.name.as_str());
+            self.log(format!("Tıklanan yerde {target} öğesi yok."));
+            return;
+        };
+
+        self.cancel_pick();
+
+        if self.set_value(pick.subject, pick.field, Value::Object(hit.id)) {
+            let field = pick
+                .subject
+                .resolve(&self.layers)
+                .and_then(|(layer, _)| layer.schema.get(pick.field))
+                .map_or_else(String::new, |field| field.name.clone());
+            let chosen = hit
+                .resolve(&self.layers)
+                .map_or_else(String::new, |(layer, feature)| layer.label(feature));
+
+            self.log(format!("{field}: {chosen} seçildi."));
+        }
+    }
+
+    fn cancel_pick(&mut self) {
+        self.picking = None;
+        self.inspector.stop_picking();
+    }
+
+    // --- Öznitelik tablosu ve sorgular -----------------------------------
+
+    /// Aktif katmanın tablo ayarları.
+    pub(crate) fn active_table(&self) -> Option<&TableView> {
+        self.tables.get(self.active_layer)
+    }
+
+    /// Tabloda görünen satırlar, görünen sırayla.
+    pub(crate) fn table_rows(&self) -> Vec<FeatureRef> {
+        self.active_table().map_or_else(Vec::new, |table| {
+            table.rows(&self.layers, self.active_layer, &self.selection)
+        })
+    }
+
+    /// Filtreye ve aramaya uyan satırlar, seçimden bağımsız.
+    fn matching_rows(&self) -> Vec<FeatureRef> {
+        self.active_table().map_or_else(Vec::new, |table| {
+            table.matching(&self.layers, self.active_layer)
+        })
+    }
+
+    /// Sorgu penceresini açar. Filtrede mevcut filtreyle, seçimde tek boş
+    /// koşulla başlar.
+    fn open_query(&mut self, purpose: QueryPurpose, layer: usize) {
+        let Some(schema) = self.layers.get(layer).map(|layer| &layer.schema) else {
+            return;
+        };
+
+        let current = match purpose {
+            QueryPurpose::Filter => self
+                .tables
+                .get(layer)
+                .map(|table| table.filter.clone())
+                .filter(|filter| !filter.is_empty()),
+            QueryPurpose::Select => None,
+        };
+
+        self.query = Some(QueryDialog {
+            purpose,
+            layer,
+            query: current.unwrap_or_else(|| starter_query(schema)),
+            mode: SelectionMode::New,
+        });
+        self.app_menu_open = false;
+        self.help_open = false;
+    }
+
+    /// Sorgu penceresini uygular: eşleşen öğeleri seçer ya da tabloyu
+    /// filtreler.
+    fn apply_query(&mut self) {
+        let Some(dialog) = self.query.take() else {
+            return;
+        };
+
+        let Some(layer) = self.layers.get(dialog.layer) else {
+            return;
+        };
+
+        if !dialog.query.errors(&layer.schema).is_empty() {
+            self.query = Some(dialog);
+            return;
+        }
+
+        let name = layer.name.clone();
+        let description = match dialog.query.describe(&layer.schema) {
+            description if description.is_empty() => "bütün kayıtlar".to_owned(),
+            description => description,
+        };
+
+        match dialog.purpose {
+            QueryPurpose::Select => {
+                let found: Vec<FeatureRef> = layer
+                    .features
+                    .iter()
+                    .filter(|feature| dialog.query.matches(&layer.schema, &feature.values))
+                    .map(|feature| FeatureRef::new(dialog.layer, feature.id))
+                    .collect();
+                let count = found.len();
+
+                self.selection.apply(dialog.mode, found);
+                self.active_layer = dialog.layer;
+                self.sync_inspector();
+                self.log(format!(
+                    "Öznitelikle seç, {name}: {description}. {count} öğe eşleşti; {} öğe seçili.",
+                    self.selection.len()
+                ));
+            }
+            QueryPurpose::Filter => {
+                let cleared = dialog.query.is_empty();
+
+                if let Some(table) = self.tables.get_mut(dialog.layer) {
+                    table.filter = dialog.query;
+                }
+
+                self.active_layer = dialog.layer;
+                self.table_open = true;
+                self.log(if cleared {
+                    format!("{name} tablosunun filtresi kaldırıldı.")
+                } else {
+                    format!("{name} tablosu filtrelendi: {description}.")
+                });
+            }
         }
     }
 
@@ -377,19 +929,6 @@ impl Showcase {
     fn zoom(&mut self, delta: f64) {
         let anchor = self.viewport.center_point();
         self.viewport.zoom_by(delta, anchor);
-    }
-
-    /// Seçili öğeyi görünümün ortasına getirir; büyük öğeyi sınırlarına
-    /// sığdırır, noktaya sabit bir yakınlaştırmayla odaklanır.
-    fn focus_selection(&mut self) {
-        let bounds = self
-            .selection
-            .and_then(|selection| selection.resolve(&self.layers))
-            .and_then(|(_, feature)| feature.bounds());
-
-        if let Some(bounds) = bounds {
-            self.viewport.focus(bounds, 140.0, 12.0);
-        }
     }
 
     fn set_all_layers_visible(&mut self, visible: bool) {
@@ -402,6 +941,27 @@ impl Showcase {
         } else {
             "Tüm katmanlar gizlendi."
         });
+    }
+
+    /// Esc: önce açık menüyü, pencereyi ya da haritadan seçimi kapatır;
+    /// sonra yarım çizimi bitirir; en son ölçümü ve seçimi temizler.
+    fn escape(&mut self) {
+        if self.app_menu_open {
+            self.app_menu_open = false;
+        } else if self.query.is_some() {
+            self.query = None;
+        } else if self.help_open {
+            self.help_open = false;
+        } else if self.picking.is_some() {
+            self.cancel_pick();
+            self.log("Haritadan seçim iptal edildi.");
+        } else if !self.draft.is_empty() {
+            self.finish_draft();
+        } else {
+            self.measurement.clear();
+            self.selection.clear();
+            self.sync_inspector();
+        }
     }
 
     // --- Ayarlar ---------------------------------------------------------
@@ -437,7 +997,9 @@ impl Showcase {
         if command == AppCommand::New {
             self.viewport.center = INITIAL_CENTER;
             self.viewport.zoom = INITIAL_ZOOM;
-            self.selection = None;
+            self.selection.clear();
+            self.sync_inspector();
+            self.cancel_pick();
             self.measurement.clear();
             self.draft.clear();
             self.log("Yeni: görünüm, seçim ve ölçüm sıfırlandı.");
@@ -471,11 +1033,14 @@ impl Showcase {
                 self.log("Görünüm sıfırlandı.");
             }
             Command::FocusSelection => {
-                if self.selection.is_some() {
-                    self.focus_selection();
-                    self.log("Seçili öğeye odaklanıldı.");
-                } else {
+                if self.selection.is_empty() {
                     self.log("Odaklanacak seçili öğe yok.");
+                } else {
+                    let _ = self.update(Message::FocusSelection);
+                    self.log(format!(
+                        "Seçili {} öğeye odaklanıldı.",
+                        self.selection.len()
+                    ));
                 }
             }
             Command::Toggle(setting) => return self.update(Message::Toggle(setting)),
@@ -495,17 +1060,24 @@ impl Showcase {
             Command::ActiveLayer => {
                 self.log(format!("Aktif katman: {}", self.active_layer_name()));
             }
-            Command::Delete => {
-                if self.selection.is_some() {
-                    self.delete_selection();
+            Command::SelectAll => self.select_all(),
+            Command::InvertSelection => self.invert_selection(),
+            Command::AttributeTable => {
+                self.table_open = !self.table_open;
+                self.log(if self.table_open {
+                    "Öznitelik tablosu açıldı."
                 } else {
-                    self.log("Silinecek seçili öğe yok.");
-                }
+                    "Öznitelik tablosu kapatıldı."
+                });
             }
+            Command::SelectByAttributes => self.open_query(QueryPurpose::Select, self.active_layer),
+            Command::Filter => self.open_query(QueryPurpose::Filter, self.active_layer),
+            Command::Delete => self.delete_selection(),
             Command::Clear => {
                 self.draft.clear();
                 self.measurement.clear();
-                self.selection = None;
+                self.selection.clear();
+                self.sync_inspector();
                 self.log("Seçim ve ölçüm temizlendi.");
             }
             Command::New => self.run_app_command(AppCommand::New),
@@ -534,22 +1106,67 @@ impl Showcase {
     }
 }
 
-/// CAD kısayolları: Esc, Delete, F1 (yardım), F3 (yakalama), F7 (ızgara).
-fn keyboard_shortcut(event: Event, _status: event::Status, _window: window::Id) -> Option<Message> {
-    let Event::Keyboard(keyboard::Event::KeyPressed {
-        key: keyboard::Key::Named(key),
-        ..
-    }) = event
-    else {
+/// Değiştirici tuşlara göre seçim yöntemi: Shift ekler, Ctrl çıkarır.
+fn selection_mode(modifiers: Modifiers) -> SelectionMode {
+    if modifiers.shift() {
+        SelectionMode::Add
+    } else if modifiers.command() {
+        SelectionMode::Remove
+    } else {
+        SelectionMode::New
+    }
+}
+
+/// Nesne inceleyicinin öğe anahtarı: katman sırası ve öğe numarası.
+fn inspector_key(reference: FeatureRef) -> u64 {
+    ((reference.layer as u64) << 48) | reference.id.0
+}
+
+/// Öğelerin tamamını kapsayan kutu.
+fn bounds_of(layers: &[Layer], references: impl IntoIterator<Item = FeatureRef>) -> Option<Bounds> {
+    references
+        .into_iter()
+        .filter_map(|reference| reference.resolve(layers))
+        .filter_map(|(_, feature)| feature.bounds())
+        .reduce(Bounds::union)
+}
+
+/// Tek, boş koşullu sorgu; pencere boş açılmasın.
+fn starter_query(schema: &[Field]) -> Query {
+    let mut query = Query::default();
+    query.apply(Edit::Add, schema);
+    query
+}
+
+/// Klavye: değiştirici tuşlar her zaman izlenir; kısayollar yalnızca olayı
+/// bir bileşen (ör. metin girişi) kullanmadıysa çalışır.
+fn keyboard_event(event: Event, status: event::Status, _window: window::Id) -> Option<Message> {
+    let Event::Keyboard(event) = event else {
         return None;
     };
 
+    match event {
+        keyboard::Event::ModifiersChanged(modifiers) => Some(Message::ModifiersChanged(modifiers)),
+        keyboard::Event::KeyPressed { key, modifiers, .. } if status == event::Status::Ignored => {
+            shortcut(key.as_ref(), modifiers)
+        }
+        _ => None,
+    }
+}
+
+/// CAD kısayolları: Esc, Delete, Ctrl+A (tümünü seç), F1 (yardım), F3
+/// (yakalama), F7 (ızgara).
+fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
+    use keyboard::Key;
+    use keyboard::key::Named;
+
     match key {
-        keyboard::key::Named::Escape => Some(Message::Escape),
-        keyboard::key::Named::Delete => Some(Message::DeleteSelection),
-        keyboard::key::Named::F1 => Some(Message::HelpToggled),
-        keyboard::key::Named::F3 => Some(Message::Toggle(Setting::Snap)),
-        keyboard::key::Named::F7 => Some(Message::Toggle(Setting::Grid)),
+        Key::Named(Named::Escape) => Some(Message::Escape),
+        Key::Named(Named::Delete) => Some(Message::DeleteSelection),
+        Key::Named(Named::F1) => Some(Message::HelpToggled),
+        Key::Named(Named::F3) => Some(Message::Toggle(Setting::Snap)),
+        Key::Named(Named::F7) => Some(Message::Toggle(Setting::Grid)),
+        Key::Character("a" | "A") if modifiers.command() => Some(Message::SelectAll),
         _ => None,
     }
 }

@@ -13,6 +13,12 @@ cargo doc -p kentos-rc --open   # API belgeleri
 
 ```
 src/                     kentos-rc kütüphanesi
+├── attribute/           öznitelik veri modeli (arayüzden bağımsız)
+│   ├── value.rs         Value (metin, sayı, evet/hayır, tarih, saat, başvuru), ObjectId
+│   ├── field.rs         Field ve FieldKind: tür, birim, zorunluluk, kodlu değer, aralık
+│   ├── query.rs         Query: "öznitelikle seç" ve tablo filtresi koşulları
+│   ├── time.rs          Date, Time, DateTime (harici bağımlılık olmadan)
+│   └── text.rs, number.rs  Türkçe arama, sıralama ve sayı yazımı
 ├── theme/               renk belirteçleri (Tokens), tip ölçeği, iced teması
 ├── style/               iced stil fonksiyonları: button, container, text, field
 ├── icon/                16×16 ızgarada çizilmiş vektör ikon seti
@@ -21,8 +27,12 @@ src/                     kentos-rc kütüphanesi
 │   ├── ribbon/          şerit: sekmeler, gruplar, düğmeler, alanlar
 │   ├── app_menu.rs      uygulama menüsü (Office "Dosya" menüsü gibi)
 │   ├── dock.rs          yan panel yuvası ve başlıklı paneller
-│   ├── table.rs         veri tablosu
-│   ├── property_grid.rs özellik ızgarası
+│   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
+│   ├── inspector.rs     düzenlenebilir nesne inceleyici (ArcGIS öznitelik bölmesi)
+│   ├── query_builder.rs sorgu oluşturucu
+│   ├── toolbar.rs       araç çubuğu: arama, eylemler, anahtarlar
+│   ├── segmented.rs     parçalı seçim
+│   ├── property_grid.rs salt okunur özellik ızgarası
 │   ├── command_line.rs  CAD komut satırı
 │   ├── status_bar.rs    durum çubuğu ve anahtarlar
 │   ├── navigation_bar.rs, dialog.rs, overlay.rs, tip.rs
@@ -30,7 +40,8 @@ src/                     kentos-rc kütüphanesi
     ├── projection.rs    LonLat, Bounds, Viewport (Web Mercator)
     ├── feature.rs       Geometry, Feature, Layer, FeatureRef
     ├── measure.rs       jeodezik mesafe, Measurement
-    ├── query.rs         öğe seçimi (hit test) ve nesne yakalama
+    ├── query.rs         öğe seçimi (tıklama, pencere, kesişen) ve nesne yakalama
+    ├── selection.rs     çoklu seçim ve seçim yöntemleri (yeni, ekle, çıkar, kesişim)
     ├── tool.rs          araçlar
     ├── draft.rs         çizim araçlarının durum makinesi
     ├── format.rs        Türkçe koordinat, mesafe ve sayı yazımı
@@ -41,9 +52,34 @@ examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
 ├── app.rs               durum ve güncelleme mantığı
 ├── message.rs           mesajlar, sekmeler, menü komutları
 ├── command.rs           komut satırı çözümleyicisi
-├── sample.rs            örnek veri
+├── gallery.rs           galeri sayfaları ve örneklerin durumu
+├── table.rs             öznitelik tablosunun görünüm modeli: filtre, arama, sıralama
+├── sample.rs            örnek veri ve öznitelik şemaları
 └── view/                bileşenlerin yerleşimi
+    └── gallery/         bileşen kataloğu (Galeri sekmesi)
 ```
+
+Vitrindeki **Galeri** sekmesi kütüphanenin kataloğudur: renkler, yazı, ikonlar,
+düğmeler, veri bileşenleri, çerçeve, öznitelikler ve CBS/CAD bileşenleri; her
+biri canlı örneği, modül yolu ve kullanım koduyla.
+
+## Öznitelikler ve seçim
+
+Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
+
+- **Seçim.** Seç aracında tıklama öğeyi seçer; soldan sağa sürüklemek pencere
+  seçimi (tamamı içeride kalanlar), sağdan sola sürüklemek kesişen seçimdir.
+  Shift seçime ekler, Ctrl seçimden çıkarır.
+- **Öznitelik tablosu.** Model alanının altında aktif katmanın kayıtları:
+  arama, filtre, "yalnızca seçili", sütuna göre sıralama. Satıra tıklamak seçer;
+  Shift aralık seçer, Ctrl satırı ekler ya da çıkarır.
+- **Öznitelikle seç ve filtre.** Sorgu oluşturucuyla koşullar kurulur; seçimde
+  yeni seçim, ekle, çıkar ve kesişim yöntemleri vardır. Eşleşen kayıt sayısı
+  yazarken görünür.
+- **Nesne inceleyici.** Seçimin birincil öğesi türlerine göre düzenlenir:
+  metin, tam sayı, ondalık, evet/hayır, kodlu değer, aralık, tarih, saat, tarih
+  ve saat, nesne başvurusu. Başvuru alanı aranabilir listeden (nesne seçici) ya
+  da haritada tıklanarak (varlık seçici) doldurulur.
 
 ## İlkeler
 
@@ -59,8 +95,13 @@ examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
   (projeksiyon, ölçüm, sorgu, çizim durum makinesi) arayüz olmadan test edilir.
 - **Model alanı durum tutmaz.** Görünüm, seçim ve ölçüm uygulamanındır; model
   alanı olanları `model_space::Event` olarak bildirir.
+- **Düzenleyiciler değeri değiştirmez.** Nesne inceleyici ve sorgu oluşturucu
+  değişikliği mesaj olarak bildirir (`inspector::Action`, `query::Edit`);
+  değeri uygulama kendi verisine yazar.
+- **Türkçe öncelikli.** Sayılar 15.840.900 ve 1.234,5; tarihler 24.09.2026;
+  arama Türkçe harf ve büyük/küçük harf duyarsız; sıralama Türk alfabesine göre.
 
-## Örnek
+## Örnekler
 
 ```rust
 use kentos_rc::icon::Icon;
@@ -78,4 +119,21 @@ Ribbon::new()
                     .push(ribbon::Button::small(Icon::ZoomOut, "Uzaklaştır").on_press(Message::ZoomOut)),
             ),
     )
+```
+
+```rust
+use kentos_rc::widget::{Inspector, inspector};
+
+// Görünüm: alanlar türlerine göre düzenlenir.
+Inspector::new(&self.inspector, Message::Inspector)
+    .category("Öznitelikler")
+    .field(0, &layer.schema[0], feature.value(0))
+    .object(4, &layer.schema[4], feature.value(4), candidates, true)
+
+// Güncelleme: değişiklik uygulamanın verisine yazılır.
+Message::Inspector(event) => match self.inspector.update(event) {
+    Some(inspector::Action::Change { id, value }) => self.set_attribute(id, value),
+    Some(inspector::Action::Pick(id)) => self.start_picking(id),
+    Some(inspector::Action::CancelPick) | None => {}
+}
 ```

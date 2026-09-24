@@ -1,10 +1,16 @@
 //! Vitrin uygulamasının örnek verisi: Türkiye'nin şehirleri, önemli
 //! yerleri, ana yolları, nehirleri ve İstanbul ilçeleri (basitleştirilmiş).
+//!
+//! Her katmanın bir öznitelik şeması vardır; alanlar kentos-rc'nin bütün
+//! alan türlerini kullanır. Nesne başvuruları (en yakın şehir, yolların
+//! başlangıç ve bitiş şehri) veriden hesaplanır. Bilinmeyen değerler (hız
+//! sınırı, bakım tarihi, açılış saati) boş bırakılmıştır; nesne inceleyiciyle
+//! doldurulabilir.
 
 use iced::Color;
 
-use kentos_rc::spatial::format;
-use kentos_rc::spatial::{Feature, Geometry, Layer, LonLat};
+use kentos_rc::attribute::{Field, ObjectId, Value};
+use kentos_rc::spatial::{Feature, Geometry, Layer, LonLat, measure};
 
 const DRAWING_COLOR: Color = Color::from_rgb(0.55, 0.86, 0.26);
 const CITY_COLOR: Color = Color::from_rgb(0.96, 0.35, 0.38);
@@ -13,65 +19,259 @@ const ROAD_COLOR: Color = Color::from_rgb(0.96, 0.62, 0.25);
 const RIVER_COLOR: Color = Color::from_rgb(0.29, 0.62, 0.96);
 const DISTRICT_COLOR: Color = Color::from_rgb(0.18, 0.56, 0.60);
 
+/// Şehirler katmanının adı; nesne başvuruları bu katmanı hedefler.
+pub const CITIES: &str = "Şehirler";
+
+/// Çizim araçlarının ürettiği geometri türleri.
+pub const DRAWING_KINDS: [&str; 6] = [
+    "Çizgi",
+    "Çoklu çizgi",
+    "Alan",
+    "Dikdörtgen",
+    "Daire",
+    "Nokta",
+];
+
+const REGIONS: [&str; 7] = [
+    "Marmara",
+    "Ege",
+    "Akdeniz",
+    "İç Anadolu",
+    "Karadeniz",
+    "Doğu Anadolu",
+    "Güneydoğu",
+];
+
 /// Çizim araçlarının geometri eklediği, boş başlayan katman.
 pub fn drawing_layer() -> Layer {
     Layer::lines("Çizimler", DRAWING_COLOR)
         .fill_alpha(0.18)
         .stroke_width(1.8)
+        .with_schema([
+            Field::text("Ad").required(),
+            Field::choice("Tür", DRAWING_KINDS).read_only(),
+            Field::choice("Durum", ["Taslak", "Onaylandı"]),
+            Field::datetime("Oluşturma").read_only(),
+            Field::text("Not"),
+        ])
 }
 
 /// Örnek veri katmanları.
 pub fn layers() -> Vec<Layer> {
+    let cities = Layer::points(CITIES, CITY_COLOR)
+        .labels_from(5.0)
+        .with_schema([
+            Field::text("Ad").required(),
+            Field::choice("Bölge", REGIONS),
+            Field::integer("Nüfus").unit("kişi"),
+            Field::integer("Plaka").between(1, 81),
+            Field::boolean("Kıyı şehri"),
+            Field::text("Not"),
+        ])
+        .with_features(cities());
+
+    let centers: Vec<(ObjectId, LonLat)> = cities
+        .features
+        .iter()
+        .filter_map(|feature| match feature.geometry {
+            Geometry::Point(location) => Some((feature.id, location)),
+            _ => None,
+        })
+        .collect();
+
+    // Konuma en yakın şehir.
+    let nearest = |location: LonLat| -> Value {
+        centers
+            .iter()
+            .min_by(|(_, a), (_, b)| {
+                measure::haversine_meters(*a, location)
+                    .total_cmp(&measure::haversine_meters(*b, location))
+            })
+            .map_or(Value::Null, |(id, _)| Value::Object(*id))
+    };
+
+    let mut places = places_of_interest();
+
+    for place in &mut places {
+        if let Geometry::Point(location) = place.geometry {
+            place.values.push(nearest(location));
+        }
+    }
+
+    let mut roads = roads();
+
+    for road in &mut roads {
+        let ends = (
+            road.geometry.vertices().first().copied(),
+            road.geometry.vertices().last().copied(),
+        );
+
+        if let (Some(start), Some(end)) = ends {
+            road.values
+                .extend([Value::Null, nearest(start), nearest(end)]);
+        }
+    }
+
     vec![
-        Layer::points("Şehirler", CITY_COLOR)
-            .labels_from(5.0)
-            .with_features(cities()),
+        cities,
         Layer::points("Önemli Yerler", POI_COLOR)
             .labels_from(9.5)
-            .with_features(places_of_interest()),
+            .with_schema([
+                Field::text("Ad").required(),
+                Field::choice(
+                    "Kategori",
+                    [
+                        "Tarihi yapı",
+                        "Anıt",
+                        "Saray",
+                        "Köprü",
+                        "Doğal alan",
+                        "Antik kent",
+                        "Manastır",
+                        "Kıyı",
+                    ],
+                ),
+                Field::object("En yakın şehir", CITIES),
+                Field::time("Açılış"),
+                Field::text("Not"),
+            ])
+            .with_features(places),
         Layer::lines("Karayolları", ROAD_COLOR)
             .stroke_width(2.2)
             .opacity(0.95)
-            .with_features(roads()),
+            .with_schema([
+                Field::text("Ad").required(),
+                Field::choice("Tür", ["Otoyol", "Devlet yolu", "Bulvar"]),
+                Field::choice("Durum", ["Hizmette", "Yapım aşamasında", "Planlanan"]),
+                Field::range("Hız sınırı", 30.0, 140.0, 10.0).unit("km/sa"),
+                Field::object("Başlangıç şehri", CITIES),
+                Field::object("Bitiş şehri", CITIES),
+                Field::date("Son bakım"),
+            ])
+            .with_features(roads),
         Layer::lines("Nehirler", RIVER_COLOR)
             .stroke_width(1.6)
             .opacity(0.95)
+            .with_schema([
+                Field::text("Ad").required(),
+                Field::choice("Tür", ["Nehir", "Çay"]),
+                Field::text("Not"),
+            ])
             .with_features(rivers()),
         Layer::polygons("İlçeler", DISTRICT_COLOR)
             .opacity(0.9)
+            .with_schema([
+                Field::text("Ad").required(),
+                Field::text("İl"),
+                Field::real("Yaklaşık alan", 1).unit("km²"),
+                Field::text("Not"),
+            ])
             .with_features(districts()),
     ]
 }
 
 fn cities() -> Vec<Feature> {
-    const CITIES: &[(&str, f64, f64, f64, &str, u16)] = &[
-        ("İstanbul", 28.9784, 41.0082, 15_840_900.0, "Marmara", 34),
-        ("Ankara", 32.8597, 39.9334, 5_782_000.0, "İç Anadolu", 6),
-        ("İzmir", 27.1428, 38.4237, 4_479_500.0, "Ege", 35),
-        ("Bursa", 29.0610, 40.1885, 3_214_600.0, "Marmara", 16),
-        ("Antalya", 30.7133, 36.8969, 2_696_000.0, "Akdeniz", 7),
-        ("Konya", 32.4932, 37.8746, 2_296_000.0, "İç Anadolu", 42),
-        ("Adana", 35.3213, 37.0000, 2_270_000.0, "Akdeniz", 1),
-        ("Gaziantep", 37.3825, 37.0662, 2_164_000.0, "Güneydoğu", 27),
-        ("Şanlıurfa", 38.7955, 37.1591, 2_213_000.0, "Güneydoğu", 63),
-        ("Mersin", 34.6415, 36.8000, 1_916_000.0, "Akdeniz", 33),
-        ("Diyarbakır", 40.2306, 37.9144, 1_818_000.0, "Güneydoğu", 21),
-        ("Kayseri", 35.4881, 38.7312, 1_441_000.0, "İç Anadolu", 38),
-        ("Samsun", 36.3300, 41.2867, 1_371_000.0, "Karadeniz", 55),
-        ("Trabzon", 39.7168, 41.0027, 816_000.0, "Karadeniz", 61),
-        ("Erzurum", 41.2769, 39.9043, 749_000.0, "Doğu Anadolu", 25),
-        ("Van", 43.3800, 38.4942, 1_141_000.0, "Doğu Anadolu", 65),
+    const CITIES: &[(&str, f64, f64, i64, &str, i64, bool)] = &[
+        (
+            "İstanbul",
+            28.9784,
+            41.0082,
+            15_840_900,
+            "Marmara",
+            34,
+            true,
+        ),
+        (
+            "Ankara",
+            32.8597,
+            39.9334,
+            5_782_000,
+            "İç Anadolu",
+            6,
+            false,
+        ),
+        ("İzmir", 27.1428, 38.4237, 4_479_500, "Ege", 35, true),
+        ("Bursa", 29.0610, 40.1885, 3_214_600, "Marmara", 16, true),
+        ("Antalya", 30.7133, 36.8969, 2_696_000, "Akdeniz", 7, true),
+        (
+            "Konya",
+            32.4932,
+            37.8746,
+            2_296_000,
+            "İç Anadolu",
+            42,
+            false,
+        ),
+        ("Adana", 35.3213, 37.0000, 2_270_000, "Akdeniz", 1, true),
+        (
+            "Gaziantep",
+            37.3825,
+            37.0662,
+            2_164_000,
+            "Güneydoğu",
+            27,
+            false,
+        ),
+        (
+            "Şanlıurfa",
+            38.7955,
+            37.1591,
+            2_213_000,
+            "Güneydoğu",
+            63,
+            false,
+        ),
+        ("Mersin", 34.6415, 36.8000, 1_916_000, "Akdeniz", 33, true),
+        (
+            "Diyarbakır",
+            40.2306,
+            37.9144,
+            1_818_000,
+            "Güneydoğu",
+            21,
+            false,
+        ),
+        (
+            "Kayseri",
+            35.4881,
+            38.7312,
+            1_441_000,
+            "İç Anadolu",
+            38,
+            false,
+        ),
+        ("Samsun", 36.3300, 41.2867, 1_371_000, "Karadeniz", 55, true),
+        ("Trabzon", 39.7168, 41.0027, 816_000, "Karadeniz", 61, true),
+        (
+            "Erzurum",
+            41.2769,
+            39.9043,
+            749_000,
+            "Doğu Anadolu",
+            25,
+            false,
+        ),
+        (
+            "Van",
+            43.3800,
+            38.4942,
+            1_141_000,
+            "Doğu Anadolu",
+            65,
+            false,
+        ),
     ];
 
     CITIES
         .iter()
-        .map(|&(name, lon, lat, population, region, plate)| {
-            Feature::new(name, Geometry::Point(LonLat::new(lon, lat)))
-                .with("Tür", "Şehir")
-                .with("Bölge", region)
-                .with("Nüfus (2024)", format::integer(population))
-                .with("Plaka", format!("{plate:02}"))
-                .with("Merkez", format!("{lat:.4}, {lon:.4}"))
+        .map(|&(name, lon, lat, population, region, plate, coastal)| {
+            Feature::new(Geometry::Point(LonLat::new(lon, lat))).with_values([
+                Value::from(name),
+                Value::from(region),
+                Value::Integer(population),
+                Value::Integer(plate),
+                Value::Bool(coastal),
+            ])
         })
         .collect()
 }
@@ -93,27 +293,27 @@ fn places_of_interest() -> Vec<Feature> {
     PLACES
         .iter()
         .map(|&(name, lon, lat, category)| {
-            Feature::new(name, Geometry::Point(LonLat::new(lon, lat)))
-                .with("Tür", "Görülecek yer")
-                .with("Kategori", category)
-                .with("Konum", format!("{lat:.4}, {lon:.4}"))
+            Feature::new(Geometry::Point(LonLat::new(lon, lat)))
+                .with_values([Value::from(name), Value::from(category)])
         })
         .collect()
 }
 
+/// Ad ve tür değerleriyle bir çizgi öğesi.
 fn line_feature(name: &str, kind: &str, path: Vec<LonLat>) -> Feature {
-    let geometry = Geometry::Line(path);
-    let length = format::distance(geometry.length_meters());
+    Feature::new(Geometry::Line(path)).with_values([Value::from(name), Value::from(kind)])
+}
 
-    Feature::new(name, geometry)
-        .with("Tür", kind)
-        .with("Uzunluk", length)
-        .with("Kaynak", "Örnek veri (basitleştirilmiş)")
+/// Hizmetteki bir yol; hız sınırı ve şehirler `layers` içinde eklenir.
+fn road(name: &str, kind: &str, path: Vec<LonLat>) -> Feature {
+    let mut feature = line_feature(name, kind, path);
+    feature.values.push(Value::from("Hizmette"));
+    feature
 }
 
 fn roads() -> Vec<Feature> {
     vec![
-        line_feature(
+        road(
             "O-1 (İstanbul – Edirne)",
             "Otoyol",
             coords(&[
@@ -126,7 +326,7 @@ fn roads() -> Vec<Feature> {
                 (26.550, 41.680),
             ]),
         ),
-        line_feature(
+        road(
             "O-4 / TEM (İstanbul – Ankara)",
             "Otoyol",
             coords(&[
@@ -140,7 +340,7 @@ fn roads() -> Vec<Feature> {
                 (32.860, 39.933),
             ]),
         ),
-        line_feature(
+        road(
             "O-31 (İzmir – Aydın)",
             "Otoyol",
             coords(&[
@@ -150,7 +350,7 @@ fn roads() -> Vec<Feature> {
                 (28.000, 37.850),
             ]),
         ),
-        line_feature(
+        road(
             "D-400 Akdeniz Sahil Yolu",
             "Devlet yolu",
             coords(&[
@@ -162,7 +362,7 @@ fn roads() -> Vec<Feature> {
                 (34.642, 36.800),
             ]),
         ),
-        line_feature(
+        road(
             "O-52 Güneydoğu Otoyolu",
             "Otoyol",
             coords(&[
@@ -173,7 +373,7 @@ fn roads() -> Vec<Feature> {
                 (37.383, 37.066),
             ]),
         ),
-        line_feature(
+        road(
             "D-010 Karadeniz Sahil Yolu",
             "Devlet yolu",
             coords(&[
@@ -188,7 +388,7 @@ fn roads() -> Vec<Feature> {
                 (41.277, 39.904),
             ]),
         ),
-        line_feature(
+        road(
             "D-100 / E-5 (İstanbul içi)",
             "Bulvar",
             coords(&[
@@ -316,11 +516,11 @@ fn districts() -> Vec<Feature> {
             let polygon = blob(lon, lat, radius, 7, index as u64 + 1);
             let area = std::f64::consts::PI * (radius * 111.0).powi(2) * 0.85;
 
-            Feature::new(name, Geometry::Polygon(polygon))
-                .with("Tür", "İlçe")
-                .with("İl", "İstanbul")
-                .with("Yaklaşık alan", format!("{} km²", format::pretty(area)))
-                .with("Merkez", format!("{lat:.3}, {lon:.3}"))
+            Feature::new(Geometry::Polygon(polygon)).with_values([
+                Value::from(name),
+                Value::from("İstanbul"),
+                Value::Real((area * 10.0).round() / 10.0),
+            ])
         })
         .collect()
 }

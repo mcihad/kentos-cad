@@ -1,34 +1,23 @@
 //! Koordinat, mesafe ve sayıların Türkçe yazımı.
+//!
+//! Sayılar binlik ayraç olarak nokta, ondalık ayırıcı olarak virgül kullanır
+//! (15.840.900, 346,71 km). Ondalık koordinatlar ise alışılmış biçimde
+//! noktayla yazılır ve virgülle ayrılır (41.00820, 28.97840).
 
 use super::LonLat;
+use crate::attribute::number;
 
-/// Tam sayıyı binlik ayraçlı yazar (15.840.900).
+/// Sayıyı yuvarlayıp binlik ayraçlı yazar (15.840.900).
 pub fn integer(value: f64) -> String {
-    let digits = format!("{value:.0}");
-    let (sign, digits) = match digits.strip_prefix('-') {
-        Some(rest) => ("-", rest),
-        None => ("", digits.as_str()),
-    };
-
-    let mut grouped = String::with_capacity(digits.len() + digits.len() / 3);
-
-    for (index, character) in digits.chars().enumerate() {
-        if index > 0 && (digits.len() - index) % 3 == 0 {
-            grouped.push('.');
-        }
-
-        grouped.push(character);
-    }
-
-    format!("{sign}{grouped}")
+    number::integer(value.round() as i64)
 }
 
 /// Mesafeyi okunaklı yazar: 1 km altında metre, üstünde iki ondalıklı km.
 pub fn distance(meters: f64) -> String {
     if meters >= 1_000.0 {
-        format!("{:.2} km", meters / 1_000.0)
+        format!("{} km", number::real(meters / 1_000.0, 2))
     } else {
-        format!("{meters:.0} m")
+        format!("{} m", number::integer(meters.round() as i64))
     }
 }
 
@@ -60,12 +49,12 @@ pub fn decimal(location: LonLat) -> String {
     format!("{:.5}, {:.5}", location.lat, location.lon)
 }
 
-/// Ondalık sayıyı gereksiz sıfırlar olmadan yazar (5, 2.5).
+/// Ondalık sayıyı gereksiz sıfırlar olmadan yazar (5, 2,5).
 pub fn pretty(value: f64) -> String {
     if (value - value.round()).abs() < 1e-9 {
-        format!("{value:.0}")
+        number::integer(value.round() as i64)
     } else {
-        format!("{value:.1}")
+        number::real(value, 1)
     }
 }
 
@@ -84,7 +73,10 @@ mod tests {
     #[test]
     fn distances_switch_to_kilometers() {
         assert_eq!(distance(950.0), "950 m");
-        assert_eq!(distance(1_500.0), "1.50 km");
+        assert_eq!(distance(1_500.0), "1,50 km");
+        assert_eq!(distance(346_710.0), "346,71 km");
+        assert_eq!(pretty(2.5), "2,5");
+        assert_eq!(pretty(-30.0), "-30");
     }
 
     #[test]

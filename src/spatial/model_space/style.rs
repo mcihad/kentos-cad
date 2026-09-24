@@ -33,6 +33,10 @@ pub struct Style {
     /// İmleç yanındaki bilgi kutuları.
     pub tag_background: Color,
     pub tag_text: Color,
+    /// Pencere seçimi (soldan sağa).
+    pub window: Color,
+    /// Kesişen seçim (sağdan sola).
+    pub crossing: Color,
 }
 
 impl Style {
@@ -54,6 +58,8 @@ impl Style {
         crosshair_small: hexa(0xd8dce1, 0.85),
         tag_background: hexa(0x1d1f23, 0.92),
         tag_text: hex(0xd8dce1),
+        window: hex(0x4c9be8),
+        crossing: hex(0x5cbf62),
     };
 
     pub const LIGHT: Self = Self {
@@ -74,6 +80,8 @@ impl Style {
         crosshair_small: hexa(0x1e2226, 0.8),
         tag_background: hexa(0xffffff, 0.95),
         tag_text: hex(0x1e2226),
+        window: hex(0x1b6fd0),
+        crossing: hex(0x2f9437),
     };
 
     /// Temanın koyu ya da aydınlık olmasına göre renkler.

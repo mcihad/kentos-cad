@@ -4,7 +4,7 @@
 //! ```ignore
 //! ModelSpace::new(self.viewport, &self.layers, Message::ModelSpace)
 //!     .tool(self.tool)
-//!     .selection(self.selection)
+//!     .selection(&self.selection)
 //!     .measurement(self.measurement.points())
 //!     .draft(self.draft.points(), drawing_color)
 //!     .view_cube(ViewCube::new(self.rotation))
@@ -16,10 +16,12 @@
 //! durumunu buna göre günceller.
 //!
 //! CAD programlarındaki gibi sistem imleci gizlenir, yerine artı imleç
-//! çizilir. Seç aracında imlecin ortasında seçim kutusu bulunur; nokta
-//! girişi alan araçlarda nesne yakalama işaretleri ve imleç yanında
-//! koordinat/mesafe kutuları gösterilir. Sol altta UCS simgesi ve ölçek
-//! çubuğu, sağ üstte ViewCube ve gezinme çubuğu yer alır.
+//! çizilir. Seç aracında imlecin ortasında seçim kutusu bulunur; sürüklemek
+//! seçim penceresi açar: soldan sağa pencere seçimi (tamamı içeride kalan
+//! öğeler), sağdan sola kesişen seçim (pencereye değen öğeler). Orta tuş her
+//! araçta gezinir. Nokta girişi alan araçlarda nesne yakalama işaretleri ve
+//! imleç yanında koordinat/mesafe kutuları gösterilir. Sol altta UCS simgesi
+//! ve ölçek çubuğu, sağ üstte ViewCube ve gezinme çubuğu yer alır.
 
 mod program;
 mod render;
@@ -27,13 +29,14 @@ mod style;
 
 pub use style::Style;
 
+use iced::keyboard::Modifiers;
 use iced::widget::{Column, canvas, container, stack};
 use iced::{Center, Color, Element, Fill, Point, Right, Size, Top, Vector};
 
 use program::{Chrome, Program};
 
 use super::view_cube::ViewCube;
-use super::{FeatureRef, Layer, LonLat, Tool, Viewport};
+use super::{Bounds, FeatureRef, Layer, LonLat, Selection, Tool, Viewport};
 use crate::widget::NavigationBar;
 
 /// Sağ üstteki ViewCube ve gezinme çubuğunun kenar boşluğu.
@@ -79,8 +82,19 @@ pub enum Event {
     Panned { delta: Vector, cursor: LonLat },
     /// Tekerlekle yakınlaştırma; `anchor` yerinde kalacak ekran noktasıdır.
     Zoomed { delta: f64, anchor: Point },
-    /// Seç ve Kaydır araçlarında tıklama.
-    Clicked(LonLat),
+    /// Seç ve Kaydır araçlarında tıklama; basılı değiştirici tuşlarla
+    /// (Shift seçime ekler, Ctrl çıkarır).
+    Clicked {
+        location: LonLat,
+        modifiers: Modifiers,
+    },
+    /// Seç aracında sürüklenen seçim penceresi. `crossing`: sağdan sola
+    /// sürüklendi, pencereye değen öğeler de seçilmeli.
+    BoxSelected {
+        bounds: Bounds,
+        crossing: bool,
+        modifiers: Modifiers,
+    },
     /// Ölç ve çizim araçlarında nokta girişi. Yakalama açıksa konum en
     /// yakın köşeye tutturulmuştur.
     PointPicked(LonLat),
@@ -93,12 +107,13 @@ pub struct ModelSpace<'a, Message> {
     viewport: Viewport,
     layers: &'a [Layer],
     tool: Tool,
-    selection: Option<FeatureRef>,
+    selection: Option<&'a Selection>,
     hover: Option<FeatureRef>,
     measurement: &'a [LonLat],
     draft: &'a [LonLat],
     draft_color: Option<Color>,
     options: Options,
+    prompt: Option<&'a str>,
     view_cube: Option<ViewCube>,
     navigation: Option<NavigationBar<'a, Message>>,
     on_event: Box<dyn Fn(Event) -> Message + 'a>,
@@ -120,6 +135,7 @@ impl<'a, Message: Clone + 'a> ModelSpace<'a, Message> {
             draft: &[],
             draft_color: None,
             options: Options::default(),
+            prompt: None,
             view_cube: None,
             navigation: None,
             on_event: Box::new(on_event),
@@ -131,9 +147,9 @@ impl<'a, Message: Clone + 'a> ModelSpace<'a, Message> {
         self
     }
 
-    /// Seçili öğe: vurgu rengiyle ve köşe tutamaçlarıyla çizilir.
-    pub fn selection(mut self, selection: Option<FeatureRef>) -> Self {
-        self.selection = selection;
+    /// Seçili öğeler: vurgu rengiyle ve köşe tutamaçlarıyla çizilir.
+    pub fn selection(mut self, selection: &'a Selection) -> Self {
+        self.selection = Some(selection);
         self
     }
 
@@ -159,6 +175,14 @@ impl<'a, Message: Clone + 'a> ModelSpace<'a, Message> {
 
     pub fn options(mut self, options: Options) -> Self {
         self.options = options;
+        self
+    }
+
+    /// İmlecin yanında gösterilen yönlendirme (ör. "Şehirler öğesi seçin").
+    /// AutoCAD'deki dinamik giriş istemi gibi, kullanıcıdan ne beklendiğini
+    /// söyler.
+    pub fn prompt(mut self, prompt: Option<&'a str>) -> Self {
+        self.prompt = prompt;
         self
     }
 
@@ -195,6 +219,7 @@ impl<'a, Message: Clone + 'a> From<ModelSpace<'a, Message>> for Element<'a, Mess
             draft: model_space.draft,
             draft_color: model_space.draft_color,
             options: model_space.options,
+            prompt: model_space.prompt,
             chrome,
             on_event: model_space.on_event,
         };

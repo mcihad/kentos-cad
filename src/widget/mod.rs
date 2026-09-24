@@ -13,12 +13,16 @@ pub mod app_menu;
 pub mod command_line;
 pub mod dialog;
 pub mod dock;
+pub mod inspector;
 pub mod navigation_bar;
 pub mod overlay;
 pub mod property_grid;
+pub mod query_builder;
 pub mod ribbon;
+pub mod segmented;
 pub mod status_bar;
 pub mod table;
+pub mod toolbar;
 
 mod tip;
 
@@ -26,12 +30,16 @@ pub use app_menu::AppMenu;
 pub use command_line::CommandLine;
 pub use dialog::{Dialog, ShortcutList};
 pub use dock::{Dock, Panel};
+pub use inspector::Inspector;
 pub use navigation_bar::NavigationBar;
 pub use property_grid::PropertyGrid;
+pub use query_builder::QueryBuilder;
 pub use ribbon::Ribbon;
+pub use segmented::Segmented;
 pub use status_bar::StatusBar;
 pub use table::Table;
 pub use tip::{Tip, tip};
+pub use toolbar::Toolbar;
 
 use iced::widget::{Rule, container, rule, space};
 use iced::{Color, Element};

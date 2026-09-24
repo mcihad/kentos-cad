@@ -1,7 +1,5 @@
 //! Şerit: sekmeler ve Giriş sekmesinin grupları.
 
-use std::fmt;
-
 use iced::widget::pick_list;
 use iced::{Element, Fill};
 
@@ -14,7 +12,8 @@ use kentos_rc::widget::{Tip, swatch};
 
 use crate::app::Showcase;
 use crate::command::{self, Command};
-use crate::message::{Message, RibbonTab};
+use crate::gallery::Page;
+use crate::message::{Message, QueryPurpose, RibbonTab};
 
 impl Showcase {
     pub(super) fn ribbon(&self) -> Element<'_, Message> {
@@ -26,6 +25,15 @@ impl Showcase {
             )
             .tabs(RibbonTab::ALL, self.ribbon_tab, Message::RibbonTabSelected)
             .trailing(label::caption("Türkiye örnek verisi"));
+
+        if self.ribbon_tab == RibbonTab::Gallery {
+            return ribbon
+                .group(self.gallery_group("Temel", &[Page::Colors, Page::Typography, Page::Icons]))
+                .group(self.gallery_group("Bileşenler", &[Page::Buttons, Page::Data, Page::Frame]))
+                .group(self.gallery_group("CBS ve CAD", &[Page::Attributes, Page::Spatial]))
+                .group(self.interface_group())
+                .into();
+        }
 
         if self.ribbon_tab != RibbonTab::Home {
             return ribbon
@@ -70,15 +78,7 @@ impl Showcase {
     }
 
     fn layers_group(&self) -> Group<'_, Message> {
-        let choices: Vec<LayerChoice<'_>> = self
-            .layers
-            .iter()
-            .enumerate()
-            .map(|(index, layer)| LayerChoice {
-                index,
-                name: &layer.name,
-            })
-            .collect();
+        let choices = self.layer_choices();
 
         let current = choices.get(self.active_layer).cloned();
         let color = self
@@ -87,7 +87,7 @@ impl Showcase {
             .map(|layer| layer.color)
             .unwrap_or_default();
 
-        let picker = pick_list(choices, current, |choice: LayerChoice<'_>| {
+        let picker = pick_list(choices, current, |choice: super::LayerChoice<'_>| {
             Message::LayerActivated(choice.index)
         })
         .text_size(12.0)
@@ -113,24 +113,50 @@ impl Showcase {
     }
 
     fn selection_group(&self) -> Group<'_, Message> {
-        let has_selection = self.selection.is_some();
+        let has_selection = !self.selection.is_empty();
 
-        Group::new("Seçim").push(
-            Stack::new()
-                .push(
-                    Button::small(Icon::Target, "Seçime odakla")
-                        .on_press_maybe(has_selection.then_some(Message::FocusSelection)),
-                )
-                .push(
-                    Button::small(Icon::ClearSelection, "Seçimi kaldır")
-                        .on_press_maybe(has_selection.then_some(Message::ClearSelection)),
-                )
-                .push(
-                    Button::small(Icon::Eraser, "Ölçümü temizle").on_press_maybe(
-                        (!self.measurement.is_empty()).then_some(Message::ClearMeasurement),
+        Group::new("Seçim")
+            .push(
+                Button::large(Icon::Filter, "Öznitelikle\nseç")
+                    .on_press(Message::QueryOpened(QueryPurpose::Select))
+                    .tip(
+                        Tip::new("Öznitelikle seç")
+                            .body("Koşullara uyan öğeleri seçer; seçime ekler ya da çıkarır.")
+                            .detail(format!(
+                                "Komut: {}",
+                                command::name(Command::SelectByAttributes)
+                            )),
                     ),
-                ),
-        )
+            )
+            .push(
+                Stack::new()
+                    .push(Button::small(Icon::SelectAll, "Tümünü seç").on_press(Message::SelectAll))
+                    .push(
+                        Button::small(Icon::InvertSelection, "Tersine çevir")
+                            .on_press(Message::InvertSelection),
+                    )
+                    .push(
+                        Button::small(Icon::ClearSelection, "Seçimi kaldır")
+                            .on_press_maybe(has_selection.then_some(Message::ClearSelection)),
+                    ),
+            )
+            .push(
+                Stack::new()
+                    .push(
+                        Button::small(Icon::Table, "Öznitelik tablosu")
+                            .active(self.table_open)
+                            .on_press(Message::TableToggled),
+                    )
+                    .push(
+                        Button::small(Icon::Target, "Seçime odakla")
+                            .on_press_maybe(has_selection.then_some(Message::FocusSelection)),
+                    )
+                    .push(
+                        Button::small(Icon::Eraser, "Ölçümü temizle").on_press_maybe(
+                            (!self.measurement.is_empty()).then_some(Message::ClearMeasurement),
+                        ),
+                    ),
+            )
     }
 
     fn interface_group(&self) -> Group<'_, Message> {
@@ -150,6 +176,18 @@ impl Showcase {
                             .on_press(Message::CommandListRequested),
                     ),
             )
+    }
+
+    /// Galeri sayfalarına götüren büyük düğmeler; açık sayfa vurgulanır.
+    fn gallery_group(&self, title: &'static str, pages: &[Page]) -> Group<'_, Message> {
+        pages.iter().fold(Group::new(title), |group, &page| {
+            group.push(
+                Button::large(page.icon(), page.label())
+                    .active(self.gallery.page == page)
+                    .on_press(Message::GalleryPageSelected(page))
+                    .tip(Tip::new(page.label()).body(page.description())),
+            )
+        })
     }
 
     /// Araç düğmesi: etkin araç vurgulanır; ipucu aracın ne yaptığını ve
@@ -188,18 +226,5 @@ fn large_label(tool: Tool) -> &'static str {
     match tool {
         Tool::Polyline => "Çoklu\nçizgi",
         other => other.label(),
-    }
-}
-
-/// Şeritteki katman seçim kutusunun seçeneği.
-#[derive(Debug, Clone, PartialEq)]
-struct LayerChoice<'a> {
-    index: usize,
-    name: &'a str,
-}
-
-impl fmt::Display for LayerChoice<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.name)
     }
 }

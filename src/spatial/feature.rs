@@ -4,6 +4,7 @@ use iced::Color;
 
 use super::measure;
 use super::{Bounds, LonLat};
+use crate::attribute::{Field, ObjectId, Value};
 
 /// Öğe geometrisi.
 #[derive(Debug, Clone, PartialEq)]
@@ -48,36 +49,36 @@ impl Geometry {
     }
 }
 
-/// Adı, geometrisi ve öznitelikleri olan tek bir coğrafi öğe.
+/// Tek bir coğrafi öğe: kalıcı numarası, geometrisi ve katmanın şemasına
+/// göre sıralanmış öznitelik değerleri.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Feature {
-    pub name: String,
+    /// Katman içindeki kalıcı numara; [`Layer::insert`] atar.
+    pub id: ObjectId,
     pub geometry: Geometry,
-    /// Sırası korunan anahtar-değer öznitelikleri.
-    pub properties: Vec<(String, String)>,
+    /// Katman şemasındaki alanlarla aynı sırada değerler.
+    pub values: Vec<Value>,
 }
 
 impl Feature {
-    pub fn new(name: impl Into<String>, geometry: Geometry) -> Self {
+    pub fn new(geometry: Geometry) -> Self {
         Self {
-            name: name.into(),
+            id: ObjectId::default(),
             geometry,
-            properties: Vec::new(),
+            values: Vec::new(),
         }
     }
 
-    /// Öznitelik ekler.
-    pub fn with(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
-        self.properties.push((key.into(), value.into()));
+    pub fn with_values(mut self, values: impl IntoIterator<Item = Value>) -> Self {
+        self.values = values.into_iter().collect();
         self
     }
 
-    /// Özniteliğin değeri.
-    pub fn property(&self, key: &str) -> Option<&str> {
-        self.properties
-            .iter()
-            .find(|(name, _)| name == key)
-            .map(|(_, value)| value.as_str())
+    /// Alanın değeri; alan yoksa boş.
+    pub fn value(&self, field: usize) -> &Value {
+        static NULL: Value = Value::Null;
+
+        self.values.get(field).unwrap_or(&NULL)
     }
 
     pub fn bounds(&self) -> Option<Bounds> {
@@ -103,7 +104,7 @@ impl LayerKind {
     }
 }
 
-/// Vektör katmanı: aynı biçimde çizilen öğeler.
+/// Vektör katmanı: aynı şemayı paylaşan, aynı biçimde çizilen öğeler.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Layer {
     pub name: String,
@@ -117,7 +118,13 @@ pub struct Layer {
     pub stroke_width: f32,
     /// Nokta etiketlerinin görünmeye başladığı yakınlaştırma seviyesi.
     pub label_zoom: Option<f64>,
+    /// Öznitelik alanları.
+    pub schema: Vec<Field>,
+    /// Öğenin adı olarak gösterilen alan.
+    pub label_field: Option<usize>,
+    /// Numara sırasıyla öğeler.
     pub features: Vec<Feature>,
+    last_id: u64,
 }
 
 impl Layer {
@@ -131,7 +138,10 @@ impl Layer {
             fill_alpha: 0.0,
             stroke_width: 1.5,
             label_zoom: None,
+            schema: Vec::new(),
+            label_field: None,
             features: Vec::new(),
+            last_id: 0,
         }
     }
 
@@ -160,8 +170,19 @@ impl Layer {
         }
     }
 
+    /// Öznitelik alanları; ilk alan öğenin adı olarak kullanılır.
+    pub fn with_schema(mut self, schema: impl IntoIterator<Item = Field>) -> Self {
+        self.schema = schema.into_iter().collect();
+        self.label_field = (!self.schema.is_empty()).then_some(0);
+        self
+    }
+
+    /// Öğeleri ekler ve numaralandırır.
     pub fn with_features(mut self, features: impl IntoIterator<Item = Feature>) -> Self {
-        self.features.extend(features);
+        for feature in features {
+            self.insert(feature);
+        }
+
         self
     }
 
@@ -186,6 +207,55 @@ impl Layer {
         self
     }
 
+    /// Öğeyi sona ekler ve yeni bir numara verir. Değerler şemadaki alan
+    /// sayısına boş değerlerle tamamlanır.
+    pub fn insert(&mut self, mut feature: Feature) -> ObjectId {
+        self.last_id += 1;
+        feature.id = ObjectId(self.last_id);
+        feature
+            .values
+            .resize(self.schema.len().max(feature.values.len()), Value::Null);
+
+        let id = feature.id;
+        self.features.push(feature);
+        id
+    }
+
+    fn position(&self, id: ObjectId) -> Option<usize> {
+        self.features
+            .binary_search_by_key(&id, |feature| feature.id)
+            .ok()
+    }
+
+    pub fn feature(&self, id: ObjectId) -> Option<&Feature> {
+        self.position(id).map(|index| &self.features[index])
+    }
+
+    pub fn feature_mut(&mut self, id: ObjectId) -> Option<&mut Feature> {
+        self.position(id)
+            .map(move |index| &mut self.features[index])
+    }
+
+    /// Öğeyi siler; diğer öğelerin numaraları değişmez.
+    pub fn remove(&mut self, id: ObjectId) -> Option<Feature> {
+        self.position(id).map(|index| self.features.remove(index))
+    }
+
+    /// Adı verilen alanın numarası.
+    pub fn field_index(&self, name: &str) -> Option<usize> {
+        self.schema.iter().position(|field| field.name == name)
+    }
+
+    /// Öğenin adı: ad alanının değeri, yoksa "#numara".
+    pub fn label(&self, feature: &Feature) -> String {
+        self.label_field
+            .and_then(|index| {
+                let text = self.schema.get(index)?.format(feature.value(index));
+                (!text.is_empty()).then_some(text)
+            })
+            .unwrap_or_else(|| format!("#{}", feature.id))
+    }
+
     /// Görünür ve seçilebilecek kadar opak mı.
     pub fn is_interactive(&self) -> bool {
         self.visible && self.opacity > 0.05
@@ -200,26 +270,24 @@ impl Layer {
     }
 }
 
-/// Katman listesindeki bir öğenin yeri.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// Katman listesindeki bir öğenin kalıcı adresi: katman sırası ve öğe
+/// numarası.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FeatureRef {
     pub layer: usize,
-    pub feature: usize,
+    pub id: ObjectId,
 }
 
 impl FeatureRef {
-    pub const fn new(layer: usize, feature: usize) -> Self {
-        Self { layer, feature }
+    pub const fn new(layer: usize, id: ObjectId) -> Self {
+        Self { layer, id }
     }
 
-    /// Katman listesindeki öğe; yer geçersizse `None`.
+    /// Katman listesindeki öğe; adres geçersizse `None`.
     pub fn resolve(self, layers: &[Layer]) -> Option<(&Layer, &Feature)> {
         let layer = layers.get(self.layer)?;
 
-        layer
-            .features
-            .get(self.feature)
-            .map(|feature| (layer, feature))
+        layer.feature(self.id).map(|feature| (layer, feature))
     }
 }
 
@@ -230,4 +298,46 @@ pub fn visible_bounds(layers: &[Layer]) -> Option<Bounds> {
         .filter(|layer| layer.visible)
         .filter_map(Layer::bounds)
         .reduce(Bounds::union)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn features_keep_their_numbers_after_removal() {
+        let mut layer = Layer::points("Test", Color::BLACK)
+            .with_schema([Field::text("Ad")])
+            .with_features(["A", "B", "C"].map(|name| {
+                Feature::new(Geometry::Point(LonLat::new(0.0, 0.0)))
+                    .with_values([Value::from(name)])
+            }));
+
+        assert!(layer.remove(ObjectId(2)).is_some());
+        assert_eq!(
+            layer
+                .features
+                .iter()
+                .map(|feature| feature.id)
+                .collect::<Vec<_>>(),
+            [ObjectId(1), ObjectId(3)]
+        );
+        assert_eq!(
+            layer
+                .feature(ObjectId(3))
+                .map(|feature| layer.label(feature)),
+            Some("C".to_owned())
+        );
+
+        let next = layer.insert(Feature::new(Geometry::Point(LonLat::new(1.0, 1.0))));
+        assert_eq!(next, ObjectId(4));
+        assert_eq!(
+            layer.feature(next).map(|feature| feature.values.len()),
+            Some(1)
+        );
+        assert_eq!(
+            layer.feature(next).map(|feature| layer.label(feature)),
+            Some("#4".to_owned())
+        );
+    }
 }

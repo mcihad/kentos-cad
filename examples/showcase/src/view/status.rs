@@ -27,6 +27,8 @@ impl Showcase {
             .push(label::mono_caption(dms).width(196))
             .separator()
             .push(label::caption("MODEL").font(typography::UI_STRONG))
+            .separator()
+            .push(self.selection_status())
             .separator();
 
         let bar = Setting::ALL.into_iter().fold(bar, |bar, setting| {
@@ -49,6 +51,19 @@ impl Showcase {
             .push(label::mono_caption(format!("z {:.2}", self.viewport.zoom)))
             .separator()
             .push(label::mono_caption("EPSG:3857"))
+            .into()
+    }
+
+    /// Seçili öğe sayısı; haritadan seçim sürerken beklenen katman.
+    fn selection_status(&self) -> Element<'_, Message> {
+        let content = match (&self.picking, self.selection.len()) {
+            (Some(pick), _) => label::caption(pick.prompt.as_str()).style(style::text::accent),
+            (None, 0) => label::caption("Seçim yok"),
+            (None, count) => label::caption(format!("{count} seçili")).style(style::text::default),
+        };
+
+        content
+            .width(if self.picking.is_some() { 220 } else { 72 })
             .into()
     }
 }

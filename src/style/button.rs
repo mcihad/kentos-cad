@@ -50,13 +50,13 @@ pub fn flat(theme: &Theme, status: Status) -> Style {
 pub fn primary(theme: &Theme, status: Status) -> Style {
     let t = Tokens::of(theme);
 
-    let background = match status {
-        Status::Active => t.accent,
-        Status::Hovered | Status::Pressed => t.accent_hover,
-        Status::Disabled => t.accent.scale_alpha(0.5),
+    let (background, text) = match status {
+        Status::Active => (t.accent, t.on_accent),
+        Status::Hovered | Status::Pressed => (t.accent_hover, t.on_accent),
+        Status::Disabled => (t.accent.scale_alpha(0.3), t.on_accent.scale_alpha(0.5)),
     };
 
-    style(background, t.on_accent, border::rounded(RADIUS))
+    style(background, text, border::rounded(RADIUS))
 }
 
 /// İkincil eylem: kenarlı, yüzey renginde düğme.
@@ -130,6 +130,12 @@ pub fn tool(active: bool) -> impl Fn(&Theme, Status) -> Style {
 
 /// Tablo satırı: seçili satır vurgu zemini ve kenarıyla gösterilir.
 pub fn row(selected: bool) -> impl Fn(&Theme, Status) -> Style {
+    table_row(selected, selected)
+}
+
+/// Çoklu seçimli tablo satırı: seçili satırlar vurgu zeminiyle, birincil
+/// (`current`) satır ayrıca vurgu kenarıyla gösterilir.
+pub fn table_row(selected: bool, current: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
         let t = Tokens::of(theme);
 
@@ -143,15 +149,47 @@ pub fn row(selected: bool) -> impl Fn(&Theme, Status) -> Style {
             background,
             t.text,
             Border {
-                color: if selected {
+                color: if current {
                     t.accent
                 } else {
                     Color::TRANSPARENT
                 },
-                width: if selected { 1.0 } else { 0.0 },
+                width: if current { 1.0 } else { 0.0 },
                 radius: 0.0.into(),
             },
         )
+    }
+}
+
+/// Parçalı seçim düğmesi (ör. seçim yöntemi); seçili parça vurgu zeminiyle.
+pub fn segment(selected: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+
+        let (background, text) = match (selected, is_hovered(status)) {
+            (true, _) => (t.accent, t.on_accent),
+            (false, true) => (t.surface_hover, t.text),
+            (false, false) => (t.surface_alt, t.text),
+        };
+
+        style(background, text, Border::default())
+    }
+}
+
+/// Tablo başlığı: sıralanabilir sütun adları; sıralı sütun belirgin.
+pub fn header(sorted: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+
+        Style {
+            background: None,
+            text_color: if sorted || is_hovered(status) {
+                t.text
+            } else {
+                t.muted
+            },
+            ..Style::default()
+        }
     }
 }
 

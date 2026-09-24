@@ -67,11 +67,34 @@ pub enum Icon {
     Rectangle,
     Circle,
     Point,
+    // Katalog
+    Drop,
+    Type,
+    Grid,
+    Button,
+    Table,
+    Layout,
+    Globe,
+    // Öznitelik ve seçim
+    Search,
+    Filter,
+    SelectAll,
+    InvertSelection,
+    Calendar,
+    Clock,
+    Link,
+    ChevronUp,
+    ChevronLeft,
+    Close,
+    Plus,
+    Check,
+    Warning,
+    Properties,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 31] = [
+    pub const ALL: [Icon; 52] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -103,6 +126,27 @@ impl Icon {
         Icon::Rectangle,
         Icon::Circle,
         Icon::Point,
+        Icon::Drop,
+        Icon::Type,
+        Icon::Grid,
+        Icon::Button,
+        Icon::Table,
+        Icon::Layout,
+        Icon::Globe,
+        Icon::Search,
+        Icon::Filter,
+        Icon::SelectAll,
+        Icon::InvertSelection,
+        Icon::Calendar,
+        Icon::Clock,
+        Icon::Link,
+        Icon::ChevronUp,
+        Icon::ChevronLeft,
+        Icon::Close,
+        Icon::Plus,
+        Icon::Check,
+        Icon::Warning,
+        Icon::Properties,
     ];
 }
 
@@ -119,6 +163,8 @@ pub enum Tone {
     Highlight,
     OnAccent,
     Disabled,
+    /// Hata ve uyarı.
+    Danger,
     Custom(Color),
 }
 
@@ -134,6 +180,7 @@ impl Tone {
             Tone::Highlight => tokens.accent_hover,
             Tone::OnAccent => tokens.on_accent,
             Tone::Disabled => tokens.disabled(),
+            Tone::Danger => tokens.danger,
             Tone::Custom(color) => color,
         }
     }

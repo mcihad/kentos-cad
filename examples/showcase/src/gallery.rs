@@ -1,0 +1,428 @@
+//! Bileşen galerisi: sayfalar ve etkileşimli örneklerin durumu.
+//!
+//! Galeri, kentos-rc'nin kataloğudur. Her sayfa bir grup bileşeni canlı
+//! örnekleriyle gösterir; örnekler kendi küçük durumlarını burada tutar ve
+//! uygulamanın asıl durumuna dokunmaz.
+
+use std::fmt;
+
+use kentos_rc::attribute::query::Edit;
+use kentos_rc::attribute::{
+    Condition, Date, DateTime, Field, ObjectId, Operator, Query, Time, Value, text,
+};
+use kentos_rc::icon::Icon;
+use kentos_rc::spatial::SelectionMode;
+use kentos_rc::widget::command_line::Entry;
+use kentos_rc::widget::inspector;
+use kentos_rc::widget::table::SortOrder;
+
+use crate::sample;
+
+/// Galeri sayfaları.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Page {
+    Colors,
+    Typography,
+    Icons,
+    Buttons,
+    Data,
+    Frame,
+    Attributes,
+    Spatial,
+}
+
+impl Page {
+    pub fn label(self) -> &'static str {
+        match self {
+            Page::Colors => "Renkler",
+            Page::Typography => "Yazı",
+            Page::Icons => "İkonlar",
+            Page::Buttons => "Düğmeler",
+            Page::Data => "Veri",
+            Page::Frame => "Çerçeve",
+            Page::Attributes => "Öznitelikler",
+            Page::Spatial => "Mekânsal",
+        }
+    }
+
+    pub fn icon(self) -> Icon {
+        match self {
+            Page::Colors => Icon::Drop,
+            Page::Typography => Icon::Type,
+            Page::Icons => Icon::Grid,
+            Page::Buttons => Icon::Button,
+            Page::Data => Icon::Table,
+            Page::Frame => Icon::Layout,
+            Page::Attributes => Icon::Properties,
+            Page::Spatial => Icon::Globe,
+        }
+    }
+
+    pub fn description(self) -> &'static str {
+        match self {
+            Page::Colors => "Tema belirteçleri: arayüzün ve model alanının bütün renkleri.",
+            Page::Typography => "Tip ölçeği, yazı tipleri ve hazır metin biçimleri.",
+            Page::Icons => "16×16 ızgarada çizilmiş vektör ikon seti, boyutları ve tonları.",
+            Page::Buttons => "Düğme stilleri, şerit düğmeleri ve ipuçları.",
+            Page::Data => "Tablo, özellik ızgarası, panel ve giriş alanları.",
+            Page::Frame => "Durum çubuğu, komut satırı, gezinme çubuğu, menü ve iletişim kutuları.",
+            Page::Attributes => {
+                "Nesne inceleyici, öznitelik tablosu, sorgu oluşturucu ve alan türleri."
+            }
+            Page::Spatial => "ViewCube, araçlar, nesne yakalama ve Türkçe biçimlendirme.",
+        }
+    }
+}
+
+/// Örneklerle etkileşim.
+#[derive(Debug, Clone)]
+pub enum Demo {
+    /// Etkisi olmayan bir örnek düğmeye basıldı; komut satırına yazılır.
+    Pressed(&'static str),
+    RowSelected(usize),
+    Toggled(usize),
+    Checked(bool),
+    OpacityChanged(f32),
+    TextChanged(String),
+    CrsSelected(Crs),
+    CommandChanged(String),
+    CommandSubmitted,
+    /// Öznitelikler sayfası: tabloda satır seçildi.
+    RecordSelected(usize),
+    Inspector(inspector::Event),
+    QueryEdited(Edit),
+    ModeSelected(SelectionMode),
+    /// Tablo sütununa göre sırala ya da yönü çevir.
+    Sorted(usize),
+    SearchChanged(String),
+}
+
+/// Açılır liste örneğindeki koordinat sistemleri.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Crs {
+    Wgs84,
+    WebMercator,
+    Tm30,
+    Utm36,
+}
+
+impl Crs {
+    pub const ALL: [Crs; 4] = [Crs::Wgs84, Crs::WebMercator, Crs::Tm30, Crs::Utm36];
+}
+
+impl fmt::Display for Crs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Crs::Wgs84 => "EPSG:4326 WGS 84",
+            Crs::WebMercator => "EPSG:3857 Web Mercator",
+            Crs::Tm30 => "EPSG:5254 TUREF / TM30",
+            Crs::Utm36 => "EPSG:32636 WGS 84 / UTM 36N",
+        })
+    }
+}
+
+/// Galeri örneğindeki komut satırının geçmişi en fazla bu kadar satır tutar.
+const HISTORY_LIMIT: usize = 12;
+
+/// Galerinin durumu.
+#[derive(Debug, Clone)]
+pub struct Gallery {
+    pub page: Page,
+    pub row: usize,
+    pub toggles: [bool; 3],
+    pub checked: bool,
+    pub opacity: f32,
+    pub text: String,
+    pub crs: Option<Crs>,
+    pub command: String,
+    pub history: Vec<Entry>,
+
+    /// Öznitelikler sayfasının örnek kayıtları: bütün alan türlerini
+    /// kullanan bir yapı envanteri.
+    pub schema: Vec<Field>,
+    pub records: Vec<Vec<Value>>,
+    /// İnceleyicide gösterilen kayıt.
+    pub record: usize,
+    pub inspector: inspector::State,
+    pub query: Query,
+    pub mode: SelectionMode,
+    pub sort: Option<(usize, SortOrder)>,
+    pub search: String,
+}
+
+impl Default for Gallery {
+    fn default() -> Self {
+        Self {
+            page: Page::Colors,
+            row: 1,
+            toggles: [true, true, false],
+            checked: true,
+            opacity: 0.8,
+            text: String::new(),
+            crs: Some(Crs::WebMercator),
+            command: String::new(),
+            history: vec![
+                Entry::Output("Galeri örneği: komutlar burada çalıştırılmaz.".to_owned()),
+                Entry::Input("CIZGI".to_owned()),
+                Entry::Output("Çizgi: Art arda doğru parçaları çizer.".to_owned()),
+            ],
+            schema: building_schema(),
+            records: building_records(),
+            record: 0,
+            inspector: {
+                let mut inspector = inspector::State::new();
+                inspector.inspect(Some(0));
+                inspector
+            },
+            query: Query {
+                conditions: vec![Condition {
+                    field: 2,
+                    operator: Operator::GreaterOrEqual,
+                    value: "10".to_owned(),
+                }],
+                ..Query::default()
+            },
+            mode: SelectionMode::New,
+            sort: None,
+            search: String::new(),
+        }
+    }
+}
+
+impl Gallery {
+    /// Örnek etkileşimini uygular. Uygulamanın komut satırına yazılacak bir
+    /// satır döndürebilir.
+    pub fn update(&mut self, demo: Demo) -> Option<String> {
+        match demo {
+            Demo::Pressed(name) => return Some(format!("Galeri: \"{name}\" düğmesine basıldı.")),
+            Demo::RowSelected(row) => self.row = row,
+            Demo::Toggled(index) => {
+                if let Some(toggle) = self.toggles.get_mut(index) {
+                    *toggle = !*toggle;
+                }
+            }
+            Demo::Checked(checked) => self.checked = checked,
+            Demo::OpacityChanged(opacity) => self.opacity = opacity,
+            Demo::TextChanged(text) => self.text = text,
+            Demo::CrsSelected(crs) => self.crs = Some(crs),
+            Demo::CommandChanged(command) => self.command = command,
+            Demo::CommandSubmitted => {
+                let command = std::mem::take(&mut self.command);
+                let command = command.trim();
+
+                if !command.is_empty() {
+                    self.history.push(Entry::Input(command.to_owned()));
+                    self.history.push(Entry::Output(
+                        "Bu komut satırı yalnızca bir örnek; komutlar alttaki asıl komut satırında çalışır."
+                            .to_owned(),
+                    ));
+
+                    let excess = self.history.len().saturating_sub(HISTORY_LIMIT);
+                    self.history.drain(..excess);
+                }
+            }
+            Demo::RecordSelected(record) => {
+                if record < self.records.len() {
+                    self.record = record;
+                    self.inspector.inspect(Some(record as u64));
+                }
+            }
+            Demo::Inspector(event) => match self.inspector.update(event) {
+                Some(inspector::Action::Change { id, value }) => {
+                    let valid = self
+                        .schema
+                        .get(id)
+                        .is_some_and(|field| field.editable && field.validate(&value).is_ok());
+
+                    if valid
+                        && let Some(slot) = self
+                            .records
+                            .get_mut(self.record)
+                            .and_then(|record| record.get_mut(id))
+                    {
+                        *slot = value;
+                    }
+                }
+                Some(inspector::Action::Pick(_)) => {
+                    self.inspector.stop_picking();
+                    return Some(
+                        "Galeri: haritadan seçim Giriş sekmesindeki nesne inceleyicide çalışır."
+                            .to_owned(),
+                    );
+                }
+                Some(inspector::Action::CancelPick) | None => {}
+            },
+            Demo::QueryEdited(edit) => self.query.apply(edit, &self.schema),
+            Demo::ModeSelected(mode) => self.mode = mode,
+            Demo::Sorted(column) => {
+                self.sort = match self.sort {
+                    Some((current, order)) if current == column => Some((column, order.reversed())),
+                    _ => Some((column, SortOrder::Ascending)),
+                };
+            }
+            Demo::SearchChanged(search) => self.search = search,
+        }
+
+        None
+    }
+
+    /// Örnek tablonun satırları: aramaya uyan kayıtlar, sıralı.
+    pub fn rows(&self) -> Vec<usize> {
+        let search = self.search.trim();
+
+        let mut rows: Vec<usize> = (0..self.records.len())
+            .filter(|&record| {
+                search.is_empty()
+                    || self.schema.iter().enumerate().any(|(field, definition)| {
+                        text::contains(&definition.format(self.value(record, field)), search)
+                    })
+            })
+            .collect();
+
+        if let Some((column, order)) = self.sort {
+            rows.sort_by(|&a, &b| {
+                let ordering = self
+                    .value(a, column)
+                    .compare(self.value(b, column))
+                    .then(a.cmp(&b));
+
+                match order {
+                    SortOrder::Ascending => ordering,
+                    SortOrder::Descending => ordering.reverse(),
+                }
+            });
+        }
+
+        rows
+    }
+
+    /// Kaydın alan değeri; yoksa boş.
+    pub fn value(&self, record: usize, field: usize) -> &Value {
+        static NULL: Value = Value::Null;
+
+        self.records
+            .get(record)
+            .and_then(|values| values.get(field))
+            .unwrap_or(&NULL)
+    }
+
+    /// Sorguyu sağlayan kayıtlar.
+    pub fn matches(&self, record: usize) -> bool {
+        self.records
+            .get(record)
+            .is_some_and(|values| self.query.matches(&self.schema, values))
+    }
+}
+
+/// Örnek yapı envanterinin alanları: kentos-rc'nin bütün alan türleri.
+fn building_schema() -> Vec<Field> {
+    vec![
+        Field::text("Ad").required(),
+        Field::choice("Kullanım", ["Konut", "Ticaret", "Karma", "Kamu", "Sanayi"]),
+        Field::integer("Kat").between(1, 120),
+        Field::real("Yükseklik", 1).unit("m"),
+        Field::boolean("Asansör"),
+        Field::range("Doluluk", 0.0, 100.0, 5.0).unit("%"),
+        Field::date("Ruhsat"),
+        Field::time("Açılış"),
+        Field::datetime("Son denetim"),
+        Field::object("Şehir", sample::CITIES),
+        Field::text("Ada/parsel").read_only(),
+    ]
+}
+
+/// Örnek yapı kayıtları. Şehir başvuruları Şehirler katmanının
+/// numaralarıdır (1 İstanbul, 2 Ankara, 3 İzmir, 4 Bursa, 5 Antalya).
+fn building_records() -> Vec<Vec<Value>> {
+    let date = |day, month, year| Date::new(year, month, day).map_or(Value::Null, Value::Date);
+    let time = |hour, minute| Time::new(hour, minute, 0).map_or(Value::Null, Value::Time);
+    let moment = |day, month, year, hour, minute| match (
+        Date::new(year, month, day),
+        Time::new(hour, minute, 0),
+    ) {
+        (Some(date), Some(time)) => Value::DateTime(DateTime::new(date, time)),
+        _ => Value::Null,
+    };
+    let city = |id| Value::Object(ObjectId(id));
+
+    vec![
+        vec![
+            "Kuleli İş Merkezi".into(),
+            "Karma".into(),
+            Value::Integer(24),
+            Value::Real(96.5),
+            true.into(),
+            Value::Real(85.0),
+            date(12, 3, 2019),
+            time(8, 30),
+            moment(18, 9, 2026, 14, 30),
+            city(1),
+            "1204/7".into(),
+        ],
+        vec![
+            "Çınar Konutları".into(),
+            "Konut".into(),
+            Value::Integer(12),
+            Value::Real(38.4),
+            true.into(),
+            Value::Real(95.0),
+            date(4, 11, 2021),
+            Value::Null,
+            moment(2, 9, 2026, 10, 0),
+            city(2),
+            "845/3".into(),
+        ],
+        vec![
+            "Liman Deposu".into(),
+            "Sanayi".into(),
+            Value::Integer(2),
+            Value::Real(11.0),
+            false.into(),
+            Value::Real(60.0),
+            date(21, 6, 2012),
+            time(7, 0),
+            Value::Null,
+            city(3),
+            "77/12".into(),
+        ],
+        vec![
+            "Kent Kütüphanesi".into(),
+            "Kamu".into(),
+            Value::Integer(4),
+            Value::Real(18.2),
+            true.into(),
+            Value::Real(70.0),
+            date(15, 1, 2016),
+            time(9, 0),
+            moment(20, 8, 2026, 16, 45),
+            city(4),
+            "310/1".into(),
+        ],
+        vec![
+            "Sahil Çarşısı".into(),
+            "Ticaret".into(),
+            Value::Integer(3),
+            Value::Real(12.5),
+            false.into(),
+            Value::Null,
+            date(30, 5, 2018),
+            time(10, 0),
+            Value::Null,
+            city(5),
+            "56/9".into(),
+        ],
+        vec![
+            "Kule Rezidans".into(),
+            "Konut".into(),
+            Value::Integer(38),
+            Value::Real(131.0),
+            true.into(),
+            Value::Real(80.0),
+            date(8, 8, 2023),
+            Value::Null,
+            moment(11, 9, 2026, 11, 20),
+            city(1),
+            "1204/8".into(),
+        ],
+    ]
+}

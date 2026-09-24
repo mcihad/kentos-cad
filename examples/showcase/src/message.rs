@@ -2,9 +2,16 @@
 
 use std::fmt;
 
+use iced::keyboard::Modifiers;
+
+use kentos_rc::attribute::query;
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::model_space;
-use kentos_rc::spatial::{FeatureRef, Tool};
+use kentos_rc::spatial::{FeatureRef, SelectionMode, Tool};
+use kentos_rc::widget::inspector;
+
+use crate::gallery::{Demo, Page};
+use crate::table::Column;
 
 /// Kullanıcının yaptığı her şey.
 #[derive(Debug, Clone)]
@@ -17,7 +24,10 @@ pub enum Message {
     ZoomOut,
     FitAll,
     ResetView,
+    /// Seçili öğelerin tamamına odaklanır.
     FocusSelection,
+    /// Tek bir öğeye odaklanır (nesne inceleyicideki "Odakla").
+    FocusFeature(FeatureRef),
 
     // Katmanlar
     LayerVisibility(usize, bool),
@@ -28,10 +38,31 @@ pub enum Message {
     HideAllLayers,
 
     // Seçim ve ölçüm
-    FeatureSelected(FeatureRef),
+    SelectAll,
+    InvertSelection,
     ClearSelection,
     DeleteSelection,
     ClearMeasurement,
+    /// Nesne inceleyicide seçimdeki sonraki (ya da önceki) öğe.
+    SelectionStep(bool),
+    Inspector(inspector::Event),
+
+    // Öznitelik tablosu
+    TableToggled,
+    TableRowPressed(FeatureRef),
+    TableSearch(String),
+    TableSelectedOnly,
+    /// Sütun başlığına tıklandı: sütuna göre sırala ya da yönü çevir.
+    TableSort(Column),
+    FilterCleared,
+
+    // Öznitelikle seç ve filtre
+    QueryOpened(QueryPurpose),
+    QueryLayerSelected(usize),
+    QueryEdited(query::Edit),
+    QueryModeSelected(SelectionMode),
+    QueryApplied,
+    QueryClosed,
 
     // Ayarlar
     Toggle(Setting),
@@ -47,13 +78,27 @@ pub enum Message {
     HelpToggled,
     CommandListRequested,
 
+    // Galeri
+    GalleryPageSelected(Page),
+    Gallery(Demo),
+
     // Komut satırı
     CommandInput(String),
     CommandSubmitted,
 
+    ModifiersChanged(Modifiers),
     Escape,
     Tick,
     Quit,
+}
+
+/// Sorgu penceresinin amacı.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QueryPurpose {
+    /// Eşleşen öğeleri seçer ("öznitelikle seç").
+    Select,
+    /// Öznitelik tablosunda yalnızca eşleşen kayıtları gösterir.
+    Filter,
 }
 
 /// Açılıp kapatılabilen görüntüleme ayarları.
@@ -98,8 +143,9 @@ impl Setting {
     }
 }
 
-/// Şerit sekmeleri. Yalnızca "Giriş" araç içerir; diğerleri çerçevenin
-/// CAD düzenini tamamlayan yer tutuculardır.
+/// Şerit sekmeleri. "Giriş" model alanının araçlarını, "Galeri" bileşen
+/// kataloğunu içerir; diğerleri çerçevenin CAD düzenini tamamlayan yer
+/// tutuculardır.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RibbonTab {
     Home,
@@ -109,10 +155,11 @@ pub enum RibbonTab {
     View,
     Manage,
     Output,
+    Gallery,
 }
 
 impl RibbonTab {
-    pub const ALL: [RibbonTab; 7] = [
+    pub const ALL: [RibbonTab; 8] = [
         RibbonTab::Home,
         RibbonTab::Insert,
         RibbonTab::Annotate,
@@ -120,6 +167,7 @@ impl RibbonTab {
         RibbonTab::View,
         RibbonTab::Manage,
         RibbonTab::Output,
+        RibbonTab::Gallery,
     ];
 }
 
@@ -133,6 +181,7 @@ impl fmt::Display for RibbonTab {
             RibbonTab::View => "Görünüm",
             RibbonTab::Manage => "Yönet",
             RibbonTab::Output => "Çıktı",
+            RibbonTab::Gallery => "Galeri",
         })
     }
 }

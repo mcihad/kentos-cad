@@ -49,7 +49,7 @@ impl Tool {
 
     pub fn description(self) -> &'static str {
         match self {
-            Tool::Select => "Tıklanan öğenin özelliklerini gösterir.",
+            Tool::Select => "Tıklanan öğeyi seçer; sürükleyerek pencere ya da kesişen seçim yapar.",
             Tool::Pan => "Sürükleyerek gezinir, tekerlek yakınlaştırır.",
             Tool::Measure => "Tıklanan noktalar arası mesafeyi ölçer. Sağ tık temizler.",
             Tool::Line => "Art arda doğru parçaları çizer. Sağ tık veya Esc bitirir.",

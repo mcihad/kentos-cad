@@ -53,6 +53,7 @@ impl<'a, Message: 'a> From<Dock<'a, Message>> for Element<'a, Message> {
 pub struct Panel<'a, Message> {
     title: Fragment<'a>,
     meta: Option<Fragment<'a>>,
+    trailing: Option<Element<'a, Message>>,
     body: Element<'a, Message>,
     height: Length,
     scrollable: bool,
@@ -63,6 +64,7 @@ impl<'a, Message: 'a> Panel<'a, Message> {
         Self {
             title: title.into_fragment(),
             meta: None,
+            trailing: None,
             body: body.into(),
             height: Length::Shrink,
             scrollable: false,
@@ -72,6 +74,13 @@ impl<'a, Message: 'a> Panel<'a, Message> {
     /// Başlık çubuğunun sağındaki meta bilgisi (ör. "6 katman").
     pub fn meta(mut self, meta: impl IntoFragment<'a>) -> Self {
         self.meta = Some(meta.into_fragment());
+        self
+    }
+
+    /// Başlık çubuğunun sağ ucundaki öğe (ör. bir eylem düğmesi); meta
+    /// bilgisinin sağında yer alır.
+    pub fn trailing(mut self, trailing: impl Into<Element<'a, Message>>) -> Self {
+        self.trailing = Some(trailing.into());
         self
     }
 
@@ -91,17 +100,22 @@ impl<'a, Message: 'a> Panel<'a, Message> {
 
 impl<'a, Message: 'a> From<Panel<'a, Message>> for Element<'a, Message> {
     fn from(panel: Panel<'a, Message>) -> Self {
-        let header = container(
-            row![
-                label::strong(panel.title),
-                space::horizontal(),
-                label::caption(panel.meta.unwrap_or_default()),
-            ]
-            .align_y(Center),
-        )
-        .padding([5, 10])
-        .width(Fill)
-        .style(style::container::header);
+        let mut header_row = row![label::strong(panel.title), space::horizontal()]
+            .spacing(8)
+            .align_y(Center);
+
+        if let Some(meta) = panel.meta {
+            header_row = header_row.push(label::caption(meta));
+        }
+
+        if let Some(trailing) = panel.trailing {
+            header_row = header_row.push(trailing);
+        }
+
+        let header = container(header_row)
+            .padding([5, 10])
+            .width(Fill)
+            .style(style::container::header);
 
         // Esnek yükseklikli panelde gövde, başlıktan kalan alanı doldurur.
         let body_height = if panel.height == Length::Shrink {
@@ -110,9 +124,12 @@ impl<'a, Message: 'a> From<Panel<'a, Message>> for Element<'a, Message> {
             Length::Fill
         };
 
+        // Kaydırma çubuğu içeriğin üstüne binmez; yalnızca gerektiğinde yer
+        // kaplar.
         let body: Element<'a, Message> = if panel.scrollable {
             scrollable(panel.body)
                 .direction(style::field::thin_scrollbar())
+                .spacing(0)
                 .width(Fill)
                 .height(body_height)
                 .into()

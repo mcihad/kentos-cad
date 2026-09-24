@@ -5,8 +5,10 @@
 
 mod app;
 mod command;
+mod gallery;
 mod message;
 mod sample;
+mod table;
 mod view;
 
 use iced::Size;

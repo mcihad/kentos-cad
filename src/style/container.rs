@@ -45,6 +45,21 @@ pub fn grid_lines(theme: &Theme) -> Style {
     fill(Tokens::of(theme).border)
 }
 
+/// Kenarlı yüzey: gruplanmış içerik ve örnek alanları.
+pub fn bordered(theme: &Theme) -> Style {
+    let t = Tokens::of(theme);
+
+    Style {
+        background: Some(Background::Color(t.surface)),
+        border: Border {
+            color: t.border,
+            width: 1.0,
+            radius: RADIUS.into(),
+        },
+        ..Style::default()
+    }
+}
+
 /// Açılır menüler, ipuçları ve iletişim kutuları: kenar ve gölge.
 pub fn popover(theme: &Theme) -> Style {
     let t = Tokens::of(theme);
@@ -72,6 +87,22 @@ pub fn floating(theme: &Theme) -> Style {
 
     Style {
         background: Some(Background::Color(t.surface.scale_alpha(0.92))),
+        border: Border {
+            color: t.border,
+            width: 1.0,
+            radius: RADIUS.into(),
+        },
+        ..Style::default()
+    }
+}
+
+/// Parçalı seçim çerçevesi: parçalar arasındaki 1 piksellik boşluklar kenar
+/// renginde görünür.
+pub fn segmented(theme: &Theme) -> Style {
+    let t = Tokens::of(theme);
+
+    Style {
+        background: Some(Background::Color(t.border)),
         border: Border {
             color: t.border,
             width: 1.0,

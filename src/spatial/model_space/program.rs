@@ -1,10 +1,11 @@
 //! Model alanının canvas programı: girdi işleme ve çizim sırası.
 
+use iced::keyboard::{self, Modifiers};
 use iced::widget::canvas::{self, Frame, Geometry};
 use iced::{Color, Point, Rectangle, Renderer, Size, Theme, Vector, mouse};
 
 use super::{CHROME_GAP, Event, OVERLAY_PADDING, Options, Style};
-use crate::spatial::{FeatureRef, Layer, LonLat, Tool, Viewport, query};
+use crate::spatial::{Bounds, FeatureRef, Layer, LonLat, Selection, Tool, Viewport, query};
 use crate::widget::navigation_bar;
 
 /// Basılan fare tuşunun sürükleme sayılması için gereken mesafe (piksel).
@@ -82,12 +83,13 @@ pub(super) struct Program<'a, Message> {
     pub viewport: Viewport,
     pub layers: &'a [Layer],
     pub tool: Tool,
-    pub selection: Option<FeatureRef>,
+    pub selection: Option<&'a Selection>,
     pub hover: Option<FeatureRef>,
     pub measurement: &'a [LonLat],
     pub draft: &'a [LonLat],
     pub draft_color: Option<Color>,
     pub options: Options,
+    pub prompt: Option<&'a str>,
     pub chrome: Chrome,
     pub on_event: Box<dyn Fn(Event) -> Message + 'a>,
 }
@@ -105,6 +107,27 @@ pub(super) struct State {
     /// İmleç en son alanın üzerinde miydi; dışarı çıkışta bir kez
     /// `CursorLeft` bildirilir.
     inside: bool,
+    /// Sürüklenen seçim penceresi: başlangıç ve o anki köşe.
+    window: Option<(Point, Point)>,
+    /// Basılı değiştirici tuşlar (Shift, Ctrl).
+    modifiers: Modifiers,
+}
+
+impl State {
+    /// Sürüklenen seçim penceresi ve kesişen seçim olup olmadığı.
+    pub fn selection_window(&self) -> Option<(Rectangle, bool)> {
+        let (start, end) = self.window?;
+
+        Some((
+            Rectangle {
+                x: start.x.min(end.x),
+                y: start.y.min(end.y),
+                width: (start.x - end.x).abs(),
+                height: (start.y - end.y).abs(),
+            },
+            end.x < start.x,
+        ))
+    }
 }
 
 impl<Message> Program<'_, Message> {
@@ -138,8 +161,13 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
             return Some(self.publish(Event::Resized(size)));
         }
 
-        let canvas::Event::Mouse(event) = event else {
-            return None;
+        let event = match event {
+            canvas::Event::Mouse(event) => event,
+            canvas::Event::Keyboard(keyboard::Event::ModifiersChanged(modifiers)) => {
+                state.modifiers = *modifiers;
+                return None;
+            }
+            _ => return None,
         };
 
         match event {
@@ -147,10 +175,12 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
                 // Sürükleme sürerken imleç alanın dışına çıksa da gezinme
                 // devam eder. Aksi hâlde yalnızca alanın üzerindeki ve üstünde
                 // başka bir katman olmayan konumlar dikkate alınır.
-                let position = match (state.drag, cursor.position_in(bounds)) {
-                    (Some(_), _) => *position - Vector::new(bounds.x, bounds.y),
-                    (None, Some(position)) => position,
-                    (None, None) => {
+                let dragging = state.drag.is_some() || state.window.is_some();
+
+                let position = match (dragging, cursor.position_in(bounds)) {
+                    (true, _) => *position - Vector::new(bounds.x, bounds.y),
+                    (false, Some(position)) => position,
+                    (false, None) => {
                         return state.inside.then(|| {
                             state.inside = false;
                             self.publish(Event::CursorLeft)
@@ -160,7 +190,7 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
 
                 state.inside = true;
 
-                if state.drag.is_none() && self.chrome.is_over_view_cube(size, position) {
+                if !dragging && self.chrome.is_over_view_cube(size, position) {
                     return None;
                 }
 
@@ -175,11 +205,20 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
                     }));
                 }
 
-                if let Some(pressed) = state.press
+                if let Some((start, _)) = state.window {
+                    state.window = Some((start, position));
+                } else if let Some(pressed) = state.press
                     && position.distance(pressed) > DRAG_THRESHOLD
                 {
                     state.moved = true;
-                    state.drag = Some(position);
+
+                    // Seç aracında sol tuşla sürüklemek seçim penceresi açar;
+                    // diğer araçlarda görünümü kaydırır.
+                    if self.tool == Tool::Select {
+                        state.window = Some((pressed, position));
+                    } else {
+                        state.drag = Some(position);
+                    }
                 }
 
                 Some(self.publish(Event::CursorMoved(location)))
@@ -220,6 +259,18 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
                 state.drag = None;
                 state.moved = false;
 
+                if let Some((start, end)) = state.window.take() {
+                    let corners = [self.viewport.unproject(start), self.viewport.unproject(end)];
+
+                    return Bounds::from_points(corners).map(|bounds| {
+                        self.publish(Event::BoxSelected {
+                            bounds,
+                            crossing: end.x < start.x,
+                            modifiers: state.modifiers,
+                        })
+                    });
+                }
+
                 if was_dragging {
                     return None;
                 }
@@ -234,7 +285,10 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
                 Some(self.publish(if self.tool.takes_points() {
                     Event::PointPicked(location)
                 } else {
-                    Event::Clicked(location)
+                    Event::Clicked {
+                        location,
+                        modifiers: state.modifiers,
+                    }
                 }))
             }
             mouse::Event::ButtonReleased(mouse::Button::Middle) => {
@@ -280,7 +334,7 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
 
     fn draw(
         &self,
-        _state: &Self::State,
+        state: &Self::State,
         renderer: &Renderer,
         theme: &Theme,
         bounds: Rectangle,
@@ -309,6 +363,10 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
 
         self.draw_measurement(&mut frame, &style, pointer);
         self.draw_draft(&mut frame, &style, pointer);
+
+        if let Some((window, crossing)) = state.selection_window() {
+            self.draw_selection_window(&mut frame, &style, window, crossing);
+        }
 
         if let Some(pointer) = pointer {
             self.draw_crosshair(&mut frame, &style, pointer);

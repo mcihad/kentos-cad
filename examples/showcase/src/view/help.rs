@@ -13,23 +13,43 @@ use crate::message::Message;
 impl Showcase {
     pub(super) fn help(&self) -> Element<'_, Message> {
         let shortcuts = ShortcutList::new()
-            .item("Sol tık + sürükle", "Her araçta gezinme")
-            .item("Orta tuş + sürükle", "Her araçta gezinme")
-            .item("Tekerlek", "İmlecin altındaki noktaya yakınlaştırma")
-            .item("Seç + sol tık", "Öğeyi seçer, özellikler sağ panelde")
-            .item("Ölç + sol tık", "Ölçüm noktası ekler")
-            .item("Ölç + sağ tık", "Ölçümü temizler")
             .item(
-                "Çizim + sol tık",
-                "Nokta ekler, yakalama açıkken köşeye tutunur",
+                "Seç + tık",
+                "Öğeyi seçer; özellikleri sağ panelde düzenlenir",
             )
-            .item("Çizim + sağ tık", "Çoklu çizgiyi veya alanı bitirir")
-            .item("Esc", "Çizimi bitirir, seçimi ve ölçümü temizler")
-            .item("Delete", "Seçili çizimi siler")
+            .item(
+                "Soldan sağa sürükle",
+                "Pencere seçimi: tamamı içeride kalan öğeler",
+            )
+            .item(
+                "Sağdan sola sürükle",
+                "Kesişen seçim: pencereye değen öğeler de",
+            )
+            .item("Shift / Ctrl", "Seçime ekler / seçimden çıkarır")
+            .item(
+                "Tabloda Shift",
+                "Birincil satırdan tıklanan satıra kadar seçer",
+            )
+            .item("Ctrl+A", "Tablodaki kayıtların hepsini seçer")
+            .item(
+                "Orta tuş + sürükle",
+                "Her araçta gezinme; Kaydır aracında sol tuş da",
+            )
+            .item("Tekerlek", "İmlecin altındaki noktaya yakınlaştırma")
+            .item("Ölç + tık", "Ölçüm noktası ekler; sağ tık temizler")
+            .item(
+                "Çizim + tık",
+                "Nokta ekler; sağ tık çoklu çizgiyi veya alanı bitirir",
+            )
+            .item(
+                "Esc",
+                "Pencereyi ya da haritadan seçimi kapatır; yoksa seçimi temizler",
+            )
+            .item("Delete", "Seçili çizimleri siler")
             .item("F1  F3  F7", "Kısayollar, nesne yakalama, ızgara")
             .item(
                 "Komut satırı",
-                "CIZGI, DAIRE, OLC, TUMUNU, YARDIM ve diğerleri",
+                "SORGU, FILTRE, TABLO, CIZGI, YARDIM ve diğerleri",
             );
 
         let dialog = Dialog::new("Kısayollar ve komutlar")

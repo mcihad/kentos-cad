@@ -39,3 +39,10 @@ pub fn disabled(theme: &Theme) -> Style {
         color: Some(Tokens::of(theme).disabled()),
     }
 }
+
+/// Hata ve uyarı metni.
+pub fn danger(theme: &Theme) -> Style {
+    Style {
+        color: Some(Tokens::of(theme).danger),
+    }
+}
