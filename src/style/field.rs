@@ -1,7 +1,7 @@
 //! Giriş alanları, açılır listeler, bölücüler ve kaydırma çubukları.
 
 use iced::widget::pick_list::{Status as PickListStatus, Style as PickListStyle};
-use iced::widget::{overlay, rule, scrollable, text_input};
+use iced::widget::{overlay, rule, scrollable, text_editor, text_input};
 use iced::{Background, Border, Color, Shadow, Theme, Vector};
 
 use crate::theme::Tokens;
@@ -63,6 +63,29 @@ pub fn cell(invalid: bool) -> impl Fn(&Theme, text_input::Status) -> text_input:
             },
             ..input(theme, status)
         }
+    }
+}
+
+/// Çok satırlı metin alanı; odaklanınca kenar vurgu rengini alır.
+pub fn text_area(theme: &Theme, status: text_editor::Status) -> text_editor::Style {
+    let t = Tokens::of(theme);
+
+    let edge = match status {
+        text_editor::Status::Focused { .. } => t.accent,
+        text_editor::Status::Hovered => t.muted,
+        text_editor::Status::Active | text_editor::Status::Disabled => t.border,
+    };
+
+    text_editor::Style {
+        background: Background::Color(t.field),
+        border: Border {
+            color: edge,
+            width: 1.0,
+            radius: RADIUS.into(),
+        },
+        placeholder: t.muted.scale_alpha(0.75),
+        value: t.text,
+        selection: t.accent.scale_alpha(0.35),
     }
 }
 

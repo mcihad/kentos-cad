@@ -13,6 +13,11 @@ pub const MONTHS: [&str; 12] = [
     "Kasım", "Aralık",
 ];
 
+/// Kısaltılmış Türkçe ay adları.
+pub const MONTHS_SHORT: [&str; 12] = [
+    "Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
+];
+
 /// Takvim başlıkları için kısaltılmış gün adları, pazartesiden başlayarak.
 pub const WEEKDAYS: [&str; 7] = ["Pt", "Sa", "Ça", "Pe", "Cu", "Ct", "Pz"];
 
@@ -102,6 +107,20 @@ impl Date {
     /// Ayın Türkçe adıyla: "Eylül 2026".
     pub fn month_title(self) -> String {
         format!("{} {}", MONTHS[usize::from(self.month) - 1], self.year)
+    }
+
+    /// ISO 8601 hafta numarası (1–53): hafta pazartesi başlar, yılın ilk
+    /// haftası ilk perşembeyi içeren haftadır.
+    pub fn iso_week(self) -> u8 {
+        let thursday = self.add_days(3 - i64::from(self.weekday()));
+        let first = Date::new(thursday.year(), 1, 1).unwrap_or(thursday);
+
+        ((thursday.days_since_epoch() - first.days_since_epoch()) / 7 + 1) as u8
+    }
+
+    /// Hafta sonu mu (cumartesi ya da pazar).
+    pub fn is_weekend(self) -> bool {
+        self.weekday() >= 5
     }
 }
 
@@ -282,6 +301,21 @@ mod tests {
 
     fn date(year: i32, month: u8, day: u8) -> Date {
         Date::new(year, month, day).expect("geçerli tarih")
+    }
+
+    #[test]
+    fn iso_weeks_follow_the_first_thursday() {
+        let week = |year, month, day| Date::new(year, month, day).map(Date::iso_week);
+
+        // 1 Ocak 2026 perşembe: yılın ilk haftası.
+        assert_eq!(week(2026, 1, 1), Some(1));
+        // 24 Eylül 2026.
+        assert_eq!(week(2026, 9, 24), Some(39));
+        // 1 Ocak 2027 cuma: 2026'nın 53. haftası.
+        assert_eq!(week(2027, 1, 1), Some(53));
+        // 29 Aralık 2025 pazartesi: 2026'nın ilk haftası.
+        assert_eq!(week(2025, 12, 29), Some(1));
+        assert!(Date::new(2026, 9, 26).is_some_and(Date::is_weekend));
     }
 
     #[test]

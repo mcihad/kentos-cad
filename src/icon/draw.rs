@@ -593,6 +593,56 @@ impl Pen {
                 self.dot(frame, (8.0, 11.5), 0.85);
             }
             Icon::Minus => self.line(frame, (3.0, 8.0), (13.0, 8.0)),
+            Icon::Hash => {
+                self.line(frame, (6.5, 2.5), (5.0, 13.5));
+                self.line(frame, (11.0, 2.5), (9.5, 13.5));
+                self.line(frame, (2.75, 6.0), (13.5, 6.0));
+                self.line(frame, (2.5, 10.0), (13.25, 10.0));
+            }
+            Icon::Slider => {
+                self.line(frame, (1.75, 8.0), (7.25, 8.0));
+                self.line(frame, (12.75, 8.0), (14.25, 8.0));
+                self.circle(frame, (10.0, 8.0), 2.75);
+            }
+            Icon::Lock => {
+                self.polyline(
+                    frame,
+                    &[(3.25, 7.25), (12.75, 7.25), (12.75, 14.25), (3.25, 14.25)],
+                    true,
+                );
+
+                let shackle = Path::new(|builder| {
+                    builder.move_to(self.p(5.25, 7.25));
+                    builder.line_to(self.p(5.25, 5.0));
+                    self.arc(builder, (8.0, 5.0), 2.75, PI, 2.0 * PI);
+                    builder.line_to(self.p(10.75, 7.25));
+                });
+                frame.stroke(&shackle, self.stroke());
+                self.dot(frame, (8.0, 10.75), 1.0);
+            }
+            Icon::Undo => {
+                let arc = Path::new(|builder| {
+                    builder.move_to(self.p(3.5, 7.5));
+                    self.arc(builder, (8.5, 8.75), 5.0, PI * 1.08, PI * 2.5);
+                });
+                frame.stroke(&arc, self.stroke());
+                self.polyline(frame, &[(2.75, 3.75), (3.25, 7.75), (7.0, 6.75)], false);
+            }
+            Icon::Open => {
+                self.polyline(
+                    frame,
+                    &[
+                        (7.0, 3.25),
+                        (2.75, 3.25),
+                        (2.75, 13.25),
+                        (12.75, 13.25),
+                        (12.75, 9.0),
+                    ],
+                    false,
+                );
+                self.line(frame, (7.75, 8.25), (13.5, 2.5));
+                self.polyline(frame, &[(9.0, 2.5), (13.5, 2.5), (13.5, 7.0)], false);
+            }
             Icon::Copy => {
                 self.polyline(
                     frame,

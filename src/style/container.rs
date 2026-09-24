@@ -39,6 +39,21 @@ pub fn field(theme: &Theme) -> Style {
     fill(Tokens::of(theme).field)
 }
 
+/// Giriş alanıyla aynı zemin ve kenar: seçim kutusu, arama kutusu.
+pub fn field_box(theme: &Theme) -> Style {
+    let t = Tokens::of(theme);
+
+    Style {
+        background: Some(Background::Color(t.field)),
+        border: Border {
+            color: t.border,
+            width: 1.0,
+            radius: RADIUS.into(),
+        },
+        ..Style::default()
+    }
+}
+
 /// Kenar renginde dolgu. İçine 1 piksel aralıkla dizilen hücreler arasında
 /// ızgara çizgisi gibi görünür.
 pub fn grid_lines(theme: &Theme) -> Style {

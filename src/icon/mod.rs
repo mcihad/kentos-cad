@@ -92,11 +92,16 @@ pub enum Icon {
     Properties,
     Minus,
     Copy,
+    Hash,
+    Slider,
+    Lock,
+    Undo,
+    Open,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 54] = [
+    pub const ALL: [Icon; 59] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -151,6 +156,11 @@ impl Icon {
         Icon::Properties,
         Icon::Minus,
         Icon::Copy,
+        Icon::Hash,
+        Icon::Slider,
+        Icon::Lock,
+        Icon::Undo,
+        Icon::Open,
     ];
 }
 

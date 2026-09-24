@@ -64,7 +64,7 @@ impl Tokens {
         accent_hover: hex(0x6fb1f0),
         on_accent: hex(0xffffff),
 
-        popover: hexa(0x2a2d32, 0.99),
+        popover: hex(0x2a2d32),
 
         success: hex(0x5cbf62),
         warning: hex(0xf2c53d),
@@ -89,7 +89,7 @@ impl Tokens {
         accent_hover: hex(0x155cae),
         on_accent: hex(0xffffff),
 
-        popover: hexa(0xf7f8f9, 0.99),
+        popover: hex(0xf7f8f9),
 
         success: hex(0x2f9437),
         warning: hex(0xb58500),

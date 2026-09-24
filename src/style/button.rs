@@ -161,6 +161,68 @@ pub fn table_row(selected: bool, current: bool) -> impl Fn(&Theme, Status) -> St
     }
 }
 
+/// Özellik ızgarasındaki kategori başlığı: başlık zemininde, üzerine
+/// gelince açılır.
+pub fn category(theme: &Theme, status: Status) -> Style {
+    let t = Tokens::of(theme);
+
+    style(
+        if is_hovered(status) {
+            t.surface_hover
+        } else {
+            t.header
+        },
+        t.text,
+        Border::default(),
+    )
+}
+
+/// Takvim ve saat ızgarası hücresinin metin tonu.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CellTone {
+    Normal,
+    /// Hafta sonu günleri.
+    Weekend,
+    /// Gösterilen ayın ya da on yılın dışında kalan hücreler.
+    Outside,
+}
+
+/// Takvim ve saat ızgarası hücresi: seçili hücre vurgu zeminiyle, bugün (ya
+/// da şimdiki saat) vurgu kenarıyla gösterilir.
+pub fn calendar(selected: bool, today: bool, tone: CellTone) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+
+        let background = match (selected, is_hovered(status)) {
+            (true, false) => t.accent,
+            (true, true) => t.accent_hover,
+            (false, true) => t.surface_hover,
+            (false, false) => Color::TRANSPARENT,
+        };
+
+        let text = match (selected, tone) {
+            (true, _) => t.on_accent,
+            (false, CellTone::Normal) => t.text,
+            (false, CellTone::Weekend) => t.muted,
+            (false, CellTone::Outside) => t.disabled(),
+        };
+
+        style(
+            background,
+            text,
+            Border {
+                color: if today && !selected {
+                    t.accent
+                } else {
+                    Color::TRANSPARENT
+                },
+                width: if today && !selected { 1.0 } else { 0.0 },
+                radius: 3.0.into(),
+            },
+        )
+    }
+}
+
 /// Ağaçtaki onay kutusu: işaretli ya da karışık kutu vurgu renginde dolu,
 /// işaretsiz kutu kenarlı; üzerine gelince kenar vurgulanır.
 pub fn check(filled: bool) -> impl Fn(&Theme, Status) -> Style {
