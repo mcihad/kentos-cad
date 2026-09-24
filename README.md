@@ -31,6 +31,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── dock.rs          yan panel yuvası: açılıp kapanan paneller, sürüklenen kenar
 │   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
 │   ├── toast.rs         bildirimler: önem düzeyi, eylem, üst üste dizilme, süre
+│   ├── progress.rs      ilerleme çubuğu, dönen gösterge, iptal edilebilen görev listesi
 │   ├── severity.rs      geri bildirimin önem düzeyleri (bilgi, başarı, uyarı, hata)
 │   ├── sash.rs          boyutlandırma tutamağı (sürükle, çift tıkla sıfırla)
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
@@ -169,9 +170,20 @@ Message::Window(event) => self.windows.update(event),
   süre durur. En fazla üç bildirim görünür; eskiler "2 bildirim daha" olarak
   sayılır ve hepsi birden kapatılır. Aynı bildirim yinelenirse yenisi
   eklenmez, sayısı (×2) artar.
+- **İlerleme.** İnce ilerleme çubuğu oranı bilinen işte dolar, bilinmeyende
+  üzerinde bir parça kayar; rengi işin durumunu söyler. Dönen gösterge
+  çember üzerinde sekiz noktadır. Görev listesi arka plandaki işleri
+  durumlarıyla sıralar (sürüyor, sırada, bitti, başarısız, iptal edildi):
+  süren ve sıradaki iş durdurulur, başarısız iş yeniden denenir, biten iş
+  listeden kaldırılır.
 - **Vitrinde.** Çizim silmek geri alınabilir: bildirimdeki "Geri al" çizimleri
   numaralarıyla geri koyar. Örnek veri silinmeye çalışılınca uyarı, ayarlar
   yazılamayınca kalıcı hata bildirimi çıkar; kopyalamalar bilgi bildirir.
+  Dışa aktarma (uygulama menüsü ya da Yönet sekmesi) ve dizin oluşturma arka
+  planda sürer: durum çubuğunda dönen gösterge ve yüzde görünür, tıklanınca
+  Görevler penceresi açılır; biten iş bildirilir. DXF'e dışa aktarma ilk
+  denemede başarısız olur; hata bildirimi ve görev satırı "Yeniden dene"
+  sunar.
 
 ```rust
 use kentos_rc::widget::{Toast, Toaster, Toasts};
@@ -183,6 +195,16 @@ Toaster::new(map, &self.toasts, Message::ToastClosed)
 
 // update
 Message::ToastClosed(id) => self.toasts.dismiss(id),
+
+// Görevler ve durum çubuğundaki gösterge
+TaskList::new().push(
+    Task::new("GeoJSON olarak dışa aktar")
+        .detail("Türkiye.geojson: 27 / 60 öğe")
+        .running(Some(0.45))
+        .on_cancel(Message::Cancel(id)),
+)
+Readout::new(row![progress::spinner().size(12.0), label::caption("Dışa aktarılıyor")])
+    .on_press(Message::ShowTasks)
 ```
 
 ## Komut kutusu ve durum çubuğu
@@ -312,6 +334,7 @@ cargo run -- snapshot yazi.png --senaryo secim --yazi inter --esaralikli jetbrai
 cargo run -- snapshot panel.png --senaryo secim --surukle 1077,400,877,400 --tikla 1140,483
 cargo run -- snapshot pencereler.png --senaryo pencereler --bas 400,158 --imlec 406,163
 cargo run -- snapshot bildirim.png --senaryo bildirimler --tikla 903,463
+cargo run -- snapshot gorevler.png --senaryo gorevler
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 

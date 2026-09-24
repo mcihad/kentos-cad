@@ -16,10 +16,12 @@ use kentos_rc::label;
 use kentos_rc::spatial::{LayerKind, LonLat, format, model_space};
 use kentos_rc::style;
 use kentos_rc::theme::typography;
+use kentos_rc::widget::progress::{self, Task, TaskList};
 use kentos_rc::widget::{Segmented, Tip, ToolWindow, horizontal_divider, tip};
 
 use super::LayerChoice;
 use crate::app::Showcase;
+use crate::jobs::JobState;
 use crate::message::{Keyword, Message, Pane};
 
 /// Katman stili penceresindeki hazır renkler: örnek verinin renkleri ve
@@ -49,6 +51,73 @@ impl Showcase {
             Pane::Measure => self.measure_pane(),
             Pane::GoTo => self.go_to_pane(),
             Pane::Style => self.style_pane(),
+            Pane::Tasks => self.tasks_pane(),
+        }
+    }
+
+    /// Arka plandaki işler: süren, sıradaki ve biten işler; iptal, yeniden
+    /// deneme ve listeden kaldırma.
+    fn tasks_pane(&self) -> ToolWindow<'_, Message> {
+        let active = self.jobs.iter().filter(|job| job.is_active()).count();
+
+        let tasks = self.jobs.iter().map(|job| {
+            let state = match &job.state {
+                JobState::Queued => progress::State::Queued,
+                JobState::Running => progress::State::Running(job.progress()),
+                JobState::Done => progress::State::Done,
+                JobState::Failed(_) => progress::State::Failed,
+                JobState::Cancelled => progress::State::Cancelled,
+            };
+
+            Task::new(job.title())
+                .detail(job.detail())
+                .state(state)
+                .on_cancel(Message::JobCancelled(job.id))
+                .on_retry(Message::JobRetried(job.id))
+                .on_dismiss(Message::JobDismissed(job.id))
+        });
+
+        let body: Element<'_, Message> = if self.jobs.is_empty() {
+            container(label::caption(
+                "Süren iş yok. Dışa aktarma uygulama menüsünden, dizin oluşturma Yönet \
+                 sekmesinden başlar.",
+            ))
+            .padding([12, 12])
+            .into()
+        } else {
+            let mut body = column![TaskList::new().extend(tasks)];
+
+            if self.jobs.has_finished() {
+                body = body.push(horizontal_divider()).push(
+                    container(
+                        button(label::caption("Bitenleri kaldır").style(style::text::default))
+                            .on_press(Message::JobsCleared)
+                            .padding([2, 8])
+                            .style(style::button::flat),
+                    )
+                    .padding([6, 8]),
+                );
+            }
+
+            body.into()
+        };
+
+        let meta = match (active, self.jobs.failed()) {
+            (0, 0) => String::new(),
+            (0, failed) => format!("{failed} başarısız"),
+            (active, _) => format!("{active} etkin"),
+        };
+
+        let window = ToolWindow::new(Pane::Tasks.title(), body)
+            .icon(Pane::Tasks.icon())
+            .width(Pane::Tasks.width())
+            .scrollable()
+            .resizable();
+
+        if meta.is_empty() {
+            window
+        } else {
+            window.meta(meta)
         }
     }
 

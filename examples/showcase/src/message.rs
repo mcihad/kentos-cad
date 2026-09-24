@@ -157,6 +157,18 @@ pub enum Message {
     /// Son silinen çizimleri geri koyar.
     UndoDelete,
 
+    // Arka plandaki işler
+    /// İşleri bir adım ilerletir.
+    JobTick,
+    JobCancelled(u64),
+    JobRetried(u64),
+    /// Biten işi görev listesinden kaldırır.
+    JobDismissed(u64),
+    /// Biten bütün işleri görev listesinden kaldırır.
+    JobsCleared,
+    /// Uzamsal dizini yeniden oluşturur.
+    IndexRequested,
+
     // Yan panel
     /// Yan panelin yeni genişliği (12 piksellik gövde metnine göre).
     DockResized(f32),
@@ -193,6 +205,8 @@ pub enum Pane {
     GoTo,
     /// Aktif katmanın rengi, opaklığı ve çizgi kalınlığı.
     Style,
+    /// Arka plandaki işler: ilerleme, iptal, yeniden deneme.
+    Tasks,
 }
 
 impl Pane {
@@ -201,6 +215,7 @@ impl Pane {
             Pane::Measure => "Ölçüm",
             Pane::GoTo => "Koordinata git",
             Pane::Style => "Katman stili",
+            Pane::Tasks => "Görevler",
         }
     }
 
@@ -209,15 +224,19 @@ impl Pane {
             Pane::Measure => Icon::Measure,
             Pane::GoTo => Icon::Target,
             Pane::Style => Icon::Drop,
+            Pane::Tasks => Icon::Progress,
         }
     }
 
     /// Varsayılan genişlik, 12 piksellik gövde metnine göre.
+    ///
+    /// Görevler sol altta açılır; bildirimler sağ alttadır.
     pub fn width(self) -> f32 {
         match self {
             Pane::Measure => 248.0,
             Pane::GoTo => 252.0,
             Pane::Style => 268.0,
+            Pane::Tasks => 300.0,
         }
     }
 
@@ -233,6 +252,7 @@ impl Pane {
                 Placement::top_left(2.0 * gap + typography::scaled(Pane::Measure.width()), gap)
             }
             Pane::Style => Placement::top_right(96.0, gap),
+            Pane::Tasks => Placement::bottom_left(gap, gap),
         }
     }
 }

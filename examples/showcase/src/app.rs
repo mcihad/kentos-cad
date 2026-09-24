@@ -21,6 +21,7 @@ use kentos_rc::widget::{Toast, Toasts, inspector};
 
 use crate::command::{self, Command};
 use crate::gallery::{Demo, Gallery};
+use crate::jobs::{JobKind, Jobs, Outcome};
 use crate::layer_tree::{LayerTree, NodeId};
 use crate::message::{
     AppCommand, CoordinateFormat, DockPanel, Keyword, Message, Pane, Pending, QueryPurpose,
@@ -61,6 +62,9 @@ const HISTORY_LIMIT: usize = 80;
 
 /// ViewCube'un her karede döndüğü açı (radyan).
 const CUBE_SPEED: f32 = 0.012;
+
+/// Arka plandaki işlerin bir adımı.
+const JOB_STEP: Duration = Duration::from_millis(100);
 
 /// KentOS CAD: kentos-rc bileşenlerinin vitrin uygulaması.
 pub struct Showcase {
@@ -129,6 +133,8 @@ pub struct Showcase {
     pub(crate) toasts: Toasts<Message>,
     /// Son silinen çizimler; bildirimdeki "Geri al" onları geri koyar.
     deleted: Vec<Feature>,
+    /// Arka plandaki işler: dışa aktarma, dizin, içe aktarma.
+    pub(crate) jobs: Jobs,
 }
 
 /// Koordinata git penceresinin alanları.
@@ -263,6 +269,7 @@ impl Showcase {
             go_to: GoTo::default(),
             toasts: Toasts::new(),
             deleted: Vec::new(),
+            jobs: Jobs::default(),
         }
     }
 
@@ -284,16 +291,18 @@ impl Showcase {
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
-        let keys = event::listen_with(keyboard_event);
+        let mut subscriptions = vec![event::listen_with(keyboard_event)];
 
         if self.view_cube {
-            Subscription::batch([
-                keys,
-                iced::time::every(Duration::from_millis(33)).map(|_| Message::Tick),
-            ])
-        } else {
-            keys
+            subscriptions.push(iced::time::every(Duration::from_millis(33)).map(|_| Message::Tick));
         }
+
+        // Arka plandaki işler yalnızca sürerken ilerletilir.
+        if self.jobs.is_busy() {
+            subscriptions.push(iced::time::every(JOB_STEP).map(|_| Message::JobTick));
+        }
+
+        Subscription::batch(subscriptions)
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
@@ -514,8 +523,16 @@ impl Showcase {
             }
             Message::ExportPressed(format) => {
                 self.app_menu_open = false;
+
+                let features = self
+                    .layers
+                    .iter()
+                    .map(|layer| layer.features.len())
+                    .sum::<usize>();
+                self.jobs.push(JobKind::Export(format), features as u32);
                 self.log(format!(
-                    "{format} olarak dışa aktarma bu sürümde henüz yok."
+                    "{} olarak dışa aktarma başladı; ilerleme durum çubuğunda.",
+                    format
                 ));
             }
             Message::RecentPressed(index) => {
@@ -648,6 +665,28 @@ impl Showcase {
                 self.toasts.dismiss(id);
             }
             Message::UndoDelete => self.undo_delete(),
+
+            Message::JobTick => self.step_jobs(),
+            Message::JobCancelled(id) => {
+                if let Some((title, detail)) =
+                    self.jobs.cancel(id).map(|job| (job.title(), job.detail()))
+                {
+                    self.log(format!("{title}: iptal edildi."));
+                    self.toasts
+                        .push(Toast::info(format!("{title} iptal edildi")).body(detail));
+                }
+            }
+            Message::JobRetried(id) => {
+                if self.jobs.retry(id) {
+                    self.log("İş yeniden sıraya kondu.");
+                }
+            }
+            Message::JobDismissed(id) => self.jobs.dismiss(id),
+            Message::JobsCleared => self.jobs.clear_finished(),
+            Message::IndexRequested => {
+                self.jobs.push(JobKind::Index, 28);
+                self.log("Uzamsal dizin oluşturuluyor.");
+            }
 
             Message::DockResized(width) => self.dock.width = width,
             Message::DockResizeEnded => self.save_settings(),
@@ -839,7 +878,7 @@ impl Showcase {
 
                 self.windows.open(pane, pane.placement());
             }
-            Pane::Style => self.windows.open(pane, pane.placement()),
+            Pane::Style | Pane::Tasks => self.windows.open(pane, pane.placement()),
         }
     }
 
@@ -855,6 +894,32 @@ impl Showcase {
             )))
             .collect::<Vec<_>>()
             .join("\n")
+    }
+
+    // --- Arka plandaki işler -------------------------------------------
+
+    /// İşleri bir adım ilerletir; biten ya da başarısız olan işi bildirir.
+    fn step_jobs(&mut self) {
+        match self.jobs.tick() {
+            Some(Outcome::Done(job)) => {
+                let title = match &job.kind {
+                    JobKind::Export(_) => "Dışa aktarıldı",
+                    JobKind::Index => "Uzamsal dizin hazır",
+                };
+
+                self.log(format!("{}: {}", job.title(), job.detail()));
+                self.toasts.push(Toast::success(title).body(job.detail()));
+            }
+            Some(Outcome::Failed(job)) => {
+                self.error(format!("{}: {}", job.title(), job.detail()));
+                self.toasts.push(
+                    Toast::error(format!("{} başarısız", job.title()))
+                        .body(job.detail())
+                        .action("Yeniden dene", Message::JobRetried(job.id)),
+                );
+            }
+            None => {}
+        }
     }
 
     // --- Seçim -----------------------------------------------------------

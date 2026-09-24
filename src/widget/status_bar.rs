@@ -119,6 +119,7 @@ pub struct Readout<'a, Message> {
     content: Element<'a, Message>,
     icon: Option<Icon>,
     menu: Option<Box<dyn Fn() -> Menu<Message> + 'a>>,
+    on_press: Option<Message>,
     tip: Option<Tip>,
     width: Option<f32>,
 }
@@ -129,9 +130,17 @@ impl<'a, Message: Clone + 'a> Readout<'a, Message> {
             content: content.into(),
             icon: None,
             menu: None,
+            on_press: None,
             tip: None,
             width: None,
         }
+    }
+
+    /// Tıklanınca gönderilen mesaj (ör. görevler penceresini açmak);
+    /// menüsü olan göstergede kullanılmaz.
+    pub fn on_press(mut self, message: Message) -> Self {
+        self.on_press = Some(message);
+        self
     }
 
     /// Değerin solundaki sönük ikon.
@@ -186,10 +195,19 @@ impl<'a, Message: Clone + 'a> From<Readout<'a, Message>> for Element<'a, Message
             .height(item_height())
             .align_y(Center);
 
+        let body: Element<'a, Message> = match readout.on_press {
+            Some(message) if readout.menu.is_none() => button(body)
+                .on_press(message)
+                .padding(0)
+                .style(style::button::status_toggle(true))
+                .into(),
+            _ => body.into(),
+        };
+
         match (readout.menu, readout.tip) {
             (Some(menu), _) => MenuButton::new(body, menu).into(),
             (None, Some(description)) => tip(body, description, tooltip::Position::Top),
-            (None, None) => body.into(),
+            (None, None) => body,
         }
     }
 }

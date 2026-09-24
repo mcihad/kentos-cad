@@ -4,16 +4,17 @@
 use iced::widget::{Row, row, space};
 use iced::{Center, Element};
 
-use kentos_rc::icon::Icon;
+use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::{LonLat, format};
 use kentos_rc::style;
 use kentos_rc::widget::Menu;
 use kentos_rc::widget::StatusBar;
+use kentos_rc::widget::progress;
 use kentos_rc::widget::status_bar::{Readout, Toggle};
 
 use crate::app::Showcase;
-use crate::message::{CoordinateFormat, Message, Setting};
+use crate::message::{CoordinateFormat, Message, Pane, Setting};
 
 /// Ölçek menüsündeki standart harita ölçekleri: halihazır haritalardan
 /// (1:1.000, 1:5.000) topoğrafik paftalara ve ülke haritalarına.
@@ -38,11 +39,15 @@ const COORDINATES_WIDTH: f32 = 214.0;
 
 impl Showcase {
     pub(super) fn status_bar(&self) -> Element<'_, Message> {
-        let bar = StatusBar::new()
+        let mut bar = StatusBar::new()
             .push(self.coordinates())
             .separator()
             .push(self.selection_readout())
             .spacer();
+
+        if let Some(jobs) = self.jobs_readout() {
+            bar = bar.push(jobs).separator();
+        }
 
         let bar = Setting::ALL.into_iter().fold(bar, |bar, setting| {
             bar.push(
@@ -97,6 +102,49 @@ impl Showcase {
                     .icon(Icon::Copy)
             })
             .into()
+    }
+
+    /// Arka plandaki işler: süren iş, yüzdesi ve sıradakiler; iş yokken
+    /// başarısız iş sayısı. Tıklanınca görevler penceresi açılır.
+    fn jobs_readout(&self) -> Option<Element<'_, Message>> {
+        let open = Message::PaneToggled(Pane::Tasks);
+
+        let content: Element<'_, Message> = if let Some(job) = self.jobs.running() {
+            let mut content = row![
+                progress::spinner().size(12.0),
+                label::caption(job.activity()).style(style::text::default),
+            ]
+            .spacing(6)
+            .align_y(Center);
+
+            if let Some(done) = job.progress() {
+                content = content.push(label::mono_caption(format!("%{:.0}", done * 100.0)));
+            }
+
+            if self.jobs.queued() > 0 {
+                content = content.push(label::caption(format!("{} sırada", self.jobs.queued())));
+            }
+
+            content.into()
+        } else if self.jobs.failed() > 0 {
+            row![
+                icon(Icon::Error).size(13.0).tone(Tone::Danger),
+                label::caption(format!("{} iş başarısız", self.jobs.failed()))
+                    .style(style::text::danger),
+            ]
+            .spacing(6)
+            .align_y(Center)
+            .into()
+        } else {
+            return None;
+        };
+
+        Some(
+            Readout::new(content)
+                .on_press(open)
+                .tip("Görevler penceresini açar")
+                .into(),
+        )
     }
 
     /// Seçili öğe sayısı; menüsü seçimle yapılacak işleri sunar.

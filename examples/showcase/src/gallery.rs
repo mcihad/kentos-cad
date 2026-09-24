@@ -76,8 +76,7 @@ impl Page {
                  kutuları."
             }
             Page::Feedback => {
-                "Bildirimler: önem düzeyleri, eylem düğmesi, üst üste dizilme ve kendiliğinden \
-                 kapanma."
+                "Bildirimler, ilerleme çubuğu, dönen gösterge ve iptal edilebilen görev listesi."
             }
             Page::Attributes => {
                 "Nesne inceleyici, öznitelik tablosu, sorgu oluşturucu ve alan türleri."

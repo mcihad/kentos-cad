@@ -15,7 +15,7 @@ use kentos_rc::widget::{Tip, swatch, tip};
 use crate::app::Showcase;
 use crate::command::{self, Command};
 use crate::gallery::Page;
-use crate::message::{Message, Pane, QueryPurpose, RibbonTab, SizeStep};
+use crate::message::{EXPORT_FORMATS, Message, Pane, QueryPurpose, RibbonTab, SizeStep};
 use crate::view::family_note;
 
 impl Showcase {
@@ -52,6 +52,13 @@ impl Showcase {
                 .into();
         }
 
+        if self.ribbon_tab == RibbonTab::Manage {
+            return ribbon
+                .group(self.data_group())
+                .group(self.export_group())
+                .into();
+        }
+
         if self.ribbon_tab != RibbonTab::Home {
             return ribbon
                 .placeholder(format!(
@@ -71,6 +78,46 @@ impl Showcase {
             .into()
     }
 
+    /// Veri bakımı: uzamsal dizin ve arka plandaki işler.
+    fn data_group(&self) -> Group<'_, Message> {
+        Group::new("Veri")
+            .push(
+                Button::large(Icon::Grid, "Dizin\noluştur")
+                    .on_press(Message::IndexRequested)
+                    .tip(
+                        Tip::new("Uzamsal dizin oluştur").body(
+                            "Katmanların dizinini yeniden kurar; seçim ve yakalama hızlanır.",
+                        ),
+                    ),
+            )
+            .push(
+                Button::large(Icon::Progress, "Görevler")
+                    .active(self.windows.is_open(Pane::Tasks))
+                    .on_press(Message::PaneToggled(Pane::Tasks))
+                    .tip(
+                        Tip::new("Görevler")
+                            .body("Arka plandaki işler: ilerleme, iptal ve yeniden deneme."),
+                    ),
+            )
+    }
+
+    /// Bütün katmanları dosyaya yazar; iş arka planda sürer.
+    fn export_group(&self) -> Group<'_, Message> {
+        let [first, second] = [&EXPORT_FORMATS[..2], &EXPORT_FORMATS[2..]].map(|formats| {
+            formats
+                .iter()
+                .fold(Stack::new(), |stack, &(format, description)| {
+                    stack.push(
+                        Button::small(Icon::Export, format)
+                            .on_press(Message::ExportPressed(format))
+                            .tip(Tip::new(format!("{format} olarak dışa aktar")).body(description)),
+                    )
+                })
+        });
+
+        Group::new("Dışa aktar").push(first).push(second)
+    }
+
     /// Harita üstündeki kayan pencereler; açık olan vurgulanır. AutoCAD'in
     /// Görünüm sekmesindeki "Paletler" grubu gibi.
     fn windows_group(&self) -> Group<'_, Message> {
@@ -85,24 +132,36 @@ impl Showcase {
                 )
         };
 
-        Group::new("Pencereler").push(
-            Stack::new()
-                .push(pane(
-                    Pane::Measure,
-                    "Ölç aracını ve ölçüm penceresini açar.",
-                    Command::Tool(Tool::Measure),
-                ))
-                .push(pane(
-                    Pane::GoTo,
-                    "Enlem ve boylam yazıp görünümü ortalar ya da çizime nokta ekler.",
-                    Command::Pane(Pane::GoTo),
-                ))
-                .push(pane(
-                    Pane::Style,
-                    "Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştirir.",
-                    Command::Pane(Pane::Style),
-                )),
-        )
+        Group::new("Pencereler")
+            .push(
+                Stack::new()
+                    .push(pane(
+                        Pane::Measure,
+                        "Ölç aracını ve ölçüm penceresini açar.",
+                        Command::Tool(Tool::Measure),
+                    ))
+                    .push(pane(
+                        Pane::GoTo,
+                        "Enlem ve boylam yazıp görünümü ortalar ya da çizime nokta ekler.",
+                        Command::Pane(Pane::GoTo),
+                    ))
+                    .push(pane(
+                        Pane::Style,
+                        "Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştirir.",
+                        Command::Pane(Pane::Style),
+                    )),
+            )
+            .push(
+                Stack::new().push(
+                    Button::small(Pane::Tasks.icon(), Pane::Tasks.title())
+                        .active(self.windows.is_open(Pane::Tasks))
+                        .on_press(Message::PaneToggled(Pane::Tasks))
+                        .tip(
+                            Tip::new(Pane::Tasks.title())
+                                .body("Arka plandaki işler: ilerleme, iptal ve yeniden deneme."),
+                        ),
+                ),
+            )
     }
 
     fn draw_group(&self) -> Group<'_, Message> {

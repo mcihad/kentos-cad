@@ -6,6 +6,7 @@
 mod app;
 mod command;
 mod gallery;
+mod jobs;
 mod layer_tree;
 mod message;
 mod sample;

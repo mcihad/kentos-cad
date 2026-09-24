@@ -30,7 +30,7 @@ use crate::message::{Message, Pane, QueryPurpose, RibbonTab};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 13] = [
+const SCENARIOS: [(&str, &str); 14] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -66,6 +66,10 @@ const SCENARIOS: [(&str, &str); 13] = [
     (
         "bildirimler",
         "bildirimler: yinelenen bilgi, uyarı, kalıcı hata ve geri alınabilir silme",
+    ),
+    (
+        "gorevler",
+        "görevler penceresi: süren, sıradaki, biten, başarısız ve iptal edilen işler",
     ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
@@ -365,6 +369,28 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::ToolSelected(Tool::Select));
             send(Message::SelectNode(NodeId::Layer(DRAWING_LAYER)));
             send(Message::DeleteSelection);
+        }
+        "gorevler" => {
+            let mut run = |message: Message, ticks: usize| {
+                let _ = app.update(message);
+
+                for _ in 0..ticks {
+                    let _ = app.update(Message::JobTick);
+                }
+            };
+
+            // Sırayla: DXF başarısız olur, PNG iptal edilir, dizin biter,
+            // GeoJSON sürer, PDF sırada bekler.
+            run(Message::ExportPressed("DXF"), 21);
+            run(Message::ExportPressed("PNG"), 4);
+            run(Message::JobCancelled(2), 0);
+            run(Message::IndexRequested, 29);
+            run(Message::ExportPressed("GeoJSON"), 15);
+            run(Message::ExportPressed("PDF"), 0);
+            run(Message::PaneToggled(Pane::Tasks), 0);
+
+            app.toasts.clear();
+            return Ok(());
         }
         "galeri" => {
             let page = match page {
