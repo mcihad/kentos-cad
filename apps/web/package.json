@@ -1,0 +1,22 @@
+{
+  "name": "@kentos/web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "wasm": "node ../../scripts/wasm/ensure.mjs",
+    "dev": "node ../../scripts/wasm/ensure.mjs && vite",
+    "build": "node ../../scripts/wasm/ensure.mjs && tsc && vite build",
+    "preview": "vite preview",
+    "test": "node ../../scripts/wasm/ensure.mjs && vitest run",
+    "test:watch": "node ../../scripts/wasm/ensure.mjs && vitest",
+    "e2e": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/smoke.mjs",
+    "e2e:cloud": "node ../../scripts/wasm/ensure.mjs && cargo build -q -p kentos-api && node scripts/e2e/cloud.mjs",
+    "perf:interaction": "node ../../scripts/wasm/ensure.mjs && node scripts/perf/interaction.mjs"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}

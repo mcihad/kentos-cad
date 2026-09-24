@@ -1,0 +1,3 @@
+# pnpm workspace: the web app is a package of its own; the Rust side is the Cargo workspace.
+packages:
+  - apps/web

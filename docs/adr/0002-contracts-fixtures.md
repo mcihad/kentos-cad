@@ -12,8 +12,8 @@ Tarayıcı, WASM, API ve saklanan dosyalar aynı veriyi konuşacak. Tipler iki d
 
 ### Sözleşmeler: tek tanım Rust'ta
 
-- **Tek kaynak `crates/contracts`'tır.** `cargo test -p kentos-contracts`, ts-rs ile TypeScript tiplerini `src/contracts/generated/` altına yazar; bu dosyalar depoya girer.
-- **Uygulamanın iç tipleri** (`Entity`, `LayerNode` …) derleme anında sözleşmeye karşı denetlenir (`src/contracts/contracts.test.ts`). Bir alan eklenip sözleşmeye yazılmazsa `tsc` hata verir.
+- **Tek kaynak `crates/shared/contracts`'tır.** `cargo test -p kentos-contracts`, ts-rs ile TypeScript tiplerini `apps/web/src/contracts/generated/` altına yazar; bu dosyalar depoya girer.
+- **Uygulamanın iç tipleri** (`Entity`, `LayerNode` …) derleme anında sözleşmeye karşı denetlenir (`apps/web/src/contracts/contracts.test.ts`). Bir alan eklenip sözleşmeye yazılmazsa `tsc` hata verir.
 - **v1 sözleşmeleri:**
   - `Entity` (13 tür, `kind` etiketli);
   - `LayerNode` ve `LayerStyle`;
@@ -38,9 +38,9 @@ Tarayıcı, WASM, API ve saklanan dosyalar aynı veriyi konuşacak. Tipler iki d
 - `fixtures/geometry/v1/cases.json` her durum için girdi ve beklenen sonucu taşır. Beklenen sonuçlar bir kez TypeScript referansından kaydedildi (`GOLDEN_WRITE=1`) ve kilitlendi. Değiştirmek, bilinçli ve incelenmiş bir davranış değişikliğidir.
 - Bağımsız referanslar (ADR 0004, §23.4): `fixtures/geometry/v1/reference.json` ve `fixtures/numeric/v1/*`. KentOS kodu olmadan, Python kesin aritmetiğiyle üretildi. Eski TypeScript sonucuna eşitlik tek doğruluk ölçütü değildir.
 - Aynı dosyayı okuyanlar:
-  - TypeScript: `src/model/geom/golden.test.ts`;
-  - yerel Rust: `crates/geometry-core/tests/golden.rs`;
-  - WASM: `src/wasm/golden.wasm.test.ts`, `pnpm test:rust` ile. Bağımsız referanslar da (`reference.json`) aynı sınırlarla WASM'da sınanır.
+  - TypeScript: `apps/web/src/model/geom/golden.test.ts`;
+  - yerel Rust: `crates/shared/geometry-core/tests/golden.rs`;
+  - WASM: `apps/web/src/wasm/golden.wasm.test.ts`, `pnpm test:rust` ile. Bağımsız referanslar da (`reference.json`) aynı sınırlarla WASM'da sınanır.
 - **Tolerans:** `|gerçek − beklenen| ≤ 1e-9 + 1e-14·max(|gerçek|, |beklenen|)`. Sınır CRS türüne göre yazılır (§14): dosya koordinatlarının metre cinsinden bir projeksiyon düzleminde olduğunu `crs` alanında söyler; iki okuyucu da bunu denetler. Coğrafi (derece) koordinat ve jeodezik hesap ayrı dosya ve ayrı sınırla gelir.
   - Formüller ve işlem sırası iki dilde aynı olduğu için toplama ve çarpma aynı sonucu verir.
   - Fark yalnızca `atan2`, `sin`, `hypot` gibi kütüphane işlevlerinin son bitinden gelebilir.
@@ -54,17 +54,17 @@ Tarayıcı, WASM, API ve saklanan dosyalar aynı veriyi konuşacak. Tipler iki d
 
 ### Çağrı fixture'ları (ADR 0008)
 
-- Geometri Rust'a taşınırken her modülün davranışı `fixtures/geometry/v1/calls-*.json` dosyalarına dondurulur: `{ fn, args, expect }` satırları, aynı tolerans ve `crs` alanıyla. Kayıt TS varken yapılır (`scripts/fixtures/record-calls.test.ts`); native (`tests/calls.rs`) ve WASM (`src/wasm/calls.wasm.test.ts`) aynı dosyaları çekirdeğin çağrı tablosundan geçirir.
+- Geometri Rust'a taşınırken her modülün davranışı `fixtures/geometry/v1/calls-*.json` dosyalarına dondurulur: `{ fn, args, expect }` satırları, aynı tolerans ve `crs` alanıyla. Kayıt TS varken yapılır (`apps/web/scripts/fixtures/record-calls.test.ts`); native (`tests/calls.rs`) ve WASM (`apps/web/src/wasm/calls.wasm.test.ts`) aynı dosyaları çekirdeğin çağrı tablosundan geçirir.
 - TS silinince bu dosyalar davranış kilidi olarak kalır; `cases.json` gibi, değiştirmek incelenmiş bir karardır.
 
 ### CRS kaydı
 
-- `fixtures/crs/v1/registry.json`, `src/geo/crs.ts`'ten üretilir (`scripts/fixtures/record-crs.test.ts`, `GOLDEN_WRITE=1`). Kaynak TypeScript kaydı kalır (§5).
-- `src/geo/crs.test.ts`, dosya kayıttan ayrılınca kırılır.
-- `crates/contracts/tests/crs.rs` dosyayı bağımsız olarak EPSG değerlerine göre denetler: SRID ile dilim eşlemesi, elipsoit, ölçek katsayısı, başlangıç ötelemesi. TUREF dilim önerisini de aynı kuralla (en yakın orta meridyen, sınırda batı dilimi) yeniden hesaplar.
+- `fixtures/crs/v1/registry.json`, `apps/web/src/geo/crs.ts`'ten üretilir (`apps/web/scripts/fixtures/record-crs.test.ts`, `GOLDEN_WRITE=1`). Kaynak TypeScript kaydı kalır (§5).
+- `apps/web/src/geo/crs.test.ts`, dosya kayıttan ayrılınca kırılır.
+- `crates/shared/contracts/tests/crs.rs` dosyayı bağımsız olarak EPSG değerlerine göre denetler: SRID ile dilim eşlemesi, elipsoit, ölçek katsayısı, başlangıç ötelemesi. TUREF dilim önerisini de aynı kuralla (en yakın orta meridyen, sınırda batı dilimi) yeniden hesaplar.
 - Dönüşüm (datum, dilim) Faz B/C'de PROJ/PostGIS ile, sabitlenmiş grid verisiyle gelir. O zaman bu dosyaya dönüşüm referans noktaları eklenir.
 
 ## Sonuçlar
 
 - Rust ve TypeScript arasındaki her uyumsuzluk bir testte görünür. Sözleşme değişikliği TS tarafında derleme hatası olarak ortaya çıkar.
-- Opak stil alanları v1'de doğrulanmaz. Doğrulama şimdilik `src/style/file.ts` içindeki TypeScript okuyucusunda kalır.
+- Opak stil alanları v1'de doğrulanmaz. Doğrulama şimdilik `apps/web/src/style/file.ts` içindeki TypeScript okuyucusunda kalır.

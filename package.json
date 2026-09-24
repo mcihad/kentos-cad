@@ -1,29 +1,25 @@
 {
-  "name": "kentos-cad",
+  "name": "kentos",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "wasm": "node scripts/wasm/ensure.mjs",
-    "dev": "node scripts/wasm/ensure.mjs && vite",
-    "build": "node scripts/wasm/ensure.mjs && tsc && vite build",
-    "preview": "vite preview",
-    "test": "node scripts/wasm/ensure.mjs && vitest run",
-    "test:watch": "node scripts/wasm/ensure.mjs && vitest",
-    "e2e": "node scripts/wasm/ensure.mjs && node scripts/e2e/smoke.mjs",
-    "e2e:cloud": "node scripts/wasm/ensure.mjs && cargo build -q -p kentos-api && node scripts/e2e/cloud.mjs",
-    "perf:interaction": "node scripts/wasm/ensure.mjs && node scripts/perf/interaction.mjs",
+    "dev": "pnpm -C apps/web dev",
+    "build": "pnpm -C apps/web build",
+    "typecheck": "pnpm -C apps/web exec tsc --noEmit -p .",
+    "preview": "pnpm -C apps/web preview",
+    "test": "pnpm -C apps/web test",
+    "test:watch": "pnpm -C apps/web test:watch",
+    "e2e": "pnpm -C apps/web e2e",
+    "e2e:cloud": "pnpm -C apps/web e2e:cloud",
+    "perf:interaction": "pnpm -C apps/web perf:interaction",
     "rust:test": "cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings",
-    "rust:wasm": "cargo build -p kentos-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir src/wasm/pkg target/wasm32-unknown-unknown/wasm/kentos_wasm.wasm",
-    "rust:wasm:formats": "cargo build -p kentos-formats-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir src/io/pkg target/wasm32-unknown-unknown/wasm/kentos_formats_wasm.wasm",
-    "test:rust": "pnpm rust:test && pnpm wasm && vitest run src/wasm src/io",
+    "rust:wasm": "cargo build -p kentos-geometry-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir apps/web/src/wasm/pkg target/wasm32-unknown-unknown/wasm/kentos_geometry_wasm.wasm",
+    "rust:wasm:formats": "cargo build -p kentos-formats-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir apps/web/src/io/pkg target/wasm32-unknown-unknown/wasm/kentos_formats_wasm.wasm",
+    "test:rust": "pnpm rust:test && pnpm wasm && pnpm -C apps/web exec vitest run src/wasm src/io",
     "api": "cargo run -q -p kentos-api --bin kentosd -- serve",
     "kentosd": "cargo run -q -p kentos-api --bin kentosd --",
     "db:setup": "cargo run -q -p kentos-api --bin kentosd -- db-setup && cargo run -q -p kentos-api --bin kentosd -- migrate && cargo run -q -p kentos-api --bin kentosd -- dev-seed"
-  },
-  "devDependencies": {
-    "typescript": "~6.0.2",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.1"
   }
 }

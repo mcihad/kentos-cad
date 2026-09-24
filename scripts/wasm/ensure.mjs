@@ -1,6 +1,6 @@
 // Builds the Rust WASM packages whose sources changed since their last build
-// (docs/adr/0008): the geometry core (src/wasm/pkg), which the app needs to
-// start, and the file formats (src/io/pkg), which the formats worker loads
+// (docs/adr/0008): the geometry core (apps/web/src/wasm/pkg), which the app needs to
+// start, and the file formats (apps/web/src/io/pkg), which the formats worker loads
 // only when a file is imported or exported (CLAUDE.md §20). `pnpm dev`,
 // `test`, `build`, `e2e` and the perf scripts run this first. Each package
 // has its own digest (the crates it is built from and the toolchain pins)
@@ -15,9 +15,9 @@ import { spawnSync } from 'node:child_process';
 const ROOT = new URL('../..', import.meta.url).pathname;
 const PINS = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml'];
 const PACKAGES = [
-  { label: 'Geometri çekirdeği', script: 'rust:wasm', out: 'src/wasm/pkg', lib: 'kentos_wasm', sources: ['crates/geometry-core', 'crates/wasm', ...PINS] },
+  { label: 'Geometri çekirdeği', script: 'rust:wasm', out: 'apps/web/src/wasm/pkg', lib: 'kentos_geometry_wasm', sources: ['crates/shared/geometry-core', 'crates/wasm/geometry-wasm', ...PINS] },
   // The formats use the core's own sampling of bulged rings (docs/adr/0009): a core edit rebuilds both.
-  { label: 'Dosya biçimleri', script: 'rust:wasm:formats', out: 'src/io/pkg', lib: 'kentos_formats_wasm', sources: ['crates/formats', 'crates/formats-wasm', 'crates/contracts', 'crates/geometry-core', ...PINS] },
+  { label: 'Dosya biçimleri', script: 'rust:wasm:formats', out: 'apps/web/src/io/pkg', lib: 'kentos_formats_wasm', sources: ['crates/shared/formats', 'crates/wasm/formats-wasm', 'crates/shared/contracts', 'crates/shared/geometry-core', ...PINS] },
 ];
 
 function files(path) {

@@ -1,8 +1,22 @@
-# KentOS Rust workspace (CLAUDE.md §14): the shared analytic core (native and
-# WASM), versioned contracts, the file formats, and the server. The browser app stays in src/.
+# KentOS Rust workspace (CLAUDE.md §14). crates/shared: platform-neutral libraries
+# (geometry core, contracts, file formats) that the web app (through crates/wasm), the
+# server (crates/server, apps/api) and the future desktop app share.
 [workspace]
 resolver = "3"
-members = ["crates/contracts", "crates/geometry-core", "crates/wasm", "crates/formats", "crates/formats-wasm", "crates/postgres", "crates/application", "apps/api"]
+members = [
+    # Platform-neutral libraries: the web app, the server and the desktop app share them.
+    "crates/shared/geometry-core",
+    "crates/shared/contracts",
+    "crates/shared/formats",
+    # Browser bindings (wasm-bindgen) of the shared libraries.
+    "crates/wasm/geometry-wasm",
+    "crates/wasm/formats-wasm",
+    # Server-only libraries: PostgreSQL/PostGIS and the use cases.
+    "crates/server/postgres",
+    "crates/server/application",
+    # Executables.
+    "apps/api",
+]
 
 [workspace.package]
 version = "0.1.0"

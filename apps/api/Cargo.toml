@@ -11,9 +11,9 @@ name = "kentosd"
 path = "src/main.rs"
 
 [dependencies]
-kentos-contracts = { path = "../../crates/contracts" }
-kentos-application = { path = "../../crates/application" }
-kentos-postgres = { path = "../../crates/postgres" }
+kentos-contracts = { path = "../../crates/shared/contracts", default-features = false }
+kentos-application = { path = "../../crates/server/application" }
+kentos-postgres = { path = "../../crates/server/postgres" }
 axum = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }

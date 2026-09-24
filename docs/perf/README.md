@@ -3,8 +3,8 @@
 Ölçümler betikle alınır ve buraya yazılır; elle sayı girilmez. Hedefler [ADR 0005](../adr/0005-performance-acceptance-targets.md)'tedir. ADR **taslaktır ve kullanıcı onayı bekler**; aşağıdaki karşılaştırmalar bu yüzden yalnızca kayıttır, kabul kararı değildir.
 
 ```bash
-node scripts/perf/bundle.mjs  --label baseline   # production build + chunk envanteri
-node scripts/perf/startup.mjs --label baseline   # vite preview + başsız Chrome, soğuk/ılık × 3
+node apps/web/scripts/perf/bundle.mjs  --label baseline   # production build + chunk envanteri
+node apps/web/scripts/perf/startup.mjs --label baseline   # vite preview + başsız Chrome, soğuk/ılık × 3
 pnpm perf:interaction --label baseline           # etkileşim tabanı: Vite + başsız Chrome (GPU), parsel-50k ve hat-1m × 3 koşu
 pnpm perf:interaction --label s1                 # sonraki ölçüm: interaction-s1.{json,md}, tabanla karşılaştırmalı
 ```
@@ -13,7 +13,7 @@ pnpm perf:interaction --label s1                 # sonraki ölçüm: interaction
 
 ## Etkileşim tabanı (2026-09-24, `c110b15`)
 
-Kaynak: [interaction-baseline.md](interaction-baseline.md) (ham veri `.json`; betik `scripts/perf/interaction.mjs`, veri setleri `scripts/perf/datasets.mjs`). [ADR 0008](../adr/0008-shared-core-boundary.md)'in S1 diliminden (geometri deposu) önce, kenet, seçme ve katman geometrisi henüz TypeScript'teyken alındı. S1 ve sonraki dilimler aynı betikle, aynı makinede bu tabanla karşılaştırılır; betik gerilemeleri raporun sonunda listeler.
+Kaynak: [interaction-baseline.md](interaction-baseline.md) (ham veri `.json`; betik `apps/web/scripts/perf/interaction.mjs`, veri setleri `apps/web/scripts/perf/datasets.mjs`). [ADR 0008](../adr/0008-shared-core-boundary.md)'in S1 diliminden (geometri deposu) önce, kenet, seçme ve katman geometrisi henüz TypeScript'teyken alındı. S1 ve sonraki dilimler aynı betikle, aynı makinede bu tabanla karşılaştırılır; betik gerilemeleri raporun sonunda listeler.
 
 | Ölçüt (p95, 3 koşunun ortancası) | `parsel-50k` (81 229 nesne) | `hat-1m` (1 M segment) | ADR 0005 önerisi |
 |---|---|---|---|
@@ -50,7 +50,7 @@ Kaynaklar: [interaction-s1-before.md](interaction-s1-before.md) ve [interaction-
 Notlar:
 
 - **Seçme, kenet, buda ve etiketler** 10–1000 kat hızlandı. `hat-1m` genel görünümde kenet hâlâ 19 ms (p50) ve 32 ms (p95): imlecin yakınındaki eşyükseltilerin kesişim adayları. Sıradaki iyileştirme hedefi budur.
-- **Yeniden kurma** P8 ile S1c arasında değişmeyen koddur (`src/render`, `src/style` aynı). Fark iki koşunun makine yükünden gelir; `hat-1m`'de süreyi SwiftShader'ın yazılımla yüklemesi belirler.
+- **Yeniden kurma** P8 ile S1c arasında değişmeyen koddur (`apps/web/src/render`, `apps/web/src/style` aynı). Fark iki koşunun makine yükünden gelir; `hat-1m`'de süreyi SwiftShader'ın yazılımla yüklemesi belirler.
 - Betik 29 ölçütü gerileme sayıyor. Çoğu p50'si değişmeyen karelerin p95 sıçramaları (`hat-1m` seç karesi p50 1,09 → 1,00, p95 1,36 → 12,3), SwiftShader'ın kare aralığı ve 1 ms altındaki GPU gönderimleridir. Tek koşu ve yüklü makinede p95 güvenilir değildir.
 - Kabul ölçümü kullanıcının makinesindedir: `pnpm perf:interaction --label s1`, tabanla karşılaştırmalı.
 

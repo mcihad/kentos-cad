@@ -32,7 +32,7 @@ Faz B'nin ilk dikey dilimi: tek tenant'ta gerçek proje, izinli kayıt, iki edit
 - **Kimliksiz girişler:** parola denetimi ve OpenID hesabının bulunması kullanıcı bilinmeden yapılır. Bunlar yalnızca iki `SECURITY DEFINER` işlevle yapılır: `kentos.check_local_login`, `kentos.resolve_identity`.
   - `search_path` sabittir; işlevler başka bir şeye dokunmaz.
   - Sunucu rolü parola özetini hiç okuyamaz.
-- **Sınanan davranışlar** (`crates/application/tests/identity.rs`):
+- **Sınanan davranışlar** (`crates/server/application/tests/identity.rs`):
   - başka tenant'ın projesi görünmez;
   - başka tenant adına satır yazılamaz;
   - sunucu rolü `local_credential` okuyamaz, tenant açamaz, rol değiştiremez, denetim kaydı silemez;
@@ -82,7 +82,7 @@ Faz B'nin ilk dikey dilimi: tek tenant'ta gerçek proje, izinli kayıt, iki edit
 - **Sunucu rolü proje satırı silemez** (`delete` yetkisi yok); silme bir güncellemedir. Satır güvenliği kuralları değişmedi: tenant sınırı aynıdır, silinmişliği uygulama katmanı denetler.
 - **Geri getirme** işletmecinindir (sahip rolü, komut satırı): `kentosd project deleted --tenant KISA` listeler, `kentosd project restore --tenant KISA --project KİMLİK` geri getirir; denetime aktörsüz `project.restore` yazılır.
 - **Yeniden adlandırma** yeni bir yazma yolu değildir: `project.changes` içindeki proje bilgisi yamasıdır (`name`, `project.edit` yetkisi, `expectedVersions["@project"]`).
-- **Geliştirme:** `sqlx::migrate!` migration dosyalarını derlerken gömer ve klasöre yeni eklenen dosyayı kendiliğinden görmez; `crates/postgres/build.rs` klasör değişince yeniden derletir (yoksa test veritabanları yeni migration olmadan kurulur).
+- **Geliştirme:** `sqlx::migrate!` migration dosyalarını derlerken gömer ve klasöre yeni eklenen dosyayı kendiliğinden görmez; `crates/server/postgres/build.rs` klasör değişince yeniden derletir (yoksa test veritabanları yeni migration olmadan kurulur).
 - **Sınırlar:** belirli bir süre sonra kalıcı silme ve arayüzden geri getirme yok. Geri getirilen projeyi silinmiş hâlde açık tutan editör onu listeden yeniden açar; cihaz taslağı o zaman geri gelir.
 
 ## 2026-09-24: Olay günlüğünün budanması (migration 0003)
@@ -92,5 +92,5 @@ Faz B'nin ilk dikey dilimi: tek tenant'ta gerçek proje, izinli kayıt, iki edit
 - **Neden ufuk:** `seq` bütün projelerde ortak bir sayaçtır; bir projenin kalan en eski olayına bakarak aradaki olayların silinip silinmediği anlaşılmaz. Ufuk sessiz bir projeyi (imleçten sonra hiç olay yok) olayları silinmiş projeden ayırır.
 - **İstemciye etkisi:** imleç ufkun altındaysa (bazı olaylar gitmiş) ya da en yeni olayın ötesindeyse (geri yüklenmiş veritabanı) günlük oradan sürdürülemez: HTTP olay günlüğü 410 `resync_required`, WebSocket `resyncRequired` döner; istemci projeyi yeniden açar (cihaz taslağı geri gelir). Proje bilgisi (`event_cursor`) ve en yeni imleç ufkun altına inmez; bütün olayları silinmiş bir proje açılınca ufuktan sürer, yeniden açma döngüsü olmaz.
 - **Yarış:** olay okuması önce, ufuk okuması sonra yapılır. Aradaki bir budama en çok gereksiz bir yeniden açma doğurur, eksik olayla sürdürmeyi değil.
-- **Sınanan:** `crates/application/tests/retention.rs` (partiler, iki tenant, ufuk, 410, boş proje, RLS), `apps/api/src/http/ws_tests.rs` (gerçek soket: eski imleçte `resyncRequired`, ufuktan kalan olay, en yeni olayın ötesi), `identity.rs` (sunucu rolü olay silemez, ufku değiştiremez).
+- **Sınanan:** `crates/server/application/tests/retention.rs` (partiler, iki tenant, ufuk, 410, boş proje, RLS), `apps/api/src/http/ws_tests.rs` (gerçek soket: eski imleçte `resyncRequired`, ufuktan kalan olay, en yeni olayın ötesi), `identity.rs` (sunucu rolü olay silemez, ufku değiştiremez).
 - **Sınırlar:** `command_log` (idempotency) ve `audit_event` budanmaz; idempotency penceresi ve denetim saklama süresi ayrı kararlardır.

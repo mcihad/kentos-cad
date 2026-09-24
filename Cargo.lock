@@ -1259,20 +1259,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-geometry-wasm"
+version = "0.1.0"
+dependencies = [
+ "kentos-geometry-core",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "kentos-postgres"
 version = "0.1.0"
 dependencies = [
  "sqlx",
  "tokio",
  "uuid",
-]
-
-[[package]]
-name = "kentos-wasm"
-version = "0.1.0"
-dependencies = [
- "kentos-geometry-core",
- "wasm-bindgen",
 ]
 
 [[package]]

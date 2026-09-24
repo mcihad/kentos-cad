@@ -13,7 +13,7 @@ Harita büroları veriyi Netcad koordinat listeleriyle (NCN, TXT, CSV) ve DXF il
 
 ### Biçimler Rust'ta, tek crate
 
-- `crates/formats` (`kentos-formats`): saf crate. Bağımlılıkları çalışma alanında zaten onaylı olanlar: `kentos-contracts` (nesne ve katman biçimi), `kentos-geometry-core`, `serde`, `serde_json`, `libm`. Yeni dış bağımlılık yok.
+- `crates/shared/formats` (`kentos-formats`): saf crate. Bağımlılıkları çalışma alanında zaten onaylı olanlar: `kentos-contracts` (nesne ve katman biçimi), `kentos-geometry-core`, `serde`, `serde_json`, `libm`. Yeni dış bağımlılık yok.
   - `libm`, native ile WASM'ın aynı dosyadan aynı bitleri okuması için gerekir (§23.4, ADR 0008); `clippy.toml` std aşkın işlevlerini yasaklar.
   - Uygulamanın da hesapladığı geometri ortak çekirdekten gelir (§14 tek hesap kaynağı): yaylı yolun noktaları (`bulge_path_outline`, uygulamanın `polygonRing`'i; bir DXF taramasının çoklu çizgi sınırı, uygulamanın aynı sınırdan kurduğu taramayla aynı noktaları alır), halka alanı ve nokta-halka sınaması. İlk sürüm bunların kopyalarını tutuyordu ve adım kuralı uygulamanınkinden ayrılıyordu (en az bir parça, başka bir `hypot`).
   - Yalnız dosya okumaya özgü geometri `geom.rs`'tedir: dörtte bir dönüşlerde tam sin/cos ile afin dönüşüm ve benzerlik ayrıştırması, DXF nesne koordinat sistemi, gerilmiş daireden elips, saat yönünde de dönebilen DXF tarama yayları (uygulamanın adımıyla: turda 72, en az iki parça); NURBS `nurbs.rs`'tedir. Çekirdekte bunların karşılığı yok.
@@ -23,11 +23,11 @@ Harita büroları veriyi Netcad koordinat listeleriyle (NCN, TXT, CSV) ve DXF il
   - Hiçbir girdi paniğe yol açmaz (`unwrap`/`expect`/`panic` lint ile yasak); bozuk satır sayılır, raporlanır.
   - Tek geçiş; satır sayısıyla doğrusal.
 - **Yazıcı**, geri okununca aynı float64'ü veren en kısa ondalığı yazar (`num.rs`); yazıp okuma bit bit aynıdır.
-- **Sözleşmeler** `crates/contracts/src/formats.rs`'tedir (`FORMATS_VERSION = 1`); TS tipleri ts-rs ile üretilir. Modül sürümünü bildirir, worker farklı sürümü reddeder.
+- **Sözleşmeler** `crates/shared/contracts/src/formats.rs`'tedir (`FORMATS_VERSION = 1`); TS tipleri ts-rs ile üretilir. Modül sürümünü bildirir, worker farklı sürümü reddeder.
 
 ### Tarayıcıda: ayrı WASM modülü, ayrı worker, geç yükleme
 
-- `crates/formats-wasm` geometri çekirdeğinin paketinden ayrıdır (`src/io/pkg`). Çekirdek başlangıçta yüklenir; biçim modülü yalnız içe ya da dışa aktarmada.
+- `crates/wasm/formats-wasm` geometri çekirdeğinin paketinden ayrıdır (`apps/web/src/io/pkg`). Çekirdek başlangıçta yüklenir; biçim modülü yalnız içe ya da dışa aktarmada.
 - `scripts/wasm/ensure.mjs` iki paketi ayrı özet ve damgayla derler.
 - `io/formatsWorker.ts` modülü ilk istekte yükler (`?url` varlığı, `init`). Dosya `ArrayBuffer` olarak aktarılır: DXF'nin bütün arabelleği kopyasız devredilir (daha büyük bir arabelleğe bakan görünüm kopyalanır), koordinat listesi kopyayla gider çünkü pencere her seçimde dosyayı yeniden okur. Sonuç UTF-8 JSON baytıdır, o da aktarılır ve sayfada ayrıştırılır; serde_json float'ları en kısa gidiş-dönüş biçimiyle yazdığı için koordinatlar bit bit gelir.
 - `io/client.ts` worker'ı 30 sn boşta kalınca kapatır: WASM belleği küçülmez, büyük bir dosyanın belleği böylece geri verilir. Tuzakta (modül hatası) worker kapatılır, sonraki istek yenisini açar.

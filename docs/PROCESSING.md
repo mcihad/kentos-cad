@@ -34,7 +34,7 @@ sadeleştirmek, bir ada içindeki parselleri yeniden numaralamak.
 ## 3. Dizin yapısı
 
 ```
-src/processing/
+apps/web/src/processing/
   types.ts           Sözleşme: parametre türleri, değer tipleri, ProcessingTool, ChangeSet, RunContext, Feedback, defineTool
   parameters.ts      Varsayılanlar, görünürlük, doğrulama (kullanıcı mesajlı), kayıtlı değerleri güvenle geri yükleme
   features.ts        Nesne kapsamını çözme (seçili, görünen, tümü, katman, kimlikler) ve "12 kapalı alan" özetleri
@@ -63,21 +63,21 @@ src/processing/
     selectByExpression.ts  selection.byExpression: İfadeyle seç
     models.ts        Yerleşik modeller (Parsel ölçü yazıları)
 
-src/app/processing.ts         ProcessingService (registry + runner + son değerler), komut kaydı
-src/ui/processing/
+apps/web/src/app/processing.ts         ProcessingService (registry + runner + son değerler), komut kaydı
+apps/web/src/ui/processing/
   ToolDialog.ts      Tanımdan üretilen araç penceresi
   paramFields.ts     Parametre türü başına kontrol
   ProcessingPanel.ts Sağ doktaki araç kutusu (Modeller dalı dahil) ve geçmiş
   model/             Model tasarımcısı: ModelDesigner, ModelCanvas, modelPalette, modelInspector
-src/tools/pickPointTool.ts    Nokta parametresi için "Haritadan göster"
-src/styles/processing.css     Pencere ve panel stilleri
-src/styles/model.css          Model tasarımcısı stilleri
+apps/web/src/tools/pickPointTool.ts    Nokta parametresi için "Haritadan göster"
+apps/web/src/styles/processing.css     Pencere ve panel stilleri
+apps/web/src/styles/model.css          Model tasarımcısı stilleri
 ```
 
 Yeni bir araç ailesi büyüdükçe `builtin/` altında alt klasör açılır
 (`builtin/cadastre/…`). Geometri araç dosyasında hesaplanmaz: Rust
-çekirdeğindedir (`crates/geometry-core`; işlem araçlarına özgü olanlar
-`src/processing/` altında: köşe numaralama, kenar ölçüleri) ve araç onu
+çekirdeğindedir (`crates/shared/geometry-core`; işlem araçlarına özgü olanlar
+`apps/web/src/processing/` altında: köşe numaralama, kenar ölçüleri) ve araç onu
 `ctx.geometry` ile nesne kimliğinden sorar (ADR 0008 S4). Araç dosyasında
 metin, sayaç, süzgeç ve akış kalır.
 
@@ -271,12 +271,12 @@ değişmiş, katman silinmiş) değerler varsayılana döner.
 
 ## 9. Yeni işlem aracı tarifi
 
-1. Geometriyi Rust çekirdeğine yazın ve test edin (`crates/geometry-core`; araca özgüyse `src/processing/` altına, bir depo sorgusu ve `ObjectStore`'da bir yöntemle); TS'te metin ve akış kalır. Taşıma yöntemi ADR 0008'dedir.
+1. Geometriyi Rust çekirdeğine yazın ve test edin (`crates/shared/geometry-core`; araca özgüyse `apps/web/src/processing/` altına, bir depo sorgusu ve `ObjectStore`'da bir yöntemle); TS'te metin ve akış kalır. Taşıma yöntemi ADR 0008'dedir.
 2. `processing/builtin/<ad>.ts` içinde `defineTool({...})` ile tanımı yazın: kimlik, etiket, kategori, simge, açıklama, yardım, anahtar kelimeler, takma adlar, `targets`, `parameters` (`as const`), `outputs`, gerekirse `validate` ve `preview`, `run`.
 3. `processing/builtin/index.ts` içindeki `BUILTIN_TOOLS` listesine ekleyin. Kategori yoksa `categories.ts`'e ekleyin.
 4. Simge yoksa `ui/icons.ts`'e çizin (DESIGN.md §6).
 5. `processing.test.ts`'e (ya da aracın yanına `*.test.ts`) saf çekirdek ve `ProcessingRunner` üzerinde belgeyle bir test ekleyin: değişiklik, tek geri alma adımı, sınır durumları.
-6. Yeni bir kullanıcı akışıysa `scripts/e2e/smoke.mjs`'e bir kontrol ekleyin.
+6. Yeni bir kullanıcı akışıysa `apps/web/scripts/e2e/smoke.mjs`'e bir kontrol ekleyin.
 
 Pencere, araç kutusu satırı, menü öğesi, komut ve takma adlar kendiliğinden
 oluşur. Arayüz kodu yazmak gerekmez; gerekiyorsa bu, yeni bir parametre

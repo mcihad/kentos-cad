@@ -24,14 +24,14 @@ dist-ssr
 *.sw?
 
 # e2e screenshots
-scripts/e2e/out
-scripts/showcase/out/
+apps/web/scripts/e2e/out
+apps/web/scripts/showcase/out/
 
 # Rust
 /target
 # WASM build output (pnpm rust:wasm, pnpm rust:wasm:formats)
-src/wasm/pkg/
-src/io/pkg/
+apps/web/src/wasm/pkg/
+apps/web/src/io/pkg/
 
 # Local server credentials (kentosd db-setup writes them; never committed)
 .env.local

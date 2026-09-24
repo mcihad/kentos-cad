@@ -2,7 +2,7 @@
 
 KentOS'un görsel dilini ve etkileşim kurallarını tanımlar. Mimari ve kod
 kuralları için [CLAUDE.md](CLAUDE.md) dosyasına bakın. Değerlerin tek kaynağı
-`src/styles/tokens.css` dosyasıdır; bu belge o değerlerin **neden** öyle
+`apps/web/src/styles/tokens.css` dosyasıdır; bu belge o değerlerin **neden** öyle
 olduğunu ve nasıl kullanılacağını anlatır.
 
 ---

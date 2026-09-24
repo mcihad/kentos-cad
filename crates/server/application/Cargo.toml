@@ -1,0 +1,20 @@
+[package]
+name = "kentos-application"
+description = "KentOS use cases shared by HTTP, CLI and (later) MCP and the worker: identity, tenancy, projects, feature commands"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+kentos-postgres = { path = "../postgres" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+time = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

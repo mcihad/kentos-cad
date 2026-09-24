@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  apps/web:
     devDependencies:
       typescript:
         specifier: ~6.0.2

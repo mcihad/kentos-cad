@@ -20,11 +20,11 @@ işler ve kurallar durur.
 
 ## 2. Nerede kaldık
 
-- **Kullanıcının hedefi “öncelikle ortak çekirdeği tamamlayalım” tamamlandı** (P0–P8, S1–S6; `main`, 24 Eylül). CLAUDE.md §14: CAD hesabı `crates/geometry-core` içinde bir kez yazılır, native ve wasm32 olarak derlenir; TS algoritmaları eşdeğerlik kanıtlanınca silindi.
+- **Kullanıcının hedefi “öncelikle ortak çekirdeği tamamlayalım” tamamlandı** (P0–P8, S1–S6; `main`, 24 Eylül). CLAUDE.md §14: CAD hesabı `crates/shared/geometry-core` içinde bir kez yazılır, native ve wasm32 olarak derlenir; TS algoritmaları eşdeğerlik kanıtlanınca silindi.
 - **Kapsam: yalnız hesap Rust'ta, arayüz TypeScript'te kalır.** Kullanıcı bunu açıkça sordu ve doğruladı; bu ayrımı koruyun.
-  - Rust'ta (`crates/geometry-core`, tarayıcıda WASM): geometri işlemleri (kesişim, budama, uzatma, öteleme, köşe yuvarlama, alan cebiri ve bindirme, yay/elips/eğri, ölçü yerleşimi, tarama çizgileri, üçgenleme), nesne ölçüleri, geometri deposu (seçme, kenet, pencere seçimi, etiket ve tutamaç kararları, araç önizlemeleri, çizilecek geometri, ifadelerin geometri değerleri), işlem araçlarının geometrisi (köşe numaralama, kenar ölçüleri), araçların yapı hesapları (nokta girişi, orto/kutupsal, nesne izleme), dosya biçimleri (`crates/formats`), sunucunun PostGIS geometrisi (tessellate, EWKB), §23 sayısal politika.
+  - Rust'ta (`crates/shared/geometry-core`, tarayıcıda WASM): geometri işlemleri (kesişim, budama, uzatma, öteleme, köşe yuvarlama, alan cebiri ve bindirme, yay/elips/eğri, ölçü yerleşimi, tarama çizgileri, üçgenleme), nesne ölçüleri, geometri deposu (seçme, kenet, pencere seçimi, etiket ve tutamaç kararları, araç önizlemeleri, çizilecek geometri, ifadelerin geometri değerleri), işlem araçlarının geometrisi (köşe numaralama, kenar ölçüleri), araçların yapı hesapları (nokta girişi, orto/kutupsal, nesne izleme), dosya biçimleri (`crates/shared/formats`), sunucunun PostGIS geometrisi (tessellate, EWKB), §23 sayısal politika.
   - TypeScript'te: bütün arayüz (DOM, paneller, pencereler, menüler, komutlar, kısayollar), araçların akışı (tıklama, istem, önizlemenin çizimi), belge modeli ve geri alma, çizim motorları (WebGL2/WebGPU), kamera ve ekran pikseli hesapları, bulut eşitleme, stil motoru, ifade dili ve SVG düzenleyicisi. Son üçünün kendi geometrisi ileride ayrı bir `style-core` dilimidir (§3); acelesi yok.
-  - Cepheler (`src/model/geom`, `src/model/ops`, `model/geometry.ts`, `entities.ts`, `render/triangulate.ts`, `tools/constructions.ts` …) yalnız çağırır: `op('ad')` ile çağrı tablosuna, sıcak yollarda tipli girişlere. `src/model/singleSource.test.ts` bu dosyalarda aritmetik ya da `Math.` görürse düşer.
+  - Cepheler (`apps/web/src/model/geom`, `apps/web/src/model/ops`, `model/geometry.ts`, `entities.ts`, `render/triangulate.ts`, `tools/constructions.ts` …) yalnız çağırır: `op('ad')` ile çağrı tablosuna, sıcak yollarda tipli girişlere. `apps/web/src/model/singleSource.test.ts` bu dosyalarda aritmetik ya da `Math.` görürse düşer.
 - **Dilimler** (her biri tek commit; ayrıntı ADR 0008'in aynı adlı başlığında):
 
   | Dilim | Commit | Ne yapıldı |
@@ -41,13 +41,14 @@ işler ve kurallar durur.
   | Performans | `24d466e` | `CadDocument` katman dizini (`byLayer`), ızgaranın yeniden kullanımı, `JSON.stringify`'sız geometri karşılaştırması (CLAUDE.md §6.3) |
   | Kenet | `602bf5c` | Genel görünümde kesişim keneti ~7 kat hızlı, yanıtlar bit bit aynı (ADR 0008, geometri deposu) |
 
-- **Dosya biçimleri** (`wip/formats-dxf` dalından, `33f9981` … `96f4460`): koordinat listesi (Netcad NCN, TXT, CSV) içe/dışa aktarma ve DXF içe aktarma Rust'ta (`crates/formats`, ayrı ve yalnız komutla yüklenen WASM paketi `src/io/pkg`). ADR 0009 “önerildi”, onay bekliyor. DXF dışa aktarma yok (§3).
+- **Dosya biçimleri** (`wip/formats-dxf` dalından, `33f9981` … `96f4460`): koordinat listesi (Netcad NCN, TXT, CSV) içe/dışa aktarma ve DXF içe aktarma Rust'ta (`crates/shared/formats`, ayrı ve yalnız komutla yüklenen WASM paketi `apps/web/src/io/pkg`). ADR 0009 “önerildi”, onay bekliyor. DXF dışa aktarma yok (§3).
 - **WASM paketi:** 883 087 bayt, gzip 297 912 bayt. ADR 0005 taslağındaki başlangıç sınırı 300 KB gzip; ~2 KB kaldı. Çekirdeğe eklenecek bir sonraki kod bu sınırı aşar: önce kullanıcının kararı gerekir (§6 madde 8).
-- **Son doğrulama** (`main` `602bf5c`, 24 Eylül, bulut konteyneri): `npx tsc --noEmit -p .` temiz; `pnpm test` 612 test geçti, 6 atlandı (fixture kaydedicileri); `cargo fmt --all -- --check` temiz; `pnpm rust:test` (cargo test ve clippy `-D warnings`) temiz, veritabanı testleri sır olmadığı için atlandı; `pnpm e2e` 100 denetim geçti, düşen üçü bu konteynerde hep düşen WebGPU denetimleri (§5).
+- **Son doğrulama** (`main` `602bf5c`, 24 Eylül, bulut konteyneri): `pnpm typecheck` temiz; `pnpm test` 612 test geçti, 6 atlandı (fixture kaydedicileri); `cargo fmt --all -- --check` temiz; `pnpm rust:test` (cargo test ve clippy `-D warnings`) temiz, veritabanı testleri sır olmadığı için atlandı; `pnpm e2e` 100 denetim geçti, düşen üçü bu konteynerde hep düşen WebGPU denetimleri (§5).
 - **Ölçüm:**
   - S1 önce/sonra (bulut, `docs/perf/interaction-s1-*.md`): imleç başına seçme ve kenet `parsel-50k`'da ~19 ms'den 0,1–3 ms'ye, `hat-1m` budama önizlemesi 972 ms'den 18 ms'ye indi.
   - Genel görünümde kenet `602bf5c`'de ~7 kat hızlandı (`hat-1m`, WASM, Node'da mikro ölçüm: p50 11,5 → 1,6 ms, p95 16,4 → 2,4 ms). Kalan ~1,1 ms aday çizgilerin köşe ve kenar geçişidir.
   - Son bulut ölçümü (S6) makine alt ajanlarla aşırı yüklü olduğu için (4 çekirdekte yük ~8) 16 senaryonun 4'ünde durduruldu. S2–S5'in etkileşime etkisi kullanıcının makinesindeki kabul ölçümüyle görülecek (§3 madde 2).
+- **Dizin düzeni değişti (24 Eylül, kullanıcı kararı; ADR 0001 “Güncelleme”):** depo monorepo oldu, çünkü ortak Rust kodu ileride wgpu masaüstü uygulamasında da kullanılacak. Tarayıcı uygulaması `apps/web/` (pnpm paketi `@kentos/web`); Rust crate'leri `crates/shared/` (geometry-core, contracts, formats: platformdan bağımsız), `crates/wasm/` (geometry-wasm, eski `kentos-wasm`; formats-wasm) ve `crates/server/` (postgres, application). `contracts`'ta ts-rs `ts` özelliğinin arkasında. Komutlar eskisi gibi kökten çalışır. Bu belgedeki ve CLAUDE.md'deki `model/…`, `tools/…` gibi adlar `apps/web/src/`'ye göredir; tip denetimi kökten `pnpm typecheck` (`apps/web`'de `tsc --noEmit`), fixture kaydedicisi `pnpm -C apps/web exec vitest run scripts/fixtures/record-calls.test.ts` ile çalışır.
 - **Açık alt ajan yok.** Kullanıcı yenisini istemiyor (kredi); son ikisinin işi main'de (`24d466e`, `602bf5c`).
 
 ## 3. Sıradaki işler (öncelik sırasıyla)
@@ -69,7 +70,7 @@ Kullanıcı kredinin azaldığını söyledi: alt ajanı yalnız gerçekten gere
 
 ## 4. Taşıma yöntemi ve yeni çekirdek işlevleri
 
-- **Birebir taşıma.** JavaScript sayı anlamı `crates/geometry-core/src/jsmath.rs`'tedir:
+- **Birebir taşıma.** JavaScript sayı anlamı `crates/shared/geometry-core/src/jsmath.rs`'tedir:
   - `js_round`, `js_sign`;
   - NaN yayan `js_min`/`js_max`;
   - V8 algoritmalı `js_hypot`;
@@ -78,29 +79,29 @@ Kullanıcı kredinin azaldığını söyledi: alt ajanı yalnız gerçekten gere
 - **Aşkın işlevler `libm`'den gelir.** `clippy.toml` std `sin/cos/tan/atan2/hypot/powi/mul_add/round/signum/min/max`'ı yasaklar.
   - V8'in `Math.sin`/`cos`'u çağrıların ~%2'sinde son bitte farklıdır.
   - Native ve WASM ise hep bit bit aynıdır.
-- **Kayıt:** TS dosyası başına bir modül; `pub(crate) static OPS: &[Op]` içinde `op!("tsAdı", |a: A, b: B| gövde)`. Modül `crates/geometry-core/src/api/tables.rs` içindeki `TABLES` listesine eklenir.
-- **JSON:** `src/api/json.rs`.
+- **Kayıt:** TS dosyası başına bir modül; `pub(crate) static OPS: &[Op]` içinde `op!("tsAdı", |a: A, b: B| gövde)`. Modül `crates/shared/geometry-core/src/api/tables.rs` içindeki `TABLES` listesine eklenir.
+- **JSON:** `apps/web/src/api/json.rs`.
   - `json_struct!`, `json_tagged!`; açık `null` için `Nullable`.
   - `None` alan yazılmaz.
 - **Hata ve panik:**
   - TypeScript'in istisna fırlattığı yerde `Result<_, String>` döner, JS'te istisna olur.
   - Panik yok: `unwrap`/`expect` test dışı kodda yasaktır.
 - **Nesne alanları:** nesnenin kimlik, katman ve öznitelik gibi alanları `Entity.rest`'te olduğu gibi geri döner.
-- **Çağrı kümesi:** `src/wasm/calls/sets/*.ts` dosyasına adlı sınır durumları ve tohumlu rastgele çağrılar (`repeat`, `Gen`) yazılır, küme `sets.ts`'e eklenir. Yeni bir çekirdek işlevi (TS karşılığı olmayan) kümeye yazılır ve kaydediciyle dondurulur; beklenen değerler çekirdekten gelir, fark okunarak doğrulanır, bağımsız referans eklenir.
+- **Çağrı kümesi:** `apps/web/src/wasm/calls/sets/*.ts` dosyasına adlı sınır durumları ve tohumlu rastgele çağrılar (`repeat`, `Gen`) yazılır, küme `sets.ts`'e eklenir. Yeni bir çekirdek işlevi (TS karşılığı olmayan) kümeye yazılır ve kaydediciyle dondurulur; beklenen değerler çekirdekten gelir, fark okunarak doğrulanır, bağımsız referans eklenir.
   - Üreteçler çekirdeğin hata döndürdüğü girdileri üretmemeli; test donanımı istisna yakalamaz.
-- **TS'ten taşıma (style-core gibi):** S3c'de TS ↔ Rust karşılaştırması (`parity.test.ts`, kümelerin `fns` ve `ties` alanları) son referanslarla birlikte silindi; `git show c7445e0:src/wasm/parity/parity.test.ts` ve `c7445e0:src/wasm/parity/harness.ts` yöntemin çalışan biçimidir. Taşınacak TS'i kümenin `fns` alanına koyup testi geri getirin:
+- **TS'ten taşıma (style-core gibi):** S3c'de TS ↔ Rust karşılaştırması (`parity.test.ts`, kümelerin `fns` ve `ties` alanları) son referanslarla birlikte silindi; `git show c7445e0:apps/web/src/wasm/parity/parity.test.ts` ve `c7445e0:apps/web/src/wasm/parity/harness.ts` yöntemin çalışan biçimidir. Taşınacak TS'i kümenin `fns` alanına koyup testi geri getirin:
   - normal: işlem başına 200 durum; derin: `PARITY_CASES=20000`;
   - tolerans 1e-9 + 1e-14 · büyüklüktür; gerekçeli istisnalar kümede `tolerance`, eşit ölçülü sıra değişimleri `ties` ile bildirilir;
-  - derin koşu temizse TS silinir, karşılaştırma yeniden kaldırılır ve tek kaynak bekçisi (`src/model/singleSource.test.ts`) yeni cephe dosyalarını listesine alır.
+  - derin koşu temizse TS silinir, karşılaştırma yeniden kaldırılır ve tek kaynak bekçisi (`apps/web/src/model/singleSource.test.ts`) yeni cephe dosyalarını listesine alır.
 - **Fark çıkarsa:** çoğu zaman TypeScript'te gizli bir kırılganlık ya da hatadır.
   - Önce hatayı yeniden üreten bir TS birim testi yazın.
   - Sonra TS ve Rust'ı aynı biçimde düzeltin ve ADR 0008'e yazın.
   - Örnekler ADR'dedir: halka izlemede ikiz parça, elipste en yakın nokta, ortak köşede en yakın kenar.
 - **Fixture:**
-  - `GOLDEN_WRITE=1 npx vitest run scripts/fixtures/record-calls.test.ts` (depo için `record-store.test.ts`, `record-store-processing.test.ts`); kaydediciler S3c'den beri yanıtı çekirdekten alır, yeniden kayıt bilinçli bir golden değişikliğidir;
-  - sonra `npx vitest run src/wasm` ve `cargo test -p kentos-geometry-core --test calls`.
+  - `GOLDEN_WRITE=1 pnpm -C apps/web exec vitest run scripts/fixtures/record-calls.test.ts` (depo için `record-store.test.ts`, `record-store-processing.test.ts`); kaydediciler S3c'den beri yanıtı çekirdekten alır, yeniden kayıt bilinçli bir golden değişikliğidir;
+  - sonra `pnpm -C apps/web exec vitest run src/wasm` ve `cargo test -p kentos-geometry-core --test calls`.
   - Kaydedici işlem başına en çok 25 rastgele durum ve 48 KB tutar.
-- **Boyut:** `src/wasm/pkg/kentos_wasm_bg.wasm` ham ve `gzip -9` boyutu ADR 0008 tablosuna yeni satır olarak yazılır.
+- **Boyut:** `apps/web/src/wasm/pkg/kentos_wasm_bg.wasm` ham ve `gzip -9` boyutu ADR 0008 tablosuna yeni satır olarak yazılır.
 
 ## 5. Ortam ve çalışma kuralları
 
@@ -119,13 +120,13 @@ Kullanıcı kredinin azaldığını söyledi: alt ajanı yalnız gerçekten gere
 - **Ölçüm:** taban kullanıcının makinesinde (Intel Iris Xe GPU) alındı.
   - Karşılaştırmayı kullanıcı kendi makinesinde `pnpm perf:interaction --label s6` ile yapar.
   - Bulutta yalnız aynı makinede önce/sonra çifti anlamlıdır. SwiftShader'da `--allow-swiftshader` gerekir; yalnız ana iş parçacığı süreleri anlamlıdır, bir koşu (`--runs 1`) ~50 dk sürer.
-  - Düzenek çalışma dizinindeki kaynağı sunar: ölçüm sürerken `src/` değişirse ölçüm bozulur. Ölçülecek commit'i ayrı bir git worktree'sinde çalıştırın (`node_modules` bağı ve `src/wasm/pkg` kopyasıyla); ana dizinde çalışmaya devam edilebilir.
+  - Düzenek çalışma dizinindeki kaynağı sunar: ölçüm sürerken `apps/web/src/` değişirse ölçüm bozulur. Ölçülecek commit'i ayrı bir git worktree'sinde çalıştırın (`node_modules` bağı ve `apps/web/src/wasm/pkg` kopyasıyla); ana dizinde çalışmaya devam edilebilir.
 - **Ağır işler:** kullanıcının makinesinde cargo, tam vitest, e2e ve ölçüm aynı anda çalışmaz (makine bir kez dondu). Bulut konteynerinde paralel çalıştırılabilir (kullanıcı izin verdi), ama ölçüm sürerken başka ağır iş çalışmaz.
 - **Alt ajan:** kullanıcı kredinin azaldığını söyledi; yalnız gerçekten gerekirse ve tek tek. Alt ajan ayrı worktree'de çalışır, main'e push etmez; sonucunu siz inceleyip sınar ve alırsınız.
 - **Commit ve push:** dilim başına bir commit, mevcut biçimde İngilizce mesajla (ör. “Shared core, P8: …”). `tsc`, `pnpm test`, clippy ve gerekiyorsa `pnpm e2e` geçince main'e push edilir.
 - **Test ve doğrulama:**
   - Hata düzeltmesi önce hatayı yeniden üreten testle başlar.
-  - Her değişiklikte `npx tsc --noEmit -p .` temiz, `pnpm test` geçer.
+  - Her değişiklikte `pnpm typecheck` temiz, `pnpm test` geçer.
   - Arayüze dokunan değişiklik tarayıcıda denenir.
 - **Sorulmadan yapılmayanlar:**
   - Çalışma zamanı bağımlılığı eklemek (kullanıcıya sorulur).
@@ -151,7 +152,7 @@ Kullanıcı kredinin azaldığını söyledi: alt ajanı yalnız gerçekten gere
 
 1. Bu dosyayı ve §1'deki belgeleri okuyun. CLAUDE.md §0 ve §13 sonrası kullanıcının metnidir: yalnız doğrulanmış durum notu eklenir.
 2. Ortamı kurun (§5): `pnpm install --frozen-lockfile`, `cargo install wasm-bindgen-cli --version 0.2.128 --locked`, bulutta Chromium sarmalayıcısı (`CHROME_BIN`).
-3. `main`'i doğrulayın: `npx tsc --noEmit -p .`, `pnpm test`, `pnpm rust:test`, `pnpm e2e`. Beklenen sonuçlar §2 “Son doğrulama”dadır; bulutta üç WebGPU denetimi bilinen biçimde düşer.
+3. `main`'i doğrulayın: `pnpm typecheck`, `pnpm test`, `pnpm rust:test`, `pnpm e2e`. Beklenen sonuçlar §2 “Son doğrulama”dadır; bulutta üç WebGPU denetimi bilinen biçimde düşer.
 4. Kullanıcıya §6'daki açık kararları sorun; özellikle 8 (WASM bütçesi) ve 9 (ADR 0009), çünkü §3'teki işlerin çoğu bunlara bağlı.
 5. §3'ten sıradaki işi alın. Dilim başına bir commit, İngilizce ileti (“Shared core, …” ya da “File formats, …”), sonunda oturumun atıf satırları; `tsc`, `pnpm test`, Rust'a dokunulduysa `pnpm rust:test` ve arayüze ya da çekirdeğe dokunulduysa `pnpm e2e` geçince `main`'e ve oturum dalına push edilir.
 6. Yeni bir çekirdek işlevi: önce Rust'ta işlev ve birim testi, sonra çağrı tablosu (`op!`), çağrı kümesi ve donmuş fixture (§4), sonra TS cephesi (`op<Sig>('ad')`), en son çağıranlar. Cephede aritmetik yazmayın; bekçi test düşer. WASM boyutunu ADR 0008 tablosuna yazın.

@@ -22,7 +22,7 @@ Alan, koordinat ve hisse gibi mülkiyeti etkileyen değerlerde sessiz yuvarlama,
   - Parçaların toplamı tutmazsa ve artık kuralı `reject` ise işlem `needs_rule` hatasıyla durur; artık kimseye verilmez.
   - `largest_remainder` kuralında artık birer birim, en çok eksik kalan parçaya verilir; eşitlikte giriş sırası geçerlidir. Verilen artık kaydedilir.
   - Artığı rastgele son parsele vermek yoktur.
-- **Uygulama:** `crates/geometry-core/src/numeric.rs` (rust_decimal 1.43.0 ve taşma denetimli i128 kesirler). Aynı kod native ve WASM olarak çalışacak. Sözleşme tipleri `crates/contracts/src/numeric.rs`'dedir.
+- **Uygulama:** `crates/shared/geometry-core/src/numeric.rs` (rust_decimal 1.43.0 ve taşma denetimli i128 kesirler). Aynı kod native ve WASM olarak çalışacak. Sözleşme tipleri `crates/shared/contracts/src/numeric.rs`'dedir.
 - **Onay:** bu tarihte **onaylı politika yok.** Kesin kadastral işlemler (resmî alan yazımı, ifraz dağıtımı) kurum kuralı doğrulanıp `approved` sürüm girilene kadar açılmaz. Önizleme gösterilebilir.
 
 ## Bağımsız doğrulama

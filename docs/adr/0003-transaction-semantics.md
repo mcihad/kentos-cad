@@ -29,7 +29,7 @@ Sunucu tarafında (CLAUDE.md §15) her yazma tek mantıksal commit olacak. İste
 
 - Çalıştırıcıda hata veren bir `apply` artık belgeyi değiştirmez.
 - Yeni geri alma kodu sonradan eklenmedi: mevcut `invert` ve `applyAll` kullanılıyor. Ters op'lar, uygulanmamış bir op'u da zararsızca geri çevirir (silinmemiş varlığı yeniden yazmak aynı değeri yazar).
-- Testler: `src/model/document.test.ts`:
+- Testler: `apps/web/src/model/document.test.ts`:
   - başarısız işlemin tam geri alınması;
   - iç içe kayıt noktası;
   - grup içinde başarısız işlem ve grup iptali.
