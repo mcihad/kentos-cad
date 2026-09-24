@@ -16,6 +16,8 @@
 //! - [`spatial`]: CBS ve CAD bileşenleri; projeksiyon, katman modeli,
 //!   yakalama, çizim araçları, model alanı ve ViewCube (`spatial`
 //!   özelliği, varsayılan olarak açık).
+//! - `snapshot`: arayüzü pencere açmadan çizip PNG'ye yazar; ekran kapalı
+//!   ya da kilitliyken de çalışır (`snapshot` özelliği).
 //!
 //! Bileşenler uygulamanın `Message` türünden bağımsızdır ve yapıcı
 //! (builder) desenini izler:
@@ -43,3 +45,6 @@ pub mod widget;
 
 #[cfg(feature = "spatial")]
 pub mod spatial;
+
+#[cfg(feature = "snapshot")]
+pub mod snapshot;

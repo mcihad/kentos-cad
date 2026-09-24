@@ -9,11 +9,15 @@ publish = false
 default = ["spatial"]
 # CBS/CAD bileşenleri: projeksiyon, katman modeli, model alanı, ViewCube.
 spatial = ["dep:glam", "dep:bytemuck"]
+# Ekransız görüntü: arayüzü pencere açmadan çizip PNG'ye yazar.
+snapshot = ["dep:iced_runtime", "dep:png"]
 
 [dependencies]
 iced = { version = "0.14", features = ["canvas", "advanced"] }
 glam = { version = "0.30", optional = true }
 bytemuck = { version = "1", features = ["derive"], optional = true }
+iced_runtime = { version = "0.14", optional = true }
+png = { version = "0.18", optional = true }
 
 [workspace]
 members = ["examples/showcase"]
