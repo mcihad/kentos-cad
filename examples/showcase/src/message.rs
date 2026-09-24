@@ -7,10 +7,11 @@ use iced::keyboard::Modifiers;
 use kentos_rc::attribute::query;
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::model_space;
-use kentos_rc::spatial::{FeatureRef, SelectionMode, Tool};
+use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
 use kentos_rc::widget::inspector;
 
 use crate::gallery::{Demo, Page};
+use crate::layer_tree::NodeId;
 use crate::table::Column;
 
 /// Kullanıcının yaptığı her şey.
@@ -30,12 +31,36 @@ pub enum Message {
     FocusFeature(FeatureRef),
 
     // Katmanlar
-    LayerVisibility(usize, bool),
     LayerOpacity(usize, f32),
     LayerActivated(usize),
     ZoomToLayer(usize),
     ShowAllLayers,
     HideAllLayers,
+
+    // Katman ağacı
+    TreeSelected(NodeId),
+    /// Grubu ya da alt katmanları açar/kapatır.
+    TreeToggled(NodeId),
+    /// Düğümün onay kutusu: görünürlük.
+    TreeChecked(NodeId, bool),
+    /// Grubu (ya da `None` ile bütün ağacı) iç içe açar veya kapatır.
+    TreeExpandAll(Option<usize>, bool),
+    /// Yalnızca düğümü gösterir, diğerlerini gizler.
+    ShowOnly(NodeId),
+    /// Katmanın bütün alt katmanlarını gösterir ya da gizler.
+    SublayersShown(usize, bool),
+    ZoomToNode(NodeId),
+    /// Düğümün bütün öğelerini seçer.
+    SelectNode(NodeId),
+    OpenTable(usize),
+    /// Çizimler katmanındaki bütün öğeleri siler.
+    ClearDrawings,
+
+    // Bağlam menüleri
+    SelectFeature(FeatureRef, SelectionMode),
+    CenterAt(LonLat),
+    CopyCoordinates(LonLat),
+    CopyRow(FeatureRef),
 
     // Seçim ve ölçüm
     SelectAll,
@@ -58,6 +83,8 @@ pub enum Message {
 
     // Öznitelikle seç ve filtre
     QueryOpened(QueryPurpose),
+    /// Sorgu penceresini verilen katman için açar.
+    QueryOpenedFor(QueryPurpose, usize),
     QueryLayerSelected(usize),
     QueryEdited(query::Edit),
     QueryModeSelected(SelectionMode),

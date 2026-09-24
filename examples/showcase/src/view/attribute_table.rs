@@ -76,7 +76,8 @@ impl Showcase {
                 )
                 .selected(self.selection.contains(&reference))
                 .current(primary == Some(reference))
-                .on_press(Message::TableRowPressed(reference)),
+                .on_press(Message::TableRowPressed(reference))
+                .menu(move |_| self.row_menu(reference)),
             )
         });
 

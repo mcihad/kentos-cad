@@ -7,6 +7,7 @@ kurulu, CBS ve CAD uygulamaları için bileşen kütüphanesi.
 cargo run                       # vitrin uygulaması: KentOS CAD
 cargo test --workspace          # kütüphane ve vitrin testleri
 cargo doc -p kentos-rc --open   # API belgeleri
+cargo run -- snapshot ekran.png # pencere açmadan ekran görüntüsü
 ```
 
 ## Yapı
@@ -23,11 +24,14 @@ src/                     kentos-rc kütüphanesi
 ├── style/               iced stil fonksiyonları: button, container, text, field
 ├── icon/                16×16 ızgarada çizilmiş vektör ikon seti
 ├── label.rs             tip ölçeğine bağlı hazır metin biçimleri
+├── snapshot.rs          ekransız görüntü (`snapshot` özelliği)
 ├── widget/              uygulama çerçevesi
 │   ├── ribbon/          şerit: sekmeler, gruplar, düğmeler, alanlar
 │   ├── app_menu.rs      uygulama menüsü (Office "Dosya" menüsü gibi)
 │   ├── dock.rs          yan panel yuvası ve başlıklı paneller
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
+│   ├── tree_view.rs     ağaç tablo: sınırsız derinlik, üç durumlu onay kutusu
+│   ├── context_menu.rs  sağ tık menüsü: alt menü, kısayol, işaret, klavye
 │   ├── inspector.rs     düzenlenebilir nesne inceleyici (ArcGIS öznitelik bölmesi)
 │   ├── query_builder.rs sorgu oluşturucu
 │   ├── toolbar.rs       araç çubuğu: arama, eylemler, anahtarlar
@@ -38,7 +42,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── navigation_bar.rs, dialog.rs, overlay.rs, tip.rs
 └── spatial/             CBS ve CAD (`spatial` özelliği, varsayılan açık)
     ├── projection.rs    LonLat, Bounds, Viewport (Web Mercator)
-    ├── feature.rs       Geometry, Feature, Layer, FeatureRef
+    ├── feature.rs       Geometry, Feature, Layer, Sublayer, FeatureRef
     ├── measure.rs       jeodezik mesafe, Measurement
     ├── query.rs         öğe seçimi (tıklama, pencere, kesişen) ve nesne yakalama
     ├── selection.rs     çoklu seçim ve seçim yöntemleri (yeni, ekle, çıkar, kesişim)
@@ -54,7 +58,9 @@ examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
 ├── command.rs           komut satırı çözümleyicisi
 ├── gallery.rs           galeri sayfaları ve örneklerin durumu
 ├── table.rs             öznitelik tablosunun görünüm modeli: filtre, arama, sıralama
+├── layer_tree.rs        katman ağacı: iç içe gruplar ve görünürlük
 ├── sample.rs            örnek veri ve öznitelik şemaları
+├── snapshot.rs          `snapshot` alt komutu ve senaryolar
 └── view/                bileşenlerin yerleşimi
     └── gallery/         bileşen kataloğu (Galeri sekmesi)
 ```
@@ -76,10 +82,40 @@ Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
 - **Öznitelikle seç ve filtre.** Sorgu oluşturucuyla koşullar kurulur; seçimde
   yeni seçim, ekle, çıkar ve kesişim yöntemleri vardır. Eşleşen kayıt sayısı
   yazarken görünür.
+- **Katman ağacı.** Katmanlar iç içe gruplarda durur; derinlik sınırsızdır.
+  Grubun ve katmanın kendi görünürlüğü vardır; katman, kendisi ve bütün üst
+  grupları açıksa çizilir. Katmanlar bir alanın değerine göre alt
+  katmanlara ayrılır (şehirler bölgeye, yollar türe göre); her alt katmanın
+  rengi ve görünürlüğü ayrıdır.
+- **Bağlam menüleri.** Ağaçtaki gruplara, katmanlara ve alt katmanlara,
+  model alanına ve tablo satırlarına sağ tıklanınca ilgili komutlar açılır:
+  yakınlaştır, seç, yalnızca bunu göster, opaklık, koordinatı kopyala...
 - **Nesne inceleyici.** Seçimin birincil öğesi türlerine göre düzenlenir:
   metin, tam sayı, ondalık, evet/hayır, kodlu değer, aralık, tarih, saat, tarih
   ve saat, nesne başvurusu. Başvuru alanı aranabilir listeden (nesne seçici) ya
   da haritada tıklanarak (varlık seçici) doldurulur.
+
+## Ekransız görüntü
+
+`snapshot` özelliği arayüzü pencere açmadan çizip PNG'ye yazar. Ekran kapalı
+ya da kilitliyken, hatta hiç ekran yokken (CI) de çalışır: iced'in ekran dışı
+çizicisi kullanılır, önce GPU (wgpu), olmazsa yazılım (tiny-skia). Arayüz
+gerçek olaylarla sürülür; bağlam menüsü gibi durumunu kendi tutan bileşenler
+de sağ tıkla açılır.
+
+Vitrin bunu bir alt komutla sunar. Senaryo uygulamayı mesajlarla hazırlar;
+girdiler ardından verildikleri sırayla uygulanır. Konumlar pencere
+koordinatıdır, görüntüdeki piksellerle aynıdır:
+
+```sh
+cargo run -- snapshot ekran.png
+cargo run -- snapshot menu.png --senaryo agac --sag-tikla 1233,329 --imlec 1100,546
+cargo run -- snapshot galeri.png --senaryo galeri --sayfa veri --boyut 1440x1500
+cargo run -- snapshot secim.png --senaryo secim --tema acik --olcek 2
+cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
+```
+
+`KENTOS_SNAPSHOT_BACKEND=tiny-skia` yazılım çiziciyi zorlar.
 
 ## İlkeler
 
@@ -136,4 +172,33 @@ Message::Inspector(event) => match self.inspector.update(event) {
     Some(inspector::Action::Pick(id)) => self.start_picking(id),
     Some(inspector::Action::CancelPick) | None => {}
 }
+```
+
+```rust
+use kentos_rc::widget::tree_view::{self, Node, TreeView};
+use kentos_rc::widget::{ContextMenu, Menu};
+
+// Ağaç tablo: düğümler iç içe, durumları uygulamanın.
+TreeView::new([
+    tree_view::Column::new("Ad").width(Fill),
+    tree_view::Column::new("Öğe").width(28).align_right(),
+])
+.push(
+    Node::new("Ulaşım")
+        .check(group.visible, Message::GroupChecked(id))
+        .expanded(group.expanded, Message::GroupToggled(id))
+        .push(Node::new("Karayolları").cells([count]))
+        .menu(move |_| Menu::new().item("Gruba yakınlaştır", Message::ZoomToGroup(id))),
+)
+
+// Herhangi bir öğeye sağ tık menüsü.
+ContextMenu::new(model_space, |position| {
+    Menu::new()
+        .item("Koordinatı kopyala", Message::Copy(position))
+        .icon(Icon::Copy)
+        .separator()
+        .item("Sil", Message::Delete)
+        .shortcut("Del")
+        .danger()
+})
 ```

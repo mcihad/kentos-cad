@@ -31,6 +31,7 @@ impl Showcase {
                 "Birincil satırdan tıklanan satıra kadar seçer",
             )
             .item("Ctrl+A", "Tablodaki kayıtların hepsini seçer")
+            .item("Sağ tık", "Katman, harita ya da tablo satırı menüsünü açar")
             .item(
                 "Orta tuş + sürükle",
                 "Her araçta gezinme; Kaydır aracında sol tuş da",

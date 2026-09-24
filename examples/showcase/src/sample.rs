@@ -6,11 +6,16 @@
 //! başlangıç ve bitiş şehri) veriden hesaplanır. Bilinmeyen değerler (hız
 //! sınırı, bakım tarihi, açılış saati) boş bırakılmıştır; nesne inceleyiciyle
 //! doldurulabilir.
+//!
+//! Şehirler bölgelerine, yollar türlerine, çizimler durumlarına göre alt
+//! katmanlara ayrılır; her alt katmanın kendi rengi vardır.
 
 use iced::Color;
 
 use kentos_rc::attribute::{Field, ObjectId, Value};
-use kentos_rc::spatial::{Feature, Geometry, Layer, LonLat, measure};
+use kentos_rc::spatial::{Feature, Geometry, Layer, LonLat, Sublayer, measure};
+
+use crate::layer_tree::{Entry, LayerTree};
 
 const DRAWING_COLOR: Color = Color::from_rgb(0.55, 0.86, 0.26);
 const CITY_COLOR: Color = Color::from_rgb(0.96, 0.35, 0.38);
@@ -32,14 +37,22 @@ pub const DRAWING_KINDS: [&str; 6] = [
     "Nokta",
 ];
 
-const REGIONS: [&str; 7] = [
-    "Marmara",
-    "Ege",
-    "Akdeniz",
-    "İç Anadolu",
-    "Karadeniz",
-    "Doğu Anadolu",
-    "Güneydoğu",
+/// Coğrafi bölgeler ve haritadaki renkleri.
+const REGIONS: [(&str, Color); 7] = [
+    ("Marmara", Color::from_rgb8(0x5B, 0x9C, 0xF6)),
+    ("Ege", Color::from_rgb8(0x36, 0xC5, 0xB5)),
+    ("Akdeniz", Color::from_rgb8(0xF2, 0x9E, 0x4C)),
+    ("İç Anadolu", Color::from_rgb8(0xE3, 0xC1, 0x5A)),
+    ("Karadeniz", Color::from_rgb8(0x6C, 0xCB, 0x7F)),
+    ("Doğu Anadolu", Color::from_rgb8(0xE4, 0x77, 0xB8)),
+    ("Güneydoğu", Color::from_rgb8(0xEF, 0x64, 0x61)),
+];
+
+/// Yol türleri: otoyol katmanın renginde, diğerleri açılarak.
+const ROAD_KINDS: [(&str, Color); 3] = [
+    ("Otoyol", ROAD_COLOR),
+    ("Devlet yolu", Color::from_rgb8(0xE8, 0xC4, 0x68)),
+    ("Bulvar", Color::from_rgb8(0xF4, 0xD9, 0xB0)),
 ];
 
 /// Çizim araçlarının geometri eklediği, boş başlayan katman.
@@ -54,6 +67,42 @@ pub fn drawing_layer() -> Layer {
             Field::datetime("Oluşturma").read_only(),
             Field::text("Not"),
         ])
+        .with_sublayers(
+            "Durum",
+            [
+                Sublayer::new("Taslak", DRAWING_COLOR),
+                Sublayer::new("Onaylandı", Color::from_rgb8(0x4F, 0xC3, 0xF7)),
+            ],
+        )
+}
+
+/// Katman ağacı: çizimler en üstte, örnek veri iç içe gruplarda.
+///
+/// Katman sırası: 0 Çizimler, 1 Şehirler, 2 Önemli Yerler, 3 Karayolları,
+/// 4 Nehirler, 5 İlçeler.
+pub fn layer_tree() -> LayerTree {
+    let mut tree = LayerTree::flat(6);
+
+    let settlement = tree.add_group("Yerleşim", true, vec![Entry::Layer(1), Entry::Layer(2)]);
+    let transport = tree.add_group("Ulaşım", true, vec![Entry::Layer(3)]);
+    let nature = tree.add_group("Doğal yapı", true, vec![Entry::Layer(4)]);
+    let boundaries = tree.add_group("İdari sınırlar", true, vec![Entry::Layer(5)]);
+    let istanbul = tree.add_group("İstanbul", false, vec![Entry::Group(boundaries)]);
+    let country = tree.add_group(
+        "Türkiye",
+        true,
+        vec![
+            Entry::Group(settlement),
+            Entry::Group(transport),
+            Entry::Group(nature),
+            Entry::Group(istanbul),
+        ],
+    );
+
+    tree.roots = vec![Entry::Layer(0), Entry::Group(country)];
+    // Yolların türlere göre alt katmanları açık başlar.
+    tree.expanded[3] = true;
+    tree
 }
 
 /// Örnek veri katmanları.
@@ -62,13 +111,17 @@ pub fn layers() -> Vec<Layer> {
         .labels_from(5.0)
         .with_schema([
             Field::text("Ad").required(),
-            Field::choice("Bölge", REGIONS),
+            Field::choice("Bölge", REGIONS.map(|(region, _)| region)),
             Field::integer("Nüfus").unit("kişi"),
             Field::integer("Plaka").between(1, 81),
             Field::boolean("Kıyı şehri"),
             Field::text("Not"),
         ])
-        .with_features(cities());
+        .with_features(cities())
+        .with_sublayers(
+            "Bölge",
+            REGIONS.map(|(region, color)| Sublayer::new(region, color)),
+        );
 
     let centers: Vec<(ObjectId, LonLat)> = cities
         .features
@@ -148,7 +201,11 @@ pub fn layers() -> Vec<Layer> {
                 Field::object("Bitiş şehri", CITIES),
                 Field::date("Son bakım"),
             ])
-            .with_features(roads),
+            .with_features(roads)
+            .with_sublayers(
+                "Tür",
+                ROAD_KINDS.map(|(kind, color)| Sublayer::new(kind, color)),
+            ),
         Layer::lines("Nehirler", RIVER_COLOR)
             .stroke_width(1.6)
             .opacity(0.95)

@@ -95,7 +95,24 @@ pub enum Demo {
     /// Tablo sütununa göre sırala ya da yönü çevir.
     Sorted(usize),
     SearchChanged(String),
+    /// Ağaç örneği: klasörü aç/kapat.
+    ProjectToggled(usize),
+    /// Klasörün kutusu: içindekilerin hepsini işaretler ya da kaldırır.
+    ProjectFolderChecked(usize),
+    ProjectFileChecked(usize),
+    ProjectSelected(ProjectRow),
 }
+
+/// Ağaç örneğindeki satır: klasör ya da dosya.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProjectRow {
+    Folder(usize),
+    File(usize),
+}
+
+/// Ağaç örneğindeki klasörlerin dosyaları: 0 proje, 1 paftalar, 2 dış
+/// referanslar, 3 plan kararları. Projenin kutusu bütün dosyaları kapsar.
+pub const PROJECT_FILES: [&[usize]; 4] = [&[0, 1, 2, 3, 4], &[0, 1], &[2, 3], &[4]];
 
 /// Açılır liste örneğindeki koordinat sistemleri.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -148,6 +165,11 @@ pub struct Gallery {
     pub mode: SelectionMode,
     pub sort: Option<(usize, SortOrder)>,
     pub search: String,
+
+    /// Ağaç örneği: açık klasörler, işaretli dosyalar ve seçili satır.
+    pub project_open: [bool; 4],
+    pub project_checked: [bool; 5],
+    pub project_selected: Option<ProjectRow>,
 }
 
 impl Default for Gallery {
@@ -185,6 +207,9 @@ impl Default for Gallery {
             mode: SelectionMode::New,
             sort: None,
             search: String::new(),
+            project_open: [true, true, true, false],
+            project_checked: [true, true, true, false, true],
+            project_selected: Some(ProjectRow::File(2)),
         }
     }
 }
@@ -261,6 +286,25 @@ impl Gallery {
                 };
             }
             Demo::SearchChanged(search) => self.search = search,
+            Demo::ProjectToggled(folder) => {
+                if let Some(open) = self.project_open.get_mut(folder) {
+                    *open = !*open;
+                }
+            }
+            Demo::ProjectFolderChecked(folder) => {
+                let files = PROJECT_FILES.get(folder).copied().unwrap_or_default();
+                let all = files.iter().all(|&file| self.project_checked[file]);
+
+                for &file in files {
+                    self.project_checked[file] = !all;
+                }
+            }
+            Demo::ProjectFileChecked(file) => {
+                if let Some(checked) = self.project_checked.get_mut(file) {
+                    *checked = !*checked;
+                }
+            }
+            Demo::ProjectSelected(row) => self.project_selected = Some(row),
         }
 
         None

@@ -1,14 +1,13 @@
 //! Yan paneller: katmanlar ve özellikler (nesne inceleyici ya da ölçüm).
 
-use iced::widget::{button, checkbox, column, container, row, slider, space, tooltip};
-use iced::{Center, Element, Fill, Right};
+use iced::widget::{button, column, container, row, space, tooltip};
+use iced::{Center, Element, Fill, FillPortion};
 
 use kentos_rc::attribute::{DateTime, FieldKind, ObjectId, text};
 use kentos_rc::icon::{Icon, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::{Geometry, Tool, format};
 use kentos_rc::style;
-use kentos_rc::widget::table::{self, Table};
 use kentos_rc::widget::{Dock, Inspector, Panel, PropertyGrid, Tip, swatch, tip};
 
 use crate::app::{Showcase, TIME_ZONE};
@@ -30,79 +29,17 @@ impl Showcase {
 
         Dock::new(DOCK_WIDTH)
             .push(
-                Panel::new("Katmanlar", self.layer_table())
-                    .meta(format!("{} katman", self.layers.len())),
+                Panel::new("Katmanlar", self.layer_panel())
+                    .meta(format!(
+                        "{} katman, {} grup",
+                        self.layers.len(),
+                        self.layer_tree.groups.len()
+                    ))
+                    .trailing(self.layer_panel_actions())
+                    .height(FillPortion(5)),
             )
-            .push(details.height(Fill).scrollable())
+            .push(details.height(FillPortion(6)).scrollable())
             .into()
-    }
-
-    /// Katman tablosu ve altında etkin katmanın opaklığı.
-    fn layer_table(&self) -> Element<'_, Message> {
-        let rows = self.layers.iter().enumerate().map(|(index, layer)| {
-            let name = label::body(layer.name.as_str()).style(if layer.visible {
-                style::text::default
-            } else {
-                style::text::muted
-            });
-
-            table::Row::new([
-                checkbox(layer.visible)
-                    .size(13.0)
-                    .on_toggle(move |visible| Message::LayerVisibility(index, visible))
-                    .into(),
-                swatch(layer.color),
-                name.into(),
-                label::caption(layer.kind.label()).into(),
-                label::mono_caption(layer.features.len().to_string()).into(),
-                label::mono_caption(format!("{:.0}%", layer.opacity * 100.0)).into(),
-                tip(
-                    button(icon(Icon::Target).size(13.0))
-                        .on_press(Message::ZoomToLayer(index))
-                        .padding([0, 4])
-                        .style(style::button::subtle),
-                    Tip::new("Katmana sığdır"),
-                    tooltip::Position::Left,
-                ),
-            ])
-            .selected(index == self.active_layer)
-            .on_press(Message::LayerActivated(index))
-        });
-
-        let layers = Table::new([
-            table::Column::new("").width(13),
-            table::Column::new("").width(11),
-            table::Column::new("Ad").width(Fill),
-            table::Column::new("Tür").width(44),
-            table::Column::new("Öğe").width(24).align_right(),
-            table::Column::new("Opak.").width(38).align_right(),
-            table::Column::new("").width(20),
-        ])
-        .extend(rows);
-
-        let opacity: Element<'_, Message> = match self.layers.get(self.active_layer) {
-            Some(layer) => {
-                let index = self.active_layer;
-
-                row![
-                    label::muted("Opaklık").width(58),
-                    slider(0.0..=1.0, layer.opacity, move |value| {
-                        Message::LayerOpacity(index, value)
-                    })
-                    .step(0.05_f32),
-                    label::mono_caption(format!("{:>3.0}%", layer.opacity * 100.0))
-                        .style(style::text::default)
-                        .width(38)
-                        .align_x(Right),
-                ]
-                .spacing(8)
-                .align_y(Center)
-                .into()
-            }
-            None => space::vertical().height(0).into(),
-        };
-
-        column![layers, container(opacity).padding([6, 10]).width(Fill)].into()
     }
 
     /// Birincil öğenin nesne inceleyicisi: başlıkta adı ve seçimde gezinme,

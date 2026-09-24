@@ -10,7 +10,7 @@ use kentos_rc::attribute::{DateTime, Field, FieldKind, Query, Value, text};
 use kentos_rc::spatial::model_space::{self, Options};
 use kentos_rc::spatial::{
     Bounds, Draft, Feature, FeatureRef, Geometry, Layer, LonLat, Measurement, Selection,
-    SelectionMode, Tool, Viewport, feature, query,
+    SelectionMode, Tool, Viewport, feature, format, query,
 };
 use kentos_rc::theme::{self, Mode};
 use kentos_rc::widget::command_line::Entry;
@@ -18,15 +18,19 @@ use kentos_rc::widget::inspector;
 
 use crate::command::{self, Command};
 use crate::gallery::Gallery;
+use crate::layer_tree::{LayerTree, NodeId};
 use crate::message::{AppCommand, Message, QueryPurpose, RECENT_DRAWINGS, RibbonTab, Setting};
 use crate::sample;
-use crate::table::TableView;
+use crate::table::{self, TableView};
 
 /// Çizim araçlarının geometri eklediği katman; listenin en üstündedir.
 pub const DRAWING_LAYER: usize = 0;
 
 /// Yerel saat dilimi: Türkiye (UTC+3), dakika olarak.
 pub const TIME_ZONE: i32 = 180;
+
+/// Pencerenin açılış boyutu.
+pub const WINDOW_SIZE: Size = Size::new(1440.0, 900.0);
 
 const INITIAL_CENTER: LonLat = LonLat::new(32.0, 39.0);
 const INITIAL_ZOOM: f64 = 6.0;
@@ -49,6 +53,8 @@ const CUBE_SPEED: f32 = 0.012;
 pub struct Showcase {
     pub(crate) viewport: Viewport,
     pub(crate) layers: Vec<Layer>,
+    /// Katmanların gruplar hâlindeki ağacı ve görünürlükleri.
+    pub(crate) layer_tree: LayerTree,
     pub(crate) active_layer: usize,
     pub(crate) selection: Selection,
     pub(crate) hover: Option<FeatureRef>,
@@ -128,8 +134,12 @@ impl Showcase {
             ),
         ];
 
+        let mut layer_tree = sample::layer_tree();
+        layer_tree.selected = Some(NodeId::Layer(DRAWING_LAYER + 1));
+
         Self {
             viewport: Viewport::new(INITIAL_CENTER, INITIAL_ZOOM, Size::new(900.0, 640.0)),
+            layer_tree,
             active_layer: DRAWING_LAYER + 1,
             selection: Selection::new(),
             hover: None,
@@ -203,32 +213,68 @@ impl Showcase {
                 }
             }
 
-            Message::LayerVisibility(index, visible) => {
-                if let Some(layer) = self.layers.get_mut(index) {
-                    layer.visible = visible;
-                }
-            }
             Message::LayerOpacity(index, opacity) => {
                 if let Some(layer) = self.layers.get_mut(index) {
                     layer.opacity = opacity;
                 }
             }
-            Message::LayerActivated(index) => {
-                if index < self.layers.len() {
-                    self.active_layer = index;
-                }
-            }
+            Message::LayerActivated(index) => self.activate_layer(index),
             Message::ZoomToLayer(index) => {
-                if let Some(layer) = self.layers.get(index) {
-                    self.active_layer = index;
-
-                    if let Some(bounds) = layer.bounds() {
-                        self.viewport.fit_bounds(bounds, 48.0);
-                    }
-                }
+                self.activate_layer(index);
+                self.zoom_to_node(NodeId::Layer(index));
             }
             Message::ShowAllLayers => self.set_all_layers_visible(true),
             Message::HideAllLayers => self.set_all_layers_visible(false),
+
+            Message::TreeSelected(node) => {
+                self.layer_tree.selected = Some(node);
+
+                if let Some(layer) = node.layer() {
+                    self.active_layer = layer;
+                }
+            }
+            Message::TreeToggled(node) => self.layer_tree.toggle(node),
+            Message::TreeChecked(node, checked) => self.check_node(node, checked),
+            Message::TreeExpandAll(group, expanded) => self.layer_tree.expand_all(group, expanded),
+            Message::ShowOnly(node) => self.show_only(node),
+            Message::SublayersShown(index, visible) => {
+                if let Some(layer) = self.layers.get_mut(index) {
+                    for sublayer in &mut layer.sublayers {
+                        sublayer.visible = visible;
+                    }
+                }
+            }
+            Message::ZoomToNode(node) => self.zoom_to_node(node),
+            Message::SelectNode(node) => self.select_node(node),
+            Message::OpenTable(index) => {
+                self.activate_layer(index);
+                self.table_open = true;
+            }
+            Message::ClearDrawings => self.clear_drawings(),
+
+            Message::SelectFeature(reference, mode) => {
+                self.selection.apply(mode, [reference]);
+
+                if mode == SelectionMode::Add {
+                    self.selection.focus(reference);
+                }
+
+                self.selection_changed(true);
+            }
+            Message::CenterAt(location) => self.viewport.center = location,
+            Message::CopyCoordinates(location) => {
+                let text = format::decimal(location);
+                self.log(format!("Koordinat panoya kopyalandı: {text}"));
+
+                return iced::clipboard::write(text);
+            }
+            Message::CopyRow(reference) => {
+                if let Some(text) = self.row_text(reference) {
+                    self.log("Satır panoya kopyalandı (sekmeyle ayrılmış).");
+
+                    return iced::clipboard::write(text);
+                }
+            }
 
             Message::SelectAll => self.select_all(),
             Message::InvertSelection => self.invert_selection(),
@@ -280,6 +326,7 @@ impl Showcase {
             }
 
             Message::QueryOpened(purpose) => self.open_query(purpose, self.active_layer),
+            Message::QueryOpenedFor(purpose, layer) => self.open_query(purpose, layer),
             Message::QueryLayerSelected(index) => {
                 if let Some(dialog) = &mut self.query
                     && dialog.layer != index
@@ -497,7 +544,6 @@ impl Showcase {
         self.drawn_count += 1;
         let name = format!("{} {}", self.tool.label(), self.drawn_count);
 
-        layer.visible = true;
         let id = layer.insert(Feature::new(geometry).with_values([
             Value::from(name.as_str()),
             Value::from(self.tool.label()),
@@ -505,6 +551,10 @@ impl Showcase {
             Value::DateTime(DateTime::now(TIME_ZONE)),
             Value::Null,
         ]));
+
+        // Çizim görünsün diye katman ve üst grupları açılır.
+        self.layer_tree.reveal(DRAWING_LAYER);
+        self.sync_visibility();
 
         self.selection.select(FeatureRef::new(DRAWING_LAYER, id));
         self.selection_changed(true);
@@ -638,7 +688,7 @@ impl Showcase {
     /// seçimi izler.
     fn selection_changed(&mut self, follow: bool) {
         if follow && let Some(primary) = self.selection.primary() {
-            self.active_layer = primary.layer;
+            self.activate_layer(primary.layer);
         }
 
         self.sync_inspector();
@@ -763,10 +813,9 @@ impl Showcase {
             self.measurement.clear();
         }
 
-        if let Some(layer) = self.layers.get_mut(target)
-            && !layer.visible
-        {
-            layer.visible = true;
+        if self.layers.get(target).is_some_and(|layer| !layer.visible) {
+            self.layer_tree.reveal(target);
+            self.sync_visibility();
             self.log(format!("{target_name} katmanı gösterildi."));
         }
 
@@ -899,7 +948,7 @@ impl Showcase {
                 let count = found.len();
 
                 self.selection.apply(dialog.mode, found);
-                self.active_layer = dialog.layer;
+                self.activate_layer(dialog.layer);
                 self.sync_inspector();
                 self.log(format!(
                     "Öznitelikle seç, {name}: {description}. {count} öğe eşleşti; {} öğe seçili.",
@@ -913,7 +962,7 @@ impl Showcase {
                     table.filter = dialog.query;
                 }
 
-                self.active_layer = dialog.layer;
+                self.activate_layer(dialog.layer);
                 self.table_open = true;
                 self.log(if cleared {
                     format!("{name} tablosunun filtresi kaldırıldı.")
@@ -924,6 +973,176 @@ impl Showcase {
         }
     }
 
+    // --- Katman ağacı ----------------------------------------------------
+
+    /// Katmanı aktif yapar; ağaçta da o katman seçilir.
+    fn activate_layer(&mut self, index: usize) {
+        if index < self.layers.len() {
+            self.active_layer = index;
+            self.layer_tree.selected = Some(NodeId::Layer(index));
+        }
+    }
+
+    /// Katmanların çizilip çizilmeyeceğini ağaçtaki işaretlerden hesaplar:
+    /// katman, kendisi ve bütün üst grupları görünürse çizilir.
+    fn sync_visibility(&mut self) {
+        for (layer, visible) in self.layers.iter_mut().zip(self.layer_tree.effective()) {
+            layer.visible = visible;
+        }
+    }
+
+    /// Ağaçtaki onay kutusu. Bazı alt katmanları gizli olan görünür
+    /// katmanın kutusu karışıktır; ona tıklamak bütün alt katmanları gösterir.
+    fn check_node(&mut self, node: NodeId, checked: bool) {
+        match node {
+            NodeId::Group(group) => {
+                if let Some(group) = self.layer_tree.groups.get_mut(group) {
+                    group.visible = checked;
+                }
+            }
+            NodeId::Layer(index) => {
+                let own = self.layer_tree.visible.get(index).copied().unwrap_or(false);
+
+                if checked && own {
+                    if let Some(layer) = self.layers.get_mut(index) {
+                        for sublayer in &mut layer.sublayers {
+                            sublayer.visible = true;
+                        }
+                    }
+                } else if let Some(visible) = self.layer_tree.visible.get_mut(index) {
+                    *visible = checked;
+                }
+            }
+            NodeId::Sublayer(layer, sublayer) => {
+                if let Some(sublayer) = self
+                    .layers
+                    .get_mut(layer)
+                    .and_then(|layer| layer.sublayers.get_mut(sublayer))
+                {
+                    sublayer.visible = checked;
+                }
+            }
+        }
+
+        self.sync_visibility();
+    }
+
+    /// Yalnızca düğümü gösterir: katman ya da grubun katmanları görünür,
+    /// diğerleri gizlenir; alt katmanda katmanın diğer alt katmanları gizlenir.
+    fn show_only(&mut self, node: NodeId) {
+        match node {
+            NodeId::Group(group) => {
+                let layers = self.layer_tree.layers_in(group);
+                self.layer_tree.show_only(&layers);
+                self.layer_tree.groups[group].visible = true;
+            }
+            NodeId::Layer(layer) => self.layer_tree.show_only(&[layer]),
+            NodeId::Sublayer(index, only) => {
+                self.layer_tree.reveal(index);
+
+                if let Some(layer) = self.layers.get_mut(index) {
+                    for (sublayer, entry) in layer.sublayers.iter_mut().enumerate() {
+                        entry.visible = sublayer == only;
+                    }
+                }
+            }
+        }
+
+        self.sync_visibility();
+        self.log(format!("Yalnızca {} gösteriliyor.", self.node_name(node)));
+    }
+
+    /// Düğümün öğeleri: katmanın, alt katmanın ya da grubun bütün katmanlarının.
+    pub(crate) fn node_features(&self, node: NodeId) -> Vec<FeatureRef> {
+        let layer_features = |index: usize| {
+            self.layers
+                .get(index)
+                .into_iter()
+                .flat_map(move |layer| layer.features.iter())
+                .map(move |feature| FeatureRef::new(index, feature.id))
+        };
+
+        match node {
+            NodeId::Group(group) => self
+                .layer_tree
+                .layers_in(group)
+                .into_iter()
+                .flat_map(layer_features)
+                .collect(),
+            NodeId::Layer(index) => layer_features(index).collect(),
+            NodeId::Sublayer(index, sublayer) => self
+                .layers
+                .get(index)
+                .into_iter()
+                .flat_map(|layer| layer.sublayer_features(sublayer))
+                .map(|feature| FeatureRef::new(index, feature.id))
+                .collect(),
+        }
+    }
+
+    fn zoom_to_node(&mut self, node: NodeId) {
+        if let Some(bounds) = bounds_of(&self.layers, self.node_features(node)) {
+            self.viewport.focus(bounds, 48.0, 9.0);
+        }
+    }
+
+    fn select_node(&mut self, node: NodeId) {
+        let found = self.node_features(node);
+        let count = found.len();
+
+        self.selection.apply(SelectionMode::New, found);
+        self.selection_changed(true);
+        self.log(format!("{}: {count} öğe seçildi.", self.node_name(node)));
+    }
+
+    /// Düğümün ağaçta gösterilen adı.
+    pub(crate) fn node_name(&self, node: NodeId) -> String {
+        match node {
+            NodeId::Group(group) => self
+                .layer_tree
+                .groups
+                .get(group)
+                .map_or_else(String::new, |group| group.name.clone()),
+            NodeId::Layer(layer) => self
+                .layers
+                .get(layer)
+                .map_or_else(String::new, |layer| layer.name.clone()),
+            NodeId::Sublayer(layer, sublayer) => self
+                .layers
+                .get(layer)
+                .and_then(|layer| layer.sublayers.get(sublayer))
+                .map_or_else(String::new, |sublayer| sublayer.name.clone()),
+        }
+    }
+
+    /// Çizimler katmanındaki bütün öğeleri siler.
+    fn clear_drawings(&mut self) {
+        let removed = self
+            .layers
+            .get_mut(DRAWING_LAYER)
+            .map_or(0, |layer| std::mem::take(&mut layer.features).len());
+
+        self.selection.retain(|item| item.layer != DRAWING_LAYER);
+        self.hover = None;
+        self.sync_inspector();
+        self.log(format!("{removed} çizim silindi."));
+    }
+
+    /// Satırın değerleri, sekmeyle ayrılmış: OBJECTID ve şemadaki alanlar.
+    fn row_text(&self, reference: FeatureRef) -> Option<String> {
+        let (layer, feature) = reference.resolve(&self.layers)?;
+
+        let values = (0..layer.schema.len())
+            .map(|field| table::cell_text(&self.layers, layer, feature, field));
+
+        Some(
+            std::iter::once(feature.id.to_string())
+                .chain(values)
+                .collect::<Vec<_>>()
+                .join("\t"),
+        )
+    }
+
     // --- Görünüm ---------------------------------------------------------
 
     fn zoom(&mut self, delta: f64) {
@@ -932,10 +1151,15 @@ impl Showcase {
     }
 
     fn set_all_layers_visible(&mut self, visible: bool) {
-        for layer in &mut self.layers {
-            layer.visible = visible;
+        self.layer_tree.visible.fill(visible);
+
+        if visible {
+            for group in &mut self.layer_tree.groups {
+                group.visible = true;
+            }
         }
 
+        self.sync_visibility();
         self.log(if visible {
             "Tüm katmanlar gösterildi."
         } else {

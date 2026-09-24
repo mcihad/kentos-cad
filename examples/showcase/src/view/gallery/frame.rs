@@ -2,15 +2,15 @@
 //! menüsü ve iletişim kutuları.
 
 use iced::widget::{button, column, container, row};
-use iced::{Center, Element, Theme};
+use iced::{Center, Element, Fill, Theme};
 
-use kentos_rc::icon::Icon;
+use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::model_space;
 use kentos_rc::style;
 use kentos_rc::theme::typography;
 use kentos_rc::widget::status_bar::Toggle;
-use kentos_rc::widget::{CommandLine, Dialog, NavigationBar, StatusBar};
+use kentos_rc::widget::{CommandLine, ContextMenu, Dialog, Menu, NavigationBar, StatusBar};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
@@ -154,6 +154,23 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Bağlam menüsü",
+                "kentos_rc::widget::ContextMenu",
+                "Herhangi bir öğeyi sarar; sağ tıklanan yerde açılır, pencere kenarına \
+                 taşacaksa sola ya da yukarı döner. Komut, işaret, kısayol, başlık, alt \
+                 menü, devre dışı ve tehlikeli komut destekler. Oklarla gezinilir, Enter \
+                 seçer, Esc kapatır. Aşağıdaki alana sağ tıklayın.",
+                self.context_menu_sample(),
+                Some(
+                    "ContextMenu::new(content, |position| {\n    Menu::new()\n        \
+                     .item(\"Kopyala\", Message::Copy).icon(Icon::Copy).shortcut(\"Ctrl+C\")\n        \
+                     .check(\"Izgara\", grid, Message::ToggleGrid)\n        \
+                     .submenu(\"Hizala\", Menu::new().item(\"Sola\", Message::AlignLeft))\n        \
+                     .separator()\n        \
+                     .item(\"Sil\", Message::Delete).danger()\n})",
+                ),
+            ),
+            entry(
                 "Uygulama menüsü",
                 "kentos_rc::widget::AppMenu",
                 "Şeridin marka düğmesinden açılan büyük menü: solda komutlar, sağda \
@@ -171,5 +188,61 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+
+    /// Sağ tıklanınca bütün komut türlerini gösteren örnek menü açan alan.
+    fn context_menu_sample(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+
+        let area = container(
+            column![
+                icon(Icon::Select).size(20.0).tone(Tone::Muted),
+                label::muted("Bu alana sağ tıklayın"),
+            ]
+            .spacing(8)
+            .align_x(Center),
+        )
+        .center_x(Fill)
+        .center_y(120)
+        .style(style::container::field);
+
+        ContextMenu::new(area, move |_| {
+            Menu::new()
+                .header("Düzen")
+                .item("Kes", pressed("Kes"))
+                .shortcut("Ctrl+X")
+                .item("Kopyala", pressed("Kopyala"))
+                .icon(Icon::Copy)
+                .shortcut("Ctrl+C")
+                .item("Yapıştır", None)
+                .shortcut("Ctrl+V")
+                .separator()
+                .check(
+                    "Izgara",
+                    gallery.toggles[0],
+                    Message::Gallery(Demo::Toggled(0)),
+                )
+                .shortcut("F7")
+                .check(
+                    "Yakalama",
+                    gallery.toggles[1],
+                    Message::Gallery(Demo::Toggled(1)),
+                )
+                .shortcut("F3")
+                .submenu(
+                    "Hizala",
+                    Menu::new()
+                        .item("Sola", pressed("Sola hizala"))
+                        .item("Ortaya", pressed("Ortaya hizala"))
+                        .item("Sağa", pressed("Sağa hizala")),
+                )
+                .icon(Icon::Layout)
+                .separator()
+                .item("Sil", pressed("Sil"))
+                .icon(Icon::Eraser)
+                .shortcut("Del")
+                .danger()
+        })
+        .into()
     }
 }

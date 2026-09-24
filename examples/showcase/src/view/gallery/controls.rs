@@ -5,17 +5,18 @@ use iced::widget::{
 };
 use iced::{Center, Element, Fill, Theme};
 
-use kentos_rc::icon::{Icon, icon};
+use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::Tool;
 use kentos_rc::style;
 use kentos_rc::widget::ribbon::{self, Field, Group, Stack};
 use kentos_rc::widget::table::{self, Table};
-use kentos_rc::widget::{Panel, PropertyGrid, Tip, badge, swatch, tip, vertical_divider};
+use kentos_rc::widget::tree_view::{self, Check, Node, TreeView};
+use kentos_rc::widget::{Menu, Panel, PropertyGrid, Tip, badge, swatch, tip, vertical_divider};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
-use crate::gallery::{Crs, Demo};
+use crate::gallery::{Crs, Demo, PROJECT_FILES, ProjectRow};
 use crate::message::Message;
 
 type ButtonStyle = Box<dyn Fn(&Theme, button::Status) -> button::Style>;
@@ -343,6 +344,26 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Ağaç görünümü",
+                "kentos_rc::widget::TreeView",
+                "İç içe klasörler ve öğeler; derinlik sınırsızdır. İlk sütun girinti \
+                 çizgilerini, açma okunu, onay kutusunu ve ikonu taşır; diğer sütunlar \
+                 tabloyla aynı hizadadır. Klasörün kutusu içindekilerden hesaplanır: \
+                 bazıları işaretliyse karışıktır, tıklamak hepsini işaretler. Dosyalara \
+                 sağ tıklayın.",
+                container(self.project_tree()).width(520),
+                Some(
+                    "TreeView::new([\n    \
+                     tree_view::Column::new(\"Ad\").width(Fill),\n    \
+                     tree_view::Column::new(\"Boyut\").width(72).align_right(),\n])\n\
+                     .push(\n    Node::new(\"Dış referanslar\")\n        \
+                     .check(Check::Mixed, Message::FolderChecked(2))\n        \
+                     .expanded(open, Message::FolderToggled(2))\n        \
+                     .push(Node::new(\"Ortofoto 2025.tif\").cells([size]))\n        \
+                     .menu(|_| Menu::new().item(\"Aç\", Message::Open(3))),\n)",
+                ),
+            ),
+            entry(
                 "Özellik ızgarası",
                 "kentos_rc::widget::PropertyGrid",
                 "CAD programlarındaki Özellikler paleti: anahtar ve değer iki sütunda, \
@@ -380,6 +401,104 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+
+    /// Ağaç örneği: bir imar planı projesinin klasörleri ve dosyaları.
+    fn project_tree(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+
+        let file = |index: usize, name: &'static str, glyph: Icon, kind: &'static str, size| {
+            let row = ProjectRow::File(index);
+            let checked = gallery.project_checked[index];
+
+            Node::new(name)
+                .icon(icon(glyph).size(14.0).tone(Tone::Muted))
+                .check(checked, Message::Gallery(Demo::ProjectFileChecked(index)))
+                .cells([
+                    label::caption(kind).into(),
+                    label::mono_caption(size).into(),
+                ])
+                .selected(gallery.project_selected == Some(row))
+                .muted(!checked)
+                .on_press(Message::Gallery(Demo::ProjectSelected(row)))
+                .menu(move |_| {
+                    Menu::new()
+                        .header(name)
+                        .item("Aç", pressed("Aç"))
+                        .icon(Icon::Folder)
+                        .item("Kopyala", pressed("Kopyala"))
+                        .icon(Icon::Copy)
+                        .shortcut("Ctrl+C")
+                        .item("Yeniden adlandır", None)
+                        .shortcut("F2")
+                        .separator()
+                        .item("Projeden kaldır", pressed("Projeden kaldır"))
+                        .icon(Icon::Close)
+                        .danger()
+                })
+        };
+
+        let folder = |index: usize, name: &'static str, children: Vec<Node<'static, Message>>| {
+            let files = PROJECT_FILES[index];
+            let checked = files
+                .iter()
+                .filter(|&&file| gallery.project_checked[file])
+                .count();
+            let check = match checked {
+                0 => Check::Unchecked,
+                count if count == files.len() => Check::Checked,
+                _ => Check::Mixed,
+            };
+            let open = gallery.project_open[index];
+            let row = ProjectRow::Folder(index);
+
+            let node = Node::new(name)
+                .icon(icon(Icon::Folder).size(14.0).tone(Tone::Muted))
+                .check(check, Message::Gallery(Demo::ProjectFolderChecked(index)))
+                .expanded(open, Message::Gallery(Demo::ProjectToggled(index)))
+                .cells([
+                    label::caption("Klasör").into(),
+                    label::mono_caption(format!("{} dosya", files.len())).into(),
+                ])
+                .selected(gallery.project_selected == Some(row))
+                .on_press(Message::Gallery(Demo::ProjectSelected(row)));
+
+            if open { node.extend(children) } else { node }
+        };
+
+        TreeView::new([
+            tree_view::Column::new("Ad").width(Fill),
+            tree_view::Column::new("Tür").width(64),
+            tree_view::Column::new("Boyut").width(72).align_right(),
+        ])
+        .push(folder(
+            0,
+            "Kadıköy imar planı",
+            vec![
+                folder(
+                    1,
+                    "Paftalar",
+                    vec![
+                        file(0, "G22-b-18-c", Icon::Rectangle, "Pafta", "1:1000"),
+                        file(1, "G22-b-18-d", Icon::Rectangle, "Pafta", "1:1000"),
+                    ],
+                ),
+                folder(
+                    2,
+                    "Dış referanslar",
+                    vec![
+                        file(2, "Halihazır harita.dxf", Icon::Polyline, "DXF", "4,2 MB"),
+                        file(3, "Ortofoto 2025.tif", Icon::Grid, "TIFF", "182 MB"),
+                    ],
+                ),
+                folder(
+                    3,
+                    "Plan kararları",
+                    vec![file(4, "Plan notları.pdf", Icon::Document, "PDF", "860 KB")],
+                ),
+            ],
+        ))
+        .into()
     }
 
     fn fields_sample(&self) -> Element<'_, Message> {

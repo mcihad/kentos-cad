@@ -19,6 +19,8 @@ mod attribute_table;
 mod dock;
 mod gallery;
 mod help;
+mod layers;
+mod menus;
 mod query;
 mod ribbon;
 mod status;
@@ -31,7 +33,9 @@ use iced::{Element, Fill};
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::{Layer, ModelSpace, ViewCube};
 use kentos_rc::style;
-use kentos_rc::widget::{CommandLine, NavigationBar, horizontal_divider, vertical_divider};
+use kentos_rc::widget::{
+    CommandLine, ContextMenu, NavigationBar, horizontal_divider, vertical_divider,
+};
 
 use crate::app::{DRAWING_LAYER, Showcase};
 use crate::message::{Message, RibbonTab};
@@ -100,7 +104,7 @@ impl Showcase {
             )
             .button(Icon::Home, "Başlangıç görünümü", Message::ResetView);
 
-        ModelSpace::new(self.viewport, &self.layers, Message::ModelSpace)
+        let model_space = ModelSpace::new(self.viewport, &self.layers, Message::ModelSpace)
             .tool(self.tool)
             .selection(&self.selection)
             .hover(self.hover)
@@ -109,8 +113,11 @@ impl Showcase {
             .options(self.options)
             .prompt(self.picking.as_ref().map(|pick| pick.prompt.as_str()))
             .view_cube(self.view_cube.then(|| ViewCube::new(self.cube_rotation)))
-            .navigation(navigation)
-            .into()
+            .navigation(navigation);
+
+        // Seç ve Kaydır araçlarında sağ tık bağlam menüsünü açar; çizim ve
+        // ölçüm araçlarında model alanı sağ tıkı kendisi kullanır.
+        ContextMenu::new(model_space, move |position| self.map_menu(position)).into()
     }
 
     fn command_line(&self) -> Element<'_, Message> {
