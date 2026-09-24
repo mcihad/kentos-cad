@@ -18,7 +18,7 @@ use crate::app::Showcase;
 use crate::command::{self, Command};
 use crate::gallery::Page;
 use crate::message::{EXPORT_FORMATS, Message, Pane, QueryPurpose, RibbonTab, SizeStep};
-use crate::view::{backdrop_note, family_note, hex_of};
+use crate::view::{backdrop_note, family_note, hex_of, theme_note};
 
 impl Showcase {
     pub(super) fn ribbon(&self) -> Element<'_, Message> {
@@ -326,14 +326,28 @@ impl Showcase {
             )
     }
 
-    /// Tema kipi ve vurgu rengi: sekiz hazır renk, altında kendi rengini
-    /// yazdıran düğme.
+    /// Tema ve vurgu rengi: dört temanın önizleme karoları; sekiz hazır
+    /// renk, altında kendi rengini yazdıran düğme.
     fn theme_group(&self) -> Group<'_, Message> {
-        let (icon, label) = if self.mode.is_dark() {
-            (Icon::Contrast, "Aydınlık\ntema")
-        } else {
-            (Icon::Contrast, "Koyu\ntema")
-        };
+        let tile = |mode: Mode| theme_tile(mode, self.accent, self.mode == mode);
+
+        let themes = Stack::new()
+            .width(78)
+            .push(
+                ribbon::Row::new()
+                    .push(tile(Mode::Dark))
+                    .push(tile(Mode::Light)),
+            )
+            .push(
+                ribbon::Row::new()
+                    .push(tile(Mode::Night))
+                    .push(tile(Mode::HighContrast)),
+            )
+            // Dar sütunda kısa ad: "Yüksek karşıtlık" iki satıra bölünmesin.
+            .push(label::caption(match self.mode {
+                Mode::HighContrast => "Karşıtlık",
+                mode => mode.label(),
+            }));
 
         let chips = |presets: &[Accent]| {
             presets.iter().fold(ribbon::Row::new(), |row, &accent| {
@@ -352,14 +366,12 @@ impl Showcase {
                 .detail(format!("Komut: {}", command::name(Command::Accent))),
         );
 
-        Group::new("Tema")
-            .push(Button::large(icon, label).on_press(Message::ToggleTheme))
-            .push(
-                Stack::new()
-                    .push(chips(&Accent::PRESETS[..4]))
-                    .push(chips(&Accent::PRESETS[4..]))
-                    .push(custom),
-            )
+        Group::new("Tema").push(themes).push(
+            Stack::new()
+                .push(chips(&Accent::PRESETS[..4]))
+                .push(chips(&Accent::PRESETS[4..]))
+                .push(custom),
+        )
     }
 
     /// Harita zemini: arayüzün temasından bağımsız; önizleme karoları.
@@ -516,6 +528,61 @@ fn view_group<'a>(title: &'a str) -> Group<'a, Message> {
                 .push(Button::small(Icon::ZoomOut, "Uzaklaştır").on_press(Message::ZoomOut))
                 .push(Button::small(Icon::Home, "Sıfırla").on_press(Message::ResetView)),
         )
+}
+
+/// Tema karosu: temanın küçük bir penceresi; üstte pencere şeridi, gövdede
+/// yazı çizgisi ve vurgu noktası, kenar temanın kenar renginde.
+fn theme_tile<'a>(mode: Mode, accent: Accent, selected: bool) -> Element<'a, Message> {
+    let tokens = mode.tokens(accent);
+
+    let block = |color: Color, width: f32, height: f32, radius: f32| {
+        container(space::horizontal())
+            .width(width)
+            .height(height)
+            .style(move |_: &Theme| container::Style {
+                background: Some(color.into()),
+                border: iced::border::rounded(radius),
+                ..container::Style::default()
+            })
+    };
+
+    let body = container(
+        row![
+            block(tokens.text, 10.0, 2.0, 1.0),
+            space::horizontal(),
+            block(tokens.accent, 5.0, 5.0, 2.5),
+        ]
+        .align_y(Center),
+    )
+    .padding([0, 3])
+    .width(Fill)
+    .center_y(11)
+    .style(move |_: &Theme| container::Style {
+        background: Some(tokens.surface.into()),
+        ..container::Style::default()
+    });
+
+    let preview = container(column![block(tokens.window, 26.0, 4.0, 0.0), body])
+        .width(28)
+        .padding(1)
+        .style(move |_: &Theme| container::Style {
+            background: Some(tokens.window.into()),
+            border: Border {
+                color: tokens.border,
+                width: 1.0,
+                radius: 2.0.into(),
+            },
+            ..container::Style::default()
+        });
+
+    tip(
+        button(preview)
+            .on_press(Message::ThemeSelected(mode))
+            .padding(2)
+            .style(style::button::swatch(selected)),
+        Tip::new(mode.label()).body(theme_note(mode)),
+        tooltip::Position::Bottom,
+    )
 }
 
 /// Vurgu rengi düğmesi: yuvarlak renk örneği; seçili renk vurgu halkasıyla.

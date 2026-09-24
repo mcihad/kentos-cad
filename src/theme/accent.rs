@@ -17,8 +17,13 @@ use iced::Color;
 use super::Mode;
 use super::tokens::{Tokens, hex};
 
-/// Vurgunun temanın yüzeyine karşı en az karşıtlığı.
+/// Vurgunun temanın yüzeyine karşı en az karşıtlığı; yüksek karşıtlık
+/// temasında daha yüksek.
 const CONTRAST: f32 = 4.0;
+const HIGH_CONTRAST: f32 = 7.0;
+
+/// Gece temasında vurgunun yüzeye doğru kısılma oranı.
+const NIGHT_DIM: f32 = 0.12;
 
 /// Vurgu rengi.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -97,10 +102,29 @@ impl Accent {
             .map(Accent::Custom)
     }
 
-    /// Koyu ve aydınlık temadaki tonu. Hazır renklerin tonları elle
-    /// seçilmiştir; kullanıcının rengi zeminde okunur kalacak kadar açılır
-    /// ya da koyulaştırılır.
+    /// Temadaki tonu. Hazır renklerin koyu ve aydınlık tonları elle
+    /// seçilmiştir; gece temasında renk biraz kısılır. Her renk, hazırlar
+    /// dahil, temanın zemininde okunur kalacak kadar (yüksek karşıtlıkta
+    /// 7:1) açılır ya da koyulaştırılır.
     pub fn color(self, mode: Mode) -> Color {
+        let base = Tokens::base(mode);
+
+        let (toward, minimum) = match mode {
+            Mode::Light => (Color::BLACK, CONTRAST),
+            Mode::HighContrast => (Color::WHITE, HIGH_CONTRAST),
+            Mode::Dark | Mode::Night => (Color::WHITE, CONTRAST),
+        };
+
+        let tone = match mode {
+            Mode::Night => mix(self.tone(mode), base.surface, NIGHT_DIM),
+            _ => self.tone(mode),
+        };
+
+        readable(tone, base.surface, toward, minimum)
+    }
+
+    /// Hazır rengin temadaki tonu ya da kullanıcının rengi, düzeltilmeden.
+    fn tone(self, mode: Mode) -> Color {
         let (dark, light) = match self {
             Accent::Blue => (0x4c9be8, 0x1b6fd0),
             Accent::Turquoise => (0x2db5ac, 0x08766f),
@@ -110,29 +134,19 @@ impl Accent {
             Accent::Pink => (0xe3689b, 0xbc2c6b),
             Accent::Violet => (0x9d86f0, 0x6547cf),
             Accent::Gray => (0xaeb6c0, 0x4f5863),
-            Accent::Custom(rgb) => {
-                let (surface, toward) = match mode {
-                    Mode::Dark => (Tokens::DARK.surface, Color::WHITE),
-                    Mode::Light => (Tokens::LIGHT.surface, Color::BLACK),
-                };
-
-                return readable(hex(rgb), surface, toward);
-            }
+            Accent::Custom(rgb) => return hex(rgb),
         };
 
-        hex(match mode {
-            Mode::Dark => dark,
-            Mode::Light => light,
-        })
+        hex(if mode.is_dark() { dark } else { light })
     }
 }
 
-/// Rengi `background` üzerinde en az [`CONTRAST`] karşıtlığa ulaşana dek
+/// Rengi `background` üzerinde en az `minimum` karşıtlığa ulaşana dek
 /// `toward` rengine doğru kaydırır.
-fn readable(color: Color, background: Color, toward: Color) -> Color {
+fn readable(color: Color, background: Color, toward: Color, minimum: f32) -> Color {
     (0..=20)
         .map(|step| mix(color, toward, step as f32 * 0.05))
-        .find(|candidate| contrast(*candidate, background) >= CONTRAST)
+        .find(|candidate| contrast(*candidate, background) >= minimum)
         .unwrap_or(toward)
 }
 
@@ -204,18 +218,21 @@ mod tests {
     }
 
     #[test]
-    fn every_accent_reads_on_both_themes() {
+    fn every_accent_reads_on_every_theme() {
         let colors = Accent::PRESETS
             .into_iter()
             .chain([0x000000, 0xffffff, 0xffee00, 0x202040, 0x7f7f7f].map(Accent::Custom));
 
         for accent in colors {
-            for (mode, surface) in [
-                (Mode::Dark, Tokens::DARK.surface),
-                (Mode::Light, Tokens::LIGHT.surface),
-            ] {
-                let ratio = contrast(accent.color(mode), surface);
-                assert!(ratio >= CONTRAST, "{accent:?} {mode:?}: {ratio}");
+            for mode in Mode::ALL {
+                let minimum = if mode == Mode::HighContrast {
+                    HIGH_CONTRAST
+                } else {
+                    CONTRAST
+                };
+                let ratio = contrast(accent.color(mode), Tokens::base(mode).surface);
+
+                assert!(ratio >= minimum, "{accent:?} {mode:?}: {ratio}");
             }
         }
     }

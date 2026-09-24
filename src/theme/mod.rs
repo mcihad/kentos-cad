@@ -1,8 +1,11 @@
 //! Tema: renk belirteçleri, vurgu rengi, tip ölçeği ve iced teması.
 //!
 //! Uygulama `iced::application(..).theme(..)` için [`theme`] fonksiyonunu
-//! kipi ve vurgu rengiyle çağırır. Bileşenler bu temadan [`Tokens::of`] ile
-//! renklerini okur; uygulamanın renkleri bileşenlere taşıması gerekmez.
+//! temayla ([`Mode`]: koyu, aydınlık, gece, yüksek karşıtlık) ve vurgu
+//! rengiyle çağırır. Bileşenler bu temadan [`Tokens::of`] ile renklerini
+//! okur; uygulamanın renkleri bileşenlere taşıması gerekmez. Tema bir alt
+//! ağaca `iced::widget::themer` ile de verilebilir; belirteçler o temayı
+//! izler.
 
 pub mod accent;
 pub mod tokens;
@@ -15,43 +18,64 @@ use iced::Theme;
 pub use accent::Accent;
 pub use tokens::Tokens;
 
-/// Tema kipi.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+/// Tema.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum Mode {
     /// CAD programlarının grafit arayüzü (varsayılan).
     #[default]
     Dark,
     /// Kâğıt zeminli aydınlık arayüz.
     Light,
+    /// Gece çalışması için çok koyu, az parlak arayüz.
+    Night,
+    /// Siyah zemin, beyaz yazı, parlak kenarlar.
+    HighContrast,
 }
 
 impl Mode {
+    /// Temalar, seçim listelerindeki sırasıyla.
+    pub const ALL: [Mode; 4] = [Mode::Dark, Mode::Light, Mode::Night, Mode::HighContrast];
+
+    /// Koyu ve aydınlık arasında geçiş: koyu temaların hepsi aydınlığa,
+    /// aydınlık koyuya döner.
     pub fn toggled(self) -> Self {
         match self {
-            Mode::Dark => Mode::Light,
             Mode::Light => Mode::Dark,
+            Mode::Dark | Mode::Night | Mode::HighContrast => Mode::Light,
         }
     }
 
     pub fn is_dark(self) -> bool {
-        self == Mode::Dark
+        self != Mode::Light
     }
 
     pub fn label(self) -> &'static str {
         match self {
             Mode::Dark => "Koyu",
             Mode::Light => "Aydınlık",
+            Mode::Night => "Gece",
+            Mode::HighContrast => "Yüksek karşıtlık",
         }
     }
 
-    /// Kipin belirteçleri, verilen vurgu rengiyle.
+    /// Temanın belirteçleri, verilen vurgu rengiyle.
     pub fn tokens(self, accent: Accent) -> Tokens {
-        let base = match self {
-            Mode::Dark => Tokens::DARK,
-            Mode::Light => Tokens::LIGHT,
-        };
+        Tokens::base(self).with_accent(accent.color(self))
+    }
 
-        base.with_accent(accent.color(self))
+    /// iced temasının teması: KentOS temasıysa yüzey renginden tanınır;
+    /// başka bir iced temasında koyu ya da aydınlık sayılır.
+    pub fn of(theme: &Theme) -> Self {
+        let background = theme.palette().background;
+
+        Self::ALL
+            .into_iter()
+            .find(|mode| Tokens::base(*mode).surface == background)
+            .unwrap_or(if theme.extended_palette().is_dark {
+                Mode::Dark
+            } else {
+                Mode::Light
+            })
     }
 }
 
@@ -72,6 +96,8 @@ pub fn theme(mode: Mode, accent: Accent) -> Theme {
     let name = match mode {
         Mode::Dark => "KentOS Koyu",
         Mode::Light => "KentOS Aydınlık",
+        Mode::Night => "KentOS Gece",
+        Mode::HighContrast => "KentOS Yüksek Karşıtlık",
     };
 
     let theme = build(name, mode.tokens(accent));
@@ -118,5 +144,36 @@ mod tests {
             theme(Mode::Light, Accent::Amber),
             theme(Mode::Light, Accent::Amber)
         );
+    }
+
+    #[test]
+    fn every_theme_is_recognised_from_its_iced_theme() {
+        for mode in Mode::ALL {
+            for accent in Accent::PRESETS {
+                let tokens = Tokens::of(&theme(mode, accent));
+
+                assert_eq!(tokens.mode, mode, "{mode:?} {accent:?}");
+                assert_eq!(tokens.surface, Tokens::base(mode).surface);
+                assert_eq!(tokens.accent, accent.color(mode));
+            }
+        }
+
+        // Başka bir iced teması koyu ya da aydınlık sayılır.
+        assert_eq!(Mode::of(&Theme::Light), Mode::Light);
+        assert_eq!(Mode::of(&Theme::Dracula), Mode::Dark);
+    }
+
+    #[test]
+    fn high_contrast_picks_the_more_readable_text_on_accent() {
+        let tokens = Tokens::of(&theme(Mode::HighContrast, Accent::Blue));
+
+        assert_eq!(tokens.text, iced::Color::WHITE);
+        assert_eq!(tokens.on_accent, iced::Color::BLACK);
+        assert!(tokens.selection().a > Tokens::of(&theme(Mode::Dark, Accent::Blue)).selection().a);
+
+        // Koyu temaların hepsi aydınlığa döner.
+        assert_eq!(Mode::Night.toggled(), Mode::Light);
+        assert_eq!(Mode::Light.toggled(), Mode::Dark);
+        assert!(Mode::HighContrast.is_dark());
     }
 }

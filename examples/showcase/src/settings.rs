@@ -6,7 +6,7 @@
 //!
 //! ```text
 //! # KentOS CAD ayarları
-//! tema = koyu
+//! tema = gece
 //! vurgu = turuncu
 //! harita-zemini = siyah
 //! yazi-ailesi = inter
@@ -104,10 +104,10 @@ impl Settings {
 
             match key.trim() {
                 "tema" => {
-                    settings.mode = match value {
-                        "aydinlik" => Mode::Light,
-                        _ => Mode::Dark,
-                    };
+                    settings.mode = Mode::ALL
+                        .into_iter()
+                        .find(|mode| mode_key(*mode) == value)
+                        .unwrap_or_default();
                 }
                 "vurgu" => {
                     if let Some(accent) = Accent::parse(value) {
@@ -161,10 +161,7 @@ impl Settings {
     }
 
     fn render(&self) -> String {
-        let mode = match self.mode {
-            Mode::Dark => "koyu",
-            Mode::Light => "aydinlik",
-        };
+        let mode = mode_key(self.mode);
 
         let state = |collapsed: bool| if collapsed { "kapali" } else { "acik" };
 
@@ -183,6 +180,16 @@ impl Settings {
     }
 }
 
+/// Temanın dosyadaki adı.
+pub fn mode_key(mode: Mode) -> &'static str {
+    match mode {
+        Mode::Dark => "koyu",
+        Mode::Light => "aydinlik",
+        Mode::Night => "gece",
+        Mode::HighContrast => "karsitlik",
+    }
+}
+
 /// Ailenin dosyadaki adı: küçük harf, boşluklar tire ("IBM Plex Sans" →
 /// "ibm-plex-sans").
 fn key_of(name: &str) -> String {
@@ -196,7 +203,7 @@ mod tests {
     #[test]
     fn settings_round_trip() {
         let settings = Settings {
-            mode: Mode::Light,
+            mode: Mode::Night,
             accent: Accent::Custom(0xff8800),
             backdrop: Backdrop::Black,
             typography: Typography {

@@ -2,17 +2,20 @@
 
 use iced::Color;
 
+use super::Mode;
 use super::accent::{contrast, mix};
 
 /// Arayüzün bütün renkleri.
 ///
 /// Bileşenler hiçbir rengi doğrudan kullanmaz; stil fonksiyonları o anki
-/// temadan [`Tokens::of`] ile belirteçleri alır. Böylece koyu ve aydınlık
-/// temalar, ileride eklenecek temalar dahil, tek yerden yönetilir. Vurgu
-/// rengi temanın `primary` rengidir ([`theme`](super::theme)); vurgunun
-/// üzerine gelme tonu ve vurgu zeminindeki yazı ondan türetilir.
+/// temadan [`Tokens::of`] ile belirteçleri alır. Böylece dört tema (koyu,
+/// aydınlık, gece, yüksek karşıtlık) tek yerden yönetilir. Vurgu rengi
+/// temanın `primary` rengidir ([`theme`](super::theme)); vurgunun üzerine
+/// gelme tonu ve vurgu zeminindeki yazı ondan türetilir.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Tokens {
+    /// Belirteçlerin teması.
+    pub mode: Mode,
     pub is_dark: bool,
 
     /// En dış çerçeve: sekme şeridi ve durum çubuğu.
@@ -51,6 +54,7 @@ pub struct Tokens {
 
 impl Tokens {
     pub const DARK: Self = Self {
+        mode: Mode::Dark,
         is_dark: true,
 
         window: hex(0x1d1f23),
@@ -76,6 +80,7 @@ impl Tokens {
     };
 
     pub const LIGHT: Self = Self {
+        mode: Mode::Light,
         is_dark: false,
 
         window: hex(0xdcdfe3),
@@ -100,21 +105,82 @@ impl Tokens {
         danger: hex(0xcc3a31),
     };
 
-    /// Temanın belirteçleri: koyu ya da aydınlık set, temanın vurgu
-    /// rengiyle.
-    pub fn of(theme: &iced::Theme) -> Self {
-        let base = if theme.extended_palette().is_dark {
-            Self::DARK
-        } else {
-            Self::LIGHT
-        };
+    /// Gece çalışması için: mavimsi, çok koyu yüzeyler ve daha az parlak
+    /// yazı; gözü yormaz, karanlık odada ekran parlamaz.
+    pub const NIGHT: Self = Self {
+        mode: Mode::Night,
+        is_dark: true,
 
-        base.with_accent(theme.palette().primary)
+        window: hex(0x0b0d11),
+        surface: hex(0x12151b),
+        surface_alt: hex(0x171b22),
+        surface_hover: hex(0x20252e),
+        header: hex(0x191d24),
+        field: hex(0x0a0c10),
+        border: hex(0x272d36),
+
+        text: hex(0xb9c1ca),
+        muted: hex(0x77808c),
+
+        accent: hex(0x4589cb),
+        accent_hover: hex(0x60a0d8),
+        on_accent: hex(0xffffff),
+
+        popover: hex(0x151920),
+
+        success: hex(0x4fae5a),
+        warning: hex(0xd6ae3a),
+        danger: hex(0xd4544b),
+    };
+
+    /// Yüksek karşıtlık: siyah zemin, beyaz yazı, parlak kenarlar. Bölgeler
+    /// zemin tonlarıyla değil kenarlarla ayrılır; yazılar en az 7:1
+    /// karşıtlıktadır.
+    pub const HIGH_CONTRAST: Self = Self {
+        mode: Mode::HighContrast,
+        is_dark: true,
+
+        window: hex(0x000000),
+        surface: hex(0x000000),
+        surface_alt: hex(0x0d0d0d),
+        surface_hover: hex(0x2a2a2a),
+        header: hex(0x161616),
+        field: hex(0x000000),
+        border: hex(0xb3b3b3),
+
+        text: hex(0xffffff),
+        muted: hex(0xd6d6d6),
+
+        accent: hex(0x6cb4ff),
+        accent_hover: hex(0x8fc6ff),
+        on_accent: hex(0x000000),
+
+        popover: hex(0x0a0a0a),
+
+        success: hex(0x6ee07a),
+        warning: hex(0xffd84a),
+        danger: hex(0xff6b61),
+    };
+
+    /// Temanın vurgusuz, sabit belirteçleri.
+    pub const fn base(mode: Mode) -> Self {
+        match mode {
+            Mode::Dark => Self::DARK,
+            Mode::Light => Self::LIGHT,
+            Mode::Night => Self::NIGHT,
+            Mode::HighContrast => Self::HIGH_CONTRAST,
+        }
+    }
+
+    /// Temanın belirteçleri: temanın seti ([`Mode::of`]), vurgu rengiyle.
+    pub fn of(theme: &iced::Theme) -> Self {
+        Self::base(Mode::of(theme)).with_accent(theme.palette().primary)
     }
 
     /// Vurgu rengi verilmiş belirteçler. Üzerine gelme tonu koyu temada
     /// açılarak, aydınlıkta koyulaşarak bulunur. Vurgu zeminindeki yazı
-    /// beyazdır; vurgu beyazla okunamayacak kadar açıksa koyu olur.
+    /// beyazdır; vurgu beyazla okunamayacak kadar açıksa koyu olur. Yüksek
+    /// karşıtlıkta hangisi daha okunaklıysa o seçilir.
     pub fn with_accent(self, accent: Color) -> Self {
         let accent_hover = if self.is_dark {
             mix(accent, Color::WHITE, 0.18)
@@ -122,10 +188,14 @@ impl Tokens {
             mix(accent, Color::BLACK, 0.16)
         };
 
-        let on_accent = if contrast(Color::WHITE, accent) >= 2.8 {
-            Color::WHITE
-        } else {
-            hex(0x16181b)
+        let dark = hex(0x16181b);
+        let white = contrast(Color::WHITE, accent);
+
+        let on_accent = match self.mode {
+            Mode::HighContrast if contrast(Color::BLACK, accent) > white => Color::BLACK,
+            Mode::HighContrast => Color::WHITE,
+            _ if white >= 2.8 => Color::WHITE,
+            _ => dark,
         };
 
         Self {
@@ -138,8 +208,11 @@ impl Tokens {
 
     /// Seçili satır, etkin araç ve açık alt menü zemini.
     pub fn selection(&self) -> Color {
-        self.accent
-            .scale_alpha(if self.is_dark { 0.22 } else { 0.14 })
+        self.accent.scale_alpha(match self.mode {
+            Mode::HighContrast => 0.4,
+            Mode::Light => 0.14,
+            Mode::Dark | Mode::Night => 0.22,
+        })
     }
 
     /// Zeminin ne olduğundan bağımsız, hafif bir durum katmanı: koyu temada

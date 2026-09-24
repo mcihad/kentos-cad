@@ -321,6 +321,16 @@ StatusBar::new()
 
 ## Renkler
 
+- **Temalar.** Dört tema vardır:
+  - Koyu: CAD programlarının grafit arayüzü (varsayılan).
+  - Aydınlık: kâğıt zeminli.
+  - Gece: çok koyu, mavimsi, az parlak yazılı; karanlık odada ekran parlamaz.
+    Vurgu biraz kısılır, haritada katman renkleri kısılır.
+  - Yüksek karşıtlık: siyah zemin, beyaz yazı, parlak kenarlar. Bölgeler zemin
+    tonlarıyla değil kenarlarla ayrılır; yazı ve vurgu en az 7:1
+    karşıtlıktadır, vurgu zeminindeki yazı daha okunaklı olan renktir.
+  Her temanın kendi harita zemini vardır. Bileşenler temayı iced paletinden
+  tanır; bir alt ağaca `iced::widget::themer` ile başka tema verilebilir.
 - **Vurgu rengi.** Etkin araç, seçim, odak, birincil düğmeler, öndeki
   pencerenin çizgisi ve haritadaki seçim ve tutamaçlar vurgu rengindedir.
   Sekiz hazır renk vardır: mavi, turkuaz, yeşil, kehribar, turuncu, pembe,
@@ -331,21 +341,27 @@ StatusBar::new()
   koyudur. iced'in kendi bileşenleri (onay kutusu, kaydırıcı) de aynı rengi
   alır: vurgu, temanın `primary` rengidir.
 - **Harita zemini.** Arayüzün temasından bağımsız seçilir: temaya uyan (koyu
-  temada arduvaz, aydınlıkta kâğıt), arduvaz, klasik AutoCAD siyahı ya da
-  kâğıt. Koyu arayüzde kâğıt zeminli harita da olur.
-- **Vitrinde.** Görünüm sekmesindeki Tema grubunda renk düğmeleri ve "Özel
-  renk…", yanında Harita zemini karoları var; `VURGU` ve `ZEMIN` komutları da
-  aynı seçenekleri sunar. Seçim ayar dosyasında saklanır (`vurgu = turuncu`,
-  `harita-zemini = siyah`).
+  temada arduvaz, aydınlıkta kâğıt, gecede gece haritası, yüksek karşıtlıkta
+  siyah), arduvaz, klasik AutoCAD siyahı ya da kâğıt. Koyu arayüzde kâğıt
+  zeminli harita da olur.
+- **Vitrinde.** Görünüm sekmesindeki Tema grubunda dört temanın önizleme
+  karoları, renk düğmeleri ve "Özel renk…"; yanında Harita zemini karoları
+  var. `KOYU`, `AYDINLIK`, `GECE`, `KARSITLIK`, `VURGU` ve `ZEMIN` komutları da
+  aynı seçenekleri sunar. Seçim ayar dosyasında saklanır (`tema = gece`,
+  `vurgu = turuncu`, `harita-zemini = siyah`). Galerinin Renkler sayfası dört
+  temayı gerçek bileşenlerle yan yana gösterir.
 
 ```rust
 use kentos_rc::spatial::model_space::Backdrop;
 use kentos_rc::theme::{self, Accent, Mode};
 
 iced::application(App::new, App::update, App::view)
-    .theme(|app: &App| theme::theme(app.mode, app.accent))
+    .theme(|app: &App| theme::theme(app.mode, app.accent)) // Mode::Night, Mode::HighContrast…
 
 Accent::parse("#e8618c"); // Some(Accent::Custom(0xe8618c))
+
+// Bir alt ağaca başka tema: belirteçler onu izler.
+themer(Some(theme::theme(Mode::HighContrast, accent)), preview)
 
 ModelSpace::new(viewport, &layers, Message::ModelSpace).backdrop(Backdrop::Black)
 ```
@@ -422,6 +438,8 @@ cargo run -- snapshot sihirbaz.png --senaryo sihirbaz --sayfa 2
 cargo run -- snapshot ozellikler.png --senaryo ozellikler
 cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah
 cargo run -- snapshot mor.png --senaryo secim --tema acik --vurgu "#7c5cff" --zemin arduvaz
+cargo run -- snapshot gece.png --senaryo pencereler --tema gece
+cargo run -- snapshot karsitlik.png --senaryo secim --tema karsitlik
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 

@@ -451,10 +451,30 @@ pub(crate) fn hex_of(color: iced::Color) -> String {
     format!("#{red:02x}{green:02x}{blue:02x}")
 }
 
+/// Temanın kısa tanımı.
+pub(crate) fn theme_note(mode: Mode) -> &'static str {
+    match mode {
+        Mode::Dark => "CAD programlarının grafit arayüzü; uzun çalışmada göz yormaz.",
+        Mode::Light => {
+            "Kâğıt zeminli aydınlık arayüz; aydınlık ortamda ve çıktıya yakın çalışırken."
+        }
+        Mode::Night => {
+            "Çok koyu, az parlak arayüz ve kısık renkli gece haritası; karanlık odada ekran \
+             parlamaz."
+        }
+        Mode::HighContrast => {
+            "Siyah zemin, beyaz yazı ve parlak kenarlar; yazılar ve vurgu en az 7:1 karşıtlıkta."
+        }
+    }
+}
+
 /// Harita zemininin kısa tanımı.
 pub(crate) fn backdrop_note(backdrop: Backdrop) -> &'static str {
     match backdrop {
-        Backdrop::Theme => "Koyu temada arduvaz, aydınlık temada kâğıt.",
+        Backdrop::Theme => {
+            "Temaya uyar: koyu temada arduvaz, aydınlıkta kâğıt, gecede gece haritası, yüksek \
+             karşıtlıkta siyah."
+        }
         Backdrop::Slate => "AutoCAD'in koyu gri-mavi model alanı; göz yormaz.",
         Backdrop::Black => "Klasik AutoCAD: saf siyah zemin, parlak çizgiler.",
         Backdrop::Paper => "Beyaza yakın zemin; çıktıya en yakın görünüm.",

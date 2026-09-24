@@ -1,6 +1,8 @@
 //! Temel sayfalar: renkler, yazı ve ikonlar.
 
-use iced::widget::{button, column, container, row, space, text};
+use iced::widget::{
+    button, checkbox, column, container, row, slider, space, text, text_input, themer,
+};
 use iced::{Bottom, Center, Color, Element, Fill};
 
 use kentos_rc::icon::{Icon, Tone, icon};
@@ -8,11 +10,12 @@ use kentos_rc::label;
 use kentos_rc::spatial::model_space;
 use kentos_rc::style;
 use kentos_rc::theme::typography::{self, Family, Mono, Typography};
-use kentos_rc::theme::{Accent, Mode};
+use kentos_rc::theme::{self, Accent, Mode, Tokens};
 use kentos_rc::widget::table::{self, Table};
 
 use super::{chip, entry, hex, pressed};
 use crate::app::Showcase;
+use crate::gallery::Demo;
 use crate::message::Message;
 use crate::view::family_note;
 
@@ -94,6 +97,21 @@ impl Showcase {
 
         vec![
             entry(
+                "Temalar",
+                "kentos_rc::theme::Mode",
+                "Dört tema: CAD programlarının grafit koyusu, kâğıt zeminli aydınlık, gece \
+                 çalışması için çok koyu ve az parlak gece, siyah zemin ve beyaz yazıyla yüksek \
+                 karşıtlık. Her tema kendi harita zeminiyle gelir; gecede katman renkleri kısılır. \
+                 Önizlemeler gerçek bileşenlerdir: iced'in themer'ı alt ağaca başka tema verir, \
+                 belirteçler onu izler.",
+                self.theme_cards(),
+                Some(
+                    "theme::theme(Mode::Night, Accent::Blue)\n\n\
+                     // Bir alt ağaca başka tema\n\
+                     themer(Some(theme::theme(Mode::HighContrast, accent)), preview)",
+                ),
+            ),
+            entry(
                 "Vurgu rengi",
                 "kentos_rc::theme::Accent",
                 "Etkin araç, seçim, odak, birincil düğmeler ve öndeki pencerenin çizgisi vurgu \
@@ -141,6 +159,84 @@ impl Showcase {
 }
 
 impl Showcase {
+    /// Dört temanın canlı önizlemesi: her kart kendi temasında çizilir;
+    /// altındaki düğme temayı uygular.
+    fn theme_cards(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+
+        let cards = Mode::ALL.map(|mode| {
+            let current = self.mode == mode;
+
+            let preview = column![
+                row![
+                    label::strong(mode.label()).width(Fill),
+                    label::mono_caption("1:25.000"),
+                ]
+                .align_y(Center),
+                text_input("Katman adı", &gallery.text)
+                    .on_input(|text| Message::Gallery(Demo::TextChanged(text)))
+                    .font(typography::ui())
+                    .size(typography::body())
+                    .padding([3, 6])
+                    .style(style::field::input),
+                checkbox(gallery.checked)
+                    .label("Etiketleri göster")
+                    .size(13.0)
+                    .font(typography::ui())
+                    .text_size(typography::body())
+                    .on_toggle(|checked| Message::Gallery(Demo::Checked(checked))),
+                slider(0.0..=1.0, gallery.opacity, |opacity| {
+                    Message::Gallery(Demo::OpacityChanged(opacity))
+                })
+                .step(0.05_f32),
+                label::muted("Seçili satır ve odak vurgu renginde."),
+                row![
+                    button(label::body("Vazgeç"))
+                        .on_press(pressed("Vazgeç"))
+                        .padding([3, 10])
+                        .style(style::button::secondary),
+                    button(label::body("Uygula"))
+                        .on_press(pressed("Uygula"))
+                        .padding([3, 10])
+                        .style(style::button::primary),
+                ]
+                .spacing(6),
+            ]
+            .spacing(10)
+            .padding(12);
+
+            let card = themer(
+                Some(theme::theme(mode, self.accent)),
+                container(preview)
+                    .width(Fill)
+                    .style(style::container::bordered),
+            )
+            .text_color(|theme| Tokens::of(theme).text)
+            .background(|theme| Tokens::of(theme).window.into());
+
+            let apply = button(
+                label::body(if current {
+                    "Kullanılıyor"
+                } else {
+                    "Bu temayı kullan"
+                })
+                .width(Fill)
+                .align_x(Center),
+            )
+            .on_press_maybe((!current).then_some(Message::ThemeSelected(mode)))
+            .width(Fill)
+            .padding([3, 10])
+            .style(style::button::flat);
+
+            column![container(card).padding(1).width(Fill), apply]
+                .spacing(6)
+                .width(Fill)
+                .into()
+        });
+
+        row(cards).spacing(12).into()
+    }
+
     /// Hazır vurgu renkleri: renk, adı, iki temadaki tonu ve vurgu
     /// zeminindeki yazının örneği. Tıklanınca o renk seçilir.
     fn accent_cards(&self) -> Element<'_, Message> {

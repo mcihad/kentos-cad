@@ -214,6 +214,20 @@ const COMMANDS: &[(Command, Info)] = &[
             .description("Kâğıt zeminli aydınlık temaya geçer."),
     ),
     (
+        Command::Theme(Some(Mode::Night)),
+        Info::new("GECE", "Gece teması")
+            .aliases(&["NIGHT"])
+            .icon(Icon::Contrast)
+            .description("Çok koyu, az parlak temaya geçer; karanlık odada göz yormaz."),
+    ),
+    (
+        Command::Theme(Some(Mode::HighContrast)),
+        Info::new("KARSITLIK", "Yüksek karşıtlık")
+            .aliases(&["YUKSEKKARSITLIK", "CONTRAST"])
+            .icon(Icon::Contrast)
+            .description("Siyah zemin, beyaz yazı ve parlak kenarlarla yüksek karşıtlıklı temaya geçer."),
+    ),
+    (
         Command::Theme(Some(Mode::Dark)),
         Info::new("KOYU", "Koyu tema")
             .aliases(&["DARK"])

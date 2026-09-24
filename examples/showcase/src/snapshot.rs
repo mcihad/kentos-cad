@@ -20,8 +20,8 @@ use kentos_rc::attribute::{Combinator, Date, ObjectId, Operator, Value};
 use kentos_rc::snapshot::{Input, Snapshot};
 use kentos_rc::spatial::model_space::{Backdrop, Event as ModelSpace};
 use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
-use kentos_rc::theme::Accent;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
+use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::inspector::Event as Inspector;
 
 use crate::app::{DRAWING_LAYER, Showcase, WINDOW_SIZE};
@@ -114,7 +114,7 @@ Seçenekler:
   --sayfa <ad>          galeri senaryosunda sayfa; sihirbazda adım (1-4)
   --boyut <G>x<Y>       pencere boyutu (varsayılan: 1440x900)
   --olcek <katsayı>     piksel yoğunluğu (varsayılan: 1)
-  --tema acik|koyu      tema (varsayılan: koyu)
+  --tema <ad>           koyu, acik, gece, karsitlik (varsayılan: koyu)
   --vurgu <renk>        mavi, turkuaz, yesil, kehribar, turuncu, pembe, mor, gri ya da #RRGGBB
   --zemin <ad>          harita zemini: tema, arduvaz, siyah, kagit
   --yazi <aile>         ibm-plex-sans, inter, plus-jakarta-sans
@@ -139,7 +139,7 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let mut page = None;
     let mut size = WINDOW_SIZE;
     let mut scale = 1.0;
-    let mut light = false;
+    let mut mode = None;
     let mut accent = None;
     let mut backdrop = None;
     let mut inputs = Vec::new();
@@ -169,7 +169,16 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
             "--sayfa" => page = Some(value()?),
             "--boyut" => size = parse_size(&value()?)?,
             "--olcek" => scale = parse_number(&value()?)?,
-            "--tema" => light = value()? == "acik",
+            "--tema" => {
+                let name = value()?;
+                mode = Some(match name.as_str() {
+                    "koyu" => Mode::Dark,
+                    "acik" | "aydinlik" => Mode::Light,
+                    "gece" => Mode::Night,
+                    "karsitlik" => Mode::HighContrast,
+                    other => return Err(format!("Bilinmeyen tema: {other}")),
+                });
+            }
             "--vurgu" => {
                 let name = value()?;
                 accent = Some(
@@ -240,8 +249,8 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let mut app = Showcase::new();
     prepare(&mut app, &scenario, page.as_deref())?;
 
-    if light {
-        let _ = app.update(Message::ToggleTheme);
+    if let Some(mode) = mode {
+        let _ = app.update(Message::ThemeSelected(mode));
     }
 
     if let Some(accent) = accent {

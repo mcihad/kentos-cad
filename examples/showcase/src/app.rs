@@ -647,6 +647,11 @@ impl Showcase {
             Message::CommandHistoryToggled => self.command_expanded = !self.command_expanded,
             Message::Keyword(keyword) => self.keyword(keyword),
 
+            Message::ThemeSelected(mode) => {
+                if mode != self.mode {
+                    self.set_mode(mode);
+                }
+            }
             Message::AccentChanged(accent) => {
                 self.pending = None;
 
@@ -1937,7 +1942,7 @@ impl Showcase {
 
     fn set_mode(&mut self, mode: Mode) {
         self.mode = mode;
-        self.log(format!("{} tema etkin.", mode.label()));
+        self.log(format!("Tema: {}.", mode.label()));
         self.save_settings();
     }
 
@@ -2637,6 +2642,28 @@ mod tests {
         assert_eq!(app.pending, Some(Pending::Backdrop));
         submit(&mut app, "siyah");
         assert_eq!(app.backdrop, Backdrop::Black);
+    }
+
+    #[test]
+    fn themes_are_chosen_from_commands_and_messages() {
+        let mut app = Showcase::new();
+
+        submit(&mut app, "gece");
+        assert_eq!(app.mode, Mode::Night);
+
+        submit(&mut app, "karsitlik");
+        assert_eq!(app.mode, Mode::HighContrast);
+        assert_eq!(
+            kentos_rc::theme::Tokens::of(&app.theme()).mode,
+            Mode::HighContrast
+        );
+
+        // TEMA koyu ile aydınlık arasında geçer.
+        submit(&mut app, "tema");
+        assert_eq!(app.mode, Mode::Light);
+
+        let _ = app.update(Message::ThemeSelected(Mode::Night));
+        assert_eq!(app.mode, Mode::Night);
     }
 
     #[test]
