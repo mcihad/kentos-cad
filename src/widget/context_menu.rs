@@ -44,6 +44,10 @@
 //! Sarılan öğe sağ tıklamayı kendisi kullanırsa (ör. çizim aracının sağ
 //! tıkla bitirmesi) menü açılmaz.
 //!
+//! macOS'ta Control + tık da sağ tık sayılır: izleyici dizüstülerde ikincil
+//! tık çoğunlukla böyle yapılır. Sarılan öğeye sağ tık olarak iletilir;
+//! böylece iç içe menülerde en içteki açılır, düğmeler de basılmış sayılmaz.
+//!
 //! [`MenuButton`] aynı menüyü sol tıkla, öğenin altına (sığmazsa üstüne)
 //! hizalı açar; durum çubuğundaki göstergeler böyle çalışır:
 //!
@@ -435,6 +439,8 @@ struct State {
     submenu: Option<usize>,
     /// İmleç menü düğmesinin üzerinde mi; değişince zemin yeniden çizilir.
     over: bool,
+    /// Basılı değiştirici tuşlar; macOS'ta Control + tık sağ tıktır.
+    modifiers: keyboard::Modifiers,
 }
 
 impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'a, Message> {
@@ -488,6 +494,21 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
+        let state = tree.state.downcast_mut::<State>();
+
+        if let Event::Keyboard(keyboard::Event::ModifiersChanged(modifiers)) = event {
+            state.modifiers = *modifiers;
+        }
+
+        let secondary;
+        let event =
+            if self.trigger == Trigger::Secondary && is_control_click(event, state.modifiers) {
+                secondary = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right));
+                &secondary
+            } else {
+                event
+            };
+
         self.content.as_widget_mut().update(
             &mut tree.children[0],
             event,
@@ -537,6 +558,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
             *state = State {
                 anchor: Some(anchor),
                 over: state.over,
+                modifiers: state.modifiers,
                 ..State::default()
             };
 
@@ -743,6 +765,7 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
     fn close(&mut self, shell: &mut Shell<'_, Message>) {
         *self.state = State {
             over: self.state.over,
+            modifiers: self.state.modifiers,
             ..State::default()
         };
         shell.invalidate_layout();
@@ -1070,6 +1093,22 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
     }
 }
 
+/// macOS'un ikincil tıkı: Control basılıyken sol tık. Diğer sistemlerde
+/// Control + tık seçime ekleme gibi işlerde kullanıldığı için sağ tık
+/// sayılmaz.
+fn is_control_click(event: &Event, modifiers: keyboard::Modifiers) -> bool {
+    control_click(event, modifiers, cfg!(target_os = "macos"))
+}
+
+fn control_click(event: &Event, modifiers: keyboard::Modifiers, macos: bool) -> bool {
+    macos
+        && modifiers.control()
+        && matches!(
+            event,
+            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left))
+        )
+}
+
 /// Menü kutusu; `highlighted` komut vurgulanır.
 fn panel<'a, Message: 'a>(
     menu: &Menu<Message>,
@@ -1222,6 +1261,22 @@ mod tests {
         assert_eq!(menu.step(Some(1), false), Some(5));
         assert!(menu.submenu_of(4).is_some());
         assert!(menu.submenu_of(1).is_none());
+    }
+
+    #[test]
+    fn control_click_is_a_secondary_click_on_macos_only() {
+        let left = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left));
+        let right = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right));
+        let control = keyboard::Modifiers::CTRL;
+
+        assert!(control_click(&left, control, true));
+        // Diğer sistemlerde Control + tık seçime ekler; menü açmaz.
+        assert!(!control_click(&left, control, false));
+        assert!(!control_click(&left, keyboard::Modifiers::empty(), true));
+        // Komut (⌘) + tık macOS'ta seçime ekler.
+        assert!(!control_click(&left, keyboard::Modifiers::LOGO, true));
+        // Sağ tık zaten sağ tıktır; çevrilmez.
+        assert!(!control_click(&right, control, true));
     }
 
     #[test]
