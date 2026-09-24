@@ -1,7 +1,7 @@
 //! CBS ve CAD bileşenleri.
 //!
 //! - Veri: [`LonLat`], [`Bounds`], [`Viewport`] (Web Mercator), vektör
-//!   veri modeli ([`Geometry`], [`Feature`], [`Layer`]).
+//!   veri modeli ([`Geometry`], [`Feature`], [`Layer`], [`Sublayer`]).
 //! - Hesap: jeodezik mesafe ve [`Measurement`], [`query`] ile öğe seçimi
 //!   ve nesne yakalama, [`format`](mod@format) ile Türkçe koordinat ve sayı
 //!   yazımı.
@@ -24,7 +24,7 @@ pub mod tool;
 pub mod view_cube;
 
 pub use draft::Draft;
-pub use feature::{Feature, FeatureRef, Geometry, Layer, LayerKind};
+pub use feature::{Feature, FeatureRef, Geometry, Layer, LayerKind, Sublayer};
 pub use measure::Measurement;
 pub use model_space::ModelSpace;
 pub use projection::{Bounds, LonLat, Viewport};

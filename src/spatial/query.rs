@@ -42,6 +42,7 @@ fn hit_layer(index: usize, layer: &Layer, viewport: &Viewport, point: Point) -> 
         .features
         .iter()
         .rev()
+        .filter(|feature| layer.shows(feature))
         .find(|feature| is_hit(&feature.geometry, viewport, point))
         .map(|feature| FeatureRef::new(index, feature.id))
 }
@@ -72,6 +73,7 @@ pub fn in_bounds(
             layer
                 .features
                 .iter()
+                .filter(move |feature| layer.shows(feature))
                 .filter(move |feature| is_in_window(feature, viewport, window, crossing))
                 .map(move |feature| FeatureRef::new(index, feature.id))
         })
@@ -184,7 +186,7 @@ pub fn snap(layers: &[Layer], viewport: &Viewport, point: Point, tolerance: f32)
     };
 
     for layer in layers.iter().filter(|layer| layer.is_interactive()) {
-        for feature in &layer.features {
+        for feature in layer.features.iter().filter(|feature| layer.shows(feature)) {
             match &feature.geometry {
                 Geometry::Point(location) => consider(*location, SnapKind::Node),
                 Geometry::Line(points) => {
@@ -431,5 +433,30 @@ mod tests {
             hit_test_in(&layers, 1, &viewport, point),
             Some(FeatureRef::new(1, ObjectId(1)))
         );
+    }
+
+    #[test]
+    fn hidden_sublayers_cannot_be_picked() {
+        use crate::attribute::{Field, Value};
+        use crate::spatial::Sublayer;
+
+        let viewport = viewport();
+        let location = LonLat::new(28.98, 41.01);
+        let mut layers = [Layer::points("Test", Color::BLACK)
+            .with_schema([Field::text("Tür")])
+            .with_features(
+                [Feature::new(Geometry::Point(location)).with_values([Value::from("A")])],
+            )
+            .with_sublayers("Tür", [Sublayer::new("A", Color::WHITE)])];
+        let point = viewport.project(location);
+        let everything = viewport.visible_bounds();
+
+        assert_eq!(hit_test(&layers, &viewport, point), Some(FIRST));
+
+        layers[0].sublayers[0].visible = false;
+
+        assert_eq!(hit_test(&layers, &viewport, point), None);
+        assert!(in_bounds(&layers, &viewport, everything, true).is_empty());
+        assert!(snap(&layers, &viewport, point, SNAP_TOLERANCE).is_none());
     }
 }

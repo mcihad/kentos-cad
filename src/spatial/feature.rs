@@ -1,4 +1,4 @@
-//! Vektör veri modeli: geometri, öğe (feature) ve katman.
+//! Vektör veri modeli: geometri, öğe (feature), katman ve alt katman.
 
 use iced::Color;
 
@@ -104,6 +104,44 @@ impl LayerKind {
     }
 }
 
+/// Alt katman: katman öğelerinin bir alanın değerine göre ayrılmış bir
+/// kısmı; kendi rengi ve görünürlüğü vardır. ArcGIS'teki alt tür grup
+/// katmanı gibi: yolları türüne, şehirleri bölgesine göre ayırıp ayrı
+/// renklendirmek ve açıp kapatmak için.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Sublayer {
+    /// Gösterilen ad; verilmezse değerin kendisi.
+    pub name: String,
+    /// Öğelerin ayrıldığı alanın bu alt katmana düşen değeri.
+    pub value: Value,
+    pub color: Color,
+    pub visible: bool,
+}
+
+impl Sublayer {
+    /// Metin değerli alt katman; adı değerin kendisidir.
+    pub fn new(value: impl Into<String>, color: Color) -> Self {
+        let name = value.into();
+
+        Self {
+            value: Value::Text(name.clone()),
+            name,
+            color,
+            visible: true,
+        }
+    }
+
+    /// Herhangi bir türde değeri olan alt katman.
+    pub fn with_value(name: impl Into<String>, value: impl Into<Value>, color: Color) -> Self {
+        Self {
+            name: name.into(),
+            value: value.into(),
+            color,
+            visible: true,
+        }
+    }
+}
+
 /// Vektör katmanı: aynı şemayı paylaşan, aynı biçimde çizilen öğeler.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Layer {
@@ -122,6 +160,10 @@ pub struct Layer {
     pub schema: Vec<Field>,
     /// Öğenin adı olarak gösterilen alan.
     pub label_field: Option<usize>,
+    /// Öğelerin alt katmanlara ayrıldığı alan.
+    pub sublayer_field: Option<usize>,
+    /// Alt katmanlar; hiçbirine uymayan öğeler katmanın rengiyle çizilir.
+    pub sublayers: Vec<Sublayer>,
     /// Numara sırasıyla öğeler.
     pub features: Vec<Feature>,
     last_id: u64,
@@ -140,6 +182,8 @@ impl Layer {
             label_zoom: None,
             schema: Vec::new(),
             label_field: None,
+            sublayer_field: None,
+            sublayers: Vec::new(),
             features: Vec::new(),
             last_id: 0,
         }
@@ -207,6 +251,53 @@ impl Layer {
         self
     }
 
+    /// Öğeleri adı verilen alanın değerine göre alt katmanlara ayırır. Şemada
+    /// böyle bir alan yoksa katman ayrılmaz.
+    pub fn with_sublayers(
+        mut self,
+        field: &str,
+        sublayers: impl IntoIterator<Item = Sublayer>,
+    ) -> Self {
+        self.sublayer_field = self.field_index(field);
+        self.sublayers = if self.sublayer_field.is_some() {
+            sublayers.into_iter().collect()
+        } else {
+            Vec::new()
+        };
+        self
+    }
+
+    /// Öğenin alt katmanı.
+    pub fn sublayer_of(&self, feature: &Feature) -> Option<usize> {
+        let value = feature.value(self.sublayer_field?);
+
+        self.sublayers
+            .iter()
+            .position(|sublayer| sublayer.value == *value)
+    }
+
+    /// Öğe çizilir ve seçilebilir mi: katman görünür ve öğenin alt katmanı
+    /// (varsa) açık.
+    pub fn shows(&self, feature: &Feature) -> bool {
+        self.visible
+            && self
+                .sublayer_of(feature)
+                .is_none_or(|sublayer| self.sublayers[sublayer].visible)
+    }
+
+    /// Öğenin rengi: alt katmanının rengi, yoksa katmanın rengi.
+    pub fn color_of(&self, feature: &Feature) -> Color {
+        self.sublayer_of(feature)
+            .map_or(self.color, |sublayer| self.sublayers[sublayer].color)
+    }
+
+    /// Alt katmandaki öğeler.
+    pub fn sublayer_features(&self, sublayer: usize) -> impl Iterator<Item = &Feature> + '_ {
+        self.features
+            .iter()
+            .filter(move |feature| self.sublayer_of(feature) == Some(sublayer))
+    }
+
     /// Öğeyi sona ekler ve yeni bir numara verir. Değerler şemadaki alan
     /// sayısına boş değerlerle tamamlanır.
     pub fn insert(&mut self, mut feature: Feature) -> ObjectId {
@@ -261,6 +352,7 @@ impl Layer {
         self.visible && self.opacity > 0.05
     }
 
+
     /// Katmanın bütün öğelerini kapsayan kutu.
     pub fn bounds(&self) -> Option<Bounds> {
         self.features
@@ -303,6 +395,55 @@ pub fn visible_bounds(layers: &[Layer]) -> Option<Bounds> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sublayers_split_features_by_value() {
+        let red = Color::from_rgb(1.0, 0.0, 0.0);
+        let blue = Color::from_rgb(0.0, 0.0, 1.0);
+
+        let mut layer = Layer::lines("Yollar", Color::BLACK)
+            .with_schema([Field::text("Ad"), Field::text("Tür")])
+            .with_features([("A", "Otoyol"), ("B", "Bulvar"), ("C", "Patika")].map(
+                |(name, kind)| {
+                    Feature::new(Geometry::Line(vec![
+                        LonLat::new(0.0, 0.0),
+                        LonLat::new(1.0, 1.0),
+                    ]))
+                    .with_values([Value::from(name), Value::from(kind)])
+                },
+            ))
+            .with_sublayers(
+                "Tür",
+                [Sublayer::new("Otoyol", red), Sublayer::new("Bulvar", blue)],
+            );
+
+        let [highway, boulevard, path] =
+            [1, 2, 3].map(|id| layer.feature(ObjectId(id)).cloned().expect("öğe"));
+
+        assert_eq!(layer.sublayer_of(&highway), Some(0));
+        assert_eq!(layer.color_of(&boulevard), blue);
+        // Hiçbir alt katmana uymayan öğe katmanın rengini alır.
+        assert_eq!(layer.sublayer_of(&path), None);
+        assert_eq!(layer.color_of(&path), Color::BLACK);
+
+        layer.sublayers[0].visible = false;
+        assert!(!layer.shows(&highway));
+        assert!(layer.shows(&boulevard) && layer.shows(&path));
+        assert_eq!(layer.sublayer_features(1).count(), 1);
+
+        layer.visible = false;
+        assert!(!layer.shows(&boulevard));
+    }
+
+    #[test]
+    fn missing_sublayer_field_leaves_the_layer_whole() {
+        let layer = Layer::points("Noktalar", Color::BLACK)
+            .with_schema([Field::text("Ad")])
+            .with_sublayers("Tür", [Sublayer::new("A", Color::WHITE)]);
+
+        assert_eq!(layer.sublayer_field, None);
+        assert!(layer.sublayers.is_empty());
+    }
 
     #[test]
     fn features_keep_their_numbers_after_removal() {

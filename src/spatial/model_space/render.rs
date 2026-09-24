@@ -162,7 +162,7 @@ impl<Message> Program<'_, Message> {
                 continue;
             }
 
-            for feature in &layer.features {
+            for feature in layer.features.iter().filter(|feature| layer.shows(feature)) {
                 let reference = FeatureRef::new(layer_index, feature.id);
 
                 self.draw_feature(
@@ -188,7 +188,7 @@ impl<Message> Program<'_, Message> {
         hovered: bool,
     ) {
         let opacity = layer.opacity;
-        let color = style.layer_color(layer.color);
+        let color = style.layer_color(layer.color_of(feature));
 
         match &feature.geometry {
             Geometry::Point(location) => {
@@ -310,7 +310,7 @@ impl<Message> Program<'_, Message> {
         });
 
         for layer in labelled {
-            for feature in &layer.features {
+            for feature in layer.features.iter().filter(|feature| layer.shows(feature)) {
                 let Geometry::Point(location) = &feature.geometry else {
                     continue;
                 };
