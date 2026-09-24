@@ -299,9 +299,10 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
                 None
             }
             mouse::Event::WheelScrolled { delta } => {
-                let position = cursor
-                    .position_in(bounds)
-                    .unwrap_or_else(|| Point::new(bounds.width / 2.0, bounds.height / 2.0));
+                // Tekerlek yalnızca imleç model alanının üzerindeyken
+                // yakınlaştırır; şerit, paneller ve tablolar kendi içlerinde
+                // kaydırılır.
+                let position = cursor.position_in(bounds)?;
 
                 if self.chrome.is_over_view_cube(size, position) {
                     return None;
