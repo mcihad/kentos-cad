@@ -1030,11 +1030,15 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
                 if over {
                     shell.capture_event();
                 } else {
+                    let secondary = *button == mouse::Button::Right
+                        || is_control_click(event, self.state.modifiers);
+
                     self.close(shell);
 
-                    // Sağ tık alttaki öğeye geçer ve menüyü orada açar; diğer
-                    // tıklamalar yalnızca menüyü kapatır.
-                    if *button != mouse::Button::Right {
+                    // Sağ tık (macOS'ta Control + tık) alttaki öğeye geçer ve
+                    // menüyü orada açar; diğer tıklamalar yalnızca menüyü
+                    // kapatır.
+                    if !secondary {
                         shell.capture_event();
                     }
                 }
@@ -1048,13 +1052,11 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
                     }
                 }
             }
-            Event::Mouse(mouse::Event::WheelScrolled { .. }) => {
-                if over {
-                    shell.capture_event();
-                } else {
-                    self.close(shell);
-                }
-            }
+            // Menü açıkken tekerlek menüyü kapatmaz ve alttaki öğelere geçmez
+            // (harita yakınlaşmaz): macOS'ta iki parmakla tıklamanın ardından
+            // izleme yüzeyi hemen küçük kaydırma olayları üretir; bunlar
+            // menüyü açılır açılmaz kapatıyordu. Yerel menüler de böyledir.
+            Event::Mouse(mouse::Event::WheelScrolled { .. }) => shell.capture_event(),
             Event::Keyboard(keyboard::Event::KeyPressed { key, .. }) => {
                 if self.key(key.as_ref(), shell) {
                     shell.capture_event();
