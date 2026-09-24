@@ -21,12 +21,14 @@ use kentos_rc::widget::{Toast, Toasts, inspector};
 
 use crate::command::{self, Command};
 use crate::gallery::{Demo, Gallery};
+use crate::import::{self, ImportWizard};
 use crate::jobs::{JobKind, Jobs, Outcome};
 use crate::layer_tree::{LayerTree, NodeId};
 use crate::message::{
     AppCommand, Confirmation, CoordinateFormat, DockPanel, Keyword, Message, Pane, Pending,
     QueryPurpose, RECENT_DRAWINGS, RibbonTab, Setting, SizeStep,
 };
+use crate::properties::{self, LayerProperties};
 use crate::sample;
 use crate::settings::{DockLayout, Settings};
 use crate::table::{self, TableView};
@@ -139,6 +141,12 @@ pub struct Showcase {
     pub(crate) confirm: Option<Confirmation>,
     /// Örnek verinin salt okunur olduğunu anlatan şerit görünür mü.
     pub(crate) read_only_notice: bool,
+    /// Açık veri içe aktarma sihirbazı.
+    pub(crate) import: Option<ImportWizard>,
+    /// Açık katman özellikleri penceresi.
+    pub(crate) properties: Option<LayerProperties>,
+    /// Katmanların kaynağı, katmanlarla aynı sırada.
+    pub(crate) sources: Vec<String>,
 }
 
 /// Koordinata git penceresinin alanları.
@@ -218,6 +226,15 @@ impl Showcase {
         layers.extend(sample::layers());
 
         let feature_count: usize = layers.iter().map(|layer| layer.features.len()).sum();
+        let sources = (0..layers.len())
+            .map(|index| {
+                if index == DRAWING_LAYER {
+                    "Bu oturumda çizildi; bellekte".to_owned()
+                } else {
+                    "Türkiye örnek verisi; bellekte".to_owned()
+                }
+            })
+            .collect();
 
         let history = vec![
             Entry::Output(format!(
@@ -276,6 +293,9 @@ impl Showcase {
             jobs: Jobs::default(),
             confirm: None,
             read_only_notice: false,
+            import: None,
+            properties: None,
+            sources,
         }
     }
 
@@ -604,6 +624,8 @@ impl Showcase {
                     || self.query.is_some()
                     || self.help_open
                     || self.confirm.is_some()
+                    || self.import.is_some()
+                    || self.properties.is_some()
                 {
                     return Task::none();
                 }
@@ -755,8 +777,79 @@ impl Showcase {
                 if self.confirm.is_some() {
                     return self.update(Message::ConfirmAccepted);
                 }
+
+                if self.import.is_some() {
+                    self.import_next();
+                }
             }
             Message::BannerDismissed => self.read_only_notice = false,
+
+            Message::ImportOpened => {
+                self.import = Some(ImportWizard::default());
+                self.app_menu_open = false;
+            }
+            Message::ImportSource(source) => {
+                if let Some(wizard) = &mut self.import {
+                    wizard.select(source);
+                }
+            }
+            Message::ImportX(column) => {
+                if let Some(wizard) = &mut self.import {
+                    wizard.x = Some(column);
+                }
+            }
+            Message::ImportY(column) => {
+                if let Some(wizard) = &mut self.import {
+                    wizard.y = Some(column);
+                }
+            }
+            Message::ImportSystem(system) => {
+                if let Some(wizard) = &mut self.import {
+                    wizard.system = system;
+                }
+            }
+            Message::ImportName(name) => {
+                if let Some(wizard) = &mut self.import {
+                    wizard.name = name;
+                }
+            }
+            Message::ImportBack => {
+                if let Some(wizard) = &mut self.import {
+                    wizard.step = wizard.step.saturating_sub(1);
+                }
+            }
+            Message::ImportNext => self.import_next(),
+            Message::ImportClosed => self.import = None,
+
+            Message::PropertiesOpened(index) => {
+                if let Some(layer) = self.layers.get(index) {
+                    let visible = self.layer_tree.visible.get(index).copied().unwrap_or(true);
+
+                    self.properties = Some(LayerProperties::new(
+                        index,
+                        properties::Draft::of(layer, visible),
+                    ));
+                }
+            }
+            Message::PropertiesSection(section) => {
+                if let Some(properties) = &mut self.properties {
+                    properties.section = section;
+                }
+            }
+            Message::PropertiesEdited(edit) => {
+                if let Some(properties) = &mut self.properties {
+                    properties.edit(edit);
+                }
+            }
+            Message::PropertiesApplied => {
+                self.apply_properties();
+            }
+            Message::PropertiesAccepted => {
+                if self.apply_properties() {
+                    self.properties = None;
+                }
+            }
+            Message::PropertiesClosed => self.properties = None,
         }
 
         Task::none()
@@ -938,19 +1031,118 @@ impl Showcase {
             .join("\n")
     }
 
+    // --- İçe aktarma ve katman özellikleri -----------------------------
+
+    /// Sihirbazda sonraki adım; son adımda içe aktarmayı başlatır. Adım
+    /// tamamlanmadıysa bir şey olmaz.
+    fn import_next(&mut self) {
+        let Some(wizard) = &mut self.import else {
+            return;
+        };
+
+        if !wizard.is_ready(&self.layers) {
+            return;
+        }
+
+        if wizard.step + 1 < import::STEPS.len() {
+            wizard.step += 1;
+            return;
+        }
+
+        let Some(wizard) = self.import.take() else {
+            return;
+        };
+        let Some(source) = wizard.source else {
+            return;
+        };
+
+        let name = wizard.name.trim().to_owned();
+
+        self.jobs.push(
+            JobKind::Import {
+                source,
+                name: name.clone(),
+                x: wizard.x.unwrap_or(3),
+                y: wizard.y.unwrap_or(2),
+            },
+            source.count() as u32,
+        );
+        self.log(format!(
+            "{} içe aktarılıyor; {name} katmanı bitince eklenecek.",
+            source.file()
+        ));
+    }
+
+    /// İçe aktarılan katmanı ağacın en üstüne, çizimlerin altına ekler.
+    fn add_layer(&mut self, layer: kentos_rc::spatial::Layer, source: &str) -> usize {
+        let index = self.layers.len();
+
+        self.layers.push(layer);
+        self.tables.push(TableView::default());
+        self.sources.push(format!("{source}; içe aktarıldı"));
+        self.layer_tree.visible.push(true);
+        self.layer_tree.expanded.push(false);
+
+        let position = self.layer_tree.roots.len().min(1);
+        self.layer_tree
+            .roots
+            .insert(position, crate::layer_tree::Entry::Layer(index));
+
+        self.sync_visibility();
+        index
+    }
+
+    /// Taslağı katmana yazar; ad geçersizse yazmaz.
+    fn apply_properties(&mut self) -> bool {
+        let Some(properties) = &mut self.properties else {
+            return false;
+        };
+
+        let index = properties.layer;
+
+        if properties.draft.problem(&self.layers, index).is_some() {
+            return false;
+        }
+
+        let Some(layer) = self.layers.get_mut(index) else {
+            return false;
+        };
+
+        properties.draft.apply(layer);
+        properties.original = properties.draft.clone();
+
+        if let Some(visible) = self.layer_tree.visible.get_mut(index) {
+            *visible = properties.draft.visible;
+        }
+
+        let name = layer.name.clone();
+        self.sync_visibility();
+        self.log(format!("{name}: katman özellikleri uygulandı."));
+        true
+    }
+
     // --- Arka plandaki işler -------------------------------------------
 
     /// İşleri bir adım ilerletir; biten ya da başarısız olan işi bildirir.
     fn step_jobs(&mut self) {
         match self.jobs.tick() {
             Some(Outcome::Done(job)) => {
-                let title = match &job.kind {
-                    JobKind::Export(_) => "Dışa aktarıldı",
-                    JobKind::Index => "Uzamsal dizin hazır",
+                self.log(format!("{}: {}", job.title(), job.detail()));
+
+                let toast = match &job.kind {
+                    JobKind::Export(_) => Toast::success("Dışa aktarıldı").body(job.detail()),
+                    JobKind::Index => Toast::success("Uzamsal dizin hazır").body(job.detail()),
+                    JobKind::Import { source, name, x, y } => {
+                        let index =
+                            self.add_layer(import::layer(*source, name, *x, *y), source.file());
+
+                        Toast::success(format!("{name} eklendi"))
+                            .body(format!("{} öğe, EPSG:4326 WGS 84.", source.count()))
+                            .action("Katmana git", Message::ZoomToLayer(index))
+                    }
                 };
 
-                self.log(format!("{}: {}", job.title(), job.detail()));
-                self.toasts.push(Toast::success(title).body(job.detail()));
+                self.toasts.push(toast);
             }
             Some(Outcome::Failed(job)) => {
                 self.error(format!("{}: {}", job.title(), job.detail()));
@@ -1658,7 +1850,10 @@ impl Showcase {
     /// Esc: önce açık menüyü, pencereyi ya da haritadan seçimi kapatır;
     /// sonra yarım çizimi bitirir; en son ölçümü ve seçimi temizler.
     fn escape(&mut self) {
-        if self.confirm.take().is_some() {
+        if self.confirm.take().is_some()
+            || self.import.take().is_some()
+            || self.properties.take().is_some()
+        {
             return;
         }
 
@@ -1947,6 +2142,7 @@ impl Showcase {
             }
             Command::New => self.run_app_command(AppCommand::New),
             Command::Pane(pane) => self.open_pane(pane),
+            Command::Import => return self.update(Message::ImportOpened),
             Command::Typeface => self.pending = Some(Pending::Typeface),
             Command::TextSize => self.pending = Some(Pending::TextSize),
             Command::Help => {
@@ -2296,6 +2492,76 @@ mod tests {
         picked(&mut app, 35.48, 38.72);
         let _ = app.update(Message::Quit);
         assert_eq!(app.confirm, Some(Confirmation::Quit));
+    }
+
+    #[test]
+    fn the_import_wizard_adds_a_layer_through_a_background_job() {
+        let mut app = Showcase::new();
+        let layers = app.layers.len();
+
+        submit(&mut app, "iceaktar");
+        assert!(app.import.is_some());
+
+        // Dosya seçilmeden ilerlenmez; bozuk dosyada da.
+        let _ = app.update(Message::ImportNext);
+        assert_eq!(app.import.as_ref().map(|wizard| wizard.step), Some(0));
+
+        let _ = app.update(Message::ImportSource(import::Source::Broken));
+        let _ = app.update(Message::ImportNext);
+        assert_eq!(app.import.as_ref().map(|wizard| wizard.step), Some(0));
+
+        let _ = app.update(Message::ImportSource(import::Source::Stations));
+
+        for _ in 0..4 {
+            let _ = app.update(Message::EnterPressed);
+        }
+
+        // Son adım işi başlatır; sihirbaz kapanır.
+        assert!(app.import.is_none());
+        assert!(app.jobs.is_busy());
+
+        for _ in 0..30 {
+            let _ = app.update(Message::JobTick);
+        }
+
+        assert_eq!(app.layers.len(), layers + 1);
+        assert_eq!(app.layers[layers].name, "Meteoroloji istasyonları");
+        assert_eq!(app.layers[layers].features.len(), 24);
+        assert!(app.layers[layers].visible);
+        assert_eq!(app.tables.len(), app.layers.len());
+        assert_eq!(
+            app.layer_tree.roots[1],
+            crate::layer_tree::Entry::Layer(layers)
+        );
+    }
+
+    #[test]
+    fn layer_properties_apply_only_valid_drafts() {
+        let mut app = Showcase::new();
+
+        let _ = app.update(Message::PropertiesOpened(1));
+        let _ = app.update(Message::PropertiesEdited(properties::Edit::Name(
+            "Karayolları".to_owned(),
+        )));
+
+        // Başka katmanın adı verilemez.
+        let _ = app.update(Message::PropertiesAccepted);
+        assert!(app.properties.is_some());
+        assert_eq!(app.layers[1].name, "Şehirler");
+
+        let _ = app.update(Message::PropertiesEdited(properties::Edit::Name(
+            "İller".to_owned(),
+        )));
+        let _ = app.update(Message::PropertiesEdited(properties::Edit::Visible(false)));
+        let _ = app.update(Message::PropertiesApplied);
+        assert_eq!(app.layers[1].name, "İller");
+        assert!(!app.layers[1].visible);
+        assert!(app.properties.as_ref().is_some_and(|open| !open.is_dirty()));
+
+        // İptal taslağı atar.
+        let _ = app.update(Message::PropertiesEdited(properties::Edit::Opacity(0.3)));
+        let _ = app.update(Message::PropertiesClosed);
+        assert_eq!(app.layers[1].opacity, 1.0);
     }
 
     #[test]

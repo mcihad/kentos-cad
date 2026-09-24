@@ -26,7 +26,7 @@ use crate::message::{Keyword, Message, Pane};
 
 /// Katman stili penceresindeki hazır renkler: örnek verinin renkleri ve
 /// harita zemininde okunan birkaç ton.
-const COLORS: [Color; 10] = [
+pub(super) const COLORS: [Color; 10] = [
     Color::from_rgb(0.96, 0.35, 0.38),
     Color::from_rgb(0.96, 0.62, 0.25),
     Color::from_rgb(0.89, 0.76, 0.35),

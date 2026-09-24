@@ -72,6 +72,23 @@ pub fn danger(theme: &Theme, status: Status) -> Style {
     style(background, text, border::rounded(RADIUS))
 }
 
+/// Özellikler penceresinin solundaki bölüm listesi: seçili bölüm seçim
+/// zemininde; üzerine gelince hafif bir katman.
+pub fn navigation(selected: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+
+        let background = match (selected, status) {
+            (true, _) => t.selection(),
+            (false, Status::Hovered) => t.layer(0.05),
+            (false, Status::Pressed) => t.layer(0.09),
+            (false, _) => Color::TRANSPARENT,
+        };
+
+        style(background, t.text, border::rounded(RADIUS))
+    }
+}
+
 /// Rengi beyaza doğru `amount` kadar açar.
 fn lighten(color: Color, amount: f32) -> Color {
     Color {

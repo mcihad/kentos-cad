@@ -6,9 +6,11 @@
 mod app;
 mod command;
 mod gallery;
+mod import;
 mod jobs;
 mod layer_tree;
 mod message;
+mod properties;
 mod sample;
 mod settings;
 mod snapshot;

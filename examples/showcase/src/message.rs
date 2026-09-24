@@ -14,7 +14,9 @@ use kentos_rc::widget::floating::{self, Placement};
 use kentos_rc::widget::{inspector, toast};
 
 use crate::gallery::{Demo, Page};
+use crate::import::Source;
 use crate::layer_tree::NodeId;
+use crate::properties::{Edit, Section};
 use crate::table::Column;
 
 /// Kullanıcının yaptığı her şey.
@@ -178,6 +180,30 @@ pub enum Message {
     EnterPressed,
     /// Salt okunur veri şeridini kapatır.
     BannerDismissed,
+
+    // Veri içe aktarma sihirbazı
+    ImportOpened,
+    ImportSource(Source),
+    /// Boylam (X) sütunu.
+    ImportX(usize),
+    /// Enlem (Y) sütunu.
+    ImportY(usize),
+    ImportSystem(usize),
+    ImportName(String),
+    ImportBack,
+    /// Sonraki adım; son adımda içe aktarmayı başlatır.
+    ImportNext,
+    ImportClosed,
+
+    // Katman özellikleri
+    PropertiesOpened(usize),
+    PropertiesSection(Section),
+    PropertiesEdited(Edit),
+    PropertiesApplied,
+    /// Uygular ve kapatır.
+    PropertiesAccepted,
+    /// Taslağı atar ve kapatır.
+    PropertiesClosed,
 
     // Yan panel
     /// Yan panelin yeni genişliği (12 piksellik gövde metnine göre).

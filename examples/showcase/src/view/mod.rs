@@ -21,9 +21,11 @@ mod attribute_table;
 mod dock;
 mod gallery;
 mod help;
+mod import;
 mod layers;
 mod menus;
 mod panes;
+mod properties;
 mod query;
 mod ribbon;
 mod status;
@@ -93,6 +95,10 @@ impl Showcase {
 
         let overlay = if let Some(confirmation) = self.confirm {
             Some(self.confirmation(confirmation))
+        } else if let Some(wizard) = &self.import {
+            Some(self.import_wizard(wizard))
+        } else if let Some(properties) = &self.properties {
+            Some(self.layer_properties(properties))
         } else if self.app_menu_open {
             Some(self.app_menu())
         } else if let Some(dialog) = &self.query {

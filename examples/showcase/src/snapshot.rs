@@ -25,12 +25,14 @@ use kentos_rc::widget::inspector::Event as Inspector;
 
 use crate::app::{DRAWING_LAYER, Showcase, WINDOW_SIZE};
 use crate::gallery::Page;
+use crate::import::Source;
 use crate::layer_tree::NodeId;
 use crate::message::{Message, Pane, QueryPurpose, RibbonTab};
+use crate::properties::{self, Section};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 16] = [
+const SCENARIOS: [(&str, &str); 18] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -79,6 +81,14 @@ const SCENARIOS: [(&str, &str); 16] = [
         "bos-durumlar",
         "katmanlar gizli, örnek veri silinmeye çalışılmış: boş harita, salt okunur şeridi, boş tablo",
     ),
+    (
+        "sihirbaz",
+        "veri içe aktarma sihirbazı: istasyonlar.csv seçili; adımlar İleri ile, --adim ile",
+    ),
+    (
+        "ozellikler",
+        "Şehirler katmanının özellikleri: sembolizasyon, kaydedilmemiş değişiklik",
+    ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
 
@@ -100,7 +110,7 @@ Kullanım: showcase snapshot <çıktı.png> [seçenekler]
 
 Seçenekler:
   --senaryo <ad>        uygulamanın hazırlanacağı durum (varsayılan: bos)
-  --sayfa <ad>          galeri senaryosunda sayfa
+  --sayfa <ad>          galeri senaryosunda sayfa; sihirbazda adım (1-4)
   --boyut <G>x<Y>       pencere boyutu (varsayılan: 1440x900)
   --olcek <katsayı>     piksel yoğunluğu (varsayılan: 1)
   --tema acik|koyu      tema (varsayılan: koyu)
@@ -423,6 +433,24 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::HideAllLayers);
             send(Message::LayerActivated(DRAWING_LAYER));
         }
+        "sihirbaz" => {
+            send(Message::ImportOpened);
+            send(Message::ImportSource(Source::Stations));
+
+            let steps = page.map_or(Ok(0), |step| {
+                step.parse::<usize>()
+                    .map_err(|_| format!("Adım bir sayı olmalı: {step}"))
+            })?;
+
+            for _ in 1..steps.max(1) {
+                send(Message::ImportNext);
+            }
+        }
+        "ozellikler" => {
+            send(Message::PropertiesOpened(1));
+            send(Message::PropertiesSection(Section::Symbology));
+            send(Message::PropertiesEdited(properties::Edit::Opacity(0.8)));
+        }
         "galeri" => {
             let page = match page {
                 Some(name) => PAGES
@@ -503,9 +531,17 @@ mod tests {
     #[test]
     fn every_scenario_prepares_the_app() {
         for (name, _) in SCENARIOS {
+            let page = match name {
+                "galeri" => Some("veri"),
+                "sihirbaz" => Some("3"),
+                _ => None,
+            };
+
             let mut app = Showcase::new();
-            assert_eq!(prepare(&mut app, name, Some("veri")), Ok(()), "{name}");
+            assert_eq!(prepare(&mut app, name, page), Ok(()), "{name}");
         }
+
+        assert!(prepare(&mut Showcase::new(), "sihirbaz", Some("iki")).is_err());
 
         assert!(prepare(&mut Showcase::new(), "yok", None).is_err());
     }

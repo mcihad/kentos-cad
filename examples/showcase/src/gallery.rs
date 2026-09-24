@@ -77,7 +77,7 @@ impl Page {
             }
             Page::Feedback => {
                 "Bildirimler, ilerleme ve görevler, onay kutusu, uyarı şeridi, boş ve hata \
-                 durumları."
+                 durumları, adımlı sihirbaz ve özellikler penceresi."
             }
             Page::Attributes => {
                 "Nesne inceleyici, öznitelik tablosu, sorgu oluşturucu ve alan türleri."
@@ -134,6 +134,10 @@ pub enum Demo {
     StagePressed,
     /// Örnek bildirim gösterir; [`sample_toasts`] sırasıyla, sonuncusu hepsini.
     Notify(usize),
+    /// Sihirbaz örneğinde adım.
+    WizardStep(usize),
+    /// Özellikler penceresi örneğinde bölüm.
+    SectionSelected(usize),
 }
 
 /// Bildirim örnekleri: düğme adı ve bildirim.
@@ -274,6 +278,9 @@ pub struct Gallery {
     pub panes: Windows<DemoPane>,
     pub snaps: [bool; 4],
     pub stage_presses: usize,
+    /// Sihirbaz ve özellikler penceresi örneklerinde adım ve bölüm.
+    pub wizard_step: usize,
+    pub section: usize,
 }
 
 impl Default for Gallery {
@@ -327,6 +334,8 @@ impl Default for Gallery {
             panes: demo_panes(),
             snaps: [true, true, false, true],
             stage_presses: 0,
+            wizard_step: 1,
+            section: 0,
         }
     }
 }
@@ -457,6 +466,8 @@ impl Gallery {
             Demo::StagePressed => self.stage_presses += 1,
             // Bildirimler uygulamanın kuyruğuna eklenir.
             Demo::Notify(_) => {}
+            Demo::WizardStep(step) => self.wizard_step = step.min(2),
+            Demo::SectionSelected(section) => self.section = section,
         }
 
         None

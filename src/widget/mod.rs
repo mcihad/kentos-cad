@@ -22,6 +22,7 @@ pub mod navigation_bar;
 pub mod notice;
 pub mod overlay;
 pub mod progress;
+pub mod properties;
 pub mod property_grid;
 pub mod query_builder;
 pub mod ribbon;
@@ -34,6 +35,7 @@ pub mod table;
 pub mod toast;
 pub mod toolbar;
 pub mod tree_view;
+pub mod wizard;
 
 mod tip;
 
@@ -48,6 +50,7 @@ pub use inspector::Inspector;
 pub use navigation_bar::NavigationBar;
 pub use notice::{Banner, EmptyState};
 pub use progress::{Task, TaskList};
+pub use properties::PropertiesDialog;
 pub use property_grid::PropertyGrid;
 pub use query_builder::QueryBuilder;
 pub use ribbon::Ribbon;
@@ -61,6 +64,7 @@ pub use tip::{Tip, tip};
 pub use toast::{Toast, Toaster, Toasts};
 pub use toolbar::Toolbar;
 pub use tree_view::TreeView;
+pub use wizard::Wizard;
 
 use iced::widget::{Rule, container, rule, space};
 use iced::{Color, Element};

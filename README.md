@@ -33,6 +33,8 @@ src/                     kentos-rc kütüphanesi
 │   ├── toast.rs         bildirimler: önem düzeyi, eylem, üst üste dizilme, süre
 │   ├── progress.rs      ilerleme çubuğu, dönen gösterge, iptal edilebilen görev listesi
 │   ├── notice.rs        uyarı şeridi, boş ve hata durumları
+│   ├── wizard.rs        adımlı sihirbaz: adım göstergesi, seçenek satırları
+│   ├── properties.rs    solunda bölüm listesi olan özellikler penceresi
 │   ├── severity.rs      geri bildirimin önem düzeyleri (bilgi, başarı, uyarı, hata)
 │   ├── sash.rs          boyutlandırma tutamağı (sürükle, çift tıkla sıfırla)
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
@@ -184,13 +186,28 @@ Message::Window(event) => self.windows.update(event),
   farkı kapatılana ya da durum değişene kadar yerinde kalmasıdır.
 - **Boş ve hata durumları.** İçeriği olmayan alanın ortasında ne olduğu ve ne
   yapılabileceği; hata durumunda neyin yapılamadığı ve nasıl düzeltileceği.
+- **Adımlı sihirbaz.** Biten adımlar onay işaretiyle, süren adım vurgu
+  renginde; içerik sabit yüksekliktedir, kutu adımlar arasında zıplamaz. İleri
+  adım tamamlanmadıysa devre dışıdır ve alttaki not nedenini söyler; son düğme
+  işin adını taşır ("İçe aktar"). Arkasına tıklamak ilerlemeyi kaybettirmez
+  (`overlay::blocking`).
+- **Özellikler penceresi.** Solunda bölüm listesi, sağında bölümün içeriği
+  (QGIS'in katman özellikleri gibi). Değişiklikler taslakta tutulur: Uygula
+  yazar ve açık kalır, Tamam yazar ve kapatır, İptal atar; taslak farklıyken
+  altta not görünür.
 - **Vitrinde.** Çizim silmek geri alınabilir: bildirimdeki "Geri al" çizimleri
   numaralarıyla geri koyar. Örnek veri silinmeye çalışılınca haritanın
   üstünde salt okunur şeridi açılır; ayarlar yazılamayınca kalıcı hata
   bildirimi çıkar; kopyalamalar bilgi bildirir. "Çizimleri temizle" ve çizim
   varken çıkış onay ister. Bütün katmanlar gizliyken harita, satırı olmayan
   öznitelik tablosu (filtre, arama, seçili yok, boş katman) nedenini ve
-  düzeltecek düğmeyi gösterir.
+  düzeltecek düğmeyi gösterir. Ekle sekmesindeki "Veri içe aktar" (`ICEAKTAR`)
+  örnek bir CSV ya da GeoJSON dosyasını adım adım katman olarak ekler: CSV'de
+  koordinat sütunları seçilir ve değerleri denetlenir, bozuk dosyada hata
+  durumu görünür, metre bekleyen koordinat sistemi reddedilir; iş arka planda
+  sürer ve bitince katman ağacın en üstüne eklenir. Katman menüsündeki
+  "Özellikler…" adı, görünürlüğü, opaklığı, rengi ve etiketleri düzenler;
+  kaynağı ve alanları gösterir.
   Dışa aktarma (uygulama menüsü ya da Yönet sekmesi) ve dizin oluşturma arka
   planda sürer: durum çubuğunda dönen gösterge ve yüzde görünür, tıklanınca
   Görevler penceresi açılır; biten iş bildirilir. DXF'e dışa aktarma ilk
@@ -217,6 +234,27 @@ TaskList::new().push(
 )
 Readout::new(row![progress::spinner().size(12.0), label::caption("Dışa aktarılıyor")])
     .on_press(Message::ShowTasks)
+
+// Sihirbaz ve özellikler penceresi; arkasına tıklamak kapatmaz
+overlay::blocking(
+    Wizard::new("Veri içe aktar", ["Kaynak", "Alanlar", "Koordinat sistemi", "Özet"])
+        .current(step)
+        .body(self.step_body())
+        .hint(problem.unwrap_or(note))
+        .back(Message::Back)
+        .next(ready.then_some(Message::Next))
+        .finish("İçe aktar", ready.then_some(Message::Finish))
+        .on_cancel(Message::Cancel),
+)
+overlay::blocking(
+    PropertiesDialog::new("Katman özellikleri")
+        .section(Icon::Info, "Genel", selected, Message::Section(Section::General))
+        .body("Genel", self.general())
+        .dirty(draft != original)
+        .on_apply(Message::Apply)
+        .on_accept(Message::Accept)
+        .on_cancel(Message::Cancel),
+)
 ```
 
 ## Komut kutusu ve durum çubuğu
@@ -349,6 +387,8 @@ cargo run -- snapshot bildirim.png --senaryo bildirimler --tikla 903,463
 cargo run -- snapshot gorevler.png --senaryo gorevler
 cargo run -- snapshot onay.png --senaryo onay
 cargo run -- snapshot bos.png --senaryo bos-durumlar
+cargo run -- snapshot sihirbaz.png --senaryo sihirbaz --sayfa 2
+cargo run -- snapshot ozellikler.png --senaryo ozellikler
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 

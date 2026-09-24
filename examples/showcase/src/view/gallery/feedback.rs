@@ -9,7 +9,7 @@ use kentos_rc::label;
 use kentos_rc::style;
 use kentos_rc::theme::typography;
 use kentos_rc::widget::progress::{self, State, Task, TaskList, Tint};
-use kentos_rc::widget::{Banner, Confirm, EmptyState};
+use kentos_rc::widget::{Banner, Confirm, EmptyState, PropertiesDialog, Wizard};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
@@ -184,8 +184,158 @@ impl Showcase {
                      .primary(\"Yeniden dene\", Message::Retry)",
                 ),
             ),
+            entry(
+                "Adımlı sihirbaz",
+                "kentos_rc::widget::Wizard",
+                "Bir işi sırayla birkaç adımda yaptırır. Biten adımlar onay işaretiyle, süren \
+                 adım vurgu renginde gösterilir; içerik sabit yüksekliktedir, kutu adımlar \
+                 arasında zıplamaz. İleri adım tamamlanmadıysa devre dışıdır ve alttaki not \
+                 nedenini söyler; son düğme işin adını taşır. Arkasına tıklamak ilerlemeyi \
+                 kaybettirmez. Örnekte Geri ve İleri çalışır.",
+                self.wizard_sample(),
+                Some(
+                    "overlay::blocking(\n    \
+                     Wizard::new(\"Veri içe aktar\", [\"Kaynak\", \"Alanlar\", \"Koordinat sistemi\", \"Özet\"])\n        \
+                     .current(step)\n        \
+                     .body(self.step_body())\n        \
+                     .hint(problem.unwrap_or(note))\n        \
+                     .back(Message::Back)\n        \
+                     .next(ready.then_some(Message::Next))\n        \
+                     .finish(\"İçe aktar\", ready.then_some(Message::Finish))\n        \
+                     .on_cancel(Message::Cancel),\n)",
+                ),
+            ),
+            entry(
+                "Özellikler penceresi",
+                "kentos_rc::widget::PropertiesDialog",
+                "Solunda bölüm listesi olan pencere (QGIS'in katman özellikleri gibi). \
+                 Değişiklikler taslakta tutulur: Uygula yazar ve açık kalır, Tamam yazar ve \
+                 kapatır, İptal atar. Taslak farklıyken Uygula etkindir ve altta not görünür. \
+                 Vitrinde katmanın menüsündeki \"Özellikler…\" açar.",
+                self.properties_sample(),
+                Some(
+                    "PropertiesDialog::new(\"Katman özellikleri\")\n    \
+                     .subtitle(\"Şehirler, nokta katmanı\")\n    \
+                     .section(Icon::Info, \"Genel\", selected, Message::Section(Section::General))\n    \
+                     .body(\"Genel\", self.general())\n    \
+                     .description(\"Katmanın adı, görünürlüğü ve opaklığı.\")\n    \
+                     .dirty(draft != original)\n    \
+                     .on_apply(Message::Apply).on_accept(Message::Accept).on_cancel(Message::Cancel)",
+                ),
+            ),
         ]
     }
+
+    /// Sihirbaz örneği: adımlar gerçek değil, gezilebilir.
+    fn wizard_sample(&self) -> Element<'_, Message> {
+        let step = self.gallery.wizard_step;
+        let steps = ["Kaynak", "Alanlar", "Özet"];
+
+        let body = match step {
+            0 => column![
+                label::body("Dosya: istasyonlar.csv"),
+                label::muted("İlk adımda dosya seçilir; okunamayan dosyada İleri devre dışıdır."),
+            ],
+            1 => column![
+                label::body("Boylam (X): boylam, Enlem (Y): enlem"),
+                label::muted("Sütunlar adlarından tanındı; önizlemede vurgulanır."),
+            ],
+            _ => column![
+                label::body("Meteoroloji istasyonları: 24 nokta, EPSG:4326"),
+                label::muted("Son düğme işin adını taşır: İçe aktar."),
+            ],
+        }
+        .spacing(6);
+
+        column![
+            Wizard::new("Veri içe aktar", steps)
+                .current(step)
+                .body(body)
+                .hint(match step {
+                    0 => "Dosya okunabiliyor; sütunlara geçin.",
+                    1 => "Koordinatlar seçilen sütunlardan okunur.",
+                    _ => "İçe aktarma arka planda sürer.",
+                })
+                .back(Message::Gallery(Demo::WizardStep(step.saturating_sub(1))))
+                .next(Some(Message::Gallery(Demo::WizardStep(step + 1))))
+                .finish("İçe aktar", Some(pressed("İçe aktar")))
+                .on_cancel(pressed("Vazgeç"))
+                .size(560.0, 72.0),
+            button(label::body("Gerçek sihirbazı aç"))
+                .on_press(Message::ImportOpened)
+                .padding([4, 12])
+                .style(style::button::secondary),
+        ]
+        .spacing(12)
+        .into()
+    }
+
+    /// Özellikler penceresi örneği: bölümler gezilebilir.
+    fn properties_sample(&self) -> Element<'_, Message> {
+        let current = self.gallery.section;
+        let sections = [
+            (Icon::Info, "Genel"),
+            (Icon::Document, "Kaynak"),
+            (Icon::Drop, "Sembolizasyon"),
+        ];
+
+        let body = match current {
+            0 => column![
+                sample_row("Ad", "Şehirler"),
+                sample_row("Tür", "Nokta"),
+                sample_row("Opaklık", "%100"),
+            ],
+            1 => column![
+                sample_row("Kaynak", "Türkiye örnek verisi"),
+                sample_row("Öğe sayısı", "16"),
+                sample_row("Koordinat sistemi", "EPSG:4326 WGS 84"),
+            ],
+            _ => column![
+                sample_row("Renk", "Kırmızı"),
+                sample_row("Alt katmanlar", "7 bölge"),
+            ],
+        }
+        .spacing(8);
+
+        let dialog = sections.iter().enumerate().fold(
+            PropertiesDialog::new("Katman özellikleri").subtitle("Şehirler, nokta katmanı"),
+            |dialog, (index, (glyph, name))| {
+                dialog.section(
+                    *glyph,
+                    *name,
+                    index == current,
+                    Message::Gallery(Demo::SectionSelected(index)),
+                )
+            },
+        );
+
+        column![
+            dialog
+                .body(sections[current.min(2)].1, body)
+                .description("Örnek içerik; gerçek pencere katman menüsünden açılır.")
+                .dirty(current == 2)
+                .on_apply(pressed("Uygula"))
+                .on_accept(pressed("Tamam"))
+                .on_cancel(pressed("İptal"))
+                .size(640.0, 200.0),
+            button(label::body("Şehirler katmanının özelliklerini aç"))
+                .on_press(Message::PropertiesOpened(1))
+                .padding([4, 12])
+                .style(style::button::secondary),
+        ]
+        .spacing(12)
+        .into()
+    }
+}
+
+/// Özellikler örneğinin satırı.
+fn sample_row<'a>(name: &'a str, value: &'a str) -> Element<'a, Message> {
+    row![
+        label::muted(name).width(typography::scaled(132.0)),
+        label::body(value),
+    ]
+    .spacing(12)
+    .into()
 }
 
 /// Onay kutusu örneği; bir kaplama olmadan, yerinde.

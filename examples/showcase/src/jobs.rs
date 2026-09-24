@@ -1,9 +1,11 @@
-//! Arka plandaki işler: dışa aktarma ve uzamsal dizin.
+//! Arka plandaki işler: dışa aktarma, uzamsal dizin ve içe aktarma.
 //!
 //! Vitrinde işler gerçekte dosya yazmaz; zamanlayıcıyla ilerleyen bir
 //! benzetimdir. Aynı anda tek iş sürer, diğerleri sırasını bekler. DXF'e
 //! dışa aktarma ilk denemede başarısız olur; hata durumu ve "Yeniden dene"
 //! böyle görülür.
+
+use crate::import::Source;
 
 /// İşin türü.
 #[derive(Debug, Clone, PartialEq)]
@@ -12,6 +14,14 @@ pub enum JobKind {
     Export(&'static str),
     /// Katmanların uzamsal dizinini yeniden kurar; süresi önceden bilinmez.
     Index,
+    /// Dosyayı okuyup katman olarak ekler; CSV'de boylam (X) ve enlem (Y)
+    /// sütunlarıyla.
+    Import {
+        source: Source,
+        name: String,
+        x: usize,
+        y: usize,
+    },
 }
 
 /// İşin durumu.
@@ -42,6 +52,7 @@ impl Job {
         match &self.kind {
             JobKind::Export(format) => format!("{format} olarak dışa aktar"),
             JobKind::Index => "Uzamsal dizin oluştur".to_owned(),
+            JobKind::Import { source, .. } => format!("{} içe aktar", source.file()),
         }
     }
 
@@ -58,6 +69,14 @@ impl Job {
             (JobKind::Index, JobState::Cancelled) => {
                 "Durduruldu; önceki dizin kullanılıyor.".to_owned()
             }
+            (JobKind::Import { .. }, JobState::Cancelled) => format!(
+                "{} / {} kayıtta durduruldu; katman eklenmedi.",
+                self.done, self.total
+            ),
+            (JobKind::Import { name, .. }, JobState::Done) => {
+                format!("{name} katmanı eklendi: {} öğe.", self.total)
+            }
+            (JobKind::Import { .. }, _) => format!("{} / {} kayıt okundu", self.done, self.total),
             (JobKind::Export(format), JobState::Done) => {
                 format!("{}: {} öğe yazıldı.", file_name(format), self.total)
             }
@@ -86,6 +105,7 @@ impl Job {
         match self.kind {
             JobKind::Export(_) => "Dışa aktarılıyor",
             JobKind::Index => "Dizin oluşturuluyor",
+            JobKind::Import { .. } => "İçe aktarılıyor",
         }
     }
 
@@ -93,7 +113,7 @@ impl Job {
     fn step(&self) -> u32 {
         match self.kind {
             JobKind::Export(_) => 2,
-            JobKind::Index => 1,
+            JobKind::Index | JobKind::Import { .. } => 1,
         }
     }
 }

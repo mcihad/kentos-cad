@@ -52,6 +52,10 @@ impl Showcase {
                 .into();
         }
 
+        if self.ribbon_tab == RibbonTab::Insert {
+            return ribbon.group(self.insert_group()).into();
+        }
+
         if self.ribbon_tab == RibbonTab::Manage {
             return ribbon
                 .group(self.data_group())
@@ -76,6 +80,27 @@ impl Showcase {
             .group(self.selection_group())
             .group(self.interface_group())
             .into()
+    }
+
+    /// Veri ekleme: içe aktarma sihirbazı ve aktif katmanın özellikleri.
+    fn insert_group(&self) -> Group<'_, Message> {
+        Group::new("Veri")
+            .push(
+                Button::large(Icon::Import, "Veri\niçe aktar")
+                    .on_press(Message::ImportOpened)
+                    .tip(
+                        Tip::new("Veri içe aktar")
+                            .body("CSV ya da GeoJSON dosyasını adım adım katman olarak ekler.")
+                            .detail(format!("Komut: {}", command::name(Command::Import))),
+                    ),
+            )
+            .push(
+                Button::large(Icon::Properties, "Katman\nözellikleri")
+                    .on_press(Message::PropertiesOpened(self.active_layer))
+                    .tip(Tip::new("Katman özellikleri").body(
+                        "Aktif katmanın adı, kaynağı, sembolizasyonu, etiketleri ve alanları.",
+                    )),
+            )
     }
 
     /// Veri bakımı: uzamsal dizin ve arka plandaki işler.

@@ -52,6 +52,30 @@ pub fn modal<'a, Message: Clone + 'a>(
     stack![dismiss_area(on_dismiss, true), centered].into()
 }
 
+/// `content`'i ortalar ve arkasını karartır; karartılmış alana tıklamak
+/// kutuyu kapatmaz. İlerlemesi ya da taslağı olan kutular (sihirbaz,
+/// özellikler penceresi) yanlışlıkla kapanmasın diye: kutu yalnızca kendi
+/// düğmeleriyle ya da Esc ile kapanır.
+pub fn blocking<'a, Message: Clone + 'a>(
+    content: impl Into<Element<'a, Message>>,
+) -> Element<'a, Message> {
+    let centered = container(content)
+        .width(Fill)
+        .height(Fill)
+        .align_x(Center)
+        .align_y(Center);
+
+    let scrim = mouse_area(
+        container(space::vertical())
+            .width(Fill)
+            .height(Fill)
+            .style(style::container::scrim),
+    )
+    .interaction(mouse::Interaction::Idle);
+
+    stack![scrim, centered].into()
+}
+
 fn dismiss_area<'a, Message: Clone + 'a>(on_dismiss: Message, scrim: bool) -> Element<'a, Message> {
     let area = container(space::vertical()).width(Fill).height(Fill);
     let area = if scrim {

@@ -68,7 +68,9 @@ impl Showcase {
             .submenu("Opaklık", opacity)
             .icon(Icon::Contrast)
             .item("Stil…", Message::StyleOpened(index))
-            .icon(Icon::Drop);
+            .icon(Icon::Drop)
+            .item("Özellikler…", Message::PropertiesOpened(index))
+            .icon(Icon::Properties);
 
         if !layer.sublayers.is_empty() {
             let expanded = self

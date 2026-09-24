@@ -44,6 +44,8 @@ pub enum Command {
     Clear,
     /// Kayan araç penceresini açar ya da öne getirir.
     Pane(Pane),
+    /// Veri içe aktarma sihirbazını açar.
+    Import,
     New,
     Help,
     /// Yazı ailesini seçtirir.
@@ -304,6 +306,13 @@ const COMMANDS: &[(Command, Info)] = &[
             .aliases(&["STYLE", "SEMBOL"])
             .icon(Icon::Drop)
             .description("Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştiren pencereyi açar."),
+    ),
+    (
+        Command::Import,
+        Info::new("ICEAKTAR", "Veri içe aktar")
+            .aliases(&["IMPORT", "EKLE"])
+            .icon(Icon::Import)
+            .description("CSV ya da GeoJSON dosyasını adım adım katman olarak ekleyen sihirbazı açar."),
     ),
     (
         Command::New,
