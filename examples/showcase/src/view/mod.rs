@@ -36,9 +36,11 @@ use iced::widget::{Column, column, container, row, stack};
 use iced::{Element, Fill};
 
 use kentos_rc::icon::Icon;
+use kentos_rc::spatial::model_space::Backdrop;
 use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format, model_space};
 use kentos_rc::style;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
+use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::command_line::Prompt;
 use kentos_rc::widget::{
     Banner, CommandLine, Confirm, ContextMenu, EmptyState, Floating, NavigationBar, Toaster,
@@ -135,6 +137,7 @@ impl Showcase {
             .button(Icon::Home, "Başlangıç görünümü", Message::ResetView);
 
         let model_space = ModelSpace::new(self.viewport, &self.layers, Message::ModelSpace)
+            .backdrop(self.backdrop)
             .tool(self.tool)
             .selection(&self.selection)
             .hover(self.hover)
@@ -330,12 +333,38 @@ impl Showcase {
         Some(prompt)
     }
 
-    /// Seçenek bekleyen yazı komutlarının istemi.
+    /// Seçenek bekleyen komutların istemi: yazı ailesi, yazı boyutu, vurgu
+    /// rengi ve harita zemini.
     fn pending_prompt(&self, pending: Pending) -> Prompt<'static, Message> {
         let current = self.typography;
         let choose = move |typography: Typography| Message::TypographyChanged(typography);
 
         match pending {
+            Pending::Accent => Accent::PRESETS.into_iter().fold(
+                Prompt::new(format!("Vurgu rengini seçin; şimdi {}", self.accent.name()))
+                    .command(command::name(Command::Accent))
+                    .placeholder("ya da #RRGGBB yazın"),
+                |prompt, accent| {
+                    let [dark, light] =
+                        [Mode::Dark, Mode::Light].map(|mode| hex_of(accent.color(mode)));
+
+                    prompt
+                        .option(accent.name(), Message::AccentChanged(accent))
+                        .description(format!("Koyu temada {dark}, aydınlık temada {light}."))
+                },
+            ),
+            Pending::Backdrop => Backdrop::ALL.into_iter().fold(
+                Prompt::new(format!(
+                    "Harita zeminini seçin; şimdi {}",
+                    self.backdrop.name()
+                ))
+                .command(command::name(Command::Backdrop)),
+                |prompt, backdrop| {
+                    prompt
+                        .option(backdrop.name(), Message::BackdropChanged(backdrop))
+                        .description(backdrop_note(backdrop))
+                },
+            ),
             Pending::Typeface => {
                 let prompt = Family::ALL.into_iter().fold(
                     Prompt::new("Yazı ailesini seçin")
@@ -412,6 +441,23 @@ impl<'a> LayerChoice<'a> {
 impl fmt::Display for LayerChoice<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.name)
+    }
+}
+
+/// Rengin onaltılık yazımı (#rrggbb).
+pub(crate) fn hex_of(color: iced::Color) -> String {
+    let [red, green, blue, _] = color.into_rgba8();
+
+    format!("#{red:02x}{green:02x}{blue:02x}")
+}
+
+/// Harita zemininin kısa tanımı.
+pub(crate) fn backdrop_note(backdrop: Backdrop) -> &'static str {
+    match backdrop {
+        Backdrop::Theme => "Koyu temada arduvaz, aydınlık temada kâğıt.",
+        Backdrop::Slate => "AutoCAD'in koyu gri-mavi model alanı; göz yormaz.",
+        Backdrop::Black => "Klasik AutoCAD: saf siyah zemin, parlak çizgiler.",
+        Backdrop::Paper => "Beyaza yakın zemin; çıktıya en yakın görünüm.",
     }
 }
 

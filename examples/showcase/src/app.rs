@@ -8,13 +8,13 @@ use iced::{Event, Point, Size, Subscription, Task, Theme, event, keyboard, windo
 
 use kentos_rc::attribute::query::Edit;
 use kentos_rc::attribute::{DateTime, Field, FieldKind, ObjectId, Query, Value, text};
-use kentos_rc::spatial::model_space::{self, Options};
+use kentos_rc::spatial::model_space::{self, Backdrop, Options};
 use kentos_rc::spatial::{
     Bounds, Draft, Feature, FeatureRef, Geometry, Layer, LonLat, Measurement, Selection,
     SelectionMode, Tool, Viewport, feature, format, query,
 };
 use kentos_rc::theme::typography::{self, Typography};
-use kentos_rc::theme::{self, Mode};
+use kentos_rc::theme::{self, Accent, Mode};
 use kentos_rc::widget::command_line::{self, Entry};
 use kentos_rc::widget::floating::{self, Windows};
 use kentos_rc::widget::{Toast, Toasts, inspector};
@@ -104,6 +104,9 @@ pub struct Showcase {
     pub(crate) view_cube: bool,
     pub(crate) cube_rotation: f32,
     pub(crate) mode: Mode,
+    /// Vurgu rengi ve harita zemini.
+    pub(crate) accent: Accent,
+    pub(crate) backdrop: Backdrop,
     /// Yazı ailesi ve boyutu; kütüphanenin genel yazı ayarıyla aynıdır.
     pub(crate) typography: Typography,
     /// Yan panelin genişliği ve panellerin açık ya da kapalı olması.
@@ -274,6 +277,8 @@ impl Showcase {
             view_cube: true,
             cube_rotation: 0.6,
             mode: Mode::Dark,
+            accent: Accent::default(),
+            backdrop: Backdrop::default(),
             typography: typography::current(),
             dock: DockLayout::default(),
             settings_path: None,
@@ -305,6 +310,8 @@ impl Showcase {
     pub fn boot(settings: Settings, path: Option<PathBuf>) -> Self {
         Self {
             mode: settings.mode,
+            accent: settings.accent,
+            backdrop: settings.backdrop,
             typography: typography::current(),
             dock: settings.dock,
             settings_path: path,
@@ -313,7 +320,7 @@ impl Showcase {
     }
 
     pub fn theme(&self) -> Theme {
-        theme::theme(self.mode)
+        theme::theme(self.mode, self.accent)
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
@@ -640,6 +647,24 @@ impl Showcase {
             Message::CommandHistoryToggled => self.command_expanded = !self.command_expanded,
             Message::Keyword(keyword) => self.keyword(keyword),
 
+            Message::AccentChanged(accent) => {
+                self.pending = None;
+
+                if accent != self.accent {
+                    self.accent = accent;
+                    self.log(format!("Vurgu rengi: {}.", accent.name()));
+                    self.save_settings();
+                }
+            }
+            Message::BackdropChanged(backdrop) => {
+                self.pending = None;
+
+                if backdrop != self.backdrop {
+                    self.backdrop = backdrop;
+                    self.log(format!("Harita zemini: {}.", backdrop.name()));
+                    self.save_settings();
+                }
+            }
             Message::TypographyChanged(typography) => self.set_typography(typography),
             Message::TextSize(step) => {
                 let size = match step {
@@ -1861,6 +1886,8 @@ impl Showcase {
             let name = match pending {
                 Pending::Typeface => command::name(Command::Typeface),
                 Pending::TextSize => command::name(Command::TextSize),
+                Pending::Accent => command::name(Command::Accent),
+                Pending::Backdrop => command::name(Command::Backdrop),
             };
 
             self.log(format!("{name} iptal edildi."));
@@ -1941,6 +1968,8 @@ impl Showcase {
 
         let settings = Settings {
             mode: self.mode,
+            accent: self.accent,
+            backdrop: self.backdrop,
             typography: self.typography,
             dock: self.dock,
         };
@@ -1997,6 +2026,19 @@ impl Showcase {
 
         if let Some(keyword) = self.prompt().and_then(|prompt| prompt.find(input).cloned()) {
             return self.update(keyword);
+        }
+
+        // VURGU beklerken seçeneklerin dışında #RRGGBB de yazılabilir.
+        if self.pending == Some(Pending::Accent) {
+            return match Accent::parse(input) {
+                Some(accent) => self.update(Message::AccentChanged(accent)),
+                None => {
+                    self.error(format!(
+                        "{input}: renk #RRGGBB biçiminde yazılır (ör. #e8618c) ya da hazır renklerden biri seçilir."
+                    ));
+                    Task::none()
+                }
+            };
         }
 
         if let Some(location) = command::coordinates(input) {
@@ -2143,6 +2185,8 @@ impl Showcase {
             Command::New => self.run_app_command(AppCommand::New),
             Command::Pane(pane) => self.open_pane(pane),
             Command::Import => return self.update(Message::ImportOpened),
+            Command::Accent => self.pending = Some(Pending::Accent),
+            Command::Backdrop => self.pending = Some(Pending::Backdrop),
             Command::Typeface => self.pending = Some(Pending::Typeface),
             Command::TextSize => self.pending = Some(Pending::TextSize),
             Command::Help => {
@@ -2562,6 +2606,37 @@ mod tests {
         let _ = app.update(Message::PropertiesEdited(properties::Edit::Opacity(0.3)));
         let _ = app.update(Message::PropertiesClosed);
         assert_eq!(app.layers[1].opacity, 1.0);
+    }
+
+    #[test]
+    fn accent_and_backdrop_commands_offer_presets_and_hex_codes() {
+        let mut app = Showcase::new();
+
+        submit(&mut app, "vurgu");
+        assert_eq!(app.pending, Some(Pending::Accent));
+
+        // Hazır renk adıyla ya da baş harfleriyle seçilir.
+        submit(&mut app, "tur");
+        assert_eq!(app.accent, Accent::Turquoise);
+        assert_eq!(app.pending, None);
+
+        // #RRGGBB de yazılabilir; yanlış yazım hata verir, komut sürer.
+        submit(&mut app, "renk");
+        submit(&mut app, "#zz0000");
+        assert!(matches!(app.history.last(), Some(Entry::Error(_))));
+        assert_eq!(app.pending, Some(Pending::Accent));
+
+        submit(&mut app, "#e8618c");
+        assert_eq!(app.accent, Accent::Custom(0xe8618c));
+        assert_eq!(
+            kentos_rc::theme::Tokens::of(&app.theme()).accent,
+            Accent::Custom(0xe8618c).color(Mode::Dark)
+        );
+
+        submit(&mut app, "zemin");
+        assert_eq!(app.pending, Some(Pending::Backdrop));
+        submit(&mut app, "siyah");
+        assert_eq!(app.backdrop, Backdrop::Black);
     }
 
     #[test]

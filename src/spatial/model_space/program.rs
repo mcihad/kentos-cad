@@ -4,7 +4,7 @@ use iced::keyboard::{self, Modifiers};
 use iced::widget::canvas::{self, Frame, Geometry};
 use iced::{Color, Point, Rectangle, Renderer, Size, Theme, Vector, mouse};
 
-use super::{CHROME_GAP, Event, OVERLAY_PADDING, Options, Style};
+use super::{Backdrop, CHROME_GAP, Event, OVERLAY_PADDING, Options, Style};
 use crate::spatial::{Bounds, FeatureRef, Layer, LonLat, Selection, Tool, Viewport, query};
 use crate::widget::navigation_bar;
 
@@ -91,6 +91,7 @@ pub(super) struct Program<'a, Message> {
     pub options: Options,
     pub prompt: Option<&'a str>,
     pub chrome: Chrome,
+    pub backdrop: Backdrop,
     pub on_event: Box<dyn Fn(Event) -> Message + 'a>,
 }
 
@@ -341,7 +342,7 @@ impl<Message> canvas::Program<Message> for Program<'_, Message> {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
-        let style = Style::of(theme);
+        let style = Style::with(self.backdrop, theme);
         let mut frame = Frame::new(renderer, bounds.size());
 
         // Artı imleç ve önizlemeler yalnızca imleç alanın üzerindeyken ve

@@ -2,11 +2,15 @@
 
 use iced::Color;
 
+use super::accent::{contrast, mix};
+
 /// Arayüzün bütün renkleri.
 ///
 /// Bileşenler hiçbir rengi doğrudan kullanmaz; stil fonksiyonları o anki
 /// temadan [`Tokens::of`] ile belirteçleri alır. Böylece koyu ve aydınlık
-/// temalar, ileride eklenecek temalar dahil, tek yerden yönetilir.
+/// temalar, ileride eklenecek temalar dahil, tek yerden yönetilir. Vurgu
+/// rengi temanın `primary` rengidir ([`theme`](super::theme)); vurgunun
+/// üzerine gelme tonu ve vurgu zeminindeki yazı ondan türetilir.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Tokens {
     pub is_dark: bool,
@@ -96,12 +100,39 @@ impl Tokens {
         danger: hex(0xcc3a31),
     };
 
-    /// Temanın koyu ya da aydınlık olmasına göre belirteçleri döndürür.
+    /// Temanın belirteçleri: koyu ya da aydınlık set, temanın vurgu
+    /// rengiyle.
     pub fn of(theme: &iced::Theme) -> Self {
-        if theme.extended_palette().is_dark {
+        let base = if theme.extended_palette().is_dark {
             Self::DARK
         } else {
             Self::LIGHT
+        };
+
+        base.with_accent(theme.palette().primary)
+    }
+
+    /// Vurgu rengi verilmiş belirteçler. Üzerine gelme tonu koyu temada
+    /// açılarak, aydınlıkta koyulaşarak bulunur. Vurgu zeminindeki yazı
+    /// beyazdır; vurgu beyazla okunamayacak kadar açıksa koyu olur.
+    pub fn with_accent(self, accent: Color) -> Self {
+        let accent_hover = if self.is_dark {
+            mix(accent, Color::WHITE, 0.18)
+        } else {
+            mix(accent, Color::BLACK, 0.16)
+        };
+
+        let on_accent = if contrast(Color::WHITE, accent) >= 2.8 {
+            Color::WHITE
+        } else {
+            hex(0x16181b)
+        };
+
+        Self {
+            accent,
+            accent_hover,
+            on_accent,
+            ..self
         }
     }
 

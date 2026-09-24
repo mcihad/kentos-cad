@@ -27,7 +27,7 @@ mod program;
 mod render;
 mod style;
 
-pub use style::Style;
+pub use style::{Backdrop, Style};
 
 use iced::keyboard::Modifiers;
 use iced::widget::{Column, canvas, container, stack};
@@ -133,6 +133,7 @@ pub struct ModelSpace<'a, Message> {
     prompt: Option<&'a str>,
     view_cube: Option<ViewCube>,
     navigation: Option<NavigationBar<'a, Message>>,
+    backdrop: Backdrop,
     on_event: Box<dyn Fn(Event) -> Message + 'a>,
 }
 
@@ -155,8 +156,15 @@ impl<'a, Message: Clone + 'a> ModelSpace<'a, Message> {
             prompt: None,
             view_cube: None,
             navigation: None,
+            backdrop: Backdrop::Theme,
             on_event: Box::new(on_event),
         }
+    }
+
+    /// Model alanının zemini; varsayılanı temaya uyar.
+    pub fn backdrop(mut self, backdrop: Backdrop) -> Self {
+        self.backdrop = backdrop;
+        self
     }
 
     pub fn tool(mut self, tool: Tool) -> Self {
@@ -238,6 +246,7 @@ impl<'a, Message: Clone + 'a> From<ModelSpace<'a, Message>> for Element<'a, Mess
             options: model_space.options,
             prompt: model_space.prompt,
             chrome,
+            backdrop: model_space.backdrop,
             on_event: model_space.on_event,
         };
 

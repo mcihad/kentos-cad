@@ -48,6 +48,10 @@ pub enum Command {
     Import,
     New,
     Help,
+    /// Vurgu rengini seçtirir.
+    Accent,
+    /// Harita zeminini seçtirir.
+    Backdrop,
     /// Yazı ailesini seçtirir.
     Typeface,
     /// Yazı boyutunu seçtirir.
@@ -329,6 +333,22 @@ const COMMANDS: &[(Command, Info)] = &[
             .description(
                 "Klavye kısayollarını ve komut kutusunun tuşlarını gösterir. Kısayolu F1.",
             ),
+    ),
+    (
+        Command::Accent,
+        Info::new("VURGU", "Vurgu rengi")
+            .aliases(&["ACCENT", "RENK"])
+            .icon(Icon::Drop)
+            .description(
+                "Seçim, etkin araç ve düğmelerin rengini seçtirir: sekiz hazır renk ya da #RRGGBB.",
+            ),
+    ),
+    (
+        Command::Backdrop,
+        Info::new("ZEMIN", "Harita zemini")
+            .aliases(&["ARKAPLAN", "BACKGROUND"])
+            .icon(Icon::Layers)
+            .description("Model alanının zeminini seçtirir: temaya uyan, arduvaz, siyah ya da kâğıt."),
     ),
     (
         Command::Typeface,

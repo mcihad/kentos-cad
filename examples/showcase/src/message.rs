@@ -7,8 +7,9 @@ use iced::keyboard::Modifiers;
 
 use kentos_rc::attribute::query;
 use kentos_rc::icon::Icon;
-use kentos_rc::spatial::model_space;
+use kentos_rc::spatial::model_space::{self, Backdrop};
 use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
+use kentos_rc::theme::Accent;
 use kentos_rc::theme::typography::{self, Typography};
 use kentos_rc::widget::floating::{self, Placement};
 use kentos_rc::widget::{inspector, toast};
@@ -128,6 +129,12 @@ pub enum Message {
     CommandHistoryToggled,
     /// Etkin komutun istemindeki seçenek.
     Keyword(Keyword),
+
+    // Renk ve zemin
+    /// Vurgu rengini değiştirir: hazır renk ya da #RRGGBB.
+    AccentChanged(Accent),
+    /// Harita zeminini değiştirir.
+    BackdropChanged(Backdrop),
 
     // Yazı
     /// Yazı ayarını değiştirir: aile, eş aralıklı aile ya da boyut.
@@ -317,6 +324,10 @@ pub enum Pending {
     Typeface,
     /// PUNTO: gövde metninin boyutu.
     TextSize,
+    /// VURGU: vurgu rengi; hazır renk ya da #RRGGBB.
+    Accent,
+    /// ZEMIN: harita zemini.
+    Backdrop,
 }
 
 /// Çizim ve ölçüm istemlerinin seçenekleri.

@@ -18,8 +18,9 @@ use iced::{Point, Size};
 use kentos_rc::attribute::query::Edit;
 use kentos_rc::attribute::{Combinator, Date, ObjectId, Operator, Value};
 use kentos_rc::snapshot::{Input, Snapshot};
-use kentos_rc::spatial::model_space::Event as ModelSpace;
+use kentos_rc::spatial::model_space::{Backdrop, Event as ModelSpace};
 use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
+use kentos_rc::theme::Accent;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::widget::inspector::Event as Inspector;
 
@@ -114,6 +115,8 @@ Seçenekler:
   --boyut <G>x<Y>       pencere boyutu (varsayılan: 1440x900)
   --olcek <katsayı>     piksel yoğunluğu (varsayılan: 1)
   --tema acik|koyu      tema (varsayılan: koyu)
+  --vurgu <renk>        mavi, turkuaz, yesil, kehribar, turuncu, pembe, mor, gri ya da #RRGGBB
+  --zemin <ad>          harita zemini: tema, arduvaz, siyah, kagit
   --yazi <aile>         ibm-plex-sans, inter, plus-jakarta-sans
   --esaralikli <aile>   ibm-plex-mono, jetbrains-mono
   --punto <boyut>       gövde metninin boyutu, 11-18 (varsayılan: 13)
@@ -137,6 +140,8 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let mut size = WINDOW_SIZE;
     let mut scale = 1.0;
     let mut light = false;
+    let mut accent = None;
+    let mut backdrop = None;
     let mut inputs = Vec::new();
     let mut typography = Typography::DEFAULT;
 
@@ -165,6 +170,20 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
             "--boyut" => size = parse_size(&value()?)?,
             "--olcek" => scale = parse_number(&value()?)?,
             "--tema" => light = value()? == "acik",
+            "--vurgu" => {
+                let name = value()?;
+                accent = Some(
+                    Accent::parse(&name)
+                        .ok_or_else(|| format!("Bilinmeyen vurgu rengi: {name}"))?,
+                );
+            }
+            "--zemin" => {
+                let name = value()?;
+                backdrop = Some(
+                    Backdrop::parse(&name)
+                        .ok_or_else(|| format!("Bilinmeyen harita zemini: {name}"))?,
+                );
+            }
             "--yazi" => {
                 let name = value()?;
                 typography.family = Family::ALL
@@ -223,6 +242,14 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
 
     if light {
         let _ = app.update(Message::ToggleTheme);
+    }
+
+    if let Some(accent) = accent {
+        let _ = app.update(Message::AccentChanged(accent));
+    }
+
+    if let Some(backdrop) = backdrop {
+        let _ = app.update(Message::BackdropChanged(backdrop));
     }
 
     let mut snapshot = Snapshot::new(size)

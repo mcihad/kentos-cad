@@ -1,4 +1,4 @@
-//! Kalıcı ayarlar: tema ve yazı ayarı.
+//! Kalıcı ayarlar: tema, vurgu rengi, harita zemini, yazı ve yan panel.
 //!
 //! Ayarlar kullanıcının yapılandırma klasöründe düz bir metin dosyasında
 //! tutulur (`$XDG_CONFIG_HOME/kentos-cad/ayarlar`, yoksa
@@ -7,6 +7,8 @@
 //! ```text
 //! # KentOS CAD ayarları
 //! tema = koyu
+//! vurgu = turuncu
+//! harita-zemini = siyah
 //! yazi-ailesi = inter
 //! es-aralikli = ibm-plex-mono
 //! yazi-boyutu = 14
@@ -21,8 +23,9 @@
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 
-use kentos_rc::theme::Mode;
+use kentos_rc::spatial::model_space::Backdrop;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
+use kentos_rc::theme::{Accent, Mode};
 
 use crate::app::DOCK_WIDTH;
 
@@ -30,6 +33,10 @@ use crate::app::DOCK_WIDTH;
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Settings {
     pub mode: Mode,
+    /// Vurgu rengi: hazır renk ya da #RRGGBB.
+    pub accent: Accent,
+    /// Harita zemini; varsayılanı temaya uyar.
+    pub backdrop: Backdrop,
     pub typography: Typography,
     pub dock: DockLayout,
 }
@@ -102,6 +109,16 @@ impl Settings {
                         _ => Mode::Dark,
                     };
                 }
+                "vurgu" => {
+                    if let Some(accent) = Accent::parse(value) {
+                        settings.accent = accent;
+                    }
+                }
+                "harita-zemini" => {
+                    if let Some(backdrop) = Backdrop::parse(value) {
+                        settings.backdrop = backdrop;
+                    }
+                }
                 "yazi-ailesi" => {
                     if let Some(family) = Family::ALL
                         .into_iter()
@@ -152,8 +169,10 @@ impl Settings {
         let state = |collapsed: bool| if collapsed { "kapali" } else { "acik" };
 
         format!(
-            "# KentOS CAD ayarları\ntema = {mode}\nyazi-ailesi = {}\nes-aralikli = {}\nyazi-boyutu = {}\n\
-             yan-panel = {}\nkatmanlar = {}\nozellikler = {}\n",
+            "# KentOS CAD ayarları\ntema = {mode}\nvurgu = {}\nharita-zemini = {}\nyazi-ailesi = {}\n\
+             es-aralikli = {}\nyazi-boyutu = {}\nyan-panel = {}\nkatmanlar = {}\nozellikler = {}\n",
+            self.accent.key(),
+            self.backdrop.key(),
             key_of(self.typography.family.name()),
             key_of(self.typography.mono.name()),
             self.typography.size,
@@ -178,6 +197,8 @@ mod tests {
     fn settings_round_trip() {
         let settings = Settings {
             mode: Mode::Light,
+            accent: Accent::Custom(0xff8800),
+            backdrop: Backdrop::Black,
             typography: Typography {
                 family: Family::PlusJakartaSans,
                 mono: Mono::JetBrainsMono,
@@ -197,10 +218,12 @@ mod tests {
     fn broken_lines_keep_the_defaults() {
         let settings = Settings::parse(
             "# yorum\ntema = mor\nyazi-ailesi = comic-sans\nyazi-boyutu = 99\nbilinmeyen = 1\n\
-             bozuk satır\nyan-panel = 5000\nkatmanlar = belki",
+             bozuk satır\nyan-panel = 5000\nkatmanlar = belki\nvurgu = lacivert\nharita-zemini = mavi",
         );
 
         assert_eq!(settings.mode, Mode::Dark);
+        assert_eq!(settings.accent, Accent::Blue);
+        assert_eq!(settings.backdrop, Backdrop::Theme);
         assert_eq!(settings.typography.family, Family::IbmPlexSans);
         assert_eq!(settings.typography.size, 18.0);
         assert_eq!(settings.dock.width, 720.0);
@@ -213,6 +236,8 @@ mod tests {
         let path = folder.join("alt").join("ayarlar");
         let settings = Settings {
             mode: Mode::Dark,
+            accent: Accent::Violet,
+            backdrop: Backdrop::Paper,
             typography: Typography {
                 family: Family::Inter,
                 ..Typography::DEFAULT

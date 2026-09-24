@@ -1,14 +1,16 @@
 //! Şerit: sekmeler ve Giriş sekmesinin grupları.
 
-use iced::widget::{button, column, container, pick_list, text, tooltip};
-use iced::{Center, Element, Fill, Font};
+use iced::widget::{button, column, container, pick_list, row, space, text, tooltip};
+use iced::{Border, Center, Color, Element, Fill, Font, Theme};
 
 use kentos_rc::icon::Icon;
 use kentos_rc::label;
 use kentos_rc::spatial::Tool;
+use kentos_rc::spatial::model_space::{self, Backdrop};
 use kentos_rc::style;
 use kentos_rc::theme::typography;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
+use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::ribbon::{self, AppButton, Button, Field, Group, Ribbon, Stack};
 use kentos_rc::widget::{Tip, swatch, tip};
 
@@ -16,7 +18,7 @@ use crate::app::Showcase;
 use crate::command::{self, Command};
 use crate::gallery::Page;
 use crate::message::{EXPORT_FORMATS, Message, Pane, QueryPurpose, RibbonTab, SizeStep};
-use crate::view::family_note;
+use crate::view::{backdrop_note, family_note, hex_of};
 
 impl Showcase {
     pub(super) fn ribbon(&self) -> Element<'_, Message> {
@@ -46,6 +48,7 @@ impl Showcase {
                 .group(view_group("Harita"))
                 .group(self.windows_group())
                 .group(self.theme_group())
+                .group(self.backdrop_group())
                 .group(self.typeface_group())
                 .group(self.mono_group())
                 .group(self.size_group())
@@ -323,6 +326,8 @@ impl Showcase {
             )
     }
 
+    /// Tema kipi ve vurgu rengi: sekiz hazır renk, altında kendi rengini
+    /// yazdıran düğme.
     fn theme_group(&self) -> Group<'_, Message> {
         let (icon, label) = if self.mode.is_dark() {
             (Icon::Contrast, "Aydınlık\ntema")
@@ -330,7 +335,53 @@ impl Showcase {
             (Icon::Contrast, "Koyu\ntema")
         };
 
-        Group::new("Tema").push(Button::large(icon, label).on_press(Message::ToggleTheme))
+        let chips = |presets: &[Accent]| {
+            presets.iter().fold(ribbon::Row::new(), |row, &accent| {
+                row.push(accent_chip(accent, self.mode, self.accent == accent))
+            })
+        };
+
+        let custom = match self.accent {
+            Accent::Custom(_) => Button::small(Icon::Drop, self.accent.name()).active(true),
+            _ => Button::small(Icon::Drop, "Özel renk…"),
+        }
+        .on_press(Message::CommandRun(command::name(Command::Accent).to_owned()))
+        .tip(
+            Tip::new("Özel vurgu rengi")
+                .body("Komut kutusuna #RRGGBB yazın; renk temanın zemininde okunur kalacak kadar ayarlanır.")
+                .detail(format!("Komut: {}", command::name(Command::Accent))),
+        );
+
+        Group::new("Tema")
+            .push(Button::large(icon, label).on_press(Message::ToggleTheme))
+            .push(
+                Stack::new()
+                    .push(chips(&Accent::PRESETS[..4]))
+                    .push(chips(&Accent::PRESETS[4..]))
+                    .push(custom),
+            )
+    }
+
+    /// Harita zemini: arayüzün temasından bağımsız; önizleme karoları.
+    fn backdrop_group(&self) -> Group<'_, Message> {
+        let tile = |backdrop: Backdrop| backdrop_tile(backdrop, self.backdrop == backdrop);
+
+        // Karolar sabit boyuttadır; hücreler yığının genişliğini paylaşır.
+        Group::new("Harita zemini").push(
+            Stack::new()
+                .width(78)
+                .push(
+                    ribbon::Row::new()
+                        .push(tile(Backdrop::Theme))
+                        .push(tile(Backdrop::Slate)),
+                )
+                .push(
+                    ribbon::Row::new()
+                        .push(tile(Backdrop::Black))
+                        .push(tile(Backdrop::Paper)),
+                )
+                .push(label::caption(self.backdrop.name())),
+        )
     }
 
     /// Arayüz metninin ailesi: her karo "Aa" örneğini kendi ailesiyle yazar.
@@ -465,6 +516,87 @@ fn view_group<'a>(title: &'a str) -> Group<'a, Message> {
                 .push(Button::small(Icon::ZoomOut, "Uzaklaştır").on_press(Message::ZoomOut))
                 .push(Button::small(Icon::Home, "Sıfırla").on_press(Message::ResetView)),
         )
+}
+
+/// Vurgu rengi düğmesi: yuvarlak renk örneği; seçili renk vurgu halkasıyla.
+fn accent_chip<'a>(accent: Accent, mode: Mode, selected: bool) -> Element<'a, Message> {
+    let color = accent.color(mode);
+
+    let chip = container(space::horizontal())
+        .width(14)
+        .height(14)
+        .style(move |_: &Theme| container::Style {
+            background: Some(color.into()),
+            border: Border {
+                color: Color::BLACK.scale_alpha(0.3),
+                width: 1.0,
+                radius: 7.0.into(),
+            },
+            ..container::Style::default()
+        });
+
+    tip(
+        button(chip)
+            .on_press(Message::AccentChanged(accent))
+            .padding(2)
+            .style(move |theme, status| {
+                let mut style = style::button::swatch(selected)(theme, status);
+                style.border.radius = 10.0.into();
+                style
+            }),
+        Tip::new(accent.name()).body(format!(
+            "Koyu temada {}, aydınlık temada {}.",
+            hex_of(accent.color(Mode::Dark)),
+            hex_of(accent.color(Mode::Light))
+        )),
+        tooltip::Position::Bottom,
+    )
+}
+
+/// Harita zemini karosu: zeminin rengi; "Temaya uy" yarı arduvaz yarı kâğıt.
+fn backdrop_tile<'a>(backdrop: Backdrop, selected: bool) -> Element<'a, Message> {
+    let fill = |color: Color, width: f32| {
+        container(space::horizontal())
+            .width(width)
+            .height(16)
+            .style(move |_: &Theme| container::Style {
+                background: Some(color.into()),
+                ..container::Style::default()
+            })
+    };
+
+    let preview: Element<'a, Message> = match backdrop {
+        Backdrop::Theme => row![
+            fill(model_space::Style::DARK.background, 13.0),
+            fill(model_space::Style::LIGHT.background, 13.0),
+        ]
+        .into(),
+        Backdrop::Slate => fill(model_space::Style::DARK.background, 26.0).into(),
+        Backdrop::Black => fill(model_space::Style::BLACK.background, 26.0).into(),
+        Backdrop::Paper => fill(model_space::Style::LIGHT.background, 26.0).into(),
+    };
+
+    let framed = container(preview)
+        .padding(1)
+        .style(|theme: &Theme| container::Style {
+            border: Border {
+                color: kentos_rc::theme::Tokens::of(theme).border,
+                width: 1.0,
+                radius: 2.0.into(),
+            },
+            ..container::Style::default()
+        });
+
+    tip(
+        button(framed)
+            .on_press(Message::BackdropChanged(backdrop))
+            .padding(2)
+            .style(style::button::swatch(selected)),
+        Tip::new(backdrop.name())
+            .body(backdrop_note(backdrop))
+            .detail(format!("Komut: {}", command::name(Command::Backdrop))),
+        tooltip::Position::Bottom,
+    )
 }
 
 /// Büyük düğmelerde uzun etiketler iki satıra bölünür.

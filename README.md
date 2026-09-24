@@ -20,7 +20,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── query.rs         Query: "öznitelikle seç" ve tablo filtresi koşulları
 │   ├── time.rs          Date, Time, DateTime (harici bağımlılık olmadan)
 │   └── text.rs, number.rs  Türkçe arama, sıralama ve sayı yazımı
-├── theme/               renk belirteçleri (Tokens), yazı ayarı ve tip ölçeği, iced teması
+├── theme/               renk belirteçleri (Tokens), vurgu rengi (Accent), yazı ayarı, iced teması
 ├── style/               iced stil fonksiyonları: button, container, text, field
 ├── icon/                16×16 ızgarada çizilmiş vektör ikon seti
 ├── label.rs             tip ölçeğine bağlı hazır metin biçimleri
@@ -319,6 +319,37 @@ StatusBar::new()
     .push(Readout::new(label::mono(scale)).menu(standard_scales))
 ```
 
+## Renkler
+
+- **Vurgu rengi.** Etkin araç, seçim, odak, birincil düğmeler, öndeki
+  pencerenin çizgisi ve haritadaki seçim ve tutamaçlar vurgu rengindedir.
+  Sekiz hazır renk vardır: mavi, turkuaz, yeşil, kehribar, turuncu, pembe,
+  mor, gri. Her birinin koyu ve aydınlık tema için ayrı tonu seçilmiştir.
+  Kendi renginiz `VURGU` komutuyla `#RRGGBB` olarak yazılır; renk temanın
+  zemininde okunur kalacak kadar (en az 4:1 karşıtlık) açılır ya da
+  koyulaştırılır. Vurgu zeminindeki yazı, rengin açıklığına göre beyaz ya da
+  koyudur. iced'in kendi bileşenleri (onay kutusu, kaydırıcı) de aynı rengi
+  alır: vurgu, temanın `primary` rengidir.
+- **Harita zemini.** Arayüzün temasından bağımsız seçilir: temaya uyan (koyu
+  temada arduvaz, aydınlıkta kâğıt), arduvaz, klasik AutoCAD siyahı ya da
+  kâğıt. Koyu arayüzde kâğıt zeminli harita da olur.
+- **Vitrinde.** Görünüm sekmesindeki Tema grubunda renk düğmeleri ve "Özel
+  renk…", yanında Harita zemini karoları var; `VURGU` ve `ZEMIN` komutları da
+  aynı seçenekleri sunar. Seçim ayar dosyasında saklanır (`vurgu = turuncu`,
+  `harita-zemini = siyah`).
+
+```rust
+use kentos_rc::spatial::model_space::Backdrop;
+use kentos_rc::theme::{self, Accent, Mode};
+
+iced::application(App::new, App::update, App::view)
+    .theme(|app: &App| theme::theme(app.mode, app.accent))
+
+Accent::parse("#e8618c"); // Some(Accent::Custom(0xe8618c))
+
+ModelSpace::new(viewport, &layers, Message::ModelSpace).backdrop(Backdrop::Black)
+```
+
 ## Yazı tipleri ve boyut
 
 Yazı ailesi ve boyutu çalışırken değişir; bütün bileşenler, harita etiketleri
@@ -389,6 +420,8 @@ cargo run -- snapshot onay.png --senaryo onay
 cargo run -- snapshot bos.png --senaryo bos-durumlar
 cargo run -- snapshot sihirbaz.png --senaryo sihirbaz --sayfa 2
 cargo run -- snapshot ozellikler.png --senaryo ozellikler
+cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah
+cargo run -- snapshot mor.png --senaryo secim --tema acik --vurgu "#7c5cff" --zemin arduvaz
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 
@@ -397,7 +430,8 @@ cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ## İlkeler
 
 - **Renkler temadan gelir.** Bileşenler renkleri `Tokens::of(&theme)` ile okur;
-  uygulama yalnızca `theme::theme(Mode::Dark)` verir, renk taşımaz.
+  uygulama yalnızca `theme::theme(Mode::Dark, Accent::Blue)` verir, renk
+  taşımaz.
 - **Bileşenler `Message` türünden bağımsızdır** ve yapıcı (builder) desenini
   izler; hepsi `Element`'e dönüşür.
 - **Stil fonksiyonları iced imzalarını kullanır**; kentos-rc bileşenleri

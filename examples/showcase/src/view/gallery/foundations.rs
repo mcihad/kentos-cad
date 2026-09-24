@@ -1,6 +1,6 @@
 //! Temel sayfalar: renkler, yazı ve ikonlar.
 
-use iced::widget::{button, column, container, row, text};
+use iced::widget::{button, column, container, row, space, text};
 use iced::{Bottom, Center, Color, Element, Fill};
 
 use kentos_rc::icon::{Icon, Tone, icon};
@@ -8,6 +8,7 @@ use kentos_rc::label;
 use kentos_rc::spatial::model_space;
 use kentos_rc::style;
 use kentos_rc::theme::typography::{self, Family, Mono, Typography};
+use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::table::{self, Table};
 
 use super::{chip, entry, hex, pressed};
@@ -23,7 +24,7 @@ const FIGURES: &str = "0123456789  41°00'29.5\"K  ±0,05 m  1:25.000  Ø12  ×2
 
 impl Showcase {
     pub(super) fn colors_page(&self) -> Vec<Element<'_, Message>> {
-        let t = self.mode.tokens();
+        let t = self.mode.tokens(self.accent);
 
         let interface = [
             (
@@ -65,11 +66,7 @@ impl Showcase {
             ("danger", t.danger, "Hata ve silme"),
         ];
 
-        let canvas = if self.mode.is_dark() {
-            model_space::Style::DARK
-        } else {
-            model_space::Style::LIGHT
-        };
+        let canvas = model_space::Style::with(self.backdrop, &self.theme());
 
         let model = [
             ("background", canvas.background, "Model alanı zemini"),
@@ -97,6 +94,22 @@ impl Showcase {
 
         vec![
             entry(
+                "Vurgu rengi",
+                "kentos_rc::theme::Accent",
+                "Etkin araç, seçim, odak, birincil düğmeler ve öndeki pencerenin çizgisi vurgu \
+                 rengindedir; haritadaki seçim ve tutamaçlar da. Sekiz hazır rengin koyu ve \
+                 aydınlık tema için ayrı tonları var. Kendi renginiz VURGU komutuyla #RRGGBB \
+                 olarak yazılır ve zeminde okunur kalacak kadar açılır ya da koyulaştırılır. \
+                 Vurgu zeminindeki yazı, rengin açıklığına göre beyaz ya da koyudur. Bir renge \
+                 tıklayarak deneyin.",
+                self.accent_cards(),
+                Some(
+                    "iced::application(App::new, App::update, App::view)\n    \
+                     .theme(|app: &App| theme::theme(app.mode, app.accent))\n\n\
+                     Accent::parse(\"#e8618c\") // Some(Accent::Custom(0xe8618c))",
+                ),
+            ),
+            entry(
                 "Arayüz renkleri",
                 "kentos_rc::theme::Tokens",
                 "Bileşenler renklerini temadan okur; uygulama yalnızca kipi seçer. \
@@ -111,15 +124,78 @@ impl Showcase {
             entry(
                 "Model alanı renkleri",
                 "kentos_rc::spatial::model_space::Style",
-                "Koyu temada AutoCAD'in arduvaz model alanını, aydınlık temada kâğıt \
-                 zemini izler. Katman renkleri kâğıt zeminde biraz koyulaştırılır.",
+                "Zemin arayüzün temasından bağımsız seçilir: temaya uyan (koyu temada \
+                 arduvaz, aydınlıkta kâğıt), arduvaz, klasik AutoCAD siyahı ya da kâğıt. Seçim \
+                 ve tutamaçlar vurgu rengindedir; katman renkleri kâğıt zeminde biraz \
+                 koyulaştırılır. Tablo o anki zemini gösterir.",
                 color_table(&model),
                 Some(
-                    "let colors = model_space::Style::of(theme);\n\
+                    "ModelSpace::new(viewport, &layers, Message::ModelSpace)\n    \
+                     .backdrop(Backdrop::Black)\n\n\
+                     let colors = model_space::Style::with(Backdrop::Black, theme);\n\
                      let stroke = colors.layer_color(layer.color);",
                 ),
             ),
         ]
+    }
+}
+
+impl Showcase {
+    /// Hazır vurgu renkleri: renk, adı, iki temadaki tonu ve vurgu
+    /// zeminindeki yazının örneği. Tıklanınca o renk seçilir.
+    fn accent_cards(&self) -> Element<'_, Message> {
+        let cards = Accent::PRESETS.map(|accent| {
+            let tokens = self.mode.tokens(accent);
+            let selected = self.accent == accent;
+
+            let sample =
+                container(
+                    label::caption("Kaydet").style(move |_: &iced::Theme| text::Style {
+                        color: Some(tokens.on_accent),
+                    }),
+                )
+                .padding([2, 10])
+                .style(move |_: &iced::Theme| container::Style {
+                    background: Some(tokens.accent.into()),
+                    border: iced::border::rounded(2.0),
+                    ..container::Style::default()
+                });
+
+            button(
+                column![
+                    row![
+                        container(space::horizontal()).width(18).height(18).style(
+                            move |_: &iced::Theme| container::Style {
+                                background: Some(tokens.accent.into()),
+                                border: iced::border::rounded(9.0),
+                                ..container::Style::default()
+                            }
+                        ),
+                        label::strong(accent.name()),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                    label::mono_caption(format!(
+                        "{}  {}",
+                        hex(accent.color(Mode::Dark)),
+                        hex(accent.color(Mode::Light))
+                    )),
+                    sample,
+                ]
+                .spacing(6),
+            )
+            .on_press(Message::AccentChanged(accent))
+            .width(Fill)
+            .padding([8, 10])
+            .style(style::button::list_item(selected))
+            .into()
+        });
+
+        // İki sıra, dörder renk.
+        let mut cards = cards.into_iter();
+        let rows = (0..2).map(|_| row(cards.by_ref().take(4)).spacing(8).into());
+
+        column(rows).spacing(8).into()
     }
 }
 
