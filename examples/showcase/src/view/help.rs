@@ -48,6 +48,11 @@ impl Showcase {
             )
             .item("Delete", "Seçili çizimleri siler")
             .item(
+                "Yan panel kenarı",
+                "Sürükleyerek genişletir; çift tık varsayılan genişliğe döndürür",
+            )
+            .item("Panel başlığı", "Tıklayınca paneli açar ya da kapatır")
+            .item(
                 "F1  F2  F3  F7",
                 "Kısayollar, komut geçmişi, nesne yakalama, ızgara",
             )

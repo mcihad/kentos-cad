@@ -22,11 +22,11 @@ use crate::command::{self, Command};
 use crate::gallery::Gallery;
 use crate::layer_tree::{LayerTree, NodeId};
 use crate::message::{
-    AppCommand, CoordinateFormat, Keyword, Message, Pending, QueryPurpose, RECENT_DRAWINGS,
-    RibbonTab, Setting, SizeStep,
+    AppCommand, CoordinateFormat, DockPanel, Keyword, Message, Pending, QueryPurpose,
+    RECENT_DRAWINGS, RibbonTab, Setting, SizeStep,
 };
 use crate::sample;
-use crate::settings::Settings;
+use crate::settings::{DockLayout, Settings};
 use crate::table::{self, TableView};
 
 /// Çizim araçlarının geometri eklediği katman; listenin en üstündedir.
@@ -37,6 +37,9 @@ pub const TIME_ZONE: i32 = 180;
 
 /// Pencerenin açılış boyutu.
 pub const WINDOW_SIZE: Size = Size::new(1440.0, 900.0);
+
+/// Yan panelin varsayılan genişliği, 12 piksellik gövde metninde.
+pub const DOCK_WIDTH: f32 = 332.0;
 
 /// Komut kutusunun giriş kimliği: odaklamak ve komut listesini açmak için.
 pub const COMMAND_INPUT: &str = "komut-kutusu";
@@ -96,6 +99,8 @@ pub struct Showcase {
     pub(crate) mode: Mode,
     /// Yazı ailesi ve boyutu; kütüphanenin genel yazı ayarıyla aynıdır.
     pub(crate) typography: Typography,
+    /// Yan panelin genişliği ve panellerin açık ya da kapalı olması.
+    pub(crate) dock: DockLayout,
     /// Ayarların saklandığı dosya; yoksa ayarlar saklanmaz (testler, ekransız
     /// görüntü).
     settings_path: Option<PathBuf>,
@@ -186,6 +191,7 @@ impl Showcase {
             cube_rotation: 0.6,
             mode: Mode::Dark,
             typography: typography::current(),
+            dock: DockLayout::default(),
             settings_path: None,
             ribbon_tab: RibbonTab::Home,
             app_menu_open: false,
@@ -206,6 +212,7 @@ impl Showcase {
         Self {
             mode: settings.mode,
             typography: typography::current(),
+            dock: settings.dock,
             settings_path: path,
             ..Self::new()
         }
@@ -498,6 +505,18 @@ impl Showcase {
                     size,
                     ..self.typography
                 });
+            }
+
+            Message::DockResized(width) => self.dock.width = width,
+            Message::DockResizeEnded => self.save_settings(),
+            Message::PanelToggled(panel) => {
+                let collapsed = match panel {
+                    DockPanel::Layers => &mut self.dock.layers_collapsed,
+                    DockPanel::Details => &mut self.dock.details_collapsed,
+                };
+
+                *collapsed = !*collapsed;
+                self.save_settings();
             }
 
             Message::CoordinateFormatSelected(format) => self.coordinate_format = format,
@@ -1359,6 +1378,7 @@ impl Showcase {
         let settings = Settings {
             mode: self.mode,
             typography: self.typography,
+            dock: self.dock,
         };
 
         if let Err(error) = settings.save(path) {
@@ -1747,6 +1767,22 @@ mod tests {
 
         submit(&mut app, "punto");
         assert_eq!(app.pending, Some(Pending::TextSize));
+    }
+
+    #[test]
+    fn dock_layout_changes_with_messages() {
+        let mut app = Showcase::new();
+
+        let _ = app.update(Message::DockResized(420.0));
+        let _ = app.update(Message::DockResizeEnded);
+        assert_eq!(app.dock.width, 420.0);
+
+        let _ = app.update(Message::PanelToggled(DockPanel::Layers));
+        assert!(app.dock.layers_collapsed);
+        assert!(!app.dock.details_collapsed);
+
+        let _ = app.update(Message::PanelToggled(DockPanel::Layers));
+        assert!(!app.dock.layers_collapsed);
     }
 
     #[test]

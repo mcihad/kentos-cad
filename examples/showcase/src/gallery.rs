@@ -109,6 +109,8 @@ pub enum Demo {
     ProjectFolderChecked(usize),
     ProjectFileChecked(usize),
     ProjectSelected(ProjectRow),
+    /// Panel örneğinde paneli açar ya da kapatır.
+    PanelToggled(usize),
 }
 
 /// Ağaç örneğindeki satır: klasör ya da dosya.
@@ -185,6 +187,8 @@ pub struct Gallery {
     pub project_open: [bool; 4],
     pub project_checked: [bool; 5],
     pub project_selected: Option<ProjectRow>,
+    /// Panel örneğindeki panellerin kapalı olması.
+    pub panels_collapsed: [bool; 2],
 }
 
 impl Default for Gallery {
@@ -234,6 +238,7 @@ impl Default for Gallery {
             project_open: [true, true, true, false],
             project_checked: [true, true, true, false, true],
             project_selected: Some(ProjectRow::File(2)),
+            panels_collapsed: [false, false],
         }
     }
 }
@@ -349,6 +354,11 @@ impl Gallery {
                 }
             }
             Demo::ProjectSelected(row) => self.project_selected = Some(row),
+            Demo::PanelToggled(panel) => {
+                if let Some(collapsed) = self.panels_collapsed.get_mut(panel) {
+                    *collapsed = !*collapsed;
+                }
+            }
         }
 
         None

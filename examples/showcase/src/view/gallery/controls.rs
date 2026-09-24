@@ -308,6 +308,10 @@ impl Showcase {
             container(
                 Panel::new("Katmanlar", panel_body("Başlık, meta bilgisi ve gövde."))
                     .meta("6 katman")
+                    .collapsible(
+                        self.gallery.panels_collapsed[0],
+                        Message::Gallery(Demo::PanelToggled(0)),
+                    )
             )
             .padding(1)
             .width(300)
@@ -322,6 +326,10 @@ impl Showcase {
                         .on_press(pressed("Odakla"))
                         .padding([1, 8])
                         .style(style::button::flat),
+                )
+                .collapsible(
+                    self.gallery.panels_collapsed[1],
+                    Message::Gallery(Demo::PanelToggled(1)),
                 ),
             )
             .padding(1)
@@ -380,13 +388,18 @@ impl Showcase {
             entry(
                 "Panel ve yuva",
                 "kentos_rc::widget::Panel",
-                "Yan paneller başlık çubuğu ve gövdeden oluşur; yuva (Dock) onları bölücü \
-                 çizgilerle alt alta dizer. Esnek panellerin gövdesi kaydırılabilir.",
+                "Yan paneller başlık çubuğu ve gövdeden oluşur; başlığa tıklayınca açılıp \
+                 kapanır, kapalı panelin yerini açık olanlar doldurur. Yuva (Dock) panelleri \
+                 bölücü çizgilerle alt alta dizer; sol kenarı sürüklenerek genişletilir, \
+                 kenara çift tıklamak varsayılan genişliğe döndürür. Başlıklara tıklayın.",
                 panels,
                 Some(
-                    "Dock::new(332.0).push(\n    Panel::new(\"Katmanlar\", table)\n        \
-                     .meta(\"6 katman\")\n        .height(FillPortion(4))\n        \
-                     .scrollable(),\n)",
+                    "Dock::new(width)\n    .resizable(332.0, Message::DockResized)\n    \
+                     .on_resize_end(Message::DockResizeEnded)\n    \
+                     .push(\n        Panel::new(\"Katmanlar\", table)\n            \
+                     .meta(\"6 katman\")\n            \
+                     .collapsible(collapsed, Message::LayersToggled)\n            \
+                     .height(FillPortion(4))\n            .scrollable(),\n    )",
                 ),
             ),
             entry(

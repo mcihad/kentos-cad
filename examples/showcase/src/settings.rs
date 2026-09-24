@@ -10,6 +10,9 @@
 //! yazi-ailesi = inter
 //! es-aralikli = ibm-plex-mono
 //! yazi-boyutu = 14
+//! yan-panel = 360
+//! katmanlar = acik
+//! ozellikler = kapali
 //! ```
 //!
 //! Bilinmeyen anahtarlar ve bozuk değerler yok sayılır; eksik ayar
@@ -21,11 +24,33 @@ use std::{fs, io};
 use kentos_rc::theme::Mode;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 
+use crate::app::DOCK_WIDTH;
+
 /// Uygulamanın saklanan ayarları.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Settings {
     pub mode: Mode,
     pub typography: Typography,
+    pub dock: DockLayout,
+}
+
+/// Yan panelin düzeni.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DockLayout {
+    /// Genişlik, 12 piksellik gövde metnine göre.
+    pub width: f32,
+    pub layers_collapsed: bool,
+    pub details_collapsed: bool,
+}
+
+impl Default for DockLayout {
+    fn default() -> Self {
+        Self {
+            width: DOCK_WIDTH,
+            layers_collapsed: false,
+            details_collapsed: false,
+        }
+    }
 }
 
 impl Settings {
@@ -102,6 +127,15 @@ impl Settings {
                         .clamped();
                     }
                 }
+                "yan-panel" => {
+                    if let Ok(width) = value.replace(',', ".").parse::<f32>()
+                        && width.is_finite()
+                    {
+                        settings.dock.width = width.clamp(240.0, 720.0);
+                    }
+                }
+                "katmanlar" => settings.dock.layers_collapsed = value == "kapali",
+                "ozellikler" => settings.dock.details_collapsed = value == "kapali",
                 _ => {}
             }
         }
@@ -115,11 +149,17 @@ impl Settings {
             Mode::Light => "aydinlik",
         };
 
+        let state = |collapsed: bool| if collapsed { "kapali" } else { "acik" };
+
         format!(
-            "# KentOS CAD ayarları\ntema = {mode}\nyazi-ailesi = {}\nes-aralikli = {}\nyazi-boyutu = {}\n",
+            "# KentOS CAD ayarları\ntema = {mode}\nyazi-ailesi = {}\nes-aralikli = {}\nyazi-boyutu = {}\n\
+             yan-panel = {}\nkatmanlar = {}\nozellikler = {}\n",
             key_of(self.typography.family.name()),
             key_of(self.typography.mono.name()),
             self.typography.size,
+            self.dock.width.round(),
+            state(self.dock.layers_collapsed),
+            state(self.dock.details_collapsed),
         )
     }
 }
@@ -143,6 +183,11 @@ mod tests {
                 mono: Mono::JetBrainsMono,
                 size: 15.0,
             },
+            dock: DockLayout {
+                width: 410.0,
+                layers_collapsed: true,
+                details_collapsed: false,
+            },
         };
 
         assert_eq!(Settings::parse(&settings.render()), settings);
@@ -151,12 +196,15 @@ mod tests {
     #[test]
     fn broken_lines_keep_the_defaults() {
         let settings = Settings::parse(
-            "# yorum\ntema = mor\nyazi-ailesi = comic-sans\nyazi-boyutu = 99\nbilinmeyen = 1\nbozuk satır",
+            "# yorum\ntema = mor\nyazi-ailesi = comic-sans\nyazi-boyutu = 99\nbilinmeyen = 1\n\
+             bozuk satır\nyan-panel = 5000\nkatmanlar = belki",
         );
 
         assert_eq!(settings.mode, Mode::Dark);
         assert_eq!(settings.typography.family, Family::IbmPlexSans);
         assert_eq!(settings.typography.size, 18.0);
+        assert_eq!(settings.dock.width, 720.0);
+        assert!(!settings.dock.layers_collapsed);
     }
 
     #[test]
@@ -169,6 +217,7 @@ mod tests {
                 family: Family::Inter,
                 ..Typography::DEFAULT
             },
+            dock: DockLayout::default(),
         };
 
         settings.save(&path).expect("ayar dosyası yazılamadı");

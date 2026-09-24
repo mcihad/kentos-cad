@@ -128,6 +128,14 @@ pub enum Message {
     /// Yazıyı bir adım büyütür, küçültür ya da varsayılana döndürür.
     TextSize(SizeStep),
 
+    // Yan panel
+    /// Yan panelin yeni genişliği (12 piksellik gövde metnine göre).
+    DockResized(f32),
+    /// Genişlik sürüklenerek ya da çift tıkla değişti; saklanır.
+    DockResizeEnded,
+    /// Paneli açar ya da kapatır.
+    PanelToggled(DockPanel),
+
     // Durum çubuğu
     CoordinateFormatSelected(CoordinateFormat),
     /// Ölçeği 1:N yapar.
@@ -137,6 +145,14 @@ pub enum Message {
     Escape,
     Tick,
     Quit,
+}
+
+/// Yan paneldeki paneller.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DockPanel {
+    Layers,
+    /// Özellikler (nesne inceleyici) ya da ölçüm.
+    Details,
 }
 
 /// Yazı boyutunun adımı (Ctrl +, Ctrl −, Ctrl 0).

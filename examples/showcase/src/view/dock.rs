@@ -10,10 +10,8 @@ use kentos_rc::spatial::{Geometry, Tool, format};
 use kentos_rc::style;
 use kentos_rc::widget::{Dock, Inspector, Panel, PropertyGrid, Tip, swatch, tip};
 
-use crate::app::{Showcase, TIME_ZONE};
-use crate::message::Message;
-
-const DOCK_WIDTH: f32 = 332.0;
+use crate::app::{DOCK_WIDTH, Showcase, TIME_ZONE};
+use crate::message::{DockPanel, Message};
 
 impl Showcase {
     pub(super) fn dock(&self) -> Element<'_, Message> {
@@ -27,7 +25,9 @@ impl Showcase {
             })
         };
 
-        Dock::new(DOCK_WIDTH)
+        Dock::new(self.dock.width)
+            .resizable(DOCK_WIDTH, Message::DockResized)
+            .on_resize_end(Message::DockResizeEnded)
             .push(
                 Panel::new("Katmanlar", self.layer_panel())
                     .meta(format!(
@@ -36,9 +36,21 @@ impl Showcase {
                         self.layer_tree.groups.len()
                     ))
                     .trailing(self.layer_panel_actions())
+                    .collapsible(
+                        self.dock.layers_collapsed,
+                        Message::PanelToggled(DockPanel::Layers),
+                    )
                     .height(FillPortion(5)),
             )
-            .push(details.height(FillPortion(6)).scrollable())
+            .push(
+                details
+                    .collapsible(
+                        self.dock.details_collapsed,
+                        Message::PanelToggled(DockPanel::Details),
+                    )
+                    .height(FillPortion(6))
+                    .scrollable(),
+            )
             .into()
     }
 

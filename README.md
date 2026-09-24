@@ -28,7 +28,8 @@ src/                     kentos-rc kütüphanesi
 ├── widget/              uygulama çerçevesi
 │   ├── ribbon/          şerit: sekmeler, gruplar, düğmeler, alanlar
 │   ├── app_menu.rs      uygulama menüsü (Office "Dosya" menüsü gibi)
-│   ├── dock.rs          yan panel yuvası ve başlıklı paneller
+│   ├── dock.rs          yan panel yuvası: açılıp kapanan paneller, sürüklenen kenar
+│   ├── sash.rs          boyutlandırma tutamağı (sürükle, çift tıkla sıfırla)
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
 │   ├── tree_view.rs     ağaç tablo: sınırsız derinlik, üç durumlu onay kutusu
 │   ├── context_menu.rs  sağ tık menüsü ve menü düğmesi: alt menü, kısayol, klavye
@@ -92,6 +93,9 @@ Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
   grupları açıksa çizilir. Katmanlar bir alanın değerine göre alt
   katmanlara ayrılır (şehirler bölgeye, yollar türe göre); her alt katmanın
   rengi ve görünürlüğü ayrıdır.
+- **Yan panel.** Sol kenarı sürüklenerek genişletilir, çift tık varsayılan
+  genişliğe döndürür; paneller başlıklarına tıklanınca açılıp kapanır. Düzen
+  ayar dosyasında saklanır.
 - **Bağlam menüleri.** Ağaçtaki gruplara, katmanlara ve alt katmanlara,
   model alanına ve tablo satırlarına sağ tıklanınca ilgili komutlar açılır:
   yakınlaştır, seç, yalnızca bunu göster, opaklık, koordinatı kopyala...
@@ -230,6 +234,7 @@ cargo run -- snapshot secim.png --senaryo secim --tema acik --olcek 2
 cargo run -- snapshot oneri.png --senaryo cizim --tikla 800,851 --yaz c
 cargo run -- snapshot olcek.png --senaryo cizim --tikla 1255,884
 cargo run -- snapshot yazi.png --senaryo secim --yazi inter --esaralikli jetbrains-mono --punto 15
+cargo run -- snapshot panel.png --senaryo secim --surukle 1077,400,877,400 --tikla 1140,483
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 

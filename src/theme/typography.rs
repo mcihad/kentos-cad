@@ -279,6 +279,13 @@ pub fn scaled(px: f32) -> f32 {
     current().scaled(px)
 }
 
+/// [`scaled`]'ın tersi: o anki yazı boyutundaki bir ölçünün 12 piksellik
+/// gövde metnindeki karşılığı (ör. kullanıcının sürükleyerek verdiği panel
+/// genişliğini yazı boyutundan bağımsız saklamak için).
+pub fn unscaled(px: f32) -> f32 {
+    px * BASE / body()
+}
+
 /// Sabit uzunluğu [`scaled`] ile ölçekler; esnek uzunluklar (`Fill`,
 /// `Shrink`) olduğu gibi kalır.
 pub fn length(length: Length) -> Length {

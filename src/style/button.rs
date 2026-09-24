@@ -177,6 +177,22 @@ pub fn category(theme: &Theme, status: Status) -> Style {
     )
 }
 
+/// Açılıp kapanan panelin başlığı: başlık zemininde; üzerine gelince hafif
+/// bir katman.
+pub fn panel_header(theme: &Theme, status: Status) -> Style {
+    let t = Tokens::of(theme);
+
+    Style {
+        background: match status {
+            Status::Hovered => Some(Background::Color(t.layer(0.04))),
+            Status::Pressed => Some(Background::Color(t.layer(0.08))),
+            Status::Active | Status::Disabled => None,
+        },
+        text_color: t.text,
+        ..Style::default()
+    }
+}
+
 /// Takvim ve saat ızgarası hücresinin metin tonu.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CellTone {

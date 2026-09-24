@@ -35,9 +35,7 @@ use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
 use kentos_rc::style;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::widget::command_line::Prompt;
-use kentos_rc::widget::{
-    CommandLine, ContextMenu, NavigationBar, horizontal_divider, vertical_divider,
-};
+use kentos_rc::widget::{CommandLine, ContextMenu, NavigationBar, horizontal_divider};
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
 use crate::command::{self, Command};
@@ -58,9 +56,10 @@ impl Showcase {
                     .push(self.attribute_table());
             }
 
+            // Yan panelin sol kenarı hem bölücü çizgi hem boyutlandırma
+            // tutamağıdır.
             row![
                 drawing.push(self.command_line()).width(Fill).height(Fill),
-                vertical_divider(),
                 self.dock()
             ]
             .height(Fill)
