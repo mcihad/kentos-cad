@@ -11,9 +11,10 @@
 //! ```
 //!
 //! Model alanının üstünde kayan araç pencereleri (ölçüm, koordinata git,
-//! katman stili) durur. Galeri sekmesinde model alanı ve yan paneller yerini
-//! bileşen kataloğuna bırakır. Üst katmanlar önceliğe göre tek tek açılır: uygulama menüsü,
-//! sorgu penceresi, kısayollar.
+//! katman stili), sağ alt köşesinde bildirimler durur. Galeri sekmesinde
+//! model alanı ve yan paneller yerini bileşen kataloğuna bırakır. Üst
+//! katmanlar önceliğe göre tek tek açılır: uygulama menüsü, sorgu
+//! penceresi, kısayollar.
 
 mod app_menu;
 mod attribute_table;
@@ -33,11 +34,13 @@ use iced::widget::{Column, column, container, row, stack};
 use iced::{Element, Fill};
 
 use kentos_rc::icon::Icon;
-use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
+use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format, model_space};
 use kentos_rc::style;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::widget::command_line::Prompt;
-use kentos_rc::widget::{CommandLine, ContextMenu, Floating, NavigationBar, horizontal_divider};
+use kentos_rc::widget::{
+    CommandLine, ContextMenu, Floating, NavigationBar, Toaster, horizontal_divider,
+};
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
 use crate::command::{self, Command};
@@ -46,7 +49,7 @@ use crate::message::{Keyword, Message, Pending, RibbonTab};
 impl Showcase {
     pub fn view(&self) -> Element<'_, Message> {
         let workspace: Element<'_, Message> = if self.ribbon_tab == RibbonTab::Gallery {
-            column![self.gallery(), self.command_line()]
+            column![self.notifications(self.gallery()), self.command_line()]
                 .height(Fill)
                 .into()
         } else {
@@ -124,11 +127,27 @@ impl Showcase {
         let map = ContextMenu::new(model_space, move |position| self.map_menu(position));
 
         // Kayan araç pencereleri haritanın üstündedir; dışlarında harita
-        // çalışmayı sürdürür.
-        Floating::new(map, &self.windows, Message::Window, move |pane| {
+        // çalışmayı sürdürür. Bildirimler pencerelerin de üstünde, sağ alt
+        // köşededir.
+        let floating = Floating::new(map, &self.windows, Message::Window, move |pane| {
             self.pane(pane)
-        })
-        .into()
+        });
+
+        // Bildirimler sağdaki ViewCube ve gezinme çubuğu şeridini açık bırakır.
+        Toaster::new(floating, &self.toasts, Message::ToastClosed)
+            .padding(iced::Padding {
+                right: model_space::chrome_width(self.view_cube, true) + 8.0,
+                ..iced::Padding::new(8.0)
+            })
+            .into()
+    }
+
+    /// İçeriğin sağ alt köşesinde bildirimler.
+    fn notifications<'a>(
+        &'a self,
+        content: impl Into<Element<'a, Message>>,
+    ) -> Element<'a, Message> {
+        Toaster::new(content, &self.toasts, Message::ToastClosed).into()
     }
 
     fn command_line(&self) -> Element<'_, Message> {

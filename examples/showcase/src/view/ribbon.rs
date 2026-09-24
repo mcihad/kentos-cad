@@ -32,7 +32,10 @@ impl Showcase {
         if self.ribbon_tab == RibbonTab::Gallery {
             return ribbon
                 .group(self.gallery_group("Temel", &[Page::Colors, Page::Typography, Page::Icons]))
-                .group(self.gallery_group("Bileşenler", &[Page::Buttons, Page::Data, Page::Frame]))
+                .group(self.gallery_group(
+                    "Bileşenler",
+                    &[Page::Buttons, Page::Data, Page::Frame, Page::Feedback],
+                ))
                 .group(self.gallery_group("CBS ve CAD", &[Page::Attributes, Page::Spatial]))
                 .group(self.interface_group())
                 .into();

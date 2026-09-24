@@ -30,6 +30,8 @@ src/                     kentos-rc kütüphanesi
 │   ├── app_menu.rs      uygulama menüsü (Office "Dosya" menüsü gibi)
 │   ├── dock.rs          yan panel yuvası: açılıp kapanan paneller, sürüklenen kenar
 │   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
+│   ├── toast.rs         bildirimler: önem düzeyi, eylem, üst üste dizilme, süre
+│   ├── severity.rs      geri bildirimin önem düzeyleri (bilgi, başarı, uyarı, hata)
 │   ├── sash.rs          boyutlandırma tutamağı (sürükle, çift tıkla sıfırla)
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
 │   ├── tree_view.rs     ağaç tablo: sınırsız derinlik, üç durumlu onay kutusu
@@ -155,6 +157,32 @@ Floating::new(map, &self.windows, Message::Window, |pane| match pane {
 
 // update: sürükleme, boyutlandırma, öne gelme, daraltma ve kapatma
 Message::Window(event) => self.windows.update(event),
+```
+
+## Geri bildirim
+
+- **Bildirimler.** Haritanın sağ alt köşesinde, ViewCube ve gezinme çubuğunu
+  açık bırakarak üst üste dizilir; en yenisi köşeye en yakındır. İkonun ve
+  alttaki kalan süre çizgisinin rengi önem düzeyidir: bilgi, başarı, uyarı,
+  hata. Bilgi ve başarı 5, uyarı 8 saniyede kapanır; eylemli bildirim ("Geri
+  al") en az 8 saniye durur, hata kendiliğinden kapanmaz. İmleç üzerindeyken
+  süre durur. En fazla üç bildirim görünür; eskiler "2 bildirim daha" olarak
+  sayılır ve hepsi birden kapatılır. Aynı bildirim yinelenirse yenisi
+  eklenmez, sayısı (×2) artar.
+- **Vitrinde.** Çizim silmek geri alınabilir: bildirimdeki "Geri al" çizimleri
+  numaralarıyla geri koyar. Örnek veri silinmeye çalışılınca uyarı, ayarlar
+  yazılamayınca kalıcı hata bildirimi çıkar; kopyalamalar bilgi bildirir.
+
+```rust
+use kentos_rc::widget::{Toast, Toaster, Toasts};
+
+self.toasts.push(Toast::success("2 çizim silindi").action("Geri al", Message::UndoDelete));
+self.toasts.push(Toast::error("Ayarlar kaydedilemedi").body(reason)); // kendiliğinden kapanmaz
+
+Toaster::new(map, &self.toasts, Message::ToastClosed)
+
+// update
+Message::ToastClosed(id) => self.toasts.dismiss(id),
 ```
 
 ## Komut kutusu ve durum çubuğu
@@ -283,6 +311,7 @@ cargo run -- snapshot olcek.png --senaryo cizim --tikla 1255,884
 cargo run -- snapshot yazi.png --senaryo secim --yazi inter --esaralikli jetbrains-mono --punto 15
 cargo run -- snapshot panel.png --senaryo secim --surukle 1077,400,877,400 --tikla 1140,483
 cargo run -- snapshot pencereler.png --senaryo pencereler --bas 400,158 --imlec 406,163
+cargo run -- snapshot bildirim.png --senaryo bildirimler --tikla 903,463
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 

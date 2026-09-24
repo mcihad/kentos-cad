@@ -102,11 +102,19 @@ pub enum Icon {
     Crosshair,
     Cube,
     Layers,
+    // Geri bildirim
+    Info,
+    Success,
+    Error,
+    Stop,
+    Retry,
+    Import,
+    Progress,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 63] = [
+    pub const ALL: [Icon; 70] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -170,6 +178,13 @@ impl Icon {
         Icon::Crosshair,
         Icon::Cube,
         Icon::Layers,
+        Icon::Info,
+        Icon::Success,
+        Icon::Error,
+        Icon::Stop,
+        Icon::Retry,
+        Icon::Import,
+        Icon::Progress,
     ];
 }
 
@@ -186,8 +201,12 @@ pub enum Tone {
     Highlight,
     OnAccent,
     Disabled,
-    /// Hata ve uyarı.
+    /// Hata.
     Danger,
+    /// Tamamlanan iş.
+    Success,
+    /// Dikkat isteyen durum.
+    Warning,
     Custom(Color),
 }
 
@@ -204,6 +223,8 @@ impl Tone {
             Tone::OnAccent => tokens.on_accent,
             Tone::Disabled => tokens.disabled(),
             Tone::Danger => tokens.danger,
+            Tone::Success => tokens.success,
+            Tone::Warning => tokens.warning,
             Tone::Custom(color) => color,
         }
     }

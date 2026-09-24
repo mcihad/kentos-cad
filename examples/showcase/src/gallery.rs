@@ -12,11 +12,13 @@ use kentos_rc::attribute::{
 };
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::SelectionMode;
+use kentos_rc::widget::Toast;
 use kentos_rc::widget::command_line::Entry;
 use kentos_rc::widget::floating::{self, Placement, Windows};
 use kentos_rc::widget::inspector;
 use kentos_rc::widget::table::SortOrder;
 
+use crate::message::Message;
 use crate::sample;
 
 /// Galeri sayfaları.
@@ -28,6 +30,7 @@ pub enum Page {
     Buttons,
     Data,
     Frame,
+    Feedback,
     Attributes,
     Spatial,
 }
@@ -41,6 +44,7 @@ impl Page {
             Page::Buttons => "Düğmeler",
             Page::Data => "Veri",
             Page::Frame => "Çerçeve",
+            Page::Feedback => "Geri bildirim",
             Page::Attributes => "Öznitelikler",
             Page::Spatial => "Mekânsal",
         }
@@ -54,6 +58,7 @@ impl Page {
             Page::Buttons => Icon::Button,
             Page::Data => Icon::Table,
             Page::Frame => Icon::Layout,
+            Page::Feedback => Icon::Info,
             Page::Attributes => Icon::Properties,
             Page::Spatial => Icon::Globe,
         }
@@ -69,6 +74,10 @@ impl Page {
             Page::Frame => {
                 "Kayan pencereler, durum çubuğu, komut kutusu, gezinme çubuğu, menü ve iletişim \
                  kutuları."
+            }
+            Page::Feedback => {
+                "Bildirimler: önem düzeyleri, eylem düğmesi, üst üste dizilme ve kendiliğinden \
+                 kapanma."
             }
             Page::Attributes => {
                 "Nesne inceleyici, öznitelik tablosu, sorgu oluşturucu ve alan türleri."
@@ -123,6 +132,40 @@ pub enum Demo {
     SnapToggled(usize),
     /// Kayan pencerelerin arkasındaki düğme.
     StagePressed,
+    /// Örnek bildirim gösterir; [`sample_toasts`] sırasıyla, sonuncusu hepsini.
+    Notify(usize),
+}
+
+/// Bildirim örnekleri: düğme adı ve bildirim.
+pub fn sample_toasts() -> [(&'static str, Toast<Message>); 5] {
+    [
+        (
+            "Bilgi",
+            Toast::info("Katman eklendi").body("İstasyonlar: 24 nokta, EPSG:4326."),
+        ),
+        (
+            "Başarı",
+            Toast::success("Dışa aktarıldı").body("Türkiye.geojson: 60 öğe, 1,2 MB."),
+        ),
+        (
+            "Uyarı",
+            Toast::warning("3 kayıt atlandı").body("Geometrisi boş olan kayıtlar içe aktarılmadı."),
+        ),
+        (
+            "Hata",
+            Toast::error("Altlık haritaya bağlanılamadı")
+                .body("tiles.kentos.local yanıt vermedi; önbellekteki paftalar gösteriliyor.")
+                .action(
+                    "Yeniden dene",
+                    Message::Gallery(Demo::Pressed("Yeniden dene")),
+                ),
+        ),
+        (
+            "Eylemli",
+            Toast::success("Çizim silindi")
+                .action("Geri al", Message::Gallery(Demo::Pressed("Geri al"))),
+        ),
+    ]
 }
 
 /// Kayan pencere örneğinin pencereleri.
@@ -412,6 +455,8 @@ impl Gallery {
                 }
             }
             Demo::StagePressed => self.stage_presses += 1,
+            // Bildirimler uygulamanın kuyruğuna eklenir.
+            Demo::Notify(_) => {}
         }
 
         None

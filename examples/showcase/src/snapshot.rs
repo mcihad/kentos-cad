@@ -19,18 +19,18 @@ use kentos_rc::attribute::query::Edit;
 use kentos_rc::attribute::{Combinator, Date, ObjectId, Operator, Value};
 use kentos_rc::snapshot::{Input, Snapshot};
 use kentos_rc::spatial::model_space::Event as ModelSpace;
-use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode};
+use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::widget::inspector::Event as Inspector;
 
-use crate::app::{Showcase, WINDOW_SIZE};
+use crate::app::{DRAWING_LAYER, Showcase, WINDOW_SIZE};
 use crate::gallery::Page;
 use crate::layer_tree::NodeId;
 use crate::message::{Message, Pane, QueryPurpose, RibbonTab};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 12] = [
+const SCENARIOS: [(&str, &str); 13] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -63,17 +63,22 @@ const SCENARIOS: [(&str, &str); 12] = [
         "pencereler",
         "kayan pencereler: ölçüm sürüyor, koordinata git ve katman stili açık",
     ),
+    (
+        "bildirimler",
+        "bildirimler: yinelenen bilgi, uyarı, kalıcı hata ve geri alınabilir silme",
+    ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
 
 /// Galeri sayfalarının komut satırı adları.
-const PAGES: [(&str, Page); 8] = [
+const PAGES: [(&str, Page); 9] = [
     ("renkler", Page::Colors),
     ("yazi", Page::Typography),
     ("ikonlar", Page::Icons),
     ("dugmeler", Page::Buttons),
     ("veri", Page::Data),
     ("cerceve", Page::Frame),
+    ("geri-bildirim", Page::Feedback),
     ("oznitelikler", Page::Attributes),
     ("mekansal", Page::Spatial),
 ];
@@ -340,6 +345,26 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::ModelSpace(ModelSpace::CursorMoved(LonLat::new(
                 36.2, 37.1,
             ))));
+        }
+        "bildirimler" => {
+            let ankara = LonLat::new(32.85, 39.93);
+
+            send(Message::CopyCoordinates(ankara));
+            send(Message::CopyCoordinates(ankara));
+            send(Message::SelectFeature(
+                FeatureRef::new(1, ObjectId(2)),
+                SelectionMode::New,
+            ));
+            send(Message::DeleteSelection);
+            send(Message::ToolSelected(Tool::Point));
+
+            for point in [LonLat::new(30.52, 39.78), LonLat::new(34.63, 36.8)] {
+                send(Message::ModelSpace(ModelSpace::PointPicked(point)));
+            }
+
+            send(Message::ToolSelected(Tool::Select));
+            send(Message::SelectNode(NodeId::Layer(DRAWING_LAYER)));
+            send(Message::DeleteSelection);
         }
         "galeri" => {
             let page = match page {

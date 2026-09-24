@@ -26,8 +26,10 @@ pub mod ribbon;
 pub mod sash;
 pub mod segmented;
 pub mod select;
+pub mod severity;
 pub mod status_bar;
 pub mod table;
+pub mod toast;
 pub mod toolbar;
 pub mod tree_view;
 
@@ -48,9 +50,11 @@ pub use ribbon::Ribbon;
 pub use sash::Sash;
 pub use segmented::Segmented;
 pub use select::{Choice, Select};
+pub use severity::Severity;
 pub use status_bar::StatusBar;
 pub use table::Table;
 pub use tip::{Tip, tip};
+pub use toast::{Toast, Toaster, Toasts};
 pub use toolbar::Toolbar;
 pub use tree_view::TreeView;
 

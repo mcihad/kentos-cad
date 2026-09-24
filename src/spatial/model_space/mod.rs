@@ -45,6 +45,23 @@ pub const OVERLAY_PADDING: f32 = 12.0;
 /// ViewCube ile gezinme çubuğu arasındaki boşluk.
 const CHROME_GAP: f32 = 6.0;
 
+/// Sağ kenardaki ViewCube ve gezinme çubuğu sütununun, kenar boşluğuyla
+/// birlikte genişliği. Harita üstüne yerleşen öğeler (ör. bildirimler) bu
+/// şeridi açık bırakır.
+pub fn chrome_width(view_cube: bool, navigation: bool) -> f32 {
+    let column = Chrome {
+        view_cube: view_cube.then_some(super::view_cube::SIZE),
+        navigation: navigation.then_some(0.0),
+    }
+    .column_width();
+
+    if column > 0.0 {
+        OVERLAY_PADDING + column
+    } else {
+        0.0
+    }
+}
+
 /// Görüntüleme seçenekleri.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Options {

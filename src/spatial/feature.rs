@@ -332,6 +332,22 @@ impl Layer {
         self.position(id).map(|index| self.features.remove(index))
     }
 
+    /// Silinmiş öğeyi numarasıyla yerine koyar (geri alma). Numara başka
+    /// bir öğedeyse koymaz ve `false` döndürür.
+    pub fn restore(&mut self, feature: Feature) -> bool {
+        match self
+            .features
+            .binary_search_by_key(&feature.id, |existing| existing.id)
+        {
+            Ok(_) => false,
+            Err(index) => {
+                self.last_id = self.last_id.max(feature.id.0);
+                self.features.insert(index, feature);
+                true
+            }
+        }
+    }
+
     /// Adı verilen alanın numarası.
     pub fn field_index(&self, name: &str) -> Option<usize> {
         self.schema.iter().position(|field| field.name == name)
@@ -479,5 +495,25 @@ mod tests {
             layer.feature(next).map(|feature| layer.label(feature)),
             Some("#4".to_owned())
         );
+    }
+
+    #[test]
+    fn removed_features_are_restored_with_their_numbers() {
+        let mut layer = Layer::points("Test", Color::BLACK)
+            .with_features((0..3).map(|_| Feature::new(Geometry::Point(LonLat::new(0.0, 0.0)))));
+
+        let removed = layer.remove(ObjectId(2)).expect("öğe");
+        assert!(layer.restore(removed.clone()));
+        assert_eq!(
+            layer
+                .features
+                .iter()
+                .map(|feature| feature.id)
+                .collect::<Vec<_>>(),
+            [ObjectId(1), ObjectId(2), ObjectId(3)]
+        );
+
+        // Numara doluysa yerine konmaz.
+        assert!(!layer.restore(removed));
     }
 }

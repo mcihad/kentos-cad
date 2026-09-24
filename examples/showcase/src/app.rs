@@ -17,10 +17,10 @@ use kentos_rc::theme::typography::{self, Typography};
 use kentos_rc::theme::{self, Mode};
 use kentos_rc::widget::command_line::{self, Entry};
 use kentos_rc::widget::floating::{self, Windows};
-use kentos_rc::widget::inspector;
+use kentos_rc::widget::{Toast, Toasts, inspector};
 
 use crate::command::{self, Command};
-use crate::gallery::Gallery;
+use crate::gallery::{Demo, Gallery};
 use crate::layer_tree::{LayerTree, NodeId};
 use crate::message::{
     AppCommand, CoordinateFormat, DockPanel, Keyword, Message, Pane, Pending, QueryPurpose,
@@ -124,6 +124,11 @@ pub struct Showcase {
     pub(crate) windows: Windows<Pane>,
     /// Koordinata git penceresinde yazılanlar.
     pub(crate) go_to: GoTo,
+
+    /// Haritanın köşesindeki bildirimler.
+    pub(crate) toasts: Toasts<Message>,
+    /// Son silinen çizimler; bildirimdeki "Geri al" onları geri koyar.
+    deleted: Vec<Feature>,
 }
 
 /// Koordinata git penceresinin alanları.
@@ -256,6 +261,8 @@ impl Showcase {
             gallery: Gallery::default(),
             windows: Windows::new(),
             go_to: GoTo::default(),
+            toasts: Toasts::new(),
+            deleted: Vec::new(),
         }
     }
 
@@ -378,12 +385,18 @@ impl Showcase {
             Message::CopyCoordinates(location) => {
                 let text = format::decimal(location);
                 self.log(format!("Koordinat panoya kopyalandı: {text}"));
+                self.toasts
+                    .push(Toast::info("Koordinat kopyalandı").body(text.clone()));
 
                 return iced::clipboard::write(text);
             }
             Message::CopyRow(reference) => {
                 if let Some(text) = self.row_text(reference) {
                     self.log("Satır panoya kopyalandı (sekmeyle ayrılmış).");
+                    self.toasts.push(
+                        Toast::info("Satır kopyalandı")
+                            .body("Değerler sekmeyle ayrılmış; tabloya yapıştırılabilir."),
+                    );
 
                     return iced::clipboard::write(text);
                 }
@@ -525,7 +538,20 @@ impl Showcase {
 
             Message::GalleryPageSelected(page) => self.gallery.page = page,
             Message::Gallery(demo) => {
-                if let Some(output) = self.gallery.update(demo) {
+                if let Demo::Notify(index) = demo {
+                    let samples = crate::gallery::sample_toasts();
+
+                    match samples.into_iter().nth(index) {
+                        Some((_, toast)) => {
+                            self.toasts.push(toast);
+                        }
+                        None => {
+                            for (_, toast) in crate::gallery::sample_toasts() {
+                                self.toasts.push(toast);
+                            }
+                        }
+                    }
+                } else if let Some(output) = self.gallery.update(demo) {
                     self.log(output);
                 }
             }
@@ -608,10 +634,20 @@ impl Showcase {
             Message::CopyMeasurement => {
                 if !self.measurement.is_empty() {
                     self.log("Ölçüm panoya kopyalandı.");
+                    self.toasts
+                        .push(Toast::info("Ölçüm kopyalandı").body(format!(
+                            "{} kenar, toplam {}",
+                            self.measurement.segment_count(),
+                            format::distance(self.measurement.total_meters())
+                        )));
 
                     return iced::clipboard::write(self.measurement_text());
                 }
             }
+            Message::ToastClosed(id) => {
+                self.toasts.dismiss(id);
+            }
+            Message::UndoDelete => self.undo_delete(),
 
             Message::DockResized(width) => self.dock.width = width,
             Message::DockResizeEnded => self.save_settings(),
@@ -983,20 +1019,29 @@ impl Showcase {
 
         if drawings.is_empty() {
             self.log("Yalnızca Çizimler katmanındaki öğeler silinebilir.");
+            self.toasts.push(
+                Toast::warning("Örnek veri silinemez")
+                    .body("Yalnızca Çizimler katmanındaki öğeler silinebilir."),
+            );
             return;
         }
 
-        if let Some(layer) = self.layers.get_mut(DRAWING_LAYER) {
-            for drawing in &drawings {
-                layer.remove(drawing.id);
-            }
-        }
+        let removed: Vec<Feature> = self
+            .layers
+            .get_mut(DRAWING_LAYER)
+            .map(|layer| {
+                drawings
+                    .iter()
+                    .filter_map(|drawing| layer.remove(drawing.id))
+                    .collect()
+            })
+            .unwrap_or_default();
 
         self.selection.retain(|item| item.layer != DRAWING_LAYER);
         self.hover = None;
         self.sync_inspector();
 
-        let mut output = format!("{} çizim silindi.", drawings.len());
+        let mut output = format!("{} çizim silindi.", removed.len());
 
         if !others.is_empty() {
             output.push_str(&format!(
@@ -1006,6 +1051,52 @@ impl Showcase {
         }
 
         self.log(output);
+        self.forget(removed);
+    }
+
+    /// Silinen çizimleri "Geri al" için saklar ve bildirir.
+    fn forget(&mut self, removed: Vec<Feature>) {
+        if removed.is_empty() {
+            return;
+        }
+
+        let toast = Toast::success(match removed.len() {
+            1 => "Çizim silindi".to_owned(),
+            count => format!("{count} çizim silindi"),
+        })
+        .action("Geri al", Message::UndoDelete);
+
+        self.deleted = removed;
+        self.toasts.push(toast);
+    }
+
+    /// Son silinen çizimleri numaralarıyla geri koyar ve seçer.
+    fn undo_delete(&mut self) {
+        let deleted = std::mem::take(&mut self.deleted);
+        let Some(layer) = self.layers.get_mut(DRAWING_LAYER) else {
+            return;
+        };
+
+        let restored: Vec<FeatureRef> = deleted
+            .into_iter()
+            .filter_map(|feature| {
+                let id = feature.id;
+                layer
+                    .restore(feature)
+                    .then(|| FeatureRef::new(DRAWING_LAYER, id))
+            })
+            .collect();
+
+        if restored.is_empty() {
+            return;
+        }
+
+        self.layer_tree.reveal(DRAWING_LAYER);
+        self.sync_visibility();
+        self.selection
+            .apply(SelectionMode::New, restored.iter().copied());
+        self.selection_changed(true);
+        self.log(format!("{} çizim geri alındı.", restored.len()));
     }
 
     // --- Öznitelikler ----------------------------------------------------
@@ -1410,12 +1501,14 @@ impl Showcase {
         let removed = self
             .layers
             .get_mut(DRAWING_LAYER)
-            .map_or(0, |layer| std::mem::take(&mut layer.features).len());
+            .map(|layer| std::mem::take(&mut layer.features))
+            .unwrap_or_default();
 
         self.selection.retain(|item| item.layer != DRAWING_LAYER);
         self.hover = None;
         self.sync_inspector();
-        self.log(format!("{removed} çizim silindi."));
+        self.log(format!("{} çizim silindi.", removed.len()));
+        self.forget(removed);
     }
 
     /// Satırın değerleri, sekmeyle ayrılmış: OBJECTID ve şemadaki alanlar.
@@ -1549,10 +1642,13 @@ impl Showcase {
         };
 
         if let Err(error) = settings.save(path) {
-            self.error(format!(
-                "Ayarlar {} dosyasına yazılamadı: {error}",
-                path.display()
-            ));
+            let file = path.display().to_string();
+
+            self.error(format!("Ayarlar {file} dosyasına yazılamadı: {error}"));
+            self.toasts
+                .push(Toast::error("Ayarlar kaydedilemedi").body(format!(
+                    "{file}: {error}. Değişiklikler bu oturumda geçerli."
+                )));
         }
     }
 
@@ -2023,6 +2119,40 @@ mod tests {
         submit(&mut app, "stil");
         submit(&mut app, "stil");
         assert!(app.windows.is_open(Pane::Style));
+    }
+
+    #[test]
+    fn deleting_drawings_can_be_undone_from_the_notification() {
+        let mut app = Showcase::new();
+
+        submit(&mut app, "nokta");
+        picked(&mut app, 32.85, 39.93);
+        picked(&mut app, 35.48, 38.72);
+        let _ = app.update(Message::SelectNode(NodeId::Layer(DRAWING_LAYER)));
+        let _ = app.update(Message::DeleteSelection);
+
+        assert!(app.layers[DRAWING_LAYER].features.is_empty());
+        let (_, toast, _) = app.toasts.iter().last().expect("bildirim yok");
+        assert_eq!(toast.title(), "2 çizim silindi");
+
+        // "Geri al" çizimleri numaralarıyla geri koyar ve seçer.
+        let _ = app.update(Message::UndoDelete);
+        let ids: Vec<ObjectId> = app.layers[DRAWING_LAYER]
+            .features
+            .iter()
+            .map(|feature| feature.id)
+            .collect();
+        assert_eq!(ids, [ObjectId(1), ObjectId(2)]);
+        assert_eq!(app.selection.len(), 2);
+
+        // Örnek veri silinmez; uyarı bildirimi çıkar.
+        let _ = app.update(Message::SelectFeature(
+            FeatureRef::new(1, ObjectId(1)),
+            SelectionMode::New,
+        ));
+        let _ = app.update(Message::DeleteSelection);
+        let (_, toast, _) = app.toasts.iter().last().expect("bildirim yok");
+        assert_eq!(toast.severity(), kentos_rc::widget::Severity::Warning);
     }
 
     #[test]

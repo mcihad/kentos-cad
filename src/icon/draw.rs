@@ -716,6 +716,65 @@ impl Pen {
                 self.polyline(frame, &[(1.75, 8.25), (8.0, 11.75), (14.25, 8.25)], false);
                 self.polyline(frame, &[(1.75, 11.25), (8.0, 14.75), (14.25, 11.25)], false);
             }
+            Icon::Info => {
+                self.circle(frame, (8.0, 8.0), 6.25);
+                self.dot(frame, (8.0, 5.0), 0.85);
+                self.line(frame, (8.0, 7.25), (8.0, 11.25));
+            }
+            Icon::Success => {
+                self.circle(frame, (8.0, 8.0), 6.25);
+                self.polyline(frame, &[(5.25, 8.25), (7.25, 10.25), (10.75, 6.0)], false);
+            }
+            Icon::Error => {
+                self.circle(frame, (8.0, 8.0), 6.25);
+                self.line(frame, (5.75, 5.75), (10.25, 10.25));
+                self.line(frame, (10.25, 5.75), (5.75, 10.25));
+            }
+            Icon::Stop => {
+                self.polyline(
+                    frame,
+                    &[(4.25, 4.25), (11.75, 4.25), (11.75, 11.75), (4.25, 11.75)],
+                    true,
+                );
+            }
+            Icon::Retry => {
+                // Saat yönünde dönen ok: boşluk sol üstte, ok ucu sonunda.
+                let (from, to) = (PI * 1.2, PI * 2.85);
+                let arc = Path::new(|builder| {
+                    builder.move_to(self.p(8.0 + 5.5 * from.cos(), 8.0 + 5.5 * from.sin()));
+                    self.arc(builder, (8.0, 8.0), 5.5, from, to);
+                });
+                frame.stroke(&arc, self.stroke());
+                self.arrow_head(
+                    frame,
+                    (8.0 + 5.5 * to.cos(), 8.0 + 5.5 * to.sin()),
+                    Vector::new(-to.sin(), to.cos()),
+                );
+            }
+            Icon::Import => {
+                self.polyline(
+                    frame,
+                    &[(2.25, 9.75), (2.25, 13.75), (13.75, 13.75), (13.75, 9.75)],
+                    false,
+                );
+                self.line(frame, (8.0, 2.0), (8.0, 10.0));
+                self.arrow_head(frame, (8.0, 10.25), Vector::new(0.0, 1.0));
+            }
+            Icon::Progress => {
+                for (y, end) in [(5.0, 10.5), (11.0, 6.5)] {
+                    self.polyline(
+                        frame,
+                        &[
+                            (1.75, y - 2.0),
+                            (14.25, y - 2.0),
+                            (14.25, y + 2.0),
+                            (1.75, y + 2.0),
+                        ],
+                        true,
+                    );
+                    self.line(frame, (3.75, y), (end, y));
+                }
+            }
             Icon::Measure => {
                 self.line(frame, (1.75, 4.0), (1.75, 12.0));
                 self.line(frame, (14.25, 4.0), (14.25, 12.0));

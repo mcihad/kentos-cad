@@ -12,6 +12,7 @@
 
 mod attributes;
 mod controls;
+mod feedback;
 mod foundations;
 mod frame;
 mod spatial;
@@ -42,6 +43,7 @@ impl Showcase {
             Page::Buttons => self.buttons_page(),
             Page::Data => self.data_page(),
             Page::Frame => self.frame_page(),
+            Page::Feedback => self.feedback_page(),
             Page::Attributes => self.attributes_page(),
             Page::Spatial => self.spatial_page(),
         };

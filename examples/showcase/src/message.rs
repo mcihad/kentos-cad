@@ -11,7 +11,7 @@ use kentos_rc::spatial::model_space;
 use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
 use kentos_rc::theme::typography::{self, Typography};
 use kentos_rc::widget::floating::{self, Placement};
-use kentos_rc::widget::inspector;
+use kentos_rc::widget::{inspector, toast};
 
 use crate::gallery::{Demo, Page};
 use crate::layer_tree::NodeId;
@@ -150,6 +150,12 @@ pub enum Message {
     GoToPlaced,
     /// Ölçümün kenarlarını ve toplamını panoya yazar.
     CopyMeasurement,
+
+    // Bildirimler
+    /// Bildirim kapandı: süresi doldu, kapatıldı ya da eylemi yapıldı.
+    ToastClosed(toast::Id),
+    /// Son silinen çizimleri geri koyar.
+    UndoDelete,
 
     // Yan panel
     /// Yan panelin yeni genişliği (12 piksellik gövde metnine göre).
