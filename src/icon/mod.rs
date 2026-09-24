@@ -90,11 +90,13 @@ pub enum Icon {
     Check,
     Warning,
     Properties,
+    Minus,
+    Copy,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 52] = [
+    pub const ALL: [Icon; 54] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -147,6 +149,8 @@ impl Icon {
         Icon::Check,
         Icon::Warning,
         Icon::Properties,
+        Icon::Minus,
+        Icon::Copy,
     ];
 }
 

@@ -81,6 +81,29 @@ pub fn popover(theme: &Theme) -> Style {
     }
 }
 
+/// Bağlam menüsü satırı: vurgulanınca vurgu zemini ve açık metin;
+/// tehlikeli komut kırmızıyla, devre dışı komut sönük yazılır.
+pub fn menu_item(highlighted: bool, enabled: bool, danger: bool) -> impl Fn(&Theme) -> Style {
+    move |theme| {
+        let t = Tokens::of(theme);
+
+        let (background, text) = match (highlighted && enabled, enabled, danger) {
+            (true, _, true) => (Some(t.danger), t.on_accent),
+            (true, _, false) => (Some(t.accent), t.on_accent),
+            (false, false, _) => (None, t.disabled()),
+            (false, true, true) => (None, t.danger),
+            (false, true, false) => (None, t.text),
+        };
+
+        Style {
+            text_color: Some(text),
+            background: background.map(Background::Color),
+            border: border::rounded(RADIUS),
+            ..Style::default()
+        }
+    }
+}
+
 /// Model alanı üzerinde yüzen, yarı saydam araç çubukları.
 pub fn floating(theme: &Theme) -> Style {
     let t = Tokens::of(theme);

@@ -352,7 +352,6 @@ impl Layer {
         self.visible && self.opacity > 0.05
     }
 
-
     /// Katmanın bütün öğelerini kapsayan kutu.
     pub fn bounds(&self) -> Option<Bounds> {
         self.features

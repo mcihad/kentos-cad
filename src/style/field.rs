@@ -137,6 +137,16 @@ pub fn hairline(theme: &Theme) -> rule::Style {
     }
 }
 
+/// Ağaçtaki girinti çizgisi: bölücüden silik.
+pub fn guide(theme: &Theme) -> rule::Style {
+    rule::Style {
+        color: Tokens::of(theme).border.scale_alpha(0.7),
+        radius: 0.0.into(),
+        fill_mode: rule::FillMode::Full,
+        snap: true,
+    }
+}
+
 /// İnce, dikey kaydırma çubuğu.
 pub fn thin_scrollbar() -> scrollable::Direction {
     scrollable::Direction::Vertical(scrollable::Scrollbar::new().width(6).scroller_width(6))

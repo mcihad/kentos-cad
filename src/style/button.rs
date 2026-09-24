@@ -161,6 +161,32 @@ pub fn table_row(selected: bool, current: bool) -> impl Fn(&Theme, Status) -> St
     }
 }
 
+/// Ağaçtaki onay kutusu: işaretli ya da karışık kutu vurgu renginde dolu,
+/// işaretsiz kutu kenarlı; üzerine gelince kenar vurgulanır.
+pub fn check(filled: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+        let hovered = is_hovered(status);
+
+        let (background, edge) = match (filled, hovered) {
+            (true, false) => (t.accent, t.accent),
+            (true, true) => (t.accent_hover, t.accent_hover),
+            (false, false) => (t.field, t.border),
+            (false, true) => (t.field, t.accent),
+        };
+
+        style(
+            background,
+            t.on_accent,
+            Border {
+                color: edge,
+                width: 1.0,
+                radius: RADIUS.into(),
+            },
+        )
+    }
+}
+
 /// Parçalı seçim düğmesi (ör. seçim yöntemi); seçili parça vurgu zeminiyle.
 pub fn segment(selected: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {

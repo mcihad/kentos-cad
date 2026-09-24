@@ -11,6 +11,7 @@
 
 pub mod app_menu;
 pub mod command_line;
+pub mod context_menu;
 pub mod dialog;
 pub mod dock;
 pub mod inspector;
@@ -23,11 +24,13 @@ pub mod segmented;
 pub mod status_bar;
 pub mod table;
 pub mod toolbar;
+pub mod tree_view;
 
 mod tip;
 
 pub use app_menu::AppMenu;
 pub use command_line::CommandLine;
+pub use context_menu::{ContextMenu, Menu};
 pub use dialog::{Dialog, ShortcutList};
 pub use dock::{Dock, Panel};
 pub use inspector::Inspector;
@@ -40,6 +43,7 @@ pub use status_bar::StatusBar;
 pub use table::Table;
 pub use tip::{Tip, tip};
 pub use toolbar::Toolbar;
+pub use tree_view::TreeView;
 
 use iced::widget::{Rule, container, rule, space};
 use iced::{Color, Element};

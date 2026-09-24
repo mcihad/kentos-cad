@@ -16,19 +16,23 @@
 //! Öznitelik tablosu gibi çok sütunlu tablolar [`Table::horizontal`] ile
 //! yatay kaydırılır; başlık dikey kaydırmada yerinde kalır.
 //! [`Table::min_width`] verilirse dar tablonun başlığı ve satır vurgusu yine
-//! de bu genişliğe uzanır.
+//! de bu genişliğe uzanır. Satırlara [`Row::menu`] ile bağlam menüsü
+//! eklenebilir.
 
 use iced::alignment::Horizontal;
 use iced::widget::text::{Fragment, IntoFragment};
 use iced::widget::{button, container, row, scrollable};
-use iced::{Center, Element, Fill, Length, Padding};
+use iced::{Center, Element, Fill, Length, Padding, Point};
 
 use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
+use crate::widget::context_menu::{ContextMenu, Menu};
 
-const SPACING: f32 = 8.0;
-const PADDING_X: f32 = 10.0;
+/// Sütunlar arasındaki boşluk.
+pub(crate) const SPACING: f32 = 8.0;
+/// Satırların yatay iç boşluğu.
+pub(crate) const PADDING_X: f32 = 10.0;
 /// Sağa hizalı hücrelerin sağındaki boşluk; ardından gelen sola hizalı
 /// sütunun metnine yapışmasınlar. Sabit genişlikli sütunlarda genişliğe
 /// eklenir, içeriğin alanını daraltmaz.
@@ -87,12 +91,17 @@ impl<'a, Message> Column<'a, Message> {
     }
 }
 
+/// Sağ tıklanınca açılan menüyü kuran fonksiyon; sağ tıklanan noktanın
+/// satır içindeki konumunu alır.
+pub(crate) type MenuBuilder<'a, Message> = Box<dyn Fn(Point) -> Menu<Message> + 'a>;
+
 /// Tablo satırı.
 pub struct Row<'a, Message> {
     cells: Vec<Element<'a, Message>>,
     selected: bool,
     current: Option<bool>,
     on_press: Option<Message>,
+    menu: Option<MenuBuilder<'a, Message>>,
 }
 
 impl<'a, Message: 'a> Row<'a, Message> {
@@ -102,6 +111,7 @@ impl<'a, Message: 'a> Row<'a, Message> {
             selected: false,
             current: None,
             on_press: None,
+            menu: None,
         }
     }
 
@@ -120,6 +130,12 @@ impl<'a, Message: 'a> Row<'a, Message> {
 
     pub fn on_press(mut self, message: Message) -> Self {
         self.on_press = Some(message);
+        self
+    }
+
+    /// Satıra sağ tıklanınca açılan bağlam menüsü.
+    pub fn menu(mut self, menu: impl Fn(Point) -> Menu<Message> + 'a) -> Self {
+        self.menu = Some(Box::new(menu));
         self
     }
 }
@@ -209,8 +225,59 @@ fn cell_width(width: Length, align: Horizontal) -> Length {
     }
 }
 
+/// Sütunların genişliği ve hizası.
+pub(crate) fn layout<Message>(columns: &[Column<'_, Message>]) -> Vec<(Length, Horizontal)> {
+    columns
+        .iter()
+        .map(|column| (column.width, column.align))
+        .collect()
+}
+
+/// Başlık satırı: sıralanabilir sütunlarda başlık düğmedir ve sıralama yönü
+/// okla gösterilir.
+pub(crate) fn header<'a, Message: Clone + 'a>(
+    columns: Vec<Column<'a, Message>>,
+    layout: &[(Length, Horizontal)],
+) -> Element<'a, Message> {
+    let titles = columns.into_iter().map(|column| {
+        let title = label::caption(column.title);
+
+        match column.sort {
+            Some((order, on_press)) => {
+                let mut content =
+                    row![title.style(|_theme| iced::widget::text::Style { color: None })]
+                        .spacing(3)
+                        .align_y(Center);
+
+                if let Some(order) = order {
+                    content = content.push(
+                        icon(match order {
+                            SortOrder::Ascending => Icon::ChevronUp,
+                            SortOrder::Descending => Icon::ChevronDown,
+                        })
+                        .size(10.0),
+                    );
+                }
+
+                button(content)
+                    .on_press(on_press)
+                    .padding(0)
+                    .style(style::button::header(order.is_some()))
+                    .into()
+            }
+            None => title.into(),
+        }
+    });
+
+    container(line(layout, titles.collect::<Vec<_>>()))
+        .padding([3.0, PADDING_X])
+        .width(Fill)
+        .style(style::container::surface)
+        .into()
+}
+
 /// Hücreleri sütunların genişliğine ve hizasına yerleştirir.
-fn line<'a, Message: 'a>(
+pub(crate) fn line<'a, Message: 'a>(
     columns: &[(Length, Horizontal)],
     cells: impl IntoIterator<Item = Element<'a, Message>>,
 ) -> iced::widget::Row<'a, Message> {
@@ -234,46 +301,9 @@ fn line<'a, Message: 'a>(
 impl<'a, Message: Clone + 'a> From<Table<'a, Message>> for Element<'a, Message> {
     fn from(table: Table<'a, Message>) -> Self {
         let width = table.horizontal.then(|| table.content_width());
-        let layout: Vec<(Length, Horizontal)> = table
-            .columns
-            .iter()
-            .map(|column| (column.width, column.align))
-            .collect();
+        let layout = layout(&table.columns);
 
-        let headers = table.columns.into_iter().map(|column| {
-            let title = label::caption(column.title);
-
-            match column.sort {
-                Some((order, on_press)) => {
-                    let mut content =
-                        row![title.style(|_theme| iced::widget::text::Style { color: None })]
-                            .spacing(3)
-                            .align_y(Center);
-
-                    if let Some(order) = order {
-                        content = content.push(
-                            icon(match order {
-                                SortOrder::Ascending => Icon::ChevronUp,
-                                SortOrder::Descending => Icon::ChevronDown,
-                            })
-                            .size(10.0),
-                        );
-                    }
-
-                    button(content)
-                        .on_press(on_press)
-                        .padding(0)
-                        .style(style::button::header(order.is_some()))
-                        .into()
-                }
-                None => title.into(),
-            }
-        });
-
-        let header = container(line(&layout, headers.collect::<Vec<_>>()))
-            .padding([3.0, PADDING_X])
-            .width(Fill)
-            .style(style::container::surface);
+        let header = header(table.columns, &layout);
 
         let body: Element<'a, Message> = match (table.rows.is_empty(), table.empty) {
             (true, Some(message)) => container(label::muted(message))
@@ -283,12 +313,16 @@ impl<'a, Message: Clone + 'a> From<Table<'a, Message>> for Element<'a, Message> 
             _ => iced::widget::Column::with_children(table.rows.into_iter().map(|row| {
                 let current = row.current.unwrap_or(row.selected);
 
-                button(line(&layout, row.cells))
+                let content = button(line(&layout, row.cells))
                     .on_press_maybe(row.on_press)
                     .width(Fill)
                     .padding([4.0, PADDING_X])
-                    .style(style::button::table_row(row.selected, current))
-                    .into()
+                    .style(style::button::table_row(row.selected, current));
+
+                match row.menu {
+                    Some(menu) => ContextMenu::new(content, menu).into(),
+                    None => content.into(),
+                }
             }))
             .width(Fill)
             .into(),

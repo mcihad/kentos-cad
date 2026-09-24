@@ -592,6 +592,15 @@ impl Pen {
                 self.line(frame, (8.0, 6.25), (8.0, 9.5));
                 self.dot(frame, (8.0, 11.5), 0.85);
             }
+            Icon::Minus => self.line(frame, (3.0, 8.0), (13.0, 8.0)),
+            Icon::Copy => {
+                self.polyline(
+                    frame,
+                    &[(5.75, 5.25), (14.25, 5.25), (14.25, 14.25), (5.75, 14.25)],
+                    true,
+                );
+                self.polyline(frame, &[(2.25, 11.25), (2.25, 1.75), (10.75, 1.75)], false);
+            }
             Icon::Properties => {
                 for (y, end) in [(3.5, 14.25), (8.0, 11.75), (12.5, 13.25)] {
                     self.dot(frame, (2.75, y), 1.25);
