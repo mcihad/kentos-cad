@@ -43,17 +43,24 @@ use iced::{Center, Element, Fill, Length, Point};
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 use crate::widget::context_menu::{ContextMenu, Menu};
 use crate::widget::table::{self, MenuBuilder};
 
 pub use crate::widget::table::Column;
 
-/// Satır yüksekliği; girinti çizgileri satırlar boyunca kesintisiz uzanır.
+/// Satır yüksekliği, 12 piksellik gövde metninde; girinti çizgileri satırlar
+/// boyunca kesintisiz uzanır. Yazı boyutuyla büyür ([`row_height`]).
 pub const ROW_HEIGHT: f32 = 24.0;
 /// Her derinlik düzeyinin girintisi; açma/kapama oku da bu genişliktedir.
 pub const INDENT: f32 = 16.0;
 /// Onay kutusunun kenarı.
 const CHECK_SIZE: f32 = 13.0;
+
+/// Geçerli yazı boyutundaki satır yüksekliği.
+pub fn row_height() -> f32 {
+    typography::scaled(ROW_HEIGHT)
+}
 
 /// Onay kutusunun durumu.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -241,7 +248,7 @@ fn flatten<'a, Message: Clone + 'a>(
 
         let mut tree = Row::with_children((0..depth).map(|_| guide()))
             .push(toggle(expanded))
-            .height(ROW_HEIGHT)
+            .height(row_height())
             .align_y(Center);
 
         if let Some((check, on_toggle)) = check {
@@ -269,7 +276,7 @@ fn flatten<'a, Message: Clone + 'a>(
         ))
         .on_press_maybe(on_press)
         .width(Fill)
-        .height(ROW_HEIGHT)
+        .height(row_height())
         .padding([0.0, table::PADDING_X])
         .style(style::button::table_row(selected, selected));
 
@@ -288,7 +295,7 @@ fn flatten<'a, Message: Clone + 'a>(
 fn guide<'a, Message: 'a>() -> Element<'a, Message> {
     container(rule::vertical(1).style(style::field::guide))
         .width(INDENT)
-        .height(ROW_HEIGHT)
+        .height(row_height())
         .center_x(INDENT)
         .into()
 }
@@ -310,7 +317,7 @@ fn toggle<'a, Message: Clone + 'a>(expanded: Option<(bool, Message)>) -> Element
         .on_press(on_toggle)
         .padding(0)
         .width(INDENT)
-        .height(ROW_HEIGHT)
+        .height(row_height())
         .style(style::button::subtle)
         .into(),
         None => space::horizontal().width(INDENT).into(),

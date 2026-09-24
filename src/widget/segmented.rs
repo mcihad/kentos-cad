@@ -8,6 +8,7 @@ use iced::{Element, Length};
 
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 
 /// Parçalı seçim.
 pub struct Segmented<'a, Message> {
@@ -36,7 +37,8 @@ impl<'a, Message: Clone + 'a> Segmented<'a, Message> {
         }
     }
 
-    /// `Fill` verilirse parçalar genişliği eşit paylaşır.
+    /// `Fill` verilirse parçalar genişliği eşit paylaşır. Sabit genişlik yazı
+    /// boyutuyla büyür.
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
         self
@@ -72,7 +74,7 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
 
         container(iced::widget::Row::with_children(segments).spacing(1))
             .padding(1)
-            .width(segmented.width)
+            .width(typography::length(segmented.width))
             .style(style::container::segmented)
             .into()
     }

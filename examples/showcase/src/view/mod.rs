@@ -33,6 +33,7 @@ use iced::{Element, Fill};
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
 use kentos_rc::style;
+use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::widget::command_line::Prompt;
 use kentos_rc::widget::{
     CommandLine, ContextMenu, NavigationBar, horizontal_divider, vertical_divider,
@@ -40,7 +41,7 @@ use kentos_rc::widget::{
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
 use crate::command::{self, Command};
-use crate::message::{Keyword, Message, RibbonTab};
+use crate::message::{Keyword, Message, Pending, RibbonTab};
 
 impl Showcase {
     pub fn view(&self) -> Element<'_, Message> {
@@ -140,6 +141,10 @@ impl Showcase {
     pub(crate) fn prompt(&self) -> Option<Prompt<'static, Message>> {
         let keyword = Message::Keyword;
 
+        if let Some(pending) = self.pending {
+            return Some(self.pending_prompt(pending));
+        }
+
         if let Some(pick) = &self.picking {
             return Some(
                 Prompt::new(pick.prompt.clone())
@@ -225,6 +230,59 @@ impl Showcase {
         Some(prompt)
     }
 
+    /// Seçenek bekleyen yazı komutlarının istemi.
+    fn pending_prompt(&self, pending: Pending) -> Prompt<'static, Message> {
+        let current = self.typography;
+        let choose = move |typography: Typography| Message::TypographyChanged(typography);
+
+        match pending {
+            Pending::Typeface => {
+                let prompt = Family::ALL.into_iter().fold(
+                    Prompt::new("Yazı ailesini seçin")
+                        .command(command::name(Command::Typeface))
+                        .placeholder("ya da adını yazın"),
+                    |prompt, family| {
+                        prompt
+                            .option(family.name(), choose(Typography { family, ..current }))
+                            .description(family_note(family))
+                    },
+                );
+
+                Mono::ALL.into_iter().fold(prompt, |prompt, mono| {
+                    prompt
+                        .option(mono.name(), choose(Typography { mono, ..current }))
+                        .description("Koordinat, ölçü ve komutların eş aralıklı yazısı.")
+                })
+            }
+            Pending::TextSize => {
+                let (smallest, largest) = (
+                    *Typography::SIZES.start() as u8,
+                    *Typography::SIZES.end() as u8,
+                );
+
+                (smallest..=largest).fold(
+                    Prompt::new(format!(
+                        "Yazı boyutunu seçin; şimdi {} piksel",
+                        current.size
+                    ))
+                    .command(command::name(Command::TextSize))
+                    .placeholder("ya da sayıyı yazın"),
+                    |prompt, size| {
+                        prompt
+                            .option(
+                                size.to_string(),
+                                choose(Typography {
+                                    size: f32::from(size),
+                                    ..current
+                                }),
+                            )
+                            .description(format!("Gövde metni {size} piksel."))
+                    },
+                )
+            }
+        }
+    }
+
     /// Katman seçim kutularının seçenekleri.
     fn layer_choices(&self) -> Vec<LayerChoice<'_>> {
         self.layers
@@ -254,5 +312,16 @@ impl<'a> LayerChoice<'a> {
 impl fmt::Display for LayerChoice<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.name)
+    }
+}
+
+/// Yazı ailesinin kısa tanımı.
+pub(crate) fn family_note(family: Family) -> &'static str {
+    match family {
+        Family::IbmPlexSans => {
+            "Mühendislik çizgili, dar ve sakin bir grotesk; ekrana çok metin sığar."
+        }
+        Family::Inter => "Ekran için çizilmiş; x yüksekliği büyük, küçük boyutta en okunaklısı.",
+        Family::PlusJakartaSans => "Geometrik, açık ve yumuşak hatlı; ferah bir görünüm.",
     }
 }

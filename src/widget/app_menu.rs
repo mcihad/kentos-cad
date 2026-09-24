@@ -24,6 +24,7 @@ use iced::{Center, Element, Fill, Point};
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 use crate::widget::{horizontal_divider, overlay, ribbon, vertical_divider};
 
 const WIDTH: f32 = 680.0;
@@ -80,15 +81,16 @@ impl<'a, Message: Clone + 'a> AppMenu<'a, Message> {
 impl<'a, Message: Clone + 'a> From<AppMenu<'a, Message>> for Element<'a, Message> {
     fn from(menu: AppMenu<'a, Message>) -> Self {
         let entry_count = menu.entries.len().max(1) as f32;
-        let body_height =
-            ENTRY_HEIGHT * entry_count + ENTRY_GAP * (entry_count - 1.0) + PADDING * 2.0;
+        let body_height = typography::scaled(ENTRY_HEIGHT) * entry_count
+            + ENTRY_GAP * (entry_count - 1.0)
+            + PADDING * 2.0;
 
         let entries =
             Column::with_children(menu.entries.into_iter().map(Element::from)).spacing(ENTRY_GAP);
 
         let body = row![
             container(entries)
-                .width(COMMAND_COLUMN)
+                .width(typography::scaled(COMMAND_COLUMN))
                 .height(Fill)
                 .padding(PADDING)
                 .style(style::container::surface),
@@ -121,12 +123,12 @@ impl<'a, Message: Clone + 'a> From<AppMenu<'a, Message>> for Element<'a, Message
                 .width(Fill)
                 .style(style::container::surface),
         ])
-        .width(WIDTH)
+        .width(typography::scaled(WIDTH))
         .style(style::container::popover);
 
         overlay::popover(
             panel,
-            Point::new(0.0, ribbon::STRIP_HEIGHT),
+            Point::new(0.0, ribbon::strip_height()),
             menu.on_dismiss,
         )
     }
@@ -208,7 +210,7 @@ impl<'a, Message: Clone + 'a> From<Entry<'a, Message>> for Element<'a, Message> 
         )
         .on_press_maybe(entry.on_press)
         .width(Fill)
-        .height(ENTRY_HEIGHT)
+        .height(typography::scaled(ENTRY_HEIGHT))
         .padding([0, 10])
         .style(style::button::list_item(expanded));
 

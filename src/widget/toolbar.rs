@@ -18,9 +18,11 @@ use iced::{Center, Element, Fill};
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 use crate::widget::{Tip, tip, vertical_divider};
 
-/// Araç çubuğu satırının yüksekliği.
+/// Araç çubuğu satırının yüksekliği, 12 piksellik gövde metninde; yazı
+/// boyutuyla büyür ([`typography::scaled`]).
 pub const HEIGHT: f32 = 30.0;
 
 /// Araç çubuğu.
@@ -110,7 +112,8 @@ impl<'a, Message: Clone + 'a> Toolbar<'a, Message> {
                 icon(Icon::Search).size(14.0).tone(Tone::Muted),
                 text_input(placeholder, value)
                     .on_input(on_input)
-                    .size(12.0)
+                    .font(typography::ui())
+                    .size(typography::body())
                     .padding([2, 0])
                     .style(style::field::bare_input),
             ]
@@ -118,8 +121,8 @@ impl<'a, Message: Clone + 'a> Toolbar<'a, Message> {
             .align_y(Center),
         )
         .padding([0, 8])
-        .width(220)
-        .height(24)
+        .width(typography::scaled(220.0))
+        .height(typography::scaled(24.0))
         .align_y(Center)
         .style(|theme| {
             let mut container = style::container::badge(theme);
@@ -155,7 +158,7 @@ impl<'a, Message: Clone + 'a> From<Toolbar<'a, Message>> for Element<'a, Message
                 .align_y(Center),
         )
         .padding([0, 8])
-        .height(HEIGHT)
+        .height(typography::scaled(HEIGHT))
         .width(Fill)
         .align_y(Center)
         .style(style::container::surface)

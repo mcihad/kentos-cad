@@ -7,6 +7,7 @@ use std::cmp::Ordering;
 
 use kentos_rc::attribute::{FieldKind, ObjectId, Query, Value, text};
 use kentos_rc::spatial::{Feature, FeatureRef, Geometry, Layer, LayerKind, Selection, format};
+use kentos_rc::theme::typography;
 use kentos_rc::widget::table::SortOrder;
 
 /// Tablonun sütunları: OBJECTID, şemadaki alanlar ve çizgi/alan
@@ -48,41 +49,39 @@ impl Column {
         }
     }
 
-    /// Sütunun piksel genişliği: başlığa ve en uzun hücreye göre, sınırlar
-    /// içinde. ArcGIS'teki gibi tablo açılırken içeriğe sığdırılır.
+    /// Sütunun genişliği: başlığa ve en uzun hücreye göre, sınırlar içinde.
+    /// ArcGIS'teki gibi tablo açılırken içeriğe sığdırılır. Genişlik 12
+    /// piksellik gövde metnine göre, seçili yazı ailesinin harf genişliğiyle
+    /// hesaplanır; tablo onu yazı boyutuna göre büyütür.
     pub fn width(self, layers: &[Layer], layer: &Layer) -> f32 {
-        const SANS: f32 = 6.5;
-        const MONO: f32 = 7.3;
-        const CAPTION: f32 = 6.2;
+        const BODY: f32 = 12.0;
+        const CAPTION: f32 = 11.0;
         const SORT_ARROW: f32 = 14.0;
         const LINK_ICON: f32 = 18.0;
 
-        let title = self.title(layer).chars().count() as f32 * CAPTION + SORT_ARROW;
+        let title = typography::text_width(&self.title(layer), CAPTION) + SORT_ARROW;
 
         let longest = layer
             .features
             .iter()
-            .map(|feature| self.text(layers, layer, feature).chars().count())
-            .max()
-            .unwrap_or(0) as f32;
+            .map(|feature| self.text(layers, layer, feature))
+            .max_by_key(|text| text.chars().count())
+            .unwrap_or_default();
 
-        let (per_char, extra) = match self {
+        let cell = match self {
             Column::Field(index)
                 if matches!(
                     layer.schema.get(index).map(|field| &field.kind),
                     Some(FieldKind::Object { .. })
                 ) =>
             {
-                (SANS, LINK_ICON)
+                typography::text_width(&longest, BODY) + LINK_ICON
             }
-            _ if self.is_monospaced(layer) => (MONO, 0.0),
-            _ => (SANS, 0.0),
+            _ if self.is_monospaced(layer) => typography::mono_width(&longest, BODY),
+            _ => typography::text_width(&longest, BODY),
         };
 
-        title
-            .max(longest * per_char + extra)
-            .clamp(56.0, 260.0)
-            .ceil()
+        title.max(cell).clamp(56.0, 260.0).ceil()
     }
 
     /// Sayısal sütunlar sağa hizalanır.

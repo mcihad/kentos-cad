@@ -12,7 +12,7 @@ use crate::spatial::query::SnapKind;
 use crate::spatial::{
     Feature, FeatureRef, Geometry, Layer, LayerKind, LonLat, Tool, format, measure,
 };
-use crate::theme::typography::MONO;
+use crate::theme::typography;
 
 /// Seç aracında artı imlecin ortasındaki seçim kutusunun yarı boyu.
 const PICKBOX: f32 = 5.0;
@@ -26,9 +26,10 @@ const MAX_GRIPPED_FEATURES: usize = 64;
 /// Ölçüm ve önizleme çizgilerinin kesik çizgi deseni.
 const DASH: [f32; 2] = [7.0, 6.0];
 
-/// Bilgi kutularının yüksekliği ve harf başına yaklaşık genişliği.
-const TAG_HEIGHT: f32 = 18.0;
-const TAG_CHAR_WIDTH: f32 = 6.6;
+/// Bilgi kutularının yüksekliği; yazı boyutuyla büyür.
+fn tag_height() -> f32 {
+    typography::scaled(18.0)
+}
 
 fn stroke(color: Color, width: f32) -> Stroke<'static> {
     Stroke {
@@ -67,7 +68,7 @@ fn polyline(points: &[Point], closed: bool) -> Path {
 }
 
 fn tag_width(content: &str) -> f32 {
-    content.chars().count() as f32 * TAG_CHAR_WIDTH + 12.0
+    typography::mono_width(content, typography::caption()) + 12.0
 }
 
 impl<Message> Program<'_, Message> {
@@ -98,8 +99,8 @@ impl<Message> Program<'_, Message> {
             content,
             position,
             color: style.grid_label,
-            size: 10.0.into(),
-            font: MONO,
+            size: (typography::caption() - 1.0).into(),
+            font: typography::mono(),
             align_y,
             ..Text::default()
         };
@@ -319,7 +320,8 @@ impl<Message> Program<'_, Message> {
                     content: layer.label(feature),
                     position: self.viewport.project(*location) + Vector::new(9.0, -9.0),
                     color: style.label.scale_alpha(layer.opacity.max(0.65)),
-                    size: 12.0.into(),
+                    size: typography::body().into(),
+                    font: typography::ui(),
                     align_x: Alignment::Left,
                     align_y: Vertical::Bottom,
                     ..Text::default()
@@ -609,16 +611,17 @@ impl<Message> Program<'_, Message> {
         anchor: Point,
         color: Color,
     ) {
-        let size = Size::new(tag_width(&content), TAG_HEIGHT);
+        let height = tag_height();
+        let size = Size::new(tag_width(&content), height);
 
         frame.fill_rectangle(anchor, size, style.tag_background);
         frame.stroke_rectangle(anchor, size, stroke(color.scale_alpha(0.6), 1.0));
         frame.fill_text(Text {
             content,
-            position: Point::new(anchor.x + 6.0, anchor.y + TAG_HEIGHT / 2.0),
+            position: Point::new(anchor.x + 6.0, anchor.y + height / 2.0),
             color,
-            size: 11.0.into(),
-            font: MONO,
+            size: typography::caption().into(),
+            font: typography::mono(),
             align_y: Vertical::Center,
             ..Text::default()
         });
@@ -676,8 +679,8 @@ impl<Message> Program<'_, Message> {
                 content: name.to_owned(),
                 position: tip + direction * 8.0,
                 color,
-                size: 11.0.into(),
-                font: MONO,
+                size: typography::caption().into(),
+                font: typography::mono(),
                 align_x: Alignment::Center,
                 align_y: Vertical::Center,
                 ..Text::default()
@@ -706,8 +709,8 @@ impl<Message> Program<'_, Message> {
                 content,
                 position: Point::new(origin.x + x, origin.y - 4.0),
                 color: style.label,
-                size: 10.5.into(),
-                font: MONO,
+                size: (typography::caption() - 0.5).into(),
+                font: typography::mono(),
                 align_x: Alignment::Center,
                 align_y: Vertical::Bottom,
                 ..Text::default()

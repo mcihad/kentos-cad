@@ -1,19 +1,22 @@
 //! Şerit: sekmeler ve Giriş sekmesinin grupları.
 
-use iced::widget::pick_list;
-use iced::{Element, Fill};
+use iced::widget::{button, column, container, pick_list, text, tooltip};
+use iced::{Center, Element, Fill, Font};
 
 use kentos_rc::icon::Icon;
 use kentos_rc::label;
 use kentos_rc::spatial::Tool;
 use kentos_rc::style;
+use kentos_rc::theme::typography;
+use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::widget::ribbon::{self, AppButton, Button, Field, Group, Ribbon, Stack};
-use kentos_rc::widget::{Tip, swatch};
+use kentos_rc::widget::{Tip, swatch, tip};
 
 use crate::app::Showcase;
 use crate::command::{self, Command};
 use crate::gallery::Page;
-use crate::message::{Message, QueryPurpose, RibbonTab};
+use crate::message::{Message, QueryPurpose, RibbonTab, SizeStep};
+use crate::view::family_note;
 
 impl Showcase {
     pub(super) fn ribbon(&self) -> Element<'_, Message> {
@@ -35,6 +38,16 @@ impl Showcase {
                 .into();
         }
 
+        if self.ribbon_tab == RibbonTab::View {
+            return ribbon
+                .group(view_group("Harita"))
+                .group(self.theme_group())
+                .group(self.typeface_group())
+                .group(self.mono_group())
+                .group(self.size_group())
+                .into();
+        }
+
         if self.ribbon_tab != RibbonTab::Home {
             return ribbon
                 .placeholder(format!(
@@ -47,7 +60,7 @@ impl Showcase {
         ribbon
             .group(self.draw_group())
             .group(self.tools_group())
-            .group(view_group())
+            .group(view_group("Görünüm"))
             .group(self.layers_group())
             .group(self.selection_group())
             .group(self.interface_group())
@@ -90,7 +103,8 @@ impl Showcase {
         let picker = pick_list(choices, current, |choice: super::LayerChoice<'_>| {
             Message::LayerActivated(choice.index)
         })
-        .text_size(12.0)
+        .font(typography::ui())
+        .text_size(typography::body())
         .padding([2, 8])
         .width(Fill)
         .style(style::field::pick_list)
@@ -174,8 +188,118 @@ impl Showcase {
                     .push(
                         Button::small(Icon::Terminal, "Komut listesi")
                             .on_press(Message::CommandListRequested),
+                    )
+                    .push(
+                        Button::small(Icon::Type, "Yazı ve boyut")
+                            .on_press(Message::RibbonTabSelected(RibbonTab::View))
+                            .tip(
+                                Tip::new("Yazı ve boyut")
+                                    .body("Yazı ailesi ve boyutu Görünüm sekmesinde seçilir.")
+                                    .detail("Komut: YAZITIPI, PUNTO"),
+                            ),
                     ),
             )
+    }
+
+    fn theme_group(&self) -> Group<'_, Message> {
+        let (icon, label) = if self.mode.is_dark() {
+            (Icon::Contrast, "Aydınlık\ntema")
+        } else {
+            (Icon::Contrast, "Koyu\ntema")
+        };
+
+        Group::new("Tema").push(Button::large(icon, label).on_press(Message::ToggleTheme))
+    }
+
+    /// Arayüz metninin ailesi: her karo "Aa" örneğini kendi ailesiyle yazar.
+    fn typeface_group(&self) -> Group<'_, Message> {
+        let current = self.typography;
+
+        Family::ALL
+            .into_iter()
+            .fold(Group::new("Yazı tipi"), |group, family| {
+                let typography = Typography { family, ..current };
+
+                group.push(typeface_tile(
+                    "Aa",
+                    family.name(),
+                    family_note(family),
+                    typography.ui(),
+                    current.family == family,
+                    Message::TypographyChanged(typography),
+                ))
+            })
+    }
+
+    /// Koordinat, ölçü ve komutların eş aralıklı ailesi.
+    fn mono_group(&self) -> Group<'_, Message> {
+        let current = self.typography;
+
+        Mono::ALL
+            .into_iter()
+            .fold(Group::new("Eş aralıklı"), |group, mono| {
+                let typography = Typography { mono, ..current };
+
+                group.push(typeface_tile(
+                    "41°",
+                    mono.name(),
+                    "Koordinat, ölçü ve komutların yazısı.",
+                    typography.mono(),
+                    current.mono == mono,
+                    Message::TypographyChanged(typography),
+                ))
+            })
+    }
+
+    /// Gövde metninin boyutu ve adım düğmeleri.
+    fn size_group(&self) -> Group<'_, Message> {
+        let size = self.typography.size;
+        let (smallest, largest) = (*Typography::SIZES.start(), *Typography::SIZES.end());
+
+        let value = container(
+            column![
+                text(format!("{size}"))
+                    .font(typography::ui_strong())
+                    .size(typography::scaled(24.0)),
+                label::caption("piksel"),
+            ]
+            .spacing(2)
+            .align_x(Center),
+        )
+        .width(typography::scaled(56.0))
+        .height(ribbon::content_height())
+        .center_x(typography::scaled(56.0))
+        .center_y(ribbon::content_height());
+
+        Group::new("Boyut").push(value).push(
+            Stack::new()
+                .push(
+                    Button::small(Icon::Plus, "Büyüt")
+                        .on_press_maybe(
+                            (size < largest).then_some(Message::TextSize(SizeStep::Larger)),
+                        )
+                        .tip(Tip::new("Yazıyı büyüt").detail("Ctrl +")),
+                )
+                .push(
+                    Button::small(Icon::Minus, "Küçült")
+                        .on_press_maybe(
+                            (size > smallest).then_some(Message::TextSize(SizeStep::Smaller)),
+                        )
+                        .tip(Tip::new("Yazıyı küçült").detail("Ctrl −")),
+                )
+                .push(
+                    Button::small(Icon::Undo, "Varsayılan")
+                        .on_press_maybe(
+                            (size != Typography::DEFAULT.size)
+                                .then_some(Message::TextSize(SizeStep::Default)),
+                        )
+                        .tip(
+                            Tip::new("Varsayılan boyut")
+                                .body(format!("{} piksel", Typography::DEFAULT.size))
+                                .detail("Ctrl 0"),
+                        ),
+                ),
+        )
     }
 
     /// Galeri sayfalarına götüren büyük düğmeler; açık sayfa vurgulanır.
@@ -210,8 +334,8 @@ impl Showcase {
     }
 }
 
-fn view_group<'a>() -> Group<'a, Message> {
-    Group::new("Görünüm")
+fn view_group<'a>(title: &'a str) -> Group<'a, Message> {
+    Group::new(title)
         .push(Button::large(Icon::ZoomExtents, "Tümünü\ngör").on_press(Message::FitAll))
         .push(
             Stack::new()
@@ -227,4 +351,37 @@ fn large_label(tool: Tool) -> &'static str {
         Tool::Polyline => "Çoklu\nçizgi",
         other => other.label(),
     }
+}
+
+/// Yazı ailesi karosu: örnek metin kendi ailesiyle, adı arayüz yazısıyla.
+fn typeface_tile<'a>(
+    sample: &'a str,
+    name: &'static str,
+    note: &'static str,
+    font: Font,
+    active: bool,
+    on_press: Message,
+) -> Element<'a, Message> {
+    let tile = button(
+        column![
+            text(sample)
+                .font(font)
+                .size(typography::scaled(22.0))
+                .line_height(1.0),
+            label::caption(name)
+                .style(style::text::default)
+                .align_x(Center)
+                .width(Fill),
+        ]
+        .spacing(5)
+        .align_x(Center)
+        .width(Fill),
+    )
+    .on_press(on_press)
+    .width(typography::scaled(84.0))
+    .height(ribbon::content_height())
+    .padding([7, 4])
+    .style(style::button::tool(active));
+
+    tip(tile, Tip::new(name).body(note), tooltip::Position::Bottom)
 }

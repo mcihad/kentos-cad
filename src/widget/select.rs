@@ -42,6 +42,8 @@ use crate::theme::typography;
 use crate::widget::dropdown::{Dropdown, Reaction};
 use crate::widget::swatch;
 
+// Ölçüler 12 piksellik gövde metninde tasarlandı ve yazı boyutuyla büyür.
+
 /// Satır yüksekliği.
 const ROW_HEIGHT: f32 = 26.0;
 /// Listenin en fazla yüksekliği; daha uzun listeler kayar.
@@ -90,13 +92,10 @@ impl Choice {
 
     /// Satırın yaklaşık genişliği.
     fn width(&self) -> f32 {
-        let chars = |text: &str| text.chars().count() as f32;
-
-        chars(&self.label) * 6.8
-            + self
-                .detail
-                .as_deref()
-                .map_or(0.0, |detail| chars(detail) * 7.2 + 12.0)
+        typography::text_width(&self.label, typography::body())
+            + self.detail.as_deref().map_or(0.0, |detail| {
+                typography::mono_width(detail, typography::caption()) + 12.0
+            })
             + if self.color.is_some() { 17.0 } else { 0.0 }
             + if self.icon.is_some() { 20.0 } else { 0.0 }
     }
@@ -204,10 +203,11 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             .chain(
                 actions
                     .iter()
-                    .map(|(_, label, _)| label.chars().count() as f32 * 6.8 + 20.0),
+                    .map(|(_, label, _)| typography::text_width(label, typography::body()) + 20.0),
             )
             .fold(0.0, f32::max);
-        let width = (width + 14.0 + 6.0 + 12.0 + 8.0 + 10.0).clamp(MIN_WIDTH, MAX_WIDTH);
+        let width = (width + 14.0 + 6.0 + 12.0 + 8.0 + 10.0)
+            .clamp(typography::scaled(MIN_WIDTH), typography::scaled(MAX_WIDTH));
 
         let choices = Rc::new(choices);
         let actions = Rc::new(actions);
@@ -318,7 +318,8 @@ fn panel<'a>(
                     text_input("Ara", search)
                         .id(id)
                         .on_input(Event::Search)
-                        .size(typography::BODY)
+                        .font(typography::ui())
+                        .size(typography::body())
                         .padding([3, 0])
                         .style(style::field::bare_input),
                 ]
@@ -361,7 +362,7 @@ fn panel<'a>(
         button(line)
             .on_press(Event::Pick(index))
             .width(Fill)
-            .height(ROW_HEIGHT)
+            .height(typography::scaled(ROW_HEIGHT))
             .padding([0, 6])
             .style(style::button::list_item(is_selected))
             .into()
@@ -375,7 +376,8 @@ fn panel<'a>(
                 .width(Fill),
         )
     } else {
-        let height = (matches.len() as f32 * (ROW_HEIGHT + 1.0)).min(MAX_HEIGHT);
+        let height = (matches.len() as f32 * (typography::scaled(ROW_HEIGHT) + 1.0))
+            .min(typography::scaled(MAX_HEIGHT));
 
         content.push(
             scrollable(rows)
@@ -416,7 +418,7 @@ fn command<'a>(glyph: Icon, text: String, event: Event) -> Element<'a, Event> {
     )
     .on_press(event)
     .width(Fill)
-    .height(ROW_HEIGHT)
+    .height(typography::scaled(ROW_HEIGHT))
     .padding([0, 6])
     .style(style::button::list_item(false))
     .into()

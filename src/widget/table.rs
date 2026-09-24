@@ -27,6 +27,7 @@ use iced::{Center, Element, Fill, Length, Padding, Point};
 use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 use crate::widget::context_menu::{ContextMenu, Menu};
 
 /// Sütunlar arasındaki boşluk.
@@ -72,6 +73,8 @@ impl<'a, Message> Column<'a, Message> {
         }
     }
 
+    /// Sütunun genişliği. Sabit genişlik 12 piksellik gövde metnine göre
+    /// verilir ve yazı boyutuyla büyür.
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
         self
@@ -206,7 +209,7 @@ impl<'a, Message: Clone + 'a> Table<'a, Message> {
             .iter()
             .map(|column| match cell_width(column.width, column.align) {
                 Length::Fixed(width) => width,
-                _ => 120.0,
+                _ => typography::scaled(120.0),
             })
             .sum();
 
@@ -217,10 +220,14 @@ impl<'a, Message: Clone + 'a> Table<'a, Message> {
     }
 }
 
-/// Hücrenin genişliği: sağa hizalı sabit sütunlarda sağ boşluk eklenir.
+/// Hücrenin genişliği: sabit genişlik yazı boyutuyla büyür; sağa hizalı
+/// sabit sütunlarda sağ boşluk eklenir.
 fn cell_width(width: Length, align: Horizontal) -> Length {
     match (width, align) {
-        (Length::Fixed(width), Horizontal::Right) => Length::Fixed(width + RIGHT_INSET),
+        (Length::Fixed(width), Horizontal::Right) => {
+            Length::Fixed(typography::scaled(width) + RIGHT_INSET)
+        }
+        (Length::Fixed(width), _) => Length::Fixed(typography::scaled(width)),
         (width, _) => width,
     }
 }
@@ -292,6 +299,7 @@ pub(crate) fn line<'a, Message: 'a>(
             .width(cell_width(width, align))
             .align_x(align)
             .padding(Padding::ZERO.right(inset))
+            .clip(true)
             .into()
     }))
     .spacing(SPACING)

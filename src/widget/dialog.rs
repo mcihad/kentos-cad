@@ -9,6 +9,7 @@ use iced::{Center, Element};
 
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 use crate::widget::horizontal_divider;
 
 /// Başlık, gövde ve sağa hizalı eylem düğmelerinden oluşan kutu.
@@ -47,6 +48,8 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
         self
     }
 
+    /// Kutunun genişliği, 12 piksellik gövde metnine göre; yazı boyutuyla
+    /// büyür.
     pub fn width(mut self, width: f32) -> Self {
         self.width = width;
         self
@@ -78,7 +81,7 @@ impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
         }
 
         container(content)
-            .width(dialog.width)
+            .width(typography::scaled(dialog.width))
             .padding(18)
             .style(style::container::popover)
             .into()
@@ -116,7 +119,7 @@ impl<'a, Message: 'a> From<ShortcutList<'a>> for Element<'a, Message> {
     fn from(list: ShortcutList<'a>) -> Self {
         Column::with_children(list.items.into_iter().map(|(keys, description)| {
             row![
-                label::mono(keys).width(list.key_width),
+                label::mono(keys).width(typography::scaled(list.key_width)),
                 label::muted(description),
             ]
             .spacing(12)

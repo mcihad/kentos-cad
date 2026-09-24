@@ -1,5 +1,6 @@
 //! Uygulama durumu ve güncelleme mantığı.
 
+use std::path::PathBuf;
 use std::time::Duration;
 
 use iced::keyboard::Modifiers;
@@ -12,6 +13,7 @@ use kentos_rc::spatial::{
     Bounds, Draft, Feature, FeatureRef, Geometry, Layer, LonLat, Measurement, Selection,
     SelectionMode, Tool, Viewport, feature, format, query,
 };
+use kentos_rc::theme::typography::{self, Typography};
 use kentos_rc::theme::{self, Mode};
 use kentos_rc::widget::command_line::{self, Entry};
 use kentos_rc::widget::inspector;
@@ -20,10 +22,11 @@ use crate::command::{self, Command};
 use crate::gallery::Gallery;
 use crate::layer_tree::{LayerTree, NodeId};
 use crate::message::{
-    AppCommand, CoordinateFormat, Keyword, Message, QueryPurpose, RECENT_DRAWINGS, RibbonTab,
-    Setting,
+    AppCommand, CoordinateFormat, Keyword, Message, Pending, QueryPurpose, RECENT_DRAWINGS,
+    RibbonTab, Setting, SizeStep,
 };
 use crate::sample;
+use crate::settings::Settings;
 use crate::table::{self, TableView};
 
 /// Çizim araçlarının geometri eklediği katman; listenin en üstündedir.
@@ -91,6 +94,11 @@ pub struct Showcase {
     pub(crate) view_cube: bool,
     pub(crate) cube_rotation: f32,
     pub(crate) mode: Mode,
+    /// Yazı ailesi ve boyutu; kütüphanenin genel yazı ayarıyla aynıdır.
+    pub(crate) typography: Typography,
+    /// Ayarların saklandığı dosya; yoksa ayarlar saklanmaz (testler, ekransız
+    /// görüntü).
+    settings_path: Option<PathBuf>,
 
     pub(crate) ribbon_tab: RibbonTab,
     pub(crate) app_menu_open: bool,
@@ -101,6 +109,8 @@ pub struct Showcase {
     pub(crate) history: Vec<Entry>,
     /// Komut geçmişi açık mı (F2).
     pub(crate) command_expanded: bool,
+    /// Seçenek bekleyen komut (YAZITIPI, PUNTO).
+    pub(crate) pending: Option<Pending>,
 
     pub(crate) gallery: Gallery,
 }
@@ -175,6 +185,8 @@ impl Showcase {
             view_cube: true,
             cube_rotation: 0.6,
             mode: Mode::Dark,
+            typography: typography::current(),
+            settings_path: None,
             ribbon_tab: RibbonTab::Home,
             app_menu_open: false,
             app_menu_hover: None,
@@ -182,7 +194,20 @@ impl Showcase {
             command_input: String::new(),
             history,
             command_expanded: false,
+            pending: None,
             gallery: Gallery::default(),
+        }
+    }
+
+    /// Saklanan ayarlarla açılış: tema ve yazı ayarı dosyadan gelir,
+    /// değişiklikler aynı dosyaya yazılır. Yazı ayarı pencere açılmadan
+    /// verilmiş olmalıdır.
+    pub fn boot(settings: Settings, path: Option<PathBuf>) -> Self {
+        Self {
+            mode: settings.mode,
+            typography: typography::current(),
+            settings_path: path,
+            ..Self::new()
         }
     }
 
@@ -460,6 +485,20 @@ impl Showcase {
             }
             Message::CommandHistoryToggled => self.command_expanded = !self.command_expanded,
             Message::Keyword(keyword) => self.keyword(keyword),
+
+            Message::TypographyChanged(typography) => self.set_typography(typography),
+            Message::TextSize(step) => {
+                let size = match step {
+                    SizeStep::Larger => self.typography.size + 1.0,
+                    SizeStep::Smaller => self.typography.size - 1.0,
+                    SizeStep::Default => Typography::DEFAULT.size,
+                };
+
+                self.set_typography(Typography {
+                    size,
+                    ..self.typography
+                });
+            }
 
             Message::CoordinateFormatSelected(format) => self.coordinate_format = format,
             Message::ScaleSelected(denominator) => {
@@ -1235,7 +1274,14 @@ impl Showcase {
     /// Esc: önce açık menüyü, pencereyi ya da haritadan seçimi kapatır;
     /// sonra yarım çizimi bitirir; en son ölçümü ve seçimi temizler.
     fn escape(&mut self) {
-        if self.app_menu_open {
+        if let Some(pending) = self.pending.take() {
+            let name = match pending {
+                Pending::Typeface => command::name(Command::Typeface),
+                Pending::TextSize => command::name(Command::TextSize),
+            };
+
+            self.log(format!("{name} iptal edildi."));
+        } else if self.app_menu_open {
             self.app_menu_open = false;
         } else if self.query.is_some() {
             self.query = None;
@@ -1282,6 +1328,45 @@ impl Showcase {
     fn set_mode(&mut self, mode: Mode) {
         self.mode = mode;
         self.log(format!("{} tema etkin.", mode.label()));
+        self.save_settings();
+    }
+
+    /// Yazı ayarını değiştirir; bekleyen yazı komutu biter.
+    fn set_typography(&mut self, typography: Typography) {
+        typography::set(typography);
+
+        let previous = self.typography;
+        self.typography = typography::current();
+        self.pending = None;
+
+        if self.typography != previous {
+            self.log(format!(
+                "Yazı: {}, {} piksel; eş aralıklı {}.",
+                self.typography.family.name(),
+                self.typography.size,
+                self.typography.mono.name(),
+            ));
+            self.save_settings();
+        }
+    }
+
+    /// Tema ve yazı ayarını dosyaya yazar.
+    fn save_settings(&mut self) {
+        let Some(path) = &self.settings_path else {
+            return;
+        };
+
+        let settings = Settings {
+            mode: self.mode,
+            typography: self.typography,
+        };
+
+        if let Err(error) = settings.save(path) {
+            self.error(format!(
+                "Ayarlar {} dosyasına yazılamadı: {error}",
+                path.display()
+            ));
+        }
     }
 
     // --- Komutlar --------------------------------------------------------
@@ -1469,6 +1554,8 @@ impl Showcase {
                 self.log("Seçim ve ölçüm temizlendi.");
             }
             Command::New => self.run_app_command(AppCommand::New),
+            Command::Typeface => self.pending = Some(Pending::Typeface),
+            Command::TextSize => self.pending = Some(Pending::TextSize),
             Command::Help => {
                 self.help_open = true;
                 self.log("Kısayollar açıldı.");
@@ -1570,7 +1657,8 @@ fn typed(text: Option<&str>, modifiers: Modifiers) -> Option<Message> {
 }
 
 /// CAD kısayolları: Esc, Delete, Ctrl+A (tümünü seç), F1 (yardım), F2
-/// (komut geçmişi), F3 (yakalama), F7 (ızgara).
+/// (komut geçmişi), F3 (yakalama), F7 (ızgara); Ctrl +, Ctrl − ve Ctrl 0
+/// yazı boyutunu değiştirir.
 fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
     use keyboard::Key;
     use keyboard::key::Named;
@@ -1583,6 +1671,11 @@ fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
         Key::Named(Named::F3) => Some(Message::Toggle(Setting::Snap)),
         Key::Named(Named::F7) => Some(Message::Toggle(Setting::Grid)),
         Key::Character("a" | "A") if modifiers.command() => Some(Message::SelectAll),
+        Key::Character("+" | "=") if modifiers.command() => {
+            Some(Message::TextSize(SizeStep::Larger))
+        }
+        Key::Character("-") if modifiers.command() => Some(Message::TextSize(SizeStep::Smaller)),
+        Key::Character("0") if modifiers.command() => Some(Message::TextSize(SizeStep::Default)),
         _ => None,
     }
 }
@@ -1635,6 +1728,25 @@ mod tests {
 
         let drawings = &app.layers[DRAWING_LAYER].features;
         assert_eq!(drawings.len(), 1);
+    }
+
+    #[test]
+    fn typeface_command_waits_for_an_option() {
+        let mut app = Showcase::new();
+
+        submit(&mut app, "yazitipi");
+        assert_eq!(app.pending, Some(Pending::Typeface));
+        assert!(
+            app.prompt()
+                .is_some_and(|prompt| prompt.find("inter").is_some())
+        );
+
+        // Esc bekleyen komutu bırakır; yazı ayarı değişmez.
+        let _ = app.update(Message::Escape);
+        assert_eq!(app.pending, None);
+
+        submit(&mut app, "punto");
+        assert_eq!(app.pending, Some(Pending::TextSize));
     }
 
     #[test]

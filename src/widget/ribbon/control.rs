@@ -1,10 +1,10 @@
 //! Şerit düğmeleri ve uygulama (marka) düğmesi.
 
-use iced::widget::text::{Fragment, IntoFragment};
+use iced::widget::text::{Fragment, IntoFragment, Wrapping};
 use iced::widget::{button, column, container, row, space, text, tooltip};
 use iced::{Center, Element, Fill, Padding, Right, Top};
 
-use super::{CONTENT, ICON, LARGE_ICON, LARGE_WIDTH, ROW, TAB_HEIGHT};
+use super::{ICON, LARGE_ICON, content_height, large_width, row_height, tab_height};
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
@@ -85,21 +85,32 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>> for Element<'a, Message>
             Tone::Inherit
         };
 
+        // Büyük düğme en az standart genişliktedir; etiketin en uzun satırı
+        // sığmazsa genişler. Etiketler kırılmaz: satırlar etikette verilir.
+        let widest_line = ribbon_button
+            .label
+            .lines()
+            .map(|line| typography::text_width(line, typography::caption()))
+            .fold(0.0, f32::max);
+        let large = large_width().max((widest_line + 8.0).ceil());
+
         let content: Element<'a, Message> = match ribbon_button.size {
             Size::Large => button(
                 column![
                     icon(ribbon_button.icon).size(LARGE_ICON).tone(tone),
                     text(ribbon_button.label)
-                        .size(typography::CAPTION)
+                        .font(typography::ui())
+                        .size(typography::caption())
                         .line_height(1.15)
+                        .wrapping(Wrapping::None)
                         .align_x(Center),
                 ]
                 .spacing(5)
                 .align_x(Center)
                 .width(Fill),
             )
-            .width(LARGE_WIDTH)
-            .height(CONTENT)
+            .width(large)
+            .height(content_height())
             .padding(Padding {
                 top: 9.0,
                 right: 2.0,
@@ -109,13 +120,13 @@ impl<'a, Message: Clone + 'a> From<Button<'a, Message>> for Element<'a, Message>
             Size::Small => button(
                 row![
                     icon(ribbon_button.icon).size(ICON).tone(tone),
-                    label::body(ribbon_button.label),
+                    label::body(ribbon_button.label).wrapping(Wrapping::None),
                 ]
                 .spacing(6)
                 .height(Fill)
                 .align_y(Center),
             )
-            .height(ROW)
+            .height(row_height())
             .padding([0, 6]),
         }
         .on_press_maybe(ribbon_button.on_press)
@@ -171,7 +182,7 @@ impl<'a, Message: Clone + 'a> From<AppButton<'a, Message>> for Element<'a, Messa
             .align_y(Center),
         )
         .on_press_maybe(app_button.on_press)
-        .height(TAB_HEIGHT)
+        .height(tab_height())
         .padding([0, 12])
         .style(style::button::brand(app_button.open))
         .into()

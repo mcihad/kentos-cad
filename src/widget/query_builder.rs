@@ -81,7 +81,8 @@ impl<'a, Message: Clone + 'a> QueryBuilder<'a, Message> {
                     on_edit(Edit::Value(index, choice))
                 })
                 .placeholder("Seçin")
-                .text_size(typography::BODY)
+                .font(typography::ui())
+                .text_size(typography::body())
                 .padding([3, 8])
                 .width(Fill)
                 .style(style::field::pick_list)
@@ -96,7 +97,8 @@ impl<'a, Message: Clone + 'a> QueryBuilder<'a, Message> {
 
                 text_input(placeholder, value)
                     .on_input(move |value| on_edit(Edit::Value(index, value)))
-                    .size(typography::BODY)
+                    .font(typography::ui())
+                    .size(typography::body())
                     .padding([4, 8])
                     .width(Fill)
                     .style(move |theme, status| {
@@ -186,9 +188,10 @@ impl<'a, Message: Clone + 'a> From<QueryBuilder<'a, Message>> for Element<'a, Me
                     fields.get(condition.field).cloned(),
                     move |choice: FieldChoice| on_field(Edit::Field(index, choice.index)),
                 )
-                .text_size(typography::BODY)
+                .font(typography::ui())
+                .text_size(typography::body())
                 .padding([3, 8])
-                .width(170)
+                .width(typography::scaled(170.0))
                 .style(style::field::pick_list)
                 .menu_style(style::field::menu),
                 pick_list(
@@ -196,9 +199,10 @@ impl<'a, Message: Clone + 'a> From<QueryBuilder<'a, Message>> for Element<'a, Me
                     Some(condition.operator),
                     move |operator| on_operator(Edit::Operator(index, operator)),
                 )
-                .text_size(typography::BODY)
+                .font(typography::ui())
+                .text_size(typography::body())
                 .padding([3, 8])
-                .width(120)
+                .width(typography::scaled(120.0))
                 .style(style::field::pick_list)
                 .menu_style(style::field::menu),
                 value,

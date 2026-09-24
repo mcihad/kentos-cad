@@ -44,6 +44,10 @@ pub enum Command {
     Clear,
     New,
     Help,
+    /// Yazı ailesini seçtirir.
+    Typeface,
+    /// Yazı boyutunu seçtirir.
+    TextSize,
     Quit,
 }
 
@@ -298,6 +302,20 @@ const COMMANDS: &[(Command, Info)] = &[
             .description(
                 "Klavye kısayollarını ve komut kutusunun tuşlarını gösterir. Kısayolu F1.",
             ),
+    ),
+    (
+        Command::Typeface,
+        Info::new("YAZITIPI", "Yazı tipi")
+            .aliases(&["FONT"])
+            .icon(Icon::Type)
+            .description("Arayüzün ve koordinatların yazı ailesini seçtirir: IBM Plex, Inter, Plus Jakarta Sans, JetBrains Mono."),
+    ),
+    (
+        Command::TextSize,
+        Info::new("PUNTO", "Yazı boyutu")
+            .aliases(&["YAZIBOYUTU", "FONTSIZE"])
+            .icon(Icon::Type)
+            .description("Arayüz metninin boyutunu seçtirir. Kısayolları Ctrl +, Ctrl − ve Ctrl 0."),
     ),
     (
         Command::Quit,

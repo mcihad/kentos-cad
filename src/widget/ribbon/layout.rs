@@ -4,7 +4,7 @@ use iced::widget::text::{Fragment, IntoFragment};
 use iced::widget::{Column, column, container, row};
 use iced::{Center, Element, Fill, Length, Padding, Top};
 
-use super::{CAPTION, CONTENT, ICON, ROW, ROW_GAP};
+use super::{ICON, ROW_GAP, caption_height, content_height, row_height};
 use crate::label;
 
 /// Başlıklı araç grubu. Öğeler yan yana dizilir; altta ortalanmış grup
@@ -33,10 +33,10 @@ impl<'a, Message: 'a> From<Group<'a, Message>> for Element<'a, Message> {
     fn from(group: Group<'a, Message>) -> Self {
         column![
             container(iced::widget::Row::with_children(group.items).spacing(2))
-                .height(CONTENT)
+                .height(content_height())
                 .align_y(Top),
             container(label::caption(group.title))
-                .height(CAPTION)
+                .height(caption_height())
                 .align_y(Center),
         ]
         .padding(Padding {
@@ -125,7 +125,7 @@ impl<'a, Message: 'a> From<Row<'a, Message>> for Element<'a, Message> {
                 .into_iter()
                 .map(|item| container(item).width(Fill).into()),
         )
-        .height(ROW)
+        .height(row_height())
         .into()
     }
 }
@@ -158,7 +158,7 @@ impl<'a, Message: 'a> From<Field<'a, Message>> for Element<'a, Message> {
         ]
         .spacing(6)
         .padding([0, 6])
-        .height(ROW)
+        .height(row_height())
         .align_y(Center)
         .into()
     }

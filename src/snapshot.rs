@@ -106,12 +106,15 @@ pub struct Snapshot {
 }
 
 impl Snapshot {
-    /// Verilen mantıksal boyutta ekran dışı arayüz kurar.
+    /// Verilen mantıksal boyutta ekran dışı arayüz kurar. Gömülü yazı
+    /// tipleri yüklenir; metinler geçerli yazı ayarıyla çizilir.
     pub fn new(size: Size) -> Result<Self, Error> {
         let backend = std::env::var("KENTOS_SNAPSHOT_BACKEND").ok();
 
+        typography::load();
+
         let renderer = iced::futures::executor::block_on(<Renderer as Headless>::new(
-            typography::UI,
+            typography::ui(),
             Pixels(16.0),
             backend.as_deref(),
         ))

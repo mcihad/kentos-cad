@@ -108,6 +108,21 @@ const ROW_SPACING: f32 = 6.0;
 /// listenin yüksekliği oynamaz.
 const FOOTER_HEIGHT: f32 = 42.0;
 
+// Metni taşıyan ölçüler 12 piksellik gövde metninde tasarlandı ve yazı
+// boyutuyla büyür; ikon sütunları ve boşluklar sabittir.
+
+fn line_height() -> f32 {
+    typography::scaled(LINE_HEIGHT)
+}
+
+fn input_height() -> f32 {
+    typography::scaled(INPUT_HEIGHT)
+}
+
+fn row_height() -> f32 {
+    typography::scaled(ROW_HEIGHT)
+}
+
 /// Komut geçmişindeki bir satır.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Entry {
@@ -491,7 +506,7 @@ fn log<'a, Message: 'a>(
         let rows = Column::with_children(
             std::iter::once(
                 space::vertical()
-                    .height(missing as f32 * LINE_HEIGHT)
+                    .height(missing as f32 * line_height())
                     .into(),
             )
             .chain(
@@ -505,7 +520,7 @@ fn log<'a, Message: 'a>(
             .anchor_bottom()
             .direction(style::field::thin_scrollbar())
             .width(Fill)
-            .height(EXPANDED_LINES as f32 * LINE_HEIGHT + 8.0)
+            .height(EXPANDED_LINES as f32 * line_height() + 8.0)
             .into();
     }
 
@@ -521,7 +536,7 @@ fn log<'a, Message: 'a>(
     container(rows)
         .padding([4.0, PADDING_X])
         .width(Fill)
-        .height(lines as f32 * LINE_HEIGHT + 8.0)
+        .height(lines as f32 * line_height() + 8.0)
         .align_y(Bottom)
         .clip(true)
         .into()
@@ -546,18 +561,19 @@ fn history_line<'a, Message: 'a>(
             let content = match commands.iter().find(|command| command.is_spelled(input)) {
                 Some(command) => row![
                     text(command.name)
-                        .font(typography::MONO_STRONG)
-                        .size(typography::BODY)
+                        .font(typography::mono_strong())
+                        .size(typography::body())
                         .style(ink(|t| t.text, alpha)),
                     text(command.title)
-                        .size(typography::BODY)
+                        .font(typography::ui())
+                        .size(typography::body())
                         .style(ink(|t| t.muted, alpha)),
                 ]
                 .spacing(10)
                 .into(),
                 None => text(input.as_str())
-                    .font(typography::MONO)
-                    .size(typography::BODY)
+                    .font(typography::mono())
+                    .size(typography::body())
                     .wrapping(wrapping)
                     .style(ink(|t| t.text, alpha))
                     .into(),
@@ -571,7 +587,8 @@ fn history_line<'a, Message: 'a>(
         Entry::Output(output) => (
             None,
             text(output.as_str())
-                .size(typography::BODY)
+                .font(typography::ui())
+                .size(typography::body())
                 .wrapping(wrapping)
                 .style(ink(|t| t.text, alpha))
                 .into(),
@@ -579,7 +596,8 @@ fn history_line<'a, Message: 'a>(
         Entry::Error(error) => (
             Some(mark(Icon::Warning, 11.0, |t| t.danger, alpha)),
             text(error.as_str())
-                .size(typography::BODY)
+                .font(typography::ui())
+                .size(typography::body())
                 .wrapping(wrapping)
                 .style(ink(|t| t.danger, alpha))
                 .into(),
@@ -595,7 +613,7 @@ fn history_line<'a, Message: 'a>(
     if wrap {
         container(line).padding([1, 0]).into()
     } else {
-        container(line).height(LINE_HEIGHT).align_y(Center).into()
+        container(line).height(line_height()).align_y(Center).into()
     }
 }
 
@@ -670,8 +688,8 @@ fn input_row<'a, Message: Clone + 'a>(
             ask = ask.push(
                 container(
                     text(command)
-                        .font(typography::MONO_STRONG)
-                        .size(typography::CAPTION),
+                        .font(typography::mono_strong())
+                        .size(typography::caption()),
                 )
                 .padding([1, 6])
                 .style(style::container::token),
@@ -707,8 +725,8 @@ fn input_row<'a, Message: Clone + 'a>(
 
     let mut input = text_input(&placeholder, value)
         .id(id)
-        .font(typography::MONO)
-        .size(12.5)
+        .font(typography::mono())
+        .size(typography::body())
         .padding([4, 0])
         .width(Fill)
         .style(style::field::bare_input);
@@ -723,7 +741,7 @@ fn input_row<'a, Message: Clone + 'a>(
 
     container(content.push(input))
         .padding(padding::left(PADDING_X).right(8))
-        .height(INPUT_HEIGHT)
+        .height(input_height())
         .width(Fill)
         .align_y(Center)
         .into()
@@ -741,9 +759,14 @@ enum Control {
 fn controls<'a>(expanded: bool, can_expand: bool) -> Element<'a, Control> {
     let control = |glyph: Icon, name: &'a str| {
         button(
-            row![icon(glyph).size(12.0), text(name).size(typography::CAPTION)]
-                .spacing(5)
-                .align_y(Center),
+            row![
+                icon(glyph).size(12.0),
+                text(name)
+                    .font(typography::ui())
+                    .size(typography::caption())
+            ]
+            .spacing(5)
+            .align_y(Center),
         )
         .padding([3, 7])
         .style(style::button::ghost)
@@ -952,11 +975,11 @@ fn panel<'a, Message: 'a>(
         horizontal_divider(),
         container(label::caption(description).wrapping(Wrapping::WordOrGlyph))
             .padding([5.0, ROW_PADDING])
-            .height(FOOTER_HEIGHT)
+            .height(typography::scaled(FOOTER_HEIGHT))
             .width(Fill),
     ])
     .padding(PANEL_PADDING)
-    .width(PANEL_WIDTH)
+    .width(typography::scaled(PANEL_WIDTH))
     .style(style::container::popover)
     .into()
 }
@@ -992,7 +1015,8 @@ fn suggestion_row<'a, Message: 'a>(
 
             row![
                 container(glyph).width(ROW_ICON).align_x(Center),
-                container(command_name(command.name, suggestion.matched)).width(ROW_NAME),
+                container(command_name(command.name, suggestion.matched))
+                    .width(typography::scaled(ROW_NAME)),
                 label::body(command.title)
                     .wrapping(Wrapping::None)
                     .width(Fill),
@@ -1005,8 +1029,8 @@ fn suggestion_row<'a, Message: 'a>(
                     .width(ROW_ICON)
                     .align_x(Center),
                 text(label.clone())
-                    .font(typography::UI_STRONG)
-                    .size(typography::BODY)
+                    .font(typography::ui_strong())
+                    .size(typography::body())
                     .width(Fill),
             ];
 
@@ -1024,7 +1048,7 @@ fn suggestion_row<'a, Message: 'a>(
 
     container(content.spacing(ROW_SPACING).align_y(Center))
         .padding([0.0, ROW_PADDING])
-        .height(ROW_HEIGHT)
+        .height(row_height())
         .width(Fill)
         .align_y(Center)
         .style(style::container::suggestion(highlighted))
@@ -1035,8 +1059,8 @@ fn suggestion_row<'a, Message: 'a>(
 fn command_name<'a, Message: 'a>(name: &'a str, matched: Match) -> Element<'a, Message> {
     let part = |content: &'a str| {
         text(content)
-            .font(typography::MONO_STRONG)
-            .size(typography::BODY)
+            .font(typography::mono_strong())
+            .size(typography::body())
     };
 
     match matched {
@@ -1294,7 +1318,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
         let controls = self.controls.as_widget_mut().layout(
             &mut tree.children[2],
             renderer,
-            &layout::Limits::new(Size::ZERO, Size::new(width, INPUT_HEIGHT)),
+            &layout::Limits::new(Size::ZERO, Size::new(width, input_height())),
         );
         let controls_size = controls.size();
 
@@ -1305,7 +1329,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
                 Size::ZERO,
                 Size::new(
                     (width - controls_size.width - PADDING_X).max(0.0),
-                    INPUT_HEIGHT,
+                    input_height(),
                 ),
             ),
         );
@@ -1314,13 +1338,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
         let input_y = 1.0 + log_height + 1.0;
 
         layout::Node::with_children(
-            Size::new(width, input_y + INPUT_HEIGHT),
+            Size::new(width, input_y + input_height()),
             vec![
                 log.move_to(Point::new(0.0, 1.0)),
                 input.move_to(Point::new(0.0, input_y)),
                 controls.move_to(Point::new(
                     width - controls_size.width - PADDING_X,
-                    input_y + (INPUT_HEIGHT - controls_size.height) / 2.0,
+                    input_y + (input_height() - controls_size.height) / 2.0,
                 )),
             ],
         )
@@ -1558,7 +1582,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
         if state.focused {
             let row = Rectangle {
                 y: input_y,
-                height: INPUT_HEIGHT,
+                height: input_height(),
                 ..bounds
             };
 
@@ -1702,8 +1726,8 @@ impl<Message> Suggestions<'_, '_, Message> {
         let offset = position.y - panel.y - PANEL_PADDING;
         let visible = self.suggestions.len().min(VISIBLE_ROWS);
 
-        (offset >= 0.0 && offset < visible as f32 * ROW_HEIGHT)
-            .then(|| self.state.scroll + (offset / ROW_HEIGHT) as usize)
+        (offset >= 0.0 && offset < visible as f32 * row_height())
+            .then(|| self.state.scroll + (offset / row_height()) as usize)
             .filter(|&index| index < self.suggestions.len())
     }
 }
@@ -1760,7 +1784,7 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Suggestions<
 
         if count > VISIBLE_ROWS {
             let bounds = panel.bounds();
-            let track = VISIBLE_ROWS as f32 * ROW_HEIGHT;
+            let track = VISIBLE_ROWS as f32 * row_height();
             let thumb = Rectangle {
                 x: bounds.x + bounds.width - 3.5,
                 y: bounds.y + PANEL_PADDING + track * self.state.scroll as f32 / count as f32,
@@ -1817,7 +1841,7 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Suggestions<
             Event::Mouse(mouse::Event::WheelScrolled { delta }) if over => {
                 let rows = match delta {
                     mouse::ScrollDelta::Lines { y, .. } => y.round(),
-                    mouse::ScrollDelta::Pixels { y, .. } => (y / ROW_HEIGHT).round(),
+                    mouse::ScrollDelta::Pixels { y, .. } => (y / row_height()).round(),
                 };
                 let limit = self.suggestions.len().saturating_sub(VISIBLE_ROWS);
                 let scroll = (self.state.scroll as f32 - rows).clamp(0.0, limit as f32) as usize;

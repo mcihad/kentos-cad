@@ -37,7 +37,7 @@ impl Showcase {
 
         let entries = match page {
             Page::Colors => self.colors_page(),
-            Page::Typography => foundations::typography_page(),
+            Page::Typography => self.typography_page(),
             Page::Icons => foundations::icons_page(),
             Page::Buttons => self.buttons_page(),
             Page::Data => self.data_page(),
@@ -47,7 +47,7 @@ impl Showcase {
         };
 
         let header = column![
-            label::title(page.label()).size(typography::FIGURE),
+            label::title(page.label()).size(typography::figure()),
             label::muted(page.description()),
         ]
         .spacing(4);
@@ -56,7 +56,7 @@ impl Showcase {
             .extend(entries)
             .spacing(16)
             .padding(20)
-            .max_width(PAGE_WIDTH);
+            .max_width(typography::scaled(PAGE_WIDTH));
 
         container(
             scrollable(content)
@@ -76,7 +76,7 @@ impl Showcase {
 fn entry<'a>(
     title: &'a str,
     path: &'a str,
-    description: &'a str,
+    description: impl iced::widget::text::IntoFragment<'a>,
     stage: impl Into<Element<'a, Message>>,
     code: Option<&'a str>,
 ) -> Element<'a, Message> {

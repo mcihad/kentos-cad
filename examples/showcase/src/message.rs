@@ -8,6 +8,7 @@ use kentos_rc::attribute::query;
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::model_space;
 use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
+use kentos_rc::theme::typography::Typography;
 use kentos_rc::widget::inspector;
 
 use crate::gallery::{Demo, Page};
@@ -121,6 +122,12 @@ pub enum Message {
     /// Etkin komutun istemindeki seçenek.
     Keyword(Keyword),
 
+    // Yazı
+    /// Yazı ayarını değiştirir: aile, eş aralıklı aile ya da boyut.
+    TypographyChanged(Typography),
+    /// Yazıyı bir adım büyütür, küçültür ya da varsayılana döndürür.
+    TextSize(SizeStep),
+
     // Durum çubuğu
     CoordinateFormatSelected(CoordinateFormat),
     /// Ölçeği 1:N yapar.
@@ -130,6 +137,23 @@ pub enum Message {
     Escape,
     Tick,
     Quit,
+}
+
+/// Yazı boyutunun adımı (Ctrl +, Ctrl −, Ctrl 0).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SizeStep {
+    Larger,
+    Smaller,
+    Default,
+}
+
+/// Seçenek bekleyen komut: istem seçenekleri gösterir, seçilince biter.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Pending {
+    /// YAZITIPI: yazı ailesi ya da eş aralıklı aile.
+    Typeface,
+    /// PUNTO: gövde metninin boyutu.
+    TextSize,
 }
 
 /// Çizim ve ölçüm istemlerinin seçenekleri.

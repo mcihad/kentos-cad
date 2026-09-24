@@ -4,6 +4,7 @@
 //! ve seçim eylemleri; başlığa tıklayarak sıralama; satıra tıklayarak seçim
 //! (Shift aralık seçer, Ctrl satırı seçime ekler ya da çıkarır).
 
+use iced::widget::text::Wrapping;
 use iced::widget::{button, column, pick_list, row, space, tooltip};
 use iced::{Center, Element};
 
@@ -21,7 +22,8 @@ use crate::app::Showcase;
 use crate::message::{Message, QueryPurpose};
 use crate::table::{Column, TableView};
 
-/// Panelin yüksekliği: başlık, araç çubuğu ve yaklaşık yedi satır.
+/// Panelin yüksekliği: başlık, araç çubuğu ve yaklaşık yedi satır. Yazı
+/// boyutuyla büyümez; büyük yazıda daha az satır görünür, harita küçülmez.
 const HEIGHT: f32 = 252.0;
 
 /// Araç çubuğunda gösterilen filtre açıklamasının en fazla uzunluğu.
@@ -120,7 +122,8 @@ impl Showcase {
                 pick_list(choices, current, |choice: LayerChoice<'_>| {
                     Message::LayerActivated(choice.index)
                 })
-                .text_size(typography::BODY)
+                .font(typography::ui())
+                .text_size(typography::body())
                 .padding([2, 8])
                 .width(150)
                 .style(style::field::pick_list)
@@ -205,17 +208,20 @@ impl Showcase {
         {
             return row![
                 icon(Icon::Link).size(12.0).tone(Tone::Muted),
-                label::body(content)
+                label::body(content).wrapping(Wrapping::None)
             ]
             .spacing(4)
             .align_y(Center)
             .into();
         }
 
+        // Hücreler tek satırdır; sütuna sığmayan metin kırpılır.
         match column {
-            Column::Id => label::mono_caption(content).into(),
-            _ if column.is_monospaced(layer) => label::mono(content).into(),
-            _ => label::body(content).into(),
+            Column::Id => label::mono_caption(content).wrapping(Wrapping::None).into(),
+            _ if column.is_monospaced(layer) => {
+                label::mono(content).wrapping(Wrapping::None).into()
+            }
+            _ => label::body(content).wrapping(Wrapping::None).into(),
         }
     }
 }

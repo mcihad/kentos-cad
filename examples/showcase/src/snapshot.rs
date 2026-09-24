@@ -20,6 +20,7 @@ use kentos_rc::attribute::{Combinator, Date, ObjectId, Operator, Value};
 use kentos_rc::snapshot::{Input, Snapshot};
 use kentos_rc::spatial::model_space::Event as ModelSpace;
 use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode};
+use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::widget::inspector::Event as Inspector;
 
 use crate::app::{Showcase, WINDOW_SIZE};
@@ -52,7 +53,7 @@ const SCENARIOS: [(&str, &str); 11] = [
     ("yardim", "kısayollar penceresi"),
     (
         "cizim",
-        "çoklu çizgi sürüyor: istem ve seçenekleri; öneriler --tikla 300,854 --yaz ile açılır",
+        "çoklu çizgi sürüyor: istem ve seçenekleri; öneriler --tikla 800,851 --yaz ile açılır",
     ),
     (
         "gecmis",
@@ -82,6 +83,9 @@ Seçenekler:
   --boyut <G>x<Y>       pencere boyutu (varsayılan: 1440x900)
   --olcek <katsayı>     piksel yoğunluğu (varsayılan: 1)
   --tema acik|koyu      tema (varsayılan: koyu)
+  --yazi <aile>         ibm-plex-sans, inter, plus-jakarta-sans
+  --esaralikli <aile>   ibm-plex-mono, jetbrains-mono
+  --punto <boyut>       gövde metninin boyutu, 11-18 (varsayılan: 13)
 
 Girdiler (verildikleri sırayla):
   --imlec <x>,<y>       imleci taşır
@@ -100,6 +104,7 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let mut scale = 1.0;
     let mut light = false;
     let mut inputs = Vec::new();
+    let mut typography = Typography::DEFAULT;
 
     while let Some(argument) = args.next() {
         let mut value = || {
@@ -126,6 +131,21 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
             "--boyut" => size = parse_size(&value()?)?,
             "--olcek" => scale = parse_number(&value()?)?,
             "--tema" => light = value()? == "acik",
+            "--yazi" => {
+                let name = value()?;
+                typography.family = Family::ALL
+                    .into_iter()
+                    .find(|family| key_of(family.name()) == name)
+                    .ok_or_else(|| format!("Bilinmeyen yazı ailesi: {name}"))?;
+            }
+            "--esaralikli" => {
+                let name = value()?;
+                typography.mono = Mono::ALL
+                    .into_iter()
+                    .find(|mono| key_of(mono.name()) == name)
+                    .ok_or_else(|| format!("Bilinmeyen eş aralıklı aile: {name}"))?;
+            }
+            "--punto" => typography.size = parse_number(&value()?)?,
             "--imlec" => inputs.push(Input::Move(parse_point(&value()?)?)),
             "--tikla" => inputs.push(Input::Click(parse_point(&value()?)?)),
             "--sag-tikla" => inputs.push(Input::RightClick(parse_point(&value()?)?)),
@@ -145,6 +165,9 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     }
 
     let output = output.ok_or_else(|| format!("Çıktı dosyası verilmedi.\n\n{USAGE}"))?;
+
+    // Yazı ayarı uygulama kurulmadan verilir; uygulama onu okur.
+    kentos_rc::theme::typography::set(typography);
 
     let mut app = Showcase::new();
     prepare(&mut app, &scenario, page.as_deref())?;
@@ -300,6 +323,11 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
     }
 
     Ok(())
+}
+
+/// Ailenin komut satırındaki adı ("IBM Plex Sans" → "ibm-plex-sans").
+fn key_of(name: &str) -> String {
+    name.to_ascii_lowercase().replace(' ', "-")
 }
 
 fn parse_number(text: &str) -> Result<f32, String> {

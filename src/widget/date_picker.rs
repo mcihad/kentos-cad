@@ -35,7 +35,7 @@
 
 use std::rc::Rc;
 
-use iced::widget::{Column, Row, button, column, container, row, rule, space, text};
+use iced::widget::{Column, Row, button, column, container, row, rule, space};
 use iced::{Center, Element, Fill, Length};
 
 use crate::attribute::time::{MONTHS_SHORT, WEEKDAYS};
@@ -47,14 +47,37 @@ use crate::style::button::CellTone;
 use crate::theme::typography;
 use crate::widget::dropdown::{Dropdown, Reaction};
 
+// Hücre ölçüleri 12 piksellik gövde metninde tasarlandı ve yazı boyutuyla
+// büyür; aralarındaki boşluk sabittir.
+
 /// Takvim hücresi.
-const DAY_WIDTH: f32 = 30.0;
-const DAY_HEIGHT: f32 = 26.0;
+fn day_width() -> f32 {
+    typography::scaled(30.0)
+}
+
+fn day_height() -> f32 {
+    typography::scaled(26.0)
+}
+
 /// Hafta numarası sütunu.
-const WEEK_WIDTH: f32 = 24.0;
+fn week_width() -> f32 {
+    typography::scaled(24.0)
+}
+
 /// Saat ve dakika hücresi.
-const CLOCK_WIDTH: f32 = 30.0;
-const CLOCK_HEIGHT: f32 = 24.0;
+fn clock_width() -> f32 {
+    typography::scaled(30.0)
+}
+
+fn clock_height() -> f32 {
+    typography::scaled(24.0)
+}
+
+/// Ay ve yıl hücrelerinin yüksekliği.
+fn wide_cell_height() -> f32 {
+    typography::scaled(40.0)
+}
+
 /// Hücreler arası boşluk.
 const GAP: f32 = 2.0;
 /// Dakika ızgarasının adımı.
@@ -382,16 +405,18 @@ fn reduce<'a, Message>(
 /// Takvimin genişliği: hafta numaraları ve yedi gün.
 fn calendar_width(props: Props) -> f32 {
     let week_column = if props.week_numbers {
-        WEEK_WIDTH + GAP
+        week_width() + GAP
     } else {
         0.0
     };
 
-    week_column + DAY_WIDTH * 7.0 + GAP * 6.0
+    week_column + day_width() * 7.0 + GAP * 6.0
 }
 
 /// Saat ızgarasının genişliği: altı sütun.
-const CLOCK_SECTION: f32 = CLOCK_WIDTH * 6.0 + GAP * 5.0;
+fn clock_section() -> f32 {
+    clock_width() * 6.0 + GAP * 5.0
+}
 
 /// Takvimle saat ızgarası arasındaki boşluk.
 const SECTION_GAP: f32 = 20.0;
@@ -402,8 +427,8 @@ fn panel<'a>(state: &State, props: Props) -> Element<'a, Pick> {
     // paneli pencere boyunca yaymasın.
     let width = match props.mode {
         Mode::Date => calendar_width(props),
-        Mode::DateTime => calendar_width(props) + SECTION_GAP + CLOCK_SECTION,
-        Mode::Time => CLOCK_SECTION,
+        Mode::DateTime => calendar_width(props) + SECTION_GAP + clock_section(),
+        Mode::Time => clock_section(),
     };
 
     let mut sections = Row::new().spacing(SECTION_GAP);
@@ -493,8 +518,8 @@ fn days<'a>(state: &State, props: Props) -> Element<'a, Pick> {
     if props.week_numbers {
         heading = heading.push(
             container(label::caption("Hf"))
-                .width(WEEK_WIDTH)
-                .center_x(WEEK_WIDTH),
+                .width(week_width())
+                .center_x(week_width()),
         );
     }
 
@@ -506,7 +531,10 @@ fn days<'a>(state: &State, props: Props) -> Element<'a, Pick> {
             name.style(style::text::default)
         };
 
-        container(name).width(DAY_WIDTH).center_x(DAY_WIDTH).into()
+        container(name)
+            .width(day_width())
+            .center_x(day_width())
+            .into()
     }));
 
     let weeks = Column::with_children((0..6).map(|week| {
@@ -516,8 +544,8 @@ fn days<'a>(state: &State, props: Props) -> Element<'a, Pick> {
         if props.week_numbers {
             line = line.push(
                 container(label::mono_caption(first.iso_week().to_string()))
-                    .width(WEEK_WIDTH)
-                    .center_x(WEEK_WIDTH),
+                    .width(week_width())
+                    .center_x(week_width()),
             );
         }
 
@@ -537,8 +565,8 @@ fn days<'a>(state: &State, props: Props) -> Element<'a, Pick> {
                 selected == Some(day),
                 day == props.now.date,
                 tone,
-                DAY_WIDTH,
-                DAY_HEIGHT,
+                day_width(),
+                day_height(),
             )
         }))
         .into()
@@ -569,7 +597,7 @@ fn months<'a>(state: &State, props: Props, width: f32) -> Element<'a, Pick> {
                 current == Some(month),
                 CellTone::Normal,
                 cell_width,
-                40.0,
+                wide_cell_height(),
             )
         }))
         .spacing(GAP)
@@ -601,7 +629,7 @@ fn years<'a>(state: &State, props: Props, width: f32) -> Element<'a, Pick> {
                 props.now.date.year() == year,
                 tone,
                 cell_width,
-                40.0,
+                wide_cell_height(),
             )
         }))
         .spacing(GAP)
@@ -635,8 +663,8 @@ fn clock<'a>(state: &State, props: Props) -> Element<'a, Pick> {
                 selected.is_some_and(|time| time.hour() == hour),
                 props.now.time.hour() == hour,
                 CellTone::Normal,
-                CLOCK_WIDTH,
-                CLOCK_HEIGHT,
+                clock_width(),
+                clock_height(),
             )
         }))
         .spacing(GAP)
@@ -654,8 +682,8 @@ fn clock<'a>(state: &State, props: Props) -> Element<'a, Pick> {
                 selected.is_some_and(|time| time.minute() == minute),
                 props.now.time.minute() / MINUTE_STEP * MINUTE_STEP == minute,
                 CellTone::Normal,
-                CLOCK_WIDTH,
-                CLOCK_HEIGHT,
+                clock_width(),
+                clock_height(),
             )
         }))
         .spacing(GAP)
@@ -671,7 +699,7 @@ fn clock<'a>(state: &State, props: Props) -> Element<'a, Pick> {
         minutes,
     ]
     .spacing(4)
-    .width(CLOCK_SECTION)
+    .width(clock_section())
     .into()
 }
 
@@ -722,7 +750,7 @@ fn cell<'a>(
     height: f32,
 ) -> Element<'a, Pick> {
     button(
-        container(text(content).size(typography::BODY))
+        container(label::body(content))
             .center_x(Length::Fill)
             .center_y(Length::Fill),
     )

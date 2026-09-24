@@ -6,7 +6,11 @@ description = "KentOS Rust Components: iced üzerine kurulu CBS ve CAD arayüz b
 publish = false
 
 [features]
-default = ["spatial"]
+default = ["spatial", "fonts"]
+# Yazı tipleri ikili dosyaya gömülür: IBM Plex Sans ve Mono, Inter, Plus
+# Jakarta Sans, JetBrains Mono (SIL Open Font License, assets/fonts). Kapalıysa
+# aileler makinede kurulu olmalıdır.
+fonts = []
 # CBS/CAD bileşenleri: projeksiyon, katman modeli, model alanı, ViewCube.
 spatial = ["dep:glam", "dep:bytemuck"]
 # Ekransız görüntü: arayüzü pencere açmadan çizip PNG'ye yazar.

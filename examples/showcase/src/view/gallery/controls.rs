@@ -9,6 +9,7 @@ use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::Tool;
 use kentos_rc::style;
+use kentos_rc::theme::typography;
 use kentos_rc::widget::ribbon::{self, Field, Group, Stack};
 use kentos_rc::widget::table::{self, Table};
 use kentos_rc::widget::tree_view::{self, Check, Node, TreeView};
@@ -205,7 +206,8 @@ impl Showcase {
         let crs = pick_list(Crs::ALL, self.gallery.crs, |crs| {
             Message::Gallery(Demo::CrsSelected(crs))
         })
-        .text_size(12.0)
+        .font(typography::ui())
+        .text_size(typography::body())
         .padding([2, 8])
         .width(Fill)
         .style(style::field::pick_list)
@@ -266,7 +268,7 @@ impl Showcase {
             ]
             .height(Fill),
         )
-        .height(ribbon::PANEL_HEIGHT)
+        .height(ribbon::panel_height())
         .style(style::container::surface)
         .into()
     }
@@ -515,7 +517,8 @@ impl Showcase {
                 label::muted("Metin").width(110),
                 text_input("Katman adı", &gallery.text)
                     .on_input(|text| Message::Gallery(Demo::TextChanged(text)))
-                    .size(12.0)
+                    .font(typography::ui())
+                    .size(typography::body())
                     .padding([4, 8])
                     .width(280)
                     .style(style::field::input),
@@ -528,7 +531,8 @@ impl Showcase {
                     Message::Gallery(Demo::CrsSelected(crs))
                 })
                 .placeholder("Koordinat sistemi")
-                .text_size(12.0)
+                .font(typography::ui())
+                .text_size(typography::body())
                 .padding([3, 8])
                 .width(280)
                 .style(style::field::pick_list)
@@ -541,7 +545,8 @@ impl Showcase {
                 checkbox(gallery.checked)
                     .label("Etiketleri göster")
                     .size(13.0)
-                    .text_size(12.0)
+                    .font(typography::ui())
+                    .text_size(typography::body())
                     .on_toggle(|checked| Message::Gallery(Demo::Checked(checked))),
             ]
             .spacing(12)

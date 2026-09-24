@@ -7,12 +7,13 @@ use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::model_space;
 use kentos_rc::style;
-use kentos_rc::theme::typography;
+use kentos_rc::theme::typography::{self, Family, Mono, Typography};
 use kentos_rc::widget::table::{self, Table};
 
 use super::{chip, entry, hex, pressed};
 use crate::app::Showcase;
 use crate::message::Message;
+use crate::view::family_note;
 
 /// Türkçe harflerin hepsini içeren pangram.
 const PANGRAM: &str = "Pijamalı hasta yağız şoföre çabucak güvendi.";
@@ -140,124 +141,184 @@ fn color_table<'a>(entries: &[(&'static str, Color, &'static str)]) -> Element<'
     .into()
 }
 
-pub(super) fn typography_page<'a>() -> Vec<Element<'a, Message>> {
-    let styles = [
-        (
-            "label::figure",
-            typography::FIGURE,
-            "Plex Mono",
-            label::figure("346.71 km"),
-        ),
-        (
-            "label::title",
-            typography::TITLE,
-            "Plex Sans Semibold",
-            label::title("Kısayollar ve komutlar"),
-        ),
-        (
-            "label::heading",
-            typography::HEADING,
-            "Plex Sans Semibold",
-            label::heading("Dışa aktar"),
-        ),
-        (
-            "label::strong",
-            typography::BODY,
-            "Plex Sans Semibold",
-            label::strong("Katmanlar"),
-        ),
-        (
-            "label::body",
-            typography::BODY,
-            "Plex Sans",
-            label::body("Seçili öğenin özellikleri"),
-        ),
-        (
-            "label::muted",
-            typography::BODY,
-            "Plex Sans",
-            label::muted("Haritada bir öğeye tıklayın"),
-        ),
-        (
-            "label::caption",
-            typography::CAPTION,
-            "Plex Sans",
-            label::caption("6 katman"),
-        ),
-        (
-            "label::mono",
-            typography::BODY,
-            "Plex Mono",
-            label::mono("41.00820, 28.97840"),
-        ),
-        (
-            "label::mono_caption",
-            typography::CAPTION,
-            "Plex Mono",
-            label::mono_caption("EPSG:3857"),
-        ),
-    ];
+impl Showcase {
+    pub(super) fn typography_page(&self) -> Vec<Element<'_, Message>> {
+        let current = self.typography;
+        let family = current.family.name();
+        let mono = current.mono.name();
+        let strong = format!("{family} SemiBold");
 
-    let scale = Table::new([
-        table::Column::new("Biçim").width(160),
-        table::Column::new("Boyut").width(44).align_right(),
-        table::Column::new("Yazı tipi").width(140),
-        table::Column::new("Örnek").width(Fill),
-    ])
-    .extend(styles.into_iter().map(|(name, size, font, sample)| {
-        table::Row::new([
-            label::mono(name).into(),
-            label::mono_caption(format!("{size:.0}")).into(),
-            label::muted(font).into(),
-            sample.into(),
-        ])
-    }));
-
-    let faces = column![
-        typeface(
-            "typography::UI",
-            text(PANGRAM).size(18.0).font(typography::UI)
-        ),
-        typeface(
-            "typography::UI_STRONG",
-            text(PANGRAM).size(18.0).font(typography::UI_STRONG),
-        ),
-        typeface(
-            "typography::MONO",
-            text(PANGRAM).size(16.0).font(typography::MONO)
-        ),
-        typeface("Rakamlar", text(FIGURES).size(16.0).font(typography::MONO)),
-    ]
-    .spacing(14);
-
-    vec![
-        entry(
-            "Tip ölçeği",
-            "kentos_rc::label",
-            "Beş boyut: açıklamalar 11, kontroller ve gövde 12, menü komutları 13, \
-             başlıklar 14, öne çıkan değerler 20 piksel. Hazır biçimler boyutu, yazı \
-             tipini ve rengi birlikte ayarlar.",
-            scale,
-            Some(
-                "label::title(feature.name.as_str())\n\
-                 label::caption(format!(\"{} katman\", layers.len()))\n\
-                 label::mono(format::decimal(location))",
+        let styles = [
+            (
+                "label::figure",
+                typography::figure(),
+                mono.to_owned(),
+                label::figure("346,71 km"),
             ),
-        ),
-        entry(
-            "Yazı tipleri",
-            "kentos_rc::theme::typography",
-            "IBM Plex Sans arayüz metni, IBM Plex Mono koordinat, ölçü ve komutlar \
-             içindir. Pangram, Türkçe harflerin hepsini içerir. Yazı tipi sistemde \
-             yoksa iced varsayılan yazı tipine döner.",
-            faces,
-            Some("iced::application(new, update, view)\n    .default_font(typography::UI)"),
-        ),
-    ]
+            (
+                "label::title",
+                typography::title(),
+                strong.clone(),
+                label::title("Kısayollar ve komutlar"),
+            ),
+            (
+                "label::heading",
+                typography::heading(),
+                strong.clone(),
+                label::heading("Dışa aktar"),
+            ),
+            (
+                "label::strong",
+                typography::body(),
+                strong,
+                label::strong("Katmanlar"),
+            ),
+            (
+                "label::body",
+                typography::body(),
+                family.to_owned(),
+                label::body("Seçili öğenin özellikleri"),
+            ),
+            (
+                "label::muted",
+                typography::body(),
+                family.to_owned(),
+                label::muted("Haritada bir öğeye tıklayın"),
+            ),
+            (
+                "label::caption",
+                typography::caption(),
+                family.to_owned(),
+                label::caption("6 katman"),
+            ),
+            (
+                "label::mono",
+                typography::body(),
+                mono.to_owned(),
+                label::mono("41.00820, 28.97840"),
+            ),
+            (
+                "label::mono_caption",
+                typography::caption(),
+                mono.to_owned(),
+                label::mono_caption("EPSG:3857"),
+            ),
+        ];
+
+        let scale = Table::new([
+            table::Column::new("Biçim").width(160),
+            table::Column::new("Boyut").width(44).align_right(),
+            table::Column::new("Yazı tipi").width(170),
+            table::Column::new("Örnek").width(Fill),
+        ])
+        .extend(styles.into_iter().map(|(name, size, font, sample)| {
+            table::Row::new([
+                label::mono(name).into(),
+                label::mono_caption(format!("{size:.0}")).into(),
+                label::muted(font).into(),
+                sample.into(),
+            ])
+        }));
+
+        let families = Family::ALL
+            .into_iter()
+            .fold(column![].spacing(6), |families, option| {
+                let typography = Typography {
+                    family: option,
+                    ..current
+                };
+
+                families.push(typeface(
+                    option.name(),
+                    family_note(option),
+                    text(PANGRAM)
+                        .font(typography.ui())
+                        .size(typography::scaled(20.0)),
+                    current.family == option,
+                    Message::TypographyChanged(typography),
+                ))
+            });
+
+        let monos = Mono::ALL
+            .into_iter()
+            .fold(column![].spacing(6), |monos, option| {
+                let typography = Typography {
+                    mono: option,
+                    ..current
+                };
+
+                monos.push(typeface(
+                    option.name(),
+                    "Koordinat, ölçü ve komutlar; rakamlar aynı genişlikte.",
+                    text(FIGURES)
+                        .font(typography.mono())
+                        .size(typography::scaled(16.0)),
+                    current.mono == option,
+                    Message::TypographyChanged(typography),
+                ))
+            });
+
+        vec![
+            entry(
+                "Tip ölçeği",
+                "kentos_rc::label",
+                format!(
+                    "Beş boyut, gövde metnine göre: açıklamalar {}, kontroller ve gövde {}, \
+                     menü komutları {}, başlıklar {}, öne çıkan değerler {} piksel. Gövde \
+                     metni Görünüm sekmesinden, PUNTO komutuyla ya da Ctrl + ve Ctrl − ile \
+                     değişir; satır yükseklikleri gibi metni taşıyan ölçüler de birlikte \
+                     büyür.",
+                    typography::caption(),
+                    typography::body(),
+                    typography::heading(),
+                    typography::title(),
+                    typography::figure(),
+                ),
+                scale,
+                Some(
+                    "label::title(feature.name.as_str())\n\
+                     label::caption(format!(\"{} katman\", layers.len()))\n\
+                     label::mono(format::decimal(location))",
+                ),
+            ),
+            entry(
+                "Yazı aileleri",
+                "kentos_rc::theme::typography",
+                "Aileler kütüphaneye gömülüdür ve SIL Open Font License ile dağıtılır; \
+                 makinede kurulu olmaları gerekmez. Pangram Türkçe harflerin hepsini \
+                 içerir. Bir aileye tıklamak arayüzü o aileye geçirir; seçim saklanır.",
+                column![families, monos].spacing(14),
+                Some(
+                    "typography::load();\n\
+                     typography::set(Typography { family: Family::Inter, size: 14.0, ..Typography::DEFAULT });\n\n\
+                     iced::application(new, update, view)\n    .default_font(typography::ui())",
+                ),
+            ),
+        ]
+    }
 }
 
-fn typeface<'a>(name: &'a str, sample: text::Text<'a>) -> Element<'a, Message> {
-    column![label::mono_caption(name), sample].spacing(2).into()
+/// Yazı ailesi örneği: adı, açıklaması ve kendi ailesiyle yazılmış örnek;
+/// tıklanınca o aile seçilir.
+fn typeface<'a>(
+    name: &'static str,
+    note: &'static str,
+    sample: text::Text<'a>,
+    active: bool,
+    on_press: Message,
+) -> Element<'a, Message> {
+    let mut heading = row![label::strong(name)].spacing(8).align_y(Center);
+
+    if active {
+        heading = heading.push(label::caption("Seçili").style(style::text::accent));
+    }
+
+    button(column![heading, sample, label::caption(note)].spacing(4))
+        .on_press(on_press)
+        .width(Fill)
+        .padding([10, 12])
+        .style(style::button::list_item(active))
+        .into()
 }
 
 pub(super) fn icons_page<'a>() -> Vec<Element<'a, Message>> {

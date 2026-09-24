@@ -76,9 +76,10 @@ use crate::style;
 use crate::theme::{Tokens, typography};
 use crate::widget::{Choice, DatePicker, Select, TimePicker, Tip, tip};
 
-/// Alan adlarının sütun genişliği (değişiklik çizgisi ve tür ikonu dahil).
+/// Alan adlarının sütun genişliği (değişiklik çizgisi ve tür ikonu dahil),
+/// 12 piksellik gövde metninde; yazı boyutuyla büyür.
 const KEY_WIDTH: f32 = 136.0;
-/// Satır yüksekliği.
+/// Satır yüksekliği, 12 piksellik gövde metninde; yazı boyutuyla büyür.
 const ROW_HEIGHT: f32 = 26.0;
 /// Boş değerin gösterimi.
 const EMPTY: &str = "—";
@@ -475,7 +476,8 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                     text,
                 })
             })
-            .size(typography::BODY)
+            .font(typography::ui())
+            .size(typography::body())
             .padding([3, 4])
             .width(Fill)
             .style(style::field::cell(invalid));
@@ -486,7 +488,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                 FieldKind::Date | FieldKind::Time | FieldKind::DateTime
             )
         {
-            input.font(typography::MONO).into()
+            input.font(typography::mono()).into()
         } else {
             input.into()
         }
@@ -638,7 +640,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                         })
                     })
                     .step(*step),
-                    container(self.input(id, field, value)).width(52),
+                    container(self.input(id, field, value)).width(typography::scaled(52.0)),
                 ]
                 .spacing(6)
                 .align_y(Center);
@@ -874,8 +876,8 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
             ]
             .align_y(Center),
         )
-        .width(KEY_WIDTH)
-        .height(ROW_HEIGHT)
+        .width(typography::scaled(KEY_WIDTH))
+        .height(typography::scaled(ROW_HEIGHT))
         .align_y(Center)
         .style(style::container::surface);
 
@@ -895,7 +897,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                     Tip::new("İlk değerine döndür").body(original_text(self.state, id, field)),
                     tooltip::Position::Left,
                 ))
-                .height(ROW_HEIGHT)
+                .height(typography::scaled(ROW_HEIGHT))
                 .align_y(Center)
                 .style(style::container::surface_alt),
             );
@@ -914,8 +916,9 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                 column![
                     text_editor(content)
                         .on_action(move |action| on_event(Event::TextAction(id, action)))
-                        .size(typography::BODY)
-                        .height(96)
+                        .font(typography::ui())
+                        .size(typography::body())
+                        .height(typography::scaled(96.0))
                         .style(style::field::text_area),
                     row![
                         space::horizontal(),
@@ -975,8 +978,8 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                 ]
                 .align_y(Center),
             )
-            .width(KEY_WIDTH)
-            .height(ROW_HEIGHT)
+            .width(typography::scaled(KEY_WIDTH))
+            .height(typography::scaled(ROW_HEIGHT))
             .align_y(Center)
             .style(style::container::surface),
             cell(container(value).padding([0, 4])),
@@ -998,7 +1001,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                 .size(10.0)
                 .tone(Tone::Muted),
                 label::caption(title.to_owned())
-                    .font(typography::UI_STRONG)
+                    .font(typography::ui_strong())
                     .style(style::text::default),
                 space::horizontal(),
                 label::mono_caption(count.to_string()),
@@ -1022,7 +1025,8 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                 icon(Icon::Search).size(13.0).tone(Tone::Muted),
                 text_input("Özellik ara", &state.filter)
                     .on_input(move |filter| on_event(Event::Filter(filter)))
-                    .size(typography::BODY)
+                    .font(typography::ui())
+                    .size(typography::body())
                     .padding([3, 0])
                     .style(style::field::bare_input),
             ]
@@ -1179,7 +1183,7 @@ fn kind_icon(field: &Field) -> Icon {
 fn marker<'a, Message: 'a>(modified: bool) -> Element<'a, Message> {
     container(space::horizontal())
         .width(2)
-        .height(ROW_HEIGHT)
+        .height(typography::scaled(ROW_HEIGHT))
         .style(move |theme| container::Style {
             background: modified.then(|| Tokens::of(theme).accent.into()),
             ..container::Style::default()
@@ -1258,7 +1262,7 @@ fn object_label(candidates: &[(ObjectId, String)], object: ObjectId) -> String {
 fn cell<'a, Message: 'a>(content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
     container(content)
         .width(Fill)
-        .height(ROW_HEIGHT)
+        .height(typography::scaled(ROW_HEIGHT))
         .padding([0, 4])
         .align_y(Center)
         .style(style::container::surface_alt)

@@ -12,7 +12,8 @@
 //! ```
 //!
 //! Grup içeriği 3 satırlık bir ızgaraya oturur: küçük düğmeler ve alanlar
-//! bir satır ([`ROW`]), büyük düğmeler üç satır ([`CONTENT`]) yüksekliğindedir.
+//! bir satır ([`row_height`]), büyük düğmeler üç satır ([`content_height`])
+//! yüksekliğindedir.
 //! Seçili sekmenin alt çizgisi yoktur ve zemini panelle aynıdır; sekme
 //! alttaki panele akar.
 
@@ -23,19 +24,21 @@ pub use control::{AppButton, Button};
 pub use layout::{Field, Group, Row, Stack};
 
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{Column, button, column, container, row, space};
+use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Element, Fill, Length, Padding, Right};
 
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 use crate::widget::{horizontal_divider, vertical_divider};
+
+// Ölçüler 12 piksellik gövde metninde tasarlandı; metni taşıyanlar yazı
+// boyutuyla büyür (aşağıdaki fonksiyonlar). İkonlar sabit boyuttadır.
 
 /// Izgara satırının yüksekliği: küçük düğme, alan.
 pub const ROW: f32 = 22.0;
 /// Izgara satırları arasındaki boşluk.
 pub const ROW_GAP: f32 = 1.0;
-/// Grup içeriğinin yüksekliği: üç satır.
-pub const CONTENT: f32 = ROW * 3.0 + ROW_GAP * 2.0;
 /// Küçük düğme ikonlarının boyutu; alanların önündeki sütun genişliği.
 pub const ICON: f32 = 16.0;
 /// Büyük düğme ikonlarının boyutu.
@@ -47,8 +50,6 @@ pub const LARGE_WIDTH: f32 = 62.0;
 pub const CAPTION: f32 = 16.0;
 const PANEL_PADDING_TOP: f32 = 6.0;
 const PANEL_PADDING_BOTTOM: f32 = 2.0;
-/// Araç panelinin yüksekliği (alt kenar hariç).
-pub const PANEL_HEIGHT: f32 = PANEL_PADDING_TOP + CONTENT + CAPTION + PANEL_PADDING_BOTTOM;
 
 /// Sekme başlıklarının yüksekliği.
 pub const TAB_HEIGHT: f32 = 30.0;
@@ -56,9 +57,42 @@ pub const TAB_HEIGHT: f32 = 30.0;
 const TAB_ACCENT: f32 = 2.0;
 /// Sekme şeridinin pencere kenarından uzaklığı.
 const STRIP_TOP: f32 = 4.0;
+
+/// Geçerli yazı boyutunda ızgara satırının yüksekliği.
+pub fn row_height() -> f32 {
+    typography::scaled(ROW)
+}
+
+/// Grup içeriğinin yüksekliği: üç satır.
+pub fn content_height() -> f32 {
+    row_height() * 3.0 + ROW_GAP * 2.0
+}
+
+/// Büyük düğmelerin genişliği.
+pub fn large_width() -> f32 {
+    typography::scaled(LARGE_WIDTH)
+}
+
+/// Grup adının satır yüksekliği.
+pub fn caption_height() -> f32 {
+    typography::scaled(CAPTION)
+}
+
+/// Araç panelinin yüksekliği (alt kenar hariç).
+pub fn panel_height() -> f32 {
+    PANEL_PADDING_TOP + content_height() + caption_height() + PANEL_PADDING_BOTTOM
+}
+
+/// Sekme başlıklarının yüksekliği.
+pub fn tab_height() -> f32 {
+    typography::scaled(TAB_HEIGHT)
+}
+
 /// Sekme şeridinin toplam yüksekliği; uygulama menüsü bunun hemen altına
 /// açılır.
-pub const STRIP_HEIGHT: f32 = STRIP_TOP + TAB_HEIGHT;
+pub fn strip_height() -> f32 {
+    STRIP_TOP + tab_height()
+}
 
 const EDGE: f32 = 10.0;
 
@@ -148,7 +182,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         tabs: Vec<Tab<'a, Message>>,
         trailing: Option<Element<'a, Message>>,
     ) -> Element<'a, Message> {
-        let mut strip = iced::widget::Row::new().height(TAB_HEIGHT + 1.0);
+        let mut strip = iced::widget::Row::new().height(tab_height() + 1.0);
 
         strip = match application {
             Some(application) => strip.push(underlined(
@@ -169,7 +203,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
                             .align_y(iced::Center),
                     )
                     .on_press(tab.on_press)
-                    .height(TAB_HEIGHT)
+                    .height(tab_height())
                     .padding([0, 14])
                     .style(style::button::tab),
                     Length::Shrink,
@@ -179,7 +213,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
 
         let trailing = container(trailing.unwrap_or_else(|| space::horizontal().into()))
             .width(Fill)
-            .height(TAB_HEIGHT)
+            .height(tab_height())
             .padding([0.0, EDGE])
             .align_x(Right)
             .align_y(iced::Center);
@@ -202,7 +236,15 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
                     groups_row = groups_row.push(group).push(vertical_divider());
                 }
 
-                groups_row.into()
+                // Büyük yazı boyutunda ya da dar pencerede gruplar sığmazsa
+                // şerit yatay kaydırılır; ince çubuk yalnızca o zaman görünür.
+                scrollable(groups_row)
+                    .direction(scrollable::Direction::Horizontal(
+                        scrollable::Scrollbar::new().width(3).scroller_width(3),
+                    ))
+                    .width(Fill)
+                    .height(Fill)
+                    .into()
             }
             Panel::Placeholder(message) => container(label::muted(message))
                 .padding([0, 16])
@@ -213,7 +255,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
 
         container(content)
             .width(Fill)
-            .height(PANEL_HEIGHT)
+            .height(panel_height())
             .style(style::container::surface)
             .into()
     }
@@ -278,6 +320,6 @@ fn selected_tab<'a, Message: 'a>(label: Fragment<'a>) -> Element<'a, Message> {
         .width(Length::Shrink),
         vertical_divider(),
     ]
-    .height(TAB_HEIGHT + 1.0)
+    .height(tab_height() + 1.0)
     .into()
 }

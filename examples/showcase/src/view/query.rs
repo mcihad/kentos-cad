@@ -57,7 +57,8 @@ impl Showcase {
                 pick_list(choices, current, |choice: LayerChoice<'_>| {
                     Message::QueryLayerSelected(choice.index)
                 })
-                .text_size(typography::BODY)
+                .font(typography::ui())
+                .text_size(typography::body())
                 .padding([3, 8])
                 .width(Fill)
                 .style(style::field::pick_list)
@@ -160,8 +161,11 @@ pub(super) fn problem(query: &Query, schema: &[Field]) -> Option<&'static str> {
 
 /// Pencerenin ayar satırı: solda ad, sağda denetim.
 fn setting<'a>(name: &'a str, control: Element<'a, Message>) -> Element<'a, Message> {
-    row![label::muted(name).width(KEY_WIDTH), control]
-        .spacing(12)
-        .align_y(Center)
-        .into()
+    row![
+        label::muted(name).width(typography::scaled(KEY_WIDTH)),
+        control
+    ]
+    .spacing(12)
+    .align_y(Center)
+    .into()
 }

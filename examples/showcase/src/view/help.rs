@@ -52,6 +52,10 @@ impl Showcase {
                 "Kısayollar, komut geçmişi, nesne yakalama, ızgara",
             )
             .item(
+                "Ctrl +  Ctrl −  Ctrl 0",
+                "Yazıyı büyütür, küçültür, varsayılan boyuta döndürür",
+            )
+            .item(
                 "Yazmaya başla",
                 "Komut kutusuna yazar; komut ya da \"enlem, boylam\" girilir",
             )

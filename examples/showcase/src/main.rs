@@ -9,6 +9,7 @@ mod gallery;
 mod layer_tree;
 mod message;
 mod sample;
+mod settings;
 mod snapshot;
 mod table;
 mod view;
@@ -16,6 +17,9 @@ mod view;
 use kentos_rc::theme::typography;
 
 fn main() -> iced::Result {
+    // Gömülü yazı tipleri: makinede kurulu olmaları gerekmez.
+    typography::load();
+
     // `showcase snapshot çıktı.png ...`: pencere açmadan görüntü alır.
     let mut args = std::env::args().skip(1);
 
@@ -28,14 +32,24 @@ fn main() -> iced::Result {
         return Ok(());
     }
 
+    // Saklanan tema ve yazı ayarı; yazı ayarı pencere açılmadan verilir ki
+    // varsayılan yazı tipi de seçilen aile olsun.
+    let path = settings::Settings::path();
+    let saved = path
+        .as_deref()
+        .map(settings::Settings::load)
+        .unwrap_or_default();
+
+    typography::set(saved.typography);
+
     iced::application(
-        app::Showcase::new,
+        move || app::Showcase::boot(saved, path.clone()),
         app::Showcase::update,
         app::Showcase::view,
     )
     .title("KentOS CAD — Türkiye örnek verisi")
     .theme(app::Showcase::theme)
-    .default_font(typography::UI)
+    .default_font(typography::ui())
     .subscription(app::Showcase::subscription)
     .window_size(app::WINDOW_SIZE)
     .antialiasing(true)

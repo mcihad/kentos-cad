@@ -5,6 +5,7 @@ use iced::widget::{column, container, tooltip};
 
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 
 /// İpucu içeriği: başlık, isteğe bağlı açıklama ve eş aralıklı bir ayrıntı
 /// satırı (ör. komut satırı karşılığı).
@@ -46,7 +47,9 @@ impl Tip {
                 .into();
         }
 
-        let mut content = column![label::strong(self.title)].spacing(3).max_width(260);
+        let mut content = column![label::strong(self.title)]
+            .spacing(3)
+            .max_width(typography::scaled(260.0));
 
         if let Some(body) = self.body {
             content = content.push(label::caption(body));

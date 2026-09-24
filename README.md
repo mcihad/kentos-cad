@@ -20,7 +20,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── query.rs         Query: "öznitelikle seç" ve tablo filtresi koşulları
 │   ├── time.rs          Date, Time, DateTime (harici bağımlılık olmadan)
 │   └── text.rs, number.rs  Türkçe arama, sıralama ve sayı yazımı
-├── theme/               renk belirteçleri (Tokens), tip ölçeği, iced teması
+├── theme/               renk belirteçleri (Tokens), yazı ayarı ve tip ölçeği, iced teması
 ├── style/               iced stil fonksiyonları: button, container, text, field
 ├── icon/                16×16 ızgarada çizilmiş vektör ikon seti
 ├── label.rs             tip ölçeğine bağlı hazır metin biçimleri
@@ -54,6 +54,8 @@ src/                     kentos-rc kütüphanesi
     ├── model_space/     etkileşimli harita/çizim alanı
     └── view_cube.rs     wgpu ile çizilen yön küpü
 
+assets/fonts/            gömülü yazı tipleri ve lisansları (SIL Open Font License)
+
 examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
 ├── app.rs               durum ve güncelleme mantığı
 ├── message.rs           mesajlar, sekmeler, menü komutları
@@ -62,6 +64,7 @@ examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
 ├── table.rs             öznitelik tablosunun görünüm modeli: filtre, arama, sıralama
 ├── layer_tree.rs        katman ağacı: iç içe gruplar ve görünürlük
 ├── sample.rs            örnek veri ve öznitelik şemaları
+├── settings.rs          kalıcı ayarlar: tema ve yazı (~/.config/kentos-cad/ayarlar)
 ├── snapshot.rs          `snapshot` alt komutu ve senaryolar
 └── view/                bileşenlerin yerleşimi
     └── gallery/         bileşen kataloğu (Galeri sekmesi)
@@ -165,6 +168,47 @@ StatusBar::new()
     .push(Readout::new(label::mono(scale)).menu(standard_scales))
 ```
 
+## Yazı tipleri ve boyut
+
+Yazı ailesi ve boyutu çalışırken değişir; bütün bileşenler, harita etiketleri
+dahil, yeni ayarla kurulur. Aileler kütüphaneye gömülüdür (`fonts` özelliği,
+varsayılan açık), makinede kurulu olmaları gerekmez:
+
+| Arayüz metni       | Eş aralıklı (koordinat, ölçü, komut) |
+|--------------------|--------------------------------------|
+| IBM Plex Sans      | IBM Plex Mono                        |
+| Inter              | JetBrains Mono                       |
+| Plus Jakarta Sans  |                                      |
+
+Hepsi SIL Open Font License ile dağıtılır; kaynakları, lisansları ve
+statik kesimlerin nasıl üretildiği `assets/fonts/README.md` dosyasındadır.
+
+Gövde metni 11–18 piksel arasında seçilir, varsayılanı 13'tür. Tip ölçeği
+ona göre kurulur (açıklama bir küçük, başlıklar bir ve iki büyük). Metni
+taşıyan ölçüler de birlikte büyür: satır yükseklikleri, şerit, menüler,
+takvim hücreleri, sütun genişlikleri. Ölçüler tam piksele yuvarlanır;
+çizgiler her boyutta keskin kalır. Menü ve liste genişlikleri seçili ailenin
+ölçülmüş harf genişliğiyle tahmin edilir.
+
+Vitrinde **Görünüm** sekmesi aileleri kendi yazılarıyla gösterir ve boyutu
+değiştirir. `YAZITIPI` ve `PUNTO` komutları da aynı seçenekleri komut
+kutusunda sunar; Ctrl +, Ctrl − ve Ctrl 0 boyutu değiştirir. Seçim
+`~/.config/kentos-cad/ayarlar` dosyasında saklanır.
+
+```rust
+use kentos_rc::theme::typography::{self, Family, Typography};
+
+typography::load(); // gömülü yazı tipleri
+typography::set(Typography { family: Family::Inter, size: 14.0, ..Typography::DEFAULT });
+
+iced::application(App::new, App::update, App::view)
+    .default_font(typography::ui())
+    .run()
+
+// Bileşenler ölçüleri gövde metnine göre büyütür:
+container(content).height(typography::scaled(26.0))
+```
+
 ## Ekransız görüntü
 
 `snapshot` özelliği arayüzü pencere açmadan çizip PNG'ye yazar. Ekran kapalı
@@ -183,8 +227,9 @@ cargo run -- snapshot menu.png --senaryo agac --sag-tikla 1233,329 --imlec 1100,
 cargo run -- snapshot takvim.png --senaryo yol --tikla 1418,778
 cargo run -- snapshot galeri.png --senaryo galeri --sayfa veri --boyut 1440x1500
 cargo run -- snapshot secim.png --senaryo secim --tema acik --olcek 2
-cargo run -- snapshot oneri.png --senaryo cizim --tikla 700,854 --yaz c
-cargo run -- snapshot olcek.png --senaryo cizim --tikla 1262,886
+cargo run -- snapshot oneri.png --senaryo cizim --tikla 800,851 --yaz c
+cargo run -- snapshot olcek.png --senaryo cizim --tikla 1255,884
+cargo run -- snapshot yazi.png --senaryo secim --yazi inter --esaralikli jetbrains-mono --punto 15
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 

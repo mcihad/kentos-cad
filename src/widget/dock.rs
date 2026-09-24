@@ -6,6 +6,7 @@ use iced::{Center, Element, Fill, Length};
 
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 use crate::widget::horizontal_divider;
 
 /// Sabit genişlikli, panelleri alt alta dizen yuva. Paneller arasına
@@ -16,6 +17,7 @@ pub struct Dock<'a, Message> {
 }
 
 impl<'a, Message: 'a> Dock<'a, Message> {
+    /// `width` 12 piksellik gövde metnine göredir; yazı boyutuyla büyür.
     pub fn new(width: f32) -> Self {
         Self {
             panels: Vec::new(),
@@ -42,7 +44,7 @@ impl<'a, Message: 'a> From<Dock<'a, Message>> for Element<'a, Message> {
         }
 
         container(column)
-            .width(dock.width)
+            .width(typography::scaled(dock.width))
             .height(Fill)
             .style(style::container::surface)
             .into()
@@ -85,7 +87,7 @@ impl<'a, Message: 'a> Panel<'a, Message> {
     }
 
     /// Gövdenin yüksekliği; birden çok esnek paneli oranlamak için
-    /// `FillPortion` kullanılabilir.
+    /// `FillPortion` kullanılabilir. Sabit yükseklik yazı boyutuyla büyür.
     pub fn height(mut self, height: impl Into<Length>) -> Self {
         self.height = height.into();
         self
@@ -140,7 +142,7 @@ impl<'a, Message: 'a> From<Panel<'a, Message>> for Element<'a, Message> {
         Column::new()
             .push(header)
             .push(body)
-            .height(panel.height)
+            .height(typography::length(panel.height))
             .into()
     }
 }

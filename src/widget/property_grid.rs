@@ -12,6 +12,7 @@ use iced::{Center, Element, Fill};
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
+use crate::theme::typography;
 
 const KEY_WIDTH: f32 = 112.0;
 
@@ -78,7 +79,7 @@ impl<'a, Message: 'a> From<PropertyGrid<'a, Message>> for Element<'a, Message> {
                 row![
                     icon(Icon::ChevronDown).size(10.0).tone(Tone::Muted),
                     label::caption(title)
-                        .font(crate::theme::typography::UI_STRONG)
+                        .font(crate::theme::typography::ui_strong())
                         .style(style::text::default),
                 ]
                 .spacing(6)
@@ -90,7 +91,7 @@ impl<'a, Message: 'a> From<PropertyGrid<'a, Message>> for Element<'a, Message> {
             .into(),
             Entry::Property { key, value, mono } => row![
                 container(label::muted(key))
-                    .width(KEY_WIDTH)
+                    .width(typography::scaled(KEY_WIDTH))
                     .padding([3, 8])
                     .style(style::container::surface),
                 container(if mono {

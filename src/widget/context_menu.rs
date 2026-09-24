@@ -67,7 +67,10 @@ use iced::{
 use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
-use crate::theme::Tokens;
+use crate::theme::{Tokens, typography};
+
+// Metni taşıyan ölçüler 12 piksellik gövde metninde tasarlandı ve yazı
+// boyutuyla büyür.
 
 /// Komut satırının yüksekliği.
 const ITEM_HEIGHT: f32 = 26.0;
@@ -88,6 +91,14 @@ const SUBMENU_OVERLAP: f32 = 2.0;
 const CURSOR_GAP: f32 = 2.0;
 /// Menü düğmesinin menüsüyle düğme arasındaki boşluk.
 const BUTTON_GAP: f32 = 3.0;
+
+fn item_height() -> f32 {
+    typography::scaled(ITEM_HEIGHT)
+}
+
+fn header_height() -> f32 {
+    typography::scaled(HEADER_HEIGHT)
+}
 
 /// Menünün komutları.
 #[derive(Debug, Clone)]
@@ -120,9 +131,9 @@ struct Command<Message> {
 impl<Message> Item<Message> {
     fn height(&self) -> f32 {
         match self {
-            Item::Command(_) | Item::Submenu { .. } => ITEM_HEIGHT,
+            Item::Command(_) | Item::Submenu { .. } => item_height(),
             Item::Separator => SEPARATOR_HEIGHT,
-            Item::Header(_) => HEADER_HEIGHT,
+            Item::Header(_) => header_height(),
         }
     }
 
@@ -311,32 +322,30 @@ impl<Message> Menu<Message> {
             .find(|&index| self.items[index].is_selectable())
     }
 
-    /// Kutunun genişliği: en uzun satıra göre, sınırlar içinde.
+    /// Kutunun genişliği: en uzun satıra göre, sınırlar içinde. Metnin
+    /// genişliği yazı ailesinin ortalama harf genişliğinden tahmin edilir.
     fn width(&self) -> f32 {
-        const SANS: f32 = 6.6;
-        const MONO: f32 = 7.2;
-        const CAPTION: f32 = 6.2;
-
-        let chars = |text: &str| text.chars().count() as f32;
+        let body = typography::body();
+        let caption = typography::caption();
 
         let widest = self
             .items
             .iter()
             .map(|item| match item {
                 Item::Command(command) => {
-                    chars(&command.label) * SANS
-                        + command
-                            .shortcut
-                            .as_deref()
-                            .map_or(0.0, |shortcut| chars(shortcut) * MONO + 24.0)
+                    typography::text_width(&command.label, body)
+                        + command.shortcut.as_deref().map_or(0.0, |shortcut| {
+                            typography::mono_width(shortcut, caption) + 24.0
+                        })
                 }
-                Item::Submenu { label, .. } => chars(label) * SANS + 24.0,
-                Item::Header(title) => chars(title) * CAPTION,
+                Item::Submenu { label, .. } => typography::text_width(label, body) + 24.0,
+                Item::Header(title) => typography::text_width(title, caption),
                 Item::Separator => 0.0,
             })
             .fold(0.0, f32::max);
 
-        (widest + ICON_SLOT + 8.0 + 16.0 + PADDING * 2.0 + 8.0).clamp(MIN_WIDTH, MAX_WIDTH)
+        (widest + ICON_SLOT + 8.0 + 16.0 + PADDING * 2.0 + 8.0)
+            .clamp(typography::scaled(MIN_WIDTH), typography::scaled(MAX_WIDTH))
     }
 }
 
@@ -1106,7 +1115,7 @@ fn item_row<'a, Message: 'a>(item: &Item<Message>, highlighted: bool) -> Element
         Item::Header(title) => {
             return container(label::caption(title.clone()))
                 .padding([0, 8])
-                .height(HEADER_HEIGHT)
+                .height(header_height())
                 .align_y(Center)
                 .into();
         }
@@ -1144,7 +1153,7 @@ fn item_row<'a, Message: 'a>(item: &Item<Message>, highlighted: bool) -> Element
 
     container(content)
         .padding([0, 8])
-        .height(ITEM_HEIGHT)
+        .height(item_height())
         .width(Fill)
         .align_y(Center)
         .style(style::container::menu_item(highlighted, enabled, danger))
@@ -1191,14 +1200,14 @@ mod tests {
 
         // Başlık, iki komut, bölücü, alt menü, komut.
         assert_eq!(menu.item_at(PADDING + 1.0), Some(0));
-        assert_eq!(menu.item_at(PADDING + HEADER_HEIGHT + 1.0), Some(1));
+        assert_eq!(menu.item_at(PADDING + header_height() + 1.0), Some(1));
         assert_eq!(
-            menu.item_at(PADDING + HEADER_HEIGHT + ITEM_HEIGHT * 2.0 + 1.0),
+            menu.item_at(PADDING + header_height() + item_height() * 2.0 + 1.0),
             Some(3)
         );
         assert_eq!(
             menu.offset(4),
-            PADDING + HEADER_HEIGHT + ITEM_HEIGHT * 2.0 + SEPARATOR_HEIGHT
+            PADDING + header_height() + item_height() * 2.0 + SEPARATOR_HEIGHT
         );
         assert_eq!(menu.item_at(-1.0), None);
     }
@@ -1220,7 +1229,8 @@ mod tests {
         assert!(Menu::<u8>::new().separator().is_empty());
         assert!(!Menu::<u8>::new().header("Başlık").is_empty());
         assert!(
-            (MIN_WIDTH..=MAX_WIDTH).contains(&Menu::new().item("Uzun bir komut adı", 1_u8).width())
+            (typography::scaled(MIN_WIDTH)..=typography::scaled(MAX_WIDTH))
+                .contains(&Menu::new().item("Uzun bir komut adı", 1_u8).width())
         );
     }
 }

@@ -35,21 +35,32 @@
 //! ```
 
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{button, column, container, row, space, text, tooltip};
+use iced::widget::{button, column, container, row, space, tooltip};
 use iced::{Center, Element, Fill, Length};
 
 use crate::icon::{Icon, Tone, icon};
+use crate::label;
 use crate::style;
 use crate::theme::typography;
 use crate::widget::context_menu::{Menu, MenuButton};
 use crate::widget::{Tip, horizontal_divider, tip, vertical_divider};
 
-/// Durum çubuğunun yüksekliği.
+/// Durum çubuğunun yüksekliği, 12 piksellik gövde metninde; yazı boyutuyla
+/// büyür ([`height`]).
 pub const HEIGHT: f32 = 28.0;
 
 /// Öğelerin yüksekliği; üzerine gelme zemini çubuğun üst ve altında eşit
 /// boşluk bırakır.
 const ITEM_HEIGHT: f32 = 22.0;
+
+/// Geçerli yazı boyutunda durum çubuğunun yüksekliği.
+pub fn height() -> f32 {
+    typography::scaled(HEIGHT)
+}
+
+fn item_height() -> f32 {
+    typography::scaled(ITEM_HEIGHT)
+}
 
 /// Pencerenin altındaki durum çubuğu; üst kenarında bölücü çizgi bulunur.
 pub struct StatusBar<'a, Message> {
@@ -92,7 +103,7 @@ impl<'a, Message: 'a> From<StatusBar<'a, Message>> for Element<'a, Message> {
                     .spacing(2)
                     .align_y(Center),
             )
-            .height(HEIGHT)
+            .height(height())
             .padding([0, 6])
             .width(Fill)
             .align_y(Center)
@@ -142,7 +153,8 @@ impl<'a, Message: Clone + 'a> Readout<'a, Message> {
         self
     }
 
-    /// Değerin sabit genişliği: değer değiştikçe çubuk kıpırdamasın.
+    /// Değerin sabit genişliği: değer değiştikçe çubuk kıpırdamasın. 12
+    /// piksellik gövde metnine göre verilir ve yazı boyutuyla büyür.
     pub fn width(mut self, width: f32) -> Self {
         self.width = Some(width);
         self
@@ -159,7 +171,9 @@ impl<'a, Message: Clone + 'a> From<Readout<'a, Message>> for Element<'a, Message
 
         content = content.push(
             container(readout.content)
-                .width(readout.width.map_or(Length::Shrink, Length::Fixed))
+                .width(readout.width.map_or(Length::Shrink, |width| {
+                    Length::Fixed(typography::scaled(width))
+                }))
                 .clip(true),
         );
 
@@ -169,7 +183,7 @@ impl<'a, Message: Clone + 'a> From<Readout<'a, Message>> for Element<'a, Message
 
         let body = container(content)
             .padding([0, 8])
-            .height(ITEM_HEIGHT)
+            .height(item_height())
             .align_y(Center);
 
         match (readout.menu, readout.tip) {
@@ -238,10 +252,10 @@ impl<'a, Message: Clone + 'a> From<Toggle<'a, Message>> for Element<'a, Message>
         }
 
         tip(
-            button(content.push(text(toggle.label).size(typography::BODY)))
+            button(content.push(label::body(toggle.label)))
                 .on_press_maybe(toggle.on_press)
                 .padding([0, 8])
-                .height(ITEM_HEIGHT)
+                .height(item_height())
                 .style(style::button::status_toggle(toggle.active)),
             description,
             tooltip::Position::Top,
