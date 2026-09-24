@@ -48,6 +48,10 @@ pub struct Field {
     pub editable: bool,
     /// Boş bırakılamaz mı.
     pub required: bool,
+    /// Alanın ne tuttuğunu anlatan metin (ArcGIS'teki alan açıklaması).
+    pub description: Option<String>,
+    /// Uzun metin: çok satırlı düzenlenir.
+    pub multiline: bool,
 }
 
 impl Field {
@@ -58,6 +62,8 @@ impl Field {
             unit: None,
             editable: true,
             required: false,
+            description: None,
+            multiline: false,
         }
     }
 
@@ -143,6 +149,57 @@ impl Field {
     pub fn required(mut self) -> Self {
         self.required = true;
         self
+    }
+
+    /// Alanın açıklaması; nesne inceleyicinin yardım bölümünde gösterilir.
+    pub fn description(mut self, description: impl Into<String>) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+
+    /// Uzun metin alanı: nesne inceleyicide çok satırlı düzenlenir.
+    pub fn multiline(mut self) -> Self {
+        self.multiline = true;
+        self
+    }
+
+    /// Türün ve kısıtların okunur özeti: "Tam sayı, 1–81 arası".
+    pub fn summary(&self) -> String {
+        let mut summary = match &self.kind {
+            FieldKind::Text if self.multiline => "Uzun metin".to_owned(),
+            FieldKind::Text => "Metin".to_owned(),
+            FieldKind::Integer {
+                min: Some(min),
+                max: Some(max),
+            } => format!(
+                "Tam sayı, {}–{} arası",
+                number::integer(*min),
+                number::integer(*max)
+            ),
+            FieldKind::Integer { .. } => "Tam sayı".to_owned(),
+            FieldKind::Real { decimals } => format!("Ondalık sayı, {decimals} basamak"),
+            FieldKind::Bool => "Evet/hayır".to_owned(),
+            FieldKind::Choice(options) => format!("Seçenekli, {} seçenek", options.len()),
+            FieldKind::Range { min, max, step } => {
+                let decimals = number::decimals_of(*step);
+                format!(
+                    "Aralık, {}–{}, adım {}",
+                    number::real(*min, decimals),
+                    number::real(*max, decimals),
+                    number::real(*step, decimals)
+                )
+            }
+            FieldKind::Date => "Tarih (GG.AA.YYYY)".to_owned(),
+            FieldKind::Time => "Saat (SS:DD)".to_owned(),
+            FieldKind::DateTime => "Tarih ve saat (GG.AA.YYYY SS:DD)".to_owned(),
+            FieldKind::Object { target } => format!("{target} katmanına başvuru"),
+        };
+
+        if let Some(unit) = &self.unit {
+            summary.push_str(&format!(", birim {unit}"));
+        }
+
+        summary
     }
 
     /// Sayısal mı (sağa hizalı ve eş aralıklı gösterilir).

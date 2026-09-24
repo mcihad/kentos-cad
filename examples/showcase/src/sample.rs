@@ -61,11 +61,20 @@ pub fn drawing_layer() -> Layer {
         .fill_alpha(0.18)
         .stroke_width(1.8)
         .with_schema([
-            Field::text("Ad").required(),
-            Field::choice("Tür", DRAWING_KINDS).read_only(),
-            Field::choice("Durum", ["Taslak", "Onaylandı"]),
-            Field::datetime("Oluşturma").read_only(),
-            Field::text("Not"),
+            Field::text("Ad")
+                .required()
+                .description("Çizimin adı; haritada ve listelerde gösterilir."),
+            Field::choice("Tür", DRAWING_KINDS)
+                .read_only()
+                .description("Çizimi üreten araç."),
+            Field::choice("Durum", ["Taslak", "Onaylandı"])
+                .description("Onaylanan çizimler haritada mavi gösterilir."),
+            Field::datetime("Oluşturma")
+                .read_only()
+                .description("Çizimin oluşturulduğu an, Türkiye saatiyle."),
+            Field::text("Not")
+                .multiline()
+                .description("Serbest açıklama; birden çok satır olabilir."),
         ])
         .with_sublayers(
             "Durum",
@@ -110,12 +119,17 @@ pub fn layers() -> Vec<Layer> {
     let cities = Layer::points(CITIES, CITY_COLOR)
         .labels_from(5.0)
         .with_schema([
-            Field::text("Ad").required(),
-            Field::choice("Bölge", REGIONS.map(|(region, _)| region)),
-            Field::integer("Nüfus").unit("kişi"),
-            Field::integer("Plaka").between(1, 81),
-            Field::boolean("Kıyı şehri"),
-            Field::text("Not"),
+            Field::text("Ad").required().description("İlin resmî adı."),
+            Field::choice("Bölge", REGIONS.map(|(region, _)| region))
+                .description("Coğrafi bölge; şehirler haritada bölgelerine göre renklenir."),
+            Field::integer("Nüfus")
+                .unit("kişi")
+                .description("2024 adrese dayalı nüfus kayıt sistemi sonucu."),
+            Field::integer("Plaka")
+                .between(1, 81)
+                .description("İl trafik kodu."),
+            Field::boolean("Kıyı şehri").description("İlin denize kıyısı var mı."),
+            Field::text("Not").multiline(),
         ])
         .with_features(cities())
         .with_sublayers(
@@ -184,9 +198,11 @@ pub fn layers() -> Vec<Layer> {
                         "Kıyı",
                     ],
                 ),
-                Field::object("En yakın şehir", CITIES),
-                Field::time("Açılış"),
-                Field::text("Not"),
+                Field::object("En yakın şehir", CITIES).description(
+                    "Yere en yakın il merkezi; listeden ya da haritadan değiştirilir.",
+                ),
+                Field::time("Açılış").description("Ziyaretçilere açıldığı saat."),
+                Field::text("Not").multiline(),
             ])
             .with_features(places),
         Layer::lines("Karayolları", ROAD_COLOR)
@@ -194,12 +210,15 @@ pub fn layers() -> Vec<Layer> {
             .opacity(0.95)
             .with_schema([
                 Field::text("Ad").required(),
-                Field::choice("Tür", ["Otoyol", "Devlet yolu", "Bulvar"]),
+                Field::choice("Tür", ["Otoyol", "Devlet yolu", "Bulvar"])
+                    .description("Yol sınıfı; haritada türüne göre renklenir."),
                 Field::choice("Durum", ["Hizmette", "Yapım aşamasında", "Planlanan"]),
-                Field::range("Hız sınırı", 30.0, 140.0, 10.0).unit("km/sa"),
-                Field::object("Başlangıç şehri", CITIES),
-                Field::object("Bitiş şehri", CITIES),
-                Field::date("Son bakım"),
+                Field::range("Hız sınırı", 30.0, 140.0, 10.0)
+                    .unit("km/sa")
+                    .description("Binek araçlar için genel hız sınırı."),
+                Field::object("Başlangıç şehri", CITIES).description("Yolun başladığı il."),
+                Field::object("Bitiş şehri", CITIES).description("Yolun bittiği il."),
+                Field::date("Son bakım").description("En son bakım ya da onarım tarihi."),
             ])
             .with_features(roads)
             .with_sublayers(
@@ -212,7 +231,7 @@ pub fn layers() -> Vec<Layer> {
             .with_schema([
                 Field::text("Ad").required(),
                 Field::choice("Tür", ["Nehir", "Çay"]),
-                Field::text("Not"),
+                Field::text("Not").multiline(),
             ])
             .with_features(rivers()),
         Layer::polygons("İlçeler", DISTRICT_COLOR)
@@ -220,8 +239,10 @@ pub fn layers() -> Vec<Layer> {
             .with_schema([
                 Field::text("Ad").required(),
                 Field::text("İl"),
-                Field::real("Yaklaşık alan", 1).unit("km²"),
-                Field::text("Not"),
+                Field::real("Yaklaşık alan", 1)
+                    .unit("km²")
+                    .description("Basitleştirilmiş sınırdan hesaplanan yüzölçümü."),
+                Field::text("Not").multiline(),
             ])
             .with_features(districts()),
     ]

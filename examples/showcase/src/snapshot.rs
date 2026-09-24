@@ -28,7 +28,7 @@ use crate::message::{Message, QueryPurpose, RibbonTab};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 10] = [
+const SCENARIOS: [(&str, &str); 9] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -38,8 +38,10 @@ const SCENARIOS: [(&str, &str); 10] = [
         "agac",
         "katman ağacı: şehir alt katmanları açık, bir alt katman ve grup gizli",
     ),
-    ("takvim", "yol seçili, nesne inceleyicide takvim açık"),
-    ("nesne", "yol seçili, nesne seçici listesi açık"),
+    (
+        "yol",
+        "yol seçili, hız sınırı ve bakım tarihi değiştirilmiş; takvim ve listeler --tikla ile açılır",
+    ),
     ("sorgu", "öznitelikle seç penceresi, iki koşul"),
     ("sorgu-hata", "öznitelikle seç penceresi, hatalı koşulla"),
     (
@@ -195,7 +197,7 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::TreeChecked(NodeId::Group(2), false));
             send(Message::TreeSelected(NodeId::Layer(1)));
         }
-        "takvim" | "nesne" => {
+        "yol" => {
             send(Message::LayerActivated(3));
             send(Message::TableRowPressed(road));
             send(Message::Inspector(Inspector::Set {
@@ -206,9 +208,6 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
                 id: 6,
                 value: Date::new(2026, 9, 8).map_or(Value::Null, Value::Date),
             }));
-            send(Message::Inspector(Inspector::Expand(Some(
-                if scenario == "takvim" { 6 } else { 4 },
-            ))));
         }
         "sorgu" | "sorgu-hata" => {
             send(Message::QueryOpened(QueryPurpose::Select));

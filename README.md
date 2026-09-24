@@ -32,7 +32,9 @@ src/                     kentos-rc kütüphanesi
 │   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
 │   ├── tree_view.rs     ağaç tablo: sınırsız derinlik, üç durumlu onay kutusu
 │   ├── context_menu.rs  sağ tık menüsü: alt menü, kısayol, işaret, klavye
-│   ├── inspector.rs     düzenlenebilir nesne inceleyici (ArcGIS öznitelik bölmesi)
+│   ├── inspector.rs     nesne inceleyici: arama, kategoriler, geri alma, yardım
+│   ├── date_picker.rs   tarih, tarih-saat ve saat seçicileri (açılır takvim)
+│   ├── select.rs        aranabilir, açılır seçim kutusu
 │   ├── query_builder.rs sorgu oluşturucu
 │   ├── toolbar.rs       araç çubuğu: arama, eylemler, anahtarlar
 │   ├── segmented.rs     parçalı seçim
@@ -91,9 +93,15 @@ Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
   model alanına ve tablo satırlarına sağ tıklanınca ilgili komutlar açılır:
   yakınlaştır, seç, yalnızca bunu göster, opaklık, koordinatı kopyala...
 - **Nesne inceleyici.** Seçimin birincil öğesi türlerine göre düzenlenir:
-  metin, tam sayı, ondalık, evet/hayır, kodlu değer, aralık, tarih, saat, tarih
-  ve saat, nesne başvurusu. Başvuru alanı aranabilir listeden (nesne seçici) ya
-  da haritada tıklanarak (varlık seçici) doldurulur.
+  metin ve uzun metin, tam sayı ve ondalık (birim, artırma okları), evet/hayır
+  (parçalı seçim), kodlu değer (aranabilir liste), aralık (kaydırıcı ve sayı),
+  tarih (takvim), saat (saat ızgarası), tarih ve saat (ikisi yan yana), nesne
+  başvurusu. Başvuru alanı aranabilir listeden (nesne seçici) ya da haritada
+  tıklanarak (varlık seçici) doldurulur; başvurulan nesneye gidilebilir.
+  Üstte alan araması, kategorili/alfabetik görünüm ve boş alanları gizleme;
+  kategoriler daraltılır. Değişen alanlar işaretlenir ve ilk değerine
+  döndürülür. Alttaki yardım bölümü alanın türünü, kısıtlarını ve açıklamasını
+  gösterir.
 
 ## Ekransız görüntü
 
@@ -110,6 +118,7 @@ koordinatıdır, görüntüdeki piksellerle aynıdır:
 ```sh
 cargo run -- snapshot ekran.png
 cargo run -- snapshot menu.png --senaryo agac --sag-tikla 1233,329 --imlec 1100,546
+cargo run -- snapshot takvim.png --senaryo yol --tikla 1418,778
 cargo run -- snapshot galeri.png --senaryo galeri --sayfa veri --boyut 1440x1500
 cargo run -- snapshot secim.png --senaryo secim --tema acik --olcek 2
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları

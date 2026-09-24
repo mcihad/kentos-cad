@@ -6,7 +6,7 @@ use iced::keyboard::Modifiers;
 use iced::{Event, Point, Size, Subscription, Task, Theme, event, keyboard, window};
 
 use kentos_rc::attribute::query::Edit;
-use kentos_rc::attribute::{DateTime, Field, FieldKind, Query, Value, text};
+use kentos_rc::attribute::{DateTime, Field, FieldKind, ObjectId, Query, Value, text};
 use kentos_rc::spatial::model_space::{self, Options};
 use kentos_rc::spatial::{
     Bounds, Draft, Feature, FeatureRef, Geometry, Layer, LonLat, Measurement, Selection,
@@ -294,6 +294,7 @@ impl Showcase {
                         inspector::Action::Change { id, value } => self.set_attribute(id, value),
                         inspector::Action::Pick(field) => self.start_pick(field),
                         inspector::Action::CancelPick => self.cancel_pick(),
+                        inspector::Action::Navigate { id, object } => self.navigate(id, object),
                     }
                 }
             }
@@ -860,6 +861,36 @@ impl Showcase {
                 .map_or_else(String::new, |(layer, feature)| layer.label(feature));
 
             self.log(format!("{field}: {chosen} seçildi."));
+        }
+    }
+
+    /// Birincil öğenin başvuru alanının gösterdiği nesneyi seçer ve ona
+    /// odaklanır.
+    fn navigate(&mut self, field: usize, object: ObjectId) {
+        let target = self
+            .selection
+            .primary()
+            .and_then(|subject| subject.resolve(&self.layers))
+            .and_then(|(layer, _)| match &layer.schema.get(field)?.kind {
+                FieldKind::Object { target } => Some(target.clone()),
+                _ => None,
+            })
+            .and_then(|target| self.layers.iter().position(|layer| layer.name == target));
+
+        let Some(reference) = target.map(|layer| FeatureRef::new(layer, object)) else {
+            return;
+        };
+
+        if reference.resolve(&self.layers).is_none() {
+            self.log(format!("#{object} bulunamadı."));
+            return;
+        }
+
+        self.selection.select(reference);
+        self.selection_changed(true);
+
+        if let Some(bounds) = bounds_of(&self.layers, [reference]) {
+            self.viewport.focus(bounds, FOCUS_PADDING, FOCUS_ZOOM);
         }
     }
 

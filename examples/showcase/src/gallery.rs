@@ -95,6 +95,11 @@ pub enum Demo {
     /// Tablo sütununa göre sırala ya da yönü çevir.
     Sorted(usize),
     SearchChanged(String),
+    /// Seçici örnekleri.
+    DatePicked(Option<Date>),
+    MomentPicked(Option<DateTime>),
+    TimePicked(Option<Time>),
+    RegionPicked(Option<usize>),
     /// Ağaç örneği: klasörü aç/kapat.
     ProjectToggled(usize),
     /// Klasörün kutusu: içindekilerin hepsini işaretler ya da kaldırır.
@@ -166,6 +171,12 @@ pub struct Gallery {
     pub sort: Option<(usize, SortOrder)>,
     pub search: String,
 
+    /// Seçici örneklerinin değerleri.
+    pub picked_date: Option<Date>,
+    pub picked_moment: Option<DateTime>,
+    pub picked_time: Option<Time>,
+    pub picked_region: Option<usize>,
+
     /// Ağaç örneği: açık klasörler, işaretli dosyalar ve seçili satır.
     pub project_open: [bool; 4],
     pub project_checked: [bool; 5],
@@ -207,6 +218,10 @@ impl Default for Gallery {
             mode: SelectionMode::New,
             sort: None,
             search: String::new(),
+            picked_date: Date::new(2026, 10, 29),
+            picked_moment: None,
+            picked_time: Time::new(9, 0, 0),
+            picked_region: Some(0),
             project_open: [true, true, true, false],
             project_checked: [true, true, true, false, true],
             project_selected: Some(ProjectRow::File(2)),
@@ -275,6 +290,11 @@ impl Gallery {
                             .to_owned(),
                     );
                 }
+                Some(inspector::Action::Navigate { object, .. }) => {
+                    return Some(format!(
+                        "Galeri: #{object} nesnesine gitme Giriş sekmesindeki nesne inceleyicide çalışır."
+                    ));
+                }
                 Some(inspector::Action::CancelPick) | None => {}
             },
             Demo::QueryEdited(edit) => self.query.apply(edit, &self.schema),
@@ -286,6 +306,10 @@ impl Gallery {
                 };
             }
             Demo::SearchChanged(search) => self.search = search,
+            Demo::DatePicked(date) => self.picked_date = date,
+            Demo::MomentPicked(moment) => self.picked_moment = moment,
+            Demo::TimePicked(time) => self.picked_time = time,
+            Demo::RegionPicked(region) => self.picked_region = region,
             Demo::ProjectToggled(folder) => {
                 if let Some(open) = self.project_open.get_mut(folder) {
                     *open = !*open;
@@ -361,17 +385,29 @@ impl Gallery {
 /// Örnek yapı envanterinin alanları: kentos-rc'nin bütün alan türleri.
 fn building_schema() -> Vec<Field> {
     vec![
-        Field::text("Ad").required(),
-        Field::choice("Kullanım", ["Konut", "Ticaret", "Karma", "Kamu", "Sanayi"]),
-        Field::integer("Kat").between(1, 120),
-        Field::real("Yükseklik", 1).unit("m"),
+        Field::text("Ad")
+            .required()
+            .description("Yapının tabelada ve ruhsatta geçen adı."),
+        Field::choice("Kullanım", ["Konut", "Ticaret", "Karma", "Kamu", "Sanayi"])
+            .description("İmar planındaki kullanım kararı."),
+        Field::integer("Kat")
+            .between(1, 120)
+            .description("Zemin üstü kat sayısı."),
+        Field::real("Yükseklik", 1)
+            .unit("m")
+            .description("Zeminden en üst noktaya yükseklik."),
         Field::boolean("Asansör"),
-        Field::range("Doluluk", 0.0, 100.0, 5.0).unit("%"),
-        Field::date("Ruhsat"),
-        Field::time("Açılış"),
-        Field::datetime("Son denetim"),
-        Field::object("Şehir", sample::CITIES),
-        Field::text("Ada/parsel").read_only(),
+        Field::range("Doluluk", 0.0, 100.0, 5.0)
+            .unit("%")
+            .description("Kullanılan bağımsız bölümlerin oranı."),
+        Field::date("Ruhsat").description("Yapı ruhsatının verildiği tarih."),
+        Field::time("Açılış").description("Ziyaretçilere açıldığı saat."),
+        Field::datetime("Son denetim").description("Son yapı denetiminin tarihi ve saati."),
+        Field::object("Şehir", sample::CITIES).description("Yapının bulunduğu il."),
+        Field::text("Ada/parsel")
+            .read_only()
+            .description("Tapu kaydındaki ada ve parsel; kadastrodan gelir."),
+        Field::text("Not").multiline(),
     ]
 }
 
@@ -402,6 +438,7 @@ fn building_records() -> Vec<Vec<Value>> {
             moment(18, 9, 2026, 14, 30),
             city(1),
             "1204/7".into(),
+            "Zemin katta ticari birimler var.\nÇatıda güneş panelleri kurulu.".into(),
         ],
         vec![
             "Çınar Konutları".into(),

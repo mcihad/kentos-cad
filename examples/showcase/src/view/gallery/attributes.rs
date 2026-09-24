@@ -13,16 +13,22 @@ use kentos_rc::label;
 use kentos_rc::spatial::SelectionMode;
 use kentos_rc::style;
 use kentos_rc::widget::table::{self, Table};
-use kentos_rc::widget::{Inspector, QueryBuilder, Segmented, Toolbar};
+use kentos_rc::widget::{
+    Choice, DatePicker, Inspector, QueryBuilder, Segmented, Select, TimePicker, Toolbar,
+};
 
-use super::entry;
+use super::{entry, pressed};
 use crate::app::{Showcase, TIME_ZONE};
 use crate::gallery::Demo;
 use crate::message::Message;
 
 /// İnceleyicinin kategorileri: başlık ve kapsadığı alanlar.
-const CATEGORIES: [(&str, std::ops::Range<usize>); 3] =
-    [("Genel", 0..6), ("Tarihler", 6..9), ("Konum", 9..11)];
+const CATEGORIES: [(&str, std::ops::Range<usize>); 4] = [
+    ("Genel", 0..6),
+    ("Tarihler", 6..9),
+    ("Konum", 9..11),
+    ("Açıklama", 11..12),
+];
 
 impl Showcase {
     pub(super) fn attributes_page(&self) -> Vec<Element<'_, Message>> {
@@ -31,10 +37,11 @@ impl Showcase {
                 "Nesne inceleyici",
                 "kentos_rc::widget::Inspector",
                 "ArcGIS'teki öznitelik bölmesi ve CAD'deki Özellikler paleti gibi: her alan \
-                 türü kendi düzenleyicisiyle. Geçersiz metin kırmızıyla işaretlenir ve kayda \
-                 yazılmaz. Takvim ve nesne listesi satırın altında açılır. Başvuru alanında \
-                 liste nesne seçici, hedef düğmesi haritadan varlık seçicidir. Yıldızlı alanlar \
-                 zorunludur, sönük olanlar salt okunur.",
+                 türü kendi düzenleyicisiyle. Üstte arama, kategorili ya da alfabetik görünüm \
+                 ve boş alanları gizleme; kategoriler başlığa tıklanarak daralır. Değişen \
+                 alanlar solda çizgiyle işaretlenir ve ↺ ile ilk değerine döner. Takvim, saat \
+                 ve listeler açılır panelde açılır. Alttaki yardım, imlecin üzerindeki alanın \
+                 türünü, kısıtlarını ve açıklamasını gösterir.",
                 row![
                     container(self.demo_inspector()).width(400),
                     container(editor_table()).width(Fill),
@@ -47,6 +54,35 @@ impl Showcase {
                      .object(9, &schema[9], &values[9], candidates, true)\n\n\
                      // update\n\
                      if let Some(Action::Change { id, value }) = state.update(event) { … }",
+                ),
+            ),
+            entry(
+                "Tarih ve saat seçicileri",
+                "kentos_rc::widget::DatePicker, TimePicker",
+                "Takvim başlığa tıklanınca ay, sonra yıl görünümüne geçer; hafta numaraları \
+                 ISO 8601'e göredir, bugün kenarla, hafta sonu sönük gösterilir. Tarih ve \
+                 saatte takvimle saat ızgarası yan yana açılır. Panelde gezinmek uygulamaya \
+                 mesaj üretmez; yalnızca seçilen değer bildirilir. Bir uygulamanın metin \
+                 girişine de eklenebilir.",
+                self.demo_pickers(),
+                Some(
+                    "DatePicker::date(value, Message::DatePicked)\n    \
+                     .anchor(text_input(\"GG.AA.YYYY\", &draft).on_input(Message::DateTyped))\n    \
+                     .now(DateTime::now(180))\n\n\
+                     DatePicker::date_time(moment, Message::MomentPicked)\n\
+                     TimePicker::new(time, Message::TimePicked)",
+                ),
+            ),
+            entry(
+                "Seçim kutusu",
+                "kentos_rc::widget::Select",
+                "Aranabilir açılır liste: seçeneklerde renk örneği, ikon ve sağda ayrıntı. \
+                 Uzun listelerde arama kutusu kendiliğinden çıkar ve açılışta odaklanır. \
+                 Listenin altına komutlar eklenebilir.",
+                self.demo_select(),
+                Some(
+                    "Select::new(\n    REGIONS.map(|(name, color)| Choice::new(name).color(color)),\n    \
+                     selected,\n    Message::RegionPicked,\n)\n.clear(Message::RegionCleared)",
                 ),
             ),
             entry(
@@ -132,6 +168,80 @@ impl Showcase {
                 format!("{} / {}", record + 1, gallery.records.len()),
             )
             .into()
+    }
+
+    /// Uygulamanın metin girişi olmadan, kendi başına kullanılan seçiciler.
+    fn demo_pickers(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let now = DateTime::now(TIME_ZONE);
+
+        let picker = |name: &'static str, picker: Element<'static, Message>| {
+            column![label::caption(name), container(picker).width(220)].spacing(4)
+        };
+
+        row![
+            picker(
+                "Tarih",
+                DatePicker::date(gallery.picked_date, |date| {
+                    Message::Gallery(Demo::DatePicked(date))
+                })
+                .now(now)
+                .into()
+            ),
+            picker(
+                "Tarih ve saat",
+                DatePicker::date_time(gallery.picked_moment, |moment| {
+                    Message::Gallery(Demo::MomentPicked(moment))
+                })
+                .now(now)
+                .into()
+            ),
+            picker(
+                "Saat",
+                TimePicker::new(gallery.picked_time, |time| {
+                    Message::Gallery(Demo::TimePicked(time))
+                })
+                .now(now)
+                .into()
+            ),
+        ]
+        .spacing(16)
+        .into()
+    }
+
+    /// Bölgeler: renk örnekli ve şehir sayılı seçenekler.
+    fn demo_select(&self) -> Element<'_, Message> {
+        let regions: Vec<Choice> = self
+            .layers
+            .get(1)
+            .map(|cities| {
+                cities
+                    .sublayers
+                    .iter()
+                    .enumerate()
+                    .map(|(index, sublayer)| {
+                        Choice::new(sublayer.name.clone())
+                            .color(sublayer.color)
+                            .detail(format!("{} şehir", cities.sublayer_features(index).count()))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        container(
+            Select::new(regions, self.gallery.picked_region, |index| {
+                Message::Gallery(Demo::RegionPicked(Some(index)))
+            })
+            .searchable(true)
+            .clear(Message::Gallery(Demo::RegionPicked(None)))
+            .action(
+                Icon::Target,
+                "Bölgeye yakınlaştır",
+                pressed("Bölgeye yakınlaştır"),
+            ),
+        )
+        .width(260)
+        .into()
     }
 
     fn demo_table(&self) -> Element<'_, Message> {
@@ -317,17 +427,29 @@ fn editor_table<'a>() -> Element<'a, Message> {
     ])
     .extend(
         [
+            ("Metin", "Metin girişi; yazarken denetlenir"),
             (
-                "Metin, tam sayı, ondalık",
-                "Metin girişi; yazarken denetlenir",
+                "Uzun metin",
+                "İlk satır önizlemesi ve çok satırlı düzenleyici",
             ),
-            ("Evet/hayır", "Onay kutusu"),
-            ("Kodlu değer", "Açılır liste; \"—\" boş değerdir"),
-            ("Aralık", "Kaydırıcı ve biçimli değer"),
-            ("Tarih, tarih ve saat", "Metin girişi ve açılır takvim"),
-            ("Saat", "Metin girişi ve \"Şimdi\" düğmesi"),
-            ("Nesne başvurusu", "Aranabilir liste ve haritadan seçme"),
-            ("Salt okunur", "Sönük metin"),
+            (
+                "Tam sayı, ondalık",
+                "Metin girişi, birim ve artırma/azaltma okları",
+            ),
+            ("Evet/hayır", "Parçalı seçim; boş bırakılabilirse üç parça"),
+            (
+                "Kodlu değer",
+                "Aranabilir açılır liste; \"Boş bırak\" komutu",
+            ),
+            ("Aralık", "Kaydırıcı ve sayı girişi"),
+            ("Tarih", "Takvim: ay ve yıl görünümü, hafta numarası, bugün"),
+            ("Tarih ve saat", "Takvim ve saat ızgarası yan yana"),
+            ("Saat", "Saat ve dakika ızgarası, \"Şimdi\""),
+            (
+                "Nesne başvurusu",
+                "Aranabilir liste, haritadan seçme, başvuruya git",
+            ),
+            ("Salt okunur", "Kilitli ve sönük"),
         ]
         .map(|(kind, editor)| {
             table::Row::new([label::body(kind).into(), label::muted(editor).into()])
