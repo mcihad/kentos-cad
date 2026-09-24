@@ -124,7 +124,7 @@ pnpm perf:interaction     # etkileşim ölçümü (parsel-50k, hat-1m): seçme, 
   - Etkin motor durum çubuğunun sağ alt köşesinde yazar. Tıklayınca motor seçilir: seçim hemen uygulanır (`view.switchBackend`, sayfa yenilenmez) ve `prefs.rendererPreference` ile hatırlanır. Aynı seçim **Görünüm → Çizim motoru** menüsünde ve Uygulama ayarları → Çizim motoru bölümünde de vardır.
   - `?renderer=webgpu` ya da `?renderer=webgl2` URL parametresi açılışta kayıtlı tercihi geçersiz kılar.
   - WebGPU başlatılamazsa WebGL2'ye düşülür ve uyarı yazılır.
-- Her değişiklikten sonra `tsc` temiz olmalı ve `pnpm test` geçmeli (bkz. §9.4).
+- Her değişiklikten sonra `pnpm typecheck` temiz olmalı ve `pnpm test` geçmeli (bkz. §9.4).
 - Geliştirme modunda uygulama bağlamı `window.kentos` olarak açıktır (üretim derlemesinde yoktur). Tarayıcıda doğrulama yaparken durumu buradan okuyun, ör. `kentos.doc.size`, `kentos.tools.activeId.value`.
 - Arayüzü etkileyen her değişiklik **gerçek tarayıcıda** denenmelidir: tıklama, klavye, açık ve koyu tema, "Büyük" yazı boyutu.
 - Tercihler `localStorage`'da `kentos.ui.v1` (yerleşim), `kentos.prefs.v1` (uygulama ayarları) `kentos.processing.v1` (işlem araçlarının son değerleri ve kullanıcı modelleri) ve `kentos.styles.v1` (kullanıcının stil kitaplığı) anahtarlarında durur. Bulut projelerinin gönderilmemiş değişiklikleri IndexedDB'de (`kentos.cloud` / `drafts`, hesap ve proje başına) durur. Temiz başlangıç için bu anahtarları silin.
@@ -146,7 +146,7 @@ pnpm perf:interaction     # etkileşim ölçümü (parsel-50k, hat-1m): seçme, 
   - bakım altında olmalı
 
   Aday örnekleri: `earcut` (üçgenleme), `flatbush`/`rbush` (R-tree), `proj4` (dönüşüm). Eklemeden önce kullanıcıya sorun.
-- **Araç zinciri:** Vite 8, TypeScript 6, pnpm. Hedef ES2023.
+- **Araç zinciri:** Vite 8, TypeScript 6, pnpm (çalışma alanı: kök ve `apps/web`). Hedef ES2023.
 - **Tarayıcı kısayolları:** Tarayıcının yakaladığı kısayollar bağlanmaz: `Ctrl+N`, `Ctrl+T`, `Ctrl+W`, `Ctrl+Shift+T`, `Alt+F`, `Alt+D`, `Alt+E`.
 
 ---
@@ -236,8 +236,8 @@ Yeni bir ayar ya da durum eklemeden önce **hangi kapsama ait olduğuna** karar 
 | --------------------------- | ----------------------------------------------------------- | -------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Proje ayarları**          | `model/projectSettings.ts` → `doc.settings`                 | Proje dosyası (.kcad)            | Projeyi açan herkes                 | SRID, uzunluk ve alan hassasiyeti, alan birimi, açı birimi, çizim ölçeği, proje adı                                                                                                                                                                                                   |
 | **Belge verisi**            | `CadDocument`, `LayerStore`                                 | Proje dosyası                    | Projeyi açan herkes                 | Varlıklar, katman ağacı ve stilleri (işleyiciler dahil), nesne sembolleri, öznitelikler, projenin stil kitaplığı (`doc.styles`)                                                                                                                                                       |
-| **Uygulama ayarları**       | `app/state.ts` → `ctx.prefs`                                | `localStorage` `kentos.prefs.v1` | Yalnızca bu kullanıcı, tüm projeler | Tema, yazı boyutu, artı imleç, fare yardımcıları (imleç yanında giriş, bilgi kartı), kenet türleri ve yarıçapları, çizim motoru, sembol boyutu (çizim ölçeğinde / ekranda sabit), **yeni proje varsayılan SRID'si (5256)**; işlem araçlarının son değerleri (`kentos.processing.v1`); kullanıcının stil kitaplığı (`kentos.styles.v1`) |
-| **Çalışma alanı yerleşimi** | `app/state.ts` → `ctx.ui`                                   | `localStorage` `kentos.ui.v1`    | Yalnızca bu kullanıcı               | Panel genişlikleri, araç kutusu konumu, sütun sayısı ve katlanan grupları, açık sekme, sağ dok sekmesi (Katmanlar/İşlemler), İşlemler görünümü ve katlanan kategoriler                                                                                                                |
+| **Uygulama ayarları**       | `app/state.ts` → `ctx.prefs`                                | `localStorage` `kentos.prefs.v1` | Yalnızca bu kullanıcı, tüm projeler | Tema, arayüz düzeni (klasik ya da şerit, `prefs.shell`), yazı boyutu, artı imleç, fare yardımcıları (imleç yanında giriş, bilgi kartı), kenet türleri ve yarıçapları, çizim motoru, sembol boyutu (çizim ölçeğinde / ekranda sabit), **yeni proje varsayılan SRID'si (5256)**; işlem araçlarının son değerleri (`kentos.processing.v1`); kullanıcının stil kitaplığı (`kentos.styles.v1`) |
+| **Çalışma alanı yerleşimi** | `app/state.ts` → `ctx.ui`                                   | `localStorage` `kentos.ui.v1`    | Yalnızca bu kullanıcı               | Panel genişlikleri, araç kutusu konumu, sütun sayısı ve katlanan grupları, açık sekme, sağ dok sekmesi (Katmanlar/İşlemler), İşlemler görünümü ve katlanan kategoriler; şeridin açık sekmesi, daraltılmışlığı, hızlı erişime eklenenler ve şeritle birlikte araç kutusunun açıklığı                                                                                                                |
 | **Oturum durumu**           | `DraftingSettings`, `Selection`, `ToolManager`, `Clipboard` | Saklanmaz                        | Bu oturum                           | Kenet/Izgara/Orto düğmeleri, seçim, etkin araç, pano, işlem geçmişi                                                                                                                                                                                                                   |
 
 Kurallar:
@@ -263,8 +263,10 @@ kutusu, kısayol, komut satırı ve bağlam menüsü hep aynı komutu çağırı
 - **Kimlik biçimi:** `alan.eylem`. Örnekler: `file.save`, `edit.undo`, `view.rightPanel`, `draft.snap`, `tool.line`, `layer.new`, `crs.set`.
 - **`watch`:** `isEnabled` ve `isChecked` sonucunu etkileyen sinyallerdir. Düğmeler bunlara abone olarak kendini günceller.
 - **`aliases`:** Komut satırından yazılabilen adlardır. Türkçe karakterler katlanır (`CIZGI` = `ÇİZGİ`).
-- **Henüz yapılmamış özellikler** `pending(...)` ile kaydedilir ve dürüstçe uyarı verir. Sessizce hiçbir şey yapmayan düğme olmaz.
-- **Menü modeli** `app/menus.ts` içindedir. Menü öğeleri komut kimliğidir; başlık, simge, kısayol ve durum komuttan çözülür.
+- **Henüz yapılmamış özellikler** `pending(...)` ile kaydedilir (`Command.pending`; hazır olmayan araçların komutu da) ve dürüstçe uyarı verir; şerit onları soluk simge ve “Geliştirme aşamasında” ipucuyla gösterir. Sessizce hiçbir şey yapmayan düğme olmaz.
+- **`short`:** dar yerlerde (şerit düğmesi) gösterilen kısa ad (“Bulut projesini yeniden adlandır…” → “Yeniden adlandır”); yoksa başlık kullanılır, sondaki “…” şeritte yazılmaz.
+- **Menü modeli** `app/menus.ts` içindedir ve **klasik menü çubuğu ile şeridin tek kaynağıdır.** Menü öğeleri komut kimliğidir; başlık, simge, kısayol ve durum komuttan çözülür. `{ section: 'Başlık' }` başlıklı bir blok açar: menüde ayırıcı, şeritte panel olur; aynı başlıklı bloklar birleşir. `@tools:draw` bir araç grubunun bütün araçlarını bölüm bölüm, `@tools:map/measure` tek bölümü katalogdan getirir; **araçlar menüde tek tek yazılmaz.** Alt menü şeritte açılır düğmedir, `inline: true` ise blokları panel olur. Bir komut bir menüde bir kez yer alır.
+- **Şerit** (`app/ribbon.ts` → `RIBBON_TABS`): sekmeler menülerden (`{ menu: 'draw' }`) ve araç gruplarından (`{ tools: 'select' }`) kurulur; aynı başlıklı paneller birleşir, bir komut bir sekmede bir kez yer alır. Yalnız Giriş sekmesi gündelik araçları seçer (`pick`; her biri kendi sekmesinde de vardır) ve sunum ipuçları taşır (`large`, `small`, `lead`, `keep`, `launchers`); hızlı erişim Kaydet, Geri al, Yinele ile başlar (`QUICK_ACCESS`). `app/menus.test.ts` kataloğun her aracının menülerde, `app/ribbon.test.ts` her aracın ve menülerin her komutunun şeritte olduğunu denetler.
 
 ### 4.6 Kısayollar (`core/keymap.ts`, `app/keybindings.ts`)
 
@@ -280,7 +282,7 @@ kutusu, kısayol, komut satırı ve bağlam menüsü hep aynı komutu çağırı
 
 ### 4.7 Araçlar (`tools/`)
 
-- **`tools/catalog.ts`:** tek bildirimsel liste. Her araç bir kimlik, etiket, simge, grup (`select | draw | annotate | transform | modify | map`), kısayol, takma adlar, açıklama, **fareyle kullanım adımları** (`steps`) ve `create(ctx)` içerir. Araç kutusu, menüler, kısayollar, ipuçları ve komut satırı bu listeden üretilir. Yeni araç `steps` olmadan eklenmez: kullanıcı aracı fareyle nasıl kullanacağını ipucundan öğrenir.
+- **`tools/catalog.ts`:** tek bildirimsel liste. Her araç bir kimlik, etiket, simge, grup (`select | draw | annotate | transform | modify | area | map`), gruplu bölümlerde bölüm (`section`: `tools/Tool.ts` → `TOOL_SECTIONS`, ör. Çizim → Çizgi, Eğri, Şekil, Yardımcı, Nokta), kısayol, takma adlar, açıklama, **fareyle kullanım adımları** (`steps`) ve `create(ctx)` içerir. Araç kutusu, klasik menüler, şerit, kısayollar, ipuçları ve komut satırı bu listeden üretilir: **yeni araç yalnız buraya eklenir**, menüye ya da şeride ayrıca yazılmaz. Bölümü olmayan araç grubunun adıyla sonda görünür (`tools/sections.ts`). Yeni araç `steps` olmadan eklenmez: kullanıcı aracı fareyle nasıl kullanacağını ipucundan öğrenir.
 - **Henüz yapılmamış araçlar** `create` vermez; `PendingTool` olur, `ready: false` görünür ve ipucunda "Geliştirme aşamasında" yazar.
 - **`Tool` sözleşmesi** (`tools/Tool.ts`):
   - `pointerDown/Move/Up`
@@ -498,7 +500,8 @@ CadDocument ──(changed/state olayları)──► ViewportController.dirtyLay
 - **`Component`:** tek kök elemana ve bir `DisposableStore`'a sahiptir. `dispose()` her aboneliği ve dinleyiciyi bırakır. Her `subscribe` ve `listen` çağrısının dönüşü `this.d.add(...)` ile saklanır.
 - **`ui/widgets/`:** genel ve bağımsız parçalar: `PopupMenu`, `Dropdown`, `TreeView`, `PropertyGrid`, `Dialog`, `Splitter`, `tooltip`, `controls` (segmented, switch, stepper, textField, settingRow, note). Widget'lar `AppContext` bilmez. Tek istisna `CommandButton`'dır, çünkü komuta bağlı düğmedir.
 - **Paneller** (`LayersPanel`, `PropertiesPanel`, `BottomPanel`) modelden okur, değişikliği komut ya da belge API'si ile yapar. Panel içi yeniden çizimler mikro görevde birleştirilir (`PropertiesPanel.schedule`).
-- **`AppShell`** yerleşimi kurar ve bölgeleri doldurur. Bileşenler birbirini tanımaz.
+- **`AppShell`** yerleşimi kurar ve bölgeleri doldurur. Bileşenler birbirini tanımaz. Üst bölge (`shell__chrome`) `prefs.shell`'e göre menü çubuğu ve araç çubuğu ya da şerittir; ayar değişince sayfa yenilenmeden değişir.
+- **Şerit** (`ui/ribbon/`: `Ribbon.ts` sekmeler, sığdırma, daraltma; `panels.ts` panel düzeyleri ve alanlı paneller; `controls.ts` düğmeler; `search.ts` Komut ara): ayrı JS ve CSS parçasıdır (§20), yalnız seçilince yüklenir; yüklenirken yerini aynı yükseklikte bir yer tutucu tutar, yüklenemezse klasik arayüze dönülür ve söylenir. Sekmeler ilk açılışta kurulur ve saklanır. Pencere daralınca paneller sağdan sola, her biri bir adım inerek küçülür (büyük → küçük etiketli → yalnız simge → tek düğme; genişlik kazandırmayan adım atlanır, Giriş'te Çizim ve Değiştir en son). Seçim varken bağlamsal **Seçim** sekmesi (sayı, türler, seçime uygulanan komutlar) çıkar; çalışan aracı içeren sekmeler amber nokta taşır; İşlemler sekmesi işlem kaydını ve modelleri izler. `Ctrl+F1` ya da sekmeye çift tık şeridi sekmelere daraltır; daraltılmışken sekme çizimin üstünde açılır, bir komut çalışınca kapanır. `Alt+Q` Komut ara (klasik arayüzde komut satırı). Sağ tık düğmeyi hızlı erişime ekler. Şerit düğmesine tıklamak klavye odağını almaz (Enter son komutu yinelemeye devam eder). Şeritle birlikte araç kutusu kapalıdır (F9 ile açılır, ayrı hatırlanır). Geçerli özellik alanları (katman, renk, tip, kalınlık, ölçek) araç çubuğuyla ortaktır (`ui/toolbar/fields.ts`).
 - **Ayar pencereleri** `ui/settings/`: `SettingsShell` (iskelet, taslak ve Kaydet/Vazgeç), `crsPicker` (ortak EPSG seçici), `ProjectSettingsDialog`, `AppSettingsDialog`.
 - **Sağ dok** üst yuvada "Katmanlar | İşlemler" sekmelerini (`ui.dockTab`), altta öznitelikleri taşır. Aynı yuvayı paylaşan paneller başlıkta sekme şeridi gösterir (`Panel.setTabs`).
 
@@ -620,17 +623,19 @@ kurallar büyük veriye geçerken kodun yeniden yazılmasını önlemek içindir
 ### 9.1 Yeni komut
 
 `app/commands.ts` içinde `registerCoreCommands` listesine ekleyin. Kısayol
-gerekiyorsa `app/keybindings.ts`'e, menüde görünecekse `app/menus.ts`'e komut
-kimliğini yazın. Araç çubuğu düğmesi için `commandButton(ctx, id, this.d)`
-kullanın.
+gerekiyorsa `app/keybindings.ts`'e, menüde görünecekse `app/menus.ts`'te uygun
+bölüme komut kimliğini yazın: şerit menü modelinden kurulduğu için komut
+şeritte o bölümün panelinde kendiliğinden çıkar. Şeritte düğme olacaksa
+simgesi, adı uzunsa `short` adı olsun. Araç çubuğu düğmesi için
+`commandButton(ctx, id, this.d)` kullanın.
 
 ### 9.2 Yeni araç
 
 1. `tools/` içinde `Tool` uygulayın. Uygun aileden türetin (§4.7): nokta dizisi → `PointInputTool`, seçime dönüşüm → `SelectionFirstTool`, seçime tek adımlık işlem → `SelectionActionTool`, kenara etki → `EdgePickTool`. Geometri hesabını `model/ops/` altına saf fonksiyon olarak yazıp test edin; araç yalnızca akışı ve önizlemeyi yönetir.
-2. `tools/catalog.ts`'e tanımı ekleyin: kimlik, etiket, simge, grup, kısayol, takma adlar, açıklama, `create`.
+2. `tools/catalog.ts`'e tanımı ekleyin: kimlik, etiket, simge, grup, gruplu bölümlerde bölüm (`section`), kısayol, takma adlar, açıklama, `steps`, `create`.
 3. Simge yoksa `ui/icons.ts`'e 20×20, 1,4 px çizgili bir simge çizin (bkz. DESIGN.md §6).
 
-Komut, kısayol, araç kutusu düğmesi ve F1 listesi kendiliğinden oluşur.
+Komut, kısayol, araç kutusu düğmesi, klasik menüdeki yeri, şerit düğmesi ve F1 listesi kendiliğinden oluşur; menüye ya da şeride elle eklenmez.
 
 ### 9.3 Yeni ayar
 
@@ -659,6 +664,8 @@ Komut, kısayol, araç kutusu düğmesi ve F1 listesi kendiliğinden oluşur.
 | `model/geom/shapes.test.ts`           | Dikdörtgen ve düzgün çokgen yapıları, yay yöntemleri                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `model/geom/bulge.test.ts`            | Bulge yardımcıları, teğet devam, ters çevirme, TTY ve TTT daireleri (üçgenin iç teğet dairesi, üç daire, TM koordinatında doğru-doğru-daire)                                                                                                                                                                                                                                                                                                                                               |
 | `ui/promptOptions.test.ts`            | İstem ayrıştırma: araç, adım, seçenekler, değerler, notlar                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `app/menus.test.ts` | Tek kaynak: araç bölümleri (her araç kendi grubunun bölümünü adlandırır, sıra, bölümsüz araç grubun adıyla sonda), menülerin kataloğun her aracına ulaşması, aynı başlıklı blokların birleşmesi, komutun menüde bir kez yer alması, kataloğa eklenen aracın başka bir şey yazmadan grubunun menüsünde çıkması |
+| `app/ribbon.test.ts` | Şeridin her aracı ve menülerin her komutunu içermesi (hızlı erişimle), kataloğa eklenen aracın şerit sekmesinde kendiliğinden çıkması, İşlemler sekmesinin kayıttan ve model kitaplığından kurulması, sekmede tekil panel başlıkları ve komutlar, büyük/küçük düğme kuralı (ilk öğe, bir ya da iki öğeli panel, `lead`, `small`), yalnız bilinen sekme, komut ve menülerin adlandırılması |
 | `viewport/objectTracking.test.ts`     | Nesne izleme (çekirdekten): tek hiza, kesişim, son noktayla kesişim, kutupsal açılar, hiza boyunca mesafe                                                                                                                                                                                                                                                                                                                                                                                  |
 | `model/geom/region.test.ts`           | Alan cebiri: örtüşen, komşu (ortak kenar), T-bağlantılı, köşede değen, delikli alanlar; daire ve yay kenarları; TM koordinatında girdi köşelerinin bit bit korunması; bölme, yüzler, adalar, sarkan çizgi                                                                                                                                                                                                                                                                                  |
 | `model/ops/areas.test.ts`             | Nesne ↔ alan dönüşümleri; adalı alanda alan, çevre, kenar, aynalama, tutamaç, esnet, patlat ve belgenin deliği düşürmesi                                                                                                                                                                                                                                                                                                                                                                   |
@@ -733,8 +740,9 @@ Kurallar:
 
 - `model/geom` ve `model/ops` altındaki her yeni fonksiyon test ile gelir. Sınır durumları (paralel, çakışık, sıfır uzunluk, açı 0/2π geçişi) mutlaka sınanır.
 - Hata düzeltmesi, önce hatayı yeniden üreten bir testle başlar.
-- **Uçtan uca duman testi** `apps/web/scripts/e2e/smoke.mjs` (`pnpm e2e`): kendi Vite sunucusunu açar, başsız Chrome'u DevTools protokolüyle (`apps/web/scripts/e2e/cdp.mjs`, bağımlılıksız) sürer, gerçek fare ve klavye olayları gönderir ve belgeyi `window.kentos` ile doğrular. Ekran görüntüleri `apps/web/scripts/e2e/out/`'a düşer. Çizim, budama, eğri, ölçü, yazı, tarama, yerinde düzenleme, yay kipli çoklu çizgi, patlat/birleştir, pah, kır, pano, araç kutusu (tüm araçlar kaydırmasız görünür, grup katlama), komut şeridi düğmeleri, fareyle köşe yuvarlama, basılı sağ tıkla tek seferlik kenet, imleç yanında değer girişi, tutamaç menüsü, nesne izleme, panel boyutlandırırken siyah kare çıkmaması (`Page.startScreencast` ile), paralel çizgi ve dik çık (yazılan mesafelerle tam koordinat), alan işlemleri (Alt+B birleştir, Alt+C ile ada bırakan çıkarma, adalı alanın taranması, Shift+B ve çizgilerle sınırlı tarama ile çizgilerin kapattığı bölgeye tıklayarak alan), işlem araçları (İşlemler menüsünden pencere, canlı girdi sayısı ve önizleme, çalıştırma, geçmiş, tek geri alma adımı; ifadeyle seçimde canlı eşleşme sayısı ve seçim, Web Worker'ın sayfayla aynı sonucu vermesi, yerleşik modelin tek geri alma adımıyla çalışması, tasarımcıda girdiye bağlı adımlı modelin kaydedilmesi), Yeni proje (`Ctrl+Alt+N`: ad, sistem, ölçek; kaydedilmemiş değişiklik sorusu ve Vazgeç'in pencereye dönmesi; boş çizimde yazılan çizgi ve ilk kayıtta yerin proje adıyla sorulması), varsayılan motorun WebGL2 olması, durum çubuğundan WebGPU'ya canlı geçiş ve iki motorun aynı sahneyi çizmesi (ızgara kapalı karşılaştırılır; soluk ızgara çizgileri motorlar arasında yalnızca örneklemeyle farklılaşır), dosya alışverişi (bellek içi seçiciyle koordinat listesi içe aktarma: önizlemede Ad Y X Z önerisi ve bozuk satır, başka koordinat sistemi seçilince içe aktarmanın kapanması, tam koordinatlar ve dosya adıyla yeni katman, tek geri alma adımı; seçili noktaların NCN olarak aynı metinle dışa aktarılması; DXF içe aktarmada katman tablosu ve alınmayanların raporu, dosya adlı grupta yeni katmanlar, tam koordinatla patlatılmış bloklar, işareti kaldırılan katmanın dışarıda kalması, içe aktarılan nesnenin hemen seçilebilmesi (geometri deposu), tek geri alma adımı), geri alma akışlarını sınar. Tam değer bekleyen kontrollerde noktalar komut satırından mutlak koordinatla girilir; ekrandan tıklanan nokta piksel yuvarlaması kadar (~0,1 m) sapar. Yeni bir kullanıcı akışı eklendiğinde buraya bir kontrol eklenir.
+- **Uçtan uca duman testi** `apps/web/scripts/e2e/smoke.mjs` (`pnpm e2e`): kendi Vite sunucusunu açar, başsız Chrome'u DevTools protokolüyle (`apps/web/scripts/e2e/cdp.mjs`, bağımlılıksız) sürer, gerçek fare ve klavye olayları gönderir ve belgeyi `window.kentos` ile doğrular. Ekran görüntüleri `apps/web/scripts/e2e/out/`'a düşer. Çizim, budama, eğri, ölçü, yazı, tarama, yerinde düzenleme, yay kipli çoklu çizgi, patlat/birleştir, pah, kır, pano, araç kutusu (tüm araçlar kaydırmasız görünür, grup katlama), komut şeridi düğmeleri, fareyle köşe yuvarlama, basılı sağ tıkla tek seferlik kenet, imleç yanında değer girişi, tutamaç menüsü, nesne izleme, panel boyutlandırırken siyah kare çıkmaması (`Page.startScreencast` ile), paralel çizgi ve dik çık (yazılan mesafelerle tam koordinat), alan işlemleri (Alt+B birleştir, Alt+C ile ada bırakan çıkarma, adalı alanın taranması, Shift+B ve çizgilerle sınırlı tarama ile çizgilerin kapattığı bölgeye tıklayarak alan), işlem araçları (İşlemler menüsünden pencere, canlı girdi sayısı ve önizleme, çalıştırma, geçmiş, tek geri alma adımı; ifadeyle seçimde canlı eşleşme sayısı ve seçim, Web Worker'ın sayfayla aynı sonucu vermesi, yerleşik modelin tek geri alma adımıyla çalışması, tasarımcıda girdiye bağlı adımlı modelin kaydedilmesi), Yeni proje (`Ctrl+Alt+N`: ad, sistem, ölçek; kaydedilmemiş değişiklik sorusu ve Vazgeç'in pencereye dönmesi; boş çizimde yazılan çizgi ve ilk kayıtta yerin proje adıyla sorulması), şerit (Uygulama ayarlarından seçilip hemen yerleşmesi, kataloğun her aracının şeritte düğmesi ve her düğmenin kayıtlı komutu, şeritten çalışan aracın dolu amber düğmesi ve Giriş'teki noktası, 1100 px'te her sekmenin panelleri küçülterek sığması ve 1600 px'te Değiştir'in etiketlerini koruması, seçimle çıkan Seçim sekmesi ve Esc ile kaybolması, Ctrl+F1 ile daraltma ve komutla kapanan açılır şerit, Alt+Q ile arayıp Enter'la çalıştırma, sağ tıkla hızlı erişime ekleme, açık tema, Şerit arayüzü düğmesiyle klasiğe dönüş), varsayılan motorun WebGL2 olması, durum çubuğundan WebGPU'ya canlı geçiş ve iki motorun aynı sahneyi çizmesi (ızgara kapalı karşılaştırılır; soluk ızgara çizgileri motorlar arasında yalnızca örneklemeyle farklılaşır), dosya alışverişi (bellek içi seçiciyle koordinat listesi içe aktarma: önizlemede Ad Y X Z önerisi ve bozuk satır, başka koordinat sistemi seçilince içe aktarmanın kapanması, tam koordinatlar ve dosya adıyla yeni katman, tek geri alma adımı; seçili noktaların NCN olarak aynı metinle dışa aktarılması; DXF içe aktarmada katman tablosu ve alınmayanların raporu, dosya adlı grupta yeni katmanlar, tam koordinatla patlatılmış bloklar, işareti kaldırılan katmanın dışarıda kalması, içe aktarılan nesnenin hemen seçilebilmesi (geometri deposu), tek geri alma adımı), geri alma akışlarını sınar. Tam değer bekleyen kontrollerde noktalar komut satırından mutlak koordinatla girilir; ekrandan tıklanan nokta piksel yuvarlaması kadar (~0,1 m) sapar. Yeni bir kullanıcı akışı eklendiğinde buraya bir kontrol eklenir.
 - Tıklama noktaları ekrandan tahmin edilmez; dünya koordinatından `camera.worldToScreen` ile hesaplanır.
+- **Fixture kaydedicileri** uygulamanın yolundan kaydeder ve `apps/web/scripts/fixtures/record-*.test.ts`'tedir: `GOLDEN_WRITE=1 pnpm -C apps/web exec vitest run scripts/fixtures/<ad>.test.ts` (değişen dosya bilinçli bir golden değişikliğidir, farkı okunur). Dilden bağımsız referans üreticileri kökten çalışır: `python3 scripts/fixtures/<ad>.py`.
 - **Etkileşim ölçümü** `apps/web/scripts/perf/interaction.mjs` (`pnpm perf:interaction`; bir şeyi doğrulamaz, ölçer): kendi Vite sunucusunu ve tek başsız Chrome'u açar (WebGL2 makinenin GPU'sunda, `--use-angle=gl`; SwiftShader'da tek kare saniyeler sürdüğü için onu reddeder), ADR 0005'in `parsel-50k` ve `hat-1m` veri setlerini sayfada tohumlu üretip `doc.replaceWith` ile açar. Gerçek fare hareketleriyle seç (üzerine gelme), çizgi (ilk noktadan sonra kenet) ve buda araçlarında olay başına süreyi 1:1000 ve genel görünümde, orta tuşla kaydırmada kare süresini ve GPU dahil kare aralığını, buda önizlemesinde kare süresini, stil değişikliğinde büyük katmanın yeniden kurulmasını `view.probe` ile toplar. Her koşu sayfayı yeniden açar; 3 koşunun p50/p95/p99'u ve p95 aralığı `docs/perf/interaction-<etiket>.{json,md}`'ye yazılır (`--label baseline` tabanı yazar; başka etiket tabanla karşılaştırılır). Nesne izleme ve bilgi kartı ölçümde kapalıdır (beklemeye bağlıdırlar). Makinede başka ağır süreç çalışırken çalıştırılmaz.
 - Sıradaki eksikler: `core` (komut arama, kısayol çözümleme).
 
@@ -837,7 +845,8 @@ Kaynağın SRID'si bilinmiyorsa kullanıcıya sorulur; asla tahmin edilmez. Kayn
 - Tarama deseni her katman yeniden kurulumunda CPU'da üretiliyor; çok sayıda sık taramada GPU tarafına (desen gölgelendiricisi) taşınmalı.
 - Pencere seçiminde çokgenlerin sınır kutusu kullanılıyor (tam geometri testi değil).
 - Ayar pencereleri her değişiklikte bölümü yeniden çiziyor (odak korunuyor); kısa formlar için yeterli.
-- Arayüz bileşenlerinin birim testi yok; arayüz yalnızca duman testiyle (`pnpm e2e`) sınanıyor.
+- Arayüz bileşenlerinin birim testi yok; arayüz yalnızca duman testiyle (`pnpm e2e`) sınanıyor (şeridin modeli `app/ribbon.test.ts`'te).
+- Şerit: klavye harf ipuçları (KeyTips) yok, çünkü tarayıcı Alt tuşunu kendine alır; sekmelere ve düğmelere ok tuşlarıyla, komutlara Alt+Q ile ulaşılır. Seçim sekmesinin içeriği seçilen türlere göre daralmıyor (alan işlemleri her zaman görünür). Hızlı erişim yalnız ekleme ve kaldırmayı biliyor, sıralama yok. Panel genişlikleri bir kez ölçülür; yazı ölçeği ya da yazı tipi değişince yeniden ölçülür, başka içerik değişikliği (ör. uzayan bir etiket) bir sonraki sekme kurulumuna kalır.
 - Geometrinin tek kaynağı Rust çekirdeğidir (`crates/shared/geometry-core`, ADR 0008): seçme, kenet, etiket ve tutamaç kararları, araç önizlemeleri (S1), katman kurulurken çizilen geometri ve dolgu üçgenlemesi (S2), `model/geom`, `model/ops` ve ilkel modüller (S3a–S3b), işlem araçlarının geometrisi (S4), araçların ve nesne izlemenin satır içi hesapları (S5). TS algoritmaları TS ile yan yana derin koşulardan sonra silindi (S3c); cephelerde aritmetik olmadığını `model/singleSource.test.ts` denetler. TS'te geometri algoritması yalnız stil motoru, ifade dili ve SVG düzenleyicisinde kalır (ayrı style-core dilimi). Büyük seçimi taşımak, kopyalamak ve yapıştırmak tek çağrıdır ama JSON'dan geçer: 10 000 nesnede ~0,15 s (TS'te ~0,01 s); dönüşüm depoda yapılıp paketli döndürülecek. Yaylı nesnelerin sınır kutusu 72 parçalı ana hatla yaklaşık bulunuyor ve golden setinde yok (ADR 0002). WASM paketi 883 KB (gzip 298 KB), ADR 0005 taslağındaki 300 KB başlangıç sınırına dayandı; yeni çekirdek kodu bu karar verilene kadar sınırı aşar (`docs/DEVIR.md` §6).
 - Sağlam geometrik kararlar (§23.3) yok: kesişim, yönelim, içerme ve ortak sınır kararları f64'te sabit toleranslarla verilir (kesişimde parametre 1e-9, bindirmede köşe birleştirme `TOL = 1e-6` m); adaptive ya da exact predicates kullanılmıyor. Ayrı bir dilimdir: yalnız Rust'ta, bağımsız referanslarla; değişen sonuçlar golden dosyalara bilinçle işlenir.
 - §23 sayısal politika (yuvarlama, hisse, artık dağıtımı) yalnızca Rust'ta var. Onaylı resmî politika olmadığı için durumu `draft`; kesin kadastral işlemler kapalı. `ctx.format` yalnızca gösterimdir.
@@ -865,7 +874,8 @@ apps/web/src/
     context.ts               AppContext arayüzü
     commands.ts              Çekirdek komutlar, tema ve yazı ölçeği uygulama
     keybindings.ts           Varsayılan kısayollar
-    menus.ts                 Ana menü modeli, komuttan menü öğesi çözümü
+    menus.ts                 Ana menü modeli (klasik menü ve şeridin tek kaynağı: başlıklı bloklar, `@tools:` araç referansları), komuttan menü öğesi çözümü
+    ribbon.ts                Şerit modeli: sekmeler menülerden ve araç gruplarından türetilir (`RIBBON_TABS`, `ribbonTabs`), hızlı erişim varsayılanları
     state.ts                 DraftingSettings, MessageLog, UiState, Preferences (localStorage)
     clipboard.ts             Clipboard: kopyalanan nesneler ve taban noktası (oturumluk)
     fileIO.ts                DocumentFiles: yerel .kcad kaydet/farklı kaydet/aç, içe aktarılacak dosyanın seçimi, dosya seçici (tarayıcı ya da test için bellek içi)
@@ -903,7 +913,7 @@ apps/web/src/
     webgl2/styled*.ts        Stilli toplulukların GLSL gölgelendiricileri ve çizicisi
     webgpu/styled*.ts        Aynısının WGSL karşılığı
   viewport/                  Kamera, ViewportController, PickIndex (geometri deposunun yüzü ve eşitlemesi), storeRecords (depodan gelen etiket ve tutamaç kayıtları, varsayılan etiketler), üst katman çizimi
-  tools/                     Tool sözleşmesi, ToolManager, katalog, koordinat girişi, imleç kısıtlaması (tracking)
+  tools/                     Tool sözleşmesi (gruplar ve bölümler: `TOOL_SECTIONS`), ToolManager, katalog, bölümler (`sections.ts`), koordinat girişi, imleç kısıtlaması (tracking)
     constructions.ts         Araçların yapı hesapları: Rust çekirdeğinin (`geometry-core::tools`) tipli çağırıcıları
     drawTools.ts             PointInputTool ailesi: çizgi, nokta, sil
     pathTool.ts              Çoklu çizgi, kapalı alan, parsel, ölçüm (yay seçenekleriyle)
@@ -937,7 +947,8 @@ apps/web/src/
     shell/HoverCard.ts       Üzerine gelinen nesnenin bilgi kartı
     shell/viewportMenus.ts   Çizim alanındaki sağ tuş menüleri: boşta, komut, kenet, tutamaç
     promptOptions.ts         İstem ayrıştırma ve seçenek düğmeleri (komut şeridi ve komut satırı ortak)
-    menu/ toolbar/ toolbox/  Menü çubuğu, araç çubuğu, kayan araç kutusu
+    menu/ toolbar/ toolbox/  Menü çubuğu, araç çubuğu (`fields.ts`: şeritle ortak geçerli özellik alanları), kayan araç kutusu
+    ribbon/                  Şerit (ayrı parça, seçilince yüklenir): Ribbon (sekmeler, sığdırma, daraltma ve açılır şerit, Seçim sekmesi, hızlı erişim), panels (düzeyler, alanlı paneller), controls (düğmeler), search (Komut ara)
     dock/ layers/ properties/  Sağ dok (Katmanlar/İşlemler sekmeleri), katman ağacı, öznitelik paneli
     processing/              İşlem aracı penceresi (ToolDialog, modeller dahil), parametre kontrolleri, araç kutusu ve geçmiş paneli
       model/                 Model tasarımcısı: ModelDesigner, ModelCanvas, modelPalette, modelInspector
@@ -951,7 +962,7 @@ apps/web/src/
     io/                      Dosya alışverişi pencereleri: CoordImportDialog, CoordExportDialog, DxfImportDialog; common (dosya satırı, alanlar, özet satırları, CrsQuestion), scope (dışa aktarma kapsamı), save (dışa aktarılanı yazma), zoom
     dialogs.ts               Kısayol listesi ve Hakkında
     icons.ts                 Simge seti
-  styles/                    tokens, base, shell, controls, panels, settings, processing, model, style, svgedit (SVG düzenleyicisinin düzenleme araçları); io.css (dosya alışverişi pencereleri, onlarla birlikte yüklenir)
+  styles/                    tokens, base, shell, controls, panels, settings, processing, model, style, svgedit (SVG düzenleyicisinin düzenleme araçları); io.css (dosya alışverişi pencereleri, onlarla birlikte yüklenir); ribbon.css (şeritle birlikte yüklenir)
   wasm/                      Rust çekirdeğinin tarayıcı cephesi: core.ts (başlatma, op() çağrıları, NaN/±∞ geri çevirme, hata bildirimi, tipli toplu girişler: `triangulateMany`, `offsetPathXY`, `hatchLinesXY`, `cornerTexts`; sayı alan küçük ölçüler (`coreDist` …) ve kazıma tamponlu halka ölçüleri (`ringCentroid` …); durum tutan sınıflar: geometri deposu `CoreStore`, yüz dizini `CoreFaceIndex`), pack.ts (nesneleri depo için sayı akışına paketleme), testSetup.ts (Vitest), calls/ (çağrı kümeleri ve tohumlu üreteç, depo sahnesi, toleranslı karşılaştırma, depo fixture'larının ortak okuyucusu `storeCases.ts`, bağımsız referans testi; S3c'ye kadar TS ↔ Rust parity ve eski TS referansları buradaydı), golden, çağrı ve depo fixture testleri; pkg/ `pnpm wasm` ile üretilir, depoya girmez
 crates/                      Rust kütüphaneleri, rolüne göre (Cargo çalışma alanı, kök Cargo.toml)
   shared/                    Platformdan bağımsız: web (WASM ile), sunucu ve ileride masaüstü (wgpu) uygulaması aynen kullanır; DOM, tarayıcı, veritabanı ve ağ bilmez
@@ -1016,6 +1027,11 @@ arka uçları, stil motoru ve `SceneLayer` sözleşmesi mevcuttur.
 > - TS algoritmaları, TS ile yan yana derin koşulardan (işlem başına 20 000 rastgele durum) sonra silindi; cephelerde aritmetik olmadığını bir test denetler.
 >
 > Komutların sunucuda çekirdekle yeniden doğrulanması (§14, §18), stil motorunun geometrisi (style-core) ve §23.3 sağlam kararlar yoktur. Etkileşim ölçümü bulutta yazılım GPU'suyla yapıldı; kullanıcının makinesindeki kabul ölçümü bekliyor (§11, `docs/perf/`).
+>
+> **Doğrulanmış durum (2026-09-24, `0ebd723` sonrası):** depo kullanıcı kararıyla monorepo düzenine geçti (ADR 0001 “Güncelleme”):
+> - Tarayıcı uygulaması `apps/web/` (pnpm çalışma alanı paketi `@kentos/web`); komutlar kökten çalışır.
+> - Rust crate'leri `crates/shared/` (geometry-core, contracts, formats: platformdan bağımsız), `crates/wasm/` (geometry-wasm, formats-wasm) ve `crates/server/` (postgres, application) altında; `contracts`'ın TS üretimi `ts` özelliğinde.
+> - Hesap, sözleşme ve arayüz davranışı değişmedi; `apps/desktop` (wgpu) henüz yoktur.
 
 **Kesin karar:** Ana kalıcı veri deposu PostgreSQL + PostGIS. Bu proje için
 ayrı bir disk motoru, WAL, MVCC, uzamsal indeks veya dağıtık veritabanı
@@ -1062,7 +1078,7 @@ süreçte çalışır; bağlantı havuzu ve sorgu süreleri bütçelenir. Ağır
 hesabı Tokio I/O görevini bloke etmez; sınırlandırılmış CPU havuzu veya
 ayrı worker kullanılır. Stack değişikliği sessizce yapılmaz; ADR gerekir.
 
-Mevcut `apps/web/src/` ağacını toplu taşımayın. Çalışan dikey dilim ilerledikçe
+Mevcut `apps/web/src/` ağacını (2026-09-24'te kullanıcı kararıyla kökteki `src/`'den taşındı, ADR 0001) toplu yeniden düzenlemeyin. Çalışan dikey dilim ilerledikçe
 modüler Cargo workspace ekleyin. İlk kapsam için ayrı Rust **api** ve
 **worker** süreç modları ile ortak uygulama çekirdeği yeterlidir:
 

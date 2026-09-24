@@ -75,7 +75,7 @@ export class Toolbox extends Component {
       }, true),
     );
     this.d.add(ui.toolboxFolded.subscribe(() => this.fit()));
-    this.d.add(watchAll([ui.toolboxDocked, ui.toolboxVisible], () => this.place()));
+    this.d.add(watchAll([ui.toolboxDocked, ui.toolboxVisible, ui.ribbonToolbox, ctx.prefs.shell], () => this.place()));
     this.place();
     this.bindDrag(grip);
     const ro = new ResizeObserver(() => {
@@ -160,12 +160,19 @@ export class Toolbox extends Component {
     }
   }
 
+  /** Shown with the classic shell unless hidden; next to the ribbon (which holds every tool) only when asked for. */
+  private get shown(): boolean {
+    const { ui, prefs } = this.ctx;
+    return prefs.shell.value === 'ribbon' ? ui.ribbonToolbox.value : ui.toolboxVisible.value;
+  }
+
   private place(): void {
     const { ui } = this.ctx;
-    this.el.hidden = !ui.toolboxVisible.value;
+    const shown = this.shown;
+    this.el.hidden = !shown;
     const docked = ui.toolboxDocked.value;
     this.el.dataset.docked = String(docked);
-    this.dockHost.toggleAttribute('data-empty', !docked || !ui.toolboxVisible.value);
+    this.dockHost.toggleAttribute('data-empty', !docked || !shown);
     if (docked) {
       this.dockHost.append(this.el);
       this.el.style.transform = '';
@@ -197,7 +204,7 @@ export class Toolbox extends Component {
 
   private clamp(): void {
     const { ui } = this.ctx;
-    if (!ui.toolboxDocked.value && ui.toolboxVisible.value) this.moveTo(ui.toolboxX.value, ui.toolboxY.value);
+    if (!ui.toolboxDocked.value && this.shown) this.moveTo(ui.toolboxX.value, ui.toolboxY.value);
   }
 
   private bindDrag(grip: HTMLElement): void {

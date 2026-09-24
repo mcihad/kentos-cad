@@ -105,6 +105,7 @@ export async function createApp(root: HTMLElement): Promise<AppContext> {
     openProjectSettings: (section) => openProjectSettings(ctx, section as ProjectSettingsSection | undefined),
     openNewProject: () => openNewProjectDialog(ctx),
     focusCommandLine: () => shell?.bottom.commandLine.focus(),
+    searchCommands: () => shell?.searchCommands(),
   });
   registerProcessingCommands(ctx, {
     open: (id, values) => openToolDialog(ctx, id, values),

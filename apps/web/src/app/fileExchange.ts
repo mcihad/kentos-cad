@@ -56,6 +56,7 @@ export function registerFileExchangeCommands(ctx: AppContext): void {
     {
       id: 'crs.points',
       title: 'Nokta listesi içe aktar…',
+      short: 'Nokta listesi',
       category: 'Koordinat',
       icon: 'import',
       description: describeImport,

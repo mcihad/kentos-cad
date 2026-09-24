@@ -1,6 +1,6 @@
 import { applyTheme, applyUiScale } from '../../app/commands';
 import type { AppContext } from '../../app/context';
-import { PREFERENCE_DEFAULTS, snapshot, type PreferencesData, type Theme } from '../../app/state';
+import { PREFERENCE_DEFAULTS, snapshot, type PreferencesData, type ShellKind, type Theme } from '../../app/state';
 import type { Signal } from '../../core/signal';
 import { crsBySrid } from '../../geo/crs';
 import { WebGPUBackend } from '../../render/webgpu/WebGPUBackend';
@@ -26,8 +26,8 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Görünüm',
       icon: 'appearance',
       title: 'Görünüm',
-      lead: 'Tema, yazı boyutu, artı imleç ve fare yardımcıları.',
-      keys: ['theme', 'uiScale', 'crosshair', 'cursorInput', 'hoverInfo'],
+      lead: 'Tema, arayüz düzeni, yazı boyutu, artı imleç ve fare yardımcıları.',
+      keys: ['theme', 'shell', 'uiScale', 'crosshair', 'cursorInput', 'hoverInfo'],
       render: (api) => appearance(api),
     },
     {
@@ -121,8 +121,51 @@ function appearance(api: DraftApi<AppDraft>) {
     b.addEventListener('click', () => api.set('theme', theme));
     return b;
   };
+  // Miniature workbenches in the current theme: menu bar, toolbar and toolbox, or tabs over a ribbon.
+  const shellCard = (shell: ShellKind, label: string, detail: string) => {
+    const i = (n: number, cls?: string) => Array.from({ length: n }, (_, k) => h('i', { class: k === 1 && cls ? cls : null }));
+    const top =
+      shell === 'classic'
+        ? [h('div', { class: 'lmock__menu' }, ...i(5)), h('div', { class: 'lmock__toolbar' }, ...i(6))]
+        : [
+            h('div', { class: 'lmock__tabs' }, ...i(5, 'on')),
+            h(
+              'div',
+              { class: 'lmock__ribbon' },
+              h('b', { class: 'lmock__big' }),
+              h('span', { class: 'lmock__smalls' }, ...i(3)),
+              h('b', { class: 'lmock__big' }),
+              h('span', { class: 'lmock__smalls' }, ...i(3)),
+              h('span', { class: 'lmock__smalls' }, ...i(3)),
+            ),
+          ];
+    const b = h(
+      'button',
+      { class: 'theme-card layout-card', type: 'button', role: 'radio', 'aria-checked': String(d.shell === shell), dataset: { shell } },
+      h(
+        'div',
+        { class: 'layout-card__mock', 'aria-hidden': 'true' },
+        ...top,
+        h('div', { class: 'lmock__body' }, shell === 'classic' ? h('div', { class: 'lmock__toolbox' }, ...i(6)) : null, h('div', { class: 'lmock__canvas' }), h('div', { class: 'lmock__panel' })),
+      ),
+      h('span', { class: 'theme-card__label' }, label),
+      h('span', { class: 'layout-card__detail' }, detail),
+    );
+    b.addEventListener('click', () => api.set('shell', shell));
+    return b;
+  };
   return [
     group('Tema', h('div', { class: 'theme-cards', role: 'radiogroup', 'aria-label': 'Tema' }, themeCard('dark', 'Koyu grafit'), themeCard('light', 'Açık pafta'))),
+    group(
+      'Arayüz düzeni',
+      h(
+        'div',
+        { class: 'theme-cards', role: 'radiogroup', 'aria-label': 'Arayüz düzeni' },
+        shellCard('classic', 'Klasik', 'Menüler, araç çubuğu ve kayan araç kutusu'),
+        shellCard('ribbon', 'Şerit', 'Sekmeli şerit; dar pencerede kendini sığdırır'),
+      ),
+      note('info', 'İkisi aynı araç ve komutları sunar; yeni bir araç ikisinde de kendiliğinden yer alır. Görünüm → Şerit arayüzü komutuyla da geçilir.'),
+    ),
     group(
       'Yazı ve imleç',
       settingRow(

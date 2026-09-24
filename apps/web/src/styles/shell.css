@@ -2,11 +2,25 @@
 /* Desktop workstation layout; below this width the page scrolls instead. */
 .shell {
   display: grid;
-  grid-template-rows: var(--menubar-h) var(--toolbar-h) minmax(0, 1fr) var(--status-h);
+  grid-template-rows: auto minmax(0, 1fr) var(--status-h);
   height: 100dvh;
   min-width: 1100px;
   min-height: 600px;
   background: var(--c-panel);
+}
+
+/* Menu bar and toolbar, or the ribbon (prefs.shell). */
+.shell__chrome {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* Holds the ribbon's place while its chunk loads, so the drawing does not jump. */
+.ribbon-placeholder {
+  height: calc(var(--menubar-h) + var(--ribbon-h) + 2px);
+  background: var(--c-toolbar);
+  border-bottom: 1px solid var(--c-line);
+  box-shadow: inset 0 var(--menubar-h) 0 var(--c-menubar);
 }
 
 .shell__body {
@@ -50,6 +64,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  height: var(--menubar-h);
+  flex: none;
   padding: 0 6px 0 10px;
   background: var(--c-menubar);
   border-bottom: 1px solid var(--c-line);
@@ -142,6 +158,8 @@
 .toolbar {
   display: flex;
   align-items: center;
+  height: var(--toolbar-h);
+  flex: none;
   padding: 0 6px;
   background: var(--c-toolbar);
   border-bottom: 1px solid var(--c-line);

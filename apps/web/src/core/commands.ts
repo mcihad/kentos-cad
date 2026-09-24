@@ -10,11 +10,15 @@ import { foldTurkish } from './text';
 export interface Command {
   id: string;
   title: string;
+  /** Shorter name for tight places (ribbon buttons, where the panel names the context); the title otherwise. */
+  short?: string;
   category?: string;
   icon?: string;
   description?: string;
   /** Names accepted by the command line, e.g. ["L", "LINE", "CIZGI"]. */
   aliases?: readonly string[];
+  /** Not built yet: shown dimmed with “Geliştirme aşamasında”, and running it says so. */
+  pending?: boolean;
   run(args?: unknown): void;
   isEnabled?(): boolean;
   isChecked?(): boolean;

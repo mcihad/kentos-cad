@@ -15,6 +15,7 @@ function pending(ctx: AppContext, id: string, title: string, category: string, i
     title,
     category,
     icon,
+    pending: true,
     run: () => ctx.log.warn(`“${title}” bu sürümde henüz kullanılamıyor.`),
   };
 }
@@ -65,11 +66,14 @@ export interface CommandHooks {
   /** Yeni proje — an empty drawing with the standard layers, a CRS and a plot scale. */
   openNewProject: () => void;
   focusCommandLine: () => void;
+  /** Komut ara — the ribbon's search box, or the command line in the classic shell. */
+  searchCommands: () => void;
 }
 
 export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void {
   const { commands, doc, selection, settings, ui, view, tools, log } = ctx;
   const selected = () => [...selection.ids.value].map((id) => doc.get(id)).filter((e): e is Entity => !!e);
+  const toolboxShown = () => (ctx.prefs.shell.value === 'ribbon' ? ui.ribbonToolbox : ui.toolboxVisible);
   const F = 'Dosya';
   const E = 'Düzen';
   const V = 'Görünüm';
@@ -128,6 +132,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       id: 'file.saveAs',
       title: 'Farklı kaydet…',
       category: F,
+      icon: 'saveAs',
       description: 'Çizimi yeni bir .kcad dosyasına yazar ve bundan sonra oraya kaydeder.',
       aliases: ['FARKLIKAYDET', 'SAVEAS'],
       run: () => void ctx.files.saveAs(),
@@ -140,7 +145,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     pending(ctx, 'file.export.dxf', 'DXF…', F),
     pending(ctx, 'file.export.geojson', 'GeoJSON…', F),
     pending(ctx, 'file.export.pdf', 'PDF pafta…', F),
-    pending(ctx, 'file.print', 'Yazdır ve pafta çıktısı…', F, 'print'),
+    { ...pending(ctx, 'file.print', 'Yazdır ve pafta çıktısı…', F, 'print'), short: 'Yazdır' },
     { id: 'file.settings', title: 'Proje ayarları…', category: F, icon: 'folder', aliases: ['PROJE'], run: () => hooks.openProjectSettings() },
 
     // Düzen
@@ -218,7 +223,9 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     {
       id: 'edit.pasteOriginal',
       title: 'Özgün koordinatlara yapıştır',
+      short: 'Yerine yapıştır',
       category: E,
+      icon: 'pasteOriginal',
       aliases: ['PASTEORIG'],
       description: 'Panodaki nesneleri kopyalandıkları koordinatlara yapıştırır (başka projeye aktarırken).',
       run: () => {
@@ -232,17 +239,19 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       id: 'edit.selectAll',
       title: 'Tümünü seç',
       category: E,
+      icon: 'selectAll',
       run: () => {
         const ids = [...doc.all()].filter((e) => doc.layers.isVisible(e.layerId)).map((e) => e.id);
         selection.set(ids);
         log.info(`${ids.length} nesne seçildi.`);
       },
     },
-    { id: 'edit.deselect', title: 'Seçimi kaldır', category: E, run: () => selection.clear(), isEnabled: () => selection.size > 0, watch: [selection.ids] },
+    { id: 'edit.deselect', title: 'Seçimi kaldır', category: E, icon: 'deselect', run: () => selection.clear(), isEnabled: () => selection.size > 0, watch: [selection.ids] },
     {
       id: 'edit.invertSelection',
       title: 'Seçimi ters çevir',
       category: E,
+      icon: 'invertSelection',
       run: () => selection.set([...doc.all()].filter((e) => doc.layers.isVisible(e.layerId) && !selection.has(e.id)).map((e) => e.id)),
     },
 
@@ -259,10 +268,19 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isEnabled: () => selection.size > 0,
       watch: [selection.ids],
     },
-    toggle('view.toolbox', 'Araç kutusu', ui.toolboxVisible, { category: V, icon: 'toolbox' }),
-    toggle('view.toolboxDock', 'Araç kutusunu kenara sabitle', ui.toolboxDocked, { category: V, icon: 'dock' }),
-    toggle('view.rightPanel', 'Katman ve öznitelik paneli', ui.rightVisible, { category: V, icon: 'panelRight' }),
-    toggle('view.bottomPanel', 'Komut geçmişi paneli', ui.bottomExpanded, { category: V, icon: 'panelBottom' }),
+    {
+      id: 'view.toolbox',
+      title: 'Araç kutusu',
+      category: V,
+      icon: 'toolbox',
+      // The ribbon holds every tool: next to it the toolbox stays off until asked for, remembered apart.
+      run: () => toolboxShown().set(!toolboxShown().value),
+      isChecked: () => toolboxShown().value,
+      watch: [ui.toolboxVisible, ui.ribbonToolbox, ctx.prefs.shell],
+    },
+    toggle('view.toolboxDock', 'Araç kutusunu kenara sabitle', ui.toolboxDocked, { category: V, icon: 'dock', short: 'Kenara sabitle' }),
+    toggle('view.rightPanel', 'Katman ve öznitelik paneli', ui.rightVisible, { category: V, icon: 'panelRight', short: 'Katman paneli' }),
+    toggle('view.bottomPanel', 'Komut geçmişi paneli', ui.bottomExpanded, { category: V, icon: 'panelBottom', short: 'Komut geçmişi' }),
     {
       id: 'view.theme.dark',
       title: 'Koyu',
@@ -305,6 +323,38 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     },
     { id: 'view.theme.toggle', title: 'Temayı değiştir', category: V, run: () => applyTheme(ctx, ui.theme.value === 'dark' ? 'light' : 'dark') },
     {
+      id: 'view.ribbon',
+      title: 'Şerit arayüzü',
+      category: V,
+      icon: 'ribbon',
+      aliases: ['SERIT', 'RIBBON'],
+      description: 'Menüler, araç çubuğu ve araç kutusu yerine sekmeli şerit: aynı araçlar ve komutlar. Uygulama ayarları → Görünüm’den de seçilir.',
+      run: () => ctx.prefs.shell.set(ctx.prefs.shell.value === 'ribbon' ? 'classic' : 'ribbon'),
+      isChecked: () => ctx.prefs.shell.value === 'ribbon',
+      watch: [ctx.prefs.shell],
+    },
+    {
+      id: 'view.ribbonCollapse',
+      title: 'Şeridi daralt',
+      category: V,
+      icon: 'chevronUp',
+      aliases: ['SERITDARALT'],
+      description: 'Şeritte yalnız sekmeler kalır; bir sekmeye tıklayınca şerit çizimin üstünde açılır, komuttan sonra kapanır. Sekmeye çift tıklamak da daraltır ya da açar.',
+      run: () => ui.ribbonCollapsed.set(!ui.ribbonCollapsed.value),
+      isEnabled: () => ctx.prefs.shell.value === 'ribbon',
+      isChecked: () => ui.ribbonCollapsed.value,
+      watch: [ctx.prefs.shell, ui.ribbonCollapsed],
+    },
+    {
+      id: 'view.commandSearch',
+      title: 'Komut ara',
+      category: V,
+      icon: 'search',
+      aliases: ['ARA', 'SEARCH'],
+      description: 'Bir komutu adıyla ya da takma adıyla bulup çalıştırır: şeritte arama kutusu, klasik arayüzde komut satırı.',
+      run: hooks.searchCommands,
+    },
+    {
       id: 'view.coords',
       title: 'Koordinat listesi',
       category: V,
@@ -335,15 +385,15 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     }),
 
     // Harita / Koordinat / Analiz
-    pending(ctx, 'map.contours', 'Eşyükselti üret…', M),
-    pending(ctx, 'map.profile', 'Boy kesit al…', M),
-    pending(ctx, 'map.sheet', 'Pafta bölümlemesi…', M),
-    pending(ctx, 'map.parcelReport', 'Parsel alan çizelgesi', M),
+    pending(ctx, 'map.contours', 'Eşyükselti üret…', M, 'contours'),
+    pending(ctx, 'map.profile', 'Boy kesit al…', M, 'profile'),
+    pending(ctx, 'map.sheet', 'Pafta bölümlemesi…', M, 'sheet'),
+    { ...pending(ctx, 'map.parcelReport', 'Parsel alan çizelgesi', M, 'parcelReport'), short: 'Alan çizelgesi' },
     { id: 'crs.set', title: 'Koordinat sistemi…', category: K, icon: 'crs', aliases: ['SRID', 'EPSG'], run: () => hooks.openProjectSettings('crs') },
-    pending(ctx, 'crs.transform', 'Datum dönüşümü (ED50 ↔ TUREF)…', K),
-    pending(ctx, 'crs.query', 'Koordinat sorgula', K),
-    pending(ctx, 'analysis.volume', 'Hacim hesabı…', A),
-    pending(ctx, 'analysis.slope', 'Eğim analizi…', A),
+    { ...pending(ctx, 'crs.transform', 'Datum dönüşümü (ED50 ↔ TUREF)…', K, 'crsTransform'), short: 'Datum dönüşümü' },
+    pending(ctx, 'crs.query', 'Koordinat sorgula', K, 'crsQuery'),
+    pending(ctx, 'analysis.volume', 'Hacim hesabı…', A, 'volume'),
+    pending(ctx, 'analysis.slope', 'Eğim analizi…', A, 'slope'),
 
     // Katmanlar
     {
@@ -368,7 +418,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
         log.success(`“${node.name}” grubu eklendi.`);
       },
     },
-    { id: 'layer.showAll', title: 'Tüm katmanları göster', category: 'Katman', run: () => doc.layers.showAll() },
+    { id: 'layer.showAll', title: 'Tüm katmanları göster', short: 'Katmanları göster', category: 'Katman', icon: 'eye', run: () => doc.layers.showAll() },
 
     // Araç akışı
     { id: 'tool.cancel', title: 'İptal', category: 'Komut', run: () => tools.exit() },
@@ -391,7 +441,9 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     {
       id: 'server.check',
       title: 'Sunucu bağlantısını denetle',
+      short: 'Sunucuyu denetle',
       category: 'Araçlar',
+      icon: 'server',
       description: 'KentOS sunucusuna şimdi sorar. Çizim sunucusuz da çalışır; kayıt yerel .kcad dosyasına yapılır.',
       aliases: ['SUNUCU', 'SERVER'],
       run: () =>
@@ -415,6 +467,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       icon: d.icon,
       description: d.description,
       aliases: d.aliases,
+      pending: !d.ready || undefined,
       run: () => tools.activate(d.id),
       isChecked: () => tools.activeId.value === d.id,
       watch: [tools.activeId],

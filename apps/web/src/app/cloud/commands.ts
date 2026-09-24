@@ -30,6 +30,7 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       id: 'cloud.signIn',
       title: 'Buluta giriş…',
       category: C,
+      icon: 'signIn',
       description: 'KentOS sunucusunda hesabınızla oturum açar (yerel hesap ya da kurumunuzun OpenID girişi).',
       aliases: ['GIRIS', 'LOGIN'],
       run: () => hooks.signIn(),
@@ -40,6 +41,7 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       id: 'cloud.signOut',
       title: 'Bulut oturumunu kapat',
       category: C,
+      icon: 'signOut',
       description: 'Oturumu kapatır. Açık bulut projesinin gönderilemeyen değişiklikleri bu cihazda saklanır.',
       aliases: ['CIKIS', 'LOGOUT'],
       run: () =>
@@ -54,7 +56,7 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       id: 'cloud.open',
       title: 'Bulut projesi aç…',
       category: C,
-      icon: 'fileOpen',
+      icon: 'cloud',
       description: 'Kurumunuzun bulut projelerinden birini açar. Açık projedeki değişiklikler kendiliğinden kaydedilir.',
       aliases: ['BULUTAC', 'CLOUDOPEN'],
       run: needAccount(() => hooks.projects('open')),
@@ -65,6 +67,7 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       id: 'cloud.upload',
       title: 'Buluta yükle…',
       category: C,
+      icon: 'cloudUpload',
       description: 'Açık çizimi kurumunuzda yeni bir bulut projesi yapar; sonra her değişiklik kendiliğinden kaydedilir.',
       aliases: ['BULUTAYUKLE', 'UPLOAD'],
       run: needAccount(() => hooks.projects('upload')),
@@ -74,7 +77,9 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
     {
       id: 'cloud.rename',
       title: 'Bulut projesini yeniden adlandır…',
+      short: 'Yeniden adlandır',
       category: C,
+      icon: 'edit',
       description: 'Açık bulut projesinin adını kurumdaki herkes için değiştirir (project.edit yetkisi gerekir). Başka bir projeyi Bulut projesi aç listesinden yeniden adlandırın.',
       aliases: ['BULUTAD', 'RENAME'],
       run: () => hooks.rename(),
@@ -84,7 +89,9 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
     {
       id: 'cloud.delete',
       title: 'Bulut projesini sil…',
+      short: 'Projeyi sil',
       category: C,
+      icon: 'trash',
       description:
         'Açık bulut projesini kurumdaki herkes için siler (project.delete yetkisi, yönetici). Nesneler sunucuda saklanır; yanlışlıkla silineni sunucu yöneticisi geri getirebilir.',
       aliases: ['BULUTSIL'],
@@ -95,7 +102,9 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
     {
       id: 'cloud.conflicts',
       title: 'Kayıt çakışmalarını çöz…',
+      short: 'Çakışmaları çöz',
       category: C,
+      icon: 'conflict',
       description: 'Başkasının daha önce kaydettiği nesneler için sunucudakini alır ya da sizinkini kaydeder.',
       run: () => hooks.conflicts(),
       isEnabled: () => !!cloud.sync.value?.conflicts.value.length,

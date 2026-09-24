@@ -1128,6 +1128,132 @@ try {
     await b.shot('newproject-drawn');
   }
 
+  // Şerit (Uygulama ayarları → Görünüm → Arayüz düzeni): built from the same menu model and tool catalog as the
+  // classic shell, switched live. Panels shrink to the window, a selection brings its own tab, the tabs holding the
+  // running tool carry a dot, and folded (Ctrl+F1) a tab opens over the drawing until a command runs.
+  {
+    const at = (sel) =>
+      b.eval(`(() => { const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.offsetParent); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const click = async (sel) => {
+      const p = await at(sel);
+      if (!p) throw new Error(`bulunamadı: ${sel}`);
+      await b.click(...p);
+      await sleep(120);
+    };
+    const tab = (id) => click(`.ribbon__tab[data-tab="${id}"]`);
+    const viewportH = () => b.eval(`window.kentos.view.clientRect().height`);
+    const classicH = await viewportH();
+
+    await key(',', { ctrl: true });
+    await b.waitFor(`document.querySelector('.layout-card[data-shell="ribbon"]')`, 3000).catch(() => {});
+    await click('.layout-card[data-shell="ribbon"]');
+    await b.shot('ribbon-settings');
+    const save = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Kaydet'); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await b.click(...save);
+    await b.waitFor(`!!document.querySelector('.ribbon .ribbon__strip .rpanel')`, 15000).catch(() => {});
+    const swapped = await b.eval(`({ ribbon: !!document.querySelector('.ribbon'), menubar: !!document.querySelector('.menubar'), toolbar: !!document.querySelector('.toolbar'), toolbox: document.querySelector('.toolbox').hidden, pref: window.kentos.prefs.shell.value })`);
+    check('Şerit chosen in Uygulama ayarları replaces the menu bar, toolbar and toolbox at once', swapped.ribbon && !swapped.menubar && !swapped.toolbar && swapped.toolbox && swapped.pref === 'ribbon', JSON.stringify(swapped));
+
+    // Every tool of the catalog and every menu command has a button; the tabs are derived, nothing lists tools twice.
+    const tabIds = await b.eval(`[...document.querySelectorAll('.ribbon__tab')].filter((t) => !t.hidden).map((t) => t.dataset.tab)`);
+    const seen = new Set();
+    for (const id of tabIds) {
+      await tab(id);
+      for (const c of await b.eval(`[...document.querySelectorAll('.ribbon__strip [data-command]')].map((e) => e.dataset.command)`)) seen.add(c);
+    }
+    const tools = await b.eval(`window.kentos.tools.list().map((t) => 'tool.' + t.id)`);
+    const missing = tools.filter((id) => !seen.has(id));
+    const unknown = await b.eval(`${JSON.stringify([...seen])}.filter((id) => !window.kentos.commands.get(id))`);
+    check('every tool of the catalog has a ribbon button, and every button a registered command', missing.length === 0 && unknown.length === 0, [...missing, ...unknown].join(', '));
+
+    // A tool button runs its tool (filled amber); Giriş, which also offers it, carries the running-tool dot.
+    await tab('draw');
+    await click('.ribbon__strip [data-command="tool.circle"]');
+    const running = await b.eval(`({ tool: window.kentos.tools.activeId.value, pressed: document.querySelector('.ribbon__strip [data-command="tool.circle"]').getAttribute('aria-pressed'), dot: document.querySelector('.ribbon__tab[data-tab="home"]').hasAttribute('data-active-tool') })`);
+    check('Daire on the ribbon runs the circle tool, marks its button and puts a dot on Giriş', running.tool === 'circle' && running.pressed === 'true' && running.dot, JSON.stringify(running));
+    await key('Escape');
+
+    // Narrow window: panels step down (labels, then icons) instead of being cut off.
+    const fits = async () => {
+      const out = [];
+      for (const id of tabIds) {
+        await tab(id);
+        out.push(await b.eval(`(() => { const s = document.querySelector('.ribbon__strip'); const levels = [...s.querySelectorAll('.rpanel')].map((p) => Number(p.dataset.level)); return { id: '${id}', over: s.scrollWidth > s.clientWidth + 1, shrunk: levels.some((l) => l > 0) }; })()`));
+      }
+      return out;
+    };
+    const wide = await fits();
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1100, height: 900, deviceScaleFactor: 1, mobile: false });
+    await sleep(300);
+    const narrow = await fits();
+    await tab('home');
+    await b.shot('ribbon-1100');
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 900, deviceScaleFactor: 1, mobile: false });
+    await sleep(300);
+    check(
+      'at 1100 px every tab fits by shrinking its panels; at 1600 px Değiştir keeps its labels',
+      narrow.every((t) => !t.over) && narrow.some((t) => t.shrunk) && wide.every((t) => !t.over) && !wide.find((t) => t.id === 'modify').shrunk,
+      JSON.stringify(narrow.filter((t) => t.over || t.shrunk).map((t) => t.id)),
+    );
+
+    // A selection brings the contextual Seçim tab with its count and summary; clearing it takes the tab away.
+    await tab('home');
+    const line = await b.eval(`[...window.kentos.doc.all()].find((e) => e.kind === 'line').id`);
+    await b.eval(`window.kentos.selection.set([${line}])`);
+    await sleep(150);
+    await tab('selection');
+    const summary = await b.eval(`({ tab: document.querySelector('.ribbon__tab[data-tab="selection"]').textContent, count: document.querySelector('.rsel__count').textContent, kinds: document.querySelector('.rsel__kinds').textContent })`);
+    await b.shot('ribbon-selection');
+    await key('Escape');
+    await sleep(150);
+    const after = await b.eval(`({ hidden: document.querySelector('.ribbon__tab[data-tab="selection"]').hidden, current: document.querySelector('.ribbon__tab[aria-selected="true"]').dataset.tab })`);
+    check('a selection shows the Seçim tab (count, kinds); Esc clears it and returns to Giriş', summary.tab === 'Seçim1' && summary.count === '1' && summary.kinds === '1 çizgi' && after.hidden && after.current === 'home', JSON.stringify({ summary, after }));
+
+    // Folded with Ctrl+F1: the drawing grows; a tab opens over it and a command closes it again.
+    await key('F1', { ctrl: true });
+    await sleep(200);
+    const foldedH = await viewportH();
+    await tab('view');
+    const peek = await b.eval(`getComputedStyle(document.querySelector('.ribbon__strip')).position`);
+    await click('.ribbon__strip [data-command="view.zoomExtents"]');
+    const closed = await b.eval(`getComputedStyle(document.querySelector('.ribbon__strip')).display`);
+    await key('F1', { ctrl: true });
+    await sleep(200);
+    check('Ctrl+F1 folds the ribbon to its tabs; a tab opens it over the drawing until a command runs', foldedH > classicH && peek === 'absolute' && closed === 'none' && (await viewportH()) < foldedH, `${classicH} → ${foldedH}, ${peek}, ${closed}`);
+
+    // Komut ara (Alt+Q): a typed name, Enter runs it.
+    await key('q', { alt: true });
+    const focused = await b.eval(`document.activeElement === document.querySelector('.rsearch__input')`);
+    await b.type('elips');
+    await sleep(120);
+    const found = await b.eval(`[...document.querySelectorAll('.rsearch__title')].map((e) => e.textContent)`);
+    await b.key('Enter');
+    await sleep(80);
+    check('Alt+Q searches commands by name and Enter runs the first', focused && found[0] === 'Elips' && (await b.eval('window.kentos.tools.activeId.value')) === 'ellipse', JSON.stringify(found));
+    await key('Escape');
+
+    // Quick access: right button on a ribbon command adds it to the bar, remembered with the layout.
+    await tab('view');
+    const zoom = await at('.ribbon__strip [data-command="view.zoomExtents"]');
+    await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: zoom[0], y: zoom[1], button: 'none' });
+    await b.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: zoom[0], y: zoom[1], button: 'right', clickCount: 1 });
+    await b.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: zoom[0], y: zoom[1], button: 'right', clickCount: 1 });
+    await sleep(120);
+    await click('.menu .menu__item');
+    check('a right click adds a ribbon command to the quick access bar', await b.eval(`!!document.querySelector('.ribbon__qat [data-command="view.zoomExtents"]') && window.kentos.ui.ribbonQuickAccess.value.includes('view.zoomExtents')`));
+    await b.shot('ribbon-dark');
+    await b.eval(`window.kentos.commands.execute('view.theme.light')`);
+    await sleep(150);
+    await b.shot('ribbon-light');
+    await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+
+    // Back to the classic shell from the ribbon's own Şerit arayüzü button: menus and toolbox return.
+    await click('.ribbon__strip [data-command="view.ribbon"]');
+    await b.waitFor(`!!document.querySelector('.menubar')`, 3000).catch(() => {});
+    const back = await b.eval(`({ ribbon: !!document.querySelector('.ribbon'), menubar: !!document.querySelector('.menubar'), toolbox: !document.querySelector('.toolbox').hidden })`);
+    check('the Şerit arayüzü button returns to menus and toolbox', !back.ribbon && back.menubar && back.toolbox && (await viewportH()) === classicH, JSON.stringify(back));
+  }
+
   const errors = b.consoleLog.filter((l) => /^(error|EXCEPTION)/.test(l));
   check('no console errors', errors.length === 0, errors.join(' | '));
 } catch (e) {

@@ -102,7 +102,7 @@ export function registerProcessingCommands(ctx: AppContext, hooks: ProcessingHoo
   const list: Command[] = [
     { id: 'processing.toolbox', title: 'İşlem araç kutusu', category: cat, icon: 'processing', aliases: ['ISLEMLER', 'PROCESSING'], description: 'Toplu işlem araçlarını sağ panelde listeler.', run: () => hooks.show('tools') },
     // Harita menüsündeki eski komut, aynı işi yapan işlem aracını açar.
-    { id: 'map.edgeLengths', title: 'Kenar ölçülerini yaz…', category: 'Harita', icon: 'dimension', aliases: ['KENAR', 'KENAROLCU'], description: 'Parsel ve çizgilerin kenar uzunluklarını yazar (işlem aracı).', run: () => hooks.open('annotation.edgeLengths') },
+    { id: 'map.edgeLengths', title: 'Kenar ölçülerini yaz…', short: 'Kenar ölçüleri', category: 'Harita', icon: 'dimension', aliases: ['KENAR', 'KENAROLCU'], description: 'Parsel ve çizgilerin kenar uzunluklarını yazar (işlem aracı).', run: () => hooks.open('annotation.edgeLengths') },
     { id: 'processing.history', title: 'İşlem geçmişi', category: cat, icon: 'history', description: 'Bu oturumda çalıştırılan işlemler; yeniden çalıştırılabilir.', run: () => hooks.show('history') },
     {
       id: 'processing.newModel',

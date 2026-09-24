@@ -1,69 +1,124 @@
 import type { MenuItem } from '../ui/widgets/PopupMenu';
 import type { CategoryNode } from '../processing/registry';
+import type { ToolDescriptor } from '../tools/Tool';
+import { parseToolRef, toolSections } from '../tools/sections';
 import type { AppContext } from './context';
 import { modelCommandId, processingCommandId } from './processing';
 
 /**
- * Declarative main menu. Strings are command ids; "-" is a separator;
- * "@processing" expands to the processing categories with their tools,
- * "@models" to the model library (run a model, or design a new one).
+ * Declarative main menu: the single source for where commands live. The
+ * classic menu bar and the ribbon (app/ribbon.ts) are both built from it.
+ *
+ * - A string is a command id, or a reference expanded on use:
+ *   `@tools:draw` (every tool of a group, one section per tool section),
+ *   `@tools:map/measure` (one section), `@processing` (the processing
+ *   categories with their tools), `@models` (the model library).
+ * - `{ section }` starts a titled block: a separator in the menu, a panel
+ *   in the ribbon. Blocks with the same title merge, so a menu can add its
+ *   own commands to a tool section (`Parsel`: the tools, then the report).
+ * - "-" starts an untitled block.
+ * - `{ label, items }` is a submenu (a drop-down button in the ribbon, or
+ *   its blocks as panels when `inline`).
+ *
+ * Tools are never listed one by one: a tool added to tools/catalog.ts
+ * appears in its group's menu and ribbon tab by itself.
  */
-export type MenuSpec = string | '-' | '@processing' | '@models' | { label: string; icon?: string; items: MenuSpec[] };
+export type MenuSpec = string | MenuSection | SubmenuSpec;
+
+export interface MenuSection {
+  readonly section: string;
+}
+
+export interface SubmenuSpec {
+  readonly label: string;
+  readonly icon?: string;
+  readonly items: readonly MenuSpec[];
+  /** Ribbon: show the items as panels of their own instead of a drop-down button. */
+  readonly inline?: boolean;
+}
+
+/** What a block holds once references are expanded: command ids, submenus, `@processing`, `@models`. */
+export type MenuEntry = string | SubmenuSpec;
+
+/** A titled (or untitled, label '') block of a menu. */
+export interface MenuBlock {
+  readonly label: string;
+  readonly items: MenuEntry[];
+}
 
 export interface TopMenu {
   id: string;
   label: string;
-  items: MenuSpec[];
+  items: readonly MenuSpec[];
 }
+
+const sec = (section: string): MenuSection => ({ section });
 
 export const MAIN_MENU: TopMenu[] = [
   {
     id: 'file',
     label: 'Dosya',
     items: [
+      sec('Proje'),
       'file.new',
       'file.open',
-      '-',
+      sec('Kaydet'),
       'file.save',
       'file.saveAs',
-      '-',
+      sec('Bulut'),
       'cloud.open',
       'cloud.upload',
       'cloud.conflicts',
       'cloud.rename',
       'cloud.delete',
-      '-',
+      sec('Dosya alışverişi'),
       { label: 'İçe aktar', icon: 'import', items: ['file.import.dxf', 'file.import.ncz', 'file.import.shp', 'file.import.geojson', '-', 'file.import.ncn'] },
       { label: 'Dışa aktar', icon: 'export', items: ['file.export.dxf', 'file.export.geojson', 'file.export.pdf', '-', 'file.export.ncn'] },
-      '-',
+      sec('Çıktı'),
       'file.print',
-      '-',
+      sec('Ayarlar'),
       'file.settings',
     ],
   },
   {
     id: 'edit',
     label: 'Düzen',
-    items: ['edit.undo', 'edit.redo', '-', 'edit.cut', 'edit.copy', 'edit.paste', 'edit.pasteOriginal', 'tool.erase', '-', 'edit.selectAll', 'edit.deselect', 'edit.invertSelection'],
+    items: [
+      sec('Geçmiş'),
+      'edit.undo',
+      'edit.redo',
+      sec('Pano'),
+      'edit.cut',
+      'edit.copy',
+      'edit.paste',
+      'edit.pasteOriginal',
+      'tool.erase',
+      sec('Seçim'),
+      'edit.selectAll',
+      'edit.deselect',
+      'edit.invertSelection',
+    ],
   },
   {
     id: 'view',
     label: 'Görünüm',
     items: [
+      sec('Yakınlaştır'),
       'view.zoomExtents',
       'tool.zoomWindow',
       'view.zoomSelection',
       'view.zoomIn',
       'view.zoomOut',
       'tool.pan',
-      '-',
+      sec('Paneller'),
       'view.toolbox',
       'view.toolboxDock',
       'view.rightPanel',
       'view.bottomPanel',
       'view.coords',
-      '-',
-      { label: 'Tema', items: ['view.theme.dark', 'view.theme.light'] },
+      'view.ribbon',
+      sec('Görünüş'),
+      { label: 'Tema', icon: 'appearance', items: ['view.theme.dark', 'view.theme.light'] },
       { label: 'Çizim motoru', icon: 'chip', items: ['view.renderer.webgl2', 'view.renderer.webgpu'] },
       { label: 'Sembol boyutu', icon: 'styles', items: ['view.symbols.plot', 'view.symbols.screen'] },
     ],
@@ -71,63 +126,52 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'draw',
     label: 'Çizim',
-    items: ['tool.point', 'tool.divide', '-', 'tool.line', 'tool.polyline', 'tool.parallel', 'tool.arc', 'tool.circle', 'tool.ellipse', 'tool.rectangle', 'tool.rectangle3', 'tool.regularPolygon', 'tool.polygon', 'tool.spline', '-', 'tool.perpIn', 'tool.perpOut', 'tool.xline', 'tool.ray', 'tool.donut', '-', 'tool.text', 'tool.dimension', 'tool.hatch', 'tool.revcloud'],
+    items: ['@tools:draw', '@tools:annotate'],
   },
   {
     id: 'modify',
     label: 'Değiştir',
-    items: [
-      'tool.move',
-      'tool.copy',
-      'tool.rotate',
-      'tool.scale',
-      'tool.mirror',
-      'tool.stretch',
-      'tool.array',
-      'tool.arrayPolar',
-      'tool.align',
-      '-',
-      'tool.offset',
-      'tool.trim',
-      'tool.extend',
-      'tool.lengthen',
-      'tool.break',
-      'tool.fillet',
-      'tool.chamfer',
-      '-',
-      'tool.join',
-      'tool.explode',
-      'tool.vertex',
-      '-',
-      { label: 'Alan işlemleri', icon: 'areaUnion', items: ['tool.boundary', 'tool.toArea', '-', 'tool.areaUnion', 'tool.areaIntersect', 'tool.areaSubtract', 'tool.areaSplit', '-', 'tool.toPolyline'] },
-      '-',
-      'tool.erase',
-    ],
+    items: ['@tools:transform', '@tools:modify', { label: 'Alan işlemleri', icon: 'areaUnion', inline: true, items: ['@tools:area'] }],
   },
   {
     id: 'map',
     label: 'Harita',
-    items: ['tool.parcel', 'tool.subdivide', 'tool.stakeout', 'map.parcelReport', 'map.edgeLengths', '-', 'tool.spot', 'map.contours', 'map.profile', '-', 'map.sheet'],
+    items: ['@tools:map', sec('Parsel'), 'map.parcelReport', 'map.edgeLengths', sec('Arazi'), 'map.contours', 'map.profile', sec('Pafta'), 'map.sheet'],
   },
   {
     id: 'crs',
     label: 'Koordinat',
-    items: ['crs.set', 'crs.transform', '-', 'crs.query', 'crs.points', 'view.coords'],
+    items: [sec('Koordinat sistemi'), 'crs.set', 'crs.transform', sec('Koordinatlar'), 'crs.query', 'crs.points', 'view.coords'],
   },
   {
     id: 'analysis',
     label: 'Analiz',
-    items: ['tool.measure', 'tool.area', '-', 'analysis.volume', 'analysis.slope'],
+    items: ['@tools:map/measure', sec('Arazi analizi'), 'analysis.volume', 'analysis.slope'],
   },
   {
     id: 'processing',
     label: 'İşlemler',
-    items: ['processing.toolbox', 'processing.history', '-', '@models', '@processing'],
+    items: [sec('İşlemler'), 'processing.toolbox', 'processing.history', sec('Modeller'), '@models', '@processing'],
   },
   {
     id: 'tools',
     label: 'Araçlar',
-    items: ['commandline.focus', { label: 'Çizim yardımcıları', items: ['draft.snap', 'draft.grid', 'draft.ortho', 'draft.polar', 'draft.tracking'] }, '-', 'style.manager', 'style.svgEditor', 'style.layerStyle', 'style.legend', 'style.assign', 'style.clearSymbol', '-', 'help.shortcuts', 'server.check', 'tools.options'],
+    items: [
+      sec('Komut'),
+      'commandline.focus',
+      { label: 'Çizim yardımcıları', icon: 'snap', inline: true, items: ['draft.snap', 'draft.grid', 'draft.ortho', 'draft.polar', 'draft.tracking'] },
+      sec('Stil'),
+      'style.manager',
+      'style.svgEditor',
+      'style.layerStyle',
+      'style.legend',
+      'style.assign',
+      'style.clearSymbol',
+      sec('Uygulama'),
+      'help.shortcuts',
+      'server.check',
+      'tools.options',
+    ],
   },
   {
     id: 'help',
@@ -136,20 +180,75 @@ export const MAIN_MENU: TopMenu[] = [
   },
 ];
 
+export const menuById = (id: string): TopMenu | undefined => MAIN_MENU.find((m) => m.id === id);
+
+/**
+ * Expands a menu into its blocks: tool references become the tools of the
+ * catalog (section by section), blocks with the same title merge, and a
+ * command is listed once (its first place wins).
+ */
+export function menuBlocks(specs: readonly MenuSpec[], tools: readonly ToolDescriptor[]): MenuBlock[] {
+  const out: { label: string; items: MenuEntry[] }[] = [];
+  let current: { label: string; items: MenuEntry[] } | null = null;
+  const seen = new Set<string>();
+  const open = (label: string) => {
+    const found = label ? out.find((b) => b.label === label) : undefined;
+    current = found ?? { label, items: [] };
+    if (!found) out.push(current);
+    return current;
+  };
+  const add = (block: { items: MenuEntry[] }, entry: MenuEntry) => {
+    if (typeof entry === 'string' && !entry.startsWith('@')) {
+      if (seen.has(entry)) return;
+      seen.add(entry);
+    }
+    block.items.push(entry);
+  };
+  for (const spec of specs) {
+    if (typeof spec === 'object') {
+      if ('section' in spec) open(spec.section);
+      else add(current ?? open(''), spec);
+    } else if (spec === '-') {
+      current = null;
+    } else if (spec.startsWith('@tools:')) {
+      const ref = parseToolRef(spec.slice('@tools:'.length));
+      if (!ref) continue;
+      for (const s of toolSections(tools, ref.group)) {
+        if (ref.section && s.id !== `${ref.group}/${ref.section}`) continue;
+        const block = open(s.label);
+        for (const t of s.tools) add(block, `tool.${t.id}`);
+      }
+      // What follows a tool reference starts a block of its own.
+      current = null;
+    } else add(current ?? open(''), spec);
+  }
+  return out.filter((b) => b.items.length);
+}
+
 /** Resolves specs against the live command registry (enabled/checked/shortcut). */
-export function resolveMenu(ctx: AppContext, specs: MenuSpec[]): MenuItem[] {
-  return specs.flatMap((s): MenuItem | MenuItem[] => {
-    if (s === '-') return { kind: 'separator' };
-    if (s === '@processing') return processingMenu(ctx, ctx.processing.registry.tree());
-    if (s === '@models')
-      return {
-        label: 'Modeller',
-        icon: 'processing',
-        items: () => [...ctx.processing.models.value.map((m) => commandItem(ctx, modelCommandId(m.id))), { kind: 'separator' }, commandItem(ctx, 'processing.newModel')],
-      };
-    if (typeof s === 'object') return { label: s.label, icon: s.icon, items: () => resolveMenu(ctx, s.items) };
-    return commandItem(ctx, s);
-  });
+export function resolveMenu(ctx: AppContext, specs: readonly MenuSpec[]): MenuItem[] {
+  const out: MenuItem[] = [];
+  for (const block of menuBlocks(specs, ctx.tools.list())) {
+    if (out.length) out.push({ kind: 'separator' });
+    for (const e of block.items) out.push(...entryItems(ctx, e));
+  }
+  return out;
+}
+
+function entryItems(ctx: AppContext, e: MenuEntry): MenuItem[] {
+  if (e === '@processing') return processingMenu(ctx, ctx.processing.registry.tree());
+  if (e === '@models') return [modelsMenu(ctx)];
+  if (typeof e === 'object') return [{ label: e.label, icon: e.icon, items: () => resolveMenu(ctx, e.items) }];
+  return [commandItem(ctx, e)];
+}
+
+/** The model library: run a model, or design a new one. */
+export function modelsMenu(ctx: AppContext): MenuItem {
+  return {
+    label: 'Modeller',
+    icon: 'processing',
+    items: () => [...ctx.processing.models.value.map((m) => commandItem(ctx, modelCommandId(m.id))), { kind: 'separator' }, commandItem(ctx, 'processing.newModel')],
+  };
 }
 
 /** One submenu per processing category, its tools as commands (the registry decides what exists). */

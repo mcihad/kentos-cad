@@ -4,7 +4,7 @@ import { NEW_PROJECT_NAME, newProjectContent } from '../../model/newProject';
 import { PROJECT_SETTINGS_DEFAULTS } from '../../model/projectSettings';
 import { standardLayers } from '../../model/standardLayers';
 import { h, replaceChildren } from '../dom';
-import { PLOT_SCALES } from '../toolbar/Toolbar';
+import { PLOT_SCALES } from '../toolbar/fields';
 import { note, segmented, settingRow } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
 import { crsPicker } from './crsPicker';

@@ -74,11 +74,30 @@ export const TOOL_GROUP_LABEL: Record<ToolGroup, string> = {
   map: 'Harita',
 };
 
+/**
+ * Sub-headings inside a group, in display order: the separators of the
+ * classic menus and the panels of the ribbon. A tool names its section in
+ * the catalog; a group without sections (or a tool without one) is shown
+ * under the group's own name, so a new tool always appears somewhere.
+ */
+export const TOOL_SECTIONS = {
+  draw: { line: 'Çizgi', curve: 'Eğri', shape: 'Şekil', construction: 'Yardımcı', point: 'Nokta' },
+  transform: { move: 'Dönüştür', array: 'Dizi' },
+  modify: { edge: 'Kenar', corner: 'Köşe', object: 'Nesne' },
+  area: { create: 'Oluştur ve çevir', boolean: 'Birleştir ve böl' },
+  map: { parcel: 'Parsel', field: 'Arazi', measure: 'Ölçme' },
+} as const satisfies Partial<Record<ToolGroup, Record<string, string>>>;
+
+type Sectioned = typeof TOOL_SECTIONS;
+export type ToolSection = { [G in keyof Sectioned]: keyof Sectioned[G] }[keyof Sectioned];
+
 export interface ToolDescriptor {
   id: string;
   label: string;
   icon: string;
   group: ToolGroup;
+  /** Sub-heading inside the group (TOOL_SECTIONS); must be one of the group's own. */
+  section?: ToolSection;
   shortcut?: string;
   aliases?: readonly string[];
   description: string;

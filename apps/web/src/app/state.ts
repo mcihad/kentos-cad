@@ -70,6 +70,12 @@ export interface UiLayoutData {
   processingTab: ProcessingTab;
   /** Processing categories folded in the toolbox. */
   processingFolded: string[];
+  /** Ribbon (Şerit): the open tab, folded to its tab row, and commands added to its quick access bar. */
+  ribbonTab: string;
+  ribbonCollapsed: boolean;
+  ribbonQuickAccess: string[];
+  /** The floating toolbox next to the ribbon (off by default: the ribbon holds every tool). */
+  ribbonToolbox: boolean;
 }
 
 const DEFAULTS: UiLayoutData = {
@@ -89,6 +95,10 @@ const DEFAULTS: UiLayoutData = {
   dockTab: 'layers',
   processingTab: 'tools',
   processingFolded: [],
+  ribbonTab: 'home',
+  ribbonCollapsed: false,
+  ribbonQuickAccess: [],
+  ribbonToolbox: false,
 };
 
 export type Signals<T> = { readonly [K in keyof T]: Signal<T[K]> };
@@ -147,6 +157,8 @@ export type UiState = Signals<UiLayoutData>;
 // model/projectSettings.ts instead.
 
 export type UiScale = 'standard' | 'large' | 'xlarge';
+/** Workbench chrome: menu bar, toolbar and floating toolbox, or the tabbed ribbon (Şerit). */
+export type ShellKind = 'classic' | 'ribbon';
 export type CrosshairSize = 'small' | 'medium' | 'full';
 
 export interface PreferencesData {
@@ -180,6 +192,11 @@ export interface PreferencesData {
    * the screen, the same size at every zoom (browsing).
    */
   symbolSize: 'plot' | 'screen';
+  /**
+   * Workbench chrome. Both are built from the same tool catalog and menu
+   * model (app/menus.ts), so a new tool or command appears in either.
+   */
+  shell: ShellKind;
 }
 
 export const PREFERENCE_DEFAULTS: PreferencesData = {
@@ -202,6 +219,7 @@ export const PREFERENCE_DEFAULTS: PreferencesData = {
   cursorInput: true,
   hoverInfo: true,
   symbolSize: 'plot',
+  shell: 'classic',
 };
 
 export const createPreferences = () => persistedSignals<PreferencesData>('kentos.prefs.v1', PREFERENCE_DEFAULTS);

@@ -120,6 +120,7 @@ export async function launch(url, { width = 1600, height = 900, args = [] } = {}
         Escape: [27, 'Escape'],
         ' ': [32, 'Space', ' '],
         Delete: [46, 'Delete'],
+        F1: [112, 'F1'],
         F10: [121, 'F10'],
         F3: [114, 'F3'],
         F8: [119, 'F8'],

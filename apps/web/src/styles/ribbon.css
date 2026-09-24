@@ -1,0 +1,636 @@
+/*
+ * Ribbon (Şerit). Loaded with the ribbon chunk (ui/ribbon/Ribbon.ts); the
+ * placeholder shown while it loads lives in shell.css. Buttons and panel
+ * bodies are styled without the .ribbon scope because a folded panel opens
+ * in a pop-up under #overlay-root.
+ */
+
+/* ── Frame ───────────────────────────────────────────────────────── */
+.ribbon {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--c-toolbar);
+  border-bottom: 1px solid var(--c-line);
+}
+
+/* ── Tab row ─────────────────────────────────────────────────────── */
+.ribbon__bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--menubar-h);
+  padding: 0 6px 0 10px;
+  background: var(--c-menubar);
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--fs-sm);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ribbon__brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-right: 6px;
+  color: var(--c-text);
+  flex: none;
+}
+.ribbon__product {
+  font-weight: 600;
+  font-size: var(--fs-md);
+  letter-spacing: 0.01em;
+}
+
+.ribbon__qat {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 0 6px 0 4px;
+  margin-right: 4px;
+  border-right: 1px solid var(--c-line);
+  flex: none;
+}
+.ribbon__qat-more {
+  display: grid;
+  place-items: center;
+  width: calc(16px * var(--ui-scale));
+  height: calc(24px * var(--ui-scale));
+  border-radius: var(--r-sm);
+  color: var(--c-text-3);
+}
+.ribbon__qat-more:hover,
+.ribbon__qat-more[aria-expanded='true'] {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+.ribbon__tabs {
+  display: flex;
+  align-self: stretch;
+  flex: none;
+}
+.ribbon__tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  color: var(--c-text-2);
+  white-space: nowrap;
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.ribbon__tab:hover {
+  color: var(--c-text);
+  background: var(--c-hover);
+}
+.ribbon__tab[aria-selected='true'] {
+  color: var(--c-text);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--c-accent);
+}
+/* Folded: no tab is "open" until one is pressed. */
+.ribbon[data-collapsed]:not([data-peek]) .ribbon__tab[aria-selected='true'] {
+  font-weight: 400;
+  color: var(--c-text-2);
+  box-shadow: none;
+}
+/* The running tool lives in this tab. */
+.ribbon__tab[data-active-tool]::after {
+  content: '';
+  position: absolute;
+  top: calc(7px * var(--ui-scale));
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+/* Contextual tab: the selection, in the selection's colour. */
+.ribbon__tab--context {
+  color: var(--c-accent-text);
+  margin-left: 4px;
+}
+.ribbon__tab--context::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--c-accent-line);
+}
+.ribbon__tab--context:hover,
+.ribbon__tab--context[aria-selected='true'] {
+  color: var(--c-accent-text);
+}
+.ribbon__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+  font: 600 var(--fs-2xs) / 1 var(--font-ui);
+}
+
+.ribbon__doc {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 8px;
+  color: var(--c-text-2);
+  overflow: hidden;
+}
+.ribbon__doc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ribbon__crs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: calc(24px * var(--ui-scale));
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+  flex: none;
+}
+.ribbon__crs:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.ribbon__icon {
+  display: grid;
+  place-items: center;
+  width: calc(26px * var(--ui-scale));
+  height: calc(24px * var(--ui-scale));
+  border-radius: var(--r-sm);
+  color: var(--c-text-3);
+  flex: none;
+}
+.ribbon__icon:hover,
+.ribbon__icon[aria-expanded='true'] {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+/* The row gives way in steps as the window narrows (Ribbon.fitBar). */
+.ribbon[data-tight='1'] .ribbon__product,
+.ribbon[data-tight='2'] .ribbon__product,
+.ribbon[data-tight='3'] .ribbon__product,
+.ribbon[data-tight='1'] .rsearch__kbd,
+.ribbon[data-tight='2'] .rsearch__kbd,
+.ribbon[data-tight='3'] .rsearch__kbd {
+  display: none;
+}
+.ribbon[data-tight='2'] .ribbon__crs-name,
+.ribbon[data-tight='3'] .ribbon__crs-name {
+  display: none;
+}
+.ribbon[data-tight='3'] .rsearch:not([data-focus]) {
+  width: calc(26px * var(--ui-scale));
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+.ribbon[data-tight='3'] .rsearch:not([data-focus]) .rsearch__input {
+  width: 0;
+  padding: 0;
+}
+
+/* ── Search ──────────────────────────────────────────────────────── */
+.rsearch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: calc(206px * var(--ui-scale));
+  height: calc(24px * var(--ui-scale));
+  padding: 0 4px 0 0;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  flex: none;
+}
+.rsearch:hover {
+  border-color: var(--c-line-strong);
+}
+.rsearch[data-focus] {
+  border-color: var(--c-accent-line);
+}
+.rsearch__icon {
+  display: grid;
+  place-items: center;
+  width: calc(24px * var(--ui-scale));
+  height: 100%;
+  color: var(--c-text-3);
+  flex: none;
+}
+.rsearch__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font-size: var(--fs-sm);
+}
+.rsearch__input::placeholder {
+  color: var(--c-text-3);
+}
+.rsearch__input::-webkit-search-cancel-button {
+  display: none;
+}
+.rsearch__kbd {
+  flex: none;
+  height: 16px;
+}
+.rsearch[data-focus] .rsearch__kbd {
+  display: none;
+}
+
+.rsearch__list {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: calc(390px * var(--ui-scale));
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--c-popover);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  font-size: var(--fs-sm);
+  color: var(--c-text);
+}
+.rsearch__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: calc(38px * var(--ui-scale));
+  padding: 3px 6px 3px 8px;
+  border-radius: var(--r-sm);
+}
+.rsearch__row[aria-selected='true'] {
+  background: var(--c-accent-soft);
+}
+.rsearch__row[aria-disabled] {
+  color: var(--c-text-3);
+}
+.rsearch__row[aria-disabled][aria-selected='true'] {
+  background: var(--c-hover);
+}
+.rsearch__glyph {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  flex: none;
+  color: var(--c-text-2);
+}
+.rsearch__row[aria-disabled] .rsearch__glyph {
+  opacity: 0.5;
+}
+.rsearch__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.rsearch__title,
+.rsearch__where {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rsearch__where {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+.rsearch__chord {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+.rsearch__pin {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-sm);
+  color: var(--c-text-3);
+  flex: none;
+}
+.rsearch__pin:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.rsearch__empty {
+  padding: 10px 10px 11px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+
+/* ── Panel strip ─────────────────────────────────────────────────── */
+.ribbon__strip {
+  display: flex;
+  height: var(--ribbon-h);
+  padding: calc(4px * var(--ui-scale)) 4px 0;
+  overflow: hidden;
+}
+/* Wider than even the smallest layout (rare): scroll rather than cut. */
+.ribbon__strip[data-overflow] {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ribbon[data-collapsed]:not([data-peek]) .ribbon__strip {
+  display: none;
+}
+/* Folded ribbon opened over the drawing. */
+.ribbon[data-peek] .ribbon__strip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--c-toolbar);
+  border-bottom: 1px solid var(--c-line-strong);
+  box-shadow: var(--shadow-pop);
+}
+
+.ribbon__panels {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+}
+
+/* ── Panel ───────────────────────────────────────────────────────── */
+.rpanel {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  padding: 0 5px;
+  border-right: 1px solid var(--c-line);
+}
+.rpanel__body {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  flex: 1;
+  min-height: 0;
+}
+.rpanel__col,
+.rpanel__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.rpanel__stack {
+  gap: 3px;
+  padding: 0 2px;
+}
+.rpanel__row {
+  display: flex;
+  gap: 2px;
+}
+.rpanel__foot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(17px * var(--ui-scale));
+  padding: 0 14px;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  white-space: nowrap;
+}
+.rpanel__launch {
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: var(--r-xs);
+  color: var(--c-text-3);
+}
+.rpanel__launch:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+/* Folded to one button: the panel's controls open in a pop-up under it.
+   (Scoped to the panel so it outranks .rbtn, which is declared later.) */
+.rpanel > .rpanel__collapsed {
+  display: none;
+}
+.rpanel[data-level='3'] > .rpanel__body,
+.rpanel[data-level='3'] > .rpanel__foot {
+  display: none;
+}
+.rpanel[data-level='3'] > .rpanel__collapsed {
+  display: flex;
+  height: 100%;
+}
+.rpanel[data-open] .rpanel__collapsed {
+  background: var(--c-press);
+}
+.ribbon-pop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  height: calc(var(--ribbon-h) - 4px);
+  padding: 6px 6px 4px;
+  background: var(--c-toolbar);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  font-size: var(--fs-sm);
+  color: var(--c-text);
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────── */
+.rbtn {
+  display: flex;
+  align-items: center;
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  white-space: nowrap;
+  flex: none;
+}
+.rbtn .icon {
+  color: var(--c-text-2);
+}
+.rbtn:hover:not(:disabled) {
+  background: var(--c-hover);
+}
+.rbtn:hover:not(:disabled) .icon {
+  color: var(--c-text);
+}
+.rbtn:active:not(:disabled),
+.rbtn[aria-expanded='true'] {
+  background: var(--c-press);
+}
+.rbtn:disabled {
+  opacity: 0.38;
+}
+/* Not built yet: dimmed like the toolbox; the tooltip says “Geliştirme aşamasında”. */
+.rbtn[data-pending] .icon {
+  opacity: 0.62;
+}
+/* A toggle that is on: soft amber, like a pressed toolbar button. */
+.rbtn[aria-pressed='true']:not([data-tool]) {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+.rbtn[aria-pressed='true']:not([data-tool]) .icon {
+  color: var(--c-accent-text);
+}
+/* The running tool: filled amber, as in the toolbox. */
+.rbtn[data-tool][aria-pressed='true'] {
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+.rbtn[data-tool][aria-pressed='true'] .icon {
+  color: var(--c-accent-ink);
+}
+/* Found by the search: its place, for a moment. */
+.rbtn[data-flash] {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 1px;
+}
+.rbtn__caret {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 2px;
+  color: var(--c-text-3);
+}
+.rbtn__caret .icon {
+  color: inherit;
+}
+
+/* Large: icon over a label of up to two lines. */
+.rbtn--large {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: calc(4px * var(--ui-scale));
+  min-width: calc(50px * var(--ui-scale));
+  max-width: calc(100px * var(--ui-scale));
+  padding: calc(5px * var(--ui-scale)) 5px 2px;
+}
+.rbtn--large .icon {
+  width: calc(28px * var(--ui-scale));
+  height: calc(28px * var(--ui-scale));
+  stroke-width: 1.55px;
+}
+/* Strokes keep their weight at the larger size (the set is drawn for 20 px). */
+.rbtn--large .icon > * {
+  vector-effect: non-scaling-stroke;
+}
+.rbtn--large .rbtn__label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  line-height: 1.18;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* Small: icon and label on one row, three rows to a column. */
+.rbtn--small {
+  gap: 6px;
+  height: calc(24px * var(--ui-scale));
+  padding: 0 7px 0 4px;
+  font-size: var(--fs-xs);
+}
+.rbtn--small .icon {
+  width: calc(16px * var(--ui-scale));
+  height: calc(16px * var(--ui-scale));
+}
+.rbtn--small .rbtn__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Icon only (narrow windows, quick access). */
+.rbtn--icon {
+  justify-content: center;
+  width: calc(26px * var(--ui-scale));
+  padding: 0;
+}
+.rbtn--icon .rbtn__label {
+  display: none;
+}
+.rbtn--qat[data-tool][aria-pressed='true'] {
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+.rbtn--qat[data-tool][aria-pressed='true'] .icon {
+  color: var(--c-accent-text);
+}
+
+/* Fields in the ribbon are one small row high. */
+.rpanel__body .dropdown {
+  height: calc(24px * var(--ui-scale));
+  font-size: var(--fs-xs);
+}
+
+/* ── Selection summary (contextual tab) ──────────────────────────── */
+.rsel__total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: calc(76px * var(--ui-scale));
+  padding: 0 6px;
+}
+.rsel__count {
+  color: var(--c-accent-text);
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  line-height: 1;
+}
+.rsel__noun {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+.rsel__kinds {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  width: calc(112px * var(--ui-scale));
+  padding: 0 6px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  border-left: 1px solid var(--c-line-soft);
+}
+.rsel__kind {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rsel__kind--more {
+  color: var(--c-text-3);
+}

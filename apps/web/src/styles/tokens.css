@@ -23,6 +23,8 @@
 
   --menubar-h: calc(32px * var(--ui-scale));
   --toolbar-h: calc(44px * var(--ui-scale));
+  /* Ribbon panels under its tab row (the tab row is --menubar-h). */
+  --ribbon-h: calc(96px * var(--ui-scale));
   --status-h: calc(28px * var(--ui-scale));
   --cmd-h: calc(36px * var(--ui-scale));
   --row-h: calc(28px * var(--ui-scale));

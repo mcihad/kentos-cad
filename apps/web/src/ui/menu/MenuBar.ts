@@ -88,7 +88,7 @@ export class MenuBar extends Component {
 }
 
 /** KentOS mark: a K whose arms meet at a survey point. */
-function brandMark(): SVGSVGElement {
+export function brandMark(): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 20 20');
   svg.setAttribute('width', '18');

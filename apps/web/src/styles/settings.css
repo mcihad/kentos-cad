@@ -474,6 +474,133 @@
   width: 70%;
 }
 
+/* ── Interface layout cards: the workbench in miniature, in the current theme ── */
+.layout-card__detail {
+  margin-top: -5px;
+  padding: 0 4px 2px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.layout-card__mock {
+  display: flex;
+  flex-direction: column;
+  height: 108px;
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--canvas-bg);
+}
+.lmock__menu,
+.lmock__tabs {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 11px;
+  padding: 0 6px;
+  background: var(--c-menubar);
+  border-bottom: 1px solid var(--c-line);
+  flex: none;
+}
+.lmock__menu i,
+.lmock__tabs i {
+  display: block;
+  width: 11px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c-text-3);
+  opacity: 0.7;
+}
+.lmock__tabs i.on {
+  background: var(--c-text-2);
+  opacity: 1;
+  box-shadow: 0 3px 0 var(--c-accent);
+}
+.lmock__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 14px;
+  padding: 0 6px;
+  background: var(--c-toolbar);
+  border-bottom: 1px solid var(--c-line);
+  flex: none;
+}
+.lmock__toolbar i {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--c-text-3);
+  opacity: 0.55;
+}
+.lmock__ribbon {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 27px;
+  padding: 4px 6px;
+  background: var(--c-toolbar);
+  border-bottom: 1px solid var(--c-line);
+  flex: none;
+}
+.lmock__big {
+  display: block;
+  width: 13px;
+  border-radius: 2px;
+  background: var(--c-text-3);
+  opacity: 0.55;
+}
+.lmock__smalls {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.lmock__smalls i {
+  display: block;
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--c-text-3);
+  opacity: 0.45;
+}
+.lmock__body {
+  position: relative;
+  display: flex;
+  flex: 1;
+}
+.lmock__toolbox {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, 7px);
+  gap: 3px;
+  padding: 3px;
+  border-radius: 3px;
+  background: var(--c-panel);
+  border: 1px solid var(--c-line);
+}
+.lmock__toolbox i {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--c-text-3);
+  opacity: 0.6;
+}
+.lmock__toolbox i:first-child {
+  background: var(--c-accent);
+  opacity: 1;
+}
+.lmock__canvas {
+  flex: 1;
+}
+.lmock__panel {
+  width: 28%;
+  background: var(--c-panel);
+  border-left: 1px solid var(--c-line);
+}
+
 /* ── Engine cards ────────────────────────────────────────────────── */
 .engine-cards {
   display: grid;
