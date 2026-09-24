@@ -3,6 +3,8 @@ import formatsRs from '../../../../crates/shared/contracts/src/formats.rs?raw';
 import type { CoordRead } from '../contracts/generated/CoordRead';
 import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
+import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
+import type { Entity } from '../contracts/generated/Entity';
 import type { ExportReport } from '../contracts/generated/ExportReport';
 import type { ImportResult } from '../contracts/generated/ImportResult';
 import { FORMATS_VERSION } from './version';
@@ -20,6 +22,7 @@ interface Formats {
   readCoords(bytes: Uint8Array, options: string): Uint8Array;
   readDxf(bytes: Uint8Array, options: string): Uint8Array;
   writeCoords(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
+  writeDxf(input: string): { takeBytes(): Uint8Array; readonly report: string; free(): void };
 }
 
 const glue = import.meta.glob<Formats>('./pkg/kentos_formats_wasm.js');
@@ -128,5 +131,47 @@ describe.skipIf(!loader)('formats WASM module', () => {
       ['1', 452345.123, 4412345.678, 0.1 + 0.2],
       ['Ağaç 2', 1 / 3, -2.5e-7, undefined],
     ]);
+  });
+
+  it('writes an AutoCAD 2007 DXF that reads back as the same objects, bit for bit', async () => {
+    const w = await load();
+    const P = (x: number, y: number) => ({ x: 452345.123 + x, y: 4412345.678 + y });
+    const entities: Entity[] = [
+      { kind: 'polygon', id: 1, layerId: 'parsel', attrs: { Ada: '101', Parsel: '12' }, label: '12', pts: [P(0, 0), P(20, 0), P(20, 20), P(0, 20)], bulges: [0, 0.2, 0, 0], holes: [{ pts: [P(2, 2), P(4, 2), P(4, 4)] }] },
+      { kind: 'arc', id: 2, layerId: 'yapi', attrs: {}, c: P(40, 30), r: 3, a0: 0.1, a1: 2.2 },
+      { kind: 'spline', id: 3, layerId: 'yapi', attrs: {}, pts: [P(0, 40), P(5, 45), P(10, 40)], closed: true },
+      { kind: 'text', id: 4, layerId: 'yazi', attrs: {}, color: '#FF0000', p: P(5, 60), text: 'Çınar ağacı ^ 100%', height: 2.5, rotation: 30 },
+      { kind: 'point', id: 5, layerId: 'yazi', attrs: { Ad: 'P7' }, label: 'P7', p: P(1 / 3, 0.1 + 0.2), z: 0 },
+      { kind: 'hatch', id: 6, layerId: 'parsel', attrs: {}, ring: [P(40, 0), P(60, 0), P(60, 20), P(40, 20)], holes: [[P(45, 5), P(50, 5), P(50, 10)]], pattern: { type: 'cross', angle: 30, spacing: 2 } },
+    ];
+    const input: DxfWriteInput = {
+      entities,
+      layers: [
+        { id: 'parsel', name: 'Parsel sınırı', path: ['Kadastro'], color: 'fg-dim', visible: true, locked: false, lineType: 'continuous', lineWeight: 0.18 },
+        { id: 'yapi', name: 'Yapı', path: [], color: '#7FB2E5', visible: false, locked: true, lineType: 'dashed', lineWeight: 0.35 },
+        { id: 'yazi', name: 'Yazılar', path: ['Pafta'], color: 'ink', visible: true, locked: false, lineType: 'continuous', lineWeight: 0.25 },
+      ],
+      scale: 1000,
+      lengthDecimals: 3,
+      grads: true,
+    };
+    const out = w.writeDxf(JSON.stringify(input));
+    const bytes = out.takeBytes();
+    const report = JSON.parse(out.report) as ExportReport;
+    out.free();
+    const head = '  0\r\nSECTION\r\n  2\r\nHEADER\r\n  9\r\n$ACADVER\r\n  1\r\nAC1021\r\n';
+    expect(new TextDecoder().decode(bytes.subarray(0, head.length))).toBe(head);
+    expect(report.counts).toEqual({ polygon: 1, arc: 1, spline: 1, text: 1, point: 1, hatch: 1 });
+    expect(report.notes.map((n) => n.what)).toEqual(['Katman rengi', 'Adalı alan']);
+    const back = JSON.parse(new TextDecoder().decode(w.readDxf(bytes, JSON.stringify({ maxEntities: 0 })))) as ImportResult;
+    // The reader numbers nothing and names layers as the file does; everything else is the drawing's own.
+    const layerName = new Map(input.layers.map((l) => [l.id, l.name]));
+    expect(back.entities).toEqual(entities.map((e) => ({ ...e, id: 0, layerId: layerName.get(e.layerId) })));
+    expect(back.layers.map((l) => [l.name, l.color, l.visible, l.locked, l.lineType, l.lineWeight])).toEqual([
+      ['Parsel sınırı', 'fg-dim', true, false, 'continuous', 0.18],
+      ['Yapı', '#7FB2E5', false, true, 'dashed', 0.35],
+      ['Yazılar', 'ink', true, false, 'continuous', 0.25],
+    ]);
+    expect(back.report.skipped).toEqual([]);
   });
 });

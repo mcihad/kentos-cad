@@ -2,6 +2,7 @@ import type { CoordRead } from '../contracts/generated/CoordRead';
 import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
+import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
 import type { ImportResult } from '../contracts/generated/ImportResult';
 import type { ExportReport } from '../contracts/generated/ExportReport';
 import type { FormatsReply, FormatsRequest } from './protocol';
@@ -68,6 +69,11 @@ export class FormatsClient {
 
   async writeCoords(input: CoordWriteInput): Promise<WrittenFile> {
     return written(await this.request({ op: 'writeCoords', input }, []));
+  }
+
+  /** Writes a DXF (AutoCAD 2007) of the objects and their layers; the input goes as a structured copy. */
+  async writeDxf(input: DxfWriteInput): Promise<WrittenFile> {
+    return written(await this.request({ op: 'writeDxf', input }, []));
   }
 
   /** Stops the worker now (a dialog closed while its file was being read). */

@@ -142,7 +142,6 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     pending(ctx, 'file.import.ncz', 'Netcad NCZ…', F),
     pending(ctx, 'file.import.shp', 'Shapefile…', F),
     pending(ctx, 'file.import.geojson', 'GeoJSON…', F),
-    pending(ctx, 'file.export.dxf', 'DXF…', F),
     pending(ctx, 'file.export.geojson', 'GeoJSON…', F),
     pending(ctx, 'file.export.pdf', 'PDF pafta…', F),
     { ...pending(ctx, 'file.print', 'Yazdır ve pafta çıktısı…', F, 'print'), short: 'Yazdır' },

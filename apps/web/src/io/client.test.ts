@@ -98,6 +98,21 @@ describe('FormatsClient', () => {
     expect(out.report.counts).toEqual({ point: 1 });
   });
 
+  it('sends the objects of a DXF export as a copy and passes the file and its report on', async () => {
+    const { client, workers } = setup();
+    const input = { entities: [], layers: [], scale: 1000, lengthDecimals: 3, grads: true };
+    const written = client.writeDxf(input);
+    const w = workers[0];
+    const sent = w.sent[0];
+    expect(sent.message).toEqual({ id: w.id(), op: 'writeDxf', input });
+    expect(sent.transfer).toEqual([]);
+    const file = new TextEncoder().encode('  0\r\nEOF\r\n').buffer as ArrayBuffer;
+    w.reply({ id: w.id(), ok: true, file, report: JSON.stringify({ counts: { line: 2 }, notes: [], skipped: [] }) });
+    const out = await written;
+    expect(new TextDecoder().decode(out.bytes)).toBe('  0\r\nEOF\r\n');
+    expect(out.report.counts).toEqual({ line: 2 });
+  });
+
   it("rejects a reader's error without stopping the worker", async () => {
     const { client, workers } = setup();
     const r = client.readDxf(new Uint8Array(1), { maxEntities: 0 });

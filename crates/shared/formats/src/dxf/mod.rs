@@ -1,10 +1,12 @@
 //! ASCII DXF: the reader (HEADER, TABLES, BLOCKS, ENTITIES; everything else
-//! is passed over). The drawing's code page decides how strings decode;
-//! blocks are exploded into their objects with the full insertion transform
-//! (nested, arrays); objects in paper space and kinds the model cannot hold
-//! are counted and reported, never a reason to stop. Z is dropped, except a
-//! POINT's elevation. Units are reported, never applied: survey drawings
-//! often declare millimetres while holding metres (§23: no silent rescale).
+//! is passed over) and the writer (`writer`). The drawing's code page
+//! decides how strings decode; blocks are exploded into their objects with
+//! the full insertion transform (nested, arrays); objects in paper space
+//! and kinds the model cannot hold are counted and reported, never a reason
+//! to stop. Z is dropped, except a POINT's elevation. Units are reported,
+//! never applied: survey drawings often declare millimetres while holding
+//! metres (§23: no silent rescale). KentOS's own extended data (`xdata`)
+//! gives back what a KentOS export could not say in DXF.
 
 pub mod aci;
 mod emit;
@@ -12,6 +14,10 @@ mod entity;
 mod hatch;
 mod lexer;
 mod strings;
+mod writer;
+pub mod xdata;
+
+pub use writer::{WriteInput, input_from_json, write};
 
 use std::collections::{HashMap, HashSet};
 
@@ -168,12 +174,18 @@ impl<'a> Reader<'a> {
                 "LAYER" => {
                     let flags = g(70).and_then(|x| parse_int(x.text())).unwrap_or(0);
                     let aci_ = g(62).and_then(|x| parse_int(x.text())).unwrap_or(7);
-                    let color = match g(420).and_then(|x| parse_int(x.text())) {
+                    let mut color = match g(420).and_then(|x| parse_int(x.text())) {
                         Some(rgb) => aci::true_color(rgb),
                         None => {
                             aci::color(u8::try_from(aci_.unsigned_abs().clamp(1, 255)).unwrap_or(7))
                         }
                     };
+                    // KentOS data names the app's colour (a theme token) while the number is still what it names.
+                    if let Some(app) = entity::xdata_of(&groups, self.dec).and_then(|m| m.color)
+                        && aci::from_app(&app).0.read_back() == color
+                    {
+                        color = app;
+                    }
                     let ltype = g(6).map(|x| self.dec.string(x.value)).unwrap_or_default();
                     let line_type = self
                         .ltypes
@@ -423,6 +435,7 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
             }
         }
     }
+    em.merge_holes();
     let mut out = em.out;
     // Layers the objects landed on: the table's (in its order), then any it lacked.
     let mut layers: Vec<ImportLayer> = Vec::new();

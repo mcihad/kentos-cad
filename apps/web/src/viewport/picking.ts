@@ -5,6 +5,7 @@ import type { Bounds, Vec2 } from '../model/geometry';
 import type { Affine } from '../model/geom/affine';
 import type { Edge } from '../model/geom/intersect';
 import type { LayerNode, LayerStore } from '../model/layers';
+import { transformedFrom } from '../model/ops/transform';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
 import { CoreStore } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
@@ -263,6 +264,18 @@ export class PickIndex {
   ghosts(ids: readonly number[], affines: readonly Affine[], limit: number): Float64Array {
     this.sync();
     return this.store.transformOutlines(Float64Array.from(ids), Float64Array.from(affines.flat()), limit);
+  }
+
+  /**
+   * `transformEntities(list, affines)` done by the store on its own copies
+   * (move, copy, rotate, scale, mirror, arrays): only the new geometry
+   * comes back, packed, so no object crosses as JSON (docs/adr/0008). The
+   * list's objects are the drawing's; they keep their other fields.
+   */
+  transformEntities<E extends Entity>(list: readonly E[], affines: readonly Affine[]): E[] {
+    this.sync();
+    const ids = Float64Array.from(list, (e) => e.id);
+    return transformedFrom(list, ids, affines.length, this.store.transformPacked(ids, Float64Array.from(affines.flat())));
   }
 
   /** Outlines of objects stretched by a window and (dx, dy) (`stretchEntity`), for ghosts. */

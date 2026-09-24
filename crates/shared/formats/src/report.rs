@@ -49,6 +49,16 @@ impl Report {
         *self.counts.entry(kind.to_string()).or_insert(0) += 1;
     }
 
+    /// One object of `kind` counted before is not one after all (it joined another).
+    pub fn uncount(&mut self, kind: &str) {
+        if let Some(n) = self.counts.get_mut(kind) {
+            *n = n.saturating_sub(1);
+            if *n == 0 {
+                self.counts.remove(kind);
+            }
+        }
+    }
+
     /// Something at `line` (0: no line) was left out, and why.
     pub fn skip(&mut self, what: &str, reason: &str, line: u32) {
         self.skipped.add(what, reason, line, 1);

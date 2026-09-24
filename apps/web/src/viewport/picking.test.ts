@@ -37,6 +37,7 @@ function compare(g: Gen, doc: CadDocument, live: PickIndex, fresh: PickIndex): s
   const scale = g.pick(SCENE_SCALES);
   const editing = ids.length && g.chance(0.2) ? g.pick(ids) : null;
   const selected = [...ids.filter(() => g.chance(0.05)), ...(g.chance(0.2) ? [999_999] : [])];
+  const selectedEntities = selected.map((id) => doc.get(id)).filter((e): e is Entity => !!e);
   const c = sceneCursor(g, doc);
   const affines: Affine[] = Array.from({ length: g.int(1, 3) }, () => g.pick([translation(g.num(-50, 50), g.num(-50, 50)), rotation(g.num(-3, 3), c), scaling(g.num(0.2, 3), c), mirror(c, sceneCursor(g, doc))]));
   const w = sceneRect(g, p, [5, 50]);
@@ -61,6 +62,7 @@ function compare(g: Gen, doc: CadDocument, live: PickIndex, fresh: PickIndex): s
     ['labels', (s) => Array.from(s.labels(view, scale, editing))],
     ['grips', (s) => s.grips(selected)],
     ['ghosts', (s) => Array.from(s.ghosts(selected, affines, 400))],
+    ['transformEntities', (s) => s.transformEntities(selectedEntities, affines)],
     ['stretchGhosts', (s) => Array.from(s.stretchGhosts(selected, w, dx, dy))],
     ['measure', (s) => s.measure(selected)],
     ['extent', (s) => [s.extent(selected), s.extent()]],

@@ -7,6 +7,7 @@
 use super::hatch::{Hatch, parse_hatch};
 use super::lexer::Pair;
 use super::strings::Decoder;
+use super::xdata::{self, Meta};
 use crate::num::{parse_int, parse_real};
 
 pub type P3 = [f64; 3];
@@ -148,6 +149,10 @@ pub struct Parsed {
     pub common: Common,
     pub line: u32,
     pub name: String,
+    /// The entity's handle (group 5), when it has a readable one.
+    pub handle: Option<u64>,
+    /// KentOS's extended data, when a KentOS export wrote some (`xdata`).
+    pub meta: Option<Meta>,
 }
 
 /// Why an entity could not be read.
@@ -301,6 +306,7 @@ pub fn parse(
     after: Vec<(u32, Vec<Pair<'_>>)>,
     fit_data_in_hatch_splines: bool,
 ) -> Result<Parsed, Unreadable> {
+    let meta = xdata_of(list, dec);
     let list = own_groups(list);
     let common = common(list, dec)?;
     let g = Groups { list, dec };
@@ -490,5 +496,18 @@ pub fn parse(
         common,
         line,
         name: name.to_string(),
+        handle: u64::from_str_radix(g.string(5).trim(), 16).ok(),
+        meta,
     })
+}
+
+/// The KENTOS extended data among a record's groups (entity or table record).
+pub fn xdata_of(list: &[Pair<'_>], dec: Decoder) -> Option<Meta> {
+    let start = list.iter().position(|p| p.code == 1001)?;
+    let groups: Vec<(i32, String)> = list[start..]
+        .iter()
+        .filter(|p| p.code >= 1000)
+        .map(|p| (p.code, dec.string(p.value)))
+        .collect();
+    xdata::read(&groups)
 }

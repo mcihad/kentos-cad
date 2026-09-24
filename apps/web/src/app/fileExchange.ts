@@ -3,8 +3,8 @@ import type { AppContext } from './context';
 import type { FileKind, PickedFile } from './fileIO';
 
 /**
- * File exchange commands: coordinate lists (Netcad NCN, TXT, CSV) in and
- * out, DXF in. The dialogs, the formats worker and its Rust module load on first
+ * File exchange commands: coordinate lists (Netcad NCN, TXT, CSV) and DXF,
+ * in and out. The dialogs, the formats worker and its Rust module load on first
  * use (CLAUDE.md §20): nothing of them is in the start-up bundle. Reading
  * and writing run in the worker (§6.2 rule 6); the source coordinate system
  * is always asked, never guessed, and nothing is reprojected (§5).
@@ -62,6 +62,16 @@ export function registerFileExchangeCommands(ctx: AppContext): void {
       description: describeImport,
       aliases: ['NOKTALISTESI'],
       run: coordImport,
+    },
+    {
+      id: 'file.export.dxf',
+      title: 'DXF…',
+      category: 'Dosya',
+      icon: 'export',
+      description:
+        "Seçili, görünen ya da bütün nesneleri katmanlarıyla AutoCAD 2007 DXF'i olarak yazar (UTF-8, metre): koordinatlar tam, yuvarlanmadan; ölçüler çizgi ve yazıya patlatılır. Etiket, öznitelik ve semboller KentOS verisi olarak yazılır ve KentOS'a geri okunur.",
+      aliases: ['DXFYAZ', 'DXFVER', 'DXFOUT'],
+      run: () => void import('../ui/io/DxfExportDialog').then((m) => m.openDxfExport(ctx)).catch(loadFailed(ctx, 'DXF')),
     },
     {
       id: 'file.export.ncn',

@@ -15,7 +15,8 @@ use crate::entity::{Entity, Vec2};
 use crate::layer::LineType;
 
 /// Version of this boundary; the WASM module reports the one it was built with.
-pub const FORMATS_VERSION: u32 = 1;
+/// 2: `writeDxf` (`DxfWriteInput`), and the reader takes back KentOS's DXF data.
+pub const FORMATS_VERSION: u32 = 2;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -270,6 +271,47 @@ pub struct CoordWriteInput {
 pub struct DxfReadOptions {
     /// Stop after this many objects (0: one million); the rest is counted and reported.
     pub max_entities: u32,
+}
+
+/// A layer as the DXF writer receives it. DXF layers are flat and their
+/// names ignore case: the writer makes each name valid and unique (the
+/// group path tells layers of the same name apart) and reports what it changed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DxfWriteLayer {
+    /// What the objects' `layerId` holds.
+    pub id: String,
+    pub name: String,
+    /// Names of the groups above the layer, outermost first.
+    pub path: Vec<String>,
+    /// Hex colour or a theme token ("ink" is DXF colour 7).
+    pub color: String,
+    /// As the drawing shows it (inherited from the groups): a hidden layer is written off.
+    pub visible: bool,
+    pub locked: bool,
+    pub line_type: LineType,
+    /// Plot line weight in mm (written as AutoCAD's nearest weight).
+    pub line_weight: f64,
+}
+
+/// What `file.export.dxf` writes (an AutoCAD 2007 DXF). The writer draws a
+/// dimension as its lines and text, so a dimension's `text` holds what it
+/// shows: the app fills in the measured value in the project's units.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DxfWriteInput {
+    pub entities: Vec<Entity>,
+    pub layers: Vec<DxfWriteLayer>,
+    /// Plot scale denominator (1000 for 1:1000): line type patterns and point marks are sized for paper at it.
+    pub scale: f64,
+    /// Decimals the project shows lengths with ($LUPREC).
+    pub length_decimals: u32,
+    /// Angles are shown in grads, else in degrees ($AUNITS).
+    pub grads: bool,
 }
 
 /// What a writer did besides writing: counts, and anything it could not write as it was.

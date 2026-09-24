@@ -1,7 +1,8 @@
 //! Tool previews and totals on the store (docs/adr/0008, S1c): trim and
 //! extend against the visible edges (or chosen boundaries) in one call,
 //! the outlines of moved, copied, stretched or pasted objects, and the
-//! selection's total length and area.
+//! selection's total length and area. The move, copy and paste themselves
+//! come from here too, packed (`transform_packed`).
 //!
 //! Trim and extend are the ported `trim_entity` / `extend_entity`; only the
 //! boundaries they get are fewer. Their result depends on which boundary
@@ -13,7 +14,7 @@
 //! with every edge of the target on every frame.
 
 use super::rtree::{PackedTree, overlaps};
-use super::{Item, Store};
+use super::{Item, Packer, Store};
 use crate::entity::{
     Entity, Shape, dimension_geom, ellipse_geom, entity_area, entity_length, entity_outline,
     polygon_ring,
@@ -28,7 +29,7 @@ use crate::jsmath::{js_hypot, js_max, js_min};
 use crate::ops::curve_cuts::{Cut, Geometry};
 use crate::ops::edges::entity_edges;
 use crate::ops::stretch::stretch_entity;
-use crate::ops::transform::transform_entity;
+use crate::ops::transform::transform_shape;
 use crate::ops::trim::{extend_entity, trim_entity};
 use crate::vec2::Vec2;
 
@@ -312,10 +313,25 @@ impl Store {
                 if n > limit {
                     break;
                 }
-                outline_paths(
-                    &transform_entity(&Entity::new(it.shape.clone()), m).shape,
-                    &mut out,
-                );
+                outline_paths(&transform_shape(&it.shape, m), &mut out);
+            }
+        }
+        out
+    }
+
+    /// Objects moved by each affine in turn, as `transformEntities` gives
+    /// them, packed as `put_packed` reads them (`Packer`): move, copy,
+    /// rotate, scale, mirror, arrays and paste transform the store's own
+    /// copies, and nothing crosses as JSON. Records come affine after
+    /// affine, in the order of `ids`; unknown ids are skipped.
+    pub fn transform_packed(&self, ids: &[f64], affines: &[Affine]) -> Packer {
+        let names = self.layer_names();
+        let mut out = Packer::default();
+        for m in affines {
+            for &id in ids {
+                let Some(it) = self.get(id) else { continue };
+                let layer = names.get(it.layer as usize).copied().unwrap_or("");
+                out.object(it.id, layer, it.label, &transform_shape(&it.shape, m));
             }
         }
         out
@@ -449,5 +465,93 @@ mod tests {
             [0.0, 2.0, 0.0, 0.0, 4.0, 4.0]
         );
         assert_eq!(s.measure(&[1.0, 2.0, 3.0, 5.0]), (5.0, 16.0 - 0.5));
+    }
+
+    /// Objects of every kind in a TM zone, with the fields the core does not
+    /// read (attributes, colour, symbol, label) and optional geometry given
+    /// and left out.
+    const TM_OBJECTS: &str = r##"[
+        {"id":1,"layerId":"parsel","attrs":{"Ada":"104","Parsel":"7"},"label":"7","kind":"polygon","pts":[{"x":486512.34,"y":4420187.52},{"x":486535.757,"y":4420188.723},{"x":486538.221,"y":4420218.986},{"x":486514.344,"y":4420220.532}],"bulges":[0,0.25,0,-0.1],"holes":[{"pts":[{"x":486520,"y":4420195},{"x":486525,"y":4420195},{"x":486522,"y":4420200}],"bulges":[0,0,0.3]}]},
+        {"id":2,"layerId":"parsel","attrs":{},"kind":"polygon","pts":[{"x":486500.1,"y":4420100.2},{"x":486540.35,"y":4420101.9},{"x":486538.8,"y":4420141.15}]},
+        {"id":3,"layerId":"yol","attrs":{},"color":"#aa3322","kind":"polyline","pts":[{"x":486500.1,"y":4420100.2},{"x":486540.35,"y":4420101.9},{"x":486538.8,"y":4420141.15}],"bulges":[0.5,0,0]},
+        {"id":4,"layerId":"yol","attrs":{},"kind":"polyline","pts":[{"x":486501,"y":4420102},{"x":486503,"y":4420109}]},
+        {"id":5,"layerId":"kot","attrs":{"Ad":"P1"},"label":"P1","kind":"point","p":{"x":486512.345,"y":4420187.521},"z":850.25},
+        {"id":6,"layerId":"kot","attrs":{},"kind":"point","p":{"x":486513,"y":4420188}},
+        {"id":7,"layerId":"taslak","attrs":{},"kind":"line","a":{"x":486500.1,"y":4420100.2},"b":{"x":486512.34,"y":4420187.52}},
+        {"id":8,"layerId":"taslak","attrs":{},"kind":"circle","c":{"x":486520,"y":4420200},"r":12.5},
+        {"id":9,"layerId":"taslak","attrs":{},"kind":"arc","c":{"x":486520,"y":4420200},"r":12.5,"a0":0.3,"a1":2.1},
+        {"id":10,"layerId":"taslak","attrs":{},"kind":"ellipse","c":{"x":486520,"y":4420200},"major":{"x":10,"y":-3},"ratio":0.4,"t0":0.5,"t1":2.5},
+        {"id":11,"layerId":"taslak","attrs":{},"kind":"ellipse","c":{"x":486520,"y":4420200},"major":{"x":10,"y":-3},"ratio":0.4,"t0":1,"t1":1},
+        {"id":12,"layerId":"taslak","attrs":{},"kind":"xline","p":{"x":486520,"y":4420200},"dir":{"x":0.6,"y":0.8}},
+        {"id":13,"layerId":"taslak","attrs":{},"kind":"ray","p":{"x":486520,"y":4420200},"dir":{"x":-1,"y":0}},
+        {"id":14,"layerId":"taslak","attrs":{},"symbol":"mpyy:konut","kind":"spline","pts":[{"x":486520,"y":4420200},{"x":486530,"y":4420210},{"x":486540,"y":4420205}],"closed":false},
+        {"id":15,"layerId":"yazi","attrs":{},"kind":"text","p":{"x":486520,"y":4420200},"text":"Ada 104 😀","height":2,"rotation":-30},
+        {"id":16,"layerId":"olcu","attrs":{},"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486530,"y":4420207},"offset":2,"height":0.5},
+        {"id":17,"layerId":"olcu","attrs":{},"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486530,"y":4420207},"offset":-2,"height":0.5,"style":"linear"},
+        {"id":18,"layerId":"olcu","attrs":{},"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486530,"y":4420207},"offset":-2,"height":0.5,"text":"12,5 m","style":"linear","angle":90},
+        {"id":19,"layerId":"olcu","attrs":{},"kind":"dimension","a":{"x":486530,"y":4420200},"b":{"x":486520,"y":4420210},"offset":5,"height":1,"style":"angular","c":{"x":486520,"y":4420200}},
+        {"id":20,"layerId":"olcu","attrs":{},"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486530,"y":4420200},"offset":1,"height":1,"style":"radius"},
+        {"id":21,"layerId":"tarama","attrs":{},"kind":"hatch","ring":[{"x":486520,"y":4420200},{"x":486530,"y":4420200},{"x":486525,"y":4420210}],"holes":[[{"x":486524,"y":4420202},{"x":486526,"y":4420202},{"x":486525,"y":4420204}]],"pattern":{"type":"lines","angle":45,"spacing":1}},
+        {"id":22,"layerId":"tarama","attrs":{},"kind":"hatch","ring":[{"x":486520,"y":4420200},{"x":486530,"y":4420200},{"x":486525,"y":4420210}],"pattern":{"type":"solid","angle":0,"spacing":1}}
+    ]"##;
+
+    #[test]
+    fn transforms_packed_as_the_json_call_does() {
+        use super::super::pack::unpack;
+        use crate::api::json::{self, FromJson, Json};
+        use crate::api::run_named;
+        use crate::geom::affine::{IDENTITY, compose, mirror, rotation, scaling, translation};
+
+        let mut s = Store::new();
+        s.put_json(TM_OBJECTS).unwrap();
+        let all = Vec::<Entity>::from_json(&Json::parse(TM_OBJECTS).unwrap()).unwrap();
+        let o = Vec2::new(486520.0, 4420200.0);
+        let affines: Vec<Affine> = vec![
+            translation(12.5, -7.25),
+            rotation(0.3, o),
+            rotation(3.0, o),
+            scaling(2.5, o),
+            // Non-uniform: the tools never make one, the transform still must not differ.
+            [1.5, 0.0, 0.0, 0.5, o.x * (1.0 - 1.5), o.y * (1.0 - 0.5)],
+            mirror(o, Vec2::new(486530.0, 4420210.0)),
+            mirror(o, Vec2::new(486520.0, 4420260.0)),
+            compose(
+                &rotation(-1.1, o),
+                &mirror(o, Vec2::new(486525.0, 4420200.0)),
+            ),
+            IDENTITY,
+        ];
+        // Any order the caller asks in; an id the store does not hold is left out.
+        let ids: Vec<f64> = (1..=all.len())
+            .rev()
+            .map(|i| i as f64)
+            .chain([999.0])
+            .collect();
+        let out = s.transform_packed(&ids, &affines);
+        let got = unpack(&out.nums, &out.strings).unwrap();
+
+        let list: Vec<Entity> = ids
+            .iter()
+            .filter_map(|&id| all.get(id as usize - 1).cloned())
+            .collect();
+        let args = format!("[{},{}]", json::to_string(&list), json::to_string(&affines));
+        let want = run_named("transformEntities", &args).unwrap();
+        let want = Vec::<Entity>::from_json(&Json::parse(&want).unwrap()).unwrap();
+        assert_eq!(got.len(), list.len() * affines.len());
+        assert_eq!(want.len(), got.len());
+        for (k, ((id, layer, label, shape), w)) in got.iter().zip(&want).enumerate() {
+            let e = &list[k % list.len()];
+            let field = |name: &str| e.rest.iter().find(|(n, _)| n == name).map(|(_, v)| v);
+            assert_eq!(Some(&Json::Num(*id)), field("id"), "{k}");
+            assert_eq!(Some(&Json::Str(layer.clone())), field("layerId"), "{k}");
+            assert_eq!(*label, field("label").is_some(), "{k}");
+            // The same geometry, number for number: the JSON writer tells −0, NaN and every bit apart.
+            assert_eq!(json::to_string(shape), json::to_string(&w.shape), "{k}");
+            assert_eq!(*shape, transform_shape(&e.shape, &affines[k / list.len()]));
+            // The JSON call hands every other field back as it came.
+            assert_eq!(w.rest, e.rest, "{k}");
+        }
+        assert!(s.transform_packed(&[], &affines).nums.is_empty());
+        assert!(s.transform_packed(&ids, &[]).nums.is_empty());
     }
 }

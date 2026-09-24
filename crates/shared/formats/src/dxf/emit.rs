@@ -10,14 +10,15 @@ use std::collections::{BTreeMap, HashMap};
 
 use kentos_contracts::{
     ArcEntity, Bounds, CircleEntity, ConstructionEntity, EllipseEntity, Entity, EntityBase,
-    HatchEntity, HatchPattern, HatchPatternType, LineEntity, PathEntity, PointEntity, SplineEntity,
-    TextEntity, Vec2,
+    HatchEntity, HatchPattern, HatchPatternType, LineEntity, PathEntity, PointEntity, RingGeometry,
+    SplineEntity, TextEntity, Vec2,
 };
 
 use super::aci;
 use super::entity::{Color, Kind, P3, Parsed, Vertex};
 use super::hatch::{Edge, Hatch, Path};
 use super::strings::{mtext_lines, text_codes};
+use super::xdata::{Meta, caret_decode};
 use crate::geom::{
     Similarity, Tf, arc_points, arc_steps, bulge_path_points, dist, ellipse_from, finite, has_arcs,
     ocs_tf, ring_area, ring_contains, to_core, v,
@@ -95,6 +96,10 @@ pub struct Out {
     pub visit_limit: u64,
     /// The walk stopped at `visit_limit`.
     pub exhausted: bool,
+    /// Model space objects by their DXF handle (index into `entities`), and
+    /// the polygons KentOS data names as holes of another (index, owner handle).
+    pub handles: HashMap<u64, usize>,
+    pub holes: Vec<(usize, u64)>,
 }
 
 impl Out {
@@ -109,6 +114,8 @@ impl Out {
             visits: 0,
             visit_limit,
             exhausted: false,
+            handles: HashMap::new(),
+            holes: Vec::new(),
         }
     }
 
@@ -157,6 +164,49 @@ fn xy(p: P3) -> Vec2 {
 /// The world transform of an entity in object coordinates at `elevation`.
 fn ocs(ctx: &Ctx, extrusion: P3, elevation: f64) -> Option<Tf> {
     Some(ocs_tf(extrusion, elevation)?.then(&ctx.tf))
+}
+
+/// Whether two angles (radians) name the same direction, to a billionth of a radian.
+fn same_angle(a: f64, b: f64) -> bool {
+    let d = (a - b).rem_euclid(TAU);
+    d < 1e-9 || TAU - d < 1e-9
+}
+
+fn base_mut(e: &mut Entity) -> &mut EntityBase {
+    match e {
+        Entity::Point(x) => &mut x.base,
+        Entity::Line(x) => &mut x.base,
+        Entity::Polyline(x) | Entity::Polygon(x) => &mut x.base,
+        Entity::Circle(x) => &mut x.base,
+        Entity::Arc(x) => &mut x.base,
+        Entity::Ellipse(x) => &mut x.base,
+        Entity::Spline(x) => &mut x.base,
+        Entity::Xline(x) | Entity::Ray(x) => &mut x.base,
+        Entity::Text(x) => &mut x.base,
+        Entity::Dimension(x) => &mut x.base,
+        Entity::Hatch(x) => &mut x.base,
+    }
+}
+
+/// What KentOS's extended data adds to the objects an entity became: the
+/// label, attributes and symbol, and the app's own name of a colour DXF
+/// holds as a number (only while the number is still what it names: a
+/// colour changed in another program wins).
+fn apply_meta(meta: &Meta, e: &mut Entity) {
+    let b = base_mut(e);
+    if meta.label.is_some() {
+        b.label.clone_from(&meta.label);
+    }
+    b.attrs
+        .extend(meta.attrs.iter().map(|(k, v)| (k.clone(), v.clone())));
+    if meta.symbol.is_some() {
+        b.symbol.clone_from(&meta.symbol);
+    }
+    if let (Some(app), Some(read)) = (&meta.color, &b.color)
+        && aci::from_app(app).0.read_back() == *read
+    {
+        b.color = Some(app.clone());
+    }
 }
 
 fn kind_name(e: &Entity) -> &'static str {
@@ -262,6 +312,69 @@ impl<'l> Emitter<'l> {
     }
 
     pub fn emit(&mut self, e: &Parsed, ctx: &Ctx) {
+        let start = self.out.entities.len();
+        self.emit_kind(e, ctx);
+        let end = self.out.entities.len();
+        if let Some(meta) = &e.meta {
+            for x in &mut self.out.entities[start..end] {
+                apply_meta(meta, x);
+            }
+        }
+        // Holes and the polygons they belong to are linked by handle, in model space (as KentOS writes them).
+        if ctx.chain.is_empty() && end == start + 1 {
+            if let Some(h) = e.handle {
+                self.out.handles.insert(h, start);
+            }
+            if let Some(owner) = e.meta.as_ref().and_then(|m| m.hole_of) {
+                self.out.holes.push((start, owner));
+            }
+        }
+    }
+
+    /// Moves the polygons KentOS data names as holes into their polygons
+    /// ("adalı alan") once every object is read. A hole whose polygon is
+    /// missing (not in the file, or not a polygon) stays a polygon of its own.
+    pub fn merge_holes(&mut self) {
+        let out = &mut self.out;
+        let mut gone = vec![false; out.entities.len()];
+        for (hole, owner) in std::mem::take(&mut out.holes) {
+            let Some(&o) = out.handles.get(&owner) else {
+                continue;
+            };
+            if o == hole || gone[o] || gone[hole] {
+                continue;
+            }
+            let ring = match &out.entities[hole] {
+                Entity::Polygon(h) => RingGeometry {
+                    pts: h.pts.clone(),
+                    bulges: h.bulges.clone(),
+                },
+                _ => continue,
+            };
+            if let Entity::Polygon(p) = &mut out.entities[o] {
+                p.holes.get_or_insert_with(Vec::new).push(ring);
+                gone[hole] = true;
+            }
+        }
+        if !gone.contains(&true) {
+            return;
+        }
+        let mut i = 0;
+        let (per_layer, report) = (&mut out.per_layer, &mut out.report);
+        out.entities.retain(|e| {
+            let keep = !gone[i];
+            i += 1;
+            if !keep && let Entity::Polygon(p) = e {
+                if let Some(n) = per_layer.get_mut(&p.base.layer_id) {
+                    *n -= 1;
+                }
+                report.uncount("polygon");
+            }
+            keep
+        });
+    }
+
+    fn emit_kind(&mut self, e: &Parsed, ctx: &Ctx) {
         if !self.out.visit() {
             return;
         }
@@ -295,10 +408,12 @@ impl<'l> Emitter<'l> {
                     return;
                 }
                 let z = ctx.z_offset + ctx.z_scale * p[2];
+                // KentOS data says when an elevation of 0 is data, not the lack of one.
+                let kept = e.meta.as_ref().is_some_and(|m| m.z);
                 self.push(Entity::Point(PointEntity {
                     base: b(),
                     p: ctx.tf.apply(xy(*p)),
-                    z: (z != 0.0).then_some(z),
+                    z: (z != 0.0 || kept).then_some(z),
                 }));
             }
             Kind::Circle { c, r } => {
@@ -318,7 +433,17 @@ impl<'l> Emitter<'l> {
                     return self.skip(&e.name, "yarıçapı sıfır ya da negatif", e.line);
                 }
                 let span = (a1 - a0).rem_euclid(360.0);
+                let before = self.out.entities.len();
                 self.circle_or_arc(m, xy(*c), *r, (span != 0.0).then_some((*a0, *a1)), b(), e);
+                // KentOS data holds the radians the degrees round; they count while the arc still has those angles.
+                if let (Some((x0, x1)), true) =
+                    (e.meta.as_ref().and_then(|m| m.arc), m.is_identity())
+                    && let Some(Entity::Arc(arc)) = self.out.entities.get_mut(before)
+                    && same_angle(arc.a0, x0)
+                    && same_angle(arc.a1, x1)
+                {
+                    (arc.a0, arc.a1) = (x0, x1);
+                }
             }
             Kind::Ellipse {
                 c,
@@ -489,10 +614,16 @@ impl<'l> Emitter<'l> {
                 if !(l > 0.0) {
                     return self.skip(&e.name, "doğrultusu yok (dünya düzlemine dik)", e.line);
                 }
+                // A direction the file gives as a unit vector stays as written (bit for bit).
+                let dir = if (l - 1.0).abs() <= 4.0 * f64::EPSILON {
+                    d
+                } else {
+                    v(d.x / l, d.y / l)
+                };
                 let c = ConstructionEntity {
                     base: b(),
                     p: ctx.tf.apply(xy(*p)),
-                    dir: v(d.x / l, d.y / l),
+                    dir,
                 };
                 self.push(if *ray {
                     Entity::Ray(c)
@@ -809,13 +940,17 @@ impl<'l> Emitter<'l> {
         b: EntityBase,
         e: &Parsed,
     ) {
-        let closed = flags & 1 == 1;
+        // KentOS data: the curve is KentOS's own through the fit points, and whether it is closed.
+        let own = e.meta.as_ref().and_then(|m| m.curve);
+        let closed = own.unwrap_or(flags & 1 == 1);
         if fit.len() >= 2 {
             let mut pts: Vec<Vec2> = fit.iter().map(|p| ctx.tf.apply(xy(*p))).collect();
             if closed && pts.len() > 2 && pts.first() == pts.last() {
                 pts.pop();
             }
-            self.note("Eğri (SPLINE)", "geçiş noktalarından KentOS eğrisi (Catmull-Rom) olarak kuruldu; noktalar arasındaki biçim küçük farklar gösterebilir", e.line);
+            if own.is_none() {
+                self.note("Eğri (SPLINE)", "geçiş noktalarından KentOS eğrisi (Catmull-Rom) olarak kuruldu; noktalar arasındaki biçim küçük farklar gösterebilir", e.line);
+            }
             if ctx.tf.similarity().is_none() {
                 self.note(
                     "Eğri (SPLINE)",
@@ -893,7 +1028,7 @@ impl<'l> Emitter<'l> {
         b: EntityBase,
         e: &Parsed,
     ) {
-        let text = text_codes(text);
+        let text = text_codes(&caret_decode(text));
         if text.trim().is_empty() {
             return self.skip(&e.name, "boş yazı", e.line);
         }
@@ -1006,7 +1141,7 @@ impl<'l> Emitter<'l> {
         b: EntityBase,
         e: &Parsed,
     ) {
-        let lines = mtext_lines(text);
+        let lines = mtext_lines(&caret_decode(text));
         if lines.iter().all(|l| l.trim().is_empty()) {
             return self.skip("Çok satırlı yazı (MTEXT)", "boş yazı", e.line);
         }
@@ -1260,7 +1395,19 @@ impl<'l> Emitter<'l> {
         if curved {
             self.note("Tarama (HATCH)", "sınırdaki yaylar ve eğriler parçalı alındı (72 parça/tur, uygulamanın taramaları gibi)", e.line);
         }
-        let pattern = self.pattern(m, h, e);
+        let mut pattern = self.pattern(m, h, e);
+        // KentOS data holds the angle and spacing the pattern's offsets round; they count while the pattern still has them.
+        if let (Some((angle, spacing)), true) =
+            (e.meta.as_ref().and_then(|x| x.pattern), m.is_identity())
+        {
+            // Line families repeat every 180°: compare doubled angles.
+            let same = pattern.kind == HatchPatternType::Solid
+                || (same_angle(rad(pattern.angle) * 2.0, rad(angle) * 2.0)
+                    && (pattern.spacing - spacing).abs() <= 1e-9 * spacing.abs());
+            if same {
+                (pattern.angle, pattern.spacing) = (angle, spacing);
+            }
+        }
         // Nesting: even depth is hatched, odd depth is an island of its container.
         let core: Vec<_> = rings.iter().map(|r| to_core(r)).collect();
         let area: Vec<f64> = core.iter().map(|r| ring_area(r)).collect();
@@ -1285,14 +1432,14 @@ impl<'l> Emitter<'l> {
             1 => 1,
             _ => usize::MAX,
         };
-        for &i in &order {
+        // Hatched rings and their islands in the order the file lists them.
+        for i in 0..rings.len() {
             if !depth[i].is_multiple_of(2) || depth[i] > max_depth {
                 continue;
             }
-            let holes: Vec<Vec<Vec2>> = order
-                .iter()
-                .filter(|&&j| parent[j] == Some(i) && depth[j] <= max_depth)
-                .map(|&j| rings[j].clone())
+            let holes: Vec<Vec<Vec2>> = (0..rings.len())
+                .filter(|&j| parent[j] == Some(i) && depth[j] <= max_depth)
+                .map(|j| rings[j].clone())
                 .collect();
             self.push(Entity::Hatch(HatchEntity {
                 base: b.clone(),

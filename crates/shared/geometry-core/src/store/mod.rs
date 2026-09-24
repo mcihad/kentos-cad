@@ -21,6 +21,8 @@ mod rtree;
 pub mod snap;
 pub mod tools;
 
+pub use pack::Packer;
+
 use std::collections::HashMap;
 
 use crate::api::json::{FromJson, Json};
@@ -303,6 +305,17 @@ impl Store {
         it.shape.write_fields(&mut out, &mut first);
         out.push('}');
         Some(out)
+    }
+
+    /// Layer ids by the store's layer number.
+    fn layer_names(&self) -> Vec<&str> {
+        let mut names = vec![""; self.flags.len()];
+        for (name, &l) in &self.layer_ids {
+            if let Some(n) = names.get_mut(l as usize) {
+                *n = name;
+            }
+        }
+        names
     }
 
     /// The flags of an object's layer.

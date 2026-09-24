@@ -1,7 +1,8 @@
 //! The geometry store across the boundary (docs/adr/0008, S1): objects go
-//! in as JSON (puts, removals, the layer table), queries take numbers and
-//! give back flat arrays of numbers. `apps/web/src/viewport/picking.ts` holds one per
-//! view; the clipboard has its own.
+//! in packed or as JSON (puts, removals, the layer table), queries take
+//! numbers and give back flat arrays of numbers; moved, copied and pasted
+//! objects come back packed (`PackedObjects`). `apps/web/src/viewport/picking.ts`
+//! holds one per view; the clipboard has its own.
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::{self, FromJson, Json};
@@ -37,6 +38,37 @@ pub fn pack_edges(edges: &[Edge]) -> Vec<f64> {
         }
     }
     out
+}
+
+/// Affines as the page sends them: six numbers each.
+fn affines_of(flat: &[f64]) -> Vec<[f64; 6]> {
+    flat.chunks_exact(6)
+        .map(|m| [m[0], m[1], m[2], m[3], m[4], m[5]])
+        .collect()
+}
+
+/// Objects packed as `putPacked` reads them (`apps/web/src/wasm/pack.ts`
+/// `unpackEntities` reads them back): the store's answer to a move, copy,
+/// array or paste. `intoNums` hands the numbers over and frees the object.
+#[wasm_bindgen]
+pub struct PackedObjects {
+    nums: Vec<f64>,
+    strings: String,
+}
+
+#[wasm_bindgen]
+impl PackedObjects {
+    /// A JSON array of the strings the numbers point at.
+    #[wasm_bindgen(getter)]
+    pub fn strings(&self) -> String {
+        self.strings.clone()
+    }
+
+    /// The numbers; the object is used up (no second copy of a large answer).
+    #[wasm_bindgen(js_name = intoNums)]
+    pub fn into_nums(self) -> Vec<f64> {
+        self.nums
+    }
 }
 
 #[wasm_bindgen]
@@ -320,11 +352,21 @@ impl GeometryStore {
     /// 1 closed, 2 a marker).
     #[wasm_bindgen(js_name = transformOutlines)]
     pub fn transform_outlines(&self, ids: &[f64], affines: &[f64], limit: u32) -> Vec<f64> {
-        let ms: Vec<[f64; 6]> = affines
-            .chunks_exact(6)
-            .map(|m| [m[0], m[1], m[2], m[3], m[4], m[5]])
-            .collect();
-        self.inner.transform_outlines(ids, &ms, limit as usize)
+        self.inner
+            .transform_outlines(ids, &affines_of(affines), limit as usize)
+    }
+
+    /// These objects moved by each affine (six numbers each), affine after
+    /// affine, as `transformEntities` gives them, packed as `putPacked`
+    /// reads them (`Store::transform_packed`): move, copy, arrays and paste
+    /// without the objects crossing as JSON. Unknown ids are skipped.
+    #[wasm_bindgen(js_name = transformPacked)]
+    pub fn transform_packed(&self, ids: &[f64], affines: &[f64]) -> PackedObjects {
+        let p = self.inner.transform_packed(ids, &affines_of(affines));
+        PackedObjects {
+            strings: json::to_string(&p.strings),
+            nums: p.nums,
+        }
     }
 
     /// Outlines of these objects stretched by the window and (dx, dy), as `transformOutlines`.

@@ -3,6 +3,7 @@ import type { AppContext } from '../../app/context';
 import type { Bounds } from '../../contracts/generated/Bounds';
 import type { ReportItem } from '../../contracts/generated/ReportItem';
 import { CRS_REGISTRY, crsBySrid, DATUM_LABEL, type CrsDef, type Datum } from '../../geo/crs';
+import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { note } from '../widgets/controls';
@@ -60,6 +61,14 @@ export function summaryLine(kind: 'ok' | 'warn' | 'info' | 'error', ...content: 
 /** A report item as a sentence ("IMAGE: 2, raster görüntüler alınmaz (satır 120, 488)."). */
 export const reportText = (i: ReportItem): string =>
   `${i.what}: ${i.count}, ${i.reason}${i.lines.length ? ` (satır ${i.lines.join(', ')}${i.count > i.lines.length ? ' …' : ''})` : ''}.`;
+
+/** Object counts by kind, largest first, without plurals (Turkish counts take none: "12 çizgi, 3 yay"). */
+export function kindCounts(counts: ReadonlyMap<string, number>): string {
+  return [...counts]
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, n]) => `${n} ${(ENTITY_KIND_LABEL[k as EntityKind] ?? k).toLocaleLowerCase('tr-TR')}`)
+    .join(', ');
+}
 
 /** Report items as summary lines. */
 export function reportLines(items: readonly ReportItem[], kind: 'warn' | 'info', max = 12): HTMLElement[] {

@@ -608,6 +608,77 @@ try {
   const turned = await b.eval(`window.kentos.doc.get(${slanted})`);
   check('döndür Referans: the line turns onto north', Math.abs(turned.b.x - (AX + 115)) < 1e-9 && Math.abs(turned.b.y - (N - 85)) < 1e-9);
 
+  // Move, copy, mirror, array and paste: the geometry store moves its own copies and only the
+  // new geometry comes back (packed, not JSON). Typed points, exact coordinates, every other
+  // field kept, one undo step each.
+  const MX = AX + 200;
+  await b.eval(`window.kentos.view.camera.fit({ minX: ${MX - 10}, minY: ${N - 30}, maxX: ${MX + 140}, maxY: ${N + 80} }, 20)`);
+  await sleep(100);
+  const parcel = await b.eval(`(() => { const k = window.kentos; let id; k.doc.transact('t', () => { id = k.doc.add({ kind: 'polygon', layerId: k.doc.layers.active.value, attrs: { Ada: '104', Parsel: '7' }, label: '7', color: '#aa3322', pts: [{ x: ${MX}, y: ${N} }, { x: ${MX + 10.25}, y: ${N} }, { x: ${MX + 10.25}, y: ${N + 8.5} }, { x: ${MX}, y: ${N + 8.5} }], bulges: [0, 0.25, 0, 0] }).id; }); return id; })()`);
+  const bow = await addGeom({ kind: 'arc', c: { x: MX + 5, y: N + 20 }, r: 3, a0: 0.5, a1: 2 });
+  const both = () => b.eval(`[${parcel}, ${bow}].map((id) => window.kentos.doc.get(id))`);
+  const start = await both();
+  await b.eval(`window.kentos.selection.set([${parcel}, ${bow}])`);
+  await key('m', { shift: true });
+  await cmd(`${MX},${N}`);
+  await cmd('@12.5,-7.25');
+  const [mp, ma] = await both();
+  check(
+    'move: a typed displacement lands exactly, every other field kept',
+    mp.pts.every((p, i) => p.x === start[0].pts[i].x + 12.5 && p.y === start[0].pts[i].y - 7.25) && JSON.stringify(mp.bulges) === '[0,0.25,0,0]' && mp.label === '7' && mp.color === '#aa3322' && mp.attrs.Parsel === '7' && ma.c.x === start[1].c.x + 12.5 && ma.r === 3 && Math.abs(ma.a0 - 0.5) < 1e-9 && Math.abs(ma.a1 - 2) < 1e-9,
+    JSON.stringify([mp.pts[2], ma]),
+  );
+  await key('z', { ctrl: true });
+  const undoneMove = JSON.stringify(await both()) === JSON.stringify(start);
+  await key('y', { ctrl: true });
+  check('move: one undo step takes both back, redo moves them again', undoneMove && JSON.stringify(await both()) === JSON.stringify([mp, ma]));
+  const beforeCopy = await b.eval('window.kentos.doc.size');
+  await b.eval(`window.kentos.selection.set([${parcel}])`);
+  await key('c', { shift: true });
+  await cmd(`${MX},${N}`);
+  await cmd('@0,20');
+  await cmd('@0,40');
+  await key('Escape');
+  const copies = await b.eval('[...window.kentos.doc.all()].slice(-2)');
+  const ownAttrs = await b.eval(`[...window.kentos.doc.all()].slice(-2).every((e) => e.attrs !== window.kentos.doc.get(${parcel}).attrs)`);
+  check(
+    'copy: copies at typed offsets with the parcel’s fields and their own attributes',
+    (await b.eval('window.kentos.doc.size')) === beforeCopy + 2 && copies.every((c, k) => c.id !== parcel && c.kind === 'polygon' && c.pts.every((p, i) => p.x === mp.pts[i].x && p.y === mp.pts[i].y + 20 * (k + 1)) && c.label === '7' && c.color === '#aa3322' && c.attrs.Ada === '104') && ownAttrs,
+  );
+  await b.eval(`window.kentos.selection.set([${bow}])`);
+  await key('i', { shift: true });
+  await cmd(`${MX + 60},${N}`);
+  await cmd(`${MX + 60},${N + 10}`);
+  const mirrored = await newest();
+  check('mirror: the arc lands across the axis, still counter-clockwise', mirrored.kind === 'arc' && mirrored.id !== bow && Math.abs(mirrored.c.x - (2 * (MX + 60) - ma.c.x)) < 1e-9 && mirrored.c.y === ma.c.y && Math.abs(mirrored.a0 - (Math.PI - 2)) < 1e-8 && Math.abs(mirrored.a1 - (Math.PI - 0.5)) < 1e-8, JSON.stringify(mirrored));
+  const beforeGrid = await b.eval('window.kentos.doc.size');
+  await b.eval(`window.kentos.selection.set([${parcel}])`);
+  await key('a', { shift: true });
+  await cmd('2,3');
+  await cmd('15,12');
+  const grid = await b.eval('[...window.kentos.doc.all()].slice(-5)');
+  const cells = [[15, 0], [30, 0], [0, 12], [15, 12], [30, 12]];
+  check('array 2 × 3: five copies on the grid', (await b.eval('window.kentos.doc.size')) === beforeGrid + 5 && grid.every((c, k) => c.pts.every((p, i) => p.x === mp.pts[i].x + cells[k][0] && p.y === mp.pts[i].y + cells[k][1])));
+  await key('z', { ctrl: true });
+  check('array: one undo step takes all five back', (await b.eval('window.kentos.doc.size')) === beforeGrid);
+  await b.eval(`window.kentos.selection.set([${parcel}, ${bow}])`);
+  await key('c', { ctrl: true });
+  const pasteBase = await b.eval('window.kentos.clipboard.get().base');
+  const beforePasteTool = await b.eval('window.kentos.doc.size');
+  await key('v', { ctrl: true });
+  await b.move(...(await toScreen(MX + 90, N + 50)));
+  await cmd(`${MX + 100},${N + 50}`);
+  const pasted = await b.eval('[...window.kentos.selection.ids.value].map((id) => window.kentos.doc.get(id))');
+  const [pdx, pdy] = [MX + 100 - pasteBase.x, N + 50 - pasteBase.y];
+  check(
+    'paste: the copies land by the base point, fields kept',
+    (await b.eval('window.kentos.doc.size')) === beforePasteTool + 2 && pasted.length === 2 && pasted[0].pts.every((p, i) => p.x === mp.pts[i].x + pdx && p.y === mp.pts[i].y + pdy) && pasted[0].attrs.Parsel === '7' && pasted[0].label === '7' && pasted[1].kind === 'arc' && pasted[1].c.x === ma.c.x + pdx && pasted[1].r === 3,
+    `${pdx}, ${pdy}`,
+  );
+  await key('z', { ctrl: true });
+  check('paste: one undo step', (await b.eval('window.kentos.doc.size')) === beforePasteTool);
+  await b.eval('window.kentos.selection.clear()');
+
   // Drawing engines: WebGL2 by default; WebGPU switched live from the status
   // bar must draw the same scene. Pixels are read straight after a frame.
   check('WebGL2 is the default engine', (await b.eval('window.kentos.view.backendKind.value')) === 'webgl2');
@@ -1060,6 +1131,76 @@ try {
     const undone = await b.eval('window.kentos.doc.size');
     await b.eval(`window.kentos.commands.execute('edit.redo')`);
     check('DXF import is one undo step', undone === n0 && (await b.eval('window.kentos.doc.size')) === n0 + 8, `${n0} → ${undone}`);
+    await b.eval(`(() => { const k = window.kentos; k.files.picker = window.__io.original; k.selection.clear(); })()`);
+  }
+
+  // DXF export (crates/shared/formats dxf/writer): the selected objects go out through the in-memory picker as an
+  // AutoCAD 2007 DXF; imported back, the same objects return onto the same layer with the same coordinates, bit for
+  // bit, and with their labels and attributes (KentOS data in the file). Exporting is not saving: the drawing stays as it was.
+  {
+    await ioPicker('kullanilmaz.dxf', '');
+    const made = await b.eval(`(() => {
+      const k = window.kentos;
+      const layer = k.doc.layers.add({ name: 'DXF deneme', style: { color: '#7FB2E5', lineType: 'dashed', lineWeight: 0.35 } });
+      const P = (x, y) => ({ x: ${E + 900.123} + x, y: ${N + 50.456} + y });
+      const objects = [
+        { kind: 'polygon', pts: [P(0, 0), P(20, 0), P(20, 20), P(0, 20)], bulges: [0, 0.2, 0, 0], holes: [{ pts: [P(2, 2), P(4, 2), P(4, 4)] }], label: '101', attrs: { Ada: '12', Parsel: '101' } },
+        { kind: 'arc', c: P(30, 5), r: 3.25, a0: 0.1, a1: 2.2, attrs: {} },
+        { kind: 'spline', pts: [P(0, 30), P(5, 35), P(10, 30), P(15, 36)], closed: false, attrs: {} },
+        { kind: 'text', p: P(0, 40), text: 'Çınar ağacı', height: 2, rotation: 15, attrs: {} },
+        { kind: 'point', p: P(1 / 3, 0.1 + 0.2), z: 105.25, label: 'P7', attrs: { Ad: 'P7' } },
+        { kind: 'line', a: P(0, -5), b: P(20, -5), color: '#FF0000', attrs: {} },
+      ];
+      const ids = [];
+      k.doc.transact('DXF deneme', () => { for (const o of objects) ids.push(k.doc.add({ ...o, layerId: layer.id }).id); });
+      k.selection.set(ids);
+      return { ids, layerId: layer.id, dirty: k.doc.dirty.value, size: k.doc.size };
+    })()`);
+    await b.eval(`window.kentos.commands.execute('file.export.dxf')`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-summary')`, 10000).catch(() => {});
+    const rows = await b.eval(`[...document.querySelectorAll('.dialog--io tbody tr')].map((r) => [r.children[1].textContent.trim(), r.children[2].textContent.trim()])`);
+    const summary = await b.eval(`document.querySelector('.dialog--io .io-summary')?.textContent ?? ''`);
+    check(
+      'DXF export: the window lists the selection by layer and says what DXF changes',
+      JSON.stringify(rows) === '[["DXF deneme","6"]]' && /6 nesne 1 katmanla yazılacak/.test(summary) && /adalı alan/.test(summary) && /KentOS verisi/.test(summary),
+      `${JSON.stringify(rows)} ${summary.slice(0, 200)}`,
+    );
+    await b.shot('io-dxf-export');
+    await ioPress('.dialog--io .dialog__foot .btn--primary', 'Dışa aktar');
+    await b.waitFor(`window.__io.written`, 10000).catch(() => {});
+    const dxf = await ioWritten();
+    const kept = await b.eval(`({ dirty: window.kentos.doc.dirty.value, size: window.kentos.doc.size, open: !!document.querySelector('.dialog--io') })`);
+    check(
+      'DXF export writes an AutoCAD 2007 DXF and leaves the drawing as it was',
+      !!dxf && /\.dxf$/.test(dxf.name) && dxf.text.includes('$ACADVER\r\n  1\r\nAC1021\r\n') && dxf.text.endsWith('  0\r\nEOF\r\n') && kept.dirty === made.dirty && kept.size === made.size && !kept.open,
+      `${dxf?.name} ${dxf?.text.length} ${JSON.stringify(kept)}`,
+    );
+    await b.eval(`(() => {
+      const k = window.kentos;
+      const parts = window.__io.written.parts;
+      k.selection.clear();
+      k.files.picker = { ...k.files.picker, open: async () => ({ name: 'geri.dxf', getFile: async () => new Blob(parts) }) };
+    })()`);
+    const lastId = await b.eval(`Math.max(...[...window.kentos.doc.all()].map((e) => e.id))`);
+    await b.eval(`window.kentos.commands.execute('file.import.dxf')`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-table tbody tr')`, 20000).catch(() => {});
+    const where = await b.eval(`[...document.querySelectorAll('.dialog--io tbody tr')].map((r) => [r.children[1].textContent.trim(), r.children[3].textContent.trim()])`);
+    check('DXF export → import: the file\'s layer goes back to the drawing\'s layer of the same name', where.length === 1 && where[0][0] === 'DXF deneme' && /katmanına eklenir/.test(where[0][1]), JSON.stringify(where));
+    await ioPress('.dialog--io .dialog__foot .btn--primary', 'İçe aktar');
+    await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
+    const back = await b.eval(`(() => {
+      const k = window.kentos;
+      // Key order and absent fields aside, JSON of every field: numbers print exactly, so equal text is equal bits.
+      const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).filter((key) => key !== 'id' && v[key] !== undefined).sort().map((key) => [key, canon(v[key])])) : v);
+      const mine = ${JSON.stringify(made.ids)}.map((id) => JSON.stringify(canon(k.doc.get(id))));
+      const got = [...k.doc.all()].filter((e) => e.id > ${lastId}).map((e) => JSON.stringify(canon(e)));
+      return { same: JSON.stringify(mine) === JSON.stringify(got), mine, got };
+    })()`);
+    check('DXF export → import: the same objects come back, coordinates bit for bit, with labels and attributes', back.same, back.same ? '' : `${back.mine.join(' ')} ≠ ${back.got.join(' ')}`.slice(0, 600));
+    await b.eval(`window.kentos.commands.execute('edit.undo')`);
+    await b.eval(`window.kentos.commands.execute('edit.undo')`);
+    const cleared = await b.eval('window.kentos.doc.size');
+    check('DXF export → import: the import and the test objects each undo in one step', cleared === made.size - made.ids.length, `${made.size} → ${cleared}`);
     await b.eval(`(() => { const k = window.kentos; k.files.picker = window.__io.original; k.selection.clear(); })()`);
   }
 

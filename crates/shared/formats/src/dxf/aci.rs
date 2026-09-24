@@ -64,6 +64,84 @@ pub fn true_color(v: i64) -> String {
     format!("#{:06X}", v & 0xFF_FFFF)
 }
 
+/// A colour as a DXF file holds it: the ACI index (group 62) and, for a
+/// colour of the app's own, its exact RGB (group 420, AutoCAD 2004 on).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DxfColor {
+    pub aci: u8,
+    pub rgb: Option<i64>,
+}
+
+impl DxfColor {
+    /// What the reader makes of it: `ink` for 7, else "#RRGGBB".
+    pub fn read_back(self) -> String {
+        match self.rgb {
+            Some(v) => true_color(v),
+            None => color(self.aci),
+        }
+    }
+}
+
+/// "#RGB", "#RRGGBB" or "#RRGGBBAA" as RGB, and whether an alpha was dropped.
+fn parse_hex(c: &str) -> Option<([u8; 3], bool)> {
+    let h = c.strip_prefix('#')?;
+    if !h.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    let byte = |s: &str| u8::from_str_radix(s, 16).ok();
+    match h.len() {
+        3 => {
+            let d: Vec<u8> = h.chars().filter_map(|x| byte(&format!("{x}{x}"))).collect();
+            Some(([*d.first()?, *d.get(1)?, *d.get(2)?], false))
+        }
+        6 | 8 => Some((
+            [byte(&h[0..2])?, byte(&h[2..4])?, byte(&h[4..6])?],
+            h.len() == 8,
+        )),
+        _ => None,
+    }
+}
+
+/// How a colour of the app (a hex colour or a theme token) is written, and
+/// why when DXF cannot hold it as it is. Theme tokens have no DXF
+/// equivalent: `ink` is colour 7 (black on white, white on black) exactly,
+/// the others become the nearest fixed colour.
+pub fn from_app(c: &str) -> (DxfColor, Option<&'static str>) {
+    let aci = |n: u8| DxfColor { aci: n, rgb: None };
+    match c {
+        "ink" => (aci(7), None),
+        "fg" => (
+            aci(7),
+            Some("“fg” (ana mürekkep) tema rengi DXF'te 7 (siyah/beyaz) oldu"),
+        ),
+        "fg-dim" => (
+            aci(8),
+            Some("“fg-dim” (ikincil mürekkep) tema rengi DXF'te 8 (gri) oldu"),
+        ),
+        "paper" => (
+            aci(255),
+            Some("“paper” (kâğıt rengi) tema rengi DXF'te 255 (beyaz) oldu"),
+        ),
+        _ => match parse_hex(c) {
+            Some((rgb_, alpha)) => {
+                let [r, g, b] = rgb_;
+                let v = (i64::from(r) << 16) | (i64::from(g) << 8) | i64::from(b);
+                (
+                    DxfColor {
+                        aci: nearest(rgb_),
+                        rgb: Some(v),
+                    },
+                    alpha.then_some("saydamlığı yazılmadı (DXF renkleri saydamlık taşımaz)"),
+                )
+            }
+            None => (
+                aci(7),
+                Some("tanınmayan renk 7 (siyah/beyaz) olarak yazıldı"),
+            ),
+        },
+    }
+}
+
 /// The ACI index nearest to an RGB colour (exact when the colour is one of them).
 pub fn nearest(rgb_: [u8; 3]) -> u8 {
     let mut best = (u32::MAX, 7u8);
@@ -105,6 +183,33 @@ mod tests {
         assert_eq!(color(7), "ink");
         assert_eq!(color(1), "#FF0000");
         assert_eq!(true_color(0x00A0B0C0), "#A0B0C0");
+    }
+
+    #[test]
+    fn app_colours_are_written_as_the_reader_reads_them_back() {
+        let (c, note) = from_app("#7fb2e5");
+        assert_eq!((c.rgb, note), (Some(0x7FB2E5), None));
+        assert_eq!(c.read_back(), "#7FB2E5");
+        assert_eq!(from_app("#F00").0.read_back(), "#FF0000");
+        assert_eq!(
+            from_app("#FF000080"),
+            (
+                DxfColor {
+                    aci: 1,
+                    rgb: Some(0xFF0000)
+                },
+                Some("saydamlığı yazılmadı (DXF renkleri saydamlık taşımaz)")
+            )
+        );
+        assert_eq!(from_app("ink"), (DxfColor { aci: 7, rgb: None }, None));
+        assert_eq!(from_app("ink").0.read_back(), "ink");
+        assert_eq!(from_app("fg").0.aci, 7);
+        assert_eq!(from_app("fg-dim").0.read_back(), "#808080");
+        assert!(
+            from_app("fg").1.is_some()
+                && from_app("kırmızı").1.is_some()
+                && from_app("#12345").1.is_some()
+        );
     }
 
     #[test]

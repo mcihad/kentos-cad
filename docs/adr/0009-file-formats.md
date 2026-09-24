@@ -2,7 +2,7 @@
 
 - **Durum:** kabul edildi (2026-09-24, sahibinin onayı); dal main'e göre yeniden kuruldu ve incelendi
 - **Tarih:** 2026-09-24
-- **İnceleme:** biçimler, uygulamanın da hesapladığı geometriyi artık ortak çekirdekten alır (aşağıda); DXF okuyucusuna iş sınırları ve düzeltmeler eklendi. DXF yazıcısının başlangıcı (sözleşme, KentOS genişletilmiş verisi, Catmull-Rom → Bézier) yarım kaldığı için alınmadı (docs/DEVIR.md).
+- **İnceleme:** biçimler, uygulamanın da hesapladığı geometriyi artık ortak çekirdekten alır (aşağıda); DXF okuyucusuna iş sınırları ve düzeltmeler eklendi. DXF yazıcısının yarım kalan başlangıcı alınmamıştı; yazıcı aynı gün baştan yazıldı (“DXF yazma”, `FORMATS_VERSION` 2).
 - **Bağlam belgesi:** CLAUDE.md §5, §6.2 kural 6, §9.7, §14, §20, §23
 
 ## Bağlam
@@ -17,13 +17,13 @@ Harita büroları veriyi Netcad koordinat listeleriyle (NCN, TXT, CSV) ve DXF il
   - `libm`, native ile WASM'ın aynı dosyadan aynı bitleri okuması için gerekir (§23.4, ADR 0008); `clippy.toml` std aşkın işlevlerini yasaklar.
   - Uygulamanın da hesapladığı geometri ortak çekirdekten gelir (§14 tek hesap kaynağı): yaylı yolun noktaları (`bulge_path_outline`, uygulamanın `polygonRing`'i; bir DXF taramasının çoklu çizgi sınırı, uygulamanın aynı sınırdan kurduğu taramayla aynı noktaları alır), halka alanı ve nokta-halka sınaması. İlk sürüm bunların kopyalarını tutuyordu ve adım kuralı uygulamanınkinden ayrılıyordu (en az bir parça, başka bir `hypot`).
   - Yalnız dosya okumaya özgü geometri `geom.rs`'tedir: dörtte bir dönüşlerde tam sin/cos ile afin dönüşüm ve benzerlik ayrıştırması, DXF nesne koordinat sistemi, gerilmiş daireden elips, saat yönünde de dönebilen DXF tarama yayları (uygulamanın adımıyla: turda 72, en az iki parça); NURBS `nurbs.rs`'tedir. Çekirdekte bunların karşılığı yok.
-  - WASM modülü çekirdekten yalnız kullandığı işlevleri bağlar: modül 494 KB (gzip -9 ile 187 KB), bağlanmadan öncekinden 5 KB küçük. `ensure.mjs` biçim paketini çekirdeğin kaynakları değişince de derler.
+  - WASM modülü çekirdekten yalnız kullandığı işlevleri bağlar: modül 494 KB (gzip -9 ile 187 KB), bağlanmadan öncekinden 5 KB küçük; DXF yazıcısıyla 661 KB (gzip -9 ile 246 KB, “DXF yazma”). `ensure.mjs` biçim paketini çekirdeğin kaynakları değişince de derler.
 - **Okuyucu** baytlardan sözleşmedeki `ImportResult`'u üretir: kimliği 0 olan `Entity` listesi (`layerId` kaynak katmanın adı), kaynak katmanlar ve rapor (türe göre sayılar; alınmayanlar ve dönüştürülenler, Türkçe neden ve ilk satır numaralarıyla; kaynağın bilgileri).
   - Sayılar dosyadaki ondalığa en yakın float64'tür (Rust'ın ayrıştırıcısı doğru yuvarlar); `nan` ve `inf` reddedilir.
   - Hiçbir girdi paniğe yol açmaz (`unwrap`/`expect`/`panic` lint ile yasak); bozuk satır sayılır, raporlanır.
   - Tek geçiş; satır sayısıyla doğrusal.
 - **Yazıcı**, geri okununca aynı float64'ü veren en kısa ondalığı yazar (`num.rs`); yazıp okuma bit bit aynıdır.
-- **Sözleşmeler** `crates/shared/contracts/src/formats.rs`'tedir (`FORMATS_VERSION = 1`); TS tipleri ts-rs ile üretilir. Modül sürümünü bildirir, worker farklı sürümü reddeder.
+- **Sözleşmeler** `crates/shared/contracts/src/formats.rs`'tedir (`FORMATS_VERSION = 2`: 2 DXF yazmayı ekledi); TS tipleri ts-rs ile üretilir. Modül sürümünü bildirir, worker farklı sürümü reddeder.
 
 ### Tarayıcıda: ayrı WASM modülü, ayrı worker, geç yükleme
 
@@ -59,8 +59,23 @@ Harita büroları veriyi Netcad koordinat listeleriyle (NCN, TXT, CSV) ve DXF il
 - **HATCH:** sınır yolları halkalara çevrilir; iç içelik alan ve içerme sınamasıyla (ortak çekirdek) bulunur, çift derinlikte olanlar taranır, tek derinliktekiler ada olur (stil 0 "normal"; stil 1 "dış" yalnız dış halkaları tarar). Çoklu çizgi sınırları çekirdeğin `bulge_path_outline`'ıyla, kenar yayları ve elipsleri aynı adımla (turda 72, en az iki parça) örneklenir; hesaplanamayan eğri kenarın yerine denetim noktaları konur ve raporlanır. Desen: dolu, tek çizgi ailesi (açı ve aralık), dik iki aile → çapraz; diğerleri yaklaşık, raporlanır.
 - **Rapor:** her dönüşüm ve atlama türüyle, sayısıyla, nedeniyle ve ilk beş satır numarasıyla yazılır; okunamayan bir blok özniteliği (ATTRIB) de.
 
+### DXF yazma
+
+- **Sürüm AutoCAD 2007 (AC1021), ASCII.** Metni UTF-8 tutan en eski sürümdür: Türkçe harfler kod sayfası tahmin edilmeden gider (okuyucu AC1021 ve sonrasını her zaman UTF-8 okur; `$DWGCODEPAGE` ANSI_1254 yalnız eski araçlar içindir). Gerçek renk (420) ve çizgi kalınlığı (370) da taşır. AutoCAD 2007 ve sonrası, BricsCAD, Netcad, QGIS/GDAL, LibreCAD ve ezdxf bu sürümü okur. Birim metredir (`$INSUNITS` 6); açı birimi ve uzunluk basamakları projeden (`$AUNITS`, `$LUPREC`).
+- **Yapı.** Dosya AutoCAD 2000+ çiziminin istediğini taşır: her kaydın tutamacı (handle) ve sahibi, dokuz sembol tablosu, `*Model_Space` ve `*Paper_Space` blok kayıtları ve blokları, kök sözlük, ACAD_GROUP, yerleşimler (Model, Layout1), çizim stili ve malzeme sözlükleri; sabit kısmı ezdxf'in en küçük R2007 belgesinden alındı (`writer/template.rs`), `$HANDSEED` en son yazılır. ezdxf 1.4 dosyayı `audit` ve `recover` ile hatasız ve düzeltmesiz okur. Gerçek AutoCAD, Netcad, BricsCAD ya da QGIS ile açma denemesi yapılmadı.
+- **Kesinlik.** Sayılar geri okununca aynı float64'ü veren en kısa ondalıkla yazılır; her türün aynı veriyi tutan bir DXF nesnesi vardır (LWPOLYLINE bulge'ları, ELLIPSE parametreleri, XLINE/RAY doğrultusu, HATCH halkaları ve kullanıcı tanımlı deseni). Bu depodaki okuyucu yazılan her nesneyi eşit geri okur, TM koordinatında bit bit (`tests/dxf_write.rs`, `io/formats.wasm.test.ts`, duman testi).
+- **KentOS verisi (XDATA).** DXF'in söyleyemediği, uygulama adı `KENTOS` altında `{ … }` listeleriyle yazılır (`xdata.rs`): etiket, öznitelikler, sembol, tema rengi, yayın dereceye yuvarlanan radyanları, taramanın desen ötelemelerine yuvarlanan açı ve aralığı, noktanın 0 kotu (okuyucu 0'ı “kot yok” sayar), eğrinin KentOS eğrisi olduğu ve adanın alanı. Metin 250 baytlık parçalarla ve şapka gösterimiyle gider; nesne başına 16 KB'ı (AutoCAD'in sınırı) aşan veride etiket, öznitelik ve sembol düşer ve raporlanır. Okuyucu veriyi yalnız DXF'in kendi sayıları hâlâ aynı şeyi söylerken uygular: başka bir programda değiştirilen renk, açı ya da desen kazanır; bilinmeyen öğeler atlanır. Başka programlar bu veriyi göstermez.
+- **Biçim değiştiren üç tür.**
+  - Adalı alan: DXF'te adalı bir alan nesnesi yoktur (taramanınki dolgu içindir). Dış halka ve adalar ayrı kapalı LWPOLYLINE'lardır; adalar alanın tutamacını taşır ve okuyucu onları yeniden adalı alan yapar. Başka program ayrı kapalı çizgiler görür.
+  - Eğri: uygulamanın merkezcil Catmull-Rom eğrisi her açıklıkta kübik bir polinomdur. Çekirdeğe eklenen `catmull_rom_beziers` her açıklığın tam Bézier biçimini verir (iç denetim noktaları, uçlardaki türevin düğüm aralığının üçte biri boyunca; büyük koordinatlar farklarla hesaplanır). Yazıcı bunları üçlü iç düğümlü, uçları sabit kübik B-spline'a dizer: bir uydurma değil, çizilen eğrinin kendisidir (çekirdek testi çizilen eğriyle karşılaştırır; ezdxf'in değerlendirmesi düğümlerde geçiş noktalarını 10⁻⁹ m içinde verir). Geçiş noktaları da yazılır; DXF'in “kapalı” bayrağı yazılmaz, çünkü bazı okuyucular onu periyodik sayıp denetim noktalarını sarar. Eğri tek kaynaklıdır: hesap çekirdektedir, yazıcı yalnız dizer.
+  - Ölçü: çekirdeğin patlatmasıyla çizgi, yay ve yazı (Patlat'la aynı); kendi yazısı olmayan ölçüye uygulama çizimde görünen değeri verir. DXF ölçüsü kendi anonim bloğunu ve ölçü stilini ister, başka program onu kendi kurallarıyla yeniden çizerdi; KentOS'a da ölçü olarak geri okunmaz.
+- **Katmanlar.** DXF katmanları düz bir listedir ve adları büyük/küçük harf ayırmaz. Benzersiz ad olduğu gibi kalır; yinelenen ad grup adlarını içten dışa önüne alır (“Kadastro - Sınır”), yine çakışırsa numara alır; reddedilen karakterler `_` olur, ad en çok 255 karakterdir. Çizgi tipleri (DASHED, DASHDOT, DOT) çizim ölçeğinde kâğıt milimetresine göre boyutlanır; kalınlık AutoCAD'in 24 geçerli değerinden en yakınına iner. Renk: hex gerçek renk ve en yakın ACI; `ink` 7, `fg` 7, `fg-dim` 8, `paper` 255 (tema adı KentOS verisiyle geri gelir), saydamlık düşer. Her değişiklik raporlanır.
+- **Girdi ve modül boyutu.** Girdi sözleşmedeki `DxfWriteInput`'tur. WASM sınırında nesne listesi serde'nin türettiği kodla değil elle yazılmış bir ziyaretçiyle okunur (`writer/input.rs`; türetilmiş kod modüle ~100 KB ekliyordu, testler iki okuyucunun aynı okuyup aynı reddettiğini denetler), JSON sınır crate'inde ayrıştırılır (başka crate'teki `from_str` serde_json ayrıştırıcısının ikinci kopyasıydı, ~25 KB). Yazıcıyla modül 494 KB'tan 661 KB'a (gzip -9: 187 KB'tan 246 KB'a) büyür; yalnız içe ya da dışa aktarmada yüklenir.
+- **Okuyucuya etkisi.** TEXT ve MTEXT'te şapka gösterimi çözülür (AutoCAD de böyle yazar), birim uzunluktaki XLINE/RAY doğrultusu olduğu gibi alınır, taramanın halkaları dosyadaki sırayla gelir.
+
 ## Sonuçlar
 
 - Sunucunun içe aktarma işi aynı crate'i native çalıştırabilir; sonuçlar aynı bitlerdir.
 - Başlangıç paketine biçim kodu girmez; ilk sayfa JS'i yalnız komut kayıtları ve dosya seçme kodu kadar büyür.
 - Datum/dilim dönüşümü gelene kadar başka sistemdeki dosyalar içe aktarılamaz; bu bilinçli bir kısıttır.
+- KentOS'un yazdığı DXF KentOS'a aynı nesneler olarak döner (ölçüler dışında); başka programlara DXF'in taşıyabildiği kadarı gider, farkı yazmadan önce pencere, yazdıktan sonra rapor söyler. Sunucunun ileride çalışacak dışa aktarma işi de aynı yazıcıyı native kullanabilir.

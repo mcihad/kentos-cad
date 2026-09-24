@@ -283,6 +283,11 @@ export class ViewportController {
     return this.picker.ghosts(ids, affines, limit);
   }
 
+  /** Objects moved by each affine, affine after affine, from the geometry store without JSON (see PickIndex.transformEntities). */
+  transformEntities<E extends Entity>(list: readonly E[], affines: readonly Affine[]): E[] {
+    return this.picker.transformEntities(list, affines);
+  }
+
   /** Ghost outlines of objects stretched by a window and (dx, dy). */
   stretchGhosts(ids: readonly number[], window: Bounds, dx: number, dy: number): Float64Array {
     return this.picker.stretchGhosts(ids, window, dx, dy);

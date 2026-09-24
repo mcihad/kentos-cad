@@ -33,9 +33,12 @@ fn transform_ring(
     (pts, bulges)
 }
 
-pub fn transform_entity(e: &Entity, m: &Affine) -> Entity {
+/// The geometry `s` under `m`. The store transforms its own copies of the
+/// objects with it (move, copy, arrays and paste answer packed, without the
+/// objects crossing as JSON; `Store::transform_packed`).
+pub fn transform_shape(shape: &Shape, m: &Affine) -> Shape {
     let s = length_scale(m);
-    let shape = match &e.shape {
+    match shape {
         Shape::Point { p, z } => Shape::Point {
             p: apply(m, *p),
             z: *z,
@@ -127,7 +130,7 @@ pub fn transform_entity(e: &Entity, m: &Affine) -> Entity {
             let d = apply_linear(m, *dir);
             let l = or(js_hypot(d.x, d.y), 1.0);
             let (p, dir) = (apply(m, *p), Vec2::new(d.x / l, d.y / l));
-            if matches!(e.shape, Shape::Ray { .. }) {
+            if matches!(shape, Shape::Ray { .. }) {
                 Shape::Ray { p, dir }
             } else {
                 Shape::Xline { p, dir }
@@ -242,8 +245,11 @@ pub fn transform_entity(e: &Entity, m: &Affine) -> Entity {
                 rotation: rot,
             }
         }
-    };
-    e.with(shape)
+    }
+}
+
+pub fn transform_entity(e: &Entity, m: &Affine) -> Entity {
+    e.with(transform_shape(&e.shape, m))
 }
 
 pub fn translate_entity(e: &Entity, dx: f64, dy: f64) -> Entity {

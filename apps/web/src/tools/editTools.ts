@@ -7,7 +7,7 @@ import { dimensionLabel } from '../model/geom/dimension';
 import { explodeEntity } from '../model/ops/explode';
 import { joinEntities } from '../model/ops/join';
 import { stretchEntity } from '../model/ops/stretch';
-import { transformEntities } from '../model/ops/transform';
+import { transformedFrom } from '../model/ops/transform';
 import type { ViewTransform } from '../viewport/Camera';
 import { CoreStore } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
@@ -282,7 +282,8 @@ export class PasteTool implements Tool {
   private readonly ctx: AppContext;
   private readonly items: NewEntity[];
   private readonly base: Vec2;
-  private ghosts: CoreStore | null = null;
+  /** The copies' own geometry store (they are not in the drawing): their ghosts and the pasted geometry come from it. */
+  private store: CoreStore | null = null;
 
   constructor(ctx: AppContext, items: NewEntity[], base: Vec2) {
     this.ctx = ctx;
@@ -316,49 +317,68 @@ export class PasteTool implements Tool {
   }
 
   private place(at: Vec2): void {
-    const ids = pasteEntities(this.ctx, this.items, at.x - this.base.x, at.y - this.base.y);
+    const ids = pasteEntities(this.ctx, this.items, at.x - this.base.x, at.y - this.base.y, this.copies());
     if (ids.length) this.ctx.selection.set(ids);
     this.ctx.tools.exit();
   }
 
+  private copies(): CoreStore {
+    return (this.store ??= storeOf(this.items));
+  }
+
   deactivate(): void {
-    this.ghosts?.dispose();
-    this.ghosts = null;
+    this.store?.dispose();
+    this.store = null;
   }
 
   draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
     if (!this.hover) return;
     const m = translation(this.hover.x - this.base.x, this.hover.y - this.base.y);
     const pal = this.ctx.view.palette;
-    // The copies are not in the drawing: a store of their own (numbered 1…n) outlines their ghosts.
     const shown = Math.min(this.items.length, MAX_GHOSTS);
-    if (!this.ghosts) {
-      this.ghosts = new CoreStore();
-      const p = packEntities(this.items.slice(0, shown).map((e, i) => ({ ...e, id: i + 1 })));
-      this.ghosts.putPacked(p.nums, p.strings);
-    }
-    const ids = Float64Array.from({ length: shown }, (_, i) => i + 1);
-    strokePaths(g, view, this.ghosts.transformOutlines(ids, Float64Array.from(m), shown), { color: pal.accent, dash: [4, 3] });
+    strokePaths(g, view, this.copies().transformOutlines(numbered(shown), Float64Array.from(m), shown), { color: pal.accent, dash: [4, 3] });
   }
+}
+
+/** Ids 1…n: how a store of objects not in the drawing numbers them. */
+function numbered(n: number): Float64Array {
+  return Float64Array.from({ length: n }, (_, i) => i + 1);
+}
+
+/** Objects that are not in the drawing (the clipboard's) in a geometry store of their own, numbered 1…n. */
+function storeOf(items: readonly NewEntity[]): CoreStore {
+  const store = new CoreStore();
+  const p = packEntities(items.map((e, i) => ({ ...e, id: i + 1 })));
+  store.putPacked(p.nums, p.strings);
+  return store;
 }
 
 /**
  * Adds copies of `items` moved by (dx, dy) in one undo step. Entities keep
  * their layer when it exists and is unlocked, otherwise they go to the
- * active layer. Returns the new ids.
+ * active layer. `store` holds the items as 1…n (the paste tool's); without
+ * it one is made for the call. Returns the new ids.
  */
-export function pasteEntities(ctx: AppContext, items: readonly NewEntity[], dx: number, dy: number): number[] {
+export function pasteEntities(ctx: AppContext, items: readonly NewEntity[], dx: number, dy: number, store?: CoreStore): number[] {
   const { doc, log } = ctx;
   const active = doc.layers.active.value;
   if (doc.layers.isLocked(active) && items.some((e) => !doc.layers.get(e.layerId) || doc.layers.isLocked(e.layerId))) {
     log.warn(`“${doc.layers.get(active)?.name}” katmanı kilitli; yapıştırılamadı.`);
     return [];
   }
-  // One call to the core for all of them; the copies come back new, sharing nothing with the clipboard.
-  const moved = transformEntities(items.map((item) => ({ ...item, id: 0 }) as Entity), [translation(dx, dy)]);
+  // One call to the core for all of them: it moves its own copies and only the new geometry comes back,
+  // as numbers; the pasted objects share nothing with the clipboard.
+  const own = store ?? storeOf(items);
+  let moved: NewEntity[];
+  try {
+    const ids = numbered(items.length);
+    moved = transformedFrom(items, ids, 1, own.transformPacked(ids, Float64Array.from(translation(dx, dy))));
+  } finally {
+    if (!store) own.dispose();
+  }
   const ids: number[] = [];
   doc.transact('Yapıştır', () => {
-    for (const { id: _id, ...e } of moved) {
+    for (const e of moved) {
       const layerId = doc.layers.get(e.layerId) && !doc.layers.isLocked(e.layerId) ? e.layerId : active;
       ids.push(doc.add({ ...e, layerId } as NewEntity).id);
     }

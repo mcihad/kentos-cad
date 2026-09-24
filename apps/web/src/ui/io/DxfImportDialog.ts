@@ -4,11 +4,10 @@ import type { ImportLayer } from '../../contracts/generated/ImportLayer';
 import type { ImportResult } from '../../contracts/generated/ImportResult';
 import { applyImport, layerNamed, type LayerTarget } from '../../io/apply';
 import { formats } from '../../io/client';
-import { ENTITY_KIND_LABEL, type EntityKind } from '../../model/entities';
 import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
 import { Dialog } from '../widgets/Dialog';
-import { CrsQuestion, extentLine, fileLine, reportLines, reportText, summaryLine } from './common';
+import { CrsQuestion, extentLine, fileLine, kindCounts, reportLines, reportText, summaryLine } from './common';
 import { zoomToImported } from './zoom';
 
 /**
@@ -24,14 +23,6 @@ export function openDxfImport(ctx: AppContext, file: PickedFile, kind: FileKind)
 }
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
-
-/** Plural-free Turkish counts ("12 çizgi, 3 yay"). */
-function kindCounts(counts: ReadonlyMap<string, number>): string {
-  return [...counts]
-    .sort((a, b) => b[1] - a[1])
-    .map(([k, n]) => `${n} ${(ENTITY_KIND_LABEL[k as EntityKind] ?? k).toLocaleLowerCase('tr-TR')}`)
-    .join(', ');
-}
 
 class DxfImportDialog {
   private readonly ctx: AppContext;

@@ -74,3 +74,17 @@ pub fn write_coords(input: &str) -> Result<Written, JsError> {
         report: String::from_utf8(to_json(&report)?).unwrap_or_default(),
     })
 }
+
+/// Writes an AutoCAD 2007 DXF from `DxfWriteInput` (JSON). The objects are
+/// read by the formats crate's own visitor (`dxf::WriteInput`), not the
+/// contract's derived code, which would weigh ~100 KB in this module.
+#[wasm_bindgen(js_name = writeDxf)]
+pub fn write_dxf(input: &str) -> Result<Written, JsError> {
+    let input: kentos_formats::dxf::WriteInput =
+        serde_json::from_str(input).map_err(|e| bad_input("Yazılacak nesneler", &e))?;
+    let (bytes, report) = kentos_formats::dxf::write(&input.0);
+    Ok(Written {
+        bytes,
+        report: String::from_utf8(to_json(&report)?).unwrap_or_default(),
+    })
+}

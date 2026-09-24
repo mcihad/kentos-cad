@@ -1,6 +1,7 @@
 import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
+import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
 
 /**
  * Messages between the page and the formats worker (formatsWorker.ts).
@@ -12,7 +13,8 @@ import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 export type FormatsRequest =
   | { id: number; op: 'readCoords'; bytes: ArrayBuffer; options: CoordReadOptions }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }
-  | { id: number; op: 'readDxf'; bytes: ArrayBuffer; options: DxfReadOptions };
+  | { id: number; op: 'readDxf'; bytes: ArrayBuffer; options: DxfReadOptions }
+  | { id: number; op: 'writeDxf'; input: DxfWriteInput };
 
 export type FormatsReply =
   /** A reader's result: JSON. */

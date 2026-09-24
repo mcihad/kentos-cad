@@ -399,6 +399,21 @@ export class CoreStore {
     return typed(() => this.raw.transformOutlines(ids, affines, limit));
   }
 
+  /**
+   * These objects moved by each affine (six numbers each), affine after
+   * affine, as `transformEntities` gives them: packed as `putPacked` reads
+   * them (./pack.ts `unpackEntities` reads them back), not as JSON. Move,
+   * copy, arrays and paste. Unknown ids are skipped.
+   */
+  transformPacked(ids: Float64Array, affines: Float64Array): { nums: Float64Array; strings: string } {
+    return typed(() => {
+      const r = this.raw.transformPacked(ids, affines);
+      const strings = r.strings;
+      // Hands the numbers over and frees the answer: a large one is not copied twice.
+      return { nums: r.intoNums(), strings };
+    });
+  }
+
   /** Outlines of objects stretched by a window and a displacement. */
   stretchOutlines(ids: Float64Array, minX: number, minY: number, maxX: number, maxY: number, dx: number, dy: number): Float64Array {
     return typed(() => this.raw.stretchOutlines(ids, minX, minY, maxX, maxY, dx, dy));

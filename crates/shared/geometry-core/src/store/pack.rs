@@ -26,7 +26,15 @@
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
 //! coordinates; a `path` is points and bulges (a count, −1 for none, then
 //! the values); `holes` is a count (−1 for none) of paths; `hatch holes` a
-//! count (−1 for none) of point lists.
+//! count (−1 for none) of point lists. A field left out (`z`, `angle`, `c`)
+//! still takes its numbers, NaN.
+//!
+//! The store answers in the same layout (`Packer`): moved, copied, arrayed
+//! and pasted objects come back as numbers, not JSON
+//! (`Store::transform_packed`; the page reads them with `pack.ts`
+//! `unpackEntities`).
+
+use std::collections::HashMap;
 
 use super::Store;
 use crate::entity::{HatchPattern, Shape};
@@ -245,6 +253,188 @@ impl Reader<'_> {
     }
 }
 
+/// Writes objects in the packed layout, the reader's other direction:
+/// numbers, and the strings they point at, each once in the order first
+/// met (as `pack.ts` writes them).
+#[derive(Default)]
+pub struct Packer {
+    pub nums: Vec<f64>,
+    pub strings: Vec<String>,
+    index: HashMap<String, u32>,
+}
+
+fn flag(b: bool) -> f64 {
+    if b { 1.0 } else { 0.0 }
+}
+
+/// A count, or −1 for a field left out.
+fn count<T>(v: Option<&[T]>) -> f64 {
+    v.map_or(-1.0, |v| v.len() as f64)
+}
+
+impl Packer {
+    /// Numbers appended as given: one call per record part keeps the
+    /// writer small (every inlined push was a capacity check).
+    #[inline(never)]
+    fn put(&mut self, xs: &[f64]) {
+        self.nums.extend_from_slice(xs);
+    }
+
+    fn string(&mut self, s: &str) -> f64 {
+        if let Some(&i) = self.index.get(s) {
+            return f64::from(i);
+        }
+        let i = self.strings.len() as u32;
+        self.strings.push(s.to_string());
+        self.index.insert(s.to_string(), i);
+        f64::from(i)
+    }
+
+    fn maybe_string(&mut self, s: Option<&str>) -> f64 {
+        s.map_or(-1.0, |s| self.string(s))
+    }
+
+    #[inline(never)]
+    fn points(&mut self, ps: &[Vec2]) {
+        self.nums.reserve(1 + 2 * ps.len());
+        self.nums.push(ps.len() as f64);
+        for p in ps {
+            self.nums.extend([p.x, p.y]);
+        }
+    }
+
+    fn values(&mut self, vs: Option<&[f64]>) {
+        self.put(&[count(vs)]);
+        if let Some(v) = vs {
+            self.put(v);
+        }
+    }
+
+    /// One object: `id, layer, label, kind`, then the kind's fields.
+    pub fn object(&mut self, id: f64, layer: &str, label: bool, shape: &Shape) {
+        let layer = self.string(layer);
+        self.put(&[id, layer, flag(label)]);
+        const NONE: Vec2 = Vec2::new(f64::NAN, f64::NAN);
+        match shape {
+            Shape::Point { p, z } => {
+                self.put(&[0.0, p.x, p.y, flag(z.is_some()), z.unwrap_or(f64::NAN)]);
+            }
+            Shape::Line { a, b } => self.put(&[1.0, a.x, a.y, b.x, b.y]),
+            Shape::Polyline { pts, bulges, holes } | Shape::Polygon { pts, bulges, holes } => {
+                let polygon = matches!(shape, Shape::Polygon { .. });
+                self.put(&[if polygon { 3.0 } else { 2.0 }]);
+                self.points(pts);
+                self.values(bulges.as_deref());
+                self.put(&[count(holes.as_deref())]);
+                for h in holes.iter().flatten() {
+                    self.points(&h.pts);
+                    self.values(h.bulges.as_deref());
+                }
+            }
+            Shape::Circle { c, r } => self.put(&[4.0, c.x, c.y, *r]),
+            Shape::Arc { c, r, a0, a1 } => self.put(&[5.0, c.x, c.y, *r, *a0, *a1]),
+            Shape::Ellipse {
+                c,
+                major,
+                ratio,
+                t0,
+                t1,
+            } => self.put(&[6.0, c.x, c.y, major.x, major.y, *ratio, *t0, *t1]),
+            Shape::Xline { p, dir } | Shape::Ray { p, dir } => {
+                let ray = matches!(shape, Shape::Ray { .. });
+                self.put(&[if ray { 8.0 } else { 7.0 }, p.x, p.y, dir.x, dir.y]);
+            }
+            Shape::Spline { pts, closed } => {
+                self.put(&[9.0]);
+                self.points(pts);
+                self.put(&[flag(*closed)]);
+            }
+            Shape::Text {
+                p,
+                text,
+                height,
+                rotation,
+            } => {
+                let t = self.string(text);
+                self.put(&[10.0, p.x, p.y, *height, *rotation, t]);
+            }
+            Shape::Dimension {
+                a,
+                b,
+                offset,
+                height,
+                text,
+                style,
+                angle,
+                c,
+            } => {
+                let t = self.maybe_string(text.as_deref());
+                let st = self.maybe_string(style.as_deref());
+                let at = c.unwrap_or(NONE);
+                self.put(&[
+                    11.0,
+                    a.x,
+                    a.y,
+                    b.x,
+                    b.y,
+                    *offset,
+                    *height,
+                    t,
+                    st,
+                    flag(angle.is_some()),
+                    angle.unwrap_or(f64::NAN),
+                    flag(c.is_some()),
+                    at.x,
+                    at.y,
+                ]);
+            }
+            Shape::Hatch {
+                ring,
+                holes,
+                pattern,
+            } => {
+                self.put(&[12.0]);
+                self.points(ring);
+                self.put(&[count(holes.as_deref())]);
+                for h in holes.iter().flatten() {
+                    self.points(h);
+                }
+                let kind = self.string(&pattern.kind);
+                self.put(&[kind, pattern.angle, pattern.spacing]);
+            }
+        }
+    }
+}
+
+impl Reader<'_> {
+    /// The next object: its id, layer, label flag and geometry.
+    fn object(&mut self) -> Result<(f64, String, bool, Shape), String> {
+        let id = self.num()?;
+        let layer = self.string()?.unwrap_or_default();
+        let label = self.flag()?;
+        let kind = self.num()?;
+        Ok((id, layer, label, self.shape(kind)?))
+    }
+}
+
+/// Every packed object in order (tests read the store's packed answers back).
+#[cfg(test)]
+pub(crate) fn unpack(
+    nums: &[f64],
+    strings: &[String],
+) -> Result<Vec<(f64, String, bool, Shape)>, String> {
+    let mut r = Reader {
+        nums,
+        at: 0,
+        strings,
+    };
+    let mut out = Vec::new();
+    while r.at < nums.len() {
+        out.push(r.object()?);
+    }
+    Ok(out)
+}
+
 impl Store {
     /// Adds or replaces packed objects in order (see the module's table);
     /// `strings` holds the layer ids and texts the numbers point at.
@@ -256,11 +446,7 @@ impl Store {
         };
         let mut n = 0;
         while r.at < nums.len() {
-            let id = r.num()?;
-            let layer = r.string()?.unwrap_or_default();
-            let label = r.flag()?;
-            let kind = r.num()?;
-            let shape = r.shape(kind)?;
+            let (id, layer, label, shape) = r.object()?;
             self.put(id, &layer, label, shape);
             n += 1;
         }
@@ -375,6 +561,88 @@ mod tests {
             assert_eq!(a.shape, b.shape, "{id}");
             assert_eq!(a.bounds, b.bounds);
             assert_eq!((a.label, a.layer), (b.label, b.layer));
+        }
+        // Written back from the store's copies, the same numbers and strings
+        // (the left-out angle and centre as NaN, as pack.ts writes them).
+        let names = s.layer_names();
+        let mut w = Packer::default();
+        for id in [1.0, 2.0, 3.0, 4.0] {
+            let it = s.get(id).unwrap();
+            w.object(it.id, names[it.layer as usize], it.label, &it.shape);
+        }
+        assert_eq!(w.strings, strings);
+        assert_eq!(bits(&w.nums), bits(&nums));
+    }
+
+    fn bits(nums: &[f64]) -> Vec<u64> {
+        nums.iter().map(|x| x.to_bits()).collect()
+    }
+
+    /// Geometry of every kind, optional fields given and left out, in TM
+    /// coordinates, with −0, NaN and ±∞ (as the core's JSON writes them).
+    const SHAPES: &[&str] = &[
+        r#"{"kind":"point","p":{"x":486512.34,"y":4420187.52},"z":850.5}"#,
+        r##"{"kind":"point","p":{"x":-0,"y":"#NaN"}}"##,
+        r##"{"kind":"line","a":{"x":486500.1,"y":4420100.2},"b":{"x":"#Inf","y":"#-Inf"}}"##,
+        r#"{"kind":"polyline","pts":[{"x":486500.1,"y":4420100.2},{"x":486540.35,"y":4420101.9},{"x":486538.8,"y":4420141.15}],"bulges":[0.5,-0,0],"holes":[{"pts":[{"x":1,"y":1}]}]}"#,
+        r#"{"kind":"polyline","pts":[]}"#,
+        r#"{"kind":"polygon","pts":[{"x":486512.34,"y":4420187.52},{"x":486535.757,"y":4420188.723},{"x":486538.221,"y":4420218.986}],"bulges":[0,0.25,0],"holes":[{"pts":[{"x":486520,"y":4420195},{"x":486525,"y":4420195},{"x":486522,"y":4420200}],"bulges":[0,0,-0.1]},{"pts":[{"x":486530,"y":4420200},{"x":486531,"y":4420200},{"x":486531,"y":4420201}]}]}"#,
+        r#"{"kind":"polygon","pts":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"bulges":[],"holes":[]}"#,
+        r#"{"kind":"circle","c":{"x":486520,"y":4420200},"r":12.5}"#,
+        r#"{"kind":"arc","c":{"x":486520,"y":4420200},"r":12.5,"a0":0.3,"a1":6.1}"#,
+        r#"{"kind":"ellipse","c":{"x":486520,"y":4420200},"major":{"x":10,"y":-3},"ratio":0.4,"t0":1,"t1":1}"#,
+        r#"{"kind":"xline","p":{"x":486520,"y":4420200},"dir":{"x":0.6,"y":0.8}}"#,
+        r#"{"kind":"ray","p":{"x":486520,"y":4420200},"dir":{"x":-1,"y":0}}"#,
+        r#"{"kind":"spline","pts":[{"x":486520,"y":4420200},{"x":486530,"y":4420210},{"x":486540,"y":4420205}],"closed":true}"#,
+        r#"{"kind":"spline","pts":[],"closed":false}"#,
+        r#"{"kind":"text","p":{"x":486520,"y":4420200},"text":"Ada 104 😀","height":2,"rotation":-30}"#,
+        r#"{"kind":"text","p":{"x":1,"y":2},"text":"","height":0.5,"rotation":0}"#,
+        r#"{"kind":"dimension","a":{"x":486520,"y":4420200},"b":{"x":486530,"y":4420200},"offset":2,"height":0.5}"#,
+        r#"{"kind":"dimension","a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":-2,"height":0.5,"text":"12,5 m","style":"linear","angle":90}"#,
+        r#"{"kind":"dimension","a":{"x":10,"y":0},"b":{"x":0,"y":10},"offset":5,"height":1,"text":"","style":"angular","c":{"x":0,"y":0}}"#,
+        r#"{"kind":"hatch","ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}],[]],"pattern":{"type":"cross","angle":30,"spacing":0.5}}"#,
+        r#"{"kind":"hatch","ring":[{"x":486520,"y":4420200},{"x":486530,"y":4420200},{"x":486525,"y":4420210}],"pattern":{"type":"solid","angle":0,"spacing":1}}"#,
+    ];
+
+    #[test]
+    fn writes_and_reads_every_kind_bit_for_bit() {
+        use crate::api::json::{self, FromJson, Json};
+        let shapes: Vec<Shape> = SHAPES
+            .iter()
+            .map(|t| Shape::from_json(&Json::parse(t).unwrap()).unwrap())
+            .collect();
+        let layers = ["parsel", "", "Bina çatısı"];
+        let mut w = Packer::default();
+        for (i, s) in shapes.iter().enumerate() {
+            w.object(i as f64 + 1.0, layers[i % 3], i % 2 == 0, s);
+        }
+        let back = unpack(&w.nums, &w.strings).unwrap();
+        assert_eq!(back.len(), shapes.len());
+        for (i, (id, layer, label, shape)) in back.iter().enumerate() {
+            assert_eq!(
+                (*id, layer.as_str(), *label),
+                (i as f64 + 1.0, layers[i % 3], i % 2 == 0)
+            );
+            // The core's JSON tells −0 from 0 and keeps NaN and ±∞.
+            assert_eq!(json::to_string(shape), json::to_string(&shapes[i]), "{i}");
+        }
+        // Written again, the same numbers; each string once.
+        let mut again = Packer::default();
+        for (id, layer, label, shape) in &back {
+            again.object(*id, layer, *label, shape);
+        }
+        assert_eq!(bits(&again.nums), bits(&w.nums));
+        assert_eq!(again.strings, w.strings);
+        assert_eq!(
+            w.strings.iter().filter(|s| s.as_str() == "parsel").count(),
+            1
+        );
+        // The store reads it as it reads the page's packs.
+        let mut s = Store::new();
+        assert_eq!(s.put_packed(&w.nums, &w.strings), Ok(shapes.len()));
+        for (i, want) in shapes.iter().enumerate() {
+            let it = s.get(i as f64 + 1.0).unwrap();
+            assert_eq!(json::to_string(&it.shape), json::to_string(want));
         }
     }
 

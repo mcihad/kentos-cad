@@ -3,7 +3,6 @@ import { Signal } from '../core/signal';
 import type { Entity, NewEntity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
 import { mirror, rotation, scaling, translation, type Affine } from '../model/geom/affine';
-import { transformEntities } from '../model/ops/transform';
 import type { ViewTransform } from '../viewport/Camera';
 import { directionAngle, rotationAngle, scaleFactor } from './constructions';
 import { parseNumber } from './coordinateInput';
@@ -168,8 +167,9 @@ export abstract class SelectionFirstTool implements Tool {
     const editable = copy ? ents : ents.filter((e) => !doc.layers.isLocked(e.layerId));
     if (editable.length < ents.length) log.warn(`${ents.length - editable.length} nesne kilitli katmanda olduğu için atlandı.`);
     const created: number[] = [];
-    // Every object by every affine in one call to the core, affine after affine.
-    const moved = transformEntities(editable, ms);
+    // Every object by every affine, affine after affine, in one call to the
+    // geometry store, which holds the objects: only their new geometry comes back.
+    const moved = this.ctx.view.transformEntities(editable, ms);
     doc.transact(label, () => {
       for (const t of moved) {
         if (copy) {
