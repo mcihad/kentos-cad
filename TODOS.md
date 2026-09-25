@@ -167,7 +167,10 @@ Bu bir hedef haritadır; ilk adımda boş crate ağacı kurulmayacak. Native `do
 | Renderer | Kaynak yönetimi, LOD, draw/pick pass, görünüm cache'i | Kalıcı koordinatı yuvarlamak, seçimi veri deposuna sessizce yazmak |
 | Python / AI | Tipli komut ve sorgu adapter'ı, workflow | Repository/SQL/DOM üzerinden kuralları atlamak |
 
-- [ ] `ARCH-01` Derleme bağımlılığını adapter → application → domain/hesaplama yönünde tut; Cargo ve statik denetimle Iced/SQLx/PyO3/WASM runtime bağımlılıklarının saf çekirdeğe sızmasını engelle. Port arayüzlerini iç katman, implementation'larını dış adapter sahiplenir.
+- [x] `ARCH-01` Derleme bağımlılığını adapter → application → domain/hesaplama yönünde tut; Cargo ve statik denetimle Iced/SQLx/PyO3/WASM runtime bağımlılıklarının saf çekirdeğe sızmasını engelle. Port arayüzlerini iç katman, implementation'larını dış adapter sahiplenir. — **25 Eylül:** `scripts/arch/deps.mjs` (`pnpm rust:test` sonunda, `pnpm arch:deps`).
+  - Denetim her crate'i derlendiği hedefte `cargo tree` ile gezer. Grup yönünü ve geçişli çalışma zamanı sızıntısını yolunu göstererek yakalar.
+  - Kurallar ve port sahipliği [ADR 0010](docs/adr/0010-platform-boundaries.md)'da.
+  - Yeni UI/renderer/native yolu, kuralı yazılmadan denetimden geçmez.
 - [ ] `ARCH-02` `DocumentRepository`, `DataProvider`, `AssetStore`, `SettingsStore`, `JobExecutor`, `EventSink`, `Clock`, `IdGenerator` gibi gerçekten ihtiyaç duyulan portları belirle; her portun transaction ve async anlamını yaz.
 - [ ] `ARCH-03` Native async runtime ile web JS/Worker yaşam döngüsünü ayrı tasarla. Hesaplama WASM binding'leri dar ve toplu olsun; native runtime veya application trait ağacını browser'a taşıma.
 - [ ] `ARCH-04` Her uygulamanın açık belgesi için tek mutation sahibi seç; web'de TS, desktop'ta native belge servisi. Render, autosave, Python ve UI'a revision'lı snapshot/değişiklik akışı ver; hesap/render cache'lerini ikinci otoriter belgeye dönüştürme.

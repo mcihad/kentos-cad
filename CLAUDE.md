@@ -69,7 +69,8 @@ pnpm dev                 # Vite; yerel çizim API olmadan çalışır
 pnpm typecheck
 pnpm test                # Vitest; gerekli WASM paketlerini kontrol eder
 pnpm build               # WASM kontrolü + tsc + Vite
-pnpm rust:test           # cargo test --workspace + clippy -D warnings
+pnpm rust:test           # cargo test --workspace + clippy -D warnings + bağımlılık yönü
+pnpm arch:deps           # yalnız bağımlılık yönü denetimi (ADR 0010, ARCH-01)
 pnpm test:rust           # Rust ve WASM/format entegrasyon testleri
 pnpm wasm                # değişen ortak kaynakların WASM paketlerini derle
 pnpm e2e                 # gerçek tarayıcı duman testi

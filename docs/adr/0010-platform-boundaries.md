@@ -42,5 +42,16 @@ Sahip 25 Eylül'de yönü kesinleştirdi. UI bileşen kütüphanesi `~/Projects/
 - Web'in bugünkü mimarisi ve çalışma akışı değişmez. CLAUDE.md §4 ve ADR 0008'in “yalnız hesap Rust'ta, arayüz TypeScript'te” kuralı web için aynen geçerlidir.
 - Masaüstü yolları (`apps/desktop`, `apps/ui-showcase`, `crates/ui`, `crates/native/*`, `crates/render/wgpu`, `shaders/wgsl/`) hedeftir. İlk gerçek tüketicisi oluşunca açılır, boş crate ağacı kurulmaz (TODOS.md §2.1). Mevcut `crates/server/application` paketinin adı `kentos-application`'dır. Native application katmanı eklenirken bu çakışma ayrıca çözülür.
 - **Denetim (bugün):** `apps/web/src/model/singleSource.test.ts` web cephelerinde hesabın TS'e geri kopyalanmasını yakalar.
+- **Bağımlılık yönü (TODOS.md `ARCH-01`, 25 Eylül):** `scripts/arch/deps.mjs` her crate'i derlendiği hedefte `cargo tree` ile gezer. `pnpm rust:test`'in sonunda ya da `pnpm arch:deps` ile çalışır. Normal ve build bağımlılıkları sayılır, özellik ve hedef süzgeçleri uygulanır.
+
+  | Grup (yol) | Hedef | Kullanabileceği gruplar | Altında bulunamayanlar |
+  |---|---|---|---|
+  | `shared` (`crates/shared/`) | makine, wasm32 | shared | tokio, sqlx, axum, hyper, tower, reqwest, wasm-bindgen, js-sys, web-sys, iced, wgpu, winit, naga, pyo3, gdal, proj |
+  | `wasm` (`crates/wasm/`) | wasm32 | shared | sunucu çalışma zamanları (tokio … reqwest), iced, wgpu, winit, naga, pyo3 |
+  | `native` (`crates/native/`, henüz yok) | makine | shared, native | sqlx, axum, tarayıcı bağları, iced, wgpu, winit, naga, pyo3 |
+  | `server` (`crates/server/`), `api` (`apps/api/`) | makine | shared, native, server | tarayıcı bağları, iced, wgpu, winit, naga |
+
+  - Hiçbir grubun kapsamadığı yoldaki bir crate denetimi durdurur. İlk UI, renderer ya da masaüstü crate'i kurallarıyla birlikte bilinçli olarak eklenir.
+  - Port kuralı: port arayüzünü iç katman (domain/application) tanımlar, gerçekleştirmesini dış adapter (PostgreSQL, dosya sistemi, tarayıcı) sahiplenir (`ARCH-02`).
 - **Denetim (sonra):** web paketinde Iced, native application ya da Rust renderer bulunmadığını bağımlılık ve varlık denetimiyle koruyan test ilk masaüstü crate'iyle eklenecek (TODOS.md `TEST-02`, `ARCH-01`).
 - Yeni bağımlılıklar (Iced, wgpu, naga, winit …) bu depoya girerken sürüm, lisans, platform ve gerekçe kaydı ister (TODOS.md `BASE-06`, [bağımlılık kaydı](../deps/README.md)). `kentos-rc`'deki kilitli sürümler (Iced 0.14.0, wgpu 27.0.1) başlangıç noktasıdır, kesin seçim değildir (TODOS.md `UI-05`).
