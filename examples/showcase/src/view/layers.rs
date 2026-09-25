@@ -53,12 +53,12 @@ impl Showcase {
 
         row![
             action(
-                Icon::ChevronDown,
+                Icon::ExpandAll,
                 "Tümünü genişlet",
                 Message::TreeExpandAll(None, true)
             ),
             action(
-                Icon::ChevronUp,
+                Icon::CollapseAll,
                 "Tümünü daralt",
                 Message::TreeExpandAll(None, false)
             ),

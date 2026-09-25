@@ -13,7 +13,7 @@
 //! piksellerle aynıdır (ölçek 1 iken).
 
 use iced::keyboard::key::Named;
-use iced::{Point, Size};
+use iced::{Point, Rectangle, Size};
 
 use kentos_rc::attribute::query::Edit;
 use kentos_rc::attribute::{Combinator, Date, ObjectId, Operator, Value};
@@ -22,18 +22,19 @@ use kentos_rc::spatial::model_space::{Backdrop, Event as ModelSpace};
 use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::theme::{Accent, Mode};
+use kentos_rc::widget::docking;
 use kentos_rc::widget::inspector::Event as Inspector;
 
 use crate::app::{DRAWING_LAYER, Showcase, WINDOW_SIZE};
 use crate::gallery::Page;
 use crate::import::Source;
 use crate::layer_tree::NodeId;
-use crate::message::{Message, Pane, QueryPurpose, RibbonTab};
+use crate::message::{DockPanel, Message, Pane, QueryPurpose, RibbonTab};
 use crate::properties::{self, Section};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 19] = [
+const SCENARIOS: [(&str, &str); 20] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -72,7 +73,7 @@ const SCENARIOS: [(&str, &str); 19] = [
     ),
     (
         "gorevler",
-        "görevler penceresi: süren, sıradaki, biten, başarısız ve iptal edilen işler",
+        "görevler paneli: süren, sıradaki, biten, başarısız ve iptal edilen işler",
     ),
     (
         "onay",
@@ -89,6 +90,10 @@ const SCENARIOS: [(&str, &str); 19] = [
     (
         "ozellikler",
         "Şehirler katmanının özellikleri: sembolizasyon, kaydedilmemiş değişiklik",
+    ),
+    (
+        "yuva",
+        "yuva yeniden düzenlenmiş: özellikler katmanların yanında sekme, görevler yüzen pencere",
     ),
     (
         "duzen",
@@ -131,7 +136,7 @@ Girdiler (verildikleri sırayla):
   --tikla <x>,<y>       sol tık
   --sag-tikla <x>,<y>   sağ tık
   --tekerlek <x>,<y>,<satır>
-  --surukle <x>,<y>,<x>,<y>   sol tuşla sürükler (ör. yan panelin kenarı)
+  --surukle <x>,<y>,<x>,<y>   sol tuşla sürükler (ör. panel sekmesi, yuvanın kenarı)
   --bas <x>,<y>         sol tuşa basar ve tutar; ardından --imlec sürükler
   --birak <x>,<y>       tutulan sol tuşu bırakır
   --tus <ad>            asagi, yukari, sag, sol, enter, esc, sekme, bosluk
@@ -446,7 +451,7 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             run(Message::IndexRequested, 29);
             run(Message::ExportPressed("GeoJSON"), 15);
             run(Message::ExportPressed("PDF"), 0);
-            run(Message::PaneToggled(Pane::Tasks), 0);
+            run(Message::PanelShown(DockPanel::Tasks), 0);
 
             app.toasts.clear();
             return Ok(());
@@ -491,6 +496,29 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::PropertiesOpened(1));
             send(Message::PropertiesSection(Section::Symbology));
             send(Message::PropertiesEdited(properties::Edit::Opacity(0.8)));
+        }
+        "yuva" => {
+            let dock = |event| Message::Dock(event);
+
+            send(dock(docking::Event::Moved(
+                DockPanel::Details,
+                docking::Target::Tab(docking::Slot::Docked(docking::Side::Right, 0), 1),
+            )));
+            send(dock(docking::Event::Moved(
+                DockPanel::Tasks,
+                docking::Target::Float(Rectangle::new(
+                    Point::new(520.0, 150.0),
+                    Size::new(380.0, 250.0),
+                )),
+            )));
+            send(Message::ExportPressed("GeoJSON"));
+
+            for _ in 0..12 {
+                send(Message::JobTick);
+            }
+
+            app.toasts.clear();
+            return Ok(());
         }
         "duzen" => {
             send(Message::SheetAdded);

@@ -76,7 +76,7 @@ examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
 ├── layer_tree.rs        katman ağacı: iç içe gruplar ve görünürlük
 ├── sheets.rs            model ve düzen (pafta) sekmeleri
 ├── sample.rs            örnek veri ve öznitelik şemaları
-├── settings.rs          kalıcı ayarlar: tema ve yazı (~/.config/kentos-cad/ayarlar)
+├── settings.rs          kalıcı ayarlar: tema, yazı ve yuva (~/.config/kentos-cad/ayarlar)
 ├── snapshot.rs          `snapshot` alt komutu ve senaryolar
 └── view/                bileşenlerin yerleşimi
     └── gallery/         bileşen kataloğu (Galeri sekmesi)
@@ -104,9 +104,10 @@ Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
   grupları açıksa çizilir. Katmanlar bir alanın değerine göre alt
   katmanlara ayrılır (şehirler bölgeye, yollar türe göre); her alt katmanın
   rengi ve görünürlüğü ayrıdır.
-- **Yan panel.** Sol kenarı sürüklenerek genişletilir, çift tık varsayılan
-  genişliğe döndürür; paneller başlıklarına tıklanınca açılıp kapanır. Düzen
-  ayar dosyasında saklanır.
+- **Yuva.** Katmanlar ve Özellikler sağda, Öznitelik tablosu ve Görevler
+  altta sekmeli yığınlardadır; sekmeler sürüklenerek başka yığına, kenara ya
+  da ortaya (yüzen pencere) taşınır. Yerleşim ayar dosyasında saklanır;
+  kapatılan panel Görünüm sekmesindeki Paneller grubundan geri açılır.
 - **Bağlam menüleri.** Ağaçtaki gruplara, katmanlara ve alt katmanlara,
   model alanına ve tablo satırlarına sağ tıklanınca ilgili komutlar açılır:
   yakınlaştır, seç, yalnızca bunu göster, opaklık, koordinatı kopyala...
@@ -141,8 +142,8 @@ stil değişiklikleri haritaya anında yansır.
   boyutlandırılır; sağ alt köşedeki noktalar bunu belli eder. Yalnızca yatay
   kenar sürüklenirse yükseklik içeriğe göre kalır.
 - **Kenara tutunma.** Konum pencerenin yakın olduğu kenarlara göre saklanır:
-  sağ alta bırakılan pencere, yan panel genişleyince ya da tablo açılınca sağ
-  alt köşeyle birlikte kayar.
+  sağ alta bırakılan pencere, yuvanın alanları genişleyince ya da tablo
+  açılınca sağ alt köşeyle birlikte kayar.
 - **Vitrinde.** Ölç aracı ölçüm penceresini açar; pencereyi kapatmak araçtan
   çıkar. Koordinata git (`GIT`) enlem ve boylamı doğrular, görünümü ortalar ya
   da süren çizime nokta ekler. Katman stili (`STIL`, katman menüsünde "Stil…")
@@ -309,7 +310,7 @@ let docks = Docks::load(&text, Panel::parse);
   kaynağı ve alanları gösterir.
   Dışa aktarma (uygulama menüsü ya da Yönet sekmesi) ve dizin oluşturma arka
   planda sürer: durum çubuğunda dönen gösterge ve yüzde görünür, tıklanınca
-  Görevler penceresi açılır; biten iş bildirilir. DXF'e dışa aktarma ilk
+  Görevler paneli açılır; biten iş bildirilir. DXF'e dışa aktarma ilk
   denemede başarısız olur; hata bildirimi ve görev satırı "Yeniden dene"
   sunar.
 
@@ -538,6 +539,7 @@ cargo run -- snapshot bos.png --senaryo bos-durumlar
 cargo run -- snapshot sihirbaz.png --senaryo sihirbaz --sayfa 2
 cargo run -- snapshot ozellikler.png --senaryo ozellikler
 cargo run -- snapshot duzen.png --senaryo duzen
+cargo run -- snapshot yuva.png --senaryo yuva --bas 1150,153 --imlec 700,300
 cargo run -- snapshot sekmeler.png --senaryo galeri --sayfa yerlesim
 cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah
 cargo run -- snapshot mor.png --senaryo secim --tema acik --vurgu "#7c5cff" --zemin arduvaz

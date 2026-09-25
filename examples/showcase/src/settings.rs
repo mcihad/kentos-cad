@@ -1,4 +1,4 @@
-//! Kalıcı ayarlar: tema, vurgu rengi, harita zemini, yazı ve yan panel.
+//! Kalıcı ayarlar: tema, vurgu rengi, harita zemini, yazı ve yuva.
 //!
 //! Ayarlar kullanıcının yapılandırma klasöründe düz bir metin dosyasında
 //! tutulur (`$XDG_CONFIG_HOME/kentos-cad/ayarlar`, yoksa
@@ -12,9 +12,7 @@
 //! yazi-ailesi = inter
 //! es-aralikli = ibm-plex-mono
 //! yazi-boyutu = 14
-//! yan-panel = 360
-//! katmanlar = acik
-//! ozellikler = kapali
+//! yuva = sol 260: ; sag 360: katmanlar* @0.45 / ozellikler* @0.55; alt 252: tablo* gorevler @1.00
 //! ```
 //!
 //! Bilinmeyen anahtarlar ve bozuk değerler yok sayılır; eksik ayar
@@ -26,11 +24,12 @@ use std::{fs, io};
 use kentos_rc::spatial::model_space::Backdrop;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::theme::{Accent, Mode};
+use kentos_rc::widget::Docks;
 
-use crate::app::DOCK_WIDTH;
+use crate::message::DockPanel;
 
 /// Uygulamanın saklanan ayarları.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Settings {
     pub mode: Mode,
     /// Vurgu rengi: hazır renk ya da #RRGGBB.
@@ -38,24 +37,18 @@ pub struct Settings {
     /// Harita zemini; varsayılanı temaya uyar.
     pub backdrop: Backdrop,
     pub typography: Typography,
-    pub dock: DockLayout,
+    /// Yuvadaki panellerin yerleşimi.
+    pub docks: Docks<DockPanel>,
 }
 
-/// Yan panelin düzeni.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct DockLayout {
-    /// Genişlik, 12 piksellik gövde metnine göre.
-    pub width: f32,
-    pub layers_collapsed: bool,
-    pub details_collapsed: bool,
-}
-
-impl Default for DockLayout {
+impl Default for Settings {
     fn default() -> Self {
         Self {
-            width: DOCK_WIDTH,
-            layers_collapsed: false,
-            details_collapsed: false,
+            mode: Mode::default(),
+            accent: Accent::default(),
+            backdrop: Backdrop::default(),
+            typography: Typography::default(),
+            docks: DockPanel::layout(),
         }
     }
 }
@@ -144,15 +137,11 @@ impl Settings {
                         .clamped();
                     }
                 }
-                "yan-panel" => {
-                    if let Ok(width) = value.replace(',', ".").parse::<f32>()
-                        && width.is_finite()
-                    {
-                        settings.dock.width = width.clamp(240.0, 720.0);
+                "yuva" => {
+                    if let Some(docks) = Docks::load(value, DockPanel::parse) {
+                        settings.docks = docks;
                     }
                 }
-                "katmanlar" => settings.dock.layers_collapsed = value == "kapali",
-                "ozellikler" => settings.dock.details_collapsed = value == "kapali",
                 _ => {}
             }
         }
@@ -163,19 +152,15 @@ impl Settings {
     fn render(&self) -> String {
         let mode = mode_key(self.mode);
 
-        let state = |collapsed: bool| if collapsed { "kapali" } else { "acik" };
-
         format!(
             "# KentOS CAD ayarları\ntema = {mode}\nvurgu = {}\nharita-zemini = {}\nyazi-ailesi = {}\n\
-             es-aralikli = {}\nyazi-boyutu = {}\nyan-panel = {}\nkatmanlar = {}\nozellikler = {}\n",
+             es-aralikli = {}\nyazi-boyutu = {}\nyuva = {}\n",
             self.accent.key(),
             self.backdrop.key(),
             key_of(self.typography.family.name()),
             key_of(self.typography.mono.name()),
             self.typography.size,
-            self.dock.width.round(),
-            state(self.dock.layers_collapsed),
-            state(self.dock.details_collapsed),
+            self.docks.save(|panel| panel.key().to_owned()),
         )
     }
 }
@@ -198,6 +183,9 @@ fn key_of(name: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use iced::{Point, Rectangle, Size};
+    use kentos_rc::widget::docking::{self, Side};
+
     use super::*;
 
     #[test]
@@ -211,21 +199,43 @@ mod tests {
                 mono: Mono::JetBrainsMono,
                 size: 15.0,
             },
-            dock: DockLayout {
-                width: 410.0,
-                layers_collapsed: true,
-                details_collapsed: false,
+            docks: {
+                let mut docks = DockPanel::layout();
+                docks.set_size(Side::Right, 410.0);
+                docks.update(docking::Event::Collapsed(
+                    docking::Slot::Docked(Side::Right, 0),
+                    true,
+                ));
+                docks.close(DockPanel::Tasks);
+                docks.float(
+                    DockPanel::Table,
+                    Rectangle::new(Point::new(120.0, 80.0), Size::new(600.0, 300.0)),
+                );
+                docks
             },
         };
 
-        assert_eq!(Settings::parse(&settings.render()), settings);
+        // Kapanan panelin kenarı saklanmaz; yeniden açılınca kendi
+        // kenarına döner.
+        let mut expected = settings.clone();
+        expected.docks = Docks::load(
+            &settings.docks.save(|panel| panel.key().to_owned()),
+            DockPanel::parse,
+        )
+        .expect("yerleşim");
+
+        assert_eq!(Settings::parse(&settings.render()), expected);
+        assert_eq!(
+            expected.docks.slot(DockPanel::Table),
+            Some(docking::Slot::Floating(0))
+        );
     }
 
     #[test]
     fn broken_lines_keep_the_defaults() {
         let settings = Settings::parse(
             "# yorum\ntema = mor\nyazi-ailesi = comic-sans\nyazi-boyutu = 99\nbilinmeyen = 1\n\
-             bozuk satır\nyan-panel = 5000\nkatmanlar = belki\nvurgu = lacivert\nharita-zemini = mavi",
+             bozuk satır\nyuva = bozuk\nvurgu = lacivert\nharita-zemini = mavi",
         );
 
         assert_eq!(settings.mode, Mode::Dark);
@@ -233,8 +243,7 @@ mod tests {
         assert_eq!(settings.backdrop, Backdrop::Theme);
         assert_eq!(settings.typography.family, Family::IbmPlexSans);
         assert_eq!(settings.typography.size, 18.0);
-        assert_eq!(settings.dock.width, 720.0);
-        assert!(!settings.dock.layers_collapsed);
+        assert_eq!(settings.docks, DockPanel::layout());
     }
 
     #[test]
@@ -249,7 +258,7 @@ mod tests {
                 family: Family::Inter,
                 ..Typography::DEFAULT
             },
-            dock: DockLayout::default(),
+            docks: DockPanel::layout(),
         };
 
         settings.save(&path).expect("ayar dosyası yazılamadı");

@@ -14,7 +14,7 @@ use kentos_rc::widget::progress;
 use kentos_rc::widget::status_bar::{Readout, Toggle};
 
 use crate::app::Showcase;
-use crate::message::{CoordinateFormat, Message, Pane, Setting};
+use crate::message::{CoordinateFormat, DockPanel, Message, Setting};
 
 /// Ölçek menüsündeki standart harita ölçekleri: halihazır haritalardan
 /// (1:1.000, 1:5.000) topoğrafik paftalara ve ülke haritalarına.
@@ -105,9 +105,9 @@ impl Showcase {
     }
 
     /// Arka plandaki işler: süren iş, yüzdesi ve sıradakiler; iş yokken
-    /// başarısız iş sayısı. Tıklanınca görevler penceresi açılır.
+    /// başarısız iş sayısı. Tıklanınca görevler paneli açılır.
     fn jobs_readout(&self) -> Option<Element<'_, Message>> {
-        let open = Message::PaneToggled(Pane::Tasks);
+        let open = Message::PanelShown(DockPanel::Tasks);
 
         let content: Element<'_, Message> = if let Some(job) = self.jobs.running() {
             let mut content = row![
@@ -142,7 +142,7 @@ impl Showcase {
         Some(
             Readout::new(content)
                 .on_press(open)
-                .tip("Görevler penceresini açar")
+                .tip("Görevler panelini açar")
                 .into(),
         )
     }

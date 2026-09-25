@@ -1,11 +1,11 @@
-//! Öznitelik tablosu: model alanının altında, aktif katmanın kayıtları.
+//! Öznitelik tablosu: yuvanın alt alanında, aktif katmanın kayıtları.
 //!
 //! ArcGIS'teki öznitelik tablosu gibi: araç çubuğunda katman, arama, filtre
 //! ve seçim eylemleri; başlığa tıklayarak sıralama; satıra tıklayarak seçim
 //! (Shift aralık seçer, Ctrl satırı seçime ekler ya da çıkarır).
 
 use iced::widget::text::Wrapping;
-use iced::widget::{button, column, pick_list, row, space, tooltip};
+use iced::widget::{column, pick_list, row, space};
 use iced::{Center, Element};
 
 use kentos_rc::attribute::{FieldKind, text};
@@ -15,21 +15,43 @@ use kentos_rc::spatial::{Feature, Layer, Tool};
 use kentos_rc::style;
 use kentos_rc::theme::typography;
 use kentos_rc::widget::table::{self, Table};
-use kentos_rc::widget::{EmptyState, Panel, Tip, Toolbar, tip};
+use kentos_rc::widget::{EmptyState, Toolbar};
 
 use super::LayerChoice;
 use crate::app::Showcase;
 use crate::message::{Message, QueryPurpose};
 use crate::table::{Column, TableView};
 
-/// Panelin yüksekliği: başlık, araç çubuğu ve yaklaşık yedi satır. Yazı
-/// boyutuyla büyümez; büyük yazıda daha az satır görünür, harita küçülmez.
-const HEIGHT: f32 = 252.0;
-
 /// Araç çubuğunda gösterilen filtre açıklamasının en fazla uzunluğu.
 const FILTER_SUMMARY: usize = 64;
 
 impl Showcase {
+    /// Tablonun başlıktaki özeti: kayıt ve seçim sayısı.
+    pub(super) fn table_meta(&self) -> String {
+        let index = self.active_layer;
+
+        let Some(layer) = self.layers.get(index) else {
+            return String::new();
+        };
+
+        let rows = self.table_rows().len();
+        let total = layer.features.len();
+        let selected = self.selection.count_in(index);
+
+        let mut meta = if rows == total {
+            format!("{total} kayıt")
+        } else {
+            format!("{rows} / {total} kayıt")
+        };
+
+        if selected > 0 {
+            meta.push_str(&format!(", {selected} seçili"));
+        }
+
+        meta
+    }
+
+    /// Yuvadaki öznitelik tablosu: araç çubuğu ve aktif katmanın kayıtları.
     pub(super) fn attribute_table(&self) -> Element<'_, Message> {
         let index = self.active_layer;
 
@@ -38,18 +60,6 @@ impl Showcase {
         };
 
         let rows = self.table_rows();
-        let total = layer.features.len();
-        let selected = self.selection.count_in(index);
-
-        let mut meta = if rows.len() == total {
-            format!("{total} kayıt")
-        } else {
-            format!("{} / {total} kayıt", rows.len())
-        };
-
-        if selected > 0 {
-            meta.push_str(&format!(", {selected} seçili"));
-        }
 
         let columns = Column::all(layer);
 
@@ -97,23 +107,7 @@ impl Showcase {
                 .into()
         };
 
-        let close = tip(
-            button(icon(Icon::Close).size(12.0))
-                .on_press(Message::TableToggled)
-                .padding([1, 4])
-                .style(style::button::subtle),
-            Tip::new("Tabloyu kapat"),
-            tooltip::Position::Left,
-        );
-
-        Panel::new(
-            "Öznitelik tablosu",
-            column![self.table_toolbar(layer, view), table],
-        )
-        .meta(meta)
-        .trailing(close)
-        .height(HEIGHT)
-        .into()
+        column![self.table_toolbar(layer, view), table].into()
     }
 
     fn table_toolbar<'a>(&'a self, layer: &'a Layer, view: &'a TableView) -> Toolbar<'a, Message> {

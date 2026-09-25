@@ -790,6 +790,16 @@ impl Pen {
                 );
                 self.polyline(frame, &[(7.25, 3.75), (12.25, 3.75), (12.25, 5.75)], false);
             }
+            Icon::ExpandAll => {
+                for y in [3.5, 8.5] {
+                    self.polyline(frame, &[(3.5, y), (8.0, y + 4.0), (12.5, y)], false);
+                }
+            }
+            Icon::CollapseAll => {
+                for y in [7.5, 12.5] {
+                    self.polyline(frame, &[(3.5, y), (8.0, y - 4.0), (12.5, y)], false);
+                }
+            }
             Icon::More => {
                 for x in [3.25, 8.0, 12.75] {
                     self.dot(frame, (x, 8.0), 1.25);

@@ -2,14 +2,17 @@
 //!
 //! ```text
 //! ┌ Şerit ─────────────────────────────────────────────────┐
-//! ├ Model alanı ────────────────────────────┬ Yan paneller ┤
-//! │                                         │ Katmanlar    │
-//! ├ Model │ Düzen 1 │ Düzen 2 │ + ──────────┤ Özellikler   │
-//! ├ Öznitelik tablosu ──────────────────────┤ (nesne       │
-//! ├ Komut satırı ───────────────────────────┤  inceleyici) │
-//! ├ Durum çubuğu ───────────────────────────┴──────────────┤
+//! ├ Model alanı ────────────────────────────┬ Katmanlar  ⋯ ┤
+//! │                                         │              │
+//! ├ Model │ Düzen 1 │ Düzen 2 │ + ──────────┼ Özellikler ⋯ ┤
+//! ├ Öznitelik tablosu │ Görevler ─────── ⋯ ─┤ (nesne       │
+//! │                                         │  inceleyici) │
+//! ├ Komut satırı ───────────────────────────┴──────────────┤
+//! ├ Durum çubuğu ──────────────────────────────────────────┤
 //! ```
 //!
+//! Paneller yuvadadır (`DockSpace`): sekmeleri sürüklenerek yeniden
+//! düzenlenir, yüzdürülür, kapatılır; yerleşim ayar dosyasında saklanır.
 //! Model ve düzen sekmeleri haritanın altındadır; düzen sekmesinde harita
 //! yerini kâğıt paftaya bırakır. Model alanının üstünde kayan araç
 //! pencereleri (ölçüm, koordinata git, katman stili) durur; bildirimler
@@ -34,19 +37,20 @@ mod status;
 
 use std::fmt;
 
-use iced::widget::{Column, column, container, row, stack};
+use iced::widget::{Column, column, container, stack};
 use iced::{Element, Fill};
 
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::model_space::Backdrop;
 use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
 use kentos_rc::style;
-use kentos_rc::theme::typography::{Family, Mono, Typography};
+use kentos_rc::theme::typography::{self, Family, Mono, Typography};
 use kentos_rc::theme::{Accent, Mode};
-use kentos_rc::widget::command_line::Prompt;
+use kentos_rc::widget::command_line::{self, Prompt};
+use kentos_rc::widget::docking::Side;
 use kentos_rc::widget::{
     Banner, CommandLine, Confirm, ContextMenu, EmptyState, Floating, NavigationBar, Toaster,
-    horizontal_divider, overlay, status_bar,
+    overlay, status_bar,
 };
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
@@ -74,23 +78,14 @@ impl Showcase {
                 );
             }
 
-            // Model ve düzen sekmeleri haritanın altına asılır.
+            // Model ve düzen sekmeleri haritanın altına asılır; paneller
+            // yuvada, haritanın çevresindedir. Komut satırı en altta,
+            // pencere boyunca uzanır.
             drawing = drawing.push(self.model_space()).push(self.sheet_tabs());
 
-            if self.table_open {
-                drawing = drawing
-                    .push(horizontal_divider())
-                    .push(self.attribute_table());
-            }
-
-            // Yan panelin sol kenarı hem bölücü çizgi hem boyutlandırma
-            // tutamağıdır.
-            row![
-                drawing.push(self.command_line()).width(Fill).height(Fill),
-                self.dock()
-            ]
-            .height(Fill)
-            .into()
+            column![self.dock_space(drawing), self.command_line()]
+                .height(Fill)
+                .into()
         };
 
         let base = container(column![self.ribbon(), workspace, self.status_bar()])
@@ -99,12 +94,19 @@ impl Showcase {
             .style(style::container::window);
 
         // Bildirimler bütün pencereye bağlıdır: her sekmede aynı yerde,
-        // durum çubuğunun hemen üstünde, sağ alt köşede durur. Giriş
-        // sekmesinde yan panelin genişliğine sığar; çizim alanına girmez.
+        // komut satırının hemen üstünde, sağ alt köşede durur. Sağ alan
+        // açıksa onun genişliğine sığar; çizim alanına girmez.
+        let right = if self.docks.stacks(Side::Right).is_empty() {
+            340.0
+        } else {
+            typography::scaled(self.docks.size(Side::Right)) - 16.0
+        };
         let base = Toaster::new(base, &self.toasts, Message::ToastClosed)
-            .width((self.dock.width - 16.0).clamp(240.0, 340.0))
+            .width(right.clamp(240.0, 340.0))
             .padding(iced::Padding {
-                bottom: status_bar::height() + 8.0,
+                bottom: status_bar::height()
+                    + command_line::height(command_line::LINES, self.command_expanded)
+                    + 8.0,
                 ..iced::Padding::new(8.0)
             });
 

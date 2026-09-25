@@ -47,7 +47,7 @@ fn main() -> iced::Result {
     typography::set(saved.typography);
 
     iced::application(
-        move || app::Showcase::boot(saved, path.clone()),
+        move || app::Showcase::boot(saved.clone(), path.clone()),
         app::Showcase::update,
         app::Showcase::view,
     )

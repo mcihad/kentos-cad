@@ -17,7 +17,7 @@ use kentos_rc::widget::{Tip, swatch, tip};
 use crate::app::Showcase;
 use crate::command::{self, Command};
 use crate::gallery::Page;
-use crate::message::{EXPORT_FORMATS, Message, Pane, QueryPurpose, RibbonTab, SizeStep};
+use crate::message::{DockPanel, EXPORT_FORMATS, Message, Pane, QueryPurpose, RibbonTab, SizeStep};
 use crate::view::{backdrop_note, family_note, hex_of, theme_note};
 
 impl Showcase {
@@ -53,6 +53,7 @@ impl Showcase {
             return ribbon
                 .group(view_group("Harita"))
                 .group(self.windows_group())
+                .group(self.panels_group())
                 .group(self.theme_group())
                 .group(self.backdrop_group())
                 .group(self.typeface_group())
@@ -126,12 +127,9 @@ impl Showcase {
             )
             .push(
                 Button::large(Icon::Progress, "Görevler")
-                    .active(self.windows.is_open(Pane::Tasks))
-                    .on_press(Message::PaneToggled(Pane::Tasks))
-                    .tip(
-                        Tip::new("Görevler")
-                            .body("Arka plandaki işler: ilerleme, iptal ve yeniden deneme."),
-                    ),
+                    .active(self.docks.is_shown(DockPanel::Tasks))
+                    .on_press(Message::PanelToggled(DockPanel::Tasks))
+                    .tip(Tip::new("Görevler").body(DockPanel::Tasks.description())),
             )
     }
 
@@ -166,35 +164,46 @@ impl Showcase {
                 )
         };
 
-        Group::new("Pencereler")
+        Group::new("Pencereler").push(
+            Stack::new()
+                .push(pane(
+                    Pane::Measure,
+                    "Ölç aracını ve ölçüm penceresini açar.",
+                    Command::Tool(Tool::Measure),
+                ))
+                .push(pane(
+                    Pane::GoTo,
+                    "Enlem ve boylam yazıp görünümü ortalar ya da çizime nokta ekler.",
+                    Command::Pane(Pane::GoTo),
+                ))
+                .push(pane(
+                    Pane::Style,
+                    "Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştirir.",
+                    Command::Pane(Pane::Style),
+                )),
+        )
+    }
+
+    /// Yuvadaki paneller; görünen vurgulanır. Kapatılan panel yeniden
+    /// açılınca kapatıldığı kenara döner.
+    fn panels_group(&self) -> Group<'_, Message> {
+        let panel = |panel: DockPanel| {
+            Button::small(panel.icon(), panel.title())
+                .active(self.docks.is_shown(panel))
+                .on_press(Message::PanelToggled(panel))
+                .tip(Tip::new(panel.title()).body(panel.description()))
+        };
+
+        Group::new("Paneller")
             .push(
                 Stack::new()
-                    .push(pane(
-                        Pane::Measure,
-                        "Ölç aracını ve ölçüm penceresini açar.",
-                        Command::Tool(Tool::Measure),
-                    ))
-                    .push(pane(
-                        Pane::GoTo,
-                        "Enlem ve boylam yazıp görünümü ortalar ya da çizime nokta ekler.",
-                        Command::Pane(Pane::GoTo),
-                    ))
-                    .push(pane(
-                        Pane::Style,
-                        "Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştirir.",
-                        Command::Pane(Pane::Style),
-                    )),
+                    .push(panel(DockPanel::Layers))
+                    .push(panel(DockPanel::Details)),
             )
             .push(
-                Stack::new().push(
-                    Button::small(Pane::Tasks.icon(), Pane::Tasks.title())
-                        .active(self.windows.is_open(Pane::Tasks))
-                        .on_press(Message::PaneToggled(Pane::Tasks))
-                        .tip(
-                            Tip::new(Pane::Tasks.title())
-                                .body("Arka plandaki işler: ilerleme, iptal ve yeniden deneme."),
-                        ),
-                ),
+                Stack::new()
+                    .push(panel(DockPanel::Table))
+                    .push(panel(DockPanel::Tasks)),
             )
     }
 
@@ -289,7 +298,7 @@ impl Showcase {
                 Stack::new()
                     .push(
                         Button::small(Icon::Table, "Öznitelik tablosu")
-                            .active(self.table_open)
+                            .active(self.docks.is_shown(DockPanel::Table))
                             .on_press(Message::TableToggled),
                     )
                     .push(

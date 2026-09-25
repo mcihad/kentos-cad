@@ -11,6 +11,7 @@ use kentos_rc::spatial::model_space::{self, Backdrop};
 use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
 use kentos_rc::theme::typography::{self, Typography};
 use kentos_rc::theme::{Accent, Mode};
+use kentos_rc::widget::docking::{self, Docks, Side};
 use kentos_rc::widget::floating::{self, Placement};
 use kentos_rc::widget::{inspector, toast};
 
@@ -222,13 +223,13 @@ pub enum Message {
     /// Taslağı atar ve kapatır.
     PropertiesClosed,
 
-    // Yan panel
-    /// Yan panelin yeni genişliği (12 piksellik gövde metnine göre).
-    DockResized(f32),
-    /// Genişlik sürüklenerek ya da çift tıkla değişti; saklanır.
-    DockResizeEnded,
+    // Yuva
+    /// Yuvadaki sürükleme, boyutlandırma, daraltma ve kapatma.
+    Dock(docking::Event<DockPanel>),
     /// Paneli açar ya da kapatır.
     PanelToggled(DockPanel),
+    /// Paneli gösterir: kapalıysa açar, arkadaysa öne getirir.
+    PanelShown(DockPanel),
 
     // Durum çubuğu
     CoordinateFormatSelected(CoordinateFormat),
@@ -241,13 +242,96 @@ pub enum Message {
     Quit,
 }
 
-/// Yan paneldeki paneller.
+/// Yuvadaki paneller.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DockPanel {
     Layers,
-    /// Özellikler (nesne inceleyici) ya da ölçüm.
+    /// Özellikler: seçili öğenin nesne inceleyicisi.
     Details,
+    /// Aktif katmanın öznitelik tablosu.
+    Table,
+    /// Arka plandaki işler: ilerleme, iptal, yeniden deneme.
+    Tasks,
 }
+
+impl DockPanel {
+    pub const ALL: [DockPanel; 4] = [
+        DockPanel::Layers,
+        DockPanel::Details,
+        DockPanel::Table,
+        DockPanel::Tasks,
+    ];
+
+    pub fn title(self) -> &'static str {
+        match self {
+            DockPanel::Layers => "Katmanlar",
+            DockPanel::Details => "Özellikler",
+            DockPanel::Table => "Öznitelik tablosu",
+            DockPanel::Tasks => "Görevler",
+        }
+    }
+
+    pub fn icon(self) -> Icon {
+        match self {
+            DockPanel::Layers => Icon::Layers,
+            DockPanel::Details => Icon::Properties,
+            DockPanel::Table => Icon::Table,
+            DockPanel::Tasks => Icon::Progress,
+        }
+    }
+
+    pub fn description(self) -> &'static str {
+        match self {
+            DockPanel::Layers => "Katman ağacı: görünürlük, gruplar, opaklık.",
+            DockPanel::Details => "Seçili öğenin öznitelikleri ve geometrisi.",
+            DockPanel::Table => "Aktif katmanın kayıtları: arama, filtre, sıralama, seçim.",
+            DockPanel::Tasks => "Arka plandaki işler: ilerleme, iptal ve yeniden deneme.",
+        }
+    }
+
+    /// Ayar dosyasındaki adı.
+    pub fn key(self) -> &'static str {
+        match self {
+            DockPanel::Layers => "katmanlar",
+            DockPanel::Details => "ozellikler",
+            DockPanel::Table => "tablo",
+            DockPanel::Tasks => "gorevler",
+        }
+    }
+
+    pub fn parse(key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|panel| panel.key() == key)
+    }
+
+    /// Hiç açılmamışsa açıldığı kenar.
+    pub fn side(self) -> Side {
+        match self {
+            DockPanel::Layers | DockPanel::Details => Side::Right,
+            DockPanel::Table | DockPanel::Tasks => Side::Bottom,
+        }
+    }
+
+    /// Açılıştaki yerleşim: sağda katmanlar ve özellikler alt alta, altta
+    /// öznitelik tablosu ve arkasında görevler.
+    pub fn layout() -> Docks<DockPanel> {
+        let mut docks = Docks::new();
+
+        docks.dock(DockPanel::Layers, Side::Right);
+        docks.split(DockPanel::Details, Side::Right);
+        docks.dock(DockPanel::Table, Side::Bottom);
+        docks.dock(DockPanel::Tasks, Side::Bottom);
+        docks.show(DockPanel::Table, Side::Bottom);
+        docks.update(docking::Event::Shared(Side::Right, vec![5.0, 6.0]));
+        docks.set_size(Side::Right, DOCK_WIDTH);
+        docks.set_size(Side::Bottom, TABLE_HEIGHT);
+        docks
+    }
+}
+
+/// Sağ alanın ve alt alanın açılıştaki boyutu (12 piksellik gövde metnine
+/// göre).
+pub const DOCK_WIDTH: f32 = 332.0;
+pub const TABLE_HEIGHT: f32 = 252.0;
 
 /// Harita üstündeki kayan araç pencereleri.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -258,8 +342,6 @@ pub enum Pane {
     GoTo,
     /// Aktif katmanın rengi, opaklığı ve çizgi kalınlığı.
     Style,
-    /// Arka plandaki işler: ilerleme, iptal, yeniden deneme.
-    Tasks,
 }
 
 impl Pane {
@@ -268,7 +350,6 @@ impl Pane {
             Pane::Measure => "Ölçüm",
             Pane::GoTo => "Koordinata git",
             Pane::Style => "Katman stili",
-            Pane::Tasks => "Görevler",
         }
     }
 
@@ -277,19 +358,15 @@ impl Pane {
             Pane::Measure => Icon::Measure,
             Pane::GoTo => Icon::Target,
             Pane::Style => Icon::Drop,
-            Pane::Tasks => Icon::Progress,
         }
     }
 
     /// Varsayılan genişlik, 12 piksellik gövde metnine göre.
-    ///
-    /// Görevler sol altta açılır; bildirimler sağ alttadır.
     pub fn width(self) -> f32 {
         match self {
             Pane::Measure => 248.0,
             Pane::GoTo => 252.0,
             Pane::Style => 268.0,
-            Pane::Tasks => 300.0,
         }
     }
 
@@ -305,7 +382,6 @@ impl Pane {
                 Placement::top_left(2.0 * gap + typography::scaled(Pane::Measure.width()), gap)
             }
             Pane::Style => Placement::top_right(96.0, gap),
-            Pane::Tasks => Placement::bottom_left(gap, gap),
         }
     }
 }

@@ -16,6 +16,7 @@ use kentos_rc::spatial::{
 use kentos_rc::theme::typography::{self, Typography};
 use kentos_rc::theme::{self, Accent, Mode};
 use kentos_rc::widget::command_line::{self, Entry};
+use kentos_rc::widget::docking::{self, Docks};
 use kentos_rc::widget::floating::{self, Windows};
 use kentos_rc::widget::{Toast, Toasts, inspector};
 
@@ -30,7 +31,7 @@ use crate::message::{
 };
 use crate::properties::{self, LayerProperties};
 use crate::sample;
-use crate::settings::{DockLayout, Settings};
+use crate::settings::Settings;
 use crate::sheets::Sheets;
 use crate::table::{self, TableView};
 
@@ -42,9 +43,6 @@ pub const TIME_ZONE: i32 = 180;
 
 /// Pencerenin açılış boyutu.
 pub const WINDOW_SIZE: Size = Size::new(1440.0, 900.0);
-
-/// Yan panelin varsayılan genişliği, 12 piksellik gövde metninde.
-pub const DOCK_WIDTH: f32 = 332.0;
 
 /// Komut kutusunun giriş kimliği: odaklamak ve komut listesini açmak için.
 pub const COMMAND_INPUT: &str = "komut-kutusu";
@@ -92,7 +90,6 @@ pub struct Showcase {
     pub(crate) picking: Option<Pick>,
     /// Katmanların tablo ayarları; katmanlarla aynı sırada.
     pub(crate) tables: Vec<TableView>,
-    pub(crate) table_open: bool,
     /// Açık "Öznitelikle seç" ya da "Tabloyu filtrele" penceresi.
     pub(crate) query: Option<QueryDialog>,
 
@@ -110,8 +107,9 @@ pub struct Showcase {
     pub(crate) backdrop: Backdrop,
     /// Yazı ailesi ve boyutu; kütüphanenin genel yazı ayarıyla aynıdır.
     pub(crate) typography: Typography,
-    /// Yan panelin genişliği ve panellerin açık ya da kapalı olması.
-    pub(crate) dock: DockLayout,
+    /// Yuvadaki paneller: katmanlar, özellikler, öznitelik tablosu,
+    /// görevler.
+    pub(crate) docks: Docks<DockPanel>,
     /// Ayarların saklandığı dosya; yoksa ayarlar saklanmaz (testler, ekransız
     /// görüntü).
     settings_path: Option<PathBuf>,
@@ -271,7 +269,6 @@ impl Showcase {
             inspector: inspector::State::new(),
             picking: None,
             tables: vec![TableView::default(); layers.len()],
-            table_open: true,
             query: None,
             layers,
             tool: Tool::Select,
@@ -285,7 +282,7 @@ impl Showcase {
             accent: Accent::default(),
             backdrop: Backdrop::default(),
             typography: typography::current(),
-            dock: DockLayout::default(),
+            docks: DockPanel::layout(),
             settings_path: None,
             ribbon_tab: RibbonTab::Home,
             app_menu_open: false,
@@ -319,7 +316,7 @@ impl Showcase {
             accent: settings.accent,
             backdrop: settings.backdrop,
             typography: typography::current(),
-            dock: settings.dock,
+            docks: settings.docks,
             settings_path: path,
             ..Self::new()
         }
@@ -421,7 +418,7 @@ impl Showcase {
             Message::SelectNode(node) => self.select_node(node),
             Message::OpenTable(index) => {
                 self.activate_layer(index);
-                self.table_open = true;
+                self.docks.show(DockPanel::Table, DockPanel::Table.side());
             }
             Message::ClearDrawings => {
                 if self
@@ -486,7 +483,10 @@ impl Showcase {
                 }
             }
 
-            Message::TableToggled => self.table_open = !self.table_open,
+            Message::TableToggled => {
+                self.docks.toggle(DockPanel::Table, DockPanel::Table.side());
+                self.save_settings();
+            }
             Message::TableRowPressed(reference) => self.press_row(reference),
             Message::TableSearch(search) => {
                 if let Some(table) = self.tables.get_mut(self.active_layer) {
@@ -769,15 +769,28 @@ impl Showcase {
                 self.log("Uzamsal dizin oluşturuluyor.");
             }
 
-            Message::DockResized(width) => self.dock.width = width,
-            Message::DockResizeEnded => self.save_settings(),
-            Message::PanelToggled(panel) => {
-                let collapsed = match panel {
-                    DockPanel::Layers => &mut self.dock.layers_collapsed,
-                    DockPanel::Details => &mut self.dock.details_collapsed,
-                };
+            Message::Dock(event) => {
+                // Sürüklerken gelen boyut ve konumlar, bırakılınca gelen
+                // `Settled` ile saklanır.
+                let live = matches!(
+                    event,
+                    docking::Event::Resized(..)
+                        | docking::Event::Shared(..)
+                        | docking::Event::Placed(..)
+                );
 
-                *collapsed = !*collapsed;
+                self.docks.update(event);
+
+                if !live {
+                    self.save_settings();
+                }
+            }
+            Message::PanelToggled(panel) => {
+                self.docks.toggle(panel, panel.side());
+                self.save_settings();
+            }
+            Message::PanelShown(panel) => {
+                self.docks.show(panel, panel.side());
                 self.save_settings();
             }
 
@@ -1092,7 +1105,7 @@ impl Showcase {
 
                 self.windows.open(pane, pane.placement());
             }
-            Pane::Style | Pane::Tasks => self.windows.open(pane, pane.placement()),
+            Pane::Style => self.windows.open(pane, pane.placement()),
         }
     }
 
@@ -1720,7 +1733,7 @@ impl Showcase {
                 }
 
                 self.activate_layer(dialog.layer);
-                self.table_open = true;
+                self.docks.show(DockPanel::Table, DockPanel::Table.side());
                 self.log(if cleared {
                     format!("{name} tablosunun filtresi kaldırıldı.")
                 } else {
@@ -2025,7 +2038,7 @@ impl Showcase {
             accent: self.accent,
             backdrop: self.backdrop,
             typography: self.typography,
-            dock: self.dock,
+            docks: self.docks.clone(),
         };
 
         if let Err(error) = settings.save(path) {
@@ -2219,8 +2232,9 @@ impl Showcase {
             Command::SelectAll => self.select_all(),
             Command::InvertSelection => self.invert_selection(),
             Command::AttributeTable => {
-                self.table_open = !self.table_open;
-                self.log(if self.table_open {
+                let open = self.docks.toggle(DockPanel::Table, DockPanel::Table.side());
+                self.save_settings();
+                self.log(if open {
                     "Öznitelik tablosu açıldı."
                 } else {
                     "Öznitelik tablosu kapatıldı."
@@ -2440,17 +2454,36 @@ mod tests {
     #[test]
     fn dock_layout_changes_with_messages() {
         let mut app = Showcase::new();
+        assert!(app.docks.is_shown(DockPanel::Table));
+        assert!(!app.docks.is_shown(DockPanel::Tasks));
 
-        let _ = app.update(Message::DockResized(420.0));
-        let _ = app.update(Message::DockResizeEnded);
-        assert_eq!(app.dock.width, 420.0);
+        let _ = app.update(Message::Dock(docking::Event::Resized(
+            docking::Side::Right,
+            420.0,
+        )));
+        let _ = app.update(Message::Dock(docking::Event::Settled));
+        assert_eq!(app.docks.size(docking::Side::Right), 420.0);
 
+        // Panel kapanır, yeniden açılınca aynı kenara döner.
         let _ = app.update(Message::PanelToggled(DockPanel::Layers));
-        assert!(app.dock.layers_collapsed);
-        assert!(!app.dock.details_collapsed);
-
+        assert!(!app.docks.contains(DockPanel::Layers));
         let _ = app.update(Message::PanelToggled(DockPanel::Layers));
-        assert!(!app.dock.layers_collapsed);
+        assert_eq!(
+            app.docks.slot(DockPanel::Layers),
+            Some(docking::Slot::Docked(docking::Side::Right, 1))
+        );
+
+        // Görevler arkadaki sekmesinden öne gelir. Tablo komutu arkadaki
+        // tabloyu öne getirir, öndeyse kapatır.
+        let _ = app.update(Message::PanelShown(DockPanel::Tasks));
+        assert!(app.docks.is_shown(DockPanel::Tasks));
+
+        submit(&mut app, "tablo");
+        assert!(app.docks.is_shown(DockPanel::Table));
+        submit(&mut app, "tablo");
+        assert!(!app.docks.contains(DockPanel::Table));
+        let _ = app.update(Message::OpenTable(2));
+        assert!(app.docks.is_shown(DockPanel::Table));
     }
 
     #[test]

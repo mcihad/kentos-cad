@@ -1,54 +1,123 @@
-//! Yan paneller: katmanlar ve özellikler (nesne inceleyici). Ölçüm, harita
-//! üstündeki kayan pencerededir.
+//! Yuva: kenarlardaki paneller (katmanlar, özellikler, öznitelik tablosu,
+//! görevler) ve ortadaki harita. Ölçüm, koordinata git ve katman stili
+//! harita üstündeki kayan pencerelerdedir.
 
 use iced::widget::{button, column, container, row, space, tooltip};
-use iced::{Center, Element, Fill, FillPortion};
+use iced::{Center, Element, Fill};
 
 use kentos_rc::attribute::{DateTime, FieldKind, ObjectId, text};
 use kentos_rc::icon::{Icon, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::{Geometry, format};
 use kentos_rc::style;
-use kentos_rc::widget::{Dock, Inspector, Panel, Tip, swatch, tip};
+use kentos_rc::widget::progress;
+use kentos_rc::widget::{
+    DockSpace, Inspector, Pane, Task, TaskList, Tip, horizontal_divider, swatch, tip,
+};
 
-use crate::app::{DOCK_WIDTH, Showcase, TIME_ZONE};
+use crate::app::{Showcase, TIME_ZONE};
+use crate::jobs::JobState;
 use crate::message::{DockPanel, Message};
 
 impl Showcase {
-    pub(super) fn dock(&self) -> Element<'_, Message> {
-        let details =
-            Panel::new("Özellikler", self.inspector_panel()).meta(match self.selection.len() {
-                0 => "Seçim yok".to_owned(),
-                count => format!("{count} öğe seçili"),
-            });
+    /// Ortadaki içeriğin çevresinde yuvadaki paneller. Panelin gövdesi
+    /// yalnızca görünürken kurulur; başlığın sağında kısa bilgisi ve
+    /// eylemleri durur.
+    pub(super) fn dock_space<'a>(
+        &'a self,
+        center: impl Into<Element<'a, Message>>,
+    ) -> Element<'a, Message> {
+        DockSpace::new(center, &self.docks, Message::Dock, move |panel| {
+            let pane = Pane::new(panel.title(), move || self.panel_body(panel)).icon(panel.icon());
 
-        Dock::new(self.dock.width)
-            .resizable(DOCK_WIDTH, Message::DockResized)
-            .on_resize_end(Message::DockResizeEnded)
-            .push(
-                Panel::new("Katmanlar", self.layer_panel())
-                    .meta(format!(
-                        "{} katman, {} grup",
-                        self.layers.len(),
-                        self.layer_tree.groups.len()
-                    ))
-                    .trailing(self.layer_panel_actions())
-                    .collapsible(
-                        self.dock.layers_collapsed,
-                        Message::PanelToggled(DockPanel::Layers),
-                    )
-                    .height(FillPortion(5)),
-            )
-            .push(
-                details
-                    .collapsible(
-                        self.dock.details_collapsed,
-                        Message::PanelToggled(DockPanel::Details),
-                    )
-                    .height(FillPortion(6))
+            match panel {
+                DockPanel::Layers => pane.actions(
+                    row![
+                        label::caption(format!(
+                            "{} katman, {} grup",
+                            self.layers.len(),
+                            self.layer_tree.groups.len()
+                        )),
+                        self.layer_panel_actions(),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                ),
+                DockPanel::Details => pane
+                    .actions(label::caption(match self.selection.len() {
+                        0 => "Seçim yok".to_owned(),
+                        count => format!("{count} öğe seçili"),
+                    }))
                     .scrollable(),
-            )
-            .into()
+                DockPanel::Table => pane.actions(label::caption(self.table_meta())),
+                DockPanel::Tasks => {
+                    let active = self.jobs.iter().filter(|job| job.is_active()).count();
+                    let meta = match (active, self.jobs.failed()) {
+                        (0, 0) => String::new(),
+                        (0, failed) => format!("{failed} başarısız"),
+                        (active, _) => format!("{active} etkin"),
+                    };
+
+                    pane.actions(label::caption(meta)).scrollable()
+                }
+            }
+        })
+        .into()
+    }
+
+    fn panel_body(&self, panel: DockPanel) -> Element<'_, Message> {
+        match panel {
+            DockPanel::Layers => self.layer_panel(),
+            DockPanel::Details => self.inspector_panel(),
+            DockPanel::Table => self.attribute_table(),
+            DockPanel::Tasks => self.tasks_panel(),
+        }
+    }
+
+    /// Arka plandaki işler: süren, sıradaki ve biten işler; iptal, yeniden
+    /// deneme ve listeden kaldırma.
+    fn tasks_panel(&self) -> Element<'_, Message> {
+        if self.jobs.is_empty() {
+            return container(label::caption(
+                "Süren iş yok. Dışa aktarma uygulama menüsünden, dizin oluşturma Yönet \
+                 sekmesinden başlar.",
+            ))
+            .padding([12, 12])
+            .into();
+        }
+
+        let tasks = self.jobs.iter().map(|job| {
+            let state = match &job.state {
+                JobState::Queued => progress::State::Queued,
+                JobState::Running => progress::State::Running(job.progress()),
+                JobState::Done => progress::State::Done,
+                JobState::Failed(_) => progress::State::Failed,
+                JobState::Cancelled => progress::State::Cancelled,
+            };
+
+            Task::new(job.title())
+                .detail(job.detail())
+                .state(state)
+                .on_cancel(Message::JobCancelled(job.id))
+                .on_retry(Message::JobRetried(job.id))
+                .on_dismiss(Message::JobDismissed(job.id))
+        });
+
+        let mut body = column![TaskList::new().extend(tasks)];
+
+        if self.jobs.has_finished() {
+            body = body.push(horizontal_divider()).push(
+                container(
+                    button(label::caption("Bitenleri kaldır").style(style::text::default))
+                        .on_press(Message::JobsCleared)
+                        .padding([2, 8])
+                        .style(style::button::flat),
+                )
+                .padding([6, 8]),
+            );
+        }
+
+        body.into()
     }
 
     /// Birincil öğenin nesne inceleyicisi: başlıkta adı ve seçimde gezinme,

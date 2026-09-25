@@ -190,6 +190,10 @@ pub enum Event<K> {
     Raised(usize),
     /// Yüzen pencere yuvaya, geldiği kenara döndü.
     Docked(usize),
+    /// Tutamak ya da yüzen pencere bırakıldı: sürüklerken bildirilen
+    /// boyut ve konum son hâlini aldı (ör. yerleşimi saklamak için).
+    /// Yerleşimi değiştirmez.
+    Settled,
 }
 
 /// Yığın: aynı yeri sekmelerle paylaşan paneller.
@@ -242,8 +246,17 @@ struct Area<K> {
 pub struct Docks<K> {
     areas: [Area<K>; 3],
     floats: Vec<Float<K>>,
-    /// Kapanan panellerin son kenarı; yeniden açılınca oraya döner.
-    closed: Vec<(K, Side)>,
+    /// Kapanan panellerin son yeri; yeniden açılınca oraya döner.
+    closed: Vec<Closed<K>>,
+}
+
+/// Kapanan panelin yeri: kenarı ve yığınındaki komşusu (tek başınaysa
+/// yok).
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Closed<K> {
+    key: K,
+    side: Side,
+    neighbour: Option<K>,
 }
 
 impl<K: Copy + PartialEq> Default for Docks<K> {
@@ -336,32 +349,60 @@ impl<K: Copy + PartialEq> Docks<K> {
         self.put(key, Target::Float(bounds), home);
     }
 
-    /// Paneli gösterir: kapalıysa son bulunduğu kenarda (hiç açılmadıysa
-    /// `side`'da) açar, sekmesini öne getirir, yığınını açar.
+    /// Paneli gösterir, sekmesini öne getirir, yığınını açar. Kapalıysa
+    /// kapandığı yere döner: yığınındaki komşusu hâlâ açıksa onun yanına,
+    /// yığınında tek başınaysa kenarının sonuna yeni yığın olarak. Hiç
+    /// açılmadıysa `side`'ın son yığınına katılır.
     pub fn show(&mut self, key: K, side: Side) {
         if !self.contains(key) {
-            let side = self
+            let closed = self
                 .closed
                 .iter()
                 .rev()
-                .find(|(closed, _)| *closed == key)
-                .map_or(side, |(_, side)| *side);
+                .find(|closed| closed.key == key)
+                .copied();
 
-            self.dock(key, side);
+            match closed {
+                Some(closed) => {
+                    let beside = closed
+                        .neighbour
+                        .and_then(|neighbour| self.locate(neighbour))
+                        .and_then(|(slot, _)| {
+                            self.stack(slot).map(|stack| (slot, stack.tabs.len()))
+                        });
+
+                    match beside {
+                        Some((slot, end)) => self.put(key, Target::Tab(slot, end), closed.side),
+                        None => self.put(key, Target::Edge(closed.side), closed.side),
+                    }
+                }
+                None => self.dock(key, side),
+            }
         }
 
         self.select(key);
     }
 
-    /// Paneli kapatır; yeniden açılınca aynı kenara döner.
+    /// Paneli kapatır; yeniden açılınca kapandığı yere döner.
     pub fn close(&mut self, key: K) -> bool {
-        let Some(home) = self.home(key) else {
+        let (Some(side), Some((slot, index))) = (self.home(key), self.locate(key)) else {
             return false;
         };
+        let neighbour = self.stack(slot).and_then(|stack| {
+            index
+                .checked_sub(1)
+                .and_then(|left| stack.tabs.get(left))
+                .or_else(|| stack.tabs.get(index + 1))
+                .copied()
+        });
 
         self.remove(key);
-        self.closed.retain(|(closed, _)| *closed != key);
-        self.closed.push((key, home));
+        self.closed.retain(|closed| closed.key != key);
+        self.closed.push(Closed {
+            key,
+            side,
+            neighbour,
+        });
         true
     }
 
@@ -404,6 +445,7 @@ impl<K: Copy + PartialEq> Docks<K> {
                 }
             }
             Event::Raised(index) => self.raise(index),
+            Event::Settled => {}
             Event::Docked(index) => {
                 if index < self.floats.len() {
                     let float = self.floats.remove(index);
@@ -2537,6 +2579,12 @@ where
                         )));
                     }
                     (_, mouse::Event::ButtonReleased(_)) => {
+                        // Sürüklerken bildirilen boyut ya da konum son
+                        // hâlini aldı.
+                        if !matches!(state.gesture, Some(Gesture::Press { .. })) {
+                            shell.publish((self.on_event)(Event::Settled));
+                        }
+
                         state.gesture = None;
                         shell.request_redraw();
                     }
@@ -3594,11 +3642,18 @@ mod tests {
         assert!(docks.is_shown(P::A));
         assert_eq!(tabs(&docks, Side::Left), [vec![P::A, P::B]]);
 
-        // Kapanan panel yeniden açılınca aynı kenara döner.
+        // Kapanan panel yeniden açılınca kapandığı yere döner: tek
+        // başınaysa kendi yığınına, değilse komşusunun yanına.
         assert!(docks.close(P::D));
         assert_eq!(tabs(&docks, Side::Right), [vec![P::C]]);
         docks.show(P::D, Side::Bottom);
-        assert_eq!(tabs(&docks, Side::Right), [vec![P::C, P::D]]);
+        assert_eq!(tabs(&docks, Side::Right), [vec![P::C], vec![P::D]]);
+
+        assert!(docks.close(P::A));
+        docks.update(Event::Moved(P::B, Target::Edge(Side::Bottom)));
+        docks.show(P::A, Side::Right);
+        assert_eq!(tabs(&docks, Side::Bottom), [vec![P::E], vec![P::B, P::A]]);
+        assert!(docks.stacks(Side::Left).is_empty());
 
         // Görünen panel kapanır, görünmeyen gösterilir.
         assert!(!docks.toggle(P::D, Side::Left));
@@ -3606,6 +3661,7 @@ mod tests {
         assert!(docks.is_shown(P::D));
 
         // Öndeki panel kapanınca solundaki öne gelir.
+        docks.dock(P::D, Side::Right);
         docks.close(P::D);
         assert_eq!(docks.stacks(Side::Right)[0].active(), Some(P::C));
         assert!(!docks.close(P::D));

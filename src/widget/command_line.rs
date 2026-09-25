@@ -74,6 +74,9 @@ use crate::theme::{Tokens, typography};
 use crate::widget::dropdown::propagate;
 use crate::widget::horizontal_divider;
 
+/// Geçmiş kapalıyken varsayılan olarak gösterilen satır sayısı.
+pub const LINES: usize = 3;
+
 /// Geçmiş satırının yüksekliği.
 const LINE_HEIGHT: f32 = 18.0;
 /// Geçmiş açıkken görünen satır sayısı.
@@ -117,6 +120,19 @@ fn line_height() -> f32 {
 
 fn input_height() -> f32 {
     typography::scaled(INPUT_HEIGHT)
+}
+
+/// Komut kutusunun yüksekliği: geçmiş kapalıyken `lines` satır ya da açık
+/// geçmiş, altında giriş satırı. Kutunun üstünde duracak öğeler için (ör.
+/// bildirimler).
+pub fn height(lines: usize, expanded: bool) -> f32 {
+    let shown = if expanded {
+        EXPANDED_LINES
+    } else {
+        lines.max(1)
+    };
+
+    2.0 + shown as f32 * line_height() + 8.0 + input_height()
 }
 
 fn row_height() -> f32 {
@@ -326,7 +342,7 @@ impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
             },
             commands: Vec::new(),
             prompt: None,
-            lines: 3,
+            lines: LINES,
             expanded: false,
             on_expand: None,
             id: None,
