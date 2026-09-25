@@ -202,6 +202,28 @@ pub struct SettingsSchema {
     pub groups: Vec<SettingGroup>,
     pub settings: Vec<SettingDescriptor>,
     pub presets: Vec<SettingsPreset>,
+    /// Every error code with its Turkish message: every host says the same.
+    pub errors: Vec<SettingErrorText>,
+    /// Every reason an effective value differs, with its Turkish text.
+    pub reasons: Vec<ResolveReasonText>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SettingErrorText {
+    pub code: SettingErrorCode,
+    pub message: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ResolveReasonText {
+    pub reason: ResolveReason,
+    pub message: String,
 }
 
 impl SettingsSchema {
@@ -245,6 +267,19 @@ pub enum SettingErrorCode {
 }
 
 impl SettingErrorCode {
+    pub const ALL: [Self; 10] = [
+        Self::UnknownKey,
+        Self::WrongType,
+        Self::NotInteger,
+        Self::OutOfRange,
+        Self::NotAllowed,
+        Self::WrongScope,
+        Self::Sensitive,
+        Self::NotJson,
+        Self::NotSettings,
+        Self::UnsupportedVersion,
+    ];
+
     /// What went wrong and how to fix it, in Turkish (CLAUDE.md §8).
     pub fn message(self) -> &'static str {
         match self {
@@ -383,6 +418,28 @@ pub enum ResolveReason {
     DeviceUnsupported,
     /// The device refused the value when it was applied; the last working one is in use.
     DeviceFailed,
+}
+
+impl ResolveReason {
+    pub const ALL: [Self; 4] = [
+        Self::OrganizationLocked,
+        Self::OrganizationLimit,
+        Self::DeviceUnsupported,
+        Self::DeviceFailed,
+    ];
+
+    /// Why the value in use differs from the one asked for, in Turkish; the
+    /// constraint's or the policy's own detail follows it.
+    pub fn message(self) -> &'static str {
+        match self {
+            Self::OrganizationLocked => "Kurum politikası bu ayarı sabitliyor.",
+            Self::OrganizationLimit => "Kurum politikası bu değere izin vermiyor.",
+            Self::DeviceUnsupported => "Bu aygıt istenen değeri desteklemiyor.",
+            Self::DeviceFailed => {
+                "İstenen değer bu aygıtta uygulanamadı; son çalışan değer kullanılıyor."
+            }
+        }
+    }
 }
 
 /// What a host can use for one setting (TODOS.md AA-01): values outside

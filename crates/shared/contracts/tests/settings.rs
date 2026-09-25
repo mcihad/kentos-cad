@@ -422,6 +422,55 @@ fn every_setting_is_described_completely() {
     }
 }
 
+/// Every error code and reason has its message in the schema, so each host shows the same text.
+#[test]
+fn every_code_and_reason_has_its_message() {
+    /// The names an enum's JSON Schema allows (`enum`, or one `const` per documented variant).
+    fn variants(schema: serde_json::Value) -> Vec<String> {
+        let parts = schema["oneOf"].as_array().cloned().unwrap_or_default();
+        let mut out: Vec<String> = parts
+            .iter()
+            .chain(std::iter::once(&schema))
+            .flat_map(|p| {
+                let listed = p["enum"].as_array().cloned().unwrap_or_default();
+                listed.into_iter().chain(p.get("const").cloned())
+            })
+            .filter_map(|v| v.as_str().map(str::to_owned))
+            .collect();
+        out.sort();
+        out
+    }
+    let schema = settings_schema();
+    let codes = variants(schemars::schema_for!(SettingErrorCode).to_value());
+    let mut listed: Vec<String> = schema
+        .errors
+        .iter()
+        .map(|e| {
+            serde_json::to_value(e.code)
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_owned))
+                .unwrap_or_default()
+        })
+        .collect();
+    listed.sort();
+    assert_eq!(listed, codes);
+    assert!(schema.errors.iter().all(|e| !e.message.is_empty()));
+    let reasons = variants(schemars::schema_for!(kentos_contracts::ResolveReason).to_value());
+    let mut listed: Vec<String> = schema
+        .reasons
+        .iter()
+        .map(|r| {
+            serde_json::to_value(r.reason)
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_owned))
+                .unwrap_or_default()
+        })
+        .collect();
+    listed.sort();
+    assert_eq!(listed, reasons);
+    assert!(schema.reasons.iter().all(|r| !r.message.is_empty()));
+}
+
 fn generated(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../../apps/web/src/contracts/generated")

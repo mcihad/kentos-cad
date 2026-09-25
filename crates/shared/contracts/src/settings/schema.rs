@@ -10,14 +10,14 @@
 use serde_json::{Value, json};
 
 use super::{
-    SETTINGS_SCHEMA_FORMAT, SETTINGS_SCHEMA_VERSION, SettingApply, SettingChoice,
-    SettingDescriptor, SettingGroup, SettingHost, SettingScope, SettingType, SettingsPreset,
-    SettingsSchema,
+    ResolveReason, ResolveReasonText, SETTINGS_SCHEMA_FORMAT, SETTINGS_SCHEMA_VERSION,
+    SettingApply, SettingChoice, SettingDescriptor, SettingErrorCode, SettingErrorText,
+    SettingGroup, SettingHost, SettingScope, SettingType, SettingsPreset, SettingsSchema,
 };
 
 use SettingHost::{Desktop, Web};
 
-/// Every setting, group and preset of this version.
+/// Every setting, group and preset of this version, and the messages.
 pub fn settings_schema() -> SettingsSchema {
     SettingsSchema {
         format: SETTINGS_SCHEMA_FORMAT.into(),
@@ -25,6 +25,20 @@ pub fn settings_schema() -> SettingsSchema {
         groups: groups(),
         settings: settings(),
         presets: presets(),
+        errors: SettingErrorCode::ALL
+            .iter()
+            .map(|&code| SettingErrorText {
+                code,
+                message: code.message().into(),
+            })
+            .collect(),
+        reasons: ResolveReason::ALL
+            .iter()
+            .map(|&reason| ResolveReasonText {
+                reason,
+                message: reason.message().into(),
+            })
+            .collect(),
     }
 }
 

@@ -998,5 +998,65 @@
         "graphics.msaa": 4
       }
     }
+  ],
+  "errors": [
+    {
+      "code": "unknown_key",
+      "message": "Bu sürümde böyle bir ayar yok; değer saklanır ama kullanılmaz."
+    },
+    {
+      "code": "wrong_type",
+      "message": "Değerin türü yanlış; ayarın türünde bir değer girin."
+    },
+    {
+      "code": "not_integer",
+      "message": "Tam sayı olmalı; ondalık kısmı kaldırın."
+    },
+    {
+      "code": "out_of_range",
+      "message": "Değer izin verilen aralığın dışında; aralıktaki bir değer seçin."
+    },
+    {
+      "code": "not_allowed",
+      "message": "Bu değer seçeneklerden biri değil; listeden seçin."
+    },
+    {
+      "code": "wrong_scope",
+      "message": "Bu ayar bu katmanda saklanmaz (örneğin proje ayarı kullanıcı tercihinde)."
+    },
+    {
+      "code": "sensitive",
+      "message": "Gizli değerler ayar dosyasına yazılmaz ve dosyadan okunmaz; yeniden girin."
+    },
+    {
+      "code": "not_json",
+      "message": "Dosya JSON değil; KentOS'tan dışa aktarılmış bir ayar dosyası seçin."
+    },
+    {
+      "code": "not_settings",
+      "message": "Bu bir KentOS ayar dosyası değil (format ≠ kentos.settings); doğru dosyayı seçin."
+    },
+    {
+      "code": "unsupported_version",
+      "message": "Ayar dosyası bu uygulamanın okuyamadığı bir sürümde; uygulamayı güncelleyin."
+    }
+  ],
+  "reasons": [
+    {
+      "reason": "organization_locked",
+      "message": "Kurum politikası bu ayarı sabitliyor."
+    },
+    {
+      "reason": "organization_limit",
+      "message": "Kurum politikası bu değere izin vermiyor."
+    },
+    {
+      "reason": "device_unsupported",
+      "message": "Bu aygıt istenen değeri desteklemiyor."
+    },
+    {
+      "reason": "device_failed",
+      "message": "İstenen değer bu aygıtta uygulanamadı; son çalışan değer kullanılıyor."
+    }
   ]
 }
