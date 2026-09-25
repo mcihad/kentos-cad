@@ -354,6 +354,14 @@ impl Showcase {
             subscriptions.push(iced::time::every(Duration::from_millis(33)).map(|_| Message::Tick));
         }
 
+        // Galerideki zaman çizelgeleri yalnızca oynatılırken ilerletilir.
+        if self.ribbon_tab == RibbonTab::Gallery && self.gallery.is_playing() {
+            subscriptions.push(
+                iced::time::every(Duration::from_millis(16))
+                    .map(|now| Message::Gallery(Demo::Tick(now))),
+            );
+        }
+
         // Arka plandaki işler yalnızca sürerken ilerletilir.
         if self.jobs.is_busy() {
             subscriptions.push(iced::time::every(JOB_STEP).map(|_| Message::JobTick));
@@ -2937,6 +2945,28 @@ mod tests {
         assert!(app.rulers);
         let _ = app.update(Message::RulersToggled);
         assert!(!app.rulers);
+    }
+
+    #[test]
+    fn gallery_timelines_play_with_the_ticks() {
+        use kentos_rc::widget::timeline::Event;
+
+        let mut app = Showcase::new();
+        let start = iced::time::Instant::now();
+
+        let _ = app.update(Message::Gallery(Demo::Animation(Event::Play(true))));
+        assert!(app.gallery.is_playing());
+
+        // İlk tur yalnızca anı kaydeder; yarım saniye 24 kare/saniyede 12
+        // karedir.
+        let _ = app.update(Message::Gallery(Demo::Tick(start)));
+        let _ = app.update(Message::Gallery(Demo::Tick(
+            start + Duration::from_millis(500),
+        )));
+        assert!((app.gallery.animation.current - 12.0).abs() < 1e-6);
+
+        let _ = app.update(Message::Gallery(Demo::Animation(Event::Play(false))));
+        assert!(!app.gallery.is_playing());
     }
 
     #[test]

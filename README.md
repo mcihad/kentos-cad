@@ -28,6 +28,7 @@ src/                     kentos-rc kütüphanesi
 ├── widget/              uygulama çerçevesi
 │   ├── ribbon/          şerit: sekmeler, gruplar, düğmeler, alanlar
 │   ├── rulers.rs        cetveller ve kılavuzlar: birimli çizgiler, sürüklenen kılavuzlar
+│   ├── timeline.rs      zaman çizelgesi: oynatma başı, aralık, işaretler, takvim ölçeği
 │   ├── compass.rs       pusula ve pafta kuzey oku
 │   ├── app_menu.rs      uygulama menüsü (Office "Dosya" menüsü gibi)
 │   ├── dock.rs          yan panel yuvası: açılıp kapanan paneller, sürüklenen kenar
@@ -540,6 +541,39 @@ Form::new()
 
 RangeSlider::new(0.0..=16e6, self.population, Message::PopulationRange)
     .histogram(&range::histogram(values, 0.0..=16e6, 32))
+```
+
+### Zaman çizelgesi
+
+`Timeline` zamanlı verinin ya da animasyonun oynatma başını, seçili aralığını
+ve işaretlerini gösterir; üstünde oynatma denetimleri durur (başa, geri,
+oynat/duraklat, ileri, sona, döngü, hız, tümünü göster).
+
+- **Durum uygulamanındır.** `Playback` tüm süreyi, görünen pencereyi,
+  oynatma başını, aralığı, hızı ve döngüyü tutar; çizelge her değişikliği
+  `timeline::Event` ile bildirir. Oynatılırken uygulama bir zamanlayıcıyla
+  `advance(geçen)` çağırır: oynatma aralıkta (yoksa baştan sona) döner ya da
+  sonda durur, pencere oynatma başını izler.
+- **Eksen.** Tıklamak ve sürüklemek oynatma başını taşır; tekerlek imlecin
+  altındaki ana göre yakınlaştırır, Shift ile kaydırır. `Scale::Number`
+  1, 2, 5 × 10ⁿ adımlarla sayar (kare, saniye); `Scale::Calendar` Unix
+  saniyesini yerel saatle yazar ve yakınlaştıkça yıldan aya, haftaya
+  (pazartesi), güne, saate ve dakikaya iner. Ay adları Türkçedir.
+- **Aralık ve işaretler.** Aralık şeridinde sürüklemek aralık seçer, uçları
+  ve gövdesi sürüklenir, boş yere tıklamak kaldırır. İşaretlerin üzerine
+  gelince adı yazar, tıklamak oynatma başını oraya taşır.
+- **Vitrinde.** Girdiler sayfasında bir kentsel dönüşüm projesinin takvimi
+  (aşamalar işaret) ve kareye göre dönen ev modeliyle 24 kare/saniyelik bir
+  animasyon.
+
+```rust
+Timeline::new(&self.playback, Message::Timeline)
+    .scale(Scale::Calendar { offset: 180 })
+    .marker(Marker::new(permit, "Yapı ruhsatı"))
+
+// update
+Message::Timeline(event) => self.playback.update(event),
+Message::Tick(elapsed) => self.playback.advance(elapsed),
 ```
 
 ## Geri bildirim

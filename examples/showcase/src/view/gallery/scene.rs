@@ -88,11 +88,15 @@ const FACES: [(&[usize], f32); 7] = [
     (&[0, 3, 2, 1], 0.4),
 ];
 
-/// Tuvalde çizilen sahne.
+/// Tuvalde çizilen sahne. Perspektif bakış `yaw` derece döner.
 pub struct Scene {
     pub camera: Camera,
     pub shading: Shading,
+    pub yaw: f32,
 }
+
+/// Perspektif bakışın açılıştaki dönüşü.
+pub const YAW: f32 = -35.0;
 
 impl Scene {
     /// Noktanın bakıştaki ekran konumu (yukarı eksi y) ve derinliği
@@ -105,7 +109,7 @@ impl Scene {
             Camera::Perspective => {
                 // Modelin ortası çevresinde döndürülür, sonra eğilir.
                 let (cx, cy, cz) = (x - 2.0, y - 1.5, z - 1.5);
-                let yaw = (-35.0_f32).to_radians();
+                let yaw = self.yaw.to_radians();
                 let pitch = 28.0_f32.to_radians();
                 let (sy, cyaw) = yaw.sin_cos();
                 let rx = cx * cyaw - cy * sy;

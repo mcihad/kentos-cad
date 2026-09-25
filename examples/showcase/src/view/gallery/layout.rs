@@ -18,7 +18,7 @@ use super::{entry, pressed};
 use crate::app::Showcase;
 use crate::gallery::{Demo, DemoPanel};
 use crate::message::Message;
-use crate::view::gallery::scene::{Camera, Scene, Shading};
+use crate::view::gallery::scene::{self, Camera, Scene, Shading};
 
 impl Showcase {
     pub(super) fn layout_page(&self) -> Vec<Element<'_, Message>> {
@@ -204,31 +204,38 @@ impl Showcase {
                 let camera = gallery.cameras[index];
                 let shading = gallery.shadings[index];
 
-                View::new(canvas(Scene { camera, shading }).width(Fill).height(Fill))
-                    .menu(camera.label(), move || {
-                        Camera::ALL.into_iter().fold(
-                            Menu::new().header("Bakış"),
-                            |menu, choice| {
-                                menu.check(
-                                    choice.label(),
-                                    choice == camera,
-                                    Message::Gallery(Demo::Camera(index, choice)),
-                                )
-                            },
-                        )
+                View::new(
+                    canvas(Scene {
+                        camera,
+                        shading,
+                        yaw: scene::YAW,
                     })
-                    .menu(shading.label(), move || {
-                        Shading::ALL.into_iter().fold(
-                            Menu::new().header("Görsel stil"),
-                            |menu, choice| {
-                                menu.check(
-                                    choice.label(),
-                                    choice == shading,
-                                    Message::Gallery(Demo::Shading(index, choice)),
-                                )
-                            },
-                        )
-                    })
+                    .width(Fill)
+                    .height(Fill),
+                )
+                .menu(camera.label(), move || {
+                    Camera::ALL
+                        .into_iter()
+                        .fold(Menu::new().header("Bakış"), |menu, choice| {
+                            menu.check(
+                                choice.label(),
+                                choice == camera,
+                                Message::Gallery(Demo::Camera(index, choice)),
+                            )
+                        })
+                })
+                .menu(shading.label(), move || {
+                    Shading::ALL.into_iter().fold(
+                        Menu::new().header("Görsel stil"),
+                        |menu, choice| {
+                            menu.check(
+                                choice.label(),
+                                choice == shading,
+                                Message::Gallery(Demo::Shading(index, choice)),
+                            )
+                        },
+                    )
+                })
             },
         );
 

@@ -50,6 +50,7 @@ use iced::{
 
 use crate::attribute::number;
 use crate::theme::{Tokens, typography};
+use crate::widget::axis;
 
 /// Cetvelin kalınlığı, 12 piksellik gövde metnine göre.
 const THICKNESS: f32 = 18.0;
@@ -231,34 +232,15 @@ impl Transform {
 }
 
 /// Etiketli çizgilerin aralığı (birim) ve iki etiket arasındaki bölüm
-/// sayısı. Etiketler en az `LABEL_SPACING`, küçük çizgiler en az
-/// `TICK_SPACING` piksel aralıklıdır; aralık 1, 2 ya da 5 × 10ⁿ birimdir.
+/// sayısı; aralık 1, 2 ya da 5 × 10ⁿ birimdir.
 fn ticks(scale: f32) -> (f32, u32) {
-    let raw = LABEL_SPACING / scale.max(f32::EPSILON);
-    let base = 10f32.powf(raw.log10().floor());
-    let (nice, parts): (f32, &[u32]) = match raw / base {
-        mantissa if mantissa <= 1.0 => (1.0, &[10, 5, 2]),
-        mantissa if mantissa <= 2.0 => (2.0, &[4, 2]),
-        mantissa if mantissa <= 5.0 => (5.0, &[5]),
-        _ => (10.0, &[10, 5, 2]),
-    };
-    let major = nice * base;
-    let parts = parts
-        .iter()
-        .copied()
-        .find(|parts| major * scale / *parts as f32 >= TICK_SPACING)
-        .unwrap_or(1);
+    let (major, parts) = axis::nice(
+        f64::from(scale),
+        f64::from(LABEL_SPACING),
+        f64::from(TICK_SPACING),
+    );
 
-    (major, parts)
-}
-
-/// Etiketteki ondalık basamak sayısı: aralık 1'den küçükse gereken kadar.
-fn decimals(major: f32) -> usize {
-    if major >= 1.0 {
-        0
-    } else {
-        (-major.log10() - 1e-3).ceil().max(0.0) as usize
-    }
+    (major as f32, parts)
 }
 
 /// Shift basılıyken kılavuz küçük çizgilere oturur.
@@ -647,7 +629,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Rulers<'a, Message> {
 
         let transform = self.transform;
         let (major, parts) = ticks(transform.scale);
-        let decimals = decimals(major);
+        let decimals = axis::decimals(f64::from(major));
         let step = major / parts as f32;
         let font = typography::mono();
         let size = Pixels(typography::scaled(9.0).round());
@@ -1034,15 +1016,6 @@ mod tests {
         let (major, parts) = ticks(0.01);
         assert_eq!(major, 10_000.0);
         assert!(major * 0.01 / parts as f32 >= TICK_SPACING);
-    }
-
-    #[test]
-    fn labels_show_as_many_decimals_as_the_step_needs() {
-        assert_eq!(decimals(50.0), 0);
-        assert_eq!(decimals(1.0), 0);
-        assert_eq!(decimals(0.5), 1);
-        assert_eq!(decimals(0.2), 1);
-        assert_eq!(decimals(0.05), 2);
     }
 
     #[test]

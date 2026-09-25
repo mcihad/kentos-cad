@@ -10,6 +10,7 @@
 //! okur.
 
 pub mod app_menu;
+mod axis;
 pub mod chips;
 pub mod color;
 pub mod command_line;
@@ -45,6 +46,7 @@ pub mod status_bar;
 pub mod switch;
 pub mod table;
 pub mod tabs;
+pub mod timeline;
 pub mod toast;
 pub mod toolbar;
 pub mod tree_view;
@@ -88,6 +90,7 @@ pub use status_bar::StatusBar;
 pub use switch::Switch;
 pub use table::Table;
 pub use tabs::{Tab, Tabs};
+pub use timeline::Timeline;
 pub use tip::{Tip, tip};
 pub use toast::{Toast, Toaster, Toasts};
 pub use toolbar::Toolbar;

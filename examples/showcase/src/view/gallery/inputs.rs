@@ -11,13 +11,15 @@ use kentos_rc::theme::typography;
 use kentos_rc::widget::color::{self, ColorPicker};
 use kentos_rc::widget::number::{self, Dial, units};
 use kentos_rc::widget::range::histogram;
-use kentos_rc::widget::{ChipInput, Form, NumberInput, RadioGroup, RangeSlider, Switch};
+use kentos_rc::widget::timeline::{self, Marker, Scale};
+use kentos_rc::widget::{ChipInput, Form, NumberInput, RadioGroup, RangeSlider, Switch, Timeline};
 
 use super::entry;
 use crate::app::Showcase;
-use crate::gallery::Demo;
+use crate::gallery::{self, Demo, KEYFRAMES, MILESTONES};
 use crate::message::Message;
 use crate::sample;
+use crate::view::gallery::scene::{self, Camera, Scene, Shading};
 
 /// Nüfus aralığı örneğinin sınırları ve histogramın aralık sayısı.
 const POPULATION: std::ops::RangeInclusive<f64> = 0.0..=16_000_000.0;
@@ -428,6 +430,36 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Zaman çizelgesi",
+                "kentos_rc::widget::Timeline",
+                "Zamanlı verinin oynatma başı, aralığı ve olayları: burada bir kentsel dönüşüm \
+                 projesinin takvimi. Eksene tıklayın ya da sürükleyin; tekerlek imlecin altındaki \
+                 ana göre yakınlaştırır, Shift ile kaydırır, ⤢ tümünü gösterir. Aralık şeridinde \
+                 sürükleyerek aralık seçin; oynatma aralıkta döner. Yakınlaştıkça etiketler \
+                 yıldan aya, güne ve saate iner. ◆ işaretlerine tıklamak o aşamaya gider.",
+                self.project_timeline(),
+                Some(
+                    "Timeline::new(&self.playback, Message::Timeline)\n    \
+                         .scale(Scale::Calendar { offset: 180 })\n    \
+                         .marker(Marker::new(permit, \"Yapı ruhsatı\"))\n\n\
+                     // update\n\
+                     Message::Timeline(event) => self.playback.update(event),\n\
+                     Message::Tick(elapsed) => self.playback.advance(elapsed),",
+                ),
+            ),
+            entry(
+                "Animasyon",
+                "kentos_rc::widget::timeline::Scale::Number",
+                "Aynı çizelge kare sayısıyla: 24 kare/saniye, 10 saniye. Oynatın ya da oynatma \
+                 başını sürükleyin; ev modeli kareye göre döner. ◆ anahtar karelerdir; hız \
+                 menüsü ve döngü düğmesi oynatmayı değiştirir.",
+                self.animation_timeline(),
+                Some(
+                    "Timeline::new(&self.animation, Message::Animation)\n    \
+                         .markers(KEYFRAMES.map(|frame| Marker::new(frame, \"Anahtar kare\")))",
+                ),
+            ),
+            entry(
                 "Form düzeni",
                 "kentos_rc::widget::Form",
                 "Etiketler aynı genişlikte bir sütunda, alanın ilk satırına hizalı durur. Bölüm \
@@ -444,6 +476,65 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+}
+
+impl Showcase {
+    /// Proje takvimi: aşamalar işaret, oynatma saniyede bir ay.
+    fn project_timeline(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let phase = MILESTONES
+            .iter()
+            .rev()
+            .find(|(day, month, year, _)| {
+                gallery::unix(*day, *month, *year) <= gallery.project.current
+            })
+            .map_or("Hazırlık", |(_, _, _, name)| name);
+
+        column![
+            Timeline::new(&gallery.project, |event| {
+                Message::Gallery(Demo::Project(event))
+            })
+            .scale(Scale::Calendar { offset: 180 })
+            .markers(MILESTONES.iter().map(|(day, month, year, name)| {
+                Marker::new(gallery::unix(*day, *month, *year), *name)
+            })),
+            label::caption(format!("Aşama: {phase}")),
+        ]
+        .spacing(8)
+        .into()
+    }
+
+    /// Animasyon: kare sayılı çizelge ve kareye göre dönen ev.
+    fn animation_timeline(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let frame = gallery.animation.current;
+        let yaw = scene::YAW + (frame / f64::from(gallery::ANIMATION_FRAMES) * 360.0) as f32;
+
+        column![
+            container(
+                iced::widget::canvas(Scene {
+                    camera: Camera::Perspective,
+                    shading: Shading::ShadedEdges,
+                    yaw,
+                })
+                .width(Fill)
+                .height(typography::scaled(180.0)),
+            )
+            .style(style::container::field),
+            Timeline::new(&gallery.animation, |event| {
+                Message::Gallery(Demo::Animation(event))
+            })
+            .markers(KEYFRAMES.map(|frame| Marker::new(f64::from(frame), "Anahtar kare")),),
+            label::caption(format!(
+                "Kare {} / {}, {} saniye",
+                timeline::format(frame, Scale::Number, 1.0),
+                gallery::ANIMATION_FRAMES,
+                real(frame / 24.0, 2)
+            )),
+        ]
+        .spacing(8)
+        .into()
     }
 }
 

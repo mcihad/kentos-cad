@@ -20,6 +20,7 @@ use kentos_rc::widget::floating::{self, Placement, Windows};
 use kentos_rc::widget::inspector;
 use kentos_rc::widget::rulers::{self, Guide, Guides};
 use kentos_rc::widget::table::SortOrder;
+use kentos_rc::widget::timeline::{self, Playback};
 use kentos_rc::widget::tree_view::Place;
 use kentos_rc::widget::viewports::{self, Arrangement, Views};
 
@@ -95,7 +96,7 @@ impl Page {
             }
             Page::Inputs => {
                 "Birimli sayı, vektör ve açı girişleri; renk seçici ve rampa; anahtar, radyo \
-                 grubu, aralık kaydırıcısı, etiket girişi ve form düzeni."
+                 grubu, aralık kaydırıcısı, etiket girişi, zaman çizelgesi ve form düzeni."
             }
             Page::Feedback => {
                 "Bildirimler, ilerleme ve görevler, onay kutusu, uyarı şeridi, boş ve hata \
@@ -227,6 +228,11 @@ pub enum Demo {
     /// döndürme.
     MapRotated(f64),
     NorthReset,
+    /// Zaman çizelgesi örnekleri: proje takvimi ve animasyon; oynatılırken
+    /// zamanlayıcı.
+    Project(timeline::Event),
+    Animation(timeline::Event),
+    Tick(iced::time::Instant),
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -481,6 +487,10 @@ pub struct Gallery {
     pub ruler_zoom: f64,
     /// Pusula örneği: haritanın saat yönünde dönüşü, derece.
     pub map_rotation: f64,
+    /// Zaman çizelgesi örnekleri ve son zamanlayıcı anı.
+    pub project: Playback,
+    pub animation: Playback,
+    pub last_tick: Option<iced::time::Instant>,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -541,6 +551,39 @@ pub const SHAPES: [(&str, iced::Rectangle, iced::Color); 3] = [
         iced::Color::from_rgb8(0x8f, 0xc9, 0x5a),
     ),
 ];
+
+/// Proje takvimi örneğinin aşamaları: gün, ay, yıl ve adı.
+pub const MILESTONES: [(u8, u8, i32, &str); 7] = [
+    (15, 3, 2024, "İhale"),
+    (1, 6, 2024, "Yapı ruhsatı"),
+    (10, 9, 2024, "Yıkım"),
+    (20, 1, 2025, "Temel"),
+    (5, 8, 2025, "Kaba inşaat"),
+    (10, 2, 2026, "İnce işler"),
+    (30, 9, 2026, "İskân"),
+];
+
+/// Animasyon örneğinin kare sayısı (24 kare/saniye, 10 saniye) ve anahtar
+/// kareleri.
+pub const ANIMATION_FRAMES: u16 = 240;
+pub const KEYFRAMES: [u16; 5] = [0, 60, 120, 180, 240];
+
+/// Tarihin Türkiye saatiyle gece yarısı, Unix saniyesi.
+pub fn unix(day: u8, month: u8, year: i32) -> f64 {
+    Date::new(year, month, day).map_or(0.0, |date| {
+        (date.days_since_epoch() * 86_400) as f64 - 3.0 * 3_600.0
+    })
+}
+
+/// Proje takvimi: 2024 başından 2026 sonuna; 1× hızda saniyede bir ay,
+/// adım bir hafta. Oynatma başı temel atılan günde.
+fn project_playback() -> Playback {
+    let mut playback = Playback::new((unix(1, 1, 2024), unix(31, 12, 2026)), 30.0 * 86_400.0)
+        .with_step(7.0 * 86_400.0);
+
+    playback.update(timeline::Event::Seek(unix(20, 1, 2025)));
+    playback
+}
 
 /// Cetvel örneğinin açılıştaki kılavuzları: A5 kâğıdın 10 mm kenar payı.
 fn sample_guides() -> Guides {
@@ -810,11 +853,20 @@ impl Default for Gallery {
             ruler_guides: sample_guides(),
             ruler_zoom: 100.0,
             map_rotation: 30.0,
+            project: project_playback(),
+            animation: Playback::new((0.0, f64::from(ANIMATION_FRAMES)), 24.0).with_step(1.0),
+            last_tick: None,
         }
     }
 }
 
 impl Gallery {
+    /// Zaman çizelgesi örneklerinden biri oynatılıyor mu; zamanlayıcı
+    /// yalnızca o sürece çalışır.
+    pub fn is_playing(&self) -> bool {
+        self.project.playing || self.animation.playing
+    }
+
     /// Komut kutusu örneğine yazılanı geçmişe ekler; komutlar yalnızca asıl
     /// komut kutusunda çalışır.
     fn echo(&mut self, command: &str) {
@@ -1111,6 +1163,25 @@ impl Gallery {
             Demo::RulerGuidesCleared => self.ruler_guides.clear(),
             Demo::MapRotated(rotation) => self.map_rotation = rotation.rem_euclid(360.0),
             Demo::NorthReset => self.map_rotation = 0.0,
+            // Oynatma başlayınca ilk tur eski andan saymasın.
+            Demo::Project(event) => {
+                self.project.update(event);
+                self.last_tick = None;
+            }
+            Demo::Animation(event) => {
+                self.animation.update(event);
+                self.last_tick = None;
+            }
+            Demo::Tick(now) => {
+                if let Some(last) = self.last_tick {
+                    let elapsed = now.saturating_duration_since(last);
+
+                    self.project.advance(elapsed);
+                    self.animation.advance(elapsed);
+                }
+
+                self.last_tick = Some(now);
+            }
         }
 
         None

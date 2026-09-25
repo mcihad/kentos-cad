@@ -97,6 +97,25 @@ impl Pen {
         });
     }
 
+    /// Dolu, köşeleri yuvarlatılmış üçgen.
+    fn triangle(&self, frame: &mut Frame, a: (f32, f32), b: (f32, f32), c: (f32, f32)) {
+        let path = Path::new(|builder| {
+            builder.move_to(self.p(a.0, a.1));
+            builder.line_to(self.p(b.0, b.1));
+            builder.line_to(self.p(c.0, c.1));
+            builder.close();
+        });
+
+        frame.fill(&path, self.color);
+        frame.stroke(
+            &path,
+            Stroke {
+                width: 0.8 * self.unit,
+                ..self.stroke()
+            },
+        );
+    }
+
     fn magnifier(&self, frame: &mut Frame) {
         self.circle(frame, (6.75, 6.75), 4.75);
         self.line(frame, (10.25, 10.25), (14.0, 14.0));
@@ -912,6 +931,37 @@ impl Pen {
                     &[(8.0, 1.75), (12.25, 14.25), (8.0, 11.0), (3.75, 14.25)],
                     true,
                 );
+            }
+            // Oynatma: sağa bakan dolu üçgen.
+            Icon::Play => self.triangle(frame, (4.5, 2.75), (4.5, 13.25), (13.0, 8.0)),
+            Icon::Pause => {
+                for x in [4.25, 9.25] {
+                    let bar = Path::rounded_rectangle(
+                        self.p(x, 2.75),
+                        iced::Size::new(2.5 * self.unit, 10.5 * self.unit),
+                        (0.6 * self.unit).into(),
+                    );
+
+                    frame.fill(&bar, self.color);
+                }
+            }
+            // Başa: çizgi ve sola bakan üçgen.
+            Icon::SkipBack => {
+                self.line(frame, (3.25, 3.25), (3.25, 12.75));
+                self.triangle(frame, (12.75, 3.25), (12.75, 12.75), (5.25, 8.0));
+            }
+            Icon::SkipForward => {
+                self.line(frame, (12.75, 3.25), (12.75, 12.75));
+                self.triangle(frame, (3.25, 3.25), (3.25, 12.75), (10.75, 8.0));
+            }
+            // Bir adım geri: iki sola bakan üçgen.
+            Icon::StepBack => {
+                self.triangle(frame, (8.0, 3.75), (8.0, 12.25), (1.75, 8.0));
+                self.triangle(frame, (14.25, 3.75), (14.25, 12.25), (8.0, 8.0));
+            }
+            Icon::StepForward => {
+                self.triangle(frame, (1.75, 3.75), (1.75, 12.25), (8.0, 8.0));
+                self.triangle(frame, (8.0, 3.75), (8.0, 12.25), (14.25, 8.0));
             }
             Icon::Measure => {
                 self.line(frame, (1.75, 4.0), (1.75, 12.0));

@@ -127,11 +127,18 @@ pub enum Icon {
     NoSelect,
     Ruler,
     North,
+    // Oynatma
+    Play,
+    Pause,
+    SkipBack,
+    SkipForward,
+    StepBack,
+    StepForward,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 86] = [
+    pub const ALL: [Icon; 92] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -218,6 +225,12 @@ impl Icon {
         Icon::NoSelect,
         Icon::Ruler,
         Icon::North,
+        Icon::Play,
+        Icon::Pause,
+        Icon::SkipBack,
+        Icon::SkipForward,
+        Icon::StepBack,
+        Icon::StepForward,
     ];
 }
 
