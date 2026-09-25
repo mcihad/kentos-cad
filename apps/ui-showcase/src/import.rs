@@ -8,8 +8,8 @@
 
 use iced::Color;
 
-use kentos_rc::attribute::{Field, Value};
-use kentos_rc::spatial::{Feature, Geometry, Layer, LonLat};
+use kentos_ui::attribute::{Field, Value};
+use kentos_ui::spatial::{Feature, Geometry, Layer, LonLat};
 
 /// Sihirbazın adımları.
 pub const STEPS: [&str; 4] = ["Kaynak", "Alanlar", "Koordinat sistemi", "Özet"];

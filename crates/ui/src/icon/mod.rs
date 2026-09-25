@@ -1,11 +1,11 @@
 //! Vektör ikon seti.
 //!
 //! Unicode simgeleri farklı yazı tiplerinden geldiği için boyutları ve
-//! taban çizgileri tutarsızdır. kentos-rc ikonları 16×16'lık bir ızgarada,
+//! taban çizgileri tutarsızdır. kentos-ui ikonları 16×16'lık bir ızgarada,
 //! tek çizgi kalınlığıyla çizilir ve her boyutta aynı optik ağırlığı korur.
 //!
 //! ```ignore
-//! use kentos_rc::icon::{Icon, icon};
+//! use kentos_ui::icon::{Icon, icon};
 //!
 //! button(icon(Icon::ZoomIn)).on_press(Message::ZoomIn)
 //! ```

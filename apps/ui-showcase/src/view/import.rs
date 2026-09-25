@@ -5,12 +5,12 @@ use iced::widget::text::Wrapping;
 use iced::widget::{Column, Row, column, container, pick_list, row, space, text_input};
 use iced::{Center, Element, Fill};
 
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::wizard::{self, Wizard};
-use kentos_rc::widget::{Banner, EmptyState, overlay};
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::wizard::{self, Wizard};
+use kentos_ui::widget::{Banner, EmptyState, overlay};
 
 use crate::app::Showcase;
 use crate::import::{self, CSV_COLUMNS, ImportWizard, PARK_FIELDS, SYSTEMS, Source};

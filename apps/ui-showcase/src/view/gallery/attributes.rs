@@ -8,13 +8,13 @@ use iced::widget::text::Wrapping;
 use iced::widget::{column, container, row};
 use iced::{Center, Element, Fill};
 
-use kentos_rc::attribute::{DateTime, Field, FieldKind, ObjectId, Value, text};
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::spatial::SelectionMode;
-use kentos_rc::style;
-use kentos_rc::widget::table::{self, Table};
-use kentos_rc::widget::{
+use kentos_ui::attribute::{DateTime, Field, FieldKind, ObjectId, Value, text};
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::spatial::SelectionMode;
+use kentos_ui::style;
+use kentos_ui::widget::table::{self, Table};
+use kentos_ui::widget::{
     Choice, DatePicker, Inspector, QueryBuilder, Segmented, Select, TimePicker, Toolbar,
 };
 
@@ -36,7 +36,7 @@ impl Showcase {
         vec![
             entry(
                 "Nesne inceleyici",
-                "kentos_rc::widget::Inspector",
+                "kentos_ui::widget::Inspector",
                 "ArcGIS'teki öznitelik bölmesi ve CAD'deki Özellikler paleti gibi: her alan \
                  türü kendi düzenleyicisiyle. Üstte arama, kategorili ya da alfabetik görünüm \
                  ve boş alanları gizleme; kategoriler başlığa tıklanarak daralır. Değişen \
@@ -59,7 +59,7 @@ impl Showcase {
             ),
             entry(
                 "Tarih ve saat seçicileri",
-                "kentos_rc::widget::DatePicker, TimePicker",
+                "kentos_ui::widget::DatePicker, TimePicker",
                 "Takvim başlığa tıklanınca ay, sonra yıl görünümüne geçer; hafta numaraları \
                  ISO 8601'e göredir, bugün kenarla, hafta sonu sönük gösterilir. Tarih ve \
                  saatte takvimle saat ızgarası yan yana açılır. Panelde gezinmek uygulamaya \
@@ -76,7 +76,7 @@ impl Showcase {
             ),
             entry(
                 "Seçim kutusu",
-                "kentos_rc::widget::Select",
+                "kentos_ui::widget::Select",
                 "Aranabilir açılır liste: seçeneklerde renk örneği, ikon ve sağda ayrıntı. \
                  Uzun listelerde arama kutusu kendiliğinden çıkar ve açılışta odaklanır. \
                  Listenin altına komutlar eklenebilir.",
@@ -88,7 +88,7 @@ impl Showcase {
             ),
             entry(
                 "Öznitelik tablosu",
-                "kentos_rc::widget::Table, Toolbar",
+                "kentos_ui::widget::Table, Toolbar",
                 "Araç çubuğu ve yatay kayan, sıralanabilir tablo. Başlığa tıklayarak \
                  sıralayın; satıra tıklayınca kayıt yukarıdaki inceleyicide açılır ve \
                  kenarıyla işaretlenir. Aşağıdaki sorguya uyan satırlar seçili görünür.",
@@ -102,7 +102,7 @@ impl Showcase {
             ),
             entry(
                 "Sorgu oluşturucu",
-                "kentos_rc::widget::QueryBuilder",
+                "kentos_ui::widget::QueryBuilder",
                 "Öznitelikle seç ve tablo filtresi için koşullar. İşleçler alan türüne göre \
                  değişir; seçenekli alanlarda değer açılır listeden seçilir. Metinler Türkçe \
                  harf ve büyük/küçük harf duyarsız karşılaştırılır.",
@@ -116,7 +116,7 @@ impl Showcase {
             ),
             entry(
                 "Parçalı seçim",
-                "kentos_rc::widget::Segmented",
+                "kentos_ui::widget::Segmented",
                 "Birbirini dışlayan birkaç seçenek; seçim yöntemi ve koşulların birleşimi \
                  gibi. Seçenekler Display ile yazılır.",
                 self.demo_segmented(),
@@ -124,7 +124,7 @@ impl Showcase {
             ),
             entry(
                 "Alan türleri",
-                "kentos_rc::attribute",
+                "kentos_ui::attribute",
                 "Alanın türü değerin nasıl yazılacağını, çözümleneceğini ve denetleneceğini \
                  belirler. Sayılar ve tarihler Türkçe yazılır, metinler Türk alfabesine göre \
                  sıralanır. Sonuçlar canlı hesaplanır.",

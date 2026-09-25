@@ -1,4 +1,4 @@
-//! # kentos-rc: KentOS Rust Components
+//! # kentos-ui: KentOS UI bileşenleri
 //!
 //! [iced] üzerine kurulu, CBS ve CAD uygulamaları için bileşen kütüphanesi.
 //!
@@ -23,8 +23,8 @@
 //! (builder) desenini izler:
 //!
 //! ```ignore
-//! use kentos_rc::widget::ribbon::{self, Ribbon};
-//! use kentos_rc::icon::Icon;
+//! use kentos_ui::widget::ribbon::{self, Ribbon};
+//! use kentos_ui::icon::Icon;
 //!
 //! Ribbon::new()
 //!     .tabs(Tab::ALL, self.tab, Message::TabSelected)

@@ -2,9 +2,9 @@
 //! Ekran kapalı ya da kilitliyken de çalışır.
 //!
 //! ```sh
-//! cargo run -p showcase -- snapshot ekran.png
-//! cargo run -p showcase -- snapshot agac.png --senaryo agac --sag-tikla 1250,330
-//! cargo run -p showcase -- snapshot galeri.png --senaryo galeri --sayfa veri --boyut 1440x2400
+//! cargo run -p kentos-ui-showcase -- snapshot ekran.png
+//! cargo run -p kentos-ui-showcase -- snapshot agac.png --senaryo agac --sag-tikla 1250,330
+//! cargo run -p kentos-ui-showcase -- snapshot galeri.png --senaryo galeri --sayfa veri --boyut 1440x2400
 //! ```
 //!
 //! Senaryo uygulamayı mesajlarla hazırlar. Girdiler (`--imlec`, `--tikla`,
@@ -15,16 +15,16 @@
 use iced::keyboard::key::Named;
 use iced::{Point, Rectangle, Size};
 
-use kentos_rc::attribute::query::Edit;
-use kentos_rc::attribute::{Combinator, Date, ObjectId, Operator, Value};
-use kentos_rc::snapshot::{Input, Snapshot};
-use kentos_rc::spatial::model_space::{Backdrop, Event as ModelSpace};
-use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
-use kentos_rc::theme::typography::{Family, Mono, Typography};
-use kentos_rc::theme::{Accent, Mode};
-use kentos_rc::widget::docking;
-use kentos_rc::widget::inspector::Event as Inspector;
-use kentos_rc::widget::rulers::{self, Guide};
+use kentos_ui::attribute::query::Edit;
+use kentos_ui::attribute::{Combinator, Date, ObjectId, Operator, Value};
+use kentos_ui::snapshot::{Input, Snapshot};
+use kentos_ui::spatial::model_space::{Backdrop, Event as ModelSpace};
+use kentos_ui::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
+use kentos_ui::theme::typography::{Family, Mono, Typography};
+use kentos_ui::theme::{Accent, Mode};
+use kentos_ui::widget::docking;
+use kentos_ui::widget::inspector::Event as Inspector;
+use kentos_ui::widget::rulers::{self, Guide};
 
 use crate::app::{DRAWING_LAYER, Showcase, WINDOW_SIZE};
 use crate::gallery::Page;
@@ -276,10 +276,10 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let output = output.ok_or_else(|| format!("Çıktı dosyası verilmedi.\n\n{USAGE}"))?;
 
     // Yazı ayarı uygulama kurulmadan verilir; uygulama onu okur.
-    kentos_rc::theme::typography::set(typography);
+    kentos_ui::theme::typography::set(typography);
     // Görüntü tek karedir: geçişler yarıda kalmasın, bileşenler son
     // hâlleriyle çizilsin.
-    kentos_rc::theme::motion::set_reduced(true);
+    kentos_ui::theme::motion::set_reduced(true);
 
     let mut app = Showcase::new();
     prepare(&mut app, &scenario, page.as_deref())?;

@@ -3,18 +3,18 @@
 use iced::widget::{button, column, container, pick_list, row, space, text, tooltip};
 use iced::{Border, Center, Color, Element, Fill, Font, Theme};
 
-use kentos_rc::icon::Icon;
-use kentos_rc::label;
-use kentos_rc::spatial::Tool;
-use kentos_rc::spatial::model_space::{self, Backdrop};
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::theme::typography::{Family, Mono, Typography};
-use kentos_rc::theme::{Accent, Mode};
-use kentos_rc::widget::ribbon::{
+use kentos_ui::icon::Icon;
+use kentos_ui::label;
+use kentos_ui::spatial::Tool;
+use kentos_ui::spatial::model_space::{self, Backdrop};
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::theme::typography::{Family, Mono, Typography};
+use kentos_ui::theme::{Accent, Mode};
+use kentos_ui::widget::ribbon::{
     self, AppButton, Button, Field, Gallery, Group, Preview, Ribbon, Stack, Tile,
 };
-use kentos_rc::widget::{Menu, Tip, swatch, tip};
+use kentos_ui::widget::{Menu, Tip, swatch, tip};
 
 use crate::app::Showcase;
 use crate::command::{self, Command};
@@ -847,7 +847,7 @@ fn backdrop_tile<'a>(backdrop: Backdrop, selected: bool) -> Element<'a, Message>
         .padding(1)
         .style(|theme: &Theme| container::Style {
             border: Border {
-                color: kentos_rc::theme::Tokens::of(theme).border,
+                color: kentos_ui::theme::Tokens::of(theme).border,
                 width: 1.0,
                 radius: 2.0.into(),
             },

@@ -5,10 +5,10 @@
 //! (L, PL, C, ZE...) kabul edilir. Komut yerine "enlem, boylam" yazılabilir:
 //! çizim sürerken nokta ekler, yoksa görünümü oraya ortalar.
 
-use kentos_rc::icon::Icon;
-use kentos_rc::spatial::{LonLat, Tool};
-use kentos_rc::theme::Mode;
-use kentos_rc::widget::command_line;
+use kentos_ui::icon::Icon;
+use kentos_ui::spatial::{LonLat, Tool};
+use kentos_ui::theme::Mode;
+use kentos_ui::widget::command_line;
 
 use crate::message::{Pane, Setting};
 

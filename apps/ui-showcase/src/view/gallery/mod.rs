@@ -1,9 +1,9 @@
-//! Bileşen galerisi: kentos-rc'nin kataloğu.
+//! Bileşen galerisi: kentos-ui'nin kataloğu.
 //!
 //! Her sayfa, bileşenleri katalog girdileri ([`entry`]) olarak dizer:
 //!
 //! ```text
-//! ┌ Bileşen adı ─────────────────────── kentos_rc::modül::yolu ┐
+//! ┌ Bileşen adı ─────────────────────── kentos_ui::modül::yolu ┐
 //! │ Ne işe yaradığı.                                            │
 //! │ [canlı örnek]                                               │
 //! │ ┌ kullanım kodu ──────────────────────────────────────────┐ │
@@ -23,10 +23,10 @@ mod spatial;
 use iced::widget::{column, container, scrollable, space};
 use iced::{Color, Element, Fill};
 
-use kentos_rc::label;
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::Panel;
+use kentos_ui::label;
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::Panel;
 
 use crate::app::Showcase;
 use crate::gallery::{Demo, Page};

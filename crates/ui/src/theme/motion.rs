@@ -8,7 +8,7 @@
 //! çizilir.
 //!
 //! ```ignore
-//! kentos_rc::theme::motion::set_reduced(settings.reduce_motion);
+//! kentos_ui::theme::motion::set_reduced(settings.reduce_motion);
 //! ```
 
 use std::sync::atomic::{AtomicBool, Ordering};

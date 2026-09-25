@@ -21,10 +21,10 @@
 use std::path::{Path, PathBuf};
 use std::{fs, io};
 
-use kentos_rc::spatial::model_space::Backdrop;
-use kentos_rc::theme::typography::{Family, Mono, Typography};
-use kentos_rc::theme::{Accent, Mode};
-use kentos_rc::widget::Docks;
+use kentos_ui::spatial::model_space::Backdrop;
+use kentos_ui::theme::typography::{Family, Mono, Typography};
+use kentos_ui::theme::{Accent, Mode};
+use kentos_ui::widget::Docks;
 
 use crate::message::DockPanel;
 
@@ -184,7 +184,7 @@ fn key_of(name: &str) -> String {
 #[cfg(test)]
 mod tests {
     use iced::{Point, Rectangle, Size};
-    use kentos_rc::widget::docking::{self, Side};
+    use kentos_ui::widget::docking::{self, Side};
 
     use super::*;
 

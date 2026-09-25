@@ -7,7 +7,7 @@
 use iced::widget::canvas::{self, Frame, Geometry, Path, Stroke};
 use iced::{Color, Point, Rectangle, Renderer, Theme, Vector, mouse};
 
-use kentos_rc::theme::Tokens;
+use kentos_ui::theme::Tokens;
 
 /// Bakış yönü.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

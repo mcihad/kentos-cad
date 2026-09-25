@@ -5,16 +5,16 @@ use std::fmt;
 use iced::Color;
 use iced::keyboard::Modifiers;
 
-use kentos_rc::attribute::query;
-use kentos_rc::icon::Icon;
-use kentos_rc::spatial::model_space::{self, Backdrop};
-use kentos_rc::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
-use kentos_rc::theme::typography::{self, Typography};
-use kentos_rc::theme::{Accent, Mode};
-use kentos_rc::widget::docking::{self, Docks, Side};
-use kentos_rc::widget::floating::{self, Placement};
-use kentos_rc::widget::tree_view::Place;
-use kentos_rc::widget::{assets, inspector, rulers, toast};
+use kentos_ui::attribute::query;
+use kentos_ui::icon::Icon;
+use kentos_ui::spatial::model_space::{self, Backdrop};
+use kentos_ui::spatial::{FeatureRef, LonLat, SelectionMode, Tool};
+use kentos_ui::theme::typography::{self, Typography};
+use kentos_ui::theme::{Accent, Mode};
+use kentos_ui::widget::docking::{self, Docks, Side};
+use kentos_ui::widget::floating::{self, Placement};
+use kentos_ui::widget::tree_view::Place;
+use kentos_ui::widget::{assets, inspector, rulers, toast};
 
 use crate::gallery::{Demo, Page};
 use crate::import::Source;

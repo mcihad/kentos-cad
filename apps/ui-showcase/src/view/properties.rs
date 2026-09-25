@@ -6,11 +6,11 @@ use iced::widget::{
 };
 use iced::{Center, Element, Fill, Right};
 
-use kentos_rc::label;
-use kentos_rc::spatial::{Layer, LayerKind};
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::{PropertiesDialog, Segmented, overlay, swatch};
+use kentos_ui::label;
+use kentos_ui::spatial::{Layer, LayerKind};
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::{PropertiesDialog, Segmented, overlay, swatch};
 
 use super::panes::COLORS;
 use crate::app::Showcase;

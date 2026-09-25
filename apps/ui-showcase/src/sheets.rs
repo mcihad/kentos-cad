@@ -4,8 +4,8 @@
 //! (paftalar) haritanın kendi görünümüyle bir kâğıda yerleştirilmiş
 //! hâlidir; her düzen kendi görünümünü saklar.
 
-use kentos_rc::spatial::Viewport;
-use kentos_rc::widget::Guides;
+use kentos_ui::spatial::Viewport;
+use kentos_ui::widget::Guides;
 
 /// Bir düzen: kâğıt paftası.
 #[derive(Debug, Clone)]
@@ -126,7 +126,7 @@ impl Sheets {
 #[cfg(test)]
 mod tests {
     use iced::Size;
-    use kentos_rc::spatial::LonLat;
+    use kentos_ui::spatial::LonLat;
 
     use super::*;
 

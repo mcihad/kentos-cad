@@ -5,13 +5,13 @@
 use iced::widget::{button, column, container, row, space, tooltip};
 use iced::{Center, Element, Fill};
 
-use kentos_rc::attribute::{DateTime, FieldKind, ObjectId, text};
-use kentos_rc::icon::{Icon, icon};
-use kentos_rc::label;
-use kentos_rc::spatial::{Geometry, format};
-use kentos_rc::style;
-use kentos_rc::widget::progress;
-use kentos_rc::widget::{
+use kentos_ui::attribute::{DateTime, FieldKind, ObjectId, text};
+use kentos_ui::icon::{Icon, icon};
+use kentos_ui::label;
+use kentos_ui::spatial::{Geometry, format};
+use kentos_ui::style;
+use kentos_ui::widget::progress;
+use kentos_ui::widget::{
     DockSpace, Inspector, Pane, Task, TaskList, Tip, horizontal_divider, swatch, tip,
 };
 
@@ -261,7 +261,7 @@ fn step_button<'a>(glyph: Icon, description: &'a str, forward: bool) -> Element<
 }
 
 /// Öğeyi kapsayan kutunun merkezi.
-fn center(feature: &kentos_rc::spatial::Feature) -> String {
+fn center(feature: &kentos_ui::spatial::Feature) -> String {
     feature
         .bounds()
         .map_or_else(String::new, |bounds| format::decimal(bounds.center()))

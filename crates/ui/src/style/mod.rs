@@ -1,10 +1,10 @@
 //! iced bileşenleri için stil fonksiyonları.
 //!
-//! Hepsi iced'in kendi imzalarını kullanır; kentos-rc bileşenlerinin
+//! Hepsi iced'in kendi imzalarını kullanır; kentos-ui bileşenlerinin
 //! dışında da doğrudan verilebilir:
 //!
 //! ```ignore
-//! button("Kaydet").style(kentos_rc::style::button::primary)
+//! button("Kaydet").style(kentos_ui::style::button::primary)
 //! ```
 //!
 //! Renkler o anki temadan [`Tokens::of`](crate::theme::Tokens::of) ile

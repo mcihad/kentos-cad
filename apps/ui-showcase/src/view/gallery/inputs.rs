@@ -4,15 +4,15 @@
 use iced::widget::{Column, Row, column, container, row, space, text, text_input};
 use iced::{Center, Element, Fill};
 
-use kentos_rc::attribute::number::real;
-use kentos_rc::label;
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::color::{self, ColorPicker};
-use kentos_rc::widget::number::{self, Dial, units};
-use kentos_rc::widget::range::histogram;
-use kentos_rc::widget::timeline::{self, Marker, Scale};
-use kentos_rc::widget::{ChipInput, Form, NumberInput, RadioGroup, RangeSlider, Switch, Timeline};
+use kentos_ui::attribute::number::real;
+use kentos_ui::label;
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::color::{self, ColorPicker};
+use kentos_ui::widget::number::{self, Dial, units};
+use kentos_ui::widget::range::histogram;
+use kentos_ui::widget::timeline::{self, Marker, Scale};
+use kentos_ui::widget::{ChipInput, Form, NumberInput, RadioGroup, RangeSlider, Switch, Timeline};
 
 use super::entry;
 use crate::app::Showcase;
@@ -313,7 +313,7 @@ impl Showcase {
         vec![
             entry(
                 "Sayı girişi",
-                "kentos_rc::widget::NumberInput",
+                "kentos_ui::widget::NumberInput",
                 "Birimli değer girişi. Alana tıklayınca değer seçili düzenlenir; Enter ya da \
                  alandan çıkmak onaylar, Esc vazgeçer, ↑ ↓ adım kadar değiştirir. Dört işlem ve \
                  parantezli ifadeler, başka birimde yazılan sayılar (alanın birimine çevrilir) ve \
@@ -333,7 +333,7 @@ impl Showcase {
             ),
             entry(
                 "Vektör girişi",
-                "kentos_rc::widget::number::vector",
+                "kentos_ui::widget::number::vector",
                 "Konum ve boyut gibi iki ya da üç bileşenli değerler. Etiketler eksen \
                  renklerindedir (X kırmızı, Y yeşil, Z mavi), model alanındaki eksen \
                  göstergesiyle aynı.",
@@ -342,7 +342,7 @@ impl Showcase {
             ),
             entry(
                 "Açı girişi",
-                "kentos_rc::widget::number::angle",
+                "kentos_ui::widget::number::angle",
                 "Kadran ve derece alanı. Kadranı sürüklemek açıyı değiştirir; Shift 15°'lik \
                  adımlara oturtur. Derece, dakika ve saniye bitişik yazılır (30°15'20\"); \
                  radyan ve grad da kabul edilir. Kadran CAD'deki gibi doğudan saat yönünün \
@@ -355,7 +355,7 @@ impl Showcase {
             ),
             entry(
                 "Renk seçici",
-                "kentos_rc::widget::ColorPicker",
+                "kentos_ui::widget::ColorPicker",
                 "Alana tıklayınca açılır: doygunluk ve parlaklık düzlemi, ton şeridi, istenirse \
                  saydamlık şeridi, onaltılık giriş (#RGB, #RRGGBB, #RRGGBBAA), hazır renkler ve \
                  uygulamanın verdiği son kullanılanlar. Soldaki kutu panel açıldığındaki renktir; \
@@ -370,7 +370,7 @@ impl Showcase {
             ),
             entry(
                 "Renk rampası",
-                "kentos_rc::widget::color::ramp",
+                "kentos_ui::widget::color::ramp",
                 "Sürekli verilerin ve sınıfların renkleri için. Çubuğa tıklamak o noktanın \
                  rengiyle durak ekler; durak sürüklenerek taşınır, çubuğun altına uzağa \
                  sürüklenip bırakılınca silinir. Seçili durağın rengi ve yeri alttaki satırda \
@@ -384,7 +384,7 @@ impl Showcase {
             ),
             entry(
                 "Anahtar",
-                "kentos_rc::widget::Switch",
+                "kentos_ui::widget::Switch",
                 "Hemen uygulanan açık/kapalı ayarlar için (ör. ızgarayı açmak); onay kutusu ise \
                  bir formla birlikte onaylanan seçimler içindir. Düğme yeni konumuna kayar; \
                  etiket de tıklanabilir. Devre dışı anahtar durumunu gösterir.",
@@ -393,7 +393,7 @@ impl Showcase {
             ),
             entry(
                 "Radyo grubu",
-                "kentos_rc::widget::RadioGroup",
+                "kentos_ui::widget::RadioGroup",
                 "Birbirini dışlayan seçenekler; her seçeneğin açıklaması olabilir, seçilemeyen \
                  seçenek sönük görünür. Kısa seçenekler yan yana dizilir.",
                 radios,
@@ -405,7 +405,7 @@ impl Showcase {
             ),
             entry(
                 "Aralık kaydırıcısı ve histogram",
-                "kentos_rc::widget::RangeSlider",
+                "kentos_ui::widget::RangeSlider",
                 "İki tutamakla alt ve üst sınır; aradaki parça sürüklenince aralık bütün olarak \
                  kayar, rayın boş yerine basmak en yakın tutamağı taşır. Histogram verinin \
                  dağılımını gösterir, seçili aralıktaki çubuklar vurgu rengindedir. Burada örnek \
@@ -419,7 +419,7 @@ impl Showcase {
             ),
             entry(
                 "Etiket girişi",
-                "kentos_rc::widget::ChipInput",
+                "kentos_ui::widget::ChipInput",
                 "Yazılan değerler kaldırılabilir etiketlere dönüşür. Aynı etiket büyük/küçük harf \
                  ve Türkçe harf ayırmadan ikinci kez eklenmez. Öneriler verilmişse yazılanla \
                  başlayan ilki sağda görünür, Tab tamamlar. Etiketler sığmayınca alt satıra geçer.",
@@ -431,7 +431,7 @@ impl Showcase {
             ),
             entry(
                 "Zaman çizelgesi",
-                "kentos_rc::widget::Timeline",
+                "kentos_ui::widget::Timeline",
                 "Zamanlı verinin oynatma başı, aralığı ve olayları: burada bir kentsel dönüşüm \
                  projesinin takvimi. Eksene tıklayın ya da sürükleyin; tekerlek imlecin altındaki \
                  ana göre yakınlaştırır, Shift ile kaydırır, ⤢ tümünü gösterir. Aralık şeridinde \
@@ -449,7 +449,7 @@ impl Showcase {
             ),
             entry(
                 "Animasyon",
-                "kentos_rc::widget::timeline::Scale::Number",
+                "kentos_ui::widget::timeline::Scale::Number",
                 "Aynı çizelge kare sayısıyla: 24 kare/saniye, 10 saniye. Oynatın ya da oynatma \
                  başını sürükleyin; ev modeli kareye göre döner. ◆ anahtar karelerdir; hız \
                  menüsü ve döngü düğmesi oynatmayı değiştirir.",
@@ -461,7 +461,7 @@ impl Showcase {
             ),
             entry(
                 "Form düzeni",
-                "kentos_rc::widget::Form",
+                "kentos_ui::widget::Form",
                 "Etiketler aynı genişlikte bir sütunda, alanın ilk satırına hizalı durur. Bölüm \
                  başlıkları formu böler; zorunlu alanın adının yanında yıldız, altında yardım ya \
                  da hata yazar. Adı silerek hatayı görün.",

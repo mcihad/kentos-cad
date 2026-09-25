@@ -5,13 +5,13 @@ use iced::widget::{
 };
 use iced::{Bottom, Center, Color, Element, Fill};
 
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::spatial::model_space;
-use kentos_rc::style;
-use kentos_rc::theme::typography::{self, Family, Mono, Typography};
-use kentos_rc::theme::{self, Accent, Mode, Tokens};
-use kentos_rc::widget::table::{self, Table};
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::spatial::model_space;
+use kentos_ui::style;
+use kentos_ui::theme::typography::{self, Family, Mono, Typography};
+use kentos_ui::theme::{self, Accent, Mode, Tokens};
+use kentos_ui::widget::table::{self, Table};
 
 use super::{chip, entry, hex, pressed};
 use crate::app::Showcase;
@@ -98,7 +98,7 @@ impl Showcase {
         vec![
             entry(
                 "Temalar",
-                "kentos_rc::theme::Mode",
+                "kentos_ui::theme::Mode",
                 "Dört tema: CAD programlarının grafit koyusu, kâğıt zeminli aydınlık, gece \
                  çalışması için çok koyu ve az parlak gece, siyah zemin ve beyaz yazıyla yüksek \
                  karşıtlık. Her tema kendi harita zeminiyle gelir; gecede katman renkleri kısılır. \
@@ -113,7 +113,7 @@ impl Showcase {
             ),
             entry(
                 "Vurgu rengi",
-                "kentos_rc::theme::Accent",
+                "kentos_ui::theme::Accent",
                 "Etkin araç, seçim, odak, birincil düğmeler ve öndeki pencerenin çizgisi vurgu \
                  rengindedir; haritadaki seçim ve tutamaçlar da. Sekiz hazır rengin koyu ve \
                  aydınlık tema için ayrı tonları var. Kendi renginiz VURGU komutuyla #RRGGBB \
@@ -129,7 +129,7 @@ impl Showcase {
             ),
             entry(
                 "Arayüz renkleri",
-                "kentos_rc::theme::Tokens",
+                "kentos_ui::theme::Tokens",
                 "Bileşenler renklerini temadan okur; uygulama yalnızca kipi seçer. \
                  Tablo o anki temanın değerlerini gösterir; Arayüz grubundaki tema \
                  düğmesiyle karşılaştırabilirsiniz.",
@@ -141,7 +141,7 @@ impl Showcase {
             ),
             entry(
                 "Model alanı renkleri",
-                "kentos_rc::spatial::model_space::Style",
+                "kentos_ui::spatial::model_space::Style",
                 "Zemin arayüzün temasından bağımsız seçilir: temaya uyan (koyu temada \
                  arduvaz, aydınlıkta kâğıt), arduvaz, klasik AutoCAD siyahı ya da kâğıt. Seçim \
                  ve tutamaçlar vurgu rengindedir; katman renkleri kâğıt zeminde biraz \
@@ -433,7 +433,7 @@ impl Showcase {
         vec![
             entry(
                 "Tip ölçeği",
-                "kentos_rc::label",
+                "kentos_ui::label",
                 format!(
                     "Beş boyut, gövde metnine göre: açıklamalar {}, kontroller ve gövde {}, \
                      menü komutları {}, başlıklar {}, öne çıkan değerler {} piksel. Gövde \
@@ -455,7 +455,7 @@ impl Showcase {
             ),
             entry(
                 "Yazı aileleri",
-                "kentos_rc::theme::typography",
+                "kentos_ui::theme::typography",
                 "Aileler kütüphaneye gömülüdür ve SIL Open Font License ile dağıtılır; \
                  makinede kurulu olmaları gerekmez. Pangram Türkçe harflerin hepsini \
                  içerir. Bir aileye tıklamak arayüzü o aileye geçirir; seçim saklanır.",
@@ -574,7 +574,7 @@ pub(super) fn icons_page<'a>() -> Vec<Element<'a, Message>> {
     vec![
         entry(
             "İkon seti",
-            "kentos_rc::icon::Icon",
+            "kentos_ui::icon::Icon",
             "Her ikon 16×16'lık bir ızgarada tek çizgi kalınlığıyla çizilir ve \
              çizimi önbellekte tutulur. Adlar Rust'taki varyant adlarıdır.",
             set,
@@ -582,7 +582,7 @@ pub(super) fn icons_page<'a>() -> Vec<Element<'a, Message>> {
         ),
         entry(
             "Boyutlar",
-            "kentos_rc::icon::Glyph::size",
+            "kentos_ui::icon::Glyph::size",
             "İkon istenen boyuta ölçeklenir; çizgi kalınlığı ölçekle büyür ama 1,2 \
              pikselin altına inmez.",
             sizes,
@@ -590,7 +590,7 @@ pub(super) fn icons_page<'a>() -> Vec<Element<'a, Message>> {
         ),
         entry(
             "Tonlar",
-            "kentos_rc::icon::Tone",
+            "kentos_ui::icon::Tone",
             "Varsayılan ton Inherit'tir: ikon içinde bulunduğu düğmenin metin rengini \
              alır, düğme devre dışıyken sönükleşir. Diğer tonlar rengi temadan seçer.",
             column![tones, inherit].spacing(16),

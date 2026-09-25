@@ -42,6 +42,11 @@
     - `onay`: yeni nesnenin oluşturma zamanı 15:45 → 17:04:15;
     - `galeri-yerlesim` ve `galeri-geri-bildirim`: geçen süreyle ilerleyen çubuklar, 44 ve 8 piksel.
   - Betik bu üç sahneyi ayrı raporlar.
+- **Ad değişikliğinden sonra** aynı karşılaştırmanın sonucu:
+  - 22 sahne bayt bayt aynı.
+  - 9 galeri sayfası yalnız ekrana yazdıkları crate yolu etiketlerinde ayrılıyor (`kentos_rc::theme::Mode` → `kentos_ui::theme::Mode`).
+  - 4 sahne saat gösteriyor. Dördüncüsü `bildirimler`: bildirimin kalan süre çubuğu bir piksel uzadı.
+  - Bundan sonraki karşılaştırmaların başvurusu `apps/ui-showcase/snapshots.json`'dır. `scripts/ui/snapshots.mjs --write` onu farkı okuduktan sonra yeniden yazar; taşıma öncesi kayıt `docs/baseline`'da kalır.
 - **Testler:** paralel koşuda 170 kütüphane ve 55 vitrin testi geçti; 48 doctest `ignore` işaretli.
 - **Baseline'daki paralel SIGSEGV'nin nedeni:**
   - Bileşen testleri ekransız çiziciyi aynı anda birçok iş parçacığında açıyor. Aynı anda açılan wgpu aygıtları GPU sürücüsünü çökertiyor.

@@ -14,12 +14,12 @@
 use iced::widget::{button, column, container, pick_list, row, space};
 use iced::{Center, Element, Fill};
 
-use kentos_rc::attribute::{Field, Query};
-use kentos_rc::label;
-use kentos_rc::spatial::SelectionMode;
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::{Dialog, QueryBuilder, Segmented, overlay};
+use kentos_ui::attribute::{Field, Query};
+use kentos_ui::label;
+use kentos_ui::spatial::SelectionMode;
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::{Dialog, QueryBuilder, Segmented, overlay};
 
 use super::LayerChoice;
 use crate::app::{QueryDialog, Showcase};

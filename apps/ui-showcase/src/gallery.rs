@@ -1,29 +1,29 @@
 //! Bileşen galerisi: sayfalar ve etkileşimli örneklerin durumu.
 //!
-//! Galeri, kentos-rc'nin kataloğudur. Her sayfa bir grup bileşeni canlı
+//! Galeri, kentos-ui'nin kataloğudur. Her sayfa bir grup bileşeni canlı
 //! örnekleriyle gösterir; örnekler kendi küçük durumlarını burada tutar ve
 //! uygulamanın asıl durumuna dokunmaz.
 
 use std::fmt;
 
-use kentos_rc::attribute::query::Edit;
-use kentos_rc::attribute::{
+use kentos_ui::attribute::query::Edit;
+use kentos_ui::attribute::{
     Condition, Date, DateTime, Field, ObjectId, Operator, Query, Time, Value, text,
 };
-use kentos_rc::icon::Icon;
-use kentos_rc::spatial::{SelectionMode, Tool};
-use kentos_rc::widget::Toast;
-use kentos_rc::widget::assets;
-use kentos_rc::widget::color::Ramp;
-use kentos_rc::widget::command_line::Entry;
-use kentos_rc::widget::docking::{self, Docks, Side};
-use kentos_rc::widget::floating::{self, Placement, Windows};
-use kentos_rc::widget::inspector;
-use kentos_rc::widget::rulers::{self, Guide, Guides};
-use kentos_rc::widget::table::SortOrder;
-use kentos_rc::widget::timeline::{self, Playback};
-use kentos_rc::widget::tree_view::Place;
-use kentos_rc::widget::viewports::{self, Arrangement, Views};
+use kentos_ui::icon::Icon;
+use kentos_ui::spatial::{SelectionMode, Tool};
+use kentos_ui::widget::Toast;
+use kentos_ui::widget::assets;
+use kentos_ui::widget::color::Ramp;
+use kentos_ui::widget::command_line::Entry;
+use kentos_ui::widget::docking::{self, Docks, Side};
+use kentos_ui::widget::floating::{self, Placement, Windows};
+use kentos_ui::widget::inspector;
+use kentos_ui::widget::rulers::{self, Guide, Guides};
+use kentos_ui::widget::table::SortOrder;
+use kentos_ui::widget::timeline::{self, Playback};
+use kentos_ui::widget::tree_view::Place;
+use kentos_ui::widget::viewports::{self, Arrangement, Views};
 
 use crate::message::Message;
 use crate::sample;
@@ -1291,7 +1291,7 @@ impl Gallery {
     }
 }
 
-/// Örnek yapı envanterinin alanları: kentos-rc'nin bütün alan türleri.
+/// Örnek yapı envanterinin alanları: kentos-ui'nin bütün alan türleri.
 fn building_schema() -> Vec<Field> {
     vec![
         Field::text("Ad")

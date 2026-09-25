@@ -1,6 +1,6 @@
 # Gömülü yazı tipleri
 
-kentos-rc bu yazı tiplerini `fonts` özelliğiyle (varsayılan açık) ikili dosyaya
+kentos-ui bu yazı tiplerini `fonts` özelliğiyle (varsayılan açık) ikili dosyaya
 gömer; uygulamanın çalıştığı makinede kurulu olmaları gerekmez. Hepsi
 [SIL Open Font License 1.1](https://openfontlicense.org) ile dağıtılır; her
 ailenin lisansı ve telif satırı `OFL-*.txt` dosyasındadır.

@@ -6,8 +6,8 @@
 
 use iced::Color;
 
-use kentos_rc::icon::Icon;
-use kentos_rc::spatial::Layer;
+use kentos_ui::icon::Icon;
+use kentos_ui::spatial::Layer;
 
 /// Pencerenin bölümleri.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

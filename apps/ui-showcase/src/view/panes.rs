@@ -11,14 +11,14 @@ use iced::widget::{
 };
 use iced::{Center, Color, Element, Fill, Right, Theme};
 
-use kentos_rc::icon::{Icon, icon};
-use kentos_rc::label;
-use kentos_rc::spatial::{LayerKind, LonLat, format, model_space};
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::legend::Symbol;
-use kentos_rc::widget::number::Unit;
-use kentos_rc::widget::{
+use kentos_ui::icon::{Icon, icon};
+use kentos_ui::label;
+use kentos_ui::spatial::{LayerKind, LonLat, format, model_space};
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::legend::Symbol;
+use kentos_ui::widget::number::Unit;
+use kentos_ui::widget::{
     ColorPicker, Legend, NumberInput, Tip, ToolWindow, horizontal_divider, tip,
 };
 
@@ -254,7 +254,7 @@ impl Showcase {
                 row![
                     icon(Icon::Warning)
                         .size(12.0)
-                        .tone(kentos_rc::icon::Tone::Danger),
+                        .tone(kentos_ui::icon::Tone::Danger),
                     label::caption(error).style(style::text::danger),
                 ]
                 .spacing(6)

@@ -7,9 +7,9 @@
 
 use iced::Point;
 
-use kentos_rc::icon::Icon;
-use kentos_rc::spatial::{FeatureRef, SelectionMode, Tool, format, query};
-use kentos_rc::widget::Menu;
+use kentos_ui::icon::Icon;
+use kentos_ui::spatial::{FeatureRef, SelectionMode, Tool, format, query};
+use kentos_ui::widget::Menu;
 
 use crate::app::{DRAWING_LAYER, Showcase};
 use crate::layer_tree::NodeId;

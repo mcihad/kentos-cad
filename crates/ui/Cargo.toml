@@ -1,6 +1,6 @@
 [package]
-name = "kentos-rc"
-description = "KentOS Rust Components: iced üzerine kurulu CBS ve CAD arayüz bileşenleri"
+name = "kentos-ui"
+description = "KentOS UI: iced üzerine kurulu CBS ve CAD arayüz bileşenleri"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -8,14 +8,14 @@ use iced::widget::text::Wrapping;
 use iced::widget::{column, pick_list, row, space};
 use iced::{Center, Element};
 
-use kentos_rc::attribute::{FieldKind, text};
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::spatial::{Feature, Layer, Tool};
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::table::{self, Table};
-use kentos_rc::widget::{EmptyState, Toolbar};
+use kentos_ui::attribute::{FieldKind, text};
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::spatial::{Feature, Layer, Tool};
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::table::{self, Table};
+use kentos_ui::widget::{EmptyState, Toolbar};
 
 use super::LayerChoice;
 use crate::app::Showcase;

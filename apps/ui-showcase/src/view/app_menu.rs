@@ -2,11 +2,11 @@
 
 use iced::Element;
 
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::style;
-use kentos_rc::widget::app_menu::{Action, AppMenu, Entry, Item, Pane};
-use kentos_rc::widget::badge;
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::style;
+use kentos_ui::widget::app_menu::{Action, AppMenu, Entry, Item, Pane};
+use kentos_ui::widget::badge;
 
 use crate::app::Showcase;
 use crate::message::{AppCommand, EXPORT_FORMATS, Message, RECENT_DRAWINGS};

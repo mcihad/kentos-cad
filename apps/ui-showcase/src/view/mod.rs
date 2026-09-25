@@ -43,15 +43,15 @@ use std::fmt;
 use iced::widget::{Column, column, container, stack};
 use iced::{Color, Element, Fill, keyboard};
 
-use kentos_rc::icon::Icon;
-use kentos_rc::spatial::model_space::Backdrop;
-use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
-use kentos_rc::style;
-use kentos_rc::theme::typography::{self, Family, Mono, Typography};
-use kentos_rc::theme::{Accent, Mode};
-use kentos_rc::widget::command_line::{self, Prompt};
-use kentos_rc::widget::docking::Side;
-use kentos_rc::widget::{
+use kentos_ui::icon::Icon;
+use kentos_ui::spatial::model_space::Backdrop;
+use kentos_ui::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
+use kentos_ui::style;
+use kentos_ui::theme::typography::{self, Family, Mono, Typography};
+use kentos_ui::theme::{Accent, Mode};
+use kentos_ui::widget::command_line::{self, Prompt};
+use kentos_ui::widget::docking::Side;
+use kentos_ui::widget::{
     Banner, CommandLine, Compare, Confirm, ContextMenu, EmptyState, Floating, MiniToolbar,
     NavigationBar, RadialMenu, Toaster, overlay, status_bar,
 };

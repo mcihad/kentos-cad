@@ -6,20 +6,20 @@ use std::time::Duration;
 use iced::keyboard::Modifiers;
 use iced::{Event, Point, Size, Subscription, Task, Theme, event, keyboard, window};
 
-use kentos_rc::attribute::query::Edit;
-use kentos_rc::attribute::{DateTime, Field, FieldKind, ObjectId, Query, Value, text};
-use kentos_rc::spatial::model_space::{self, Backdrop, Options};
-use kentos_rc::spatial::{
+use kentos_ui::attribute::query::Edit;
+use kentos_ui::attribute::{DateTime, Field, FieldKind, ObjectId, Query, Value, text};
+use kentos_ui::spatial::model_space::{self, Backdrop, Options};
+use kentos_ui::spatial::{
     Bounds, Draft, Feature, FeatureRef, Geometry, Layer, LonLat, Measurement, Selection,
     SelectionMode, Tool, Viewport, feature, format, query,
 };
-use kentos_rc::theme::typography::{self, Typography};
-use kentos_rc::theme::{self, Accent, Mode};
-use kentos_rc::widget::command_line::{self, Entry};
-use kentos_rc::widget::docking::{self, Docks};
-use kentos_rc::widget::floating::{self, Windows};
-use kentos_rc::widget::tree_view::{self, Place};
-use kentos_rc::widget::{Toast, Toasts, assets, inspector};
+use kentos_ui::theme::typography::{self, Typography};
+use kentos_ui::theme::{self, Accent, Mode};
+use kentos_ui::widget::command_line::{self, Entry};
+use kentos_ui::widget::docking::{self, Docks};
+use kentos_ui::widget::floating::{self, Windows};
+use kentos_ui::widget::tree_view::{self, Place};
+use kentos_ui::widget::{Toast, Toasts, assets, inspector};
 
 use crate::command::{self, Command};
 use crate::gallery::{Demo, Gallery, Page};
@@ -69,7 +69,7 @@ const CUBE_SPEED: f32 = 0.012;
 /// Arka plandaki işlerin bir adımı.
 const JOB_STEP: Duration = Duration::from_millis(100);
 
-/// KentOS CAD: kentos-rc bileşenlerinin vitrin uygulaması.
+/// KentOS CAD: kentos-ui bileşenlerinin vitrin uygulaması.
 pub struct Showcase {
     pub(crate) viewport: Viewport,
     pub(crate) layers: Vec<Layer>,
@@ -1561,7 +1561,7 @@ impl Showcase {
     }
 
     /// İçe aktarılan katmanı ağacın en üstüne, çizimlerin altına ekler.
-    fn add_layer(&mut self, layer: kentos_rc::spatial::Layer, source: &str) -> usize {
+    fn add_layer(&mut self, layer: kentos_ui::spatial::Layer, source: &str) -> usize {
         let index = self.layers.len();
 
         self.layers.push(layer);
@@ -2984,7 +2984,7 @@ mod tests {
 
     #[test]
     fn layout_sheets_keep_their_own_guides() {
-        use kentos_rc::widget::rulers::{Event, Guide};
+        use kentos_ui::widget::rulers::{Event, Guide};
 
         let mut app = Showcase::new();
 
@@ -3017,7 +3017,7 @@ mod tests {
 
     #[test]
     fn gallery_timelines_play_with_the_ticks() {
-        use kentos_rc::widget::timeline::Event;
+        use kentos_ui::widget::timeline::Event;
 
         let mut app = Showcase::new();
         let start = iced::time::Instant::now();
@@ -3402,7 +3402,7 @@ mod tests {
         submit(&mut app, "#e8618c");
         assert_eq!(app.accent, Accent::Custom(0xe8618c));
         assert_eq!(
-            kentos_rc::theme::Tokens::of(&app.theme()).accent,
+            kentos_ui::theme::Tokens::of(&app.theme()).accent,
             Accent::Custom(0xe8618c).color(Mode::Dark)
         );
 
@@ -3422,7 +3422,7 @@ mod tests {
         submit(&mut app, "karsitlik");
         assert_eq!(app.mode, Mode::HighContrast);
         assert_eq!(
-            kentos_rc::theme::Tokens::of(&app.theme()).mode,
+            kentos_ui::theme::Tokens::of(&app.theme()).mode,
             Mode::HighContrast
         );
 

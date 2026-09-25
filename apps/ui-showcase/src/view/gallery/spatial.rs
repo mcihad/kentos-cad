@@ -4,15 +4,15 @@
 use iced::widget::{Row, button, column, container, row};
 use iced::{Bottom, Center, Element, Fill, Theme};
 
-use kentos_rc::icon::icon;
-use kentos_rc::label;
-use kentos_rc::spatial::query::SnapKind;
-use kentos_rc::spatial::{LonLat, Tool, ViewCube, format, model_space};
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::number::units;
-use kentos_rc::widget::table::{self, Table};
-use kentos_rc::widget::{Compass, Dial, NumberInput};
+use kentos_ui::icon::icon;
+use kentos_ui::label;
+use kentos_ui::spatial::query::SnapKind;
+use kentos_ui::spatial::{LonLat, Tool, ViewCube, format, model_space};
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::number::units;
+use kentos_ui::widget::table::{self, Table};
+use kentos_ui::widget::{Compass, Dial, NumberInput};
 
 use super::entry;
 use crate::app::Showcase;
@@ -115,7 +115,7 @@ impl Showcase {
         vec![
             entry(
                 "Model alanı",
-                "kentos_rc::spatial::ModelSpace",
+                "kentos_ui::spatial::ModelSpace",
                 "Katmanları, ızgarayı, ölçümü ve çizimi gösteren etkileşimli alan. Durum \
                  tutmaz; kullanıcının yaptığı her şeyi bir olay olarak bildirir. Canlı \
                  örneği Giriş sekmesindedir.",
@@ -131,7 +131,7 @@ impl Showcase {
             ),
             entry(
                 "ViewCube",
-                "kentos_rc::spatial::ViewCube",
+                "kentos_ui::spatial::ViewCube",
                 "wgpu ile çizilen yön küpü; arka planı saydamdır. Döndürme uygulamanındır; \
                  burada Giriş sekmesindekiyle aynı açıyı kullanır.",
                 cubes,
@@ -139,7 +139,7 @@ impl Showcase {
             ),
             entry(
                 "Pusula",
-                "kentos_rc::widget::Compass",
+                "kentos_ui::widget::Compass",
                 "Görünüm döndükçe kuzeyi gösteren iğne; harf hep dik kalır. Harita ve 3B \
                  görünümlerin köşesinde durur, tıklanınca görünümü kuzeye döndürür. Sade biçimi \
                  pafta düzenlerindeki klasik kuzey okudur (Giriş sekmesinde düzenlerin harita \
@@ -153,7 +153,7 @@ impl Showcase {
             ),
             entry(
                 "Araçlar",
-                "kentos_rc::spatial::Tool",
+                "kentos_ui::spatial::Tool",
                 "Her aracın adı, açıklaması ve ikonu kütüphanededir; komut satırı \
                  karşılıkları uygulamanındır.",
                 tools,
@@ -165,7 +165,7 @@ impl Showcase {
             ),
             entry(
                 "Nesne yakalama",
-                "kentos_rc::spatial::query",
+                "kentos_ui::spatial::query",
                 "Nokta girişi alan araçlarda imlece en yakın köşe yakalanır. İşaretler \
                  AutoCAD'deki nesne yakalama işaretlerini izler.",
                 snaps,
@@ -176,7 +176,7 @@ impl Showcase {
             ),
             entry(
                 "Türkçe biçimlendirme",
-                "kentos_rc::spatial::format",
+                "kentos_ui::spatial::format",
                 "Sayılar binlik ayraçla, koordinatlar enlem-boylam sırasıyla ve K/G/D/B \
                  yönleriyle yazılır.",
                 formatting,

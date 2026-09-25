@@ -5,19 +5,19 @@ use iced::widget::{
 };
 use iced::{Center, Element, Fill, Theme};
 
-use kentos_rc::attribute::number;
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::spatial::Tool;
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::assets::Asset;
-use kentos_rc::widget::color::Ramp;
-use kentos_rc::widget::legend::{self, Symbol};
-use kentos_rc::widget::ribbon::{self, AppButton, Field, Group, Preview, Ribbon, Stack, Tile};
-use kentos_rc::widget::table::{self, Table};
-use kentos_rc::widget::tree_view::{self, Check, Node, Toggle, TreeView};
-use kentos_rc::widget::{
+use kentos_ui::attribute::number;
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::spatial::Tool;
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::assets::Asset;
+use kentos_ui::widget::color::Ramp;
+use kentos_ui::widget::legend::{self, Symbol};
+use kentos_ui::widget::ribbon::{self, AppButton, Field, Group, Preview, Ribbon, Stack, Tile};
+use kentos_ui::widget::table::{self, Table};
+use kentos_ui::widget::tree_view::{self, Check, Node, Toggle, TreeView};
+use kentos_ui::widget::{
     AssetBrowser, Legend, Menu, NumberInput, Panel, PropertyGrid, Tip, badge, swatch, tip,
     vertical_divider,
 };
@@ -154,15 +154,15 @@ impl Showcase {
         vec![
             entry(
                 "Düğme stilleri",
-                "kentos_rc::style::button",
-                "iced'in stil imzasını kullanır; kentos-rc bileşenleri dışında da doğrudan \
+                "kentos_ui::style::button",
+                "iced'in stil imzasını kullanır; kentos-ui bileşenleri dışında da doğrudan \
                  verilebilir. İkinci örnekler devre dışı ya da diğer durumu gösterir.",
                 style_table,
                 Some("button(\"Kaydet\").style(style::button::primary)"),
             ),
             entry(
                 "Şerit düğmeleri ve grupları",
-                "kentos_rc::widget::ribbon",
+                "kentos_ui::widget::ribbon",
                 "Grup içeriği üç satırlık ızgaraya oturur: büyük düğme üç, küçük düğme ve \
                  alan bir satır yüksekliğindedir. Etkin düğme vurgulanır; on_press \
                  verilmeyen düğme ikonuyla birlikte sönükleşir.",
@@ -176,7 +176,7 @@ impl Showcase {
             ),
             entry(
                 "Menülü düğme, galeri, hızlı erişim",
-                "kentos_rc::widget::ribbon::{Button::menu, Gallery}",
+                "kentos_ui::widget::ribbon::{Button::menu, Gallery}",
                 "Eylemi olan menülü düğme bölünür: üst (küçükte sol) kısım eylemi yapar, ok \
                  menüyü açar; eylemsiz düğmenin tamamı menüdür. Galeri seçeneklerin \
                  önizlemelerini (renk, rampa, ikon, çizgi) dizer; satır seçili karoyu içerecek \
@@ -195,7 +195,7 @@ impl Showcase {
             ),
             entry(
                 "İpucu",
-                "kentos_rc::widget::Tip",
+                "kentos_ui::widget::Tip",
                 "Yalnızca başlığı olan ipucu tek satırlık bir etikettir; açıklama ve ayrıntı \
                  satırı eklenince araç ipucuna dönüşür. Görmek için düğmelerin üzerine gelin.",
                 row![
@@ -444,7 +444,7 @@ impl Showcase {
         vec![
             entry(
                 "Tablo",
-                "kentos_rc::widget::Table",
+                "kentos_ui::widget::Table",
                 "Sütunlar genişlik ve hizayla tanımlanır; başlık ve satırlar aynı aralıkla \
                  dizildiği için hizalı kalır. Satıra tıklayarak seçin. Hücrelerdeki onay \
                  kutusu ve düğmeler satır tıklamasından önce olayı alır.",
@@ -458,7 +458,7 @@ impl Showcase {
             ),
             entry(
                 "Ağaç görünümü",
-                "kentos_rc::widget::TreeView",
+                "kentos_ui::widget::TreeView",
                 "İç içe klasörler ve öğeler; derinlik sınırsızdır. İlk sütun girinti \
                  çizgilerini, açma okunu, onay kutusunu ve ikonu taşır; diğer sütunlar \
                  tabloyla aynı hizadadır. Klasörün kutusu içindekilerden hesaplanır: \
@@ -478,7 +478,7 @@ impl Showcase {
             ),
             entry(
                 "Sanal tablo",
-                "kentos_rc::widget::Table::virtualized",
+                "kentos_ui::widget::Table::virtualized",
                 "100.000 kayıtlık tablo: satırlar sıra numarasından istenir ve yalnızca \
                  görünenler kurulur, kaydırma hep akıcıdır. Satır numarası yazıp Enter'a \
                  basın; seçilen satır görünür yapılır (reveal). Aynı yapı TreeView::virtualized \
@@ -495,7 +495,7 @@ impl Showcase {
             ),
             entry(
                 "Ağaçta taşıma, adlandırma, satır düğmeleri",
-                "kentos_rc::widget::tree_view",
+                "kentos_ui::widget::tree_view",
                 "Kimlikli düğümleri sürükleyin: satırın üst yarısı önüne, alt yarısı ardına, \
                  klasörün ortası içine bırakır; altındakiler de taşınır, Esc vazgeçer. Satırı \
                  seçip F2'ye basın ya da sağ tıklayıp Yeniden adlandır'ı seçin: Enter ve \
@@ -516,7 +516,7 @@ impl Showcase {
             ),
             entry(
                 "Lejant",
-                "kentos_rc::widget::Legend",
+                "kentos_ui::widget::Legend",
                 "Harita katmanlarının simgeleri: nokta, çizgi, alan, renk kutusu ya da ikon; \
                  bölüm başlıkları, girintili alt satırlar ve sürekli renk ölçeği. Satıra \
                  tıklamak gizler ya da gösterir, gizli satırlar sönüktür; başlığa tıklamak \
@@ -535,7 +535,7 @@ impl Showcase {
             ),
             entry(
                 "Varlık tarayıcısı",
-                "kentos_rc::widget::AssetBrowser",
+                "kentos_ui::widget::AssetBrowser",
                 "Sembol, blok ve malzeme kitaplıkları için aranabilir, kategorili ızgara. \
                  Arama Türkçe harf ayırmaz, kategoriler öğelerden çıkarılır; tıklamak seçer, \
                  çift tıklamak kullanır. Izgara ile liste arasında geçin. Önizlemeler \
@@ -551,7 +551,7 @@ impl Showcase {
             ),
             entry(
                 "Özellik ızgarası",
-                "kentos_rc::widget::PropertyGrid",
+                "kentos_ui::widget::PropertyGrid",
                 "CAD programlarındaki Özellikler paleti: anahtar ve değer iki sütunda, \
                  kategoriler başlık satırlarıyla. Sayısal değerler eş aralıklı yazılır.",
                 container(properties).width(380),
@@ -563,7 +563,7 @@ impl Showcase {
             ),
             entry(
                 "Panel ve yuva",
-                "kentos_rc::widget::Panel",
+                "kentos_ui::widget::Panel",
                 "Yan paneller başlık çubuğu ve gövdeden oluşur; başlığa tıklayınca açılıp \
                  kapanır, kapalı panelin yerini açık olanlar doldurur. Yuva (Dock) panelleri \
                  bölücü çizgilerle alt alta dizer; sol kenarı sürüklenerek genişletilir, \
@@ -580,8 +580,8 @@ impl Showcase {
             ),
             entry(
                 "Giriş alanları",
-                "kentos_rc::style::field",
-                "iced'in kendi kontrolleri kentos-rc stilleriyle; onay kutusu ve kaydırıcı \
+                "kentos_ui::style::field",
+                "iced'in kendi kontrolleri kentos-ui stilleriyle; onay kutusu ve kaydırıcı \
                  renklerini doğrudan temadan alır.",
                 self.fields_sample(),
                 Some(

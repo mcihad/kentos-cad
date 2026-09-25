@@ -1,7 +1,7 @@
-//! KentOS CAD: kentos-rc bileşenlerinin vitrin uygulaması.
+//! KentOS CAD: kentos-ui bileşenlerinin vitrin uygulaması.
 //!
 //! Uygulama yalnızca durumu, mesajları, komut yorumlayıcısını ve örnek
-//! veriyi tutar; arayüzün tamamı kentos-rc bileşenleriyle kurulur.
+//! veriyi tutar; arayüzün tamamı kentos-ui bileşenleriyle kurulur.
 
 mod app;
 mod command;
@@ -18,13 +18,13 @@ mod snapshot;
 mod table;
 mod view;
 
-use kentos_rc::theme::typography;
+use kentos_ui::theme::typography;
 
 fn main() -> iced::Result {
     // Gömülü yazı tipleri: makinede kurulu olmaları gerekmez.
     typography::load();
 
-    // `showcase snapshot çıktı.png ...`: pencere açmadan görüntü alır.
+    // `kentos-ui-showcase snapshot çıktı.png ...`: pencere açmadan görüntü alır.
     let mut args = std::env::args().skip(1);
 
     if args.next().as_deref() == Some("snapshot") {

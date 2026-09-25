@@ -12,12 +12,12 @@
 use iced::widget::{button, column, container, row, slider, space, tooltip};
 use iced::{Center, Color, Element, Fill, Right, border};
 
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::spatial::LayerKind;
-use kentos_rc::style;
-use kentos_rc::widget::tree_view::{self, Check, Node, Toggle, TreeView};
-use kentos_rc::widget::{Tip, swatch, tip};
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::spatial::LayerKind;
+use kentos_ui::style;
+use kentos_ui::widget::tree_view::{self, Check, Node, Toggle, TreeView};
+use kentos_ui::widget::{Tip, swatch, tip};
 
 use crate::app::Showcase;
 use crate::layer_tree::{Entry, NodeId};

@@ -5,10 +5,10 @@
 
 use std::cmp::Ordering;
 
-use kentos_rc::attribute::{FieldKind, ObjectId, Query, Value, text};
-use kentos_rc::spatial::{Feature, FeatureRef, Geometry, Layer, LayerKind, Selection, format};
-use kentos_rc::theme::typography;
-use kentos_rc::widget::table::SortOrder;
+use kentos_ui::attribute::{FieldKind, ObjectId, Query, Value, text};
+use kentos_ui::spatial::{Feature, FeatureRef, Geometry, Layer, LayerKind, Selection, format};
+use kentos_ui::theme::typography;
+use kentos_ui::widget::table::SortOrder;
 
 /// Tablonun sütunları: OBJECTID, şemadaki alanlar ve çizgi/alan
 /// katmanlarında hesaplanan uzunluk ya da çevre.
@@ -256,7 +256,7 @@ fn compare(layers: &[Layer], layer: &Layer, column: Column, a: &Feature, b: &Fea
 mod tests {
     use super::*;
     use crate::sample;
-    use kentos_rc::attribute::{Condition, Operator};
+    use kentos_ui::attribute::{Condition, Operator};
 
     fn layers() -> Vec<Layer> {
         sample::layers()

@@ -4,16 +4,16 @@
 use iced::widget::{Column, button, canvas, column, container, responsive, row, space};
 use iced::{Center, Element, Fill, Point, Shadow, Size, Theme, Vector};
 
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::style;
-use kentos_rc::theme::{Tokens, typography};
-use kentos_rc::widget::compare::Direction;
-use kentos_rc::widget::number::units;
-use kentos_rc::widget::progress;
-use kentos_rc::widget::rulers::Transform;
-use kentos_rc::widget::viewports::{self, View, Viewports};
-use kentos_rc::widget::{
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::style;
+use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::compare::Direction;
+use kentos_ui::widget::number::units;
+use kentos_ui::widget::progress;
+use kentos_ui::widget::rulers::Transform;
+use kentos_ui::widget::viewports::{self, View, Viewports};
+use kentos_ui::widget::{
     Compare, DockSpace, Menu, NumberInput, Pane, Rulers, Segmented, Tab, Tabs, swatch,
 };
 
@@ -28,7 +28,7 @@ impl Showcase {
         vec![
             entry(
                 "Sekmeli yuva",
-                "kentos_rc::widget::DockSpace",
+                "kentos_ui::widget::DockSpace",
                 "Paneller kenarlardaki alanlara yerleşir, aynı yeri sekmelerle paylaşır. Bir \
                  sekmeyi sürükleyin: başka yığının şeridine ya da gövdesinin ortasına bırakılan \
                  panel o yığına katılır, gövdenin kenarına bırakılan yığını böler, ortanın \
@@ -54,7 +54,7 @@ impl Showcase {
             ),
             entry(
                 "Görünüm alanları",
-                "kentos_rc::widget::Viewports",
+                "kentos_ui::widget::Viewports",
                 "Aynı modeli birden çok bakışla gösterir: tek, iki, üç ya da dört görünüm. \
                  Görünüme tıklamak onu etkin yapar; etkin görünüm vurgu renginde çerçevelenir. \
                  Sol üstteki menüler bakış yönünü ve görsel stili seçer; ⤢ ya da başlığa çift tık \
@@ -74,7 +74,7 @@ impl Showcase {
             ),
             entry(
                 "Karşılaştırma perdesi",
-                "kentos_rc::widget::Compare",
+                "kentos_ui::widget::Compare",
                 "İki içerik üst üste; aradaki perde birinin solunu, öbürünün sağını gösterir \
                  (CBS'deki kaydırma aracı gibi). Perdeyi tutamağından ya da çizgisinden sürükleyin, \
                  çift tıklamak ortaya alır. Fare olayları imlecin olduğu yana gider. Giriş \
@@ -89,7 +89,7 @@ impl Showcase {
             ),
             entry(
                 "Cetveller ve kılavuzlar",
-                "kentos_rc::widget::Rulers",
+                "kentos_ui::widget::Rulers",
                 "İçeriğin üstünde ve solunda birimli cetveller; yakınlaştıkça aralıklar 1, 2, 5 × \
                  10ⁿ adımlarla sıklaşır, imlecin yeri iki cetvelde de işaretlenir. Üst cetvelden \
                  aşağı sürükleyin: yatay kılavuz; sol cetvelden sağa: dikey kılavuz. Kılavuzu \
@@ -107,7 +107,7 @@ impl Showcase {
             ),
             entry(
                 "Belge sekmeleri",
-                "kentos_rc::widget::Tabs",
+                "kentos_ui::widget::Tabs",
                 "Açık çizimler ya da model ve düzen görünümleri gibi aynı alanı paylaşan içerikler. \
              Etkin sekme içeriğe bağlanır. Kaydedilmemiş çizimde kapatma düğmesinin yerinde nokta \
              durur; üzerine gelince × olur, orta tık da kapatır. Sekmeleri sürükleyerek sıralayın. \

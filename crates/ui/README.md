@@ -1,19 +1,19 @@
-# kentos-rc
+# kentos-ui
 
-**KentOS Rust Components**: [iced](https://github.com/iced-rs/iced) 0.14 üzerine
+**KentOS UI**: [iced](https://github.com/iced-rs/iced) 0.14 üzerine
 kurulu, CBS ve CAD uygulamaları için bileşen kütüphanesi.
 
 ```sh
-cargo run                       # vitrin uygulaması: KentOS CAD
-cargo test --workspace          # kütüphane ve vitrin testleri
-cargo doc -p kentos-rc --open   # API belgeleri
-cargo run -- snapshot ekran.png # pencere açmadan ekran görüntüsü
+make showcase                   # vitrin uygulaması: KentOS CAD (apps/ui-showcase)
+make test-desktop               # kütüphane ve vitrin testleri (pnpm rust:test:desktop)
+cargo doc -p kentos-ui --open   # API belgeleri
+cargo run -p kentos-ui-showcase -- snapshot ekran.png   # pencere açmadan ekran görüntüsü
 ```
 
 ## Yapı
 
 ```
-src/                     kentos-rc kütüphanesi
+src/                     kentos-ui kütüphanesi
 ├── attribute/           öznitelik veri modeli (arayüzden bağımsız)
 │   ├── value.rs         Value (metin, sayı, evet/hayır, tarih, saat, başvuru), ObjectId
 │   ├── field.rs         Field ve FieldKind: tür, birim, zorunluluk, kodlu değer, aralık
@@ -83,7 +83,7 @@ src/                     kentos-rc kütüphanesi
 
 assets/fonts/            gömülü yazı tipleri ve lisansları (SIL Open Font License)
 
-examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
+../../apps/ui-showcase/  KentOS CAD: kütüphanenin vitrin uygulaması (paket kentos-ui-showcase)
 ├── app.rs               durum ve güncelleme mantığı
 ├── message.rs           mesajlar, sekmeler, menü komutları
 ├── command.rs           komut kataloğu ve yazılanın çözümlenmesi
@@ -277,7 +277,7 @@ stil değişiklikleri haritaya anında yansır.
   sekmesindeki Pencereler grubundan açılıp kapanır.
 
 ```rust
-use kentos_rc::widget::floating::{self, Floating, Placement, ToolWindow, Windows};
+use kentos_ui::widget::floating::{self, Floating, Placement, ToolWindow, Windows};
 
 // Durum: açık pencereler, konumları ve sıraları.
 self.windows.open(Pane::Measure, Placement::top_left(8.0, 8.0));
@@ -417,7 +417,7 @@ görünümleri.
   kapatma, sıralama ve taşma denenir.
 
 ```rust
-use kentos_rc::widget::{Tab, Tabs};
+use kentos_ui::widget::{Tab, Tabs};
 
 Tabs::new(
     self.drawings.iter().map(|d| Tab::new(&d.name).icon(Icon::Document).dirty(d.dirty)),
@@ -459,7 +459,7 @@ panellerdir.
   okunur (`Docks::save`, `Docks::load`).
 
 ```rust
-use kentos_rc::widget::docking::{DockSpace, Docks, Pane, Side};
+use kentos_ui::widget::docking::{DockSpace, Docks, Pane, Side};
 
 let mut docks = Docks::new();
 docks.dock(Panel::Layers, Side::Right);
@@ -499,7 +499,7 @@ let docks = Docks::load(&text, Panel::parse);
   perspektif görünümleri; tel kafes, gizli çizgi ve gölgeli stiller.
 
 ```rust
-use kentos_rc::widget::viewports::{self, View, Viewports, Views};
+use kentos_ui::widget::viewports::{self, View, Viewports, Views};
 
 Viewports::new(&self.views, Message::Views, |index| {
     View::new(self.scene(index))
@@ -537,8 +537,8 @@ düzenlenen metni bileşen kendi tutar.
   pusuladaki gibi kuzeyden saat yönüne ölçer, Shift 15°'lik adımlara oturtur.
 
 ```rust
-use kentos_rc::widget::NumberInput;
-use kentos_rc::widget::number::{self, units};
+use kentos_ui::widget::NumberInput;
+use kentos_ui::widget::number::{self, units};
 
 NumberInput::new(self.width, Message::WidthChanged)
     .label("G")
@@ -564,7 +564,7 @@ rampa ters çevrilir ya da hazır rampalardan (Viridis, Magma, Spektral, Arazi�
 biri seçilir. `Ramp::color_at(t)` herhangi bir noktadaki rengi verir.
 
 ```rust
-use kentos_rc::widget::color::{self, ColorPicker, Ramp};
+use kentos_ui::widget::color::{self, ColorPicker, Ramp};
 
 ColorPicker::new(layer.color, Message::ColorChanged).alpha()
 color::ramp(&self.ramp, self.stop, Message::RampChanged)
@@ -686,7 +686,7 @@ Message::Tick(elapsed) => self.playback.advance(elapsed),
   sunar.
 
 ```rust
-use kentos_rc::widget::{Toast, Toaster, Toasts};
+use kentos_ui::widget::{Toast, Toaster, Toasts};
 
 self.toasts.push(Toast::success("2 çizim silindi").action("Geri al", Message::UndoDelete));
 self.toasts.push(Toast::error("Ayarlar kaydedilemedi").body(reason)); // kendiliğinden kapanmaz
@@ -790,8 +790,8 @@ Mono ile, uygulamanın yanıtları ve talimatları Plex Sans ile yazılır.
   koordinat soluk kalır; değerler sabit genişliktedir, çubuk kıpırdamaz.
 
 ```rust
-use kentos_rc::widget::command_line::{self, CommandLine, Prompt};
-use kentos_rc::widget::status_bar::{Readout, Toggle};
+use kentos_ui::widget::command_line::{self, CommandLine, Prompt};
+use kentos_ui::widget::status_bar::{Readout, Toggle};
 
 const CATALOG: &[command_line::Command] = &[
     command_line::Command::new("CIZGI", "Çizgi")
@@ -859,8 +859,8 @@ StatusBar::new()
   temayı gerçek bileşenlerle yan yana gösterir.
 
 ```rust
-use kentos_rc::spatial::model_space::Backdrop;
-use kentos_rc::theme::{self, Accent, Mode};
+use kentos_ui::spatial::model_space::Backdrop;
+use kentos_ui::theme::{self, Accent, Mode};
 
 iced::application(App::new, App::update, App::view)
     .theme(|app: &App| theme::theme(app.mode, app.accent)) // Mode::Night, Mode::HighContrast…
@@ -901,7 +901,7 @@ kutusunda sunar; Ctrl +, Ctrl − ve Ctrl 0 boyutu değiştirir. Seçim
 `~/.config/kentos-cad/ayarlar` dosyasında saklanır.
 
 ```rust
-use kentos_rc::theme::typography::{self, Family, Typography};
+use kentos_ui::theme::typography::{self, Family, Typography};
 
 typography::load(); // gömülü yazı tipleri
 typography::set(Typography { family: Family::Inter, size: 14.0, ..Typography::DEFAULT });
@@ -927,36 +927,36 @@ girdiler ardından verildikleri sırayla uygulanır. Konumlar pencere
 koordinatıdır, görüntüdeki piksellerle aynıdır:
 
 ```sh
-cargo run -- snapshot ekran.png
-cargo run -- snapshot menu.png --senaryo agac --sag-tikla 1233,329 --imlec 1100,546
-cargo run -- snapshot takvim.png --senaryo yol --tikla 1418,778
-cargo run -- snapshot galeri.png --senaryo galeri --sayfa veri --boyut 1440x1500
-cargo run -- snapshot secim.png --senaryo secim --tema acik --olcek 2
-cargo run -- snapshot oneri.png --senaryo cizim --tikla 800,851 --yaz c
-cargo run -- snapshot olcek.png --senaryo cizim --tikla 1255,884
-cargo run -- snapshot yazi.png --senaryo secim --yazi inter --esaralikli jetbrains-mono --punto 15
-cargo run -- snapshot panel.png --senaryo secim --surukle 1077,400,877,400 --tikla 1140,483
-cargo run -- snapshot pencereler.png --senaryo pencereler --bas 400,158 --imlec 406,163
-cargo run -- snapshot bildirim.png --senaryo bildirimler --tikla 903,463
-cargo run -- snapshot gorevler.png --senaryo gorevler
-cargo run -- snapshot onay.png --senaryo onay
-cargo run -- snapshot bos.png --senaryo bos-durumlar
-cargo run -- snapshot sihirbaz.png --senaryo sihirbaz --sayfa 2
-cargo run -- snapshot ozellikler.png --senaryo ozellikler
-cargo run -- snapshot duzen.png --senaryo duzen
-cargo run -- snapshot yuva.png --senaryo yuva --bas 1150,153 --imlec 700,300
-cargo run -- snapshot mini.png --senaryo mini --imlec 437,272
-cargo run -- snapshot daire.png --senaryo daire --imlec 600,250
-cargo run -- snapshot kilavuz.png --senaryo kilavuz --bas 10,350 --imlec 300,352
-cargo run -- snapshot lejant.png --senaryo lejant
-cargo run -- snapshot karsilastir.png --senaryo karsilastir --imlec 700,300
-cargo run -- snapshot sekmeler.png --senaryo galeri --sayfa yerlesim
-cargo run -- snapshot girdiler.png --senaryo galeri --sayfa girdiler --boyut 1440x1700 --tikla 222,1190
-cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah
-cargo run -- snapshot mor.png --senaryo secim --tema acik --vurgu "#7c5cff" --zemin arduvaz
-cargo run -- snapshot gece.png --senaryo pencereler --tema gece
-cargo run -- snapshot karsitlik.png --senaryo secim --tema karsitlik
-cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
+cargo run -p kentos-ui-showcase -- snapshot ekran.png
+cargo run -p kentos-ui-showcase -- snapshot menu.png --senaryo agac --sag-tikla 1233,329 --imlec 1100,546
+cargo run -p kentos-ui-showcase -- snapshot takvim.png --senaryo yol --tikla 1418,778
+cargo run -p kentos-ui-showcase -- snapshot galeri.png --senaryo galeri --sayfa veri --boyut 1440x1500
+cargo run -p kentos-ui-showcase -- snapshot secim.png --senaryo secim --tema acik --olcek 2
+cargo run -p kentos-ui-showcase -- snapshot oneri.png --senaryo cizim --tikla 800,851 --yaz c
+cargo run -p kentos-ui-showcase -- snapshot olcek.png --senaryo cizim --tikla 1255,884
+cargo run -p kentos-ui-showcase -- snapshot yazi.png --senaryo secim --yazi inter --esaralikli jetbrains-mono --punto 15
+cargo run -p kentos-ui-showcase -- snapshot panel.png --senaryo secim --surukle 1077,400,877,400 --tikla 1140,483
+cargo run -p kentos-ui-showcase -- snapshot pencereler.png --senaryo pencereler --bas 400,158 --imlec 406,163
+cargo run -p kentos-ui-showcase -- snapshot bildirim.png --senaryo bildirimler --tikla 903,463
+cargo run -p kentos-ui-showcase -- snapshot gorevler.png --senaryo gorevler
+cargo run -p kentos-ui-showcase -- snapshot onay.png --senaryo onay
+cargo run -p kentos-ui-showcase -- snapshot bos.png --senaryo bos-durumlar
+cargo run -p kentos-ui-showcase -- snapshot sihirbaz.png --senaryo sihirbaz --sayfa 2
+cargo run -p kentos-ui-showcase -- snapshot ozellikler.png --senaryo ozellikler
+cargo run -p kentos-ui-showcase -- snapshot duzen.png --senaryo duzen
+cargo run -p kentos-ui-showcase -- snapshot yuva.png --senaryo yuva --bas 1150,153 --imlec 700,300
+cargo run -p kentos-ui-showcase -- snapshot mini.png --senaryo mini --imlec 437,272
+cargo run -p kentos-ui-showcase -- snapshot daire.png --senaryo daire --imlec 600,250
+cargo run -p kentos-ui-showcase -- snapshot kilavuz.png --senaryo kilavuz --bas 10,350 --imlec 300,352
+cargo run -p kentos-ui-showcase -- snapshot lejant.png --senaryo lejant
+cargo run -p kentos-ui-showcase -- snapshot karsilastir.png --senaryo karsilastir --imlec 700,300
+cargo run -p kentos-ui-showcase -- snapshot sekmeler.png --senaryo galeri --sayfa yerlesim
+cargo run -p kentos-ui-showcase -- snapshot girdiler.png --senaryo galeri --sayfa girdiler --boyut 1440x1700 --tikla 222,1190
+cargo run -p kentos-ui-showcase -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah
+cargo run -p kentos-ui-showcase -- snapshot mor.png --senaryo secim --tema acik --vurgu "#7c5cff" --zemin arduvaz
+cargo run -p kentos-ui-showcase -- snapshot gece.png --senaryo pencereler --tema gece
+cargo run -p kentos-ui-showcase -- snapshot karsitlik.png --senaryo secim --tema karsitlik
+cargo run -p kentos-ui-showcase -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 
 `KENTOS_SNAPSHOT_BACKEND=tiny-skia` yazılım çiziciyi zorlar. Alt komut
@@ -970,7 +970,7 @@ geçişleri kapatır (`theme::motion::set_reduced`); bileşenler son hâlleriyle
   taşımaz.
 - **Bileşenler `Message` türünden bağımsızdır** ve yapıcı (builder) desenini
   izler; hepsi `Element`'e dönüşür.
-- **Stil fonksiyonları iced imzalarını kullanır**; kentos-rc bileşenleri
+- **Stil fonksiyonları iced imzalarını kullanır**; kentos-ui bileşenleri
   dışında da verilebilir: `button("Kaydet").style(style::button::primary)`.
 - **İkonlar düğmenin rengini miras alır**; etkin, üzerine gelinmiş ve devre
   dışı durumlar ikona kendiliğinden yansır.
@@ -987,8 +987,8 @@ geçişleri kapatır (`theme::motion::set_reduced`); bileşenler son hâlleriyle
 ## Örnekler
 
 ```rust
-use kentos_rc::icon::Icon;
-use kentos_rc::widget::ribbon::{self, Ribbon};
+use kentos_ui::icon::Icon;
+use kentos_ui::widget::ribbon::{self, Ribbon};
 
 Ribbon::new()
     .application(ribbon::AppButton::new("KentOS CAD").on_press(Message::AppMenu))
@@ -1005,7 +1005,7 @@ Ribbon::new()
 ```
 
 ```rust
-use kentos_rc::widget::{Inspector, inspector};
+use kentos_ui::widget::{Inspector, inspector};
 
 // Görünüm: alanlar türlerine göre düzenlenir.
 Inspector::new(&self.inspector, Message::Inspector)
@@ -1022,8 +1022,8 @@ Message::Inspector(event) => match self.inspector.update(event) {
 ```
 
 ```rust
-use kentos_rc::widget::tree_view::{self, Node, TreeView};
-use kentos_rc::widget::{ContextMenu, Menu};
+use kentos_ui::widget::tree_view::{self, Node, TreeView};
+use kentos_ui::widget::{ContextMenu, Menu};
 
 // Ağaç tablo: düğümler iç içe, durumları uygulamanın.
 TreeView::new([

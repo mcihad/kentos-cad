@@ -1,0 +1,350 @@
+{
+  "source": "apps/ui-showcase",
+  "backend": "tiny-skia",
+  "command": "node scripts/ui/snapshots.mjs --write",
+  "wallClock": [
+    "onay",
+    "bildirimler",
+    "galeri-yerlesim",
+    "galeri-geri-bildirim"
+  ],
+  "images": [
+    {
+      "name": "bos",
+      "args": [
+        "--senaryo",
+        "bos"
+      ],
+      "bytes": 190508,
+      "sha256": "e3cc53cf662d5af60f48d5e60b126a4caef6aa623a460727c0991fdf040c43f2"
+    },
+    {
+      "name": "secim",
+      "args": [
+        "--senaryo",
+        "secim"
+      ],
+      "bytes": 204512,
+      "sha256": "15d0f9a4136fcd57c64966786686a0c08ee184203b159ffe2603890b77344107"
+    },
+    {
+      "name": "agac",
+      "args": [
+        "--senaryo",
+        "agac"
+      ],
+      "bytes": 179844,
+      "sha256": "10694c34119b7cd894bb95978a311069abd8a6a9755ba5cb823d97991d65597f"
+    },
+    {
+      "name": "yol",
+      "args": [
+        "--senaryo",
+        "yol"
+      ],
+      "bytes": 221192,
+      "sha256": "bdc9fd1eb42299e2577fe46043b1241bce122b5bcb039737695a8daff4e88087"
+    },
+    {
+      "name": "sorgu",
+      "args": [
+        "--senaryo",
+        "sorgu"
+      ],
+      "bytes": 193574,
+      "sha256": "bfb2020f8ad9bcf962e3e042b8837094837b425b2d6b8295cd7a024c93978b68"
+    },
+    {
+      "name": "sorgu-hata",
+      "args": [
+        "--senaryo",
+        "sorgu-hata"
+      ],
+      "bytes": 196019,
+      "sha256": "c71abb65a4871e6543a2537c8b2732806752dfc739972b0059c3f1c12952efff"
+    },
+    {
+      "name": "filtre",
+      "args": [
+        "--senaryo",
+        "filtre"
+      ],
+      "bytes": 212860,
+      "sha256": "5fc0996003f91f27353b8431f0d18bce0969ce27d566b58d4db36fd75a778abb"
+    },
+    {
+      "name": "yardim",
+      "args": [
+        "--senaryo",
+        "yardim"
+      ],
+      "bytes": 286436,
+      "sha256": "4f3402b0324053762c5d66cf79cc7fce560829fedcfc7a293ad2de996cf4e62b"
+    },
+    {
+      "name": "cizim",
+      "args": [
+        "--senaryo",
+        "cizim"
+      ],
+      "bytes": 198617,
+      "sha256": "8a444c1769035c5b4a64ffef269979e1743dd67b3e29c494e6414c490637e6dd"
+    },
+    {
+      "name": "gecmis",
+      "args": [
+        "--senaryo",
+        "gecmis"
+      ],
+      "bytes": 193785,
+      "sha256": "1c654d72b08be88735f1cd8ffddbe3ec77e9dadbff665a02e00f9220406d330b"
+    },
+    {
+      "name": "pencereler",
+      "args": [
+        "--senaryo",
+        "pencereler"
+      ],
+      "bytes": 216707,
+      "sha256": "6ee630cba419f872fec4e3958376e9c1bf69fae38bbe5579237ae2fb058d5bae"
+    },
+    {
+      "name": "bildirimler",
+      "args": [
+        "--senaryo",
+        "bildirimler"
+      ],
+      "bytes": 188366,
+      "sha256": "a01d7a0a3e5edefafab25da98003ef6b51f3d42d4bfb06b118d18ea1e73f8f1b"
+    },
+    {
+      "name": "gorevler",
+      "args": [
+        "--senaryo",
+        "gorevler"
+      ],
+      "bytes": 190058,
+      "sha256": "936f0172d73f80a985ed7badb0e5e5346def1dfc3d1165a95ff223c6763905df"
+    },
+    {
+      "name": "onay",
+      "args": [
+        "--senaryo",
+        "onay"
+      ],
+      "bytes": 189576,
+      "sha256": "236ca3df6cc9e5238042d138125734fa32d6dfd933843e9ff03b870980a70fe4"
+    },
+    {
+      "name": "bos-durumlar",
+      "args": [
+        "--senaryo",
+        "bos-durumlar"
+      ],
+      "bytes": 166784,
+      "sha256": "d8484f154deb8f1fb21c348b31565977c8c7d648c0c02c4f6dc202de5a19e9a7"
+    },
+    {
+      "name": "sihirbaz",
+      "args": [
+        "--senaryo",
+        "sihirbaz"
+      ],
+      "bytes": 204471,
+      "sha256": "e59e9fdd23967900642abd20856041e0f48364b264d8c8be4c8d6571b10af6aa"
+    },
+    {
+      "name": "ozellikler",
+      "args": [
+        "--senaryo",
+        "ozellikler"
+      ],
+      "bytes": 181990,
+      "sha256": "60234203b5c61afef64e9145a7ccda5a191d0fa904a2af4541325c1c78d7cdc7"
+    },
+    {
+      "name": "yuva",
+      "args": [
+        "--senaryo",
+        "yuva"
+      ],
+      "bytes": 187660,
+      "sha256": "72a43bcdc86aa33fb58f425b72cad6306251b96693f8ac756e343805d4717e52"
+    },
+    {
+      "name": "duzen",
+      "args": [
+        "--senaryo",
+        "duzen"
+      ],
+      "bytes": 176877,
+      "sha256": "aae5075f59944f003f211077a5b7438c4487206fb931d201a3d31c546bbd2050"
+    },
+    {
+      "name": "mini",
+      "args": [
+        "--senaryo",
+        "mini"
+      ],
+      "bytes": 219598,
+      "sha256": "6eb984671ec0c845391503d750b19b4ff06d6530bf89db4bb09be47fd8a4778b"
+    },
+    {
+      "name": "daire",
+      "args": [
+        "--senaryo",
+        "daire"
+      ],
+      "bytes": 207919,
+      "sha256": "cbe100cf030cad7a4108f55366a4f7a7890e2cf871bc4b11829e97223267fa1a"
+    },
+    {
+      "name": "kilavuz",
+      "args": [
+        "--senaryo",
+        "kilavuz"
+      ],
+      "bytes": 176856,
+      "sha256": "092404618c96bdf8428d8ff57ad7c644a4d112781de733dc49543b08c326a6d7"
+    },
+    {
+      "name": "lejant",
+      "args": [
+        "--senaryo",
+        "lejant"
+      ],
+      "bytes": 206628,
+      "sha256": "71575a21515857c08fa9e45b510ea1e2bfdc2a9063bdd52e8f55005ee52d757e"
+    },
+    {
+      "name": "karsilastir",
+      "args": [
+        "--senaryo",
+        "karsilastir"
+      ],
+      "bytes": 198931,
+      "sha256": "0182f9ac33b6c21f418c230f0901cdd6d06e229c895c7adc2793e78f382935fc"
+    },
+    {
+      "name": "galeri-renkler",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "renkler"
+      ],
+      "bytes": 157144,
+      "sha256": "b239fcd2a3de9feb18727b910ec7afdc6e4805d7a9c674737551967294bb7ecc"
+    },
+    {
+      "name": "galeri-yazi",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "yazi"
+      ],
+      "bytes": 148728,
+      "sha256": "d2c4d6a6ea441f55b86b81f094f831f4f26a2d56d5b8a357777fc2d83abc05cf"
+    },
+    {
+      "name": "galeri-ikonlar",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "ikonlar"
+      ],
+      "bytes": 116457,
+      "sha256": "e0c910c9dbb9a7a7da045c626de8181678db6fae4cf11018e5424618cfe1894a"
+    },
+    {
+      "name": "galeri-dugmeler",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "dugmeler"
+      ],
+      "bytes": 151666,
+      "sha256": "a611ff9a121ae45d4665d5d804938c48d69df1bb41e8c0b50f113815481ea906"
+    },
+    {
+      "name": "galeri-veri",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "veri"
+      ],
+      "bytes": 128024,
+      "sha256": "31d0271dbd6347cc8f2218311dd4ff81ef9b043c52d896e92c773bbc53c09d0d"
+    },
+    {
+      "name": "galeri-cerceve",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "cerceve"
+      ],
+      "bytes": 133560,
+      "sha256": "06c622ae84fa0fe9453e671b9a6f40be32a2ddc0b739c3d51c8125e7cac54a04"
+    },
+    {
+      "name": "galeri-yerlesim",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "yerlesim"
+      ],
+      "bytes": 128475,
+      "sha256": "95dd4c360899ff5100102e2ce21ac65dff01441bce751c6abea7195532a3f612"
+    },
+    {
+      "name": "galeri-girdiler",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "girdiler"
+      ],
+      "bytes": 144741,
+      "sha256": "ac64c8f96a8fa7bd931e4bdb53b9fc4a986ce21eea156902d7677910bd0c10e6"
+    },
+    {
+      "name": "galeri-geri-bildirim",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "geri-bildirim"
+      ],
+      "bytes": 136507,
+      "sha256": "63ae05de3296319a27983ab69dba53f337b47383b43b22b79a73e74bd88c43f1"
+    },
+    {
+      "name": "galeri-oznitelikler",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "oznitelikler"
+      ],
+      "bytes": 162129,
+      "sha256": "9953d5cb796b3df1eccf001bb9f811b6288ad580bfd32f40a3c042cedee73472"
+    },
+    {
+      "name": "galeri-mekansal",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "mekansal"
+      ],
+      "bytes": 103684,
+      "sha256": "c2f750741d16598744f8c7be054a7c7ec091908ce4e341236f69b731de640feb"
+    }
+  ]
+}

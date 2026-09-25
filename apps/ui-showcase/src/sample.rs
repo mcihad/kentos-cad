@@ -1,7 +1,7 @@
 //! Vitrin uygulamasının örnek verisi: Türkiye'nin şehirleri, önemli
 //! yerleri, ana yolları, nehirleri ve İstanbul ilçeleri (basitleştirilmiş).
 //!
-//! Her katmanın bir öznitelik şeması vardır; alanlar kentos-rc'nin bütün
+//! Her katmanın bir öznitelik şeması vardır; alanlar kentos-ui'nin bütün
 //! alan türlerini kullanır. Nesne başvuruları (en yakın şehir, yolların
 //! başlangıç ve bitiş şehri) veriden hesaplanır. Bilinmeyen değerler (hız
 //! sınırı, bakım tarihi, açılış saati) boş bırakılmıştır; nesne inceleyiciyle
@@ -12,8 +12,8 @@
 
 use iced::Color;
 
-use kentos_rc::attribute::{Field, ObjectId, Value};
-use kentos_rc::spatial::{Feature, Geometry, Layer, LonLat, Sublayer, measure};
+use kentos_ui::attribute::{Field, ObjectId, Value};
+use kentos_ui::spatial::{Feature, Geometry, Layer, LonLat, Sublayer, measure};
 
 use crate::layer_tree::{Entry, LayerTree};
 

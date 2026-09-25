@@ -7,14 +7,14 @@ use iced::widget::{
 };
 use iced::{Border, Center, Element, Fill, Theme, keyboard};
 
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::spatial::{Tool, model_space};
-use kentos_rc::style;
-use kentos_rc::theme::{Tokens, typography};
-use kentos_rc::widget::command_line::Prompt;
-use kentos_rc::widget::status_bar::{Readout, Toggle};
-use kentos_rc::widget::{
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::spatial::{Tool, model_space};
+use kentos_ui::style;
+use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::command_line::Prompt;
+use kentos_ui::widget::status_bar::{Readout, Toggle};
+use kentos_ui::widget::{
     CommandLine, ContextMenu, Dialog, Floating, Menu, MiniToolbar, NavigationBar, RadialMenu,
     StatusBar, ToolWindow,
 };
@@ -158,7 +158,7 @@ impl Showcase {
         vec![
             entry(
                 "Kayan araç pencereleri",
-                "kentos_rc::widget::Floating",
+                "kentos_ui::widget::Floating",
                 "Harita üstünde sürüklenen, arkadaki işi kilitlemeyen pencereler. Başlıktan \
                  sürükleyin: kenarlara ve birbirlerine yaklaşınca yakalanırlar, sarı kılavuz \
                  nerede durduklarını gösterir (Ctrl yakalamayı kapatır). Tıklanan pencere öne \
@@ -180,7 +180,7 @@ impl Showcase {
             ),
             entry(
                 "Durum çubuğu",
-                "kentos_rc::widget::StatusBar",
+                "kentos_ui::widget::StatusBar",
                 "Göstergeler değer gösterir; menüsü olan gösterge tıklanınca yukarı doğru \
                  açılır ve bunu sağındaki ok belli eder. Anahtarlar açıkken ikonlarıyla \
                  vurgulanır; zemin yalnızca üzerine gelince belirir. Değişen değerler sabit \
@@ -197,7 +197,7 @@ impl Showcase {
             ),
             entry(
                 "Komut kutusu",
-                "kentos_rc::widget::CommandLine",
+                "kentos_ui::widget::CommandLine",
                 "Geçmiş, istem ve giriş. Yazılan komutlar › işaretiyle ve eş aralıklı \
                  yazıyla, yanıtlar düz yazıyla, hatalar kırmızıyla gösterilir; eski satırlar \
                  soluklaşır. İstem etkin komutun adımını ve seçeneklerini gösterir. Yazmaya \
@@ -217,7 +217,7 @@ impl Showcase {
             ),
             entry(
                 "Gezinme çubuğu",
-                "kentos_rc::widget::NavigationBar",
+                "kentos_ui::widget::NavigationBar",
                 "Model alanının köşesinde duran dar, dikey görünüm denetimleri. \
                  Yüksekliğini bildirir; model alanı o bölgede artı imleci çizmez.",
                 row![
@@ -239,7 +239,7 @@ impl Showcase {
             ),
             entry(
                 "İletişim kutusu",
-                "kentos_rc::widget::Dialog",
+                "kentos_ui::widget::Dialog",
                 "Başlık, gövde ve sağa hizalı eylemlerden oluşan kutu. Kendi başına bir \
                  kaplama değildir; overlay::modal ile ortalanır ve arkası karartılır.",
                 column![
@@ -257,7 +257,7 @@ impl Showcase {
             ),
             entry(
                 "Bağlam menüsü",
-                "kentos_rc::widget::ContextMenu",
+                "kentos_ui::widget::ContextMenu",
                 "Herhangi bir öğeyi sarar; sağ tıklanan yerde açılır, pencere kenarına \
                  taşacaksa sola ya da yukarı döner. Komut, işaret, kısayol, başlık, alt \
                  menü, devre dışı ve tehlikeli komut destekler. Oklarla gezinilir, Enter \
@@ -274,7 +274,7 @@ impl Showcase {
             ),
             entry(
                 "Mini araç çubuğu",
-                "kentos_rc::widget::MiniToolbar",
+                "kentos_ui::widget::MiniToolbar",
                 "Seçimin üstünde beliren küçük çubuk: seçimle en sık yapılan işler. Üstte yer \
                  yoksa altına geçer, alanın kenarlarından taşmaz. İmleç uzaklaştıkça \
                  soluklaşır ve çizimi kapatmaz, yaklaşınca belirginleşir; düğmenin adı ve \
@@ -295,7 +295,7 @@ impl Showcase {
             ),
             entry(
                 "Dairesel menü",
-                "kentos_rc::widget::RadialMenu",
+                "kentos_ui::widget::RadialMenu",
                 "İmlecin yerinde açılan, komutları çevresinde hep aynı yönlerde dizen menü \
                  (Blender'daki pasta, Maya'daki işaretleme menüsü gibi). Alana basılı tutup \
                  bir yöne çekin ve bırakın; kısa tıklarsanız menü açık kalır, yönü seçip \
@@ -312,7 +312,7 @@ impl Showcase {
             ),
             entry(
                 "Uygulama menüsü",
-                "kentos_rc::widget::AppMenu",
+                "kentos_ui::widget::AppMenu",
                 "Şeridin marka düğmesinden açılan büyük menü: solda komutlar, sağda \
                  ayrıntı bölmesi, altta eylemler. Bir kaplama olduğu için burada \
                  gösterilmez; düğmeyle açın.",

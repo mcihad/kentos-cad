@@ -15,12 +15,12 @@ use iced::widget::text::Wrapping;
 use iced::widget::{column, container, responsive, row, space, stack, themer};
 use iced::{Border, Element, Fill, Point, Shadow, Size, Theme, Vector};
 
-use kentos_rc::label;
-use kentos_rc::spatial::model_space::{Backdrop, Style};
-use kentos_rc::spatial::{ModelSpace, Tool};
-use kentos_rc::theme::{self, Mode, Tokens, typography};
-use kentos_rc::widget::rulers::{self, Transform};
-use kentos_rc::widget::{Compass, Rulers, Tab, Tabs};
+use kentos_ui::label;
+use kentos_ui::spatial::model_space::{Backdrop, Style};
+use kentos_ui::spatial::{ModelSpace, Tool};
+use kentos_ui::theme::{self, Mode, Tokens, typography};
+use kentos_ui::widget::rulers::{self, Transform};
+use kentos_ui::widget::{Compass, Rulers, Tab, Tabs};
 
 use crate::app::Showcase;
 use crate::message::Message;
@@ -132,7 +132,7 @@ impl Showcase {
                 themer(Some(paper_theme.clone()), paper).text_color(|theme| Tokens::of(theme).text),
             )
             .center(Fill)
-            .style(kentos_rc::style::container::surface);
+            .style(kentos_ui::style::container::surface);
 
             if !rulers_shown {
                 return desk.into();
@@ -155,7 +155,7 @@ impl Showcase {
         let cell = |content: String| {
             container(
                 label::caption(content)
-                    .style(kentos_rc::style::text::default)
+                    .style(kentos_ui::style::text::default)
                     .wrapping(Wrapping::None),
             )
             .padding([3, 8])
@@ -184,7 +184,7 @@ impl Showcase {
                 container(
                     label::caption("KentOS CAD")
                         .font(typography::ui_strong())
-                        .style(kentos_rc::style::text::default)
+                        .style(kentos_ui::style::text::default)
                 )
                 .padding([3, 8]),
             ]

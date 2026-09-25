@@ -3,9 +3,9 @@
 use iced::Element;
 use iced::widget::button;
 
-use kentos_rc::label;
-use kentos_rc::style;
-use kentos_rc::widget::{Dialog, ShortcutList, overlay};
+use kentos_ui::label;
+use kentos_ui::style;
+use kentos_ui::widget::{Dialog, ShortcutList, overlay};
 
 use crate::app::Showcase;
 use crate::message::Message;

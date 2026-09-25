@@ -4,14 +4,14 @@
 use iced::widget::{Row, row, space};
 use iced::{Center, Element};
 
-use kentos_rc::icon::{Icon, Tone, icon};
-use kentos_rc::label;
-use kentos_rc::spatial::{LonLat, format};
-use kentos_rc::style;
-use kentos_rc::widget::Menu;
-use kentos_rc::widget::StatusBar;
-use kentos_rc::widget::progress;
-use kentos_rc::widget::status_bar::{Readout, Toggle};
+use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
+use kentos_ui::spatial::{LonLat, format};
+use kentos_ui::style;
+use kentos_ui::widget::Menu;
+use kentos_ui::widget::StatusBar;
+use kentos_ui::widget::progress;
+use kentos_ui::widget::status_bar::{Readout, Toggle};
 
 use crate::app::Showcase;
 use crate::message::{CoordinateFormat, DockPanel, Message, Setting};
@@ -204,8 +204,8 @@ impl Showcase {
                     .into_iter()
                     .filter(|&scale| {
                         let zoom = viewport.zoom_for_scale(scale);
-                        (kentos_rc::spatial::projection::MIN_ZOOM
-                            ..=kentos_rc::spatial::projection::MAX_ZOOM)
+                        (kentos_ui::spatial::projection::MIN_ZOOM
+                            ..=kentos_ui::spatial::projection::MAX_ZOOM)
                             .contains(&zoom)
                     })
                     .fold(menu, |menu, scale| {

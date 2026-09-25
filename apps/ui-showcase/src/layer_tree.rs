@@ -12,7 +12,7 @@
 //! öğeleri silinmez ve düzenlenmez) ve seçilemez yapılabilir (haritada
 //! tıklanınca seçilmez).
 
-use kentos_rc::widget::tree_view::Place;
+use kentos_ui::widget::tree_view::Place;
 
 /// Ağaçtaki bir düğüm.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

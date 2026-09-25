@@ -8,8 +8,8 @@ use iced::widget::canvas::{self, Frame, Geometry, Path, Stroke};
 use iced::widget::{Canvas, canvas as canvas_widget};
 use iced::{Color, Element, Point, Rectangle, Renderer, Size, Theme, Vector, mouse};
 
-use kentos_rc::theme::{Tokens, typography};
-use kentos_rc::widget::assets::{Asset, AssetBrowser};
+use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::assets::{Asset, AssetBrowser};
 
 use crate::app::Showcase;
 use crate::message::Message;

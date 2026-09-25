@@ -4,12 +4,12 @@
 use iced::widget::{Row, button, column, container, row};
 use iced::{Center, Element, Fill};
 
-use kentos_rc::icon::Icon;
-use kentos_rc::label;
-use kentos_rc::style;
-use kentos_rc::theme::typography;
-use kentos_rc::widget::progress::{self, State, Task, TaskList, Tint};
-use kentos_rc::widget::{Banner, Confirm, EmptyState, PropertiesDialog, Wizard};
+use kentos_ui::icon::Icon;
+use kentos_ui::label;
+use kentos_ui::style;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::progress::{self, State, Task, TaskList, Tint};
+use kentos_ui::widget::{Banner, Confirm, EmptyState, PropertiesDialog, Wizard};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
@@ -81,7 +81,7 @@ impl Showcase {
         vec![
             entry(
                 "Bildirimler",
-                "kentos_rc::widget::Toaster",
+                "kentos_ui::widget::Toaster",
                 "Sardığı alanın sağ alt köşesinde üst üste dizilen kısa iletiler; vitrinde \
              bütün pencereyi sarar, bu yüzden her sekmede durum çubuğunun hemen üstünde, aynı \
              yerde durur. İkonun ve alttaki kalan süre çizgisinin rengi önem düzeyidir. Bilgi \
@@ -99,7 +99,7 @@ impl Showcase {
             ),
             entry(
                 "İlerleme çubuğu",
-                "kentos_rc::widget::progress::bar",
+                "kentos_ui::widget::progress::bar",
                 "İnce çubuk: oranı bilinen işte dolar, bilinmeyende üzerinde bir parça soldan \
              sağa kayar. Renk işin durumunu söyler: süren iş vurgu, biten iş yeşil, başarısız \
              iş kırmızı.",
@@ -110,7 +110,7 @@ impl Showcase {
             ),
             entry(
                 "Dönen gösterge",
-                "kentos_rc::widget::progress::spinner",
+                "kentos_ui::widget::progress::spinner",
                 "Süren işin küçük göstergesi: çember üzerinde sekiz nokta, öndeki en koyu. Durum \
              çubuğunda ve görev satırında kullanılır.",
                 spinners,
@@ -118,7 +118,7 @@ impl Showcase {
             ),
             entry(
                 "Görev listesi",
-                "kentos_rc::widget::TaskList",
+                "kentos_ui::widget::TaskList",
                 "Arka plandaki işler durumlarıyla: sürüyor, sırada, bitti, başarısız, iptal edildi. \
              Süren ve sıradaki iş durdur düğmesiyle iptal edilir; başarısız iş yeniden denenir; \
              biten iş listeden kaldırılır. Vitrinde dışa aktarma ve dizin oluşturma buraya düşer: Yönet \
@@ -138,7 +138,7 @@ impl Showcase {
             ),
             entry(
                 "Onay kutusu",
-                "kentos_rc::widget::Confirm",
+                "kentos_ui::widget::Confirm",
                 "Başlık soru olarak yazılır; onay düğmesi işin adını taşır (\"Tamam\" değil, \
                  \"Tümünü sil\"). Yıkıcı işte onay düğmesi kırmızıdır; geri alınabiliyorsa bu \
                  söylenir. overlay::modal ile ortalanır; Enter onaylar, Esc vazgeçer. Vitrinde \
@@ -156,7 +156,7 @@ impl Showcase {
             ),
             entry(
                 "Uyarı şeridi",
-                "kentos_rc::widget::Banner",
+                "kentos_ui::widget::Banner",
                 "Bir alanın üstünde süren bir durumu anlatır: olay değil, hâl. Bildirimden farkı \
                  kapatılana ya da durum değişene kadar yerinde kalmasıdır. Vitrinde örnek veri \
                  silinmeye çalışılınca haritanın üstünde salt okunur şeridi açılır.",
@@ -169,7 +169,7 @@ impl Showcase {
             ),
             entry(
                 "Boş ve hata durumları",
-                "kentos_rc::widget::EmptyState",
+                "kentos_ui::widget::EmptyState",
                 "İçeriği olmayan alanın ortasında ne olduğu ve ne yapılabileceği; hata durumunda \
                  neyin yapılamadığı ve nasıl düzeltileceği. Hata özür dilemez, neyin olduğunu \
                  açıkça söyler. Vitrinde bütün katmanlar gizliyken harita ve satırı olmayan \
@@ -186,7 +186,7 @@ impl Showcase {
             ),
             entry(
                 "Adımlı sihirbaz",
-                "kentos_rc::widget::Wizard",
+                "kentos_ui::widget::Wizard",
                 "Bir işi sırayla birkaç adımda yaptırır. Biten adımlar onay işaretiyle, süren \
                  adım vurgu renginde gösterilir; içerik sabit yüksekliktedir, kutu adımlar \
                  arasında zıplamaz. İleri adım tamamlanmadıysa devre dışıdır ve alttaki not \
@@ -207,7 +207,7 @@ impl Showcase {
             ),
             entry(
                 "Özellikler penceresi",
-                "kentos_rc::widget::PropertiesDialog",
+                "kentos_ui::widget::PropertiesDialog",
                 "Solunda bölüm listesi olan pencere (QGIS'in katman özellikleri gibi). \
                  Değişiklikler taslakta tutulur: Uygula yazar ve açık kalır, Tamam yazar ve \
                  kapatır, İptal atar. Taslak farklıyken Uygula etkindir ve altta not görünür. \

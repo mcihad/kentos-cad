@@ -1,11 +1,11 @@
 [package]
-name = "showcase"
-description = "KentOS CAD: kentos-rc bileşenlerinin vitrin uygulaması"
+name = "kentos-ui-showcase"
+description = "KentOS UI bileşenlerinin vitrin uygulaması (KentOS CAD örneği)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-kentos-rc = { path = "../../crates/ui", features = ["snapshot"] }
+kentos-ui = { path = "../../crates/ui", features = ["snapshot"] }
 iced = { workspace = true, features = ["canvas", "debug", "tokio"] }
