@@ -115,6 +115,11 @@ pub struct Showcase {
     settings_path: Option<PathBuf>,
 
     pub(crate) ribbon_tab: RibbonTab,
+    /// Şerit daraltılmış: yalnızca sekmeler görünür.
+    pub(crate) ribbon_collapsed: bool,
+    /// Hızlı erişim düğmelerinin görünürlüğü (dışa aktar, geri al, tümünü
+    /// gör, kısayollar).
+    pub(crate) quick: [bool; 4],
     pub(crate) app_menu_open: bool,
     pub(crate) app_menu_hover: Option<AppCommand>,
     pub(crate) help_open: bool,
@@ -285,6 +290,8 @@ impl Showcase {
             docks: DockPanel::layout(),
             settings_path: None,
             ribbon_tab: RibbonTab::Home,
+            ribbon_collapsed: false,
+            quick: [true; 4],
             app_menu_open: false,
             app_menu_hover: None,
             help_open: false,
@@ -552,6 +559,7 @@ impl Showcase {
 
             Message::RibbonTabSelected(tab) => {
                 self.ribbon_tab = tab;
+                self.ribbon_collapsed = false;
 
                 // Galeride model alanı görünmez; imleç bilgisi eskimesin,
                 // haritadan seçim de sürmesin.
@@ -559,6 +567,12 @@ impl Showcase {
                     self.cursor = None;
                     self.hover = None;
                     self.cancel_pick();
+                }
+            }
+            Message::RibbonCollapsed => self.ribbon_collapsed = !self.ribbon_collapsed,
+            Message::QuickToggled(index) => {
+                if let Some(shown) = self.quick.get_mut(index) {
+                    *shown = !*shown;
                 }
             }
             Message::AppMenuToggled => {
@@ -1460,6 +1474,11 @@ impl Showcase {
     }
 
     /// Son silinen çizimleri numaralarıyla geri koyar ve seçer.
+    /// Geri alınabilecek silme var mı.
+    pub(crate) fn can_undo(&self) -> bool {
+        !self.deleted.is_empty()
+    }
+
     fn undo_delete(&mut self) {
         let deleted = std::mem::take(&mut self.deleted);
         let Some(layer) = self.layers.get_mut(DRAWING_LAYER) else {
@@ -2357,7 +2376,8 @@ fn typed(text: Option<&str>, modifiers: Modifiers) -> Option<Message> {
         .then(|| Message::CommandTyped(text.to_owned()))
 }
 
-/// CAD kısayolları: Esc, Delete, Ctrl+A (tümünü seç), F1 (yardım), F2
+/// CAD kısayolları: Esc, Delete, Ctrl+A (tümünü seç), F1 (yardım), Ctrl+F1
+/// (şeridi daralt), F2
 /// (komut geçmişi), F3 (yakalama), F7 (ızgara); Ctrl +, Ctrl − ve Ctrl 0
 /// yazı boyutunu değiştirir.
 fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
@@ -2368,6 +2388,7 @@ fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
         Key::Named(Named::Escape) => Some(Message::Escape),
         Key::Named(Named::Enter) => Some(Message::EnterPressed),
         Key::Named(Named::Delete) => Some(Message::DeleteSelection),
+        Key::Named(Named::F1) if modifiers.command() => Some(Message::RibbonCollapsed),
         Key::Named(Named::F1) => Some(Message::HelpToggled),
         Key::Named(Named::F2) => Some(Message::CommandHistoryToggled),
         Key::Named(Named::F3) => Some(Message::Toggle(Setting::Snap)),
@@ -2449,6 +2470,27 @@ mod tests {
 
         submit(&mut app, "punto");
         assert_eq!(app.pending, Some(Pending::TextSize));
+    }
+
+    #[test]
+    fn the_ribbon_collapses_and_quick_buttons_hide() {
+        let mut app = Showcase::new();
+
+        assert!(matches!(
+            shortcut(keyboard::Key::Named(keyboard::key::Named::F1), Modifiers::CTRL),
+            Some(Message::RibbonCollapsed)
+        ));
+
+        let _ = app.update(Message::RibbonCollapsed);
+        assert!(app.ribbon_collapsed);
+
+        // Sekme seçmek şeridi açar.
+        let _ = app.update(Message::RibbonTabSelected(RibbonTab::View));
+        assert!(!app.ribbon_collapsed);
+
+        let _ = app.update(Message::QuickToggled(1));
+        assert_eq!(app.quick, [true, false, true, true]);
+        assert!(!app.can_undo());
     }
 
     #[test]

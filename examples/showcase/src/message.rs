@@ -115,6 +115,10 @@ pub enum Message {
 
     // Şerit, menüler ve iletişim kutuları
     RibbonTabSelected(RibbonTab),
+    /// Şeridi daraltır ya da gösterir (Ctrl+F1).
+    RibbonCollapsed,
+    /// Hızlı erişim düğmesini gösterir ya da gizler.
+    QuickToggled(usize),
     AppMenuToggled,
     AppMenuHovered(AppCommand),
     AppCommandPressed(AppCommand),

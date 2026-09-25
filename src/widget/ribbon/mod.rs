@@ -16,21 +16,29 @@
 //! yüksekliğindedir.
 //! Seçili sekmenin alt çizgisi yoktur ve zemini panelle aynıdır; sekme
 //! alttaki panele akar.
+//!
+//! Sekme şeridinde uygulama düğmesinin yanında hızlı erişim düğmeleri
+//! durur ([`Ribbon::quick`]); sağ uçtaki düğme şeridi daraltır, daraltılmış
+//! şeritte yalnızca sekmeler görünür ([`Ribbon::collapsible`]). Düğmeler
+//! menülü ya da bölünmüş olabilir ([`Button::menu`]); [`Gallery`]
+//! seçeneklerin önizlemelerini dizer.
 
 mod control;
 mod layout;
 
 pub use control::{AppButton, Button};
-pub use layout::{Field, Group, Row, Stack};
+pub use layout::{Field, Gallery, Group, Preview, Row, Stack, Tile};
 
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{Column, button, column, container, row, scrollable, space};
+use iced::widget::{Column, button, column, container, row, scrollable, space, tooltip};
 use iced::{Element, Fill, Length, Padding, Right};
 
+use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
 use crate::theme::typography;
-use crate::widget::{horizontal_divider, vertical_divider};
+use crate::widget::context_menu::{Menu, MenuButton};
+use crate::widget::{Tip, horizontal_divider, tip, vertical_divider};
 
 // Ölçüler 12 piksellik gövde metninde tasarlandı; metni taşıyanlar yazı
 // boyutuyla büyür (aşağıdaki fonksiyonlar). İkonlar sabit boyuttadır.
@@ -102,6 +110,11 @@ pub struct Ribbon<'a, Message> {
     tabs: Vec<Tab<'a, Message>>,
     trailing: Option<Element<'a, Message>>,
     panel: Panel<'a, Message>,
+    /// Hızlı erişim düğmeleri ve menüsü.
+    quick: Vec<Element<'a, Message>>,
+    quick_menu: Option<Box<dyn Fn() -> Menu<Message> + 'a>>,
+    /// Daraltılmış mı ve daraltma düğmesinin mesajı.
+    collapse: Option<(bool, Message)>,
 }
 
 struct Tab<'a, Message> {
@@ -122,7 +135,44 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             tabs: Vec::new(),
             trailing: None,
             panel: Panel::Groups(Vec::new()),
+            quick: Vec::new(),
+            quick_menu: None,
+            collapse: None,
         }
+    }
+
+    /// Hızlı erişim düğmesi: uygulama düğmesinin yanında, sekmelerden önce
+    /// duran küçük ikon (ör. kaydet, geri al). `on_press` yoksa devre
+    /// dışıdır.
+    pub fn quick(
+        mut self,
+        glyph: Icon,
+        description: impl Into<String>,
+        on_press: Option<Message>,
+    ) -> Self {
+        self.quick.push(tip(
+            button(icon(glyph).size(14.0))
+                .on_press_maybe(on_press)
+                .padding([4, 5])
+                .style(style::button::flat),
+            Tip::new(description.into()),
+            tooltip::Position::Bottom,
+        ));
+        self
+    }
+
+    /// Hızlı erişim düğmelerinin sonundaki ⌄ menüsü (ör. düğmeleri gösterip
+    /// gizlemek için).
+    pub fn quick_menu(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
+        self.quick_menu = Some(Box::new(menu));
+        self
+    }
+
+    /// Sekme şeridinin sağ ucunda şeridi daraltan düğme; daraltılmış
+    /// şeritte yalnızca sekmeler görünür.
+    pub fn collapsible(mut self, collapsed: bool, on_toggle: Message) -> Self {
+        self.collapse = Some((collapsed, on_toggle));
+        self
     }
 
     /// Sekme şeridinin başındaki uygulama (marka) düğmesi.
@@ -181,8 +231,12 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         application: Option<AppButton<'a, Message>>,
         tabs: Vec<Tab<'a, Message>>,
         trailing: Option<Element<'a, Message>>,
+        quick: Vec<Element<'a, Message>>,
+        quick_menu: Option<Box<dyn Fn() -> Menu<Message> + 'a>>,
+        collapse: Option<(bool, Message)>,
     ) -> Element<'a, Message> {
         let mut strip = iced::widget::Row::new().height(tab_height() + 1.0);
+        let collapsed = collapse.as_ref().is_some_and(|(collapsed, _)| *collapsed);
 
         strip = match application {
             Some(application) => strip.push(underlined(
@@ -192,9 +246,56 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             None => strip.push(underlined(space::horizontal().width(EDGE), Length::Shrink)),
         };
 
+        // Hızlı erişim düğmeleri, ardından sekmelerden ayıran çizgi.
+        if !quick.is_empty() || quick_menu.is_some() {
+            let mut buttons = iced::widget::Row::with_children(quick)
+                .spacing(1)
+                .align_y(iced::Center);
+
+            if let Some(menu) = quick_menu {
+                buttons = buttons.push(MenuButton::new(
+                    container(icon(Icon::ChevronDown).size(9.0)).padding([6, 4]),
+                    menu,
+                ));
+            }
+
+            strip = strip.push(underlined(
+                container(
+                    row![
+                        buttons,
+                        container(vertical_divider()).height(typography::scaled(16.0)),
+                    ]
+                    .spacing(6)
+                    .align_y(iced::Center),
+                )
+                .height(tab_height())
+                .padding(Padding {
+                    right: 8.0,
+                    ..Padding::ZERO
+                })
+                .align_y(iced::Center),
+                Length::Shrink,
+            ));
+        }
+
         for tab in tabs {
-            strip = strip.push(if tab.selected {
+            // Daraltılmış şeritte seçili sekme panele akmaz; kalın yazıyla
+            // ayrılır.
+            strip = strip.push(if tab.selected && !collapsed {
                 selected_tab(tab.label)
+            } else if tab.selected {
+                underlined(
+                    button(
+                        container(label::strong(tab.label))
+                            .height(Fill)
+                            .align_y(iced::Center),
+                    )
+                    .on_press(tab.on_press)
+                    .height(tab_height())
+                    .padding([0, 14])
+                    .style(style::button::tab),
+                    Length::Shrink,
+                )
             } else {
                 underlined(
                     button(
@@ -218,13 +319,38 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             .align_x(Right)
             .align_y(iced::Center);
 
-        container(column![
-            space::vertical().height(STRIP_TOP),
-            strip.push(underlined(trailing, Fill)),
-        ])
-        .width(Fill)
-        .style(style::container::window)
-        .into()
+        strip = strip.push(underlined(trailing, Fill));
+
+        if let Some((collapsed, on_toggle)) = collapse {
+            let (glyph, description) = if collapsed {
+                (Icon::ChevronDown, "Şeridi göster")
+            } else {
+                (Icon::ChevronUp, "Şeridi daralt")
+            };
+
+            strip = strip.push(underlined(
+                container(tip(
+                    button(icon(glyph).size(11.0))
+                        .on_press(on_toggle)
+                        .padding([4, 6])
+                        .style(style::button::flat),
+                    Tip::new(description).detail("Ctrl+F1"),
+                    tooltip::Position::Left,
+                ))
+                .height(tab_height())
+                .padding(Padding {
+                    right: 6.0,
+                    ..Padding::ZERO
+                })
+                .align_y(iced::Center),
+                Length::Shrink,
+            ));
+        }
+
+        container(column![space::vertical().height(STRIP_TOP), strip])
+            .width(Fill)
+            .style(style::container::window)
+            .into()
     }
 
     fn panel(panel: Panel<'a, Message>) -> Element<'a, Message> {
@@ -274,10 +400,19 @@ impl<'a, Message: Clone + 'a> From<Ribbon<'a, Message>> for Element<'a, Message>
             tabs,
             trailing,
             panel,
+            quick,
+            quick_menu,
+            collapse,
         } = ribbon;
+        let collapsed = collapse.as_ref().is_some_and(|(collapsed, _)| *collapsed);
+        let strip = Ribbon::strip(application, tabs, trailing, quick, quick_menu, collapse);
+
+        if collapsed {
+            return strip;
+        }
 
         Column::new()
-            .push(Ribbon::strip(application, tabs, trailing))
+            .push(strip)
             .push(Ribbon::panel(panel))
             .push(horizontal_divider())
             .into()

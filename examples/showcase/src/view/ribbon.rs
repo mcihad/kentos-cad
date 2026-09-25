@@ -11,14 +11,34 @@ use kentos_rc::style;
 use kentos_rc::theme::typography;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::theme::{Accent, Mode};
-use kentos_rc::widget::ribbon::{self, AppButton, Button, Field, Group, Ribbon, Stack};
-use kentos_rc::widget::{Tip, swatch, tip};
+use kentos_rc::widget::ribbon::{
+    self, AppButton, Button, Field, Gallery, Group, Preview, Ribbon, Stack, Tile,
+};
+use kentos_rc::widget::{Menu, Tip, swatch, tip};
 
 use crate::app::Showcase;
 use crate::command::{self, Command};
 use crate::gallery::Page;
 use crate::message::{DockPanel, EXPORT_FORMATS, Message, Pane, QueryPurpose, RibbonTab, SizeStep};
+use crate::view::panes::COLORS;
 use crate::view::{backdrop_note, family_note, hex_of, theme_note};
+
+/// Katman rengi galerisindeki renklerin adları, [`COLORS`] sırasıyla.
+const COLOR_NAMES: [&str; 10] = [
+    "Kırmızı",
+    "Turuncu",
+    "Hardal",
+    "Yeşil",
+    "Turkuaz",
+    "Mavi",
+    "Petrol",
+    "Mor",
+    "Pembe",
+    "Gri",
+];
+
+/// Çizgi kalınlığı galerisinin kalınlıkları (piksel).
+const STROKE_WIDTHS: [f32; 5] = [1.0, 1.5, 2.0, 3.0, 4.0];
 
 impl Showcase {
     pub(super) fn ribbon(&self) -> Element<'_, Message> {
@@ -29,7 +49,44 @@ impl Showcase {
                     .on_press(Message::AppMenuToggled),
             )
             .tabs(RibbonTab::ALL, self.ribbon_tab, Message::RibbonTabSelected)
-            .trailing(label::caption("Türkiye örnek verisi"));
+            .trailing(label::caption("Türkiye örnek verisi"))
+            .collapsible(self.ribbon_collapsed, Message::RibbonCollapsed);
+
+        // Hızlı erişim düğmeleri; ⌄ menüsü hangilerinin görüneceğini seçer.
+        let quick = self.quick_commands();
+        let shown = self.quick;
+        let collapsed = self.ribbon_collapsed;
+
+        let ribbon = quick
+            .iter()
+            .zip(shown)
+            .filter(|(_, shown)| *shown)
+            .fold(ribbon, |ribbon, ((glyph, name, message), _)| {
+                ribbon.quick(*glyph, *name, message.clone())
+            })
+            .quick_menu(move || {
+                quick
+                    .iter()
+                    .zip(shown)
+                    .enumerate()
+                    .fold(
+                        Menu::new().header("Hızlı erişim araç çubuğu"),
+                        |menu, (index, ((glyph, name, _), shown))| {
+                            menu.check(*name, shown, Message::QuickToggled(index))
+                                .icon(*glyph)
+                        },
+                    )
+                    .separator()
+                    .item(
+                        if collapsed {
+                            "Şeridi göster"
+                        } else {
+                            "Şeridi daralt"
+                        },
+                        Message::RibbonCollapsed,
+                    )
+                    .shortcut("Ctrl+F1")
+            });
 
         if self.ribbon_tab == RibbonTab::Gallery {
             return ribbon
@@ -65,6 +122,13 @@ impl Showcase {
 
         if self.ribbon_tab == RibbonTab::Insert {
             return ribbon.group(self.insert_group()).into();
+        }
+
+        if self.ribbon_tab == RibbonTab::Annotate {
+            return ribbon
+                .group(self.color_gallery())
+                .group(self.stroke_gallery())
+                .into();
         }
 
         if self.ribbon_tab == RibbonTab::Manage {
@@ -134,21 +198,86 @@ impl Showcase {
             )
     }
 
-    /// Bütün katmanları dosyaya yazar; iş arka planda sürer.
+    /// Bütün katmanları dosyaya yazar; iş arka planda sürer. Bölünmüş
+    /// düğme: üst kısım GeoJSON'a aktarır, alt kısım biçimleri açar.
     fn export_group(&self) -> Group<'_, Message> {
-        let [first, second] = [&EXPORT_FORMATS[..2], &EXPORT_FORMATS[2..]].map(|formats| {
-            formats
-                .iter()
-                .fold(Stack::new(), |stack, &(format, description)| {
-                    stack.push(
-                        Button::small(Icon::Export, format)
-                            .on_press(Message::ExportPressed(format))
-                            .tip(Tip::new(format!("{format} olarak dışa aktar")).body(description)),
+        Group::new("Dışa aktar").push(
+            Button::large(Icon::Export, "Dışa aktar")
+                .on_press(Message::ExportPressed("GeoJSON"))
+                .menu(|| {
+                    EXPORT_FORMATS.iter().fold(
+                        Menu::new().header("Biçim"),
+                        |menu, &(format, description)| {
+                            menu.item(
+                                format!("{format}: {description}"),
+                                Message::ExportPressed(format),
+                            )
+                            .icon(Icon::Export)
+                        },
                     )
                 })
+                .tip(
+                    Tip::new("GeoJSON olarak dışa aktar")
+                        .body("Başka biçimler için alttaki oka basın: PDF, PNG, DXF."),
+                ),
+        )
+    }
+
+    /// Hızlı erişim komutları: ikon, ad ve (etkinse) mesaj.
+    fn quick_commands(&self) -> [(Icon, &'static str, Option<Message>); 4] {
+        [
+            (
+                Icon::Export,
+                "GeoJSON olarak dışa aktar",
+                Some(Message::ExportPressed("GeoJSON")),
+            ),
+            (
+                Icon::Undo,
+                "Silineni geri al",
+                self.can_undo().then_some(Message::UndoDelete),
+            ),
+            (Icon::ZoomExtents, "Tümünü gör", Some(Message::FitAll)),
+            (Icon::Help, "Kısayollar (F1)", Some(Message::HelpToggled)),
+        ]
+    }
+
+    /// Aktif katmanın rengi: hazır renklerin galerisi.
+    fn color_gallery(&self) -> Group<'_, Message> {
+        let index = self.active_layer;
+        let current = self.layers.get(index).map(|layer| layer.color);
+        let selected = COLORS.iter().position(|color| Some(*color) == current);
+
+        Group::new("Katman rengi").push(
+            Gallery::new(
+                COLORS
+                    .iter()
+                    .zip(COLOR_NAMES)
+                    .map(|(color, name)| Tile::new(name, Preview::Color(*color))),
+                selected,
+                move |choice| Message::LayerColor(index, COLORS[choice]),
+            )
+            .columns(5),
+        )
+    }
+
+    /// Aktif katmanın çizgi kalınlığı: örnek çizgilerin galerisi.
+    fn stroke_gallery(&self) -> Group<'_, Message> {
+        let index = self.active_layer;
+        let layer = self.layers.get(index);
+        let color = layer.map_or(iced::Color::WHITE, |layer| layer.color);
+        let selected = layer.and_then(|layer| {
+            STROKE_WIDTHS
+                .iter()
+                .position(|width| (width - layer.stroke_width).abs() < 0.05)
         });
 
-        Group::new("Dışa aktar").push(first).push(second)
+        Group::new("Çizgi kalınlığı").push(Gallery::new(
+            STROKE_WIDTHS
+                .iter()
+                .map(|width| Tile::new(format!("{width} px"), Preview::Line(color, *width))),
+            selected,
+            move |choice| Message::LayerStroke(index, STROKE_WIDTHS[choice]),
+        ))
     }
 
     /// Harita üstündeki kayan pencereler; açık olan vurgulanır. AutoCAD'in

@@ -102,6 +102,15 @@ impl Pen {
         self.line(frame, (10.25, 10.25), (14.0, 14.0));
     }
 
+    fn undo(&self, frame: &mut Frame) {
+        let arc = Path::new(|builder| {
+            builder.move_to(self.p(3.5, 7.5));
+            self.arc(builder, (8.5, 8.75), 5.0, PI * 1.08, PI * 2.5);
+        });
+        frame.stroke(&arc, self.stroke());
+        self.polyline(frame, &[(2.75, 3.75), (3.25, 7.75), (7.0, 6.75)], false);
+    }
+
     fn arrow_head(&self, frame: &mut Frame, tip: (f32, f32), direction: Vector) {
         let size = 2.25;
         let normal = Vector::new(-direction.y, direction.x);
@@ -620,13 +629,16 @@ impl Pen {
                 frame.stroke(&shackle, self.stroke());
                 self.dot(frame, (8.0, 10.75), 1.0);
             }
-            Icon::Undo => {
-                let arc = Path::new(|builder| {
-                    builder.move_to(self.p(3.5, 7.5));
-                    self.arc(builder, (8.5, 8.75), 5.0, PI * 1.08, PI * 2.5);
+            Icon::Undo => self.undo(frame),
+            // Geri almanın aynadaki görüntüsü.
+            Icon::Redo => {
+                let width = self.p(16.0, 0.0).x;
+
+                frame.with_save(|frame| {
+                    frame.translate(Vector::new(width, 0.0));
+                    frame.scale_nonuniform(Vector::new(-1.0, 1.0));
+                    self.undo(frame);
                 });
-                frame.stroke(&arc, self.stroke());
-                self.polyline(frame, &[(2.75, 3.75), (3.25, 7.75), (7.0, 6.75)], false);
             }
             Icon::Open => {
                 self.polyline(

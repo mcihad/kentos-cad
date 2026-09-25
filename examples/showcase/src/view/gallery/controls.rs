@@ -10,7 +10,8 @@ use kentos_rc::label;
 use kentos_rc::spatial::Tool;
 use kentos_rc::style;
 use kentos_rc::theme::typography;
-use kentos_rc::widget::ribbon::{self, Field, Group, Stack};
+use kentos_rc::widget::color::Ramp;
+use kentos_rc::widget::ribbon::{self, AppButton, Field, Group, Preview, Ribbon, Stack, Tile};
 use kentos_rc::widget::table::{self, Table};
 use kentos_rc::widget::tree_view::{self, Check, Node, TreeView};
 use kentos_rc::widget::{Menu, Panel, PropertyGrid, Tip, badge, swatch, tip, vertical_divider};
@@ -167,6 +168,25 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Menülü düğme, galeri, hızlı erişim",
+                "kentos_rc::widget::ribbon::{Button::menu, Gallery}",
+                "Eylemi olan menülü düğme bölünür: üst (küçükte sol) kısım eylemi yapar, ok \
+                 menüyü açar; eylemsiz düğmenin tamamı menüdür. Galeri seçeneklerin \
+                 önizlemelerini (renk, rampa, ikon, çizgi) dizer; satır seçili karoyu içerecek \
+                 kadar kayar, ⌄ hepsini ızgarada açar. Sekme şeridinde uygulama düğmesinin \
+                 yanında hızlı erişim düğmeleri durur; sağ uçtaki ok şeridi daraltır.",
+                self.ribbon_extras(),
+                Some(
+                    "ribbon::Button::large(Icon::Export, \"Dışa aktar\")\n    \
+                         .on_press(Message::Export(Format::GeoJson))\n    \
+                         .menu(|| formats_menu())\n\n\
+                     ribbon::Gallery::new(tiles, Some(selected), Message::RampSelected)\n\n\
+                     Ribbon::new()\n    \
+                         .quick(Icon::Undo, \"Geri al\", Some(Message::Undo))\n    \
+                         .collapsible(self.collapsed, Message::RibbonToggled)",
+                ),
+            ),
+            entry(
                 "İpucu",
                 "kentos_rc::widget::Tip",
                 "Yalnızca başlığı olan ipucu tek satırlık bir etikettir; açıklama ve ayrıntı \
@@ -199,6 +219,82 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+
+    /// Hızlı erişimli, daraltılabilen küçük bir şerit: menülü düğmeler ve
+    /// rampa galerisi.
+    fn ribbon_extras(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let menu = || {
+            Menu::new()
+                .item("Yapıştır", pressed("Yapıştır"))
+                .shortcut("Ctrl+V")
+                .item("Yerinde yapıştır", pressed("Yerinde yapıştır"))
+                .item("Blok olarak yapıştır", pressed("Blok olarak yapıştır"))
+        };
+        let ramps = Ramp::presets();
+
+        let ribbon = Ribbon::new()
+            .application(AppButton::new("Örnek").on_press(pressed("Uygulama menüsü")))
+            .quick(Icon::Save, "Kaydet", Some(pressed("Kaydet")))
+            .quick(Icon::Undo, "Geri al", Some(pressed("Geri al")))
+            .quick(Icon::Redo, "Yinele", None)
+            .quick_menu(|| {
+                Menu::new()
+                    .header("Hızlı erişim")
+                    .item("Özelleştir…", pressed("Özelleştir"))
+            })
+            .tab("Giriş", true, pressed("Giriş"))
+            .tab("Görünüm", false, pressed("Görünüm"))
+            .collapsible(
+                gallery.ribbon_collapsed,
+                Message::Gallery(Demo::RibbonCollapsed),
+            )
+            .group(
+                Group::new("Pano")
+                    .push(
+                        ribbon::Button::large(Icon::Copy, "Yapıştır")
+                            .on_press(pressed("Yapıştır"))
+                            .menu(menu),
+                    )
+                    .push(ribbon::Button::large(Icon::DocumentNew, "Yeni").menu(|| {
+                        Menu::new()
+                            .item("Boş çizim", pressed("Boş çizim"))
+                            .item("Şablondan…", pressed("Şablondan"))
+                    }))
+                    .push(
+                        Stack::new()
+                            .push(
+                                ribbon::Button::small(Icon::Export, "Dışa aktar")
+                                    .on_press(pressed("Dışa aktar"))
+                                    .menu(|| {
+                                        Menu::new()
+                                            .item("PDF", pressed("PDF"))
+                                            .item("DXF", pressed("DXF"))
+                                    }),
+                            )
+                            .push(ribbon::Button::small(Icon::Print, "Yazdır").menu(|| {
+                                Menu::new()
+                                    .item("Yazdır…", pressed("Yazdır"))
+                                    .item("Önizleme", pressed("Önizleme"))
+                            })),
+                    ),
+            )
+            .group(
+                Group::new("Renk rampası").push(ribbon::Gallery::new(
+                    ramps
+                        .iter()
+                        .map(|(name, ramp)| Tile::new(*name, Preview::Ramp(ramp.clone()))),
+                    Some(gallery.ribbon_ramp),
+                    |ramp| Message::Gallery(Demo::RibbonRamp(ramp)),
+                )),
+            );
+
+        container(ribbon)
+            .padding(1)
+            .width(Fill)
+            .style(style::container::bordered)
+            .into()
     }
 
     /// Tek başına çizilmiş şerit grupları.

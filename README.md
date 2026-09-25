@@ -451,6 +451,39 @@ overlay::blocking(
 )
 ```
 
+## Şerit
+
+`Ribbon` sekme şeridi ve seçili sekmenin araç gruplarıdır; grup içeriği üç
+satırlık ızgaraya oturur.
+
+- **Menülü ve bölünmüş düğme.** `Button::menu(..)` düğmeye menü ekler.
+  Eylemi de olan düğme bölünür: büyük düğmede üst kısım, küçükte sol kısım
+  eylemi yapar; ok menüyü açar. Eylemsiz düğmenin tamamı menüdür.
+- **Galeri.** `ribbon::Gallery` seçeneklerin önizlemelerini (renk, rampa,
+  ikon, çizgi) dizer; satır seçili karoyu içerecek kadar kayar, ⌄ bütün
+  karoları ızgarada açar.
+- **Hızlı erişim.** `Ribbon::quick(..)` uygulama düğmesinin yanına küçük
+  ikon düğmeleri koyar; `quick_menu` sonlarına ⌄ menüsü ekler (ör. hangi
+  düğmelerin görüneceği).
+- **Daraltma.** `Ribbon::collapsible(..)` sekme şeridinin sağ ucuna şeridi
+  daraltan düğmeyi koyar; daraltılmış şeritte yalnızca sekmeler görünür.
+- **Vitrinde.** Hızlı erişimde dışa aktarma, geri alma, tümünü görme ve
+  kısayollar (⌄ menüsünden gizlenir); Ctrl+F1 şeridi daraltır. Yönet
+  sekmesindeki "Dışa aktar" bölünmüş düğmedir; Açıklama sekmesinde aktif
+  katmanın rengi ve çizgi kalınlığı galeriden seçilir.
+
+```rust
+Ribbon::new()
+    .quick(Icon::Undo, "Geri al", self.can_undo().then_some(Message::Undo))
+    .collapsible(self.ribbon_collapsed, Message::RibbonToggled)
+    .group(Group::new("Dışa aktar").push(
+        Button::large(Icon::Export, "Dışa aktar")
+            .on_press(Message::Export(Format::GeoJson))
+            .menu(|| formats_menu()),
+    ))
+    .group(Group::new("Renk").push(Gallery::new(tiles, selected, Message::ColorPicked)))
+```
+
 ## Komut kutusu ve durum çubuğu
 
 Pencerenin altı AutoCAD'deki gibi klavyeyle çalışır. Yazı tipinin bir anlamı

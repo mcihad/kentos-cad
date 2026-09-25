@@ -122,11 +122,12 @@ pub enum Icon {
     ViewRows,
     ViewThree,
     ViewQuad,
+    Redo,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 81] = [
+    pub const ALL: [Icon; 82] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -208,6 +209,7 @@ impl Icon {
         Icon::ViewRows,
         Icon::ViewThree,
         Icon::ViewQuad,
+        Icon::Redo,
     ];
 }
 

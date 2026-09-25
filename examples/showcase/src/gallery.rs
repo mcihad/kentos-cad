@@ -175,6 +175,9 @@ pub enum Demo {
     Views(viewports::Event),
     Camera(usize, Camera),
     Shading(usize, Shading),
+    /// Şerit örneği: galerideki rampa ve daraltma.
+    RibbonRamp(usize),
+    RibbonCollapsed,
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -395,6 +398,9 @@ pub struct Gallery {
     pub views: Views,
     pub cameras: [Camera; 4],
     pub shadings: [Shading; 4],
+    /// Şerit örneği: seçili rampa ve şeridin daraltılmış olması.
+    pub ribbon_ramp: usize,
+    pub ribbon_collapsed: bool,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -501,6 +507,8 @@ impl Default for Gallery {
                 Shading::Hidden,
                 Shading::ShadedEdges,
             ],
+            ribbon_ramp: 0,
+            ribbon_collapsed: false,
         }
     }
 }
@@ -710,6 +718,8 @@ impl Gallery {
                     *slot = shading;
                 }
             }
+            Demo::RibbonRamp(ramp) => self.ribbon_ramp = ramp,
+            Demo::RibbonCollapsed => self.ribbon_collapsed = !self.ribbon_collapsed,
         }
 
         None
