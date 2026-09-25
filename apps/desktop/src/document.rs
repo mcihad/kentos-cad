@@ -10,6 +10,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use kentos_contracts::{DocumentSnapshotV1, LayerNode, LayerNodeType, ProjectSettings};
 
@@ -19,15 +20,21 @@ pub struct Document {
     /// What the drawing holds and every change to it.
     pub model: kentos_domain::Document,
     pub path: Option<PathBuf>,
+    /// Which opened drawing this is, unique while the program runs: a save
+    /// that finishes after another drawing was opened applies to its own
+    /// drawing only (CLAUDE.md §21.2).
+    pub session: u64,
 }
 
 impl Document {
     /// A drawing from a snapshot; refused when the document cannot hold it
     /// (a repeated object id, an object on a layer the file does not have).
     pub fn new(snapshot: DocumentSnapshotV1, path: Option<PathBuf>) -> Result<Self, String> {
+        static OPENED: AtomicU64 = AtomicU64::new(0);
         Ok(Self {
             model: kentos_domain::Document::from_snapshot(snapshot)?,
             path,
+            session: OPENED.fetch_add(1, Ordering::Relaxed) + 1,
         })
     }
 

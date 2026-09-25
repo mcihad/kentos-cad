@@ -88,11 +88,19 @@ pub enum Message {
     /// A drawing read from disk, or `None` when the file dialog was cancelled.
     /// Boxed: a drawing is large and messages are moved often.
     Opened(Option<Result<Box<Document>, String>>),
-    /// A save of `revision` finished, or `None` when the dialog was cancelled.
-    Saved(Option<Result<(PathBuf, u64), String>>),
+    /// A save finished, or `None` when the dialog was cancelled.
+    Saved(Option<Result<Written, String>>),
     CloseRequested(window::Id),
     DialogConfirmed,
     DialogClosed,
+}
+
+/// A finished save: which opened drawing, where, and the revision written.
+#[derive(Debug, Clone)]
+pub struct Written {
+    pub session: u64,
+    pub path: PathBuf,
+    pub revision: u64,
 }
 
 pub struct App {
@@ -216,17 +224,20 @@ impl App {
             Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
                 self.error(error)
             }
-            Message::Saved(Some(Ok((path, revision)))) => {
-                if let Some(doc) = &mut self.document {
-                    doc.saved(path.clone(), revision);
+            Message::Saved(Some(Ok(written))) => match &mut self.document {
+                Some(doc) if doc.session == written.session => {
+                    doc.saved(written.path.clone(), written.revision);
                     let later = if doc.dirty() {
                         " Kayıt sürerken yapılan değişiklikler kaydedilmedi."
                     } else {
                         ""
                     };
-                    self.output(format!("Kaydedildi: {}.{later}", path.display()));
+                    self.output(format!("Kaydedildi: {}.{later}", written.path.display()));
                 }
-            }
+                // Another drawing was opened meanwhile: the file is written, but it is
+                // not the open drawing's file, which keeps its path and its state.
+                _ => self.output(format!("Kaydedildi: {}.", written.path.display())),
+            },
             Message::CloseRequested(window) => {
                 if self.document.as_ref().is_some_and(Document::dirty) {
                     self.dialog = Some(Dialog::Unsaved(Then::Close(window)));
@@ -381,6 +392,7 @@ impl App {
         };
         let snapshot = doc.model.to_snapshot();
         let revision = doc.model.revision();
+        let session = doc.session;
         let known = doc.path.clone().filter(|_| !choose);
         Task::perform(
             async move {
@@ -402,7 +414,11 @@ impl App {
                         }
                     }
                 };
-                Some(document::write(&snapshot, &path).map(|()| (path, revision)))
+                Some(document::write(&snapshot, &path).map(|()| Written {
+                    session,
+                    path,
+                    revision,
+                }))
             },
             Message::Saved,
         )
@@ -564,6 +580,29 @@ mod tests {
         );
         let _ = app.run("edit.redo");
         assert_eq!(last_output(&app), "Yinelenecek değişiklik yok.");
+    }
+
+    #[test]
+    fn a_save_that_finishes_after_another_drawing_was_opened_leaves_that_one_alone() {
+        let mut app = with_demo();
+        let first = app.document.as_ref().map(|doc| doc.session).expect("open");
+        // The first drawing's save is still running when another is opened.
+        let second = with_demo().document.expect("open");
+        assert_ne!(second.session, first);
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(second)))));
+        app.document.as_mut().expect("open").model.mark_unsaved();
+        let _ = app.update(Message::Saved(Some(Ok(Written {
+            session: first,
+            path: PathBuf::from("ilk.kcad"),
+            revision: 0,
+        }))));
+        let doc = app.document.as_ref().expect("open");
+        assert_eq!(
+            doc.path, None,
+            "Ctrl+S must not write this drawing over the first one's file"
+        );
+        assert!(doc.dirty());
+        assert_eq!(last_output(&app), "Kaydedildi: ilk.kcad.");
     }
 
     #[test]
