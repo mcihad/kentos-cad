@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SettingsFile",
+  "description": "The stored settings (TODOS.md SET-04): the layers a host keeps, and the\nmigrations that filled them. Session values are never stored; project\nvalues live in the project.",
+  "type": "object",
+  "properties": {
+    "device": {
+      "description": "This device: device-scope settings, and user ones overridden here.",
+      "type": "object",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "format": {
+      "type": "string"
+    },
+    "migrations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SettingsMigration"
+      }
+    },
+    "user": {
+      "description": "Preferences: user-scope settings.",
+      "type": "object",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "version": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "format",
+    "version"
+  ],
+  "$defs": {
+    "SettingDiagnostic": {
+      "description": "A value a layer holds but resolution did not use, or a problem in a file.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/SettingErrorCode"
+        },
+        "key": {
+          "type": "string"
+        },
+        "layer": {
+          "description": "The layer it was found in.",
+          "$ref": "#/$defs/SettingScope"
+        }
+      },
+      "required": [
+        "layer",
+        "key",
+        "code"
+      ]
+    },
+    "SettingErrorCode": {
+      "description": "Why a value was not taken, or why the effective value differs.",
+      "oneOf": [
+        {
+          "description": "No setting has this key.",
+          "type": "string",
+          "const": "unknown_key"
+        },
+        {
+          "description": "Not the setting's type (text for a switch, a number for a choice).",
+          "type": "string",
+          "const": "wrong_type"
+        },
+        {
+          "description": "A fraction where a whole number belongs.",
+          "type": "string",
+          "const": "not_integer"
+        },
+        {
+          "description": "Below the minimum or above the maximum.",
+          "type": "string",
+          "const": "out_of_range"
+        },
+        {
+          "description": "Not one of the setting's choices.",
+          "type": "string",
+          "const": "not_allowed"
+        },
+        {
+          "description": "The setting does not live in this layer (a project setting in a\npreference, a device setting in the user layer).",
+          "type": "string",
+          "const": "wrong_scope"
+        },
+        {
+          "description": "A sensitive value in a file: never read from or written to one.",
+          "type": "string",
+          "const": "sensitive"
+        },
+        {
+          "description": "The text is not JSON.",
+          "type": "string",
+          "const": "not_json"
+        },
+        {
+          "description": "JSON, but not a settings document (`format` ≠ `kentos.settings`).",
+          "type": "string",
+          "const": "not_settings"
+        },
+        {
+          "description": "A settings document of a version this app does not read.",
+          "type": "string",
+          "const": "unsupported_version"
+        }
+      ]
+    },
+    "SettingScope": {
+      "description": "Where a setting lives and who may change it: the scope table of TODOS.md §7.",
+      "oneOf": [
+        {
+          "description": "Fixed by this version of the app: only the schema's default.",
+          "type": "string",
+          "const": "default"
+        },
+        {
+          "description": "Set only by the organisation's policy; a lock or a bound on the other layers.",
+          "type": "string",
+          "const": "organization"
+        },
+        {
+          "description": "The user's preference on this machine (an account-wide copy comes later).",
+          "type": "string",
+          "const": "user"
+        },
+        {
+          "description": "This device only (the GPU, the window); a project never carries it to another device.",
+          "type": "string",
+          "const": "device"
+        },
+        {
+          "description": "Saved with the project (`.kcad`, cloud revision); no preference overrides it.",
+          "type": "string",
+          "const": "project"
+        },
+        {
+          "description": "Until the app closes; never saved.",
+          "type": "string",
+          "const": "session"
+        }
+      ]
+    },
+    "SettingsMigration": {
+      "description": "One migration from an older store into the typed one (TODOS.md SET-04).",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When, as RFC 3339 UTC text.",
+          "type": "string"
+        },
+        "dropped": {
+          "description": "Values left behind, and why; the older store keeps them untouched.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SettingDiagnostic"
+          }
+        },
+        "from": {
+          "description": "The older store: `localStorage kentos.prefs.v1`, `~/.config/kentos-cad/ayarlar`.",
+          "type": "string"
+        },
+        "moved": {
+          "description": "Values taken over.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "from",
+        "at",
+        "moved",
+        "dropped"
+      ]
+    }
+  }
+}
