@@ -11,18 +11,22 @@ use kentos_rc::label;
 use kentos_rc::spatial::Tool;
 use kentos_rc::style;
 use kentos_rc::theme::typography;
+use kentos_rc::widget::assets::Asset;
 use kentos_rc::widget::color::Ramp;
+use kentos_rc::widget::legend::{self, Symbol};
 use kentos_rc::widget::ribbon::{self, AppButton, Field, Group, Preview, Ribbon, Stack, Tile};
 use kentos_rc::widget::table::{self, Table};
 use kentos_rc::widget::tree_view::{self, Check, Node, Toggle, TreeView};
 use kentos_rc::widget::{
-    Menu, NumberInput, Panel, PropertyGrid, Tip, badge, swatch, tip, vertical_divider,
+    AssetBrowser, Legend, Menu, NumberInput, Panel, PropertyGrid, Tip, badge, swatch, tip,
+    vertical_divider,
 };
 
 use super::{entry, pressed};
 use crate::app::Showcase;
 use crate::gallery::{self, Crs, Demo, Gallery, PARCELS, PROJECT_FILES, ProjectRow};
 use crate::message::Message;
+use crate::view::library;
 
 type ButtonStyle = Box<dyn Fn(&Theme, button::Status) -> button::Style>;
 
@@ -511,6 +515,41 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Lejant",
+                "kentos_rc::widget::Legend",
+                "Harita katmanlarının simgeleri: nokta, çizgi, alan, renk kutusu ya da ikon; \
+                 bölüm başlıkları, girintili alt satırlar ve sürekli renk ölçeği. Satıra \
+                 tıklamak gizler ya da gösterir, gizli satırlar sönüktür; başlığa tıklamak \
+                 lejantı daraltır. Giriş sekmesinde Görünüm → Pencereler → Lejant.",
+                self.legend_sample(),
+                Some(
+                    "Legend::new()\n    \
+                     .title(\"Lejant\")\n    \
+                     .section(\"Ulaşım\")\n    \
+                     .item(Symbol::line(road_color, 2.0), \"Karayolları\")\n    \
+                     .detail(\"7\")\n    \
+                     .on_press(Message::LayerToggled(3))\n    \
+                     .sub(Symbol::line(highway, 2.0), \"Otoyol\")\n    \
+                     .ramp(\"Nüfus\", &ramp, \"0\", \"16 M\")",
+                ),
+            ),
+            entry(
+                "Varlık tarayıcısı",
+                "kentos_rc::widget::AssetBrowser",
+                "Sembol, blok ve malzeme kitaplıkları için aranabilir, kategorili ızgara. \
+                 Arama Türkçe harf ayırmaz, kategoriler öğelerden çıkarılır; tıklamak seçer, \
+                 çift tıklamak kullanır. Izgara ile liste arasında geçin. Önizlemeler \
+                 uygulamanındır; buradakiler tuvale çizilen plan sembolleri.",
+                container(self.assets_sample()).width(460),
+                Some(
+                    "AssetBrowser::new(assets, self.selected, Message::AssetSelected)\n    \
+                     .on_activate(Message::AssetInserted)\n    \
+                     .search(&self.query, Message::AssetSearch)\n    \
+                     .category(self.category.as_deref(), Message::AssetCategory)\n    \
+                     .view(self.view, Message::AssetView)",
+                ),
+            ),
+            entry(
                 "Özellik ızgarası",
                 "kentos_rc::widget::PropertyGrid",
                 "CAD programlarındaki Özellikler paleti: anahtar ve değer iki sütunda, \
@@ -553,6 +592,93 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+
+    /// Lejant örneği: bölümler, alt satırlar, ikon ve renk ölçeği.
+    fn legend_sample(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let hidden = gallery.legend_hidden;
+        let rgb = |value: u32| {
+            iced::Color::from_rgb8((value >> 16) as u8, (value >> 8) as u8, value as u8)
+        };
+        let toggle = |index: usize| Message::Gallery(Demo::LegendItem(index));
+
+        let legend = Legend::new()
+            .title("Lejant")
+            .collapsible(
+                gallery.legend_collapsed,
+                Message::Gallery(Demo::LegendCollapsed),
+            )
+            .section("Yerleşim")
+            .item(Symbol::point(rgb(0xe8_59_4c)), "Şehirler")
+            .detail("16")
+            .muted(hidden[0])
+            .on_press(toggle(0))
+            .item(Symbol::Icon(Icon::Target, rgb(0x9b_7b_e8)), "Önemli yerler")
+            .detail("10")
+            .muted(hidden[1])
+            .on_press(toggle(1))
+            .section("Ulaşım")
+            .item(Symbol::line(rgb(0xe2_a9_3b), 2.5), "Karayolları")
+            .detail("7")
+            .muted(hidden[2])
+            .on_press(toggle(2))
+            .sub(Symbol::line(rgb(0xf0_8a_3c), 2.5), "Otoyol")
+            .sub(Symbol::line(rgb(0xe2_c1_3b), 2.0), "Devlet yolu")
+            .item(Symbol::line(rgb(0x4c_9b_e8), 1.5), "Nehirler")
+            .detail("12")
+            .muted(hidden[3])
+            .on_press(toggle(3))
+            .section("İdari")
+            .item(Symbol::area(rgb(0x8f_c9_5a)), "İlçeler")
+            .detail("24")
+            .muted(hidden[4])
+            .on_press(toggle(4))
+            .item(Symbol::Swatch(rgb(0xa0_a4_ab)), "Kıyı şeridi")
+            .muted(hidden[5])
+            .on_press(toggle(5))
+            .ramp("Nüfus yoğunluğu (kişi/km²)", &gallery.ramp, "0", "3.000")
+            .width(260);
+
+        row![
+            legend::frame(legend),
+            label::muted(
+                "Harita üstünde lejant::frame ile yarı saydam kutuda durur; kâğıt \
+                 düzeninde çerçevesiz kullanılır."
+            )
+            .width(260),
+        ]
+        .spacing(24)
+        .into()
+    }
+
+    /// Varlık tarayıcısı örneği: blok kitaplığı.
+    fn assets_sample(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let size = typography::scaled(44.0).round();
+        let assets = library::BLOCKS
+            .iter()
+            .enumerate()
+            .map(|(index, (name, category, lines))| {
+                Asset::new(*name, *category, library::preview(index, size))
+                    .detail(format!("{lines} çizgi"))
+            });
+
+        AssetBrowser::new(assets, gallery.asset, |asset| {
+            Message::Gallery(Demo::AssetSelected(asset))
+        })
+        .on_activate(|asset| Message::Gallery(Demo::AssetActivated(asset)))
+        .search(&gallery.asset_search, |search| {
+            Message::Gallery(Demo::AssetSearch(search))
+        })
+        .category(gallery.asset_category.as_deref(), |category| {
+            Message::Gallery(Demo::AssetCategory(category))
+        })
+        .view(gallery.asset_view, |view| {
+            Message::Gallery(Demo::AssetView(view))
+        })
+        .height(typography::scaled(300.0))
+        .into()
     }
 
     /// Sanal tablo örneği: 100.000 parsel ve satır numarasıyla gitme.

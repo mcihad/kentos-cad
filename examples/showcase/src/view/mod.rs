@@ -29,6 +29,7 @@ pub(crate) mod gallery;
 mod help;
 mod import;
 mod layers;
+pub(crate) mod library;
 mod menus;
 mod panes;
 mod properties;

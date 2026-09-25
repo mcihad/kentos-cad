@@ -134,11 +134,12 @@ pub enum Icon {
     SkipForward,
     StepBack,
     StepForward,
+    Legend,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 92] = [
+    pub const ALL: [Icon; 93] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -231,6 +232,7 @@ impl Icon {
         Icon::SkipForward,
         Icon::StepBack,
         Icon::StepForward,
+        Icon::Legend,
     ];
 }
 

@@ -326,6 +326,13 @@ const COMMANDS: &[(Command, Info)] = &[
             .description("Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştiren pencereyi açar."),
     ),
     (
+        Command::Pane(Pane::Legend),
+        Info::new("LEJANT", "Lejant")
+            .aliases(&["LEGEND", "GOSTERIM"])
+            .icon(Icon::Legend)
+            .description("Görünür katmanların simgelerini ve adlarını gösteren pencereyi açar."),
+    ),
+    (
         Command::Import,
         Info::new("ICEAKTAR", "Veri içe aktar")
             .aliases(&["IMPORT", "EKLE"])

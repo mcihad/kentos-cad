@@ -14,7 +14,7 @@ use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::docking::{self, Docks, Side};
 use kentos_rc::widget::floating::{self, Placement};
 use kentos_rc::widget::tree_view::Place;
-use kentos_rc::widget::{inspector, rulers, toast};
+use kentos_rc::widget::{assets, inspector, rulers, toast};
 
 use crate::gallery::{Demo, Page};
 use crate::import::Source;
@@ -83,6 +83,13 @@ pub enum Message {
     /// Boşluk: model alanında imlecin yerinde dairesel araç menüsü açılır.
     RadialOpened,
     RadialClosed,
+    /// Kitaplık paneli: blok seçildi, arandı, kategori ya da görünüm
+    /// değişti; çift tıklanan blok yerleştirilir.
+    LibrarySelected(usize),
+    LibrarySearch(String),
+    LibraryCategory(Option<String>),
+    LibraryView(assets::View),
+    BlockInserted(usize),
     /// Düğümün onay kutusu: görünürlük.
     TreeChecked(NodeId, bool),
     /// Grubu (ya da `None` ile bütün ağacı) iç içe açar veya kapatır.
@@ -280,14 +287,17 @@ pub enum DockPanel {
     Table,
     /// Arka plandaki işler: ilerleme, iptal, yeniden deneme.
     Tasks,
+    /// Blok kitaplığı: semboller ve donatılar.
+    Library,
 }
 
 impl DockPanel {
-    pub const ALL: [DockPanel; 4] = [
+    pub const ALL: [DockPanel; 5] = [
         DockPanel::Layers,
         DockPanel::Details,
         DockPanel::Table,
         DockPanel::Tasks,
+        DockPanel::Library,
     ];
 
     pub fn title(self) -> &'static str {
@@ -296,6 +306,7 @@ impl DockPanel {
             DockPanel::Details => "Özellikler",
             DockPanel::Table => "Öznitelik tablosu",
             DockPanel::Tasks => "Görevler",
+            DockPanel::Library => "Kitaplık",
         }
     }
 
@@ -305,6 +316,7 @@ impl DockPanel {
             DockPanel::Details => Icon::Properties,
             DockPanel::Table => Icon::Table,
             DockPanel::Tasks => Icon::Progress,
+            DockPanel::Library => Icon::Grid,
         }
     }
 
@@ -314,6 +326,9 @@ impl DockPanel {
             DockPanel::Details => "Seçili öğenin öznitelikleri ve geometrisi.",
             DockPanel::Table => "Aktif katmanın kayıtları: arama, filtre, sıralama, seçim.",
             DockPanel::Tasks => "Arka plandaki işler: ilerleme, iptal ve yeniden deneme.",
+            DockPanel::Library => {
+                "Blok kitaplığı: çift tıklanan sembol Nokta aracıyla haritaya yerleştirilir."
+            }
         }
     }
 
@@ -324,6 +339,7 @@ impl DockPanel {
             DockPanel::Details => "ozellikler",
             DockPanel::Table => "tablo",
             DockPanel::Tasks => "gorevler",
+            DockPanel::Library => "kitaplik",
         }
     }
 
@@ -334,18 +350,21 @@ impl DockPanel {
     /// Hiç açılmamışsa açıldığı kenar.
     pub fn side(self) -> Side {
         match self {
-            DockPanel::Layers | DockPanel::Details => Side::Right,
+            DockPanel::Layers | DockPanel::Details | DockPanel::Library => Side::Right,
             DockPanel::Table | DockPanel::Tasks => Side::Bottom,
         }
     }
 
-    /// Açılıştaki yerleşim: sağda katmanlar ve özellikler alt alta, altta
-    /// öznitelik tablosu ve arkasında görevler.
+    /// Açılıştaki yerleşim: sağda katmanlar ve özellikler alt alta,
+    /// özelliklerin arkasında kitaplık; altta öznitelik tablosu ve arkasında
+    /// görevler.
     pub fn layout() -> Docks<DockPanel> {
         let mut docks = Docks::new();
 
         docks.dock(DockPanel::Layers, Side::Right);
         docks.split(DockPanel::Details, Side::Right);
+        docks.dock(DockPanel::Library, Side::Right);
+        docks.show(DockPanel::Details, Side::Right);
         docks.dock(DockPanel::Table, Side::Bottom);
         docks.dock(DockPanel::Tasks, Side::Bottom);
         docks.show(DockPanel::Table, Side::Bottom);
@@ -370,6 +389,8 @@ pub enum Pane {
     GoTo,
     /// Aktif katmanın rengi, opaklığı ve çizgi kalınlığı.
     Style,
+    /// Görünür katmanların simgeleri ve adları.
+    Legend,
 }
 
 impl Pane {
@@ -378,6 +399,7 @@ impl Pane {
             Pane::Measure => "Ölçüm",
             Pane::GoTo => "Koordinata git",
             Pane::Style => "Katman stili",
+            Pane::Legend => "Lejant",
         }
     }
 
@@ -386,6 +408,7 @@ impl Pane {
             Pane::Measure => Icon::Measure,
             Pane::GoTo => Icon::Target,
             Pane::Style => Icon::Drop,
+            Pane::Legend => Icon::Legend,
         }
     }
 
@@ -395,12 +418,13 @@ impl Pane {
             Pane::Measure => 248.0,
             Pane::GoTo => 252.0,
             Pane::Style => 268.0,
+            Pane::Legend => 228.0,
         }
     }
 
     /// İlk açıldığı yer: ölçüm ve koordinata git üst kenar boyunca yan
     /// yana, katman stili sağda; sağ üstteki ViewCube ve gezinme çubuğu
-    /// açıkta kalır.
+    /// açıkta kalır. Lejant sol altta, ölçek çubuğunun üstündedir.
     pub fn placement(self) -> Placement {
         let gap = floating::GAP;
 
@@ -410,6 +434,7 @@ impl Pane {
                 Placement::top_left(2.0 * gap + typography::scaled(Pane::Measure.width()), gap)
             }
             Pane::Style => Placement::top_right(96.0, gap),
+            Pane::Legend => Placement::bottom_left(gap, 72.0),
         }
     }
 }

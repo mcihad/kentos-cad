@@ -18,6 +18,7 @@ use kentos_rc::widget::{
 use crate::app::{Showcase, TIME_ZONE};
 use crate::jobs::JobState;
 use crate::message::{DockPanel, Message};
+use crate::view::library;
 
 impl Showcase {
     /// Ortadaki içeriğin çevresinde yuvadaki paneller. Panelin gövdesi
@@ -60,6 +61,9 @@ impl Showcase {
 
                     pane.actions(label::caption(meta)).scrollable()
                 }
+                DockPanel::Library => {
+                    pane.actions(label::caption(format!("{} blok", library::BLOCKS.len())))
+                }
             }
         })
         .into()
@@ -71,6 +75,7 @@ impl Showcase {
             DockPanel::Details => self.inspector_panel(),
             DockPanel::Table => self.attribute_table(),
             DockPanel::Tasks => self.tasks_panel(),
+            DockPanel::Library => self.library_panel(),
         }
     }
 

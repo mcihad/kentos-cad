@@ -327,24 +327,31 @@ impl Showcase {
                 )
         };
 
-        Group::new("Pencereler").push(
-            Stack::new()
-                .push(pane(
-                    Pane::Measure,
-                    "Ölç aracını ve ölçüm penceresini açar.",
-                    Command::Tool(Tool::Measure),
-                ))
-                .push(pane(
-                    Pane::GoTo,
-                    "Enlem ve boylam yazıp görünümü ortalar ya da çizime nokta ekler.",
-                    Command::Pane(Pane::GoTo),
-                ))
-                .push(pane(
-                    Pane::Style,
-                    "Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştirir.",
-                    Command::Pane(Pane::Style),
-                )),
-        )
+        Group::new("Pencereler")
+            .push(
+                Stack::new()
+                    .push(pane(
+                        Pane::Measure,
+                        "Ölç aracını ve ölçüm penceresini açar.",
+                        Command::Tool(Tool::Measure),
+                    ))
+                    .push(pane(
+                        Pane::GoTo,
+                        "Enlem ve boylam yazıp görünümü ortalar ya da çizime nokta ekler.",
+                        Command::Pane(Pane::GoTo),
+                    ))
+                    .push(pane(
+                        Pane::Style,
+                        "Aktif katmanın rengini, opaklığını ve çizgi kalınlığını değiştirir.",
+                        Command::Pane(Pane::Style),
+                    )),
+            )
+            .push(Stack::new().push(pane(
+                Pane::Legend,
+                "Görünür katmanların simgelerini ve adlarını gösterir; satıra tıklamak katmanı \
+             gizler ya da gösterir.",
+                Command::Pane(Pane::Legend),
+            )))
     }
 
     /// Yuvadaki paneller; görünen vurgulanır. Kapatılan panel yeniden
@@ -366,7 +373,8 @@ impl Showcase {
             .push(
                 Stack::new()
                     .push(panel(DockPanel::Table))
-                    .push(panel(DockPanel::Tasks)),
+                    .push(panel(DockPanel::Tasks))
+                    .push(panel(DockPanel::Library)),
             )
     }
 

@@ -16,11 +16,15 @@ use kentos_rc::label;
 use kentos_rc::spatial::{LayerKind, LonLat, format, model_space};
 use kentos_rc::style;
 use kentos_rc::theme::typography;
+use kentos_rc::widget::legend::Symbol;
 use kentos_rc::widget::number::Unit;
-use kentos_rc::widget::{ColorPicker, NumberInput, Tip, ToolWindow, horizontal_divider, tip};
+use kentos_rc::widget::{
+    ColorPicker, Legend, NumberInput, Tip, ToolWindow, horizontal_divider, tip,
+};
 
 use super::LayerChoice;
 use crate::app::Showcase;
+use crate::layer_tree::NodeId;
 use crate::message::{Keyword, Message, Pane};
 
 /// Katman stili penceresindeki hazır renkler: örnek verinin renkleri ve
@@ -51,7 +55,69 @@ impl Showcase {
             Pane::Measure => self.measure_pane(),
             Pane::GoTo => self.go_to_pane(),
             Pane::Style => self.style_pane(),
+            Pane::Legend => self.legend_pane(),
         }
+    }
+
+    /// Katmanların simgeleri ve adları; satıra tıklamak katmanı ya da alt
+    /// katmanı gizler veya gösterir. Gizli satırlar sönüktür.
+    fn legend_pane(&self) -> ToolWindow<'_, Message> {
+        let mut legend = Legend::new();
+        let mut rows = 0;
+
+        for (index, layer) in self.layers.iter().enumerate() {
+            let symbol = match layer.kind {
+                LayerKind::Point => Symbol::point(layer.color),
+                LayerKind::Line => Symbol::line(layer.color, layer.stroke_width.clamp(1.0, 4.0)),
+                LayerKind::Polygon => Symbol::area(layer.color),
+            };
+            let own = self.layer_tree.visible.get(index).copied().unwrap_or(true);
+
+            legend = legend
+                .item(symbol, layer.name.as_str())
+                .detail(layer.features.len().to_string())
+                .muted(!layer.visible)
+                .on_press(Message::TreeChecked(NodeId::Layer(index), !own));
+            rows += 1;
+
+            // Alt katmanlar yalnızca görünür katmanlarda sıralanır.
+            if !layer.visible {
+                continue;
+            }
+
+            for (position, sublayer) in layer.sublayers.iter().enumerate() {
+                let symbol = match layer.kind {
+                    LayerKind::Point => Symbol::point(sublayer.color),
+                    LayerKind::Line => {
+                        Symbol::line(sublayer.color, layer.stroke_width.clamp(1.0, 4.0))
+                    }
+                    LayerKind::Polygon => Symbol::area(sublayer.color),
+                };
+
+                legend = legend
+                    .sub(symbol, sublayer.name.as_str())
+                    .muted(!sublayer.visible)
+                    .on_press(Message::TreeChecked(
+                        NodeId::Sublayer(index, position),
+                        !sublayer.visible,
+                    ));
+                rows += 1;
+            }
+        }
+
+        // Uzun lejant kayar; kısa lejant kendi boyundadır.
+        let height = (rows as f32 * typography::scaled(22.0)).min(typography::scaled(340.0));
+        let shown = self.layers.iter().filter(|layer| layer.visible).count();
+
+        ToolWindow::new(
+            Pane::Legend.title(),
+            scrollable(container(legend.width(Fill)).padding([6, 8]))
+                .direction(style::field::thin_scrollbar())
+                .height(height + 12.0),
+        )
+        .icon(Pane::Legend.icon())
+        .meta(format!("{shown} görünür"))
+        .width(Pane::Legend.width())
     }
 
     /// Ölç aracının sonuçları: toplam uzunluk, eylemler ve kenarlar.

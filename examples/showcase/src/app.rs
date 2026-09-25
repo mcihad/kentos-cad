@@ -19,7 +19,7 @@ use kentos_rc::widget::command_line::{self, Entry};
 use kentos_rc::widget::docking::{self, Docks};
 use kentos_rc::widget::floating::{self, Windows};
 use kentos_rc::widget::tree_view::{self, Place};
-use kentos_rc::widget::{Toast, Toasts, inspector};
+use kentos_rc::widget::{Toast, Toasts, assets, inspector};
 
 use crate::command::{self, Command};
 use crate::gallery::{Demo, Gallery, Page};
@@ -35,6 +35,7 @@ use crate::sample;
 use crate::settings::Settings;
 use crate::sheets::Sheets;
 use crate::table::{self, TableView};
+use crate::view::library;
 
 /// Çizim araçlarının geometri eklediği katman; listenin en üstündedir.
 pub const DRAWING_LAYER: usize = 0;
@@ -166,6 +167,18 @@ pub struct Showcase {
     pub(crate) radial_open: bool,
     /// Düzende cetveller gösteriliyor mu (Ctrl+R).
     pub(crate) rulers: bool,
+    /// Kitaplık paneli ve Nokta aracıyla yerleştirilecek blok.
+    pub(crate) library: Library,
+    pub(crate) pending_block: Option<usize>,
+}
+
+/// Kitaplık panelinin durumu: seçili blok, arama, kategori ve görünüm.
+#[derive(Debug, Clone, Default)]
+pub(crate) struct Library {
+    pub selected: Option<usize>,
+    pub search: String,
+    pub category: Option<String>,
+    pub view: assets::View,
 }
 
 /// Koordinata git penceresinin alanları.
@@ -325,6 +338,8 @@ impl Showcase {
             tree_focused: false,
             radial_open: false,
             rulers: true,
+            library: Library::default(),
+            pending_block: None,
         }
     }
 
@@ -523,6 +538,20 @@ impl Showcase {
                 }
             }
             Message::RadialClosed => self.radial_open = false,
+            Message::LibrarySelected(block) => self.library.selected = Some(block),
+            Message::LibrarySearch(search) => self.library.search = search,
+            Message::LibraryCategory(category) => self.library.category = category,
+            Message::LibraryView(view) => self.library.view = view,
+            Message::BlockInserted(block) => {
+                if let Some((name, _, _)) = library::BLOCKS.get(block) {
+                    self.select_tool(Tool::Point);
+                    self.library.selected = Some(block);
+                    self.pending_block = Some(block);
+                    self.log(format!(
+                        "{name}: haritada yerini tıklayın; Esc yerleştirmeyi bitirir."
+                    ));
+                }
+            }
             Message::TreeChecked(node, checked) => self.check_node(node, checked),
             Message::TreeExpandAll(group, expanded) => self.layer_tree.expand_all(group, expanded),
             Message::ShowOnly(node) => self.show_only(node),
@@ -1340,6 +1369,8 @@ impl Showcase {
     fn select_tool(&mut self, tool: Tool) {
         self.tool = tool;
         self.draft.clear();
+        // Başka araca geçmek kitaplıktan yerleştirmeyi bitirir.
+        self.pending_block = None;
         // Çizim araçlarında tıklama nokta girişidir; haritadan seçim sürmez.
         self.cancel_pick();
 
@@ -1374,7 +1405,16 @@ impl Showcase {
         };
 
         self.drawn_count += 1;
-        let name = format!("{} {}", self.tool.label(), self.drawn_count);
+        // Kitaplıktan seçilen blok, noktaya adını verir.
+        let name = match self
+            .pending_block
+            .and_then(|block| library::BLOCKS.get(block))
+        {
+            Some((block, _, _)) if self.tool == Tool::Point => {
+                format!("{block} {}", self.drawn_count)
+            }
+            _ => format!("{} {}", self.tool.label(), self.drawn_count),
+        };
 
         let id = layer.insert(Feature::new(geometry).with_values([
             Value::from(name.as_str()),
@@ -1432,7 +1472,7 @@ impl Showcase {
 
                 self.windows.open(pane, pane.placement());
             }
-            Pane::Style => self.windows.open(pane, pane.placement()),
+            Pane::Style | Pane::Legend => self.windows.open(pane, pane.placement()),
         }
     }
 
@@ -2967,6 +3007,29 @@ mod tests {
 
         let _ = app.update(Message::Gallery(Demo::Animation(Event::Play(false))));
         assert!(!app.gallery.is_playing());
+    }
+
+    #[test]
+    fn library_blocks_name_the_points_placed_after_them() {
+        let mut app = Showcase::new();
+
+        let _ = app.update(Message::BlockInserted(0));
+        assert_eq!(app.tool, Tool::Point);
+        assert_eq!(app.pending_block, Some(0));
+
+        picked(&mut app, 32.85, 39.93);
+        let feature = app.layers[DRAWING_LAYER]
+            .features
+            .last()
+            .expect("nokta eklendi");
+        assert_eq!(feature.values.first(), Some(&Value::from("Ağaç 1")));
+
+        // Başka araca geçmek yerleştirmeyi bitirir.
+        let _ = app.update(Message::ToolSelected(Tool::Select));
+        assert_eq!(app.pending_block, None);
+
+        let _ = app.update(Message::PaneToggled(Pane::Legend));
+        assert!(app.windows.is_open(Pane::Legend));
     }
 
     #[test]

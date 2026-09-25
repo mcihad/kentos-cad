@@ -13,6 +13,7 @@ use kentos_rc::attribute::{
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::{SelectionMode, Tool};
 use kentos_rc::widget::Toast;
+use kentos_rc::widget::assets;
 use kentos_rc::widget::color::Ramp;
 use kentos_rc::widget::command_line::Entry;
 use kentos_rc::widget::docking::{self, Docks, Side};
@@ -84,7 +85,8 @@ impl Page {
             Page::Icons => "16×16 ızgarada çizilmiş vektör ikon seti, boyutları ve tonları.",
             Page::Buttons => "Düğme stilleri, şerit düğmeleri ve ipuçları.",
             Page::Data => {
-                "Tablo, sanal tablo, ağaç görünümü, özellik ızgarası, panel ve giriş alanları."
+                "Tablo, sanal tablo, ağaç görünümü, lejant, varlık tarayıcısı, özellik ızgarası, \
+                 panel ve giriş alanları."
             }
             Page::Frame => {
                 "Kayan pencereler, durum çubuğu, komut kutusu, gezinme çubuğu, bağlam menüsü, \
@@ -233,6 +235,15 @@ pub enum Demo {
     Project(timeline::Event),
     Animation(timeline::Event),
     Tick(iced::time::Instant),
+    /// Lejant örneği: daraltma ve satırı gizleme.
+    LegendCollapsed,
+    LegendItem(usize),
+    /// Varlık tarayıcısı örneği.
+    AssetSelected(usize),
+    AssetActivated(usize),
+    AssetSearch(String),
+    AssetCategory(Option<String>),
+    AssetView(assets::View),
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -491,6 +502,14 @@ pub struct Gallery {
     pub project: Playback,
     pub animation: Playback,
     pub last_tick: Option<iced::time::Instant>,
+    /// Lejant örneği: daraltılmış mı, gizlenen satırlar.
+    pub legend_collapsed: bool,
+    pub legend_hidden: [bool; 6],
+    /// Varlık tarayıcısı örneği.
+    pub asset: Option<usize>,
+    pub asset_search: String,
+    pub asset_category: Option<String>,
+    pub asset_view: assets::View,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -856,6 +875,12 @@ impl Default for Gallery {
             project: project_playback(),
             animation: Playback::new((0.0, f64::from(ANIMATION_FRAMES)), 24.0).with_step(1.0),
             last_tick: None,
+            legend_collapsed: false,
+            legend_hidden: [false, false, false, false, true, false],
+            asset: Some(0),
+            asset_search: String::new(),
+            asset_category: None,
+            asset_view: assets::View::Grid,
         }
     }
 }
@@ -1172,6 +1197,27 @@ impl Gallery {
                 self.animation.update(event);
                 self.last_tick = None;
             }
+            Demo::LegendCollapsed => self.legend_collapsed = !self.legend_collapsed,
+            Demo::LegendItem(item) => {
+                if let Some(hidden) = self.legend_hidden.get_mut(item) {
+                    *hidden = !*hidden;
+                }
+            }
+            Demo::AssetSelected(asset) => self.asset = Some(asset),
+            Demo::AssetActivated(asset) => {
+                self.asset = Some(asset);
+
+                return Some(format!(
+                    "Galeri: \"{}\" kullanıldı; Giriş sekmesindeki Kitaplık panelinde bloğu \
+                     haritaya yerleştirir.",
+                    crate::view::library::BLOCKS
+                        .get(asset)
+                        .map_or("", |(name, _, _)| *name)
+                ));
+            }
+            Demo::AssetSearch(search) => self.asset_search = search,
+            Demo::AssetCategory(category) => self.asset_category = category,
+            Demo::AssetView(view) => self.asset_view = view,
             Demo::Tick(now) => {
                 if let Some(last) = self.last_tick {
                     let elapsed = now.saturating_duration_since(last);

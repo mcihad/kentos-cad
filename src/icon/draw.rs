@@ -932,6 +932,22 @@ impl Pen {
                     true,
                 );
             }
+            // Lejant: üç satır; solda simge (kare, daire, çizgi), sağda ad.
+            Icon::Legend => {
+                frame.fill(
+                    &Path::rectangle(
+                        self.p(1.75, 2.25),
+                        iced::Size::new(3.0 * self.unit, 3.0 * self.unit),
+                    ),
+                    self.color,
+                );
+                self.dot(frame, (3.25, 8.0), 1.6);
+                self.line(frame, (1.75, 12.75), (4.75, 12.75));
+
+                for y in [3.75, 8.0, 12.75] {
+                    self.line(frame, (7.25, y), (14.25, y));
+                }
+            }
             // Oynatma: sağa bakan dolu üçgen.
             Icon::Play => self.triangle(frame, (4.5, 2.75), (4.5, 13.25), (13.0, 8.0)),
             Icon::Pause => {

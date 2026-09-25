@@ -54,6 +54,8 @@ src/                     kentos-rc kütüphanesi
 │   ├── virtual_list.rs  sanal liste: yalnızca görünen satırları kurar
 │   ├── context_menu.rs  sağ tık menüsü ve menü düğmesi: alt menü, kısayol, klavye
 │   ├── inspector.rs     nesne inceleyici: arama, kategoriler, geri alma, yardım
+│   ├── legend.rs        lejant: nokta, çizgi, alan simgeleri, bölümler, renk ölçeği
+│   ├── assets.rs        varlık tarayıcısı: aranabilir, kategorili ızgara ya da liste
 │   ├── mini_toolbar.rs  seçimin üstünde beliren, uzaklaştıkça soluklaşan araç çubuğu
 │   ├── radial.rs        dairesel menü: yöne göre seçim, basılı tutup bırakma
 │   ├── date_picker.rs   tarih, tarih-saat ve saat seçicileri (açılır takvim)
@@ -120,8 +122,8 @@ Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
   rengi ve görünürlüğü ayrıdır. Gruplar ve katmanlar sürüklenerek taşınır,
   F2 ile yerinde adlandırılır; kilitli katmana çizilmez, seçilemeyen katmanın
   öğeleri haritada seçilmez (bkz. [Veri](#veri)).
-- **Yuva.** Katmanlar ve Özellikler sağda, Öznitelik tablosu ve Görevler
-  altta sekmeli yığınlardadır; sekmeler sürüklenerek başka yığına, kenara ya
+- **Yuva.** Katmanlar ve Özellikler (arkasında Kitaplık) sağda, Öznitelik
+  tablosu ve Görevler altta sekmeli yığınlardadır; sekmeler sürüklenerek başka yığına, kenara ya
   da ortaya (yüzen pencere) taşınır. Yerleşim ayar dosyasında saklanır;
   kapatılan panel Görünüm sekmesindeki Paneller grubundan geri açılır.
 - **Bağlam menüleri.** Ağaçtaki gruplara, katmanlara ve alt katmanlara,
@@ -209,6 +211,40 @@ node.editor(tree_view::rename(
     Message::RenameSubmitted,
     Message::RenameCancelled,
 ))
+```
+
+### Lejant ve varlık tarayıcısı
+
+- **Lejant.** `Legend` katmanların simgelerini (nokta, çizgi, alan, renk
+  kutusu, ikon), adlarını ve sayılarını sıralar; bölüm başlıkları, girintili
+  alt satırlar ve sürekli renk ölçekleri (rampa ve uç değerler) vardır.
+  Satıra tıklanabilir (ör. katmanı gizle), gizli satırlar sönüktür; başlığa
+  tıklamak lejantı daraltır. `legend::frame` harita üstü için yarı saydam
+  kutudur.
+- **Varlık tarayıcısı.** `AssetBrowser` sembol, blok ve malzeme kitaplıkları
+  içindir: arama Türkçe harf ayırmaz, kategoriler öğelerden çıkarılır,
+  ızgara ile liste arasında geçilir. Tıklamak seçer, çift tıklamak kullanır.
+  Önizlemeler uygulamanındır (ikon, tuval, resim).
+- **Vitrinde.** Görünüm → Pencereler → Lejant (`LEJANT`) görünür katmanları
+  ve alt katmanları gösterir; satıra tıklamak gizler. Sağdaki Kitaplık
+  paneli kentsel donatı, bitki, altyapı ve trafik bloklarını plan
+  sembolleriyle gösterir; çift tıklanan blok Nokta aracıyla haritaya
+  yerleştirilir ve noktaya adını verir.
+
+```rust
+Legend::new()
+    .title("Lejant")
+    .section("Ulaşım")
+    .item(Symbol::line(road_color, 2.0), "Karayolları")
+    .detail("7")
+    .on_press(Message::LayerToggled(3))
+    .ramp("Nüfus", &ramp, "0", "16 M")
+
+AssetBrowser::new(assets, self.selected, Message::AssetSelected)
+    .on_activate(Message::AssetInserted)
+    .search(&self.query, Message::AssetSearch)
+    .category(self.category.as_deref(), Message::AssetCategory)
+    .view(self.view, Message::AssetView)
 ```
 
 ## Kayan araç pencereleri
@@ -890,6 +926,7 @@ cargo run -- snapshot yuva.png --senaryo yuva --bas 1150,153 --imlec 700,300
 cargo run -- snapshot mini.png --senaryo mini --imlec 437,272
 cargo run -- snapshot daire.png --senaryo daire --imlec 600,250
 cargo run -- snapshot kilavuz.png --senaryo kilavuz --bas 10,350 --imlec 300,352
+cargo run -- snapshot lejant.png --senaryo lejant
 cargo run -- snapshot sekmeler.png --senaryo galeri --sayfa yerlesim
 cargo run -- snapshot girdiler.png --senaryo galeri --sayfa girdiler --boyut 1440x1700 --tikla 222,1190
 cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah

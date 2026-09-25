@@ -10,6 +10,7 @@
 //! okur.
 
 pub mod app_menu;
+pub mod assets;
 mod axis;
 pub mod chips;
 pub mod color;
@@ -24,6 +25,7 @@ mod dropdown;
 pub mod floating;
 pub mod form;
 pub mod inspector;
+pub mod legend;
 pub mod mini_toolbar;
 pub mod navigation_bar;
 pub mod notice;
@@ -57,6 +59,7 @@ pub mod wizard;
 mod tip;
 
 pub use app_menu::AppMenu;
+pub use assets::AssetBrowser;
 pub use chips::ChipInput;
 pub use color::ColorPicker;
 pub use command_line::CommandLine;
@@ -69,6 +72,7 @@ pub use docking::{DockSpace, Docks, Pane};
 pub use floating::{Floating, ToolWindow};
 pub use form::Form;
 pub use inspector::Inspector;
+pub use legend::Legend;
 pub use mini_toolbar::MiniToolbar;
 pub use navigation_bar::NavigationBar;
 pub use notice::{Banner, EmptyState};
