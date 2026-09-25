@@ -38,7 +38,7 @@ Komut kayıtlarının yanında menü ve şerit yerleri de hesaplanır: menü yol
   - `partial` yalnız `annotations.json`'dan gelir ve nedenini `note` alanında taşır.
 - **`platforms`:** `{ web, desktop }`.
   - `web` `status`'la aynıdır.
-  - `desktop`: masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`, masaüstü testi onu `catalog::PORTED` ile eşit tutar) `implemented`'dır, öbürleri `none`. Bir özellik masaüstünde anlamsızsa notla `n/a` yazılır.
+  - `desktop`: masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`, masaüstü testi onu `catalog::PORTED` ile eşit tutar) `implemented`'dır, öbürleri `none`. Ayarlarda tipli ayarın `hosts`'unda masaüstü varsa `implemented`'dır (`settingsSchema.json`). Bir özellik masaüstünde anlamsızsa notla `n/a` yazılır.
 - **`tests`:** kimliğin geçtiği test dosyaları, e2e betikleri ve etkileşim izleri (`fixtures/interaction`, [ADR 0018](../adr/0018-tool-session-and-input.md)).
   - Komutta kimlik tırnak içinde aranır. Araçta `tool.<id>` ya da `activate('<id>')`, işlem araçlarında kimlik ya da komut kimliği aranır.
   - Kimliğin geçmesi davranışın sınandığını göstermez. Boş liste de sınanmadığı anlamına gelmez: test komutu başka bir yoldan çalıştırıyor olabilir.

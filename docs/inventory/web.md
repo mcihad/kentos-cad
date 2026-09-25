@@ -9,8 +9,8 @@
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
-| Ayarlar | 63 | 63 | 0 | 0 |
-| Tarayıcı depoları | 6 | 6 | 0 | 0 |
+| Ayarlar | 64 | 64 | 0 | 0 |
+| Tarayıcı depoları | 8 | 8 | 0 | 0 |
 | `.kcad` v1 alanları | 174 | 174 | 0 | 0 |
 | Pencereler ve paneller | 48 | 48 | 0 | 0 |
 
@@ -51,7 +51,7 @@ Menüde, şeritte ve araç kutusunda yoklar; kimlikleri `src/ui` altındaki hiç
 
 ## Masaüstü
 
-Masaüstü kabuğu (apps/desktop) 19 / 163 komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.
+Masaüstü kabuğu (apps/desktop) 22 / 163 komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.
 
 ## Test başvurusu
 

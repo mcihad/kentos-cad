@@ -49,14 +49,14 @@
       "pending": 2
     },
     "settings": {
-      "total": 63,
-      "implemented": 63,
+      "total": 64,
+      "implemented": 64,
       "partial": 0,
       "pending": 0
     },
     "storage": {
-      "total": 6,
-      "implemented": 6,
+      "total": 8,
+      "implemented": 8,
       "partial": 0,
       "pending": 0
     },
@@ -77,7 +77,7 @@
       "view.theme.toggle"
     ],
     "commandsWithoutTests": 99,
-    "commandsOnDesktop": 19
+    "commandsOnDesktop": 22
   },
   "commands": [
     {
@@ -725,7 +725,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -756,7 +756,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4453,7 +4453,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs",
@@ -7163,6 +7163,48 @@
   ],
   "settings": [
     {
+      "id": "device.hiDpi",
+      "key": "hiDpi",
+      "setting": "graphics.hiDpi",
+      "scope": "device",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "boolean",
+      "default": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "device.msaa",
+      "key": "msaa",
+      "setting": "graphics.msaa",
+      "scope": "device",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "number",
+      "default": 4,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      }
+    },
+    {
+      "id": "device.rendererPreference",
+      "key": "rendererPreference",
+      "setting": "graphics.backend",
+      "scope": "device",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "string",
+      "default": "webgl2",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "layout.bottomExpanded",
       "key": "bottomExpanded",
       "scope": "layout",
@@ -7559,6 +7601,7 @@
       "persistence": "none",
       "type": "boolean",
       "default": true,
+      "setting": "drafting.grid",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -7598,10 +7641,11 @@
       "persistence": "none",
       "type": "boolean",
       "default": false,
+      "setting": "drafting.ortho",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -7611,10 +7655,11 @@
       "persistence": "none",
       "type": "boolean",
       "default": false,
+      "setting": "drafting.polar",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -7624,6 +7669,7 @@
       "persistence": "none",
       "type": "boolean",
       "default": true,
+      "setting": "drafting.snap",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -7637,6 +7683,7 @@
       "persistence": "none",
       "type": "boolean",
       "default": true,
+      "setting": "drafting.tracking",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -7646,8 +7693,9 @@
     {
       "id": "user.accent",
       "key": "accent",
+      "setting": "appearance.accent",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "string",
       "default": "navy",
       "status": "implemented",
@@ -7659,8 +7707,9 @@
     {
       "id": "user.crosshair",
       "key": "crosshair",
+      "setting": "appearance.crosshair",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "string",
       "default": "medium",
       "status": "implemented",
@@ -7672,21 +7721,23 @@
     {
       "id": "user.cursorInput",
       "key": "cursorInput",
+      "setting": "drafting.cursorInput",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
       "id": "user.defaultDrawingFont",
       "key": "defaultDrawingFont",
+      "setting": "newProjects.drawingFont",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "string",
       "default": "barlow",
       "status": "implemented",
@@ -7698,8 +7749,9 @@
     {
       "id": "user.defaultSrid",
       "key": "defaultSrid",
+      "setting": "newProjects.srid",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "number",
       "default": 5256,
       "status": "implemented",
@@ -7711,8 +7763,9 @@
     {
       "id": "user.defaultWorkspace",
       "key": "defaultWorkspace",
+      "setting": "newProjects.workspace",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "string",
       "default": "hybrid",
       "status": "implemented",
@@ -7724,8 +7777,9 @@
     {
       "id": "user.hoverInfo",
       "key": "hoverInfo",
+      "setting": "drafting.hoverInfo",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7737,8 +7791,9 @@
     {
       "id": "user.lineWeights",
       "key": "lineWeights",
+      "setting": "graphics.lineWeights",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7750,8 +7805,9 @@
     {
       "id": "user.pickAperture",
       "key": "pickAperture",
+      "setting": "drafting.pickAperture",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "number",
       "default": 5,
       "status": "implemented",
@@ -7763,47 +7819,23 @@
     {
       "id": "user.polarIncrement",
       "key": "polarIncrement",
+      "setting": "drafting.polarIncrement",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "number",
       "default": 45,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
-    },
-    {
-      "id": "user.renderQuality",
-      "key": "renderQuality",
-      "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
-      "type": "string",
-      "default": "high",
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "none"
-      }
-    },
-    {
-      "id": "user.rendererPreference",
-      "key": "rendererPreference",
-      "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
-      "type": "string",
-      "default": "webgl2",
-      "status": "implemented",
-      "platforms": {
-        "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
       "id": "user.shell",
       "key": "shell",
+      "setting": "appearance.shell",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "string",
       "default": "classic",
       "status": "implemented",
@@ -7815,21 +7847,23 @@
     {
       "id": "user.snapAperture",
       "key": "snapAperture",
+      "setting": "drafting.snapAperture",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "number",
       "default": 11,
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
       "id": "user.snapCenter",
       "key": "snapCenter",
+      "setting": "snap.center",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7841,8 +7875,9 @@
     {
       "id": "user.snapEndpoint",
       "key": "snapEndpoint",
+      "setting": "snap.endpoint",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7854,8 +7889,9 @@
     {
       "id": "user.snapIntersection",
       "key": "snapIntersection",
+      "setting": "snap.intersection",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7867,8 +7903,9 @@
     {
       "id": "user.snapMidpoint",
       "key": "snapMidpoint",
+      "setting": "snap.midpoint",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7880,8 +7917,9 @@
     {
       "id": "user.snapNearest",
       "key": "snapNearest",
+      "setting": "snap.nearest",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": false,
       "status": "implemented",
@@ -7893,8 +7931,9 @@
     {
       "id": "user.snapNode",
       "key": "snapNode",
+      "setting": "snap.node",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7906,8 +7945,9 @@
     {
       "id": "user.snapPerpendicular",
       "key": "snapPerpendicular",
+      "setting": "snap.perpendicular",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7919,8 +7959,9 @@
     {
       "id": "user.snapTangent",
       "key": "snapTangent",
+      "setting": "snap.tangent",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7932,8 +7973,9 @@
     {
       "id": "user.startScreen",
       "key": "startScreen",
+      "setting": "appearance.startScreen",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
       "default": true,
       "status": "implemented",
@@ -7945,8 +7987,9 @@
     {
       "id": "user.symbolSize",
       "key": "symbolSize",
+      "setting": "graphics.symbolSize",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "string",
       "default": "plot",
       "status": "implemented",
@@ -7958,8 +8001,9 @@
     {
       "id": "user.uiFont",
       "key": "uiFont",
+      "setting": "appearance.uiFont",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "string",
       "default": "jakarta",
       "status": "implemented",
@@ -7971,8 +8015,9 @@
     {
       "id": "user.uiScale",
       "key": "uiScale",
+      "setting": "appearance.uiScale",
       "scope": "user",
-      "persistence": "localStorage kentos.prefs.v1",
+      "persistence": "localStorage kentos.settings.v1",
       "type": "string",
       "default": "standard",
       "status": "implemented",
@@ -8006,12 +8051,13 @@
     {
       "id": "kentos.prefs.v1",
       "kind": "localStorage",
-      "source": "apps/web/src/app/state.ts",
+      "source": "apps/web/src/app/settings/legacy.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
-      }
+      },
+      "note": "Eski tercih deposu. Tipli ayarlara (`kentos.settings.v1`) bir kez taşınır; uygulama ona bir daha yazmaz, yedek olarak olduğu gibi durur (ADR 0023)."
     },
     {
       "id": "kentos.processing.v1",
@@ -8022,6 +8068,27 @@
         "web": "implemented",
         "desktop": "none"
       }
+    },
+    {
+      "id": "kentos.settings.v1",
+      "kind": "localStorage",
+      "source": "apps/web/src/app/settings/store.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "kentos.settings.v1.backup",
+      "kind": "localStorage",
+      "source": "apps/web/src/app/settings/store.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "note": "Okunamayan ya da geçersiz değer içeren ayar kaydının tam metni; kurtarma üstüne yazmadan önce buraya kopyalar (ADR 0023)."
     },
     {
       "id": "kentos.styles.v1",
