@@ -1,0 +1,476 @@
+//! Harita üstündeki kayan araç pencereleri: ölçüm, koordinata git ve
+//! katman stili.
+//!
+//! Pencereler arkadaki işi kilitlemez: ölçüm sürerken haritaya tıklanır,
+//! stil değişiklikleri haritaya anında yansır.
+
+use iced::widget::text::Wrapping;
+use iced::widget::{
+    Column, button, column, container, pick_list, row, scrollable, slider, space, text_input,
+    tooltip,
+};
+use iced::{Center, Color, Element, Fill, Right, Theme};
+
+use kentos_rc::icon::{Icon, icon};
+use kentos_rc::label;
+use kentos_rc::spatial::{LayerKind, LonLat, format, model_space};
+use kentos_rc::style;
+use kentos_rc::theme::typography;
+use kentos_rc::widget::legend::Symbol;
+use kentos_rc::widget::number::Unit;
+use kentos_rc::widget::{
+    ColorPicker, Legend, NumberInput, Tip, ToolWindow, horizontal_divider, tip,
+};
+
+use super::LayerChoice;
+use crate::app::Showcase;
+use crate::layer_tree::NodeId;
+use crate::message::{Keyword, Message, Pane};
+
+/// Katman stili penceresindeki hazır renkler: örnek verinin renkleri ve
+/// harita zemininde okunan birkaç ton.
+pub(super) const COLORS: [Color; 10] = [
+    Color::from_rgb(0.96, 0.35, 0.38),
+    Color::from_rgb(0.96, 0.62, 0.25),
+    Color::from_rgb(0.89, 0.76, 0.35),
+    Color::from_rgb(0.55, 0.86, 0.26),
+    Color::from_rgb(0.21, 0.77, 0.71),
+    Color::from_rgb(0.29, 0.62, 0.96),
+    Color::from_rgb(0.18, 0.56, 0.60),
+    Color::from_rgb(0.69, 0.52, 0.97),
+    Color::from_rgb(0.89, 0.47, 0.72),
+    Color::from_rgb(0.85, 0.86, 0.88),
+];
+
+/// Çizgi kalınlığının birimi ve sınırları (piksel).
+const PIXELS: &[Unit] = &[Unit::new("px", 1.0)];
+const STROKE: std::ops::RangeInclusive<f64> = 0.5..=8.0;
+
+/// Form satırlarındaki etiket sütununun genişliği (12 piksellik metne göre).
+const LABEL_WIDTH: f32 = 56.0;
+
+impl Showcase {
+    pub(super) fn pane(&self, pane: Pane) -> ToolWindow<'_, Message> {
+        match pane {
+            Pane::Measure => self.measure_pane(),
+            Pane::GoTo => self.go_to_pane(),
+            Pane::Style => self.style_pane(),
+            Pane::Legend => self.legend_pane(),
+        }
+    }
+
+    /// Katmanların simgeleri ve adları; satıra tıklamak katmanı ya da alt
+    /// katmanı gizler veya gösterir. Gizli satırlar sönüktür.
+    fn legend_pane(&self) -> ToolWindow<'_, Message> {
+        let mut legend = Legend::new();
+        let mut rows = 0;
+
+        for (index, layer) in self.layers.iter().enumerate() {
+            let symbol = match layer.kind {
+                LayerKind::Point => Symbol::point(layer.color),
+                LayerKind::Line => Symbol::line(layer.color, layer.stroke_width.clamp(1.0, 4.0)),
+                LayerKind::Polygon => Symbol::area(layer.color),
+            };
+            let own = self.layer_tree.visible.get(index).copied().unwrap_or(true);
+
+            legend = legend
+                .item(symbol, layer.name.as_str())
+                .detail(layer.features.len().to_string())
+                .muted(!layer.visible)
+                .on_press(Message::TreeChecked(NodeId::Layer(index), !own));
+            rows += 1;
+
+            // Alt katmanlar yalnızca görünür katmanlarda sıralanır.
+            if !layer.visible {
+                continue;
+            }
+
+            for (position, sublayer) in layer.sublayers.iter().enumerate() {
+                let symbol = match layer.kind {
+                    LayerKind::Point => Symbol::point(sublayer.color),
+                    LayerKind::Line => {
+                        Symbol::line(sublayer.color, layer.stroke_width.clamp(1.0, 4.0))
+                    }
+                    LayerKind::Polygon => Symbol::area(sublayer.color),
+                };
+
+                legend = legend
+                    .sub(symbol, sublayer.name.as_str())
+                    .muted(!sublayer.visible)
+                    .on_press(Message::TreeChecked(
+                        NodeId::Sublayer(index, position),
+                        !sublayer.visible,
+                    ));
+                rows += 1;
+            }
+        }
+
+        // Uzun lejant kayar; kısa lejant kendi boyundadır.
+        let height = (rows as f32 * typography::scaled(22.0)).min(typography::scaled(340.0));
+        let shown = self.layers.iter().filter(|layer| layer.visible).count();
+
+        ToolWindow::new(
+            Pane::Legend.title(),
+            scrollable(container(legend.width(Fill)).padding([6, 8]))
+                .direction(style::field::thin_scrollbar())
+                .height(height + 12.0),
+        )
+        .icon(Pane::Legend.icon())
+        .meta(format!("{shown} görünür"))
+        .width(Pane::Legend.width())
+    }
+
+    /// Ölç aracının sonuçları: toplam uzunluk, eylemler ve kenarlar.
+    fn measure_pane(&self) -> ToolWindow<'_, Message> {
+        let measurement = &self.measurement;
+        let total = format::distance(measurement.total_meters());
+        let empty = measurement.is_empty();
+
+        let actions = row![
+            action(
+                Icon::Undo,
+                "Son noktayı geri al",
+                (!empty).then_some(Message::Keyword(Keyword::Undo))
+            ),
+            action(
+                Icon::Eraser,
+                "Ölçümü temizle",
+                (!empty).then_some(Message::ClearMeasurement)
+            ),
+            action(
+                Icon::Copy,
+                "Panoya kopyala",
+                (measurement.segment_count() > 0).then_some(Message::CopyMeasurement)
+            ),
+        ]
+        .spacing(2);
+
+        let summary = row![
+            column![
+                label::caption("Toplam uzunluk"),
+                label::figure(total.clone()).style(measure_color),
+            ]
+            .spacing(2)
+            .width(Fill),
+            actions,
+        ]
+        .align_y(Center);
+
+        let mut body = column![summary].spacing(10).padding([10, 12]);
+
+        body = if measurement.segment_count() > 0 {
+            let mut running = 0.0;
+            let rows = measurement.segments().enumerate().map(|(index, meters)| {
+                running += meters;
+
+                row![
+                    label::mono_caption((index + 1).to_string()).width(typography::scaled(22.0)),
+                    label::mono(format::distance(meters))
+                        .width(Fill)
+                        .align_x(Right),
+                    label::mono(format::distance(running))
+                        .style(style::text::muted)
+                        .width(Fill)
+                        .align_x(Right),
+                ]
+                .spacing(8)
+                .into()
+            });
+
+            let header = row![
+                label::caption("#").width(typography::scaled(22.0)),
+                label::caption("Kenar").width(Fill).align_x(Right),
+                label::caption("Toplam").width(Fill).align_x(Right),
+            ]
+            .spacing(8);
+
+            body.push(
+                column![
+                    header,
+                    horizontal_divider(),
+                    scrollable(Column::with_children(rows).spacing(4))
+                        .direction(style::field::thin_scrollbar())
+                        .spacing(4),
+                ]
+                .spacing(5),
+            )
+        } else {
+            body.push(label::caption(if empty {
+                "Haritada ölçülecek ilk noktayı tıklayın. Her tıklama bir kenar ekler; sağ tık ölçümü temizler."
+            } else {
+                "Kenarı tamamlamak için ikinci noktayı tıklayın."
+            }))
+        };
+
+        let window = ToolWindow::new(Pane::Measure.title(), body)
+            .icon(Pane::Measure.icon())
+            .width(Pane::Measure.width())
+            .resizable();
+
+        if empty { window } else { window.meta(total) }
+    }
+
+    /// Koordinata git: enlem ve boylam yazılır; görünüm ortalanır ya da
+    /// süren çizime nokta eklenir.
+    fn go_to_pane(&self) -> ToolWindow<'_, Message> {
+        let latitude = self.go_to.latitude();
+        let longitude = self.go_to.longitude();
+        let location = self.go_to.location();
+
+        let field =
+            |name: &'static str, value: &str, invalid: bool, on_input: fn(String) -> Message| {
+                row![
+                    label::muted(name).width(typography::scaled(LABEL_WIDTH)),
+                    text_input("ondalık derece", value)
+                        .on_input(on_input)
+                        .on_submit(Message::GoToCentered)
+                        .font(typography::mono())
+                        .size(typography::body())
+                        .padding([3, 6])
+                        .style(style::field::validated(invalid)),
+                ]
+                .spacing(8)
+                .align_y(Center)
+            };
+
+        let mut form = column![
+            field(
+                "Enlem",
+                &self.go_to.latitude,
+                latitude.is_err(),
+                Message::GoToLatitude
+            ),
+            field(
+                "Boylam",
+                &self.go_to.longitude,
+                longitude.is_err(),
+                Message::GoToLongitude
+            ),
+        ]
+        .spacing(6);
+
+        for error in [latitude.err(), longitude.err()].into_iter().flatten() {
+            form = form.push(
+                row![
+                    icon(Icon::Warning)
+                        .size(12.0)
+                        .tone(kentos_rc::icon::Tone::Danger),
+                    label::caption(error).style(style::text::danger),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
+        }
+
+        let drawing = self.tool.takes_points();
+
+        let actions = row![
+            button(label::text("Git").align_x(Center).width(Fill))
+                .on_press_maybe(location.map(|_| Message::GoToCentered))
+                .width(Fill)
+                .padding([3, 10])
+                .style(style::button::primary),
+            tip(
+                button(label::text("Nokta ekle").align_x(Center).width(Fill))
+                    .on_press_maybe(location.filter(|_| drawing).map(|_| Message::GoToPlaced))
+                    .width(Fill)
+                    .padding([3, 10])
+                    .style(style::button::secondary),
+                Tip::new("Nokta ekle").body(if drawing {
+                    "Koordinatı süren çizime ya da ölçüme nokta olarak ekler."
+                } else {
+                    "Önce şeritten bir çizim aracı ya da Ölç'ü seçin."
+                }),
+                tooltip::Position::Bottom,
+            ),
+        ]
+        .spacing(6);
+
+        let readouts = column![
+            self.readout(
+                "İmleç",
+                self.cursor.or(self.last_cursor),
+                self.cursor.is_some()
+            ),
+            self.readout("Merkez", Some(self.viewport.center), true),
+        ]
+        .spacing(2);
+
+        ToolWindow::new(
+            Pane::GoTo.title(),
+            column![form, actions, horizontal_divider(), readouts]
+                .spacing(10)
+                .padding([10, 12]),
+        )
+        .icon(Pane::GoTo.icon())
+        .width(Pane::GoTo.width())
+    }
+
+    /// Koordinat satırı: ad, ondalık koordinat ve kopyalama düğmesi. Canlı
+    /// olmayan değer soluk yazılır.
+    fn readout<'a>(
+        &self,
+        name: &'a str,
+        location: Option<LonLat>,
+        live: bool,
+    ) -> Element<'a, Message> {
+        let value: Element<'a, Message> = match location {
+            Some(location) => label::mono_caption(format::decimal(location))
+                .style(if live {
+                    style::text::default
+                } else {
+                    style::text::muted
+                })
+                .wrapping(Wrapping::None)
+                .into(),
+            None => label::caption("haritada değil").into(),
+        };
+
+        row![
+            label::caption(name).width(typography::scaled(LABEL_WIDTH)),
+            container(value).width(Fill).clip(true),
+            action(
+                Icon::Copy,
+                "Koordinatı kopyala",
+                location.map(Message::CopyCoordinates)
+            ),
+        ]
+        .spacing(8)
+        .align_y(Center)
+        .into()
+    }
+
+    /// Aktif katmanın rengi, opaklığı ve çizgi kalınlığı; değişiklikler
+    /// haritaya anında yansır.
+    fn style_pane(&self) -> ToolWindow<'_, Message> {
+        let index = self.active_layer;
+
+        let Some(layer) = self.layers.get(index) else {
+            return ToolWindow::new(Pane::Style.title(), space::vertical().height(0));
+        };
+
+        let choices = self.layer_choices();
+        let current = choices.get(index).cloned();
+
+        let picker = pick_list(choices, current, |choice: LayerChoice<'_>| {
+            Message::LayerActivated(choice.index)
+        })
+        .font(typography::ui())
+        .text_size(typography::body())
+        .padding([2, 8])
+        .width(Fill)
+        .style(style::field::pick_list)
+        .menu_style(style::field::menu);
+
+        let swatches = COLORS.chunks(5).map(|colors| {
+            row(colors.iter().map(|&color| {
+                let selected = same_color(layer.color, color);
+
+                button(
+                    container(space::horizontal())
+                        .width(16)
+                        .height(16)
+                        .style(style::container::swatch(color)),
+                )
+                .on_press(Message::LayerColor(index, color))
+                .padding(2)
+                .style(style::button::swatch(selected))
+                .into()
+            }))
+            .spacing(4)
+            .into()
+        });
+
+        // Hızlı seçim kutuları; altında her rengi seçtiren renk seçici.
+        let colors = Column::with_children(swatches).spacing(4).push(
+            ColorPicker::new(layer.color, move |color| Message::LayerColor(index, color))
+                .width(Fill),
+        );
+
+        let mut form = column![
+            form_row("Katman", picker),
+            form_row("Renk", colors),
+            form_row(
+                "Opaklık",
+                row![
+                    slider(
+                        0.0..=1.0,
+                        layer.opacity,
+                        move |value| Message::LayerOpacity(index, value)
+                    )
+                    .step(0.05_f32),
+                    label::mono_caption(format!("{:>3.0}%", layer.opacity * 100.0))
+                        .style(style::text::default)
+                        .width(38)
+                        .align_x(Right),
+                ]
+                .spacing(8)
+                .align_y(Center),
+            ),
+        ]
+        .spacing(8);
+
+        // Kalınlık etiketi sürüklenince harita anında güncellenir.
+        if layer.kind != LayerKind::Point {
+            form = form.push(form_row(
+                "Kalınlık",
+                NumberInput::new(f64::from(layer.stroke_width), move |width| {
+                    Message::LayerStroke(index, width as f32)
+                })
+                .label("K")
+                .units(PIXELS)
+                .range(STROKE)
+                .step(0.1),
+            ));
+        }
+
+        if !layer.sublayers.is_empty() {
+            form = form.push(label::caption(
+                "Alt katmanlar kendi renkleriyle çizilir; bu renk hiçbir alt katmana uymayan öğeler içindir.",
+            ));
+        }
+
+        ToolWindow::new(Pane::Style.title(), form.padding([10, 12]))
+            .icon(Pane::Style.icon())
+            .width(Pane::Style.width())
+    }
+}
+
+/// Ölçüm renginde metin: haritadaki ölçüm çizgisiyle aynı.
+fn measure_color(theme: &Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(model_space::Style::of(theme).measure),
+    }
+}
+
+/// Pencerelerdeki küçük ikon düğmesi ve ipucu.
+fn action<'a>(
+    glyph: Icon,
+    description: &'a str,
+    on_press: Option<Message>,
+) -> Element<'a, Message> {
+    tip(
+        button(icon(glyph).size(14.0))
+            .on_press_maybe(on_press)
+            .padding(4)
+            .style(style::button::ghost),
+        Tip::new(description),
+        tooltip::Position::Bottom,
+    )
+}
+
+/// Form satırı: solda ad, sağda denetim.
+fn form_row<'a>(name: &'a str, control: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
+    row![
+        label::muted(name).width(typography::scaled(LABEL_WIDTH)),
+        container(control).width(Fill),
+    ]
+    .spacing(8)
+    .align_y(Center)
+    .into()
+}
+
+/// İki renk aynı mı (kayan nokta yuvarlamasına dayanıklı).
+fn same_color(a: Color, b: Color) -> bool {
+    a.into_rgba8() == b.into_rgba8()
+}
