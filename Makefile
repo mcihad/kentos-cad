@@ -12,7 +12,8 @@
 #   WEB_PORT      web geliştirme sunucusu (5173)
 #   PREVIEW_PORT  üretim önizlemesi (4173)
 #   API_PORT      kentosd (8787)
-#   PG_CONTAINER  yerel PostGIS Docker kabı (postgis)
+#   PG_CONTAINER  yerel PostGIS Docker kabı ve compose servisi (postgis)
+#   DB_COMPOSE    PostGIS'i tanımlayan compose dosyası (~/Projects/database/compose.yml; yoksa docker start/stop)
 #   TEST_DB       Rust veritabanı testleri: .env.local varsa "required" (atlanamaz), yoksa boş
 #   LABEL         ölçüm raporunun etiketi (latest)
 #   ARGS          kentosd yönetim komutuna geçen argümanlar
@@ -28,6 +29,7 @@ WEB_PORT ?= 5173
 PREVIEW_PORT ?= 4173
 API_PORT ?= 8787
 PG_CONTAINER ?= postgis
+DB_COMPOSE ?= $(HOME)/Projects/database/compose.yml
 TEST_DB ?= $(if $(wildcard .env.local),required,)
 LABEL ?= latest
 ARGS ?=
@@ -171,13 +173,17 @@ db-status: ## PostGIS kabının ve bağlantının durumu
 	@echo "Veritabanı:"
 	@docker ps -a --filter "name=^$(PG_CONTAINER)$$" --format '  {{.Names}}: {{.Status}} ({{.Image}})' 2>/dev/null | grep . || echo "  $(PG_CONTAINER) kabı bulunamadı (PG_CONTAINER=...)"
 	@docker exec $(PG_CONTAINER) pg_isready -q 2>/dev/null && echo "  bağlantı hazır" || echo "  bağlantı yok"
+	@[ -f "$(DB_COMPOSE)" ] && echo "  compose: $(DB_COMPOSE)" || echo "  compose dosyası yok ($(DB_COMPOSE)); kap docker ile yönetiliyor"
 
-db-start: ## PostGIS kabını başlatır (docker start)
-	docker start $(PG_CONTAINER)
+# The compose file also holds other services (redis, mongodb, keycloak) and
+# the PostGIS server hosts other applications' databases: only the one
+# service is started, and a running container is never recreated.
+db-start: ## PostGIS'i başlatır: compose varsa up --no-recreate (çalışan kabı yeniden kurmaz), yoksa docker start
+	@if [ -f "$(DB_COMPOSE)" ]; then docker compose -f "$(DB_COMPOSE)" up -d --no-recreate $(PG_CONTAINER); else docker start $(PG_CONTAINER); fi
 
 db-stop: ## PostGIS kabını durdurur; DİKKAT: kaptaki başka uygulamaların veritabanları da kapanır
 	@[ "$(YES)" = 1 ] || { read -r -p "$(PG_CONTAINER) kabı durdurulsun mu? İçindeki başka veritabanları da kapanır [e/H] " a; [ "$$a" = e ] || { echo "vazgeçildi"; exit 0; }; }
-	docker stop $(PG_CONTAINER)
+	@if [ -f "$(DB_COMPOSE)" ]; then docker compose -f "$(DB_COMPOSE)" stop $(PG_CONTAINER); else docker stop $(PG_CONTAINER); fi
 
 db-setup: ## Roller, kentos_cad veritabanı, migration ve geliştirme verisi (yalnız yerel!)
 	$(HEAVY) pnpm db:setup
