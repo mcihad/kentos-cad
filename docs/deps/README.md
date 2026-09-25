@@ -1,6 +1,6 @@
 # Bağımlılık kaydı
 
-Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 24 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
+Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 27 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
 
 ## Kurallar
 
@@ -25,9 +25,12 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | iced | 0.14.0 (varsayılan özellikler; `canvas`, `advanced`, vitrinde `debug`, `tokio`) | MIT | native (masaüstü) | ui, ui-showcase | ADR 0016 (`kentos-rc`'nin test edilmiş sürümü) |
 | iced_runtime | 0.14.0 (isteğe bağlı: `snapshot`) | MIT | native | ui | ADR 0016 |
 | glam | 0.30.10 (isteğe bağlı: `spatial`) | MIT OR Apache-2.0 | native | ui | ADR 0016 |
-| bytemuck | 1.25.2, `derive` (isteğe bağlı: `spatial`) | Zlib OR Apache-2.0 OR MIT | native | ui | ADR 0016 |
+| bytemuck | 1.25.2, `derive` (isteğe bağlı: `spatial`) | Zlib OR Apache-2.0 OR MIT | native | ui, render-wgpu | ADR 0016, 0019 |
 | png | 0.18.1 (isteğe bağlı: `snapshot`) | MIT OR Apache-2.0 | native | ui | ADR 0016 |
 | rfd | 0.17.2 (varsayılan: `xdg-portal`, `wayland`) | MIT | native (masaüstü) | desktop | ADR 0017 (sahibin onayı, 25 Eylül). Getirdiği tek yeni paket `pollster` (Apache-2.0 OR MIT) |
+| wgpu | 27.0.1 (Iced'in kilitlediği sürüm, varsayılan özellikler) | MIT OR Apache-2.0 | native (masaüstü) | render-wgpu | ADR 0019; kilide yeni paket girmedi |
+| naga | 27.0.3, `wgsl-in` (yalnız test) | MIT OR Apache-2.0 | native (test) | render-wgpu | ADR 0019 |
+| pollster | 0.4.0 (yalnız test) | Apache-2.0 OR MIT | native (test) | render-wgpu GPU testi | ADR 0019 |
 | axum | 0.8.9, `ws` | MIT | native | api | ADR 0001 |
 | tokio | 1.53.1 | MIT | native | api, postgres; application testleri | ADR 0001 |
 | sqlx | 0.9.0, `tls-none` | MIT OR Apache-2.0 | native | postgres, application, api | ADR 0006, 0007. TLS'siz yalnız yerel sunucu içindir; üretim TLS'i açıktır (`OPS-03`) |
@@ -76,7 +79,6 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 
 | Aday | Görev | Karar yeri |
 |---|---|---|
-| Doğrudan `wgpu` bağımlılığı (bugün Iced'in içinden gelir) | Native CAD çizim alanı | `REN-01`, `REN-02` |
 | CBOR kodlayıcısı (ör. `ciborium`, `minicbor`), sıkıştırma kodeği | Binary `.kcad` | `FILE-01`, `FILE-07`, `FILE-11`; KCAD v2 ADR'si ([ADR 0011](../adr/0011-kcad-binary-snapshot.md)) |
 | sqlx TLS özelliği (`rustls`) | Üretim veritabanı bağlantısı | `OPS-03` |
 | S3 uyumlu nesne deposu istemcisi | Bulut dosya revizyonları | `SYNC-02`, `SYNC-03` |

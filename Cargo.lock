@@ -2440,6 +2440,7 @@ dependencies = [
  "iced",
  "kentos-contracts",
  "kentos-domain",
+ "kentos-render-wgpu",
  "kentos-ui",
  "rfd",
  "serde",
@@ -2502,6 +2503,20 @@ dependencies = [
  "sqlx",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "kentos-render-wgpu"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "kentos-contracts",
+ "kentos-geometry-core",
+ "naga",
+ "pollster",
+ "serde",
+ "serde_json",
+ "wgpu",
 ]
 
 [[package]]

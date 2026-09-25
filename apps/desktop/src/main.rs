@@ -1,5 +1,6 @@
 //! KentOS CAD desktop (docs/adr/0010, 0017): native Iced with the KentOS UI
-//! components, the shared Rust contracts and, next, a pure wgpu drawing area.
+//! components, the shared Rust contracts and KentOS's own wgpu drawing area
+//! (docs/adr/0019).
 //! `kentos-cad [çizim.kcad]` opens the drawing at once; `kentos-cad snapshot
 //! çıktı.png [çizim.kcad]` draws the window into an image without opening it.
 
@@ -9,6 +10,7 @@ mod document;
 mod icons;
 mod snapshot;
 mod view;
+mod viewport;
 
 use kentos_ui::theme::typography;
 

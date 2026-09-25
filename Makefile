@@ -268,9 +268,9 @@ ui-snapshots: ## Arayüz vitrinini ekransız çizer, başvuru görüntüleriyle 
 	$(HEAVY) cargo build -q -p kentos-ui-showcase
 	$(HEAVY) node scripts/ui/snapshots.mjs
 
-desktop-snapshot: ## Masaüstü penceresini görüntüye çizer: .run/desktop.png (FILE=çizim.kcad)
+desktop-snapshot: ## Masaüstü penceresini görüntüye çizer: .run/desktop.png (FILE=çizim.kcad; çizim alanı wgpu ister)
 	$(HEAVY) cargo build -q -p kentos-desktop
-	mkdir -p .run && KENTOS_SNAPSHOT_BACKEND=tiny-skia target/debug/kentos-cad snapshot .run/desktop.png $(FILE)
+	mkdir -p .run && KENTOS_SNAPSHOT_BACKEND=wgpu target/debug/kentos-cad snapshot .run/desktop.png $(FILE)
 	@echo "• .run/desktop.png"
 
 ##@ Ölçüm (başka servis ve ağır iş yokken; önce make stop)

@@ -42,6 +42,9 @@ const GROUPS = [
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
+  // The native renderer (docs/adr/0019): wgpu on the host's device, fed by the shared core.
+  // No Iced or window system (the desktop app plugs it into Iced), no runtime, no browser.
+  { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*'] },
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'native', 'ui', 'render'], forbid: ['axum*', ...BROWSER] },
   { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'domain', 'native', 'ui', 'render'], forbid: ['axum*', ...BROWSER] },

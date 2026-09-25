@@ -1,0 +1,123 @@
+{
+  "format": "kentos.wgsl-layout",
+  "version": 1,
+  "module": "cad2d",
+  "description": "KentOS CAD 2D drawing: shared WGSL and its binding, vertex and uniform layout (docs/adr/0019). The native renderer (crates/render/wgpu) is tested against this file and the WGSL; scripts/wgsl/browser-check.mjs compiles the same sources in a browser's WebGPU and builds these pipelines. Any change to a struct, attribute or binding raises the version.",
+  "sources": [
+    "common/frame.wgsl",
+    "common/color.wgsl",
+    "common/marks.wgsl",
+    "cad2d/background.wgsl",
+    "cad2d/fill.wgsl",
+    "cad2d/line.wgsl",
+    "cad2d/marker.wgsl"
+  ],
+  "bindGroups": [
+    {
+      "group": 0,
+      "bindings": [
+        { "binding": 0, "name": "frame", "type": "uniform", "struct": "Frame", "visibility": ["vertex", "fragment"] }
+      ]
+    }
+  ],
+  "structs": {
+    "Frame": {
+      "size": 64,
+      "align": 16,
+      "fields": [
+        { "name": "center_hi", "type": "vec2<f32>", "offset": 0 },
+        { "name": "center_lo", "type": "vec2<f32>", "offset": 8 },
+        { "name": "viewport", "type": "vec2<f32>", "offset": 16 },
+        { "name": "px_per_unit", "type": "f32", "offset": 24 },
+        { "name": "dpi", "type": "f32", "offset": 28 },
+        { "name": "background", "type": "vec4<f32>", "offset": 32 },
+        { "name": "line_width", "type": "f32", "offset": 48 },
+        { "name": "srgb_target", "type": "u32", "offset": 52 }
+      ]
+    }
+  },
+  "pipelines": [
+    {
+      "name": "background",
+      "vertex": "background_vs",
+      "fragment": "background_fs",
+      "topology": "triangle-list",
+      "vertexCount": 3,
+      "blend": "replace",
+      "buffers": []
+    },
+    {
+      "name": "fill",
+      "vertex": "fill_vs",
+      "fragment": "fill_fs",
+      "topology": "triangle-list",
+      "blend": "alpha",
+      "buffers": [
+        {
+          "stepMode": "vertex",
+          "arrayStride": 20,
+          "attributes": [
+            { "location": 0, "name": "hi", "format": "float32x2", "offset": 0 },
+            { "location": 1, "name": "lo", "format": "float32x2", "offset": 8 },
+            { "location": 2, "name": "color", "format": "unorm8x4", "offset": 16 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "line",
+      "vertex": "line_vs",
+      "fragment": "line_fs",
+      "topology": "triangle-strip",
+      "vertexCount": 4,
+      "blend": "alpha",
+      "buffers": [
+        {
+          "stepMode": "instance",
+          "arrayStride": 36,
+          "attributes": [
+            { "location": 0, "name": "a_hi", "format": "float32x2", "offset": 0 },
+            { "location": 1, "name": "a_lo", "format": "float32x2", "offset": 8 },
+            { "location": 2, "name": "b_hi", "format": "float32x2", "offset": 16 },
+            { "location": 3, "name": "b_lo", "format": "float32x2", "offset": 24 },
+            { "location": 4, "name": "color", "format": "unorm8x4", "offset": 32 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "marker",
+      "vertex": "marker_vs",
+      "fragment": "marker_fs",
+      "topology": "triangle-strip",
+      "vertexCount": 4,
+      "blend": "alpha",
+      "buffers": [
+        {
+          "stepMode": "instance",
+          "arrayStride": 28,
+          "attributes": [
+            { "location": 0, "name": "hi", "format": "float32x2", "offset": 0 },
+            { "location": 1, "name": "lo", "format": "float32x2", "offset": 8 },
+            { "location": 2, "name": "color", "format": "unorm8x4", "offset": 16 },
+            { "location": 3, "name": "size", "format": "float32", "offset": 20 },
+            { "location": 4, "name": "shape", "format": "uint32", "offset": 24 }
+          ]
+        }
+      ]
+    }
+  ],
+  "blends": {
+    "replace": null,
+    "alpha": {
+      "color": { "srcFactor": "src-alpha", "dstFactor": "one-minus-src-alpha", "operation": "add" },
+      "alpha": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" }
+    }
+  },
+  "values": {
+    "color": "sRGB-encoded, straight alpha, 8 bits per channel (the drawing's own colours)",
+    "hi/lo": "float32 high and low parts of a float64 offset from the scene's local origin: hi = f32(d), lo = f32(d - hi)",
+    "size": "mark diameter in logical pixels",
+    "shape": "0 ring, 1 cross, 2 triangle"
+  }
+}

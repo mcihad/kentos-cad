@@ -1,0 +1,22 @@
+[package]
+name = "kentos-render-wgpu"
+description = "KentOS CAD's native wgpu drawing pipeline: camera, scene cache and the shared WGSL contract (docs/adr/0019)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native only, and no Iced: the desktop app plugs this into Iced's shader widget,
+# which hands over Iced's own device (TODOS.md REN-01, REN-02). The geometry comes
+# from the shared core: tessellation and triangulation are not written again here.
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+wgpu = { workspace = true }
+bytemuck = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+naga = { workspace = true }
+pollster = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

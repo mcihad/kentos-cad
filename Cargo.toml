@@ -28,6 +28,8 @@ members = [
     "crates/ui",
     "apps/ui-showcase",
     "apps/desktop",
+    # The desktop's own wgpu drawing pipeline (docs/adr/0019); desktop-only like the above.
+    "crates/render/wgpu",
 ]
 default-members = [
     "crates/shared/geometry-core",
@@ -88,6 +90,14 @@ png = { version = "=0.18.1" }
 # Native open and save dialogs of the desktop app (owner's approval, 2026-09-25;
 # docs/adr/0017): xdg-desktop-portal on Linux, the system dialog elsewhere.
 rfd = { version = "=0.17.2" }
+# The desktop's CAD drawing pipeline (docs/adr/0019): the wgpu Iced is built on, used
+# directly so the renderer shares Iced's device (TODOS.md REN-01, REN-02). Same version
+# and features as through Iced: nothing new in the lockfile.
+wgpu = { version = "=27.0.1" }
+# Tests only: the naga wgpu uses validates the shared WGSL (shaders/wgsl, REN-05).
+naga = { version = "=27.0.3", features = ["wgsl-in"] }
+# Tests only: waits on wgpu's futures in the renderer's GPU test (locked through rfd).
+pollster = { version = "=0.4.0" }
 
 [profile.release]
 lto = "thin"
