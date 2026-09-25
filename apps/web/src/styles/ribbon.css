@@ -589,6 +589,108 @@
   color: var(--c-accent-text);
 }
 
+/* ── Split buttons: a tool family or a tool's methods ──────────────
+   The top part (icon) runs the choice made last, the arrow part lists
+   them all (AutoCAD's Daire ▾). The two parts light up separately. */
+.rsplit {
+  align-items: stretch;
+}
+.rbtn.rsplit:hover {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--c-line);
+}
+.rsplit__main,
+.rsplit__arrow {
+  display: flex;
+  align-items: center;
+  border-radius: var(--r-sm);
+  color: inherit;
+}
+.rsplit__main:hover,
+.rsplit__arrow:hover {
+  background: var(--c-hover);
+}
+.rsplit__main:hover .icon {
+  color: var(--c-text);
+}
+.rsplit__main:active,
+.rsplit__arrow[aria-expanded='true'] {
+  background: var(--c-press);
+}
+.rsplit__main[data-pending] .icon {
+  opacity: 0.62;
+}
+/* One of its tools is running: filled amber, like any tool button. */
+.rsplit[data-active] .rsplit__main {
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+.rsplit[data-active] .rsplit__main .icon {
+  color: var(--c-accent-ink);
+}
+.rsplit.rbtn--large {
+  gap: 0;
+  padding: 0;
+}
+.rsplit.rbtn--large .rsplit__main {
+  justify-content: center;
+  padding: calc(5px * var(--ui-scale)) 5px calc(3px * var(--ui-scale));
+}
+.rsplit.rbtn--large .rsplit__main .rsplit__label {
+  display: none;
+}
+.rsplit.rbtn--large .rsplit__arrow {
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 1px 4px 2px;
+}
+.rsplit.rbtn--large .rsplit__arrow .rbtn__caret {
+  margin: 0;
+}
+.rsplit.rbtn--small {
+  gap: 0;
+  padding: 0;
+}
+.rsplit.rbtn--small .rsplit__main {
+  gap: 6px;
+  min-width: 0;
+  padding: 0 5px 0 4px;
+}
+.rsplit.rbtn--small .rsplit__arrow {
+  padding: 0 3px;
+}
+.rsplit.rbtn--small .rsplit__arrow .rsplit__label,
+.rsplit.rbtn--icon .rsplit__label {
+  display: none;
+}
+.rsplit.rbtn--icon {
+  width: auto;
+}
+.rsplit.rbtn--icon .rsplit__main {
+  justify-content: center;
+  width: calc(24px * var(--ui-scale));
+  padding: 0;
+}
+
+/* The panel title opens its seldom used commands (AutoCAD's panel expander). */
+.rpanel__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
+  padding: 0 5px;
+  border-radius: var(--r-xs);
+  color: inherit;
+  font: inherit;
+}
+.rpanel__more:hover,
+.rpanel__more[aria-expanded='true'] {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
 /* Fields in the ribbon are one small row high. */
 .rpanel__body .dropdown {
   height: calc(24px * var(--ui-scale));

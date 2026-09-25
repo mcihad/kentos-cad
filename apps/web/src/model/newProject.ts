@@ -1,7 +1,7 @@
 import { crsBySrid, workAreaCentre } from '../geo/crs';
 import type { DocumentContent } from './document';
 import type { Bounds } from './geometry';
-import { PROJECT_SETTINGS_DEFAULTS } from './projectSettings';
+import { PROJECT_SETTINGS_DEFAULTS, type Workspace } from './projectSettings';
 import { STANDARD_ACTIVE_LAYER, standardLayers } from './standardLayers';
 
 /**
@@ -16,6 +16,8 @@ export interface NewProjectOptions {
   srid: number;
   /** Plot scale denominator (1:1000 → 1000). */
   plotScale: number;
+  /** Work mode (hybrid when not given). */
+  workspace?: Workspace;
 }
 
 export const NEW_PROJECT_NAME = 'Yeni proje';
@@ -25,7 +27,7 @@ export function newProjectContent(o: NewProjectOptions): DocumentContent {
   if (!crs) throw new Error(`EPSG:${o.srid} bu sürümde tanımlı değil. Listedeki sistemlerden birini seçin.`);
   return {
     name: o.name.trim() || NEW_PROJECT_NAME,
-    settings: { ...PROJECT_SETTINGS_DEFAULTS, srid: crs.srid, plotScale: o.plotScale },
+    settings: { ...PROJECT_SETTINGS_DEFAULTS, srid: crs.srid, plotScale: o.plotScale, workspace: o.workspace ?? PROJECT_SETTINGS_DEFAULTS.workspace },
     origin: workAreaCentre(crs),
     homeView: null,
     layers: standardLayers(o.plotScale),

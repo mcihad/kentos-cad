@@ -2,16 +2,19 @@
  * Kentos design tokens.
  * Dark "grafit": blue-graphite chrome around a deeper drafting field.
  * Light "pafta": cool sheet-paper greys.
- * One accent — prism amber, from survey reflectors and tripod legs — marks
- * the active tool, selection and focus. Nothing else is amber.
+ * One accent marks the active tool, selection and focus; nothing else uses
+ * it. The values here are amber (prism reflectors, tripod legs); the user
+ * picks the accent (Lacivert by default), whose values are accents.css.
+ * The interface typeface is picked too (app/appearance.ts sets --font-ui;
+ * Plus Jakarta Sans by default, bundled in fonts.css).
  */
 :root {
-  --font-ui: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+  --font-ui: 'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
   /*
    * Type scale. Every size derives from --ui-scale (Ayarlar → Görünüm →
-   * Yazı boyutu: 1 / 1.08 / 1.16), so the whole chrome scales together.
+   * Yazı boyutu: 0.93 / 1 / 1.08 / 1.16 / 1.25), so the whole chrome scales together.
    */
   --ui-scale: 1;
   --fs-2xs: calc(11px * var(--ui-scale));

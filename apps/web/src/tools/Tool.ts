@@ -91,6 +91,14 @@ export const TOOL_SECTIONS = {
 type Sectioned = typeof TOOL_SECTIONS;
 export type ToolSection = { [G in keyof Sectioned]: keyof Sectioned[G] }[keyof Sectioned];
 
+/** One way of starting a tool (AutoCAD's Daire ▾ list): the option typed right after it starts. */
+export interface ToolMethod {
+  readonly label: string;
+  /** The prompt option sent after the tool starts (`2N`); none for the tool's own first step. */
+  readonly option?: string;
+  readonly description?: string;
+}
+
 export interface ToolDescriptor {
   id: string;
   label: string;
@@ -103,6 +111,17 @@ export interface ToolDescriptor {
   description: string;
   /** Mouse-first "how to use" steps, shown in the toolbox tooltip. */
   steps?: readonly string[];
+  /**
+   * Ribbon presentation (app/ribbon.ts): a main tool of its panel, drawn
+   * large; the others are small, three to a column. At most four a panel.
+   */
+  primary?: boolean;
+  /** Ribbon: tools of one family share a split button showing the one last chosen (Dikdörtgen ▾). */
+  family?: string;
+  /** Ribbon: the ways to start the tool, listed under its split button (Daire ▾: 2 nokta, 3 nokta …). */
+  methods?: readonly ToolMethod[];
+  /** Ribbon: seldom used; listed under the panel's ▾ instead of on the panel. */
+  rare?: boolean;
   /** False for tools whose behaviour is not built yet. */
   ready: boolean;
   create(ctx: AppContext): Tool;

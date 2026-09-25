@@ -1,4 +1,6 @@
 import { applyTheme, applyUiScale } from '../../app/commands';
+import { applyAccent, applyUiFont } from '../../app/appearance';
+import { accentPicker, fontPicker } from './appearancePickers';
 import type { AppContext } from '../../app/context';
 import { PREFERENCE_DEFAULTS, snapshot, type PreferencesData, type ShellKind, type Theme } from '../../app/state';
 import type { Signal } from '../../core/signal';
@@ -7,6 +9,8 @@ import { WebGPUBackend } from '../../render/webgpu/WebGPUBackend';
 import { h } from '../dom';
 import { note, segmented, settingRow, stepper, toggleSwitch } from '../widgets/controls';
 import { crsPicker } from './crsPicker';
+import { workspacePicker } from './workspacePicker';
+import { workspaceById } from '../../app/workspaces';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
 
 /** Application settings: this user, this browser, every project. */
@@ -26,8 +30,8 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Görünüm',
       icon: 'appearance',
       title: 'Görünüm',
-      lead: 'Tema, arayüz düzeni, yazı boyutu, artı imleç ve fare yardımcıları.',
-      keys: ['theme', 'shell', 'uiScale', 'crosshair', 'cursorInput', 'hoverInfo'],
+      lead: 'Tema, vurgu rengi, yazı tipi, arayüz düzeni, yazı boyutu, artı imleç ve fare yardımcıları.',
+      keys: ['theme', 'accent', 'uiFont', 'shell', 'uiScale', 'crosshair', 'cursorInput', 'hoverInfo'],
       render: (api) => appearance(api),
     },
     {
@@ -44,13 +48,17 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Yeni projeler',
       icon: 'fileNew',
       title: 'Yeni proje varsayılanları',
-      lead: 'Oluşturacağınız her yeni projede başlangıçta kullanılacak koordinat sistemi.',
-      keys: ['defaultSrid'],
+      lead: 'Oluşturacağınız her yeni projede başlangıçta önerilecek çalışma modu ve koordinat sistemi.',
+      keys: ['defaultSrid', 'defaultWorkspace'],
       render: (api) => {
         const current = ctx.doc.crs.value;
         const openProject = h('button', { class: 'btn btn--small', type: 'button' }, 'Proje ayarlarını aç');
         openProject.addEventListener('click', () => ctx.commands.execute('file.settings'));
         return [
+          group(
+            'Çalışma modu',
+            workspacePicker({ value: api.draft.defaultWorkspace, compact: true, onChange: (id) => api.set('defaultWorkspace', id, false) }),
+          ),
           crsPicker({
             value: api.draft.defaultSrid,
             initial: api.initial.defaultSrid,
@@ -88,10 +96,17 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       const prefs = ctx.prefs as unknown as Record<string, Signal<unknown>>;
       for (const k of Object.keys(PREFERENCE_DEFAULTS) as (keyof PreferencesData)[]) prefs[k].set(draft[k]);
       if (draft.uiScale !== init.uiScale) applyUiScale(draft.uiScale);
+      if (draft.accent !== init.accent) applyAccent(draft.accent);
       if (draft.theme !== init.theme) applyTheme(ctx, draft.theme);
+      // The drawing's selection colour follows the accent.
+      else if (draft.accent !== init.accent) ctx.view.refreshPalette();
+      if (draft.uiFont !== init.uiFont) void applyUiFont(draft.uiFont).then(() => ctx.view.requestOverlay());
       if (draft.defaultSrid !== init.defaultSrid) {
         const c = crsBySrid(draft.defaultSrid)!;
         ctx.log.info(`Yeni projeler ${c.name} (EPSG:${c.srid}) ile oluşturulacak. Açık projenin sistemi değişmedi.`);
+      }
+      if (draft.defaultWorkspace !== init.defaultWorkspace) {
+        ctx.log.info(`Yeni projeler “${workspaceById(draft.defaultWorkspace).label}” çalışma moduyla önerilecek. Açık projenin modu değişmedi.`);
       }
       ctx.log.success('Uygulama ayarları kaydedildi.');
     },
@@ -157,6 +172,16 @@ function appearance(api: DraftApi<AppDraft>) {
   return [
     group('Tema', h('div', { class: 'theme-cards', role: 'radiogroup', 'aria-label': 'Tema' }, themeCard('dark', 'Koyu grafit'), themeCard('light', 'Açık pafta'))),
     group(
+      'Vurgu rengi',
+      h('p', { class: 'sgroup__note' }, 'Çalışan araç, seçim, odak ve seçili öğeler bu renkle gösterilir; çizimdeki seçim rengi de ona uyar. Uyarılar turuncu, kenet işaretleri yeşil kalır.'),
+      accentPicker({ value: d.accent, onChange: (v) => api.set('accent', v) }),
+    ),
+    group(
+      'Yazı tipi',
+      h('p', { class: 'sgroup__note' }, 'Menüler, paneller, pencereler ve çizim alanındaki işaret yazıları. Yazı tipleri uygulamayla birlikte gelir, internetten indirilmez; çizimdeki yazı nesneleri etkilenmez.'),
+      fontPicker({ value: d.uiFont, onChange: (v) => api.set('uiFont', v) }),
+    ),
+    group(
       'Arayüz düzeni',
       h(
         'div',
@@ -175,9 +200,11 @@ function appearance(api: DraftApi<AppDraft>) {
           label: 'Yazı boyutu',
           value: d.uiScale,
           options: [
+            { value: 'small', label: 'Küçük' },
             { value: 'standard', label: 'Standart' },
             { value: 'large', label: 'Büyük' },
             { value: 'xlarge', label: 'Çok büyük' },
+            { value: 'xxlarge', label: 'En büyük' },
           ],
           onChange: (v) => api.set('uiScale', v),
         }),

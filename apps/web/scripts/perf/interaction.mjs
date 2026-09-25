@@ -418,8 +418,7 @@ let env0 = null;
 let failure = null;
 try {
   await b.send('Network.enable');
-  // Web fonts come from Google: blocked, so every run draws with the same local font and needs no network.
-  await b.send('Network.setBlockedURLs', { urls: ['*fonts.googleapis.com*', '*fonts.gstatic.com*'] });
+  // The typefaces come with the app (src/assets/fonts): every run draws with the same faces and needs no network.
   for (let run = 1; run <= runs; run++)
     for (const name of only) {
       if (!DATASETS[name]) throw new Error(`Bilinmeyen veri seti: ${name}`);

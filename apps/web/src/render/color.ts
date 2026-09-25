@@ -30,6 +30,8 @@ export interface CanvasPalette {
   danger: string;
   label: string;
   labelHalo: string;
+  /** The interface typeface (Uygulama ayarları → Yazı tipi), for the overlay's labels and marks. */
+  font: string;
 }
 
 export function readCanvasPalette(el: Element = document.documentElement): CanvasPalette {
@@ -48,6 +50,7 @@ export function readCanvasPalette(el: Element = document.documentElement): Canva
     danger: v('--c-danger', '#EF6B61'),
     label: v('--canvas-label', '#C7D0DA'),
     labelHalo: v('--canvas-bg', '#151B22'),
+    font: v('--font-ui', 'system-ui, sans-serif'),
   };
 }
 

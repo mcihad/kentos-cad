@@ -1,5 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { commandItem } from '../../app/menus';
+import { effectiveWorkspace, WORKSPACES, workspaceById } from '../../app/workspaces';
 import type { LogEntry } from '../../app/state';
 import { watchAll } from '../../core/signal';
 import { Component } from '../Component';
@@ -65,12 +66,45 @@ export class StatusBar extends Component {
       ),
     );
 
+    // The project's work mode: which menus, tabs and tools show (app/workspaces.ts).
+    const modeName = h('span');
+    const modeIcon = h('span', { class: 'status__mode-icon' });
+    const mode = h('button', { class: 'status__cell status__btn status__mode', type: 'button', 'aria-haspopup': 'menu' }, modeIcon, modeName);
+    mode.addEventListener('click', () =>
+      PopupMenu.open(
+        [
+          { kind: 'header', label: 'Çalışma modu' },
+          ...WORKSPACES.filter((w) => w.status === 'ready').map((w) => commandItem(ctx, `workspace.${w.id}`)),
+          { kind: 'separator' },
+          ...WORKSPACES.filter((w) => w.status === 'soon').map((w) => commandItem(ctx, `workspace.${w.id}`)),
+        ],
+        mode.getBoundingClientRect(),
+        { placement: 'below', owner: mode },
+      ),
+    );
+    this.d.add(
+      ctx.doc.settings.workspace.subscribe((id) => {
+        const w = effectiveWorkspace(id);
+        modeName.textContent = w.label;
+        modeIcon.replaceChildren(icon(w.icon, 14));
+        mode.dataset.mode = w.id;
+      }, true),
+    );
+    this.d.add(
+      tooltip(mode, () => {
+        const set = workspaceById(ctx.doc.settings.workspace.value);
+        const w = effectiveWorkspace(set.id);
+        const note = set.id !== w.id ? ` Proje “${set.label}” modunda kaydedilmiş; bu mod yakında geliyor, şimdilik Hibrit gösteriliyor.` : '';
+        return { title: `Çalışma modu: ${w.label}`, description: `${w.description}${note} Proje ayarıdır; değiştirmek için tıklayın. Gizlenen komutlar komut satırından yine çalışır.` };
+      }, 'top'),
+    );
+
     const serverText = h('span');
     const server = h('button', { class: 'status__cell status__btn status__server', type: 'button' }, h('span', { class: 'status__lamp', 'aria-hidden': 'true' }), serverText);
     server.addEventListener('click', () => accountMenu(ctx, server));
     const save = saveCell(ctx, this.d);
 
-    this.el = h('footer', { class: 'status' }, coords, flash, selCount, toggles, zoom, crs, save, server, renderer);
+    this.el = h('footer', { class: 'status' }, coords, flash, selCount, toggles, zoom, mode, crs, save, server, renderer);
 
     this.d.add(
       ctx.view.cursorWorld.subscribe((p) => {

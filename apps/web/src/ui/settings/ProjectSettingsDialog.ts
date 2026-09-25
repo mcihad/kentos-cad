@@ -7,6 +7,7 @@ import { h, type Child } from '../dom';
 import { PLOT_SCALES } from '../toolbar/fields';
 import { note, segmented, settingRow, stepper, textField } from '../widgets/controls';
 import { crsPicker } from './crsPicker';
+import { workspacePicker } from './workspacePicker';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
 
 /** Project settings: stored in the project file, shared by everyone who opens it. */
@@ -27,8 +28,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       label: 'Genel',
       icon: 'folder',
       title: 'Genel',
-      lead: 'Projenin adı ve pafta çıktılarında kullanılacak çizim ölçeği.',
-      keys: ['plotScale'],
+      lead: 'Projenin adı, çalışma modu ve pafta çıktılarında kullanılacak çizim ölçeği.',
+      keys: ['plotScale', 'workspace'],
       render: (api) => [
         group(
           'Proje',
@@ -43,6 +44,11 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
               onChange: (v) => api.set('plotScale', Number(v)),
             }),
           ),
+        ),
+        group(
+          'Çalışma modu',
+          h('p', { class: 'sgroup__note' }, 'Hangi menülerin, şerit sekmelerinin ve araçların görüneceğini seçer; veriyi değiştirmez. Gizlenen komutlar komut satırından yine çalışır.'),
+          workspacePicker({ value: api.draft.workspace, compact: true, onChange: (id) => api.set('workspace', id, false) }),
         ),
         group(
           'Özet',

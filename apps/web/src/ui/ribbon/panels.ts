@@ -6,7 +6,7 @@ import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { colorField, layerField, lineTypeField, scaleField, weightField } from '../toolbar/fields';
 import { tooltip } from '../widgets/tooltip';
-import { commandControl, menuControl, type Control, type ControlHost } from './controls';
+import { commandControl, menuControl, overflowMenu, splitControl, type Control, type ControlHost } from './controls';
 
 /**
  * How much of a panel shows. The ribbon lowers levels, rightmost panels
@@ -75,19 +75,41 @@ export class PanelView {
       const slots: Slot[] = [];
       for (const item of model.items) {
         if (item.kind === 'builtin') continue;
-        const control = item.kind === 'command' ? commandControl(ctx, item.id, d, host) : menuControl(ctx, item.menu, d, host);
+        const control =
+          item.kind === 'command' ? commandControl(ctx, item.id, d, host) : item.kind === 'split' ? splitControl(ctx, item.key, item.entries, d, host) : menuControl(ctx, item.menu, d, host);
         if (control.sync) this.syncs.push(control.sync);
         slots.push({ control, size: item.size });
       }
       this.arrange = (level) => arrangeSlots(this.body, slots, level);
     }
 
+    // Seldom used commands wait under a ▾ beside the title (AutoCAD's panel expander).
+    const overflow = model.overflow;
+    const more = overflow
+      ? h(
+          'button',
+          { class: 'rpanel__more', type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false', 'aria-label': `${model.label}: diğer araçlar`, dataset: { commands: overflow.join(' ') } },
+          h('span', { class: 'rpanel__label' }, model.label),
+          icon('chevronDown', 10),
+        )
+      : null;
+    if (more && overflow) {
+      d.add(
+        listen<PointerEvent>(more, 'pointerdown', (e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          more.setAttribute('aria-expanded', 'true');
+          overflowMenu(ctx, overflow, more, host, () => more.setAttribute('aria-expanded', 'false'));
+        }),
+      );
+      d.add(tooltip(more, () => ({ title: `${model.label}: diğer araçlar`, description: overflow.map((id) => ctx.commands.get(id)?.title ?? id).join(' · ') })));
+    }
     this.el = h(
       'div',
       { class: 'rpanel', role: 'group', 'aria-label': model.label, dataset: { panel: model.label } },
       this.body,
       this.collapsedButton,
-      h('div', { class: 'rpanel__foot' }, h('span', { class: 'rpanel__label' }, model.label), launch),
+      h('div', { class: 'rpanel__foot' }, more ?? h('span', { class: 'rpanel__label' }, model.label), launch),
     );
     this.setLevel(0);
   }

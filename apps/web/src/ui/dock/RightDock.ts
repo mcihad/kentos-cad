@@ -7,6 +7,7 @@ import { ProcessingPanel } from '../processing/ProcessingPanel';
 import { PropertiesPanel } from '../properties/PropertiesPanel';
 import { splitter } from '../widgets/Splitter';
 import { dockTabs } from './dockTabs';
+import { filterOf } from '../../app/workspaces';
 
 /**
  * Right dock: the upper slot holds the layer tree or the processing
@@ -46,13 +47,16 @@ export class RightDock extends Component {
     this.el = h('aside', { class: 'dock', 'aria-label': 'Katmanlar, işlemler ve öznitelikler' }, this.layers.el, this.processing.el, split.el, this.props.el);
     this.d.add(ui.layersFraction.subscribe((f) => this.el.style.setProperty('--layers-frac', String(f)), true));
     const sync = () => {
-      const tab = ui.dockTab.value;
+      // A work mode without processing (CAD) keeps the layers in the slot, whatever tab was last open.
+      const processing = filterOf(ctx).menu('processing');
+      for (const b of this.el.querySelectorAll<HTMLElement>('[data-dock-tab="processing"]')) b.hidden = !processing;
+      const tab = processing ? ui.dockTab.value : 'layers';
       this.layers.el.hidden = tab !== 'layers';
       this.processing.el.hidden = tab !== 'processing';
       const top = tab === 'layers' ? this.layers : this.processing;
       this.el.dataset.layout = top.collapsed.value ? 'props' : this.props.collapsed.value ? 'top' : 'split';
     };
-    this.d.add(watchAll([ui.dockTab, this.layers.collapsed, this.processing.collapsed, this.props.collapsed], sync));
+    this.d.add(watchAll([ui.dockTab, this.layers.collapsed, this.processing.collapsed, this.props.collapsed, ctx.doc.settings.workspace], sync));
     sync();
   }
 

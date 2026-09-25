@@ -5,6 +5,7 @@ import { crsBySrid } from '../geo/crs';
 import type { CadDocument, DocumentContent } from './document';
 import type { Entity } from './entities';
 import type { LayerInit } from './layers';
+import { WORKSPACE_IDS } from './projectSettings';
 
 /**
  * The drawing as a versioned file (`.kcad`, contract `DocumentSnapshotV1`,
@@ -119,6 +120,8 @@ function parse(data: unknown): DocumentContent {
       areaUnit: oneOf(settings.areaUnit, ['m2', 'donum', 'ha'] as const, 'Proje ayarları › alan birimi'),
       angleUnit: oneOf(settings.angleUnit, ['grad', 'deg'] as const, 'Proje ayarları › açı birimi'),
       plotScale: num(settings.plotScale, 'Proje ayarları › çizim ölçeği'),
+      // Files written before work modes have none: they open as they always did (hybrid).
+      workspace: settings.workspace === undefined ? 'hybrid' : oneOf(settings.workspace, WORKSPACE_IDS, 'Proje ayarları › çalışma modu'),
     },
     origin: vec(data.origin, 'Yerel orijin'),
     homeView: isObj(hv) ? { minX: num(hv.minX, 'Başlangıç görünümü'), minY: num(hv.minY, 'Başlangıç görünümü'), maxX: num(hv.maxX, 'Başlangıç görünümü'), maxY: num(hv.maxY, 'Başlangıç görünümü') } : null,

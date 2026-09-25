@@ -94,6 +94,15 @@
 .sgroup {
   margin-top: 18px;
 }
+.sgroup > .wspick {
+  margin-top: 10px;
+}
+.sgroup__note {
+  margin: 8px 0 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
 .sgroup__title {
   padding-bottom: 6px;
   border-bottom: 1px solid var(--c-line);
@@ -420,7 +429,7 @@
   background: var(--m-dim);
 }
 .mock__tools i:first-child {
-  background: #f2b632;
+  background: var(--c-accent);
 }
 .mock__canvas {
   position: relative;
@@ -450,7 +459,7 @@
   top: 60%;
   width: 20%;
   height: 18%;
-  border-color: #f2b632;
+  border-color: var(--c-accent);
   border-style: dashed;
   transform: rotate(-12deg);
   opacity: 1;
@@ -762,4 +771,294 @@
 }
 .newproj__status:not(:empty) {
   margin-top: 10px;
+}
+
+/* ── Work mode cards (Yeni proje, Proje ayarları → Genel) ──────────────
+ * Three modes to choose from, each with its picture, name, purpose and
+ * three points; the chosen one is outlined in amber with a check. Modes
+ * announced but not built sit below, smaller and dimmed, with “Yakında”.
+ */
+.wspick {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wspick__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.wspick__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 12px 11px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-field);
+  color: var(--c-text);
+  text-align: left;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
+}
+.wspick__card:hover:not([aria-disabled]) {
+  border-color: var(--c-text-3);
+  background: var(--c-hover);
+}
+.wspick__card[aria-checked='true'] {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--c-accent);
+}
+.wspick__card:focus-visible {
+  outline: 2px solid var(--c-accent-line);
+  outline-offset: 2px;
+}
+.wspick__art {
+  display: grid;
+  place-items: center;
+  width: calc(40px * var(--ui-scale));
+  height: calc(40px * var(--ui-scale));
+  margin-bottom: 4px;
+  border-radius: var(--r-md);
+  background: var(--c-panel-head);
+  color: var(--c-text-2);
+}
+.wspick__art .icon {
+  width: calc(28px * var(--ui-scale));
+  height: calc(28px * var(--ui-scale));
+}
+.wspick__art .icon > * {
+  vector-effect: non-scaling-stroke;
+}
+.wspick__card[aria-checked='true'] .wspick__art {
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+.wspick__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  align-self: stretch;
+  gap: 8px;
+}
+.wspick__name {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.wspick__check {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: 50%;
+  color: transparent;
+}
+.wspick__card[aria-checked='true'] .wspick__check {
+  border-color: var(--c-accent);
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+.wspick__title {
+  color: var(--c-accent-text);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.wspick__desc {
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+.wspick__points {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--c-text-2);
+  font-size: var(--fs-2xs);
+  line-height: 1.5;
+}
+.wspick__points li::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin: 0 7px 2px 1px;
+  border-radius: 1px;
+  background: var(--c-text-3);
+}
+.wspick__card[aria-checked='true'] .wspick__points li::before {
+  background: var(--c-accent);
+}
+
+/* Announced modes: a quieter row under a “Yakında” rule. */
+.wspick__soon {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wspick__soonlabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+}
+.wspick__soonlabel::after {
+  content: '';
+  flex: 1;
+  border-top: 1px dashed var(--c-line-strong);
+}
+.wspick__soon .wspick__row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.wspick__card[data-status='soon'] {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 10px;
+  padding: 9px 12px;
+  border-style: dashed;
+  background: transparent;
+  cursor: default;
+}
+.wspick__card[data-status='soon'] .wspick__art {
+  width: calc(32px * var(--ui-scale));
+  height: calc(32px * var(--ui-scale));
+  margin: 0;
+  opacity: 0.8;
+}
+.wspick__card[data-status='soon'] .wspick__art .icon {
+  width: calc(22px * var(--ui-scale));
+  height: calc(22px * var(--ui-scale));
+}
+.wspick__card[data-status='soon'] .wspick__head {
+  flex: 1;
+  align-self: center;
+}
+.wspick__card[data-status='soon'] .wspick__name {
+  color: var(--c-text-2);
+}
+.wspick__card[data-status='soon'] .wspick__title {
+  flex-basis: 100%;
+  padding-left: calc(42px * var(--ui-scale));
+  margin-top: -6px;
+  color: var(--c-text-3);
+  font-weight: 400;
+}
+.wspick__card[data-status='soon'] .wspick__desc,
+.wspick__card[data-status='soon'] .wspick__points {
+  display: none;
+}
+.wspick__badge {
+  padding: 1px 8px;
+  border: 1px solid var(--c-accent-line);
+  border-radius: 999px;
+  color: var(--c-accent-text);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+}
+/* In Proje ayarları the cards are one row high. */
+.wspick--compact .wspick__card:not([data-status='soon']) {
+  padding: 10px;
+}
+
+/* ── Accent colour and typeface (Uygulama ayarları → Görünüm) ─────────
+ * Accents are round swatches, half the dark theme's tone and half the
+ * light one's, with the name under them; the chosen one is ringed and
+ * checked. Typefaces are cards, each written in its own face.
+ */
+.accent-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.accent-pick__opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: calc(84px * var(--ui-scale));
+  padding: 10px 8px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.accent-pick__opt:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.accent-pick__opt[aria-checked='true'] {
+  border-color: var(--c-line-strong);
+  background: var(--c-field);
+  color: var(--c-text);
+  font-weight: 600;
+}
+.accent-pick__swatch {
+  display: grid;
+  place-items: center;
+  width: calc(30px * var(--ui-scale));
+  height: calc(30px * var(--ui-scale));
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sw-dark) 50%, var(--sw-light) 50%);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+.accent-pick__opt[aria-checked='true'] .accent-pick__swatch {
+  outline: 2px solid var(--c-text-2);
+  outline-offset: 2px;
+}
+.accent-pick__opt:focus-visible,
+.font-pick__card:focus-visible {
+  outline: 2px solid var(--c-accent-line);
+  outline-offset: 2px;
+}
+.font-pick {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(170px * var(--ui-scale)), 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.font-pick__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-field);
+  color: var(--c-text);
+  text-align: left;
+}
+.font-pick__card:hover {
+  border-color: var(--c-text-3);
+  background: var(--c-hover);
+}
+.font-pick__card[aria-checked='true'] {
+  border-color: var(--c-accent);
+  background: var(--c-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--c-accent);
+}
+.font-pick__sample {
+  font-size: calc(22px * var(--ui-scale));
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.font-pick__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.font-pick__note {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
 }

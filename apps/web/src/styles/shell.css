@@ -923,6 +923,15 @@
 .status__renderer[data-error] {
   color: var(--c-danger);
 }
+/* Work mode: the mode's icon in amber, so a narrowed interface is never a surprise. */
+.status__mode {
+  color: var(--c-text-2);
+  font-weight: 600;
+}
+.status__mode-icon {
+  display: inline-flex;
+  color: var(--c-accent-text);
+}
 /* Server lamp: round, unlike the square drafting-aid lamps; hollow while there is no server. */
 .status__server {
   color: var(--c-text-3);

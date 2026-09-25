@@ -1,4 +1,6 @@
+import './styles/fonts.css';
 import './styles/tokens.css';
+import './styles/accents.css';
 import './styles/base.css';
 import './styles/shell.css';
 import './styles/controls.css';

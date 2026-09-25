@@ -134,6 +134,12 @@ const ICONS = {
   error: '<circle cx="10" cy="10" r="7"/><path d="m7.3 7.3 5.4 5.4M12.7 7.3l-5.4 5.4"/>',
   success: '<circle cx="10" cy="10" r="7"/><path d="m6.8 10.2 2.3 2.3 4.2-4.6"/>',
   more: '<circle cx="5" cy="10" r="1" fill="currentColor"/><circle cx="10" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/>',
+  // Work modes (Çalışma modu)
+  modeHybrid: `<path d="m10 10.2 7.5 3.4-7.5 3.4-7.5-3.4z" fill="currentColor" fill-opacity=".14"/><path d="M4.5 8.2 15.5 3.2"/>${grip(4.5, 8.2)}${grip(15.5, 3.2)}`,
+  modeCad: `<path d="M3.5 16.5V4l12.5 12.5z"/><path d="M6.5 13.5V11.2l2.3 2.3z"/><path d="M3.5 7.5h1.6M3.5 10.5h1.6"/>`,
+  modeGis: '<path d="M2.5 5.8 7 3.8l6 2 4.5-2v10.4L13 16.2l-6-2-4.5 2z" fill="currentColor" fill-opacity=".14"/><path d="M7 3.8v10.4M13 5.8v10.4"/>',
+  modePlan3d: '<path d="m3 13.2 7 3.8 7-3.8"/><path d="M5 6.2 8.5 4.4 12 6.2 8.5 8z" fill="currentColor" fill-opacity=".14"/><path d="M5 6.2v6.4l3.5 1.9 3.5-1.9V6.2M8.5 8v6.5M12 9.6l2.8-1.4 2.2 1.1v3.6l-5 2.6"/>',
+  modeDisaster: '<path d="M2 11h3l1.5-4 2.2 8.5 2.1-11 2 9.3 1.5-2.8H18"/>',
   crs: '<circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3c-2.5 2-2.5 12 0 14M10 3c2.5 2 2.5 12 0 14"/>',
   table: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.5h15M2.5 12h15M7.5 7.5v9"/>',
   // Processing: two steps joined by a flow, a third node waiting.

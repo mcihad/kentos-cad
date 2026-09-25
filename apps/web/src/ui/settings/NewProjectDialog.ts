@@ -8,11 +8,13 @@ import { PLOT_SCALES } from '../toolbar/fields';
 import { note, segmented, settingRow } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
 import { crsPicker } from './crsPicker';
+import { workspacePicker } from './workspacePicker';
+import { effectiveWorkspace } from '../../app/workspaces';
 import { group } from './SettingsShell';
 
 /**
  * Dosya → Yeni proje: an empty drawing with the standard layer tree, a
- * coordinate system (the app's default for new projects) and a plot scale.
+ * work mode (app/workspaces.ts; the app's default first), a coordinate system (the app's default for new projects) and a plot scale.
  * Nothing changes until Oluştur. Unsaved changes of the open drawing are
  * asked about then, over this dialog, so Vazgeç there comes back here; an
  * open cloud project is closed first (its changes are sent or kept on this
@@ -25,7 +27,8 @@ const ANGLE_UNIT = { grad: 'grad', deg: 'derece' } as const;
 export function openNewProjectDialog(ctx: AppContext): void {
   const defaults = PROJECT_SETTINGS_DEFAULTS;
   const fallback = crsBySrid(ctx.prefs.defaultSrid.value) ? ctx.prefs.defaultSrid.value : DEFAULT_SRID;
-  const draft = { srid: fallback, plotScale: defaults.plotScale };
+  // An announced mode is never offered, even if the preference names one.
+  const draft = { srid: fallback, plotScale: defaults.plotScale, workspace: effectiveWorkspace(ctx.prefs.defaultWorkspace.value).id };
   const crsState = { query: '' };
 
   const name = h('input', { class: 'field field--setting', value: NEW_PROJECT_NAME, 'aria-label': 'Proje adı', spellcheck: 'false' });
@@ -97,6 +100,7 @@ export function openNewProjectDialog(ctx: AppContext): void {
         settingRow('Proje adı', 'İlk kayıtta dosya adı olarak önerilir.', name),
         settingRow('Çizim ölçeği', 'Yazı yükseklikleri ve pafta çıktıları bu ölçeğe göre hesaplanır.', scaleSlot),
       ),
+      group('Çalışma modu', workspacePicker({ value: draft.workspace, onChange: (id) => (draft.workspace = id) })),
       group('Koordinat sistemi', crsSlot),
       note(
         'info',
@@ -120,7 +124,7 @@ export function openNewProjectDialog(ctx: AppContext): void {
     }
     let content: ReturnType<typeof newProjectContent>;
     try {
-      content = newProjectContent({ name: name.value, srid: draft.srid, plotScale: draft.plotScale });
+      content = newProjectContent({ name: name.value, srid: draft.srid, plotScale: draft.plotScale, workspace: draft.workspace });
     } catch (e) {
       status.textContent = (e as Error).message;
       return;

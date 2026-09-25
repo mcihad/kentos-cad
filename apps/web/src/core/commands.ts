@@ -19,6 +19,8 @@ export interface Command {
   aliases?: readonly string[];
   /** Not built yet: shown dimmed with “Geliştirme aşamasında”, and running it says so. */
   pending?: boolean;
+  /** Announced, not built: menus and tooltips say this instead of “Geliştirme aşamasında” (e.g. “Yakında”). */
+  pendingNote?: string;
   run(args?: unknown): void;
   isEnabled?(): boolean;
   isChecked?(): boolean;

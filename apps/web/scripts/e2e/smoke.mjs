@@ -1464,6 +1464,10 @@ try {
     await press('.dialog--newproj .crs-search__input');
     await b.type('5254');
     await press('.dialog--newproj .seg__opt', '1:500');
+    // Work mode: an announced mode (Yakında) cannot be chosen; CAD can.
+    await press('.dialog--newproj .wspick__card[data-mode="plan3d"]');
+    const soonChosen = await b.eval(`document.querySelector('.wspick__card[data-mode="plan3d"]').getAttribute('aria-checked')`);
+    await press('.dialog--newproj .wspick__card[data-mode="cad"]');
     await b.shot('newproject-dialog');
     await press('.dialog__foot .btn', 'Oluştur');
     await b.waitFor(`[...document.querySelectorAll('.dialog__foot .btn')].some((x) => x.textContent === 'Kaydetmeden devam et')`, 3000).catch(() => {});
@@ -1476,10 +1480,10 @@ try {
     check('Yeni proje asks about unsaved changes, and Vazgeç returns to its dialog', stayed && !!(await center(question, 'Kaydetmeden devam et')));
     await press(question, 'Kaydetmeden devam et');
     await b.waitFor(`!document.querySelector('.dialog--newproj') && window.kentos.doc.size === 0`, 5000).catch(() => {});
-    const np = await b.eval(`(() => { const k = window.kentos; const leaves = k.doc.layers.leaves().map((l) => l.id); return { size: k.doc.size, name: k.doc.name.value, srid: k.doc.crs.value.srid, scale: k.doc.settings.plotScale.value, dirty: k.doc.dirty.value, undo: k.doc.canUndo.value, file: k.files.handle, parcel: leaves.includes('parsel') && leaves.includes('kot'), active: k.doc.layers.active.value, origin: k.doc.origin }; })()`);
+    const np = await b.eval(`(() => { const k = window.kentos; const leaves = k.doc.layers.leaves().map((l) => l.id); return { size: k.doc.size, name: k.doc.name.value, srid: k.doc.crs.value.srid, scale: k.doc.settings.plotScale.value, dirty: k.doc.dirty.value, undo: k.doc.canUndo.value, file: k.files.handle, parcel: leaves.includes('parsel') && leaves.includes('kot'), active: k.doc.layers.active.value, origin: k.doc.origin, mode: k.doc.settings.workspace.value }; })()`);
     check(
-      'Yeni proje opens an empty drawing with the chosen name, system and scale',
-      np.size === 0 && np.name === 'Ada 200' && np.srid === 5254 && np.scale === 500 && !np.dirty && !np.undo && np.file === null && np.parcel && np.active === 'taslak',
+      'Yeni proje opens an empty drawing with the chosen name, system, scale and work mode (not an announced one)',
+      np.size === 0 && np.name === 'Ada 200' && np.srid === 5254 && np.scale === 500 && np.mode === 'cad' && soonChosen === 'false' && !np.dirty && !np.undo && np.file === null && np.parcel && np.active === 'taslak',
       JSON.stringify(np),
     );
     // A typed line lands exactly; the first Ctrl+S asks where to write, under the project's name.
@@ -1495,6 +1499,30 @@ try {
     check('a line in the new project, and the first save asks for “Ada 200.kcad”', drawn.length === 1 && drawn[0].b.x === np.origin.x + 60 && asked === 'Ada 200.kcad' && !(await b.eval('window.kentos.doc.dirty.value')), `${asked}`);
     await b.eval(`(() => { window.kentos.files.picker = window.__files.original; window.kentos.files.handle = null; })()`);
     await b.shot('newproject-drawn');
+
+    // CAD mode: no map, coordinate or processing menus and no parcel tool in the toolbox; the parcel command still runs by name.
+    const ui = () =>
+      b.eval(`({ menus: [...document.querySelectorAll('.menubar__item')].map((m) => m.dataset.menu), parcel: !!document.querySelector('.toolbox [data-tool="parcel"]'), line: !!document.querySelector('.toolbox [data-tool="line"]'), status: document.querySelector('.status__mode').textContent, mode: window.kentos.doc.settings.workspace.value, dirty: window.kentos.doc.dirty.value })`);
+    const cadUi = await ui();
+    await cmd('PARSEL');
+    const byName = await b.eval('window.kentos.tools.activeId.value');
+    await key('Escape');
+    check(
+      'CAD mode hides the map, coordinate and processing menus and the parcel tool, whose command still runs by name',
+      !cadUi.menus.includes('map') && !cadUi.menus.includes('crs') && !cadUi.menus.includes('processing') && cadUi.menus.includes('draw') && !cadUi.parcel && cadUi.line && cadUi.status === 'CAD' && byName === 'parcel',
+      JSON.stringify({ ...cadUi, byName }),
+    );
+    // Back to Hibrit from the status bar's mode cell; announced modes are listed with Yakında.
+    await press('.status__mode');
+    const modeMenu = await b.eval(`[...document.querySelectorAll('.menu__item')].map((e) => e.textContent)`);
+    await b.shot('workspace-menu');
+    await press('.menu__item', 'Hibrit');
+    const hybridUi = await ui();
+    check(
+      'the status bar switches the work mode back to Hibrit (the project is unsaved); 3D Plan and Afet Analizi say Yakında',
+      hybridUi.mode === 'hybrid' && hybridUi.menus.includes('map') && hybridUi.parcel && hybridUi.status === 'Hibrit' && hybridUi.dirty && modeMenu.some((t) => t.includes('3D Plan') && t.includes('Yakında')) && modeMenu.some((t) => t.includes('Afet Analizi') && t.includes('Yakında')),
+      JSON.stringify({ ...hybridUi, modeMenu }),
+    );
   }
 
   // Şerit (Uygulama ayarları → Görünüm → Arayüz düzeni): built from the same menu model and tool catalog as the
@@ -1502,7 +1530,7 @@ try {
   // running tool carry a dot, and folded (Ctrl+F1) a tab opens over the drawing until a command runs.
   {
     const at = (sel) =>
-      b.eval(`(() => { const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.offsetParent); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+      b.eval(`(() => { const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.offsetParent); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
     const click = async (sel) => {
       const p = await at(sel);
       if (!p) throw new Error(`bulunamadı: ${sel}`);
@@ -1528,12 +1556,14 @@ try {
     const seen = new Set();
     for (const id of tabIds) {
       await tab(id);
+      // Buttons, the choices of split buttons and the panels' ▾ lists.
       for (const c of await b.eval(`[...document.querySelectorAll('.ribbon__strip [data-command]')].map((e) => e.dataset.command)`)) seen.add(c);
+      for (const c of await b.eval(`[...document.querySelectorAll('.ribbon__strip [data-commands]')].flatMap((e) => e.dataset.commands.split(' '))`)) seen.add(c);
     }
     const tools = await b.eval(`window.kentos.tools.list().map((t) => 'tool.' + t.id)`);
     const missing = tools.filter((id) => !seen.has(id));
     const unknown = await b.eval(`${JSON.stringify([...seen])}.filter((id) => !window.kentos.commands.get(id))`);
-    check('every tool of the catalog has a ribbon button, and every button a registered command', missing.length === 0 && unknown.length === 0, [...missing, ...unknown].join(', '));
+    check('every tool of the catalog is on the ribbon (a button, a split button or a panel’s ▾), and every button a registered command', missing.length === 0 && unknown.length === 0, [...missing, ...unknown].join(', '));
 
     // A tool button runs its tool (filled amber); Giriş, which also offers it, carries the running-tool dot.
     await tab('draw');
@@ -1541,6 +1571,33 @@ try {
     const running = await b.eval(`({ tool: window.kentos.tools.activeId.value, pressed: document.querySelector('.ribbon__strip [data-command="tool.circle"]').getAttribute('aria-pressed'), dot: document.querySelector('.ribbon__tab[data-tab="home"]').hasAttribute('data-active-tool') })`);
     check('Daire on the ribbon runs the circle tool, marks its button and puts a dot on Giriş', running.tool === 'circle' && running.pressed === 'true' && running.dot, JSON.stringify(running));
     await key('Escape');
+
+    // Daire ▾ lists its methods: 3 nokta starts the tool with that method, and the button remembers it.
+    const menuItem = (text) => b.eval(`(() => { const e = [...document.querySelectorAll('.menu__item')].find((x) => x.textContent.includes(${JSON.stringify(text)})); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + 30), Math.round(r.top + r.height / 2)]; })()`);
+    await tab('home');
+    await click('.ribbon__strip [data-split="circle"] .rsplit__arrow');
+    const listed = await b.eval(`[...document.querySelectorAll('.menu__item')].map((e) => e.textContent)`);
+    await b.shot('ribbon-split');
+    await b.click(...(await menuItem('3 nokta')));
+    await sleep(150);
+    const method = await b.eval(`({ tool: window.kentos.tools.activeId.value, prompt: window.kentos.tools.prompt.value })`);
+    await key('Escape');
+    await click('.ribbon__strip [data-split="circle"] .rsplit__main');
+    const again = await b.eval(`window.kentos.tools.prompt.value`);
+    await key('Escape');
+    check(
+      'Daire ▾ lists its five methods; 3 nokta starts the circle by three points, and the button starts it so again',
+      listed.length === 5 && method.tool === 'circle' && /ilk noktayı/.test(method.prompt) && /ilk noktayı/.test(again),
+      `${listed.length} · ${method.prompt} · ${again}`,
+    );
+    // A seldom used tool waits under its panel's ▾.
+    await tab('draw');
+    await click('.ribbon__strip .rpanel[data-panel="Eğri"] .rpanel__more');
+    await b.click(...(await menuItem('Halka')));
+    await sleep(150);
+    const donut = await b.eval(`window.kentos.tools.activeId.value`);
+    await key('Escape');
+    check('Halka is under the Eğri panel’s ▾ and runs from there', donut === 'donut', donut);
 
     // Narrow window: panels step down (labels, then icons) instead of being cut off.
     const fits = async () => {
@@ -1621,6 +1678,42 @@ try {
     await b.waitFor(`!!document.querySelector('.menubar')`, 3000).catch(() => {});
     const back = await b.eval(`({ ribbon: !!document.querySelector('.ribbon'), menubar: !!document.querySelector('.menubar'), toolbox: !document.querySelector('.toolbox').hidden })`);
     check('the Şerit arayüzü button returns to menus and toolbox', !back.ribbon && back.menubar && back.toolbox && (await viewportH()) === classicH, JSON.stringify(back));
+  }
+
+  // Uygulama ayarları → Görünüm: accent colour and typeface, applied on Kaydet; the typefaces come with the app.
+  {
+    const at = (sel) => b.eval(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const press = async (sel) => {
+      const p = await at(sel);
+      if (!p) throw new Error(`bulunamadı: ${sel}`);
+      await b.click(...p);
+      await sleep(150);
+    };
+    const before = await b.eval(`({ accent: document.documentElement.dataset.accent, font: getComputedStyle(document.body).fontFamily.split(',')[0].replaceAll('"', ''), jakarta: document.fonts.check('600 13px "Plus Jakarta Sans"', 'ğşıİ') })`);
+    await b.eval(`window.kentos.commands.execute('tools.options', 'appearance')`);
+    await b.waitFor(`!!document.querySelector('.accent-pick')`, 3000).catch(() => {});
+    await press('.accent-pick__opt[data-accent="bordeaux"]');
+    await press('.font-pick__card[data-font="inter"]');
+    await b.shot('appearance-settings');
+    const save = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Kaydet'); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await b.click(...save);
+    await b.waitFor(`document.fonts.check('13px "Inter"')`, 5000).catch(() => {});
+    // Preferences are written a moment after they change.
+    await b.waitFor(`JSON.parse(localStorage.getItem('kentos.prefs.v1') ?? '{}').uiFont === 'inter'`, 3000).catch(() => {});
+    const after = await b.eval(`({
+      accent: document.documentElement.dataset.accent,
+      fill: getComputedStyle(document.documentElement).getPropertyValue('--c-accent').trim(),
+      font: getComputedStyle(document.body).fontFamily.split(',')[0].replaceAll('"', ''),
+      inter: document.fonts.check('13px "Inter"'),
+      stored: JSON.parse(localStorage.getItem('kentos.prefs.v1')),
+      foreign: performance.getEntriesByType('resource').map((r) => r.name).filter((n) => !n.startsWith(location.origin) && !n.startsWith('data:') && !n.startsWith('blob:')),
+    })`);
+    check(
+      'Lacivert and Plus Jakarta Sans by default; Bordo and Inter apply on Kaydet and are remembered; nothing is fetched from another host',
+      before.accent === 'navy' && before.font === 'Plus Jakarta Sans' && before.jakarta && after.accent === 'bordeaux' && after.fill === '#c24a63' && after.font === 'Inter' && after.inter && after.stored.accent === 'bordeaux' && after.stored.uiFont === 'inter' && after.foreign.length === 0,
+      JSON.stringify({ before, after: { ...after, stored: { accent: after.stored?.accent, uiFont: after.stored?.uiFont } } }),
+    );
+    await b.eval(`(async () => { const a = await import('/src/app/appearance.ts'); window.kentos.prefs.accent.set('navy'); window.kentos.prefs.uiFont.set('jakarta'); a.applyAccent('navy'); await a.applyUiFont('jakarta'); window.kentos.view.refreshPalette(); })()`);
   }
 
   const errors = b.consoleLog.filter((l) => /^(error|EXCEPTION)/.test(l));

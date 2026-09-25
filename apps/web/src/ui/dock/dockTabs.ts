@@ -17,7 +17,7 @@ export function dockTabs(ctx: AppContext, current: DockTab): HTMLElement {
     'div',
     { class: 'panel__tabs', role: 'tablist', 'aria-label': 'Sağ panel' },
     TABS.map((t) => {
-      const b = h('button', { class: 'tab', type: 'button', role: 'tab', 'aria-selected': String(t.id === current) }, icon(t.icon, 15), h('span', null, t.label));
+      const b = h('button', { class: 'tab', type: 'button', role: 'tab', 'aria-selected': String(t.id === current), dataset: { dockTab: t.id } }, icon(t.icon, 15), h('span', null, t.label));
       b.addEventListener('click', () => ctx.ui.dockTab.set(t.id));
       return b;
     }),

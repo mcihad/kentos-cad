@@ -30,6 +30,24 @@ pub enum AngleUnit {
     Deg,
 }
 
+/// The work mode a project opens in (`app/workspaces.ts`): which menus, ribbon
+/// tabs and tools the interface shows. Presentation only, never what the data
+/// means: every command still runs in every mode. `plan3d` and `disaster` are
+/// announced ("Yakında") and cannot be chosen yet; a file naming them opens in
+/// the hybrid presentation. Files written before modes existed have none
+/// (hybrid).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum Workspace {
+    Hybrid,
+    Cad,
+    Gis,
+    Plan3d,
+    Disaster,
+}
+
 /// Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -43,6 +61,10 @@ pub struct ProjectSettings {
     pub angle_unit: AngleUnit,
     /// Plot scale denominator (1:1000 → 1000).
     pub plot_scale: f64,
+    /// Absent in files written before work modes (read as hybrid).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub workspace: Option<Workspace>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

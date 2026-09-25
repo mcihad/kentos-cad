@@ -1,7 +1,8 @@
 import '../../styles/ribbon.css';
 import type { AppContext } from '../../app/context';
 import { commandItem, menuById, resolveMenu } from '../../app/menus';
-import { QUICK_ACCESS, ribbonTabs, type RibbonTab } from '../../app/ribbon';
+import { panelCommands, QUICK_ACCESS, ribbonTabs, type RibbonTab } from '../../app/ribbon';
+import { filterOf } from '../../app/workspaces';
 import { DisposableStore, listen } from '../../core/disposable';
 import { Component } from '../Component';
 import { h, overlayRoot } from '../dom';
@@ -72,6 +73,8 @@ export class Ribbon extends Component {
   private peeking = false;
   private pop: { panel: PanelView; el: HTMLElement; d: DisposableStore } | null = null;
   private fitFrame = 0;
+  /** Listeners of the tab buttons, rebuilt with the work mode. */
+  private tabsD = new DisposableStore();
 
   constructor(ctx: AppContext) {
     super();
@@ -156,6 +159,8 @@ export class Ribbon extends Component {
     this.d.add(ctx.tools.activeId.subscribe(() => this.updateDots(), true));
     this.d.add(ctx.processing.registry.version.subscribe(() => this.rebuild('processing')));
     this.d.add(ctx.processing.models.subscribe(() => this.rebuild('processing')));
+    // The work mode changes which tabs, panels and buttons exist: everything is built again.
+    this.d.add(ctx.doc.settings.workspace.subscribe(() => this.rebuildAll()));
 
     // Width: panels shrink or grow with the window; widths are measured again when the type scale or fonts change.
     const ro = new ResizeObserver(() => this.scheduleFit());
@@ -175,6 +180,7 @@ export class Ribbon extends Component {
     this.bindKeys();
     this.bindPeek();
     this.d.add(() => {
+      this.tabsD.dispose();
       cancelAnimationFrame(this.fitFrame);
       this.closePop();
       this.views.forEach((v) => v.dispose());
@@ -195,15 +201,16 @@ export class Ribbon extends Component {
       processing: ctx.processing.registry.tree(),
       models: ctx.processing.models.value,
       iconOf: (id) => ctx.commands.get(id)?.icon,
+      filter: filterOf(ctx),
     });
-    this.tabCommands = new Map(this.tabs.map((t) => [t.id, new Set(t.panels.flatMap((p) => p.items.flatMap((i) => (i.kind === 'command' ? [i.id] : []))))]));
+    this.tabCommands = new Map(this.tabs.map((t) => [t.id, new Set(t.panels.flatMap(panelCommands))]));
   }
 
   /** "Tab › Panel" of a command: its own tab rather than Giriş's picks, never the contextual tab. */
   private where(id: string): string | undefined {
     const order = [...this.tabs.filter((t) => !t.contextual && t.id !== 'home'), ...this.tabs.filter((t) => t.id === 'home')];
     for (const t of order) {
-      const p = t.panels.find((p) => p.items.some((i) => i.kind === 'command' && i.id === id));
+      const p = t.panels.find((p) => panelCommands(p).includes(id));
       if (p) return `${t.label} › ${p.label}`;
     }
     return undefined;
@@ -218,6 +225,24 @@ export class Ribbon extends Component {
     this.updateDots();
   }
 
+  /** A new work mode: tabs and their views are built again; the open tab stays when it still exists. */
+  private rebuildAll(): void {
+    this.closePeek();
+    this.closePop();
+    this.derive();
+    this.views.forEach((v) => v.dispose());
+    this.views.clear();
+    this.tabsD.dispose();
+    this.tabsD = new DisposableStore();
+    this.tabButtons.clear();
+    this.tabList.replaceChildren();
+    this.renderTabs();
+    const keep = this.tabs.some((t) => t.id === this.lastRegular && !t.contextual) ? this.lastRegular : 'home';
+    this.select(keep, { focus: false });
+    this.updateContextual();
+    this.remeasure();
+  }
+
   // ── Tabs ──────────────────────────────────────────────────────────────
 
   private renderTabs(): void {
@@ -228,7 +253,7 @@ export class Ribbon extends Component {
         h('span', { class: 'ribbon__tab-label' }, t.label),
         t.contextual ? h('span', { class: 'ribbon__count num' }) : null,
       );
-      this.d.add(
+      this.tabsD.add(
         listen<PointerEvent>(b, 'pointerdown', (e) => {
           if (e.button !== 0) return;
           // A click leaves the keyboard where it was (Enter still repeats the last command).
@@ -242,8 +267,8 @@ export class Ribbon extends Component {
           this.select(t.id, { focus: false });
         }),
       );
-      this.d.add(listen(b, 'dblclick', () => this.ctx.commands.execute('view.ribbonCollapse')));
-      this.d.add(
+      this.tabsD.add(listen(b, 'dblclick', () => this.ctx.commands.execute('view.ribbonCollapse')));
+      this.tabsD.add(
         tooltip(b, () =>
           t.contextual
             ? { title: `${t.label} (bağlamsal)`, description: 'Seçili nesneler varken görünür: seçimin özeti ve seçime uygulanan komutlar.' }
@@ -323,10 +348,12 @@ export class Ribbon extends Component {
 
   /**
    * Chooses each panel's level for the available width: every panel steps
-   * down once (rightmost first, the tab's kept panels last) before any
-   * steps down twice. A step that would not save width (a lone large
-   * button made small) is skipped, and such a panel waits its turn for the
-   * level it would reach.
+   * down once (rightmost first) before any steps down twice. The tab's kept
+   * panels (Giriş: Çizim, Değiştir) keep their large buttons and labels
+   * until every other panel shows icons only; only folding into one button
+   * comes before they shrink further. A step that would not save width (a
+   * lone large button made small) is skipped, and such a panel waits its
+   * turn for the level it would reach.
    */
   private fit(): void {
     this.fitBar();
@@ -348,12 +375,13 @@ export class Ribbon extends Component {
       return null;
     };
     const order = view.panels.map((_, i) => i).sort((a, b) => Number(!!view.panels[a].model.keep) - Number(!!view.panels[b].model.keep) || b - a);
+    const rank = (i: number, l: Level) => l + (view.panels[i].model.keep && l < 3 ? 1.5 : 0);
     while (total > available) {
       let pick = -1;
       let to: Level | null = null;
       for (const i of order) {
         const l = next(i);
-        if (l !== null && (to === null || l < to)) {
+        if (l !== null && (to === null || rank(i, l) < rank(pick, to))) {
           pick = i;
           to = l;
         }
@@ -545,9 +573,13 @@ export class Ribbon extends Component {
     if (this.ctx.ui.ribbonCollapsed.value) this.openPeek(tab.id);
     else this.select(tab.id, { focus: false });
     const view = this.views.get(tab.id)!;
-    const panel = view.panels.find((p) => p.model.items.some((i) => i.kind === 'command' && i.id === id));
+    const panel = view.panels.find((p) => panelCommands(p.model).includes(id));
     if (panel?.level === 3) this.openCollapsed(panel);
-    const b = (panel?.body ?? view.el).querySelector<HTMLElement>(`[data-command="${CSS.escape(id)}"]`);
+    // A command inside a split button flashes the split; one under the ▾, the ▾.
+    const split = panel?.model.items.find((i) => i.kind === 'split' && i.entries.some((e) => e.command === id));
+    const selector =
+      split?.kind === 'split' ? `[data-split="${CSS.escape(split.key)}"]` : panel?.model.overflow?.includes(id) ? '.rpanel__more' : `[data-command="${CSS.escape(id)}"]`;
+    const b = (panel?.el ?? view.el).querySelector<HTMLElement>(selector);
     if (!b) return;
     b.dataset.flash = '';
     b.focus();

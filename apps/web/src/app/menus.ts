@@ -4,6 +4,7 @@ import type { ToolDescriptor } from '../tools/Tool';
 import { parseToolRef, toolSections } from '../tools/sections';
 import type { AppContext } from './context';
 import { modelCommandId, processingCommandId } from './processing';
+import { filterOf, SHOW_ALL, type WorkspaceFilter } from './workspaces';
 
 /**
  * Declarative main menu: the single source for where commands live. The
@@ -35,6 +36,8 @@ export interface SubmenuSpec {
   readonly items: readonly MenuSpec[];
   /** Ribbon: show the items as panels of their own instead of a drop-down button. */
   readonly inline?: boolean;
+  /** Ribbon: the main thing of its panel, drawn large. */
+  readonly primary?: boolean;
 }
 
 /** What a block holds once references are expanded: command ids, submenus, `@processing`, `@models`. */
@@ -118,6 +121,7 @@ export const MAIN_MENU: TopMenu[] = [
       'view.coords',
       'view.ribbon',
       sec('Görünüş'),
+      { label: 'Çalışma modu', icon: 'modeHybrid', primary: true, items: ['workspace.hybrid', 'workspace.cad', 'workspace.gis', '-', 'workspace.plan3d', 'workspace.disaster'] },
       { label: 'Tema', icon: 'appearance', items: ['view.theme.dark', 'view.theme.light'] },
       { label: 'Çizim motoru', icon: 'chip', items: ['view.renderer.webgl2', 'view.renderer.webgpu'] },
       { label: 'Sembol boyutu', icon: 'styles', items: ['view.symbols.plot', 'view.symbols.screen'] },
@@ -182,12 +186,17 @@ export const MAIN_MENU: TopMenu[] = [
 
 export const menuById = (id: string): TopMenu | undefined => MAIN_MENU.find((m) => m.id === id);
 
+/** The main menus a work mode shows, in order. */
+export const visibleMenus = (filter: WorkspaceFilter, menus: readonly TopMenu[] = MAIN_MENU): TopMenu[] => menus.filter((m) => filter.menu(m.id));
+
 /**
  * Expands a menu into its blocks: tool references become the tools of the
  * catalog (section by section), blocks with the same title merge, and a
  * command is listed once (its first place wins).
  */
-export function menuBlocks(specs: readonly MenuSpec[], tools: readonly ToolDescriptor[]): MenuBlock[] {
+export function menuBlocks(specs: readonly MenuSpec[], allTools: readonly ToolDescriptor[], filter: WorkspaceFilter = SHOW_ALL): MenuBlock[] {
+  // The work mode's hidden tools and commands are left out (they still run from the command line).
+  const tools = allTools.filter((t) => filter.tool(t));
   const out: { label: string; items: MenuEntry[] }[] = [];
   let current: { label: string; items: MenuEntry[] } | null = null;
   const seen = new Set<string>();
@@ -198,8 +207,10 @@ export function menuBlocks(specs: readonly MenuSpec[], tools: readonly ToolDescr
     return current;
   };
   const add = (block: { items: MenuEntry[] }, entry: MenuEntry) => {
+    // A submenu with nothing left to show in this mode is left out too.
+    if (typeof entry === 'object' && !entry.inline && !menuBlocks(entry.items, tools, filter).length) return;
     if (typeof entry === 'string' && !entry.startsWith('@')) {
-      if (seen.has(entry)) return;
+      if (seen.has(entry) || !filter.command(entry)) return;
       seen.add(entry);
     }
     block.items.push(entry);
@@ -228,7 +239,7 @@ export function menuBlocks(specs: readonly MenuSpec[], tools: readonly ToolDescr
 /** Resolves specs against the live command registry (enabled/checked/shortcut). */
 export function resolveMenu(ctx: AppContext, specs: readonly MenuSpec[]): MenuItem[] {
   const out: MenuItem[] = [];
-  for (const block of menuBlocks(specs, ctx.tools.list())) {
+  for (const block of menuBlocks(specs, ctx.tools.list(), filterOf(ctx))) {
     if (out.length) out.push({ kind: 'separator' });
     for (const e of block.items) out.push(...entryItems(ctx, e));
   }
@@ -264,7 +275,7 @@ export function commandItem(ctx: AppContext, id: string, overrides: Partial<Menu
   const cmd = ctx.commands.get(id);
   if (!cmd) return { label: id, disabled: true };
   const checked = cmd.isChecked?.();
-  const isRadio = (id.startsWith('view.theme.') && id !== 'view.theme.toggle') || id.startsWith('view.renderer.') || id.startsWith('view.symbols.');
+  const isRadio = (id.startsWith('view.theme.') && id !== 'view.theme.toggle') || id.startsWith('view.renderer.') || id.startsWith('view.symbols.') || id.startsWith('workspace.');
   // Tools report "active" via isChecked, but in menus they read as actions.
   const isTool = id.startsWith('tool.');
   return {
@@ -274,6 +285,7 @@ export function commandItem(ctx: AppContext, id: string, overrides: Partial<Menu
     checked: isTool ? undefined : checked,
     radio: isRadio,
     disabled: !ctx.commands.isEnabled(id),
+    hint: cmd.pendingNote,
     run: () => ctx.commands.execute(id),
     ...overrides,
   };

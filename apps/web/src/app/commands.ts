@@ -7,6 +7,7 @@ import type { Signal } from '../core/signal';
 import { TOOL_GROUP_LABEL } from '../tools/Tool';
 import type { AppContext } from './context';
 import type { Theme, UiScale } from './state';
+import { WORKSPACES, type WorkspaceSpec } from './workspaces';
 
 /** Features that exist in the menu but are not built yet say so plainly. */
 function pending(ctx: AppContext, id: string, title: string, category: string, icon?: string): Command {
@@ -22,6 +23,37 @@ function pending(ctx: AppContext, id: string, title: string, category: string, i
 
 function toggle(id: string, title: string, s: Signal<boolean>, opts: Partial<Command> = {}): Command {
   return { id, title, run: () => s.set(!s.value), isChecked: () => s.value, watch: [s], ...opts };
+}
+
+/**
+ * A work mode as a radio command. Choosing one changes the project setting
+ * (the project is unsaved afterwards, like any project setting); an
+ * announced mode says “Yakında” and changes nothing.
+ */
+function workspace(ctx: AppContext, w: WorkspaceSpec): Command {
+  const setting = () => ctx.doc.settings.workspace;
+  const soon = w.status === 'soon';
+  return {
+    id: `workspace.${w.id}`,
+    title: w.id === 'hybrid' ? `${w.label} (${w.title})` : w.label,
+    category: 'Görünüm',
+    icon: w.icon,
+    description: w.description,
+    aliases: [`MOD${w.label.replace(/\s+/g, '')}`],
+    pending: soon || undefined,
+    pendingNote: soon ? 'Yakında' : undefined,
+    run: () => {
+      if (soon) {
+        ctx.log.info(`“${w.label}” çalışma modu yakında geliyor. Şimdilik Hibrit, CAD ya da CBS modunu kullanın.`);
+        return;
+      }
+      if (setting().value === w.id) return;
+      setting().set(w.id);
+      ctx.log.info(`Çalışma modu: ${w.label}. Gizlenen komutlar komut satırından ve kısayoluyla yine çalışır.`);
+    },
+    isChecked: () => setting().value === w.id,
+    watch: [setting()],
+  };
 }
 
 /** Drawing engine choice: remembered in preferences, applied live by the viewport. */
@@ -50,7 +82,7 @@ export function applyTheme(ctx: AppContext, theme: Theme): void {
 }
 
 /** Type scale multiplier; every font/size token is derived from --ui-scale. */
-export const UI_SCALE: Record<UiScale, number> = { standard: 1, large: 1.08, xlarge: 1.16 };
+export const UI_SCALE: Record<UiScale, number> = { small: 0.93, standard: 1, large: 1.08, xlarge: 1.16, xxlarge: 1.25 };
 
 export function applyUiScale(scale: UiScale): void {
   document.documentElement.style.setProperty('--ui-scale', String(UI_SCALE[scale] ?? 1));
@@ -298,6 +330,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isChecked: () => ui.theme.value === 'light',
       watch: [ui.theme],
     },
+    ...WORKSPACES.map((w) => workspace(ctx, w)),
     renderer(ctx, 'webgl2', 'WebGL2', 'Tüm güncel tarayıcılarda çalışır. Varsayılan çizim motoru.'),
     renderer(ctx, 'webgpu', 'WebGPU', 'Yeni nesil grafik arayüzü. Tarayıcı ve ekran kartı desteklemelidir.'),
     {

@@ -109,7 +109,7 @@ export class RibbonSearch {
           'span',
           { class: 'rsearch__text' },
           h('span', { class: 'rsearch__title' }, cmd.title),
-          h('span', { class: 'rsearch__where' }, cmd.pending ? 'Geliştirme aşamasında' : (where ?? cmd.category ?? '')),
+          h('span', { class: 'rsearch__where' }, cmd.pending ? (cmd.pendingNote ?? 'Geliştirme aşamasında') : (where ?? cmd.category ?? '')),
         ),
         chord ? h('span', { class: 'rsearch__chord' }, formatChord(chord)) : null,
         pin,

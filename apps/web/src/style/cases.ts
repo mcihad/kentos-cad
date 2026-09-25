@@ -72,6 +72,7 @@ export const PALETTE: CanvasPalette = {
   danger: '#EF6B61',
   label: '#C7D0DA',
   labelHalo: '#151B22',
+  font: 'system-ui, sans-serif',
 };
 
 /** Width and height of the assets that exist (what the page gives the core). */

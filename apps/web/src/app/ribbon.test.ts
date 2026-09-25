@@ -6,7 +6,7 @@ import { TOOL_CATALOG } from '../tools/catalog';
 import type { ToolDescriptor } from '../tools/Tool';
 import { MAIN_MENU, menuBlocks, menuById, type MenuSpec } from './menus';
 import { modelCommandId, processingCommandId } from './processing';
-import { QUICK_ACCESS, RIBBON_TABS, ribbonTabs, type RibbonInputs, type RibbonTab } from './ribbon';
+import { MAX_LARGE, panelCommands, QUICK_ACCESS, RIBBON_TABS, ribbonTabs, type RibbonInputs, type RibbonItem, type RibbonTab } from './ribbon';
 
 const registry = new ProcessingRegistry();
 BUILTIN_TOOLS.forEach((t) => registry.register(t));
@@ -27,18 +27,14 @@ function menuCommands(specs: readonly MenuSpec[], tools: readonly ToolDescriptor
   );
 }
 
-/** Every command a tab set reaches: its buttons and what its drop-down buttons open. */
-function ribbonCommands(tabs: readonly RibbonTab[], tools: readonly ToolDescriptor[]): string[] {
-  return tabs.flatMap((t) =>
-    t.panels.flatMap((p) =>
-      p.items.flatMap((i): string[] => {
-        if (i.kind === 'command') return [i.id];
-        if (i.kind === 'menu') return menuCommands(i.menu.items, tools);
-        return [];
-      }),
-    ),
-  );
+/** Every command a tab set reaches: its buttons, split buttons, ▾ lists and what its drop-down buttons open. */
+export function ribbonCommands(tabs: readonly RibbonTab[], tools: readonly ToolDescriptor[]): string[] {
+  return tabs.flatMap((t) => t.panels.flatMap((p) => [...panelCommands(p), ...p.items.flatMap((i) => (i.kind === 'menu' ? menuCommands(i.menu.items, tools) : []))]));
 }
+
+/** `id:size` of a panel's items (a split names its first choice). */
+const sized = (items: readonly RibbonItem[]) =>
+  items.map((i) => (i.kind === 'command' ? `${i.id}:${i.size}` : i.kind === 'split' ? `${i.entries[0].command}▾:${i.size}` : i.kind === 'menu' ? `${i.menu.label}:${i.size}` : i.name));
 
 const allMenus = (tools: readonly ToolDescriptor[]) => MAIN_MENU.flatMap((m) => menuCommands(m.items, tools));
 
@@ -53,8 +49,9 @@ describe('ribbon', () => {
   });
 
   it('shows a tool added to the catalog in its menu and ribbon tab, with nothing else to edit', () => {
-    const added: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'arc')!, id: 'clothoid', label: 'Klotoid', section: 'curve' };
-    const loose: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'trim')!, id: 'cleanup', label: 'Temizle', section: undefined };
+    const plain = { primary: undefined, methods: undefined, family: undefined, rare: undefined };
+    const added: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'arc')!, ...plain, id: 'clothoid', label: 'Klotoid', section: 'curve' };
+    const loose: ToolDescriptor = { ...TOOL_CATALOG.find((t) => t.id === 'trim')!, ...plain, id: 'cleanup', label: 'Temizle', section: undefined };
     const tools = [...TOOL_CATALOG, added, loose];
     expect(allMenus(tools)).toEqual(expect.arrayContaining(['tool.clothoid', 'tool.cleanup']));
     const withNew = ribbonTabs(inputs(tools));
@@ -77,29 +74,51 @@ describe('ribbon', () => {
     for (const t of tabs) {
       const labels = t.panels.map((p) => p.label);
       expect(new Set(labels).size, t.id).toBe(labels.length);
-      const ids = t.panels.flatMap((p) => p.items.flatMap((i) => (i.kind === 'command' ? [i.id] : [])));
+      const ids = t.panels.flatMap(panelCommands);
       expect(new Set(ids).size, t.id).toBe(ids.length);
     }
   });
 
-  it('draws the first item of a panel large (or its leading command), every item of a panel of one or two, and what the tab asks small', () => {
+  it('sizes by meaning: main tools large, the rest small, a panel of one or two large, a compact pick small', () => {
     const home = tabs.find((t) => t.id === 'home')!;
     const draw = home.panels.find((p) => p.label === 'Çizim')!;
-    expect(draw.items.map((i) => (i.kind === 'command' ? `${i.id}:${i.size}` : ''))).toEqual([
-      'tool.line:large',
-      'tool.polyline:large',
-      'tool.polygon:small',
-      'tool.circle:small',
-      'tool.arc:small',
-      'tool.rectangle:small',
-    ]);
+    expect(sized(draw.items)).toEqual(['tool.line:large', 'tool.polyline:large', 'tool.circle▾:large', 'tool.arc▾:large', 'tool.polygon:small', 'tool.rectangle▾:small']);
     expect(draw.launcher).toEqual({ tab: 'draw', title: 'Tüm araçlar: Çizim sekmesi' });
+    // AutoCAD's Modify panel: every button small.
+    expect(home.panels.find((p) => p.label === 'Değiştir')!.items.every((i) => i.kind !== 'builtin' && i.size === 'small')).toBe(true);
     const pano = home.panels.find((p) => p.label === 'Pano')!;
     expect(pano.items[0]).toEqual({ kind: 'command', id: 'edit.paste', size: 'large' });
     expect(pano.items.slice(1).every((i) => i.kind === 'command' && i.size === 'small')).toBe(true);
     expect(home.panels.find((p) => p.label === 'Seçim')!.items.every((i) => i.kind === 'command' && i.size === 'small')).toBe(true);
     const ölçme = tabs.find((t) => t.id === 'map')!.panels.find((p) => p.label === 'Ölçme')!;
     expect(ölçme.items.every((i) => i.kind === 'command' && i.size === 'large')).toBe(true);
+    const curve = tabs.find((t) => t.id === 'draw')!.panels.find((p) => p.label === 'Eğri')!;
+    expect(sized(curve.items)).toEqual(['tool.circle▾:large', 'tool.arc▾:large', 'tool.ellipse:small', 'tool.spline:small']);
+    expect(curve.overflow).toEqual(['tool.donut']);
+  });
+
+  it('keeps a main tool the same size wherever its panel is not compact, and no panel has more than four large', () => {
+    for (const t of tabs)
+      for (const p of t.panels) expect(p.items.filter((i) => i.kind !== 'builtin' && i.size === 'large').length, `${t.id} › ${p.label}`).toBeLessThanOrEqual(MAX_LARGE);
+    for (const tool of TOOL_CATALOG.filter((x) => x.primary)) {
+      for (const t of tabs.filter((x) => x.id !== 'home' && !x.contextual)) {
+        const item = t.panels.flatMap((p) => p.items).find((i) => (i.kind === 'command' && i.id === `tool.${tool.id}`) || (i.kind === 'split' && i.entries.some((e) => e.command === `tool.${tool.id}`)));
+        if (item && item.kind !== 'builtin') expect(item.size, `${t.id}: ${tool.id}`).toBe('large');
+      }
+    }
+  });
+
+  it('puts a family in one split button and a tool with methods in its own, the ways listed in order', () => {
+    const drawTab = tabs.find((t) => t.id === 'draw')!;
+    const shape = drawTab.panels.find((p) => p.label === 'Şekil')!;
+    expect(shape.items).toHaveLength(1);
+    const split = shape.items[0];
+    expect(split.kind === 'split' && split.entries.map((e) => e.command)).toEqual(['tool.rectangle', 'tool.rectangle3', 'tool.regularPolygon']);
+    const circle = drawTab.panels.find((p) => p.label === 'Eğri')!.items[0];
+    expect(circle.kind === 'split' && circle.entries.map((e) => e.option ?? '')).toEqual(['', '2N', '3N', 'TTY', 'TTT']);
+    // Giriş picks only the rectangle; its family comes along.
+    const homeDraw = tabs.find((t) => t.id === 'home')!.panels.find((p) => p.label === 'Çizim')!;
+    expect(panelCommands(homeDraw)).toEqual(expect.arrayContaining(['tool.rectangle3', 'tool.regularPolygon']));
   });
 
   it('names only known tabs, commands and menus', () => {

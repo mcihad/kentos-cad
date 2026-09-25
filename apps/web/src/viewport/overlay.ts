@@ -9,9 +9,16 @@ import type { TrackHit } from './objectTracking';
 import { SNAP_LABEL, type SnapHit } from './picking';
 import { DEFAULT_LABELS, DIMENSION_PREFIX, LABEL, LABEL_STRIDE, type GripSet } from './storeRecords';
 
+/**
+ * Text that is part of the drawing (text objects, dimension values, labels)
+ * keeps one face whatever the interface typeface is: it is data everyone sees
+ * alike. The overlay's own marks (snap names, scale bar, north arrow) use the
+ * interface typeface (CanvasPalette.font).
+ */
+const DRAWING_FONT = 'Barlow, system-ui, sans-serif';
+
 /** Screen-space annotation layer drawn with Canvas2D above the GPU canvas. */
 
-const FONT = 'Barlow, system-ui, sans-serif';
 
 function haloText(g: CanvasRenderingContext2D, text: string, x: number, y: number, fill: string, halo: string): void {
   g.lineJoin = 'round';
@@ -54,7 +61,7 @@ export function drawLabels(
       g.save();
       g.translate(s.x, s.y);
       g.rotate((-spots[i + 4] * Math.PI) / 180);
-      g.font = `500 ${px.toFixed(1)}px ${FONT}`;
+      g.font = `500 ${px.toFixed(1)}px ${DRAWING_FONT}`;
       g.textAlign = 'center';
       g.textBaseline = 'alphabetic';
       const color = e.color ?? layers.get(e.layerId)?.style.color;
@@ -69,7 +76,7 @@ export function drawLabels(
       g.save();
       g.translate(s.x, s.y);
       g.rotate((-spots[i + 4] * Math.PI) / 180);
-      g.font = `italic 400 ${px.toFixed(1)}px ${FONT}`;
+      g.font = `italic 400 ${px.toFixed(1)}px ${DRAWING_FONT}`;
       g.textAlign = 'left';
       g.textBaseline = 'alphabetic';
       haloText(g, e.text, 0, 0, pal.label, pal.labelHalo);
@@ -81,7 +88,7 @@ export function drawLabels(
     const size = Math.min(st.maxSize ?? st.size, st.size + (st.grow ?? 0) * cam.scale);
     const text = st.template ? st.template.replace('{label}', e.label) : e.label;
     const color = ink[st.ink ?? 'label'];
-    g.font = `${st.weight ?? 500} ${size.toFixed(1)}px ${FONT}`;
+    g.font = `${st.weight ?? 500} ${size.toFixed(1)}px ${DRAWING_FONT}`;
 
     switch (what) {
       case LABEL.center: {
@@ -231,7 +238,7 @@ export function drawSnap(g: CanvasRenderingContext2D, hit: SnapHit, cam: Camera,
       g.rect(x - 5, y - 5, 10, 10);
   }
   g.stroke();
-  g.font = `500 10.5px ${FONT}`;
+  g.font = `500 10.5px ${pal.font}`;
   g.textBaseline = 'bottom';
   // Above-right, so it never collides with the tool's measurement tag (below-right).
   haloText(g, SNAP_LABEL[hit.kind], x + 9, y - 7, pal.snap, pal.labelHalo);
@@ -281,7 +288,7 @@ export function drawScaleBar(g: CanvasRenderingContext2D, cam: Camera, pal: Canv
   g.strokeStyle = pal.fg;
   g.lineWidth = 1;
   g.strokeRect(x0 + 0.5, y0 + 0.5, px, 4);
-  g.font = `500 10.5px ${FONT}`;
+  g.font = `500 10.5px ${pal.font}`;
   g.textBaseline = 'bottom';
   g.textAlign = 'left';
   haloText(g, '0', x0, y0 - 3, pal.label, pal.labelHalo);
@@ -311,7 +318,7 @@ export function drawNorthArrow(g: CanvasRenderingContext2D, cam: Camera, pal: Ca
   g.lineTo(x, y + 23);
   g.closePath();
   g.stroke();
-  g.font = `600 11px ${FONT}`;
+  g.font = `600 11px ${pal.font}`;
   g.textAlign = 'center';
   g.textBaseline = 'bottom';
   haloText(g, 'K', x, y + 3, pal.fg, pal.labelHalo);
@@ -365,7 +372,7 @@ export function drawObjectTracking(g: CanvasRenderingContext2D, acquired: readon
     const at = cam.worldToScreen(track.point);
     const l = track.lines[0];
     const text = track.lines.length > 1 ? 'İzleme: kesişim' : `İzleme ${formatLength(dist(l.origin, track.point))} < ${l.angle}°`;
-    g.font = `500 10.5px ${FONT}`;
+    g.font = `500 10.5px ${pal.font}`;
     g.textBaseline = 'bottom';
     haloText(g, text, Math.round(at.x) + 9, Math.round(at.y) - 7, pal.snap, pal.labelHalo);
   }

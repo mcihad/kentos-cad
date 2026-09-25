@@ -1,0 +1,73 @@
+/*
+ * Accent colours (Uygulama ayarları → Görünüm → Vurgu rengi,
+ * app/appearance.ts). The accent marks the running tool, the selection in
+ * the drawing, focus and the chosen item; nothing else uses it. Amber is
+ * tokens.css itself; every other accent redefines the same tokens, tuned
+ * per theme: on the dark chrome a lighter tone so fills and text stay
+ * readable, on the light sheet the deep one. Warnings keep their own
+ * orange (--c-warn) and snaps their green, whatever the accent.
+ *
+ * Each block sets: the fill (--c-accent) and its ink, the accent as text or
+ * icon on the chrome, a soft wash, a line, the tooltip's accent (tooltips
+ * are dark in both themes) and the drawing's selection colour.
+ */
+
+/* ── Lacivert (default) ───────────────────────────────────────────── */
+:root:not([data-theme='light'])[data-accent='navy'] {
+  --c-accent: #4c7fe0;
+  --c-accent-ink: #ffffff;
+  --c-accent-text: #8fb3f5;
+  --c-accent-soft: rgba(76, 127, 224, 0.18);
+  --c-accent-line: rgba(106, 150, 236, 0.7);
+  --c-tooltip-accent: #8fb3f5;
+  --canvas-accent: #6f9bff;
+}
+:root[data-theme='light'][data-accent='navy'] {
+  --c-accent: #1f4a96;
+  --c-accent-ink: #ffffff;
+  --c-accent-text: #1f4a96;
+  --c-accent-soft: rgba(31, 74, 150, 0.12);
+  --c-accent-line: rgba(31, 74, 150, 0.6);
+  --c-tooltip-accent: #8fb3f5;
+  --canvas-accent: #1c54c7;
+}
+
+/* ── Petrol yeşili ────────────────────────────────────────────────── */
+:root:not([data-theme='light'])[data-accent='teal'] {
+  --c-accent: #2aa99d;
+  --c-accent-ink: #04201d;
+  --c-accent-text: #5fd2c6;
+  --c-accent-soft: rgba(42, 169, 157, 0.17);
+  --c-accent-line: rgba(64, 190, 178, 0.65);
+  --c-tooltip-accent: #5fd2c6;
+  --canvas-accent: #3fd0c2;
+}
+:root[data-theme='light'][data-accent='teal'] {
+  --c-accent: #0e6f68;
+  --c-accent-ink: #ffffff;
+  --c-accent-text: #0c6660;
+  --c-accent-soft: rgba(14, 111, 104, 0.12);
+  --c-accent-line: rgba(14, 111, 104, 0.6);
+  --c-tooltip-accent: #5fd2c6;
+  --canvas-accent: #0b8078;
+}
+
+/* ── Bordo ────────────────────────────────────────────────────────── */
+:root:not([data-theme='light'])[data-accent='bordeaux'] {
+  --c-accent: #c24a63;
+  --c-accent-ink: #ffffff;
+  --c-accent-text: #f08ea1;
+  --c-accent-soft: rgba(194, 74, 99, 0.18);
+  --c-accent-line: rgba(214, 102, 125, 0.7);
+  --c-tooltip-accent: #f08ea1;
+  --canvas-accent: #ff7d97;
+}
+:root[data-theme='light'][data-accent='bordeaux'] {
+  --c-accent: #8a1f37;
+  --c-accent-ink: #ffffff;
+  --c-accent-text: #8a1f37;
+  --c-accent-soft: rgba(138, 31, 55, 0.1);
+  --c-accent-line: rgba(138, 31, 55, 0.55);
+  --c-tooltip-accent: #f08ea1;
+  --canvas-accent: #b3243f;
+}

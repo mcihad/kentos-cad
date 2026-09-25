@@ -1,5 +1,6 @@
 import type { AppContext } from '../../app/context';
-import { listen } from '../../core/disposable';
+import { DisposableStore, listen } from '../../core/disposable';
+import { filterOf } from '../../app/workspaces';
 import { formatChordCompact } from '../../core/keymap';
 import { watchAll } from '../../core/signal';
 import { TOOL_GROUP_LABEL, type ToolDescriptor, type ToolGroup } from '../../tools/Tool';
@@ -29,6 +30,8 @@ export class Toolbox extends Component {
   private readonly dockHost: HTMLElement;
   private readonly buttons = new Map<string, HTMLButtonElement>();
   private readonly body: HTMLElement;
+  /** Subscriptions of the groups shown, rebuilt with the work mode. */
+  private groupD = new DisposableStore();
 
   constructor(ctx: AppContext, hosts: { float: HTMLElement; dock: HTMLElement }) {
     super();
@@ -42,12 +45,6 @@ export class Toolbox extends Component {
     const dockBtn = h('button', { class: 'toolbox__hbtn', type: 'button', 'aria-label': 'Kenara sabitle' }, icon('dock', 14));
     const body = (this.body = h('div', { class: 'toolbox__body' }));
 
-    const groups = ctx.tools.byGroup();
-    for (const g of GROUP_ORDER) {
-      const list = groups.get(g);
-      if (list) body.append(this.section(g, list));
-    }
-
     this.el = h(
       'aside',
       { class: 'toolbox', 'aria-label': 'Çizim araçları' },
@@ -55,13 +52,15 @@ export class Toolbox extends Component {
       body,
     );
 
+    // The project's work mode decides which tools show (app/workspaces.ts); the others still run by name.
+    this.d.add(() => this.groupD.dispose());
+    this.d.add(ctx.doc.settings.workspace.subscribe(() => this.renderGroups(), true));
     this.d.add(
       ctx.tools.activeId.subscribe((id, prev) => {
         this.buttons.get(prev)?.setAttribute('aria-pressed', 'false');
         this.buttons.get(id)?.setAttribute('aria-pressed', 'true');
       }),
     );
-    this.buttons.get(ctx.tools.activeId.value)?.setAttribute('aria-pressed', 'true');
 
     this.d.add(listen(colsBtn, 'click', () => ui.toolboxColumns.set(ui.toolboxColumns.value === 3 ? 2 : 3)));
     this.d.add(listen(dockBtn, 'click', () => ui.toolboxDocked.set(!ui.toolboxDocked.value)));
@@ -87,6 +86,22 @@ export class Toolbox extends Component {
     this.d.add(() => ro.disconnect());
   }
 
+  private renderGroups(): void {
+    this.groupD.dispose();
+    this.groupD = new DisposableStore();
+    this.buttons.clear();
+    const filter = filterOf(this.ctx);
+    const groups = this.ctx.tools.byGroup();
+    this.body.replaceChildren(
+      ...GROUP_ORDER.flatMap((g) => {
+        const list = (groups.get(g) ?? []).filter((t) => filter.tool(t));
+        return list.length ? [this.section(g, list)] : [];
+      }),
+    );
+    this.buttons.get(this.ctx.tools.activeId.value)?.setAttribute('aria-pressed', 'true');
+    this.fit();
+  }
+
   /** A titled group; clicking the title folds it (remembered with the layout). */
   private section(g: ToolGroup, list: readonly ToolDescriptor[]): HTMLElement {
     const { ui } = this.ctx;
@@ -105,14 +120,14 @@ export class Toolbox extends Component {
       title.setAttribute('aria-expanded', String(!folded));
       grid.hidden = folded;
     };
-    this.d.add(ui.toolboxFolded.subscribe(sync, true));
-    this.d.add(
+    this.groupD.add(ui.toolboxFolded.subscribe(sync, true));
+    this.groupD.add(
       listen(title, 'click', () => {
         const folded = ui.toolboxFolded.value;
         ui.toolboxFolded.set(folded.includes(g) ? folded.filter((x) => x !== g) : [...folded, g]);
       }),
     );
-    this.d.add(tooltip(title, () => ({ title: ui.toolboxFolded.value.includes(g) ? `${TOOL_GROUP_LABEL[g]} grubunu aç` : `${TOOL_GROUP_LABEL[g]} grubunu katla` }), 'right'));
+    this.groupD.add(tooltip(title, () => ({ title: ui.toolboxFolded.value.includes(g) ? `${TOOL_GROUP_LABEL[g]} grubunu aç` : `${TOOL_GROUP_LABEL[g]} grubunu katla` }), 'right'));
     return section;
   }
 
@@ -125,13 +140,13 @@ export class Toolbox extends Component {
       icon(d.icon, 20),
       chord ? h('span', { class: 'toolbox__key', 'aria-hidden': 'true' }, formatChordCompact(chord)) : null,
     );
-    this.d.add(
+    this.groupD.add(
       listen(b, 'click', () => {
         ctx.commands.execute(`tool.${d.id}`);
         ctx.view.focus();
       }),
     );
-    this.d.add(
+    this.groupD.add(
       tooltip(
         b,
         () => ({

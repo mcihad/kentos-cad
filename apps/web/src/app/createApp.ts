@@ -30,6 +30,7 @@ import { createProcessing, registerProcessingCommands } from './processing';
 import { createStyles, registerStyleCommands } from './styles';
 import { Formatter } from './format';
 import { applyUiScale } from './commands';
+import { applyAccent, applyUiFont } from './appearance';
 import { createPreferences, createUiState, DraftingSettings, MessageLog } from './state';
 import { onCoreFault } from '../wasm/core';
 
@@ -67,8 +68,10 @@ export async function createApp(root: HTMLElement): Promise<AppContext> {
     buildShowcase(doc, SYSTEM_LIBRARY.items, SYSTEM_LIBRARY.categories, { x: doc.homeView.minX, y: doc.homeView.minY - 80 });
     doc.dirty.set(false);
   }
-  // Theme and type scale before any service reads CSS tokens (canvas palette).
+  // Theme, accent, typeface and type scale before any service reads CSS tokens (canvas palette).
   document.documentElement.dataset.theme = ui.theme.value;
+  applyAccent(prefs.accent.value);
+  const fontReady = applyUiFont(prefs.uiFont.value);
   applyUiScale(prefs.uiScale.value);
 
   const selection = new Selection();
@@ -145,6 +148,9 @@ export async function createApp(root: HTMLElement): Promise<AppContext> {
 
   ctx.tools.activate('select');
   await ctx.view.mount(shell.viewportHost);
+  // The overlay was drawn with fallbacks until the bundled faces arrived: the interface's and the drawing text's
+  // (Barlow; a canvas does not ask for a face by itself).
+  void Promise.all([fontReady, document.fonts?.load('500 12px Barlow', 'Ağİ').catch(() => undefined)]).then(() => ctx.view.requestOverlay());
 
   // The server is asked only once the app is idle, so the check never slows the start.
   ctx.server.watch(window);

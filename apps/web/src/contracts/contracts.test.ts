@@ -39,7 +39,8 @@ const unitsOut = (u: DefaultsContext): ContractDefaultsContext => u;
 const jobOut = (j: Wire<RunJob>): ContractRunJob => j;
 // … and every object the wire can carry is one the app knows (after the reader's checks).
 const entityIn = (e: ContractEntity): Entity => e;
-const settingsIn = (s: ContractProjectSettings): ProjectSettingsData => s;
+// A file from before work modes has none; the reader reads it as hybrid (model/snapshot.ts).
+const settingsIn = (s: ContractProjectSettings): ProjectSettingsData => ({ ...s, workspace: s.workspace ?? 'hybrid' });
 
 describe('versioned contracts', () => {
   it('match the app types (checked by tsc; this keeps the checks referenced)', () => {

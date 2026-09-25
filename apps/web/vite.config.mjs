@@ -63,5 +63,10 @@ export default defineConfig({
   worker: { format: 'es' },
   // Agents' git worktrees live under .claude/worktrees: neither watched nor tested from here.
   server: { watch: { ignored: ['**/.claude/**'] } },
-  test: { setupFiles: ['src/wasm/testSetup.ts', 'src/style/svg/testSetup.ts'], exclude: ['**/node_modules/**', '**/dist/**', '**/.claude/**'] },
+  test: {
+    setupFiles: ['src/wasm/testSetup.ts', 'src/style/svg/testSetup.ts'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.claude/**'],
+    // Vitest empties stylesheets; these two are read as text by app/appearance.test.ts.
+    css: { include: [/styles\/(accents|fonts)\.css/] },
+  },
 });

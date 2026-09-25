@@ -16,6 +16,7 @@ const palette = (): CanvasPalette => ({
   danger: '#FF5C5C',
   label: '#E4EAF0',
   labelHalo: '#151B22',
+  font: 'system-ui, sans-serif',
 });
 
 const ORIGIN = { x: 486500, y: 4420000 };

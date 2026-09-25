@@ -72,7 +72,15 @@ export function crsPicker(o: CrsPickerOptions): Child {
           ])
         : h('div', { class: 'crs-list__empty' }, 'Eşleşen koordinat sistemi yok.'),
     );
-    queueMicrotask(() => list.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' }));
+    // Only the list scrolls to the chosen row: scrollIntoView would also scroll the dialog around it.
+    queueMicrotask(() => {
+      const row = list.querySelector<HTMLElement>('[aria-selected="true"]');
+      if (!row) return;
+      const r = row.getBoundingClientRect();
+      const l = list.getBoundingClientRect();
+      if (r.top < l.top) list.scrollTop -= l.top - r.top;
+      else if (r.bottom > l.bottom) list.scrollTop += r.bottom - l.bottom;
+    });
     const code = sridOf(o.state.query);
     status.textContent = SRID_RE.test(o.state.query) && !crsBySrid(code) ? `EPSG:${code} bu sürümde tanımlı değil. Listedeki sistemlerden birini seçin.` : '';
   };
