@@ -5,7 +5,7 @@ TODOS.md §5 (`UX-01`, `UX-04`, `UX-06`) ve [ADR 0018](../../docs/adr/0018-tool-
 Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komut seçmek, tıklamak, yazmak, tuşa basmak. Her adımdan sonra görülmesi gerekeni de platformdan bağımsız olarak söyler.
 
 - **Web** izleri bugün gerçek tarayıcıda oynatır: `pnpm e2e:interaction` (`make e2e-interaction`). Başsız Chrome'a gerçek fare ve klavye olayları gönderilir.
-- **Masaüstü** çizim alanı ve araç oturumu gelince aynı dosyaları değiştirmeden oynatır.
+- **Masaüstü** aynı dosyaları değiştirmeden, pencere açmadan oynatır: `cargo test -p kentos-desktop traces` (`apps/desktop/src/traces.rs`, [ADR 0021](../../docs/adr/0021-native-tool-session.md)). Tuşlar ve fare, uygulamanın kendi aboneliğinden ve çizim alanının kendi hareket kodundan geçen Iced olaylarıdır. `kentos-cad snapshot çıktı.png --iz <iz> --adim <n>` bir izi görüntüye oynatır.
 
 İz, iki uygulamanın kullanım davranışının ortak referansıdır.
 
@@ -78,7 +78,8 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
   2. iki uygulamada değişiklik;
   3. izin güncellenmesi.
 - Beklenen değeri hataya göre yenilemek yasaktır (CLAUDE.md §9.4).
-- Yeni bir iz ya da alan eklenince bu belge ve web oynatıcısı (`apps/web/scripts/e2e/interaction.mjs`) birlikte güncellenir.
+- Yeni bir iz ya da alan eklenince bu belge ve iki oynatıcı birlikte güncellenir: web (`apps/web/scripts/e2e/interaction.mjs`) ve masaüstü (`apps/desktop/src/traces.rs`). Masaüstü oynatıcısı bilmediği alanda durur.
+- Yazılan değerin dilbilgisi ayrı bir dosyadadır: `fixtures/point-input/v1/cases.json`. Web'in ve masaüstünün okuyucusu onu okur.
 
 ## Varyantlar
 
