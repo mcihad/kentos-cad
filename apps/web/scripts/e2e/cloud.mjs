@@ -1,10 +1,12 @@
 // Cloud end-to-end test (Faz B): the real kentosd against the development
 // database, the app in headless Chrome signed in as `ayse`, and `mehmet` as a
-// second editor over plain HTTP. Checks sign-in, upload, autosave, reload
+// second editor over plain HTTP. Checks sign-in, upload, that a new project
+// is its owner's until she shares it (docs/adr/0015), autosave, reload
 // persistence, another editor's change arriving live, a conflict resolved
 // from the dialog, a server restart while an edit waits, renaming the open
-// project from the list, and deletion: by `zeynep` (an admin) while the
-// project is open, and from the list after a confirmation.
+// project from the list, and deletion: by `zeynep` (an admin, under the
+// organisation's policy) while the project is open, and from the list after
+// a confirmation.
 //
 //   pnpm e2e:cloud     (needs `pnpm db:setup` once; builds kentosd first)
 //
@@ -126,9 +128,16 @@ try {
   await b.waitFor(`window.kentos.cloud.link.value === 'online'`, 8000);
   check('the live channel is open', true);
 
-  await mehmet.call('POST', '/v1/auth/login', { login: 'mehmet', password: env.KENTOS_DEV_PASSWORD });
+  const mehmetMe = await mehmet.call('POST', '/v1/auth/login', { login: 'mehmet', password: env.KENTOS_DEV_PASSWORD });
+  // A new project is its owner's until she shares it: mehmet, an editor of the same organisation, cannot find it yet.
+  const hidden = await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}`);
+  check('a new project is its owner’s until shared', hidden.status === 404, String(hidden.status));
+  const shared = await b.eval(
+    `window.kentos.cloud.api.command({ commandName: 'project.share', version: 1, tenantId: ${JSON.stringify(project.tenantId)}, projectId: ${JSON.stringify(project.projectId)}, requestId: 'e2e-paylasim', idempotencyKey: crypto.randomUUID(), expectedVersions: {}, input: { userId: ${JSON.stringify(mehmetMe.body.user.id)}, role: 'editor' } }).then((r) => r.changed)`,
+  );
+  check('the owner shares it with mehmet as an editor', shared === true);
   const listed = await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}`);
-  check('another member sees it with every object', listed.status === 200 && Number(listed.body.featureCount) === size, listed.body.featureCount);
+  check('the member it was shared with sees it with every object', listed.status === 200 && Number(listed.body.featureCount) === size && listed.body.access?.role === 'editor', listed.body.featureCount);
 
   // Draw a line with typed coordinates; autosave sends it without Ctrl+S.
   const X = 486900, N = 4420600;
@@ -221,12 +230,14 @@ try {
   await b.key('Escape');
   await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1')`);
 
-  // Renaming the open project from the list (ayse is a project manager: project.edit, but not project.delete).
+  // Renaming the open project from the list (ayse owns it: project.edit and project.delete are hers).
   await b.eval(`window.kentos.commands.execute('cloud.open')`);
   await b.waitFor(`document.querySelector('.cloud-row')`, 5000);
+  const before = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Sil…'); return e && { disabled: e.disabled, title: e.title }; })()`);
+  check('with nothing picked the buttons wait and say why', !!before?.disabled && /seçin/.test(before.title), before?.title);
   await press('.cloud-row', name);
   const del = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Sil…'); return e && { disabled: e.disabled, title: e.title }; })()`);
-  check('a project manager may not delete; the button says why', !!del?.disabled && /project\.delete/.test(del.title), del?.title);
+  check('the owner may delete her project (the permission comes with the project)', del && !del.disabled, del?.title);
   await press('.dialog__foot .btn', 'Yeniden adlandır');
   await b.waitFor(`document.querySelector('.dialog[aria-label="Bulut projesini yeniden adlandır"]')`, 3000);
   const renamedTo = `${name} (revize)`;
