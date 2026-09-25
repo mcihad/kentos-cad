@@ -95,7 +95,7 @@ export class Rulers {
   }
 
   /** Double click on a guide: its position and angle, typed. */
-  dbl(e: MouseEvent, target: Element): boolean {
+  dbl(e: { clientX: number; clientY: number }, target: Element): boolean {
     const id = target.getAttribute('data-guide');
     const g = id ? this.guides.find((x) => x.id === id) : undefined;
     if (!g) return false;

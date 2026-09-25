@@ -1,6 +1,6 @@
 [package]
 name = "kentos-style-core"
-description = "The KentOS style engine's core: the expression language (and, slice by slice, symbol placement and compilation), shared by the browser (WASM) and the server"
+description = "The KentOS style engine's core: the expression language and the style compiler (symbols on geometry, renderers, a layer's GPU batches), shared by the browser (WASM) and the server"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

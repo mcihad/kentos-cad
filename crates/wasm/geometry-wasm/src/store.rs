@@ -11,6 +11,7 @@ use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
 use kentos_geometry_core::store::Store;
+use kentos_style_core::style::build::{LayerObjects, Program, build_layer};
 use wasm_bindgen::prelude::*;
 
 fn read_entity(text: &str) -> Result<Entity, JsError> {
@@ -68,6 +69,65 @@ impl PackedObjects {
     #[wasm_bindgen(js_name = intoNums)]
     pub fn into_nums(self) -> Vec<f64> {
         self.nums
+    }
+}
+
+/// A layer's symbols and expressions for one styled build
+/// (`kentos_style_core::style::build::Program`): the page reads which values
+/// its expressions need, builds the table, and hands both to `buildStyled`.
+#[wasm_bindgen]
+pub struct StyleProgram {
+    inner: Program,
+}
+
+#[wasm_bindgen]
+impl StyleProgram {
+    #[wasm_bindgen(constructor)]
+    pub fn new(json: &str) -> Result<StyleProgram, JsError> {
+        Program::read(json)
+            .map(|inner| StyleProgram { inner })
+            .map_err(|e| JsError::new(&format!("Stil okunamadı: {e}")))
+    }
+
+    /// The attribute names the expressions read (a JSON array), the table's text slots in order.
+    #[wasm_bindgen(getter)]
+    pub fn fields(&self) -> String {
+        json::to_string(&self.inner.fields)
+    }
+
+    /// The variables they read, as bits: 1 geometry values, 2 corners, 4 kind,
+    /// 8 layer, 16 label, 32 position, 64 id, 128 scale.
+    #[wasm_bindgen(getter)]
+    pub fn needs(&self) -> u32 {
+        let n = self.inner.needs;
+        [
+            n.measured, n.vertices, n.kind, n.layer, n.label, n.index, n.id, n.scale,
+        ]
+        .iter()
+        .enumerate()
+        .fold(0, |bits, (i, &on)| bits | (u32::from(on) << i))
+    }
+}
+
+/// A styled layer's batches (`style::batch`): their descriptions as JSON and
+/// their numbers one after another (float32, origin-relative).
+#[wasm_bindgen]
+pub struct StyledBatches {
+    json: String,
+    data: Vec<f32>,
+}
+
+#[wasm_bindgen]
+impl StyledBatches {
+    #[wasm_bindgen(getter)]
+    pub fn json(&self) -> String {
+        self.json.clone()
+    }
+
+    /// The numbers; the object is used up.
+    #[wasm_bindgen(js_name = intoData)]
+    pub fn into_data(self) -> Vec<f32> {
+        self.data
     }
 }
 
@@ -415,6 +475,52 @@ impl GeometryStore {
     /// area, anchor x, anchor y, 0` each (`store::draw::measure_record`).
     pub fn measures(&self, ids: &[f64]) -> Vec<f64> {
         self.inner.measures(ids)
+    }
+
+    /// A layer through the style engine (`kentos_style_core::style::build`):
+    /// `objects` four numbers per id (how it is drawn, its set or symbol, the
+    /// set of its simple look, its colour), the program's table of values
+    /// (`texts`, `text_lens`, `numbers`), the box construction lines are
+    /// clipped to, the origin the batches are relative to, the plot scale.
+    #[wasm_bindgen(js_name = buildStyled)]
+    #[allow(clippy::too_many_arguments)]
+    pub fn build_styled(
+        &self,
+        program: &StyleProgram,
+        ids: &[f64],
+        objects: &[i32],
+        texts: &str,
+        text_lens: &[i32],
+        numbers: &[f64],
+        has_clip: bool,
+        min_x: f64,
+        min_y: f64,
+        max_x: f64,
+        max_y: f64,
+        origin_x: f64,
+        origin_y: f64,
+        plot_scale: f64,
+    ) -> Result<StyledBatches, JsError> {
+        let clip = has_clip.then(|| rect(min_x, min_y, max_x, max_y));
+        let b = build_layer(
+            &self.inner,
+            &program.inner,
+            &LayerObjects {
+                ids,
+                objects,
+                texts,
+                text_lens,
+                numbers,
+            },
+            clip.as_ref(),
+            Vec2::new(origin_x, origin_y),
+            plot_scale,
+        )
+        .map_err(|e| JsError::new(&e))?;
+        Ok(StyledBatches {
+            json: b.json,
+            data: b.data,
+        })
     }
 
     /// Ids of objects on every layer whose box overlaps the rectangle, in the

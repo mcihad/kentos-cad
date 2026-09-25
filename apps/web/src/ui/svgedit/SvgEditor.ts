@@ -2,6 +2,7 @@ import type { AppContext } from '../../app/context';
 import type { LibraryAsset } from '../../model/style';
 import { resolveColor } from '../../render/color';
 import { sanitizeSvg, svgAsset } from '../../style/file';
+import { initSvgCore } from '../../style/svg/core';
 import { svgText } from '../../style/svg/exportSvg';
 import { importSummary } from '../../style/svg/importSvg';
 import { newDoc, shapeId, transformShape, translate, type SvgDoc } from '../../style/svg/svgModel';
@@ -45,7 +46,18 @@ const TOOLS: { id: ToolId; label: string; key: string; icon: string; hint: strin
   { id: 'measure', label: 'Ölç', key: 'M', icon: 'measure', hint: 'İki noktayı kenetleyerek ölçer (sürükleyin ya da iki tık); yolun üstünde parça boyları' },
 ];
 
-export function openSvgEditor(ctx: AppContext, opts: SvgEditorOptions = {}): void {
+/**
+ * Opens the editor once its geometry core (a WASM package of its own,
+ * CLAUDE.md §20) is running; a core that cannot load leaves the app as it
+ * was and says so (the next try loads it again).
+ */
+export async function openSvgEditor(ctx: AppContext, opts: SvgEditorOptions = {}): Promise<void> {
+  try {
+    await initSvgCore();
+  } catch (e) {
+    ctx.log.error(`SVG düzenleyicisi açılamadı: çekirdeği yüklenemedi (${e instanceof Error ? e.message : String(e)}). Ağ bağlantısını denetleyip yeniden açın.`);
+    return;
+  }
   const lib = ctx.styles.library;
   const asset = opts.id ? lib.get(opts.id) : undefined;
   let doc = newDoc(100, 100);

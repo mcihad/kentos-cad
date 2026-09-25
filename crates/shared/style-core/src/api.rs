@@ -6,7 +6,10 @@
 use kentos_geometry_core::api::Op;
 use kentos_geometry_core::{json_struct, op};
 
+use kentos_geometry_core::api::json::Json;
+
 use crate::expr::{self, Needs, library};
+use crate::style::build::compile_one;
 
 struct NeedsJson {
     measured: bool,
@@ -114,6 +117,15 @@ pub static OPS: &[Op] = &[
     Op {
         name: "exprCatalog",
         run: |_| kentos_geometry_core::api::result(&catalog()),
+    },
+    // One symbol on one object, as primitives (previews, legends, tests): the
+    // result is already JSON (style::build::compile_one).
+    Op {
+        name: "styleCompile",
+        run: |args| match Json::parse(args)? {
+            Json::Arr(list) => compile_one(list.first().unwrap_or(&Json::Null)),
+            _ => Err("styleCompile: argümanlar bir dizi olmalı.".into()),
+        },
     },
 ];
 

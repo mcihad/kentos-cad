@@ -7,9 +7,20 @@ node apps/web/scripts/perf/bundle.mjs  --label baseline   # production build + c
 node apps/web/scripts/perf/startup.mjs --label baseline   # vite preview + başsız Chrome, soğuk/ılık × 3
 pnpm perf:interaction --label baseline           # etkileşim tabanı: Vite + başsız Chrome (GPU), parsel-50k ve hat-1m × 3 koşu
 pnpm perf:interaction --label s1                 # sonraki ölçüm: interaction-s1.{json,md}, tabanla karşılaştırmalı
+node apps/web/scripts/perf/modules.mjs --label y4 # pnpm build'den sonra: ağır modüllerin ilk ve ikinci açılışı (boş profil × 3)
 ```
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
+
+## Ağır modüllerin açılışı (2026-09-24, `e0b9168`)
+
+Kaynak: [modules-y4-2026-09-24.md](modules-y4-2026-09-24.md) (ham veri `.json`; betik `apps/web/scripts/perf/modules.mjs`). Üretim derlemesi `vite preview` ile, her modül kendi boş profiliyle; süre komut satırında Enter'dan pencerenin boyandığı kareye kadardır. Bulut konteyneri, başsız Chrome; kabul ölçümü kullanıcının makinesinde yapılır.
+
+| Modül | İlk açılış | İkinci açılış | İlk açılışta indirilen | ADR 0005 önerisi |
+|---|---|---|---|---|
+| Stil yöneticisi | 220 ms | 107 ms | 12,9 KB (gzip JS) | ≤ 400 / ≤ 150 ms |
+| Model tasarımcısı | 125 ms | 36 ms | 11,1 KB (gzip JS) | ≤ 400 / ≤ 150 ms |
+| SVG düzenleyicisi | 163 ms | 42 ms | 51,3 KB gzip JS + 841 KB WASM (sunucu WASM'ı sıkıştırmadı; gzip -9 ile 315,8 KB) | ≤ 400 / ≤ 150 ms |
 
 ## Etkileşim tabanı (2026-09-24, `c110b15`)
 
@@ -64,7 +75,7 @@ Kaynaklar:
 |---|---|---|
 | İlk sayfa JS (gzip) | 258,4 KB | ≤ 350 KB |
 | İlk sayfa CSS (gzip) | 15,8 KB | ≤ 40 KB |
-| Başlangıç WASM | yok (uygulama WASM yüklemiyor) | ≤ 350 KB (2026-09-24'e kadar 300 KB) |
+| Başlangıç WASM | yok (uygulama WASM yüklemiyor) | sınır yok (2026-09-24, sahibinin kararı; önce 300, 350, 400 KB) |
 | Etkileşime hazır, soğuk (ortanca) | 557 ms | ≤ 1,5 s |
 | Etkileşime hazır, ılık (ortanca) | 288 ms | ≤ 0,8 s |
 | Script süresi, soğuk | 177 ms | ≤ 600 ms |

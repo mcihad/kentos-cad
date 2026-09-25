@@ -1,0 +1,19 @@
+[package]
+name = "kentos-svg-core"
+description = "The geometry of KentOS's own SVG editor: path data, Béziers, curve fitting, path booleans, stroke outlines, node and path operations, snapping, tracing and the SVG file model, shared by the browser (WASM, loaded with the editor) and the server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure dependencies only, like the geometry core (CLAUDE.md §14): this crate
+# builds for every target and never reaches for the file system, the network
+# or a runtime. Booleans and offsets run on the geometry core's plane
+# overlay; numbers are written as JavaScript writes them (the style core's
+# `js::number`), docs/adr/0008.
+[dependencies]
+kentos-geometry-core = { path = "../geometry-core" }
+kentos-style-core = { path = "../style-core" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

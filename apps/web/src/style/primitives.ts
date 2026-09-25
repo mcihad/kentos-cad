@@ -2,16 +2,21 @@ import type { Vec2 } from '../model/geometry';
 import type { Anchor, Color, ShapeName } from '../model/style';
 
 /**
- * What compiling a symbol on a geometry produces: drawing primitives in
- * world coordinates, independent of any backend. The GPU scene builder
- * packs them into batches; previews and legends draw them with Canvas2D.
- * Every size is already converted: "world" means metres (from mm or m),
- * "px" screen pixels drawn by the shader.
+ * What compiling a symbol on a geometry produces, as the style core writes
+ * it (crates/shared/style-core/src/style/prim.rs): drawing primitives in
+ * world coordinates, independent of any backend. A layer's come packed in
+ * GPU batches (render/styledBatches.ts); previews and legends get them one
+ * by one (`compileSymbol`) and draw them with Canvas2D. Every size is
+ * already converted: "world" means metres (from mm or m), "px" screen
+ * pixels drawn by the shader.
  */
 
 export type PrimUnit = 'world' | 'px';
 
-/** Paint shared by one batch: equal styles merge (see styleKey). */
+/** A CSS pixel on paper (96 dpi), where a length in px must become geometry. */
+export const MM_PER_PX = 25.4 / 96;
+
+/** Paint shared by one batch: equal styles merge. */
 export interface StrokeStyle {
   readonly color: Color;
   readonly opacity: number;
@@ -128,33 +133,9 @@ export interface MarkerCommon {
   readonly level: number;
 }
 
-/** Where compile sends its output. Equal styles are merged by the receiver. */
-export interface PrimitiveSink {
-  stroke(style: StrokeStyle, path: readonly Vec2[], closed: boolean): void;
-  /** One area: outer ring first, holes after (any orientation). */
-  fill(paint: FillPaint, rings: readonly (readonly Vec2[])[]): void;
-  /** `angle`: radians, the direction the marker faces (0 = east). */
-  marker(style: MarkerStyle, at: Vec2, angle: number): void;
-}
-
-/** A stable key for merging equal styles into one batch. */
-export const styleKey = (s: StrokeStyle | FillPaint | MarkerStyle): string => JSON.stringify(s);
-
-/** Collects primitives in order (tests, previews, legends). */
-export class PrimitiveList implements PrimitiveSink {
-  readonly strokes: { style: StrokeStyle; path: readonly Vec2[]; closed: boolean }[] = [];
-  readonly fills: { paint: FillPaint; rings: readonly (readonly Vec2[])[] }[] = [];
-  readonly markers: { style: MarkerStyle; at: Vec2; angle: number }[] = [];
-
-  stroke(style: StrokeStyle, path: readonly Vec2[], closed: boolean): void {
-    this.strokes.push({ style, path, closed });
-  }
-
-  fill(paint: FillPaint, rings: readonly (readonly Vec2[])[]): void {
-    this.fills.push({ paint, rings });
-  }
-
-  marker(style: MarkerStyle, at: Vec2, angle: number): void {
-    this.markers.push({ style, at, angle });
-  }
+/** A symbol's primitives on one object, in the order compiled (`compileSymbol`). */
+export interface Primitives {
+  readonly strokes: readonly { readonly style: StrokeStyle; readonly path: readonly Vec2[]; readonly closed: boolean }[];
+  readonly fills: readonly { readonly paint: FillPaint; readonly rings: readonly (readonly Vec2[])[] }[];
+  readonly markers: readonly { readonly style: MarkerStyle; readonly at: Vec2; readonly angle: number }[];
 }

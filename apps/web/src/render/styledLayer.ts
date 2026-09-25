@@ -1,25 +1,24 @@
 import type { Entity } from '../model/entities';
+import { exprTable, type ExprNeeds, type ExprTable } from '../model/expression/expression';
 import type { Bounds, Vec2 } from '../model/geometry';
 import type { LayerStyle } from '../model/layers';
-import type { LibraryAsset, Symbol, SymbolSet } from '../model/style';
-import { compileSymbol, ExprRun, type CompileEnv, type ExprCache } from '../style/compile';
+import type { LayerRenderer, LibraryAsset, Rule, Symbol, SymbolSet } from '../model/style';
 import { hatchSymbolOf, symbolsOfLayerStyle } from '../style/fromLayer';
-import { DrawnReader, type GeometryClass } from '../style/geometry';
-import { resolveRenderer, symbolOf, type ResolvedSet } from '../style/resolve';
+import { CoreStyleProgram } from '../wasm/core';
 import type { CanvasPalette } from './color';
-import { StyledSink } from './styledSink';
+import { styledBatches } from './styledBatches';
 import type { SceneLayer } from './types';
 
 /**
- * A document layer through the style engine (docs/STYLE.md §6): each
- * object gets its own symbol, else its layer's renderer, else the layer's
- * simple look; the symbols are compiled and packed into GPU batches.
- * A symbol missing from the library (or no symbol for the object's kind of
- * geometry) falls back to the simple look, so an object never silently
- * disappears; an area without a fill symbol draws its edges with the line
- * symbol. Dimensions keep their hairlines. What each object draws (curves
- * tessellated, rings oriented) and the geometry values expressions ask for
- * come from the geometry store, the whole layer in one call each.
+ * A document layer through the style engine (docs/STYLE.md §6), in one
+ * call to the style core next to the geometry store
+ * (crates/shared/style-core/src/style/build.rs, docs/adr/0008 “Stil
+ * derleyicisi”): each object gets its own symbol, else its layer's
+ * renderer, else the layer's simple look; symbols are compiled on the
+ * store's geometry and packed into GPU batches there. This side says how
+ * each object is drawn, gives the symbols and the objects' values for the
+ * expressions, and turns the batches' colours and images into what the
+ * GPU draws (render/styledBatches.ts).
  */
 
 export interface StyleSources {
@@ -27,12 +26,12 @@ export interface StyleSources {
   asset(id: string): LibraryAsset | undefined;
 }
 
-/** The geometry store's answers for a layer build (viewport/picking.ts; docs/adr/0008, S2). */
+/** The geometry store's answers for layer builds (viewport/picking.ts; docs/adr/0008, S2). */
 export interface GeometrySource {
   /** What these objects draw, one record each (style/geometry.ts `DrawnReader`); `oriented`: rings turned for the style engine; `clip`: the box construction lines are clipped to. */
   drawn(ids: readonly number[], oriented: boolean, clip?: Bounds): Float64Array;
-  /** Their geometry values for expressions (model/expression/expressionLib.ts `measuredAt`). */
-  measures(ids: readonly number[]): Float64Array;
+  /** A styled layer's batches (`CoreStore.buildStyled`). */
+  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number): { json: string; data: Float32Array };
 }
 
 export interface StyledBuildOptions {
@@ -40,83 +39,131 @@ export interface StyledBuildOptions {
   palette: CanvasPalette;
   plotScale: number;
   library: StyleSources;
-  exprs: ExprCache;
   layerName(id: string): string;
   geometry: GeometrySource;
   /** Box construction lines are clipped to (see ViewportController). */
   clip?: Bounds;
 }
 
-/** Symbol levels across classes: every fill before any line, every line before any marker. */
-const LEVEL_BASE: Record<GeometryClass, number> = { fill: 0, line: 1000, marker: 2000 };
-/** An object's symbol may be of another class than its geometry (compileSymbol adapts it). */
-const SYMBOL_CLASS = { fill: 'fill', line: 'line', marker: 'marker' } as const;
+/** How the core draws an object (style/build.rs `MODE_*`). */
+const SKIP = 0;
+const DIMENSION = 1;
+const SET = 2;
+const OWN = 3;
+const RENDERER = 4;
+
+/** The library symbols a renderer's sets refer to. */
+function rendererRefs(r: LayerRenderer, out: Set<string>): void {
+  const set = (s: SymbolSet | undefined) => {
+    for (const ref of [s?.marker, s?.line, s?.fill]) if (ref && 'ref' in ref) out.add(ref.ref);
+  };
+  const rules = (list: readonly Rule[]) => {
+    for (const r of list) {
+      set(r.symbols);
+      if (r.children) rules(r.children);
+    }
+  };
+  switch (r.type) {
+    case 'single':
+      return set(r.symbols);
+    case 'categorized':
+      r.categories.forEach((c) => set(c.symbols));
+      return set(r.other);
+    case 'graduated':
+      return r.classes.forEach((c) => set(c.symbols));
+    case 'rules':
+      return rules(r.rules);
+  }
+}
+
+/** Image assets the symbols tile (their sizes go to the core: tiles keep the images' proportions). */
+function assetsOf(value: unknown, out: Set<string>): void {
+  if (Array.isArray(value)) for (const v of value) assetsOf(v, out);
+  else if (value && typeof value === 'object') {
+    const o = value as Record<string, unknown>;
+    if (o.type === 'imageFill' && typeof o.asset === 'string') out.add(o.asset);
+    for (const v of Object.values(o)) assetsOf(v, out);
+  }
+}
+
+/** Width and height of the library's image assets among `ids` (what the core reads as `assets`). */
+export function assetSizes(ids: Iterable<string>, asset: (id: string) => LibraryAsset | undefined): Record<string, readonly [number, number]> {
+  const out: Record<string, readonly [number, number]> = {};
+  for (const id of ids) {
+    const a = asset(id);
+    if (a) out[id] = [a.width, a.height];
+  }
+  return out;
+}
+
+const NEEDS: readonly (keyof ExprNeeds)[] = ['measured', 'vertices', 'kind', 'layer', 'label', 'index', 'id', 'scale'];
 
 export function buildStyledLayer(id: string, entities: readonly Entity[], style: LayerStyle, opts: StyledBuildOptions): SceneLayer {
-  const sink = new StyledSink({ origin: opts.origin, palette: opts.palette, plotScale: opts.plotScale, asset: (a) => opts.library.asset(a) });
-  const ids = entities.map((e) => e.id);
-  // Each expression is evaluated for the whole layer the first time an object needs it; its
-  // geometry values come from the store, for the whole layer, the first time one is read.
-  const run = new ExprRun(opts.exprs, { entities, layerName: opts.layerName, plotScale: opts.plotScale, measures: () => opts.geometry.measures(ids) });
-  const env: CompileEnv = {
-    plotScale: opts.plotScale,
-    exprs: opts.exprs,
-    run,
-    assetAspect: (a) => {
-      const asset = opts.library.asset(a);
-      return asset ? asset.height / asset.width : 1;
-    },
+  // Sets by content (the simple look per colour, hatches' own patterns), colours and own symbols by index.
+  const sets: SymbolSet[] = [];
+  const setIndex = new Map<string, number>();
+  const setOf = (s: SymbolSet) => {
+    const key = JSON.stringify(s);
+    let k = setIndex.get(key);
+    if (k === undefined) {
+      setIndex.set(key, (k = sets.length));
+      sets.push(s);
+    }
+    return k;
   };
-  const simple = new Map<string, SymbolSet>();
-  const simpleFor = (color: string) => {
-    let s = simple.get(color);
-    if (!s) simple.set(color, (s = symbolsOfLayerStyle(style, color)));
-    return s;
-  };
-  const lookup = (ref: string) => opts.library.symbol(ref);
-  const drawn = new DrawnReader(opts.geometry.drawn(ids, true, opts.clip));
-
+  const colors: string[] = [];
+  const colorIndex = new Map<string, number>();
+  const refs: string[] = [];
+  const refIndex = new Map<string, number>();
+  const simple = new Map<string, number>();
+  const objects = new Int32Array(4 * entities.length);
   entities.forEach((e, i) => {
-    // Every object has a record, also those drawn elsewhere (text).
-    const geom = drawn.read(e);
-    if (e.kind === 'text') return;
     const color = e.color ?? style.color;
-    if (e.kind === 'dimension') {
-      // Dimensions keep their own hairline look (the dimension style is a later step): their layout lines.
-      if (geom?.cls !== 'line') return;
-      const hair = { color, opacity: 1, width: 0, unit: 'px' as const, dash: null, dashOffset: 0, cap: 'butt' as const, join: 'miter' as const, blur: 0, level: LEVEL_BASE.line + 500 };
-      for (const p of geom.paths) sink.stroke(hair, p.pts, false);
-      return;
+    let c = colorIndex.get(color);
+    if (c === undefined) {
+      colorIndex.set(color, (c = colors.length));
+      colors.push(color);
     }
-    if (!geom) return;
-    const target = { entity: e, index: i + 1 };
-    let sets: ResolvedSet[];
-    if (e.kind === 'hatch') sets = [{ symbols: { fill: hatchSymbolOf(e, color) } }];
-    else if (e.symbol) sets = [{ symbols: { [geom.cls]: { ref: e.symbol } } }];
-    else if (style.renderer) sets = resolveRenderer(style.renderer, e, i + 1, env);
-    else sets = [{ symbols: simpleFor(color) }];
-    // No matching rule or category: the renderer leaves the object out (as in QGIS).
-    let drew = false;
-    for (const r of sets) {
-      sink.setScale(r);
-      const own = symbolOf(r.symbols[geom.cls], lookup);
-      if (own) {
-        compileSymbol(own, geom, target, env, sink, LEVEL_BASE[SYMBOL_CLASS[own.type]]);
-        drew = true;
-      } else if (geom.cls === 'fill') {
-        // An area without a fill symbol takes the line symbol on its edges.
-        const edge = symbolOf(r.symbols.line, lookup);
-        if (!edge) continue;
-        compileSymbol(edge, geom, target, env, sink, LEVEL_BASE.line);
-        drew = true;
+    let s = simple.get(color);
+    if (s === undefined) simple.set(color, (s = setOf(symbolsOfLayerStyle(style, color))));
+    let mode = RENDERER;
+    let a = 0;
+    if (e.kind === 'text') mode = SKIP;
+    else if (e.kind === 'dimension') mode = DIMENSION;
+    else if (e.kind === 'hatch') {
+      mode = SET;
+      a = setOf({ fill: hatchSymbolOf(e, color) });
+    } else if (e.symbol) {
+      mode = OWN;
+      let r = refIndex.get(e.symbol);
+      if (r === undefined) {
+        refIndex.set(e.symbol, (r = refs.length));
+        refs.push(e.symbol);
       }
+      a = r;
+    } else if (!style.renderer) {
+      mode = SET;
+      a = s;
     }
-    // Matched, but nothing for this kind of geometry (or the symbol is gone): the simple look, never nothing.
-    if (sets.length && !drew) {
-      sink.setScale(sets[0]);
-      const fallback = symbolOf(simpleFor(color)[geom.cls], lookup);
-      if (fallback) compileSymbol(fallback, geom, target, env, sink, LEVEL_BASE[geom.cls]);
-    }
+    objects.set([mode, a, s, c], 4 * i);
   });
-  return { id, lines: [], fills: [], points: [], styled: sink.finish() };
+  const used = new Set(refs);
+  if (style.renderer) rendererRefs(style.renderer, used);
+  const symbols: Record<string, Symbol> = {};
+  for (const ref of used) {
+    const sym = opts.library.symbol(ref);
+    if (sym) symbols[ref] = sym;
+  }
+  const tiled = new Set<string>();
+  assetsOf([symbols, sets, style.renderer ?? null], tiled);
+  const assets = assetSizes(tiled, (a) => opts.library.asset(a));
+  const program = new CoreStyleProgram(JSON.stringify({ symbols, renderer: style.renderer ?? null, sets, refs, colors, assets }));
+  try {
+    const needs = Object.fromEntries(NEEDS.map((k, i) => [k, !!(program.needs & (1 << i))])) as unknown as ExprNeeds;
+    const table = exprTable(program.fields, needs, entities, opts.layerName);
+    const out = opts.geometry.styled(program, entities.map((e) => e.id), objects, table, opts.clip ?? null, opts.origin, opts.plotScale);
+    return { id, lines: [], fills: [], points: [], styled: styledBatches(out.json, out.data, { palette: opts.palette, plotScale: opts.plotScale, asset: (a) => opts.library.asset(a) }) };
+  } finally {
+    program.free();
+  }
 }

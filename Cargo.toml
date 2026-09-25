@@ -9,9 +9,11 @@ members = [
     "crates/shared/contracts",
     "crates/shared/formats",
     "crates/shared/style-core",
+    "crates/shared/svg-core",
     # Browser bindings (wasm-bindgen) of the shared libraries.
     "crates/wasm/geometry-wasm",
     "crates/wasm/formats-wasm",
+    "crates/wasm/svg-wasm",
     # Server-only libraries: PostgreSQL/PostGIS and the use cases.
     "crates/server/postgres",
     "crates/server/application",

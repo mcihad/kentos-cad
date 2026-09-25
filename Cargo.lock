@@ -1285,6 +1285,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-svg-core"
+version = "0.1.0"
+dependencies = [
+ "kentos-geometry-core",
+ "kentos-style-core",
+ "serde_json",
+]
+
+[[package]]
+name = "kentos-svg-wasm"
+version = "0.1.0"
+dependencies = [
+ "kentos-geometry-core",
+ "kentos-svg-core",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

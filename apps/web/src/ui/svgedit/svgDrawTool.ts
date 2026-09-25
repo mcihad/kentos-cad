@@ -55,8 +55,9 @@ export class DrawTool {
   penDrag(q: Pt): void {
     const n = this.draft[this.draft.length - 1];
     if (n && Math.hypot(q[0] - n.x, q[1] - n.y) > 2 / this.view.scale) {
-      n.out = q;
+      // `in` before `out`: the order the core writes nodes in (the editor compares drawings as text).
       n.in = [2 * n.x - q[0], 2 * n.y - q[1]];
+      n.out = q;
     }
   }
 
@@ -72,7 +73,7 @@ export class DrawTool {
     this.draft = [];
     this.cursor = null;
     if (nodes.length >= 2) {
-      const shape: SvgShape = { id: shapeId(), kind: 'path', subs: [{ nodes, closed }], fill: closed ? 'fill' : 'none', stroke: closed ? 'none' : 'fill', strokeWidth: Math.max(1, host.doc.width / 25) };
+      const shape: SvgShape = { id: shapeId(), kind: 'path', subs: [{ closed, nodes }], fill: closed ? 'fill' : 'none', stroke: closed ? 'none' : 'fill', strokeWidth: Math.max(1, host.doc.width / 25) };
       host.begin();
       host.doc.shapes.push(shape);
       host.commit(host.tool === 'pen' ? 'Kalem' : 'Çizgi');

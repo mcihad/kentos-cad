@@ -23,11 +23,17 @@ export type { CanvasHost, CanvasOptions, ToolId } from './svgView';
 
 type Op =
   | { kind: 'pan'; x: number; y: number; ox: number; oy: number }
-  | { kind: 'move'; p0: Pt; orig: Map<string, SvgShape>; box: Box; sources: Pt[]; narrow: string[] | null }
-  | { kind: 'scale'; handle: number; orig: Map<string, SvgShape>; box: Box }
-  | { kind: 'rotate'; p0: Pt; orig: Map<string, SvgShape>; box: Box }
+  | { kind: 'move'; p0: Pt; orig: Map<string, SvgShape>; box: Box; sources: Pt[]; narrow: string[] | null; moved: boolean }
+  | { kind: 'scale'; handle: number; p0: Pt; orig: Map<string, SvgShape>; box: Box; moved: boolean }
+  | { kind: 'rotate'; p0: Pt; orig: Map<string, SvgShape>; box: Box; moved: boolean }
   | { kind: 'marquee'; p0: Pt; p1: Pt; add: boolean }
   | { kind: 'draw'; p0: Pt; p1: Pt };
+
+/** Screen pixels the pointer travels before a press moves anything (the node tool's node drag uses the same). */
+const DRAG_PX = 3;
+/** Two presses this close in time (ms, as the drawing's select tool) and place (px) are a double click. */
+const DOUBLE_MS = 450;
+const CLICK_SLOP_PX = 4;
 
 export class SvgCanvas implements CanvasView {
   readonly el: HTMLElement;
@@ -39,6 +45,9 @@ export class SvgCanvas implements CanvasView {
   private readonly snapper: Snapper;
   private readonly svg: SVGSVGElement;
   private zoom = 4;
+  /** The left press under way (for double clicks), and the last press that was a click. */
+  private press: { t: number; clientX: number; clientY: number; target: Element; travelled: boolean } | null = null;
+  private lastClick: { t: number; clientX: number; clientY: number } | null = null;
   private ox = 20;
   private oy = 20;
   private op: Op | null = null;
@@ -66,7 +75,6 @@ export class SvgCanvas implements CanvasView {
     this.svg.addEventListener('pointerdown', (e) => this.down(e));
     this.svg.addEventListener('pointermove', (e) => this.move(e));
     this.svg.addEventListener('pointerup', (e) => this.up(e));
-    this.svg.addEventListener('dblclick', (e) => this.dbl(e));
     this.svg.addEventListener('wheel', (e) => this.wheel(e), { passive: false });
     this.el.addEventListener('keydown', (e) => {
       if (e.key === ' ') this.spaceDown = true;
@@ -295,6 +303,7 @@ export class SvgCanvas implements CanvasView {
     if (e.button !== 0) return;
     this.svg.setPointerCapture(e.pointerId);
     const target = e.target as Element;
+    this.press = { t: e.timeStamp, clientX: e.clientX, clientY: e.clientY, target, travelled: false };
     const host = this.host;
     if (this.picking) {
       const pick = this.picking;
@@ -315,7 +324,7 @@ export class SvgCanvas implements CanvasView {
       if (!box) return;
       host.begin();
       const orig = new Map(sel.map((s) => [s.id, structuredClone(s)]));
-      this.op = handle === 'rot' ? { kind: 'rotate', p0: p, orig, box } : { kind: 'scale', handle: Number(handle), orig, box };
+      this.op = handle === 'rot' ? { kind: 'rotate', p0: p, orig, box, moved: false } : { kind: 'scale', handle: Number(handle), p0: p, orig, box, moved: false };
       return;
     }
     switch (tool) {
@@ -340,7 +349,7 @@ export class SvgCanvas implements CanvasView {
           if (sel.some((s) => s.locked)) return;
           host.begin();
           const box = shapesBox(sel)!;
-          this.op = { kind: 'move', p0: p, orig: new Map(sel.map((s) => [s.id, structuredClone(s)])), box, sources: moveSources(sel, box), narrow };
+          this.op = { kind: 'move', p0: p, orig: new Map(sel.map((s) => [s.id, structuredClone(s)])), box, sources: moveSources(sel, box), narrow, moved: false };
         } else {
           this.op = { kind: 'marquee', p0: p, p1: p, add: e.shiftKey };
           if (!e.shiftKey) host.select([]);
@@ -368,6 +377,8 @@ export class SvgCanvas implements CanvasView {
 
   private move(e: PointerEvent): void {
     this.drawing.shift = e.shiftKey;
+    const press = this.press;
+    if (press && !press.travelled && Math.hypot(e.clientX - press.clientX, e.clientY - press.clientY) > CLICK_SLOP_PX) press.travelled = true;
     const p = this.toDoc(e);
     const op = this.op;
     const host = this.host;
@@ -390,11 +401,14 @@ export class SvgCanvas implements CanvasView {
         return;
       case 'move': {
         const d: Pt = [p[0] - op.p0[0], p[1] - op.p0[1]];
+        // A click is no move: nothing moves (or snaps to the grid) until the pointer has travelled.
+        if (!this.travelled(op, p)) return;
         const dd = this.moveSnap(op, d);
         this.replace(op.orig, (s) => transformShape(s, translate(dd[0], dd[1])));
         return;
       }
       case 'scale': {
+        if (!this.travelled(op, p)) return;
         const q = this.snap(p, { exclude: new Set(op.orig.keys()) });
         const b = { ...op.box };
         const h = op.handle;
@@ -418,6 +432,7 @@ export class SvgCanvas implements CanvasView {
         return;
       }
       case 'rotate': {
+        if (!this.travelled(op, p)) return;
         const cx = (op.box.minX + op.box.maxX) / 2;
         const cy = (op.box.minY + op.box.maxY) / 2;
         let deg = ((Math.atan2(p[1] - cy, p[0] - cx) - Math.atan2(op.p0[1] - cy, op.p0[0] - cx)) * 180) / Math.PI;
@@ -438,6 +453,13 @@ export class SvgCanvas implements CanvasView {
         return;
       }
     }
+  }
+
+  /** Whether a move, scale or rotation has begun: the pointer has travelled a few pixels since the press. */
+  private travelled(op: { p0: Pt; moved: boolean }, p: Pt): boolean {
+    if (!op.moved && Math.hypot(p[0] - op.p0[0], p[1] - op.p0[1]) * this.zoom < DRAG_PX) return false;
+    op.moved = true;
+    return true;
   }
 
   /**
@@ -463,7 +485,27 @@ export class SvgCanvas implements CanvasView {
     return [corner[0] - op.box.minX, corner[1] - op.box.minY];
   }
 
+  /**
+   * Double clicks are counted here, not by the browser: the canvas captures
+   * the pointer and re-renders on a press, so the element pressed is gone by
+   * the release and the browser fires neither click nor dblclick.
+   */
   private up(e: PointerEvent): void {
+    const press = this.press;
+    this.press = null;
+    this.release(e);
+    if (!press || press.travelled) {
+      this.lastClick = null;
+      return;
+    }
+    const last = this.lastClick;
+    if (last && press.t - last.t <= DOUBLE_MS && Math.hypot(press.clientX - last.clientX, press.clientY - last.clientY) <= CLICK_SLOP_PX) {
+      this.lastClick = null;
+      this.dbl(press);
+    } else this.lastClick = { t: press.t, clientX: press.clientX, clientY: press.clientY };
+  }
+
+  private release(e: PointerEvent): void {
     const op = this.op;
     this.op = null;
     const host = this.host;
@@ -523,15 +565,16 @@ export class SvgCanvas implements CanvasView {
     }
   }
 
-  private dbl(e: MouseEvent): void {
+  /** A double click: `at` is the second press, `target` what it pressed (by now perhaps re-rendered away; its attributes still read). */
+  private dbl(at: { clientX: number; clientY: number; target: Element }): void {
     const host = this.host;
-    const target = e.target as Element;
-    if (this.rulers.dbl(e, target)) return;
+    const target = at.target;
+    if (this.rulers.dbl(at, target)) return;
     if (host.tool === 'line' || host.tool === 'pen') {
       this.drawing.dropLast();
       return this.drawing.finish(false);
     }
-    if (host.nodeEdit && host.tool === 'node' && this.nodes.dbl(this.toDoc(e), target)) return;
+    if (host.nodeEdit && host.tool === 'node' && this.nodes.dbl(this.toDoc(at), target)) return;
     const id = target.closest('[data-id]')?.getAttribute('data-id');
     const shape = id ? host.doc.shapes.find((s) => s.id === id) : undefined;
     if (shape?.kind === 'path' && !shape.locked) {

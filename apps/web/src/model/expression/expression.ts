@@ -80,7 +80,7 @@ export function compileExpression(source: string): CompileResult {
 export const expressionError = (r: Extract<CompileResult, { ok: false }>) => (r.at > 1 ? `${r.at}. karakterde: ${r.error}` : r.error);
 
 /** Corners of a path or area (holes included), for $köşe. */
-function vertexCount(e: Entity): number | null {
+export function vertexCount(e: Entity): number | null {
   switch (e.kind) {
     case 'polyline':
       return e.pts.length;
@@ -121,15 +121,21 @@ function measuresOf(list: readonly Entity[]): Float64Array {
 const WANT: Record<ExprAs, number> = { value: 0, number: 1, text: 2, bool: 3, textNumber: 4 };
 const NO_NUMBERS = new Float64Array(0);
 
+/** What expressions read of each object, as the core takes it (`exprTable`). */
+export interface ExprTable {
+  readonly texts: string;
+  readonly lens: Int32Array;
+  readonly numbers: Float64Array;
+}
+
 /**
- * The table of what the expression reads (crates/shared/style-core/src/expr/rows.rs
+ * The table of what expressions read (crates/shared/style-core/src/expr/rows.rs
  * has the layout): text slots per object (the fields in order, then the label,
  * the layer name and the kind label, each only when read; a missing value is
- * length −1), number slots (the id, then the vertex count), and the geometry
- * store's measures when a geometry value is read.
+ * length −1), number slots (the id, then the vertex count), one object after
+ * another. A styled layer's table serves all its expressions (`fields` their union).
  */
-function evaluateAll(source: string, fields: readonly string[], needs: ExprNeeds, o: ExprObjects, as: ExprAs): ExprColumn {
-  const list = o.entities;
+export function exprTable(fields: readonly string[], needs: ExprNeeds, list: readonly Entity[], layerName: (id: string) => string): ExprTable {
   // Text slots per object.
   const n = fields.length + [needs.label, needs.layer, needs.kind].filter(Boolean).length;
   // One text, joined as it goes (faster than joining a list of 100 000 at the end).
@@ -149,11 +155,17 @@ function evaluateAll(source: string, fields: readonly string[], needs: ExprNeeds
     // Own attributes only: a field named "constructor" is not the object's prototype.
     for (const f of fields) put(Object.hasOwn(e.attrs, f) ? e.attrs[f] : null);
     if (needs.label) put(e.label ?? null);
-    if (needs.layer) put(o.layerName(e.layerId));
+    if (needs.layer) put(layerName(e.layerId));
     if (needs.kind) put(ENTITY_KIND_LABEL[e.kind]);
     if (needs.id) numbers[k++] = e.id;
     if (needs.vertices) numbers[k++] = vertexCount(e) ?? NaN;
   }
+  return { texts, lens, numbers };
+}
+
+function evaluateAll(source: string, fields: readonly string[], needs: ExprNeeds, o: ExprObjects, as: ExprAs): ExprColumn {
+  const list = o.entities;
+  const { texts, lens, numbers } = exprTable(fields, needs, list, o.layerName);
   const measures = needs.measured ? (o.measures?.() ?? measuresOf(list)) : NO_NUMBERS;
   return column(exprEvaluate(source, list.length, texts, lens, numbers, measures, o.plotScale ?? NaN, WANT[as]));
 }

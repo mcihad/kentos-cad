@@ -1,0 +1,317 @@
+{
+  "label": "y4",
+  "date": "2026-09-24T23:43:13.470Z",
+  "commit": "e0b9168",
+  "dirtyTree": false,
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+    "threads": 4,
+    "memoryGb": 16,
+    "chrome": "Chromium 141.0.7390.37"
+  },
+  "runs": 3,
+  "summary": [
+    {
+      "module": "Stil yöneticisi",
+      "firstInserted": 103.10000000149012,
+      "firstPainted": 220.40000000596046,
+      "firstPaintedRange": [
+        214.60000000149012,
+        239.80000000447035
+      ],
+      "secondPainted": 107.10000000149012,
+      "secondPaintedRange": [
+        89.89999999850988,
+        125.80000000447035
+      ],
+      "fetchedBytes": 13218,
+      "errors": 0
+    },
+    {
+      "module": "Model tasarımcısı",
+      "firstInserted": 75.79999999701977,
+      "firstPainted": 125.20000000298023,
+      "firstPaintedRange": [
+        122.20000000298023,
+        141.5
+      ],
+      "secondPainted": 35.600000001490116,
+      "secondPaintedRange": [
+        29.80000000447035,
+        35.899999998509884
+      ],
+      "fetchedBytes": 11327,
+      "errors": 0
+    },
+    {
+      "module": "SVG düzenleyicisi",
+      "firstInserted": 113.79999999701977,
+      "firstPainted": 163.10000000149012,
+      "firstPaintedRange": [
+        153.10000000149012,
+        163.30000000447035
+      ],
+      "secondPainted": 42.19999999552965,
+      "secondPaintedRange": [
+        36.5,
+        66.39999999850988
+      ],
+      "fetchedBytes": 913638,
+      "errors": 0
+    }
+  ],
+  "loads": [
+    {
+      "module": "Stil yöneticisi",
+      "first": {
+        "inserted": 109.70000000298023,
+        "painted": 239.80000000447035
+      },
+      "second": {
+        "inserted": 23.599999994039536,
+        "painted": 89.89999999850988
+      },
+      "errors": 0,
+      "fetched": [
+        {
+          "path": "/assets/StyleManager-DXa8N58T.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 7217
+        },
+        {
+          "path": "/assets/thumbs-BZJ5Cdt2.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 4805
+        },
+        {
+          "path": "/assets/styleFiles-D4VFYQyz.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 1196
+        }
+      ]
+    },
+    {
+      "module": "Model tasarımcısı",
+      "first": {
+        "inserted": 96.10000000149012,
+        "painted": 141.5
+      },
+      "second": {
+        "inserted": 16.700000002980232,
+        "painted": 35.899999998509884
+      },
+      "errors": 0,
+      "fetched": [
+        {
+          "path": "/assets/ModelDesigner-BCpIFX_N.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 11327
+        }
+      ]
+    },
+    {
+      "module": "SVG düzenleyicisi",
+      "first": {
+        "inserted": 101,
+        "painted": 153.10000000149012
+      },
+      "second": {
+        "inserted": 7.600000001490116,
+        "painted": 36.5
+      },
+      "errors": 0,
+      "fetched": [
+        {
+          "path": "/assets/designerFields-Cnem1Qp3.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 2233
+        },
+        {
+          "path": "/assets/SvgEditor-Dnw9cgn-.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 50239
+        },
+        {
+          "path": "/assets/kentos_svg_wasm_bg-CKwpOsM6.wasm",
+          "mime": "application/wasm",
+          "encoding": "",
+          "bytes": 861166
+        }
+      ]
+    },
+    {
+      "module": "Stil yöneticisi",
+      "first": {
+        "inserted": 89,
+        "painted": 214.60000000149012
+      },
+      "second": {
+        "inserted": 27,
+        "painted": 107.10000000149012
+      },
+      "errors": 0,
+      "fetched": [
+        {
+          "path": "/assets/styleFiles-D4VFYQyz.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 1196
+        },
+        {
+          "path": "/assets/StyleManager-DXa8N58T.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 7217
+        },
+        {
+          "path": "/assets/thumbs-BZJ5Cdt2.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 4805
+        }
+      ]
+    },
+    {
+      "module": "Model tasarımcısı",
+      "first": {
+        "inserted": 75.79999999701977,
+        "painted": 125.20000000298023
+      },
+      "second": {
+        "inserted": 9.800000004470348,
+        "painted": 35.600000001490116
+      },
+      "errors": 0,
+      "fetched": [
+        {
+          "path": "/assets/ModelDesigner-BCpIFX_N.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 11327
+        }
+      ]
+    },
+    {
+      "module": "SVG düzenleyicisi",
+      "first": {
+        "inserted": 126.60000000149012,
+        "painted": 163.30000000447035
+      },
+      "second": {
+        "inserted": 8.199999995529652,
+        "painted": 42.19999999552965
+      },
+      "errors": 0,
+      "fetched": [
+        {
+          "path": "/assets/designerFields-Cnem1Qp3.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 2233
+        },
+        {
+          "path": "/assets/SvgEditor-Dnw9cgn-.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 50239
+        },
+        {
+          "path": "/assets/kentos_svg_wasm_bg-CKwpOsM6.wasm",
+          "mime": "application/wasm",
+          "encoding": "",
+          "bytes": 861166
+        }
+      ]
+    },
+    {
+      "module": "Stil yöneticisi",
+      "first": {
+        "inserted": 103.10000000149012,
+        "painted": 220.40000000596046
+      },
+      "second": {
+        "inserted": 33.600000001490116,
+        "painted": 125.80000000447035
+      },
+      "errors": 0,
+      "fetched": [
+        {
+          "path": "/assets/thumbs-BZJ5Cdt2.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 4805
+        },
+        {
+          "path": "/assets/StyleManager-DXa8N58T.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 7217
+        },
+        {
+          "path": "/assets/styleFiles-D4VFYQyz.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 1196
+        }
+      ]
+    },
+    {
+      "module": "Model tasarımcısı",
+      "first": {
+        "inserted": 21.399999998509884,
+        "painted": 122.20000000298023
+      },
+      "second": {
+        "inserted": 18.80000000447035,
+        "painted": 29.80000000447035
+      },
+      "errors": 0,
+      "fetched": [
+        {
+          "path": "/assets/ModelDesigner-BCpIFX_N.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 11327
+        }
+      ]
+    },
+    {
+      "module": "SVG düzenleyicisi",
+      "first": {
+        "inserted": 113.79999999701977,
+        "painted": 163.10000000149012
+      },
+      "second": {
+        "inserted": 37,
+        "painted": 66.39999999850988
+      },
+      "errors": 0,
+      "fetched": [
+        {
+          "path": "/assets/designerFields-Cnem1Qp3.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 2233
+        },
+        {
+          "path": "/assets/SvgEditor-Dnw9cgn-.js",
+          "mime": "text/javascript",
+          "encoding": "gzip",
+          "bytes": 50239
+        },
+        {
+          "path": "/assets/kentos_svg_wasm_bg-CKwpOsM6.wasm",
+          "mime": "application/wasm",
+          "encoding": "",
+          "bytes": 861166
+        }
+      ]
+    }
+  ]
+}

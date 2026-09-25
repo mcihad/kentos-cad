@@ -1,13 +1,12 @@
 import type { Entity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import type { Symbol } from '../model/style';
-import { compileSymbol, ExprCache, ExprRun, type CompileEnv } from '../style/compile';
-import { styledGeometry } from '../style/geometry';
-import { PrimitiveList, type FillPaint, type MarkerStyle, type PrimUnit, type StrokeStyle, type TileSource } from '../style/primitives';
+import { compileSymbol } from '../style/compile';
+import type { FillPaint, MarkerStyle, Primitives, PrimUnit, StrokeStyle, TileSource } from '../style/primitives';
 import { drawShape } from './canvasShapes';
 import { parseHex, resolveColor, type CanvasPalette } from './color';
-import type { StyleSources } from './styledLayer';
-import { applySvgParams } from './styledSink';
+import { assetSizes, type StyleSources } from './styledLayer';
+import { applySvgParams } from './styledBatches';
 import { TEXT_BOX, type RGBA, type ShapeId } from './types';
 
 /**
@@ -156,23 +155,12 @@ export function drawSymbolPreview(canvas: HTMLCanvasElement, symbol: Symbol, opt
     g.fillRect(0, 0, canvas.width, canvas.height);
   }
   const kind = opts.geometry ?? defaultGeometry(symbol);
-  const exprs = new ExprCache();
-  const compile = (k: number) => {
-    const entity = sampleEntity(kind, cssW / k, cssH / k, opts.attrs ?? SAMPLE_ATTRS);
-    const env: CompileEnv = {
-      plotScale: 1000,
-      exprs,
-      run: new ExprRun(exprs, { entities: [entity], layerName: () => 'Önizleme', plotScale: 1000 }),
-      assetAspect: (a) => {
-        const x = opts.library.asset(a);
-        return x ? x.height / x.width : 1;
-      },
-    };
-    const geom = styledGeometry(entity);
-    const out = new PrimitiveList();
-    if (geom) compileSymbol(symbol, geom, { entity, index: 1 }, env, out);
-    return out;
-  };
+  // Image tiles keep their proportions.
+  const assets = assetSizes(
+    symbol.layers.flatMap((l) => (l.type === 'imageFill' ? [l.asset] : [])),
+    (a) => opts.library.asset(a),
+  );
+  const compile = (k: number): Primitives => compileSymbol(symbol, sampleEntity(kind, cssW / k, cssH / k, opts.attrs ?? SAMPLE_ATTRS), { plotScale: 1000, layerName: 'Önizleme', assets });
   // Legend-like size: a sample of 36 × 22 mm fitted to the canvas; a point symbol is fitted by its own size.
   let k = opts.pxPerMm ?? Math.min(cssW / 36, cssH / 22);
   let out = compile(k);
@@ -202,7 +190,7 @@ export function drawSymbolPreview(canvas: HTMLCanvasElement, symbol: Symbol, opt
 }
 
 /** How far a point symbol reaches from its point, in mm (markers, their offsets, a text's rough width). */
-function markerReach(out: PrimitiveList): number {
+function markerReach(out: Primitives): number {
   let r = 0;
   for (const { style: m } of out.markers) {
     if (m.common.unit === 'px') continue;

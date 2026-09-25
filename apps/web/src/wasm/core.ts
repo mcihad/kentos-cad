@@ -8,6 +8,7 @@ import {
   exprEvaluate as wasmExprEvaluate,
   FaceIndex,
   GeometryStore,
+  StyleProgram,
   hatchLinesXY as wasmHatchLinesXY,
   initSync,
   offsetPathXY as wasmOffsetPathXY,
@@ -97,9 +98,14 @@ const SPECIAL = new Map<string, number>([
 ]);
 const revive = (_key: string, v: unknown) => (typeof v === 'string' && v.charCodeAt(0) === 35 && SPECIAL.has(v) ? SPECIAL.get(v) : v);
 
-/** A core result read back: the special numbers are strings starting with "#". */
+/**
+ * A core result read back: the special numbers are the strings "#NaN",
+ * "#Inf" and "#-Inf". The reviver (a call per value, several times slower)
+ * runs only when one of them is there: colours such as "#AA3300" start with
+ * "#" too.
+ */
 export function readResult(text: string): unknown {
-  return text.includes('"#') ? JSON.parse(text, revive) : JSON.parse(text);
+  return text.includes('"#NaN"') || text.includes('"#Inf"') || text.includes('"#-Inf"') ? JSON.parse(text, revive) : JSON.parse(text);
 }
 
 const special = (_key: string, x: unknown) => (typeof x !== 'number' || Number.isFinite(x) ? x : x !== x ? '#NaN' : x > 0 ? '#Inf' : '#-Inf');
@@ -359,6 +365,33 @@ export function cornerTexts(corners: Float64Array, chars: Float64Array, height: 
 }
 
 /**
+ * A layer's symbols and expressions for one styled build
+ * (crates/shared/style-core/src/style/build.rs `Program`): the attribute names
+ * and variables its expressions read, for the table of values the build takes.
+ * Freed after the build.
+ */
+export class CoreStyleProgram {
+  readonly raw: StyleProgram;
+  /** The program as given (the style fixtures record it). */
+  readonly json: string;
+  /** The attribute names, in the table's order. */
+  readonly fields: string[];
+  /** The variables read, as bits: 1 geometry values, 2 corners, 4 kind, 8 layer, 16 label, 32 position, 64 id, 128 scale. */
+  readonly needs: number;
+
+  constructor(json: string) {
+    this.json = json;
+    this.raw = typed(() => new StyleProgram(json));
+    this.fields = JSON.parse(typed(() => this.raw.fields)) as string[];
+    this.needs = typed(() => this.raw.needs);
+  }
+
+  free(): void {
+    this.raw.free();
+  }
+}
+
+/**
  * The Rust geometry store (docs/adr/0008, S1): a copy of the drawing's
  * objects that picking, snapping and selection query on every pointer move.
  * `src/viewport/picking.ts` keeps one in step with the document. Objects go
@@ -462,6 +495,21 @@ export class CoreStore {
   /** Geometry values of these objects for expressions: `flags, length, area, anchor x, anchor y, 0` each. */
   measures(ids: Float64Array): Float64Array {
     return typed(() => this.raw.measures(ids));
+  }
+
+  /**
+   * A layer through the style engine (crates/shared/style-core/src/style/build.rs):
+   * `objects` four numbers per id (how it is drawn, its set or symbol, the set
+   * of its simple look, its colour), the program's table of values, the box
+   * construction lines are clipped to, the batches' origin, the plot scale.
+   * The batches' descriptions (JSON) and their numbers one after another.
+   */
+  buildStyled(program: CoreStyleProgram, ids: Float64Array, objects: Int32Array, table: { texts: string; lens: Int32Array; numbers: Float64Array }, clip: { minX: number; minY: number; maxX: number; maxY: number } | null, origin: { x: number; y: number }, plotScale: number): { json: string; data: Float32Array } {
+    return typed(() => {
+      const r = this.raw.buildStyled(program.raw, ids, objects, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale);
+      const json = r.json;
+      return { json, data: r.intoData() };
+    });
   }
 
   /** Ids of objects on every layer whose box overlaps the rectangle, in the document's order (the "visible" scope). */

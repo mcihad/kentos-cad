@@ -961,6 +961,71 @@ try {
     await b.key('Escape');
     await closeEditor();
 
+    // Clicks on the SVG canvas. The editor counts double clicks itself (the canvas captures the pointer and
+    // re-renders on a press, so the browser fires no dblclick): a double click ends a polyline, opens a path's
+    // nodes, turns a node smooth and back, adds a node on a segment. A still click on one of two chosen shapes
+    // narrows the choice and moves nothing (no snap to the grid), with no undo step.
+    await b.eval(`window.kentos.commands.execute('style.svgEditor')`);
+    await sleep(600);
+    const mouse = (type, [x, y], buttons = 0) => b.send('Input.dispatchMouseEvent', { type, x, y, button: type === 'mouseMoved' && !buttons ? 'none' : 'left', buttons, clickCount: 1 });
+    const stroke = async (from, to) => {
+      await mouse('mouseMoved', from);
+      await mouse('mousePressed', from, 1);
+      await mouse('mouseMoved', to, 1);
+      await mouse('mouseReleased', to);
+      await sleep(60);
+    };
+    const dblAt = async (x, y) => {
+      const p = await docPt(x, y);
+      await b.click(...p);
+      await b.click(...p, { clickCount: 2 });
+      await sleep(250);
+    };
+    const stage = () => b.eval(`document.querySelector('.svge__stage').focus()`);
+    await stage();
+    await b.key('l');
+    await b.click(...(await docPt(20, 30)));
+    await b.click(...(await docPt(50, 60)));
+    await dblAt(80, 30);
+    const polyline = await pathD();
+    await stage();
+    await b.key('v');
+    await b.key('Escape');
+    await dblAt(35, 45);
+    const nodesShown = await b.eval(`document.querySelectorAll('[data-node$=",node"]').length`);
+    await dblAt(50, 60);
+    const smooth = await pathD();
+    await dblAt(50, 60);
+    const corner = await pathD();
+    await dblAt(65, 45);
+    const inserted = await pathD();
+    check(
+      'SVG editor double clicks end a polyline, open its nodes, turn a node smooth and back and add a node on a segment',
+      polyline === 'M20 30L50 60L80 30' && nodesShown === 3 && /^M20 30C.+ 50 60C.+ 80 30$/.test(smooth) && corner === polyline && inserted === 'M20 30L50 60L65 45L80 30',
+      JSON.stringify({ polyline, nodesShown, smooth, corner, inserted }),
+    );
+    await stage();
+    await b.key('Escape');
+    await b.key('Escape');
+    await b.key('b');
+    await stroke(await docPt(20, 75), await docPt(30, 70));
+    await stroke(await docPt(45, 80), await docPt(45, 80));
+    await stroke(await docPt(70, 85), await docPt(70, 85));
+    await b.key('Enter');
+    await b.key('v');
+    await b.key('a', { ctrl: true });
+    const selectedRows = () => b.eval(`document.querySelectorAll('.svge__row[aria-selected="true"]').length`);
+    const bothChosen = await selectedRows();
+    const drawnBefore = JSON.stringify(await svgShapes());
+    await stroke(await docPt(45, 80), await docPt(45, 80));
+    const narrowed = await selectedRows();
+    const unmoved = JSON.stringify(await svgShapes()) === drawnBefore;
+    await stage();
+    await b.key('z', { ctrl: true });
+    const leftAfterUndo = (await svgShapes()).length;
+    check('SVG editor narrows a choice by a still click on a pen path, moving nothing and with no undo step', bothChosen === 2 && narrowed === 1 && unmoved && leftAfterUndo === 1, `${bothChosen} → ${narrowed}, ${unmoved ? 'yerinde' : 'kaydı'}, geri almadan sonra ${leftAfterUndo} şekil`);
+    await closeEditor();
+
     // Questions ask in a window of their own over the editor (ui/widgets/confirm.ts, DESIGN.md §7.9.1). An editor
     // with nothing changed closes at once; with a change, × asks: Esc, Vazgeç and a second × go back to the work,
     // "Kaydetmeden kapat" closes, "Kaydet ve kapat" saves first. Tab stays in the question.

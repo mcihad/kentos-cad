@@ -14,11 +14,16 @@ import { describe, expect, it } from 'vitest';
  * UPPER_CASE stride or a `.length`. Unary `+` reads a number from typed
  * text. The few other exceptions are listed below with their reason.
  *
- * The expression language is the style core's (crates/shared/style-core,
- * docs/adr/0008 “İfade dili”): its TypeScript only builds the table of what
- * an expression reads and reads the answer back. The style engine and the
- * SVG editor keep their own geometry for now (the next style-core slices,
- * docs/DEVIR.md), so `src/style` is not checked; screen-space drawing
+ * The expression language and the style compiler are the style core's
+ * (crates/shared/style-core, docs/adr/0008 “İfade dili”, “Stil
+ * derleyicisi”): their TypeScript builds the table of what expressions read
+ * and the program of a layer's symbols, and reads the answers back. The SVG
+ * editor's geometry, its file reading and writing included, is the SVG
+ * core's (crates/shared/svg-core, “SVG düzenleyicisi”): style/svg only
+ * passes calls. The style window's classes (breaks of a value range), the
+ * symbol previews' sample shapes, the page's half of a styled layer
+ * (colours, atlas images, how far a batch reaches) and the editor's views
+ * (ui/svgedit: zoom, drag, rulers) are presentation; screen-space drawing
  * (pixel offsets on the overlay) is presentation, not geometry.
  */
 
@@ -33,9 +38,12 @@ const SOURCES = import.meta.glob<string>(
     './geom/*.ts',
     './ops/*.ts',
     './expression/*.ts',
+    '../style/svg/*.ts',
     '!./**/*.test.ts',
+    '!../style/svg/*.test.ts',
     '!./geom/goldenCases.ts',
     '!./expression/cases.ts',
+    '!../style/svg/testSetup.ts',
     './geometry.ts',
     './entities.ts',
     '../render/triangulate.ts',
@@ -45,6 +53,10 @@ const SOURCES = import.meta.glob<string>(
     '../viewport/picking.ts',
     '../viewport/storeRecords.ts',
     '../processing/geometry.ts',
+    '../style/compile.ts',
+    '../style/geometry.ts',
+    '../style/primitives.ts',
+    '../render/styledLayer.ts',
   ],
   { query: '?raw', import: 'default', eager: true },
 );
@@ -56,6 +68,15 @@ const repoPath = (key: string) => new URL(key, 'file:///src/model/').pathname.sl
 const EXCEPTIONS: Record<string, Record<string, string>> = {
   'src/model/geometry.ts': {
     extendBounds: 'Growing a box by a point is bookkeeping (min, max and the padding the caller asks for), not geometry.',
+  },
+  'src/style/svg/svgModel.ts': {
+    shapeId: 'A counter that makes ids unique (bookkeeping, not geometry).',
+  },
+  'src/style/svg/importSvg.ts': {
+    newGroup: 'A counter that makes group ids unique (bookkeeping, not geometry).',
+  },
+  'src/style/primitives.ts': {
+    '(modül)': 'Definitions, not calculations: a CSS pixel on paper (25.4/96 mm) and the shape parameters the shaders take when a symbol gives none (an arc opening of half a turn).',
   },
   'src/model/expression/expression.ts': {
     put: 'Joining the table’s texts into the one text the core reads (text, not arithmetic).',

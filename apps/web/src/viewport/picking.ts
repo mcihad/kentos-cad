@@ -7,7 +7,8 @@ import type { Edge } from '../model/geom/intersect';
 import type { LayerNode, LayerStore } from '../model/layers';
 import { transformedFrom } from '../model/ops/transform';
 import type { ExtendResult, TrimResult } from '../model/ops/trim';
-import { CoreStore } from '../wasm/core';
+import type { ExprTable } from '../model/expression/expression';
+import { CoreStore, type CoreStyleProgram } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 import { DEFAULT_LABELS, labelRule, readGrips, type GripSet } from './storeRecords';
 
@@ -304,10 +305,16 @@ export class PickIndex {
     return this.store.drawn(Float64Array.from(ids), oriented, clip ?? null);
   }
 
-  /** Their geometry values for expressions (style/geometry.ts `measuredAt`). */
+  /** Their geometry values for expressions (model/expression/expressionLib.ts `measuredAt`). */
   measures(ids: readonly number[]): Float64Array {
     this.sync();
     return this.store.measures(Float64Array.from(ids));
+  }
+
+  /** A layer through the style engine, next to its geometry (render/styledLayer.ts). */
+  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number): { json: string; data: Float32Array } {
+    this.sync();
+    return this.store.buildStyled(program, Float64Array.from(ids), objects, table, clip, origin, plotScale);
   }
 
   /** Ids of objects on every layer whose box overlaps `r`, in the document's order (the processing tools' "visible" scope). */

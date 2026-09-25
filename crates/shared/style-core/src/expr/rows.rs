@@ -19,7 +19,7 @@
 //!   outside symbol drawing.
 
 use super::value::{into_text, to_number, to_text, truthy};
-use super::{Expr, Measured, Scope, Value};
+use super::{Expr, Measured, Needs, Scope, Value};
 
 /// What the caller wants of each value: as it is, a number (empty when it is
 /// not one), text, true/false (the last two keep "empty" apart), or the
@@ -86,7 +86,7 @@ pub const BOOL: u8 = 3;
 pub const MEASURE_STRIDE: usize = 6;
 
 /// Where each read value sits in a row.
-struct Layout {
+pub struct Layout {
     text_slots: usize,
     label: Option<usize>,
     layer: Option<usize>,
@@ -94,23 +94,26 @@ struct Layout {
     number_slots: usize,
     id: Option<usize>,
     vertices: Option<usize>,
+    measured: bool,
 }
 
 impl Layout {
-    fn of(e: &Expr) -> Layout {
-        let mut t = e.fields.len();
+    /// The layout of a table read by expressions with `fields` field names
+    /// in all (their union) and these variables.
+    pub fn new(fields: usize, needs: Needs) -> Layout {
+        let mut t = fields;
         let slot = |on: bool, next: &mut usize| {
             on.then(|| {
                 *next += 1;
                 *next - 1
             })
         };
-        let label = slot(e.needs.label, &mut t);
-        let layer = slot(e.needs.layer, &mut t);
-        let kind = slot(e.needs.kind, &mut t);
+        let label = slot(needs.label, &mut t);
+        let layer = slot(needs.layer, &mut t);
+        let kind = slot(needs.kind, &mut t);
         let mut k = 0;
-        let id = slot(e.needs.id, &mut k);
-        let vertices = slot(e.needs.vertices, &mut k);
+        let id = slot(needs.id, &mut k);
+        let vertices = slot(needs.vertices, &mut k);
         Layout {
             text_slots: t,
             label,
@@ -119,36 +122,84 @@ impl Layout {
             number_slots: k,
             id,
             vertices,
+            measured: needs.measured,
+        }
+    }
+
+    fn of(e: &Expr) -> Layout {
+        Layout::new(e.fields.len(), e.needs)
+    }
+}
+
+/// The objects' values as expressions read them, split into slots once.
+pub struct Table<'a> {
+    layout: Layout,
+    texts: Vec<Option<&'a str>>,
+    input: RowsInput<'a>,
+}
+
+impl<'a> Table<'a> {
+    /// Refuses a table whose sizes do not match the layout.
+    pub fn new(input: RowsInput<'a>, layout: Layout) -> Result<Table<'a>, String> {
+        let n = input.n;
+        if input.text_lens.len() != n * layout.text_slots
+            || input.numbers.len() != n * layout.number_slots
+            || (layout.measured && input.measures.len() != n * MEASURE_STRIDE)
+        {
+            return Err(format!(
+                "İfade tablosu ifadeye uymuyor ({n} nesne, {} yazı, {} sayı, {} ölçü).",
+                input.text_lens.len(),
+                input.numbers.len(),
+                input.measures.len()
+            ));
+        }
+        let texts = split(input.texts, input.text_lens)?;
+        Ok(Table {
+            layout,
+            texts,
+            input,
+        })
+    }
+
+    /// Object `i` as an expression sees it; `slots` maps the expression's
+    /// fields to the table's (None: the same).
+    pub fn row<'b>(&'b self, i: usize, slots: Option<&'b [usize]>) -> Row<'a, 'b> {
+        Row {
+            i,
+            slots,
+            table: self,
         }
     }
 }
 
-struct Row<'a, 'b> {
+pub struct Row<'a, 'b> {
     i: usize,
-    layout: &'b Layout,
-    texts: &'b [Option<&'a str>],
-    input: &'b RowsInput<'a>,
+    slots: Option<&'b [usize]>,
+    table: &'b Table<'a>,
 }
 
 impl Row<'_, '_> {
     fn text(&self, slot: Option<usize>) -> Option<&str> {
-        slot.and_then(|s| self.texts[self.i * self.layout.text_slots + s])
+        let t = self.table;
+        slot.and_then(|s| t.texts[self.i * t.layout.text_slots + s])
     }
 
     fn number(&self, slot: Option<usize>) -> Option<f64> {
-        let x = self.input.numbers[self.i * self.layout.number_slots + slot?];
+        let t = self.table;
+        let x = t.input.numbers[self.i * t.layout.number_slots + slot?];
         (!x.is_nan()).then_some(x)
     }
 }
 
 impl Scope for Row<'_, '_> {
     fn field(&self, i: usize) -> Option<&str> {
-        self.texts[self.i * self.layout.text_slots + i]
+        let slot = self.slots.map_or(Some(i), |s| s.get(i).copied());
+        self.text(slot)
     }
 
     fn measured(&self) -> Measured {
         let k = self.i * MEASURE_STRIDE;
-        let Some(m) = self.input.measures.get(k..k + MEASURE_STRIDE) else {
+        let Some(m) = self.table.input.measures.get(k..k + MEASURE_STRIDE) else {
             return Measured::default();
         };
         let flags = m[0] as u32;
@@ -160,19 +211,19 @@ impl Scope for Row<'_, '_> {
     }
 
     fn vertices(&self) -> Option<f64> {
-        self.number(self.layout.vertices)
+        self.number(self.table.layout.vertices)
     }
 
     fn kind(&self) -> &str {
-        self.text(self.layout.kind).unwrap_or("")
+        self.text(self.table.layout.kind).unwrap_or("")
     }
 
     fn layer(&self) -> &str {
-        self.text(self.layout.layer).unwrap_or("")
+        self.text(self.table.layout.layer).unwrap_or("")
     }
 
     fn label(&self) -> Option<&str> {
-        self.text(self.layout.label)
+        self.text(self.table.layout.label)
     }
 
     fn index(&self) -> f64 {
@@ -180,11 +231,12 @@ impl Scope for Row<'_, '_> {
     }
 
     fn id(&self) -> f64 {
-        self.number(self.layout.id).unwrap_or(f64::NAN)
+        self.number(self.table.layout.id).unwrap_or(f64::NAN)
     }
 
     fn scale(&self) -> Option<f64> {
-        (!self.input.scale.is_nan()).then_some(self.input.scale)
+        let s = self.table.input.scale;
+        (!s.is_nan()).then_some(s)
     }
 }
 
@@ -213,32 +265,25 @@ fn split<'a>(texts: &'a str, lens: &[i32]) -> Result<Vec<Option<&'a str>>, Strin
 
 /// Evaluates `e` for every object of the table, each value as `want` asks.
 pub fn evaluate_rows(e: &Expr, input: &RowsInput, want: As) -> Result<Column, String> {
-    let layout = Layout::of(e);
     let n = input.n;
-    if input.text_lens.len() != n * layout.text_slots
-        || input.numbers.len() != n * layout.number_slots
-        || (e.needs.measured && input.measures.len() != n * MEASURE_STRIDE)
-    {
-        return Err(format!(
-            "İfade tablosu ifadeye uymuyor ({n} nesne, {} yazı, {} sayı, {} ölçü).",
-            input.text_lens.len(),
-            input.numbers.len(),
-            input.measures.len()
-        ));
-    }
-    let texts = split(input.texts, input.text_lens)?;
+    let table = Table::new(
+        RowsInput {
+            n,
+            texts: input.texts,
+            text_lens: input.text_lens,
+            numbers: input.numbers,
+            measures: input.measures,
+            scale: input.scale,
+        },
+        Layout::of(e),
+    )?;
     let mut out = Column {
         kinds: Vec::with_capacity(n),
         numbers: Vec::with_capacity(n),
         ..Column::default()
     };
     for i in 0..n {
-        let row = Row {
-            i,
-            layout: &layout,
-            texts: &texts,
-            input,
-        };
+        let row = table.row(i, None);
         match want.convert(e.evaluate(&row)) {
             Value::Null => {
                 out.kinds.push(EMPTY);

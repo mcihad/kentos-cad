@@ -26,7 +26,7 @@ Kullanıcının kararları (2026-09-24):
 ### Tek kaynak
 
 - Belgeye yazılan ya da bir CAD kararı veren her hesap `geometry-core`'dadır. TypeScript'te kalan cephe (`apps/web/src/wasm/core.ts` ve çevrilen `model/geom`, `model/ops` modülleri) yalnız çağırır, paketler ve açar; koordinat aritmetiği yapmaz. Bunu `apps/web/src/model/singleSource.test.ts` denetler (S3c).
-- Kamera, ekran pikseli ve üst katman çizim hesabı TS'te kalır. Stil motoru, ifade dili ve SVG düzenleyicisinin kendi geometrisi `style-core`'un işidir; o zamana kadar TS'te kalır ve geometriyi çekirdekten alır.
+- Kamera, ekran pikseli ve üst katman çizim hesabı TS'te kalır. İfade dili ve stil motoru `style-core`'da, SVG düzenleyicisinin geometrisi (dosyasının okunması ve yazılması dahil) `svg-core`'dadır (aşağıda “İfade dili”, “Stil derleyicisi”, “SVG düzenleyicisi”).
 - Bir modülün TS algoritması şu dört koşulla silinir (S3c'de son TS referansları da silindi; style-core'un taşınması aynı koşullara uyar):
   - parity testi derin koşuda (`PARITY_CASES=20000`) temiz geçer;
   - sonuçlar golden'a dondurulur;
@@ -127,7 +127,7 @@ Kullanıcının kararları (2026-09-24):
 
 ### İlkel modüller (S3b)
 
-- **Kapsam:** `model/geometry.ts`'in ölçüleri, `geom/affine`, `arc`, `bulge`, `intersect`, `ellipse`, `spline`, `model/entities.ts` ve `render/triangulate.ts` çekirdeğin cepheleridir; TS algoritmaları silindi. Stil motoru, ifade dili ve SVG düzenleyicisinin kendi geometrisi dışında TS'te geometri algoritması kalmadı. TS'te kalanlar hesap değil kayıttır: `Vec2` ve `Bounds` tipleri, kutu büyütme (`emptyBounds`, `extendBounds`, `isEmptyBounds`), `bulgeAt` (diziden okuma), `entityGeometry` (alanları ayıklama), sabitler (`TAU` sayı olarak, `IDENTITY`, `CONSTRUCTION_REACH`), etiket tabloları ve `polygonRing`'in yaysız halkayı çağrısız, olduğu gibi döndürmesi.
+- **Kapsam:** `model/geometry.ts`'in ölçüleri, `geom/affine`, `arc`, `bulge`, `intersect`, `ellipse`, `spline`, `model/entities.ts` ve `render/triangulate.ts` çekirdeğin cepheleridir; TS algoritmaları silindi. O zaman TS'te geometri algoritması yalnız stil motoru, ifade dili ve SVG düzenleyicisinde kalmıştı; üçü de sonra taşındı (style-core Y1–Y4). TS'te kalanlar hesap değil kayıttır: `Vec2` ve `Bounds` tipleri, kutu büyütme (`emptyBounds`, `extendBounds`, `isEmptyBounds`), `bulgeAt` (diziden okuma), `entityGeometry` (alanları ayıklama), sabitler (`TAU` sayı olarak, `IDENTITY`, `CONSTRUCTION_REACH`), etiket tabloları ve `polygonRing`'in yaysız halkayı çağrısız, olduğu gibi döndürmesi.
 - **Sayı alan girişler:** `dist`, `angleDeg`, `bearingGrad` ve `distToSegment` araçlarda imleç hareketi başına çağrılır. JSON yerine sayı alan girişlerden geçer (`coreDist` …; çağrı başına kapanış ya da dizi ayrılmaz): `dist` çağrı başına ~0,05 µs, JS `Math.hypot` 0,02 µs.
 - **Kazıma tamponu:** halka ölçüleri (`signedArea`, `pathLength`, `centroid`, `pointInPolygon`) noktaları çekirdeğin belleğindeki kalıcı bir tampona doğrudan yazar, yanıt da oradan okunur (`crates/wasm/geometry-wasm` `scratch`); çağrı iki tarafta da bellek ayırmaz. Stil motoru katman kurarken yazı ve merkez işaretleri için her alanda `interiorPoint` → `centroid` çağırır. 50 000 beş köşeli halkada `centroid`: `Float64Array` giren ve dönen ilk sürüm 44–81 ms, tamponla 16–31 ms, eski TS 2–10 ms; `interiorPoint` 53–58 ms'den 13–25 ms'ye.
 - **Çok nesneye bakan yerler depodan:** tümünü göster ve seçime yakınlaş, panonun taban noktası ve kutupsal dizinin seçim ortası (her önizleme karesinde) geometri deposunun `extent(ids)` sorgusunu kullanır (`view.extent`). Nesne başına `entityBounds` JSON çağrısı 80 bin nesnede ~1 s olurdu. `CadDocument.bounds` testler için kalır (nesne başına çağrı).
@@ -143,7 +143,7 @@ Kullanıcının kararları (2026-09-24):
   - `processing/runs.test.ts`: her yerleşik araç rastgele değerlerle sayfada ve worker'ın iş işleyicisinde bit bit aynı sonucu verir; “görünen” kapsam görünümün deposundan ve kendi deposundan aynı çıkar; ifade önizlemesi depo değerleriyle ve nesne başına cephelerle aynıdır.
   - Yanıtların kendisi donmuş dosyalarla sınanır; dosyalar TS'ten kaydedildiği gibi kalır.
 - **Kaydediciler çekirdekten:** `record-calls`, `record-store` ve `record-store-processing` beklenen yanıtı artık çekirdekten alır; bir durumu yeniden yazmak bilinçli bir golden değişikliğidir ve farkı okunur (§23.3 robust kararlar gibi). Çevrilen kaydediciler mevcut dosyaları yeniden üretmeyi denedi: `store-processing.json` bayt bayt aynı çıktı; `store-v1.json`'da 33 durumda 41 sayı son bitte farklı (en çok 1,4·10⁻¹⁴ m, V8 ile libm'in sin/cos farkı), durum seçimi aynı. Çağrı kaydedicisi de bütün kümelerde aynı durumları seçti; farklar son bitte (bağıl en çok 3·10⁻¹⁵), bir P6 durumunda ise üretecin girdisi değişti (S3a'da tam elipsin yolu kapalı oldu; iki kayıt da kendi girdisiyle tutarlı). Donmuş dosyalar TS'ten kaydedildiği gibi kaldı.
-- **Tek kaynak bekçisi** (`apps/web/src/model/singleSource.test.ts`): `model/geom` ve `model/ops`'taki bütün dosyalar (test ve test desteği dışında; yeni dosya kendiliğinden girer) ve depo okuyucuları (`model/geometry.ts`, `entities.ts`, `render/triangulate.ts`, `tools/constructions.ts`, `coordinateInput.ts`, `viewport/objectTracking.ts`, `picking.ts`, `storeRecords.ts`, `processing/geometry.ts`) TypeScript derleyicisinin sözdizimi ağacıyla okunur; aritmetik işleç (`+ - * / % **` ve atamalı biçimleri, eksi işareti) ya da `Math.` bulunursa test düşer ve iletisi hesabı çekirdekte yazıp `op()` ile çağırmayı söyler. Düz dizilerden okuma serbesttir: her işlenen bir dizinse (tam sayı, `i`/`j`/`k`/`n`/`at`, BÜYÜK_HARFLİ adım, `.length`). Tekli artı yazılan metinden sayı okur. Tek istisna gerekçesiyle `extendBounds`'tur (kutu büyütmek kayıttır); artık gerekmeyen istisna da testi düşürür. `dimensionLabel` birleştirmeyi şablon metinle yapar. Stil motoru, ifade dili ve SVG düzenleyicisi kapsam dışıdır (style-core); ekran pikseli çizimi (`tools/tracking.ts` `drawTracking`) gösterimdir. Bekçinin kendisi bir örnek metinle sınanır: yeni bir `model/geom` dosyasında `Math.sqrt` ve bir cephede `(a.x + b.x) / 2` yakalandı.
+- **Tek kaynak bekçisi** (`apps/web/src/model/singleSource.test.ts`): `model/geom` ve `model/ops`'taki bütün dosyalar (test ve test desteği dışında; yeni dosya kendiliğinden girer) ve depo okuyucuları (`model/geometry.ts`, `entities.ts`, `render/triangulate.ts`, `tools/constructions.ts`, `coordinateInput.ts`, `viewport/objectTracking.ts`, `picking.ts`, `storeRecords.ts`, `processing/geometry.ts`) TypeScript derleyicisinin sözdizimi ağacıyla okunur; aritmetik işleç (`+ - * / % **` ve atamalı biçimleri, eksi işareti) ya da `Math.` bulunursa test düşer ve iletisi hesabı çekirdekte yazıp `op()` ile çağırmayı söyler. Düz dizilerden okuma serbesttir: her işlenen bir dizinse (tam sayı, `i`/`j`/`k`/`n`/`at`, BÜYÜK_HARFLİ adım, `.length`). Tekli artı yazılan metinden sayı okur. Tek istisna gerekçesiyle `extendBounds`'tur (kutu büyütmek kayıttır); artık gerekmeyen istisna da testi düşürür. `dimensionLabel` birleştirmeyi şablon metinle yapar. Stil motoru, ifade dili ve SVG düzenleyicisi o zaman kapsam dışıydı; taşındıkça bekçiye girdiler (`model/expression`, `style/compile.ts` …, `style/svg`). Ekran pikseli çizimi (`tools/tracking.ts` `drawTracking`) gösterimdir. Bekçinin kendisi bir örnek metinle sınanır: yeni bir `model/geom` dosyasında `Math.sqrt` ve bir cephede `(a.x + b.x) / 2` yakalandı.
 
 ### İşlem araçları ve worker (S4)
 
@@ -181,7 +181,7 @@ Kullanıcının kararları (2026-09-24):
   - **Ekran pikseli:** sürükleme eşikleri (`SelectTool` üç yerde, `modifyTools` ve `editTools` seçim pencereleri, model tasarımcısında `ModelCanvas` ve `modelPalette`); tutamaç yakalama (`ViewportController.gripAt`) ve kenar ortası tutamacının 28 px sınırı (`overlay.midGripVisible`); dik açı işareti (`perpTools.unitScreen`); yol boyunca etiketin ekrandaki açısı (`overlay.drawLabels`); izleme ve kutupsal ışınların ekrana çizimi (`overlay.drawObjectTracking`, `tracking.drawTracking`).
   - **Kamera:** ölçek çubuğunun yuvarlak uzunluğu (`overlay.drawScaleBar`), yakınlaştırma adımı (`ViewportController`, log2), sonsuz doğru önizlemelerinin görünümü aşan boyu (`constructionTools.strokeInfinite`, `perpTools.drawRef`, `pointCalc`'ın referans doğrusu). Köşe araçlarının adımı görünümden gelir (dört piksel), yuvarlama çekirdektedir.
   - **Okumaların biçimi:** radyandan dereceye ya da grada çevirme ve `toFixed`; gösterimdir, belgeye dönmez.
-  - **SVG düzenleyicisi** (`apps/web/src/ui/svgedit/*`): sembol tuvalinin kendi geometrisi; `style-core` işidir (DEVIR “Kapsam dışı”).
+  - **SVG düzenleyicisi** (`apps/web/src/ui/svgedit/*`): tuvalin yakınlaştırması, sürükleme eşikleri, cetveller; geometrisi `svg-core`'dadır (“SVG düzenleyicisi”).
 - **Doğrulama:**
   - Çağrı kümeleri `s5-input` (11 işlem) ve `s5-tools` (28 işlem): adlı sınır durumları (eksenler, tam tur, çakışık noktalar, tam 1e-9 uzaklık, paralel kenarlar, 10'un kuvveti olan toleranslar, TM koordinatları) ve tohumlu rastgele çağrılar. Derin koşu (20 000) temiz geçti. Donmuş dosyalar (`calls-s5-input.json`, `calls-s5-tools.json`) native ve WASM'da geçer.
   - Kutupsal izleme hizaları rastgele noktalarla üretilir. Üç hizanın bir noktada kesiştiği ızgara durumunda eşit uzaklıktaki kesişimlerden hangisinin seçileceğini sin/cos'un son biti belirlerdi; eksen hizaları tam olduğu için ızgara noktaları yalnız onlarla kullanılır.
@@ -215,7 +215,7 @@ Kullanıcının kararları (2026-09-24):
 
 ### İfade dili (style-core Y1)
 
-İşlem araçlarının ve stil motorunun ifade dili (`Nitelik = 'Arsa' ve $alan > 500`, `'P' || doldur($sıra, 5)`) TypeScript'ten Rust'a taşındı; stil motorunun geometrisi ve SVG düzenleyicisi sıradaki dilimlerdir (DEVIR).
+İşlem araçlarının ve stil motorunun ifade dili (`Nitelik = 'Arsa' ve $alan > 500`, `'P' || doldur($sıra, 5)`) TypeScript'ten Rust'a taşındı; stil motorunun geometrisi ve SVG düzenleyicisi sonraki dilimlerde taşındı (aşağıda).
 
 - **Yer:** yeni crate `crates/shared/style-core` (§14 `style-core`): `kentos-geometry-core`'a bağlıdır; DOM, WASM ve ağ bilmez; `clippy.toml` std aşkın işlevlerini yasaklar.
   - `expr/`: sözcükler (konumlar UTF-16 birimi), sözdizimi (öncelik tırmanması; TS'le aynı Türkçe hata iletileri ve konumları), işlevler ve değişkenler (adlar, takma adlar, imzalar, açıklamalar), değer kuralları, toplu değerlendirme (`rows.rs`).
@@ -223,7 +223,7 @@ Kullanıcının kararları (2026-09-24):
 - **Sınır:**
   - Çağrı tablosunda `exprCompile` (alanlar, okunanlar, hata ve konumu) ve `exprCatalog` (arayüzün işlev ve değişken menüleri); `geometry-wasm`'ın tablosu önce `geometry-core`'a, sonra `style-core`'a bakar (numaraları öncekilerin ardından gelir).
   - Toplu değerlendirme tipli bir giriştir: `exprEvaluate(kaynak, n, metinler, uzunluklar, sayılar, ölçüler, ölçek, biçim)`. Nesneler ifadenin okuduğu bir tablo olarak geçer: nesne başına metin yuvaları (alanlar ifadedeki sırayla, sonra etiket, katman adı ve tür adı; yalnız okunanlar; tek metinde UTF-16 uzunluklarıyla, −1 yok), sayı yuvaları (numara, köşe sayısı; NaN yok) ve bir geometri değeri okunuyorsa deponun `measures` yanıtı olduğu gibi (nesne başına altı sayı). Değerler sütun olarak döner: tür (0 boş, 1 sayı, 2 metin, 3 doğru/yanlış), sayılar ve UTF-16 uzunluklu metinler. İfade her çağrıda yeniden derlenir (mikrosaniyeler); çekirdekte derlenmiş ifade yaşamaz.
-  - Biçimler: değerin kendisi, sayı (sayı değilse boş), metin, doğru/yanlış (bu ikisinde boş boş kalır) ve metninin okunduğu sayı (stil penceresinin sınıfları, 12 anlamlı basamak). İfadeyle seç ve koşullar doğru/yanlış, öznitelik hesapla metin ister; stil motoru katman kurulumu başına ifade ve biçim başına bir sütun alır (`style/compile.ts` `ExprRun`; ölçüler bir kez).
+  - Biçimler: değerin kendisi, sayı (sayı değilse boş), metin, doğru/yanlış (bu ikisinde boş boş kalır) ve metninin okunduğu sayı (stil penceresinin sınıfları, 12 anlamlı basamak). İfadeyle seç ve koşullar doğru/yanlış, öznitelik hesapla metin ister. Stil motoru önce katman kurulumu başına ifade ve biçim başına bir sütun alıyordu; Y2–Y3'ten beri katmanı çekirdekte kurar ve programın bütün ifadeleri tek tabloyu okur (“Stil derleyicisi”).
 - **Birebir taşıma:**
   - Kaynaklar ve nesneler tohumlu üreteçle (`apps/web/src/model/expression/cases.ts`): geçerli ve bozuk kaynaklar, Türkçe harfler, sayı gibi okunan metinler, eksik alanlar, ölçüsü olmayan nesneler. TS ile çekirdek 20 000 rastgele kaynakta beş biçimin hepsinde aynı değeri, aynı hatayı ve konumunu verdi. Mutasyon denetimi: eşitlikte yuvarlama yönü ya da sıralamanın harf büyüklüğü düzeyi değiştirilince test düşer.
   - TS silindi (başvuru kopyası ve karşılaştırma testi). Dondurulmuş yanıtlar `fixtures/expression/v1/cases.json`'dadır (400 kaynak: 148 hata, 886 nesne değerlendirmesi; kaydedici `apps/web/scripts/fixtures/record-expression.test.ts`). Native `crates/shared/style-core/tests/cases.rs`, uygulamanın yolundan `apps/web/src/model/expression/fixture.test.ts` okur. `expression.test.ts` aynı adlarla çekirdeği sınar; Rust'taki karşılığı `expr/tests.rs`'tir.
@@ -259,6 +259,95 @@ Kullanıcının kararları (2026-09-24):
   - Metin üreten ifadelerde metinler WASM'ın bellek ayırıcısında kurulur. Değer bir kez, sayfada da taşınmadan okunur.
   - Katman kurulumu bütçesi (§6.1, 100 000 segmentte < 50 ms) bu yolla aynı ölçüdedir.
 
+### Stil derleyicisi (style-core Y2 + Y3)
+
+Stil motorunun geometrisi ve derleyicisi TypeScript'ten Rust'a taşındı: sembol × geometri → çizim ilkelleri, işleyicilerin çözümü ve GPU toplulukları. Bir katman çekirdekte, geometri deposunun yanında tek çağrıda kurulur. SVG düzenleyicisinin geometrisi sonraki dilimde taşındı (“SVG düzenleyicisi”).
+
+- **Yer:** `crates/shared/style-core/src/style/`:
+  - `model.rs`: semboller, katmanlar, işleyiciler ve kurallar JSON'dan okunur; ifadeler bir kez derlenir.
+  - `place.rs`: çizgi boyunca işaret yerleri, gruplar, keskin köşeden uzak durma, dalgalar, alanın iç noktası, ağırlık merkezi, çizginin ortası.
+  - `compile.rs`: birimler, veriye bağlı değerler, paralel kaydırma, işaret, çizgi ve dolgu katmanları.
+  - `resolve.rs`: tek, kategorili, aralıklı ve kural tabanlı işleyiciler; ölçek aralıkları.
+  - `prim.rs`: çizim ilkelleri ve JSON yazıcısı.
+  - `batch.rs`: toplama. Eşit stiller bir toplulukta birleşir, geometri orijine göre float32 olur, dolgular tek çağrıda üçgenlenir, sıra sembol düzeyinedir.
+  - `build.rs`: katmanın tek çağrısı ve tek sembol önizleme girişi.
+- **Sınır:**
+  - **Program:** sayfa katmanın programını kurar (`render/styledLayer.ts`). İçinde kullanılan kitaplık sembolleri, işleyici, kümeler (renk başına basit görünüş, taramaların kendi desenleri), nesnelerin kendi sembolleri, renkler ve döşenen görüntülerin boyları vardır. `StyleProgram` (WASM) onu bir kez okur, ifadelerini derler ve okunan alanlarla değişkenleri söyler.
+  - **Nesneler ve tablo:** nesne başına dört sayı gider (`Int32Array`): kip (atla, ölçü çizgileri, küme, kendi sembolü, işleyici), küme ya da sembol, basit görünüş kümesi, renk. İfade tablosu Y1'deki gibidir: programın bütün ifadelerinin alanları tek tablodadır, her ifade kendi yuvalarını okur.
+  - **Çağrı:** `GeometryStore.buildStyled(program, ids, nesneler, tablo, kırpma, orijin, ölçek)`. Depo nesnelerin çizilecek geometrisini kendisi okur; bir ifade `$alan`, `$uzunluk`, `$y` ya da `$x` isterse bunlar katman için bir kez hesaplanır. Yanıt iki parçadır: toplulukların tanımı (JSON: tür, ilk stil, ölçek aralığı, sayıların yeri, kutu, en büyük işaret) ve bütün sayılar tek bir `Float32Array`'de.
+  - **Sayfada kalan (gösterim, `render/styledBatches.ts`):** tema paletinden renkler, atlas görüntüleri (yazı, SVG, raster, desen döşemeleri), bir topluluğun geometrisinin ötesine ne kadar taştığı (görüntü boylarından), GPU'ya yükleme.
+  - **Tek sembol:** önizleme, lejant ve testler bir sembolü bir nesnede çizer: `styleCompile` işlemi (`style/compile.ts` `compileSymbol`) çizim ilkellerini JSON olarak döndürür. Yazı ve ölçü nesnesinde çizim yoktur.
+- **Birebir taşıma:**
+  - **Üreteç** (`apps/web/src/style/cases.ts`):
+    - Her katman türünden rastgele semboller: sabit, veriye bağlı, derlenmeyen ve tuhaf ifadeler; birimler, kesikler, dalgalar, gruplar, bütün yerleşimler, iç içe işaret sembolleri.
+    - Dört işleyici türü: iç içe kurallar, ölçek aralıkları, “diğer” kuralları, kapalı kategoriler.
+    - Görüntüler (eksik olan dahil) ve her türden nesne (başlangıç yakını ve TM).
+  - **Karşılaştırma:** TS ile çekirdek üç kümede karşılaştırıldı:
+    - Sistem kitaplığının 695 sembolü, her biri beş nesne türünde.
+    - 20 000 rastgele sembol, her biri bir nesnede.
+    - 20 000 rastgele katman: 89 095 topluluk, 235 787 995 float32 sayı.
+
+    Katman yolunda bütün sayılar bit bit aynı çıktı. Tek sembol yolunda 23 475 durumun 94'ü son birkaç ulp'te ayrıştı (dalga noktaları ve işaret açıları: V8'in ve libm'in sin, cos, atan2'si), geometri toleransı içinde.
+  - **Dondurma:** TS silindi. Dondurulmuş yanıtlar `fixtures/style/v1/cases.json`'dadır (160 sembol, 48 katman; kaydedici `apps/web/scripts/fixtures/record-style.test.ts`). Katman durumlarında sayfanın çekirdeğe verdikleri de dondurulur: program, nesne sayıları, ifade tablosu.
+    - Native: `crates/shared/style-core/tests/style.rs`.
+    - Uygulamanın yolundan: `apps/web/src/style/fixture.test.ts`.
+    - Birim testleri: `style/tests.rs` (birimler, yerleşim, gruplar, köşeden uzak durma, dalgalar, iç nokta, işleyiciler, topluluklar, ölçü çizgileri).
+  - **Bekçi:** `singleSource.test.ts` artık `style/compile.ts`, `style/geometry.ts`, `style/primitives.ts` ve `render/styledLayer.ts`'i de denetler. Görüntü oranı (yükseklik/genişlik) çekirdekte bölünür; sayfa görüntünün genişlik ve yüksekliğini verir.
+- **Taşırken bulunan (TS'te de böyleydi):**
+  - Ölçü çizgileri bir önceki nesnenin kural ölçek aralığını alıyordu: ölçek aralıklı bir kuraldan sonra gelen ölçü o aralığın dışında görünmüyordu. Artık her ölçekte çizilir.
+  - TS toplulukların içine kuralın sembol kümesini de kopyalıyordu (hiçbir şeyin okumadığı bir alan).
+- **Bilinçli fark:** çizim ilkellerinin JSON'u NaN ve ±∞'u null, −0'ı 0 yazar. TS'in stil anahtarları da `JSON.stringify` ile böyleydi. Tek fark önizlemededir: aynalanmış bir işaretin kaydırması −0 yerine 0 döner.
+- **Hız:** stil anahtarı (JSON) her ilkelde yazılmaz. Her tür için son 16 stil, topluluklarıyla birlikte tutulur; eşit stil aynı topluluğa gider, sonuç değişmez. İlk sürümde 50 000 çizgi native 69 ms sürüyordu, bununla 17 ms oldu. Kategorileri sırayla değişen 20 000 nokta 68 ms'den 11 ms'ye indi.
+- **Boyut:** 1 008 667 → 1 128 063 bayt, gzip 349 550 → 394 938 (+45,4 KB). Stil derleyicisinin kodu ~90 KB ham.
+  - İki std `sort_by` yerine geometri çekirdeğinin `stable_sort`'u kullanıldı (her karşılaştırıcı için yeniden üretilmez): −6,4 KB gzip. Stil crate'ini `opt-level = "s"` ile derlemek yalnız 1,8 KB kazandırıyor ve %10–15 yavaşlatıyordu; kullanılmadı.
+  - Başlangıç sınırı kullanıcı kararıyla 350'den 400 KB gzip'e yükseltildi (24 Eylül, ADR 0005 “Değişiklikler”). Sınıra 5 KB kaldı. Aynı gün sahip sınırı kaldırdı (“WASM boyutu önemli değil, artabilir”); boyut yine ölçülüp aşağıdaki tabloya yazılır.
+- **Ölçüm** (`STYLE_BENCH=1 pnpm -C apps/web exec vitest run scripts/perf/style.test.ts --disable-console-intercept`; Node 22, bulut makinesi, 20 koşunun p50'si, ms). Eski TS aynı makinede ve aynı WASM paketiyle, Y1 işlemesinin çalışma kopyasından ölçüldü; iki tur sırayla koşuldu. Native, Rust release'te yalnız çekirdektir. İki yol aynı toplulukları ve sayıları verdi.
+
+  | Katman | Eski TS | Çekirdek (WASM yolu) | Native |
+  |---|---|---|---|
+  | Parsel ×10 000 (kural tabanlı, dolgu, kenar, iki alan yazısı) | 108–109 | 51–53 | 25 |
+  | Köy sınırı ×2 000 (MPYY işaretli çizgi, 36 000 işaret) | 51–52 | 8,0–8,4 | 4 |
+  | Çizgi ×50 000 (yalın görünüş, kesikli) | 129–131 | 31–33 | 17 |
+  | Yapı noktası ×20 000 (kategorili, şekil ve yazı) | 194–196 | 21,5–22,4 | 11 |
+
+  - Parsellerde sürenin çoğu, her parsel numarası için ayrı bir topluluktur: yazının kendisi atlas görüntüsüdür. 3 339 topluluğun tanımı ~1 MB JSON tutar; TS'te de topluluklar böyleydi.
+  - Katman kurulumu bütçesi (§6.1, 100 000 segmentte < 50 ms): 50 000 segment 31–33 ms sürüyor. Kabul ölçümü kullanıcının makinesinde yapılacak.
+
+### SVG düzenleyicisi (style-core Y4)
+
+SVG düzenleyicisinin geometrisi TypeScript'ten Rust'a taşındı: yol verisi, Bézier eğrileri ve uydurma, yol cebri, çizgi dış hattı ve öteleme, şekil düzeyinde yol işlemleri, düğüm işlemleri, kenet, hizalama ve diziler, bitmap izleme, SVG dosyasının okunması ve yazılması. Düzenleyici başlangıçta yüklenmediği için çekirdeği de kendi paketindedir.
+
+- **Yer:** yeni crate `crates/shared/svg-core`. `kentos-geometry-core` ve `kentos-style-core`'a bağlıdır; DOM, WASM ve ağ bilmez; `clippy.toml` std aşkın işlevlerini yasaklar. TS dosyası başına bir modül:
+  - `path.rs` (pathData), `bezier.rs`, `fit.rs` (fitCurve), `boolean.rs` (pathBool: kirişi izlenen düzleştirme, dolgu kuralları, geometri çekirdeğinin düzlem bindirmesi, eğrilerin geri kurulması, yolu kes), `stroke.rs` (pathStroke), `ops.rs` (pathOps);
+  - `model.rs` ve `shape.rs` (svgModel), `nodes.rs` (nodeOps), `snap.rs` (snapping), `arrange.rs`, `trace.rs`;
+  - `values/` (svgValues; kavram başına bir dosya: `number` JavaScript'in sayı okuması, `color` renk ve boya, `units` dönüşüm, uzunluk ve viewBox, `xml` dosyanın öğe listesi, `css` stil sayfaları), `import.rs` (importSvg), `export.rs` (exportSvg);
+  - `api.rs`: çağrı tablosu (99 işlem, adları TS işlevlerininki).
+- **Paket:** `crates/wasm/svg-wasm` → `apps/web/src/style/svg/pkg` (`pnpm rust:wasm:svg`; `scripts/wasm/ensure.mjs` üçüncü paket olarak derler; depoya girmez). `openSvgEditor` önce `initSvgCore()`'u bekler (indirme ve derleme bir kez). Yüklenemezse düzenleyici açılmaz, Türkçe hata yazılır, sonraki açılış yeniden dener (CLAUDE.md §20.2). Testlerde `style/svg/testSetup.ts` paketi baytlarından başlatır.
+- **Sınır:**
+  - Çağrı tablosu JSON'dur (`svgOp('ad')`, geometri çekirdeğininki gibi; NaN ve ±∞ "#NaN", "#Inf", "#-Inf"). Tipli girişler: kenet dizini (`SnapIndex` sınıfı: çizim ve görünüm başına bir kez kurulur, imleç hareketinde yalnız sayılar gider), resmin baytları (`inkMask`, `traceContours`, `traceBitmap`; sayı dizisi de kabul edilir), PNG baytları (`crc32`, `withPngDpi`).
+  - Şekiller alan alan taşınır (`shape.rs` `Obj`): bir işlem kendi alanlarını değiştirir, öbürlerini yerinde bırakır; tanımsız alan yerini korur, yazılmaz. TS'in nesne yayması (`{ ...s, x }`) böyleydi ve düzenleyici değişikliği çizimin JSON metnini karşılaştırarak anlar: alan sırası da korunur. Yol düğümleri ve alt yollar ise tipli değerlerdir ve hep aynı sırayla yazılır (`x, y, in, out, type`; `closed, nodes`; aşağıda “Bilinçli farklar”).
+  - Yeni şekil ve grup kimlikleri: çekirdek onları TS'in `shapeId()`/`newGroup()` çağırdığı sırayla "\u0001k" ve "\u0002k" diye adlandırır ve sayısını döndürür. Kimlikleri (metinlerinde zaman vardır) sayfa yapar ve yerlerine koyar.
+  - SVG dosyasının öğeleri düz bir listeyle geçer (etiket, öznitelikler, metin, üst öğenin sırası): derin bir dosya derin JSON değildir (çekirdeğin JSON okuyucusu 64 düzeyle sınırlıdır). Çekirdek dosyayı kendi yığınıyla dolaşır (TS özyinelemeliydi); dosyanın derinliği çağrı yığınına ulaşmaz. Boyanın yedek zinciri (`url(#a) url(#b) red`) de iç içe değil zincir olarak okunur.
+  - Kaynak görünümündeki aralıklar ve yazının ilerlemesi UTF-16 birimidir (sayfanın metni böyle sayar).
+- **JavaScript anlamı:** sayı okuma (`Number`, `parseFloat`, `parseInt(s, 16)`), `\s` ve `trim`, sayıdan metne (`String(x)`, style-core `js::number`), Unicode büyük/küçük harf, `Map`/`Set` ekleme sırası (izleme halkaları, hücreler, kullanılan renkler), kararlı sıralama (`stable_sort`). Geometri çekirdeğine JSON'la giden sayılarda (bindirme, yüzler, `insideArea`) −0, TS'te olduğu gibi 0'dır.
+- **Birebir taşıma:**
+  - Üreteç (`apps/web/src/style/svg/cases/`: `geometry.ts`, `files.ts`, `calls.ts`): alt yollar (düz ve eğri, açık ve kapalı, yinelenen noktalar, kollar), her türden ve her stil alanıyla şekiller, afinler, her komut biçimiyle yol verisi; SVG dosyaları (stiller ve seçiciler, `<use>` ve döngüler, degrade ve desen, birimler, iç içe `<svg>`, yazılar ve `<tspan>`, emojiler, kırık başvurular, görüntüler, altlık); renk, dönüşüm ve uzunluk yazımları, izlenecek resimler, PNG baytları. `CALLS` tablonun her işleminin bağımsız değişkenlerini üretir.
+  - Karşılaştırma (`parity.test.ts`, silindi): tablonun 99 işlemi ve tipli girişler TS ile karşılaştırıldı. TS, çekirdeğin libm'inin sin, cos, tan, atan2 ve acos'uyla koşuldu: V8'in sin ve cos'u açıların ~%1'inde son bitte ayrılır, atan2'si seyrek (`atan2(1, −1,5e-19)` V8'de doğru yuvarlanır, libm'de bir ulp yukarıdadır; dosyadan gelen çok basık bir köşe yayı bunu buldu). Bu yüzden her yanıtın bit bit aynı olması beklendi. İşlem başına 20 000 rastgele durum (106 giriş, 5 242 s): hepsi sıfır toleransla aynı. Alan sırası ayrıca bütün girişlerde JSON metniyle karşılaştırıldı (işlem başına 2 000 durum): şekillerin ve öbür nesnelerin alanları TS'teki sırayla; ayrılan yalnız yol düğümlerinin ve alt yolların sırasıydı (aşağıda).
+  - Dondurma: TS silindi. `fixtures/svg/v1/cases.json` (1 341 durum, 105 giriş; kaydedici `apps/web/scripts/fixtures/record-svg.test.ts`, yanıtlar çekirdekten). Native `crates/shared/svg-core/tests/cases.rs` (tablonun her işleminin en az üç durumu olduğunu da denetler), WASM `apps/web/src/style/svg/fixture.test.ts`. Birim testleri (`svg`, `importSvg`, `exportSvg`, `trace`, `pathOps`, `nodeOps`, `arrange`, `snapping` …) aynı adlarla çekirdeği sınar.
+  - Bekçi: `singleSource.test.ts` `style/svg`'yi de denetler. İki istisna kimlik sayaçlarıdır (`shapeId`, `newGroup`).
+- **Taşırken bulunan (TS de düzeltildi):** CSS öznitelik seçicisi `[constructor]` (ya da `[toString]` …) her öğeyi seçiyordu ve `font-size: constructor` yazının boyunu NaN yapıyordu: TS adları düz nesnelerde arıyordu (`ad in attrs`, `FONT_SIZES[ad]`). Artık yalnız dosyanın kendi adları okunur (`importSvg.test.ts`).
+- **Bilinçli farklar:**
+  - Yol düğümleri ve alt yollar çekirdekte hep aynı sırayla yazılır (`x, y, in, out, type`; `closed, nodes`). TS sırayı nesneyi nasıl kurduğuna bırakıyordu: yaymayla eklenen alan sona gidiyordu (`{ ...n, type }`, sonra `out`), `parsePathData` alt yolda önce `nodes`'u yazıyordu; 20 işlemin yanıtı bu yüzden metin olarak ayrıldı (değerler aynı). Tek sıra değişiklik algılamasını düzeltir: aynı değerler aynı metni verir. Düğüm yazan iki araç da bu sıraya getirildi (kalemin kolları önce `in`, kalem ve kırık çizginin alt yolu önce `closed`, düğüm aracının yumuşattığı düğüm yeni nesne). Önceden kalemle çizilen yola hareketsiz tıklama, taşımayı sıfır uzaklıkla çekirdekten geçirince çizimi değişmiş sayıyordu: seçim daralmıyor, boş bir “Taşı” adımı yazılıyordu (TS'in taşıması da düğümleri bu sıraya yazıyordu; tarayıcıda denendi).
+  - Aralık dışı düğüm numarasıyla köşe yuvarlama ya da pah (`cornerNodes`) TS'te `TypeError` fırlatıyordu; çekirdek o düğümü köşe saymaz.
+  - Bir emojiyi bölen 60 birimlik ad kesimi (Inkscape etiketi, `<title>`) yarısını U+FFFD yapar (Y1'deki gibi).
+- **Sayfada:** `readResult` artık yavaş okuyucuyu (reviver) yalnız yanıtta "#NaN", "#Inf" ya da "#-Inf" varken kullanır. Önce `"#` ile başlayan her metin, yani her renk (`"#AA3300"`) onu tetikliyordu (iki çekirdek de): 300 şekillik taşıma 17 → 10 ms.
+- **Boyut:** düzenleyicinin paketi 860 890 bayt, gzip -9 315 799, Brotli 246 429 (geometri çekirdeğinin bindirmesi, style-core'un sayı yazımı ve metin kuralları dahil). Başlangıç paketi değişmedi (kaynakları değişmedi; 1 128 063 bayt).
+- **Açılış** (üretim derlemesi, `apps/web/scripts/perf/modules.mjs`, [modules-y4-2026-09-24.md](../perf/modules-y4-2026-09-24.md); bulut, başsız Chrome, her ölçüm boş profille, 3 ölçümün ortancası): komut satırında Enter'dan pencerenin boyandığı kareye ilk açılış 163 ms (paketin indirilmesi ve derlenmesi dahil), ikinci açılış 42 ms. ADR 0005'in hedefi 400 ve 150 ms.
+- **Ölçüm** (Node 22, WASM, 300 ayrıntılı rastgele şekil, p50 ms; eski TS aynı süreçte): taşıma (tek çağrı `transformShapes`) 10,3 (TS 1,1); her şeklin öğesi (`elementOf`, 300 çağrı) 12,9 (TS 3,4); 40 SVG dosyasının içe alınması 8,9 (TS 8,9).
+  - Süre JSON sınırındadır: native'de taşımanın 1,3 ms'si ayrıştırma, 2,6 ms'si modelin tiplerine çevirme ve yazma.
+  - Sistem kitaplığının 81 çiziminde şekil sayısı ortanca 2, %95'te 8, en çok 120 (küçük şekiller): düzenleyicide kare başına milisaniyenin altında.
+  - Büyük çizimler sıklaşırsa: şekiller paketli sayılarla geçebilir (geometri deposu gibi) ya da değişmeyen şekillerin öğeleri saklanabilir (düğüm aracı `subs`'u yerinde değiştirdiği için önce o değişmeli).
+
 ### DXF yazıcısının eğrisi
 
 - `geom::spline::catmull_rom_beziers(pts, closed)`: `catmull_rom`'un çizdiği eğrinin her açıklığının tam kübik Bézier biçimi ve merkezcil düğüm aralığı. DXF yazıcısı (`crates/shared/formats`, ADR 0009 “DXF yazma”) açıklıkları üçlü iç düğümlü kübik B-spline'a dizer: dosyadaki eğri bir uydurma değil, KentOS'un çizdiği eğrinin kendisidir. Açıklık uçları noktaların kendisidir (bit bit).
@@ -279,6 +368,7 @@ Kullanıcının kararları (2026-09-24):
 - **Rust zorunlu:** `pnpm dev`, `test`, `test:watch`, `build`, `e2e`, `e2e:cloud` ve `pnpm wasm` önce `scripts/wasm/ensure.mjs`'i çalıştırır.
   - Betik; `crates/shared/geometry-core`, `crates/shared/style-core` (ifade dili), `crates/wasm/geometry-wasm`, `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml` ve `.cargo/config.toml` özetini `apps/web/src/wasm/pkg/.stamp` ile karşılaştırır.
   - Özet değiştiyse `nice pnpm rust:wasm` çalıştırır. Rust araç zinciri artık `pnpm test` için de gereklidir; ADR 0001'in ilgili maddesi bu kararla değişti.
+  - Biçim paketi (`apps/web/src/io/pkg`, ADR 0009) ve SVG düzenleyicisinin paketi (`apps/web/src/style/svg/pkg`, `pnpm rust:wasm:svg`) kendi özet ve damgalarıyla aynı biçimde derlenir. Düzenleyicininki `svg-core`, `svg-wasm`, geometri çekirdeği ya da style-core değişince derlenir; ikisi de başlangıçta yüklenmez.
 - **`wasm` profili:** release'den türer; `lto = "fat"`, `codegen-units = 1`, `panic = "abort"`. Paket `target/wasm32-unknown-unknown/wasm/`'dan `wasm-bindgen` ile `apps/web/src/wasm/pkg`'a yazılır; paket depoya girmez.
 - **Boyut:** her taşıma diliminde ADR 0005 taslağındaki başlangıç sınırıyla (300 KB gzip) karşılaştırılıp raporlanır.
 
@@ -308,6 +398,8 @@ Kullanıcının kararları (2026-09-24):
   | Sağlam kararlar R3 (köşe çevresindeki sıra) | 896 KB | 303 KB | 894 506 → 896 139 bayt, gzip 302 106 → 302 678 (+572 bayt): kesin ve teğetli sıralama, eski kiriş açısı silindi |
   | Sağlam kararlar R4 (kesişim parametreleri) | 898 KB | 304 KB | 896 139 → 898 018 bayt, gzip 302 678 → 303 940 (+1,3 KB): `cross_accurate`, `compress`, dört noktaya genelleştirilmiş uyarlamalı aşamalar |
   | İfade dili (style-core Y1) | 1 009 KB | 350 KB | 898 018 → 1 008 667 bayt, gzip 303 940 → 349 550 (+45,6 KB): Unicode harf tabloları, Türkçe sıralama tablosu, iletiler ve açıklamalar (`.rodata` +20,7 KB), değerlendirici, JavaScript'in sayı yazımı. 350 KB sınırına 0,45 KB kaldı |
+  | Stil derleyicisi (style-core Y2 + Y3) | 1 128 KB | 395 KB | 1 008 667 → 1 128 063 bayt, gzip 349 550 → 394 938 (+45,4 KB): yerleşim, derleme, işleyiciler, toplama, JSON okuyucu ve yazıcıları (~90 KB kod), son stillerin önbelleği; iki std sıralaması yerine `stable_sort` (−6,4 KB gzip). Sınır 400 KB'a yükseltildi, 5 KB kaldı |
+  | SVG düzenleyicisi (style-core Y4) | 1 128 KB | 395 KB | Başlangıç paketi değişmedi: düzenleyicinin geometrisi kendi paketindedir, düzenleyici açılınca yüklenir (860 890 bayt, gzip 315 799). Başlangıç WASM sınırı sahibin kararıyla kaldırıldı (ADR 0005 “Değişiklikler”) |
 
 ### Doğrulama
 

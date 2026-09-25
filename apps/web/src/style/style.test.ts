@@ -1,36 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import type { Entity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
-import { compileSymbol, ExprCache, ExprRun, toDrawn, toWorld, type CompileEnv } from './compile';
+import { compileSymbol } from './compile';
 import { exportStyles, importStyles, parseStyleFile, sanitizeSvg, svgAsset, validateSymbol } from './file';
 import { hatchSymbolOf, symbolsOfLayerStyle } from './fromLayer';
-import { geometryClassOf, interiorPoint, MAX_MARKERS_PER_PATH, placeAlong, styledGeometry, wavePaths } from './geometry';
+import { geometryClassOf, styledGeometry } from './geometry';
 import { StyleLibrary } from './library';
-import { PrimitiveList } from './primitives';
-import { resolveRenderer } from './resolve';
-import type { FillSymbol, LayerRenderer, LibraryItem, LineSymbol, MarkerSymbol } from '../model/style';
+import type { FillSymbol, LibraryItem, LineSymbol, MarkerSymbol } from '../model/style';
 
+// Units, placement along paths, waves, inside points and renderers are the
+// style core's own tests (crates/shared/style-core/src/style/tests.rs); these
+// compile symbols through the app's path (`compileSymbol` → the core).
 const v = (x: number, y: number): Vec2 => ({ x, y });
-// The build's objects are the one object compiled (the target's index is 1).
-const env = (plotScale = 1000, entity: Entity = line([])): CompileEnv => {
-  const exprs = new ExprCache();
-  return { plotScale, exprs, run: new ExprRun(exprs, { entities: [entity], layerName: (id) => ({ a: 'Parseller' })[id] ?? id, plotScale }) };
-};
 const polygon = (pts: Vec2[], attrs: Record<string, string> = {}, holes?: Vec2[][]): Entity => ({ id: 1, kind: 'polygon', layerId: 'a', pts, attrs, holes: holes?.map((h) => ({ pts: h })) });
 const line = (pts: Vec2[], attrs: Record<string, string> = {}): Entity => ({ id: 2, kind: 'polyline', layerId: 'a', pts, attrs });
 const square = (s: number) => [v(0, 0), v(s, 0), v(s, s), v(0, s)];
 const close = (a: number, b: number) => Math.abs(a - b) < 1e-9;
-
-describe('units', () => {
-  it('turns paper mm into metres at the plot scale; px stays px for drawn sizes', () => {
-    expect(toWorld(1, 'mm', env(1000))).toBe(1);
-    expect(toWorld(2, 'mm', env(500))).toBe(1);
-    expect(toWorld(3, 'm', env(1000))).toBe(3);
-    expect(toWorld(96, 'px', env(1000))).toBeCloseTo(25.4, 9);
-    expect(toDrawn(4, 'px', env())).toEqual({ v: 4, unit: 'px' });
-    expect(toDrawn(0.5, undefined, env(2000))).toEqual({ v: 1, unit: 'world' });
-  });
-});
 
 describe('geometry for styles', () => {
   it('classes objects and orients area rings: outer counter-clockwise, holes clockwise', () => {
@@ -45,43 +30,12 @@ describe('geometry for styles', () => {
     expect(geometryClassOf({ id: 3, kind: 'circle', layerId: 'a', c: v(0, 0), r: 1, attrs: {} })).toBe('line');
     expect(geometryClassOf({ id: 4, kind: 'text', layerId: 'a', p: v(0, 0), text: 'x', height: 1, rotation: 0, attrs: {} })).toBeNull();
   });
-  it('places markers at intervals, vertices, ends and centres', () => {
-    const path = [v(0, 0), v(10, 0), v(10, 10)];
-    expect(placeAlong(path, false, 'interval', 5).map((p) => [p.at.x, p.at.y])).toEqual([
-      [0, 0],
-      [5, 0],
-      [10, 0],
-      [10, 5],
-      [10, 10],
-    ]);
-    expect(placeAlong(path, false, 'interval', 5, 2.5).map((p) => p.at.x + p.at.y)).toEqual([2.5, 7.5, 12.5, 17.5]);
-    // A closed square does not repeat its start.
-    expect(placeAlong(square(10), true, 'interval', 10)).toHaveLength(4);
-    const corners = placeAlong(path, false, 'vertex');
-    expect(corners).toHaveLength(3);
-    expect(close(corners[1].angle, Math.PI / 4)).toBe(true);
-    expect(placeAlong(path, false, 'innerVertex').map((p) => p.at)).toEqual([v(10, 0)]);
-    expect(placeAlong(path, false, 'center')[0].at).toEqual(v(10, 0));
-    expect(placeAlong(path, false, 'segmentCenter').map((p) => p.at)).toEqual([v(5, 0), v(10, 5)]);
-    expect(close(placeAlong(path, false, 'last')[0].angle, Math.PI / 2)).toBe(true);
-    expect(placeAlong(path, false, 'interval', 1e-9)).toHaveLength(MAX_MARKERS_PER_PATH);
-  });
-  it('finds a point inside any area, never in a hole', () => {
-    expect(interiorPoint([square(10)])).toEqual(v(5, 5));
-    const u = [v(0, 0), v(30, 0), v(30, 30), v(20, 30), v(20, 10), v(10, 10), v(10, 30), v(0, 30)];
-    const p = interiorPoint([u])!;
-    const inU = (q: Vec2) => (q.y < 10 && q.x > 0 && q.x < 30) || (q.x < 10 && q.x > 0) || (q.x > 20 && q.x < 30);
-    expect(inU(p)).toBe(true);
-    const donut = interiorPoint([square(10), [v(3, 3), v(3, 7), v(7, 7), v(7, 3)]])!;
-    expect(donut.x > 3 && donut.x < 7 && donut.y > 3 && donut.y < 7).toBe(false);
-  });
 });
 
 describe('compiling symbols', () => {
   it('offsets and dashes lines in paper mm', () => {
     const sym: LineSymbol = { type: 'line', layers: [{ id: 'a', type: 'simpleLine', color: '#E06C75', width: 0.35, dash: [4, 1], offset: 1, cap: 'round' }] };
-    const out = new PrimitiveList();
-    compileSymbol(sym, styledGeometry(line([v(0, 0), v(10, 0)]))!, { entity: line([]), index: 1 }, env(1000), out);
+    const out = compileSymbol(sym, line([v(0, 0), v(10, 0)]));
     expect(out.strokes).toHaveLength(1);
     const s = out.strokes[0];
     expect(s.path).toEqual([v(0, 1), v(10, 1)]);
@@ -97,8 +51,7 @@ describe('compiling symbols', () => {
         { id: 'f', type: 'markerLine', marker: dot('#1565C0'), placement: 'interval', interval: 8, offsetAlong: 4 },
       ],
     };
-    const out = new PrimitiveList();
-    compileSymbol(sym, styledGeometry(line([v(0, 0), v(24, 0)]))!, { entity: line([]), index: 1 }, env(1000), out);
+    const out = compileSymbol(sym, line([v(0, 0), v(24, 0)]));
     const xs = out.markers.map((m) => [m.at.x, m.style.kind === 'shape' ? m.style.fill : 'x']);
     expect(xs).toEqual([
       [0, null],
@@ -115,8 +68,7 @@ describe('compiling symbols', () => {
     const edges = (unit: 'm' | 'mm', expr: string, scale: number) => {
       const sym: LineSymbol = { type: 'line', layers: [{ id: 'l', type: 'simpleLine', color: 'ink', width: 0.3, unit, offset: { expr, fallback: 1 } }] };
       const e = line([v(0, 0), v(10, 0)], { Genişlik: '12' });
-      const out = new PrimitiveList();
-      compileSymbol(sym, styledGeometry(e)!, { entity: e, index: 1 }, env(scale, e), out);
+      const out = compileSymbol(sym, e, { plotScale: scale });
       return out.strokes[0].path[0].y;
     };
     expect(edges('m', '[Genişlik] / 2', 1000)).toBeCloseTo(6, 9);
@@ -129,8 +81,7 @@ describe('compiling symbols', () => {
     const sym: LineSymbol = { type: 'line', layers: [{ id: 's', type: 'simpleLine', color: '#808080', width: 1, blur: 0.8, shift: [0.6, -0.6] }] };
     // Either drawing direction: the shift is on the page, not to the line's left.
     for (const pts of [[v(0, 0), v(10, 0)], [v(10, 0), v(0, 0)]]) {
-      const out = new PrimitiveList();
-      compileSymbol(sym, styledGeometry(line(pts))!, { entity: line([]), index: 1 }, env(1000), out);
+      const out = compileSymbol(sym, line(pts));
       const p = out.strokes[0].path;
       expect(p.map((q) => q.y)).toEqual([-0.6, -0.6].map((y) => expect.closeTo(y, 12)));
       expect(Math.min(...p.map((q) => q.x))).toBeCloseTo(0.6, 12);
@@ -144,8 +95,7 @@ describe('compiling symbols', () => {
       layers: [{ id: 't', type: 'markerLine', placement: 'center', marker: { type: 'marker', layers: [{ id: 'x', type: 'text', text: 'SEG', size: 2, offset: [0, 3], anchor: 'left' }] } }],
     };
     const along = (pts: Vec2[]) => {
-      const out = new PrimitiveList();
-      compileSymbol(sym, styledGeometry(line(pts))!, { entity: line([]), index: 1 }, env(1000), out);
+      const out = compileSymbol(sym, line(pts));
       return out.markers[0];
     };
     const ltr = along([v(0, 0), v(10, 0)]);
@@ -153,7 +103,8 @@ describe('compiling symbols', () => {
     // Drawn right to left: turned half a turn, offset and anchor mirrored (same box, above the line).
     const rtl = along([v(10, 0), v(0, 0)]);
     expect(Math.cos(rtl.angle)).toBeCloseTo(1, 9);
-    expect([rtl.style.common.offset, rtl.style.common.anchor]).toEqual([[-0, -3], 'right']);
+    // (The primitives come as JSON, where the mirrored −0 is written 0.)
+    expect([rtl.style.common.offset, rtl.style.common.anchor]).toEqual([[0, -3], 'right']);
     // Straight down reads upwards instead.
     expect(Math.sin(along([v(0, 10), v(0, 0)]).angle)).toBeCloseTo(1, 9);
   });
@@ -164,8 +115,7 @@ describe('compiling symbols', () => {
     });
     const count = (sym: FillSymbol, ring: Vec2[]) => {
       const e = polygon(ring);
-      const out = new PrimitiveList();
-      compileSymbol(sym, styledGeometry(e)!, { entity: e, index: 1 }, env(1000), out);
+      const out = compileSymbol(sym, e);
       return out.markers.length;
     };
     // 16 places round a 20 m square, 4 of them on its corners.
@@ -174,8 +124,8 @@ describe('compiling symbols', () => {
     expect(count(code('YAPI YASAKLI'), square(20))).toBe(4);
     // Gentle turns (15° at each vertex of a 24-sided ring) are not corners: nothing is left out.
     const ring = Array.from({ length: 24 }, (_, i) => v(20 * Math.cos((i * Math.PI) / 12), 20 * Math.sin((i * Math.PI) / 12)));
-    const plain = placeAlong([...ring], true, 'interval', 5).length;
-    expect(count(code('SEG'), ring)).toBe(plain);
+    const dots: FillSymbol = { type: 'fill', layers: [{ id: 'd', type: 'markerLine', placement: 'interval', interval: 5, marker: { type: 'marker', layers: [{ id: 'x', type: 'shape', shape: 'circle', size: 1 }] } }] };
+    expect(count(code('SEG'), ring)).toBe(count(dots, ring));
   });
   it('passes gear teeth, holes and arc openings to the shaders', () => {
     const sym: MarkerSymbol = {
@@ -186,8 +136,7 @@ describe('compiling symbols', () => {
         { id: 'c', type: 'shape', shape: 'circle', size: 2, fill: 'ink', hole: 2 },
       ],
     };
-    const out = new PrimitiveList();
-    compileSymbol(sym, { cls: 'marker', point: v(0, 0) }, { entity: line([]), index: 1 }, env(1000), out);
+    const out = compileSymbol(sym, { id: 5, kind: 'point', layerId: 'a', p: v(0, 0), attrs: {} });
     const params = out.markers.map((m) => (m.style.kind === 'shape' ? m.style.params : null));
     expect(params[0]).toEqual([5 / 7, 12, Math.PI, 0.13]);
     expect(params[1]![2]).toBeCloseTo(Math.PI / 2, 12);
@@ -213,12 +162,11 @@ describe('compiling symbols', () => {
       ],
     };
     const e = polygon(square(20));
-    const out = new PrimitiveList();
-    compileSymbol(sym, styledGeometry(e)!, { entity: e, index: 1 }, env(1000), out, 2000);
+    const out = compileSymbol(sym, e);
     const [frame, cross] = out.markers.map((m) => m.style.common.level);
-    expect(frame).toBe(2000);
+    expect(frame).toBe(0);
     expect(cross).toBeGreaterThan(frame);
-    expect(cross).toBeLessThan(2001);
+    expect(cross).toBeLessThan(1);
   });
   it('draws area edges into the area, fills, hatches and a text from attributes', () => {
     const sym: FillSymbol = {
@@ -232,8 +180,7 @@ describe('compiling symbols', () => {
     };
     const cw = [v(0, 0), v(0, 20), v(20, 20), v(20, 0)];
     const e = polygon(cw, { Parsel: '12' });
-    const out = new PrimitiveList();
-    compileSymbol(sym, styledGeometry(e)!, { entity: e, index: 1 }, env(1000, e), out);
+    const out = compileSymbol(sym, e);
     expect(out.fills.map((f) => f.paint.kind)).toEqual(['solid', 'hatch']);
     const hatch = out.fills[1].paint;
     expect(hatch.kind === 'hatch' && [hatch.spacing, hatch.width, close(hatch.angle, Math.PI / 4)]).toEqual([2, 0.1, true]);
@@ -254,15 +201,11 @@ describe('compiling symbols', () => {
       ],
     };
     const pt = (attrs: Record<string, string>): Entity => ({ id: 5, kind: 'point', layerId: 'a', p: v(1, 2), attrs });
-    const out = new PrimitiveList();
-    const a = pt({ Boy: '9', Aci: '90', Tur: 'A' });
-    compileSymbol(sym, styledGeometry(a)!, { entity: a, index: 1 }, env(1000, a), out);
+    const out = compileSymbol(sym, pt({ Boy: '9', Aci: '90', Tur: 'A' }));
     expect(out.markers).toHaveLength(1);
     const m = out.markers[0].style;
     expect(m.kind === 'shape' && [m.size, m.common.unit, m.fill, close(m.common.rotation, Math.PI / 2)]).toEqual([9, 'px', '#FF0000', true]);
-    const out2 = new PrimitiveList();
-    const b = pt({ Tur: 'B' });
-    compileSymbol(sym, styledGeometry(b)!, { entity: b, index: 1 }, env(1000, b), out2);
+    const out2 = compileSymbol(sym, pt({ Tur: 'B' }));
     expect(out2.markers.map((x) => (x.style.kind === 'shape' ? [x.style.size, x.style.fill] : null))).toEqual([
       [1, '#0000FF'],
       [2, null],
@@ -286,8 +229,7 @@ describe('compiling symbols', () => {
       ],
     };
     const e = polygon(square(10));
-    const out = new PrimitiveList();
-    compileSymbol(sym, styledGeometry(e)!, { entity: e, index: 1 }, { ...env(500), assetAspect: () => 0.5 }, out);
+    const out = compileSymbol(sym, e, { plotScale: 500, assets: { a1: [48, 24] } });
     const [shape, text, i] = out.fills.map((f) => f.paint);
     // Shape sizes stay in the pattern's unit (world metres at 1:500), jitter is clamped to 0–1.
     expect(shape.kind === 'pattern' && [shape.size, shape.stagger, shape.mark.size, shape.mark.strokeWidth, shape.jitter, shape.coverage]).toEqual([[2, 1.5], true, 0.5, 0.1, 1, 0.4]);
@@ -298,8 +240,7 @@ describe('compiling symbols', () => {
   it('hatch dash offsets and marker groups along a line', () => {
     const hatch: FillSymbol = { type: 'fill', layers: [{ id: 'h', type: 'hatchFill', angle: 0, spacing: 2, width: 0.2, color: '#000000', dash: [2, 2], dashOffset: 2 }] };
     const e = polygon(square(10));
-    const out = new PrimitiveList();
-    compileSymbol(hatch, styledGeometry(e)!, { entity: e, index: 1 }, env(1000), out);
+    const out = compileSymbol(hatch, e);
     const h = out.fills[0].paint;
     expect(h.kind === 'hatch' && [h.dash, h.dashOffset]).toEqual([[2, 2], 2]);
     // Three dots 1 mm apart in the middle of every 10 mm (köy sınırı): at 1:1000 that is metres.
@@ -308,92 +249,12 @@ describe('compiling symbols', () => {
       layers: [{ id: 'g', type: 'markerLine', placement: 'interval', interval: 10, offsetAlong: 5, group: { count: 3, spacing: 1 }, marker: { type: 'marker', layers: [{ id: 'm', type: 'shape', shape: 'circle', size: 0.5, fill: '#000000' }] } }],
     };
     const l = line([v(0, 0), v(20, 0)]);
-    const out2 = new PrimitiveList();
-    compileSymbol(dots, styledGeometry(l)!, { entity: l, index: 1 }, env(1000), out2);
+    const out2 = compileSymbol(dots, l);
     expect(out2.markers.map((m) => m.at.x)).toEqual([4, 5, 6, 14, 15, 16]);
   });
 });
 
-describe('placement and waves', () => {
-  it('groups wrap on closed paths and are cut at open ends', () => {
-    const sq = [v(0, 0), v(10, 0), v(10, 10), v(0, 10)];
-    const closed = placeAlong(sq, true, 'first', 0, 0, { count: 3, spacing: 1 });
-    expect(closed.map((p) => [p.at.x, p.at.y])).toEqual([
-      [0, 1],
-      [0, 0],
-      [1, 0],
-    ]);
-    const open = placeAlong([v(0, 0), v(10, 0)], false, 'first', 0, 0, { count: 3, spacing: 1 });
-    expect(open.map((p) => p.at.x)).toEqual([0, 1]);
-  });
-
-  it('lays sine waves along a path, connected or as dashes', () => {
-    const path = [v(0, 0), v(20, 0)];
-    const joined = wavePaths(path, false, { shape: 'sine', length: 5, amplitude: 1, spacing: 5, connect: true });
-    expect(joined).toHaveLength(1);
-    const pts = joined[0];
-    expect(pts[0]).toEqual(v(0, 0));
-    expect(pts[pts.length - 1]).toEqual(v(20, 0));
-    // A quarter of the first wave is its crest, one amplitude to the left.
-    expect(Math.max(...pts.map((p) => p.y))).toBeCloseTo(1, 9);
-    expect(Math.min(...pts.map((p) => p.y))).toBeCloseTo(-1, 9);
-    const dashed = wavePaths(path, false, { shape: 'sine', length: 5, amplitude: 1, spacing: 7, connect: false });
-    // Two 7-unit repeats fit in 20; each wave is its own piece, centred on the path.
-    expect(dashed).toHaveLength(2);
-    expect(dashed[0][0].x).toBeCloseTo(4, 9);
-    expect(dashed[1][dashed[1].length - 1].x).toBeCloseTo(16, 9);
-  });
-  it('anchors waves at the path start so markers with the same interval stay in step', () => {
-    const path = [v(0, 0), v(20, 0)];
-    const waves = wavePaths(path, false, { shape: 'sine', length: 4, amplitude: 1, spacing: 5, connect: false, offsetAlong: 1 });
-    // Waves start at 1, 6, 11 and 16; the last one ends exactly at the path's end.
-    expect(waves.map((w) => w[0].x)).toEqual([1, 6, 11, 16].map((x) => expect.closeTo(x, 9)));
-    expect(waves[3][waves[3].length - 1].x).toBeCloseTo(20, 9);
-    // The gaps are where interval markers from the same start sit.
-    const dots = placeAlong(path, false, 'interval', 5, 0);
-    expect(dots.map((d) => d.at.x)).toEqual([0, 5, 10, 15, 20]);
-    // A closed square wraps the anchor into the first repeat.
-    const ring = wavePaths(square(10), true, { shape: 'sine', length: 4, amplitude: 1, spacing: 5, connect: false, offsetAlong: 11 });
-    expect(ring).toHaveLength(8);
-    expect(ring[0][0].x).toBeCloseTo(1, 9);
-  });
-});
-
-describe('renderers', () => {
-  const red: LineSymbol = { type: 'line', layers: [{ id: 'r', type: 'simpleLine', color: '#FF0000', width: 0.3 }] };
-  const blue: LineSymbol = { type: 'line', layers: [{ id: 'b', type: 'simpleLine', color: '#0000FF', width: 0.3 }] };
-  const e = (attrs: Record<string, string>) => line([v(0, 0), v(1, 0)], attrs);
-  // The build's objects are the one object resolved.
-  const resolve = (renderer: LayerRenderer, attrs: Record<string, string>) => {
-    const x = e(attrs);
-    return resolveRenderer(renderer, x, 1, { run: new ExprRun(new ExprCache(), { entities: [x], layerName: (id: string) => id }) });
-  };
-  it('categorized, graduated and single', () => {
-    const cat: LayerRenderer = { type: 'categorized', expr: 'Tur', categories: [{ value: 'yol', label: 'Yol', symbols: { line: red } }], other: { line: blue } };
-    expect(resolve(cat, { Tur: 'yol' })[0].symbols.line).toBe(red);
-    expect(resolve(cat, { Tur: 'dere' })[0].symbols.line).toBe(blue);
-    const grad: LayerRenderer = { type: 'graduated', expr: '$uzunluk * 10', classes: [{ min: 0, max: 5, label: 'kısa', symbols: { line: red } }, { min: 5, max: 10, label: 'uzun', symbols: { line: blue } }] };
-    expect(resolve(grad, {})[0].symbols.line).toBe(blue); // 10 is in the last class, max included
-    expect(resolve({ type: 'single', symbols: { line: red } }, {})).toHaveLength(1);
-  });
-  it('rules: every match draws, children narrow the scale range, else catches the rest', () => {
-    const r: LayerRenderer = {
-      type: 'rules',
-      rules: [
-        { id: '1', label: 'Anayol', filter: "Tur = 'ana'", symbols: { line: red }, maxScale: 5000, children: [{ id: '1a', label: 'Yakın', minScale: 100, maxScale: 2000, symbols: { line: blue } }] },
-        { id: '2', label: 'Hepsi', symbols: { line: blue } },
-        { id: '3', label: 'Diğer', isElse: true, symbols: { line: red } },
-      ],
-    };
-    const ana = resolve(r, { Tur: 'ana' });
-    expect(ana.map((x) => [x.symbols.line === red ? 'red' : 'blue', x.minScale, x.maxScale])).toEqual([
-      ['red', undefined, 5000],
-      ['blue', 100, 2000],
-      ['blue', undefined, undefined],
-    ]);
-    const elseOnly: LayerRenderer = { type: 'rules', rules: [{ id: 'x', label: 'x', filter: 'yanlış', symbols: { line: blue } }, { id: 'y', label: 'y', isElse: true, symbols: { line: red } }] };
-    expect(resolve(elseOnly, {}).map((x) => x.symbols.line)).toEqual([red]);
-  });
+describe('layer looks', () => {
   it('turns a layer’s simple look and a hatch object into symbols', () => {
     const set = symbolsOfLayerStyle({ color: 'fg-dim', lineType: 'dashed', lineWeight: 0.18, fill: '#7FB2E52E' });
     expect(set.line && 'layers' in set.line && set.line.layers[0]).toMatchObject({ type: 'simpleLine', width: 0.18, dash: [3, 1.5], unit: 'mm' });

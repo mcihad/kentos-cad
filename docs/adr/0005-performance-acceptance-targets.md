@@ -26,7 +26,7 @@ Günlük 2D çizim, demo katalogu olmadan açılır.
 |---|---|
 | İlk sayfada istenen JS (gzip) | ≤ 350 KB |
 | İlk sayfada istenen CSS (gzip) | ≤ 40 KB |
-| Başlangıç WASM (gzip, eklendiğinde) | ≤ 350 KB (2026-09-24'e kadar 300 KB; aşağıda “Değişiklikler”) |
+| Başlangıç WASM (gzip) | sınır yok (2026-09-24, sahibinin kararı; önce 300, 350, 400 KB idi; aşağıda “Değişiklikler”). Boyut ölçülür ve raporlanır, hedef değildir |
 | Etkileşime hazır (`kentos:interactive`), soğuk | ≤ 1,5 s |
 | Etkileşime hazır, ılık | ≤ 0,8 s |
 | Ana iş parçacığında script süresi, soğuk | ≤ 600 ms |
@@ -84,6 +84,12 @@ Faz B–D yük testlerinde tek tenant'ta 25 eşzamanlı editör ve 200 görünt�
 - **2026-09-24, başlangıç WASM 300 → 350 KB gzip (sahibinin kararı).** Ortak çekirdek (ADR 0008) uygulamanın bütün CAD hesabını tek pakette topladı; paket 297,9 KB'a ulaştı ve sıradaki çekirdek işleri (§23.3 sağlam kararlar, depoda dönüşüm) kod ekleyecek. Değerlendirilen seçenekler: işlev adları bölümünü üretim paketinden atmak (gzip 297 → 276 KB; bedeli, bir tuzağın yığın izinde adlar yerine numaralar), ağır işlemleri ilk kullanımda yüklenen ayrı bir pakete bölmek (geometri deposu tek modülde kalmak zorunda) ve sınırı yükseltmek. Sahip sınırı yükseltmeyi seçti; adlar pakette kalır. Öbür hedefler değişmedi.
 
 - **2026-09-24, ifade dili Rust'a taşındı (ADR 0008 “İfade dili”):** başlangıç WASM'ı 303,9 → 349,6 KB gzip; 350 KB sınırına 0,45 KB kaldı. Sınır değişmedi. Stil motorunun geometrisi (sıradaki style-core dilimleri) sınırı aşacak; karar sahibinindir.
+
+- **2026-09-24, başlangıç WASM 350 → 400 KB gzip (sahibinin kararı).** Stil derleyicisi Rust'a taşınınca (ADR 0008 “Stil derleyicisi”) paket 350 KB'ı aşacaktı. Sahibe üç seçenek sunuldu: sınırı yükseltmek, işlev adları bölümünü üretim paketinden atmak (~24 KB gzip; bedeli, bir tuzağın yığın izinde adlar yerine numaralar), stil motorunu ayrı pakete koymak (çizim açılışta stil motorunu istediği için ilk yükü azaltmaz). Sahip sınırı 400 KB'a yükseltmeyi seçti; adlar pakette kalır. Stil derleyicisiyle paket 394,9 KB gzip oldu. Öbür hedefler değişmedi.
+
+- **2026-09-24, SVG düzenleyicisinin geometrisi kendi paketinde (ADR 0008 “SVG düzenleyicisi”).** Düzenleyici başlangıçta yüklenmediği için geometrisi (yol işlemleri, düğümler, kenet, izleme, SVG okuma ve yazma) başlangıç paketine girmedi: ayrı paket 860 890 bayt, gzip -9 315 799; düzenleyici ilk açılışta indirir ve derler. Başlangıç paketi değişmedi (394,9 KB gzip). Ağır modülün ilk açılışı hedefi (≤ 400 ms) bu paketi de kapsar. Üç ağır modülün açılışı ilk kez ölçüldü (`apps/web/scripts/perf/modules.mjs`, [modules-y4-2026-09-24.md](../perf/modules-y4-2026-09-24.md); üretim derlemesi, bulut, 3 ölçümün ortancası): ilk / ikinci açılış stil yöneticisi 220 / 107 ms, model tasarımcısı 125 / 36 ms, SVG düzenleyicisi 163 / 42 ms. Üçü de hedefin içinde.
+
+- **2026-09-24, başlangıç WASM sınırı kaldırıldı (sahibinin kararı).** Sahip: “WASM boyutu önemli değil, artabilir.” Başlangıç paketinin boyutu artık bir hedef değildir. Boyut her çekirdek diliminden sonra yine ölçülüp ADR 0008'e yazılır, değişimi görünür kalsın diye. Açılış süresi hedefleri (etkileşime hazır, script süresi) ve ağır modüllerin açılış hedefleri sürer; paketin indirilmesi ve derlenmesi onlara girer. Ağır modüllerin isteğe bağlı yüklenmesi (CLAUDE.md §20) boyut için değil ilk yük için sürer: SVG düzenleyicisinin paketi ayrı kalır.
 
 ## Onay
 

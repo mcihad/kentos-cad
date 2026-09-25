@@ -210,6 +210,22 @@ describe('importing SVG files', () => {
     expect(reference && [reference.x, reference.y, reference.width, reference.opacity, reference.locked]).toEqual([1, 2, 30, 0.4, false]);
   });
 
+  it('reads attribute selectors and font size names from the file only', () => {
+    // The TypeScript looked names up in plain objects: `[constructor]` matched every element (every object
+    // has one) and `font-size: constructor` read a function, so the text's size became NaN.
+    const { doc } = docFromSvgTree(
+      node('svg', { viewBox: '0 0 100 100' }, [
+        node('style', {}, [], '[constructor] { fill: #FF0000 } [data-k] { fill: #0000FF }'),
+        node('rect', { width: '10', height: '10', fill: '#00FF00' }),
+        node('rect', { width: '10', height: '10', 'data-k': '' }),
+        node('text', { 'font-size': 'constructor', x: '0', y: '20' }, [], 'A'),
+      ]),
+      { symbolColor: null },
+    );
+    expect(doc.shapes.map((s) => s.fill)).toEqual(['#00FF00', '#0000FF', '#000000']);
+    expect(doc.shapes[2]).toMatchObject({ kind: 'text', size: 16 });
+  });
+
   it('leaves out what is not drawn: display none, hidden visibility, defs, symbols, Inkscape layers make no group', () => {
     const { doc } = docFromSvgTree(
       node('svg', { viewBox: '0 0 10 10' }, [

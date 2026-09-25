@@ -20,7 +20,7 @@ type PathShape = Extract<SvgShape, { kind: 'path' }>;
 
 type Op =
   | { kind: 'nodes'; grab: NodeRef; p0: Pt; orig: SubPath[]; moved: boolean }
-  | { kind: 'handle'; ref: NodeRef; part: 'in' | 'out'; orig: SubPath[] }
+  | { kind: 'handle'; ref: NodeRef; part: 'in' | 'out'; p0: Pt; orig: SubPath[]; moved: boolean }
   | { kind: 'box'; p0: Pt; p1: Pt; add: boolean }
   | { kind: 'corner'; ref: NodeRef; corner: Corner; orig: SubPath[]; size: number };
 
@@ -125,7 +125,7 @@ export class NodeTool {
         this.op = { kind: 'nodes', grab: ref, p0: p, orig: structuredClone(s.subs), moved: false };
       } else {
         host.begin();
-        this.op = { kind: 'handle', ref, part: part as 'in' | 'out', orig: structuredClone(s.subs) };
+        this.op = { kind: 'handle', ref, part: part as 'in' | 'out', p0: p, orig: structuredClone(s.subs), moved: false };
       }
       this.view.render();
       return true;
@@ -184,6 +184,9 @@ export class NodeTool {
         return true;
       }
       case 'handle': {
+        // As with nodes: a click on a handle does not snap it anywhere.
+        if (!op.moved && Math.hypot(p[0] - op.p0[0], p[1] - op.p0[1]) * this.view.scale < 3) return true;
+        op.moved = true;
         const q = this.view.snap(p, { nodes: { shape: s.id, refs: [op.ref] }, noGrid: true });
         s.subs = dragHandle(op.orig, op.ref, op.part, q, e.altKey);
         host.changed();
@@ -219,7 +222,7 @@ export class NodeTool {
         host.commit(op.moved ? 'Düğümü taşı' : '');
         return true;
       case 'handle':
-        host.commit('Kolu taşı');
+        host.commit(op.moved ? 'Kolu taşı' : '');
         return true;
       case 'box': {
         if (!s) return true;
@@ -271,9 +274,8 @@ export class NodeTool {
         const next = sp.nodes[(ni + 1) % len];
         const dx = (next.x - prev.x) / 6;
         const dy = (next.y - prev.y) / 6;
-        n.in = [n.x - dx, n.y - dy];
-        n.out = [n.x + dx, n.y + dy];
-        n.type = 'smooth';
+        // A new node object: its fields in the order the core writes them (the editor compares drawings as text).
+        sp.nodes[ni] = { x: n.x, y: n.y, in: [n.x - dx, n.y - dy], out: [n.x + dx, n.y + dy], type: 'smooth' };
       } else {
         delete n.in;
         delete n.out;

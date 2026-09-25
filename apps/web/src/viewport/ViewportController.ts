@@ -14,7 +14,6 @@ import { buildGrid, gridExtent, type GridExtent } from '../render/grid';
 import { Atlas } from '../render/atlas';
 import { buildSceneLayer } from '../render/sceneBuilder';
 import { buildStyledLayer } from '../render/styledLayer';
-import { ExprCache } from '../style/compile';
 import type { BackendKind, RenderBackend } from '../render/types';
 import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
@@ -808,7 +807,6 @@ export class ViewportController {
       palette: this.palette,
       plotScale,
       library: this.ctx.styles.library,
-      exprs: new ExprCache(),
       layerName: (id: string) => doc.layers.get(id)?.name ?? id,
       geometry: this.picker,
       clip: this.constructionClip(),

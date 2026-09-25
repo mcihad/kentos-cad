@@ -1,0 +1,15 @@
+[package]
+name = "kentos-svg-wasm"
+description = "The KentOS SVG editor's geometry for the browser: the editor's own wasm-bindgen boundary, loaded only when the editor opens"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+kentos-svg-core = { path = "../../shared/svg-core" }
+wasm-bindgen = { workspace = true }
