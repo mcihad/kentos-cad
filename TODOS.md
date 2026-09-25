@@ -71,12 +71,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 1.1 İlk bakım işleri — P0
 
-- [ ] `BASE-01` `CLAUDE.md`, `docs/DEVIR.md`, ADR 0001/0005/0008/0009 ve bu belge arasında mevcut durum / hedef / eski karar ayrımını güncelle. Tarihsel ADR'yi silmek yerine yeni kararla hangisinin değiştiğini kaydet.
-- [ ] `BASE-02` Özellikle eski Martin/yayın önceliğini kişisel/kurumsal proje bulutu kararıyla ilişkilendir; Martin rolünün mevcut teslimden çıkarıldığını kaydet. Olası Tauri/Electron önerisi, JSON `.kcad` ve “backend henüz yok” notlarını da yeni yönle ilişkilendir. Native Iced + wgpu bu yol haritasının desktop temelidir.
+- [x] `BASE-01` `CLAUDE.md`, `docs/DEVIR.md`, ADR 0001/0005/0008/0009 ve bu belge arasında mevcut durum / hedef / eski karar ayrımını güncelle. Tarihsel ADR'yi silmek yerine yeni kararla hangisinin değiştiğini kaydet. — **25 Eylül:** kararlar [ADR 0010](docs/adr/0010-platform-boundaries.md), [0011](docs/adr/0011-kcad-binary-snapshot.md), [0012](docs/adr/0012-server-scope-project-cloud.md)'de. ADR 0001, 0002, 0005, 0006, 0008 ve 0009'da değişen maddeler işaretlendi, tarihsel metin korundu. `docs/DEVIR.md`'nin başına hangi bölümün geçerli kaldığı yazıldı.
+- [x] `BASE-02` Özellikle eski Martin/yayın önceliğini kişisel/kurumsal proje bulutu kararıyla ilişkilendir; Martin rolünün mevcut teslimden çıkarıldığını kaydet. Olası Tauri/Electron önerisi, JSON `.kcad` ve “backend henüz yok” notlarını da yeni yönle ilişkilendir. Native Iced + wgpu bu yol haritasının desktop temelidir. — **25 Eylül:** Martin, tile hedefleri ve “backend yok” notları → ADR 0012; Tauri/Electron notu (eski CLAUDE.md §24.4) → ADR 0010; JSON `.kcad` → ADR 0011.
 - [ ] `BASE-03` İncelemede görülen izlenmeyen `.claude/`, `scripts/e2e/`, `scripts/showcase/`, `src/` içeriğinin sahipliğini ve kullanımını belirle; taşımada bunları otomatik silme veya yeni kaynak kabul etme.
 - [ ] `BASE-04` Web komutları, araçlar, ayarlar, dosya alanları, processing işlemleri ve ekranlar için makinece okunabilir özellik envanteri çıkar; `implemented/partial/pending`, platform ve kabul senaryosu alanlarını ekle.
 - [ ] `BASE-05` Mevcut native/WASM fixture'ları, web e2e ve UI showcase görüntülerini başlangıç referansı olarak dondur; ölçüm yapılan commit ve ortamı kaydet.
-- [ ] `BASE-06` Yeni bağımlılıkları sürüm, bakım, lisans, hedef platform, WASM derlenebilirliği ve gerçek kullanım gerekçesiyle ADR'ye bağla. Bu belgeyi yazmak bağımlılık kurulumunun yapıldığı anlamına gelmez.
+- [x] `BASE-06` Yeni bağımlılıkları sürüm, bakım, lisans, hedef platform, WASM derlenebilirliği ve gerçek kullanım gerekçesiyle ADR'ye bağla. Bu belgeyi yazmak bağımlılık kurulumunun yapıldığı anlamına gelmez. — **25 Eylül:** [bağımlılık kaydı](docs/deps/README.md) kuralı yazar ve bugünkü 17 Rust bağımlılığını ADR'leriyle eşler. Web'de runtime bağımlılığı yok. Geçişli 284 paketin lisansları tarandı, copyleft yok. Adaylar kurulmadı.
 
 ## 2. Hedef mimari ve uygulama sınırları
 
@@ -197,7 +197,7 @@ Kabul: aynı basit düzenleme, ortak fixture ile native uygulamada, TS web uygul
 ### 3.3 Hassasiyet, CRS ve geometri
 
 - [ ] `NUM-01` Domain koordinatını `f64`, mülkiyet/hisse/nihai yuvarlama değerlerini mevcut decimal/rational sözleşmeleriyle koru. `NaN/Inf/-0` için hesaplama, dış protokol ve kalıcı dosya politikalarını ayrı yaz.
-- [ ] `NUM-02` Mevcut libm/robust predicate ve bağımsız referans testlerini koru; GPU hesaplarını kadastral nihai değerlerin otoritesi yapma.
+- [ ] `NUM-02` Mevcut libm/robust predicate ve bağımsız referans testlerini koru; GPU hesaplarını kadastral nihai değerlerin otoritesi yapma. Kalan sağlam karar dilimleri (yay kesişimleri, ortak sınır kararları, incircle) `docs/DEVIR.md` §3 madde 3'te tarif edilmiştir.
 - [ ] `NUM-03` Eksen sırasını açıklaştır: iç model `x=east, y=north`, arayüzdeki geleneksel `Y,X`, EPSG eksen sırası ve LonLat birbirine adapter ile dönsün.
 - [ ] `NUM-04` Proje CRS, kaynak CRS, render CRS, yatay/düşey datum, coordinate epoch, Z/M ve birimi ayrı alanlarla modelle; `srid` tek başına bütün jeodezik bilgiyi taşımaz.
 - [ ] `NUM-05` Native/server PROJ/PostGIS dönüşüm yolu ile WASM'da desteklenen dönüşümleri aynı servis sözleşmesinde sun; tarayıcıya her native bağımlılığın derlenebileceğini varsayma.

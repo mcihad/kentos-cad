@@ -3,6 +3,7 @@
 - **Durum:** **taslak, kullanıcı onayı bekliyor.** Ölçümden önce yazıldı (CLAUDE.md §19.0, §20.4). Değerler ölçüm sonucuna göre değiştirilmez; değişiklik ancak gerekçeli yeni bir ADR sürümüyle yapılır.
 - **Tarih:** 2026-09-23
 - **Bağlam belgesi:** CLAUDE.md §6.1, §17, §18, §19.0, §20, §21
+- **Sonraki kararlar (2026-09-25):** tile satırları ve Martin karşılaştırması tarihsel/gelecek yayın başvurusudur, bugünkü proje bulutunun kabul kapısı değildir ([ADR 0012](0012-server-scope-project-cloud.md), TODOS.md §20.1). Proje kataloğu, büyük binary aç/kaydet, paylaşım ve yetki iptalinin bütçeleri ölçülüp ayrıca yazılacak (TODOS.md `CLOUD-28`). ADR yine taslaktır ve onay bekler.
 
 ## Referans ortam
 
@@ -56,7 +57,8 @@ Günlük 2D çizim, demo katalogu olmadan açılır.
 | Job kabul yanıtı (`202 + job_id`) | 20 ms | 50 ms | 150 ms |
 | Worker'ın kuyruktan iş alması (boşken) | 250 ms | 1 s | 2 s |
 
-- Martin karşılaştırması (§17) aynı veri, indeks ve donanımla iki rapor olarak yapılır: saf Martin ve KentOS gateway dahil.
+- İki “Tile” satırı **2026-09-25'ten beri kabul kapısı değildir** ([ADR 0012](0012-server-scope-project-cloud.md)); yayın kapsamı ileride açılırsa yeniden değerlendirilir.
+- ~~Martin karşılaştırması (§17) aynı veri, indeks ve donanımla iki rapor olarak yapılır: saf Martin ve KentOS gateway dahil.~~ (2026-09-25: Martin rolü kapsam dışı, ADR 0012.)
 - "Daha hızlı" iddiası yalnızca bu koşullarda geçen ölçümle yapılır.
 
 ### Veri setleri
@@ -64,7 +66,7 @@ Günlük 2D çizim, demo katalogu olmadan açılır.
 | Ad | İçerik | Amaç |
 |---|---|---|
 | `demo` | Bugünkü örnek pafta ve MPYY katalogu (~2 000 nesne) | Başlangıç ve görsel doğruluk |
-| `parsel-50k` | 50 000 delikli/yaylı parsel, TM36 koordinatında, öznitelikli | Tile, commit, seçme |
+| `parsel-50k` | 50 000 delikli/yaylı parsel, TM36 koordinatında, öznitelikli | Commit, seçme (tile amacı 2026-09-25'te düştü, ADR 0012) |
 | `hat-1m` | 1 milyon segment (eşyükselti benzeri) | Kaydırma, katman kurma |
 | `ifraz-referans` | §23'ün bağımsız referanslı alan ve hisse örnekleri | Kadastral doğruluk |
 

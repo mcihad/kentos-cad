@@ -3,6 +3,7 @@
 - **Durum:** kabul edildi
 - **Tarih:** 2026-09-23
 - **Bağlam belgesi:** CLAUDE.md §14, §20 Faz A
+- **Sonraki kararlar (2026-09-25):** masaüstü native Iced + `kentos-ui` + saf wgpu çizim alanıdır ([ADR 0010](0010-platform-boundaries.md)); planlı `crates/tiles` kapsamdan çıktı ([ADR 0012](0012-server-scope-project-cloud.md)). Aşağıdaki tarihsel metin korunur, değişen yerler işaretlidir.
 
 ## Bağlam
 
@@ -46,13 +47,13 @@ Sunucu yığını kesindir: Axum, Tokio, SQLx (PostgreSQL + PostGIS) ve Tower. F
   - `apps/worker`;
   - `crates/server/application` (ortak kullanım durumları, yetki, iş sözleşmesi);
   - `crates/server/postgres` (SQLx, PostGIS SQL, migration);
-  - `crates/tiles` (Martin arkasında TileJSON/MVT, önbellek geçersizleştirme);
+  - ~~`crates/tiles` (Martin arkasında TileJSON/MVT, önbellek geçersizleştirme);~~ **2026-09-25'te kapsamdan çıktı ([ADR 0012](0012-server-scope-project-cloud.md)):** sunucunun görevi proje bulutudur, Martin rolü ve tile crate'i şimdiki kapsamda yoktur;
   - `crates/style-core`.
 - SQLx ve Tower Faz B'de PostgreSQL ile birlikte girer. Faz A'da veritabanı yoktur.
 
 ## Güncelleme (2026-09-24): monorepo dizin düzeni
 
-Kullanıcı kararı: geometri çekirdeği ve öteki ortak Rust kodu ileride bir wgpu masaüstü CAD/CBS uygulamasında da kullanılacak; depo bir ön yüz projesi gibi değil, üç istemcinin (web, sunucu, masaüstü) ortak kodunu taşıyan bir monorepo gibi düzenlenir.
+Kullanıcı kararı: geometri çekirdeği ve öteki ortak Rust kodu ileride bir wgpu masaüstü CAD/CBS uygulamasında da kullanılacak; depo bir ön yüz projesi gibi değil, üç istemcinin (web, sunucu, masaüstü) ortak kodunu taşıyan bir monorepo gibi düzenlenir. (2026-09-25: masaüstü Iced + `kentos-ui` + saf wgpu çizim alanıyla native bir Rust uygulamasıdır, web'e derlenmez; [ADR 0010](0010-platform-boundaries.md).)
 
 - **Tarayıcı uygulaması `apps/web/`'e taşındı** (`src/`, `index.html`, `public/`, Vite ve TypeScript yapılandırması, yalnız web'e ait betikler: e2e, perf, showcase, TS fixture kaydedicileri). pnpm çalışma alanının tek paketidir (`@kentos/web`, `pnpm-workspace.yaml`). Kökteki `package.json` bütün komutları tutar ve web komutlarını `apps/web`'e iletir; `pnpm dev`, `test`, `build`, `e2e` eskisi gibi kökten çalışır.
 - **Crate'ler rolüne göre gruplandı:**

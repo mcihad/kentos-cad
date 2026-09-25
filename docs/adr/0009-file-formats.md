@@ -4,6 +4,7 @@
 - **Tarih:** 2026-09-24
 - **İnceleme:** biçimler, uygulamanın da hesapladığı geometriyi artık ortak çekirdekten alır (aşağıda); DXF okuyucusuna iş sınırları ve düzeltmeler eklendi. DXF yazıcısının yarım kalan başlangıcı alınmamıştı; yazıcı aynı gün baştan yazıldı (“DXF yazma”, `FORMATS_VERSION` 2). Aynı gün ölçüler gerçek DXF ölçüsü oldu ve KentOS'a ölçü olarak döner (“DXF yazma” → “Ölçü”, `FORMATS_VERSION` 3).
 - **Bağlam belgesi:** CLAUDE.md §5, §6.2 kural 6, §9.7, §14, §20, §23
+- **Sonraki kararlar (2026-09-25):** bu ADR değişim biçimleriyle (NCN, TXT, CSV, DXF) ilgilidir. Proje dosyası `.kcad`'in binary snapshot yönü ayrı bir karardır ([ADR 0011](0011-kcad-binary-snapshot.md)), buradaki kararları değiştirmez. `crates/shared/formats` masaüstü ve sunucuda da native çalışacak ([ADR 0010](0010-platform-boundaries.md), TODOS.md `FMT-01`).
 
 ## Bağlam
 

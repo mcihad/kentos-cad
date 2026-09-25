@@ -69,7 +69,7 @@ Faz B'nin ilk dikey dilimi: tek tenant'ta gerçek proje, izinli kayıt, iki edit
 
 - **Bilinen sınırlar (Faz B):**
   - Veritabanı bağlantısı TLS'siz (yerel sunucu). Üretimde sqlx'in TLS özelliği açılır.
-  - Proje başına katman tablosu yok; katman ağacı projenin JSON'udur. Katman politikası ve yayın geldiğinde (Faz C) tabloya ayrılır.
+  - Proje başına katman tablosu yok; katman ağacı projenin JSON'udur. ~~Katman politikası ve yayın geldiğinde (Faz C) tabloya ayrılır.~~ **2026-09-25:** yayın fazı kapsamdan çıktı ([ADR 0012](0012-server-scope-project-cloud.md)); tabloya ayırma yönetilen CAD/CBS proje şemasıyla (TODOS.md `PG-19`) ve proje düzeyinde yetkiyle gelir.
   - Tipli öznitelik şeması yok (`properties jsonb`, metin değerler).
   - PostGIS eğri türleri (CircularString …) denenmedi (§15 PoC); izdüşüm doğrusal.
 - **Testler:** her test kendi `kentos_cad_test_<zaman>_<rastgele>` veritabanını açar ve kapatır. Çöken bir çalıştırmanın artığı bir saat sonra silinir. Veritabanı yoksa testler görünür bir uyarıyla atlanır; `KENTOS_TEST_DB=required` bu durumda testi başarısız sayar.

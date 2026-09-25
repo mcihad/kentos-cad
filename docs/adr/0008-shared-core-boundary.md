@@ -3,6 +3,7 @@
 - **Durum:** kabul edildi
 - **Tarih:** 2026-09-24
 - **Bağlam belgesi:** CLAUDE.md §14 (“Tek hesaplama kaynağı kapısı”), §23.4, §6
+- **Sonraki karar (2026-09-25):** [ADR 0010](0010-platform-boundaries.md) platform sınırını yazdı. Bu ADR'nin kararları sürer. Web yalnız hesabı Rust'tan alır, arayüzü ve belgesi TypeScript'te kalır. JSON çağrı tablosu, `Float64Array` girişleri ve WASM paketleri yalnız web bağlayıcısının ayrıntısıdır. Masaüstü ve sunucu aynı crate'leri doğrudan (native) çağırır, JSON sınırından geçmez. Native↔WASM bit eşitliği ve donmuş fixture'lar üç platformun ortak ölçütüdür.
 
 ## Bağlam
 

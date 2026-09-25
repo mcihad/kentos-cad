@@ -1,5 +1,17 @@
 # Devir notları
 
+> **25 Eylül 2026 notu (TODOS.md `BASE-01`):** Bu dosya 24 Eylül'ün devir notudur. Güncel yol haritası [TODOS.md](../TODOS.md), güncel kurallar [CLAUDE.md](../CLAUDE.md)'dir. Kapsam kararları [ADR 0010](adr/0010-platform-boundaries.md) (web/masaüstü sınırı), [ADR 0011](adr/0011-kcad-binary-snapshot.md) (binary `.kcad`) ve [ADR 0012](adr/0012-server-scope-project-cloud.md)'dedir (proje bulutu, Martin kapsam dışı). Bu belgenin bölümlerinin durumu:
+>
+> - **Geçerli:**
+>   - §4: taşıma yöntemi, fixture ve kaydedici kuralları.
+>   - §5: ortam notları.
+>   - §6: açık kararlar; hâlâ yanıt bekliyor.
+> - **Yerini aldı:** §3 “Sıradaki işler” sırasının yerine TODOS.md §22'deki fazlar geçti (F0–F10). Kalan işler şuralarda izlenir:
+>   - kabul ölçümü: `PERF-01..04`;
+>   - DXF'in gerçek programlarda denenmesi: `FMT-02`;
+>   - kalan sağlam karar dilimleri: `NUM-02`.
+> - **Değişti:** kullanıcı söylemeden alt ajan ya da workflow çalıştırılmaz. Derleme ve testler hiçbir zaman aynı anda çalışmaz (kullanıcı, 25 Eylül). Bu, §2 “Alt ajanlar”, §5 “Ağır işler” ve “Alt ajan” maddelerinin yerine geçer.
+
 Tarih: 24 Eylül 2026. Bu notlar işi sürdürecek yapay zekâ ajanı içindir.
 Önce bu dosyayı, sonra aşağıdaki belgeleri okuyun. İş ilerledikçe bu dosyayı
 güncel tutun; biten maddeyi silin, yeni kararı ekleyin. Dilimlerin ayrıntılı
