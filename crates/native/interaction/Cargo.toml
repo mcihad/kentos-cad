@@ -1,0 +1,16 @@
+[package]
+name = "kentos-interaction"
+description = "The desktop's tool session: tool states, prompts as data, typed and clicked points, confirm, cancel and step undo, as the web's tools behave (docs/adr/0018, 0021)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust, native only (TODOS.md §2.1 `native/interaction`): no Iced, no GPU,
+# no runtime (scripts/arch/deps.mjs, group `interaction`). The web keeps its
+# own TypeScript session (apps/web/src/tools). The geometry comes from the
+# shared core; a finished object is written through the native document.
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+kentos-domain = { path = "../domain" }

@@ -2499,6 +2499,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-interaction"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
+ "kentos-geometry-core",
+]
+
+[[package]]
 name = "kentos-postgres"
 version = "0.1.0"
 dependencies = [
