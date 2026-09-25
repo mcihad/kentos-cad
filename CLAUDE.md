@@ -56,11 +56,12 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015) | `apps/api/`, `crates/server/` |
 | Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict | `app/cloud/`, `ui/cloud/` |
 | KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
-| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet, geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır) | `apps/desktop/` |
+| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet, geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan aracı, değer alanı ve web'in tuş anlamları (ADR 0021) | `apps/desktop/` |
 | Native wgpu çizim hattı ve paylaşılan WGSL sözleşmesi | `crates/render/wgpu/`, `shaders/wgsl/` |
 | Masaüstü belgesi (`kentos-domain`): web `CadDocument`'inin anlamı native olarak, ortak işlem fixture'larıyla sınanır | `crates/native/domain/`, `fixtures/document-ops/` |
+| Masaüstü araç oturumu (`kentos-interaction`): durumlar, veri olarak istem, kapalı alan aracı; iki platform `fixtures/interaction/v1` izlerini ve `fixtures/point-input/v1` dilbilgisini geçer | `crates/native/interaction/` |
 
-Desktop çizim araçları, çizim alanında yazı/seçim/yakalama, binary KCAD, embed Python, tam AI yüzeyi,
+Kapalı alan dışındaki desktop çizim araçları, çizim alanında yazı/seçim/yakalama, binary KCAD, embed Python, tam AI yüzeyi,
 genişletilmiş proje bazlı paylaşım ve kalıcı server worker kabulü gelecek
 işlerdir. Mevcut tenant/cloud altyapısını yok saymayın; onu bu kapsamla tamamlayın.
 Web'e göre verilen kısa dosya yolları `apps/web/src/` altındadır.
@@ -85,6 +86,7 @@ pnpm wasm                # değişen ortak kaynakların WASM paketlerini derle
 pnpm e2e                 # gerçek tarayıcı duman testi
 pnpm e2e:visual          # görsel karşılaştırma
 pnpm e2e:interaction     # etkileşim izleri: poligon kabul izi, tuş anlamları (fixtures/interaction, ADR 0018)
+cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan (ADR 0021)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 node scripts/wgsl/browser-check.mjs   # paylaşılan WGSL'yi Chrome WebGPU'da derler ve çizer
 KENTOS_GPU_TESTS=1 cargo test -p kentos-render-wgpu --test gpu   # gerçek GPU'da hassasiyet
@@ -191,6 +193,9 @@ Araç DOM'a dokunmaz; mevcut `Tool`, araç aileleri ve `ctx.view` arayüzünü k
 Akış/istem/önizleme TS'te, hesap Rust'tadır. Enter/onay, Esc/iptal ve nested
 şeffaf araç davranışı korunur; iptal taslağı kalıcı geometriye dönüştürmez.
 Kenet pointerdown/up'ta yeniden hesaplanır; eski pointermove sonucuna güvenilmez.
+Masaüstünün karşılığı `kentos_interaction`'dır (ADR 0021): iki taraf `fixtures/interaction/v1`
+izlerini ve yazılan değerin `fixtures/point-input/v1` dilbilgisini geçer; davranış
+değişikliği ADR 0018'in sırasıyla yapılır.
 
 ### 4.8 Belge ve kayıt
 
@@ -382,7 +387,7 @@ apps/api/              kentosd: HTTP/WS, auth ve yönetim CLI
 apps/desktop/          masaüstü kabuğu (kentos-cad): Iced + KentOS UI
 apps/ui-showcase/      KentOS UI bileşen vitrini
 crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
-crates/native/         native belge (domain); web'e derlenmez
+crates/native/         native belge (domain) ve araç oturumu (interaction); web'e derlenmez
 crates/render/wgpu/    native wgpu çizim hattı (Iced bilmez)
 shaders/wgsl/          paylaşılabilir WGSL ve sürümlü düzen sözleşmesi
 crates/shared/         contracts, geometry-core, style-core, svg-core, formats
@@ -398,7 +403,8 @@ docs/deps/             bağımlılık kaydı
 ```
 
 `crates/ui`, `apps/ui-showcase`, `apps/desktop` (ilk kabuk), `crates/native/domain`
-(belge, ADR 0020), `crates/render/wgpu` ve `shaders/wgsl` (ADR 0019) kuruldu.
+(belge, ADR 0020), `crates/native/interaction` (araç oturumu, ADR 0021),
+`crates/render/wgpu` ve `shaders/wgsl` (ADR 0019) kuruldu.
 Stil sistemi: [docs/STYLE.md](docs/STYLE.md). Processing:
 [docs/PROCESSING.md](docs/PROCESSING.md). Tarihli devir notları:
 [docs/DEVIR.md](docs/DEVIR.md); eski durum/faz notlarını güncel kod ve
