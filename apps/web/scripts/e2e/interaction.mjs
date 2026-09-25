@@ -4,7 +4,10 @@
 // `window.kentos` handle. The desktop plays the same files natively once its
 // drawing area and tool session exist; a trace is the behaviour both keep.
 //
-//   pnpm e2e:interaction [trace-id…]      (CHROME_BIN overrides the browser binary)
+// Every trace runs once per variant (the §5 acceptance variants): the key
+// events a US and a Turkish Q keyboard send, and a 2× (HiDPI) screen.
+//
+//   pnpm e2e:interaction [trace-id…] [--variant=us|tr-q|hidpi]   (CHROME_BIN overrides the browser binary)
 import http from 'node:http';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -12,7 +15,16 @@ import { createServer } from 'vite';
 import { launch, sleep } from './cdp.mjs';
 
 const DIR = new URL('../../../../fixtures/interaction/v1/', import.meta.url).pathname;
-const only = process.argv.slice(2);
+const args = process.argv.slice(2);
+const only = args.filter((a) => !a.startsWith('--'));
+const VARIANTS = [
+  { id: 'us', layout: 'us', dpr: 1 },
+  { id: 'tr-q', layout: 'tr-q', dpr: 1 },
+  { id: 'hidpi', layout: 'us', dpr: 2 },
+];
+const wanted = args.filter((a) => a.startsWith('--variant=')).map((a) => a.slice('--variant='.length));
+const variants = VARIANTS.filter((v) => !wanted.length || wanted.includes(v.id));
+if (!variants.length) throw new Error(`no variant ${wanted.join(', ')}; there are ${VARIANTS.map((v) => v.id).join(', ')}`);
 const traces = readdirSync(DIR)
   .filter((f) => f.endsWith('.json'))
   .sort()
@@ -38,7 +50,7 @@ const b = await launch(server.resolvedUrls.local[0]);
 
 // ── Keyboard ────────────────────────────────────────────────────────────
 // A trace names characters (what the keyboard produces), not key positions;
-// these are the key events a US layout sends for them.
+// each layout says which key events produce them.
 const NAMED = {
   Enter: { key: 'Enter', code: 'Enter', vk: 13, text: '\r' },
   Esc: { key: 'Escape', code: 'Escape', vk: 27 },
@@ -46,24 +58,47 @@ const NAMED = {
   Backspace: { key: 'Backspace', code: 'Backspace', vk: 8 },
   Space: { key: ' ', code: 'Space', vk: 32, text: ' ' },
 };
-const SYMBOLS = {
-  '.': { code: 'Period', vk: 190 },
-  ',': { code: 'Comma', vk: 188 },
-  ';': { code: 'Semicolon', vk: 186 },
-  '-': { code: 'Minus', vk: 189 },
-  '+': { code: 'NumpadAdd', vk: 107 },
-  '@': { code: 'Digit2', vk: 50, shift: true },
-  '<': { code: 'IntlBackslash', vk: 226 },
-  ' ': { code: 'Space', vk: 32 },
+const LAYOUTS = {
+  us: {
+    '.': { code: 'Period', vk: 190 },
+    ',': { code: 'Comma', vk: 188 },
+    ';': { code: 'Semicolon', vk: 186 },
+    '-': { code: 'Minus', vk: 189 },
+    '+': { code: 'NumpadAdd', vk: 107 },
+    '@': { code: 'Digit2', vk: 50, shift: true },
+    '<': { code: 'IntlBackslash', vk: 226 },
+    ' ': { code: 'Space', vk: 32 },
+  },
+  // Turkish Q: + is Shift+4, - sits right of *, @ is AltGr+Q. Windows
+  // reports AltGr as Ctrl+Alt, so that is what the page receives.
+  'tr-q': {
+    '.': { code: 'Slash', vk: 191 },
+    ',': { code: 'Backslash', vk: 220 },
+    ';': { code: 'Backslash', vk: 220, shift: true },
+    '-': { code: 'Equal', vk: 187 },
+    '+': { code: 'Digit4', vk: 52, shift: true },
+    '@': { code: 'KeyQ', vk: 81, altGr: true },
+    '<': { code: 'IntlBackslash', vk: 226 },
+    ' ': { code: 'Space', vk: 32 },
+    ı: { code: 'KeyI', vk: 73 },
+    i: { code: 'Quote', vk: 222 },
+    ş: { code: 'Semicolon', vk: 186 },
+    ğ: { code: 'BracketLeft', vk: 219 },
+    ü: { code: 'BracketRight', vk: 221 },
+    ö: { code: 'Comma', vk: 188 },
+    ç: { code: 'Period', vk: 190 },
+  },
 };
+let layout = LAYOUTS.us;
 
 function keyFor(ch) {
   if (NAMED[ch]) return NAMED[ch];
   if (/^\d$/.test(ch)) return { key: ch, code: `Digit${ch}`, vk: 48 + Number(ch), text: ch };
-  if (SYMBOLS[ch]) return { key: ch, text: ch, ...SYMBOLS[ch] };
+  if (layout[ch]) return { key: ch, text: ch, ...layout[ch] };
   if (/^\p{L}$/u.test(ch)) {
     // An option letter is typed without Shift; the app compares upper case.
     const lower = ch.toLocaleLowerCase('tr-TR');
+    if (layout[lower]) return { key: lower, text: lower, ...layout[lower] };
     const ascii = lower.normalize('NFD').replace(/\p{M}/gu, '').replace('ı', 'i').toUpperCase();
     return { key: lower, code: `Key${ascii}`, vk: ascii.charCodeAt(0), text: lower };
   }
@@ -73,11 +108,13 @@ function keyFor(ch) {
 async function press(chord) {
   const parts = chord === '+' ? ['+'] : chord.split('+');
   const name = parts.pop();
-  const ctrl = parts.includes('Ctrl');
-  const alt = parts.includes('Alt');
   const spec = keyFor(name);
+  const altGr = Boolean(spec.altGr);
+  const ctrl = parts.includes('Ctrl') || altGr;
+  const alt = parts.includes('Alt') || altGr;
   const modifiers = (alt ? 1 : 0) | (ctrl ? 2 : 0) | (spec.shift ? 8 : 0);
-  const text = ctrl || alt ? undefined : spec.text;
+  // A chord types nothing; AltGr types its character.
+  const text = (ctrl || alt) && !altGr ? undefined : spec.text;
   const base = { key: spec.key, code: spec.code, windowsVirtualKeyCode: spec.vk, modifiers };
   await b.send('Input.dispatchKeyEvent', { type: text ? 'keyDown' : 'rawKeyDown', ...base, text });
   await b.send('Input.dispatchKeyEvent', { type: 'keyUp', ...base });
@@ -123,6 +160,9 @@ async function setUp(t) {
   await b.eval(`(() => {
     const k = window.kentos;
     k.tools.activate('select');
+    // Nothing typed in an earlier trace carries over.
+    const line = document.querySelector('.cmdline__input');
+    if (line) line.value = '';
     if (!k.files.load(${JSON.stringify(doc)}, null)) throw new Error('${t.document} did not load');
     // Save and open write to memory; the drawing is asked about nowhere.
     const store = (window.__traceFiles = new Map());
@@ -244,27 +284,32 @@ try {
   await b.waitFor(ready, 20000);
   await sleep(1200); // first-load dependency optimisation can reload once
   await b.waitFor(ready, 20000);
-  for (const t of traces) {
-    await setUp(t);
-    const problems = [];
-    for (const [i, step] of t.steps.entries()) {
-      const label = `  adım ${i + 1} ${JSON.stringify(Object.fromEntries(Object.entries(step).filter(([k]) => k !== 'expect' && k !== 'note')))}`;
-      try {
-        await act(step);
-      } catch (e) {
-        // A step that cannot be played ends its trace; the others still run.
-        problems.push(`${label}: ${e instanceof Error ? e.message : e}`);
-        break;
+  for (const v of variants) {
+    layout = LAYOUTS[v.layout];
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 900, deviceScaleFactor: v.dpr, mobile: false });
+    await sleep(300);
+    for (const t of traces) {
+      await setUp(t);
+      const problems = [];
+      for (const [i, step] of t.steps.entries()) {
+        const label = `  adım ${i + 1} ${JSON.stringify(Object.fromEntries(Object.entries(step).filter(([k]) => k !== 'expect' && k !== 'note')))}`;
+        try {
+          await act(step);
+        } catch (e) {
+          // A step that cannot be played ends its trace; the others still run.
+          problems.push(`${label}: ${e instanceof Error ? e.message : e}`);
+          break;
+        }
+        if (!step.expect) continue;
+        const bad = compare(step.expect, await observe(), t);
+        if (bad.length) problems.push(`${label}: ${bad.join('; ')}`);
       }
-      if (!step.expect) continue;
-      const bad = compare(step.expect, await observe(), t);
-      if (bad.length) problems.push(`${label}: ${bad.join('; ')}`);
+      // The end state of each trace, to look at (scripts/e2e/out, not committed).
+      if (v.id === 'us') await b.shot(`interaction-${t.id}`);
+      console.log(`${problems.length ? '✗' : '✓'} [${v.id}] ${t.id}: ${t.title}`);
+      for (const p of problems) console.log(p);
+      if (problems.length) failed++;
     }
-    // The end state of each trace, to look at (scripts/e2e/out, not committed).
-    await b.shot(`interaction-${t.id}`);
-    console.log(`${problems.length ? '✗' : '✓'} ${t.id}: ${t.title}`);
-    for (const p of problems) console.log(p);
-    if (problems.length) failed++;
   }
   const errors = b.consoleLog.filter((l) => l.startsWith('EXCEPTION') || l.startsWith('error'));
   if (errors.length) {
@@ -276,5 +321,5 @@ try {
   await server.close();
   api.close();
 }
-console.log(failed ? `${failed} iz geçmedi.` : `${traces.length} iz geçti.`);
+console.log(failed ? `${failed} iz geçmedi.` : `${traces.length} iz × ${variants.length} varyant geçti.`);
 process.exit(failed ? 1 : 0);

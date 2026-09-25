@@ -44,17 +44,29 @@ export function keyFromEvent(e: KeyboardEvent): string | null {
   const c = e.code;
   const ch = e.key.length === 1 ? (e.key === 'ı' ? 'I' : e.key.toUpperCase()) : '';
   if (/^[A-Z]$/.test(ch)) return ch;
+  // Symbol keys differ per layout: trust the produced character. It comes
+  // before the key position, since Turkish Q types + with Shift+4 (docs/adr/0018).
+  if (e.key === '+' || e.key === '-' || e.key === ',') return e.key;
   if (c.startsWith('Key')) return c.slice(3);
   if (c.startsWith('Digit')) return c.slice(5);
   if (/^F\d{1,2}$/.test(c)) return c;
   if (NAMED_CODES[c]) return NAMED_CODES[c];
-  // Symbol keys differ per layout: trust the produced character.
-  if (e.key === '+' || e.key === '-' || e.key === ',') return e.key;
   return null;
+}
+
+/**
+ * A character typed with AltGr: @ on Turkish Q and F keyboards is AltGr+Q,
+ * which Windows reports as Ctrl+Alt. It is text, never a Ctrl+Alt chord;
+ * Ctrl+Alt with a letter or digit stays a chord (Ctrl+Alt+N).
+ */
+export function isAltGrText(e: KeyboardEvent): boolean {
+  if (e.key.length !== 1 || /^[\p{L}\p{N}]$/u.test(e.key)) return false;
+  return e.getModifierState?.('AltGraph') || (e.ctrlKey && e.altKey);
 }
 
 export function chordFromEvent(e: KeyboardEvent): string | null {
   if (e.key === 'Control' || e.key === 'Shift' || e.key === 'Alt' || e.key === 'Meta') return null;
+  if (isAltGrText(e)) return null;
   const key = keyFromEvent(e);
   if (!key) return null;
   const mods: string[] = [];

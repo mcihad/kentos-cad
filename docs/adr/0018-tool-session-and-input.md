@@ -55,8 +55,9 @@ Bir tuş aşağıdaki sırayla ilk sahibine gider:
 4. **Kısayollar.**
 5. **Değer başlatan karakter:** rakam, `.` ve `@`; komut çalışırken `-` ve `+` da.
    - İmleç çizim alanındaysa ve tercih açıksa değer alanı imlecin yanında açılır; değilse komut satırı odaklanır.
-   - **İlk karakter alana tam bir kez girer.** Web'de tuş işleyicisi alanı odaklar, tarayıcı karakteri yeni odağa yazar.
-   - Masaüstünde karakter, tuş olayının ürettiği metinden alınır, fiziksel tuş kodundan değil. Türkçe Q ve F klavye böylece korunur (CLAUDE.md §4.6).
+   - **İlk karakter alana tam bir kez girer.** Web'de alan karakteri kendisi yazar ve tuş olayını tüketir. Karakteri tarayıcının yeni odağa taşımasına bırakmak güvenilir değildi: AltGr ile yazılan `@` yolda kayboluyordu (aşağıda).
+   - Karakter, tuş olayının ürettiği metinden alınır, fiziksel tuş kodundan değil. Türkçe Q ve F klavye böylece korunur (CLAUDE.md §4.6). Masaüstü de aynı kuralı uygular.
+   - AltGr ile üretilen karakter metindir, kısayol değildir. Windows AltGr'yi Ctrl+Alt diye bildirir; Ctrl+Alt ile harf ya da rakam ise kısayol kalır (Ctrl+Alt+N).
 
 Komut yokken `+` ve `-` görünümü 1,5 kat yakınlaştırır ve uzaklaştırır.
 
@@ -111,7 +112,11 @@ Komut yokken `+` ve `-` görünümü 1,5 kat yakınlaştırır ve uzaklaştırı
   - Tab'dan sonra alan kapanıyor ve değer kayboluyor.
 
   İzler davranışı gerçekten tutuyor.
-- **Henüz izde olmayan varyantlar:** yüksek DPI, Türkçe klavye ve IME. Odak başka alandayken yazma varyantının ilk örneği `polygon-keys`'te.
+- **Varyantlar:** oynatıcı her izi üç kez oynatır: US klavye, Türkçe Q klavye ve 2× ekran (HiDPI). Türkçe Q'da AltGr, Windows'taki gibi Ctrl+Alt olarak gelir. Türkçe Q varyantı iki hata buldu; ikisi de düzeltildi (25 Eylül):
+  - `@0,8` yazınca `@` kayboluyordu. `0,8` mutlak koordinat sayılıyor ve köşe koordinat sisteminin başlangıcına, yüzlerce kilometre öteye uyarısız konuyordu.
+  - Shift+4 ile yazılan `+` yakınlaştırmıyordu. Tuş çözücüsü `4` okuyordu; karakter komut satırına düşüyordu.
+
+  `core/keymap.test.ts` iki düzeni birim düzeyinde de sınar. IME açık varyantı ve Türkçe F klavye henüz izde değil. Odak başka alandayken yazma, `polygon-keys`'te.
 - **`UX-03`:** öncelik sırası yazıldı. Değer alanı ile iletişim kutusu arasındaki ayrıntılar ve IME testi açık.
 
 ## Sahibin kararları (25 Eylül)

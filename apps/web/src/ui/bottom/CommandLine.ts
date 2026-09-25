@@ -1,7 +1,7 @@
 import type { AppContext } from '../../app/context';
 import type { Command } from '../../core/commands';
 import { listen } from '../../core/disposable';
-import { formatChord, isTextInput } from '../../core/keymap';
+import { formatChord, isAltGrText, isTextInput } from '../../core/keymap';
 import { looksLikeCoordinate } from '../../tools/coordinateInput';
 import { CALC_KINDS, canCalcPoint, startPointCalc } from '../../tools/pointCalc';
 import { Component } from '../Component';
@@ -54,15 +54,19 @@ export class CommandLine extends Component {
     this.d.add(listen(this.input, 'blur', () => setTimeout(() => this.hideList(), 120)));
 
     // Route coordinate-looking keystrokes from the drawing into the field.
-    // The browser then types the key into the field it focused: the first
-    // character arrives exactly once. + and − reach here only while a
+    // The field takes the first character itself, exactly once: left to
+    // the browser, a character typed with AltGr (@ on Turkish keyboards)
+    // does not always follow the focus. + and − reach here only while a
     // command runs (their zoom bindings wait for the select tool).
     ctx.keymap.fallback = (e) => {
-      if (e.ctrlKey || e.altKey || e.metaKey || e.key.length !== 1) return;
+      if (e.metaKey || e.key.length !== 1) return;
+      // @ comes with AltGr (Ctrl+Alt on Windows) on Turkish keyboards: text, not a chord.
+      if ((e.ctrlKey || e.altKey) && !isAltGrText(e)) return;
       if (isTextInput(document.activeElement)) return;
       if (!/[\d@.+-]/.test(e.key)) return;
-      if (this.direct?.accepts()) this.direct.show();
-      else this.focus();
+      e.preventDefault();
+      if (this.direct?.accepts()) this.direct.show(e.key);
+      else this.typeFirst(e.key);
     };
     this.d.add(() => (ctx.keymap.fallback = null));
 
@@ -84,10 +88,18 @@ export class CommandLine extends Component {
   }
 
   /** Field beside the cursor that takes typed values while the mouse is on the drawing. */
-  direct: { accepts(): boolean; show(): void } | null = null;
+  direct: { accepts(): boolean; show(first: string): void } | null = null;
 
   focus(): void {
     this.input.focus();
+  }
+
+  /** Focuses the field with a character typed elsewhere, added after what it holds. */
+  private typeFirst(ch: string): void {
+    this.input.focus();
+    this.input.value += ch;
+    this.input.setSelectionRange(this.input.value.length, this.input.value.length);
+    this.suggest();
   }
 
   private setPrompt(prompt: string): void {

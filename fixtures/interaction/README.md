@@ -80,10 +80,20 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 - Beklenen değeri hataya göre yenilemek yasaktır (CLAUDE.md §9.4).
 - Yeni bir iz ya da alan eklenince bu belge ve web oynatıcısı (`apps/web/scripts/e2e/interaction.mjs`) birlikte güncellenir.
 
-## Eklenecek varyantlar
+## Varyantlar
 
-§5 kabul izi şu varyantları da ister:
-- **Odak başka bir metin alanındayken:** ilk örneği `polygon-keys`'te.
-- **Yüksek DPI.**
-- **Türkçe Q ve F klavye.**
-- **IME açıkken.**
+Web oynatıcısı her izi üç varyantta oynatır. Masaüstü de aynısını yapar.
+
+| Varyant | Anlamı |
+|---|---|
+| `us` | US klavye, 1× ekran |
+| `tr-q` | Türkçe Q klavye. `+` Shift+4'le, `-` `*`'ın sağındaki tuşla, `@` AltGr+Q ile yazılır; AltGr Windows'taki gibi Ctrl+Alt olarak gelir |
+| `hidpi` | US klavye, 2× ekran (HiDPI) |
+
+Bir varyantı seçmek için: `pnpm e2e:interaction -- --variant=tr-q`.
+
+**Odak başka bir metin alanındayken** yazma durumu `polygon-keys`'te.
+
+§5 kabul izinin istediği şu varyantlar henüz yok:
+- Türkçe F klavye;
+- IME açıkken yazma.

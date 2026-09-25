@@ -52,12 +52,14 @@ export class CursorInput extends Component {
     return this.ctx.prefs.cursorInput.value && this.ctx.view.cursorWorld.value !== null && this.ctx.tools.activeId.value !== 'select';
   }
 
-  show(): void {
+  /** Opens the field holding the character that opened it. */
+  show(first: string): void {
     this.open = true;
-    this.input.value = '';
+    this.input.value = first;
     this.el.hidden = false;
     this.place();
     this.input.focus({ preventScroll: true });
+    this.input.setSelectionRange(first.length, first.length);
   }
 
   private place(): void {
