@@ -53,7 +53,7 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Rust geometri, sayısal politika, pick/snap deposu, stil/ifade, SVG ve format hesapları | `crates/shared/` |
 | Dar WASM bağlayıcıları ve Rust → TS sözleşme üretimi | `crates/wasm/`, `crates/shared/contracts/` |
 | Belge transaction/rollback, undo/redo ve yerel JSON `.kcad` kaydet/aç | `model/document.ts`, `model/snapshot.ts`, `app/fileIO.ts` |
-| Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox | `apps/api/`, `crates/server/` |
+| Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015) | `apps/api/`, `crates/server/` |
 | Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict | `app/cloud/`, `ui/cloud/` |
 | KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
 | Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet, geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır) | `apps/desktop/` |
@@ -442,6 +442,11 @@ bağımsız yazılabilir otorite kurmayın. Ayrıntı TODOS.md §10–11, ADR 00
 ## 16. Tenant, proje yetkisi ve paylaşım
 
 Mevcut tenant/rol altyapısını koruyup proje bazlı yetkiyle genişletin.
+Proje erişimi proje düzeyindedir (ADR 0015): rolü `kentos.project_role`, izinleri
+`application/src/access.rs` verir. Projeye dokunan her kullanım durumu, HTTP yolu, ürün komutu
+ve WS aboneliği `access::project` ile başlar; yazanlar proje kilidi altında yeniden sorar.
+Erişilemeyen proje var olmayan gibi 404'tür. Projeye bağlı satırlar yalnız `app.project_id`
+kapsamında görünür.
 Kimlik/izin server'da doğrulanır; tenant üyeliği her projeyi görme hakkı değildir.
 API, WS, sorgu, dosya/asset, job, Python ve AI aynı erişim modelini kullanır.
 Kişisel ve kurumsal sahiplik, davet, paylaşım ve izin iptali TODOS.md §12'dedir.

@@ -20,6 +20,15 @@ pub const PROJECT_CHANGES_VERSION: u32 = 1;
 pub const PROJECT_META_KEY: &str = "@project";
 /// Event kind of a deleted project (`EventRecord.kind`): its editors stop sending.
 pub const PROJECT_DELETED: &str = "project.deleted";
+/// Sharing a project with a person or changing their role (docs/adr/0015).
+pub const PROJECT_SHARE: &str = "project.share";
+pub const PROJECT_SHARE_VERSION: u32 = 1;
+/// Taking a person's grant away.
+pub const PROJECT_ACCESS_REVOKE: &str = "project.access.revoke";
+pub const PROJECT_ACCESS_REVOKE_VERSION: u32 = 1;
+/// Event kind of a changed grant (`EventRecord.kind`, no objects): open
+/// connections check their access again, and one without it is closed.
+pub const PROJECT_ACCESS_CHANGED: &str = "project.access";
 
 // ── Sign-in ──────────────────────────────────────────────────────────────
 
@@ -83,7 +92,21 @@ pub enum TenantRole {
     Owner,
 }
 
-/// `GET /v1/me`: the signed-in account and every tenant it belongs to.
+/// A tenant is an organisation or a person's personal space (docs/adr/0015).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum TenantKind {
+    /// Opened by the server for one person; its only member is its owner, others come through sharing.
+    Personal,
+    Organization,
+}
+
+/// `GET /v1/me`: the signed-in account and every tenant it belongs to
+/// (organisations by name, then the personal space, which the server opens
+/// on the first sign-in).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -116,14 +139,194 @@ pub struct UserView {
 pub struct MembershipView {
     pub tenant_id: String,
     pub tenant_slug: String,
+    /// An organisation's name; for a personal space, its person's name (the interface says “Kişisel”).
     pub tenant_name: String,
+    pub tenant_kind: TenantKind,
     pub role: TenantRole,
     /// A seat is allocated: without one the tenant's projects cannot be opened.
     pub seat: bool,
     /// Membership and tenant are both active.
     pub active: bool,
-    /// What this membership may do (`project.read`, `feature.write`, …).
+    /// What this membership may do in the tenant itself: `project.create`,
+    /// `member.manage`. What it may do in a project is that project's
+    /// (`ProjectAccessView`): a tenant role opens no project by itself.
     pub capabilities: Vec<String>,
+}
+
+// ── Project access (docs/adr/0015) ───────────────────────────────────────
+
+/// A role in one project. Each has the rights of the ones before it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ProjectRole {
+    Viewer,
+    Commenter,
+    Editor,
+    Manager,
+    /// The project's owner; not given by sharing (ownership is transferred).
+    Owner,
+}
+
+impl ProjectRole {
+    /// Its name in the API and the database.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Viewer => "viewer",
+            Self::Commenter => "commenter",
+            Self::Editor => "editor",
+            Self::Manager => "manager",
+            Self::Owner => "owner",
+        }
+    }
+
+    pub fn from_name(name: &str) -> Option<Self> {
+        [
+            Self::Viewer,
+            Self::Commenter,
+            Self::Editor,
+            Self::Manager,
+            Self::Owner,
+        ]
+        .into_iter()
+        .find(|r| r.name() == name)
+    }
+}
+
+/// A role a share gives: every project role but the owner's (ownership is transferred, not shared).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum GrantRole {
+    Viewer,
+    Commenter,
+    Editor,
+    Manager,
+}
+
+impl GrantRole {
+    pub const ALL: [GrantRole; 4] = [Self::Viewer, Self::Commenter, Self::Editor, Self::Manager];
+
+    pub fn name(self) -> &'static str {
+        ProjectRole::from(self).name()
+    }
+
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|r| r.name() == name)
+    }
+}
+
+impl From<GrantRole> for ProjectRole {
+    fn from(role: GrantRole) -> Self {
+        match role {
+            GrantRole::Viewer => Self::Viewer,
+            GrantRole::Commenter => Self::Commenter,
+            GrantRole::Editor => Self::Editor,
+            GrantRole::Manager => Self::Manager,
+        }
+    }
+}
+
+/// A permission in a project. The names are fixed: commands (`permissions`
+/// in the catalog), the web, the desktop, Python and AI use them as they are.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ProjectPermission {
+    /// See it in lists, open it, read its objects and events.
+    #[serde(rename = "project.read")]
+    Read,
+    /// Change its objects.
+    #[serde(rename = "feature.write")]
+    FeatureWrite,
+    /// Its name, settings, layer tree and styles.
+    #[serde(rename = "project.edit")]
+    Edit,
+    /// Delete it (softly: the operator can restore it).
+    #[serde(rename = "project.delete")]
+    Delete,
+    /// Comments and review notes.
+    #[serde(rename = "project.comment")]
+    Comment,
+    /// Download and export its files and revisions (viewing is not DRM: what is seen can be copied).
+    #[serde(rename = "project.download")]
+    Download,
+    /// See and open earlier revisions.
+    #[serde(rename = "project.history")]
+    History,
+    /// Give and take away roles in it.
+    #[serde(rename = "project.share")]
+    Share,
+    /// Hand its ownership over.
+    #[serde(rename = "project.transfer")]
+    Transfer,
+    /// Start server jobs on it.
+    #[serde(rename = "project.jobs.run")]
+    JobsRun,
+}
+
+impl ProjectPermission {
+    pub const ALL: [ProjectPermission; 10] = [
+        Self::Read,
+        Self::FeatureWrite,
+        Self::Edit,
+        Self::Delete,
+        Self::Comment,
+        Self::Download,
+        Self::History,
+        Self::Share,
+        Self::Transfer,
+        Self::JobsRun,
+    ];
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Read => "project.read",
+            Self::FeatureWrite => "feature.write",
+            Self::Edit => "project.edit",
+            Self::Delete => "project.delete",
+            Self::Comment => "project.comment",
+            Self::Download => "project.download",
+            Self::History => "project.history",
+            Self::Share => "project.share",
+            Self::Transfer => "project.transfer",
+            Self::JobsRun => "project.jobs.run",
+        }
+    }
+}
+
+/// Where a person's role in a project comes from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AccessSource {
+    /// They own it.
+    Owner,
+    /// It was shared with them.
+    Grant,
+    /// The organisation's policy lets its owners and admins into projects not shared with them.
+    Policy,
+}
+
+/// The caller's access to a project: the highest of ownership, a grant and the
+/// organisation's policy, and exactly what it allows. Buttons follow it; the
+/// server checks every request itself.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectAccessView {
+    pub role: ProjectRole,
+    pub via: AccessSource,
+    pub permissions: Vec<ProjectPermission>,
 }
 
 // ── Projects and features ────────────────────────────────────────────────
@@ -140,8 +343,14 @@ pub struct ProjectSummary {
     pub data_revision: String,
     /// RFC 3339.
     pub updated_at: String,
+    pub tenant_id: String,
+    pub tenant_name: String,
+    pub tenant_kind: TenantKind,
+    pub access: ProjectAccessView,
 }
 
+/// A tenant's projects the caller may see (`GET /v1/tenants/{tenant}/projects`), or
+/// the caller's own and shared ones across tenants (`GET /v1/me/projects`); newest first.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -177,6 +386,10 @@ pub struct ProjectCreate {
 pub struct ProjectInfo {
     pub id: String,
     pub tenant_id: String,
+    pub tenant_name: String,
+    pub tenant_kind: TenantKind,
+    /// What the caller may do in it.
+    pub access: ProjectAccessView,
     pub name: String,
     pub settings: ProjectSettings,
     pub origin: Vec2,
@@ -348,6 +561,89 @@ pub struct ApiError {
     pub conflicts: Option<Vec<FeatureConflict>>,
 }
 
+// ── Sharing (project.share, project.access.revoke) ───────────────────────
+
+/// Input of `project.share` v1: gives a person a role in the project, or
+/// changes the one they have. In an organisation the person must be a member.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectShare {
+    /// The account id (`UserView.id`).
+    pub user_id: String,
+    pub role: GrantRole,
+    /// RFC 3339; the grant ends by itself then. Absent: until revoked.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub expires_at: Option<String>,
+}
+
+/// Input of `project.access.revoke` v1: takes a person's grant away (nothing
+/// changes if they have none). Their open connections are closed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectAccessRevoke {
+    pub user_id: String,
+}
+
+/// A person's grant in a project.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectGrant {
+    pub user_id: String,
+    pub display_name: String,
+    pub role: GrantRole,
+    /// RFC 3339, when it ends by itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub expires_at: Option<String>,
+    /// RFC 3339.
+    pub updated_at: String,
+}
+
+/// `GET …/projects/{project}/access`: the owner and every grant (needs `project.share`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectAccessList {
+    pub owner_id: String,
+    pub owner_name: String,
+    pub grants: Vec<ProjectGrant>,
+}
+
+/// The result of `project.share` and `project.access.revoke`; a retry with the
+/// same idempotency key gets the same one (`replayed`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectAccessChange {
+    pub user_id: String,
+    /// The grant now; absent after a revoke.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub grant: Option<ProjectGrant>,
+    /// Whether anything changed (sharing the same role again, or revoking what is not there, does not).
+    pub changed: bool,
+    /// The `project.access` event, when something changed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub event_seq: Option<String>,
+    #[serde(default)]
+    pub replayed: bool,
+}
+
 // ── Events (outbox) ──────────────────────────────────────────────────────
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -383,7 +679,8 @@ pub struct EventFeature {
 pub struct EventRecord {
     pub seq: String,
     pub data_revision: String,
-    /// `project.changes`, or `project.deleted` (no objects; nothing is committed after it).
+    /// `project.changes`; `project.deleted` (no objects; nothing is committed
+    /// after it); `project.access` (a grant changed; no objects).
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -457,4 +754,35 @@ pub enum ServerMessage {
         error: String,
         message: String,
     },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn access_names_on_the_wire_are_the_fixed_ones() {
+        // The names clients, the catalog and the database use are exactly the serialized ones.
+        for p in ProjectPermission::ALL {
+            assert_eq!(serde_json::to_value(p).unwrap(), p.name());
+        }
+        for r in [
+            ProjectRole::Viewer,
+            ProjectRole::Commenter,
+            ProjectRole::Editor,
+            ProjectRole::Manager,
+            ProjectRole::Owner,
+        ] {
+            assert_eq!(serde_json::to_value(r).unwrap(), r.name());
+            assert_eq!(ProjectRole::from_name(r.name()), Some(r));
+        }
+        for g in GrantRole::ALL {
+            assert_eq!(serde_json::to_value(g).unwrap(), g.name());
+            assert_eq!(GrantRole::from_name(g.name()), Some(g));
+        }
+        // Sharing never makes an owner.
+        assert_eq!(GrantRole::from_name("owner"), None);
+        assert!(serde_json::from_value::<GrantRole>(serde_json::json!("owner")).is_err());
+        assert_eq!(ProjectRole::from_name("admin"), None);
+    }
 }

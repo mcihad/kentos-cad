@@ -4,12 +4,14 @@
 
 use std::collections::BTreeMap;
 
+use kentos_application::access::{self, ProjectAccess};
 use kentos_application::identity::{self};
 use kentos_application::tenancy::{self, Access};
-use kentos_application::{AppError, admin, changes, events, projects};
+use kentos_application::{AppError, admin, changes, events, listing, projects, sharing};
 use kentos_contracts::{
     CommandEnvelope, ConflictReason, DocumentSnapshotV1, Entity, FeatureChange, FeatureOp,
-    PROJECT_CHANGES, ProjectChanges, ProjectCreate, ProjectPatch, SignInMethod, TenantRole,
+    GrantRole, PROJECT_CHANGES, PROJECT_SHARE, ProjectChanges, ProjectCreate, ProjectPatch,
+    SignInMethod, TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;
@@ -93,6 +95,24 @@ fn envelope(
     }
 }
 
+/// `who`'s access to a project of their tenant, as a request would get it.
+async fn open(db: &TestDb, who: &Access, project: Uuid) -> ProjectAccess {
+    access::project(&db.app, &who.actor, who.tenant, project)
+        .await
+        .unwrap()
+}
+
+/// The project's owner (`by`) shares it with each of `with` in this role.
+async fn share_with(db: &TestDb, by: &Access, project: Uuid, with: &[&Access], role: GrantRole) {
+    let owner = open(db, by, project).await;
+    for who in with {
+        let mut e = envelope(by, project, changes_of(vec![]), &[]);
+        e.command_name = PROJECT_SHARE.into();
+        e.input = serde_json::json!({ "userId": who.actor.user_id.to_string(), "role": role });
+        sharing::share(&db.app, &owner, e).await.unwrap();
+    }
+}
+
 fn with_id(mut e: Entity, id: u32) -> Entity {
     let base = match &mut e {
         Entity::Point(x) => &mut x.base,
@@ -129,6 +149,11 @@ async fn every_object_kind_comes_back_exactly() {
     let ayse = member(&db, "buro", "ayse", TenantRole::Editor).await;
     let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
     let project = new_project(&db, &pm).await;
+    share_with(&db, &pm, project, &[&ayse], GrantRole::Editor).await;
+    let (ayse_p, pm_p) = (
+        open(&db, &ayse, project).await,
+        open(&db, &pm, project).await,
+    );
     let entities = sample().entities;
     let kinds: std::collections::BTreeSet<_> = entities
         .iter()
@@ -151,7 +176,7 @@ async fn every_object_kind_comes_back_exactly() {
         .collect();
     let result = changes::commit(
         &db.app,
-        &ayse,
+        &ayse_p,
         envelope(&ayse, project, changes_of(list), &[]),
     )
     .await
@@ -168,7 +193,7 @@ async fn every_object_kind_comes_back_exactly() {
     };
     changes::commit(
         &db.app,
-        &pm,
+        &pm_p,
         envelope(&pm, project, restore, &[("@project", "1")]),
     )
     .await
@@ -178,7 +203,7 @@ async fn every_object_kind_comes_back_exactly() {
     let mut back = BTreeMap::new();
     let mut after = None;
     loop {
-        let page = projects::features(&db.app, &ayse, project, after, 5)
+        let page = projects::features(&db.app, &ayse_p, after, 5)
             .await
             .unwrap();
         for f in &page.features {
@@ -212,7 +237,7 @@ async fn every_object_kind_comes_back_exactly() {
             "{kind}"
         );
     }
-    let info = projects::info(&db.app, &ayse, project).await.unwrap();
+    let info = projects::info(&db.app, &ayse_p).await.unwrap();
     assert_eq!(
         (info.feature_count.as_str(), info.data_revision.as_str()),
         (entities.len().to_string().as_str(), "2")
@@ -231,7 +256,7 @@ async fn every_object_kind_comes_back_exactly() {
     assert!(matches!(
         changes::commit(
             &db.app,
-            &ayse,
+            &ayse_p,
             envelope(
                 &ayse,
                 project,
@@ -260,6 +285,11 @@ async fn versions_conflicts_and_idempotency() {
     let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
     let bora = member(&db, "buro", "bora", TenantRole::Editor).await;
     let project = new_project(&db, &ayse).await;
+    share_with(&db, &ayse, project, &[&bora], GrantRole::Editor).await;
+    let (ayse_p, bora_p) = (
+        open(&db, &ayse, project).await,
+        open(&db, &bora, project).await,
+    );
     let layer = sample().active_layer;
     let id = Uuid::new_v4().to_string();
 
@@ -272,11 +302,11 @@ async fn versions_conflicts_and_idempotency() {
         }]),
         &[],
     );
-    let first = changes::commit(&db.app, &ayse, create.clone())
+    let first = changes::commit(&db.app, &ayse_p, create.clone())
         .await
         .unwrap();
     // The same envelope again is answered from the log, without a second write.
-    let again = changes::commit(&db.app, &ayse, create.clone())
+    let again = changes::commit(&db.app, &ayse_p, create.clone())
         .await
         .unwrap();
     assert!(
@@ -287,7 +317,7 @@ async fn versions_conflicts_and_idempotency() {
     let mut reused = create.clone();
     reused.input = serde_json::to_value(changes_of(vec![])).unwrap();
     assert!(
-        matches!(changes::commit(&db.app, &ayse, reused).await, Err(AppError::Invalid(m)) if m.contains("idempotency"))
+        matches!(changes::commit(&db.app, &ayse_p, reused).await, Err(AppError::Invalid(m)) if m.contains("idempotency"))
     );
 
     // Bora edits version 1; Ayşe's edit based on version 1 then conflicts and carries the server's copy.
@@ -302,11 +332,11 @@ async fn versions_conflicts_and_idempotency() {
             &[(id.as_str(), v)],
         )
     };
-    let by_bora = changes::commit(&db.app, &bora, update(&bora, 486513.0, "1"))
+    let by_bora = changes::commit(&db.app, &bora_p, update(&bora, 486513.0, "1"))
         .await
         .unwrap();
     assert_eq!(by_bora.versions[&id], "2");
-    match changes::commit(&db.app, &ayse, update(&ayse, 486514.0, "1")).await {
+    match changes::commit(&db.app, &ayse_p, update(&ayse, 486514.0, "1")).await {
         Err(AppError::Conflict { conflicts, .. }) => {
             assert_eq!(conflicts.len(), 1);
             assert_eq!(
@@ -321,7 +351,7 @@ async fn versions_conflicts_and_idempotency() {
         other => panic!("expected a conflict, got {other:?}"),
     }
     // Nothing of the refused command was written.
-    let now = projects::features_by_id(&db.app, &ayse, project, &[Uuid::parse_str(&id).unwrap()])
+    let now = projects::features_by_id(&db.app, &ayse_p, &[Uuid::parse_str(&id).unwrap()])
         .await
         .unwrap();
     assert_eq!(now[0].version, "2");
@@ -333,7 +363,7 @@ async fn versions_conflicts_and_idempotency() {
         &[],
     );
     assert!(matches!(
-        changes::commit(&db.app, &ayse, missing).await,
+        changes::commit(&db.app, &ayse_p, missing).await,
         Err(AppError::Invalid(_))
     ));
     let taken = envelope(
@@ -346,7 +376,7 @@ async fn versions_conflicts_and_idempotency() {
         &[],
     );
     assert!(
-        matches!(changes::commit(&db.app, &ayse, taken).await, Err(AppError::Conflict { conflicts, .. }) if conflicts[0].reason == ConflictReason::Exists)
+        matches!(changes::commit(&db.app, &ayse_p, taken).await, Err(AppError::Conflict { conflicts, .. }) if conflicts[0].reason == ConflictReason::Exists)
     );
     let delete = envelope(
         &ayse,
@@ -354,35 +384,32 @@ async fn versions_conflicts_and_idempotency() {
         changes_of(vec![FeatureChange::Delete { id: id.clone() }]),
         &[(id.as_str(), "2")],
     );
-    let deleted = changes::commit(&db.app, &ayse, delete).await.unwrap();
+    let deleted = changes::commit(&db.app, &ayse_p, delete).await.unwrap();
     assert_eq!(deleted.deleted, vec![id.clone()]);
     assert!(
-        matches!(changes::commit(&db.app, &bora, update(&bora, 2.0, "2")).await,
+        matches!(changes::commit(&db.app, &bora_p, update(&bora, 2.0, "2")).await,
         Err(AppError::Conflict { conflicts, .. }) if conflicts[0].reason == ConflictReason::Deleted)
     );
 
-    // The event log lists the four commits in order, with who and which request.
-    let log = events::after(&db.app, &ayse, project, 0, 100)
-        .await
-        .unwrap();
-    let ops: Vec<FeatureOp> = log.events.iter().map(|e| e.features[0].op).collect();
+    // The event log lists the commits in order, with who and which request (the share came first).
+    let log = events::after(&db.app, &ayse_p, 0, 100).await.unwrap();
+    let edits: Vec<_> = log
+        .events
+        .iter()
+        .filter(|e| e.kind == PROJECT_CHANGES)
+        .collect();
+    let ops: Vec<FeatureOp> = edits.iter().map(|e| e.features[0].op).collect();
     assert_eq!(
         ops,
         vec![FeatureOp::Create, FeatureOp::Update, FeatureOp::Delete]
     );
     assert_eq!(
-        log.events[1].actor.as_deref(),
+        edits[1].actor.as_deref(),
         Some(bora.actor.user_id.to_string().as_str())
     );
-    let tail = events::after(
-        &db.app,
-        &ayse,
-        project,
-        log.events[0].seq.parse().unwrap(),
-        100,
-    )
-    .await
-    .unwrap();
+    let tail = events::after(&db.app, &ayse_p, edits[0].seq.parse().unwrap(), 100)
+        .await
+        .unwrap();
     assert_eq!(tail.events.len(), 2);
     assert_eq!(tail.next, log.next);
     db.close().await;
@@ -404,7 +431,14 @@ async fn locked_layers_rights_and_tenants() {
     let viewer = member(&db, "buro", "izleyici", TenantRole::Viewer).await;
     let stranger = member(&db, "diger", "yabanci", TenantRole::Owner).await;
     let project = new_project(&db, &pm).await;
-    let info = projects::info(&db.app, &pm, project).await.unwrap();
+    share_with(&db, &pm, project, &[&editor], GrantRole::Editor).await;
+    share_with(&db, &pm, project, &[&viewer], GrantRole::Viewer).await;
+    let (pm_p, editor_p, viewer_p) = (
+        open(&db, &pm, project).await,
+        open(&db, &editor, project).await,
+        open(&db, &viewer, project).await,
+    );
+    let info = projects::info(&db.app, &pm_p).await.unwrap();
     let layer = info.active_layer.clone();
 
     // Lock the layer through a metadata patch (needs project.edit and the metadata version).
@@ -428,19 +462,19 @@ async fn locked_layers_rights_and_tenants() {
     assert!(matches!(
         changes::commit(
             &db.app,
-            &editor,
+            &editor_p,
             envelope(&editor, project, patch.clone(), &[("@project", "1")])
         )
         .await,
         Err(AppError::Forbidden(_))
     ));
     assert!(
-        matches!(changes::commit(&db.app, &pm, envelope(&pm, project, patch.clone(), &[("@project", "0")])).await,
+        matches!(changes::commit(&db.app, &pm_p, envelope(&pm, project, patch.clone(), &[("@project", "0")])).await,
         Err(AppError::Conflict { conflicts, .. }) if conflicts[0].reason == ConflictReason::Project)
     );
     let locked = changes::commit(
         &db.app,
-        &pm,
+        &pm_p,
         envelope(&pm, project, patch, &[("@project", "1")]),
     )
     .await
@@ -458,35 +492,23 @@ async fn locked_layers_rights_and_tenants() {
         )
     };
     assert!(
-        matches!(changes::commit(&db.app, &editor, write(&editor)).await, Err(AppError::Forbidden(m)) if m.contains("kilitli"))
+        matches!(changes::commit(&db.app, &editor_p, write(&editor)).await, Err(AppError::Forbidden(m)) if m.contains("kilitli"))
     );
     // A viewer may read but not write.
-    assert!(projects::info(&db.app, &viewer, project).await.is_ok());
+    assert!(projects::info(&db.app, &viewer_p).await.is_ok());
     assert!(matches!(
-        changes::commit(&db.app, &viewer, write(&viewer)).await,
-        Err(AppError::Forbidden(_))
+        changes::commit(&db.app, &viewer_p, write(&viewer)).await,
+        Err(AppError::Forbidden(m)) if m.contains("feature.write")
     ));
     // Another tenant's member cannot see or touch the project, even knowing its id.
-    let mut foreign = write(&stranger);
-    foreign.tenant_id = stranger.tenant.to_string();
-    assert!(matches!(
-        changes::commit(&db.app, &stranger, foreign).await,
-        Err(AppError::NotFound(_))
-    ));
-    assert!(matches!(
-        projects::info(&db.app, &stranger, project).await,
-        Err(AppError::NotFound(_))
-    ));
-    assert!(matches!(
-        projects::features(&db.app, &stranger, project, None, 10).await,
-        Err(AppError::NotFound(_))
-    ));
-    assert!(matches!(
-        events::after(&db.app, &stranger, project, 0, 10).await,
-        Err(AppError::NotFound(_))
-    ));
+    for tenant in [pm.tenant, stranger.tenant] {
+        assert!(matches!(
+            access::project(&db.app, &stranger.actor, tenant, project).await,
+            Err(AppError::NotFound(_))
+        ));
+    }
     assert!(
-        projects::list(&db.app, &stranger)
+        listing::list(&db.app, &stranger)
             .await
             .unwrap()
             .projects
@@ -496,7 +518,14 @@ async fn locked_layers_rights_and_tenants() {
     let mut wrong_tenant = write(&pm);
     wrong_tenant.tenant_id = stranger.tenant.to_string();
     assert!(matches!(
-        changes::commit(&db.app, &pm, wrong_tenant).await,
+        changes::commit(&db.app, &pm_p, wrong_tenant).await,
+        Err(AppError::Invalid(_))
+    ));
+    // So is one naming another project than the one it is sent to.
+    let mut wrong_project = write(&pm);
+    wrong_project.project_id = Uuid::new_v4().to_string();
+    assert!(matches!(
+        changes::commit(&db.app, &pm_p, wrong_project).await,
         Err(AppError::Invalid(_))
     ));
     db.close().await;
@@ -514,11 +543,16 @@ async fn concurrent_writers_serialize_per_project() {
     let bora = member(&db, "buro", "bora", TenantRole::Editor).await;
     let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
     let project = new_project(&db, &pm).await;
+    share_with(&db, &pm, project, &[&ayse, &bora], GrantRole::Editor).await;
+    let (ayse_p, bora_p) = (
+        open(&db, &ayse, project).await,
+        open(&db, &bora, project).await,
+    );
     let layer = sample().active_layer;
     let id = Uuid::new_v4().to_string();
     changes::commit(
         &db.app,
-        &ayse,
+        &ayse_p,
         envelope(
             &ayse,
             project,
@@ -542,8 +576,8 @@ async fn concurrent_writers_serialize_per_project() {
         &[(id.as_str(), "1")],
     );
     let (a, b) = tokio::join!(
-        changes::commit(&db.app, &ayse, retry.clone()),
-        changes::commit(&db.app, &ayse, retry.clone())
+        changes::commit(&db.app, &ayse_p, retry.clone()),
+        changes::commit(&db.app, &ayse_p, retry.clone())
     );
     let (a, b) = (a.unwrap(), b.unwrap());
     assert!(a.replayed != b.replayed && a.versions == b.versions);
@@ -560,15 +594,15 @@ async fn concurrent_writers_serialize_per_project() {
         )
     };
     let (a, b) = tokio::join!(
-        changes::commit(&db.app, &ayse, from(&ayse, 3.0)),
-        changes::commit(&db.app, &bora, from(&bora, 4.0))
+        changes::commit(&db.app, &ayse_p, from(&ayse, 3.0)),
+        changes::commit(&db.app, &bora_p, from(&bora, 4.0))
     );
     assert!(a.is_ok() != b.is_ok());
     assert!(matches!(
         a.err().or(b.err()),
         Some(AppError::Conflict { .. })
     ));
-    let info = projects::info(&db.app, &ayse, project).await.unwrap();
+    let info = projects::info(&db.app, &ayse_p).await.unwrap();
     assert_eq!(info.data_revision, "3");
     db.close().await;
 }

@@ -7,9 +7,9 @@ import { Dialog } from '../widgets/Dialog';
  * Renaming and deleting a cloud project, for the open one (Dosya menu,
  * account menu) or any project of the list (Bulut projesi aç). Both stack
  * over the list, which reads itself again afterwards. Deleting asks first
- * and says what it does: the project is gone for everyone in the tenant,
- * though the server keeps it so the operator can bring it back. The safe
- * button (Vazgeç) has the focus; the deleting one is marked, not amber.
+ * and says what it does: the project is gone for everyone who has access to
+ * it, though the server keeps it so the operator can bring it back. The
+ * safe button (Vazgeç) has the focus; the deleting one is marked, not amber.
  */
 
 export interface ProjectTarget {
@@ -36,7 +36,7 @@ export function openRenameDialog(ctx: AppContext, target: ProjectTarget, done?: 
     stack: true,
     content: [
       h('label', { class: 'cloud-field' }, h('span', null, 'Yeni ad'), field),
-      h('p', { class: 'cloud-hint' }, `“${target.tenantName}” kurumunda projeyi açan herkes yeni adı görür.`),
+      h('p', { class: 'cloud-hint' }, 'Projeye erişimi olan herkes yeni adı görür.'),
       status,
     ],
     footer: [h('div', { class: 'dialog__foot-spacer' }), cancel, save],
@@ -87,7 +87,7 @@ export function openDeleteDialog(ctx: AppContext, target: ProjectTarget, done?: 
     className: 'dialog--cloud',
     stack: true,
     content: [
-      h('p', null, `“${target.name}” projesi “${target.tenantName}” kurumundaki herkes için silinsin mi?`),
+      h('p', null, `“${target.name}” projesi (${target.tenantName}) erişimi olan herkes için silinsin mi?`),
       h(
         'ul',
         { class: 'cloud-consequences' },

@@ -1,6 +1,7 @@
 import type { AppContext } from '../../app/context';
 import { commandItem } from '../../app/menus';
 import type { SaveState } from '../../app/cloud/sync';
+import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { DisposableStore } from '../../core/disposable';
 import { h } from '../dom';
 import { PopupMenu } from '../widgets/PopupMenu';
@@ -96,9 +97,9 @@ export function accountMenu(ctx: AppContext, anchor: HTMLElement): void {
   const me = ctx.cloud.me.value;
   const p = ctx.cloud.project.value;
   // An action on the open project that this account may not take says which right it lacks.
-  const needs = (id: string, capability: string) => {
+  const needs = (id: string, permission: ProjectPermission) => {
     const item = commandItem(ctx, id);
-    if (p && item.disabled && !ctx.cloud.can(p.tenantId, capability)) item.detail = `Yetkiniz yok (${capability}); kurum yöneticinize başvurun.`;
+    if (p && item.disabled && !ctx.cloud.may(permission)) item.detail = `Bu projede yetkiniz yok (${permission}); proje sahibine ya da yöneticisine başvurun.`;
     return item;
   };
   PopupMenu.open(

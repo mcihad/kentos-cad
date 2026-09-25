@@ -1,8 +1,9 @@
 //! The project WebSocket over a real TCP socket, with a throwaway database:
 //! a client whose cursor is older than the events still kept is told to
-//! reopen (`resyncRequired`), and one at the horizon gets the rest. The test
-//! speaks the few parts of RFC 6455 it needs itself (the upgrade, masked
-//! text frames out, plain text frames in).
+//! reopen (`resyncRequired`), and one at the horizon gets the rest; a
+//! subscriber whose grant is taken away is cut off at once (TODOS.md
+//! CLOUD-13). The test speaks the few parts of RFC 6455 it needs itself (the
+//! upgrade, masked text frames out, plain text frames in).
 
 use std::net::SocketAddr;
 use std::time::Duration;
@@ -10,12 +11,12 @@ use std::time::Duration;
 use axum::body::Body;
 use axum::http::{Request, StatusCode, header};
 use kentos_application::{admin, events};
-use kentos_contracts::{ApiError, TenantRole};
+use kentos_contracts::{ApiError, GrantRole, TenantRole};
 use kentos_postgres::testing::TestDb;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 
-use super::tests::{app, json_req, send, signed_in};
+use super::tests::{access_command, app, json_req, send, signed_in};
 
 struct Socket {
     stream: TcpStream,
@@ -189,6 +190,122 @@ async fn a_cursor_older_than_the_kept_events_must_reopen() {
     // A cursor beyond anything the server has (a restored database) is sent to reopen too.
     ws.send(subscribe(seqs[2] + 1000)).await;
     assert_eq!(ws.next().await["type"], "resyncRequired");
+    server.abort();
+    db.close().await;
+}
+
+#[tokio::test]
+async fn taking_a_grant_away_ends_the_live_subscription() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 3)
+        .await
+        .unwrap();
+    for (login, role) in [
+        ("ayse", TenantRole::ProjectManager),
+        ("bora", TenantRole::Editor),
+    ] {
+        admin::create_local_user(&db.owner, login, login, None, "dogru-parola-1")
+            .await
+            .unwrap();
+        admin::set_membership(&db.owner, "buro", login, role, true)
+            .await
+            .unwrap();
+    }
+    let router = app(Some(db.app.clone()));
+    let (ayse, bora) = (
+        signed_in(&router, "ayse").await,
+        signed_in(&router, "bora").await,
+    );
+    let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
+        "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
+    let create = serde_json::json!({ "name": "Ada 101", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+        "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
+    let base = format!("/v1/tenants/{tenant}/projects");
+    let (_, _, body) = send(&router, json_req("POST", &base, &ayse, create)).await;
+    let project = serde_json::from_slice::<kentos_contracts::ProjectInfo>(&body)
+        .unwrap()
+        .id;
+    let point = |x: f64| {
+        json_req(
+            "POST",
+            &format!("{base}/{project}/commands"),
+            &ayse,
+            serde_json::json!({
+                "commandName": "project.changes", "version": 1, "tenantId": tenant.to_string(), "projectId": project,
+                "requestId": "istek", "idempotencyKey": uuid::Uuid::new_v4().to_string(), "expectedVersions": {},
+                "input": { "features": [{ "op": "create", "id": uuid::Uuid::new_v4().to_string(),
+                    "entity": { "kind": "point", "id": 1, "layerId": "cizim", "attrs": {}, "p": { "x": x, "y": 2.0 } } }] } }),
+        )
+    };
+    let bora_id = admin::user_id(&db.owner, "bora").await.unwrap();
+    let grant = |role: Option<GrantRole>| {
+        access_command(&tenant.to_string(), &project, &ayse, bora_id, role)
+    };
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    let server = tokio::spawn({
+        let router = router.clone();
+        async move { axum::serve(listener, router).await }
+    });
+    let mut ws = Socket::open(addr, &bora).await;
+    let subscribe = serde_json::json!({ "type": "subscribe", "tenantId": tenant.to_string(), "projectId": project, "after": "0" });
+    // Not shared yet: the same answer as a project that does not exist.
+    ws.send(subscribe.clone()).await;
+    let refused = ws.next().await;
+    assert_eq!(
+        (refused["type"].as_str(), refused["error"].as_str()),
+        (Some("error"), Some("not_found"))
+    );
+
+    // Shared: he follows it live.
+    let (status, _, _) = send(&router, grant(Some(GrantRole::Editor))).await;
+    assert_eq!(status, StatusCode::OK);
+    ws.send(subscribe).await;
+    assert_eq!(ws.next().await["type"], "subscribed");
+    let replay = ws.next().await;
+    assert_eq!(replay["events"][0]["kind"], "project.access");
+    let (status, _, _) = send(&router, point(1.0)).await;
+    assert_eq!(status, StatusCode::OK);
+    let live = ws.next().await;
+    assert_eq!(
+        (live["type"].as_str(), live["events"][0]["kind"].as_str()),
+        (Some("events"), Some("project.changes"))
+    );
+
+    // Taken away while the socket is open: he is told at once, and nothing of the project follows.
+    let (status, _, _) = send(&router, grant(None)).await;
+    assert_eq!(status, StatusCode::OK);
+    let cut = ws.next().await;
+    assert_eq!(
+        (
+            cut["type"].as_str(),
+            cut["error"].as_str(),
+            cut["message"].as_str()
+        ),
+        (Some("error"), Some("not_found"), Some("Proje bulunamadı."))
+    );
+    let (status, _, _) = send(&router, point(2.0)).await;
+    assert_eq!(status, StatusCode::OK);
+    // The next thing he hears is the answer to his heartbeat: no event slipped in between.
+    ws.send(serde_json::json!({ "type": "ping", "t": 7.0 }))
+        .await;
+    assert_eq!(
+        ws.next().await,
+        serde_json::json!({ "type": "pong", "t": 7.0 })
+    );
+    // Over HTTP the same.
+    let (status, _, _) = send(
+        &router,
+        Request::get(format!("{base}/{project}/events?after=0"))
+            .header(header::COOKIE, &bora)
+            .body(Body::empty())
+            .unwrap(),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
     server.abort();
     db.close().await;
 }

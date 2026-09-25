@@ -113,7 +113,11 @@ pub async fn config(State(state): State<AppState>) -> Json<AuthConfig> {
     })
 }
 
+/// The account and its tenants. The personal space is opened here the first
+/// time (signing in answers with this, and so does `/v1/me` after an OpenID
+/// sign-in), so it is always among the memberships (docs/adr/0015).
 pub async fn me_of(state: &AppState, actor: Actor) -> Result<Me, AppError> {
+    tenancy::ensure_personal(state.db()?, &actor).await?;
     let memberships = tenancy::memberships(state.db()?, &actor).await?;
     Ok(Me {
         user: UserView {

@@ -1,6 +1,8 @@
 import type { AppContext } from '../../app/context';
 import { ApiFailure } from '../../app/cloud/api';
+import { workspaceName } from '../../app/cloud/session';
 import type { MembershipView } from '../../contracts/generated/MembershipView';
+import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { crsBySrid } from '../../geo/crs';
 import { h, replaceChildren } from '../dom';
@@ -8,11 +10,14 @@ import { Dialog } from '../widgets/Dialog';
 import { openDeleteDialog, openRenameDialog } from './ProjectActions';
 
 /**
- * Cloud projects of a tenant: open one, or upload the current drawing as a
- * new one. Opening shows its progress and can be cancelled; the drawing on
- * screen is replaced only when every object has arrived. The selected
- * project can also be renamed (project.edit) or deleted (project.delete);
- * a button the account may not use says why.
+ * Cloud projects of a workspace (an organisation, or the personal space):
+ * open one, or upload the current drawing as a new one. The list holds the
+ * projects this account may see there: its own, the ones shared with it and,
+ * for an organisation's admins, every one (docs/adr/0015). Opening shows its
+ * progress and can be cancelled; the drawing on screen is replaced only when
+ * every object has arrived. The selected project can also be renamed
+ * (project.edit) or deleted (project.delete), as that project's own access
+ * allows; a button the account may not use says why.
  */
 export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pick?: { tenantId: string; projectId: string }): void {
   const cloud = ctx.cloud;
@@ -24,11 +29,12 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
   let tenant: MembershipView = tenants.find((t) => t.tenantId === (pick?.tenantId ?? cloud.project.value?.tenantId)) ?? tenants[0];
   let picked: ProjectSummary | null = null;
   let abort: AbortController | null = null;
+  const label = (t: MembershipView) => workspaceName(t.tenantKind, t.tenantName, true);
 
   const tenantSelect = h(
     'select',
-    { class: 'field', 'aria-label': 'Kurum', disabled: tenants.length < 2 },
-    tenants.map((t) => h('option', { value: t.tenantId, selected: t.tenantId === tenant.tenantId }, t.tenantName)),
+    { class: 'field', 'aria-label': 'Çalışma alanı', disabled: tenants.length < 2 },
+    tenants.map((t) => h('option', { value: t.tenantId, selected: t.tenantId === tenant.tenantId }, label(t))),
   );
   const list = h('div', { class: 'cloud-list', role: 'listbox', 'aria-label': 'Projeler' });
   const nameField = h('input', { class: 'field', value: ctx.doc.name.value, 'aria-label': 'Proje adı', spellcheck: 'false' });
@@ -42,9 +48,9 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
 
   const body =
     mode === 'open'
-      ? [h('label', { class: 'cloud-field' }, h('span', null, 'Kurum'), tenantSelect), list, progress, status]
+      ? [h('label', { class: 'cloud-field' }, h('span', null, 'Çalışma alanı'), tenantSelect), list, progress, status]
       : [
-          h('label', { class: 'cloud-field' }, h('span', null, 'Kurum'), tenantSelect),
+          h('label', { class: 'cloud-field' }, h('span', null, 'Çalışma alanı'), tenantSelect),
           h('label', { class: 'cloud-field' }, h('span', null, 'Proje adı'), nameField),
           h('p', { class: 'cloud-hint' }, `${ctx.doc.size} nesne, katman ağacı, proje ayarları ve proje stilleri yüklenir. Sonra her değişiklik kendiliğinden kaydedilir.`),
           progress,
@@ -69,17 +75,17 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
     say(`${done} / ${total} nesne`);
   };
   const canCreate = () => tenant.capabilities.includes('project.create');
-  // A disabled button says why: nothing picked, or the right it needs.
-  const action = (b: HTMLButtonElement, capability: string, what: string) => {
-    const allowed = tenant.capabilities.includes(capability);
-    b.disabled = !picked || !allowed;
-    b.title = !allowed ? `“${tenant.tenantName}” kurumunda proje ${what} yetkiniz yok (${capability}); kurum yöneticinize başvurun.` : picked ? '' : 'Önce listeden bir proje seçin.';
+  // A disabled button says why: nothing picked, or the right it needs in the picked project.
+  const action = (b: HTMLButtonElement, permission: ProjectPermission, what: string) => {
+    const allowed = !!picked?.access.permissions.includes(permission);
+    b.disabled = !allowed;
+    b.title = !picked ? 'Önce listeden bir proje seçin.' : !allowed ? `“${picked.name}” projesinde ${what} yetkiniz yok (${permission}); proje sahibine ya da yöneticisine başvurun.` : '';
   };
   const refreshButton = () => {
     action(rename, 'project.edit', 'adlandırma');
     action(remove, 'project.delete', 'silme');
     primary.disabled = mode === 'open' ? !picked : !canCreate() || !nameField.value.trim();
-    if (mode === 'upload' && !canCreate()) say(`“${tenant.tenantName}” kurumunda proje açma yetkiniz yok.`, 'error');
+    if (mode === 'upload' && !canCreate()) say(`“${label(tenant)}” kurumunda proje açma yetkiniz yok (project.create).`, 'error');
     else if (mode === 'upload') say('');
   };
 
@@ -90,7 +96,11 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
     try {
       const { projects } = await cloud.projects(tenant.tenantId);
       if (!projects.length) {
-        replaceChildren(list, h('p', { class: 'cloud-empty' }, 'Bu kurumda henüz proje yok. Açık çizimi Dosya → Buluta yükle ile buraya gönderebilirsiniz.'));
+        const empty =
+          tenant.tenantKind === 'personal'
+            ? 'Kişisel alanınızda henüz proje yok. Açık çizimi Dosya → Buluta yükle ile buraya gönderebilirsiniz.'
+            : 'Bu kurumda size açık bir proje yok: sizin açtıklarınız ve sizinle paylaşılanlar burada görünür. Açık çizimi Dosya → Buluta yükle ile gönderebilirsiniz.';
+        replaceChildren(list, h('p', { class: 'cloud-empty' }, empty));
         return;
       }
       replaceChildren(
@@ -146,7 +156,7 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
     }
   };
 
-  const target = () => picked && { tenantId: tenant.tenantId, tenantName: tenant.tenantName, projectId: picked.id, name: picked.name };
+  const target = () => picked && { tenantId: tenant.tenantId, tenantName: label(tenant), projectId: picked.id, name: picked.name };
   rename.addEventListener('click', () => {
     const t = target();
     if (t) openRenameDialog(ctx, t, () => void load());

@@ -1,7 +1,9 @@
 //! Administration from the command line (`kentosd tenant|user|member|project
-//! …`), as the owner role: tenants, local accounts, memberships and seats,
-//! and restoring a deleted project. There is no open sign-up (ADR 0007);
-//! inviting from the interface comes later.
+//! …`), as the owner role: organisations and their policies, local accounts,
+//! memberships and seats, and restoring a deleted project. There is no open
+//! sign-up (ADR 0007); inviting from the interface comes later. Personal
+//! spaces are opened by the server itself (`tenancy::ensure_personal`) and
+//! take no members (docs/adr/0015).
 //! Passwords are hashed by PostgreSQL (`crypt` with a bcrypt salt, cost 12).
 
 use kentos_contracts::TenantRole;
@@ -145,11 +147,19 @@ pub async fn set_password(owner: &PgPool, login: &str, password: &str) -> AppRes
 }
 
 async fn tenant_id(owner: &PgPool, slug: &str) -> AppResult<(Uuid, i32)> {
-    sqlx::query_as("select id, seat_limit from kentos.tenant where slug = $1")
-        .bind(slug)
-        .fetch_optional(owner)
-        .await?
-        .ok_or_else(|| AppError::not_found(format!("“{slug}” kısa adlı kurum yok.")))
+    let (id, seats, _) = tenant_row(owner, slug).await?;
+    Ok((id, seats))
+}
+
+/// Id, seat limit and whether it is an organisation (not a personal space).
+async fn tenant_row(owner: &PgPool, slug: &str) -> AppResult<(Uuid, i32, bool)> {
+    sqlx::query_as(
+        "select id, seat_limit, kind = 'organization' from kentos.tenant where slug = $1",
+    )
+    .bind(slug)
+    .fetch_optional(owner)
+    .await?
+    .ok_or_else(|| AppError::not_found(format!("“{slug}” kısa adlı kurum yok.")))
 }
 
 /// A local login or an account id.
@@ -172,7 +182,12 @@ pub async fn set_membership(
     role: TenantRole,
     seat: bool,
 ) -> AppResult<()> {
-    let (tenant, limit) = tenant_id(owner, tenant_slug).await?;
+    let (tenant, limit, organization) = tenant_row(owner, tenant_slug).await?;
+    if !organization {
+        return Err(AppError::invalid(format!(
+            "“{tenant_slug}” bir kişisel alan: tek üyesi sahibidir. Başkalarıyla birlikte çalışma proje paylaşımıyla olur."
+        )));
+    }
     let user = user_id(owner, who).await?;
     let mut tx = owner.begin().await?;
     sqlx::query(
@@ -218,30 +233,83 @@ pub async fn set_membership(
 pub struct TenantLine {
     pub slug: String,
     pub name: String,
+    /// `organization` or `personal`.
+    pub kind: String,
     pub seats_used: i64,
     pub seat_limit: i32,
     pub members: i64,
+    /// Owners and admins reach projects not shared with them (docs/adr/0015).
+    pub admins_access_all_projects: bool,
+    pub viewer_download: bool,
 }
 
+/// Every tenant: organisations first, then personal spaces.
 pub async fn list_tenants(owner: &PgPool) -> AppResult<Vec<TenantLine>> {
-    let rows: Vec<(String, String, i64, i32, i64)> = sqlx::query_as(
-        "select t.slug, t.name,
+    type Row = (String, String, String, i64, i32, i64, bool, bool);
+    let rows: Vec<Row> = sqlx::query_as(
+        "select t.slug, t.name, t.kind,
                 (select count(*) from kentos.seat_allocation s where s.tenant_id = t.id), t.seat_limit,
-                (select count(*) from kentos.membership m where m.tenant_id = t.id)
-           from kentos.tenant t order by t.slug",
+                (select count(*) from kentos.membership m where m.tenant_id = t.id),
+                t.admins_access_all_projects, t.viewer_download
+           from kentos.tenant t order by t.kind = 'personal', t.slug",
     )
     .fetch_all(owner)
     .await?;
     Ok(rows
         .into_iter()
-        .map(|(slug, name, seats_used, seat_limit, members)| TenantLine {
-            slug,
-            name,
-            seats_used,
-            seat_limit,
-            members,
-        })
+        .map(
+            |(slug, name, kind, seats_used, seat_limit, members, admins, download)| TenantLine {
+                slug,
+                name,
+                kind,
+                seats_used,
+                seat_limit,
+                members,
+                admins_access_all_projects: admins,
+                viewer_download: download,
+            },
+        )
         .collect())
+}
+
+/// Changes a tenant's access policies (docs/adr/0015); `None` leaves one as it is.
+/// `admins_access_all_projects` is an organisation's; a personal space has no admins.
+pub async fn set_tenant_policy(
+    owner: &PgPool,
+    tenant_slug: &str,
+    admins_access_all_projects: Option<bool>,
+    viewer_download: Option<bool>,
+) -> AppResult<()> {
+    let (tenant, _, organization) = tenant_row(owner, tenant_slug).await?;
+    if admins_access_all_projects.is_some() && !organization {
+        return Err(AppError::invalid(format!(
+            "“{tenant_slug}” bir kişisel alan; yöneticilerin erişim politikası yalnız kurumlarda vardır."
+        )));
+    }
+    let mut tx = owner.begin().await?;
+    let (admins, download): (bool, bool) = sqlx::query_as(
+        "update kentos.tenant set admins_access_all_projects = coalesce($2, admins_access_all_projects),
+                viewer_download = coalesce($3, viewer_download)
+          where id = $1 returning admins_access_all_projects, viewer_download",
+    )
+    .bind(tenant)
+    .bind(admins_access_all_projects)
+    .bind(viewer_download)
+    .fetch_one(&mut *tx)
+    .await?;
+    sqlx::query(
+        "insert into kentos.audit_event (tenant_id, action, detail) values ($1, 'tenant.policy', $2)",
+    )
+    .bind(tenant)
+    .bind(serde_json::json!({
+        "adminsAccessAllProjects": admins,
+        "viewerDownload": download,
+        "by": "kentosd",
+    }))
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(())
 }
 
 #[derive(Debug)]

@@ -7,17 +7,19 @@
 //! removed. A cursor below the horizon cannot be continued from (some events
 //! after it are gone), and one beyond the newest event never existed (a
 //! restored database): both answer `ResyncRequired`, and the client opens
-//! the project again. A deleted project's log stays readable.
+//! the project again. A deleted project's log stays readable to those who
+//! had access. Reading needs `project.read`; the log is visible only in the
+//! project's scope and only while the reader has a role in it (migration
+//! 0004), so a grant taken away stops the reading at once.
 
 use std::time::Duration;
 
-use kentos_contracts::{EventPage, EventRecord};
+use kentos_contracts::{EventPage, EventRecord, ProjectPermission};
 use serde_json::Value;
 use sqlx::{Postgres, Transaction};
-use uuid::Uuid;
 
+use crate::access::{ProjectAccess, not_found};
 use crate::error::{AppError, AppResult};
-use crate::tenancy::{Access, Capability};
 
 pub const PAGE_MAX: i64 = 500;
 
@@ -51,35 +53,27 @@ fn resync() -> AppError {
     )
 }
 
-async fn exists(
-    tx: &mut Transaction<'static, Postgres>,
-    access: &Access,
-    project: Uuid,
-) -> AppResult<()> {
+/// The project in scope is still one the reader has a role in (it may be deleted).
+async fn exists(tx: &mut Transaction<'static, Postgres>, access: &ProjectAccess) -> AppResult<()> {
     let found: bool = sqlx::query_scalar(
         "select exists (select 1 from kentos.project where tenant_id = $1 and id = $2)",
     )
     .bind(access.tenant)
-    .bind(project)
+    .bind(access.project)
     .fetch_one(&mut **tx)
     .await?;
-    if found {
-        Ok(())
-    } else {
-        Err(AppError::not_found("Proje bulunamadı."))
-    }
+    if found { Ok(()) } else { Err(not_found()) }
 }
 
 async fn horizon(
     tx: &mut Transaction<'static, Postgres>,
-    access: &Access,
-    project: Uuid,
+    access: &ProjectAccess,
 ) -> AppResult<i64> {
     let through: Option<i64> = sqlx::query_scalar(
         "select pruned_through from kentos.outbox_horizon where tenant_id = $1 and project_id = $2",
     )
     .bind(access.tenant)
-    .bind(project)
+    .bind(access.project)
     .fetch_optional(&mut **tx)
     .await?;
     Ok(through.unwrap_or(0))
@@ -89,19 +83,18 @@ async fn horizon(
 /// from. A cursor older than what is kept is refused (`ResyncRequired`).
 pub async fn after(
     db: &kentos_postgres::Db,
-    access: &Access,
-    project: Uuid,
+    access: &ProjectAccess,
     after: i64,
     limit: i64,
 ) -> AppResult<EventPage> {
-    access.require(Capability::ProjectRead)?;
+    access.require(ProjectPermission::Read)?;
     let mut tx = db.scoped(access.scope()).await?;
-    exists(&mut tx, access, project).await?;
+    exists(&mut tx, access).await?;
     let rows: Vec<(i64, Value)> = sqlx::query_as(
         "select seq, payload from kentos.outbox_event where tenant_id = $1 and project_id = $2 and seq > $3 order by seq limit $4",
     )
     .bind(access.tenant)
-    .bind(project)
+    .bind(access.project)
     .bind(after)
     .bind(limit.clamp(1, PAGE_MAX))
     .fetch_all(&mut *tx)
@@ -109,7 +102,7 @@ pub async fn after(
     // Read after the events: a prune that removed some of them had committed its
     // horizon before, so it shows here. (One committing in between only makes
     // this a resync that was not needed.)
-    let pruned = horizon(&mut tx, access, project).await?;
+    let pruned = horizon(&mut tx, access).await?;
     tx.commit().await?;
     if after < pruned {
         return Err(resync());
@@ -126,18 +119,18 @@ pub async fn after(
 }
 
 /// The newest cursor and the horizon of a project's log (a subscription checks its cursor against both).
-pub async fn bounds(db: &kentos_postgres::Db, access: &Access, project: Uuid) -> AppResult<Bounds> {
-    access.require(Capability::ProjectRead)?;
+pub async fn bounds(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult<Bounds> {
+    access.require(ProjectPermission::Read)?;
     let mut tx = db.scoped(access.scope()).await?;
-    exists(&mut tx, access, project).await?;
+    exists(&mut tx, access).await?;
     let newest: i64 = sqlx::query_scalar(
         "select coalesce(max(seq), 0) from kentos.outbox_event where tenant_id = $1 and project_id = $2",
     )
     .bind(access.tenant)
-    .bind(project)
+    .bind(access.project)
     .fetch_one(&mut *tx)
     .await?;
-    let pruned_through = horizon(&mut tx, access, project).await?;
+    let pruned_through = horizon(&mut tx, access).await?;
     tx.commit().await?;
     Ok(Bounds {
         newest: newest.max(pruned_through),
@@ -146,8 +139,8 @@ pub async fn bounds(db: &kentos_postgres::Db, access: &Access, project: Uuid) ->
 }
 
 /// The cursor of a client that has everything (0 when the project has no events yet).
-pub async fn latest(db: &kentos_postgres::Db, access: &Access, project: Uuid) -> AppResult<i64> {
-    Ok(bounds(db, access, project).await?.newest)
+pub async fn latest(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult<i64> {
+    Ok(bounds(db, access).await?.newest)
 }
 
 /// Removes up to `batch` events older than `keep`, of every tenant (through

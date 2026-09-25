@@ -132,8 +132,8 @@ pub async fn session_actor(db: &Db, token: &str) -> AppResult<Option<Actor>> {
 pub async fn actor_of(db: &Db, user: Uuid, method: SignInMethod) -> AppResult<Option<Actor>> {
     let mut tx = db
         .scoped(Scope {
-            tenant: None,
             user: Some(user),
+            ..Scope::default()
         })
         .await?;
     let row: Option<(String, Option<String>, String)> =

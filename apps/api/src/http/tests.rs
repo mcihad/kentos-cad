@@ -5,7 +5,7 @@ use std::sync::Arc;
 use axum::body::Body;
 use axum::http::{Request, StatusCode, header};
 use kentos_application::admin;
-use kentos_contracts::{ApiError, Health, Me, TenantRole};
+use kentos_contracts::{ApiError, GrantRole, Health, Me, ProjectRole, TenantKind, TenantRole};
 use kentos_postgres::testing::TestDb;
 use tower::ServiceExt;
 
@@ -149,6 +149,12 @@ async fn local_sign_in_with_a_session_cookie() {
     let me: Me = serde_json::from_slice(&body).unwrap();
     assert_eq!(me.user.display_name, "Ayşe Yılmaz");
     assert_eq!(me.memberships[0].tenant_slug, "buro");
+    // The first sign-in opened her personal space; it comes after the organisations.
+    assert_eq!(me.memberships.len(), 2);
+    assert_eq!(
+        (me.memberships[1].tenant_kind, me.memberships[1].role),
+        (TenantKind::Personal, TenantRole::Owner)
+    );
     let cookie = set.split(';').next().unwrap().to_string();
 
     let (status, _, body) = send(
@@ -235,12 +241,56 @@ pub(super) fn json_req(
         .unwrap()
 }
 
+pub(super) fn get(uri: &str, cookie: &str) -> Request<Body> {
+    Request::get(uri)
+        .header(header::COOKIE, cookie)
+        .body(Body::empty())
+        .unwrap()
+}
+
+/// A `project.share` (with a role) or `project.access.revoke` (without) command for `user`.
+pub(super) fn access_command(
+    tenant: &str,
+    project: &str,
+    cookie: &str,
+    user: uuid::Uuid,
+    role: Option<GrantRole>,
+) -> Request<Body> {
+    let (name, input) = match role {
+        Some(role) => (
+            "project.share",
+            serde_json::json!({ "userId": user.to_string(), "role": role }),
+        ),
+        None => (
+            "project.access.revoke",
+            serde_json::json!({ "userId": user.to_string() }),
+        ),
+    };
+    json_req(
+        "POST",
+        &format!("/v1/tenants/{tenant}/projects/{project}/commands"),
+        cookie,
+        serde_json::json!({
+            "commandName": name, "version": 1, "tenantId": tenant, "projectId": project,
+            "requestId": "paylasim", "idempotencyKey": uuid::Uuid::new_v4().to_string(), "expectedVersions": {},
+            "input": input }),
+    )
+}
+
+/// The `error` and `message` of a 404: what a caller learns about a project they may not see.
+pub(super) async fn not_found_body(app: &Router, req: Request<Body>) -> (String, String) {
+    let (status, _, body) = send(app, req).await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let e: ApiError = serde_json::from_slice(&body).unwrap();
+    (e.error, e.message)
+}
+
 #[tokio::test]
 async fn projects_commands_and_events_over_http() {
     let Some(db) = TestDb::create().await else {
         return;
     };
-    let tenant = admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 3)
+    let tenant = admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 4)
         .await
         .unwrap();
     let other = admin::create_tenant(&db.owner, "diger", "Diğer", 3)
@@ -249,6 +299,7 @@ async fn projects_commands_and_events_over_http() {
     for (login, t, role) in [
         ("ayse", "buro", TenantRole::ProjectManager),
         ("bora", "buro", TenantRole::Editor),
+        ("dilek", "buro", TenantRole::ProjectManager),
         ("can", "diger", TenantRole::Owner),
     ] {
         admin::create_local_user(&db.owner, login, login, None, "dogru-parola-1")
@@ -259,9 +310,10 @@ async fn projects_commands_and_events_over_http() {
             .unwrap();
     }
     let app = app(Some(db.app.clone()));
-    let (ayse, bora, can) = (
+    let (ayse, bora, dilek, can) = (
         signed_in(&app, "ayse").await,
         signed_in(&app, "bora").await,
+        signed_in(&app, "dilek").await,
         signed_in(&app, "can").await,
     );
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
@@ -312,6 +364,33 @@ async fn projects_commands_and_events_over_http() {
     };
     let (status, _, body) = send(&app, command(&ayse, 1.0, "create", serde_json::json!({}))).await;
     assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
+    // The project is ayse's: bora (a member of the same tenant) cannot write to it, or even find it, until she shares it.
+    let (status, _, _) = send(
+        &app,
+        command(
+            &bora,
+            2.0,
+            "update",
+            serde_json::json!({ fid.clone(): "1" }),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let bora_id = admin::user_id(&db.owner, "bora").await.unwrap();
+    let (status, _, body) = send(
+        &app,
+        access_command(
+            &tenant.to_string(),
+            project,
+            &ayse,
+            bora_id,
+            Some(GrantRole::Editor),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
+    let shared: kentos_contracts::ProjectAccessChange = serde_json::from_slice(&body).unwrap();
+    assert!(shared.changed && shared.grant.unwrap().role == GrantRole::Editor);
     let (status, _, _) = send(
         &app,
         command(
@@ -361,7 +440,21 @@ async fn projects_commands_and_events_over_http() {
     )
     .await;
     let log: kentos_contracts::EventPage = serde_json::from_slice(&body).unwrap();
-    assert_eq!(log.events.len(), 2);
+    let kinds: Vec<&str> = log.events.iter().map(|e| e.kind.as_str()).collect();
+    assert_eq!(
+        kinds,
+        ["project.changes", "project.access", "project.changes"]
+    );
+    // What each may do comes with the project.
+    let (_, _, body) = send(&app, get(&format!("{base}/{project}"), &bora)).await;
+    let seen: kentos_contracts::ProjectInfo = serde_json::from_slice(&body).unwrap();
+    assert_eq!(seen.access.role, ProjectRole::Editor);
+    assert!(
+        !seen
+            .access
+            .permissions
+            .contains(&kentos_contracts::ProjectPermission::Edit)
+    );
 
     // Another tenant's member: every route is 404, even with the right ids; a wrong tenant in the body is refused.
     for uri in [
@@ -369,17 +462,49 @@ async fn projects_commands_and_events_over_http() {
         format!("{base}/{project}"),
         format!("{base}/{project}/features"),
         format!("{base}/{project}/events"),
+        format!("{base}/{project}/access"),
     ] {
-        let (status, _, _) = send(
-            &app,
-            Request::get(&uri)
-                .header(header::COOKIE, &can)
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await;
+        let (status, _, _) = send(&app, get(&uri, &can)).await;
         assert_eq!(status, StatusCode::NOT_FOUND, "{uri}");
     }
+    // A member it was not shared with sees none of it: the list leaves it out, every route is 404.
+    let (_, _, body) = send(&app, get(&base, &dilek)).await;
+    assert!(
+        serde_json::from_slice::<kentos_contracts::ProjectList>(&body)
+            .unwrap()
+            .projects
+            .is_empty()
+    );
+    // Every 404 of a project reads the same: not shared, another tenant's, guessed or malformed.
+    let reference = not_found_body(&app, get(&format!("{base}/{project}"), &dilek)).await;
+    for (uri, cookie) in [
+        (format!("{base}/{project}/features"), &dilek),
+        (format!("{base}/{project}/events?after=0"), &dilek),
+        (format!("{base}/{project}"), &can),
+        (format!("/v1/tenants/{other}/projects/{project}"), &can),
+        (format!("{base}/{}", uuid::Uuid::now_v7()), &ayse),
+        (format!("{base}/bozuk"), &ayse),
+        (format!("/v1/tenants/bozuk/projects/{project}"), &ayse),
+    ] {
+        assert_eq!(
+            not_found_body(&app, get(&uri, cookie)).await,
+            reference,
+            "{uri}"
+        );
+    }
+    assert_eq!(
+        not_found_body(
+            &app,
+            command(
+                &dilek,
+                9.0,
+                "update",
+                serde_json::json!({ fid.clone(): "2" })
+            )
+        )
+        .await,
+        reference
+    );
     let (status, _, _) = send(
         &app,
         Request::get(format!("/v1/tenants/{other}/projects/{project}"))
@@ -467,17 +592,31 @@ async fn deleting_a_project_over_http() {
         "input": { "features": [{ "op": "create", "id": uuid::Uuid::new_v4().to_string(),
             "entity": { "kind": "point", "id": 1, "layerId": "cizim", "attrs": {}, "p": { "x": 1.0, "y": 2.0 } } }] } });
 
-    // A project manager and a viewer may not; another tenant's owner cannot find it; the app header is required.
-    for cookie in [&ayse, &izzet] {
-        let (status, _, body) = send(&app, delete_req(&uri, cookie, true)).await;
-        assert_eq!(status, StatusCode::FORBIDDEN);
-        assert!(
-            serde_json::from_slice::<ApiError>(&body)
-                .unwrap()
-                .message
-                .contains("project.delete")
-        );
-    }
+    // A member it was not shared with cannot find it; shared as a viewer, may not delete it; another
+    // tenant's owner cannot find it; the app header is required.
+    let (status, _, _) = send(&app, delete_req(&uri, &izzet, true)).await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let izzet_id = admin::user_id(&db.owner, "izzet").await.unwrap();
+    let (status, _, _) = send(
+        &app,
+        access_command(
+            &tenant.to_string(),
+            &project,
+            &ayse,
+            izzet_id,
+            Some(GrantRole::Viewer),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _, body) = send(&app, delete_req(&uri, &izzet, true)).await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+    assert!(
+        serde_json::from_slice::<ApiError>(&body)
+            .unwrap()
+            .message
+            .contains("project.delete")
+    );
     for path in [
         uri.clone(),
         format!("/v1/tenants/{other}/projects/{project}"),
@@ -487,7 +626,7 @@ async fn deleting_a_project_over_http() {
     }
     let (status, _, _) = send(&app, delete_req(&uri, &zeynep, false)).await;
     assert_eq!(status, StatusCode::FORBIDDEN);
-    // The admin deletes it; asking again is the same answer.
+    // The organisation's admin deletes it (the policy; its owner could too); asking again is the same answer.
     for _ in 0..2 {
         let (status, _, _) = send(&app, delete_req(&uri, &zeynep, true)).await;
         assert_eq!(status, StatusCode::NO_CONTENT);
@@ -540,6 +679,114 @@ async fn deleting_a_project_over_http() {
         log.events.last().unwrap().kind,
         kentos_contracts::PROJECT_DELETED
     );
+    // To anyone who never had access it is simply not there: 404, not 410.
+    let (status, _, _) = send(&app, get(&uri, &can)).await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    db.close().await;
+}
+
+#[tokio::test]
+async fn the_personal_space_sharing_and_my_projects_over_http() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    for login in ["ayse", "bora"] {
+        admin::create_local_user(&db.owner, login, login, None, "dogru-parola-1")
+            .await
+            .unwrap();
+    }
+    let app = app(Some(db.app.clone()));
+    let (ayse, bora) = (signed_in(&app, "ayse").await, signed_in(&app, "bora").await);
+    // No organisation: the sign-in opened a personal space, where she may create projects.
+    let (_, _, body) = send(&app, get("/v1/me", &ayse)).await;
+    let me: Me = serde_json::from_slice(&body).unwrap();
+    assert_eq!(me.memberships.len(), 1);
+    let space = &me.memberships[0];
+    assert_eq!(
+        (space.tenant_kind, space.capabilities.clone()),
+        (TenantKind::Personal, vec!["project.create".to_string()])
+    );
+    let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
+        "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
+    let create = serde_json::json!({ "name": "Bahçe", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+        "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
+    let base = format!("/v1/tenants/{}/projects", space.tenant_id);
+    let (status, _, body) = send(&app, json_req("POST", &base, &ayse, create)).await;
+    assert_eq!(status, StatusCode::CREATED);
+    let info: kentos_contracts::ProjectInfo = serde_json::from_slice(&body).unwrap();
+    assert_eq!(
+        (info.tenant_kind, info.access.role, info.access.via),
+        (
+            TenantKind::Personal,
+            ProjectRole::Owner,
+            kentos_contracts::AccessSource::Owner
+        )
+    );
+    let uri = format!("{base}/{}", info.id);
+    // Bora is not a member of her space: he cannot list it, nor find the project.
+    let (status, _, _) = send(&app, get(&base, &bora)).await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let missing = not_found_body(&app, get(&uri, &bora)).await;
+    let (_, _, body) = send(&app, get("/v1/me/projects", &bora)).await;
+    assert!(
+        serde_json::from_slice::<kentos_contracts::ProjectList>(&body)
+            .unwrap()
+            .projects
+            .is_empty()
+    );
+    // Shared with him: in his “Projelerim”, and open to him at his role.
+    let bora_id = admin::user_id(&db.owner, "bora").await.unwrap();
+    let (status, _, _) = send(
+        &app,
+        access_command(
+            &space.tenant_id,
+            &info.id,
+            &ayse,
+            bora_id,
+            Some(GrantRole::Editor),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let (_, _, body) = send(&app, get("/v1/me/projects", &bora)).await;
+    let mine: kentos_contracts::ProjectList = serde_json::from_slice(&body).unwrap();
+    assert_eq!(mine.projects.len(), 1);
+    assert_eq!(
+        (
+            mine.projects[0].id.as_str(),
+            mine.projects[0].tenant_id.as_str(),
+            mine.projects[0].access.role
+        ),
+        (
+            info.id.as_str(),
+            space.tenant_id.as_str(),
+            ProjectRole::Editor
+        )
+    );
+    let (status, _, _) = send(&app, get(&uri, &bora)).await;
+    assert_eq!(status, StatusCode::OK);
+    // Who has access is shown to whoever may share (she may, he may not).
+    let (status, _, body) = send(&app, get(&format!("{uri}/access"), &ayse)).await;
+    assert_eq!(status, StatusCode::OK);
+    let list: kentos_contracts::ProjectAccessList = serde_json::from_slice(&body).unwrap();
+    assert_eq!(
+        (
+            list.owner_name.as_str(),
+            list.grants.len(),
+            list.grants[0].display_name.as_str()
+        ),
+        ("ayse", 1, "bora")
+    );
+    let (status, _, _) = send(&app, get(&format!("{uri}/access"), &bora)).await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+    // Taken away: the same 404 as before it was shared.
+    let (status, _, _) = send(
+        &app,
+        access_command(&space.tenant_id, &info.id, &ayse, bora_id, None),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(not_found_body(&app, get(&uri, &bora)).await, missing);
     db.close().await;
 }
 
