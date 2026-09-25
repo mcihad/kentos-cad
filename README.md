@@ -20,7 +20,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── query.rs         Query: "öznitelikle seç" ve tablo filtresi koşulları
 │   ├── time.rs          Date, Time, DateTime (harici bağımlılık olmadan)
 │   └── text.rs, number.rs  Türkçe arama, sıralama ve sayı yazımı
-├── theme/               renk belirteçleri (Tokens), vurgu rengi (Accent), yazı ayarı, iced teması
+├── theme/               renk belirteçleri (Tokens), vurgu rengi (Accent), yazı ayarı, hareket, iced teması
 ├── style/               iced stil fonksiyonları: button, container, text, field
 ├── icon/                16×16 ızgarada çizilmiş vektör ikon seti
 ├── label.rs             tip ölçeğine bağlı hazır metin biçimleri
@@ -51,6 +51,8 @@ src/                     kentos-rc kütüphanesi
 │   ├── virtual_list.rs  sanal liste: yalnızca görünen satırları kurar
 │   ├── context_menu.rs  sağ tık menüsü ve menü düğmesi: alt menü, kısayol, klavye
 │   ├── inspector.rs     nesne inceleyici: arama, kategoriler, geri alma, yardım
+│   ├── mini_toolbar.rs  seçimin üstünde beliren, uzaklaştıkça soluklaşan araç çubuğu
+│   ├── radial.rs        dairesel menü: yöne göre seçim, basılı tutup bırakma
 │   ├── date_picker.rs   tarih, tarih-saat ve saat seçicileri (açılır takvim)
 │   ├── select.rs        aranabilir, açılır seçim kutusu
 │   ├── query_builder.rs sorgu oluşturucu
@@ -250,6 +252,47 @@ Floating::new(map, &self.windows, Message::Window, |pane| match pane {
 
 // update: sürükleme, boyutlandırma, öne gelme, daraltma ve kapatma
 Message::Window(event) => self.windows.update(event),
+```
+
+## Seçim çubuğu ve dairesel menü
+
+- **Mini araç çubuğu.** `MiniToolbar` içeriği (ör. model alanı) sarar ve
+  seçimin ekrandaki kutusunun üst ortasında küçük bir çubuk gösterir; üstte
+  yer yoksa altına geçer, alanın kenarlarından taşmaz, seçim görünür alanın
+  dışındaysa gizlenir. Office'teki gibi imleç uzaklaştıkça soluklaşır ve
+  çizimi kapatmaz, yaklaşınca belirginleşir. Düğmenin adı ve kısayolu
+  çubuğun seçimden uzak yanında yazar; açık ayarlar (`active`) vurgulu,
+  yıkıcı işler (`danger`) kırmızıdır. Çubuğun altına tıklanmaz.
+- **Dairesel menü.** `RadialMenu` içeriği sarar ve imlecin yerinde en çok
+  sekiz komutu çevrede, tepeden saat yönünde dizer (Blender'daki pasta,
+  Maya'daki işaretleme menüsü gibi): yönler hep aynıdır, kas hafızası
+  oluşur. İmleci bir yöne kaydırmak o komutu seçer, tıklamak çalıştırır.
+  Menüyü açan tuş (`hold`) ya da fare basılı tutulup bir yöne çekilerek
+  bırakılırsa komut hemen çalışır; kısa basış menüyü açık bırakır. Ortaya
+  tıklamak, sağ tık ya da Esc kapatır; kenara yakın açılan menü içeri
+  kaydırılır.
+- **Vitrinde.** Seç aracında seçimin üstünde çubuk belirir: seçime
+  yakınlaştır, özellikler, öznitelik tablosu, katmanı kilitle, sil (yalnızca
+  Çizimler katmanında) ve seçimi bırak. Boşluk tuşu model alanında araç
+  menüsünü açar; komut yazılırken ve pencereler açıkken açılmaz.
+- **Hareket.** Çubuğun belirmesi ve menünün açılması kısa geçişlerdir;
+  `theme::motion::set_reduced(true)` geçişleri kapatır (hareketi azaltmak
+  isteyen kullanıcılar ve ekransız görüntü için).
+
+```rust
+let map = MiniToolbar::new(model_space, self.selection_bounds())
+    .button(Icon::Target, "Seçime yakınlaştır", Message::FocusSelection)
+    .button(Icon::Lock, "Katmanı kilitle", Message::LayerLocked(layer))
+    .active(locked)
+    .separator()
+    .button(Icon::Eraser, "Sil", can_delete.then_some(Message::Delete))
+    .shortcut("Delete")
+    .danger();
+
+RadialMenu::new(map, self.radial_open, Message::RadialClosed)
+    .hold(keyboard::Key::Named(key::Named::Space))
+    .item(Icon::Select, "Seç", Message::ToolSelected(Tool::Select))
+    .item(Icon::Line, "Çizgi", Message::ToolSelected(Tool::Line))
 ```
 
 ## Yerleşim
@@ -777,6 +820,8 @@ cargo run -- snapshot sihirbaz.png --senaryo sihirbaz --sayfa 2
 cargo run -- snapshot ozellikler.png --senaryo ozellikler
 cargo run -- snapshot duzen.png --senaryo duzen
 cargo run -- snapshot yuva.png --senaryo yuva --bas 1150,153 --imlec 700,300
+cargo run -- snapshot mini.png --senaryo mini --imlec 437,272
+cargo run -- snapshot daire.png --senaryo daire --imlec 600,250
 cargo run -- snapshot sekmeler.png --senaryo galeri --sayfa yerlesim
 cargo run -- snapshot girdiler.png --senaryo galeri --sayfa girdiler --boyut 1440x1700 --tikla 222,1190
 cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah
@@ -786,7 +831,9 @@ cargo run -- snapshot karsitlik.png --senaryo secim --tema karsitlik
 cargo run -- snapshot --yardim   # senaryolar, girdiler ve galeri sayfaları
 ```
 
-`KENTOS_SNAPSHOT_BACKEND=tiny-skia` yazılım çiziciyi zorlar.
+`KENTOS_SNAPSHOT_BACKEND=tiny-skia` yazılım çiziciyi zorlar. Alt komut
+geçişleri kapatır (`theme::motion::set_reduced`); bileşenler son hâlleriyle
+çizilir.
 
 ## İlkeler
 

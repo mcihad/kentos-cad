@@ -1,24 +1,28 @@
 //! Çerçeve sayfası: kayan araç pencereleri, durum çubuğu, komut kutusu,
-//! gezinme çubuğu, uygulama menüsü ve iletişim kutuları.
+//! gezinme çubuğu, bağlam menüsü, mini araç çubuğu, dairesel menü,
+//! uygulama menüsü ve iletişim kutuları.
 
-use iced::widget::{Column, button, checkbox, column, container, row, space};
-use iced::{Center, Element, Fill, Theme};
+use iced::widget::{
+    Column, button, checkbox, column, container, mouse_area, pin, row, space, stack,
+};
+use iced::{Border, Center, Element, Fill, Theme, keyboard};
 
 use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
-use kentos_rc::spatial::model_space;
+use kentos_rc::spatial::{Tool, model_space};
 use kentos_rc::style;
-use kentos_rc::theme::typography;
+use kentos_rc::theme::{Tokens, typography};
 use kentos_rc::widget::command_line::Prompt;
 use kentos_rc::widget::status_bar::{Readout, Toggle};
 use kentos_rc::widget::{
-    CommandLine, ContextMenu, Dialog, Floating, Menu, NavigationBar, StatusBar, ToolWindow,
+    CommandLine, ContextMenu, Dialog, Floating, Menu, MiniToolbar, NavigationBar, RadialMenu,
+    StatusBar, ToolWindow,
 };
 
 use super::{entry, pressed};
 use crate::app::Showcase;
 use crate::command;
-use crate::gallery::{Demo, DemoPane, SNAP_KINDS};
+use crate::gallery::{Demo, DemoPane, SHAPES, SNAP_KINDS};
 use crate::message::Message;
 
 impl Showcase {
@@ -269,6 +273,44 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Mini araç çubuğu",
+                "kentos_rc::widget::MiniToolbar",
+                "Seçimin üstünde beliren küçük çubuk: seçimle en sık yapılan işler. Üstte yer \
+                 yoksa altına geçer, alanın kenarlarından taşmaz. İmleç uzaklaştıkça \
+                 soluklaşır ve çizimi kapatmaz, yaklaşınca belirginleşir; düğmenin adı ve \
+                 kısayolu çubuğun seçimden uzak yanında yazar. Şekillere tıklayın; kilitli \
+                 şekil silinemez.",
+                self.mini_toolbar_sample(),
+                Some(
+                    "MiniToolbar::new(model_space, self.selection_bounds())\n    \
+                     .button(Icon::Target, \"Seçime yakınlaştır\", Message::FocusSelection)\n    \
+                     .button(Icon::Copy, \"Kopyala\", Message::Copy)\n    \
+                     .shortcut(\"Ctrl+C\")\n    \
+                     .separator()\n    \
+                     .button(Icon::Lock, \"Kilitle\", Message::Lock)\n    \
+                     .active(locked)\n    \
+                     .button(Icon::Eraser, \"Sil\", (!locked).then_some(Message::Delete))\n    \
+                     .danger()",
+                ),
+            ),
+            entry(
+                "Dairesel menü",
+                "kentos_rc::widget::RadialMenu",
+                "İmlecin yerinde açılan, komutları çevresinde hep aynı yönlerde dizen menü \
+                 (Blender'daki pasta, Maya'daki işaretleme menüsü gibi). Alana basılı tutup \
+                 bir yöne çekin ve bırakın; kısa tıklarsanız menü açık kalır, yönü seçip \
+                 tıklayın. Ortaya tıklamak, sağ tık ya da Esc kapatır. Model alanında Boşluk \
+                 tuşu aynı menüyü açar: basılı tutup çekip bırakmak aracı hemen seçer.",
+                self.radial_sample(),
+                Some(
+                    "RadialMenu::new(model_space, self.radial_open, Message::RadialClosed)\n    \
+                     .hold(keyboard::Key::Named(key::Named::Space))\n    \
+                     .item(Icon::Select, \"Seç\", Message::ToolSelected(Tool::Select))\n    \
+                     .item(Icon::Line, \"Çizgi\", Message::ToolSelected(Tool::Line))\n    \
+                     .item(Icon::Polyline, \"Çoklu çizgi\", Message::ToolSelected(Tool::Polyline))",
+                ),
+            ),
+            entry(
                 "Uygulama menüsü",
                 "kentos_rc::widget::AppMenu",
                 "Şeridin marka düğmesinden açılan büyük menü: solda komutlar, sağda \
@@ -366,6 +408,190 @@ impl Showcase {
         .height(typography::scaled(260.0));
 
         container(floating)
+            .padding(1)
+            .style(style::container::bordered)
+            .into()
+    }
+
+    /// Mini araç çubuğu örneği: seçilebilen üç şekil ve seçimin üstündeki
+    /// çubuk.
+    fn mini_toolbar_sample(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+
+        let background = mouse_area(
+            container(label::caption("Boşluğa tıklamak seçimi bırakır.").style(style::text::muted))
+                .padding([8, 12])
+                .width(Fill)
+                .height(Fill)
+                .style(|theme: &Theme| {
+                    style::container::solid(model_space::Style::of(theme).background)(theme)
+                }),
+        )
+        .on_press(Message::Gallery(Demo::ShapeSelected(None)));
+
+        let mut stage = stack![background];
+
+        for (index, (name, bounds, color)) in SHAPES.into_iter().enumerate() {
+            if gallery.shapes_deleted[index] {
+                continue;
+            }
+
+            let selected = gallery.shape == Some(index);
+            let locked = gallery.shapes_locked[index];
+            let mut title = row![label::caption(name).style(style::text::default)]
+                .spacing(4)
+                .align_y(Center);
+
+            if locked {
+                title = title.push(icon(Icon::Lock).size(12.0).tone(Tone::Muted));
+            }
+
+            let shape = button(container(title).padding([4, 6]))
+                .on_press(Message::Gallery(Demo::ShapeSelected(Some(index))))
+                .width(bounds.width)
+                .height(bounds.height)
+                .padding(0)
+                .style(move |theme: &Theme, _| {
+                    let t = Tokens::of(theme);
+
+                    button::Style {
+                        background: Some(color.scale_alpha(0.22).into()),
+                        text_color: t.text,
+                        border: Border {
+                            color: if selected { t.accent } else { color },
+                            width: if selected { 2.0 } else { 1.0 },
+                            radius: 2.0.into(),
+                        },
+                        ..button::Style::default()
+                    }
+                });
+
+            stage = stage.push(pin(shape).x(bounds.x).y(bounds.y));
+        }
+
+        let anchor = gallery
+            .shape
+            .filter(|shape| !gallery.shapes_deleted[*shape])
+            .map(|shape| SHAPES[shape].1);
+        let locked = gallery
+            .shape
+            .is_some_and(|shape| gallery.shapes_locked[shape]);
+
+        let toolbar = match gallery.shape {
+            Some(shape) => MiniToolbar::new(stage.height(typography::scaled(250.0)), anchor)
+                .button(
+                    Icon::Target,
+                    "Seçime yakınlaştır",
+                    pressed("Seçime yakınlaştır"),
+                )
+                .button(Icon::Copy, "Kopyala", pressed("Kopyala"))
+                .shortcut("Ctrl+C")
+                .button(Icon::Properties, "Özellikler", pressed("Özellikler"))
+                .separator()
+                .button(
+                    if locked { Icon::Lock } else { Icon::Unlock },
+                    if locked { "Kilidi aç" } else { "Kilitle" },
+                    Message::Gallery(Demo::ShapeLocked(shape)),
+                )
+                .active(locked)
+                .separator()
+                .button(
+                    Icon::Eraser,
+                    "Sil",
+                    (!locked).then_some(Message::Gallery(Demo::ShapeDeleted(shape))),
+                )
+                .shortcut("Delete")
+                .danger()
+                .button(
+                    Icon::ClearSelection,
+                    "Seçimi bırak",
+                    Message::Gallery(Demo::ShapeSelected(None)),
+                )
+                .shortcut("Esc"),
+            None => MiniToolbar::new(stage.height(typography::scaled(250.0)), None),
+        };
+
+        let deleted = gallery
+            .shapes_deleted
+            .iter()
+            .filter(|deleted| **deleted)
+            .count();
+        let mut sample = column![
+            container(toolbar)
+                .padding(1)
+                .style(style::container::bordered)
+        ]
+        .spacing(8);
+
+        if deleted > 0 {
+            sample = sample.push(
+                button(label::caption("Silinen şekilleri geri getir").style(style::text::default))
+                    .on_press(Message::Gallery(Demo::ShapesReset))
+                    .padding([2, 8])
+                    .style(style::button::flat),
+            );
+        }
+
+        sample.into()
+    }
+
+    /// Dairesel menü örneği: alana basmak menüyü imlecin yerinde açar.
+    fn radial_sample(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let tool = gallery.radial_tool;
+
+        let stage = mouse_area(
+            container(
+                column![
+                    row![
+                        icon(tool.icon()).size(16.0),
+                        label::strong(format!("Etkin araç: {}", tool.label())),
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
+                    label::caption(
+                        "Basılı tutup bir yöne çekin ve bırakın, ya da tıklayıp yönü seçin."
+                    ),
+                ]
+                .spacing(6),
+            )
+            .padding([10, 12])
+            .width(Fill)
+            .height(Fill)
+            .style(|theme: &Theme| {
+                style::container::solid(model_space::Style::of(theme).background)(theme)
+            }),
+        )
+        .on_press(Message::Gallery(Demo::RadialOpened));
+
+        let menu = [
+            Tool::Select,
+            Tool::Line,
+            Tool::Polyline,
+            Tool::Polygon,
+            Tool::Measure,
+            Tool::Point,
+            Tool::Circle,
+            Tool::Rectangle,
+        ]
+        .into_iter()
+        .fold(
+            RadialMenu::new(
+                container(stage).height(typography::scaled(300.0)),
+                gallery.radial_open,
+                Message::Gallery(Demo::RadialClosed),
+            )
+            .hold(keyboard::Key::Named(keyboard::key::Named::Space)),
+            |menu, tool| {
+                menu.item(
+                    tool.icon(),
+                    tool.label(),
+                    Message::Gallery(Demo::RadialChosen(tool)),
+                )
+            },
+        );
+
+        container(menu)
             .padding(1)
             .style(style::container::bordered)
             .into()

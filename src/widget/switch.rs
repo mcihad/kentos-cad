@@ -26,7 +26,7 @@ use iced::{
     Theme, Vector, mouse, window,
 };
 
-use crate::theme::{Tokens, typography};
+use crate::theme::{Tokens, motion, typography};
 
 /// Rayın ölçüleri ve düğmenin kayma süresi.
 const TRACK: Size = Size::new(32.0, 18.0);
@@ -89,11 +89,7 @@ impl State {
 
         match self.changed {
             Some(changed) => {
-                let t = (self.now.saturating_duration_since(changed).as_secs_f32()
-                    / SLIDE.as_secs_f32())
-                .clamp(0.0, 1.0);
-                // Yavaşlayarak durur.
-                let eased = 1.0 - (1.0 - t) * (1.0 - t);
+                let eased = motion::progress(changed, self.now, SLIDE);
 
                 if self.shown { eased } else { 1.0 - eased }
             }
@@ -198,7 +194,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Switch<'a, Message> {
                 state.now = *now;
 
                 if let Some(changed) = state.changed {
-                    if now.saturating_duration_since(changed) < SLIDE {
+                    if motion::running(changed, *now, SLIDE) {
                         shell.request_redraw();
                     } else {
                         state.changed = None;

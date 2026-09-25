@@ -48,6 +48,14 @@ impl Showcase {
             )
             .item("Delete", "Seçili çizimleri siler")
             .item(
+                "Seçimin üstündeki çubuk",
+                "Yakınlaştır, özellikler, tablo, kilitle, sil; imleç uzaklaşınca soluklaşır",
+            )
+            .item(
+                "Boşluk",
+                "İmlecin yerinde dairesel araç menüsü: yöne çekip tıklayın ya da basılı tutup bırakın",
+            )
+            .item(
                 "Panel sekmesi",
                 "Sürükleyerek başka yığına, kenara ya da ortaya (yüzen pencere) taşır",
             )

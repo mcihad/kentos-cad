@@ -8,6 +8,7 @@
 //! izler.
 
 pub mod accent;
+pub mod motion;
 pub mod tokens;
 pub mod typography;
 

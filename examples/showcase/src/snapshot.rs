@@ -34,7 +34,7 @@ use crate::properties::{self, Section};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 20] = [
+const SCENARIOS: [(&str, &str); 22] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -98,6 +98,14 @@ const SCENARIOS: [(&str, &str); 20] = [
     (
         "duzen",
         "Düzen 1 sekmesi: A3 kâğıtta harita çerçevesi ve antet; üç düzen açık",
+    ),
+    (
+        "mini",
+        "yol seçili: seçimin üstünde mini araç çubuğu; imleç uzaklaştıkça soluklaşır",
+    ),
+    (
+        "daire",
+        "Boşluk: dairesel araç menüsü açık; --imlec ile bir yöne çekilir",
     ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
@@ -256,6 +264,9 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
 
     // Yazı ayarı uygulama kurulmadan verilir; uygulama onu okur.
     kentos_rc::theme::typography::set(typography);
+    // Görüntü tek karedir: geçişler yarıda kalmasın, bileşenler son
+    // hâlleriyle çizilsin.
+    kentos_rc::theme::motion::set_reduced(true);
 
     let mut app = Showcase::new();
     prepare(&mut app, &scenario, page.as_deref())?;
@@ -525,6 +536,11 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::SheetAdded);
             send(Message::SheetSelected(1));
         }
+        "mini" => {
+            send(Message::LayerActivated(3));
+            send(Message::TableRowPressed(road));
+        }
+        "daire" => send(Message::RadialOpened),
         "galeri" => {
             let page = match page {
                 Some(name) => PAGES

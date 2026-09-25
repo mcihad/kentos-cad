@@ -11,7 +11,7 @@ use kentos_rc::attribute::{
     Condition, Date, DateTime, Field, ObjectId, Operator, Query, Time, Value, text,
 };
 use kentos_rc::icon::Icon;
-use kentos_rc::spatial::SelectionMode;
+use kentos_rc::spatial::{SelectionMode, Tool};
 use kentos_rc::widget::Toast;
 use kentos_rc::widget::color::Ramp;
 use kentos_rc::widget::command_line::Entry;
@@ -85,8 +85,8 @@ impl Page {
                 "Tablo, sanal tablo, ağaç görünümü, özellik ızgarası, panel ve giriş alanları."
             }
             Page::Frame => {
-                "Kayan pencereler, durum çubuğu, komut kutusu, gezinme çubuğu, menü ve iletişim \
-                 kutuları."
+                "Kayan pencereler, durum çubuğu, komut kutusu, gezinme çubuğu, bağlam menüsü, \
+                 mini araç çubuğu, dairesel menü ve iletişim kutuları."
             }
             Page::Layout => {
                 "Belge sekmeleri, sekmeli yuva ve görünüm alanları: çalışma alanının düzeni."
@@ -207,6 +207,16 @@ pub enum Demo {
     OutlineInput(String),
     OutlineRenamed,
     OutlineCancelled,
+    /// Mini araç çubuğu örneği: şekil seçildi (`None` boşluğa tıklandı),
+    /// kilitlendi ya da silindi.
+    ShapeSelected(Option<usize>),
+    ShapeLocked(usize),
+    ShapeDeleted(usize),
+    ShapesReset,
+    /// Dairesel menü örneği.
+    RadialOpened,
+    RadialClosed,
+    RadialChosen(Tool),
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -449,6 +459,13 @@ pub struct Gallery {
     pub outline: Vec<Outline>,
     pub outline_selected: Option<usize>,
     pub outline_renaming: Option<(usize, String)>,
+    /// Mini araç çubuğu örneği: seçili şekil, kilitli ve silinmiş şekiller.
+    pub shape: Option<usize>,
+    pub shapes_locked: [bool; 3],
+    pub shapes_deleted: [bool; 3],
+    /// Dairesel menü örneği: menü açık mı, seçilen araç.
+    pub radial_open: bool,
+    pub radial_tool: Tool,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -475,6 +492,40 @@ fn sample_documents() -> Vec<Document> {
     })
     .collect()
 }
+
+/// Mini araç çubuğu örneğindeki şekiller: adı, alandaki yeri ve rengi.
+pub const SHAPES: [(&str, iced::Rectangle, iced::Color); 3] = [
+    (
+        "Parsel 1204/7",
+        iced::Rectangle {
+            x: 48.0,
+            y: 110.0,
+            width: 170.0,
+            height: 96.0,
+        },
+        iced::Color::from_rgb8(0xe2, 0xa9, 0x3b),
+    ),
+    (
+        "Yapı adası",
+        iced::Rectangle {
+            x: 268.0,
+            y: 36.0,
+            width: 140.0,
+            height: 150.0,
+        },
+        iced::Color::from_rgb8(0xc7, 0x7d, 0xd8),
+    ),
+    (
+        "Park",
+        iced::Rectangle {
+            x: 458.0,
+            y: 132.0,
+            width: 150.0,
+            height: 84.0,
+        },
+        iced::Color::from_rgb8(0x8f, 0xc9, 0x5a),
+    ),
+];
 
 /// Sanal tablo örneğinin kayıt sayısı.
 pub const PARCELS: usize = 100_000;
@@ -720,6 +771,11 @@ impl Default for Gallery {
             outline: sample_outline(),
             outline_selected: Some(1),
             outline_renaming: None,
+            shape: Some(0),
+            shapes_locked: [false, false, true],
+            shapes_deleted: [false; 3],
+            radial_open: false,
+            radial_tool: Tool::Select,
         }
     }
 }
@@ -993,6 +1049,29 @@ impl Gallery {
                 }
             }
             Demo::OutlineCancelled => self.outline_renaming = None,
+            Demo::ShapeSelected(shape) => {
+                self.shape = shape.filter(|shape| !self.shapes_deleted[*shape]);
+            }
+            Demo::ShapeLocked(shape) => {
+                if let Some(locked) = self.shapes_locked.get_mut(shape) {
+                    *locked = !*locked;
+                }
+            }
+            Demo::ShapeDeleted(shape) => {
+                if !self.shapes_locked.get(shape).copied().unwrap_or(true) {
+                    self.shapes_deleted[shape] = true;
+                    self.shape = None;
+
+                    return Some(format!("Galeri: \"{}\" silindi.", SHAPES[shape].0));
+                }
+            }
+            Demo::ShapesReset => {
+                self.shapes_deleted = [false; 3];
+                self.shape = Some(0);
+            }
+            Demo::RadialOpened => self.radial_open = true,
+            Demo::RadialClosed => self.radial_open = false,
+            Demo::RadialChosen(tool) => self.radial_tool = tool,
         }
 
         None

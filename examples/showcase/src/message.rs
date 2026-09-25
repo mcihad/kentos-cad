@@ -74,6 +74,9 @@ pub enum Message {
     /// F2: ağaçta seçili düğüm varsa yeniden adlandırır, yoksa komut
     /// geçmişini açar.
     F2Pressed,
+    /// Boşluk: model alanında imlecin yerinde dairesel araç menüsü açılır.
+    RadialOpened,
+    RadialClosed,
     /// Düğümün onay kutusu: görünürlük.
     TreeChecked(NodeId, bool),
     /// Grubu (ya da `None` ile bütün ağacı) iç içe açar veya kapatır.

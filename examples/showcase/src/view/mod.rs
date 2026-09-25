@@ -16,9 +16,11 @@
 //! Model ve düzen sekmeleri haritanın altındadır; düzen sekmesinde harita
 //! yerini kâğıt paftaya bırakır. Model alanının üstünde kayan araç
 //! pencereleri (ölçüm, koordinata git, katman stili) durur; bildirimler
-//! pencerenin sağ alt köşesindedir. Galeri sekmesinde model alanı ve yan
-//! paneller yerini bileşen kataloğuna bırakır. Üst katmanlar önceliğe göre
-//! tek tek açılır: uygulama menüsü, sorgu penceresi, kısayollar.
+//! pencerenin sağ alt köşesindedir. Seçimin üstünde mini araç çubuğu belirir;
+//! Boşluk imlecin yerinde dairesel araç menüsünü açar. Galeri sekmesinde
+//! model alanı ve yan paneller yerini bileşen kataloğuna bırakır. Üst
+//! katmanlar önceliğe göre tek tek açılır: uygulama menüsü, sorgu
+//! penceresi, kısayollar.
 
 mod app_menu;
 mod attribute_table;
@@ -38,7 +40,7 @@ mod status;
 use std::fmt;
 
 use iced::widget::{Column, column, container, stack};
-use iced::{Element, Fill};
+use iced::{Element, Fill, keyboard};
 
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::model_space::Backdrop;
@@ -49,13 +51,26 @@ use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::command_line::{self, Prompt};
 use kentos_rc::widget::docking::Side;
 use kentos_rc::widget::{
-    Banner, CommandLine, Confirm, ContextMenu, EmptyState, Floating, NavigationBar, Toaster,
-    overlay, status_bar,
+    Banner, CommandLine, Confirm, ContextMenu, EmptyState, Floating, MiniToolbar, NavigationBar,
+    RadialMenu, Toaster, overlay, status_bar,
 };
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
 use crate::command::{self, Command};
-use crate::message::{Confirmation, Keyword, Message, Pending, RibbonTab};
+use crate::message::{Confirmation, DockPanel, Keyword, Message, Pending, RibbonTab};
+
+/// Dairesel menünün araçları, tepeden saat yönünde: seçim tepede, çizim
+/// araçları çevrede, ölçüm altta.
+const RADIAL_TOOLS: [Tool; 8] = [
+    Tool::Select,
+    Tool::Line,
+    Tool::Polyline,
+    Tool::Polygon,
+    Tool::Measure,
+    Tool::Point,
+    Tool::Circle,
+    Tool::Rectangle,
+];
 
 impl Showcase {
     pub fn view(&self) -> Element<'_, Message> {
@@ -140,10 +155,74 @@ impl Showcase {
             None => self.map(),
         };
 
-        Floating::new(area, &self.windows, Message::Window, move |pane| {
+        let area = Floating::new(area, &self.windows, Message::Window, move |pane| {
             self.pane(pane)
-        })
-        .into()
+        });
+
+        // Boşluk: imlecin yerinde araç menüsü. Basılı tutup yöne çekip
+        // bırakmak aracı hemen seçer.
+        let radial = RadialMenu::new(area, self.radial_open, Message::RadialClosed)
+            .hold(keyboard::Key::Named(keyboard::key::Named::Space));
+
+        RADIAL_TOOLS
+            .into_iter()
+            .fold(radial, |radial, tool| {
+                radial.item(tool.icon(), tool.label(), Message::ToolSelected(tool))
+            })
+            .into()
+    }
+
+    /// Seçimin üstündeki mini araç çubuğu: seçimle en sık yapılan işler.
+    fn selection_toolbar<'a>(&'a self, map: Element<'a, Message>) -> Element<'a, Message> {
+        let layer = self.selection.primary().map(|item| item.layer);
+        let locked =
+            layer.is_some_and(|layer| self.layer_tree.locked.get(layer).copied().unwrap_or(false));
+
+        let mut toolbar = MiniToolbar::new(map, self.selection_anchor())
+            .button(Icon::Target, "Seçime yakınlaştır", Message::FocusSelection)
+            .button(
+                Icon::Properties,
+                "Özellikler",
+                Message::PanelShown(DockPanel::Details),
+            )
+            .button(
+                Icon::Table,
+                "Öznitelik tablosunda göster",
+                Message::PanelShown(DockPanel::Table),
+            )
+            .separator();
+
+        if let Some(layer) = layer {
+            toolbar = toolbar
+                .button(
+                    if locked { Icon::Lock } else { Icon::Unlock },
+                    if locked {
+                        "Katmanın kilidini aç"
+                    } else {
+                        "Katmanı kilitle"
+                    },
+                    Message::LayerLocked(layer),
+                )
+                .active(locked)
+                .separator();
+        }
+
+        toolbar
+            .button(
+                Icon::Eraser,
+                "Sil",
+                self.can_delete_selection()
+                    .then_some(Message::DeleteSelection),
+            )
+            .shortcut("Delete")
+            .danger()
+            .button(
+                Icon::ClearSelection,
+                "Seçimi bırak",
+                Message::ClearSelection,
+            )
+            .shortcut("Esc")
+            .into()
     }
 
     fn map(&self) -> Element<'_, Message> {
@@ -180,11 +259,12 @@ impl Showcase {
         // Seç ve Kaydır araçlarında sağ tık bağlam menüsünü açar; çizim ve
         // ölçüm araçlarında model alanı sağ tıkı kendisi kullanır.
         let map = ContextMenu::new(model_space, move |position| self.map_menu(position));
+        let map = self.selection_toolbar(map.into());
 
         // Görünür katman yokken harita boştur; ortada ne olduğu ve nasıl
         // düzeltileceği yazar.
         if self.layers.iter().any(|layer| layer.visible) {
-            map.into()
+            map
         } else {
             stack![
                 map,

@@ -24,7 +24,9 @@
 //!
 //! Uygulamanın abonelikleri (klavye kısayolları, zamanlayıcılar) ve
 //! görevleri (`Task`) çalıştırılmaz; bunlara bağlı durumlar mesajlarla
-//! kurulmalıdır.
+//! kurulmalıdır. Görüntü tek karedir: geçişlerin yarıda kalmaması için
+//! [`motion::set_reduced`](crate::theme::motion::set_reduced) ile geçişler
+//! kapatılabilir.
 
 use std::fmt;
 use std::fs::File;

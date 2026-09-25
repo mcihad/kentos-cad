@@ -162,6 +162,8 @@ pub struct Showcase {
     /// Son tıklanan yer bir ağaç (katman ağacı ya da galerideki örnek): F2
     /// seçili düğümü yeniden adlandırır.
     tree_focused: bool,
+    /// Dairesel araç menüsü açık mı (Boşluk).
+    pub(crate) radial_open: bool,
 }
 
 /// Koordinata git penceresinin alanları.
@@ -319,6 +321,7 @@ impl Showcase {
             sheets: Sheets::new(viewport),
             renaming: None,
             tree_focused: false,
+            radial_open: false,
         }
     }
 
@@ -478,6 +481,23 @@ impl Showcase {
 
                 self.command_expanded = !self.command_expanded;
             }
+            Message::RadialOpened => {
+                // Komut yazılırken ve pencere ya da menü açıkken açılmaz.
+                let blocked = self.app_menu_open
+                    || self.query.is_some()
+                    || self.help_open
+                    || self.confirm.is_some()
+                    || self.import.is_some()
+                    || self.properties.is_some();
+
+                if self.ribbon_tab != RibbonTab::Gallery
+                    && self.command_input.is_empty()
+                    && !blocked
+                {
+                    self.radial_open = true;
+                }
+            }
+            Message::RadialClosed => self.radial_open = false,
             Message::TreeChecked(node, checked) => self.check_node(node, checked),
             Message::TreeExpandAll(group, expanded) => self.layer_tree.expand_all(group, expanded),
             Message::ShowOnly(node) => self.show_only(node),
@@ -1212,6 +1232,43 @@ impl Showcase {
         self.renaming = Some((node, name));
 
         focus_rename()
+    }
+
+    /// Mini araç çubuğunun yeri: seçimin model alanındaki kutusu. Seç
+    /// aracında, çizim ya da haritadan seçim sürmüyorken vardır.
+    pub(crate) fn selection_anchor(&self) -> Option<iced::Rectangle> {
+        if self.tool != Tool::Select || !self.draft.is_empty() || self.picking.is_some() {
+            return None;
+        }
+
+        let bounds = bounds_of(&self.layers, self.selection.iter())?;
+        let south_west = self.viewport.project(bounds.south_west);
+        let north_east = self.viewport.project(bounds.north_east);
+
+        Some(iced::Rectangle::new(
+            Point::new(
+                south_west.x.min(north_east.x),
+                south_west.y.min(north_east.y),
+            ),
+            Size::new(
+                (north_east.x - south_west.x).abs(),
+                (north_east.y - south_west.y).abs(),
+            ),
+        ))
+    }
+
+    /// Seçimdeki çizimler silinebilir mi: Çizimler katmanında ve katman
+    /// kilitli değil.
+    pub(crate) fn can_delete_selection(&self) -> bool {
+        self.selection
+            .iter()
+            .any(|item| item.layer == DRAWING_LAYER)
+            && !self
+                .layer_tree
+                .locked
+                .get(DRAWING_LAYER)
+                .copied()
+                .unwrap_or(false)
     }
 
     /// Yeniden adlandırmadan vazgeçer; ad değişmez.
@@ -2606,6 +2663,14 @@ fn keyboard_event(event: Event, status: event::Status, _window: window::Id) -> O
     match event {
         keyboard::Event::ModifiersChanged(modifiers) => Some(Message::ModifiersChanged(modifiers)),
         keyboard::Event::KeyPressed {
+            key: keyboard::Key::Named(keyboard::key::Named::Space),
+            repeat,
+            modifiers,
+            ..
+        } if status == event::Status::Ignored => {
+            (!repeat && modifiers.is_empty()).then_some(Message::RadialOpened)
+        }
+        keyboard::Event::KeyPressed {
             key,
             modifiers,
             text,
@@ -2634,7 +2699,7 @@ fn typed(text: Option<&str>, modifiers: Modifiers) -> Option<Message> {
 /// CAD kısayolları: Esc, Delete, Ctrl+A (tümünü seç), F1 (yardım), Ctrl+F1
 /// (şeridi daralt), F2 (komut geçmişi; ağaçta seçili düğümü adlandırır), F3
 /// (yakalama), F7 (ızgara); Ctrl +, Ctrl − ve Ctrl 0 yazı boyutunu
-/// değiştirir.
+/// değiştirir. Boşluk dairesel araç menüsünü açar (`keyboard_event`).
 fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
     use keyboard::Key;
     use keyboard::key::Named;
@@ -2780,6 +2845,46 @@ mod tests {
         let point = app.viewport.project(LonLat::new(32.85, 39.93));
         let hit = app.hit(point);
         assert!(hit.is_none_or(|hit| hit.layer != DRAWING_LAYER));
+    }
+
+    #[test]
+    fn the_radial_menu_opens_only_on_the_drawing_and_closes() {
+        let mut app = Showcase::new();
+
+        let _ = app.update(Message::RadialOpened);
+        assert!(app.radial_open);
+        let _ = app.update(Message::ToolSelected(Tool::Line));
+        let _ = app.update(Message::RadialClosed);
+        assert!(!app.radial_open);
+        assert_eq!(app.tool, Tool::Line);
+
+        // Komut yazılırken Boşluk menüyü açmaz.
+        let _ = app.update(Message::CommandInput("koordinat".to_owned()));
+        let _ = app.update(Message::RadialOpened);
+        assert!(!app.radial_open);
+
+        let _ = app.update(Message::CommandInput(String::new()));
+        let _ = app.update(Message::RibbonTabSelected(RibbonTab::Gallery));
+        let _ = app.update(Message::RadialOpened);
+        assert!(!app.radial_open);
+    }
+
+    #[test]
+    fn the_mini_toolbar_follows_the_selection_in_the_select_tool() {
+        let mut app = Showcase::new();
+
+        assert!(app.selection_anchor().is_none());
+
+        let road = FeatureRef::new(3, ObjectId(2));
+        let _ = app.update(Message::LayerActivated(3));
+        let _ = app.update(Message::TableRowPressed(road));
+        let anchor = app.selection_anchor().expect("seçim var");
+        assert!(anchor.width > 0.0 && anchor.height > 0.0);
+
+        // Örnek veri silinemez; araç değişince çubuk gizlenir.
+        assert!(!app.can_delete_selection());
+        let _ = app.update(Message::ToolSelected(Tool::Measure));
+        assert!(app.selection_anchor().is_none());
     }
 
     #[test]
