@@ -14,15 +14,19 @@ import { DRAWING_FONT_IDS, WORKSPACE_IDS } from './projectSettings';
  * reading checks every field and refuses anything it does not know with a
  * message that says what and where; it never guesses (CLAUDE.md §9.7).
  * The project's style items are opaque here (the style layer checks them).
+ *
+ * v1 keeps no persistent object ids (docs/adr/0014): they are not written,
+ * and one found in a file is not taken. The binary v2 format will store
+ * them (TODOS.md FILE-05).
  */
 
 export const DOCUMENT_FORMAT = 'kentos.document';
 export const DOCUMENT_VERSION = 1;
 export const DOCUMENT_EXTENSION = '.kcad';
 
-/** The drawing as a snapshot; deep copies, so later edits do not change it. */
+/** The drawing as a snapshot; deep copies, so later edits do not change it. Persistent ids are not written in v1. */
 export function toSnapshot(doc: CadDocument): DocumentSnapshotV1 {
-  const entities: ContractEntity[] = [...doc.all()].map((e) => structuredClone(e));
+  const entities: ContractEntity[] = [...doc.all()].map(({ uid: _uid, ...e }) => structuredClone(e));
   const layers: ContractLayerNode[] = structuredClone([...doc.layers.tree]);
   const snap: DocumentSnapshotV1 = {
     format: DOCUMENT_FORMAT,
@@ -156,6 +160,8 @@ function layer(v: unknown, where: string): LayerInit {
 
 function entity(v: unknown, where: string, layers: ReadonlySet<string>, ids: Set<number>): Entity {
   if (!isObj(v)) return fail(where, 'nesne olmalı');
+  // v1 has no persistent ids: one found here is not taken for the object's (they are derived; ADR 0014).
+  if ('uid' in v) delete v.uid;
   const kind = oneOf(v.kind, KINDS, `${where} › tür`);
   const w = `${where} (${kind})`;
   const id = num(v.id, `${w} › kimlik`);

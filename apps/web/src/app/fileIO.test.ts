@@ -125,7 +125,9 @@ describe('local drawing files', () => {
     const good = memoryFile('Örnek.kcad', { text: JSON.stringify(toSnapshot(src)) });
     files.picker = pick(null, good);
     expect(await files.open()).toBe(true);
-    expect([...doc.all()]).toEqual([...src.all()]);
+    // The same objects; v1 files hold no persistent ids, so those are the drawing's own.
+    const bare = (d: CadDocument) => [...d.all()].map(({ uid: _uid, ...e }) => e);
+    expect(bare(doc)).toEqual(bare(src));
     expect(doc.dirty.value).toBe(false);
     expect(files.handle).toBe(good);
     const size = doc.size;

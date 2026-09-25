@@ -63,13 +63,20 @@ export abstract class EdgePickTool implements Tool {
     return { ...geom, layerId: e.layerId, color: e.color, attrs: keepData ? { ...e.attrs } : {}, label: keepData ? e.label : undefined } as NewEntity;
   }
 
-  /** Replaces `e` by `pieces` in one undo step (attributes survive a single piece). */
+  /**
+   * Replaces `e` by `pieces` in one undo step (attributes survive a single
+   * piece). The first piece is `e` itself, changed: the part a trim leaves,
+   * the first part of a break, a line that took a vertex. It keeps its slot
+   * and persistent id; the other pieces are new objects (docs/adr/0014).
+   */
   protected replace(label: string, e: Entity, pieces: EntityGeometry[]): void {
     const { doc } = this.ctx;
     const keep = pieces.length === 1 && e.kind !== 'polygon';
+    const [first, ...others] = pieces;
     doc.transact(label, () => {
-      doc.remove([e.id]);
-      for (const piece of pieces) doc.add(this.inherit(e, piece, keep));
+      if (first) doc.replace(e.id, this.inherit(e, first, keep));
+      else doc.remove([e.id]);
+      for (const piece of others) doc.add(this.inherit(e, piece, keep));
     });
     this.ctx.selection.retain((id) => !!doc.get(id));
     this.hover = null;

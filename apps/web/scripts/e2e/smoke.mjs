@@ -174,15 +174,21 @@ try {
   await b.click(...(await toScreen(X + 30, N - 60)));
   await key('Enter');
   await key('Escape');
-  const halves = await b.eval(`[...window.kentos.doc.all()].slice(-2).map((e) => e.kind).join(',')`);
-  check('break at one point splits a line in two', halves === 'line,line' && !(await b.eval(`!!window.kentos.doc.get(${brokenLine.id})`)), halves);
+  // The first half is the line itself (same slot and persistent id, ADR 0014); the second is a new object.
+  const halves = await b.eval(`[...window.kentos.doc.all()].slice(-2).map((e) => ({ kind: e.kind, id: e.id, uid: e.uid }))`);
+  check(
+    'break at one point splits a line in two: the line keeps its id, the other half is new',
+    halves.map((h) => h.kind).join(',') === 'line,line' && halves[0].id === brokenLine.id && halves[0].uid === brokenLine.uid && !!halves[1].uid && halves[1].uid !== brokenLine.uid,
+    JSON.stringify(halves),
+  );
 
-  // Copy / paste back at the original coordinates.
+  // Copy / paste back at the original coordinates: a new object with a persistent id of its own.
   await b.eval(`window.kentos.selection.set([${rect.id}])`);
   await key('c', { ctrl: true });
   const beforePaste = await b.eval('window.kentos.doc.size');
   await key('v', { ctrl: true, shift: true });
-  check('copy and paste-in-place duplicate the selection', (await b.eval('window.kentos.doc.size')) === beforePaste + 1);
+  const pasted = await newest();
+  check('copy and paste-in-place duplicate the selection as a new object', (await b.eval('window.kentos.doc.size')) === beforePaste + 1 && /^[0-9a-f]{8}-[0-9a-f]{4}-7/.test(pasted.uid) && pasted.uid !== rect.uid, pasted.uid);
   await b.eval('window.kentos.selection.clear()');
 
   // Toolbox: every tool visible without scrolling; a group title folds its tools.
@@ -348,7 +354,9 @@ try {
   await b.click(...(await toScreen(X + 5, N + 115)));
   await key('Escape');
   const rays = await b.eval(`[...window.kentos.doc.all()].filter((e) => e.kind === 'ray' && e.p.y === ${N + 115}).map((e) => e.dir.x)`);
-  check('trimming an xline on one side leaves a ray', !(await b.eval(`!!window.kentos.doc.get(${xl.id})`)) && rays.includes(1), JSON.stringify(rays));
+  // What a trim leaves is the object itself (ADR 0014): the xline's slot and persistent id, now a ray.
+  const trimmedXl = await b.eval(`window.kentos.doc.get(${xl.id})`);
+  check('trimming an xline on one side leaves a ray, the same object', trimmedXl?.kind === 'ray' && trimmedXl.uid === xl.uid && rays.includes(1), JSON.stringify({ rays, kind: trimmedXl?.kind }));
 
   // Option letters: in a running command a plain letter that is an option triggers it (S: side count).
   await key('g', { shift: true });
