@@ -549,12 +549,17 @@ impl shader::Primitive for Frame {
 
 /// The renderer in Iced's primitive storage: one per window's device, made
 /// with the first frame. If its pipelines cannot be built, the reason is kept
-/// and shown instead of the drawing.
+/// and shown instead of the drawing, and written to standard error for the
+/// service log (`make desktop` → .run/desktop.log).
 pub struct Pipeline(Result<Renderer, RenderError>);
 
 impl shader::Pipeline for Pipeline {
     fn new(device: &wgpu::Device, _queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
-        Self(Renderer::new(device, format))
+        let renderer = Renderer::new(device, format);
+        if let Err(error) = &renderer {
+            eprintln!("kentos-cad: çizim alanının wgpu hattı kurulamadı ({format:?}): {error}");
+        }
+        Self(renderer)
     }
 
     fn trim(&mut self) {
