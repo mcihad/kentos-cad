@@ -187,8 +187,8 @@ try {
   await key('c', { ctrl: true });
   const beforePaste = await b.eval('window.kentos.doc.size');
   await key('v', { ctrl: true, shift: true });
-  const pasted = await newest();
-  check('copy and paste-in-place duplicate the selection as a new object', (await b.eval('window.kentos.doc.size')) === beforePaste + 1 && /^[0-9a-f]{8}-[0-9a-f]{4}-7/.test(pasted.uid) && pasted.uid !== rect.uid, pasted.uid);
+  const pastedCopy = await newest();
+  check('copy and paste-in-place duplicate the selection as a new object', (await b.eval('window.kentos.doc.size')) === beforePaste + 1 && /^[0-9a-f]{8}-[0-9a-f]{4}-7/.test(pastedCopy.uid) && pastedCopy.uid !== rect.uid, pastedCopy.uid);
   await b.eval('window.kentos.selection.clear()');
 
   // Toolbox: every tool visible without scrolling; a group title folds its tools.
@@ -1460,8 +1460,9 @@ try {
     await b.shot('io-dxf-roundtrip');
     const back = await b.eval(`(() => {
       const k = window.kentos;
-      // Key order and absent fields aside, JSON of every field: numbers print exactly, so equal text is equal bits.
-      const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).filter((key) => key !== 'id' && v[key] !== undefined).sort().map((key) => [key, canon(v[key])])) : v);
+      // Key order, absent fields and ids aside (imported objects are new ones, ADR 0014), JSON of every field:
+      // numbers print exactly, so equal text is equal bits.
+      const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).filter((key) => key !== 'id' && key !== 'uid' && v[key] !== undefined).sort().map((key) => [key, canon(v[key])])) : v);
       const mine = ${JSON.stringify(made.ids)}.map((id) => JSON.stringify(canon(k.doc.get(id))));
       const got = [...k.doc.all()].filter((e) => e.id > ${lastId}).map((e) => JSON.stringify(canon(e)));
       return { same: JSON.stringify(mine) === JSON.stringify(got), mine, got };
@@ -1490,7 +1491,8 @@ try {
       k.files.handle = null;
       k.selection.clear();
     })()`);
-    const saved = await b.eval(`JSON.stringify([...window.kentos.doc.all()])`);
+    // What the file holds: persistent ids are not written in v1; opening derives them (ADR 0014, checked at the end).
+    const saved = await b.eval(`JSON.stringify([...window.kentos.doc.all()].map(({ uid, ...e }) => e))`);
     await b.key('s', { ctrl: true });
     await b.waitFor(`!window.kentos.files.busy.value && Object.keys(window.__disk).length === 1`, 5000).catch(() => {});
     const written = await b.eval(`(() => { const [name, text] = Object.entries(window.__disk)[0] ?? []; const f = text ? JSON.parse(text) : {}; return { name, format: f.format, n: f.entities?.length, dirty: window.kentos.doc.dirty.value }; })()`);
@@ -1504,7 +1506,7 @@ try {
     check('Ctrl+O asks before dropping unsaved changes', !!drop);
     if (drop) await b.click(...drop);
     await b.waitFor(`!window.kentos.files.busy.value && !window.kentos.doc.dirty.value`, 5000).catch(() => {});
-    const reopened = await b.eval(`JSON.stringify([...window.kentos.doc.all()])`);
+    const reopened = await b.eval(`JSON.stringify([...window.kentos.doc.all()].map(({ uid, ...e }) => e))`);
     check('the reopened file holds the saved drawing, with no undo history', reopened === saved && !(await b.eval('window.kentos.doc.canUndo.value')), `${await b.eval('window.kentos.doc.size')} nesne`);
     await b.eval(`(() => { const k = window.kentos; k.doc.remove([[...k.doc.all()].at(-1).id]); k.files.picker = { save: async (n) => window.__files.file(n, true), open: async () => null }; k.commands.execute('file.saveAs'); })()`);
     await b.waitFor(`!window.kentos.files.busy.value`, 3000).catch(() => {});
