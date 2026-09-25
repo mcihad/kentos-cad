@@ -414,7 +414,9 @@ pub fn to_path(s: &Obj) -> Obj {
 /// text is Arial or the browser's sans default; a bold face is a little wider. Kerning is left out.
 fn text_box(s: &Obj) -> Bounds {
     let size = s.num("size");
-    let w = size * text_em(s.text("text").unwrap_or("")) * (if s.num("weight") >= 700.0 { 1.08 } else { 1.0 });
+    let w = size
+        * text_em(s.text("text").unwrap_or(""))
+        * (if s.num("weight") >= 700.0 { 1.08 } else { 1.0 });
     let (x, y) = (s.num("x"), s.num("y"));
     let x0 = match s.text("anchor") {
         Some("start") => x,

@@ -5,7 +5,6 @@
 //! (project units belong to the app), and is used only when the dimension
 //! has no text of its own.
 
-use crate::text::{Font, width_em};
 use crate::api::Op;
 use crate::entity::{Entity, Shape, dimension_geom};
 use crate::geom::arc::norm_angle;
@@ -17,6 +16,7 @@ use crate::geom::spline::catmull_rom;
 use crate::jsmath::{PI, cos, js_hypot, js_max, sin};
 use crate::op;
 use crate::ops::curve_cuts::Cut;
+use crate::text::{Font, width_em};
 use crate::vec2::Vec2;
 
 fn line(a: Vec2, b: Vec2) -> Entity {
@@ -170,6 +170,13 @@ fn segment_pieces(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Vec<Ent
     pieces
 }
 
-pub(crate) static OPS: &[Op] = &[op!("explodeEntity", |e: Entity, value_text: String, font: Option<String>| {
-    explode_entity(&e.shape, &value_text, font.as_deref().map_or(Font::DEFAULT, Font::from_id))
-})];
+pub(crate) static OPS: &[Op] = &[op!(
+    "explodeEntity",
+    |e: Entity, value_text: String, font: Option<String>| {
+        explode_entity(
+            &e.shape,
+            &value_text,
+            font.as_deref().map_or(Font::DEFAULT, Font::from_id),
+        )
+    }
+)];

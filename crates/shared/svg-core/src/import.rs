@@ -1327,7 +1327,11 @@ impl<'a> Importer<'a> {
                     };
                     cur = Some(at);
                     lines[at].text.push_str(&t);
-                    px += if t.is_empty() { 0.0 } else { crate::model::text_em(&t) * c.font_size };
+                    px += if t.is_empty() {
+                        0.0
+                    } else {
+                        crate::model::text_em(&t) * c.font_size
+                    };
                 }
             }
         }

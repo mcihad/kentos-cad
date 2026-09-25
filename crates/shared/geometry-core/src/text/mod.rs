@@ -18,7 +18,10 @@ impl Font {
 
     /// The face by its `DrawingFont` id; an unknown id is Barlow.
     pub fn from_id(id: &str) -> Font {
-        FONTS.iter().position(|f| *f == id).map_or(Font::DEFAULT, |i| Font(i as u8))
+        FONTS
+            .iter()
+            .position(|f| *f == id)
+            .map_or(Font::DEFAULT, |i| Font(i as u8))
     }
 
     pub fn id(self) -> &'static str {

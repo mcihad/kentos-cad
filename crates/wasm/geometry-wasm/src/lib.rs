@@ -282,7 +282,13 @@ pub fn corner_texts_js(corners: &[f64], texts: Vec<String>, height: f64, font: &
         .chunks_exact(4)
         .zip(&texts)
         .flat_map(|(c, t)| {
-            let at = corner_text_at(Vec2::new(c[0], c[1]), Vec2::new(c[2], c[3]), t, height, font);
+            let at = corner_text_at(
+                Vec2::new(c[0], c[1]),
+                Vec2::new(c[2], c[3]),
+                t,
+                height,
+                font,
+            );
             [at.x, at.y]
         })
         .collect()

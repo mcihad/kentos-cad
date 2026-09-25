@@ -27,9 +27,9 @@ use std::collections::HashMap;
 
 use crate::api::json::{FromJson, Json};
 use crate::entity::{Entity, Shape, entity_bounds_in};
-use crate::text::Font;
 use crate::geometry::{Bounds, empty_bounds, is_empty_bounds};
 use crate::jsmath::{js_max, js_min};
+use crate::text::Font;
 use rtree::{PackedTree, overlaps};
 
 /// What queries need from an object's layer (`LayerStore.isVisible`,

@@ -8,11 +8,11 @@
 
 use std::collections::HashMap;
 
-use crate::text::{Font, width_em};
 use crate::api::Op;
 use crate::geometry::signed_area;
 use crate::jsmath::{js_cmp, js_hypot, js_max, or, stable_sort};
 use crate::op;
+use crate::text::{Font, width_em};
 use crate::vec2::Vec2;
 
 /// Where a ring's numbering starts (`StartCorner`).
@@ -388,9 +388,18 @@ pub(crate) static OPS: &[Op] = &[
             })
         }
     ),
-    op!("cornerTextAt", |c: CornerAt, text: String, height: f64, font: Option<String>| {
-        corner_text_at(c.p, c.out, &text, height, font.as_deref().map_or(Font::DEFAULT, Font::from_id))
-    }),
+    op!(
+        "cornerTextAt",
+        |c: CornerAt, text: String, height: f64, font: Option<String>| {
+            corner_text_at(
+                c.p,
+                c.out,
+                &text,
+                height,
+                font.as_deref().map_or(Font::DEFAULT, Font::from_id),
+            )
+        }
+    ),
 ];
 
 #[cfg(test)]
@@ -493,8 +502,17 @@ mod tests {
         assert_eq!(outward(&[v(1.0, 1.0)], 0, false, false), v(0.0, 1.0));
         let mono = Font::from_id("plex-mono");
         let at = corner_text_at(v(0.0, 0.0), v(-1.0, -1.0), "100001", 2.0, mono);
-        assert_eq!(at, v(-2.4 - crate::text::width_em("100001", mono) * 2.0, -2.4 - 2.0));
+        assert_eq!(
+            at,
+            v(
+                -2.4 - crate::text::width_em("100001", mono) * 2.0,
+                -2.4 - 2.0
+            )
+        );
         // East of the corner nothing is measured: the text starts there.
-        assert_eq!(corner_text_at(v(0.0, 0.0), v(1.0, 0.0), "100001", 2.0, mono), v(2.4, 0.0));
+        assert_eq!(
+            corner_text_at(v(0.0, 0.0), v(1.0, 0.0), "100001", 2.0, mono),
+            v(2.4, 0.0)
+        );
     }
 }

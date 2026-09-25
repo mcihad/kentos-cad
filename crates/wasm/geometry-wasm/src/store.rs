@@ -184,7 +184,8 @@ impl GeometryStore {
     /// The drawing typeface (a `DrawingFont` id): text boxes follow its measured letters.
     #[wasm_bindgen(js_name = setFont)]
     pub fn set_font(&mut self, id: &str) {
-        self.inner.set_font(kentos_geometry_core::text::Font::from_id(id));
+        self.inner
+            .set_font(kentos_geometry_core::text::Font::from_id(id));
     }
 
     /// `[{ id, visible, locked, pickInterior }]` for every layer node, ancestors resolved.

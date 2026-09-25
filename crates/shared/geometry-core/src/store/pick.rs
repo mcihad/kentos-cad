@@ -5,7 +5,6 @@
 //! the TypeScript's comparisons decide, ties included.
 
 use super::{Item, Store, padded};
-use crate::text::Font;
 use crate::entity::{
     Shape, dimension_geom, ellipse_geom, entity_area, entity_outline, inside_polygon,
     is_closed_outline, polygon_holes, polygon_ring, text_box,
@@ -16,6 +15,7 @@ use crate::geom::intersect::{Edge, closest_on_edge, seg_seg};
 use crate::geometry::{Bounds, point_in_polygon, signed_area};
 use crate::jsmath::{PI, js_cmp, js_hypot, js_max, js_min};
 use crate::ops::edges::entity_edges;
+use crate::text::Font;
 use crate::vec2::Vec2;
 
 fn infinite(s: &Shape) -> bool {
