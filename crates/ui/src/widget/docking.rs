@@ -1989,7 +1989,7 @@ where
                 (point.x - body.x) / body.width.max(1.0)
             };
 
-            if ratio < SPLIT || ratio > 1.0 - SPLIT {
+            if !(SPLIT..=1.0 - SPLIT).contains(&ratio) {
                 if own && alone {
                     return None;
                 }

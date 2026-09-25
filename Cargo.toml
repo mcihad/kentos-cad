@@ -19,6 +19,24 @@ members = [
     "crates/server/application",
     # Executables.
     "apps/api",
+    # Desktop (docs/adr/0010, 0016): the KentOS UI library and its showcase. Not in
+    # default-members, so web and server work never builds Iced and wgpu (TODOS.md UI-04);
+    # pnpm rust:test:desktop and make test-desktop build them.
+    "crates/ui",
+    "apps/ui-showcase",
+]
+default-members = [
+    "crates/shared/geometry-core",
+    "crates/shared/contracts",
+    "crates/shared/formats",
+    "crates/shared/style-core",
+    "crates/shared/svg-core",
+    "crates/wasm/geometry-wasm",
+    "crates/wasm/formats-wasm",
+    "crates/wasm/svg-wasm",
+    "crates/server/postgres",
+    "crates/server/application",
+    "apps/api",
 ]
 
 [workspace.package]
@@ -55,6 +73,13 @@ reqwest = { version = "=0.13.5", default-features = false, features = ["rustls",
 time = { version = "=0.3.55", features = ["serde", "formatting", "parsing"] }
 tracing = "=0.1.44"
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter", "fmt"] }
+# Desktop interface (docs/adr/0016): Iced and its companions at the versions kentos-rc
+# was built and tested with (its lockfile, dc2e8df).
+iced = { version = "=0.14.0" }
+iced_runtime = { version = "=0.14.0" }
+glam = { version = "=0.30.10" }
+bytemuck = { version = "=1.25.2" }
+png = { version = "=0.18.1" }
 
 [profile.release]
 lto = "thin"

@@ -36,6 +36,11 @@ const GROUPS = [
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
+  // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
+  { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
+  // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'native', 'ui', 'render'], forbid: ['axum*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'native', 'ui', 'render'], forbid: ['axum*', ...BROWSER] },
 ];
 
 const meta = JSON.parse(cargo(['metadata', '--format-version', '1', '--locked', '--no-deps']));

@@ -1,9 +1,10 @@
 [package]
 name = "kentos-rc"
-version = "0.1.0"
-edition = "2024"
 description = "KentOS Rust Components: iced üzerine kurulu CBS ve CAD arayüz bileşenleri"
-publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
 
 [features]
 default = ["spatial", "fonts"]
@@ -17,12 +18,8 @@ spatial = ["dep:glam", "dep:bytemuck"]
 snapshot = ["dep:iced_runtime", "dep:png"]
 
 [dependencies]
-iced = { version = "0.14", features = ["canvas", "advanced"] }
-glam = { version = "0.30", optional = true }
-bytemuck = { version = "1", features = ["derive"], optional = true }
-iced_runtime = { version = "0.14", optional = true }
-png = { version = "0.18", optional = true }
-
-[workspace]
-members = ["examples/showcase"]
-default-members = [".", "examples/showcase"]
+iced = { workspace = true, features = ["canvas", "advanced"] }
+glam = { workspace = true, optional = true }
+bytemuck = { workspace = true, features = ["derive"], optional = true }
+iced_runtime = { workspace = true, optional = true }
+png = { workspace = true, optional = true }

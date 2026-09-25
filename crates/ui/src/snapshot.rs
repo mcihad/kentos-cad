@@ -119,7 +119,14 @@ impl Snapshot {
     /// Verilen mantıksal boyutta ekran dışı arayüz kurar. Gömülü yazı
     /// tipleri yüklenir; metinler geçerli yazı ayarıyla çizilir.
     pub fn new(size: Size) -> Result<Self, Error> {
-        let backend = std::env::var("KENTOS_SNAPSHOT_BACKEND").ok();
+        // This crate's unit tests draw in many threads at once, and several wgpu
+        // devices opened together crash GPU drivers (SIGSEGV, found 2026-09-25,
+        // docs/baseline/2026-09-25.md); a unit test must not depend on the
+        // machine's GPU either. So tests use the software renderer unless
+        // KENTOS_SNAPSHOT_BACKEND asks for another.
+        let backend = std::env::var("KENTOS_SNAPSHOT_BACKEND")
+            .ok()
+            .or_else(|| cfg!(test).then(|| "tiny-skia".to_string()));
 
         typography::load();
 
