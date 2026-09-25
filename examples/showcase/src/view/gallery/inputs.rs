@@ -1,21 +1,27 @@
 //! Girdiler sayfası: birimli sayı, vektör ve açı girişleri; renk seçici ve
 //! renk rampası.
 
-use iced::widget::{Column, Row, column, container, row, space, text};
+use iced::widget::{Column, Row, column, container, row, space, text, text_input};
 use iced::{Center, Element, Fill};
 
 use kentos_rc::attribute::number::real;
 use kentos_rc::label;
 use kentos_rc::style;
 use kentos_rc::theme::typography;
-use kentos_rc::widget::NumberInput;
 use kentos_rc::widget::color::{self, ColorPicker};
 use kentos_rc::widget::number::{self, Dial, units};
+use kentos_rc::widget::range::histogram;
+use kentos_rc::widget::{ChipInput, Form, NumberInput, RadioGroup, RangeSlider, Switch};
 
 use super::entry;
 use crate::app::Showcase;
 use crate::gallery::Demo;
 use crate::message::Message;
+use crate::sample;
+
+/// Nüfus aralığı örneğinin sınırları ve histogramın aralık sayısı.
+const POPULATION: std::ops::RangeInclusive<f64> = 0.0..=16_000_000.0;
+const POPULATION_BINS: usize = 32;
 
 /// Form satırlarındaki etiket sütunu (12 piksellik gövde metnine göre).
 const LABEL: f32 = 96.0;
@@ -165,6 +171,143 @@ impl Showcase {
         .spacing(12)
         .max_width(typography::scaled(720.0));
 
+        let demo = |message| Message::Gallery(message);
+
+        let switches = row![
+            Switch::new(gallery.switches[0], move |on| demo(Demo::Switched(0, on)))
+                .label("Nesne yakalama"),
+            Switch::new(gallery.switches[1], move |on| demo(Demo::Switched(1, on))).label("Izgara"),
+            Switch::<Message>::disabled(true).label("Salt okunur katman"),
+        ]
+        .spacing(28)
+        .align_y(Center);
+
+        let radios = row![
+            RadioGroup::new(gallery.method, move |method| demo(Demo::Method(method)))
+                .option(0, "Pencere", "Tamamen içinde kalan öğeler seçilir.")
+                .option(1, "Kesişen", "Pencereye değen öğeler de seçilir.")
+                .disabled(2, "Çokgenle (bu katmanda yok)"),
+            RadioGroup::new(gallery.unit_system, move |system| demo(Demo::UnitSystem(
+                system
+            )))
+            .option(0, "Metrik", "")
+            .option(1, "İmparatorluk", "")
+            .horizontal(),
+        ]
+        .spacing(48);
+
+        // Şehirlerin nüfus dağılımı; seçili aralıktaki şehirler sayılır.
+        let populations: Vec<f64> = self
+            .layers
+            .iter()
+            .find(|layer| layer.name == sample::CITIES)
+            .map(|layer| {
+                layer
+                    .features
+                    .iter()
+                    .filter_map(|feature| feature.value(2).as_f64())
+                    .collect()
+            })
+            .unwrap_or_default();
+        let (low, high) = gallery.population;
+        let inside = populations
+            .iter()
+            .filter(|value| **value >= low && **value <= high)
+            .count();
+
+        let range = column![
+            RangeSlider::new(POPULATION, gallery.population, move |range| {
+                demo(Demo::Population(range))
+            })
+            .step(100_000.0)
+            .histogram(&histogram(
+                populations.iter().copied(),
+                POPULATION,
+                POPULATION_BINS
+            )),
+            row![
+                label::mono_caption(real(low, 0)),
+                space::horizontal(),
+                label::caption(format!(
+                    "{inside} / {} şehir bu aralıkta",
+                    populations.len()
+                )),
+                space::horizontal(),
+                label::mono_caption(real(high, 0)),
+            ],
+        ]
+        .spacing(6)
+        .max_width(typography::scaled(560.0));
+
+        let tags = column![
+            ChipInput::new(&gallery.tags, move |tags| demo(Demo::Tags(tags)))
+                .suggestions([
+                    "park",
+                    "yeşil alan",
+                    "kentsel dönüşüm",
+                    "okul",
+                    "sağlık tesisi",
+                    "kıyı",
+                ])
+                .placeholder("Etiket yazın"),
+            label::caption(
+                "Enter ya da virgül ekler; boş alanda Backspace son etiketi siler; Tab öneriyi \
+                 tamamlar."
+            ),
+        ]
+        .spacing(6)
+        .max_width(typography::scaled(560.0));
+
+        let name_error = gallery
+            .sheet_name
+            .trim()
+            .is_empty()
+            .then_some("Pafta adı boş olamaz.");
+
+        let form = Form::new()
+            .section("Pafta")
+            .field(
+                "Ad",
+                text_input("Pafta adı", &gallery.sheet_name)
+                    .on_input(move |name| demo(Demo::SheetName(name)))
+                    .font(typography::ui())
+                    .size(typography::body())
+                    .padding([4, 8])
+                    .style(style::field::validated(name_error.is_some())),
+            )
+            .required()
+            .help("Antet kutusunda ve sekmede görünür.")
+            .error(name_error)
+            .field(
+                "Kâğıt",
+                RadioGroup::new(gallery.paper, move |paper| demo(Demo::Paper(paper)))
+                    .option(0, "A4", "")
+                    .option(1, "A3", "")
+                    .option(2, "A1", "")
+                    .horizontal(),
+            )
+            .section("Konum")
+            .field(
+                "Merkez enlemi",
+                NumberInput::new(gallery.latitude, move |value| demo(Demo::Latitude(value)))
+                    .units(units::ANGLE)
+                    .range(-90.0..=90.0)
+                    .step(0.01)
+                    .decimals(5)
+                    .width(typography::scaled(200.0)),
+            )
+            .help("Derece, dakika ve saniye de yazılabilir: 40°59'24\"")
+            .section("Seçenekler")
+            .row(
+                Switch::new(gallery.title_block, move |on| demo(Demo::TitleBlock(on)))
+                    .label("Antet kutusunu göster"),
+            )
+            .field(
+                "Etiketler",
+                ChipInput::new(&gallery.tags, move |tags| demo(Demo::Tags(tags)))
+                    .placeholder("Etiket yazın"),
+            );
+
         vec![
             entry(
                 "Sayı girişi",
@@ -235,6 +378,69 @@ impl Showcase {
                 Some(
                     "color::ramp(&self.ramp, self.stop, Message::RampChanged)\n\
                      self.ramp.color_at(0.25)",
+                ),
+            ),
+            entry(
+                "Anahtar",
+                "kentos_rc::widget::Switch",
+                "Hemen uygulanan açık/kapalı ayarlar için (ör. ızgarayı açmak); onay kutusu ise \
+                 bir formla birlikte onaylanan seçimler içindir. Düğme yeni konumuna kayar; \
+                 etiket de tıklanabilir. Devre dışı anahtar durumunu gösterir.",
+                switches,
+                Some("Switch::new(self.snap, Message::SnapToggled).label(\"Nesne yakalama\")"),
+            ),
+            entry(
+                "Radyo grubu",
+                "kentos_rc::widget::RadioGroup",
+                "Birbirini dışlayan seçenekler; her seçeneğin açıklaması olabilir, seçilemeyen \
+                 seçenek sönük görünür. Kısa seçenekler yan yana dizilir.",
+                radios,
+                Some(
+                    "RadioGroup::new(self.mode, Message::ModeSelected)\n    \
+                         .option(Mode::Window, \"Pencere\", \"Tamamen içinde kalan öğeler seçilir.\")\n    \
+                         .option(Mode::Crossing, \"Kesişen\", \"Pencereye değen öğeler de seçilir.\")",
+                ),
+            ),
+            entry(
+                "Aralık kaydırıcısı ve histogram",
+                "kentos_rc::widget::RangeSlider",
+                "İki tutamakla alt ve üst sınır; aradaki parça sürüklenince aralık bütün olarak \
+                 kayar, rayın boş yerine basmak en yakın tutamağı taşır. Histogram verinin \
+                 dağılımını gösterir, seçili aralıktaki çubuklar vurgu rengindedir. Burada örnek \
+                 verideki illerin nüfusu.",
+                range,
+                Some(
+                    "RangeSlider::new(0.0..=16e6, self.population, Message::PopulationRange)\n    \
+                         .step(100_000.0)\n    \
+                         .histogram(&range::histogram(values, 0.0..=16e6, 32))",
+                ),
+            ),
+            entry(
+                "Etiket girişi",
+                "kentos_rc::widget::ChipInput",
+                "Yazılan değerler kaldırılabilir etiketlere dönüşür. Aynı etiket büyük/küçük harf \
+                 ve Türkçe harf ayırmadan ikinci kez eklenmez. Öneriler verilmişse yazılanla \
+                 başlayan ilki sağda görünür, Tab tamamlar. Etiketler sığmayınca alt satıra geçer.",
+                tags,
+                Some(
+                    "ChipInput::new(&self.tags, Message::TagsChanged)\n    \
+                         .suggestions([\"park\", \"okul\", \"kentsel dönüşüm\"])",
+                ),
+            ),
+            entry(
+                "Form düzeni",
+                "kentos_rc::widget::Form",
+                "Etiketler aynı genişlikte bir sütunda, alanın ilk satırına hizalı durur. Bölüm \
+                 başlıkları formu böler; zorunlu alanın adının yanında yıldız, altında yardım ya \
+                 da hata yazar. Adı silerek hatayı görün.",
+                container(form).max_width(typography::scaled(620.0)),
+                Some(
+                    "Form::new()\n    \
+                         .section(\"Pafta\")\n    \
+                         .field(\"Ad\", name_input).required()\n    \
+                         .help(\"Antet kutusunda ve sekmede görünür.\")\n    \
+                         .error(self.name_error())\n    \
+                         .row(Switch::new(self.title_block, Message::TitleBlock).label(\"Antet\"))",
                 ),
             ),
         ]

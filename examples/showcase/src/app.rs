@@ -2477,7 +2477,10 @@ mod tests {
         let mut app = Showcase::new();
 
         assert!(matches!(
-            shortcut(keyboard::Key::Named(keyboard::key::Named::F1), Modifiers::CTRL),
+            shortcut(
+                keyboard::Key::Named(keyboard::key::Named::F1),
+                Modifiers::CTRL
+            ),
             Some(Message::RibbonCollapsed)
         ));
 

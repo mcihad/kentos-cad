@@ -35,6 +35,10 @@ src/                     kentos-rc kütüphanesi
 │   ├── viewports.rs     görünüm alanları: 1–4 görünüm, etkin görünüm, büyütme, bölme
 │   ├── number.rs        sayı girişi: birim, ifade, sürükleme; vektör, açı ve kadran
 │   ├── color.rs         renk seçici (HSV, onaltılık, saydamlık) ve renk rampası
+│   ├── switch.rs, radio.rs  anahtar ve radyo grubu
+│   ├── range.rs         çift uçlu aralık kaydırıcısı, isteğe bağlı histogramla
+│   ├── chips.rs         etiket girişi: Enter/virgülle ekleme, öneri tamamlama
+│   ├── form.rs          form düzeni: etiket sütunu, bölümler, yardım ve hata
 │   ├── toast.rs         bildirimler: önem düzeyi, eylem, üst üste dizilme, süre
 │   ├── progress.rs      ilerleme çubuğu, dönen gösterge, iptal edilebilen görev listesi
 │   ├── notice.rs        uyarı şeridi, boş ve hata durumları
@@ -353,6 +357,37 @@ use kentos_rc::widget::color::{self, ColorPicker, Ramp};
 
 ColorPicker::new(layer.color, Message::ColorChanged).alpha()
 color::ramp(&self.ramp, self.stop, Message::RampChanged)
+```
+
+### Temel kontroller ve form
+
+- **Anahtar.** `Switch` hemen uygulanan açık/kapalı ayarlar içindir; düğme
+  yeni konumuna kayar, etiket de tıklanır.
+- **Radyo grubu.** `RadioGroup` birbirini dışlayan seçenekleri açıklamalarıyla
+  dizer; seçilemeyen seçenek sönüktür, kısa seçenekler yan yana durur.
+- **Aralık kaydırıcısı.** `RangeSlider` iki tutamakla alt ve üst sınırı
+  seçer; aradaki parça sürüklenince aralık bütün olarak kayar. İsteğe bağlı
+  histogram verinin dağılımını gösterir (`range::histogram` sayar), seçili
+  aralıktaki çubuklar vurgu rengindedir.
+- **Etiket girişi.** `ChipInput` yazılanı Enter ya da virgülle etikete
+  çevirir, aynısını ikinci kez eklemez (Türkçe harf ayırmadan); boş alanda
+  Backspace son etiketi siler, Tab öneriyi tamamlar.
+- **Form.** `Form` etiketleri aynı genişlikte bir sütunda alanın ilk
+  satırına hizalar; bölüm başlıkları, zorunlu alan yıldızı, yardım ve hata
+  satırları vardır.
+
+```rust
+Form::new()
+    .section("Pafta")
+    .field("Ad", name_input).required()
+    .help("Antet kutusunda ve sekmede görünür.")
+    .error(self.name_error())
+    .field("Kâğıt", RadioGroup::new(self.paper, Message::Paper)
+        .option(Paper::A4, "A4", "").option(Paper::A3, "A3", "").horizontal())
+    .row(Switch::new(self.title_block, Message::TitleBlock).label("Antet kutusunu göster"))
+
+RangeSlider::new(0.0..=16e6, self.population, Message::PopulationRange)
+    .histogram(&range::histogram(values, 0.0..=16e6, 32))
 ```
 
 ## Geri bildirim

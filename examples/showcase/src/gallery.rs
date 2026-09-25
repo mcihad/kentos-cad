@@ -88,7 +88,10 @@ impl Page {
             Page::Layout => {
                 "Belge sekmeleri, sekmeli yuva ve görünüm alanları: çalışma alanının düzeni."
             }
-            Page::Inputs => "Birimli sayı, vektör ve açı girişleri; renk seçici ve renk rampası.",
+            Page::Inputs => {
+                "Birimli sayı, vektör ve açı girişleri; renk seçici ve rampa; anahtar, radyo \
+                 grubu, aralık kaydırıcısı, etiket girişi ve form düzeni."
+            }
             Page::Feedback => {
                 "Bildirimler, ilerleme ve görevler, onay kutusu, uyarı şeridi, boş ve hata \
                  durumları, adımlı sihirbaz ve özellikler penceresi."
@@ -178,6 +181,16 @@ pub enum Demo {
     /// Şerit örneği: galerideki rampa ve daraltma.
     RibbonRamp(usize),
     RibbonCollapsed,
+    /// Temel kontroller ve form örneği.
+    Switched(usize, bool),
+    Method(usize),
+    UnitSystem(usize),
+    Population((f64, f64)),
+    Tags(Vec<String>),
+    SheetName(String),
+    Paper(usize),
+    Latitude(f64),
+    TitleBlock(bool),
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -401,6 +414,18 @@ pub struct Gallery {
     /// Şerit örneği: seçili rampa ve şeridin daraltılmış olması.
     pub ribbon_ramp: usize,
     pub ribbon_collapsed: bool,
+    /// Temel kontroller: anahtarlar, seçim yöntemi, birim sistemi, nüfus
+    /// aralığı ve etiketler.
+    pub switches: [bool; 2],
+    pub method: usize,
+    pub unit_system: usize,
+    pub population: (f64, f64),
+    pub tags: Vec<String>,
+    /// Form örneği: pafta adı, kâğıt, enlem ve antet.
+    pub sheet_name: String,
+    pub paper: usize,
+    pub latitude: f64,
+    pub title_block: bool,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -509,6 +534,15 @@ impl Default for Gallery {
             ],
             ribbon_ramp: 0,
             ribbon_collapsed: false,
+            switches: [true, false],
+            method: 0,
+            unit_system: 0,
+            population: (1_000_000.0, 6_000_000.0),
+            tags: vec!["park".to_owned(), "yeşil alan".to_owned()],
+            sheet_name: "Kadıköy imar planı".to_owned(),
+            paper: 1,
+            latitude: 40.99,
+            title_block: true,
         }
     }
 }
@@ -720,6 +754,19 @@ impl Gallery {
             }
             Demo::RibbonRamp(ramp) => self.ribbon_ramp = ramp,
             Demo::RibbonCollapsed => self.ribbon_collapsed = !self.ribbon_collapsed,
+            Demo::Switched(index, on) => {
+                if let Some(switch) = self.switches.get_mut(index) {
+                    *switch = on;
+                }
+            }
+            Demo::Method(method) => self.method = method,
+            Demo::UnitSystem(system) => self.unit_system = system,
+            Demo::Population(range) => self.population = range,
+            Demo::Tags(tags) => self.tags = tags,
+            Demo::SheetName(name) => self.sheet_name = name,
+            Demo::Paper(paper) => self.paper = paper,
+            Demo::Latitude(latitude) => self.latitude = latitude,
+            Demo::TitleBlock(shown) => self.title_block = shown,
         }
 
         None
