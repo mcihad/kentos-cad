@@ -14,14 +14,14 @@ import { openDeleteDialog, openRenameDialog } from './ProjectActions';
  * project can also be renamed (project.edit) or deleted (project.delete);
  * a button the account may not use says why.
  */
-export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload'): void {
+export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pick?: { tenantId: string; projectId: string }): void {
   const cloud = ctx.cloud;
   const tenants = (cloud.me.value?.memberships ?? []).filter((m) => m.active && m.seat);
   if (!tenants.length) {
     ctx.log.warn('Hiçbir kurumda etkin üyeliğiniz ya da koltuğunuz yok; kurum yöneticinize başvurun.');
     return;
   }
-  let tenant: MembershipView = tenants.find((t) => t.tenantId === cloud.project.value?.tenantId) ?? tenants[0];
+  let tenant: MembershipView = tenants.find((t) => t.tenantId === (pick?.tenantId ?? cloud.project.value?.tenantId)) ?? tenants[0];
   let picked: ProjectSummary | null = null;
   let abort: AbortController | null = null;
 
@@ -112,6 +112,13 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload'): vo
           return row;
         }),
       );
+      // A project picked elsewhere (the application menu) is selected, ready for Aç.
+      const chosen = pick?.tenantId === tenant.tenantId ? list.querySelector<HTMLButtonElement>(`.cloud-row[data-id="${CSS.escape(pick.projectId)}"]`) : null;
+      if (chosen) {
+        chosen.click();
+        chosen.scrollIntoView({ block: 'nearest' });
+        primary.focus();
+      }
     } catch (e) {
       replaceChildren(list, h('p', { class: 'cloud-empty' }, e instanceof ApiFailure ? e.message : 'Projeler okunamadı.'));
     }

@@ -12,7 +12,7 @@ import { tooltip } from '../widgets/tooltip';
  * server cell. "Buluta kaydedildi" is shown only after the server's answer.
  */
 
-const SAVE_TEXT: Record<SaveState, (n: number) => string> = {
+export const SAVE_TEXT: Record<SaveState, (n: number) => string> = {
   saved: () => 'Buluta kaydedildi',
   pending: (n) => `Kaydedilecek: ${n}`,
   saving: () => 'Kaydediliyor…',
@@ -23,7 +23,7 @@ const SAVE_TEXT: Record<SaveState, (n: number) => string> = {
   deleted: () => 'Proje silindi',
 };
 
-const LINK_TEXT = { none: '', connecting: 'bağlanıyor', online: 'canlı', reconnecting: 'yeniden bağlanıyor', offline: 'çevrimdışı', auth_required: 'oturum gerekli' } as const;
+export const LINK_TEXT = { none: '', connecting: 'bağlanıyor', online: 'canlı', reconnecting: 'yeniden bağlanıyor', offline: 'çevrimdışı', auth_required: 'oturum gerekli' } as const;
 
 function ago(ms: number | null): string {
   if (ms === null) return 'henüz yok';

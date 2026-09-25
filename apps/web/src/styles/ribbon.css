@@ -30,19 +30,6 @@
   overflow: hidden;
 }
 
-.ribbon__brand {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding-right: 6px;
-  color: var(--c-text);
-  flex: none;
-}
-.ribbon__product {
-  font-weight: 600;
-  font-size: var(--fs-md);
-  letter-spacing: 0.01em;
-}
 
 .ribbon__qat {
   display: flex;
@@ -187,9 +174,9 @@
 }
 
 /* The row gives way in steps as the window narrows (Ribbon.fitBar). */
-.ribbon[data-tight='1'] .ribbon__product,
-.ribbon[data-tight='2'] .ribbon__product,
-.ribbon[data-tight='3'] .ribbon__product,
+.ribbon[data-tight='1'] .brand__word,
+.ribbon[data-tight='2'] .brand__word,
+.ribbon[data-tight='3'] .brand__word,
 .ribbon[data-tight='1'] .rsearch__kbd,
 .ribbon[data-tight='2'] .rsearch__kbd,
 .ribbon[data-tight='3'] .rsearch__kbd {

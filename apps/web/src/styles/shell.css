@@ -73,17 +73,47 @@
   min-width: 0;
 }
 
-.menubar__brand {
+/* ── Brand button (the KentOS mark: opens the application menu) ──── */
+.brand {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding-right: 10px;
-  color: var(--c-text);
+  height: calc(26px * var(--ui-scale));
+  margin-right: 6px;
+  padding: 0 6px 0 3px;
+  border-radius: var(--r-md);
+  color: var(--c-brand-text);
+  flex: none;
 }
-.menubar__product {
-  font-weight: 600;
+.brand:hover,
+.brand[aria-expanded='true'] {
+  background: var(--c-hover);
+}
+.brand:focus-visible {
+  outline: 2px solid var(--c-accent-line);
+  outline-offset: 1px;
+}
+.brand__mark {
+  flex: none;
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35));
+}
+.brand__word {
   font-size: var(--fs-md);
+  font-weight: 700;
   letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.brand__os {
+  font-weight: 500;
+  opacity: 0.85;
+}
+.brand__caret {
+  display: inline-flex;
+  color: var(--c-text-3);
+  transition: transform var(--dur);
+}
+.brand[aria-expanded='true'] .brand__caret {
+  transform: rotate(180deg);
 }
 
 .menubar__menus {

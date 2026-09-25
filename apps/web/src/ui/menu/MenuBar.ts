@@ -2,6 +2,7 @@ import type { AppContext } from '../../app/context';
 import { MAIN_MENU, resolveMenu, visibleMenus, type TopMenu } from '../../app/menus';
 import { filterOf } from '../../app/workspaces';
 import { fullscreenButton } from '../shell/fullscreenButton';
+import { brandButton } from '../shell/brandButton';
 import { listen } from '../../core/disposable';
 import { Component } from '../Component';
 import { h } from '../dom';
@@ -34,7 +35,7 @@ export class MenuBar extends Component {
     this.el = h(
       'header',
       { class: 'menubar', role: 'menubar', 'aria-label': 'Ana menü' },
-      h('div', { class: 'menubar__brand', 'aria-hidden': 'true' }, brandMark(), h('span', { class: 'menubar__product' }, 'KentOS')),
+      brandButton(ctx, this.d, 'menubar__brand'),
       this.nav,
       h('div', { class: 'menubar__doc' }, dirty, docName),
       h('div', { class: 'menubar__right' }, crs, fullscreenButton(ctx, this.d, 'menubar__icon')),
@@ -95,19 +96,4 @@ export class MenuBar extends Component {
     });
     if (keyboard) menu.focusFirst();
   }
-}
-
-/** KentOS mark: a K whose arms meet at a survey point. */
-export function brandMark(): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 20 20');
-  svg.setAttribute('width', '18');
-  svg.setAttribute('height', '18');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.classList.add('menubar__mark');
-  svg.innerHTML =
-    '<path d="M5.5 3.2v13.6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>' +
-    '<path d="M15 3.4 7.4 10 15 16.6" fill="none" stroke="var(--c-accent)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<circle cx="7.4" cy="10" r="2.1" fill="var(--c-accent)"/>';
-  return svg;
 }

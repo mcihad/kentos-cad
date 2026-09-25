@@ -1,12 +1,17 @@
 import type { AppContext } from '../context';
 
+/** A project to select in the open dialog (`cloud.open` with args). */
+const isPick = (v: unknown): v is { tenantId: string; projectId: string } =>
+  !!v && typeof (v as { tenantId?: unknown }).tenantId === 'string' && typeof (v as { projectId?: unknown }).projectId === 'string';
+
 /**
  * Cloud commands (menus, the status bar's server menu, the command line).
  * Anything that needs an account opens the sign-in first and goes on after it.
  */
 export interface CloudHooks {
   signIn(then?: () => void): void;
-  projects(mode: 'open' | 'upload'): void;
+  /** `pick`: a project to select in the list (the application menu's recent projects). */
+  projects(mode: 'open' | 'upload', pick?: { tenantId: string; projectId: string }): void;
   conflicts(): void;
   /** Rename or delete the open cloud project (the projects list offers both for any project). */
   rename(): void;
@@ -18,7 +23,10 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
   const C = 'Bulut';
   const signedIn = () => cloud.auth.value === 'signedIn';
   const reachable = () => ctx.server.state.value === 'online';
-  const needAccount = (next: () => void) => () => (signedIn() ? next() : hooks.signIn(next));
+  const needAccount =
+    (next: (args?: unknown) => void) =>
+    (args?: unknown) =>
+      signedIn() ? next(args) : hooks.signIn(() => next(args));
   const watch = [cloud.auth, ctx.server.state];
   // The open project, while it still exists, and whether this account may do `capability` in it.
   const openMay = (capability: string) => {
@@ -59,7 +67,7 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       icon: 'cloud',
       description: 'Kurumunuzun bulut projelerinden birini açar. Açık projedeki değişiklikler kendiliğinden kaydedilir.',
       aliases: ['BULUTAC', 'CLOUDOPEN'],
-      run: needAccount(() => hooks.projects('open')),
+      run: needAccount((pick) => hooks.projects('open', isPick(pick) ? pick : undefined)),
       isEnabled: () => reachable(),
       watch,
     },

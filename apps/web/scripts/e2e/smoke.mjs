@@ -1680,6 +1680,48 @@ try {
     check('the Şerit arayüzü button returns to menus and toolbox', !back.ribbon && back.menubar && back.toolbox && (await viewportH()) === classicH, JSON.stringify(back));
   }
 
+  // The KentOS mark opens the application menu (loaded on first use): files on the left, formats and the cloud on
+  // the right; Esc closes it, a row runs its command.
+  {
+    const at = (sel) => b.eval(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const loadedBefore = await b.eval(`performance.getEntriesByType('resource').some((r) => r.name.includes('AppMenu'))`);
+    await b.click(...(await at('.brand')));
+    await b.waitFor(`!!document.querySelector('.appmenu')`, 5000).catch(() => {});
+    const opened = await b.eval(`({ expanded: document.querySelector('.brand').getAttribute('aria-expanded'), nav: [...document.querySelectorAll('.appmenu__item .appmenu__label')].map((e) => e.textContent), pane: document.querySelector('.appmenu__pane').dataset.pane })`);
+    await b.move(...(await at('.appmenu__item[data-pane="import"]')));
+    await sleep(200);
+    const importRows = await b.eval(`[...document.querySelectorAll('.appmenu__pane [data-command]')].map((e) => e.dataset.command)`);
+    await b.move(...(await at('.appmenu__item[data-pane="cloud"]')));
+    await sleep(200);
+    const cloudPane = await b.eval(`document.querySelector('.appmenu__pane').dataset.pane`);
+    await b.shot('appmenu-cloud');
+    await b.key('Escape');
+    await sleep(150);
+    const closed = await b.eval(`!document.querySelector('.appmenu') && document.querySelector('.brand').getAttribute('aria-expanded') === 'false'`);
+    await b.click(...(await at('.brand')));
+    await b.waitFor(`!!document.querySelector('.appmenu')`, 5000).catch(() => {});
+    await b.click(...(await at('.appmenu__item[data-command="file.settings"]')));
+    await sleep(300);
+    const ran = await b.eval(`({ menu: !!document.querySelector('.appmenu'), dialog: !!document.querySelector('.dialog') })`);
+    await b.key('Escape');
+    await sleep(200);
+    check(
+      'the KentOS mark opens the application menu (loaded then): Yeni to Proje ayarları, İçe aktar lists the formats, Bulut its pane; Esc closes; a row runs its command',
+      !loadedBefore &&
+        opened.expanded === 'true' &&
+        opened.nav[0] === 'Yeni' &&
+        opened.nav.includes('Bulut') &&
+        opened.pane === 'overview' &&
+        importRows.includes('file.import.dxf') &&
+        importRows.includes('file.import.ncn') &&
+        cloudPane === 'cloud' &&
+        closed &&
+        !ran.menu &&
+        ran.dialog,
+      JSON.stringify({ loadedBefore, opened, importRows, cloudPane, closed, ran }),
+    );
+  }
+
   // Proje ayarları → Çizim yazı tipi (a project setting), Çizim kalitesi (anti-aliasing made again live) and Tam ekran.
   {
     const at = (sel) => b.eval(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);

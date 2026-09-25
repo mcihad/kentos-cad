@@ -8,7 +8,7 @@ import { DisposableStore, listen } from '../../core/disposable';
 import { Component } from '../Component';
 import { h, overlayRoot } from '../dom';
 import { icon } from '../icons';
-import { brandMark } from '../menu/MenuBar';
+import { brandButton } from '../shell/brandButton';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { tooltip } from '../widgets/tooltip';
 import { commandControl, type ControlHost } from './controls';
@@ -103,7 +103,7 @@ export class Ribbon extends Component {
     this.bar = h(
       'div',
       { class: 'ribbon__bar' },
-      h('div', { class: 'ribbon__brand', 'aria-hidden': 'true' }, brandMark(), h('span', { class: 'ribbon__product' }, 'KentOS')),
+      brandButton(ctx, this.d, 'ribbon__brand'),
       this.qat,
       this.tabList,
       h('div', { class: 'ribbon__doc' }, dirty, docName),

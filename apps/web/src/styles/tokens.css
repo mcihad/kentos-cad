@@ -69,6 +69,12 @@
   --c-text-2: #9ba7b5;
   --c-text-3: #6d7988;
 
+  /* Brand navy (the KentOS mark and wordmark): the brand's own, whatever accent the user picks. */
+  --c-brand: #1f4a96;
+  --c-brand-hi: #4677d6;
+  --c-brand-ink: #ffffff;
+  --c-brand-text: #8fb3f5;
+
   --c-accent: #f2b632;
   --c-accent-ink: #1b1405;
   --c-accent-text: #f2b632;
@@ -122,6 +128,11 @@
   --c-text: #1b232c;
   --c-text-2: #4d5966;
   --c-text-3: #7a8591;
+
+  --c-brand: #1f4a96;
+  --c-brand-hi: #3a6ccc;
+  --c-brand-ink: #ffffff;
+  --c-brand-text: #1f4a96;
 
   --c-accent: #f0b02a;
   --c-accent-ink: #1b1405;

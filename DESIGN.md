@@ -23,12 +23,11 @@ olduğunu ve nasıl kullanılacağını anlatır.
 | Öğe | Kural |
 |---|---|
 | Ürün adı | **KentOS CAD** (sayfa başlığı, Hakkında penceresi) |
-| Menü çubuğundaki yazı | **KentOS** (arayüz yazı tipi, 600, `--fs-md`) |
-| Logo | **K harfi.** Dikey gövde mürekkep renginde. Kollar vurgu rengindedir ve birleştikleri yerde bir ölçme noktası (dolu daire) bulunur. 20×20 ızgara, 2,1 px çizgi, yuvarlak uçlar. |
+| Menü çubuğundaki yazı | **KentOS** (arayüz yazı tipi, 700, `--fs-md`, marka laciverti `--c-brand-text`; “OS” 500) ve ▾ |
+| Logo | **Lacivert karo üstünde K.** 22×22 yuvarlak köşeli karo (r 6), açık maviden (`--c-brand-hi`) laciverte (`--c-brand`) çapraz geçişli, içte ince açık çizgi; üstünde beyaz (`--c-brand-ink`) K: dikey gövde ve kollar, birleştikleri yerde bir ölçme noktası (dolu daire) bulunur. 20×20 ızgara, 2,1 px çizgi, yuvarlak uçlar. |
 | Favicon | `public/favicon.svg`: `#1E252E` zemin üstünde aynı K |
 
-Logo başka renge boyanmaz, döndürülmez, gölge almaz. Kol ve nokta her iki
-temada da `--c-accent` rengidir, yani kullanıcının seçtiği vurgu rengini izler.
+Logo ve yazısı **her zaman laciverttir** (`--c-brand*` jetonları; karo iki temada da lacivert, yazı koyu temada açık lacivert, açık temada lacivert); kullanıcının seçtiği vurgu rengini izlemez, çünkü markanın kendi rengidir. Logo döndürülmez, başka renge boyanmaz; altında hafif bir gölge vardır. Logo ile yazı bir düğmedir: tıklayınca uygulama menüsü açılır (§7.1.1).
 
 ---
 
@@ -228,6 +227,18 @@ Tek istisna şeridin gölgesidir (§7.3.1): şeridin altında yalnız çizim ala
 
 - **Solda:** logo, KentOS ve menüler. **Ortada:** proje adı; kaydedilmemiş değişiklik varsa önünde amber nokta. **Sağda:** koordinat sistemi düğmesi (tıklayınca Proje ayarları → Koordinat sistemi) ve **Tam ekran** düğmesi (dört köşe dışa; tam ekrandayken içe, Esc de çıkar). Şeritte aynı düğme Yardım'ın solundadır; komut Görünüm → Paneller'dedir (`view.fullscreen`).
 - Menü tıklayınca açılır. Açıkken fare başka bir menünün üstüne gelince o menüye geçer. ←/→ menüler arasında gezer, Esc kapatır.
+
+### 7.1.1 Uygulama menüsü
+
+KentOS logosuna (klasik arayüzde menü çubuğunda, şeritte sekme satırında) tıklayınca açılır; AutoCAD'in uygulama menüsünün karşılığıdır (`ui/appmenu/AppMenu.ts`, ilk kullanımda yüklenir).
+
+- **Panel:** logonun altında, ~780 px genişliğinde, `--c-popover` zeminli, `--r-lg` köşeli ve `--shadow-pop` gölgeli. **Başlık:** 28 px logo, lacivert “KentOS” ve ikincil “CAD”, altında çizimin adı (kaydedilmemişse sonunda •); başlığın zemini laciverten saydama hafif bir geçiştir.
+- **Sol sütun:** Yeni, Aç, Kaydet, Farklı kaydet, İçe aktar ▸, Dışa aktar ▸, Bulut ▸, Yazdır ve pafta, Proje ayarları. Satırda 34 px zeminli simge, ad (600) ve altında durumu söyleyen üçüncül satır (Kaydet'te dosyanın adı ya da “İlk kayıtta yer sorulur”, Bulut'ta hesap ya da açık proje); sağda kısayol ya da ›.
+- **Sağ bölme:** ▸ taşıyan satırın üzerine gelince ya da odaklanınca onun içeriği, başta “Bu çizim”: adı ve nerede durduğu, yongalar (koordinat sistemi, çalışma modu, ölçek, çizim yazı tipi), nesne ve katman sayısı, kayıt durumu (kaydedilmemişse vurgu noktası ve Kaydet düğmesi) ve dört hızlı karo (Yeni proje, Dosya aç, Bulut projesi, DXF içe aktar).
+  - **İçe/Dışa aktar:** biçimler iki satırlı satırlardır; solda eş aralıklı yazılı biçim rozeti (DXF, NCN, NCZ …), ad ve ne aldığı; hazır olmayanın sağında “Yakında” hapı.
+  - **Bulut:** sunucu yoksa gri resim, açıklama ve “Yeniden dene”; oturum yoksa vurgu parıltılı resim, “Projeleriniz her yerde” ve “Giriş yap”; oturum varsa baş harfli vurgu dairesiyle hesap kartı ve Çıkış, açık bulut projesi kayıt lambasıyla (yeşil kayıtlı, turuncu bekliyor, kırmızı çakışma ya da hata), hap düğmeler (Proje aç, Buluta yükle, açık projede Yeniden adlandır ve Sil) ve kurumun son beş projesi (tıklayınca Bulut projesi aç penceresi o proje seçili açılır; yüklenirken iskelet satırlar).
+- **Alt şerit:** Uygulama ayarları, Kısayollar, Hakkında; sağda “KentOS CAD”.
+- **Klavye:** logoda Enter, Boşluk ya da ↓ açar; ↑/↓ satırlar arasında, → sağ bölmeye, ← geri; Esc kapatır ve odağı logoya verir. Bir satır komutunu çalıştırınca, dışarı basınca ya da pencere boyutu değişince kapanır.
 
 ### 7.2 Açılır menü (PopupMenu)
 

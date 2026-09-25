@@ -126,7 +126,7 @@ export async function createApp(root: HTMLElement): Promise<AppContext> {
   };
   registerCloudCommands(ctx, {
     signIn: (then) => openLoginDialog(ctx, then),
-    projects: (mode) => openProjectsDialog(ctx, mode),
+    projects: (mode, pick) => openProjectsDialog(ctx, mode, pick),
     conflicts: () => openConflictDialog(ctx),
     rename: () => {
       const t = openTarget();

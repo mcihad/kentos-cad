@@ -1,0 +1,477 @@
+/*
+ * The application menu (ui/appmenu/AppMenu.ts, DESIGN.md §7.1.1): a panel
+ * under the KentOS mark. A head with the mark and the drawing's name, the
+ * file commands down the left as two-line rows, what the hovered one holds
+ * on the right, the app's settings along the foot. Loaded with the menu.
+ */
+.appmenu {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  width: min(calc(780px * var(--ui-scale)), calc(100vw - 16px));
+  max-height: calc(100vh - 60px);
+  overflow: hidden;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-lg);
+  background: var(--c-popover);
+  box-shadow: var(--shadow-pop);
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+}
+
+.appmenu__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--c-line);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c-brand) 10%, transparent), transparent);
+}
+.appmenu__title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.appmenu__product {
+  color: var(--c-brand-text);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.appmenu__cad {
+  color: var(--c-text-2);
+  font-weight: 500;
+}
+.appmenu__doc {
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.appmenu__body {
+  display: grid;
+  grid-template-columns: calc(292px * var(--ui-scale)) 1fr;
+  min-height: calc(420px * var(--ui-scale));
+  overflow: hidden;
+}
+
+/* ── Left column ─────────────────────────────────────────────────── */
+.appmenu__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px;
+  border-right: 1px solid var(--c-line);
+  overflow-y: auto;
+}
+.appmenu__item,
+.appmenu__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: var(--r-md);
+  color: var(--c-text);
+  text-align: left;
+}
+.appmenu__item:hover:not(:disabled),
+.appmenu__item:focus-visible,
+.appmenu__item[data-current],
+.appmenu__row:hover:not(:disabled),
+.appmenu__row:focus-visible {
+  background: var(--c-hover);
+  outline: none;
+}
+.appmenu__item[data-current] {
+  background: var(--c-accent-soft);
+}
+.appmenu__item[data-current] .appmenu__icon {
+  color: var(--c-accent-text);
+}
+.appmenu__item:disabled,
+.appmenu__row:disabled {
+  opacity: 0.45;
+}
+.appmenu__icon {
+  display: grid;
+  place-items: center;
+  width: calc(34px * var(--ui-scale));
+  height: calc(34px * var(--ui-scale));
+  flex: none;
+  border-radius: var(--r-md);
+  background: var(--c-panel-head);
+  color: var(--c-text-2);
+}
+.appmenu__icon .icon {
+  width: calc(20px * var(--ui-scale));
+  height: calc(20px * var(--ui-scale));
+}
+.appmenu__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.appmenu__label {
+  font-weight: 600;
+}
+.appmenu__sub {
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.appmenu__arrow {
+  display: inline-flex;
+  color: var(--c-text-3);
+}
+.appmenu__key {
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  white-space: nowrap;
+}
+[data-pending] .appmenu__icon,
+[data-pending] .appmenu__badge {
+  opacity: 0.6;
+}
+
+/* ── Right pane ──────────────────────────────────────────────────── */
+.appmenu__pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px 18px;
+  overflow-y: auto;
+  background: var(--c-panel);
+}
+.appmenu__panehead h3 {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.appmenu__panehead p {
+  margin: 3px 0 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.appmenu__rows,
+.appmenu__recent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.appmenu__badge {
+  display: grid;
+  place-items: center;
+  width: calc(42px * var(--ui-scale));
+  height: calc(30px * var(--ui-scale));
+  flex: none;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-sm);
+  background: var(--c-field);
+  color: var(--c-accent-text);
+  font: 600 var(--fs-2xs) / 1 var(--font-mono);
+  letter-spacing: 0.02em;
+}
+.appmenu__soon {
+  padding: 1px 8px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: 999px;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+  white-space: nowrap;
+}
+.appmenu__soon--open {
+  border-color: var(--c-accent-line);
+  color: var(--c-accent-text);
+}
+
+.appmenu__card {
+  padding: 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-field);
+}
+.appmenu__projname {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+.appmenu__projwhere {
+  margin-top: 2px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.appmenu__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.appmenu__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  background: var(--c-panel);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.appmenu__chip .icon {
+  color: var(--c-text-3);
+}
+.appmenu__stats {
+  display: flex;
+  gap: 18px;
+  margin-top: 12px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.appmenu__stats b {
+  color: var(--c-text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.appmenu__dirty,
+.appmenu__clean {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--c-line);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.appmenu__dirty .btn {
+  margin-left: auto;
+}
+.appmenu__clean .icon {
+  color: var(--c-ok);
+}
+.appmenu__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+.appmenu__tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.appmenu__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 6px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  text-align: center;
+}
+.appmenu__tile .icon {
+  color: var(--c-accent-text);
+}
+.appmenu__tile:hover {
+  border-color: var(--c-line-strong);
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+
+/* ── Cloud ───────────────────────────────────────────────────────── */
+.appmenu__cloud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 20px 20px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: radial-gradient(120% 90% at 50% 0%, var(--c-accent-soft), transparent 70%), var(--c-field);
+  text-align: center;
+}
+.appmenu__cloud h4 {
+  margin: 4px 0 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.appmenu__cloud p {
+  max-width: 44ch;
+  margin: 0 0 6px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+.appmenu__cloud--off .appmenu__cloudart {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+.appmenu__account,
+.appmenu__open {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.appmenu__avatar {
+  display: grid;
+  place-items: center;
+  width: calc(38px * var(--ui-scale));
+  height: calc(38px * var(--ui-scale));
+  flex: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-accent), color-mix(in srgb, var(--c-accent) 55%, var(--c-panel)));
+  color: var(--c-accent-ink);
+  font-weight: 700;
+}
+.appmenu__who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.appmenu__who span {
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.appmenu__link {
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.appmenu__link:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.appmenu__lamp {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  margin: 0 4px;
+  border-radius: 50%;
+  background: var(--c-ok);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-ok) 20%, transparent);
+}
+.appmenu__lamp[data-state='pending'],
+.appmenu__lamp[data-state='saving'],
+.appmenu__lamp[data-state='offline_pending'] {
+  background: var(--c-warn);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-warn) 20%, transparent);
+}
+.appmenu__lamp[data-state='conflict'],
+.appmenu__lamp[data-state='error'],
+.appmenu__lamp[data-state='deleted'] {
+  background: var(--c-danger);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-danger) 20%, transparent);
+}
+.appmenu__lamp[data-state='readonly'] {
+  background: var(--c-text-3);
+  box-shadow: none;
+}
+.appmenu__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.appmenu__pane > .appmenu__ctas {
+  justify-content: flex-start;
+}
+.appmenu__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: calc(32px * var(--ui-scale));
+  padding: 0 14px 0 11px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: 999px;
+  background: var(--c-field);
+  color: var(--c-text);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.appmenu__cta:hover:not(:disabled) {
+  border-color: var(--c-text-3);
+  background: var(--c-hover);
+}
+.appmenu__cta:disabled {
+  opacity: 0.45;
+}
+.appmenu__cta--primary {
+  border-color: var(--c-accent);
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+.appmenu__cta--primary:hover:not(:disabled) {
+  border-color: var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 88%, white);
+}
+.appmenu__section {
+  margin-top: 2px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.appmenu__projicon {
+  display: grid;
+  place-items: center;
+  width: calc(30px * var(--ui-scale));
+  height: calc(30px * var(--ui-scale));
+  flex: none;
+  border-radius: var(--r-md);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+.appmenu__skeleton {
+  height: calc(40px * var(--ui-scale));
+  border-radius: var(--r-md);
+  background: linear-gradient(90deg, var(--c-hover), var(--c-press), var(--c-hover));
+  opacity: 0.7;
+}
+.appmenu__empty {
+  margin: 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* ── Foot ────────────────────────────────────────────────────────── */
+.appmenu__foot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--c-line);
+  background: var(--c-panel-head);
+}
+.appmenu__footbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: calc(28px * var(--ui-scale));
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.appmenu__footbtn:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.appmenu__version {
+  margin-left: auto;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
