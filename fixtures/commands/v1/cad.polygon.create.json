@@ -1,0 +1,610 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.polygon.create",
+  "commandVersion": 1,
+  "title": "Kapalı alan oluştur: doğrulama, plan, yazma, geri alma",
+  "note": "ADR 0022. Denetim sırası: dış halka, sonra her delik (köşe sayısı, sonlu koordinat, yay değeri sayısı, sonlu yay değeri); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow" },
+    "origin": { "x": 487000, "y": 4420000 },
+    "layers": [
+      { "id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] },
+      { "id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] },
+      { "id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] },
+      {
+        "id": "pafta", "name": "Pafta", "type": "group", "visible": true, "locked": false, "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 },
+        "children": [
+          { "id": "sinir", "name": "Sınır", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }
+        ]
+      },
+      {
+        "id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 },
+        "children": [
+          { "id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }
+        ]
+      },
+      {
+        "id": "taslak", "name": "Taslak", "type": "group", "visible": false, "locked": false, "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 },
+        "children": [
+          { "id": "notlar", "name": "Notlar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }
+        ]
+      }
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      { "kind": "point", "id": 4, "layerId": "yapi", "attrs": {}, "p": { "x": 487001, "y": 4420001 } },
+      { "kind": "polygon", "id": 9, "layerId": "sinir", "attrs": { "Ada": "101" }, "pts": [{ "x": 487000, "y": 4420000 }, { "x": 487040, "y": 4420000 }, { "x": 487040, "y": 4420030 }] }
+    ],
+    "styles": { "items": [], "categories": [] }
+  },
+  "cases": [
+    {
+      "name": "yazılır, tek adımda geri alınır, aynı kalıcı kimlikle yinelenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }] },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] },
+          "expect": {
+            "ids": [4, 9, 10],
+            "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "attrs": {}, "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }] } },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        { "op": "captureUid", "id": 10, "as": "created" },
+        { "op": "undo", "returns": "Ekle", "note": "Kapalı alan aracının hep yazdığı adım adı.", "expect": { "ids": [4, 9], "canUndo": false, "canRedo": true, "dirty": true, "revision": "changed" } },
+        {
+          "op": "redo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [4, 9, 10],
+            "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "attrs": {}, "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }] } },
+            "uids": { "10": "created" },
+            "canUndo": true,
+            "canRedo": false,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "her yeni alan yeni kalıcı kimlik alır, aynı girdiyle de",
+      "steps": [
+        { "op": "execute", "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] } },
+        { "op": "captureUid", "id": 10, "as": "first" },
+        { "op": "execute", "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] }, "result": { "status": "completed", "output": { "uid": "$uid", "id": 11, "revision": "$current" }, "warnings": [] }, "expect": { "ids": [4, 9, 10, 11], "uids": { "10": "first", "11": "new" } } }
+      ]
+    },
+    {
+      "name": "yay değerleri kenar başına yazılır; kapanış kenarınınki sondadır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [0, 1, 0, 0.5] },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] },
+          "expect": {
+            "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "attrs": {}, "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [0, 1, 0, 0.5] } }
+          }
+        }
+      ]
+    },
+    {
+      "name": "delikler, renk ve öznitelikler olduğu gibi yazılır; grubun içindeki katmana da",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "sinir",
+            "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }],
+            "holes": [
+              { "pts": [{ "x": 487012, "y": 4420012 }, { "x": 487014, "y": 4420012 }, { "x": 487013, "y": 4420014 }] },
+              { "pts": [{ "x": 487020, "y": 4420012 }, { "x": 487024, "y": 4420012 }, { "x": 487024, "y": 4420016 }, { "x": 487020, "y": 4420016 }], "bulges": [0, 0, -0.25, 0] }
+            ],
+            "color": "#E5484D",
+            "attrs": { "Ad": "Havuz", "Nitelik": "Bahçe" }
+          },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] },
+          "expect": {
+            "ids": [4, 9, 10],
+            "entities": {
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "sinir",
+                "color": "#E5484D",
+                "attrs": { "Ad": "Havuz", "Nitelik": "Bahçe" },
+                "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }],
+                "holes": [
+                  { "pts": [{ "x": 487012, "y": 4420012 }, { "x": 487014, "y": 4420012 }, { "x": 487013, "y": 4420014 }] },
+                  { "pts": [{ "x": 487020, "y": 4420012 }, { "x": 487024, "y": 4420012 }, { "x": 487024, "y": 4420016 }, { "x": 487020, "y": 4420016 }], "bulges": [0, 0, -0.25, 0] }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "gizli katmana uyarıyla yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "gizli", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": {
+            "status": "completed",
+            "output": { "uid": "$uid", "id": 10, "revision": "$current" },
+            "warnings": [{ "code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId" }]
+          },
+          "expect": {
+            "ids": [4, 9, 10],
+            "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "gizli", "attrs": {}, "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] } },
+            "canUndo": true,
+            "dirty": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gizli grubun katmanı da gizlidir; uyarı katmanın adını verir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "notlar", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": {
+            "status": "completed",
+            "output": { "uid": "$uid", "id": 10, "revision": "$current" },
+            "warnings": [{ "code": "layer_hidden", "message": "“Notlar” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId" }]
+          },
+          "expect": { "ids": [4, 9, 10] }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katmana hiçbir şey yazılmaz; ileti nasıl düzeltileceğini söyler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "kilitli", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "failed", "error": { "code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId" } },
+          "expect": { "ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "kilitli grubun katmanı da kilitlidir; ileti katmanın adını verir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "eski", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "failed", "error": { "code": "layer_locked", "message": "“Eski” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId" } },
+          "expect": { "ids": [4, 9], "canUndo": false, "dirty": false, "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "bilinmeyen katman",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "yok", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "failed", "error": { "code": "layer_not_found", "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId" } },
+          "expect": { "ids": [4, 9], "canUndo": false, "dirty": false, "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "note": "Katman adı kimlik değildir.",
+          "input": { "layerId": "Yapı", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "failed", "error": { "code": "layer_not_found", "message": "“Yapı” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId" } },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "failed", "error": { "code": "layer_not_found", "message": "“” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId" } },
+          "expect": { "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "grup katman değildir; kilitli grup da önce grup olduğu için reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "pafta", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "failed", "error": { "code": "not_a_layer", "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "path": "layerId" } },
+          "expect": { "ids": [4, 9], "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "arsiv", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "failed", "error": { "code": "not_a_layer", "message": "“Arşiv” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "path": "layerId" } },
+          "expect": { "ids": [4, 9], "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "kapalı alanın en az üç köşesi olmalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }] },
+          "result": { "status": "failed", "error": { "code": "too_few_corners", "message": "Kapalı alanın en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin.", "path": "pts" } },
+          "expect": { "ids": [4, 9], "canUndo": false, "dirty": false, "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [] },
+          "result": { "status": "failed", "error": { "code": "too_few_corners", "message": "Kapalı alanın en az 3 köşesi olmalı; 0 köşe verildi. Eksik köşeleri ekleyin.", "path": "pts" } },
+          "expect": { "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "deliğin de en az üç köşesi olmalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }],
+            "holes": [
+              { "pts": [{ "x": 487012, "y": 4420012 }, { "x": 487014, "y": 4420012 }, { "x": 487013, "y": 4420014 }] },
+              { "pts": [{ "x": 487020, "y": 4420012 }, { "x": 487024, "y": 4420012 }] }
+            ]
+          },
+          "result": { "status": "failed", "error": { "code": "too_few_corners", "message": "2. deliğin en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.", "path": "holes[1].pts" } },
+          "expect": { "ids": [4, 9], "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "NaN ya da sonsuz koordinat yazılmaz; yol ve ileti köşeyi söyler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }] },
+          "nonFinite": { "pts[1].y": "NaN" },
+          "result": { "status": "failed", "error": { "code": "not_finite", "message": "2. köşenin kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "pts[1].y" } },
+          "expect": { "ids": [4, 9], "canUndo": false, "dirty": false, "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }] },
+          "nonFinite": { "pts[2].x": "Infinity", "pts[3].y": "NaN" },
+          "note": "İlk bozuk değer söylenir: köşe sırasıyla, önce x.",
+          "result": { "status": "failed", "error": { "code": "not_finite", "message": "3. köşenin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "pts[2].x" } },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }],
+            "holes": [
+              { "pts": [{ "x": 487012, "y": 4420012 }, { "x": 487014, "y": 4420012 }, { "x": 487013, "y": 4420014 }] },
+              { "pts": [{ "x": 487020, "y": 4420012 }, { "x": 487024, "y": 4420012 }, { "x": 487024, "y": 4420016 }, { "x": 487020, "y": 4420016 }] }
+            ]
+          },
+          "nonFinite": { "holes[1].pts[0].x": "-Infinity" },
+          "result": { "status": "failed", "error": { "code": "not_finite", "message": "2. deliğin 1. köşesinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "holes[1].pts[0].x" } },
+          "expect": { "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "NaN ya da sonsuz yay değeri yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [0, 1, 0, 0] },
+          "nonFinite": { "bulges[3]": "-Infinity" },
+          "result": { "status": "failed", "error": { "code": "not_finite", "message": "4. kenarın yay değeri sonlu bir sayı değil (NaN ya da sonsuz). Düz kenar için 0, yay için tan(açı/4) verin.", "path": "bulges[3]" } },
+          "expect": { "ids": [4, 9], "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }],
+            "holes": [{ "pts": [{ "x": 487012, "y": 4420012 }, { "x": 487014, "y": 4420012 }, { "x": 487013, "y": 4420014 }], "bulges": [0, 0, 0] }]
+          },
+          "nonFinite": { "holes[0].bulges[2]": "NaN" },
+          "result": { "status": "failed", "error": { "code": "not_finite", "message": "1. deliğin 3. kenarının yay değeri sonlu bir sayı değil (NaN ya da sonsuz). Düz kenar için 0, yay için tan(açı/4) verin.", "path": "holes[0].bulges[2]" } },
+          "expect": { "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "her kenara bir yay değeri: kapanış kenarı dahil",
+      "steps": [
+        {
+          "op": "execute",
+          "note": "Kapanış kenarının değeri unutulmuş.",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [0, 1, 0] },
+          "result": { "status": "failed", "error": { "code": "bulge_count", "message": "Yay değerleri köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: 4 köşe, 3 yay değeri verildi. Eksik ya da fazla değerleri düzeltin.", "path": "bulges" } },
+          "expect": { "ids": [4, 9], "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [0, 0, 0, 0, 0] },
+          "result": { "status": "failed", "error": { "code": "bulge_count", "message": "Yay değerleri köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: 4 köşe, 5 yay değeri verildi. Eksik ya da fazla değerleri düzeltin.", "path": "bulges" } },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "note": "Boş liste de verilmiş sayılır; yay değeri yoksa alan hiç yazılmaz.",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [] },
+          "result": { "status": "failed", "error": { "code": "bulge_count", "message": "Yay değerleri köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: 4 köşe, 0 yay değeri verildi. Eksik ya da fazla değerleri düzeltin.", "path": "bulges" } },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }],
+            "holes": [{ "pts": [{ "x": 487012, "y": 4420012 }, { "x": 487014, "y": 4420012 }, { "x": 487013, "y": 4420014 }], "bulges": [0, 0, 0, 0] }]
+          },
+          "result": { "status": "failed", "error": { "code": "bulge_count", "message": "1. deliğin yay değerleri köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: 3 köşe, 4 yay değeri verildi. Eksik ya da fazla değerleri düzeltin.", "path": "holes[0].bulges" } },
+          "expect": { "ids": [4, 9], "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "beklenen sürüm çizimin sürümüyse yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "$current" },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] },
+          "expect": { "ids": [4, 9, 10], "revision": "changed" }
+        }
+      ]
+    },
+    {
+      "name": "çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict",
+      "steps": [
+        { "op": "captureRevision", "as": "prepared" },
+        {
+          "op": "execute",
+          "note": "Girdi hazırlandıktan sonra çizim başka bir düzenlemeyle değişir.",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487050, "y": 4420010 }, { "x": 487060, "y": 4420010 }, { "x": 487060, "y": 4420020 }, { "x": 487050, "y": 4420020 }] },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] },
+          "expect": { "revision": "changed" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "$prepared" },
+          "result": {
+            "status": "conflict",
+            "error": { "code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current" }
+          },
+          "expect": { "ids": [4, 9, 10], "canUndo": true, "canRedo": false, "dirty": true, "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "note": "Şimdiki sürümle yeniden hazırlanan girdi yazılır.",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "$current" },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 11, "revision": "$current" }, "warnings": [] },
+          "expect": { "ids": [4, 9, 10, 11], "revision": "changed" }
+        },
+        {
+          "op": "execute",
+          "note": "Hiç olmamış bir sürüm de, ne kadar büyük olursa olsun, çakışmadır; hata değildir.",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "99999999999999999999999" },
+          "result": {
+            "status": "conflict",
+            "error": { "code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current" }
+          },
+          "expect": { "ids": [4, 9, 10, 11], "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "beklenen sürüm ondalık bir tamsayı yazısıdır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "012" },
+          "result": { "status": "failed", "error": { "code": "invalid_revision", "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision" } },
+          "expect": { "ids": [4, 9], "dirty": false, "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "" },
+          "result": { "status": "failed", "error": { "code": "invalid_revision", "message": "Beklenen sürüm “” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision" } },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "-1" },
+          "result": { "status": "failed", "error": { "code": "invalid_revision", "message": "Beklenen sürüm “-1” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision" } },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "7.0" },
+          "result": { "status": "failed", "error": { "code": "invalid_revision", "message": "Beklenen sürüm “7.0” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision" } },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": " 7" },
+          "result": { "status": "failed", "error": { "code": "invalid_revision", "message": "Beklenen sürüm “ 7” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision" } },
+          "expect": { "ids": [4, 9], "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "girdinin hatası çizimin durumundan önce gelir; çakışma katmandan önce",
+      "note": "Girdi kendi başına bozuksa çizime bakılmaz. Çizim değiştiyse katmanın o anki hâli girdinin hazırlandığı hâl değildir.",
+      "steps": [
+        { "op": "captureRevision", "as": "prepared" },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487050, "y": 4420010 }, { "x": 487060, "y": 4420010 }, { "x": 487060, "y": 4420020 }, { "x": 487050, "y": 4420020 }] },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "kilitli", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "$prepared" },
+          "nonFinite": { "pts[0].x": "NaN" },
+          "result": { "status": "failed", "error": { "code": "not_finite", "message": "1. köşenin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "pts[0].x" } },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "kilitli", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "012" },
+          "result": { "status": "failed", "error": { "code": "invalid_revision", "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision" } },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "kilitli", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "$prepared" },
+          "result": {
+            "status": "conflict",
+            "error": { "code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current" }
+          },
+          "expect": { "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "kilitli", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "$current" },
+          "result": { "status": "failed", "error": { "code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId" } },
+          "expect": { "ids": [4, 9, 10], "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "doğrulama hiçbir şey yazmaz; yazmanın vereceği cevabı verir",
+      "steps": [
+        {
+          "op": "validate",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "completed", "output": null, "warnings": [] },
+          "expect": { "ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same" }
+        },
+        {
+          "op": "validate",
+          "input": { "layerId": "gizli", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "completed", "output": null, "warnings": [{ "code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId" }] },
+          "expect": { "ids": [4, 9], "dirty": false, "revision": "same" }
+        },
+        {
+          "op": "validate",
+          "input": { "layerId": "kilitli", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "failed", "error": { "code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId" } },
+          "expect": { "dirty": false, "revision": "same" }
+        },
+        {
+          "op": "validate",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "nonFinite": { "pts[1].x": "NaN" },
+          "result": { "status": "failed", "error": { "code": "not_finite", "message": "2. köşenin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "pts[1].x" } },
+          "expect": { "revision": "same" }
+        },
+        { "op": "captureRevision", "as": "prepared" },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487050, "y": 4420010 }, { "x": 487060, "y": 4420010 }, { "x": 487060, "y": 4420020 }, { "x": 487050, "y": 4420020 }] },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }
+        },
+        {
+          "op": "validate",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "expectedRevision": "$prepared" },
+          "result": {
+            "status": "conflict",
+            "error": { "code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current" }
+          },
+          "expect": { "ids": [4, 9, 10], "canUndo": true, "canRedo": false, "revision": "same" }
+        }
+      ]
+    },
+    {
+      "name": "plan yazılacak nesneyi gösterir ve hiçbir şey yazmaz; yazma planın sürümüyle planı yazar",
+      "steps": [
+        {
+          "op": "plan",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [0, 1, 0, 0], "color": "#E5484D" },
+          "result": {
+            "status": "completed",
+            "output": {
+              "entity": { "kind": "polygon", "id": 0, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [0, 1, 0, 0] },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": { "ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [0, 1, 0, 0], "color": "#E5484D", "expectedRevision": "$current" },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] },
+          "expect": {
+            "ids": [4, 9, 10],
+            "entities": { "10": { "kind": "polygon", "id": 10, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }, { "x": 487010, "y": 4420022.5 }], "bulges": [0, 1, 0, 0] } },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan ve doğrulama geçmişe dokunmaz: yinelenecek adım kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 10, "revision": "$current" }, "warnings": [] }
+        },
+        { "op": "undo", "returns": "Ekle", "expect": { "ids": [4, 9], "canUndo": false, "canRedo": true } },
+        {
+          "op": "plan",
+          "input": { "layerId": "gizli", "pts": [{ "x": 487050, "y": 4420010 }, { "x": 487060, "y": 4420010 }, { "x": 487060, "y": 4420020 }] },
+          "result": {
+            "status": "completed",
+            "output": { "entity": { "kind": "polygon", "id": 0, "layerId": "gizli", "attrs": {}, "pts": [{ "x": 487050, "y": 4420010 }, { "x": 487060, "y": 4420010 }, { "x": 487060, "y": 4420020 }] }, "revision": "$current" },
+            "warnings": [{ "code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId" }]
+          },
+          "expect": { "ids": [4, 9], "canUndo": false, "canRedo": true, "revision": "same" }
+        },
+        {
+          "op": "validate",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487050, "y": 4420010 }, { "x": 487060, "y": 4420010 }, { "x": 487060, "y": 4420020 }] },
+          "result": { "status": "completed", "output": null, "warnings": [] },
+          "expect": { "canUndo": false, "canRedo": true, "revision": "same" }
+        },
+        {
+          "op": "execute",
+          "note": "Yeni bir düzenleme yinelenecek adımı siler, her düzenleme gibi.",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487050, "y": 4420010 }, { "x": 487060, "y": 4420010 }, { "x": 487060, "y": 4420020 }] },
+          "result": { "status": "completed", "output": { "uid": "$uid", "id": 11, "revision": "$current" }, "warnings": [] },
+          "expect": { "ids": [4, 9, 11], "canUndo": true, "canRedo": false, "revision": "changed" }
+        }
+      ]
+    },
+    {
+      "name": "plan da aynı nedenlerle reddeder",
+      "steps": [
+        {
+          "op": "plan",
+          "input": { "layerId": "eski", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }] },
+          "result": { "status": "failed", "error": { "code": "layer_locked", "message": "“Eski” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId" } },
+          "expect": { "ids": [4, 9], "dirty": false, "revision": "same" }
+        },
+        {
+          "op": "plan",
+          "input": { "layerId": "yapi", "pts": [{ "x": 487010, "y": 4420010 }, { "x": 487030, "y": 4420010 }, { "x": 487030, "y": 4420022.5 }], "bulges": [0, 0] },
+          "result": { "status": "failed", "error": { "code": "bulge_count", "message": "Yay değerleri köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: 3 köşe, 2 yay değeri verildi. Eksik ya da fazla değerleri düzeltin.", "path": "bulges" } },
+          "expect": { "revision": "same" }
+        }
+      ]
+    }
+  ]
+}

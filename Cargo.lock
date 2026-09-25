@@ -2510,6 +2510,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-native-application"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-postgres"
 version = "0.1.0"
 dependencies = [

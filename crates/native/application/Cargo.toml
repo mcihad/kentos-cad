@@ -1,0 +1,21 @@
+[package]
+name = "kentos-native-application"
+description = "The desktop's product commands (docs/adr/0013, 0022): typed, versioned operations over the native document, held to the web's own handlers by shared cases"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust, native only (TODOS.md §2.1 `native/application`): no UI, GPU, database,
+# async runtime or network (scripts/arch/deps.mjs, group `application`). The web runs
+# its own TypeScript handlers (apps/web/src/product); this crate is never built for the
+# browser. The package is not `kentos-application`: that name is the server's use cases.
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-domain = { path = "../domain" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+# The command catalog (tests/catalog.rs) needs the contracts' JSON Schema feature, as
+# the server's catalog test does.
+kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
