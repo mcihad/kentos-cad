@@ -14,6 +14,9 @@ members = [
     "crates/wasm/geometry-wasm",
     "crates/wasm/formats-wasm",
     "crates/wasm/svg-wasm",
+    # Native libraries (desktop, later the server; never the browser): the drawing
+    # document, the counterpart of the web's TypeScript one (docs/adr/0020).
+    "crates/native/domain",
     # Server-only libraries: PostgreSQL/PostGIS and the use cases.
     "crates/server/postgres",
     "crates/server/application",
@@ -35,6 +38,7 @@ default-members = [
     "crates/wasm/geometry-wasm",
     "crates/wasm/formats-wasm",
     "crates/wasm/svg-wasm",
+    "crates/native/domain",
     "crates/server/postgres",
     "crates/server/application",
     "apps/api",
