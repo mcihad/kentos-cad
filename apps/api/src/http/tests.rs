@@ -686,6 +686,111 @@ async fn deleting_a_project_over_http() {
 }
 
 #[tokio::test]
+async fn the_personal_space_sharing_and_my_projects_over_http() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    for login in ["ayse", "bora"] {
+        admin::create_local_user(&db.owner, login, login, None, "dogru-parola-1")
+            .await
+            .unwrap();
+    }
+    let app = app(Some(db.app.clone()));
+    let (ayse, bora) = (signed_in(&app, "ayse").await, signed_in(&app, "bora").await);
+    // No organisation: the sign-in opened a personal space, where she may create projects.
+    let (_, _, body) = send(&app, get("/v1/me", &ayse)).await;
+    let me: Me = serde_json::from_slice(&body).unwrap();
+    assert_eq!(me.memberships.len(), 1);
+    let space = &me.memberships[0];
+    assert_eq!(
+        (space.tenant_kind, space.capabilities.clone()),
+        (TenantKind::Personal, vec!["project.create".to_string()])
+    );
+    let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
+        "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
+    let create = serde_json::json!({ "name": "Bahçe", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+        "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] } });
+    let base = format!("/v1/tenants/{}/projects", space.tenant_id);
+    let (status, _, body) = send(&app, json_req("POST", &base, &ayse, create)).await;
+    assert_eq!(status, StatusCode::CREATED);
+    let info: kentos_contracts::ProjectInfo = serde_json::from_slice(&body).unwrap();
+    assert_eq!(
+        (info.tenant_kind, info.access.role, info.access.via),
+        (
+            TenantKind::Personal,
+            ProjectRole::Owner,
+            kentos_contracts::AccessSource::Owner
+        )
+    );
+    let uri = format!("{base}/{}", info.id);
+    // Bora is not a member of her space: he cannot list it, nor find the project.
+    let (status, _, _) = send(&app, get(&base, &bora)).await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let missing = not_found_body(&app, get(&uri, &bora)).await;
+    let (_, _, body) = send(&app, get("/v1/me/projects", &bora)).await;
+    assert!(
+        serde_json::from_slice::<kentos_contracts::ProjectList>(&body)
+            .unwrap()
+            .projects
+            .is_empty()
+    );
+    // Shared with him: in his “Projelerim”, and open to him at his role.
+    let bora_id = admin::user_id(&db.owner, "bora").await.unwrap();
+    let (status, _, _) = send(
+        &app,
+        access_command(
+            &space.tenant_id,
+            &info.id,
+            &ayse,
+            bora_id,
+            Some(GrantRole::Editor),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let (_, _, body) = send(&app, get("/v1/me/projects", &bora)).await;
+    let mine: kentos_contracts::ProjectList = serde_json::from_slice(&body).unwrap();
+    assert_eq!(mine.projects.len(), 1);
+    assert_eq!(
+        (
+            mine.projects[0].id.as_str(),
+            mine.projects[0].tenant_id.as_str(),
+            mine.projects[0].access.role
+        ),
+        (
+            info.id.as_str(),
+            space.tenant_id.as_str(),
+            ProjectRole::Editor
+        )
+    );
+    let (status, _, _) = send(&app, get(&uri, &bora)).await;
+    assert_eq!(status, StatusCode::OK);
+    // Who has access is shown to whoever may share (she may, he may not).
+    let (status, _, body) = send(&app, get(&format!("{uri}/access"), &ayse)).await;
+    assert_eq!(status, StatusCode::OK);
+    let list: kentos_contracts::ProjectAccessList = serde_json::from_slice(&body).unwrap();
+    assert_eq!(
+        (
+            list.owner_name.as_str(),
+            list.grants.len(),
+            list.grants[0].display_name.as_str()
+        ),
+        ("ayse", 1, "bora")
+    );
+    let (status, _, _) = send(&app, get(&format!("{uri}/access"), &bora)).await;
+    assert_eq!(status, StatusCode::FORBIDDEN);
+    // Taken away: the same 404 as before it was shared.
+    let (status, _, _) = send(
+        &app,
+        access_command(&space.tenant_id, &info.id, &ayse, bora_id, None),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(not_found_body(&app, get(&uri, &bora)).await, missing);
+    db.close().await;
+}
+
+#[tokio::test]
 async fn repeated_wrong_passwords_lock_the_login_for_a_while() {
     let Some(db) = TestDb::create().await else {
         return;
