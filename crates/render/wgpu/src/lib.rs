@@ -16,6 +16,9 @@
 //!   uniform per view and the scene cache, GPU buffers uploaded once per part
 //!   and never per frame.
 //! - [`RenderSettings`] and [`FrameStats`].
+//! - [`targets`]: a view's own multisampled or scaled targets and their
+//!   composition into the host's frame, and the sample counts the device
+//!   takes (TODOS.md AA-01, AA-02; docs/adr/0023).
 //!
 //! It knows no Iced. A host hands it the device, queue and render pass it
 //! draws with; the desktop app does that from Iced's shader widget, so the
@@ -40,10 +43,11 @@ pub mod scene;
 pub mod settings;
 pub mod shader;
 pub mod stats;
+pub mod targets;
 
 pub use camera::Camera;
 pub use color::{Palette, Rgba8};
-pub use renderer::{FrameInput, RenderError, Renderer, ViewId};
+pub use renderer::{FrameInput, RenderError, Renderer, SampleFailure, ViewId};
 pub use scene::{Drawing, LayerRanges, ScenePart};
 pub use settings::RenderSettings;
 pub use stats::FrameStats;

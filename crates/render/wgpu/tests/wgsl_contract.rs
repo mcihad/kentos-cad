@@ -468,3 +468,20 @@ fn the_pipelines_and_their_vertex_layouts_agree_with_the_contract_and_the_wgsl()
     }
     assert_eq!(layout::LINE.buffers[0].array_stride, 36);
 }
+
+/// The composition shader of a view's own targets (AA-02, `targets`) is
+/// native-only, but it too stays within core WebGPU and validates with naga.
+#[test]
+fn the_composition_shader_validates_within_core_webgpu() {
+    let source = kentos_render_wgpu::targets::compose_source();
+    let module = naga::front::wgsl::parse_str(source)
+        .unwrap_or_else(|e| panic!("WGSL does not parse:\n{}", e.emit_to_string(source)));
+    naga::valid::Validator::new(
+        naga::valid::ValidationFlags::all(),
+        naga::valid::Capabilities::empty(),
+    )
+    .validate(&module)
+    .unwrap_or_else(|e| panic!("WGSL does not validate:\n{}", e.emit_to_string(source)));
+    let entries: Vec<&str> = module.entry_points.iter().map(|e| e.name.as_str()).collect();
+    assert_eq!(entries, ["vs", "fs"]);
+}

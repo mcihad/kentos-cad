@@ -1,8 +1,10 @@
 //! `kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik]
-//! [--komut <id>]… [--tumu] [--merkez Y,X] [--yakinlastir <kat>]
-//! [--iz <iz> [--adim <n>] [--varyant us|tr-q|hidpi]]`: the window drawn
-//! without opening one (the KentOS UI snapshot renderer), for visual checks
-//! and documentation. Nothing is written but the image.
+//! [--ayar anahtar=değer]… [--komut <id>]… [--tumu] [--merkez Y,X]
+//! [--yakinlastir <kat>] [--iz <iz> [--adim <n>] [--varyant us|tr-q|hidpi]]`:
+//! the window drawn without opening one (the KentOS UI snapshot renderer),
+//! for visual checks and documentation. Nothing is written but the image;
+//! `--ayar` chooses a typed setting in memory (`graphics.msaa=8`), never in
+//! the user's settings file.
 //!
 //! `--iz` plays an interaction trace (fixtures/interaction/v1, traces.rs) on
 //! its own drawing, up to step `--adim` (all by default), so the image shows
@@ -23,7 +25,6 @@ use std::path::Path;
 use iced::{Point, Size};
 use kentos_render_wgpu::Vec2;
 use kentos_ui::snapshot::Snapshot;
-use kentos_ui::theme::Mode;
 
 use crate::app::{App, Message};
 use crate::catalog::catalog;
@@ -32,7 +33,7 @@ use crate::traces::{self, Player, Trace, VARIANTS, Variant};
 use crate::viewport::Event;
 
 const USAGE: &str = "kullanım: kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik] \
-                     [--komut <id>]… [--tumu] [--merkez Y,X] [--yakinlastir <kat>] \
+                     [--ayar anahtar=değer]… [--komut <id>]… [--tumu] [--merkez Y,X] [--yakinlastir <kat>] \
                      [--iz <iz> [--adim <n>] [--varyant us|tr-q|hidpi]]";
 
 /// A view option, applied in the order given once the drawing is on screen.
@@ -63,10 +64,15 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
                     .ok_or(format!("{id}: böyle bir şerit sekmesi yok"))?;
             }
             "--tema" => {
-                app.mode = match args.next().as_deref() {
-                    Some("acik") => Mode::Light,
-                    _ => Mode::Dark,
+                // Through the settings (in memory here), as the theme commands do.
+                let theme = match args.next().as_deref() {
+                    Some("acik") => "light",
+                    _ => "dark",
                 };
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+                app.apply_settings();
             }
             "--komut" => {
                 let id = args
@@ -78,6 +84,12 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
                 commands.push(command.id);
             }
             "--tumu" => views.push(View::Extents),
+            "--ayar" => {
+                let text = args
+                    .next()
+                    .ok_or("--ayar bir anahtar=değer ister (ör. graphics.msaa=8)")?;
+                setting(&mut app, &text)?;
+            }
             "--iz" => {
                 let id = args
                     .next()
@@ -174,10 +186,33 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
         let _ = app.update(Message::Viewport(event));
         snapshot.settle(&mut app, App::view, &mut update);
     }
+    // The drawing area says what the device takes once it has drawn a frame (AA-01): one
+    // frame first, so the settings window shows the device's sample counts and the value in use.
+    let _ = snapshot.render(app.view(), &app.theme());
+    app.sync_device();
     snapshot
         .render(app.view(), &app.theme())
         .save(&out)
         .map_err(|e| format!("{out}: {e}"))
+}
+
+/// `--ayar key=value`: a typed setting chosen before the image is drawn, as
+/// the settings window would (JSON value, else text: `graphics.msaa=8`,
+/// `graphics.hiDpi=false`, `appearance.theme=light`).
+fn setting(app: &mut App, text: &str) -> Result<(), String> {
+    let (key, value) = text.split_once('=').ok_or(format!(
+        "{text}: ayar anahtar=değer biçiminde olmalı (ör. graphics.msaa=8)"
+    ))?;
+    let value = serde_json::from_str(value).unwrap_or_else(|_| serde_json::Value::from(value));
+    let key = crate::settings::schema()
+        .get(key.trim())
+        .map(|d| d.key.as_str())
+        .ok_or(format!("{key}: böyle bir ayar yok"))?;
+    if let Some((_, code)) = app.settings.choose(&[(key, value)]).first() {
+        return Err(format!("{text}: {}", code.message()));
+    }
+    app.apply_settings();
+    Ok(())
 }
 
 /// `Y,X` with a decimal point (CLAUDE.md §5): east, then north.

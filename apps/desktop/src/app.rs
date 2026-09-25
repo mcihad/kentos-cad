@@ -11,7 +11,9 @@ use std::path::PathBuf;
 
 use iced::widget::operation;
 use iced::{Subscription, Task, Theme, event, keyboard, window};
+use serde_json::Value;
 
+use kentos_contracts::{ResolveReason, SettingConstraint};
 use kentos_interaction::{Draft, Level, Session};
 use kentos_ui::icon::Icon;
 use kentos_ui::theme::{self, Accent, Mode};
@@ -22,7 +24,9 @@ use crate::catalog::{Standing, catalog};
 use crate::document::{self, Document};
 use crate::input::{Field, release_keyboard};
 use crate::keys::{self, KeyPress};
-use crate::viewport::{self, Viewport};
+use crate::settings::Settings;
+use crate::settings_view::{Edit, SettingsDraft, samples_label};
+use crate::viewport::{self, Graphics, Viewport};
 
 pub const COMMAND_INPUT: &str = "komut-satiri";
 
@@ -67,6 +71,8 @@ pub enum Dialog {
     Shortcuts,
     /// The drawing has unsaved changes; asked before `then` throws them away.
     Unsaved(Then),
+    /// Uygulama ayarları (`tools.options`); its draft is `App::settings_draft`.
+    Settings,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -119,6 +125,8 @@ pub enum Message {
     DialogClosed,
     /// The drawing area: its size, the pointer, pan, zoom and clicks.
     Viewport(viewport::Event),
+    /// The settings window: a value in its draft, a preset, Kaydet, the file actions.
+    Settings(Edit),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -147,10 +155,17 @@ pub struct App {
     pub session: Session,
     /// The value field beside the cursor, while it is open (ADR 0018).
     pub field: Option<Field>,
-    /// Drafting aids for new points: ortho, polar tracking, the snap aperture.
+    /// Drafting aids for new points: ortho, polar tracking, the snap aperture
+    /// (the typed settings' `drafting.*`, applied by `apply_settings`).
     pub draft: Draft,
-    /// Typed values open beside the cursor (the web's `cursorInput` preference).
+    /// Typed values open beside the cursor (`drafting.cursorInput`).
     pub cursor_input: bool,
+    /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
+    pub settings: Settings,
+    /// The settings window's draft while it is open.
+    pub settings_draft: Option<SettingsDraft>,
+    /// The sample-count failure already reported, so it is said once.
+    reported_failure: Option<(u32, u32)>,
     /// Whether the command line's text box has the keyboard.
     pub line_focused: bool,
     pub modifiers: keyboard::Modifiers,
@@ -160,9 +175,16 @@ pub struct App {
 }
 
 impl App {
-    /// The shell, opening `path` at once when given (`kentos-cad cizim.kcad`).
+    /// The shell with settings in memory, opening `path` at once when given:
+    /// what tests, snapshots and the trace player start from, never touching
+    /// the user's files. `main` opens the real settings ([`App::start`]).
     pub fn boot(path: Option<PathBuf>) -> (Self, Task<Message>) {
-        let app = Self {
+        Self::start(path, Settings::memory())
+    }
+
+    /// The shell with these settings, opening `path` at once when given (`kentos-cad cizim.kcad`).
+    pub fn start(path: Option<PathBuf>, settings: Settings) -> (Self, Task<Message>) {
+        let mut app = Self {
             document: None,
             tab: catalog().tabs().nth(1).or(catalog().tabs().next()).map_or("home", |tab| tab.id),
             ribbon_collapsed: false,
@@ -182,11 +204,27 @@ impl App {
             field: None,
             draft: Draft::default(),
             cursor_input: true,
+            settings,
+            settings_draft: None,
+            reported_failure: None,
             line_focused: false,
             modifiers: keyboard::Modifiers::default(),
             last_level: None,
             picker: Picker::Dialog,
         };
+        // The organisation's policy: no server sends one yet; a local file may stand in (docs/adr/0023).
+        match Settings::policy_from_env() {
+            Some(Ok(policy)) => {
+                app.settings.set_policy(policy);
+                app.output("Kurum politikası KENTOS_SETTINGS_POLICY dosyasından okundu (yerel deneme).");
+            }
+            Some(Err(error)) => app.warn(format!(
+                "Kurum politikası okunamadı: {error}. Dosyayı denetleyin ya da KENTOS_SETTINGS_POLICY'yi kaldırın."
+            )),
+            None => {}
+        }
+        app.apply_settings();
+        app.report_settings_open();
         let task = match path {
             Some(path) => Task::perform(
                 async move { Some(Document::read(&path).map(Box::new)) },
@@ -220,6 +258,8 @@ impl App {
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
+        // What the drawing area's device can draw with, known after its first frame (AA-01).
+        self.sync_device();
         match message {
             Message::Run(id) => return self.run(id),
             Message::RibbonTab(id) => self.tab = id,
@@ -317,10 +357,118 @@ impl App {
                     };
                 }
             }
-            Message::DialogClosed => self.dialog = None,
+            Message::DialogClosed => {
+                self.dialog = None;
+                self.settings_draft = None;
+            }
             Message::Viewport(event) => return self.pointer(event),
+            Message::Settings(edit) => return self.settings_edit(edit),
         }
         Task::none()
+    }
+
+    /// Puts the settings in use (docs/adr/0023): the tool session's drafting
+    /// aids and value field, the theme; the drawing area reads `graphics()`
+    /// each frame. Called after every change.
+    pub(crate) fn apply_settings(&mut self) {
+        let s = &self.settings;
+        self.draft = Draft {
+            ortho: s.bool("drafting.ortho"),
+            polar: s
+                .bool("drafting.polar")
+                .then(|| s.number("drafting.polarIncrement")),
+            snap_aperture: s.number("drafting.snapAperture"),
+        };
+        self.cursor_input = s.bool("drafting.cursorInput");
+        self.mode = match s.effective("appearance.theme").as_str() {
+            Some("light") => Mode::Light,
+            _ => Mode::Dark,
+        };
+    }
+
+    /// What the drawing area draws with: the effective sample count and pixel ratio.
+    pub fn graphics(&self) -> Graphics {
+        Graphics {
+            samples: self.settings.number("graphics.msaa").max(1.0) as u32,
+            hi_dpi: self.settings.bool("graphics.hiDpi"),
+        }
+    }
+
+    /// Feeds the drawing area's device into the settings (TODOS.md AA-01,
+    /// SET-03): the sample counts it takes, or the count it could not make
+    /// targets for (AA-02); the effective value follows, the requested one stays.
+    pub(crate) fn sync_device(&mut self) {
+        let status = self.viewport.status();
+        if status.supported.is_empty() {
+            return;
+        }
+        let values = |counts: &mut dyn Iterator<Item = u32>| counts.map(Value::from).collect();
+        let listed: Vec<String> = status.supported.iter().map(|&n| samples_label(n)).collect();
+        let constraint = match &status.failure {
+            Some(f) => SettingConstraint {
+                allowed: values(
+                    &mut status
+                        .supported
+                        .iter()
+                        .copied()
+                        .filter(|&c| c < f.requested),
+                ),
+                reason: ResolveReason::DeviceFailed,
+                detail: format!("{}× hedefi kurulamadı ({}).", f.requested, f.error),
+            },
+            None => SettingConstraint {
+                allowed: values(&mut status.supported.iter().copied()),
+                reason: ResolveReason::DeviceUnsupported,
+                detail: format!("Desteklenenler: {}.", listed.join(", ")),
+            },
+        };
+        self.settings
+            .set_constraint("graphics.msaa", Some(constraint));
+        if let Some(f) = &status.failure
+            && self.reported_failure != Some((f.requested, f.working))
+        {
+            self.reported_failure = Some((f.requested, f.working));
+            self.warn(format!(
+                "Kenar yumuşatma {}× bu aygıtta kurulamadı; son çalışan ayara ({}) dönüldü. Neden: {}",
+                f.requested,
+                samples_label(f.working),
+                f.error
+            ));
+        }
+    }
+
+    /// What opening the settings did, in the command line: the one migration, a recovery.
+    fn report_settings_open(&mut self) {
+        let report = self.settings.report.clone();
+        if let Some(m) = &report.migrated {
+            self.output(format!(
+                "Ayarlar {} dosyasından alındı ({} değer); o dosya olduğu gibi duruyor.",
+                m.from, m.moved
+            ));
+        }
+        if let Some(r) = &report.recovered {
+            self.warn(format!(
+                "Ayar dosyası okunamadı ya da geçersiz değer içeriyordu; eski metni {} olarak saklandı.",
+                r.backup.display()
+            ));
+        }
+    }
+
+    /// A drafting aid of this session turned over (F8, F10): said as AutoCAD says it.
+    fn toggle_session(&mut self, key: &'static str, name: &str) {
+        let on = !self.settings.bool(key);
+        let _ = self.settings.choose(&[(key, Value::Bool(on))]);
+        self.apply_settings();
+        self.output(format!("{name} {}", if on { "açık" } else { "kapalı" }));
+    }
+
+    /// The theme chosen from a command: a preference, kept.
+    fn choose_theme(&mut self, mode: Mode) {
+        let theme = if mode == Mode::Light { "light" } else { "dark" };
+        let _ = self
+            .settings
+            .choose(&[("appearance.theme", Value::from(theme))]);
+        self.apply_settings();
     }
 
     /// Runs a web command id: the desktop's handler, or a note that it is not here yet.
@@ -360,15 +508,16 @@ impl App {
             }
             "file.save" => return self.save(false),
             "file.saveAs" => return self.save(true),
-            "view.theme.dark" => self.mode = Mode::Dark,
-            "view.theme.light" => self.mode = Mode::Light,
-            "view.theme.toggle" => {
-                self.mode = if self.mode == Mode::Light {
-                    Mode::Dark
-                } else {
-                    Mode::Light
-                };
-            }
+            "view.theme.dark" => self.choose_theme(Mode::Dark),
+            "view.theme.light" => self.choose_theme(Mode::Light),
+            "view.theme.toggle" => self.choose_theme(if self.mode == Mode::Light {
+                Mode::Dark
+            } else {
+                Mode::Light
+            }),
+            "tools.options" => self.open_settings(),
+            "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
+            "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
             "view.ribbonCollapse" => self.ribbon_collapsed = !self.ribbon_collapsed,
             "view.zoomIn" => self.zoom_in(),
             "view.zoomOut" => self.zoom_out(),

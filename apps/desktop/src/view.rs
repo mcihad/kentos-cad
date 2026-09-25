@@ -115,7 +115,7 @@ impl App {
                     self.session.preview(&format),
                     self.field.as_ref().map(|f| (f.text.as_str(), f.at)),
                 );
-                stack![self.viewport.view(doc, self.mode), over].into()
+                stack![self.viewport.view(doc, self.mode, self.graphics()), over].into()
             }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")
@@ -417,6 +417,7 @@ impl App {
                     .destructive(),
                 Message::DialogClosed,
             ),
+            Asking::Settings => self.settings_dialog(),
         }
     }
 }

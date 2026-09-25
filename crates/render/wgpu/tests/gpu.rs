@@ -1,6 +1,8 @@
-//! The drawing pipeline on a real GPU (TODOS.md REN-02, REN-07): the shared
-//! WGSL built into pipelines by the device's own driver, a frame drawn and
-//! read back. Test only: the renderer itself never reads the GPU back.
+//! The drawing pipeline on a real GPU (TODOS.md REN-02, REN-07, AA-01,
+//! AA-02): the shared WGSL built into pipelines by the device's own driver, a
+//! frame drawn and read back; the sample counts the device takes, a live
+//! change of multisampling, the fallback when a count is refused, and HiDPI
+//! off. Test only: the renderer itself never reads the GPU back.
 //!
 //! Needs a GPU, so it runs only with `KENTOS_GPU_TESTS=1`; otherwise it says
 //! it was skipped, which is not a pass. One device, one test function: several
@@ -75,6 +77,21 @@ impl Gpu {
         width: u32,
         height: u32,
     ) -> Vec<u8> {
+        self.draw_scaled(parts, camera, settings, width, height, 1.0)
+    }
+
+    /// As `draw`, on a screen of `scale` device pixels per logical pixel: a
+    /// view with its own targets (MSAA, or HiDPI off) is composed into the
+    /// target the way the desktop's Iced frame gets it.
+    fn draw_scaled(
+        &mut self,
+        parts: &[&ScenePart],
+        camera: &Camera,
+        settings: &RenderSettings,
+        width: u32,
+        height: u32,
+        scale: f64,
+    ) -> Vec<u8> {
         let texture = self.device.create_texture(&wgpu::TextureDescriptor {
             label: Some("target"),
             size: wgpu::Extent3d {
@@ -101,7 +118,8 @@ impl Gpu {
                     camera,
                     origin,
                     size_px: [width as f32, height as f32],
-                    scale_factor: 1.0,
+                    origin_px: [0.0, 0.0],
+                    scale_factor: scale,
                     settings,
                 },
             )
@@ -125,7 +143,14 @@ impl Gpu {
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });
-            self.renderer.draw(&mut pass, 1);
+            if !self.renderer.owns_targets(1) {
+                self.renderer.draw(&mut pass, 1);
+            }
+        }
+        // A view with its own targets draws there and composes into the (red) frame.
+        if self.renderer.owns_targets(1) {
+            self.renderer
+                .render(&mut encoder, &view, [0, 0, width, height], 1);
         }
         let row = (width * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT)
             * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
@@ -243,6 +268,155 @@ fn on_a_real_gpu() {
     let mut gpu = Gpu::open();
     sub_pixel_pans_at_tm_coordinates_move_the_line_by_exactly_the_pan(&mut gpu);
     the_sample_draws_with_every_pipeline_and_the_cache_uploads_once(&mut gpu);
+    multisampling_changes_live_and_smooths_fill_edges(&mut gpu);
+    a_count_the_device_refuses_falls_back_to_the_last_working_one(&mut gpu);
+    hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(&mut gpu);
+}
+
+/// One grey square turned by 30° on black: its edges cross pixels at every
+/// angle. Its outline is transparent, so only the fill's (unsmoothed) edge
+/// meets the background.
+fn turned_square() -> (DocumentSnapshotV1, Camera) {
+    let mut doc = one_line(E);
+    doc.layers[0].style.fill = Some("#808080".into());
+    doc.layers[0].style.color = "#00000000".into();
+    let (c, s) = (30f64.to_radians().cos(), 30f64.to_radians().sin());
+    let corner = |x: f64, y: f64| kentos_contracts::Vec2 {
+        x: E + x * c - y * s,
+        y: N + x * s + y * c,
+    };
+    let ring = [
+        corner(-10.0, -10.0),
+        corner(10.0, -10.0),
+        corner(10.0, 10.0),
+        corner(-10.0, 10.0),
+    ];
+    let json = serde_json::json!({
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "l",
+        "attrs": {},
+        "pts": ring.iter().map(|p| serde_json::json!({ "x": p.x, "y": p.y })).collect::<Vec<_>>(),
+    });
+    doc.entities = vec![serde_json::from_value::<Entity>(json).expect("a polygon")];
+    let camera = Camera {
+        center: Vec2::new(E, N),
+        scale: 2.0,
+        width: 64.0,
+        height: 64.0,
+    };
+    (doc, camera)
+}
+
+/// Grey levels strictly between the background and the fill: edge pixels a
+/// multisampled frame blends.
+fn blended(rgba: &[u8]) -> usize {
+    rgba.chunks(4).filter(|p| p[0] > 8 && p[0] < 0x78).count()
+}
+
+/// AA-01, AA-02 on the device: the counts it takes include WebGPU's 1 and 4;
+/// the same renderer switches between 1× and 4× from one frame to the next,
+/// with no new upload, and 4× blends the fill's edges where 1× cannot.
+fn multisampling_changes_live_and_smooths_fill_edges(gpu: &mut Gpu) {
+    let counts = gpu.renderer.sample_counts().to_vec();
+    eprintln!("AA-01 on the GPU: sample counts {counts:?}");
+    assert!(
+        counts.starts_with(&[1]) && counts.contains(&4),
+        "{counts:?}"
+    );
+    let (doc, camera) = turned_square();
+    let origin = scene::scene_origin(&doc);
+    let fixed = scene::build_fixed(&doc, &palette(), origin);
+    let mut settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
+    let single = gpu.draw(&[&fixed], &camera, &settings, 64, 64);
+    settings.samples = 4;
+    let four = gpu.draw(&[&fixed], &camera, &settings, 64, 64);
+    let stats = gpu.renderer.stats(1).expect("stats");
+    assert_eq!(stats.samples, 4);
+    assert_eq!(
+        stats.uploaded_bytes, 64,
+        "only the uniform: the scene stays"
+    );
+    assert!(stats.target_bytes >= 64 * 64 * 4 * 5, "{stats:?}");
+    // The area is covered: nothing of the red frame is left.
+    assert!(
+        !four.chunks(4).any(|p| p == [255, 0, 0, 255]),
+        "the picture covers the area"
+    );
+    let (edges1, edges4) = (blended(&single), blended(&four));
+    eprintln!("AA-02 on the GPU: blended edge pixels 1×: {edges1}, 4×: {edges4}");
+    assert!(
+        edges4 > edges1 + 20,
+        "4× blends the fill's edges ({edges1} → {edges4})"
+    );
+    // And back, and again: nothing reopened, the same renderer.
+    settings.samples = 1;
+    assert_eq!(gpu.draw(&[&fixed], &camera, &settings, 64, 64), single);
+    assert_eq!(gpu.renderer.stats(1).expect("stats").samples, 1);
+    // 16× where the device takes fewer: the nearest one below.
+    settings.samples = 16;
+    let _ = gpu.draw(&[&fixed], &camera, &settings, 64, 64);
+    let drawn = gpu.renderer.stats(1).expect("stats").samples;
+    assert_eq!(
+        drawn,
+        counts
+            .iter()
+            .copied()
+            .filter(|&c| c <= 16)
+            .max()
+            .unwrap_or(1)
+    );
+}
+
+/// AA-02: a count whose targets the device refuses leaves the view drawing
+/// with the last count that worked, and says why.
+fn a_count_the_device_refuses_falls_back_to_the_last_working_one(gpu: &mut Gpu) {
+    let (doc, camera) = turned_square();
+    let origin = scene::scene_origin(&doc);
+    let fixed = scene::build_fixed(&doc, &palette(), origin);
+    let mut settings = RenderSettings::new(Rgba8::rgb(0, 0, 0));
+    settings.samples = 4;
+    let four = gpu.draw(&[&fixed], &camera, &settings, 64, 64);
+    // Believe a count the device does not take (64 samples), and ask for it.
+    let real = gpu.renderer.sample_counts().to_vec();
+    gpu.renderer.believe_sample_counts(vec![1, 4, 64]);
+    settings.samples = 64;
+    let after = gpu.draw(&[&fixed], &camera, &settings, 64, 64);
+    let failure = gpu
+        .renderer
+        .sample_failure(1)
+        .cloned()
+        .expect("the failure is kept");
+    eprintln!("AA-02 fallback: {failure:?}");
+    assert_eq!((failure.requested, failure.working), (64, 4));
+    assert_eq!(gpu.renderer.stats(1).expect("stats").samples, 4);
+    assert_eq!(after, four, "the frame is the last working one's");
+    gpu.renderer.believe_sample_counts(real);
+}
+
+/// HiDPI off on a 2× screen: the picture is drawn at the logical size and
+/// scaled up; it still covers the whole area.
+fn hi_dpi_off_draws_a_quarter_of_the_pixels_and_fills_the_area(gpu: &mut Gpu) {
+    let (doc, mut camera) = turned_square();
+    let origin = scene::scene_origin(&doc);
+    let fixed = scene::build_fixed(&doc, &palette(), origin);
+    let mut settings = RenderSettings::new(Rgba8::rgb(0x14, 0x1a, 0x21));
+    settings.hi_dpi = false;
+    // A 128 × 128 device-pixel area on a 2× screen is 64 × 64 logical pixels.
+    camera.width = 64.0;
+    camera.height = 64.0;
+    let rgba = gpu.draw_scaled(&[&fixed], &camera, &settings, 128, 128, 2.0);
+    let stats = gpu.renderer.stats(1).expect("stats");
+    assert_eq!(
+        stats.target_bytes,
+        64 * 64 * 4,
+        "one picture at the logical size"
+    );
+    assert!(
+        !rgba.chunks(4).any(|p| p == [255, 0, 0, 255]),
+        "the area is covered"
+    );
+    assert_eq!(&rgba[0..4], &[0x14, 0x1a, 0x21, 0xff]);
 }
 
 /// REN-07 on the device: at 0.2 mm per pixel, around E 487 012 / N 4 420 187,
