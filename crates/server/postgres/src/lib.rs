@@ -98,3 +98,53 @@ impl Db {
 pub async fn migrate(owner: &PgPool) -> Result<(), sqlx::migrate::MigrateError> {
     MIGRATOR.run(owner).await
 }
+
+#[cfg(test)]
+mod tests {
+    use super::MIGRATOR;
+
+    /// The SHA-384 that sqlx records for each migration once a database has
+    /// applied it. A released migration never changes, not even a comment:
+    /// sqlx refuses to migrate a database whose recorded checksum differs
+    /// (the layout move of 595ecf1 edited a path in 0001's comment and
+    /// stopped the development database). Change the schema with a new
+    /// migration, and pin it here once a kept database has applied it.
+    const RELEASED: [(i64, &str); 4] = [
+        (
+            1,
+            "63c0207c18858174260b3de415ec2beb450cde6d8d80e8d8b01c54dbf67fc845621290e7855212f41dc82a8a1b888d02",
+        ),
+        (
+            2,
+            "0033569198c64566d8c0aaa288e98ce5e47b698ba93545ed7fc946d63638fd85e2c7151f3d622c3dbc211bd28e6399d9",
+        ),
+        (
+            3,
+            "082ebabcc1c80dda911fbc296ea061222f01f726e617434174b7c89ad464fb676d5d7dd6128d457f8aa106df31691084",
+        ),
+        (
+            4,
+            "feb6ce3e969c6ef0dbff47a7e23043e04835da9ebebaa1e736543bad8160478b59b1a10f0e16413899d756965e62335a",
+        ),
+    ];
+
+    #[test]
+    fn released_migrations_are_unchanged() {
+        for (version, pinned) in RELEASED {
+            let migration = MIGRATOR
+                .iter()
+                .find(|m| m.version == version)
+                .unwrap_or_else(|| panic!("migration {version} is gone"));
+            let checksum: String = migration
+                .checksum
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect();
+            assert_eq!(
+                checksum, pinned,
+                "migration {version} ({}) changed after databases applied it; restore it and add a new migration",
+                migration.description
+            );
+        }
+    }
+}

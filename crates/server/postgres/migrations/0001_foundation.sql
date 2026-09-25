@@ -96,7 +96,7 @@ create table kentos.seat_allocation (
 
 -- ── Projects and features ────────────────────────────────────────────────
 
--- The layer tree, settings and project styles are contract JSON (crates/shared/contracts),
+-- The layer tree, settings and project styles are contract JSON (crates/contracts),
 -- versioned together by meta_version. data_revision counts every committed change.
 create table kentos.project (
   tenant_id uuid not null references kentos.tenant (id) on delete cascade,
