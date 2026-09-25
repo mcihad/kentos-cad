@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import accents from '../styles/accents.css?raw';
 import fonts from '../styles/fonts.css?raw';
 import page from '../../index.html?raw';
-import { ACCENTS, UI_FONTS } from './appearance';
+import { DRAWING_FONT_IDS } from '../model/projectSettings';
+import { ACCENTS, DRAWING_FONTS, UI_FONTS } from './appearance';
 import { PREFERENCE_DEFAULTS } from './state';
 
 /** The bundled files, as the app's build sees them. */
@@ -10,6 +11,12 @@ const files = new Set(Object.keys(import.meta.glob('../assets/fonts/*/*', { quer
 const TOKENS = ['--c-accent', '--c-accent-ink', '--c-accent-text', '--c-accent-soft', '--c-accent-line', '--c-tooltip-accent', '--canvas-accent'];
 
 describe('appearance', () => {
+  it('names every drawing typeface the contract knows, Barlow first', () => {
+    expect(DRAWING_FONTS.map((f) => f.id)).toEqual([...DRAWING_FONT_IDS]);
+    expect(DRAWING_FONTS[0].id).toBe('barlow');
+    expect(PREFERENCE_DEFAULTS.defaultDrawingFont).toBe('barlow');
+  });
+
   it('starts with Lacivert and Plus Jakarta Sans', () => {
     expect(PREFERENCE_DEFAULTS.accent).toBe('navy');
     expect(PREFERENCE_DEFAULTS.uiFont).toBe('jakarta');
@@ -36,10 +43,12 @@ describe('appearance', () => {
   });
 
   it('bundles every typeface but the system one: local files with Latin and Turkish letters, and their licence', () => {
-    for (const f of UI_FONTS.filter((x) => x.id !== 'system')) {
+    for (const f of [...UI_FONTS.filter((x) => x.id !== 'system'), ...DRAWING_FONTS]) {
       const family = f.family.split(',')[0].trim();
-      const faces = fonts.split('@font-face').filter((b: string) => b.includes(`font-family: ${family};`));
-      expect(faces.length, family).toBe(2);
+      const quoted = family.startsWith("'") ? family : `'${family}'`;
+      const faces = fonts.split('@font-face').filter((b: string) => b.includes(`font-family: ${quoted};`));
+      // One face per subset, or per subset and weight/style for the static fonts.
+      expect(faces.length >= 2 && faces.length % 2 === 0, family).toBe(true);
       // Latin Extended carries ğ (U+011F), ş (U+015F) and İ (U+0130); ı (U+0131) is in the Latin subset.
       expect(faces.some((b: string) => b.includes('U+0100-02BA') || b.includes('U+0100-02AF')), family).toBe(true);
       for (const b of faces) {

@@ -39,6 +39,7 @@ fn units_turn_paper_mm_into_metres_and_keep_px_for_drawn_sizes() {
     let env = |plot_scale| Env {
         plot_scale,
         aspects: &aspects,
+        screen: false,
     };
     assert_eq!(to_world(1.0, Unit::Mm, &env(1000.0)), 1.0);
     assert_eq!(to_world(2.0, Unit::Mm, &env(500.0)), 1.0);
@@ -49,6 +50,23 @@ fn units_turn_paper_mm_into_metres_and_keep_px_for_drawn_sizes() {
         to_drawn(0.5, Unit::Mm, &env(2000.0)),
         (1.0, PrimUnit::World)
     );
+}
+
+#[test]
+fn screen_sized_symbols_draw_paper_mm_as_px_and_keep_placement_in_metres() {
+    let aspects = HashMap::new();
+    let env = Env {
+        plot_scale: 2000.0,
+        aspects: &aspects,
+        screen: true,
+    };
+    // Drawn sizes: 25.4 mm is 96 px whatever the scale, so zooming does not change them.
+    let (w, u) = to_drawn(25.4, Unit::Mm, &env);
+    assert!(close(w, 96.0) && u == PrimUnit::Px);
+    assert_eq!(to_drawn(4.0, Unit::Px, &env), (4.0, PrimUnit::Px));
+    // Map units stay metres; placing lengths follow the view's scale.
+    assert_eq!(to_drawn(3.0, Unit::M, &env), (3.0, PrimUnit::World));
+    assert_eq!(to_world(1.0, Unit::Mm, &env), 2.0);
 }
 
 #[test]
@@ -346,7 +364,7 @@ fn build(program: &str, objects: &[Obj], origin: Vec2) -> (Vec<Json>, Vec<f32>) 
         text_lens: &lens,
         numbers: &numbers,
     };
-    let out = build_layer(&store, &program, &objects, None, origin, 1000.0).expect("build");
+    let out = build_layer(&store, &program, &objects, None, origin, 1000.0, false).expect("build");
     let Json::Arr(batches) = Json::parse(&out.json).expect("json") else {
         panic!("not an array: {}", out.json);
     };

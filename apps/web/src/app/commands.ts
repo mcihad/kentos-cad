@@ -3,7 +3,7 @@ import type { BackendKind } from '../render/types';
 import { WebGPUBackend } from '../render/webgpu/WebGPUBackend';
 import type { Entity } from '../model/entities';
 import { pasteEntities, PasteTool } from '../tools/editTools';
-import type { Signal } from '../core/signal';
+import { Signal } from '../core/signal';
 import { TOOL_GROUP_LABEL } from '../tools/Tool';
 import type { AppContext } from './context';
 import type { Theme, UiScale } from './state';
@@ -53,6 +53,31 @@ function workspace(ctx: AppContext, w: WorkspaceSpec): Command {
     },
     isChecked: () => setting().value === w.id,
     watch: [setting()],
+  };
+}
+
+/**
+ * Tam ekran: the whole app (not only the drawing) fills the screen; Esc or
+ * the same command leaves it. The browser's F11 does the same on its own.
+ */
+function fullscreen(): Command {
+  const on = new Signal(!!document.fullscreenElement);
+  // The app's one global listener of this kind; it lives as long as the page.
+  document.addEventListener('fullscreenchange', () => on.set(!!document.fullscreenElement));
+  return {
+    id: 'view.fullscreen',
+    title: 'Tam ekran',
+    category: 'Görünüm',
+    icon: 'fullscreen',
+    description: 'Uygulamayı ekranın tamamına yayar; Esc ya da aynı düğme çıkar.',
+    aliases: ['TAMEKRAN', 'FULLSCREEN'],
+    run: () => {
+      if (document.fullscreenElement) void document.exitFullscreen();
+      else void document.documentElement.requestFullscreen?.().catch(() => undefined);
+    },
+    isEnabled: () => document.fullscreenEnabled !== false,
+    isChecked: () => on.value,
+    watch: [on],
   };
 }
 
@@ -386,6 +411,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       description: 'Bir komutu adıyla ya da takma adıyla bulup çalıştırır: şeritte arama kutusu, klasik arayüzde komut satırı.',
       run: hooks.searchCommands,
     },
+    fullscreen(),
     {
       id: 'view.coords',
       title: 'Koordinat listesi',
@@ -469,7 +495,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
     // Yardım
     { id: 'help.shortcuts', title: 'Klavye kısayolları', category: 'Yardım', icon: 'keyboard', aliases: ['KISAYOL', 'KEYS'], run: hooks.openShortcuts },
     { id: 'help.about', title: 'KentOS CAD hakkında', category: 'Yardım', icon: 'info', run: hooks.openAbout },
-    { id: 'tools.options', title: 'Uygulama ayarları…', category: 'Araçlar', icon: 'settings', aliases: ['AYARLAR', 'OPTIONS'], run: () => hooks.openAppSettings() },
+    { id: 'tools.options', title: 'Uygulama ayarları…', category: 'Araçlar', icon: 'settings', aliases: ['AYARLAR', 'OPTIONS'], run: (section) => hooks.openAppSettings(typeof section === 'string' ? section : undefined) },
     {
       id: 'server.check',
       title: 'Sunucu bağlantısını denetle',

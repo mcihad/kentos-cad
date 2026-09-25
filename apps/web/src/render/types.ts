@@ -273,7 +273,8 @@ export interface RenderBackend {
   readonly kind: BackendKind;
   /** Human label for the status bar, e.g. "WebGL2 · ANGLE (Intel…)". */
   readonly label: string;
-  init(canvas: HTMLCanvasElement): Promise<void>;
+  /** `antialias` false: no multisampling (Uygulama ayarları → Çizim kalitesi); fixed for the backend's life. */
+  init(canvas: HTMLCanvasElement, opts?: { antialias?: boolean }): Promise<void>;
   resize(width: number, height: number, dpr: number): void;
   /** Create or replace GPU resources for a layer. */
   upload(layer: SceneLayer): void;

@@ -111,6 +111,10 @@ Serin, kâğıt paftayı andıran griler. Krem ya da sıcak kâğıt tonu kullan
 
 **Uygulama ayarları → Görünüm → Vurgu rengi** (`prefs.accent`, `app/appearance.ts`): **Lacivert** (varsayılan), Amber (§3.1–3.2'deki değerler), Petrol yeşili, Bordo. Her seçenek aynı jetonları yeniden tanımlar (`styles/accents.css`: `--c-accent`, `--c-accent-ink`, `--c-accent-text`, `--c-accent-soft`, `--c-accent-line`, `--c-tooltip-accent`, `--canvas-accent`) ve temaya göre ayarlanır: koyu temada okunabilsin diye açık bir ton (lacivertte `#4c7fe0` dolgu, `#8fb3f5` metin), açık temada koyu ton (lacivertte `#1f4a96`). Lacivert, petrol ve bordoda dolgu üstündeki mürekkep beyazdır. Çizimdeki seçim rengi (`--canvas-accent`) vurguyu izler. Uyarı turuncusu (`--c-warn`), kenet yeşili ve hata kırmızısı hiçbir seçenekte değişmez. Seçimde her renk, yarısı koyu temanın yarısı açık temanın tonu olan yuvarlak bir örnekle gösterilir.
 
+### 3.6 Çizim kalitesi
+
+**Uygulama ayarları → Çizim motoru → Çizim kalitesi** (`prefs.renderQuality`, `render/quality.ts`): **Yüksek** (varsayılan; 4× kenar yumuşatma ve ekranın tam çözünürlüğü), **Dengeli** (tam çözünürlük, kenar yumuşatma yok), **Hızlı** (ikisi de yok; Retina ve 4K ekranda dörtte bir piksel). Kalın ve kesikli çizgilerin kenarı gölgelendiricide yumuşatıldığı için her kademede düzgündür; fark ince çizgilerde görünür. Kenar yumuşatma değişince çizim motoru sayfa yenilenmeden yeniden kurulur.
+
 ---
 
 ## 4. Tipografi
@@ -118,7 +122,7 @@ Serin, kâğıt paftayı andıran griler. Krem ya da sıcak kâğıt tonu kullan
 | Aile | Kullanım |
 |---|---|
 | **Plus Jakarta Sans** (varsayılan; değişken ağırlık) | Bütün arayüz metni. **Uygulama ayarları → Görünüm → Yazı tipi** (`prefs.uiFont`) ile Inter, IBM Plex Sans, Source Sans 3, Noto Sans, Roboto ya da sistemin yazı tipi seçilir. |
-| **Barlow** (400, 500, 600, italik 400) | Çizimin kendi yazıları: yazı nesneleri, ölçü değerleri, etiketler (üst katman). Veridir; arayüz yazı tipi seçimini izlemez. |
+| **Barlow** (varsayılan çizim yazı tipi) | Çizimin kendi yazıları: yazı nesneleri, ölçü değerleri, etiketler (üst katman). **Proje ayarları → Genel → Çizim yazı tipi** (`doc.settings.drawingFont`, projeyle kaydedilir; yeni projelerin varsayılanı Uygulama ayarları → Yeni projeler) ile klasik teknik çizim yazıları seçilir: Arimo (Arial ölçülerinde), Overpass (DIN/ISO), Quicksand (ince, yuvarlak uçlu; plotter yazısına benzer), Architects Daughter (mimari el yazısı), Courier Prime (daktilo), IBM Plex Mono. Veridir; arayüz yazı tipi seçimini izlemez. |
 | **IBM Plex Mono** (400, 500) | **Yalnızca** komut satırı girdisi, komut geçmişi, takma ad gösterimi (`PL`, `PARSEL`) ve işlem pencerelerindeki ifade alanı (komut gibi yazılır). Veri etiketlerinde mono kullanılmaz. |
 
 **Yazı tipleri uygulamayla gelir, CDN'den ya da internetten yüklenmez** (`apps/web/src/assets/fonts/<ad>/`, her birinin yanında SIL OFL 1.1 lisansı; `styles/fonts.css`). Yalnız Latin ve Latin Extended alt kümeleri vardır (ğ, ş, İ ikincisindedir); tarayıcı yalnız kullanılan yazı tipini indirir. Seçim kartında her yazı tipi kendisiyle yazılır (“Ağ Şı İ 123”). Arayüz yazı tipi çizim alanındaki işaretlere (kenet adı, ölçek çubuğu, kuzey oku) de uygulanır; çizimdeki yazı nesneleri, ölçü değerleri ve etiketler veridir, yazı tipi değişmez.
@@ -222,7 +226,7 @@ Tek istisna şeridin gölgesidir (§7.3.1): şeridin altında yalnız çizim ala
 
 ### 7.1 Menü çubuğu
 
-- **Solda:** logo, KentOS ve menüler. **Ortada:** proje adı; kaydedilmemiş değişiklik varsa önünde amber nokta. **Sağda:** koordinat sistemi düğmesi (tıklayınca Proje ayarları → Koordinat sistemi).
+- **Solda:** logo, KentOS ve menüler. **Ortada:** proje adı; kaydedilmemiş değişiklik varsa önünde amber nokta. **Sağda:** koordinat sistemi düğmesi (tıklayınca Proje ayarları → Koordinat sistemi) ve **Tam ekran** düğmesi (dört köşe dışa; tam ekrandayken içe, Esc de çıkar). Şeritte aynı düğme Yardım'ın solundadır; komut Görünüm → Paneller'dedir (`view.fullscreen`).
 - Menü tıklayınca açılır. Açıkken fare başka bir menünün üstüne gelince o menüye geçer. ←/→ menüler arasında gezer, Esc kapatır.
 
 ### 7.2 Açılır menü (PopupMenu)

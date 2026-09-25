@@ -23,6 +23,8 @@ describe('new project', () => {
     // The work mode chosen in the dialog; hybrid when none is given.
     expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000 }).settings.workspace).toBe('hybrid');
     expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000, workspace: 'gis' }).settings.workspace).toBe('gis');
+    expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000 }).settings.drawingFont).toBe('barlow');
+    expect(newProjectContent({ name: 'x', srid: 5256, plotScale: 1000, drawingFont: 'arimo' }).settings.drawingFont).toBe('arimo');
     expect(() => newProjectContent({ name: 'x', srid: 1234, plotScale: 1000 })).toThrow(/EPSG:1234/);
   });
 

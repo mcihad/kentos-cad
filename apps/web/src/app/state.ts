@@ -1,5 +1,6 @@
+import type { RenderQuality } from '../render/quality';
 import type { AccentId, UiFontId } from './appearance';
-import type { Workspace } from '../model/projectSettings';
+import type { DrawingFont, Workspace } from '../model/projectSettings';
 import { Signal } from '../core/signal';
 import type { LineType } from '../model/layers';
 
@@ -163,11 +164,14 @@ export type UiScale = 'small' | 'standard' | 'large' | 'xlarge' | 'xxlarge';
 export type ShellKind = 'classic' | 'ribbon';
 export type CrosshairSize = 'small' | 'medium' | 'full';
 
+
 export interface PreferencesData {
   /** EPSG code used for new projects. TUREF / TM36 by default. */
   defaultSrid: number;
   /** Work mode offered first for new projects (the project keeps its own, ProjectSettings.workspace). */
   defaultWorkspace: Workspace;
+  /** Drawing typeface for new projects (the project keeps its own, ProjectSettings.drawingFont). */
+  defaultDrawingFont: DrawingFont;
   /** Object snap and pick apertures in CSS px. */
   snapAperture: number;
   pickAperture: number;
@@ -188,8 +192,11 @@ export interface PreferencesData {
   /** Interface typeface, bundled with the app (app/appearance.ts). */
   uiFont: UiFontId;
   rendererPreference: 'webgl2' | 'webgpu';
-  /** Render at device pixel ratio; off trades sharpness for fill rate. */
-  hiDpi: boolean;
+  /**
+   * Drawing quality: high = 4× anti-aliasing at the screen's full resolution, balanced = full resolution
+   * without anti-aliasing, fast = neither (one pixel per CSS pixel). Lower trades smoothness for frame rate.
+   */
+  renderQuality: RenderQuality;
   /** Typed values open beside the cursor while a command runs (dynamic input). */
   cursorInput: boolean;
   /** Resting the mouse on an object shows its kind, layer and measures. */
@@ -210,6 +217,7 @@ export interface PreferencesData {
 export const PREFERENCE_DEFAULTS: PreferencesData = {
   defaultSrid: 5256,
   defaultWorkspace: 'hybrid',
+  defaultDrawingFont: 'barlow',
   snapAperture: 11,
   pickAperture: 5,
   snapEndpoint: true,
@@ -226,7 +234,7 @@ export const PREFERENCE_DEFAULTS: PreferencesData = {
   accent: 'navy',
   uiFont: 'jakarta',
   rendererPreference: 'webgl2',
-  hiDpi: true,
+  renderQuality: 'high',
   cursorInput: true,
   hoverInfo: true,
   symbolSize: 'plot',

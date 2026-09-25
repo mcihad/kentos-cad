@@ -1,10 +1,14 @@
 import { Signal, watchAll } from '../core/signal';
+import type { DrawingFont } from '../contracts/generated/DrawingFont';
 import type { Workspace } from '../contracts/generated/Workspace';
 import { crsBySrid, DEFAULT_SRID, type CrsDef } from '../geo/crs';
 
 export type AreaUnit = 'm2' | 'donum' | 'ha';
 export type AngleUnit = 'grad' | 'deg';
-export type { Workspace };
+export type { DrawingFont, Workspace };
+
+/** Every drawing typeface a file may name (contract `DrawingFont`; the list with names is app/appearance.ts). */
+export const DRAWING_FONT_IDS: readonly DrawingFont[] = ['barlow', 'arimo', 'overpass', 'quicksand', 'architects-daughter', 'courier-prime', 'plex-mono'];
 
 /**
  * Every work mode a file may name (contract `Workspace`). What each shows,
@@ -24,6 +28,8 @@ export interface ProjectSettingsData {
   plotScale: number;
   /** The work mode the project opens in (menus, ribbon and tools shown). */
   workspace: Workspace;
+  /** Typeface of the drawing's own text (text objects, dimension values, labels). */
+  drawingFont: DrawingFont;
 }
 
 export const PROJECT_SETTINGS_DEFAULTS: ProjectSettingsData = {
@@ -34,6 +40,7 @@ export const PROJECT_SETTINGS_DEFAULTS: ProjectSettingsData = {
   angleUnit: 'grad',
   plotScale: 1000,
   workspace: 'hybrid',
+  drawingFont: 'barlow',
 };
 
 /**
@@ -50,6 +57,7 @@ export class ProjectSettings {
   readonly angleUnit: Signal<AngleUnit>;
   readonly plotScale: Signal<number>;
   readonly workspace: Signal<Workspace>;
+  readonly drawingFont: Signal<DrawingFont>;
   /** Bumped on any change; the document marks itself dirty from this. */
   readonly changed = new Signal(0);
 
@@ -62,7 +70,8 @@ export class ProjectSettings {
     this.angleUnit = new Signal(d.angleUnit);
     this.plotScale = new Signal(d.plotScale);
     this.workspace = new Signal(d.workspace);
-    watchAll([this.crs, this.lengthDecimals, this.areaDecimals, this.areaUnit, this.angleUnit, this.plotScale, this.workspace], () =>
+    this.drawingFont = new Signal(d.drawingFont);
+    watchAll([this.crs, this.lengthDecimals, this.areaDecimals, this.areaUnit, this.angleUnit, this.plotScale, this.workspace, this.drawingFont], () =>
       this.changed.update((v) => v + 1),
     );
   }
@@ -76,6 +85,7 @@ export class ProjectSettings {
       angleUnit: this.angleUnit.value,
       plotScale: this.plotScale.value,
       workspace: this.workspace.value,
+      drawingFont: this.drawingFont.value,
     };
   }
 
@@ -93,5 +103,6 @@ export class ProjectSettings {
     if (data.plotScale !== undefined) this.plotScale.set(data.plotScale);
     // A snapshot without a mode (older files, partial patches) is hybrid only when it replaces the whole settings.
     if (data.workspace !== undefined) this.workspace.set(data.workspace);
+    if (data.drawingFont !== undefined) this.drawingFont.set(data.drawingFont);
   }
 }

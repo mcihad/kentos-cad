@@ -110,6 +110,7 @@ fn whole_layers_as_frozen() {
             clip.as_ref(),
             origin,
             num(&c["plotScale"]),
+            false,
         )
         .unwrap_or_else(|e| panic!("katman {i}: {e}"));
         let batches: Json =

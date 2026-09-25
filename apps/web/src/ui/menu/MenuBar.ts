@@ -1,6 +1,7 @@
 import type { AppContext } from '../../app/context';
 import { MAIN_MENU, resolveMenu, visibleMenus, type TopMenu } from '../../app/menus';
 import { filterOf } from '../../app/workspaces';
+import { fullscreenButton } from '../shell/fullscreenButton';
 import { listen } from '../../core/disposable';
 import { Component } from '../Component';
 import { h } from '../dom';
@@ -36,7 +37,7 @@ export class MenuBar extends Component {
       h('div', { class: 'menubar__brand', 'aria-hidden': 'true' }, brandMark(), h('span', { class: 'menubar__product' }, 'KentOS')),
       this.nav,
       h('div', { class: 'menubar__doc' }, dirty, docName),
-      h('div', { class: 'menubar__right' }, crs),
+      h('div', { class: 'menubar__right' }, crs, fullscreenButton(ctx, this.d, 'menubar__icon')),
     );
 
     // The work mode decides which menus show (app/workspaces.ts).

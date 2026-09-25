@@ -1054,6 +1054,16 @@
   line-height: 1.25;
   white-space: nowrap;
 }
+.font-pick__card {
+  overflow: hidden;
+}
+.font-pick--drawing .font-pick__sample {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: calc(18px * var(--ui-scale));
+  font-weight: 500;
+  text-overflow: ellipsis;
+}
 .font-pick__name {
   font-size: var(--fs-sm);
   font-weight: 600;

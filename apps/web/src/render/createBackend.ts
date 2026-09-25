@@ -14,6 +14,7 @@ const factories: Record<BackendKind, () => RenderBackend> = {
 export async function createBackend(
   host: HTMLElement,
   preferred: BackendKind[] = ['webgl2'],
+  opts: { antialias?: boolean } = {},
 ): Promise<{ backend: RenderBackend; canvas: HTMLCanvasElement; errors: string[] }> {
   const errors: string[] = [];
   // WebGPU is only attempted where the browser exposes it; WebGL2 is the floor.
@@ -23,7 +24,7 @@ export async function createBackend(
     canvas.className = 'viewport__gl';
     const backend = factories[kind]();
     try {
-      await backend.init(canvas);
+      await backend.init(canvas, opts);
       host.prepend(canvas);
       return { backend, canvas, errors };
     } catch (err) {

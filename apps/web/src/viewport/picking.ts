@@ -312,9 +312,9 @@ export class PickIndex {
   }
 
   /** A layer through the style engine, next to its geometry (render/styledLayer.ts). */
-  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number): { json: string; data: Float32Array } {
+  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen = false): { json: string; data: Float32Array } {
     this.sync();
-    return this.store.buildStyled(program, Float64Array.from(ids), objects, table, clip, origin, plotScale);
+    return this.store.buildStyled(program, Float64Array.from(ids), objects, table, clip, origin, plotScale, screen);
   }
 
   /** Ids of objects on every layer whose box overlaps `r`, in the document's order (the processing tools' "visible" scope). */

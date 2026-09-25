@@ -1,4 +1,5 @@
 import type { AppContext } from '../app/context';
+import { RENDER_QUALITY } from '../render/quality';
 import { DisposableStore, listen } from '../core/disposable';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
@@ -102,6 +103,8 @@ export class ViewportController {
   private allDirty = true;
   /** The scale symbols were last compiled at, and the wait before recompiling after a zoom (screen-sized symbols). */
   private builtSymbolScale = 0;
+  /** Whether the current backend was made with anti-aliasing. */
+  private antialias = true;
   private symbolTimer = 0;
   private highlightDirty = true;
   /** What the backend's grid was built for (null: it has none); rebuilt only when the view outgrows it. */
@@ -138,7 +141,8 @@ export class ViewportController {
     const param = new URLSearchParams(location.search).get('renderer');
     const preferred: BackendKind[] = [param === 'webgpu' || param === 'webgl2' ? param : this.ctx.prefs.rendererPreference.value];
     try {
-      const { backend, canvas, errors } = await createBackend(host, preferred);
+      const { backend, canvas, errors } = await createBackend(host, preferred, { antialias: this.quality().antialias });
+      this.antialias = this.quality().antialias;
       this.backend = backend;
       this.glCanvas = canvas;
       backend.useAtlas(this.atlas);
@@ -177,16 +181,18 @@ export class ViewportController {
    * again from the document and drawn before the old canvas is removed, so
    * the view never shows an empty frame. Falls back to WebGL2 like mount().
    */
-  async switchBackend(kind: BackendKind): Promise<void> {
+  async switchBackend(kind: BackendKind, rebuild = false): Promise<void> {
     if (!this.backend) return;
-    if (this.backendKind.value === kind) {
+    // `rebuild`: the same kind again, for a setting fixed at creation (anti-aliasing).
+    if (this.backendKind.value === kind && !rebuild) {
       this.switching = null; // cancels a switch still initialising
       return;
     }
     if (this.switching === kind) return;
     this.switching = kind;
     try {
-      const { backend, canvas, errors } = await createBackend(this.host, [kind]);
+      const antialias = this.quality().antialias;
+      const { backend, canvas, errors } = await createBackend(this.host, [kind], { antialias });
       if (this.switching !== kind) {
         // A newer switch started while this one initialised.
         backend.dispose();
@@ -206,10 +212,11 @@ export class ViewportController {
       this.frame();
       old.dispose();
       oldCanvas?.remove();
+      this.antialias = antialias;
       this.backendKind.set(backend.kind);
       this.backendLabel.set(backend.label);
       errors.forEach((e) => this.ctx.log.warn(`Çizim arka ucu atlandı: ${e}`));
-      this.ctx.log.info(`Çizim motoru değişti: ${backend.label}`);
+      this.ctx.log.info(rebuild ? `Çizim kalitesi uygulandı: ${antialias ? 'kenar yumuşatma açık' : 'kenar yumuşatma kapalı'}.` : `Çizim motoru değişti: ${backend.label}`);
     } catch (err) {
       this.ctx.log.error(`Çizim motoru değiştirilemedi: ${(err as Error).message}`);
     } finally {
@@ -383,6 +390,13 @@ export class ViewportController {
     this.requestRender();
   }
 
+  /** The typefaces changed (interface or drawing): only the overlay draws text, so no layer is rebuilt. */
+  refreshFonts(): void {
+    const p = readCanvasPalette();
+    this.palette = { ...this.palette, font: p.font, drawingFont: p.drawingFont };
+    this.requestOverlay();
+  }
+
   // ── Wiring ──────────────────────────────────────────────────────────
 
   private bindModel(): void {
@@ -442,7 +456,8 @@ export class ViewportController {
     d.add(
       this.camera.changed.subscribe(() => {
         this.requestRender();
-        // Screen-sized symbols are recompiled for the new zoom once it settles; until then the GPU scales the last build.
+        // Screen-sized symbols keep their size in px while zooming (the core draws their paper mm as px); what
+        // they place along lines (marker spacing, offsets) is recompiled for the new zoom once it settles.
         if (this.ctx.prefs.symbolSize.value !== 'screen' || this.symbolScale() === this.builtSymbolScale) return;
         clearTimeout(this.symbolTimer);
         this.symbolTimer = window.setTimeout(() => {
@@ -459,7 +474,13 @@ export class ViewportController {
       }),
     );
     d.add(settings.grid.subscribe(() => this.requestRender()));
-    d.add(this.ctx.prefs.hiDpi.subscribe(() => this.resize()));
+    // Drawing quality: the pixel ratio applies at once; anti-aliasing is fixed per context, so the backend is made again.
+    d.add(
+      this.ctx.prefs.renderQuality.subscribe(() => {
+        this.resize();
+        if (this.backend && this.quality().antialias !== this.antialias) void this.switchBackend(this.backend.kind, true);
+      }),
+    );
     d.add(this.ctx.prefs.crosshair.subscribe(() => this.requestOverlay()));
     d.add(
       tools.activeId.subscribe(() => {
@@ -699,10 +720,15 @@ export class ViewportController {
     );
   }
 
+  /** What the drawing quality preference asks for (app/state.ts RENDER_QUALITY). */
+  private quality(): { antialias: boolean; hiDpi: boolean } {
+    return RENDER_QUALITY[this.ctx.prefs.renderQuality.value] ?? RENDER_QUALITY.high;
+  }
+
   private resize(): void {
     const w = this.host.clientWidth;
     const h = this.host.clientHeight;
-    const dpr = this.ctx.prefs.hiDpi.value ? window.devicePixelRatio || 1 : 1;
+    const dpr = this.quality().hiDpi ? window.devicePixelRatio || 1 : 1;
     if (w === this.size.w && h === this.size.h && dpr === this.dpr) return;
     this.size = { w, h };
     this.dpr = dpr;
@@ -806,6 +832,7 @@ export class ViewportController {
       origin: doc.origin,
       palette: this.palette,
       plotScale,
+      screen: this.ctx.prefs.symbolSize.value === 'screen',
       library: this.ctx.styles.library,
       layerName: (id: string) => doc.layers.get(id)?.name ?? id,
       geometry: this.picker,

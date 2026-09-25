@@ -48,6 +48,24 @@ pub enum Workspace {
     Disaster,
 }
 
+/// The typeface of the text that is part of the drawing (text objects,
+/// dimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with
+/// the app. A project setting: everyone who opens the project sees the same
+/// letters. Files written before it have none (Barlow).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum DrawingFont {
+    Barlow,
+    Arimo,
+    Overpass,
+    Quicksand,
+    ArchitectsDaughter,
+    CourierPrime,
+    PlexMono,
+}
+
 /// Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -65,6 +83,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub workspace: Option<Workspace>,
+    /// Absent in files written before drawing typefaces (read as Barlow).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing_font: Option<DrawingFont>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

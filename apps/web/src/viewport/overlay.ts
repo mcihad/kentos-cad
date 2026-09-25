@@ -9,13 +9,9 @@ import type { TrackHit } from './objectTracking';
 import { SNAP_LABEL, type SnapHit } from './picking';
 import { DEFAULT_LABELS, DIMENSION_PREFIX, LABEL, LABEL_STRIDE, type GripSet } from './storeRecords';
 
-/**
- * Text that is part of the drawing (text objects, dimension values, labels)
- * keeps one face whatever the interface typeface is: it is data everyone sees
- * alike. The overlay's own marks (snap names, scale bar, north arrow) use the
- * interface typeface (CanvasPalette.font).
- */
-const DRAWING_FONT = 'Barlow, system-ui, sans-serif';
+// Text that is part of the drawing (text objects, dimension values, labels) is drawn in the project's typeface
+// (CanvasPalette.drawingFont), whatever the interface's is; the overlay's own marks (snap names, scale bar,
+// north arrow) use the interface typeface (CanvasPalette.font).
 
 /** Screen-space annotation layer drawn with Canvas2D above the GPU canvas. */
 
@@ -61,7 +57,7 @@ export function drawLabels(
       g.save();
       g.translate(s.x, s.y);
       g.rotate((-spots[i + 4] * Math.PI) / 180);
-      g.font = `500 ${px.toFixed(1)}px ${DRAWING_FONT}`;
+      g.font = `500 ${px.toFixed(1)}px ${pal.drawingFont}`;
       g.textAlign = 'center';
       g.textBaseline = 'alphabetic';
       const color = e.color ?? layers.get(e.layerId)?.style.color;
@@ -76,7 +72,7 @@ export function drawLabels(
       g.save();
       g.translate(s.x, s.y);
       g.rotate((-spots[i + 4] * Math.PI) / 180);
-      g.font = `italic 400 ${px.toFixed(1)}px ${DRAWING_FONT}`;
+      g.font = `italic 400 ${px.toFixed(1)}px ${pal.drawingFont}`;
       g.textAlign = 'left';
       g.textBaseline = 'alphabetic';
       haloText(g, e.text, 0, 0, pal.label, pal.labelHalo);
@@ -88,7 +84,7 @@ export function drawLabels(
     const size = Math.min(st.maxSize ?? st.size, st.size + (st.grow ?? 0) * cam.scale);
     const text = st.template ? st.template.replace('{label}', e.label) : e.label;
     const color = ink[st.ink ?? 'label'];
-    g.font = `${st.weight ?? 500} ${size.toFixed(1)}px ${DRAWING_FONT}`;
+    g.font = `${st.weight ?? 500} ${size.toFixed(1)}px ${pal.drawingFont}`;
 
     switch (what) {
       case LABEL.center: {

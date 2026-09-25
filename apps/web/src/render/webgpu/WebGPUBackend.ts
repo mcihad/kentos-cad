@@ -18,6 +18,7 @@ interface GpuLayer {
 }
 
 const SHAPES = { ring: 0, cross: 1, triangle: 2 } as const;
+/** Multisampling when anti-aliasing is on (Çizim kalitesi: Yüksek). */
 const SAMPLES = 4;
 /** Frame uniform: offset, scale, pxPerUnit, dpr, viewport (8 floats). */
 const FRAME_BYTES = 32;
@@ -39,7 +40,7 @@ const RENDER_ATTACHMENT = 0x10;
  *   lines  → line-list, vertex {pos, dist}, dash tested per fragment
  *   fills  → triangle-list
  *   points → instanced quads with the symbol drawn by distance functions
- * Anti-aliasing is 4× MSAA like the WebGL2 context.
+ * Anti-aliasing is 4× MSAA like the WebGL2 context (none at the lower drawing qualities).
  */
 export class WebGPUBackend implements RenderBackend {
   readonly kind = 'webgpu' as const;
@@ -57,13 +58,16 @@ export class WebGPUBackend implements RenderBackend {
   private pointPipe!: GPURenderPipeline;
   private styled!: WebGPUStyledRenderer;
   private msaa: GPUTexture | null = null;
+  /** 4 with anti-aliasing, 1 without (then the pass draws straight into the canvas). */
+  private samples = SAMPLES;
   private layers = new Map<string, GpuLayer>();
 
   static isSupported(): boolean {
     return typeof navigator !== 'undefined' && 'gpu' in navigator;
   }
 
-  async init(canvas: HTMLCanvasElement): Promise<void> {
+  async init(canvas: HTMLCanvasElement, opts: { antialias?: boolean } = {}): Promise<void> {
+    this.samples = opts.antialias === false ? 1 : SAMPLES;
     if (!WebGPUBackend.isSupported()) throw new Error('Tarayıcı WebGPU sunmuyor');
     const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
     if (!adapter) throw new Error('WebGPU bağdaştırıcısı bulunamadı');
@@ -109,13 +113,13 @@ export class WebGPUBackend implements RenderBackend {
         vertex: { module, entryPoint: vs, buffers },
         fragment: { module, entryPoint: fs, targets: [target] },
         primitive: { topology },
-        multisample: { count: SAMPLES },
+        multisample: { count: this.samples },
       });
     const vec2 = (location: number, stepMode: GPUVertexStepMode = 'vertex'): GPUVertexBufferLayout => ({ arrayStride: 8, stepMode, attributes: [{ shaderLocation: location, offset: 0, format: 'float32x2' }] });
     this.linePipe = pipeline('lineVs', 'lineFs', [vec2(0), { arrayStride: 4, attributes: [{ shaderLocation: 1, offset: 0, format: 'float32' }] }], 'line-list');
     this.fillPipe = pipeline('fillVs', 'fillFs', [vec2(0)], 'triangle-list');
     this.pointPipe = pipeline('pointVs', 'pointFs', [vec2(0, 'instance')], 'triangle-list');
-    this.styled = new WebGPUStyledRenderer(device, this.format, frameLayout, SAMPLES);
+    this.styled = new WebGPUStyledRenderer(device, this.format, frameLayout, this.samples);
   }
 
   useAtlas(atlas: AtlasSource): void {
@@ -181,9 +185,10 @@ export class WebGPUBackend implements RenderBackend {
     const { view } = frame;
     const w = this.canvas.width;
     const h = this.canvas.height;
-    if (!this.msaa || this.msaa.width !== w || this.msaa.height !== h) {
+    const multisampled = this.samples > 1;
+    if (multisampled && (!this.msaa || this.msaa.width !== w || this.msaa.height !== h)) {
       this.msaa?.destroy();
-      this.msaa = device.createTexture({ size: [w, h], sampleCount: SAMPLES, format: this.format, usage: RENDER_ATTACHMENT });
+      this.msaa = device.createTexture({ size: [w, h], sampleCount: this.samples, format: this.format, usage: RENDER_ATTACHMENT });
     }
     device.queue.writeBuffer(
       this.frameBuffer,
@@ -193,7 +198,11 @@ export class WebGPUBackend implements RenderBackend {
     const [r, g, b] = frame.clearColor;
     const encoder = device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
-      colorAttachments: [{ view: this.msaa.createView(), resolveTarget: this.context.getCurrentTexture().createView(), clearValue: { r, g, b, a: 1 }, loadOp: 'clear', storeOp: 'discard' }],
+      colorAttachments: [
+        multisampled
+          ? { view: this.msaa!.createView(), resolveTarget: this.context.getCurrentTexture().createView(), clearValue: { r, g, b, a: 1 }, loadOp: 'clear', storeOp: 'discard' }
+          : { view: this.context.getCurrentTexture().createView(), clearValue: { r, g, b, a: 1 }, loadOp: 'clear', storeOp: 'store' },
+      ],
     });
     pass.setBindGroup(0, this.frameBind);
     // Visibility and atlas images for the whole frame before anything is drawn.

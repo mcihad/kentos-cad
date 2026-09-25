@@ -9,7 +9,8 @@
     "areaUnit": "m2",
     "angleUnit": "grad",
     "plotScale": 1000,
-    "workspace": "hybrid"
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
   },
   "origin": {
     "x": 486512.34,

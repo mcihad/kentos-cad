@@ -1,6 +1,6 @@
 import { applyTheme, applyUiScale } from '../../app/commands';
 import { applyAccent, applyUiFont } from '../../app/appearance';
-import { accentPicker, fontPicker } from './appearancePickers';
+import { accentPicker, drawingFontPicker, fontPicker } from './appearancePickers';
 import type { AppContext } from '../../app/context';
 import { PREFERENCE_DEFAULTS, snapshot, type PreferencesData, type ShellKind, type Theme } from '../../app/state';
 import type { Signal } from '../../core/signal';
@@ -48,8 +48,8 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Yeni projeler',
       icon: 'fileNew',
       title: 'Yeni proje varsayılanları',
-      lead: 'Oluşturacağınız her yeni projede başlangıçta önerilecek çalışma modu ve koordinat sistemi.',
-      keys: ['defaultSrid', 'defaultWorkspace'],
+      lead: 'Oluşturacağınız her yeni projede başlangıçta önerilecek çalışma modu, çizim yazı tipi ve koordinat sistemi.',
+      keys: ['defaultSrid', 'defaultWorkspace', 'defaultDrawingFont'],
       render: (api) => {
         const current = ctx.doc.crs.value;
         const openProject = h('button', { class: 'btn btn--small', type: 'button' }, 'Proje ayarlarını aç');
@@ -59,6 +59,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
             'Çalışma modu',
             workspacePicker({ value: api.draft.defaultWorkspace, compact: true, onChange: (id) => api.set('defaultWorkspace', id, false) }),
           ),
+          group('Çizim yazı tipi', drawingFontPicker({ value: api.draft.defaultDrawingFont, onChange: (id) => api.set('defaultDrawingFont', id) })),
           crsPicker({
             value: api.draft.defaultSrid,
             initial: api.initial.defaultSrid,
@@ -79,8 +80,8 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Çizim motoru',
       icon: 'chip',
       title: 'Çizim motoru',
-      lead: 'Çizim alanını ekran kartında çizen arka uç ve çözünürlük tercihi.',
-      keys: ['rendererPreference', 'hiDpi', 'symbolSize'],
+      lead: 'Çizim alanını ekran kartında çizen arka uç, çizim kalitesi ve sembol boyutu.',
+      keys: ['rendererPreference', 'renderQuality', 'symbolSize'],
       render: (api) => engine(api, ctx),
     },
   ];
@@ -100,7 +101,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       if (draft.theme !== init.theme) applyTheme(ctx, draft.theme);
       // The drawing's selection colour follows the accent.
       else if (draft.accent !== init.accent) ctx.view.refreshPalette();
-      if (draft.uiFont !== init.uiFont) void applyUiFont(draft.uiFont).then(() => ctx.view.requestOverlay());
+      if (draft.uiFont !== init.uiFont) void applyUiFont(draft.uiFont).then(() => ctx.view.refreshFonts());
       if (draft.defaultSrid !== init.defaultSrid) {
         const c = crsBySrid(draft.defaultSrid)!;
         ctx.log.info(`Yeni projeler ${c.name} (EPSG:${c.srid}) ile oluşturulacak. Açık projenin sistemi değişmedi.`);
@@ -314,11 +315,20 @@ function engine(api: DraftApi<AppDraft>, ctx: AppContext) {
       note('info', `Şu an çalışan: ${ctx.view.backendLabel.value}. Seçim Kaydet ile hemen uygulanır; motor başlatılamazsa WebGL2’ye dönülür.`),
     ),
     group(
-      'Çözünürlük',
+      'Çizim kalitesi',
       settingRow(
-        'Yüksek çözünürlük (HiDPI)',
-        'Retina ve 4K ekranlarda keskin çizgiler. Kapatıldığında daha az piksel çizilir; çok büyük çizimlerde kaydırma akıcılaşır.',
-        toggleSwitch({ label: 'Yüksek çözünürlük', checked: d.hiDpi, onChange: (v) => api.set('hiDpi', v) }),
+        'Kalite',
+        'Yüksek: kenar yumuşatma (4× örnekleme) ve ekranın tam çözünürlüğü. Dengeli: tam çözünürlük, kenar yumuşatma yok; ince çizgiler biraz basamaklı, kare hızı yüksek. Hızlı: ikisi de yok; Retina ve 4K ekranda daha az piksel çizilir, çok büyük çizimlerde kaydırma en akıcısıdır.',
+        segmented({
+          label: 'Çizim kalitesi',
+          options: [
+            { value: 'high', label: 'Yüksek' },
+            { value: 'balanced', label: 'Dengeli' },
+            { value: 'fast', label: 'Hızlı' },
+          ],
+          value: d.renderQuality,
+          onChange: (v) => api.set('renderQuality', v),
+        }),
       ),
     ),
     group(

@@ -481,7 +481,8 @@ impl GeometryStore {
     /// `objects` four numbers per id (how it is drawn, its set or symbol, the
     /// set of its simple look, its colour), the program's table of values
     /// (`texts`, `text_lens`, `numbers`), the box construction lines are
-    /// clipped to, the origin the batches are relative to, the plot scale.
+    /// clipped to, the origin the batches are relative to, the plot scale and
+    /// whether symbol sizes are on the screen (paper mm drawn as px).
     #[wasm_bindgen(js_name = buildStyled)]
     #[allow(clippy::too_many_arguments)]
     pub fn build_styled(
@@ -500,6 +501,7 @@ impl GeometryStore {
         origin_x: f64,
         origin_y: f64,
         plot_scale: f64,
+        screen: bool,
     ) -> Result<StyledBatches, JsError> {
         let clip = has_clip.then(|| rect(min_x, min_y, max_x, max_y));
         let b = build_layer(
@@ -515,6 +517,7 @@ impl GeometryStore {
             clip.as_ref(),
             Vec2::new(origin_x, origin_y),
             plot_scale,
+            screen,
         )
         .map_err(|e| JsError::new(&e))?;
         Ok(StyledBatches {

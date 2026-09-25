@@ -3,6 +3,7 @@ import type { AppContext } from '../../app/context';
 import { commandItem, menuById, resolveMenu } from '../../app/menus';
 import { panelCommands, QUICK_ACCESS, ribbonTabs, type RibbonTab } from '../../app/ribbon';
 import { filterOf } from '../../app/workspaces';
+import { fullscreenButton } from '../shell/fullscreenButton';
 import { DisposableStore, listen } from '../../core/disposable';
 import { Component } from '../Component';
 import { h, overlayRoot } from '../dom';
@@ -108,6 +109,7 @@ export class Ribbon extends Component {
       h('div', { class: 'ribbon__doc' }, dirty, docName),
       this.search.el,
       crs,
+      fullscreenButton(ctx, this.d, 'ribbon__icon'),
       help,
       fold,
     );

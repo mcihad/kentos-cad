@@ -8,6 +8,7 @@ import { PLOT_SCALES } from '../toolbar/fields';
 import { note, segmented, settingRow, stepper, textField } from '../widgets/controls';
 import { crsPicker } from './crsPicker';
 import { workspacePicker } from './workspacePicker';
+import { drawingFontPicker } from './appearancePickers';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
 
 /** Project settings: stored in the project file, shared by everyone who opens it. */
@@ -28,8 +29,8 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
       label: 'Genel',
       icon: 'folder',
       title: 'Genel',
-      lead: 'Projenin adı, çalışma modu ve pafta çıktılarında kullanılacak çizim ölçeği.',
-      keys: ['plotScale', 'workspace'],
+      lead: 'Projenin adı, çalışma modu, çizim ölçeği ve çizimdeki yazıların yazı tipi.',
+      keys: ['plotScale', 'workspace', 'drawingFont'],
       render: (api) => [
         group(
           'Proje',
@@ -49,6 +50,11 @@ export function openProjectSettings(ctx: AppContext, section?: ProjectSettingsSe
           'Çalışma modu',
           h('p', { class: 'sgroup__note' }, 'Hangi menülerin, şerit sekmelerinin ve araçların görüneceğini seçer; veriyi değiştirmez. Gizlenen komutlar komut satırından yine çalışır.'),
           workspacePicker({ value: api.draft.workspace, compact: true, onChange: (id) => api.set('workspace', id, false) }),
+        ),
+        group(
+          'Çizim yazı tipi',
+          h('p', { class: 'sgroup__note' }, 'Çizimdeki yazılar, ölçü değerleri ve etiketler bu yazı tipiyle çizilir; projeyi açan herkes aynısını görür. Arayüzün yazı tipi Uygulama ayarlarındadır.'),
+          drawingFontPicker({ value: api.draft.drawingFont, onChange: (id) => api.set('drawingFont', id) }),
         ),
         group(
           'Özet',

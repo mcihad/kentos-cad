@@ -153,6 +153,19 @@
   background: var(--c-hover);
   color: var(--c-text);
 }
+.menubar__icon {
+  display: grid;
+  place-items: center;
+  width: calc(26px * var(--ui-scale));
+  height: calc(24px * var(--ui-scale));
+  margin-left: 2px;
+  border-radius: var(--r-sm);
+  color: var(--c-text-3);
+}
+.menubar__icon:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
 
 /* ── Toolbar ─────────────────────────────────────────────────────── */
 .toolbar {

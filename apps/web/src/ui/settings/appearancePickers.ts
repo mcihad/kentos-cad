@@ -1,4 +1,5 @@
-import { ACCENTS, UI_FONTS, type AccentId, type UiFontId } from '../../app/appearance';
+import { ACCENTS, DRAWING_FONTS, UI_FONTS, type AccentId, type UiFontId } from '../../app/appearance';
+import type { DrawingFont } from '../../model/projectSettings';
 import { h } from '../dom';
 import { icon } from '../icons';
 
@@ -43,13 +44,30 @@ export function accentPicker(opts: { value: AccentId; onChange: (id: AccentId) =
 }
 
 export function fontPicker(opts: { value: UiFontId; onChange: (id: UiFontId) => void }): HTMLElement {
-  const group = h('div', { class: 'font-pick', role: 'radiogroup', 'aria-label': 'Yazı tipi' });
-  for (const f of UI_FONTS) {
+  return typefaceCards('Yazı tipi', UI_FONTS, 'Ağ Şı İ 123', opts.value, opts.onChange);
+}
+
+/** The drawing's typeface, each card showing drawing text in it: an island, a parcel point, a length. */
+export function drawingFontPicker(opts: { value: DrawingFont; onChange: (id: DrawingFont) => void }): HTMLElement {
+  return typefaceCards('Çizim yazı tipi', DRAWING_FONTS, '1244 ada · 12.50 m', opts.value, opts.onChange, 'font-pick--drawing');
+}
+
+function typefaceCards<T extends string>(
+  label: string,
+  fonts: readonly { readonly id: T; readonly label: string; readonly family: string; readonly note: string }[],
+  sample: string,
+  value: T,
+  onChange: (id: T) => void,
+  extra = '',
+): HTMLElement {
+  const opts = { value, onChange };
+  const group = h('div', { class: `font-pick ${extra}`.trim(), role: 'radiogroup', 'aria-label': label });
+  for (const f of fonts) {
     const on = f.id === opts.value;
     const b = h(
       'button',
       { class: 'font-pick__card', type: 'button', role: 'radio', 'aria-checked': String(on), tabindex: on ? '0' : '-1', dataset: { font: f.id } },
-      h('span', { class: 'font-pick__sample', style: `font-family: ${f.family}` }, 'Ağ Şı İ 123'),
+      h('span', { class: 'font-pick__sample', style: `font-family: ${f.family}` }, sample),
       h('span', { class: 'font-pick__name', style: `font-family: ${f.family}` }, f.label),
       h('span', { class: 'font-pick__note' }, f.note),
     );
@@ -58,7 +76,7 @@ export function fontPicker(opts: { value: UiFontId; onChange: (id: UiFontId) => 
   }
   radioGroup(
     group,
-    UI_FONTS.map((f) => f.id),
+    fonts.map((f) => f.id),
     opts.value,
     opts.onChange,
   );

@@ -31,13 +31,15 @@ export interface GeometrySource {
   /** What these objects draw, one record each (style/geometry.ts `DrawnReader`); `oriented`: rings turned for the style engine; `clip`: the box construction lines are clipped to. */
   drawn(ids: readonly number[], oriented: boolean, clip?: Bounds): Float64Array;
   /** A styled layer's batches (`CoreStore.buildStyled`). */
-  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number): { json: string; data: Float32Array };
+  styled(program: CoreStyleProgram, ids: readonly number[], objects: Int32Array, table: ExprTable, clip: Bounds | null, origin: Vec2, plotScale: number, screen?: boolean): { json: string; data: Float32Array };
 }
 
 export interface StyledBuildOptions {
   origin: Vec2;
   palette: CanvasPalette;
   plotScale: number;
+  /** Symbol sizes on the screen: paper mm are drawn as px, so they hold still while the view zooms. */
+  screen?: boolean;
   library: StyleSources;
   layerName(id: string): string;
   geometry: GeometrySource;
@@ -161,7 +163,7 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
   try {
     const needs = Object.fromEntries(NEEDS.map((k, i) => [k, !!(program.needs & (1 << i))])) as unknown as ExprNeeds;
     const table = exprTable(program.fields, needs, entities, opts.layerName);
-    const out = opts.geometry.styled(program, entities.map((e) => e.id), objects, table, opts.clip ?? null, opts.origin, opts.plotScale);
+    const out = opts.geometry.styled(program, entities.map((e) => e.id), objects, table, opts.clip ?? null, opts.origin, opts.plotScale, opts.screen);
     return { id, lines: [], fills: [], points: [], styled: styledBatches(out.json, out.data, { palette: opts.palette, plotScale: opts.plotScale, asset: (a) => opts.library.asset(a) }) };
   } finally {
     program.free();

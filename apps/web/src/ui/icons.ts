@@ -140,6 +140,8 @@ const ICONS = {
   modeGis: '<path d="M2.5 5.8 7 3.8l6 2 4.5-2v10.4L13 16.2l-6-2-4.5 2z" fill="currentColor" fill-opacity=".14"/><path d="M7 3.8v10.4M13 5.8v10.4"/>',
   modePlan3d: '<path d="m3 13.2 7 3.8 7-3.8"/><path d="M5 6.2 8.5 4.4 12 6.2 8.5 8z" fill="currentColor" fill-opacity=".14"/><path d="M5 6.2v6.4l3.5 1.9 3.5-1.9V6.2M8.5 8v6.5M12 9.6l2.8-1.4 2.2 1.1v3.6l-5 2.6"/>',
   modeDisaster: '<path d="M2 11h3l1.5-4 2.2 8.5 2.1-11 2 9.3 1.5-2.8H18"/>',
+  fullscreen: '<path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4"/>',
+  fullscreenExit: '<path d="M7.5 3.5v4h-4M16.5 7.5h-4v-4M12.5 16.5v-4h4M3.5 12.5h4v4"/>',
   crs: '<circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3c-2.5 2-2.5 12 0 14M10 3c2.5 2 2.5 12 0 14"/>',
   table: '<rect x="2.5" y="3.5" width="15" height="13" rx="1"/><path d="M2.5 7.5h15M2.5 12h15M7.5 7.5v9"/>',
   // Processing: two steps joined by a flow, a third node waiting.

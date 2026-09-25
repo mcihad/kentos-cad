@@ -42,11 +42,13 @@ describe('.kcad snapshots', () => {
     expect(JSON.parse(sampleText)).toEqual(JSON.parse(JSON.stringify(toSnapshot(snapshotSampleDocument()))));
     expect(readSnapshot(sampleText).ok).toBe(true);
   });
-  it('reads a file from before work modes as hybrid, and keeps an announced mode', () => {
+  it('reads a file from before work modes and drawing typefaces as hybrid and Barlow, and keeps an announced mode', () => {
     const good = JSON.parse(JSON.stringify(toSnapshot(snapshotSampleDocument())));
     delete good.settings.workspace;
+    delete good.settings.drawingFont;
     const old = readSnapshot(JSON.stringify(good));
     expect(old.ok && old.content.settings.workspace).toBe('hybrid');
+    expect(old.ok && old.content.settings.drawingFont).toBe('barlow');
     good.settings.workspace = 'plan3d';
     const soon = readSnapshot(JSON.stringify(good));
     expect(soon.ok && soon.content.settings.workspace).toBe('plan3d');
@@ -64,6 +66,7 @@ describe('.kcad snapshots', () => {
     expect(err((d) => (d.version = 2))).toContain('sürümü 2');
     expect(err((d) => (d.settings.srid = 99999))).toContain('EPSG:99999 tanınmıyor');
     expect(err((d) => (d.settings.workspace = 'bim'))).toContain('Proje ayarları › çalışma modu');
+    expect(err((d) => (d.settings.drawingFont = 'comic-sans'))).toContain('Proje ayarları › çizim yazı tipi');
     expect(err((d) => (d.entities[0].kind = 'blok'))).toContain('Nesne 1 › tür');
     expect(err((d) => (d.entities[1].layerId = 'yok'))).toContain('“yok” katmanı dosyada yok');
     expect(err((d) => (d.entities[1].a.x = '486512.34'))).toContain('a.x: sonlu bir sayı olmalı');

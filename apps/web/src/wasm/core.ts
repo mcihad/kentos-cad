@@ -501,12 +501,13 @@ export class CoreStore {
    * A layer through the style engine (crates/shared/style-core/src/style/build.rs):
    * `objects` four numbers per id (how it is drawn, its set or symbol, the set
    * of its simple look, its colour), the program's table of values, the box
-   * construction lines are clipped to, the batches' origin, the plot scale.
+   * construction lines are clipped to, the batches' origin, the plot scale, and
+   * whether symbol sizes are on the screen (paper mm drawn as px, steady while zooming).
    * The batches' descriptions (JSON) and their numbers one after another.
    */
-  buildStyled(program: CoreStyleProgram, ids: Float64Array, objects: Int32Array, table: { texts: string; lens: Int32Array; numbers: Float64Array }, clip: { minX: number; minY: number; maxX: number; maxY: number } | null, origin: { x: number; y: number }, plotScale: number): { json: string; data: Float32Array } {
+  buildStyled(program: CoreStyleProgram, ids: Float64Array, objects: Int32Array, table: { texts: string; lens: Int32Array; numbers: Float64Array }, clip: { minX: number; minY: number; maxX: number; maxY: number } | null, origin: { x: number; y: number }, plotScale: number, screen = false): { json: string; data: Float32Array } {
     return typed(() => {
-      const r = this.raw.buildStyled(program.raw, ids, objects, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale);
+      const r = this.raw.buildStyled(program.raw, ids, objects, table.texts, table.lens, table.numbers, clip !== null, clip?.minX ?? 0, clip?.minY ?? 0, clip?.maxX ?? 0, clip?.maxY ?? 0, origin.x, origin.y, plotScale, screen);
       const json = r.json;
       return { json, data: r.intoData() };
     });

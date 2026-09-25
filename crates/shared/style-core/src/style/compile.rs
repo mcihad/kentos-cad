@@ -70,6 +70,10 @@ pub struct Env<'a> {
     pub plot_scale: f64,
     /// Height/width of image assets (tiles keep their proportions); 1 when unknown.
     pub aspects: &'a HashMap<String, f64>,
+    /// Symbol sizes on the screen (Uygulama ayarları → Sembol boyutu → Ekranda sabit): paper millimetres
+    /// of drawn sizes (widths, dashes, marker and hatch sizes) become CSS px for the shader, so they stay
+    /// the same while the view zooms; lengths that place geometry still follow `plot_scale` (the view's).
+    pub screen: bool,
 }
 
 // ── Data-defined values ────────────────────────────────────────────────
@@ -149,13 +153,24 @@ pub fn to_world(v: f64, unit: Unit, env: &Env) -> f64 {
     (mm * env.plot_scale) / 1000.0
 }
 
-/// A drawn size (width, marker size, dash): px stays px for the shader, the rest becomes metres.
+/// Whether drawn sizes in `unit` go to the shader in px: px always, paper mm with screen-sized symbols.
+pub fn drawn_in_px(unit: Unit, env: &Env) -> bool {
+    unit == Unit::Px || (env.screen && unit == Unit::Mm)
+}
+
+/// A drawn size (width, marker size, dash): px (and with screen-sized symbols paper mm) goes to the shader
+/// in px, the rest becomes metres.
 pub fn to_drawn(v: f64, unit: Unit, env: &Env) -> (f64, PrimUnit) {
-    if unit == Unit::Px {
-        (v, PrimUnit::Px)
+    if drawn_in_px(unit, env) {
+        (to_px(v, unit), PrimUnit::Px)
     } else {
         (to_world(v, unit, env), PrimUnit::World)
     }
+}
+
+/// A px or paper-mm length in CSS px (96 per inch).
+pub fn to_px(v: f64, unit: Unit) -> f64 {
+    if unit == Unit::Mm { v / MM_PER_PX } else { v }
 }
 
 /// JavaScript's truthiness of a number: not 0 and not NaN.
@@ -179,7 +194,7 @@ pub fn marker_style(
     let off = layer.offset.unwrap_or([0.0, 0.0]);
     let conv = |v: f64| {
         if size_unit == PrimUnit::Px {
-            v
+            to_px(v, unit)
         } else {
             to_world(v, unit, env)
         }
@@ -349,7 +364,7 @@ fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Op
     let (width, width_unit) = to_drawn(dd_number(&layer.width, t, 0.0), unit, env);
     let len = |v: f64| {
         if width_unit == PrimUnit::Px {
-            v
+            to_px(v, unit)
         } else {
             to_world(v, unit, env)
         }
@@ -557,8 +572,14 @@ fn emit_fill_layer(
         return;
     }
     let opacity = base.opacity.unwrap_or(1.0);
-    let px = base.unit == Unit::Px;
-    let len = |v: f64| if px { v } else { to_world(v, base.unit, env) };
+    let px = drawn_in_px(base.unit, env);
+    let len = |v: f64| {
+        if px {
+            to_px(v, base.unit)
+        } else {
+            to_world(v, base.unit, env)
+        }
+    };
     let unit = if px { PrimUnit::Px } else { PrimUnit::World };
     match layer {
         Layer::SimpleFill { color, .. } => {

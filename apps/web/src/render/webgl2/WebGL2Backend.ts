@@ -39,8 +39,8 @@ export class WebGL2Backend implements RenderBackend {
   private styled!: StyledRenderer;
   private layers = new Map<string, GpuLayer>();
 
-  async init(canvas: HTMLCanvasElement): Promise<void> {
-    const gl = canvas.getContext('webgl2', { antialias: true, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
+  async init(canvas: HTMLCanvasElement, opts: { antialias?: boolean } = {}): Promise<void> {
+    const gl = canvas.getContext('webgl2', { antialias: opts.antialias !== false, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 desteklenmiyor');
     this.gl = gl;
     this.canvas = canvas;

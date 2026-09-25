@@ -340,6 +340,7 @@ pub fn build_layer(
     clip: Option<&Bounds>,
     origin: Vec2,
     plot_scale: f64,
+    screen: bool,
 ) -> Result<Batches, String> {
     let n = o.ids.len();
     if o.objects.len() != 4 * n {
@@ -368,6 +369,7 @@ pub fn build_layer(
     let env = Env {
         plot_scale,
         aspects: &program.aspects,
+        screen,
     };
     let mut sink = BatchSink::new(origin);
     let mut buf = Vec::new();
@@ -661,9 +663,11 @@ pub fn compile_one(v: &Json) -> Result<String, String> {
         },
     };
     let aspects = aspects_of(v.get("assets"));
+    // A single symbol (previews, legend) is drawn at its paper size.
     let env = Env {
         plot_scale: values.scale,
         aspects: &aspects,
+        screen: false,
     };
     let sink: &mut dyn Sink = &mut out;
     compile_symbol(&symbol, &geom, &values, &env, sink, 0.0);

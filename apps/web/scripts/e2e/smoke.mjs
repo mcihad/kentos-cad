@@ -1680,6 +1680,64 @@ try {
     check('the Şerit arayüzü button returns to menus and toolbox', !back.ribbon && back.menubar && back.toolbox && (await viewportH()) === classicH, JSON.stringify(back));
   }
 
+  // Proje ayarları → Çizim yazı tipi (a project setting), Çizim kalitesi (anti-aliasing made again live) and Tam ekran.
+  {
+    const at = (sel) => b.eval(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const press = async (sel) => {
+      const p = await at(sel);
+      if (!p) throw new Error(`bulunamadı: ${sel}`);
+      await b.click(...p);
+      await sleep(150);
+    };
+    const saveDialog = async () => {
+      const p = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Kaydet'); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+      await b.click(...p);
+      await sleep(300);
+    };
+    await b.eval(`window.kentos.commands.execute('file.settings')`);
+    await b.waitFor(`!!document.querySelector('.font-pick--drawing')`, 3000).catch(() => {});
+    await press('.font-pick--drawing [data-font="arimo"]');
+    await b.shot('drawing-font-settings');
+    await saveDialog();
+    await b.waitFor(`document.fonts.check('500 12px Arimo')`, 5000).catch(() => {});
+    await sleep(300);
+    const font = await b.eval(`({ setting: window.kentos.doc.settings.drawingFont.value, css: getComputedStyle(document.documentElement).getPropertyValue('--font-drawing').trim(), loaded: document.fonts.check('500 12px Arimo'), dirty: window.kentos.doc.dirty.value, file: window.kentos.doc.settings.toJSON().drawingFont })`);
+    await b.shot('drawing-font-arimo');
+    check(
+      'Proje ayarları sets the drawing typeface (Arimo): the project is unsaved, the file will carry it, the bundled face is loaded',
+      font.setting === 'arimo' && font.css.startsWith('Arimo') && font.loaded && font.dirty && font.file === 'arimo',
+      JSON.stringify(font),
+    );
+    await b.eval(`window.kentos.doc.settings.drawingFont.set('barlow')`);
+
+    // Çizim kalitesi: Hızlı makes the backend again without anti-aliasing (one canvas, same drawing); Yüksek brings it back.
+    const quality = () => b.eval(`({ aa: document.querySelector('canvas.viewport__gl').getContext('webgl2')?.getContextAttributes()?.antialias ?? null, canvases: document.querySelectorAll('canvas.viewport__gl').length, dpr: window.kentos.view.stats && document.querySelector('canvas.viewport__gl').width / document.querySelector('canvas.viewport__gl').clientWidth })`);
+    // On WebGL2 (the context's attributes say whether it anti-aliases).
+    await b.eval(`window.kentos.commands.execute('view.renderer.webgl2')`);
+    await b.waitFor(`window.kentos.view.backendKind.value === 'webgl2' && document.querySelectorAll('canvas.viewport__gl').length === 1`, 8000).catch(() => {});
+    await b.eval(`window.kentos.commands.execute('tools.options', 'engine')`);
+    await b.waitFor(`!!document.querySelector('[aria-label="Çizim kalitesi"]')`, 3000).catch(() => {});
+    const fastBtn = await b.eval(`(() => { const e = [...document.querySelectorAll('[aria-label="Çizim kalitesi"] .seg__opt')].find((x) => x.textContent === 'Hızlı'); e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await b.click(...fastBtn);
+    await sleep(150);
+    await saveDialog();
+    await b.waitFor(`document.querySelector('canvas.viewport__gl')?.getContext('webgl2')?.getContextAttributes()?.antialias === false`, 8000).catch(() => {});
+    const fast = await quality();
+    await b.eval(`window.kentos.prefs.renderQuality.set('high')`);
+    await b.waitFor(`document.querySelector('canvas.viewport__gl')?.getContext('webgl2')?.getContextAttributes()?.antialias === true`, 8000).catch(() => {});
+    const high = await quality();
+    check('Çizim kalitesi: Hızlı draws without anti-aliasing on one canvas, Yüksek with it again', fast.aa === false && fast.canvases === 1 && high.aa === true && high.canvases === 1, JSON.stringify({ fast, high }));
+
+    // Tam ekran from the menu bar's button, and back.
+    await press('.menubar__icon[data-command="view.fullscreen"]');
+    await sleep(400);
+    const full = await b.eval('!!document.fullscreenElement');
+    await press('.menubar__icon[data-command="view.fullscreen"]');
+    await sleep(400);
+    const back = await b.eval('!!document.fullscreenElement');
+    check('the Tam ekran button fills the screen and leaves it', full && !back, JSON.stringify({ full, back }));
+  }
+
   // Uygulama ayarları → Görünüm: accent colour and typeface, applied on Kaydet; the typefaces come with the app.
   {
     const at = (sel) => b.eval(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);

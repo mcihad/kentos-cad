@@ -124,7 +124,7 @@ export function openNewProjectDialog(ctx: AppContext): void {
     }
     let content: ReturnType<typeof newProjectContent>;
     try {
-      content = newProjectContent({ name: name.value, srid: draft.srid, plotScale: draft.plotScale, workspace: draft.workspace });
+      content = newProjectContent({ name: name.value, srid: draft.srid, plotScale: draft.plotScale, workspace: draft.workspace, drawingFont: ctx.prefs.defaultDrawingFont.value });
     } catch (e) {
       status.textContent = (e as Error).message;
       return;
