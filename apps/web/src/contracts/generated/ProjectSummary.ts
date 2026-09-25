@@ -6,4 +6,9 @@ export type ProjectSummary = { id: string, name: string, srid: number, dataRevis
 /**
  * RFC 3339.
  */
-updatedAt: string, tenantId: string, tenantName: string, tenantKind: TenantKind, access: ProjectAccessView, };
+updatedAt: string, tenantId: string, tenantName: string, tenantKind: TenantKind, 
+/**
+ * The owner's name ("Benimle paylaşılanlar" says whose it is); empty
+ * when the caller cannot see the owner (one who left the organisation).
+ */
+ownerName: string, access: ProjectAccessView, };

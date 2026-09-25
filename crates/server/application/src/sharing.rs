@@ -5,9 +5,11 @@
 //! record, a `project.access` event and the idempotent answer. Open
 //! connections of the project hear the event, check their access again, and
 //! one that lost it is closed; the next request of the person is refused.
-//! Copies downloaded before are not taken back.
+//! Copies downloaded before are not taken back. Who has access and whom a
+//! project can be shared with are people.rs.
 //!
-//! - The owner's access is not a grant: it changes by a transfer (CLOUD-08).
+//! - The owner's access is not a grant: it changes by a transfer (CLOUD-08),
+//!   so a project always keeps its owner.
 //! - In an organisation only its members can be given a role (guests,
 //!   CLOUD-17, come later); a personal space's projects can be shared with
 //!   any account.
@@ -16,8 +18,7 @@
 use kentos_contracts::{
     CommandEnvelope, EventRecord, GrantRole, PROJECT_ACCESS_CHANGED, PROJECT_ACCESS_REVOKE,
     PROJECT_ACCESS_REVOKE_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION, ProjectAccessChange,
-    ProjectAccessList, ProjectAccessRevoke, ProjectGrant, ProjectPermission, ProjectShare,
-    TenantKind,
+    ProjectAccessRevoke, ProjectGrant, ProjectPermission, ProjectShare, TenantKind,
 };
 use serde::de::DeserializeOwned;
 use sqlx::{Postgres, Transaction};
@@ -50,40 +51,6 @@ fn grant((user, name, role, expires, updated): GrantRow) -> Option<ProjectGrant>
         role: GrantRole::from_name(&role)?,
         expires_at: expires.map(rfc3339),
         updated_at: rfc3339(updated),
-    })
-}
-
-/// Who has access to a project besides the organisation's policy: its owner
-/// and every grant, expired ones included (for the share dialog). Needs
-/// `project.share`.
-pub async fn list(
-    db: &kentos_postgres::Db,
-    access: &ProjectAccess,
-) -> AppResult<ProjectAccessList> {
-    access.live()?;
-    access.require(ProjectPermission::Share)?;
-    let mut tx = db.scoped(access.scope()).await?;
-    let owner: Option<(Uuid, Option<String>)> = sqlx::query_as(
-        "select p.owner_user_id, u.display_name from kentos.project p left join kentos.app_user u on u.id = p.owner_user_id
-          where p.tenant_id = $1 and p.id = $2",
-    )
-    .bind(access.tenant)
-    .bind(access.project)
-    .fetch_optional(&mut *tx)
-    .await?;
-    let rows: Vec<GrantRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
-        "{GRANT_SELECT} order by u.display_name, g.user_id"
-    )))
-    .bind(access.tenant)
-    .bind(access.project)
-    .fetch_all(&mut *tx)
-    .await?;
-    tx.commit().await?;
-    let (owner_id, owner_name) = owner.ok_or_else(crate::access::not_found)?;
-    Ok(ProjectAccessList {
-        owner_id: owner_id.to_string(),
-        owner_name: owner_name.unwrap_or_default(),
-        grants: rows.into_iter().filter_map(grant).collect(),
     })
 }
 

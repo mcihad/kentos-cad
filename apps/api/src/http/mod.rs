@@ -4,6 +4,8 @@
 pub mod auth;
 pub mod error;
 pub mod limit;
+#[cfg(test)]
+mod people_tests;
 pub mod projects;
 #[cfg(test)]
 mod tests;
@@ -105,6 +107,10 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/v1/tenants/{tenant}/projects/{project}/access",
             get(projects::access_list),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/access/candidates",
+            get(projects::share_candidates),
         )
         .route("/v1/ws", get(ws::upgrade))
         .layer(middleware)

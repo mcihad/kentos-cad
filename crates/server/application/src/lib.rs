@@ -16,6 +16,7 @@ mod idempotency;
 pub mod identity;
 pub mod lifecycle;
 pub mod listing;
+pub mod people;
 pub mod projects;
 pub mod sharing;
 pub mod tenancy;

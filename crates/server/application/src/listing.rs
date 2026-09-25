@@ -25,13 +25,18 @@ type SummaryRow = (
     String,
     String,
     bool,
+    Option<String>,
 );
 
 /// The projects of the scope's tenant the caller has a role in and that are not deleted;
-/// `mine` keeps only the ones they own or that were shared with them.
+/// `mine` keeps only the ones they own or that were shared with them. The
+/// owner's name is there when row-level security shows the owner (a member
+/// of the tenant, or a personal space's own person).
 const SUMMARY_SELECT: &str = "select p.id, p.name, p.srid, p.data_revision, p.updated_at,
-        kentos.project_role(p.tenant_id, p.id, p.owner_user_id), t.id, t.name, t.kind, t.viewer_download
+        kentos.project_role(p.tenant_id, p.id, p.owner_user_id), t.id, t.name, t.kind, t.viewer_download,
+        u.display_name
    from kentos.project p join kentos.tenant t on t.id = p.tenant_id
+   left join kentos.app_user u on u.id = p.owner_user_id
   where p.tenant_id = $1 and p.deleted_at is null";
 
 /// Newest first.
@@ -39,7 +44,7 @@ fn summaries(mut rows: Vec<SummaryRow>) -> Vec<ProjectSummary> {
     rows.sort_by(|a, b| b.4.cmp(&a.4).then(a.0.cmp(&b.0)));
     rows.into_iter()
         .filter_map(
-            |(id, name, srid, rev, at, role, tenant, tenant_name, kind, download)| {
+            |(id, name, srid, rev, at, role, tenant, tenant_name, kind, download, owner)| {
                 Some(ProjectSummary {
                     id: id.to_string(),
                     name,
@@ -49,6 +54,7 @@ fn summaries(mut rows: Vec<SummaryRow>) -> Vec<ProjectSummary> {
                     tenant_id: tenant.to_string(),
                     tenant_name,
                     tenant_kind: tenant_kind(&kind),
+                    owner_name: owner.unwrap_or_default(),
                     access: view_of(role.as_deref()?, download)?,
                 })
             },

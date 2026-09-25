@@ -1,8 +1,8 @@
 //! The project WebSocket over a real TCP socket, with a throwaway database:
 //! a client whose cursor is older than the events still kept is told to
 //! reopen (`resyncRequired`), and one at the horizon gets the rest; a
-//! subscriber whose grant is taken away is cut off at once (TODOS.md
-//! CLOUD-13). The test speaks the few parts of RFC 6455 it needs itself (the
+//! subscriber whose role is lowered keeps following and hears the change,
+//! one whose grant is taken away is cut off at once (TODOS.md CLOUD-13). The test speaks the few parts of RFC 6455 it needs itself (the
 //! upgrade, masked text frames out, plain text frames in).
 
 use std::net::SocketAddr;
@@ -274,6 +274,22 @@ async fn taking_a_grant_away_ends_the_live_subscription() {
         (live["type"].as_str(), live["events"][0]["kind"].as_str()),
         (Some("events"), Some("project.changes"))
     );
+
+    // Lowered to a viewer: he still follows it, and hears that his access changed (the web app
+    // asks again what it may do and stops saving).
+    let (status, _, _) = send(&router, grant(Some(GrantRole::Viewer))).await;
+    assert_eq!(status, StatusCode::OK);
+    let lowered = ws.next().await;
+    assert_eq!(
+        (
+            lowered["type"].as_str(),
+            lowered["events"][0]["kind"].as_str()
+        ),
+        (Some("events"), Some("project.access"))
+    );
+    let (status, _, _) = send(&router, point(1.5)).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(ws.next().await["events"][0]["kind"], "project.changes");
 
     // Taken away while the socket is open: he is told at once, and nothing of the project follows.
     let (status, _, _) = send(&router, grant(None)).await;

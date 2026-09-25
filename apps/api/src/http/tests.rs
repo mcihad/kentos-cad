@@ -772,10 +772,11 @@ async fn the_personal_space_sharing_and_my_projects_over_http() {
     assert_eq!(
         (
             list.owner_name.as_str(),
-            list.grants.len(),
-            list.grants[0].display_name.as_str()
+            list.people.len(),
+            list.people[1].display_name.as_str(),
+            list.people[1].grant
         ),
-        ("ayse", 1, "bora")
+        ("ayse", 2, "bora", Some(GrantRole::Editor))
     );
     let (status, _, _) = send(&app, get(&format!("{uri}/access"), &bora)).await;
     assert_eq!(status, StatusCode::FORBIDDEN);

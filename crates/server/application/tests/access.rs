@@ -13,7 +13,7 @@ use common::{
 use kentos_application::access::ProjectAccess;
 use kentos_application::identity::Actor;
 use kentos_application::{
-    AppError, admin, changes, events, lifecycle, listing, projects, sharing, tenancy,
+    AppError, admin, changes, events, lifecycle, listing, people, projects, sharing, tenancy,
 };
 use kentos_contracts::{
     AccessSource, GrantRole, PROJECT_ACCESS_CHANGED, ProjectPermission, ProjectRole, TenantKind,
@@ -779,7 +779,7 @@ async fn sharing_rules_events_and_retries() {
         Err(AppError::Forbidden(m)) if m.contains("project.share")
     ));
     assert!(matches!(
-        sharing::list(&db.app, &edits).await,
+        people::list(&db.app, &edits).await,
         Err(AppError::Forbidden(_))
     ));
     // Not one's own access, not the owner's, never in the past.
@@ -870,12 +870,12 @@ async fn sharing_rules_events_and_retries() {
     .await
     .unwrap();
     assert!(!again.changed && again.event_seq.is_none());
-    let list = sharing::list(&db.app, &owner).await.unwrap();
+    let list = people::list(&db.app, &owner).await.unwrap();
     assert_eq!(list.owner_id, pm.actor.user_id.to_string());
     let mut who: Vec<(String, GrantRole)> = list
-        .grants
+        .people
         .iter()
-        .map(|g| (g.display_name.clone(), g.role))
+        .filter_map(|p| Some((p.display_name.clone(), p.grant?)))
         .collect();
     who.sort();
     assert_eq!(
