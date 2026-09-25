@@ -1,10 +1,11 @@
 import type { Entity, EntityGeometry } from '../entities';
+import type { DrawingFont } from '../projectSettings';
 import { layoutDimension, type DimensionLayout } from '../geom/dimension';
 import { entityOp } from './entityOp';
 
 export type ExplodeResult = { pieces: EntityGeometry[] } | { error: string };
 
-const explode = entityOp<(e: Entity, valueText: string) => ExplodeResult>('explodeEntity');
+const explode = entityOp<(e: Entity, valueText: string, font?: DrawingFont) => ExplodeResult>('explodeEntity');
 
 /**
  * Breaks a compound entity into simple ones (computed by the geometry core,
@@ -14,8 +15,9 @@ const explode = entityOp<(e: Entity, valueText: string) => ExplodeResult>('explo
  *   dimension → lines and the value text · patterned hatch → lines
  * `valueText` renders a dimension's measured value (project units); the
  * core takes the text, so it is asked only for a dimension without its own.
+ * `font` is the drawing's typeface: the value text is placed by its measured width.
  */
-export function explodeEntity(e: Entity, valueText: (l: DimensionLayout) => string): ExplodeResult {
+export function explodeEntity(e: Entity, valueText: (l: DimensionLayout) => string, font?: DrawingFont): ExplodeResult {
   const l = e.kind === 'dimension' && !e.text ? layoutDimension(e) : null;
-  return explode(e, l ? valueText(l) : '');
+  return explode(e, l ? valueText(l) : '', font);
 }

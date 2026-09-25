@@ -7,6 +7,7 @@ import { askUnsaved } from '../ui/widgets/confirm';
 import { projectStylesProblem } from './cloud/incoming';
 import type { AppContext } from './context';
 import type { DocumentContent } from '../model/document';
+import { RecentFiles, type RecentFile } from './recentFiles';
 
 /**
  * Local drawing files (`.kcad`, the versioned `DocumentSnapshotV1`): Save,
@@ -104,6 +105,8 @@ export class DocumentFiles {
   picker: DrawingFilePicker = browserPicker;
   /** A save or open is in progress (commands stay disabled meanwhile). */
   readonly busy = new Signal(false);
+  /** Drawings opened or saved lately (Son dosyalar): the start screen and the application menu list them. */
+  readonly recent = new RecentFiles();
   /** Asks about unsaved changes; `after` says what would lose them. A dialog in the app; tests answer themselves. */
   ask: (name: string, after: string) => Promise<DiscardChoice> = askAboutUnsaved;
   private readonly ctx: AppContext;
@@ -149,6 +152,47 @@ export class DocumentFiles {
       // A local file replaces an open cloud project: what waits is sent, the rest stays in the device draft.
       await this.leaveCloud();
       this.show(content, handle, readOnly);
+      return true;
+    });
+  }
+
+  /**
+   * Opens a drawing from the recent list: asks about unsaved changes, then
+   * for the browser's permission to the file again (it forgets it between
+   * visits). A file that is gone leaves the list. True when it was opened.
+   */
+  openRecent(entry: RecentFile): Promise<boolean> {
+    return this.run(async () => {
+      if (this.mustAsk() && !(await this.confirmDiscard('Başka bir çizim açılırsa bu değişiklikler kaybolur.'))) return false;
+      const handle = entry.handle as DrawingFileHandle & {
+        queryPermission?(o: { mode: string }): Promise<PermissionState>;
+        requestPermission?(o: { mode: string }): Promise<PermissionState>;
+      };
+      try {
+        if (handle.queryPermission && (await handle.queryPermission({ mode: 'readwrite' })) !== 'granted') {
+          const answer = await handle.requestPermission?.({ mode: 'readwrite' });
+          if (answer !== 'granted') {
+            this.ctx.log.warn(`“${entry.name}” için dosya izni verilmedi; çizim açılmadı.`);
+            return false;
+          }
+        }
+      } catch (e) {
+        this.ctx.log.error(`“${entry.name}” için izin istenemedi: ${message(e)}. Dosyayı Aç ile seçin.`);
+        return false;
+      }
+      let text: string;
+      try {
+        text = await (await handle.getFile()).text();
+      } catch (e) {
+        const gone = (e as DOMException).name === 'NotFoundError';
+        if (gone) void this.recent.remove(entry.id);
+        this.ctx.log.error(gone ? `“${entry.name}” artık bulunamıyor (taşınmış ya da silinmiş); son dosyalardan kaldırıldı.` : `“${entry.name}” okunamadı: ${message(e)}.`);
+        return false;
+      }
+      const content = this.read(text, handle);
+      if (!content) return false;
+      await this.leaveCloud();
+      this.show(content, handle, false);
       return true;
     });
   }
@@ -234,7 +278,14 @@ export class DocumentFiles {
     const { ctx } = this;
     replaceDrawing(ctx, content);
     this.handle = readOnly ? null : handle;
+    if (this.handle) this.remember(this.handle);
     ctx.log.success(`“${handle?.name ?? ctx.doc.name.value}” açıldı: ${ctx.doc.size} nesne, ${ctx.doc.layers.leaves().length} katman.`);
+  }
+
+  /** Puts the file first in the recent list, with what it holds now. */
+  private remember(handle: DrawingFileHandle): void {
+    const doc = this.ctx.doc;
+    void this.recent.add(handle, `${doc.size.toLocaleString('tr-TR')} nesne · ${doc.crs.value.name}`);
   }
 
   /** Unsaved changes that replacing the drawing would lose: local ones, or edits a cloud project does not keep (a viewer's). */
@@ -273,6 +324,7 @@ export class DocumentFiles {
       return false;
     }
     doc.markSaved(revision);
+    this.remember(handle);
     if (doc.dirty.value) this.ctx.log.warn(`“${handle.name}” kaydedildi; kayıt sürerken yapılan değişiklikler henüz kaydedilmedi.`);
     else this.ctx.log.success(`“${handle.name}” kaydedildi.`);
     return true;

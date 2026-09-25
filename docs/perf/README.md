@@ -12,6 +12,19 @@ node apps/web/scripts/perf/modules.mjs --label y4 # pnpm build'den sonra: ağır
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
 
+## Açılış yükü: kitaplık, örnek proje ve pencereler ayrı parçada (2026-09-25)
+
+Kaynak: önce [bundle-f6-before-2026-09-25.md](bundle-f6-before-2026-09-25.md), [startup-f6-before-2026-09-25.md](startup-f6-before-2026-09-25.md); sonra [bundle-f6-after-2026-09-25.md](bundle-f6-after-2026-09-25.md), [startup-f6-after-2026-09-25.md](startup-f6-after-2026-09-25.md). Sistem sembol kitaplığı (bütün MPYY sayfaları), örnek proje ve gösterim kataloğu tek bir ayrı parçadır ve WASM çekirdeği derlenirken paralel iner (`app/startContent.ts`); ayar, işlem aracı ve bulut pencereleri ilk açılışta, WebGPU arka ucu seçilince yüklenir. Davranış değişmedi (uygulama yine örnek projeyle açılır). Bulut konteyneri, başsız Chrome, `vite preview`, 5 ölçümün ortancası.
+
+| Ölçüt | Önce | Sonra |
+|---|---|---|
+| İlk sayfa JS (giriş ve statik içe aktarmaları; ham / gzip) | 844,5 / 263,5 KB | 538,9 / 170,4 KB |
+| Açılışta aktarılan JS (paralel inen parça dahil) | 269,4 KB | 243,8 KB |
+| Etkileşime hazır, soğuk (aralık) | 865 ms (835–910) | 808 ms (756–819) |
+| Ana iş parçacığında script süresi, soğuk | 107 ms | 96 ms |
+
+Açılıştaki aktarımın çoğu WASM çekirdeğidir (1 109,7 KB): `vite preview` onu sıkıştırmadan gönderiyor (gzip -9 ile ~395 KB). Üretim sunucusu `.wasm`'ı gzip ya da brotli ile göndermelidir; bu ölçüm onu içermez.
+
 ## Ağır modüllerin açılışı (2026-09-24, `e0b9168`)
 
 Kaynak: [modules-y4-2026-09-24.md](modules-y4-2026-09-24.md) (ham veri `.json`; betik `apps/web/scripts/perf/modules.mjs`). Üretim derlemesi `vite preview` ile, her modül kendi boş profiliyle; süre komut satırında Enter'dan pencerenin boyandığı kareye kadardır. Bulut konteyneri, başsız Chrome; kabul ölçümü kullanıcının makinesinde yapılır.

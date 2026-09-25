@@ -26,7 +26,8 @@ pub use pack::Packer;
 use std::collections::HashMap;
 
 use crate::api::json::{FromJson, Json};
-use crate::entity::{Entity, Shape, entity_bounds};
+use crate::entity::{Entity, Shape, entity_bounds_in};
+use crate::text::Font;
 use crate::geometry::{Bounds, empty_bounds, is_empty_bounds};
 use crate::jsmath::{js_max, js_min};
 use rtree::{PackedTree, overlaps};
@@ -100,6 +101,8 @@ pub struct Store {
     /// `(order, slot)` in the document's order; entries whose slot has since
     /// been freed or reused are stale and skipped (compacted at rebuilds).
     ordered: Vec<(u64, u32)>,
+    /// The drawing typeface text boxes are measured in (`ProjectSettings.drawingFont`).
+    font: Font,
 }
 
 /// An object read from the document's JSON: its id, layer, label and geometry.
@@ -151,7 +154,7 @@ impl Store {
     /// Adds or replaces one object.
     pub fn put(&mut self, id: f64, layer_id: &str, label: bool, shape: Shape) {
         let layer = self.layer_index(layer_id);
-        let bounds = entity_bounds(&shape);
+        let bounds = entity_bounds_in(&shape, self.font);
         let key = id.to_bits();
         let slot = match self.by_id.get(&key) {
             Some(&s) => {
@@ -213,6 +216,29 @@ impl Store {
         self.maybe_rebuild();
     }
 
+    /// The drawing typeface: text boxes (picking, window selection, extents) follow its letters. A
+    /// change measures every text again.
+    pub fn set_font(&mut self, font: Font) {
+        if font == self.font {
+            return;
+        }
+        self.font = font;
+        let texts: Vec<u32> = (0..self.slots.len() as u32)
+            .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Text { .. })))
+            .collect();
+        for s in &texts {
+            if let Some(it) = self.slots[*s as usize].as_mut() {
+                it.bounds = entity_bounds_in(&it.shape, font);
+            }
+            self.loosen(*s);
+        }
+        self.maybe_rebuild();
+    }
+
+    pub fn font(&self) -> Font {
+        self.font
+    }
+
     /// Empties the store (the layer table and label defaults stay).
     pub fn clear(&mut self) {
         let layers = (
@@ -220,9 +246,11 @@ impl Store {
             std::mem::take(&mut self.flags),
         );
         let defaults = self.label_defaults;
+        let font = self.font;
         *self = Store::default();
         (self.layer_ids, self.flags) = layers;
         self.label_defaults = defaults;
+        self.font = font;
     }
 
     /// Replaces the layer table: `[{ id, visible, locked, pickInterior, label? }]`,

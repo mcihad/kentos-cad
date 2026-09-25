@@ -101,7 +101,7 @@ const report = {
   label,
   date: new Date().toISOString(),
   commit: execSync('git rev-parse --short HEAD').toString().trim(),
-  machine: { cpu, threads: cpus().length, memoryGb: Math.round(totalmem() / 2 ** 30), chrome: execSync('google-chrome --version').toString().trim() },
+  machine: { cpu, threads: cpus().length, memoryGb: Math.round(totalmem() / 2 ** 30), chrome: execSync(`${process.env.CHROME_BIN ?? 'google-chrome'} --version`).toString().trim() },
   runs,
   cold: summarize(false),
   warm: summarize(true),

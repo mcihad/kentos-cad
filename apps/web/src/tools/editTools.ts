@@ -88,7 +88,7 @@ export class ExplodeTool extends SelectionActionTool {
     const pieces: NewEntity[] = [];
     let firstError: string | null = null;
     for (const e of targets) {
-      const r = explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a) }));
+      const r = explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a) }), this.ctx.doc.settings.drawingFont.value);
       if ('error' in r) {
         firstError ??= r.error;
         continue;

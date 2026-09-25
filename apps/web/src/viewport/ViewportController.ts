@@ -95,6 +95,15 @@ export class ViewportController {
   private g!: CanvasRenderingContext2D;
   private host!: HTMLElement;
   private dpr = 1;
+  /**
+   * The labels drawn last, as a picture: the overlay is redrawn at every pointer move (cross-hair, snap
+   * marker), the labels only when the view, the drawing or their look changed (`labelsKey`).
+   */
+  private labelCache: { canvas: HTMLCanvasElement; key: string } | null = null;
+  /** Bumped by whatever changes what the labels show (objects, layers, palette, typeface, editing). */
+  private labelEpoch = 0;
+  /** The camera change the last overlay frame drew (a new one means the view is moving). */
+  private labelCamera = -1;
   private readonly d = new DisposableStore();
 
   private dirtyLayers = new Set<string>();
@@ -345,6 +354,7 @@ export class ViewportController {
   /** Hide an entity's overlay text while an inline editor covers it. */
   setEditing(id: number | null): void {
     this.editingId = id;
+    this.labelEpoch++;
     this.requestOverlay();
   }
 
@@ -385,6 +395,7 @@ export class ViewportController {
   refreshPalette(): void {
     // The grid follows by itself: its extent records the palette it was drawn with.
     this.palette = readCanvasPalette();
+    this.labelEpoch++;
     this.allDirty = true;
     this.highlightDirty = true;
     this.requestRender();
@@ -394,6 +405,7 @@ export class ViewportController {
   refreshFonts(): void {
     const p = readCanvasPalette();
     this.palette = { ...this.palette, font: p.font, drawingFont: p.drawingFont };
+    this.labelEpoch++;
     this.requestOverlay();
   }
 
@@ -402,6 +414,13 @@ export class ViewportController {
   private bindModel(): void {
     const { doc, selection, settings, tools } = this.ctx;
     const d = this.d;
+    // Anything that can change a label's text, look or place (edits of any origin, a reload, layer state and style).
+    const stale = () => this.labelEpoch++;
+    d.add(doc.events.on('touched', stale));
+    d.add(doc.events.on('reset', stale));
+    d.add(doc.events.on('attrs', stale));
+    d.add(doc.layers.events.on('state', stale));
+    d.add(doc.layers.events.on('structure', stale));
     d.add(
       doc.events.on('changed', ({ layerIds }) => {
         layerIds.forEach((id) => this.dirtyLayers.add(id));
@@ -467,12 +486,13 @@ export class ViewportController {
       }),
     );
     d.add(() => clearTimeout(this.symbolTimer));
-    d.add(
-      this.ctx.prefs.symbolSize.subscribe(() => {
-        this.allDirty = true;
-        this.requestRender();
-      }),
-    );
+    for (const s of [this.ctx.prefs.symbolSize, this.ctx.prefs.lineWeights])
+      d.add(
+        s.subscribe(() => {
+          this.allDirty = true;
+          this.requestRender();
+        }),
+      );
     d.add(settings.grid.subscribe(() => this.requestRender()));
     // Drawing quality: the pixel ratio applies at once; anti-aliasing is fixed per context, so the backend is made again.
     d.add(
@@ -833,6 +853,7 @@ export class ViewportController {
       palette: this.palette,
       plotScale,
       screen: this.ctx.prefs.symbolSize.value === 'screen',
+      hairlines: !this.ctx.prefs.lineWeights.value,
       library: this.ctx.styles.library,
       layerName: (id: string) => doc.layers.get(id)?.name ?? id,
       geometry: this.picker,
@@ -925,6 +946,40 @@ export class ViewportController {
     });
   }
 
+  /**
+   * The labels: drawn again only when the view, the drawing or their look changed since the last time,
+   * otherwise copied from the picture of the last drawing (a pointer move redraws the overlay, not the labels).
+   */
+  private drawCachedLabels(g: CanvasRenderingContext2D): void {
+    const cam = this.camera;
+    const w = Math.max(1, Math.round(cam.width * this.dpr));
+    const h = Math.max(1, Math.round(cam.height * this.dpr));
+    const key = `${cam.changed.value}|${w}x${h}|${this.dpr}|${this.labelEpoch}|${this.ctx.doc.revision}`;
+    // While the view moves (pan, zoom) every frame has new labels: they are drawn straight on the overlay; the
+    // picture is made in the first frame after the view came to rest, for the pointer moves that follow.
+    const moving = cam.changed.value !== this.labelCamera;
+    this.labelCamera = cam.changed.value;
+    if (moving) {
+      if (this.labelCache) this.labelCache.key = '';
+      drawLabels(g, this.ctx.doc, cam, this.palette, this.picker.labels(cam.visibleBounds(), cam.scale, this.editingId), (l) => this.dimensionText(l));
+      return;
+    }
+    let cache = this.labelCache;
+    if (!cache) cache = this.labelCache = { canvas: document.createElement('canvas'), key: '' };
+    if (cache.key !== key) {
+      if (cache.canvas.width !== w || cache.canvas.height !== h) [cache.canvas.width, cache.canvas.height] = [w, h];
+      const lg = cache.canvas.getContext('2d')!;
+      lg.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      lg.clearRect(0, 0, cam.width, cam.height);
+      drawLabels(lg, this.ctx.doc, cam, this.palette, this.picker.labels(cam.visibleBounds(), cam.scale, this.editingId), (l) => this.dimensionText(l));
+      cache.key = key;
+    }
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.drawImage(cache.canvas, 0, 0);
+    g.restore();
+  }
+
   private drawOverlay(): void {
     const g = this.g;
     const cam = this.camera;
@@ -932,7 +987,7 @@ export class ViewportController {
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     g.clearRect(0, 0, cam.width, cam.height);
     const l0 = import.meta.env.DEV ? performance.now() : 0;
-    drawLabels(g, this.ctx.doc, cam, pal, this.picker.labels(cam.visibleBounds(), cam.scale, this.editingId), (l) => this.dimensionText(l));
+    this.drawCachedLabels(g);
     const l1 = import.meta.env.DEV ? performance.now() : 0;
     const selected = this.ctx.selection.ids.value;
     if (selected.size <= 150) drawGrips(g, this.picker.grips(selected), cam, pal, this.ctx.tools.active.activeGrip?.() ?? null);

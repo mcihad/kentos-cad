@@ -78,6 +78,9 @@ export class PickIndex {
   constructor(doc: CadDocument) {
     this.doc = doc;
     this.store.setLabelDefaults(LABEL_DEFAULTS);
+    // Text boxes (picking, window selection, extents) are measured in the project's drawing typeface.
+    this.store.setFont(doc.settings.drawingFont.value);
+    this.d.add(doc.settings.drawingFont.subscribe((f) => this.store.setFont(f)));
     this.d.add(doc.events.on('touched', ({ ids }) => this.touch(ids)));
     this.d.add(
       doc.events.on('reset', () => {

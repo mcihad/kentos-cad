@@ -723,3 +723,28 @@
 .rsel__kind--more {
   color: var(--c-text-3);
 }
+
+/* ── Key tips (Alt or F6): letters over the tabs and controls ─────────── */
+.keytips {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+.keytips__tip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  min-width: calc(16px * var(--ui-scale));
+  padding: 0 calc(4px * var(--ui-scale));
+  border-radius: var(--r-sm);
+  background: var(--c-tooltip);
+  color: var(--c-tooltip-text);
+  border: 1px solid var(--c-tooltip-line);
+  font: 600 var(--fs-xs) / calc(16px * var(--ui-scale)) var(--font-mono);
+  text-align: center;
+  box-shadow: var(--shadow-float);
+}
+.keytips__tip[data-off] {
+  opacity: 0.25;
+}

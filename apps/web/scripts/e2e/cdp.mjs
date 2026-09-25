@@ -122,6 +122,8 @@ export async function launch(url, { width = 1600, height = 900, args = [] } = {}
         Delete: [46, 'Delete'],
         F1: [112, 'F1'],
         F10: [121, 'F10'],
+        F6: [117, 'F6'],
+        Alt: [18, 'AltLeft'],
         F3: [114, 'F3'],
         F8: [119, 'F8'],
         // Printable keys whose char code is not their virtual key (46 would be Delete).

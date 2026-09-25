@@ -14,7 +14,7 @@ import { icon } from '../icons';
 import { segmented } from '../widgets/controls';
 import { tooltip } from '../widgets/tooltip';
 import { TreeView } from '../widgets/TreeView';
-import { openToolDialog, TARGET_SHORT } from './ToolDialog';
+import { TARGET_SHORT } from './targets';
 
 type Node =
   | { kind: 'category'; id: string; category: ProcessingCategory; children: Node[]; count: number }
@@ -211,7 +211,8 @@ export class ProcessingPanel extends Panel {
     const alive = (r.added.length ? r.added : r.touched).filter((id) => doc.get(id));
     const known = !!this.ctx.processing.registry.get(r.toolId);
     const reopen = h('button', { class: 'btn btn--small', type: 'button', disabled: !known, title: 'Aynı değerlerle pencereyi açar' }, 'Yeniden aç');
-    reopen.addEventListener('click', () => openToolDialog(this.ctx, r.toolId, r.values));
+    // The dialog is loaded when first opened (CLAUDE.md §20).
+    reopen.addEventListener('click', () => void import('./ToolDialog').then((m) => m.openToolDialog(this.ctx, r.toolId, r.values)));
     const select = alive.length ? h('button', { class: 'btn btn--small btn--ghost', type: 'button', title: 'Bu çalıştırmanın eklediği nesneleri seçer' }, `${alive.length} nesneyi seç`) : null;
     select?.addEventListener('click', () => {
       this.ctx.selection.set(alive);

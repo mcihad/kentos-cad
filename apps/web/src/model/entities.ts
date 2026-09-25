@@ -206,10 +206,10 @@ export const polygonHoles = op<(e: EntityGeometry) => Vec2[][]>('polygonHoles');
 export const insidePolygon = op<(e: Extract<EntityGeometry, { kind: 'polyline' | 'polygon' }>, p: Vec2) => boolean>('insidePolygon');
 
 /**
- * Approximate rotated box of a text entity (Barlow averages ~0.55 em per
- * glyph). Used for picking and bounds until real glyph metrics exist.
+ * Rotated box of a text: its letters' advances measured in the drawing typeface
+ * (`font`, Barlow without one; geometry-core `text`), one line tall.
  */
-export const textBox = op<(e: { p: Vec2; text: string; height: number; rotation: number }) => Vec2[]>('textBox');
+export const textBox = op<(e: { p: Vec2; text: string; height: number; rotation: number; font?: string }) => Vec2[]>('textBox');
 
 /** Whether the outline is a closed ring. */
 export const isClosedOutline = op<(e: EntityGeometry) => boolean>('isClosedOutline');

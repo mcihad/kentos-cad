@@ -1,26 +1,18 @@
 import { CommandRegistry } from '../core/commands';
 import { Keymap } from '../core/keymap';
-import { createSampleProject } from '../model/sampleProject';
-import { buildShowcase } from '../style/showcase';
-import { SYSTEM_LIBRARY } from '../style/system';
+import type { StartContent } from './startContent';
 import { Selection } from '../model/selection';
 import { TOOL_CATALOG } from '../tools/catalog';
 import { ToolManager } from '../tools/ToolManager';
 import { openAboutDialog, openShortcutsDialog } from '../ui/dialogs';
-import { openAppSettings, type AppSettingsSection } from '../ui/settings/AppSettingsDialog';
-import { openNewProjectDialog } from '../ui/settings/NewProjectDialog';
-import { openProjectSettings, type ProjectSettingsSection } from '../ui/settings/ProjectSettingsDialog';
+import type { AppSettingsSection } from '../ui/settings/AppSettingsDialog';
+import type { ProjectSettingsSection } from '../ui/settings/ProjectSettingsDialog';
 import { AppShell } from '../ui/shell/AppShell';
-import { openModelDialog, openToolDialog } from '../ui/processing/ToolDialog';
 import { ViewportController } from '../viewport/ViewportController';
 import { Clipboard } from './clipboard';
 import { registerCoreCommands } from './commands';
 import type { AppContext } from './context';
 import { registerCloudCommands } from './cloud/commands';
-import { openConflictDialog } from '../ui/cloud/ConflictDialog';
-import { openLoginDialog } from '../ui/cloud/LoginDialog';
-import { openDeleteDialog, openRenameDialog } from '../ui/cloud/ProjectActions';
-import { openProjectsDialog } from '../ui/cloud/ProjectsDialog';
 import { CloudSession } from './cloud/session';
 import { registerFileExchangeCommands } from './fileExchange';
 import { DocumentFiles } from './fileIO';
@@ -57,17 +49,14 @@ function reportSignInError(ctx: AppContext): void {
  * Composition root: builds services, wires them into one AppContext and
  * mounts the shell. Nothing else in the app constructs services.
  */
-export async function createApp(root: HTMLElement): Promise<AppContext> {
+export async function createApp(root: HTMLElement, start: Promise<StartContent>): Promise<AppContext> {
   const commands = new CommandRegistry();
   const keymap = new Keymap(commands);
   const ui = createUiState();
   const prefs = createPreferences();
-  const doc = createSampleProject(prefs.defaultSrid.value);
-  // The demo carries the whole system symbol library as a catalogue below the sheet.
-  if (doc.homeView) {
-    buildShowcase(doc, SYSTEM_LIBRARY.items, SYSTEM_LIBRARY.categories, { x: doc.homeView.minX, y: doc.homeView.minY - 80 });
-    doc.dirty.set(false);
-  }
+  // The system symbol library and the demo drawing are chunks of their own, fetched beside the geometry core (main.ts).
+  const { system, sampleProject } = await start;
+  const doc = sampleProject(prefs.defaultSrid.value);
   // Theme, accent, typeface and type scale before any service reads CSS tokens (canvas palette).
   document.documentElement.dataset.theme = ui.theme.value;
   applyAccent(prefs.accent.value);
@@ -89,7 +78,7 @@ export async function createApp(root: HTMLElement): Promise<AppContext> {
     clipboard: new Clipboard(),
     // The visible area and the geometry store are read lazily: the viewport exists only after the context.
     processing: createProcessing(doc, selection, () => ctx.view.camera.visibleBounds(), { inBox: (r) => ctx.view.inBox(r), measures: (ids) => ctx.view.measures(ids) }),
-    styles: createStyles(doc),
+    styles: createStyles(doc, system),
     server: new ServerStatus(),
   } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession };
   ctx.tools = new ToolManager(ctx);
@@ -104,15 +93,18 @@ export async function createApp(root: HTMLElement): Promise<AppContext> {
   registerCoreCommands(ctx, {
     openShortcuts: () => openShortcutsDialog(ctx),
     openAbout: () => openAboutDialog(ctx),
-    openAppSettings: (section) => openAppSettings(ctx, section as AppSettingsSection | undefined),
-    openProjectSettings: (section) => openProjectSettings(ctx, section as ProjectSettingsSection | undefined),
-    openNewProject: () => openNewProjectDialog(ctx),
+    // Windows are loaded when first opened (CLAUDE.md §20): most sessions open few of them.
+    openAppSettings: (section) => lazy(ctx, import('../ui/settings/AppSettingsDialog'), (m) => m.openAppSettings(ctx, section as AppSettingsSection | undefined)),
+    openProjectSettings: (section) => lazy(ctx, import('../ui/settings/ProjectSettingsDialog'), (m) => m.openProjectSettings(ctx, section as ProjectSettingsSection | undefined)),
+    openNewProject: () => lazy(ctx, import('../ui/settings/NewProjectDialog'), (m) => m.openNewProjectDialog(ctx)),
     focusCommandLine: () => shell?.bottom.commandLine.focus(),
     searchCommands: () => shell?.searchCommands(),
+    keyTips: () => shell?.keyTips(),
+    openStart: () => void openStart(ctx),
   });
   registerProcessingCommands(ctx, {
-    open: (id, values) => openToolDialog(ctx, id, values),
-    openModel: (id, values) => openModelDialog(ctx, id, values),
+    open: (id, values) => lazy(ctx, import('../ui/processing/ToolDialog'), (m) => m.openToolDialog(ctx, id, values)),
+    openModel: (id, values) => lazy(ctx, import('../ui/processing/ToolDialog'), (m) => m.openModelDialog(ctx, id, values)),
     // The designer is loaded when first opened: most sessions never need it.
     design: (id) => void import('../ui/processing/model/ModelDesigner').then((m) => m.openModelDesigner(ctx, id)),
     show: (tab) => shell?.showProcessing(tab),
@@ -125,16 +117,16 @@ export async function createApp(root: HTMLElement): Promise<AppContext> {
     return p && { tenantId: p.tenantId, tenantName: p.tenantName, projectId: p.projectId, name: p.name };
   };
   registerCloudCommands(ctx, {
-    signIn: (then) => openLoginDialog(ctx, then),
-    projects: (mode, pick) => openProjectsDialog(ctx, mode, pick),
-    conflicts: () => openConflictDialog(ctx),
+    signIn: (then) => lazy(ctx, import('../ui/cloud/LoginDialog'), (m) => m.openLoginDialog(ctx, then)),
+    projects: (mode, pick) => lazy(ctx, import('../ui/cloud/ProjectsDialog'), (m) => m.openProjectsDialog(ctx, mode, pick)),
+    conflicts: () => lazy(ctx, import('../ui/cloud/ConflictDialog'), (m) => m.openConflictDialog(ctx)),
     rename: () => {
       const t = openTarget();
-      if (t) openRenameDialog(ctx, t);
+      if (t) lazy(ctx, import('../ui/cloud/ProjectActions'), (m) => m.openRenameDialog(ctx, t));
     },
     remove: () => {
       const t = openTarget();
-      if (t) openDeleteDialog(ctx, t);
+      if (t) lazy(ctx, import('../ui/cloud/ProjectActions'), (m) => m.openDeleteDialog(ctx, t));
     },
   });
   registerDefaultKeybindings(ctx);
@@ -165,5 +157,30 @@ export async function createApp(root: HTMLElement): Promise<AppContext> {
   doc.events.on('changed', () => ctx.selection.retain((id) => !!doc.get(id)));
 
   ctx.log.info(`${doc.name.value} açıldı: ${doc.size} nesne, ${doc.layers.leaves().length} katman.`);
+  if (startScreenOnOpen(ctx)) void openStart(ctx);
   return ctx;
+}
+
+/** Runs `open` with a window's module once it has loaded; a failed load says so (the drawing is untouched). */
+function lazy<M>(ctx: AppContext, module: Promise<M>, open: (m: M) => void): void {
+  module.then(open, (e: Error) => ctx.log.error(`Pencere yüklenemedi: ${e.message}. Bağlantıyı denetleyip yeniden deneyin.`));
+}
+
+/** The start screen is loaded on first use (CLAUDE.md §20); a failed load says so and the drawing stays. */
+function openStart(ctx: AppContext): Promise<void> {
+  return import('../ui/start/StartScreen').then(
+    (m) => m.openStartScreen(ctx),
+    () => ctx.log.error('Başlangıç ekranı yüklenemedi; bağlantıyı denetleyip Dosya → Başlangıç ekranı ile yeniden deneyin.'),
+  );
+}
+
+/**
+ * Whether the start screen opens with the app: the user's setting, except
+ * under automation (tests drive the drawing at once; `?start=1` still asks for it) and with `?start=0`.
+ */
+function startScreenOnOpen(ctx: AppContext): boolean {
+  const param = new URLSearchParams(location.search).get('start');
+  if (param === '0') return false;
+  if (param === '1') return true;
+  return ctx.prefs.startScreen.value && !navigator.webdriver;
 }

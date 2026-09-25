@@ -427,6 +427,11 @@ export class CoreStore {
     typed(() => this.raw.clear());
   }
 
+  /** The drawing typeface (`DrawingFont` id): text boxes follow its measured letters. */
+  setFont(id: string): void {
+    typed(() => this.raw.setFont(id));
+  }
+
   /** `[{ id, visible, locked, pickInterior }]` for every layer node, ancestors resolved. */
   setLayers(json: string): void {
     typed(() => this.raw.setLayers(json));

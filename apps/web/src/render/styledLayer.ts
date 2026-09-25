@@ -40,6 +40,8 @@ export interface StyledBuildOptions {
   plotScale: number;
   /** Symbol sizes on the screen: paper mm are drawn as px, so they hold still while the view zooms. */
   screen?: boolean;
+  /** Line weights hidden (Kalınlık off): the layers' simple look draws one-pixel lines. */
+  hairlines?: boolean;
   library: StyleSources;
   layerName(id: string): string;
   geometry: GeometrySource;
@@ -127,7 +129,7 @@ export function buildStyledLayer(id: string, entities: readonly Entity[], style:
       colors.push(color);
     }
     let s = simple.get(color);
-    if (s === undefined) simple.set(color, (s = setOf(symbolsOfLayerStyle(style, color))));
+    if (s === undefined) simple.set(color, (s = setOf(symbolsOfLayerStyle(style, color, opts.hairlines))));
     let mode = RENDERER;
     let a = 0;
     if (e.kind === 'text') mode = SKIP;

@@ -11,6 +11,9 @@ import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { Dialog } from '../widgets/Dialog';
 import { paramControl, type FieldEnv } from './paramFields';
+import { TARGET_SHORT } from './targets';
+
+export { TARGET_SHORT };
 
 /**
  * The dialog of one processing tool, generated from its definition: the
@@ -26,13 +29,6 @@ export const TARGET_LABEL: Record<ExecutionTarget, string> = {
   postgis: 'PostGIS veritabanında',
 };
 
-/** Lower-case, for "şimdi: …" and history rows. */
-export const TARGET_SHORT: Record<ExecutionTarget, string> = {
-  client: 'bu tarayıcıda',
-  worker: 'arka planda',
-  server: 'sunucuda',
-  postgis: 'PostGIS’te',
-};
 
 export function openToolDialog(ctx: AppContext, toolId: string, values?: Record<string, unknown>): void {
   if (toolId.startsWith(MODEL_PREFIX)) return openModelDialog(ctx, toolId.slice(MODEL_PREFIX.length), values);

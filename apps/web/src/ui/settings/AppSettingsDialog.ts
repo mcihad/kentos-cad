@@ -5,7 +5,7 @@ import type { AppContext } from '../../app/context';
 import { PREFERENCE_DEFAULTS, snapshot, type PreferencesData, type ShellKind, type Theme } from '../../app/state';
 import type { Signal } from '../../core/signal';
 import { crsBySrid } from '../../geo/crs';
-import { WebGPUBackend } from '../../render/webgpu/WebGPUBackend';
+import { webgpuSupported } from '../../render/webgpu/support';
 import { h } from '../dom';
 import { note, segmented, settingRow, stepper, toggleSwitch } from '../widgets/controls';
 import { crsPicker } from './crsPicker';
@@ -31,7 +31,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       icon: 'appearance',
       title: 'Görünüm',
       lead: 'Tema, vurgu rengi, yazı tipi, arayüz düzeni, yazı boyutu, artı imleç ve fare yardımcıları.',
-      keys: ['theme', 'accent', 'uiFont', 'shell', 'uiScale', 'crosshair', 'cursorInput', 'hoverInfo'],
+      keys: ['theme', 'accent', 'uiFont', 'shell', 'uiScale', 'crosshair', 'cursorInput', 'hoverInfo', 'startScreen'],
       render: (api) => appearance(api),
     },
     {
@@ -80,8 +80,8 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Çizim motoru',
       icon: 'chip',
       title: 'Çizim motoru',
-      lead: 'Çizim alanını ekran kartında çizen arka uç, çizim kalitesi ve sembol boyutu.',
-      keys: ['rendererPreference', 'renderQuality', 'symbolSize'],
+      lead: 'Çizim alanını ekran kartında çizen arka uç, çizim kalitesi, sembol boyutu ve çizgi kalınlığı.',
+      keys: ['rendererPreference', 'renderQuality', 'symbolSize', 'lineWeights'],
       render: (api) => engine(api, ctx),
     },
   ];
@@ -238,6 +238,14 @@ function appearance(api: DraftApi<AppDraft>) {
         toggleSwitch({ label: 'Nesne bilgi kartı', checked: d.hoverInfo, onChange: (v) => api.set('hoverInfo', v) }),
       ),
     ),
+    group(
+      'Açılış',
+      settingRow(
+        'Başlangıç ekranı',
+        'Uygulama açılınca yeni proje, dosya aç, bulut ve son dosyalar gösterilir. Dosya → Başlangıç ekranı ile her zaman açılır.',
+        toggleSwitch({ label: 'Başlangıç ekranı', checked: d.startScreen, onChange: (v) => api.set('startScreen', v) }),
+      ),
+    ),
   ];
 }
 
@@ -286,7 +294,7 @@ function snap(api: DraftApi<AppDraft>) {
 
 function engine(api: DraftApi<AppDraft>, ctx: AppContext) {
   const d = api.draft;
-  const gpu = WebGPUBackend.isSupported();
+  const gpu = webgpuSupported();
   const card = (value: 'webgl2' | 'webgpu', title: string, desc: string, badge: string, disabled: boolean) => {
     const b = h(
       'button',
@@ -332,7 +340,7 @@ function engine(api: DraftApi<AppDraft>, ctx: AppContext) {
       ),
     ),
     group(
-      'Sembol boyutu',
+      'Semboller ve çizgiler',
       settingRow(
         'Semboller',
         'Çizim ölçeğinde: basılı paftadaki boyları, harita ile büyür ve küçülür (yönetmelik ölçüleri böyle görünür). Ekranda sabit: her yakınlıkta aynı boy, gezinmek için.',
@@ -345,6 +353,11 @@ function engine(api: DraftApi<AppDraft>, ctx: AppContext) {
           value: d.symbolSize,
           onChange: (v) => api.set('symbolSize', v),
         }),
+      ),
+      settingRow(
+        'Çizgi kalınlığı',
+        'Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir (durum çubuğunda Kalınlık).',
+        toggleSwitch({ label: 'Çizgi kalınlığını göster', checked: d.lineWeights, onChange: (v) => api.set('lineWeights', v) }),
       ),
     ),
   ];

@@ -26,11 +26,65 @@ function haloText(g: CanvasRenderingContext2D, text: string, x: number, y: numbe
 }
 
 /**
+ * Widths of label texts in the font last set on the context, kept between frames: a pan measures each
+ * text once, not at every frame. Forgets everything when it grows large or the font changes.
+ */
+const widths = new Map<string, number>();
+let widthsFont = '';
+function textWidth(g: CanvasRenderingContext2D, text: string): number {
+  if (g.font !== widthsFont || widths.size > 20000) {
+    widths.clear();
+    widthsFont = g.font;
+  }
+  let w = widths.get(text);
+  if (w === undefined) widths.set(text, (w = g.measureText(text).width));
+  return w;
+}
+
+/**
+ * Where labels already are on screen, in 8 px cells: a label that would
+ * cover one is not drawn. Coarse on purpose (a cell or two of slack is
+ * spacing between labels); the text's halo is inside it.
+ */
+class LabelRoom {
+  private static readonly CELL = 8;
+  private readonly cols: number;
+  private readonly rows: number;
+  private readonly taken: Uint8Array;
+
+  constructor(width: number, height: number) {
+    this.cols = Math.max(1, Math.ceil(width / LabelRoom.CELL));
+    this.rows = Math.max(1, Math.ceil(height / LabelRoom.CELL));
+    this.taken = new Uint8Array(this.cols * this.rows);
+  }
+
+  /** Takes the box if nothing is there yet; false (and nothing taken) when a label is in the way. */
+  claim(x0: number, y0: number, x1: number, y1: number): boolean {
+    const C = LabelRoom.CELL;
+    const c0 = Math.max(0, Math.floor(x0 / C));
+    const c1 = Math.min(this.cols - 1, Math.floor(x1 / C));
+    const r0 = Math.max(0, Math.floor(y0 / C));
+    const r1 = Math.min(this.rows - 1, Math.floor(y1 / C));
+    // Wholly off screen: nothing to keep apart from (the store sends only labels near the view).
+    if (c0 > c1 || r0 > r1) return true;
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) if (this.taken[r * this.cols + c]) return false;
+    for (let r = r0; r <= r1; r++) this.taken.fill(1, r * this.cols + c0, r * this.cols + c1 + 1);
+    return true;
+  }
+}
+
+/**
  * Entity labels and text. Which ones a frame draws and where comes from the
  * geometry store (`labels`: visible layer, box in view, text size on
  * screen, the LabelStyle's scale range and smallest feature; see
  * ./storeRecords); size, template and colour from the layer's LabelStyle,
  * so this function knows nothing about specific layers.
+ *
+ * Labels (parcel numbers, point names, contour heights) are thinned where
+ * they would overlap on screen: the first one keeps its place and one that
+ * would cover it is left out of this view (as GIS labelling does), so a
+ * zoomed-out map stays readable and draws fewer letters. Text objects and
+ * dimension values are part of the drawing and are always drawn.
  */
 export function drawLabels(
   g: CanvasRenderingContext2D,
@@ -42,6 +96,7 @@ export function drawLabels(
 ): void {
   const layers = doc.layers;
   const ink = { fg: pal.fg, 'fg-dim': pal.fgDim, label: pal.label } as const;
+  const room = new LabelRoom(cam.width, cam.height);
   g.save();
   g.textAlign = 'center';
   g.textBaseline = 'middle';
@@ -86,14 +141,17 @@ export function drawLabels(
     const color = ink[st.ink ?? 'label'];
     g.font = `${st.weight ?? 500} ${size.toFixed(1)}px ${pal.drawingFont}`;
 
+    const w = textWidth(g, text);
     switch (what) {
       case LABEL.center: {
         const s = cam.worldToScreen({ x, y });
+        if (!room.claim(s.x - w / 2, s.y - size / 2, s.x + w / 2, s.y + size / 2)) break;
         haloText(g, text, s.x, s.y, color, pal.labelHalo);
         break;
       }
       case LABEL.corner: {
         const tl = cam.worldToScreen({ x, y });
+        if (!room.claim(tl.x + 8, tl.y + 14 - size / 2, tl.x + 8 + w, tl.y + 14 + size / 2)) break;
         g.textAlign = 'left';
         haloText(g, text, tl.x + 8, tl.y + 14, color, pal.labelHalo);
         g.textAlign = 'center';
@@ -101,6 +159,7 @@ export function drawLabels(
       }
       case LABEL.beside: {
         const s = cam.worldToScreen({ x, y });
+        if (!room.claim(s.x + 7, s.y - 7 - size / 2, s.x + 7 + w, s.y - 7 + size / 2)) break;
         g.textAlign = 'left';
         haloText(g, text, s.x + 7, s.y - 7, color, pal.labelHalo);
         g.textAlign = 'center';
@@ -112,6 +171,12 @@ export function drawLabels(
         const c = cam.worldToScreen({ x: spots[i + 4], y: spots[i + 5] });
         let ang = Math.atan2(c.y - a.y, c.x - a.x);
         if (ang > Math.PI / 2 || ang < -Math.PI / 2) ang += Math.PI;
+        // The rotated text's box on screen.
+        const mx = (a.x + c.x) / 2;
+        const my = (a.y + c.y) / 2;
+        const hx = (Math.abs(Math.cos(ang)) * w + Math.abs(Math.sin(ang)) * size) / 2;
+        const hy = (Math.abs(Math.sin(ang)) * w + Math.abs(Math.cos(ang)) * size) / 2;
+        if (!room.claim(mx - hx, my - hy, mx + hx, my + hy)) break;
         g.save();
         g.translate((a.x + c.x) / 2, (a.y + c.y) / 2);
         g.rotate(ang);

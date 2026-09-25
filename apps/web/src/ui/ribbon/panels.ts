@@ -102,6 +102,15 @@ export class PanelView {
           overflowMenu(ctx, overflow, more, host, () => more.setAttribute('aria-expanded', 'false'));
         }),
       );
+      // From the keyboard (arrows through the panel, key tips) the list opens with its first item focused.
+      d.add(
+        listen<KeyboardEvent>(more, 'keydown', (e) => {
+          if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'ArrowDown') return;
+          e.preventDefault();
+          more.setAttribute('aria-expanded', 'true');
+          overflowMenu(ctx, overflow, more, host, () => more.setAttribute('aria-expanded', 'false')).focusFirst();
+        }),
+      );
       d.add(tooltip(more, () => ({ title: `${model.label}: diğer araçlar`, description: overflow.map((id) => ctx.commands.get(id)?.title ?? id).join(' · ') })));
     }
     this.el = h(

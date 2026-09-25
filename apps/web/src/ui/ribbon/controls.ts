@@ -98,8 +98,6 @@ export function commandControl(ctx: AppContext, id: string, d: DisposableStore, 
   return { el: b, sync };
 }
 
-/** The choice last made on each split button, for this session (AutoCAD keeps the last method on top). */
-const lastChoice = new Map<string, string>();
 const choiceKey = (e: SplitEntry) => `${e.command}|${e.option ?? ''}`;
 
 /** Runs a split entry: the tool, then its method's option as if typed. */
@@ -117,7 +115,9 @@ export function runEntry(ctx: AppContext, e: SplitEntry): boolean {
  * icon is the top part and the label with its arrow the bottom part.
  */
 export function splitControl(ctx: AppContext, key: string, entries: readonly SplitEntry[], d: DisposableStore, host: ControlHost): Control {
-  const current = () => entries.find((e) => choiceKey(e) === lastChoice.get(key)) ?? entries[0];
+  // The choice last made stays on top, across sessions (AutoCAD keeps the last method too).
+  const splits = ctx.ui.ribbonSplits;
+  const current = () => entries.find((e) => choiceKey(e) === splits.value[key]) ?? entries[0];
   const main = h('button', { class: 'rsplit__main', type: 'button', dataset: { tool: '' } });
   const arrow = h('button', { class: 'rsplit__arrow', type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false' });
   const el = h('div', { class: 'rbtn rsplit', role: 'group', dataset: { split: key, commands: [...new Set(entries.map((e) => e.command))].join(' ') } }, main, arrow);
@@ -172,7 +172,7 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
       label: e.label,
       hint: e.description,
       run: () => {
-        lastChoice.set(key, choiceKey(e));
+        splits.set({ ...splits.value, [key]: choiceKey(e) });
         render();
         if (runEntry(ctx, e)) host.afterRun();
       },
@@ -205,8 +205,8 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
 }
 
 /** The ▾ beside a panel's title: its seldom used commands. */
-export function overflowMenu(ctx: AppContext, ids: readonly string[], anchor: HTMLElement, host: ControlHost, onClose: () => void): void {
-  PopupMenu.open(afterEach(ids.map((id) => commandItem(ctx, id)), () => host.afterRun()), anchor.getBoundingClientRect(), { minWidth: 220, owner: anchor, onClose });
+export function overflowMenu(ctx: AppContext, ids: readonly string[], anchor: HTMLElement, host: ControlHost, onClose: () => void): PopupMenu {
+  return PopupMenu.open(afterEach(ids.map((id) => commandItem(ctx, id)), () => host.afterRun()), anchor.getBoundingClientRect(), { minWidth: 220, owner: anchor, onClose });
 }
 
 /** A drop-down button for a submenu of the menu model (Tema, İçe aktar …). */

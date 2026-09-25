@@ -13,6 +13,7 @@
     "test:watch": "pnpm -C apps/web test:watch",
     "e2e": "pnpm -C apps/web e2e",
     "e2e:cloud": "pnpm -C apps/web e2e:cloud",
+    "e2e:visual": "pnpm -C apps/web e2e:visual",
     "perf:interaction": "pnpm -C apps/web perf:interaction",
     "rust:test": "cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings",
     "rust:wasm": "cargo build -p kentos-geometry-wasm --target wasm32-unknown-unknown --profile wasm && wasm-bindgen --target web --out-dir apps/web/src/wasm/pkg target/wasm32-unknown-unknown/wasm/kentos_geometry_wasm.wasm",

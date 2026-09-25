@@ -1,6 +1,6 @@
 import type { Command } from '../core/commands';
 import type { BackendKind } from '../render/types';
-import { WebGPUBackend } from '../render/webgpu/WebGPUBackend';
+import { webgpuSupported } from '../render/webgpu/support';
 import type { Entity } from '../model/entities';
 import { pasteEntities, PasteTool } from '../tools/editTools';
 import { Signal } from '../core/signal';
@@ -93,7 +93,7 @@ function renderer(ctx: AppContext, kind: BackendKind, title: string, description
       ctx.prefs.rendererPreference.set(kind);
       void ctx.view.switchBackend(kind);
     },
-    isEnabled: () => kind !== 'webgpu' || WebGPUBackend.isSupported(),
+    isEnabled: () => kind !== 'webgpu' || webgpuSupported(),
     isChecked: () => ctx.view.backendKind.value === kind,
     watch: [ctx.view.backendKind],
   };
@@ -125,6 +125,10 @@ export interface CommandHooks {
   focusCommandLine: () => void;
   /** Komut ara — the ribbon's search box, or the command line in the classic shell. */
   searchCommands: () => void;
+  /** Klavye ipuçları — letters over the ribbon's tabs and controls. */
+  keyTips: () => void;
+  /** Başlangıç ekranı — new, open, cloud and the recent files. */
+  openStart: () => void;
 }
 
 export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void {
@@ -162,6 +166,16 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       run: () => void ctx.files.open(),
       isEnabled: () => !ctx.files.busy.value,
       watch: [ctx.files.busy],
+    },
+    {
+      id: 'file.start',
+      title: 'Başlangıç ekranı…',
+      short: 'Başlangıç',
+      category: F,
+      icon: 'history',
+      description: 'Yeni proje, dosya aç, bulut projeleri ve son açılan ya da kaydedilen dosyalar.',
+      aliases: ['BASLANGIC', 'SON', 'RECENT'],
+      run: hooks.openStart,
     },
     {
       id: 'file.save',
@@ -378,6 +392,13 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       isChecked: () => ctx.prefs.symbolSize.value === 'screen',
       watch: [ctx.prefs.symbolSize],
     },
+    toggle('view.lineWeights', 'Çizgi kalınlığını göster', ctx.prefs.lineWeights, {
+      category: V,
+      icon: 'lineWeight',
+      short: 'Kalınlık',
+      description: 'Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir (AutoCAD LWT); hassas çalışmada kalın sınırlar noktaları örtmez. Kitaplık sembolleri kendi kalınlığını korur.',
+      aliases: ['KALINLIK', 'LWT', 'LWDISPLAY'],
+    }),
     { id: 'view.theme.toggle', title: 'Temayı değiştir', category: V, run: () => applyTheme(ctx, ui.theme.value === 'dark' ? 'light' : 'dark') },
     {
       id: 'view.ribbon',
@@ -410,6 +431,18 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       aliases: ['ARA', 'SEARCH'],
       description: 'Bir komutu adıyla ya da takma adıyla bulup çalıştırır: şeritte arama kutusu, klasik arayüzde komut satırı.',
       run: hooks.searchCommands,
+    },
+    {
+      id: 'view.keyTips',
+      title: 'Şerit harf ipuçları',
+      short: 'Harf ipuçları',
+      category: V,
+      icon: 'keyboard',
+      aliases: ['KEYTIPS', 'HARFLER'],
+      description: 'Şeridin sekmelerinde ve düğmelerinde harfler gösterir: sekmenin harfine, sonra düğmenin harflerine basınca çalışır. Alt tuşuna tek başına basıp bırakmak da açar; Esc bir düzey geri gider.',
+      run: hooks.keyTips,
+      isEnabled: () => ctx.prefs.shell.value === 'ribbon',
+      watch: [ctx.prefs.shell],
     },
     fullscreen(),
     {

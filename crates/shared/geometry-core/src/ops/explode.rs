@@ -5,6 +5,7 @@
 //! (project units belong to the app), and is used only when the dimension
 //! has no text of its own.
 
+use crate::text::{Font, width_em};
 use crate::api::Op;
 use crate::entity::{Entity, Shape, dimension_geom};
 use crate::geom::arc::norm_angle;
@@ -22,7 +23,7 @@ fn line(a: Vec2, b: Vec2) -> Entity {
     Entity::new(Shape::Line { a, b })
 }
 
-pub fn explode_entity(e: &Shape, value_text: &str) -> Cut {
+pub fn explode_entity(e: &Shape, value_text: &str, font: Font) -> Cut {
     match e {
         Shape::Polyline { pts, bulges, .. } => {
             let pieces = segment_pieces(pts, bulges.as_deref(), false);
@@ -96,9 +97,9 @@ pub fn explode_entity(e: &Shape, value_text: &str) -> Cut {
                 Some(t) if !t.is_empty() => t.clone(),
                 _ => value_text.to_string(),
             };
-            // textAt is the text's centre; single-line text is anchored at its start.
+            // textAt is the text's centre; single-line text is anchored at its start (measured in the drawing's face).
             let r = (l.rotation * PI) / 180.0;
-            let half = text.encode_utf16().count() as f64 * height * 0.55 * 0.5;
+            let half = width_em(&text, font) * height * 0.5;
             pieces.push(Entity::new(Shape::Text {
                 p: Vec2::new(l.text_at.x - cos(r) * half, l.text_at.y - sin(r) * half),
                 text,
@@ -169,6 +170,6 @@ fn segment_pieces(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Vec<Ent
     pieces
 }
 
-pub(crate) static OPS: &[Op] = &[op!("explodeEntity", |e: Entity, value_text: String| {
-    explode_entity(&e.shape, &value_text)
+pub(crate) static OPS: &[Op] = &[op!("explodeEntity", |e: Entity, value_text: String, font: Option<String>| {
+    explode_entity(&e.shape, &value_text, font.as_deref().map_or(Font::DEFAULT, Font::from_id))
 })];

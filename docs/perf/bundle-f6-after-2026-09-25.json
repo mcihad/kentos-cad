@@ -1,0 +1,879 @@
+{
+  "label": "f6-after",
+  "date": "2026-09-25T06:27:49.198Z",
+  "commit": "55a0fff",
+  "dirtyTree": true,
+  "initial": {
+    "js": {
+      "raw": 551808,
+      "gzip": 174451,
+      "brotli": 147272
+    },
+    "css": {
+      "raw": 117119,
+      "gzip": 19612,
+      "brotli": 17203
+    },
+    "files": [
+      "assets/index-CibOo_FA.js",
+      "assets/PopupMenu-DXK5ZIuy.js",
+      "assets/color-BbnSkwok.js",
+      "assets/core-Cxr8jddY.js",
+      "assets/crs-DXR5jJaS.js",
+      "assets/emitter-BgRlvLeE.js",
+      "assets/entities-CxB-9br2.js",
+      "assets/expression-Dw20Clgt.js",
+      "assets/pack-D9eDrjDN.js",
+      "assets/projectSettings-DR46irdx.js",
+      "assets/signal-BEuxsL1Q.js",
+      "assets/text-NQAA7O1A.js",
+      "assets/index-DZH6mKJ1.css"
+    ]
+  },
+  "lazy": [
+    {
+      "file": "assets/AppMenu-D39rwsx9.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 13744,
+        "gzip": 5181,
+        "brotli": 4712
+      },
+      "topModules": [
+        {
+          "id": "src/ui/appmenu/AppMenu.ts",
+          "size": 18057
+        },
+        {
+          "id": "src/styles/appmenu.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/AppSettingsDialog-B4Txq0fO.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 11157,
+        "gzip": 4329,
+        "brotli": 3956
+      },
+      "topModules": [
+        {
+          "id": "src/ui/settings/AppSettingsDialog.ts",
+          "size": 13769
+        }
+      ]
+    },
+    {
+      "file": "assets/ConflictDialog-CFlBxqY8.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 2161,
+        "gzip": 1177,
+        "brotli": 1067
+      },
+      "topModules": [
+        {
+          "id": "src/ui/cloud/ConflictDialog.ts",
+          "size": 2632
+        }
+      ]
+    },
+    {
+      "file": "assets/CoordExportDialog-CRFm3aDS.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 3734,
+        "gzip": 1740,
+        "brotli": 1555
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/CoordExportDialog.ts",
+          "size": 4869
+        }
+      ]
+    },
+    {
+      "file": "assets/CoordImportDialog-K2bsER7s.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 8406,
+        "gzip": 3422,
+        "brotli": 3142
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/CoordImportDialog.ts",
+          "size": 11193
+        }
+      ]
+    },
+    {
+      "file": "assets/DxfExportDialog-DPNZHaOz.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 6524,
+        "gzip": 2876,
+        "brotli": 2621
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/DxfExportDialog.ts",
+          "size": 8865
+        }
+      ]
+    },
+    {
+      "file": "assets/DxfImportDialog-BkVNq0tM.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 5659,
+        "gzip": 2301,
+        "brotli": 2099
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/DxfImportDialog.ts",
+          "size": 7385
+        }
+      ]
+    },
+    {
+      "file": "assets/LayerStyleDialog-Bc64sgS0.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 16901,
+        "gzip": 5963,
+        "brotli": 5469
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/LayerStyleDialog.ts",
+          "size": 14802
+        },
+        {
+          "id": "src/ui/style/rulesEditor.ts",
+          "size": 5343
+        },
+        {
+          "id": "src/ui/style/symbolSlot.ts",
+          "size": 3199
+        }
+      ]
+    },
+    {
+      "file": "assets/LegendDialog-BnNme3mt.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 5102,
+        "gzip": 2314,
+        "brotli": 2072
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/LegendDialog.ts",
+          "size": 5041
+        },
+        {
+          "id": "src/style/legend.ts",
+          "size": 2162
+        }
+      ]
+    },
+    {
+      "file": "assets/LoginDialog-CVZhViT7.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 1951,
+        "gzip": 995,
+        "brotli": 850
+      },
+      "topModules": [
+        {
+          "id": "src/ui/cloud/LoginDialog.ts",
+          "size": 2807
+        }
+      ]
+    },
+    {
+      "file": "assets/ModelDesigner-CZYjgQzv.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 32774,
+        "gzip": 10973,
+        "brotli": 9994
+      },
+      "topModules": [
+        {
+          "id": "src/ui/processing/model/modelInspector.ts",
+          "size": 15661
+        },
+        {
+          "id": "src/ui/processing/model/ModelDesigner.ts",
+          "size": 11505
+        },
+        {
+          "id": "src/ui/processing/model/ModelCanvas.ts",
+          "size": 11260
+        },
+        {
+          "id": "src/processing/modelEdit.ts",
+          "size": 6066
+        },
+        {
+          "id": "src/ui/processing/model/modelPalette.ts",
+          "size": 3004
+        }
+      ]
+    },
+    {
+      "file": "assets/NewProjectDialog-CUvE_gjO.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 3228,
+        "gzip": 1714,
+        "brotli": 1564
+      },
+      "topModules": [
+        {
+          "id": "src/ui/settings/NewProjectDialog.ts",
+          "size": 4396
+        }
+      ]
+    },
+    {
+      "file": "assets/ProjectActions-Bgu9n7Cj.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 2981,
+        "gzip": 1353,
+        "brotli": 1209
+      },
+      "topModules": [
+        {
+          "id": "src/ui/cloud/ProjectActions.ts",
+          "size": 3952
+        }
+      ]
+    },
+    {
+      "file": "assets/ProjectSettingsDialog-CWmsdj-H.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 5094,
+        "gzip": 2272,
+        "brotli": 2085
+      },
+      "topModules": [
+        {
+          "id": "src/ui/settings/ProjectSettingsDialog.ts",
+          "size": 6273
+        }
+      ]
+    },
+    {
+      "file": "assets/ProjectsDialog-B8k1BJoJ.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 4447,
+        "gzip": 2015,
+        "brotli": 1826
+      },
+      "topModules": [
+        {
+          "id": "src/ui/cloud/ProjectsDialog.ts",
+          "size": 6563
+        }
+      ]
+    },
+    {
+      "file": "assets/Ribbon-BrwOz4_U.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 38237,
+        "gzip": 12380,
+        "brotli": 11309
+      },
+      "topModules": [
+        {
+          "id": "src/ui/ribbon/Ribbon.ts",
+          "size": 20203
+        },
+        {
+          "id": "src/app/ribbon.ts",
+          "size": 9773
+        },
+        {
+          "id": "src/ui/ribbon/controls.ts",
+          "size": 7431
+        },
+        {
+          "id": "src/ui/ribbon/panels.ts",
+          "size": 6708
+        },
+        {
+          "id": "src/ui/ribbon/keytips.ts",
+          "size": 5603
+        },
+        {
+          "id": "src/ui/ribbon/search.ts",
+          "size": 5309
+        },
+        {
+          "id": "src/styles/ribbon.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/SettingsShell-CsbVfdfb.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 8020,
+        "gzip": 3228,
+        "brotli": 2938
+      },
+      "topModules": [
+        {
+          "id": "src/ui/settings/crsPicker.ts",
+          "size": 5143
+        },
+        {
+          "id": "src/ui/settings/SettingsShell.ts",
+          "size": 3404
+        },
+        {
+          "id": "src/ui/settings/workspacePicker.ts",
+          "size": 2324
+        }
+      ]
+    },
+    {
+      "file": "assets/StartScreen-Clmd7lGz.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 2986,
+        "gzip": 1391,
+        "brotli": 1264
+      },
+      "topModules": [
+        {
+          "id": "src/ui/start/StartScreen.ts",
+          "size": 3567
+        },
+        {
+          "id": "src/styles/start.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/StyleManager-DwVPHAvj.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 18322,
+        "gzip": 6679,
+        "brotli": 6157
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/StyleManager.ts",
+          "size": 16168
+        },
+        {
+          "id": "src/ui/style/managerDetails.ts",
+          "size": 9605
+        }
+      ]
+    },
+    {
+      "file": "assets/SvgEditor-Bfn22_p0.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 150288,
+        "gzip": 49870,
+        "brotli": 43401
+      },
+      "topModules": [
+        {
+          "id": "src/ui/svgedit/SvgEditor.ts",
+          "size": 20518
+        },
+        {
+          "id": "src/ui/svgedit/svgCanvas.ts",
+          "size": 19093
+        },
+        {
+          "id": "src/ui/svgedit/svgProps.ts",
+          "size": 15870
+        },
+        {
+          "id": "src/ui/svgedit/svgNodeTool.ts",
+          "size": 14491
+        },
+        {
+          "id": "src/ui/svgedit/svgFile.ts",
+          "size": 13882
+        },
+        {
+          "id": "src/ui/svgedit/svgActions.ts",
+          "size": 10779
+        },
+        {
+          "id": "src/ui/svgedit/svgReference.ts",
+          "size": 8829
+        },
+        {
+          "id": "src/style/svg/pkg/kentos_svg_wasm.js",
+          "size": 8026
+        }
+      ]
+    },
+    {
+      "file": "assets/SymbolDesigner-NtnYKRg4.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 27319,
+        "gzip": 9765,
+        "brotli": 8928
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/layerForms.ts",
+          "size": 19506
+        },
+        {
+          "id": "src/ui/style/SymbolDesigner.ts",
+          "size": 17716
+        }
+      ]
+    },
+    {
+      "file": "assets/ToolDialog-CLaLWnmZ.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 25073,
+        "gzip": 8952,
+        "brotli": 8188
+      },
+      "topModules": [
+        {
+          "id": "src/ui/processing/ToolDialog.ts",
+          "size": 16257
+        },
+        {
+          "id": "src/ui/processing/paramFields.ts",
+          "size": 11541
+        },
+        {
+          "id": "src/processing/modelRunner.ts",
+          "size": 4582
+        },
+        {
+          "id": "src/processing/model.ts",
+          "size": 3145
+        },
+        {
+          "id": "src/tools/pickPointTool.ts",
+          "size": 926
+        }
+      ]
+    },
+    {
+      "file": "assets/WebGPUBackend-C9fcW5gu.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 29583,
+        "gzip": 9596,
+        "brotli": 8657
+      },
+      "topModules": [
+        {
+          "id": "src/render/webgpu/styledShaders.ts",
+          "size": 14841
+        },
+        {
+          "id": "src/render/webgpu/styledRenderer.ts",
+          "size": 9206
+        },
+        {
+          "id": "src/render/webgpu/WebGPUBackend.ts",
+          "size": 8825
+        },
+        {
+          "id": "src/render/webgpu/shaders.ts",
+          "size": 3138
+        }
+      ]
+    },
+    {
+      "file": "assets/appearancePickers-zRpYPubl.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 1766,
+        "gzip": 840,
+        "brotli": 718
+      },
+      "topModules": [
+        {
+          "id": "src/ui/settings/appearancePickers.ts",
+          "size": 2425
+        }
+      ]
+    },
+    {
+      "file": "assets/classify-C2udqnMe.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 2720,
+        "gzip": 1434,
+        "brotli": 1292
+      },
+      "topModules": [
+        {
+          "id": "src/style/classify.ts",
+          "size": 4232
+        }
+      ]
+    },
+    {
+      "file": "assets/common-BGbu36dj.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 5587,
+        "gzip": 2463,
+        "brotli": 2283
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/common.ts",
+          "size": 4464
+        },
+        {
+          "id": "src/io/client.ts",
+          "size": 2937
+        },
+        {
+          "id": "src/styles/io.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/coords-OLfFaALF.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 1408,
+        "gzip": 740,
+        "brotli": 682
+      },
+      "topModules": [
+        {
+          "id": "src/io/coords.ts",
+          "size": 2074
+        }
+      ]
+    },
+    {
+      "file": "assets/designerFields-DIkKqwJy.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 4353,
+        "gzip": 1862,
+        "brotli": 1700
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/designerFields.ts",
+          "size": 6439
+        }
+      ]
+    },
+    {
+      "file": "assets/recentList-DopqgN7V.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 957,
+        "gzip": 555,
+        "brotli": 489
+      },
+      "topModules": [
+        {
+          "id": "src/ui/start/recentList.ts",
+          "size": 1232
+        },
+        {
+          "id": "src/styles/recent.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/sampleProject-BZSGOHy9.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 13244,
+        "gzip": 4975,
+        "brotli": 4560
+      },
+      "topModules": [
+        {
+          "id": "src/model/document.ts",
+          "size": 11364
+        },
+        {
+          "id": "src/model/sampleProject.ts",
+          "size": 8806
+        },
+        {
+          "id": "src/model/sameJson.ts",
+          "size": 1160
+        }
+      ]
+    },
+    {
+      "file": "assets/scope-Cd1FEqaU.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 1032,
+        "gzip": 670,
+        "brotli": 578
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/save.ts",
+          "size": 1015
+        },
+        {
+          "id": "src/ui/io/scope.ts",
+          "size": 414
+        }
+      ]
+    },
+    {
+      "file": "assets/showcase-CGLPshhb.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 2494,
+        "gzip": 1200,
+        "brotli": 1098
+      },
+      "topModules": [
+        {
+          "id": "src/style/showcase.ts",
+          "size": 4628
+        }
+      ]
+    },
+    {
+      "file": "assets/styleFiles-MTvMqefG.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 1359,
+        "gzip": 827,
+        "brotli": 698
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/styleFiles.ts",
+          "size": 1834
+        }
+      ]
+    },
+    {
+      "file": "assets/system-CzF_h3uS.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 205312,
+        "gzip": 61378,
+        "brotli": 48934
+      },
+      "topModules": [
+        {
+          "id": "src/style/system/mpyy/pictogramDrawings.ts",
+          "size": 35541
+        },
+        {
+          "id": "src/style/system/mpyy/nip/09-teknik-altyapi.ts",
+          "size": 16891
+        },
+        {
+          "id": "src/style/system/mpyy/ortak/02-sit.ts",
+          "size": 11150
+        },
+        {
+          "id": "src/style/system/mpyy/ortak/01-sinirlar.ts",
+          "size": 10472
+        },
+        {
+          "id": "src/style/system/mpyy/uip/11-ulasim.ts",
+          "size": 9690
+        },
+        {
+          "id": "src/style/system/mpyy/uip/07-sosyal-altyapi.ts",
+          "size": 9308
+        },
+        {
+          "id": "src/style/system/mpyy/uip/03-konut-calisma.ts",
+          "size": 8506
+        },
+        {
+          "id": "src/style/system/mpyy/uip/10-karayollari.ts",
+          "size": 7907
+        }
+      ]
+    },
+    {
+      "file": "assets/thumbs-DNt47K9y.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 10311,
+        "gzip": 4488,
+        "brotli": 4051
+      },
+      "topModules": [
+        {
+          "id": "src/render/symbolPreview.ts",
+          "size": 14710
+        },
+        {
+          "id": "src/ui/style/thumbs.ts",
+          "size": 1541
+        },
+        {
+          "id": "src/style/compile.ts",
+          "size": 362
+        }
+      ]
+    },
+    {
+      "file": "assets/zoom-DlT2ybYU.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 2046,
+        "gzip": 1127,
+        "brotli": 1050
+      },
+      "topModules": [
+        {
+          "id": "src/io/apply.ts",
+          "size": 2676
+        },
+        {
+          "id": "src/ui/io/zoom.ts",
+          "size": 412
+        }
+      ]
+    }
+  ],
+  "total": {
+    "raw": 5298152,
+    "gzip": 2624388,
+    "brotli": 2348908
+  },
+  "entryTopModules": [
+    {
+      "id": "src/tools/catalog.ts",
+      "size": 30420
+    },
+    {
+      "id": "src/viewport/ViewportController.ts",
+      "size": 22455
+    },
+    {
+      "id": "src/app/commands.ts",
+      "size": 19182
+    },
+    {
+      "id": "src/render/webgl2/styledShaders.ts",
+      "size": 16463
+    },
+    {
+      "id": "src/tools/areaTools.ts",
+      "size": 15663
+    },
+    {
+      "id": "src/ui/properties/PropertiesPanel.ts",
+      "size": 15551
+    },
+    {
+      "id": "src/tools/modifyTools.ts",
+      "size": 14376
+    },
+    {
+      "id": "src/tools/curveTools.ts",
+      "size": 14219
+    },
+    {
+      "id": "src/render/webgl2/styledRenderer.ts",
+      "size": 12105
+    },
+    {
+      "id": "src/tools/cornerTools.ts",
+      "size": 11702
+    },
+    {
+      "id": "src/app/cloud/sync.ts",
+      "size": 11241
+    },
+    {
+      "id": "src/style/file.ts",
+      "size": 10899
+    },
+    {
+      "id": "src/tools/editTools.ts",
+      "size": 10433
+    },
+    {
+      "id": "src/tools/shapeTools.ts",
+      "size": 10392
+    },
+    {
+      "id": "src/app/fileIO.ts",
+      "size": 9647
+    },
+    {
+      "id": "src/viewport/overlay.ts",
+      "size": 9640
+    },
+    {
+      "id": "src/app/cloud/session.ts",
+      "size": 9633
+    },
+    {
+      "id": "src/ui/layers/LayersPanel.ts",
+      "size": 9473
+    },
+    {
+      "id": "src/tools/pathTool.ts",
+      "size": 9449
+    },
+    {
+      "id": "src/model/snapshot.ts",
+      "size": 9370
+    },
+    {
+      "id": "src/ui/processing/ProcessingPanel.ts",
+      "size": 9207
+    },
+    {
+      "id": "src/processing/runner.ts",
+      "size": 9060
+    },
+    {
+      "id": "src/tools/pathEditTools.ts",
+      "size": 8654
+    },
+    {
+      "id": "src/render/styledBatches.ts",
+      "size": 8640
+    },
+    {
+      "id": "src/tools/pointCalc.ts",
+      "size": 8360
+    }
+  ],
+  "fileCount": 97
+}

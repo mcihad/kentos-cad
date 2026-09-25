@@ -23,6 +23,7 @@ use crate::geometry::{
 };
 use crate::jsmath::{PI, TAU, cos, js_max, sin};
 use crate::op;
+use crate::text::{Font, width_em};
 use crate::vec2::Vec2;
 
 /// Half-length (1000 km) an infinite line gets when it meets finite geometry
@@ -402,9 +403,10 @@ pub fn inside_polygon(e: &Shape, p: Vec2) -> bool {
             .any(|h| point_in_polygon(p, &polygon_ring(&h.pts, h.bulges.as_deref())))
 }
 
-/// Approximate rotated box of a text (~0.55 em per glyph, JavaScript's string length).
-pub fn text_box(p: Vec2, text: &str, height: f64, rotation: f64) -> Vec<Vec2> {
-    let w = js_max(1.0, text.encode_utf16().count() as f64) * height * 0.55;
+/// Rotated box of a text: its letters' advances in the drawing's typeface (`text`), one line tall and a
+/// little over for descenders and accents.
+pub fn text_box(p: Vec2, text: &str, height: f64, rotation: f64, font: Font) -> Vec<Vec2> {
+    let w = width_em(text, font) * height;
     let h = height * 1.15;
     let r = (rotation * PI) / 180.0;
     let ux = cos(r);
@@ -429,7 +431,12 @@ pub fn is_closed_outline(e: &Shape) -> bool {
     }
 }
 
+/// The box of an object; text measured in Barlow (the store measures in the project's face, `entity_bounds_in`).
 pub fn entity_bounds(e: &Shape) -> Bounds {
+    entity_bounds_in(e, Font::DEFAULT)
+}
+
+pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
     let mut b = empty_bounds();
     match e {
         Shape::Circle { c, r } => {
@@ -442,7 +449,7 @@ pub fn entity_bounds(e: &Shape) -> Bounds {
             height,
             rotation,
         } => {
-            for q in text_box(*p, text, *height, *rotation) {
+            for q in text_box(*p, text, *height, *rotation, font) {
                 extend_bounds(&mut b, q, 0.0);
             }
             return b;
@@ -621,13 +628,18 @@ pub(crate) static OPS: &[Op] = &[
     op!("entityGeometry", |e: Entity| entity_geometry(&e)),
 ];
 
-/// `textBox` takes any object with p, text, height and rotation (a text entity or a draft).
+/// `textBox` takes any object with p, text, height and rotation (a text entity or a draft), and the
+/// drawing typeface as `font` (a `DrawingFont` id; Barlow without one).
 fn text_box_json(v: &Json) -> Result<Vec<Vec2>, String> {
+    let font = match v.get("font") {
+        Json::Str(id) => Font::from_id(id),
+        _ => Font::DEFAULT,
+    };
     let p: Vec2 = json::read_field(v, "p")?;
     let text: String = json::read_field(v, "text")?;
     let height: f64 = json::read_field(v, "height")?;
     let rotation: f64 = json::read_field(v, "rotation")?;
-    Ok(text_box(p, &text, height, rotation))
+    Ok(text_box(p, &text, height, rotation, font))
 }
 
 impl FromJson for Json {

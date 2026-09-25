@@ -5,6 +5,7 @@
 //! the TypeScript's comparisons decide, ties included.
 
 use super::{Item, Store, padded};
+use crate::text::Font;
 use crate::entity::{
     Shape, dimension_geom, ellipse_geom, entity_area, entity_outline, inside_polygon,
     is_closed_outline, polygon_holes, polygon_ring, text_box,
@@ -77,7 +78,7 @@ impl Store {
         let mut area: Option<(f64, f64)> = None;
         for it in self.near(p, tol * 1.5) {
             let e = &it.shape;
-            let d = edge_distance(e, p);
+            let d = edge_distance(e, p, self.font);
             let t = if matches!(e, Shape::Point { .. } | Shape::Text { .. }) {
                 tol * 1.5
             } else {
@@ -131,7 +132,7 @@ impl Store {
             .near(p, tol)
             .into_iter()
             .filter(|it| !matches!(it.shape, Shape::Point { .. } | Shape::Text { .. }))
-            .map(|it| (it.id, edge_distance(&it.shape, p)))
+            .map(|it| (it.id, edge_distance(&it.shape, p, self.font)))
             .filter(|&(_, d)| d <= tol)
             .collect();
         // Stable, and −0 equals 0 as in `d < best.d`: equal distances keep the document's order.
@@ -224,7 +225,7 @@ impl Store {
 
 /// Distance from `p` to what can be clicked of an object: its edges, a
 /// text's whole body, a dimension's value text.
-pub fn edge_distance(e: &Shape, p: Vec2) -> f64 {
+pub fn edge_distance(e: &Shape, p: Vec2, font: Font) -> f64 {
     match e {
         Shape::Point { p: q, .. } => return js_hypot(p.x - q.x, p.y - q.y),
         Shape::Text {
@@ -234,7 +235,7 @@ pub fn edge_distance(e: &Shape, p: Vec2) -> f64 {
             rotation,
         } => {
             // Anywhere on the text body counts as a hit.
-            let b = text_box(*at, text, *height, *rotation);
+            let b = text_box(*at, text, *height, *rotation, font);
             if point_in_polygon(p, &b) {
                 return 0.0;
             }

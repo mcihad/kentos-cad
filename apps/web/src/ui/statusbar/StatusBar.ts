@@ -6,7 +6,7 @@ import { watchAll } from '../../core/signal';
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
-import { WebGPUBackend } from '../../render/webgpu/WebGPUBackend';
+import { webgpuSupported } from '../../render/webgpu/support';
 import { PopupMenu } from '../widgets/PopupMenu';
 import { hideTooltip, tooltip } from '../widgets/tooltip';
 import { accountMenu, saveCell } from './cloudCells';
@@ -45,6 +45,7 @@ export class StatusBar extends Component {
       this.toggle('draft.ortho', 'Orto'),
       this.toggle('draft.polar', 'Kutupsal'),
       this.toggle('draft.tracking', 'İzleme'),
+      this.toggle('view.lineWeights', 'Kalınlık'),
     );
 
     const crs = h('button', { class: 'status__cell status__btn', type: 'button' }, icon('crs', 14), h('span'));
@@ -57,7 +58,7 @@ export class StatusBar extends Component {
         [
           { kind: 'header', label: 'Çizim motoru' },
           commandItem(ctx, 'view.renderer.webgl2', { hint: 'varsayılan' }),
-          commandItem(ctx, 'view.renderer.webgpu', { hint: WebGPUBackend.isSupported() ? undefined : 'desteklenmiyor' }),
+          commandItem(ctx, 'view.renderer.webgpu', { hint: webgpuSupported() ? undefined : 'desteklenmiyor' }),
           { kind: 'separator' },
           commandItem(ctx, 'tools.options'),
         ],

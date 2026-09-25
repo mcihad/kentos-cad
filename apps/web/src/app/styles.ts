@@ -2,7 +2,6 @@ import type { Command } from '../core/commands';
 import type { CadDocument } from '../model/document';
 import type { LibraryCategory, LibraryItem } from '../model/style';
 import { StyleLibrary } from '../style/library';
-import { SYSTEM_LIBRARY } from '../style/system';
 import { geometryClassOf } from '../style/geometry';
 import type { AppContext } from './context';
 import { persistedSignals } from './state';
@@ -23,8 +22,9 @@ interface UserStyles {
 
 const isItem = (v: unknown): v is LibraryItem => !!v && typeof v === 'object' && ((v as LibraryItem).kind === 'symbol' || (v as LibraryItem).kind === 'asset') && typeof (v as LibraryItem).id === 'string';
 
-export function createStyles(doc: CadDocument): StyleService {
-  const library = new StyleLibrary(SYSTEM_LIBRARY);
+/** `system` is the built-in library (style/system), a chunk of its own loaded before the app starts. */
+export function createStyles(doc: CadDocument, system: { items: readonly LibraryItem[]; categories?: readonly LibraryCategory[] }): StyleService {
+  const library = new StyleLibrary(system);
   const stored = persistedSignals<UserStyles>('kentos.styles.v1', { items: [], categories: [] });
   library.load('user', (stored.items.value ?? []).filter(isItem), stored.categories.value ?? []);
   library.load('project', doc.styles.value.items, doc.styles.value.categories);

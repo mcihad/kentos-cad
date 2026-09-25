@@ -33,6 +33,7 @@ pub mod predicates;
 pub mod processing;
 pub mod store;
 pub mod tessellate;
+pub mod text;
 pub mod tools;
 pub mod triangulate;
 pub mod vec2;

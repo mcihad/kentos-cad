@@ -42,6 +42,7 @@ export function registerDefaultKeybindings(ctx: AppContext): void {
   keymap.bind('F1', 'help.shortcuts', global);
   keymap.bind('Ctrl+F1', 'view.ribbonCollapse', global);
   keymap.bind('Alt+Q', 'view.commandSearch', global);
+  keymap.bind('F6', 'view.keyTips', global);
   keymap.bind('Ctrl+,', 'tools.options', global);
   keymap.bind('Space', 'commandline.focus');
   keymap.bind('Esc', 'tool.cancel');

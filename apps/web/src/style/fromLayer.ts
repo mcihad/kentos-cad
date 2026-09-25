@@ -23,9 +23,12 @@ export function lineSymbolOf(color: string, lineType: LineType, weight: number):
   return { type: 'line', layers: [{ id: 'l', type: 'simpleLine', color, width: weight, dash: LINE_TYPE_DASH[lineType], unit: 'mm', cap: 'butt', join: 'miter' }] };
 }
 
-/** Symbols for a layer's simple style; `color` is the object's own colour when it has one. */
-export function symbolsOfLayerStyle(style: LayerStyle, color = style.color): SymbolSet {
-  const line = lineSymbolOf(color, style.lineType, style.lineWeight);
+/**
+ * Symbols for a layer's simple style; `color` is the object's own colour when it has one. `hairlines`: line
+ * weights hidden (Kalınlık off), every line one pixel.
+ */
+export function symbolsOfLayerStyle(style: LayerStyle, color = style.color, hairlines = false): SymbolSet {
+  const line = lineSymbolOf(color, style.lineType, hairlines ? 0 : style.lineWeight);
   const fill: FillSymbol = {
     type: 'fill',
     layers: [...(style.fill ? [{ id: 'f', type: 'simpleFill' as const, color: style.fill }] : []), { ...line.layers[0], id: 'o' }],

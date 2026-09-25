@@ -402,6 +402,11 @@ fn hatches_with_islands_solid_fill_and_a_cross_pattern() {
     );
 }
 
+fn text_width(text: &str) -> f64 {
+    use kentos_geometry_core::text::{Font, width_em};
+    width_em(text, Font::from_id("arimo"))
+}
+
 #[test]
 fn a_dimension_is_its_block_exploded() {
     let r = read("dimension.dxf");
@@ -420,7 +425,8 @@ fn a_dimension_is_its_block_exploded() {
         Entity::Text(t) =>
             t.base.layer_id == "OLCU"
                 && t.text == "10.00"
-                && (t.p.x - (5.0 - 5.0 * 0.55 * 0.5 / 2.0)).abs() < 1e-12,
+                // Centred on 5: moved left by half its width in Arial's measures (Arimo).
+                && (t.p.x - (5.0 - text_width("10.00") * 0.5 / 2.0)).abs() < 1e-12,
         _ => false,
     }));
     assert!(r.report.notes.iter().any(|n| n.what == "Ölçü (DIMENSION)"));

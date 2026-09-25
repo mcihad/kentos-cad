@@ -86,6 +86,11 @@ export class AppShell extends Component {
     this.d.add(bindViewportMenus(ctx));
   }
 
+  /** Klavye ipuçları: the ribbon's letters (the command is off in the classic shell). */
+  keyTips(): void {
+    this.ribbon?.showKeyTips();
+  }
+
   /** Komut ara: the ribbon's search field, or the command line (which also suggests commands) in the classic shell. */
   searchCommands(): void {
     if (this.ribbon) this.ribbon.focusSearch();

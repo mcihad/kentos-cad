@@ -8,6 +8,7 @@ import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { LINK_TEXT, SAVE_TEXT } from '../statusbar/cloudCells';
 import { brandMark } from '../shell/brandButton';
+import { recentFileRow } from '../start/recentList';
 
 /**
  * The application menu (DESIGN.md §7.1.1), opened from the KentOS mark in
@@ -244,6 +245,9 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
           return t;
         }),
       ),
+      ...(ctx.files.recent.list.value.length
+        ? [h('div', { class: 'appmenu__section' }, 'Son dosyalar'), h('div', { class: 'appmenu__recentfiles', role: 'list' }, ...ctx.files.recent.list.value.slice(0, 5).map((f) => recentFileRow(ctx, f, close)))]
+        : []),
     ];
   };
 
@@ -374,7 +378,7 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
     pane.replaceChildren();
     showPane(keep);
   };
-  d.add(watchAll([ctx.doc.name, ctx.doc.dirty, ctx.cloud.me, ctx.cloud.project, ctx.server.state, ctx.cloud.link], refresh));
+  d.add(watchAll([ctx.doc.name, ctx.doc.dirty, ctx.cloud.me, ctx.cloud.project, ctx.server.state, ctx.cloud.link, ctx.files.recent.list], refresh));
   refresh();
 
   // ── Place, focus, dismiss ──────────────────────────────────────────

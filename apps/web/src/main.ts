@@ -13,6 +13,7 @@ import './styles/svgfile.css';
 import './styles/svgedit.css';
 import './styles/cloud.css';
 import { createApp } from './app/createApp';
+import { loadStartContent } from './app/startContent';
 import { initCore } from './wasm/core';
 
 const root = document.getElementById('app')!;
@@ -29,10 +30,14 @@ function coreFailed(err: Error): void {
   root.replaceChildren(text, retry);
 }
 
+// The system symbol library and the demo drawing download while the core compiles.
+const start = loadStartContent();
+start.catch(() => undefined);
+
 // Every drawing calculation runs in the Rust core (docs/adr/0008): it starts before the app.
 initCore()
   .then(
-    () => createApp(root),
+    () => createApp(root, start),
     (err: Error) => {
       coreFailed(err);
       return null;

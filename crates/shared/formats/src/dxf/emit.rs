@@ -34,8 +34,11 @@ const MAX_DEPTH: usize = 24;
 const MAX_ARRAY: i64 = 10_000;
 /// Curves sampled into points stay within this of the true curve (1 mm).
 const SAMPLE_TOLERANCE: f64 = 1e-3;
-/// Text width per character in ems, as the app estimates it (entities.ts textBox).
-const EM_PER_CHAR: f64 = 0.55;
+/// Width of a DXF text in ems: measured in Arimo, the app's face with Arial's widths, the metrics of
+/// AutoCAD's Standard style (the file does not say which face drew it).
+fn text_em(text: &str) -> f64 {
+    kentos_geometry_core::text::width_em(text, kentos_geometry_core::text::Font::from_id("arimo"))
+}
 
 #[derive(Clone, Debug)]
 pub struct Block {
@@ -1078,7 +1081,7 @@ impl<'l> Emitter<'l> {
         {
             {
                 let q = v(q[0], q[1]);
-                let w = text.chars().count() as f64 * EM_PER_CHAR * height * width.abs().max(0.01);
+                let w = text_em(&text) * height * width.abs().max(0.01);
                 if halign == 3 || halign == 5 {
                     // Aligned and fit: the text runs from 10 to 11.
                     rot = deg(atan2(q.y - p[1], q.x - p[0]));
@@ -1217,7 +1220,7 @@ impl<'l> Emitter<'l> {
             if line.trim().is_empty() {
                 continue;
             }
-            let w = line.chars().count() as f64 * EM_PER_CHAR * height;
+            let w = text_em(line) * height;
             let along = match col {
                 1 => -w / 2.0,
                 2 => -w,

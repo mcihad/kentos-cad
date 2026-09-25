@@ -121,6 +121,7 @@ const ICONS = {
   terminal: '<rect x="2.5" y="4" width="15" height="12" rx="1"/><path d="m6 8 2.5 2L6 12M10.5 12.5h3.5"/>',
   snap: '<rect x="6.5" y="6.5" width="7" height="7"/><path d="M10 2v4.5M10 13.5V18M2 10h4.5M13.5 10H18"/>',
   grid: '<path d="M3 7h14M3 13h14M7 3v14M13 3v14"/>',
+  lineWeight: '<path d="M3 5h14"/><path d="M3 10h14" stroke-width="2.4"/><path d="M3 15.5h14" stroke-width="3.6"/>',
   ortho: '<path d="M4 3.5v12.5h12.5"/><path d="M4 12h4v4"/>',
   polar: '<path d="M3 16.5h14M3 16.5 14.5 5"/><path d="M9 16.5a6 6 0 0 0-1.8-4.2"/>',
   sun: '<circle cx="10" cy="10" r="3.4"/><path d="M10 2.5v1.8M10 15.7v1.8M2.5 10h1.8M15.7 10h1.8M4.7 4.7l1.3 1.3M14 14l1.3 1.3M4.7 15.3 6 14M14 6l1.3-1.3"/>',

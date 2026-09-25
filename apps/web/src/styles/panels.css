@@ -560,3 +560,11 @@
 .about dd {
   margin: 0;
 }
+
+/* Stand-ins for the rows a long list does not build (ui/widgets/VirtualRows.ts). */
+.vrows__spacer,
+.vrows__spacer td {
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+}

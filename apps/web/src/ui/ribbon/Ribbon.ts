@@ -12,6 +12,7 @@ import { brandButton } from '../shell/brandButton';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { tooltip } from '../widgets/tooltip';
 import { commandControl, type ControlHost } from './controls';
+import { KeyTips } from './keytips';
 import { LEVELS, PanelView, type Level, type PanelHost } from './panels';
 import { RibbonSearch } from './search';
 
@@ -76,6 +77,7 @@ export class Ribbon extends Component {
   private fitFrame = 0;
   /** Listeners of the tab buttons, rebuilt with the work mode. */
   private tabsD = new DisposableStore();
+  private readonly keyTips: KeyTips;
 
   constructor(ctx: AppContext) {
     super();
@@ -179,7 +181,16 @@ export class Ribbon extends Component {
     // Whatever runs a command (a shortcut too) closes the ribbon opened over the drawing and a folded panel's pop-up.
     this.d.add(ctx.commands.events.on('executed', ({ command }) => command.id !== 'view.ribbonCollapse' && this.afterRun()));
 
+    this.keyTips = new KeyTips({
+      root: this.el,
+      tabs: () => this.visibleTabs().map((el) => ({ id: el.dataset.tab!, label: el.querySelector('.ribbon__tab-label')?.textContent ?? '', el })),
+      quickAccess: () => [...this.qat.querySelectorAll<HTMLElement>('button.rbtn:not(:disabled)')],
+      openTab: (id) => (this.ctx.ui.ribbonCollapsed.value ? this.openPeek(id) : this.select(id, { focus: false })),
+      controls: () => [...this.focusables(), ...(this.pop ? [...this.pop.el.querySelectorAll<HTMLElement>('button:not(:disabled)')] : [])],
+    });
+    this.d.add(() => this.keyTips.hide());
     this.bindKeys();
+    this.bindAltTap();
     this.bindPeek();
     this.d.add(() => {
       this.tabsD.dispose();
@@ -187,6 +198,12 @@ export class Ribbon extends Component {
       this.closePop();
       this.views.forEach((v) => v.dispose());
     });
+  }
+
+  /** Klavye ipuçları (F6, or Alt tapped alone): letters over the tabs, then over the open tab's controls. */
+  showKeyTips(): void {
+    if (this.keyTips.shown) this.keyTips.hide();
+    else this.keyTips.show();
   }
 
   /** Alt+Q: the search field (the ribbon opens over the drawing first when folded). */
@@ -634,6 +651,40 @@ export class Ribbon extends Component {
           this.tabButtons.get(this.current)?.focus();
         }
       }),
+    );
+  }
+
+  /**
+   * Alt pressed and released with nothing between shows the key tips (as in Office). The browser keeps
+   * Alt+letter for its own menus, so the letters come after the release; preventing the release's default
+   * keeps Chromium from moving the focus to its own menu. Inside a dialog Alt stays the dialog's.
+   */
+  private bindAltTap(): void {
+    let armed = false;
+    this.d.add(
+      listen<KeyboardEvent>(
+        window,
+        'keydown',
+        (e) => {
+          armed = e.key === 'Alt' && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.repeat;
+        },
+        true,
+      ),
+    );
+    this.d.add(listen(window, 'pointerdown', () => (armed = false), true));
+    this.d.add(
+      listen<KeyboardEvent>(
+        window,
+        'keyup',
+        (e) => {
+          if (e.key !== 'Alt' || !armed) return;
+          armed = false;
+          if (document.querySelector('.dialog') || PopupMenu.isOpen) return;
+          e.preventDefault();
+          this.showKeyTips();
+        },
+        true,
+      ),
     );
   }
 

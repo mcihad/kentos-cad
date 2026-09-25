@@ -9,6 +9,7 @@ import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { splitter } from '../widgets/Splitter';
 import { tooltip } from '../widgets/tooltip';
+import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
 
 const TABS: { id: BottomTab; label: string; icon: string }[] = [
@@ -32,6 +33,10 @@ export class BottomPanel extends Component {
   private readonly tabButtons = new Map<BottomTab, HTMLButtonElement>();
   private readonly badge = h('span', { class: 'badge', hidden: true });
   private seenWarnings = 0;
+  /** The log list on screen, its tab and the entries it shows (new entries are appended, not the whole list rebuilt). */
+  private log: { tab: BottomTab; list: HTMLElement; shown: LogEntry[] } | null = null;
+  /** The coordinate table's rows, built only in its scroll window. */
+  private rows: VirtualRows | null = null;
 
   constructor(ctx: AppContext) {
     super();
@@ -106,6 +111,7 @@ export class BottomPanel extends Component {
     this.d.add(watchAll([ctx.log.entries], () => this.onLog()));
     this.d.add(watchAll([ctx.selection.ids, ctx.format.changed], () => ui.bottomTab.value === 'coords' && this.renderContent()));
     this.d.add(ctx.doc.events.on('changed', () => ui.bottomTab.value === 'coords' && this.renderContent()));
+    this.d.add(() => this.rows?.dispose());
   }
 
   private warningCount(): number {
@@ -117,15 +123,45 @@ export class BottomPanel extends Component {
     this.badge.hidden = n <= 0;
     this.badge.textContent = String(n);
     const tab = this.ctx.ui.bottomTab.value;
-    if (tab === 'history' || tab === 'messages') this.renderContent();
+    if ((tab === 'history' || tab === 'messages') && !this.appendLog(tab)) this.renderContent();
     if (tab === 'messages') this.seenWarnings = this.warningCount();
   }
 
+  private entriesOf(tab: BottomTab): LogEntry[] {
+    return this.ctx.log.entries.value.filter((e) => tab === 'history' || e.level === 'warn' || e.level === 'error');
+  }
+
+  /**
+   * The log grew (and perhaps dropped its oldest entries, it keeps 500): the new rows are added and the
+   * dropped ones removed, instead of the whole list being built again at every message. False when the
+   * list on screen cannot follow that way (another tab, cleared), and it is built again.
+   */
+  private appendLog(tab: BottomTab): boolean {
+    const log = this.log;
+    if (!this.ctx.ui.bottomExpanded.value || !log || log.tab !== tab || !log.list.isConnected) return false;
+    const entries = this.entriesOf(tab);
+    const firstKept = log.shown.findIndex((e) => e.id === entries[0]?.id);
+    if (!entries.length || firstKept < 0) return false;
+    const last = log.shown.at(-1);
+    const at = last ? entries.findIndex((e) => e.id === last.id) : -1;
+    if (last && at < 0) return false;
+    const follow = log.list.parentElement ? this.content.scrollHeight - this.content.scrollTop - this.content.clientHeight < 24 : true;
+    for (let i = 0; i < firstKept; i++) log.list.firstElementChild?.remove();
+    const added = entries.slice(at + 1);
+    if (added.length) log.list.append(...added.map((e) => this.logRow(e)));
+    log.shown = entries;
+    if (follow) this.content.scrollTop = this.content.scrollHeight;
+    return true;
+  }
+
   private renderContent(): void {
+    this.rows?.dispose();
+    this.rows = null;
+    this.log = null;
     if (!this.ctx.ui.bottomExpanded.value) return;
     const tab = this.ctx.ui.bottomTab.value;
     if (tab === 'coords') return replaceChildren(this.content, this.coordinateTable());
-    const entries = this.ctx.log.entries.value.filter((e) => tab === 'history' || e.level === 'warn' || e.level === 'error');
+    const entries = this.entriesOf(tab);
     if (!entries.length) {
       return replaceChildren(
         this.content,
@@ -134,7 +170,8 @@ export class BottomPanel extends Component {
     }
     const list = h('ol', { class: 'log' }, entries.map((e) => this.logRow(e)));
     replaceChildren(this.content, list);
-    list.scrollTop = list.scrollHeight;
+    this.log = { tab, list, shown: entries };
+    this.content.scrollTop = this.content.scrollHeight;
   }
 
   private logRow(e: LogEntry): HTMLElement {
@@ -155,9 +192,13 @@ export class BottomPanel extends Component {
 
     const points = ents.filter((e) => e.kind === 'point');
     if (points.length === ents.length) {
-      return table(
+      return this.table(
         ['Nokta', 'Y (sağa)', 'X (yukarı)', 'Z (kot)', 'Katman'],
-        points.map((p) => (p.kind === 'point' ? [p.label ?? `#${p.id}`, f.coord(p.p.x), f.coord(p.p.y), p.z !== undefined ? f.length(p.z, false) : '—', doc.layers.get(p.layerId)?.name ?? ''] : [])),
+        points.length,
+        (i) => {
+          const p = points[i];
+          return p.kind === 'point' ? [p.label ?? `#${p.id}`, f.coord(p.p.x), f.coord(p.p.y), p.z !== undefined ? f.length(p.z, false) : '—', doc.layers.get(p.layerId)?.name ?? ''] : [];
+        },
         `${points.length} nokta`,
         [1, 2, 3],
       );
@@ -166,7 +207,9 @@ export class BottomPanel extends Component {
     const e = ents.find((x) => x.kind !== 'point' && x.kind !== 'text') ?? ents[0];
     const pts = entityVertices(e);
     const closed = e.kind === 'polygon';
-    const rows = pts.map((p, i) => {
+    // Rows are formatted when they scroll into view (a contour has hundreds of vertices).
+    const row = (i: number) => {
+      const p = pts[i];
       const next = pts[i + 1] ?? (closed ? pts[0] : null);
       return [
         String(i + 1),
@@ -175,26 +218,32 @@ export class BottomPanel extends Component {
         next ? f.length(dist(p, next), false) : '',
         next ? f.bearing(bearingGrad(p, next), false) : '',
       ];
-    });
+    };
     const title = e.label ? `${e.attrs.Ada ? `${e.attrs.Ada} ada ` : ''}${e.label}` : `#${e.id}`;
     const footer = closed
       ? `${title}   Alan ${f.area(Math.abs(signedArea(pts)))}   Çevre ${f.length(pathLength(pts, true))}`
       : `${title}   Uzunluk ${f.length(pathLength(pts))}`;
-    return table(['Köşe', 'Y (sağa)', 'X (yukarı)', 'Kenar (m)', `Semt (${f.angleUnitLabel})`], rows, ents.length > 1 ? `${footer}   (ilk nesne gösteriliyor)` : footer, [0, 1, 2, 3, 4]);
+    return this.table(['Köşe', 'Y (sağa)', 'X (yukarı)', 'Kenar (m)', `Semt (${f.angleUnitLabel})`], pts.length, row, ents.length > 1 ? `${footer}   (ilk nesne gösteriliyor)` : footer, [0, 1, 2, 3, 4]);
   }
-}
 
-function table(head: string[], rows: string[][], footer: string, numeric: number[]): HTMLElement {
-  const cls = (i: number) => (numeric.includes(i) ? 'num' : null);
-  return h(
-    'div',
-    { class: 'ctable' },
-    h(
-      'table',
-      null,
-      h('thead', null, h('tr', null, head.map((c, i) => h('th', { class: cls(i) }, c)))),
-      h('tbody', null, rows.map((r) => h('tr', null, r.map((c, i) => h('td', { class: cls(i) }, c))))),
-    ),
-    h('div', { class: 'ctable__foot num' }, footer),
-  );
+  /** A coordinate table whose rows are built only in the panel's scroll window (ten thousand points stay light). */
+  private table(head: string[], count: number, row: (i: number) => string[], footer: string, numeric: number[]): HTMLElement {
+    const cls = (i: number) => (numeric.includes(i) ? 'num' : null);
+    const body = h('tbody');
+    const el = h(
+      'div',
+      { class: 'ctable' },
+      h('table', null, h('thead', null, h('tr', null, head.map((c, i) => h('th', { class: cls(i) }, c)))), body),
+      h('div', { class: 'ctable__foot num' }, footer),
+    );
+    this.rows = new VirtualRows({
+      parent: body,
+      scroller: this.content,
+      row: (i) => h('tr', null, row(i).map((c, j) => h('td', { class: cls(j) }, c))),
+      spacer: tableSpacer(head.length),
+    });
+    // Built once the table is in the page (the first row's height is measured there).
+    queueMicrotask(() => this.rows?.set(count));
+    return el;
+  }
 }

@@ -1,0 +1,596 @@
+{
+  "label": "f6-before",
+  "date": "2026-09-25T06:26:57.097Z",
+  "commit": "55a0fff",
+  "dirtyTree": true,
+  "initial": {
+    "js": {
+      "raw": 864726,
+      "gzip": 269828,
+      "brotli": 222080
+    },
+    "css": {
+      "raw": 117119,
+      "gzip": 19612,
+      "brotli": 17203
+    },
+    "files": [
+      "assets/index-C_pfDmpb.js",
+      "assets/PopupMenu-DXK5ZIuy.js",
+      "assets/core-Cxr8jddY.js",
+      "assets/crs-DXR5jJaS.js",
+      "assets/emitter-BgRlvLeE.js",
+      "assets/entities-CxB-9br2.js",
+      "assets/expression-Dw20Clgt.js",
+      "assets/projectSettings-CJyelkpc.js",
+      "assets/runner-BUg9mnJb.js",
+      "assets/signal-BEuxsL1Q.js",
+      "assets/text-NQAA7O1A.js",
+      "assets/index-DZH6mKJ1.css"
+    ]
+  },
+  "lazy": [
+    {
+      "file": "assets/AppMenu-BI6DDMOl.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 13744,
+        "gzip": 5188,
+        "brotli": 4704
+      },
+      "topModules": [
+        {
+          "id": "src/ui/appmenu/AppMenu.ts",
+          "size": 18057
+        },
+        {
+          "id": "src/styles/appmenu.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/CoordExportDialog-Bij0hykO.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 3733,
+        "gzip": 1739,
+        "brotli": 1548
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/CoordExportDialog.ts",
+          "size": 4869
+        }
+      ]
+    },
+    {
+      "file": "assets/CoordImportDialog-BeIvxbt2.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 8405,
+        "gzip": 3423,
+        "brotli": 3135
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/CoordImportDialog.ts",
+          "size": 11193
+        }
+      ]
+    },
+    {
+      "file": "assets/DxfExportDialog-Bq9TW6Hv.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 6522,
+        "gzip": 2872,
+        "brotli": 2616
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/DxfExportDialog.ts",
+          "size": 8865
+        }
+      ]
+    },
+    {
+      "file": "assets/DxfImportDialog-DPDuQ2cc.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 5658,
+        "gzip": 2298,
+        "brotli": 2104
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/DxfImportDialog.ts",
+          "size": 7385
+        }
+      ]
+    },
+    {
+      "file": "assets/LayerStyleDialog-D4u5fFna.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 16898,
+        "gzip": 5964,
+        "brotli": 5468
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/LayerStyleDialog.ts",
+          "size": 14802
+        },
+        {
+          "id": "src/ui/style/rulesEditor.ts",
+          "size": 5343
+        },
+        {
+          "id": "src/ui/style/symbolSlot.ts",
+          "size": 3199
+        }
+      ]
+    },
+    {
+      "file": "assets/LegendDialog-DTQxPq13.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 5102,
+        "gzip": 2315,
+        "brotli": 2072
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/LegendDialog.ts",
+          "size": 5041
+        },
+        {
+          "id": "src/style/legend.ts",
+          "size": 2162
+        }
+      ]
+    },
+    {
+      "file": "assets/ModelDesigner-VOPtp_KW.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 32750,
+        "gzip": 10973,
+        "brotli": 9991
+      },
+      "topModules": [
+        {
+          "id": "src/ui/processing/model/modelInspector.ts",
+          "size": 15661
+        },
+        {
+          "id": "src/ui/processing/model/ModelDesigner.ts",
+          "size": 11505
+        },
+        {
+          "id": "src/ui/processing/model/ModelCanvas.ts",
+          "size": 11260
+        },
+        {
+          "id": "src/processing/modelEdit.ts",
+          "size": 6066
+        },
+        {
+          "id": "src/ui/processing/model/modelPalette.ts",
+          "size": 3004
+        }
+      ]
+    },
+    {
+      "file": "assets/Ribbon-CB3-uKLD.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 38225,
+        "gzip": 12376,
+        "brotli": 11302
+      },
+      "topModules": [
+        {
+          "id": "src/ui/ribbon/Ribbon.ts",
+          "size": 20203
+        },
+        {
+          "id": "src/app/ribbon.ts",
+          "size": 9773
+        },
+        {
+          "id": "src/ui/ribbon/controls.ts",
+          "size": 7431
+        },
+        {
+          "id": "src/ui/ribbon/panels.ts",
+          "size": 6708
+        },
+        {
+          "id": "src/ui/ribbon/keytips.ts",
+          "size": 5603
+        },
+        {
+          "id": "src/ui/ribbon/search.ts",
+          "size": 5309
+        },
+        {
+          "id": "src/styles/ribbon.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/StartScreen-EjEH634P.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 2985,
+        "gzip": 1392,
+        "brotli": 1260
+      },
+      "topModules": [
+        {
+          "id": "src/ui/start/StartScreen.ts",
+          "size": 3567
+        },
+        {
+          "id": "src/styles/start.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/StyleManager-DzJmkV6q.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 18318,
+        "gzip": 6681,
+        "brotli": 6156
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/StyleManager.ts",
+          "size": 16168
+        },
+        {
+          "id": "src/ui/style/managerDetails.ts",
+          "size": 9605
+        }
+      ]
+    },
+    {
+      "file": "assets/SvgEditor-BW303XJX.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 150253,
+        "gzip": 49863,
+        "brotli": 43404
+      },
+      "topModules": [
+        {
+          "id": "src/ui/svgedit/SvgEditor.ts",
+          "size": 20518
+        },
+        {
+          "id": "src/ui/svgedit/svgCanvas.ts",
+          "size": 19093
+        },
+        {
+          "id": "src/ui/svgedit/svgProps.ts",
+          "size": 15870
+        },
+        {
+          "id": "src/ui/svgedit/svgNodeTool.ts",
+          "size": 14491
+        },
+        {
+          "id": "src/ui/svgedit/svgFile.ts",
+          "size": 13882
+        },
+        {
+          "id": "src/ui/svgedit/svgActions.ts",
+          "size": 10779
+        },
+        {
+          "id": "src/ui/svgedit/svgReference.ts",
+          "size": 8829
+        },
+        {
+          "id": "src/style/svg/pkg/kentos_svg_wasm.js",
+          "size": 8026
+        }
+      ]
+    },
+    {
+      "file": "assets/SymbolDesigner-CI2uWDIH.js",
+      "dynamicEntry": true,
+      "size": {
+        "raw": 27317,
+        "gzip": 9768,
+        "brotli": 8920
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/layerForms.ts",
+          "size": 19506
+        },
+        {
+          "id": "src/ui/style/SymbolDesigner.ts",
+          "size": 17716
+        }
+      ]
+    },
+    {
+      "file": "assets/classify-DiDCsToC.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 2719,
+        "gzip": 1435,
+        "brotli": 1292
+      },
+      "topModules": [
+        {
+          "id": "src/style/classify.ts",
+          "size": 4232
+        }
+      ]
+    },
+    {
+      "file": "assets/common-2DDtsXFG.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 5591,
+        "gzip": 2464,
+        "brotli": 2277
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/common.ts",
+          "size": 4464
+        },
+        {
+          "id": "src/io/client.ts",
+          "size": 2937
+        },
+        {
+          "id": "src/styles/io.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/coords-OLfFaALF.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 1408,
+        "gzip": 740,
+        "brotli": 682
+      },
+      "topModules": [
+        {
+          "id": "src/io/coords.ts",
+          "size": 2074
+        }
+      ]
+    },
+    {
+      "file": "assets/designerFields-CZqPS9sZ.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 4353,
+        "gzip": 1862,
+        "brotli": 1701
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/designerFields.ts",
+          "size": 6439
+        }
+      ]
+    },
+    {
+      "file": "assets/recentList-DopqgN7V.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 957,
+        "gzip": 555,
+        "brotli": 489
+      },
+      "topModules": [
+        {
+          "id": "src/ui/start/recentList.ts",
+          "size": 1232
+        },
+        {
+          "id": "src/styles/recent.css",
+          "size": 0
+        }
+      ]
+    },
+    {
+      "file": "assets/scope-Cd1FEqaU.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 1032,
+        "gzip": 670,
+        "brotli": 578
+      },
+      "topModules": [
+        {
+          "id": "src/ui/io/save.ts",
+          "size": 1015
+        },
+        {
+          "id": "src/ui/io/scope.ts",
+          "size": 414
+        }
+      ]
+    },
+    {
+      "file": "assets/styleFiles-CNU6XYLE.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 1354,
+        "gzip": 824,
+        "brotli": 698
+      },
+      "topModules": [
+        {
+          "id": "src/ui/style/styleFiles.ts",
+          "size": 1834
+        }
+      ]
+    },
+    {
+      "file": "assets/thumbs-B8IaJmtj.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 10289,
+        "gzip": 4478,
+        "brotli": 4035
+      },
+      "topModules": [
+        {
+          "id": "src/render/symbolPreview.ts",
+          "size": 14710
+        },
+        {
+          "id": "src/ui/style/thumbs.ts",
+          "size": 1541
+        },
+        {
+          "id": "src/style/compile.ts",
+          "size": 362
+        }
+      ]
+    },
+    {
+      "file": "assets/zoom-3ziHSqq2.js",
+      "dynamicEntry": false,
+      "size": {
+        "raw": 2046,
+        "gzip": 1127,
+        "brotli": 1049
+      },
+      "topModules": [
+        {
+          "id": "src/io/apply.ts",
+          "size": 2676
+        },
+        {
+          "id": "src/ui/io/zoom.ts",
+          "size": 412
+        }
+      ]
+    }
+  ],
+  "total": {
+    "raw": 5294449,
+    "gzip": 2615727,
+    "brotli": 2336001
+  },
+  "entryTopModules": [
+    {
+      "id": "src/style/system/mpyy/pictogramDrawings.ts",
+      "size": 35541
+    },
+    {
+      "id": "src/tools/catalog.ts",
+      "size": 30420
+    },
+    {
+      "id": "src/viewport/ViewportController.ts",
+      "size": 22455
+    },
+    {
+      "id": "src/app/commands.ts",
+      "size": 19192
+    },
+    {
+      "id": "src/style/system/mpyy/nip/09-teknik-altyapi.ts",
+      "size": 16891
+    },
+    {
+      "id": "src/render/webgl2/styledShaders.ts",
+      "size": 16463
+    },
+    {
+      "id": "src/ui/processing/ToolDialog.ts",
+      "size": 16375
+    },
+    {
+      "id": "src/tools/areaTools.ts",
+      "size": 15663
+    },
+    {
+      "id": "src/ui/properties/PropertiesPanel.ts",
+      "size": 15551
+    },
+    {
+      "id": "src/render/webgpu/styledShaders.ts",
+      "size": 14841
+    },
+    {
+      "id": "src/tools/modifyTools.ts",
+      "size": 14376
+    },
+    {
+      "id": "src/tools/curveTools.ts",
+      "size": 14219
+    },
+    {
+      "id": "src/ui/settings/AppSettingsDialog.ts",
+      "size": 13779
+    },
+    {
+      "id": "src/render/webgl2/styledRenderer.ts",
+      "size": 12111
+    },
+    {
+      "id": "src/tools/cornerTools.ts",
+      "size": 11702
+    },
+    {
+      "id": "src/ui/processing/paramFields.ts",
+      "size": 11541
+    },
+    {
+      "id": "src/model/document.ts",
+      "size": 11364
+    },
+    {
+      "id": "src/app/cloud/sync.ts",
+      "size": 11241
+    },
+    {
+      "id": "src/style/system/mpyy/ortak/02-sit.ts",
+      "size": 11150
+    },
+    {
+      "id": "src/style/file.ts",
+      "size": 10899
+    },
+    {
+      "id": "src/style/system/mpyy/ortak/01-sinirlar.ts",
+      "size": 10472
+    },
+    {
+      "id": "src/tools/editTools.ts",
+      "size": 10433
+    },
+    {
+      "id": "src/tools/shapeTools.ts",
+      "size": 10392
+    },
+    {
+      "id": "src/style/system/mpyy/uip/11-ulasim.ts",
+      "size": 9690
+    },
+    {
+      "id": "src/app/fileIO.ts",
+      "size": 9647
+    }
+  ],
+  "fileCount": 82
+}

@@ -1,0 +1,152 @@
+/*
+ * The start screen (ui/start/StartScreen.ts): the product and what to do
+ * first on the left, the recent files on the right. A dialog, so it takes
+ * the dialog's card, head and foot; loaded with the screen.
+ */
+.start .dialog__body {
+  padding: 0;
+}
+
+.start__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  min-height: calc(400px * var(--ui-scale));
+}
+
+.start__main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 22px 20px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c-brand) 12%, transparent), transparent 55%);
+}
+
+.start__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.start__product {
+  color: var(--c-brand-text);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.15;
+}
+.start__product span {
+  color: var(--c-text-2);
+  font-weight: 500;
+}
+.start__tagline {
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+}
+
+.start__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.start__action {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-panel);
+  color: var(--c-text);
+  text-align: left;
+  cursor: pointer;
+}
+.start__action:hover:not(:disabled) {
+  border-color: var(--c-accent-line);
+  background: var(--c-hover);
+}
+.start__action:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 1px;
+}
+.start__action:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.start__action-icon {
+  display: grid;
+  place-items: center;
+  width: calc(36px * var(--ui-scale));
+  height: calc(36px * var(--ui-scale));
+  border-radius: var(--r-md);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+}
+.start__action--quiet {
+  background: transparent;
+  border-style: dashed;
+}
+.start__action--quiet .start__action-icon {
+  background: var(--c-panel-head);
+  color: var(--c-text-2);
+}
+.start__action-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.start__action-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.start__action-sub {
+  overflow: hidden;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.start__kbd:empty {
+  display: none;
+}
+
+.start__side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 22px 16px 16px;
+  border-left: 1px solid var(--c-line);
+}
+.start__heading {
+  margin: 0 6px 10px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.start__recent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  max-height: calc(360px * var(--ui-scale));
+}
+.start__empty {
+  margin: 6px;
+  color: var(--c-text-3);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.start .dialog__foot {
+  justify-content: space-between;
+}
+.start__show {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.start__hint {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
