@@ -238,12 +238,18 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
     const expiresAt = until.value ? endOfDay(until.value) : null;
     if (until.value && !expiresAt) return say('Bitiş tarihi okunamadı: takvimden bir gün seçin ya da alanı boş bırakın.', 'error');
     const grant = role.value as GrantRole;
+    // Shared already: sharing again changes the role (and the end).
+    const had = list?.people.some((p) => p.userId === who.userId && p.grant);
     busy = true;
     refreshAdd();
     say(`${who.displayName} ekleniyor…`);
     try {
       const r = await api.accessCommand(shareEnvelope(target.tenantId, target.projectId, who.userId, grant, expiresAt ?? undefined));
-      const text = r.changed ? `${who.displayName} projeye ${ROLE_LABEL[grant]} olarak eklendi.` : `${who.displayName} zaten ${ROLE_LABEL[grant]} rolündeydi; değişen bir şey yok.`;
+      const text = !r.changed
+        ? `${who.displayName} zaten ${ROLE_LABEL[grant]} rolündeydi; değişen bir şey yok.`
+        : had
+          ? `${who.displayName} artık ${ROLE_LABEL[grant]}.`
+          : `${who.displayName} projeye ${ROLE_LABEL[grant]} olarak eklendi.`;
       if (r.changed) ctx.log.success(`“${target.name}”: ${text}`);
       chosen = null;
       find.value = '';
@@ -255,6 +261,8 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
     } finally {
       busy = false;
       refreshAdd();
+      // Ready for the next person.
+      if (open && mayShare) find.focus();
     }
   };
 
@@ -324,7 +332,7 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
         : r.owner
           ? 'Proje sahibinin erişimi paylaşımla değişmez.'
           : !r.grant
-            ? 'Kurum politikasından gelen erişim paylaşımla değişmez; kurum yöneticisi politikayı kapatabilir.'
+            ? 'Kurum politikasından gelen erişim paylaşımla değişmez.'
             : 'Bu erişimi değiştirme yetkiniz yok.';
       action = h('span', { class: 'share-fixed', title: why, 'aria-label': why }, icon('lock', 14));
     }
