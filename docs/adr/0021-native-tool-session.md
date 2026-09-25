@@ -175,9 +175,10 @@ Iced bir tuşa basışı şöyle verir: değiştiricisiz tuş, düzenin üretti�
 - Ortho, kutupsal izleme, kenet açıklığı ve `cursorInput` için ayar penceresi ve kalıcılık (`SET-*`). Bugün web'in varsayılanlarıyla çalışır.
 - Tipli `PromptSpec` (`UX-02`) ve dilbilgisinin kararı (`UX-05`).
 - Web ile bilinçli farklar:
-  1. Seçenek ya da kısayol olmayan harf masaüstünde komut satırını açar (ADR 0017); web onu yok sayar.
-  2. Komut satırında Ctrl+Z masaüstünde hiçbir şey yapmaz; web'de alanın kendi geri almasıdır.
-  3. Değer alanı yalnız sona ekler (yukarıda).
+  1. Komut satırında Ctrl+Z masaüstünde hiçbir şey yapmaz; web'de alanın kendi geri almasıdır.
+  2. Değer alanı yalnız sona ekler (yukarıda).
+- Kapanan fark (25 Eylül): seçenek ya da kısayol olmayan harf artık web'de de komut satırını açar (ADR 0018, 6. adım). `pnpm e2e` denetliyor.
+  - İzlere bu adım henüz eklenmedi. Native oynatıcı, uygulamanın odak işlemlerini (`focus`, `unfocus`) ve komut satırının öneri listesini izleyemiyor; öneri listesi açıkken Enter öneriyi çalıştırır. Oynatıcı ikisini izleyince komut adı yazan bir iz eklenecek.
 
 ## Doğrulama (25 Eylül 2026, Linux; main `2c659c3` üstünde)
 

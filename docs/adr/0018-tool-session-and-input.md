@@ -58,6 +58,7 @@ Bir tuş aşağıdaki sırayla ilk sahibine gider:
    - **İlk karakter alana tam bir kez girer.** Web'de alan karakteri kendisi yazar ve tuş olayını tüketir. Karakteri tarayıcının yeni odağa taşımasına bırakmak güvenilir değildi: AltGr ile yazılan `@` yolda kayboluyordu (aşağıda).
    - Karakter, tuş olayının ürettiği metinden alınır, fiziksel tuş kodundan değil. Türkçe Q ve F klavye böylece korunur (CLAUDE.md §4.6). Masaüstü de aynı kuralı uygular.
    - AltGr ile üretilen karakter metindir, kısayol değildir. Windows AltGr'yi Ctrl+Alt diye bildirir; Ctrl+Alt ile harf ya da rakam ise kısayol kalır (Ctrl+Alt+N).
+6. **Başka metin** (boşluk ve sekme dışında): komut satırını açar, karakteri oraya yazar. Böylece komut adı çizim alanından yazılabilir: kısayolu olmayan K'dan sonra `KA` ve Enter Kapalı alan'ı başlatır. AutoCAD alışkanlığıdır ve masaüstünde baştan beri böyledir (ADR 0017). Web 25 Eylül'e dek bu harfi yok sayıyordu ([ADR 0021](0021-native-tool-session.md)); `pnpm e2e` denetliyor.
 
 Komut yokken `+` ve `-` görünümü 1,5 kat yakınlaştırır ve uzaklaştırır.
 

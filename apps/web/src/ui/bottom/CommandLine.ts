@@ -53,19 +53,21 @@ export class CommandLine extends Component {
     this.d.add(listen<KeyboardEvent>(this.input, 'keydown', (e) => this.onKey(e)));
     this.d.add(listen(this.input, 'blur', () => setTimeout(() => this.hideList(), 120)));
 
-    // Route coordinate-looking keystrokes from the drawing into the field.
-    // The field takes the first character itself, exactly once: left to
-    // the browser, a character typed with AltGr (@ on Turkish keyboards)
-    // does not always follow the focus. + and − reach here only while a
-    // command runs (their zoom bindings wait for the select tool).
+    // Text typed on the drawing that no option or shortcut took: a value
+    // goes to the field beside the cursor when it takes one, anything else
+    // (a command name first of all) starts the command line, as in AutoCAD
+    // and on the desktop (docs/adr/0017, 0021). The field takes the first
+    // character itself, exactly once: left to the browser, a character typed
+    // with AltGr (@ on Turkish keyboards) does not always follow the focus.
+    // + and − reach here only while a command runs (their zoom bindings wait
+    // for the select tool).
     ctx.keymap.fallback = (e) => {
-      if (e.metaKey || e.key.length !== 1) return;
+      if (e.metaKey || e.key.length !== 1 || /\s/.test(e.key)) return;
       // @ comes with AltGr (Ctrl+Alt on Windows) on Turkish keyboards: text, not a chord.
       if ((e.ctrlKey || e.altKey) && !isAltGrText(e)) return;
       if (isTextInput(document.activeElement)) return;
-      if (!/[\d@.+-]/.test(e.key)) return;
       e.preventDefault();
-      if (this.direct?.accepts()) this.direct.show(e.key);
+      if (/[\d@.+-]/.test(e.key) && this.direct?.accepts()) this.direct.show(e.key);
       else this.typeFirst(e.key);
     };
     this.d.add(() => (ctx.keymap.fallback = null));

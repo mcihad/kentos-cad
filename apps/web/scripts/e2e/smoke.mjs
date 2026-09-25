@@ -717,6 +717,16 @@ try {
   check('paste: one undo step', (await b.eval('window.kentos.doc.size')) === beforePasteTool);
   await b.eval('window.kentos.selection.clear()');
 
+  // A letter that is neither an option nor a shortcut starts the command line, as in AutoCAD and
+  // on the desktop (docs/adr/0021): K is free, so “KA” and Enter typed on the drawing start Kapalı alan.
+  await key('k');
+  const lineText = await b.eval(`document.activeElement?.closest('.cmdline') ? document.activeElement.value : null`);
+  await b.key('a');
+  await b.key('Enter');
+  const started = await b.eval('window.kentos.tools.activeId.value');
+  check('a free letter on the drawing starts the command line (KA → Kapalı alan)', lineText === 'k' && started === 'polygon', `${lineText} → ${started}`);
+  await key('Escape');
+
   // Drawing engines: WebGL2 by default; WebGPU switched live from the status
   // bar must draw the same scene. Pixels are read straight after a frame.
   check('WebGL2 is the default engine', (await b.eval('window.kentos.view.backendKind.value')) === 'webgl2');
