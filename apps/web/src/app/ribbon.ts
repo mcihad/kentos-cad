@@ -112,7 +112,7 @@ export const RIBBON_TABS: readonly RibbonTabSpec[] = [
     label: 'Harita',
     // CAD shows no map or coordinate menus: what is left is measuring.
     labels: { cad: 'Ölçme' },
-    sources: [{ menu: 'map' }, { menu: 'crs' }, { menu: 'analysis' }],
+    sources: [{ menu: 'map' }, { menu: 'calc' }, { menu: 'crs' }, { menu: 'analysis' }],
     launchers: { 'Koordinat sistemi': { command: 'crs.set', title: 'Proje ayarları: koordinat sistemi' } },
   },
   {

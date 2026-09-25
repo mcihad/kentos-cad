@@ -219,6 +219,220 @@ hit = cross_hit(pa, pb, pc, pb)
 assert F(hit["t"]) == 1 and F(hit["u"]) == 1
 case("TM ortak uçta 3e-9 rad açıyla birleşen iki kenar", "segSeg", [pa, pb, pc, pb], hit, "1e-9")
 
+# ── Surveying computations (Hesap menüsü: crates/shared/geometry-core/src/survey) ──
+# Trigonometry by 60-digit series here, independent of KentOS code and of libm;
+# the forward intersection solves two rays, the resection runs Newton's method
+# on the two measured angles (the core mirrors B in the line of two circle
+# centres and uses the sine rule).
+TWO_PI = 2 * PI
+
+def pmod(x):
+    """x in [0, 2π) (Decimal's % keeps the dividend's sign)."""
+    return x - TWO_PI * (x / TWO_PI).to_integral_value(rounding="ROUND_FLOOR")
+
+def dsin(x):
+    x = pmod(x)
+    term, total, n = x, x, 1
+    while abs(term) > Decimal("1e-70"):
+        term = -term * x * x / ((2 * n) * (2 * n + 1))
+        total += term
+        n += 1
+    return total
+
+def dcos(x):
+    return dsin(x + PI / 2)
+
+def datan(x):
+    # atan(x) = 2 atan(x / (1 + sqrt(1 + x²))), halved until the series is quick.
+    k = 0
+    while abs(x) > Decimal("0.1"):
+        x = x / (1 + (1 + x * x).sqrt())
+        k += 1
+    term, total, n = x, x, 1
+    while abs(term) > Decimal("1e-70"):
+        term = -term * x * x
+        total += term / (2 * n + 1)
+        n += 1
+    return total * (2 ** k)
+
+def datan2(y, x):
+    if x > 0:
+        return datan(y / x)
+    if x < 0:
+        return datan(y / x) + (PI if y >= 0 else -PI)
+    return PI / 2 if y > 0 else -PI / 2
+
+def dd(x):
+    return x if isinstance(x, Decimal) else Decimal(x.numerator) / Decimal(x.denominator)
+
+def semt(a, b):
+    return pmod(datan2(dd(b[0]) - dd(a[0]), dd(b[1]) - dd(a[1])))
+
+def dist(a, b):
+    dx, dy = dd(b[0]) - dd(a[0]), dd(b[1]) - dd(a[1])
+    return (dx * dx + dy * dy).sqrt()
+
+def signed(r):
+    r = pmod(r)
+    return r - TWO_PI if r > PI else r
+
+def num(text):
+    return float(text), Decimal(text)
+
+def S(x):
+    return format(x, "f")
+
+def UNIT(u):
+    return (Decimal(400) if u == "grad" else Decimal(360)) / TWO_PI
+
+def trav(unit, start, back, end, fore, angles, dists):
+    """A traverse adjusted as in the Hesap dialog: angles equally, coordinates by the compass rule."""
+    k = UNIT(unit)
+    A = [Decimal(a) / k for a in angles]
+    Sd = [Decimal(d) for d in dists]
+    t, bk = [], semt(start[1], back[1])
+    for i in range(len(Sd)):
+        leg = pmod(bk + A[i])
+        t.append(leg)
+        bk = leg + PI
+    out = {}
+    corr = Decimal(0)
+    if fore is not None:
+        f = signed(bk + A[len(Sd)] - semt(end[1], fore[1]))
+        corr = -f / len(A)
+        out["angleMisclosure"] = S(f * k)
+        out["angleCorrection"] = S(corr * k)
+    t = [pmod(x + corr * (i + 1)) for i, x in enumerate(t)]
+    L = sum(Sd)
+    raw = [(s * dsin(x), s * dcos(x)) for x, s in zip(t, Sd)]
+    fy = fx = Decimal(0)
+    if end is not None:
+        fy = sum(r[0] for r in raw) - (dd(end[1][0]) - dd(start[1][0]))
+        fx = sum(r[1] for r in raw) - (dd(end[1][1]) - dd(start[1][1]))
+        out["fy"], out["fx"] = S(fy), S(fx)
+        out["linearMisclosure"] = S((fy * fy + fx * fx).sqrt())
+    y, x = dd(start[1][0]), dd(start[1][1])
+    pts, legs = [], []
+    for (dy, dx), s, b in zip(raw, Sd, t):
+        vy, vx = -fy * s / L, -fx * s / L
+        y, x = y + dy + vy, x + dx + vx
+        pts.append({"x": S(y), "y": S(x)})
+        legs.append({"bearing": S(b * k), "distance": S(s), "dy": S(dy + vy), "dx": S(dx + vx), "vy": S(vy), "vx": S(vx)})
+    if end is not None:
+        pts.pop()
+    out["points"], out["legs"], out["length"] = pts, legs, S(L)
+    return out
+
+def pt(dx, dy):
+    """A TM point as (JSON args, exact Decimal pair)."""
+    x, y = format(E + Decimal(dx), "f"), format(N + Decimal(dy), "f")
+    return {"x": float(x), "y": float(y)}, (Decimal(x), Decimal(y))
+
+def notes(unit, stations, back, fore, angle_places, errors=()):
+    """Field notes of a traverse through designed points: angles and distances rounded as read
+    (angle_places decimals, mm), plus deliberate errors (index, amount) in the angles."""
+    k = UNIT(unit)
+    q = Decimal(1).scaleb(-angle_places)
+    angles = []
+    for i in range(len(stations) - 1):
+        prev = back if i == 0 else stations[i - 1]
+        angles.append(pmod(semt(stations[i][1], stations[i + 1][1]) - semt(stations[i][1], prev[1])) * k)
+    if fore is not None:
+        angles.append(pmod(semt(stations[-1][1], fore[1]) - semt(stations[-1][1], stations[-2][1])) * k)
+    angles = [a.quantize(q) for a in angles]
+    for i, e in errors:
+        angles[i] += Decimal(e)
+    dists = [dist(stations[i][1], stations[i + 1][1]).quantize(Decimal("0.001")) for i in range(len(stations) - 1)]
+    return [format(a, "f") for a in angles], [format(d, "f") for d in dists]
+
+# Bağlı poligon in grad: rounded field notes (0.1 mgon, mm) and a 2.5 mgon angle error.
+A, A0, E_, E0 = pt("0", "0"), pt("-152.318", "211.407"), pt("612.884", "95.271"), pt("790.114", "-60.905")
+route = [A, pt("138.214", "35.119"), pt("301.502", "-5.873"), pt("455.931", "16.044"), E_]
+angles, dists = notes("grad", route, A0, E0, 4, [(2, "0.0025")])
+case("Bağlı poligon (grad, açı ve koordinat dengelemesi)", "surveyTraverse",
+     [{"unit": "grad", "start": A[0], "back": A0[0], "end": E_[0], "fore": E0[0], "angles": [float(a) for a in angles], "distances": [float(d) for d in dists]}],
+     trav("grad", A, A0, E_, E0, angles, dists), "1e-8")
+
+# Kapalı poligon in degrees: back on its start, oriented on the same point (seconds as 0.0001°).
+B0 = pt("-80.5", "40.25")
+angles, dists = notes("deg", [A, pt("100.0", "50.0"), pt("200.0", "-50.0"), pt("150.0", "-100.0"), A], B0, B0, 4)
+case("Kapalı poligon (derece)", "surveyTraverse",
+     [{"unit": "deg", "start": A[0], "back": B0[0], "end": A[0], "fore": B0[0], "angles": [float(a) for a in angles], "distances": [float(d) for d in dists]}],
+     trav("deg", A, B0, A, B0, angles, dists), "1e-8")
+
+# Açık poligon: no closure.
+angles, dists = notes("grad", [A, pt("60.2", "70.9"), pt("180.4", "95.35")], A0, None, 4)
+case("Açık poligon (grad)", "surveyTraverse",
+     [{"unit": "grad", "start": A[0], "back": A0[0], "end": None, "fore": None, "angles": [float(a) for a in angles], "distances": [float(d) for d in dists]}],
+     trav("grad", A, A0, None, None, angles, dists), "1e-8")
+
+# Kutupsal alım (grad): slope distances with zenith angles, heights.
+St, Bk = pt("10.5", "-20.25"), pt("250.125", "180.75")
+k = UNIT("grad")
+back_reading = Decimal("12.3456")
+shots = [("48.7612", "84.231", None, None), ("233.0105", "152.608", "98.4410", "1.600"), ("380.5000", "35.114", "101.2050", "2.150")]
+sz, ih = Decimal("812.345"), Decimal("1.550")
+orient = semt(St[1], Bk[1]) - back_reading / k
+exp = []
+for r, d, z, th in shots:
+    t = pmod(orient + Decimal(r) / k)
+    D_ = Decimal(d)
+    if z is None:
+        h, dz = D_, None
+    else:
+        zr = Decimal(z) / k
+        h, dz = D_ * dsin(zr), D_ * dcos(zr) + ih - Decimal(th)
+    e = {"p": {"x": S(St[1][0] + h * dsin(t)), "y": S(St[1][1] + h * dcos(t))}, "bearing": S(t * k), "horizontal": S(h)}
+    if dz is not None:
+        e["z"], e["dz"] = S(sz + dz), S(dz)
+    exp.append(e)
+case("Kutupsal alım (grad, eğik uzunluk ve başucu açısı)", "surveyPolar",
+     [{"unit": "grad", "station": St[0], "back": Bk[0], "backReading": float(back_reading), "stationZ": float(sz), "instrumentHeight": float(ih),
+       "shots": [{"reading": float(r), "distance": float(d), "zenith": None if z is None else float(z), "targetHeight": None if th is None else float(th)} for r, d, z, th in shots]}],
+     exp, "1e-8")
+
+# Aplikasyon: bearings, distances and turning angles from the station.
+T1, T2 = pt("-40.004", "95.312"), pt("301.77", "-12.5")
+exp = []
+for T in (T1, T2):
+    t = semt(St[1], T[1])
+    exp.append({"bearing": S(t * k), "distance": S(dist(St[1], T[1])), "angle": S((pmod(t - semt(St[1], Bk[1]))) * k)})
+case("Aplikasyon (grad)", "surveyStakeout", [{"unit": "grad", "station": St[0], "back": Bk[0], "targets": [T1[0], T2[0]]}], exp, "1e-8")
+
+# Önden kestirme: the two rays meet (solved as lines here).
+Pa, Pb = pt("0", "0"), pt("412.51", "88.07")
+al, be = Decimal("61.2345"), Decimal("48.9012")
+ta = pmod(semt(Pa[1], Pb[1]) + al / k)
+tb = pmod(semt(Pb[1], Pa[1]) - be / k)
+ax0, ay0, bx0, by0 = Pa[1][0], Pa[1][1], Pb[1][0], Pb[1][1]
+ua, va, ub, vb = dsin(ta), dcos(ta), dsin(tb), dcos(tb)
+den = ua * vb - va * ub
+sa = ((bx0 - ax0) * vb - (by0 - ay0) * ub) / den
+case("Önden kestirme (grad)", "surveyForward", ["grad", Pa[0], Pb[0], float(al), float(be)],
+     {"x": S(ax0 + sa * ua), "y": S(ay0 + sa * va)}, "1e-8")
+
+# Geriden kestirme: Newton's method on the two angles, from the point the angles were read at.
+Ra, Rb, Rc = pt("-310.2", "402.75"), pt("205.66", "515.1"), pt("498.3", "-120.45")
+al, be = Decimal("83.4417"), Decimal("121.0968")
+def ang(P, U, V):
+    return pmod(semt(P, V) - semt(P, U))
+P = [E + Decimal("20"), N + Decimal("15")]
+for _ in range(30):
+    f1 = ang(P, Ra[1], Rb[1]) - al / k
+    f2 = ang(P, Rb[1], Rc[1]) - be / k
+    h = Decimal("1e-25")
+    J = []
+    for dxy in ((h, 0), (0, h)):
+        Q = [P[0] + dxy[0], P[1] + dxy[1]]
+        J.append(((ang(Q, Ra[1], Rb[1]) - al / k - f1) / h, (ang(Q, Rb[1], Rc[1]) - be / k - f2) / h))
+    a11, a21 = J[0]
+    a12, a22 = J[1]
+    det = a11 * a22 - a12 * a21
+    P = [P[0] - (f1 * a22 - a12 * f2) / det, P[1] - (a11 * f2 - a21 * f1) / det]
+assert abs(ang(P, Ra[1], Rb[1]) - al / k) < Decimal("1e-40") and abs(ang(P, Rb[1], Rc[1]) - be / k) < Decimal("1e-40")
+case("Geriden kestirme (grad)", "surveyResection", ["grad", Ra[0], Rb[0], Rc[0], float(al), float(be)],
+     {"p": {"x": S(P[0]), "y": S(P[1])}}, "1e-7")
+
 doc = {
     "format": "kentos.geometry-call-reference",
     "version": 1,

@@ -152,6 +152,11 @@ export const MAIN_MENU: TopMenu[] = [
     items: [sec('Koordinat sistemi'), 'crs.set', 'crs.transform', sec('Koordinatlar'), 'crs.query', 'crs.points', 'view.coords'],
   },
   {
+    id: 'calc',
+    label: 'Hesap',
+    items: [sec('Poligon'), 'calc.traverse', sec('Nokta alımı'), 'calc.polar', 'calc.stakeout', sec('Kestirme'), 'calc.forward', 'calc.resection'],
+  },
+  {
     id: 'analysis',
     label: 'Analiz',
     items: ['@tools:map/measure', sec('Arazi analizi'), 'analysis.volume', 'analysis.slope'],

@@ -71,12 +71,13 @@ describe('work modes', () => {
 
   it('CAD leaves out the map, coordinate and processing menus; what is left of the map tab is measuring', () => {
     const cad = filterFor('cad');
-    expect(visibleMenus(cad).map((m) => m.id)).toEqual(['file', 'edit', 'view', 'draw', 'modify', 'analysis', 'tools', 'help']);
+    // Survey computations (Hesap) are measuring: CAD keeps them.
+    expect(visibleMenus(cad).map((m) => m.id)).toEqual(['file', 'edit', 'view', 'draw', 'modify', 'calc', 'analysis', 'tools', 'help']);
     const tabs = tabsIn(cad);
     expect(tabs.some((t) => t.id === 'processing')).toBe(false);
     const map = tabs.find((t) => t.id === 'map')!;
     expect(map.label).toBe('Ölçme');
-    expect(map.panels.flatMap(panelCommands)).toEqual(['tool.measure', 'tool.area']);
+    expect(map.panels.flatMap(panelCommands)).toEqual(['calc.traverse', 'calc.polar', 'calc.stakeout', 'calc.forward', 'calc.resection', 'tool.measure', 'tool.area']);
     expect(cad.command('tool.parcel')).toBe(false);
     expect(cad.command('tool.hatch')).toBe(true);
   });

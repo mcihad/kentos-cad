@@ -1,0 +1,182 @@
+/* Hesap windows (ui/calc/): traverse, polar survey, stake-out, intersections.
+   Loaded with the windows, not at start-up (CLAUDE.md §20); they take the
+   file exchange windows' layout (io.css) and add the known point fields and
+   the editable measurements table. */
+
+.dialog--calc .dialog__body {
+  max-height: min(calc(100vh - 160px), calc(760px * var(--ui-scale)));
+  overflow: auto;
+}
+.calc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.calc-knowns {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(260px * var(--ui-scale)), 1fr));
+  gap: 12px 18px;
+}
+.calc-knowns--col {
+  grid-template-columns: 1fr;
+}
+.calc-known {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.calc-known__row {
+  display: flex;
+  gap: 6px;
+}
+.calc-known__input {
+  flex: 1;
+  min-width: 0;
+}
+.calc-known__pick {
+  flex: none;
+}
+.calc-known__value {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+.calc-known__value[data-kind='error'] {
+  color: var(--c-danger);
+}
+.calc-num {
+  width: calc(130px * var(--ui-scale));
+  font-variant-numeric: tabular-nums;
+}
+.calc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.calc-section:empty {
+  display: none;
+}
+.calc-table-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* The measurements table: inputs fill their cells, fixed cells read as text. */
+.calc-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.calc-grid__wrap {
+  align-self: stretch;
+  max-height: calc(280px * var(--ui-scale));
+  overflow: auto;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.calc-grid__table td {
+  padding: 0;
+}
+.calc-grid__table td.calc-grid__no,
+.calc-grid__table th.calc-grid__no {
+  width: 1%;
+  padding: 0 8px;
+  color: var(--c-text-3);
+  text-align: right;
+}
+.calc-grid__table td.calc-grid__fixed {
+  padding: 4px 8px;
+  color: var(--c-text-2);
+  font-weight: 500;
+}
+.calc-grid__table td.calc-grid__act,
+.calc-grid__table th.calc-grid__act {
+  width: 1%;
+  padding: 0 2px;
+}
+.calc-grid__unit {
+  color: var(--c-text-3);
+  font-weight: 400;
+}
+.calc-grid__cell {
+  display: block;
+  width: 100%;
+  min-width: calc(90px * var(--ui-scale));
+  height: calc(26px * var(--ui-scale));
+  padding: 0 8px;
+  color: var(--c-text);
+  font: inherit;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+.calc-grid__cell.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.calc-grid__cell:focus {
+  background: var(--c-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--c-accent-line);
+}
+.calc-grid__cell[data-bad] {
+  color: var(--c-danger);
+  box-shadow: inset 0 0 0 1px var(--c-danger);
+}
+.calc-grid__cell::placeholder {
+  color: var(--c-text-3);
+}
+
+/* Results. */
+.calc-results__title {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.calc-results {
+  max-height: calc(240px * var(--ui-scale));
+}
+.io-table th.num,
+.io-table td.num {
+  text-align: right;
+}
+.calc-foot-label {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.calc-layer {
+  max-width: calc(200px * var(--ui-scale));
+}
+
+/* Intersections: the fields beside a sketch of the angles. */
+.calc-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(230px * var(--ui-scale));
+  gap: 18px;
+}
+.calc-sketch-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--c-panel-head);
+  border: 1px solid var(--c-line-soft);
+  border-radius: var(--r-md);
+}
+.calc-sketch svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--c-text-2);
+  font-family: var(--font-ui);
+}
+.calc-sketch svg text {
+  fill: currentColor;
+}
+.calc-sketch svg text[fill] {
+  fill: var(--c-accent);
+}

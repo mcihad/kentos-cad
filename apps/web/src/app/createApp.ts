@@ -14,6 +14,7 @@ import { registerCoreCommands } from './commands';
 import type { AppContext } from './context';
 import { registerCloudCommands } from './cloud/commands';
 import { CloudSession } from './cloud/session';
+import { registerCalcCommands } from './calc';
 import { registerFileExchangeCommands } from './fileExchange';
 import { DocumentFiles } from './fileIO';
 import { ServerStatus } from './server';
@@ -111,6 +112,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   });
   registerStyleCommands(ctx);
   registerFileExchangeCommands(ctx);
+  registerCalcCommands(ctx);
   // The open cloud project as the rename and delete dialogs name it.
   const openTarget = () => {
     const p = ctx.cloud.project.value;

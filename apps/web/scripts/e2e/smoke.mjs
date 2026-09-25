@@ -1210,6 +1210,72 @@ try {
     await b.eval(`window.kentos.ui.dockTab.set('layers'); window.kentos.ui.processingTab.set('tools'); window.kentos.selection.clear()`);
   }
 
+  // Hesap menu (ui/calc, crates/shared/geometry-core/src/survey): a connected traverse typed into its table
+  // from measurements made from designed points, added to the drawing as one undo step; a resection at a
+  // known point gives that point back. Values are typed with the keyboard into the fields.
+  {
+    const center = (sel) => b.eval(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const typeAt = async (sel, text) => {
+      const p = await center(sel);
+      if (!p) throw new Error(`bulunamadı: ${sel}`);
+      await b.click(...p);
+      await b.eval(`document.activeElement.select?.()`);
+      await b.type(text);
+      await sleep(40);
+    };
+    const helpers = `const k = window.kentos; const pt = (n) => [...k.doc.all()].find((e) => e.kind === 'point' && e.label === n).p;
+      const semt = (a, b) => { let t = Math.atan2(b.x - a.x, b.y - a.y); if (t < 0) t += 2 * Math.PI; return t; };
+      const g = (r) => { let v = (r * 200) / Math.PI; v %= 400; if (v < 0) v += 400; return v; };`;
+    const plan = await b.eval(`(() => { ${helpers}
+      const A = pt('P.101'), A0 = pt('P.105'), E = pt('P.102'), E0 = pt('P.103');
+      const X1 = { x: A.x + 0.35 * (E.x - A.x) + 12.3, y: A.y + 0.35 * (E.y - A.y) - 8.7 };
+      const X2 = { x: A.x + 0.7 * (E.x - A.x) - 6.1, y: A.y + 0.7 * (E.y - A.y) + 9.4 };
+      const st = [A, X1, X2, E], ang = [], dist = [];
+      for (let i = 0; i < 3; i++) ang.push(g(semt(st[i], st[i + 1]) - semt(st[i], i ? st[i - 1] : A0)).toFixed(5));
+      ang.push(g(semt(E, E0) - semt(E, X2)).toFixed(5));
+      for (let i = 0; i < 3; i++) dist.push(Math.hypot(st[i + 1].x - st[i].x, st[i + 1].y - st[i].y).toFixed(4));
+      return { X1, X2, ang, dist };
+    })()`);
+    await b.eval(`window.kentos.commands.execute('calc.traverse')`);
+    await b.waitFor(`!!document.querySelector('.dialog--calc [data-key="start"]')`, 10000);
+    await b.eval(`[...document.querySelectorAll('.dialog--calc .seg button')].find((x) => x.textContent === 'Bağlı')?.click()`);
+    for (const [key, name] of [['start', 'P.101'], ['back', 'P.105'], ['end', 'P.102'], ['fore', 'P.103']]) await typeAt(`.dialog--calc [data-key="${key}"]`, name);
+    const cells = [['0', 'angle', plan.ang[0]], ['0', 'distance', plan.dist[0]], ['1', 'name', 'H1'], ['1', 'angle', plan.ang[1]], ['1', 'distance', plan.dist[1]], ['2', 'name', 'H2'], ['2', 'angle', plan.ang[2]], ['2', 'distance', plan.dist[2]], ['3', 'angle', plan.ang[3]]];
+    for (const [row, key, v] of cells) await typeAt(`.dialog--calc input[data-row="${row}"][data-key="${key}"]`, v);
+    await sleep(200);
+    const shown = await b.eval(`document.querySelector('.dialog--calc .io-summary').innerText`);
+    check('Hesap: a connected traverse shows its misclosures', /Açı kapanma hatası/.test(shown) && /fs = 0\.\d mm/.test(shown), shown.split('\n')[0]);
+    await b.shot('calc-traverse');
+    const n0 = await b.eval('window.kentos.doc.size');
+    const addAt = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog--calc .btn--primary')].find((x) => x.textContent === 'Çizime ekle'); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await b.click(...addAt);
+    await sleep(200);
+    const got = await b.eval(`[...window.kentos.doc.all()].filter((e) => e.kind === 'point' && (e.label === 'H1' || e.label === 'H2')).map((e) => ({ n: e.label, layer: e.layerId, p: e.p }))`);
+    const near = (p, q) => Math.hypot(p.x - q.x, p.y - q.y) < 1e-4;
+    check(
+      'Hesap: the traverse points go to Poligon noktaları within 0.1 mm of the designed ones, one undo step',
+      got.length === 2 && got.every((g) => g.layer === 'poligon') && near(got[0].p, plan.X1) && near(got[1].p, plan.X2) && (await b.eval('window.kentos.doc.size')) === n0 + 2,
+      JSON.stringify(got),
+    );
+    await b.key('z', { ctrl: true });
+    await sleep(100);
+    check('Hesap: undo takes the traverse points back', (await b.eval('window.kentos.doc.size')) === n0);
+    // Resection at P.107 towards three sample points seen left to right.
+    const rs = await b.eval(`(() => { ${helpers} const P = pt('P.107');
+      const o = ['P.101', 'P.104', 'P.112', 'P.109'].map((n) => ({ n, t: semt(P, pt(n)) })).sort((a, b) => a.t - b.t).slice(0, 3);
+      return { names: o.map((x) => x.n), alpha: g(o[1].t - o[0].t).toFixed(6), beta: g(o[2].t - o[1].t).toFixed(6), P }; })()`);
+    await b.eval(`window.kentos.commands.execute('calc.resection')`);
+    await b.waitFor(`!!document.querySelector('.dialog--calc [data-key="c"]')`, 10000);
+    for (const [key, name] of [['a', rs.names[0]], ['b', rs.names[1]], ['c', rs.names[2]]]) await typeAt(`.dialog--calc [data-key="${key}"]`, name);
+    await typeAt('.dialog--calc input[aria-label^="α"]', rs.alpha);
+    await typeAt('.dialog--calc input[aria-label^="β"]', rs.beta);
+    await sleep(200);
+    const cellsOut = await b.eval(`[...document.querySelectorAll('.dialog--calc .calc-section tbody td')].map((c) => c.textContent)`);
+    check('Hesap: a resection at a known point gives it back', cellsOut[1] === rs.P.x.toFixed(3) && cellsOut[2] === rs.P.y.toFixed(3), JSON.stringify({ cellsOut, want: rs.P }));
+    await b.key('Escape');
+    await sleep(100);
+  }
+
   // File exchange (src/io, crates/shared/formats): an in-memory picker hands files to the importers and takes the
   // exported bytes; the Rust formats module runs in its own worker. Coordinates must arrive exactly.
   const ioCenter = (sel, text = '') =>

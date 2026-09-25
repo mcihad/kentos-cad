@@ -32,6 +32,7 @@ pub mod ops;
 pub mod predicates;
 pub mod processing;
 pub mod store;
+pub mod survey;
 pub mod tessellate;
 pub mod text;
 pub mod tools;
