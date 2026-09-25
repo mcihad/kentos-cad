@@ -267,9 +267,10 @@ impl App {
     fn status_bar(&self) -> Element<'_, Message> {
         let coordinates = match (&self.document, self.viewport.cursor) {
             (Some(doc), Some(p)) => {
-                // Display only (CLAUDE.md §5): the project's length decimals, Y (east) first.
-                let d = (doc.settings().length_decimals as usize).min(9);
-                format!("Y {:.d$}   X {:.d$}", p.x, p.y)
+                // Display only (CLAUDE.md §5): the project's length decimals, Y (east)
+                // first, rounded as the web's toFixed rounds.
+                let f = Format::of(doc.settings());
+                format!("Y {}   X {}", f.coord(p.x), f.coord(p.y))
             }
             _ => "Y —   X —".to_owned(),
         };
