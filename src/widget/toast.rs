@@ -13,6 +13,8 @@
 //!   └───────────────────────────────────────────────────┘
 //! ```
 //!
+//! - Yığın, sardığı alanın köşesinde durur. Uygulamanın bütün penceresini
+//!   sarmak, bildirimi sekme ya da görünüm değişince yerinde tutar.
 //! - Önem düzeyi ([`Severity`]) ikonun ve kalan süre çizgisinin rengidir.
 //! - Eylem düğmesi (ör. "Geri al") eylemi yapar ve bildirimi kapatır.
 //! - En yeni bildirim köşeye en yakın olandır. En fazla üç bildirim görünür;
@@ -27,7 +29,7 @@
 //! ```ignore
 //! self.toasts.push(Toast::success("3 çizim silindi").action("Geri al", Message::Undo));
 //!
-//! Toaster::new(map, &self.toasts, Message::ToastClosed)
+//! Toaster::new(window, &self.toasts, Message::ToastClosed)
 //!
 //! // update:
 //! Message::ToastClosed(id) => self.toasts.dismiss(id),
@@ -274,6 +276,8 @@ pub struct Toaster<'a, Message> {
     on_dismiss: Box<dyn Fn(Id) -> Message + 'a>,
     /// Bildirimlerin alanın kenarlarına uzaklığı.
     padding: Padding,
+    /// Bildirimin genişliği, 12 piksellik gövde metnine göre.
+    width: f32,
 }
 
 struct Entry<'a, Message> {
@@ -324,7 +328,15 @@ impl<'a, Message: Clone + 'a> Toaster<'a, Message> {
             more,
             on_dismiss: Box::new(on_dismiss),
             padding: Padding::new(GAP),
+            width: WIDTH,
         }
+    }
+
+    /// Bildirimin genişliği, 12 piksellik gövde metnine göre (varsayılan
+    /// 340); yazı boyutuyla büyür. Alana sığmazsa daralır.
+    pub fn width(mut self, width: f32) -> Self {
+        self.width = width;
+        self
     }
 
     /// Bildirimlerin alanın sağ ve alt kenarına uzaklığı (varsayılan 8
@@ -592,7 +604,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Toaster<'a, M
         );
 
         let padding = self.padding;
-        let width = typography::scaled(WIDTH)
+        let width = typography::scaled(self.width)
             .min(area.width - padding.left - padding.right)
             .max(0.0);
         let left = area.width - padding.right - width;

@@ -166,8 +166,9 @@ Message::Window(event) => self.windows.update(event),
 
 ## Geri bildirim
 
-- **Bildirimler.** Haritanın sağ alt köşesinde, ViewCube ve gezinme çubuğunu
-  açık bırakarak üst üste dizilir; en yenisi köşeye en yakındır. İkonun ve
+- **Bildirimler.** Pencerenin sağ alt köşesinde, durum çubuğunun hemen
+  üstünde üst üste dizilir; en yenisi köşeye en yakındır. Bütün pencereye
+  bağlı olduğu için sekme değişince yer değiştirmez ve çizim alanına girmez. İkonun ve
   alttaki kalan süre çizgisinin rengi önem düzeyidir: bilgi, başarı, uyarı,
   hata. Bilgi ve başarı 5, uyarı 8 saniyede kapanır; eylemli bildirim ("Geri
   al") en az 8 saniye durur, hata kendiliğinden kapanmaz. İmleç üzerindeyken
@@ -220,7 +221,9 @@ use kentos_rc::widget::{Toast, Toaster, Toasts};
 self.toasts.push(Toast::success("2 çizim silindi").action("Geri al", Message::UndoDelete));
 self.toasts.push(Toast::error("Ayarlar kaydedilemedi").body(reason)); // kendiliğinden kapanmaz
 
-Toaster::new(map, &self.toasts, Message::ToastClosed)
+// Bütün pencereyi sarar: bildirim her sekmede aynı köşede durur.
+Toaster::new(window, &self.toasts, Message::ToastClosed)
+    .padding(Padding { bottom: status_bar::height() + 8.0, ..Padding::new(8.0) })
 
 // update
 Message::ToastClosed(id) => self.toasts.dismiss(id),

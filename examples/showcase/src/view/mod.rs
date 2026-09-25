@@ -11,7 +11,7 @@
 //! ```
 //!
 //! Model alanının üstünde kayan araç pencereleri (ölçüm, koordinata git,
-//! katman stili), sağ alt köşesinde bildirimler durur. Galeri sekmesinde
+//! katman stili) durur; bildirimler pencerenin sağ alt köşesindedir. Galeri sekmesinde
 //! model alanı ve yan paneller yerini bileşen kataloğuna bırakır. Üst
 //! katmanlar önceliğe göre tek tek açılır: uygulama menüsü, sorgu
 //! penceresi, kısayollar.
@@ -37,14 +37,14 @@ use iced::{Element, Fill};
 
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::model_space::Backdrop;
-use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format, model_space};
+use kentos_rc::spatial::{Layer, ModelSpace, Tool, ViewCube, format};
 use kentos_rc::style;
 use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::command_line::Prompt;
 use kentos_rc::widget::{
     Banner, CommandLine, Confirm, ContextMenu, EmptyState, Floating, NavigationBar, Toaster,
-    horizontal_divider, overlay,
+    horizontal_divider, overlay, status_bar,
 };
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
@@ -54,7 +54,7 @@ use crate::message::{Confirmation, Keyword, Message, Pending, RibbonTab};
 impl Showcase {
     pub fn view(&self) -> Element<'_, Message> {
         let workspace: Element<'_, Message> = if self.ribbon_tab == RibbonTab::Gallery {
-            column![self.notifications(self.gallery()), self.command_line()]
+            column![self.gallery(), self.command_line()]
                 .height(Fill)
                 .into()
         } else {
@@ -94,6 +94,16 @@ impl Showcase {
             .width(Fill)
             .height(Fill)
             .style(style::container::window);
+
+        // Bildirimler bütün pencereye bağlıdır: her sekmede aynı yerde,
+        // durum çubuğunun hemen üstünde, sağ alt köşede durur. Giriş
+        // sekmesinde yan panelin genişliğine sığar; çizim alanına girmez.
+        let base = Toaster::new(base, &self.toasts, Message::ToastClosed)
+            .width((self.dock.width - 16.0).clamp(240.0, 340.0))
+            .padding(iced::Padding {
+                bottom: status_bar::height() + 8.0,
+                ..iced::Padding::new(8.0)
+            });
 
         let overlay = if let Some(confirmation) = self.confirm {
             Some(self.confirmation(confirmation))
@@ -170,19 +180,11 @@ impl Showcase {
         };
 
         // Kayan araç pencereleri haritanın üstündedir; dışlarında harita
-        // çalışmayı sürdürür. Bildirimler pencerelerin de üstünde, sağ alt
-        // köşededir.
-        let floating = Floating::new(map, &self.windows, Message::Window, move |pane| {
+        // çalışmayı sürdürür.
+        Floating::new(map, &self.windows, Message::Window, move |pane| {
             self.pane(pane)
-        });
-
-        // Bildirimler sağdaki ViewCube ve gezinme çubuğu şeridini açık bırakır.
-        Toaster::new(floating, &self.toasts, Message::ToastClosed)
-            .padding(iced::Padding {
-                right: model_space::chrome_width(self.view_cube, true) + 8.0,
-                ..iced::Padding::new(8.0)
-            })
-            .into()
+        })
+        .into()
     }
 
     /// Onay bekleyen işin onay kutusu; Enter onaylar, Esc vazgeçer.
@@ -216,14 +218,6 @@ impl Showcase {
         };
 
         overlay::modal(dialog, Message::ConfirmCancelled)
-    }
-
-    /// İçeriğin sağ alt köşesinde bildirimler.
-    fn notifications<'a>(
-        &'a self,
-        content: impl Into<Element<'a, Message>>,
-    ) -> Element<'a, Message> {
-        Toaster::new(content, &self.toasts, Message::ToastClosed).into()
     }
 
     fn command_line(&self) -> Element<'_, Message> {

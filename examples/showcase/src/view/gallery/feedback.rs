@@ -82,17 +82,17 @@ impl Showcase {
             entry(
                 "Bildirimler",
                 "kentos_rc::widget::Toaster",
-                "Alanın sağ alt köşesinde üst üste dizilen kısa iletiler. İkonun ve alttaki kalan \
-             süre çizgisinin rengi önem düzeyidir. Bilgi ve başarı 5, uyarı 8 saniyede kapanır; \
-             eylemli bildirim en az 8 saniye durur, hata kendiliğinden kapanmaz. İmleç \
-             üzerindeyken süre durur. En fazla üç bildirim görünür, eskiler sayılır; aynı \
-             bildirim yinelenirse sayısı artar. Düğmelerle deneyin: bildirimler bu sayfanın \
-             sağ alt köşesinde açılır.",
+                "Sardığı alanın sağ alt köşesinde üst üste dizilen kısa iletiler; vitrinde \
+             bütün pencereyi sarar, bu yüzden her sekmede durum çubuğunun hemen üstünde, aynı \
+             yerde durur. İkonun ve alttaki kalan süre çizgisinin rengi önem düzeyidir. Bilgi \
+             ve başarı 5, uyarı 8 saniyede kapanır; eylemli bildirim en az 8 saniye durur, hata \
+             kendiliğinden kapanmaz. İmleç üzerindeyken süre durur. En fazla üç bildirim \
+             görünür, eskiler sayılır; aynı bildirim yinelenirse sayısı artar.",
                 Row::with_children(buttons).spacing(6).align_y(Center),
                 Some(
                     "self.toasts.push(\n    \
                  Toast::success(\"Çizim silindi\").action(\"Geri al\", Message::UndoDelete),\n);\n\n\
-                 Toaster::new(map, &self.toasts, Message::ToastClosed)\n\n\
+                 Toaster::new(window, &self.toasts, Message::ToastClosed)\n\n\
                  // update\n\
                  Message::ToastClosed(id) => self.toasts.dismiss(id),",
                 ),
