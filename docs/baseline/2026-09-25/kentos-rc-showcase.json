@@ -1,0 +1,591 @@
+{
+  "source": "/home/cihad/Projects/kentos-rc",
+  "commit": "dc2e8df",
+  "backend": "tiny-skia (KENTOS_SNAPSHOT_BACKEND=tiny-skia)",
+  "command": "cargo build -p showcase && KENTOS_SNAPSHOT_BACKEND=tiny-skia ./target/debug/showcase snapshot <out.png> <args>",
+  "deterministic": "the same binary rendered agac.png twice with the same sha256 (2026-09-25)",
+  "images": [
+    {
+      "name": "bos",
+      "args": [
+        "--senaryo",
+        "bos"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 190508,
+      "sha256": "e3cc53cf662d5af60f48d5e60b126a4caef6aa623a460727c0991fdf040c43f2",
+      "pixelsSha256": "01aacd21f58ce8a0c5fc6a127acd254b704ef3958a065a3987c2ed50d1b44010",
+      "stored": true
+    },
+    {
+      "name": "secim",
+      "args": [
+        "--senaryo",
+        "secim"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 204512,
+      "sha256": "15d0f9a4136fcd57c64966786686a0c08ee184203b159ffe2603890b77344107",
+      "pixelsSha256": "7ec3048bb3fd6267697c539728702537d1dea34440f8953b879c85d5b51ed753",
+      "stored": false
+    },
+    {
+      "name": "agac",
+      "args": [
+        "--senaryo",
+        "agac"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 179844,
+      "sha256": "10694c34119b7cd894bb95978a311069abd8a6a9755ba5cb823d97991d65597f",
+      "pixelsSha256": "43016e022a3c9c71c874def73c6ac48780813615e1b101e1ac3ff84efad147a0",
+      "stored": true
+    },
+    {
+      "name": "yol",
+      "args": [
+        "--senaryo",
+        "yol"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 221192,
+      "sha256": "bdc9fd1eb42299e2577fe46043b1241bce122b5bcb039737695a8daff4e88087",
+      "pixelsSha256": "46516483a9830cdfa43b89d151ecfda66f198c3ac9278c95a04ae50f0533cbc6",
+      "stored": false
+    },
+    {
+      "name": "sorgu",
+      "args": [
+        "--senaryo",
+        "sorgu"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 193574,
+      "sha256": "bfb2020f8ad9bcf962e3e042b8837094837b425b2d6b8295cd7a024c93978b68",
+      "pixelsSha256": "faae3340817418fc33275f6ea95c29f2f292cd67996f003914a9c3b7f68f7d84",
+      "stored": true
+    },
+    {
+      "name": "sorgu-hata",
+      "args": [
+        "--senaryo",
+        "sorgu-hata"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 196019,
+      "sha256": "c71abb65a4871e6543a2537c8b2732806752dfc739972b0059c3f1c12952efff",
+      "pixelsSha256": "94d706914bfdf3f0db97f532f53a720207c349990d389ab58de29630fa6e6a82",
+      "stored": false
+    },
+    {
+      "name": "filtre",
+      "args": [
+        "--senaryo",
+        "filtre"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 212860,
+      "sha256": "5fc0996003f91f27353b8431f0d18bce0969ce27d566b58d4db36fd75a778abb",
+      "pixelsSha256": "f893aab7546cfdfd7ef9f21fdb84674c066b89e2a9123469c1dda90c09229c89",
+      "stored": false
+    },
+    {
+      "name": "yardim",
+      "args": [
+        "--senaryo",
+        "yardim"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 286436,
+      "sha256": "4f3402b0324053762c5d66cf79cc7fce560829fedcfc7a293ad2de996cf4e62b",
+      "pixelsSha256": "c8d3911be36b04d03f8cc0bc6c5b02b7743715ad33fa734725fe440b44f8032a",
+      "stored": false
+    },
+    {
+      "name": "cizim",
+      "args": [
+        "--senaryo",
+        "cizim"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 198617,
+      "sha256": "8a444c1769035c5b4a64ffef269979e1743dd67b3e29c494e6414c490637e6dd",
+      "pixelsSha256": "27dc14eacedaa28b05ef107602cec69028bb5a29265be0df345cc7e02f7797d3",
+      "stored": true
+    },
+    {
+      "name": "gecmis",
+      "args": [
+        "--senaryo",
+        "gecmis"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 193785,
+      "sha256": "1c654d72b08be88735f1cd8ffddbe3ec77e9dadbff665a02e00f9220406d330b",
+      "pixelsSha256": "605380e65613b7889532a14039e33884094643829872538bee8db6a48a61385a",
+      "stored": false
+    },
+    {
+      "name": "pencereler",
+      "args": [
+        "--senaryo",
+        "pencereler"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 216707,
+      "sha256": "6ee630cba419f872fec4e3958376e9c1bf69fae38bbe5579237ae2fb058d5bae",
+      "pixelsSha256": "cf9e81a0a10bf52d528ae258366c5c2b55104baac9fe7c636c3ac7f3b87c3aa3",
+      "stored": true
+    },
+    {
+      "name": "bildirimler",
+      "args": [
+        "--senaryo",
+        "bildirimler"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 188366,
+      "sha256": "a01d7a0a3e5edefafab25da98003ef6b51f3d42d4bfb06b118d18ea1e73f8f1b",
+      "pixelsSha256": "6891b5527c496e482ede1de42ef4fd70ff8f01a6bb1559b8267abd75b330db2b",
+      "stored": false
+    },
+    {
+      "name": "gorevler",
+      "args": [
+        "--senaryo",
+        "gorevler"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 190058,
+      "sha256": "936f0172d73f80a985ed7badb0e5e5346def1dfc3d1165a95ff223c6763905df",
+      "pixelsSha256": "76d6604c4320b265f9461d011ef05fc198d527369cfd9b12b521405572acb018",
+      "stored": false
+    },
+    {
+      "name": "onay",
+      "args": [
+        "--senaryo",
+        "onay"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 188991,
+      "sha256": "f184f9b5e1d2221cf71ba0724ab0609b053d851d7499c6c56b4db56913d6ab3d",
+      "pixelsSha256": "92d1bec585e8862e779819405df19b20dbba7b292c7e836f7f17ebdd6a905e01",
+      "stored": false
+    },
+    {
+      "name": "bos-durumlar",
+      "args": [
+        "--senaryo",
+        "bos-durumlar"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 166784,
+      "sha256": "d8484f154deb8f1fb21c348b31565977c8c7d648c0c02c4f6dc202de5a19e9a7",
+      "pixelsSha256": "5b8d3c800fb35d8d3543615ada4237f2c6a7233e99d36a9db064edbbb775933a",
+      "stored": false
+    },
+    {
+      "name": "sihirbaz",
+      "args": [
+        "--senaryo",
+        "sihirbaz"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 204471,
+      "sha256": "e59e9fdd23967900642abd20856041e0f48364b264d8c8be4c8d6571b10af6aa",
+      "pixelsSha256": "9032cc891732badb4bd23d23f9e7988f5151b1d61b16215ccc7afde153283895",
+      "stored": false
+    },
+    {
+      "name": "ozellikler",
+      "args": [
+        "--senaryo",
+        "ozellikler"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 181990,
+      "sha256": "60234203b5c61afef64e9145a7ccda5a191d0fa904a2af4541325c1c78d7cdc7",
+      "pixelsSha256": "c0c7d6f0cade2192440ebd3eda7bb5df08c61404267438ce17def8f8eba54df8",
+      "stored": false
+    },
+    {
+      "name": "yuva",
+      "args": [
+        "--senaryo",
+        "yuva"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 187660,
+      "sha256": "72a43bcdc86aa33fb58f425b72cad6306251b96693f8ac756e343805d4717e52",
+      "pixelsSha256": "020707303db60c48f4a81ba5cbea050ff2dc67537577e9116dc7777682f34239",
+      "stored": false
+    },
+    {
+      "name": "duzen",
+      "args": [
+        "--senaryo",
+        "duzen"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 176877,
+      "sha256": "aae5075f59944f003f211077a5b7438c4487206fb931d201a3d31c546bbd2050",
+      "pixelsSha256": "ed8187b1ad42345939a4f04bcbddd8cac5c0a6551a8139622cc1e225bdefc2b1",
+      "stored": false
+    },
+    {
+      "name": "mini",
+      "args": [
+        "--senaryo",
+        "mini"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 219598,
+      "sha256": "6eb984671ec0c845391503d750b19b4ff06d6530bf89db4bb09be47fd8a4778b",
+      "pixelsSha256": "86f4546c74f6d2049a0edc8851f78ffb3f26b4fe78d017caff12881c018fd633",
+      "stored": false
+    },
+    {
+      "name": "daire",
+      "args": [
+        "--senaryo",
+        "daire"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 207919,
+      "sha256": "cbe100cf030cad7a4108f55366a4f7a7890e2cf871bc4b11829e97223267fa1a",
+      "pixelsSha256": "de3b2095000688750d689d24a4b1ea7c6ac84670ffbf321b7a89acf4eb564129",
+      "stored": false
+    },
+    {
+      "name": "kilavuz",
+      "args": [
+        "--senaryo",
+        "kilavuz"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 176856,
+      "sha256": "092404618c96bdf8428d8ff57ad7c644a4d112781de733dc49543b08c326a6d7",
+      "pixelsSha256": "09ebacbfb550bb4646be385dce2baa1c8f1a16cda073bfdd7102150c32a3b027",
+      "stored": false
+    },
+    {
+      "name": "lejant",
+      "args": [
+        "--senaryo",
+        "lejant"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 206628,
+      "sha256": "71575a21515857c08fa9e45b510ea1e2bfdc2a9063bdd52e8f55005ee52d757e",
+      "pixelsSha256": "2982612a99b175d3a007505d8884739d7f072c57e09164a909d16bd2685b549d",
+      "stored": false
+    },
+    {
+      "name": "karsilastir",
+      "args": [
+        "--senaryo",
+        "karsilastir"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 198931,
+      "sha256": "0182f9ac33b6c21f418c230f0901cdd6d06e229c895c7adc2793e78f382935fc",
+      "pixelsSha256": "f21c2d9a0bc47efa82c56637635477d55ff7bb943dec94daa585eb92ca492159",
+      "stored": false
+    },
+    {
+      "name": "galeri-renkler",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "renkler"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 157251,
+      "sha256": "de14e7514c9c8e59676d680c94d370ea2a997174922a5c8cfcdc6715b24ad49c",
+      "pixelsSha256": "fd7a5f35cb9644d12eefd33a741fad8cd9a184c4b0f7aaca0f10994f04358721",
+      "stored": true
+    },
+    {
+      "name": "galeri-yazi",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "yazi"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 148853,
+      "sha256": "af603dbf2219398acb1dfde131f128e6e4e9fe3186483878ac4b36d5b0ccdec9",
+      "pixelsSha256": "21f7f0e3b33b7ea72605f02f63f821ac6a0a9f97572cdf2276a53d6d2d2ce38e",
+      "stored": false
+    },
+    {
+      "name": "galeri-ikonlar",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "ikonlar"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 116410,
+      "sha256": "df0d96b142adf1d305fa1bca68e250433ef271d12b91b8f26dc1e00283e3c5ab",
+      "pixelsSha256": "f4f74627b8da0b4fbe30b7cf7eb833c1307d0e98bc12bfec699488e277de46a2",
+      "stored": false
+    },
+    {
+      "name": "galeri-dugmeler",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "dugmeler"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 152269,
+      "sha256": "97d99d3a9d9dae4f304f1245421b4391856338663228a1abd3cd3b5a1a95f86d",
+      "pixelsSha256": "e34e491b5ee47bdfba0c49ffd898208ab4495048e9868253303c5049e6baec6b",
+      "stored": false
+    },
+    {
+      "name": "galeri-veri",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "veri"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 128121,
+      "sha256": "7e6814a37515fa8c5c40ee19a6afe20051ef0082b222c428a5a160d074c18cf0",
+      "pixelsSha256": "c49ed42a21f88728a78d3d5627a03a6fb58f3137b8f9db8e54971b1d2017d255",
+      "stored": false
+    },
+    {
+      "name": "galeri-cerceve",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "cerceve"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 133601,
+      "sha256": "c5fa56d6495f0203b30999f0e062e3b9ad54ab6484b426b228b92549d652d126",
+      "pixelsSha256": "08780efff96d2636cd6088d63cd334f25dfc92a6e89119a33301788546fb0825",
+      "stored": false
+    },
+    {
+      "name": "galeri-yerlesim",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "yerlesim"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 128539,
+      "sha256": "247efb7c3b115aa55493988423b5762c4501d76846550e590201d05a405aa207",
+      "pixelsSha256": "da51e88bc61133adbc892389d67bd00f15f2c5f3663b743c76f47d2da3d2d182",
+      "stored": false
+    },
+    {
+      "name": "galeri-girdiler",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "girdiler"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 144875,
+      "sha256": "bbe2bc48ff255a065379b556d19364bc697d95b8eeadd6dfba075ef087e87f66",
+      "pixelsSha256": "918d728d74e57ecac81750e6b457e849a89f4ba9f7d643f7992a2d926bf0a3ab",
+      "stored": false
+    },
+    {
+      "name": "galeri-geri-bildirim",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "geri-bildirim"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 136589,
+      "sha256": "d2f27d01f693d2649761f076b457f1be6475939b31bf8c8a27aa6d5d4974af2d",
+      "pixelsSha256": "b321cc6296f7b8aabae7cc6f9df9d5a07c39007eb4fd20fa60ff444b4e4e79bf",
+      "stored": false
+    },
+    {
+      "name": "galeri-oznitelikler",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "oznitelikler"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 162140,
+      "sha256": "856f9318fb333a9abf69fa5f19ccf739caa369fb920c4c718e32c419efdfdbf7",
+      "pixelsSha256": "4672141fa9e6bfbcf0abe39447eb2a073f942a836ea3f1d2566582903325328c",
+      "stored": false
+    },
+    {
+      "name": "galeri-mekansal",
+      "args": [
+        "--senaryo",
+        "galeri",
+        "--sayfa",
+        "mekansal"
+      ],
+      "size": [
+        1440,
+        900
+      ],
+      "mode": "RGBA",
+      "bytes": 103697,
+      "sha256": "3ba11e909a192aebce65327d7c206bc33d46355738fcf5f3b72f79f301f91f46",
+      "pixelsSha256": "47566d9324cd2e3e7072c55fee8269ec7921460fde8cc2b0c3b601b0dcd5e639",
+      "stored": true
+    }
+  ]
+}

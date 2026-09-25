@@ -1,0 +1,22 @@
+✓ signs in with a local account  (Ayşe Yılmaz)
+✓ uploads the drawing as a cloud project  (2049 nesne)
+✓ the live channel is open
+✓ another member sees it with every object  (2049)
+✓ autosave stores the line exactly  ({"x":487000,"y":4420600})
+✓ after a reload the cloud project opens with the line  (2050 nesne)
+✓ the other editor commits  (2)
+✓ another editor’s change arrives live
+✓ a simultaneous edit is a conflict, not an overwrite  (Çakışma: 1)
+✓ taking the server copy shows the other editor’s line
+✓ with the server down the edit waits on the device
+✓ the waiting edit is saved once when the server is back  (4)
+✓ the live channel reconnects
+✓ a project manager may not delete; the button says why  (“Örnek Harita Bürosu” kurumunda proje silme yetkiniz yok (project.delete); kurum yöneticinize başvurun.)
+✓ renaming the open project saves the name for everyone and the list shows it  (E2E 2026-09-25T12:44:03 (revize))
+✓ an admin deletes the project  (204)
+✓ the open editor hears it: saving stops and the drawing stays  (Proje silindi)
+✓ an edit made after the deletion stays in the device draft  (1)
+✓ the deleted project refuses opening and leaves the list  (“E2E 2026-09-25T12:44:03 (revize)” projesi silindi; açılamaz ve değiştirilemez. Yanlışlıkla silindiyse kurum yöneticinize başvurun.)
+✓ deleting asks first, with the safe button focused  ({"safe":"Vazgeç","says":3})
+✓ the confirmed delete removes it from the list for everyone  (201 → 410)
+✓ no console errors

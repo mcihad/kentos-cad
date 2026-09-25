@@ -36,3 +36,6 @@ apps/web/src/style/svg/pkg/
 
 # Local server credentials (kentosd db-setup writes them; never committed)
 .env.local
+
+# Claude Code agent worktrees (tool state, never source; docs/baseline/2026-09-25.md)
+.claude/worktrees/

@@ -1,0 +1,181 @@
+{
+  "commit": "481d7c4",
+  "note": "Frozen reference files read by the native and WASM tests (ADR 0002, 0008, 0009); regenerate only as a reviewed golden change.",
+  "files": [
+    {
+      "path": "fixtures/crs/v1/registry.json",
+      "bytes": 9523,
+      "sha256": "c4f61acbbbf92df1e089721c313fab1700f24c48cda307938684d4da2c64f71f"
+    },
+    {
+      "path": "fixtures/document/v1/sample.json",
+      "bytes": 7569,
+      "sha256": "4968b65b9d34dd2b9ec7abfdc1c10bb5567c50d10a8980df3205044423d68fcb"
+    },
+    {
+      "path": "fixtures/expression/v1/cases.json",
+      "bytes": 609310,
+      "sha256": "ce1b9e4cb0ec011e0c892ca7daabe1cc065a146fff233ac82f9ad1156b46268e"
+    },
+    {
+      "path": "fixtures/formats/v1/bad-lines.txt",
+      "bytes": 105,
+      "sha256": "aedbf3f88189441d48578c2d36796a4bc4dc97062578689d34da74153ad5bf06"
+    },
+    {
+      "path": "fixtures/formats/v1/blocks.dxf",
+      "bytes": 1783,
+      "sha256": "a7bed8005494210d6c90ec23e8a543b1fe8a1ee604a075f4844e3bf53f95fa71"
+    },
+    {
+      "path": "fixtures/formats/v1/dimension.dxf",
+      "bytes": 921,
+      "sha256": "0295c5f3b0f855420b9a6f3439a200ba14bb533efa7f784a4200d393ab6e5b5c"
+    },
+    {
+      "path": "fixtures/formats/v1/entities.dxf",
+      "bytes": 3008,
+      "sha256": "1f3d20d05ad31a12a73951ee31be626c642f69b56d0c1384af2d702205b68d39"
+    },
+    {
+      "path": "fixtures/formats/v1/excel-tr.csv",
+      "bytes": 164,
+      "sha256": "12051da02d8d2e51f289d9ab54fcf7fe791b80744accdebadff52fa91fd6729a"
+    },
+    {
+      "path": "fixtures/formats/v1/hatch.dxf",
+      "bytes": 1551,
+      "sha256": "e40ece01192c70af34b4148416e97c1baa8483a7c23417f5f1aa3149cee5ccec"
+    },
+    {
+      "path": "fixtures/formats/v1/netcad.ncn",
+      "bytes": 183,
+      "sha256": "8b02fe1c9efb100479fc9230418402e59f7440c9abce3653e29717710b93cb23"
+    },
+    {
+      "path": "fixtures/formats/v1/ocs.dxf",
+      "bytes": 774,
+      "sha256": "ebf1826870812e5c50022828ad2b0b4b420211e415d4fa2691289da20ab280ce"
+    },
+    {
+      "path": "fixtures/formats/v1/unicode.txt",
+      "bytes": 66,
+      "sha256": "caa64e4b4b2bb619f7f3abbd5a803c94cae2ceb6b1f3ea5e467d9e1e8aed8919"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-p0-basics.json",
+      "bytes": 23773,
+      "sha256": "d9d94050f2fbe2571dc9b9d55f58bb25c8f92e304c5429c0ed6fa20aa5a55b0a"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-p1-primitives.json",
+      "bytes": 423264,
+      "sha256": "df84e4d65c8039bc7646ff3803101f1a13a34839a8077a09e4ee1e99e76bb700"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-p2-curves.json",
+      "bytes": 411788,
+      "sha256": "4811ae8475a38cb5c2cd1124422ab712721b556f646546885d3203daf86b2398"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-p3-offset-annotation.json",
+      "bytes": 179184,
+      "sha256": "968777cfab56e5c5a0367de2cc58d691ce2ad56feb919ed844ee12ee6687f93e"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-p4-overlay.json",
+      "bytes": 383169,
+      "sha256": "7262ea834bbd2a60284b6a921b5a27ae5accf13b3f170a0390e25f79391cb8d2"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-p5-entities.json",
+      "bytes": 401764,
+      "sha256": "5c09f323db6a957fadaa4b9d24dd7d28b67e098a13f32d9512a7d43bd97a0b20"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-p6-path-editing.json",
+      "bytes": 796101,
+      "sha256": "6fb12d56453decbf5760f2ab5b5669d290cd3b8d17d5e5ac86a7ae4fb833a7b2"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-p7-editing.json",
+      "bytes": 319139,
+      "sha256": "0eb3c825effef0435670fb5d850688749a5d998a9a133357348847252d631cd0"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-p8-triangulate.json",
+      "bytes": 59631,
+      "sha256": "a3475dfc83498efb47ff05063d6519cd15f790fa96a9e4e3fb4d8f2d36796eb3"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-r1-predicates.json",
+      "bytes": 7925,
+      "sha256": "e4bd3b28d5186cc76abbaeb688c12f6d3c6bd2e1a0aff0933628f42ca909c53d"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-s4-processing.json",
+      "bytes": 133586,
+      "sha256": "b2dc152287d4084d07507140add4e7181599fa0bae4c0d0c649462738df6d822"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-s5-input.json",
+      "bytes": 83400,
+      "sha256": "c2d43002020ee02158efb9ebb87c7e221d59906507b1f98f576e4ccb999ee97c"
+    },
+    {
+      "path": "fixtures/geometry/v1/calls-s5-tools.json",
+      "bytes": 275742,
+      "sha256": "c2ebd0e233d9bd8f64844143423f6f9cb3235beab8949857842926e79166a842"
+    },
+    {
+      "path": "fixtures/geometry/v1/cases.json",
+      "bytes": 13625,
+      "sha256": "5c65ce3b22098e179aa15be3885ce7e61c1c90b05ad98f616f6e7b61d79c8784"
+    },
+    {
+      "path": "fixtures/geometry/v1/reference-calls.json",
+      "bytes": 58562,
+      "sha256": "fff1110dd399651b0801166287b52583bda64d93f4acf46e1f1cbc2da64c938d"
+    },
+    {
+      "path": "fixtures/geometry/v1/reference.json",
+      "bytes": 4275,
+      "sha256": "6cecc6bfe492381963668e1fcb36ae052b8fe3e3e104a9578fde1aad297cbff0"
+    },
+    {
+      "path": "fixtures/geometry/v1/store-processing.json",
+      "bytes": 467863,
+      "sha256": "4d5c9e26ee6683e45cad3f599d8b596939eaf6490f106ce808c9dd75e1bbeeed"
+    },
+    {
+      "path": "fixtures/geometry/v1/store-v1.json",
+      "bytes": 1067122,
+      "sha256": "3f156c4a3a8cc050a53d2dad736a365e5d4c0b3539c15013d64e0336a2d4c5e7"
+    },
+    {
+      "path": "fixtures/numeric/v1/distribution.json",
+      "bytes": 2074,
+      "sha256": "45cebcb0c1d3bb355a8bb89a1a1ff685643972225d974fc45527b3bc69dff6be"
+    },
+    {
+      "path": "fixtures/numeric/v1/rounding.json",
+      "bytes": 106202,
+      "sha256": "de0996ed605edea48d151aa732232c7b30518547a3495d2200979f63aaddaac3"
+    },
+    {
+      "path": "fixtures/numeric/v1/shares.json",
+      "bytes": 1291,
+      "sha256": "8932d54639603bb4d0bb35d555d43f8272fb9370f45c17cafa4e77f0df35e81d"
+    },
+    {
+      "path": "fixtures/style/v1/cases.json",
+      "bytes": 1130280,
+      "sha256": "a1f05a64a5cafa2c656d66ec009c93a577df343ab26f0f3fcf0b9989f515dd81"
+    },
+    {
+      "path": "fixtures/svg/v1/cases.json",
+      "bytes": 1221510,
+      "sha256": "a0c85bbf689ffb70ca79c29139327b4e2b159024e0ff636c617393e7a891fe4b"
+    }
+  ]
+}

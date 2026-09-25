@@ -1,0 +1,155 @@
+✓ app boots with a GPU backend  (webgl2)
+✓ status bar shows the API as connected  (Sunucu: bağlı)
+✓ without the API it shows “Sunucu: yok” and says why  (API çalışmıyor.)
+✓ line tool draws three lines (no stale snap)  (+3)
+✓ trim splits the crossed line in two  (+4)
+✓ text tool opens a focused field where you click
+✓ spline, dimension and text are created  (spline,dimension,text)
+✓ hatch fills the rectangle
+✓ double click opens the inline text editor
+✓ inline edit commits the new text  (Düzenlendi)
+✓ polyline arc mode draws a tangent half circle  ([0,0.9999999999999999,0,0])
+✓ explode and join round-trip a polyline with an arc  (line,arc,line)
+✓ chamfer cuts a polygon corner  (5 köşe)
+✓ break at one point splits a line in two  (line,line)
+✓ copy and paste-in-place duplicate the selection
+✓ toolbox shows every tool without scrolling  ({"scroll":false,"tools":58})
+✓ a toolbox group folds and opens from its title
+✓ command bar option buttons work with the mouse  ([0,-0.9999999999999999,0])
+✓ fillet: click a corner, pull the mouse, click  (5 köşe)
+✓ held right button → one-shot midpoint snap  (a=(130.000, -50.000))
+✓ cursor input: typed 12.5 draws 12.5 m towards the mouse  (alan=12.5)
+✓ grip menu deletes a vertex
+✓ object tracking: resting acquires a point, the next pick is level with it  (1 nokta, y=-30.000000000)
+✓ rotated rectangle: 20 m edge at 45°, 5 m wide  (alan 100.0000)
+✓ regular polygon: 8 corners on the circle
+✓ arc continues tangent to the last line  (c=(120.000000, -100.000000))
+✓ ellipse from an axis and the other half-axis
+✓ snap to xline × ellipse crossing is exact  (x=22.679491924238)
+✓ trimming an xline on one side leaves a ray  ([1])
+✓ option letter beats the tool shortcut (S → kenar sayısı)  (7)
+✓ point calculator: yan nokta 30/5 feeds the line  ((5.000000000, 130.000000000))
+✓ resizing a panel never flashes a black viewport  (0/28 kare siyah)
+✓ Layers panel: counts follow add, undo and redo in the same row elements  (6,13 → 9,16 → 6,13 → 9,16)
+✓ Layers panel: the eye hides the layer in the same row and leaves the focus
+✓ Layers panel: a long tree builds only the rows near its window; End scrolls to the last and builds it  ({"built":52,"lastBefore":false,"selected":"true","inView":true,"count":"2","place":"300/300","after":52})
+✓ Alt+B unites two squares into one area
+✓ Alt+C with an inner area leaves a hole (adalı alan)
+✓ hatching a holed area leaves its island empty
+✓ Shift+B: a click inside crossing lines makes the enclosed area
+✓ hatch by lines (B) fills the region the crossing lines close
+✓ Paralel çizgi: sides at 3 m and 4 m, mitred at the turn  ([{"x":487477,"y":4420063},{"x":487484,"y":4420056}])
+✓ Dik çık: 6 m from the clicked end, 5 m to the left  ({"kind":"line","a":{"x":487466,"y":4420060},"b":{"x":487466,"y":4420065},"layerId":"taslak","attrs":{},"id":2107})
+✓ linear dimension ΔX (X), typed offset
+✓ C selects “Çap (Ç)” instead of the circle tool
+✓ kutupsal dizi: 3 adet, 2 yeni kopya
+✓ uzat-kısalt: typed total length at the clicked end
+✓ buda with a chosen boundary cuts only there
+✓ çoklu çizgi: Uzunluk and a Yarıçap arc
+✓ daire TTT: the incircle, r = 3
+✓ döndür Referans: the line turns onto north
+✓ move: a typed displacement lands exactly, every other field kept  ([{"x":487682.75,"y":4420101.25},{"kind":"arc","c":{"x":487677.5,"y":4420112.75},"r":3,"a0":0.5000000000357867,"a1":1.999999999995257,"layerId":"taslak","attrs":{},"id":2123}])
+✓ move: one undo step takes both back, redo moves them again
+✓ copy: copies at typed offsets with the parcel’s fields and their own attributes
+✓ mirror: the arc lands across the axis, still counter-clockwise  ({"layerId":"taslak","attrs":{},"kind":"arc","c":{"x":487762.5,"y":4420112.75},"r":3,"a0":1.1415926536121792,"a1":2.6415926535447043,"id":2126})
+✓ array 2 × 3: five copies on the grid
+✓ array: one undo step takes all five back
+✓ paste: the copies land by the base point, fields kept  (87.5, 57.25)
+✓ paste: one undo step
+✓ WebGL2 is the default engine
+✓ style: renderer and symbol add ink (hatches, arrows, text)  (145529 / 80780 px)
+✓ style: text markers are drawn into the atlas
+✓ style: an object symbol is one undo step
+✓ status bar switches to WebGPU live
+✓ WebGPU draws the same scene as WebGL2  (145613 / 145529 px)
+✓ switching back to WebGL2 keeps one canvas
+✓ style manager: tree, pictures and details
+✓ symbol designer saves an edited copy in the user library  ({"id":"h","type":"hatchFill","angle":135,"spacing":2,"width":0.13,"color":"ink"})
+✓ layer style window classifies by value and applies  (categorized 6)
+✓ SVG editor draws a rectangle and saves it as a library drawing  (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><rect fill="currentColor" stroke=)
+✓ SVG editor pastes markup with a group transform and a CSS class  ([{"tag":"rect","x":"20","w":"20","fill":"#E0457B","d":null,"rule":null},{"tag":"ellipse","x":null,"w":null,"fill":"#ffffff","d":null,"rule":null}])
+✓ SVG editor exports a plain SVG that reads back the same  (4 şekil)
+✓ SVG editor traces a bitmap into a path with its hole  (1 parça, 1 delik, 8 düğüm · 100 × 100 piksel M20 20L80 20L80 80L20 80ZM40 40L40 60L60)
+✓ SVG editor applies an edited source as one step
+✓ SVG editor closes without saving when asked
+✓ SVG editor unites two overlapping rectangles into one eight-node path  (M10 10L50 10L50 30L70 30L70 70L30 70L30 50L10 50Z)
+✓ SVG editor gives the keys back to the canvas after a menu choice
+✓ SVG editor rounds a corner node by dragging along its side  (M10 16C10 12.686 12.686 10 16 10L50 10L50 30L70 30L70 70L30 70L30 50L10 50Z)
+✓ SVG editor rounds a chosen corner by a typed radius  (M10 16C10 12.686 12.686 10 16 10L50 10L50 30L70 30L70 65C70 67.761 67.761 70 65 70L30 70L30 50L10 50Z)
+✓ SVG editor aligns left edges to the selection  ({"tag":"rect","x":"10","w":"20","fill":"#ffffff","d":null,"rule":null})
+✓ SVG editor makes a polar array round the canvas centre  (["","","rotate(-60 63.146 92.231)","rotate(-120 93.146 59.731)","rotate(-180 80 17.5)","rotate(120 36.854 7.769)","rotate(60 6.854 40.269)"])
+✓ SVG editor takes the array back in one undo step
+✓ SVG editor preview ink follows the theme  (#ffffff → #000000)
+✓ SVG editor double clicks end a polyline, open its nodes, turn a node smooth and back and add a node on a segment  ({"polyline":"M20 30L50 60L80 30","nodesShown":3,"smooth":"M20 30C20 30 40 60 50 60C60 60 80 30 80 30","corner":"M20 30L50 60L80 30","inserted":"M20 30L50 60L65 45L80 30"})
+✓ SVG editor narrows a choice by a still click on a pen path, moving nothing and with no undo step  (2 → 1, yerinde, geri almadan sonra 1 şekil)
+✓ an untouched SVG drawing closes without a question
+✓ closing with a change asks in a window of its own, with Kaydet ve kapat focused  ({"role":"alertdialog","focus":"Kaydet ve kapat","buttons":["Kaydetmeden kapat","Vazgeç","Kaydet ve kapat"]})
+✓ Tab stays in the question; Esc goes back to the drawing  ([true,true,true,true])
+✓ Vazgeç and a second × keep the editor and its drawing
+✓ Kaydetmeden kapat closes the editor and saves nothing
+✓ an untouched new model closes without a question
+✓ Kaydet ve kapat saves the model, then closes  ([{"type":"features","name":"nesneler","label":"Nesneler","default":{"scope":"selection"}}])
+✓ the symbol designer closes untouched and asks after a rename
+✓ deleting from the library asks in a window: Vazgeç focused, Esc keeps, Sil removes  ({"title":"Kitaplıktan sil","focus":"Vazgeç","danger":"Sil"})
+✓ processing: dialog opens from the İşlemler menu
+✓ processing: input shows what it will read  (4 kapalı alan; seçili nesneler)
+✓ processing: preview follows the typed prefix  (K00001, K00002, K00003 …)
+✓ processing: corners numbered into a new layer  (10 nokta, K00001)
+✓ processing: history lists the run
+✓ processing: the run is one undo step
+✓ processing: expression preview counts the matches  (16 / 2110 nesne koşulu sağlıyor.)
+✓ processing: İfadeyle seç selects the matches  (16)
+✓ processing: the Web Worker gives the same result as the page  ({"page":"ok","bg":"ok","target":"worker","same":true,"n":589})
+✓ processing: the built-in model runs its three steps  (3 adım çalıştı. 3 nesnede 8 köşe numaralandı: P00001 – P00008; 4 ortak köşe komşularıyla tek numara aldı. 3 nesneye 10 kenar uzunluğu yazıldı; 2 ortak kenar bir kez yazıldı. 3 nesnede “Hesap alanı” yazıldı.)
+✓ processing: one undo takes the whole model back
+✓ processing: the designer chains a tool to the input and saves the model  ({"input":{"kind":"input","name":"nesneler"}})
+✓ Hesap: a connected traverse shows its misclosures  (Açı kapanma hatası fβ = 0.00000 g (0.0 cc); her açıya 0.00000 g (0.0 cc) düzeltme verildi.)
+✓ Hesap: the traverse points go to Poligon noktaları within 0.1 mm of the designed ones, one undo step  ([{"n":"H1","layer":"poligon","p":{"x":486646.42569926067,"y":4420126.653885357}},{"n":"H2","layer":"poligon","p":{"x":486665.7214114917,"y":4420154.152811771}}])
+✓ Hesap: undo takes the traverse points back
+✓ Hesap: a resection at a known point gives it back  ({"cellsOut":["P","486832.036","4420098.642"],"want":{"x":486832.036,"y":4420098.642}})
+✓ coordinate import: the preview reads the NCN as Ad Y X Z and marks the bad line  ({"cols":["name","y","x","z"],"rows":3,"bad":1})
+✓ coordinate import: another coordinate system blocks it with a warning  ({"disabled":true,"warned":true,"after":false})
+✓ coordinate import adds the points exactly, on a new layer named after the file  ([["1001",487061.123,4420101.456,105.2,"deneme","1001"],["1002",487071.5,4420111.25,106.75,"deneme","1002"]])
+✓ coordinate import is one undo step  (2110 → 2110)
+✓ coordinate export writes the selected points back exactly (NCN)  ({"name":"Ornek_1244-1249_Ada.ncn","text":"1001 487061.123 4420101.456 105.2\r\n1002 487071.5 4420111.25 106.75\r\n"})
+✓ DXF import: the layers table lists the file's layers and the report names what was left out  (["0","DETAY","DIZI","KAPILAR"] 8 nesne alınacak: 5 çizgi, 1 daire, 1 nokta, 1 elips. 3 yeni katman “kapi.dxf” grubunda kurulacak.Blok (INSERT): 4, KentOS'ta blok nesnesi yok: bloklar patlatıl)
+✓ DXF import: new layers in a group named after the file, blocks exploded exactly, a left-out layer stays out  ({"layers":["0","DETAY","KAPILAR"],"circle":[1000,2010,1],"point":[996,2003,101.5],"dizi":0,"added":8})
+✓ DXF import: an imported object can be picked at once  (true)
+✓ DXF import is one undo step  (2112 → 2112)
+✓ DXF export: the window lists the selection by layer and says what DXF changes  ([["DXF deneme","8"]] 8 nesne 1 katmanla yazılacak: 2 ölçü, 1 kapalı alan, 1 yay, 1 eğri, 1 yazı, 1 nokta, 1 çizgi.2 ölçü DXF ölçüsü olarak yazılır ve KentOS'taki gibi görünür; başka bir program ölçüyü düzenlerse kendi kur)
+✓ DXF export writes an AutoCAD 2007 DXF, with the dimensions as DXF dimensions, and leaves the drawing as it was  (Ornek_1244-1249_Ada.dxf 19042 {"dirty":true,"size":2128,"open":false})
+✓ DXF export → import: the file's layer goes back to the drawing's layer of the same name  ([["DXF deneme","“DXF deneme” katmanına eklenir"]])
+✓ DXF export → import: the same objects come back (dimensions as dimensions), coordinates bit for bit, with labels and attributes
+✓ DXF export → import: the import and the test objects each undo in one step  (2128 → 2120)
+✓ Ctrl+S writes a .kcad file and the drawing turns clean  ({"name":"Ornek_1244-1249_Ada.kcad","format":"kentos.document","n":2120,"dirty":false})
+✓ an edit after saving marks the drawing unsaved
+✓ Ctrl+O asks before dropping unsaved changes
+✓ the reopened file holds the saved drawing, with no undo history  (2120 nesne)
+✓ a failed write keeps the drawing unsaved  (“Ornek_1244-1249_Ada.kcad” yazılamadı: disk dolu. Değişiklikler kaydedilmemiş sayılıyor; başka bir yere kaydetmeyi deneyin (Farklı kaydet).)
+✓ undo/redo keeps the document intact
+✓ the drawing has unsaved changes before Yeni proje
+✓ Yeni proje asks about unsaved changes, and Vazgeç returns to its dialog
+✓ Yeni proje opens an empty drawing with the chosen name, system, scale and work mode (not an announced one)  ({"size":0,"name":"Ada 200","srid":5254,"scale":500,"dirty":false,"undo":false,"file":null,"parcel":true,"active":"taslak","origin":{"x":500000,"y":4320000},"mode":"cad"})
+✓ a line in the new project, and the first save asks for “Ada 200.kcad”  (Ada 200.kcad)
+✓ the start screen lists the saved file first and opens it again  (["Ada 200","Ornek_1244-1249_Ada","Ornek_1244-1249_Ada"] {"name":"Ada 200","size":1})
+✓ CAD mode hides the map, coordinate and processing menus and the parcel tool, whose command still runs by name  ({"menus":["file","edit","view","draw","modify","calc","analysis","tools","help"],"parcel":false,"line":true,"status":"CAD","mode":"cad","dirty":false,"byName":"parcel"})
+✓ the status bar switches the work mode back to Hibrit (the project is unsaved); 3D Plan and Afet Analizi say Yakında  ({"menus":["file","edit","view","draw","modify","map","crs","calc","analysis","processing","tools","help"],"parcel":true,"line":true,"status":"Hibrit","mode":"hybrid","dirty":true,"modeMenu":["Hibrit (CAD + CBS)","CAD","CBS","3D PlanYakında","Afet AnaliziYakında"]})
+✓ Şerit chosen in Uygulama ayarları replaces the menu bar, toolbar and toolbox at once  ({"ribbon":true,"menubar":false,"toolbar":false,"toolbox":true,"pref":"ribbon"})
+✓ every tool of the catalog is on the ribbon (a button, a split button or a panel’s ▾), and every button a registered command
+✓ Daire on the ribbon runs the circle tool, marks its button and puts a dot on Giriş  ({"tool":"circle","pressed":"true","dot":true})
+✓ Daire ▾ lists its five methods; 3 nokta starts the circle by three points, and the button starts it so again  (5 · Daire: ilk noktayı belirtin · Daire: ilk noktayı belirtin)
+✓ Halka is under the Eğri panel’s ▾ and runs from there  (donut)
+✓ at 1100 px every tab fits by shrinking its panels; at 1600 px Değiştir keeps its labels  (["home","modify","map","tools"])
+✓ a selection shows the Seçim tab (count, kinds); Esc clears it and returns to Giriş  ({"summary":{"tab":"Seçim1","count":"1","kinds":"1 çizgi"},"after":{"hidden":true,"current":"home"}})
+✓ Ctrl+F1 folds the ribbon to its tabs; a tab opens it over the drawing until a command runs  (759 → 802, absolute, none)
+✓ Alt+Q searches commands by name and Enter runs the first  (["Elips"])
+✓ Alt shows key tips: the tab letters open Değiştir, the button letters start Taşı  (DE T)
+✓ F6 shows the key tips too; Esc takes them away  (9)
+✓ a right click adds a ribbon command to the quick access bar
+✓ the Şerit arayüzü button returns to menus and toolbox  ({"ribbon":false,"menubar":true,"toolbox":true})
+✓ the KentOS mark opens the application menu (loaded then): Yeni to Proje ayarları, İçe aktar lists the formats, Bulut its pane; Esc closes; a row runs its command  ({"loadedBefore":false,"opened":{"expanded":"true","nav":["Yeni","Aç","Kaydet","Farklı kaydet","İçe aktar","Dışa aktar","Bulut","Yazdır ve pafta","Proje ayarları"],"pane":"overview"},"importRows":["file.import.dxf","file.import.ncn","file.import.ncz","file.import.shp","file.import.geojson"],"cloudPane":"cloud","closed":true,"ran":{"menu":false,"dialog":true}})
+✓ Proje ayarları sets the drawing typeface (Arimo): the project is unsaved, the file will carry it, the bundled face is loaded  ({"setting":"arimo","css":"Arimo, Arial, system-ui, sans-serif","loaded":true,"dirty":true,"file":"arimo"})
+✓ Çizim kalitesi: Hızlı draws without anti-aliasing on one canvas, Yüksek with it again  ({"fast":{"aa":false,"canvases":1,"dpr":1},"high":{"aa":true,"canvases":1,"dpr":1}})
+✓ the Tam ekran button fills the screen and leaves it  ({"full":true,"back":false})
+✓ Lacivert and Plus Jakarta Sans by default; Bordo and Inter apply on Kaydet and are remembered; nothing is fetched from another host  ({"before":{"accent":"navy","font":"Plus Jakarta Sans","jakarta":true},"after":{"accent":"bordeaux","fill":"#c24a63","font":"Inter","inter":true,"stored":{"accent":"bordeaux","uiFont":"inter"},"foreign":[]}})
+✓ no console errors

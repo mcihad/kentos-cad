@@ -12,6 +12,20 @@ node apps/web/scripts/perf/modules.mjs --label y4 # pnpm build'den sonra: ağır
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
 
+## F0 başlangıç kaydı: kullanıcının makinesinde açılış (2026-09-25, `481d7c4`)
+
+- **Kaynak:** [bundle-f0-2026-09-25.md](bundle-f0-2026-09-25.md), [startup-f0-2026-09-25.md](startup-f0-2026-09-25.md). Ortam ve test sonuçları [docs/baseline/2026-09-25.md](../baseline/2026-09-25.md)'dedir.
+- **Ortam:** i5-11300H (Iris Xe ve RTX 3050 Mobile), başsız Chrome 154, WebGL2, `vite preview`. Kod `4399477` ile aynı, temiz ayrı bir worktree'de. 3 ölçümün ortancası.
+
+| Ölçüt | Soğuk | Ilık |
+|---|---|---|
+| Etkileşime hazır (aralık) | 797 ms (776–819) | 278 ms (258–282) |
+| Ana iş parçacığında script süresi | 83 ms | 21 ms |
+| Aktarılan toplam (WASM) | 706,4 KB (305,0 KB) | 0,8 KB |
+
+- İlk sayfa JS'i ham / gzip / brotli 551,3 / 174,2 / 147,2 KB; CSS'i 114,4 / 19,2 / 16,8 KB.
+- Bulut konteynerindeki ölçümde ılık açılış soğuktan yavaştı (2 274 ms, [startup-wasm-compressed](startup-wasm-compressed-2026-09-25.md)). Bu makinede ılık açılış beklendiği gibi hızlı. Bulut ölçümündeki fark açıklanmış değildir (TODOS.md §20.1).
+
 ## Açılış yükü: kitaplık, örnek proje ve pencereler ayrı parçada (2026-09-25)
 
 Kaynak: önce [bundle-f6-before-2026-09-25.md](bundle-f6-before-2026-09-25.md), [startup-f6-before-2026-09-25.md](startup-f6-before-2026-09-25.md); sonra [bundle-f6-after-2026-09-25.md](bundle-f6-after-2026-09-25.md), [startup-f6-after-2026-09-25.md](startup-f6-after-2026-09-25.md). Sistem sembol kitaplığı (bütün MPYY sayfaları), örnek proje ve gösterim kataloğu tek bir ayrı parçadır ve WASM çekirdeği derlenirken paralel iner (`app/startContent.ts`); ayar, işlem aracı ve bulut pencereleri ilk açılışta, WebGPU arka ucu seçilince yüklenir. Davranış değişmedi (uygulama yine örnek projeyle açılır). Bulut konteyneri, başsız Chrome, `vite preview`, 5 ölçümün ortancası.
