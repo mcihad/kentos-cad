@@ -1,0 +1,39 @@
+{
+  "$comment": "Hand-written additions to the generated web inventory (apps/web/scripts/inventory). Key: section:id with section one of command, tool, processing, model, workspace, setting, storage, fileField, screen. Fields: status (implemented | partial | pending), desktop (implemented | partial | pending | none | n/a), note, acceptance. Only facts verified in code, tests or an ADR. After editing run pnpm inventory.",
+  "command:file.open": {
+    "note": "Yerel `.kcad` v1 JSON'u (`DocumentSnapshotV1`) açar. Binary v2 hedefi ADR 0011'dedir; eski JSON dosyaları açılmaya devam edecek (TODOS.md FILE-21)."
+  },
+  "command:file.save": {
+    "note": "`.kcad` v1 JSON yazar; binary v2 henüz yok (ADR 0011, TODOS.md FILE-01..24)."
+  },
+  "command:file.saveAs": {
+    "note": "`.kcad` v1 JSON yazar; binary v2 henüz yok (ADR 0011)."
+  },
+  "command:file.import.dxf": {
+    "note": "ASCII DXF, Rust okuyucusu (ADR 0009). Bloklar patlatılır; alınamayan ya da dönüştürülen nesneler raporlanır."
+  },
+  "command:file.export.dxf": {
+    "note": "AutoCAD 2007 ASCII DXF (AC1021), Rust yazıcısı (ADR 0009). Yalnız ezdxf ile denetlendi; AutoCAD, Netcad, BricsCAD ve QGIS'te açılması denenmedi (TODOS.md FMT-02)."
+  },
+  "command:crs.set": {
+    "note": "Projenin SRID'sini atar, koordinatları dönüştürmez (CLAUDE.md §5). Dönüşüm bekleyen `crs.transform` ile gelecek (TODOS.md NUM-04..07)."
+  },
+  "command:cloud.open": {
+    "note": "Kurum (tenant) projelerini açar. Kişisel çalışma alanı, proje düzeyinde yetki ve paylaşım henüz yok (ADR 0012, TODOS.md §12)."
+  },
+  "command:cloud.upload": {
+    "note": "Nesneleri `project.changes` komutlarıyla PostGIS'e yazar. Binary `.kcad` bulut revizyonu henüz yok (TODOS.md SYNC-02..06)."
+  },
+  "screen:apps/web/src/ui/properties/PropertiesPanel.ts#PropertiesPanel": {
+    "note": "Öznitelikler v1'de metindir; tipli öznitelik şeması henüz yok (CLAUDE.md §24.1, TODOS.md DOM-09..11)."
+  },
+  "tool:polygon": {
+    "acceptance": "TODOS.md §5 kabul izi: polygon başlat → tıkla → 12 yaz → imleç yanındaki alan açılır ve “12” görünür → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç. Web e2e ile native etkileşim fixture'ının ortak başvurusudur (UX-01, UX-04, UX-06). Henüz otomatik test değildir."
+  },
+  "tool:stakeout": {
+    "note": "Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır."
+  },
+  "tool:subdivide": {
+    "note": "İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13)."
+  }
+}

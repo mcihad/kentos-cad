@@ -76,6 +76,8 @@ pnpm e2e                 # gerçek tarayıcı duman testi
 pnpm e2e:visual          # görsel karşılaştırma
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 pnpm perf:interaction    # etkileşim ölçümleri
+pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
+pnpm inventory:check     # envanter güncel değilse düşer
 pnpm db:setup            # yalnız yerel geliştirme DB/rolleri, migration, seed
 pnpm api                 # kentosd serve; varsayılan 127.0.0.1:8787
 pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
@@ -284,6 +286,8 @@ dispose/cancel yolu olsun. Kullanıcının mevcut değişikliklerini koruyun.
 İlgili testler, sözleşme/undo/yetki, UI gerekiyorsa gerçek klavye/fare ve
 tema/yazı ölçeği kontrolü yapılır. Çalıştırılmayan kontrol ve nedenini bildirin.
 Üretim iddiası veya tamamlandı işareti için TODOS.md kabul kapılarını kullanın.
+Komut, araç, ayar, pencere, depo ya da `.kcad` alanı değiştiyse `pnpm inventory`
+çalıştırın; farkı okuyup değişiklikle aynı commit'e koyun (docs/inventory/README.md).
 
 ## 9. Yeni iş ekleme tarifleri
 
@@ -362,6 +366,9 @@ fixtures/              sürümlü ortak test verisi
 scripts/               ortak build/fixture araçları
 docs/adr/              karar ve geçiş kanıtları
 docs/perf/             tarihli ölçümler ve ortam sınırlamaları
+docs/inventory/        web özellik envanteri (üretilir) ve elle notları
+docs/baseline/         tarihli başlangıç kayıtları: test, e2e, fixture, vitrin
+docs/deps/             bağımlılık kaydı
 ```
 
 `apps/desktop`, `crates/ui` ve diğer hedef yollar henüz kurulmuş kabul edilmez.
