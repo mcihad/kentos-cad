@@ -1,0 +1,924 @@
+# KentOS CAD / GIS / 3D — Mimari ve ürün yol haritası
+
+Tarih: 25 Eylül 2026. İncelenen kaynaklar: bu depo (`4399477`) ve `/home/cihad/Projects/kentos-rc` (`dc2e8df`). Bu belge kod incelemesine ve aşağıda bağlantıları verilen birincil teknik kaynaklara dayanır. İnceleme sırasında uygulama veya benchmark çalıştırılmadı; mevcut ölçüm raporları yeni ölçüm gibi sunulmaz. Bu çalışma yalnızca yol haritasıdır; UI taşıması veya aşağıdaki özelliklerin uygulanması yapılmış sayılmaz.
+
+Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis sözleşmelerine sahip ayrı web ve masaüstü uygulamalarıyla profesyonel CAD/GIS düzenleme, Python otomasyonu ve eksiksiz AI erişimi sunan; kişi ve kurumların projelerini bulutta saklayan, senkronize eden ve yetkiye göre erişilebilir/paylaşılabilir kılan; yol, mimari, arazi ve 3D dijital ikiz projelerine genişleyebilen KentOS.
+
+**Son kapsam kararı:** KentOS sunucusunun ana görevi kişisel ve kurumsal proje bulutudur: 18 uygulaması, imar planı, ifraz/tevhit ve diğer CAD/GIS projelerini saklama, senkronizasyon, sürümleme, yetkili erişim ve paylaşım. Şimdiki kapsamda Martin görevi üstlenmeyecek; tile/harita yayın sunucusu ancak ileride ayrı bir ürün kararıyla değerlendirilebilir. Ne Martin entegrasyonu ne de Martin eşdeğeri geliştirmek proje bulutunun önkoşuludur. GIS projeleri PostGIS ile çalışabilir; CAD projeleri de düzenlenebilir CAD anlamı korunarak PostGIS üzerinde saklanabilir.
+
+**Kesin web sınırı:** Web ayrı TypeScript/DOM uygulamasıdır. Desktop/Iced uygulaması web'e export edilmeyecek, uygulamanın tamamı WASM'a çevrilmeyecek. Web kendi komut/etkileşim/belge orkestrasyonunu ve WebGPU/WebGL renderer'larını korur. Ortak yürütülebilir KentOS kodu hesaplama kütüphaneleridir; veri/komut şemaları uyum için paylaşılır, uygun WGSL shader kaynakları ayrıca ortak kullanılabilir. Ortak Rust application veya wgpu renderer'ı web'e derleme hedefi yoktur.
+
+**Kesin dosya sınırı:** `.kcad` yalnız proje kaydetme/yükleme için sürümlü binary/byte dosyasıdır. Dosyaya veritabanı, SQL, kalıcı sorgu/arama indeksi veya doğrudan vector tile sunma görevi verilmeyecek. İlk mesajdaki aranabilir/tile kaynaklı container düşüncesi, kullanıcının bu sadeleştirmesiyle kapsamdan çıkmıştır. Büyük veri sorguları PostGIS/provider, bulut proje kataloğu ve erişim kuralları KentOS server sorumluluğudur; yerel belge açıldıktan sonraki geçici pick/snap indeksleri bu karardan etkilenmez.
+
+## 0. Belgenin kullanımı ve öncelikler
+
+- `[ ]`: henüz teslim edilmemiş iş. Kodda temeli bulunan işler de eksik kabul koşulları nedeniyle açık tutulur.
+- `P0`: veri doğruluğu, ortak sözleşme ve mimari bağımlılıklar. İlk ürün dilimlerinin önkoşulu.
+- `P1`: kullanılabilir desktop, binary dosya, kişisel/kurumsal proje bulutu, yetki/paylaşım, CAD/GIS PostGIS kaydı ve Python/AI'ın ilk üretim kapsamı.
+- `P2`: profesyonel CAD/GIS derinliği, yaygın dış formatlar, operasyon ve büyük veri.
+- `P3`: yol/altyapı, mimari/BIM ve 3D şehir tasarımının ileri kapsamı. Temel veri modeli bunları engellemeyecek; hepsi ilk sürüme sıkıştırılmayacak.
+- Bölüm sonlarındaki kabul koşulları sağlanmadan ilgili iş grubu tamamlandı sayılmaz. Kütüphane eklemek, ekran göstermek veya test fixture'ını yeniden üretmek tek başına kabul değildir.
+- Önerilen yollar, şemalar ve API örnekleri hedef tasarımdır; mevcut API diye kullanılmamalıdır. Yeni crate, bağımsız sorumluluğu ve ilk gerçek tüketicisi oluştuğunda açılır.
+- Kullanıcının kesin hedefleri ile teknik öneriler ayrıdır: ayrı web uygulaması, Rust hesaplama paylaşımı, uyumlu sözleşmeler, KentOS UI, saf wgpu desktop viewport, Python, AI, yalnız kayıt/yükleme yapan binary `.kcad`, kişisel/kurumsal proje bulutu ve hem CAD hem GIS için PostGIS desteği kesindir. Martin benzeri rol kesin teslim değildir. Binary encoding seçimi, crate ayrıntıları ve aşama içi seçenekler bu incelemenin önerisidir; prototip ve ADR ile kesinleştirilir.
+
+### 0.1 Kapsamın izlenmesi
+
+| Kullanıcı hedefi | Yol haritasındaki karşılığı |
+|---|---|
+| Rust ile devam, ortak hesaplama | §2–4: Rust hesaplama kütüphaneleri, uyumlu ayrı uygulamalar |
+| Desktop ve web aynı kullanım kalitesi | §5–8: komut oturumu, dinamik giriş, KentOS UI, wgpu |
+| Python embed ve Python kütüphaneleri | §14: CPython/PyO3, Pyodide, ortak SDK |
+| Tam AI surface | §15: katalog, sorgu, önizleme, çalıştırma, MCP, kapsam testleri |
+| `kentos-rc` bu depoya ve KentOS UI ad alanına | §6: dosya/modül bazında taşıma ve ayrıştırma |
+| Ayarlardan tüm grafik/performance seçenekleri | §7–8: tipli settings, yeteneklere göre AA, bellek ve kalite |
+| Binary ve açık `.kcad`; yalnız kayıt/yükleme | §9: belgelenmiş byte formatı, sürümleme ve dış okuyucu; DB/tile görevi yok |
+| Cloud'a aynı formatta kayıt/senkronizasyon | §10: komut senkronizasyonu ve kalıcı `.kcad` revizyonları |
+| CAD ve GIS projelerini PostGIS'e kaydetme ve doğrudan çalışma | §11: CAD anlamını koruyan saklama, kaynak otoritesi, provider ve metadata dosyası |
+| Kişi/kurum projelerini saklama, erişim ve paylaşım | §10–12: proje kataloğu, senkronizasyon, sürümleme, üyelik ve proje yetkileri |
+| İleride olası Martin benzeri rol | §12.5: ayrı karara bağlı gelecek seçeneği; mevcut teslimlerin bağımlılığı değil |
+| 3D şehir, yol, harita ve mimari | §16–19: CAD/GIS, civil, BIM, dijital ikiz ve yayın |
+| Uzun ömürlü yüksek performans | §13, §20–23: worker, test, işletim ve teslim kapıları |
+
+## 1. Koddan doğrulanan mevcut durum
+
+| Alan | Mevcut kanıt | Mimari sonucu / açık iş |
+|---|---|---|
+| Workspace | `Cargo.toml`, `rust-toolchain.toml`, `pnpm-workspace.yaml` | Rust 1.96.0 / edition 2024; ortak, WASM ve server ayrımı kurulmuş. Tümü yeniden başlatılmayacak. |
+| Rust hesaplama | `crates/shared/geometry-core/src/`, `style-core/src/`, `svg-core/src/` | Geometri, stil/ifade ve SVG hesabı zaten önemli ölçüde Rust'ta. Var olan algoritmalar taşınacak UI içinde yeniden yazılmayacak. |
+| Sıcak yollar | `geometry-core/src/store/{mod,rtree,pick,snap,draw,pack}.rs`, `apps/web/src/wasm/pack.ts` | Paketli veri, R-tree, snap/pick ve toplu çizim hesabı var. GPU ve belge katmanı bu birikimi kullanmalı. |
+| Ortak sözleşmeler | `crates/shared/contracts/src/`, `apps/web/src/contracts/generated/` | Rust'tan TS tipleri üretiliyor. Tip üretimi, bütün platformların aynı iş kuralını çalıştırdığı anlamına henüz gelmiyor. |
+| Belge ve undo | `apps/web/src/model/document.ts`, `document.test.ts`, ADR 0003 | Web belge yaşam döngüsü ve undo/redo TS'te kalır. Native karşılığı aynı transaction sözleşmesiyle geliştirilmeli. |
+| Komutlar | `apps/web/src/core/commands.ts`, `app/commands.ts`, `tools/ToolManager.ts` | UI registry `run(args?: unknown): void` kullanıyor. Tipli, async, headless ve sürümlü ürün komutları ayrıca kurulmalı. |
+| Dinamik giriş | `ui/shell/CursorInput.ts`, `ui/bottom/CommandLine.ts`, `tools/pathTool.ts` | İmleç yanında otomatik giriş ve aktif araca metin gönderme var. Desktop kabul senaryosu için referans davranış. |
+| Dosya | `model/snapshot.ts`, `app/fileIO.ts`, `contracts/src/document.rs` | Uzantı zaten `.kcad`; içerik `kentos.document` v1 JSON, MIME `application/json`. Binary geçiş bir format göçüdür. |
+| Web renderer | `render/webgl2/`, `render/webgpu/`, `render/quality.ts` | WebGPU/WebGL2 bağımsız web renderer'ları korunur; kalite ayarları genişletilir. Uygun WGSL kaynakları native ile paylaşılabilir. |
+| Ayarlar | `app/state.ts`, `model/projectSettings.ts`, `ui/settings/` | Kullanıcı ve proje ayarları ayrılmış; web kalıcılığı çoğunlukla localStorage. Ortak şema/validasyon ve desktop adapter eksik. |
+| Sunucu | `apps/api/`, `crates/server/application/`, `crates/server/postgres/` | Axum/Tokio/SQLx, kimlik/tenant, proje ve PostGIS kodu var. “Backend yok” yazan eski belge girişleri güncel değil. |
+| Kalıcı değişiklik | `application/src/changes.rs`, `contracts/src/{command,cloud}.rs` | `project.changes` v1; expected version, idempotency, audit/outbox ve proje satır kilidi var. Genel ürün command bus'ı henüz değil. |
+| Büyük commit sınırı | `application/src/changes.rs::MAX_CHANGES` | Bir komutta 5.000 nesne sınırı var. Büyük CAD işlemini gelişigüzel parçalamak atomik undo/commit anlamını bozabilir; staging tasarımı gerekli. |
+| CAD/PostGIS ilişkisi | `application/src/cad.rs`, `postgres/migrations/0001_foundation.sql` | Basit geometride `geom`, parametrik CAD'de `cad_definition` kaynak; GIS izdüşümü türetiliyor. Bu ayrım korunmalı. |
+| Cloud | `apps/web/src/app/cloud/`, `ui/cloud/`, API WS testleri | Dayanıklı taslak, tekrar bağlanma/çakışma altyapısı var. Binary `.kcad` cloud checkpoint ve çoklu cihaz dosya akışı ayrıca gerekli. |
+| İşleme | `apps/web/src/processing/`, `contracts/src/job.rs` | Araç/iş tanımı ve browser worker var. Kalıcı server worker'ın çalıştığı yalnız bu tiplerden çıkarılamaz. |
+| Kimlik/öznitelik | `contracts/src/entity.rs`, `cloud.rs` | Yerel `u32` entity ID, cloud UUID; öznitelikler v1'de `BTreeMap<String,String>`. Global ID ve tipli şema göçü gerekli. |
+| CRS | `apps/web/src/geo/crs.ts`, `contracts/tests/crs.rs` | CRS kataloğu var; web dosyasındaki başlangıç noktası seçimi tam reprojection motoru değildir. |
+| Sayısal politika | `contracts/src/numeric.rs`, `geometry-core/src/{numeric,predicates,jsmath}.rs` | Decimal/hisse/yuvarlama ve deterministik hesap temeli korunacak. GPU float32, domain hassasiyeti yerine geçmeyecek. |
+| UI kütüphanesi | `kentos-rc/Cargo.toml`, `src/widget/`, `src/theme/`, `examples/showcase/` | Iced 0.14.0, docking/ribbon/tablolar/girdiler gibi geniş bir temel var. Showcase üretim desktop uygulaması sayılmaz. |
+| UI çizim alanı | `kentos-rc/src/spatial/model_space/render.rs`, `view_cube.rs` | Model alanı Iced Canvas; ViewCube özel wgpu pipeline kullanıyor. Ana viewport için ayrı render bağlantısı gerekli. |
+| UI veri modeli | `kentos-rc/src/spatial/{feature,projection}.rs`, `src/attribute/value.rs` | WGS84/LonLat + Mercator ve Iced renkleriyle bağlı ikinci model var; CAD domain'i olarak doğrudan alınamaz. |
+| UI GPU sürümü | `kentos-rc/Cargo.lock` | İncelenen kilitte `wgpu 27.0.1`. İnternetteki güncel wgpu API'si farklı olabilir; tek uyumlu sürüm kümesi seçilmeli. |
+| Performans kanıtı | `docs/perf/`, ADR 0005 | Ölçüm altyapısı var. ADR hedefleri taslak; raporların GPU/donanım bağlamı ve bilinen headless sınırlamaları korunmalı. |
+| Yeni ürün yüzeyleri | Workspace üyeleri ve incelenen giriş noktaları | Bu depoda üretim desktop, embed Python ve tam AI/MCP henüz görünmüyor; hedef olarak izlenecek. Mevcut cloud temeli, §12'nin ayrıntılı yetki/paylaşım kabulüyle ayrıca doğrulanmalı. |
+
+### 1.1 İlk bakım işleri — P0
+
+- [ ] `BASE-01` `CLAUDE.md`, `docs/DEVIR.md`, ADR 0001/0005/0008/0009 ve bu belge arasında mevcut durum / hedef / eski karar ayrımını güncelle. Tarihsel ADR'yi silmek yerine yeni kararla hangisinin değiştiğini kaydet.
+- [ ] `BASE-02` Özellikle eski Martin/yayın önceliğini kişisel/kurumsal proje bulutu kararıyla ilişkilendir; Martin rolünün mevcut teslimden çıkarıldığını kaydet. Olası Tauri/Electron önerisi, JSON `.kcad` ve “backend henüz yok” notlarını da yeni yönle ilişkilendir. Native Iced + wgpu bu yol haritasının desktop temelidir.
+- [ ] `BASE-03` İncelemede görülen izlenmeyen `.claude/`, `scripts/e2e/`, `scripts/showcase/`, `src/` içeriğinin sahipliğini ve kullanımını belirle; taşımada bunları otomatik silme veya yeni kaynak kabul etme.
+- [ ] `BASE-04` Web komutları, araçlar, ayarlar, dosya alanları, processing işlemleri ve ekranlar için makinece okunabilir özellik envanteri çıkar; `implemented/partial/pending`, platform ve kabul senaryosu alanlarını ekle.
+- [ ] `BASE-05` Mevcut native/WASM fixture'ları, web e2e ve UI showcase görüntülerini başlangıç referansı olarak dondur; ölçüm yapılan commit ve ortamı kaydet.
+- [ ] `BASE-06` Yeni bağımlılıkları sürüm, bakım, lisans, hedef platform, WASM derlenebilirliği ve gerçek kullanım gerekçesiyle ADR'ye bağla. Bu belgeyi yazmak bağımlılık kurulumunun yapıldığı anlamına gelmez.
+
+## 2. Hedef mimari ve uygulama sınırları
+
+Hesaplama tek Rust kaynağından gelir; web bu kütüphaneleri dar WASM bağlayıcılarıyla, desktop/server native olarak çağırır. Web application, belge, command session, settings kalıcılığı ve render yaşam döngüsü TypeScript'te kalır. Desktop/server tarafında uygun Rust domain ve servis kodu paylaşılabilir; bu paylaşım web'e uygulama runtime'ı taşımaz. Platform uyumu sürümlü sözleşme, ortak fixture ve davranış testleriyle kurulur. Rust merkezli mimari, CPython/PROJ/PostGIS altyapılarını yeniden yazma şartı değildir.
+
+```mermaid
+flowchart TD
+  W[Web TypeScript + DOM] --> WC[Web komut / belge / etkileşim]
+  WC --> CW[Hesaplama WASM binding]
+  CW --> C[Rust geometry / style / numeric / format hesabı]
+  WC --> WR[WebGPU / WebGL2 renderer]
+  D[Desktop KentOS UI] --> NC[Native Rust komut / belge / servis]
+  NC --> C
+  NC --> NR[Native wgpu renderer]
+  WG[Ortak uygun WGSL kaynakları] --> WR
+  WG --> NR
+  WC --> API[KentOS Rust API / servisler]
+  NC --> API
+  API --> C
+  API --> P[Proje bulutu / yetki / paylaşım / senkronizasyon]
+  P --> PG[PostgreSQL + PostGIS: katalog ve CAD/GIS proje verisi]
+  P --> O[Nesne deposu: binary KCAD revizyonları ve proje ekleri]
+  API --> EP[Yetkili dış PostGIS provider]
+```
+
+Buradaki oklar çalışma akışını gösterir. Native application port arayüzlerini kullanır; depolama adapter'larını uygulama bileşimi seçer. Web çevrimdışı çizimde server gerektirmez; cloud/provider/paylaşım işlemleri için API kullanır. Desktop ayrıca yetkili dış PostGIS'e doğrudan bağlanabilir. Python ve AI, bulunduğu host'un uyumlu komut girişine bağlanır. Web renderer'a Rust wgpu Device/Queue veya Iced aktarılmaz. Domain verisi GPU kaynaklarını tutmaz. Dosya projesini bulutta tutmak bütün geometrilerini PostGIS tablolarına dönüştürmeyi gerektirmez; dosya ve canlı veritabanı modlarının otoritesi §10'da ayrılır.
+
+### 2.1 Önerilen depo düzeni
+
+```text
+apps/
+  web/                         mevcut DOM/TypeScript kabuğu ve browser adapter'ları
+  desktop/                     native Iced + kentos_ui + wgpu uygulaması
+  api/                         kentosd: HTTP, WS, proje bulutu, auth ve MCP bileşimi
+  worker/                      kalıcı ağır işler; gerekirse önce kentosd worker modu
+  cli/                         headless ürün komutları; yönetim CLI'siyle açık sınır
+  ui-showcase/                 kentos-rc vitrininin yeni yeri
+crates/
+  shared/
+    contracts/                 sürümlü dış veri sözleşmeleri; mevcut
+    geometry-core/             mevcut sayısal/geometrik çekirdek
+    style-core/                mevcut ifade ve stil hesabı
+    svg-core/                  mevcut SVG hesabı
+    formats/                   mevcut DXF/koordinat vb. import/export
+  native/
+    domain/                    desktop/server Rust domain; web karşılığı TS
+    application/               native command/use case/port; web'e derlenmez
+    interaction/               native tool session; web kendi TS session'ını korur
+    settings/                  native ayar servisi; ortak şemanın Rust uygulaması
+  ui/                          package kentos-ui, Rust kentos_ui; Iced bileşenleri
+  render/wgpu/                 yalnız native wgpu renderer ve kaynak yönetimi
+  storage/kcad/                binary dosya I/O, migration ve snapshot; DB değil
+  providers/postgis/           desktop doğrudan PG bağlantısı; ortak capability sınırı
+  server/
+    application/               mevcut sunucu use case'leri; aşamalı ayrıştırılır
+    postgres/                  mevcut DB, migration, RLS adapter'ı
+    projects/                  katalog, sahiplik ve paylaşım; önce application modülü olabilir
+    jobs/                      lease, fencing, kalıcı kuyruk
+  wasm/                        sadece ortak hesaplama/codec kütüphanelerinin bağlayıcıları
+  bindings/python/             PyO3 native binding; UI ve server bağımlılığı yok
+  scripting/                   interpreter host, izinler, yaşam döngüsü
+  automation/                  komut şemalarından MCP/CLI/SDK adapter'ları
+python/kentos/                 kullanıcıya sunulan Python paketi
+shaders/wgsl/                  paylaşılabilir WGSL; web GL için ayrı GLSL yolu
+fixtures/                      platformlar arası sürümlü örnekler
+docs/adr/                      kararlar ve geçiş gerekçeleri
+docs/specs/                    KCAD, komut, settings, cloud/yetki ve SDK sözleşmeleri
+```
+
+Bu bir hedef haritadır; ilk adımda boş crate ağacı kurulmayacak. Native `domain`, `application`, `interaction`, `settings` gerektiğinde modül olarak başlayabilir. Mevcut `crates/server/application` paket adı `kentos-application` olduğundan yeni native servis ayrımında isim çakışması çözülmeli; mevcut paketi sırf isim için taşımak yerine ayrılan sorumluluklar ve bağımlı yollar birlikte değerlendirilir. Web'in karşılıkları `apps/web/src/` altında kalır.
+
+### 2.2 Uygulama kuralları — P0
+
+| Sınır | İzin verilen sorumluluk | Sınırı ihlal eden örnek |
+|---|---|---|
+| Domain / hesaplama | Kesin model, geometri, kurallar, saf dönüşüm | Iced `Color`, DOM, SQLx transaction, GPU buffer, global clock |
+| Native application / web application | Aynı sözleşmeye uyan ayrı komut orkestrasyonu, plan ve undo | Geometri/hesap algoritmasını TS'te tekrar yazmak |
+| Desktop | Pencere/input, native dosya, OS keychain, CPython host, wgpu surface | Web'in davranışını ayrı geometri algoritmasıyla yeniden üretmek |
+| Web | TS/DOM/a11y, komut ve belge, WebGPU/WebGL, hesaplama WASM, offline depolama | Iced export, Rust application/render WASM, gizli PG parolası |
+| Server | Auth/tenant, proje saklama/katalog, yetki/paylaşım, sync, durable commit, jobs, kota | İstemcinin actor/permission iddiasına güvenmek; sırf görüntüleme/paylaşım için tile servisini zorunlu kılmak |
+| UI kütüphanesi | Widget, tema, ikon, layout, sunum modeli | Veritabanına yazmak, çizim belgesinin sahibi olmak |
+| Renderer | Kaynak yönetimi, LOD, draw/pick pass, görünüm cache'i | Kalıcı koordinatı yuvarlamak, seçimi veri deposuna sessizce yazmak |
+| Python / AI | Tipli komut ve sorgu adapter'ı, workflow | Repository/SQL/DOM üzerinden kuralları atlamak |
+
+- [ ] `ARCH-01` Derleme bağımlılığını adapter → application → domain/hesaplama yönünde tut; Cargo ve statik denetimle Iced/SQLx/PyO3/WASM runtime bağımlılıklarının saf çekirdeğe sızmasını engelle. Port arayüzlerini iç katman, implementation'larını dış adapter sahiplenir.
+- [ ] `ARCH-02` `DocumentRepository`, `DataProvider`, `AssetStore`, `SettingsStore`, `JobExecutor`, `EventSink`, `Clock`, `IdGenerator` gibi gerçekten ihtiyaç duyulan portları belirle; her portun transaction ve async anlamını yaz.
+- [ ] `ARCH-03` Native async runtime ile web JS/Worker yaşam döngüsünü ayrı tasarla. Hesaplama WASM binding'leri dar ve toplu olsun; native runtime veya application trait ağacını browser'a taşıma.
+- [ ] `ARCH-04` Her uygulamanın açık belgesi için tek mutation sahibi seç; web'de TS, desktop'ta native belge servisi. Render, autosave, Python ve UI'a revision'lı snapshot/değişiklik akışı ver; hesap/render cache'lerini ikinci otoriter belgeye dönüştürme.
+- [ ] `ARCH-05` Dış protokol, domain tipi ve GPU paketini ayrı sürümle; biri değişince bütün dosya formatı veya HTTP protokolü zorunlu olarak değişmesin.
+- [ ] `ARCH-06` `Capabilities` sözleşmesi kur: offline/online, read/write, transaction, curve, Z/M, Python paketleri, GPU özellikleri ve provider yetenekleri açıkça sorgulanabilsin.
+- [ ] `ARCH-07` Kullanıcı mesajı ile sabit hata kodunu ayır; hata `code`, alan yolu, kaynak/revision, retry bilgisi ve açıklama taşısın. UI, Python ve AI aynı hatayı farklı sunabilsin.
+- [ ] `ARCH-08` Feature flag/modül manifestlerini ve lazy-load sınırlarını tanımla; ilk 2D açılış Python, BIM, terrain veya 3D asset yüklemek zorunda kalmasın.
+
+Kabul: aynı basit düzenleme, ortak fixture ile native uygulamada, TS web uygulamasında ve server'da uyumlu sonuç/hata üretir. Hesaplamanın native↔WASM eşdeğerliği ayrıca sınanır. Web bundle'ına native application, Iced veya Rust renderer girmez.
+
+## 3. Ortak domain, belge ve sayısal doğruluk — P0
+
+### 3.1 Belgenin tek anlamı
+
+- [ ] `DOM-01` `Project`, `Document`, `Layer`, `Entity`, `Dataset`, `SourceBinding`, `Style`, `Layout`, `Asset`, `Revision`, `SelectionRef` sınırlarını yaz. Katman, veri kaynağı ve görünüm aynı şey sayılmasın.
+- [ ] `DOM-02` `apps/web/src/model/document.ts` transaction/savepoint/revision/undo davranışını ortak fixture'larla belgele; native belge karşılığını bu sözleşmeyle geliştir. TS belge sahibi korunur; Rust facade'a dönüştürülmez.
+- [ ] `DOM-03` Kalıcı global UUID ile runtime slot/index ve eski yerel `u32` kimliği ayır. Yerel dosya, cloud, PostGIS, Python ve provider identify aynı kalıcı kimliğe bağlansın.
+- [ ] `DOM-04` Eski `.kcad` yerel ID'leri için bir defalık deterministik göç haritası ve import namespace'i tasarla; aynı eski dosyanın yeniden açılması/retry yeni nesne çoğaltmasın.
+- [ ] `DOM-05` `contracts::Entity`, geometry-core `Shape/Entity.rest`, TS `Entity` ve kentos-rc `Feature` arasındaki rolü belgeleyip açık dönüştürücüler kur; sıcak yol tipini bütün domain ile zorla birleştirme.
+- [ ] `DOM-06` Kalıcı şema değişiminde bilinmeyen alan/extension round-trip politikasını tanımla. Tanınmayan kritik geometri salt okunur veya açık hata; sessiz düşürme yok.
+- [ ] `DOM-07` `ChangeSet` içinde create/update/delete yanında schema/layer/style/settings/reference değişikliklerini ve inverse bilgisini kapsa; dependency invalidation sonuçlarını aynı revision'a bağla.
+- [ ] `DOM-08` Çoklu belge, belge sekmeleri, xref/linked dataset ve document lifecycle tasarla; belge kapanınca GPU, Worker, sorgu, abonelik ve geçici script kaynakları bırakılsın.
+
+### 3.2 Tipli öznitelik ve şema
+
+- [ ] `DOM-09` Text, boolean, signed integer, kesin decimal, float, date, time, timezone'lu timestamp, enum/domain, UUID/reference, null ve gerekirse structured value türlerini tanımla.
+- [ ] `DOM-10` `String → typed value` geçişini açık migration olarak yap; parse edilemeyen kaynağı raporla, boşa veya sıfıra çevirmeden koru. Şema revision'ı dosya/cloud/AI çıktısında bulunsun.
+- [ ] `DOM-11` Alan adı ile sabit `FieldId`'yi ayır; rename ilişkiyi kırmasın. Zorunluluk, default, aralık, unique, coded values, birim, ilişki ve hesaplanan alan sözleşmesini kur.
+- [ ] `DOM-12` 64-bit integer ve revision'ları JS/JSON'da decimal string ya da açık binary integer olarak taşı. `kentos-rc::Value::compare` içindeki integer → f64 yolunu aynen taşımadan büyük tamsayı sıralamasını düzelt.
+- [ ] `DOM-13` UI query builder, ifade dili, server filtreleri ve AI sorgularını tipli bir sorgu AST'sine bağla; SQL'e çevrilemeyen işlemleri capability/hata olarak bildir.
+- [ ] `DOM-14` Türkçe arama/sıralama, `I/İ/ı/i`, decimal ayırıcı, null sırası ve case-fold kurallarını ortak fixture'larla tanımla; locale görüntüleme biçimi veri depolama biçimine dönüşmesin.
+
+### 3.3 Hassasiyet, CRS ve geometri
+
+- [ ] `NUM-01` Domain koordinatını `f64`, mülkiyet/hisse/nihai yuvarlama değerlerini mevcut decimal/rational sözleşmeleriyle koru. `NaN/Inf/-0` için hesaplama, dış protokol ve kalıcı dosya politikalarını ayrı yaz.
+- [ ] `NUM-02` Mevcut libm/robust predicate ve bağımsız referans testlerini koru; GPU hesaplarını kadastral nihai değerlerin otoritesi yapma.
+- [ ] `NUM-03` Eksen sırasını açıklaştır: iç model `x=east, y=north`, arayüzdeki geleneksel `Y,X`, EPSG eksen sırası ve LonLat birbirine adapter ile dönsün.
+- [ ] `NUM-04` Proje CRS, kaynak CRS, render CRS, yatay/düşey datum, coordinate epoch, Z/M ve birimi ayrı alanlarla modelle; `srid` tek başına bütün jeodezik bilgiyi taşımaz.
+- [ ] `NUM-05` Native/server PROJ/PostGIS dönüşüm yolu ile WASM'da desteklenen dönüşümleri aynı servis sözleşmesinde sun; tarayıcıya her native bağımlılığın derlenebileceğini varsayma.
+- [ ] `NUM-06` Dönüşüm işlemi, grid dosyaları ve hash'leri, engine sürümü, kullanım alanı ve doğruluk bilgisini kaydet. Eksik grid veya düşük doğrulukta sessiz alternatif seçmek yerine açık durum döndür.
+- [ ] `NUM-07` ED50/TUREF/WGS84, TM/UTM, coğrafi↔yerel, yükseklik ve epoch senaryolarını bağımsız kontrol noktalarıyla doğrula; dosya açarken CRS tahminiyle koordinat değiştirme.
+- [ ] `NUM-08` Snap toleransı (ekran px), geometrik tolerans (model birimi), CAD→GIS örnekleme toleransı ve çizim tessellation hatasını farklı ayarlar yap.
+- [ ] `NUM-09` 2D, 2.5D ve 3D geometrileri birbirinden ayır; mevcut isteğe bağlı nokta Z'sini tam 3D model varmış gibi yorumlama. Curve, spline, surface ve solid extension'ları için sürümlü alan bırak.
+- [ ] `NUM-10` Topoloji için ortak edge/node kimliği, yön, delik, çoklu geometri, komşuluk ve geçersiz geometri raporunu kur; “onar” işlemi ayrı undo/preview komutu olsun.
+
+PROJ işlemin kullanılabilir grid ve doğruluğa göre seçilmesini destekler; bu yüzden engine sürümü ve dönüşüm verisi platform uyumunun parçasıdır. Her dış kütüphane çıktısına bit düzeyinde eşitlik sözü verilmez: saf KentOS işlemlerinde deterministik fixture, reprojection/harici kernel'de belgelenmiş sayısal tolerans kullanılır. [PROJ işlem seçimi](https://proj.org/en/stable/operations/operations_computation.html), [PROJ doğruluk ve grid seçenekleri](https://proj.org/en/stable/development/reference/functions.html).
+
+Kabul: büyük koordinat, Türkçe alan adı, delikli/yaylı alan, büyük integer, decimal/hisse, bilinmeyen extension ve CRS fixture'ları desktop↔web↔server round-trip'inde semantik kayıp üretmez.
+
+## 4. Tek command sistemi ve transaction semantiği — P0
+
+UI düğmesi, komut satırı, Python çağrısı, HTTP, CLI ve AI aynı sürümlü komut sözleşmesinin girişleridir. Web'de handler/orkestrasyon TS, native'de Rust olur; hesaplama ortak Rust kütüphanesine gider. “Araç seç”, “kamerayı kaydır” gibi yerel etkileşimler ile “polygon oluştur”, “parsel böl”, “proje paylaş” gibi kalıcı komutlar katalogda kapsam bilgisi taşır; hepsi server commit'i gerektirmez.
+
+### 4.1 Komut tanımı ve yürütme
+
+- [ ] `CMD-01` Ortak `CommandDescriptor` sözleşmesini oluştur: sabit ID, sürüm, açıklama/alias, tipli input/output, etki sınıfı, platform/headless desteği, izin, undo desteği, önkoşul, maliyet sınıfı ve örnekler. Native ve web registry ayrı uygulanır.
+- [ ] `CMD-02` Domain komut ID'lerini kullanıcı dili ve tuş kısayolundan ayır; `cad.polygon.create`, `gis.feature.query`, `project.save`, `project.share` gibi adları sürümle. Bunlar önerilen isimlerdir.
+- [ ] `CMD-03` Rust kaynaklarından TS tipleri, JSON Schema, Python type stub, CLI help ve AI tool şemalarını üret; semantik handler ile üretilen metadata arasındaki uyumu CI'da denetle.
+- [ ] `CMD-04` `discover → validate → preview/plan → execute → progress/result` akışını kur. Preview veri yazmaz; execute, beklenen revision ve planın girdilerine bağlı çalışır.
+- [ ] `CMD-05` Sonucu `completed`, `queued(job_id)`, `needs_input`, `conflict`, `cancelled`, `failed` gibi açık durumlarla taşı; başarılı/başarısız boolean kritik bilgiyi kaybetmesin.
+- [ ] `CMD-06` Yerel kullanım için tenant zorunluluğu olmayan `ExecutionContext` kur; cloud'da actor ve yetki doğrulanmış oturumdan gelsin. Mevcut `CommandEnvelope` wire adapter olarak göç etsin.
+- [ ] `CMD-07` Command input'ta selection/layer/camera gibi örtük UI durumunu gerektiğinde somutlaştır; aynı Python/AI çağrısı başka aktif seçim yüzünden farklı nesneleri düzenlemesin.
+- [ ] `CMD-08` Komut adı, schema revision, algoritma sürümü, numeric policy, source revision ve gerekiyorsa random seed'i replay kaydına ekle.
+- [ ] `CMD-09` Önizleme değiştiğinde yeni plan hash'i/revision'ı üret; onay gerektiren işlemlerde onay sadece incelenen plana uygulansın. Normal düzenleme akışını gereksiz onaylarla yavaşlatma.
+- [ ] `CMD-10` Komut kayıt ömrünü modül ömrüne bağla; alias çakışması, iki kez kayıt ve bilinmeyen komut hatalarını deterministik yap.
+
+### 4.2 Atomiklik ve geri alma
+
+- [ ] `TX-01` Mevcut ADR 0003 rollback/savepoint anlamını native belgeye aktar; iptal veya hata sonrasında veri, dirty flag ve undo geçmişi tutarlı kalsın.
+- [ ] `TX-02` Beklenen sürüm kontrolünü sadece yazılan nesnelere değil sonucu etkileyen okuma kümesine de gerektiğinde uygula; seçim sorgusunun/şemanın arada değişmesi algılansın.
+- [ ] `TX-03` Yerel undo ile çok kullanıcılı undo'yu ayır. Cloud undo, yeni yetki ve version kontrolünden geçen inverse komut olsun; başka kullanıcının değişikliğini snapshot ile ezmesin.
+- [ ] `TX-04` `project.changes` için var olan idempotency ve istek hash kontrolünü koru; aynı anahtar + farklı input reddi, commit sonrası kayıp ACK ve yeniden başlama senaryolarını bütün girişlerde çalıştır.
+- [ ] `TX-05` 5.000 üzeri nesne için bounded-memory staging + son atomik commit veya açık kısmi işlem sözleşmesi kur. Ağ paketlerine bölme ile kullanıcı transaction'ını birbirine karıştırma.
+- [ ] `TX-06` Büyük undo verisini sıkıştırılmış disk/OPFS günlüğüne taşıyabilen bir bütçe uygula; undo geçmişi sessizce eksilmesin, saklama politikası görünür olsun.
+- [ ] `TX-07` Uzun hesapta revision'lı snapshot kullan; sonucu uygulamadan önce yeniden doğrula. Interactive preview, server işi veya Python çalışırken DB transaction'ını açık bekletme.
+- [ ] `TX-08` İptal noktası, son geri dönülebilir aşama ve commit sonrası iptal cevabını tanımla; tamamlanmış işi “iptal edildi” diye raporlama.
+
+Kabul: aynı kayıtlı komut UI, Python ve AI'dan aynı değişikliği üretir; hatalı batch hiçbir kısmi yazma bırakmaz; retry tek commit üretir; farklı kullanıcı düzenlemesi undo ile kaybolmaz.
+
+## 5. Web ile desktop etkileşim eşdeğerliği — P0/P1
+
+Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında nokta verir; klavyeden sayı/koordinat yazınca imleç yanındaki parametre alanı açılır ve ilk karakter kaybolmadan girişe katılır. Desktop bunu aynı alışkanlıklarla karşılar. DOM ile Iced widget ağacının aynı olması gerekmez; davranış sözleşmesi aynı olmalıdır.
+
+- [ ] `UX-01` `ToolSession` davranış sözleşmesini tanımla: başlangıç, nokta/nesne/mesafe/açı/seçenek bekleme, önizleme, commit, iptal, askıya alma ve geri dönme. Web'in TS session'ı korunur; desktop Rust karşılığı bu sözleşmeyle geliştirilir.
+- [ ] `UX-02` Prompt'u metinden parse edilen düğmelere bağımlı bırakma; `PromptSpec` içinde alan türü, seçenek ID'leri, default, birim, validation ve yardım olsun. Web geçici adapter ile mevcut prompt'u desteklesin.
+- [ ] `UX-03` Klavye önceliğini yaz: açık modal/metin editörü → IME composition → aktif araç parametresi → komut satırı → global shortcut. UI odağına göre yazı çalınmasın.
+- [ ] `UX-04` Yazmaya başlayınca dinamik giriş aç, ilk karakteri tam bir kez aktar; `-`, `+`, `@`, ondalık ve göreli/polar girişi destekle. Sadece fiziksel tuş koduna değil text/IME olaylarına dayan.
+- [ ] `UX-05` `Y,X`, `@dY,dX`, `@mesafe<açı`, uzunluk birimi, derece/grad, ifade ve Türkçe ondalık ayırıcısının gramerini belirle; virgülün koordinat/ondalık çakışmasına açık çözüm üret.
+- [ ] `UX-06` Enter, Esc, Tab/Shift+Tab, Backspace, sağ tık, çift tık, son komutu tekrarla, undo last point ve polygon kapatma anlamını platformlar arasında fixture'la doğrula.
+- [ ] `UX-07` Sayı yazılırken pan/zoom, snap, ortho, polar tracking ve geçici nokta hesaplayıcı bağlamını koru. `ToolManager.nest/unnest` davranışını kaybetme.
+- [ ] `UX-08` Dinamik giriş konumunu viewport/DPI/ekran kenarına göre sınırla; imleci, ölçü etiketini veya seçilen nesneyi gereksiz örtmesin.
+- [ ] `UX-09` Seçim yönü, crossing/window, çoklu seçim, katman kilidi/görünürlüğü, grips ve hover önceliğini mevcut web ile karşılaştır; toleranslar settings'ten gelsin.
+- [ ] `UX-10` Komut satırı geçmişi, alias arama, seçenek tamamlama, copy/paste, açıklanabilir hata ve script çağrısı için aynı katalogu kullan.
+- [ ] `UX-11` Ribbon/menu/context menu, kısayol, command palette ve toolbar etkinlik durumlarını aynı komut capability'sinden üret; çalışmayan özellikler açık `pending` kalsın.
+- [ ] `UX-12` Klavye ile tam kullanım, odak halkası, metin seçimi, yüksek kontrast, ekran okuyucu etiketleri, Türkçe fontlar ve IME testlerini desktop/web eşdeğerlik listesine ekle.
+
+Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" göründü → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç`. Buna focus başka metin kutusundayken, yüksek DPI'da, Türkçe klavyede ve IME açıkken varyantlar eklenir. Bu iz Web e2e ile native interaction fixture'ının ortak referansıdır.
+
+## 6. `kentos-rc` → KentOS UI taşıması — P0/P1
+
+Öneri: UI'yı aynı monorepo içinde `crates/ui` path dependency olarak sahiplenmek. Yalnız bu ürün için geliştirilen bileşenlerde bu düzen domain değişikliği, UI adaptasyonu ve testleri aynı revision'da tutar. Git submodule ayrı sürüm/checkout ve CI koordinasyonu getirir; bu proje için ilk tercih değildir. Ayrı dağıtım ihtiyacı doğarsa karar yeniden ele alınır.
+
+### 6.1 Dosya bazında taşıma kararı
+
+| `kentos-rc` kaynağı | Hedef / işlem |
+|---|---|
+| `src/theme`, `src/style`, `src/icon`, `src/label.rs` | `crates/ui`: tema, token, ikon ve metin bileşenleri korunur |
+| `src/widget/*` | `crates/ui`: ribbon/dock/table/inspector/input gibi bileşenler taşınır; ortak tipli view model adapter'ları eklenir |
+| `src/attribute/{value,field,query,time,...}` | Alan anlamı ortak domain/query'ye alınır; widget editor/sunumu UI'da kalır; sayı/locale algoritmaları mevcut çekirdekle karşılaştırılır |
+| `src/spatial/feature.rs` | Ana domain olarak taşınmaz; geçici showcase adapter'ı veya kaldırılacak demo modeli olur |
+| `src/spatial/projection.rs`, `measure.rs`, `query.rs` | Ortak geometri/CRS/snap servisleriyle değiştirilir; LonLat/Mercator demo varsayımları CAD'e yayılmaz |
+| `src/spatial/draft.rs`, `tool.rs`, `selection.rs` | Native `interaction` ve uyumlu selection sözleşmesine eşlenir; showcase ve native üretim arasında mükerrer motor bırakılmaz; web TS ayrı kalır |
+| `src/spatial/model_space/` | Üretim viewport'u yeni wgpu renderer'a bağlanır; canvas demo ancak açıkça demo olarak kalabilir |
+| `src/spatial/view_cube.rs` | Özel wgpu entegrasyon örneği olarak korunur; ortak kamera/orientation sözleşmesine bağlanır |
+| `src/snapshot.rs` | UI görsel regresyon aracı; platform destek matrisi ve GPU/CPU çizim yolu açıklanır |
+| `examples/showcase/` | `apps/ui-showcase/`; üretim desktop'ın veri/komut motoru olarak kullanılmaz |
+| `examples/showcase/src/settings.rs` | Ortak settings'e bir defalık migration adapter'ı; ayrı kalıcı ayar sistemi sürdürülmez |
+| `assets/fonts/` ve lisanslar | Repo içinde korunur; uygulama font kayıt/asset yönetimine bağlanır |
+
+### 6.2 Uygulama adımları
+
+- [ ] `UI-01` Kaynak repo commit'ini, dosya listesini, lisansları ve mevcut test/görüntü sonuçlarını taşıma kaydına al; kendi geçmişini koruyan import/subtree yöntemi veya açık provenance kaydı kullan.
+- [ ] `UI-02` Önce yeni dizine import et; eski `/home/cihad/Projects/kentos-rc` çalışma ağacını doğrulama öncesinde silme. Son sahiplik/arsivleme kararı ayrı açık işlem olsun.
+- [ ] `UI-03` Package adını `kentos-ui`, crate yolunu `kentos_ui` yap; import, doc örneği, manifest, test ve showcase komutlarını birlikte güncelle. İstenirse facade crate üzerinden `kentos::ui` re-export sağla; domain'in UI'a bağımlılığı oluşmasın.
+- [ ] `UI-04` Taşınan nested `[workspace]` ve ikinci `Cargo.lock`'ı kök workspace'e uyumlandır; root default-members/build komutları ile sadece web/server çalışanın gereksiz desktop paketlerini derlemesini önle.
+- [ ] `UI-05` Iced, iced_wgpu, wgpu, naga, winit ve wasm-bindgen sürüm uyumunu kilit dosyasında doğrula. Ayrı wgpu major sürümlerinden gelen Device/Texture tiplerini birbirine geçirmek mümkünmüş gibi tasarlama.
+- [ ] `UI-06` `fonts`, `snapshot`, `spatial` feature'larını yeniden değerlendir. Domain çıkarıldıktan sonra `spatial` production viewport extension'ı mı, demo mu olduğunu açıkça ayır.
+- [ ] `UI-07` `include_bytes!`, font yolları, shader/ikon asset'leri ve paketleme kaynaklarının yeni konumunu doğrula; gömülü fontların OFL bildirimlerini koru.
+- [ ] `UI-08` `DESIGN.md` ile Rust token'larını ortak isimlere bağla; web CSS ve Iced token üretimi için tek tasarım token kaynağı oluştur. Platform metin rasterizasyonunu zorla piksel eşit yapmaya çalışma.
+- [ ] `UI-09` Katman ağacı, property inspector, query builder ve sanal tabloyu gerçek domain/query API'siyle besle; 100 bin satır örneği gerçek pagination/filter/sort davranışıyla sınansın.
+- [ ] `UI-10` Showcase içinde CAD'e özgü demo hesaplarının üretim yoluna girmediğini test et; `kentos_rc::spatial` import'ları için aşamalı kaldırma listesi çıkar.
+- [ ] `UI-11` İlk desktop shell'i mevcut web menü/komut envanterinden kur: proje aç/kaydet, ribbon, layer tree, properties, status, command input, settings ve cloud durumu.
+- [ ] `UI-12` Linux Wayland/X11, Windows ve macOS için pencere, DPI, IME, clipboard, dosya association ve erişilebilirlik matrisi oluştur; ilk geliştirme platformunu diğerlerinin mimari yasağına dönüştürme.
+
+Iced özel `shader` widget'ı wgpu pipeline entegrasyonu sunuyor; ViewCube kodu bunun depoda zaten kullanıldığını gösteriyor. Ana viewport için ortak Device/Queue ile özel render pass/texture kompozisyonu ilk prototiptir. Iced entegrasyonu kare zamanını veya surface kontrolünü kısıtlarsa ölçümle gerekçelenen özel compositor seçeneği değerlendirilir. [Iced shader API](https://docs.rs/iced/latest/iced/widget/shader/index.html).
+
+Kabul: yeni `apps/ui-showcase` ve `apps/desktop` kök workspace'ten derlenir; UI eski repo yoluna ihtiyaç duymaz; gerçek polygon akışı ortak komutla çalışır; desktop ana CAD sahnesi Iced Canvas yerine KentOS wgpu pipeline'ında çizilir.
+
+## 7. Settings sistemi: tüm davranışların denetlenebilir olması — P0/P1
+
+Tek settings sözleşmesi, her platformda kendi servisi ve kalıcılık adapter'ıyla uygulanır. Web TS servisi korunur; native settings runtime'ı WASM'a taşınmaz. Kullanıcı tercihi, proje kuralı, cihaz kapasitesi ve kurumun zorunlu politikası farklı şeylerdir.
+
+| Kapsam | Örnek | Kalıcılık / paylaşım |
+|---|---|---|
+| Varsayılan | İlk snap aperture, varsayılan tema | Uygulama sürümüyle gelen şema |
+| Kurum politikası | Dış paylaşım/indirme izinleri, retention, zorunlu numeric policy | Server; kilitli değerler kullanıcı tercihiyle geçersiz kılınmaz |
+| Kullanıcı | Kısayol, dil, tema, komut alias'ı | Yerel profil; isteğe bağlı hesap senkronizasyonu |
+| Cihaz | GPU backend, MSAA, VRAM bütçesi, pencere yerleşimi | Yalnız ilgili cihaz; dosya açınca başka cihazdan zorlanmaz |
+| Proje | CRS, birim, çizim fontu, ölçek, doğruluk, stiller | `.kcad` ve cloud proje revision'ı |
+| Görünüm/oturum | Kamera, geçici görünürlük, debug overlay | Oturum veya açıkça kaydedilen named view |
+
+- [ ] `SET-01` Her ayara sabit anahtar, tür, default, aralık/enum, birim, scope, sürüm, açıklama, hassas veri bayrağı ve `live/recreate/restart` uygulama biçimi ver.
+- [ ] `SET-02` Çakışma çözümünü şemada tanımla: varsayılan → kullanıcı → cihaz/oturum override; proje ayarları kendi scope'unda, kurum kilitleri üst kısıt olarak çalışsın. Tek düz merge ile CRS veya yetki bozulmasın.
+- [ ] `SET-03` `requested` ve `effective` değerleri ayır; örneğin kullanıcı 8× MSAA isterken donanım 4× destekliyorsa etkin değer ve neden görünür olsun. Tercih sessizce kaybolmasın.
+- [ ] `SET-04` Web `localStorage` ayarları ve native showcase `ayarlar` dosyası için bir defalık migration, bozuk dosya recovery, yedek, reset ve dışa/içe aktarma uygula.
+- [ ] `SET-05` Grafik seçeneklerini presetten bağımsız değiştirilebilir yap; “hızlı/dengeli/kaliteli/özel” presetleri yalnız ayar grubunu doldursun.
+- [ ] `SET-06` CAD ayarlarını kapsa: snap türleri/aperture, pick toleransı, ortho/polar, tracking, birim ve giriş biçimi, imleç, selection, otomatik kayıt, undo bütçesi, import doğruluk politikası.
+- [ ] `SET-07` Performans ayarlarını kapsa: CPU işçi sayısı, browser worker bütçesi, geometry/texture cache, upload limiti, disk cache, server query timeout ve cloud aktarım/job kotaları. Kullanıcı yalnız yetkili olduğu scope'u değiştirebilsin.
+- [ ] `SET-08` Python paket kaynakları, interpreter seçimi, script izinleri ve AI model/endpoint tercihlerini settings'e bağla; parola/token değerlerini dosyaya veya normal settings export'una yazma.
+- [ ] `SET-09` Ayarlar penceresinde arama, reset-to-default, inherited/locked işaretleri, etki açıklaması ve anlık önizleme sun. Grafik değişikliği başarısızsa son çalışan yapılandırmaya dön.
+- [ ] `SET-10` Her kalıcı ayarı UI, komut ve Python/AI erişimi açısından envantere kat; gizli yönetim ayarları için de açıklanmış yetkili API olsun.
+
+Kabul: yanlış tür/sınır dışı ayar tüm host'larda aynı hata kodunu verir; proje başka cihazda açıldığında CRS/font korunur, uygun olmayan GPU ayarı zorlanmaz; eski profil yeni sürümde güvenle yükselir.
+
+## 8. Render mimarisi, CAD kalitesi ve GPU performansı — P0/P1/P3
+
+### 8.1 İki ayrı renderer, paylaşılabilir shader
+
+Desktop: Rust + saf wgpu çizim pipeline'ı. Web: mevcut TypeScript WebGPU ve WebGL2 backend'leri. Ortak hesaplama; tessellation, stil yerleşimi, bbox, pick/snap adayları gibi işlerdir. WebGPU ile native wgpu için uygun WGSL metinleri paylaşılabilir; render graph, device/surface, buffer sahipliği ve frame scheduler her platformun kendisindedir. Wgpu'nun browser desteği olması, bu projede web renderer'ının Rust'a taşınacağı anlamına gelmez. [Wgpu hedefleri](https://wgpu.rs/doc/wgpu/).
+
+- [ ] `REN-01` Native `RenderDevice`, `Viewport`, `Camera`, `SceneCache`, `RenderSettings` ve `FrameStats` sorumluluklarını tanımla; Iced UI mesaj akışıyla milyonlarca entity'yi her kare yeniden üretme.
+- [ ] `REN-02` Iced ile CAD renderer aynı uyumlu wgpu Device/Queue'yu paylaşsın; framebuffer/texture kompozisyonu, scissor, DPI, depth ve viewport resize sahipliğini açıkça belirle. GPU→CPU→GPU kopya döngüsü kurma.
+- [ ] `REN-03` `apps/web/src/render/{webgpu,webgl2}` yollarını koru ve bağımsız geliştirme/test hedefi yap; browser WebGPU yoksa mevcut WebGL2 dönüşü çalışsın.
+- [ ] `REN-04` Paylaşılacak WGSL için `shaders/wgsl/` ve sürümlü binding/vertex/uniform layout sözleşmesi kur. Rust struct alignment ile TS buffer offset'lerini schema/fixture üzerinden doğrula.
+- [ ] `REN-05` WGSL modüllerini ortak matematik/çizim parçası ve platform pipeline girişleri olarak ayır. Rust Naga validasyonu ve gerçek browser WebGPU compile testi ikisi de geçsin.
+- [ ] `REN-06` WebGL2 GLSL yolunu ayrı sürdür; WGSL'yi otomatik GLSL'ye çevirmenin her shader'da çalışacağını varsayma. Aynı görsel sahne ve sayısal paket fixture'larıyla eşdeğerliği denetle.
+- [ ] `REN-07` Domain `f64` koordinatlardan kamera/yerel origin'e göre GPU `f32` üret; orijin değişiminde jitter, çizgi dikişi, snap ve picking tutarlılığını büyük TM koordinatlarında ölç.
+- [ ] `REN-08` GPU buffer sahipliği ve partial update tasarla: stable slot/generation, dirty range, chunk bazlı rebuild, instancing ve atlas. Bir entity değişimi bütün projeyi upload etmesin.
+- [ ] `REN-09` Çizgi/curve, dolgu/hatch, stil/simge, metin/ölçü, selection ve interaction overlay pass'lerini ayrı bütçele; static sahne ile her hareket eden imleç overlay'inin invalidation'ı ayrışsın.
+- [ ] `REN-10` Frustum/bbox culling, ekrandaki hata ile tessellation, LOD ve background build kullan; düşük kalite kalıcı geometriyi değiştirmesin.
+- [ ] `REN-11` CAD kalın çizgisini native line rasterizer garantilerine bırakma: join/cap, miter limiti, dash phase, gerçek yay, pattern origin ve alpha davranışını pipeline'da tanımla.
+- [ ] `REN-12` Stil/etiket hesabında mevcut style-core'u kullan; metin shaping, font fallback, Türkçe glyph, atlas eviction, hinting ve küçük yazı okunaklılığını platform bazında doğrula.
+- [ ] `REN-13` Snap/pick'in kesin kararını CPU `f64` geometriyle sürdür. GPU ID picking varsa ayrı single-sample integer pass ve gecikmeli readback kullan; hover için GPU senkron bekleme ekleme.
+- [ ] `REN-14` Adapter/device loss, minimize/restore, resize storm, DPI/monitor değişimi ve suspend/resume recovery uygula; cihaz kaybı belgeyi veya undo'yu kaybettirmesin.
+- [ ] `REN-15` Render-on-demand ve kontrollü animasyon döngüsü kur; boşta GPU/CPU tüketimi, foreground/background FPS ve güç profili settings üzerinden yönetilsin.
+
+### 8.2 Antialias ve kalite seçenekleri
+
+MSAA tek başına her ince çizgi/metin problemini çözmez. Native destek format/adapter'a bağlı sorgulanmalıdır; web WebGPU'nun desteklediği örnek sayısı kümesi daha sınırlıdır. Preset, desteklenmeyen örnek sayısını pipeline'a geçirip crash üretmemelidir. [Wgpu texture format capabilities](https://docs.rs/wgpu/latest/wgpu/struct.TextureFormatFeatureFlags.html).
+
+| Ayar grubu | Sunulacak kontrol | Uygulama kuralı |
+|---|---|---|
+| Kenar yumuşatma | Kapalı, analitik çizgi AA, MSAA, uygun birleşimler | Aktif yöntemler ve bellek etkisi görünür |
+| MSAA | 1×/kapalı, 4×; native'de sorguyla desteklenen 2×/8×/16× | Renk ve depth formatının ortak destek kümesi; resolve uyumu |
+| Web MSAA | Browser'ın doğruladığı örnek sayıları; WebGL context kısıtları | Native seçenek listesi web'e aynen kopyalanmaz |
+| Supersampling | İsteğe bağlı viewport/export ölçeği | Piksel sayısı ve bellek artışı hesaplanır; üst limit |
+| HiDPI/render scale | DPR/ölçek, düşük güç ve yüksek kalite | UI metni ile model sahnesi çözünürlüğü ayrı kontrol edilebilir |
+| Eğri/dolgu | Ekran hatası px, tessellation ve LOD sınırı | Hesaplama/GIS dönüşüm toleransını değiştirmez |
+| Metin | Atlas kalitesi, uygun SDF/MSDF/coverage yolu | Küçük CAD metnini bulanıklaştıran genel postprocess zorunlu olmaz |
+| Postprocess | Gerekçeli FXAA/SMAA; 3D'de opsiyonel temporal AA | 2D CAD'de ghosting/konum kayması görsel kabulden geçmeli |
+| Sunum | Vsync, desteklenen present mode, FPS limiti | Native/browser capability ayrı; idle render durur |
+| 3D kalite | Shadow, SSAO, anisotropy, texture/mesh LOD, distance | P3; 2D açılışta kaynak ayırmaz |
+| Bütçeler | Geometry cache, GPU texture/buffer, upload/frame | Bütçe aşımında kontrollü düşürme ve raporlama |
+
+- [ ] `AA-01` Feature/limit sorgusu ve supported/effective kalite matrisini native ve web'de kur; örnek sayısına göre pipeline/cache anahtarını değiştir.
+- [ ] `AA-02` Ayar değişince MSAA color/depth/resolve target'larını güvenle yeniden kur; eski kaynakları GPU işi bittiğinde bırak, pencereyi veya belgeyi yeniden açmayı şart koşma.
+- [ ] `AA-03` Analitik çizgi AA, MSAA ve alpha blending birleşiminde çift yumuşama/koyu kenar oluşmadığını kontrol et; renk uzayı, sRGB ve premultiplied alpha sözleşmesi yaz.
+- [ ] `AA-04` Çok ince çizgi, üst üste çizgi, delikli hatch, kesik çizgi, daire/yay, döndürülmüş yazı ve beyaz/siyah zemin için yakın/uzak zoom görüntü seti kur.
+- [ ] `AA-05` 4K/HiDPI + yüksek MSAA'da render target belleğini yaratmadan önce hesapla; yetersiz bellek durumunda son çalışan ayara geri dön.
+- [ ] `AA-06` Export/print kalitesini interaktif kalite profilinden ayır; yüksek kaliteli pafta çıktısı için tiled supersampling veya vektör çıktı seç, tek dev texture sınırına takılma.
+
+Kabul: web WebGPU ve WebGL2 çalışmayı sürdürür; native wgpu viewport aynı proje/stili doğru gösterir; shared WGSL her iki WebGPU yolunda doğrulanır; bütün kalite geçişleri belge kaybetmeden yapılır. “Hızlı” preset daha az hassas CAD kaydı üretmez.
+
+## 9. `.kcad`: yalnız kayıt/yükleme için açık binary format — P0/P1
+
+### 9.1 Format kararı
+
+KCAD bir proje snapshot dosyasıdır. İçinde SQL tabloları, R-tree/FTS, veritabanı transaction motoru, WAL veya tile sunum düzeni olmayacak. Açık belge bellekte düzenlenir; kaydetmede belirli revision'ın byte temsili üretilir. Arama/seçim açık belge üzerinde; büyük CBS sorguları PostGIS üzerinde yapılır. Cloud dosya saklama/paylaşımı için binary revizyon ve katalog yeterlidir; dosyaya DB ya da tile servisi görevi eklenmez.
+
+Önerilen başlangıç: **KCAD magic/header + format sürümü + CBOR ile kodlanmış proje snapshot'ı + bütünlük bilgisi**. CBOR; byte string, integer, float, map ve array taşıyabilen belgeli bir binary encoding'dir. Bu encoding tek başına KentOS şemasını tarif etmez; entity alanları, tür kodları ve uyumluluk kuralları ayrıca yayımlanır. [CBOR, RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html).
+
+Bu tercih prototip önerisidir; MessagePack veya başka açık binary encoding somut boyut/hız/uyumluluk ölçümüyle seçilebilir. Rust struct belleğinin doğrudan dump'ı ve yalnız belirli bir serializer sürümünün anlayabildiği tanımsız format kullanılmaz. JSON metnini UTF-8 byte'a çevirmek eski v1'e göre gerçek binary encoding hedefini tek başına karşılamaz.
+
+### 9.2 Dosya sözleşmesi
+
+- [ ] `FILE-01` `docs/specs/kcad-v2.md` oluştur: magic byte dizisi, header boyu, major/minor sürüm, byte order, payload encoding/compression ID'si, uzunluklar ve bütünlük kontrolü. Kesin byte yerleşimini implementation öncesi fixture ile sabitle.
+- [ ] `FILE-02` Header ve payload sürümünü ayır; minimum reader/writer ve zorunlu extension listesi belirt. Bilinmeyen zorunlu özellikte açık hata veya salt okunur açılış uygula.
+- [ ] `FILE-03` Uzantıdan bağımsız sniff yap: eski JSON `kentos.document` v1, yeni KCAD binary, bozuk/yabancı dosya. “Dosya uzantısı doğru” tek doğrulama olmasın.
+- [ ] `FILE-04` Snapshot kapsamını yaz: proje ID/revision/ad, ayarlar/CRS, layer tree, entity/öznitelik, schema, stiller, semboller, layout, named view, source binding ve asset referansları.
+- [ ] `FILE-05` Kalıcı UUID, eski yerel ID eşlemesi, entity type/version ve extension'ların serialization kurallarını tanımla; runtime slot, GPU buffer ve browser state dosyaya girmez.
+- [ ] `FILE-06` Koordinatları kayıpsız binary64, integer'ları uygun integer/string temsiliyle, decimal ve hisseyi mevcut kesin sözleşmeyle kaydet. Encoding'in “küçük float” optimizasyonu hassasiyet kaybetmesin; `NaN/Inf/-0` politikasını açıkça belirt.
+- [ ] `FILE-07` CBOR profili seçilirse kabul edilen tag/anahtar türleri, duplicate key reddi, map ordering, depth/length sınırı ve sayı temsili yayımlansın; “deterministic” iddiası kullanılan profile göre tanımlansın.
+- [ ] `FILE-08` Yay, bulge, delik, spline, ölçü, hatch, block/xref ve ileride surface/solid tanımlarını koru; yalnız ekranda çizilen üçgen/segmentleri kaydetme.
+- [ ] `FILE-09` Küçük asset'leri binary blob olarak göm; büyük raster/mesh/point cloud için açık embedded/external politikası ve “taşınabilir paket olarak kaydet” seçeneği sun. Göreli yol/URI taşınması ve eksik asset raporunu tanımla.
+- [ ] `FILE-10` İlk sürümde tek snapshot ve isteğe bağlı compression yeterli olsun. Büyük dosya gerektirirse sıralı, uzunluğu belli entity/asset bloklarıyla streaming ekle; chunk kullanımı dosyaya sorgu indeksi veya DB rolü kazandırmasın.
+- [ ] `FILE-11` Compression codec/version ve decompressed size limitini yaz; başlangıçta yaygın ve hedef platformlarda desteklenen codec seçimini ölç. Sıkıştırma algoritması format şemasının yerine geçmesin.
+- [ ] `FILE-12` Checksum/hash'i veri bozulmasını algılamak için kullan; kimlik doğrulama/imza ile karıştırma. Dosya formatına eklenecek imza veya şifreleme ileride ayrı extension olsun.
+- [ ] `FILE-13` Dosya association ve MIME bilgisini desktop/web indirmede tutarlı yap; özel MIME henüz kayıtlı değilse bunu kayıtlı standart diye sunma, gerektiğinde `application/octet-stream` kullan.
+
+### 9.3 Kayıt, yükleme ve eski dosya geçişi
+
+- [ ] `FILE-14` Native ve web I/O akışlarını ayrı uygula: native dosya sistemi, web File System Access/Blob/stream. Bağımsız encode/decode hesap modülü mevcut format kütüphanelerine eklenebilir; native uygulama runtime'ı browser'a taşınmaz.
+- [ ] `FILE-15` Web'de ağır encode/decode ve compression'ı Worker'da çalıştır; ana thread'e tek dev string ve tekrar tekrar bütün-belge clone yükleme. Transferable byte buffer kullanımı ve ownership açık olsun.
+- [ ] `FILE-16` Native kayıt: revision snapshot → geçici hedef dosya → tam yazma/bütünlük kontrolü → gerekli flush → platforma uygun atomik replace. Önceki sağlam dosya başarısız kayıtla kaybolmasın.
+- [ ] `FILE-17` Browser kayıt: kullanıcı seçtiği dosyaya write/close başarısı ile download fallback'ini ayır; yalnız gerçek yazma onayında kayıt tamamlandı say. Mevcut dirty-state doğruluğunu koru.
+- [ ] `FILE-18` Kayıt sırasında yeni değişiklik oluşursa yalnız snapshot'ın revision'ı temizlenir; sonraki değişiklikler dirty kalır. Cancel, disk dolu, izin iptali ve tarayıcı kapanması senaryolarını sınayarak recovery sun.
+- [ ] `FILE-19` Yerel recovery/auto-save çalışma kopyasını nihai `.kcad` formatından ayır. Browser mevcut IndexedDB taslağını kullanabilir; bu, `.kcad` içine veritabanı yerleştirmek değildir.
+- [ ] `FILE-20` Açılışı iptal edilebilir/aşamalı yap; önce proje bilgisi, sonra entity grupları ve görünüm kurulur. Tam yükleme bitmeden hangi komutların çalışabildiğini açıkça belirle; yarım dosyayı geçerli proje diye commit etme.
+- [ ] `FILE-21` Eski JSON v1 için read-only compatibility reader ve yeni binary'ye save-as göçü yap. Orijinali göç doğrulanmadan ezme; eski sürüme export gerekiyorsa kayıp raporu ver.
+- [ ] `FILE-22` Untrusted dosyada boyut/depth/array/decompression sınırı, bozuk uzunluk, path traversal, eksik zorunlu alan ve bilinmeyen tür kontrolü yap; gömülü script'i açılışta çalıştırma.
+- [ ] `FILE-23` `inspect/validate/migrate` araçları, küçük bağımsız Python reader, byte-level fixture ve format dokümanı sun. Başka uygulamaların açabilmesi açık spec/örneklerle sağlanır; bütün CAD programlarının kendiliğinden desteklediği iddia edilmez.
+- [ ] `FILE-24` 100 MB ve büyük proje kaydet/aç sürelerini, peak memory'yi ve compression maliyetini ölç; formatı geleceğin veritabanı veya tile sistemi olmak için büyütme.
+
+Kabul: desktop'ta kaydedilen binary `.kcad` web'de açılır, düzenlenir ve server/desktop'ta kayıpsız okunur. Eski JSON dosyalar açılır. Dosya snapshot'tır; SQL/sorgu/tile API'si yoktur. Kamuya açık spec ve örnek reader ile dosyanın türü ve içeriği KentOS dışından anlaşılır.
+
+## 10. Cloud kayıt, senkronizasyon ve çevrimdışı çalışma — P0/P1
+
+Cloud'da kullanıcıya sunulan kayıt/yükleme dosyası da aynı binary `.kcad` olacak. Server kişisel ve kurumsal projelerin katalog, sahiplik, erişim, paylaşım ve senkronizasyonunu yönetir; proje türü veya saklama modu bu ortak hizmetleri değiştirmez. Sunucunun mevcut PostGIS transaction/event altyapısı canlı CAD/GIS düzenleme ve çoklu kullanıcı koordinasyonu için geliştirilir; bu durum dosyayı veritabanına dönüştürmez. Her tamamlanmış dosya kayıt revizyonunun nesne deposunda doğrulanmış `.kcad` karşılığı bulunur. “Komut sunucuda commit edildi”, “dosya snapshot'ı üretildi” ve “cihazda indirildi” ayrı durumlardır. Her canlı DB commit'inde tam dosya üretmek şart değildir; snapshot/checkpoint sıklığı ve beklenen gecikmesi açık politikadır.
+
+### 10.1 Kaynak otoritesi
+
+| Proje modu | Düzenlenebilir verinin otoritesi | `.kcad` içeriği |
+|---|---|---|
+| Yerel bağımsız çizim | Açık belge; son dayanıklı kayıt dosyası | Geometri, öznitelik, stil ve proje snapshot'ı |
+| Cloud dosya revizyonu | Sunucuda tamamlanmış immutable dosya revision'ı | Aynı tam binary snapshot; ETag/revision kontrollü yeni kayıt |
+| Yönetilen PostGIS CAD/GIS projesi | PG transaction/revision akışı; geometri ve gerekli CAD kaynak tanımları | Tutarlı revision'ın tam binary snapshot'ı; seçilirse açıkça referanslı metadata-only kayıt |
+| Doğrudan dış PostGIS projesi | Dış DB'deki yetkili CAD/GIS kaynakları; desteklenen provider şeması | Proje metadata'sı, bağlantı referansı, şema/stil/layout; esas geometriler yok |
+
+Bu modlar arasında sessiz geçiş yapılmaz. “Veriyi projeye göm”, “PostGIS'e aktar”, “referanslı kaydet” ve “cloud ortak düzenlemeye aç” açık komutlardır. Aynı geometri aynı anda iki bağımsız yazılabilir otoriteye sahip olmaz. Kişisel/kurumsal sahiplik ve 18 uygulaması/imar/ifraz gibi proje türleri bu modlardan bağımsızdır. Dosya modunda katalog/ACL/manifest PostgreSQL'de, binary içerik nesne deposunda tutulabilir; cloud'a yüklemek tek başına entity tablolarına import veya CAD→GIS dönüşümü tetiklemez.
+
+- [ ] `SYNC-01` Mevcut web cloud tracker/drafts/sync/socket davranışını belgeleyip koru; native client ayrı adapter ile aynı protokolü uygulasın. Web sync kodunu Rust'a taşıma şartı koyma.
+- [ ] `SYNC-02` Dosya revizyonu kaydını `capture → encode → upload temporary object → verify bytes/hash → finalize manifest/CAS → acknowledge` akışıyla tasarla.
+- [ ] `SYNC-03` S3/uyumlu object store ile PG arasında dağıtık atomik transaction varmış gibi davranma; pending/finalized durumları, idempotent finalize, recovery job ve yetim obje temizliği kur.
+- [ ] `SYNC-04` Cloud autosave için komut ACK ile `.kcad` snapshot durumunu UI'da ayır. Yeni kaydın dosyası dayanıklı hale gelmeden “dosya cloud'a kaydedildi” deme; snapshot gecikmesi/hatası görünür olsun.
+- [ ] `SYNC-05` Mevcut PG projesinden snapshot üretirken revision tutarlılığını koru; metadata/geometri farklı revision'lardan karışmasın. Serialization/upload boyunca proje write lock'u tutmayan snapshot stratejisini seç.
+- [ ] `SYNC-06` Basit dosya senkronizasyonunda expected revision/ETag ile optimistic concurrency kur; iki cihazın binary dosyalarını byte düzeyinde birleştirme. Çakışmada iki revision'ı koru ve semantik birleştirme/ayrı kopya sun.
+- [ ] `SYNC-07` Cloud editlerinde mevcut expected version/idempotency protokolünü kullan; offline queue'yu kalıcılaştırmadan “güvende” durumu gösterme. User/tenant/project anahtarlamasını koru.
+- [ ] `SYNC-08` Gönderilmeyen değişiklikler için retry/backoff, reconnect, resume cursor, retention dışı tam resync ve duplicate/out-of-order event davranışını native/web'de aynı senaryolarla sınayarak doğrula.
+- [ ] `SYNC-09` Remote değişiklik gelince aktif tool preview, local undo, selection ve entity sürümlerini uzlaştır; local hesap sonucunu yeni remote geometri üstüne kontrolsüz uygulama.
+- [ ] `SYNC-10` Büyük binary dosyalarda streaming upload/download, multipart/resume, checksum, kota, süre sınırı ve iptal kur; byte parçaları taşıma detayıdır, dosya içi tile/DB sistemi değildir.
+- [ ] `SYNC-11` Proje geçmişi, named checkpoint, revision karşılaştırma, restore-as-new ve branch/senaryo akışını tasarla; restore başkasının güncel işini sessizce ezmesin.
+- [ ] `SYNC-12` Proje silme/geri alma, üyelik iptali, logout ve cihaz değişiminde local taslak ile remote yetki durumunu ele al; kullanıcının taslağını silmeden erişim sınırını uygula.
+- [ ] `SYNC-13` Şifre/token/signed URL'nin snapshot, log ve recovery dosyasına girmediğini denetle; dış veri bağlantılarında yalnız credential reference sakla.
+- [ ] `SYNC-14` Dosya formatı/komut protokolü minimum sürüm pazarlığını ekle; eski client daha yeni snapshot'ı veri kaybederek yeniden kaydetmesin.
+- [ ] `SYNC-15` Aç/yükle/kaydet/paylaş akışlarında proje sahibi, saklama modu, kaynak revision, en son dayanıklı snapshot ve etkin erişim durumunu birlikte göster; “cihazda”, “cloud'da” ve “DB'de” durumları yanıltıcı tek bir işarete sıkıştırılmasın.
+- [ ] `SYNC-16` Sync isteğinde ve upload finalize/DB commit anında güncel proje yetkisini doğrula; yükleme başında izinli olmak sonlandırmada yeterli sayılmasın. Yetki iptalinde pending iş ve local taslak korunumu §12 politikasına uysun.
+
+Kabul: yetkili kullanıcı desktop'ta offline düzenler, bağlantı gelince sunucuya aktarır; web aynı revision'ı açar. Sunucu restart veya ACK kaybı mükerrer entity oluşturmaz. Her “tamamlandı” dosya kaydı indirilebilir ve doğrulanabilir binary `.kcad` üretir; metadata-only kayıt bu modla açıkça işaretlenir. Paylaşım/yetki modeli hem dosya hem canlı PostGIS projelerinde korunur.
+
+## 11. CAD ve GIS projelerini PostGIS'te saklama, aktarım ve doğrudan çalışma — P0/P1/P2
+
+### 11.1 CAD ile GIS verisinin ilişkisi
+
+PostGIS desteği yalnız CAD'den GIS'e export değildir: GIS projelerinin yanında düzenlenebilir CAD projeleri de PostgreSQL/PostGIS üzerinde saklanabilecek ve yeniden açılabilecektir. Mevcut `crates/server/application/src/cad.rs` kaynak ayrımı iyi bir başlangıçtır: desteklenen basit nesnelerde `geom`, analitik CAD nesnelerinde `cad_definition` otoriterdir. Hedefte daire/yay, ölçü, blok/instance, kısıt/ilişki gibi CAD tanımları ve proje katman/stil/layout bilgileri uygun sürümlü şemayla korunur; gerektiğinde üretilen GIS geometrisi mekânsal sorgu/görünüm için türetilmiş temsildir. Örnekleme toleransı, algoritma ve revision kaydedilir; türetilmiş polyline'ı tek kaynak yaparak CAD düzenlenebilirliği kaybedilmez.
+
+CRS etiketi atamak dönüşüm yapmak değildir; gerçek dönüşüm `ST_Transform`/uygun CRS engine üzerinden yürür. [PostGIS ST_Transform](https://postgis.net/docs/ST_Transform.html).
+
+- [ ] `PG-01` Provider sözleşmesini tanımla: catalog/schema discovery, query/filter/bbox, pagination, identify, capability, write transaction, version/conflict, cancellation ve source health.
+- [ ] `PG-02` Uygulamanın yönettiği `kentos.*` şeması ile kurumun var olan external tablolarını ayır; bağlanırken dış şemayı otomatik değiştirip KentOS tablolarına dönüştürme.
+- [ ] `PG-03` Desktop için TLS/sertifika doğrulamalı doğrudan PG provider; web için server aracılı provider uygula. Browser'a PG parola/connection string verme.
+- [ ] `PG-04` Connection profile'da host/DB/schema/table/geometry/PK alanı, read/write mode ve credential reference kullan; dosyada parola, refresh token veya signed URL bulunmasın.
+- [ ] `PG-05` Referanslı `.kcad` yalnız proje ayarı, source binding, layer mapping, schema referansı, stil/layout ve named view taşısın. Esas feature verisi ve offline cache varsayılan olarak dosyaya gömülmesin.
+- [ ] `PG-06` Provider değişikliği, tablo rename, şema drift'i, eksik PK, unknown SRID, erişim iptali ve bağlantı kesilmesine açıklanabilir durum ver; eksik veriyi boş çizim diye kaydetme.
+- [ ] `PG-07` Table/view/SQL function erişimini yetki ve allowlist ile sınırla; user/AI girdisini raw SQL identifier veya WHERE metni olarak birleştirme.
+- [ ] `PG-08` Tipli field mapping, null, decimal, UUID, array/JSON, enum, date/time ve geometry dimension dönüşümlerini kayıp raporuyla uygula.
+- [ ] `PG-09` `source_kind`, `cad_definition`, projection algorithm/version/tolerance ve geometry revision'ını birlikte tut; dış GIS edit'i CAD tanımını geçersizleştiriyorsa conflict/yeniden türetme kuralı olsun.
+- [ ] `PG-10` Mevcut tabloya ID ve optimistic locking modeli seç; salt `xmin`'i uzun ömürlü global revision yerine kullanma. Revision altyapısı olmayan kaynağı varsayılan salt okunur veya açık sınırlı yazma modunda aç.
+- [ ] `PG-11` Dış PG tablolarında değişiklik algılamayı seçeneklendir: izinli trigger/outbox, mantıksal yayın veya polling. `LISTEN/NOTIFY` tek başına dayanıklı değişiklik geçmişi sayılmasın.
+- [ ] `PG-12` Bbox sorgu, keyset pagination, seçilmiş kolonlar ve GiST/uygun öznitelik indekslerini ölç; büyük tabloyu client'a bütünüyle indirmek provider'ın standart davranışı olmasın.
+
+### 11.2 Aktarım ve veri yaşam döngüsü
+
+- [ ] `PG-13` Import wizard: kaynak seç → CRS/birim → alan/tür/katman eşlemesi → preview/kayıp raporu → staged import → doğrulama → commit. Her adım command/Python/AI ile erişilebilir olsun.
+- [ ] `PG-14` Büyük aktarımda COPY/staging kullan; geometri validity, row count, kimlik eşlemesi, checksum/alan toplamı ve hata satırlarını raporla; yarım import hedef projeyi kirletmesin.
+- [ ] `PG-15` PostGIS → embedded `.kcad` için tutarlı snapshot export; `.kcad` → PostGIS için kontrollü schema/geometry import geliştir. Dosya exporter'ını tile engine yapma.
+- [ ] `PG-16` CRS değiştirme, precision grid/snap, geometri onarma ve CAD→GIS dönüşümünü ayrı izlenebilir komutlar yap; açılışta veya sıradan kayıtta geometriyi sessiz değiştirme.
+- [ ] `PG-17` Local cache/çevrimdışı çalışma istenirse ayrı çalışma deposu ve revision sözleşmesi kur; referanslı proje dosyasının anlamını gizlice tam-veri dosyasına çevirme.
+- [ ] `PG-18` Query ve provider davranışını desktop, web gateway, server jobs ve Python üzerinden aynı fixture/kayıp raporuyla doğrula.
+- [ ] `PG-19` Yönetilen CAD proje şemasını tamamla: proje/revision, katman, kalıcı entity ID, analitik CAD tanımı, geometri izdüşümü, öznitelik, stil, blok/ilişki, layout ve asset referansları. Migration/unknown-extension politikasını binary domain sözleşmesiyle eşle; bütün projeyi sorgulanamayan tek JSON alanına koymayı provider modeli yerine geçirme.
+- [ ] `PG-20` “CAD projesini PostGIS'e kaydet” ile “GIS geometrisine dönüştür/export et” komutlarını ayır. İlkinde desteklenen CAD semantiği korunur; ikincisinde tolerans ve kayıp önizlemesi gerekir. Dış şema CAD tanımlarını taşıyamıyorsa yönetilen şema kurulumu için açık izin iste veya sınırlamayı bildir; sessiz flatten/DDL yapma.
+- [ ] `PG-21` CAD definition, türetilmiş geometry, relation ve revision değişimini atomik commit et; async türetim gerekirse pending/projection revision durumuyla eski geometriyi güncel kaynak gibi göstermeme kuralı koy. Undo/redo ve concurrent update bu otorite modeline uysun.
+- [ ] `PG-22` Binary `.kcad` → yönetilen PostGIS → `.kcad` round-trip'ini yay/daire, blok/instance, ölçü, tipli öznitelik, stil/katman, CRS/birim ve desteklenen ilişki örnekleriyle sınayarak doğrula. CAD ve GIS projeleri desktop/native provider ile web/gateway üzerinden aynı kalıcı kimlik ve izinlerle açılıp düzenlensin.
+
+Kabul: CAD projesi PostGIS'e kaydedilip yeniden açıldığında desteklenen analitik CAD nesneleri, kimlikleri ve proje özellikleri korunur; GIS projesi de aynı provider/yetki sözleşmesiyle çalışır. Bir dış PostGIS katmanı desktop'ta doğrudan, web'de API aracılığıyla açılır; referanslı `.kcad` yalnız proje metadata'sını taşır; veri ve sırlar yanlışlıkla dosyaya gömülmez. Tam-veri export'u kullanıcı seçerse ayrı dosya üretir. Bulut proje paylaşımı alıcıya bağlantı parolası veya yetkisiz DB erişimi vermez.
+
+## 12. Kişisel ve kurumsal proje bulutu, yetkilendirme ve paylaşım — P0/P1/P2
+
+KentOS server'ın ana ürün sorumluluğu kullanıcıların ve kurumların çalışmalarını güvenle saklamak, cihazlar arasında senkronize etmek ve yetkili kişilere erişim/paylaşım sağlamaktır. 18 uygulaması, imar planı, ifraz/tevhit, genel CAD, GIS, yol ve mimari çalışmaları bu proje modelinin türleridir; her biri için ayrı bir depolama veya kullanıcı sistemi kurulmaz. Bir projeyi bulutta erişilebilir kılmak harita yayını veya MVT üretmek anlamına gelmez. Hesabı olmayan kullanıcı yerelde çalışabilir; cloud özellikleri kimlik ve yetkili bağlantı gerektirir.
+
+### 12.1 Proje alanları, katalog ve yaşam döngüsü
+
+| Kavram | Sorumluluk | Kesin sınır |
+|---|---|---|
+| Kişisel çalışma alanı | Kişinin kendi projeleri ve kendisine paylaşılan işler | Kurum üyeliği zorunlu değil |
+| Kurumsal çalışma alanı | Kurum sahipliği, üyeler, gruplar, politika ve kota | Kuruma üye olmak bütün projelere erişim vermek değildir |
+| Proje | Kalıcı kimlik, tür, sahip, metadata, sürümler ve erişim politikası | Proje türü ile saklama modu birbirinden bağımsız |
+| Dosya tabanlı proje | Binary `.kcad` revizyonları ve proje ekleri | CAD/GIS verisini zorunlu olarak DB entity tablolarına açmaz |
+| Yönetilen PostGIS projesi | CAD/GIS kaynağı, transaction ve ortak düzenleme | Snapshot dosyası ikinci bağımsız yazılabilir otorite değil |
+| Dış PostGIS referans projesi | Yetkili kaynağa bağlantı ve KentOS proje ayarları | Kaynak parolası paylaşılmaz; proje paylaşımı DB yetkisi yaratmaz |
+
+- [ ] `CLOUD-01` Kişisel ve kurumsal çalışma alanı sahipliğini, tenant sınırını, hesap/üyelik ilişkisini ve kalıcı proje kimliğini mevcut auth/tenant modeliyle eşle. Kişisel kullanıcıyı sahte bir kurum kurmaya zorlamadan izolasyonu koru.
+- [ ] `CLOUD-02` Proje türü/şablonunu saklama modundan ayır: genel CAD, GIS, 18 uygulaması, imar planı, ifraz/tevhit ve sonraki civil/BIM modülleri aynı katalogda yer alsın. Tür seçimi tek başına mevzuata uygunluk veya resmî onay iddiası oluşturmasın.
+- [ ] `CLOUD-03` Proje metadata sözleşmesini belirle: ad/açıklama, sahip alan, tür, etiketler, CRS/birim, kapsam/bounds varsa, durum, oluşturucu, değişiklik zamanı ve geçerli revision. Özel kurumsal alanlar sürümlü şemayla eklenebilsin.
+- [ ] `CLOUD-04` Web ve desktop için projelerim, kurum projeleri, benimle paylaşılanlar, son kullanılanlar, favoriler ve arşivlenmişler ekranlarını kur. Arama/sıralama/sayfalama server katalog metadata'sı üzerinde ve yetki filtresiyle çalışsın; `.kcad` içine kalıcı arama indeksi koyma.
+- [ ] `CLOUD-05` Oluştur, aç, yeniden adlandır, çoğalt, arşivle, çöp kutusuna taşı, geri yükle ve açık onaylı kalıcı sil komutlarını tanımla. Kopyanın yeni proje kimliği/ACL'si olsun; geçmişi ve dış kaynak bağlantısını kopyalama davranışı açıkça seçilsin.
+- [ ] `CLOUD-06` Proje eklerini (rapor, pafta, çizelge, görsel ve kaynak dosya) revision/asset ilişkisiyle sakla; boyut/tür sınırı, hash, karantina/tarama ve yetkili indirme uygula. Yüklenen HTML/script içeriğini güvenilir uygulama kodu gibi sunma.
+- [ ] `CLOUD-07` Sürüm geçmişi ve named checkpoint'i §10 ile tek modelde sun; önceki sürümü aç/karşılaştır/indir/restore-as-new akışları revision ve yetkiyi korusun. Dosya snapshot'ı hazırlanıyor/başarısız durumları katalogda görünür olsun.
+- [ ] `CLOUD-08` Kişisel alandan kuruma veya kurumlar arasında proje devrini ayrı onaylı komut yap; eski/yeni sahip, erişim listesi, kota, dış kaynak erişimi ve audit etkisini önizle. Kişinin kurumdan ayrılması kuruma ait projeleri silmesin; son yetkili sahip için koruma koy.
+
+### 12.2 Üyelik ve proje düzeyinde yetki — P0 temel / P1 teslim
+
+- [ ] `CLOUD-09` Kurum üyeliği, gruplar ve proje grant/ACL modelini tanımla. Örnek görüntüleyici/düzenleyici/proje yöneticisi rollerini açık izin kümelerine eşle; kurum yöneticisinin proje erişim yetkisini varsaymak yerine politika olarak kaydet.
+- [ ] `CLOUD-10` `project.list/view/edit/comment/download/share/manage/delete`, geçmişe erişim ve iş çalıştırma gibi izinleri ayrıştır; nihai adlar command/capability şemasında sabitlensin. Varsayılan kapalı erişim ve en az yetki uygula; açık reddetme varsa öncelik/kalıtım kuralını tanımla.
+- [ ] `CLOUD-11` Yetkiyi her API/command, WS aboneliği, sorgu, asset/thumbnail, export, revision indirme, job sonucu, Python ve AI girişinde server'da değerlendir. Client UI'da düğme gizlemek güvenlik kontrolü değildir; tenant ID yanında proje erişimi de denetlensin.
+- [ ] `CLOUD-12` Listeleme, arama sayıları, öneriler, hata mesajları ve son kullanılanlar yetkisiz projenin varlığını/başlığını sızdırmasın. Object ID tahmini, yatay/dikey yetki yükseltme ve başka tenant kaynağına bağlama için negatif testler ekle.
+- [ ] `CLOUD-13` İzin değişikliğini audit/outbox ile dağıt; aktif WS/oturum, cache, indirme ve henüz commit edilmemiş uzun işlere yeniden kontrol uygula. İptal sonrası yeni veri/commit engellensin; önceden indirilmiş dosyaları veya ekran görüntülerini geri alma garantisi verme.
+- [ ] `CLOUD-14` Dış PostGIS gateway'de proje yetkisi ile kaynak kimliği/DB yetkisinin kesişimini uygula. Ortak servis hesabı kullanılıyorsa KentOS filtre/policy sınırları server'da zorunlu olsun; tenant/proje bağlamı pool reuse ile başka isteğe taşınmasın. Doğrudan DB bağlantısı için ayrıca DB rolleri gerekir.
+- [ ] `CLOUD-15` Yetki önizlemesi ve “bu kişi neden erişebiliyor?” açıklamasını yetkili yöneticilere sun; rol/politika değişiklikleri sürümlü ve audit edilebilir olsun. Etkin izin matrisi native/web/Python/AI'da aynı sonucu versin.
+
+### 12.3 Paylaşım, davet ve birlikte çalışma
+
+- [ ] `CLOUD-16` Kişiye/gruba proje paylaşma, rol değiştirme, daveti kabul etme/iptal etme ve erişimi geri alma komutlarını tasarla. Davet belirli kimlik/eposta ve süreyle bağlı olsun; token tekrar kullanımı veya başka hesapla kabul kontrol edilsin.
+- [ ] `CLOUD-17` Kurum dışı misafirin yalnız paylaşılan projelere erişebilmesini sağla; davet tüm kurum üyeliğini veya diğer proje listesini açmasın. Dış paylaşımı kurum politikasıyla kapatılabilir/kısıtlanabilir yap.
+- [ ] `CLOUD-18` Paylaşılan projenin güncel sürümünü izlemek ile sabit bir revision'ı incelemek ayrı seçimler olsun. Sabit inceleme bağlantısı yeni gizli değişiklikleri göstermesin; güncel bağlantının revision ve senkronizasyon durumu açık olsun.
+- [ ] `CLOUD-19` İlk paylaşım dilimi kimliği doğrulanmış alıcılarla çalışsın. İleride anonim/link paylaşımı gerekiyorsa açık politika ve onayla, salt okunur, tahmin edilemez token, süre/iptal ve erişim kaydıyla ekle; proje oluşturmak otomatik public erişim vermesin.
+- [ ] `CLOUD-20` İndirme/export iznini UI/API'de uygularken görüntüleme iznini DRM gibi sunma: görüntülenen veri kopyalanabilir. Hassas paylaşımda orijinal yerine açıkça tanımlı sadeleştirilmiş/alanları çıkarılmış türetilmiş çıktı seçeneğini ayrı iş olarak değerlendir.
+- [ ] `CLOUD-21` Paylaşım penceresinde alıcılar, etkin roller, dış kaynak erişim durumu ve dosya/live-DB modu görünsün; web ve desktop aynı kullanım sözleşmesini uygulasın. Önerilen `project.share`, `project.access.revoke`, `project.revision.restore` komutları Python/AI'a da aynı izinle açılsın.
+- [ ] `CLOUD-22` Aynı projede eşzamanlı düzenlemenin conflict/expected revision/undo kurallarını §4 ve §10 ile birleştir. Presence/aktif kullanıcı bilgisi kalıcı commit yerine geçmesin; salt okunur kullanıcı edit event göndererek yazamasın.
+- [ ] `CLOUD-23` Proje veya revision'a bağlı yorum, inceleme notu ve isteğe bağlı nesne referansı geliştir; silinmiş/yenilenmiş geometriye ait yorum sessizce başka nesneye bağlanmasın. Mention/bildirim yalnız yetkili alıcıya gitsin.
+
+### 12.4 Kurumsal süreç, güvenilirlik ve kabul
+
+- [ ] `CLOUD-24` Proje türüne göre taslak/incelemede/onaylı/arşiv gibi yapılandırılabilir durumları ve geçiş izinlerini tasarla. Uygulama içi onay ile hukuken geçerli imza/kurum onayını ayrı tut; resmî süreç entegrasyonu ayrıca doğrulanan kapsam olsun.
+- [ ] `CLOUD-25` Oluşturma, erişim değişikliği, paylaşım, export/indirme, restore ve silme olaylarını actor/tenant/project/revision/request ID ile audit et. Token, parola, gereksiz hassas geometri ve kişisel veriyi log'a yazma; audit okuma yetkisi ve saklama politikası ayrı olsun.
+- [ ] `CLOUD-26` Kullanıcı/kurum bazında storage, sürüm geçmişi, ek dosya, upload/download ve job kotalarını yönet. Kota aşımı önceki kayıtları bozmasın; tamamlanmamış upload'lar temizlensin, retention/purge açık ve test edilmiş olsun.
+- [ ] `CLOUD-27` Auth, catalog, proje içeriği/asset, sürümleme, paylaşım ve sync servis sınırlarını mevcut API içinde modüllerle kur. İlk sürümde gereksiz mikroservis veya tile crate'i açma; sözleşmeler gelecekte bağımsız dağıtıma izin versin.
+- [ ] `CLOUD-28` Proje listeleme/arama, ilk açılış, büyük revision upload/download, görünür hale gelme ve yetki iptali yayılma süreleri için ölçülebilir bütçe tanımla. Çok sayıda proje/revision/üye ve yavaş bağlantıda bellek/kota/backpressure kabulünü sınayarak belirle.
+- [ ] `CLOUD-29` Dosya ve yönetilen PostGIS modunda aynı kabul setini çalıştır: A kendi 18 uygulaması/imar/ifraz projesini kaydeder; B görüntüler, C düzenler; yetkisiz D erişemez. Desktop/web senkronizasyonu, sürüm geri alma, binary export, paylaşımı kaldırma ve başka tenant izolasyonu doğrulansın.
+- [ ] `CLOUD-30` DB ve object store backup/restore, kullanıcı/kurum ayrılması, abonelik/kota değişimi varsa, geçici kesinti ve iptal edilmiş erişimde local taslak davranışını operasyon runbook'una bağla. Kullanıcı kendi verisini yetkisi dahilinde açık binary formatta dışarı alabilsin.
+
+Kabul: kişi veya kurum tile servisi kurmadan projesini KentOS bulutuna kaydeder, yetkili kullanıcı web/desktop'tan açar, paylaşır ve izin verilen düzenlemeler senkronize olur. Aynı erişim kuralları CAD/GIS, binary dosya ve yönetilen PostGIS modlarında geçerlidir. Dosya projesi için PostGIS'e geometri import'u gerekmez. Yetki iptali server erişimini keser; önceden alınmış offline kopyaları yok ettiği iddia edilmez.
+
+### 12.5 Gelecekte olası harita/tile yayın rolü — mevcut teslim dışında
+
+Martin benzeri rol ancak somut ihtiyaç ve ayrıca onaylanan kapsamla açılır. F0–F10 teslimleri için Martin eşdeğerliği veya 2D MVT/TileJSON yayın katmanı zorunlu değildir; §19'daki uzun vadeli 3D dağıtım ihtiyaçları kendi ürün diliminde ele alınır. Proje paylaşımı şimdi normal yetkili proje/feature/asset servisleriyle çalışır.
+
+- [ ] `FUTURE-01` İhtiyaç doğarsa ayrı ADR ile harita yayınının kullanıcılarını, kaynaklarını, güvenlik modelini ve işletim bütçesini belirle; harici Martin entegrasyonu ile KentOS içi implementasyonu karşılaştır. Şimdiden eşdeğerlik veya teslim taahhüdü verme.
+- [ ] `FUTURE-02` Bu kapsam açılırsa önce küçük bir PostGIS → MVT/TileJSON dikey dilimi tasarla; stil/sprite/glyph, PMTiles/MBTiles, composite source ve raster kapsamını ayrı ihtiyaçlarla seç. `.kcad` yine yalnız kayıt/yükleme dosyası olarak kalır.
+- [ ] `FUTURE-03` Olası yayın çıktısında CAD kaynak doğruluğu, tolerans/CRS, tile buffer/sınırları, gerçek feature kimliği, alan gizliliği, auth-before-cache, revision invalidation ve yük izolasyonunu test et. Türetilmiş tile editable CAD/GIS kaynağının yerine geçmesin.
+- [ ] `FUTURE-04` İleride yayın kapsamı onaylanırsa bağımsız istemci uyumu ve seçilen Martin sürümüyle karşılaştırmalı ölçüm yap; yalnız doğrulanan özellikler için uyum iddiası ver. O zamana kadar eski tile performans hedefleri aktif cloud kabul kapısı değildir.
+
+Gelecek değerlendirme için araştırma kaynakları: Martin'in kaynak, endpoint ve mimari belgeleri; PostGIS MVT fonksiyonu; PMTiles arşiv yaklaşımı. Bunlar bugünkü server sorumluluğunu genişletmez. [Martin kaynakları](https://maplibre.org/martin/sources-tiles/), [Martin endpoint'leri](https://maplibre.org/martin/using/), [Martin mimarisi](https://maplibre.org/martin/architecture/), [PostGIS ST_AsMVT](https://postgis.net/docs/ST_AsMVT.html), [PMTiles](https://docs.protomaps.com/pmtiles/).
+
+## 13. Processing, worker ve workflow altyapısı — P1/P2
+
+- [ ] `JOB-01` Mevcut `processing/runner.ts`, tool metadata, parametreler ve model designer'ı uyumlu bir işlem sözleşmesine bağla; web orchestrator TS'te, hesaplama Rust'ta kalır.
+- [ ] `JOB-02` İş tanımı giriş dataset/snapshot revision'ı, parametre şeması, seçim referansı, CRS/birim, algoritma ve numeric policy sürümü taşısın; server'a her işte bütün browser belgesini göndermek zorunlu olmasın.
+- [ ] `JOB-03` Executor capability matrisi kur: web main thread kısa işler, web Worker hesaplama, native CPU pool, kalıcı server worker ve gerekirse GPU iş sınıfı. Aynı tool farklı executor'da aynı sonuç sözleşmesini üretmeli.
+- [ ] `JOB-04` PostgreSQL kalıcı queue için queued/running/succeeded/failed/cancelled durumları, lease expiry, heartbeat, fencing token, retry/backoff ve idempotent sonuç commit'i uygula.
+- [ ] `JOB-05` İş kabulünü `202/job_id` ile hızlı döndür; uzun CPU/GDAL/mesh/Python işini API event loop veya UI thread üzerinde çalıştırma.
+- [ ] `JOB-06` Worker restart, ağ kopması, lease'i biten eski worker ve aynı işin iki kez alınması senaryolarında yalnız güncel fencing sahibi sonuç yayımlayabilsin.
+- [ ] `JOB-07` İş iptalini yetkili command olarak uygula; socket kapanması işi kendiliğinden iptal etmesin. Progress ve log akışı bounded olsun; yavaş client işi durdurmasın.
+- [ ] `JOB-08` Batch sonuçlarını staged artifact/changeset olarak üret; preview, validation, expected revision ve son commit birbirinden ayrılmalı. Kısmi çıktının kalıcılığı açık politika taşısın.
+- [ ] `JOB-09` CPU/RAM/disk/GPU/time limitleri ile tenant başına concurrency ve fairness uygula; tek büyük terrain işi proje açma/paylaşım/sync API'sini veya interaktif düzenlemeyi kilitlemesin.
+- [ ] `JOB-10` Workflow DAG için tipli giriş/çıkış, bağımlılık, cycle detection, dry-run, ara çıktı cache key'i, iptal/yeniden başlatma ve provenance kaydı ekle.
+- [ ] `JOB-11` Mevcut style expression dilini form/label/filter/processing alanlarında aynı sözleşmeyle kullan; kullanıcı ifadesini genel JS/Python eval olarak çalıştırma.
+- [ ] `JOB-12` Import/export, binary snapshot üretimi, proje eklerini işleme, reprojection ve topology repair işlemlerini aynı job gözlem/sonuç sistemiyle sun. Terrain, corridor ve 3D çıktı üretimini ilgili ileri modül açıldığında bu sisteme bağla; tile bake bugünkü worker kabulü değildir.
+
+Kabul: çalışan job sırasında browser kapanır veya worker düşer; iş güvenli biçimde sürer/yeniden alınır, sonuç en fazla bir kez commit edilir. Aynı pure hesap fixture'ı web Worker ve native worker'da eşdeğer çıkar.
+
+## 14. Embedded Python ve `kentos` Python kütüphaneleri — P1/P2
+
+### 14.1 Çalışma modeli
+
+Desktop uygulamasına CPython, PyO3 aracılığıyla embed edilir. Python kullanıcıya komut ve hesaplama SDK'sı sunar; ana CAD hesaplama algoritmaları Python'da yeniden yazılmaz. Native Python extension dağıtımı ile uygulama içine interpreter gömme ayrı build/packaging ihtiyaçlarıdır. PyO3 her iki kullanım biçimini destekler; static embedding ve C extension yükleme ayrıntıları ayrıca ele alınmalıdır. [PyO3 rehberi](https://pyo3.rs/main/), [PyO3 dağıtım/embedding](https://pyo3.rs/main/building-and-distribution.html).
+
+| Host | Python yürütme | KentOS'a bağlantı |
+|---|---|---|
+| Desktop | Embed CPython; kontrollü thread/host yaşam döngüsü | Native command girişine ve Rust hesap kütüphanelerine binding |
+| Harici Python | Kurulabilir `kentos` paketi | Yerel headless binding veya yetkili HTTP client |
+| Web | Gerektiğinde yüklenen ayrı Pyodide Worker | JS/RPC üzerinden web TS komut servisi ve hesaplama facade'ı |
+| Server otomasyonu | Sınırlandırılmış Python worker process/container | Yetkili command/job API'si; ana API process'ine script embed edilmez |
+
+Web Python'u, desktop uygulamasının WASM export'u değildir. Pyodide kendi interpreter'ıdır; native PyO3 wheel dosyası tarayıcıya aynen yüklenmez. Emscripten/Pyodide belleği ile mevcut `wasm32-unknown-unknown` hesap modüllerinin belleğini ortakmış gibi kullanma. Web Worker UI'nın uzun Python hesabıyla bloke olmamasını sağlar; Python paketlerinin browser kısıtları ayrıca görünür olmalıdır. [Pyodide Worker](https://pyodide.org/en/stable/usage/webworker.html), [Pyodide uyumluluk sınırları](https://pyodide.org/en/stable/usage/wasm-constraints.html).
+
+### 14.2 Native embedding ve dağıtım
+
+- [ ] `PY-01` CPython/PyO3 sürüm matrisi, desteklenen OS/architecture, bundled interpreter konumu ve güncelleme politikasını seç. Kullanıcının sistem Python'unun tesadüfen uyumlu olmasına güvenme.
+- [ ] `PY-02` App embedding crate'i ile harici extension/wheel build'ini ayır; `extension-module`, interpreter initialization ve linker flag'leri birbirine yanlış feature birleşimiyle taşınmasın.
+- [ ] `PY-03` Interpreter startup/shutdown, module initialization, exception/traceback, stdout/stderr ve log yönlendirmesini tasarla; PyObject yaşam süresi kapanmış belge/runtime'ı kullanamasın.
+- [ ] `PY-04` GIL ve Rust lock sırasını belirle; Python callback beklerken UI/document lock'u tutma. Uzun Rust hesabında interpreter lock'unu uygun API ile bırak; UI mutation'ı komut kuyruğunda yap.
+- [ ] `PY-05` GUI console, script editor/run, dosyadan script, seçili kodu çalıştır, stop/restart, geçmiş, otomatik tamamlama ve `.pyi` destekli yardım ekle.
+- [ ] `PY-06` Python ortamını proje/uygulama bağımlılıkları açısından yönet; package lock, kaynak allowlist, offline paket cache'i ve native wheel lisans/ABI uyumluluğunu denetle.
+- [ ] `PY-07` Embed çalışma trusted yerel script modu olsun; güvenilmeyen script veya zorunlu sonlandırma ihtiyacında ayrı OS process host kullan. Restricted builtins, thread timeout veya GIL'i güvenlik sandbox'ı sayma.
+- [ ] `PY-08` Script izinlerini dosya/ağ/komut/credential kapsamlarıyla bildir; proje açılışında gömülü script otomatik çalışmasın. İzinler proje verisinden gelen iddiayla yükselmesin.
+
+### 14.3 SDK: komut sistemi üzerinden ürün erişimi
+
+- [ ] `PY-09` `python/kentos` paketini tasarla: `commands`, `projects`, `sharing`, `layers`, `features`, `geometry`, `styles`, `settings`, `processing`, `jobs`, `io`; ileri aşamada `terrain`, `civil`, `bim`, `scenes`. Proje kataloğu, sürümler, paylaşım ve erişimi geri alma da normal yetki/command yolunu kullansın; olası `publish` paketi ancak ayrı gelecek kapsamı açılırsa eklenir.
+- [ ] `PY-10` Her kalıcı SDK metodu aynı komut descriptor/input/output sözleşmesine bağlansın. `feature.attrs[...] = ...` gibi kontrolsüz canlı mutation yerine açık update/transaction API'si kullan.
+- [ ] `PY-11` Tipli request/result, enum, hata sınıfı, `FeatureRef`, exact decimal ve async job handle üret; genel `execute(name, input)` kaçış yolu da katalogu doğrulasın.
+- [ ] `PY-12` Native/web/remote için aynı mantıksal API kur; async temel yüzeyi destekle. Sync convenience native/headless'te olabilir; çalışan event loop'u gizlice bloke etmesin.
+- [ ] `PY-13` Selection/camera/aktif layer gibi UI state'i isteğe bağlı explicit context yap; headless script'in hangi veriyi değiştireceği parametrelerinden anlaşılabilsin.
+- [ ] `PY-14` Transaction context'i bir changeset hazırlayıp sonunda doğrulasın/commit etsin; `await` veya kullanıcı girişi boyunca açık DB transaction tutmasın. Bir script işlemi tek undo grubu olabilsin.
+- [ ] `PY-15` Batch/iterator/pagination ve NumPy/Arrow benzeri toplu veri aktarımını kullanım gerektirince ekle; entity başına FFI/JSON çağrısıyla milyon nesne dolaşma. Zero-copy iddiasında lifetime ve mutability kanıtı olsun.
+- [ ] `PY-16` Generated stub ve dokümantasyonu katalogdan üret; örnek projelerle SDK test et. Kayıtlı komutun Python wrapper'ı eksikse CI bunu raporlasın.
+- [ ] `PY-17` Script sonucu/çıktı dosyaları, kullanılan girdiler/revision'lar ve SDK sürümünü provenance'a ekle; replay için gizli UI state veya rastgele seed bırakma.
+
+### 14.4 Web Python ve paketler
+
+- [ ] `PY-18` Pyodide yalnız scripting açıldığında yüklensin; 2D başlangıç bundle'ına interpreter/paketleri ekleme.
+- [ ] `PY-19` Worker RPC'de request/job ID, cancellation, timeout, typed error ve transfer edilen veri bütçesini kullan; Python Worker'ın UI nesnelerini doğrudan çağırmasını gerektirme.
+- [ ] `PY-20` Pure-Python `kentos` facade'ının native ve browser transport'unu ayır; desteklenmeyen native wheel/OS/socket çağrısı açık capability hatası versin.
+- [ ] `PY-21` Kullanılabilir Python paketlerinin desktop/web/server matrisini yayımla; browser'a uygun olmayan işlem için kullanıcının seçtiği yetkili server job yolu sun, sessizce veri upload etme.
+- [ ] `PY-22` Browser script interrupt desteğini hedef ortama göre doğrula; mümkün olmadığında worker sonlandır/restart ve staged changeset iptali ile belge tutarlılığını koru.
+
+Kabul: aynı basit `polygon oluştur → ölç → katmana ata → kaydet` Python örneği desktop ve web adapter'ında aynı sonucu verir; hatalı script yarım değişiklik bırakmaz. Native olmayan web paketi açıklanabilir hata verir. Harici Python paketi GUI gerektirmeden belgelenmiş headless komutları çalıştırır.
+
+## 15. Tam AI surface: sorgulanabilir, işlem yapabilir, sınanabilir — P0 tasarım / P1 teslim
+
+“Tam” yüzey ölçülebilir bir kapsam hedefidir: her yayımlanmış ürün yeteneği katalogda bulunur; izinli veri okunur, parametreler keşfedilir, işlemler planlanır/çalıştırılır ve sonuç izlenir. AI'ın geometri doğruluğu veya yetki kararı dil modeline bırakılmaz. Model sağlayıcısı değişebilir; komut sistemi ve hesap motoru aynı kalır.
+
+### 15.1 Yüzey kapsamı
+
+| Yetenek | AI'a sunulacak sözleşme |
+|---|---|
+| Keşif | Command catalog/schema/examples, platform/provider capability, version |
+| Proje bağlamı | Project/source/revision/CRS/units, aktif belge, seçim ve named view |
+| Veri okuma | Layer/schema, filtre/bbox sorgusu, pagination, feature detail ve ilişkiler |
+| Açıklama/doğrulama | Geometri ölçümü, topology/CRS sorunu, hesap provenance ve loss report |
+| Planlama | Validate, dry-run, changeset summary, bbox/feature count ve maliyet tahmini |
+| Değişiklik | Tipli execute, batch/transaction, conflict, undo ve tekrar deneme |
+| Görsel bağlam | Yetkili viewport görüntüsü, screen↔world referansı ve object ID; görsel tek veri kaynağı olmaz |
+| Dosya/cloud | Aç, save/save-as, snapshot status, senkronizasyon ve conflict çözüm seçenekleri |
+| Proje bulutu/paylaşım | Yetkili proje kataloğu, saklama/sync durumu, sürüm geçmişi, davet/paylaşım, etkin izinler ve erişimi geri alma |
+| Uzun işler | Submit/status/progress/log/result/cancel |
+| Ayarlar | Şema, effective/requested, yetkili değişiklik, reset |
+| Python/workflow | Script incele/çalıştır, kontrollü ortam, DAG ve sonucu takip |
+
+- [ ] `AI-01` Command coverage manifest'ine UI/CLI/Python/AI/web/native/headless sütunları ekle. Yayımlanmış işlevin eksik giriş noktası veya açık gerekçeli `requires_ui` durumu görünür olsun.
+- [ ] `AI-02` Keşif ve şemaları tek command katalogundan üret; tool adı, alan açıklaması, birim, CRS, örnek ve hata kodları modelin tahmin etmesine bırakılmasın.
+- [ ] `AI-03` Uygulama içi AI için web TS/native command adapter'larını; dış agent için yetkili MCP/HTTP adapter'ını uygula. Model sağlayıcısının SDK tipleri domain'e girmesin.
+- [ ] `AI-04` MCP tools/resources/prompts ayrımını kullan: actions komutlara, resources proje/spec/iş sonucuna, prompts kullanıcı iş akışına bağlansın. Uygulanan protokol sürümünü pinle ve negotiation yap.
+- [ ] `AI-05` Query tool'ları allowlist'li AST, bbox, field projection, limit ve cursor kullansın; bütün şehir modelini veya bütün tabloyu varsayılan context'e doldurma.
+- [ ] `AI-06` Tool result'larında revision, seçilen feature ID'leri, birim/CRS, computed-versus-source alanı, warnings ve gerekirse artifact bağlantısı dön; model yanlış ölçek/CRS varsayımıyla devam etmesin.
+- [ ] `AI-07` Tahrip edici geniş değişiklik, yeni alıcıya/dış kuruma paylaşım, erişim genişletme ve veri aktarımı için scope'a bağlı preview/approval tasarla; alıcı/rol dahil onaylanmış plan/input/revision hash'i değişirse yeniden değerlendir. Basit izinli işlemlere sürekli modal ekleme.
+- [ ] `AI-08` AI ve Python actor'u mevcut kullanıcı/servis kimliğinin sınırlarını devralsın; tenant/role/scope her server girişinde doğrulansın. MCP metadata'daki “readOnly” etiketi yetkilendirme yerine geçmesin.
+- [ ] `AI-09` Proje notu, katman adı, web kaynağı ve script açıklamasını untrusted veri olarak işle; bunların içerdiği talimatlar tool izinlerini, endpoint'i veya paylaşım alıcısını/rolünü değiştiremesin.
+- [ ] `AI-10` Model/provider'a gönderilecek geometri, öznitelik ve görüntü kapsamını ayarlanabilir yap; yerel/kurumsal endpoint seçimi, token/maliyet bütçesi ve sensitive-field filtresi sun.
+- [ ] `AI-11` Tool execution audit'ine actor, command ID/version, input digest, revision, onay/izin kapsamı, sonuç ve undo referansını kaydet; sırları loglama.
+- [ ] `AI-12` Plan ile execute arasında eski context algıla; stale revision, permission change, missing entity ve network retry durumlarını modelin anlayacağı structured error olarak dön.
+- [ ] `AI-13` “Eksik parametre” çıktısını `needs_input` şemasıyla sun; seçim/CRS/hedef katman gibi kritik bilgiyi modelin uydurmasına izin verme. Varsayılan varsa kaynağını açık bildir.
+- [ ] `AI-14` AI sohbetinden yapılan değişiklikler normal undo/history/progress'te görünsün; kullanıcı aynı komutun manuel karşılığına ve üretilen Python örneğine ulaşabilsin.
+- [ ] `AI-15` UI'a bağlı kamera/dinamik giriş komutları için oturum attachment modeli oluştur; headless server'ın ekrana tıkladığını varsayma. Headless eşdeğeri olan işlem somut koordinat/ID ile çalışsın.
+- [ ] `AI-16` Agent'tan verilen Python'u ayrı güven sınırıyla çalıştır; sıradan tool çağrısından daha geniş OS yetkisine otomatik yükseltme.
+- [ ] `AI-17` Altın senaryolar kur: polygon çiz/alanını sor, katman filtrele, bozuk geometriyi raporla, 10 bin nesneye toplu işlem, CAD/GIS PostGIS kaydı, binary cloud kayıt, proje paylaş/erişimi geri al, job iptal et, undo ve yetkisiz isteği reddet. Arama ve geçmiş yanıtları da yetkisiz proje bilgisini sızdırmasın.
+- [ ] `AI-18` Kapsam hedefi olarak bütün yayımlanmış uygun komutların keşfedilebilirliğini ve şema uyumunu otomatik ölç; modelin doğru iş planlama oranını ayrı eval ile raporla. “Kusursuz” iddiasını yalnız yüzey tamlığıyla karıştırma.
+
+MCP tools yapılandırılmış giriş/çıkış ve çağrı yüzeyini standartlaştırır; proje/tenant/komut yetkisi KentOS tarafında uygulanmaya devam eder. Kullanılan MCP sürümüyle auth/transport uyumluluğu ayrıca test edilir. [MCP tools sözleşmesi](https://modelcontextprotocol.io/specification/2026-07-28/server/tools).
+
+Kabul: UI'da çalışan her yayımlanmış veri işlemi AI katalogunda doğru şema/izin/sonuçla bulunur; aynı komut aynı sonucu verir. Yetkisiz tenant, prompt injection, stale revision ve iptal senaryoları veri kaybı veya yetki aşımı üretmez.
+
+## 16. Profesyonel CAD/GIS ürün kapsamı — P1/P2
+
+Bu bölümde bir aracın listelenmesi sıfırdan yazılması gerektiği anlamına gelmez. `BASE-04` envanteri önce mevcut web/Rust karşılığını bulur; görev, eksik platform/yüzey/kalite koşulunu tamamlamaktır.
+
+### 16.1 CAD düzenleme ve pafta
+
+- [ ] `CAD-01` Nokta, çizgi, polyline/polygon, circle/arc, ellipse, spline, xline/ray, text, dimension ve hatch türlerinde mevcut web davranışını native'de tamamla; parametre, preview, grips, undo, dosya ve scripting eşdeğerliği sağla.
+- [ ] `CAD-02` Move/copy/rotate/scale/mirror, trim/extend, fillet/chamfer, offset, break/join/explode/stretch, vertex ve array araçlarının ortak hesaplama çağrılarını ve typed command parametrelerini tamamla.
+- [ ] `CAD-03` Geometric constraint ve parametrik tasarım için mesafe/açı/paralellik/diklik/tanjant/eşitlik modelini kur; over/under-constrained durumları, çözüm toleransı ve rollback'i raporla.
+- [ ] `CAD-04` Block/symbol definition, instance transform, nested block, attribute, xref, bağımlılık döngüsü ve eksik referans yönetimini tasarla; edit-once/update-many davranışını revision'la bağla.
+- [ ] `CAD-05` UCS/workplane, named view, ortho/polar, relative coordinate, multiple viewport ve gelecekte 3D snap için koordinat dönüşüm zincirini açıklaştır.
+- [ ] `CAD-06` Yazı/ölçü association'ı ve yeniden hesaplanmasını kur; entity değişince bağlı ölçü güncellensin, patlatma/export bilinçli ilişki kaybı olarak raporlansın.
+- [ ] `CAD-07` Pafta/model space, ölçekli viewport, antet, legend, north arrow, scale bar, grid/coordinate listesi ve çok sayfalı print/export geliştir.
+- [ ] `CAD-08` Çizgi kalınlığı, pattern, çizim fontu, fiziksel mm/ölçek, kâğıt renkleri, çıktı DPI ve PDF/SVG/DXF görünüş eşdeğerliğini test et; ekran kalite ayarı baskı verisini değiştirmesin.
+- [ ] `CAD-09` Proje şablonları, standart katman/stil, komut makroları, kullanıcı workspace'i, özel toolbar/kısayol ve kurumsal dağıtım profilini settings/command üzerinden sun.
+- [ ] `CAD-10` Katman kilidi/seçilebilirlik, filtre, toplu property edit, match properties, clipboard ve belge arası kopyada ID/style/CRS çakışmalarını yönet.
+
+### 16.2 GIS, haritacılık ve kadastro
+
+- [ ] `GIS-01` Layer/source catalog, bağlantı yönetimi, grup/alt katman, tipli attribute table, sanal satırlar, sıralama/filtre ve schema-aware form düzenleyicisini tamamla.
+- [ ] `GIS-02` Mekânsal ve öznitelik sorgusu, join/relate, spatial join, aggregate/statistics, field calculation ve expression preview geliştir; büyük sorgu provider/server'a itilebilsin.
+- [ ] `GIS-03` Buffer, intersect/union/difference, clip, dissolve, multipart/singlepart, validity/repair, simplify ve reprojection araçlarını geometri/topoloji kaybı raporlarıyla sun.
+- [ ] `GIS-04` Ortak sınır topolojisi, overlap/gap/sliver, duplicate vertex/edge, self-intersection ve polygon hole doğrulamasını komut/önizleme/raporla bütünleştir.
+- [ ] `GIS-05` Ölçme/survey işlemlerini geliştir: polar, kesişim, traverse, dönüşüm/dengelemeye uygun gözlem modeli, kontrol noktaları, residual ve doğruluk raporu.
+- [ ] `GIS-06` Ifraz/tevhit, parsel numarası, kenar/alan cetveli, hisse dağıtımı ve kesin rounding politikalarını bağımsız referansla doğrula; geometrik alan ile kayıtlı/hukuki alanı farklı alanlar olarak tut.
+- [ ] `GIS-07` Kadastro/imar çıktıları için kuralın kaynağı, yürürlük tarihi, numeric policy revision ve kurum onayı bilgisini kaydet; bu yol haritasını güncel mevzuat doğrulaması yerine kullanma.
+- [ ] `GIS-08` Raster/ortofoto/DEM katmanları için georeferencing, CRS, nodata, band/style, overviews, tile cache ve seçilmiş bölge okuma desteği geliştir.
+- [ ] `GIS-09` COG/GeoTIFF, point cloud ve büyük dataset'leri provider tabanlı tüket; düşük çözünürlük önizleme, tam kaynak analizi ve export birbirinden ayrı capability taşısın.
+- [ ] `GIS-10` Harici OGC/standart servis bağlantıları için WMS/WMTS, WFS/OGC API Features ve Tiles öncelik sırası çıkar; auth, attribution, proxy ve coordinate-axis davranışını test et.
+- [ ] `GIS-11` Ağ topolojisi, yön/maliyet, rota, en kısa yol, service area ve altyapı şebeke analizleri için typed graph/data modeli kur; tasarım yol aksıyla ağ yönlendirmesini aynı veri tipi sayma.
+- [ ] `GIS-12` Zamansal katman, validity interval, revision karşılaştırması ve senaryo gösterimi ekle; güncel saha durumu ile tasarlanan alternatifleri ayrı sakla.
+- [ ] `GIS-13` 18 uygulaması için kaynak parseller, düzenleme sınırı, hak sahipliği/hisse, hesap girdileri/sonuçları, dağıtım alternatifleri ve cetvel/rapor ilişkisini sürümlü proje şablonunda modelle. Hukuki formül ve kuralların güncel doğrulamasını uygulama fazında yetkin uzman/kurum kabulüne bağla; cloud saklama bu hesap modülünün tamamlanmasını beklemesin.
+- [ ] `GIS-14` İmar planı ve ifraz/tevhit projelerinde plan/kaynak revision'ı, katman/lejand, geometrik/topolojik ilişkiler, proje ekleri, işlem durumu ve inceleme izini ortak proje modeline bağla. Binary ve PostGIS saklama seçenekleri proje türünün semantiğini değiştirmesin.
+
+### 16.3 Formatlar ve gerçek birlikte çalışabilirlik
+
+- [ ] `FMT-01` Mevcut DXF reader/writer'ı native/web/server üzerinden aynı fixtures ile kullan; geometry yanında layer/style/font/dimension/block kayıp raporlarını koru.
+- [ ] `FMT-02` DXF ölçü ve bloklarını gerçek AutoCAD/BricsCAD/Netcad/QGIS gibi hedef uygulamalarda açıp görsel/semantik kontrol planla; yalnız aynı reader ile round-trip doğruluğu yeterli sayılmasın.
+- [ ] `FMT-03` GeoJSON, GeoPackage, Shapefile, CSV/XYZ ve kurum koordinat formatları için capability/kayıp matrisi çıkar; encoding, alan adı uzunluğu, tip kısıtları ve CRS farklarını görünür yap.
+- [ ] `FMT-04` Gerekli GDAL/PROJ/native codec'leri adapter veya server işine bağla; bütün C/C++ bağımlılığını browser'a taşımayı şart koşma. Web yerel desteklenmeyen formatı açık server conversion seçeneğiyle ele alsın.
+- [ ] `FMT-05` DWG gibi formatların SDK/lisans/dağıtım kararını ayrı değerlendir; lisanslı dönüştürücü seçilmeden tam yerel DWG desteği sözü verme.
+- [ ] `FMT-06` Her importer için boyut/karmaşıklık bütçesi, iptal, provenance, unknown-object preservation ve raporlanan kayıp politikası oluştur.
+
+Kabul: profesyonel bir 2D proje iki arayüzde düzenlenir, pafta alınır ve seçilen dış uygulamalarla aktarım kayıpları ölçülür. Hesaplama, dosya, komut, Python ve AI erişimi envanterde birbirine bağlanır.
+
+## 17. Arazi, yol ve altyapı projeleri — P2/P3
+
+Bu modül çizilmiş bir polyline'ı yol tasarımı saymayacak. Aks, boykesit, enkesit ve koridorun kaynak parametreleri; türetilmiş mesh ve metrajdan ayrı tutulacak. IFC 4.3 altyapı kapsamı ve `IfcAlignment` uyumu için dış veri eşleme tasarımı yapılabilir. [IFC altyapı kapsamı](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/content/scope.htm), [IfcAlignment](https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcAlignment.htm).
+
+- [ ] `CIVIL-01` Arazi/surface modeli kur: ölçülmüş noktalar, breakline, boundary/hole, TIN/DEM, kaynak doğruluğu, düşey datum ve revision.
+- [ ] `CIVIL-02` Robust Delaunay/constrained triangulation, elevation query, contour, slope/aspect ve surface edit işlemlerini shared Rust hesap modülleri olarak geliştir; algoritma/parametre provenance'ı koru.
+- [ ] `CIVIL-03` Point cloud import/classification bağlantısı, sampling, terrain build ve büyük veri tiling'ini server/native job olarak planla; GPU önizlemesini hassas hesap sonucu yerine kullanma.
+- [ ] `CIVIL-04` Yatay aksı doğru/yay/geçiş eğrisi segmentleri, chainage, station equation, yön ve süreklilik koşullarıyla modelle; spline gösterimi mühendislik aksının yerine geçmesin.
+- [ ] `CIVIL-05` Düşey profil, eğim, düşey kurp, kot/istasyon ve limit kontrollerini geliştir; tasarım standardının sürümü projeye bağlansın.
+- [ ] `CIVIL-06` Tip enkesit/assembly, şerit/banket/refüj/hendek/şev bileşenleri ve parametrik hedef yüzeylerini kur; genişlik/eğim değişimi station aralığıyla tanımlansın.
+- [ ] `CIVIL-07` Dever ve genişletme geçişleri, corridor sampling, intersection/junction ve daylight hesaplarını deterministic job olarak üret.
+- [ ] `CIVIL-08` Mevcut/tasarım yüzeyi kesitleri, kazı/dolgu, hacim, malzeme tabakası ve metraj hesaplarında yöntem/tolerans/yuvarlama bilgisini rapora ekle.
+- [ ] `CIVIL-09` Boykesit ve enkesit sheet set üretimi, istasyon etiketleri, aplikasyon/koordinat cetveli ve export akışını layout motoruna bağla.
+- [ ] `CIVIL-10` Drenaj/boru/menhol ve diğer altyapı ağlarında bağlantı, çap/malzeme/kot, minimum açıklık ve clash kontrolleri ekle; hidrolik analiz ayrı doğrulanmış hesap modülü olsun.
+- [ ] `CIVIL-11` Aks/surface/assembly değiştiğinde etkilenen corridor bölgelerini dependency graph üzerinden yeniden hesapla; bütün şehir modelini her değişiklikte rebuild etme.
+- [ ] `CIVIL-12` Alternatif güzergâh/senaryo, compare, maliyet ve çevresel kısıt overlay'lerini destekle; kaynak verinin revision'ını her raporda belirt.
+- [ ] `CIVIL-13` LandXML/IFC alignment ve hedef mühendislik yazılımlarına aktarım seçeneklerini incele; desteklenen segment/geometri/ünite matrisi ve kayıp raporu oluştur.
+- [ ] `CIVIL-14` Bilinen örnek aks, geçiş eğrisi, enkesit ve hacim sonuçlarından bağımsız referans seti kur; sadece görsel mesh'in doğru görünmesini kabul sayma.
+
+Kabul: küçük bir yol projesi yüzey + aks + profil + enkesitten hesaplanır; parametre değişince bağlı sonuçlar yenilenir; metraj, pafta ve Python/AI komutları aynı kaynak/revision'ı kullanır.
+
+## 18. Mimari, parametrik yapı ve BIM — P3
+
+- [ ] `BIM-01` Site, building, storey, space, element, material ve ilişki modelini proje/dataset kimlikleriyle tasarla; yalnız mesh listesi mimari model olarak yeterli sayılmasın.
+- [ ] `BIM-02` Workplane/sketch, constraint, extrusion/sweep/revolve ve parametrik feature history için çekirdek sınırını çiz; B-rep/kernel seçimini doğruluk, lisans, Rust/native/browser erişimi ve bakım açısından prototiple değerlendir.
+- [ ] `BIM-03` Duvar, döşeme, kolon, kiriş, kapı/pencere/açıklık, çatı ve merdiven gibi elemanların tip/instance parametrelerini ve bağımlılıklarını kur.
+- [ ] `BIM-04` Yerel bina koordinatı ↔ survey/project CRS ↔ global konum dönüşümünü açık metadata ile bağla; render origin'ini IFC gerçek yerleşiminin yerine koyma.
+- [ ] `BIM-05` Plan/kesit/görünüş, ölçü/etiket, detail level, section box ve sheet set üretimini CAD layout ile bütünleştir.
+- [ ] `BIM-06` Quantities, schedule/metraj, material assignment, clash/clearance ve model kontrol raporlarını tipli sorgu/processing yüzeyinde sun.
+- [ ] `BIM-07` IFC import/export için entity/type/property set, GUID, ilişki, unit, georeferencing ve round-trip support matrisi oluştur; tanınmayan property'leri sessiz silme.
+- [ ] `BIM-08` BuildingSMART schema/model view hedefini sürümle; görsel viewer uyumu ile semantik BIM uyumluluğunu farklı kabul koşulları yap.
+- [ ] `BIM-09` Disiplinler arası linked model, issue/BCF benzeri referans, revision compare ve approval akışını planla; model dosyası ile çalışma koordinasyonunu ayır.
+- [ ] `BIM-10` Native kernel gerektiren işlemlerde web'i server hesap servisiyle destekle; web UI/render hâlâ ayrı kalır. Basit ortak hesapları WASM üzerinden kullan.
+
+Kabul: parametrik küçük bina örneğinde plan/kesit/3D/öznitelik birlikte güncellenir; dış BIM değişiminde GUID, konum, birim ve desteklenen semantik korunur.
+
+## 19. 3D şehir tasarımı ve dijital ikiz yayın — P2 temel / P3 ürün
+
+Bu uzun vadeli modülün 3D dağıtım ihtiyaçları, bugünkü proje bulutuna Martin eşdeğeri veya 2D tile sunucusu zorunluluğu getirmez. Önce güvenilir proje saklama/erişim ve kaynak model kurulur; 3D asset üretimi ve web üzerinden sunum kendi teslim diliminde eklenir.
+
+Kaynak şehir modeli; parsel, yapı, yol, arazi, altyapı, zaman ve senaryo semantiğini taşır. Render mesh/LOD/texture ve 3D Tiles türetilmiş yayın ürünleridir. glTF çalışma zamanında 3D asset taşımak, 3D Tiles büyük coğrafi sahneleri akışla sunmak için uygun standart sınırları sağlar; CityGML semantik şehir modelinin eşlemesinde değerlendirilir. [glTF 2.0](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html), [OGC 3D Tiles](https://www.ogc.org/standards/3dtiles/), [CityGML kavramsal model](https://docs.ogc.org/is/20-010/20-010.html).
+
+- [ ] `CITY-01` 2D parcel/building footprint ile 3D entity kimliklerini ilişkilendir; extrusion ile başlayan model daha sonra detaylı bina/IFC modeline kaynak kaybetmeden bağlanabilsin.
+- [ ] `CITY-02` İmar parametreleri, çekme mesafesi, yükseklik/kat, taban alanı, kullanım ve yapılaşma senaryolarını sürümlü kural verisi olarak modelle; kural uygulamasını açıklanabilir hesap raporuna bağla.
+- [ ] `CITY-03` Parcel → buildable envelope → massing → bina/çatı/cephe → render mesh aşamalarını dependency graph ile kur; manuel override ve kaynak ilişkisinin kaybı açık olsun.
+- [ ] `CITY-04` World/ECEF/ENU/local frame, düşey datum, axis convention ve camera-relative origin zincirini tasarla; km ölçeğindeki şehirde mm/cm CAD düzenlemesinin hangi bölgede/hassasiyette desteklendiğini ölç.
+- [ ] `CITY-05` Native wgpu renderer'a 3D camera/orbit/fly, perspective/orthographic, depth, mesh/material, light/shadow ve picking pass'lerini aşamalı ekle.
+- [ ] `CITY-06` Web 3D renderer'ını mevcut TS WebGPU altyapısının ayrı modülü olarak geliştir; uygun WGSL'yi paylaş, WebGL2 için desteklenen daha sınırlı kalite/özellik yolunu açıkça tanımla. Native engine'i browser'a export etme.
+- [ ] `CITY-07` 2D/3D eşzamanlı view, selection, kesit, workplane ve feature inspection sözleşmesini kur; renderer'lar ortak feature/revision'ı gösterir, birbirlerinin GPU state'ini paylaşmaz.
+- [ ] `CITY-08` Spatial hierarchy/LOD, screen-space error, visible set, request priority/cancellation, mesh/texture streaming ve CPU/GPU cache budget'ını tanımla.
+- [ ] `CITY-09` Terrain, buildings, vegetation/instance, road corridor, utility, point cloud ve imagery için ayrı render/data pipeline kur; her kaynak tam çözünürlükte belleğe alınmasın.
+- [ ] `CITY-10` Instancing, texture compression, mesh quantization ve vertex/index compression seçeneklerini ölç; türetilmiş mesh sıkıştırması tasarım koordinatlarının doğruluğunu düşürmesin.
+- [ ] `CITY-11` Şehir üretimi/bake işlerini worker'a taşı; kaynak revision ve parametre hash'iyle cache/incremental rebuild yap, eski bake yeni projeye bağlanmasın.
+- [ ] `CITY-12` 3D Tiles/GLB asset servisi, tileset manifest'i, object storage/CDN ve yetkiyi server yayın katmanına ekle. Yayın öncesi geometry/metadata/bounds doğrula.
+- [ ] `CITY-13` Tile metadata'da feature kimliğini semantik servise bağla; düşük LOD'da gösterilen nesnenin tam özniteliğine yetkili identify ile ulaş.
+- [ ] `CITY-14` Senaryo/branch karşılaştırması, zaman çizgisi, mevcut/tasarlanan/as-built ayrımı, ölçüm/sensör kaynakları ve validity interval desteği ekle; sensör akışı tasarım geçmişini ezmesin.
+- [ ] `CITY-15` Gölge/güneş, görüş, ulaşım, afet/risk gibi analizleri doğrulanmış ayrı modüller olarak ele al; renkli görselleştirme bilimsel/doğrulanmış analiz yapıldığı anlamına gelmesin.
+- [ ] `CITY-16` Hafif salt okunur web viewer/embedding yüzeyi tasarla; editör, Python ve bütün tasarım modüllerini yayın izleyicisine yükleme.
+- [ ] `CITY-17` CityGML/CityJSON, IFC, glTF ve 3D Tiles için amaç/semantik/kayıp matrisi yaz; yayın formatını editable KCAD veya BIM kaynak modeli yerine geçirme.
+- [ ] `CITY-18` Aynı sahnede kaynak veri, native görüntü, web WebGPU görüntü ve dış 3D Tiles viewer'ı karşılaştır; feature ID, CRS, bounds, görünürlük ve LOD geçişini doğrula.
+
+Kabul: parsel tabanlı bir şehir senaryosu native'de tasarlanır, server'da bake edilir, web'in kendi renderer'ında kademeli yüklenir; seçilen binanın kaynak ID/özniteliği ve revision'ı korunur. 2D proje açılışı 3D bileşenlerini yüklemez.
+
+## 20. Performans bütçeleri ve doğrulama — P0'dan itibaren
+
+### 20.1 Mevcut hedefleri koruma
+
+`docs/adr/0005-performance-acceptance-targets.md` hâlâ taslaktır. Aşağıdaki mevcut değerler tamamlanmış performans iddiası değildir. Yeni desktop/GPU/Python/file hedefleri benchmark öncesi ayrı profil olarak tanımlanacak; sonuç kötü diye sonradan eşik gevşetilmeyecek.
+
+| Ölçüm | Mevcut ADR hedefi | Yol haritasındaki kullanım |
+|---|---|---|
+| Pan/zoom | 1 milyon segment, p95 kare ≤16 ms | WebGL2/WebGPU/native ayrı ölçüm |
+| Pick/snap | 100 bin nesnede p95 <2 ms | Ortak hesap süresi ve input→görsel gecikme ayrı |
+| Layer rebuild | 100 bin segment <50 ms | Native/web hazırlık, WASM köprüsü ve upload ayrıştırılır |
+| Panel selection update | <8 ms | Gerçek açık panel/virtual table ile |
+| Web interactive | Soğuk ≤1,5 s; ılık ≤0,8 s | Aynı browser/profile; Python/3D lazy kalır |
+| Server tek entity commit | p95 80 ms; p99 200 ms | Auth + transaction + audit/outbox dahil |
+| İkinci client'a görünme | p95 1,5 s; p99 3 s | Event commit→apply; dosya snapshot finalize ayrı ölçülür |
+| Job kabulü | p95 50 ms; p99 150 ms | İş bitişi ile karıştırılmaz |
+
+ADR 0005'teki tile warm/cold bütçeleri tarihsel/gelecek yayın referansıdır; mevcut proje bulutunun teslim kapısı değildir. Proje kataloğu, büyük binary aç/kaydet/aktar, paylaşım ve yetki iptalinin yayılma bütçeleri `CLOUD-28` kapsamında veri hacmi/bağlantı/cihaz profiliyle ölçülüp ayrıca sabitlenir; bunlara ölçümsüz tile hedefleri atanmaz.
+
+Başlangıç WASM boyut sınırı kullanıcı kararıyla kaldırılmıştır; yeniden keyfi 300/400 KB sınırı eklenmeyecek. Boyut ve startup süresi ölçülmeye devam eder. `docs/perf/startup-wasm-compressed-2026-09-25.md` raporundaki soğuk 830 ms / ılık 2274 ms farkı, aynı ortamda açıklanması gereken ölçüm bulgusudur; “ılık da hedefi geçti” diye raporlanamaz.
+
+- [ ] `PERF-01` Referans donanımı (integrated/discrete GPU), OS, driver, browser, render backend, viewport/DPR, güç modu ve commit hash'ini her ölçümde kaydet.
+- [ ] `PERF-02` `demo`, `parsel-50k`, `hat-1m` ve kadastral referans setlerini koru; yeni setlere büyük binary dosya, 10 bin batch edit, yoğun hatch/text, çok projeli/üyeli katalog ve eşzamanlı revision aktarımı ekle. Terrain/corridor ve şehir LOD ölçümleri ilgili ileri modülle gelir.
+- [ ] `PERF-03` Frame süresini input, CPU hesap, style/tessellation, TS↔WASM kopya, GPU upload, draw ve present olarak ayır; FPS tek başına kök nedeni açıklamaz.
+- [ ] `PERF-04` p50/p95/p99, cold/warm, peak RSS/JS/WASM/GPU memory ve long task ölç; tek başarılı kare veya ortalama üzerinden kalite kararı verme.
+- [ ] `PERF-05` Native için idle power, ilk pencere/ilk viewport, dosya açma/kaydetme, ayar geçişi ve Python startup hedeflerini benchmark öncesi dondur.
+- [ ] `PERF-06` Kalite profili bazında AA/DPR/tessellation/texture ayarlarını kaydet; performansı artırmak için habersiz geometri/etiket eksiltme.
+- [ ] `PERF-07` CPU/GPU kaynak bütçesine göre backpressure, bounded queue ve cancellation uygula; viewer/worker/API ayrı kaynak havuzlarında ölçülsün.
+- [ ] `PERF-08` Milyon entity'de bütün-belge clone, entity başına JSON/FFI, her framede allocation, R-tree tam rebuild ve tam GPU upload noktalarını profiler ile belirle.
+- [ ] `PERF-09` Proje listele/aç, edit/sync, revision upload/download, paylaşım/yetki iptali, job ve Python karma yük testi yap. ADR'deki 25 editör/200 görüntüleyici sayılarını başlangıç yük profili olarak al, artık proje bulutu kullanım akışlarıyla ölç; eski tile yüküyle eşdeğer sonuç iddia etme. Kapasite artışını yeni ölçümle gerekçelendir.
+- [ ] `PERF-10` Yazılım GPU/headless benchmark ile gerçek cihaz GPU süresini aynı tabloya eşdeğer kanıt gibi koyma; developer makinesinde ağır cargo/test/e2e/benchmark süreçlerini aynı anda çalıştırma.
+
+### 20.2 Test katmanları ve CI
+
+- [ ] `TEST-01` Hesaplamada native↔WASM fixture, bağımsız referans, property/metamorphic ve robust geometry sınır testlerini sürdür. TS uygulama davranışını ayrı conformance fixture'ıyla native'e eşle.
+- [ ] `TEST-02` Web'in Rust application/Iced/wgpu runtime'ını bundle etmediğini bağımlılık/asset denetimiyle koru; mevcut `singleSource.test.ts` hesapların TS'e geri kopyalanmasını denetlemeye devam etsin.
+- [ ] `TEST-03` Command schema/codegen drift, eksik platform handler, Python stub ve AI surface coverage için CI kapısı koy.
+- [ ] `TEST-04` Binary KCAD için byte golden, eski JSON göçü, native↔web↔server/Python reader, corrupt/truncated file, büyük uzunluk, unknown extension ve crash-save testleri ekle.
+- [ ] `TEST-05` Native UI interaction testleri ve platform smoke testleri kur; ekran görüntüsü testini transaction/input doğruluğu yerine kullanma.
+- [ ] `TEST-06` Shared WGSL binding/layout doğrulaması, WebGPU compile, WebGL GLSL compile ve seçilmiş gerçek GPU görsel regresyon sahnelerini çalıştır.
+- [ ] `TEST-07` Geometri/CAD format parser'ları, binary decoder ve shader input paketleri için fuzz/corpus bütçesi oluştur; panic/timeout/OOM çıktıları hata sayılır.
+- [ ] `TEST-08` Cloud conflict/retry/offline/resync, snapshot finalize crash, paylaşım iptali, süresi dolmuş davet/indirme bağlantısı, lease fencing ve permission-revoke fault injection senaryolarını ekle; izin değişikliğiyle yarışan upload finalize ve job commit'i ayrıca sınansın.
+- [ ] `TEST-09` Veritabanı entegrasyon job'unda PG/PostGIS zorunlu olsun; DB yok diye atlanan testler “geçti” sayılmasın. Mevcut `KENTOS_TEST_DB=required` gibi mekanizmaları CI'da kullan.
+- [ ] `TEST-10` Tenant/proje izolasyonu, RLS/pool reuse, katalog/arama/cache/304, aktif WS, revision indirme/export, assets, MCP, jobs ve source gateway için negatif test seti kur. Bir kurumun üyesi olan ama projeye davetli olmayan kullanıcıyı, dış misafiri ve yetkisi kaldırılmış kişiyi ayrı test et.
+- [ ] `TEST-11` Hedefe göre build matrisi kullan: ortak hesap crate'leri native+wasm32; desktop native; server native; web TS+hesap WASM. Bütün workspace'i browser'a derlemeye çalışma.
+- [ ] `TEST-12` Format/protokol desteklenen eski sürüm matrisi, mixed-client cloud oturumu ve schema migration rollback/recovery testlerini çalıştır.
+- [ ] `TEST-13` Flaky e2e, golden refresh ve performans eşiği değişikliğini açıklamalı incelemeye bağla; testin bekleneni uygulamanın yeni hatasından otomatik üretip onaylama.
+
+Kabul: her teslimin test komutu, veri seti, revision ve ölçüm ortamı bellidir; test atlanması ve bilinen ortam sınırlamaları raporda açıkça yer alır. Performans hedefi aynı iş ve aynı kalite düzeyinde ölçülür.
+
+## 21. Güvenlik, işletim, dağıtım ve bakım — P1/P2
+
+- [ ] `OPS-01` Proje/sync/paylaşım API'si, worker, MCP ve admin bileşenlerinin tek binary modları/ayrı process dağıtımını tanımla; ilk sürümde gereksiz mikroservis parçalanması yapma. Tile servisi mevcut deployment'ın zorunlu bileşeni değildir.
+- [ ] `OPS-02` Native login için sistem browser'ı ve uygun OIDC/PKCE akışı, web için güvenli session/cookie, headless otomasyon için scope'lu token kullan; aynı permission modeline bağla.
+- [ ] `OPS-03` Mevcut production DB TLS planını tamamla; kök Cargo'daki `sqlx tls-none` yerel tercihinin production için sessiz varsayılan olmamasını sağla. Certificate validation ve secret rotation test et.
+- [ ] `OPS-04` Migration/admin rolünü runtime rolünden ayır; pool bağlantısında tenant context'in transaction ömrünü doğrula. RLS bypass/owner davranışı özellikle test edilsin.
+- [ ] `OPS-05` Tenant/proje/resource quota, request boyutu, rate limit, concurrent jobs, provider query timeout, upload/download bütçesi, artifact/revision retention ve storage limitlerini settings/policy sisteminde yönet.
+- [ ] `OPS-06` Trace/correlation ID'yi UI komutu → API → DB/outbox → worker/snapshot finalize → sync/revision bildirimi zincirinde taşı; paylaşım/yetki değişikliği de aynı izleme modeline bağlansın. Kullanıcıya export edilebilir, sırları ayıklanmış tanı paketi sun.
+- [ ] `OPS-07` PostgreSQL backup/PITR, object store revision retention ve `.kcad` artifact restore'u birlikte planla; restore denemesi yapmadan backup'ın çalıştığı kabul edilmesin.
+- [ ] `OPS-08` RPO/RTO ve disaster recovery prosedürünü ölçümle belirle; DB revision manifest'i ile object store dosyaları restore sonrası tutarlı olsun.
+- [ ] `OPS-09` Cloud dosya/asset erişiminde yetkili kısa ömürlü indirme bağlantısı, audit ve doğrulanmış hash kullan; URL token'larını log veya proje dosyasına yazma. Doğrudan object-store signed URL'nin süre bitene kadar çalışabileceğini politika/UI'da açıkla; anlık iptal gereken akışta her isteği güncel yetkiye bağlayan gateway/token denetimi kullan. Cache/304 ve devam eden aktarımın iptal davranışını da sınayarak doğrula.
+- [ ] `OPS-10` Desktop Windows/macOS/Linux paketleri, dosya association, installer/uninstaller, code signing/notarization uygunluğu ve güvenli update/rollback planını kur.
+- [ ] `OPS-11` CPython, font, shader, native format/CRS kütüphanesi ve grid asset'lerinin paket/ABI/lisans envanterini tut; bundle boyutu ve offline çalışmayı test et.
+- [ ] `OPS-12` Web asset/WASM sürümlerini content hash ve protokol uyumluluğuyla dağıt; eski service worker/cache yeni schema ile karışmasın. Güncelleme aktif çizimi kaybettirmesin.
+- [ ] `OPS-13` SBOM, dependency advisory, lisans taraması, lockfile bütünlüğü ve reproducible-build hedeflerini CI'ya ekle; dependencies kontrolsüz “latest” kullanmasın.
+- [ ] `OPS-14` Resource lifecycle gözden geçirmesi yap: açık/kapanan belge, tekrar login, dock/viewport, GPU device, Python runtime ve worker döngülerinde memory/resource leak testi.
+- [ ] `OPS-15` Geliştirici onboarding, mimari diyagram, format/spec, command/Python örnekleri, troubleshooting ve sürüm notlarını gerçek feature envanterinden güncel tut.
+
+## 22. Teslim sırası, bağımlılıklar ve kabul kapıları
+
+Takvim ve ekip büyüklüğü bilinmediği için sahte süre tahmini verilmez. Her faz çalışan dikey dilim üretir. Aynı anda UI, format, domain ve bütün renderer'ları yeniden yazan bir geçiş yapılmaz. Web'in çalışma ve release akışı her aşamada korunur.
+
+| Faz | Bağımlılık | Somut teslim | Geçiş kapısı |
+|---|---|---|---|
+| F0 — Envanter ve kararlar | Başlangıç | Mevcut özellik matrisi, baseline, web/file/proje bulutu sınır ADR'leri | Gerçek durum ile hedef ayrılmış; kaynak/örnekler kayıtlı |
+| F1 — Sözleşmeler ve komutlar | F0 | Command schema/result/capability, domain kimliği, proje sahiplik/yetki sözleşmesi, ilk native belge işlemi | TS web ve native aynı fixture'ı karşılar; hesap native/WASM eşdeğer |
+| F2 — KentOS UI + native viewport | F1 | UI import, native shell, saf wgpu polygon, dynamic input | Tıkla→yaz→Enter→undo/redo desktop/web kullanım kabulü |
+| F3 — Binary dosya + settings | F1; UI kısmı F2 | KCAD v2, eski JSON reader, save/open, native/web settings | Cross-platform dosya turu, bozuk dosya/kayıt hatası, kalite değişimi |
+| F4 — Cloud + CAD/GIS PostGIS parity | F1/F3 ve asgari server yetki denetimi | Native cloud, binary revizyonlar, yönetilen CAD/GIS PG kaydı ve metadata-only referans projesi | Retry/offline/conflict, finalized `.kcad`, CAD round-trip ve proje izolasyonu |
+| F5 — Kişisel/kurumsal proje erişimi ve paylaşım | F1 ve mevcut API; içerik/sync F4 ile bütünleşir | Proje kataloğu, üyelik/ACL, davet/paylaşım, sürüm geçmişi, web/desktop proje ekranları | Dosya ve PostGIS modlarında kaydet/aç/paylaş/düzenle/erişimi geri al; tenant/proje izolasyonu |
+| F6 — Python + AI ilk tam dikey dilim | F1/F3; server işlemleri F4/F5 | Embedded Python, SDK, web scripting adapter, AI/MCP katalog | Aynı polygon/query/save/share akışının UI/Python/AI eşdeğerliği |
+| F7 — Üretim sertleştirme + CAD/GIS derinliği | F2–F6 | Büyük veri performansı, worker, provider/format/pafta kapsamı | Belirlenen performans ve restore/security kapıları |
+| F8 — Arazi ve yol | F7'nin gerekli modülleri | TIN, aks, profil, kesit, corridor, metraj | Bağımsız mühendislik referansları ve incremental rebuild |
+| F9 — Parametrik mimari/BIM | F7 + kernel prototipi | Temel bina modeli, plan/kesit, IFC eşleme | Geometri ve semantik aktarım kabulü |
+| F10 — Şehir tasarımı/dijital ikiz | F4/F7; gereken civil/BIM modülleri | Native 3D tasarım + server 3D asset üretimi/dağıtımı + ayrı web 3D renderer | LOD/streaming/ID/CRS/yetki uyumu ve 2D startup izolasyonu; Martin eşdeğerliği önkoşul değil |
+
+F5'in proje kataloğu/yetki temeli mevcut API üzerinde erken başlayabilir; bütün desktop araçlarının bitmesini beklemez. F4'teki hiçbir cloud verisi “yetkiler F5'te gelecek” denerek korumasız açılmaz: asgari sahiplik, tenant/proje izolasyonu ve server denetimi F1/F4 kapılarıdır; F5 kullanıcıya dönük paylaşım kapsamını tamamlar. Python/AI tasarımı F1'de başlar; F6'ya kadar command yüzeyi UI'a özel kapatılmaz. F8–F10 kapsamı birbirinin bütün özelliklerinin tamamlanmasını beklemek yerine somut hesap/veri bağımlılıklarıyla ilerler. Martin benzeri 2D yayın rolü bu fazların bağımlılığı değildir; §12.5 ayrı gelecek değerlendirmesidir.
+
+### 22.1 İlk uygulanacak işler
+
+1. `BASE-01/04/05`: gerçek kod envanteri ve mevcut test/performans referansını çıkar.
+2. `ARCH-01`, `CMD-01/03`, `DOM-03`, `CLOUD-01/09..14`: web/native sınırı, command descriptor, ID migration ve asgari proje sahiplik/yetki kararlarını yaz.
+3. `UX-01/04/06`: web polygon kullanım izini fixture'a çevir; ilk native davranış hedefini sabitle.
+4. `UI-01..07`: UI'yı `crates/ui` ve `apps/ui-showcase` altına import et, ad alanını düzelt, saf UI parçalarını ayır.
+5. `REN-01..07`: tek native viewport + saf wgpu çizgi/polygon prototipi; web renderer'larına dokunmadan ortak WGSL adayını sınayarak seç.
+6. `CMD-04..07`, `TX-01`: native polygon command/preview/undo; web aynı schema üzerinden mevcut handler'la çalışsın.
+7. `SET-01..05`, `AA-01/02`: tipli settings ve MSAA/HiDPI live değişimi.
+8. `FILE-01..08`, `FILE-14..23`: küçük binary KCAD v2 dikey dilimi ve eski JSON read compatibility.
+9. `SYNC-02..06/16`, `PG-01..06/19..22`: yetkili binary cloud revizyonu, CAD/GIS PostGIS kayıt turu ve dış PostGIS metadata-only proje akışı.
+10. `CLOUD-03..07/16..22/29`: kişisel/kurumsal proje kataloğu ve ilk davet/paylaşım/erişimi geri alma dikey dilimi; aynı komutları Python ve AI plan/execute yüzeyinden doğrula.
+
+### 22.2 Her yeni özellik için tamamlanma tanımı
+
+- [ ] `DONE-01` Özelliğin domain/veri anlamı, desteklenen platformları ve capability kısıtları yazıldı.
+- [ ] `DONE-02` Hesaplama gerekiyorsa tek Rust kaynağı kullanılıyor; web application/render bağımsızlığı korunuyor.
+- [ ] `DONE-03` Sürümlü command giriş/sonucu, hata/iptal/undo ve gerekiyorsa conflict/retry davranışı tamamlandı.
+- [ ] `DONE-04` Uygun UI, CLI/Python ve AI girişleri envantere işlendi; headless sınırı açık.
+- [ ] `DONE-05` `.kcad`/cloud/PostGIS etkisi, migration ve round-trip kayıp politikası doğrulandı.
+- [ ] `DONE-06` Performans, yetki, lifecycle, test ve gerçek örnek kabul koşulları geçti; atlanan kontrol açıkça raporlandı.
+- [ ] `DONE-07` Doküman/örnekler ve ADR güncel; üretilen şema/stub/fixture beklenmedik drift içermiyor.
+
+## 23. Karar kayıtları ve açık mühendislik seçimleri
+
+Yeni ADR numaraları mevcut `0001–0009` sonrasından çakışma kontrolüyle ayrılmalı. Aşağıdaki seçimler bu belgeyi hazırlamak için kullanıcıyı bekleten sorular değildir; ilgili uygulama fazında somut prototip ve ölçümle karara bağlanır. Son kullanıcı talimatıyla kesinleşmiş sınırlar tekrar oylanmaz.
+
+| ADR konusu | Bu yol haritasındaki yön | Uygulamada üretilecek kanıt |
+|---|---|---|
+| Web/native sınırı | Ayrı TS web; yalnız Rust hesap paylaşımı; uygun WGSL ortak | Dependency/bundle grafiği ve platform fixture'ları |
+| UI sahipliği | `kentos-rc` → monorepo path dependency `kentos-ui` | Import provenance, build, showcase, gerçek desktop dilimi |
+| Native viewport entegrasyonu | Iced shell + özel wgpu viewport | Aynı device, input/overlay, frame-time ve device-loss ölçümü |
+| Command ve kimlik | Ortak şema, ayrı platform orchestrator, global ID | Aynı command fixture'ı, eski ID mapping ve retry/undo testleri |
+| KCAD v2 encoding | Yalnız binary save/load; CBOR snapshot ilk öneri | Public byte spec, boyut/hız, dış reader, crash-safe save |
+| Cloud kayıt otoritesi | Canlı commit ile immutable `.kcad` kayıt revision'ı açık | Object/DB finalize recovery ve tutarlı revision testi |
+| CAD/GIS PostGIS saklama | CAD tanımları ve GIS verisi DB'de; açık kaynak otoritesi, isteğe bağlı referanslı dosya | Analitik CAD round-trip, desktop direct/web gateway parity; credentials dosyada yok |
+| KentOS proje bulutu | Kişisel/kurumsal saklama, katalog, sync, yetkili erişim ve paylaşım | Dosya/PG modlarında kayıt, davet, rol, iptal ve tenant/proje izolasyonu testleri |
+| Olası harita/tile servisi | Bugünkü kapsam dışında; ileride ayrı ihtiyaç/karar | Ancak kapsam açılırsa seçenek karşılaştırması ve pilot; mevcut teslim kapısı değil |
+| Python dağıtımı | CPython/PyO3 native; bağımsız web Pyodide adapter | OS/wheel/ABI matrisi, async/cancel ve örnek SDK |
+| AI/MCP | Katalogdan üretilen tam ve yetkili yüzey | Coverage raporu, version negotiation ve abuse/stale-context testleri |
+| CRS/jeodezi | Belgeli pipeline/grid/epoch/doğruluk | Bağımsız kontrol noktaları ve platform capability matrisi |
+| Performans bütçesi | ADR 0005 taslağını temel al, yeni profilleri önce tanımla | Tekrarlanabilir aynı-kalite ölçümleri; gerçek GPU sonuçları |
+| B-rep/BIM kernel | İhtiyaç ve lisans/uyum prototipiyle seç | Hassasiyet, veri kaybı, performans, native/server/web erişim planı |
+| 3D yayın | Semantik kaynak ayrı; glTF/3D Tiles türetilmiş ürün | Kaynak ID/CRS/LOD uyumu ve dış viewer testi |
+
+### 23.1 Mimariyi koruyan kesin sınırlar
+
+- Web uygulaması Iced/Rust desktop export'u olmayacak; command/session/document/settings/render yaşam döngüsü web'de TypeScript olarak kalacak.
+- Paylaşılan Rust hesaplama kütüphaneleri ve uyumlu veri/komut sözleşmeleri esas alınacak; uygun WGSL shader kaynakları paylaşılabilecek. Web WebGPU ve WebGL2 backend'leri korunacak.
+- Desktop ana CAD çizim alanı KentOS'un saf wgpu pipeline'ında çalışacak; UI kütüphanesinin mevcut Canvas demo viewport'u üretim motoru sayılmayacak.
+- `.kcad` sürümlü binary/byte kayıt-yükleme dosyası olacak. Dosyaya veritabanı, kalıcı sorgu indeksi veya vector tile sunma görevi verilmeyecek.
+- Cloud dosya kayıtları aynı `.kcad` formatında olacak; kayıt onayı revision ve dayanıklılık anlamını açık taşıyacak.
+- Referanslı PostGIS projesinde veri DB'de kalacak, dosya proje metadata'sı ve kaynağa referans taşıyacak.
+- Hem GIS hem CAD projeleri PostGIS'te saklanıp açılabilecek; CAD saklamak sessizce GIS geometrisine dönüştürmek demek olmayacak. Desteklenen analitik tanım, stil ve ilişkiler korunacak.
+- KentOS server'ın ana görevi kişi/kurum projelerini bulutta saklamak, senkronize etmek, yetkiye göre erişilebilir kılmak ve paylaşmak olacak. 18 uygulaması/imar/ifraz/tevhit gibi proje türleri aynı bulut altyapısını kullanacak.
+- Martin görevi şimdiki kapsamda üstlenilmeyecek. Olası tile/harita yayın rolü ancak ileride ayrı kararla değerlendirilecek; proje saklama/paylaşımının önkoşulu olmayacak.
+- Python/AI ürün işlevlerini command sistemi üzerinden kullanacak; hesaplama, yetki ve kayıt kurallarını atlayan ikinci mutasyon yolu kurulmayacak.
+- 3D render/publish cache'i, MVT ve GLB gibi türetilmiş çıktılar hassas CAD/GIS/BIM kaynak modelinin yerine geçmeyecek.
+
+### 23.2 Araştırma notu
+
+Bu belgede önerilerin yanında verilen bağlantılar 25 Eylül 2026 araştırmasında incelenen resmi proje/standart kaynaklarıdır. Online `latest/main` dokümanındaki sürüm, repodaki kilitli sürümle aynı olmayabilir; özellikle Iced/wgpu, PyO3/Pyodide ve MCP uygulamasında kullanılacak sürüm sabitlenip ilgili API yeniden doğrulanmalıdır. Üçüncü taraf özellikleri KentOS'ta uygulanmış gibi işaretlenmemiştir. Önceki SQLite/aranabilir KCAD değerlendirmesi, kullanıcının yalnız binary kayıt/yükleme kararı nedeniyle hedef tasarıma alınmamıştır. Önceki zorunlu Martin rolü planı da son kullanıcı düzeltmesiyle kaldırılmış; sunucunun ana rolü proje bulutu olarak güncellenmiş, Martin kaynakları yalnız olası gelecek değerlendirmesi için tutulmuştur.
