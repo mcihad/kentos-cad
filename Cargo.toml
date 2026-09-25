@@ -38,6 +38,9 @@ serde_json = { version = "=1.0.151", features = ["float_roundtrip"] }
 libm = "=0.2.16"
 rust_decimal = { version = "=1.43.0", default-features = false, features = ["std"] }
 ts-rs = { version = "=12.0.1", features = ["serde-json-impl"] }
+# JSON Schema of the contract types, for the product command catalog (docs/adr/0013):
+# the schemas are derived from the same serde types, so type and schema cannot drift.
+schemars = { version = "=1.2.2", default-features = false, features = ["derive", "std"] }
 wasm-bindgen = "=0.2.128"
 axum = { version = "=0.8.9", features = ["ws"] }
 tokio = { version = "=1.53.1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }

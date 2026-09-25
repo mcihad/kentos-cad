@@ -7,6 +7,7 @@ use ts_rs::TS;
 /// `GET /v1/health`: the server is up, and which build and contracts it speaks.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct Health {
     #[cfg_attr(feature = "ts", ts(type = "\"ok\""))]

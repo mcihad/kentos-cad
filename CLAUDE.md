@@ -313,6 +313,8 @@ kalıcılık ve live-apply davranışını birlikte ekleyin.
   `pnpm test/build`; UI değişiminde tarayıcı e2e ve açık/koyu/Büyük yazı kontrolü.
 - Rust/hesap değişiminde ilgili native testler, clippy, WASM fixture/bağımsız
   referanslar; sözleşme değişiminde Rust → TS üretimi ve drift denetimi.
+  Sözleşme tipi ürün komutu kataloğunun şemasını da değiştirir:
+  `KENTOS_WRITE_CATALOG=1 cargo test -p kentos-contracts catalog` (ADR 0013).
 - DB/cloud değişiminde gerçek PostGIS entegrasyonu ve `KENTOS_TEST_DB=required`;
   offline/retry/conflict/tenant/permission senaryoları. Atlananları açıklayın.
 - Golden/visual fixture güncellemesi otomatik onay değildir; farkı okuyun,

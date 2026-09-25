@@ -10,6 +10,7 @@ pub const STYLE_FORMAT: &str = "kentos-style";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StyleFile {
     #[cfg_attr(feature = "ts", ts(type = "\"kentos-style\""))]

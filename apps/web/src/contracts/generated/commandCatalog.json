@@ -1,0 +1,1561 @@
+{
+  "format": "kentos.commands",
+  "version": 1,
+  "commands": [
+    {
+      "id": "project.changes",
+      "version": 1,
+      "title": "Proje değişiklikleri",
+      "summary": "Bir bulut projesine nesne ekler, değiştirir, siler ve proje bilgisini günceller; hepsi tek işlemde yazılır ya da hiçbiri yazılmaz. Her değişen nesnenin ve proje bilgisinin beklenen sürümü zarfın expectedVersions alanındadır; biri değişmişse 409 döner, hiçbir şey yazılmaz. Nesneler feature.write, proje bilgisi project.edit ister. Aynı idempotency anahtarıyla tekrar aynı sonucu verir.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "feature.write",
+        "project.edit"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "AngleUnit": {
+            "enum": [
+              "grad",
+              "deg"
+            ],
+            "type": "string"
+          },
+          "ArcEntity": {
+            "description": "Arc from `a0` to `a1` (radians), always counter-clockwise.",
+            "properties": {
+              "a0": {
+                "format": "double",
+                "type": "number"
+              },
+              "a1": {
+                "format": "double",
+                "type": "number"
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "c": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "r": {
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "c",
+              "r",
+              "a0",
+              "a1"
+            ],
+            "type": "object"
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "CircleEntity": {
+            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "c": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "r": {
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "c",
+              "r"
+            ],
+            "type": "object"
+          },
+          "ConstructionEntity": {
+            "description": "Construction line or ray: base point and unit direction.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dir": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "dir"
+            ],
+            "type": "object"
+          },
+          "DimensionEntity": {
+            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "properties": {
+              "a": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "angle": {
+                "description": "Linear: measured direction in degrees (0 = ΔY, 90 = ΔX).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "b": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "c": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Angular: the vertex."
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "offset": {
+                "format": "double",
+                "type": "number"
+              },
+              "style": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DimensionStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "a",
+              "b",
+              "offset",
+              "height"
+            ],
+            "type": "object"
+          },
+          "DimensionStyle": {
+            "enum": [
+              "aligned",
+              "linear",
+              "angular",
+              "radius",
+              "diameter"
+            ],
+            "type": "string"
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "EllipseEntity": {
+            "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "c": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "major": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "ratio": {
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "t0": {
+                "format": "double",
+                "type": "number"
+              },
+              "t1": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "c",
+              "major",
+              "ratio",
+              "t0",
+              "t1"
+            ],
+            "type": "object"
+          },
+          "Entity": {
+            "description": "Any drawing object, tagged by `kind` as in the TypeScript model.",
+            "oneOf": [
+              {
+                "$ref": "#/$defs/PointEntity",
+                "properties": {
+                  "kind": {
+                    "const": "point",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/LineEntity",
+                "properties": {
+                  "kind": {
+                    "const": "line",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PathEntity",
+                "properties": {
+                  "kind": {
+                    "const": "polyline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/PathEntity",
+                "properties": {
+                  "kind": {
+                    "const": "polygon",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/CircleEntity",
+                "properties": {
+                  "kind": {
+                    "const": "circle",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ArcEntity",
+                "properties": {
+                  "kind": {
+                    "const": "arc",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/EllipseEntity",
+                "properties": {
+                  "kind": {
+                    "const": "ellipse",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/SplineEntity",
+                "properties": {
+                  "kind": {
+                    "const": "spline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ConstructionEntity",
+                "properties": {
+                  "kind": {
+                    "const": "xline",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/ConstructionEntity",
+                "properties": {
+                  "kind": {
+                    "const": "ray",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/TextEntity",
+                "properties": {
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/DimensionEntity",
+                "properties": {
+                  "kind": {
+                    "const": "dimension",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "$ref": "#/$defs/HatchEntity",
+                "properties": {
+                  "kind": {
+                    "const": "hatch",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "FeatureChange": {
+            "oneOf": [
+              {
+                "description": "A new object; the client picks the UUID so a retry cannot create it twice.",
+                "properties": {
+                  "entity": {
+                    "$ref": "#/$defs/Entity"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "op": {
+                    "const": "create",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "id",
+                  "entity"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Replaces the object; `expectedVersions[id]` must be its current version.",
+                "properties": {
+                  "entity": {
+                    "$ref": "#/$defs/Entity"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "op": {
+                    "const": "update",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "id",
+                  "entity"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "op": {
+                    "const": "delete",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "id"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "HatchEntity": {
+            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "items": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "type": "array"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "pattern": {
+                "$ref": "#/$defs/HatchPattern"
+              },
+              "ring": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "ring",
+              "pattern"
+            ],
+            "type": "object"
+          },
+          "HatchPattern": {
+            "properties": {
+              "angle": {
+                "description": "Degrees, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "spacing": {
+                "description": "Metres.",
+                "format": "double",
+                "type": "number"
+              },
+              "type": {
+                "$ref": "#/$defs/HatchPatternType"
+              }
+            },
+            "required": [
+              "type",
+              "angle",
+              "spacing"
+            ],
+            "type": "object"
+          },
+          "HatchPatternType": {
+            "enum": [
+              "solid",
+              "lines",
+              "cross"
+            ],
+            "type": "string"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LayerNode": {
+            "description": "A node of the layer tree: a group or a layer.",
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/LayerNode"
+                },
+                "type": "array"
+              },
+              "expanded": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LayerStyle"
+              },
+              "type": {
+                "$ref": "#/$defs/LayerNodeType"
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "type",
+              "visible",
+              "locked",
+              "expanded",
+              "style",
+              "children"
+            ],
+            "type": "object"
+          },
+          "LayerNodeType": {
+            "enum": [
+              "group",
+              "layer"
+            ],
+            "type": "string"
+          },
+          "LayerStyle": {
+            "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
+            "properties": {
+              "color": {
+                "description": "Hex colour or a theme token (fg, fg-dim, ink, paper).",
+                "type": "string"
+              },
+              "fill": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "description": "Plot line weight in mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "pickInterior": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "renderer": true
+            },
+            "required": [
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LineEntity": {
+            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "properties": {
+              "a": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "b": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "a",
+              "b"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "PathEntity": {
+            "description": "Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "holes": {
+                "items": {
+                  "$ref": "#/$defs/RingGeometry"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts"
+            ],
+            "type": "object"
+          },
+          "PointEntity": {
+            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p"
+            ],
+            "type": "object"
+          },
+          "PointStyle": {
+            "properties": {
+              "size": {
+                "description": "Diameter in CSS px.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "$ref": "#/$defs/PointSymbol"
+              }
+            },
+            "required": [
+              "symbol",
+              "size"
+            ],
+            "type": "object"
+          },
+          "PointSymbol": {
+            "enum": [
+              "ring",
+              "cross",
+              "triangle"
+            ],
+            "type": "string"
+          },
+          "ProjectPatch": {
+            "description": "Metadata to replace; absent fields stay. Needs `expectedVersions[\"@project\"]`.",
+            "properties": {
+              "activeLayer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layers": {
+                "items": {
+                  "$ref": "#/$defs/LayerNode"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "settings": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ProjectSettings"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "styles": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ProjectStyles"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "ProjectSettings": {
+            "description": "Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.",
+            "properties": {
+              "angleUnit": {
+                "$ref": "#/$defs/AngleUnit"
+              },
+              "areaDecimals": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit"
+              },
+              "drawingFont": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Absent in files written before drawing typefaces (read as Barlow)."
+              },
+              "lengthDecimals": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "plotScale": {
+                "description": "Plot scale denominator (1:1000 → 1000).",
+                "format": "double",
+                "type": "number"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "workspace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Workspace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Absent in files written before work modes (read as hybrid)."
+              }
+            },
+            "required": [
+              "srid",
+              "lengthDecimals",
+              "areaDecimals",
+              "areaUnit",
+              "angleUnit",
+              "plotScale"
+            ],
+            "type": "object"
+          },
+          "ProjectStyles": {
+            "description": "The project's own style library (opaque items in v1, see `style`).",
+            "properties": {
+              "categories": {
+                "items": true,
+                "type": "array"
+              },
+              "items": {
+                "items": true,
+                "type": "array"
+              }
+            },
+            "required": [
+              "items",
+              "categories"
+            ],
+            "type": "object"
+          },
+          "RingGeometry": {
+            "description": "A closed ring in vertex + bulge form (a polygon hole).",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
+          "SplineEntity": {
+            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "closed": {
+                "type": "boolean"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "pts",
+              "closed"
+            ],
+            "type": "object"
+          },
+          "TextEntity": {
+            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+                "type": "object"
+              },
+              "color": {
+                "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "description": "Metres.",
+                "format": "double",
+                "type": "number"
+              },
+              "id": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "label": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layerId": {
+                "type": "string"
+              },
+              "p": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "rotation": {
+                "description": "Degrees, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "description": "Library symbol overriding the layer's style.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "layerId",
+              "attrs",
+              "p",
+              "text",
+              "height",
+              "rotation"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "Workspace": {
+            "description": "The work mode a project opens in (`app/workspaces.ts`): which menus, ribbon\ntabs and tools the interface shows. Presentation only, never what the data\nmeans: every command still runs in every mode. `plan3d` and `disaster` are\nannounced (\"Yakında\") and cannot be chosen yet; a file naming them opens in\nthe hybrid presentation. Files written before modes existed have none\n(hybrid).",
+            "enum": [
+              "hybrid",
+              "cad",
+              "gis",
+              "plan3d",
+              "disaster"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.changes` v1: one atomic commit of object changes and, optionally, metadata.",
+        "properties": {
+          "features": {
+            "items": {
+              "$ref": "#/$defs/FeatureChange"
+            },
+            "type": "array"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProjectPatch"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "features"
+        ],
+        "title": "ProjectChanges",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "The committed result; a retry with the same idempotency key gets the same one (`replayed`).",
+        "properties": {
+          "dataRevision": {
+            "type": "string"
+          },
+          "deleted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "eventSeq": {
+            "type": "string"
+          },
+          "metaVersion": {
+            "type": "string"
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          },
+          "versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "New version of every created or updated object.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "dataRevision",
+          "metaVersion",
+          "versions",
+          "deleted",
+          "eventSeq"
+        ],
+        "title": "CommitResult",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Yeni bir nokta ekle",
+          "input": {
+            "features": [
+              {
+                "entity": {
+                  "attrs": {
+                    "ad": "P1"
+                  },
+                  "id": 1,
+                  "kind": "point",
+                  "layerId": "kot",
+                  "p": {
+                    "x": 423510.25,
+                    "y": 4512300.5
+                  }
+                },
+                "id": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                "op": "create"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -10,12 +10,14 @@ use ts_rs::TS;
 // A newtype: serde writes it as the bare string.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DecimalString(pub String);
 
 /// A share as an exact fraction; both parts are integers as decimal text.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ShareValue {
     pub numerator: String,
@@ -24,6 +26,7 @@ pub struct ShareValue {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum RoundingMode {
@@ -38,6 +41,7 @@ pub enum RoundingMode {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum RemainderRule {
@@ -49,6 +53,7 @@ pub enum RemainderRule {
 /// may be previewed but not committed (§23.2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum PolicyStatus {
@@ -58,6 +63,7 @@ pub enum PolicyStatus {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct NumericPolicy {

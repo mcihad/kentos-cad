@@ -1,6 +1,6 @@
 # Bağımlılık kaydı
 
-Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
+Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 18 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
 
 ## Kurallar
 
@@ -21,6 +21,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | rust_decimal | 1.43.0, yalnız `std` | MIT | native, wasm32 | geometry-core | ADR 0001, 0004 |
 | ts-rs | 12.0.1, `serde-json-impl` | MIT | native (yalnız TS üretimi, `ts` özelliği) | contracts | ADR 0001, 0002 |
 | wasm-bindgen | 0.2.128 | MIT OR Apache-2.0 | wasm32 | geometry-wasm, formats-wasm, svg-wasm | ADR 0001 (`wasm-bindgen-cli` aynı sürüm) |
+| schemars | 1.2.2, `derive`, `std` | MIT | native, wasm32 (derlenebilir; tarayıcı paketlerine girmez) | contracts (`schema` özelliği) | ADR 0013 (sahibin onayı, 25 Eylül). Getirdikleri: `schemars_derive` (MIT), `dyn-clone`, `ref-cast`, `ref-cast-impl`, `serde_derive_internals` (MIT OR Apache-2.0) |
 | axum | 0.8.9, `ws` | MIT | native | api | ADR 0001 |
 | tokio | 1.53.1 | MIT | native | api, postgres; application testleri | ADR 0001 |
 | sqlx | 0.9.0, `tls-none` | MIT OR Apache-2.0 | native | postgres, application, api | ADR 0006, 0007. TLS'siz yalnız yerel sunucu içindir; üretim TLS'i açıktır (`OPS-03`) |
@@ -33,9 +34,9 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | tracing | 0.1.44 | MIT | native | api | ADR 0007 |
 | tracing-subscriber | 0.3.23 | MIT | native | api | ADR 0007 |
 
-**Geçişli bağımlılıklar** (`Cargo.lock`): 330 paket. 11'i çalışma alanının kendi crate'leri, 319'u crates.io'dan.
+**Geçişli bağımlılıklar** (`Cargo.lock`): 336 paket. 11'i çalışma alanının kendi crate'leri, 325'i crates.io'dan (`schemars` ile gelen altısı dahil).
 
-- 284'ünün lisansı `~/.cargo/registry`'deki manifestlerden tarandı (25 Eylül). Hepsi izin veren lisanslardır: MIT, Apache-2.0, BSD-2/3-Clause, ISC, Zlib, Unicode-3.0, CC0-1.0, BSL-1.0, Unlicense ve bunların birleşimleri. Copyleft lisans yok.
+- 290'ının lisansı `~/.cargo/registry`'deki manifestlerden tarandı (25 Eylül; `schemars` ile gelen altısı sonradan eklendi). Hepsi izin veren lisanslardır: MIT, Apache-2.0, BSD-2/3-Clause, ISC, Zlib, Unicode-3.0, CC0-1.0, BSL-1.0, Unlicense ve bunların birleşimleri. Copyleft lisans yok.
 - Kalan 35'i yalnız başka işletim sistemlerinde derlenen paketlerdir (macOS `core-foundation`, Android `jni` …) ve Linux'ta indirilmediği için taranmadı.
 
 ## Web (`apps/web/package.json`)

@@ -10,6 +10,10 @@
 //! that only need the Rust types (formats, the server, the desktop app)
 //! depend on this crate with `default-features = false` and never build ts-rs.
 //!
+//! The `schema` feature (also on by default) derives JSON Schema for every
+//! contract type; the product command catalog (`catalog`, docs/adr/0013) is
+//! built from it.
+//!
 //! Rules (docs/adr/0002-contracts-fixtures.md):
 //! - every stored or sent document carries `format` and `version`; readers
 //!   reject versions they do not know instead of guessing;
@@ -18,6 +22,7 @@
 //!   in v1 and become typed when the style core moves to Rust.
 
 pub mod api;
+pub mod catalog;
 pub mod cloud;
 pub mod command;
 pub mod document;
@@ -29,6 +34,7 @@ pub mod numeric;
 pub mod style;
 
 pub use api::*;
+pub use catalog::*;
 pub use cloud::*;
 pub use command::*;
 pub use document::*;

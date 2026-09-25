@@ -13,6 +13,7 @@ pub const DOCUMENT_VERSION: u32 = 1;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum AreaUnit {
@@ -23,6 +24,7 @@ pub enum AreaUnit {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum AngleUnit {
@@ -38,6 +40,7 @@ pub enum AngleUnit {
 /// (hybrid).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum Workspace {
@@ -54,6 +57,7 @@ pub enum Workspace {
 /// letters. Files written before it have none (Barlow).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum DrawingFont {
@@ -69,6 +73,7 @@ pub enum DrawingFont {
 /// Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectSettings {
@@ -91,6 +96,7 @@ pub struct ProjectSettings {
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct Bounds {
@@ -103,6 +109,7 @@ pub struct Bounds {
 /// The project's own style library (opaque items in v1, see `style`).
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectStyles {
     #[cfg_attr(feature = "ts", ts(type = "unknown[]"))]
@@ -113,6 +120,7 @@ pub struct ProjectStyles {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DocumentSnapshotV1 {

@@ -12,7 +12,11 @@ serde_json = { workspace = true }
 # Only for generating the TypeScript types (the web app); the desktop app and the
 # server build without it.
 ts-rs = { workspace = true, optional = true }
+# JSON Schema of the contract types (the product command catalog, docs/adr/0013); like
+# `ts`, on by default and left out by libraries that only need the Rust types.
+schemars = { workspace = true, optional = true }
 
 [features]
-default = ["ts"]
+default = ["ts", "schema"]
 ts = ["dep:ts-rs"]
+schema = ["dep:schemars"]

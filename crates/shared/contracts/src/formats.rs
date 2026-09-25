@@ -24,6 +24,7 @@ pub const FORMATS_VERSION: u32 = 3;
 /// A layer as the source file defines it. Objects name it in `layerId`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportLayer {
@@ -44,6 +45,7 @@ pub struct ImportLayer {
 /// One line of an import or export report: what, how many, and what happened to it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ReportItem {
     /// The source's name for it ("IMAGE", "Genişlikli çoklu çizgi").
@@ -58,6 +60,7 @@ pub struct ReportItem {
 /// A fact about the source file, shown before the import ("Sürüm": "AutoCAD 2000").
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SourceFact {
     pub label: String,
@@ -66,6 +69,7 @@ pub struct SourceFact {
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportReport {
     /// Objects read, by kind (`point`, `line`, …).
@@ -81,6 +85,7 @@ pub struct ImportReport {
 /// adds them) and `layerId` holds the name of their layer in `layers`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportResult {
     pub entities: Vec<Entity>,
@@ -97,6 +102,7 @@ pub struct ImportResult {
 /// What a column of a coordinate list holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum CoordColumn {
@@ -116,6 +122,7 @@ pub enum CoordColumn {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum CoordDelimiter {
@@ -130,6 +137,7 @@ pub enum CoordDelimiter {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum DecimalMark {
@@ -142,6 +150,7 @@ pub enum DecimalMark {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum HeaderMode {
@@ -153,6 +162,7 @@ pub enum HeaderMode {
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordReadOptions {
@@ -170,6 +180,7 @@ pub struct CoordReadOptions {
 /// A row of the preview: the fields as written and, if the row is not a point, why.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordRow {
     pub line: u32,
@@ -181,6 +192,7 @@ pub struct CoordRow {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LineError {
     pub line: u32,
@@ -190,6 +202,7 @@ pub struct LineError {
 /// A coordinate list read with the given options, and what the reader found.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordRead {
@@ -226,6 +239,7 @@ pub struct CoordRead {
 /// A point to write into a coordinate list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordPoint {
     pub name: String,
@@ -240,6 +254,7 @@ pub struct CoordPoint {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum TextEncoding {
@@ -251,6 +266,7 @@ pub enum TextEncoding {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CoordWriteInput {
     pub points: Vec<CoordPoint>,
@@ -267,6 +283,7 @@ pub struct CoordWriteInput {
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfReadOptions {
@@ -279,6 +296,7 @@ pub struct DxfReadOptions {
 /// group path tells layers of the same name apart) and reports what it changed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfWriteLayer {
@@ -300,6 +318,7 @@ pub struct DxfWriteLayer {
 /// What `file.export.dxf` writes (an AutoCAD 2007 DXF).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DxfWriteInput {
@@ -322,6 +341,7 @@ pub struct DxfWriteInput {
 /// What a writer did besides writing: counts, and anything it could not write as it was.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportReport {
     pub counts: BTreeMap<String, u32>,

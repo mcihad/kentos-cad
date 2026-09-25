@@ -9,6 +9,7 @@ use ts_rs::TS;
 /// A point in world units: x = east (Y, sağa), y = north (X, yukarı).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct Vec2 {
     pub x: f64,
@@ -20,6 +21,7 @@ pub struct Vec2 {
 /// `FeatureRef` in Faz B (CLAUDE.md §15).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntityBase {
@@ -42,6 +44,7 @@ pub struct EntityBase {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct PointEntity {
     #[serde(flatten)]
@@ -55,6 +58,7 @@ pub struct PointEntity {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct LineEntity {
     #[serde(flatten)]
@@ -67,6 +71,7 @@ pub struct LineEntity {
 /// A closed ring in vertex + bulge form (a polygon hole).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct RingGeometry {
     pub pts: Vec<Vec2>,
@@ -78,6 +83,7 @@ pub struct RingGeometry {
 /// Polyline or polygon: vertices, DXF bulges (tan(θ/4), CCW positive) and, for polygons, holes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct PathEntity {
     #[serde(flatten)]
@@ -94,6 +100,7 @@ pub struct PathEntity {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CircleEntity {
     #[serde(flatten)]
@@ -106,6 +113,7 @@ pub struct CircleEntity {
 /// Arc from `a0` to `a1` (radians), always counter-clockwise.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ArcEntity {
     #[serde(flatten)]
@@ -120,6 +128,7 @@ pub struct ArcEntity {
 /// DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EllipseEntity {
     #[serde(flatten)]
@@ -135,6 +144,7 @@ pub struct EllipseEntity {
 /// Construction line or ray: base point and unit direction.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ConstructionEntity {
     #[serde(flatten)]
@@ -146,6 +156,7 @@ pub struct ConstructionEntity {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SplineEntity {
     #[serde(flatten)]
@@ -157,6 +168,7 @@ pub struct SplineEntity {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct TextEntity {
     #[serde(flatten)]
@@ -172,6 +184,7 @@ pub struct TextEntity {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum DimensionStyle {
@@ -184,6 +197,7 @@ pub enum DimensionStyle {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct DimensionEntity {
     #[serde(flatten)]
@@ -211,6 +225,7 @@ pub struct DimensionEntity {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum HatchPatternType {
@@ -221,6 +236,7 @@ pub enum HatchPatternType {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchPattern {
     #[serde(rename = "type")]
@@ -233,6 +249,7 @@ pub struct HatchPattern {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct HatchEntity {
     #[serde(flatten)]
@@ -248,6 +265,7 @@ pub struct HatchEntity {
 /// Any drawing object, tagged by `kind` as in the TypeScript model.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(tag = "kind", rename_all = "lowercase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum Entity {

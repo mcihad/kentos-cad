@@ -11,6 +11,7 @@ use ts_rs::TS;
 /// Parse → authenticate → authorize → preview/validate → transaction → outbox → result.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CommandEnvelope {
