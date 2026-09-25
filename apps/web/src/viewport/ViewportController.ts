@@ -128,6 +128,8 @@ export class ViewportController {
   /** Dev builds only, set by the interaction harness (see ViewportProbe); `declare` emits no field. */
   declare probe?: ViewportProbe;
   private glQueued = false;
+  /** Something besides the highlight changed since the last GPU frame: the backend draws every layer again. */
+  private baseDirty = true;
 
   private screenCursor: Vec2 | null = null;
   /** Entity whose text is being edited inline (hidden from the overlay). */
@@ -222,6 +224,7 @@ export class ViewportController {
       this.highlightDirty = true;
       this.grid = null;
       this.glQueued = true;
+      this.baseDirty = true;
       this.frame();
       old.dispose();
       oldCanvas?.remove();
@@ -240,6 +243,17 @@ export class ViewportController {
   // ── Public API used by tools and commands ───────────────────────────
 
   requestRender(): void {
+    this.glQueued = true;
+    this.baseDirty = true;
+    this.schedule();
+  }
+
+  /**
+   * Only the hover or the selection changed: the backend keeps the picture of the layers and draws the
+   * highlight on it (a pointer move over a large drawing no longer redraws every segment).
+   */
+  private requestHighlight(): void {
+    this.highlightDirty = true;
     this.glQueued = true;
     this.schedule();
   }
@@ -470,10 +484,7 @@ export class ViewportController {
         this.requestRender();
       }),
     );
-    const hl = () => {
-      this.highlightDirty = true;
-      this.requestRender();
-    };
+    const hl = () => this.requestHighlight();
     d.add(selection.ids.subscribe(hl));
     d.add(selection.hover.subscribe(hl));
     d.add(
@@ -765,6 +776,7 @@ export class ViewportController {
     // flashing while a panel splitter is dragged. ResizeObserver callbacks run
     // after layout and before paint, so drawing here keeps every frame filled.
     this.glQueued = true;
+    this.baseDirty = true;
     this.frame();
   }
 
@@ -947,7 +959,9 @@ export class ViewportController {
       order,
       underlays: showGrid ? ['__grid'] : [],
       overlays: ['__hover', '__sel'],
+      keepBase: !this.baseDirty,
     });
+    this.baseDirty = false;
   }
 
   /**

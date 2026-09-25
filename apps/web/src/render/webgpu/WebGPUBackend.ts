@@ -31,6 +31,18 @@ const STYLE_BYTES = 48;
 const BUFFER = { VERTEX: 0x20, UNIFORM: 0x40, COPY_DST: 0x08 } as const;
 const STAGE = { VERTEX: 0x1, FRAGMENT: 0x2 } as const;
 const RENDER_ATTACHMENT = 0x10;
+const TEXTURE_BINDING = 0x04;
+
+/** A full-view triangle that copies the kept base into the frame's target (as in WebGL2Backend). */
+const COPY_WGSL = `
+@group(0) @binding(0) var base: texture_2d<f32>;
+@vertex fn vs(@builtin(vertex_index) i: u32) -> @builtin(position) vec4f {
+  let p = vec2f(f32((i << 1u) & 2u), f32(i & 2u));
+  return vec4f(p * 2.0 - 1.0, 0.0, 1.0);
+}
+@fragment fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
+  return textureLoad(base, vec2i(pos.xy), 0);
+}`;
 
 /**
  * WebGPU implementation of the RenderBackend contract. It mirrors
@@ -41,6 +53,9 @@ const RENDER_ATTACHMENT = 0x10;
  *   fills  → triangle-list
  *   points → instanced quads with the symbol drawn by distance functions
  * Anti-aliasing is 4× MSAA like the WebGL2 context (none at the lower drawing qualities).
+ * As in WebGL2Backend, the underlays and persistent layers are kept in a
+ * texture (`base`) and a frame whose only change is in the overlays
+ * (FrameState.keepBase) copies it instead of drawing them again.
  */
 export class WebGPUBackend implements RenderBackend {
   readonly kind = 'webgpu' as const;
@@ -61,6 +76,13 @@ export class WebGPUBackend implements RenderBackend {
   /** 4 with anti-aliasing, 1 without (then the pass draws straight into the canvas). */
   private samples = SAMPLES;
   private layers = new Map<string, GpuLayer>();
+  private base: GPUTexture | null = null;
+  private copyPipe!: GPURenderPipeline;
+  private copyBind: GPUBindGroup | null = null;
+  /** What the base holds (view, scale, order, background), or '' when it must be drawn again. */
+  private baseKey = '';
+  /** The overlays of the last frame: uploading them leaves the base as it is. */
+  private overlayIds: ReadonlySet<string> = new Set();
 
   static isSupported(): boolean {
     return typeof navigator !== 'undefined' && 'gpu' in navigator;
@@ -120,9 +142,22 @@ export class WebGPUBackend implements RenderBackend {
     this.fillPipe = pipeline('fillVs', 'fillFs', [vec2(0)], 'triangle-list');
     this.pointPipe = pipeline('pointVs', 'pointFs', [vec2(0, 'instance')], 'triangle-list');
     this.styled = new WebGPUStyledRenderer(device, this.format, frameLayout, this.samples);
+    const copy = device.createShaderModule({ code: COPY_WGSL });
+    this.copyPipe = device.createRenderPipeline({
+      layout: 'auto',
+      vertex: { module: copy, entryPoint: 'vs' },
+      fragment: { module: copy, entryPoint: 'fs', targets: [{ format: this.format }] },
+      primitive: { topology: 'triangle-list' },
+      multisample: { count: this.samples },
+    });
+  }
+
+  get antialiased(): boolean {
+    return this.samples > 1;
   }
 
   useAtlas(atlas: AtlasSource): void {
+    this.baseKey = '';
     this.styled.useAtlas(atlas);
   }
 
@@ -130,6 +165,7 @@ export class WebGPUBackend implements RenderBackend {
     this.dpr = dpr;
     this.canvas.width = Math.max(1, Math.round(width * dpr));
     this.canvas.height = Math.max(1, Math.round(height * dpr));
+    this.baseKey = '';
   }
 
   private vertexBuffer(data: Float32Array): GPUBuffer {
@@ -153,6 +189,7 @@ export class WebGPUBackend implements RenderBackend {
 
   upload(layer: SceneLayer): void {
     this.remove(layer.id);
+    if (!this.overlayIds.has(layer.id)) this.baseKey = '';
     const g: GpuLayer = { lines: [], fills: [], points: [], styled: this.styled.upload(layer.styled ?? []) };
     for (const b of layer.lines) {
       if (!b.positions.length) continue;
@@ -172,6 +209,7 @@ export class WebGPUBackend implements RenderBackend {
   remove(id: string): void {
     const g = this.layers.get(id);
     if (!g) return;
+    if (!this.overlayIds.has(id)) this.baseKey = '';
     for (const b of [...g.lines, ...g.fills, ...g.points]) {
       b.buffers.forEach((buf) => buf.destroy());
       b.style.destroy();
@@ -190,6 +228,15 @@ export class WebGPUBackend implements RenderBackend {
       this.msaa?.destroy();
       this.msaa = device.createTexture({ size: [w, h], sampleCount: this.samples, format: this.format, usage: RENDER_ATTACHMENT });
     }
+    if (!this.base || this.base.width !== w || this.base.height !== h) {
+      this.base?.destroy();
+      this.base = device.createTexture({ size: [w, h], format: this.format, usage: RENDER_ATTACHMENT | TEXTURE_BINDING });
+      this.copyBind = device.createBindGroup({ layout: this.copyPipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: this.base.createView() }] });
+      this.baseKey = '';
+    }
+    this.overlayIds = new Set(frame.overlays);
+    const key = `${view.center.x},${view.center.y},${view.scale},${w}x${h},${frame.scaleDenominator},${frame.clearColor.join()},${frame.underlays.join()}|${frame.order.join()}`;
+    const drawBase = !frame.keepBase || key !== this.baseKey;
     device.queue.writeBuffer(
       this.frameBuffer,
       0,
@@ -197,19 +244,21 @@ export class WebGPUBackend implements RenderBackend {
     );
     const [r, g, b] = frame.clearColor;
     const encoder = device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        multisampled
-          ? { view: this.msaa!.createView(), resolveTarget: this.context.getCurrentTexture().createView(), clearValue: { r, g, b, a: 1 }, loadOp: 'clear', storeOp: 'discard' }
-          : { view: this.context.getCurrentTexture().createView(), clearValue: { r, g, b, a: 1 }, loadOp: 'clear', storeOp: 'store' },
-      ],
-    });
-    pass.setBindGroup(0, this.frameBind);
+    // The base pass resolves into the kept texture; the frame pass copies it and draws the overlays into the canvas.
+    const begin = (target: GPUTexture) =>
+      encoder.beginRenderPass({
+        colorAttachments: [
+          multisampled
+            ? { view: this.msaa!.createView(), resolveTarget: target.createView(), clearValue: { r, g, b, a: 1 }, loadOp: 'clear', storeOp: 'discard' }
+            : { view: target.createView(), clearValue: { r, g, b, a: 1 }, loadOp: 'clear', storeOp: 'store' },
+        ],
+      });
     // Visibility and atlas images for the whole frame before anything is drawn.
     this.styled.prepare(
-      [...frame.underlays, ...frame.order, ...frame.overlays].flatMap((id) => this.layers.get(id)?.styled ?? []),
+      [...(drawBase ? [...frame.underlays, ...frame.order] : []), ...frame.overlays].flatMap((id) => this.layers.get(id)?.styled ?? []),
       { cam: [view.center.x, view.center.y], pxPerM: view.scale * this.dpr, dpr: this.dpr, viewPx: [w, h], scaleDenominator: frame.scaleDenominator },
     );
+    let pass!: GPURenderPassEncoder;
     const drawPass = (ids: readonly string[]) => {
       const layers = ids.map((id) => this.layers.get(id)).filter((l): l is GpuLayer => !!l);
       // Same order as WebGL2: per layer its plain fills then its styled symbols; then plain lines and points.
@@ -240,8 +289,19 @@ export class WebGPUBackend implements RenderBackend {
           pass.draw(6, p.count);
         }
     };
-    drawPass(frame.underlays);
-    drawPass(frame.order);
+    if (drawBase) {
+      pass = begin(this.base);
+      pass.setBindGroup(0, this.frameBind);
+      drawPass(frame.underlays);
+      drawPass(frame.order);
+      pass.end();
+      this.baseKey = key;
+    }
+    pass = begin(this.context.getCurrentTexture());
+    pass.setPipeline(this.copyPipe);
+    pass.setBindGroup(0, this.copyBind!);
+    pass.draw(3);
+    pass.setBindGroup(0, this.frameBind);
     drawPass(frame.overlays);
     pass.end();
     device.queue.submit([encoder.finish()]);
@@ -250,6 +310,7 @@ export class WebGPUBackend implements RenderBackend {
   dispose(): void {
     for (const id of [...this.layers.keys()]) this.remove(id);
     this.msaa?.destroy();
+    this.base?.destroy();
     this.frameBuffer?.destroy();
     this.styled?.dispose();
     this.device?.destroy();

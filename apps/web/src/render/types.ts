@@ -199,6 +199,13 @@ export interface FrameState {
   /** Transient layers drawn on top in this order (grid first, highlight last). */
   underlays: readonly string[];
   overlays: readonly string[];
+  /**
+   * Only the overlays changed since the last frame (a hover, a selection): the backend may reuse the
+   * underlays and persistent layers it drew then, and draw just the overlays on top. It still draws
+   * everything when its own state says the kept picture is stale (a new size, a persistent layer
+   * uploaded or removed, a different view, order or background).
+   */
+  keepBase?: boolean;
 }
 
 export type BackendKind = 'webgl2' | 'webgpu';
@@ -275,6 +282,8 @@ export interface RenderBackend {
   readonly label: string;
   /** `antialias` false: no multisampling (Uygulama ayarları → Çizim kalitesi); fixed for the backend's life. */
   init(canvas: HTMLCanvasElement, opts?: { antialias?: boolean }): Promise<void>;
+  /** Whether frames are multisampled (the `antialias` it was started with, where the device allows it). */
+  readonly antialiased: boolean;
   resize(width: number, height: number, dpr: number): void;
   /** Create or replace GPU resources for a layer. */
   upload(layer: SceneLayer): void;

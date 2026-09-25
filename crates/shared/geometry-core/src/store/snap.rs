@@ -104,6 +104,11 @@ impl Choice {
         if self.kinds & kind.bit() == 0 {
             return;
         }
+        // Farther than the aperture along an axis is farther in all (the hypotenuse is never shorter
+        // than a side): refused without the hypotenuse. A NaN passes on to the check below, as before.
+        if (q.x - self.p.x).abs() > self.tol || (q.y - self.p.y).abs() > self.tol {
+            return;
+        }
         let d = js_hypot(q.x - self.p.x, q.y - self.p.y);
         if d > self.tol {
             return;
@@ -275,6 +280,10 @@ impl Store {
                         let a = pts[i];
                         let b = pts[(i + 1) % pts.len()];
                         let bulge = bulge_at(bulges, i);
+                        // A straight segment's midpoint lies in its box; a far box cannot offer one.
+                        if bulge == 0.0 && box_out_of_reach(a, b, p, tol) {
+                            continue;
+                        }
                         ch.consider(SnapKind::Midpoint, segment_mid(a, b, bulge), id);
                         if let Some(arc) = bulge_arc(a, b, bulge) {
                             ch.consider(SnapKind::Center, arc.c, id);
@@ -283,6 +292,13 @@ impl Store {
                 }
             }
             for ed in entity_edges(e) {
+                // Out at the overview a contour of hundreds of segments crosses the aperture with a few:
+                // the rest are left out by their box before the closest point is worked out.
+                if let Edge::Seg { a, b } = ed
+                    && box_out_of_reach(a, b, p, tol)
+                {
+                    continue;
+                }
                 let c = closest_on_edge(&ed, p);
                 if c.d > tol {
                     continue;
@@ -311,6 +327,18 @@ impl Store {
     }
 }
 
+/// Whether the box of a straight segment lies farther than `tol` from `p` along an axis, by more than
+/// rounding can account for: then every point of the segment (its midpoint, its closest point to `p`,
+/// both computed on it and within an ulp of its box) is farther than `tol` and is refused anyway.
+/// Every comparison is false with a NaN, so such a segment is never left out here.
+fn box_out_of_reach(a: Vec2, b: Vec2, p: Vec2, tol: f64) -> bool {
+    let r = tol + tol * 1e-9 + 1e-6;
+    (p.x < a.x - r && p.x < b.x - r)
+        || (p.x > a.x + r && p.x > b.x + r)
+        || (p.y < a.y - r && p.y < b.y - r)
+        || (p.y > a.y + r && p.y > b.y + r)
+}
+
 /// Crossings of the edges near the cursor, pair by pair in their order
 /// (at equal distance the first pair wins, as in the TypeScript). Close in
 /// there are a handful; at the overview hundreds of edges lie within the
@@ -325,10 +353,15 @@ impl Store {
 /// arc or an ellipse chord are always tried: `seg_arc` lets a NaN parameter
 /// through (NaN arc data), and a chord's crossing is moved onto the ellipse.
 fn crossings(ch: &mut Choice, nearby: &[Nearby], p: Vec2) {
+    // A segment's crossing with an arc is also put on the segment (`seg_arc`), so the gap bounds it
+    // as well; the arc was tried regardless only for a NaN crossing, which can win only while there
+    // is no best yet. With one (the usual case: an end or a node in the aperture) far segments skip
+    // arcs too: a parcel map's curved street fronts were otherwise met by every far edge.
+    let arcs_count = ch.best.is_none();
     // The partners a far segment still has to meet, in order.
     let mut curved = Vec::new();
     for (k, e) in nearby.iter().enumerate() {
-        if e.segment().is_none() {
+        if e.ell.is_some() || (arcs_count && e.segment().is_none()) {
             curved.push(k);
         }
     }
@@ -350,6 +383,25 @@ fn crossings(ch: &mut Choice, nearby: &[Nearby], p: Vec2) {
             let Some(b) = nearby.get(j) else { break };
             j += 1;
             if a.id == b.id && shares_vertex(&a.ed, &b.ed) {
+                continue;
+            }
+            // The crossing of two plain segments lies in the partner's box too, within its own margin
+            // and the band on the first one: a partner out of reach is skipped the same way (the
+            // overview of a parcel map has thousands of edges in the aperture, a few near the cursor).
+            if let (Some((s, e)), Some((bs, be))) = (a.segment(), b.segment())
+                && ch.out_of_reach(
+                    crossing_gap(bs, be, p) - 1e-9 * ((e.x - s.x).abs() + (e.y - s.y).abs()),
+                )
+            {
+                continue;
+            }
+            // An arc and a far segment after it: the crossing lies on the segment, as above.
+            if !arcs_count
+                && a.ell.is_none()
+                && a.segment().is_none()
+                && b.segment()
+                    .is_some_and(|(bs, be)| ch.out_of_reach(crossing_gap(bs, be, p)))
+            {
                 continue;
             }
             for h in intersect_edges(&a.ed, &b.ed) {
@@ -840,15 +892,38 @@ mod tests {
                 let dq = js_hypot(q.x - p.x, q.y - p.y);
                 assert!(dq >= g, "{a:?}→{b:?}, {p:?}: {q:?} at {dq} < {g}");
             };
+            // The partner's own gap, less the band on the first segment (the pair skip in `crossings`).
+            let partner = |c: Vec2, d: Vec2, q: Vec2| {
+                let gc = crossing_gap(c, d, p) - 1e-9 * ((b.x - a.x).abs() + (b.y - a.y).abs());
+                let dq = js_hypot(q.x - p.x, q.y - p.y);
+                assert!(
+                    dq >= gc,
+                    "{c:?}→{d:?} with {a:?}→{b:?}, {p:?}: {q:?} at {dq} < {gc}"
+                );
+            };
             if let Some(h) = seg_seg(a, b, c, d, 1e-9) {
                 check(h.p);
+                partner(c, d, h.p);
+                met += 1;
+            }
+            // A nearly parallel partner through a point of the first segment, where the crossing is least well placed.
+            let m = Vec2::new(a.x + 0.5 * (b.x - a.x), a.y + 0.5 * (b.y - a.y));
+            let tilt = rng.range(-1e-7, 1e-7);
+            let (u, v) = (b.x - a.x, b.y - a.y);
+            let (c2, d2) = (
+                Vec2::new(m.x - 0.3 * (u - tilt * v), m.y - 0.3 * (v + tilt * u)),
+                Vec2::new(m.x + 0.4 * (u - tilt * v), m.y + 0.4 * (v + tilt * u)),
+            );
+            if let Some(h) = seg_seg(a, b, c2, d2, 1e-9) {
+                check(h.p);
+                partner(c2, d2, h.p);
                 met += 1;
             }
             for t in [-1e-9, 0.0, 0.5, 1.0, 1.0 + 1e-9] {
                 check(Vec2::new(a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)));
             }
         }
-        assert!(met > 1000, "{met} crossings");
+        assert!(met > 10_000, "{met} crossings");
         // Non-finite ends never prune.
         let p = Vec2::new(0.0, 0.0);
         for b in [Vec2::new(f64::NAN, 1.0), Vec2::new(f64::INFINITY, 1.0)] {

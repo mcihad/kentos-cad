@@ -1787,7 +1787,7 @@ try {
     await b.eval(`window.kentos.doc.settings.drawingFont.set('barlow')`);
 
     // Çizim kalitesi: Hızlı makes the backend again without anti-aliasing (one canvas, same drawing); Yüksek brings it back.
-    const quality = () => b.eval(`({ aa: document.querySelector('canvas.viewport__gl').getContext('webgl2')?.getContextAttributes()?.antialias ?? null, canvases: document.querySelectorAll('canvas.viewport__gl').length, dpr: window.kentos.view.stats && document.querySelector('canvas.viewport__gl').width / document.querySelector('canvas.viewport__gl').clientWidth })`);
+    const quality = () => b.eval(`({ aa: window.kentos.view.backend?.antialiased ?? null, canvases: document.querySelectorAll('canvas.viewport__gl').length, dpr: window.kentos.view.stats && document.querySelector('canvas.viewport__gl').width / document.querySelector('canvas.viewport__gl').clientWidth })`);
     // On WebGL2 (the context's attributes say whether it anti-aliases).
     await b.eval(`window.kentos.commands.execute('view.renderer.webgl2')`);
     await b.waitFor(`window.kentos.view.backendKind.value === 'webgl2' && document.querySelectorAll('canvas.viewport__gl').length === 1`, 8000).catch(() => {});
@@ -1797,10 +1797,10 @@ try {
     await b.click(...fastBtn);
     await sleep(150);
     await saveDialog();
-    await b.waitFor(`document.querySelector('canvas.viewport__gl')?.getContext('webgl2')?.getContextAttributes()?.antialias === false`, 8000).catch(() => {});
+    await b.waitFor(`window.kentos.view.backend?.antialiased === false`, 8000).catch(() => {});
     const fast = await quality();
     await b.eval(`window.kentos.prefs.renderQuality.set('high')`);
-    await b.waitFor(`document.querySelector('canvas.viewport__gl')?.getContext('webgl2')?.getContextAttributes()?.antialias === true`, 8000).catch(() => {});
+    await b.waitFor(`window.kentos.view.backend?.antialiased === true`, 8000).catch(() => {});
     const high = await quality();
     check('Çizim kalitesi: Hızlı draws without anti-aliasing on one canvas, Yüksek with it again', fast.aa === false && fast.canvases === 1 && high.aa === true && high.canvases === 1, JSON.stringify({ fast, high }));
 
