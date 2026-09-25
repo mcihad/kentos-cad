@@ -16,7 +16,7 @@ use kentos_ui::widget::command_line::Entry;
 use kentos_ui::widget::docking::{self, Docks, Side};
 
 use crate::catalog::{Standing, catalog};
-use crate::document::Document;
+use crate::document::{self, Document};
 
 pub const COMMAND_INPUT: &str = "komut-satiri";
 
@@ -143,7 +143,7 @@ impl App {
             Some(doc) => format!(
                 "{}{} — KentOS CAD",
                 doc.name(),
-                if doc.dirty { " •" } else { "" }
+                if doc.dirty() { " •" } else { "" }
             ),
             None => "KentOS CAD".to_owned(),
         }
@@ -182,20 +182,24 @@ impl App {
             Message::LayerSelected(id) => {
                 self.selected_layer = (self.selected_layer.as_deref() != Some(&id)).then_some(id);
             }
+            // The layer tree's changes go through the document, as on the web: visibility
+            // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
                 if let Some(doc) = &mut self.document {
-                    doc.change_layer(&id, |n| n.visible = !n.visible);
+                    doc.model.toggle_layer_visible(&id);
                 }
             }
             Message::LayerLocked(id) => {
                 if let Some(doc) = &mut self.document {
-                    doc.change_layer(&id, |n| n.locked = !n.locked);
+                    doc.model.toggle_layer_locked(&id);
                 }
             }
             Message::LayerExpanded(id) => {
-                if let Some(doc) = &mut self.document {
-                    // Folding is part of the file (the web keeps it too).
-                    doc.change_layer(&id, |n| n.expanded = !n.expanded);
+                if let Some(doc) = &mut self.document
+                    && let Some(expanded) = doc.find(&id).map(|n| !n.expanded)
+                {
+                    // Folding is kept in the file but is not an edit (web).
+                    doc.model.set_layer_expanded(&id, expanded);
                 }
             }
             Message::Opened(None) | Message::Saved(None) => {}
@@ -203,7 +207,7 @@ impl App {
                 self.output(format!(
                     "{} açıldı: {} nesne, {} katman.",
                     doc.name(),
-                    doc.snapshot.entities.len(),
+                    doc.entity_count(),
                     doc.layer_count()
                 ));
                 self.selected_layer = None;
@@ -215,7 +219,7 @@ impl App {
             Message::Saved(Some(Ok((path, revision)))) => {
                 if let Some(doc) = &mut self.document {
                     doc.saved(path.clone(), revision);
-                    let later = if doc.dirty {
+                    let later = if doc.dirty() {
                         " Kayıt sürerken yapılan değişiklikler kaydedilmedi."
                     } else {
                         ""
@@ -224,7 +228,7 @@ impl App {
                 }
             }
             Message::CloseRequested(window) => {
-                if self.document.as_ref().is_some_and(|doc| doc.dirty) {
+                if self.document.as_ref().is_some_and(Document::dirty) {
                     self.dialog = Some(Dialog::Unsaved(Then::Close(window)));
                 } else {
                     return window::close(window);
@@ -267,7 +271,7 @@ impl App {
 
         match id {
             "file.open" => {
-                if self.document.as_ref().is_some_and(|doc| doc.dirty) {
+                if self.document.as_ref().is_some_and(Document::dirty) {
                     self.dialog = Some(Dialog::Unsaved(Then::Open));
                     return Task::none();
                 }
@@ -288,15 +292,50 @@ impl App {
             "commandline.focus" => return operation::focus(COMMAND_INPUT),
             "help.about" => self.dialog = Some(Dialog::About),
             "help.shortcuts" => self.dialog = Some(Dialog::Shortcuts),
+            // An edit, not an undo step (web: LayerStore.showAll).
             "layer.showAll" => match &mut self.document {
-                Some(doc) => doc.show_all(),
+                Some(doc) => doc.model.show_all_layers(),
                 None => self.output("Açık çizim yok."),
             },
+            "edit.undo" => self.step_history(true),
+            "edit.redo" => self.step_history(false),
             _ => self.error(format!(
                 "{id}: masaüstü işleyicisi eksik (catalog::PORTED ile karşılaştırın)"
             )),
         }
         Task::none()
+    }
+
+    /// Undoes or redoes the drawing's last step, saying which (the web's
+    /// “Geri alındı: Ekle”); with nothing to undo or redo, says that.
+    fn step_history(&mut self, undo: bool) {
+        let Some(doc) = &mut self.document else {
+            self.output("Açık çizim yok.");
+            return;
+        };
+        let step = if undo {
+            doc.model.undo()
+        } else {
+            doc.model.redo()
+        };
+        self.output(match (step, undo) {
+            (Some(label), true) => format!("Geri alındı: {label}"),
+            (Some(label), false) => format!("Yinelendi: {label}"),
+            (None, true) => "Geri alınacak değişiklik yok.".to_owned(),
+            (None, false) => "Yinelenecek değişiklik yok.".to_owned(),
+        });
+    }
+
+    /// Whether a ported command can run now: undo and redo only with a step
+    /// to take (web: `isEnabled`, `watch: [doc.canUndo]`). Buttons of commands
+    /// that cannot run are drawn dimmed.
+    pub fn available(&self, id: &str) -> bool {
+        let doc = self.document.as_ref().map(|doc| &doc.model);
+        match id {
+            "edit.undo" => doc.is_some_and(kentos_domain::Document::can_undo),
+            "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
+            _ => true,
+        }
     }
 
     /// A name typed in the command line: an alias, the command's name or its title.
@@ -333,19 +372,22 @@ impl App {
     }
 
     /// Saves to the drawing's file, or asks where (always, with `choose`).
+    /// What is written is the drawing as it is now, with its revision: a change
+    /// made while the file is written stays unsaved.
     fn save(&mut self, choose: bool) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Kaydedilecek çizim yok. Önce bir çizim açın (Ctrl+O).");
             return Task::none();
         };
-        let doc = doc.clone();
+        let snapshot = doc.model.to_snapshot();
+        let revision = doc.model.revision();
         let known = doc.path.clone().filter(|_| !choose);
         Task::perform(
             async move {
                 let path = match known {
                     Some(path) => path,
                     None => {
-                        let suggested = doc.name().trim_end_matches(".kcad").to_owned();
+                        let suggested = snapshot.name.trim_end_matches(".kcad").to_owned();
                         let file = rfd::AsyncFileDialog::new()
                             .set_title("Farklı kaydet")
                             .add_filter("KentOS çizimi (.kcad)", &["kcad"])
@@ -360,7 +402,7 @@ impl App {
                         }
                     }
                 };
-                Some(doc.write(&path).map(|()| (path, doc.revision)))
+                Some(document::write(&snapshot, &path).map(|()| (path, revision)))
             },
             Message::Saved,
         )
@@ -474,6 +516,112 @@ mod tests {
         assert!(
             matches!(app.history.last(), Some(Entry::Output(text)) if text.contains("masaüstüne henüz taşınmadı"))
         );
+    }
+
+    fn with_demo() -> App {
+        let (mut app, _) = App::boot(None);
+        let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+            "../../../fixtures/document/v1/sample.json"
+        ))
+        .expect("the web's demo file reads");
+        app.document = Some(Document::new(snapshot, None).expect("opens"));
+        app
+    }
+
+    fn last_output(app: &App) -> &str {
+        match app.history.last() {
+            Some(Entry::Output(text)) => text,
+            other => panic!("expected an output line, found {other:?}"),
+        }
+    }
+
+    #[test]
+    fn undo_and_redo_run_through_the_document_and_say_what_they_did() {
+        let mut app = with_demo();
+        assert!(!app.available("edit.undo") && !app.available("edit.redo"));
+        let _ = app.run("edit.undo");
+        assert_eq!(last_output(&app), "Geri alınacak değişiklik yok.");
+
+        // The desktop has no drawing tools yet: an edit made on the document directly.
+        let doc = app.document.as_mut().expect("open");
+        let first = doc.model.entities().next().expect("an object").clone();
+        let count = doc.entity_count();
+        doc.model.add(first).expect("a slot");
+        assert!(app.available("edit.undo"));
+
+        let _ = app.run("edit.undo");
+        assert_eq!(last_output(&app), "Geri alındı: Ekle");
+        let doc = app.document.as_ref().expect("open");
+        assert_eq!(doc.entity_count(), count);
+        assert!(doc.dirty(), "an undo is a change to save");
+        assert!(app.available("edit.redo") && !app.available("edit.undo"));
+
+        let _ = app.run("edit.redo");
+        assert_eq!(last_output(&app), "Yinelendi: Ekle");
+        assert_eq!(
+            app.document.as_ref().map(Document::entity_count),
+            Some(count + 1)
+        );
+        let _ = app.run("edit.redo");
+        assert_eq!(last_output(&app), "Yinelenecek değişiklik yok.");
+    }
+
+    #[test]
+    fn layer_changes_are_edits_but_not_undo_steps_and_folding_is_neither() {
+        let mut app = with_demo();
+        let group = app
+            .document
+            .as_ref()
+            .and_then(|doc| doc.layers().iter().find(|n| !n.children.is_empty()))
+            .map(|n| n.id.clone())
+            .expect("the demo has a group");
+        let _ = app.update(Message::LayerExpanded(group.clone()));
+        let doc = app.document.as_ref().expect("open");
+        assert!(doc.find(&group).is_some_and(|n| !n.expanded));
+        assert!(!doc.dirty(), "folding is not an edit (web)");
+
+        let _ = app.update(Message::LayerVisible(group.clone()));
+        let _ = app.update(Message::LayerLocked(group));
+        let _ = app.run("layer.showAll");
+        let doc = app.document.as_ref().expect("open");
+        assert!(doc.dirty());
+        assert!(
+            !app.available("edit.undo"),
+            "visibility and lock are not undo steps (web)"
+        );
+    }
+
+    #[test]
+    fn the_web_keys_undo_and_redo() {
+        use keyboard::key::{Code, Physical};
+        use keyboard::{Key, Location, Modifiers};
+        let chord = |modifiers: Modifiers, letter: &str| {
+            key_event(
+                Event::Keyboard(keyboard::Event::KeyPressed {
+                    key: Key::Character(letter.into()),
+                    modified_key: Key::Character(letter.into()),
+                    physical_key: Physical::Code(Code::KeyZ),
+                    location: Location::Standard,
+                    modifiers,
+                    text: None,
+                    repeat: false,
+                }),
+                event::Status::Ignored,
+                window::Id::unique(),
+            )
+        };
+        assert!(matches!(
+            chord(Modifiers::CTRL, "z"),
+            Some(Message::Run("edit.undo"))
+        ));
+        assert!(matches!(
+            chord(Modifiers::CTRL, "y"),
+            Some(Message::Run("edit.redo"))
+        ));
+        assert!(matches!(
+            chord(Modifiers::CTRL | Modifiers::SHIFT, "Z"),
+            Some(Message::Run("edit.redo"))
+        ));
     }
 
     #[test]

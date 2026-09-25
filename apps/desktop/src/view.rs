@@ -79,12 +79,14 @@ impl App {
                     format!(
                         "{}{}",
                         doc.name(),
-                        if doc.dirty { " • kaydedilmedi" } else { "" }
+                        if doc.dirty() { " • kaydedilmedi" } else { "" }
                     )
                 },
             )));
         for command in catalog.quick().iter().filter_map(|id| catalog.get(id)) {
-            ribbon = ribbon.quick(command.icon, command.title, enabled(command));
+            // Undo and redo are dimmed with no step to take (web: isEnabled).
+            let on_press = enabled(command).filter(|_| self.available(command.id));
+            ribbon = ribbon.quick(command.icon, command.title, on_press);
         }
         for tab in catalog.tabs() {
             ribbon = ribbon.tab(tab.label, tab.id == self.tab, Message::RibbonTab(tab.id));
@@ -110,7 +112,7 @@ impl App {
             Some(doc) => EmptyState::new(Icon::Cube, doc.name().to_owned()).description(format!(
                 "{} nesne, {} katman: {}. Çizim alanı KentOS'un saf wgpu hattıyla sıradaki dilimde gelecek \
                  (TODOS.md REN-01..07); katmanlar, özellikler ve kayıt şimdiden çalışıyor.",
-                doc.snapshot.entities.len(),
+                doc.entity_count(),
                 doc.layer_count(),
                 kinds_text(doc)
             )),
@@ -130,8 +132,7 @@ impl App {
                 TreeColumn::new("Öğe").width(44).align_right(),
             ])
             .extend(
-                doc.snapshot
-                    .layers
+                doc.layers()
                     .iter()
                     .map(|node| self.layer_node(doc, node, true)),
             )
@@ -210,7 +211,7 @@ impl App {
                 .tip("İmleç koordinatı (Y sağa, X yukarı) çizim alanıyla gelecek"),
         );
         if let Some(doc) = &self.document {
-            let settings = &doc.snapshot.settings;
+            let settings = doc.settings();
             let crs = match crs_name(settings.srid) {
                 Some(name) => format!("EPSG:{} · {name}", settings.srid),
                 None => format!("EPSG:{}", settings.srid),
@@ -228,10 +229,7 @@ impl App {
                         .tip("Projenin koordinat sistemi"),
                 )
                 .spacer()
-                .push(Readout::new(text(format!(
-                    "{} nesne",
-                    doc.snapshot.entities.len()
-                ))));
+                .push(Readout::new(text(format!("{} nesne", doc.entity_count()))));
         } else {
             bar = bar.spacer();
         }
@@ -428,7 +426,7 @@ fn line_command(command: &Command) -> LineCommand<'static> {
 }
 
 fn project_rows(doc: &Document) -> Vec<(&'static str, String)> {
-    let s = &doc.snapshot.settings;
+    let s = doc.settings();
     let crs = crs_name(s.srid).map_or(format!("EPSG:{}", s.srid), |name| {
         format!("EPSG:{} · {name}", s.srid)
     });
@@ -467,7 +465,7 @@ fn project_rows(doc: &Document) -> Vec<(&'static str, String)> {
             "Çizim yazı tipi",
             s.drawing_font.as_ref().map_or("barlow".to_owned(), word),
         ),
-        ("Nesne", doc.snapshot.entities.len().to_string()),
+        ("Nesne", doc.entity_count().to_string()),
         ("Katman", doc.layer_count().to_string()),
     ]
 }
