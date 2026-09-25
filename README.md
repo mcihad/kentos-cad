@@ -31,6 +31,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── dock.rs          yan panel yuvası: açılıp kapanan paneller, sürüklenen kenar
 │   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
 │   ├── tabs.rs          belge sekmeleri: kapatma, sürükleyerek sıralama, taşma listesi
+│   ├── docking.rs       sekmeli yuva: alanlar, yığınlar, sürükle-bırak, yüzen paneller
 │   ├── toast.rs         bildirimler: önem düzeyi, eylem, üst üste dizilme, süre
 │   ├── progress.rs      ilerleme çubuğu, dönen gösterge, iptal edilebilen görev listesi
 │   ├── notice.rs        uyarı şeridi, boş ve hata durumları
@@ -206,6 +207,59 @@ Tabs::new(
 .on_close(Message::DrawingClosed)
 .on_reorder(Message::DrawingMoved)
 .on_new(Message::DrawingAdded)
+```
+
+### Sekmeli yuva
+
+`DockSpace`, panelleri ortadaki içeriğin (harita, belgeler) kenarlarına
+yerleştirir. Yan alanlar tam yüksekliktedir, alt alan ortanın altındadır.
+Her alan yığınlardan oluşur; yığın aynı yeri sekmelerle paylaşan
+panellerdir.
+
+- **Sürükle ve bırak.** Sekme sürüklenince bırakılacağı yer vurgu rengiyle
+  gösterilir, imlecin yanında sekmenin başlığı taşınır. Başka yığının sekme
+  şeridine bırakılan panel o yığına, işaretlenen sıraya katılır; gövdenin
+  ortasına bırakılan sona katılır. Gövdenin kenarına bırakılan yığını böler.
+  Ortanın kenarlarına bırakılan o kenarın alanına yeni yığın olur (alan boşsa
+  açılır); ortanın içine bırakılan yüzen pencere olur. Esc sürüklemeyi bırakır.
+- **Boyutlandırma.** Alanların ortaya bakan kenarı ve yığınlar arasındaki
+  çizgi sürüklenir; orta en az kendi payı kadar kalır.
+- **Daraltma ve menü.** Yan alanlardaki ve yüzen yığınlar ⌃ düğmesiyle ya da
+  başlığa çift tıkla başlıklarına daralır. ⋯ menüsü yığındaki panelleri
+  listeler, paneli yüzdürür ya da yuvaya geri koyar, kapatır. Yer daralınca
+  arkadaki sekmelerin yalnızca ikonu kalır.
+- **Yüzen pencereler.** Başlığından taşınır, sağ ve alt kenarından
+  boyutlandırılır; tıklanan öne gelir.
+- **Tembel gövdeler.** `Pane::new(başlık, || gövde)`: gövde yalnızca panel
+  görünürken kurulur. Arkaya geçen panelin durumu (kaydırma, açık düğümler)
+  saklanır, sekmesi öne gelince geri gelir.
+- **Durum uygulamanındır.** `Docks` yerleşimi tutar; bileşen değişiklikleri
+  `docking::Event` olarak bildirir, `Docks::update` uygular. Kapanan panel
+  yeniden açılınca aynı kenara döner. Yerleşim tek satırlık metne yazılıp
+  okunur (`Docks::save`, `Docks::load`).
+
+```rust
+use kentos_rc::widget::docking::{DockSpace, Docks, Pane, Side};
+
+let mut docks = Docks::new();
+docks.dock(Panel::Layers, Side::Right);
+docks.split(Panel::Properties, Side::Right);
+docks.dock(Panel::Table, Side::Bottom);
+
+DockSpace::new(map, &self.docks, Message::Dock, |panel| match panel {
+    Panel::Layers => Pane::new("Katmanlar", || self.layers())
+        .icon(Icon::Layers)
+        .actions(self.layer_actions()),
+    Panel::Properties => Pane::new("Özellikler", || self.inspector()).scrollable(),
+    Panel::Table => Pane::new("Öznitelik tablosu", || self.table()),
+})
+
+// update
+Message::Dock(event) => self.docks.update(event),
+
+// saklama: "sol 260: ; sag 300: katmanlar* @1.00 / ozellikler* @1.00; alt 220: tablo* @1.00"
+let text = self.docks.save(|panel| panel.key().to_owned());
+let docks = Docks::load(&text, Panel::parse);
 ```
 
 ## Geri bildirim

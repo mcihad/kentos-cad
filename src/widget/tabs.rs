@@ -48,17 +48,17 @@ use crate::widget::context_menu::{Menu, MenuButton};
 /// Şeridin yüksekliği ve sekme genişliğinin sınırları, 12 piksellik gövde
 /// metnine göre.
 const HEIGHT: f32 = 28.0;
-const MIN_WIDTH: f32 = 64.0;
-const MAX_WIDTH: f32 = 200.0;
+pub(crate) const MIN_WIDTH: f32 = 64.0;
+pub(crate) const MAX_WIDTH: f32 = 200.0;
 /// Sığmayan sekmelerin daralabildiği en dar genişlik; altında listeye
 /// taşarlar.
-const SHRINK: f32 = 110.0;
+pub(crate) const SHRINK: f32 = 110.0;
 
 /// Başlığın solundaki boşluk; kapatma düğmesi olmayan sekmede sağında da.
-const PAD: f32 = 12.0;
+pub(crate) const PAD: f32 = 12.0;
 /// Kapatma düğmesinin tıklama alanı, glifi ve sekmenin kenarına uzaklığı.
-const CLOSE: f32 = 18.0;
-const GLYPH: f32 = 10.0;
+pub(crate) const CLOSE: f32 = 18.0;
+pub(crate) const GLYPH: f32 = 10.0;
 const CLOSE_MARGIN: f32 = 5.0;
 /// Başlıkla kapatma düğmesi arası.
 const GAP: f32 = 4.0;
@@ -66,7 +66,7 @@ const GAP: f32 = 4.0;
 const FADE: f32 = 20.0;
 
 /// Sürüklemenin başladığı uzaklık.
-const DRAG: f32 = 5.0;
+pub(crate) const DRAG: f32 = 5.0;
 
 /// Şeridin yüksekliği, geçerli yazı boyutunda.
 pub fn height() -> f32 {
@@ -136,22 +136,31 @@ struct Entry<'a, Message> {
 }
 
 impl<Message> Entry<'_, Message> {
-    /// Başlığın sağındaki boşluk: kapatma düğmesi ya da nokta için.
     fn trail(&self) -> f32 {
-        if self.closable || self.dirty {
-            GAP + CLOSE + CLOSE_MARGIN
-        } else {
-            PAD
-        }
+        trail(self.closable || self.dirty)
     }
 
-    /// Başlığın sığması gereken alan.
     fn room(&self, tab: Rectangle) -> Rectangle {
-        Rectangle {
-            x: tab.x + PAD,
-            width: (tab.width - PAD - self.trail()).max(0.0),
-            ..tab
-        }
+        room(tab, self.trail())
+    }
+}
+
+/// Başlığın sağındaki boşluk: kapatma düğmesi ya da nokta için yer
+/// ayrılır.
+pub(crate) fn trail(button: bool) -> f32 {
+    if button {
+        GAP + CLOSE + CLOSE_MARGIN
+    } else {
+        PAD
+    }
+}
+
+/// Başlığın sığması gereken alan.
+pub(crate) fn room(tab: Rectangle, trail: f32) -> Rectangle {
+    Rectangle {
+        x: tab.x + PAD,
+        width: (tab.width - PAD - trail).max(0.0),
+        ..tab
     }
 }
 
@@ -255,59 +264,117 @@ impl<'a, Message: Clone + 'a> Tabs<'a, Message> {
 
 /// Sekmelerin genişlikleri ve taşma: hepsi sığıyorsa doğal genişlikleri.
 /// Sığmıyorsa etkin sekme doğal genişliğinde kalır, diğerleri aynı üst
-/// sınıra kadar daralır. Sınır `floor`'un altına düşecekse sekmeler
-/// `floor`'da kalır ve sığmayanlar taşar.
-fn fit(natural: &[f32], active: usize, room: f32, floor: f32) -> (Vec<f32>, bool) {
+/// sınıra kadar daralır; her sekme kendi tabanında (`floors`) durur. Öbür
+/// sekmeler tabanlarındayken de sığmıyorsa etkin sekme en fazla
+/// `active_floor`'a kadar daralır; o da yetmezse sığmayanlar taşar.
+pub(crate) fn fit(
+    natural: &[f32],
+    active: usize,
+    room: f32,
+    floors: &[f32],
+    active_floor: f32,
+) -> (Vec<f32>, bool) {
     if natural.iter().sum::<f32>() <= room {
         return (natural.to_vec(), false);
     }
 
     let kept = natural.get(active).copied().unwrap_or(0.0);
-    let mut others: Vec<f32> = natural
+    let lows: Vec<f32> = natural
         .iter()
-        .enumerate()
-        .filter(|(index, _)| *index != active)
-        .map(|(_, tab)| *tab)
+        .zip(floors.iter().chain(std::iter::repeat(&0.0)))
+        .map(|(tab, floor)| tab.min(*floor))
         .collect();
-    others.sort_by(f32::total_cmp);
+    let others: f32 = (0..natural.len())
+        .filter(|index| *index != active)
+        .map(|index| lows[index])
+        .sum();
+    let at_floor = |kept: f32| {
+        (0..natural.len())
+            .map(|index| if index == active { kept } else { lows[index] })
+            .collect::<Vec<f32>>()
+    };
 
-    // Su doldurma: en dar sekmelerden başlayarak, kalan yer daha geniş
-    // sekmelere eşit bölünür.
-    let mut used = kept;
-    let mut cap = 0.0;
+    if kept + others > room {
+        let smallest = active_floor.min(kept);
 
-    for (index, tab) in others.iter().enumerate() {
-        let share = (room - used) / (others.len() - index) as f32;
-
-        if share <= *tab {
-            cap = share.floor();
-            break;
-        }
-
-        used += tab;
+        return if smallest + others <= room {
+            (at_floor((room - others).floor()), false)
+        } else {
+            (at_floor(kept), natural.len() > 1)
+        };
     }
 
-    let overflow = cap < floor;
-    let limit = if overflow { floor } else { cap };
-    let widths = natural
-        .iter()
-        .enumerate()
-        .map(|(index, tab)| {
-            if index == active {
-                *tab
-            } else {
-                tab.min(limit)
-            }
-        })
-        .collect();
+    // Su doldurma: tabanına inen sekme tabanda kalır, kalan yer öbür
+    // sekmelere eşit bölünür.
+    let mut pinned = vec![false; natural.len()];
 
-    (widths, overflow && natural.len() > 1)
+    loop {
+        let free: Vec<usize> = (0..natural.len())
+            .filter(|index| *index != active && !pinned[*index])
+            .collect();
+        let budget = room
+            - kept
+            - (0..natural.len())
+                .filter(|index| pinned[*index])
+                .map(|index| lows[index])
+                .sum::<f32>();
+        let cap = level(
+            &free.iter().map(|index| natural[*index]).collect::<Vec<_>>(),
+            budget,
+        );
+        let sunk: Vec<usize> = free
+            .iter()
+            .copied()
+            .filter(|index| natural[*index].min(cap) < lows[*index])
+            .collect();
+
+        if sunk.is_empty() {
+            let widths = (0..natural.len())
+                .map(|index| {
+                    if index == active {
+                        natural[index]
+                    } else if pinned[index] {
+                        lows[index]
+                    } else {
+                        natural[index].min(cap)
+                    }
+                })
+                .collect();
+
+            return (widths, false);
+        }
+
+        for index in sunk {
+            pinned[index] = true;
+        }
+    }
+}
+
+/// Genişliklerin toplamı `budget`'ı geçmesin diye hepsine uygulanan en
+/// geniş üst sınır; en darlardan başlayarak kalan yer eşit bölünür.
+fn level(widths: &[f32], budget: f32) -> f32 {
+    let mut sorted = widths.to_vec();
+    sorted.sort_by(f32::total_cmp);
+
+    let mut used = 0.0;
+
+    for (index, width) in sorted.iter().enumerate() {
+        let share = (budget - used) / (sorted.len() - index) as f32;
+
+        if share <= *width {
+            return share.floor();
+        }
+
+        used += width;
+    }
+
+    f32::INFINITY
 }
 
 /// Görünen sekmeler. `first` önceki karedeki ilk görünen sekmedir: sekmeler
 /// yerinde durur, yalnızca etkin sekme dışarıda kalınca şerit kayar. Sonda
 /// boşluk kalırsa soldaki sekmeler de gösterilir.
-fn window(widths: &[f32], active: usize, first: usize, room: f32) -> Range<usize> {
+pub(crate) fn window(widths: &[f32], active: usize, first: usize, room: f32) -> Range<usize> {
     let Some(last) = widths.len().checked_sub(1) else {
         return 0..0;
     };
@@ -459,7 +526,7 @@ impl Geometry {
 }
 
 /// Sekmenin kapatma düğmesinin tıklama alanı.
-fn close_area(tab: Rectangle) -> Rectangle {
+pub(crate) fn close_area(tab: Rectangle) -> Rectangle {
     square(
         Point::new(
             tab.x + tab.width - CLOSE_MARGIN - CLOSE / 2.0,
@@ -469,7 +536,7 @@ fn close_area(tab: Rectangle) -> Rectangle {
     )
 }
 
-fn square(center: Point, side: f32) -> Rectangle {
+pub(crate) fn square(center: Point, side: f32) -> Rectangle {
     Rectangle::new(
         Point::new(center.x - side / 2.0, center.y - side / 2.0),
         Size::new(side, side),
@@ -544,7 +611,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
             &natural,
             self.active,
             width - new,
-            typography::scaled(SHRINK),
+            &vec![typography::scaled(SHRINK); natural.len()],
+            f32::INFINITY,
         );
         let room = width - new - if overflow { height } else { 0.0 };
         let widths: Vec<f32> = widths.into_iter().map(|tab| tab.min(room)).collect();
@@ -840,6 +908,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                     bottom: self.bottom,
                     separator: previous == Some(false) && !active,
                     content,
+                    accent: true,
                 },
             );
             previous = Some(active);
@@ -1030,6 +1099,8 @@ pub(crate) struct Look {
     pub separator: bool,
     /// Etkin sekmenin bağlandığı içeriğin rengi.
     pub content: Color,
+    /// Etkin sekmenin kenarında vurgu çizgisi (ör. odaktaki yığın).
+    pub accent: bool,
 }
 
 /// Şeridin zemini ve içeriğe bakan kenarındaki çizgi.
@@ -1064,17 +1135,19 @@ pub(crate) fn tab(renderer: &mut Renderer, t: &Tokens, bounds: Rectangle, look: 
             );
         }
 
-        let y = if look.bottom {
-            bounds.y + bounds.height - 2.0
-        } else {
-            bounds.y
-        };
+        if look.accent {
+            let y = if look.bottom {
+                bounds.y + bounds.height - 2.0
+            } else {
+                bounds.y
+            };
 
-        fill(
-            renderer,
-            Rectangle::new(Point::new(bounds.x, y), Size::new(bounds.width, 2.0)),
-            t.accent,
-        );
+            fill(
+                renderer,
+                Rectangle::new(Point::new(bounds.x, y), Size::new(bounds.width, 2.0)),
+                t.accent,
+            );
+        }
 
         return look.content;
     }
@@ -1104,7 +1177,7 @@ pub(crate) fn tab(renderer: &mut Renderer, t: &Tokens, bounds: Rectangle, look: 
 
 /// Kısılan başlığın sonu: zemine doğru solan şerit. Sekmenin kenar ve vurgu
 /// çizgilerine değmez.
-fn fade(renderer: &mut Renderer, room: Rectangle, under: Color) {
+pub(crate) fn fade(renderer: &mut Renderer, room: Rectangle, under: Color) {
     let width = FADE.min(room.width);
 
     renderer.fill_quad(
@@ -1169,30 +1242,58 @@ mod tests {
         let natural = [80.0, 200.0, 150.0, 200.0];
 
         // Sığıyor.
-        assert_eq!(fit(&natural, 0, 700.0, 110.0), (natural.to_vec(), false));
+        assert_eq!(
+            fit(&natural, 0, 700.0, &[110.0; 4], f32::INFINITY),
+            (natural.to_vec(), false)
+        );
 
         // Dar sekme yerinde kalır, geniş sekmeler eşit daralır.
         assert_eq!(
-            fit(&natural, 0, 560.0, 110.0),
+            fit(&natural, 0, 560.0, &[110.0; 4], f32::INFINITY),
             (vec![80.0, 165.0, 150.0, 165.0], false)
         );
 
         // Etkin sekme doğal genişliğinde kalır.
         assert_eq!(
-            fit(&natural, 1, 500.0, 110.0),
+            fit(&natural, 1, 500.0, &[110.0; 4], f32::INFINITY),
             (vec![80.0, 200.0, 110.0, 110.0], false)
         );
         assert_eq!(
-            fit(&natural, 0, 500.0, 110.0),
+            fit(&natural, 0, 500.0, &[110.0; 4], f32::INFINITY),
             (vec![80.0, 140.0, 140.0, 140.0], false)
         );
 
         // Okunur genişliğin altına inilmez; sığmayanlar listeye taşar.
         assert_eq!(
-            fit(&natural, 3, 400.0, 110.0),
+            fit(&natural, 3, 400.0, &[110.0; 4], f32::INFINITY),
             (vec![80.0, 110.0, 110.0, 200.0], true)
         );
-        assert_eq!(fit(&[300.0], 0, 100.0, 110.0), (vec![300.0], false));
+        assert_eq!(
+            fit(&[300.0], 0, 100.0, &[110.0], f32::INFINITY),
+            (vec![300.0], false)
+        );
+
+        // Her sekme kendi tabanında durur (ör. yalnızca ikon kalan sekme).
+        assert_eq!(
+            fit(
+                &natural,
+                1,
+                400.0,
+                &[40.0, 110.0, 40.0, 110.0],
+                f32::INFINITY
+            ),
+            (vec![45.0, 200.0, 45.0, 110.0], false)
+        );
+
+        // Öbürleri tabandayken etkin sekme de daralabilir.
+        assert_eq!(
+            fit(&natural, 1, 300.0, &[40.0, 110.0, 40.0, 110.0], 100.0),
+            (vec![40.0, 110.0, 40.0, 110.0], false)
+        );
+        assert_eq!(
+            fit(&natural, 1, 280.0, &[40.0, 110.0, 40.0, 110.0], 100.0),
+            (vec![40.0, 200.0, 40.0, 110.0], true)
+        );
     }
 
     fn strip_of(count: usize, first: usize) -> Geometry {

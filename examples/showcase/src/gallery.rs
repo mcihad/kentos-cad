@@ -14,6 +14,7 @@ use kentos_rc::icon::Icon;
 use kentos_rc::spatial::SelectionMode;
 use kentos_rc::widget::Toast;
 use kentos_rc::widget::command_line::Entry;
+use kentos_rc::widget::docking::{self, Docks, Side};
 use kentos_rc::widget::floating::{self, Placement, Windows};
 use kentos_rc::widget::inspector;
 use kentos_rc::widget::table::SortOrder;
@@ -78,7 +79,7 @@ impl Page {
                 "Kayan pencereler, durum çubuğu, komut kutusu, gezinme çubuğu, menü ve iletişim \
                  kutuları."
             }
-            Page::Layout => "Belge sekmeleri: çalışma alanını paylaşan görünümler.",
+            Page::Layout => "Belge sekmeleri ve sekmeli yuva: çalışma alanının düzeni.",
             Page::Feedback => {
                 "Bildirimler, ilerleme ve görevler, onay kutusu, uyarı şeridi, boş ve hata \
                  durumları, adımlı sihirbaz ve özellikler penceresi."
@@ -148,6 +149,61 @@ pub enum Demo {
     DocumentMoved(usize, usize),
     DocumentAdded,
     DocumentSaved,
+    /// Sekmeli yuva örneği.
+    Dock(docking::Event<DemoPanel>),
+    DockReset,
+}
+
+/// Sekmeli yuva örneğinin panelleri.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DemoPanel {
+    Layers,
+    Styles,
+    Properties,
+    Tasks,
+    Output,
+    History,
+}
+
+impl DemoPanel {
+    pub fn title(self) -> &'static str {
+        match self {
+            DemoPanel::Layers => "Katmanlar",
+            DemoPanel::Styles => "Stiller",
+            DemoPanel::Properties => "Özellikler",
+            DemoPanel::Tasks => "Görevler",
+            DemoPanel::Output => "Çıktı",
+            DemoPanel::History => "Geçmiş",
+        }
+    }
+
+    pub fn icon(self) -> Icon {
+        match self {
+            DemoPanel::Layers => Icon::Layers,
+            DemoPanel::Styles => Icon::Drop,
+            DemoPanel::Properties => Icon::Properties,
+            DemoPanel::Tasks => Icon::Progress,
+            DemoPanel::Output => Icon::Terminal,
+            DemoPanel::History => Icon::Clock,
+        }
+    }
+}
+
+/// Sekmeli yuva örneğinin açılış yerleşimi.
+pub fn demo_docks() -> Docks<DemoPanel> {
+    let mut docks = Docks::new();
+
+    docks.dock(DemoPanel::Layers, Side::Left);
+    docks.dock(DemoPanel::Styles, Side::Left);
+    docks.split(DemoPanel::Tasks, Side::Left);
+    docks.dock(DemoPanel::Properties, Side::Right);
+    docks.dock(DemoPanel::Output, Side::Bottom);
+    docks.dock(DemoPanel::History, Side::Bottom);
+    docks.show(DemoPanel::Layers, Side::Left);
+    docks.set_size(Side::Left, 220.0);
+    docks.set_size(Side::Right, 220.0);
+    docks.set_size(Side::Bottom, 150.0);
+    docks
 }
 
 /// Bildirim örnekleri: düğme adı ve bildirim.
@@ -296,6 +352,8 @@ pub struct Gallery {
     pub documents: Vec<Document>,
     pub document: usize,
     pub untitled: usize,
+    /// Sekmeli yuva örneğinin yerleşimi.
+    pub docks: Docks<DemoPanel>,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -379,6 +437,7 @@ impl Default for Gallery {
             documents: sample_documents(),
             document: 0,
             untitled: 1,
+            docks: demo_docks(),
         }
     }
 }
@@ -563,6 +622,8 @@ impl Gallery {
                     document.dirty = false;
                 }
             }
+            Demo::Dock(event) => self.docks.update(event),
+            Demo::DockReset => self.docks = demo_docks(),
         }
 
         None
