@@ -1,3 +1,4 @@
+import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { AppContext } from '../context';
 
 /** A project to select in the open dialog (`cloud.open` with args). */
@@ -28,10 +29,10 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
     (args?: unknown) =>
       signedIn() ? next(args) : hooks.signIn(() => next(args));
   const watch = [cloud.auth, ctx.server.state];
-  // The open project, while it still exists, and whether this account may do `capability` in it.
-  const openMay = (capability: string) => {
+  // The open project, while it still exists, and whether this account may do `permission` in it.
+  const openMay = (permission: ProjectPermission) => {
     const p = cloud.project.value;
-    return !!p && cloud.sync.value?.state.value !== 'deleted' && cloud.can(p.tenantId, capability) && reachable();
+    return !!p && cloud.sync.value?.state.value !== 'deleted' && cloud.may(permission) && reachable();
   };
   ctx.commands.registerAll([
     {
@@ -65,7 +66,7 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       title: 'Bulut projesi aç…',
       category: C,
       icon: 'cloud',
-      description: 'Kurumunuzun bulut projelerinden birini açar. Açık projedeki değişiklikler kendiliğinden kaydedilir.',
+      description: 'Kişisel alanınızdaki ya da kurumunuzdaki, size açık bir bulut projesini açar. Açık projedeki değişiklikler kendiliğinden kaydedilir.',
       aliases: ['BULUTAC', 'CLOUDOPEN'],
       run: needAccount((pick) => hooks.projects('open', isPick(pick) ? pick : undefined)),
       isEnabled: () => reachable(),
@@ -76,7 +77,8 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       title: 'Buluta yükle…',
       category: C,
       icon: 'cloudUpload',
-      description: 'Açık çizimi kurumunuzda yeni bir bulut projesi yapar; sonra her değişiklik kendiliğinden kaydedilir.',
+      description:
+        'Açık çizimi kişisel alanınızda ya da kurumunuzda yeni bir bulut projesi yapar; proje sizindir, başkaları paylaşımla eklenir. Sonra her değişiklik kendiliğinden kaydedilir.',
       aliases: ['BULUTAYUKLE', 'UPLOAD'],
       run: needAccount(() => hooks.projects('upload')),
       isEnabled: () => reachable(),
@@ -88,7 +90,8 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       short: 'Yeniden adlandır',
       category: C,
       icon: 'edit',
-      description: 'Açık bulut projesinin adını kurumdaki herkes için değiştirir (project.edit yetkisi gerekir). Başka bir projeyi Bulut projesi aç listesinden yeniden adlandırın.',
+      description:
+        'Açık bulut projesinin adını projeye erişen herkes için değiştirir (project.edit yetkisi gerekir). Başka bir projeyi Bulut projesi aç listesinden yeniden adlandırın.',
       aliases: ['BULUTAD', 'RENAME'],
       run: () => hooks.rename(),
       isEnabled: () => openMay('project.edit'),
@@ -101,7 +104,7 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       category: C,
       icon: 'trash',
       description:
-        'Açık bulut projesini kurumdaki herkes için siler (project.delete yetkisi, yönetici). Nesneler sunucuda saklanır; yanlışlıkla silineni sunucu yöneticisi geri getirebilir.',
+        'Açık bulut projesini erişen herkes için siler (project.delete yetkisi: proje sahibi ya da kurum yöneticisi). Nesneler sunucuda saklanır; yanlışlıkla silineni sunucu yöneticisi geri getirebilir.',
       aliases: ['BULUTSIL'],
       run: () => hooks.remove(),
       isEnabled: () => openMay('project.delete'),

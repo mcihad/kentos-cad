@@ -6,6 +6,8 @@ import type { Me } from '../../contracts/generated/Me';
 import type { MembershipView } from '../../contracts/generated/MembershipView';
 import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
 import type { ProjectList } from '../../contracts/generated/ProjectList';
+import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
+import type { TenantKind } from '../../contracts/generated/TenantKind';
 import type { AppContext } from '../context';
 import { replaceDrawing } from '../fileIO';
 import { ApiFailure, HttpCloudApi, type CloudApi } from './api';
@@ -22,20 +24,39 @@ import { ProjectSync } from './sync';
  * thrown away (`generation`, CLAUDE.md §21.2). Uploading a local drawing
  * creates the project with every layer unlocked, sends the objects in
  * batches and then restores the drawing's own layer tree, locks included.
- * A project can be renamed (a metadata change) and, by an admin, deleted;
- * when someone else deletes the open one, its sync stops sending and the
- * drawing stays on screen, its edits kept on this device.
+ * A project can be renamed (a metadata change) and, by its owner or an
+ * organisation's admin, deleted; when someone else deletes the open one, its
+ * sync stops sending and the drawing stays on screen, its edits kept on this
+ * device.
+ *
+ * What the account may do comes with each project (docs/adr/0015): a tenant
+ * role opens no project by itself, so buttons follow the project's own
+ * permissions; the membership only says whether projects may be created in a
+ * workspace. The server checks every request anyway.
  */
 
 export type AuthState = 'unknown' | 'signedOut' | 'signedIn';
 
 export interface CloudProject {
   tenantId: string;
+  /** Its workspace as the interface names it (`workspaceName`). */
   tenantName: string;
+  tenantKind: TenantKind;
   projectId: string;
   name: string;
+  /** What this account may do in it. */
+  permissions: readonly ProjectPermission[];
   canWrite: boolean;
   canEditMeta: boolean;
+}
+
+/**
+ * How the interface names a workspace: an organisation by its name, one's own
+ * personal space “Kişisel”, someone else's (a project shared from it) by its person.
+ */
+export function workspaceName(kind: TenantKind, name: string, own: boolean): string {
+  if (kind === 'organization') return name;
+  return own ? 'Kişisel' : `${name} (kişisel alan)`;
 }
 
 export type Progress = (done: number, total: number) => void;
@@ -81,8 +102,14 @@ export class CloudSession {
     return this.me.value?.memberships.find((m) => m.tenantId === tenantId);
   }
 
+  /** A right in the workspace itself (`project.create`, `member.manage`). */
   can(tenantId: string, capability: string): boolean {
     return !!this.membership(tenantId)?.capabilities.includes(capability);
+  }
+
+  /** Whether this account may do `permission` in the open project. */
+  may(permission: ProjectPermission): boolean {
+    return !!this.project.value?.permissions.includes(permission);
   }
 
   /** Asks the server who we are (a quiet no when no one is signed in or the server is away). */
@@ -172,9 +199,10 @@ export class CloudSession {
   }
 
   /**
-   * Deletes a cloud project for everyone (an admin's right; the server keeps
-   * it, so the operator can restore it). The open one is left: the drawing
-   * stays on screen as an unsaved local drawing.
+   * Deletes a cloud project for everyone (`project.delete`: its owner, or an
+   * organisation's admin; the server keeps it, so the operator can restore
+   * it). The open one is left: the drawing stays on screen as an unsaved
+   * local drawing.
    */
   async deleteProject(tenantId: string, projectId: string): Promise<void> {
     await this.api.deleteProject(tenantId, projectId);
@@ -229,14 +257,18 @@ export class CloudSession {
 
   private attach(info: ProjectInfo, records: { localId: number; featureId: string; version: string }[], cursor: string): ProjectSync {
     const me = this.me.value!;
-    const tenant = this.membership(info.tenantId)!;
+    // A project shared from someone else's personal space comes without a membership there.
+    const own = !!this.membership(info.tenantId);
+    const permissions = info.access.permissions;
     const project: CloudProject = {
       tenantId: info.tenantId,
-      tenantName: tenant.tenantName,
+      tenantName: workspaceName(info.tenantKind, info.tenantName, own),
+      tenantKind: info.tenantKind,
       projectId: info.id,
       name: info.name,
-      canWrite: tenant.capabilities.includes('feature.write'),
-      canEditMeta: tenant.capabilities.includes('project.edit'),
+      permissions,
+      canWrite: permissions.includes('feature.write'),
+      canEditMeta: permissions.includes('project.edit'),
     };
     const sync = new ProjectSync({
       doc: this.ctx.doc,

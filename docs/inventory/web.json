@@ -338,7 +338,7 @@
       "short": "Projeyi sil",
       "category": "Bulut",
       "icon": "trash",
-      "description": "Açık bulut projesini kurumdaki herkes için siler (project.delete yetkisi, yönetici). Nesneler sunucuda saklanır; yanlışlıkla silineni sunucu yöneticisi geri getirebilir.",
+      "description": "Açık bulut projesini erişen herkes için siler (project.delete yetkisi: proje sahibi ya da kurum yöneticisi). Nesneler sunucuda saklanır; yanlışlıkla silineni sunucu yöneticisi geri getirebilir.",
       "aliases": [
         "BULUTSIL"
       ],
@@ -369,7 +369,7 @@
       "title": "Bulut projesi aç…",
       "category": "Bulut",
       "icon": "cloud",
-      "description": "Kurumunuzun bulut projelerinden birini açar. Açık projedeki değişiklikler kendiliğinden kaydedilir.",
+      "description": "Kişisel alanınızdaki ya da kurumunuzdaki, size açık bir bulut projesini açar. Açık projedeki değişiklikler kendiliğinden kaydedilir.",
       "aliases": [
         "BULUTAC",
         "CLOUDOPEN"
@@ -406,7 +406,7 @@
       "short": "Yeniden adlandır",
       "category": "Bulut",
       "icon": "edit",
-      "description": "Açık bulut projesinin adını kurumdaki herkes için değiştirir (project.edit yetkisi gerekir). Başka bir projeyi Bulut projesi aç listesinden yeniden adlandırın.",
+      "description": "Açık bulut projesinin adını projeye erişen herkes için değiştirir (project.edit yetkisi gerekir). Başka bir projeyi Bulut projesi aç listesinden yeniden adlandırın.",
       "aliases": [
         "BULUTAD",
         "RENAME"
@@ -496,7 +496,7 @@
       "title": "Buluta yükle…",
       "category": "Bulut",
       "icon": "cloudUpload",
-      "description": "Açık çizimi kurumunuzda yeni bir bulut projesi yapar; sonra her değişiklik kendiliğinden kaydedilir.",
+      "description": "Açık çizimi kişisel alanınızda ya da kurumunuzda yeni bir bulut projesi yapar; proje sizindir, başkaları paylaşımla eklenir. Sonra her değişiklik kendiliğinden kaydedilir.",
       "aliases": [
         "BULUTAYUKLE",
         "UPLOAD"

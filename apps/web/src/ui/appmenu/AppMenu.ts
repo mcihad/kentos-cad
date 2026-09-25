@@ -1,5 +1,6 @@
 import '../../styles/appmenu.css';
 import type { AppContext } from '../../app/context';
+import { workspaceName } from '../../app/cloud/session';
 import { effectiveWorkspace } from '../../app/workspaces';
 import { drawingFontById } from '../../app/appearance';
 import { DisposableStore, listen } from '../../core/disposable';
@@ -293,7 +294,7 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
       'div',
       { class: 'appmenu__card appmenu__account' },
       h('span', { class: 'appmenu__avatar' }, initials(me.user.displayName)),
-      h('div', { class: 'appmenu__who' }, h('b', null, me.user.displayName), h('span', null, memberships.map((m) => m.tenantName).join(' · ') || 'Kurum üyeliği yok')),
+      h('div', { class: 'appmenu__who' }, h('b', null, me.user.displayName), h('span', null, memberships.map((m) => workspaceName(m.tenantKind, m.tenantName, true)).join(' · ') || 'Kurum üyeliği yok')),
       (() => {
         const out = h('button', { class: 'appmenu__link', type: 'button', dataset: { command: 'cloud.signOut' } }, 'Çıkış');
         out.addEventListener('click', () => run('cloud.signOut'));
@@ -329,13 +330,13 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
                     'button',
                     { class: 'appmenu__row appmenu__row--project', type: 'button', role: 'menuitem', dataset: { project: x.id } },
                     h('span', { class: 'appmenu__projicon' }, icon('cloud', 16)),
-                    h('span', { class: 'appmenu__text' }, h('span', { class: 'appmenu__label' }, x.name), h('span', { class: 'appmenu__sub' }, `${tenant.tenantName} · ${ago(x.updatedAt)}`)),
+                    h('span', { class: 'appmenu__text' }, h('span', { class: 'appmenu__label' }, x.name), h('span', { class: 'appmenu__sub' }, `${workspaceName(tenant.tenantKind, tenant.tenantName, true)} · ${ago(x.updatedAt)}`)),
                     x.id === p?.projectId ? h('span', { class: 'appmenu__soon appmenu__soon--open' }, 'Açık') : null,
                   );
                   r.addEventListener('click', () => run('cloud.open', { tenantId: tenant.tenantId, projectId: x.id }));
                   return r;
                 })
-              : h('p', { class: 'appmenu__empty' }, 'Bu kurumda henüz proje yok. Açık çizimi “Buluta yükle” ile gönderin.'),
+              : h('p', { class: 'appmenu__empty' }, tenant.tenantKind === 'personal' ? 'Kişisel alanınızda henüz proje yok. Açık çizimi “Buluta yükle” ile gönderin.' : 'Bu kurumda size açık bir proje yok. Açık çizimi “Buluta yükle” ile gönderin.'),
           );
         })
         .catch(() => recent.isConnected && replaceChildren(recent, h('p', { class: 'appmenu__empty' }, 'Projeler okunamadı.')));
