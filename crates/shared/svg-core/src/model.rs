@@ -9,7 +9,7 @@ use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::jsmath::{
     PI, atan2, cos, js_hypot, js_max, js_min, js_round, sin, truthy,
 };
-use kentos_style_core::js::{number, text::utf16_len};
+use kentos_style_core::js::number;
 
 use crate::path::{
     Matrix, apply, empty_box, grow_box, path_data_of, sub_paths_box, transform_sub_paths,
@@ -20,6 +20,12 @@ use crate::shape::{Obj, PathNode, SubPath};
 pub fn n(v: f64) -> String {
     let s = number::to_string(js_round(v * 1000.0) / 1000.0);
     if s == "-0" { "0".to_string() } else { s }
+}
+
+/// Width of an SVG text in em, in Arial's measures; an empty one counts as one letter (it can still be picked).
+pub(crate) fn text_em(text: &str) -> f64 {
+    use kentos_geometry_core::text::{Font, width_em};
+    width_em(text, Font::from_id("arimo"))
 }
 
 fn font(name: &str) -> Option<&'static str> {
@@ -404,11 +410,11 @@ pub fn to_path(s: &Obj) -> Obj {
     out
 }
 
-/// Text is measured roughly (0.55 em per letter), like the drawing's text boxes.
+/// Text is measured in Arial's widths (the Arimo table of `kentos_geometry_core::text`): the editor's
+/// text is Arial or the browser's sans default; a bold face is a little wider. Kerning is left out.
 fn text_box(s: &Obj) -> Bounds {
     let size = s.num("size");
-    let len = utf16_len(s.text("text").unwrap_or("")) as f64;
-    let w = size * 0.55 * js_max(1.0, len) * (if s.num("weight") >= 700.0 { 1.08 } else { 1.0 });
+    let w = size * text_em(s.text("text").unwrap_or("")) * (if s.num("weight") >= 700.0 { 1.08 } else { 1.0 });
     let (x, y) = (s.num("x"), s.num("y"));
     let x0 = match s.text("anchor") {
         Some("start") => x,

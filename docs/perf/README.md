@@ -23,7 +23,7 @@ Kaynak: önce [bundle-f6-before-2026-09-25.md](bundle-f6-before-2026-09-25.md), 
 | Etkileşime hazır, soğuk (aralık) | 865 ms (835–910) | 808 ms (756–819) |
 | Ana iş parçacığında script süresi, soğuk | 107 ms | 96 ms |
 
-Açılıştaki aktarımın çoğu WASM çekirdeğidir (1 109,7 KB): `vite preview` onu sıkıştırmadan gönderiyor (gzip -9 ile ~395 KB). Üretim sunucusu `.wasm`'ı gzip ya da brotli ile göndermelidir; bu ölçüm onu içermez.
+Açılıştaki aktarımın çoğu WASM çekirdeğiydi (1 109,7 KB): `vite preview`'in kendi sıkıştırması `application/wasm`'ı dışarıda bırakıyordu. Derleme artık her `.wasm`, `.js`, `.css` dosyasının yanına Brotli (`.br`, kalite 11) ve gzip (`.gz`, düzey 9) kopyasını yazar ve `vite preview` bunları gönderir (`apps/web/vite.config.mjs` `kentosCompress`, Node zlib, bağımlılık yok): soğuk açılışın aktarımı 1 535,9 → 682,6 KB, WASM 1 109,7 → 298,3 KB ([startup-wasm-compressed-2026-09-25.md](startup-wasm-compressed-2026-09-25.md)); yerel sunucuda ağ beklemesi olmadığı için hazır olma süresi aynı kaldı (808 → 830 ms, ölçüm aralığında), kazanç gerçek ağdadır. Üretimde statik sunucu bu kopyaları olduğu gibi göndermelidir: nginx `brotli_static on; gzip_static on;` (brotli için ngx_brotli), Caddy `file_server { precompressed br gzip }`; `application/wasm` türü ve `Vary: Accept-Encoding` gerekir, `/assets/` altı adında özet taşıdığı için `immutable` önbelleklenebilir.
 
 ## Ağır modüllerin açılışı (2026-09-24, `e0b9168`)
 
@@ -33,7 +33,7 @@ Kaynak: [modules-y4-2026-09-24.md](modules-y4-2026-09-24.md) (ham veri `.json`; 
 |---|---|---|---|---|
 | Stil yöneticisi | 220 ms | 107 ms | 12,9 KB (gzip JS) | ≤ 400 / ≤ 150 ms |
 | Model tasarımcısı | 125 ms | 36 ms | 11,1 KB (gzip JS) | ≤ 400 / ≤ 150 ms |
-| SVG düzenleyicisi | 163 ms | 42 ms | 51,3 KB gzip JS + 841 KB WASM (sunucu WASM'ı sıkıştırmadı; gzip -9 ile 315,8 KB) | ≤ 400 / ≤ 150 ms |
+| SVG düzenleyicisi | 163 ms | 42 ms | 51,3 KB gzip JS + 841 KB WASM (bu ölçümde sunucu WASM'ı sıkıştırmadı; derleme artık Brotli kopyasını yazar: 242,6 KB) | ≤ 400 / ≤ 150 ms |
 
 ## Etkileşim tabanı (2026-09-24, `c110b15`)
 

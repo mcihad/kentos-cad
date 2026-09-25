@@ -1,0 +1,1100 @@
+{
+  "label": "wasm-compressed",
+  "date": "2026-09-25T08:02:25.084Z",
+  "commit": "1e57a85",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+    "threads": 4,
+    "memoryGb": 16,
+    "chrome": "Chromium 141.0.7390.37"
+  },
+  "runs": 3,
+  "cold": {
+    "interactiveMs": 829.7999999988824,
+    "requests": 27,
+    "transferred": 698969,
+    "js": 209368,
+    "css": 17541,
+    "wasm": 305418,
+    "scriptMs": 122,
+    "taskMs": 776,
+    "jsHeapMb": 9,
+    "interactiveRange": [
+      777.5,
+      833.4000000003725
+    ]
+  },
+  "warm": {
+    "interactiveMs": 2273.9000000003725,
+    "requests": 27,
+    "transferred": 847,
+    "js": 720,
+    "css": 0,
+    "wasm": 0,
+    "scriptMs": 158,
+    "taskMs": 3040,
+    "jsHeapMb": 15,
+    "interactiveRange": [
+      2174.7000000011176,
+      2286.0999999996275
+    ]
+  },
+  "loads": [
+    {
+      "warm": false,
+      "interactiveMs": 833.4000000003725,
+      "requests": 27,
+      "transferred": 698969,
+      "js": 209368,
+      "css": 17541,
+      "wasm": 305418,
+      "scriptMs": 118,
+      "taskMs": 776,
+      "jsHeapMb": 9,
+      "list": [
+        {
+          "path": "/",
+          "status": 200,
+          "bytes": 784,
+          "encoding": "gzip"
+        },
+        {
+          "path": "/assets/index-6zzzaVzp.css",
+          "status": 200,
+          "bytes": 17541,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/text-NQAA7O1A.js",
+          "status": 200,
+          "bytes": 496,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/emitter-BgRlvLeE.js",
+          "status": 200,
+          "bytes": 535,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/core-DwucVzgu.js",
+          "status": 200,
+          "bytes": 4876,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/index-C92eBV0I.js",
+          "status": 200,
+          "bytes": 130620,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/entities-DwIRlwRt.js",
+          "status": 200,
+          "bytes": 1067,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/pack-D9eDrjDN.js",
+          "status": 200,
+          "bytes": 1617,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/color-BbnSkwok.js",
+          "status": 200,
+          "bytes": 779,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/PopupMenu-DXK5ZIuy.js",
+          "status": 200,
+          "bytes": 9304,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/expression-DS2qfcOR.js",
+          "status": 200,
+          "bytes": 1580,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/signal-BEuxsL1Q.js",
+          "status": 200,
+          "bytes": 880,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/projectSettings-DR46irdx.js",
+          "status": 200,
+          "bytes": 938,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/crs-DXR5jJaS.js",
+          "status": 200,
+          "bytes": 1159,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/kentos_geometry_wasm_bg-DCuHYXN7.wasm",
+          "status": 200,
+          "bytes": 305418,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/sampleProject-DhqBOGvE.js",
+          "status": 200,
+          "bytes": 4872,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/showcase-CGLPshhb.js",
+          "status": 200,
+          "bytes": 1404,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/system-CzF_h3uS.js",
+          "status": 200,
+          "bytes": 49241,
+          "encoding": "br"
+        },
+        {
+          "path": "/favicon.svg",
+          "status": 200,
+          "bytes": 858,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-wght-normal-eXO_dkmS.woff2",
+          "status": 200,
+          "bytes": 27669,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-ext-wght-normal-DmpS2jIq.woff2",
+          "status": 200,
+          "bytes": 22049,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+          "status": 200,
+          "bytes": 15029,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-500-normal-DOaysfXq.woff2",
+          "status": 200,
+          "bytes": 14737,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-500-normal-BPAOfeC8.woff2",
+          "status": 200,
+          "bytes": 22329,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-600-normal-B8NK_A3D.woff2",
+          "status": 200,
+          "bytes": 15289,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-600-normal-DILqtrty.woff2",
+          "status": 200,
+          "bytes": 23093,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-400-italic-BjGuzOss.woff2",
+          "status": 200,
+          "bytes": 24805,
+          "encoding": ""
+        }
+      ]
+    },
+    {
+      "warm": true,
+      "interactiveMs": 2174.7000000011176,
+      "requests": 27,
+      "transferred": 847,
+      "js": 720,
+      "css": 0,
+      "wasm": 0,
+      "scriptMs": 156,
+      "taskMs": 2944,
+      "jsHeapMb": 15,
+      "list": [
+        {
+          "path": "/",
+          "status": 200,
+          "bytes": 127,
+          "encoding": "gzip"
+        },
+        {
+          "path": "/assets/index-C92eBV0I.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/PopupMenu-DXK5ZIuy.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/core-DwucVzgu.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/pack-D9eDrjDN.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/color-BbnSkwok.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/expression-DS2qfcOR.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/crs-DXR5jJaS.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/projectSettings-DR46irdx.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/index-6zzzaVzp.css",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/emitter-BgRlvLeE.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/text-NQAA7O1A.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/signal-BEuxsL1Q.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/entities-DwIRlwRt.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/sampleProject-DhqBOGvE.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/system-CzF_h3uS.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/showcase-CGLPshhb.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-ext-wght-normal-DmpS2jIq.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-wght-normal-eXO_dkmS.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-500-normal-DOaysfXq.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-500-normal-BPAOfeC8.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-600-normal-B8NK_A3D.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-600-normal-DILqtrty.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-400-italic-BjGuzOss.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/kentos_geometry_wasm_bg-DCuHYXN7.wasm",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/v1/health",
+          "status": 503,
+          "bytes": 0,
+          "encoding": ""
+        }
+      ]
+    },
+    {
+      "warm": false,
+      "interactiveMs": 829.7999999988824,
+      "requests": 27,
+      "transferred": 698969,
+      "js": 209368,
+      "css": 17541,
+      "wasm": 305418,
+      "scriptMs": 140,
+      "taskMs": 793,
+      "jsHeapMb": 9,
+      "list": [
+        {
+          "path": "/",
+          "status": 200,
+          "bytes": 784,
+          "encoding": "gzip"
+        },
+        {
+          "path": "/assets/index-6zzzaVzp.css",
+          "status": 200,
+          "bytes": 17541,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/text-NQAA7O1A.js",
+          "status": 200,
+          "bytes": 496,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/core-DwucVzgu.js",
+          "status": 200,
+          "bytes": 4876,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/PopupMenu-DXK5ZIuy.js",
+          "status": 200,
+          "bytes": 9304,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/emitter-BgRlvLeE.js",
+          "status": 200,
+          "bytes": 535,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/entities-DwIRlwRt.js",
+          "status": 200,
+          "bytes": 1067,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/signal-BEuxsL1Q.js",
+          "status": 200,
+          "bytes": 880,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/pack-D9eDrjDN.js",
+          "status": 200,
+          "bytes": 1617,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/expression-DS2qfcOR.js",
+          "status": 200,
+          "bytes": 1580,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/crs-DXR5jJaS.js",
+          "status": 200,
+          "bytes": 1159,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/projectSettings-DR46irdx.js",
+          "status": 200,
+          "bytes": 938,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/color-BbnSkwok.js",
+          "status": 200,
+          "bytes": 779,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/index-C92eBV0I.js",
+          "status": 200,
+          "bytes": 130620,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/kentos_geometry_wasm_bg-DCuHYXN7.wasm",
+          "status": 200,
+          "bytes": 305418,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/sampleProject-DhqBOGvE.js",
+          "status": 200,
+          "bytes": 4872,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/showcase-CGLPshhb.js",
+          "status": 200,
+          "bytes": 1404,
+          "encoding": "br"
+        },
+        {
+          "path": "/favicon.svg",
+          "status": 200,
+          "bytes": 858,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/system-CzF_h3uS.js",
+          "status": 200,
+          "bytes": 49241,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-wght-normal-eXO_dkmS.woff2",
+          "status": 200,
+          "bytes": 27669,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-ext-wght-normal-DmpS2jIq.woff2",
+          "status": 200,
+          "bytes": 22049,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+          "status": 200,
+          "bytes": 15029,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-500-normal-DOaysfXq.woff2",
+          "status": 200,
+          "bytes": 14737,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-600-normal-B8NK_A3D.woff2",
+          "status": 200,
+          "bytes": 15289,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-500-normal-BPAOfeC8.woff2",
+          "status": 200,
+          "bytes": 22329,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-600-normal-DILqtrty.woff2",
+          "status": 200,
+          "bytes": 23093,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-400-italic-BjGuzOss.woff2",
+          "status": 200,
+          "bytes": 24805,
+          "encoding": ""
+        }
+      ]
+    },
+    {
+      "warm": true,
+      "interactiveMs": 2273.9000000003725,
+      "requests": 27,
+      "transferred": 847,
+      "js": 720,
+      "css": 0,
+      "wasm": 0,
+      "scriptMs": 172,
+      "taskMs": 3060,
+      "jsHeapMb": 15,
+      "list": [
+        {
+          "path": "/",
+          "status": 200,
+          "bytes": 127,
+          "encoding": "gzip"
+        },
+        {
+          "path": "/assets/index-C92eBV0I.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/PopupMenu-DXK5ZIuy.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/core-DwucVzgu.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/pack-D9eDrjDN.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/color-BbnSkwok.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/expression-DS2qfcOR.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/crs-DXR5jJaS.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/projectSettings-DR46irdx.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/index-6zzzaVzp.css",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/emitter-BgRlvLeE.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/text-NQAA7O1A.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/signal-BEuxsL1Q.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/entities-DwIRlwRt.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/sampleProject-DhqBOGvE.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/system-CzF_h3uS.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/showcase-CGLPshhb.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-ext-wght-normal-DmpS2jIq.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-wght-normal-eXO_dkmS.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-500-normal-DOaysfXq.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-500-normal-BPAOfeC8.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-600-normal-B8NK_A3D.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-600-normal-DILqtrty.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-400-italic-BjGuzOss.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/kentos_geometry_wasm_bg-DCuHYXN7.wasm",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/v1/health",
+          "status": 503,
+          "bytes": 0,
+          "encoding": ""
+        }
+      ]
+    },
+    {
+      "warm": false,
+      "interactiveMs": 777.5,
+      "requests": 27,
+      "transferred": 698969,
+      "js": 209368,
+      "css": 17541,
+      "wasm": 305418,
+      "scriptMs": 122,
+      "taskMs": 719,
+      "jsHeapMb": 9,
+      "list": [
+        {
+          "path": "/",
+          "status": 200,
+          "bytes": 784,
+          "encoding": "gzip"
+        },
+        {
+          "path": "/assets/index-6zzzaVzp.css",
+          "status": 200,
+          "bytes": 17541,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/emitter-BgRlvLeE.js",
+          "status": 200,
+          "bytes": 535,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/PopupMenu-DXK5ZIuy.js",
+          "status": 200,
+          "bytes": 9304,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/text-NQAA7O1A.js",
+          "status": 200,
+          "bytes": 496,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/signal-BEuxsL1Q.js",
+          "status": 200,
+          "bytes": 880,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/entities-DwIRlwRt.js",
+          "status": 200,
+          "bytes": 1067,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/pack-D9eDrjDN.js",
+          "status": 200,
+          "bytes": 1617,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/color-BbnSkwok.js",
+          "status": 200,
+          "bytes": 779,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/expression-DS2qfcOR.js",
+          "status": 200,
+          "bytes": 1580,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/crs-DXR5jJaS.js",
+          "status": 200,
+          "bytes": 1159,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/projectSettings-DR46irdx.js",
+          "status": 200,
+          "bytes": 938,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/core-DwucVzgu.js",
+          "status": 200,
+          "bytes": 4876,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/index-C92eBV0I.js",
+          "status": 200,
+          "bytes": 130620,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/sampleProject-DhqBOGvE.js",
+          "status": 200,
+          "bytes": 4872,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/kentos_geometry_wasm_bg-DCuHYXN7.wasm",
+          "status": 200,
+          "bytes": 305418,
+          "encoding": "br"
+        },
+        {
+          "path": "/favicon.svg",
+          "status": 200,
+          "bytes": 858,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/showcase-CGLPshhb.js",
+          "status": 200,
+          "bytes": 1404,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/system-CzF_h3uS.js",
+          "status": 200,
+          "bytes": 49241,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-wght-normal-eXO_dkmS.woff2",
+          "status": 200,
+          "bytes": 27669,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-ext-wght-normal-DmpS2jIq.woff2",
+          "status": 200,
+          "bytes": 22049,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+          "status": 200,
+          "bytes": 15029,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-500-normal-DOaysfXq.woff2",
+          "status": 200,
+          "bytes": 14737,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-500-normal-BPAOfeC8.woff2",
+          "status": 200,
+          "bytes": 22329,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-600-normal-B8NK_A3D.woff2",
+          "status": 200,
+          "bytes": 15289,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-600-normal-DILqtrty.woff2",
+          "status": 200,
+          "bytes": 23093,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-400-italic-BjGuzOss.woff2",
+          "status": 200,
+          "bytes": 24805,
+          "encoding": ""
+        }
+      ]
+    },
+    {
+      "warm": true,
+      "interactiveMs": 2286.0999999996275,
+      "requests": 27,
+      "transferred": 847,
+      "js": 720,
+      "css": 0,
+      "wasm": 0,
+      "scriptMs": 158,
+      "taskMs": 3040,
+      "jsHeapMb": 10,
+      "list": [
+        {
+          "path": "/",
+          "status": 200,
+          "bytes": 127,
+          "encoding": "gzip"
+        },
+        {
+          "path": "/assets/index-C92eBV0I.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/PopupMenu-DXK5ZIuy.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/core-DwucVzgu.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/pack-D9eDrjDN.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/color-BbnSkwok.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/expression-DS2qfcOR.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/crs-DXR5jJaS.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/projectSettings-DR46irdx.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/index-6zzzaVzp.css",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/emitter-BgRlvLeE.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/text-NQAA7O1A.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/signal-BEuxsL1Q.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/entities-DwIRlwRt.js",
+          "status": 304,
+          "bytes": 180,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/sampleProject-DhqBOGvE.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/system-CzF_h3uS.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/showcase-CGLPshhb.js",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-ext-wght-normal-DmpS2jIq.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/plus-jakarta-sans-latin-wght-normal-eXO_dkmS.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-500-normal-DOaysfXq.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-500-normal-BPAOfeC8.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-ext-600-normal-B8NK_A3D.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-600-normal-DILqtrty.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/barlow-latin-400-italic-BjGuzOss.woff2",
+          "status": 200,
+          "bytes": 0,
+          "encoding": ""
+        },
+        {
+          "path": "/assets/kentos_geometry_wasm_bg-DCuHYXN7.wasm",
+          "status": 200,
+          "bytes": 0,
+          "encoding": "br"
+        },
+        {
+          "path": "/v1/health",
+          "status": 503,
+          "bytes": 0,
+          "encoding": ""
+        }
+      ]
+    }
+  ]
+}

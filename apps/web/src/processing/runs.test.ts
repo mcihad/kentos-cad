@@ -56,7 +56,7 @@ async function compareTools(g: Gen, doc: CadDocument): Promise<string | null> {
   const share = g.pick([0.05, 0.3, 1]);
   const ids = all.filter(() => g.chance(share)).map((e) => e.id);
   const input = { ids, description: '' };
-  const units: DefaultsContext = { lengthDecimals: 3, areaDecimals: 2, angleUnit: 'grad', plotScale: g.pick([500, 1000, 5000]), activeLayer: 'a' };
+  const units: DefaultsContext = { lengthDecimals: 3, areaDecimals: 2, angleUnit: 'grad', plotScale: g.pick([500, 1000, 5000]), activeLayer: 'a', drawingFont: g.pick(['barlow', 'plex-mono', 'arimo'] as const) };
   const selection = all.filter(() => g.chance(0.1)).map((e) => e.id);
   const leaves = doc.layers.leaves();
   const existingLayer = leaves.length ? g.pick(leaves) : null;

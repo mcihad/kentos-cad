@@ -273,15 +273,16 @@ pub fn triangulate_many_js(xy: &[f64], ring_sizes: &[u32], poly_rings: &[u32]) -
 }
 
 /// Where the texts beside numbered corners go (`corner_text_at`): four
-/// numbers per corner in `corners` (x, y, outward x and y), its text's
-/// character count in `chars`; x, y per corner come back.
+/// numbers per corner in `corners` (x, y, outward x and y), its text in
+/// `texts`, measured in the drawing typeface `font`; x, y per corner come back.
 #[wasm_bindgen(js_name = cornerTexts)]
-pub fn corner_texts_js(corners: &[f64], chars: &[f64], height: f64) -> Vec<f64> {
+pub fn corner_texts_js(corners: &[f64], texts: Vec<String>, height: f64, font: &str) -> Vec<f64> {
+    let font = kentos_geometry_core::text::Font::from_id(font);
     corners
         .chunks_exact(4)
-        .zip(chars)
-        .flat_map(|(c, &n)| {
-            let at = corner_text_at(Vec2::new(c[0], c[1]), Vec2::new(c[2], c[3]), n, height);
+        .zip(&texts)
+        .flat_map(|(c, t)| {
+            let at = corner_text_at(Vec2::new(c[0], c[1]), Vec2::new(c[2], c[3]), t, height, font);
             [at.x, at.y]
         })
         .collect()

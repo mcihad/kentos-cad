@@ -8,6 +8,7 @@
 
 use std::collections::HashMap;
 
+use crate::text::{Font, width_em};
 use crate::api::Op;
 use crate::geometry::signed_area;
 use crate::jsmath::{js_cmp, js_hypot, js_max, or, stable_sort};
@@ -292,11 +293,11 @@ pub fn number_corners(
 }
 
 /// Where the text beside a numbered corner goes: outside the corner along
-/// its bisector, shifted left by its width (`chars` characters of about
-/// 0.55 em) when outside is to the west and down by its height when
-/// outside is to the south.
-pub fn corner_text_at(p: Vec2, out: Vec2, chars: f64, height: f64) -> Vec2 {
-    let w = chars * height * 0.55;
+/// its bisector, shifted left by its width (`text` measured in the drawing's
+/// typeface, `crate::text`) when outside is to the west and down by its
+/// height when outside is to the south.
+pub fn corner_text_at(p: Vec2, out: Vec2, text: &str, height: f64, font: Font) -> Vec2 {
+    let w = width_em(text, font) * height;
     Vec2::new(
         p.x + out.x * height * 1.2 - (if out.x < 0.0 { w } else { 0.0 }),
         p.y + out.y * height * 1.2 - (if out.y < 0.0 { height } else { 0.0 }),
@@ -387,8 +388,8 @@ pub(crate) static OPS: &[Op] = &[
             })
         }
     ),
-    op!("cornerTextAt", |c: CornerAt, chars: f64, height: f64| {
-        corner_text_at(c.p, c.out, chars, height)
+    op!("cornerTextAt", |c: CornerAt, text: String, height: f64, font: Option<String>| {
+        corner_text_at(c.p, c.out, &text, height, font.as_deref().map_or(Font::DEFAULT, Font::from_id))
     }),
 ];
 
@@ -490,7 +491,10 @@ mod tests {
         assert!((o.y - std::f64::consts::FRAC_1_SQRT_2).abs() < 1e-12);
         // A lone point has no edges: up.
         assert_eq!(outward(&[v(1.0, 1.0)], 0, false, false), v(0.0, 1.0));
-        let at = corner_text_at(v(0.0, 0.0), v(-1.0, -1.0), 6.0, 2.0);
-        assert_eq!(at, v(-2.4 - 6.0 * 2.0 * 0.55, -2.4 - 2.0));
+        let mono = Font::from_id("plex-mono");
+        let at = corner_text_at(v(0.0, 0.0), v(-1.0, -1.0), "100001", 2.0, mono);
+        assert_eq!(at, v(-2.4 - crate::text::width_em("100001", mono) * 2.0, -2.4 - 2.0));
+        // East of the corner nothing is measured: the text starts there.
+        assert_eq!(corner_text_at(v(0.0, 0.0), v(1.0, 0.0), "100001", 2.0, mono), v(2.4, 0.0));
     }
 }

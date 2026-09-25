@@ -21,7 +21,7 @@ import { defineTool, type DefaultsContext, type Shown } from './types';
 const v = (x: number, y: number): Vec2 => ({ x, y });
 /** Counter-clockwise square with its first vertex at the south-west corner. */
 const square = (x: number, y: number, s: number) => [v(x, y), v(x + s, y), v(x + s, y + s), v(x, y + s)];
-const ctx: DefaultsContext = { lengthDecimals: 3, areaDecimals: 2, angleUnit: 'grad', plotScale: 1000, activeLayer: 'a' };
+const ctx: DefaultsContext = { lengthDecimals: 3, areaDecimals: 2, angleUnit: 'grad', plotScale: 1000, activeLayer: 'a', drawingFont: 'barlow' };
 
 describe('numbering format', () => {
   const f = { prefix: 'P', length: 6, pad: '0' };

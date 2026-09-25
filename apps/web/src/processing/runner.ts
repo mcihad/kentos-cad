@@ -99,6 +99,7 @@ export class ProcessingRunner {
       areaDecimals: s.areaDecimals.value,
       angleUnit: s.angleUnit.value,
       plotScale: s.plotScale.value,
+      drawingFont: s.drawingFont.value,
       activeLayer: this.host.doc.layers.active.value,
     };
   }

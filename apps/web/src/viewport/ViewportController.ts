@@ -39,6 +39,8 @@ export interface TextInputRequest {
 }
 
 /** Holding the right button this long opens the command menu instead of confirming. */
+/** The label picture reaches this share of the view beyond each edge, so a pan copies it instead of drawing the labels. */
+const LABEL_MARGIN = 0.35;
 const RIGHT_HOLD_MS = 300;
 /** Resting on a snap this long acquires (or releases) it as a tracking point. */
 const TRACK_DWELL_MS = 350;
@@ -99,7 +101,9 @@ export class ViewportController {
    * The labels drawn last, as a picture: the overlay is redrawn at every pointer move (cross-hair, snap
    * marker), the labels only when the view, the drawing or their look changed (`labelsKey`).
    */
-  private labelCache: { canvas: HTMLCanvasElement; key: string } | null = null;
+  private labelCache: { canvas: HTMLCanvasElement; key: string; center: Vec2 } | null = null;
+  /** The camera the label picture is drawn with: the view and its margin. */
+  private readonly labelView = new Camera();
   /** Bumped by whatever changes what the labels show (objects, layers, palette, typeface, editing). */
   private labelEpoch = 0;
   /** The camera change the last overlay frame drew (a new one means the view is moving). */
@@ -947,36 +951,48 @@ export class ViewportController {
   }
 
   /**
-   * The labels: drawn again only when the view, the drawing or their look changed since the last time,
-   * otherwise copied from the picture of the last drawing (a pointer move redraws the overlay, not the labels).
+   * The labels, as a picture of the view and a margin around it (LABEL_MARGIN of its size on each side):
+   * a pointer move copies the picture, a pan that stays inside the margin copies it shifted (a pan used to
+   * draw every label again in every frame), anything else (a zoom, a pan past the margin, a change of the
+   * drawing or of the labels' look, a new size) draws the picture again. After a pan the view rests on a
+   * whole-pixel shift of the picture, so the letters stay sharp; a fractional one is drawn again.
    */
   private drawCachedLabels(g: CanvasRenderingContext2D): void {
     const cam = this.camera;
-    const w = Math.max(1, Math.round(cam.width * this.dpr));
-    const h = Math.max(1, Math.round(cam.height * this.dpr));
-    const key = `${cam.changed.value}|${w}x${h}|${this.dpr}|${this.labelEpoch}|${this.ctx.doc.revision}`;
-    // While the view moves (pan, zoom) every frame has new labels: they are drawn straight on the overlay; the
-    // picture is made in the first frame after the view came to rest, for the pointer moves that follow.
+    const dpr = this.dpr;
+    const mx = Math.ceil(cam.width * LABEL_MARGIN);
+    const my = Math.ceil(cam.height * LABEL_MARGIN);
+    const w = Math.max(1, Math.round((cam.width + 2 * mx) * dpr));
+    const h = Math.max(1, Math.round((cam.height + 2 * my) * dpr));
+    const key = `${w}x${h}|${dpr}|${cam.scale}|${this.labelEpoch}|${this.ctx.doc.revision}`;
     const moving = cam.changed.value !== this.labelCamera;
     this.labelCamera = cam.changed.value;
-    if (moving) {
-      if (this.labelCache) this.labelCache.key = '';
-      drawLabels(g, this.ctx.doc, cam, this.palette, this.picker.labels(cam.visibleBounds(), cam.scale, this.editingId), (l) => this.dimensionText(l));
-      return;
-    }
     let cache = this.labelCache;
-    if (!cache) cache = this.labelCache = { canvas: document.createElement('canvas'), key: '' };
-    if (cache.key !== key) {
+    if (!cache) cache = this.labelCache = { canvas: document.createElement('canvas'), key: '', center: { x: 0, y: 0 } };
+    // Where the picture's top left corner falls on the screen, in device pixels.
+    let sx = (-mx + (cache.center.x - cam.center.x) * cam.scale) * dpr;
+    let sy = (-my - (cache.center.y - cam.center.y) * cam.scale) * dpr;
+    const inside = sx <= 0 && sy <= 0 && sx >= -2 * mx * dpr && sy >= -2 * my * dpr;
+    const whole = Math.abs(sx - Math.round(sx)) < 1e-3 && Math.abs(sy - Math.round(sy)) < 1e-3;
+    if (cache.key !== key || !inside || (!moving && !whole)) {
       if (cache.canvas.width !== w || cache.canvas.height !== h) [cache.canvas.width, cache.canvas.height] = [w, h];
+      const view = this.labelView;
+      view.center = { ...cam.center };
+      view.scale = cam.scale;
+      view.width = cam.width + 2 * mx;
+      view.height = cam.height + 2 * my;
       const lg = cache.canvas.getContext('2d')!;
-      lg.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-      lg.clearRect(0, 0, cam.width, cam.height);
-      drawLabels(lg, this.ctx.doc, cam, this.palette, this.picker.labels(cam.visibleBounds(), cam.scale, this.editingId), (l) => this.dimensionText(l));
+      lg.setTransform(dpr, 0, 0, dpr, 0, 0);
+      lg.clearRect(0, 0, view.width, view.height);
+      drawLabels(lg, this.ctx.doc, view, this.palette, this.picker.labels(view.visibleBounds(), view.scale, this.editingId), (l) => this.dimensionText(l));
       cache.key = key;
+      cache.center = view.center;
+      sx = -mx * dpr;
+      sy = -my * dpr;
     }
     g.save();
     g.setTransform(1, 0, 0, 1, 0, 0);
-    g.drawImage(cache.canvas, 0, 0);
+    g.drawImage(cache.canvas, moving ? sx : Math.round(sx), moving ? sy : Math.round(sy));
     g.restore();
   }
 

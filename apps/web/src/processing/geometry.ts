@@ -63,7 +63,7 @@ export interface RunGeometry {
    */
   numberCorners(ids: readonly number[], walk: CornerWalk, existing: readonly Vec2[]): CoreCorner[];
   /** Where the texts beside numbered corners go, for texts of `chars` characters and `height`. */
-  cornerTexts(corners: readonly { p: Vec2; out: Vec2 }[], chars: readonly number[], height: number): Vec2[];
+  cornerTexts(corners: readonly { p: Vec2; out: Vec2 }[], texts: readonly string[], height: number, font: string): Vec2[];
   /** Edge-length labels of these objects in order (lines, polylines, polygons); an edge two shapes share once when `shared`. */
   edgeLengths(ids: readonly number[], height: number, minLength: number, side: 'outside' | 'inside', shared: boolean): { labels: CoreEdgeLabel[]; skipped: number };
 }
@@ -112,8 +112,8 @@ export class ObjectStore implements RunGeometry, DocumentGeometry {
     return out;
   }
 
-  cornerTexts(corners: readonly { p: Vec2; out: Vec2 }[], chars: readonly number[], height: number): Vec2[] {
-    return textAnchors(corners, chars, height);
+  cornerTexts(corners: readonly { p: Vec2; out: Vec2 }[], texts: readonly string[], height: number, font: string): Vec2[] {
+    return textAnchors(corners, texts, height, font);
   }
 
   edgeLengths(ids: readonly number[], height: number, minLength: number, side: 'outside' | 'inside', shared: boolean): { labels: CoreEdgeLabel[]; skipped: number } {
@@ -131,10 +131,10 @@ export class ObjectStore implements RunGeometry, DocumentGeometry {
 }
 
 /** The texts beside numbered corners, placed by the core in one call. */
-function textAnchors(corners: readonly { p: Vec2; out: Vec2 }[], chars: readonly number[], height: number): Vec2[] {
+function textAnchors(corners: readonly { p: Vec2; out: Vec2 }[], texts: readonly string[], height: number, font: string): Vec2[] {
   const packed = new Float64Array(corners.length * 4);
   corners.forEach((c, i) => packed.set([c.p.x, c.p.y, c.out.x, c.out.y], 4 * i));
-  const r = cornerTexts(packed, Float64Array.from(chars), height);
+  const r = cornerTexts(packed, texts, height, font);
   const out: Vec2[] = [];
   for (let k = 0; k + 1 < r.length; k += 2) out.push({ x: r[k], y: r[k + 1] });
   return out;

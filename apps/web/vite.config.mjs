@@ -6,8 +6,11 @@
 // not running the answer is a quiet 503, so the app shows "Sunucu: yok"
 // without filling the terminal with proxy errors (Vite's own proxy logs every
 // refused connection).
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import net from 'node:net';
+import { extname, join, resolve } from 'node:path';
+import { brotliCompressSync, constants as zc, gzipSync } from 'node:zlib';
 import { defineConfig } from 'vite';
 
 const API_PORT = Number(process.env.KENTOS_API_PORT ?? 8787);
@@ -58,8 +61,67 @@ function kentosApi() {
   };
 }
 
+/** Files worth compressing, and the type each is served with. */
+const COMPRESSED = { '.wasm': 'application/wasm', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.html': 'text/html' };
+
+/**
+ * Compressed copies of the build (CLAUDE.md §20): every script, style sheet
+ * and WASM module of dist/ gets a Brotli (.br) and a gzip (.gz) sibling, so a
+ * static server sends them as they are (nginx `brotli_static`/`gzip_static`,
+ * Caddy `precompressed`) instead of compressing on each request or not at
+ * all: the geometry core is 1.1 MB raw and under 400 KB compressed, and
+ * `vite preview`'s own compression leaves `application/wasm` out. The preview
+ * server serves the siblings the same way, so what it measures is what a
+ * deployment sends. Node's zlib, no dependency.
+ */
+function kentosCompress() {
+  let outDir = 'dist';
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
+  return {
+    name: 'kentos-compress',
+    configResolved: (c) => {
+      outDir = resolve(c.root, c.build.outDir);
+    },
+    closeBundle: {
+      order: 'post',
+      handler() {
+        if (!existsSync(outDir)) return;
+        for (const file of walk(outDir)) {
+          if (!(extname(file) in COMPRESSED)) continue;
+          const raw = readFileSync(file);
+          if (raw.length < 1024) continue;
+          writeFileSync(`${file}.br`, brotliCompressSync(raw, { params: { [zc.BROTLI_PARAM_QUALITY]: 11, [zc.BROTLI_PARAM_SIZE_HINT]: raw.length } }));
+          writeFileSync(`${file}.gz`, gzipSync(raw, { level: 9 }));
+        }
+      },
+    },
+    configurePreviewServer: (server) => {
+      const root = resolve(server.config.root, server.config.build.outDir);
+      server.middlewares.use((req, res, next) => {
+        const path = decodeURIComponent((req.url ?? '/').split('?')[0]);
+        const type = COMPRESSED[extname(path)];
+        if (!type || (req.method !== 'GET' && req.method !== 'HEAD')) return next();
+        const file = join(root, path);
+        if (!file.startsWith(root)) return next();
+        const accept = String(req.headers['accept-encoding'] ?? '');
+        const pick = [['br', '.br'], ['gzip', '.gz']].find(([enc, ext]) => accept.includes(enc) && existsSync(file + ext));
+        if (!pick) return next();
+        const body = file + pick[1];
+        res.writeHead(200, {
+          'content-type': type,
+          'content-encoding': pick[0],
+          'content-length': statSync(body).size,
+          vary: 'Accept-Encoding',
+          'cache-control': path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache',
+        });
+        res.end(req.method === 'HEAD' ? undefined : readFileSync(body));
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [kentosApi()],
+  plugins: [kentosApi(), kentosCompress()],
   worker: { format: 'es' },
   // Agents' git worktrees live under .claude/worktrees: neither watched nor tested from here.
   server: { watch: { ignored: ['**/.claude/**'] } },

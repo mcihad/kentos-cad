@@ -116,10 +116,10 @@ export const S4: CallSet = {
     { name: 'TM ızgarasında dokuz parsel', fn: 'numberCorners', args: [[0, 1, 2].flatMap((i) => [0, 1, 2].map((j) => shape(closed(tm(square(10 * i, 10 * j, 10)))))), walk(), [v(E + 10, N + 10)]] },
     { name: 'başlangıçtan çok uzakta toleranssız', fn: 'numberCorners', args: [[shape(closed(square(1e10, 0, 10))), shape(closed(square(1e10 + 10, 0, 10)))], walk({ tolerance: 0 }), []] },
     { name: 'eksi koordinatta ızgara sınırı', fn: 'numberCorners', args: [[shape(closed(square(-10, -10, 10))), shape(closed(square(0, -10, 10)))], walk({ tolerance: 0.5 }), [v(-0.0001, 0.0001)]] },
-    { name: 'dışarısı güneybatı', fn: 'cornerTextAt', args: [{ p: v(0, 0), out: v(-Math.SQRT1_2, -Math.SQRT1_2) }, 6, 2] },
-    { name: 'dışarısı kuzeydoğu', fn: 'cornerTextAt', args: [{ p: v(E, N), out: v(Math.SQRT1_2, Math.SQRT1_2) }, 6, 2] },
-    { name: 'yukarı, boş ad', fn: 'cornerTextAt', args: [{ p: v(1, 1), out: v(0, 1) }, 0, 0.5] },
-    { name: 'batı', fn: 'cornerTextAt', args: [{ p: v(1, 1), out: v(-1, 0) }, 7, 3] },
+    { name: 'dışarısı güneybatı', fn: 'cornerTextAt', args: [{ p: v(0, 0), out: v(-Math.SQRT1_2, -Math.SQRT1_2) }, '100001', 2] },
+    { name: 'dışarısı kuzeydoğu', fn: 'cornerTextAt', args: [{ p: v(E, N), out: v(Math.SQRT1_2, Math.SQRT1_2) }, 'P.1024', 2, 'courier-prime'] },
+    { name: 'yukarı, boş ad', fn: 'cornerTextAt', args: [{ p: v(1, 1), out: v(0, 1) }, '', 0.5] },
+    { name: 'batı', fn: 'cornerTextAt', args: [{ p: v(1, 1), out: v(-1, 0) }, 'Köşe 12', 3, 'arimo'] },
     {
       name: 'komşu parsellerin ortak kenarı bir kez',
       fn: 'edgeLengthLabels',
@@ -167,7 +167,11 @@ export const S4: CallSet = {
     }),
     ...repeat(g, 'cornerTextAt', n, () => {
       const t = g.num(0, 2 * Math.PI);
-      return [{ p: g.pt(), out: g.chance(0.1) ? v(0, 1) : v(Math.cos(t), Math.sin(t)) }, g.int(0, 12), g.pick([0.5, 2, g.num(0.1, 10)])];
+      const corner = { p: g.pt(), out: g.chance(0.1) ? v(0, 1) : v(Math.cos(t), Math.sin(t)) };
+      // As many draws as before the texts were measured (the cases after these stay the same): the length picks the face too.
+      const k = g.int(0, 12);
+      const height = g.pick([0.5, 2, g.num(0.1, 10)]);
+      return [corner, 'P.1234567890Ğİ'.slice(0, k), height, ['barlow', 'plex-mono', 'quicksand'][k % 3]];
     }),
     ...repeat(g, 'edgeLengthLabels', n, () => [labelledObjects(g, g.int(1, 8)), g.pick([1, 2, g.num(0.1, 5)]), g.pick([0, 0, 5, 15]), g.pick(['outside', 'inside']), g.chance(0.8)]),
   ],

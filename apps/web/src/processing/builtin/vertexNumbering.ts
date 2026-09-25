@@ -105,8 +105,8 @@ export const vertexNumbering = defineTool({
     const corners = nameCorners(found, named, { format, first: v.first, step: v.step });
     const created = corners.filter((c) => c.created);
     const height = ((v.textHeight ?? 2) / 1000) * ctx.units.plotScale;
-    // Outside the corner, centred on its bisector (placed by the core from the name's length).
-    const texts = v.output !== 'points' ? ctx.geometry.cornerTexts(created, created.map((c) => c.name.length), height) : [];
+    // Outside the corner, centred on its bisector (placed by the core from the name's width in the drawing's typeface).
+    const texts = v.output !== 'points' ? ctx.geometry.cornerTexts(created, created.map((c) => c.name), height, ctx.units.drawingFont) : [];
     const add: NewEntity[] = [];
     created.forEach((c, i) => {
       const attrs = { Nokta: c.name, Tür: 'Köşe noktası' };

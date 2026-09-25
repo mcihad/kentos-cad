@@ -1,4 +1,4 @@
-import type { AngleUnit } from '../model/projectSettings';
+import type { AngleUnit, DrawingFont } from '../model/projectSettings';
 import type { Entity, EntityKind, NewEntity } from '../model/entities';
 import type { CompiledExpression } from '../model/expression/expression';
 import type { Vec2 } from '../model/geometry';
@@ -42,6 +42,8 @@ export interface DefaultsContext {
   angleUnit: AngleUnit;
   plotScale: number;
   activeLayer: string;
+  /** The drawing's typeface (`ProjectSettings.drawingFont`): texts a tool places are measured in it. */
+  drawingFont: DrawingFont;
 }
 
 /**

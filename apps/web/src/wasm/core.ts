@@ -357,11 +357,11 @@ export function exprEvaluate(source: string, n: number, texts: string, textLens:
 
 /**
  * Where the texts beside numbered corners go (processing, docs/adr/0008 S4):
- * four numbers per corner in `corners` (x, y, outward x and y), its text's
- * character count in `chars`; x, y per corner come back.
+ * four numbers per corner in `corners` (x, y, outward x and y), its text in
+ * `texts`, measured in the drawing typeface `font`; x, y per corner come back.
  */
-export function cornerTexts(corners: Float64Array, chars: Float64Array, height: number): Float64Array {
-  return typed(() => wasmCornerTexts(corners, chars, height));
+export function cornerTexts(corners: Float64Array, texts: readonly string[], height: number, font: string): Float64Array {
+  return typed(() => wasmCornerTexts(corners, [...texts], height, font));
 }
 
 /**
