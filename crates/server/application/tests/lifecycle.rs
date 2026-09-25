@@ -1,12 +1,15 @@
 //! A project's life beyond its content, against a real PostgreSQL/PostGIS:
-//! renaming (a metadata change of `project.changes`), deleting (soft, only
-//! for admins, told to open editors) and restoring by the operator.
+//! renaming (a metadata change of `project.changes`), deleting (soft, by
+//! the owner or, under the organisation's policy, an admin; told to open
+//! editors) and restoring by the operator.
 
 mod common;
 
-use common::{a_point, envelope, member, new_project};
+use common::{a_point, envelope, member, new_project, open, share, try_open};
 use kentos_application::{AppError, admin, changes, events, lifecycle, projects};
-use kentos_contracts::{ConflictReason, PROJECT_DELETED, ProjectChanges, ProjectPatch, TenantRole};
+use kentos_contracts::{
+    ConflictReason, GrantRole, PROJECT_DELETED, ProjectChanges, ProjectPatch, TenantRole,
+};
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;
 
@@ -31,10 +34,13 @@ async fn renaming_is_a_metadata_change_with_its_version() {
     let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
     let editor = member(&db, "buro", "editor", TenantRole::Editor).await;
     let project = new_project(&db, &pm, "Ada 101").await;
+    let owner = open(&db, &pm, project).await;
+    share(&db, &owner, &editor.actor, GrantRole::Editor).await;
+    let edits = open(&db, &editor, project).await;
 
     let done = changes::commit(
         &db.app,
-        &pm,
+        &owner,
         envelope(
             &pm,
             project,
@@ -48,38 +54,36 @@ async fn renaming_is_a_metadata_change_with_its_version() {
     let list = projects::list(&db.app, &pm).await.unwrap();
     assert_eq!(list.projects[0].name, "Ada 101 (revize)");
     // Open editors learn it from the event (metadata changed).
-    let log = events::after(&db.app, &editor, project, 0, 10)
-        .await
-        .unwrap();
+    let log = events::after(&db.app, &edits, 0, 10).await.unwrap();
     assert!(log.events.last().unwrap().meta);
     // An editor may not rename; an empty name and a stale version are refused.
     assert!(matches!(
         changes::commit(
             &db.app,
-            &editor,
+            &edits,
             envelope(&editor, project, renamed("Başka"), &[("@project", "2")])
         )
         .await,
-        Err(AppError::Forbidden(_))
+        Err(AppError::Forbidden(m)) if m.contains("project.edit")
     ));
     assert!(matches!(
         changes::commit(
             &db.app,
-            &pm,
+            &owner,
             envelope(&pm, project, renamed("  "), &[("@project", "2")])
         )
         .await,
         Err(AppError::Invalid(_))
     ));
     assert!(matches!(
-        changes::commit(&db.app, &pm, envelope(&pm, project, renamed("Eski sürümden"), &[("@project", "1")])).await,
+        changes::commit(&db.app, &owner, envelope(&pm, project, renamed("Eski sürümden"), &[("@project", "1")])).await,
         Err(AppError::Conflict { conflicts, .. }) if conflicts[0].reason == ConflictReason::Project
     ));
     db.close().await;
 }
 
 #[tokio::test]
-async fn admins_delete_projects_softly_and_editors_are_told() {
+async fn the_owner_or_an_admin_deletes_softly_and_editors_are_told() {
     let Some(db) = TestDb::create().await else {
         return;
     };
@@ -95,27 +99,36 @@ async fn admins_delete_projects_softly_and_editors_are_told() {
     let boss = member(&db, "buro", "mudur", TenantRole::Admin).await;
     let stranger = member(&db, "diger", "yabanci", TenantRole::Owner).await;
     let project = new_project(&db, &pm, "Ada 101").await;
+    let owner = open(&db, &pm, project).await;
+    share(&db, &owner, &editor.actor, GrantRole::Editor).await;
+    share(&db, &owner, &viewer.actor, GrantRole::Viewer).await;
+    let (edits, views) = (
+        open(&db, &editor, project).await,
+        open(&db, &viewer, project).await,
+    );
     let first = envelope(&editor, project, a_point(486512.0), &[]);
-    changes::commit(&db.app, &editor, first.clone())
+    changes::commit(&db.app, &edits, first.clone())
         .await
         .unwrap();
 
-    // Only an admin (or the owner) deletes; another tenant cannot even see the project.
-    for who in [&viewer, &editor, &pm] {
+    // A viewer and an editor may not delete; another tenant cannot even open the project.
+    for who in [&views, &edits] {
         assert!(
-            matches!(lifecycle::delete(&db.app, who, project, None).await, Err(AppError::Forbidden(m)) if m.contains("project.delete"))
+            matches!(lifecycle::delete(&db.app, who, None).await, Err(AppError::Forbidden(m)) if m.contains("project.delete"))
         );
     }
     assert!(matches!(
-        lifecycle::delete(&db.app, &stranger, project, None).await,
+        try_open(&db, &stranger.actor, pm.tenant, project).await,
         Err(AppError::NotFound(_))
     ));
-    let seq = lifecycle::delete(&db.app, &boss, project, Some("istek-sil"))
+    // The organisation's admin deletes it under the policy (it was never shared with them).
+    let by_admin = open(&db, &boss, project).await;
+    let seq = lifecycle::delete(&db.app, &by_admin, Some("istek-sil"))
         .await
         .unwrap()
         .expect("deleted now");
 
-    // Gone from the list; opening, reading and writing answer 410.
+    // Gone from the list; opening, reading and writing answer 410 to those who had access.
     assert!(
         projects::list(&db.app, &pm)
             .await
@@ -124,19 +137,19 @@ async fn admins_delete_projects_softly_and_editors_are_told() {
             .is_empty()
     );
     assert!(
-        matches!(projects::info(&db.app, &pm, project).await, Err(AppError::Deleted(m)) if m.contains("“Ada 101” projesi silindi"))
+        matches!(projects::info(&db.app, &owner).await, Err(AppError::Deleted(m)) if m.contains("“Ada 101” projesi silindi"))
     );
     assert!(matches!(
-        projects::features(&db.app, &editor, project, None, 10).await,
+        projects::features(&db.app, &edits, None, 10).await,
         Err(AppError::Deleted(_))
     ));
     assert!(matches!(
-        projects::features_by_id(&db.app, &editor, project, &[Uuid::new_v4()]).await,
+        projects::features_by_id(&db.app, &edits, &[Uuid::new_v4()]).await,
         Err(AppError::Deleted(_))
     ));
     let late = changes::commit(
         &db.app,
-        &editor,
+        &edits,
         envelope(&editor, project, a_point(1.0), &[]),
     )
     .await;
@@ -146,16 +159,17 @@ async fn admins_delete_projects_softly_and_editors_are_told() {
     );
     // A command committed before the deletion is still answered from the log (a retry after a lost answer).
     assert!(
-        changes::commit(&db.app, &editor, first)
+        changes::commit(&db.app, &edits, first)
             .await
             .unwrap()
             .replayed
     );
+    // Asked again, the access says so: deleted, still readable for its log.
+    let views = open(&db, &viewer, project).await;
+    assert!(views.deleted);
 
     // Open editors read the deletion from the event log, with who and which request.
-    let log = events::after(&db.app, &viewer, project, 0, 10)
-        .await
-        .unwrap();
+    let log = events::after(&db.app, &views, 0, 10).await.unwrap();
     let last = log.events.last().unwrap();
     assert_eq!(
         (
@@ -173,23 +187,14 @@ async fn admins_delete_projects_softly_and_editors_are_told() {
             0
         )
     );
-    assert_eq!(
-        events::latest(&db.app, &viewer, project).await.unwrap(),
-        seq
-    );
-    assert!(matches!(
-        events::after(&db.app, &stranger, project, 0, 10).await,
-        Err(AppError::NotFound(_))
-    ));
+    assert_eq!(events::latest(&db.app, &views).await.unwrap(), seq);
     // Deleting again changes nothing.
     assert_eq!(
-        lifecycle::delete(&db.app, &boss, project, None)
-            .await
-            .unwrap(),
+        lifecycle::delete(&db.app, &by_admin, None).await.unwrap(),
         None
     );
     assert_eq!(
-        events::after(&db.app, &viewer, project, 0, 10)
+        events::after(&db.app, &views, 0, 10)
             .await
             .unwrap()
             .events
@@ -223,14 +228,15 @@ async fn admins_delete_projects_softly_and_editors_are_told() {
         projects::list(&db.app, &pm).await.unwrap().projects.len(),
         1
     );
-    let info = projects::info(&db.app, &editor, project).await.unwrap();
+    let edits = open(&db, &editor, project).await;
+    let info = projects::info(&db.app, &edits).await.unwrap();
     assert_eq!(
         (info.feature_count.as_str(), info.event_cursor.clone()),
         ("1", seq.to_string())
     );
     changes::commit(
         &db.app,
-        &editor,
+        &edits,
         envelope(&editor, project, a_point(2.0), &[]),
     )
     .await
@@ -244,6 +250,15 @@ async fn admins_delete_projects_softly_and_editors_are_told() {
             .await
             .unwrap()
             .is_empty()
+    );
+
+    // The owner may delete their own project too.
+    let own = open(&db, &pm, project).await;
+    assert!(
+        lifecycle::delete(&db.app, &own, None)
+            .await
+            .unwrap()
+            .is_some()
     );
     db.close().await;
 }
@@ -259,16 +274,20 @@ async fn a_commit_waiting_for_the_project_sees_the_deletion() {
     let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
     let boss = member(&db, "buro", "mudur", TenantRole::Admin).await;
     let project = new_project(&db, &pm, "Ada 101").await;
+    let (owner, by_admin) = (
+        open(&db, &pm, project).await,
+        open(&db, &boss, project).await,
+    );
     // Deleting and writing at once: whichever takes the project's lock second sees the first.
     let (deleted, written) = tokio::join!(
-        lifecycle::delete(&db.app, &boss, project, None),
-        changes::commit(&db.app, &pm, envelope(&pm, project, a_point(3.0), &[]))
+        lifecycle::delete(&db.app, &by_admin, None),
+        changes::commit(&db.app, &owner, envelope(&pm, project, a_point(3.0), &[]))
     );
     assert!(deleted.unwrap().is_some());
     match written {
         Ok(_) => {
             // The write went first: the deletion event comes after it.
-            let log = events::after(&db.app, &pm, project, 0, 10).await.unwrap();
+            let log = events::after(&db.app, &owner, 0, 10).await.unwrap();
             assert_eq!(log.events.last().unwrap().kind, PROJECT_DELETED);
         }
         Err(e) => assert_eq!(e.code(), "project_deleted"),

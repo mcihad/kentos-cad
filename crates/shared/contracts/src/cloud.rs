@@ -104,7 +104,9 @@ pub enum TenantKind {
     Organization,
 }
 
-/// `GET /v1/me`: the signed-in account and every tenant it belongs to.
+/// `GET /v1/me`: the signed-in account and every tenant it belongs to
+/// (organisations by name, then the personal space, which the server opens
+/// on the first sign-in).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -137,13 +139,17 @@ pub struct UserView {
 pub struct MembershipView {
     pub tenant_id: String,
     pub tenant_slug: String,
+    /// An organisation's name; for a personal space, its person's name (the interface says “Kişisel”).
     pub tenant_name: String,
+    pub tenant_kind: TenantKind,
     pub role: TenantRole,
     /// A seat is allocated: without one the tenant's projects cannot be opened.
     pub seat: bool,
     /// Membership and tenant are both active.
     pub active: bool,
-    /// What this membership may do (`project.read`, `feature.write`, …).
+    /// What this membership may do in the tenant itself: `project.create`,
+    /// `member.manage`. What it may do in a project is that project's
+    /// (`ProjectAccessView`): a tenant role opens no project by itself.
     pub capabilities: Vec<String>,
 }
 
@@ -337,8 +343,14 @@ pub struct ProjectSummary {
     pub data_revision: String,
     /// RFC 3339.
     pub updated_at: String,
+    pub tenant_id: String,
+    pub tenant_name: String,
+    pub tenant_kind: TenantKind,
+    pub access: ProjectAccessView,
 }
 
+/// A tenant's projects the caller may see (`GET /v1/tenants/{tenant}/projects`), or
+/// the caller's own and shared ones across tenants (`GET /v1/me/projects`); newest first.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -374,6 +386,10 @@ pub struct ProjectCreate {
 pub struct ProjectInfo {
     pub id: String,
     pub tenant_id: String,
+    pub tenant_name: String,
+    pub tenant_kind: TenantKind,
+    /// What the caller may do in it.
+    pub access: ProjectAccessView,
     pub name: String,
     pub settings: ProjectSettings,
     pub origin: Vec2,

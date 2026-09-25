@@ -3,20 +3,29 @@
 //! then the objects page by page; events after the cursor fill in whatever
 //! changed while the pages were read.
 //!
-//! A deleted project (lifecycle.rs) is left out of the list and refuses
-//! opening (410, `project_deleted`); its rows stay for recovery.
+//! Who sees what (docs/adr/0015): a list holds only the projects the caller
+//! has a role in (row-level security decides, before anything is counted),
+//! each with what the caller may do in it; a project's own routes take a
+//! [`ProjectAccess`]. The creator of a project is its owner.
+//!
+//! A deleted project (lifecycle.rs) is left out of the lists and refuses
+//! opening (410, `project_deleted`) to those who had access; its rows stay
+//! for recovery.
 
 use kentos_contracts::{
     FeaturePage, FeatureRecord, LayerNode, LayerNodeType, ProjectCreate, ProjectInfo, ProjectList,
     ProjectSummary,
 };
+use kentos_postgres::Scope;
 use serde_json::Value;
 use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
 
+use crate::access::{self, ProjectAccess, not_found, tenant_kind, view_of};
 use crate::cad::{Stored, from_stored};
 use crate::error::{AppError, AppResult};
-use crate::tenancy::{Access, Capability};
+use crate::identity::Actor;
+use crate::tenancy::{self, Access, Capability};
 
 pub const PAGE_MAX: i64 = 2000;
 
@@ -97,7 +106,25 @@ fn rfc3339(t: time::OffsetDateTime) -> String {
         .unwrap_or_default()
 }
 
-/// Opens a new, empty project; `idempotency_key` makes a retried create return the same project.
+/// The project an earlier create with this key made (the actor's own creates only).
+async fn created_with(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &Access,
+    key: &str,
+) -> AppResult<Option<Uuid>> {
+    Ok(sqlx::query_scalar(
+        "select project_id from kentos.command_log where tenant_id = $1 and idempotency_key = $2 and command_name = 'project.create' and actor = $3",
+    )
+    .bind(access.tenant)
+    .bind(key)
+    .bind(access.actor.user_id)
+    .fetch_optional(&mut **tx)
+    .await?)
+}
+
+/// Opens a new, empty project owned by its creator; `idempotency_key` makes
+/// a retried create return the same project, also when two copies of the
+/// request arrive at once.
 pub async fn create(
     db: &kentos_postgres::Db,
     access: &Access,
@@ -107,25 +134,28 @@ pub async fn create(
     access.require(Capability::ProjectCreate)?;
     check_name(&input.name)?;
     check_tree(&input.layers, &input.active_layer)?;
-    let mut tx = db.scoped(access.scope()).await?;
-    if let Some(key) = idempotency_key {
-        let earlier: Option<Uuid> = sqlx::query_scalar(
-            "select project_id from kentos.command_log where tenant_id = $1 and idempotency_key = $2 and command_name = 'project.create'",
-        )
-        .bind(access.tenant)
-        .bind(key)
-        .fetch_optional(&mut *tx)
+    let id = Uuid::now_v7();
+    // The new project is in scope from the start: its audit and command log rows belong to it.
+    let mut tx = db
+        .scoped(Scope {
+            project: Some(id),
+            ..access.scope()
+        })
         .await?;
-        if let Some(id) = earlier {
-            tx.commit().await?;
-            return info(db, access, id).await;
-        }
+    if let Some(key) = idempotency_key
+        && let Some(earlier) = created_with(&mut tx, access, key).await?
+    {
+        tx.commit().await?;
+        return info(
+            db,
+            &access::project(db, &access.actor, access.tenant, earlier).await?,
+        )
+        .await;
     }
     check_srid(&mut tx, input.settings.srid).await?;
-    let id = Uuid::now_v7();
     sqlx::query(
-        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12)",
     )
     .bind(access.tenant)
     .bind(id)
@@ -149,7 +179,7 @@ pub async fn create(
         .execute(&mut *tx)
         .await?;
     if let Some(key) = idempotency_key {
-        sqlx::query(
+        let logged = sqlx::query(
             "insert into kentos.command_log (tenant_id, idempotency_key, project_id, command_name, request_hash, response, actor)
              values ($1, $2, $3, 'project.create', public.digest($4, 'sha256'), '{}'::jsonb, $5)",
         )
@@ -159,39 +189,149 @@ pub async fn create(
         .bind(&input.name)
         .bind(access.actor.user_id)
         .execute(&mut *tx)
-        .await?;
+        .await;
+        match logged {
+            Ok(_) => {}
+            // The same create arrived twice at once and the other copy won: nothing of this one stays; answer with its project.
+            Err(sqlx::Error::Database(d)) if d.code().as_deref() == Some("23505") => {
+                drop(tx);
+                let mut tx = db.scoped(access.scope()).await?;
+                let earlier = created_with(&mut tx, access, key).await?;
+                tx.commit().await?;
+                let Some(earlier) = earlier else {
+                    return Err(AppError::invalid(
+                        "Bu idempotency anahtarı başka bir istek için kullanılmış; her isteğe yeni bir anahtar verin.",
+                    ));
+                };
+                return info(
+                    db,
+                    &access::project(db, &access.actor, access.tenant, earlier).await?,
+                )
+                .await;
+            }
+            Err(e) => return Err(e.into()),
+        }
     }
     tx.commit().await?;
-    info(db, access, id).await
+    info(
+        db,
+        &access::project(db, &access.actor, access.tenant, id).await?,
+    )
+    .await
 }
 
 /// The refusal for a deleted project, the same wherever it is asked for.
 pub(crate) fn gone(name: &str) -> AppError {
     AppError::deleted(format!(
-        "“{name}” projesi silindi; açılamaz ve değiştirilemez. Yanlışlıkla silindiyse kurum yöneticinize başvurun."
+        "“{name}” projesi silindi; açılamaz ve değiştirilemez. Yanlışlıkla silindiyse proje sahibine ya da kurum yöneticinize başvurun."
     ))
 }
 
+type SummaryRow = (
+    Uuid,
+    String,
+    i32,
+    i64,
+    time::OffsetDateTime,
+    Option<String>,
+    Uuid,
+    String,
+    String,
+    bool,
+);
+
+/// The projects of the scope's tenant the caller has a role in and that are not deleted, newest first;
+/// `mine` keeps only the ones they own or that were shared with them.
+const SUMMARY_SELECT: &str = "select p.id, p.name, p.srid, p.data_revision, p.updated_at,
+        kentos.project_role(p.tenant_id, p.id, p.owner_user_id), t.id, t.name, t.kind, t.viewer_download
+   from kentos.project p join kentos.tenant t on t.id = p.tenant_id
+  where p.tenant_id = $1 and p.deleted_at is null";
+
+fn summaries(mut rows: Vec<SummaryRow>) -> Vec<ProjectSummary> {
+    rows.sort_by(|a, b| b.4.cmp(&a.4).then(a.0.cmp(&b.0)));
+    rows.into_iter()
+        .filter_map(
+            |(id, name, srid, rev, at, role, tenant, tenant_name, kind, download)| {
+                Some(ProjectSummary {
+                    id: id.to_string(),
+                    name,
+                    srid: srid as u32,
+                    data_revision: rev.to_string(),
+                    updated_at: rfc3339(at),
+                    tenant_id: tenant.to_string(),
+                    tenant_name,
+                    tenant_kind: tenant_kind(&kind),
+                    access: view_of(role.as_deref()?, download)?,
+                })
+            },
+        )
+        .collect()
+}
+
+/// A tenant's projects the caller may see: the ones they own, the ones shared
+/// with them and, for an organisation's owners and admins under its policy,
+/// every one. Row-level security leaves the others out.
 pub async fn list(db: &kentos_postgres::Db, access: &Access) -> AppResult<ProjectList> {
-    access.require(Capability::ProjectRead)?;
     let mut tx = db.scoped(access.scope()).await?;
-    let rows: Vec<(Uuid, String, i32, i64, time::OffsetDateTime)> =
-        sqlx::query_as("select id, name, srid, data_revision, updated_at from kentos.project where tenant_id = $1 and deleted_at is null order by updated_at desc")
-            .bind(access.tenant)
-            .fetch_all(&mut *tx)
-            .await?;
+    let rows: Vec<SummaryRow> = sqlx::query_as(SUMMARY_SELECT)
+        .bind(access.tenant)
+        .fetch_all(&mut *tx)
+        .await?;
     tx.commit().await?;
     Ok(ProjectList {
-        projects: rows
-            .into_iter()
-            .map(|(id, name, srid, rev, at)| ProjectSummary {
-                id: id.to_string(),
-                name,
-                srid: srid as u32,
-                data_revision: rev.to_string(),
-                updated_at: rfc3339(at),
+        projects: summaries(rows),
+    })
+}
+
+/// “Projelerim”: the projects the caller owns (their personal space's and
+/// the organisation projects they created) and the ones shared with them, in
+/// every tenant, newest first. An organisation's projects they reach only
+/// through its policy are the organisation's list, not this one. Opens the
+/// personal space if it is not there yet.
+pub async fn mine(db: &kentos_postgres::Db, actor: &Actor) -> AppResult<ProjectList> {
+    let personal = tenancy::ensure_personal(db, actor).await?;
+    // Where to look: the personal space, the tenants of active memberships and of grants.
+    let mut tx = db
+        .scoped(Scope {
+            user: Some(actor.user_id),
+            ..Scope::default()
+        })
+        .await?;
+    let mut tenants: Vec<Uuid> = sqlx::query_scalar(
+        "select tenant_id from kentos.membership where user_id = $1 and status = 'active'
+         union select tenant_id from kentos.project_grant where user_id = $1",
+    )
+    .bind(actor.user_id)
+    .fetch_all(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    if !tenants.contains(&personal) {
+        tenants.push(personal);
+    }
+    let mut rows = Vec::new();
+    for tenant in tenants {
+        let mut tx = db
+            .scoped(Scope {
+                tenant: Some(tenant),
+                user: Some(actor.user_id),
+                project: None,
             })
-            .collect(),
+            .await?;
+        let found: Vec<SummaryRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+            "{SUMMARY_SELECT} and (p.owner_user_id = $2 or t.owner_user_id = $2
+                  or exists (select 1 from kentos.project_grant g
+                              where g.tenant_id = p.tenant_id and g.project_id = p.id and g.user_id = $2
+                                and (g.expires_at is null or g.expires_at > now())))"
+        )))
+        .bind(tenant)
+        .bind(actor.user_id)
+        .fetch_all(&mut *tx)
+        .await?;
+        tx.commit().await?;
+        rows.extend(found);
+    }
+    Ok(ProjectList {
+        projects: summaries(rows),
     })
 }
 
@@ -214,12 +354,9 @@ type ProjectRow = (
 /// A project's metadata, object count and the event cursor of this moment:
 /// the newest event's, or the log's horizon once old events were removed
 /// (never below it, or a client would be sent to reopen again and again).
-pub async fn info(
-    db: &kentos_postgres::Db,
-    access: &Access,
-    project: Uuid,
-) -> AppResult<ProjectInfo> {
-    access.require(Capability::ProjectRead)?;
+/// Counted only after the access check, inside the project's scope.
+pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult<ProjectInfo> {
+    access.live()?;
     let mut tx = db.scoped(access.scope()).await?;
     let row: Option<ProjectRow> = sqlx::query_as(
         "select p.name, p.settings, p.layers, p.active_layer, p.origin_x, p.origin_y, p.home_view, p.styles, p.meta_version, p.data_revision,
@@ -230,7 +367,7 @@ pub async fn info(
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
-    .bind(project)
+    .bind(access.project)
     .fetch_optional(&mut *tx)
     .await?;
     tx.commit().await?;
@@ -248,14 +385,17 @@ pub async fn info(
         count,
         cursor,
         deleted,
-    ) = row.ok_or_else(|| AppError::not_found("Proje bulunamadı."))?;
+    ) = row.ok_or_else(not_found)?;
     if deleted {
         return Err(gone(&name));
     }
     let bad = |e: serde_json::Error| AppError::invalid(format!("Proje kaydı okunamadı: {e}"));
     Ok(ProjectInfo {
-        id: project.to_string(),
+        id: access.project.to_string(),
         tenant_id: access.tenant.to_string(),
+        tenant_name: access.tenant_name.clone(),
+        tenant_kind: access.tenant_kind,
+        access: access.view(),
         name,
         settings: serde_json::from_value(settings).map_err(bad)?,
         origin: kentos_contracts::Vec2 { x: ox, y: oy },
@@ -322,21 +462,21 @@ pub(crate) fn record(
     })
 }
 
-/// A project of this tenant that is not deleted: 404 when there is none, 410 when it was deleted.
+/// The project in scope, still visible to the caller and not deleted: 404
+/// when they lost their role since the access check, 410 when it was deleted.
 async fn live_project(
     tx: &mut Transaction<'static, Postgres>,
-    access: &Access,
-    project: Uuid,
+    access: &ProjectAccess,
 ) -> AppResult<()> {
     let row: Option<(String, bool)> = sqlx::query_as(
         "select name, deleted_at is not null from kentos.project where tenant_id = $1 and id = $2",
     )
     .bind(access.tenant)
-    .bind(project)
+    .bind(access.project)
     .fetch_optional(&mut **tx)
     .await?;
     match row {
-        None => Err(AppError::not_found("Proje bulunamadı.")),
+        None => Err(not_found()),
         Some((name, true)) => Err(gone(&name)),
         Some(_) => Ok(()),
     }
@@ -345,20 +485,19 @@ async fn live_project(
 /// Objects in id order after `after`, at most `limit` (≤ 2 000).
 pub async fn features(
     db: &kentos_postgres::Db,
-    access: &Access,
-    project: Uuid,
+    access: &ProjectAccess,
     after: Option<Uuid>,
     limit: i64,
 ) -> AppResult<FeaturePage> {
-    access.require(Capability::ProjectRead)?;
+    access.live()?;
     let limit = limit.clamp(1, PAGE_MAX);
     let mut tx = db.scoped(access.scope()).await?;
-    live_project(&mut tx, access, project).await?;
+    live_project(&mut tx, access).await?;
     let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and id > $3 order by id limit $4"
     )))
     .bind(access.tenant)
-    .bind(project)
+    .bind(access.project)
     .bind(after.unwrap_or(Uuid::nil()))
     .bind(limit + 1)
     .fetch_all(&mut *tx)
@@ -379,23 +518,22 @@ pub async fn features(
 /// The current copies of some objects (after an event says they changed); missing ones are left out.
 pub async fn features_by_id(
     db: &kentos_postgres::Db,
-    access: &Access,
-    project: Uuid,
+    access: &ProjectAccess,
     ids: &[Uuid],
 ) -> AppResult<Vec<FeatureRecord>> {
-    access.require(Capability::ProjectRead)?;
+    access.live()?;
     if ids.len() as i64 > PAGE_MAX {
         return Err(AppError::invalid(format!(
             "Bir istekte en çok {PAGE_MAX} nesne istenebilir."
         )));
     }
     let mut tx = db.scoped(access.scope()).await?;
-    live_project(&mut tx, access, project).await?;
+    live_project(&mut tx, access).await?;
     let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and id = any($3) order by id"
     )))
     .bind(access.tenant)
-    .bind(project)
+    .bind(access.project)
     .bind(ids)
     .fetch_all(&mut *tx)
     .await?;

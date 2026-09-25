@@ -154,7 +154,11 @@ fn schema<T: schemars::JsonSchema>() -> serde_json::Value {
 /// The catalog, with schemas derived from the contract types.
 #[cfg(feature = "schema")]
 pub fn catalog() -> CommandCatalog {
-    use crate::{CommitResult, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, ProjectChanges};
+    use crate::{
+        CommitResult, PROJECT_ACCESS_REVOKE, PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES,
+        PROJECT_CHANGES_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION, ProjectAccessChange,
+        ProjectAccessRevoke, ProjectChanges, ProjectPermission, ProjectShare,
+    };
     use serde_json::json;
     CommandCatalog {
         format: CATALOG_FORMAT.into(),
@@ -172,7 +176,10 @@ pub fn catalog() -> CommandCatalog {
             hosts: vec![CommandHost::Server],
             headless: true,
             requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
-            permissions: vec!["feature.write".into(), "project.edit".into()],
+            permissions: vec![
+                ProjectPermission::FeatureWrite.name().into(),
+                ProjectPermission::Edit.name().into(),
+            ],
             undo: CommandUndo::None,
             cost: CommandCost::Interactive,
             input: schema::<ProjectChanges>(),
@@ -194,6 +201,52 @@ pub fn catalog() -> CommandCatalog {
                 }),
                 output: None,
             }],
+        },
+        CommandDescriptor {
+            id: PROJECT_SHARE.into(),
+            version: PROJECT_SHARE_VERSION,
+            title: "Projeyi paylaş".into(),
+            summary: "Bir kişiye projede rol verir ya da rolünü değiştirir: görüntüleyici, yorumcu, düzenleyici ya da yönetici; istenirse bir bitiş zamanıyla. \
+                      Kurum projesinde kişi kurumun üyesi olmalıdır. project.share ister; değişiklik denetime ve projenin olay günlüğüne yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Share.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<ProjectShare>(),
+            output: schema::<ProjectAccessChange>(),
+            examples: vec![CommandExample {
+                title: "Bir meslektaşı düzenleyici yap".into(),
+                input: json!({ "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "role": "editor" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: PROJECT_ACCESS_REVOKE.into(),
+            version: PROJECT_ACCESS_REVOKE_VERSION,
+            title: "Proje erişimini kaldır".into(),
+            summary: "Bir kişinin projedeki paylaşımını kaldırır; açık bağlantıları kapanır ve sonraki istekleri reddedilir. \
+                      Önceden indirilmiş kopyalar geri alınamaz. project.share ister."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Share.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<ProjectAccessRevoke>(),
+            output: schema::<ProjectAccessChange>(),
+            examples: vec![CommandExample {
+                title: "Paylaşımı kaldır".into(),
+                input: json!({ "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f" }),
+                output: None,
+            }],
         }],
     }
 }
@@ -201,7 +254,7 @@ pub fn catalog() -> CommandCatalog {
 #[cfg(all(test, feature = "schema"))]
 mod tests {
     use super::*;
-    use crate::ProjectChanges;
+    use crate::{ProjectAccessRevoke, ProjectChanges, ProjectPermission, ProjectShare};
     use std::path::PathBuf;
 
     fn catalog_file() -> PathBuf {
@@ -234,15 +287,29 @@ mod tests {
                 "{}: schemas",
                 d.id
             );
+            // Permissions are the fixed names of docs/adr/0015.
+            for p in &d.permissions {
+                assert!(
+                    ProjectPermission::ALL.iter().any(|k| k.name() == p),
+                    "{}: unknown permission {p}",
+                    d.id
+                );
+            }
             for e in &d.examples {
                 // Each command's example must parse as its own input type.
-                match d.id.as_str() {
+                let parsed = match d.id.as_str() {
                     crate::PROJECT_CHANGES => {
-                        serde_json::from_value::<ProjectChanges>(e.input.clone())
-                            .unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
+                        serde_json::from_value::<ProjectChanges>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_SHARE => {
+                        serde_json::from_value::<ProjectShare>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_ACCESS_REVOKE => {
+                        serde_json::from_value::<ProjectAccessRevoke>(e.input.clone()).map(|_| ())
                     }
                     other => panic!("{other}: add its input type to this test"),
-                }
+                };
+                parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
             }
         }
     }

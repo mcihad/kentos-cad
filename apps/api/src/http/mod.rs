@@ -81,6 +81,7 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/auth/oidc/start", get(auth::oidc_start))
         .route("/v1/auth/oidc/callback", get(auth::oidc_callback))
         .route("/v1/me", get(auth::me))
+        .route("/v1/me/projects", get(projects::mine))
         .route(
             "/v1/tenants/{tenant}/projects",
             get(projects::list).post(projects::create),
@@ -100,6 +101,10 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/v1/tenants/{tenant}/projects/{project}/events",
             get(projects::event_log),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/access",
+            get(projects::access_list),
         )
         .route("/v1/ws", get(ws::upgrade))
         .layer(middleware)

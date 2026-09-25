@@ -13,7 +13,7 @@ use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use sqlx::{AssertSqlSafe, PgPool};
 
 use crate::setup::{DATABASE_URL, OWNER_URL, prepare_database};
-use crate::{Db, OWNER_ROLE, env, migrate};
+use crate::{Db, MIGRATOR, OWNER_ROLE, env, migrate};
 
 const DEFAULT_ADMIN: &str = "postgres://postgres:postgres@127.0.0.1:5432/postgres";
 /// Test databases older than this are left over from a crashed run and dropped.
@@ -72,6 +72,21 @@ async fn drop_stale(admin: &PgPool) {
 impl TestDb {
     /// A fresh migrated database, or `None` (skipped) when no local server is available.
     pub async fn create() -> Option<TestDb> {
+        Self::create_up_to(None).await
+    }
+
+    /// A fresh database with the migrations up to `version` only, for testing
+    /// how a later migration converts existing rows: fill it, then [`Self::migrate`].
+    pub async fn create_before(version: i64) -> Option<TestDb> {
+        Self::create_up_to(Some(version - 1)).await
+    }
+
+    /// Applies the migrations not applied yet (after [`Self::create_before`]).
+    pub async fn migrate(&self) {
+        migrate(&self.owner).await.expect("migration uygulanamadı");
+    }
+
+    async fn create_up_to(last: Option<i64>) -> Option<TestDb> {
         let vars = repo_env();
         let admin_url =
             std::env::var("KENTOS_TEST_ADMIN_URL").unwrap_or_else(|_| DEFAULT_ADMIN.into());
@@ -124,7 +139,11 @@ impl TestDb {
         let owner = pool(with_db(&owner_url), 4)
             .await
             .expect("sahip rolüyle bağlanılamadı");
-        migrate(&owner).await.expect("migration uygulanamadı");
+        match last {
+            None => migrate(&owner).await,
+            Some(version) => MIGRATOR.run_to(version, &owner).await,
+        }
+        .expect("migration uygulanamadı");
         let app = Db {
             pool: pool(with_db(&app_url), 8)
                 .await

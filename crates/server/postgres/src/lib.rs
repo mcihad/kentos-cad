@@ -1,11 +1,15 @@
-//! PostgreSQL + PostGIS access for KentOS (CLAUDE.md §13–16, docs/adr/0006).
+//! PostgreSQL + PostGIS access for KentOS (CLAUDE.md §13–16, docs/adr/0006,
+//! 0015).
 //!
 //! Two roles: the owner (`kentos_cad_owner`) runs migrations and the admin
 //! commands; the server connects as `kentos_cad_app`, which is not the owner
 //! and has no BYPASSRLS, so row-level security scopes every tenant-bound
 //! row. A tenant-bound query runs only inside [`Db::scoped`], which sets the
-//! tenant and user for that transaction alone (`set_config(…, true)`), so a
-//! pooled connection never carries one request's scope into the next.
+//! tenant, user and project for that transaction alone (`set_config(…,
+//! true)`), so a pooled connection never carries one request's scope into
+//! the next. A project's own rows (objects, command log, audit, events) are
+//! visible only with that project in scope, and only while the user has a
+//! role in it (migration 0004).
 
 pub mod env;
 pub mod setup;
@@ -27,11 +31,13 @@ pub static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
 pub const APP_ROLE: &str = "kentos_cad_app";
 pub const OWNER_ROLE: &str = "kentos_cad_owner";
 
-/// Who a transaction acts for. Either part may be unknown (signing in knows no tenant yet).
+/// Who a transaction acts for, and in which project. Any part may be unknown
+/// (signing in knows no tenant yet; a tenant's project list is no project's).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Scope {
     pub tenant: Option<Uuid>,
     pub user: Option<Uuid>,
+    pub project: Option<Uuid>,
 }
 
 #[derive(Clone, Debug)]
@@ -51,17 +57,19 @@ impl Db {
         Ok(Self { pool })
     }
 
-    /// A transaction acting for `scope`: row-level security sees this tenant and user until it ends.
+    /// A transaction acting for `scope`: row-level security sees this tenant, user and project until it ends.
     pub async fn scoped(
         &self,
         scope: Scope,
     ) -> Result<Transaction<'static, Postgres>, sqlx::Error> {
         let mut tx = self.pool.begin().await?;
+        let text = |id: Option<Uuid>| id.map(|v| v.to_string()).unwrap_or_default();
         sqlx::query(
-            "select set_config('app.tenant_id', $1, true), set_config('app.user_id', $2, true)",
+            "select set_config('app.tenant_id', $1, true), set_config('app.user_id', $2, true), set_config('app.project_id', $3, true)",
         )
-        .bind(scope.tenant.map(|t| t.to_string()).unwrap_or_default())
-        .bind(scope.user.map(|u| u.to_string()).unwrap_or_default())
+        .bind(text(scope.tenant))
+        .bind(text(scope.user))
+        .bind(text(scope.project))
         .execute(&mut *tx)
         .await?;
         Ok(tx)

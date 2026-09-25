@@ -1556,6 +1556,287 @@
           }
         }
       ]
+    },
+    {
+      "id": "project.share",
+      "version": 1,
+      "title": "Projeyi paylaş",
+      "summary": "Bir kişiye projede rol verir ya da rolünü değiştirir: görüntüleyici, yorumcu, düzenleyici ya da yönetici; istenirse bir bitiş zamanıyla. Kurum projesinde kişi kurumun üyesi olmalıdır. project.share ister; değişiklik denetime ve projenin olay günlüğüne yazılır.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.share"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "GrantRole": {
+            "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
+            "enum": [
+              "viewer",
+              "commenter",
+              "editor",
+              "manager"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.share` v1: gives a person a role in the project, or\nchanges the one they have. In an organisation the person must be a member.",
+        "properties": {
+          "expiresAt": {
+            "description": "RFC 3339; the grant ends by itself then. Absent: until revoked.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "$ref": "#/$defs/GrantRole"
+          },
+          "userId": {
+            "description": "The account id (`UserView.id`).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "role"
+        ],
+        "title": "ProjectShare",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GrantRole": {
+            "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
+            "enum": [
+              "viewer",
+              "commenter",
+              "editor",
+              "manager"
+            ],
+            "type": "string"
+          },
+          "ProjectGrant": {
+            "description": "A person's grant in a project.",
+            "properties": {
+              "displayName": {
+                "type": "string"
+              },
+              "expiresAt": {
+                "description": "RFC 3339, when it ends by itself.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "$ref": "#/$defs/GrantRole"
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userId",
+              "displayName",
+              "role",
+              "updatedAt"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "The result of `project.share` and `project.access.revoke`; a retry with the\nsame idempotency key gets the same one (`replayed`).",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (sharing the same role again, or revoking what is not there, does not).",
+            "type": "boolean"
+          },
+          "eventSeq": {
+            "description": "The `project.access` event, when something changed.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "grant": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProjectGrant"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The grant now; absent after a revoke."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "changed"
+        ],
+        "title": "ProjectAccessChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Bir meslektaşı düzenleyici yap",
+          "input": {
+            "role": "editor",
+            "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        }
+      ]
+    },
+    {
+      "id": "project.access.revoke",
+      "version": 1,
+      "title": "Proje erişimini kaldır",
+      "summary": "Bir kişinin projedeki paylaşımını kaldırır; açık bağlantıları kapanır ve sonraki istekleri reddedilir. Önceden indirilmiş kopyalar geri alınamaz. project.share ister.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.share"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.access.revoke` v1: takes a person's grant away (nothing\nchanges if they have none). Their open connections are closed.",
+        "properties": {
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId"
+        ],
+        "title": "ProjectAccessRevoke",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GrantRole": {
+            "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
+            "enum": [
+              "viewer",
+              "commenter",
+              "editor",
+              "manager"
+            ],
+            "type": "string"
+          },
+          "ProjectGrant": {
+            "description": "A person's grant in a project.",
+            "properties": {
+              "displayName": {
+                "type": "string"
+              },
+              "expiresAt": {
+                "description": "RFC 3339, when it ends by itself.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "$ref": "#/$defs/GrantRole"
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "userId",
+              "displayName",
+              "role",
+              "updatedAt"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "The result of `project.share` and `project.access.revoke`; a retry with the\nsame idempotency key gets the same one (`replayed`).",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (sharing the same role again, or revoking what is not there, does not).",
+            "type": "boolean"
+          },
+          "eventSeq": {
+            "description": "The `project.access` event, when something changed.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "grant": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProjectGrant"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The grant now; absent after a revoke."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "changed"
+        ],
+        "title": "ProjectAccessChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Paylaşımı kaldır",
+          "input": {
+            "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        }
+      ]
     }
   ]
 }

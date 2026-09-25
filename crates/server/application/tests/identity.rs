@@ -3,7 +3,7 @@
 
 use kentos_application::identity::{self, LOCAL_ISSUER};
 use kentos_application::{AppError, admin, tenancy};
-use kentos_contracts::{SignInMethod, TenantRole};
+use kentos_contracts::{SignInMethod, TenantKind, TenantRole};
 use kentos_postgres::Scope;
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;
@@ -57,17 +57,19 @@ async fn row_level_security_keeps_tenants_apart() {
     let in_a = Scope {
         tenant: Some(a),
         user: Some(ayse),
+        project: None,
     };
     assert_eq!(count(in_a, "select count(*) from kentos.tenant").await, 1);
     assert_eq!(
         count(in_a, "select count(*) from kentos.membership").await,
         1
     );
-    // Data rows follow the tenant scope alone. (The server sets a tenant scope only after
-    // `tenancy::access` checked the membership; one's own tenant rows stay visible for /v1/me.)
+    // Project rows follow the tenant scope and the user's role in them (the owner here). (The
+    // server sets a tenant scope only after checking the membership or the project access; one's
+    // own tenant rows stay visible for /v1/me.)
     sqlx::query(
-        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, styles, created_by)
-         values ($1, $2, 'A projesi', 5256, '{}', '[]', 'x', 0, 0, '{}', $3)",
+        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, styles, created_by, owner_user_id)
+         values ($1, $2, 'A projesi', 5256, '{}', '[]', 'x', 0, 0, '{}', $3, $3)",
     )
     .bind(a)
     .bind(Uuid::now_v7())
@@ -79,14 +81,15 @@ async fn row_level_security_keeps_tenants_apart() {
     let in_b = Scope {
         tenant: Some(b),
         user: Some(ayse),
+        project: None,
     };
     assert_eq!(count(in_b, "select count(*) from kentos.project").await, 0);
     assert_eq!(count(in_b, "select count(*) from kentos.membership where tenant_id <> kentos.current_tenant() and user_id <> kentos.current_user_id()").await, 0);
     // Writing a row for another tenant than the scope is refused by the policy.
     let mut tx = db.app.scoped(in_b).await.unwrap();
     let wrong = sqlx::query(
-        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, styles, created_by)
-         values ($1, $2, 'sızma', 5256, '{}', '[]', 'x', 0, 0, '{}', $3)",
+        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, styles, created_by, owner_user_id)
+         values ($1, $2, 'sızma', 5256, '{}', '[]', 'x', 0, 0, '{}', $3, $3)",
     )
     .bind(a)
     .bind(Uuid::now_v7())
@@ -300,10 +303,10 @@ async fn access_needs_an_active_membership_and_a_seat() {
         .unwrap();
     let access = tenancy::access(&db.app, &actor, a).await.unwrap();
     assert_eq!(access.role, TenantRole::Editor);
-    assert!(access.require(tenancy::Capability::FeatureWrite).is_ok());
+    // An editor creates no projects; what they do in a project is that project's (access.rs).
     assert!(matches!(
-        access.require(tenancy::Capability::ProjectEdit),
-        Err(AppError::Forbidden(_))
+        access.require(tenancy::Capability::ProjectCreate),
+        Err(AppError::Forbidden(m)) if m.contains("project.create")
     ));
     // Another tenant is "not found", not "forbidden": its existence is not revealed.
     assert!(matches!(
@@ -321,7 +324,22 @@ async fn access_needs_an_active_membership_and_a_seat() {
         (me[0].tenant_slug.as_str(), me[0].seat, me[0].active),
         ("buro-a", true, true)
     );
-    assert!(me[0].capabilities.contains(&"feature.write".to_string()));
+    // Tenant-level rights only: an editor has none of them.
+    assert!(me[0].capabilities.is_empty());
+    assert_eq!(me[0].tenant_kind, TenantKind::Organization);
+    admin::set_membership(
+        &db.owner,
+        "buro-a",
+        "ayse",
+        TenantRole::ProjectManager,
+        true,
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        tenancy::memberships(&db.app, &actor).await.unwrap()[0].capabilities,
+        vec!["project.create".to_string()]
+    );
 
     // Without a seat, or with a disabled membership, there is no access.
     sqlx::query("delete from kentos.seat_allocation where user_id = $1")

@@ -7,9 +7,12 @@
 //! 2. returns the stored answer if this idempotency key was already
 //!    committed (checked under the lock, so a concurrent retry waits and
 //!    then replays instead of conflicting),
-//! 3. compares every expected version; any difference is a 409 with the
+//! 3. asks the caller's access again under the lock (a grant taken away or
+//!    lowered before this commit counts, docs/adr/0015): objects need
+//!    `feature.write`, the metadata `project.edit`,
+//! 4. compares every expected version; any difference is a 409 with the
 //!    server's current copies, and nothing is written,
-//! 4. writes the changes, bumps versions and the project's data revision,
+//! 5. writes the changes, bumps versions and the project's data revision,
 //!    and records audit, an outbox event and the idempotent answer.
 //!
 //! Objects on a locked layer are refused (CLAUDE.md §7), and so is any
@@ -21,18 +24,19 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use kentos_contracts::{
     CommandEnvelope, CommitResult, ConflictReason, EventFeature, EventRecord, FeatureChange,
     FeatureConflict, FeatureOp, LayerNode, LayerNodeType, PROJECT_CHANGES, PROJECT_CHANGES_VERSION,
-    PROJECT_META_KEY, ProjectChanges,
+    PROJECT_META_KEY, ProjectChanges, ProjectPermission,
 };
 use serde_json::Value;
 use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
 
+use crate::access::{self, ProjectAccess, not_found};
 use crate::cad::{PROJECTION_VERSION, Stored, to_stored};
 use crate::error::{AppError, AppResult};
+use crate::idempotency;
 use crate::projects::{
     FEATURE_COLUMNS, FeatureRow, check_name, check_srid, check_tree, find_layer, gone, record,
 };
-use crate::tenancy::{Access, Capability};
 
 /// Most object changes one command may carry; larger sets go in several commands.
 pub const MAX_CHANGES: usize = 5000;
@@ -75,29 +79,16 @@ struct Planned {
     stored: Option<Stored>,
 }
 
-/// The input's canonical text, whose hash tells a retry from a different request with the same key.
-fn request_text(envelope: &CommandEnvelope) -> String {
-    let canonical = serde_json::json!({
-        "command": envelope.command_name,
-        "version": envelope.version,
-        "project": envelope.project_id,
-        "expected": envelope.expected_versions,
-        "input": envelope.input,
-    });
-    canonical.to_string()
-}
-
 async fn current_copies(
     tx: &mut Transaction<'static, Postgres>,
-    access: &Access,
-    project: Uuid,
+    access: &ProjectAccess,
     ids: &[Uuid],
 ) -> AppResult<HashMap<Uuid, kentos_contracts::FeatureRecord>> {
     let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and id = any($3)"
     )))
     .bind(access.tenant)
-    .bind(project)
+    .bind(access.project)
     .bind(ids)
     .fetch_all(&mut **tx)
     .await?;
@@ -106,9 +97,44 @@ async fn current_copies(
         .collect()
 }
 
+/// The envelope names the project it is sent to (`access`), in this tenant.
+pub(crate) fn check_target(envelope: &CommandEnvelope, access: &ProjectAccess) -> AppResult<()> {
+    if parse_uuid(&envelope.tenant_id, "tenantId")? != access.tenant {
+        return Err(AppError::invalid(
+            "Komutun kurumu adresteki kurumla aynı değil.",
+        ));
+    }
+    if parse_uuid(&envelope.project_id, "projectId")? != access.project {
+        return Err(AppError::invalid(
+            "Komutun projesi adresteki projeyle aynı değil.",
+        ));
+    }
+    Ok(())
+}
+
+/// Locks the project row for a command (commits, deletion and sharing of one
+/// project happen one after another) and returns the caller's access asked
+/// again under the lock: whatever changed before the lock was taken counts.
+pub(crate) async fn lock(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+) -> AppResult<ProjectAccess> {
+    let found: Option<i32> = sqlx::query_scalar(
+        "select 1 from kentos.project where tenant_id = $1 and id = $2 for update",
+    )
+    .bind(access.tenant)
+    .bind(access.project)
+    .fetch_optional(&mut **tx)
+    .await?;
+    if found.is_none() {
+        return Err(not_found());
+    }
+    access::recheck(tx, access).await
+}
+
 pub async fn commit(
     db: &kentos_postgres::Db,
-    access: &Access,
+    access: &ProjectAccess,
     envelope: CommandEnvelope,
 ) -> AppResult<CommitResult> {
     if envelope.command_name != PROJECT_CHANGES {
@@ -123,18 +149,9 @@ pub async fn commit(
             envelope.version
         )));
     }
-    if parse_uuid(&envelope.tenant_id, "tenantId")? != access.tenant {
-        return Err(AppError::invalid(
-            "Komutun kurumu adresteki kurumla aynı değil.",
-        ));
-    }
-    let project = parse_uuid(&envelope.project_id, "projectId")?;
+    check_target(&envelope, access)?;
+    idempotency::check_key(&envelope)?;
     let key = envelope.idempotency_key.as_str();
-    if !(8..=200).contains(&key.len()) || envelope.request_id.len() > 200 {
-        return Err(AppError::invalid(
-            "idempotencyKey 8–200 karakter, requestId en çok 200 karakter olmalı.",
-        ));
-    }
     let input: ProjectChanges = serde_json::from_value(envelope.input.clone())
         .map_err(|e| AppError::invalid(format!("Komut girdisi okunamadı: {e}")))?;
     if input.features.len() > MAX_CHANGES {
@@ -142,52 +159,41 @@ pub async fn commit(
             "Bir komutta en çok {MAX_CHANGES} nesne değişikliği olabilir; değişiklikleri parçalara bölün."
         )));
     }
-    if !input.features.is_empty() {
-        access.require(Capability::FeatureWrite)?;
-    }
-    if input.project.is_some() {
-        access.require(Capability::ProjectEdit)?;
-    }
 
     let mut tx = db.scoped(access.scope()).await?;
     // 1. Lock the project: commits of one project happen one after another.
-    let row: Option<(i32, Value, i64, String, bool)> = sqlx::query_as(
-        "select srid, layers, meta_version, name, deleted_at is not null from kentos.project where tenant_id = $1 and id = $2 for update",
+    let now = lock(&mut tx, access).await?;
+    let project = now.project;
+    let (srid, layers, meta_version): (i32, Value, i64) = sqlx::query_as(
+        "select srid, layers, meta_version from kentos.project where tenant_id = $1 and id = $2",
     )
-    .bind(access.tenant)
+    .bind(now.tenant)
     .bind(project)
-    .fetch_optional(&mut *tx)
+    .fetch_one(&mut *tx)
     .await?;
-    let (srid, layers, meta_version, name, deleted) =
-        row.ok_or_else(|| AppError::not_found("Proje bulunamadı."))?;
 
     // 2. The same key again: the stored answer, or a refusal if the request differs.
-    let text = request_text(&envelope);
-    let earlier: Option<(bool, Value)> = sqlx::query_as(
-        "select request_hash = public.digest($3, 'sha256'), response from kentos.command_log where tenant_id = $1 and idempotency_key = $2",
-    )
-    .bind(access.tenant)
-    .bind(key)
-    .bind(&text)
-    .fetch_optional(&mut *tx)
-    .await?;
-    if let Some((same, response)) = earlier {
-        if !same {
-            return Err(AppError::invalid(
-                "Bu idempotency anahtarı başka bir istek için kullanılmış; her komuta yeni bir anahtar verin.",
-            ));
-        }
+    let text = idempotency::request_text(&envelope);
+    if let Some(mut result) =
+        idempotency::earlier::<CommitResult>(&mut tx, &now, &envelope, &text).await?
+    {
         tx.commit().await?;
-        let mut result: CommitResult = serde_json::from_value(response)
-            .map_err(|e| AppError::invalid(format!("Saklı yanıt okunamadı: {e}")))?;
         result.replayed = true;
         return Ok(result);
     }
-    if deleted {
-        return Err(gone(&name));
+    if now.deleted {
+        return Err(gone(&now.name));
     }
+    // 3. The rights, as they are now.
+    if !input.features.is_empty() {
+        now.require(ProjectPermission::FeatureWrite)?;
+    }
+    if input.project.is_some() {
+        now.require(ProjectPermission::Edit)?;
+    }
+    let access = &now;
 
-    // 3. Plan and check: layer tree after the patch, stored forms, versions.
+    // 4. Plan and check: layer tree after the patch, stored forms, versions.
     let current_tree: Vec<LayerNode> = serde_json::from_value(layers)
         .map_err(|e| AppError::invalid(format!("Proje katmanları okunamadı: {e}")))?;
     let patch = input.project.clone().unwrap_or_default();
@@ -306,7 +312,7 @@ pub async fn commit(
         }
     }
     if !conflicts.is_empty() {
-        let mut copies = current_copies(&mut tx, access, project, &conflicting_ids).await?;
+        let mut copies = current_copies(&mut tx, access, &conflicting_ids).await?;
         for c in &mut conflicts {
             if let Ok(id) = Uuid::parse_str(&c.id) {
                 c.current = copies.remove(&id);
@@ -322,7 +328,7 @@ pub async fn commit(
         });
     }
 
-    // 4. Write.
+    // 5. Write.
     let actor = access.actor.user_id;
     let mut versions = BTreeMap::new();
     let mut deleted = Vec::new();
@@ -461,19 +467,7 @@ pub async fn commit(
         event_seq: seq.to_string(),
         replayed: false,
     };
-    sqlx::query(
-        "insert into kentos.command_log (tenant_id, idempotency_key, project_id, command_name, request_hash, response, actor)
-         values ($1, $2, $3, $4, public.digest($5, 'sha256'), $6, $7)",
-    )
-    .bind(access.tenant)
-    .bind(key)
-    .bind(project)
-    .bind(PROJECT_CHANGES)
-    .bind(&text)
-    .bind(serde_json::to_value(&result).expect("result serializes"))
-    .bind(actor)
-    .execute(&mut *tx)
-    .await?;
+    idempotency::record(&mut tx, access, &envelope, &text, &result).await?;
     tx.commit().await?;
     Ok(result)
 }

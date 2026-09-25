@@ -77,6 +77,14 @@ fn password(args: &Args) -> Result<String, String> {
     Err("Parola --password-stdin ya da --password-env DEĞİŞKEN ile verilir (komut satırında görünmesin diye).".into())
 }
 
+fn on_off(name: &str, value: &str) -> Result<bool, String> {
+    match value {
+        "on" | "acik" | "açık" => Ok(true),
+        "off" | "kapali" | "kapalı" => Ok(false),
+        _ => Err(format!("--{name} on ya da off olmalı: {value}")),
+    }
+}
+
 fn role(text: &str) -> Result<TenantRole, String> {
     kentos_application::tenancy::role_from_db(text).ok_or_else(|| {
         format!("Rol geçersiz: {text} (owner, admin, project_manager, editor, viewer)")
@@ -157,11 +165,43 @@ pub async fn run(config: &Config, args: &Args) -> Result<(), String> {
                 .await
                 .map_err(fail)?
             {
+                let kind = if t.kind == "personal" {
+                    "kişisel"
+                } else {
+                    "kurum"
+                };
+                let admins = if t.kind == "personal" {
+                    "-"
+                } else if t.admins_access_all_projects {
+                    "yöneticiler tüm projelerde"
+                } else {
+                    "yöneticiler yalnız paylaşılanlarda"
+                };
+                let download = if t.viewer_download {
+                    "görüntüleyici indirir"
+                } else {
+                    "görüntüleyici indiremez"
+                };
                 println!(
-                    "{}\t{}\t{}/{} koltuk\t{} üye",
+                    "{}\t{}\t{kind}\t{}/{} koltuk\t{} üye\t{admins}\t{download}",
                     t.slug, t.name, t.seats_used, t.seat_limit, t.members
                 );
             }
+        }
+        ["tenant", "policy"] => {
+            admin::set_tenant_policy(
+                &owner_pool(config).await?,
+                args.required("slug")?,
+                args.value("admins-access-all")
+                    .map(|v| on_off("admins-access-all", v))
+                    .transpose()?,
+                args.value("viewer-download")
+                    .map(|v| on_off("viewer-download", v))
+                    .transpose()?,
+            )
+            .await
+            .map_err(fail)?;
+            println!("kurum politikası kaydedildi");
         }
         ["user", "add"] => {
             let pool = owner_pool(config).await?;
@@ -303,7 +343,8 @@ pub const USAGE: &str = "kullanım:
   kentosd db-setup [--admin-url URL] [--database AD]
   kentosd migrate
   kentosd tenant add --slug KISA --name AD --seats N
-  kentosd tenant list
+  kentosd tenant list                         kurumlar ve kişisel alanlar, koltuklar, politikalar
+  kentosd tenant policy --slug KISA [--admins-access-all on|off] [--viewer-download on|off]
   kentosd user add --login GİRİŞ --name AD [--email E] (--password-stdin | --password-env DEĞİŞKEN)
   kentosd user password --login GİRİŞ (--password-stdin | --password-env DEĞİŞKEN)
   kentosd member add --tenant KISA --user GİRİŞ|KİMLİK --role owner|admin|project_manager|editor|viewer [--seat]

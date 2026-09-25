@@ -3,6 +3,8 @@ import type { MembershipView } from "./MembershipView";
 import type { UserView } from "./UserView";
 
 /**
- * `GET /v1/me`: the signed-in account and every tenant it belongs to.
+ * `GET /v1/me`: the signed-in account and every tenant it belongs to
+ * (organisations by name, then the personal space, which the server opens
+ * on the first sign-in).
  */
 export type Me = { user: UserView, memberships: Array<MembershipView>, };

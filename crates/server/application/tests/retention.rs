@@ -6,7 +6,8 @@ mod common;
 
 use std::time::Duration;
 
-use common::{a_point, envelope, member, new_project};
+use common::{a_point, envelope, member, new_project, open};
+use kentos_application::access::ProjectAccess;
 use kentos_application::tenancy::Access;
 use kentos_application::{AppError, admin, changes, events, projects};
 use kentos_contracts::TenantRole;
@@ -38,7 +39,8 @@ async fn prune_all(db: &TestDb) -> i64 {
 }
 
 async fn commit_point(db: &TestDb, who: &Access, project: Uuid, x: f64) -> i64 {
-    changes::commit(&db.app, who, envelope(who, project, a_point(x), &[]))
+    let access = open(db, who, project).await;
+    changes::commit(&db.app, &access, envelope(who, project, a_point(x), &[]))
         .await
         .unwrap()
         .event_seq
@@ -81,18 +83,17 @@ async fn old_events_go_and_older_cursors_must_reopen() {
     assert_eq!(prune_all(&db).await, 0);
 
     // Busy: from the horizon on the log continues; from before it, reopen.
-    let b = events::bounds(&db.app, &pm, busy).await.unwrap();
+    let busy_pm = open(&db, &pm, busy).await;
+    let b = events::bounds(&db.app, &busy_pm).await.unwrap();
     assert_eq!((b.newest, b.pruned_through), (seqs[2], seqs[1]));
     assert!(matches!(
-        events::after(&db.app, &pm, busy, 0, 10).await,
+        events::after(&db.app, &busy_pm, 0, 10).await,
         Err(AppError::ResyncRequired(_))
     ));
     assert!(
-        matches!(events::after(&db.app, &pm, busy, seqs[0], 10).await, Err(e) if e.code() == "resync_required")
+        matches!(events::after(&db.app, &busy_pm, seqs[0], 10).await, Err(e) if e.code() == "resync_required")
     );
-    let rest = events::after(&db.app, &pm, busy, seqs[1], 10)
-        .await
-        .unwrap();
+    let rest = events::after(&db.app, &busy_pm, seqs[1], 10).await.unwrap();
     assert_eq!(
         rest.events
             .iter()
@@ -101,7 +102,7 @@ async fn old_events_go_and_older_cursors_must_reopen() {
         vec![seqs[2].to_string()]
     );
     assert_eq!(
-        projects::info(&db.app, &pm, busy)
+        projects::info(&db.app, &busy_pm)
             .await
             .unwrap()
             .event_cursor,
@@ -109,36 +110,38 @@ async fn old_events_go_and_older_cursors_must_reopen() {
     );
 
     // Quiet: every event gone. Opening gives the horizon, never less (or it would be sent to reopen again and again).
+    let quiet_other = open(&db, &other, quiet).await;
     assert_eq!(
-        projects::info(&db.app, &other, quiet)
+        projects::info(&db.app, &quiet_other)
             .await
             .unwrap()
             .event_cursor,
         q.to_string()
     );
-    assert_eq!(events::latest(&db.app, &other, quiet).await.unwrap(), q);
+    assert_eq!(events::latest(&db.app, &quiet_other).await.unwrap(), q);
     assert!(
-        events::after(&db.app, &other, quiet, q, 10)
+        events::after(&db.app, &quiet_other, q, 10)
             .await
             .unwrap()
             .events
             .is_empty()
     );
     assert!(matches!(
-        events::after(&db.app, &other, quiet, q - 1, 10).await,
+        events::after(&db.app, &quiet_other, q - 1, 10).await,
         Err(AppError::ResyncRequired(_))
     ));
 
     // A project without events has nothing to resync from.
+    let fresh_pm = open(&db, &pm, fresh).await;
     assert_eq!(
-        events::bounds(&db.app, &pm, fresh).await.unwrap(),
+        events::bounds(&db.app, &fresh_pm).await.unwrap(),
         events::Bounds {
             newest: 0,
             pruned_through: 0
         }
     );
     assert!(
-        events::after(&db.app, &pm, fresh, 0, 10)
+        events::after(&db.app, &fresh_pm, 0, 10)
             .await
             .unwrap()
             .events
@@ -147,13 +150,11 @@ async fn old_events_go_and_older_cursors_must_reopen() {
 
     // New events follow a prune as before.
     let next = commit_point(&db, &pm, busy, 4.0).await;
-    let rest = events::after(&db.app, &pm, busy, seqs[2], 10)
-        .await
-        .unwrap();
+    let rest = events::after(&db.app, &busy_pm, seqs[2], 10).await.unwrap();
     assert_eq!(rest.events[0].seq, next.to_string());
 
-    // Horizons are tenant data: each tenant sees only its own.
-    let seen = |access: &Access| {
+    // Horizons are project data: visible only in their project's scope, to someone with a role in it.
+    let seen = |access: &ProjectAccess| {
         let app = db.app.clone();
         let scope = access.scope();
         async move {
@@ -166,6 +167,37 @@ async fn old_events_go_and_older_cursors_must_reopen() {
             n
         }
     };
-    assert_eq!((seen(&pm).await, seen(&other).await), (1, 1));
+    assert_eq!(
+        (
+            seen(&busy_pm).await,
+            seen(&quiet_other).await,
+            seen(&fresh_pm).await
+        ),
+        (1, 1, 0)
+    );
+    let in_tenant = |access: &Access| {
+        let app = db.app.clone();
+        let scope = access.scope();
+        async move {
+            let mut tx = app.scoped(scope).await.unwrap();
+            let n: i64 = sqlx::query_scalar("select count(*) from kentos.outbox_horizon")
+                .fetch_one(&mut *tx)
+                .await
+                .unwrap();
+            tx.commit().await.unwrap();
+            n
+        }
+    };
+    assert_eq!((in_tenant(&pm).await, in_tenant(&other).await), (0, 0));
+    // Another tenant's member with this project in scope sees nothing of it.
+    let mut peek = busy_pm.scope();
+    peek.user = Some(other.actor.user_id);
+    let mut tx = db.app.scoped(peek).await.unwrap();
+    let n: i64 = sqlx::query_scalar("select count(*) from kentos.outbox_horizon")
+        .fetch_one(&mut *tx)
+        .await
+        .unwrap();
+    tx.commit().await.unwrap();
+    assert_eq!(n, 0);
     db.close().await;
 }
