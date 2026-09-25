@@ -27,7 +27,7 @@ node apps/web/scripts/perf/modules.mjs --label y4 # pnpm build'den sonra: ağır
 | Büyük katmanı yeniden kurma (`parsel-50k` / `hat-1m`) | 112 / 131 ms | 38,6 / 52,5 ms |
 | `hat-1m`, kaydırma kare aralığı, GPU dahil (yakın / genel) | 17,1 / 48,1 ms | 17,3 / 48,1 ms |
 
-- Betik 11 gerileme işaretledi. Hepsi p95'i 0,6 ms'nin altında olan araç ve kare adımlarıdır; en büyük mutlak fark 0,22 ms'dir (`parsel-50k` genel görünümde kaydırma olayı 0,60 → 0,82 ms).
+- Betik 11 gerileme işaretledi. Hepsi 1 ms'nin altındaki araç ve kare adımlarıdır (şimdiki p95 en çok 0,82 ms). En büyük mutlak fark 0,22 ms'dir: `parsel-50k` genel görünümde kaydırma olayı 0,60 → 0,82 ms.
 - **ADR 0005 taslağına göre açık kalanlar** (onaylanmamış hedefler, yalnız kayıt):
   - `hat-1m` genel görünümde kaydırma kare aralığı 48 ms (≈ 21 kare/sn). Ana iş parçacığı 0,57 ms, yani darboğaz GPU'dur. Hedef 16 ms; iş LOD ve kırpmadadır (TODOS.md `REN-10`).
   - `hat-1m` katman kurma 52,5 ms. Hedef 100 bin segment için 50 ms; bu veri seti 1 milyon segmenttir.
