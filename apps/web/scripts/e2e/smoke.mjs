@@ -1919,12 +1919,17 @@ try {
       const k = window.kentos;
       const backend = k.view.backend;
       const before = backend.samples;
-      backend.sampleCounts = [...backend.sampleCounts, 64];
+      const counts = backend.sampleCounts;
+      backend.sampleCounts = [...counts, 64];
       backend.setSamples(64);
       k.view.requestRender();
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       const warned = k.log.entries.value.some((e) => e.level === 'warn' && e.text.includes('64× bu aygıtta kurulamadı'));
-      return { before, after: backend.samples, warned, drawing: !!backend.draw, reason: k.settingsStore.resolved('graphics.msaa').reason ?? null };
+      const result = { before, after: backend.samples, warned, drawing: !!backend.draw, reason: k.settingsStore.resolved('graphics.msaa').reason ?? null };
+      // The forced count was the test's, not the device's.
+      backend.sampleCounts = counts;
+      k.log.clear();
+      return result;
     })()`);
     check('a sample count the device refuses falls back to the last working one and is reported', failed.after === failed.before && failed.warned && failed.drawing, JSON.stringify(failed));
     await b.eval(`window.kentos.commands.execute('tools.options', 'engine')`);

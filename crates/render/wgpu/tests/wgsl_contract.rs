@@ -482,6 +482,10 @@ fn the_composition_shader_validates_within_core_webgpu() {
     )
     .validate(&module)
     .unwrap_or_else(|e| panic!("WGSL does not validate:\n{}", e.emit_to_string(source)));
-    let entries: Vec<&str> = module.entry_points.iter().map(|e| e.name.as_str()).collect();
+    let entries: Vec<&str> = module
+        .entry_points
+        .iter()
+        .map(|e| e.name.as_str())
+        .collect();
     assert_eq!(entries, ["vs", "fs"]);
 }
