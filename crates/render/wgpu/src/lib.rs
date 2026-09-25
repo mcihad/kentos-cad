@@ -6,8 +6,9 @@
 //! What it owns:
 //! - [`Camera`]: the view in float64 world units (x east, y north) and logical
 //!   pixels: pan, zoom at a point, fit, screen ↔ world.
-//! - [`scene`]: the drawing as the GPU draws it, built from a `.kcad` v1
-//!   document on the CPU. Straight geometry, points and fills form one part
+//! - [`scene`]: the drawing as the GPU draws it, built on the CPU from any
+//!   [`Drawing`] in the `.kcad` v1 terms (a snapshot, or the desktop's live
+//!   document read in place). Straight geometry, points and fills form one part
 //!   that changes only with the document; curves, tessellated by the shared
 //!   geometry core within an on-screen tolerance, form another that also
 //!   follows the zoom band. Nothing here changes the document.
@@ -43,7 +44,7 @@ pub mod stats;
 pub use camera::Camera;
 pub use color::{Palette, Rgba8};
 pub use renderer::{FrameInput, RenderError, Renderer, ViewId};
-pub use scene::{LayerRanges, ScenePart};
+pub use scene::{Drawing, LayerRanges, ScenePart};
 pub use settings::RenderSettings;
 pub use stats::FrameStats;
 

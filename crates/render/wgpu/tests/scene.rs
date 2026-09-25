@@ -360,6 +360,46 @@ fn extents_are_the_web_stores_extents() {
     }
 }
 
+/// A host's own document, read in place: the scene needs no snapshot copy.
+struct Live {
+    layers: Vec<LayerNode>,
+    objects: Vec<Entity>,
+    anchor: kentos_contracts::Vec2,
+}
+
+impl scene::Drawing for Live {
+    fn layer_tree(&self) -> &[LayerNode] {
+        &self.layers
+    }
+
+    fn objects(&self) -> impl Iterator<Item = &Entity> {
+        self.objects.iter()
+    }
+
+    fn anchor(&self) -> kentos_contracts::Vec2 {
+        self.anchor
+    }
+
+    fn drawing_font(&self) -> Option<kentos_contracts::DrawingFont> {
+        None
+    }
+}
+
+#[test]
+fn any_drawing_builds_the_same_scene_as_its_snapshot() {
+    let doc = sample();
+    let live = Live {
+        layers: doc.layers.clone(),
+        objects: doc.entities.clone(),
+        anchor: doc.origin,
+    };
+    let from_snapshot = scene::build_fixed(&doc, &palette(), origin(&doc));
+    let from_live = scene::build_fixed(&live, &palette(), scene::scene_origin(&live));
+    assert_eq!(from_live.segments, from_snapshot.segments);
+    assert_eq!(from_live.layers, from_snapshot.layers);
+    assert_eq!(scene::extents(&live), scene::extents(&doc));
+}
+
 #[test]
 fn every_build_is_a_new_part() {
     let doc = sample();

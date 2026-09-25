@@ -23,17 +23,55 @@ use iced::time::Instant;
 use iced::widget::{container, shader, stack};
 use iced::{Element, Fill, Point, Rectangle, Size, Vector, mouse, wgpu};
 
+use kentos_contracts::{DrawingFont, Entity, LayerNode};
 use kentos_render_wgpu::camera::FIT_PADDING;
 use kentos_render_wgpu::scene::{self, lod};
 use kentos_render_wgpu::{
-    Bounds, Camera, FrameInput, FrameStats, Palette, RenderError, RenderSettings, Renderer, Rgba8,
-    ScenePart, Vec2, ViewId,
+    Bounds, Camera, Drawing, FrameInput, FrameStats, Palette, RenderError, RenderSettings,
+    Renderer, Rgba8, ScenePart, Vec2, ViewId,
 };
 use kentos_ui::theme::Mode;
 use kentos_ui::widget::EmptyState;
 
 use crate::app::Message;
 use crate::document::Document;
+
+// ── How the drawing area reads the open drawing ─────────────────────────────
+// The one place that knows the document's fields. The scene reads the live
+// document in place, with no copy, and is rebuilt when its revision changes.
+
+impl Drawing for Document {
+    fn layer_tree(&self) -> &[LayerNode] {
+        &self.snapshot.layers
+    }
+
+    fn objects(&self) -> impl Iterator<Item = &Entity> {
+        self.snapshot.entities.iter()
+    }
+
+    fn anchor(&self) -> kentos_contracts::Vec2 {
+        self.snapshot.origin
+    }
+
+    fn drawing_font(&self) -> Option<DrawingFont> {
+        self.snapshot.settings.drawing_font
+    }
+}
+
+/// Changes with every change to what the drawing holds.
+fn revision(doc: &Document) -> u64 {
+    doc.revision
+}
+
+/// The drawing's start view, when it has one.
+fn start_view(doc: &Document) -> Option<Bounds> {
+    doc.snapshot.home_view.map(|h| Bounds {
+        min_x: h.min_x,
+        min_y: h.min_y,
+        max_x: h.max_x,
+        max_y: h.max_y,
+    })
+}
 
 /// Wheel zoom per line (a notch) and per pixel of a touchpad: the web's steps.
 const WHEEL_LINE: f64 = 0.15;
@@ -153,7 +191,7 @@ impl Viewport {
                 self.cursor = Some(self.world(at));
             }
             Event::Extents => {
-                if let Some(extents) = doc.and_then(|d| scene::extents(&d.snapshot)) {
+                if let Some(extents) = doc.and_then(scene::extents) {
                     self.camera.fit(&extents, FIT_PADDING);
                 }
             }
@@ -221,20 +259,21 @@ impl Viewport {
         let needed = lod::band(self.camera.scale, settings.curve_tolerance_px);
         let band = lod::build_band(self.camera.scale, settings.curve_tolerance_px);
         let budget = settings.curve_segment_budget;
+        let revision = revision(doc);
         let mut cache = self.scene.borrow_mut();
         let current = cache.as_ref().is_some_and(|c| {
-            c.generation == self.generation && c.revision == doc.revision && c.mode == mode
+            c.generation == self.generation && c.revision == revision && c.mode == mode
         });
         if !current {
-            let origin = scene::scene_origin(&doc.snapshot);
+            let origin = scene::scene_origin(doc);
             *cache = Some(Cached {
                 generation: self.generation,
-                revision: doc.revision,
+                revision,
                 mode,
                 origin,
-                fixed: Arc::new(scene::build_fixed(&doc.snapshot, palette, origin)),
+                fixed: Arc::new(scene::build_fixed(doc, palette, origin)),
                 curves: Arc::new(scene::build_curves(
-                    &doc.snapshot,
+                    doc,
                     palette,
                     origin,
                     lod::tolerance(band),
@@ -246,7 +285,7 @@ impl Viewport {
             && lod::stale(cached.band, needed)
         {
             cached.curves = Arc::new(scene::build_curves(
-                &doc.snapshot,
+                doc,
                 palette,
                 cached.origin,
                 lod::tolerance(band),
@@ -263,19 +302,9 @@ impl Viewport {
     /// The document's start view, else its extents; its origin when it has neither.
     fn fit(&mut self, doc: &Document) {
         self.fit_pending = false;
-        let start = doc
-            .snapshot
-            .home_view
-            .map(|h| Bounds {
-                min_x: h.min_x,
-                min_y: h.min_y,
-                max_x: h.max_x,
-                max_y: h.max_y,
-            })
-            .or_else(|| scene::extents(&doc.snapshot));
-        match start {
+        match start_view(doc).or_else(|| scene::extents(doc)) {
             Some(b) => self.camera.fit(&b, FIT_PADDING),
-            None => self.camera.center_on(scene::scene_origin(&doc.snapshot)),
+            None => self.camera.center_on(scene::scene_origin(doc)),
         }
     }
 
@@ -693,28 +722,28 @@ mod tests {
         assert!((factor - (-0.15f64).exp()).abs() < 1e-12);
     }
 
+    fn sample() -> Document {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/document/v1/sample.json");
+        Document::read(&path).expect("the sample reads")
+    }
+
     #[test]
     fn opening_fits_the_start_view_once_the_area_has_a_size() {
-        let doc = Document::new(
-            kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
-                "../../../fixtures/document/v1/sample.json"
-            ))
-            .expect("the sample reads"),
-            None,
-        );
+        let doc = sample();
         let mut viewport = Viewport::new();
         viewport.opened(&doc);
         assert_eq!(viewport.camera, Camera::default(), "no size yet: no fit");
         viewport.update(Event::Resized(Size::new(1000.0, 800.0)), Some(&doc));
         // The sample's start view: 70 × 80 m around the parcel.
-        let home = doc.snapshot.home_view.expect("the sample has a start view");
+        let home = start_view(&doc).expect("the sample has a start view");
         let visible = viewport.camera.visible_bounds();
         assert!(visible.min_x <= home.min_x && visible.max_x >= home.max_x);
         assert!(visible.min_y <= home.min_y && visible.max_y >= home.max_y);
         assert!((viewport.camera.center.x - (home.min_x + home.max_x) / 2.0).abs() < 1e-9);
 
         viewport.update(Event::Extents, Some(&doc));
-        let extents = scene::extents(&doc.snapshot).expect("extents");
+        let extents = scene::extents(&doc).expect("extents");
         assert!((viewport.camera.center.y - (extents.min_y + extents.max_y) / 2.0).abs() < 1e-9);
 
         // The pointer's world point follows pan and zoom.
@@ -736,50 +765,46 @@ mod tests {
 
     #[test]
     fn the_scene_is_built_again_only_when_its_inputs_change() {
-        let mut doc = Document::new(
-            kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
-                "../../../fixtures/document/v1/sample.json"
-            ))
-            .expect("the sample reads"),
-            None,
-        );
-        let mut viewport = Viewport::new();
-        viewport.opened(&doc);
-        viewport.update(Event::Resized(Size::new(1000.0, 800.0)), Some(&doc));
+        use crate::app::App;
+        // Through the app's own messages, as the window drives it.
+        let (mut app, _) = App::boot(None);
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(sample())))));
+        let _ = app.update(Message::Viewport(Event::Resized(Size::new(1000.0, 800.0))));
         let palette = palette(Mode::Dark);
         let settings = RenderSettings::new(palette.background);
-        let (_, fixed, curves) = viewport.scene(&doc, Mode::Dark, &palette, &settings);
+        let scene = |app: &App, mode: Mode, palette: &Palette| {
+            let doc = app.document.as_ref().expect("the sample is open");
+            let (_, fixed, curves) = app.viewport.scene(doc, mode, palette, &settings);
+            (fixed, curves)
+        };
+        let (fixed, curves) = scene(&app, Mode::Dark, &palette);
         // A pan leaves the scene as it is.
-        viewport.update(
-            Event::Panned {
-                by: Vector::new(30.0, 10.0),
-                at: Point::new(1.0, 1.0),
-            },
-            Some(&doc),
-        );
-        let (_, same_fixed, same_curves) = viewport.scene(&doc, Mode::Dark, &palette, &settings);
+        let _ = app.update(Message::Viewport(Event::Panned {
+            by: Vector::new(30.0, 10.0),
+            at: Point::new(1.0, 1.0),
+        }));
+        let (same_fixed, same_curves) = scene(&app, Mode::Dark, &palette);
         assert_eq!((fixed.id, curves.id), (same_fixed.id, same_curves.id));
         // Zooming in 8× leaves the curves' band: only the curves are built again.
-        viewport.update(
-            Event::Zoomed {
-                factor: 8.0,
-                at: Point::new(500.0, 400.0),
-            },
-            Some(&doc),
-        );
-        let (_, zoomed_fixed, zoomed_curves) =
-            viewport.scene(&doc, Mode::Dark, &palette, &settings);
+        let _ = app.update(Message::Viewport(Event::Zoomed {
+            factor: 8.0,
+            at: Point::new(500.0, 400.0),
+        }));
+        let (zoomed_fixed, zoomed_curves) = scene(&app, Mode::Dark, &palette);
         assert_eq!(zoomed_fixed.id, fixed.id);
         assert_ne!(zoomed_curves.id, curves.id);
         assert!(zoomed_curves.segments.len() > curves.segments.len());
-        // A change to the document (a layer shown) builds both.
-        let first = doc.snapshot.layers[0].id.clone();
-        doc.change_layer(&first, |n| n.visible = !n.visible);
-        let (_, changed, _) = viewport.scene(&doc, Mode::Dark, &palette, &settings);
+        // A change to the drawing (the Kadastro group hidden) builds both.
+        let _ = app.update(Message::LayerVisible("layer-g".into()));
+        let (changed, _) = scene(&app, Mode::Dark, &palette);
         assert_ne!(changed.id, fixed.id);
+        assert!(
+            changed.segments.is_empty(),
+            "every shown layer is in the hidden group"
+        );
         // So does the theme: token colours resolve anew.
         let light = super::palette(Mode::Light);
-        let (_, relit, _) = viewport.scene(&doc, Mode::Light, &light, &settings);
+        let (relit, _) = scene(&app, Mode::Light, &light);
         assert_ne!(relit.id, changed.id);
     }
 }

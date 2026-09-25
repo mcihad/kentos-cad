@@ -1,7 +1,9 @@
 //! The drawing as the GPU draws it (TODOS.md REN-01, REN-07): GPU-ready
-//! arrays built on the CPU from a `.kcad` v1 document (`DocumentSnapshotV1`).
-//! Nothing here writes to the document; tessellation and triangulation are
-//! for display only and come from the shared geometry core.
+//! arrays built on the CPU from a drawing in the `.kcad` v1 terms (the
+//! contracts' `LayerNode` and `Entity`), read through [`Drawing`]: a
+//! `DocumentSnapshotV1`, or a host's live document without a copy. Nothing
+//! here writes to the drawing; tessellation and triangulation are for
+//! display only and come from the shared geometry core.
 //!
 //! A scene is two parts, uploaded and cached separately:
 //! - the fixed part ([`build_fixed`]): points, straight lines and paths,
@@ -88,13 +90,45 @@ impl ScenePart {
     }
 }
 
-/// The local origin a document's GPU offsets are taken from: its own anchor
+/// What a scene is built from: read-only access to a drawing, whether a
+/// `.kcad` snapshot or a host's live document (the desktop's). The scene
+/// keeps nothing of it; a host rebuilds when the drawing's revision changes.
+pub trait Drawing {
+    /// The top of the layer tree.
+    fn layer_tree(&self) -> &[LayerNode];
+    /// Every object, in document order.
+    fn objects(&self) -> impl Iterator<Item = &Entity>;
+    /// The local anchor near the data (`DocumentSnapshotV1::origin`).
+    fn anchor(&self) -> kentos_contracts::Vec2;
+    /// The project's drawing typeface: text boxes count in the extents.
+    fn drawing_font(&self) -> Option<DrawingFont>;
+}
+
+impl Drawing for DocumentSnapshotV1 {
+    fn layer_tree(&self) -> &[LayerNode] {
+        &self.layers
+    }
+
+    fn objects(&self) -> impl Iterator<Item = &Entity> {
+        self.entities.iter()
+    }
+
+    fn anchor(&self) -> kentos_contracts::Vec2 {
+        self.origin
+    }
+
+    fn drawing_font(&self) -> Option<DrawingFont> {
+        self.settings.drawing_font
+    }
+}
+
+/// The local origin a drawing's GPU offsets are taken from: its own anchor
 /// (“the GPU works relative to it”, `DocumentSnapshotV1::origin`), or the
 /// middle of its objects when the anchor is unusable. The float32 parts keep
 /// full precision wherever it lies (`precision`); a near origin only keeps
 /// the numbers small.
-pub fn scene_origin(doc: &DocumentSnapshotV1) -> Vec2 {
-    let o = &doc.origin;
+pub fn scene_origin<D: Drawing + ?Sized>(doc: &D) -> Vec2 {
+    let o = doc.anchor();
     if o.x.is_finite() && o.y.is_finite() {
         return Vec2::new(o.x, o.y);
     }
@@ -104,8 +138,8 @@ pub fn scene_origin(doc: &DocumentSnapshotV1) -> Vec2 {
 }
 
 /// Points, straight lines and paths, straight polygons and their fills, and hatches.
-pub fn build_fixed(doc: &DocumentSnapshotV1, palette: &Palette, origin: Vec2) -> ScenePart {
-    let layers = draw_layers(&doc.layers, palette);
+pub fn build_fixed<D: Drawing + ?Sized>(doc: &D, palette: &Palette, origin: Vec2) -> ScenePart {
+    let layers = draw_layers(doc.layer_tree(), palette);
     let groups = by_layer(doc, &layers);
     let mut b = Builder::new(origin);
     let mut not_drawn = BTreeMap::new();
@@ -142,14 +176,14 @@ pub fn build_fixed(doc: &DocumentSnapshotV1, palette: &Palette, origin: Vec2) ->
 /// world units. When that would give more than `budget` chords (and fill
 /// triangles), the tolerance is coarsened fourfold until it does not; the
 /// part's `tolerance` says what was used.
-pub fn build_curves(
-    doc: &DocumentSnapshotV1,
+pub fn build_curves<D: Drawing + ?Sized>(
+    doc: &D,
     palette: &Palette,
     origin: Vec2,
     tolerance: f64,
     budget: usize,
 ) -> ScenePart {
-    let layers = draw_layers(&doc.layers, palette);
+    let layers = draw_layers(doc.layer_tree(), palette);
     let groups = by_layer(doc, &layers);
     let mut tol = if tolerance.is_finite() && tolerance > 0.0 {
         tolerance
@@ -235,10 +269,10 @@ fn curves(
 /// union of each object's box from the geometry core (`entity_bounds_in`, the
 /// store's `extent`), hidden layers included, text measured in the project's
 /// typeface. `None` for a drawing without a measurable object.
-pub fn extents(doc: &DocumentSnapshotV1) -> Option<Bounds> {
-    let font = Font::from_id(font_id(doc.settings.drawing_font));
+pub fn extents<D: Drawing + ?Sized>(doc: &D) -> Option<Bounds> {
+    let font = Font::from_id(font_id(doc.drawing_font()));
     let mut out: Option<Bounds> = None;
-    for entity in &doc.entities {
+    for entity in doc.objects() {
         let b = entity_bounds_in(&shape(entity), font);
         let usable = [b.min_x, b.min_y, b.max_x, b.max_y]
             .iter()
@@ -346,14 +380,14 @@ fn draw_layers<'a>(nodes: &'a [LayerNode], palette: &Palette) -> Vec<DrawLayer<'
 }
 
 /// The objects of each drawn layer, in document order; objects of hidden or unknown layers are left out.
-fn by_layer<'a>(doc: &'a DocumentSnapshotV1, layers: &[DrawLayer<'_>]) -> Vec<Vec<&'a Entity>> {
+fn by_layer<'a, D: Drawing + ?Sized>(doc: &'a D, layers: &[DrawLayer<'_>]) -> Vec<Vec<&'a Entity>> {
     let index: HashMap<&str, usize> = layers
         .iter()
         .enumerate()
         .map(|(i, l)| (l.node.id.as_str(), i))
         .collect();
     let mut out = vec![Vec::new(); layers.len()];
-    for entity in &doc.entities {
+    for entity in doc.objects() {
         if let Some(group) = index
             .get(entity.base().layer_id.as_str())
             .and_then(|&i| out.get_mut(i))
