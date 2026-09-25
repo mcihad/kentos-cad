@@ -26,7 +26,11 @@
 //! | ↑ ↓   | Öneriler arasında gezinir. Giriş boşken ↑ önceki komutları geri getirir, ↓ bütün komutları listeler. |
 //! | Tab   | Vurgulanan öneriyi girişe yazar.                                 |
 //! | Enter | Vurgulanan öneriyi çalıştırır; öneri yoksa yazılanı iletir.      |
-//! | Esc   | Önerileri kapatır; öneri yoksa yazılanı siler.                   |
+//! | Boşluk | [`CommandLine::space_submits`] ile Enter gibidir (AutoCAD); yoksa boşluk yazar. |
+//! | Esc   | Önerileri kapatır; öneri yoksa yazılanı siler. Giriş boşsa [`CommandLine::on_cancel`] mesajını gönderir ve odağı bırakır. |
+//!
+//! Giriş odağı değişince [`CommandLine::on_focus`] mesajı gider: uygulama
+//! odak metin kutusundayken kısayolları süzebilir.
 //!
 //! ```ignore
 //! CommandLine::new(&history, &input)
@@ -146,6 +150,8 @@ pub enum Entry {
     Input(String),
     /// Uygulamanın yanıtı.
     Output(String),
+    /// Uyarı: iş yapılmadı ya da eksik yapıldı, nedeni ve çözümüyle.
+    Warning(String),
     /// Hata: tanınmayan komut, geçersiz değer.
     Error(String),
 }
@@ -313,6 +319,8 @@ struct Callbacks<'a, Message> {
     on_input: Option<Rc<dyn Fn(String) -> Message + 'a>>,
     on_submit: Option<Message>,
     on_run: Option<Rc<dyn Fn(String) -> Message + 'a>>,
+    on_cancel: Option<Message>,
+    on_focus: Option<Rc<dyn Fn(bool) -> Message + 'a>>,
 }
 
 /// Komut kutusu.
@@ -327,6 +335,7 @@ pub struct CommandLine<'a, Message> {
     expanded: bool,
     on_expand: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     id: Option<widget::Id>,
+    space_submits: bool,
 }
 
 impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
@@ -339,6 +348,8 @@ impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
                 on_input: None,
                 on_submit: None,
                 on_run: None,
+                on_cancel: None,
+                on_focus: None,
             },
             commands: Vec::new(),
             prompt: None,
@@ -346,7 +357,29 @@ impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
             expanded: false,
             on_expand: None,
             id: None,
+            space_submits: false,
         }
+    }
+
+    /// Boşluk Enter gibi çalışır: vurgulanan öneriyi çalıştırır, öneri yoksa
+    /// yazılanı iletir (AutoCAD; KentOS CAD'de ADR 0018). Girişe boşluk
+    /// yazılamaz; `Y X` yerine `Y,X` yazılır.
+    pub fn space_submits(mut self) -> Self {
+        self.space_submits = true;
+        self
+    }
+
+    /// Giriş boşken ve öneri listesi kapalıyken Esc'e basılınca gönderilen
+    /// mesaj (ör. çalışan komuttan çık). Giriş odağı bırakır.
+    pub fn on_cancel(mut self, message: Message) -> Self {
+        self.callbacks.on_cancel = Some(message);
+        self
+    }
+
+    /// Giriş odak alınca `true`, bırakınca `false` ile gönderilen mesaj.
+    pub fn on_focus(mut self, on_focus: impl Fn(bool) -> Message + 'a) -> Self {
+        self.callbacks.on_focus = Some(Rc::new(on_focus));
+        self
     }
 
     /// İstem yokken girişte gösterilen metin.
@@ -418,6 +451,7 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
             expanded,
             on_expand,
             id,
+            space_submits,
         } = line;
 
         let id = id.unwrap_or_else(widget::Id::unique);
@@ -444,6 +478,7 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
             expand,
             focus,
             panel: None,
+            space_submits,
         })
     }
 }
@@ -603,6 +638,15 @@ fn history_line<'a, Message: 'a>(
         Entry::Output(output) => (
             None,
             text(output.as_str())
+                .font(typography::ui())
+                .size(typography::body())
+                .wrapping(wrapping)
+                .style(ink(|t| t.text, alpha))
+                .into(),
+        ),
+        Entry::Warning(warning) => (
+            Some(mark(Icon::Warning, 11.0, |t| t.warning, alpha)),
+            text(warning.as_str())
                 .font(typography::ui())
                 .size(typography::body())
                 .wrapping(wrapping)
@@ -1119,6 +1163,8 @@ struct State {
     recall: Option<usize>,
     /// Bileşenin kendi yazdığı metin (Tab, ↑); değişince geri getirme sürer.
     expected: Option<String>,
+    /// Uygulamaya en son bildirilen odak (`on_focus`).
+    reported: bool,
 }
 
 impl State {
@@ -1145,6 +1191,8 @@ struct Console<'a, Message> {
     focus: Rc<Cell<bool>>,
     /// Açık öneri listesinin bu kareki içeriği.
     panel: Option<Element<'a, Message>>,
+    /// Boşluk Enter gibidir.
+    space_submits: bool,
 }
 
 impl<'a, Message: Clone + 'a> Console<'a, Message> {
@@ -1186,6 +1234,17 @@ impl<'a, Message: Clone + 'a> Console<'a, Message> {
         let state = tree.state.downcast_mut::<State>();
         state.focused = probe.focused;
         state.input_bounds = probe.bounds;
+    }
+
+    /// Odak, uygulamaya son bildirilenden farklıysa `on_focus` ile bildirir.
+    fn report_focus(&self, state: &mut State, shell: &mut Shell<'_, Message>) {
+        if state.reported != state.focused {
+            state.reported = state.focused;
+
+            if let Some(on_focus) = &self.callbacks.on_focus {
+                shell.publish(on_focus(state.focused));
+            }
+        }
     }
 
     /// Giriş odaktayken basılan tuş; ele alındıysa `true`.
@@ -1245,6 +1304,19 @@ impl<'a, Message: Clone + 'a> Console<'a, Message> {
                     shell,
                 );
                 state.close_list();
+            }
+            Named::Space if open && self.space_submits => {
+                accept(
+                    &self.suggestions[self.highlighted(state)],
+                    &self.callbacks,
+                    shell,
+                );
+                state.close_list();
+            }
+            Named::Space if self.space_submits => {
+                if let Some(on_submit) = &self.callbacks.on_submit {
+                    shell.publish(on_submit.clone());
+                }
             }
             Named::Escape if open => {
                 state.dismissed = true;
@@ -1395,6 +1467,35 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
 
             let state = tree.state.downcast_mut::<State>();
 
+            // Son olaydan bu yana bir görevle gelen odak tuştan önce bildirilir.
+            self.report_focus(state, shell);
+
+            // Boş satırda, liste kapalıyken Esc: uygulamanın vazgeçme
+            // mesajı gider, giriş odağı bırakır.
+            if state.focused
+                && *named == Named::Escape
+                && !modifiers.command()
+                && !modifiers.alt()
+                && !self.is_open(state)
+                && self.value.is_empty()
+                && let Some(cancel) = self.callbacks.on_cancel.clone()
+            {
+                state.recall = None;
+                state.close_list();
+                shell.publish(cancel);
+                self.input.as_widget_mut().operate(
+                    &mut tree.children[1],
+                    input_layout,
+                    renderer,
+                    &mut operation::focusable::unfocus(),
+                );
+                self.probe(tree, input_layout, renderer);
+                self.report_focus(tree.state.downcast_mut::<State>(), shell);
+                shell.capture_event();
+                shell.request_redraw();
+                return;
+            }
+
             if state.focused
                 && !modifiers.command()
                 && !modifiers.alt()
@@ -1491,6 +1592,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
 
                 shell.request_redraw();
             }
+
+            self.report_focus(state, shell);
         }
     }
 
