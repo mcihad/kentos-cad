@@ -34,7 +34,8 @@ export interface SocketOptions {
   onEvents: (events: EventRecord[]) => void;
   /** The server cannot continue from our cursor: reopen the project. */
   onResync: () => void;
-  onError: (message: string) => void;
+  /** An error from the server: its message and stable code (`not_found`: the subscription was refused or ended, as for a project this account may not see). */
+  onError: (message: string, code: string) => void;
   open?: (url: string) => SocketLike;
   heartbeatMs?: number;
   deadMs?: number;
@@ -146,7 +147,7 @@ export class ProjectSocket {
           this.stopped = true;
           this.socket?.close();
         }
-        this.o.onError(msg.message);
+        this.o.onError(msg.message, msg.error);
         return;
       case 'pong':
         return;

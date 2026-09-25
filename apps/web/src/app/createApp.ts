@@ -131,6 +131,8 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
       if (t) lazy(ctx, import('../ui/cloud/ProjectActions'), (m) => m.openDeleteDialog(ctx, t));
     },
   });
+  // The open cloud project's access taken away: say so, and offer a local copy (TODOS.md CLOUD-13).
+  ctx.cloud.accessLost.subscribe((lost) => lost && lazy(ctx, import('../ui/cloud/AccessLostNotice'), (m) => m.openAccessLostNotice(ctx, lost)));
   registerDefaultKeybindings(ctx);
   commands.events.on('missing', ({ id }) => ctx.log.error(`Komut bulunamadı: ${id}`));
   // A trap in the geometry core is a bug in it; the drawing itself is safe (saving needs no core).

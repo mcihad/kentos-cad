@@ -7,9 +7,11 @@ import type { MembershipView } from '../../contracts/generated/MembershipView';
 import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
 import type { ProjectList } from '../../contracts/generated/ProjectList';
 import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
+import type { ProjectRole } from '../../contracts/generated/ProjectRole';
 import type { TenantKind } from '../../contracts/generated/TenantKind';
 import type { AppContext } from '../context';
 import { replaceDrawing } from '../fileIO';
+import { AccessWatch } from './accessWatch';
 import { ApiFailure, HttpCloudApi, type CloudApi } from './api';
 import { browserDraftStore, draftKey, type DraftStore } from './drafts';
 import { readIncoming } from './incoming';
@@ -32,7 +34,11 @@ import { ProjectSync } from './sync';
  * What the account may do comes with each project (docs/adr/0015): a tenant
  * role opens no project by itself, so buttons follow the project's own
  * permissions; the membership only says whether projects may be created in a
- * workspace. The server checks every request anyway.
+ * workspace. The server checks every request anyway. While a project is
+ * open its permissions follow the server (accessWatch.ts): a changed role
+ * holds or resumes the autosave, and access taken away stops it like a
+ * deletion, keeps the drawing and its unsent edits on this device, and says
+ * so (`accessLost`, TODOS.md CLOUD-13).
  */
 
 export type AuthState = 'unknown' | 'signedOut' | 'signedIn';
@@ -44,10 +50,23 @@ export interface CloudProject {
   tenantKind: TenantKind;
   projectId: string;
   name: string;
+  /** This account's role in it. */
+  role: ProjectRole;
   /** What this account may do in it. */
   permissions: readonly ProjectPermission[];
   canWrite: boolean;
   canEditMeta: boolean;
+}
+
+/** The open project's access was taken away: what the notice tells. */
+export interface AccessLost {
+  name: string;
+  /** Changes not sent to the server; they stay in this device's draft. */
+  unsent: number;
+  /** Whether edits are kept on this device from now on (a viewer's never are). */
+  keeps: boolean;
+  /** The server's reason when it said more than “not found” (a membership that may not be used now). */
+  reason: string;
 }
 
 /**
@@ -80,6 +99,8 @@ export class CloudSession {
   readonly sync = new Signal<ProjectSync | null>(null);
   /** The live channel of the open project ('none' when no cloud project is open). */
   readonly link = new Signal<LinkState | 'none'>('none');
+  /** Set when the open project's access is taken away (the interface shows a notice); cleared when the project is left. */
+  readonly accessLost = new Signal<AccessLost | null>(null);
   /** Whether drafts survive a reload on this browser. */
   readonly durableDrafts: boolean;
   readonly api: CloudApi;
@@ -150,6 +171,11 @@ export class CloudSession {
     return this.api.projects(tenantId);
   }
 
+  /** The account's own projects and the ones shared with it, in every workspace (“Projelerim”). */
+  myProjects(): Promise<ProjectList> {
+    return this.api.myProjects();
+  }
+
   /** Sends everything waiting now (Ctrl+S on a cloud project). */
   flush(): Promise<boolean> {
     return this.sync.value?.flush() ?? Promise.resolve(true);
@@ -158,11 +184,12 @@ export class CloudSession {
   /**
    * Whether the open cloud project keeps this drawing's changes (sent, or
    * waiting in the device draft), so replacing the drawing loses nothing.
-   * A viewer's edits are never sent: they are not kept.
+   * A viewer's edits are never sent: they are not kept. Nor can a deleted
+   * project's, or one whose access was taken away.
    */
   autosaves(): boolean {
-    const sync = this.sync.value;
-    return !!this.project.value?.canWrite && !!sync && sync.state.value !== 'deleted';
+    const state = this.sync.value?.state.value;
+    return !!this.project.value?.canWrite && !!state && state !== 'deleted' && state !== 'revoked';
   }
 
   /** The open cloud project, if it is this one. */
@@ -223,6 +250,26 @@ export class CloudSession {
   }
 
   /**
+   * This account's access to the open project was taken away (TODOS.md
+   * CLOUD-13): nothing more is sent or heard, no action on the project is
+   * offered any more, and the drawing and its unsent edits stay here. The
+   * notice (`accessLost`) says what the user can do.
+   */
+  private accessRevoked(project: CloudProject, reason: string): void {
+    const open = this.project.value;
+    if (open?.projectId !== project.projectId) return;
+    this.socket?.stop();
+    this.project.set({ ...open, permissions: [], canWrite: false, canEditMeta: false });
+    const sync = this.sync.value;
+    const keeps = !!sync?.keepsEdits;
+    const unsent = keeps ? (sync?.pending.value ?? 0) : 0;
+    this.ctx.log.warn(
+      `“${open.name}” projesine erişiminiz kaldırıldı${reason ? ` (${reason.replace(/\.$/, '')})` : ''}. Değişiklikleriniz artık buluta kaydedilmiyor${unsent ? `; gönderilmemiş ${unsent} değişiklik bu cihazda saklanıyor` : ''}. Çizimi saklamak için Dosya → Farklı kaydet ile yerel bir dosyaya kaydedin.`,
+    );
+    this.accessLost.set({ name: open.name, unsent, keeps, reason });
+  }
+
+  /**
    * Leaves the open cloud project before another drawing takes its place:
    * what waits is sent if the server answers within `waitMs`, and whatever
    * is still unsent stays in this device's draft (it comes back when the
@@ -253,6 +300,7 @@ export class CloudSession {
     this.sync.set(null);
     this.project.set(null);
     this.link.set('none');
+    this.accessLost.set(null);
   }
 
   private attach(info: ProjectInfo, records: { localId: number; featureId: string; version: string }[], cursor: string): ProjectSync {
@@ -266,10 +314,13 @@ export class CloudSession {
       tenantKind: info.tenantKind,
       projectId: info.id,
       name: info.name,
+      role: info.access.role,
       permissions,
       canWrite: permissions.includes('feature.write'),
       canEditMeta: permissions.includes('project.edit'),
     };
+    // Created right after the sync, which asks it when access may have changed.
+    let watch: AccessWatch | null = null;
     const sync = new ProjectSync({
       doc: this.ctx.doc,
       api: this.api,
@@ -285,6 +336,17 @@ export class CloudSession {
       records,
       warn: (t) => this.ctx.log.warn(t),
       onDeleted: () => this.projectDeleted(project),
+      onRevoked: (reason) => this.accessRevoked(project, reason),
+      onAccessChanged: () => void watch?.check(),
+    });
+    watch = new AccessWatch({
+      api: this.api,
+      sync,
+      project: () => (this.sync.value === sync ? this.project.value : null),
+      update: (next) => this.project.set(next),
+      resubscribe: () => this.socket?.reconnect(),
+      info: (t) => this.ctx.log.info(t),
+      warn: (t) => this.ctx.log.warn(t),
     });
     const socket = new ProjectSocket({
       url: socketUrl(),
@@ -297,10 +359,17 @@ export class CloudSession {
         this.open(info.tenantId, info.id).catch((e: unknown) => {
           // Deleted meanwhile (its event was among the ones no longer kept): the same as hearing it.
           if (e instanceof ApiFailure && e.deleted) sync.markDeleted();
+          // Or its access was taken away meanwhile.
+          else if (e instanceof ApiFailure && e.notFound) sync.markRevoked();
           else this.ctx.log.error(`Proje yeniden açılamadı: ${(e as Error).message}. Dosya → Bulut projesi aç ile yeniden deneyin.`);
         });
       },
-      onError: (m) => this.ctx.log.warn(`Canlı bağlantı: ${m}`),
+      onError: (m, code) => {
+        // The server ended the subscription: the project is gone for this account, or its organisation
+        // may not be used now. Ask what is left; if the access is still there, subscribe again.
+        if (code === 'not_found' || code === 'forbidden') void watch?.check(true);
+        else this.ctx.log.warn(`Canlı bağlantı: ${m}`);
+      },
     });
     this.socket = socket;
     const unlinkSocket = socket.state.subscribe((s) => this.link.set(s), true);

@@ -20,7 +20,7 @@ afterEach(() => {
 
 type Records = SyncOptions['records'];
 
-function setup(opts: { canEditMeta?: boolean; drafts?: MemoryDraftStore; doc?: CadDocument; server?: FakeServer; records?: Records } = {}) {
+function setup(opts: { canEditMeta?: boolean; canWrite?: boolean; drafts?: MemoryDraftStore; doc?: CadDocument; server?: FakeServer; records?: Records } = {}) {
   const doc = opts.doc ?? newDoc();
   const server =
     opts.server ??
@@ -28,7 +28,7 @@ function setup(opts: { canEditMeta?: boolean; drafts?: MemoryDraftStore; doc?: C
   const warnings: string[] = [];
   const drafts = opts.drafts ?? new MemoryDraftStore();
   const records = opts.records ?? [];
-  const told = { deleted: 0 };
+  const told = { deleted: 0, revoked: [] as string[], asked: 0 };
   const o: SyncOptions = {
     doc,
     api: server,
@@ -38,11 +38,14 @@ function setup(opts: { canEditMeta?: boolean; drafts?: MemoryDraftStore; doc?: C
     tenantId: 't',
     projectId: 'p',
     canEditMeta: opts.canEditMeta ?? true,
+    canWrite: opts.canWrite,
     metaVersion: String(server.metaVersion),
     cursor: String(server.history.length),
     records,
     warn: (t) => warnings.push(t),
     onDeleted: () => told.deleted++,
+    onRevoked: (reason) => told.revoked.push(reason),
+    onAccessChanged: () => told.asked++,
     debounceMs: 60_000,
     maxDelayMs: 60_000,
   };
@@ -280,5 +283,90 @@ describe('cloud autosave', () => {
     await sync.receive([server.commitAs('baska', [{ op: 'create', id: crypto.randomUUID(), entity: wire({ ...pt(1, 'yok-boyle-katman'), id: 0 } as Entity) }])]);
     expect(doc.size).toBe(0);
     expect(warnings[0]).toMatch(/okunamadı/);
+  });
+});
+
+describe('cloud autosave when the account’s access changes (docs/adr/0015, TODOS.md CLOUD-13)', () => {
+  it('access taken away: nothing more is sent, the drawing and its edits stay on the device', async () => {
+    const { doc, server, sync, drafts, told } = setup();
+    const a = doc.add(pt(1));
+    await sync.flush();
+    server.revoked = true;
+    doc.update(a.id, { p: { x: 2, y: 4420210 } });
+    expect(await sync.flush()).toBe(false);
+    expect([sync.state.value, told.revoked, server.commits, doc.size]).toEqual(['revoked', [''], 1, 1]);
+    // Refused before anything was written: the command stays in the draft with its key, for when access comes back.
+    let kept = await drafts.get('u1/t/p');
+    expect([Object.keys(kept!.changes).length, !!kept!.inflight]).toEqual([1, true]);
+    // Later edits are kept on the device too, and nothing is tried again.
+    doc.add(pt(3));
+    await sync.keepDraft();
+    kept = await drafts.get('u1/t/p');
+    expect(Object.keys(kept!.changes)).toHaveLength(2);
+    expect(await sync.flush()).toBe(false);
+    expect(server.commits).toBe(1);
+    // Told once; events heard after it change nothing.
+    sync.markRevoked();
+    await sync.receive([server.grant('editor')]);
+    expect([told.revoked.length, told.asked, sync.state.value]).toEqual([1, 0, 'revoked']);
+  });
+
+  it('a changed grant is heard as a question: the session asks what this account may do now', async () => {
+    const { server, sync, told } = setup();
+    await sync.receive([server.grant('viewer')]);
+    expect(told.asked).toBe(1);
+    expect(sync.cursor).toBe(server.history.at(-1)!.seq);
+  });
+
+  it('a lowered role holds the edits on the device, and a raised one sends them', async () => {
+    const { doc, server, sync, drafts } = setup();
+    const a = doc.add(pt(1));
+    await sync.flush();
+    const id = sync.featureOf(a.id)!;
+    server.role = 'viewer';
+    expect(sync.setAccess(false, false)).toBe('held');
+    expect(sync.state.value).toBe('readonly');
+    doc.update(a.id, { p: { x: 5, y: 4420210 } });
+    expect(await sync.flush()).toBe(false);
+    expect([server.commits, sync.pending.value, sync.state.value]).toEqual([1, 1, 'readonly']);
+    await sync.keepDraft();
+    expect(Object.values((await drafts.get('u1/t/p'))!.changes)[0].entity).toMatchObject({ p: { x: 5 } });
+    // The same role again changes nothing.
+    expect(sync.setAccess(false, false)).toBe('same');
+    server.role = 'editor';
+    expect(sync.setAccess(true, false)).toBe('resumed');
+    await vi.waitFor(() => expect(sync.state.value).toBe('saved'));
+    expect(server.store.get(id)).toMatchObject({ version: 2, entity: { p: { x: 5 } } });
+  });
+
+  it('a refusal for a missing right says so and asks again; once lowered, it is not an error', async () => {
+    const { doc, server, sync, told, warnings } = setup();
+    server.role = 'viewer';
+    doc.add(pt(1));
+    expect(await sync.flush()).toBe(false);
+    expect([sync.state.value, told.asked]).toEqual(['error', 1]);
+    expect(warnings.at(-1)).toMatch(/feature\.write/);
+    // The session applies the lower role: the edit is held, not in error.
+    expect(sync.setAccess(false, false)).toBe('held');
+    expect([sync.state.value, sync.pending.value]).toEqual(['readonly', 1]);
+  });
+
+  it('a viewer made an editor does not send what it drew while it could only view', async () => {
+    const { doc, server, sync, drafts } = setup({ canWrite: false });
+    doc.add(pt(1));
+    expect(sync.state.value).toBe('readonly');
+    await sync.keepDraft();
+    expect(await drafts.get('u1/t/p')).toBeNull();
+    server.role = 'editor';
+    // Those edits were never kept: opening the project again starts clean.
+    expect(sync.setAccess(true, false)).toBe('reopen');
+    expect(await sync.flush()).toBe(false);
+    expect(server.commits).toBe(0);
+    // With nothing drawn meanwhile, a viewer made an editor saves at once.
+    const clean = setup({ canWrite: false, server });
+    expect(clean.sync.setAccess(true, false)).toBe('resumed');
+    clean.doc.add(pt(2));
+    expect(await clean.sync.flush()).toBe(true);
+    expect(server.commits).toBe(1);
   });
 });

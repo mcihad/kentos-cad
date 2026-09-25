@@ -187,9 +187,14 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       aliases: ['KAYDET', 'SAVE'],
       run: () => {
         if (!ctx.cloud.project.value) return void ctx.files.save();
-        if (ctx.cloud.sync.value?.state.value === 'deleted') {
-          // Nothing can be saved to a deleted project: the next useful step is a local file.
-          ctx.log.warn('Bu bulut projesi silindi; çizim buluta kaydedilemez. Yerel bir dosyaya kaydedin.');
+        const state = ctx.cloud.sync.value?.state.value;
+        if (state === 'deleted' || state === 'revoked') {
+          // Nothing can be saved to a deleted project, or one this account may not reach: the next useful step is a local file.
+          ctx.log.warn(
+            state === 'deleted'
+              ? 'Bu bulut projesi silindi; çizim buluta kaydedilemez. Yerel bir dosyaya kaydedin.'
+              : 'Bu bulut projesine erişiminiz kaldırıldı; çizim buluta kaydedilemez. Yerel bir dosyaya kaydedin.',
+          );
           return void ctx.files.saveAs();
         }
         void ctx.cloud.flush().then((ok) =>

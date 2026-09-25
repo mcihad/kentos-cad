@@ -163,12 +163,14 @@
 }
 .status__save[data-state='conflict'],
 .status__save[data-state='error'],
-.status__save[data-state='deleted'] {
+.status__save[data-state='deleted'],
+.status__save[data-state='revoked'] {
   color: var(--c-danger);
 }
 .status__save[data-state='conflict'] .status__lamp,
 .status__save[data-state='error'] .status__lamp,
-.status__save[data-state='deleted'] .status__lamp {
+.status__save[data-state='deleted'] .status__lamp,
+.status__save[data-state='revoked'] .status__lamp {
   background: currentColor;
 }
 .status__save[data-state='readonly'] {
