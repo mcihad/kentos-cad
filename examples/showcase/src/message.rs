@@ -13,6 +13,7 @@ use kentos_rc::theme::typography::{self, Typography};
 use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::docking::{self, Docks, Side};
 use kentos_rc::widget::floating::{self, Placement};
+use kentos_rc::widget::tree_view::Place;
 use kentos_rc::widget::{inspector, toast};
 
 use crate::gallery::{Demo, Page};
@@ -59,6 +60,20 @@ pub enum Message {
     TreeSelected(NodeId),
     /// Grubu ya da alt katmanları açar/kapatır.
     TreeToggled(NodeId),
+    /// Ağaçta sürüklenip bırakılan girdi: kaynağın ve hedefin anahtarı,
+    /// yer.
+    TreeMoved(usize, usize, Place),
+    /// Katmanın kilidini ve seçilebilirliğini değiştirir.
+    LayerLocked(usize),
+    LayerSelectable(usize),
+    /// Grubu ya da katmanı yerinde yeniden adlandırma.
+    RenameStarted(NodeId),
+    RenameInput(String),
+    RenameSubmitted,
+    RenameCancelled,
+    /// F2: ağaçta seçili düğüm varsa yeniden adlandırır, yoksa komut
+    /// geçmişini açar.
+    F2Pressed,
     /// Düğümün onay kutusu: görünürlük.
     TreeChecked(NodeId, bool),
     /// Grubu (ya da `None` ile bütün ağacı) iç içe açar veya kapatır.

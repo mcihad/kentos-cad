@@ -45,6 +45,7 @@ pub mod toast;
 pub mod toolbar;
 pub mod tree_view;
 pub mod viewports;
+pub mod virtual_list;
 pub mod wizard;
 
 mod tip;
@@ -82,8 +83,9 @@ pub use tabs::{Tab, Tabs};
 pub use tip::{Tip, tip};
 pub use toast::{Toast, Toaster, Toasts};
 pub use toolbar::Toolbar;
-pub use tree_view::TreeView;
+pub use tree_view::{Toggle, TreeView};
 pub use viewports::{View, Viewports, Views};
+pub use virtual_list::VirtualList;
 pub use wizard::Wizard;
 
 use iced::widget::{Rule, container, rule, space};

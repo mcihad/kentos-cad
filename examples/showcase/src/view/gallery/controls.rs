@@ -1,10 +1,11 @@
 //! Bileşen sayfaları: düğmeler ve veri.
 
 use iced::widget::{
-    Row, button, checkbox, column, container, pick_list, row, slider, text_input, tooltip,
+    Row, button, checkbox, column, container, pick_list, row, slider, space, text_input, tooltip,
 };
 use iced::{Center, Element, Fill, Theme};
 
+use kentos_rc::attribute::number;
 use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::Tool;
@@ -13,12 +14,14 @@ use kentos_rc::theme::typography;
 use kentos_rc::widget::color::Ramp;
 use kentos_rc::widget::ribbon::{self, AppButton, Field, Group, Preview, Ribbon, Stack, Tile};
 use kentos_rc::widget::table::{self, Table};
-use kentos_rc::widget::tree_view::{self, Check, Node, TreeView};
-use kentos_rc::widget::{Menu, Panel, PropertyGrid, Tip, badge, swatch, tip, vertical_divider};
+use kentos_rc::widget::tree_view::{self, Check, Node, Toggle, TreeView};
+use kentos_rc::widget::{
+    Menu, NumberInput, Panel, PropertyGrid, Tip, badge, swatch, tip, vertical_divider,
+};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
-use crate::gallery::{Crs, Demo, PROJECT_FILES, ProjectRow};
+use crate::gallery::{self, Crs, Demo, Gallery, PARCELS, PROJECT_FILES, ProjectRow};
 use crate::message::Message;
 
 type ButtonStyle = Box<dyn Fn(&Theme, button::Status) -> button::Style>;
@@ -470,6 +473,44 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Sanal tablo",
+                "kentos_rc::widget::Table::virtualized",
+                "100.000 kayıtlık tablo: satırlar sıra numarasından istenir ve yalnızca \
+                 görünenler kurulur, kaydırma hep akıcıdır. Satır numarası yazıp Enter'a \
+                 basın; seçilen satır görünür yapılır (reveal). Aynı yapı TreeView::virtualized \
+                 ve VirtualList ile ağaçlarda ve listelerde de kullanılır.",
+                self.parcel_table(),
+                Some(
+                    "Table::new(columns)\n    \
+                     .virtualized(records.len(), |index| {\n        \
+                     table::Row::new(cells(&records[index]))\n            \
+                     .selected(index == selected)\n            \
+                     .on_press(Message::Selected(index))\n    })\n    \
+                     .reveal(Some(selected))\n    .height(300)",
+                ),
+            ),
+            entry(
+                "Ağaçta taşıma, adlandırma, satır düğmeleri",
+                "kentos_rc::widget::tree_view",
+                "Kimlikli düğümleri sürükleyin: satırın üst yarısı önüne, alt yarısı ardına, \
+                 klasörün ortası içine bırakır; altındakiler de taşınır, Esc vazgeçer. Satırı \
+                 seçip F2'ye basın ya da sağ tıklayıp Yeniden adlandır'ı seçin: Enter ve \
+                 dışarı tıklamak kaydeder, Esc vazgeçer. Göz ve kilit düğmeleri adın \
+                 sağındadır; gizli klasörün altındakiler sönük görünür.",
+                container(self.outline_tree()).width(340),
+                Some(
+                    "TreeView::new([tree_view::Column::new(\"Katman\").width(Fill)])\n    \
+                     .on_move(Message::Moved)\n    \
+                     .push(\n        Node::new(\"Mimari\")\n            .id(0)\n            \
+                     .folder()\n            .expanded(open, Message::Opened(0))\n            \
+                     .push(\n                Node::new(\"Kapılar\")\n                    \
+                     .id(2)\n                    \
+                     .toggle(Toggle::visible(true, Message::Shown(2)))\n                    \
+                     .toggle(Toggle::locked(false, Message::Locked(2))),\n            ),\n    )\n\
+                     // F2: .editor(tree_view::rename(&name, Input, Renamed, Cancelled))",
+                ),
+            ),
+            entry(
                 "Özellik ızgarası",
                 "kentos_rc::widget::PropertyGrid",
                 "CAD programlarındaki Özellikler paleti: anahtar ve değer iki sütunda, \
@@ -512,6 +553,69 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+
+    /// Sanal tablo örneği: 100.000 parsel ve satır numarasıyla gitme.
+    fn parcel_table(&self) -> Element<'_, Message> {
+        let selected = self.gallery.parcel;
+
+        let table = Table::new([
+            table::Column::new("No").width(56).align_right(),
+            table::Column::new("Ada/parsel").width(76),
+            table::Column::new("Mahalle").width(Fill),
+            table::Column::new("Kullanım").width(72),
+            table::Column::new("Alan").width(84).align_right(),
+        ])
+        .virtualized(PARCELS, move |index| {
+            let parcel = gallery::parcel(index);
+
+            table::Row::new([
+                label::mono_caption(number::integer(index as i64 + 1)).into(),
+                label::body(format!("{}/{}", parcel.block, parcel.lot)).into(),
+                label::body(parcel.district).into(),
+                label::caption(parcel.usage).into(),
+                label::mono_caption(format!("{} m²", number::real(parcel.area, 2))).into(),
+            ])
+            .selected(index == selected)
+            .on_press(Message::Gallery(Demo::ParcelSelected(index)))
+        })
+        .reveal(Some(selected))
+        .height(typography::scaled(300.0));
+
+        let jump = row![
+            label::muted("Satıra git"),
+            NumberInput::new((selected + 1) as f64, |value| {
+                Message::Gallery(Demo::ParcelSelected(
+                    (value.round().max(1.0) as usize).saturating_sub(1),
+                ))
+            })
+            .range(1.0..=PARCELS as f64)
+            .step(1.0)
+            .decimals(0)
+            .width(typography::scaled(110.0)),
+            space::horizontal(),
+            label::caption(format!(
+                "{} kayıt, seçili: {}",
+                number::integer(PARCELS as i64),
+                number::integer(selected as i64 + 1)
+            )),
+        ]
+        .spacing(8)
+        .align_y(Center);
+
+        container(column![jump, container(table).style(style::container::bordered)].spacing(8))
+            .width(560)
+            .into()
+    }
+
+    /// Taşınabilir ağaç örneği: bir yapı projesinin katman grupları.
+    fn outline_tree(&self) -> Element<'_, Message> {
+        TreeView::new([tree_view::Column::new("Katman").width(Fill)])
+            .on_move(|source, target, place| {
+                Message::Gallery(Demo::OutlineMoved(source, target, place))
+            })
+            .extend(outline_branch(&self.gallery, &mut 0, 0, false))
+            .into()
     }
 
     /// Ağaç örneği: bir imar planı projesinin klasörleri ve dosyaları.
@@ -727,4 +831,80 @@ fn panel_body<'a>(content: &'static str) -> Element<'a, Message> {
         .padding([12, 10])
         .width(Fill)
         .into()
+}
+
+/// Taşınabilir ağaç örneğinin `depth` derinliğindeki düğümleri, `next`
+/// satırından başlayarak; derinlik sırasındaki satırlardan iç içe düğümler
+/// kurar. Gizli bir klasörün altındakiler sönük görünür.
+fn outline_branch<'a>(
+    gallery: &'a Gallery,
+    next: &mut usize,
+    depth: usize,
+    hidden: bool,
+) -> Vec<Node<'a, Message>> {
+    let mut nodes = Vec::new();
+
+    while let Some(row) = gallery.outline.get(*next).filter(|row| row.depth == depth) {
+        let index = *next;
+        let name = row.name.as_str();
+        *next += 1;
+
+        let children = outline_branch(gallery, next, depth + 1, hidden || !row.visible);
+        let glyph: Element<'a, Message> = if row.folder {
+            icon(Icon::Folder).size(14.0).tone(Tone::Muted).into()
+        } else {
+            swatch(row.color)
+        };
+
+        let mut node = Node::new(name)
+            .id(index)
+            .icon(glyph)
+            .toggle(Toggle::visible(
+                row.visible,
+                Message::Gallery(Demo::OutlineShown(index)),
+            ))
+            .toggle(Toggle::locked(
+                row.locked,
+                Message::Gallery(Demo::OutlineLocked(index)),
+            ))
+            .selected(gallery.outline_selected == Some(index))
+            .muted(hidden || !row.visible)
+            .on_press(Message::Gallery(Demo::OutlineSelected(index)))
+            .menu(move |_| {
+                Menu::new()
+                    .header(name)
+                    .item(
+                        "Yeniden adlandır",
+                        Message::Gallery(Demo::OutlineRename(index)),
+                    )
+                    .shortcut("F2")
+            });
+
+        if let Some((_, text)) = gallery
+            .outline_renaming
+            .as_ref()
+            .filter(|(renaming, _)| *renaming == index)
+        {
+            node = node.editor(tree_view::rename(
+                text,
+                |text| Message::Gallery(Demo::OutlineInput(text)),
+                Message::Gallery(Demo::OutlineRenamed),
+                Message::Gallery(Demo::OutlineCancelled),
+            ));
+        }
+
+        if row.folder {
+            node = node
+                .folder()
+                .expanded(row.open, Message::Gallery(Demo::OutlineOpened(index)));
+        }
+
+        if !row.folder || row.open {
+            node = node.extend(children);
+        }
+
+        nodes.push(node);
+    }
+
+    nodes
 }

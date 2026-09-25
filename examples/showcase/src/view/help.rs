@@ -56,12 +56,20 @@ impl Showcase {
                 "Alanları ve yığınları sürükleyerek boyutlandırır",
             )
             .item(
+                "Katman ağacında sürükle",
+                "Katmanı ya da grubu önüne, ardına ya da grubun içine taşır",
+            )
+            .item(
+                "Ağaçta F2",
+                "Seçili grubu ya da katmanı yerinde adlandırır; Enter kaydeder, Esc vazgeçer",
+            )
+            .item(
                 "Panel başlığına çift tık",
                 "Yığını başlığına daraltır ya da açar; ⋯ menüsü yüzdürür, kapatır",
             )
             .item(
                 "F1  F2  F3  F7",
-                "Kısayollar, komut geçmişi, nesne yakalama, ızgara",
+                "Kısayollar, komut geçmişi (ağaçta: adlandır), nesne yakalama, ızgara",
             )
             .item(
                 "Ctrl +  Ctrl −  Ctrl 0",

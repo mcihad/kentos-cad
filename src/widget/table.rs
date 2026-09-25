@@ -18,6 +18,10 @@
 //! [`Table::min_width`] verilirse dar tablonun başlığı ve satır vurgusu yine
 //! de bu genişliğe uzanır. Satırlara [`Row::menu`] ile bağlam menüsü
 //! eklenebilir.
+//!
+//! Çok satırlı tablolar [`Table::virtualized`] ile kurulur: satırlar
+//! yalnızca görünürken kurulur ([`VirtualList`]), satırların yüksekliği
+//! eşittir ([`row_height`]).
 
 use iced::alignment::Horizontal;
 use iced::widget::text::{Fragment, IntoFragment};
@@ -29,11 +33,19 @@ use crate::label;
 use crate::style;
 use crate::theme::typography;
 use crate::widget::context_menu::{ContextMenu, Menu};
+use crate::widget::virtual_list::VirtualList;
 
 /// Sütunlar arasındaki boşluk.
 pub(crate) const SPACING: f32 = 8.0;
 /// Satırların yatay iç boşluğu.
 pub(crate) const PADDING_X: f32 = 10.0;
+/// Sanal tablonun satır yüksekliği, 12 piksellik gövde metnine göre.
+pub const ROW: f32 = 25.0;
+
+/// Sanal tablonun satır yüksekliği, geçerli yazı boyutunda.
+pub fn row_height() -> f32 {
+    typography::scaled(ROW)
+}
 /// Sağa hizalı hücrelerin sağındaki boşluk; ardından gelen sola hizalı
 /// sütunun metnine yapışmasınlar. Sabit genişlikli sütunlarda genişliğe
 /// eklenir, içeriğin alanını daraltmaz.
@@ -147,10 +159,18 @@ impl<'a, Message: 'a> Row<'a, Message> {
 pub struct Table<'a, Message> {
     columns: Vec<Column<'a, Message>>,
     rows: Vec<Row<'a, Message>>,
+    /// Sanal satırlar: sayısı, kurucusu ve görünür yapılacak satır.
+    lazy: Option<Lazy<'a, Message>>,
     height: Option<Length>,
     empty: Option<Fragment<'a>>,
     horizontal: bool,
     min_width: f32,
+}
+
+struct Lazy<'a, Message> {
+    count: usize,
+    view: Box<dyn Fn(usize) -> Row<'a, Message> + 'a>,
+    reveal: Option<usize>,
 }
 
 impl<'a, Message: Clone + 'a> Table<'a, Message> {
@@ -158,11 +178,36 @@ impl<'a, Message: Clone + 'a> Table<'a, Message> {
         Self {
             columns: columns.into_iter().collect(),
             rows: Vec::new(),
+            lazy: None,
             height: None,
             empty: None,
             horizontal: false,
             min_width: 0.0,
         }
+    }
+
+    /// Sanal satırlar: `count` satırdan yalnızca görünenler `view` ile
+    /// kurulur. Satırlar eşit yükseklikte ([`row_height`]) ve tablo
+    /// verilen yüksekliği (varsayılan `Fill`) doldurur.
+    pub fn virtualized(
+        mut self,
+        count: usize,
+        view: impl Fn(usize) -> Row<'a, Message> + 'a,
+    ) -> Self {
+        self.lazy = Some(Lazy {
+            count,
+            view: Box::new(view),
+            reveal: None,
+        });
+        self
+    }
+
+    /// Sanal tabloda satırı görünür yapar (ör. seçilen öğenin satırı).
+    pub fn reveal(mut self, index: Option<usize>) -> Self {
+        if let Some(lazy) = &mut self.lazy {
+            lazy.reveal = index;
+        }
+        self
     }
 
     pub fn push(mut self, row: Row<'a, Message>) -> Self {
@@ -306,43 +351,90 @@ pub(crate) fn line<'a, Message: 'a>(
     .align_y(Center)
 }
 
+/// Satırın öğesi: hücreler sütunlara yerleşir, satır tıklanır ve sağ
+/// tıklanınca menüsü açılır. Sanal tabloda yükseklik sabittir.
+fn row_element<'a, Message: Clone + 'a>(
+    row: Row<'a, Message>,
+    layout: &[(Length, Horizontal)],
+    height: Option<f32>,
+) -> Element<'a, Message> {
+    let current = row.current.unwrap_or(row.selected);
+
+    let line = line(layout, row.cells);
+
+    // Sabit yükseklikli satırda hücreler dikeyde ortalanır.
+    let content = match height {
+        Some(height) => button(container(line).center_y(Fill))
+            .height(height)
+            .padding([0.0, PADDING_X]),
+        None => button(line).padding([4.0, PADDING_X]),
+    }
+    .on_press_maybe(row.on_press)
+    .width(Fill)
+    .style(style::button::table_row(row.selected, current));
+
+    match row.menu {
+        Some(menu) => ContextMenu::new(content, menu).into(),
+        None => content.into(),
+    }
+}
+
 impl<'a, Message: Clone + 'a> From<Table<'a, Message>> for Element<'a, Message> {
     fn from(table: Table<'a, Message>) -> Self {
         let width = table.horizontal.then(|| table.content_width());
         let layout = layout(&table.columns);
 
         let header = header(table.columns, &layout);
+        let empty = match &table.lazy {
+            Some(lazy) => lazy.count == 0,
+            None => table.rows.is_empty(),
+        };
 
-        let body: Element<'a, Message> = match (table.rows.is_empty(), table.empty) {
-            (true, Some(message)) => container(label::muted(message))
-                .padding([8.0, PADDING_X])
+        // Sanal liste kendisi kayar; öbür satırlar verilen yükseklikte
+        // kaydırılabilir alana konur.
+        let (body, scrolls): (Element<'a, Message>, bool) = match (empty, table.empty, table.lazy) {
+            (true, Some(message), _) => (
+                container(label::muted(message))
+                    .padding([8.0, PADDING_X])
+                    .width(Fill)
+                    .into(),
+                false,
+            ),
+            (_, _, Some(lazy)) => {
+                let height = row_height();
+                let row_layout = layout.clone();
+                let view = lazy.view;
+
+                (
+                    VirtualList::new(lazy.count, height, move |index| {
+                        row_element(view(index), &row_layout, Some(height))
+                    })
+                    .reveal(lazy.reveal)
+                    .height(table.height.unwrap_or(Length::Fill))
+                    .into(),
+                    true,
+                )
+            }
+            (_, _, None) => (
+                iced::widget::Column::with_children(
+                    table
+                        .rows
+                        .into_iter()
+                        .map(|row| row_element(row, &layout, None)),
+                )
                 .width(Fill)
                 .into(),
-            _ => iced::widget::Column::with_children(table.rows.into_iter().map(|row| {
-                let current = row.current.unwrap_or(row.selected);
-
-                let content = button(line(&layout, row.cells))
-                    .on_press_maybe(row.on_press)
-                    .width(Fill)
-                    .padding([4.0, PADDING_X])
-                    .style(style::button::table_row(row.selected, current));
-
-                match row.menu {
-                    Some(menu) => ContextMenu::new(content, menu).into(),
-                    None => content.into(),
-                }
-            }))
-            .width(Fill)
-            .into(),
+                false,
+            ),
         };
 
         let body = match table.height {
-            Some(height) => scrollable(body)
+            Some(height) if !scrolls => scrollable(body)
                 .direction(style::field::thin_scrollbar())
                 .width(Fill)
                 .height(height)
                 .into(),
-            None => body,
+            _ => body,
         };
 
         let content = iced::widget::Column::new().push(header).push(body);

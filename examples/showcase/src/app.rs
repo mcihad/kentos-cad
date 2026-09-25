@@ -18,13 +18,14 @@ use kentos_rc::theme::{self, Accent, Mode};
 use kentos_rc::widget::command_line::{self, Entry};
 use kentos_rc::widget::docking::{self, Docks};
 use kentos_rc::widget::floating::{self, Windows};
+use kentos_rc::widget::tree_view::{self, Place};
 use kentos_rc::widget::{Toast, Toasts, inspector};
 
 use crate::command::{self, Command};
-use crate::gallery::{Demo, Gallery};
+use crate::gallery::{Demo, Gallery, Page};
 use crate::import::{self, ImportWizard};
 use crate::jobs::{JobKind, Jobs, Outcome};
-use crate::layer_tree::{LayerTree, NodeId};
+use crate::layer_tree::{self, LayerTree, NodeId};
 use crate::message::{
     AppCommand, Confirmation, CoordinateFormat, DockPanel, Keyword, Message, Pane, Pending,
     QueryPurpose, RECENT_DRAWINGS, RibbonTab, Setting, SizeStep,
@@ -156,6 +157,11 @@ pub struct Showcase {
     pub(crate) sources: Vec<String>,
     /// Model alanı ve düzen (pafta) sekmeleri.
     pub(crate) sheets: Sheets,
+    /// Yerinde yeniden adlandırılan düğüm ve yazılan ad.
+    pub(crate) renaming: Option<(NodeId, String)>,
+    /// Son tıklanan yer bir ağaç (katman ağacı ya da galerideki örnek): F2
+    /// seçili düğümü yeniden adlandırır.
+    tree_focused: bool,
 }
 
 /// Koordinata git penceresinin alanları.
@@ -311,6 +317,8 @@ impl Showcase {
             properties: None,
             sources,
             sheets: Sheets::new(viewport),
+            renaming: None,
+            tree_focused: false,
         }
     }
 
@@ -405,12 +413,71 @@ impl Showcase {
 
             Message::TreeSelected(node) => {
                 self.layer_tree.selected = Some(node);
+                self.tree_focused = true;
 
                 if let Some(layer) = node.layer() {
                     self.active_layer = layer;
                 }
             }
             Message::TreeToggled(node) => self.layer_tree.toggle(node),
+            Message::TreeMoved(from, to, place) => self.move_entry(from, to, place),
+            Message::LayerLocked(layer) => {
+                if let Some(locked) = self.layer_tree.locked.get_mut(layer) {
+                    *locked = !*locked;
+                    let locked = *locked;
+                    let name = self.layer_name(layer);
+
+                    self.log(if locked {
+                        format!("{name} kilitlendi: öğeleri eklenmez, silinmez, düzenlenmez.")
+                    } else {
+                        format!("{name} kilidi açıldı.")
+                    });
+                }
+            }
+            Message::LayerSelectable(layer) => {
+                if let Some(selectable) = self.layer_tree.selectable.get_mut(layer) {
+                    *selectable = !*selectable;
+                    let selectable = *selectable;
+                    let name = self.layer_name(layer);
+
+                    self.log(if selectable {
+                        format!("{name} yeniden seçilebilir.")
+                    } else {
+                        format!("{name} seçilemez: haritada tıklanınca seçilmez.")
+                    });
+                }
+            }
+            Message::RenameStarted(node) => return self.start_rename(node),
+            Message::RenameInput(text) => {
+                if let Some((_, buffer)) = &mut self.renaming {
+                    *buffer = text;
+                }
+            }
+            Message::RenameSubmitted => self.finish_rename(),
+            Message::RenameCancelled => self.cancel_rename(),
+            Message::F2Pressed => {
+                // Son tıklanan ağaçtaki seçili düğüm adlandırılır: galeride
+                // örnek ağaç, çalışma alanında katman ağacı.
+                let gallery = self.ribbon_tab == RibbonTab::Gallery;
+
+                if self.tree_focused
+                    && gallery
+                    && self.gallery.page == Page::Data
+                    && let Some(row) = self.gallery.outline_selected
+                {
+                    return self.update(Message::Gallery(Demo::OutlineRename(row)));
+                }
+
+                if self.tree_focused
+                    && !gallery
+                    && let Some(node @ (NodeId::Group(_) | NodeId::Layer(_))) =
+                        self.layer_tree.selected
+                {
+                    return self.start_rename(node);
+                }
+
+                self.command_expanded = !self.command_expanded;
+            }
             Message::TreeChecked(node, checked) => self.check_node(node, checked),
             Message::TreeExpandAll(group, expanded) => self.layer_tree.expand_all(group, expanded),
             Message::ShowOnly(node) => self.show_only(node),
@@ -482,7 +549,11 @@ impl Showcase {
             Message::Inspector(event) => {
                 if let Some(action) = self.inspector.update(event) {
                     match action {
-                        inspector::Action::Change { id, value } => self.set_attribute(id, value),
+                        inspector::Action::Change { id, value } => {
+                            if self.editable(self.selection.primary().map(|item| item.layer)) {
+                                self.set_attribute(id, value);
+                            }
+                        }
                         inspector::Action::Pick(field) => self.start_pick(field),
                         inspector::Action::CancelPick => self.cancel_pick(),
                         inspector::Action::Navigate { id, object } => self.navigate(id, object),
@@ -494,7 +565,10 @@ impl Showcase {
                 self.docks.toggle(DockPanel::Table, DockPanel::Table.side());
                 self.save_settings();
             }
-            Message::TableRowPressed(reference) => self.press_row(reference),
+            Message::TableRowPressed(reference) => {
+                self.tree_focused = false;
+                self.press_row(reference);
+            }
             Message::TableSearch(search) => {
                 if let Some(table) = self.tables.get_mut(self.active_layer) {
                     table.search = search;
@@ -634,8 +708,20 @@ impl Showcase {
                             }
                         }
                     }
-                } else if let Some(output) = self.gallery.update(demo) {
-                    self.log(output);
+                } else {
+                    let rename = matches!(demo, Demo::OutlineRename(_));
+
+                    if matches!(demo, Demo::OutlineSelected(_)) {
+                        self.tree_focused = true;
+                    }
+
+                    if let Some(output) = self.gallery.update(demo) {
+                        self.log(output);
+                    }
+
+                    if rename && self.gallery.outline_renaming.is_some() {
+                        return focus_rename();
+                    }
                 }
             }
 
@@ -651,6 +737,8 @@ impl Showcase {
                 return self.submit(&name);
             }
             Message::CommandTyped(text) => {
+                self.tree_focused = false;
+
                 // Pencere ya da menü açıkken yazılanlar komut kutusuna gitmez.
                 if self.app_menu_open
                     || self.query.is_some()
@@ -1021,11 +1109,149 @@ impl Showcase {
     }
 
     /// İmlecin altındaki öğe; haritadan seçim sürerken yalnızca hedef
-    /// katmanda aranır.
+    /// katmanda aranır. Seçilemeyen katmanların öğeleri sayılmaz.
     fn hit(&self, point: Point) -> Option<FeatureRef> {
         match &self.picking {
             Some(pick) => query::hit_test_in(&self.layers, pick.target, &self.viewport, point),
-            None => query::hit_test(&self.layers, &self.viewport, point),
+            None => query::hit_test(&self.layers, &self.viewport, point)
+                .filter(|hit| self.is_selectable(hit.layer)),
+        }
+    }
+
+    fn is_selectable(&self, layer: usize) -> bool {
+        self.layer_tree
+            .selectable
+            .get(layer)
+            .copied()
+            .unwrap_or(true)
+    }
+
+    /// Seçimde seçilemeyen katmanlar gizliymiş gibi aranır: altlarındaki
+    /// seçilebilir öğe bulunur.
+    fn with_selectable<R>(&mut self, search: impl FnOnce(&[Layer]) -> R) -> R {
+        let hidden: Vec<usize> = (0..self.layers.len())
+            .filter(|layer| self.layers[*layer].visible && !self.is_selectable(*layer))
+            .collect();
+
+        for layer in &hidden {
+            self.layers[*layer].visible = false;
+        }
+
+        let result = search(&self.layers);
+
+        for layer in hidden {
+            self.layers[layer].visible = true;
+        }
+
+        result
+    }
+
+    /// Katmanın öğeleri değiştirilebilir mi; kilitliyse nedenini yazar.
+    fn editable(&mut self, layer: Option<usize>) -> bool {
+        let Some(layer) = layer else {
+            return true;
+        };
+
+        if self.layer_tree.locked.get(layer).copied().unwrap_or(false) {
+            let name = self.layer_name(layer);
+            self.log(format!("{name} kilitli; değişiklik yapılmadı."));
+            return false;
+        }
+
+        true
+    }
+
+    /// Katmanın adı.
+    fn layer_name(&self, layer: usize) -> String {
+        self.layers
+            .get(layer)
+            .map_or_else(String::new, |layer| layer.name.clone())
+    }
+
+    /// Ağaçta sürüklenip bırakılan girdiyi taşır.
+    fn move_entry(&mut self, from: usize, to: usize, place: Place) {
+        let (entry, target) = (
+            layer_tree::Entry::from_key(from),
+            layer_tree::Entry::from_key(to),
+        );
+        let name = |tree: &Self, entry: layer_tree::Entry| match entry {
+            layer_tree::Entry::Group(group) => tree.layer_tree.groups[group].name.clone(),
+            layer_tree::Entry::Layer(layer) => tree.layer_name(layer),
+        };
+
+        if self.layer_tree.move_entry(entry, target, place) {
+            self.sync_visibility();
+
+            let (moved, onto) = (name(self, entry), name(self, target));
+            self.log(match place {
+                Place::Into => format!("{moved}, {onto} grubuna taşındı."),
+                Place::Before => format!("{moved}, {onto} önüne taşındı."),
+                Place::After => format!("{moved}, {onto} ardına taşındı."),
+            });
+        }
+    }
+
+    /// Grubu ya da katmanı yerinde yeniden adlandırmaya başlar; kutu
+    /// odaklanır.
+    fn start_rename(&mut self, node: NodeId) -> Task<Message> {
+        let name = match node {
+            NodeId::Group(group) => self
+                .layer_tree
+                .groups
+                .get(group)
+                .map(|group| group.name.clone()),
+            NodeId::Layer(layer) => self.layers.get(layer).map(|layer| layer.name.clone()),
+            NodeId::Sublayer(..) => None,
+        };
+
+        let Some(name) = name else {
+            return Task::none();
+        };
+
+        self.layer_tree.selected = Some(node);
+        self.renaming = Some((node, name));
+
+        focus_rename()
+    }
+
+    /// Yeniden adlandırmadan vazgeçer; ad değişmez.
+    fn cancel_rename(&mut self) {
+        self.gallery.outline_renaming = None;
+
+        if self.renaming.take().is_some() {
+            self.log("Yeniden adlandırma iptal edildi.");
+        }
+    }
+
+    /// Yazılan adı uygular; boş ad eski adı bırakır.
+    fn finish_rename(&mut self) {
+        let Some((node, name)) = self.renaming.take() else {
+            return;
+        };
+        let name = name.trim().to_owned();
+
+        if name.is_empty() {
+            self.log("Ad boş olamaz; eski ad kaldı.");
+            return;
+        }
+
+        let previous = match node {
+            NodeId::Group(group) => self
+                .layer_tree
+                .groups
+                .get_mut(group)
+                .map(|group| std::mem::replace(&mut group.name, name.clone())),
+            NodeId::Layer(layer) => self
+                .layers
+                .get_mut(layer)
+                .map(|layer| std::mem::replace(&mut layer.name, name.clone())),
+            NodeId::Sublayer(..) => None,
+        };
+
+        if let Some(previous) = previous
+            && previous != name
+        {
+            self.log(format!("{previous} yeniden adlandırıldı: {name}."));
         }
     }
 
@@ -1054,8 +1280,13 @@ impl Showcase {
         }
     }
 
-    /// Tamamlanan geometriyi çizim katmanına ekler ve seçer.
+    /// Tamamlanan geometriyi çizim katmanına ekler ve seçer; katman
+    /// kilitliyse eklemez.
     fn commit_drawing(&mut self, geometry: Geometry) {
+        if !self.editable(Some(DRAWING_LAYER)) {
+            return;
+        }
+
         let Some(layer) = self.layers.get_mut(DRAWING_LAYER) else {
             return;
         };
@@ -1188,6 +1419,8 @@ impl Showcase {
         self.sources.push(format!("{source}; içe aktarıldı"));
         self.layer_tree.visible.push(true);
         self.layer_tree.expanded.push(false);
+        self.layer_tree.locked.push(false);
+        self.layer_tree.selectable.push(true);
 
         let position = self.layer_tree.roots.len().min(1);
         self.layer_tree
@@ -1267,7 +1500,10 @@ impl Showcase {
     /// Seç aracında tıklama: Shift seçime ekler, Ctrl seçimden çıkarır;
     /// değiştirici yoksa boş yere tıklamak seçimi kaldırır.
     fn click_select(&mut self, point: Point, modifiers: Modifiers) {
-        let hit = query::hit_test(&self.layers, &self.viewport, point);
+        self.tree_focused = false;
+
+        let viewport = self.viewport;
+        let hit = self.with_selectable(|layers| query::hit_test(layers, &viewport, point));
         let mode = selection_mode(modifiers);
 
         match hit {
@@ -1287,7 +1523,9 @@ impl Showcase {
 
     /// Seçim penceresi: soldan sağa pencere, sağdan sola kesişen seçim.
     fn box_select(&mut self, bounds: Bounds, crossing: bool, modifiers: Modifiers) {
-        let found = query::in_bounds(&self.layers, &self.viewport, bounds, crossing);
+        let viewport = self.viewport;
+        let found =
+            self.with_selectable(|layers| query::in_bounds(layers, &viewport, bounds, crossing));
         let count = found.len();
         let mode = selection_mode(modifiers);
 
@@ -1421,6 +1659,10 @@ impl Showcase {
             .selection
             .iter()
             .partition(|item| item.layer == DRAWING_LAYER);
+
+        if !drawings.is_empty() && !self.editable(Some(DRAWING_LAYER)) {
+            return;
+        }
 
         if drawings.is_empty() {
             // Süren bir durum: bildirim değil, haritanın üstünde şerit.
@@ -1961,6 +2203,11 @@ impl Showcase {
     /// Esc: önce açık menüyü, pencereyi ya da haritadan seçimi kapatır;
     /// sonra yarım çizimi bitirir; en son ölçümü ve seçimi temizler.
     fn escape(&mut self) {
+        if self.renaming.is_some() || self.gallery.outline_renaming.is_some() {
+            self.cancel_rename();
+            return;
+        }
+
         if self.confirm.take().is_some()
             || self.import.take().is_some()
             || self.properties.take().is_some()
@@ -2341,6 +2588,14 @@ fn starter_query(schema: &[Field]) -> Query {
     query
 }
 
+/// Yerinde adlandırma kutusunu odaklar ve adı seçer.
+fn focus_rename() -> Task<Message> {
+    Task::batch([
+        iced::widget::operation::focus(tree_view::RENAME),
+        iced::widget::operation::select_all(tree_view::RENAME),
+    ])
+}
+
 /// Klavye: değiştirici tuşlar her zaman izlenir; kısayollar yalnızca olayı
 /// bir bileşen (ör. metin girişi) kullanmadıysa çalışır.
 fn keyboard_event(event: Event, status: event::Status, _window: window::Id) -> Option<Message> {
@@ -2377,9 +2632,9 @@ fn typed(text: Option<&str>, modifiers: Modifiers) -> Option<Message> {
 }
 
 /// CAD kısayolları: Esc, Delete, Ctrl+A (tümünü seç), F1 (yardım), Ctrl+F1
-/// (şeridi daralt), F2
-/// (komut geçmişi), F3 (yakalama), F7 (ızgara); Ctrl +, Ctrl − ve Ctrl 0
-/// yazı boyutunu değiştirir.
+/// (şeridi daralt), F2 (komut geçmişi; ağaçta seçili düğümü adlandırır), F3
+/// (yakalama), F7 (ızgara); Ctrl +, Ctrl − ve Ctrl 0 yazı boyutunu
+/// değiştirir.
 fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
     use keyboard::Key;
     use keyboard::key::Named;
@@ -2390,7 +2645,7 @@ fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
         Key::Named(Named::Delete) => Some(Message::DeleteSelection),
         Key::Named(Named::F1) if modifiers.command() => Some(Message::RibbonCollapsed),
         Key::Named(Named::F1) => Some(Message::HelpToggled),
-        Key::Named(Named::F2) => Some(Message::CommandHistoryToggled),
+        Key::Named(Named::F2) => Some(Message::F2Pressed),
         Key::Named(Named::F3) => Some(Message::Toggle(Setting::Snap)),
         Key::Named(Named::F7) => Some(Message::Toggle(Setting::Grid)),
         Key::Character("a" | "A") if modifiers.command() => Some(Message::SelectAll),
@@ -2470,6 +2725,95 @@ mod tests {
 
         submit(&mut app, "punto");
         assert_eq!(app.pending, Some(Pending::TextSize));
+    }
+
+    #[test]
+    fn tree_nodes_are_renamed_moved_locked_and_made_unselectable() {
+        let mut app = Showcase::new();
+        let key = |entry: layer_tree::Entry| entry.key();
+
+        // Menüden yeniden adlandırma; boş ad eski adı bırakır.
+        let _ = app.update(Message::RenameStarted(NodeId::Layer(DRAWING_LAYER)));
+        let _ = app.update(Message::RenameInput("  Taslaklar ".to_owned()));
+        let _ = app.update(Message::RenameSubmitted);
+        assert_eq!(app.layers[DRAWING_LAYER].name, "Taslaklar");
+
+        let _ = app.update(Message::RenameStarted(NodeId::Group(0)));
+        let _ = app.update(Message::RenameInput(String::new()));
+        let _ = app.update(Message::RenameSubmitted);
+        assert_eq!(app.layer_tree.groups[0].name, "Yerleşim");
+
+        // F2: ağaçta seçili düğüm varsa adlandırır, yoksa geçmişi açar; Esc
+        // vazgeçer.
+        let _ = app.update(Message::F2Pressed);
+        assert!(app.command_expanded);
+        let _ = app.update(Message::TreeSelected(NodeId::Group(1)));
+        let _ = app.update(Message::F2Pressed);
+        assert!(matches!(app.renaming, Some((NodeId::Group(1), _))));
+        let _ = app.update(Message::Escape);
+        assert!(app.renaming.is_none());
+
+        // Karayolları, Yerleşim grubunun içine; grup kendi altına gidemez.
+        let roads = key(layer_tree::Entry::Layer(3));
+        let settlement = key(layer_tree::Entry::Group(0));
+        let _ = app.update(Message::TreeMoved(roads, settlement, Place::Into));
+        assert_eq!(app.layer_tree.parent(layer_tree::Entry::Layer(3)), Some(0));
+
+        let country = key(layer_tree::Entry::Group(5));
+        let _ = app.update(Message::TreeMoved(country, settlement, Place::Into));
+        assert_eq!(app.layer_tree.parent(layer_tree::Entry::Group(5)), None);
+
+        // Kilitli çizim katmanına nokta eklenmez.
+        let _ = app.update(Message::LayerLocked(DRAWING_LAYER));
+        submit(&mut app, "nokta");
+        picked(&mut app, 32.85, 39.93);
+        assert!(app.layers[DRAWING_LAYER].features.is_empty());
+
+        let _ = app.update(Message::LayerLocked(DRAWING_LAYER));
+        picked(&mut app, 32.85, 39.93);
+        assert_eq!(app.layers[DRAWING_LAYER].features.len(), 1);
+
+        // Seçilemeyen katmanın öğesine tıklamak seçmez.
+        let _ = app.update(Message::LayerSelectable(DRAWING_LAYER));
+        let _ = app.update(Message::ToolSelected(Tool::Select));
+        app.selection.clear();
+        let point = app.viewport.project(LonLat::new(32.85, 39.93));
+        let hit = app.hit(point);
+        assert!(hit.is_none_or(|hit| hit.layer != DRAWING_LAYER));
+    }
+
+    #[test]
+    fn f2_renames_the_gallery_tree_row_on_the_data_page() {
+        let mut app = Showcase::new();
+
+        let _ = app.update(Message::RibbonTabSelected(RibbonTab::Gallery));
+        let _ = app.update(Message::GalleryPageSelected(Page::Data));
+        let _ = app.update(Message::Gallery(Demo::OutlineSelected(2)));
+        let _ = app.update(Message::F2Pressed);
+        assert_eq!(
+            app.gallery.outline_renaming,
+            Some((2, "Kapılar".to_owned()))
+        );
+        assert!(!app.command_expanded);
+
+        let _ = app.update(Message::Gallery(Demo::OutlineInput(
+            "Kapı doğramaları ".to_owned(),
+        )));
+        let _ = app.update(Message::Gallery(Demo::OutlineRenamed));
+        assert_eq!(app.gallery.outline[2].name, "Kapı doğramaları");
+
+        // Esc adlandırmadan vazgeçer; ad değişmez.
+        let _ = app.update(Message::F2Pressed);
+        let _ = app.update(Message::Gallery(Demo::OutlineInput("Başka".to_owned())));
+        let _ = app.update(Message::Escape);
+        assert!(app.gallery.outline_renaming.is_none());
+        assert_eq!(app.gallery.outline[2].name, "Kapı doğramaları");
+
+        // Başka bir yere yazmaya başlamak F2'yi komut geçmişine döndürür.
+        let _ = app.update(Message::CommandTyped("l".to_owned()));
+        let _ = app.update(Message::F2Pressed);
+        assert!(app.gallery.outline_renaming.is_none());
+        assert!(app.command_expanded);
     }
 
     #[test]

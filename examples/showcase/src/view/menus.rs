@@ -70,7 +70,10 @@ impl Showcase {
             .item("Stil…", Message::StyleOpened(index))
             .icon(Icon::Drop)
             .item("Özellikler…", Message::PropertiesOpened(index))
-            .icon(Icon::Properties);
+            .icon(Icon::Properties)
+            .item("Yeniden adlandır", Message::RenameStarted(id))
+            .icon(Icon::Type)
+            .shortcut("F2");
 
         if !layer.sublayers.is_empty() {
             let expanded = self
@@ -148,11 +151,14 @@ impl Showcase {
             })
             .item("Yalnızca bu grubu göster", Message::ShowOnly(id))
             .icon(Icon::Eye)
+            .item("Yeniden adlandır", Message::RenameStarted(id))
+            .icon(Icon::Type)
+            .shortcut("F2")
             .separator()
             .item("Tümünü genişlet", Message::TreeExpandAll(Some(index), true))
-            .icon(Icon::ChevronDown)
+            .icon(Icon::ExpandAll)
             .item("Tümünü daralt", Message::TreeExpandAll(Some(index), false))
-            .icon(Icon::ChevronRight)
+            .icon(Icon::CollapseAll)
     }
 
     /// Alt katman düğümünün menüsü.

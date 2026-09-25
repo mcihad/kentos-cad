@@ -4,6 +4,10 @@
 //! gizli olduğu için çizilmeyen düğümler sönük yazılır. Bazı alt katmanları
 //! gizli olan görünür katmanın kutusu karışıktır. Her düğüme sağ tıklanınca
 //! kendi bağlam menüsü açılır.
+//!
+//! Gruplar ve katmanlar sürüklenerek taşınır; F2 (ya da menüdeki "Yeniden
+//! adlandır") adı yerinde düzenler. Katmanların sağındaki düğmeler kilidi
+//! ve seçilebilirliği değiştirir.
 
 use iced::widget::{button, column, container, row, slider, space, tooltip};
 use iced::{Center, Color, Element, Fill, Right, border};
@@ -12,7 +16,7 @@ use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::spatial::LayerKind;
 use kentos_rc::style;
-use kentos_rc::widget::tree_view::{self, Check, Node, TreeView};
+use kentos_rc::widget::tree_view::{self, Check, Node, Toggle, TreeView};
 use kentos_rc::widget::{Tip, swatch, tip};
 
 use crate::app::Showcase;
@@ -33,6 +37,7 @@ impl Showcase {
                 .iter()
                 .map(|entry| self.tree_node(*entry)),
         )
+        .on_move(Message::TreeMoved)
         .height(Fill);
 
         column![tree, self.opacity_footer()].into()
@@ -85,7 +90,10 @@ impl Showcase {
             .map(|layer| layer.features.len())
             .sum();
 
-        let mut node = Node::new(group.name.as_str())
+        let mut node = self
+            .named(Node::new(group.name.as_str()), id)
+            .id(Entry::Group(index).key())
+            .folder()
             .icon(icon(Icon::Folder).size(14.0).tone(Tone::Muted))
             .check(group.visible, Message::TreeChecked(id, !group.visible))
             .expanded(group.expanded, Message::TreeToggled(id))
@@ -116,7 +124,22 @@ impl Showcase {
             (true, false) => Check::Checked,
         };
 
-        let mut node = Node::new(layer.name.as_str())
+        let locked = self.layer_tree.locked.get(index).copied().unwrap_or(false);
+        let selectable = self
+            .layer_tree
+            .selectable
+            .get(index)
+            .copied()
+            .unwrap_or(true);
+
+        let mut node = self
+            .named(Node::new(layer.name.as_str()), id)
+            .id(Entry::Layer(index).key())
+            .toggle(Toggle::locked(locked, Message::LayerLocked(index)))
+            .toggle(Toggle::selectable(
+                selectable,
+                Message::LayerSelectable(index),
+            ))
             .icon(symbol(layer.kind, layer.color))
             .check(check, Message::TreeChecked(id, check != Check::Checked))
             .cells([count_cell(layer.features.len()), zoom_button(id)])
@@ -138,6 +161,19 @@ impl Showcase {
         }
 
         node
+    }
+
+    /// Yeniden adlandırılan düğümün adı yerinde düzenlenir.
+    fn named<'a>(&'a self, node: Node<'a, Message>, id: NodeId) -> Node<'a, Message> {
+        match &self.renaming {
+            Some((renaming, name)) if *renaming == id => node.editor(tree_view::rename(
+                name,
+                Message::RenameInput,
+                Message::RenameSubmitted,
+                Message::RenameCancelled,
+            )),
+            _ => node,
+        }
     }
 
     fn sublayer_node(&self, layer_index: usize, index: usize) -> Node<'_, Message> {

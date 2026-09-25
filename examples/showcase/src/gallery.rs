@@ -19,6 +19,7 @@ use kentos_rc::widget::docking::{self, Docks, Side};
 use kentos_rc::widget::floating::{self, Placement, Windows};
 use kentos_rc::widget::inspector;
 use kentos_rc::widget::table::SortOrder;
+use kentos_rc::widget::tree_view::Place;
 use kentos_rc::widget::viewports::{self, Arrangement, Views};
 
 use crate::message::Message;
@@ -80,7 +81,9 @@ impl Page {
             Page::Typography => "Tip ölçeği, yazı tipleri ve hazır metin biçimleri.",
             Page::Icons => "16×16 ızgarada çizilmiş vektör ikon seti, boyutları ve tonları.",
             Page::Buttons => "Düğme stilleri, şerit düğmeleri ve ipuçları.",
-            Page::Data => "Tablo, özellik ızgarası, panel ve giriş alanları.",
+            Page::Data => {
+                "Tablo, sanal tablo, ağaç görünümü, özellik ızgarası, panel ve giriş alanları."
+            }
             Page::Frame => {
                 "Kayan pencereler, durum çubuğu, komut kutusu, gezinme çubuğu, menü ve iletişim \
                  kutuları."
@@ -191,6 +194,19 @@ pub enum Demo {
     Paper(usize),
     Latitude(f64),
     TitleBlock(bool),
+    /// Sanal tablo örneği: satır seçildi ya da numarasıyla gidildi.
+    ParcelSelected(usize),
+    /// Taşınabilir ağaç örneği: kaynak ve hedef satır, yer.
+    OutlineMoved(usize, usize, Place),
+    OutlineOpened(usize),
+    OutlineShown(usize),
+    OutlineLocked(usize),
+    OutlineSelected(usize),
+    /// Satırı yerinde adlandırmaya başlar (sağ tık menüsü ya da F2).
+    OutlineRename(usize),
+    OutlineInput(String),
+    OutlineRenamed,
+    OutlineCancelled,
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -426,6 +442,13 @@ pub struct Gallery {
     pub paper: usize,
     pub latitude: f64,
     pub title_block: bool,
+    /// Sanal tablo örneğinde seçili kayıt.
+    pub parcel: usize,
+    /// Taşınabilir ağaç örneği: satırlar, seçili satır ve adlandırılan
+    /// satırla yazılan ad.
+    pub outline: Vec<Outline>,
+    pub outline_selected: Option<usize>,
+    pub outline_renaming: Option<(usize, String)>,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -451,6 +474,156 @@ fn sample_documents() -> Vec<Document> {
         dirty,
     })
     .collect()
+}
+
+/// Sanal tablo örneğinin kayıt sayısı.
+pub const PARCELS: usize = 100_000;
+
+/// Sanal tablo örneğinin mahalleleri ve kullanım kararları.
+const DISTRICTS: [&str; 8] = [
+    "Caferağa",
+    "Osmanağa",
+    "Rasimpaşa",
+    "Moda",
+    "Fikirtepe",
+    "Acıbadem",
+    "Hasanpaşa",
+    "Koşuyolu",
+];
+const USES: [&str; 5] = ["Konut", "Ticaret", "Karma", "Kamu", "Yeşil alan"];
+
+/// Sanal tablo örneğinin kaydı. Sıra numarasından üretilir; hiçbiri
+/// bellekte tutulmaz, tablo yalnızca görünen satırları ister.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Parcel {
+    pub block: usize,
+    pub lot: usize,
+    pub district: &'static str,
+    pub usage: &'static str,
+    /// Metrekare.
+    pub area: f64,
+}
+
+/// Sıra numarasındaki kayıt; aynı numara hep aynı kaydı verir.
+pub fn parcel(index: usize) -> Parcel {
+    // splitmix64: sıra numarasını dağıtır.
+    let mut hash = (index as u64).wrapping_add(0x9e37_79b9_7f4a_7c15);
+    hash = (hash ^ (hash >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    hash = (hash ^ (hash >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+    hash ^= hash >> 31;
+
+    Parcel {
+        block: 101 + index / 40,
+        lot: 1 + index % 40,
+        district: DISTRICTS[index / 2_000 % DISTRICTS.len()],
+        usage: USES[(hash % USES.len() as u64) as usize],
+        area: 120.0 + ((hash >> 8) % 480_000) as f64 / 100.0,
+    }
+}
+
+/// Taşınabilir ağaç örneğinin satırı. Satırlar derinlik sırasıyla dizilir;
+/// bir satırın altındakiler, ardından gelen daha derin satırlardır.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Outline {
+    pub name: String,
+    pub depth: usize,
+    pub folder: bool,
+    pub open: bool,
+    pub visible: bool,
+    pub locked: bool,
+    /// Katmanın rengi; klasörlerde kullanılmaz.
+    pub color: iced::Color,
+}
+
+/// Taşınabilir ağaç örneğinin açılıştaki satırları: bir yapı projesinin
+/// katman grupları.
+fn sample_outline() -> Vec<Outline> {
+    let row = |name: &str, depth, folder, color: u32| Outline {
+        name: name.to_owned(),
+        depth,
+        folder,
+        open: true,
+        visible: true,
+        locked: false,
+        color: iced::Color::from_rgb8((color >> 16) as u8, (color >> 8) as u8, color as u8),
+    };
+
+    let mut rows = vec![
+        row("Mimari", 0, true, 0),
+        row("Duvarlar", 1, false, 0xd9_d4_c7),
+        row("Kapılar", 1, false, 0xe2_a9_3b),
+        row("Pencereler", 1, false, 0x4c_9b_e8),
+        row("Taşıyıcı sistem", 0, true, 0),
+        row("Kolonlar", 1, false, 0xd6_5d_4f),
+        row("Kirişler", 1, false, 0xc7_7d_d8),
+        row("Tesisat", 0, true, 0),
+        row("Elektrik", 1, false, 0xf0_d2_4a),
+        row("Sıhhi tesisat", 1, false, 0x3f_b8_a8),
+        row("Ölçüler", 0, false, 0x8f_c9_5a),
+        row("Notlar", 0, false, 0xa0_a4_ab),
+    ];
+
+    rows[5].locked = true;
+    rows[7].open = false;
+    rows[11].visible = false;
+    rows
+}
+
+/// Satırın altındakilerle birlikte kapladığı aralık.
+fn subtree(rows: &[Outline], index: usize) -> std::ops::Range<usize> {
+    let depth = rows[index].depth;
+    let end = rows[index + 1..]
+        .iter()
+        .position(|row| row.depth <= depth)
+        .map_or(rows.len(), |offset| index + 1 + offset);
+
+    index..end
+}
+
+/// `source` satırını altındakilerle birlikte `target` satırının önüne,
+/// ardına ya da (klasörse) içine son çocuk olarak taşır; satırın yeni yerini
+/// döndürür. Satır kendi altına taşınamaz.
+pub fn move_outline(
+    rows: &mut Vec<Outline>,
+    source: usize,
+    target: usize,
+    place: Place,
+) -> Option<usize> {
+    if source >= rows.len() || target >= rows.len() {
+        return None;
+    }
+
+    let range = subtree(rows, source);
+
+    if range.contains(&target) || (place == Place::Into && !rows[target].folder) {
+        return None;
+    }
+
+    let block: Vec<Outline> = rows.drain(range.clone()).collect();
+    let target = if target > source {
+        target - block.len()
+    } else {
+        target
+    };
+    let (at, depth) = match place {
+        Place::Before => (target, rows[target].depth),
+        Place::After => (subtree(rows, target).end, rows[target].depth),
+        Place::Into => {
+            rows[target].open = true;
+            (subtree(rows, target).end, rows[target].depth + 1)
+        }
+    };
+    let shift = depth as isize - block[0].depth as isize;
+
+    rows.splice(
+        at..at,
+        block.into_iter().map(|mut row| {
+            row.depth = row.depth.saturating_add_signed(shift);
+            row
+        }),
+    );
+
+    Some(at)
 }
 
 impl Default for Gallery {
@@ -543,6 +716,10 @@ impl Default for Gallery {
             paper: 1,
             latitude: 40.99,
             title_block: true,
+            parcel: 0,
+            outline: sample_outline(),
+            outline_selected: Some(1),
+            outline_renaming: None,
         }
     }
 }
@@ -767,6 +944,55 @@ impl Gallery {
             Demo::Paper(paper) => self.paper = paper,
             Demo::Latitude(latitude) => self.latitude = latitude,
             Demo::TitleBlock(shown) => self.title_block = shown,
+            Demo::ParcelSelected(parcel) => self.parcel = parcel.min(PARCELS - 1),
+            Demo::OutlineMoved(source, target, place) => {
+                self.outline_renaming = None;
+
+                match move_outline(&mut self.outline, source, target, place) {
+                    Some(at) => self.outline_selected = Some(at),
+                    None => {
+                        return Some(
+                            "Galeri: satır yalnızca bir klasörün içine taşınabilir.".to_owned(),
+                        );
+                    }
+                }
+            }
+            Demo::OutlineOpened(row) => {
+                if let Some(row) = self.outline.get_mut(row) {
+                    row.open = !row.open;
+                }
+            }
+            Demo::OutlineShown(row) => {
+                if let Some(row) = self.outline.get_mut(row) {
+                    row.visible = !row.visible;
+                }
+            }
+            Demo::OutlineLocked(row) => {
+                if let Some(row) = self.outline.get_mut(row) {
+                    row.locked = !row.locked;
+                }
+            }
+            Demo::OutlineSelected(row) => self.outline_selected = Some(row),
+            Demo::OutlineRename(row) => {
+                if let Some(outline) = self.outline.get(row) {
+                    self.outline_selected = Some(row);
+                    self.outline_renaming = Some((row, outline.name.clone()));
+                }
+            }
+            Demo::OutlineInput(text) => {
+                if let Some((_, name)) = &mut self.outline_renaming {
+                    *name = text;
+                }
+            }
+            Demo::OutlineRenamed => {
+                if let Some((row, name)) = self.outline_renaming.take()
+                    && let Some(outline) = self.outline.get_mut(row)
+                    && !name.trim().is_empty()
+                {
+                    outline.name = name.trim().to_owned();
+                }
+            }
+            Demo::OutlineCancelled => self.outline_renaming = None,
         }
 
         None
@@ -944,4 +1170,85 @@ fn building_records() -> Vec<Vec<Value>> {
             "1204/8".into(),
         ],
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn names(rows: &[Outline]) -> Vec<(usize, &str)> {
+        rows.iter()
+            .map(|row| (row.depth, row.name.as_str()))
+            .collect()
+    }
+
+    #[test]
+    fn outline_rows_move_with_their_children() {
+        let mut rows = sample_outline();
+
+        // Taşıyıcı sistem, çocuklarıyla birlikte Mimari'nin önüne.
+        assert_eq!(move_outline(&mut rows, 4, 0, Place::Before), Some(0));
+        assert_eq!(
+            names(&rows)[..7],
+            [
+                (0, "Taşıyıcı sistem"),
+                (1, "Kolonlar"),
+                (1, "Kirişler"),
+                (0, "Mimari"),
+                (1, "Duvarlar"),
+                (1, "Kapılar"),
+                (1, "Pencereler"),
+            ]
+        );
+
+        // Notlar, kapalı Tesisat klasörünün içine: son çocuğu olur, klasör
+        // açılır.
+        assert_eq!(move_outline(&mut rows, 11, 7, Place::Into), Some(10));
+        assert_eq!(
+            names(&rows)[7..],
+            [
+                (0, "Tesisat"),
+                (1, "Elektrik"),
+                (1, "Sıhhi tesisat"),
+                (1, "Notlar"),
+                (0, "Ölçüler"),
+            ]
+        );
+        assert!(rows[7].open);
+
+        // Kapılar, Mimari grubunun ardına: en üst düzeye çıkar.
+        assert_eq!(move_outline(&mut rows, 5, 3, Place::After), Some(6));
+        assert_eq!(
+            names(&rows)[3..7],
+            [
+                (0, "Mimari"),
+                (1, "Duvarlar"),
+                (1, "Pencereler"),
+                (0, "Kapılar"),
+            ]
+        );
+    }
+
+    #[test]
+    fn outline_rows_cannot_move_under_themselves_or_into_layers() {
+        let mut rows = sample_outline();
+        let before = rows.clone();
+
+        assert_eq!(move_outline(&mut rows, 0, 2, Place::After), None);
+        assert_eq!(move_outline(&mut rows, 0, 0, Place::Into), None);
+        assert_eq!(move_outline(&mut rows, 10, 1, Place::Into), None);
+        assert_eq!(move_outline(&mut rows, 99, 1, Place::Before), None);
+        assert_eq!(rows, before);
+    }
+
+    #[test]
+    fn parcels_are_generated_from_their_index() {
+        assert_eq!(parcel(0), parcel(0));
+        assert_eq!((parcel(0).block, parcel(0).lot), (101, 1));
+        assert_eq!((parcel(41).block, parcel(41).lot), (102, 2));
+        assert!((0..PARCELS).step_by(997).all(|index| {
+            let area = parcel(index).area;
+            (120.0..4_920.0).contains(&area)
+        }));
+    }
 }

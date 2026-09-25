@@ -6,6 +6,13 @@
 //! içindekilerin işaretlerini değiştirmez, açınca eski hâlleriyle görünürler.
 //! Alt katmanlar kütüphanenin `Sublayer`larıdır; görünürlükleri katmanda
 //! tutulur.
+//!
+//! Girdiler ağaçta sürüklenerek taşınır ([`LayerTree::move_entry`]); bir
+//! grup kendi altına taşınamaz. Katmanlar kilitlenebilir (çizim eklenmez,
+//! öğeleri silinmez ve düzenlenmez) ve seçilemez yapılabilir (haritada
+//! tıklanınca seçilmez).
+
+use kentos_rc::widget::tree_view::Place;
 
 /// Ağaçtaki bir düğüm.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -33,6 +40,24 @@ pub enum Entry {
     Layer(usize),
 }
 
+impl Entry {
+    /// Ağaç görünümündeki sürükleme kimliği: gruplar tek, katmanlar çift.
+    pub fn key(self) -> usize {
+        match self {
+            Entry::Group(group) => group * 2 + 1,
+            Entry::Layer(layer) => layer * 2,
+        }
+    }
+
+    pub fn from_key(key: usize) -> Self {
+        if key % 2 == 1 {
+            Entry::Group(key / 2)
+        } else {
+            Entry::Layer(key / 2)
+        }
+    }
+}
+
 /// Katmanları ve başka grupları toplayan grup.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Group {
@@ -53,6 +78,10 @@ pub struct LayerTree {
     pub visible: Vec<bool>,
     /// Alt katmanları açık katmanlar.
     pub expanded: Vec<bool>,
+    /// Kilitli katmanlar: öğeleri eklenmez, silinmez, düzenlenmez.
+    pub locked: Vec<bool>,
+    /// Haritada tıklanınca seçilebilen katmanlar.
+    pub selectable: Vec<bool>,
     /// Ağaçta seçili düğüm.
     pub selected: Option<NodeId>,
 }
@@ -65,7 +94,68 @@ impl LayerTree {
             roots: (0..layers).map(Entry::Layer).collect(),
             visible: vec![true; layers],
             expanded: vec![false; layers],
+            locked: vec![false; layers],
+            selectable: vec![true; layers],
             selected: None,
+        }
+    }
+
+    /// Girdiyi hedefin önüne, ardına ya da (grupsa) içine taşır. Grup kendi
+    /// altına taşınamaz; taşındıysa `true`.
+    pub fn move_entry(&mut self, entry: Entry, target: Entry, place: Place) -> bool {
+        if entry == target || self.contains(entry, target) {
+            return false;
+        }
+
+        if place == Place::Into && !matches!(target, Entry::Group(_)) {
+            return false;
+        }
+
+        self.detach(entry);
+
+        match place {
+            Place::Into => {
+                let Entry::Group(group) = target else {
+                    return false;
+                };
+
+                self.groups[group].children.push(entry);
+                self.groups[group].expanded = true;
+            }
+            Place::Before | Place::After => {
+                let siblings = match self.parent(target) {
+                    Some(parent) => &mut self.groups[parent].children,
+                    None => &mut self.roots,
+                };
+                let index = siblings
+                    .iter()
+                    .position(|sibling| *sibling == target)
+                    .unwrap_or(siblings.len());
+
+                siblings.insert(index + usize::from(place == Place::After), entry);
+            }
+        }
+
+        true
+    }
+
+    /// `ancestor` grubunun altında (herhangi bir derinlikte) `entry` var mı.
+    fn contains(&self, ancestor: Entry, entry: Entry) -> bool {
+        let Entry::Group(group) = ancestor else {
+            return false;
+        };
+
+        self.groups[group]
+            .children
+            .iter()
+            .any(|child| *child == entry || self.contains(*child, entry))
+    }
+
+    /// Girdiyi bağlı olduğu listeden çıkarır.
+    fn detach(&mut self, entry: Entry) {
+        match self.parent(entry) {
+            Some(parent) => self.groups[parent].children.retain(|child| *child != entry),
+            None => self.roots.retain(|root| *root != entry),
         }
     }
 
@@ -250,6 +340,30 @@ mod tests {
 
         // Türkiye açılınca Yerleşim'deki katmanlar da yeniden görünür.
         assert_eq!(tree.effective(), [true; 4]);
+    }
+
+    #[test]
+    fn entries_move_before_after_and_into_groups() {
+        let mut tree = tree();
+
+        // Çizimler, Ulaşım grubunun sonuna; kapalı grup açılır.
+        assert!(tree.move_entry(Entry::Layer(0), Entry::Group(1), Place::Into));
+        assert_eq!(tree.groups[1].children, [Entry::Layer(3), Entry::Layer(0)]);
+        assert!(tree.groups[1].expanded);
+        assert_eq!(tree.roots, [Entry::Group(2)]);
+
+        // Önemli Yerler, Şehirler'in önüne.
+        assert!(tree.move_entry(Entry::Layer(2), Entry::Layer(1), Place::Before));
+        assert_eq!(tree.groups[0].children, [Entry::Layer(2), Entry::Layer(1)]);
+
+        // Karayolları en üst düzeye, Türkiye'nin ardına.
+        assert!(tree.move_entry(Entry::Layer(3), Entry::Group(2), Place::After));
+        assert_eq!(tree.roots, [Entry::Group(2), Entry::Layer(3)]);
+
+        // Grup kendi altına ve katmanın içine taşınamaz.
+        assert!(!tree.move_entry(Entry::Group(2), Entry::Group(0), Place::Into));
+        assert!(!tree.move_entry(Entry::Layer(1), Entry::Layer(3), Place::Into));
+        assert!(!tree.move_entry(Entry::Group(0), Entry::Group(0), Place::After));
     }
 
     #[test]

@@ -613,6 +613,40 @@ impl Pen {
                 self.line(frame, (12.75, 8.0), (14.25, 8.0));
                 self.circle(frame, (10.0, 8.0), 2.75);
             }
+            // Kilidin halkası açık: sağ ayağı gövdeden ayrılmış.
+            Icon::Unlock => {
+                self.polyline(
+                    frame,
+                    &[(3.25, 7.25), (12.75, 7.25), (12.75, 14.25), (3.25, 14.25)],
+                    true,
+                );
+
+                let shackle = Path::new(|builder| {
+                    builder.move_to(self.p(5.25, 7.25));
+                    builder.line_to(self.p(5.25, 4.0));
+                    self.arc(builder, (8.0, 4.0), 2.75, PI, 2.0 * PI);
+                    builder.line_to(self.p(10.75, 4.75));
+                });
+                frame.stroke(&shackle, self.stroke());
+                self.dot(frame, (8.0, 10.75), 1.0);
+            }
+            // Seçim oku üstünden çizgiyle.
+            Icon::NoSelect => {
+                self.polyline(
+                    frame,
+                    &[
+                        (3.5, 1.75),
+                        (3.5, 12.75),
+                        (6.4, 10.1),
+                        (8.4, 14.25),
+                        (10.3, 13.35),
+                        (8.35, 9.3),
+                        (12.25, 9.0),
+                    ],
+                    true,
+                );
+                self.line(frame, (1.75, 14.25), (14.25, 1.75));
+            }
             Icon::Lock => {
                 self.polyline(
                     frame,

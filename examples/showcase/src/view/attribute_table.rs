@@ -63,25 +63,32 @@ impl Showcase {
 
         let columns = Column::all(layer);
 
-        let headers = columns.iter().map(|&column| {
-            let header = table::Column::new(column.title(layer))
-                .width(column.width(&self.layers, layer))
-                .sortable(view.order_of(column), Message::TableSort(column));
+        let headers: Vec<table::Column<'_, Message>> = columns
+            .iter()
+            .map(|&column| {
+                let header = table::Column::new(column.title(layer))
+                    .width(column.width(&self.layers, layer))
+                    .sortable(view.order_of(column), Message::TableSort(column));
 
-            if column.is_numeric(layer) {
-                header.align_right()
-            } else {
-                header
-            }
-        });
+                if column.is_numeric(layer) {
+                    header.align_right()
+                } else {
+                    header
+                }
+            })
+            .collect();
 
         let primary = self.selection.primary();
+        let reveal = primary.and_then(|primary| rows.iter().position(|row| *row == primary));
+        let count = rows.len();
 
-        let body = rows.iter().filter_map(|&reference| {
-            let feature = layer.feature(reference.id)?;
+        // Satırlar sanaldır: yalnızca görünenler kurulur. Haritada seçilen
+        // öğenin satırı görünür yapılır.
+        let row = move |index: usize| {
+            let reference = rows[index];
 
-            Some(
-                table::Row::new(
+            match layer.feature(reference.id) {
+                Some(feature) => table::Row::new(
                     columns
                         .iter()
                         .map(|&column| self.cell(layer, feature, column)),
@@ -90,17 +97,19 @@ impl Showcase {
                 .current(primary == Some(reference))
                 .on_press(Message::TableRowPressed(reference))
                 .menu(move |_| self.row_menu(reference)),
-            )
-        });
+                None => table::Row::new([]),
+            }
+        };
 
         // Satır yokken tablonun yerinde nedeni ve yapılabilecek iş yazar.
         // Tablo model alanıyla aynı genişliktedir; dar tabloların başlığı ve
         // satır vurgusu da uçtan uca uzanır.
-        let table: Element<'_, Message> = if rows.is_empty() {
+        let table: Element<'_, Message> = if count == 0 {
             empty_table(layer, view, index == crate::app::DRAWING_LAYER)
         } else {
             Table::new(headers)
-                .extend(body)
+                .virtualized(count, row)
+                .reveal(reveal)
                 .horizontal()
                 .min_width(self.viewport.size.width)
                 .height(iced::Fill)

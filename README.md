@@ -46,8 +46,9 @@ src/                     kentos-rc kütüphanesi
 │   ├── properties.rs    solunda bölüm listesi olan özellikler penceresi
 │   ├── severity.rs      geri bildirimin önem düzeyleri (bilgi, başarı, uyarı, hata)
 │   ├── sash.rs          boyutlandırma tutamağı (sürükle, çift tıkla sıfırla)
-│   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma
-│   ├── tree_view.rs     ağaç tablo: sınırsız derinlik, üç durumlu onay kutusu
+│   ├── table.rs         veri tablosu: sıralama, çoklu seçim, yatay kaydırma, sanal satırlar
+│   ├── tree_view.rs     ağaç tablo: üç durumlu onay kutusu, sürükleyerek taşıma, adlandırma
+│   ├── virtual_list.rs  sanal liste: yalnızca görünen satırları kurar
 │   ├── context_menu.rs  sağ tık menüsü ve menü düğmesi: alt menü, kısayol, klavye
 │   ├── inspector.rs     nesne inceleyici: arama, kategoriler, geri alma, yardım
 │   ├── date_picker.rs   tarih, tarih-saat ve saat seçicileri (açılır takvim)
@@ -111,7 +112,9 @@ Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
   Grubun ve katmanın kendi görünürlüğü vardır; katman, kendisi ve bütün üst
   grupları açıksa çizilir. Katmanlar bir alanın değerine göre alt
   katmanlara ayrılır (şehirler bölgeye, yollar türe göre); her alt katmanın
-  rengi ve görünürlüğü ayrıdır.
+  rengi ve görünürlüğü ayrıdır. Gruplar ve katmanlar sürüklenerek taşınır,
+  F2 ile yerinde adlandırılır; kilitli katmana çizilmez, seçilemeyen katmanın
+  öğeleri haritada seçilmez (bkz. [Veri](#veri)).
 - **Yuva.** Katmanlar ve Özellikler sağda, Öznitelik tablosu ve Görevler
   altta sekmeli yığınlardadır; sekmeler sürüklenerek başka yığına, kenara ya
   da ortaya (yüzen pencere) taşınır. Yerleşim ayar dosyasında saklanır;
@@ -129,6 +132,79 @@ Vitrindeki **Giriş** sekmesi ArcGIS ve AutoCAD'deki iş akışını izler:
   kategoriler daraltılır. Değişen alanlar işaretlenir ve ilk değerine
   döndürülür. Alttaki yardım bölümü alanın türünü, kısıtlarını ve açıklamasını
   gösterir.
+
+## Veri
+
+### Sanal tablo, ağaç ve liste
+
+On binlerce satırlı tablolar ve ağaçlar yalnızca görünen satırlarını kurar,
+çizer ve olaylara bağlar; satırlar eşit yükseklikte olduğundan kaydırma hep
+akıcıdır.
+
+- **Sanal tablo.** `Table::virtualized(sayı, |i| satır)` satırı sıra
+  numarasından ister; başlık, sütun hizası ve satır stilleri sıradan
+  tabloyla aynıdır. `reveal(Some(i))` satırı bir kez görünür yapar (ör.
+  haritada seçilen öğenin satırı), kullanıcının kaydırmasını geri almaz.
+  Vitrindeki öznitelik tablosu ve galerinin 100.000 kayıtlık örneği böyle
+  kurulur.
+- **Sanal ağaç.** `TreeView::virtualized(sayı, |i| (derinlik, düğüm))` açık
+  düğümlerin düzleştirilmiş sırasından yalnızca görünenleri kurar.
+- **Sanal liste.** `VirtualList` aynı işi herhangi bir satırla yapar:
+  tekerlek, sürüklenen ince kaydırma çubuğu ve `reveal`.
+
+```rust
+Table::new(columns)
+    .virtualized(self.records.len(), |index| {
+        table::Row::new(self.cells(index))
+            .selected(self.selection.contains(&index))
+            .on_press(Message::RowPressed(index))
+    })
+    .reveal(self.primary)
+```
+
+### Ağaçta taşıma, adlandırma ve satır düğmeleri
+
+- **Sürükleyerek taşıma.** Kimliği (`Node::id`) olan düğümler sürüklenir:
+  satırın üst yarısı önüne, alt yarısı ardına, klasörün (`Node::folder`)
+  ortası içine bırakır; yer çizgiyle ya da çerçeveyle gösterilir. Düğüm
+  altındakilerle birlikte taşınır, kendi altına bırakılamaz; Esc vazgeçer.
+  `on_move(kaynak, hedef, yer)` bildirir, uygulama taşımayı reddedebilir.
+- **Yerinde adlandırma.** `Node::editor` adın yerine `tree_view::rename`
+  kutusunu koyar; uygulama kutuyu `tree_view::RENAME` kimliğiyle odaklar.
+  Enter ve kutunun dışına tıklamak kaydeder, Esc vazgeçer; düzenlenen satır
+  sürüklenmez, kutuda fareyle metin seçilir.
+- **Satır düğmeleri.** `Node::toggle` adın sağına göz, kilit ya da
+  seçilebilirlik düğmesi ekler (`Toggle::visible`, `locked`, `selectable`);
+  kapalı düğmenin ikonu sönüktür.
+- **Vitrinde.** Katman ağacında gruplar ve katmanlar sürüklenerek taşınır;
+  F2 (son tıklanan yer ağaçsa) ya da sağ tık menüsündeki "Yeniden adlandır"
+  seçili düğümü adlandırır. Kilitli katmana çizilmez, öğeleri silinmez ve
+  özellikleri değişmez; seçilemeyen katmanın öğeleri haritada seçilmez.
+
+```rust
+TreeView::new([tree_view::Column::new("Katman").width(Fill)])
+    .on_move(Message::TreeMoved)
+    .push(
+        Node::new("Yerleşim")
+            .id(group_key)
+            .folder()
+            .expanded(open, Message::GroupToggled(0))
+            .push(
+                Node::new("Şehirler")
+                    .id(layer_key)
+                    .toggle(Toggle::locked(locked, Message::LayerLocked(0)))
+                    .toggle(Toggle::selectable(selectable, Message::LayerSelectable(0))),
+            ),
+    )
+
+// F2: ad yerinde düzenlenir.
+node.editor(tree_view::rename(
+    &name,
+    Message::RenameInput,
+    Message::RenameSubmitted,
+    Message::RenameCancelled,
+))
+```
 
 ## Kayan araç pencereleri
 
@@ -537,7 +613,8 @@ Mono ile, uygulamanın yanıtları ve talimatları Plex Sans ile yazılır.
   ekler; çizim yokken görünümü oraya ortalar. Boşken Enter çizimi bitirir, etkin
   komut yokken son komutu yineler; Esc etkin komuttan çıkar.
 - **Geçmiş.** Yazılan komutlar `›` işaretiyle, hatalar kırmızıyla gösterilir;
-  eski satırlar soluklaşır. F2 bütün geçmişi açar.
+  eski satırlar soluklaşır. F2 bütün geçmişi açar (son tıklanan yer katman
+  ağacıysa seçili düğümü adlandırır).
 - **Durum çubuğu.** Göstergeler tıklanınca yukarı doğru menü açar: koordinat
   biçimi (ondalık derece, DMS, Web Mercator metre) ve kopyalama, seçimle
   yapılacak işler, standart harita ölçekleri (1:1.000 halihazırdan 1:5.000.000'a).
