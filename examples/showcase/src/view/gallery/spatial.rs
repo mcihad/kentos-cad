@@ -1,6 +1,7 @@
-//! Mekânsal sayfa: ViewCube, araçlar, nesne yakalama ve biçimlendirme.
+//! Mekânsal sayfa: ViewCube, pusula, araçlar, nesne yakalama ve
+//! biçimlendirme.
 
-use iced::widget::{Row, button, column, container};
+use iced::widget::{Row, button, column, container, row};
 use iced::{Bottom, Center, Element, Fill, Theme};
 
 use kentos_rc::icon::icon;
@@ -8,11 +9,15 @@ use kentos_rc::label;
 use kentos_rc::spatial::query::SnapKind;
 use kentos_rc::spatial::{LonLat, Tool, ViewCube, format, model_space};
 use kentos_rc::style;
+use kentos_rc::theme::typography;
+use kentos_rc::widget::number::units;
 use kentos_rc::widget::table::{self, Table};
+use kentos_rc::widget::{Compass, Dial, NumberInput};
 
 use super::entry;
 use crate::app::Showcase;
 use crate::command::{self, Command};
+use crate::gallery::Demo;
 use crate::message::{Message, RibbonTab};
 
 impl Showcase {
@@ -133,6 +138,20 @@ impl Showcase {
                 Some("ViewCube::new(rotation).size(96.0)"),
             ),
             entry(
+                "Pusula",
+                "kentos_rc::widget::Compass",
+                "Görünüm döndükçe kuzeyi gösteren iğne; harf hep dik kalır. Harita ve 3B \
+                 görünümlerin köşesinde durur, tıklanınca görünümü kuzeye döndürür. Sade biçimi \
+                 pafta düzenlerindeki klasik kuzey okudur (Giriş sekmesinde düzenlerin harita \
+                 çerçevesinde). Kadranı çevirin, sonra pusulaya tıklayın.",
+                self.compass_sample(),
+                Some(
+                    "Compass::new(self.rotation).on_press(Message::NorthReset)\n\n\
+                     // pafta: zeminsiz kuzey oku\n\
+                     Compass::new(0.0).plain().size(34.0)",
+                ),
+            ),
+            entry(
                 "Araçlar",
                 "kentos_rc::spatial::Tool",
                 "Her aracın adı, açıklaması ve ikonu kütüphanededir; komut satırı \
@@ -164,5 +183,58 @@ impl Showcase {
                 None,
             ),
         ]
+    }
+
+    /// Pusula örneği: haritanın dönüşünü değiştiren kadran, tıklanınca
+    /// kuzeye döndüren pusula ve pafta kuzey okları.
+    fn compass_sample(&self) -> Element<'_, Message> {
+        let rotation = self.gallery.map_rotation;
+
+        let rotate = row![
+            Dial::new(rotation, |value| Message::Gallery(Demo::MapRotated(value)))
+                .bearing()
+                .size(40.0),
+            NumberInput::new(rotation, |value| Message::Gallery(Demo::MapRotated(value)))
+                .units(units::ANGLE)
+                .step(5.0)
+                .width(typography::scaled(120.0)),
+        ]
+        .spacing(8)
+        .align_y(Center);
+
+        let plain = Row::with_children([32.0, 48.0, 64.0].map(|size: f32| {
+            column![
+                Compass::<Message>::new(rotation as f32).plain().size(size),
+                label::mono_caption(format!("{size:.0}")),
+            ]
+            .spacing(6)
+            .align_x(Center)
+            .into()
+        }))
+        .spacing(24)
+        .align_y(Bottom);
+
+        row![
+            column![
+                label::caption("Haritanın dönüşü (saat yönünde)"),
+                rotate,
+                row![
+                    Compass::new(rotation as f32)
+                        .size(48.0)
+                        .on_press(Message::Gallery(Demo::NorthReset)),
+                    label::muted(if rotation == 0.0 {
+                        "Kuzey yukarıda.".to_owned()
+                    } else {
+                        "Kuzeye döndürmek için pusulaya tıklayın.".to_owned()
+                    }),
+                ]
+                .spacing(12)
+                .align_y(Center),
+            ]
+            .spacing(10),
+            column![label::caption("Pafta kuzey oku"), plain].spacing(10),
+        ]
+        .spacing(48)
+        .into()
     }
 }

@@ -24,6 +24,7 @@ use kentos_rc::theme::typography::{Family, Mono, Typography};
 use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::docking;
 use kentos_rc::widget::inspector::Event as Inspector;
+use kentos_rc::widget::rulers::{self, Guide};
 
 use crate::app::{DRAWING_LAYER, Showcase, WINDOW_SIZE};
 use crate::gallery::Page;
@@ -34,7 +35,7 @@ use crate::properties::{self, Section};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 22] = [
+const SCENARIOS: [(&str, &str); 23] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -106,6 +107,10 @@ const SCENARIOS: [(&str, &str); 22] = [
     (
         "daire",
         "Boşluk: dairesel araç menüsü açık; --imlec ile bir yöne çekilir",
+    ),
+    (
+        "kilavuz",
+        "Düzen 1: milimetre cetvelleri ve kenar payı kılavuzları; kılavuzlar --surukle ile taşınır",
     ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
@@ -541,6 +546,19 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::TableRowPressed(road));
         }
         "daire" => send(Message::RadialOpened),
+        "kilavuz" => {
+            send(Message::SheetSelected(1));
+
+            // A3 kâğıdın 10 mm kenar payı.
+            for guide in [
+                Guide::vertical(10.0),
+                Guide::vertical(410.0),
+                Guide::horizontal(10.0),
+                Guide::horizontal(287.0),
+            ] {
+                send(Message::SheetGuide(rulers::Event::Added(guide)));
+            }
+        }
         "galeri" => {
             let page = match page {
                 Some(name) => PAGES

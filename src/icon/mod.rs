@@ -125,11 +125,13 @@ pub enum Icon {
     Redo,
     Unlock,
     NoSelect,
+    Ruler,
+    North,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 84] = [
+    pub const ALL: [Icon; 86] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -214,6 +216,8 @@ impl Icon {
         Icon::Redo,
         Icon::Unlock,
         Icon::NoSelect,
+        Icon::Ruler,
+        Icon::North,
     ];
 }
 

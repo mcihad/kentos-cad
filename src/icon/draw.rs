@@ -885,6 +885,34 @@ impl Pen {
                     self.dot(frame, (x, 8.0), 1.25);
                 }
             }
+            // Üst kenarında uzun ve kısa çizgileri olan düz cetvel.
+            Icon::Ruler => {
+                self.polyline(
+                    frame,
+                    &[(1.75, 5.0), (14.25, 5.0), (14.25, 11.0), (1.75, 11.0)],
+                    true,
+                );
+
+                for (x, length) in [(4.5, 3.0), (7.0, 1.75), (9.5, 3.0), (12.0, 1.75)] {
+                    self.line(frame, (x, 5.0), (x, 5.0 + length));
+                }
+            }
+            // Kuzey oku: yukarıyı gösteren, sol yarısı dolu ok ucu.
+            Icon::North => {
+                let left = Path::new(|builder| {
+                    builder.move_to(self.p(8.0, 1.75));
+                    builder.line_to(self.p(3.75, 14.25));
+                    builder.line_to(self.p(8.0, 11.0));
+                    builder.close();
+                });
+
+                frame.fill(&left, self.color);
+                self.polyline(
+                    frame,
+                    &[(8.0, 1.75), (12.25, 14.25), (8.0, 11.0), (3.75, 14.25)],
+                    true,
+                );
+            }
             Icon::Measure => {
                 self.line(frame, (1.75, 4.0), (1.75, 12.0));
                 self.line(frame, (14.25, 4.0), (14.25, 12.0));

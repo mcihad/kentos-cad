@@ -18,6 +18,7 @@ use kentos_rc::widget::command_line::Entry;
 use kentos_rc::widget::docking::{self, Docks, Side};
 use kentos_rc::widget::floating::{self, Placement, Windows};
 use kentos_rc::widget::inspector;
+use kentos_rc::widget::rulers::{self, Guide, Guides};
 use kentos_rc::widget::table::SortOrder;
 use kentos_rc::widget::tree_view::Place;
 use kentos_rc::widget::viewports::{self, Arrangement, Views};
@@ -89,7 +90,8 @@ impl Page {
                  mini araç çubuğu, dairesel menü ve iletişim kutuları."
             }
             Page::Layout => {
-                "Belge sekmeleri, sekmeli yuva ve görünüm alanları: çalışma alanının düzeni."
+                "Sekmeli yuva, görünüm alanları, cetveller ve belge sekmeleri: çalışma alanının \
+                 düzeni."
             }
             Page::Inputs => {
                 "Birimli sayı, vektör ve açı girişleri; renk seçici ve rampa; anahtar, radyo \
@@ -102,7 +104,7 @@ impl Page {
             Page::Attributes => {
                 "Nesne inceleyici, öznitelik tablosu, sorgu oluşturucu ve alan türleri."
             }
-            Page::Spatial => "ViewCube, araçlar, nesne yakalama ve Türkçe biçimlendirme.",
+            Page::Spatial => "ViewCube, pusula, araçlar, nesne yakalama ve Türkçe biçimlendirme.",
         }
     }
 }
@@ -217,6 +219,14 @@ pub enum Demo {
     RadialOpened,
     RadialClosed,
     RadialChosen(Tool),
+    /// Cetvel örneği: kılavuzlar, yakınlık (yüzde) ve y yönü.
+    RulerGuide(rulers::Event),
+    RulerZoom(f64),
+    RulerGuidesCleared,
+    /// Pusula örneği: haritanın dönüşü (derece, saat yönünde) ve kuzeye
+    /// döndürme.
+    MapRotated(f64),
+    NorthReset,
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -466,6 +476,11 @@ pub struct Gallery {
     /// Dairesel menü örneği: menü açık mı, seçilen araç.
     pub radial_open: bool,
     pub radial_tool: Tool,
+    /// Cetvel örneği: kâğıttaki kılavuzlar (mm) ve yakınlık (yüzde).
+    pub ruler_guides: Guides,
+    pub ruler_zoom: f64,
+    /// Pusula örneği: haritanın saat yönünde dönüşü, derece.
+    pub map_rotation: f64,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -526,6 +541,22 @@ pub const SHAPES: [(&str, iced::Rectangle, iced::Color); 3] = [
         iced::Color::from_rgb8(0x8f, 0xc9, 0x5a),
     ),
 ];
+
+/// Cetvel örneğinin açılıştaki kılavuzları: A5 kâğıdın 10 mm kenar payı.
+fn sample_guides() -> Guides {
+    let mut guides = Guides::new();
+
+    for guide in [
+        Guide::vertical(10.0),
+        Guide::vertical(200.0),
+        Guide::horizontal(10.0),
+        Guide::horizontal(138.0),
+    ] {
+        guides.push(guide);
+    }
+
+    guides
+}
 
 /// Sanal tablo örneğinin kayıt sayısı.
 pub const PARCELS: usize = 100_000;
@@ -776,6 +807,9 @@ impl Default for Gallery {
             shapes_deleted: [false; 3],
             radial_open: false,
             radial_tool: Tool::Select,
+            ruler_guides: sample_guides(),
+            ruler_zoom: 100.0,
+            map_rotation: 30.0,
         }
     }
 }
@@ -1072,6 +1106,11 @@ impl Gallery {
             Demo::RadialOpened => self.radial_open = true,
             Demo::RadialClosed => self.radial_open = false,
             Demo::RadialChosen(tool) => self.radial_tool = tool,
+            Demo::RulerGuide(event) => self.ruler_guides.update(event),
+            Demo::RulerZoom(zoom) => self.ruler_zoom = zoom.clamp(25.0, 800.0),
+            Demo::RulerGuidesCleared => self.ruler_guides.clear(),
+            Demo::MapRotated(rotation) => self.map_rotation = rotation.rem_euclid(360.0),
+            Demo::NorthReset => self.map_rotation = 0.0,
         }
 
         None

@@ -27,6 +27,8 @@ src/                     kentos-rc kütüphanesi
 ├── snapshot.rs          ekransız görüntü (`snapshot` özelliği)
 ├── widget/              uygulama çerçevesi
 │   ├── ribbon/          şerit: sekmeler, gruplar, düğmeler, alanlar
+│   ├── rulers.rs        cetveller ve kılavuzlar: birimli çizgiler, sürüklenen kılavuzlar
+│   ├── compass.rs       pusula ve pafta kuzey oku
 │   ├── app_menu.rs      uygulama menüsü (Office "Dosya" menüsü gibi)
 │   ├── dock.rs          yan panel yuvası: açılıp kapanan paneller, sürüklenen kenar
 │   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
@@ -296,6 +298,37 @@ RadialMenu::new(map, self.radial_open, Message::RadialClosed)
 ```
 
 ## Yerleşim
+
+### Cetveller, kılavuzlar ve pusula
+
+- **Cetveller.** `Rulers` içeriğin üstünde ve solunda birimli cetveller
+  çizer; yakınlaştıkça aralıklar 1, 2, 5 × 10ⁿ adımlarla sıklaşır, etiketler
+  hiç çakışmaz. İmlecin yeri iki cetvelde de işaretlenir. Birimle içerik
+  arasındaki dönüşüm uygulamanındır (`Transform`: sıfır noktası, birim başına
+  piksel, isteğe bağlı yukarı doğru y).
+- **Kılavuzlar.** Üst cetvelden aşağı sürüklemek yatay, sol cetvelden sağa
+  sürüklemek dikey kılavuz çıkarır. Kılavuz sürüklenerek taşınır, cetvele
+  geri bırakılınca silinir; Shift küçük çizgilere oturtur, Esc vazgeçer.
+  Sürüklerken değer imlecin yanında yazar. Kılavuzlar birim cinsinden
+  saklanır (`Guides`); görünüm değişince yerlerinde kalır.
+- **Pusula.** `Compass` görünüm döndükçe kuzeyi gösterir, harf hep dik kalır;
+  tıklanınca `on_press` (ör. kuzeye döndür) gönderir. `plain()` zeminsiz,
+  klasik pafta kuzey okudur.
+- **Vitrinde.** Düzen (pafta) sekmelerinde kâğıdın üstünde ve solunda
+  milimetre cetvelleri durur; her düzen kendi kılavuzlarını saklar. Görünüm
+  sekmesindeki Pafta grubu (Ctrl+R) cetvelleri açıp kapatır, kılavuzları
+  siler. Harita çerçevesinin sağ üst köşesinde kuzey oku vardır.
+
+```rust
+Rulers::new(desk, Transform::new(paper_origin, pixels_per_mm))
+    .unit("mm")
+    .guides(&sheet.guides, Message::SheetGuide)
+
+// update
+Message::SheetGuide(event) => sheet.guides.update(event),
+
+Compass::new(self.rotation).on_press(Message::NorthReset)
+```
 
 ### Belge sekmeleri
 
@@ -822,6 +855,7 @@ cargo run -- snapshot duzen.png --senaryo duzen
 cargo run -- snapshot yuva.png --senaryo yuva --bas 1150,153 --imlec 700,300
 cargo run -- snapshot mini.png --senaryo mini --imlec 437,272
 cargo run -- snapshot daire.png --senaryo daire --imlec 600,250
+cargo run -- snapshot kilavuz.png --senaryo kilavuz --bas 10,350 --imlec 300,352
 cargo run -- snapshot sekmeler.png --senaryo galeri --sayfa yerlesim
 cargo run -- snapshot girdiler.png --senaryo galeri --sayfa girdiler --boyut 1440x1700 --tikla 222,1190
 cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah

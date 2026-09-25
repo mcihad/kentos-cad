@@ -164,6 +164,8 @@ pub struct Showcase {
     tree_focused: bool,
     /// Dairesel araç menüsü açık mı (Boşluk).
     pub(crate) radial_open: bool,
+    /// Düzende cetveller gösteriliyor mu (Ctrl+R).
+    pub(crate) rulers: bool,
 }
 
 /// Koordinata git penceresinin alanları.
@@ -322,6 +324,7 @@ impl Showcase {
             renaming: None,
             tree_focused: false,
             radial_open: false,
+            rulers: true,
         }
     }
 
@@ -367,6 +370,20 @@ impl Showcase {
             Message::SheetMoved(from, to) => self.sheets.reorder(from, to),
             Message::SheetAdded => self.sheets.add(self.viewport),
             Message::SheetView(event) => self.handle_sheet_view(event),
+            Message::SheetGuide(event) => {
+                if let Some(sheet) = self.sheets.sheet_mut() {
+                    sheet.guides.update(event);
+                }
+            }
+            Message::GuidesCleared => {
+                if let Some(sheet) = self.sheets.sheet_mut() {
+                    let count = sheet.guides.len();
+
+                    sheet.guides.clear();
+                    self.log(format!("{count} kılavuz silindi."));
+                }
+            }
+            Message::RulersToggled => self.rulers = !self.rulers,
             Message::ToolSelected(tool) => self.select_tool(tool),
 
             Message::ZoomIn => self.zoom(ZOOM_STEP),
@@ -2699,7 +2716,8 @@ fn typed(text: Option<&str>, modifiers: Modifiers) -> Option<Message> {
 /// CAD kısayolları: Esc, Delete, Ctrl+A (tümünü seç), F1 (yardım), Ctrl+F1
 /// (şeridi daralt), F2 (komut geçmişi; ağaçta seçili düğümü adlandırır), F3
 /// (yakalama), F7 (ızgara); Ctrl +, Ctrl − ve Ctrl 0 yazı boyutunu
-/// değiştirir. Boşluk dairesel araç menüsünü açar (`keyboard_event`).
+/// değiştirir; Ctrl+R düzenin cetvellerini açıp kapatır. Boşluk dairesel
+/// araç menüsünü açar (`keyboard_event`).
 fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
     use keyboard::Key;
     use keyboard::key::Named;
@@ -2709,6 +2727,7 @@ fn shortcut(key: keyboard::Key<&str>, modifiers: Modifiers) -> Option<Message> {
         Key::Named(Named::Enter) => Some(Message::EnterPressed),
         Key::Named(Named::Delete) => Some(Message::DeleteSelection),
         Key::Named(Named::F1) if modifiers.command() => Some(Message::RibbonCollapsed),
+        Key::Character("r" | "R") if modifiers.command() => Some(Message::RulersToggled),
         Key::Named(Named::F1) => Some(Message::HelpToggled),
         Key::Named(Named::F2) => Some(Message::F2Pressed),
         Key::Named(Named::F3) => Some(Message::Toggle(Setting::Snap)),
@@ -2885,6 +2904,39 @@ mod tests {
         assert!(!app.can_delete_selection());
         let _ = app.update(Message::ToolSelected(Tool::Measure));
         assert!(app.selection_anchor().is_none());
+    }
+
+    #[test]
+    fn layout_sheets_keep_their_own_guides() {
+        use kentos_rc::widget::rulers::{Event, Guide};
+
+        let mut app = Showcase::new();
+
+        // Model alanında kılavuz yok.
+        let _ = app.update(Message::SheetGuide(Event::Added(Guide::vertical(20.0))));
+        assert!(app.sheets.iter().all(|sheet| sheet.guides.is_empty()));
+
+        let _ = app.update(Message::SheetSelected(1));
+        let _ = app.update(Message::SheetGuide(Event::Added(Guide::vertical(20.0))));
+        let _ = app.update(Message::SheetGuide(Event::Added(Guide::horizontal(15.0))));
+        let _ = app.update(Message::SheetGuide(Event::Moved(0, 25.0)));
+        let guides = &app.sheets.sheet().expect("düzen açık").guides;
+        assert_eq!(
+            guides.as_slice(),
+            [Guide::vertical(25.0), Guide::horizontal(15.0)]
+        );
+
+        // Öbür düzenin kılavuzları ayrıdır.
+        let _ = app.update(Message::SheetSelected(2));
+        assert!(app.sheets.sheet().expect("düzen açık").guides.is_empty());
+
+        let _ = app.update(Message::SheetSelected(1));
+        let _ = app.update(Message::GuidesCleared);
+        assert!(app.sheets.sheet().expect("düzen açık").guides.is_empty());
+
+        assert!(app.rulers);
+        let _ = app.update(Message::RulersToggled);
+        assert!(!app.rulers);
     }
 
     #[test]

@@ -14,7 +14,7 @@ use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::docking::{self, Docks, Side};
 use kentos_rc::widget::floating::{self, Placement};
 use kentos_rc::widget::tree_view::Place;
-use kentos_rc::widget::{inspector, toast};
+use kentos_rc::widget::{inspector, rulers, toast};
 
 use crate::gallery::{Demo, Page};
 use crate::import::Source;
@@ -35,6 +35,12 @@ pub enum Message {
     SheetAdded,
     /// Açık düzenin harita çerçevesinde gezinme.
     SheetView(model_space::Event),
+    /// Düzenin cetvellerinde kılavuz eklendi, taşındı ya da silindi.
+    SheetGuide(rulers::Event),
+    /// Açık düzenin kılavuzlarını siler.
+    GuidesCleared,
+    /// Düzende cetvelleri gösterir ya da gizler (Ctrl+R).
+    RulersToggled,
 
     // Görünüm
     ZoomIn,

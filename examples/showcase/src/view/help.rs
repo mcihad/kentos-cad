@@ -76,9 +76,14 @@ impl Showcase {
                 "Yığını başlığına daraltır ya da açar; ⋯ menüsü yüzdürür, kapatır",
             )
             .item(
+                "Düzende cetvelden sürükle",
+                "Kılavuz çıkarır; kılavuzu cetvele geri bırakmak siler, Shift çizgilere oturtur",
+            )
+            .item(
                 "F1  F2  F3  F7",
                 "Kısayollar, komut geçmişi (ağaçta: adlandır), nesne yakalama, ızgara",
             )
+            .item("Ctrl+R", "Düzende cetvelleri gösterir ya da gizler")
             .item(
                 "Ctrl +  Ctrl −  Ctrl 0",
                 "Yazıyı büyütür, küçültür, varsayılan boyuta döndürür",

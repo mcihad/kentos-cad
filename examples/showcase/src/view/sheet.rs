@@ -12,14 +12,15 @@
 //! ```
 
 use iced::widget::text::Wrapping;
-use iced::widget::{column, container, responsive, row, space, themer};
-use iced::{Border, Element, Fill, Shadow, Size, Theme, Vector};
+use iced::widget::{column, container, responsive, row, space, stack, themer};
+use iced::{Border, Element, Fill, Point, Shadow, Size, Theme, Vector};
 
 use kentos_rc::label;
 use kentos_rc::spatial::model_space::{Backdrop, Style};
 use kentos_rc::spatial::{ModelSpace, Tool};
 use kentos_rc::theme::{self, Mode, Tokens, typography};
-use kentos_rc::widget::{Tab, Tabs};
+use kentos_rc::widget::rulers::{self, Transform};
+use kentos_rc::widget::{Compass, Rulers, Tab, Tabs};
 
 use crate::app::Showcase;
 use crate::message::Message;
@@ -63,22 +64,37 @@ impl Showcase {
 
     /// Düzen: masanın ortasında, alana sığan A3 kâğıt. Kâğıt her temada
     /// beyazdır; üzerindeki yazılar aydınlık temayla çizilir. Harita
-    /// çerçevesinde gezinilir, seçim ve çizim model alanındadır.
+    /// çerçevesinde gezinilir, seçim ve çizim model alanındadır. Masanın
+    /// üstünde ve solunda milimetre cetvelleri durur; cetvelden sürüklenen
+    /// kılavuzlar paftada saklanır.
     pub(super) fn sheet_view<'a>(&'a self, sheet: &'a Sheet) -> Element<'a, Message> {
         let paper_theme = theme::theme(Mode::Light, self.accent);
+        let rulers_shown = self.rulers;
 
         responsive(move |size| {
+            // Cetveller açıksa masa onların içinde kalır.
+            let ruler = if rulers_shown {
+                rulers::thickness()
+            } else {
+                0.0
+            };
+            let size = Size::new(size.width - ruler, size.height - ruler);
             let room = Size::new(
                 (size.width - DESK * 2.0).max(PAPER.width / 2.0),
                 (size.height - DESK * 2.0).max(PAPER.height / 2.0),
             );
             let scale = (room.width / PAPER.width).min(room.height / PAPER.height);
 
-            let frame = container(
+            // Harita çerçevesinin sağ üst köşesinde kuzey oku.
+            let north = container(Compass::<Message>::new(0.0).plain().size(34.0))
+                .align_right(Fill)
+                .padding([8, 10]);
+            let frame = container(stack![
                 ModelSpace::new(sheet.viewport, &self.layers, Message::SheetView)
                     .backdrop(Backdrop::Paper)
                     .tool(Tool::Pan),
-            )
+                north,
+            ])
             .padding(1)
             .width(Fill)
             .height(Fill)
@@ -112,12 +128,24 @@ impl Showcase {
                     }
                 });
 
-            container(
+            let desk = container(
                 themer(Some(paper_theme.clone()), paper).text_color(|theme| Tokens::of(theme).text),
             )
             .center(Fill)
-            .style(kentos_rc::style::container::surface)
-            .into()
+            .style(kentos_rc::style::container::surface);
+
+            if !rulers_shown {
+                return desk.into();
+            }
+
+            // Kâğıdın sol üst köşesi milimetre cetvellerinin sıfırıdır.
+            let height = (PAPER.height * scale).floor();
+            let origin = Point::new((size.width - width) / 2.0, (size.height - height) / 2.0);
+
+            Rulers::new(desk, Transform::new(origin, width / PAPER.width))
+                .unit("mm")
+                .guides(&sheet.guides, Message::SheetGuide)
+                .into()
         })
         .into()
     }

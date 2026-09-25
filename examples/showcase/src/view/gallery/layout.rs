@@ -1,14 +1,18 @@
-//! Yerleşim sayfası: belge sekmeleri, sekmeli yuva ve görünüm alanları.
+//! Yerleşim sayfası: belge sekmeleri, sekmeli yuva, görünüm alanları ve
+//! cetveller.
 
-use iced::widget::{Column, button, canvas, column, container, row, space};
-use iced::{Center, Element, Fill};
+use iced::widget::{Column, button, canvas, column, container, responsive, row, space};
+use iced::{Center, Element, Fill, Point, Shadow, Size, Theme, Vector};
 
 use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::style;
+use kentos_rc::theme::{Tokens, typography};
+use kentos_rc::widget::number::units;
 use kentos_rc::widget::progress;
+use kentos_rc::widget::rulers::Transform;
 use kentos_rc::widget::viewports::{self, View, Viewports};
-use kentos_rc::widget::{DockSpace, Menu, Pane, Tab, Tabs, swatch};
+use kentos_rc::widget::{DockSpace, Menu, NumberInput, Pane, Rulers, Tab, Tabs, swatch};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
@@ -66,6 +70,24 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Cetveller ve kılavuzlar",
+                "kentos_rc::widget::Rulers",
+                "İçeriğin üstünde ve solunda birimli cetveller; yakınlaştıkça aralıklar 1, 2, 5 × \
+                 10ⁿ adımlarla sıklaşır, imlecin yeri iki cetvelde de işaretlenir. Üst cetvelden \
+                 aşağı sürükleyin: yatay kılavuz; sol cetvelden sağa: dikey kılavuz. Kılavuzu \
+                 sürükleyerek taşıyın, cetvele geri bırakarak silin; Shift küçük çizgilere \
+                 oturtur, Esc vazgeçer. Dönüşüm uygulamanındır: sıfır noktası ve birim başına \
+                 piksel. Giriş sekmesinde düzen (pafta) sekmelerinde de vardır.",
+                self.rulers_sample(),
+                Some(
+                    "Rulers::new(sheet, Transform::new(paper_origin, pixels_per_mm))\n    \
+                     .unit(\"mm\")\n    \
+                     .guides(&self.guides, Message::Guide)\n\n\
+                     // update\n\
+                     Message::Guide(event) => self.guides.update(event),",
+                ),
+            ),
+            entry(
                 "Belge sekmeleri",
                 "kentos_rc::widget::Tabs",
                 "Açık çizimler ya da model ve düzen görünümleri gibi aynı alanı paylaşan içerikler. \
@@ -89,6 +111,87 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+
+    /// Cetvel örneği: masanın ortasında A5 kâğıt, yakınlık ve kılavuzlar.
+    fn rulers_sample(&self) -> Element<'_, Message> {
+        /// A5 yatay, milimetre; yüzde yüzde milimetre başına piksel.
+        const PAPER: Size = Size::new(210.0, 148.0);
+        const PIXELS: f32 = 1.6;
+
+        let gallery = &self.gallery;
+        let scale = PIXELS * gallery.ruler_zoom as f32 / 100.0;
+
+        let desk = responsive(move |size| {
+            let paper = Size::new(PAPER.width * scale, PAPER.height * scale);
+            let origin = Point::new(
+                ((size.width - paper.width) / 2.0).round(),
+                ((size.height - paper.height) / 2.0).round(),
+            );
+
+            let sheet = container(label::caption("A5 yatay, 210 × 148 mm").style(
+                |theme: &Theme| iced::widget::text::Style {
+                    color: Some(Tokens::of(theme).muted),
+                },
+            ))
+            .padding(8)
+            .width(paper.width)
+            .height(paper.height)
+            .style(|_: &Theme| container::Style {
+                background: Some(iced::Color::WHITE.into()),
+                shadow: Shadow {
+                    color: iced::Color::from_rgba(0.0, 0.0, 0.0, 0.35),
+                    offset: Vector::new(0.0, 2.0),
+                    blur_radius: 10.0,
+                },
+                ..container::Style::default()
+            });
+
+            Rulers::new(
+                container(iced::widget::pin(sheet).x(origin.x).y(origin.y))
+                    .width(Fill)
+                    .height(Fill)
+                    .style(style::container::surface),
+                Transform::new(origin, scale),
+            )
+            .unit("mm")
+            .guides(&gallery.ruler_guides, |event| {
+                Message::Gallery(Demo::RulerGuide(event))
+            })
+            .into()
+        });
+
+        let controls = row![
+            label::muted("Yakınlık"),
+            NumberInput::new(gallery.ruler_zoom, |zoom| {
+                Message::Gallery(Demo::RulerZoom(zoom))
+            })
+            .units(units::PERCENT)
+            .range(25.0..=800.0)
+            .step(25.0)
+            .width(typography::scaled(110.0)),
+            space::horizontal(),
+            label::caption(format!("{} kılavuz", gallery.ruler_guides.len())),
+            button(label::caption("Kılavuzları sil").style(style::text::default))
+                .on_press_maybe(
+                    (!gallery.ruler_guides.is_empty())
+                        .then_some(Message::Gallery(Demo::RulerGuidesCleared)),
+                )
+                .padding([2, 8])
+                .style(style::button::flat),
+        ]
+        .spacing(8)
+        .align_y(Center);
+
+        column![
+            controls,
+            container(desk)
+                .height(typography::scaled(340.0))
+                .padding(1)
+                .style(style::container::bordered),
+        ]
+        .spacing(8)
+        .into()
     }
 
     /// Görünüm alanı örneği: düzen seçici ve evin dört bakışı.

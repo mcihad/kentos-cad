@@ -110,6 +110,7 @@ impl Showcase {
         if self.ribbon_tab == RibbonTab::View {
             return ribbon
                 .group(view_group("Harita"))
+                .group(self.sheet_group())
                 .group(self.windows_group())
                 .group(self.panels_group())
                 .group(self.theme_group())
@@ -282,6 +283,38 @@ impl Showcase {
 
     /// Harita üstündeki kayan pencereler; açık olan vurgulanır. AutoCAD'in
     /// Görünüm sekmesindeki "Paletler" grubu gibi.
+    /// Düzen sekmelerinin cetvelleri ve kılavuzları.
+    fn sheet_group(&self) -> Group<'_, Message> {
+        let guides = self.sheets.sheet().map_or(0, |sheet| sheet.guides.len());
+
+        Group::new("Pafta").push(
+            Stack::new()
+                .push(
+                    Button::small(Icon::Ruler, "Cetveller")
+                        .active(self.rulers)
+                        .on_press(Message::RulersToggled)
+                        .tip(
+                            Tip::new("Cetveller")
+                                .body(
+                                    "Düzende kâğıdın üstünde ve solunda milimetre cetvelleri. \
+                                     Cetvelden sürükleyerek kılavuz çıkarın; kılavuzu cetvele \
+                                     geri bırakmak siler.",
+                                )
+                                .detail("Ctrl+R"),
+                        ),
+                )
+                .push(
+                    Button::small(Icon::Eraser, "Kılavuzları sil")
+                        .on_press_maybe((guides > 0).then_some(Message::GuidesCleared))
+                        .tip(Tip::new("Kılavuzları sil").body(if guides > 0 {
+                            format!("Açık düzendeki {guides} kılavuz silinir.")
+                        } else {
+                            "Açık düzende kılavuz yok.".to_owned()
+                        })),
+                ),
+        )
+    }
+
     fn windows_group(&self) -> Group<'_, Message> {
         let pane = |pane: Pane, description: &'static str, command: Command| {
             Button::small(pane.icon(), pane.title())

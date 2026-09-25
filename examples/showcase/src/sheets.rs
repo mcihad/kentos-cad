@@ -5,6 +5,7 @@
 //! hâlidir; her düzen kendi görünümünü saklar.
 
 use kentos_rc::spatial::Viewport;
+use kentos_rc::widget::Guides;
 
 /// Bir düzen: kâğıt paftası.
 #[derive(Debug, Clone)]
@@ -14,6 +15,8 @@ pub struct Sheet {
     pub viewport: Viewport,
     /// Çerçeve ilk boyutunu aldığında görünür katmanlara sığdırılır.
     pub fitted: bool,
+    /// Kâğıttaki kılavuz çizgileri, milimetre.
+    pub guides: Guides,
 }
 
 /// Model ve düzen sekmeleri. Sekme sırası: 0 model alanı, ardından
@@ -76,6 +79,7 @@ impl Sheets {
             name: format!("Düzen {}", self.next),
             viewport,
             fitted: false,
+            guides: Guides::new(),
         });
         self.next += 1;
         self.current = self.sheets.len();
