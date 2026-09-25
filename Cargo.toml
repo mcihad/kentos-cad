@@ -24,6 +24,7 @@ members = [
     # pnpm rust:test:desktop and make test-desktop build them.
     "crates/ui",
     "apps/ui-showcase",
+    "apps/desktop",
 ]
 default-members = [
     "crates/shared/geometry-core",
@@ -80,6 +81,9 @@ iced_runtime = { version = "=0.14.0" }
 glam = { version = "=0.30.10" }
 bytemuck = { version = "=1.25.2" }
 png = { version = "=0.18.1" }
+# Native open and save dialogs of the desktop app (owner's approval, 2026-09-25;
+# docs/adr/0017): xdg-desktop-portal on Linux, the system dialog elsewhere.
+rfd = { version = "=0.17.2" }
 
 [profile.release]
 lto = "thin"

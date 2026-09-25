@@ -76,13 +76,15 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 100
+    "commandsWithoutTests": 100,
+    "commandsOnDesktop": 11
   },
   "commands": [
     {
       "id": "analysis.slope",
       "title": "Eğim analizi…",
       "category": "Analiz",
+      "icon": "slope",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -109,6 +111,7 @@
       "id": "analysis.volume",
       "title": "Hacim hesabı…",
       "category": "Analiz",
+      "icon": "volume",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -136,6 +139,7 @@
       "title": "Önden kestirme…",
       "short": "Önden kestirme",
       "category": "Hesap",
+      "icon": "surveyForward",
       "description": "İki bilinen noktada yeni noktaya ölçülen açılardan yeni noktanın koordinatını hesaplar.",
       "aliases": [
         "ONDEN",
@@ -168,6 +172,7 @@
       "title": "Kutupsal alım…",
       "short": "Kutupsal alım",
       "category": "Hesap",
+      "icon": "surveyPolar",
       "description": "Bilinen bir istasyondan yatay açı okumaları ve uzunluklarla alınan noktaları hesaplar (takeometri). Eğik uzunluk başucu açısıyla yataya indirilir, istasyon kotu verilirse nokta kotları da hesaplanır.",
       "aliases": [
         "KUTUPSAL",
@@ -200,6 +205,7 @@
       "title": "Geriden kestirme…",
       "short": "Geriden kestirme",
       "category": "Hesap",
+      "icon": "surveyResection",
       "description": "Yeni noktada üç bilinen noktaya ölçülen iki açıdan durulan noktanın koordinatını hesaplar; tehlike dairesine yakınsa uyarır.",
       "aliases": [
         "GERIDEN",
@@ -233,6 +239,7 @@
       "title": "Aplikasyon…",
       "short": "Aplikasyon",
       "category": "Hesap",
+      "icon": "surveyStakeout",
       "description": "Bir istasyondan bilinen noktaların aplikasyon değerlerini verir: semt, yatay uzunluk ve bakılan noktadan saat yönünde dönülecek açı. Rapor panoya kopyalanır.",
       "aliases": [
         "APLIKASYON",
@@ -265,6 +272,7 @@
       "title": "Poligon hesabı…",
       "short": "Poligon",
       "category": "Hesap",
+      "icon": "surveyTraverse",
       "description": "Bilinen bir noktadan kırılma açıları ve kenarlarla yeni poligon noktalarını hesaplar: bağlı, kapalı ya da açık. Açı kapanma hatası açılara eşit, koordinat kapanma hatası kenarlara uzunluklarıyla orantılı dağıtılır; noktalar çizime eklenir.",
       "aliases": [
         "POLIGON",
@@ -298,6 +306,7 @@
       "title": "Kayıt çakışmalarını çöz…",
       "short": "Çakışmaları çöz",
       "category": "Bulut",
+      "icon": "conflict",
       "description": "Başkasının daha önce kaydettiği nesneler için sunucudakini alır ya da sizinkini kaydeder.",
       "aliases": [],
       "kind": "action",
@@ -328,6 +337,7 @@
       "title": "Bulut projesini sil…",
       "short": "Projeyi sil",
       "category": "Bulut",
+      "icon": "trash",
       "description": "Açık bulut projesini kurumdaki herkes için siler (project.delete yetkisi, yönetici). Nesneler sunucuda saklanır; yanlışlıkla silineni sunucu yöneticisi geri getirebilir.",
       "aliases": [
         "BULUTSIL"
@@ -358,6 +368,7 @@
       "id": "cloud.open",
       "title": "Bulut projesi aç…",
       "category": "Bulut",
+      "icon": "cloud",
       "description": "Kurumunuzun bulut projelerinden birini açar. Açık projedeki değişiklikler kendiliğinden kaydedilir.",
       "aliases": [
         "BULUTAC",
@@ -394,6 +405,7 @@
       "title": "Bulut projesini yeniden adlandır…",
       "short": "Yeniden adlandır",
       "category": "Bulut",
+      "icon": "edit",
       "description": "Açık bulut projesinin adını kurumdaki herkes için değiştirir (project.edit yetkisi gerekir). Başka bir projeyi Bulut projesi aç listesinden yeniden adlandırın.",
       "aliases": [
         "BULUTAD",
@@ -425,6 +437,7 @@
       "id": "cloud.signIn",
       "title": "Buluta giriş…",
       "category": "Bulut",
+      "icon": "signIn",
       "description": "KentOS sunucusunda hesabınızla oturum açar (yerel hesap ya da kurumunuzun OpenID girişi).",
       "aliases": [
         "GIRIS",
@@ -452,6 +465,7 @@
       "id": "cloud.signOut",
       "title": "Bulut oturumunu kapat",
       "category": "Bulut",
+      "icon": "signOut",
       "description": "Oturumu kapatır. Açık bulut projesinin gönderilemeyen değişiklikleri bu cihazda saklanır.",
       "aliases": [
         "CIKIS",
@@ -481,6 +495,7 @@
       "id": "cloud.upload",
       "title": "Buluta yükle…",
       "category": "Bulut",
+      "icon": "cloudUpload",
       "description": "Açık çizimi kurumunuzda yeni bir bulut projesi yapar; sonra her değişiklik kendiliğinden kaydedilir.",
       "aliases": [
         "BULUTAYUKLE",
@@ -515,6 +530,7 @@
       "id": "commandline.focus",
       "title": "Komut satırına git",
       "category": "Araçlar",
+      "icon": "terminal",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -533,7 +549,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -542,6 +558,7 @@
       "title": "Nokta listesi içe aktar…",
       "short": "Nokta listesi",
       "category": "Koordinat",
+      "icon": "import",
       "description": "Nokta adı, Y (sağa), X (yukarı) ve Z sütunlu bir listeyi (Netcad NCN, TXT, CSV) noktalar olarak içe aktarır. Ayırıcı, sütun sırası ve koordinat sistemi önizlemeyle seçilir; koordinatlar dönüştürülmez.",
       "aliases": [
         "NOKTALISTESI"
@@ -569,6 +586,7 @@
       "id": "crs.query",
       "title": "Koordinat sorgula",
       "category": "Koordinat",
+      "icon": "crsQuery",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -593,6 +611,7 @@
       "id": "crs.set",
       "title": "Koordinat sistemi…",
       "category": "Koordinat",
+      "icon": "crs",
       "aliases": [
         "SRID",
         "EPSG"
@@ -628,6 +647,7 @@
       "title": "Datum dönüşümü (ED50 ↔ TUREF)…",
       "short": "Datum dönüşümü",
       "category": "Koordinat",
+      "icon": "crsTransform",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -652,6 +672,7 @@
       "id": "draft.grid",
       "title": "Izgara",
       "category": "Çizim yardımcıları",
+      "icon": "grid",
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [
@@ -680,6 +701,7 @@
       "id": "draft.ortho",
       "title": "Orto",
       "category": "Çizim yardımcıları",
+      "icon": "ortho",
       "description": "Yeni nokta son noktanın tam yatayına ya da dikeyine düşer. Shift basılıyken tersine döner.",
       "aliases": [],
       "kind": "toggle",
@@ -710,6 +732,7 @@
       "id": "draft.polar",
       "title": "Kutupsal izleme",
       "category": "Çizim yardımcıları",
+      "icon": "polar",
       "description": "Son noktadan açı adımlarında (ayarlardan, varsayılan 45°) kılavuz çıkar; imleç yaklaşınca yapışır.",
       "aliases": [],
       "kind": "toggle",
@@ -740,6 +763,7 @@
       "id": "draft.snap",
       "title": "Kenetleme",
       "category": "Çizim yardımcıları",
+      "icon": "snap",
       "description": "İmleç uç, orta, merkez, kesişim gibi noktalara yapışır. Tek seferlik kenet için Shift + sağ tık.",
       "aliases": [],
       "kind": "toggle",
@@ -770,6 +794,7 @@
       "id": "draft.tracking",
       "title": "Nesne izleme",
       "category": "Çizim yardımcıları",
+      "icon": "tracking",
       "description": "Bir kenet noktasının üzerinde kısa süre bekleyin: o noktadan yatay ve dikey kılavuzlar çıkar, imleç bu hizalara ve kesişimlerine yapışır.",
       "aliases": [],
       "kind": "toggle",
@@ -800,6 +825,7 @@
       "id": "edit.copy",
       "title": "Panoya kopyala",
       "category": "Düzen",
+      "icon": "copy",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -829,6 +855,7 @@
       "id": "edit.cut",
       "title": "Kes",
       "category": "Düzen",
+      "icon": "cut",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -856,6 +883,7 @@
       "id": "edit.deselect",
       "title": "Seçimi kaldır",
       "category": "Düzen",
+      "icon": "deselect",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -883,6 +911,7 @@
       "id": "edit.invertSelection",
       "title": "Seçimi ters çevir",
       "category": "Düzen",
+      "icon": "invertSelection",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -909,6 +938,7 @@
       "id": "edit.paste",
       "title": "Yapıştır",
       "category": "Düzen",
+      "icon": "paste",
       "aliases": [
         "YAPISTIR",
         "PASTE"
@@ -945,6 +975,7 @@
       "title": "Özgün koordinatlara yapıştır",
       "short": "Yerine yapıştır",
       "category": "Düzen",
+      "icon": "pasteOriginal",
       "description": "Panodaki nesneleri kopyalandıkları koordinatlara yapıştırır (başka projeye aktarırken).",
       "aliases": [
         "PASTEORIG"
@@ -975,6 +1006,7 @@
       "id": "edit.redo",
       "title": "Yinele",
       "category": "Düzen",
+      "icon": "redo",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -1005,6 +1037,7 @@
       "id": "edit.selectAll",
       "title": "Tümünü seç",
       "category": "Düzen",
+      "icon": "selectAll",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -1033,6 +1066,7 @@
       "id": "edit.undo",
       "title": "Geri al",
       "category": "Düzen",
+      "icon": "undo",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -1063,6 +1097,7 @@
       "id": "file.export.dxf",
       "title": "DXF…",
       "category": "Dosya",
+      "icon": "export",
       "description": "Seçili, görünen ya da bütün nesneleri katmanlarıyla AutoCAD 2007 DXF'i olarak yazar (UTF-8, metre): koordinatlar tam, yuvarlanmadan; ölçüler çizgi ve yazıya patlatılır. Etiket, öznitelik ve semboller KentOS verisi olarak yazılır ve KentOS'a geri okunur.",
       "aliases": [
         "DXFYAZ",
@@ -1123,6 +1158,7 @@
       "id": "file.export.ncn",
       "title": "Koordinat listesi (NCN, TXT, CSV)…",
       "category": "Dosya",
+      "icon": "export",
       "description": "Noktaları (seçili, görünen ya da hepsi) ad, Y, X ve Z sütunlarıyla bir koordinat listesine yazar; değerler tam, yuvarlanmadan yazılır.",
       "aliases": [
         "NCNYAZ",
@@ -1182,6 +1218,7 @@
       "id": "file.import.dxf",
       "title": "DXF…",
       "category": "Dosya",
+      "icon": "import",
       "description": "AutoCAD DXF (ASCII) çizimini içe aktarır: katmanlar, bloklar (patlatılarak), yaylı çoklu çizgiler, taramalar ve yazılar; alınamayanlar nedeniyle listelenir. DWG açılamaz: kapalı (tescilli) bir biçimdir; AutoCAD ya da Netcad'de DXF olarak kaydedip onu açın.",
       "aliases": [
         "DXF",
@@ -1243,6 +1280,7 @@
       "id": "file.import.ncn",
       "title": "Koordinat listesi (NCN, TXT, CSV)…",
       "category": "Dosya",
+      "icon": "import",
       "description": "Nokta adı, Y (sağa), X (yukarı) ve Z sütunlu bir listeyi (Netcad NCN, TXT, CSV) noktalar olarak içe aktarır. Ayırıcı, sütun sırası ve koordinat sistemi önizlemeyle seçilir; koordinatlar dönüştürülmez.",
       "aliases": [
         "NCN",
@@ -1329,6 +1367,7 @@
       "id": "file.new",
       "title": "Yeni proje…",
       "category": "Dosya",
+      "icon": "fileNew",
       "description": "Boş bir çizim açar: standart katman ağacı, seçilen koordinat sistemi ve çizim ölçeği. Kaydedilmemiş değişiklikler varsa önce sorar; açık bulut projesi kapanır.",
       "aliases": [
         "YENI",
@@ -1364,6 +1403,7 @@
       "id": "file.open",
       "title": "Aç…",
       "category": "Dosya",
+      "icon": "fileOpen",
       "description": "Bir KentOS çizimi (.kcad) açar; kaydedilmemiş değişiklikler varsa önce sorar.",
       "aliases": [
         "AC",
@@ -1391,7 +1431,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [],
       "note": "Yerel `.kcad` v1 JSON'u (`DocumentSnapshotV1`) açar. Binary v2 hedefi ADR 0011'dedir; eski JSON dosyaları açılmaya devam edecek (TODOS.md FILE-21)."
@@ -1401,6 +1441,7 @@
       "title": "Yazdır ve pafta çıktısı…",
       "short": "Yazdır",
       "category": "Dosya",
+      "icon": "print",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -1429,6 +1470,7 @@
       "id": "file.save",
       "title": "Kaydet",
       "category": "Dosya",
+      "icon": "save",
       "description": "Bulut projesinde bekleyen değişiklikleri hemen gönderir (zaten kendiliğinden kaydedilir). Yerel çizimi .kcad dosyasına yazar; dosya yazılamazsa değişiklikler kaydedilmemiş sayılır.",
       "aliases": [
         "KAYDET",
@@ -1455,7 +1497,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/cloud.mjs"
@@ -1466,6 +1508,7 @@
       "id": "file.saveAs",
       "title": "Farklı kaydet…",
       "category": "Dosya",
+      "icon": "saveAs",
       "description": "Çizimi yeni bir .kcad dosyasına yazar ve bundan sonra oraya kaydeder.",
       "aliases": [
         "FARKLIKAYDET",
@@ -1491,7 +1534,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
@@ -1502,6 +1545,7 @@
       "id": "file.settings",
       "title": "Proje ayarları…",
       "category": "Dosya",
+      "icon": "folder",
       "aliases": [
         "PROJE"
       ],
@@ -1534,6 +1578,7 @@
       "title": "Başlangıç ekranı…",
       "short": "Başlangıç",
       "category": "Dosya",
+      "icon": "history",
       "description": "Yeni proje, dosya aç, bulut projeleri ve son açılan ya da kaydedilen dosyalar.",
       "aliases": [
         "BASLANGIC",
@@ -1566,6 +1611,7 @@
       "id": "help.about",
       "title": "KentOS CAD hakkında",
       "category": "Yardım",
+      "icon": "info",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -1584,7 +1630,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -1592,6 +1638,7 @@
       "id": "help.shortcuts",
       "title": "Klavye kısayolları",
       "category": "Yardım",
+      "icon": "keyboard",
       "aliases": [
         "KISAYOL",
         "KEYS"
@@ -1616,7 +1663,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -1624,6 +1671,7 @@
       "id": "layer.new",
       "title": "Yeni katman",
       "category": "Katman",
+      "icon": "layerAdd",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -1647,6 +1695,7 @@
       "id": "layer.newGroup",
       "title": "Yeni grup",
       "category": "Katman",
+      "icon": "folderAdd",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -1671,6 +1720,7 @@
       "title": "Tüm katmanları göster",
       "short": "Katmanları göster",
       "category": "Katman",
+      "icon": "eye",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -1685,7 +1735,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -1693,6 +1743,7 @@
       "id": "map.contours",
       "title": "Eşyükselti üret…",
       "category": "Harita",
+      "icon": "contours",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -1718,6 +1769,7 @@
       "title": "Kenar ölçülerini yaz…",
       "short": "Kenar ölçüleri",
       "category": "Harita",
+      "icon": "dimension",
       "description": "Parsel ve çizgilerin kenar uzunluklarını yazar (işlem aracı).",
       "aliases": [
         "KENAR",
@@ -1749,6 +1801,7 @@
       "title": "Parsel alan çizelgesi",
       "short": "Alan çizelgesi",
       "category": "Harita",
+      "icon": "parcelReport",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -1775,6 +1828,7 @@
       "id": "map.profile",
       "title": "Boy kesit al…",
       "category": "Harita",
+      "icon": "profile",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -1799,6 +1853,7 @@
       "id": "map.sheet",
       "title": "Pafta bölümlemesi…",
       "category": "Harita",
+      "icon": "sheet",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -1823,6 +1878,7 @@
       "id": "processing.history",
       "title": "İşlem geçmişi",
       "category": "İşlemler",
+      "icon": "history",
       "description": "Bu oturumda çalıştırılan işlemler; yeniden çalıştırılabilir.",
       "aliases": [],
       "kind": "action",
@@ -1850,6 +1906,7 @@
       "id": "processing.model.builtin.parcelSheet",
       "title": "Parsel ölçü yazıları…",
       "category": "İşlemler",
+      "icon": "processing",
       "description": "Parsellerin köşelerini numaralar, kenar uzunluklarını yazar ve hesaplanan alanı özniteliğe yazar; hepsi tek adımda geri alınır.",
       "aliases": [],
       "kind": "action",
@@ -1877,6 +1934,7 @@
       "id": "processing.newModel",
       "title": "Yeni model…",
       "category": "İşlemler",
+      "icon": "modelNew",
       "description": "İşlem araçlarını birbirine bağlayan bir akış (model) tasarlar.",
       "aliases": [
         "MODEL",
@@ -1912,6 +1970,7 @@
       "id": "processing.run.annotation.edgeLengths",
       "title": "Kenar uzunluklarını yaz…",
       "category": "İşlemler",
+      "icon": "edgeLengths",
       "description": "Alan, çoklu çizgi ve çizgilerin her kenarına uzunluğunu yazar; ortak kenarlar bir kez yazılır.",
       "aliases": [
         "KENARYAZ",
@@ -1940,6 +1999,7 @@
       "id": "processing.run.attributes.calculate",
       "title": "Öznitelik hesapla…",
       "category": "İşlemler",
+      "icon": "fieldCalc",
       "description": "Seçtiğiniz alana her nesne için bir ifadenin değerini yazar; alan yoksa oluşturur.",
       "aliases": [
         "OZHESAP",
@@ -1968,6 +2028,7 @@
       "id": "processing.run.points.numberVertices",
       "title": "Köşe noktalarını numarala…",
       "category": "İşlemler",
+      "icon": "numberVertices",
       "description": "Alanların köşelerine belirlediğiniz biçimde numaralı nokta koyar (P00001, P00002 …); yön ve başlangıç köşesi seçilir.",
       "aliases": [
         "KOSENUMARA",
@@ -1997,6 +2058,7 @@
       "id": "processing.run.selection.byExpression",
       "title": "İfadeyle seç…",
       "category": "İşlemler",
+      "icon": "selectExpression",
       "description": "Özniteliklere ve geometriye göre yazdığınız koşulu sağlayan nesneleri seçer.",
       "aliases": [
         "IFADESEC",
@@ -2027,6 +2089,7 @@
       "id": "processing.toolbox",
       "title": "İşlem araç kutusu",
       "category": "İşlemler",
+      "icon": "processing",
       "description": "Toplu işlem araçlarını sağ panelde listeler.",
       "aliases": [
         "ISLEMLER",
@@ -2058,6 +2121,7 @@
       "title": "Sunucu bağlantısını denetle",
       "short": "Sunucuyu denetle",
       "category": "Araçlar",
+      "icon": "server",
       "description": "KentOS sunucusuna şimdi sorar. Çizim sunucusuz da çalışır; kayıt yerel .kcad dosyasına yapılır.",
       "aliases": [
         "SUNUCU",
@@ -2092,6 +2156,7 @@
       "title": "Seçili nesnelere sembol ver…",
       "short": "Sembol ver",
       "category": "Stil",
+      "icon": "symbolAssign",
       "description": "Kitaplıktan bir sembol seçer ve seçili nesnelere verir; nesnenin sembolü katman stilinin önüne geçer.",
       "aliases": [
         "SEMBOLVER",
@@ -2126,6 +2191,7 @@
       "title": "Nesne sembolünü kaldır",
       "short": "Sembolü kaldır",
       "category": "Stil",
+      "icon": "symbolClear",
       "description": "Seçili nesneler yeniden katmanlarının stiliyle çizilir.",
       "aliases": [
         "SEMBOLKALDIR"
@@ -2158,6 +2224,7 @@
       "id": "style.layerStyle",
       "title": "Katman stili…",
       "category": "Stil",
+      "icon": "layerStyle",
       "description": "Etkin katmanın nesnelerinin nasıl çizileceği: tek sembol, kategorili, aralıklı ya da kurallarla.",
       "aliases": [
         "KATMANSTILI",
@@ -2190,6 +2257,7 @@
       "id": "style.legend",
       "title": "Lejant…",
       "category": "Stil",
+      "icon": "legend",
       "description": "Çizimdeki sembollerin anlamı, katman katman; PNG olarak kaydedilir.",
       "aliases": [
         "LEJANT",
@@ -2219,6 +2287,7 @@
       "id": "style.manager",
       "title": "Stil yöneticisi…",
       "category": "Stil",
+      "icon": "styles",
       "description": "Sembol kitaplığı: sistem, kullanıcı ve proje sembolleri; kopyala, düzenle, içe ve dışa aktar.",
       "aliases": [
         "STIL",
@@ -2252,6 +2321,7 @@
       "title": "SVG çizim düzenleyicisi…",
       "short": "SVG düzenleyici",
       "category": "Stil",
+      "icon": "penTool",
       "description": "İşaret ve desen çizimleri (piktogram) çizer; kaydedince Kitaplığım'a eklenir.",
       "aliases": [
         "SVG",
@@ -2283,6 +2353,7 @@
       "id": "tool.align",
       "title": "Hizala",
       "category": "Dönüştür",
+      "icon": "align",
       "description": "Seçimi iki nokta çiftiyle yerine oturtur: birinci kaynak birinci hedefe taşınır, ikinci çift yönü (isterseniz ölçeği) verir.",
       "aliases": [
         "AL",
@@ -2313,6 +2384,7 @@
       "id": "tool.arc",
       "title": "Yay",
       "category": "Çizim",
+      "icon": "arc",
       "description": "AutoCAD’in tüm yay yöntemleri: üç nokta; başlangıç-merkez-bitiş/açı/kiriş; başlangıç-bitiş-merkez/açı/yön/yarıçap; merkez-başlangıç; son nesneye teğet devam.",
       "aliases": [
         "A",
@@ -2345,6 +2417,7 @@
       "id": "tool.area",
       "title": "Alan hesapla",
       "category": "Harita",
+      "icon": "area",
       "description": "Tıklanan köşelerden alan ve çevre hesaplar.",
       "aliases": [
         "AA",
@@ -2379,6 +2452,7 @@
       "id": "tool.areaIntersect",
       "title": "Alan kesiştir",
       "category": "Alan",
+      "icon": "areaIntersect",
       "description": "Seçili alanların ortak parçasını yeni bir alan olarak çıkarır; kaynaklar yerinde kalır.",
       "aliases": [
         "INT",
@@ -2411,6 +2485,7 @@
       "id": "tool.areaSplit",
       "title": "Alan böl",
       "category": "Alan",
+      "icon": "areaSplit",
       "description": "Alanı çizilen ya da gösterilen çizgi boyunca parçalara ayırır; parçalar ve alanları canlı görünür.",
       "aliases": [
         "SLICE",
@@ -2442,6 +2517,7 @@
       "id": "tool.areaSubtract",
       "title": "Alan çıkar",
       "category": "Alan",
+      "icon": "areaSubtract",
       "description": "Alanlardan başka alanları çıkarır; tamamen içte kalan alan ada (delik) olur.",
       "aliases": [
         "SU",
@@ -2474,6 +2550,7 @@
       "id": "tool.areaUnion",
       "title": "Alan birleştir",
       "category": "Alan",
+      "icon": "areaUnion",
       "description": "Seçili alanları tek alanda birleştirir (tevhit): ortak sınırlar kalkar, köşe koordinatları aynen korunur.",
       "aliases": [
         "UNI",
@@ -2509,6 +2586,7 @@
       "id": "tool.array",
       "title": "Dizi",
       "category": "Dönüştür",
+      "icon": "array",
       "description": "Seçili nesneleri satır ve sütun düzeninde çoğaltır.",
       "aliases": [
         "AR",
@@ -2545,6 +2623,7 @@
       "id": "tool.arrayPolar",
       "title": "Kutupsal dizi",
       "category": "Dönüştür",
+      "icon": "arrayPolar",
       "description": "Seçili nesneleri bir merkez çevresinde çoğaltır: adet, doldurma açısı, nesneler dönsün ya da dönmesin.",
       "aliases": [
         "ARPO",
@@ -2580,6 +2659,7 @@
       "id": "tool.boundary",
       "title": "İçine tıklayarak alan",
       "category": "Alan",
+      "icon": "boundary",
       "description": "Çizgilerle çevrili bölgenin içine tıklayınca o bölge alan olur; içteki kapalı şekiller ada (delik) olur.",
       "aliases": [
         "BO",
@@ -2615,6 +2695,7 @@
       "id": "tool.break",
       "title": "Kır",
       "category": "Düzenle",
+      "icon": "break",
       "description": "Nesnenin iki nokta arasındaki kısmını siler; Enter ile tek noktadan böler.",
       "aliases": [
         "BR",
@@ -2671,6 +2752,7 @@
       "id": "tool.chamfer",
       "title": "Pah",
       "category": "Düzenle",
+      "icon": "chamfer",
       "description": "Köşeyi iki mesafeyle keser: iki çizgi ya da çoklu çizginin komşu kenarları (imar köşe kesmesi).",
       "aliases": [
         "CHA",
@@ -2705,6 +2787,7 @@
       "id": "tool.circle",
       "title": "Daire",
       "category": "Çizim",
+      "icon": "circle",
       "description": "Merkez ve yarıçap ya da çapla; 2N çaptan, 3N üç noktadan, TTY iki nesneye teğet yarıçaplı, TTT üç nesneye teğet daire.",
       "aliases": [
         "C",
@@ -2766,6 +2849,7 @@
       "id": "tool.copy",
       "title": "Kopyala",
       "category": "Dönüştür",
+      "icon": "copy",
       "description": "Seçili nesnelerin bir ya da daha fazla kopyasını çıkarır.",
       "aliases": [
         "CO",
@@ -2801,6 +2885,7 @@
       "id": "tool.dimension",
       "title": "Ölçülendirme",
       "category": "Açıklama",
+      "icon": "dimension",
       "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap ve çap; değer proje birimini izler.",
       "aliases": [
         "DIM",
@@ -2840,6 +2925,7 @@
       "id": "tool.divide",
       "title": "Böl",
       "category": "Çizim",
+      "icon": "divide",
       "description": "Nesne boyunca nokta koyar: eşit parçalara ya da A ile verilen aralıkla.",
       "aliases": [
         "DIV",
@@ -2873,6 +2959,7 @@
       "id": "tool.donut",
       "title": "Halka",
       "category": "Çizim",
+      "icon": "donut",
       "description": "Dolu halka ya da (iç çap 0 ile) dolu daire koyar; her tıklama bir tane.",
       "aliases": [
         "DO",
@@ -2906,6 +2993,7 @@
       "id": "tool.ellipse",
       "title": "Elips",
       "category": "Çizim",
+      "icon": "ellipse",
       "description": "Elips ya da eliptik yay: eksen uçlarından ya da merkezden; diğer yarı eksen uzunlukla ya da döndürme açısıyla.",
       "aliases": [
         "EL",
@@ -2939,6 +3027,7 @@
       "id": "tool.erase",
       "title": "Sil",
       "category": "Düzenle",
+      "icon": "erase",
       "description": "Seçili nesneleri siler; seçim yoksa tıklanan nesneyi siler.",
       "aliases": [
         "E",
@@ -2975,6 +3064,7 @@
       "id": "tool.explode",
       "title": "Patlat",
       "category": "Düzenle",
+      "icon": "explode",
       "description": "Çoklu çizgi ve alanı çizgi ve yaylara, eğriyi çoklu çizgiye, ölçüyü çizgi ve yazıya ayırır.",
       "aliases": [
         "X",
@@ -3007,6 +3097,7 @@
       "id": "tool.extend",
       "title": "Uzat",
       "category": "Düzenle",
+      "icon": "extend",
       "description": "Çizgi ya da yay ucunu ilk rastladığı kenara kadar uzatır.",
       "aliases": [
         "EX",
@@ -3039,6 +3130,7 @@
       "id": "tool.fillet",
       "title": "Köşe yuvarla",
       "category": "Düzenle",
+      "icon": "fillet",
       "description": "İki çizgiyi ya da çoklu çizginin komşu iki kenarını yarıçaplı yayla (0: keskin köşe) birleştirir.",
       "aliases": [
         "F",
@@ -3075,6 +3167,7 @@
       "id": "tool.hatch",
       "title": "Tarama",
       "category": "Açıklama",
+      "icon": "hatch",
       "description": "Tıklanan kapalı alanı desenle tarar; D ile desen değişir.",
       "aliases": [
         "H",
@@ -3111,6 +3204,7 @@
       "id": "tool.join",
       "title": "Birleştir",
       "category": "Düzenle",
+      "icon": "join",
       "description": "Uç uca gelen çizgi, yay ve çoklu çizgileri tek çoklu çizgiye; kapanırsa kapalı alana çevirir.",
       "aliases": [
         "J",
@@ -3143,6 +3237,7 @@
       "id": "tool.lengthen",
       "title": "Uzat-kısalt",
       "category": "Düzenle",
+      "icon": "lengthen",
       "description": "Çizgi, yay ya da açık çoklu çizginin boyunu bir ucundan değiştirir: fareyle, farkla, yüzdeyle ya da toplam uzunlukla.",
       "aliases": [
         "LEN",
@@ -3176,6 +3271,7 @@
       "id": "tool.line",
       "title": "Çizgi",
       "category": "Çizim",
+      "icon": "line",
       "description": "Uç uca bağlı çizgi parçaları çizer.",
       "aliases": [
         "L",
@@ -3211,6 +3307,7 @@
       "id": "tool.measure",
       "title": "Mesafe ölç",
       "category": "Harita",
+      "icon": "measure",
       "description": "Noktalar arası kenar uzunluğu ve semt açısını ölçer.",
       "aliases": [
         "DI",
@@ -3245,6 +3342,7 @@
       "id": "tool.mirror",
       "title": "Aynala",
       "category": "Dönüştür",
+      "icon": "mirror",
       "description": "Seçili nesnelerin iki noktalı eksene göre simetriğini alır; S ile kaynağı siler.",
       "aliases": [
         "MI",
@@ -3278,6 +3376,7 @@
       "id": "tool.move",
       "title": "Taşı",
       "category": "Dönüştür",
+      "icon": "move",
       "description": "Seçili nesneleri temel noktadan hedefe taşır.",
       "aliases": [
         "M",
@@ -3315,6 +3414,7 @@
       "id": "tool.offset",
       "title": "Ötele",
       "category": "Düzenle",
+      "icon": "offset",
       "description": "Çizgi, çoklu çizgi, alan, daire ya da yayın paralel kopyasını çıkarır.",
       "aliases": [
         "O",
@@ -3347,6 +3447,7 @@
       "id": "tool.pan",
       "title": "Kaydır",
       "category": "Seçim",
+      "icon": "pan",
       "description": "Görünümü sürükler. Orta tuşla her araçta kullanılabilir.",
       "aliases": [
         "PAN",
@@ -3382,6 +3483,7 @@
       "id": "tool.parallel",
       "title": "Paralel çizgi",
       "category": "Çizim",
+      "icon": "parallel",
       "description": "Ekseni çizerken sağında ve solunda verilen mesafelerde paralel hatlar çizer (yol, kaldırım, duvar); istenirse arası tek alan olur.",
       "aliases": [
         "PARALEL",
@@ -3417,6 +3519,7 @@
       "id": "tool.parcel",
       "title": "Parsel oluştur",
       "category": "Harita",
+      "icon": "parcel",
       "description": "Köşe noktalarından parsel çizer, numara ve tapu alanını yazar.",
       "aliases": [
         "PARSEL"
@@ -3451,6 +3554,7 @@
       "id": "tool.perpIn",
       "title": "Dik in",
       "category": "Çizim",
+      "icon": "perpIn",
       "description": "Gösterilen noktalardan bir hatta dik iner (hattın uzantısına da); yay ve dairede merkeze doğru.",
       "aliases": [
         "DIKIN",
@@ -3483,6 +3587,7 @@
       "id": "tool.perpOut",
       "title": "Dik çık",
       "category": "Çizim",
+      "icon": "perpOut",
       "description": "Hat üzerindeki bir noktadan, verilen dik boyda dik çıkar; dik ayak tıklanan uçtan ölçülür, dik boy sağa artıdır.",
       "aliases": [
         "DIKCIK"
@@ -3514,6 +3619,7 @@
       "id": "tool.point",
       "title": "Nokta",
       "category": "Çizim",
+      "icon": "point",
       "description": "Tek tek nokta yerleştirir.",
       "aliases": [
         "PO",
@@ -3545,6 +3651,7 @@
       "id": "tool.polygon",
       "title": "Kapalı alan",
       "category": "Çizim",
+      "icon": "polygon",
       "description": "Kapalı çoklu çizgi (alan) çizer.",
       "aliases": [
         "KA",
@@ -3579,6 +3686,7 @@
       "id": "tool.polyline",
       "title": "Çoklu çizgi",
       "category": "Çizim",
+      "icon": "polyline",
       "description": "Tek parça, açık çoklu çizgi çizer; Y ile yay parçası (teğet, açı, merkez, yarıçap, ikinci nokta, doğrultu), D ile düz parça, U ile son doğrultuda uzunluk.",
       "aliases": [
         "PL",
@@ -3613,6 +3721,7 @@
       "id": "tool.ray",
       "title": "Işın",
       "category": "Çizim",
+      "icon": "ray",
       "description": "Bir başlangıç noktasından tek yöne sonsuz yardımcı çizgi.",
       "aliases": [
         "RAY",
@@ -3645,6 +3754,7 @@
       "id": "tool.rectangle",
       "title": "Dikdörtgen",
       "category": "Çizim",
+      "icon": "rectangle",
       "description": "İki karşı köşeden dikdörtgen çizer; döndürme açısı, tam boyut, köşe yuvarlama ve pah seçenekleriyle.",
       "aliases": [
         "REC",
@@ -3682,6 +3792,7 @@
       "id": "tool.rectangle3",
       "title": "Döndürülmüş dikdörtgen",
       "category": "Çizim",
+      "icon": "rectangle3",
       "description": "Önce bir kenar çizilir, sonra yana çekilerek genişlik verilir; her açıda dikdörtgen.",
       "aliases": [
         "REC3",
@@ -3718,6 +3829,7 @@
       "id": "tool.regularPolygon",
       "title": "Düzgün çokgen",
       "category": "Çizim",
+      "icon": "regularPolygon",
       "description": "Kenar sayısı verilen düzgün çokgen: merkezden (çembere içten ya da dıştan) ya da bir kenardan.",
       "aliases": [
         "POL",
@@ -3776,6 +3888,7 @@
       "id": "tool.revcloud",
       "title": "Revizyon bulutu",
       "category": "Açıklama",
+      "icon": "revcloud",
       "description": "Değişen yeri çevreleyen, dışa bombeli yaylardan kapalı bulut çizer; dikdörtgen ya da çokgen.",
       "aliases": [
         "REVCLOUD",
@@ -3806,6 +3919,7 @@
       "id": "tool.rotate",
       "title": "Döndür",
       "category": "Dönüştür",
+      "icon": "rotate",
       "description": "Seçili nesneleri bir nokta etrafında döndürür. Açı yazılabilir; K ile kopya.",
       "aliases": [
         "RO",
@@ -3839,6 +3953,7 @@
       "id": "tool.scale",
       "title": "Ölçekle",
       "category": "Dönüştür",
+      "icon": "scale",
       "description": "Seçili nesneleri temel noktaya göre büyütür ya da küçültür: faktör ya da referans uzunluk.",
       "aliases": [
         "SC",
@@ -3872,6 +3987,7 @@
       "id": "tool.select",
       "title": "Seç",
       "category": "Seçim",
+      "icon": "select",
       "description": "Nesne seçer. Sürükleyerek pencere ya da kesişim seçimi yapın.",
       "aliases": [
         "SEC",
@@ -3901,6 +4017,7 @@
       "id": "tool.spline",
       "title": "Eğri",
       "category": "Çizim",
+      "icon": "spline",
       "description": "Tıklanan noktalardan geçen yumuşak eğri çizer; K ile kapatır.",
       "aliases": [
         "SPL",
@@ -3934,6 +4051,7 @@
       "id": "tool.spot",
       "title": "Kot noktası",
       "category": "Harita",
+      "icon": "spot",
       "description": "Kot değeri girilerek yükseklik noktası ekler.",
       "aliases": [
         "KOT"
@@ -3965,6 +4083,7 @@
       "id": "tool.stakeout",
       "title": "Aplikasyon",
       "category": "Harita",
+      "icon": "stakeout",
       "description": "Seçili noktalar için istasyondan semt ve mesafe hesaplar.",
       "aliases": [
         "APLIKASYON",
@@ -3997,6 +4116,7 @@
       "id": "tool.stretch",
       "title": "Esnet",
       "category": "Dönüştür",
+      "icon": "stretch",
       "description": "Pencerenin içinde kalan köşeleri taşır; dışındakiler yerinde kalır.",
       "aliases": [
         "STR",
@@ -4031,6 +4151,7 @@
       "id": "tool.subdivide",
       "title": "İfraz",
       "category": "Harita",
+      "icon": "subdivide",
       "description": "Parseli verilen alan ya da doğrultuya göre böler.",
       "aliases": [
         "IFRAZ"
@@ -4064,6 +4185,7 @@
       "id": "tool.text",
       "title": "Yazı",
       "category": "Açıklama",
+      "icon": "text",
       "description": "Tek satır yazı: tıklanan yerde açılan kutuya yazılır. Yükseklik kâğıt mm olarak, açı derece ya da iki noktayla verilir; yazıya çift tıklayarak düzenleyin.",
       "aliases": [
         "T",
@@ -4096,6 +4218,7 @@
       "id": "tool.toArea",
       "title": "Alana çevir",
       "category": "Alan",
+      "icon": "toArea",
       "description": "Kapalı çoklu çizgi, daire, elips ve kapalı eğriyi alana çevirir; kapalı bölge oluşturan çizgilerden alan üretir.",
       "aliases": [
         "REG",
@@ -4128,6 +4251,7 @@
       "id": "tool.toPolyline",
       "title": "Çizgiye çevir",
       "category": "Alan",
+      "icon": "toPolyline",
       "description": "Alanı kapalı çoklu çizgiye çevirir; delikler ayrı çizgi olur.",
       "aliases": [
         "ALANCIZGI",
@@ -4157,6 +4281,7 @@
       "id": "tool.trim",
       "title": "Buda",
       "category": "Düzenle",
+      "icon": "trim",
       "description": "Tıklanan parçayı, onu kesen en yakın iki kenar arasında siler.",
       "aliases": [
         "TR",
@@ -4189,6 +4314,7 @@
       "id": "tool.vertex",
       "title": "Köşe ekle/sil",
       "category": "Düzenle",
+      "icon": "vertex",
       "description": "Kenara tıklayınca köşe ekler, köşeye tıklayınca siler.",
       "aliases": [
         "KOSE",
@@ -4221,6 +4347,7 @@
       "id": "tool.xline",
       "title": "Yardımcı çizgi",
       "category": "Çizim",
+      "icon": "xline",
       "description": "İki yöne sonsuz yardımcı çizgi: bir noktadan, yatay, düşey, açılı ya da açıortay.",
       "aliases": [
         "XL",
@@ -4256,6 +4383,7 @@
       "id": "tool.zoomWindow",
       "title": "Pencere yakınlaştır",
       "category": "Seçim",
+      "icon": "zoomWindow",
       "description": "Çizilen dikdörtgene yakınlaştırır.",
       "aliases": [
         "Z",
@@ -4291,6 +4419,7 @@
       "id": "tools.options",
       "title": "Uygulama ayarları…",
       "category": "Araçlar",
+      "icon": "settings",
       "aliases": [
         "AYARLAR",
         "OPTIONS"
@@ -4330,6 +4459,7 @@
       "title": "Komut geçmişi paneli",
       "short": "Komut geçmişi",
       "category": "Görünüm",
+      "icon": "panelBottom",
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [
@@ -4359,6 +4489,7 @@
       "id": "view.commandSearch",
       "title": "Komut ara",
       "category": "Görünüm",
+      "icon": "search",
       "description": "Bir komutu adıyla ya da takma adıyla bulup çalıştırır: şeritte arama kutusu, klasik arayüzde komut satırı.",
       "aliases": [
         "ARA",
@@ -4385,6 +4516,7 @@
       "id": "view.coords",
       "title": "Koordinat listesi",
       "category": "Görünüm",
+      "icon": "table",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -4413,6 +4545,7 @@
       "id": "view.fullscreen",
       "title": "Tam ekran",
       "category": "Görünüm",
+      "icon": "fullscreen",
       "description": "Uygulamayı ekranın tamamına yayar; Esc ya da aynı düğme çıkar.",
       "aliases": [
         "TAMEKRAN",
@@ -4446,6 +4579,7 @@
       "title": "Şerit harf ipuçları",
       "short": "Harf ipuçları",
       "category": "Görünüm",
+      "icon": "keyboard",
       "description": "Şeridin sekmelerinde ve düğmelerinde harfler gösterir: sekmenin harfine, sonra düğmenin harflerine basınca çalışır. Alt tuşuna tek başına basıp bırakmak da açar; Esc bir düzey geri gider.",
       "aliases": [
         "KEYTIPS",
@@ -4477,6 +4611,7 @@
       "title": "Çizgi kalınlığını göster",
       "short": "Kalınlık",
       "category": "Görünüm",
+      "icon": "lineWeight",
       "description": "Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir (AutoCAD LWT); hassas çalışmada kalın sınırlar noktaları örtmez. Kitaplık sembolleri kendi kalınlığını korur.",
       "aliases": [
         "KALINLIK",
@@ -4568,6 +4703,7 @@
       "id": "view.ribbon",
       "title": "Şerit arayüzü",
       "category": "Görünüm",
+      "icon": "ribbon",
       "description": "Menüler, araç çubuğu ve araç kutusu yerine sekmeli şerit: aynı araçlar ve komutlar. Uygulama ayarları → Görünüm’den de seçilir.",
       "aliases": [
         "SERIT",
@@ -4598,6 +4734,7 @@
       "id": "view.ribbonCollapse",
       "title": "Şeridi daralt",
       "category": "Görünüm",
+      "icon": "chevronUp",
       "description": "Şeritte yalnız sekmeler kalır; bir sekmeye tıklayınca şerit çizimin üstünde açılır, komuttan sonra kapanır. Sekmeye çift tıklamak da daraltır ya da açar.",
       "aliases": [
         "SERITDARALT"
@@ -4617,7 +4754,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4626,6 +4763,7 @@
       "title": "Katman ve öznitelik paneli",
       "short": "Katman paneli",
       "category": "Görünüm",
+      "icon": "panelRight",
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [
@@ -4709,6 +4847,7 @@
       "id": "view.theme.dark",
       "title": "Koyu",
       "category": "Görünüm",
+      "icon": "moon",
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [],
@@ -4725,7 +4864,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
@@ -4735,6 +4874,7 @@
       "id": "view.theme.light",
       "title": "Açık",
       "category": "Görünüm",
+      "icon": "sun",
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [],
@@ -4751,7 +4891,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
@@ -4773,7 +4913,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4781,6 +4921,7 @@
       "id": "view.toolbox",
       "title": "Araç kutusu",
       "category": "Görünüm",
+      "icon": "toolbox",
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [
@@ -4810,6 +4951,7 @@
       "title": "Araç kutusunu kenara sabitle",
       "short": "Kenara sabitle",
       "category": "Görünüm",
+      "icon": "dock",
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [],
@@ -4834,6 +4976,7 @@
       "id": "view.zoomExtents",
       "title": "Tümünü göster",
       "category": "Görünüm",
+      "icon": "zoomExtents",
       "aliases": [
         "ZE",
         "TUMU"
@@ -4869,6 +5012,7 @@
       "id": "view.zoomIn",
       "title": "Yakınlaştır",
       "category": "Görünüm",
+      "icon": "zoomIn",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -4897,6 +5041,7 @@
       "id": "view.zoomOut",
       "title": "Uzaklaştır",
       "category": "Görünüm",
+      "icon": "zoomOut",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -4925,6 +5070,7 @@
       "id": "view.zoomSelection",
       "title": "Seçime yakınlaştır",
       "category": "Görünüm",
+      "icon": "zoomSelection",
       "aliases": [],
       "kind": "action",
       "shortcuts": [
@@ -4955,6 +5101,7 @@
       "id": "workspace.cad",
       "title": "CAD",
       "category": "Görünüm",
+      "icon": "modeCad",
       "description": "Çizim, düzenleme ve ölçülendirmeye odaklı sade arayüz; harita ve işlem menüleri gizlenir.",
       "aliases": [
         "MODCAD"
@@ -4982,6 +5129,7 @@
       "id": "workspace.disaster",
       "title": "Afet Analizi",
       "category": "Görünüm",
+      "icon": "modeDisaster",
       "description": "Deprem, sel ve heyelan riskinin parsel ve yapı düzeyinde analizi.",
       "aliases": [
         "MODAfetAnalizi"
@@ -5010,6 +5158,7 @@
       "id": "workspace.gis",
       "title": "CBS",
       "category": "Görünüm",
+      "icon": "modeGis",
       "description": "Katman, öznitelik ve harita işlerine odaklı arayüz; ileri çizim araçları gizlenir.",
       "aliases": [
         "MODCBS"
@@ -5037,6 +5186,7 @@
       "id": "workspace.hybrid",
       "title": "Hibrit (CAD + CBS)",
       "category": "Görünüm",
+      "icon": "modeHybrid",
       "description": "Hassas çizim ile coğrafi veri bir arada: bütün menüler, sekmeler ve araçlar.",
       "aliases": [
         "MODHibrit"
@@ -5064,6 +5214,7 @@
       "id": "workspace.plan3d",
       "title": "3D Plan",
       "category": "Görünüm",
+      "icon": "modePlan3d",
       "description": "Parsel ve imar kurallarından yapı kütleleri, senaryolar ve 3D görünüm.",
       "aliases": [
         "MOD3DPlan"
@@ -5093,6 +5244,7 @@
     {
       "id": "align",
       "label": "Hizala",
+      "icon": "align",
       "group": "transform",
       "section": "move",
       "aliases": [
@@ -5115,6 +5267,7 @@
     {
       "id": "arc",
       "label": "Yay",
+      "icon": "arc",
       "group": "draw",
       "section": "curve",
       "shortcut": "A",
@@ -5142,6 +5295,7 @@
     {
       "id": "area",
       "label": "Alan hesapla",
+      "icon": "area",
       "group": "map",
       "section": "measure",
       "shortcut": "Alt+H",
@@ -5167,6 +5321,7 @@
     {
       "id": "areaIntersect",
       "label": "Alan kesiştir",
+      "icon": "areaIntersect",
       "group": "area",
       "section": "boolean",
       "shortcut": "Alt+K",
@@ -5190,6 +5345,7 @@
     {
       "id": "areaSplit",
       "label": "Alan böl",
+      "icon": "areaSplit",
       "group": "area",
       "section": "boolean",
       "shortcut": "Alt+L",
@@ -5212,6 +5368,7 @@
     {
       "id": "areaSubtract",
       "label": "Alan çıkar",
+      "icon": "areaSubtract",
       "group": "area",
       "section": "boolean",
       "shortcut": "Alt+C",
@@ -5235,6 +5392,7 @@
     {
       "id": "areaUnion",
       "label": "Alan birleştir",
+      "icon": "areaUnion",
       "group": "area",
       "section": "boolean",
       "shortcut": "Alt+B",
@@ -5261,6 +5419,7 @@
     {
       "id": "array",
       "label": "Dizi",
+      "icon": "array",
       "group": "transform",
       "section": "array",
       "shortcut": "Shift+A",
@@ -5287,6 +5446,7 @@
     {
       "id": "arrayPolar",
       "label": "Kutupsal dizi",
+      "icon": "arrayPolar",
       "group": "transform",
       "section": "array",
       "aliases": [
@@ -5313,6 +5473,7 @@
     {
       "id": "boundary",
       "label": "İçine tıklayarak alan",
+      "icon": "boundary",
       "group": "area",
       "section": "create",
       "shortcut": "Shift+B",
@@ -5339,6 +5500,7 @@
     {
       "id": "break",
       "label": "Kır",
+      "icon": "break",
       "group": "modify",
       "section": "edge",
       "shortcut": "B",
@@ -5362,6 +5524,7 @@
     {
       "id": "chamfer",
       "label": "Pah",
+      "icon": "chamfer",
       "group": "modify",
       "section": "corner",
       "shortcut": "Shift+P",
@@ -5386,6 +5549,7 @@
     {
       "id": "circle",
       "label": "Daire",
+      "icon": "circle",
       "group": "draw",
       "section": "curve",
       "shortcut": "C",
@@ -5417,6 +5581,7 @@
     {
       "id": "copy",
       "label": "Kopyala",
+      "icon": "copy",
       "group": "transform",
       "section": "move",
       "shortcut": "Shift+C",
@@ -5440,6 +5605,7 @@
     {
       "id": "dimension",
       "label": "Ölçülendirme",
+      "icon": "dimension",
       "group": "annotate",
       "shortcut": "D",
       "aliases": [
@@ -5467,6 +5633,7 @@
     {
       "id": "divide",
       "label": "Böl",
+      "icon": "divide",
       "group": "draw",
       "section": "point",
       "shortcut": "Shift+D",
@@ -5492,6 +5659,7 @@
     {
       "id": "donut",
       "label": "Halka",
+      "icon": "donut",
       "group": "draw",
       "section": "curve",
       "aliases": [
@@ -5516,6 +5684,7 @@
     {
       "id": "ellipse",
       "label": "Elips",
+      "icon": "ellipse",
       "group": "draw",
       "section": "curve",
       "shortcut": "Shift+L",
@@ -5539,6 +5708,7 @@
     {
       "id": "erase",
       "label": "Sil",
+      "icon": "erase",
       "group": "modify",
       "section": "object",
       "shortcut": "Delete",
@@ -5562,6 +5732,7 @@
     {
       "id": "explode",
       "label": "Patlat",
+      "icon": "explode",
       "group": "modify",
       "section": "object",
       "shortcut": "X",
@@ -5585,6 +5756,7 @@
     {
       "id": "extend",
       "label": "Uzat",
+      "icon": "extend",
       "group": "modify",
       "section": "edge",
       "shortcut": "Shift+E",
@@ -5608,6 +5780,7 @@
     {
       "id": "fillet",
       "label": "Köşe yuvarla",
+      "icon": "fillet",
       "group": "modify",
       "section": "corner",
       "shortcut": "Shift+F",
@@ -5634,6 +5807,7 @@
     {
       "id": "hatch",
       "label": "Tarama",
+      "icon": "hatch",
       "group": "annotate",
       "shortcut": "H",
       "aliases": [
@@ -5658,6 +5832,7 @@
     {
       "id": "join",
       "label": "Birleştir",
+      "icon": "join",
       "group": "modify",
       "section": "object",
       "shortcut": "J",
@@ -5681,6 +5856,7 @@
     {
       "id": "lengthen",
       "label": "Uzat-kısalt",
+      "icon": "lengthen",
       "group": "modify",
       "section": "edge",
       "shortcut": "Shift+U",
@@ -5704,6 +5880,7 @@
     {
       "id": "line",
       "label": "Çizgi",
+      "icon": "line",
       "group": "draw",
       "section": "line",
       "shortcut": "L",
@@ -5730,6 +5907,7 @@
     {
       "id": "measure",
       "label": "Mesafe ölç",
+      "icon": "measure",
       "group": "map",
       "section": "measure",
       "shortcut": "Alt+M",
@@ -5755,6 +5933,7 @@
     {
       "id": "mirror",
       "label": "Aynala",
+      "icon": "mirror",
       "group": "transform",
       "section": "move",
       "shortcut": "Shift+I",
@@ -5778,6 +5957,7 @@
     {
       "id": "move",
       "label": "Taşı",
+      "icon": "move",
       "group": "transform",
       "section": "move",
       "shortcut": "Shift+M",
@@ -5803,6 +5983,7 @@
     {
       "id": "offset",
       "label": "Ötele",
+      "icon": "offset",
       "group": "modify",
       "section": "edge",
       "shortcut": "Shift+O",
@@ -5826,6 +6007,7 @@
     {
       "id": "pan",
       "label": "Kaydır",
+      "icon": "pan",
       "group": "select",
       "shortcut": "Shift+H",
       "aliases": [
@@ -5847,6 +6029,7 @@
     {
       "id": "parallel",
       "label": "Paralel çizgi",
+      "icon": "parallel",
       "group": "draw",
       "section": "line",
       "shortcut": "Y",
@@ -5872,6 +6055,7 @@
     {
       "id": "parcel",
       "label": "Parsel oluştur",
+      "icon": "parcel",
       "group": "map",
       "section": "parcel",
       "shortcut": "Alt+P",
@@ -5896,6 +6080,7 @@
     {
       "id": "perpIn",
       "label": "Dik in",
+      "icon": "perpIn",
       "group": "draw",
       "section": "construction",
       "shortcut": "I",
@@ -5919,6 +6104,7 @@
     {
       "id": "perpOut",
       "label": "Dik çık",
+      "icon": "perpOut",
       "group": "draw",
       "section": "construction",
       "shortcut": "O",
@@ -5941,6 +6127,7 @@
     {
       "id": "point",
       "label": "Nokta",
+      "icon": "point",
       "group": "draw",
       "section": "point",
       "shortcut": "N",
@@ -5964,6 +6151,7 @@
     {
       "id": "polygon",
       "label": "Kapalı alan",
+      "icon": "polygon",
       "group": "draw",
       "section": "line",
       "shortcut": "G",
@@ -5990,6 +6178,7 @@
     {
       "id": "polyline",
       "label": "Çoklu çizgi",
+      "icon": "polyline",
       "group": "draw",
       "section": "line",
       "shortcut": "P",
@@ -6015,6 +6204,7 @@
     {
       "id": "ray",
       "label": "Işın",
+      "icon": "ray",
       "group": "draw",
       "section": "construction",
       "shortcut": "Alt+X",
@@ -6038,6 +6228,7 @@
     {
       "id": "rectangle",
       "label": "Dikdörtgen",
+      "icon": "rectangle",
       "group": "draw",
       "section": "shape",
       "shortcut": "R",
@@ -6065,6 +6256,7 @@
     {
       "id": "rectangle3",
       "label": "Döndürülmüş dikdörtgen",
+      "icon": "rectangle3",
       "group": "draw",
       "section": "shape",
       "shortcut": "Alt+R",
@@ -6091,6 +6283,7 @@
     {
       "id": "regularPolygon",
       "label": "Düzgün çokgen",
+      "icon": "regularPolygon",
       "group": "draw",
       "section": "shape",
       "shortcut": "Shift+G",
@@ -6117,6 +6310,7 @@
     {
       "id": "revcloud",
       "label": "Revizyon bulutu",
+      "icon": "revcloud",
       "group": "annotate",
       "aliases": [
         "REVCLOUD",
@@ -6137,6 +6331,7 @@
     {
       "id": "rotate",
       "label": "Döndür",
+      "icon": "rotate",
       "group": "transform",
       "section": "move",
       "shortcut": "Shift+R",
@@ -6160,6 +6355,7 @@
     {
       "id": "scale",
       "label": "Ölçekle",
+      "icon": "scale",
       "group": "transform",
       "section": "move",
       "shortcut": "Shift+S",
@@ -6183,6 +6379,7 @@
     {
       "id": "select",
       "label": "Seç",
+      "icon": "select",
       "group": "select",
       "shortcut": "Esc",
       "aliases": [
@@ -6207,6 +6404,7 @@
     {
       "id": "spline",
       "label": "Eğri",
+      "icon": "spline",
       "group": "draw",
       "section": "curve",
       "shortcut": "S",
@@ -6230,6 +6428,7 @@
     {
       "id": "spot",
       "label": "Kot noktası",
+      "icon": "spot",
       "group": "map",
       "section": "field",
       "shortcut": "Alt+Z",
@@ -6251,6 +6450,7 @@
     {
       "id": "stakeout",
       "label": "Aplikasyon",
+      "icon": "stakeout",
       "group": "map",
       "section": "field",
       "shortcut": "Alt+A",
@@ -6274,6 +6474,7 @@
     {
       "id": "stretch",
       "label": "Esnet",
+      "icon": "stretch",
       "group": "transform",
       "section": "move",
       "shortcut": "E",
@@ -6297,6 +6498,7 @@
     {
       "id": "subdivide",
       "label": "İfraz",
+      "icon": "subdivide",
       "group": "map",
       "section": "parcel",
       "shortcut": "Alt+I",
@@ -6321,6 +6523,7 @@
     {
       "id": "text",
       "label": "Yazı",
+      "icon": "text",
       "group": "annotate",
       "shortcut": "T",
       "aliases": [
@@ -6343,6 +6546,7 @@
     {
       "id": "toArea",
       "label": "Alana çevir",
+      "icon": "toArea",
       "group": "area",
       "section": "create",
       "shortcut": "Alt+G",
@@ -6366,6 +6570,7 @@
     {
       "id": "toPolyline",
       "label": "Çizgiye çevir",
+      "icon": "toPolyline",
       "group": "area",
       "section": "create",
       "aliases": [
@@ -6387,6 +6592,7 @@
     {
       "id": "trim",
       "label": "Buda",
+      "icon": "trim",
       "group": "modify",
       "section": "edge",
       "shortcut": "Shift+T",
@@ -6410,6 +6616,7 @@
     {
       "id": "vertex",
       "label": "Köşe ekle/sil",
+      "icon": "vertex",
       "group": "modify",
       "section": "corner",
       "shortcut": "V",
@@ -6432,6 +6639,7 @@
     {
       "id": "xline",
       "label": "Yardımcı çizgi",
+      "icon": "xline",
       "group": "draw",
       "section": "construction",
       "shortcut": "Shift+X",
@@ -6458,6 +6666,7 @@
     {
       "id": "zoomWindow",
       "label": "Pencere yakınlaştır",
+      "icon": "zoomWindow",
       "group": "select",
       "shortcut": "Z",
       "aliases": [
@@ -10699,5 +10908,1953 @@
         "desktop": "none"
       }
     }
-  ]
+  ],
+  "layout": {
+    "menus": [
+      {
+        "id": "file",
+        "label": "Dosya",
+        "blocks": [
+          {
+            "label": "Proje",
+            "items": [
+              "file.new",
+              "file.open",
+              "file.start"
+            ]
+          },
+          {
+            "label": "Kaydet",
+            "items": [
+              "file.save",
+              "file.saveAs"
+            ]
+          },
+          {
+            "label": "Bulut",
+            "items": [
+              "cloud.open",
+              "cloud.upload",
+              "cloud.conflicts",
+              "cloud.rename",
+              "cloud.delete"
+            ]
+          },
+          {
+            "label": "Dosya alışverişi",
+            "items": [
+              {
+                "label": "İçe aktar",
+                "items": [
+                  {
+                    "label": "",
+                    "items": [
+                      "file.import.dxf",
+                      "file.import.ncz",
+                      "file.import.shp",
+                      "file.import.geojson"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "file.import.ncn"
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "Dışa aktar",
+                "items": [
+                  {
+                    "label": "",
+                    "items": [
+                      "file.export.dxf",
+                      "file.export.geojson",
+                      "file.export.pdf"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "file.export.ncn"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Çıktı",
+            "items": [
+              "file.print"
+            ]
+          },
+          {
+            "label": "Ayarlar",
+            "items": [
+              "file.settings"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "edit",
+        "label": "Düzen",
+        "blocks": [
+          {
+            "label": "Geçmiş",
+            "items": [
+              "edit.undo",
+              "edit.redo"
+            ]
+          },
+          {
+            "label": "Pano",
+            "items": [
+              "edit.cut",
+              "edit.copy",
+              "edit.paste",
+              "edit.pasteOriginal",
+              "tool.erase"
+            ]
+          },
+          {
+            "label": "Seçim",
+            "items": [
+              "edit.selectAll",
+              "edit.deselect",
+              "edit.invertSelection"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "view",
+        "label": "Görünüm",
+        "blocks": [
+          {
+            "label": "Yakınlaştır",
+            "items": [
+              "view.zoomExtents",
+              "tool.zoomWindow",
+              "view.zoomSelection",
+              "view.zoomIn",
+              "view.zoomOut",
+              "tool.pan"
+            ]
+          },
+          {
+            "label": "Paneller",
+            "items": [
+              "view.toolbox",
+              "view.toolboxDock",
+              "view.rightPanel",
+              "view.bottomPanel",
+              "view.coords",
+              "view.ribbon",
+              "view.keyTips",
+              "view.fullscreen"
+            ]
+          },
+          {
+            "label": "Görünüş",
+            "items": [
+              {
+                "label": "Çalışma modu",
+                "items": [
+                  {
+                    "label": "",
+                    "items": [
+                      "workspace.hybrid",
+                      "workspace.cad",
+                      "workspace.gis"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "workspace.plan3d",
+                      "workspace.disaster"
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "Tema",
+                "items": [
+                  {
+                    "label": "",
+                    "items": [
+                      "view.theme.dark",
+                      "view.theme.light"
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "Çizim motoru",
+                "items": [
+                  {
+                    "label": "",
+                    "items": [
+                      "view.renderer.webgl2",
+                      "view.renderer.webgpu"
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "Sembol boyutu",
+                "items": [
+                  {
+                    "label": "",
+                    "items": [
+                      "view.symbols.plot",
+                      "view.symbols.screen"
+                    ]
+                  }
+                ]
+              },
+              "view.lineWeights"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "draw",
+        "label": "Çizim",
+        "blocks": [
+          {
+            "label": "Çizgi",
+            "items": [
+              "tool.line",
+              "tool.polyline",
+              "tool.polygon",
+              "tool.parallel"
+            ]
+          },
+          {
+            "label": "Eğri",
+            "items": [
+              "tool.circle",
+              "tool.arc",
+              "tool.ellipse",
+              "tool.spline",
+              "tool.donut"
+            ]
+          },
+          {
+            "label": "Şekil",
+            "items": [
+              "tool.rectangle",
+              "tool.rectangle3",
+              "tool.regularPolygon"
+            ]
+          },
+          {
+            "label": "Yardımcı",
+            "items": [
+              "tool.xline",
+              "tool.ray",
+              "tool.perpIn",
+              "tool.perpOut"
+            ]
+          },
+          {
+            "label": "Nokta",
+            "items": [
+              "tool.point",
+              "tool.divide"
+            ]
+          },
+          {
+            "label": "Açıklama",
+            "items": [
+              "tool.text",
+              "tool.dimension",
+              "tool.revcloud",
+              "tool.hatch"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "modify",
+        "label": "Değiştir",
+        "blocks": [
+          {
+            "label": "Dönüştür",
+            "items": [
+              "tool.move",
+              "tool.copy",
+              "tool.rotate",
+              "tool.scale",
+              "tool.mirror",
+              "tool.stretch",
+              "tool.align"
+            ]
+          },
+          {
+            "label": "Dizi",
+            "items": [
+              "tool.array",
+              "tool.arrayPolar"
+            ]
+          },
+          {
+            "label": "Kenar",
+            "items": [
+              "tool.offset",
+              "tool.trim",
+              "tool.extend",
+              "tool.lengthen",
+              "tool.break"
+            ]
+          },
+          {
+            "label": "Köşe",
+            "items": [
+              "tool.fillet",
+              "tool.chamfer",
+              "tool.vertex"
+            ]
+          },
+          {
+            "label": "Nesne",
+            "items": [
+              "tool.join",
+              "tool.explode",
+              "tool.erase"
+            ]
+          },
+          {
+            "label": "",
+            "items": [
+              {
+                "label": "Alan işlemleri",
+                "items": [
+                  {
+                    "label": "Oluştur ve çevir",
+                    "items": [
+                      "tool.boundary",
+                      "tool.toArea",
+                      "tool.toPolyline"
+                    ]
+                  },
+                  {
+                    "label": "Birleştir ve böl",
+                    "items": [
+                      "tool.areaUnion",
+                      "tool.areaIntersect",
+                      "tool.areaSubtract",
+                      "tool.areaSplit"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "map",
+        "label": "Harita",
+        "blocks": [
+          {
+            "label": "Parsel",
+            "items": [
+              "tool.parcel",
+              "tool.subdivide",
+              "map.parcelReport",
+              "map.edgeLengths"
+            ]
+          },
+          {
+            "label": "Arazi",
+            "items": [
+              "tool.stakeout",
+              "tool.spot",
+              "map.contours",
+              "map.profile"
+            ]
+          },
+          {
+            "label": "Ölçme",
+            "items": [
+              "tool.measure",
+              "tool.area"
+            ]
+          },
+          {
+            "label": "Pafta",
+            "items": [
+              "map.sheet"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "crs",
+        "label": "Koordinat",
+        "blocks": [
+          {
+            "label": "Koordinat sistemi",
+            "items": [
+              "crs.set",
+              "crs.transform"
+            ]
+          },
+          {
+            "label": "Koordinatlar",
+            "items": [
+              "crs.query",
+              "crs.points",
+              "view.coords"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "calc",
+        "label": "Hesap",
+        "blocks": [
+          {
+            "label": "Poligon",
+            "items": [
+              "calc.traverse"
+            ]
+          },
+          {
+            "label": "Nokta alımı",
+            "items": [
+              "calc.polar",
+              "calc.stakeout"
+            ]
+          },
+          {
+            "label": "Kestirme",
+            "items": [
+              "calc.forward",
+              "calc.resection"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "analysis",
+        "label": "Analiz",
+        "blocks": [
+          {
+            "label": "Ölçme",
+            "items": [
+              "tool.measure",
+              "tool.area"
+            ]
+          },
+          {
+            "label": "Arazi analizi",
+            "items": [
+              "analysis.volume",
+              "analysis.slope"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "processing",
+        "label": "İşlemler",
+        "blocks": [
+          {
+            "label": "İşlemler",
+            "items": [
+              "processing.toolbox",
+              "processing.history"
+            ]
+          },
+          {
+            "label": "Modeller",
+            "items": [
+              "processing.newModel",
+              "processing.model.builtin.parcelSheet",
+              "processing.run.points.numberVertices",
+              "processing.run.annotation.edgeLengths",
+              "processing.run.attributes.calculate",
+              "processing.run.selection.byExpression"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "tools",
+        "label": "Araçlar",
+        "blocks": [
+          {
+            "label": "Komut",
+            "items": [
+              "commandline.focus",
+              {
+                "label": "Çizim yardımcıları",
+                "items": [
+                  {
+                    "label": "",
+                    "items": [
+                      "draft.snap",
+                      "draft.grid",
+                      "draft.ortho",
+                      "draft.polar",
+                      "draft.tracking"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Stil",
+            "items": [
+              "style.manager",
+              "style.svgEditor",
+              "style.layerStyle",
+              "style.legend",
+              "style.assign",
+              "style.clearSymbol"
+            ]
+          },
+          {
+            "label": "Uygulama",
+            "items": [
+              "help.shortcuts",
+              "server.check",
+              "tools.options"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "help",
+        "label": "Yardım",
+        "blocks": [
+          {
+            "label": "",
+            "items": [
+              "help.shortcuts"
+            ]
+          },
+          {
+            "label": "",
+            "items": [
+              "help.about"
+            ]
+          }
+        ]
+      }
+    ],
+    "ribbon": [
+      {
+        "id": "file",
+        "label": "Dosya",
+        "panels": [
+          {
+            "label": "Proje",
+            "icon": "more",
+            "items": [
+              {
+                "command": "file.new",
+                "size": "large"
+              },
+              {
+                "command": "file.open",
+                "size": "large"
+              },
+              {
+                "command": "file.start",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Kaydet",
+            "icon": "more",
+            "items": [
+              {
+                "command": "file.save",
+                "size": "large"
+              },
+              {
+                "command": "file.saveAs",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Bulut",
+            "icon": "more",
+            "items": [
+              {
+                "command": "cloud.open",
+                "size": "large"
+              },
+              {
+                "command": "cloud.upload",
+                "size": "large"
+              },
+              {
+                "command": "cloud.conflicts",
+                "size": "small"
+              },
+              {
+                "command": "cloud.rename",
+                "size": "small"
+              },
+              {
+                "command": "cloud.delete",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Dosya alışverişi",
+            "icon": "import",
+            "items": [
+              {
+                "menu": "İçe aktar",
+                "size": "large",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "file.import.dxf",
+                      "file.import.ncz",
+                      "file.import.shp",
+                      "file.import.geojson"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "file.import.ncn"
+                    ]
+                  }
+                ]
+              },
+              {
+                "menu": "Dışa aktar",
+                "size": "large",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "file.export.dxf",
+                      "file.export.geojson",
+                      "file.export.pdf"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "file.export.ncn"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Çıktı",
+            "icon": "more",
+            "items": [
+              {
+                "command": "file.print",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Ayarlar",
+            "icon": "more",
+            "items": [
+              {
+                "command": "file.settings",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          }
+        ]
+      },
+      {
+        "id": "home",
+        "label": "Giriş",
+        "panels": [
+          {
+            "label": "Pano",
+            "icon": "more",
+            "items": [
+              {
+                "command": "edit.paste",
+                "size": "large"
+              },
+              {
+                "command": "edit.cut",
+                "size": "small"
+              },
+              {
+                "command": "edit.copy",
+                "size": "small"
+              },
+              {
+                "command": "edit.pasteOriginal",
+                "size": "small"
+              },
+              {
+                "command": "tool.erase",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Seçim",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.select",
+                "size": "small"
+              },
+              {
+                "command": "tool.zoomWindow",
+                "size": "small"
+              },
+              {
+                "command": "tool.pan",
+                "size": "small"
+              },
+              {
+                "command": "edit.selectAll",
+                "size": "small"
+              },
+              {
+                "command": "edit.deselect",
+                "size": "small"
+              },
+              {
+                "command": "edit.invertSelection",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Çizim",
+            "icon": "line",
+            "items": [
+              {
+                "command": "tool.line",
+                "size": "large"
+              },
+              {
+                "command": "tool.polyline",
+                "size": "large"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.circle",
+                    "label": "Merkez, yarıçap"
+                  },
+                  {
+                    "command": "tool.circle",
+                    "option": "2N",
+                    "label": "2 nokta"
+                  },
+                  {
+                    "command": "tool.circle",
+                    "option": "3N",
+                    "label": "3 nokta"
+                  },
+                  {
+                    "command": "tool.circle",
+                    "option": "TTY",
+                    "label": "Teğet, teğet, yarıçap"
+                  },
+                  {
+                    "command": "tool.circle",
+                    "option": "TTT",
+                    "label": "Teğet, teğet, teğet"
+                  }
+                ],
+                "size": "large"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.arc",
+                    "label": "3 nokta"
+                  },
+                  {
+                    "command": "tool.arc",
+                    "option": "M",
+                    "label": "Merkez, başlangıç, bitiş"
+                  },
+                  {
+                    "command": "tool.arc",
+                    "option": "D",
+                    "label": "Devam"
+                  }
+                ],
+                "size": "large"
+              },
+              {
+                "command": "tool.polygon",
+                "size": "small"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.rectangle",
+                    "label": "Dikdörtgen"
+                  },
+                  {
+                    "command": "tool.rectangle3",
+                    "label": "Döndürülmüş dikdörtgen"
+                  },
+                  {
+                    "command": "tool.regularPolygon",
+                    "label": "Düzgün çokgen"
+                  }
+                ],
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Değiştir",
+            "icon": "move",
+            "items": [
+              {
+                "command": "tool.move",
+                "size": "small"
+              },
+              {
+                "command": "tool.copy",
+                "size": "small"
+              },
+              {
+                "command": "tool.rotate",
+                "size": "small"
+              },
+              {
+                "command": "tool.mirror",
+                "size": "small"
+              },
+              {
+                "command": "tool.scale",
+                "size": "small"
+              },
+              {
+                "command": "tool.offset",
+                "size": "small"
+              },
+              {
+                "command": "tool.trim",
+                "size": "small"
+              },
+              {
+                "command": "tool.extend",
+                "size": "small"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.fillet",
+                    "label": "Köşe yuvarla"
+                  },
+                  {
+                    "command": "tool.chamfer",
+                    "label": "Pah"
+                  }
+                ],
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Açıklama",
+            "icon": "text",
+            "items": [
+              {
+                "command": "tool.text",
+                "size": "large"
+              },
+              {
+                "command": "tool.dimension",
+                "size": "large"
+              },
+              {
+                "command": "tool.hatch",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Katmanlar",
+            "icon": "layers",
+            "items": [
+              {
+                "builtin": "layers"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Özellikler",
+            "icon": "styles",
+            "items": [
+              {
+                "builtin": "properties"
+              }
+            ],
+            "overflow": []
+          }
+        ]
+      },
+      {
+        "id": "draw",
+        "label": "Çizim",
+        "panels": [
+          {
+            "label": "Çizgi",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.line",
+                "size": "large"
+              },
+              {
+                "command": "tool.polyline",
+                "size": "large"
+              },
+              {
+                "command": "tool.polygon",
+                "size": "small"
+              },
+              {
+                "command": "tool.parallel",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Eğri",
+            "icon": "more",
+            "items": [
+              {
+                "split": [
+                  {
+                    "command": "tool.circle",
+                    "label": "Merkez, yarıçap"
+                  },
+                  {
+                    "command": "tool.circle",
+                    "option": "2N",
+                    "label": "2 nokta"
+                  },
+                  {
+                    "command": "tool.circle",
+                    "option": "3N",
+                    "label": "3 nokta"
+                  },
+                  {
+                    "command": "tool.circle",
+                    "option": "TTY",
+                    "label": "Teğet, teğet, yarıçap"
+                  },
+                  {
+                    "command": "tool.circle",
+                    "option": "TTT",
+                    "label": "Teğet, teğet, teğet"
+                  }
+                ],
+                "size": "large"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.arc",
+                    "label": "3 nokta"
+                  },
+                  {
+                    "command": "tool.arc",
+                    "option": "M",
+                    "label": "Merkez, başlangıç, bitiş"
+                  },
+                  {
+                    "command": "tool.arc",
+                    "option": "D",
+                    "label": "Devam"
+                  }
+                ],
+                "size": "large"
+              },
+              {
+                "command": "tool.ellipse",
+                "size": "small"
+              },
+              {
+                "command": "tool.spline",
+                "size": "small"
+              }
+            ],
+            "overflow": [
+              "tool.donut"
+            ]
+          },
+          {
+            "label": "Şekil",
+            "icon": "more",
+            "items": [
+              {
+                "split": [
+                  {
+                    "command": "tool.rectangle",
+                    "label": "Dikdörtgen"
+                  },
+                  {
+                    "command": "tool.rectangle3",
+                    "label": "Döndürülmüş dikdörtgen"
+                  },
+                  {
+                    "command": "tool.regularPolygon",
+                    "label": "Düzgün çokgen"
+                  }
+                ],
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Yardımcı",
+            "icon": "more",
+            "items": [
+              {
+                "split": [
+                  {
+                    "command": "tool.xline",
+                    "label": "Yardımcı çizgi"
+                  },
+                  {
+                    "command": "tool.ray",
+                    "label": "Işın"
+                  }
+                ],
+                "size": "large"
+              },
+              {
+                "split": [
+                  {
+                    "command": "tool.perpIn",
+                    "label": "Dik in"
+                  },
+                  {
+                    "command": "tool.perpOut",
+                    "label": "Dik çık"
+                  }
+                ],
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Nokta",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.point",
+                "size": "large"
+              },
+              {
+                "command": "tool.divide",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Açıklama",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.text",
+                "size": "large"
+              },
+              {
+                "command": "tool.dimension",
+                "size": "large"
+              },
+              {
+                "command": "tool.hatch",
+                "size": "large"
+              }
+            ],
+            "overflow": [
+              "tool.revcloud"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "modify",
+        "label": "Değiştir",
+        "panels": [
+          {
+            "label": "Dönüştür",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.move",
+                "size": "large"
+              },
+              {
+                "command": "tool.copy",
+                "size": "large"
+              },
+              {
+                "command": "tool.rotate",
+                "size": "large"
+              },
+              {
+                "command": "tool.scale",
+                "size": "small"
+              },
+              {
+                "command": "tool.mirror",
+                "size": "small"
+              },
+              {
+                "command": "tool.stretch",
+                "size": "small"
+              },
+              {
+                "command": "tool.align",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Dizi",
+            "icon": "more",
+            "items": [
+              {
+                "split": [
+                  {
+                    "command": "tool.array",
+                    "label": "Dizi"
+                  },
+                  {
+                    "command": "tool.arrayPolar",
+                    "label": "Kutupsal dizi"
+                  }
+                ],
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Kenar",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.offset",
+                "size": "large"
+              },
+              {
+                "command": "tool.trim",
+                "size": "large"
+              },
+              {
+                "command": "tool.extend",
+                "size": "small"
+              },
+              {
+                "command": "tool.break",
+                "size": "small"
+              }
+            ],
+            "overflow": [
+              "tool.lengthen"
+            ]
+          },
+          {
+            "label": "Köşe",
+            "icon": "more",
+            "items": [
+              {
+                "split": [
+                  {
+                    "command": "tool.fillet",
+                    "label": "Köşe yuvarla"
+                  },
+                  {
+                    "command": "tool.chamfer",
+                    "label": "Pah"
+                  }
+                ],
+                "size": "large"
+              }
+            ],
+            "overflow": [
+              "tool.vertex"
+            ]
+          },
+          {
+            "label": "Nesne",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.join",
+                "size": "small"
+              },
+              {
+                "command": "tool.explode",
+                "size": "small"
+              },
+              {
+                "command": "tool.erase",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Oluştur ve çevir",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.boundary",
+                "size": "large"
+              },
+              {
+                "command": "tool.toArea",
+                "size": "small"
+              }
+            ],
+            "overflow": [
+              "tool.toPolyline"
+            ]
+          },
+          {
+            "label": "Birleştir ve böl",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.areaUnion",
+                "size": "large"
+              },
+              {
+                "command": "tool.areaIntersect",
+                "size": "large"
+              },
+              {
+                "command": "tool.areaSubtract",
+                "size": "large"
+              },
+              {
+                "command": "tool.areaSplit",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          }
+        ]
+      },
+      {
+        "id": "map",
+        "label": "Harita",
+        "panels": [
+          {
+            "label": "Parsel",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.parcel",
+                "size": "large"
+              },
+              {
+                "command": "tool.subdivide",
+                "size": "small"
+              },
+              {
+                "command": "map.parcelReport",
+                "size": "small"
+              },
+              {
+                "command": "map.edgeLengths",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Arazi",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.stakeout",
+                "size": "small"
+              },
+              {
+                "command": "tool.spot",
+                "size": "large"
+              },
+              {
+                "command": "map.contours",
+                "size": "small"
+              },
+              {
+                "command": "map.profile",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Ölçme",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.measure",
+                "size": "large"
+              },
+              {
+                "command": "tool.area",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Pafta",
+            "icon": "more",
+            "items": [
+              {
+                "command": "map.sheet",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Poligon",
+            "icon": "more",
+            "items": [
+              {
+                "command": "calc.traverse",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Nokta alımı",
+            "icon": "more",
+            "items": [
+              {
+                "command": "calc.polar",
+                "size": "large"
+              },
+              {
+                "command": "calc.stakeout",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Kestirme",
+            "icon": "more",
+            "items": [
+              {
+                "command": "calc.forward",
+                "size": "large"
+              },
+              {
+                "command": "calc.resection",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Koordinat sistemi",
+            "icon": "more",
+            "items": [
+              {
+                "command": "crs.set",
+                "size": "large"
+              },
+              {
+                "command": "crs.transform",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Koordinatlar",
+            "icon": "more",
+            "items": [
+              {
+                "command": "crs.query",
+                "size": "small"
+              },
+              {
+                "command": "crs.points",
+                "size": "small"
+              },
+              {
+                "command": "view.coords",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Arazi analizi",
+            "icon": "more",
+            "items": [
+              {
+                "command": "analysis.volume",
+                "size": "large"
+              },
+              {
+                "command": "analysis.slope",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          }
+        ]
+      },
+      {
+        "id": "view",
+        "label": "Görünüm",
+        "panels": [
+          {
+            "label": "Yakınlaştır",
+            "icon": "more",
+            "items": [
+              {
+                "command": "view.zoomExtents",
+                "size": "large"
+              },
+              {
+                "command": "tool.zoomWindow",
+                "size": "small"
+              },
+              {
+                "command": "view.zoomSelection",
+                "size": "small"
+              },
+              {
+                "command": "view.zoomIn",
+                "size": "small"
+              },
+              {
+                "command": "view.zoomOut",
+                "size": "small"
+              },
+              {
+                "command": "tool.pan",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Paneller",
+            "icon": "more",
+            "items": [
+              {
+                "command": "view.toolbox",
+                "size": "small"
+              },
+              {
+                "command": "view.toolboxDock",
+                "size": "small"
+              },
+              {
+                "command": "view.rightPanel",
+                "size": "small"
+              },
+              {
+                "command": "view.bottomPanel",
+                "size": "small"
+              },
+              {
+                "command": "view.coords",
+                "size": "small"
+              },
+              {
+                "command": "view.ribbon",
+                "size": "small"
+              },
+              {
+                "command": "view.keyTips",
+                "size": "small"
+              },
+              {
+                "command": "view.fullscreen",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Görünüş",
+            "icon": "modeHybrid",
+            "items": [
+              {
+                "menu": "Çalışma modu",
+                "size": "large",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "workspace.hybrid",
+                      "workspace.cad",
+                      "workspace.gis"
+                    ]
+                  },
+                  {
+                    "label": "",
+                    "items": [
+                      "workspace.plan3d",
+                      "workspace.disaster"
+                    ]
+                  }
+                ]
+              },
+              {
+                "menu": "Tema",
+                "size": "small",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "view.theme.dark",
+                      "view.theme.light"
+                    ]
+                  }
+                ]
+              },
+              {
+                "menu": "Çizim motoru",
+                "size": "small",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "view.renderer.webgl2",
+                      "view.renderer.webgpu"
+                    ]
+                  }
+                ]
+              },
+              {
+                "menu": "Sembol boyutu",
+                "size": "small",
+                "blocks": [
+                  {
+                    "label": "",
+                    "items": [
+                      "view.symbols.plot",
+                      "view.symbols.screen"
+                    ]
+                  }
+                ]
+              },
+              {
+                "command": "view.lineWeights",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          }
+        ]
+      },
+      {
+        "id": "processing",
+        "label": "İşlemler",
+        "panels": [
+          {
+            "label": "İşlemler",
+            "icon": "more",
+            "items": [
+              {
+                "command": "processing.toolbox",
+                "size": "large"
+              },
+              {
+                "command": "processing.history",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Modeller",
+            "icon": "more",
+            "items": [
+              {
+                "command": "processing.newModel",
+                "size": "large"
+              },
+              {
+                "command": "processing.model.builtin.parcelSheet",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Nokta işlemleri",
+            "icon": "more",
+            "items": [
+              {
+                "command": "processing.run.points.numberVertices",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Yazı ve etiket",
+            "icon": "more",
+            "items": [
+              {
+                "command": "processing.run.annotation.edgeLengths",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Öznitelik",
+            "icon": "more",
+            "items": [
+              {
+                "command": "processing.run.attributes.calculate",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Seçim",
+            "icon": "more",
+            "items": [
+              {
+                "command": "processing.run.selection.byExpression",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          }
+        ]
+      },
+      {
+        "id": "tools",
+        "label": "Araçlar",
+        "panels": [
+          {
+            "label": "Komut",
+            "icon": "more",
+            "items": [
+              {
+                "command": "commandline.focus",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Çizim yardımcıları",
+            "icon": "more",
+            "items": [
+              {
+                "command": "draft.snap",
+                "size": "small"
+              },
+              {
+                "command": "draft.grid",
+                "size": "small"
+              },
+              {
+                "command": "draft.ortho",
+                "size": "small"
+              },
+              {
+                "command": "draft.polar",
+                "size": "small"
+              },
+              {
+                "command": "draft.tracking",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Stil",
+            "icon": "more",
+            "items": [
+              {
+                "command": "style.manager",
+                "size": "large"
+              },
+              {
+                "command": "style.svgEditor",
+                "size": "large"
+              },
+              {
+                "command": "style.layerStyle",
+                "size": "small"
+              },
+              {
+                "command": "style.legend",
+                "size": "small"
+              },
+              {
+                "command": "style.assign",
+                "size": "small"
+              },
+              {
+                "command": "style.clearSymbol",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Uygulama",
+            "icon": "more",
+            "items": [
+              {
+                "command": "help.shortcuts",
+                "size": "small"
+              },
+              {
+                "command": "server.check",
+                "size": "small"
+              },
+              {
+                "command": "tools.options",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Yardım",
+            "icon": "more",
+            "items": [
+              {
+                "command": "help.about",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          }
+        ]
+      },
+      {
+        "id": "selection",
+        "label": "Seçim",
+        "contextual": "selection",
+        "panels": [
+          {
+            "label": "Seçim",
+            "icon": "select",
+            "items": [
+              {
+                "builtin": "selection"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Dönüştür",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.move",
+                "size": "large"
+              },
+              {
+                "command": "tool.copy",
+                "size": "large"
+              },
+              {
+                "command": "tool.rotate",
+                "size": "large"
+              },
+              {
+                "command": "tool.scale",
+                "size": "small"
+              },
+              {
+                "command": "tool.mirror",
+                "size": "small"
+              },
+              {
+                "command": "tool.stretch",
+                "size": "small"
+              },
+              {
+                "command": "tool.align",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Dizi",
+            "icon": "more",
+            "items": [
+              {
+                "split": [
+                  {
+                    "command": "tool.array",
+                    "label": "Dizi"
+                  },
+                  {
+                    "command": "tool.arrayPolar",
+                    "label": "Kutupsal dizi"
+                  }
+                ],
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Nesne",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.join",
+                "size": "small"
+              },
+              {
+                "command": "tool.explode",
+                "size": "small"
+              },
+              {
+                "command": "tool.erase",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Oluştur ve çevir",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.boundary",
+                "size": "large"
+              },
+              {
+                "command": "tool.toArea",
+                "size": "small"
+              }
+            ],
+            "overflow": [
+              "tool.toPolyline"
+            ]
+          },
+          {
+            "label": "Birleştir ve böl",
+            "icon": "more",
+            "items": [
+              {
+                "command": "tool.areaUnion",
+                "size": "large"
+              },
+              {
+                "command": "tool.areaIntersect",
+                "size": "large"
+              },
+              {
+                "command": "tool.areaSubtract",
+                "size": "large"
+              },
+              {
+                "command": "tool.areaSplit",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Pano",
+            "icon": "more",
+            "items": [
+              {
+                "command": "edit.cut",
+                "size": "small"
+              },
+              {
+                "command": "edit.copy",
+                "size": "small"
+              },
+              {
+                "command": "edit.paste",
+                "size": "large"
+              },
+              {
+                "command": "edit.pasteOriginal",
+                "size": "small"
+              }
+            ],
+            "overflow": []
+          },
+          {
+            "label": "Sembol",
+            "icon": "symbolAssign",
+            "items": [
+              {
+                "command": "style.assign",
+                "size": "large"
+              },
+              {
+                "command": "style.clearSymbol",
+                "size": "large"
+              }
+            ],
+            "overflow": []
+          }
+        ]
+      }
+    ],
+    "quickAccess": [
+      "file.save",
+      "edit.undo",
+      "edit.redo"
+    ]
+  }
 }

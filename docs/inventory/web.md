@@ -49,6 +49,10 @@ Menüde, şeritte ve araç kutusunda yoklar; kimlikleri `src/ui` altındaki hiç
 
 `view.commandSearch`, `view.theme.toggle`
 
+## Masaüstü
+
+Masaüstü kabuğu (apps/desktop) 11 / 163 komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.
+
 ## Test başvurusu
 
 100 / 163 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

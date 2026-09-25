@@ -51,6 +51,28 @@ export async function collectInPage() {
     }
   }
 
+  // The layout as the web shows it, in order: the menu bar with its blocks and
+  // submenus, the ribbon's tabs and panels, the quick access bar. The desktop
+  // shell builds its menus and ribbon from this (docs/adr/0017).
+  const menuLayout = (specs) =>
+    menus.menuBlocks(specs, tools).map((b) => ({
+      label: b.label,
+      items: b.items.flatMap((e) => (typeof e === 'object' ? [{ label: e.label, items: menuLayout(e.items) }] : e === '@processing' ? toolIds : e === '@models' ? modelIds : [e])),
+    }));
+  const ribbonItem = (i) =>
+    i.kind === 'command'
+      ? { command: i.id, size: i.size }
+      : i.kind === 'split'
+        ? { split: i.entries.map((e) => ({ command: e.command, option: e.option, label: e.label })), size: i.size }
+        : i.kind === 'menu'
+          ? { menu: i.menu.label, size: i.size, blocks: menuLayout(i.menu.items) }
+          : { builtin: i.name };
+  const layout = {
+    menus: menus.MAIN_MENU.map((m) => ({ id: m.id, label: m.label, blocks: menuLayout(m.items) })),
+    ribbon: tabs.map((t) => ({ id: t.id, label: t.label, contextual: t.contextual, panels: t.panels.map((p) => ({ label: p.label, icon: p.icon, items: p.items.map(ribbonItem), overflow: [...(p.overflow ?? [])] })) })),
+    quickAccess: [...ribbon.QUICK_ACCESS],
+  };
+
   const modes = workspaces.WORKSPACES.filter((w) => w.status === 'ready').map((w) => ({ id: w.id, filter: workspaces.workspaceFilter(w, tools) }));
   const shortcuts = {};
   for (const b of k.keymap.all()) push(shortcuts, b.command, b.args === undefined ? b.chord : `${b.chord} ${JSON.stringify(b.args)}`);
@@ -61,6 +83,7 @@ export async function collectInPage() {
     title: c.title,
     short: c.short,
     category: c.category,
+    icon: c.icon,
     description: c.description,
     aliases: [...(c.aliases ?? [])],
     pending: !!c.pending,
@@ -77,6 +100,7 @@ export async function collectInPage() {
   const toolItems = tools.map((t) => ({
     id: t.id,
     label: t.label,
+    icon: t.icon,
     group: t.group,
     section: t.section,
     shortcut: t.shortcut,
@@ -128,5 +152,5 @@ export async function collectInPage() {
     ...fields(k.settings, 'session', 'none'),
   ];
 
-  return { commands, tools: toolItems, processing: processingItems, models: modelItems, workspaces: workspaceItems, settings };
+  return { commands, tools: toolItems, processing: processingItems, models: modelItems, workspaces: workspaceItems, settings, layout };
 }

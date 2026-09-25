@@ -1,0 +1,557 @@
+//! The desktop shell's layout, after the KentOS UI showcase (docs/adr/0017):
+//!
+//! ```text
+//! ┌ Şerit: web'in sekmeleri, panelleri ve hızlı erişimi ──────────┐
+//! ├ Çizim alanı                               │ Katmanlar       ⋯ ┤
+//! │ (saf wgpu hattı sıradaki dilim)           ├ Özellikler      ⋯ ┤
+//! ├ Komut satırı ─────────────────────────────┴───────────────────┤
+//! ├ Durum çubuğu ─────────────────────────────────────────────────┤
+//! ```
+//!
+//! A command the desktop does not run yet is drawn dimmed (the UI kit's
+//! disabled button) and its tooltip says why; typed or keyed, it says so in
+//! the command line.
+
+use iced::widget::{Column, button, column, container, row, scrollable, stack, text};
+use iced::{Color, Element, Fill};
+
+use kentos_contracts::{LayerNode, LayerNodeType};
+use kentos_ui::icon::Icon;
+use kentos_ui::label;
+use kentos_ui::style;
+use kentos_ui::widget::command_line::Command as LineCommand;
+use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon, Stack};
+use kentos_ui::widget::status_bar::{Readout, StatusBar};
+use kentos_ui::widget::table::Column as TreeColumn;
+use kentos_ui::widget::tree_view::{Node, Toggle, TreeView};
+use kentos_ui::widget::{
+    CommandLine, Confirm, Dialog, DockSpace, EmptyState, Menu, Pane, ShortcutList, Tip, overlay,
+    swatch,
+};
+
+use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel, Then};
+use crate::catalog::{Command, Item, Standing, catalog};
+use crate::document::{Document, crs_name};
+
+impl App {
+    pub fn view(&self) -> Element<'_, Message> {
+        let docked = DockSpace::new(
+            self.drawing_area(),
+            &self.docks,
+            Message::Dock,
+            move |panel| {
+                let pane =
+                    Pane::new(panel.title(), move || self.panel_body(panel)).icon(panel.icon());
+                match (panel, &self.document) {
+                    (Panel::Layers, Some(doc)) => {
+                        pane.actions(label::caption(format!("{} katman", doc.layer_count())))
+                    }
+                    _ => pane.scrollable(),
+                }
+            },
+        );
+
+        let base = container(column![
+            self.ribbon(),
+            docked,
+            self.command_line(),
+            self.status_bar()
+        ])
+        .width(Fill)
+        .height(Fill)
+        .style(style::container::window);
+
+        match self.dialog {
+            None => base.into(),
+            Some(dialog) => stack![base, self.dialog_view(dialog)].into(),
+        }
+    }
+
+    fn ribbon(&self) -> Element<'_, Message> {
+        let catalog = catalog();
+        let first = catalog.tabs().next().map_or("file", |tab| tab.id);
+        let mut ribbon = Ribbon::new()
+            .application(AppButton::new("KentOS CAD").on_press(Message::RibbonTab(first)))
+            .collapsible(self.ribbon_collapsed, Message::Run("view.ribbonCollapse"))
+            .trailing(label::caption(self.document.as_ref().map_or(
+                "Açık çizim yok".to_owned(),
+                |doc| {
+                    format!(
+                        "{}{}",
+                        doc.name(),
+                        if doc.dirty { " • kaydedilmedi" } else { "" }
+                    )
+                },
+            )));
+        for command in catalog.quick().iter().filter_map(|id| catalog.get(id)) {
+            ribbon = ribbon.quick(command.icon, command.title, enabled(command));
+        }
+        for tab in catalog.tabs() {
+            ribbon = ribbon.tab(tab.label, tab.id == self.tab, Message::RibbonTab(tab.id));
+        }
+        if let Some(tab) = catalog.tabs().find(|tab| tab.id == self.tab) {
+            for panel in &tab.panels {
+                if let Some(group) = group(panel.label, &panel.items) {
+                    ribbon = ribbon.group(group);
+                }
+            }
+        }
+        ribbon.into()
+    }
+
+    fn drawing_area(&self) -> Element<'_, Message> {
+        let empty = match &self.document {
+            None => EmptyState::new(Icon::Document, "Açık çizim yok")
+                .description(
+                    "Web'de kaydedilmiş bir KentOS çizimini (.kcad) açın. Çizim alanı KentOS'un saf wgpu \
+                     hattıyla sıradaki dilimde gelecek (TODOS.md REN-01..07).",
+                )
+                .primary("Çizim aç…", Message::Run("file.open")),
+            Some(doc) => EmptyState::new(Icon::Cube, doc.name().to_owned()).description(format!(
+                "{} nesne, {} katman: {}. Çizim alanı KentOS'un saf wgpu hattıyla sıradaki dilimde gelecek \
+                 (TODOS.md REN-01..07); katmanlar, özellikler ve kayıt şimdiden çalışıyor.",
+                doc.snapshot.entities.len(),
+                doc.layer_count(),
+                kinds_text(doc)
+            )),
+        };
+        container(empty).center(Fill).into()
+    }
+
+    fn panel_body(&self, panel: Panel) -> Element<'_, Message> {
+        let Some(doc) = &self.document else {
+            return container(label::muted("Açık çizim yok."))
+                .padding(12)
+                .into();
+        };
+        match panel {
+            Panel::Layers => TreeView::new([
+                TreeColumn::new("Ad").width(Fill),
+                TreeColumn::new("Öğe").width(44).align_right(),
+            ])
+            .extend(
+                doc.snapshot
+                    .layers
+                    .iter()
+                    .map(|node| self.layer_node(doc, node, true)),
+            )
+            .height(Fill)
+            .into(),
+            Panel::Properties => {
+                let rows = match self.selected_layer.as_deref().and_then(|id| doc.find(id)) {
+                    Some(layer) => layer_rows(doc, layer),
+                    None => project_rows(doc),
+                };
+                rows.into_iter()
+                    .fold(
+                        Column::new().spacing(6).padding(12),
+                        |column, (key, value)| {
+                            column.push(
+                                row![
+                                    label::caption(key).width(128),
+                                    label::body(value).width(Fill)
+                                ]
+                                .spacing(8),
+                            )
+                        },
+                    )
+                    .into()
+            }
+        }
+    }
+
+    fn layer_node<'a>(
+        &'a self,
+        doc: &'a Document,
+        node: &'a LayerNode,
+        parent_visible: bool,
+    ) -> Node<'a, Message> {
+        let base = Node::new(node.name.as_str())
+            .check(node.visible, Message::LayerVisible(node.id.clone()))
+            .cells([label::caption(doc.count_below(node).to_string()).into()])
+            .on_press(Message::LayerSelected(node.id.clone()))
+            .selected(self.selected_layer.as_deref() == Some(node.id.as_str()))
+            .muted(!parent_visible);
+        match node.kind {
+            LayerNodeType::Group => base
+                .folder()
+                .expanded(node.expanded, Message::LayerExpanded(node.id.clone()))
+                .extend(
+                    node.children
+                        .iter()
+                        .map(|child| self.layer_node(doc, child, parent_visible && node.visible)),
+                ),
+            LayerNodeType::Layer => {
+                base.icon(swatch(hex_color(&node.style.color)))
+                    .toggle(Toggle::locked(
+                        node.locked,
+                        Message::LayerLocked(node.id.clone()),
+                    ))
+            }
+        }
+    }
+
+    fn command_line(&self) -> Element<'_, Message> {
+        CommandLine::new(&self.history, &self.command_input)
+            .id(COMMAND_INPUT)
+            .placeholder("Komut yazın (ör. AC, KAYDET, TEMA); öneriler yazdıkça gelir")
+            .commands(catalog().commands().iter().map(line_command))
+            .on_input(Message::CommandInput)
+            .on_submit(Message::CommandSubmitted)
+            .on_run(Message::CommandRun)
+            .expanded(self.command_expanded, |_| Message::CommandHistoryToggled)
+            .into()
+    }
+
+    fn status_bar(&self) -> Element<'_, Message> {
+        let mut bar = StatusBar::new().push(
+            Readout::new(label::mono("Y —   X —"))
+                .icon(Icon::Crosshair)
+                .tip("İmleç koordinatı (Y sağa, X yukarı) çizim alanıyla gelecek"),
+        );
+        if let Some(doc) = &self.document {
+            let settings = &doc.snapshot.settings;
+            let crs = match crs_name(settings.srid) {
+                Some(name) => format!("EPSG:{} · {name}", settings.srid),
+                None => format!("EPSG:{}", settings.srid),
+            };
+            bar = bar
+                .separator()
+                .push(
+                    Readout::new(text(format!("1:{}", settings.plot_scale)))
+                        .tip("Pafta ölçeği (proje ayarı)"),
+                )
+                .separator()
+                .push(
+                    Readout::new(text(crs))
+                        .icon(Icon::Globe)
+                        .tip("Projenin koordinat sistemi"),
+                )
+                .spacer()
+                .push(Readout::new(text(format!(
+                    "{} nesne",
+                    doc.snapshot.entities.len()
+                ))));
+        } else {
+            bar = bar.spacer();
+        }
+        bar.separator()
+            .push(
+                Readout::new(text("wgpu"))
+                    .icon(Icon::Cube)
+                    .tip("Çizim motoru: KentOS'un saf wgpu hattı (hazırlanıyor)"),
+            )
+            .into()
+    }
+
+    fn dialog_view(&self, dialog: Asking) -> Element<'_, Message> {
+        let close = || {
+            button(text("Kapat"))
+                .on_press(Message::DialogClosed)
+                .style(style::button::secondary)
+        };
+        match dialog {
+            Asking::About => overlay::modal(
+                Dialog::new("KentOS CAD hakkında")
+                    .push(label::body(
+                        "Harita mühendisliği, kadastro ve imar için CAD/CBS. Bu masaüstü uygulaması web \
+                         uygulamasıyla aynı Rust hesap çekirdeğini ve sözleşmelerini kullanır; komutları web'den \
+                         adım adım taşınır.",
+                    ))
+                    .push(label::caption(format!(
+                        "Sürüm {} · masaüstüne taşınan komut: {} / {}",
+                        env!("CARGO_PKG_VERSION"),
+                        catalog().commands().iter().filter(|c| c.standing == Standing::Ported).count(),
+                        catalog().commands().len()
+                    )))
+                    .action(close())
+                    .width(460.0),
+                Message::DialogClosed,
+            ),
+            Asking::Shortcuts => {
+                let list = catalog()
+                    .commands()
+                    .iter()
+                    .filter(|c| !c.shortcuts.is_empty())
+                    .fold(ShortcutList::new(), |list, c| {
+                        let place = if c.standing == Standing::Ported { "" } else { " (web)" };
+                        list.item(c.shortcuts.join(", "), format!("{}{place}", c.title))
+                    });
+                overlay::modal(
+                    Dialog::new("Klavye kısayolları")
+                        .hint("Masaüstünde Ctrl ve Alt'lı kısayollar ile F tuşları çalışır; “(web)” olanlar henüz yalnız web'de.")
+                        .push(scrollable(list).height(420))
+                        .action(close())
+                        .width(560.0),
+                    Message::DialogClosed,
+                )
+            }
+            Asking::Unsaved(then) => overlay::modal(
+                Confirm::new("Kaydedilmemiş değişiklikler var", Message::DialogConfirmed, Message::DialogClosed)
+                    .message(format!(
+                        "“{}” çiziminde kaydedilmemiş değişiklikler var.",
+                        self.document.as_ref().map_or("", |doc| doc.name())
+                    ))
+                    .detail("Önce kaydetmek için Vazgeç'e basıp Ctrl+S kullanın.")
+                    .confirm(match then {
+                        Then::Open => "Kaydetmeden aç",
+                        Then::Close(_) => "Kaydetmeden çık",
+                    })
+                    .destructive(),
+                Message::DialogClosed,
+            ),
+        }
+    }
+}
+
+/// A ribbon panel: large buttons alone, small ones three to a column.
+fn group(title: &'static str, items: &[Item]) -> Option<Group<'static, Message>> {
+    let mut group = Group::new(title);
+    let mut small: Vec<Button<'static, Message>> = Vec::new();
+    let mut any = false;
+    let flush = |group: Group<'static, Message>, small: &mut Vec<Button<'static, Message>>| {
+        if small.is_empty() {
+            return group;
+        }
+        let stack = small
+            .drain(..)
+            .fold(Stack::new(), |stack, button| stack.push(button));
+        group.push(stack)
+    };
+    for item in items {
+        let Some((button, large)) = ribbon_button(item) else {
+            continue;
+        };
+        any = true;
+        if large {
+            group = flush(group, &mut small);
+            group = group.push(button);
+        } else {
+            small.push(button);
+            if small.len() == 3 {
+                group = flush(group, &mut small);
+            }
+        }
+    }
+    let group = flush(group, &mut small);
+    any.then_some(group)
+}
+
+fn ribbon_button(item: &Item) -> Option<(Button<'static, Message>, bool)> {
+    let catalog = catalog();
+    let make = |command: &Command, large: bool| {
+        let button = if large {
+            Button::large(command.icon, command.short)
+        } else {
+            Button::small(command.icon, command.short)
+        };
+        button.on_press_maybe(enabled(command)).tip(tip(command))
+    };
+    match item {
+        Item::Command { id, large } => Some((make(catalog.get(id)?, *large), *large)),
+        Item::Split { ids, large } => {
+            let first = catalog.get(ids.first()?)?;
+            let button = make(first, *large);
+            Some((with_family(button, ids, first.title), *large))
+        }
+        Item::Menu { label, ids, large } => {
+            let icon = ids
+                .first()
+                .and_then(|id| catalog.get(id))
+                .map_or(Icon::More, |c| c.icon);
+            let button = if *large {
+                Button::large(icon, *label)
+            } else {
+                Button::small(icon, *label)
+            };
+            Some((with_family(button, ids, label), *large))
+        }
+        Item::Builtin => None,
+    }
+}
+
+/// A split or drop-down button's menu. When no member is ported the button
+/// stays a dimmed one without a menu, like any command not ported, and its
+/// tooltip names the family.
+fn with_family(
+    button: Button<'static, Message>,
+    ids: &[&'static str],
+    title: &str,
+) -> Button<'static, Message> {
+    let members: Vec<&Command> = ids.iter().filter_map(|id| catalog().get(id)).collect();
+    if members.iter().any(|c| c.standing == Standing::Ported) {
+        let ids = ids.to_vec();
+        return button.menu(move || menu_of(&ids));
+    }
+    let names: Vec<&str> = members.iter().map(|c| c.title).collect();
+    button
+        .on_press_maybe(None)
+        .tip(Tip::new(title.to_owned()).body(format!(
+            "{}.\n\nWeb'de var; masaüstüne henüz taşınmadı.",
+            names.join(", ")
+        )))
+}
+
+fn menu_of(ids: &[&'static str]) -> Menu<Message> {
+    ids.iter()
+        .filter_map(|id| catalog().get(id))
+        .fold(Menu::new(), |menu, command| {
+            let menu = menu
+                .item(command.title, enabled(command))
+                .icon(command.icon);
+            match command.shortcuts.first() {
+                Some(keys) => menu.shortcut(*keys),
+                None => menu,
+            }
+        })
+}
+
+/// The message of a command the desktop runs; none (a dimmed button) otherwise.
+fn enabled(command: &Command) -> Option<Message> {
+    (command.standing == Standing::Ported).then_some(Message::Run(command.id))
+}
+
+fn tip(command: &Command) -> Tip {
+    let tip = Tip::new(command.title).body(command.note());
+    match command.shortcuts.first() {
+        Some(keys) => tip.detail(*keys),
+        None => tip,
+    }
+}
+
+fn line_command(command: &Command) -> LineCommand<'static> {
+    let others: &'static [&'static str] = command.aliases.get(1..).unwrap_or(&[]);
+    LineCommand::new(command.name(), command.title)
+        .aliases(others)
+        .description(command.description)
+        .icon(command.icon)
+}
+
+fn project_rows(doc: &Document) -> Vec<(&'static str, String)> {
+    let s = &doc.snapshot.settings;
+    let crs = crs_name(s.srid).map_or(format!("EPSG:{}", s.srid), |name| {
+        format!("EPSG:{} · {name}", s.srid)
+    });
+    let area = match word(&s.area_unit).as_str() {
+        "m2" => "m²",
+        "donum" => "dönüm (1000 m²)",
+        "ha" => "hektar (10 000 m²)",
+        _ => "?",
+    };
+    let angle = match word(&s.angle_unit).as_str() {
+        "grad" => "grad",
+        "deg" => "derece",
+        _ => "?",
+    };
+    let workspace = match s.workspace.as_ref().map(word).as_deref() {
+        None | Some("hybrid") => "Hibrit",
+        Some("cad") => "CAD",
+        Some("gis") => "CBS",
+        Some(other) => return_other(other),
+    };
+    vec![
+        ("Proje", doc.name().to_owned()),
+        (
+            "Dosya",
+            doc.path
+                .as_ref()
+                .map_or("kaydedilmedi".to_owned(), |p| p.display().to_string()),
+        ),
+        ("Koordinat sistemi", crs),
+        ("Pafta ölçeği", format!("1:{}", s.plot_scale)),
+        ("Uzunluk", format!("m · {} basamak", s.length_decimals)),
+        ("Alan", format!("{area} · {} basamak", s.area_decimals)),
+        ("Açı", angle.to_owned()),
+        ("Çalışma modu", workspace.to_owned()),
+        (
+            "Çizim yazı tipi",
+            s.drawing_font.as_ref().map_or("barlow".to_owned(), word),
+        ),
+        ("Nesne", doc.snapshot.entities.len().to_string()),
+        ("Katman", doc.layer_count().to_string()),
+    ]
+}
+
+fn return_other(other: &str) -> &'static str {
+    match other {
+        "plan3d" => "3D Plan",
+        "disaster" => "Afet analizi",
+        _ => "?",
+    }
+}
+
+fn layer_rows(doc: &Document, layer: &LayerNode) -> Vec<(&'static str, String)> {
+    let yes = |b: bool| if b { "Evet" } else { "Hayır" }.to_owned();
+    let mut rows = vec![
+        ("Ad", layer.name.clone()),
+        ("Kimlik", layer.id.clone()),
+        (
+            "Tür",
+            match layer.kind {
+                LayerNodeType::Group => "Grup",
+                LayerNodeType::Layer => "Katman",
+            }
+            .to_owned(),
+        ),
+        ("Görünür", yes(layer.visible)),
+        ("Kilitli", yes(layer.locked)),
+        ("Nesne", doc.count_below(layer).to_string()),
+    ];
+    if layer.kind == LayerNodeType::Layer {
+        rows.push(("Renk", layer.style.color.clone()));
+        rows.push(("Çizgi türü", word(&layer.style.line_type)));
+        rows.push(("Çizgi kalınlığı", format!("{}", layer.style.line_weight)));
+        rows.push((
+            "Dolgu",
+            layer.style.fill.clone().unwrap_or_else(|| "yok".to_owned()),
+        ));
+    }
+    rows
+}
+
+/// An enum's value as written in the file (`donum`, `grad`, `dashed` …).
+fn word<T: serde::Serialize>(value: &T) -> String {
+    serde_json::to_value(value)
+        .ok()
+        .and_then(|v| v.as_str().map(str::to_owned))
+        .unwrap_or_default()
+}
+
+fn kinds_text(doc: &Document) -> String {
+    let names = |kind: &str| match kind {
+        "point" => "nokta",
+        "line" => "çizgi",
+        "polyline" => "çoklu çizgi",
+        "polygon" => "kapalı alan",
+        "circle" => "daire",
+        "arc" => "yay",
+        "ellipse" => "elips",
+        "spline" => "eğri",
+        "xline" => "yardımcı çizgi",
+        "ray" => "ışın",
+        "text" => "yazı",
+        "dimension" => "ölçü",
+        "hatch" => "tarama",
+        _ => "diğer",
+    };
+    let kinds = doc.kinds();
+    if kinds.is_empty() {
+        return "boş".to_owned();
+    }
+    kinds
+        .iter()
+        .map(|(kind, count)| format!("{count} {}", names(kind)))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// A layer colour from the file: `#rrggbb`; theme colours (`fg` …) as grey.
+fn hex_color(text: &str) -> Color {
+    let hex = text.trim_start_matches('#');
+    if hex.len() == 6
+        && let Ok(value) = u32::from_str_radix(hex, 16)
+    {
+        return Color::from_rgb8((value >> 16) as u8, (value >> 8) as u8, value as u8);
+    }
+    Color::from_rgb8(0x9a, 0xa0, 0xa6)
+}

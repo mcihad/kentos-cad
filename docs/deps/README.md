@@ -1,6 +1,6 @@
 # Bağımlılık kaydı
 
-Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 23 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
+Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 24 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
 
 ## Kurallar
 
@@ -27,6 +27,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | glam | 0.30.10 (isteğe bağlı: `spatial`) | MIT OR Apache-2.0 | native | ui | ADR 0016 |
 | bytemuck | 1.25.2, `derive` (isteğe bağlı: `spatial`) | Zlib OR Apache-2.0 OR MIT | native | ui | ADR 0016 |
 | png | 0.18.1 (isteğe bağlı: `snapshot`) | MIT OR Apache-2.0 | native | ui | ADR 0016 |
+| rfd | 0.17.2 (varsayılan: `xdg-portal`, `wayland`) | MIT | native (masaüstü) | desktop | ADR 0017 (sahibin onayı, 25 Eylül). Getirdiği tek yeni paket `pollster` (Apache-2.0 OR MIT) |
 | axum | 0.8.9, `ws` | MIT | native | api | ADR 0001 |
 | tokio | 1.53.1 | MIT | native | api, postgres; application testleri | ADR 0001 |
 | sqlx | 0.9.0, `tls-none` | MIT OR Apache-2.0 | native | postgres, application, api | ADR 0006, 0007. TLS'siz yalnız yerel sunucu içindir; üretim TLS'i açıktır (`OPS-03`) |
@@ -39,7 +40,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | tracing | 0.1.44 | MIT | native | api | ADR 0007 |
 | tracing-subscriber | 0.3.23 | MIT | native | api | ADR 0007 |
 
-**Geçişli bağımlılıklar** (`Cargo.lock`): 625 paket, 13'ü çalışma alanının kendi crate'leri.
+**Geçişli bağımlılıklar** (`Cargo.lock`): 628 paket, 14'ü çalışma alanının kendi crate'leri.
 
 - Masaüstü arayüzü (Iced, wgpu, winit, cosmic-text, tiny-skia …) 291 paket getirdi (ADR 0016). Hepsi taranmıştır.
 - Yalnız masaüstü derlemesine girerler; web ve sunucu derlemesi (`default-members`) onları derlemez.

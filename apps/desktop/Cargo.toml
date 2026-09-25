@@ -1,0 +1,19 @@
+[package]
+name = "kentos-desktop"
+description = "KentOS CAD masaüstü uygulaması: native Iced + KentOS UI (docs/adr/0010, 0017)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "kentos-cad"
+path = "src/main.rs"
+
+[dependencies]
+kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }
+kentos-contracts = { path = "../../crates/shared/contracts", default-features = false }
+iced = { workspace = true }
+rfd = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

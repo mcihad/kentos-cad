@@ -283,3 +283,41 @@ pub enum Entity {
     Dimension(DimensionEntity),
     Hatch(HatchEntity),
 }
+
+impl Entity {
+    /// The fields every object has (id, layer, colour, attributes, label, symbol).
+    pub fn base(&self) -> &EntityBase {
+        match self {
+            Entity::Point(e) => &e.base,
+            Entity::Line(e) => &e.base,
+            Entity::Polyline(e) | Entity::Polygon(e) => &e.base,
+            Entity::Circle(e) => &e.base,
+            Entity::Arc(e) => &e.base,
+            Entity::Ellipse(e) => &e.base,
+            Entity::Spline(e) => &e.base,
+            Entity::Xline(e) | Entity::Ray(e) => &e.base,
+            Entity::Text(e) => &e.base,
+            Entity::Dimension(e) => &e.base,
+            Entity::Hatch(e) => &e.base,
+        }
+    }
+
+    /// The `kind` tag as written in files and on the wire.
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Entity::Point(_) => "point",
+            Entity::Line(_) => "line",
+            Entity::Polyline(_) => "polyline",
+            Entity::Polygon(_) => "polygon",
+            Entity::Circle(_) => "circle",
+            Entity::Arc(_) => "arc",
+            Entity::Ellipse(_) => "ellipse",
+            Entity::Spline(_) => "spline",
+            Entity::Xline(_) => "xline",
+            Entity::Ray(_) => "ray",
+            Entity::Text(_) => "text",
+            Entity::Dimension(_) => "dimension",
+            Entity::Hatch(_) => "hatch",
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+  "commands": [
+    "file.open",
+    "file.save",
+    "file.saveAs",
+    "view.theme.dark",
+    "view.theme.light",
+    "view.theme.toggle",
+    "view.ribbonCollapse",
+    "commandline.focus",
+    "help.about",
+    "help.shortcuts",
+    "layer.showAll"
+  ],
+  "format": "kentos.desktop-ported",
+  "version": 1
+}

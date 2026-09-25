@@ -18,8 +18,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 - Web bağımsız TypeScript/DOM uygulamasıdır; desktop'ın web export'u değildir.
   Yalnız hesaplama/codec kütüphaneleri dar WASM bağlayıcılarıyla kullanılır.
   Web'in belge, komut, etkileşim, settings ve render orkestrasyonu TS'te kalır.
-- Desktop Rust ile; `kentos-rc` bu depoya `kentos-ui` / `kentos_ui` olarak
-  alınacak, ana CAD viewport'u saf wgpu olacaktır. Bu taşıma henüz yapılmadı.
+- Desktop Rust ile; `kentos-rc` 25 Eylül'de bu depoya `crates/ui`
+  (`kentos-ui` / `kentos_ui`) olarak geçmişiyle alındı (ADR 0016). İlk masaüstü
+  kabuğu `apps/desktop`'tadır (ADR 0017); ana CAD viewport'u saf wgpu olacaktır,
+  henüz yok. Web özellikleri envanter üzerinden adım adım masaüstüne taşınır.
 - Web WebGPU/WebGL2 renderer'larını korur. Uygun WGSL kaynakları native ile
   paylaşılabilir; native Iced/application/wgpu runtime'ı web'e derlenmez.
 - Server'ın ana görevi kişisel/kurumsal proje saklama, erişim, yetkilendirme,
@@ -52,8 +54,10 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Belge transaction/rollback, undo/redo ve yerel JSON `.kcad` kaydet/aç | `model/document.ts`, `model/snapshot.ts`, `app/fileIO.ts` |
 | Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox | `apps/api/`, `crates/server/` |
 | Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict | `app/cloud/`, `ui/cloud/` |
+| KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
+| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet; çizim alanı yok | `apps/desktop/` |
 
-Desktop uygulaması/UI taşıması, binary KCAD, embed Python, tam AI yüzeyi,
+Desktop çizim alanı (saf wgpu) ve araçları, binary KCAD, embed Python, tam AI yüzeyi,
 genişletilmiş proje bazlı paylaşım ve kalıcı server worker kabulü gelecek
 işlerdir. Mevcut tenant/cloud altyapısını yok saymayın; onu bu kapsamla tamamlayın.
 Web'e göre verilen kısa dosya yolları `apps/web/src/` altındadır.
@@ -64,12 +68,14 @@ Komutlar depo kökünden çalışır; kesin kaynak `package.json`,
 `apps/web/package.json`, `Cargo.toml` ve `rust-toolchain.toml` dosyalarıdır.
 
 ```bash
+make                     # gruplu komut listesi; servisler: make dev/run/desktop/stop/status
 pnpm install
 pnpm dev                 # Vite; yerel çizim API olmadan çalışır
 pnpm typecheck
 pnpm test                # Vitest; gerekli WASM paketlerini kontrol eder
 pnpm build               # WASM kontrolü + tsc + Vite
-pnpm rust:test           # cargo test --workspace + clippy -D warnings + bağımlılık yönü
+pnpm rust:test           # web/sunucu crate'leri: cargo test + clippy -D warnings + bağımlılık yönü
+pnpm rust:test:desktop   # kentos-ui, vitrin ve masaüstü: cargo test + clippy
 pnpm arch:deps           # yalnız bağımlılık yönü denetimi (ADR 0010, ARCH-01)
 pnpm test:rust           # Rust ve WASM/format entegrasyon testleri
 pnpm wasm                # değişen ortak kaynakların WASM paketlerini derle
@@ -362,6 +368,9 @@ varlığına bakarak kapatmayın.
 ```text
 apps/web/              bağımsız TypeScript/DOM uygulaması
 apps/api/              kentosd: HTTP/WS, auth ve yönetim CLI
+apps/desktop/          masaüstü kabuğu (kentos-cad): Iced + KentOS UI
+apps/ui-showcase/      KentOS UI bileşen vitrini
+crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
 crates/shared/         contracts, geometry-core, style-core, svg-core, formats
 crates/wasm/           yalnız hesap/codec bağlayıcıları
 crates/server/         application ve postgres
@@ -374,7 +383,8 @@ docs/baseline/         tarihli başlangıç kayıtları: test, e2e, fixture, vit
 docs/deps/             bağımlılık kaydı
 ```
 
-`apps/desktop`, `crates/ui` ve diğer hedef yollar henüz kurulmuş kabul edilmez.
+`crates/ui`, `apps/ui-showcase` ve `apps/desktop` (ilk kabuk) kuruldu;
+`crates/native`, `crates/render/wgpu`, `shaders/wgsl` gibi hedef yollar henüz yok.
 Stil sistemi: [docs/STYLE.md](docs/STYLE.md). Processing:
 [docs/PROCESSING.md](docs/PROCESSING.md). Tarihli devir notları:
 [docs/DEVIR.md](docs/DEVIR.md); eski durum/faz notlarını güncel kod ve

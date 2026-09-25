@@ -304,7 +304,11 @@ Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" gö
 - [ ] `UI-08` `DESIGN.md` ile Rust token'larını ortak isimlere bağla; web CSS ve Iced token üretimi için tek tasarım token kaynağı oluştur. Platform metin rasterizasyonunu zorla piksel eşit yapmaya çalışma.
 - [ ] `UI-09` Katman ağacı, property inspector, query builder ve sanal tabloyu gerçek domain/query API'siyle besle; 100 bin satır örneği gerçek pagination/filter/sort davranışıyla sınansın.
 - [ ] `UI-10` Showcase içinde CAD'e özgü demo hesaplarının üretim yoluna girmediğini test et; `kentos_rc::spatial` import'ları için aşamalı kaldırma listesi çıkar.
-- [ ] `UI-11` İlk desktop shell'i mevcut web menü/komut envanterinden kur: proje aç/kaydet, ribbon, layer tree, properties, status, command input, settings ve cloud durumu.
+- [ ] `UI-11` İlk desktop shell'i mevcut web menü/komut envanterinden kur: proje aç/kaydet, ribbon, layer tree, properties, status, command input, settings ve cloud durumu. — **25 Eylül, kısmen:** `apps/desktop` ([ADR 0017](docs/adr/0017-desktop-shell.md)).
+  - Web'in bütün komutları ve şerit düzeni envanterden geliyor.
+  - Çalışanlar: aç/kaydet/farklı kaydet (`.kcad` v1, `rfd`), katman ağacı, özellikler, komut satırı, durum çubuğu. Kaydedilmemiş değişiklik soruluyor.
+  - Taşınan komut 11/163 (`apps/desktop/ported.json`, envanterde masaüstü sütunu).
+  - Kalanlar: ayarlar, bulut durumu, çizim alanı (`REN-01..07`).
 - [ ] `UI-12` Linux Wayland/X11, Windows ve macOS için pencere, DPI, IME, clipboard, dosya association ve erişilebilirlik matrisi oluştur; ilk geliştirme platformunu diğerlerinin mimari yasağına dönüştürme.
 
 Iced özel `shader` widget'ı wgpu pipeline entegrasyonu sunuyor; ViewCube kodu bunun depoda zaten kullanıldığını gösteriyor. Ana viewport için ortak Device/Queue ile özel render pass/texture kompozisyonu ilk prototiptir. Iced entegrasyonu kare zamanını veya surface kontrolünü kısıtlarsa ölçümle gerekçelenen özel compositor seçeneği değerlendirilir. [Iced shader API](https://docs.rs/iced/latest/iced/widget/shader/index.html).

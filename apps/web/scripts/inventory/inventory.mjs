@@ -1,6 +1,7 @@
 // Feature inventory of the web app (TODOS.md BASE-04): commands, tools,
 // processing tools and models, work modes, settings, browser storage, the
-// `.kcad` v1 fields, windows and panels. Each item has a status
+// `.kcad` v1 fields, windows and panels, and the menu and ribbon layout in
+// order. Each item has a status
 // (implemented / partial / pending), per-platform status and the tests that
 // mention it. The inventory is derived, never typed in:
 //   - the running app's registries (collect.mjs, dev server + headless Chrome);
@@ -64,6 +65,18 @@ const sections = {
 };
 for (const list of Object.values(sections)) list.sort(byId);
 
+// ── Desktop column ───────────────────────────────────────────────────
+// The commands the desktop shell runs (apps/desktop/ported.json, kept equal to
+// its catalog::PORTED by a test; docs/adr/0017). The others stay `none`.
+const portedFile = join(ROOT, 'apps/desktop/ported.json');
+const ported = new Set(existsSync(portedFile) ? JSON.parse(readFileSync(portedFile, 'utf8')).commands : []);
+for (const c of sections.commands) if (ported.has(c.id)) c.platforms.desktop = 'implemented';
+const unknownPorted = [...ported].filter((id) => !sections.commands.some((c) => c.id === id));
+if (unknownPorted.length) {
+  console.error(`apps/desktop/ported.json web'de olmayan komutlar içeriyor: ${unknownPorted.join(', ')}`);
+  process.exit(1);
+}
+
 // ── Hand-written notes ───────────────────────────────────────────────
 /** Section of an annotation key `section:id` → the inventory section. */
 const KEYS = { command: 'commands', tool: 'tools', processing: 'processing', model: 'models', workspace: 'workspaces', setting: 'settings', storage: 'storage', fileField: 'fileFields', screen: 'screens' };
@@ -103,8 +116,11 @@ const inventory = {
     ...Object.fromEntries(Object.entries(sections).map(([name, list]) => [name, count(list)])),
     commandsWithoutPlace: commands.filter((c) => !c.menus.length && !c.ribbon.length && !c.quickAccess && !c.toolbox && !c.uiSources.length).map((c) => c.id),
     commandsWithoutTests: commands.filter((c) => !c.tests.length).length,
+    commandsOnDesktop: commands.filter((c) => c.platforms.desktop === 'implemented').length,
   },
   ...sections,
+  // Menus and ribbon in the web's order (the desktop shell mirrors them, docs/adr/0017).
+  layout: live.layout,
 };
 const files = { 'web.json': `${JSON.stringify(inventory, null, 2)}\n`, 'web.md': summaryMarkdown(inventory) };
 
