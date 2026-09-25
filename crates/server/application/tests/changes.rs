@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use kentos_application::access::{self, ProjectAccess};
 use kentos_application::identity::{self};
 use kentos_application::tenancy::{self, Access};
-use kentos_application::{AppError, admin, changes, events, projects, sharing};
+use kentos_application::{AppError, admin, changes, events, listing, projects, sharing};
 use kentos_contracts::{
     CommandEnvelope, ConflictReason, DocumentSnapshotV1, Entity, FeatureChange, FeatureOp,
     GrantRole, PROJECT_CHANGES, PROJECT_SHARE, ProjectChanges, ProjectCreate, ProjectPatch,
@@ -508,7 +508,7 @@ async fn locked_layers_rights_and_tenants() {
         ));
     }
     assert!(
-        projects::list(&db.app, &stranger)
+        listing::list(&db.app, &stranger)
             .await
             .unwrap()
             .projects

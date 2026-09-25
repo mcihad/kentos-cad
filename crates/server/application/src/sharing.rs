@@ -29,11 +29,7 @@ use crate::access::ProjectAccess;
 use crate::changes::{check_target, lock};
 use crate::error::{AppError, AppResult};
 use crate::idempotency;
-use crate::projects::gone;
-
-fn rfc3339(t: OffsetDateTime) -> String {
-    t.format(&Rfc3339).unwrap_or_default()
-}
+use crate::projects::{gone, rfc3339};
 
 type GrantRow = (
     Uuid,

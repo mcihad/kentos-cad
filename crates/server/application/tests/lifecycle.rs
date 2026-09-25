@@ -6,7 +6,7 @@
 mod common;
 
 use common::{a_point, envelope, member, new_project, open, share, try_open};
-use kentos_application::{AppError, admin, changes, events, lifecycle, projects};
+use kentos_application::{AppError, admin, changes, events, lifecycle, listing, projects};
 use kentos_contracts::{
     ConflictReason, GrantRole, PROJECT_DELETED, ProjectChanges, ProjectPatch, TenantRole,
 };
@@ -51,7 +51,7 @@ async fn renaming_is_a_metadata_change_with_its_version() {
     .await
     .unwrap();
     assert_eq!(done.meta_version, "2");
-    let list = projects::list(&db.app, &pm).await.unwrap();
+    let list = listing::list(&db.app, &pm).await.unwrap();
     assert_eq!(list.projects[0].name, "Ada 101 (revize)");
     // Open editors learn it from the event (metadata changed).
     let log = events::after(&db.app, &edits, 0, 10).await.unwrap();
@@ -130,7 +130,7 @@ async fn the_owner_or_an_admin_deletes_softly_and_editors_are_told() {
 
     // Gone from the list; opening, reading and writing answer 410 to those who had access.
     assert!(
-        projects::list(&db.app, &pm)
+        listing::list(&db.app, &pm)
             .await
             .unwrap()
             .projects
@@ -224,10 +224,7 @@ async fn the_owner_or_an_admin_deletes_softly_and_editors_are_told() {
             .unwrap(),
         "Ada 101"
     );
-    assert_eq!(
-        projects::list(&db.app, &pm).await.unwrap().projects.len(),
-        1
-    );
+    assert_eq!(listing::list(&db.app, &pm).await.unwrap().projects.len(), 1);
     let edits = open(&db, &editor, project).await;
     let info = projects::info(&db.app, &edits).await.unwrap();
     assert_eq!(

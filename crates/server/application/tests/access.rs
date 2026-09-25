@@ -12,7 +12,9 @@ use common::{
 };
 use kentos_application::access::ProjectAccess;
 use kentos_application::identity::Actor;
-use kentos_application::{AppError, admin, changes, events, lifecycle, projects, sharing, tenancy};
+use kentos_application::{
+    AppError, admin, changes, events, lifecycle, listing, projects, sharing, tenancy,
+};
 use kentos_contracts::{
     AccessSource, GrantRole, PROJECT_ACCESS_CHANGED, ProjectPermission, ProjectRole, TenantKind,
     TenantRole,
@@ -82,7 +84,7 @@ async fn roles_come_from_ownership_grants_and_the_policy() {
             Err(AppError::NotFound(_))
         ));
         assert!(
-            projects::list(&db.app, who)
+            listing::list(&db.app, who)
                 .await
                 .unwrap()
                 .projects
@@ -97,10 +99,7 @@ async fn roles_come_from_ownership_grants_and_the_policy() {
             (ProjectRole::Manager, AccessSource::Policy)
         );
         assert!(a.allows(Delete) && a.allows(Share) && a.allows(Edit) && !a.allows(Transfer));
-        assert_eq!(
-            projects::list(&db.app, who).await.unwrap().projects.len(),
-            1
-        );
+        assert_eq!(listing::list(&db.app, who).await.unwrap().projects.len(), 1);
     }
 
     share(&db, &owner, &editor.actor, GrantRole::Editor).await;
@@ -120,7 +119,7 @@ async fn roles_come_from_ownership_grants_and_the_policy() {
     let m = open(&db, &manager, project).await;
     assert!(m.allows(Share) && m.allows(Edit) && !m.allows(Delete));
     // The list shows each person their own access to each project.
-    let listed = projects::list(&db.app, &editor).await.unwrap();
+    let listed = listing::list(&db.app, &editor).await.unwrap();
     assert_eq!(listed.projects[0].access, e.view());
     assert_eq!(listed.projects[0].tenant_kind, TenantKind::Organization);
 
@@ -194,14 +193,14 @@ async fn the_negative_isolation_cases_of_the_adr() {
         reference
     );
     assert!(
-        projects::list(&db.app, &unshared)
+        listing::list(&db.app, &unshared)
             .await
             .unwrap()
             .projects
             .is_empty()
     );
     assert!(
-        !projects::mine(&db.app, &unshared.actor)
+        !listing::mine(&db.app, &unshared.actor)
             .await
             .unwrap()
             .projects
@@ -245,7 +244,7 @@ async fn the_negative_isolation_cases_of_the_adr() {
         Err(AppError::NotFound(_))
     ));
     assert!(
-        projects::list(&db.app, &editor)
+        listing::list(&db.app, &editor)
             .await
             .unwrap()
             .projects
@@ -261,7 +260,7 @@ async fn the_negative_isolation_cases_of_the_adr() {
         reference
     );
     assert!(
-        projects::list(&db.app, &admin_)
+        listing::list(&db.app, &admin_)
             .await
             .unwrap()
             .projects
@@ -311,7 +310,7 @@ async fn the_negative_isolation_cases_of_the_adr() {
     }
     for who in [&pm, &editor, &admin_] {
         assert!(
-            !projects::list(&db.app, who)
+            !listing::list(&db.app, who)
                 .await
                 .unwrap()
                 .projects
@@ -616,7 +615,7 @@ async fn the_personal_space_opens_once_and_is_shared_by_project() {
     )
     .await
     .unwrap();
-    let theirs = projects::mine(&db.app, &bora).await.unwrap();
+    let theirs = listing::mine(&db.app, &bora).await.unwrap();
     let listed = theirs
         .projects
         .iter()
@@ -630,14 +629,14 @@ async fn the_personal_space_opens_once_and_is_shared_by_project() {
         ),
         (TenantKind::Personal, AccessSource::Grant, "ayse")
     );
-    let own = projects::mine(&db.app, &ayse).await.unwrap();
+    let own = listing::mine(&db.app, &ayse).await.unwrap();
     assert_eq!(own.projects.len(), 1);
     assert_eq!(own.projects[0].access.via, AccessSource::Owner);
     // Bora got his own personal space by asking; nothing of ayse's leaks into it.
     let bora_home = personal(&db, &bora).await;
     assert_ne!(bora_home.tenant, home.tenant);
     assert!(
-        projects::list(&db.app, &bora_home)
+        listing::list(&db.app, &bora_home)
             .await
             .unwrap()
             .projects
@@ -664,7 +663,7 @@ async fn the_personal_space_opens_once_and_is_shared_by_project() {
     // Taken away: gone from his list and refused.
     revoke(&db, &owner, &bora).await;
     assert!(
-        !projects::mine(&db.app, &bora)
+        !listing::mine(&db.app, &bora)
             .await
             .unwrap()
             .projects
@@ -721,23 +720,23 @@ async fn my_projects_are_the_owned_and_the_shared_ones() {
         n
     };
     assert_eq!(
-        names(projects::mine(&db.app, &pm.actor).await.unwrap()),
+        names(listing::mine(&db.app, &pm.actor).await.unwrap()),
         ["Kendi işim", "Kurum projesi"]
     );
     assert_eq!(
-        names(projects::mine(&db.app, &editor.actor).await.unwrap()),
+        names(listing::mine(&db.app, &editor.actor).await.unwrap()),
         ["Kurum projesi"]
     );
     // What an admin reaches only through the policy is the organisation's list, not theirs.
     assert!(
-        projects::mine(&db.app, &boss.actor)
+        listing::mine(&db.app, &boss.actor)
             .await
             .unwrap()
             .projects
             .is_empty()
     );
     assert_eq!(
-        projects::list(&db.app, &boss).await.unwrap().projects.len(),
+        listing::list(&db.app, &boss).await.unwrap().projects.len(),
         1
     );
     // An organisation's project is shared only with its members (guests come later).
@@ -749,7 +748,7 @@ async fn my_projects_are_the_owned_and_the_shared_ones() {
     let own = open(&db, &home, own_project).await;
     share(&db, &own, &outsider, GrantRole::Viewer).await;
     assert_eq!(
-        names(projects::mine(&db.app, &outsider).await.unwrap()),
+        names(listing::mine(&db.app, &outsider).await.unwrap()),
         ["Kendi işim"]
     );
     db.close().await;
@@ -1034,7 +1033,7 @@ async fn existing_projects_keep_their_people_after_the_migration() {
     );
     let editor_in = tenancy::access(&db.app, &editor, tenant).await.unwrap();
     assert_eq!(
-        projects::list(&db.app, &editor_in)
+        listing::list(&db.app, &editor_in)
             .await
             .unwrap()
             .projects

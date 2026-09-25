@@ -12,7 +12,7 @@ use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use kentos_application::access::{self, ProjectAccess, not_found};
 use kentos_application::tenancy::{self, Access};
-use kentos_application::{AppError, commands, events, lifecycle, projects, sharing};
+use kentos_application::{AppError, commands, events, lifecycle, listing, projects, sharing};
 use kentos_contracts::{
     CommandEnvelope, EventPage, FeaturePage, ProjectAccessList, ProjectCreate, ProjectInfo,
     ProjectList,
@@ -57,7 +57,7 @@ pub async fn list(
 ) -> Result<Json<ProjectList>, Failure> {
     let run = async {
         let a = tenant_access(&state, &caller, &tenant).await?;
-        projects::list(state.db()?, &a).await
+        listing::list(state.db()?, &a).await
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
@@ -68,7 +68,7 @@ pub async fn mine(
     headers: HeaderMap,
     caller: Caller,
 ) -> Result<Json<ProjectList>, Failure> {
-    let run = async { projects::mine(state.db()?, &caller.0).await };
+    let run = async { listing::mine(state.db()?, &caller.0).await };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
