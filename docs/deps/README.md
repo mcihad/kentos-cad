@@ -1,6 +1,6 @@
 # Bağımlılık kaydı
 
-Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 27 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
+Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 29 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
 
 ## Kurallar
 
@@ -37,6 +37,8 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | tower | 0.5.3 | MIT | native | api | ADR 0007 |
 | tower-http | 0.7.1 | MIT | native | api | ADR 0007 |
 | uuid | 1.26.1, `v4`, `v7` | Apache-2.0 OR MIT | native | postgres, application, api, domain | ADR 0007, 0020 |
+| sha1 | 0.10.7, varsayılan özellikler kapalı | MIT OR Apache-2.0 | native, wasm32 | contracts (UUIDv5) | ADR 0014; zaten kilitliydi (axum). wasm32 hedefi sahibin onayıyla, 25 Eylül |
+| sha2 | 0.10.9, varsayılan özellikler kapalı | MIT OR Apache-2.0 | native, wasm32 | contracts (sha256) | ADR 0014; zaten kilitliydi (sqlx). wasm32 hedefi sahibin onayıyla, 25 Eylül |
 | jsonwebtoken | 11.1.0, `rust_crypto` | MIT | native | api (OpenID) | ADR 0007 |
 | reqwest | 0.13.5, `rustls` | MIT OR Apache-2.0 | native | api (OpenID) | ADR 0007 |
 | time | 0.3.55 | MIT OR Apache-2.0 | native | application, api | ADR 0007 |

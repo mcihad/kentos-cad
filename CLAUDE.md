@@ -203,6 +203,9 @@ Mevcut `.kcad` JSON `DocumentSnapshotV1`'dir; okuyucu sürüm/alan/SRID doğrula
 `replaceWith` öncesi aday belge doğrulansın; başarısız açılış mevcut işi kaybettirmesin.
 Masaüstünün karşılığı `kentos_domain::Document`'tir; iki belge `fixtures/document-ops/v1`'i
 geçer, davranış değişikliği fixture'la birlikte yapılır (ADR 0020).
+Her nesnenin kalıcı `uid`'i vardır (ADR 0014): yeni nesne yeni `uid` alır, düzenleme ve
+geri alma korur, `replace` yuvayı ve kimliği tutar. v1 dosyası `uid` yazmaz; açılışta
+içerikten türetilir.
 
 ### 4.8.1 Hesaplama çekirdeği
 

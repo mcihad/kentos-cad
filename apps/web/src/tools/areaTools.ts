@@ -48,18 +48,14 @@ function facesOf(lines: readonly Entity[]): Area[] {
   }
 }
 
-/** Adds polygons for `areas` on the layer of `from`, with its colour and (when `keepData`) its data and label. */
+/** A polygon for `a` on the layer of `from`, with its colour and (when `keepData`) its data and label. */
+function areaEntity(a: Area, from: Entity, keepData = true): NewEntity {
+  return { ...polygonOfArea(a), layerId: from.layerId, color: from.color, attrs: keepData ? { ...from.attrs } : {}, label: keepData ? from.label : undefined } as NewEntity;
+}
+
+/** Adds polygons for `areas` (`areaEntity`). */
 function addAreas(ctx: AppContext, areas: readonly Area[], from: Entity, keepData = true): number[] {
-  return areas.map(
-    (a) =>
-      ctx.doc.add({
-        ...polygonOfArea(a),
-        layerId: from.layerId,
-        color: from.color,
-        attrs: keepData ? { ...from.attrs } : {},
-        label: keepData ? from.label : undefined,
-      } as NewEntity).id,
-  );
+  return areas.map((a) => ctx.doc.add(areaEntity(a, from, keepData)).id);
 }
 
 /** Straight cut line through the clicked points. */
@@ -314,8 +310,9 @@ export class AreaSplitTool extends SelectionFirstTool {
         if (t.e.id === cutterId) continue;
         const pieces = splitArea(t.a, cut);
         if (pieces.length < 2) continue;
-        doc.remove([t.e.id]);
-        created.push(...addAreas(this.ctx, pieces, t.e));
+        // The first piece is the area itself, split: it keeps its slot and persistent id; the rest are new (ADR 0014).
+        doc.replace(t.e.id, areaEntity(pieces[0], t.e));
+        created.push(t.e.id, ...addAreas(this.ctx, pieces.slice(1), t.e));
         sizes.push(...pieces.map(netArea));
         changed++;
       }

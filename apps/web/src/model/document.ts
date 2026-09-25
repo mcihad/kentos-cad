@@ -1,6 +1,7 @@
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
-import { entityBounds, type Entity, type NewEntity } from './entities';
+import { isUuid, uuidv7 } from '../core/uuid';
+import { entityBounds, type DrawingEntity, type Entity, type NewEntity } from './entities';
 import type { CrsDef } from '../geo/crs';
 import { ProjectSettings, type ProjectSettingsData } from './projectSettings';
 import { emptyBounds, isEmptyBounds, type Bounds, type Vec2 } from './geometry';
@@ -10,9 +11,9 @@ import { sameJson } from './sameJson';
 import type { ProjectStyles } from './style';
 
 type Op =
-  | { type: 'add'; entity: Entity }
-  | { type: 'remove'; entity: Entity }
-  | { type: 'update'; before: Entity; after: Entity }
+  | { type: 'add'; entity: DrawingEntity }
+  | { type: 'remove'; entity: DrawingEntity }
+  | { type: 'update'; before: DrawingEntity; after: DrawingEntity }
   /** A layer's look (colour, line type, renderer …) is project data: undoable like objects. */
   | { type: 'layerStyle'; layerId: string; before: LayerStyle; after: LayerStyle };
 
@@ -50,7 +51,11 @@ export interface ExternalMeta {
   styles?: ProjectStyles;
 }
 
-/** Everything a drawing file holds (see model/snapshot.ts for its versioned form). */
+/**
+ * Everything a drawing file holds (see model/snapshot.ts for its versioned
+ * form). Objects come with their slots; those without a persistent id get
+ * one when the drawing takes them (`replaceWith`).
+ */
 export interface DocumentContent {
   name: string;
   settings: ProjectSettingsData;
@@ -81,7 +86,15 @@ export class CadDocument {
   /** Where the view opens (the project's start extent); all objects when unset. */
   homeView: Bounds | null = null;
 
-  private entities = new Map<number, Entity>();
+  private entities = new Map<number, DrawingEntity>();
+  /**
+   * Persistent id → slot (docs/adr/0014), kept up to date by every change,
+   * undo, redo and rollback: the boundary (files, the server, Python, AI)
+   * names objects by persistent id, the rest of the app by slot.
+   */
+  private uids = new Map<string, number>();
+  /** The persistent id of a new object (UUIDv7; tests give their own maker). */
+  private readonly newUid: () => string;
   /**
    * Each layer's objects in document order (`byLayer`), kept up to date by
    * every change so rebuilding a layer does not walk the whole drawing.
@@ -89,7 +102,7 @@ export class CadDocument {
    * may lie anywhere among that layer's objects: such a layer is read again
    * in document order the next time it is asked for (`reordered`).
    */
-  private layerIndex = new Map<string, Map<number, Entity>>();
+  private layerIndex = new Map<string, Map<number, DrawingEntity>>();
   private reordered = new Set<string>();
   private anchor: Vec2;
   /**
@@ -108,8 +121,9 @@ export class CadDocument {
   /** Open group (see beginGroup): committed transactions join it instead of the undo stack. */
   private group: Transaction | null = null;
 
-  constructor(opts: { name: string; layers: LayerStore; origin: Vec2; settings?: Partial<ProjectSettingsData> }) {
+  constructor(opts: { name: string; layers: LayerStore; origin: Vec2; settings?: Partial<ProjectSettingsData>; newUid?: () => string }) {
     this.name = new Signal(opts.name);
+    this.newUid = opts.newUid ?? uuidv7;
     this.layers = opts.layers;
     this.anchor = opts.origin;
     this.settings = new ProjectSettings(opts.settings);
@@ -160,8 +174,29 @@ export class CadDocument {
     return this.entities.size;
   }
 
+  /**
+   * The object in a slot. Every object of the drawing has its persistent id
+   * (`DrawingEntity`); the reading methods give out the general `Entity`,
+   * which the app's code takes everywhere, and `uidOf` / `byUid` name it.
+   */
   get(id: number): Entity | undefined {
     return this.entities.get(id);
+  }
+
+  /** The persistent id of the object in a slot (docs/adr/0014), if the slot holds one. */
+  uidOf(id: number): string | undefined {
+    return this.entities.get(id)?.uid;
+  }
+
+  /** The object with this persistent id, if it is in the drawing. */
+  byUid(uid: string): DrawingEntity | undefined {
+    const slot = this.uids.get(uid);
+    return slot === undefined ? undefined : this.entities.get(slot);
+  }
+
+  /** The slot of the object with this persistent id, if it is in the drawing. */
+  slotOf(uid: string): number | undefined {
+    return this.uids.get(uid);
   }
 
   all(): IterableIterator<Entity> {
@@ -184,7 +219,7 @@ export class CadDocument {
 
   bounds(ids?: Iterable<number>): Bounds | null {
     const b = emptyBounds();
-    const list = ids ? [...ids].map((id) => this.entities.get(id)).filter((e): e is Entity => !!e) : this.entities.values();
+    const list = ids ? [...ids].map((id) => this.entities.get(id)).filter((e): e is DrawingEntity => !!e) : this.entities.values();
     for (const e of list) {
       const eb = entityBounds(e);
       b.minX = Math.min(b.minX, eb.minX);
@@ -255,8 +290,12 @@ export class CadDocument {
     };
   }
 
-  add(init: NewEntity): Entity {
-    const entity = { ...init, id: this.nextId++ } as Entity;
+  /**
+   * Adds a new object: a new slot and a new persistent id, whatever `init`
+   * carries (a copy spread from another object brings that one's; ADR 0014).
+   */
+  add(init: NewEntity): DrawingEntity {
+    const entity = { ...init, id: this.nextId++, uid: this.newUid() } as DrawingEntity;
     this.record({ type: 'add', entity }, 'Ekle');
     return entity;
   }
@@ -265,10 +304,11 @@ export class CadDocument {
    * Adds many objects as one change (a file import, a copy, a paste): each
    * is its own undoable op, but listeners hear one event for all of them,
    * not one per object (the layer panel, the geometry store and cloud sync
-   * each take every event). Inside a transaction they join it.
+   * each take every event). Inside a transaction they join it. Every one is
+   * a new object, with a new slot and persistent id, as with `add`.
    */
-  addMany(inits: readonly NewEntity[], label = 'Ekle'): Entity[] {
-    const entities = inits.map((init) => ({ ...init, id: this.nextId++ }) as Entity);
+  addMany(inits: readonly NewEntity[], label = 'Ekle'): DrawingEntity[] {
+    const entities = inits.map((init) => ({ ...init, id: this.nextId++, uid: this.newUid() }) as DrawingEntity);
     this.recordMany(entities.map((entity) => ({ type: 'add', entity })), label);
     return entities;
   }
@@ -297,9 +337,22 @@ export class CadDocument {
     this.record({ type: 'layerStyle', layerId, before, after }, label);
   }
 
+  /** Changes an object; it keeps its slot and persistent id, whatever the patch holds. */
   update(id: number, patch: Partial<Entity>): void {
     const op = updateOp(this.entities.get(id), patch);
     if (op) this.record(op, 'Değiştir');
+  }
+
+  /**
+   * Replaces an object's content, keeping its slot and persistent id: the
+   * same object, changed in shape or even kind (the part of a trimmed line
+   * that remains, a circle broken into an arc, a line that takes a vertex
+   * and becomes a polyline; ADR 0014). Unlike `update` nothing is merged:
+   * a field `init` lacks is gone afterwards. Undoable; an unknown id is skipped.
+   */
+  replace(id: number, init: NewEntity, label = 'Değiştir'): void {
+    const before = this.entities.get(id);
+    if (before) this.record({ type: 'update', before, after: { ...init, id, uid: before.uid } as DrawingEntity }, label);
   }
 
   /**
@@ -311,7 +364,7 @@ export class CadDocument {
   updateMany(patches: readonly (Partial<Entity> & { id: number })[], label = 'Değiştir'): number {
     const ops: Op[] = [];
     // An id given twice changes what its first patch made, as a second `update` would.
-    const latest = new Map<number, Entity>();
+    const latest = new Map<number, DrawingEntity>();
     for (const patch of patches) {
       const op = updateOp(latest.get(patch.id) ?? this.entities.get(patch.id), patch);
       if (!op) continue;
@@ -322,9 +375,9 @@ export class CadDocument {
     return ops.length;
   }
 
-  /** Bulk load without history (file open, sample data). */
+  /** Bulk load without history (sample data), as new objects: new slots and persistent ids. */
   load(list: NewEntity[]): void {
-    for (const init of list) this.put({ ...init, id: this.nextId++ } as Entity);
+    for (const init of list) this.put({ ...init, id: this.nextId++, uid: this.newUid() } as DrawingEntity);
     this.undoStack = [];
     this.redoStack = [];
     this.syncHistory();
@@ -335,12 +388,27 @@ export class CadDocument {
   /**
    * Replaces the whole drawing with one read from a file: objects, layer
    * tree, settings, styles, anchor and start view. No history is kept and
-   * the result is clean. Refused while an edit or a group is open.
+   * the result is clean. Refused while an edit or a group is open. The
+   * drawing takes the objects themselves; one without a persistent id gets a
+   * new one (a cloud project's until ADR 0014 slice 3, generated data), a v1
+   * file's come derived from the file (`attachV1Identities`). An id that is
+   * not a UUID or is given twice refuses the whole drawing, before anything
+   * changes.
    */
   replaceWith(data: DocumentContent): void {
     if (this.pending || this.group) throw new Error('Açık bir düzenleme varken çizim değiştirilemez.');
+    const given = new Set<string>();
+    for (const e of data.entities) {
+      if (e.uid === undefined) continue;
+      if (!isUuid(e.uid)) throw new Error(`Nesne ${e.id}: kalıcı kimlik “${e.uid}” küçük harfli, tireli bir UUID değil; çizim açılmadı.`);
+      if (given.has(e.uid)) throw new Error(`Nesne ${e.id}: kalıcı kimlik ${e.uid} iki nesnede birden var; çizim açılmadı.`);
+      given.add(e.uid);
+    }
+    for (const e of data.entities) e.uid ??= this.newUid();
+    const entities = data.entities as readonly DrawingEntity[];
     const touched = new Set([...this.entities.values()].map((e) => e.layerId));
-    this.entities = new Map(data.entities.map((e) => [e.id, e]));
+    this.entities = new Map(entities.map((e) => [e.id, e]));
+    this.uids = new Map(entities.map((e) => [e.uid, e.id]));
     this.layerIndex.clear();
     this.reordered.clear();
     for (const e of this.entities.values()) this.members(e.layerId).set(e.id, e);
@@ -376,14 +444,17 @@ export class CadDocument {
    * Applies changes that another editor already saved: no undo step, not an
    * unsaved edit. Undo steps touching these objects are dropped, so undo can
    * never silently revert someone else's change (CLAUDE.md §15). Objects are
-   * put with their id (`allocateId` for new ones). Refused while an edit is open.
+   * put with their id (`allocateId` for new ones). One already in the drawing
+   * keeps its persistent id; a new one gets a new id (how the server's ids
+   * become persistent ids is ADR 0014's slice 3). Refused while an edit is open.
    */
   applyExternal(changes: { put?: readonly Entity[]; remove?: readonly number[]; meta?: ExternalMeta }): void {
     if (this.busy) throw new Error('Açık bir düzenleme varken dışarıdan gelen değişiklik uygulanamaz.');
     const ops: Op[] = [];
     for (const e of changes.put ?? []) {
       const before = this.entities.get(e.id);
-      ops.push(before ? { type: 'update', before, after: e } : { type: 'add', entity: e });
+      if (before) ops.push({ type: 'update', before, after: (e.uid === before.uid ? e : { ...e, uid: before.uid }) as DrawingEntity });
+      else ops.push({ type: 'add', entity: { ...e, uid: this.newUid() } as DrawingEntity });
       if (e.id >= this.nextId) this.nextId = e.id + 1;
     }
     for (const id of changes.remove ?? []) {
@@ -497,10 +568,12 @@ export class CadDocument {
     if (touched.length || layerStyles) this.events.emit('touched', { ids: touched, layerStyles, external: this.external });
   }
 
-  /** Sets an object in the drawing and in its layer's index. */
-  private put(e: Entity): void {
+  /** Sets an object in the drawing, its persistent id's slot and its layer's index. */
+  private put(e: DrawingEntity): void {
     const prev = this.entities.get(e.id);
     this.entities.set(e.id, e);
+    if (prev && prev.uid !== e.uid) this.uids.delete(prev.uid);
+    this.uids.set(e.uid, e.id);
     if (prev && prev.layerId !== e.layerId) {
       this.layerIndex.get(prev.layerId)?.delete(e.id);
       this.reordered.add(e.layerId);
@@ -513,10 +586,11 @@ export class CadDocument {
     const e = this.entities.get(id);
     if (!e) return;
     this.entities.delete(id);
+    this.uids.delete(e.uid);
     this.layerIndex.get(e.layerId)?.delete(id);
   }
 
-  private members(layerId: string): Map<number, Entity> {
+  private members(layerId: string): Map<number, DrawingEntity> {
     let m = this.layerIndex.get(layerId);
     if (!m) this.layerIndex.set(layerId, (m = new Map()));
     return m;
@@ -524,7 +598,7 @@ export class CadDocument {
 
   /** Reads the layers objects moved into again in document order: one walk of the drawing for all of them. */
   private reorder(): void {
-    const fresh = new Map<string, Map<number, Entity>>();
+    const fresh = new Map<string, Map<number, DrawingEntity>>();
     for (const id of this.reordered) fresh.set(id, new Map());
     this.reordered.clear();
     for (const e of this.entities.values()) fresh.get(e.layerId)?.set(e.id, e);
@@ -537,10 +611,13 @@ export class CadDocument {
   }
 }
 
-/** `before` with `patch` over it; holes belong to polygons only (trimming or breaking one opens it into a polyline). */
-function updateOp(before: Entity | undefined, patch: Partial<Entity>): Extract<Op, { type: 'update' }> | null {
+/**
+ * `before` with `patch` over it, keeping its slot and persistent id; holes
+ * belong to polygons only (trimming or breaking one opens it into a polyline).
+ */
+function updateOp(before: DrawingEntity | undefined, patch: Partial<Entity>): Extract<Op, { type: 'update' }> | null {
   if (!before) return null;
-  const after = { ...before, ...patch, id: before.id } as Entity;
+  const after = { ...before, ...patch, id: before.id, uid: before.uid } as DrawingEntity;
   if (after.kind !== 'polygon' && 'holes' in after) delete (after as { holes?: unknown }).holes;
   return { type: 'update', before, after };
 }

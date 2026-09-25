@@ -6,6 +6,8 @@ import { readSnapshot, toSnapshot } from './snapshot';
 import { snapshotSampleDocument } from './snapshotSample';
 
 const blank = () => new CadDocument({ name: 'boş', layers: new LayerStore([{ id: 'x', name: 'X' }], 'x'), origin: { x: 0, y: 0 } });
+/** The objects without their persistent ids, which v1 does not write (docs/adr/0014). */
+const bare = (doc: CadDocument) => [...doc.all()].map(({ uid: _uid, ...e }) => e);
 
 describe('.kcad snapshots', () => {
   it('writes and reads every object kind losslessly, down to the last bit', () => {
@@ -17,7 +19,10 @@ describe('.kcad snapshots', () => {
     const doc = blank();
     doc.replaceWith(read.content);
     // Objects, layer tree, settings, anchor, start view and styles are the same values.
-    expect([...doc.all()]).toEqual([...src.all()]);
+    expect(bare(doc)).toEqual(bare(src));
+    // v1 keeps no persistent ids: the file has none, and the drawing gives every object one.
+    expect(JSON.parse(text).entities.some((e: object) => 'uid' in e)).toBe(false);
+    expect([...doc.all()].every((e) => !!e.uid && doc.byUid(e.uid)?.id === e.id)).toBe(true);
     expect(doc.layers.tree).toEqual(src.layers.tree);
     expect(doc.layers.active.value).toBe('parsel');
     expect(doc.settings.toJSON()).toEqual(src.settings.toJSON());

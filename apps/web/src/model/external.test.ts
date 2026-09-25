@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isUuid } from '../core/uuid';
 import { CadDocument } from './document';
 import type { Entity } from './entities';
 import { LayerStore } from './layers';
@@ -33,9 +34,13 @@ describe('changes from elsewhere', () => {
     const external: boolean[] = [];
     d.events.on('touched', (e) => external.push(e.external));
     const theirs: Entity = { ...point(5), id: d.allocateId() };
-    d.applyExternal({ put: [theirs, { ...mine, p: { x: 7, y: 0 } } as Entity] });
+    d.applyExternal({ put: [theirs, { ...mine, p: { x: 7, y: 0 }, uid: undefined } as Entity] });
     expect(d.size).toBe(2);
-    expect(d.get(theirs.id)).toEqual(theirs);
+    // A new object gets a persistent id; one already here keeps its own, whatever arrives (ADR 0014).
+    expect(isUuid(d.uidOf(theirs.id))).toBe(true);
+    expect(d.get(theirs.id)).toEqual({ ...theirs, uid: d.uidOf(theirs.id) });
+    expect(d.get(mine.id)).toMatchObject({ p: { x: 7, y: 0 }, uid: mine.uid });
+    expect(d.byUid(mine.uid)?.id).toBe(mine.id);
     expect(d.dirty.value).toBe(false);
     expect(external).toEqual([true]);
     // Undo cannot revert the object someone else changed: its step is gone.

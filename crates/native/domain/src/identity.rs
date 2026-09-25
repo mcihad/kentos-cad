@@ -21,14 +21,17 @@ pub fn new_uid() -> Uuid {
 }
 
 /// Persistent ids for the objects of a `.kcad` v1 file, which has none, in
-/// the file's order.
-///
-/// PLACEHOLDER until the deterministic migration of ADR 0014 lands (TODOS.md
-/// DOM-04, written in parallel): today every call gives fresh v7 ids, so the
-/// same file opened twice gets different ids. The migration replaces only this
-/// body, with `UUIDv5(namespace, "entity/" + local id)` where the namespace is
-/// `UUIDv5(KENTOS_V1_IMPORT, sha256(canonical v1 text))`; nothing else depends
-/// on how these ids are made.
-pub fn v1_entity_uids(snapshot: &DocumentSnapshotV1) -> Vec<Uuid> {
-    snapshot.entities.iter().map(|_| new_uid()).collect()
+/// the file's order: the deterministic migration of ADR 0014 (TODOS.md
+/// DOM-04, `kentos_contracts::v1_uids`). `UUIDv5(namespace, "entity/" + local
+/// id)`, where the namespace is `UUIDv5(KENTOS_V1_IMPORT, sha256 of the
+/// canonical v1 text)`, so the same file gets the same ids every time, here
+/// and in the browser. Refused, with the reason, only for local ids that are
+/// not unique positive numbers, which `Document::from_snapshot` checks first.
+pub fn v1_entity_uids(snapshot: &DocumentSnapshotV1) -> Result<Vec<Uuid>, String> {
+    let ids = kentos_contracts::v1_uids(snapshot)?;
+    Ok(ids
+        .entities
+        .into_iter()
+        .map(|(_, uid)| Uuid::from_bytes(uid))
+        .collect())
 }

@@ -13,7 +13,22 @@ export type EntityKind = 'point' | 'line' | 'polyline' | 'polygon' | 'circle' | 
 export const CONSTRUCTION_REACH = 1e6;
 
 interface EntityBase {
+  /**
+   * The object's slot in the open drawing (docs/adr/0014): what selection,
+   * picking, the geometry store, the GPU buffers and undo work with. Not
+   * persistent: a drawing opened again numbers its objects anew.
+   */
   id: number;
+  /**
+   * Persistent id (docs/adr/0014): a UUID, lowercase with hyphens. Every
+   * object in a drawing has one (`DrawingEntity`): given when it is created
+   * (v7) or derived from a v1 file when it is opened (v5). An edit, undo and
+   * redo keep it; a copy or a new piece gets a new one; it is never reused.
+   * An object outside a drawing (a preview, a clipboard copy, a file's object
+   * before the drawing takes it) has none. Hot paths (drawing, picking,
+   * snapping) never carry it.
+   */
+  uid?: string;
   layerId: string;
   /** Overrides the layer colour; undefined means "katmana göre" (ByLayer). */
   color?: string;
@@ -152,8 +167,11 @@ export type Entity =
   | DimensionEntity
   | HatchEntity;
 
-/** Entity without id, as passed to CadDocument.add. */
-export type NewEntity = Entity extends infer E ? (E extends Entity ? Omit<E, 'id'> : never) : never;
+/** An object of a drawing, as `CadDocument` gives it out: always with its persistent id. */
+export type DrawingEntity = Entity & { uid: string };
+
+/** Entity without slot and persistent id, as passed to CadDocument.add, which gives both. */
+export type NewEntity = DistributiveOmit<Entity, 'id' | 'uid'>;
 
 export const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
   point: 'Nokta',
@@ -229,10 +247,10 @@ export const entityArea = op<(e: Entity) => number | null>('entityArea');
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
 /** Pure geometry of an entity (what modify operations produce). */
-export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'layerId' | 'attrs' | 'color' | 'label'>;
+export type EntityGeometry = DistributiveOmit<Entity, 'id' | 'uid' | 'layerId' | 'attrs' | 'color' | 'label'>;
 
-/** Geometry-only view of an entity (drops id, layer, colour, attributes, label). */
+/** Geometry-only view of an entity (drops ids, layer, colour, attributes, label). */
 export function entityGeometry(e: Entity): EntityGeometry {
-  const { id: _i, layerId: _l, attrs: _a, color: _c, label: _t, ...g } = e;
+  const { id: _i, uid: _u, layerId: _l, attrs: _a, color: _c, label: _t, ...g } = e;
   return g as EntityGeometry;
 }

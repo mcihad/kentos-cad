@@ -1,13 +1,13 @@
-import init, { formatsVersion, readCoords, readDxf, writeCoords, writeDxf } from './pkg/kentos_formats_wasm.js';
+import init, { formatsVersion, readCoords, readDxf, v1Identities, writeCoords, writeDxf } from './pkg/kentos_formats_wasm.js';
 import wasmUrl from './pkg/kentos_formats_wasm_bg.wasm?url';
 import type { FormatsReply, FormatsRequest } from './protocol';
 import { FORMATS_VERSION } from './version';
 
 /**
  * Entry of the formats Web Worker (started by client.ts the first time a
- * file is imported or exported). It loads the Rust formats module
- * (crates/wasm/formats-wasm) on its first message; parsing a large file never
- * blocks the page. One request at a time, in order.
+ * file is imported or exported, or a drawing opened). It loads the Rust
+ * formats module (crates/wasm/formats-wasm) on its first message; parsing a
+ * large file never blocks the page. One request at a time, in order.
  */
 const scope = self as unknown as {
   onmessage: ((e: MessageEvent<FormatsRequest>) => void) | null;
@@ -42,6 +42,9 @@ scope.onmessage = (e) => {
       if (m.op === 'readCoords' || m.op === 'readDxf') {
         const read = m.op === 'readCoords' ? readCoords : readDxf;
         const json = own(read(new Uint8Array(m.bytes), JSON.stringify(m.options)));
+        scope.postMessage({ id: m.id, ok: true, json }, [json]);
+      } else if (m.op === 'v1Identities') {
+        const json = own(v1Identities(m.text));
         scope.postMessage({ id: m.id, ok: true, json }, [json]);
       } else {
         const written = m.op === 'writeCoords' ? writeCoords(JSON.stringify(m.input)) : writeDxf(JSON.stringify(m.input));

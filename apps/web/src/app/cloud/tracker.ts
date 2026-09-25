@@ -26,15 +26,25 @@ export type Planned =
   | { op: 'update'; localId: number; featureId: string; entity: Entity; json: string; expected: string }
   | { op: 'delete'; localId: number; featureId: string; expected: string };
 
-/** An object's text for comparison: everything but the local id. */
+/**
+ * An object's text for comparison: everything but its ids. The server knows
+ * it by `featureId`; the persistent id is not sent yet (ADR 0014 slice 3
+ * makes it the server's id), so it never counts as a change.
+ */
 export function entityJson(e: Entity): string {
-  const { id: _id, ...rest } = e;
+  const { id: _id, uid: _uid, ...rest } = e;
   return JSON.stringify(rest);
 }
 
 export function changeOf(p: Planned): FeatureChange {
   if (p.op === 'delete') return { op: 'delete', id: p.featureId };
   return { op: p.op, id: p.featureId, entity: p.entity };
+}
+
+/** An object as the server and the device draft take it: the contract's shape, without the persistent id. */
+function wire(e: Entity): Entity {
+  const { uid: _uid, ...rest } = e;
+  return rest;
 }
 
 export class Tracker {
@@ -71,8 +81,8 @@ export class Tracker {
         t = { featureId: this.newId(), version: null, json: null };
         this.set(localId, t);
       }
-      if (t.version === null) return { op: 'create', localId, featureId: t.featureId, entity: cur, json };
-      if (t.json !== json) return { op: 'update', localId, featureId: t.featureId, entity: cur, json, expected: t.version };
+      if (t.version === null) return { op: 'create', localId, featureId: t.featureId, entity: wire(cur), json };
+      if (t.json !== json) return { op: 'update', localId, featureId: t.featureId, entity: wire(cur), json, expected: t.version };
       return null;
     }
     if (t && t.version !== null) return { op: 'delete', localId, featureId: t.featureId, expected: t.version };

@@ -14,7 +14,9 @@ export type FormatsRequest =
   | { id: number; op: 'readCoords'; bytes: ArrayBuffer; options: CoordReadOptions }
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }
   | { id: number; op: 'readDxf'; bytes: ArrayBuffer; options: DxfReadOptions }
-  | { id: number; op: 'writeDxf'; input: DxfWriteInput };
+  | { id: number; op: 'writeDxf'; input: DxfWriteInput }
+  /** The persistent ids of a v1 drawing's objects (`V1Identities`, docs/adr/0014), from the drawing's text. */
+  | { id: number; op: 'v1Identities'; text: string };
 
 export type FormatsReply =
   /** A reader's result: JSON. */

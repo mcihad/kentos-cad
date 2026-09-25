@@ -157,13 +157,14 @@ const FILE = 'iz.kcad';
 async function setUp(t) {
   origin = { x: t.view.center[0], y: t.view.center[1] };
   const doc = readFileSync(join(DIR, t.document), 'utf8');
-  await b.eval(`(() => {
+  await b.eval(`(async () => {
     const k = window.kentos;
     k.tools.activate('select');
     // Nothing typed in an earlier trace carries over.
     const line = document.querySelector('.cmdline__input');
     if (line) line.value = '';
-    if (!k.files.load(${JSON.stringify(doc)}, null)) throw new Error('${t.document} did not load');
+    // Loading waits for the objects' persistent ids (the formats worker, ADR 0014); the view is set after it.
+    if (!(await k.files.load(${JSON.stringify(doc)}, null))) throw new Error('${t.document} did not load');
     // Save and open write to memory; the drawing is asked about nowhere.
     const store = (window.__traceFiles = new Map());
     const handle = (name) => ({

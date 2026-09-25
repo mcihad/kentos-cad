@@ -1,7 +1,8 @@
+import type { V1Identities } from '../contracts/generated/V1Identities';
 import { Signal } from '../core/signal';
 import { crsBySrid } from '../geo/crs';
 import { sheetAround } from '../model/newProject';
-import { DOCUMENT_EXTENSION, readSnapshot, toSnapshot } from '../model/snapshot';
+import { DOCUMENT_EXTENSION, attachV1Identities, readSnapshot, toSnapshot } from '../model/snapshot';
 import { h } from '../ui/dom';
 import { askUnsaved } from '../ui/widgets/confirm';
 import { projectStylesProblem } from './cloud/incoming';
@@ -20,6 +21,11 @@ import { RecentFiles, type RecentFile } from './recentFiles';
  * replaces the drawing asks first about unsaved local changes; an open
  * cloud project needs no question, since its changes are sent or kept in
  * the device draft (it is left first, `CloudSession.leave`).
+ *
+ * An opened drawing's objects get the persistent ids the Rust contracts
+ * derive from the file (docs/adr/0014): the same file gives the same ids
+ * every time, here and in the desktop app. They are worked out in the
+ * formats worker while the page reads the file.
  */
 
 /** A file the app can read and write: a File System Access handle, or an in-memory one in tests. */
@@ -109,6 +115,12 @@ export class DocumentFiles {
   readonly recent = new RecentFiles();
   /** Asks about unsaved changes; `after` says what would lose them. A dialog in the app; tests answer themselves. */
   ask: (name: string, after: string) => Promise<DiscardChoice> = askAboutUnsaved;
+  /**
+   * The persistent ids of a v1 drawing's objects, from its text: the formats
+   * worker, whose client loads with the first file opened, as the import and
+   * export windows load it (CLAUDE.md §20); tests run the module in process.
+   */
+  identities: (text: string) => Promise<V1Identities> = async (text) => (await import('../io/client')).formats().v1Identities(text);
   private readonly ctx: AppContext;
 
   constructor(ctx: AppContext) {
@@ -147,7 +159,7 @@ export class DocumentFiles {
         this.ctx.log.error(`“${handle.name}” okunamadı: ${message(e)}.`);
         return false;
       }
-      const content = this.read(text, handle);
+      const content = await this.read(text, handle);
       if (!content) return false;
       // A local file replaces an open cloud project: what waits is sent, the rest stays in the device draft.
       await this.leaveCloud();
@@ -189,7 +201,7 @@ export class DocumentFiles {
         this.ctx.log.error(gone ? `“${entry.name}” artık bulunamıyor (taşınmış ya da silinmiş); son dosyalardan kaldırıldı.` : `“${entry.name}” okunamadı: ${message(e)}.`);
         return false;
       }
-      const content = this.read(text, handle);
+      const content = await this.read(text, handle);
       if (!content) return false;
       await this.leaveCloud();
       this.show(content, handle, false);
@@ -220,14 +232,16 @@ export class DocumentFiles {
     }
   }
 
-  /** Reads a drawing's text into the app at once; `handle` becomes the file Save writes to unless `readOnly`. */
-  load(text: string, handle: DrawingFileHandle | null, readOnly = false): boolean {
-    const content = this.read(text, handle);
-    if (!content) return false;
-    // Nothing is waited for here: an open cloud project's unsent changes stay in its device draft.
-    this.ctx.cloud.detach();
-    this.show(content, handle, readOnly);
-    return true;
+  /** Reads a drawing's text into the app; `handle` becomes the file Save writes to unless `readOnly`. */
+  load(text: string, handle: DrawingFileHandle | null, readOnly = false): Promise<boolean> {
+    return this.run(async () => {
+      const content = await this.read(text, handle);
+      if (!content) return false;
+      // Nothing is waited for here: an open cloud project's unsent changes stay in its device draft.
+      this.ctx.cloud.detach();
+      this.show(content, handle, readOnly);
+      return true;
+    });
   }
 
   /**
@@ -256,10 +270,20 @@ export class DocumentFiles {
     });
   }
 
-  /** The drawing in `text`, checked like any file someone sent; null (and the reason, said) when unreadable. */
-  private read(text: string, handle: DrawingFileHandle | null): DocumentContent | null {
+  /**
+   * The drawing in `text`, checked like any file someone sent, its objects
+   * given the persistent ids derived from the file (ADR 0014); null (and the
+   * reason, said) when unreadable. Ids that cannot be derived do not stop
+   * the drawing: its objects get new ones for this opening, and the log says so.
+   */
+  private async read(text: string, handle: DrawingFileHandle | null): Promise<DocumentContent | null> {
     const { ctx } = this;
     const where = handle ? `“${handle.name}”` : 'Dosya';
+    // Worked out in the formats worker while the page reads the drawing.
+    const identities = this.identities(text).then(
+      (ids) => ({ ok: true as const, ids }),
+      (e: unknown) => ({ ok: false as const, error: message(e) }),
+    );
     const read = readSnapshot(text);
     if (!read.ok) {
       ctx.log.error(`${where} açılamadı: ${read.error}`);
@@ -271,6 +295,10 @@ export class DocumentFiles {
       ctx.log.error(`${where} açılamadı: ${styles}.`);
       return null;
     }
+    const got = await identities;
+    const problem = got.ok ? attachV1Identities(read.content, got.ids) : got.error;
+    if (problem)
+      ctx.log.warn(`${where}: nesnelerin kalıcı kimlikleri dosyadan türetilemedi (${problem}); bu açılış için yeni kimlik verildi ve dosya yeniden açılınca kimlikler değişir. Dosyayı yeniden açmayı deneyin.`);
     return read.content;
   }
 

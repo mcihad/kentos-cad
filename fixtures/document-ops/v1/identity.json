@@ -1,0 +1,106 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Kalıcı nesne kimliği",
+  "note": "ADR 0014: nesnenin kalıcı kimliği (uid) değiştirmede, geri almada, yinelemede ve geri alınan işlemde aynı kalır; yeni nesne, bir kopya da olsa, yeni kimlik alır. Kimlikler rastgeledir (yeni nesnede v7) ya da dosyadan türetilir (açılan v1 dosyasında v5), bu yüzden yalnız birbirleriyle karşılaştırılır: captureUid bir nesnenin kimliğini bir adla saklar, uids beklentisi karşılaştırır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Kimlik",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {"x": 486500, "y": 4420100},
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {"id": "a", "name": "Bina", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18}, "children": []},
+          {"id": "b", "name": "Yol", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18}, "children": []}
+        ]
+      },
+      {"id": "c", "name": "Parsel", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18}, "children": []}
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {"id": 1, "kind": "point", "layerId": "a", "p": {"x": 486512.34, "y": 4420123.45}, "attrs": {"Ad": "N1"}},
+      {"id": 2, "kind": "line", "layerId": "c", "a": {"x": 486500.1, "y": 4420100.2}, "b": {"x": 486540.35, "y": 4420101.9}, "attrs": {}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "scenarios": [
+    {
+      "name": "Değiştirme, geri alma, yineleme ve geri alınan işlem nesnenin kimliğini korur",
+      "note": "Silinen nesne geri alınınca aynı kimlikle döner.",
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "bir"},
+        {"op": "captureUid", "id": 2, "as": "iki"},
+        {"op": "update", "id": 1, "patch": {"attrs": {"Ad": "N2"}}, "expect": {"uids": {"1": "bir"}}},
+        {
+          "op": "updateMany",
+          "patches": [{"id": 1, "layerId": "b"}, {"id": 2, "attrs": {"Kod": "7"}}],
+          "returns": 2,
+          "expect": {"uids": {"1": "bir", "2": "iki"}}
+        },
+        {"op": "undo", "expect": {"uids": {"1": "bir", "2": "iki"}}},
+        {"op": "undo", "expect": {"uids": {"1": "bir"}}},
+        {"op": "redo", "expect": {"uids": {"1": "bir"}}},
+        {"op": "remove", "ids": [1], "expect": {"ids": [2]}},
+        {"op": "undo", "expect": {"ids": [2, 1], "uids": {"1": "bir", "2": "iki"}}},
+        {
+          "op": "transact",
+          "label": "Yarım",
+          "steps": [
+            {"op": "update", "id": 2, "patch": {"layerId": "a"}},
+            {"op": "remove", "ids": [1, 2]}
+          ],
+          "throw": "bilerek",
+          "catch": "bilerek",
+          "expect": {"count": 2, "uids": {"1": "bir", "2": "iki"}}
+        }
+      ]
+    },
+    {
+      "name": "Yeni nesne, bir kopya da olsa, yeni kimlik alır; geri alma ve yineleme onu korur",
+      "note": "Kopyala/yapıştır, çoğalt ve dizi nesneyi add ya da addMany ile ekler: her biri yeni bir nesnedir.",
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "bir"},
+        {"op": "captureUid", "id": 2, "as": "iki"},
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "a", "p": {"x": 486512.34, "y": 4420123.45}, "attrs": {"Ad": "N1"}},
+          "returns": 3,
+          "expect": {"uids": {"1": "bir", "3": "new"}}
+        },
+        {"op": "captureUid", "id": 3, "as": "kopya"},
+        {
+          "op": "addMany",
+          "entities": [
+            {"kind": "point", "layerId": "a", "p": {"x": 486512.34, "y": 4420123.45}, "attrs": {"Ad": "N1"}},
+            {"kind": "line", "layerId": "c", "a": {"x": 486500.1, "y": 4420100.2}, "b": {"x": 486540.35, "y": 4420101.9}, "attrs": {}}
+          ],
+          "returns": [4, 5],
+          "expect": {"uids": {"4": "new", "5": "new"}}
+        },
+        {"op": "captureUid", "id": 4, "as": "dört"},
+        {"op": "undo", "expect": {"ids": [1, 2, 3]}},
+        {"op": "redo", "expect": {"ids": [1, 2, 3, 4, 5], "uids": {"4": "dört", "5": "new"}}},
+        {"op": "remove", "ids": [3], "expect": {"count": 4}},
+        {"op": "undo", "expect": {"uids": {"3": "kopya"}}}
+      ]
+    }
+  ]
+}

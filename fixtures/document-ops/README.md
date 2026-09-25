@@ -52,6 +52,7 @@ Her adımda `op` ve işleme göre alanlar bulunur. Bütün adımlarda şu alanla
 | `captureRevision` | `as`: ad | `revision`'ı saklar | `revision` | |
 | `markSaved` | `revision`: saklanan ad | `markSaved` | `mark_saved` | |
 | `markUnsaved` | | `markUnsaved` | `mark_unsaved` | |
+| `captureUid` | `id`, `as`: ad | `uidOf`'u saklar | `uid` | |
 | `repeat` | `times`, `steps` | adımları `times` kez koşar | | |
 | `setVisible` | `id`, `visible` | `layers.setVisible` | `set_layer_visible` | |
 | `toggleVisible` | `id` | `layers.toggleVisible` | `toggle_layer_visible` | |
@@ -81,6 +82,9 @@ Yalnız yazılan alanlar denetlenir.
 | `revision` | `"same"`: adımdan önceki sürümle aynı; `"changed"`: farklı |
 | `layers` | `{ "katman": { visible, locked, expanded, name, style, isVisible, isLocked } }`. İlk beşi düğümün kendi değeridir; `isVisible` ve `isLocked` üst grupları da hesaba katan yanıttır |
 | `activeLayer` | etkin katmanın kimliği |
+| `uids` | `{ "kimlik": ad }`: nesnenin kalıcı kimliği `captureUid`'in bu adla sakladığıdır; `"new"`: saklananların hiçbiri değildir |
+
+**Kalıcı kimlik neden yalnız karşılaştırılır?** Yeni nesnenin kimliği rastgeledir (UUIDv7), açılan v1 dosyasınınki dosyanın içeriğinden türetilir (UUIDv5, ADR 0014). Fixture elle yazıldığından değeri yazamaz; kimlik aynı senaryoda alınan kimliklerle karşılaştırılır. `entities` karşılaştırmasına kalıcı kimlik girmez.
 
 **Sürüm neden yalnız karşılaştırılır?** Sürüm bir sayaçtır. Sözleşmesi şudur: yazılan içerik değişince değişir, ve `markSaved(r)` belgeyi yalnız `r` hâlâ güncel sürümse temizler. Artış miktarı sözleşme değildir. Web bazı değişiklikleri iki kez sayar (katman stili), masaüstü bir kez. Kayıt kuralı `captureRevision` → değişiklik → `markSaved` adımlarıyla denetlenir.
 
@@ -88,4 +92,4 @@ Yalnız yazılan alanlar denetlenir.
 
 - Beklenen değerler web'in kodundan elle yazılır, iki koşucuyla doğrulanır. Bir uygulamanın çıktısından kopyalanmaz. Değiştirmek incelenmiş bir davranış değişikliğidir (CLAUDE.md §23.4).
 - Web'in yazılı bir kararla çeliştiği davranışlar fixture'a konmaz; ADR 0020'de bildirilir, masaüstü karara uyar ve kendi testinde (`crates/native/domain/tests/document.rs`) sınanır. Örnek: başarısız işlemdeki katman stili değişikliği web'de belgeyi kirletir (ADR 0003'e aykırı).
-- Kapsam dışında: dışarıdan gelen değişiklik (`applyExternal`, `forgetHistoryOf`), `load`, açılıştan sonra `replaceWith`, katman ekleme (`layers.add`), ad/ayar/stil kitaplığı değişikliği ve belge olayları (`changed`, `attrs`, `touched`). Kalıcı kimlik (`uid`, ADR 0014) web belgesinde henüz yoktur; masaüstü onu kendi testinde sınar.
+- Kapsam dışında: dışarıdan gelen değişiklik (`applyExternal`, `forgetHistoryOf`), `load`, açılıştan sonra `replaceWith`, katman ekleme (`layers.add`), ad/ayar/stil kitaplığı değişikliği ve belge olayları (`changed`, `attrs`, `touched`). Bir v1 dosyasından türetilen kimliklerin değerleri burada değil, `fixtures/document/v1/identity`'dedir (bağımsız Python referansı, ADR 0014).

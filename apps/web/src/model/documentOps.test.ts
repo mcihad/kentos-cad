@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isUuid } from '../core/uuid';
 import { CadDocument } from './document';
 import type { Entity, NewEntity } from './entities';
 import { LayerStore, type LayerStyle } from './layers';
@@ -37,6 +38,8 @@ interface Expect {
   revision?: 'same' | 'changed';
   layers?: Record<string, LayerExpect>;
   activeLayer?: string;
+  /** Object → the name of a persistent id taken with `captureUid`, or "new": one taken by none. */
+  uids?: Record<string, string>;
 }
 
 interface Step {
@@ -61,7 +64,17 @@ interface Fixture {
   scenarios: Scenario[];
 }
 
-const EXPECT_KEYS: readonly string[] = ['ids', 'count', 'entities', 'byLayer', 'canUndo', 'canRedo', 'dirty', 'revision', 'layers', 'activeLayer'];
+const EXPECT_KEYS: readonly string[] = ['ids', 'count', 'entities', 'byLayer', 'canUndo', 'canRedo', 'dirty', 'revision', 'layers', 'activeLayer', 'uids'];
+
+/**
+ * An object as the fixtures write it: persistent ids are random (UUIDv7) or
+ * derived from the file (v5), so they are compared only by `uids`.
+ */
+const withoutUid = (e: Entity | undefined) => {
+  if (!e) return e;
+  const { uid: _uid, ...rest } = e;
+  return rest;
+};
 
 const files = import.meta.glob<string>('../../../../fixtures/document-ops/v1/*.json', { query: '?raw', import: 'default', eager: true });
 
@@ -75,6 +88,7 @@ class Run {
   readonly doc: CadDocument;
   private readonly groups: { end(): void; cancel(): void }[] = [];
   private readonly revisions = new Map<string, number>();
+  private readonly uids = new Map<string, string>();
 
   constructor(setup: Json) {
     const read = readSnapshot(JSON.stringify(setup));
@@ -152,6 +166,12 @@ class Run {
       }
       case 'markUnsaved':
         return doc.markUnsaved();
+      case 'captureUid': {
+        const uid = doc.uidOf(entityId);
+        if (uid === undefined) throw new Error(`${where}: ${entityId} nesnesi yok`);
+        this.uids.set(s.as as string, uid);
+        return undefined;
+      }
       case 'repeat':
         for (let k = 0; k < (s.times as number); k++) this.steps(s.steps, `${where} (${k + 1}.)`);
         return undefined;
@@ -185,7 +205,16 @@ class Run {
     const doc = this.doc;
     if (e.ids) expect([...doc.all()].map((x) => x.id), `${where}: nesneler`).toEqual(e.ids);
     if (e.count !== undefined) expect(doc.size, `${where}: nesne sayısı`).toBe(e.count);
-    for (const [id, want] of Object.entries(e.entities ?? {})) expect(doc.get(Number(id)), `${where}: nesne ${id}`).toEqual(want);
+    for (const [id, want] of Object.entries(e.entities ?? {})) expect(withoutUid(doc.get(Number(id))), `${where}: nesne ${id}`).toEqual(want);
+    for (const [id, name] of Object.entries(e.uids ?? {})) {
+      const uid = doc.uidOf(Number(id));
+      expect(isUuid(uid), `${where}: ${id} nesnesinin kalıcı kimliği`).toBe(true);
+      if (name === 'new') expect([...this.uids.values()], `${where}: ${id} nesnesinin kimliği yeni olmalı`).not.toContain(uid);
+      else {
+        expect(this.uids.has(name), `${where}: “${name}” kimliği alınmadı`).toBe(true);
+        expect(uid, `${where}: ${id} nesnesinin kimliği “${name}” olmalı`).toBe(this.uids.get(name));
+      }
+    }
     for (const [layer, ids] of Object.entries(e.byLayer ?? {}))
       expect(
         doc.byLayer(layer).map((x) => x.id),

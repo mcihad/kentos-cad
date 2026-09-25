@@ -1,6 +1,7 @@
 //! The file formats in the browser. The formats Web Worker
 //! (`apps/web/src/io/formatsWorker.ts`) loads this module the first time the user
-//! imports or exports a file; it never loads at start-up (CLAUDE.md §20).
+//! imports or exports a file, or opens a drawing (its objects' persistent ids);
+//! it never loads at start-up (CLAUDE.md §20).
 //! Files cross as bytes; options and results as JSON (the contracts in
 //! `kentos_contracts::formats`), whose float64 values serde_json writes as
 //! the shortest round-trip decimal, so coordinates arrive bit for bit.
@@ -73,6 +74,16 @@ pub fn write_coords(input: &str) -> Result<Written, JsError> {
         bytes,
         report: String::from_utf8(to_json(&report)?).unwrap_or_default(),
     })
+}
+
+/// The persistent ids of a v1 drawing's objects (`V1Identities`, JSON bytes;
+/// docs/adr/0014), from the drawing's text: derived from its content, so the
+/// same file gets the same ids here, in the desktop app and on the server. A
+/// drawing the contract cannot read throws the reason.
+#[wasm_bindgen(js_name = v1Identities)]
+pub fn v1_identities(text: &str) -> Result<Vec<u8>, JsError> {
+    let ids = kentos_contracts::v1_identities(text).map_err(|e| JsError::new(&e))?;
+    to_json(&ids)
 }
 
 /// Writes an AutoCAD 2007 DXF from `DxfWriteInput` (JSON). The objects are

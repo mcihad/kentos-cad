@@ -106,7 +106,7 @@
             "type": "string"
           },
           "CircleEntity": {
-            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
               "attrs": {
                 "additionalProperties": {
@@ -215,7 +215,7 @@
             "type": "object"
           },
           "DimensionEntity": {
-            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
               "a": {
                 "$ref": "#/$defs/Vec2"
@@ -642,7 +642,7 @@
             ]
           },
           "HatchEntity": {
-            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
               "attrs": {
                 "additionalProperties": {
@@ -943,7 +943,7 @@
             "type": "object"
           },
           "LineEntity": {
-            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
               "a": {
                 "$ref": "#/$defs/Vec2"
@@ -1078,7 +1078,7 @@
             "type": "object"
           },
           "PointEntity": {
-            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
               "attrs": {
                 "additionalProperties": {
@@ -1312,7 +1312,7 @@
             "type": "object"
           },
           "SplineEntity": {
-            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
               "attrs": {
                 "additionalProperties": {
@@ -1369,7 +1369,7 @@
             "type": "object"
           },
           "TextEntity": {
-            "description": "Fields every object has. `id` is the document's local id in v1; the\nserver's stable id is a UUID in PostgreSQL, carried by a separate\n`FeatureRef` in Faz B (CLAUDE.md §15).",
+            "description": "Fields every object has. `id` is the object's local id inside a v1 file.\nv1 keeps no persistent id: it is derived from the file's content when the\nfile is opened (`identity`, docs/adr/0014); the server's is a UUID in\nPostgreSQL (`feature.id`).",
             "properties": {
               "attrs": {
                 "additionalProperties": {

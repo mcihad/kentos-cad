@@ -4,11 +4,18 @@ import { CadDocument } from './document';
 import type { Entity, NewEntity } from './entities';
 import { LayerStore } from './layers';
 
+/** Persistent ids 1, 2, 3… as UUIDs: two drawings built the same way get the same ones. */
+const counting = () => {
+  let n = 0;
+  return () => `00000000-0000-7000-8000-${(++n).toString(16).padStart(12, '0')}`;
+};
+
 const makeDoc = () =>
   new CadDocument({
     name: 't.kcad',
     layers: new LayerStore([{ id: 'g', name: 'G', children: [{ id: 'a', name: 'A' }] }], 'a'),
     origin: { x: 0, y: 0 },
+    newUid: counting(),
   });
 
 describe('CadDocument history', () => {

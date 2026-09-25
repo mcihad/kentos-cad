@@ -24,7 +24,7 @@ Harita büroları veriyi Netcad koordinat listeleriyle (NCN, TXT, CSV) ve DXF il
   - Hiçbir girdi paniğe yol açmaz (`unwrap`/`expect`/`panic` lint ile yasak); bozuk satır sayılır, raporlanır.
   - Tek geçiş; satır sayısıyla doğrusal.
 - **Yazıcı**, geri okununca aynı float64'ü veren en kısa ondalığı yazar (`num.rs`); yazıp okuma bit bit aynıdır.
-- **Sözleşmeler** `crates/shared/contracts/src/formats.rs`'tedir (`FORMATS_VERSION = 3`: 2 DXF yazmayı ekledi, 3 ölçüleri DXF ölçüsü olarak yazar ve geri okur, `dimensionValues`); TS tipleri ts-rs ile üretilir. Modül sürümünü bildirir, worker farklı sürümü reddeder.
+- **Sözleşmeler** `crates/shared/contracts/src/formats.rs`'tedir (`FORMATS_VERSION = 4`: 2 DXF yazmayı ekledi, 3 ölçüleri DXF ölçüsü olarak yazar ve geri okur, `dimensionValues`; 4 açılan v1 çizimin nesne kimliklerini türetir, `v1Identities`, ADR 0014); TS tipleri ts-rs ile üretilir. Modül sürümünü bildirir, worker farklı sürümü reddeder.
 
 ### Tarayıcıda: ayrı WASM modülü, ayrı worker, geç yükleme
 
