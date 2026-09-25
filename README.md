@@ -30,6 +30,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── app_menu.rs      uygulama menüsü (Office "Dosya" menüsü gibi)
 │   ├── dock.rs          yan panel yuvası: açılıp kapanan paneller, sürüklenen kenar
 │   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
+│   ├── tabs.rs          belge sekmeleri: kapatma, sürükleyerek sıralama, taşma listesi
 │   ├── toast.rs         bildirimler: önem düzeyi, eylem, üst üste dizilme, süre
 │   ├── progress.rs      ilerleme çubuğu, dönen gösterge, iptal edilebilen görev listesi
 │   ├── notice.rs        uyarı şeridi, boş ve hata durumları
@@ -72,6 +73,7 @@ examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
 ├── gallery.rs           galeri sayfaları ve örneklerin durumu
 ├── table.rs             öznitelik tablosunun görünüm modeli: filtre, arama, sıralama
 ├── layer_tree.rs        katman ağacı: iç içe gruplar ve görünürlük
+├── sheets.rs            model ve düzen (pafta) sekmeleri
 ├── sample.rs            örnek veri ve öznitelik şemaları
 ├── settings.rs          kalıcı ayarlar: tema ve yazı (~/.config/kentos-cad/ayarlar)
 ├── snapshot.rs          `snapshot` alt komutu ve senaryolar
@@ -80,8 +82,8 @@ examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
 ```
 
 Vitrindeki **Galeri** sekmesi kütüphanenin kataloğudur: renkler, yazı, ikonlar,
-düğmeler, veri bileşenleri, çerçeve, öznitelikler ve CBS/CAD bileşenleri; her
-biri canlı örneği, modül yolu ve kullanım koduyla.
+düğmeler, veri bileşenleri, çerçeve, yerleşim, geri bildirim, öznitelikler ve
+CBS/CAD bileşenleri; her biri canlı örneği, modül yolu ve kullanım koduyla.
 
 ## Öznitelikler ve seçim
 
@@ -162,6 +164,48 @@ Floating::new(map, &self.windows, Message::Window, |pane| match pane {
 
 // update: sürükleme, boyutlandırma, öne gelme, daraltma ve kapatma
 Message::Window(event) => self.windows.update(event),
+```
+
+## Yerleşim
+
+### Belge sekmeleri
+
+`Tabs`, aynı alanı paylaşan içerikler içindir: açık çizimler, model ve düzen
+görünümleri.
+
+- **Etkin sekme içeriğe bağlanır.** İçerikle aynı zemindedir, kenarında vurgu
+  çizgisi taşır; şeridin kenar çizgisi etkin sekmenin altında kesilir.
+  `.content(..)` bağlanılan içeriğin rengini verir (ör. harita zemini).
+- **Kapatma.** × düğmesi etkin sekmede ve üzerine gelinen sekmede görünür;
+  orta tık da kapatır. Kaydedilmemiş sekmede (`.dirty(true)`) yerinde bir nokta
+  durur. Kapatılamayan sekmeler `.closable(false)` ile verilir.
+- **Sıralama.** Sekmeler sürüklenerek sıralanır; bırakılacağı yer vurgu
+  renginde bir çizgiyle gösterilir. `on_reorder(from, to)` şu sırayı verir:
+  `tabs.insert(to, tabs.remove(from))`.
+- **Taşma.** Sekmeler sığmayınca önce eşit ölçüde daralır, etkin sekme okunur
+  kalır. Okunur genişliğin altına inmeleri gerekirse sığmayanlar sağdaki
+  listeye taşar; etkin sekme her zaman görünür, şerit yalnızca etkin sekme
+  dışarıda kalınca kayar. Uzun başlıkların sonu solar.
+- **Altta şerit.** `.bottom()` şeridi içeriğin altına asar (AutoCAD'in Model /
+  Düzen sekmeleri gibi).
+- **Vitrinde.** Haritanın altında Model ve Düzen sekmeleri: model alanı
+  kapanmaz ve yeri değişmez; + yeni düzen açar. Düzen, masanın ortasında A3
+  bir kâğıttır: harita çerçevesi kendi görünümüyle gezinilir, altında antet
+  kutusu durur. Kâğıt her temada beyazdır; üzerindeki yazılar `themer` ile
+  aydınlık temada çizilir. Galerinin Yerleşim sayfasında açık çizimlerle
+  kapatma, sıralama ve taşma denenir.
+
+```rust
+use kentos_rc::widget::{Tab, Tabs};
+
+Tabs::new(
+    self.drawings.iter().map(|d| Tab::new(&d.name).icon(Icon::Document).dirty(d.dirty)),
+    self.current,
+    Message::DrawingSelected,
+)
+.on_close(Message::DrawingClosed)
+.on_reorder(Message::DrawingMoved)
+.on_new(Message::DrawingAdded)
 ```
 
 ## Geri bildirim
@@ -439,6 +483,8 @@ cargo run -- snapshot onay.png --senaryo onay
 cargo run -- snapshot bos.png --senaryo bos-durumlar
 cargo run -- snapshot sihirbaz.png --senaryo sihirbaz --sayfa 2
 cargo run -- snapshot ozellikler.png --senaryo ozellikler
+cargo run -- snapshot duzen.png --senaryo duzen
+cargo run -- snapshot sekmeler.png --senaryo galeri --sayfa yerlesim
 cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah
 cargo run -- snapshot mor.png --senaryo secim --tema acik --vurgu "#7c5cff" --zemin arduvaz
 cargo run -- snapshot gece.png --senaryo pencereler --tema gece

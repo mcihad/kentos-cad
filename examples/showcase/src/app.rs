@@ -31,6 +31,7 @@ use crate::message::{
 use crate::properties::{self, LayerProperties};
 use crate::sample;
 use crate::settings::{DockLayout, Settings};
+use crate::sheets::Sheets;
 use crate::table::{self, TableView};
 
 /// Çizim araçlarının geometri eklediği katman; listenin en üstündedir.
@@ -150,6 +151,8 @@ pub struct Showcase {
     pub(crate) properties: Option<LayerProperties>,
     /// Katmanların kaynağı, katmanlarla aynı sırada.
     pub(crate) sources: Vec<String>,
+    /// Model alanı ve düzen (pafta) sekmeleri.
+    pub(crate) sheets: Sheets,
 }
 
 /// Koordinata git penceresinin alanları.
@@ -253,8 +256,10 @@ impl Showcase {
         let mut layer_tree = sample::layer_tree();
         layer_tree.selected = Some(NodeId::Layer(DRAWING_LAYER + 1));
 
+        let viewport = Viewport::new(INITIAL_CENTER, INITIAL_ZOOM, Size::new(900.0, 640.0));
+
         Self {
-            viewport: Viewport::new(INITIAL_CENTER, INITIAL_ZOOM, Size::new(900.0, 640.0)),
+            viewport,
             layer_tree,
             active_layer: DRAWING_LAYER + 1,
             selection: Selection::new(),
@@ -301,6 +306,7 @@ impl Showcase {
             import: None,
             properties: None,
             sources,
+            sheets: Sheets::new(viewport),
         }
     }
 
@@ -341,6 +347,11 @@ impl Showcase {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         match message {
             Message::ModelSpace(event) => self.handle_model_space(event),
+            Message::SheetSelected(tab) => self.sheets.select(tab),
+            Message::SheetClosed(tab) => self.sheets.close(tab),
+            Message::SheetMoved(from, to) => self.sheets.reorder(from, to),
+            Message::SheetAdded => self.sheets.add(self.viewport),
+            Message::SheetView(event) => self.handle_sheet_view(event),
             Message::ToolSelected(tool) => self.select_tool(tool),
 
             Message::ZoomIn => self.zoom(ZOOM_STEP),
@@ -886,6 +897,44 @@ impl Showcase {
     }
 
     // --- Model alanı -----------------------------------------------------
+
+    /// Düzendeki harita çerçevesi yalnızca gezinir: seçim ve çizim model
+    /// alanındadır. İmlecin koordinatı durum çubuğunda yine görünür.
+    fn handle_sheet_view(&mut self, event: model_space::Event) {
+        let Some(sheet) = self.sheets.sheet_mut() else {
+            return;
+        };
+
+        match event {
+            model_space::Event::Resized(size) => {
+                sheet.viewport.size = size;
+
+                // Yeni paftanın çerçevesi görünür katmanlara sığdırılır.
+                if !sheet.fitted {
+                    sheet.fitted = true;
+
+                    if let Some(bounds) = feature::visible_bounds(&self.layers) {
+                        sheet.viewport.fit_bounds(bounds, 12.0);
+                    }
+                }
+            }
+            model_space::Event::Panned { delta, cursor } => {
+                sheet.viewport.pan_by(delta);
+                self.cursor = Some(cursor);
+                self.last_cursor = Some(cursor);
+            }
+            model_space::Event::Zoomed { delta, anchor } => sheet.viewport.zoom_by(delta, anchor),
+            model_space::Event::CursorMoved(location) => {
+                self.cursor = Some(location);
+                self.last_cursor = Some(location);
+            }
+            model_space::Event::CursorLeft => self.cursor = None,
+            model_space::Event::Clicked { .. }
+            | model_space::Event::BoxSelected { .. }
+            | model_space::Event::PointPicked(_)
+            | model_space::Event::Finished => {}
+        }
+    }
 
     fn handle_model_space(&mut self, event: model_space::Event) {
         match event {

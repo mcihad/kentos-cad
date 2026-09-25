@@ -26,6 +26,14 @@ pub enum Message {
     ModelSpace(model_space::Event),
     ToolSelected(Tool),
 
+    // Model ve düzen sekmeleri
+    SheetSelected(usize),
+    SheetClosed(usize),
+    SheetMoved(usize, usize),
+    SheetAdded,
+    /// Açık düzenin harita çerçevesinde gezinme.
+    SheetView(model_space::Event),
+
     // Görünüm
     ZoomIn,
     ZoomOut,

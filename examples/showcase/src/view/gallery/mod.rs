@@ -15,6 +15,7 @@ mod controls;
 mod feedback;
 mod foundations;
 mod frame;
+mod layout;
 mod spatial;
 
 use iced::widget::{column, container, scrollable, space};
@@ -43,6 +44,7 @@ impl Showcase {
             Page::Buttons => self.buttons_page(),
             Page::Data => self.data_page(),
             Page::Frame => self.frame_page(),
+            Page::Layout => self.layout_page(),
             Page::Feedback => self.feedback_page(),
             Page::Attributes => self.attributes_page(),
             Page::Spatial => self.spatial_page(),

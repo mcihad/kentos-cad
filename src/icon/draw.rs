@@ -775,6 +775,21 @@ impl Pen {
                     self.line(frame, (3.75, y), (end, y));
                 }
             }
+            Icon::Tabs => {
+                self.polyline(
+                    frame,
+                    &[
+                        (1.75, 13.25),
+                        (1.75, 2.75),
+                        (7.25, 2.75),
+                        (7.25, 5.75),
+                        (14.25, 5.75),
+                        (14.25, 13.25),
+                    ],
+                    true,
+                );
+                self.polyline(frame, &[(7.25, 3.75), (12.25, 3.75), (12.25, 5.75)], false);
+            }
             Icon::Measure => {
                 self.line(frame, (1.75, 4.0), (1.75, 12.0));
                 self.line(frame, (14.25, 4.0), (14.25, 12.0));

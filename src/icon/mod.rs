@@ -110,11 +110,13 @@ pub enum Icon {
     Retry,
     Import,
     Progress,
+    // Yerleşim
+    Tabs,
 }
 
 impl Icon {
     /// Setteki bütün ikonlar, yukarıdaki gruplama sırasıyla.
-    pub const ALL: [Icon; 70] = [
+    pub const ALL: [Icon; 71] = [
         Icon::ZoomIn,
         Icon::ZoomOut,
         Icon::ZoomExtents,
@@ -185,6 +187,7 @@ impl Icon {
         Icon::Retry,
         Icon::Import,
         Icon::Progress,
+        Icon::Tabs,
     ];
 }
 

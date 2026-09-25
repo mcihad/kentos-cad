@@ -4,17 +4,18 @@
 //! ┌ Şerit ─────────────────────────────────────────────────┐
 //! ├ Model alanı ────────────────────────────┬ Yan paneller ┤
 //! │                                         │ Katmanlar    │
-//! │                                         │ Özellikler   │
+//! ├ Model │ Düzen 1 │ Düzen 2 │ + ──────────┤ Özellikler   │
 //! ├ Öznitelik tablosu ──────────────────────┤ (nesne       │
 //! ├ Komut satırı ───────────────────────────┤  inceleyici) │
 //! ├ Durum çubuğu ───────────────────────────┴──────────────┤
 //! ```
 //!
-//! Model alanının üstünde kayan araç pencereleri (ölçüm, koordinata git,
-//! katman stili) durur; bildirimler pencerenin sağ alt köşesindedir. Galeri sekmesinde
-//! model alanı ve yan paneller yerini bileşen kataloğuna bırakır. Üst
-//! katmanlar önceliğe göre tek tek açılır: uygulama menüsü, sorgu
-//! penceresi, kısayollar.
+//! Model ve düzen sekmeleri haritanın altındadır; düzen sekmesinde harita
+//! yerini kâğıt paftaya bırakır. Model alanının üstünde kayan araç
+//! pencereleri (ölçüm, koordinata git, katman stili) durur; bildirimler
+//! pencerenin sağ alt köşesindedir. Galeri sekmesinde model alanı ve yan
+//! paneller yerini bileşen kataloğuna bırakır. Üst katmanlar önceliğe göre
+//! tek tek açılır: uygulama menüsü, sorgu penceresi, kısayollar.
 
 mod app_menu;
 mod attribute_table;
@@ -28,6 +29,7 @@ mod panes;
 mod properties;
 mod query;
 mod ribbon;
+mod sheet;
 mod status;
 
 use std::fmt;
@@ -72,7 +74,8 @@ impl Showcase {
                 );
             }
 
-            drawing = drawing.push(self.model_space());
+            // Model ve düzen sekmeleri haritanın altına asılır.
+            drawing = drawing.push(self.model_space()).push(self.sheet_tabs());
 
             if self.table_open {
                 drawing = drawing
@@ -127,7 +130,21 @@ impl Showcase {
         }
     }
 
+    /// Açık sekmenin alanı: harita ya da düzen. Kayan araç pencereleri
+    /// alanın üstündedir; dışlarında harita çalışmayı sürdürür.
     fn model_space(&self) -> Element<'_, Message> {
+        let area = match self.sheets.sheet() {
+            Some(sheet) => self.sheet_view(sheet),
+            None => self.map(),
+        };
+
+        Floating::new(area, &self.windows, Message::Window, move |pane| {
+            self.pane(pane)
+        })
+        .into()
+    }
+
+    fn map(&self) -> Element<'_, Message> {
         let drawing_color = self
             .layers
             .get(DRAWING_LAYER)
@@ -164,7 +181,7 @@ impl Showcase {
 
         // Görünür katman yokken harita boştur; ortada ne olduğu ve nasıl
         // düzeltileceği yazar.
-        let map: Element<'_, Message> = if self.layers.iter().any(|layer| layer.visible) {
+        if self.layers.iter().any(|layer| layer.visible) {
             map.into()
         } else {
             stack![
@@ -177,14 +194,7 @@ impl Showcase {
                     .primary("Tümünü göster", Message::ShowAllLayers),
             ]
             .into()
-        };
-
-        // Kayan araç pencereleri haritanın üstündedir; dışlarında harita
-        // çalışmayı sürdürür.
-        Floating::new(map, &self.windows, Message::Window, move |pane| {
-            self.pane(pane)
-        })
-        .into()
+        }
     }
 
     /// Onay bekleyen işin onay kutusu; Enter onaylar, Esc vazgeçer.

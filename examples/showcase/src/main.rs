@@ -13,6 +13,7 @@ mod message;
 mod properties;
 mod sample;
 mod settings;
+mod sheets;
 mod snapshot;
 mod table;
 mod view;

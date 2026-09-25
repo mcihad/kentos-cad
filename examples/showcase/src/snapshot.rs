@@ -33,7 +33,7 @@ use crate::properties::{self, Section};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 18] = [
+const SCENARIOS: [(&str, &str); 19] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -90,17 +90,22 @@ const SCENARIOS: [(&str, &str); 18] = [
         "ozellikler",
         "Şehirler katmanının özellikleri: sembolizasyon, kaydedilmemiş değişiklik",
     ),
+    (
+        "duzen",
+        "Düzen 1 sekmesi: A3 kâğıtta harita çerçevesi ve antet; üç düzen açık",
+    ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
 
 /// Galeri sayfalarının komut satırı adları.
-const PAGES: [(&str, Page); 9] = [
+const PAGES: [(&str, Page); 10] = [
     ("renkler", Page::Colors),
     ("yazi", Page::Typography),
     ("ikonlar", Page::Icons),
     ("dugmeler", Page::Buttons),
     ("veri", Page::Data),
     ("cerceve", Page::Frame),
+    ("yerlesim", Page::Layout),
     ("geri-bildirim", Page::Feedback),
     ("oznitelikler", Page::Attributes),
     ("mekansal", Page::Spatial),
@@ -486,6 +491,10 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::PropertiesOpened(1));
             send(Message::PropertiesSection(Section::Symbology));
             send(Message::PropertiesEdited(properties::Edit::Opacity(0.8)));
+        }
+        "duzen" => {
+            send(Message::SheetAdded);
+            send(Message::SheetSelected(1));
         }
         "galeri" => {
             let page = match page {

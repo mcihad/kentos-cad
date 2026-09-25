@@ -30,6 +30,7 @@ pub enum Page {
     Buttons,
     Data,
     Frame,
+    Layout,
     Feedback,
     Attributes,
     Spatial,
@@ -44,6 +45,7 @@ impl Page {
             Page::Buttons => "Düğmeler",
             Page::Data => "Veri",
             Page::Frame => "Çerçeve",
+            Page::Layout => "Yerleşim",
             Page::Feedback => "Geri bildirim",
             Page::Attributes => "Öznitelikler",
             Page::Spatial => "Mekânsal",
@@ -58,6 +60,7 @@ impl Page {
             Page::Buttons => Icon::Button,
             Page::Data => Icon::Table,
             Page::Frame => Icon::Layout,
+            Page::Layout => Icon::Tabs,
             Page::Feedback => Icon::Info,
             Page::Attributes => Icon::Properties,
             Page::Spatial => Icon::Globe,
@@ -75,6 +78,7 @@ impl Page {
                 "Kayan pencereler, durum çubuğu, komut kutusu, gezinme çubuğu, menü ve iletişim \
                  kutuları."
             }
+            Page::Layout => "Belge sekmeleri: çalışma alanını paylaşan görünümler.",
             Page::Feedback => {
                 "Bildirimler, ilerleme ve görevler, onay kutusu, uyarı şeridi, boş ve hata \
                  durumları, adımlı sihirbaz ve özellikler penceresi."
@@ -138,6 +142,12 @@ pub enum Demo {
     WizardStep(usize),
     /// Özellikler penceresi örneğinde bölüm.
     SectionSelected(usize),
+    /// Belge sekmeleri örneği.
+    DocumentSelected(usize),
+    DocumentClosed(usize),
+    DocumentMoved(usize, usize),
+    DocumentAdded,
+    DocumentSaved,
 }
 
 /// Bildirim örnekleri: düğme adı ve bildirim.
@@ -281,6 +291,36 @@ pub struct Gallery {
     /// Sihirbaz ve özellikler penceresi örneklerinde adım ve bölüm.
     pub wizard_step: usize,
     pub section: usize,
+    /// Belge sekmeleri örneği: açık çizimler, açık olanı ve yeni çizimin
+    /// adındaki sayı.
+    pub documents: Vec<Document>,
+    pub document: usize,
+    pub untitled: usize,
+}
+
+/// Belge sekmeleri örneğindeki açık çizim.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Document {
+    pub name: String,
+    pub dirty: bool,
+}
+
+/// Belge sekmeleri örneğinin açılıştaki çizimleri.
+fn sample_documents() -> Vec<Document> {
+    [
+        ("Kadıköy imar planı.dwg", true),
+        ("Moda sahil düzenlemesi.dwg", false),
+        ("Fikirtepe kentsel dönüşüm alanı, 3. revizyon.dwg", false),
+        ("Hasanpaşa.dxf", true),
+        ("Rasimpaşa.dxf", false),
+        ("Acıbadem.dwg", false),
+    ]
+    .into_iter()
+    .map(|(name, dirty)| Document {
+        name: name.to_owned(),
+        dirty,
+    })
+    .collect()
 }
 
 impl Default for Gallery {
@@ -336,6 +376,9 @@ impl Default for Gallery {
             stage_presses: 0,
             wizard_step: 1,
             section: 0,
+            documents: sample_documents(),
+            document: 0,
+            untitled: 1,
         }
     }
 }
@@ -468,6 +511,58 @@ impl Gallery {
             Demo::Notify(_) => {}
             Demo::WizardStep(step) => self.wizard_step = step.min(2),
             Demo::SectionSelected(section) => self.section = section,
+            Demo::DocumentSelected(document) => {
+                self.document = document.min(self.documents.len().saturating_sub(1));
+            }
+            Demo::DocumentClosed(document) => {
+                if document < self.documents.len() {
+                    let closed = self.documents.remove(document);
+
+                    if document < self.document || self.document >= self.documents.len() {
+                        self.document = self.document.saturating_sub(1);
+                    }
+
+                    // Son belge de kapanınca örnek baştan açılır.
+                    if self.documents.is_empty() {
+                        self.documents = sample_documents();
+                        self.document = 0;
+                    }
+
+                    if closed.dirty {
+                        return Some(format!(
+                            "Galeri: \"{}\" kaydedilmeden kapatıldı; gerçek uygulamada önce \
+                             onay istenir.",
+                            closed.name
+                        ));
+                    }
+                }
+            }
+            Demo::DocumentMoved(from, to) => {
+                if from < self.documents.len() && to < self.documents.len() {
+                    let document = self.documents.remove(from);
+                    self.documents.insert(to, document);
+
+                    self.document = match self.document {
+                        current if current == from => to,
+                        current if from < current && current <= to => current - 1,
+                        current if to <= current && current < from => current + 1,
+                        current => current,
+                    };
+                }
+            }
+            Demo::DocumentAdded => {
+                self.documents.push(Document {
+                    name: format!("Adsız {}.dwg", self.untitled),
+                    dirty: false,
+                });
+                self.untitled += 1;
+                self.document = self.documents.len() - 1;
+            }
+            Demo::DocumentSaved => {
+                if let Some(document) = self.documents.get_mut(self.document) {
+                    document.dirty = false;
+                }
+            }
         }
 
         None

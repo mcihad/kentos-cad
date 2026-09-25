@@ -36,7 +36,13 @@ impl Showcase {
                 .group(self.gallery_group("Temel", &[Page::Colors, Page::Typography, Page::Icons]))
                 .group(self.gallery_group(
                     "Bileşenler",
-                    &[Page::Buttons, Page::Data, Page::Frame, Page::Feedback],
+                    &[
+                        Page::Buttons,
+                        Page::Data,
+                        Page::Frame,
+                        Page::Layout,
+                        Page::Feedback,
+                    ],
                 ))
                 .group(self.gallery_group("CBS ve CAD", &[Page::Attributes, Page::Spatial]))
                 .group(self.interface_group())
