@@ -93,8 +93,8 @@ impl Page {
                  mini araç çubuğu, dairesel menü ve iletişim kutuları."
             }
             Page::Layout => {
-                "Sekmeli yuva, görünüm alanları, cetveller ve belge sekmeleri: çalışma alanının \
-                 düzeni."
+                "Sekmeli yuva, görünüm alanları, karşılaştırma perdesi, cetveller ve belge \
+                 sekmeleri: çalışma alanının düzeni."
             }
             Page::Inputs => {
                 "Birimli sayı, vektör ve açı girişleri; renk seçici ve rampa; anahtar, radyo \
@@ -244,6 +244,9 @@ pub enum Demo {
     AssetSearch(String),
     AssetCategory(Option<String>),
     AssetView(assets::View),
+    /// Karşılaştırma perdesi örneği: perdenin yeri ve yönü.
+    CompareMoved(f32),
+    CompareVertical(bool),
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -510,6 +513,9 @@ pub struct Gallery {
     pub asset_search: String,
     pub asset_category: Option<String>,
     pub asset_view: assets::View,
+    /// Karşılaştırma perdesi örneği.
+    pub compare_split: f32,
+    pub compare_vertical: bool,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -881,6 +887,8 @@ impl Default for Gallery {
             asset_search: String::new(),
             asset_category: None,
             asset_view: assets::View::Grid,
+            compare_split: 0.5,
+            compare_vertical: false,
         }
     }
 }
@@ -1218,6 +1226,8 @@ impl Gallery {
             Demo::AssetSearch(search) => self.asset_search = search,
             Demo::AssetCategory(category) => self.asset_category = category,
             Demo::AssetView(view) => self.asset_view = view,
+            Demo::CompareMoved(split) => self.compare_split = split,
+            Demo::CompareVertical(vertical) => self.compare_vertical = vertical,
             Demo::Tick(now) => {
                 if let Some(last) = self.last_tick {
                     let elapsed = now.saturating_duration_since(last);

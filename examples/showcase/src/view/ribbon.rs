@@ -565,21 +565,35 @@ impl Showcase {
         let tile = |backdrop: Backdrop| backdrop_tile(backdrop, self.backdrop == backdrop);
 
         // Karolar sabit boyuttadır; hücreler yığının genişliğini paylaşır.
-        Group::new("Harita zemini").push(
-            Stack::new()
-                .width(78)
-                .push(
-                    ribbon::Row::new()
-                        .push(tile(Backdrop::Theme))
-                        .push(tile(Backdrop::Slate)),
-                )
-                .push(
-                    ribbon::Row::new()
-                        .push(tile(Backdrop::Black))
-                        .push(tile(Backdrop::Paper)),
-                )
-                .push(label::caption(self.backdrop.name())),
-        )
+        Group::new("Harita zemini")
+            .push(
+                Stack::new()
+                    .width(78)
+                    .push(
+                        ribbon::Row::new()
+                            .push(tile(Backdrop::Theme))
+                            .push(tile(Backdrop::Slate)),
+                    )
+                    .push(
+                        ribbon::Row::new()
+                            .push(tile(Backdrop::Black))
+                            .push(tile(Backdrop::Paper)),
+                    )
+                    .push(label::caption(self.backdrop.name())),
+            )
+            .push(
+                Stack::new().push(
+                    Button::small(Icon::ViewColumns, "Karşılaştır")
+                        .active(self.compare)
+                        .on_press(Message::CompareToggled)
+                        .tip(Tip::new("Zeminleri karşılaştır").body(format!(
+                            "Harita iki zeminle yan yana çizilir: solda {}, sağda {}. Aradaki \
+                         perde sürüklenir, çift tıklamak ortaya alır.",
+                            self.backdrop.name(),
+                            self.compared_backdrop().name()
+                        ))),
+                ),
+            )
     }
 
     /// Arayüz metninin ailesi: her karo "Aa" örneğini kendi ailesiyle yazar.

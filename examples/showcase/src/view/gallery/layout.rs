@@ -8,11 +8,14 @@ use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::style;
 use kentos_rc::theme::{Tokens, typography};
+use kentos_rc::widget::compare::Direction;
 use kentos_rc::widget::number::units;
 use kentos_rc::widget::progress;
 use kentos_rc::widget::rulers::Transform;
 use kentos_rc::widget::viewports::{self, View, Viewports};
-use kentos_rc::widget::{DockSpace, Menu, NumberInput, Pane, Rulers, Tab, Tabs, swatch};
+use kentos_rc::widget::{
+    Compare, DockSpace, Menu, NumberInput, Pane, Rulers, Segmented, Tab, Tabs, swatch,
+};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
@@ -70,6 +73,21 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Karşılaştırma perdesi",
+                "kentos_rc::widget::Compare",
+                "İki içerik üst üste; aradaki perde birinin solunu, öbürünün sağını gösterir \
+                 (CBS'deki kaydırma aracı gibi). Perdeyi tutamağından ya da çizgisinden sürükleyin, \
+                 çift tıklamak ortaya alır. Fare olayları imlecin olduğu yana gider. Giriş \
+                 sekmesinde Görünüm → Harita zemini → Karşılaştır iki zemini yan yana gösterir.",
+                self.compare_sample(),
+                Some(
+                    "Compare::new(before, after, self.split, Message::SplitMoved)\n    \
+                     .labels(\"Tel kafes\", \"Kenarlı gölgeli\")\n\n\
+                     // üst ve alt\n\
+                     Compare::new(before, after, split, on_change).vertical()",
+                ),
+            ),
+            entry(
                 "Cetveller ve kılavuzlar",
                 "kentos_rc::widget::Rulers",
                 "İçeriğin üstünde ve solunda birimli cetveller; yakınlaştıkça aralıklar 1, 2, 5 × \
@@ -111,6 +129,62 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+
+    /// Karşılaştırma perdesi örneği: evin tel kafes ve gölgeli çizimi.
+    fn compare_sample(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let scene = |shading| {
+            container(
+                canvas(Scene {
+                    camera: Camera::Perspective,
+                    shading,
+                    yaw: scene::YAW,
+                })
+                .width(Fill)
+                .height(Fill),
+            )
+            .style(style::container::field)
+        };
+
+        let compare = Compare::new(
+            scene(Shading::Wireframe),
+            scene(Shading::ShadedEdges),
+            gallery.compare_split,
+            |split| Message::Gallery(Demo::CompareMoved(split)),
+        )
+        .labels(Shading::Wireframe.label(), Shading::ShadedEdges.label())
+        .direction(if gallery.compare_vertical {
+            Direction::Vertical
+        } else {
+            Direction::Horizontal
+        })
+        .height(typography::scaled(260.0));
+
+        column![
+            row![
+                label::muted("Perde"),
+                Segmented::new(
+                    [Orientation::Side, Orientation::Stacked],
+                    if gallery.compare_vertical {
+                        Orientation::Stacked
+                    } else {
+                        Orientation::Side
+                    },
+                    |orientation| {
+                        Message::Gallery(Demo::CompareVertical(orientation == Orientation::Stacked))
+                    },
+                ),
+                label::caption(format!("%{:.0}", gallery.compare_split * 100.0)),
+            ]
+            .spacing(8)
+            .align_y(Center),
+            container(compare)
+                .padding(1)
+                .style(style::container::bordered),
+        ]
+        .spacing(8)
+        .into()
     }
 
     /// Cetvel örneği: masanın ortasında A5 kâğıt, yakınlık ve kılavuzlar.
@@ -484,5 +558,21 @@ fn demo_body<'a>(panel: DemoPanel) -> Element<'a, Message> {
         })
         .into(),
         DemoPanel::History => rows(&[("CIZGI", "12:03"), ("OLC", "12:04"), ("KATMAN", "12:05")]),
+    }
+}
+
+/// Karşılaştırma örneğinde perdenin yönü.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Orientation {
+    Side,
+    Stacked,
+}
+
+impl std::fmt::Display for Orientation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Orientation::Side => "Yan yana",
+            Orientation::Stacked => "Üst üste",
+        })
     }
 }

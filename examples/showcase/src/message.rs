@@ -83,6 +83,9 @@ pub enum Message {
     /// Boşluk: model alanında imlecin yerinde dairesel araç menüsü açılır.
     RadialOpened,
     RadialClosed,
+    /// Harita zeminlerini kaydırmalı perdeyle karşılaştırır; perdenin yeri.
+    CompareToggled,
+    CompareMoved(f32),
     /// Kitaplık paneli: blok seçildi, arandı, kategori ya da görünüm
     /// değişti; çift tıklanan blok yerleştirilir.
     LibrarySelected(usize),

@@ -170,6 +170,9 @@ pub struct Showcase {
     /// Kitaplık paneli ve Nokta aracıyla yerleştirilecek blok.
     pub(crate) library: Library,
     pub(crate) pending_block: Option<usize>,
+    /// Zemin karşılaştırması açık mı ve perdenin yeri (0 sol, 1 sağ).
+    pub(crate) compare: bool,
+    pub(crate) compare_split: f32,
 }
 
 /// Kitaplık panelinin durumu: seçili blok, arama, kategori ve görünüm.
@@ -340,6 +343,8 @@ impl Showcase {
             rulers: true,
             library: Library::default(),
             pending_block: None,
+            compare: false,
+            compare_split: 0.5,
         }
     }
 
@@ -538,6 +543,19 @@ impl Showcase {
                 }
             }
             Message::RadialClosed => self.radial_open = false,
+            Message::CompareToggled => {
+                self.compare = !self.compare;
+                self.log(if self.compare {
+                    format!(
+                        "Zemin karşılaştırması: solda {}, sağda {}. Perdeyi sürükleyin.",
+                        self.backdrop.name(),
+                        self.compared_backdrop().name()
+                    )
+                } else {
+                    "Zemin karşılaştırması kapatıldı.".to_owned()
+                });
+            }
+            Message::CompareMoved(split) => self.compare_split = split,
             Message::LibrarySelected(block) => self.library.selected = Some(block),
             Message::LibrarySearch(search) => self.library.search = search,
             Message::LibraryCategory(category) => self.library.category = category,
@@ -1309,6 +1327,16 @@ impl Showcase {
                 (north_east.y - south_west.y).abs(),
             ),
         ))
+    }
+
+    /// Karşılaştırmada perdenin sağındaki zemin: kâğıt, zemin zaten
+    /// kâğıtsa arduvaz.
+    pub(crate) fn compared_backdrop(&self) -> Backdrop {
+        if self.backdrop == Backdrop::Paper {
+            Backdrop::Slate
+        } else {
+            Backdrop::Paper
+        }
     }
 
     /// Seçimdeki çizimler silinebilir mi: Çizimler katmanında ve katman
@@ -3030,6 +3058,25 @@ mod tests {
 
         let _ = app.update(Message::PaneToggled(Pane::Legend));
         assert!(app.windows.is_open(Pane::Legend));
+    }
+
+    #[test]
+    fn backdrops_are_compared_side_by_side() {
+        let mut app = Showcase::new();
+
+        let _ = app.update(Message::CompareToggled);
+        assert!(app.compare);
+        assert_eq!(app.compared_backdrop(), Backdrop::Paper);
+
+        let _ = app.update(Message::CompareMoved(0.3));
+        assert_eq!(app.compare_split, 0.3);
+
+        // Zemin zaten kâğıtsa karşısı arduvazdır.
+        let _ = app.update(Message::BackdropChanged(Backdrop::Paper));
+        assert_eq!(app.compared_backdrop(), Backdrop::Slate);
+
+        let _ = app.update(Message::CompareToggled);
+        assert!(!app.compare);
     }
 
     #[test]

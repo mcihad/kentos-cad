@@ -35,7 +35,7 @@ use crate::properties::{self, Section};
 use crate::table::Column;
 
 /// Senaryolar ve açıklamaları.
-const SCENARIOS: [(&str, &str); 24] = [
+const SCENARIOS: [(&str, &str); 25] = [
     ("bos", "açılış durumu"),
     (
         "secim",
@@ -115,6 +115,10 @@ const SCENARIOS: [(&str, &str); 24] = [
     (
         "lejant",
         "lejant penceresi açık, ilçeler gizli; sağda blok kitaplığı paneli",
+    ),
+    (
+        "karsilastir",
+        "zemin karşılaştırması: solda temanın zemini, sağda kâğıt; perde --surukle ile kayar",
     ),
     ("galeri", "galeri; sayfa --sayfa ile seçilir"),
 ];
@@ -550,6 +554,10 @@ fn prepare(app: &mut Showcase, scenario: &str, page: Option<&str>) -> Result<(),
             send(Message::TableRowPressed(road));
         }
         "daire" => send(Message::RadialOpened),
+        "karsilastir" => {
+            send(Message::CompareToggled);
+            send(Message::CompareMoved(0.45));
+        }
         "lejant" => {
             send(Message::PaneToggled(Pane::Legend));
             send(Message::TreeChecked(NodeId::Layer(6), false));

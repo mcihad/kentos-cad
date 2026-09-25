@@ -30,6 +30,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── rulers.rs        cetveller ve kılavuzlar: birimli çizgiler, sürüklenen kılavuzlar
 │   ├── timeline.rs      zaman çizelgesi: oynatma başı, aralık, işaretler, takvim ölçeği
 │   ├── compass.rs       pusula ve pafta kuzey oku
+│   ├── compare.rs       karşılaştırma perdesi: iki içerik, sürüklenen ayraç
 │   ├── app_menu.rs      uygulama menüsü (Office "Dosya" menüsü gibi)
 │   ├── dock.rs          yan panel yuvası: açılıp kapanan paneller, sürüklenen kenar
 │   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
@@ -335,6 +336,27 @@ RadialMenu::new(map, self.radial_open, Message::RadialClosed)
 ```
 
 ## Yerleşim
+
+### Karşılaştırma perdesi
+
+`Compare` iki içeriği üst üste koyar; aradaki perde birinin solunu (üstünü),
+öbürünün sağını (altını) gösterir. CBS'deki kaydırma (swipe) aracı ve
+önce/sonra görüntüleri gibi: iki zemin, iki tarih ya da iki çizim stili aynı
+yerde karşılaştırılır.
+
+- Perde tutamağından ya da çizgisinden sürüklenir, çift tıklamak ortaya
+  alır; `vertical()` yatay perde (üst ve alt) kurar. Köşelerde iki yanın adı
+  yazar.
+- Fare olayları imlecin olduğu yana gider; bir yanda başlayan sürükleme
+  (ör. haritayı kaydırmak) perdeyi geçse de o yanda sürer. İki içerik aynı
+  görünümü paylaşırsa biri kaydırılınca öbürü de kayar.
+- **Vitrinde.** Görünüm → Harita zemini → Karşılaştır haritayı iki zeminle
+  çizer: solda seçili zemin, sağda kâğıt (zemin kâğıtsa arduvaz).
+
+```rust
+Compare::new(self.map(Backdrop::Slate), self.map(Backdrop::Paper), self.split, Message::Split)
+    .labels("Arduvaz", "Kâğıt")
+```
 
 ### Cetveller, kılavuzlar ve pusula
 
@@ -927,6 +949,7 @@ cargo run -- snapshot mini.png --senaryo mini --imlec 437,272
 cargo run -- snapshot daire.png --senaryo daire --imlec 600,250
 cargo run -- snapshot kilavuz.png --senaryo kilavuz --bas 10,350 --imlec 300,352
 cargo run -- snapshot lejant.png --senaryo lejant
+cargo run -- snapshot karsilastir.png --senaryo karsilastir --imlec 700,300
 cargo run -- snapshot sekmeler.png --senaryo galeri --sayfa yerlesim
 cargo run -- snapshot girdiler.png --senaryo galeri --sayfa girdiler --boyut 1440x1700 --tikla 222,1190
 cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah

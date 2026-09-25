@@ -41,7 +41,7 @@ mod status;
 use std::fmt;
 
 use iced::widget::{Column, column, container, stack};
-use iced::{Element, Fill, keyboard};
+use iced::{Color, Element, Fill, keyboard};
 
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::model_space::Backdrop;
@@ -52,8 +52,8 @@ use kentos_rc::theme::{Accent, Mode};
 use kentos_rc::widget::command_line::{self, Prompt};
 use kentos_rc::widget::docking::Side;
 use kentos_rc::widget::{
-    Banner, CommandLine, Confirm, ContextMenu, EmptyState, Floating, MiniToolbar, NavigationBar,
-    RadialMenu, Toaster, overlay, status_bar,
+    Banner, CommandLine, Compare, Confirm, ContextMenu, EmptyState, Floating, MiniToolbar,
+    NavigationBar, RadialMenu, Toaster, overlay, status_bar,
 };
 
 use crate::app::{COMMAND_INPUT, DRAWING_LAYER, Showcase};
@@ -233,34 +233,23 @@ impl Showcase {
             .map(|layer| layer.color)
             .unwrap_or_default();
 
-        let navigation = NavigationBar::new()
-            .button(Icon::ZoomIn, "Yakınlaştır", Message::ZoomIn)
-            .button(Icon::ZoomOut, "Uzaklaştır", Message::ZoomOut)
-            .separator()
-            .button(Icon::ZoomExtents, "Tümünü gör", Message::FitAll)
-            .button(
-                Icon::Target,
-                "Aktif katmana sığdır",
-                Message::ZoomToLayer(self.active_layer),
+        // Karşılaştırmada iki zemin aynı görünümü paylaşır: biri kayınca
+        // öbürü de kayar.
+        let map = if self.compare {
+            let other = self.compared_backdrop();
+
+            Compare::new(
+                self.model_space_with(self.backdrop, drawing_color),
+                self.model_space_with(other, drawing_color),
+                self.compare_split,
+                Message::CompareMoved,
             )
-            .button(Icon::Home, "Başlangıç görünümü", Message::ResetView);
-
-        let model_space = ModelSpace::new(self.viewport, &self.layers, Message::ModelSpace)
-            .backdrop(self.backdrop)
-            .tool(self.tool)
-            .selection(&self.selection)
-            .hover(self.hover)
-            .measurement(self.measurement.points())
-            .draft(self.draft.points(), drawing_color)
-            .options(self.options)
-            .prompt(self.picking.as_ref().map(|pick| pick.prompt.as_str()))
-            .view_cube(self.view_cube.then(|| ViewCube::new(self.cube_rotation)))
-            .navigation(navigation);
-
-        // Seç ve Kaydır araçlarında sağ tık bağlam menüsünü açar; çizim ve
-        // ölçüm araçlarında model alanı sağ tıkı kendisi kullanır.
-        let map = ContextMenu::new(model_space, move |position| self.map_menu(position));
-        let map = self.selection_toolbar(map.into());
+            .labels(self.backdrop.name(), other.name())
+            .into()
+        } else {
+            self.model_space_with(self.backdrop, drawing_color)
+        };
+        let map = self.selection_toolbar(map);
 
         // Görünür katman yokken harita boştur; ortada ne olduğu ve nasıl
         // düzeltileceği yazar.
@@ -278,6 +267,37 @@ impl Showcase {
             ]
             .into()
         }
+    }
+
+    /// Verilen zeminle model alanı ve bağlam menüsü.
+    fn model_space_with(&self, backdrop: Backdrop, drawing_color: Color) -> Element<'_, Message> {
+        let navigation = NavigationBar::new()
+            .button(Icon::ZoomIn, "Yakınlaştır", Message::ZoomIn)
+            .button(Icon::ZoomOut, "Uzaklaştır", Message::ZoomOut)
+            .separator()
+            .button(Icon::ZoomExtents, "Tümünü gör", Message::FitAll)
+            .button(
+                Icon::Target,
+                "Aktif katmana sığdır",
+                Message::ZoomToLayer(self.active_layer),
+            )
+            .button(Icon::Home, "Başlangıç görünümü", Message::ResetView);
+
+        let model_space = ModelSpace::new(self.viewport, &self.layers, Message::ModelSpace)
+            .backdrop(backdrop)
+            .tool(self.tool)
+            .selection(&self.selection)
+            .hover(self.hover)
+            .measurement(self.measurement.points())
+            .draft(self.draft.points(), drawing_color)
+            .options(self.options)
+            .prompt(self.picking.as_ref().map(|pick| pick.prompt.as_str()))
+            .view_cube(self.view_cube.then(|| ViewCube::new(self.cube_rotation)))
+            .navigation(navigation);
+
+        // Seç ve Kaydır araçlarında sağ tık bağlam menüsünü açar; çizim ve
+        // ölçüm araçlarında model alanı sağ tıkı kendisi kullanır.
+        ContextMenu::new(model_space, move |position| self.map_menu(position)).into()
     }
 
     /// Onay bekleyen işin onay kutusu; Enter onaylar, Esc vazgeçer.
