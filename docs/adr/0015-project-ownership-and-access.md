@@ -127,3 +127,60 @@ Kurum düzeyindeki `project.create` ve `member.manage` projeye bağlı değildir
   - grupların ilk sürüme girip girmeyeceği;
   - `viewer_download` varsayılanı;
   - misafir hesabının davetle mi, hesap açmayla mı geleceği (`CLOUD-16`, `CLOUD-17`).
+
+## Uygulama notu (2026-09-25): dilimler 1, 2, 3, 5 ve dilim 4'ün sunucu tarafı
+
+Yukarıdaki “Bu ADR bir izin şemasıdır” cümlesi artık geçerli değildir: erişim proje düzeyindedir.
+
+- **Migration 0004** (`crates/server/postgres/migrations/0004_project_access.sql`):
+  - `tenant.kind` (`personal` | `organization`, var olanlar `organization`), `tenant.owner_user_id` (kişisel alanın sahibi, kişi başına bir), `admins_access_all_projects` (varsayılan açık), `viewer_download` (varsayılan açık).
+  - `project.owner_user_id` (zorunlu).
+  - `project_grant`: tenant, proje, kişi, rol (`viewer`, `commenter`, `editor`, `manager`), isteğe bağlı bitiş zamanı, veren kişi.
+  - `kentos.project_role`: rolü tek yerde hesaplar (sahiplik, kurum politikası, yetki; kurumda önce etkin üyelik ve koltuk). Satır güvenliği de uygulama da bunu kullanır; ikisi ayrışamaz.
+  - `kentos.project_access`: açılışın bilgisi (rol, ad, silinmişlik, alanın adı ve türü, `viewer_download`). Proje olsa da olmasa da aynı sorguları çalıştırır; erişim yoksa boş döner.
+  - `kentos.ensure_personal_tenant`: kişisel alanı yalnız bu işlev açar (sunucu rolü tenant açamaz, üye ekleyemez). Aynı anda gelen istekler tek alan açar.
+- **Satır güvenliği (ikinci kat):**
+  - Proje satırı yalnız projede rolü olana görünür.
+  - Nesne, komut günlüğü, denetim, olay, olay ufku ve yetki satırları yalnız işlemde `app.project_id` o projeyse ve kişi projeyi görebiliyorsa görünür ve yazılır. Bağlam `Db::scoped` ile işlem ömürlüdür.
+  - Kişinin kendi yetkileri her kapsamda görünür (“benimle paylaşılanlar” bunlardan başlar).
+  - Bir kişisel alanın projesi kendisiyle paylaşılan kişi, o projenin kapsamında alanın adını ve sahibinin üyeliğini de görür. Kurumlarda böyle bir yol yoktur, çünkü kurum projeleri yalnız kurum üyeleriyle paylaşılır.
+- **Mevcut veri, açık varsayılan:**
+  - Mevcut projelerin sahibi, onu oluşturan kişidir (`created_by`).
+  - Kurumun her üyesine her mevcut projede kurum rolünün karşılığı yetki olarak verilir: `viewer` → `viewer`, `editor` → `editor`, `project_manager` → `manager`. Üyeliğin durumu fark etmez.
+  - `owner` ve `admin` erişimi politikadan gelir, yetki yazılmaz.
+  - Üyeliğin durumu ve koltuk her istekte eskisi gibi denetlenir. Göç anında kimse erişim kazanmaz ya da kaybetmez.
+  - Her proje için bir `project.access.migrate` denetim kaydı verilen yetkileri listeler.
+  - Göçten sonra açılan proje yalnız sahibinindir (ve politika gereği yöneticilerin). Başkası paylaşımla eklenir.
+- **Uygulama katmanı:**
+  - `crates/server/application/src/access.rs`: `ProjectAccess`, `access::project`, rol → izin tablosu.
+  - Projeye bağlı her yol buradan geçer: bilgi, nesneler, olaylar, komutlar (`commands.rs`), silme, erişim listesi, WebSocket aboneliği. Her istek yeniden hesaplar; önbellek yoktur.
+  - Yazan komutlar (`project.changes`, silme, paylaşım) erişimi projenin kilidi altında yeniden sorar: kilitten önce kaldırılan ya da düşürülen yetki sayılır.
+  - `MembershipView.capabilities` yalnız kurum düzeyindedir (`project.create`, `member.manage`). Proje izinleri `ProjectInfo.access` ve `ProjectSummary.access` ile gelir.
+- **404:**
+  - Var olmayan, paylaşılmamış, başka kurumun, tahmin edilen ya da biçimi bozuk kimlik aynı gövdeyi alır: `not_found`, “Proje bulunamadı.”
+  - Silinmiş proje, erişimi olana 410, olmayana 404'tür. Listeler ve sayılar erişim süzgecinden sonra hesaplanır.
+  - Koltuğu olmayan ya da üyeliği kapalı kurum üyesi, istediği proje kimliği ne olursa olsun aynı 403'ü alır; bu yanıt proje hakkında bir şey söylemez.
+- **Kişisel alan:**
+  - İlk girişte açılır (giriş yanıtı ve `/v1/me`). `MembershipView.tenantKind` = `personal`; arayüz “Kişisel” der. Üyelik listesinde kurumlardan sonra gelir.
+  - Kişisel alana proje açmak bugünkü uçtur: `POST /v1/tenants/{kişisel alan}/projects`.
+  - “Projelerim”: `GET /v1/me/projects`. Kişinin sahip olduğu ve kendisiyle paylaşılan projeler, bütün alanlardan. Yalnız politika ile erişilen kurum projeleri kurumun listesindedir.
+  - `kentosd member add` kişisel alana üye eklemez.
+- **Paylaşım (dilim 4, sunucu tarafı):**
+  - Ürün komutları `project.share` v1 ve `project.access.revoke` v1 (katalogda, `project.share` ister). Erişim listesi: `GET …/projects/{proje}/access`.
+  - Rol verilirken sahiplik verilmez (girdi tipi `GrantRole`). Kişi kendi erişimini değiştiremez, sahibin erişimi paylaşımla değişmez. Kurum projesi yalnız kurum üyesiyle paylaşılır.
+  - Her değişiklik denetim kaydı ve nesnesiz bir `project.access` olayı yazar. Olay kim olduğunu taşımaz.
+  - Açık WebSocket'ler her teslimden önce erişimi yeniden sorar: bu olayda, her commit'te ve 5 sn'lik yoklamada. Erişimi kalkana `not_found` gider ve aboneliği kapanır. Kurumdaki üyeliğin komut satırından kapatılması da en geç yoklamada yakalanır.
+- **Kurum politikası:** işletmeci `kentosd tenant policy --slug KISA --admins-access-all on|off --viewer-download on|off` ile değiştirir; değişiklik denetime yazılır.
+- **Web:** düğmeler projenin kendi izinlerine göre açılır. Kişisel alan kurum seçicisinde “Kişisel” adıyla durur; yükleme ve açma onu da kullanır.
+- **Sınanan** (`KENTOS_TEST_DB=required`):
+  - `crates/server/application/tests/access.rs`: rol kaynakları, ADR'nin negatif yalıtım listesi, satır güvenliği, kişisel alan (eşzamanlı açılış), “Projelerim”, paylaşım kuralları ve tekrarı, 0004'ün veri göçü.
+  - `apps/api/src/http/tests.rs`: 404 gövdelerinin eşitliği, paylaşım ve “Projelerim” HTTP üzerinden.
+  - `apps/api/src/http/ws_tests.rs`: paylaşımı kaldırılan kişinin açık aboneliği kesilir, ardından hiçbir olay gelmez.
+- **Kalanlar:**
+  - Web'de paylaşım penceresi, “Projelerim / Benimle paylaşılanlar” ekranı, açık projede erişim değişince uyarı ve salt okunura geçiş (`CLOUD-04`, `CLOUD-16`, `CLOUD-21`).
+  - Gruplar, kurum dışı misafir, davet ve kişiyi e-posta ya da giriş adıyla bulma (`CLOUD-16`, `CLOUD-17`). Bugün kişi hesap kimliğiyle (`UserView.id`) seçilir.
+  - Sahiplik devri (`project.transfer`, `CLOUD-08`) ve kurumdan ayrılanın projelerini yöneticiye geçirmek.
+  - `project.comment`, `project.download`, `project.history` ve `project.jobs.run` adlandırıldı ve rollere dağıtıldı; bunları isteyen uç henüz yok.
+  - Kurum politikasını arayüzden değiştirmek; “bu kişi neden erişebiliyor?” açıklaması (`CLOUD-15`).
+  - Dış PostGIS kesişimi (`CLOUD-14`): henüz kaynak bağlantısı yok.
+  - Proje listesi her satır için rol işlevini çağırır; çok projeli kurumlarda ölçülmeli (`CLOUD-28`).
