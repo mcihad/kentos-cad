@@ -25,8 +25,11 @@ export function registerDefaultKeybindings(ctx: AppContext): void {
   keymap.bind('Ctrl+A', 'edit.selectAll');
 
   keymap.bind('Home', 'view.zoomExtents');
-  keymap.bind('+', 'view.zoomIn');
-  keymap.bind('-', 'view.zoomOut');
+  // While a command runs, + and − begin a typed value (−5, +2.5) like a digit
+  // does; they zoom only when nothing runs (docs/adr/0018).
+  const idle = () => tools.activeId.value === 'select' && !tools.nested;
+  keymap.bind('+', 'view.zoomIn', { when: idle });
+  keymap.bind('-', 'view.zoomOut', { when: idle });
   keymap.bind('Ctrl+Shift+F', 'view.zoomSelection');
   keymap.bind('F2', 'view.bottomPanel', global);
   keymap.bind('F4', 'view.rightPanel', global);

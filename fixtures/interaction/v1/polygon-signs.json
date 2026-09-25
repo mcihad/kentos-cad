@@ -1,0 +1,41 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "polygon-signs",
+  "title": "Değer yazmaya − ya da + ile başlamak: komut çalışırken sayı başlatır, boştayken görünümü değiştirir",
+  "source": "TODOS.md UX-04",
+  "covers": ["UX-04"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.polygon" },
+    { "click": [0, 0] },
+    { "move": [20, 0] },
+    { "text": "-", "note": "Eksi değer alanını açar; görünüm uzaklaşmaz.", "expect": { "dynamicInput": "-", "metresPerPixel": 0.125 } },
+    { "text": "4", "expect": { "dynamicInput": "-4" } },
+    { "key": "Enter", "note": "Eksi uzunluk imlecin tersine gider.", "expect": { "points": 2 } },
+    { "text": "@0,5" },
+    { "key": "Enter", "expect": { "points": 3 } },
+    {
+      "key": "Enter",
+      "expect": { "entities": 1, "newest": { "kind": "polygon", "points": [[0, 0], [-4, 0], [-4, 5]], "edges": [[-4, 0], [0, 5]] } }
+    },
+    { "click": [0, 20] },
+    { "move": [20, 20] },
+    { "text": "+7", "note": "Artı da değer alanını açar; görünüm yakınlaşmaz.", "expect": { "dynamicInput": "+7", "metresPerPixel": 0.125 } },
+    { "key": "Enter", "expect": { "points": 2 } },
+    { "text": "@0,3" },
+    { "key": "Enter" },
+    {
+      "key": "Enter",
+      "expect": { "entities": 2, "newest": { "kind": "polygon", "points": [[0, 20], [7, 20], [7, 23]], "edges": [[7, 0], [0, 3]] } }
+    },
+    { "key": "Esc", "expect": { "tool": "select" } },
+    { "move": [0, 0] },
+    { "key": "-", "note": "Komut yokken eksi 1,5 kat uzaklaştırır.", "expect": { "dynamicInput": null, "metresPerPixel": 0.1875 } },
+    { "key": "+", "expect": { "metresPerPixel": 0.125 } }
+  ]
+}

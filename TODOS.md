@@ -256,12 +256,12 @@ Kabul: aynı kayıtlı komut UI, Python ve AI'dan aynı değişikliği üretir; 
 
 Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında nokta verir; klavyeden sayı/koordinat yazınca imleç yanındaki parametre alanı açılır ve ilk karakter kaybolmadan girişe katılır. Desktop bunu aynı alışkanlıklarla karşılar. DOM ile Iced widget ağacının aynı olması gerekmez; davranış sözleşmesi aynı olmalıdır.
 
-- [ ] `UX-01` `ToolSession` davranış sözleşmesini tanımla: başlangıç, nokta/nesne/mesafe/açı/seçenek bekleme, önizleme, commit, iptal, askıya alma ve geri dönme. Web'in TS session'ı korunur; desktop Rust karşılığı bu sözleşmeyle geliştirilir.
+- [ ] `UX-01` `ToolSession` davranış sözleşmesini tanımla: başlangıç, nokta/nesne/mesafe/açı/seçenek bekleme, önizleme, commit, iptal, askıya alma ve geri dönme. Web'in TS session'ı korunur; desktop Rust karşılığı bu sözleşmeyle geliştirilir. — **25 Eylül, kısmen:** durumlar, geçişler ve izlerin okuduğu gözlenebilir durum [ADR 0018](docs/adr/0018-tool-session-and-input.md)'de; web `Tool.pointCount` veriyor. Masaüstü karşılığı çizim alanı ve poligon komutuyla gelecek (`REN-01..07`, `CMD-04..07`).
 - [ ] `UX-02` Prompt'u metinden parse edilen düğmelere bağımlı bırakma; `PromptSpec` içinde alan türü, seçenek ID'leri, default, birim, validation ve yardım olsun. Web geçici adapter ile mevcut prompt'u desteklesin.
-- [ ] `UX-03` Klavye önceliğini yaz: açık modal/metin editörü → IME composition → aktif araç parametresi → komut satırı → global shortcut. UI odağına göre yazı çalınmasın.
-- [ ] `UX-04` Yazmaya başlayınca dinamik giriş aç, ilk karakteri tam bir kez aktar; `-`, `+`, `@`, ondalık ve göreli/polar girişi destekle. Sadece fiziksel tuş koduna değil text/IME olaylarına dayan.
+- [ ] `UX-03` Klavye önceliğini yaz: açık modal/metin editörü → IME composition → aktif araç parametresi → komut satırı → global shortcut. UI odağına göre yazı çalınmasın. — **25 Eylül, kısmen:** öncelik sırası ADR 0018'de. IME testi ve iletişim kutusu ayrıntıları açık.
+- [ ] `UX-04` Yazmaya başlayınca dinamik giriş aç, ilk karakteri tam bir kez aktar; `-`, `+`, `@`, ondalık ve göreli/polar girişi destekle. Sadece fiziksel tuş koduna değil text/IME olaylarına dayan. — **25 Eylül, kısmen:** web'de komut çalışırken `-` ve `+` da değer başlatıyor; önce görünümü değiştiriyordu, `-4` yazınca nokta ters yöne gidiyordu. İlk karakterin tam bir kez girdiğini `polygon-accept` ve `polygon-signs` izleri denetliyor (`pnpm e2e:interaction`). IME ve Türkçe klavye varyantları açık.
 - [ ] `UX-05` `Y,X`, `@dY,dX`, `@mesafe<açı`, uzunluk birimi, derece/grad, ifade ve Türkçe ondalık ayırıcısının gramerini belirle; virgülün koordinat/ondalık çakışmasına açık çözüm üret.
-- [ ] `UX-06` Enter, Esc, Tab/Shift+Tab, Backspace, sağ tık, çift tık, son komutu tekrarla, undo last point ve polygon kapatma anlamını platformlar arasında fixture'la doğrula.
+- [ ] `UX-06` Enter, Esc, Tab/Shift+Tab, Backspace, sağ tık, çift tık, son komutu tekrarla, undo last point ve polygon kapatma anlamını platformlar arasında fixture'la doğrula. — **25 Eylül, kısmen:** anlamlar ADR 0018'de, `polygon-keys` izinde; web geçiyor. Tab artık değeri silmiyor. Açık kararlar: ilk köşeye tıklama, Boşluk, komut içinde Ctrl+Z, Tab ile iki alan.
 - [ ] `UX-07` Sayı yazılırken pan/zoom, snap, ortho, polar tracking ve geçici nokta hesaplayıcı bağlamını koru. `ToolManager.nest/unnest` davranışını kaybetme.
 - [ ] `UX-08` Dinamik giriş konumunu viewport/DPI/ekran kenarına göre sınırla; imleci, ölçü etiketini veya seçilen nesneyi gereksiz örtmesin.
 - [ ] `UX-09` Seçim yönü, crossing/window, çoklu seçim, katman kilidi/görünürlüğü, grips ve hover önceliğini mevcut web ile karşılaştır; toleranslar settings'ten gelsin.
@@ -269,7 +269,7 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
 - [ ] `UX-11` Ribbon/menu/context menu, kısayol, command palette ve toolbar etkinlik durumlarını aynı komut capability'sinden üret; çalışmayan özellikler açık `pending` kalsın.
 - [ ] `UX-12` Klavye ile tam kullanım, odak halkası, metin seçimi, yüksek kontrast, ekran okuyucu etiketleri, Türkçe fontlar ve IME testlerini desktop/web eşdeğerlik listesine ekle.
 
-Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" göründü → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç`. Buna focus başka metin kutusundayken, yüksek DPI'da, Türkçe klavyede ve IME açıkken varyantlar eklenir. Bu iz Web e2e ile native interaction fixture'ının ortak referansıdır.
+Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" göründü → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç`. Buna focus başka metin kutusundayken, yüksek DPI'da, Türkçe klavyede ve IME açıkken varyantlar eklenir. Bu iz Web e2e ile native interaction fixture'ının ortak referansıdır. — **25 Eylül:** iz `fixtures/interaction/v1/polygon-accept.json` (biçim `fixtures/interaction/README.md`). Web gerçek tarayıcıda geçiyor (`pnpm e2e:interaction`); masaüstü aynı dosyayı çizim alanı gelince oynatacak.
 
 ## 6. `kentos-rc` → KentOS UI taşıması — P0/P1
 

@@ -35,6 +35,9 @@ export class CursorInput extends Component {
         } else if (e.key === 'Escape') {
           e.preventDefault();
           this.close();
+        } else if (e.key === 'Tab') {
+          // One field for now: Tab must not move the focus away and lose the typed value (docs/adr/0018).
+          e.preventDefault();
         }
       }),
     );

@@ -1,0 +1,56 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "polygon-accept",
+  "title": "Kapalı alan kabul izi: tıkla, 12 yaz, Enter, sonraki nokta, kapat, geri al, yinele, kaydet ve aç",
+  "source": "TODOS.md §5 kabul izi",
+  "covers": ["UX-01", "UX-04", "UX-06"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.polygon", "expect": { "tool": "polygon", "points": 0, "options": [] } },
+    { "click": [0, 0], "expect": { "points": 1, "options": ["Y", "U", "G"] } },
+    { "move": [20, 0], "note": "İmleç ilk noktanın doğusunda, aynı piksel satırında: yazılan uzunluk tam doğuya gider." },
+    { "text": "1", "note": "İlk karakter değer alanını açar ve alana bir kez girer.", "expect": { "dynamicInput": "1" } },
+    { "text": "2", "expect": { "dynamicInput": "12" } },
+    { "key": "Enter", "expect": { "dynamicInput": null, "points": 2 } },
+    { "text": "@0,8", "expect": { "dynamicInput": "@0,8" } },
+    { "key": "Enter", "expect": { "dynamicInput": null, "points": 3, "options": ["Y", "U", "G", "Enter"] } },
+    {
+      "key": "Enter",
+      "note": "Enter alanı kapatıp çizime yazar; araç yeni bir alan için açık kalır.",
+      "expect": {
+        "tool": "polygon",
+        "points": 0,
+        "entities": 1,
+        "newest": { "kind": "polygon", "points": [[0, 0], [12, 0], [12, 8]], "edges": [[12, 0], [0, 8]] },
+        "canUndo": true,
+        "dirty": true,
+        "log": "success"
+      }
+    },
+    { "key": "Esc", "expect": { "tool": "select", "entities": 1 } },
+    { "key": "Ctrl+Z", "note": "Alanın tamamı tek adımda geri alınır.", "expect": { "entities": 0, "canUndo": false, "canRedo": true } },
+    {
+      "key": "Ctrl+Y",
+      "expect": {
+        "entities": 1,
+        "newest": { "kind": "polygon", "points": [[0, 0], [12, 0], [12, 8]], "edges": [[12, 0], [0, 8]] },
+        "canUndo": true,
+        "canRedo": false
+      }
+    },
+    {
+      "saveAndReopen": true,
+      "expect": {
+        "entities": 1,
+        "newest": { "kind": "polygon", "points": [[0, 0], [12, 0], [12, 8]], "edges": [[12, 0], [0, 8]] },
+        "dirty": false,
+        "canUndo": false
+      }
+    }
+  ]
+}

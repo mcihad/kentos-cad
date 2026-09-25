@@ -45,7 +45,7 @@ PREVIEW_URL := http://localhost:$(PREVIEW_PORT)
 		restart status logs logs-web logs-api logs-desktop open \
 		db-status db-start db-stop db-setup db-migrate kentosd \
 		build wasm build-api build-rust build-desktop catalog inventory \
-		check verify typecheck test test-rust test-wasm test-desktop fmt fmt-check arch e2e e2e-visual e2e-cloud inventory-check ui-snapshots desktop-snapshot \
+		check verify typecheck test test-rust test-wasm test-desktop fmt fmt-check arch e2e e2e-visual e2e-interaction e2e-cloud inventory-check ui-snapshots desktop-snapshot \
 		perf-startup perf-interaction clean clean-wasm clean-rust
 
 ##@ Yardım
@@ -248,6 +248,9 @@ e2e: ## Tarayıcı duman testi (başsız Chrome)
 
 e2e-visual: ## Arayüzün görsel karşılaştırması
 	$(HEAVY) pnpm e2e:visual
+
+e2e-interaction: ## Etkileşim izleri: poligon kabul izi ve tuş anlamları (fixtures/interaction, ADR 0018)
+	$(HEAVY) pnpm e2e:interaction
 
 e2e-cloud: ## Gerçek kentosd + PostGIS bulut akışı (geliştirme veritabanına “E2E …” projeleri yazar)
 	$(HEAVY) pnpm e2e:cloud

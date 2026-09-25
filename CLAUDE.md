@@ -81,6 +81,7 @@ pnpm test:rust           # Rust ve WASM/format entegrasyon testleri
 pnpm wasm                # değişen ortak kaynakların WASM paketlerini derle
 pnpm e2e                 # gerçek tarayıcı duman testi
 pnpm e2e:visual          # görsel karşılaştırma
+pnpm e2e:interaction     # etkileşim izleri: poligon kabul izi, tuş anlamları (fixtures/interaction, ADR 0018)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 pnpm perf:interaction    # etkileşim ölçümleri
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}

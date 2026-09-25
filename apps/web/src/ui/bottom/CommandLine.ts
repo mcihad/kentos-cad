@@ -54,10 +54,13 @@ export class CommandLine extends Component {
     this.d.add(listen(this.input, 'blur', () => setTimeout(() => this.hideList(), 120)));
 
     // Route coordinate-looking keystrokes from the drawing into the field.
+    // The browser then types the key into the field it focused: the first
+    // character arrives exactly once. + and − reach here only while a
+    // command runs (their zoom bindings wait for the select tool).
     ctx.keymap.fallback = (e) => {
       if (e.ctrlKey || e.altKey || e.metaKey || e.key.length !== 1) return;
       if (isTextInput(document.activeElement)) return;
-      if (!/[\d@.]/.test(e.key)) return;
+      if (!/[\d@.+-]/.test(e.key)) return;
       if (this.direct?.accepts()) this.direct.show();
       else this.focus();
     };

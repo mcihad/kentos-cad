@@ -3679,7 +3679,10 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/polygon-accept.json",
+        "fixtures/interaction/v1/polygon-keys.json",
+        "fixtures/interaction/v1/polygon-signs.json"
       ]
     },
     {
@@ -6171,7 +6174,10 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/polygon-accept.json",
+        "fixtures/interaction/v1/polygon-keys.json",
+        "fixtures/interaction/v1/polygon-signs.json"
       ],
       "acceptance": "TODOS.md §5 kabul izi: polygon başlat → tıkla → 12 yaz → imleç yanındaki alan açılır ve “12” görünür → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç. Web e2e ile native etkileşim fixture'ının ortak başvurusudur (UX-01, UX-04, UX-06). Henüz otomatik test değildir."
     },
@@ -6398,7 +6404,8 @@
       },
       "tests": [
         "apps/web/src/app/menus.test.ts",
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/interaction.mjs"
       ]
     },
     {

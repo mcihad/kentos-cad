@@ -47,6 +47,10 @@ export abstract class PointInputTool implements Tool {
     return this.pts.at(-1) ?? null;
   }
 
+  get pointCount(): number {
+    return this.pts.length;
+  }
+
   pointerDown(p: ToolPointer): void {
     if (p.button === 0) this.accept(this.constrain(p));
   }

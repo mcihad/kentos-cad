@@ -131,9 +131,14 @@ function textIndex(root, paths) {
   return (needles) => files.filter((f) => needles.some((n) => f.text.includes(n))).map((f) => f.path);
 }
 
-/** Test files and e2e scripts, for looking up which of them mention an id. */
+/**
+ * Test files, e2e scripts and the interaction traces `interaction.mjs` plays
+ * (a trace names its commands: `"run": "tool.polygon"`, docs/adr/0018), for
+ * looking up which of them mention an id.
+ */
 export function testIndex(root, web) {
   const e2e = join(web, 'scripts', 'e2e');
+  const traces = join(root, 'fixtures', 'interaction', 'v1');
   return textIndex(root, [
     ...tsFiles(join(web, 'src'), { tests: true }),
     ...tsFiles(join(web, 'scripts'), { tests: true }),
@@ -141,6 +146,10 @@ export function testIndex(root, web) {
       .filter((f) => f.endsWith('.mjs') && f !== 'cdp.mjs')
       .sort()
       .map((f) => join(e2e, f)),
+    ...readdirSync(traces)
+      .filter((f) => f.endsWith('.json'))
+      .sort()
+      .map((f) => join(traces, f)),
   ]);
 }
 

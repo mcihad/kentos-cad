@@ -59,6 +59,11 @@ export interface Tool {
   acceptPoint?(p: Vec2): boolean;
   /** Screen-space preview drawn on the overlay canvas. */
   draw?(g: CanvasRenderingContext2D, view: ViewTransform): void;
+  /**
+   * Points the running command has taken so far. The interaction traces
+   * (fixtures/interaction, docs/adr/0018) read it; desktop tools report the same.
+   */
+  readonly pointCount?: number;
 }
 
 export type ToolGroup = 'select' | 'draw' | 'annotate' | 'transform' | 'modify' | 'area' | 'map';
