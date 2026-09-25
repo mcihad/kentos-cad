@@ -17,6 +17,7 @@ mod foundations;
 mod frame;
 mod inputs;
 mod layout;
+pub(crate) mod scene;
 mod spatial;
 
 use iced::widget::{column, container, scrollable, space};

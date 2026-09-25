@@ -23,7 +23,7 @@
 mod app_menu;
 mod attribute_table;
 mod dock;
-mod gallery;
+pub(crate) mod gallery;
 mod help;
 mod import;
 mod layers;

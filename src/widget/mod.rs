@@ -39,6 +39,7 @@ pub mod tabs;
 pub mod toast;
 pub mod toolbar;
 pub mod tree_view;
+pub mod viewports;
 pub mod wizard;
 
 mod tip;
@@ -72,6 +73,7 @@ pub use tip::{Tip, tip};
 pub use toast::{Toast, Toaster, Toasts};
 pub use toolbar::Toolbar;
 pub use tree_view::TreeView;
+pub use viewports::{View, Viewports, Views};
 pub use wizard::Wizard;
 
 use iced::widget::{Rule, container, rule, space};

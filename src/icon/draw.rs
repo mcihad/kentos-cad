@@ -790,6 +790,40 @@ impl Pen {
                 );
                 self.polyline(frame, &[(7.25, 3.75), (12.25, 3.75), (12.25, 5.75)], false);
             }
+            Icon::Maximize => {
+                self.polyline(frame, &[(9.25, 2.25), (13.75, 2.25), (13.75, 6.75)], false);
+                self.line(frame, (13.5, 2.5), (9.0, 7.0));
+                self.polyline(frame, &[(6.75, 13.75), (2.25, 13.75), (2.25, 9.25)], false);
+                self.line(frame, (2.5, 13.5), (7.0, 9.0));
+            }
+            Icon::Restore => {
+                self.polyline(frame, &[(13.75, 6.75), (9.25, 6.75), (9.25, 2.25)], false);
+                self.line(frame, (9.5, 6.5), (14.0, 2.0));
+                self.polyline(frame, &[(2.25, 9.25), (6.75, 9.25), (6.75, 13.75)], false);
+                self.line(frame, (6.5, 9.5), (2.0, 14.0));
+            }
+            Icon::ViewSingle
+            | Icon::ViewColumns
+            | Icon::ViewRows
+            | Icon::ViewThree
+            | Icon::ViewQuad => {
+                self.polyline(
+                    frame,
+                    &[(1.75, 2.75), (14.25, 2.75), (14.25, 13.25), (1.75, 13.25)],
+                    true,
+                );
+
+                if matches!(icon, Icon::ViewColumns | Icon::ViewThree | Icon::ViewQuad) {
+                    self.line(frame, (8.0, 2.75), (8.0, 13.25));
+                }
+
+                match icon {
+                    Icon::ViewRows => self.line(frame, (1.75, 8.0), (14.25, 8.0)),
+                    Icon::ViewThree => self.line(frame, (8.0, 8.0), (14.25, 8.0)),
+                    Icon::ViewQuad => self.line(frame, (1.75, 8.0), (14.25, 8.0)),
+                    _ => {}
+                }
+            }
             Icon::ExpandAll => {
                 for y in [3.5, 8.5] {
                     self.polyline(frame, &[(3.5, y), (8.0, y + 4.0), (12.5, y)], false);

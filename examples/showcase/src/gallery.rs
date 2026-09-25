@@ -19,9 +19,11 @@ use kentos_rc::widget::docking::{self, Docks, Side};
 use kentos_rc::widget::floating::{self, Placement, Windows};
 use kentos_rc::widget::inspector;
 use kentos_rc::widget::table::SortOrder;
+use kentos_rc::widget::viewports::{self, Arrangement, Views};
 
 use crate::message::Message;
 use crate::sample;
+use crate::view::gallery::scene::{Camera, Shading};
 
 /// Galeri sayfaları.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -83,7 +85,9 @@ impl Page {
                 "Kayan pencereler, durum çubuğu, komut kutusu, gezinme çubuğu, menü ve iletişim \
                  kutuları."
             }
-            Page::Layout => "Belge sekmeleri ve sekmeli yuva: çalışma alanının düzeni.",
+            Page::Layout => {
+                "Belge sekmeleri, sekmeli yuva ve görünüm alanları: çalışma alanının düzeni."
+            }
             Page::Inputs => "Birimli sayı, vektör ve açı girişleri; renk seçici ve renk rampası.",
             Page::Feedback => {
                 "Bildirimler, ilerleme ve görevler, onay kutusu, uyarı şeridi, boş ve hata \
@@ -167,6 +171,10 @@ pub enum Demo {
     Stroke(iced::Color),
     Fill(iced::Color),
     RampChanged(Ramp, usize),
+    /// Görünüm alanı örneği.
+    Views(viewports::Event),
+    Camera(usize, Camera),
+    Shading(usize, Shading),
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -383,6 +391,10 @@ pub struct Gallery {
     /// Renk rampası örneği ve seçili durak.
     pub ramp: Ramp,
     pub stop: usize,
+    /// Görünüm alanı örneği: düzen, bakışlar ve stiller.
+    pub views: Views,
+    pub cameras: [Camera; 4],
+    pub shadings: [Shading; 4],
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -481,6 +493,14 @@ impl Default for Gallery {
                 .map(|(_, ramp)| ramp)
                 .unwrap_or_else(|| Ramp::new([])),
             stop: 2,
+            views: Views::new(Arrangement::Quad),
+            cameras: Camera::ALL,
+            shadings: [
+                Shading::Wireframe,
+                Shading::Hidden,
+                Shading::Hidden,
+                Shading::ShadedEdges,
+            ],
         }
     }
 }
@@ -678,6 +698,17 @@ impl Gallery {
             Demo::RampChanged(ramp, stop) => {
                 self.ramp = ramp;
                 self.stop = stop;
+            }
+            Demo::Views(event) => self.views.update(event),
+            Demo::Camera(view, camera) => {
+                if let Some(slot) = self.cameras.get_mut(view) {
+                    *slot = camera;
+                }
+            }
+            Demo::Shading(view, shading) => {
+                if let Some(slot) = self.shadings.get_mut(view) {
+                    *slot = shading;
+                }
             }
         }
 

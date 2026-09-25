@@ -1,18 +1,20 @@
-//! Yerleşim sayfası: belge sekmeleri ve sekmeli yuva.
+//! Yerleşim sayfası: belge sekmeleri, sekmeli yuva ve görünüm alanları.
 
-use iced::widget::{Column, button, column, container, row, space};
+use iced::widget::{Column, button, canvas, column, container, row, space};
 use iced::{Center, Element, Fill};
 
 use kentos_rc::icon::{Icon, Tone, icon};
 use kentos_rc::label;
 use kentos_rc::style;
 use kentos_rc::widget::progress;
-use kentos_rc::widget::{DockSpace, Pane, Tab, Tabs, swatch};
+use kentos_rc::widget::viewports::{self, View, Viewports};
+use kentos_rc::widget::{DockSpace, Menu, Pane, Tab, Tabs, swatch};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
 use crate::gallery::{Demo, DemoPanel};
 use crate::message::Message;
+use crate::view::gallery::scene::{Camera, Scene, Shading};
 
 impl Showcase {
     pub(super) fn layout_page(&self) -> Vec<Element<'_, Message>> {
@@ -44,6 +46,26 @@ impl Showcase {
                 ),
             ),
             entry(
+                "Görünüm alanları",
+                "kentos_rc::widget::Viewports",
+                "Aynı modeli birden çok bakışla gösterir: tek, iki, üç ya da dört görünüm. \
+                 Görünüme tıklamak onu etkin yapar; etkin görünüm vurgu renginde çerçevelenir. \
+                 Sol üstteki menüler bakış yönünü ve görsel stili seçer; ⤢ ya da başlığa çift tık \
+                 görünümü büyütür. Görünümler arasındaki çizgiler sürüklenir. Buradaki sahne \
+                 örnek bir tuvaldir; içerik uygulamanındır (model alanı, 3B sahne).",
+                self.viewports_sample(),
+                Some(
+                    "Viewports::new(&self.views, Message::Views, |index| {\n    \
+                         View::new(self.scene(index))\n        \
+                             .menu(camera.label(), move || camera_menu(index))\n        \
+                             .menu(style.label(), move || style_menu(index))\n\
+                     })\n\n\
+                     viewports::arrangements(self.views.arrangement, |arrangement| {\n    \
+                         Message::Views(viewports::Event::Arranged(arrangement))\n\
+                     })",
+                ),
+            ),
+            entry(
                 "Belge sekmeleri",
                 "kentos_rc::widget::Tabs",
                 "Açık çizimler ya da model ve düzen görünümleri gibi aynı alanı paylaşan içerikler. \
@@ -67,6 +89,68 @@ impl Showcase {
                 ),
             ),
         ]
+    }
+
+    /// Görünüm alanı örneği: düzen seçici ve evin dört bakışı.
+    fn viewports_sample(&self) -> Element<'_, Message> {
+        let gallery = &self.gallery;
+        let views = Viewports::new(
+            &gallery.views,
+            |event| Message::Gallery(Demo::Views(event)),
+            |index| {
+                let camera = gallery.cameras[index];
+                let shading = gallery.shadings[index];
+
+                View::new(canvas(Scene { camera, shading }).width(Fill).height(Fill))
+                    .menu(camera.label(), move || {
+                        Camera::ALL.into_iter().fold(
+                            Menu::new().header("Bakış"),
+                            |menu, choice| {
+                                menu.check(
+                                    choice.label(),
+                                    choice == camera,
+                                    Message::Gallery(Demo::Camera(index, choice)),
+                                )
+                            },
+                        )
+                    })
+                    .menu(shading.label(), move || {
+                        Shading::ALL.into_iter().fold(
+                            Menu::new().header("Görsel stil"),
+                            |menu, choice| {
+                                menu.check(
+                                    choice.label(),
+                                    choice == shading,
+                                    Message::Gallery(Demo::Shading(index, choice)),
+                                )
+                            },
+                        )
+                    })
+            },
+        );
+
+        let active = gallery.views.active;
+
+        column![
+            row![
+                viewports::arrangements(gallery.views.arrangement, |arrangement| {
+                    Message::Gallery(Demo::Views(viewports::Event::Arranged(arrangement)))
+                }),
+                label::caption(format!(
+                    "Etkin görünüm: {} · {}",
+                    gallery.cameras[active].label(),
+                    gallery.shadings[active].label()
+                )),
+            ]
+            .spacing(16)
+            .align_y(Center),
+            container(views)
+                .height(460)
+                .padding(1)
+                .style(style::container::bordered),
+        ]
+        .spacing(10)
+        .into()
     }
 
     /// Sekmeli yuva örneği: ortada çizim alanı, kenarlarda paneller.

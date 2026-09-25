@@ -32,6 +32,7 @@ src/                     kentos-rc kütüphanesi
 │   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
 │   ├── tabs.rs          belge sekmeleri: kapatma, sürükleyerek sıralama, taşma listesi
 │   ├── docking.rs       sekmeli yuva: alanlar, yığınlar, sürükle-bırak, yüzen paneller
+│   ├── viewports.rs     görünüm alanları: 1–4 görünüm, etkin görünüm, büyütme, bölme
 │   ├── number.rs        sayı girişi: birim, ifade, sürükleme; vektör, açı ve kadran
 │   ├── color.rs         renk seçici (HSV, onaltılık, saydamlık) ve renk rampası
 │   ├── toast.rs         bildirimler: önem düzeyi, eylem, üst üste dizilme, süre
@@ -264,6 +265,35 @@ Message::Dock(event) => self.docks.update(event),
 // saklama: "sol 260: ; sag 300: katmanlar* @1.00 / ozellikler* @1.00; alt 220: tablo* @1.00"
 let text = self.docks.save(|panel| panel.key().to_owned());
 let docks = Docks::load(&text, Panel::parse);
+```
+
+### Görünüm alanları
+
+`Viewports` aynı modeli ya da haritayı birden çok görünümde gösterir.
+
+- **Düzen.** Tek, iki (yan yana ya da alt alta), üç (solda büyük) ya da dört
+  görünüm; `viewports::arrangements` düzen seçicisidir.
+- **Etkin görünüm.** Görünüme tıklamak onu etkin yapar; etkin görünüm vurgu
+  renginde çerçevelenir ve uygulama komutları ona uygular.
+- **Başlık.** Sol üstteki menüler uygulamanındır (`View::menu`: bakış yönü,
+  görsel stil); içeriğin üstünde okunur kalan küçük etiketlerdir. ⤢ ya da
+  başlığa çift tık görünümü büyütür, yeniden basınca düzene dönülür.
+- **Bölme.** Görünümler arasındaki çizgiler sürüklenir; oranlar `Views`'ta
+  saklanır.
+- **Vitrinde.** Galerinin Yerleşim sayfasında örnek bir evin üst, ön, sağ ve
+  perspektif görünümleri; tel kafes, gizli çizgi ve gölgeli stiller.
+
+```rust
+use kentos_rc::widget::viewports::{self, View, Viewports, Views};
+
+Viewports::new(&self.views, Message::Views, |index| {
+    View::new(self.scene(index))
+        .menu(camera.label(), move || camera_menu(index))
+        .menu(style.label(), move || style_menu(index))
+})
+
+// update
+Message::Views(event) => self.views.update(event),
 ```
 
 ## Girdiler
