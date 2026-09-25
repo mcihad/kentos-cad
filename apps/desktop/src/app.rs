@@ -17,6 +17,7 @@ use kentos_ui::widget::docking::{self, Docks, Side};
 
 use crate::catalog::{Standing, catalog};
 use crate::document::Document;
+use crate::viewport::{self, Viewport};
 
 pub const COMMAND_INPUT: &str = "komut-satiri";
 
@@ -93,6 +94,8 @@ pub enum Message {
     CloseRequested(window::Id),
     DialogConfirmed,
     DialogClosed,
+    /// The drawing area: its size, the pointer, pan and zoom.
+    Viewport(viewport::Event),
 }
 
 pub struct App {
@@ -107,6 +110,8 @@ pub struct App {
     pub command_input: String,
     pub command_expanded: bool,
     pub dialog: Option<Dialog>,
+    /// The drawing area's camera and scene cache.
+    pub viewport: Viewport,
 }
 
 impl App {
@@ -127,6 +132,7 @@ impl App {
             command_input: String::new(),
             command_expanded: false,
             dialog: None,
+            viewport: Viewport::new(),
         };
         let task = match path {
             Some(path) => Task::perform(
@@ -207,6 +213,7 @@ impl App {
                     doc.layer_count()
                 ));
                 self.selected_layer = None;
+                self.viewport.opened(&doc);
                 self.document = Some(*doc);
             }
             Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
@@ -239,6 +246,7 @@ impl App {
                 }
             }
             Message::DialogClosed => self.dialog = None,
+            Message::Viewport(event) => self.viewport.update(event, self.document.as_ref()),
         }
         Task::none()
     }

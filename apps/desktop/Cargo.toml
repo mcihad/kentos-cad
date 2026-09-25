@@ -13,6 +13,8 @@ path = "src/main.rs"
 [dependencies]
 kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }
 kentos-contracts = { path = "../../crates/shared/contracts", default-features = false }
+# The drawing area's wgpu pipeline (docs/adr/0019), fed through Iced's shader widget.
+kentos-render-wgpu = { path = "../../crates/render/wgpu" }
 iced = { workspace = true }
 rfd = { workspace = true }
 serde = { workspace = true }

@@ -3,7 +3,7 @@
 //! ```text
 //! ┌ Şerit: web'in sekmeleri, panelleri ve hızlı erişimi ──────────┐
 //! ├ Çizim alanı                               │ Katmanlar       ⋯ ┤
-//! │ (saf wgpu hattı sıradaki dilim)           ├ Özellikler      ⋯ ┤
+//! │ (KentOS'un wgpu hattı, viewport.rs)       ├ Özellikler      ⋯ ┤
 //! ├ Komut satırı ─────────────────────────────┴───────────────────┤
 //! ├ Durum çubuğu ─────────────────────────────────────────────────┤
 //! ```
@@ -100,22 +100,21 @@ impl App {
     }
 
     fn drawing_area(&self) -> Element<'_, Message> {
-        let empty = match &self.document {
-            None => EmptyState::new(Icon::Document, "Açık çizim yok")
-                .description(
-                    "Web'de kaydedilmiş bir KentOS çizimini (.kcad) açın. Çizim alanı KentOS'un saf wgpu \
-                     hattıyla sıradaki dilimde gelecek (TODOS.md REN-01..07).",
-                )
-                .primary("Çizim aç…", Message::Run("file.open")),
-            Some(doc) => EmptyState::new(Icon::Cube, doc.name().to_owned()).description(format!(
-                "{} nesne, {} katman: {}. Çizim alanı KentOS'un saf wgpu hattıyla sıradaki dilimde gelecek \
-                 (TODOS.md REN-01..07); katmanlar, özellikler ve kayıt şimdiden çalışıyor.",
-                doc.snapshot.entities.len(),
-                doc.layer_count(),
-                kinds_text(doc)
-            )),
-        };
-        container(empty).center(Fill).into()
+        match &self.document {
+            // The open drawing on KentOS's own wgpu pipeline (viewport.rs, docs/adr/0019).
+            Some(doc) => self.viewport.view(doc, self.mode),
+            None => container(
+                EmptyState::new(Icon::Document, "Açık çizim yok")
+                    .description(
+                        "Web'de ya da burada kaydedilmiş bir KentOS çizimini (.kcad) açın. Orta tuşla \
+                         sürükleyerek kaydırın, tekerlekle imlecin olduğu yere yakınlaştırın; orta tuşa \
+                         çift tıklamak tümünü gösterir.",
+                    )
+                    .primary("Çizim aç…", Message::Run("file.open")),
+            )
+            .center(Fill)
+            .into(),
+        }
     }
 
     fn panel_body(&self, panel: Panel) -> Element<'_, Message> {
@@ -204,10 +203,18 @@ impl App {
     }
 
     fn status_bar(&self) -> Element<'_, Message> {
+        let coordinates = match (&self.document, self.viewport.cursor) {
+            (Some(doc), Some(p)) => {
+                // Display only (CLAUDE.md §5): the project's length decimals, Y (east) first.
+                let d = (doc.snapshot.settings.length_decimals as usize).min(9);
+                format!("Y {:.d$}   X {:.d$}", p.x, p.y)
+            }
+            _ => "Y —   X —".to_owned(),
+        };
         let mut bar = StatusBar::new().push(
-            Readout::new(label::mono("Y —   X —"))
+            Readout::new(label::mono(coordinates))
                 .icon(Icon::Crosshair)
-                .tip("İmleç koordinatı (Y sağa, X yukarı) çizim alanıyla gelecek"),
+                .tip("İmleç koordinatı: Y sağa (doğu), X yukarı (kuzey)"),
         );
         if let Some(doc) = &self.document {
             let settings = &doc.snapshot.settings;
@@ -215,7 +222,18 @@ impl App {
                 Some(name) => format!("EPSG:{} · {name}", settings.srid),
                 None => format!("EPSG:{}", settings.srid),
             };
+            let objects = format!("{} nesne", doc.snapshot.entities.len());
             bar = bar
+                .separator()
+                .push(
+                    Readout::new(text(format!(
+                        "Ekran 1:{}",
+                        thousands(self.viewport.camera.screen_scale())
+                    )))
+                    .tip(Tip::new("Ekran ölçeği").body(
+                        "Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Pafta ölçeği proje ayarıdır.",
+                    )),
+                )
                 .separator()
                 .push(
                     Readout::new(text(format!("1:{}", settings.plot_scale)))
@@ -228,10 +246,10 @@ impl App {
                         .tip("Projenin koordinat sistemi"),
                 )
                 .spacer()
-                .push(Readout::new(text(format!(
-                    "{} nesne",
-                    doc.snapshot.entities.len()
-                ))));
+                .push(
+                    Readout::new(text(objects.clone()))
+                        .tip(Tip::new(objects).body(kinds_text(doc))),
+                );
         } else {
             bar = bar.spacer();
         }
@@ -239,9 +257,42 @@ impl App {
             .push(
                 Readout::new(text("wgpu"))
                     .icon(Icon::Cube)
-                    .tip("Çizim motoru: KentOS'un saf wgpu hattı (hazırlanıyor)"),
+                    .tip(self.engine_tip()),
             )
             .into()
+    }
+
+    /// What the drawing engine did in the last frame, or why it could not draw.
+    fn engine_tip(&self) -> Tip {
+        let tip = Tip::new("Çizim motoru: KentOS'un wgpu hattı");
+        let status = self.viewport.status();
+        if let Some(error) = status.error {
+            return tip.body(format!("Çizilemedi: {error}"));
+        }
+        if self.document.is_none() {
+            return tip.body("Açık çizim yok.");
+        }
+        let s = status.stats;
+        let mut body = format!(
+            "Son kare: {} çizgi parçası, {} dolgu üçgeni, {} nokta işareti; {} çizim çağrısı. GPU'da {} KB.",
+            s.segments,
+            s.triangles,
+            s.markers,
+            s.draw_calls,
+            s.resident_bytes.div_ceil(1024)
+        );
+        let not_drawn = self.viewport.not_drawn();
+        if !not_drawn.is_empty() {
+            let list: Vec<String> = not_drawn
+                .iter()
+                .map(|(kind, count)| format!("{count} {}", kind_name(kind)))
+                .collect();
+            body.push_str(&format!(
+                "\n\nÇizim alanında henüz gösterilmeyen: {}.",
+                list.join(", ")
+            ));
+        }
+        tip.body(body)
     }
 
     fn dialog_view(&self, dialog: Asking) -> Element<'_, Message> {
@@ -517,8 +568,9 @@ fn word<T: serde::Serialize>(value: &T) -> String {
         .unwrap_or_default()
 }
 
-fn kinds_text(doc: &Document) -> String {
-    let names = |kind: &str| match kind {
+/// An object kind as the interface names it.
+fn kind_name(kind: &str) -> &'static str {
+    match kind {
         "point" => "nokta",
         "line" => "çizgi",
         "polyline" => "çoklu çizgi",
@@ -533,16 +585,35 @@ fn kinds_text(doc: &Document) -> String {
         "dimension" => "ölçü",
         "hatch" => "tarama",
         _ => "diğer",
-    };
+    }
+}
+
+fn kinds_text(doc: &Document) -> String {
     let kinds = doc.kinds();
     if kinds.is_empty() {
         return "boş".to_owned();
     }
     kinds
         .iter()
-        .map(|(kind, count)| format!("{count} {}", names(kind)))
+        .map(|(kind, count)| format!("{count} {}", kind_name(kind)))
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+/// A whole number with Turkish digit grouping (12.345), as the web's `toLocaleString('tr-TR')`.
+fn thousands(value: f64) -> String {
+    if !value.is_finite() {
+        return "—".to_owned();
+    }
+    let digits = format!("{:.0}", value.abs().round());
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3);
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i) % 3 == 0 {
+            out.push('.');
+        }
+        out.push(c);
+    }
+    if value < 0.0 { format!("-{out}") } else { out }
 }
 
 /// A layer colour from the file: `#rrggbb`; theme colours (`fg` …) as grey.
