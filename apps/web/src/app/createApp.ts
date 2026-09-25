@@ -25,6 +25,7 @@ import { Formatter } from './format';
 import { applyUiScale } from './commands';
 import { applyAccent, applyDrawingFont, applyUiFont } from './appearance';
 import { createPreferences, createUiState, DraftingSettings, MessageLog } from './state';
+import { openBrowserSettings, reportSettingsOpen } from './settings/browser';
 import { onCoreFault } from '../wasm/core';
 
 /** An OpenID sign-in that failed comes back as `?oidc=error&reason=…`: say why, then clean the address. */
@@ -54,7 +55,9 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   const commands = new CommandRegistry();
   const keymap = new Keymap(commands);
   const ui = createUiState();
-  const prefs = createPreferences();
+  // The typed settings (docs/adr/0023): opened (and migrated once) before anything reads a preference.
+  const settingsStore = openBrowserSettings();
+  const prefs = createPreferences(settingsStore);
   // The system symbol library and the demo drawing are chunks of their own, fetched beside the geometry core (main.ts).
   const { system, sampleProject } = await start;
   const doc = sampleProject(prefs.defaultSrid.value);
@@ -75,6 +78,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     log: new MessageLog(),
     ui,
     prefs,
+    settingsStore,
     format: new Formatter(doc.settings),
     clipboard: new Clipboard(),
     // The visible area and the geometry store are read lazily: the viewport exists only after the context.
@@ -159,6 +163,7 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   doc.events.on('changed', () => ctx.selection.retain((id) => !!doc.get(id)));
 
   ctx.log.info(`${doc.name.value} açıldı: ${doc.size} nesne, ${doc.layers.leaves().length} katman.`);
+  reportSettingsOpen(settingsStore, ctx.log);
   if (startScreenOnOpen(ctx)) void openStart(ctx);
   return ctx;
 }

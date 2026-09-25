@@ -33,6 +33,12 @@
   "tool:stakeout": {
     "note": "Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır."
   },
+  "storage:kentos.prefs.v1": {
+    "note": "Eski tercih deposu. Tipli ayarlara (`kentos.settings.v1`) bir kez taşınır; uygulama ona bir daha yazmaz, yedek olarak olduğu gibi durur (ADR 0023)."
+  },
+  "storage:kentos.settings.v1.backup": {
+    "note": "Okunamayan ya da geçersiz değer içeren ayar kaydının tam metni; kurtarma üstüne yazmadan önce buraya kopyalar (ADR 0023)."
+  },
   "tool:subdivide": {
     "note": "İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13)."
   }

@@ -11,6 +11,7 @@ import type { ServerStatus } from './server';
 import type { Formatter } from './format';
 import type { ProcessingService } from './processing';
 import type { DraftingSettings, MessageLog, Preferences, UiState } from './state';
+import type { SettingsStore } from './settings/store';
 import type { StyleService } from './styles';
 
 /**
@@ -25,8 +26,13 @@ export interface AppContext {
   readonly settings: DraftingSettings;
   readonly log: MessageLog;
   readonly ui: UiState;
-  /** Persisted user preferences (Ayarlar). */
+  /** Persisted user preferences (Ayarlar): the values in use, one signal each. */
   readonly prefs: Preferences;
+  /**
+   * The typed settings behind `prefs` (docs/adr/0023): requested and effective
+   * values with the reason, the device's constraints, export and import.
+   */
+  readonly settingsStore: SettingsStore;
   /** Units/precision-aware number formatting. */
   readonly format: Formatter;
   readonly tools: ToolManager;

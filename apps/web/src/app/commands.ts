@@ -90,8 +90,10 @@ function renderer(ctx: AppContext, kind: BackendKind, title: string, description
     description,
     aliases: [kind.toUpperCase()],
     run: () => {
+      // The viewport follows the preference's effective value; a device that cannot draw with it says why.
       ctx.prefs.rendererPreference.set(kind);
-      void ctx.view.switchBackend(kind);
+      const r = ctx.settingsStore.resolved('graphics.backend');
+      if (r.effective !== kind) ctx.log.warn(`${title} kullanılamıyor${r.detail ? `: ${r.detail}` : ''}. ${String(r.effective).toUpperCase()} ile çiziliyor.`);
     },
     isEnabled: () => kind !== 'webgpu' || webgpuSupported(),
     isChecked: () => ctx.view.backendKind.value === kind,

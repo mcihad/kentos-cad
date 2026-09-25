@@ -276,14 +276,42 @@ export function batchInView(b: BatchExtent, view: readonly [number, number, numb
   return x1 + r >= view[0] && x0 - r <= view[2] && y1 + r >= view[1] && y0 - r <= view[3];
 }
 
+/** The count to draw with: the largest supported one not above `requested`, else the smallest (1: none). */
+export function supportedSamples(counts: readonly number[], requested: number): number {
+  const below = counts.filter((c) => c <= requested);
+  if (below.length) return Math.max(...below);
+  return counts.length ? Math.min(...counts) : 1;
+}
+
 export interface RenderBackend {
   readonly kind: BackendKind;
   /** Human label for the status bar, e.g. "WebGL2 · ANGLE (Intel…)". */
   readonly label: string;
-  /** `antialias` false: no multisampling (Uygulama ayarları → Çizim kalitesi); fixed for the backend's life. */
-  init(canvas: HTMLCanvasElement, opts?: { antialias?: boolean }): Promise<void>;
-  /** Whether frames are multisampled (the `antialias` it was started with, where the device allows it). */
-  readonly antialiased: boolean;
+  /** Starts on `canvas`, drawing with `samples` per pixel (default 4; see setSamples). */
+  init(canvas: HTMLCanvasElement, opts?: { samples?: number }): Promise<void>;
+  /**
+   * The sample counts the drawing's colour target can use here, ascending,
+   * 1 (none) first: what this context validates, not a list copied from
+   * elsewhere (TODOS.md AA-01). WebGL2: the RGBA8 renderbuffer counts the
+   * context reports; WebGPU: the counts a texture of the canvas format is
+   * created with (the spec allows 1 and 4).
+   */
+  readonly sampleCounts: readonly number[];
+  /** The count frames are drawn with now. */
+  readonly samples: number;
+  /**
+   * Draws with `count` samples from the next frame on, or the nearest
+   * supported count below it, which it returns. The colour targets (and on
+   * WebGPU the pipelines, kept per count) are made for it then; the old
+   * targets are released once the GPU is done with them. No new canvas or
+   * context, nothing uploaded again (TODOS.md AA-02).
+   */
+  setSamples(count: number): number;
+  /**
+   * Told when the targets for `requested` samples could not be made: the
+   * backend went back to `working`, the last count that drew, and draws on.
+   */
+  onSamplesFailed: ((requested: number, working: number, error: string) => void) | null;
   resize(width: number, height: number, dpr: number): void;
   /** Create or replace GPU resources for a layer. */
   upload(layer: SceneLayer): void;

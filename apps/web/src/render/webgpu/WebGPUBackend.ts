@@ -1,6 +1,17 @@
-import type { AtlasSource, FrameState, RenderBackend, RGBA, SceneLayer } from '../types';
+import { supportedSamples, type AtlasSource, type FrameState, type RenderBackend, type RGBA, type SceneLayer } from '../types';
 import { WGSL } from './shaders';
 import { WebGPUStyledRenderer, type GpuStyledLayer } from './styledRenderer';
+
+/** The pipelines of one sample count: a multisampled pass needs pipelines made for its count. */
+interface Pipelines {
+  line: GPURenderPipeline;
+  fill: GPURenderPipeline;
+  point: GPURenderPipeline;
+  copy: GPURenderPipeline;
+}
+
+/** Counts beyond 1 a texture may be asked to have; the device says which it takes. */
+const CANDIDATE_SAMPLES = [2, 4, 8, 16];
 
 /** One uploaded batch: its vertex buffer(s), vertex/instance count and style. */
 interface GpuBatch {
@@ -18,8 +29,6 @@ interface GpuLayer {
 }
 
 const SHAPES = { ring: 0, cross: 1, triangle: 2 } as const;
-/** Multisampling when anti-aliasing is on (Çizim kalitesi: Yüksek). */
-const SAMPLES = 4;
 /** Frame uniform: offset, scale, pxPerUnit, dpr, viewport (8 floats). */
 const FRAME_BYTES = 32;
 /** Style uniform: color, dash, size, shape, pad (12 × 4 bytes). */
@@ -52,10 +61,12 @@ const COPY_WGSL = `
  *   lines  → line-list, vertex {pos, dist}, dash tested per fragment
  *   fills  → triangle-list
  *   points → instanced quads with the symbol drawn by distance functions
- * Anti-aliasing is 4× MSAA like the WebGL2 context (none at the lower drawing qualities).
- * As in WebGL2Backend, the underlays and persistent layers are kept in a
- * texture (`base`) and a frame whose only change is in the overlays
- * (FrameState.keepBase) copies it instead of drawing them again.
+ * Anti-aliasing is MSAA at the sample count asked for (setSamples, one of the
+ * counts this device takes for the canvas format; the spec allows 4), with
+ * the pipelines made per count and kept. As in WebGL2Backend, the underlays
+ * and persistent layers are kept in a texture (`base`) and a frame whose only
+ * change is in the overlays (FrameState.keepBase) copies it instead of
+ * drawing them again.
  */
 export class WebGPUBackend implements RenderBackend {
   readonly kind = 'webgpu' as const;
@@ -68,16 +79,21 @@ export class WebGPUBackend implements RenderBackend {
   private frameBuffer!: GPUBuffer;
   private frameBind!: GPUBindGroup;
   private styleLayout!: GPUBindGroupLayout;
-  private linePipe!: GPURenderPipeline;
-  private fillPipe!: GPURenderPipeline;
-  private pointPipe!: GPURenderPipeline;
+  private pipelineLayout!: GPUPipelineLayout;
+  private module!: GPUShaderModule;
+  private copyModule!: GPUShaderModule;
+  private copyLayout!: GPUBindGroupLayout;
+  /** Pipelines by sample count, made when a count is first drawn with. */
+  private pipelines = new Map<number, Pipelines>();
   private styled!: WebGPUStyledRenderer;
   private msaa: GPUTexture | null = null;
-  /** 4 with anti-aliasing, 1 without (then the pass draws straight into the canvas). */
-  private samples = SAMPLES;
+  /** Samples per pixel (1: the pass draws straight into its target), and the last count that drew. */
+  samples = 4;
+  private working = 1;
+  sampleCounts: readonly number[] = [1];
+  onSamplesFailed: ((requested: number, working: number, error: string) => void) | null = null;
   private layers = new Map<string, GpuLayer>();
   private base: GPUTexture | null = null;
-  private copyPipe!: GPURenderPipeline;
   private copyBind: GPUBindGroup | null = null;
   /** What the base holds (view, scale, order, background), or '' when it must be drawn again. */
   private baseKey = '';
@@ -88,8 +104,7 @@ export class WebGPUBackend implements RenderBackend {
     return typeof navigator !== 'undefined' && 'gpu' in navigator;
   }
 
-  async init(canvas: HTMLCanvasElement, opts: { antialias?: boolean } = {}): Promise<void> {
-    this.samples = opts.antialias === false ? 1 : SAMPLES;
+  async init(canvas: HTMLCanvasElement, opts: { samples?: number } = {}): Promise<void> {
     if (!WebGPUBackend.isSupported()) throw new Error('Tarayıcı WebGPU sunmuyor');
     const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
     if (!adapter) throw new Error('WebGPU bağdaştırıcısı bulunamadı');
@@ -108,19 +123,34 @@ export class WebGPUBackend implements RenderBackend {
     const info = adapter.info;
     const name = info?.description || [info?.vendor, info?.architecture].filter(Boolean).join(' ');
     this.label = name ? `WebGPU · ${name}` : 'WebGPU';
-    this.createPipelines();
+    this.sampleCounts = await probeSampleCounts(device, this.format);
+    this.samples = this.working = supportedSamples(this.sampleCounts, opts.samples ?? 4);
+    this.createShared();
+    this.pipelinesFor(this.samples);
   }
 
-  private createPipelines(): void {
+  /** What every sample count shares: the shader modules, the bind group layouts, the frame uniform. */
+  private createShared(): void {
     const device = this.device;
-    const module = device.createShaderModule({ code: WGSL });
+    this.module = device.createShaderModule({ code: WGSL });
     const uniformEntry = (binding: number): GPUBindGroupLayoutEntry => ({ binding, visibility: STAGE.VERTEX | STAGE.FRAGMENT, buffer: { type: 'uniform' } });
     const frameLayout = device.createBindGroupLayout({ entries: [uniformEntry(0)] });
     this.styleLayout = device.createBindGroupLayout({ entries: [uniformEntry(0)] });
-    const layout = device.createPipelineLayout({ bindGroupLayouts: [frameLayout, this.styleLayout] });
+    this.pipelineLayout = device.createPipelineLayout({ bindGroupLayouts: [frameLayout, this.styleLayout] });
     this.frameBuffer = device.createBuffer({ size: FRAME_BYTES, usage: BUFFER.UNIFORM | BUFFER.COPY_DST });
     this.frameBind = device.createBindGroup({ layout: frameLayout, entries: [{ binding: 0, resource: { buffer: this.frameBuffer } }] });
+    this.styled = new WebGPUStyledRenderer(device, this.format, frameLayout);
+    this.copyModule = device.createShaderModule({ code: COPY_WGSL });
+    // An explicit layout: one bind group of the kept base serves the copy pipeline of every count.
+    this.copyLayout = device.createBindGroupLayout({ entries: [{ binding: 0, visibility: STAGE.FRAGMENT, texture: { sampleType: 'float' } }] });
+  }
 
+  /** The pipelines for `count` samples (TODOS.md AA-01: pipelines are keyed by sample count). */
+  private pipelinesFor(count: number): Pipelines {
+    const kept = this.pipelines.get(count);
+    if (kept) return kept;
+    const device = this.device;
+    const module = this.module;
     // Same blending as WebGL2: straight alpha for colour, "over" for alpha.
     const target: GPUColorTargetState = {
       format: this.format,
@@ -131,29 +161,74 @@ export class WebGPUBackend implements RenderBackend {
     };
     const pipeline = (vs: string, fs: string, buffers: GPUVertexBufferLayout[], topology: GPUPrimitiveTopology) =>
       device.createRenderPipeline({
-        layout,
+        layout: this.pipelineLayout,
         vertex: { module, entryPoint: vs, buffers },
         fragment: { module, entryPoint: fs, targets: [target] },
         primitive: { topology },
-        multisample: { count: this.samples },
+        multisample: { count },
       });
     const vec2 = (location: number, stepMode: GPUVertexStepMode = 'vertex'): GPUVertexBufferLayout => ({ arrayStride: 8, stepMode, attributes: [{ shaderLocation: location, offset: 0, format: 'float32x2' }] });
-    this.linePipe = pipeline('lineVs', 'lineFs', [vec2(0), { arrayStride: 4, attributes: [{ shaderLocation: 1, offset: 0, format: 'float32' }] }], 'line-list');
-    this.fillPipe = pipeline('fillVs', 'fillFs', [vec2(0)], 'triangle-list');
-    this.pointPipe = pipeline('pointVs', 'pointFs', [vec2(0, 'instance')], 'triangle-list');
-    this.styled = new WebGPUStyledRenderer(device, this.format, frameLayout, this.samples);
-    const copy = device.createShaderModule({ code: COPY_WGSL });
-    this.copyPipe = device.createRenderPipeline({
-      layout: 'auto',
-      vertex: { module: copy, entryPoint: 'vs' },
-      fragment: { module: copy, entryPoint: 'fs', targets: [{ format: this.format }] },
-      primitive: { topology: 'triangle-list' },
-      multisample: { count: this.samples },
-    });
+    const made: Pipelines = {
+      line: pipeline('lineVs', 'lineFs', [vec2(0), { arrayStride: 4, attributes: [{ shaderLocation: 1, offset: 0, format: 'float32' }] }], 'line-list'),
+      fill: pipeline('fillVs', 'fillFs', [vec2(0)], 'triangle-list'),
+      point: pipeline('pointVs', 'pointFs', [vec2(0, 'instance')], 'triangle-list'),
+      copy: device.createRenderPipeline({
+        layout: device.createPipelineLayout({ bindGroupLayouts: [this.copyLayout] }),
+        vertex: { module: this.copyModule, entryPoint: 'vs' },
+        fragment: { module: this.copyModule, entryPoint: 'fs', targets: [{ format: this.format }] },
+        primitive: { topology: 'triangle-list' },
+        multisample: { count },
+      }),
+    };
+    this.styled.pipelinesFor(count);
+    this.pipelines.set(count, made);
+    return made;
   }
 
-  get antialiased(): boolean {
-    return this.samples > 1;
+  setSamples(count: number): number {
+    const n = supportedSamples(this.sampleCounts, count);
+    if (n === this.samples) return n;
+    const device = this.device;
+    // The new count's pipelines and target are made under error scopes: if the device refuses them
+    // (out of memory), the last working count takes over again.
+    device.pushErrorScope('out-of-memory');
+    device.pushErrorScope('validation');
+    this.samples = n;
+    this.pipelinesFor(n);
+    this.ensureMsaa(this.canvas.width, this.canvas.height);
+    const settled = Promise.all([device.popErrorScope(), device.popErrorScope()]);
+    void settled.then(([validation, memory]) => {
+      const error = validation ?? memory;
+      if (!error) {
+        if (this.samples === n) this.working = n;
+        return;
+      }
+      this.pipelines.delete(n);
+      this.styled.forget(n);
+      if (this.samples === n) {
+        this.samples = n === this.working ? 1 : this.working;
+        this.baseKey = '';
+      }
+      this.onSamplesFailed?.(n, this.samples, error.message);
+    });
+    this.baseKey = '';
+    return n;
+  }
+
+  /**
+   * The multisampled colour target at this size and count. The one it
+   * replaces is destroyed only once the GPU has finished the work already
+   * submitted with it (TODOS.md AA-02).
+   */
+  private ensureMsaa(w: number, h: number): void {
+    const want = this.samples > 1;
+    const m = this.msaa;
+    if (m && want && m.width === w && m.height === h && m.sampleCount === this.samples) return;
+    if (m) {
+      this.msaa = null;
+      void this.device.queue.onSubmittedWorkDone().then(() => m.destroy());
+    }
+    if (want) this.msaa = this.device.createTexture({ size: [w, h], sampleCount: this.samples, format: this.format, usage: RENDER_ATTACHMENT });
   }
 
   useAtlas(atlas: AtlasSource): void {
@@ -223,15 +298,14 @@ export class WebGPUBackend implements RenderBackend {
     const { view } = frame;
     const w = this.canvas.width;
     const h = this.canvas.height;
+    const pipes = this.pipelinesFor(this.samples);
     const multisampled = this.samples > 1;
-    if (multisampled && (!this.msaa || this.msaa.width !== w || this.msaa.height !== h)) {
-      this.msaa?.destroy();
-      this.msaa = device.createTexture({ size: [w, h], sampleCount: this.samples, format: this.format, usage: RENDER_ATTACHMENT });
-    }
+    this.ensureMsaa(w, h);
     if (!this.base || this.base.width !== w || this.base.height !== h) {
-      this.base?.destroy();
+      const old = this.base;
+      if (old) void device.queue.onSubmittedWorkDone().then(() => old.destroy());
       this.base = device.createTexture({ size: [w, h], format: this.format, usage: RENDER_ATTACHMENT | TEXTURE_BINDING });
-      this.copyBind = device.createBindGroup({ layout: this.copyPipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: this.base.createView() }] });
+      this.copyBind = device.createBindGroup({ layout: this.copyLayout, entries: [{ binding: 0, resource: this.base.createView() }] });
       this.baseKey = '';
     }
     this.overlayIds = new Set(frame.overlays);
@@ -264,16 +338,16 @@ export class WebGPUBackend implements RenderBackend {
       // Same order as WebGL2: per layer its plain fills then its styled symbols; then plain lines and points.
       for (const l of layers) {
         if (l.fills.length) {
-          pass.setPipeline(this.fillPipe);
+          pass.setPipeline(pipes.fill);
           for (const f of l.fills) {
             pass.setBindGroup(1, f.bind);
             pass.setVertexBuffer(0, f.buffers[0]);
             pass.draw(f.count);
           }
         }
-        this.styled.draw(pass, l.styled);
+        this.styled.draw(pass, l.styled, this.samples);
       }
-      pass.setPipeline(this.linePipe);
+      pass.setPipeline(pipes.line);
       for (const l of layers)
         for (const ln of l.lines) {
           pass.setBindGroup(1, ln.bind);
@@ -281,7 +355,7 @@ export class WebGPUBackend implements RenderBackend {
           pass.setVertexBuffer(1, ln.buffers[1]);
           pass.draw(ln.count);
         }
-      pass.setPipeline(this.pointPipe);
+      pass.setPipeline(pipes.point);
       for (const l of layers)
         for (const p of l.points) {
           pass.setBindGroup(1, p.bind);
@@ -298,7 +372,7 @@ export class WebGPUBackend implements RenderBackend {
       this.baseKey = key;
     }
     pass = begin(this.context.getCurrentTexture());
-    pass.setPipeline(this.copyPipe);
+    pass.setPipeline(pipes.copy);
     pass.setBindGroup(0, this.copyBind!);
     pass.draw(3);
     pass.setBindGroup(0, this.frameBind);
@@ -315,4 +389,23 @@ export class WebGPUBackend implements RenderBackend {
     this.styled?.dispose();
     this.device?.destroy();
   }
+}
+
+/**
+ * The sample counts a render target of `format` takes on this device,
+ * ascending, 1 first: each candidate is created once, 1 × 1, inside a
+ * validation scope, and kept if the device accepts it (TODOS.md AA-01).
+ * WebGPU allows 1 and 4; a browser that validates more is believed, one
+ * that validates less too.
+ */
+export async function probeSampleCounts(device: GPUDevice, format: GPUTextureFormat): Promise<number[]> {
+  const counts = [1];
+  for (const n of CANDIDATE_SAMPLES) {
+    device.pushErrorScope('validation');
+    const texture = device.createTexture({ size: [1, 1], sampleCount: n, format, usage: RENDER_ATTACHMENT });
+    const error = await device.popErrorScope();
+    texture.destroy();
+    if (!error) counts.push(n);
+  }
+  return counts;
 }

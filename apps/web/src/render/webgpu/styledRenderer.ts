@@ -36,17 +36,24 @@ export interface GpuStyledLayer {
   list: GpuStyled[];
 }
 
+type StyledPipes = Record<'stroke' | 'solid' | 'hatch' | 'pattern' | 'tile' | 'marker', GPURenderPipeline>;
+
 export class WebGPUStyledRenderer {
   private readonly device: GPUDevice;
+  private readonly format: GPUTextureFormat;
+  private readonly module: GPUShaderModule;
+  private readonly layout: GPUPipelineLayout;
   private readonly styleLayout: GPUBindGroupLayout;
   private readonly atlasBind: GPUBindGroup;
   private readonly texture: GPUTexture;
-  private readonly pipes: Record<'stroke' | 'solid' | 'hatch' | 'pattern' | 'tile' | 'marker', GPURenderPipeline>;
+  /** Pipelines by sample count (the backend's multisampled passes need their own). */
+  private readonly pipes = new Map<number, StyledPipes>();
   private atlas: AtlasSource | null = null;
 
-  constructor(device: GPUDevice, format: GPUTextureFormat, frameLayout: GPUBindGroupLayout, samples: number) {
+  constructor(device: GPUDevice, format: GPUTextureFormat, frameLayout: GPUBindGroupLayout) {
     this.device = device;
-    const module = device.createShaderModule({ code: STYLED_WGSL });
+    this.format = format;
+    this.module = device.createShaderModule({ code: STYLED_WGSL });
     this.styleLayout = device.createBindGroupLayout({ entries: [{ binding: 0, visibility: STAGE.VERTEX | STAGE.FRAGMENT, buffer: { type: 'uniform' } }] });
     const atlasLayout = device.createBindGroupLayout({
       entries: [
@@ -57,7 +64,14 @@ export class WebGPUStyledRenderer {
     this.texture = device.createTexture({ size: [2048, 2048], format: 'rgba8unorm', usage: TEXTURE.COPY_DST | TEXTURE.TEXTURE_BINDING | TEXTURE.RENDER_ATTACHMENT });
     const sampler = device.createSampler({ magFilter: 'linear', minFilter: 'linear', addressModeU: 'clamp-to-edge', addressModeV: 'clamp-to-edge' });
     this.atlasBind = device.createBindGroup({ layout: atlasLayout, entries: [{ binding: 0, resource: this.texture.createView() }, { binding: 1, resource: sampler }] });
-    const layout = device.createPipelineLayout({ bindGroupLayouts: [frameLayout, this.styleLayout, atlasLayout] });
+    this.layout = device.createPipelineLayout({ bindGroupLayouts: [frameLayout, this.styleLayout, atlasLayout] });
+  }
+
+  /** The pipelines for `samples` per pixel, made the first time that count draws. */
+  pipelinesFor(samples: number): StyledPipes {
+    const kept = this.pipes.get(samples);
+    if (kept) return kept;
+    const { device, module, layout, format } = this;
     const straight: GPUBlendState = { color: { srcFactor: 'src-alpha', dstFactor: 'one-minus-src-alpha', operation: 'add' }, alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add' } };
     const premul: GPUBlendState = { color: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add' }, alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha', operation: 'add' } };
     const pipe = (vs: string, fs: string, buffers: GPUVertexBufferLayout[], blend: GPUBlendState) =>
@@ -69,7 +83,7 @@ export class WebGPUStyledRenderer {
         multisample: { count: samples },
       });
     const area: GPUVertexBufferLayout = { arrayStride: 8, attributes: [{ shaderLocation: 0, offset: 0, format: 'float32x2' }] };
-    this.pipes = {
+    const made: StyledPipes = {
       stroke: pipe(
         'strokeVs',
         'strokeFs',
@@ -105,6 +119,13 @@ export class WebGPUStyledRenderer {
         premul,
       ),
     };
+    this.pipes.set(samples, made);
+    return made;
+  }
+
+  /** Drops the pipelines of a count the device refused (they are made again if it is asked for again). */
+  forget(samples: number): void {
+    this.pipes.delete(samples);
   }
 
   useAtlas(atlas: AtlasSource): void {
@@ -235,14 +256,16 @@ export class WebGPUStyledRenderer {
     }
   }
 
-  draw(pass: GPURenderPassEncoder, layer: GpuStyledLayer): void {
+  /** Draws a layer's visible batches into a pass of `samples` per pixel. */
+  draw(pass: GPURenderPassEncoder, layer: GpuStyledLayer, samples: number): void {
     if (!layer.list.length) return;
+    const pipes = this.pipelinesFor(samples);
     pass.setBindGroup(2, this.atlasBind);
     let current: GPURenderPipeline | null = null;
     for (const s of layer.list) {
       if (!s.visible) continue;
       const b = s.batch;
-      const pipe = b.kind === 'stroke' ? this.pipes.stroke : b.kind === 'marker' ? this.pipes.marker : this.pipes[b.paint.kind];
+      const pipe = b.kind === 'stroke' ? pipes.stroke : b.kind === 'marker' ? pipes.marker : pipes[b.paint.kind];
       if (pipe !== current) {
         pass.setPipeline(pipe);
         current = pipe;
