@@ -86,8 +86,22 @@ async function press(chord) {
 
 // ── Mouse ───────────────────────────────────────────────────────────────
 let origin = { x: 0, y: 0 };
-const toScreen = ([de, dn]) =>
-  b.eval(`(() => { const k = window.kentos; const s = k.view.camera.worldToScreen({ x: ${origin.x + de}, y: ${origin.y + dn} }); const r = k.view.clientRect(); return [Math.round(s.x + r.left), Math.round(s.y + r.top)]; })()`);
+/**
+ * The page pixel of a trace point. A point off the drawing (under the ribbon
+ * or a panel) would silently miss the canvas, so it stops the trace instead.
+ */
+async function toScreen([de, dn]) {
+  const [x, y, inside] = await b.eval(`(() => {
+    const k = window.kentos;
+    const s = k.view.camera.worldToScreen({ x: ${origin.x + de}, y: ${origin.y + dn} });
+    const r = k.view.clientRect();
+    const x = Math.round(s.x + r.left);
+    const y = Math.round(s.y + r.top);
+    return [x, y, document.elementFromPoint(x, y)?.tagName === 'CANVAS'];
+  })()`);
+  if (!inside) throw new Error(`[${de}, ${dn}] çizim alanının dışında (${x}, ${y} px); izin noktalarını README'deki kutuda tutun.`);
+  return [x, y];
+}
 const mouse = (type, x, y, extra = {}) => b.send('Input.dispatchMouseEvent', { type, x, y, button: 'none', ...extra });
 
 async function click(at, button = 'left', clickCount = 1) {
@@ -185,7 +199,7 @@ const observe = () =>
       dynamicInput: field && !field.hidden ? field.querySelector('input').value : null,
       commandLine: document.querySelector('.cmdline__input')?.value ?? null,
       entities: k.doc.size,
-      newest: newest && { kind: newest.kind, pts: newest.pts ? newest.pts.map((p) => [p.x, p.y]) : null },
+      newest: newest && { kind: newest.kind, pts: newest.pts ? newest.pts.map((p) => [p.x, p.y]) : null, bulges: newest.bulges ?? [] },
       canUndo: k.doc.canUndo.value,
       canRedo: k.doc.canRedo.value,
       dirty: k.doc.dirty.value,
@@ -210,6 +224,10 @@ function compare(expect, got, t) {
         const near = shape.pts?.length === want.points.length && shape.pts.every(([x, y], i) => Math.hypot(x - want.points[i][0], y - want.points[i][1]) <= t.clickTolerance);
         if (!near) bad.push(`newest.points: ${JSON.stringify(shape.pts)}, beklenen ${JSON.stringify(want.points)} (±${t.clickTolerance} m)`);
       }
+      if (shape && want.arcs !== undefined) {
+        const arcs = have.bulges.filter((bulge) => bulge !== 0).length;
+        if (arcs !== want.arcs) bad.push(`newest.arcs: ${arcs}, beklenen ${want.arcs}`);
+      }
       if (shape && want.edges) {
         // Typed values are exact: consecutive vertex differences, not rounded.
         const edges = have.pts.slice(1).map(([x, y], i) => [x - have.pts[i][0], y - have.pts[i][1]]);
@@ -230,11 +248,20 @@ try {
     await setUp(t);
     const problems = [];
     for (const [i, step] of t.steps.entries()) {
-      await act(step);
+      const label = `  adım ${i + 1} ${JSON.stringify(Object.fromEntries(Object.entries(step).filter(([k]) => k !== 'expect' && k !== 'note')))}`;
+      try {
+        await act(step);
+      } catch (e) {
+        // A step that cannot be played ends its trace; the others still run.
+        problems.push(`${label}: ${e instanceof Error ? e.message : e}`);
+        break;
+      }
       if (!step.expect) continue;
       const bad = compare(step.expect, await observe(), t);
-      if (bad.length) problems.push(`  adım ${i + 1} ${JSON.stringify(Object.fromEntries(Object.entries(step).filter(([k]) => k !== 'expect' && k !== 'note')))}: ${bad.join('; ')}`);
+      if (bad.length) problems.push(`${label}: ${bad.join('; ')}`);
     }
+    // The end state of each trace, to look at (scripts/e2e/out, not committed).
+    await b.shot(`interaction-${t.id}`);
     console.log(`${problems.length ? '✗' : '✓'} ${t.id}: ${t.title}`);
     for (const p of problems) console.log(p);
     if (problems.length) failed++;

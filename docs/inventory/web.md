@@ -55,4 +55,4 @@ Masaüstü kabuğu (apps/desktop) 11 / 163 komutu çalıştırıyor; öbürleri 
 
 ## Test başvurusu
 
-100 / 163 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+99 / 163 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

@@ -183,6 +183,7 @@ export class RectangleTool extends PointInputTool {
 export class RotatedRectangleTool extends PointInputTool {
   readonly id = 'rectangle3';
   protected readonly label = 'Döndürülmüş dikdörtgen';
+  protected override readonly stepsFromPoints = true;
 
   protected promptFor(n: number): string {
     if (n === 0) return 'kenarın ilk noktasını belirtin';

@@ -23,6 +23,15 @@ export abstract class PointInputTool implements Tool {
   protected hover: Vec2 | null = null;
   protected tracking: Tracking | null = null;
   protected readonly ctx: AppContext;
+  /** Objects written for the object being drawn (a ray from its base, a line chain), newest last. */
+  private made: number[] = [];
+  /** The drawing's revision right after the newest of them was written or taken back. */
+  private madeAt = -1;
+  /**
+   * True when the tool's step follows from its points alone, so Ctrl+Z can
+   * take back one point; other tools without a Geri (G) start the object over.
+   */
+  protected readonly stepsFromPoints: boolean = false;
 
   constructor(ctx: AppContext) {
     this.ctx = ctx;
@@ -85,8 +94,46 @@ export abstract class PointInputTool implements Tool {
 
   protected reset(): void {
     this.pts = [];
+    this.made = [];
     this.refreshPrompt();
     this.ctx.view.requestOverlay();
+  }
+
+  /**
+   * Ctrl+Z while the command runs (docs/adr/0018): takes back its newest step
+   * and returns true, or false when nothing is pending and the drawing is
+   * undone instead. Newest first: the tool's own Geri (G), then an object
+   * written for the object being drawn, then a point of the draft.
+   */
+  undoStep(): boolean {
+    if (this.pts.length && this.option('G')) return true;
+    if (this.undoLastMade()) {
+      this.refreshPrompt();
+      this.ctx.view.requestOverlay();
+      return true;
+    }
+    if (!this.pts.length) return false;
+    if (!this.stepsFromPoints) {
+      this.reset();
+      return true;
+    }
+    this.pts.pop();
+    this.refreshPrompt();
+    this.ctx.view.requestOverlay();
+    return true;
+  }
+
+  /**
+   * Takes back the newest object this command wrote for the object being
+   * drawn, as an undo, when the drawing has not changed since: a later
+   * Ctrl+Z on the drawing then cannot bring it back. False otherwise.
+   */
+  protected undoLastMade(): boolean {
+    if (!this.made.length || this.ctx.doc.revision !== this.madeAt) return false;
+    this.made.pop();
+    this.ctx.doc.undo();
+    this.madeAt = this.ctx.doc.revision;
+    return true;
   }
 
   acceptPoint(p: Vec2): boolean {
@@ -96,6 +143,8 @@ export abstract class PointInputTool implements Tool {
 
   protected accept(p: Vec2): void {
     this.ctx.log.info(`  ${this.ctx.format.point(p)}`);
+    // A first point starts a new object: what was written before is the drawing's to undo.
+    if (!this.pts.length) this.made = [];
     this.onPoint(p);
     this.refreshPrompt();
     this.ctx.view.requestOverlay();
@@ -120,7 +169,10 @@ export abstract class PointInputTool implements Tool {
     const layerId = this.targetLayer(extra.layerId);
     if (!layerId) return null;
     const color = this.ctx.settings.color.value ?? undefined;
-    return this.ctx.doc.add({ ...geom, layerId, color, attrs: extra.attrs ?? {}, label: extra.label } as NewEntity);
+    const e = this.ctx.doc.add({ ...geom, layerId, color, attrs: extra.attrs ?? {}, label: extra.label } as NewEntity);
+    this.made.push(e.id);
+    this.madeAt = this.ctx.doc.revision;
+    return e;
   }
 
   draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
@@ -165,7 +217,9 @@ export class LineTool extends PointInputTool {
 
   protected override option(key: string): boolean {
     if (key === 'G' && this.created.length) {
-      this.ctx.doc.remove([this.created.pop()!]);
+      const id = this.created.pop()!;
+      // Taken back as an undo when nothing changed since, so a later Ctrl+Z cannot bring the line back.
+      if (!this.undoLastMade()) this.ctx.doc.remove([id]);
       this.pts.pop();
       this.refreshPrompt();
       this.ctx.view.requestOverlay();

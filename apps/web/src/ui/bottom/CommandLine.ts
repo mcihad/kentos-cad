@@ -37,7 +37,7 @@ export class CommandLine extends Component {
       'aria-label': 'Komut satırı',
       'aria-autocomplete': 'list',
       'aria-controls': 'cmd-suggest',
-      placeholder: 'Komut ya da koordinat yazın. Boşluk tuşu buraya getirir',
+      placeholder: 'Komut ya da koordinat yazın; Enter ya da Boşluk onaylar',
     });
     this.list = h('ul', { class: 'cmdline__suggest', id: 'cmd-suggest', role: 'listbox', hidden: true });
     this.el = h(
@@ -179,6 +179,8 @@ export class CommandLine extends Component {
   private onKey(e: KeyboardEvent): void {
     switch (e.key) {
       case 'Enter':
+      // As in AutoCAD, Space submits too; Y,X is written with a comma or semicolon (docs/adr/0018).
+      case ' ':
         e.preventDefault();
         return this.submit();
       case 'Escape':

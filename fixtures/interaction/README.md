@@ -13,7 +13,8 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 |---|---|
 | `v1/polygon-accept.json` | §5 kabul izi: poligon başlat, tıkla, `12` yaz, Enter, sonraki nokta, kapat, geri al, yinele, kaydet ve aç |
 | `v1/polygon-signs.json` | Değer yazmaya `-` ya da `+` ile başlamak (`UX-04`) |
-| `v1/polygon-keys.json` | Esc, Geri (G), sağ tık, çift tık, eksik nokta, Backspace, Tab, son komutu yinele, odak (`UX-06`) |
+| `v1/polygon-keys.json` | Esc, Geri (G), Ctrl+Z, sağ tık, çift tık, eksik nokta, Backspace, Tab, Boşluk, son komutu yinele, odak (`UX-06`) |
+| `v1/polygon-close.json` | İlk köşeye dönmek alanı kapatır: tıklama, yakınına tıklama, yazma, üç köşeden az, yayla kapatma |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
 
 ## Biçim (`kentos.interaction-trace`, sürüm 1)
@@ -55,7 +56,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | `dynamicInput` | İmleç yanındaki değer alanının metni; kapalıysa `null` |
 | `commandLine` | Komut satırının metni |
 | `entities` | Çizimdeki nesne sayısı |
-| `newest` | En son oluşturulan nesne: `kind`, köşeler `points`, ardışık köşe farkları `edges` |
+| `newest` | En son oluşturulan nesne: `kind`, köşeler `points`, ardışık köşe farkları `edges`, yaylı kenar sayısı `arcs` |
 | `canUndo`, `canRedo`, `dirty` | Geri al, yinele ve kaydedilmemiş değişiklik |
 | `log` | Son iletinin düzeyi: `success`, `info`, `warn`, `error` |
 | `metresPerPixel` | Görünümün ölçeği |
@@ -67,6 +68,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 - **Tıklanan nokta** ekran pikselinden gelir. `clickTolerance` içinde karşılaştırılır.
 - **Yazılan değer** kesindir. `edges` her köşeden sonrakine olan farktır ve tam eşit olmalıdır. Tıklanan ilk noktadan aynı piksel satırında `12` yazmak, tam `[12, 0]` verir.
 - **`metresPerPixel`** göreli `1e-9` ile karşılaştırılır.
+- **Noktalar çizim alanında kalır.** Merkezden doğuya ve batıya en çok 240, kuzeye ve güneye en çok 160 piksel uzakta olurlar. `0,125` m/piksel ölçekte bu ±30 × ±20 m eder. En küçük desteklenen pencere (1100×600) bu kutuyu çizim alanında gösterir. Oynatıcı alanın dışına düşen noktayı sessizce kaçırmaz; izi hatayla durdurur.
 
 ## Kurallar
 

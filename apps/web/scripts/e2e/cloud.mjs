@@ -133,11 +133,11 @@ try {
   // Draw a line with typed coordinates; autosave sends it without Ctrl+S.
   const X = 486900, N = 4420600;
   await b.eval(`window.kentos.view.camera.fit({ minX: ${X - 50}, minY: ${N - 50}, maxX: ${X + 150}, maxY: ${N + 50} }, 20)`);
-  // As in the smoke test: keys go to the drawing; Space opens the command line for a typed point.
+  // As in the smoke test: keys go to the drawing; the command line takes a typed point.
   const focusCanvas = () => b.eval('window.kentos.view.focus()');
   const cmd = async (t) => {
     await focusCanvas();
-    await b.key(' ');
+    await b.eval("window.kentos.commands.execute('commandline.focus')");
     await b.type(t);
     await b.key('Enter');
     await sleep(80);

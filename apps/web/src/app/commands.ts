@@ -225,12 +225,15 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: E,
       icon: 'undo',
       run: () => {
+        // While a command runs, its own newest step goes first (docs/adr/0018).
+        if (tools.activeId.value !== 'select' && tools.active.undoStep?.()) return;
         const label = doc.undo();
         if (label) log.info(`Geri alındı: ${label}`);
         selection.retain((id) => !!doc.get(id));
       },
-      isEnabled: () => doc.canUndo.value,
-      watch: [doc.canUndo],
+      isEnabled: () => doc.canUndo.value || (tools.activeId.value !== 'select' && (tools.active.pointCount ?? 0) > 0),
+      // The prompt changes with every point a command takes.
+      watch: [doc.canUndo, tools.prompt],
     },
     {
       id: 'edit.redo',

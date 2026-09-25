@@ -76,7 +76,7 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 100,
+    "commandsWithoutTests": 99,
     "commandsOnDesktop": 11
   },
   "commands": [
@@ -533,9 +533,7 @@
       "icon": "terminal",
       "aliases": [],
       "kind": "action",
-      "shortcuts": [
-        "Space"
-      ],
+      "shortcuts": [],
       "menus": [
         "Araçlar › Komut"
       ],
@@ -551,7 +549,10 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/cloud.mjs",
+        "apps/web/scripts/e2e/smoke.mjs"
+      ]
     },
     {
       "id": "crs.points",
@@ -2825,7 +2826,8 @@
       "aliases": [],
       "kind": "action",
       "shortcuts": [
-        "Enter"
+        "Enter",
+        "Space"
       ],
       "menus": [],
       "ribbon": [],
@@ -3681,6 +3683,7 @@
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/polygon-accept.json",
+        "fixtures/interaction/v1/polygon-close.json",
         "fixtures/interaction/v1/polygon-keys.json",
         "fixtures/interaction/v1/polygon-signs.json"
       ]
@@ -6176,6 +6179,7 @@
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
         "fixtures/interaction/v1/polygon-accept.json",
+        "fixtures/interaction/v1/polygon-close.json",
         "fixtures/interaction/v1/polygon-keys.json",
         "fixtures/interaction/v1/polygon-signs.json"
       ],

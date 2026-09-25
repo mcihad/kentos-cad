@@ -2,8 +2,8 @@
   "format": "kentos.interaction-trace",
   "version": 1,
   "id": "polygon-keys",
-  "title": "Kapalı alan aracında tuş ve fare anlamları: Esc, Geri (G), sağ tık, çift tık, eksik nokta, Backspace, Tab, son komutu yinele, odak",
-  "source": "TODOS.md UX-06",
+  "title": "Kapalı alan aracında tuş ve fare anlamları: Esc, Geri (G), Ctrl+Z, sağ tık, çift tık, eksik nokta, Backspace, Tab, Boşluk, son komutu yinele, odak",
+  "source": "TODOS.md UX-06; sahibin kararları, 25 Eylül (ADR 0018)",
   "covers": ["UX-01", "UX-06"],
   "document": "empty.kcad",
   "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
@@ -14,6 +14,7 @@
     { "run": "tool.polygon" },
     { "click": [0, 0] },
     { "click": [10, 0], "expect": { "points": 2 } },
+    { "key": "Ctrl+Z", "note": "Taslakta nokta varken Ctrl+Z çizimde geri alınacak bir şey olmasa da son noktayı geri alır.", "expect": { "points": 1, "entities": 0, "canUndo": false } },
     { "key": "Esc", "note": "Esc bitmemiş alanı bırakır; çizime ve geri alma geçmişine bir şey yazılmaz.", "expect": { "tool": "select", "entities": 0, "canUndo": false } },
 
     { "run": "tool.polygon" },
@@ -24,25 +25,39 @@
     { "click": [0, 10], "expect": { "points": 3 } },
     { "rightClick": [0, 10], "note": "Kısa sağ tık Enter'dır.", "expect": { "entities": 1, "points": 0, "tool": "polygon", "newest": { "kind": "polygon", "points": [[0, 0], [10, 0], [0, 10]] } } },
 
-    { "doubleClick": [0, 0], "note": "Çift tık ikinci bir nokta eklemez.", "expect": { "points": 1 } },
-    { "click": [10, 0], "expect": { "points": 2 } },
+    { "doubleClick": [-25, -10], "note": "Çift tık ikinci bir nokta eklemez.", "expect": { "points": 1 } },
+    { "click": [-15, -10], "expect": { "points": 2 } },
     { "key": "Enter", "note": "Üç noktadan azıyla Enter uyarır, hiçbir şey yazmaz ve aracı ilk noktaya döndürür.", "expect": { "log": "warn", "entities": 1, "points": 0, "tool": "polygon" } },
 
-    { "click": [0, 0] },
-    { "move": [20, 0] },
+    { "click": [-25, -10] },
+    { "move": [-5, -10] },
     { "text": "125", "expect": { "dynamicInput": "125" } },
     { "key": "Backspace", "expect": { "dynamicInput": "12" } },
     { "key": "Tab", "note": "Tab değeri silmez, alanı kapatmaz.", "expect": { "dynamicInput": "12" } },
-    { "key": "Enter", "expect": { "dynamicInput": null, "points": 2 } },
+    { "key": "Space", "note": "Boşluk, Enter gibi değeri uygular.", "expect": { "dynamicInput": null, "points": 2 } },
     { "text": "7", "expect": { "dynamicInput": "7" } },
     { "key": "Esc", "note": "İlk Esc yalnız değer alanını kapatır; komut ve noktaları sürer.", "expect": { "dynamicInput": null, "points": 2, "tool": "polygon" } },
-    { "key": "Esc", "expect": { "tool": "select", "entities": 1 } },
 
-    { "key": "Enter", "note": "Komut yokken Enter son komutu yeniden başlatır.", "expect": { "tool": "polygon", "points": 0 } },
+    { "key": "Ctrl+Z", "note": "Önce taslak: son nokta geri alınır, çizim değişmez.", "expect": { "points": 1, "entities": 1 } },
+    { "key": "Ctrl+Z", "expect": { "points": 0, "entities": 1, "tool": "polygon" } },
+    { "key": "Ctrl+Z", "note": "Taslak boşken Ctrl+Z çizimi geri alır: son biten alan kalkar, komut sürer.", "expect": { "entities": 0, "tool": "polygon", "canRedo": true } },
+    { "key": "Ctrl+Y", "expect": { "entities": 1, "canRedo": false } },
+
+    { "click": [15, -15] },
+    { "click": [25, -15] },
+    { "click": [25, -5], "expect": { "points": 3 } },
+    { "key": "Space", "note": "Boşluk, Enter gibi alanı bitirir.", "expect": { "entities": 2, "points": 0, "tool": "polygon" } },
+    { "key": "Esc", "expect": { "tool": "select" } },
+    { "key": "Space", "note": "Komut yokken Boşluk da Enter gibi son komutu yeniden başlatır.", "expect": { "tool": "polygon", "points": 0 } },
+    { "key": "Esc", "expect": { "tool": "select" } },
+    { "key": "Enter", "expect": { "tool": "polygon", "points": 0 } },
+
     { "move": [5, 5] },
     { "focus": "commandLine" },
     { "text": "12", "note": "Odak bir metin alanındayken yazılan oraya gider; değer alanı açılmaz.", "expect": { "commandLine": "12", "dynamicInput": null } },
-    { "key": "Esc", "note": "Komut satırında ilk Esc yazılanı siler, ikincisi komuttan çıkar.", "expect": { "commandLine": "", "tool": "polygon" } },
-    { "key": "Esc", "expect": { "tool": "select", "entities": 1 } }
+    { "key": "Esc", "note": "Komut satırında ilk Esc yazılanı siler.", "expect": { "commandLine": "", "tool": "polygon" } },
+    { "text": "487000,4420030" },
+    { "key": "Space", "note": "Komut satırında da Boşluk değeri uygular.", "expect": { "commandLine": "", "points": 1 } },
+    { "key": "Esc", "note": "Boş komut satırında Esc komuttan çıkar; taslak bırakılır.", "expect": { "tool": "select", "entities": 2 } }
   ]
 }

@@ -41,8 +41,14 @@ export interface Tool {
   pointerUp?(p: ToolPointer): void;
   /** Typed coordinate, number or option. Return false when not understood. */
   input?(text: string): boolean;
-  /** Enter or right click. */
+  /** Enter, Space or right click. */
   confirm?(): void;
+  /**
+   * Ctrl+Z while the tool runs: takes back its newest step (a point of the
+   * draft) and returns true; false when nothing is pending, and the
+   * drawing is undone instead (docs/adr/0018).
+   */
+  undoStep?(): boolean;
   /**
    * Esc. Return true when the tool handled it internally (e.g. dropped a
    * hot grip) and should stay active; otherwise the manager leaves the tool.

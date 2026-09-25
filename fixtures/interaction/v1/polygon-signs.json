@@ -23,15 +23,15 @@
       "key": "Enter",
       "expect": { "entities": 1, "newest": { "kind": "polygon", "points": [[0, 0], [-4, 0], [-4, 5]], "edges": [[-4, 0], [0, 5]] } }
     },
-    { "click": [0, 20] },
-    { "move": [20, 20] },
+    { "click": [0, -15] },
+    { "move": [20, -15] },
     { "text": "+7", "note": "Artı da değer alanını açar; görünüm yakınlaşmaz.", "expect": { "dynamicInput": "+7", "metresPerPixel": 0.125 } },
     { "key": "Enter", "expect": { "points": 2 } },
     { "text": "@0,3" },
     { "key": "Enter" },
     {
       "key": "Enter",
-      "expect": { "entities": 2, "newest": { "kind": "polygon", "points": [[0, 20], [7, 20], [7, 23]], "edges": [[7, 0], [0, 3]] } }
+      "expect": { "entities": 2, "newest": { "kind": "polygon", "points": [[0, -15], [7, -15], [7, -12]], "edges": [[7, 0], [0, 3]] } }
     },
     { "key": "Esc", "expect": { "tool": "select" } },
     { "move": [0, 0] },

@@ -1,0 +1,66 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "polygon-close",
+  "title": "İlk köşeye dönmek alanı kapatıp bitirir: tam üstüne ya da yakınına tıklama, ilk köşeyi yazma, üç köşeden az, yayla kapatma",
+  "source": "Sahibin kararı, 25 Eylül (ADR 0018, açık soru 1)",
+  "covers": ["UX-06"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.polygon" },
+    { "click": [-30, -15] },
+    { "click": [-20, -15] },
+    { "click": [-20, -5], "expect": { "points": 3 } },
+    {
+      "click": [-30, -15],
+      "note": "İlk köşeye tıklamak alanı kapatıp bitirir; ilk köşe ikinci kez yazılmaz.",
+      "expect": { "entities": 1, "points": 0, "tool": "polygon", "newest": { "kind": "polygon", "points": [[-30, -15], [-20, -15], [-20, -5]], "arcs": 0 } }
+    },
+
+    { "click": [-10, -15] },
+    { "click": [0, -15] },
+    { "click": [0, -5] },
+    {
+      "click": [-9.5, -14.625],
+      "note": "İlk köşenin kenet açıklığı içine (burada 5 piksel) tıklamak da kapatır.",
+      "expect": { "entities": 2, "points": 0, "newest": { "kind": "polygon", "points": [[-10, -15], [0, -15], [0, -5]] } }
+    },
+
+    { "move": [25, 15] },
+    { "text": "487010,4419985" },
+    { "key": "Enter", "expect": { "points": 1 } },
+    { "text": "@10,0" },
+    { "key": "Enter" },
+    { "text": "@0,10" },
+    { "key": "Enter", "expect": { "points": 3 } },
+    { "text": "487010,4419985" },
+    {
+      "key": "Enter",
+      "note": "İlk köşeyi yazmak da kapatır.",
+      "expect": { "entities": 3, "points": 0, "newest": { "kind": "polygon", "points": [[10, -15], [20, -15], [20, -5]], "edges": [[10, 0], [0, 10]] } }
+    },
+
+    { "text": "486975,4420005" },
+    { "key": "Enter" },
+    { "text": "@5,0" },
+    { "key": "Enter", "expect": { "points": 2 } },
+    { "text": "486975,4420005" },
+    { "key": "Enter", "note": "Üç köşeden azken ilk köşe ikinci kez eklenmez; uyarı verilir, taslak sürer.", "expect": { "log": "warn", "points": 2, "entities": 3 } },
+    { "key": "Esc", "expect": { "tool": "select", "entities": 3 } },
+
+    { "run": "tool.polygon" },
+    { "click": [0, 5] },
+    { "click": [10, 5] },
+    { "click": [10, 15], "expect": { "points": 3 } },
+    { "key": "Y", "note": "Yay kipi: sonraki kenar son doğrultuya teğet yaydır.", "expect": { "options": ["D", "A", "M", "R", "İ", "T", "G", "Enter"] } },
+    {
+      "click": [0, 5],
+      "note": "Yay kipinde ilk köşeye tıklamak alanı o yayla kapatır.",
+      "expect": { "entities": 4, "points": 0, "newest": { "kind": "polygon", "points": [[0, 5], [10, 5], [10, 15]], "arcs": 1 } }
+    }
+  ]
+}

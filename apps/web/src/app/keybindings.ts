@@ -47,9 +47,10 @@ export function registerDefaultKeybindings(ctx: AppContext): void {
   keymap.bind('Alt+Q', 'view.commandSearch', global);
   keymap.bind('F6', 'view.keyTips', global);
   keymap.bind('Ctrl+,', 'tools.options', global);
-  keymap.bind('Space', 'commandline.focus');
   keymap.bind('Esc', 'tool.cancel');
   keymap.bind('Enter', 'tool.confirm');
+  // As in AutoCAD, Space is a second Enter (docs/adr/0018); the command line is a click away.
+  keymap.bind('Space', 'tool.confirm');
 
   for (const d of tools.list()) {
     // Esc is shared with "cancel"; the select tool only displays it.

@@ -29,7 +29,8 @@ export class CursorInput extends Component {
     this.d.add(
       listen<KeyboardEvent>(this.input, 'keydown', (e) => {
         e.stopPropagation();
-        if (e.key === 'Enter') {
+        // Space is a second Enter, as in AutoCAD (docs/adr/0018).
+        if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           this.submit();
         } else if (e.key === 'Escape') {

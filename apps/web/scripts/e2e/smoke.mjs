@@ -121,7 +121,8 @@ try {
   const X = E + 200;
   const focusCanvas = () => b.eval('window.kentos.view.focus()');
   const key = async (k, o) => (await focusCanvas(), await b.key(k, o));
-  const cmd = async (text) => (await key(' '), await b.type(text), await b.key('Enter'));
+  // The command line gets the focus without moving the mouse (Space is Enter now, docs/adr/0018).
+  const cmd = async (text) => (await b.eval("window.kentos.commands.execute('commandline.focus')"), await b.type(text), await b.key('Enter'));
   const newest = () => b.eval('[...window.kentos.doc.all()].at(-1)');
   await b.eval(`window.kentos.view.camera.fit({ minX: ${X - 20}, minY: ${N - 80}, maxX: ${X + 140}, maxY: ${N + 80} }, 20)`);
   await key('Escape');

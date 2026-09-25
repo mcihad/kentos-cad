@@ -6,6 +6,7 @@ import { centreBulge, offsetAlong, radialPoint, radiusBulge, unitToward } from '
 import { parseNumber } from './coordinateInput';
 import { PointInputTool } from './drawTools';
 import { drawTag, strokePath, tint } from './preview';
+import type { ToolPointer } from './Tool';
 
 /**
  * How the next arc segment is shaped (AutoCAD PLINE arc options). The
@@ -45,6 +46,10 @@ export class PathTool extends PointInputTool {
   private arcVia: Vec2 | null = null;
   /** Line mode: waiting for a typed length along the last direction. */
   private askLength = false;
+  /** Bulge of the closing segment: an arc when the shape was closed on its first vertex in arc mode. */
+  private closing = 0;
+  /** Where the pointer went down, while that click is being taken (closing on the first vertex). */
+  private pressedAt: Vec2 | null = null;
 
   constructor(ctx: AppContext, opts: { id: string; label: string; closed: boolean; measureOnly?: boolean; parcelLayer?: string }) {
     super(ctx);
@@ -135,6 +140,7 @@ export class PathTool extends PointInputTool {
     }
     const end = this.endFor(p);
     if (dist(last, end) <= 1e-9) return;
+    if (this.closesAt(end)) return this.closeOnFirst();
     const bulge = this.nextBulge(end);
     if (bulge === null) {
       if (s.kind === 'radius' && s.r !== null) return this.ctx.log.warn(`Kiriş yarıçapın iki katından (${this.ctx.format.length(2 * s.r)}) uzun; daha yakın bir nokta seçin.`);
@@ -145,6 +151,35 @@ export class PathTool extends PointInputTool {
     this.arcVia = null;
     // Arc options shape one segment; the path then continues tangentially.
     this.spec = { kind: 'tangent' };
+  }
+
+  override pointerDown(p: ToolPointer): void {
+    this.pressedAt = p.screen;
+    super.pointerDown(p);
+    this.pressedAt = null;
+  }
+
+  /**
+   * A closed shape ends when its first vertex is given again (docs/adr/0018):
+   * typed exactly, or clicked within the snap aperture once there are three
+   * vertices. The first vertex is never written twice.
+   */
+  private closesAt(end: Vec2): boolean {
+    const first = this.pts[0];
+    if (!this.closed || !first) return false;
+    if (dist(first, end) <= 1e-9) return true;
+    if (!this.pressedAt || this.pts.length < 3) return false;
+    const s = this.ctx.view.camera.worldToScreen(first);
+    return Math.hypot(s.x - this.pressedAt.x, s.y - this.pressedAt.y) <= this.ctx.prefs.snapAperture.value;
+  }
+
+  private closeOnFirst(): void {
+    if (this.pts.length < 3) return this.ctx.log.warn(`${this.label} için en az 3 köşe gerekir; ilk köşe ikinci kez eklenmedi.`);
+    // In arc mode the segment back to the first vertex is the arc being drawn.
+    const bulge = this.nextBulge(this.pts[0]);
+    if (bulge === null) return this.ctx.log.warn('İlk köşe yayın tam arkasında kalıyor; alanı Enter ile düz kenarla kapatın.');
+    this.closing = bulge;
+    this.finish();
   }
 
   protected override option(key: string): boolean {
@@ -213,12 +248,13 @@ export class PathTool extends PointInputTool {
     this.arcMode = false;
     this.spec = { kind: 'tangent' };
     this.askLength = false;
+    this.closing = 0;
     super.reset();
   }
 
-  /** Bulges for the finished shape (a polygon closes with a straight segment). */
+  /** Bulges for the finished shape; a polygon closes straight unless it was closed on its first vertex with an arc. */
   private fullBulges(): number[] | undefined {
-    const all = [...this.bulges, 0];
+    const all = [...this.bulges, this.closing];
     return hasBulges(all) ? all : undefined;
   }
 
