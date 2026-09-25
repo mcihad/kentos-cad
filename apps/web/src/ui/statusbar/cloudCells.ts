@@ -115,6 +115,7 @@ export function accountMenu(ctx: AppContext, anchor: HTMLElement): void {
       { kind: 'separator' },
       commandItem(ctx, 'cloud.open'),
       commandItem(ctx, 'cloud.upload'),
+      needs('cloud.share', 'project.share'),
       needs('cloud.rename', 'project.edit'),
       needs('cloud.delete', 'project.delete'),
       { kind: 'separator' },

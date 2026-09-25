@@ -1,12 +1,17 @@
 // Cloud end-to-end test (Faz B): the real kentosd against the development
 // database, the app in headless Chrome signed in as `ayse`, and `mehmet` as a
 // second editor over plain HTTP. Checks sign-in, upload, that a new project
-// is its owner's until she shares it (docs/adr/0015), autosave, reload
+// is its owner's until she shares it (docs/adr/0015) through the share dialog
+// (finding him by name, a role change taking effect), autosave, reload
 // persistence, another editor's change arriving live, a conflict resolved
 // from the dialog, a server restart while an edit waits, renaming the open
 // project from the list, and deletion: by `zeynep` (an admin, under the
 // organisation's policy) while the project is open, and from the list after
-// a confirmation.
+// a confirmation. Last, `mehmet` in the browser: a project shared with him
+// under “Benimle paylaşılanlar”, opened; his role lowered and raised while it
+// is open, then his access taken away: the warning, saving stopped, the
+// drawing and his edits kept on the device, further saves refused (TODOS.md
+// CLOUD-13, CLOUD-21).
 //
 //   pnpm e2e:cloud     (needs `pnpm db:setup` once; builds kentosd first)
 //
@@ -132,12 +137,61 @@ try {
   // A new project is its owner's until she shares it: mehmet, an editor of the same organisation, cannot find it yet.
   const hidden = await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}`);
   check('a new project is its owner’s until shared', hidden.status === 404, String(hidden.status));
-  const shared = await b.eval(
-    `window.kentos.cloud.api.command({ commandName: 'project.share', version: 1, tenantId: ${JSON.stringify(project.tenantId)}, projectId: ${JSON.stringify(project.projectId)}, requestId: 'e2e-paylasim', idempotencyKey: crypto.randomUUID(), expectedVersions: {}, input: { userId: ${JSON.stringify(mehmetMe.body.user.id)}, role: 'editor' } }).then((r) => r.changed)`,
+  // She shares it through the dialog: who has access and why, then Mehmet found by name and added as an editor.
+  await b.eval(`window.kentos.commands.execute('cloud.share')`);
+  await b.waitFor(`document.querySelectorAll('.dialog--share .share-row').length >= 2 && !document.querySelector('.dialog--share input[aria-label="Paylaşılacak kişi"]').disabled`, 8000);
+  const people = () =>
+    b.eval(
+      `[...document.querySelectorAll('.dialog--share .share-row')].map((r) => ({ name: r.querySelector('.share-name').textContent, role: r.querySelector('select')?.selectedOptions[0]?.textContent ?? r.querySelector('.share-role')?.textContent, sub: r.querySelector('.share-sub').textContent }))`,
+    );
+  const firstList = await people();
+  const own = firstList.find((r) => r.name.startsWith('Ayşe'));
+  const byPolicy = firstList.find((r) => r.name.startsWith('Zeynep'));
+  const storage = await b.eval(`document.querySelector('.dialog--share .share-storage')?.textContent ?? ''`);
+  check(
+    'the share dialog shows the owner, the admins under the policy and the storage mode',
+    own?.role === 'Sahip' && byPolicy?.role === 'Yönetici' && /Kurum politikası/.test(byPolicy.sub) && /PostGIS/.test(storage) && !firstList.some((r) => r.name.startsWith('Mehmet')),
+    JSON.stringify(firstList),
   );
-  check('the owner shares it with mehmet as an editor', shared === true);
+  await b.eval(`document.querySelector('.dialog--share input[aria-label="Paylaşılacak kişi"]').focus()`);
+  await b.type('mehmet');
+  await b.waitFor(`[...document.querySelectorAll('.dialog--share .share-suggest__item')].some((e) => e.textContent.startsWith('Mehmet Demir'))`, 5000);
+  await b.shot('cloud-share-find');
+  await press('.dialog--share .share-suggest__item', 'Mehmet Demir');
+  await press('.dialog--share .btn--primary', 'Paylaş');
+  await b.waitFor(`[...document.querySelectorAll('.dialog--share .share-row')].some((r) => r.textContent.includes('Mehmet Demir'))`, 8000);
+  const added = (await people()).find((r) => r.name.startsWith('Mehmet'));
+  check('the owner shares it with mehmet as an editor, from the dialog', added?.role === 'Düzenleyici' && added.sub === 'Paylaşım', JSON.stringify(added));
   const listed = await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}`);
   check('the member it was shared with sees it with every object', listed.status === 200 && Number(listed.body.featureCount) === size && listed.body.access?.role === 'editor', listed.body.featureCount);
+  // The dialog in both themes and at the large type size.
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  await sleep(200);
+  await b.shot('cloud-share-dark');
+  await b.eval(`window.kentos.commands.execute('view.theme.light')`);
+  await sleep(200);
+  await b.shot('cloud-share-light');
+  await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1.08')`);
+  await sleep(200);
+  await b.shot('cloud-share-large');
+  await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1')`);
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  // A role changed in the dialog takes effect at once: as a viewer his commit is refused; an editor again, it is not.
+  const setRole = (role) =>
+    b.eval(
+      `(() => { const row = [...document.querySelectorAll('.dialog--share .share-row')].find((r) => r.textContent.includes('Mehmet Demir')); const s = row.querySelector('select'); s.value = ${JSON.stringify(role)}; s.dispatchEvent(new Event('change')); })()`,
+    );
+  const roleNow = () => mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}`).then((r) => r.body.access?.role);
+  await setRole('viewer');
+  await b.waitFor(`document.querySelector('.dialog--share .cloud-status')?.textContent.includes('Görüntüleyici')`, 8000);
+  const asViewer = await roleNow();
+  const tried = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'create', id: crypto.randomUUID(), entity: { kind: 'point', id: 1, layerId: 'cizim', attrs: {}, p: { x: 486500, y: 4420200 } } }], {});
+  check('a role changed in the dialog takes effect: a viewer’s commit is refused', asViewer === 'viewer' && tried.status === 403, `${asViewer} ${tried.status}`);
+  await setRole('editor');
+  await b.waitFor(`document.querySelector('.dialog--share .cloud-status')?.textContent.includes('Düzenleyici')`, 8000);
+  check('and back to an editor', (await roleNow()) === 'editor');
+  await b.key('Escape');
+  await b.waitFor(`!document.querySelector('.dialog--share')`, 3000);
 
   // Draw a line with typed coordinates; autosave sends it without Ctrl+S.
   const X = 486900, N = 4420600;
@@ -299,11 +353,127 @@ try {
   check('the confirmed delete removes it from the list for everyone', spare.status === 201 && spareGone.status === 410, `${spare.status} → ${spareGone.status}`);
   await b.key('Escape');
 
+  // ── Mehmet in the browser: shared with him, opened, his role lowered and raised, then his access taken away. ──
+  const ayse = client();
+  await ayse.call('POST', '/v1/auth/login', { login: 'ayse', password: env.KENTOS_DEV_PASSWORD });
+  const sharedName = `E2E paylaşılan ${new Date().toISOString().slice(0, 19)}`;
+  const made = await ayse.call('POST', `/v1/tenants/${project.tenantId}/projects`, {
+    name: sharedName,
+    settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000 },
+    origin: { x: 486500, y: 4420200 },
+    layers: [{ id: 'cizim', name: 'Çizim', type: 'layer', visible: true, locked: false, expanded: true, style: { color: 'ink', lineType: 'continuous', lineWeight: 0.25 }, children: [] }],
+    activeLayer: 'cizim',
+    styles: { items: [], categories: [] },
+  });
+  const sp = { tenantId: made.body.tenantId, projectId: made.body.id };
+  const pointId = crypto.randomUUID();
+  await ayse.commit(sp.tenantId, sp.projectId, [{ op: 'create', id: pointId, entity: { kind: 'point', id: 1, layerId: 'cizim', attrs: {}, p: { x: 486510, y: 4420210 } } }], {});
+  const give = (role) =>
+    ayse.call('POST', `/v1/tenants/${sp.tenantId}/projects/${sp.projectId}/commands`, {
+      commandName: role ? 'project.share' : 'project.access.revoke',
+      version: 1,
+      ...sp,
+      requestId: `e2e-${crypto.randomUUID()}`,
+      idempotencyKey: crypto.randomUUID(),
+      expectedVersions: {},
+      input: role ? { userId: mehmetMe.body.user.id, role } : { userId: mehmetMe.body.user.id },
+    });
+  const granted = await give('editor');
+  const serverPoint = async () => (await ayse.call('GET', `/v1/tenants/${sp.tenantId}/projects/${sp.projectId}/features?ids=${pointId}`)).body.features[0];
+  await b.eval(`window.kentos.commands.execute('cloud.signOut')`);
+  await b.waitFor(`window.kentos.cloud.auth.value === 'signedOut'`, 5000);
+  await b.eval(`window.kentos.commands.execute('cloud.open')`);
+  await b.waitFor(`document.querySelector('.dialog--cloud input[name=login]')`, 3000);
+  await b.type('mehmet');
+  await b.key('Tab');
+  await b.type(env.KENTOS_DEV_PASSWORD);
+  await b.key('Enter');
+  // The window grows when its list arrives (it stays centred): the tab is pressed once the list is there.
+  const listReady = `!!document.querySelector('.cloud-tabs') && !!document.querySelector('.cloud-list > *') && !document.querySelector('.cloud-list')?.textContent.includes('yükleniyor')`;
+  await b.waitFor(`window.kentos.cloud.auth.value === 'signedIn' && ${listReady}`, 8000);
+  await press('.cloud-tabs .tab', 'Benimle paylaşılanlar');
+  await b.waitFor(`[...document.querySelectorAll('.cloud-row--shared')].some((r) => r.textContent.startsWith(${JSON.stringify(sharedName)}))`, 8000);
+  const sharedRow = await b.eval(
+    `(() => { const r = [...document.querySelectorAll('.cloud-row--shared')].find((x) => x.textContent.startsWith(${JSON.stringify(sharedName)})); return { sub: r.querySelector('.cloud-row__sub').textContent, role: r.querySelector('.cloud-row__role').textContent }; })()`,
+  );
+  check('“Benimle paylaşılanlar” lists it with its owner and my role', granted.status === 200 && sharedRow.sub.includes('Ayşe Yılmaz') && sharedRow.role === 'Düzenleyici', JSON.stringify(sharedRow));
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  await sleep(200);
+  await b.shot('cloud-shared-dark');
+  await b.eval(`window.kentos.commands.execute('view.theme.light')`);
+  await sleep(200);
+  await b.shot('cloud-shared-light');
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  await press('.cloud-row--shared', sharedName);
+  await press('.dialog__foot .btn', 'Aç');
+  await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(sharedName)} && window.kentos.cloud.link.value === 'online'`, 30000);
+  const localPoint = await b.eval(`[...window.kentos.doc.all()].find((e) => window.kentos.cloud.sync.value.featureOf(e.id) === ${JSON.stringify(pointId)}).id`);
+  await b.eval(`window.kentos.doc.update(${localPoint}, { p: { x: 486520, y: 4420210 } })`);
+  await b.eval(`window.kentos.commands.execute('file.save')`);
+  await b.waitFor(`window.kentos.cloud.sync.value.state.value === 'saved' && !window.kentos.doc.dirty.value`, 8000);
+  check('the recipient opens it and his edit is saved', (await serverPoint())?.entity.p.x === 486520);
+
+  // Lowered to a viewer while it is open: saving stops, his next edit stays on the device.
+  await give('viewer');
+  await b.waitFor(`window.kentos.cloud.project.value?.canWrite === false && window.kentos.cloud.sync.value.state.value === 'readonly'`, 10000);
+  await b.eval(`window.kentos.doc.update(${localPoint}, { p: { x: 486530, y: 4420210 } })`);
+  await sleep(800);
+  check('a lowered role reaches the open editor: the edit waits on the device', (await serverPoint())?.entity.p.x === 486520 && (await b.eval(`window.kentos.cloud.sync.value.pending.value`)) === 1);
+  // An editor again: the held edit goes out.
+  await give('editor');
+  await b.waitFor(`window.kentos.cloud.project.value?.canWrite === true && window.kentos.cloud.sync.value.state.value === 'saved'`, 10000);
+  check('raised again, the held edit is saved', (await serverPoint())?.entity.p.x === 486530);
+
+  // Taken away while it is open: a clear warning, saving stops, the drawing and his edits stay here.
+  const sizeShared = await b.eval('window.kentos.doc.size');
+  await give(null);
+  await b.waitFor(`window.kentos.cloud.sync.value?.state.value === 'revoked'`, 10000).catch(() => {});
+  await b.waitFor(`document.querySelector('.dialog[aria-label="Projeye erişiminiz kaldırıldı"]')`, 5000).catch(() => {});
+  const notice = await b.eval(`document.querySelector('.dialog[aria-label="Projeye erişiminiz kaldırıldı"]')?.textContent ?? ''`);
+  const lostCell = await b.eval(`document.querySelector('.status__save')?.textContent`);
+  check(
+    'revoking shows the warning in the recipient’s open editor; saving stops and the drawing stays',
+    /artık erişemiyorsunuz/.test(notice) && /Yerel kopya kaydet/.test(notice) && lostCell === 'Erişim kaldırıldı' && (await b.eval('window.kentos.doc.size')) === sizeShared,
+    lostCell,
+  );
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  await sleep(200);
+  await b.shot('cloud-revoked-dark');
+  await b.eval(`window.kentos.commands.execute('view.theme.light')`);
+  await sleep(200);
+  await b.shot('cloud-revoked-light');
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  await press('.dialog[aria-label="Projeye erişiminiz kaldırıldı"] .dialog__foot .btn', 'Tamam');
+  await b.eval(`window.kentos.doc.update(${localPoint}, { p: { x: 486540, y: 4420210 } })`);
+  await sleep(800);
+  const kept = await b.eval(
+    `new Promise((resolve) => { const r = indexedDB.open('kentos.cloud'); r.onsuccess = () => { const q = r.result.transaction('drafts').objectStore('drafts').getAll(); q.onsuccess = () => resolve(q.result.filter((d) => Object.values(d.changes).some((c) => c.entity?.p?.x === 486540)).length); }; })`,
+  );
+  const direct = await b.eval(
+    `window.kentos.cloud.api.command({ commandName: 'project.changes', version: 1, tenantId: ${JSON.stringify(sp.tenantId)}, projectId: ${JSON.stringify(sp.projectId)}, requestId: 'e2e-sonra', idempotencyKey: crypto.randomUUID(), expectedVersions: {}, input: { features: [{ op: 'create', id: crypto.randomUUID(), entity: { kind: 'point', id: 1, layerId: 'cizim', attrs: {}, p: { x: 1, y: 2 } } }] } }).then(() => 'kaydedildi', (e) => e.code)`,
+  );
+  check(
+    'after it, edits stay in the device draft and the server refuses further saves',
+    kept === 1 && direct === 'not_found' && (await serverPoint())?.entity.p.x === 486530 && (await b.eval(`window.kentos.commands.isEnabled('cloud.share')`)) === false,
+    `${kept} ${direct}`,
+  );
+  await b.eval(`window.kentos.commands.execute('cloud.open')`);
+  await b.waitFor(listReady, 5000);
+  await press('.cloud-tabs .tab', 'Benimle paylaşılanlar');
+  await b.waitFor(`!document.querySelector('.cloud-list')?.textContent.includes('yükleniyor')`, 8000);
+  const stillListed = await b.eval(`[...document.querySelectorAll('.cloud-row--shared')].some((r) => r.textContent.startsWith(${JSON.stringify(sharedName)}))`);
+  const onShared = await b.eval(`document.querySelector('.cloud-tabs [aria-selected="true"]')?.textContent`);
+  check('taken away, it leaves “Benimle paylaşılanlar”', onShared === 'Benimle paylaşılanlar' && !stillListed, onShared);
+  await b.key('Escape');
+
   const errors = b.consoleLog.filter((l) => /^(error|EXCEPTION)/.test(l));
   check('no console errors', errors.length === 0, errors.join(' | '));
 } catch (e) {
   failures.push(String(e));
   console.error(e);
+  // What the page showed when it stopped, for whoever reads the failure.
+  await b.shot('cloud-failure').catch(() => {});
+  console.error((await b.eval(`document.querySelector('.dialog')?.innerText ?? ''`).catch(() => '')).slice(0, 2000));
 } finally {
   b.close();
   await vite.close();

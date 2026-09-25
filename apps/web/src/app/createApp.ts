@@ -130,6 +130,10 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
       const t = openTarget();
       if (t) lazy(ctx, import('../ui/cloud/ProjectActions'), (m) => m.openDeleteDialog(ctx, t));
     },
+    share: () => {
+      const t = openTarget();
+      if (t) lazy(ctx, import('../ui/cloud/ShareDialog'), (m) => m.openShareDialog(ctx, t));
+    },
   });
   // The open cloud project's access taken away: say so, and offer a local copy (TODOS.md CLOUD-13).
   ctx.cloud.accessLost.subscribe((lost) => lost && lazy(ctx, import('../ui/cloud/AccessLostNotice'), (m) => m.openAccessLostNotice(ctx, lost)));

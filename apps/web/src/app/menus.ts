@@ -72,6 +72,7 @@ export const MAIN_MENU: TopMenu[] = [
       sec('Bulut'),
       'cloud.open',
       'cloud.upload',
+      'cloud.share',
       'cloud.conflicts',
       'cloud.rename',
       'cloud.delete',

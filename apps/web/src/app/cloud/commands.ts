@@ -14,9 +14,10 @@ export interface CloudHooks {
   /** `pick`: a project to select in the list (the application menu's recent projects). */
   projects(mode: 'open' | 'upload', pick?: { tenantId: string; projectId: string }): void;
   conflicts(): void;
-  /** Rename or delete the open cloud project (the projects list offers both for any project). */
+  /** Rename, delete or share the open cloud project (the projects list offers these for any project). */
   rename(): void;
   remove(): void;
+  share(): void;
 }
 
 export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void {
@@ -29,10 +30,11 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
     (args?: unknown) =>
       signedIn() ? next(args) : hooks.signIn(() => next(args));
   const watch = [cloud.auth, ctx.server.state];
-  // The open project, while it still exists, and whether this account may do `permission` in it.
+  // The open project, while it exists for this account, and whether this account may do `permission` in it.
   const openMay = (permission: ProjectPermission) => {
     const p = cloud.project.value;
-    return !!p && cloud.sync.value?.state.value !== 'deleted' && cloud.may(permission) && reachable();
+    const state = cloud.sync.value?.state.value;
+    return !!p && state !== 'deleted' && state !== 'revoked' && cloud.may(permission) && reachable();
   };
   ctx.commands.registerAll([
     {
@@ -108,6 +110,19 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       aliases: ['BULUTSIL'],
       run: () => hooks.remove(),
       isEnabled: () => openMay('project.delete'),
+      watch: [cloud.project, cloud.sync, cloud.me, ctx.server.state],
+    },
+    {
+      id: 'cloud.share',
+      title: 'Bulut projesini paylaş…',
+      short: 'Paylaş',
+      category: C,
+      icon: 'share',
+      description:
+        'Açık bulut projesine kimin hangi rolle erişebildiğini gösterir; kişi ekler, rolünü değiştirir ya da erişimini kaldırır (project.share yetkisi: proje sahibi ya da yöneticisi). Paylaşım alıcıya veritabanı yetkisi vermez. Başka bir projeyi Bulut projesi aç listesinden paylaşın.',
+      aliases: ['PAYLAS', 'SHARE'],
+      run: () => hooks.share(),
+      isEnabled: () => openMay('project.share'),
       watch: [cloud.project, cloud.sync, cloud.me, ctx.server.state],
     },
     {
