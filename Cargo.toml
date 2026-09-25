@@ -60,6 +60,12 @@ serde_json = { version = "=1.0.151", features = ["float_roundtrip"] }
 # and WASM agree bit for bit (CLAUDE.md §23.4, docs/adr/0008).
 libm = "=0.2.16"
 rust_decimal = { version = "=1.43.0", default-features = false, features = ["std"] }
+# Persistent object identity (docs/adr/0014): a v1 drawing's objects get ids derived from
+# the sha256 of its canonical text through UUIDv5 (SHA-1). Both were locked already (axum
+# and sqlx use them); the 0.10 line shares one `digest`. The `uuid` crate's `v5` feature
+# would bring a package of its own (`sha1_smol`).
+sha1 = { version = "=0.10.7", default-features = false }
+sha2 = { version = "=0.10.9", default-features = false }
 ts-rs = { version = "=12.0.1", features = ["serde-json-impl"] }
 # JSON Schema of the contract types, for the product command catalog (docs/adr/0013):
 # the schemas are derived from the same serde types, so type and schema cannot drift.

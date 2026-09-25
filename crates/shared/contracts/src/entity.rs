@@ -16,9 +16,10 @@ pub struct Vec2 {
     pub y: f64,
 }
 
-/// Fields every object has. `id` is the document's local id in v1; the
-/// server's stable id is a UUID in PostgreSQL, carried by a separate
-/// `FeatureRef` in Faz B (CLAUDE.md §15).
+/// Fields every object has. `id` is the object's local id inside a v1 file.
+/// v1 keeps no persistent id: it is derived from the file's content when the
+/// file is opened (`identity`, docs/adr/0014); the server's is a UUID in
+/// PostgreSQL (`feature.id`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

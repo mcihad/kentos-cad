@@ -1,0 +1,24 @@
+{ "version": 1, "format": "kentos.document",
+  "name": "Küçük \"çizim\"\ttab",
+  "settings": { "plotScale": 500, "srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "donum", "angleUnit": "deg" },
+  "origin": { "y": 4420000, "x": 500000.5 },
+  "homeView": null,
+  "layers": [
+    { "id": "yol", "name": "Yol", "type": "layer", "visible": true, "locked": false, "expanded": false,
+      "style": { "lineWeight": 0.50, "lineType": "dotted", "color": "#336699",
+        "renderer": { "type": "single", "symbols": { "line": { "ref": "temel.cizgi" } }, "b": 2.0, "a": 2, "c": [1, 2.5, { "z": null, "y": true }] } },
+      "children": [] }
+  ],
+  "activeLayer": "yol",
+  "entities": [
+    { "id": 9, "kind": "polyline", "layerId": "yol", "note": "bilinmeyen alan",
+      "attrs": { "Ölçü": "1", "Ada": "7", "ad": "x" },
+      "pts": [ { "x": 500000, "y": 4420000 }, { "x": 500010, "y": 4420000 }, { "x": 500010, "y": 4420010 },
+               { "x": 500020, "y": 4420010 }, { "x": 500020, "y": 4420020 }, { "x": 500030, "y": 4420020 } ],
+      "bulges": [ 0.00001, 0.000001, 1e15, 1E16, -0.0, -2.5e-7 ] },
+    { "kind": "text", "layerId": "yol", "id": 5, "p": { "x": 500001, "y": 4420001 },
+      "text": "Satır\nçizgi \u001F / \\ \"", "height": 2, "rotation": 0, "attrs": {} }
+  ],
+  "styles": { "items": [], "categories": [] },
+  "extra": "bilinmeyen üst alan"
+}

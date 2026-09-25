@@ -1,0 +1,156 @@
+{
+  "producedBy": "python3 scripts/fixtures/v1_identity_reference.py (Python 3.14.4; json, hashlib, uuid, decimal)",
+  "importNamespace": "4a5259a1-97f7-4742-88ce-b747287025ed",
+  "cases": [
+    {
+      "name": "sample",
+      "inputs": [
+        "../sample.json",
+        "sample.compact.kcad",
+        "sample.variant.kcad"
+      ],
+      "canonical": "sample.canonical.json",
+      "sourceSha256": "6c4eb805e94f39189c1bbaa922c6082553b990df75fd6c68ef00461b45fcea2b",
+      "namespace": "10cfd23f-3e08-5b8a-b3c9-93d14765d7fc",
+      "project": "bbe66b3a-6735-5aad-a407-a59712663053",
+      "entities": [
+        {
+          "id": 1,
+          "uid": "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e"
+        },
+        {
+          "id": 2,
+          "uid": "686a5035-0451-59ce-ad9c-d9f612fd169b"
+        },
+        {
+          "id": 3,
+          "uid": "b1e0e4dd-af21-5a3e-af45-d19bc9bf7c3e"
+        },
+        {
+          "id": 4,
+          "uid": "a0e4fd78-3033-50bd-8bc0-b24dc2d89da8"
+        },
+        {
+          "id": 5,
+          "uid": "9da7e846-e460-5f9f-9c6f-5c4569623b76"
+        },
+        {
+          "id": 6,
+          "uid": "328403d1-809b-5228-8909-c6a6fd50d0d9"
+        },
+        {
+          "id": 7,
+          "uid": "74f6eafc-aeea-5e77-91d5-e359fcb46060"
+        },
+        {
+          "id": 8,
+          "uid": "3ceeecbb-0020-538b-83bb-2834b95e748c"
+        },
+        {
+          "id": 9,
+          "uid": "4061a8b5-b3a3-5d57-9e2f-a97d8e8a17dd"
+        },
+        {
+          "id": 10,
+          "uid": "817ef069-7b54-5710-ab2e-0863083e9437"
+        },
+        {
+          "id": 11,
+          "uid": "b8f5da1d-07b8-5b6f-832c-5cbc72af6145"
+        },
+        {
+          "id": 12,
+          "uid": "46f66f53-f96a-5ed7-9f87-3c5f64197609"
+        },
+        {
+          "id": 13,
+          "uid": "0e7f2460-1bec-56e5-b79a-c2fe8e5b23b1"
+        }
+      ]
+    },
+    {
+      "name": "edited",
+      "inputs": [
+        "edited.kcad"
+      ],
+      "canonical": "edited.canonical.json",
+      "sourceSha256": "36a597349c0eb031a82a0693d6bec1fed2db2d57e7c6485b0e91986628bd8807",
+      "namespace": "31106ee3-ae6b-5fc5-88d3-545ddffbb7f4",
+      "project": "47ca606b-060f-5298-bc54-91f9c610eb82",
+      "entities": [
+        {
+          "id": 1,
+          "uid": "2c32a298-edc5-50f8-8b6c-86c385127636"
+        },
+        {
+          "id": 2,
+          "uid": "5951bdc6-7023-5ee2-8f91-a1117c7c8f3e"
+        },
+        {
+          "id": 3,
+          "uid": "495c1e12-872a-5411-bf41-3d2d61ccf796"
+        },
+        {
+          "id": 4,
+          "uid": "8191b777-cc5f-5337-b2a4-954229b186ad"
+        },
+        {
+          "id": 5,
+          "uid": "cfa0b69d-d09b-5773-882b-79857aab40ab"
+        },
+        {
+          "id": 6,
+          "uid": "929fd9c7-c287-52d0-8e83-b3be9762e7e8"
+        },
+        {
+          "id": 7,
+          "uid": "2fb6ba7b-9925-5760-a384-bad26d8bdec6"
+        },
+        {
+          "id": 8,
+          "uid": "13e5ccee-0228-5548-8673-22f143fa63ba"
+        },
+        {
+          "id": 9,
+          "uid": "5fbd949a-a035-507c-ae5b-41ed0654b5aa"
+        },
+        {
+          "id": 10,
+          "uid": "29af8d0b-2ea4-5965-8bd9-c4c92e9640f9"
+        },
+        {
+          "id": 11,
+          "uid": "ea026608-a618-530a-ad1b-90354b75e903"
+        },
+        {
+          "id": 12,
+          "uid": "1794afaf-824f-5e43-8e80-c9f98136401c"
+        },
+        {
+          "id": 13,
+          "uid": "6c3ef72b-f0ce-5d59-9308-8728d12ae062"
+        }
+      ]
+    },
+    {
+      "name": "minimal",
+      "inputs": [
+        "minimal.kcad"
+      ],
+      "canonical": "minimal.canonical.json",
+      "sourceSha256": "11dbbc142aa26b78ac906f4669dbabd9ed648938fedab22bda976f1517803cc3",
+      "namespace": "92186ea6-5b1b-5f81-9da4-c5800129f8b3",
+      "project": "9e53cf49-df50-5cff-8abe-54601f2277bd",
+      "entities": [
+        {
+          "id": 9,
+          "uid": "0cc8ae35-3c75-52b8-945e-96cefc2b1d09"
+        },
+        {
+          "id": 5,
+          "uid": "60b50361-19e1-5197-8557-9ee917dadb2e"
+        }
+      ]
+    }
+  ]
+}

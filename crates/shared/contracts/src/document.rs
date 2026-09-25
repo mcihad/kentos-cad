@@ -141,15 +141,33 @@ pub struct DocumentSnapshotV1 {
     pub styles: ProjectStyles,
 }
 
+/// The two fields a reader checks before the rest; every other field is skipped unread.
+#[derive(Default, Deserialize)]
+struct Head {
+    #[serde(default)]
+    format: Option<serde_json::Value>,
+    #[serde(default)]
+    version: Option<serde_json::Value>,
+}
+
 impl DocumentSnapshotV1 {
     /// Reads a snapshot, refusing other formats and versions instead of guessing.
+    /// A leading byte order mark is skipped, as a browser skips it when it
+    /// decodes the file. The format and version are read first without building
+    /// the rest; the drawing is then read once, straight into the typed
+    /// contract (a large file never becomes a `serde_json::Value` tree).
     pub fn from_json(text: &str) -> Result<Self, String> {
-        let head: serde_json::Value =
-            serde_json::from_str(text).map_err(|e| format!("JSON değil: {e}"))?;
-        if head.get("format").and_then(|f| f.as_str()) != Some(DOCUMENT_FORMAT) {
+        let text = text.strip_prefix('\u{feff}').unwrap_or(text);
+        let head = match serde_json::from_str::<Head>(text) {
+            Ok(head) => head,
+            Err(e) if e.is_syntax() || e.is_eof() => return Err(format!("JSON değil: {e}")),
+            // Not an object, or its format or version is not plain JSON: the checks below say so.
+            Err(_) => Head::default(),
+        };
+        if head.format.as_ref().and_then(|f| f.as_str()) != Some(DOCUMENT_FORMAT) {
             return Err("KentOS çizim dosyası değil (format ≠ kentos.document).".into());
         }
-        match head.get("version").and_then(|v| v.as_u64()) {
+        match head.version.as_ref().and_then(|v| v.as_u64()) {
             Some(v) if v == u64::from(DOCUMENT_VERSION) => {}
             Some(v) => {
                 return Err(format!(
@@ -158,6 +176,6 @@ impl DocumentSnapshotV1 {
             }
             None => return Err("Çizim dosyasında sürüm yok.".into()),
         }
-        serde_json::from_value(head).map_err(|e| format!("Çizim dosyası bozuk: {e}"))
+        serde_json::from_str(text).map_err(|e| format!("Çizim dosyası bozuk: {e}"))
     }
 }
