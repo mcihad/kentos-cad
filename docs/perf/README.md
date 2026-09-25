@@ -12,6 +12,26 @@ node apps/web/scripts/perf/modules.mjs --label y4 # pnpm build'den sonra: ağır
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
 
+## S6 kabul ölçümü: kullanıcının makinesinde etkileşim (2026-09-25, `405c364`)
+
+- **Kaynak:** [interaction-s6.md](interaction-s6.md) (ham veri `.json`). Komut `pnpm perf:interaction --label s6`; kod F0 belgeleri dışında `4399477` ile aynı, temiz ayrı bir worktree'de çalıştı.
+- **Ortam:** i5-11300H, Iris Xe (ANGLE, OpenGL ES 3.2), başsız Chrome 154, WebGL2. 3 koşunun ortancası.
+- **Karşılaştırma geçersiz.** Taban (`c110b15`) Chrome 153 ile alınmıştı, betik sürüm değişince karşılaştırmayı kendi kuralıyla geçersiz sayar. Farklar yine de sürüm gürültüsünün çok üstündedir. Aynı koşullarda yeni bir taban alınana kadar değerler yalnız kayıttır.
+
+| Ölçüt (p95) | Taban (TS geometri, Chrome 153) | S6 (Rust deposu, Chrome 154) |
+|---|---|---|
+| `parsel-50k`, imleç başına seçme (yakın / genel) | 9,2 / 9,9 ms | 0,09 / 0,17 ms |
+| `parsel-50k`, imleç başına kenet (yakın / genel) | 9,2 / 12,6 ms | 0,11 / 0,41 ms |
+| `hat-1m`, imleç başına kenet (yakın / genel) | 5,7 / 31,0 ms | 0,93 / 2,13 ms |
+| `hat-1m`, buda önizlemesi karesi | 763 ms | 17,5 ms |
+| Büyük katmanı yeniden kurma (`parsel-50k` / `hat-1m`) | 112 / 131 ms | 38,6 / 52,5 ms |
+| `hat-1m`, kaydırma kare aralığı, GPU dahil (yakın / genel) | 17,1 / 48,1 ms | 17,3 / 48,1 ms |
+
+- Betik 11 gerileme işaretledi. Hepsi p95'i 0,6 ms'nin altında olan araç ve kare adımlarıdır; en büyük mutlak fark 0,22 ms'dir (`parsel-50k` genel görünümde kaydırma olayı 0,60 → 0,82 ms).
+- **ADR 0005 taslağına göre açık kalanlar** (onaylanmamış hedefler, yalnız kayıt):
+  - `hat-1m` genel görünümde kaydırma kare aralığı 48 ms (≈ 21 kare/sn). Ana iş parçacığı 0,57 ms, yani darboğaz GPU'dur. Hedef 16 ms; iş LOD ve kırpmadadır (TODOS.md `REN-10`).
+  - `hat-1m` katman kurma 52,5 ms. Hedef 100 bin segment için 50 ms; bu veri seti 1 milyon segmenttir.
+
 ## F0 başlangıç kaydı: kullanıcının makinesinde açılış (2026-09-25, `481d7c4`)
 
 - **Kaynak:** [bundle-f0-2026-09-25.md](bundle-f0-2026-09-25.md), [startup-f0-2026-09-25.md](startup-f0-2026-09-25.md). Ortam ve test sonuçları [docs/baseline/2026-09-25.md](../baseline/2026-09-25.md)'dedir.
