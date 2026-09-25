@@ -39,3 +39,6 @@ apps/web/src/style/svg/pkg/
 
 # Claude Code agent worktrees (tool state, never source; docs/baseline/2026-09-25.md)
 .claude/worktrees/
+
+# Background services started by make (PIDs and logs; scripts/dev/svc.sh)
+.run/
