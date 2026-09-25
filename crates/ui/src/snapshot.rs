@@ -37,7 +37,7 @@ use iced::advanced::clipboard;
 use iced::advanced::renderer::{self, Headless};
 use iced::keyboard::{self, key};
 use iced::time::Instant;
-use iced::{Element, Event, Pixels, Point, Renderer, Size, Theme, mouse, window};
+use iced::{Element, Event, Pixels, Point, Renderer, Size, Theme, event, mouse, window};
 use iced_runtime::user_interface::{self, UserInterface};
 
 use crate::theme::typography;
@@ -128,12 +128,22 @@ impl Snapshot {
             .ok()
             .or_else(|| cfg!(test).then(|| "tiny-skia".to_string()));
 
+        Self::with_backend(size, backend.as_deref())
+    }
+
+    /// Yazılım çiziciyle (tiny-skia) ekransız arayüz: GPU'ya bağlı olmayan
+    /// sınamalar için; başka crate'lerin testleri de kullanır.
+    pub fn software(size: Size) -> Result<Self, Error> {
+        Self::with_backend(size, Some("tiny-skia"))
+    }
+
+    fn with_backend(size: Size, backend: Option<&str>) -> Result<Self, Error> {
         typography::load();
 
         let renderer = iced::futures::executor::block_on(<Renderer as Headless>::new(
             typography::ui(),
             Pixels(16.0),
-            backend.as_deref(),
+            backend,
         ))
         .ok_or(Error)?;
 
@@ -182,6 +192,42 @@ impl Snapshot {
 
         self.cache = ui.into_cache();
         messages
+    }
+
+    /// Tek bir olayı verir: ürettiği mesajlar ve bir bileşenin olayı alıp
+    /// almadığı (uygulamanın aboneliklerinin gördüğü durum). İmleç olayla
+    /// birlikte ilerler.
+    pub fn deliver<'a, Message>(
+        &mut self,
+        view: Element<'a, Message>,
+        event: &Event,
+    ) -> (Vec<Message>, event::Status) {
+        if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
+            self.cursor = mouse::Cursor::Available(*position);
+        }
+
+        let mut ui = UserInterface::build(
+            view,
+            self.size,
+            std::mem::take(&mut self.cache),
+            &mut self.renderer,
+        );
+
+        let mut messages = Vec::new();
+
+        let (_, statuses) = ui.update(
+            std::slice::from_ref(event),
+            self.cursor,
+            &mut self.renderer,
+            &mut clipboard::Null,
+            &mut messages,
+        );
+
+        self.cache = ui.into_cache();
+
+        let status = statuses.first().copied().unwrap_or(event::Status::Ignored);
+
+        (messages, status)
     }
 
     /// Olayları sırayla verir; her olayın mesajlarını uygulamaya uygular.

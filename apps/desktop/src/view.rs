@@ -12,14 +12,16 @@
 //! disabled button) and its tooltip says why; typed or keyed, it says so in
 //! the command line.
 
-use iced::widget::{Column, button, column, container, row, scrollable, stack, text};
-use iced::{Color, Element, Fill};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, stack, text};
+use iced::{Center, Color, Element, Fill};
 
 use kentos_contracts::{LayerNode, LayerNodeType};
+use kentos_interaction::Format;
 use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::widget::command_line::Command as LineCommand;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LinePrompt};
 use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon, Stack};
 use kentos_ui::widget::status_bar::{Readout, StatusBar};
 use kentos_ui::widget::table::Column as TreeColumn;
@@ -32,6 +34,7 @@ use kentos_ui::widget::{
 use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel, Then};
 use crate::catalog::{Command, Item, Standing, catalog};
 use crate::document::{Document, crs_name};
+use crate::preview;
 
 impl App {
     pub fn view(&self) -> Element<'_, Message> {
@@ -103,8 +106,17 @@ impl App {
 
     fn drawing_area(&self) -> Element<'_, Message> {
         match &self.document {
-            // The open drawing on KentOS's own wgpu pipeline (viewport.rs, docs/adr/0019).
-            Some(doc) => self.viewport.view(doc, self.mode),
+            // The open drawing on KentOS's own wgpu pipeline (viewport.rs, docs/adr/0019),
+            // the running tool's draft and the value field over it (preview.rs).
+            Some(doc) => {
+                let format = Format::of(doc.settings());
+                let over = preview::layer(
+                    &self.viewport.camera,
+                    self.session.preview(&format),
+                    self.field.as_ref().map(|f| (f.text.as_str(), f.at)),
+                );
+                stack![self.viewport.view(doc, self.mode), over].into()
+            }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")
                     .description(
@@ -191,24 +203,74 @@ impl App {
         }
     }
 
-    fn command_line(&self) -> Element<'_, Message> {
+    pub(crate) fn command_line(&self) -> Element<'_, Message> {
+        // The running command's step and options, as buttons (the web's CommandLine.setPrompt).
+        let prompt = self.session.is_running().then(|| {
+            let p = self.session.prompt();
+            p.options.iter().fold(
+                LinePrompt::new(p.step).command(p.tool.unwrap_or("")),
+                |prompt, o| {
+                    prompt
+                        .option(o.label, Message::PromptOption(o.key))
+                        .key(o.key)
+                },
+            )
+        });
         CommandLine::new(&self.history, &self.command_input)
             .id(COMMAND_INPUT)
-            .placeholder("Komut yazın (ör. AC, KAYDET, TEMA); öneriler yazdıkça gelir")
+            .placeholder("Komut ya da koordinat yazın; Enter ya da Boşluk onaylar")
             .commands(catalog().commands().iter().map(line_command))
+            .prompt(prompt)
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)
             .on_run(Message::CommandRun)
+            // As in AutoCAD, Space is a second Enter; Esc on an empty line ends the command (ADR 0018).
+            .space_submits()
+            .on_cancel(Message::CommandCancelled)
+            .on_focus(Message::CommandFocus)
             .expanded(self.command_expanded, |_| Message::CommandHistoryToggled)
             .into()
+    }
+
+    /// The running command in the status bar: its name, the step and the
+    /// options as buttons (the web shows them in the strip over its drawing).
+    fn prompt_bar(&self) -> Option<Element<'_, Message>> {
+        let p = self.session.prompt();
+        let tool = p.tool?;
+        let head = row![
+            text(tool)
+                .font(typography::ui_strong())
+                .size(typography::caption()),
+            label::caption(p.step),
+        ]
+        .spacing(6)
+        .align_y(Center);
+        let options = p.options.iter().map(|o| {
+            button(
+                row![label::caption(o.label), label::mono_caption(o.key)]
+                    .spacing(4)
+                    .align_y(Center),
+            )
+            .on_press(Message::PromptOption(o.key))
+            .padding([0, 5])
+            .style(style::button::keyword)
+            .into()
+        });
+        Some(
+            Row::with_children(std::iter::once(head.into()).chain(options))
+                .spacing(4)
+                .align_y(Center)
+                .into(),
+        )
     }
 
     fn status_bar(&self) -> Element<'_, Message> {
         let coordinates = match (&self.document, self.viewport.cursor) {
             (Some(doc), Some(p)) => {
-                // Display only (CLAUDE.md §5): the project's length decimals, Y (east) first.
-                let d = (doc.settings().length_decimals as usize).min(9);
-                format!("Y {:.d$}   X {:.d$}", p.x, p.y)
+                // Display only (CLAUDE.md §5): the project's length decimals, Y (east)
+                // first, rounded as the web's toFixed rounds.
+                let f = Format::of(doc.settings());
+                format!("Y {}   X {}", f.coord(p.x), f.coord(p.y))
             }
             _ => "Y —   X —".to_owned(),
         };
@@ -217,6 +279,9 @@ impl App {
                 .icon(Icon::Crosshair)
                 .tip("İmleç koordinatı: Y sağa (doğu), X yukarı (kuzey)"),
         );
+        if let Some(prompt) = self.prompt_bar() {
+            bar = bar.separator().push(prompt);
+        }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
             let crs = match crs_name(settings.srid) {
@@ -331,7 +396,7 @@ impl App {
                     });
                 overlay::modal(
                     Dialog::new("Klavye kısayolları")
-                        .hint("Masaüstünde Ctrl ve Alt'lı kısayollar ile F tuşları çalışır; “(web)” olanlar henüz yalnız web'de.")
+                        .hint("Masaüstünde taşınan komutların kısayolları, bütün komutların Ctrl, Alt ve F tuşlu kısayolları çalışır; “(web)” olanlar henüz yalnız web'de.")
                         .push(scrollable(list).height(420))
                         .action(close())
                         .width(560.0),

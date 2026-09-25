@@ -2440,8 +2440,10 @@ name = "kentos-desktop"
 version = "0.1.0"
 dependencies = [
  "iced",
+ "iced_runtime",
  "kentos-contracts",
  "kentos-domain",
+ "kentos-interaction",
  "kentos-render-wgpu",
  "kentos-ui",
  "rfd",
@@ -2496,6 +2498,15 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-style-core",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "kentos-interaction"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
+ "kentos-geometry-core",
 ]
 
 [[package]]

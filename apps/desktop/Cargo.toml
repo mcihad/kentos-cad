@@ -17,7 +17,13 @@ kentos-contracts = { path = "../../crates/shared/contracts", default-features = 
 kentos-domain = { path = "../../crates/native/domain" }
 # The drawing area's wgpu pipeline (docs/adr/0019), fed through Iced's shader widget.
 kentos-render-wgpu = { path = "../../crates/render/wgpu" }
-iced = { workspace = true }
+# The tool session: tools, prompts and typed input over the document (docs/adr/0021).
+kentos-interaction = { path = "../../crates/native/interaction" }
+iced = { workspace = true, features = ["canvas"] }
+# The trace player (traces.rs) runs the app's own tasks (save, open) without a
+# window: Iced's runtime crate, already in the binary through Iced and KentOS UI's
+# snapshot feature; no new package (docs/adr/0021).
+iced_runtime = { workspace = true }
 rfd = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

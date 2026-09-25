@@ -35,6 +35,14 @@ pub const PORTED: &[&str] = &[
     "layer.showAll",
     "edit.undo",
     "edit.redo",
+    // The tool session (docs/adr/0021): the closed-area tool, its confirm and
+    // cancel, and the view commands the interaction traces use.
+    "tool.polygon",
+    "tool.confirm",
+    "tool.cancel",
+    "view.zoomIn",
+    "view.zoomOut",
+    "view.zoomExtents",
 ];
 
 /// Where a command stands, from the desktop's point of view.

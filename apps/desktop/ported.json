@@ -12,7 +12,13 @@
     "help.shortcuts",
     "layer.showAll",
     "edit.undo",
-    "edit.redo"
+    "edit.redo",
+    "tool.polygon",
+    "tool.confirm",
+    "tool.cancel",
+    "view.zoomIn",
+    "view.zoomOut",
+    "view.zoomExtents"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -93,6 +93,7 @@ Komut yokken `+` ve `-` görünümü 1,5 kat yakınlaştırır ve uzaklaştırı
   - `polygon-close`: ilk köşeye dönmek.
 - **Web:** izleri gerçek tarayıcıda oynatır: `pnpm e2e:interaction` (`make e2e-interaction`). Oynatıcı istemi uygulamanın kendi ayrıştırıcısıyla okur, belgeyi ve kamerayı geliştirme yüzeyinden (`window.kentos`) okur.
 - **Masaüstü:** çizim alanı (`REN-01..07`) ve poligon komutu (`CMD-04..07`) gelince aynı dosyaları değiştirmeden oynatır. **Masaüstünün ilk davranış hedefi budur.**
+  - 25 Eylül: native oynatıcı dört izi üç varyantta geçiyor ([ADR 0021](0021-native-tool-session.md)).
 - **Kural:** iz web'in bugünkü davranışını yazar. Davranış değişecekse sıra şudur:
   1. karar;
   2. iki uygulamada değişiklik;

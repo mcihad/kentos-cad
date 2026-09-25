@@ -1,15 +1,18 @@
 //! The desktop shell's state and update (docs/adr/0017): the open drawing,
-//! the ribbon, the docked panels, the command line and the dialogs.
+//! the ribbon, the docked panels, the command line, the dialogs, and the
+//! tool session drawing on the drawing (docs/adr/0021).
 //!
 //! Every button, shortcut and typed name runs a web command id through
 //! [`App::run`]; the ones the desktop does not run yet say so instead of
-//! doing nothing (CLAUDE.md §4.5).
+//! doing nothing (CLAUDE.md §4.5). Keys, clicks and typed values go through
+//! `input.rs` by ADR 0018's rules.
 
 use std::path::PathBuf;
 
 use iced::widget::operation;
-use iced::{Event, Subscription, Task, Theme, event, keyboard, window};
+use iced::{Subscription, Task, Theme, event, keyboard, window};
 
+use kentos_interaction::{Draft, Level, Session};
 use kentos_ui::icon::Icon;
 use kentos_ui::theme::{self, Accent, Mode};
 use kentos_ui::widget::command_line::Entry;
@@ -17,6 +20,8 @@ use kentos_ui::widget::docking::{self, Docks, Side};
 
 use crate::catalog::{Standing, catalog};
 use crate::document::{self, Document};
+use crate::input::{Field, release_keyboard};
+use crate::keys::{self, KeyPress};
 use crate::viewport::{self, Viewport};
 
 pub const COMMAND_INPUT: &str = "komut-satiri";
@@ -70,6 +75,16 @@ pub enum Then {
     Close(window::Id),
 }
 
+/// Where the open and save dialogs are answered.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum Picker {
+    /// The system's file dialog (`rfd`).
+    #[default]
+    Dialog,
+    /// This file, without asking: the trace player's (the web runner's picker).
+    File(PathBuf),
+}
+
 #[derive(Debug, Clone)]
 pub enum Message {
     /// Run a web command id (ribbon, shortcut, command line, dialog).
@@ -79,8 +94,16 @@ pub enum Message {
     CommandSubmitted,
     CommandRun(String),
     CommandHistoryToggled,
-    /// Typed while nothing had the focus: starts the command line (CAD habit).
-    Typed(String),
+    /// Esc in the empty command line: the running command ends.
+    CommandCancelled,
+    /// The command line's text box took or let go of the keyboard.
+    CommandFocus(bool),
+    /// An option button of the running command's prompt (its key: `G`, `Enter`).
+    PromptOption(&'static str),
+    /// A key press no text box captured (keys.rs); routed by ADR 0018.
+    Key(KeyPress),
+    /// Shift, Ctrl, Alt or the logo key changed (Shift turns ortho over for a click).
+    Modifiers(keyboard::Modifiers),
     Dock(docking::Event<Panel>),
     LayerSelected(String),
     LayerVisible(String),
@@ -94,7 +117,7 @@ pub enum Message {
     CloseRequested(window::Id),
     DialogConfirmed,
     DialogClosed,
-    /// The drawing area: its size, the pointer, pan and zoom.
+    /// The drawing area: its size, the pointer, pan, zoom and clicks.
     Viewport(viewport::Event),
 }
 
@@ -120,6 +143,20 @@ pub struct App {
     pub dialog: Option<Dialog>,
     /// The drawing area's camera and scene cache.
     pub viewport: Viewport,
+    /// The running tool and the last one started (kentos-interaction, docs/adr/0021).
+    pub session: Session,
+    /// The value field beside the cursor, while it is open (ADR 0018).
+    pub field: Option<Field>,
+    /// Drafting aids for new points: ortho, polar tracking, the snap aperture.
+    pub draft: Draft,
+    /// Typed values open beside the cursor (the web's `cursorInput` preference).
+    pub cursor_input: bool,
+    /// Whether the command line's text box has the keyboard.
+    pub line_focused: bool,
+    pub modifiers: keyboard::Modifiers,
+    /// The level of the newest message; the traces read it (ADR 0018).
+    pub last_level: Option<Level>,
+    pub picker: Picker,
 }
 
 impl App {
@@ -141,6 +178,14 @@ impl App {
             command_expanded: false,
             dialog: None,
             viewport: Viewport::new(),
+            session: Session::new(),
+            field: None,
+            draft: Draft::default(),
+            cursor_input: true,
+            line_focused: false,
+            modifiers: keyboard::Modifiers::default(),
+            last_level: None,
+            picker: Picker::Dialog,
         };
         let task = match path {
             Some(path) => Task::perform(
@@ -169,7 +214,7 @@ impl App {
 
     pub fn subscription(&self) -> Subscription<Message> {
         Subscription::batch([
-            event::listen_with(key_event),
+            event::listen_with(keys::key_event),
             window::close_requests().map(Message::CloseRequested),
         ])
     }
@@ -181,17 +226,27 @@ impl App {
             Message::CommandInput(text) => self.command_input = text,
             Message::CommandSubmitted => {
                 let text = std::mem::take(&mut self.command_input);
-                return self.run_typed(text.trim());
+                return self.submit_line(text.trim());
             }
             Message::CommandRun(name) => {
                 self.command_input.clear();
                 return self.run_typed(&name);
             }
             Message::CommandHistoryToggled => self.command_expanded = !self.command_expanded,
-            Message::Typed(text) => {
-                self.command_input.push_str(&text);
-                return operation::focus(COMMAND_INPUT);
+            Message::CommandCancelled => {
+                self.line_focused = false;
+                return self.run("tool.cancel");
             }
+            Message::CommandFocus(focused) => {
+                self.line_focused = focused;
+                // The value field loses the keyboard to the command line (web: its blur).
+                if focused {
+                    self.field = None;
+                }
+            }
+            Message::PromptOption(key) => return self.prompt_option(key),
+            Message::Key(press) => return self.key(press),
+            Message::Modifiers(modifiers) => self.modifiers = modifiers,
             Message::Dock(event) => self.docks.update(event),
             Message::LayerSelected(id) => {
                 self.selected_layer = (self.selected_layer.as_deref() != Some(&id)).then_some(id);
@@ -224,6 +279,8 @@ impl App {
                     doc.entity_count(),
                     doc.layer_count()
                 ));
+                // A draft belongs to the drawing it was drawn on.
+                self.cancel();
                 self.selected_layer = None;
                 self.viewport.opened(&doc);
                 self.document = Some(*doc);
@@ -261,7 +318,7 @@ impl App {
                 }
             }
             Message::DialogClosed => self.dialog = None,
-            Message::Viewport(event) => self.viewport.update(event, self.document.as_ref()),
+            Message::Viewport(event) => return self.pointer(event),
         }
         Task::none()
     }
@@ -288,6 +345,11 @@ impl App {
             }
         }
 
+        if let Some(tool) = id.strip_prefix("tool.")
+            && Session::tools().contains(&tool)
+        {
+            return self.start_tool(tool);
+        }
         match id {
             "file.open" => {
                 if self.document.as_ref().is_some_and(Document::dirty) {
@@ -308,6 +370,11 @@ impl App {
                 };
             }
             "view.ribbonCollapse" => self.ribbon_collapsed = !self.ribbon_collapsed,
+            "view.zoomIn" => self.zoom_in(),
+            "view.zoomOut" => self.zoom_out(),
+            "view.zoomExtents" => self
+                .viewport
+                .update(viewport::Event::Extents, self.document.as_ref()),
             "commandline.focus" => return operation::focus(COMMAND_INPUT),
             "help.about" => self.dialog = Some(Dialog::About),
             "help.shortcuts" => self.dialog = Some(Dialog::Shortcuts),
@@ -316,8 +383,10 @@ impl App {
                 Some(doc) => doc.model.show_all_layers(),
                 None => self.output("Açık çizim yok."),
             },
-            "edit.undo" => self.step_history(true),
+            "edit.undo" => self.undo(),
             "edit.redo" => self.step_history(false),
+            "tool.confirm" => return self.confirm(),
+            "tool.cancel" => self.cancel(),
             _ => self.error(format!(
                 "{id}: masaüstü işleyicisi eksik (catalog::PORTED ile karşılaştırın)"
             )),
@@ -327,7 +396,7 @@ impl App {
 
     /// Undoes or redoes the drawing's last step, saying which (the web's
     /// “Geri alındı: Ekle”); with nothing to undo or redo, says that.
-    fn step_history(&mut self, undo: bool) {
+    pub(crate) fn step_history(&mut self, undo: bool) {
         let Some(doc) = &mut self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -345,20 +414,25 @@ impl App {
         });
     }
 
-    /// Whether a ported command can run now: undo and redo only with a step
-    /// to take (web: `isEnabled`, `watch: [doc.canUndo]`). Buttons of commands
-    /// that cannot run are drawn dimmed.
+    /// Whether a ported command can run now: undo with a step to take, in
+    /// the drawing or in the running command's draft, redo with one to take
+    /// (web: `isEnabled`, `watch: [doc.canUndo, tools.prompt]`). Buttons of
+    /// commands that cannot run are drawn dimmed.
     pub fn available(&self, id: &str) -> bool {
         let doc = self.document.as_ref().map(|doc| &doc.model);
         match id {
-            "edit.undo" => doc.is_some_and(kentos_domain::Document::can_undo),
+            "edit.undo" => {
+                doc.is_some_and(kentos_domain::Document::can_undo)
+                    || (self.session.is_running() && self.session.point_count() > 0)
+            }
             "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
             _ => true,
         }
     }
 
-    /// A name typed in the command line: an alias, the command's name or its title.
-    fn run_typed(&mut self, text: &str) -> Task<Message> {
+    /// A name typed in the command line: an alias, the command's name or its
+    /// title. A tool started from there gets the keyboard for the drawing.
+    pub(crate) fn run_typed(&mut self, text: &str) -> Task<Message> {
         if text.is_empty() {
             return Task::none();
         }
@@ -368,7 +442,14 @@ impl App {
             c.aliases.iter().any(|a| fold(a) == folded) || fold(c.title) == folded || c.id == text
         });
         match found {
-            Some(command) => self.run(command.id),
+            Some(command) => {
+                let task = self.run(command.id);
+                if command.id.starts_with("tool.") && self.session.is_running() {
+                    self.line_focused = false;
+                    return Task::batch([task, release_keyboard()]);
+                }
+                task
+            }
             None => {
                 self.error(format!("Bilinmeyen komut: {text}. Komut adları için F1 ya da Yardım → Klavye kısayolları."));
                 Task::none()
@@ -377,6 +458,13 @@ impl App {
     }
 
     fn open(&mut self) -> Task<Message> {
+        if let Picker::File(path) = &self.picker {
+            let path = path.clone();
+            return Task::perform(
+                async move { Some(Document::read(&path).map(Box::new)) },
+                Message::Opened,
+            );
+        }
         Task::perform(
             async {
                 let file = rfd::AsyncFileDialog::new()
@@ -401,7 +489,10 @@ impl App {
         let snapshot = doc.model.to_snapshot();
         let revision = doc.model.revision();
         let session = doc.session;
-        let known = doc.path.clone().filter(|_| !choose);
+        let known = doc.path.clone().filter(|_| !choose).or(match &self.picker {
+            Picker::File(path) => Some(path.clone()),
+            Picker::Dialog => None,
+        });
         Task::perform(
             async move {
                 let path = match known {
@@ -432,12 +523,29 @@ impl App {
         )
     }
 
-    fn output(&mut self, text: impl Into<String>) {
-        self.history.push(Entry::Output(text.into()));
+    /// A message in the command line, with the web's level: commands and typed
+    /// values as input, information and success as output, warnings, errors.
+    pub(crate) fn say(&mut self, level: Level, text: impl Into<String>) {
+        let text = text.into();
+        self.history.push(match level {
+            Level::Command => Entry::Input(text),
+            Level::Info | Level::Success => Entry::Output(text),
+            Level::Warn => Entry::Warning(text),
+            Level::Error => Entry::Error(text),
+        });
+        self.last_level = Some(level);
+    }
+
+    pub(crate) fn output(&mut self, text: impl Into<String>) {
+        self.say(Level::Info, text);
+    }
+
+    pub(crate) fn warn(&mut self, text: impl Into<String>) {
+        self.say(Level::Warn, text);
     }
 
     fn error(&mut self, text: impl Into<String>) {
-        self.history.push(Entry::Error(text.into()));
+        self.say(Level::Error, text);
     }
 }
 
@@ -455,61 +563,6 @@ fn fold(text: &str) -> String {
             c => c.to_ascii_lowercase(),
         })
         .collect()
-}
-
-/// Keys: a chord with Ctrl or Alt, or a function key, runs the web command
-/// bound to it; other typed text starts the command line. Single-letter tool
-/// keys come with the tools they start.
-fn key_event(event: Event, status: event::Status, _window: window::Id) -> Option<Message> {
-    let Event::Keyboard(keyboard::Event::KeyPressed {
-        key,
-        modifiers,
-        text,
-        ..
-    }) = event
-    else {
-        return None;
-    };
-    if status == event::Status::Captured {
-        return None;
-    }
-    let name = match key.as_ref() {
-        keyboard::Key::Character(c) => c.to_uppercase(),
-        keyboard::Key::Named(named) => match named {
-            keyboard::key::Named::F1 => "F1".into(),
-            keyboard::key::Named::F2 => "F2".into(),
-            keyboard::key::Named::F3 => "F3".into(),
-            keyboard::key::Named::F4 => "F4".into(),
-            keyboard::key::Named::F6 => "F6".into(),
-            keyboard::key::Named::F7 => "F7".into(),
-            keyboard::key::Named::F8 => "F8".into(),
-            keyboard::key::Named::F9 => "F9".into(),
-            keyboard::key::Named::F10 => "F10".into(),
-            _ => return None,
-        },
-        _ => return None,
-    };
-    let function = name.starts_with('F') && name.len() > 1;
-    if modifiers.control() || modifiers.alt() || function {
-        let mut chord = String::new();
-        for (on, part) in [
-            (modifiers.control(), "Ctrl+"),
-            (modifiers.alt(), "Alt+"),
-            (modifiers.shift(), "Shift+"),
-        ] {
-            if on {
-                chord.push_str(part);
-            }
-        }
-        chord.push_str(&name);
-        return catalog()
-            .commands()
-            .iter()
-            .find(|c| c.shortcuts.contains(&chord.as_str()))
-            .map(|c| Message::Run(c.id));
-    }
-    let text = text?;
-    (!text.chars().any(char::is_control)).then(|| Message::Typed(text.to_string()))
 }
 
 #[cfg(test)]
@@ -566,7 +619,7 @@ mod tests {
         let _ = app.run("edit.undo");
         assert_eq!(last_output(&app), "Geri alınacak değişiklik yok.");
 
-        // The desktop has no drawing tools yet: an edit made on the document directly.
+        // An edit made on the document directly.
         let doc = app.document.as_mut().expect("open");
         let first = doc.model.entities().next().expect("an object").clone();
         let count = doc.entity_count();
@@ -640,10 +693,11 @@ mod tests {
 
     #[test]
     fn the_web_keys_undo_and_redo() {
+        use iced::Event;
         use keyboard::key::{Code, Physical};
         use keyboard::{Key, Location, Modifiers};
         let chord = |modifiers: Modifiers, letter: &str| {
-            key_event(
+            let message = keys::key_event(
                 Event::Keyboard(keyboard::Event::KeyPressed {
                     key: Key::Character(letter.into()),
                     modified_key: Key::Character(letter.into()),
@@ -655,20 +709,18 @@ mod tests {
                 }),
                 event::Status::Ignored,
                 window::Id::unique(),
-            )
+            );
+            let Some(Message::Key(press)) = message else {
+                panic!("a key press for the router, not {message:?}");
+            };
+            keys::chord(&press).and_then(|chord| App::boot(None).0.shortcut(&chord))
         };
-        assert!(matches!(
-            chord(Modifiers::CTRL, "z"),
-            Some(Message::Run("edit.undo"))
-        ));
-        assert!(matches!(
-            chord(Modifiers::CTRL, "y"),
-            Some(Message::Run("edit.redo"))
-        ));
-        assert!(matches!(
+        assert_eq!(chord(Modifiers::CTRL, "z"), Some("edit.undo"));
+        assert_eq!(chord(Modifiers::CTRL, "y"), Some("edit.redo"));
+        assert_eq!(
             chord(Modifiers::CTRL | Modifiers::SHIFT, "Z"),
-            Some(Message::Run("edit.redo"))
-        ));
+            Some("edit.redo")
+        );
     }
 
     #[test]
@@ -679,5 +731,24 @@ mod tests {
         assert_eq!(app.mode, Mode::Dark, "the title works as a name");
         let _ = app.update(Message::CommandRun("OLMAYAN".into()));
         assert!(matches!(app.history.last(), Some(Entry::Error(_))));
+    }
+
+    #[test]
+    fn a_tool_needs_an_open_drawing_and_says_so() {
+        let (mut app, _) = App::boot(None);
+        let _ = app.run("tool.polygon");
+        assert!(!app.session.is_running());
+        assert_eq!(
+            last_output(&app),
+            "Açık çizim yok. Önce bir çizim açın (Ctrl+O)."
+        );
+        let mut app = with_demo();
+        let _ = app.run("tool.polygon");
+        assert_eq!(app.session.tool_id(), "polygon");
+        assert!(matches!(app.history.last(), Some(Entry::Input(name)) if name == "KA"));
+        // Opening another drawing drops the command and its draft.
+        let other = with_demo().document.expect("open");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(other)))));
+        assert!(!app.session.is_running());
     }
 }
