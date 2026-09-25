@@ -1,6 +1,7 @@
 import type { AppContext } from '../app/context';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { bulgeArc, bulgeOfSweep, bulgePathLength, bulgePathOutline, bulgeRingArea, bulgeThrough, hasBulges, segmentTangent, tangentBulge } from '../model/geom/bulge';
+import { polygonCreate } from '../product/polygonCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { centreBulge, offsetAlong, radialPoint, radiusBulge, unitToward } from './constructions';
 import { parseNumber } from './coordinateInput';
@@ -275,10 +276,28 @@ export class PathTool extends PointInputTool {
     }
     const geom = { kind: this.closed ? ('polygon' as const) : ('polyline' as const), pts, ...(bulges && { bulges }) };
     if (this.parcelLayer) this.createParcel(geom, this.parcelLayer);
-    else if (this.create(geom)) {
-      this.ctx.log.success(this.closed ? `Kapalı alan eklendi: ${f.area(area())}` : `Çoklu çizgi eklendi: ${f.length(bulgePathLength(pts, bulges, false))}`);
-    }
+    else if (this.closed) this.createPolygon(pts, bulges, area);
+    else if (this.create(geom)) this.ctx.log.success(`Çoklu çizgi eklendi: ${f.length(bulgePathLength(pts, bulges, false))}`);
     super.finish();
+  }
+
+  /**
+   * A closed area is written by the product command `cad.polygon.create`
+   * (docs/adr/0022), as on the desktop. What the tool knows implicitly is
+   * explicit in the command's input (CMD-07): the active layer and the
+   * current colour. The messages stay the tool's: the command's refusal or
+   * warning (the locked and hidden layer texts, word for word), then the
+   * area. Parcels, polylines and measuring still write directly.
+   */
+  private createPolygon(pts: Vec2[], bulges: number[] | undefined, area: () => number): void {
+    const color = this.ctx.settings.color.value;
+    const result = polygonCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...(color !== null && { color }) });
+    if (result.status !== 'completed') {
+      if ('error' in result) this.ctx.log.warn(result.error.message);
+      return;
+    }
+    for (const w of result.warnings) this.ctx.log.warn(w.message);
+    this.ctx.log.success(`Kapalı alan eklendi: ${this.ctx.format.area(area())}`);
   }
 
   private createParcel(geom: { kind: 'polygon' | 'polyline'; pts: Vec2[]; bulges?: number[] }, layerId: string): void {

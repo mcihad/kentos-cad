@@ -2507,6 +2507,7 @@ dependencies = [
  "kentos-contracts",
  "kentos-domain",
  "kentos-geometry-core",
+ "kentos-native-application",
 ]
 
 [[package]]

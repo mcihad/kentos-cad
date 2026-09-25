@@ -12,14 +12,14 @@
 //!   exactly, or clicked within the snap aperture once there are three
 //!   corners; in arc mode the closing edge is the arc being drawn (ADR 0018);
 //! - a confirm with three corners or more writes one polygon in one undo
-//!   step; with fewer it warns, writes nothing and starts over.
+//!   step, through the product command `cad.polygon.create` (docs/adr/0022),
+//!   as the web's tool does; with fewer it warns, writes nothing and starts
+//!   over.
 //!
 //! The web's messages are kept word for word. Every calculation is the
 //! shared core's (`kentos-geometry-core`); none is written here.
 
-use std::collections::BTreeMap;
-
-use kentos_contracts::{Entity, EntityBase, PathEntity};
+use kentos_contracts::{CommandResult, PolygonCreate};
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::bulge::{
     bulge_arc, bulge_of_sweep, bulge_path_outline, bulge_ring_area, bulge_through, has_bulges,
@@ -32,6 +32,8 @@ use kentos_geometry_core::tools::drawing::{
 };
 use kentos_geometry_core::tools::point_input::{Tracking, constrain_cursor};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
+use kentos_native_application::ExecutionContext;
+use kentos_native_application::polygon::{self as command, codes};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -331,54 +333,45 @@ impl Polygon {
         has_bulges(Some(&all)).then_some(all)
     }
 
-    /// Writes the polygon on the active layer as one undo step. False (with a
-    /// message) when the layer is locked; a hidden layer is written with a warning.
+    /// Writes the polygon through the product command `cad.polygon.create`
+    /// (docs/adr/0022), as one undo step. What the web's tool knows
+    /// implicitly is explicit in its input (CMD-07): the active layer; the
+    /// desktop has no current colour, so the layer's colour applies. False,
+    /// with the command's message, when it refused (a locked layer); a hidden
+    /// layer is written with its warning.
     fn create(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) -> bool {
-        let layers = cx.doc.layers();
-        let id = layers.active().to_owned();
-        let Some(node) = layers.get(&id) else {
-            return false;
-        };
-        let name = node.name.clone();
-        let locked = layers.is_locked(&id);
-        let hidden = !layers.is_visible(&id);
-        if locked {
-            cx.say(
-                Level::Warn,
-                format!(
-                    "“{name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin."
-                ),
-            );
-            return false;
-        }
-        if hidden {
-            cx.say(
-                Level::Warn,
-                format!("“{name}” katmanı gizli; çizilen nesne görünmeyecek."),
-            );
-        }
-        let entity = Entity::Polygon(PathEntity {
-            base: EntityBase {
-                id: 0,
-                layer_id: id,
-                color: None,
-                attrs: BTreeMap::new(),
-                label: None,
-                symbol: None,
-            },
+        let input = PolygonCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
             pts: pts
                 .iter()
                 .map(|p| kentos_contracts::Vec2 { x: p.x, y: p.y })
                 .collect(),
             bulges,
             holes: None,
-        });
-        match cx.doc.add(entity) {
-            Ok(_) => true,
-            Err(full) => {
-                cx.say(Level::Error, full.to_string());
+            color: None,
+            attrs: None,
+            expected_revision: None,
+        };
+        match command::execute(&mut ExecutionContext::new(cx.doc), input) {
+            CommandResult::Completed { warnings, .. } => {
+                for warning in warnings {
+                    cx.say(Level::Warn, warning.message);
+                }
+                true
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                // A document out of slots is not the user's to fix here; the rest are.
+                let level = if error.code == codes::SLOTS_EXHAUSTED {
+                    Level::Error
+                } else {
+                    Level::Warn
+                };
+                cx.say(level, error.message);
                 false
             }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => false,
         }
     }
 

@@ -409,6 +409,33 @@ fn a_locked_layer_takes_nothing_and_says_how_to_fix_it() {
 }
 
 #[test]
+fn a_hidden_layer_takes_the_area_with_a_warning_first() {
+    let mut b = Bench::new();
+    b.doc.toggle_layer_visible("cizim");
+    for (de, dn) in [(0.0, 0.0), (5.0, 0.0), (5.0, 5.0)] {
+        b.click(de, dn);
+    }
+    let before = b.log.len();
+    b.confirm();
+    assert_eq!(b.doc.len(), 1);
+    let said: Vec<(Level, &str)> = b.log[before..]
+        .iter()
+        .map(|l| (l.level, l.text.as_str()))
+        .collect();
+    assert_eq!(
+        said,
+        [
+            (
+                Level::Warn,
+                "“Çizim” katmanı gizli; çizilen nesne görünmeyecek."
+            ),
+            (Level::Success, "Kapalı alan eklendi: 12.50 m²"),
+        ]
+    );
+    assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
+}
+
+#[test]
 fn shift_turns_ortho_on_for_a_point() {
     let mut b = Bench::new();
     b.click(0.0, 0.0);

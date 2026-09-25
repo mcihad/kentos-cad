@@ -112,6 +112,8 @@ export async function collectInPage() {
     methods: (t.methods ?? []).map((m) => m.label),
     steps: (t.steps ?? []).length,
     description: t.description,
+    // The product command its confirm runs (docs/adr/0013, 0022); absent for most tools.
+    productCommand: t.productCommand,
   }));
 
   const params = (list) => list.map((p) => ({ name: p.name, type: p.type, label: p.label, optional: !!p.optional, unit: p.unit || undefined }));
