@@ -1,0 +1,233 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Gruplar: birkaç işlem tek adım, iptal",
+  "note": "ADR 0003 “Grup içinde”. beginGroup bir grup açar; endGroup ve cancelGroup en son açılanı kapatır. Açık grubun içinde açılan grup dıştakine katılır: onun endGroup ve cancelGroup'u bir şey yapmaz.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlemler",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {"x": 486500, "y": 4420100},
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "a",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          },
+          {
+            "id": "b",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {"id": 1, "kind": "point", "layerId": "a", "p": {"x": 486512.34, "y": 4420123.45}, "attrs": {"N": "1"}},
+      {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520.25, "y": 4420110.5}, "attrs": {}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "scenarios": [
+    {
+      "name": "Grup, bitince içindeki işlemleri tek geri alma adımı yapar",
+      "steps": [
+        {
+          "op": "beginGroup",
+          "label": "Model",
+          "expect": {"canUndo": false, "dirty": false, "revision": "same"}
+        },
+        {
+          "op": "transact",
+          "label": "Adım 1",
+          "steps": [
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
+              "returns": 3
+            }
+          ],
+          "note": "Grup açıkken işlemler gruba katılır; belge grup bitene dek kirli sayılmaz.",
+          "expect": {"ids": [1, 2, 3], "canUndo": false, "dirty": false, "revision": "same"}
+        },
+        {
+          "op": "transact",
+          "label": "Adım 2",
+          "steps": [
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "b", "p": {"x": 2, "y": 2}, "attrs": {}},
+              "returns": 4
+            }
+          ]
+        },
+        {
+          "op": "update",
+          "id": 4,
+          "patch": {"attrs": {"K": "1"}},
+          "expect": {"canUndo": false, "dirty": false}
+        },
+        {
+          "op": "endGroup",
+          "expect": {"canUndo": true, "canRedo": false, "dirty": true, "revision": "changed"}
+        },
+        {"op": "undo", "returns": "Model", "expect": {"ids": [1, 2], "canUndo": false, "canRedo": true}},
+        {
+          "op": "redo",
+          "returns": "Model",
+          "expect": {
+            "ids": [1, 2, 3, 4],
+            "entities": {"4": {"id": 4, "kind": "point", "layerId": "b", "p": {"x": 2, "y": 2}, "attrs": {"K": "1"}}}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Grup iptali yaptıklarını geri alır; geçmişe ve kirli bayrağına dokunmaz",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
+          "returns": 3
+        },
+        {"op": "undo", "returns": "Ekle", "expect": {"canRedo": true}},
+        {"op": "captureRevision", "as": "kayıt"},
+        {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false}},
+        {"op": "beginGroup", "label": "İptal"},
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "c", "p": {"x": 2, "y": 2}, "attrs": {}},
+          "returns": 4
+        },
+        {"op": "transact", "label": "Adım", "steps": [{"op": "update", "id": 1, "patch": {"layerId": "c"}}]},
+        {"op": "remove", "ids": [2]},
+        {
+          "op": "cancelGroup",
+          "expect": {
+            "ids": [1, 2],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"N": "1"}
+              },
+              "2": {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520.25, "y": 4420110.5}, "attrs": {}}
+            },
+            "byLayer": {"a": [1], "b": [2], "c": []},
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {"op": "redo", "returns": "Ekle", "expect": {"ids": [1, 2, 3]}}
+      ]
+    },
+    {
+      "name": "Grup içinde başarısız işlem gruba bir şey katmaz",
+      "steps": [
+        {"op": "beginGroup", "label": "Model"},
+        {
+          "op": "transact",
+          "label": "Adım 1",
+          "steps": [
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
+              "returns": 3
+            }
+          ]
+        },
+        {
+          "op": "transact",
+          "label": "Adım 2",
+          "steps": [
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "b", "p": {"x": 2, "y": 2}, "attrs": {}},
+              "returns": 4
+            }
+          ],
+          "throw": "adım",
+          "catch": "adım",
+          "expect": {"ids": [1, 2, 3]}
+        },
+        {"op": "endGroup", "expect": {"canUndo": true}},
+        {"op": "undo", "returns": "Model", "expect": {"ids": [1, 2], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Grup içinde açılan grup dıştakine katılır",
+      "steps": [
+        {"op": "beginGroup", "label": "Dış"},
+        {"op": "beginGroup", "label": "İç"},
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
+          "returns": 3
+        },
+        {
+          "op": "endGroup",
+          "note": "İç grubun kapanışı bir şey yapmaz.",
+          "expect": {"canUndo": false, "dirty": false}
+        },
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "b", "p": {"x": 2, "y": 2}, "attrs": {}},
+          "returns": 4
+        },
+        {"op": "endGroup", "expect": {"canUndo": true, "dirty": true}},
+        {"op": "undo", "returns": "Dış", "expect": {"ids": [1, 2]}}
+      ]
+    },
+    {
+      "name": "Boş grup adım bırakmaz",
+      "steps": [
+        {"op": "beginGroup", "label": "Model"},
+        {"op": "endGroup", "expect": {"canUndo": false, "dirty": false, "revision": "same"}}
+      ]
+    }
+  ]
+}

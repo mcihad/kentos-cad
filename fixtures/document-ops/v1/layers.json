@@ -1,0 +1,439 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Katmanlar: görünürlük, kilit, klasör, ad ve stil",
+  "note": "Katman beklentisinde visible, locked, expanded, name ve style düğümün kendi değeridir; isVisible ve isLocked üst grupları da hesaba katan yanıttır (LayerStore.isVisible, isLocked). Görünürlük, kilit ve ad proje verisidir: belgeyi kirletir, ama geri alma geçmişine girmez. Yalnız katman stili (setLayerStyle) geri alınabilir.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Katmanlar",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {"x": 486500, "y": 4420100},
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "a",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          },
+          {
+            "id": "b",
+            "name": "Yol",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {"id": 1, "kind": "point", "layerId": "a", "p": {"x": 486512.34, "y": 4420123.45}, "attrs": {}},
+      {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520.25, "y": 4420110.5}, "attrs": {}},
+      {"id": 3, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "scenarios": [
+    {
+      "name": "Görünürlük katmanda ve üst gruplarında aranır; düzenlemedir ama geri alınmaz",
+      "steps": [
+        {
+          "op": "check",
+          "expect": {
+            "dirty": false,
+            "layers": {
+              "g": {"visible": true, "isVisible": true},
+              "a": {"visible": true, "isVisible": true},
+              "b": {"visible": false, "isVisible": false},
+              "c": {"visible": true, "isVisible": true}
+            }
+          }
+        },
+        {
+          "op": "setVisible",
+          "id": "g",
+          "visible": false,
+          "expect": {
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "layers": {
+              "g": {"visible": false, "isVisible": false},
+              "a": {"visible": true, "isVisible": false},
+              "c": {"visible": true, "isVisible": true}
+            }
+          }
+        },
+        {"op": "setVisible", "id": "g", "visible": false, "expect": {"revision": "same"}},
+        {
+          "op": "toggleVisible",
+          "id": "a",
+          "expect": {"revision": "changed", "layers": {"a": {"visible": false}}}
+        },
+        {
+          "op": "undo",
+          "returns": null,
+          "note": "Görünürlük geri alma geçmişine girmez.",
+          "expect": {"layers": {"g": {"visible": false}, "a": {"visible": false}}}
+        },
+        {
+          "op": "showAll",
+          "expect": {
+            "revision": "changed",
+            "layers": {
+              "g": {"visible": true},
+              "a": {"visible": true, "isVisible": true},
+              "b": {"visible": true, "isVisible": true},
+              "c": {"visible": true}
+            }
+          }
+        },
+        {"op": "captureRevision", "as": "kayıt"},
+        {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false}},
+        {
+          "op": "showAll",
+          "note": "Her şey zaten görünürken de düzenleme sayılır (web bugün böyle).",
+          "expect": {"dirty": true, "revision": "changed"}
+        },
+        {"op": "setVisible", "id": "yok", "visible": false, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "Yalnızca bunu göster: katman, üst grupları ve altındakiler görünür, öbürleri gizlenir",
+      "steps": [
+        {
+          "op": "isolate",
+          "id": "a",
+          "expect": {
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "layers": {"g": {"visible": true}, "a": {"visible": true}, "b": {"visible": false}, "c": {"visible": false}}
+          }
+        },
+        {
+          "op": "isolate",
+          "id": "g",
+          "expect": {
+            "layers": {"g": {"visible": true}, "a": {"visible": true}, "b": {"visible": true}, "c": {"visible": false}}
+          }
+        },
+        {
+          "op": "isolate",
+          "id": "c",
+          "expect": {
+            "layers": {
+              "g": {"visible": false},
+              "a": {"visible": false, "isVisible": false},
+              "b": {"visible": false},
+              "c": {"visible": true, "isVisible": true}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilit üst gruptan miras alınır; model kilitli katmandaki düzenlemeyi reddetmez",
+      "note": "Kilitli katmana yazmayı araçlar, komutlar, işlem çalıştırıcısı ve içe aktarma isLocked ile sorup reddeder; CadDocument'in kendisi denetlemez (web bugün böyle).",
+      "steps": [
+        {
+          "op": "toggleLocked",
+          "id": "g",
+          "expect": {
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "layers": {
+              "g": {"locked": true, "isLocked": true},
+              "a": {"locked": false, "isLocked": true},
+              "b": {"isLocked": true},
+              "c": {"isLocked": false}
+            }
+          }
+        },
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
+          "returns": 4,
+          "expect": {"ids": [1, 2, 3, 4], "canUndo": true}
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {"attrs": {"N": "kilitli"}},
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"N": "kilitli"}
+              }
+            }
+          }
+        },
+        {"op": "undo", "returns": "Değiştir"},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [1, 2, 3], "layers": {"g": {"locked": true}}}},
+        {
+          "op": "toggleLocked",
+          "id": "g",
+          "expect": {"layers": {"g": {"locked": false}, "a": {"isLocked": false}}}
+        },
+        {
+          "op": "toggleLocked",
+          "id": "a",
+          "expect": {
+            "layers": {"a": {"locked": true, "isLocked": true}, "g": {"isLocked": false}, "b": {"isLocked": false}}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Klasörü açıp kapamak ve etkin katmanı seçmek düzenleme değildir",
+      "note": "İkisi de dosyaya yazılır (expanded, activeLayer), ama belgeyi kirletmez (web bugün böyle).",
+      "steps": [
+        {
+          "op": "setExpanded",
+          "id": "g",
+          "expanded": false,
+          "expect": {"dirty": false, "revision": "same", "layers": {"g": {"expanded": false}}}
+        },
+        {"op": "setActive", "id": "c", "expect": {"activeLayer": "c", "dirty": false, "revision": "same"}},
+        {"op": "setActive", "id": "g", "note": "Grup etkin katman olamaz.", "expect": {"activeLayer": "c"}},
+        {"op": "setActive", "id": "yok", "expect": {"activeLayer": "c"}},
+        {
+          "op": "setExpanded",
+          "id": "g",
+          "expanded": true,
+          "expect": {"dirty": false, "layers": {"g": {"expanded": true}}}
+        }
+      ]
+    },
+    {
+      "name": "Katman adı kırpılır; boş ad yok sayılır",
+      "steps": [
+        {
+          "op": "rename",
+          "id": "a",
+          "name": "  Bina 2  ",
+          "expect": {"dirty": true, "revision": "changed", "canUndo": false, "layers": {"a": {"name": "Bina 2"}}}
+        },
+        {
+          "op": "rename",
+          "id": "a",
+          "name": "   ",
+          "expect": {"revision": "same", "layers": {"a": {"name": "Bina 2"}}}
+        },
+        {"op": "captureRevision", "as": "kayıt"},
+        {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false}},
+        {
+          "op": "rename",
+          "id": "a",
+          "name": "Bina 2",
+          "note": "Aynı adı yeniden vermek de düzenleme sayılır (web bugün böyle).",
+          "expect": {"dirty": true, "revision": "changed"}
+        },
+        {"op": "rename", "id": "yok", "name": "X", "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "Katman stili geri alınabilir bir düzenlemedir; değişmeyen stil adım bırakmaz",
+      "steps": [
+        {
+          "op": "setLayerStyle",
+          "id": "a",
+          "patch": {"color": "#FF0000"},
+          "expect": {
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "layers": {"a": {"style": {"color": "#FF0000", "lineType": "continuous", "lineWeight": 0.18}}}
+          }
+        },
+        {
+          "op": "setLayerStyle",
+          "id": "a",
+          "patch": {"color": "#FF0000"},
+          "expect": {"revision": "same", "canUndo": true}
+        },
+        {
+          "op": "undo",
+          "returns": "Katman stili",
+          "expect": {
+            "canUndo": false,
+            "canRedo": true,
+            "layers": {"a": {"style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18}}}
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Katman stili",
+          "expect": {"layers": {"a": {"style": {"color": "#FF0000", "lineType": "continuous", "lineWeight": 0.18}}}}
+        },
+        {
+          "op": "setLayerStyle",
+          "id": "a",
+          "patch": {"fill": "#7FB2E526", "lineWeight": 0.35},
+          "label": "Dolgu",
+          "expect": {
+            "layers": {
+              "a": {
+                "style": {"color": "#FF0000", "lineType": "continuous", "lineWeight": 0.35, "fill": "#7FB2E526"}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Dolgu",
+          "expect": {"layers": {"a": {"style": {"color": "#FF0000", "lineType": "continuous", "lineWeight": 0.18}}}}
+        },
+        {
+          "op": "setLayerStyle",
+          "id": "a",
+          "patch": {"renderer": {"type": "single", "symbols": {"fill": {"ref": "temel.alan.dolu"}}}},
+          "expect": {
+            "layers": {
+              "a": {
+                "style": {
+                  "color": "#FF0000",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "renderer": {"type": "single", "symbols": {"fill": {"ref": "temel.alan.dolu"}}}
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "setLayerStyle",
+          "id": "a",
+          "patch": {"renderer": null},
+          "note": "null alanı siler.",
+          "expect": {"layers": {"a": {"style": {"color": "#FF0000", "lineType": "continuous", "lineWeight": 0.18}}}}
+        },
+        {
+          "op": "undo",
+          "returns": "Katman stili",
+          "expect": {
+            "layers": {
+              "a": {
+                "style": {
+                  "color": "#FF0000",
+                  "lineType": "continuous",
+                  "lineWeight": 0.18,
+                  "renderer": {"type": "single", "symbols": {"fill": {"ref": "temel.alan.dolu"}}}
+                }
+              }
+            }
+          }
+        },
+        {"op": "setLayerStyle", "id": "yok", "patch": {"color": "#00FF00"}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "Katman stili ile nesne değişikliği aynı işlemde tek adımdır",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Katman ve nesne",
+          "steps": [
+            {"op": "setLayerStyle", "id": "c", "patch": {"lineType": "dashed"}},
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "c", "p": {"x": 5, "y": 5}, "attrs": {}},
+              "returns": 4
+            }
+          ],
+          "expect": {
+            "ids": [1, 2, 3, 4],
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "layers": {"c": {"style": {"color": "fg", "lineType": "dashed", "lineWeight": 0.18}}}
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Katman ve nesne",
+          "expect": {
+            "ids": [1, 2, 3],
+            "layers": {"c": {"style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18}}}
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Katman ve nesne",
+          "expect": {
+            "ids": [1, 2, 3, 4],
+            "layers": {"c": {"style": {"color": "fg", "lineType": "dashed", "lineWeight": 0.18}}}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Görünürlük işlemin dışındadır: geri alınan işlem onu geri çevirmez",
+      "note": "Görünürlük, kilit ve ad işlemin adımı olmadığı için geri alınan işlem onları olduğu gibi bırakır; belge bu yüzden kirli kalır (web bugün böyle).",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Yarım",
+          "steps": [
+            {"op": "setVisible", "id": "c", "visible": false},
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "c", "p": {"x": 5, "y": 5}, "attrs": {}},
+              "returns": 4
+            }
+          ],
+          "throw": "geri",
+          "catch": "geri",
+          "expect": {
+            "ids": [1, 2, 3],
+            "canUndo": false,
+            "dirty": true,
+            "revision": "changed",
+            "layers": {"c": {"visible": false}}
+          }
+        }
+      ]
+    }
+  ]
+}

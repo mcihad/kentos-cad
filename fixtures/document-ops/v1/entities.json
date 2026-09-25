@@ -1,0 +1,720 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Nesne ekleme, değiştirme ve silme",
+  "note": "Yama web'deki gibi sığdır: yamanın alanları nesnenin aynı adlı alanlarının yerine geçer, null alanı siler. Kimlik (id) yamayla değişmez.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Nesneler",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {"x": 486500, "y": 4420100},
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "a",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          },
+          {
+            "id": "b",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {
+        "id": 1,
+        "kind": "point",
+        "layerId": "a",
+        "p": {"x": 486512.34, "y": 4420123.45},
+        "attrs": {"Ad": "N1"}
+      },
+      {
+        "id": 2,
+        "kind": "line",
+        "layerId": "c",
+        "a": {"x": 486500.1, "y": 4420100.2},
+        "b": {"x": 486540.35, "y": 4420101.9},
+        "attrs": {}
+      },
+      {
+        "id": 5,
+        "kind": "polygon",
+        "layerId": "b",
+        "pts": [
+          {"x": 486500.1, "y": 4420100.2},
+          {"x": 486540.35, "y": 4420101.9},
+          {"x": 486538.8, "y": 4420141.15},
+          {"x": 486501.05, "y": 4420139.6}
+        ],
+        "bulges": [0, 0.25, 0, 0],
+        "holes": [{"pts": [{"x": 486510, "y": 4420110}, {"x": 486520, "y": 4420110}, {"x": 486515, "y": 4420120}]}],
+        "attrs": {"Ada": "101", "Parsel": "7"},
+        "label": "101/7"
+      }
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "scenarios": [
+    {
+      "name": "Dosyadan açılan belge temizdir; yeni nesne en büyük kimliğin ardından numaralanır",
+      "steps": [
+        {
+          "op": "check",
+          "expect": {
+            "ids": [1, 2, 5],
+            "count": 3,
+            "dirty": false,
+            "canUndo": false,
+            "canRedo": false,
+            "byLayer": {"a": [1], "b": [5], "c": [2]},
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"Ad": "N1"}
+              },
+              "2": {
+                "id": 2,
+                "kind": "line",
+                "layerId": "c",
+                "a": {"x": 486500.1, "y": 4420100.2},
+                "b": {"x": 486540.35, "y": 4420101.9},
+                "attrs": {}
+              },
+              "5": {
+                "id": 5,
+                "kind": "polygon",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "holes": [
+                  {
+                    "pts": [{"x": 486510, "y": 4420110}, {"x": 486520, "y": 4420110}, {"x": 486515, "y": 4420120}]
+                  }
+                ],
+                "attrs": {"Ada": "101", "Parsel": "7"},
+                "label": "101/7"
+              }
+            }
+          }
+        },
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}},
+          "returns": 6,
+          "expect": {
+            "ids": [1, 2, 5, 6],
+            "entities": {"6": {"id": 6, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}}},
+            "byLayer": {"c": [2, 6]},
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {"ids": [1, 2, 5], "canUndo": false, "canRedo": true, "dirty": true, "revision": "changed"}
+        },
+        {
+          "op": "redo",
+          "returns": "Ekle",
+          "expect": {
+            "ids": [1, 2, 5, 6],
+            "entities": {"6": {"id": 6, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}}},
+            "canUndo": true,
+            "canRedo": false,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "add",
+          "entity": {
+            "kind": "text",
+            "layerId": "a",
+            "p": {"x": 486525.5, "y": 4420135.75},
+            "text": "Ada 101",
+            "height": 2.5,
+            "rotation": 0,
+            "attrs": {}
+          },
+          "returns": 7,
+          "expect": {
+            "ids": [1, 2, 5, 6, 7],
+            "entities": {
+              "7": {
+                "id": 7,
+                "kind": "text",
+                "layerId": "a",
+                "p": {"x": 486525.5, "y": 4420135.75},
+                "text": "Ada 101",
+                "height": 2.5,
+                "rotation": 0,
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "addMany",
+          "entities": [
+            {"kind": "point", "layerId": "b", "p": {"x": 1, "y": 2}, "attrs": {}},
+            {"kind": "point", "layerId": "c", "p": {"x": 3, "y": 4}, "attrs": {}}
+          ],
+          "returns": [8, 9],
+          "expect": {"ids": [1, 2, 5, 6, 7, 8, 9], "byLayer": {"b": [5, 8], "c": [2, 6, 9]}}
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "note": "Toplu eklemenin varsayılan adı da “Ekle”dir.",
+          "expect": {"ids": [1, 2, 5, 6, 7]}
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: yama nesnenin üstüne yazılır, kimlik değişmez; geri alma öncekini getirir",
+      "steps": [
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {"p": {"x": 486520.5, "y": 4420130.25}, "attrs": {"Ad": "N1", "Kot": "12.50"}, "id": 99},
+          "expect": {
+            "ids": [1, 2, 5],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486520.5, "y": 4420130.25},
+                "attrs": {"Ad": "N1", "Kot": "12.50"}
+              }
+            },
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": true
+          }
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {"layerId": "c"},
+          "note": "Başka katmana geçen nesne belgedeki yerini korur; katmanında da belge sırasıyla yer alır.",
+          "expect": {
+            "ids": [1, 2, 5],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "c",
+                "p": {"x": 486520.5, "y": 4420130.25},
+                "attrs": {"Ad": "N1", "Kot": "12.50"}
+              }
+            },
+            "byLayer": {"a": [], "c": [1, 2]}
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486520.5, "y": 4420130.25},
+                "attrs": {"Ad": "N1", "Kot": "12.50"}
+              }
+            },
+            "byLayer": {"a": [1], "c": [2]}
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"Ad": "N1"}
+              }
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "update",
+          "id": 42,
+          "patch": {"attrs": {"Ad": "yok"}},
+          "note": "Bilinmeyen nesne: adım yok, yineleme geçmişi korunur.",
+          "expect": {"revision": "same", "canUndo": false, "canRedo": true}
+        },
+        {
+          "op": "update",
+          "id": 1,
+          "patch": {},
+          "note": "Hiçbir alanı değiştirmeyen yama da düzenleme sayılır: adım kaydedilir, yineleme geçmişi silinir (web bugün böyle).",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"Ad": "N1"}
+              }
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"Ad": "N1"}
+              }
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 5,
+          "patch": {"label": null, "attrs": {"Ada": "101", "Parsel": "8"}},
+          "expect": {
+            "entities": {
+              "5": {
+                "id": 5,
+                "kind": "polygon",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "holes": [
+                  {
+                    "pts": [{"x": 486510, "y": 4420110}, {"x": 486520, "y": 4420110}, {"x": 486515, "y": 4420120}]
+                  }
+                ],
+                "attrs": {"Ada": "101", "Parsel": "8"}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "5": {
+                "id": 5,
+                "kind": "polygon",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "holes": [
+                  {
+                    "pts": [{"x": 486510, "y": 4420110}, {"x": 486520, "y": 4420110}, {"x": 486515, "y": 4420120}]
+                  }
+                ],
+                "attrs": {"Ada": "101", "Parsel": "7"},
+                "label": "101/7"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapalı alan açılınca adalarını bırakır; geri alma adaları geri getirir",
+      "steps": [
+        {
+          "op": "update",
+          "id": 5,
+          "patch": {"kind": "polyline"},
+          "expect": {
+            "entities": {
+              "5": {
+                "id": 5,
+                "kind": "polyline",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "attrs": {"Ada": "101", "Parsel": "7"},
+                "label": "101/7"
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "5": {
+                "id": 5,
+                "kind": "polygon",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "holes": [
+                  {
+                    "pts": [{"x": 486510, "y": 4420110}, {"x": 486520, "y": 4420110}, {"x": 486515, "y": 4420120}]
+                  }
+                ],
+                "attrs": {"Ada": "101", "Parsel": "7"},
+                "label": "101/7"
+              }
+            }
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "5": {
+                "id": 5,
+                "kind": "polyline",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "attrs": {"Ada": "101", "Parsel": "7"},
+                "label": "101/7"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sil: bilinmeyen ve yinelenen kimlikler atlanır; geri alınan nesneler belgenin sonuna döner",
+      "steps": [
+        {
+          "op": "remove",
+          "ids": [1, 77, 5, 1],
+          "expect": {
+            "ids": [2],
+            "byLayer": {"a": [], "b": [], "c": [2]},
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Sil",
+          "note": "Geri alınan silme nesneleri eski yerlerine değil belgenin sonuna, ters sırayla koyar: çizim ve dosya sırası değişir (web bugün böyle).",
+          "expect": {
+            "ids": [2, 5, 1],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"Ad": "N1"}
+              },
+              "5": {
+                "id": 5,
+                "kind": "polygon",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "holes": [
+                  {
+                    "pts": [{"x": 486510, "y": 4420110}, {"x": 486520, "y": 4420110}, {"x": 486515, "y": 4420120}]
+                  }
+                ],
+                "attrs": {"Ada": "101", "Parsel": "7"},
+                "label": "101/7"
+              }
+            },
+            "byLayer": {"a": [1], "b": [5], "c": [2]}
+          }
+        },
+        {
+          "op": "remove",
+          "ids": [55],
+          "note": "Silinecek nesne yok: adım yok, yineleme geçmişi korunur.",
+          "expect": {"revision": "same", "canUndo": false, "canRedo": true}
+        },
+        {"op": "redo", "returns": "Sil", "expect": {"ids": [2]}},
+        {"op": "undo", "returns": "Sil", "expect": {"ids": [2, 5, 1]}}
+      ]
+    },
+    {
+      "name": "Toplu ekleme ve toplu değiştirme tek geri alma adımıdır",
+      "steps": [
+        {
+          "op": "addMany",
+          "entities": [
+            {"kind": "point", "layerId": "a", "p": {"x": 486505, "y": 4420105}, "attrs": {}},
+            {
+              "kind": "circle",
+              "layerId": "b",
+              "c": {"x": 486520, "y": 4420120},
+              "r": 3.5,
+              "attrs": {"Tür": "Direk"}
+            },
+            {
+              "kind": "text",
+              "layerId": "c",
+              "p": {"x": 486530, "y": 4420115},
+              "text": "Ada 101",
+              "height": 2.5,
+              "rotation": 0,
+              "attrs": {}
+            }
+          ],
+          "label": "Yapıştır",
+          "returns": [6, 7, 8],
+          "expect": {
+            "ids": [1, 2, 5, 6, 7, 8],
+            "canUndo": true,
+            "entities": {
+              "6": {"id": 6, "kind": "point", "layerId": "a", "p": {"x": 486505, "y": 4420105}, "attrs": {}},
+              "7": {
+                "id": 7,
+                "kind": "circle",
+                "layerId": "b",
+                "c": {"x": 486520, "y": 4420120},
+                "r": 3.5,
+                "attrs": {"Tür": "Direk"}
+              },
+              "8": {
+                "id": 8,
+                "kind": "text",
+                "layerId": "c",
+                "p": {"x": 486530, "y": 4420115},
+                "text": "Ada 101",
+                "height": 2.5,
+                "rotation": 0,
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "updateMany",
+          "label": "Taşı",
+          "patches": [
+            {"id": 6, "p": {"x": 486506, "y": 4420106}},
+            {"id": 2, "attrs": {"N": "1"}},
+            {"id": 99, "attrs": {"N": "yok"}},
+            {"id": 6, "attrs": {"K": "2"}},
+            {"id": 5, "kind": "polyline"}
+          ],
+          "returns": 4,
+          "note": "Aynı nesne iki kez: ikinci yama birincinin sonucunun üstüne yazılır. Dönen sayı uygulanan yama sayısıdır, nesne sayısı değil.",
+          "expect": {
+            "ids": [1, 2, 5, 6, 7, 8],
+            "entities": {
+              "6": {
+                "id": 6,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486506, "y": 4420106},
+                "attrs": {"K": "2"}
+              },
+              "2": {
+                "id": 2,
+                "kind": "line",
+                "layerId": "c",
+                "a": {"x": 486500.1, "y": 4420100.2},
+                "b": {"x": 486540.35, "y": 4420101.9},
+                "attrs": {"N": "1"}
+              },
+              "5": {
+                "id": 5,
+                "kind": "polyline",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "attrs": {"Ada": "101", "Parsel": "7"},
+                "label": "101/7"
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Taşı",
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "point", "layerId": "a", "p": {"x": 486505, "y": 4420105}, "attrs": {}},
+              "2": {
+                "id": 2,
+                "kind": "line",
+                "layerId": "c",
+                "a": {"x": 486500.1, "y": 4420100.2},
+                "b": {"x": 486540.35, "y": 4420101.9},
+                "attrs": {}
+              },
+              "5": {
+                "id": 5,
+                "kind": "polygon",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "holes": [
+                  {
+                    "pts": [{"x": 486510, "y": 4420110}, {"x": 486520, "y": 4420110}, {"x": 486515, "y": 4420120}]
+                  }
+                ],
+                "attrs": {"Ada": "101", "Parsel": "7"},
+                "label": "101/7"
+              }
+            }
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Taşı",
+          "expect": {
+            "entities": {
+              "6": {
+                "id": 6,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486506, "y": 4420106},
+                "attrs": {"K": "2"}
+              },
+              "2": {
+                "id": 2,
+                "kind": "line",
+                "layerId": "c",
+                "a": {"x": 486500.1, "y": 4420100.2},
+                "b": {"x": 486540.35, "y": 4420101.9},
+                "attrs": {"N": "1"}
+              },
+              "5": {
+                "id": 5,
+                "kind": "polyline",
+                "layerId": "b",
+                "pts": [
+                  {"x": 486500.1, "y": 4420100.2},
+                  {"x": 486540.35, "y": 4420101.9},
+                  {"x": 486538.8, "y": 4420141.15},
+                  {"x": 486501.05, "y": 4420139.6}
+                ],
+                "bulges": [0, 0.25, 0, 0],
+                "attrs": {"Ada": "101", "Parsel": "7"},
+                "label": "101/7"
+              }
+            }
+          }
+        },
+        {"op": "undo", "returns": "Taşı"},
+        {"op": "undo", "returns": "Yapıştır", "expect": {"ids": [1, 2, 5], "canUndo": false, "canRedo": true}},
+        {
+          "op": "updateMany",
+          "patches": [{"id": 42, "attrs": {}}],
+          "returns": 0,
+          "expect": {"revision": "same", "canRedo": true}
+        }
+      ]
+    }
+  ]
+}
