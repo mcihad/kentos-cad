@@ -10,6 +10,7 @@
 //! okur.
 
 pub mod app_menu;
+pub mod color;
 pub mod command_line;
 pub mod context_menu;
 pub mod date_picker;
@@ -21,6 +22,7 @@ pub mod floating;
 pub mod inspector;
 pub mod navigation_bar;
 pub mod notice;
+pub mod number;
 pub mod overlay;
 pub mod progress;
 pub mod properties;
@@ -42,6 +44,7 @@ pub mod wizard;
 mod tip;
 
 pub use app_menu::AppMenu;
+pub use color::ColorPicker;
 pub use command_line::CommandLine;
 pub use context_menu::{ContextMenu, Menu, MenuButton};
 pub use date_picker::{DatePicker, TimePicker};
@@ -52,6 +55,7 @@ pub use floating::{Floating, ToolWindow};
 pub use inspector::Inspector;
 pub use navigation_bar::NavigationBar;
 pub use notice::{Banner, EmptyState};
+pub use number::{Dial, NumberInput};
 pub use progress::{Task, TaskList};
 pub use properties::PropertiesDialog;
 pub use property_grid::PropertyGrid;

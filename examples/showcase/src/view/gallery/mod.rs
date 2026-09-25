@@ -15,6 +15,7 @@ mod controls;
 mod feedback;
 mod foundations;
 mod frame;
+mod inputs;
 mod layout;
 mod spatial;
 
@@ -45,6 +46,7 @@ impl Showcase {
             Page::Data => self.data_page(),
             Page::Frame => self.frame_page(),
             Page::Layout => self.layout_page(),
+            Page::Inputs => self.inputs_page(),
             Page::Feedback => self.feedback_page(),
             Page::Attributes => self.attributes_page(),
             Page::Spatial => self.spatial_page(),

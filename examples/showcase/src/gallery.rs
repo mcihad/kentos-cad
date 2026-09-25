@@ -13,6 +13,7 @@ use kentos_rc::attribute::{
 use kentos_rc::icon::Icon;
 use kentos_rc::spatial::SelectionMode;
 use kentos_rc::widget::Toast;
+use kentos_rc::widget::color::Ramp;
 use kentos_rc::widget::command_line::Entry;
 use kentos_rc::widget::docking::{self, Docks, Side};
 use kentos_rc::widget::floating::{self, Placement, Windows};
@@ -32,6 +33,7 @@ pub enum Page {
     Data,
     Frame,
     Layout,
+    Inputs,
     Feedback,
     Attributes,
     Spatial,
@@ -47,6 +49,7 @@ impl Page {
             Page::Data => "Veri",
             Page::Frame => "Çerçeve",
             Page::Layout => "Yerleşim",
+            Page::Inputs => "Girdiler",
             Page::Feedback => "Geri bildirim",
             Page::Attributes => "Öznitelikler",
             Page::Spatial => "Mekânsal",
@@ -62,6 +65,7 @@ impl Page {
             Page::Data => Icon::Table,
             Page::Frame => Icon::Layout,
             Page::Layout => Icon::Tabs,
+            Page::Inputs => Icon::Slider,
             Page::Feedback => Icon::Info,
             Page::Attributes => Icon::Properties,
             Page::Spatial => Icon::Globe,
@@ -80,6 +84,7 @@ impl Page {
                  kutuları."
             }
             Page::Layout => "Belge sekmeleri ve sekmeli yuva: çalışma alanının düzeni.",
+            Page::Inputs => "Birimli sayı, vektör ve açı girişleri; renk seçici ve renk rampası.",
             Page::Feedback => {
                 "Bildirimler, ilerleme ve görevler, onay kutusu, uyarı şeridi, boş ve hata \
                  durumları, adımlı sihirbaz ve özellikler penceresi."
@@ -152,6 +157,16 @@ pub enum Demo {
     /// Sekmeli yuva örneği.
     Dock(docking::Event<DemoPanel>),
     DockReset,
+    /// Girdiler sayfası.
+    Length(f64),
+    Thickness(f64),
+    Scale(f64),
+    Position([f64; 3]),
+    Rotation(f64),
+    Bearing(f64),
+    Stroke(iced::Color),
+    Fill(iced::Color),
+    RampChanged(Ramp, usize),
 }
 
 /// Sekmeli yuva örneğinin panelleri.
@@ -354,6 +369,20 @@ pub struct Gallery {
     pub untitled: usize,
     /// Sekmeli yuva örneğinin yerleşimi.
     pub docks: Docks<DemoPanel>,
+    /// Girdiler sayfasının değerleri: uzunluk ve kalınlık metre, ölçek
+    /// yüzde, konum metre, açılar derece.
+    pub length: f64,
+    pub thickness: f64,
+    pub scale: f64,
+    pub position: [f64; 3],
+    pub rotation: f64,
+    pub bearing: f64,
+    /// Renk seçici örneği: çizgi ve saydam dolgu rengi.
+    pub stroke: iced::Color,
+    pub fill: iced::Color,
+    /// Renk rampası örneği ve seçili durak.
+    pub ramp: Ramp,
+    pub stop: usize,
 }
 
 /// Belge sekmeleri örneğindeki açık çizim.
@@ -438,6 +467,20 @@ impl Default for Gallery {
             document: 0,
             untitled: 1,
             docks: demo_docks(),
+            length: 12.5,
+            thickness: 0.018,
+            scale: 100.0,
+            position: [412_350.25, 4_523_180.5, 42.0],
+            rotation: 30.0,
+            bearing: 135.0,
+            stroke: iced::Color::from_rgb8(0xe2, 0xa9, 0x3b),
+            fill: iced::Color::from_rgba8(0x4c, 0x9b, 0xe8, 0.4),
+            ramp: Ramp::presets()
+                .into_iter()
+                .find(|(name, _)| *name == "Arazi")
+                .map(|(_, ramp)| ramp)
+                .unwrap_or_else(|| Ramp::new([])),
+            stop: 2,
         }
     }
 }
@@ -624,6 +667,18 @@ impl Gallery {
             }
             Demo::Dock(event) => self.docks.update(event),
             Demo::DockReset => self.docks = demo_docks(),
+            Demo::Length(length) => self.length = length,
+            Demo::Thickness(thickness) => self.thickness = thickness,
+            Demo::Scale(scale) => self.scale = scale,
+            Demo::Position(position) => self.position = position,
+            Demo::Rotation(rotation) => self.rotation = rotation,
+            Demo::Bearing(bearing) => self.bearing = bearing,
+            Demo::Stroke(color) => self.stroke = color,
+            Demo::Fill(color) => self.fill = color,
+            Demo::RampChanged(ramp, stop) => {
+                self.ramp = ramp;
+                self.stop = stop;
+            }
         }
 
         None

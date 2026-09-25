@@ -41,6 +41,7 @@ impl Showcase {
                         Page::Data,
                         Page::Frame,
                         Page::Layout,
+                        Page::Inputs,
                         Page::Feedback,
                     ],
                 ))

@@ -32,6 +32,8 @@ src/                     kentos-rc kütüphanesi
 │   ├── floating.rs      kayan araç pencereleri: sürükle, yakala, daralt, boyutlandır
 │   ├── tabs.rs          belge sekmeleri: kapatma, sürükleyerek sıralama, taşma listesi
 │   ├── docking.rs       sekmeli yuva: alanlar, yığınlar, sürükle-bırak, yüzen paneller
+│   ├── number.rs        sayı girişi: birim, ifade, sürükleme; vektör, açı ve kadran
+│   ├── color.rs         renk seçici (HSV, onaltılık, saydamlık) ve renk rampası
 │   ├── toast.rs         bildirimler: önem düzeyi, eylem, üst üste dizilme, süre
 │   ├── progress.rs      ilerleme çubuğu, dönen gösterge, iptal edilebilen görev listesi
 │   ├── notice.rs        uyarı şeridi, boş ve hata durumları
@@ -83,8 +85,9 @@ examples/showcase/       KentOS CAD: kütüphanenin vitrin uygulaması
 ```
 
 Vitrindeki **Galeri** sekmesi kütüphanenin kataloğudur: renkler, yazı, ikonlar,
-düğmeler, veri bileşenleri, çerçeve, yerleşim, geri bildirim, öznitelikler ve
-CBS/CAD bileşenleri; her biri canlı örneği, modül yolu ve kullanım koduyla.
+düğmeler, veri bileşenleri, çerçeve, yerleşim, girdiler, geri bildirim,
+öznitelikler ve CBS/CAD bileşenleri; her biri canlı örneği, modül yolu ve
+kullanım koduyla.
 
 ## Öznitelikler ve seçim
 
@@ -261,6 +264,65 @@ Message::Dock(event) => self.docks.update(event),
 // saklama: "sol 260: ; sag 300: katmanlar* @1.00 / ozellikler* @1.00; alt 220: tablo* @1.00"
 let text = self.docks.save(|panel| panel.key().to_owned());
 let docks = Docks::load(&text, Panel::parse);
+```
+
+## Girdiler
+
+### Sayı girişi
+
+`NumberInput` birimli bir değer alır; değer uygulamada temel birimde durur,
+düzenlenen metni bileşen kendi tutar.
+
+- **Düzenleme.** Alana tıklayınca değer seçili düzenlenir. Enter ya da alandan
+  çıkmak onaylar, Esc vazgeçer; ↑ ↓ adım kadar (Shift ×10) değiştirir.
+- **İfadeler.** Dört işlem ve parantez (`(3+4)/2`), Türkçe sayılar (1.234,5),
+  başka birimde yazılan sayılar (`1 m + 20 cm`, `250mm`) ve bitişik birimler
+  (`30°15'20"`, `1 m 20 cm`) kabul edilir. Birimsiz sayı alanın birimindedir.
+  Hatalı ifadede kenar kırmızıdır; hatalıyken alandan çıkılırsa değer
+  değişmez. `number::evaluate` aynı çözümleyiciyi dışarıya açar.
+- **Sürükleme.** Öndeki etiket (X, Y, G…) basılıp yana sürüklenince değer
+  piksel başına bir adım değişir; Shift ince, Ctrl kaba ayardır. Alana basıp
+  sürüklemek de aynıdır; sürüklemeden bırakmak alanı düzenler.
+- **Birimler.** `units::LENGTH` (m; cm, mm, km), `units::MILLIMETRE`,
+  `units::ANGLE` (°; ', ", rad, grad), `units::PERCENT`; uygulama kendi
+  birimlerini `Unit::new("ft", 0.3048)` ile verir.
+- **Vektör ve açı.** `number::vector` iki ya da üç bileşeni eksen renkli
+  etiketlerle yan yana dizer. `number::angle` kadran ve derece alanıdır;
+  `Dial` CAD'deki gibi doğudan saat yönünün tersine ya da (`.bearing()`)
+  pusuladaki gibi kuzeyden saat yönüne ölçer, Shift 15°'lik adımlara oturtur.
+
+```rust
+use kentos_rc::widget::NumberInput;
+use kentos_rc::widget::number::{self, units};
+
+NumberInput::new(self.width, Message::WidthChanged)
+    .label("G")
+    .units(units::LENGTH)
+    .range(0.0..=10_000.0)
+    .step(0.1)
+
+number::vector(self.position, Message::Moved, units::LENGTH, 0.01, &theme)
+number::angle(self.rotation, Message::Rotated)
+```
+
+### Renk seçici ve rampa
+
+`ColorPicker` alanın altında açılan panelde rengi seçtirir: doygunluk ve
+parlaklık düzlemi, ton şeridi, isteğe bağlı saydamlık şeridi, onaltılık giriş
+(#RGB, #RRGGBB, #RRGGBBAA), hazır renkler ve uygulamanın verdiği son
+kullanılanlar. Panel açıldığındaki renk yanda durur; tıklamak geri döndürür.
+
+`color::ramp` renk rampası düzenleyicisidir: çubuğa tıklamak o noktanın
+rengiyle durak ekler, durak sürüklenerek taşınır ve çubuğun altına uzağa
+bırakılınca silinir. Seçili durağın rengi ve yeri alttaki satırda düzenlenir;
+rampa ters çevrilir ya da hazır rampalardan (Viridis, Magma, Spektral, Arazi…)
+biri seçilir. `Ramp::color_at(t)` herhangi bir noktadaki rengi verir.
+
+```rust
+use kentos_rc::widget::color::{self, ColorPicker, Ramp};
+
+ColorPicker::new(layer.color, Message::ColorChanged).alpha()
+color::ramp(&self.ramp, self.stop, Message::RampChanged)
 ```
 
 ## Geri bildirim
@@ -541,6 +603,7 @@ cargo run -- snapshot ozellikler.png --senaryo ozellikler
 cargo run -- snapshot duzen.png --senaryo duzen
 cargo run -- snapshot yuva.png --senaryo yuva --bas 1150,153 --imlec 700,300
 cargo run -- snapshot sekmeler.png --senaryo galeri --sayfa yerlesim
+cargo run -- snapshot girdiler.png --senaryo galeri --sayfa girdiler --boyut 1440x1700 --tikla 222,1190
 cargo run -- snapshot renk.png --senaryo pencereler --vurgu turuncu --zemin siyah
 cargo run -- snapshot mor.png --senaryo secim --tema acik --vurgu "#7c5cff" --zemin arduvaz
 cargo run -- snapshot gece.png --senaryo pencereler --tema gece

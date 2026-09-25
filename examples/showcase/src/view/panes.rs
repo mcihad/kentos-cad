@@ -16,7 +16,8 @@ use kentos_rc::label;
 use kentos_rc::spatial::{LayerKind, LonLat, format, model_space};
 use kentos_rc::style;
 use kentos_rc::theme::typography;
-use kentos_rc::widget::{Segmented, Tip, ToolWindow, horizontal_divider, tip};
+use kentos_rc::widget::number::Unit;
+use kentos_rc::widget::{ColorPicker, NumberInput, Tip, ToolWindow, horizontal_divider, tip};
 
 use super::LayerChoice;
 use crate::app::Showcase;
@@ -37,8 +38,9 @@ pub(super) const COLORS: [Color; 10] = [
     Color::from_rgb(0.85, 0.86, 0.88),
 ];
 
-/// Çizgi kalınlıkları (piksel).
-const STROKES: [u8; 4] = [1, 2, 3, 4];
+/// Çizgi kalınlığının birimi ve sınırları (piksel).
+const PIXELS: &[Unit] = &[Unit::new("px", 1.0)];
+const STROKE: std::ops::RangeInclusive<f64> = 0.5..=8.0;
 
 /// Form satırlarındaki etiket sütununun genişliği (12 piksellik metne göre).
 const LABEL_WIDTH: f32 = 56.0;
@@ -313,9 +315,15 @@ impl Showcase {
             .into()
         });
 
+        // Hızlı seçim kutuları; altında her rengi seçtiren renk seçici.
+        let colors = Column::with_children(swatches).spacing(4).push(
+            ColorPicker::new(layer.color, move |color| Message::LayerColor(index, color))
+                .width(Fill),
+        );
+
         let mut form = column![
             form_row("Katman", picker),
-            form_row("Renk", Column::with_children(swatches).spacing(4)),
+            form_row("Renk", colors),
             form_row(
                 "Opaklık",
                 row![
@@ -336,18 +344,17 @@ impl Showcase {
         ]
         .spacing(8);
 
+        // Kalınlık etiketi sürüklenince harita anında güncellenir.
         if layer.kind != LayerKind::Point {
-            let stroke = STROKES
-                .into_iter()
-                .find(|&width| (f32::from(width) - layer.stroke_width).abs() < 0.26)
-                .unwrap_or(0);
-
             form = form.push(form_row(
                 "Kalınlık",
-                Segmented::new(STROKES, stroke, move |width| {
-                    Message::LayerStroke(index, f32::from(width))
+                NumberInput::new(f64::from(layer.stroke_width), move |width| {
+                    Message::LayerStroke(index, width as f32)
                 })
-                .width(iced::Fill),
+                .label("K")
+                .units(PIXELS)
+                .range(STROKE)
+                .step(0.1),
             ));
         }
 
