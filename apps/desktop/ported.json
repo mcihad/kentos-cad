@@ -10,7 +10,9 @@
     "commandline.focus",
     "help.about",
     "help.shortcuts",
-    "layer.showAll"
+    "layer.showAll",
+    "edit.undo",
+    "edit.redo"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

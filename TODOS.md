@@ -47,7 +47,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 | Rust hesaplama | `crates/shared/geometry-core/src/`, `style-core/src/`, `svg-core/src/` | Geometri, stil/ifade ve SVG hesabı zaten önemli ölçüde Rust'ta. Var olan algoritmalar taşınacak UI içinde yeniden yazılmayacak. |
 | Sıcak yollar | `geometry-core/src/store/{mod,rtree,pick,snap,draw,pack}.rs`, `apps/web/src/wasm/pack.ts` | Paketli veri, R-tree, snap/pick ve toplu çizim hesabı var. GPU ve belge katmanı bu birikimi kullanmalı. |
 | Ortak sözleşmeler | `crates/shared/contracts/src/`, `apps/web/src/contracts/generated/` | Rust'tan TS tipleri üretiliyor. Tip üretimi, bütün platformların aynı iş kuralını çalıştırdığı anlamına henüz gelmiyor. |
-| Belge ve undo | `apps/web/src/model/document.ts`, `document.test.ts`, ADR 0003 | Web belge yaşam döngüsü ve undo/redo TS'te kalır. Native karşılığı aynı transaction sözleşmesiyle geliştirilmeli. |
+| Belge ve undo | `apps/web/src/model/document.ts`, `document.test.ts`, ADR 0003 | Web belge yaşam döngüsü ve undo/redo TS'te kalır. Native karşılığı `crates/native/domain` (ADR 0020); ikisi `fixtures/document-ops/v1`'i geçiyor. |
 | Komutlar | `apps/web/src/core/commands.ts`, `app/commands.ts`, `tools/ToolManager.ts` | UI registry `run(args?: unknown): void` kullanıyor. Tipli, async, headless ve sürümlü ürün komutları ayrıca kurulmalı. |
 | Dinamik giriş | `ui/shell/CursorInput.ts`, `ui/bottom/CommandLine.ts`, `tools/pathTool.ts` | İmleç yanında otomatik giriş ve aktif araca metin gönderme var. Desktop kabul senaryosu için referans davranış. |
 | Dosya | `model/snapshot.ts`, `app/fileIO.ts`, `contracts/src/document.rs` | Uzantı zaten `.kcad`; içerik `kentos.document` v1 JSON, MIME `application/json`. Binary geçiş bir format göçüdür. |
@@ -186,7 +186,10 @@ Kabul: aynı basit düzenleme, ortak fixture ile native uygulamada, TS web uygul
 ### 3.1 Belgenin tek anlamı
 
 - [ ] `DOM-01` `Project`, `Document`, `Layer`, `Entity`, `Dataset`, `SourceBinding`, `Style`, `Layout`, `Asset`, `Revision`, `SelectionRef` sınırlarını yaz. Katman, veri kaynağı ve görünüm aynı şey sayılmasın.
-- [ ] `DOM-02` `apps/web/src/model/document.ts` transaction/savepoint/revision/undo davranışını ortak fixture'larla belgele; native belge karşılığını bu sözleşmeyle geliştir. TS belge sahibi korunur; Rust facade'a dönüştürülmez.
+- [ ] `DOM-02` `apps/web/src/model/document.ts` transaction/savepoint/revision/undo davranışını ortak fixture'larla belgele; native belge karşılığını bu sözleşmeyle geliştir. TS belge sahibi korunur; Rust facade'a dönüştürülmez. — **25 Eylül, kısmen:** [ADR 0020](docs/adr/0020-native-document-model.md).
+  - `fixtures/document-ops/v1`: 33 senaryo, biçimi `fixtures/document-ops/README.md`'de. Web (`model/documentOps.test.ts`) ve native belge (`crates/native/domain/tests/fixtures.rs`) hepsini geçiyor.
+  - Kapsam: ekleme, değiştirme ve silme ile toplu karşılıkları, başarısız işlem, iç içe kayıt noktası, grup ve iptali, geri al ve yinele, 200 adım sınırı, kirli bayrağı, sürüm, kayıt sürerken yapılan değişiklik, katman görünürlüğü, kilidi, adı ve stili.
+  - Kalanlar: `applyExternal`/`forgetHistoryOf`, katman ekleme, ad, ayar ve stil kitaplığı değişikliği, belge olayları. Sunucu aynı fixture'ı henüz koşmuyor (§2 kabulü). Web'in ADR 0003'e aykırı dört davranışı ve taramanın ada kaybı ADR 0020'de.
 - [ ] `DOM-03` Kalıcı global UUID ile runtime slot/index ve eski yerel `u32` kimliği ayır. Yerel dosya, cloud, PostGIS, Python ve provider identify aynı kalıcı kimliğe bağlansın. — **25 Eylül:** karar [ADR 0014](docs/adr/0014-persistent-entity-identity.md) (UUIDv7 kalıcı kimlik, `u32` çalışma yuvası); uygulama dilimleri ADR'de.
 - [ ] `DOM-04` Eski `.kcad` yerel ID'leri için bir defalık deterministik göç haritası ve import namespace'i tasarla; aynı eski dosyanın yeniden açılması/retry yeni nesne çoğaltmasın. — **25 Eylül:** karar ADR 0014: kanonik v1 metninin sha256'sından UUIDv5 ad alanı; aynı dosya hep aynı kimlikleri verir.
 - [ ] `DOM-05` `contracts::Entity`, geometry-core `Shape/Entity.rest`, TS `Entity` ve kentos-rc `Feature` arasındaki rolü belgeleyip açık dönüştürücüler kur; sıcak yol tipini bütün domain ile zorla birleştirme.
@@ -241,7 +244,7 @@ UI düğmesi, komut satırı, Python çağrısı, HTTP, CLI ve AI aynı sürüml
 
 ### 4.2 Atomiklik ve geri alma
 
-- [ ] `TX-01` Mevcut ADR 0003 rollback/savepoint anlamını native belgeye aktar; iptal veya hata sonrasında veri, dirty flag ve undo geçmişi tutarlı kalsın.
+- [x] `TX-01` Mevcut ADR 0003 rollback/savepoint anlamını native belgeye aktar; iptal veya hata sonrasında veri, dirty flag ve undo geçmişi tutarlı kalsın. — **25 Eylül:** `crates/native/domain` (`kentos-domain`, [ADR 0020](docs/adr/0020-native-document-model.md)). Hep ya da hiç işlem, iç içe kayıt noktası, grup ve iptali, 200 adımlık geçmiş; verilen yuva yeniden verilmez. Başarısız işlem ve iptal edilen grup veriyi, kirli bayrağını, sürümü ve geçmişi değiştirmez; katman stili de değiştirmez (web'de değiştiriyor). Ortak fixture'lar ve `crates/native/domain/tests/document.rs` sınıyor.
 - [ ] `TX-02` Beklenen sürüm kontrolünü sadece yazılan nesnelere değil sonucu etkileyen okuma kümesine de gerektiğinde uygula; seçim sorgusunun/şemanın arada değişmesi algılansın.
 - [ ] `TX-03` Yerel undo ile çok kullanıcılı undo'yu ayır. Cloud undo, yeni yetki ve version kontrolünden geçen inverse komut olsun; başka kullanıcının değişikliğini snapshot ile ezmesin.
 - [ ] `TX-04` `project.changes` için var olan idempotency ve istek hash kontrolünü koru; aynı anahtar + farklı input reddi, commit sonrası kayıp ACK ve yeniden başlama senaryolarını bütün girişlerde çalıştır.
@@ -306,8 +309,9 @@ Kabul izi: `polygon başlat → tıkla → 12 yaz → alan açıldı ve "12" gö
 - [ ] `UI-10` Showcase içinde CAD'e özgü demo hesaplarının üretim yoluna girmediğini test et; `kentos_rc::spatial` import'ları için aşamalı kaldırma listesi çıkar.
 - [ ] `UI-11` İlk desktop shell'i mevcut web menü/komut envanterinden kur: proje aç/kaydet, ribbon, layer tree, properties, status, command input, settings ve cloud durumu. — **25 Eylül, kısmen:** `apps/desktop` ([ADR 0017](docs/adr/0017-desktop-shell.md)).
   - Web'in bütün komutları ve şerit düzeni envanterden geliyor.
-  - Çalışanlar: aç/kaydet/farklı kaydet (`.kcad` v1, `rfd`), katman ağacı, özellikler, komut satırı, durum çubuğu. Kaydedilmemiş değişiklik soruluyor.
-  - Taşınan komut 11/163 (`apps/desktop/ported.json`, envanterde masaüstü sütunu).
+  - Çalışanlar: aç/kaydet/farklı kaydet (`.kcad` v1, `rfd`), katman ağacı, özellikler, komut satırı, durum çubuğu, geri al ve yinele. Kaydedilmemiş değişiklik soruluyor.
+  - Belge `kentos_domain::Document` (ADR 0020). Masaüstünde geri alınabilir bir arayüz düzenlemesi henüz yok (araçlar, katman stili menüsü).
+  - Taşınan komut 13/163 (`apps/desktop/ported.json`, envanterde masaüstü sütunu).
   - Kalanlar: ayarlar, bulut durumu, çizim alanı (`REN-01..07`).
 - [ ] `UI-12` Linux Wayland/X11, Windows ve macOS için pencere, DPI, IME, clipboard, dosya association ve erişilebilirlik matrisi oluştur; ilk geliştirme platformunu diğerlerinin mimari yasağına dönüştürme.
 

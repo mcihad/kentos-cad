@@ -1,0 +1,19 @@
+[package]
+name = "kentos-domain"
+description = "The native drawing document of the desktop (later the server): the counterpart of the web's CadDocument, held to it by shared fixtures (docs/adr/0020)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust, native only (TODOS.md §2.1 `native/domain`): no UI, GPU, database,
+# async runtime or network (scripts/arch/deps.mjs, group `domain`). The web
+# keeps its own TypeScript document; this crate is never built for the browser.
+# The document reads and writes the versioned contracts (`DocumentSnapshotV1`);
+# uuid gives new objects their persistent UUIDv7 (docs/adr/0014).
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+uuid = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

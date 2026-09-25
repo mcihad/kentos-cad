@@ -33,6 +33,8 @@ pub const PORTED: &[&str] = &[
     "help.about",
     "help.shortcuts",
     "layer.showAll",
+    "edit.undo",
+    "edit.redo",
 ];
 
 /// Where a command stands, from the desktop's point of view.

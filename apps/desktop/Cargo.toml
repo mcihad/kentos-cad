@@ -13,6 +13,8 @@ path = "src/main.rs"
 [dependencies]
 kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }
 kentos-contracts = { path = "../../crates/shared/contracts", default-features = false }
+# The drawing document: the web's CadDocument semantics, natively (docs/adr/0020).
+kentos-domain = { path = "../../crates/native/domain" }
 iced = { workspace = true }
 rfd = { workspace = true }
 serde = { workspace = true }

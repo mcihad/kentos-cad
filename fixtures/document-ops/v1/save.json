@@ -1,0 +1,139 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Kirli bayrağı, sürüm ve kayıt",
+  "note": "Kayıt, yazmaya başlarken belgenin sürümünü alır (captureRevision) ve yazma bitince onu bildirir (markSaved). Belge yalnız o sürüm hâlâ güncelse temizlenir (CLAUDE.md §4.8, §21.3). Sürüm yalnız karşılaştırılır: “changed” adımdan önceki sürümden farklı, “same” aynı demektir; artış miktarı sözleşme değildir.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlemler",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {"x": 486500, "y": 4420100},
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "a",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          },
+          {
+            "id": "b",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {"id": 1, "kind": "point", "layerId": "a", "p": {"x": 486512.34, "y": 4420123.45}, "attrs": {"N": "1"}},
+      {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520.25, "y": 4420110.5}, "attrs": {}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "scenarios": [
+    {
+      "name": "Kaydedilen sürüm belgeyi temizler",
+      "steps": [
+        {"op": "check", "expect": {"dirty": false}},
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}},
+          "returns": 3,
+          "expect": {"dirty": true, "revision": "changed"}
+        },
+        {"op": "captureRevision", "as": "kayıt", "expect": {"dirty": true, "revision": "same"}},
+        {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false, "revision": "same"}},
+        {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Kayıt sürerken yapılan değişiklik kaydedilmemiş kalır",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}},
+          "returns": 3
+        },
+        {"op": "captureRevision", "as": "kayıt", "note": "Kayıt başlar."},
+        {"op": "update", "id": 1, "patch": {"attrs": {"N": "kayıtta"}}, "expect": {"revision": "changed"}},
+        {
+          "op": "markSaved",
+          "revision": "kayıt",
+          "note": "Kayıt biter; arada yapılan değişiklik yazılmadı.",
+          "expect": {"dirty": true, "revision": "same"}
+        },
+        {"op": "captureRevision", "as": "ikinci"},
+        {"op": "markSaved", "revision": "ikinci", "expect": {"dirty": false}}
+      ]
+    },
+    {
+      "name": "Geç biten eski kayıt yeni durumu değiştirmez",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}},
+          "returns": 3
+        },
+        {"op": "captureRevision", "as": "birinci"},
+        {"op": "update", "id": 1, "patch": {"attrs": {"N": "2"}}},
+        {"op": "captureRevision", "as": "ikinci"},
+        {"op": "markSaved", "revision": "ikinci", "expect": {"dirty": false}},
+        {"op": "markSaved", "revision": "birinci", "expect": {"dirty": false, "revision": "same"}},
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
+          "returns": 4,
+          "expect": {"dirty": true}
+        },
+        {"op": "markSaved", "revision": "ikinci", "expect": {"dirty": true}}
+      ]
+    },
+    {
+      "name": "Kaydedilmemiş diye işaretlemek yeni sürüm açar",
+      "note": "Bulut eşitlemesi cihaz taslağını geri yüklerken kullanır (markUnsaved).",
+      "steps": [
+        {"op": "markUnsaved", "expect": {"dirty": true, "revision": "changed", "canUndo": false}},
+        {"op": "captureRevision", "as": "kayıt"},
+        {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false}}
+      ]
+    }
+  ]
+}

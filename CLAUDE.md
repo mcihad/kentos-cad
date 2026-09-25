@@ -55,7 +55,8 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox | `apps/api/`, `crates/server/` |
 | Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict | `app/cloud/`, `ui/cloud/` |
 | KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
-| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet; çizim alanı yok | `apps/desktop/` |
+| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet, geri al/yinele; çizim alanı yok | `apps/desktop/` |
+| Masaüstü belgesi (`kentos-domain`): web `CadDocument`'inin anlamı native olarak, ortak işlem fixture'larıyla sınanır | `crates/native/domain/`, `fixtures/document-ops/` |
 
 Desktop çizim alanı (saf wgpu) ve araçları, binary KCAD, embed Python, tam AI yüzeyi,
 genişletilmiş proje bazlı paylaşım ve kalıcı server worker kabulü gelecek
@@ -196,6 +197,8 @@ tek mantıksal undo adımıdır. Async grup işlemlerinde mevcut group/cancel yo
 Kaydetme sürerken yapılan yeni değişikliği dirty=false yapmayın.
 Mevcut `.kcad` JSON `DocumentSnapshotV1`'dir; okuyucu sürüm/alan/SRID doğrular.
 `replaceWith` öncesi aday belge doğrulansın; başarısız açılış mevcut işi kaybettirmesin.
+Masaüstünün karşılığı `kentos_domain::Document`'tir; iki belge `fixtures/document-ops/v1`'i
+geçer, davranış değişikliği fixture'la birlikte yapılır (ADR 0020).
 
 ### 4.8.1 Hesaplama çekirdeği
 
@@ -372,6 +375,7 @@ apps/api/              kentosd: HTTP/WS, auth ve yönetim CLI
 apps/desktop/          masaüstü kabuğu (kentos-cad): Iced + KentOS UI
 apps/ui-showcase/      KentOS UI bileşen vitrini
 crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
+crates/native/         native belge (domain); web'e derlenmez
 crates/shared/         contracts, geometry-core, style-core, svg-core, formats
 crates/wasm/           yalnız hesap/codec bağlayıcıları
 crates/server/         application ve postgres
@@ -384,8 +388,8 @@ docs/baseline/         tarihli başlangıç kayıtları: test, e2e, fixture, vit
 docs/deps/             bağımlılık kaydı
 ```
 
-`crates/ui`, `apps/ui-showcase` ve `apps/desktop` (ilk kabuk) kuruldu;
-`crates/native`, `crates/render/wgpu`, `shaders/wgsl` gibi hedef yollar henüz yok.
+`crates/ui`, `apps/ui-showcase`, `apps/desktop` (ilk kabuk) ve `crates/native/domain`
+(belge, ADR 0020) kuruldu; `crates/render/wgpu`, `shaders/wgsl` gibi hedef yollar henüz yok.
 Stil sistemi: [docs/STYLE.md](docs/STYLE.md). Processing:
 [docs/PROCESSING.md](docs/PROCESSING.md). Tarihli devir notları:
 [docs/DEVIR.md](docs/DEVIR.md); eski durum/faz notlarını güncel kod ve

@@ -16,7 +16,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | Crate | Sürüm ve özellikler | Lisans | Hedef | Kullanan | Karar |
 |---|---|---|---|---|---|
 | serde | 1.0.229, `derive` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api | ADR 0001 |
-| serde_json | 1.0.151, `float_roundtrip` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api; test | ADR 0001, 0008 |
+| serde_json | 1.0.151, `float_roundtrip` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api; test (domain dahil) | ADR 0001, 0008 |
 | libm | 0.2.16 | MIT | native, wasm32 | geometry-core, formats | ADR 0008 |
 | rust_decimal | 1.43.0, yalnız `std` | MIT | native, wasm32 | geometry-core | ADR 0001, 0004 |
 | ts-rs | 12.0.1, `serde-json-impl` | MIT | native (yalnız TS üretimi, `ts` özelliği) | contracts | ADR 0001, 0002 |
@@ -33,7 +33,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | sqlx | 0.9.0, `tls-none` | MIT OR Apache-2.0 | native | postgres, application, api | ADR 0006, 0007. TLS'siz yalnız yerel sunucu içindir; üretim TLS'i açıktır (`OPS-03`) |
 | tower | 0.5.3 | MIT | native | api | ADR 0007 |
 | tower-http | 0.7.1 | MIT | native | api | ADR 0007 |
-| uuid | 1.26.1, `v4`, `v7` | Apache-2.0 OR MIT | native | postgres, application, api | ADR 0007 |
+| uuid | 1.26.1, `v4`, `v7` | Apache-2.0 OR MIT | native | postgres, application, api, domain | ADR 0007, 0020 |
 | jsonwebtoken | 11.1.0, `rust_crypto` | MIT | native | api (OpenID) | ADR 0007 |
 | reqwest | 0.13.5, `rustls` | MIT OR Apache-2.0 | native | api (OpenID) | ADR 0007 |
 | time | 0.3.55 | MIT OR Apache-2.0 | native | application, api | ADR 0007 |

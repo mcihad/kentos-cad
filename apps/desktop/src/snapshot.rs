@@ -1,6 +1,9 @@
-//! `kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik]`:
-//! the window drawn without opening one (the KentOS UI snapshot renderer),
-//! for visual checks and documentation. Nothing is written but the image.
+//! `kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik]
+//! [--komut <id>]…`: the window drawn without opening one (the KentOS UI
+//! snapshot renderer), for visual checks and documentation. `--komut` runs a
+//! web command id after the drawing is opened (`help.shortcuts`, `edit.undo`);
+//! what a command would start in the background (a file dialog, a save) is not
+//! run. Nothing is written but the image.
 
 use std::path::Path;
 
@@ -14,9 +17,10 @@ use crate::document::Document;
 
 pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let out = args.next().ok_or(
-        "kullanım: kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik]",
+        "kullanım: kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik] [--komut <id>]…",
     )?;
     let (mut app, _) = App::boot(None);
+    let mut commands = Vec::new();
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--sekme" => {
@@ -35,11 +39,24 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
                     _ => Mode::Dark,
                 };
             }
+            "--komut" => {
+                let id = args
+                    .next()
+                    .ok_or("--komut bir komut kimliği ister (ör. help.shortcuts, edit.undo)")?;
+                let command = catalog()
+                    .get(&id)
+                    .ok_or(format!("{id}: böyle bir komut yok"))?;
+                commands.push(command.id);
+            }
             path => {
                 let doc = Document::read(Path::new(path))?;
                 let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
             }
         }
+    }
+    // After the drawing is open, whatever order the arguments came in.
+    for id in commands {
+        let _ = app.update(Message::Run(id));
     }
 
     let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).map_err(|e| e.to_string())?;

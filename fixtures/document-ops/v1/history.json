@@ -1,0 +1,142 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Geri al ve yinele",
+  "note": "undo ve redo geri alınan ya da yinelenen adımın adını, adım yoksa null döndürür.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Geçmiş",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {"x": 486500, "y": 4420100},
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "a",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          },
+          {
+            "id": "b",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [],
+    "styles": {"items": [], "categories": []}
+  },
+  "scenarios": [
+    {
+      "name": "Boş geçmişte geri alma ve yineleme bir şey yapmaz",
+      "steps": [
+        {"op": "undo", "returns": null, "expect": {"revision": "same", "dirty": false}},
+        {"op": "redo", "returns": null, "expect": {"revision": "same", "dirty": false}}
+      ]
+    },
+    {
+      "name": "Yeni düzenleme yineleme geçmişini siler",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
+          "returns": 1,
+          "note": "Nesnesiz dosyada ilk kimlik 1'dir."
+        },
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "b", "p": {"x": 2, "y": 2}, "attrs": {}},
+          "returns": 2
+        },
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [1], "canRedo": true}},
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "c", "p": {"x": 3, "y": 3}, "attrs": {}},
+          "returns": 3,
+          "expect": {"ids": [1, 3], "canRedo": false}
+        },
+        {"op": "redo", "returns": null, "expect": {"ids": [1, 3]}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [1]}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [], "canUndo": false, "canRedo": true}},
+        {"op": "undo", "returns": null}
+      ]
+    },
+    {
+      "name": "Geri alma ve yineleme belgeyi değiştirir: kirli bayrağı ve yeni sürüm",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
+          "returns": 1
+        },
+        {"op": "captureRevision", "as": "kayıt"},
+        {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false}},
+        {"op": "undo", "returns": "Ekle", "expect": {"dirty": true, "revision": "changed"}},
+        {
+          "op": "redo",
+          "returns": "Ekle",
+          "note": "İçerik kaydedilen hâline döndü, ama belge kirli kalır: kaydedilen geçmiş noktası izlenmez.",
+          "expect": {"dirty": true, "revision": "changed"}
+        }
+      ]
+    },
+    {
+      "name": "Geri alma geçmişi en çok 200 adım tutar; daha eskisi sessizce düşer",
+      "note": "TODOS.md TX-06: geçmişin sessizce eksilmemesi ayrı iştir.",
+      "steps": [
+        {
+          "op": "repeat",
+          "times": 201,
+          "steps": [{"op": "add", "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}}}],
+          "expect": {"count": 201, "canUndo": true}
+        },
+        {
+          "op": "repeat",
+          "times": 200,
+          "steps": [{"op": "undo", "returns": "Ekle"}],
+          "expect": {"count": 1, "ids": [1], "canUndo": false, "canRedo": true}
+        },
+        {"op": "undo", "returns": null, "expect": {"count": 1}}
+      ]
+    }
+  ]
+}

@@ -2439,10 +2439,20 @@ version = "0.1.0"
 dependencies = [
  "iced",
  "kentos-contracts",
+ "kentos-domain",
  "kentos-ui",
  "rfd",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "kentos-domain"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]

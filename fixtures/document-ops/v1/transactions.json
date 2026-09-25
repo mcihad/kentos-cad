@@ -1,0 +1,426 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "İşlemler: ya hep ya hiç, iç içe kayıt noktası",
+  "note": "ADR 0003. “throw”: işlemin gövdesi adımlarından sonra bu iletiyle hata verir. “catch”: adım bu iletiyle hata vermeli; hata orada yakalanır ve sürüm karşılaştırması adımın öncesine göre yapılır. Yakalanmayan hata içteki adımdan dıştaki işleme geçer.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlemler",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {"x": 486500, "y": 4420100},
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": [
+          {
+            "id": "a",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          },
+          {
+            "id": "b",
+            "name": "Yol",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18},
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {"id": 1, "kind": "point", "layerId": "a", "p": {"x": 486512.34, "y": 4420123.45}, "attrs": {"N": "1"}},
+      {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520.25, "y": 4420110.5}, "attrs": {}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "scenarios": [
+    {
+      "name": "İşlem birkaç düzenlemeyi tek geri alma adımında toplar",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Taşı ve ekle",
+          "steps": [
+            {
+              "op": "update",
+              "id": 1,
+              "patch": {"p": {"x": 486515, "y": 4420125}},
+              "note": "İşlem içinde değişiklik hemen görünür; adım ve kirli bayrağı işlem bitince gelir.",
+              "expect": {
+                "entities": {
+                  "1": {
+                    "id": 1,
+                    "kind": "point",
+                    "layerId": "a",
+                    "p": {"x": 486515, "y": 4420125},
+                    "attrs": {"N": "1"}
+                  }
+                },
+                "canUndo": false,
+                "dirty": false,
+                "revision": "same"
+              }
+            },
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}},
+              "returns": 3,
+              "expect": {"ids": [1, 2, 3], "canUndo": false, "dirty": false, "revision": "same"}
+            },
+            {"op": "remove", "ids": [2], "expect": {"ids": [1, 3]}}
+          ],
+          "expect": {"ids": [1, 3], "canUndo": true, "canRedo": false, "dirty": true, "revision": "changed"}
+        },
+        {
+          "op": "undo",
+          "returns": "Taşı ve ekle",
+          "expect": {
+            "ids": [1, 2],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"N": "1"}
+              },
+              "2": {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520.25, "y": 4420110.5}, "attrs": {}}
+            },
+            "canUndo": false,
+            "canRedo": true
+          }
+        },
+        {
+          "op": "redo",
+          "returns": "Taşı ve ekle",
+          "expect": {
+            "ids": [1, 3],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486515, "y": 4420125},
+                "attrs": {"N": "1"}
+              },
+              "3": {"id": 3, "kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başarısız işlem yaptığı her şeyi geri alır, hiçbir şey kaydetmez",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Yarım",
+          "steps": [
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}},
+              "returns": 3
+            },
+            {"op": "update", "id": 1, "patch": {"attrs": {"N": "2"}}},
+            {"op": "remove", "ids": [1]}
+          ],
+          "throw": "kural ihlali",
+          "catch": "kural ihlali",
+          "note": "Silinip geri getirilen nesne belgenin sonuna döner: içerik aynıdır, sıra değişir (web bugün böyle).",
+          "expect": {
+            "ids": [2, 1],
+            "count": 2,
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"N": "1"}
+              },
+              "2": {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520.25, "y": 4420110.5}, "attrs": {}}
+            },
+            "dirty": false,
+            "revision": "same",
+            "canUndo": false,
+            "canRedo": false
+          }
+        },
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
+          "returns": 4,
+          "note": "Geri alınan işlemin verdiği kimlik (3) yeniden verilmez.",
+          "expect": {"ids": [2, 1, 4]}
+        },
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [2, 1]}},
+        {
+          "op": "undo",
+          "returns": null,
+          "note": "Başarısız işlem geçmişe adım bırakmadı.",
+          "expect": {"revision": "same"}
+        }
+      ]
+    },
+    {
+      "name": "Başarısız işlem geri alma ve yineleme geçmişine ve kaydedilmiş sürüme dokunmaz",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}},
+          "returns": 3
+        },
+        {"op": "undo", "returns": "Ekle", "expect": {"canUndo": false, "canRedo": true}},
+        {"op": "captureRevision", "as": "kayıt"},
+        {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false}},
+        {
+          "op": "transact",
+          "label": "Yarım",
+          "steps": [
+            {"op": "update", "id": 1, "patch": {"attrs": {"N": "9"}}},
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "b", "p": {"x": 5, "y": 5}, "attrs": {}},
+              "returns": 4
+            }
+          ],
+          "throw": "geri",
+          "catch": "geri",
+          "expect": {
+            "ids": [1, 2],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"N": "1"}
+              }
+            },
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {"op": "redo", "returns": "Ekle", "expect": {"ids": [1, 2, 3]}}
+      ]
+    },
+    {
+      "name": "İç içe işlem bir kayıt noktasıdır: yakalanan iç hata yalnız kendi düzenlemelerini geri alır",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Dış",
+          "steps": [
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "a", "p": {"x": 10, "y": 10}, "attrs": {}},
+              "returns": 3
+            },
+            {
+              "op": "transact",
+              "label": "İç",
+              "steps": [
+                {
+                  "op": "add",
+                  "entity": {"kind": "point", "layerId": "b", "p": {"x": 20, "y": 20}, "attrs": {}},
+                  "returns": 4
+                },
+                {"op": "update", "id": 1, "patch": {"attrs": {"N": "iç"}}}
+              ],
+              "throw": "iç",
+              "catch": "iç",
+              "expect": {
+                "ids": [1, 2, 3],
+                "entities": {
+                  "1": {
+                    "id": 1,
+                    "kind": "point",
+                    "layerId": "a",
+                    "p": {"x": 486512.34, "y": 4420123.45},
+                    "attrs": {"N": "1"}
+                  }
+                }
+              }
+            },
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "c", "p": {"x": 30, "y": 30}, "attrs": {}},
+              "returns": 5
+            }
+          ],
+          "expect": {"ids": [1, 2, 3, 5], "canUndo": true, "dirty": true, "revision": "changed"}
+        },
+        {
+          "op": "undo",
+          "returns": "Dış",
+          "note": "İç işlemin adı kaydedilmez: iç işlem dıştakine katılır.",
+          "expect": {"ids": [1, 2], "canUndo": false}
+        },
+        {"op": "redo", "returns": "Dış", "expect": {"ids": [1, 2, 3, 5]}}
+      ]
+    },
+    {
+      "name": "İç hata dış işleme ulaşırsa dış işlem her şeyi geri alır",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Dış",
+          "steps": [
+            {
+              "op": "add",
+              "entity": {"kind": "point", "layerId": "a", "p": {"x": 10, "y": 10}, "attrs": {}},
+              "returns": 3
+            },
+            {
+              "op": "transact",
+              "label": "İç",
+              "steps": [
+                {
+                  "op": "add",
+                  "entity": {"kind": "point", "layerId": "b", "p": {"x": 20, "y": 20}, "attrs": {}},
+                  "returns": 4
+                }
+              ],
+              "throw": "iç"
+            }
+          ],
+          "catch": "iç",
+          "expect": {"ids": [1, 2], "canUndo": false, "dirty": false, "revision": "same"}
+        },
+        {
+          "op": "add",
+          "entity": {"kind": "point", "layerId": "c", "p": {"x": 30, "y": 30}, "attrs": {}},
+          "returns": 5
+        }
+      ]
+    },
+    {
+      "name": "Toplu düzenlemeler açık işleme katılır; hata onları da geri alır",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Yarım",
+          "steps": [
+            {"op": "updateMany", "patches": [{"id": 1, "p": {"x": 486555, "y": 4420155}}], "returns": 1},
+            {
+              "op": "addMany",
+              "entities": [{"kind": "point", "layerId": "c", "p": {"x": 486530, "y": 4420130}, "attrs": {}}],
+              "returns": [3]
+            },
+            {"op": "remove", "ids": [2]}
+          ],
+          "throw": "kural ihlali",
+          "catch": "kural ihlali",
+          "expect": {
+            "ids": [1, 2],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"N": "1"}
+              },
+              "2": {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520.25, "y": 4420110.5}, "attrs": {}}
+            },
+            "dirty": false,
+            "revision": "same",
+            "canUndo": false
+          }
+        },
+        {
+          "op": "transact",
+          "label": "Taşı ve sil",
+          "steps": [
+            {"op": "updateMany", "patches": [{"id": 1, "p": {"x": 486555, "y": 4420155}}], "returns": 1},
+            {"op": "remove", "ids": [2]}
+          ],
+          "expect": {
+            "ids": [1],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486555, "y": 4420155},
+                "attrs": {"N": "1"}
+              }
+            },
+            "canUndo": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Taşı ve sil",
+          "expect": {
+            "ids": [1, 2],
+            "entities": {
+              "1": {
+                "id": 1,
+                "kind": "point",
+                "layerId": "a",
+                "p": {"x": 486512.34, "y": 4420123.45},
+                "attrs": {"N": "1"}
+              },
+              "2": {"id": 2, "kind": "point", "layerId": "b", "p": {"x": 486520.25, "y": 4420110.5}, "attrs": {}}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hiçbir şey değiştirmeyen işlem adım bırakmaz",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Boş",
+          "steps": [],
+          "expect": {"canUndo": false, "dirty": false, "revision": "same"}
+        },
+        {
+          "op": "transact",
+          "label": "Boş",
+          "steps": [{"op": "update", "id": 42, "patch": {"attrs": {"N": "1"}}}, {"op": "remove", "ids": [42]}],
+          "expect": {"canUndo": false, "dirty": false, "revision": "same"}
+        }
+      ]
+    }
+  ]
+}
