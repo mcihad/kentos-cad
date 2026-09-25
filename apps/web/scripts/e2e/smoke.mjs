@@ -1925,6 +1925,28 @@ try {
     await b.eval(`(async () => { const a = await import('/src/app/appearance.ts'); window.kentos.prefs.accent.set('navy'); window.kentos.prefs.uiFont.set('jakarta'); a.applyAccent('navy'); await a.applyUiFont('jakarta'); window.kentos.view.refreshPalette(); })()`);
   }
 
+  // Opening a .kcad: the objects get the persistent ids its content derives (ADR 0014), worked out by the Rust
+  // contracts in the formats worker; the independent Python reference wrote the same (fixtures/document/v1/identity).
+  {
+    const dir = new URL('../../../../fixtures/document/v1/identity/', import.meta.url);
+    const text = readFileSync(new URL('sample.compact.kcad', dir), 'utf8');
+    const expected = JSON.parse(readFileSync(new URL('expected.json', dir), 'utf8')).cases[0].entities;
+    const opened = await b.eval(`(async () => {
+      const k = window.kentos;
+      const keep = { picker: k.files.picker, ask: k.files.ask };
+      k.files.ask = async () => 'drop';
+      k.files.picker = { open: async () => ({ name: 'kimlik.kcad', getFile: async () => new Blob([${JSON.stringify(text)}]) }), save: async () => null };
+      try {
+        const ok = await k.files.open();
+        return { ok, ids: [...k.doc.all()].map((e) => ({ id: e.id, uid: e.uid })) };
+      } finally {
+        k.files.picker = keep.picker;
+        k.files.ask = keep.ask;
+      }
+    })()`);
+    check('opening a v1 drawing gives its objects the ids its content derives', opened.ok && JSON.stringify(opened.ids) === JSON.stringify(expected), JSON.stringify(opened.ids.slice(0, 2)));
+  }
+
   const errors = b.consoleLog.filter((l) => /^(error|EXCEPTION)/.test(l));
   check('no console errors', errors.length === 0, errors.join(' | '));
 } catch (e) {

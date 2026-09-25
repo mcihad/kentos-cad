@@ -1,6 +1,8 @@
 import type { DocumentSnapshotV1 } from '../contracts/generated/DocumentSnapshotV1';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import type { LayerNode as ContractLayerNode } from '../contracts/generated/LayerNode';
+import type { V1Identities } from '../contracts/generated/V1Identities';
+import { isUuid } from '../core/uuid';
 import { crsBySrid } from '../geo/crs';
 import type { CadDocument, DocumentContent } from './document';
 import type { Entity } from './entities';
@@ -16,8 +18,9 @@ import { DRAWING_FONT_IDS, WORKSPACE_IDS } from './projectSettings';
  * The project's style items are opaque here (the style layer checks them).
  *
  * v1 keeps no persistent object ids (docs/adr/0014): they are not written,
- * and one found in a file is not taken. The binary v2 format will store
- * them (TODOS.md FILE-05).
+ * and when a file is opened they are derived from its content by the Rust
+ * contracts (`attachV1Identities`), the same every time. The binary v2
+ * format will store them (TODOS.md FILE-05).
  */
 
 export const DOCUMENT_FORMAT = 'kentos.document';
@@ -58,6 +61,24 @@ export function readSnapshot(text: string): ReadResult {
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
+}
+
+/**
+ * Gives the objects of a v1 drawing just read (`readSnapshot`) the
+ * persistent ids the Rust contracts derived from the same text
+ * (`v1Identities`, docs/adr/0014): object by object, in file order, each
+ * matched by its local id. Returns what does not match instead, and then
+ * changes nothing.
+ */
+export function attachV1Identities(content: DocumentContent, ids: V1Identities): string | null {
+  const list = ids.entities;
+  if (list.length !== content.entities.length) return `kimlik listesinde ${list.length} nesne var, çizimde ${content.entities.length}`;
+  for (let i = 0; i < list.length; i++) {
+    const e = content.entities[i];
+    if (list[i].id !== e.id || !isUuid(list[i].uid)) return `${i + 1}. nesnenin kimliği uyuşmuyor (yerel ${e.id}, listede ${list[i].id})`;
+  }
+  for (let i = 0; i < list.length; i++) content.entities[i].uid = list[i].uid;
+  return null;
 }
 
 /**

@@ -5,12 +5,14 @@ import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
 import type { ImportResult } from '../contracts/generated/ImportResult';
 import type { ExportReport } from '../contracts/generated/ExportReport';
+import type { V1Identities } from '../contracts/generated/V1Identities';
 import type { FormatsReply, FormatsRequest } from './protocol';
 
 /**
  * The page's side of the formats worker. The worker, and the Rust formats
- * module in it, start with the first request (never at start-up, CLAUDE.md
- * §20) and stop after a quiet half minute, so the memory a large file took
+ * module in it, start with the first request (an import, an export, a
+ * drawing opened; never at start-up, CLAUDE.md §20) and stop after a quiet
+ * half minute, so the memory a large file took
  * is given back. A trap in the module or a worker that fails to load fails
  * the waiting requests with a Turkish message; the next request starts a
  * fresh worker.
@@ -74,6 +76,16 @@ export class FormatsClient {
   /** Writes a DXF (AutoCAD 2007) of the objects and their layers; the input goes as a structured copy. */
   async writeDxf(input: DxfWriteInput): Promise<WrittenFile> {
     return written(await this.request({ op: 'writeDxf', input }, []));
+  }
+
+  /**
+   * The persistent ids of a v1 drawing's objects (docs/adr/0014), from its
+   * text: the Rust contracts read it and derive them, the same wherever the
+   * drawing is opened. The text goes as a copy; the page reads its own
+   * meanwhile. A drawing the contract cannot read rejects with the reason.
+   */
+  async v1Identities(text: string): Promise<V1Identities> {
+    return json<V1Identities>(await this.request({ op: 'v1Identities', text }, []));
   }
 
   /** Stops the worker now (a dialog closed while its file was being read). */

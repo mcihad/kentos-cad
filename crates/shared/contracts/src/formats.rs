@@ -17,7 +17,8 @@ use crate::layer::LineType;
 /// Version of this boundary; the WASM module reports the one it was built with.
 /// 2: `writeDxf` (`DxfWriteInput`), and the reader takes back KentOS's DXF data.
 /// 3: dimensions are written as DXF dimensions (`dimensionValues`) and read back.
-pub const FORMATS_VERSION: u32 = 3;
+/// 4: `v1Identities`, the persistent ids of a v1 drawing's objects (`identity`, docs/adr/0014).
+pub const FORMATS_VERSION: u32 = 4;
 
 // ── Every import ────────────────────────────────────────────────────────
 

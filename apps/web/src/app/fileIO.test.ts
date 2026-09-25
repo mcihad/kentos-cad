@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { isUuid } from '../core/uuid';
+import { v1IdentitiesInProcess } from '../io/testFormats';
 import { CadDocument } from '../model/document';
 import { LayerStore } from '../model/layers';
 import { newProjectContent } from '../model/newProject';
@@ -6,6 +8,9 @@ import { toSnapshot } from '../model/snapshot';
 import { snapshotSampleDocument } from '../model/snapshotSample';
 import type { AppContext } from './context';
 import { DocumentFiles, type DiscardChoice, type DrawingFileHandle, type DrawingFilePicker } from './fileIO';
+
+/** The objects without their persistent ids, which v1 files do not hold. */
+const bare = (doc: CadDocument) => [...doc.all()].map(({ uid: _uid, ...e }) => e);
 
 /** An in-memory file; `fail` makes its writer throw on close, `during` runs while it is being written. */
 function memoryFile(name: string, opts: { text?: string; fail?: boolean; during?: () => void } = {}) {
@@ -62,6 +67,8 @@ function setup(doc = new CadDocument({ name: 'Proje', layers: new LayerStore([{ 
     cloud,
   } as unknown as AppContext;
   const files = new DocumentFiles(ctx);
+  // The formats module in this process instead of its worker.
+  files.identities = v1IdentitiesInProcess;
   // Every question is recorded and answered with the next choice (none left: the test did not expect one).
   const asked: string[] = [];
   const answers: DiscardChoice[] = [];
@@ -125,11 +132,13 @@ describe('local drawing files', () => {
     const good = memoryFile('Örnek.kcad', { text: JSON.stringify(toSnapshot(src)) });
     files.picker = pick(null, good);
     expect(await files.open()).toBe(true);
-    // The same objects; v1 files hold no persistent ids, so those are the drawing's own.
-    const bare = (d: CadDocument) => [...d.all()].map(({ uid: _uid, ...e }) => e);
     expect(bare(doc)).toEqual(bare(src));
     expect(doc.dirty.value).toBe(false);
     expect(files.handle).toBe(good);
+    // The objects' persistent ids are the ones the file's content gives (ADR 0014), not the source drawing's.
+    const ids = await v1IdentitiesInProcess(good.text);
+    expect([...doc.all()].map((e) => [e.id, e.uid])).toEqual(ids.entities.map((e) => [e.id, e.uid]));
+    expect(messages.some((m) => m.startsWith('uyarı'))).toBe(false);
     const size = doc.size;
     files.picker = pick(null, memoryFile('bozuk.kcad', { text: '{"format":"kentos.document","version":9}' }));
     expect(await files.open()).toBe(false);
@@ -138,11 +147,45 @@ describe('local drawing files', () => {
     expect(files.handle).toBe(good);
   });
 
-  it('a file read without write access is not where Save writes', () => {
+  it('a file read without write access is not where Save writes', async () => {
     const { files } = setup();
     const text = JSON.stringify(toSnapshot(snapshotSampleDocument()));
-    expect(files.load(text, memoryFile('salt.kcad', { text }), true)).toBe(true);
+    expect(await files.load(text, memoryFile('salt.kcad', { text }), true)).toBe(true);
     expect(files.handle).toBeNull();
+  });
+
+  it('opens the same file with the same ids every time, also after an unchanged save; an edited file is another drawing', async () => {
+    const { doc, files } = setup();
+    const text = JSON.stringify(toSnapshot(snapshotSampleDocument()));
+    const file = memoryFile('Örnek.kcad', { text });
+    await files.load(text, file);
+    const first = [...doc.all()].map((e) => e.uid);
+    doc.add({ kind: 'point', layerId: 'cizim', p: { x: 1, y: 1 }, attrs: {} });
+    await files.load(text, file);
+    expect([...doc.all()].map((e) => e.uid)).toEqual(first);
+    expect(await files.save()).toBe(true);
+    await files.load(file.text, file);
+    expect([...doc.all()].map((e) => e.uid)).toEqual(first);
+    // v1 keeps no ids, so an edited and saved file is another snapshot: every object gets other ids
+    // when it is opened again. The binary v2 file stores them (TODOS.md FILE-05, docs/adr/0014).
+    doc.update(1, { attrs: { Ad: 'P9' } });
+    expect(await files.save()).toBe(true);
+    await files.load(file.text, file);
+    expect([...doc.all()].map((e) => e.uid).filter((u) => first.includes(u!))).toEqual([]);
+  });
+
+  it('opens a drawing whose ids cannot be derived with new ones, and says so', async () => {
+    const { doc, files, messages } = setup();
+    files.identities = async () => {
+      throw new Error('Dosya biçimi modülü yüklenemedi');
+    };
+    const text = JSON.stringify(toSnapshot(snapshotSampleDocument()));
+    expect(await files.load(text, memoryFile('Örnek.kcad', { text }))).toBe(true);
+    expect(doc.size).toBe(13);
+    expect([...doc.all()].every((e) => isUuid(e.uid))).toBe(true);
+    expect(messages).toContain(
+      'uyarı: “Örnek.kcad”: nesnelerin kalıcı kimlikleri dosyadan türetilemedi (Dosya biçimi modülü yüklenemedi); bu açılış için yeni kimlik verildi ve dosya yeniden açılınca kimlikler değişir. Dosyayı yeniden açmayı deneyin.',
+    );
   });
 
   it('one file command at a time', async () => {
