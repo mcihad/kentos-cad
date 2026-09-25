@@ -34,7 +34,8 @@
 - **Kimlik (ADR 0014):**
   - Her nesnenin bir **yuvası** vardır: `Slot(u32)`. Web'in `Entity.id`'sidir, v1 dosyasının yerel kimliği de odur.
   - Her nesnenin bir de **kalıcı kimliği** vardır: yeni nesnede UUIDv7. Değiştirmek korur. Geri alma ve yineleme aynı kimliği geri getirir. Belge `uid → yuva` dizinini tutar.
-  - v1 dosyasından okunan nesnelerin kimliği tek bir işlevden gelir: `v1_entity_uids`. Bugün geçici olarak v7 verir. ADR 0014'ün belirlenimli UUIDv5 göçü (`DOM-04`) yalnız bu işlevin gövdesini değiştirir.
+  - v1 dosyasından okunan nesnelerin kimliği tek bir işlevden gelir: `v1_entity_uids`. İşlev ADR 0014'ün belirlenimli UUIDv5 göçünü çağırır (`DOM-04`, `kentos_contracts::v1_uids`). Aynı dosya masaüstünde ve web'de aynı kimlikleri alır; `tests/identity.rs` bağımsız referansın fixture'ıyla sınar (`fixtures/document/v1/identity`).
+    - İlk sürümde işlev geçici olarak v7 veriyordu. Göç yalnız gövdesini ve dönüş tipini değiştirdi: yerel kimlikler benzersiz pozitif sayı değilse `Result` ile reddeder. `from_snapshot` bunları önce denetlediği için bu yola varılmaz, ama hata saklanmaz.
 - **Masaüstü** (`apps/desktop/src/document.rs`): `Document` = model + dosya yolu + oturum numarası.
   - Açma `DocumentSnapshotV1::from_json` → `Document::from_snapshot`, kaydetme modelin anlık görüntüsüdür.
   - Katman paneli ve `layer.showAll` modelden geçer.
@@ -43,9 +44,10 @@
 
 ### Ortak fixture'lar: `fixtures/document-ops/v1`
 
-- Altı dosyada 33 senaryo. Biçim `fixtures/document-ops/README.md`'dedir.
+- Altı dosyada 33 senaryo; ADR 0014'ün ilk dilimiyle yedinci dosya geldi (`identity.json`, 2 senaryo). Biçim `fixtures/document-ops/README.md`'dedir.
   - Her senaryo bir `.kcad` v1 çizimini uygulamanın açtığı yoldan açar, sonra adımları uygular.
   - Her adımdan sonra durum denetlenir: kimlikler (belge sırasıyla), nesnelerin tamamı, katman başına nesneler, `canUndo`/`canRedo`, kirli bayrağı, sürüm, katman bayrakları ve miras alınan yanıtlar, etkin katman.
+  - Kalıcı kimlik nesne karşılaştırmasına girmez: rastgeledir (v7) ya da dosyadan türetilir (v5). Kimlikler birbirleriyle karşılaştırılır (`captureUid`, `uids`).
 - Aynı dosyaları iki koşucu çalıştırır:
   - web: `apps/web/src/model/documentOps.test.ts`;
   - masaüstü: `crates/native/domain/tests/fixtures.rs`.
@@ -63,7 +65,7 @@
 | Dosya ve nesne tipleri | üretilen TS tipleri | `kentos-contracts` | `DocumentSnapshotV1`, `Entity`, `LayerNode` |
 | Davranış | | | `fixtures/document-ops/v1` |
 | Değişiklik bildirimi | `changed`, `attrs`, `touched` olayları | henüz yok | — |
-| Kalıcı kimlik | ADR 0014 dilim 1 bekliyor | var (`uid`) | — |
+| Kalıcı kimlik | `uid` (ADR 0014 dilim 1) | `uid` | v1 dosyasının türetilen kimlikleri (`fixtures/document/v1/identity`); göreli denetim (`fixtures/document-ops/v1/identity.json`) |
 | Kilit denetimi | çağıranda | çağıranda (araçlar henüz yok) | — |
 
 ### Bilinçli farklar: masaüstü yazılı karara uyar, web ayrılır
@@ -97,7 +99,6 @@ Fixture'larda “(web bugün böyle)” notuyla işaretlidir. Masaüstü aynıs�
 - Masaüstünde bugün geri alınabilir bir arayüz düzenlemesi yoktur: çizim araçları ve katman stili menüsü gelmedi. Geri alma ve yineleme hazırdır; ilk araçla birlikte kullanılır.
 - **Açık:**
   - Web'deki yukarıdaki beş fark: düzeltme ve fixture'a ekleme sahibin kararıdır.
-  - v1 nesnelerinin belirlenimli kimliği (`DOM-04`): `v1_entity_uids`'in gövdesi değişir.
   - Çizim alanı için değişiklik bildirimi (hangi nesneler değişti, `touched`): kirli katman güncellemesi (CLAUDE.md §4.9) buna dayanacak.
   - Masaüstü araçları kilitli katmanı web'deki gibi reddetmeli.
   - Komut satırında Ctrl+Z. Iced'in yazı kutusunun kendi geri alması yoktur, tuşu da yakalamaz; masaüstünde komut satırındayken de çizim geri alınır. Web'de yazı alanındaki Ctrl+Z alanın kendi geri almasıdır.
