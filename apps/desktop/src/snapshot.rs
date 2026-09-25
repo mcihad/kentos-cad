@@ -1,7 +1,12 @@
 //! `kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik]
-//! [--komut <id>]… [--tumu] [--merkez Y,X] [--yakinlastir <kat>]`: the window
-//! drawn without opening one (the KentOS UI snapshot renderer), for visual
-//! checks and documentation. Nothing is written but the image.
+//! [--komut <id>]… [--tumu] [--merkez Y,X] [--yakinlastir <kat>]
+//! [--iz <iz> [--adim <n>] [--varyant us|tr-q|hidpi]]`: the window drawn
+//! without opening one (the KentOS UI snapshot renderer), for visual checks
+//! and documentation. Nothing is written but the image.
+//!
+//! `--iz` plays an interaction trace (fixtures/interaction/v1, traces.rs) on
+//! its own drawing, up to step `--adim` (all by default), so the image shows
+//! the app mid-drawing: the draft, the value field, the prompt.
 //!
 //! `--komut` runs a web command id after the drawing is opened
 //! (`help.shortcuts`, `edit.undo`); what a command would start in the
@@ -23,10 +28,12 @@ use kentos_ui::theme::Mode;
 use crate::app::{App, Message};
 use crate::catalog::catalog;
 use crate::document::Document;
+use crate::traces::{self, Player, Trace, VARIANTS, Variant};
 use crate::viewport::Event;
 
 const USAGE: &str = "kullanım: kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik] \
-                     [--komut <id>]… [--tumu] [--merkez Y,X] [--yakinlastir <kat>]";
+                     [--komut <id>]… [--tumu] [--merkez Y,X] [--yakinlastir <kat>] \
+                     [--iz <iz> [--adim <n>] [--varyant us|tr-q|hidpi]]";
 
 /// A view option, applied in the order given once the drawing is on screen.
 enum View {
@@ -40,6 +47,9 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let (mut app, _) = App::boot(None);
     let mut commands = Vec::new();
     let mut views = Vec::new();
+    let mut trace: Option<Trace> = None;
+    let mut steps: Option<usize> = None;
+    let mut variant = VARIANTS[0];
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--sekme" => {
@@ -68,6 +78,24 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
                 commands.push(command.id);
             }
             "--tumu" => views.push(View::Extents),
+            "--iz" => {
+                let id = args
+                    .next()
+                    .ok_or("--iz bir iz kimliği ister (ör. polygon-accept)")?;
+                trace = Some(Trace::by_id(&id)?);
+            }
+            "--adim" => {
+                let text = args.next().ok_or("--adim bir adım sayısı ister (ör. 5)")?;
+                steps = Some(
+                    text.parse()
+                        .map_err(|_| format!("{text}: adım sayısı pozitif bir tam sayı olmalı"))?,
+                );
+            }
+            "--varyant" => {
+                let id = args.next().ok_or("--varyant us, tr-q ya da hidpi ister")?;
+                variant = Variant::by_id(&id)
+                    .ok_or(format!("{id}: böyle bir varyant yok (us, tr-q, hidpi)"))?;
+            }
             "--merkez" => {
                 let text = args
                     .next()
@@ -96,7 +124,11 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
         let _ = app.update(Message::Run(id));
     }
 
-    let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).map_err(|e| e.to_string())?;
+    // A trace's 2× variant is drawn on a 2× screen.
+    let scale = if trace.is_some() { variant.dpr } else { 1.0 };
+    let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0))
+        .map_err(|e| e.to_string())?
+        .scale(scale);
     if snapshot.renderer_name() != "wgpu" && app.document.is_some() {
         eprintln!(
             "Uyarı: {} çizicisi KentOS'un wgpu çizim alanını çizmez; alan boş görünecek \
@@ -108,6 +140,25 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
         let _ = app.update(message);
     };
     snapshot.settle(&mut app, App::view, &mut update);
+    if let Some(trace) = &trace {
+        // The trace's drawing first, so the drawing area is laid out and knows its place.
+        let text = std::fs::read_to_string(traces::folder().join(&trace.document))
+            .map_err(|e| format!("{}: {e}", trace.document))?;
+        let doc = Document::new(
+            kentos_contracts::DocumentSnapshotV1::from_json(&text).map_err(|e| e.to_string())?,
+            None,
+        )?;
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let area = app.viewport.bounds;
+        let file = traces::scratch_file(trace, variant);
+        let mut player = Player::new(&mut app, trace, variant, area, file)?;
+        for problem in player.play(steps) {
+            eprintln!("Uyarı: {problem}");
+        }
+        drop(player);
+        snapshot.settle(&mut app, App::view, &mut update);
+    }
     for view in views {
         let event = match view {
             View::Extents => Event::Extents,

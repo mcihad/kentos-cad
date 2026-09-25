@@ -2440,8 +2440,10 @@ name = "kentos-desktop"
 version = "0.1.0"
 dependencies = [
  "iced",
+ "iced_runtime",
  "kentos-contracts",
  "kentos-domain",
+ "kentos-interaction",
  "kentos-render-wgpu",
  "kentos-ui",
  "rfd",

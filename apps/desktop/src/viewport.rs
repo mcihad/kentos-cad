@@ -10,7 +10,9 @@
 //! on demand (Iced redraws after an event), with no loop of their own.
 //!
 //! Gestures, as on the web: the middle button drags the view, the wheel zooms
-//! at the pointer, a middle double click shows everything.
+//! at the pointer, a middle double click shows everything. A left press gives
+//! the running tool a point; a quick right click (under 300 ms) is Enter
+//! (docs/adr/0018). The widget reports what happened; the app decides.
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -21,7 +23,7 @@ use std::time::Duration;
 
 use iced::time::Instant;
 use iced::widget::{container, shader, stack};
-use iced::{Element, Fill, Point, Rectangle, Size, Vector, mouse, wgpu};
+use iced::{Element, Fill, Point, Rectangle, Vector, mouse, wgpu};
 
 use kentos_contracts::{DrawingFont, Entity, LayerNode};
 use kentos_render_wgpu::camera::FIT_PADDING;
@@ -79,14 +81,17 @@ const WHEEL_PIXEL: f64 = 0.0015;
 /// Two middle presses this close in time and place are a double click.
 const DOUBLE_CLICK: Duration = Duration::from_millis(500);
 const DOUBLE_CLICK_DISTANCE: f32 = 4.0;
+/// A right press released sooner is a click (Enter); held longer it would
+/// open the command menu (the web's `RIGHT_HOLD_MS`; no menu on the desktop yet).
+pub const RIGHT_HOLD: Duration = Duration::from_millis(300);
 
 static NEXT_VIEW: AtomicU64 = AtomicU64::new(1);
 
 /// What the drawing area tells the app.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Event {
-    /// The area's size in logical pixels.
-    Resized(Size),
+    /// The area's place in the window and its size, logical pixels.
+    Resized(Rectangle),
     /// The pointer moved over the area (logical pixels from its top-left).
     Moved(Point),
     /// The pointer left the area.
@@ -99,6 +104,10 @@ pub enum Event {
     Extents,
     /// Put this world point in the middle of the area.
     CenterOn(Vec2),
+    /// The left button went down here (logical pixels from the area's top-left).
+    Pressed(Point),
+    /// The right button went down and up here within [`RIGHT_HOLD`].
+    RightClick(Point),
 }
 
 /// What the last frame drew, or why it could not.
@@ -113,6 +122,8 @@ pub struct Viewport {
     pub camera: Camera,
     /// The world point under the pointer; `None` off the area.
     pub cursor: Option<Vec2>,
+    /// Where the area is in the window, logical pixels; empty until it reports.
+    pub bounds: Rectangle,
     /// The area has reported its size (a fit can happen at once).
     sized: bool,
     /// A drawing was opened and waits for the area's size to be fitted.
@@ -147,6 +158,7 @@ impl Viewport {
         Self {
             camera: Camera::default(),
             cursor: None,
+            bounds: Rectangle::default(),
             sized: false,
             fit_pending: false,
             generation: 0,
@@ -169,9 +181,10 @@ impl Viewport {
 
     pub fn update(&mut self, event: Event, doc: Option<&Document>) {
         match event {
-            Event::Resized(size) => {
+            Event::Resized(bounds) => {
+                self.bounds = bounds;
                 self.camera
-                    .set_size(f64::from(size.width), f64::from(size.height));
+                    .set_size(f64::from(bounds.width), f64::from(bounds.height));
                 self.sized = true;
                 if self.fit_pending
                     && let Some(doc) = doc
@@ -196,6 +209,8 @@ impl Viewport {
                 }
             }
             Event::CenterOn(p) => self.camera.center_on(p),
+            // The app gives these to the tool session (app.rs); the pointer is there too.
+            Event::Pressed(at) | Event::RightClick(at) => self.cursor = Some(self.world(at)),
         }
     }
 
@@ -308,7 +323,8 @@ impl Viewport {
         }
     }
 
-    fn world(&self, at: Point) -> Vec2 {
+    /// The world point at a position of the area, through the float64 camera.
+    pub fn world(&self, at: Point) -> Vec2 {
         self.camera
             .screen_to_world(f64::from(at.x), f64::from(at.y))
     }
@@ -347,11 +363,13 @@ struct Program {
 /// What the widget remembers between events.
 #[derive(Debug, Default)]
 pub struct Gesture {
-    size: Option<Size>,
+    bounds: Option<Rectangle>,
     /// The pointer's last position while the middle button drags.
     pan: Option<Point>,
     inside: bool,
     last_middle: Option<(Instant, Point)>,
+    /// When the right button went down over the area.
+    right: Option<Instant>,
 }
 
 impl shader::Program<Message> for Program {
@@ -405,7 +423,7 @@ impl shader::Program<Message> for Program {
 }
 
 /// What a pointer event means for the view: an event for the app (if any)
-/// and whether the event is used up. `now` dates middle presses.
+/// and whether the event is used up. `now` dates middle and right presses.
 pub fn gesture(
     state: &mut Gesture,
     event: &iced::Event,
@@ -413,10 +431,9 @@ pub fn gesture(
     cursor: mouse::Cursor,
     now: Instant,
 ) -> Option<(Option<Event>, bool)> {
-    let size = bounds.size();
-    if state.size != Some(size) {
-        state.size = Some(size);
-        return Some((Some(Event::Resized(size)), false));
+    if state.bounds != Some(bounds) {
+        state.bounds = Some(bounds);
+        return Some((Some(Event::Resized(bounds)), false));
     }
     let iced::Event::Mouse(event) = event else {
         return None;
@@ -460,6 +477,23 @@ pub fn gesture(
         }
         mouse::Event::ButtonReleased(mouse::Button::Middle) => {
             state.pan.take().map(|_| (None, true))
+        }
+        mouse::Event::ButtonPressed(mouse::Button::Left) => {
+            let at = cursor.position_in(bounds)?;
+            Some((Some(Event::Pressed(at)), true))
+        }
+        mouse::Event::ButtonPressed(mouse::Button::Right) => {
+            cursor.position_in(bounds)?;
+            state.right = Some(now);
+            Some((None, true))
+        }
+        mouse::Event::ButtonReleased(mouse::Button::Right) => {
+            // Released anywhere: the press began over the area (the web captures the pointer).
+            let pressed = state.right.take()?;
+            let position = cursor.position()?;
+            let at = Point::new(position.x - bounds.x, position.y - bounds.y);
+            let quick = now.saturating_duration_since(pressed) < RIGHT_HOLD;
+            Some((quick.then_some(Event::RightClick(at)), true))
         }
         mouse::Event::WheelScrolled { delta } => {
             let at = cursor.position_in(bounds)?;
@@ -572,6 +606,7 @@ impl shader::Pipeline for Pipeline {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use iced::Size;
 
     const AREA: Rectangle = Rectangle {
         x: 100.0,
@@ -593,7 +628,7 @@ mod tests {
             mouse::Cursor::Unavailable,
             Instant::now(),
         );
-        assert_eq!(first, Some((Some(Event::Resized(AREA.size())), false)));
+        assert_eq!(first, Some((Some(Event::Resized(AREA)), false)));
         state
     }
 
@@ -739,7 +774,10 @@ mod tests {
         let mut viewport = Viewport::new();
         viewport.opened(&doc);
         assert_eq!(viewport.camera, Camera::default(), "no size yet: no fit");
-        viewport.update(Event::Resized(Size::new(1000.0, 800.0)), Some(&doc));
+        viewport.update(
+            Event::Resized(Rectangle::new(Point::ORIGIN, Size::new(1000.0, 800.0))),
+            Some(&doc),
+        );
         // The sample's start view: 70 × 80 m around the parcel.
         let home = start_view(&doc).expect("the sample has a start view");
         let visible = viewport.camera.visible_bounds();
@@ -774,7 +812,10 @@ mod tests {
         // Through the app's own messages, as the window drives it.
         let (mut app, _) = App::boot(None);
         let _ = app.update(Message::Opened(Some(Ok(Box::new(sample())))));
-        let _ = app.update(Message::Viewport(Event::Resized(Size::new(1000.0, 800.0))));
+        let _ = app.update(Message::Viewport(Event::Resized(Rectangle::new(
+            Point::ORIGIN,
+            Size::new(1000.0, 800.0),
+        ))));
         let palette = palette(Mode::Dark);
         let settings = RenderSettings::new(palette.background);
         let scene = |app: &App, mode: Mode, palette: &Palette| {

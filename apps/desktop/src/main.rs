@@ -8,7 +8,11 @@ mod app;
 mod catalog;
 mod document;
 mod icons;
+mod input;
+mod keys;
+mod preview;
 mod snapshot;
+mod traces;
 mod view;
 mod viewport;
 
