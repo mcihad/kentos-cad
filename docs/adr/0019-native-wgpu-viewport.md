@@ -134,4 +134,8 @@
 - `cargo test -p kentos-desktop`: 15 test, 6'sı çizim alanının.
 - `node scripts/arch/deps.mjs`: bağımlılık yönü temiz.
 - `node scripts/wgsl/browser-check.mjs`: derleyici iletisi yok, boru hatları kuruldu, çizgi 0,01 px içinde.
-- `KENTOS_SNAPSHOT_BACKEND=wgpu kentos-cad snapshot`: örnek çizim başlangıç görünümünde, kapsamında, bir parsel köşesinde 700 kat yakınlaştırılmış ve açık temada. Köşede buluşan bütün nesneler aynı piksele düştü. Yakından çekilmiş dairenin kenarı ideal yaydan en çok 0,11 px ayrıldı.
+- `KENTOS_SNAPSHOT_BACKEND=wgpu kentos-cad snapshot`: örnek çizim başlangıç görünümünde, kapsamında, bir parsel köşesinde 700 kat yakınlaştırılmış ve açık temada.
+  - Köşede buluşan bütün nesneler aynı piksele düştü.
+  - Görüntüden ölçüldü: çizilen köşe (kenarlara oturtulan doğruların kesişimi), float64'ün koyduğu yerden (alanın ortası) 0,001 px ayrıldı. Ölçek yaklaşık 0,22 mm/px, konum E 486 512,34 / N 4 420 187,52.
+  - Yakından çekilmiş dairenin kenarı ideal yaydan en çok 0,11 px ayrıldı.
+- Pencere (`scripts/dev/svc.sh start desktop`, `make desktop`'un başlattığı servis) örnek çizimle açıldı; günlükte hata yok. `make stop-desktop` ile kapatıldı.
