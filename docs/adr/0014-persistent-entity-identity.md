@@ -156,3 +156,10 @@ v1 dosyasında kalıcı kimlik yoktur. Göç **belirlenimlidir**: aynı dosya ka
   - Testler: aynı dosyanın iki kez yüklenmesi, ACK kaybı, geri alınan silme.
 - **Dilim 4:** sözleşmede `EntityId` tipi, v2 dosyada 16 baytlık kimlik.
 - Masaüstünde `replace`'in karşılığı ve araçlar henüz yok (ADR 0020).
+
+## Çevirme ve birleştirmede kimlik (25 Eylül, sahibin varsayılanı)
+
+- **Alana çevir:** kapalı nesne alana dönüşürken aynı nesne kalır; yuvası ve kalıcı kimliği korunur. Çizgilerin kapattığı bölgelerden doğan alanlar yeni nesnedir, çizgiler yerinde kalır.
+- **Çizgiye çevir:** alanın dış halkası aynı nesnedir, artık çoklu çizgi. Deliklerden çıkan çizgiler yeni nesnedir.
+- **Birleştir:** her zincir ilk nesnesidir (AutoCAD JOIN); öbürleri silinir.
+- **Tevhit (alan birleştir), alan çıkar, kesiştir:** sonuç yeni nesnedir. Tevhit yeni parsel doğurur; ilk seçilen alanın verisi sonuca geçer.

@@ -202,6 +202,8 @@ export class LayerStore {
 
   /** Show only this node (and its ancestors); hide every other leaf. */
   isolate(id: string): void {
+    // An unknown id hides nothing (docs/adr/0020).
+    if (!this.get(id)) return;
     const keep = new Set<string>();
     for (let n: LayerNode | null | undefined = this.get(id); n; n = this.parentOf(n.id)) keep.add(n.id);
     for (const l of this.leavesOf(id)) keep.add(l.id);
@@ -211,6 +213,8 @@ export class LayerStore {
   }
 
   showAll(): void {
+    // Everything already shown: nothing changes, not an edit (docs/adr/0020).
+    if ([...this.index.values()].every((n) => n.visible)) return;
     for (const n of this.index.values()) n.visible = true;
     this.events.emit('state', { ids: this.leaves().map((l) => l.id) });
     this.version.update((v) => v + 1);
@@ -241,7 +245,8 @@ export class LayerStore {
 
   rename(id: string, name: string): void {
     const n = this.get(id);
-    if (!n || !name.trim()) return;
+    // The same name again changes nothing, not an edit (docs/adr/0020).
+    if (!n || !name.trim() || name.trim() === n.name) return;
     n.name = name.trim();
     this.events.emit('structure', undefined);
     this.version.update((v) => v + 1);

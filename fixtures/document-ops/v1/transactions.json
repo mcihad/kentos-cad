@@ -161,9 +161,9 @@
           ],
           "throw": "kural ihlali",
           "catch": "kural ihlali",
-          "note": "Silinip geri getirilen nesne belgenin sonuna döner: içerik aynıdır, sıra değişir (web bugün böyle).",
+          "note": "Silinip geri getirilen nesne eski yerine döner: içerik de sıra da işlemden önceki gibidir (docs/adr/0020).",
           "expect": {
-            "ids": [2, 1],
+            "ids": [1, 2],
             "count": 2,
             "entities": {
               "1": {
@@ -186,9 +186,9 @@
           "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}},
           "returns": 4,
           "note": "Geri alınan işlemin verdiği kimlik (3) yeniden verilmez.",
-          "expect": {"ids": [2, 1, 4]}
+          "expect": {"ids": [1, 2, 4]}
         },
-        {"op": "undo", "returns": "Ekle", "expect": {"ids": [2, 1]}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [1, 2]}},
         {
           "op": "undo",
           "returns": null,
@@ -419,6 +419,20 @@
           "label": "Boş",
           "steps": [{"op": "update", "id": 42, "patch": {"attrs": {"N": "1"}}}, {"op": "remove", "ids": [42]}],
           "expect": {"canUndo": false, "dirty": false, "revision": "same"}
+        }
+      ]
+    },
+    {
+      "name": "Başarısız işlemdeki katman stili geri alınır; belge kirlenmez, sürüm değişmez",
+      "steps": [
+        {
+          "op": "transact",
+          "label": "Yarım",
+          "steps": [{"op": "setLayerStyle", "id": "a", "patch": {"color": "#FF0000"}}],
+          "throw": "kural ihlali",
+          "catch": "kural ihlali",
+          "note": "ADR 0003: başarısız işlemden sonra belge kirli değildir, sürüm değişmez; katman stilinde de (docs/adr/0020).",
+          "expect": {"dirty": false, "revision": "same", "canUndo": false, "layers": {"a": {"style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18}}}}
         }
       ]
     }

@@ -119,10 +119,14 @@ impl LayerTree {
         true
     }
 
-    pub(crate) fn show_all(&mut self) {
+    /// Shows every node; false when all were shown already (nothing changed, docs/adr/0020).
+    pub(crate) fn show_all(&mut self) -> bool {
+        let mut changed = false;
         visit_mut(&mut self.roots, &mut Vec::new(), &mut |_, node| {
-            node.visible = true
+            changed |= !node.visible;
+            node.visible = true;
         });
+        changed
     }
 
     pub(crate) fn set_expanded(&mut self, id: &str, expanded: bool) -> bool {
@@ -140,7 +144,8 @@ impl LayerTree {
     pub(crate) fn rename(&mut self, id: &str, name: &str) -> bool {
         let name = name.trim();
         match self.node_mut(id) {
-            Some(node) if !name.is_empty() => {
+            // The same name again changes nothing (docs/adr/0020).
+            Some(node) if !name.is_empty() && node.name != name => {
                 name.clone_into(&mut node.name);
                 true
             }

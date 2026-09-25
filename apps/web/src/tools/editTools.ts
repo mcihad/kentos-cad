@@ -69,8 +69,11 @@ export class JoinTool extends SelectionActionTool {
       return { ...g.geometry, layerId: first.layerId, color: first.color, attrs: { ...first.attrs }, label: first.label } as NewEntity;
     });
     const created = doc.transact('Birleştir', () => {
-      doc.remove(groups.flatMap((g) => g.sources));
-      return doc.addMany(joined).map((e) => e.id);
+      // Each chain is its first object, joined (AutoCAD JOIN): it keeps its slot and persistent id
+      // (docs/adr/0014); the others are gone.
+      groups.forEach((g, i) => doc.replace(g.sources[0], joined[i]));
+      doc.remove(groups.flatMap((g) => g.sources.slice(1)));
+      return groups.map((g) => g.sources[0]);
     });
     selection.set(created);
     const kinds = groups.map((g) => ENTITY_KIND_LABEL[g.geometry.kind].toLocaleLowerCase('tr-TR'));

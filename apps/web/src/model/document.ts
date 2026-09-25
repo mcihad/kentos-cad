@@ -104,6 +104,19 @@ export class CadDocument {
    */
   private layerIndex = new Map<string, Map<number, DrawingEntity>>();
   private reordered = new Set<string>();
+  /**
+   * Each slot's place in the document (larger is later), kept after the
+   * object is removed: an object put back by undo, redo or a rolled-back
+   * transaction returns to its place, not to the end (docs/adr/0020). Slots
+   * are never given twice, so a slot that comes back is the same object.
+   */
+  private places = new Map<number, number>();
+  private nextPlace = 1;
+  /** The place of the object last appended; one put back before it makes the document unsorted. */
+  private tailPlace = 0;
+  private unsorted = false;
+  /** While the document itself sets a layer style (an op), the layer store's event is not an edit of its own. */
+  private applyingStyle = false;
   private anchor: Vec2;
   /**
    * Counts every change to what a saved file holds. A save records the
@@ -133,7 +146,10 @@ export class CadDocument {
     this.name.subscribe(() => this.markEdited());
     this.styles.subscribe(() => this.markEdited());
     this.layers.events.on('structure', () => this.markEdited());
-    this.layers.events.on('state', () => this.markEdited());
+    // A layer style set by an op is an edit when its step commits, not when applied (ADR 0003).
+    this.layers.events.on('state', () => {
+      if (!this.applyingStyle) this.markEdited();
+    });
   }
 
   /** Local anchor near the data: the GPU works in float32 relative to it. */
@@ -275,17 +291,20 @@ export class CadDocument {
     if (this.group) return { end: () => {}, cancel: () => {} };
     const g: Transaction = { label, ops: [] };
     this.group = g;
+    // A group ends once: a second end or cancel does nothing (docs/adr/0020).
+    let closed = false;
     const close = () => {
+      if (closed) return false;
+      closed = true;
       if (this.group === g) this.group = null;
+      return true;
     };
     return {
       end: () => {
-        close();
-        if (g.ops.length) this.commit(g);
+        if (close() && g.ops.length) this.commit(g);
       },
       cancel: () => {
-        close();
-        if (g.ops.length) this.applyAll([...g.ops].reverse().map(invert));
+        if (close() && g.ops.length) this.applyAll([...g.ops].reverse().map(invert));
       },
     };
   }
@@ -352,7 +371,10 @@ export class CadDocument {
    */
   replace(id: number, init: NewEntity, label = 'Değiştir'): void {
     const before = this.entities.get(id);
-    if (before) this.record({ type: 'update', before, after: { ...init, id, uid: before.uid } as DrawingEntity }, label);
+    if (!before) return;
+    const after = { ...init, id, uid: before.uid } as DrawingEntity;
+    // Nothing changes: not an edit (docs/adr/0020).
+    if (!sameJson(before, after)) this.record({ type: 'update', before, after }, label);
   }
 
   /**
@@ -409,6 +431,10 @@ export class CadDocument {
     const touched = new Set([...this.entities.values()].map((e) => e.layerId));
     this.entities = new Map(entities.map((e) => [e.id, e]));
     this.uids = new Map(entities.map((e) => [e.uid, e.id]));
+    this.places = new Map(entities.map((e, i) => [e.id, i + 1]));
+    this.nextPlace = entities.length + 1;
+    this.tailPlace = entities.length;
+    this.unsorted = false;
     this.layerIndex.clear();
     this.reordered.clear();
     for (const e of this.entities.values()) this.members(e.layerId).set(e.id, e);
@@ -488,7 +514,13 @@ export class CadDocument {
     this.syncHistory();
   }
 
+  /**
+   * Reverts the last step and returns its name. Nothing happens while an
+   * edit or a group is open (a model running): undoing the step before it
+   * would lose that step's redo when the group ends (docs/adr/0020).
+   */
   undo(): string | null {
+    if (this.busy) return null;
     const tx = this.undoStack.pop();
     if (!tx) return null;
     this.applyAll([...tx.ops].reverse().map(invert));
@@ -499,6 +531,7 @@ export class CadDocument {
   }
 
   redo(): string | null {
+    if (this.busy) return null;
     const tx = this.redoStack.pop();
     if (!tx) return null;
     this.applyAll(tx.ops);
@@ -544,7 +577,12 @@ export class CadDocument {
     let layerStyles = false;
     for (const op of ops) {
       if (op.type === 'layerStyle') {
-        this.layers.replaceStyle(op.layerId, op.after);
+        this.applyingStyle = true;
+        try {
+          this.layers.replaceStyle(op.layerId, op.after);
+        } finally {
+          this.applyingStyle = false;
+        }
         layerStyles = true;
         continue;
       }
@@ -563,6 +601,7 @@ export class CadDocument {
         } else attrIds.push(op.after.id);
       }
     }
+    if (this.unsorted) this.sortByPlace(layerIds);
     if (layerIds.size) this.events.emit('changed', { layerIds });
     if (attrIds.length) this.events.emit('attrs', { ids: attrIds });
     if (touched.length || layerStyles) this.events.emit('touched', { ids: touched, layerStyles, external: this.external });
@@ -571,6 +610,12 @@ export class CadDocument {
   /** Sets an object in the drawing, its persistent id's slot and its layer's index. */
   private put(e: DrawingEntity): void {
     const prev = this.entities.get(e.id);
+    if (!prev) {
+      let place = this.places.get(e.id);
+      if (place === undefined) this.places.set(e.id, (place = this.nextPlace++));
+      if (place < this.tailPlace) this.unsorted = true;
+      else this.tailPlace = place;
+    }
     this.entities.set(e.id, e);
     if (prev && prev.uid !== e.uid) this.uids.delete(prev.uid);
     this.uids.set(e.uid, e.id);
@@ -588,6 +633,18 @@ export class CadDocument {
     this.entities.delete(id);
     this.uids.delete(e.uid);
     this.layerIndex.get(e.layerId)?.delete(id);
+  }
+
+  /**
+   * Puts the document back in place order after objects returned to their
+   * places (undo of a removal, a rolled-back transaction): one sort of the
+   * drawing, and the returned objects' layers are read again in that order.
+   */
+  private sortByPlace(layerIds: ReadonlySet<string>): void {
+    const place = (e: DrawingEntity) => this.places.get(e.id) ?? 0;
+    this.entities = new Map([...this.entities.values()].sort((a, b) => place(a) - place(b)).map((e) => [e.id, e]));
+    for (const id of layerIds) this.reordered.add(id);
+    this.unsorted = false;
   }
 
   private members(layerId: string): Map<number, DrawingEntity> {
@@ -612,14 +669,16 @@ export class CadDocument {
 }
 
 /**
- * `before` with `patch` over it, keeping its slot and persistent id; holes
- * belong to polygons only (trimming or breaking one opens it into a polyline).
+ * `before` with `patch` over it, keeping its slot and persistent id; null
+ * when nothing would change, which is not an edit (docs/adr/0020). Holes
+ * belong to polygons and a hatch's islands: a polygon that trimming or
+ * breaking opens into a polyline loses them, a hatch that moves keeps them.
  */
 function updateOp(before: DrawingEntity | undefined, patch: Partial<Entity>): Extract<Op, { type: 'update' }> | null {
   if (!before) return null;
   const after = { ...before, ...patch, id: before.id, uid: before.uid } as DrawingEntity;
-  if (after.kind !== 'polygon' && 'holes' in after) delete (after as { holes?: unknown }).holes;
-  return { type: 'update', before, after };
+  if (after.kind !== 'polygon' && after.kind !== 'hatch' && 'holes' in after) delete (after as { holes?: unknown }).holes;
+  return sameJson(before, after) ? null : { type: 'update', before, after };
 }
 
 function invert(op: Op): Op {

@@ -79,8 +79,8 @@ impl Document {
     }
 
     /// Replaces an object, keeping its slot and persistent id, as one undo
-    /// step. Returns false for an unknown slot (nothing happens then). Every
-    /// call on a known object is an edit, even one that changes nothing (web).
+    /// step. Returns false for an unknown slot, or when nothing would change,
+    /// which is not an edit (docs/adr/0020); nothing happens then.
     pub fn update(&mut self, slot: Slot, entity: Entity) -> bool {
         self.update_many(vec![(slot, entity)], labels::CHANGE) == 1
     }
@@ -88,7 +88,8 @@ impl Document {
     /// Replaces many objects as one change and one undo step (move, stretch,
     /// a layer for the selection); inside a transaction they join it. A slot
     /// given twice changes what its first entry made, as a second `update`
-    /// would. Returns how many entries were applied; unknown slots are skipped.
+    /// would. Returns how many entries changed an object; unknown slots and
+    /// entries that change nothing are skipped (docs/adr/0020).
     pub fn update_many(&mut self, changes: Vec<(Slot, Entity)>, label: &str) -> usize {
         let mut latest: HashMap<Slot, Stored> = HashMap::new();
         let mut ops = Vec::with_capacity(changes.len());
@@ -100,6 +101,9 @@ impl Document {
                 uid: before.uid,
                 entity: Arc::new(changed(entity, slot)),
             };
+            if after.entity == before.entity {
+                continue;
+            }
             latest.insert(slot, after.clone());
             ops.push(Op::Update { before, after });
         }
@@ -170,10 +174,11 @@ impl Document {
         }
     }
 
-    /// Shows every layer and group. Always an edit, even when all were shown (web).
+    /// Shows every layer and group; an edit only when one was hidden (docs/adr/0020).
     pub fn show_all_layers(&mut self) {
-        self.layers.show_all();
-        self.mark_edited();
+        if self.layers.show_all() {
+            self.mark_edited();
+        }
     }
 
     /// Opens or closes a group in the tree: kept in the file, not an edit (web).
@@ -187,8 +192,8 @@ impl Document {
         self.layers.set_active(id)
     }
 
-    /// Renames a layer or group: trimmed, an empty name refused. An edit even
-    /// when the name is the same (web).
+    /// Renames a layer or group: trimmed, an empty name refused. The same name
+    /// again is not an edit (docs/adr/0020).
     pub fn rename_layer(&mut self, id: &str, name: &str) {
         if self.layers.rename(id, name) {
             self.mark_edited();
@@ -198,7 +203,7 @@ impl Document {
 
 /// `entity` as the object at `slot` after an update: the slot's id, and no
 /// holes on a polyline (a polygon opened by an edit loses them, web `updateOp`).
-/// A hatch keeps its islands; the web drops them too, which docs/adr/0020 reports.
+/// A hatch keeps its islands, on the web too since docs/adr/0020's fix.
 fn changed(mut entity: Entity, slot: Slot) -> Entity {
     base_mut(&mut entity).id = slot.0;
     if let Entity::Polyline(path) = &mut entity {

@@ -87,6 +87,8 @@ const patchOf = (patch: unknown): Record<string, unknown> => Object.fromEntries(
 class Run {
   readonly doc: CadDocument;
   private readonly groups: { end(): void; cancel(): void }[] = [];
+  /** The group ended last, for `endGroupAgain`. */
+  private ended: { end(): void; cancel(): void } | null = null;
   private readonly revisions = new Map<string, number>();
   private readonly uids = new Map<string, string>();
 
@@ -150,8 +152,12 @@ class Run {
       case 'cancelGroup': {
         const group = this.groups.pop();
         if (!group) throw new Error(`${where}: açık grup yok`);
+        this.ended = group;
         return s.op === 'endGroup' ? group.end() : group.cancel();
       }
+      case 'endGroupAgain':
+        if (!this.ended) throw new Error(`${where}: bitmiş grup yok`);
+        return this.ended.end();
       case 'undo':
         return doc.undo();
       case 'redo':

@@ -308,7 +308,7 @@
           "op": "update",
           "id": 1,
           "patch": {},
-          "note": "Hiçbir alanı değiştirmeyen yama da düzenleme sayılır: adım kaydedilir, yineleme geçmişi silinir (web bugün böyle).",
+          "note": "Hiçbir alanı değiştirmeyen yama düzenleme değildir: adım kaydedilmez, belge kirlenmez, yineleme geçmişi korunur (docs/adr/0020).",
           "expect": {
             "entities": {
               "1": {
@@ -319,15 +319,22 @@
                 "attrs": {"Ad": "N1"}
               }
             },
-            "canUndo": true,
-            "canRedo": false,
-            "dirty": true,
-            "revision": "changed"
+            "canUndo": false,
+            "canRedo": true,
+            "revision": "same"
           }
         },
         {
+          "op": "update",
+          "id": 1,
+          "patch": {"attrs": {"Ad": "N1"}},
+          "note": "Aynı değeri yeniden yazan yama da düzenleme değildir.",
+          "expect": {"canUndo": false, "canRedo": true, "revision": "same"}
+        },
+        {
           "op": "undo",
-          "returns": "Değiştir",
+          "returns": null,
+          "note": "Geri alınacak adım yok: boş yamalar geçmişe bir şey yazmadı.",
           "expect": {
             "entities": {
               "1": {
@@ -337,7 +344,8 @@
                 "p": {"x": 486512.34, "y": 4420123.45},
                 "attrs": {"Ad": "N1"}
               }
-            }
+            },
+            "revision": "same"
           }
         },
         {
@@ -474,7 +482,7 @@
       ]
     },
     {
-      "name": "Sil: bilinmeyen ve yinelenen kimlikler atlanır; geri alınan nesneler belgenin sonuna döner",
+      "name": "Sil: bilinmeyen ve yinelenen kimlikler atlanır; geri alınan nesneler eski yerlerine döner",
       "steps": [
         {
           "op": "remove",
@@ -490,9 +498,9 @@
         {
           "op": "undo",
           "returns": "Sil",
-          "note": "Geri alınan silme nesneleri eski yerlerine değil belgenin sonuna, ters sırayla koyar: çizim ve dosya sırası değişir (web bugün böyle).",
+          "note": "Geri alınan silme nesneleri eski yerlerine koyar: çizim ve dosya sırası silmeden önceki gibidir (docs/adr/0020).",
           "expect": {
-            "ids": [2, 5, 1],
+            "ids": [1, 2, 5],
             "entities": {
               "1": {
                 "id": 1,
@@ -531,7 +539,7 @@
           "expect": {"revision": "same", "canUndo": false, "canRedo": true}
         },
         {"op": "redo", "returns": "Sil", "expect": {"ids": [2]}},
-        {"op": "undo", "returns": "Sil", "expect": {"ids": [2, 5, 1]}}
+        {"op": "undo", "returns": "Sil", "expect": {"ids": [1, 2, 5]}}
       ]
     },
     {
@@ -713,6 +721,47 @@
           "patches": [{"id": 42, "attrs": {}}],
           "returns": 0,
           "expect": {"revision": "same", "canRedo": true}
+        }
+      ]
+    },
+    {
+      "name": "Tarama değişince ve taşınınca adalarını korur",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {"kind": "hatch", "layerId": "b", "ring": [{"x": 486552.34, "y": 4420187.52}, {"x": 486562.34, "y": 4420187.52}, {"x": 486562.34, "y": 4420197.52}, {"x": 486552.34, "y": 4420197.52}], "holes": [[{"x": 486554.34, "y": 4420189.52}, {"x": 486554.34, "y": 4420191.52}, {"x": 486556.34, "y": 4420191.52}, {"x": 486556.34, "y": 4420189.52}]], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}, "attrs": {}},
+          "returns": 6
+        },
+        {
+          "op": "update",
+          "id": 6,
+          "patch": {"attrs": {"Ad": "T1"}},
+          "note": "Öznitelik değişikliği taramanın adalarına dokunmaz (docs/adr/0020; önce web adaları siliyordu).",
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "hatch", "layerId": "b", "ring": [{"x": 486552.34, "y": 4420187.52}, {"x": 486562.34, "y": 4420187.52}, {"x": 486562.34, "y": 4420197.52}, {"x": 486552.34, "y": 4420197.52}], "holes": [[{"x": 486554.34, "y": 4420189.52}, {"x": 486554.34, "y": 4420191.52}, {"x": 486556.34, "y": 4420191.52}, {"x": 486556.34, "y": 4420189.52}]], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}, "attrs": {"Ad": "T1"}}
+            }
+          }
+        },
+        {
+          "op": "update",
+          "id": 6,
+          "patch": {"ring": [{"x": 486562.34, "y": 4420187.52}, {"x": 486572.34, "y": 4420187.52}, {"x": 486572.34, "y": 4420197.52}, {"x": 486562.34, "y": 4420197.52}], "holes": [[{"x": 486564.34, "y": 4420189.52}, {"x": 486564.34, "y": 4420191.52}, {"x": 486566.34, "y": 4420191.52}, {"x": 486566.34, "y": 4420189.52}]]},
+          "note": "Taşıma sınırla birlikte adaları da taşır.",
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "hatch", "layerId": "b", "ring": [{"x": 486562.34, "y": 4420187.52}, {"x": 486572.34, "y": 4420187.52}, {"x": 486572.34, "y": 4420197.52}, {"x": 486562.34, "y": 4420197.52}], "holes": [[{"x": 486564.34, "y": 4420189.52}, {"x": 486564.34, "y": 4420191.52}, {"x": 486566.34, "y": 4420191.52}, {"x": 486566.34, "y": 4420189.52}]], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}, "attrs": {"Ad": "T1"}}
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Değiştir",
+          "expect": {
+            "entities": {
+              "6": {"id": 6, "kind": "hatch", "layerId": "b", "ring": [{"x": 486552.34, "y": 4420187.52}, {"x": 486562.34, "y": 4420187.52}, {"x": 486562.34, "y": 4420197.52}, {"x": 486552.34, "y": 4420197.52}], "holes": [[{"x": 486554.34, "y": 4420189.52}, {"x": 486554.34, "y": 4420191.52}, {"x": 486556.34, "y": 4420191.52}, {"x": 486556.34, "y": 4420189.52}]], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}, "attrs": {"Ad": "T1"}}
+            }
+          }
         }
       ]
     }

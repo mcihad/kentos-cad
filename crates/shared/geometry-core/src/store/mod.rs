@@ -23,7 +23,7 @@ pub mod tools;
 
 pub use pack::Packer;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::api::json::{FromJson, Json};
 use crate::entity::{Entity, Shape, entity_bounds_in};
@@ -101,6 +101,13 @@ pub struct Store {
     /// `(order, slot)` in the document's order; entries whose slot has since
     /// been freed or reused are stale and skipped (compacted at rebuilds).
     ordered: Vec<(u64, u32)>,
+    /// The places of removed ids. Ids are never given twice, so an id that
+    /// comes back (undo, redo, a rolled-back edit) is the same object, and it
+    /// takes its place again, as in the document (docs/adr/0020).
+    vacated: HashMap<u64, u64>,
+    /// The orders in `vacated`: their `ordered` entries survive compaction,
+    /// so a returning id finds its place without a sort.
+    vacated_orders: HashSet<u64>,
     /// The drawing typeface text boxes are measured in (`ProjectSettings.drawingFont`).
     font: Font,
 }
@@ -170,15 +177,19 @@ impl Store {
                 s
             }
             None => {
+                let returning = self.vacated.remove(&key);
+                let order = returning.unwrap_or(self.next_order);
                 let item = Item {
                     id,
                     shape,
                     layer,
                     bounds,
                     label,
-                    order: self.next_order,
+                    order,
                 };
-                self.next_order += 1;
+                if returning.is_none() {
+                    self.next_order += 1;
+                }
                 self.live += 1;
                 let s = match self.free.pop() {
                     Some(s) => {
@@ -193,7 +204,16 @@ impl Store {
                     }
                 };
                 self.by_id.insert(key, s);
-                self.ordered.push((self.next_order - 1, s));
+                if returning.is_some() {
+                    self.vacated_orders.remove(&order);
+                    // Its old entry is still in place: point it at the new slot.
+                    match self.ordered.binary_search_by_key(&order, |e| e.0) {
+                        Ok(i) => self.ordered[i].1 = s,
+                        Err(i) => self.ordered.insert(i, (order, s)),
+                    }
+                } else {
+                    self.ordered.push((order, s));
+                }
                 s
             }
         };
@@ -204,13 +224,18 @@ impl Store {
     pub fn remove(&mut self, ids: &[f64]) {
         for id in ids {
             if let Some(s) = self.by_id.remove(&id.to_bits()) {
+                if let Some(it) = &self.slots[s as usize] {
+                    self.vacated.insert(id.to_bits(), it.order);
+                    self.vacated_orders.insert(it.order);
+                }
                 self.slots[s as usize] = None;
                 self.in_tree[s as usize] = false;
                 self.free.push(s);
                 self.live -= 1;
             }
         }
-        if self.ordered.len() > 2 * self.live + REBUILD_AFTER {
+        // Removed ids keep their entries (`vacated_orders`); only stale ones are worth compacting.
+        if self.ordered.len() > 2 * (self.live + self.vacated_orders.len()) + REBUILD_AFTER {
             self.compact_order();
         }
         self.maybe_rebuild();
@@ -402,9 +427,10 @@ impl Store {
 
     /// Drops stale `ordered` entries.
     fn compact_order(&mut self) {
-        let slots = &self.slots;
-        self.ordered
-            .retain(|&(o, s)| slots[s as usize].as_ref().is_some_and(|it| it.order == o));
+        let (slots, vacated) = (&self.slots, &self.vacated_orders);
+        self.ordered.retain(|&(o, s)| {
+            slots[s as usize].as_ref().is_some_and(|it| it.order == o) || vacated.contains(&o)
+        });
     }
 
     /// The object an `ordered` entry stands for, unless it is stale.
@@ -535,7 +561,8 @@ mod tests {
             .collect();
         s.put_json(&format!("[{}]", batch.join(","))).unwrap();
         assert_eq!(s.ids(), [1.0, 2.0, 3.0, 4.0, 5.0]);
-        // A known id keeps its place; a removed and re-added one goes last.
+        // A known id keeps its place; a removed one that comes back (undo)
+        // takes its place again (docs/adr/0020); a new one goes last.
         s.put_json(&format!("[{}]", line(2.0, "a", 20.0))).unwrap();
         s.remove(&[3.0]);
         s.put_json(&format!(
@@ -544,11 +571,43 @@ mod tests {
             line(6.0, "a", 6.0)
         ))
         .unwrap();
-        assert_eq!(s.ids(), [1.0, 2.0, 4.0, 5.0, 3.0, 6.0]);
+        assert_eq!(s.ids(), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
         assert_eq!(s.get(2.0).map(|it| it.bounds.min_x), Some(20.0));
         assert_eq!(s.len(), 6);
         s.clear();
         assert!(s.is_empty() && s.ids().is_empty());
+    }
+
+    #[test]
+    fn returning_ids_take_their_places_through_compaction() {
+        let mut s = Store::new();
+        let all: Vec<String> = (1..=600)
+            .map(|i| line(f64::from(i), "a", f64::from(i)))
+            .collect();
+        s.put_json(&format!("[{}]", all.join(","))).unwrap();
+        // Remove two thirds (every id not divisible by 3), enough to compact the order.
+        let gone: Vec<f64> = (1..=600).filter(|i| i % 3 != 0).map(f64::from).collect();
+        s.remove(&gone);
+        assert_eq!(s.len(), 200);
+        s.put_json(&format!("[{}]", line(601.0, "a", 601.0)))
+            .unwrap();
+        // They come back in reverse, as an undo puts them: each takes its own place.
+        let back: Vec<String> = gone.iter().rev().map(|&i| line(i, "a", i)).collect();
+        s.put_json(&format!("[{}]", back.join(","))).unwrap();
+        let want: Vec<f64> = (1..=601).map(f64::from).collect();
+        assert_eq!(s.ids(), want);
+        // Queries answer in the same order.
+        let near: Vec<f64> = s
+            .candidates(&Bounds {
+                min_x: 9.5,
+                min_y: 0.0,
+                max_x: 12.5,
+                max_y: 10.0,
+            })
+            .iter()
+            .map(|it| it.id)
+            .collect();
+        assert_eq!(near, [10.0, 11.0, 12.0]);
     }
 
     #[test]

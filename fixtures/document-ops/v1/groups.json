@@ -228,6 +228,64 @@
         {"op": "beginGroup", "label": "Model"},
         {"op": "endGroup", "expect": {"canUndo": false, "dirty": false, "revision": "same"}}
       ]
+    },
+    {
+      "name": "Açık grup varken geri alma ve yineleme bir şey yapmaz",
+      "steps": [
+        {"op": "add", "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}}, "returns": 3},
+        {"op": "beginGroup", "label": "Model"},
+        {"op": "add", "entity": {"kind": "point", "layerId": "b", "p": {"x": 2, "y": 2}, "attrs": {}}, "returns": 4},
+        {
+          "op": "undo",
+          "returns": null,
+          "note": "Model çalışırken geri alma bekler: grubun öncesindeki adımı geri almak, grup bitince o adımın yinelenmesini kaybettirirdi (docs/adr/0020).",
+          "expect": {"ids": [1, 2, 3, 4], "canUndo": true}
+        },
+        {"op": "redo", "returns": null, "expect": {"ids": [1, 2, 3, 4]}},
+        {"op": "endGroup", "expect": {"canUndo": true, "canRedo": false}},
+        {"op": "undo", "returns": "Model", "expect": {"ids": [1, 2, 3]}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [1, 2], "canUndo": false}},
+        {"op": "redo", "returns": "Ekle", "expect": {"ids": [1, 2, 3]}},
+        {"op": "redo", "returns": "Model", "expect": {"ids": [1, 2, 3, 4], "canRedo": false}}
+      ]
+    },
+    {
+      "name": "Grubu ikinci kez bitirmek bir şey yapmaz",
+      "steps": [
+        {"op": "beginGroup", "label": "Model"},
+        {"op": "add", "entity": {"kind": "point", "layerId": "a", "p": {"x": 1, "y": 1}, "attrs": {}}, "returns": 3},
+        {"op": "endGroup", "expect": {"canUndo": true}},
+        {
+          "op": "endGroupAgain",
+          "note": "Bitmiş grubun ikinci bitişi geçmişe ikinci bir adım yazmaz (docs/adr/0020). Masaüstünde grup tutamacı bitince tükenir; koşucu bu adımı atlar.",
+          "expect": {"ids": [1, 2, 3], "revision": "same"}
+        },
+        {"op": "undo", "returns": "Model", "expect": {"ids": [1, 2]}},
+        {"op": "undo", "returns": null, "expect": {"canUndo": false}}
+      ]
+    },
+    {
+      "name": "Katman stili grupta nesneler gibidir: grup bitince kirletir, iptal edilen grup hiç kirletmez",
+      "steps": [
+        {"op": "beginGroup", "label": "Model"},
+        {
+          "op": "setLayerStyle",
+          "id": "a",
+          "patch": {"color": "#FF0000"},
+          "note": "Grup açıkken belge kirli sayılmaz, nesne değişikliklerindeki gibi (docs/adr/0020).",
+          "expect": {"dirty": false, "revision": "same", "layers": {"a": {"style": {"color": "#FF0000", "lineType": "continuous", "lineWeight": 0.18}}}}
+        },
+        {"op": "endGroup", "expect": {"dirty": true, "revision": "changed", "canUndo": true}},
+        {"op": "captureRevision", "as": "kayıt"},
+        {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false}},
+        {"op": "beginGroup", "label": "İptal"},
+        {"op": "setLayerStyle", "id": "a", "patch": {"color": "#00FF00"}},
+        {
+          "op": "cancelGroup",
+          "note": "İptal edilen grup stili geri çevirir; belge kirlenmez, sürüm değişmez.",
+          "expect": {"dirty": false, "revision": "same", "canRedo": false, "layers": {"a": {"style": {"color": "#FF0000", "lineType": "continuous", "lineWeight": 0.18}}}}
+        }
+      ]
     }
   ]
 }

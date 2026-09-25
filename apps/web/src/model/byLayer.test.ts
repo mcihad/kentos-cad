@@ -69,12 +69,13 @@ describe('objects per layer', () => {
     expect(indexed(doc)).toEqual({ a: [], b: [x1.id], c: [x2.id, x3.id] });
   });
 
-  it('puts a removed object back where the document does: at the end', () => {
+  it('puts a removed object back at its place, as the document does (docs/adr/0020)', () => {
     const doc = makeDoc();
     const ids = [1, 2, 3].map((x) => doc.add(point('a', x)).id);
     doc.remove([ids[0]]);
     doc.undo();
-    expect(indexed(doc)).toEqual({ a: [ids[1], ids[2], ids[0]], b: [], c: [] });
+    expect(indexed(doc)).toEqual({ a: [ids[0], ids[1], ids[2]], b: [], c: [] });
+    expect([...doc.all()].map((e) => e.id)).toEqual(ids);
   });
 
   it('follows a failed transaction and a cancelled group back', () => {

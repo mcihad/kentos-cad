@@ -370,8 +370,9 @@ export class ToAreaTool extends SelectionActionTool {
     const created: number[] = [];
     doc.transact(this.label, () => {
       for (const x of closed) {
-        doc.remove([x.e.id]);
-        created.push(...addAreas(this.ctx, [x.a], x.e));
+        // The object itself becomes an area: it keeps its slot and persistent id (docs/adr/0014).
+        doc.replace(x.e.id, areaEntity(x.a, x.e, true));
+        created.push(x.e.id);
       }
       // Line work stays; the regions it closes become new areas on its layer.
       if (faces.length) created.push(...addAreas(this.ctx, faces, lines[0], false));
@@ -395,10 +396,14 @@ export class ToPolylineTool extends SelectionActionTool {
     doc.transact(this.label, () => {
       for (const e of polys) {
         if (e.kind !== 'polygon') continue;
-        doc.remove([e.id]);
-        polylinesOfPolygon(e).forEach((g, i) =>
-          created.push(doc.add({ ...g, layerId: e.layerId, color: e.color, attrs: i === 0 ? { ...e.attrs } : {}, label: i === 0 ? e.label : undefined } as NewEntity).id),
-        );
+        polylinesOfPolygon(e).forEach((g, i) => {
+          const init = { ...g, layerId: e.layerId, color: e.color, attrs: i === 0 ? { ...e.attrs } : {}, label: i === 0 ? e.label : undefined } as NewEntity;
+          // The outer ring is the area itself, now a polyline (it keeps its slot and persistent id, docs/adr/0014); holes become new objects.
+          if (i === 0) {
+            doc.replace(e.id, init);
+            created.push(e.id);
+          } else created.push(doc.add(init).id);
+        });
       }
     });
     selection.set(created);

@@ -48,6 +48,7 @@ Her adımda `op` ve işleme göre alanlar bulunur. Bütün adımlarda şu alanla
 | `transact` | `label`, `steps`, `throw`? | `transact` | `transact` | |
 | `beginGroup` | `label` | `beginGroup` | `begin_group` | |
 | `endGroup`, `cancelGroup` | | en son açılan grubun `end`/`cancel`'ı | `end_group`, `cancel_group` | |
+| `endGroupAgain` | | en son biten grubun `end`'i bir kez daha | yok: tutamaç bitince tükenir, adım atlanır | |
 | `undo`, `redo` | | `undo`, `redo` | `undo`, `redo` | adımın adı ya da `null` |
 | `captureRevision` | `as`: ad | `revision`'ı saklar | `revision` | |
 | `markSaved` | `revision`: saklanan ad | `markSaved` | `mark_saved` | |

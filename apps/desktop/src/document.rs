@@ -202,7 +202,10 @@ mod tests {
         doc.saved(PathBuf::from("cizim.kcad"), revision);
         assert!(!doc.dirty());
         doc.model.show_all_layers();
-        assert!(doc.dirty(), "nothing was hidden, still an edit (web)");
+        assert!(
+            !doc.dirty(),
+            "nothing was hidden: not an edit (docs/adr/0020)"
+        );
     }
 
     #[test]

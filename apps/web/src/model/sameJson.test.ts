@@ -186,8 +186,11 @@ describe('CadDocument: geometry or attributes changed', () => {
     doc.events.on('changed', () => (changed = true));
     doc.events.on('attrs', () => (attrs = true));
     doc.update(before.id, patch as Partial<Entity>);
-    expect(changed).toBe(!attrs);
-    return { changed, expected: stringsSayChanged(before, doc.get(before.id)!) };
+    const after = doc.get(before.id)!;
+    // A patch that changes nothing is no edit and sends nothing (docs/adr/0020); any other sends exactly one of the two.
+    if (sameJson(before, after)) expect(changed || attrs).toBe(false);
+    else expect(changed).toBe(!attrs);
+    return { changed, expected: stringsSayChanged(before, after) };
   }
 
   it('sends what the JSON comparison did for every kind and field', () => {

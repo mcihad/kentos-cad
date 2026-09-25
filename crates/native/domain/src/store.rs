@@ -1,11 +1,11 @@
 //! The document's objects: by slot, in document order, per layer in document
 //! order, and by persistent id.
 //!
-//! Document order is the order objects entered the document, as in the web's
-//! `Map` (apps/web/src/model/document.ts): changing an object keeps its place,
-//! even on another layer; an object removed and put back (undo, a rolled back
-//! transaction) goes to the end. It is the drawing order and the order a saved
-//! file lists the objects in.
+//! Document order is the order objects entered the document, as on the web
+//! (apps/web/src/model/document.ts): changing an object keeps its place, even
+//! on another layer, and an object removed and put back (undo, redo, a rolled
+//! back transaction) returns to its place (docs/adr/0020). It is the drawing
+//! order and the order a saved file lists the objects in.
 
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
@@ -47,6 +47,9 @@ pub(crate) struct Store {
     layers: HashMap<String, BTreeMap<u64, Slot>>,
     uids: HashMap<Uuid, Slot>,
     next_seq: u64,
+    /// The places of removed slots. Slots are never given twice, so a slot
+    /// that comes back is the same object, and it takes its place again.
+    vacated: HashMap<Slot, u64>,
 }
 
 impl Store {
@@ -85,8 +88,10 @@ impl Store {
     pub fn put(&mut self, stored: Stored) {
         let slot = stored.slot();
         let Some(item) = self.items.get_mut(&slot) else {
-            let seq = self.next_seq;
-            self.next_seq += 1;
+            let seq = self.vacated.remove(&slot).unwrap_or_else(|| {
+                self.next_seq += 1;
+                self.next_seq - 1
+            });
             self.order.insert(seq, slot);
             self.layers
                 .entry(stored.layer().to_owned())
@@ -115,6 +120,7 @@ impl Store {
     pub fn remove(&mut self, slot: Slot) -> Option<Stored> {
         let item = self.items.remove(&slot)?;
         self.order.remove(&item.seq);
+        self.vacated.insert(slot, item.seq);
         if let Some(list) = self.layers.get_mut(item.stored.layer()) {
             list.remove(&item.seq);
         }

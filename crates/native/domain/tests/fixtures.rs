@@ -250,6 +250,8 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             }
             Value::Null
         }
+        // A group handle is used up by its end: a second end cannot be written (docs/adr/0020).
+        "endGroupAgain" => Value::Null,
         "undo" => json!(doc.undo()),
         "redo" => json!(doc.redo()),
         "captureRevision" => {

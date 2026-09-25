@@ -68,24 +68,30 @@
 | Kalıcı kimlik | `uid` (ADR 0014 dilim 1) | `uid` | v1 dosyasının türetilen kimlikleri (`fixtures/document/v1/identity`); göreli denetim (`fixtures/document-ops/v1/identity.json`) |
 | Kilit denetimi | çağıranda | çağıranda (araçlar henüz yok) | — |
 
-### Bilinçli farklar: masaüstü yazılı karara uyar, web ayrılır
+### Web'de düzeltilen farklar (25 Eylül)
 
-Bu durumlar ortak fixture'a konmadı, çünkü web'in bugünkü davranışını sözleşme yapmak bir hatayı dondurmak olurdu. Masaüstünde `crates/native/domain/tests/document.rs` sınar. Web'de düzeltmek sahibin kararıdır; düzeltilince fixture'a eklenirler.
+Bu beş durumda web yazılı karardan ayrılıyordu; masaüstü baştan karara uyuyordu. Aynı gün web de düzeltildi. Hepsi artık ortak fixture'dadır: web ve masaüstü aynı senaryoyu geçer.
 
-1. **Başarısız işlemde ya da iptal edilen grupta katman stili.** Web'de belge kirli kalır, sürüm değişir. Katman deposu her stil değişikliğinde belgeyi düzenlenmiş sayar, geri almada da. Bu ADR 0003'e aykırıdır (“dirty değişmez”). Masaüstünde kirli bayrağı ve sürüm değişmez.
+
+1. **Başarısız işlemde ya da iptal edilen grupta katman stili.** Web'de belge kirli kalıyor, sürüm değişiyordu. Katman deposu her stil değişikliğinde belgeyi düzenlenmiş sayıyordu, geri almada da. Bu ADR 0003'e aykırıdır (“dirty değişmez”). Artık belgenin kendi uyguladığı stil, nesne değişiklikleri gibi yalnız adım kaydedilince kirletir; açık grupta da grup bitince.
    - Web'de açık grupta katman stili belgeyi hemen kirletir; nesne değişiklikleri grup bitene dek kirletmez. Masaüstünde ikisi de grup bitince kirletir.
-2. **Taramanın adaları.** Web'in `updateOp`'u çokgen dışındaki her nesneden `holes`'u siler; tarama da çokgen değildir. Taramanın öznitelik değişikliği bile, taşınması da adalarını siler; adaları veren bir yama da kalmaz. Veri kaybıdır. Masaüstünde yalnız açık çoklu çizgi adasını bırakır.
-3. **Açık işlem ya da grup varken geri alma.** Web grubun öncesindeki adımı geri alır (örneğin model çalışırken Ctrl+Z). Grup bitince yineleme geçmişi silinir, o adım bir daha yinelenemez. Masaüstünde geri alma ve yineleme işlem ya da grup kapanana dek `None` döndürür.
-4. **Aynı grubun iki kez bitirilmesi.** Web'de ikinci `end()` grubu bir kez daha kaydeder: geçmişte aynı değişiklikleri taşıyan ikinci bir adım olur. Masaüstünde grup tutamacı bitirilince tükenir.
-5. **Bilinmeyen katmanı yalnız göstermek.** Web'de bütün katmanlar gizlenir ve belge kirlenir; masaüstünde bir şey olmaz.
+2. **Taramanın adaları.** Web'in `updateOp`'u çokgen dışındaki her nesneden `holes`'u siliyordu; tarama da çokgen değildir. Taramanın öznitelik değişikliği bile, taşınması da adalarını siliyordu. Veri kaybıydı. Artık adalar yalnız çokgen çoklu çizgiye açılınca düşer (masaüstündeki gibi).
+3. **Açık işlem ya da grup varken geri alma.** Web grubun öncesindeki adımı geri alıyordu (örneğin model çalışırken Ctrl+Z); grup bitince o adım bir daha yinelenemiyordu. Artık iki tarafta da geri alma ve yineleme, işlem ya da grup kapanana dek bir şey yapmaz.
+4. **Aynı grubun iki kez bitirilmesi.** Web'de ikinci `end()` grubu bir kez daha kaydediyordu. Artık ikinci bitiş bir şey yapmaz. Masaüstünde grup tutamacı bitirilince tükenir; fixture'daki `endGroupAgain` adımını masaüstü koşucusu atlar.
+5. **Bilinmeyen katmanı yalnız göstermek.** Web'de bütün katmanlar gizleniyor ve belge kirleniyordu. Artık iki tarafta da bir şey olmaz.
+
+### Sahibin varsayılanlarıyla değişen davranışlar (25 Eylül)
+
+İki taraf ve fixture birlikte değişti:
+- **Geri gelen nesne eski yerine döner.** Geri alınan silme, yinelenen ekleme ve başarısız işlemin geri çevirdiği silme nesneyi belgenin sonuna değil eski yerine koyar. Çizim ve dosya sırası silmeden önceki gibidir.
+  - Yuvalar hiç yeniden verilmediği için yerini tutmak yeter: web belgesi ve native `Store` silinen yuvanın yerini saklar (`places`, `vacated`).
+  - Web'in geometri deposu da aynı kuralı Rust'ta uygular (geometry-core `Store`), böylece seçme, kenet ve işlem araçlarının sırası belgeninkiyle aynı kalır.
+- **Hiçbir şeyi değiştirmeyen düzenleme düzenleme değildir.** Adım kaydedilmez, belge kirlenmez, yineleme geçmişi korunur. Buna, her şey görünürken “Tümünü göster” ve aynı adı yeniden vermek de dahildir.
 
 ### Web'de garip bulunan ama aynen izlenen davranışlar
 
 Fixture'larda “(web bugün böyle)” notuyla işaretlidir. Masaüstü aynısını yapar; değişirse ikisi fixture'la birlikte değişir.
 
-- Geri alınan silme ve geri alınan işlemdeki silme, nesneleri eski yerlerine değil belgenin sonuna ters sırayla koyar. Çizim sırası ve dosyadaki sıra değişir; başarısız bir işlem de sırayı değiştirebilir.
-- Hiçbir alanı değiştirmeyen yama da düzenlemedir: adım kaydedilir, yineleme silinir, belge kirlenir.
-- “Tümünü göster” her şey görünürken de, aynı adı yeniden vermek de düzenlemedir.
 - Grubun açık/kapalı hâli ve etkin katman dosyaya yazılır ama belgeyi kirletmez; yalnız bunlar değiştiyse kapanışta sorulmaz.
 - Başarısız işlemin içinde değiştirilen görünürlük, kilit ya da ad geri alınmaz; işlemin adımı değildirler.
 - Geri alma geçmişi 200 adımda en eskisini sessizce bırakır (`TX-06`).
@@ -98,7 +104,6 @@ Fixture'larda “(web bugün böyle)” notuyla işaretlidir. Masaüstü aynıs�
 - `kentos-cad snapshot` görüntüsüne `--komut <id>` eklendi (ADR 0017'deki kullanıma ek). Çizim açıldıktan sonra komut çalıştırır; örneğin kısayol penceresini açar ya da geri almayı dener.
 - Masaüstünde bugün geri alınabilir bir arayüz düzenlemesi yoktur: çizim araçları ve katman stili menüsü gelmedi. Geri alma ve yineleme hazırdır; ilk araçla birlikte kullanılır.
 - **Açık:**
-  - Web'deki yukarıdaki beş fark: düzeltme ve fixture'a ekleme sahibin kararıdır.
   - Çizim alanı için değişiklik bildirimi (hangi nesneler değişti, `touched`): kirli katman güncellemesi (CLAUDE.md §4.9) buna dayanacak.
   - Masaüstü araçları kilitli katmanı web'deki gibi reddetmeli.
   - Komut satırında Ctrl+Z. Iced'in yazı kutusunun kendi geri alması yoktur, tuşu da yakalamaz; masaüstünde komut satırındayken de çizim geri alınır. Web'de yazı alanındaki Ctrl+Z alanın kendi geri almasıdır.

@@ -128,8 +128,8 @@
         {"op": "markSaved", "revision": "kayıt", "expect": {"dirty": false}},
         {
           "op": "showAll",
-          "note": "Her şey zaten görünürken de düzenleme sayılır (web bugün böyle).",
-          "expect": {"dirty": true, "revision": "changed"}
+          "note": "Her şey zaten görünürken hiçbir şey değişmez: düzenleme değildir (docs/adr/0020).",
+          "expect": {"dirty": false, "revision": "same"}
         },
         {"op": "setVisible", "id": "yok", "visible": false, "expect": {"revision": "same"}}
       ]
@@ -164,6 +164,15 @@
               "b": {"visible": false},
               "c": {"visible": true, "isVisible": true}
             }
+          }
+        },
+        {
+          "op": "isolate",
+          "id": "yok",
+          "note": "Bilinmeyen katman hiçbir şeyi gizlemez; düzenleme değildir (docs/adr/0020; önce web bütün katmanları gizliyordu).",
+          "expect": {
+            "revision": "same",
+            "layers": {"g": {"visible": false}, "a": {"visible": false}, "b": {"visible": false}, "c": {"visible": true}}
           }
         }
       ]
@@ -267,8 +276,8 @@
           "op": "rename",
           "id": "a",
           "name": "Bina 2",
-          "note": "Aynı adı yeniden vermek de düzenleme sayılır (web bugün böyle).",
-          "expect": {"dirty": true, "revision": "changed"}
+          "note": "Aynı adı yeniden vermek hiçbir şeyi değiştirmez: düzenleme değildir (docs/adr/0020).",
+          "expect": {"dirty": false, "revision": "same"}
         },
         {"op": "rename", "id": "yok", "name": "X", "expect": {"revision": "same"}}
       ]

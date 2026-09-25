@@ -59,7 +59,7 @@
         {"op": "undo", "expect": {"uids": {"1": "bir"}}},
         {"op": "redo", "expect": {"uids": {"1": "bir"}}},
         {"op": "remove", "ids": [1], "expect": {"ids": [2]}},
-        {"op": "undo", "expect": {"ids": [2, 1], "uids": {"1": "bir", "2": "iki"}}},
+        {"op": "undo", "expect": {"ids": [1, 2], "uids": {"1": "bir", "2": "iki"}}},
         {
           "op": "transact",
           "label": "Yarım",
