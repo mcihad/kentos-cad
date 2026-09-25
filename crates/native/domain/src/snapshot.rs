@@ -24,7 +24,7 @@ impl Document {
     /// web's reader refuses them).
     pub fn from_snapshot(snapshot: DocumentSnapshotV1) -> Result<Self, String> {
         check(&snapshot)?;
-        let uids = v1_entity_uids(&snapshot);
+        let uids = v1_entity_uids(&snapshot)?;
         let DocumentSnapshotV1 {
             name,
             settings,

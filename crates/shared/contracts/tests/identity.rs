@@ -73,8 +73,8 @@ fn every_input_gives_the_reference_ids() {
 #[test]
 fn the_canonical_text_is_the_reference_text() {
     for case in expected().cases {
-        let mut snapshot = DocumentSnapshotV1::from_json(&read(&case.inputs[0])).expect("readable");
-        let text = canonical_v1(&mut snapshot).expect("written");
+        let snapshot = DocumentSnapshotV1::from_json(&read(&case.inputs[0])).expect("readable");
+        let text = canonical_v1(&snapshot).expect("written");
         assert_eq!(
             String::from_utf8(text).expect("UTF-8"),
             read(&case.canonical),

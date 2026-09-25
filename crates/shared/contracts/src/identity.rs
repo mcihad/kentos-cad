@@ -27,6 +27,7 @@ use std::fmt::Write as _;
 use std::io;
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sha1::{Digest, Sha1};
 use sha2::Sha256;
 #[cfg(feature = "ts")]
@@ -114,8 +115,8 @@ fn hex(bytes: &[u8]) -> String {
 /// optional fields are left out, every float64 is written in its shortest
 /// round-trip form (`486512.0`, `0.18`, `1e-7`), attributes are sorted by
 /// name, and the keys of the opaque parts (the project's style items and
-/// categories, layer renderers) are sorted at every depth, in place. Fields
-/// the contract does not know are not written.
+/// categories, layer renderers) are sorted at every depth. Fields the
+/// contract does not know are not written.
 ///
 /// So whitespace, line ends, the order of keys and the spelling of a float64
 /// in the file (`486512`, `486512.0`, `4.86512e5`) do not change the text;
@@ -126,21 +127,57 @@ fn hex(bytes: &[u8]) -> String {
 /// reordering them would give every v1 drawing new ids, and the fixture test
 /// fails.
 pub fn write_canonical_v1<W: io::Write>(
-    snapshot: &mut DocumentSnapshotV1,
+    snapshot: &DocumentSnapshotV1,
     out: W,
 ) -> Result<(), String> {
-    // A no-op while serde_json keeps its objects sorted (no `preserve_order`
-    // feature in any build); with that feature they would keep the file's order.
-    for v in snapshot
+    // serde_json keeps object keys sorted unless a build enables its
+    // `preserve_order` feature (none does); then they are sorted on a copy, so
+    // the text never follows the file's key order.
+    if opaque_sorted(snapshot) {
+        return write(snapshot, out);
+    }
+    let mut sorted = snapshot.clone();
+    for v in sorted
         .styles
         .items
         .iter_mut()
-        .chain(snapshot.styles.categories.iter_mut())
+        .chain(sorted.styles.categories.iter_mut())
     {
         v.sort_all_objects();
     }
-    sort_renderers(&mut snapshot.layers);
-    serde_json::to_writer(out, &*snapshot).map_err(|e| format!("Çizim yazılamadı: {e}"))
+    sort_renderers(&mut sorted.layers);
+    write(&sorted, out)
+}
+
+fn write<W: io::Write>(snapshot: &DocumentSnapshotV1, out: W) -> Result<(), String> {
+    serde_json::to_writer(out, snapshot).map_err(|e| format!("Çizim yazılamadı: {e}"))
+}
+
+/// Whether every object in the opaque parts lists its keys in order.
+fn opaque_sorted(snapshot: &DocumentSnapshotV1) -> bool {
+    snapshot
+        .styles
+        .items
+        .iter()
+        .chain(&snapshot.styles.categories)
+        .all(sorted_value)
+        && renderers_sorted(&snapshot.layers)
+}
+
+fn sorted_value(v: &Value) -> bool {
+    match v {
+        Value::Object(map) => {
+            map.keys().zip(map.keys().skip(1)).all(|(a, b)| a < b) && map.values().all(sorted_value)
+        }
+        Value::Array(list) => list.iter().all(sorted_value),
+        _ => true,
+    }
+}
+
+fn renderers_sorted(nodes: &[LayerNode]) -> bool {
+    nodes.iter().all(|n| {
+        n.style.renderer.as_ref().is_none_or(sorted_value) && renderers_sorted(&n.children)
+    })
 }
 
 fn sort_renderers(nodes: &mut [LayerNode]) {
@@ -153,23 +190,28 @@ fn sort_renderers(nodes: &mut [LayerNode]) {
 }
 
 /// The canonical text of a v1 snapshot (`write_canonical_v1`).
-pub fn canonical_v1(snapshot: &mut DocumentSnapshotV1) -> Result<Vec<u8>, String> {
+pub fn canonical_v1(snapshot: &DocumentSnapshotV1) -> Result<Vec<u8>, String> {
     let mut out = Vec::new();
     write_canonical_v1(snapshot, &mut out)?;
     Ok(out)
 }
 
-/// The persistent ids of a v1 drawing's objects, from the file's text, read as
-/// `DocumentSnapshotV1::from_json` reads it.
-pub fn v1_identities(text: &str) -> Result<V1Identities, String> {
-    let mut snapshot = DocumentSnapshotV1::from_json(text)?;
-    v1_identities_of(&mut snapshot)
+/// The persistent ids of a v1 snapshot's objects as UUID bytes (`v1_uids`);
+/// `V1Identities` is their text form.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct V1Uids {
+    /// sha256 of the canonical text, 64 lowercase hexadecimal digits.
+    pub source_sha256: String,
+    pub namespace: [u8; 16],
+    pub project: [u8; 16],
+    /// Every object in file order: its local id and its persistent id.
+    pub entities: Vec<(u32, [u8; 16])>,
 }
 
 /// The persistent ids of a v1 snapshot's objects (see the module). Local ids
-/// must be positive and unique, as the web reader requires; the canonical text
+/// must be positive and unique, as the readers require; the canonical text
 /// goes straight into the hash, it is never held whole.
-pub fn v1_identities_of(snapshot: &mut DocumentSnapshotV1) -> Result<V1Identities, String> {
+pub fn v1_uids(snapshot: &DocumentSnapshotV1) -> Result<V1Uids, String> {
     let mut sha = HashWriter(Sha256::new());
     write_canonical_v1(snapshot, &mut sha)?;
     let source_sha256 = hex(&sha.0.finalize());
@@ -188,17 +230,38 @@ pub fn v1_identities_of(snapshot: &mut DocumentSnapshotV1) -> Result<V1Identitie
         }
         name.clear();
         let _ = write!(name, "entity/{id}");
-        entities.push(V1EntityIdentity {
-            id,
-            uid: uuid_text(&uuid_v5(&namespace, name.as_bytes())),
-        });
+        entities.push((id, uuid_v5(&namespace, name.as_bytes())));
     }
-    Ok(V1Identities {
+    Ok(V1Uids {
         source_sha256,
-        namespace: uuid_text(&namespace),
-        project: uuid_text(&uuid_v5(&namespace, b"project")),
+        namespace,
+        project: uuid_v5(&namespace, b"project"),
         entities,
     })
+}
+
+/// `v1_uids` in text form, as the browser and the fixture take them.
+pub fn v1_identities_of(snapshot: &DocumentSnapshotV1) -> Result<V1Identities, String> {
+    let ids = v1_uids(snapshot)?;
+    Ok(V1Identities {
+        source_sha256: ids.source_sha256,
+        namespace: uuid_text(&ids.namespace),
+        project: uuid_text(&ids.project),
+        entities: ids
+            .entities
+            .iter()
+            .map(|(id, uid)| V1EntityIdentity {
+                id: *id,
+                uid: uuid_text(uid),
+            })
+            .collect(),
+    })
+}
+
+/// The persistent ids of a v1 drawing's objects, from the file's text, read as
+/// `DocumentSnapshotV1::from_json` reads it.
+pub fn v1_identities(text: &str) -> Result<V1Identities, String> {
+    v1_identities_of(&DocumentSnapshotV1::from_json(text)?)
 }
 
 /// A hash that takes what `serde_json` writes, piece by piece.

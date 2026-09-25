@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use kentos_domain::contracts::{DocumentSnapshotV1, Entity, LayerStyle};
-use kentos_domain::{Document, Group, Slot};
+use kentos_domain::{Document, Group, Slot, Uuid};
 use serde_json::{Map, Value, json};
 
 /// Why a step stopped: the fixture's own `throw`, or a failed expectation.
@@ -31,6 +31,9 @@ fn fail<T>(message: String) -> Outcome<T> {
 struct State {
     groups: Vec<Group>,
     revisions: HashMap<String, u64>,
+    /// Persistent ids taken by `captureUid`: they are random or derived from
+    /// the file, so the fixtures compare them only with each other.
+    uids: HashMap<String, Uuid>,
 }
 
 fn text<'a>(step: &'a Value, field: &str, at: &str) -> Outcome<&'a str> {
@@ -157,7 +160,7 @@ fn run_step(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Ou
         }
     }
     match step.get("expect") {
-        Some(expect) => check(doc, expect, before, at),
+        Some(expect) => check(doc, &state.uids, expect, before, at),
         None => Ok(()),
     }
 }
@@ -267,6 +270,14 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             doc.mark_unsaved();
             Value::Null
         }
+        "captureUid" => {
+            let target = slot(step.get("id").unwrap_or(&Value::Null), at)?;
+            let Some(uid) = doc.uid(target) else {
+                return fail(format!("{at}: {} nesnesi yok", target.0));
+            };
+            state.uids.insert(text(step, "as", at)?.to_owned(), uid);
+            Value::Null
+        }
         "repeat" => {
             let steps = step.get("steps").cloned().unwrap_or(json!([]));
             for k in 0..number(step, "times", at)? {
@@ -333,7 +344,13 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
     })
 }
 
-fn check(doc: &Document, expect: &Value, before: u64, at: &str) -> Outcome<()> {
+fn check(
+    doc: &Document,
+    uids: &HashMap<String, Uuid>,
+    expect: &Value,
+    before: u64,
+    at: &str,
+) -> Outcome<()> {
     let empty = Map::new();
     let fields = expect.as_object().unwrap_or(&empty);
     for (key, want) in fields {
@@ -373,6 +390,31 @@ fn check(doc: &Document, expect: &Value, before: u64, at: &str) -> Outcome<()> {
                 expect_same(&json!(got), want, "sürüm", at)?;
             }
             "activeLayer" => expect_same(&json!(doc.layers().active()), want, "etkin katman", at)?,
+            "uids" => {
+                for (id, name) in want.as_object().unwrap_or(&empty) {
+                    let target = slot(&json!(id.parse::<u64>().unwrap_or(0)), at)?;
+                    let Some(uid) = doc.uid(target) else {
+                        return fail(format!("{at}: {id} nesnesinin kalıcı kimliği yok"));
+                    };
+                    match name.as_str() {
+                        Some("new") => {
+                            if uids.values().any(|u| *u == uid) {
+                                return fail(format!("{at}: {id} nesnesinin kimliği yeni değil"));
+                            }
+                        }
+                        Some(name) => match uids.get(name) {
+                            Some(taken) if *taken == uid => {}
+                            Some(taken) => {
+                                return fail(format!(
+                                    "{at}: {id} nesnesinin kimliği {uid}, “{name}” {taken}"
+                                ));
+                            }
+                            None => return fail(format!("{at}: “{name}” kimliği alınmadı")),
+                        },
+                        None => return fail(format!("{at}: kimlik adı metin olmalı")),
+                    }
+                }
+            }
             "layers" => {
                 for (id, fields) in want.as_object().unwrap_or(&empty) {
                     let Some(node) = doc.layers().get(id) else {
