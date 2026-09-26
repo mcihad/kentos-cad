@@ -76,8 +76,8 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 72,
-    "commandsOnDesktop": 91
+    "commandsWithoutTests": 63,
+    "commandsOnDesktop": 102
   },
   "commands": [
     {
@@ -3151,9 +3151,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/spot-divide.json"
+      ]
     },
     {
       "id": "tool.donut",
@@ -3183,10 +3185,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/ribbon.test.ts"
+        "apps/web/src/app/ribbon.test.ts",
+        "fixtures/interaction/v1/donut-cloud.json"
       ]
     },
     {
@@ -3219,9 +3222,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/ellipse-spline.json"
+      ]
     },
     {
       "id": "tool.erase",
@@ -3732,9 +3737,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/parallel-line.json"
+      ]
     },
     {
       "id": "tool.parcel",
@@ -3800,9 +3807,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/perpendiculars.json"
+      ]
     },
     {
       "id": "tool.perpOut",
@@ -3832,9 +3841,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/perpendiculars.json"
+      ]
     },
     {
       "id": "tool.point",
@@ -3975,9 +3986,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/construction-lines.json"
+      ]
     },
     {
       "id": "tool.rectangle",
@@ -4145,9 +4158,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/donut-cloud.json"
+      ]
     },
     {
       "id": "tool.rotate",
@@ -4282,9 +4297,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/ellipse-spline.json"
+      ]
     },
     {
       "id": "tool.spot",
@@ -4314,9 +4331,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/spot-divide.json"
+      ]
     },
     {
       "id": "tool.stakeout",
@@ -4618,10 +4637,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/construction-lines.json"
       ]
     },
     {
@@ -5942,12 +5962,15 @@
       "methods": [],
       "steps": 3,
       "description": "Nesne boyunca nokta koyar: eşit parçalara ya da A ile verilen aralıkla.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/spot-divide.json"
+      ]
     },
     {
       "id": "donut",
@@ -5965,13 +5988,15 @@
       "methods": [],
       "steps": 2,
       "description": "Dolu halka ya da (iç çap 0 ile) dolu daire koyar; her tıklama bir tane.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/ribbon.test.ts"
+        "apps/web/src/app/ribbon.test.ts",
+        "fixtures/interaction/v1/donut-cloud.json"
       ]
     },
     {
@@ -5991,12 +6016,15 @@
       "methods": [],
       "steps": 3,
       "description": "Elips ya da eliptik yay: eksen uçlarından ya da merkezden; diğer yarı eksen uzunlukla ya da döndürme açısıyla.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/ellipse-spline.json"
+      ]
     },
     {
       "id": "erase",
@@ -6369,12 +6397,15 @@
       "methods": [],
       "steps": 3,
       "description": "Ekseni çizerken sağında ve solunda verilen mesafelerde paralel hatlar çizer (yol, kaldırım, duvar); istenirse arası tek alan olur.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/parallel-line.json"
+      ]
     },
     {
       "id": "parcel",
@@ -6418,12 +6449,15 @@
       "methods": [],
       "steps": 3,
       "description": "Gösterilen noktalardan bir hatta dik iner (hattın uzantısına da); yay ve dairede merkeze doğru.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/perpendiculars.json"
+      ]
     },
     {
       "id": "perpOut",
@@ -6441,12 +6475,15 @@
       "methods": [],
       "steps": 3,
       "description": "Hat üzerindeki bir noktadan, verilen dik boyda dik çıkar; dik ayak tıklanan uçtan ölçülür, dik boy sağa artıdır.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/perpendiculars.json"
+      ]
     },
     {
       "id": "point",
@@ -6553,12 +6590,15 @@
       "methods": [],
       "steps": 2,
       "description": "Bir başlangıç noktasından tek yöne sonsuz yardımcı çizgi.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/construction-lines.json"
+      ]
     },
     {
       "id": "rectangle",
@@ -6662,12 +6702,15 @@
       "methods": [],
       "steps": 2,
       "description": "Değişen yeri çevreleyen, dışa bombeli yaylardan kapalı bulut çizer; dikdörtgen ya da çokgen.",
+      "productCommand": "cad.polygon.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/donut-cloud.json"
+      ]
     },
     {
       "id": "rotate",
@@ -6767,12 +6810,15 @@
       "methods": [],
       "steps": 2,
       "description": "Tıklanan noktalardan geçen yumuşak eğri çizer; K ile kapatır.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/ellipse-spline.json"
+      ]
     },
     {
       "id": "spot",
@@ -6795,7 +6841,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/spot-divide.json"
+      ]
     },
     {
       "id": "stakeout",
@@ -7013,13 +7061,15 @@
       "methods": [],
       "steps": 3,
       "description": "İki yöne sonsuz yardımcı çizgi: bir noktadan, yatay, düşey, açılı ya da açıortay.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/construction-lines.json"
       ]
     },
     {
