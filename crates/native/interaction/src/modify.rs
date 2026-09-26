@@ -10,21 +10,24 @@
 //! - then each tool's stages ([`Stages`]): its points, clicked (object snaps,
 //!   ortho and polar tracking from its anchor) or typed, and its options;
 //! - what it does is written through the product command
-//!   `cad.entities.transform`: the selection's persistent ids explicit in the
-//!   input (TODOS.md CMD-07), in place or as copies, one undo step named
-//!   after the tool. The command's refusal or warning is the tool's message.
+//!   `cad.entities.transform` (the arrays: `cad.entities.array`, docs/adr/0047):
+//!   the selection's persistent ids explicit in the input (TODOS.md CMD-07),
+//!   in place or as copies, one undo step named after the tool. The
+//!   command's refusal or warning is the tool's message.
 //!
-//! The preview is the web's: the selection's outlines where the transform
+//! The preview is the web's: the selection's outlines where the transforms
 //! would put them, dashed (at most 400 objects, the geometry store draws
 //! them: `transform_outlines`), the line from the anchor to the cursor, the
 //! tag beside the cursor. None of the geometry is computed here.
 
-use kentos_contracts::{EntitiesTransform, EntitiesTransformed, Transform};
+use kentos_contracts::{
+    ArrayLayout, EntitiesArray, EntitiesArrayed, EntitiesTransform, EntitiesTransformed, Transform,
+};
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::jsmath::js_hypot;
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::point_from_text;
-use kentos_native_application::{ExecutionContext, transform};
+use kentos_native_application::{ExecutionContext, array, transform};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -34,11 +37,11 @@ use crate::select::SelectBox;
 use crate::tool::{Context, Flow, Pointer, Preview, Stroke, Tag, Tool};
 
 /// Ghosts drawn at most (the web's `MAX_GHOSTS`): one more is drawn, then the rest are left out.
-const MAX_GHOSTS: usize = 400;
+pub(crate) const MAX_GHOSTS: usize = 400;
 /// How far the pointer must move with the button down to draw a box, logical pixels.
 const DRAG_THRESHOLD: f64 = 4.0;
 /// A ghost's dash and gap, logical pixels (the web's `[4, 3]`).
-const GHOST_DASH: [f32; 2] = [4.0, 3.0];
+pub(crate) const GHOST_DASH: [f32; 2] = [4.0, 3.0];
 
 /// One modify tool's own part: its stages after the selection is confirmed.
 pub trait Stages {
@@ -69,8 +72,26 @@ pub trait Stages {
     /// Typed text the stage reads before a point (an option, a number):
     /// what became of it, or `None` to read it as a point.
     fn typed(&mut self, text: &str, cx: &mut Context<'_>) -> Option<Flow>;
+    /// Whether text the stage did not read is read as a point (the web's
+    /// `super.input`): not by Dizi, which reads counts and spacings only.
+    fn typed_points(&self) -> bool {
+        true
+    }
+    /// A confirm (Enter, Space, a quick right click) in the stages: the web's
+    /// modify tools leave; the arrays go on to their next stage or write.
+    fn confirm(&mut self, _cx: &mut Context<'_>) -> Flow {
+        Flow::Exit
+    }
     /// The transform to preview with the cursor at `hover` (the web's `previewTransforms`).
     fn preview(&self, hover: Vec2) -> Option<Affine>;
+    /// Every transform to preview, one ghost of the selection each (the web's
+    /// `previewTransforms`): the arrays' copies show without a cursor too.
+    fn previews(&self, hover: Option<Vec2>) -> Vec<Affine> {
+        hover
+            .and_then(|hover| self.preview(hover))
+            .into_iter()
+            .collect()
+    }
     /// What the tag beside the cursor says (the web's `previewTag`).
     fn tag(&self, _hover: Vec2, _format: &Format) -> Vec<String> {
         Vec::new()
@@ -126,7 +147,7 @@ impl<S: Stages> Modify<S> {
         point
     }
 
-    /// The ghosts where the transform would put the selection, from the
+    /// The ghosts where the transforms would put the selection, from the
     /// geometry store (the web draws them every frame from `ghosts`).
     fn refresh(&mut self, cx: &Context<'_>) {
         self.stages.see(cx);
@@ -136,9 +157,10 @@ impl<S: Stages> Modify<S> {
         if self.picking || self.done {
             return;
         }
-        let Some(m) = self.hover.and_then(|hover| self.stages.preview(hover)) else {
+        let affines = self.stages.previews(self.hover);
+        if affines.is_empty() {
             return;
-        };
+        }
         let ids: Vec<f64> = cx
             .selection
             .ids()
@@ -148,26 +170,8 @@ impl<S: Stages> Modify<S> {
         let paths = cx
             .spatial
             .store()
-            .transform_outlines(&ids, &[m], MAX_GHOSTS);
-        // `flags, n, x0, y0, …` per path: 0 open, 1 closed, 2 a marker (points and text).
-        let mut at = 0;
-        while at + 1 < paths.len() {
-            let flags = paths[at];
-            let n = paths[at + 1] as usize;
-            let pts: Vec<Vec2> = (0..n)
-                .filter_map(|k| {
-                    let (x, y) = (*paths.get(at + 2 + 2 * k)?, *paths.get(at + 3 + 2 * k)?);
-                    Some(Vec2::new(x, y))
-                })
-                .collect();
-            at += 2 + 2 * n;
-            if flags == 2.0 {
-                self.marks.extend(pts.first());
-            } else if pts.len() >= 2 {
-                self.ghosts
-                    .push(Stroke::dashed(pts, flags == 1.0, GHOST_DASH));
-            }
-        }
+            .transform_outlines(&ids, &affines, MAX_GHOSTS);
+        (self.ghosts, self.marks) = ghosts(&paths);
     }
 
     fn after(&mut self, flow: Flow, cx: &Context<'_>) {
@@ -295,6 +299,9 @@ impl<S: Stages> Tool for Modify<S> {
             self.after(flow, cx);
             return true;
         }
+        if !self.stages.typed_points() {
+            return false;
+        }
         let Some(p) = point_from_text(text, self.stages.anchor(), self.hover, |_| None) else {
             return false;
         };
@@ -303,19 +310,26 @@ impl<S: Stages> Tool for Modify<S> {
         true
     }
 
-    /// Picking with something selected: on to the stages. Otherwise the tool leaves.
+    /// Picking with something selected: on to the stages; picking with
+    /// nothing, the tool leaves. In the stages, the stage decides (the web's
+    /// modify tools leave, the arrays go on).
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
-        if self.picking && !cx.selection.is_empty() {
-            self.picking = false;
-            self.press = None;
-            cx.selection.set_hover(None);
-            if self.stages.begin(cx) == Flow::Exit {
-                return Flow::Exit;
-            }
-            self.refresh(cx);
-            return Flow::Stay;
+        if !self.picking {
+            let flow = self.stages.confirm(cx);
+            self.after(flow, cx);
+            return flow;
         }
-        Flow::Exit
+        if cx.selection.is_empty() {
+            return Flow::Exit;
+        }
+        self.picking = false;
+        self.press = None;
+        cx.selection.set_hover(None);
+        if self.stages.begin(cx) == Flow::Exit {
+            return Flow::Exit;
+        }
+        self.refresh(cx);
+        Flow::Stay
     }
 
     /// Ctrl+Z undoes the drawing: the web's modify tools take no step back.
@@ -357,6 +371,43 @@ impl<S: Stages> Tool for Modify<S> {
     }
 }
 
+/// Ghost outlines as the geometry store gives them (`transform_outlines`,
+/// `stretch_outlines`: `flags, n, x0, y0, …` per path; 0 open, 1 closed, 2 a
+/// marker for a point or a text): the dashed lines and the point marks the
+/// web's `strokePaths` draws.
+pub(crate) fn ghosts(paths: &[f64]) -> (Vec<Stroke>, Vec<Vec2>) {
+    let mut lines = Vec::new();
+    let mut marks = Vec::new();
+    let mut at = 0;
+    while at + 1 < paths.len() {
+        let flags = paths[at];
+        let n = paths[at + 1] as usize;
+        let pts: Vec<Vec2> = (0..n)
+            .filter_map(|k| {
+                let (x, y) = (*paths.get(at + 2 + 2 * k)?, *paths.get(at + 3 + 2 * k)?);
+                Some(Vec2::new(x, y))
+            })
+            .collect();
+        at += 2 + 2 * n;
+        if flags == 2.0 {
+            marks.extend(pts.first());
+        } else if pts.len() >= 2 {
+            lines.push(Stroke::dashed(pts, flags == 1.0, GHOST_DASH));
+        }
+    }
+    (lines, marks)
+}
+
+/// The selected objects' persistent ids, as the commands name them.
+fn selected_uids(cx: &Context<'_>) -> Vec<String> {
+    cx.selection
+        .ids()
+        .iter()
+        .filter_map(|slot| cx.doc.uid(*slot))
+        .map(|uid| uid.to_string())
+        .collect()
+}
+
 /// Writes a transform of the selection through the product command
 /// `cad.entities.transform` (docs/adr/0037): the selected objects'
 /// persistent ids, in place or as copies. The command's refusal or warning
@@ -366,15 +417,8 @@ pub(crate) fn transform_selection(
     copy: bool,
     cx: &mut Context<'_>,
 ) -> Option<usize> {
-    let uids = cx
-        .selection
-        .ids()
-        .iter()
-        .filter_map(|slot| cx.doc.uid(*slot))
-        .map(|uid| uid.to_string())
-        .collect();
     let input = EntitiesTransform {
-        uids,
+        uids: selected_uids(cx),
         transform,
         copy: copy.then_some(true),
         expected_revision: None,
@@ -387,4 +431,18 @@ pub(crate) fn transform_selection(
             out.changed.len()
         }
     })
+}
+
+/// Writes copies of the selection laid out by `layout` through the product
+/// command `cad.entities.array` (docs/adr/0047): the selected objects'
+/// persistent ids, one undo step named after the tool. The command's refusal
+/// or warning is said as the tool's; how many copies were made, or `None`.
+pub(crate) fn array_selection(layout: ArrayLayout, cx: &mut Context<'_>) -> Option<usize> {
+    let input = EntitiesArray {
+        uids: selected_uids(cx),
+        layout,
+        expected_revision: None,
+    };
+    let result = array::execute(&mut ExecutionContext::new(cx.doc), input);
+    points::written(result, cx).map(|out: EntitiesArrayed| out.created.len())
 }

@@ -109,6 +109,12 @@ pub const PORTED: &[&str] = &[
     "file.settings",
     // The start screen with the recent files (start.rs).
     "file.start",
+    // Modify tools, round 3 (docs/adr/0047, part 2): stretch through cad.entities.edit,
+    // the arrays through cad.entities.array, align through cad.entities.transform.
+    "tool.stretch",
+    "tool.array",
+    "tool.arrayPolar",
+    "tool.align",
 ];
 
 /// Where a command stands, from the desktop's point of view.

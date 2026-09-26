@@ -43,6 +43,16 @@ impl SelectBox {
     pub fn crossing(&self) -> bool {
         self.to[0] < self.from[0]
     }
+
+    /// The box between two corners drawn as a crossing whichever way it
+    /// went: Esnet's window takes the vertices it touches (the web draws it
+    /// dashed in the snap colour, lightly filled).
+    pub fn touching(a: [f64; 2], b: [f64; 2]) -> Self {
+        Self {
+            from: [a[0].max(b[0]), a[1]],
+            to: [a[0].min(b[0]), b[1]],
+        }
+    }
 }
 
 /// The select tool's state between pointer events.

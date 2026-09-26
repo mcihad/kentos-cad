@@ -65,7 +65,11 @@
     "file.export.ncn",
     "file.new",
     "file.settings",
-    "file.start"
+    "file.start",
+    "tool.stretch",
+    "tool.array",
+    "tool.arrayPolar",
+    "tool.align"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

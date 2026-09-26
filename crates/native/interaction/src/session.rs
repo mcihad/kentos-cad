@@ -18,7 +18,9 @@
 use kentos_geometry_core::store::snap::SnapHit;
 
 use crate::Vec2;
+use crate::align::{self, Align};
 use crate::arc::{self, Arc};
+use crate::array::{self, Array};
 use crate::breaking::{self, Break};
 use crate::circle::{self, Circle};
 use crate::corner::{self, CornerTool};
@@ -32,6 +34,7 @@ use crate::object::{self, ObjectAction};
 use crate::offset::{self, Offset};
 use crate::path::{self, Path};
 use crate::point::{self, Point};
+use crate::polar::{self, Polar};
 use crate::prompt::Prompt;
 use crate::rectangle::{self, Rectangle};
 use crate::regular::{self, RegularPolygon};
@@ -40,6 +43,7 @@ use crate::rotated::{self, RotatedRectangle};
 use crate::scale::{self, Scale};
 use crate::select::{Select, SelectBox};
 use crate::spatial::Spatial;
+use crate::stretch::{self, Stretch};
 use crate::tool::{Context, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
@@ -61,6 +65,10 @@ pub const TOOLS: &[&str] = &[
     rotate::ID,
     scale::ID,
     mirror::ID,
+    stretch::ID,
+    array::ID,
+    polar::ID,
+    align::ID,
     offset::ID,
     trim::TRIM_ID,
     trim::EXTEND_ID,
@@ -112,6 +120,10 @@ impl Session {
             rotate::ID => Box::new(Rotate::tool()),
             scale::ID => Box::new(Scale::tool()),
             mirror::ID => Box::new(Mirror::tool()),
+            stretch::ID => Box::new(Stretch::new()),
+            array::ID => Box::new(Array::tool()),
+            polar::ID => Box::new(Polar::tool()),
+            align::ID => Box::new(Align::tool()),
             offset::ID => Box::new(Offset::new()),
             trim::TRIM_ID => Box::new(Boundary::trim()),
             trim::EXTEND_ID => Box::new(Boundary::extend()),

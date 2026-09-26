@@ -90,8 +90,8 @@ pub(crate) fn write(
     points::written(result, cx)
 }
 
-/// A shape the core computed as the command takes it. `None` for a kind the
-/// command does not write (a dimension, a hatch), which these tools never make.
+/// A shape the core computed as the command takes it. `None` only for a
+/// dimension style or a hatch pattern the contract does not know.
 pub(crate) fn geometry(shape: &Shape) -> Option<kentos_contracts::EntityGeometry> {
     edit_geometry(shape.clone())
 }
