@@ -272,8 +272,9 @@ impl App {
     pub(crate) fn line_prompt(&self) -> Option<LinePrompt<'_, Message>> {
         self.session.is_running().then(|| {
             let p = self.session.prompt();
+            // The notes after the step in brackets, as the web's command line reads them.
             p.options.iter().fold(
-                LinePrompt::new(p.step.clone()).command(p.tool.unwrap_or("")),
+                LinePrompt::new(p.step_with_notes()).command(p.tool.unwrap_or("")),
                 |prompt, o| {
                     // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).
                     let name = match &o.value {

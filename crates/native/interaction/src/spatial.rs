@@ -134,6 +134,18 @@ impl Spatial {
         self.store.hit(at, tol).and_then(slot)
     }
 
+    /// The nearest visible object whose edge comes within `tol` world units
+    /// of `at` and that `accept` takes (`PickIndex.hitEdge`): what the edge
+    /// tools act on. Points and text have no edges; among equal distances
+    /// the document's order decides.
+    pub fn pick_edge(&self, at: Vec2, tol: f64, accept: impl Fn(Slot) -> bool) -> Option<Slot> {
+        self.store
+            .hit_edge(at, tol)
+            .into_iter()
+            .filter_map(|(id, _)| slot(id))
+            .find(|s| accept(*s))
+    }
+
     /// The visible objects inside the box from `a` to `b` (window), or
     /// touching it too (crossing), in the document's order (`PickIndex.inRect`).
     pub fn in_rect(&self, a: Vec2, b: Vec2, crossing: bool) -> Vec<Slot> {
@@ -200,7 +212,7 @@ pub fn record(entity: &Entity) -> (f64, &str, bool, Shape) {
 }
 
 /// The drawing typeface by its id, as the store measures text in it.
-fn font_id(font: Option<DrawingFont>) -> &'static str {
+pub(crate) fn font_id(font: Option<DrawingFont>) -> &'static str {
     match font {
         None | Some(DrawingFont::Barlow) => "barlow",
         Some(DrawingFont::Arimo) => "arimo",

@@ -61,8 +61,9 @@ impl Stages for Move {
         if self.copy { COPY_LABEL } else { MOVE_LABEL }
     }
 
-    fn begin(&mut self) {
+    fn begin(&mut self, _cx: &mut Context<'_>) -> Flow {
         self.base = None;
+        Flow::Stay
     }
 
     fn anchor(&self) -> Option<Vec2> {

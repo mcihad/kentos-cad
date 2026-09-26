@@ -19,12 +19,17 @@ use kentos_geometry_core::store::snap::SnapHit;
 
 use crate::Vec2;
 use crate::arc::{self, Arc};
+use crate::breaking::{self, Break};
 use crate::circle::{self, Circle};
+use crate::corner::{self, CornerTool};
 use crate::erase::{self, Erase};
 use crate::format::Format;
+use crate::lengthen::{self, Lengthen};
 use crate::line::{self, Line};
 use crate::mirror::{self, Mirror};
 use crate::move_copy::{self, Move};
+use crate::object::{self, ObjectAction};
+use crate::offset::{self, Offset};
 use crate::path::{self, Path};
 use crate::point::{self, Point};
 use crate::prompt::Prompt;
@@ -36,6 +41,8 @@ use crate::scale::{self, Scale};
 use crate::select::{Select, SelectBox};
 use crate::spatial::Spatial;
 use crate::tool::{Context, Draft, Flow, Pointer, Preview, Tool, View};
+use crate::trim::{self, Boundary};
+use crate::vertex::{self, Vertex};
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
 pub const TOOLS: &[&str] = &[
@@ -54,6 +61,16 @@ pub const TOOLS: &[&str] = &[
     rotate::ID,
     scale::ID,
     mirror::ID,
+    offset::ID,
+    trim::TRIM_ID,
+    trim::EXTEND_ID,
+    corner::FILLET_ID,
+    corner::CHAMFER_ID,
+    breaking::ID,
+    object::JOIN_ID,
+    object::EXPLODE_ID,
+    lengthen::ID,
+    vertex::ID,
 ];
 
 /// The running tool, if any, the last one started, and the select tool that
@@ -95,6 +112,16 @@ impl Session {
             rotate::ID => Box::new(Rotate::tool()),
             scale::ID => Box::new(Scale::tool()),
             mirror::ID => Box::new(Mirror::tool()),
+            offset::ID => Box::new(Offset::new()),
+            trim::TRIM_ID => Box::new(Boundary::trim()),
+            trim::EXTEND_ID => Box::new(Boundary::extend()),
+            corner::FILLET_ID => Box::new(CornerTool::fillet()),
+            corner::CHAMFER_ID => Box::new(CornerTool::chamfer()),
+            breaking::ID => Box::new(Break::new()),
+            object::JOIN_ID => Box::new(ObjectAction::join()),
+            object::EXPLODE_ID => Box::new(ObjectAction::explode()),
+            lengthen::ID => Box::new(Lengthen::new()),
+            vertex::ID => Box::new(Vertex::new()),
             _ => return false,
         };
         self.last = Some(tool.id());
@@ -115,9 +142,19 @@ impl Session {
         }
     }
 
-    /// Esc: leaves the running tool; its draft is dropped (ADR 0018, “İptal”).
+    /// Leaves the running tool; its draft is dropped (ADR 0018, “İptal”).
     pub fn exit(&mut self) {
         self.tool = None;
+    }
+
+    /// Esc: the running tool steps back when it can (the web's `cancel`: an
+    /// edge tool drops the object it picked); otherwise it is left. Whether it stays.
+    pub fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
+        let stays = self.tool.as_mut().is_some_and(|t| t.cancel(cx));
+        if !stays {
+            self.tool = None;
+        }
+        stays
     }
 
     pub fn is_running(&self) -> bool {

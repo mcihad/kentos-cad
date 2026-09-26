@@ -64,9 +64,16 @@ impl App {
                 .style(style::button::keyword)
                 .into()
         });
+        // The step and its notes (a current value, a hint), as the web's `cmdbar__note`: smaller, muted.
+        let step = p.notes.iter().fold(
+            row![label::body(p.step.clone().into_owned())]
+                .spacing(8)
+                .align_y(Center),
+            |step, note| step.push(label::caption(note.clone())),
+        );
         let main = Row::new()
             .push(name)
-            .push(label::body(p.step.into_owned()))
+            .push(step)
             .push(Row::with_children(options).spacing(4).align_y(Center))
             .spacing(12)
             .align_y(Center)

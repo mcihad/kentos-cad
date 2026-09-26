@@ -53,6 +53,10 @@ impl View for CameraView<'_> {
     fn world_length(&self, px: f64) -> f64 {
         px / self.0.scale
     }
+
+    fn visible(&self) -> kentos_render_wgpu::Bounds {
+        self.0.visible_bounds()
+    }
 }
 
 impl App {
@@ -130,14 +134,18 @@ impl App {
         }
     }
 
-    /// `tool.cancel`: Esc. The draft is dropped; nothing reaches the drawing.
-    /// With no command running, it clears the selection (the web's `ToolManager.exit`).
+    /// `tool.cancel`: Esc. The running tool steps back when it can (an edge
+    /// tool drops the object it picked, docs/adr/0047); otherwise it leaves and
+    /// its draft is dropped: nothing reaches the drawing. With no command
+    /// running, it clears the selection (the web's `ToolManager.exit`).
     pub(crate) fn cancel(&mut self) {
         self.field = None;
         // The snap marker belongs to the command (the web drops it when the tool changes).
         self.snap = None;
         if self.session.is_running() {
-            self.session.exit();
+            if self.with_tool(|s, cx| s.cancel(cx)) != Some(true) {
+                self.session.exit();
+            }
         } else {
             self.selection.clear();
         }

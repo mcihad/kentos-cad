@@ -74,6 +74,18 @@ pub const PORTED: &[&str] = &[
     "tool.rotate",
     "tool.scale",
     "tool.mirror",
+    // Modify tools, round 2 (docs/adr/0047): the edge, corner and object tools, through
+    // cad.entities.edit.
+    "tool.offset",
+    "tool.trim",
+    "tool.extend",
+    "tool.fillet",
+    "tool.chamfer",
+    "tool.break",
+    "tool.join",
+    "tool.explode",
+    "tool.lengthen",
+    "tool.vertex",
     // The cloud interface (docs/adr/0041): signing in and out, the catalog of cloud
     // projects, a drawing uploaded as a new project, and the save conflicts.
     "cloud.signIn",

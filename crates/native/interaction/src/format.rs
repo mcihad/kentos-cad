@@ -72,6 +72,12 @@ impl Format {
         }
     }
 
+    /// An angle in radians (an angular dimension's), in the project's angle
+    /// unit: the web's `angle`, a bearing of `rad × 200 / π` grads.
+    pub fn angle(&self, rad: f64) -> String {
+        self.bearing((rad * 200.0) / std::f64::consts::PI)
+    }
+
     /// `Y 487012.000  X 4420000.000`: east first (CLAUDE.md §5).
     pub fn point(&self, p: Vec2) -> String {
         format!("Y {}  X {}", self.coord(p.x), self.coord(p.y))

@@ -15,7 +15,7 @@ use iced::widget::canvas::{self, LineDash, Path, Stroke};
 use iced::widget::{Space, canvas as canvas_widget, column, container, pin, row, stack, text};
 use iced::{Color, Element, Fill, Point, Rectangle, Renderer, Theme, border, mouse};
 
-use kentos_interaction::{Preview, Vec2};
+use kentos_interaction::{MarkerShape, Preview, Tone, Vec2};
 use kentos_render_wgpu::Camera;
 use kentos_ui::theme::{Tokens, typography};
 
@@ -40,15 +40,19 @@ pub fn layer<'a>(
         Point::new(x as f32, y as f32)
     };
     let mut layers: Vec<Element<'a, Message>> = Vec::new();
+    // The snap colour of the drawing (`--canvas-snap`): a corner's reach is drawn in it.
+    let snap = marks.colors.snap;
     if !marks.is_empty() {
         layers.push(canvas_widget(marks).width(Fill).height(Fill).into());
     }
     if let Some(preview) = preview {
         let tag = preview.tag.clone();
+        let tag_tone = preview.tag_tone;
         layers.push(
             canvas_widget(Draft {
                 preview,
                 camera: *camera,
+                snap,
             })
             .width(Fill)
             .height(Fill)
@@ -57,7 +61,7 @@ pub fn layer<'a>(
         if let Some(tag) = tag {
             let at = screen(tag.at);
             layers.push(
-                pin(measurement(tag.lines))
+                pin(measurement(tag.lines, tag_tone))
                     .x(at.x.round() + 16.0)
                     .y(at.y.round() + 16.0)
                     .width(Fill)
@@ -84,25 +88,30 @@ pub fn layer<'a>(
 }
 
 /// The measurement beside the cursor: length and bearing, or the arc's
-/// radius and length, and the area once there are three corners.
-fn measurement<'a>(lines: Vec<String>) -> Element<'a, Message> {
+/// radius and length, and the area once there are three corners; in the
+/// danger colour where it names what goes (a vertex to remove).
+fn measurement<'a>(lines: Vec<String>, tone: Tone) -> Element<'a, Message> {
+    let color = move |t: &Tokens| match tone {
+        Tone::Danger => t.danger,
+        _ => t.accent,
+    };
     let lines = column(lines.into_iter().map(|line| {
         text(line)
             .font(typography::ui_strong())
             .size(typography::caption())
-            .style(|theme: &Theme| text::Style {
-                color: Some(Tokens::of(theme).accent),
+            .style(move |theme: &Theme| text::Style {
+                color: Some(color(&Tokens::of(theme))),
             })
             .into()
     }))
     .spacing(1);
     container(lines)
         .padding([3, 6])
-        .style(|theme: &Theme| {
+        .style(move |theme: &Theme| {
             let t = Tokens::of(theme);
             container::Style {
                 background: Some(t.popover.scale_alpha(0.92).into()),
-                border: border::width(1).color(t.accent),
+                border: border::width(1).color(color(&t)),
                 ..container::Style::default()
             }
         })
@@ -165,10 +174,13 @@ fn value_field<'a>(value: &'a str) -> Element<'a, Message> {
         .into()
 }
 
-/// The draft's lines, in the accent colour (the web's `PathTool.draw`).
+/// The draft's lines, in the accent colour (the web's `PathTool.draw`), and
+/// the parts a tool gives another tone: what a trim takes away in the danger
+/// colour, a corner's reach in the snap colour (docs/adr/0047).
 struct Draft {
     preview: Preview,
     camera: Camera,
+    snap: Color,
 }
 
 impl Draft {
@@ -203,7 +215,13 @@ impl canvas::Program<Message> for Draft {
         bounds: Rectangle,
         _cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
-        let accent = Tokens::of(theme).accent;
+        let tokens = Tokens::of(theme);
+        let accent = tokens.accent;
+        let tone = |t: Tone| match t {
+            Tone::Accent => accent,
+            Tone::Danger => tokens.danger,
+            Tone::Snap => self.snap,
+        };
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let dashed = |segments: &'static [f32]| Stroke {
             line_dash: LineDash {
@@ -242,9 +260,35 @@ impl canvas::Program<Message> for Draft {
                     segments: if line.dash.is_some() { &dash } else { &[] },
                     offset: 0,
                 },
-                ..Stroke::default().with_color(accent).with_width(line.width)
+                ..Stroke::default()
+                    .with_color(tone(line.tone))
+                    .with_width(line.width)
             };
             frame.stroke(&path, stroke);
+        }
+        // A corner found under the cursor, a vertex to add or remove: 2 px marks (docs/adr/0047).
+        for m in &self.preview.markers {
+            let at = self.screen(m.at);
+            let (x, y) = (at.x.round() + 0.5, at.y.round() + 0.5);
+            let mark = Path::new(|b| match m.shape {
+                MarkerShape::Ring(r) => b.circle(Point::new(x, y), r),
+                MarkerShape::Cross(h) => {
+                    b.move_to(Point::new(x - h, y - h));
+                    b.line_to(Point::new(x + h, y + h));
+                    b.move_to(Point::new(x + h, y - h));
+                    b.line_to(Point::new(x - h, y + h));
+                }
+                MarkerShape::Plus(h) => {
+                    b.move_to(Point::new(x - h, y));
+                    b.line_to(Point::new(x + h, y));
+                    b.move_to(Point::new(x, y - h));
+                    b.line_to(Point::new(x, y + h));
+                }
+            });
+            frame.stroke(
+                &mark,
+                Stroke::default().with_color(tone(m.tone)).with_width(2.0),
+            );
         }
         // The objects picked for a tangent circle: a 9 px square where each was clicked.
         for p in &self.preview.squares {
