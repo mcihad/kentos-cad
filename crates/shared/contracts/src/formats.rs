@@ -18,7 +18,8 @@ use crate::layer::LineType;
 /// 2: `writeDxf` (`DxfWriteInput`), and the reader takes back KentOS's DXF data.
 /// 3: dimensions are written as DXF dimensions (`dimensionValues`) and read back.
 /// 4: `v1Identities`, the persistent ids of a v1 drawing's objects (`identity`, docs/adr/0014).
-pub const FORMATS_VERSION: u32 = 4;
+/// 5: `encodeKcad`, `decodeKcad`: the binary `.kcad` v2 (docs/specs/kcad-v2.md, docs/adr/0025).
+pub const FORMATS_VERSION: u32 = 5;
 
 // ── Every import ────────────────────────────────────────────────────────
 

@@ -2478,6 +2478,7 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-formats",
+ "kentos-kcad",
  "serde",
  "serde_json",
  "wasm-bindgen",

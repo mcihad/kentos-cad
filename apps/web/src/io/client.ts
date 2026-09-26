@@ -6,6 +6,8 @@ import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
 import type { ImportResult } from '../contracts/generated/ImportResult';
 import type { ExportReport } from '../contracts/generated/ExportReport';
 import type { V1Identities } from '../contracts/generated/V1Identities';
+import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
+import { KcadError, type Dropped } from './kcad';
 import type { FormatsReply, FormatsRequest } from './protocol';
 
 /**
@@ -30,6 +32,12 @@ export interface WorkerLike {
 export interface WrittenFile {
   bytes: Uint8Array;
   report: ExportReport;
+}
+
+/** A drawing's `.kcad` v2 bytes, and what the drawing held that KCAD v2 does not keep (io/kcad.ts). */
+export interface EncodedDrawing {
+  bytes: Uint8Array<ArrayBuffer>;
+  dropped: Dropped;
 }
 
 type Ok = Extract<FormatsReply, { ok: true }>;
@@ -88,6 +96,34 @@ export class FormatsClient {
     return json<V1Identities>(await this.request({ op: 'v1Identities', text }, []));
   }
 
+  /**
+   * A drawing's `.kcad` v2 bytes (docs/specs/kcad-v2.md), made and checked in
+   * the worker (io/kcad.ts): read back to the same drawing before they come
+   * here. The drawing is copied when this is called, before it returns, so
+   * it is the drawing of that moment. Rejects with the reason (and a KCAD
+   * code) when the drawing cannot be written.
+   */
+  encodeKcad(snapshot: DocumentSnapshotV2): Promise<EncodedDrawing> {
+    return this.request({ op: 'encodeKcad', snapshot }, []).then((r) => {
+      if (!('kcad' in r)) throw new Error('Dosya biçimi modülü beklenmeyen bir yanıt verdi.');
+      return { bytes: new Uint8Array(r.kcad), dropped: r.dropped };
+    });
+  }
+
+  /**
+   * The drawing in a `.kcad` v2 file. A large file is not copied: when
+   * `bytes` spans its whole buffer, the buffer goes to the worker and `bytes`
+   * is left empty. A file the reader refuses rejects with a KcadError (the
+   * specification's code and a Turkish message).
+   */
+  async decodeKcad(bytes: Uint8Array): Promise<DocumentSnapshotV2> {
+    const whole = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength && bytes.buffer instanceof ArrayBuffer;
+    const buffer = whole ? (bytes.buffer as ArrayBuffer) : bytes.slice().buffer;
+    const r = await this.request({ op: 'decodeKcad', bytes: buffer }, [buffer]);
+    if (!('snapshot' in r)) throw new Error('Dosya biçimi modülü beklenmeyen bir yanıt verdi.');
+    return r.snapshot;
+  }
+
   /** Stops the worker now (a dialog closed while its file was being read). */
   cancel(): void {
     this.stop('İşlem durduruldu.');
@@ -118,7 +154,7 @@ export class FormatsClient {
       this.pending.delete(r.id);
       if (r.ok) p.resolve(r);
       else {
-        p.reject(new Error(r.message));
+        p.reject(r.code ? new KcadError(r.code, r.message) : new Error(r.message));
         if (r.fatal) return this.stop(r.message);
       }
       if (!this.pending.size && this.worker) this.idle = setTimeout(() => this.stop(null), IDLE_MS);

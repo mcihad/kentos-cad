@@ -1,4 +1,5 @@
 import type { DocumentSnapshotV1 } from '../contracts/generated/DocumentSnapshotV1';
+import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../contracts/generated/Entity';
 import type { LayerNode as ContractLayerNode } from '../contracts/generated/LayerNode';
 import type { V1Identities } from '../contracts/generated/V1Identities';
@@ -10,22 +11,28 @@ import type { LayerInit } from './layers';
 import { DRAWING_FONT_IDS, WORKSPACE_IDS } from './projectSettings';
 
 /**
- * The drawing as a versioned file (`.kcad`, contract `DocumentSnapshotV1`,
- * docs/adr/0002-contracts-fixtures.md): writing is lossless (float64
- * coordinates, bulges, holes, ellipses, dimensions, the project's styles),
- * reading checks every field and refuses anything it does not know with a
- * message that says what and where; it never guesses (CLAUDE.md §9.7).
- * The project's style items are opaque here (the style layer checks them).
+ * The drawing as a versioned file (`.kcad`): the v1 JSON (contract
+ * `DocumentSnapshotV1`, docs/adr/0002-contracts-fixtures.md) and what the
+ * binary v2 holds (`DocumentSnapshotV2`, docs/specs/kcad-v2.md), which the
+ * shared Rust codec writes and reads in the formats worker (io/kcad.ts).
+ * Writing is lossless (float64 coordinates, bulges, holes, ellipses,
+ * dimensions, the project's styles), reading checks every field and refuses
+ * anything it does not know with a message that says what and where; it
+ * never guesses (CLAUDE.md §9.7). The project's style items are opaque here
+ * (the style layer checks them).
  *
  * v1 keeps no persistent object ids (docs/adr/0014): they are not written,
  * and when a file is opened they are derived from its content by the Rust
- * contracts (`attachV1Identities`), the same every time. The binary v2
- * format will store them (TODOS.md FILE-05).
+ * contracts (`attachV1Identities`), the same every time. v2 keeps them, with
+ * the project's id and, for a drawing migrated from v1, the source record.
  */
 
 export const DOCUMENT_FORMAT = 'kentos.document';
 export const DOCUMENT_VERSION = 1;
+export const DOCUMENT_VERSION_2 = 2;
 export const DOCUMENT_EXTENSION = '.kcad';
+/** No registered KCAD media type exists, so none is claimed (TODOS.md FILE-13). */
+export const DOCUMENT_MIME = 'application/octet-stream';
 
 /** The drawing as a snapshot; deep copies, so later edits do not change it. Persistent ids are not written in v1. */
 export function toSnapshot(doc: CadDocument): DocumentSnapshotV1 {
@@ -46,6 +53,39 @@ export function toSnapshot(doc: CadDocument): DocumentSnapshotV1 {
   return snap;
 }
 
+/**
+ * The drawing as a v2 snapshot to write (docs/specs/kcad-v2.md): objects in
+ * document order with their persistent ids, the project's id and source
+ * record. The objects are shallow copies: the codec copies the snapshot
+ * when it is handed over, in the same turn (the worker's message; the
+ * in-process codec in tests).
+ */
+export function toSnapshotV2(doc: CadDocument): DocumentSnapshotV2 {
+  const entities: ContractEntity[] = [];
+  const uids: string[] = [];
+  for (const { uid, ...e } of doc.all()) {
+    if (!uid) throw new Error(`Nesne ${e.id} (${e.kind}): kalıcı kimliği yok; çizim KCAD v2 olarak yazılamaz.`);
+    entities.push(e as ContractEntity);
+    uids.push(uid);
+  }
+  const snap: DocumentSnapshotV2 = {
+    format: DOCUMENT_FORMAT,
+    version: DOCUMENT_VERSION_2,
+    name: doc.name.value,
+    settings: doc.settings.toJSON(),
+    origin: { ...doc.origin },
+    layers: structuredClone([...doc.layers.tree]) as ContractLayerNode[],
+    activeLayer: doc.layers.active.value,
+    entities,
+    uids,
+    styles: { items: structuredClone([...doc.styles.value.items]), categories: structuredClone([...doc.styles.value.categories]) },
+  };
+  if (doc.homeView) snap.homeView = { ...doc.homeView };
+  if (doc.projectId) snap.projectId = doc.projectId;
+  if (doc.migratedFrom) snap.migratedFrom = { ...doc.migratedFrom };
+  return snap;
+}
+
 export type ReadResult = { ok: true; content: DocumentContent } | { ok: false; error: string };
 
 /** Reads a snapshot's text into document content, or says why it cannot. */
@@ -58,6 +98,20 @@ export function readSnapshot(text: string): ReadResult {
   }
   try {
     return { ok: true, content: parse(data) };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+/**
+ * Reads a v2 drawing the codec decoded (the contract's JSON form) into
+ * document content, checked like a v1 file (the drawing's own rules: known
+ * CRS, layers, vertex counts, spec §6.10), its objects given the persistent
+ * ids the file holds, one each.
+ */
+export function readSnapshotV2(data: unknown): ReadResult {
+  try {
+    return { ok: true, content: parse(data, DOCUMENT_VERSION_2) };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
@@ -119,10 +173,10 @@ const opt = <T>(v: unknown, read: (v: unknown) => T): T | undefined => (v === un
 const KINDS = ['point', 'line', 'polyline', 'polygon', 'circle', 'arc', 'ellipse', 'spline', 'xline', 'ray', 'text', 'dimension', 'hatch'] as const;
 const LINE_TYPES = ['continuous', 'dashed', 'dashdot', 'dotted'] as const;
 
-function parse(data: unknown): DocumentContent {
+function parse(data: unknown, version = DOCUMENT_VERSION): DocumentContent {
   if (!isObj(data) || data.format !== DOCUMENT_FORMAT) throw new Bad('KentOS çizim dosyası değil (format ≠ kentos.document).');
-  if (data.version !== DOCUMENT_VERSION)
-    throw new Bad(typeof data.version === 'number' ? `Çizim dosyası sürümü ${data.version} bu uygulamada okunamıyor (desteklenen: ${DOCUMENT_VERSION}).` : 'Çizim dosyasında sürüm yok.');
+  if (data.version !== version)
+    throw new Bad(typeof data.version === 'number' ? `Çizim dosyası sürümü ${data.version} bu uygulamada okunamıyor (desteklenen: ${version}).` : 'Çizim dosyasında sürüm yok.');
   const settings = isObj(data.settings) ? data.settings : fail('Proje ayarları', 'eksik');
   const srid = num(settings.srid, 'Proje ayarları › SRID');
   // A drawing's CRS is never guessed: an unknown SRID stops the open (CLAUDE.md §9.7).
@@ -156,7 +210,30 @@ function parse(data: unknown): DocumentContent {
     activeLayer: str(data.activeLayer, 'Etkin katman'),
     entities,
     styles: { items: styles.items as DocumentContent['styles']['items'], categories: styles.categories as DocumentContent['styles']['categories'] },
+    ...(version === DOCUMENT_VERSION_2 ? identities(data, entities) : {}),
   };
+}
+
+const SHA256 = /^[0-9a-f]{64}$/;
+
+/** A v2 drawing's ids: one persistent id per object, unique, given to the objects; the project's id and source record. */
+function identities(data: Record<string, unknown>, entities: Entity[]): Pick<DocumentContent, 'projectId' | 'migratedFrom'> {
+  const uids = Array.isArray(data.uids) ? data.uids : fail('Kalıcı kimlikler', 'liste olmalı');
+  if (uids.length !== entities.length) fail('Kalıcı kimlikler', `${entities.length} nesne ama ${uids.length} kimlik var`);
+  const seen = new Set<string>();
+  uids.forEach((uid, i) => {
+    if (!isUuid(uid) || seen.has(uid)) fail(`Nesne ${i + 1} (${entities[i].kind}) › kalıcı kimlik`, 'küçük harfli, tireli, benzersiz bir UUID olmalı');
+    seen.add(uid);
+  });
+  entities.forEach((e, i) => (e.uid = uids[i] as string));
+  const projectId = opt(data.projectId, (p) => (isUuid(p) ? p : fail('Proje kimliği', 'küçük harfli, tireli bir UUID olmalı')));
+  const source = data.migratedFrom;
+  const migratedFrom = opt(source, (s) =>
+    isObj(s) && s.format === DOCUMENT_FORMAT && s.version === DOCUMENT_VERSION && typeof s.sourceSha256 === 'string' && SHA256.test(s.sourceSha256)
+      ? { format: DOCUMENT_FORMAT, version: DOCUMENT_VERSION, sourceSha256: s.sourceSha256 }
+      : fail('Göç kaynağı', 'kentos.document sürüm 1 ve 64 onaltılık haneli SHA-256 olmalı'),
+  );
+  return { projectId: projectId ?? null, migratedFrom: migratedFrom ?? null };
 }
 
 function layer(v: unknown, where: string): LayerInit {

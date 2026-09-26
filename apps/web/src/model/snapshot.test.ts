@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import sampleText from '../../../../fixtures/document/v1/sample.json?raw';
 import { CadDocument } from './document';
 import { LayerStore } from './layers';
-import { readSnapshot, toSnapshot } from './snapshot';
+import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
+import { readSnapshot, readSnapshotV2, toSnapshot, toSnapshotV2 } from './snapshot';
 import { snapshotSampleDocument } from './snapshotSample';
 
 const blank = () => new CadDocument({ name: 'boş', layers: new LayerStore([{ id: 'x', name: 'X' }], 'x'), origin: { x: 0, y: 0 } });
@@ -112,5 +113,41 @@ describe('dirty follows what a file holds', () => {
       throw new Error('hata');
     })).toThrow();
     expect(doc.dirty.value).toBe(false);
+  });
+});
+
+describe('.kcad v2 content (docs/specs/kcad-v2.md)', () => {
+  it('carries every object with its persistent id, the project id and the source record, and reads back into the same drawing', () => {
+    const src = snapshotSampleDocument();
+    src.projectId = '0192f5a0-0000-7000-8000-00000000abcd';
+    src.migratedFrom = { format: 'kentos.document', version: 1, sourceSha256: 'ab'.repeat(32) };
+    const snap = toSnapshotV2(src);
+    expect([snap.format, snap.version, snap.entities.length, snap.uids.length]).toEqual(['kentos.document', 2, 13, 13]);
+    // Slots stay in the drawing; objects carry no `uid` of their own, the list does.
+    expect(snap.entities.some((e) => 'uid' in e)).toBe(false);
+    expect(snap.uids).toEqual([...src.all()].map((e) => e.uid));
+    const read = readSnapshotV2(structuredClone(snap));
+    if (!read.ok) throw new Error(read.error);
+    const doc = blank();
+    doc.replaceWith(read.content);
+    expect([...doc.all()].map((e) => e.uid)).toEqual(snap.uids);
+    expect(bare(doc)).toEqual(bare(src));
+    expect([doc.projectId, doc.migratedFrom]).toEqual([src.projectId, src.migratedFrom]);
+  });
+
+  it('refuses ids that are not one unique UUID per object, and a bad source record', () => {
+    const good = toSnapshotV2(snapshotSampleDocument());
+    const err = (mutate: (d: DocumentSnapshotV2) => void) => {
+      const d = structuredClone(good);
+      mutate(d);
+      const r = readSnapshotV2(d);
+      return r.ok ? null : r.error;
+    };
+    expect(err((d) => d.uids.pop())).toContain('13 nesne ama 12 kimlik var');
+    expect(err((d) => (d.uids[4] = d.uids[3]))).toContain('Nesne 5 (circle) › kalıcı kimlik');
+    expect(err((d) => (d.uids[0] = 'P1'))).toContain('Nesne 1 (point) › kalıcı kimlik');
+    expect(err((d) => (d.projectId = 'proje'))).toContain('Proje kimliği');
+    expect(err((d) => (d.migratedFrom = { format: 'kentos.document', version: 2, sourceSha256: 'ab'.repeat(32) }))).toContain('Göç kaynağı');
+    expect(err((d) => ((d as { version: number }).version = 1))).toContain('sürümü 1');
   });
 });

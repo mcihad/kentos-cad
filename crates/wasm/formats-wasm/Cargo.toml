@@ -12,6 +12,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-formats = { path = "../../shared/formats" }
+# The project file, .kcad v2 (docs/specs/kcad-v2.md, docs/adr/0025).
+kentos-kcad = { path = "../../shared/kcad" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }

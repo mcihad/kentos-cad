@@ -18,7 +18,7 @@ const PINS = ['Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.
 const PACKAGES = [
   { label: 'Geometri çekirdeği', script: 'rust:wasm', out: 'apps/web/src/wasm/pkg', lib: 'kentos_geometry_wasm', sources: ['crates/shared/geometry-core', 'crates/shared/style-core', 'crates/wasm/geometry-wasm', ...PINS] },
   // The formats use the core's own sampling of bulged rings (docs/adr/0009): a core edit rebuilds both.
-  { label: 'Dosya biçimleri', script: 'rust:wasm:formats', out: 'apps/web/src/io/pkg', lib: 'kentos_formats_wasm', sources: ['crates/shared/formats', 'crates/wasm/formats-wasm', 'crates/shared/contracts', 'crates/shared/geometry-core', ...PINS] },
+  { label: 'Dosya biçimleri', script: 'rust:wasm:formats', out: 'apps/web/src/io/pkg', lib: 'kentos_formats_wasm', sources: ['crates/shared/formats', 'crates/shared/kcad', 'crates/wasm/formats-wasm', 'crates/shared/contracts', 'crates/shared/geometry-core', ...PINS] },
   // The SVG editor's geometry (loaded with the editor) runs on the core's overlay and writes numbers as the style core does.
   { label: 'SVG düzenleyicisi', script: 'rust:wasm:svg', out: 'apps/web/src/style/svg/pkg', lib: 'kentos_svg_wasm', sources: ['crates/shared/svg-core', 'crates/wasm/svg-wasm', 'crates/shared/geometry-core', 'crates/shared/style-core', ...PINS] },
 ];

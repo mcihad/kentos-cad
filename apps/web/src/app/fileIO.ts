@@ -2,30 +2,35 @@ import type { V1Identities } from '../contracts/generated/V1Identities';
 import { Signal } from '../core/signal';
 import { crsBySrid } from '../geo/crs';
 import { sheetAround } from '../model/newProject';
-import { DOCUMENT_EXTENSION, attachV1Identities, readSnapshot, toSnapshot } from '../model/snapshot';
+import { DOCUMENT_EXTENSION, DOCUMENT_MIME, toSnapshotV2 } from '../model/snapshot';
 import { h } from '../ui/dom';
 import { askUnsaved } from '../ui/widgets/confirm';
-import { projectStylesProblem } from './cloud/incoming';
 import type { AppContext } from './context';
 import type { DocumentContent } from '../model/document';
+import { describeDropped, readDrawing, type DrawingCodec, type ReadDrawing } from './drawingFile';
 import { RecentFiles, type RecentFile } from './recentFiles';
 
 /**
- * Local drawing files (`.kcad`, the versioned `DocumentSnapshotV1`): Save,
- * Save as, Open. A save counts only when the file was really written: the
- * drawing turns clean after the writer closes without error, and only for
- * the revision that was written (an edit made meanwhile stays unsaved;
- * CLAUDE.md §13.1, §21.3). Where the browser cannot write files, the drawing
- * is offered as a download and stays marked unsaved, since nothing confirms
- * it was kept. Yeni proje replaces the drawing with an empty one. Whatever
+ * Local drawing files (`.kcad`): Save, Save as, Open. A drawing is saved as
+ * the binary `.kcad` v2 (docs/specs/kcad-v2.md, docs/adr/0025), made and read
+ * back in the formats worker before a byte is written; a file opens by what
+ * it holds (v2, or the old v1 JSON), never by its name.
+ *
+ * A save counts only when the file was really written: the drawing turns
+ * clean after the writer closes without error, and only for the revision
+ * that was written (an edit made meanwhile stays unsaved; CLAUDE.md §13.1,
+ * §21.3). Where the browser cannot write files, the drawing is offered as a
+ * download and stays marked unsaved, since nothing confirms it was kept. A
+ * drawing opened from a v1 file is not written back there: Save asks where
+ * to write the v2 file, and only the user's own choice replaces the old one
+ * (FILE-21). Yeni proje replaces the drawing with an empty one. Whatever
  * replaces the drawing asks first about unsaved local changes; an open
  * cloud project needs no question, since its changes are sent or kept in
  * the device draft (it is left first, `CloudSession.leave`).
  *
- * An opened drawing's objects get the persistent ids the Rust contracts
- * derive from the file (docs/adr/0014): the same file gives the same ids
- * every time, here and in the desktop app. They are worked out in the
- * formats worker while the page reads the file.
+ * Objects keep their persistent ids (docs/adr/0014): a v2 file holds them; a
+ * v1 file's are derived from its content, the same every time, here and in
+ * the desktop app, and a v2 save records where they came from.
  */
 
 /** A file the app can read and write: a File System Access handle, or an in-memory one in tests. */
@@ -55,7 +60,8 @@ type FsaWindow = Window & {
   showOpenFilePicker?: (o: unknown) => Promise<DrawingFileHandle[]>;
 };
 
-const DRAWING: FileKind = { description: 'KentOS çizimi', accept: { 'application/json': [DOCUMENT_EXTENSION] } };
+// v1 and v2 files alike: no registered KCAD media type exists (FILE-13).
+const DRAWING: FileKind = { description: 'KentOS çizimi', accept: { [DOCUMENT_MIME]: [DOCUMENT_EXTENSION] } };
 
 /** The browser's own file dialogs (File System Access API), where available. */
 export const browserPicker: DrawingFilePicker = {
@@ -121,6 +127,14 @@ export class DocumentFiles {
    * export windows load it (CLAUDE.md §20); tests run the module in process.
    */
   identities: (text: string) => Promise<V1Identities> = async (text) => (await import('../io/client')).formats().v1Identities(text);
+  /**
+   * The `.kcad` v2 codec: the formats worker, loaded like `identities`; tests
+   * run the module in process. Its `encode` copies the drawing before it returns.
+   */
+  kcad: () => Promise<DrawingCodec> = async () => {
+    const f = (await import('../io/client')).formats();
+    return { encode: (snapshot) => f.encodeKcad(snapshot), decode: (bytes) => f.decodeKcad(bytes) };
+  };
   private readonly ctx: AppContext;
 
   constructor(ctx: AppContext) {
@@ -152,18 +166,18 @@ export class DocumentFiles {
       const readOnly = handle === undefined;
       if (readOnly) handle = await pickWithInput();
       if (!handle) return false;
-      let text: string;
+      let bytes: Uint8Array;
       try {
-        text = await (await handle.getFile()).text();
+        bytes = new Uint8Array(await (await handle.getFile()).arrayBuffer());
       } catch (e) {
         this.ctx.log.error(`“${handle.name}” okunamadı: ${message(e)}.`);
         return false;
       }
-      const content = await this.read(text, handle);
-      if (!content) return false;
+      const read = await this.read(bytes, handle);
+      if (!read) return false;
       // A local file replaces an open cloud project: what waits is sent, the rest stays in the device draft.
       await this.leaveCloud();
-      this.show(content, handle, readOnly);
+      this.show(read, handle, readOnly);
       return true;
     });
   }
@@ -192,19 +206,19 @@ export class DocumentFiles {
         this.ctx.log.error(`“${entry.name}” için izin istenemedi: ${message(e)}. Dosyayı Aç ile seçin.`);
         return false;
       }
-      let text: string;
+      let bytes: Uint8Array;
       try {
-        text = await (await handle.getFile()).text();
+        bytes = new Uint8Array(await (await handle.getFile()).arrayBuffer());
       } catch (e) {
         const gone = (e as DOMException).name === 'NotFoundError';
         if (gone) void this.recent.remove(entry.id);
         this.ctx.log.error(gone ? `“${entry.name}” artık bulunamıyor (taşınmış ya da silinmiş); son dosyalardan kaldırıldı.` : `“${entry.name}” okunamadı: ${message(e)}.`);
         return false;
       }
-      const content = await this.read(text, handle);
-      if (!content) return false;
+      const read = await this.read(bytes, handle);
+      if (!read) return false;
       await this.leaveCloud();
-      this.show(content, handle, false);
+      this.show(read, handle, false);
       return true;
     });
   }
@@ -232,14 +246,17 @@ export class DocumentFiles {
     }
   }
 
-  /** Reads a drawing's text into the app; `handle` becomes the file Save writes to unless `readOnly`. */
-  load(text: string, handle: DrawingFileHandle | null, readOnly = false): Promise<boolean> {
+  /**
+   * Reads a drawing (a file's bytes, or v1 text) into the app; `handle`
+   * becomes the file Save writes to unless `readOnly` or the file is v1.
+   */
+  load(data: string | Uint8Array, handle: DrawingFileHandle | null, readOnly = false): Promise<boolean> {
     return this.run(async () => {
-      const content = await this.read(text, handle);
-      if (!content) return false;
+      const read = await this.read(typeof data === 'string' ? new TextEncoder().encode(data) : data, handle);
+      if (!read) return false;
       // Nothing is waited for here: an open cloud project's unsent changes stay in its device draft.
       this.ctx.cloud.detach();
-      this.show(content, handle, readOnly);
+      this.show(read, handle, readOnly);
       return true;
     });
   }
@@ -271,43 +288,33 @@ export class DocumentFiles {
   }
 
   /**
-   * The drawing in `text`, checked like any file someone sent, its objects
-   * given the persistent ids derived from the file (ADR 0014); null (and the
-   * reason, said) when unreadable. Ids that cannot be derived do not stop
-   * the drawing: its objects get new ones for this opening, and the log says so.
+   * The drawing in a file's bytes (v2 or v1, by content), checked like any
+   * file someone sent, its objects with their persistent ids (ADR 0014);
+   * null (and the reason, said) when unreadable. A v1 file's ids that cannot
+   * be derived do not stop the drawing: its objects get new ones for this
+   * opening, and the log says so.
    */
-  private async read(text: string, handle: DrawingFileHandle | null): Promise<DocumentContent | null> {
-    const { ctx } = this;
+  private async read(bytes: Uint8Array, handle: DrawingFileHandle | null): Promise<Extract<ReadDrawing, { ok: true }> | null> {
     const where = handle ? `“${handle.name}”` : 'Dosya';
-    // Worked out in the formats worker while the page reads the drawing.
-    const identities = this.identities(text).then(
-      (ids) => ({ ok: true as const, ids }),
-      (e: unknown) => ({ ok: false as const, error: message(e) }),
-    );
-    const read = readSnapshot(text);
+    const read = await readDrawing(bytes, { codec: this.kcad, identities: this.identities });
     if (!read.ok) {
-      ctx.log.error(`${where} açılamadı: ${read.error}`);
+      this.ctx.log.error(`${where} açılamadı: ${read.error}`);
       return null;
     }
-    // The project's own symbols are checked like any shared style file (untrusted data).
-    const styles = projectStylesProblem(read.content.styles);
-    if (styles) {
-      ctx.log.error(`${where} açılamadı: ${styles}.`);
-      return null;
-    }
-    const got = await identities;
-    const problem = got.ok ? attachV1Identities(read.content, got.ids) : got.error;
-    if (problem)
-      ctx.log.warn(`${where}: nesnelerin kalıcı kimlikleri dosyadan türetilemedi (${problem}); bu açılış için yeni kimlik verildi ve dosya yeniden açılınca kimlikler değişir. Dosyayı yeniden açmayı deneyin.`);
-    return read.content;
+    if (read.warning) this.ctx.log.warn(`${where}: ${read.warning}`);
+    return read;
   }
 
-  private show(content: DocumentContent, handle: DrawingFileHandle | null, readOnly: boolean): void {
+  /** Puts a drawing read from `handle` on screen; Save writes back there unless it was read-only or v1. */
+  private show(read: Extract<ReadDrawing, { ok: true }>, handle: DrawingFileHandle | null, readOnly: boolean): void {
     const { ctx } = this;
-    replaceDrawing(ctx, content);
-    this.handle = readOnly ? null : handle;
-    if (this.handle) this.remember(this.handle);
+    replaceDrawing(ctx, read.content);
+    const v1 = read.format === 'v1';
+    this.handle = readOnly || v1 ? null : handle;
+    if (handle && !readOnly) this.remember(handle);
     ctx.log.success(`“${handle?.name ?? ctx.doc.name.value}” açıldı: ${ctx.doc.size} nesne, ${ctx.doc.layers.leaves().length} katman.`);
+    if (v1 && handle)
+      ctx.log.info('Dosya eski biçimde (KCAD v1). Kaydet, yeni biçimde (v2) yazmak için yer sorar; eski dosyanın üzerine kendiliğinden yazmaz.');
   }
 
   /** Puts the file first in the recent list, with what it holds now. */
@@ -339,35 +346,57 @@ export class DocumentFiles {
     }
   }
 
+  /**
+   * The drawing's `.kcad` v2 bytes and its revision, taken in one turn (the
+   * codec copies the drawing before it returns), checked in the worker; null
+   * (said) when the drawing cannot be written, and then nothing is.
+   */
+  private async encode(target: string): Promise<{ bytes: Uint8Array<ArrayBuffer>; revision: number; dropped: string | null } | null> {
+    const doc = this.ctx.doc;
+    try {
+      const codec = await this.kcad();
+      const revision = doc.revision;
+      const { bytes, dropped } = await codec.encode(toSnapshotV2(doc));
+      return { bytes, revision, dropped: describeDropped(dropped) };
+    } catch (e) {
+      this.ctx.log.error(`${target} yazılamadı: ${message(e)} Değişiklikler kaydedilmemiş sayılıyor.`);
+      return null;
+    }
+  }
+
   private async writeTo(handle: DrawingFileHandle): Promise<boolean> {
     const doc = this.ctx.doc;
-    const revision = doc.revision;
-    const text = `${JSON.stringify(toSnapshot(doc))}\n`;
+    const encoded = await this.encode(`“${handle.name}”`);
+    if (!encoded) return false;
     try {
       const w = await handle.createWritable();
-      await w.write(text);
+      await w.write(encoded.bytes);
       await w.close();
     } catch (e) {
       this.ctx.log.error(`“${handle.name}” yazılamadı: ${message(e)}. Değişiklikler kaydedilmemiş sayılıyor; başka bir yere kaydetmeyi deneyin (Farklı kaydet).`);
       return false;
     }
-    doc.markSaved(revision);
+    doc.markSaved(encoded.revision);
     this.remember(handle);
+    if (encoded.dropped) this.ctx.log.warn(`“${handle.name}”: KCAD v2'nin tanımadığı alanlar yazılmadı: ${encoded.dropped}.`);
     if (doc.dirty.value) this.ctx.log.warn(`“${handle.name}” kaydedildi; kayıt sürerken yapılan değişiklikler henüz kaydedilmedi.`);
     else this.ctx.log.success(`“${handle.name}” kaydedildi.`);
     return true;
   }
 
   /** Without file access the drawing is offered as a download; nothing confirms it was kept. */
-  private download(): boolean {
+  private async download(): Promise<boolean> {
     const doc = this.ctx.doc;
     const name = withExtension(doc.name.value);
-    const url = URL.createObjectURL(new Blob([`${JSON.stringify(toSnapshot(doc))}\n`], { type: 'application/json' }));
+    const encoded = await this.encode(`“${name}”`);
+    if (!encoded) return false;
+    const url = URL.createObjectURL(new Blob([encoded.bytes], { type: DOCUMENT_MIME }));
     const a = h('a', { href: url, download: name });
     document.body.append(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    if (encoded.dropped) this.ctx.log.warn(`“${name}”: KCAD v2'nin tanımadığı alanlar yazılmadı: ${encoded.dropped}.`);
     this.ctx.log.warn(`Bu tarayıcı dosyaya doğrudan yazamıyor; “${name}” indirme olarak verildi. Kaydedildiği doğrulanamadığı için çizim kaydedilmemiş sayılıyor.`);
     return false;
   }
@@ -416,7 +445,7 @@ async function askAboutUnsaved(name: string, after: string): Promise<DiscardChoi
 }
 
 /** Where the browser has no open dialog API: a hidden file input. */
-function pickWithInput(accept = `${DOCUMENT_EXTENSION},application/json`): Promise<DrawingFileHandle | null> {
+function pickWithInput(accept = DOCUMENT_EXTENSION): Promise<DrawingFileHandle | null> {
   return new Promise((resolve) => {
     const input = h('input', { type: 'file', accept, style: 'display:none' });
     input.addEventListener('change', () => {
