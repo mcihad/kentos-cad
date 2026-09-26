@@ -13,9 +13,11 @@ import type { AppContext } from './context';
  * never in the user's file.
  *
  * - Written a few seconds after the drawing changes (and at most every half
- *   minute while it keeps changing), when the tab is hidden, never while a
- *   save or an open runs and never for an open cloud project (its device
- *   draft keeps its changes, app/cloud/drafts.ts).
+ *   minute while it keeps changing) and when the tab is hidden; never while
+ *   an open runs and never for an open cloud project (its device draft keeps
+ *   its changes, app/cloud/drafts.ts). While a save writes its file the copy
+ *   is the save's own verified bytes, taken when the tab is hidden (the tab
+ *   may be closed or discarded before the save ends).
  * - Removed when the drawing is saved (clean again) or its changes are
  *   dropped on purpose (Kaydetmeden devam et). A drawing replaced without
  *   that question (a cloud project opened over it) leaves its copy, to be
@@ -123,7 +125,7 @@ export async function liveTabs(): Promise<ReadonlySet<string> | null> {
 /** What the copies need of the app (the whole context in the app; parts in tests). */
 export type RecoveryContext = Pick<AppContext, 'doc' | 'log'> & {
   cloud: Pick<AppContext['cloud'], 'project'>;
-  files: Pick<AppContext['files'], 'busy' | 'handle' | 'kcad' | 'recover'>;
+  files: Pick<AppContext['files'], 'busy' | 'handle' | 'kcad' | 'recover' | 'writing'>;
 };
 
 /** What the offer asks: restore the copy, keep it for later, delete it. */
@@ -260,20 +262,24 @@ export class RecoveryCopies {
   private async writeOnce(): Promise<void> {
     const { doc, cloud, files } = this.ctx;
     if (!doc.dirty.value) return this.saved();
-    // An open cloud project keeps its changes in its device draft; a save or an open is under way.
+    // An open cloud project keeps its changes in its device draft.
     if (cloud.project.value) return;
-    if (files.busy.value) return this.changed();
     const revision = doc.revision;
     if (revision === this.written) return;
+    // A save writing the drawing of this moment: its bytes are the copy. Any other busy moment waits.
+    const saving = files.writing?.revision === revision ? files.writing.bytes : null;
+    if (files.busy.value && !saving) return this.changed();
     const id = this.current;
     try {
-      const [codec, { packDrawing }] = await Promise.all([files.kcad(), import('../io/columns')]);
-      // The drawing of this moment (one turn), as a save takes it.
-      if (doc.revision !== revision || this.current !== id) return this.changed();
-      const { drawing } = packDrawing(snapshotHead(doc), doc.all());
       const objects = doc.size;
       const name = doc.name.value;
-      const bytes = await codec.encode(drawing);
+      let bytes = saving;
+      if (!bytes) {
+        const [codec, { packDrawing }] = await Promise.all([files.kcad(), import('../io/columns')]);
+        // The drawing of this moment (one turn), as a save takes it.
+        if (doc.revision !== revision || this.current !== id) return this.changed();
+        bytes = await codec.encode(packDrawing(snapshotHead(doc), doc.all()).drawing);
+      }
       // The drawing was replaced, dropped or saved meanwhile: this copy is no longer its.
       if (this.current !== id || !doc.dirty.value) return;
       await this.store.put({ id, tab: this.tab, name, file: files.handle?.name ?? null, savedAt: this.now(), objects, bytes, version: 1 });

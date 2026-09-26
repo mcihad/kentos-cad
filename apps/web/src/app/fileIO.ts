@@ -156,6 +156,13 @@ export class DocumentFiles {
   picker: DrawingFilePicker = browserPicker;
   /** A save or open is in progress (commands stay disabled meanwhile). */
   readonly busy = new Signal(false);
+  /**
+   * The verified bytes a save is writing and the revision they hold, while
+   * the file is written: the recovery copy takes them when the tab is hidden
+   * then (app/recovery.ts), as the tab may be closed or discarded before the
+   * save ends.
+   */
+  writing: { bytes: Uint8Array; revision: number } | null = null;
   /** Drawings opened or saved lately (Son dosyalar): the start screen and the application menu list them. */
   readonly recent = new RecentFiles();
   /** Asks about unsaved changes; `after` says what would lose them. A dialog in the app; tests answer themselves. */
@@ -523,11 +530,14 @@ export class DocumentFiles {
     }
     const encoded = await this.encode(`“${handle.name}”`);
     if (!encoded) return false;
+    this.writing = encoded;
     try {
       await writeFile(handle, encoded.bytes);
     } catch (e) {
       this.ctx.log.error(`${writeFailure(handle.name, e)} Değişiklikler kaydedilmemiş sayılıyor.`);
       return false;
+    } finally {
+      this.writing = null;
     }
     doc.markSaved(encoded.revision);
     this.remember(handle);

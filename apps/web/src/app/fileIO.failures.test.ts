@@ -112,10 +112,9 @@ describe.skipIf(!formatsBuilt)('saving when something goes wrong (TODOS.md FILE-
     const store = memoryStore();
     const recovery = new RecoveryCopies({ ...ctx, files }, { store, live: async () => new Set(), quietMs: 1e9, maxMs: 1e9 });
     recovery.start();
+    // Changed and saved at once: no copy yet (it waits for the drawing to rest).
     doc.add({ kind: 'point', layerId: 'x', p: { x: 1, y: 2 }, attrs: { Ad: 'P1' } });
-    // The tab is hidden: the copy is written at once (the page may be gone next).
-    await recovery.flush();
-    expect(store.items.size).toBe(1);
+    expect(store.items.size).toBe(0);
     // A writer that never closes: the tab goes away in the middle of the save.
     const file = memoryFile('pafta.kcad', { data: OLD });
     let wrote = false;
@@ -128,6 +127,9 @@ describe.skipIf(!formatsBuilt)('saving when something goes wrong (TODOS.md FILE-
     const saving = files.save();
     for (let i = 0; i < 50 && !wrote; i++) await new Promise((r) => setTimeout(r, 1));
     expect(wrote).toBe(true);
+    // The tab is hidden while the file is written: the save's own bytes become the copy at once.
+    await recovery.flush();
+    expect(store.items.size).toBe(1);
     // Everything as it was: the old file, an unsaved drawing, the save still waiting.
     expect([text(file.bytes), doc.dirty.value, files.busy.value]).toEqual([OLD, true, true]);
     // What the next start offers is the drawing itself.
@@ -136,6 +138,38 @@ describe.skipIf(!formatsBuilt)('saving when something goes wrong (TODOS.md FILE-
     expect(back.entities.map((e) => e.attrs)).toEqual([{ Ad: 'P1' }]);
     expect(copy.name).toBe('Proje');
     void saving;
+    recovery.dispose();
+  });
+
+  it('the tab hidden while a save writes an older revision: the copy waits for the save and holds the newer drawing', async () => {
+    const { ctx, doc, files } = setup();
+    const store = memoryStore();
+    const recovery = new RecoveryCopies({ ...ctx, files }, { store, live: async () => new Set(), quietMs: 1e9, maxMs: 1e9 });
+    recovery.start();
+    doc.add({ kind: 'point', layerId: 'x', p: { x: 1, y: 2 }, attrs: { Ad: 'P1' } });
+    let close: () => void = () => {};
+    let wrote = false;
+    const file = memoryFile('pafta.kcad', { data: OLD });
+    files.handle = Object.assign(file, {
+      createWritable: async () => ({
+        write: async () => void (wrote = true),
+        close: () => new Promise<void>((resolve) => (close = resolve)),
+      }),
+    });
+    const saving = files.save();
+    for (let i = 0; i < 50 && !wrote; i++) await new Promise((r) => setTimeout(r, 1));
+    // An edit while the file is written: the save's bytes no longer hold the drawing, so no copy of them.
+    doc.add({ kind: 'point', layerId: 'x', p: { x: 3, y: 4 }, attrs: { Ad: 'P2' } });
+    await recovery.flush();
+    expect(store.items.size).toBe(0);
+    close();
+    expect(await saving).toBe(true);
+    // The save wrote the first revision; the drawing is still unsaved, and its copy holds both points.
+    expect(doc.dirty.value).toBe(true);
+    await recovery.flush();
+    const copy = readCopy([...store.items.values()][0])!;
+    const back = unpackSnapshot(await (await kcadInProcess()).decode(copy.bytes));
+    expect(back.entities.map((e) => e.attrs)).toEqual([{ Ad: 'P1' }, { Ad: 'P2' }]);
     recovery.dispose();
   });
 
