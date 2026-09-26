@@ -101,3 +101,6 @@
   1. Dosya projesi kopyadan 1. revizyonla açılır. Bağlantısız kayıt bekler; bağlanınca 2. revizyon olur, bekleyen kayıt temizlenir.
   2. Yeniden bağlantısızken bekleyen kayıt, arada Dilek'in kaydettiği 3. revizyonla karşılaşır (`conflicting_revision` 3).
   3. İki iş de korunur: Dilek'inki projenin en yenisi kalır, bu cihazın işi ayrı dosya projesi olarak yüklenir. Nesne nesne ikisi de doğrudur.
+- **Ölçüm** (`docs/perf/replica-desktop-2026-09-26.md`; i5-11300H, ext4 NVMe, sürüm derlemesi):
+  - 100 bin parselin kopyası: kurulumu 584 ms, bağlantısız açılışı 392 ms, toplanması 609 ms, boyu 52,6 MB;
+  - bir adımın diske işlenmesi yaklaşık 1,4 ms, projenin büyüklüğünden bağımsız.
