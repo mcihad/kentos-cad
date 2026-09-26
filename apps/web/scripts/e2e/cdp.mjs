@@ -35,6 +35,18 @@ export async function launch(url, { width = 1600, height = 900, args = [] } = {}
     ...args,
     'about:blank',
   ], { stdio: 'ignore' });
+  // The profile (about 150 MB) goes when Chrome has closed, and at the latest when this
+  // script ends, whether or not a check failed first: /tmp is small (a RAM disk).
+  const removeProfile = () => {
+    try {
+      rmSync(profile, { recursive: true, force: true, maxRetries: 3 });
+    } catch {}
+  };
+  proc.once('exit', removeProfile);
+  process.once('exit', () => {
+    proc.kill('SIGKILL');
+    removeProfile();
+  });
   let port = PORT;
   let targets;
   for (let i = 0; i < 100; i++) {
@@ -158,7 +170,6 @@ export async function launch(url, { width = 1600, height = 900, args = [] } = {}
     close() {
       ws.close();
       proc.kill();
-      setTimeout(() => rmSync(profile, { recursive: true, force: true }), 300);
     },
   };
   return api;
