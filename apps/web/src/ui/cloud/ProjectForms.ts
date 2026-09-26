@@ -175,8 +175,8 @@ export function creatableWorkspaces(ctx: AppContext, first: string) {
  * may open projects in. The source does not change. `done` gets the new
  * project and the mode it is kept as.
  */
-export function openConvertDialog(ctx: AppContext, p: ProjectSummary, done?: (made: ProjectDuplicated, storage: ProjectStorage) => void): void {
-  const to: ProjectStorage = p.storage === 'file' ? 'database' : 'file';
+export function openConvertDialog(ctx: AppContext, p: ProjectSummary, done?: (made: ProjectDuplicated, storage: ProjectStorage) => void, from: ProjectStorage = p.storage): void {
+  const to: ProjectStorage = from === 'file' ? 'database' : 'file';
   const title = to === 'database' ? "PostGIS'e aktar" : 'Dosya projesine çevir';
   const places = creatableWorkspaces(ctx, p.tenantId);
   const name = h('input', { class: 'field', value: '', placeholder: `${p.name} (${to === 'database' ? 'PostGIS' : 'dosya'})`, 'aria-label': 'Yeni projenin adı', spellcheck: 'false', maxlength: '200' });

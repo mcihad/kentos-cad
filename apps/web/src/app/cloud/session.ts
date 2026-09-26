@@ -390,6 +390,43 @@ export class CloudSession {
     this.accessLost.set(null);
   }
 
+  /**
+   * Hears a project's events while something shows it (the catalog's
+   * history): the open project's through its own channel, another one's
+   * through a channel of its own from its event cursor now. Returns the stop.
+   */
+  watchProject(tenantId: string, projectId: string, onEvents: (events: readonly EventRecord[]) => void): () => void {
+    if (this.openProject(tenantId, projectId))
+      return this.events.on('events', (e) => {
+        if (e.tenantId === tenantId && e.projectId === projectId) onEvents(e.events);
+      });
+    let stopped = false;
+    let socket: ReturnType<SocketFactory> | null = null;
+    void this.api.project(tenantId, projectId).then(
+      (info) => {
+        if (stopped) return;
+        let cursor = info.eventCursor;
+        socket = this.sockets({
+          tenantId,
+          projectId,
+          cursor: () => cursor,
+          onEvents: (events) => {
+            cursor = events[events.length - 1]?.seq ?? cursor;
+            onEvents(events);
+          },
+          onResync: () => onEvents([]),
+          onError: () => {},
+        });
+        socket.start();
+      },
+      () => {},
+    );
+    return () => {
+      stopped = true;
+      socket?.stop();
+    };
+  }
+
   /** Starts an open: a later open, or leaving the project, makes it stale (CLAUDE.md §21.2). */
   beginOpen(signal?: AbortSignal): () => boolean {
     const gen = ++this.generation;

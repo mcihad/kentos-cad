@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 56,
-      "implemented": 56,
+      "total": 58,
+      "implemented": 58,
       "partial": 0,
       "pending": 0
     },
@@ -11020,6 +11020,28 @@
       "name": "openConflictDialog",
       "role": "window",
       "source": "apps/web/src/ui/cloud/ConflictDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/cloud/HistoryForms.ts#openCheckpointDialog",
+      "name": "openCheckpointDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/HistoryForms.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/cloud/HistoryForms.ts#openRestoreDialog",
+      "name": "openRestoreDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/HistoryForms.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

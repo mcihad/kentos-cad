@@ -354,13 +354,13 @@ export class FakeFiles {
 
   private deleteCheckpoint(envelope: CommandEnvelope): CheckpointChange {
     this.host.guard(true);
+    // As the server: one who may write, then only its maker or someone with project.edit.
+    this.may('feature.write');
     const { checkpointId } = envelope.input as CheckpointDelete;
     const at = this.checkpoints.findIndex((c) => c.id === checkpointId);
     if (at < 0) throw new ApiFailure(404, { error: 'not_found', message: 'Kontrol noktası bulunamadı.' }, 'Yok.');
     const c = this.checkpoints[at];
-    const may = this.host.permissions();
-    const maker = c.createdBy === this.host.userId && may.includes('feature.write');
-    if (!maker && !may.includes('project.edit')) throw forbidden('project.edit');
+    if (c.createdBy !== this.host.userId && !this.host.permissions().includes('project.edit')) throw forbidden('project.edit');
     this.checkpoints.splice(at, 1);
     this.host.event('project.checkpoint', envelope.requestId);
     const { bytes: _bytes, ...shown } = c;

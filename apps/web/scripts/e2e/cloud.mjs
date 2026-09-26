@@ -29,7 +29,12 @@
 // with its stages said apart, another client's revision heard and offered,
 // a conflict answered twice (the newest revision opened; the drawing saved
 // as a separate copy), the history's revisions, and downloads whose bytes
-// are the ones uploaded.
+// are the ones uploaded. History and checkpoints (docs/adr/0034, 0038): a
+// file project's revision and a database project's present state named from
+// the history tab, downloaded, restored as new projects that open (the
+// source unchanged), a revision restored, a checkpoint removed after a
+// question. Last, the other storage mode (docs/adr/0039): “PostGIS'e aktar”
+// and “Dosya projesine çevir”, each opening the new project.
 //
 //   pnpm e2e:cloud     (needs `pnpm db:setup` once; builds kentosd first)
 //   KENTOS_E2E_DB=scratch pnpm e2e:cloud
@@ -963,30 +968,170 @@ try {
   await b.waitFor(`!!document.querySelector('.cloud-storage input[value=file]:checked')`, 5000);
   await press('.dialog__foot .btn', 'Buluta dosya olarak kaydet');
   await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(`${fileName} (kopya)`)} && window.kentos.cloud.file.value?.base.value === '1'`, 60000);
-  const fileCopy = await b.eval(`({ id: window.kentos.cloud.project.value.projectId, size: window.kentos.doc.size, dirty: window.kentos.doc.dirty.value })`);
+  const fileCopy = await b.eval(`({ id: window.kentos.cloud.project.value.projectId, tenantId: window.kentos.cloud.project.value.tenantId, size: window.kentos.doc.size, dirty: window.kentos.doc.dirty.value })`);
   const original = await ayse.call('GET', `${fbase}/files`);
   check('“Ayrı kopya olarak kaydet” makes the drawing, its edit included, a new file project; the original keeps its revisions', r5.status === 200 && fileCopy.size === r4size + 1 && !fileCopy.dirty && original.body.current === '5', `${fileCopy.size} nesne`);
 
-  // The history: the original's revisions, newest first, each downloadable; “.kcad olarak indir” gives its newest revision's bytes.
-  await b.eval(`(() => { const disk = (window.__disk = { bytes: null }); window.kentos.files.picker = { save: async (name) => ({ name, getFile: async () => new Blob([disk.bytes ?? new Uint8Array()]), createWritable: async () => { const parts = []; return { write: async (d) => parts.push(d), close: async () => { disk.bytes = new Uint8Array(await new Blob(parts).arrayBuffer()); } }; } }), open: async () => null }; })()`);
-  await b.eval(`window.kentos.commands.execute('cloud.open')`);
-  await b.waitFor(listReady, 8000);
-  await press('.catalog-nav__item', 'Projelerim');
-  await b.waitFor(`[...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent === ${JSON.stringify(fileName)})`, 8000);
-  // The row whose title is exactly the original's (its copy's title starts the same).
-  await b.eval(`[...document.querySelectorAll('.catalog-row')].find((r) => r.querySelector('.catalog-row__title')?.textContent === ${JSON.stringify(fileName)}).click()`);
-  await sleep(150);
-  await press('.catalog-details__tab', 'Geçmiş');
-  await b.waitFor(`document.querySelectorAll('.catalog-history__row').length === 5`, 8000);
-  const revRows = await b.eval(`[...document.querySelectorAll('.catalog-history__row')].map((r) => r.dataset.revision)`);
+  // ── History and checkpoints (docs/adr/0034, 0038) ──
+  // Downloads are written to a stand-in for the save dialog; `window.__disk.bytes` is the file.
+  const resetDisk = () =>
+    b.eval(`(() => { const disk = (window.__disk = { bytes: null }); window.kentos.files.picker = { save: async (name) => ({ name, getFile: async () => new Blob([disk.bytes ?? new Uint8Array()]), createWritable: async () => { const parts = []; return { write: async (d) => parts.push(d), close: async () => { disk.bytes = new Uint8Array(await new Blob(parts).arrayBuffer()); } }; } }), open: async () => null }; })()`);
+  const diskSha = () => b.eval(`crypto.subtle.digest('SHA-256', window.__disk.bytes).then((d) => [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, '0')).join(''))`);
+  const diskObjects = () => b.eval(`window.kentos.files.kcad().then((c) => c.decode(window.__disk.bytes)).then((d) => d.columns.kinds.length)`);
+  const setField = (dialog, label, value) =>
+    b.eval(`(() => { const i = document.querySelector(${JSON.stringify(`${dialog} [aria-label="${label}"]`)}); i.value = ${JSON.stringify(value)}; i.dispatchEvent(new Event('input')); })()`);
+  const pickExact = async (title) => {
+    await b.waitFor(`[...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent === ${JSON.stringify(title)})`, 8000);
+    await b.eval(`[...document.querySelectorAll('.catalog-row')].find((r) => r.querySelector('.catalog-row__title')?.textContent === ${JSON.stringify(title)}).click()`);
+    await b.waitFor(`document.querySelector('.catalog-row[aria-selected="true"] .catalog-row__title')?.textContent === ${JSON.stringify(title)}`, 5000);
+  };
+  const historyShown = `!!document.querySelector('.catalog-history__tools') && !document.querySelector('.catalog-details')?.textContent.includes('Geçmiş yükleniyor')`;
+  /** The catalog on “Projelerim”, the project titled `title` selected, its history tab showing. */
+  const historyOf = async (title) => {
+    await openCatalog();
+    await showList('Projelerim');
+    await pickExact(title);
+    await press('.catalog-details__tab', 'Geçmiş');
+    await b.waitFor(historyShown, 8000);
+  };
+  const stamp3 = new Date().toISOString().slice(11, 19);
+  const cpDialog = '.dialog[aria-label="Kontrol noktası oluştur"]';
+  const rsDialog = '.dialog[aria-label="Yeni proje olarak geri yükle"]';
+  await resetDisk();
+
+  // The open file project (the copy): its one revision, named as a checkpoint from the history tab.
+  const copyTitle = `${fileName} (kopya)`;
+  const copyBase = `/v1/tenants/${fileCopy.tenantId}/projects/${fileCopy.id}`;
+  await historyOf(copyTitle);
+  const copyHistory = await b.eval(`({ revisions: [...document.querySelectorAll('.catalog-history__row[data-revision]')].map((r) => r.dataset.revision), empty: document.querySelector('.catalog-details').textContent.includes('Henüz kontrol noktası yok') })`);
+  check('the open file project’s history: its one revision, no checkpoint yet', copyHistory.revisions.join() === '1' && copyHistory.empty, JSON.stringify(copyHistory));
+  await press('.catalog-history__tools .btn', 'Kontrol noktası oluştur');
+  await b.waitFor(`!!document.querySelector(${JSON.stringify(cpDialog)})`, 3000);
+  const cpName = `Teslim ${stamp3}`;
+  await setField(cpDialog, 'Kontrol noktasının adı', cpName);
+  await setField(cpDialog, 'Not', 'Belediyeye teslim; e2e');
+  const cpForm = await b.eval(`(() => { const s = document.querySelector(${JSON.stringify(`${cpDialog} select`)}); return { revision: s?.value, options: s?.options.length ?? 0 }; })()`);
+  check('naming a file project’s checkpoint offers its revisions, the newest chosen', cpForm.revision === '1' && cpForm.options === 1, JSON.stringify(cpForm));
+  await themed('cloud-checkpoint-create');
+  await press(`${cpDialog} .dialog__foot .btn`, 'Kontrol noktası oluştur');
+  const listedPoint = (n) => `[...document.querySelectorAll('.catalog-history__row[data-checkpoint] .catalog-history__title')].some((e) => e.textContent.startsWith(${JSON.stringify(n)}))`;
+  await b.waitFor(`!document.querySelector(${JSON.stringify(cpDialog)}) && ${listedPoint(cpName)}`, 15000);
+  const cps = await ayse.call('GET', `${copyBase}/checkpoints`);
+  const cp = cps.body.checkpoints?.[0];
+  check(
+    'the checkpoint names revision 1 with its note, and the history lists it',
+    cps.status === 200 && cps.body.checkpoints.length === 1 && cp.name === cpName && cp.kind === 'revision' && cp.revision === '1' && cp.note === 'Belediyeye teslim; e2e',
+    JSON.stringify(cp && { name: cp.name, kind: cp.kind, revision: cp.revision }),
+  );
+  await themed('cloud-history');
+  // Downloaded from its row: the bytes of the revision it names.
+  await press('.catalog-history__row[data-checkpoint] .btn', 'İndir');
+  await b.waitFor(`!!window.__disk.bytes`, 15000);
+  check('a checkpoint downloads as the bytes it holds', (await diskSha()) === cp.sha256, `${cp.size} bayt`);
+  // Restored as a new project: a file project's point is a file project, opened as a copy is; the source stays.
+  await press('.catalog-history__row[data-checkpoint] .btn', 'Yeni proje olarak geri yükle');
+  await b.waitFor(`!!document.querySelector(${JSON.stringify(rsDialog)})`, 3000);
+  const restoredTitle = `${fileName} (geri yüklenen)`;
+  await setField(rsDialog, 'Yeni projenin adı', restoredTitle);
+  await themed('cloud-restore');
+  await press(`${rsDialog} .dialog__foot .btn`, 'Yeni proje olarak geri yükle');
+  await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(restoredTitle)} && window.kentos.cloud.file.value?.base.value === '1' && !window.kentos.doc.dirty.value`, 60000);
+  const restoredFile = await b.eval(`({ id: window.kentos.cloud.project.value.projectId, storage: window.kentos.cloud.project.value.storage, size: window.kentos.doc.size })`);
+  const copyKept = await ayse.call('GET', `${copyBase}/files`);
+  const copyPoints = await ayse.call('GET', `${copyBase}/checkpoints`);
+  check(
+    'the checkpoint restored as a new file project and opened; the source keeps its revision and checkpoint',
+    restoredFile.storage === 'file' && restoredFile.id !== fileCopy.id && restoredFile.size === fileCopy.size && copyKept.body.current === '1' && copyPoints.body.checkpoints.length === 1,
+    `${restoredFile.size} nesne`,
+  );
+
+  // A database project (the v1 file uploaded above): its checkpoint is a snapshot of its present state.
+  const dbTitle = `E2E kimlik ${stamp}`;
+  const dbBase = `/v1/tenants/${project.tenantId}/projects/${up1.projectId}`;
+  await historyOf(dbTitle);
+  const dbHistory = await b.eval(`({ revisions: document.querySelectorAll('.catalog-history__row[data-revision]').length, says: document.querySelector('.catalog-details').textContent.includes('revizyon dosyaları yoktur') })`);
+  check('a database project’s history has no revision files, and says so', dbHistory.revisions === 0 && dbHistory.says, JSON.stringify(dbHistory));
+  await press('.catalog-history__tools .btn', 'Kontrol noktası oluştur');
+  await b.waitFor(`!!document.querySelector(${JSON.stringify(cpDialog)})`, 3000);
+  const dbPoint = `Ada ${stamp3}`;
+  await setField(cpDialog, 'Kontrol noktasının adı', dbPoint);
+  const noRevision = await b.eval(`!document.querySelector(${JSON.stringify(`${cpDialog} select`)})`);
+  await press(`${cpDialog} .dialog__foot .btn`, 'Kontrol noktası oluştur');
+  await b.waitFor(`!document.querySelector(${JSON.stringify(cpDialog)}) && ${listedPoint(dbPoint)}`, 15000);
+  const dbCps = await ayse.call('GET', `${dbBase}/checkpoints`);
+  const dbCp = dbCps.body.checkpoints?.find((c) => c.name === dbPoint);
+  check('a database project’s checkpoint: its present state as one snapshot, no revision asked', noRevision && dbCp?.kind === 'snapshot' && dbCp.objects === String(expectedIds.length), JSON.stringify(dbCp && { kind: dbCp.kind, objects: dbCp.objects }));
+  await themed('cloud-history-database');
+  // “.kcad olarak indir” on a database project: one snapshot of the moment, checked against its SHA-256, readable.
+  await resetDisk();
+  await press('.catalog-details__actions .btn', '.kcad olarak indir');
+  await b.waitFor(`!!window.__disk.bytes`, 15000);
+  check('“.kcad olarak indir” writes a database project as one readable .kcad', (await diskObjects()) === expectedIds.length, `${expectedIds.length} nesne`);
+  // Restored under its default name: a database project, every object under its persistent id; the source stays.
+  await press('.catalog-history__row[data-checkpoint] .btn', 'Yeni proje olarak geri yükle');
+  await b.waitFor(`!!document.querySelector(${JSON.stringify(rsDialog)})`, 3000);
+  await press(`${rsDialog} .dialog__foot .btn`, 'Yeni proje olarak geri yükle');
+  const dbRestored = `${dbTitle} (${dbPoint})`;
+  await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(dbRestored)} && window.kentos.cloud.sync.value?.state.value === 'saved'`, 60000);
+  const fromPoint = await b.eval(`({ storage: window.kentos.cloud.project.value.storage, uids: [...window.kentos.doc.all()].map((e) => e.uid).sort() })`);
+  const sourceIds = (await ayse.call('GET', `${dbBase}/features?limit=5000`)).body.features.map((f) => f.id).sort();
+  check('a database checkpoint restored as a new database project with the same ids; the source unchanged', fromPoint.storage === 'database' && same(fromPoint.uids) && same(sourceIds), `${fromPoint.uids.length} nesne`);
+  // Removed after a question, by its maker.
+  await historyOf(dbTitle);
+  await b.waitFor(listedPoint(dbPoint), 8000);
+  await press('.catalog-history__row[data-checkpoint] .btn', 'Sil');
+  await b.waitFor(`!!document.querySelector('.dialog[aria-label="Kontrol noktasını sil"]')`, 3000);
+  await press('.dialog[aria-label="Kontrol noktasını sil"] .dialog__foot .btn', 'Sil');
+  await b.waitFor(`!${listedPoint(dbPoint)} && ${historyShown}`, 8000);
+  const dbLeft = await ayse.call('GET', `${dbBase}/checkpoints`);
+  check('its maker removes the checkpoint after a question', !dbLeft.body.checkpoints.some((c) => c.name === dbPoint), String(dbLeft.body.checkpoints.length));
+  await b.key('Escape');
+
+  // The history of a file project that is not open: its revisions, newest first, each downloadable and restorable;
+  // “.kcad olarak indir” gives its newest revision's bytes. The catalog must say how it is kept (docs/adr/0039).
+  await resetDisk();
+  await historyOf(fileName);
+  await b.waitFor(`document.querySelectorAll('.catalog-history__row[data-revision]').length === 5`, 8000);
+  const revRows = await b.eval(`[...document.querySelectorAll('.catalog-history__row[data-revision]')].map((r) => r.dataset.revision)`);
   check('the history lists the revisions, newest first', revRows.join() === '5,4,3,2,1', revRows.join());
   await themed('cloud-file-history');
   await press('.catalog-details__actions .btn', '.kcad olarak indir');
   await b.waitFor(`!!window.__disk.bytes`, 15000);
-  const written = await b.eval(`crypto.subtle.digest('SHA-256', window.__disk.bytes).then((d) => [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, '0')).join(''))`);
   const newest = await raw(ayse, 'GET', `${fbase}/files/5`);
-  check('“.kcad olarak indir” writes the newest revision’s bytes', written === sha(newest.bytes), `${newest.bytes.length} bayt`);
-  await b.key('Escape');
+  check('“.kcad olarak indir” writes the newest revision’s bytes', (await diskSha()) === sha(newest.bytes), `${newest.bytes.length} bayt`);
+  // Any revision restored as a new project: revision 2, a file project, opened.
+  await press('.catalog-history__row[data-revision="2"] .btn', 'Yeni proje olarak geri yükle');
+  await b.waitFor(`!!document.querySelector(${JSON.stringify(rsDialog)})`, 3000);
+  await press(`${rsDialog} .dialog__foot .btn`, 'Yeni proje olarak geri yükle');
+  await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(`${fileName} (r2)`)} && window.kentos.cloud.file.value?.base.value === '1'`, 60000);
+  const r2objects = (await ayse.call('GET', `${fbase}/files`)).body.revisions.find((r) => r.revision === '2')?.objects;
+  check('a revision restored as a new file project and opened', String(await b.eval('window.kentos.doc.size')) === r2objects, `${r2objects} nesne`);
+
+  // ── Another storage mode (docs/adr/0039): a new project from this one, opened; the source unchanged ──
+  // “PostGIS'e aktar” on the file project: its newest revision, object by object.
+  await openCatalog();
+  await showList('Projelerim');
+  await pickExact(fileName);
+  await press('.catalog-details__actions .btn', "PostGIS'e aktar");
+  const toDb = '.dialog[aria-label="PostGIS\'e aktar"]';
+  await b.waitFor(`!!document.querySelector(${JSON.stringify(toDb)})`, 3000);
+  await themed('cloud-convert');
+  await press(`${toDb} .dialog__foot .btn`, "PostGIS'e aktar");
+  await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(`${fileName} (PostGIS)`)} && window.kentos.cloud.sync.value?.state.value === 'saved'`, 60000);
+  const r5objects = (await ayse.call('GET', `${fbase}/files`)).body.revisions.find((r) => r.revision === '5')?.objects;
+  const asDb = await b.eval(`({ storage: window.kentos.cloud.project.value.storage, size: window.kentos.doc.size })`);
+  check('“PostGIS\'e aktar” makes the newest revision a database project and opens it', asDb.storage === 'database' && String(asDb.size) === r5objects, `${asDb.size} nesne`);
+  // “Dosya projesine çevir” on a database project: its present state as revision 1 of a new file project.
+  await openCatalog();
+  await showList('Projelerim');
+  await pickExact(`E2E kimlik (yeniden) ${stamp}`);
+  await press('.catalog-details__actions .btn', 'Dosya projesine çevir');
+  const toFile = '.dialog[aria-label="Dosya projesine çevir"]';
+  await b.waitFor(`!!document.querySelector(${JSON.stringify(toFile)})`, 3000);
+  await press(`${toFile} .dialog__foot .btn`, 'Dosya projesine çevir');
+  await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(`E2E kimlik (yeniden) ${stamp} (dosya)`)} && window.kentos.cloud.file.value?.base.value === '1'`, 60000);
+  const asFile = await b.eval(`({ storage: window.kentos.cloud.project.value.storage, uids: [...window.kentos.doc.all()].map((e) => e.uid).sort() })`);
+  check('“Dosya projesine çevir” makes a database project a file project and opens it', asFile.storage === 'file' && same(asFile.uids), `${asFile.uids.length} nesne`);
 
   const errors = b.consoleLog.filter((l) => /^(error|EXCEPTION)/.test(l));
   check('no console errors', errors.length === 0, errors.join(' | '));

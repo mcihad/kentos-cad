@@ -1,3 +1,6 @@
+import type { CheckpointChange } from '../../contracts/generated/CheckpointChange';
+import type { CheckpointCreate } from '../../contracts/generated/CheckpointCreate';
+import type { CheckpointRestore } from '../../contracts/generated/CheckpointRestore';
 import type { ProjectCatalogChange } from '../../contracts/generated/ProjectCatalogChange';
 import type { ProjectDuplicated } from '../../contracts/generated/ProjectDuplicated';
 import type { ProjectPurged } from '../../contracts/generated/ProjectPurged';
@@ -10,7 +13,8 @@ import type { CloudSession } from './session';
  * The catalog's commands on a cloud project (docs/adr/0028, TODOS.md
  * CLOUD-05): archive and unarchive, the trash and restoring from it,
  * removing for good, copying, a new project in the other storage mode
- * (docs/adr/0039), the catalog metadata and favourites. Each is
+ * (docs/adr/0039), checkpoints and restoring a point of the history as a
+ * new project (docs/adr/0034), the catalog metadata and favourites. Each is
  * one product command with its own idempotency key; the server checks the
  * rights and answers. When the project is the one open here, the session
  * follows: its unsent edits go first, archiving it makes it read-only,
@@ -115,6 +119,37 @@ export class ProjectLifecycle {
     if (into.name?.trim()) input.name = into.name.trim();
     if (into.tenantId) input.tenantId = into.tenantId;
     return this.send<ProjectDuplicated>('project.convert', ref, input);
+  }
+
+  /**
+   * A named checkpoint (`project.checkpoint.create`, docs/adr/0034): a
+   * database project's present state, or a file project's revision (its
+   * newest when `fileRevision` is absent). The open project's unsent edits
+   * go first, so the checkpoint holds them.
+   */
+  async createCheckpoint(ref: ProjectRef, input: CheckpointCreate): Promise<CheckpointChange> {
+    await this.settle(ref);
+    const out: CheckpointCreate = { name: input.name.trim() };
+    if (input.note?.trim()) out.note = input.note.trim();
+    if (input.fileRevision) out.fileRevision = input.fileRevision;
+    return this.send<CheckpointChange>('project.checkpoint.create', ref, out);
+  }
+
+  /** Removes a checkpoint (its maker, or someone with `project.edit`); a file project's revision stays. */
+  deleteCheckpoint(ref: ProjectRef, checkpointId: string): Promise<CheckpointChange> {
+    return this.send<CheckpointChange>('project.checkpoint.delete', ref, { checkpointId });
+  }
+
+  /**
+   * A point of the history as a new project (`project.checkpoint.restore`):
+   * a checkpoint, or a file project's revision. The source does not change;
+   * the answer is the new project, as a copy's.
+   */
+  restoreCheckpoint(ref: ProjectRef, point: { checkpointId: string } | { fileRevision: string }, into: { name?: string; tenantId?: string } = {}): Promise<ProjectDuplicated> {
+    const input: CheckpointRestore = { ...point };
+    if (into.name?.trim()) input.name = into.name.trim();
+    if (into.tenantId) input.tenantId = into.tenantId;
+    return this.send<ProjectDuplicated>('project.checkpoint.restore', ref, input);
   }
 
   setFavorite(ref: ProjectRef, favorite: boolean): Promise<ProjectCatalogChange> {

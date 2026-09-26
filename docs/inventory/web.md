@@ -12,7 +12,7 @@
 | Ayarlar | 64 | 64 | 0 | 0 |
 | Tarayıcı depoları | 9 | 9 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 192 | 0 | 0 |
-| Pencereler ve paneller | 56 | 56 | 0 | 0 |
+| Pencereler ve paneller | 58 | 58 | 0 | 0 |
 
 ## Kısmi (0)
 

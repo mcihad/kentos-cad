@@ -45,6 +45,8 @@ export interface DetailsView {
   onTab(tab: DetailsTab): void;
   history: HistoryState;
   historyActions: HistoryActions;
+  /** How the project is kept: the open project's as the session opened it, else the catalog's. */
+  storage?: ProjectSummary['storage'];
 }
 
 /** What the server worked out on asking, while it is on its way, or why it is not there. */
@@ -110,12 +112,13 @@ export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSumm
     row('Oluşturan', `${p.creatorName || 'görünmüyor'}, ${when(p.createdAt)}`),
     row('Son değişiklik', when(p.updatedAt)),
     row('Revizyon', h('span', { class: 'num' }, p.dataRevision)),
-    row('Saklama', STORAGE_TEXT[p.storage].title),
+    row('Saklama', STORAGE_TEXT[view.storage ?? p.storage].title),
     p.archivedAt ? row('Arşivlenme', when(p.archivedAt)) : null,
     p.trashedAt ? row('Çöpe taşınma', `${when(p.trashedAt)}${p.trashedByName ? `, ${p.trashedByName}` : ''}`) : null,
     p.state === 'trashed' ? row('Kalıcı silinme', p.purgeAfter ? day(p.purgeAfter) : 'Elle silinene kadar kalır') : null,
   ];
-  const toDatabase = p.storage === 'file';
+  const storage = view.storage ?? p.storage;
+  const toDatabase = storage === 'file';
   const buttons =
     p.state === 'trashed'
       ? [button('Kalıcı olarak sil…', 'trash', actions.purge, needs('project.delete', 'kalıcı olarak silme'), true)]

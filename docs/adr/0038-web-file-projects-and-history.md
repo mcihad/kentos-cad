@@ -111,3 +111,77 @@
   - indirilen revizyonun yüklenen baytlarla aynılığı;
   - başka istemcinin revizyonunun duyulması;
   - çakışmanın iki cevabı: son revizyon ve ayrı kopya.
+
+## İkinci adım: geçmiş ve kontrol noktaları (26 Eylül)
+
+Sunucu tarafı ADR 0034'tür (kontrol noktası oluşturma, listeleme, indirme, silme; yeni proje olarak geri yükleme). Yön `SYNC-11` ve `CLOUD-07`'den gelir.
+
+### Geçmiş sekmesi
+
+- Katalogda seçili projenin **Geçmiş** sekmesi iki liste gösterir, en yeni önce:
+  - **Kontrol noktaları**: ad, not, tür (anlık görüntü ya da adlandırılmış revizyon), gösterdiği revizyon, kim, ne zaman, boyut ve nesne sayısı;
+  - **Revizyonlar** (yalnız dosya projesinde): numara, kim, ne zaman, boyut ve nesne sayısı. Veritabanı projesinde revizyon dosyası olmadığı ve şimdiki hâlin “.kcad olarak indir”le alındığı söylenir.
+- Her satır indirilir ve “Yeni proje olarak geri yükle…” ile yeni proje olur; kontrol noktası satırında ayrıca “Sil…” vardır.
+- Hesabın yapamayacağı iş görünür kalır, düğmesi kapalıdır ve nedenini (eksik hakkı) söyler. Sunucu her isteği yine kendisi denetler (`app/cloud/history.ts`):
+  - listeyi görmek `project.history`, indirmek ve geri yüklemek ayrıca `project.download` ister;
+  - kontrol noktası oluşturmak `feature.write` ister; arşivdeki projede ve revizyonu olmayan dosya projesinde yoktur;
+  - silmek yalnız oluşturanın (yazma hakkı sürdükçe) ya da `project.edit` sahibinindir; arşivde yoktur.
+- Çöpteki projenin geçmişi gösterilmez (açılmaz).
+
+### Kontrol noktası oluşturma
+
+- “Kontrol noktası oluştur…” adı (en çok 120 karakter) ve isteğe bağlı notu (en çok 2000) sorar.
+- Dosya projesinde adlandırılacak revizyon seçilir; varsayılan en yenisidir. Dosya kopyalanmaz; kontrol noktası silinse de revizyon kalır.
+- Veritabanı projesinde projenin şimdiki hâli tek `.kcad` olarak saklanır. Proje bu pencerede açıksa gönderilmeyi bekleyen değişiklikler önce gönderilir; kontrol noktası onları da tutar.
+
+### Silme
+
+- “Sil…” `askRemove` ile sorar. Adlandırılmış revizyonda revizyonun kaldığı, anlık görüntüde dosyasının da silindiği söylenir.
+
+### Yeni proje olarak geri yükleme
+
+- Kontrol noktası ya da dosya projesinin herhangi bir revizyonu geri yüklenir. Pencere isteğe bağlı adı ve çalışma alanını sorar (hesabın proje açabildiği alanlar, `project.create`). Olacakları da söyler:
+  - kaynak olduğu gibi kalır;
+  - yeni projenin biçimi: dosya noktası dosya projesi, anlık görüntü veritabanı projesi olur;
+  - yeni proje hesabın olur; geçmiş ve paylaşım gelmez.
+- Yeni proje kopya gibi “Projelerim”de seçilir ve açılır; biçimi komuttan bellidir.
+- Yeni proje yalnız liste onu gösterdiğinde açılır. Arama ve tür süzgeci önce temizlenir. Liste onu göstermezse durum satırı söyler; sonraki bir liste kendiliğinden hiçbir proje açmaz. Aynı kural dönüştürmede de geçerlidir.
+
+### Güncellik
+
+- Sekme açıkken projenin olayları dinlenir (`CloudSession.watchProject`):
+  - açık proje kendi kanalından (`CloudSession.events`);
+  - başka bir proje, sekmenin kendi kanalından; kanal projenin o anki olay imlecinden başlar.
+- `project.checkpoint` ya da `project.file` olayı, ya da kanalın yeniden eşitlemesi, listeyi 250 ms sonra yeniden sorar. Liste yanıt gelene kadar olduğu gibi kalır.
+- Sekme ya da pencere kapanınca kanal kapanır; geç gelen yanıt yeni seçimin üstüne yazılmaz.
+
+### Saklama biçimi
+
+- Açık projenin biçimi, oturumun onu açtığı biçimdir (`HistoryPanel.storageOf`). Katalog kaydının biçimi (`ProjectSummary.storage`) bu dal açılırken sunucuda her proje için “database” diyordu; main'deki 5c3d2a6 (ADR 0039) bunu düzeltti. Açık olmayan dosya projesinin geçmişi, indirmesi ve dönüştürmesi o düzeltmeye dayanır.
+
+### Bu adımda olmayanlar
+
+- Bir noktayı salt okunur açmak ve iki noktayı karşılaştırmak yoktur (`SYNC-11`, `CLOUD-07`'nin kalanı).
+
+### Kod yerleşimi (ikinci adım)
+
+| Parça | Yer |
+|---|---|
+| Geçmişin okunması, hak kuralları | `app/cloud/history.ts` |
+| Oluşturma, silme, geri yükleme komutları | `app/cloud/lifecycle.ts` |
+| Projenin olaylarını dinleme | `app/cloud/session.ts` (`watchProject`) |
+| Sekme, satırlar, pencereler | `ui/cloud/historyPanel.ts`, `ui/cloud/catalogHistory.ts`, `ui/cloud/HistoryForms.ts`, `ui/cloud/CatalogDialog.ts` |
+
+## Doğrulama (ikinci adım)
+
+- Vitest, sahte sunucuyla: `history.test.ts`.
+  - Silme hakkı: oluşturan, başka düzenleyici, yönetici, görüntüleyici olmuş oluşturan, arşiv.
+  - Oluşturma ve alma hakları.
+  - Veritabanı projesinin listesi; `project.history` yoksa sorulmaması.
+  - Dosya projesinde en yeni ve seçilen revizyonun adlandırılması; kontrol noktasının ve revizyonun yeni proje olarak geri yüklenmesi, kaynağın değişmemesi; silme; başkasınınkini düzenleyicinin silememesi.
+  - Açık olmayan ve açık projede `project.checkpoint` olayıyla listenin yenilenmesi; sekme kapanınca kanalın kapanması.
+- `pnpm e2e:cloud` (gerçek sunucu, geçici veritabanı):
+  - açık dosya projesinin revizyonuna kontrol noktası; indirilen baytların özeti; yeni dosya projesi olarak geri yükleme ve açılması; kaynağın değişmemesi;
+  - veritabanı projesinin kontrol noktası; “.kcad olarak indir” ile okunabilir tek dosya; aynı kimliklerle yeni veritabanı projesi olarak geri yükleme; sorulduktan sonra silme;
+  - açık olmayan dosya projesinin revizyonları ve revizyon geri yükleme; “PostGIS'e aktar” ve “Dosya projesine çevir”. Bu son adımlar main'deki sunucuya dayanır (5c3d2a6).
+
