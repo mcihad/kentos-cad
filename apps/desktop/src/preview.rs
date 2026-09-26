@@ -410,3 +410,74 @@ impl canvas::Program<Message> for Draft {
         vec![frame.into_geometry()]
     }
 }
+
+/// Pictures of the round-3 drawing tools' previews (docs/adr/0057), for the
+/// owner: each trace played up to a pointer move that shows its preview.
+/// Not run by default: `cargo test -p kentos-desktop preview::screens -- --ignored --nocapture`.
+#[cfg(test)]
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::app::App;
+    use crate::traces::{Player, Trace, VARIANTS, scratch_file};
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    // Name, trace, the steps played (the last one a pointer move over the preview).
+    let shots = [
+        ("cizim-elips", "ellipse-spline", 4),
+        ("cizim-egri", "ellipse-spline", 27),
+        ("cizim-yardimci-cizgi", "construction-lines", 3),
+        ("cizim-paralel", "parallel-line", 21),
+        ("cizim-dik", "perpendiculars", 4),
+        ("cizim-halka", "donut-cloud", 14),
+        ("cizim-bulut", "donut-cloud", 28),
+        ("cizim-bol", "spot-divide", 10),
+    ];
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            for (name, id, steps) in shots {
+                let (mut app, _) = App::boot(None);
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                app.tab = "draw";
+                let trace = Trace::by_id(id).expect("the trace");
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                let text = std::fs::read_to_string(crate::traces::folder().join(&trace.document))
+                    .expect("the drawing");
+                let doc = crate::document::Document::new(
+                    kentos_contracts::DocumentSnapshotV1::from_json(&text).expect("reads"),
+                    None,
+                )
+                .expect("opens");
+                let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+                snapshot.settle(&mut app, App::view, &mut update);
+                // The player opens the drawing again: its line is said once.
+                app.history.pop();
+                let area = app.viewport.bounds;
+                let file = scratch_file(&trace, VARIANTS[0]);
+                let mut player =
+                    Player::new(&mut app, &trace, VARIANTS[0], area, file).expect("plays");
+                let problems = player.play(Some(steps));
+                assert!(problems.is_empty(), "{name}: {problems:?}");
+                drop(player);
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("{name}-{width}x{height}{suffix}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
+    }
+}

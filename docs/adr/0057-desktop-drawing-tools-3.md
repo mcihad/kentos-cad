@@ -106,3 +106,18 @@
 - Masaüstünde güncel renk: araçlar katmanın rengiyle yazar (ADR 0032'den beri).
 - Yazı, ölçü, tarama ve alan araçları; elipsin ve eğrinin tutamaçları.
 - `cad.entities.create`'in sunucuda çalışması ve Python/AI sarmalayıcısı (ADR 0022'nin ertelenenleri).
+
+## Doğrulama
+
+- `python3 scripts/fixtures/create_command_cases.py --check` (26 durum); `cargo test -p kentos-native-application` (ortak durumlar ve `tests/create.rs`); `crates/native/interaction/tests/drawing.rs`.
+- Altı iz iki platformda üç varyantta: web `pnpm e2e:interaction` (30 iz × 3 varyant), masaüstü `cargo test -p kentos-desktop traces`.
+- `pnpm rust:test`, `pnpm rust:test:desktop` (clippy temiz), `pnpm typecheck`, `pnpm test` (1529), `pnpm inventory:check`.
+- Görüntüler (`preview::screens`, `.run/shots/cizim-*`), koyu ve açık, 1440×900 ve 1100×650:
+  - elipsin ve eğrinin önizlemesi;
+  - görünümü kesen yardımcı çizgi ve açısı;
+  - paralel çizginin dolgulu koridoru;
+  - dik, dik açı işareti ve “A”;
+  - halkalar;
+  - revizyon bulutu;
+  - Böl'ün konacak noktaları.
+- Görüntülerde bir KentOS UI hatası bulundu ve düzeltildi. Büyük bölünmüş düğmede (Yardımcı çizgi ▾, Dik in ▾) araç çalışırken yalnız üst kısım dolgulu vurgu alıyor, ama alttaki etiket vurgu zeminin yazı rengine (beyaz) geçiyordu; açık temada kayboluyordu. Etiket artık kendi renginde kalır, web'deki gibi (`.rsplit[data-active]` yalnız `.rsplit__main`'i doldurur).

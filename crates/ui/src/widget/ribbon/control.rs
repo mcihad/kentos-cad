@@ -220,7 +220,11 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
 
     /// Etiket: kendi rengiyle (ikon düğmenin rengini alır, etiket almaz).
     fn caption(&self, large: bool) -> iced::widget::Text<'a> {
-        let state = self.state;
+        self.caption_in(large, self.state)
+    }
+
+    /// Etiket, `state` durumundaki bir zeminin üstünde.
+    fn caption_in(&self, large: bool, state: State) -> iced::widget::Text<'a> {
         let enabled = self.on_press.is_some() || self.menu.is_some();
         let label = text(self.label.clone())
             .font(typography::ui())
@@ -300,9 +304,12 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
                     .height(top)
                     .padding(0)
                     .style(style::button::ribbon(self.state)),
+                    // The label stands under the lit part, on the ribbon's own
+                    // ground: its colour stays the idle one while the tool runs,
+                    // as on the web (`.rsplit[data-active]` fills `.rsplit__main` only).
                     MenuButton::new(
                         container(
-                            column![self.caption(true), chevron()]
+                            column![self.caption_in(true, State::Idle), chevron()]
                                 .spacing(1)
                                 .align_x(Center)
                         )
