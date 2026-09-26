@@ -120,8 +120,21 @@ function kentosCompress() {
   };
 }
 
+/**
+ * The product's version, from one source for every host: the Rust workspace's
+ * (`[workspace.package]` in Cargo.toml), which the desktop and the API report
+ * too. The About window shows it (`__KENTOS_VERSION__`, src/build.d.ts).
+ */
+function workspaceVersion() {
+  const text = readFileSync(new URL('../../Cargo.toml', import.meta.url), 'utf8');
+  const version = /^\[workspace\.package\][^[]*?^version\s*=\s*"([^"]+)"/m.exec(text)?.[1];
+  if (!version) throw new Error('Cargo.toml: [workspace.package] altında version bulunamadı.');
+  return version;
+}
+
 export default defineConfig({
   plugins: [kentosApi(), kentosCompress()],
+  define: { __KENTOS_VERSION__: JSON.stringify(workspaceVersion()) },
   worker: { format: 'es' },
   // Agents' git worktrees live under .claude/worktrees: neither watched nor tested from here.
   server: { watch: { ignored: ['**/.claude/**'] } },
