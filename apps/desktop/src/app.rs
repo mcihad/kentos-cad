@@ -1159,7 +1159,7 @@ mod tests {
     fn a_command_not_ported_says_so_and_changes_nothing() {
         let (mut app, _) = App::boot(None);
         let before = app.history.len();
-        let _ = app.run("tool.hatch");
+        let _ = app.run("tool.measure");
         assert_eq!(app.history.len(), before + 1);
         assert!(
             matches!(app.history.last(), Some(Entry::Output(text)) if text.contains("masaüstüne henüz taşınmadı"))

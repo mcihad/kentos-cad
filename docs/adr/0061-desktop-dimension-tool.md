@@ -82,9 +82,9 @@
 
 ## Web'den ayrılanlar
 
-- **Kenar ya da daire beklenirken yazılan nokta alınmaz.**
-  - Web bu noktayı aracın noktalarına ekliyordu. Nokta hiçbir kenarı seçmediği hâlde araç "taze" olmaktan çıkıyordu.
-  - Masaüstü yazılanı anlaşılmamış sayar. Web ajanına aynı düzeltme için iletildi.
+- **Kenar ya da daire beklenirken yazılan nokta** (kapandı): web bu noktayı aracın noktalarına ekliyordu. Nokta hiçbir kenarı seçmediği hâlde araç "taze" olmaktan çıkıyordu.
+  - Masaüstü yazılanı anlaşılmamış sayar.
+  - Web ajanı aynı gün web'i de böyle yaptı (`bc4f8ad`, duman testiyle).
 - **Yazma yolu:** web ölçüyü belgeye doğrudan yazar (`doc.add`), masaüstü `cad.entities.create` ile yazar.
   - Geri alma adımının adı ikisinde de "Ekle"dir.
   - Web ajanının önerisi web'i de ürün komutuna taşımaktır.

@@ -100,6 +100,7 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::PerpendicularIn) => "Dik in",
         Some(CreateOperation::PerpendicularOut) => "Dik çık",
         Some(CreateOperation::Divide) => "Böl",
+        Some(CreateOperation::Hatch) => "Tarama",
     }
 }
 

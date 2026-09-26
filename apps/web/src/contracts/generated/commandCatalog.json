@@ -10935,6 +10935,11 @@
                 "const": "divide",
                 "description": "Böl: points along an object.",
                 "type": "string"
+              },
+              {
+                "const": "hatch",
+                "description": "Tarama: a hatch filling the region clicked inside.",
+                "type": "string"
               }
             ]
           },

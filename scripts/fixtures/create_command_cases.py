@@ -221,6 +221,21 @@ cases.append({
     ],
 })
 
+# Tarama: a parcel with a building left out as an island, lines at 45°, 3 m apart (3 mm at 1:1000).
+HATCH = {"kind": "hatch", "ring": [P(487000, 4420120), P(487040, 4420120), P(487040, 4420150), P(487000, 4420150)],
+         "holes": [[P(487010, 4420130), P(487020, 4420130), P(487020, 4420138), P(487010, 4420138)]],
+         "pattern": {"type": "lines", "angle": 45, "spacing": 3}}
+
+cases.append({
+    "name": "Tarama: halka, adası ve deseniyle tek adım; adı “Tarama”",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "hatch", "objects": [O(HATCH)]}, "result": done([3]),
+         "expect": {"ids": IDS + [3], "entities": {"3": made(O(HATCH), 3)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Tarama", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Tarama", "expect": {"ids": IDS + [3]}},
+    ],
+})
+
 marked = [
     O({"kind": "point", "p": P(487060, 4420010), "z": 12.5}, color="#E5484D", attrs={"Tür": "Kot noktası", "Z (m)": "12.500"}, label="12.50"),
     O(FOOT),
@@ -461,7 +476,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

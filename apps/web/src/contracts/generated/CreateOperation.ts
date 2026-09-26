@@ -4,4 +4,4 @@
  * The drawing tool whose step has its own name; without one the step is
  * “Ekle”, as for every object a drawing tool adds.
  */
-export type CreateOperation = "parallel" | "perpendicularIn" | "perpendicularOut" | "divide";
+export type CreateOperation = "parallel" | "perpendicularIn" | "perpendicularOut" | "divide" | "hatch";
