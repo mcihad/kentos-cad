@@ -33,6 +33,7 @@ use crate::move_copy::{self, Move};
 use crate::object::{self, ObjectAction};
 use crate::offset::{self, Offset};
 use crate::path::{self, Path};
+use crate::perpendicular::{self, Perpendicular};
 use crate::point::{self, Point};
 use crate::polar::{self, Polar};
 use crate::prompt::Prompt;
@@ -47,6 +48,7 @@ use crate::stretch::{self, Stretch};
 use crate::tool::{Context, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
+use crate::{construction, divide, donut, ellipse, parallel, revcloud, spline};
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
 pub const TOOLS: &[&str] = &[
@@ -79,6 +81,18 @@ pub const TOOLS: &[&str] = &[
     object::EXPLODE_ID,
     lengthen::ID,
     vertex::ID,
+    // Drawing tools, round 3 (docs/adr/0057).
+    ellipse::ID,
+    spline::ID,
+    construction::XLINE_ID,
+    construction::RAY_ID,
+    parallel::ID,
+    perpendicular::IN_ID,
+    perpendicular::OUT_ID,
+    donut::ID,
+    revcloud::ID,
+    point::SPOT_ID,
+    divide::ID,
 ];
 
 /// The running tool, if any, the last one started, and the select tool that
@@ -134,6 +148,17 @@ impl Session {
             object::EXPLODE_ID => Box::new(ObjectAction::explode()),
             lengthen::ID => Box::new(Lengthen::new()),
             vertex::ID => Box::new(Vertex::new()),
+            ellipse::ID => Box::new(crate::ellipse::Ellipse::new()),
+            spline::ID => Box::new(crate::spline::Spline::new()),
+            construction::XLINE_ID => Box::new(crate::construction::Xline::new()),
+            construction::RAY_ID => Box::new(crate::construction::Ray::new()),
+            parallel::ID => Box::new(crate::parallel::Parallel::new()),
+            perpendicular::IN_ID => Box::new(Perpendicular::perpendicular_in()),
+            perpendicular::OUT_ID => Box::new(Perpendicular::perpendicular_out()),
+            donut::ID => Box::new(crate::donut::Donut::new()),
+            revcloud::ID => Box::new(crate::revcloud::RevCloud::new()),
+            point::SPOT_ID => Box::new(Point::spot()),
+            divide::ID => Box::new(crate::divide::Divide::new()),
             _ => return false,
         };
         self.last = Some(tool.id());

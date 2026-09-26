@@ -109,6 +109,48 @@ pub(crate) fn write_ring(
     }
 }
 
+/// Objects a tool built (an ellipse, a spline, a perpendicular …) written
+/// through the product command `cad.entities.create` (docs/adr/0057): the
+/// active layer explicit in its input (CMD-07); the desktop has no current
+/// colour. One undo step, “Ekle” or the tool's `operation`. The command's
+/// answer, or `None` when it refused (its reason said).
+pub(crate) fn write_objects(
+    geometries: Vec<kentos_contracts::EntityGeometry>,
+    operation: Option<kentos_contracts::CreateOperation>,
+    cx: &mut Context<'_>,
+) -> Option<kentos_contracts::EntitiesCreated> {
+    use kentos_native_application::{ExecutionContext, create};
+    let input = kentos_contracts::EntitiesCreate {
+        layer_id: cx.doc.layers().active().to_owned(),
+        objects: geometries
+            .into_iter()
+            .map(|geometry| kentos_contracts::NewObject {
+                geometry,
+                color: None,
+                attrs: None,
+                label: None,
+            })
+            .collect(),
+        operation,
+        expected_revision: None,
+    };
+    let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
+    written(result, cx)
+}
+
+/// Points as the contracts carry them.
+pub(crate) fn wire_all(pts: &[Vec2]) -> Vec<kentos_contracts::Vec2> {
+    pts.iter().map(|p| wire(*p)).collect()
+}
+
+/// How far a preview's unbounded line reaches either way: `times` the
+/// diagonal of what the view shows (the web's `strokeInfinite` and
+/// `drawRef`: long enough to cross any view).
+pub(crate) fn reach(view: &dyn crate::tool::View, times: f64) -> f64 {
+    let b = view.visible();
+    kentos_geometry_core::jsmath::js_hypot(b.max_x - b.min_x, b.max_y - b.min_y) * times
+}
+
 /// The web's `PointInputTool.draw`: the points so far and the cursor as one
 /// solid line, the length and bearing of its last segment beside the cursor,
 /// and the polar ray the cursor is locked to.

@@ -179,6 +179,25 @@ pub struct Memory {
     pub polar_rotate: bool,
     /// Whether Hizala scales to fit its second pair (`AlignTool.scale`).
     pub align_scale: bool,
+    /// Yardımcı çizgi's typed angle, degrees (`XlineTool.angle`; docs/adr/0057).
+    pub xline_angle: f64,
+    /// Paralel çizgi's left and right distances, metres, whether the axis
+    /// is drawn and whether the corridor is one area (`ParallelLineTool`).
+    pub parallel_left: f64,
+    pub parallel_right: f64,
+    pub parallel_axis: bool,
+    pub parallel_area: bool,
+    /// Halka's inner and outer diameters, metres (`DonutTool`).
+    pub donut_inner: f64,
+    pub donut_outer: f64,
+    /// Revizyon bulutu: a rectangle (else a polygon), and its arc length in
+    /// paper millimetres (`RevCloudTool`).
+    pub cloud_rect: bool,
+    pub cloud_arc_mm: f64,
+    /// Böl: the parts, the step in metres, and whether the step applies (`DivideTool`).
+    pub divide_parts: u32,
+    pub divide_step: f64,
+    pub divide_by_step: bool,
 }
 
 impl Default for Memory {
@@ -207,6 +226,18 @@ impl Default for Memory {
             polar_fill: 360.0,
             polar_rotate: true,
             align_scale: false,
+            xline_angle: 0.0,
+            parallel_left: 5.0,
+            parallel_right: 5.0,
+            parallel_axis: true,
+            parallel_area: false,
+            donut_inner: 0.5,
+            donut_outer: 1.0,
+            cloud_rect: true,
+            cloud_arc_mm: 8.0,
+            divide_parts: 4,
+            divide_step: 10.0,
+            divide_by_step: false,
         }
     }
 }
@@ -340,6 +371,30 @@ pub struct Preview {
     pub markers: Vec<Marker>,
     /// A polar tracking ray the cursor is locked to.
     pub tracking: Option<Tracking>,
+    /// Filled areas as the web's `drawArea` draws them: a corridor, a donut (docs/adr/0057).
+    pub areas: Vec<Area>,
+    /// Short texts beside points: the reference line's start “A” (docs/adr/0057).
+    pub labels: Vec<Label>,
+}
+
+/// An area of a draft, filled in its tone and outlined solid: the outer ring,
+/// then its holes (even-odd).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Area {
+    pub rings: Vec<Vec<Vec2>>,
+    /// The fill's opacity over the tone's colour (the web's `tint(accent, 0.16)`).
+    pub fill: f32,
+    /// The outline, logical pixels.
+    pub width: f32,
+}
+
+/// A text at a world point, moved by a logical pixel offset (right and down).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Label {
+    pub at: Vec2,
+    pub text: String,
+    pub offset: [f32; 2],
+    pub tone: Tone,
 }
 
 /// A mark at a world point, sized in logical pixels.
@@ -358,6 +413,11 @@ pub enum MarkerShape {
     Cross(f32),
     /// A + this far from its centre (a vertex to add).
     Plus(f32),
+    /// A 1 px circle of this radius (Böl's points to come; docs/adr/0057).
+    Circle(f32),
+    /// The right angle at a perpendicular's foot: an 8 px square corner, 1
+    /// px, its sides towards these world points (docs/adr/0057).
+    RightAngle { along: Vec2, up: Vec2 },
 }
 
 /// An interactive tool.
