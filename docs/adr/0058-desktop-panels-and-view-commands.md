@@ -29,6 +29,14 @@
 - F2 alt paneli açar ya da kapatır. Komut satırının üstündeki üç sekme web'inkilerdir: Komut geçmişi, Koordinat listesi, Uyarılar. Uyarılar sekmesi görülmemiş uyarıları sayar.
 - Koordinat listesi seçili noktaların Y, X, Z ve katmanını, yoksa ilk nesnenin köşelerini gösterir. Her satırda kenarın uzunluğu ve semti vardır. Satırlar kaydırıldıkça kurulur.
 - Sekmelerin içeriği komut satırının zeminindedir (alan rengi). İlk hâlinde arada pencerenin gri zemini bir şerit gibi görünüyordu.
+- Sekme satırının sonunda web'in iki düğmesi vardır:
+  - Geçmişi temizle: geçmiş ve uyarı sayısı sıfırlanır.
+  - Paneli kapat: ipucunda F2.
+- Web'de temizlik başka sekmedeyken yapılırsa görülen uyarı sayısı eski değerinde kalıyor ve yeni uyarılar sayılmıyordu. Masaüstü sayıyı sıfırlar; web ajanına bildirildi.
+- Panelin üst kenarı sürüklenerek boyutlanır (KentOS UI `Sash`). Açık geçmiş en az beş satırdır; panelin üstünde şerit, çizim, sekme satırı ve durum çubuğu için en az 360 piksel kalır. Çift tık ilk boyu geri getirir.
+  - Boy yalnız bellekte tutulur, panel yerleşimi gibi.
+  - Açık geçmiş boya uyar (KentOS UI `CommandLine::expanded_height`). Öbür sekmeler aynı yüksekliktedir, sekme değişince çizim kaymaz.
+- Web'in paneli 96 px ile pencerenin %60'ı arasında boyutlanır, çift tık 190 px'e döner. Masaüstünün alt sınırı açık geçmişin beş satırı, üst sınırı üstte kalan alandır.
 
 ### Koordinat listesinin alanı (iki platformda da)
 
@@ -61,6 +69,10 @@
   - Adı olmayan komut kimliğiyle listelenir (`analysis.volume`). 100 px'lik ad sütunu bu adları başlığın üstüne taşırıyordu. Sütun artık listedeki en uzun ada göre genişler. En çok 20 harftir, eş aralıklı yüzde harf başına 0,6 em; daha uzun ad kırpılır. Başlık da kendi sütununda kırpılır. Liste 460 px'ten 500 px'e genişledi.
   - Masaüstünde çalışmayan komutlar listede şeritteki gibi soluktur (`Command::dimmed`). Açıklama satırı önce nedenini söyler: "Web'de var; masaüstüne henüz taşınmadı." ya da web'in bekleyen notu.
 - Komut satırının ipucu ("Komut ya da koordinat yazın; …") komut çalışırken gösterilmez. ADR 0056'nın görüntülerinde KentOS UI'ın kendi varsayılanı "Komut yazın" istemin yanında görünüyordu. Artık o da boştur.
+- Komut çalışırken geçmiş satırlarının yanındaki soluk komut adları kayboluyordu, çünkü komut satırına o sırada komut listesi verilmiyordu.
+  - Komut satırı artık bütün komutları hep alır; komut çalışırken yalnız öneri listesine koymaz (KentOS UI `CommandLine::suggest_commands`).
+  - Yazılanı öneri listesi değil çalışan komut alır, ADR 0018'deki gibi.
+- Yazılarak başlatılan araç geçmişe iki kez düşüyordu: önce yazılan metin ("çizgi"), sonra aracın kendi adı ("L"). Web yalnız aracın adını yazar. Masaüstü de öyle yapar; araç olmayan komutta yazılan metin kalır.
 
 ### Koordinat sistemi…
 
@@ -86,8 +98,7 @@
 - Izgara (`draft.grid`, F7), çizgi kalınlığı (`view.lineWeights`), nesne izleme (`draft.tracking`), semboller (`view.symbols`).
 - Klasik araç kutusu (`view.toolbox`, `view.toolboxDock`).
 - Durum çubuğunda web'in sunucu hücresi ve hesap menüsü: masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041).
-- Alt panelde web'in "Geçmişi temizle" ve "Paneli kapat" düğmeleri ve panelin yüksekliğini sürükleyerek değiştirme (96 px ile pencerenin %60'ı arası, çift tık 190 px): sonraki dilim.
-- Komut çalışırken geçmiş satırlarının yanındaki soluk komut adları kayboluyor, çünkü komut satırına o sırada komut listesi verilmiyor (ADR 0056'nın görüntülerinde görülüyor): sonraki dilim.
+- Geçmiş satırlarında saat: web her satırın saatini yazar. Masaüstünde yerel saat dilimini okumak için bir kütüphane gerekir (bağımlılık onayı bekliyor).
 
 ## Doğrulama
 
@@ -106,4 +117,4 @@
   - Alt+Q ile komut listesi;
   - Proje ayarları'nın koordinat sistemi sayfası;
   - Araçlar sekmesinde sunucu denetiminin iletileri;
-  - alt panelin üç sekmesi.
+  - alt panelin üç sekmesi ve sürüklenerek büyütülmüş geçmiş (komut çalışırken adlarıyla).

@@ -155,6 +155,12 @@ pub enum Message {
     CommandHistoryToggled,
     /// A tab of the bottom panel chosen: the panel opens on it.
     BottomTab(crate::bottom::BottomTab),
+    /// The bottom panel's top edge dragged: the open history's new height.
+    BottomResized(f32),
+    /// The bottom panel's top edge double-clicked: its first height again.
+    BottomReset,
+    /// Geçmişi temizle (the bottom panel's tab row).
+    HistoryCleared,
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -225,6 +231,9 @@ pub struct App {
     pub command_expanded: bool,
     /// The bottom panel's tab (bottom.rs), and the warnings seen on it.
     pub bottom_tab: crate::bottom::BottomTab,
+    /// The open history's height when the panel's edge was dragged (in memory,
+    /// as the docks' layout); `None`: the command line's own.
+    pub bottom_log: Option<f32>,
     pub seen_warnings: usize,
     pub dialog: Option<Dialog>,
     /// The drawing area's camera and scene cache.
@@ -336,6 +345,7 @@ impl App {
             command_input: String::new(),
             command_expanded: false,
             bottom_tab: crate::bottom::BottomTab::default(),
+            bottom_log: None,
             seen_warnings: 0,
             dialog: None,
             viewport: Viewport::new(),
@@ -505,6 +515,9 @@ impl App {
             }
             Message::CommandHistoryToggled => self.command_expanded = !self.command_expanded,
             Message::BottomTab(tab) => self.show_bottom(tab),
+            Message::BottomResized(height) => self.bottom_log = Some(height),
+            Message::BottomReset => self.bottom_log = None,
+            Message::HistoryCleared => self.clear_history(),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -918,11 +931,21 @@ impl App {
         if text.is_empty() {
             return Task::none();
         }
-        self.history.push(Entry::Input(text.to_owned()));
         let folded = fold(text);
         let found = catalog().commands().iter().find(|c| {
             c.aliases.iter().any(|a| fold(a) == folded) || fold(c.title) == folded || c.id == text
         });
+        // A tool that starts says its own name (start_tool), as on the web: the
+        // typed text is not said a second time.
+        let says_itself = self.document.is_some()
+            && found.is_some_and(|c| {
+                c.id
+                    .strip_prefix("tool.")
+                    .is_some_and(|tool| Session::tools().contains(&tool))
+            });
+        if !says_itself {
+            self.history.push(Entry::Input(text.to_owned()));
+        }
         match found {
             Some(command) => {
                 let task = self.run(command.id);
@@ -1289,6 +1312,21 @@ mod tests {
         assert_eq!(app.mode, Mode::Dark, "the title works as a name");
         let _ = app.update(Message::CommandRun("OLMAYAN".into()));
         assert!(matches!(app.history.last(), Some(Entry::Error(_))));
+    }
+
+    #[test]
+    fn a_typed_tool_is_said_once_by_its_own_name() {
+        let mut app = with_demo();
+        let before = app.history.len();
+        let _ = app.update(Message::CommandRun("çizgi".into()));
+        assert_eq!(app.session.tool_id(), "line");
+        // The tool's name, once (the web logs the tool, not the typed text).
+        assert_eq!(app.history.len(), before + 1);
+        assert!(matches!(app.history.last(), Some(Entry::Input(name)) if name == "L"));
+        // A command that is not a tool keeps what was typed.
+        let before = app.history.len();
+        let _ = app.update(Message::CommandRun("ZE".into()));
+        assert_eq!(app.history.len(), before + 1);
     }
 
     #[test]

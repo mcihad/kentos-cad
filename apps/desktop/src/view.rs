@@ -419,8 +419,18 @@ impl App {
         } else {
             "Komut ya da koordinat yazın; Enter ya da Boşluk onaylar"
         });
-        line.commands(self.line_commands())
-            .prompt(self.line_prompt())
+        // Every command, so the history names them while one runs too; none is
+        // suggested then: what is typed is the running command's (line_commands).
+        let line = line
+            .commands(all_line_commands())
+            .suggest_commands(!self.session.is_running());
+        // Open, as tall as the bottom panel was dragged (bottom.rs).
+        let line = if open {
+            line.expanded_height(self.bottom_log())
+        } else {
+            line
+        };
+        line.prompt(self.line_prompt())
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)
             .on_run(Message::CommandRun)
@@ -760,8 +770,16 @@ impl App {
         if self.session.is_running() {
             return Vec::new();
         }
-        catalog().commands().iter().map(line_command).collect()
+        all_line_commands().collect()
     }
+}
+
+/// Every command as the command line lists it, made once.
+fn all_line_commands() -> impl Iterator<Item = LineCommand<'static>> {
+    static ALL: std::sync::OnceLock<Vec<LineCommand<'static>>> = std::sync::OnceLock::new();
+    ALL.get_or_init(|| catalog().commands().iter().map(line_command).collect())
+        .iter()
+        .copied()
 }
 
 fn line_command(command: &Command) -> LineCommand<'static> {

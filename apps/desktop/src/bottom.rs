@@ -9,17 +9,23 @@
 //!   built only as they scroll into view (a contour has thousands);
 //! - Uyarılar: the warnings and errors; the tab counts the ones not seen yet.
 //!
+//! As on the web, the tab row ends with Geçmişi temizle and Paneli kapat,
+//! and the panel's top edge is dragged to size it (a double click puts the
+//! first height back).
+//!
 //! Numbers are the project's formats; the geometry is the shared core's.
 
-use iced::widget::{Column, column, container};
+use iced::widget::{Column, button, column, container, row};
 use iced::{Element, Fill, Length};
 use kentos_contracts::Entity;
 use kentos_interaction::{Format, bearing_grad, dist, measures, vertices};
 use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::widget::command_line::{self, Entry};
+use kentos_ui::widget::sash::Sash;
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableRow, Table};
-use kentos_ui::widget::tabs::{Tab, Tabs};
+use kentos_ui::widget::tabs::{self, Tab, Tabs};
+use kentos_ui::widget::{Tip, horizontal_divider, tip};
 
 use crate::app::{App, Message};
 
@@ -35,6 +41,14 @@ pub enum BottomTab {
 impl BottomTab {
     const ALL: [BottomTab; 3] = [BottomTab::History, BottomTab::Coords, BottomTab::Messages];
 }
+
+/// The open history's least height: five lines.
+const LEAST_LOG: f32 = 98.0;
+/// The tab row's two buttons (Geçmişi temizle, Paneli kapat) and their margins.
+const ACTIONS_WIDTH: f32 = 60.0;
+/// What the panel leaves above it at least, whatever it is dragged to: the
+/// ribbon, some of the drawing, the tab row, the command input and the status bar.
+const KEEP: f32 = 360.0;
 
 /// What the coordinate list shows (built from the selection, kept small:
 /// the rows are formatted as they scroll into view).
@@ -105,16 +119,26 @@ impl App {
                 .unwrap_or(0),
             |i| Message::BottomTab(BottomTab::ALL[i]),
         );
+        let log = self.bottom_log();
+        // The top edge sizes the panel; the drawing gives or takes the room.
+        let sash = Sash::horizontal(log, Message::BottomResized)
+            .reverse()
+            .range(LEAST_LOG..=f32::INFINITY)
+            .keep(KEEP)
+            .on_double_click(Message::BottomReset);
+        let bar = row![container(tabs).width(Fill), self.bottom_actions()].width(Fill);
         let panel = match self.bottom_tab {
-            BottomTab::History => return column![tabs, self.command_line_as(true, None)].into(),
+            BottomTab::History => {
+                return column![sash, bar, self.command_line_as(true, None)].into();
+            }
             BottomTab::Coords => self.coordinate_list(),
             BottomTab::Messages => self.messages(),
         };
         // As tall as the open history, so switching tabs does not move the drawing.
-        let height =
-            command_line::height(command_line::LINES, true) - command_line::height(0, false);
+        let height = command_line::height_with_log(log) - command_line::height(0, false);
         column![
-            tabs,
+            sash,
+            bar,
             // On the command line's own ground, so a tab reads as part of it.
             container(panel)
                 .width(Fill)
@@ -126,6 +150,56 @@ impl App {
             self.command_line_as(false, Some(0)),
         ]
         .into()
+    }
+
+    /// The open history's height: dragged, or the command line's own.
+    pub(crate) fn bottom_log(&self) -> f32 {
+        self.bottom_log
+            .unwrap_or_else(command_line::default_log_height)
+            .max(LEAST_LOG)
+    }
+
+    /// The tab row's end, as on the web: Geçmişi temizle and Paneli kapat, on
+    /// the tab strip's own ground and above its line.
+    fn bottom_actions(&self) -> Element<'_, Message> {
+        let action = |glyph: &str, message: Message, about: Tip| {
+            tip(
+                button(kentos_ui::icon::icon(crate::icons::from_web(Some(glyph))).size(15.0))
+                    .on_press(message)
+                    .padding([4, 5])
+                    .style(kentos_ui::style::button::flat),
+                about,
+                iced::widget::tooltip::Position::Top,
+            )
+        };
+        let buttons = row![
+            action("clear", Message::HistoryCleared, Tip::new("Geçmişi temizle")),
+            action(
+                "chevronDown",
+                Message::CommandHistoryToggled,
+                Tip::new("Paneli kapat").detail("F2"),
+            ),
+        ]
+        .spacing(2)
+        .padding([0, 4])
+        .height(tabs::height() - 1.0)
+        .align_y(iced::Center);
+        // A fixed width: the strip's line under the buttons would take the row's
+        // whole width otherwise, and the tabs half of it.
+        container(column![buttons, horizontal_divider()])
+            .width(ACTIONS_WIDTH)
+            .style(|theme: &iced::Theme| container::Style {
+                background: Some(kentos_ui::theme::Tokens::of(theme).window.into()),
+                ..container::Style::default()
+            })
+            .into()
+    }
+
+    /// Geçmişi temizle: the history goes, and with it the warnings' count.
+    pub(crate) fn clear_history(&mut self) {
+        self.history.clear();
+        self.seen_warnings = 0;
+        self.last_level = None;
     }
 
     /// Warnings and errors in the history.
@@ -444,6 +518,32 @@ mod tests {
         let _ = app.update(Message::BottomTab(BottomTab::Messages));
         assert_eq!(app.warning_count() - app.seen_warnings, 0);
     }
+
+    #[test]
+    fn geçmişi_temizle_empties_the_history_and_new_warnings_count_from_zero() {
+        let mut app = app_with_drawing();
+        app.warn("Bir uyarı.");
+        let _ = app.update(Message::BottomTab(BottomTab::Messages));
+        let _ = app.update(Message::BottomTab(BottomTab::History));
+        let _ = app.update(Message::HistoryCleared);
+        assert!(app.history.is_empty());
+        // Cleared from another tab: the next warning is counted (the web's badge missed it).
+        app.warn("Yeni bir uyarı.");
+        assert_eq!(app.warning_count() - app.seen_warnings, 1);
+    }
+
+    #[test]
+    fn the_panel_is_sized_by_its_edge_and_a_double_click_puts_it_back() {
+        let mut app = app_with_drawing();
+        let first = app.bottom_log();
+        let _ = app.update(Message::BottomResized(320.0));
+        assert_eq!(app.bottom_log(), 320.0);
+        // Never shorter than five lines.
+        let _ = app.update(Message::BottomResized(20.0));
+        assert_eq!(app.bottom_log(), super::LEAST_LOG);
+        let _ = app.update(Message::BottomReset);
+        assert_eq!(app.bottom_log(), first);
+    }
 }
 
 /// Pictures of the bottom panel for the owner: its history, the parcel's
@@ -468,6 +568,8 @@ fn screens() {
                 (BottomTab::History, "gecmis"),
                 (BottomTab::Coords, "koordinat"),
                 (BottomTab::Messages, "uyarilar"),
+                // Dragged taller, with a command running: the history still names the commands.
+                (BottomTab::History, "gecmis-yuksek"),
             ] {
                 let mut app = crate::files_testing::app_with_drawing();
                 let _ = app
@@ -484,6 +586,12 @@ fn screens() {
                 app.warn("“yollar.shp” içinde alınmayanlar: Kısa halka: 1, üçten az köşesi var; alınmadı.");
                 app.output("Çizgi: 12.500 m");
                 let _ = app.update(Message::BottomTab(tab));
+                if name == "gecmis-yuksek" {
+                    let _ = app.update(Message::CommandRun("L".to_owned()));
+                    let _ = app.update(Message::CommandRun("PAN".to_owned()));
+                    let _ = app.update(Message::CommandRun("L".to_owned()));
+                    let _ = app.update(Message::BottomResized(if height > 800.0 { 330.0 } else { 240.0 }));
+                }
                 let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
                 let mut update = |app: &mut App, message| {
                     let _ = app.update(message);

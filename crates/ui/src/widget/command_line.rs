@@ -135,13 +135,25 @@ fn input_height() -> f32 {
 /// geçmiş, altında giriş satırı. Kutunun üstünde duracak öğeler için (ör.
 /// bildirimler).
 pub fn height(lines: usize, expanded: bool) -> f32 {
-    let shown = if expanded {
-        EXPANDED_LINES
+    let log = if expanded {
+        expanded_log_height()
     } else {
-        lines.max(1)
+        lines.max(1) as f32 * line_height() + 8.0
     };
 
-    2.0 + shown as f32 * line_height() + 8.0 + input_height()
+    2.0 + log + input_height()
+}
+
+/// Açık geçmişi `log` piksel olan komut kutusunun yüksekliği
+/// ([`CommandLine::expanded_height`] ile).
+pub fn height_with_log(log: f32) -> f32 {
+    2.0 + log.max(line_height()) + input_height()
+}
+
+/// Açık geçmişin varsayılan yüksekliği ([`CommandLine::expanded_height`]
+/// verilmediğinde).
+pub fn default_log_height() -> f32 {
+    expanded_log_height()
 }
 
 fn row_height() -> f32 {
@@ -347,6 +359,10 @@ pub struct CommandLine<'a, Message> {
     prompt: Option<Prompt<'a, Message>>,
     lines: usize,
     expanded: bool,
+    /// Açık geçmişin yüksekliği; yoksa `EXPANDED_LINES` satır.
+    expanded_height: Option<f32>,
+    /// Komutlar öneri listesine girer mi (girmese de geçmişte adlarıyla anılır).
+    suggest_commands: bool,
     on_expand: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     id: Option<widget::Id>,
     space_submits: bool,
@@ -370,6 +386,8 @@ impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
             prompt: None,
             lines: LINES,
             expanded: false,
+            expanded_height: None,
+            suggest_commands: true,
             on_expand: None,
             id: None,
             space_submits: false,
@@ -455,6 +473,21 @@ impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
         self
     }
 
+    /// Açık geçmişin yüksekliği (piksel; ör. boyutlandırılan bir panelde).
+    /// Verilmezse [`height`]'in açık geçmişi kadardır.
+    pub fn expanded_height(mut self, height: f32) -> Self {
+        self.expanded_height = Some(height.max(line_height()));
+        self
+    }
+
+    /// `false`: komutlar öneri listesine girmez, yalnız istemin seçenekleri
+    /// önerilir (ör. bir komut çalışırken yazılan ona aittir). Komutlar
+    /// geçmişte adlarıyla anılmaya devam eder.
+    pub fn suggest_commands(mut self, suggest: bool) -> Self {
+        self.suggest_commands = suggest;
+        self
+    }
+
     /// Giriş kutusunun kimliği: odaklamak ve [`show_commands`] için.
     pub fn id(mut self, id: impl Into<widget::Id>) -> Self {
         self.id = Some(id.into());
@@ -473,6 +506,8 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
             prompt,
             lines,
             expanded,
+            expanded_height,
+            suggest_commands,
             on_expand,
             id,
             space_submits,
@@ -481,12 +516,14 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
 
         let id = id.unwrap_or_else(widget::Id::unique);
         let focus = Rc::new(Cell::new(false));
-        let suggestions = suggestions(&commands, prompt.as_ref(), value);
-        let name_width = name_width(&commands);
+        let offered: &[Command<'a>] = if suggest_commands { &commands } else { &[] };
+        let suggestions = suggestions(offered, prompt.as_ref(), value);
+        let name_width = name_width(offered);
         let expand = on_expand.map(|on_expand| on_expand(!expanded));
+        let log_height = expanded_height.unwrap_or_else(expanded_log_height);
 
         Element::new(Console {
-            log: log(history, &commands, lines, expanded),
+            log: log(history, &commands, lines, expanded.then_some(log_height)),
             input: input_row(
                 prompt,
                 value,
@@ -569,18 +606,24 @@ impl Operation for Probe {
 
 // --- Geçmiş --------------------------------------------------------------
 
-/// Geçmiş: kapalıyken son `lines` satır, eskiler soluk; açıkken bütün
-/// geçmiş, kaydırılabilir.
+/// Açık geçmişin varsayılan yüksekliği: `EXPANDED_LINES` satır.
+fn expanded_log_height() -> f32 {
+    EXPANDED_LINES as f32 * line_height() + 8.0
+}
+
+/// Geçmiş: kapalıyken son `lines` satır, eskiler soluk; açıkken
+/// (`expanded`: yüksekliği) bütün geçmiş, kaydırılabilir.
 fn log<'a, Message: 'a>(
     history: &'a [Entry],
     commands: &[Command<'a>],
     lines: usize,
-    expanded: bool,
+    expanded: Option<f32>,
 ) -> Element<'a, Message> {
-    if expanded {
+    if let Some(height) = expanded {
         // Geçmiş kısaysa satırlar konsoldaki gibi alta, girişin üstüne
         // yaslanır: baştaki boşluk eksik satırlar kadardır.
-        let missing = EXPANDED_LINES.saturating_sub(history.len());
+        let fits = ((height - 8.0) / line_height()).floor().max(0.0) as usize;
+        let missing = fits.saturating_sub(history.len());
 
         let rows = Column::with_children(
             std::iter::once(
@@ -599,7 +642,7 @@ fn log<'a, Message: 'a>(
             .anchor_bottom()
             .direction(style::field::thin_scrollbar())
             .width(Fill)
-            .height(EXPANDED_LINES as f32 * line_height() + 8.0)
+            .height(height)
             .into();
     }
 
@@ -2208,6 +2251,13 @@ mod tests {
             }]
         );
         assert!(suggested::<()>(&CATALOG, None, "xyz").is_empty());
+    }
+
+    #[test]
+    fn an_open_history_of_its_own_height_is_the_open_command_line() {
+        assert_eq!(height_with_log(default_log_height()), height(LINES, true));
+        // The name column never gets narrower than its least width.
+        assert_eq!(name_width(&[]), typography::scaled(ROW_NAME));
     }
 
     #[test]
