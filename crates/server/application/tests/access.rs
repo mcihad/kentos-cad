@@ -586,7 +586,7 @@ async fn the_personal_space_opens_once_and_is_shared_by_project() {
         .unwrap();
     assert!(matches!(
         admin::set_membership(&db.owner, &slug, "bora", TenantRole::Editor, true).await,
-        Err(AppError::Invalid(m)) if m.contains("kişisel alan")
+        Err(AppError::Invalid { message: m, .. }) if m.contains("kişisel alan")
     ));
     assert!(matches!(
         tenancy::access(&db.app, &bora, home.tenant).await,
@@ -742,7 +742,7 @@ async fn my_projects_are_the_owned_and_the_shared_ones() {
     // An organisation's project is shared only with its members (guests come later).
     assert!(matches!(
         sharing::share(&db.app, &owner, share_envelope(&owner, outsider.user_id, GrantRole::Viewer, None)).await,
-        Err(AppError::Invalid(m)) if m.contains("kurumunun üyesi değil")
+        Err(AppError::Invalid { message: m, .. }) if m.contains("kurumunun üyesi değil")
     ));
     // A personal project is shared with anyone.
     let own = open(&db, &home, own_project).await;
@@ -804,7 +804,7 @@ async fn sharing_rules_events_and_retries() {
                 share_envelope(&manages, user, role, until)
             )
             .await,
-            Err(AppError::Invalid(_))
+            Err(AppError::Invalid { .. })
         ));
     }
     // Never an owner by sharing: the input does not even parse.
@@ -812,12 +812,12 @@ async fn sharing_rules_events_and_retries() {
     as_owner.input["role"] = serde_json::json!("owner");
     assert!(matches!(
         sharing::share(&db.app, &manages, as_owner).await,
-        Err(AppError::Invalid(m)) if m.contains("okunamadı")
+        Err(AppError::Invalid { message: m, .. }) if m.contains("okunamadı")
     ));
     // An organisation's project: someone who is not a member (or no account at all) cannot be given a role.
     assert!(matches!(
         sharing::share(&db.app, &manages, share_envelope(&manages, Uuid::now_v7(), GrantRole::Viewer, None)).await,
-        Err(AppError::Invalid(m)) if m.contains("üyesi değil")
+        Err(AppError::Invalid { message: m, .. }) if m.contains("üyesi değil")
     ));
 
     // The same role again changes nothing; a new one does, with an event and an audit record.

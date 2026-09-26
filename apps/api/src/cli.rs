@@ -318,7 +318,9 @@ async fn dev_seed(config: &Config) -> Result<(), String> {
     ] {
         match admin::create_local_user(&pool, login, name, None, &password).await {
             Ok(_) => {}
-            Err(kentos_application::AppError::Invalid(m)) if m.contains("zaten") => {
+            Err(kentos_application::AppError::Invalid { message: m, .. })
+                if m.contains("zaten") =>
+            {
                 admin::set_password(&pool, login, &password)
                     .await
                     .map_err(|e| e.to_string())?;

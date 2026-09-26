@@ -2,6 +2,36 @@
 import type { FeatureConflict } from "./FeatureConflict";
 
 /**
- * Every error response: a stable code, a message for the user, the request id for support.
+ * Every error response (TODOS.md ARCH-07, docs/adr/0013): a stable code for
+ * programs, a Turkish message for people that says the cause and the fix,
+ * the request id for support, and what a caller needs to act on it without
+ * reading the message — the field it is about, the project's revision, and
+ * whether and when the same request may be sent again. UI, Python and AI
+ * present the same error in their own way from these fields.
  */
-export type ApiError = { error: string, message: string, requestId?: string, conflicts?: Array<FeatureConflict>, };
+export type ApiError = { 
+/**
+ * The stable code (`invalid`, `conflict`, `not_found` …); the name `error` is kept for older clients.
+ */
+error: string, message: string, requestId?: string, conflicts?: Array<FeatureConflict>, 
+/**
+ * The field the error is about, when the server knows it: relative to a
+ * command's input as in `CommandError` (`name`, `tags[2]`,
+ * `features[0].entity`), or a query parameter's name (`q`).
+ */
+path?: string, 
+/**
+ * The project's data revision now, as decimal text (DOM-12), when the
+ * error depends on it: a conflict says which revision the server is at.
+ */
+revision?: string, 
+/**
+ * The same request may be sent again unchanged (the server was briefly
+ * away or asked to wait); false when something must change first. The
+ * server always sends it; a body without it (a proxy's) reads as false.
+ */
+retryable: boolean, 
+/**
+ * Seconds to wait before sending it again, when the server says so (also the `Retry-After` header).
+ */
+retryAfter?: number, };

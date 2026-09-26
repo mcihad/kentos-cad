@@ -57,8 +57,12 @@ fn grant((user, name, role, expires, updated): GrantRow) -> Option<ProjectGrant>
 }
 
 fn person(text: &str) -> AppResult<Uuid> {
-    Uuid::parse_str(text)
-        .map_err(|_| AppError::invalid(format!("userId bir hesap kimliği (UUID) olmalı: {text}")))
+    Uuid::parse_str(text).map_err(|_| {
+        AppError::invalid_at(
+            "userId",
+            format!("userId bir hesap kimliği (UUID) olmalı: {text}"),
+        )
+    })
 }
 
 /// What the checks under the lock decided.
@@ -181,12 +185,16 @@ pub async fn share(
                 // Stored to the microsecond, like every timestamptz.
                 .map(|t| t - time::Duration::nanoseconds(i64::from(t.nanosecond() % 1000)))
                 .map_err(|_| {
-                    AppError::invalid(format!("expiresAt bir RFC 3339 zamanı olmalı: {t}"))
+                    AppError::invalid_at(
+                        "expiresAt",
+                        format!("expiresAt bir RFC 3339 zamanı olmalı: {t}"),
+                    )
                 })
         })
         .transpose()?;
     if expires.is_some_and(|t| t <= OffsetDateTime::now_utc()) {
-        return Err(AppError::invalid(
+        return Err(AppError::invalid_at(
+            "expiresAt",
             "Paylaşımın bitiş zamanı gelecekte olmalı.",
         ));
     }
@@ -208,10 +216,13 @@ pub async fn share(
         .fetch_one(&mut *tx)
         .await?;
         if !member {
-            return Err(AppError::invalid(format!(
-                "Bu kişi “{}” kurumunun üyesi değil. Kurum projeleri yalnız kurum üyeleriyle paylaşılır; kurum dışından paylaşım henüz yok.",
-                now.tenant_name
-            )));
+            return Err(AppError::invalid_at(
+                "userId",
+                format!(
+                    "Bu kişi “{}” kurumunun üyesi değil. Kurum projeleri yalnız kurum üyeleriyle paylaşılır; kurum dışından paylaşım henüz yok.",
+                    now.tenant_name
+                ),
+            ));
         }
     }
     let before: Option<(String, Option<OffsetDateTime>)> = sqlx::query_as(

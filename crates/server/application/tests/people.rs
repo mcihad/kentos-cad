@@ -501,7 +501,7 @@ async fn a_search_finds_only_people_the_caller_may_see() {
     // Too short to be a search.
     assert!(matches!(
         search(&owner, "m").await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
 
     // Someone else who may share (the admin, through the policy) finds neither the owner nor themselves.

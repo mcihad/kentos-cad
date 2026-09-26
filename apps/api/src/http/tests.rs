@@ -811,10 +811,20 @@ async fn repeated_wrong_passwords_lock_the_login_for_a_while() {
     // Now even the right password waits, and the answer says for how long.
     let (status, headers, body) = send(&app, login_request("AYSE", "dogru-parola-1", true)).await;
     assert_eq!(status, StatusCode::TOO_MANY_REQUESTS);
-    assert!(headers.get(header::RETRY_AFTER).is_some());
+    // The body says it too (ARCH-07): the same request may go again, after the header's seconds.
+    let limited = serde_json::from_slice::<ApiError>(&body).unwrap();
+    let wait: u32 = headers[header::RETRY_AFTER]
+        .to_str()
+        .unwrap()
+        .parse()
+        .unwrap();
     assert_eq!(
-        serde_json::from_slice::<ApiError>(&body).unwrap().error,
-        "rate_limited"
+        (
+            limited.error.as_str(),
+            limited.retryable,
+            limited.retry_after
+        ),
+        ("rate_limited", true, Some(wait))
     );
     // Another login is not affected.
     let (status, _, _) = send(&app, login_request("bora", "dogru-parola-1", true)).await;

@@ -73,7 +73,7 @@ async fn renaming_is_a_metadata_change_with_its_version() {
             envelope(&pm, project, renamed("  "), &[("@project", "2")])
         )
         .await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     assert!(matches!(
         changes::commit(&db.app, &owner, envelope(&pm, project, renamed("Eski sürümden"), &[("@project", "1")])).await,

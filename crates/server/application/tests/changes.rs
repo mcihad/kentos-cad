@@ -320,7 +320,7 @@ async fn versions_conflicts_and_idempotency() {
     let mut reused = create.clone();
     reused.input = serde_json::to_value(changes_of(vec![])).unwrap();
     assert!(
-        matches!(changes::commit(&db.app, &ayse_p, reused).await, Err(AppError::Invalid(m)) if m.contains("idempotency"))
+        matches!(changes::commit(&db.app, &ayse_p, reused).await, Err(AppError::Invalid { message: m, .. }) if m.contains("idempotency"))
     );
 
     // Bora edits version 1; Ayşe's edit based on version 1 then conflicts and carries the server's copy.
@@ -340,7 +340,16 @@ async fn versions_conflicts_and_idempotency() {
         .unwrap();
     assert_eq!(by_bora.versions[&id], "2");
     match changes::commit(&db.app, &ayse_p, update(&ayse, 486514.0, "1")).await {
-        Err(AppError::Conflict { conflicts, .. }) => {
+        Err(AppError::Conflict {
+            conflicts,
+            revision,
+            ..
+        }) => {
+            // The refusal says which revision the server is at (ARCH-07): Bora's commit made it.
+            assert_eq!(
+                revision.map(|r| r.to_string()),
+                Some(by_bora.data_revision.clone())
+            );
             assert_eq!(conflicts.len(), 1);
             assert_eq!(
                 (conflicts[0].reason, conflicts[0].actual.as_deref()),
@@ -367,7 +376,7 @@ async fn versions_conflicts_and_idempotency() {
     );
     assert!(matches!(
         changes::commit(&db.app, &ayse_p, missing).await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     let taken = envelope(
         &ayse,
@@ -522,14 +531,14 @@ async fn locked_layers_rights_and_tenants() {
     wrong_tenant.tenant_id = stranger.tenant.to_string();
     assert!(matches!(
         changes::commit(&db.app, &pm_p, wrong_tenant).await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     // So is one naming another project than the one it is sent to.
     let mut wrong_project = write(&pm);
     wrong_project.project_id = Uuid::new_v4().to_string();
     assert!(matches!(
         changes::commit(&db.app, &pm_p, wrong_project).await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     db.close().await;
 }

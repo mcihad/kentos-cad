@@ -182,7 +182,7 @@ async fn code_and_pkce_sign_in_opens_a_session() {
     // A state is good once.
     assert!(matches!(
         oidc.finish(&db.app, "kod-1", &q["state"]).await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     db.close().await;
 }

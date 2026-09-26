@@ -394,9 +394,10 @@ fn count_sql(view: CatalogView) -> String {
 /// literally), folded as the database folds the text; none for an empty search.
 pub fn search_words(search: &str) -> AppResult<Vec<String>> {
     if search.chars().count() > SEARCH_MAX {
-        return Err(AppError::invalid(format!(
-            "Arama en çok {SEARCH_MAX} karakter olabilir."
-        )));
+        return Err(AppError::invalid_at(
+            "q",
+            format!("Arama en çok {SEARCH_MAX} karakter olabilir."),
+        ));
     }
     Ok(search
         .split_whitespace()
@@ -420,7 +421,7 @@ enum Key {
 }
 
 fn bad_cursor() -> AppError {
-    AppError::invalid("Sayfa imleci geçersiz; listeyi baştan yükleyin.")
+    AppError::invalid_at("after", "Sayfa imleci geçersiz; listeyi baştan yükleyin.")
 }
 
 /// The cursor as the client sends it back: `[key, id]`, JSON.
@@ -469,12 +470,14 @@ pub async fn page(
     let sort = query.sort.unwrap_or_else(|| default_sort(query.view));
     match (sort, query.view) {
         (CatalogSort::Opened, v) if v != CatalogView::Recent => {
-            return Err(AppError::invalid(
+            return Err(AppError::invalid_at(
+                "sort",
                 "Son açılmaya göre yalnız son kullanılanlar sıralanır.",
             ));
         }
         (CatalogSort::Trashed, v) if v != CatalogView::Trash => {
-            return Err(AppError::invalid(
+            return Err(AppError::invalid_at(
+                "sort",
                 "Çöpe taşınmaya göre yalnız çöp kutusu sıralanır.",
             ));
         }

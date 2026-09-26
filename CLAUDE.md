@@ -461,6 +461,9 @@ genişletin. UI command registry ile bu protokolü tek kavram sanmayın.
 Yerel hızlı edit, dosya dayanıklılığı ve server commit onayı ayrı anlam taşır.
 Oluşturulan nesnenin sürümü commit'in veri revizyonudur; silinen kimlik yeniden
 oluşturulabilir, eski sürüme dayanan değişiklik çakışmadır (ADR 0026).
+Sunucu hatası `ApiError`'dur: sabit kod (`error`), Türkçe ileti, bilinen alanın yolu, çakışmada
+revizyon, yeniden deneme bilgisi (`retryable`, `retryAfter`; ARCH-07, ADR 0013). Alanı bilinen
+doğrulamada `AppError::invalid_at` kullanın; istemci yeniden denemeyi bu alanlardan karar verir.
 
 ## 14. Workspace ve tek hesaplama kaynağı
 

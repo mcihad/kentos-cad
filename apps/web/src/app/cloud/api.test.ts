@@ -70,6 +70,24 @@ describe('the cloud API client: sharing', () => {
     expect([net.code, net.transient, net.status]).toEqual(['network', true, 0]);
   });
 
+  it('reads what a failure tells a caller to do: the field, the revision, whether and when to send again (ARCH-07)', async () => {
+    const bad = (await recorder(422, { error: 'invalid', message: 'Arama en çok 100 karakter olabilir.', path: 'q', retryable: false })
+      .api.candidates('t', 'p', 'x')
+      .catch((e: unknown) => e)) as ApiFailure;
+    expect([bad.code, bad.path, bad.retryable, bad.transient]).toEqual(['invalid', 'q', false, false]);
+    const stale = (await recorder(409, { error: 'conflict', message: 'Başka biri değiştirdi.', revision: '42', retryable: false, conflicts: [] })
+      .api.access('t', 'p')
+      .catch((e: unknown) => e)) as ApiFailure;
+    expect([stale.code, stale.revision, stale.transient]).toEqual(['conflict', '42', false]);
+    const busy = (await recorder(429, { error: 'rate_limited', message: 'Çok fazla deneme.', retryable: true, retryAfter: 7 })
+      .api.myProjects()
+      .catch((e: unknown) => e)) as ApiFailure;
+    expect([busy.retryable, busy.retryAfter, busy.transient]).toEqual([true, 7, true]);
+    // A body without the fields (a proxy's page) is not retryable by itself; a gateway status still is.
+    const proxy = (await recorder(502, { message: 'Bad gateway' }).api.myProjects().catch((e: unknown) => e)) as ApiFailure;
+    expect([proxy.retryable, proxy.retryAfter, proxy.transient]).toEqual([false, undefined, true]);
+  });
+
   it('a search given up is aborted, not reported as a dead network', async () => {
     const api = new HttpCloudApi(((_url: string, init: RequestInit) =>
       new Promise((_resolve, reject) => init.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))))) as unknown as typeof fetch);

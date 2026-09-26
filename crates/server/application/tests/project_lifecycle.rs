@@ -369,7 +369,7 @@ async fn the_trash_keeps_a_project_restorable_and_only_its_name_removes_it_for_g
     )
     .await;
     assert!(
-        matches!(&not_yet, Err(AppError::Invalid(m)) if m.contains("çöp kutusunda değil")),
+        matches!(&not_yet, Err(AppError::Invalid { message: m, .. }) if m.contains("çöp kutusunda değil")),
         "{not_yet:?}"
     );
     changed(run(&db, &owner, PROJECT_TRASH, json!({})).await.unwrap());
@@ -382,7 +382,7 @@ async fn the_trash_keeps_a_project_restorable_and_only_its_name_removes_it_for_g
     )
     .await;
     assert!(
-        matches!(&wrong, Err(AppError::Invalid(m)) if m.contains("Hiçbir şey silinmedi")),
+        matches!(&wrong, Err(AppError::Invalid { message: m, .. }) if m.contains("Hiçbir şey silinmedi")),
         "{wrong:?}"
     );
     let views = open(&db, &viewer, project).await;
@@ -614,7 +614,7 @@ async fn the_owner_is_kept_through_every_lifecycle_change() {
         ),
     ] {
         let r = run(&db, who, name, input).await;
-        assert!(matches!(r, Err(AppError::Invalid(_))), "{name}: {r:?}");
+        assert!(matches!(r, Err(AppError::Invalid { .. })), "{name}: {r:?}");
     }
     // A copy is its maker's: the source keeps its owner.
     let copy = match run(&db, &manages, PROJECT_DUPLICATE, json!({}))

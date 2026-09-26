@@ -63,7 +63,10 @@ fn expected(envelope: &CommandEnvelope, key: &str) -> AppResult<Option<i64>> {
         .get(key)
         .map(|v| {
             v.parse::<i64>().map_err(|_| {
-                AppError::invalid(format!("expectedVersions[{key}] bir tamsayı değil: {v}"))
+                AppError::invalid_at(
+                    format!("expectedVersions[{key}]"),
+                    format!("expectedVersions[{key}] bir tamsayı değil: {v}"),
+                )
             })
         })
         .transpose()
@@ -253,7 +256,8 @@ pub async fn commit(
                 current: None,
             }),
             None => {
-                return Err(AppError::invalid(
+                return Err(AppError::invalid_at(
+                    "expectedVersions[@project]",
                     "Proje bilgisi değişikliği expectedVersions[\"@project\"] ister.",
                 ));
             }
@@ -268,16 +272,20 @@ pub async fn commit(
             FeatureChange::Update { id, entity } => (id, FeatureOp::Update, Some(entity)),
             FeatureChange::Delete { id } => (id, FeatureOp::Delete, None),
         };
-        let id = parse_uuid(id, "nesne kimliği")?;
+        let id = parse_uuid(id, "nesne kimliği").map_err(|e| e.at(format!("features[{i}].id")))?;
         if !seen.insert(id) {
-            return Err(AppError::invalid(format!(
-                "{id} nesnesi komutta birden çok kez geçiyor."
-            )));
+            return Err(AppError::invalid_at(
+                format!("features[{i}].id"),
+                format!("{id} nesnesi komutta birden çok kez geçiyor."),
+            ));
         }
         let stored = match entity {
             Some(e) => {
                 let s = to_stored(e, new_srid).map_err(|why| {
-                    AppError::invalid(format!("Değişiklik {} ({id}): {why}.", i + 1))
+                    AppError::invalid_at(
+                        format!("features[{i}].entity"),
+                        format!("Değişiklik {} ({id}): {why}.", i + 1),
+                    )
                 })?;
                 writable_layer(&tree, &s.layer_id)?;
                 Some(s)
@@ -305,8 +313,12 @@ pub async fn commit(
         let reason = match p.op {
             FeatureOp::Create => actual.map(|_| ConflictReason::Exists),
             FeatureOp::Update | FeatureOp::Delete => {
-                let want = expected(&envelope, &key)?
-                    .ok_or_else(|| AppError::invalid(format!("expectedVersions[{key}] eksik.")))?;
+                let want = expected(&envelope, &key)?.ok_or_else(|| {
+                    AppError::invalid_at(
+                        format!("expectedVersions[{key}]"),
+                        format!("expectedVersions[{key}] eksik."),
+                    )
+                })?;
                 match actual {
                     None => Some(ConflictReason::Deleted),
                     Some(v) if v != want => Some(ConflictReason::Changed),
@@ -342,6 +354,7 @@ pub async fn commit(
                 "{n} değişiklik, başka biri aynı nesneleri değiştirdiği için kaydedilmedi. Sunucudaki hâli ile sizinkini karşılaştırın."
             ),
             conflicts,
+            revision: Some(data_revision),
         });
     }
 

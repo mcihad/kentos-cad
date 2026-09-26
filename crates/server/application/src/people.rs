@@ -249,7 +249,8 @@ pub fn search_patterns(query: &str) -> AppResult<Vec<String>> {
     let words: Vec<String> = query.split_whitespace().map(fold).collect();
     let letters: usize = words.iter().map(|w| w.chars().count()).sum();
     if letters < 2 || query.chars().count() > 100 {
-        return Err(AppError::invalid(
+        return Err(AppError::invalid_at(
+            "q",
             "Aramak için kişinin adından ya da e-postasından en az iki harf yazın (en çok 100 karakter).",
         ));
     }
@@ -455,7 +456,7 @@ mod tests {
         assert_eq!(search_patterns("c\\").unwrap(), ["%c\\\\%"]);
         for short in ["", " ", "a", " ş "] {
             assert!(
-                matches!(search_patterns(short), Err(AppError::Invalid(_))),
+                matches!(search_patterns(short), Err(AppError::Invalid { .. })),
                 "{short:?}"
             );
         }

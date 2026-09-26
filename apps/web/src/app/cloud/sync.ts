@@ -334,10 +334,11 @@ export class ProjectSync {
         // device draft with its key: shared again and opened, it goes once more and the server answers it once.
         this.markRevoked();
       } else if (failure.transient) {
-        // Same command, same key, a little later (1 s … 30 s).
+        // Same command, same key, a little later (1 s … 30 s), and never sooner than the server asked.
         this.state.set('offline_pending');
         this.retries++;
-        this.schedule(Math.min(30_000, 1000 * 2 ** Math.min(this.retries - 1, 5)));
+        const backoff = Math.min(30_000, 1000 * 2 ** Math.min(this.retries - 1, 5));
+        this.schedule(Math.max(backoff, (failure.retryAfter ?? 0) * 1000));
       } else {
         // The server refused it for good (a locked layer, a missing right): say why and wait for the next edit.
         core.inflight = null;

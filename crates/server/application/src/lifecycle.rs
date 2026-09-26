@@ -267,10 +267,13 @@ pub async fn purge(
         )));
     }
     if confirm_name.trim() != now.name {
-        return Err(AppError::invalid(format!(
-            "Kalıcı silme onaylanmadı: confirmName projenin adıyla aynı olmalı (“{}”). Hiçbir şey silinmedi.",
-            now.name
-        )));
+        return Err(AppError::invalid_at(
+            "confirmName",
+            format!(
+                "Kalıcı silme onaylanmadı: confirmName projenin adıyla aynı olmalı (“{}”). Hiçbir şey silinmedi.",
+                now.name
+            ),
+        ));
     }
     let (name, objects): (String, i64) =
         sqlx::query_as("select purged_name, purged_objects from kentos.purge_project($1, $2, $3)")

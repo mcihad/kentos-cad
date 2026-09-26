@@ -36,10 +36,13 @@ use crate::{idempotency, journal, listing};
 pub fn check_description(text: &str) -> AppResult<String> {
     let text = text.trim();
     if text.chars().count() > PROJECT_DESCRIPTION_MAX {
-        return Err(AppError::invalid(format!(
-            "Açıklama en çok {PROJECT_DESCRIPTION_MAX} karakter olabilir ({} yazıldı).",
-            text.chars().count()
-        )));
+        return Err(AppError::invalid_at(
+            "description",
+            format!(
+                "Açıklama en çok {PROJECT_DESCRIPTION_MAX} karakter olabilir ({} yazıldı).",
+                text.chars().count()
+            ),
+        ));
     }
     Ok(text.to_string())
 }
@@ -50,15 +53,18 @@ pub fn check_description(text: &str) -> AppResult<String> {
 pub fn normalize_tags(tags: &[String]) -> AppResult<Vec<String>> {
     let mut out: Vec<String> = Vec::new();
     let mut seen: Vec<String> = Vec::new();
-    for tag in tags {
+    for (i, tag) in tags.iter().enumerate() {
         let tag = tag.split_whitespace().collect::<Vec<_>>().join(" ");
         if tag.is_empty() {
             continue;
         }
         if tag.chars().count() > PROJECT_TAG_MAX {
-            return Err(AppError::invalid(format!(
-                "“{tag}” etiketi çok uzun; bir etiket en çok {PROJECT_TAG_MAX} karakter olabilir."
-            )));
+            return Err(AppError::invalid_at(
+                format!("tags[{i}]"),
+                format!(
+                    "“{tag}” etiketi çok uzun; bir etiket en çok {PROJECT_TAG_MAX} karakter olabilir."
+                ),
+            ));
         }
         let key = fold(&tag);
         if seen.contains(&key) {
@@ -68,10 +74,13 @@ pub fn normalize_tags(tags: &[String]) -> AppResult<Vec<String>> {
         out.push(tag);
     }
     if out.len() > PROJECT_TAGS_MAX {
-        return Err(AppError::invalid(format!(
-            "Bir projenin en çok {PROJECT_TAGS_MAX} etiketi olabilir ({} verildi).",
-            out.len()
-        )));
+        return Err(AppError::invalid_at(
+            "tags",
+            format!(
+                "Bir projenin en çok {PROJECT_TAGS_MAX} etiketi olabilir ({} verildi).",
+                out.len()
+            ),
+        ));
     }
     Ok(out)
 }
@@ -189,6 +198,8 @@ async fn apply(
                 actual: Some(version.to_string()),
                 current: None,
             }],
+            // The catalog's own version is in the conflict; the data revision is not what it is about.
+            revision: None,
         });
     }
     // What differs from the project now; the rest is left as it is.

@@ -45,7 +45,7 @@ pub fn status_of(error: &AppError) -> StatusCode {
         AppError::Unauthenticated(_) => StatusCode::UNAUTHORIZED,
         AppError::Forbidden(_) => StatusCode::FORBIDDEN,
         AppError::NotFound(_) => StatusCode::NOT_FOUND,
-        AppError::Invalid(_) => StatusCode::UNPROCESSABLE_ENTITY,
+        AppError::Invalid { .. } => StatusCode::UNPROCESSABLE_ENTITY,
         AppError::Deleted(_) | AppError::ResyncRequired(_) => StatusCode::GONE,
         AppError::Conflict { .. } | AppError::Archived(_) => StatusCode::CONFLICT,
         AppError::Limited { .. } => StatusCode::TOO_MANY_REQUESTS,
@@ -60,19 +60,24 @@ impl IntoResponse for Failure {
         if let AppError::Database(e) = &self.error {
             tracing::error!(request_id = self.request_id.as_deref().unwrap_or("-"), error = %e, "veritabanı hatası");
         }
-        let conflicts = match &self.error {
-            AppError::Conflict { conflicts, .. } => Some(conflicts.clone()),
-            _ => None,
+        let (conflicts, revision) = match &self.error {
+            AppError::Conflict {
+                conflicts,
+                revision,
+                ..
+            } => (Some(conflicts.clone()), revision.map(|r| r.to_string())),
+            _ => (None, None),
         };
-        let retry_after = match &self.error {
-            AppError::Limited { retry_after, .. } => Some(*retry_after),
-            _ => None,
-        };
+        let (retryable, retry_after) = self.error.retry();
         let body = ApiError {
             error: self.error.code().into(),
             message: self.error.to_string(),
             request_id: self.request_id,
             conflicts,
+            path: self.error.path().map(str::to_string),
+            revision,
+            retryable,
+            retry_after,
         };
         let mut response = (status, Json(body)).into_response();
         if let Some(secs) = retry_after {

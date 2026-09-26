@@ -74,7 +74,8 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
 
 pub fn check_name(name: &str) -> AppResult<()> {
     if name.trim().is_empty() || name.len() > 200 {
-        return Err(AppError::invalid(
+        return Err(AppError::invalid_at(
+            "name",
             "Proje adı boş olamaz ve en çok 200 karakter olabilir.",
         ));
     }

@@ -33,6 +33,14 @@ export class ApiFailure extends Error {
   readonly code: string;
   readonly conflicts: FeatureConflict[];
   readonly requestId?: string;
+  /** The field the error is about, when the server knows it (`name`, `tags[2]`, `q`; TODOS.md ARCH-07). */
+  readonly path?: string;
+  /** The project's data revision now, as decimal text, when the error depends on it (a conflict). */
+  readonly revision?: string;
+  /** The server says the same request may go again unchanged. */
+  readonly retryable: boolean;
+  /** Seconds the server asks to wait before that (a rate limit). */
+  readonly retryAfter?: number;
 
   constructor(status: number, body: Partial<ApiError>, fallback: string) {
     super(body.message || fallback);
@@ -40,6 +48,10 @@ export class ApiFailure extends Error {
     this.code = body.error ?? (status === 0 ? 'network' : 'http');
     this.conflicts = body.conflicts ?? [];
     this.requestId = body.requestId;
+    this.path = body.path;
+    this.revision = body.revision;
+    this.retryable = body.retryable === true;
+    this.retryAfter = typeof body.retryAfter === 'number' && body.retryAfter >= 0 ? body.retryAfter : undefined;
   }
 
   /** The project was deleted (410, it is in the trash): nothing more can be read from it or saved to it. */
@@ -60,9 +72,13 @@ export class ApiFailure extends Error {
     return this.code === 'not_found';
   }
 
-  /** Worth retrying unchanged: no answer, a timeout, or the server/database briefly away. */
+  /**
+   * Worth retrying unchanged: the server says so (a rate limit, the
+   * database briefly away), or no answer came from it at all — no
+   * connection, a timeout, a gateway in front of it.
+   */
   get transient(): boolean {
-    return this.status === 0 || this.status === 408 || this.status === 502 || this.status === 503 || this.status === 504;
+    return this.retryable || this.status === 0 || this.status === 408 || this.status === 502 || this.status === 503 || this.status === 504;
   }
 }
 

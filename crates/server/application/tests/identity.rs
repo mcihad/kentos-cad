@@ -392,7 +392,9 @@ async fn seats_stop_at_the_tenant_limit() {
         .await
         .unwrap();
     let full = admin::set_membership(&db.owner, "kucuk", "iki", TenantRole::Viewer, true).await;
-    assert!(matches!(full, Err(AppError::Invalid(m)) if m.contains("koltuğunun hepsi dolu")));
+    assert!(
+        matches!(full, Err(AppError::Invalid { message: m, .. }) if m.contains("koltuğunun hepsi dolu"))
+    );
     let members = admin::list_members(&db.owner, "kucuk").await.unwrap();
     assert_eq!(members.len(), 1);
     // A membership without a seat is allowed.
@@ -405,15 +407,15 @@ async fn seats_stop_at_the_tenant_limit() {
     );
     assert!(matches!(
         admin::create_tenant(&db.owner, "kucuk", "Aynı", 1).await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     assert!(matches!(
         admin::create_tenant(&db.owner, "Büyük", "Harf", 1).await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     assert!(matches!(
         admin::create_local_user(&db.owner, "bir", "Tekrar", None, PASSWORD).await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     db.close().await;
 }

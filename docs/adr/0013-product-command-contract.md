@@ -69,6 +69,7 @@ TODOS.md §4, UI düğmesinin, komut satırının, Python'un, HTTP'nin, CLI'nin 
 - **Yürütme akışının hedefi** `discover → validate → preview/plan → execute → progress/result`'tır (`CMD-04`).
   - Sonuç durumları: `completed`, `queued(job_id)`, `needs_input`, `conflict`, `cancelled`, `failed` (`CMD-05`).
   - Hata sabit bir `code` taşır; iletisi, alan yolu, revizyon ve yeniden deneme bilgisi ayrıdır. Bugünkü `ApiError { error, message, requestId, conflicts }` bu biçime genişler (`ARCH-07`).
+    - **26 Eylül, uygulandı:** `ApiError` şimdi `path` (bilinen alan: komut girdisine göre `CommandError`'daki gibi, `tags[2]`, `features[0].entity`; sorgu parametresinde adı, `q`), `revision` (çakışmada projenin şimdiki veri revizyonu, ondalık metin), `retryable` ve `retryAfter` (saniye; 429'da `Retry-After` başlığıyla aynı) taşır. Kod alanının adı eski istemciler için `error` kaldı. Yeniden denenebilir olanlar yalnız hız sınırı ve kısa süreli veritabanı kesintisidir; öbürleri önce bir değişiklik ister. Web istemcisi yeniden denemeyi bu alanlardan karar verir ve sunucunun istediğinden erken denemez.
   - Yerel çalışmada tenant gerekmez (`CMD-06`).
   - Tekrar oynatma kaydı komut adı ve sürümünü, şema, algoritma ve sayısal politika sürümlerini ve kaynak revizyonunu taşır (`CMD-08`).
   - Onay gerektiren işlemde onay yalnız incelenen plana uygulanır (`CMD-09`).

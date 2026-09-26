@@ -293,3 +293,48 @@ async fn catalog_routes_answer_404_alike_and_check_every_permission() {
     assert_eq!(status, StatusCode::NOT_FOUND);
     db.close().await;
 }
+
+/// A refused catalog query names the parameter it is about and says it is
+/// not worth sending again unchanged (TODOS.md ARCH-07).
+#[tokio::test]
+async fn a_bad_catalog_query_names_its_parameter() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 2)
+        .await
+        .unwrap();
+    admin::create_local_user(&db.owner, "ayse", "Ayşe", None, "dogru-parola-1")
+        .await
+        .unwrap();
+    admin::set_membership(&db.owner, "buro", "ayse", TenantRole::ProjectManager, true)
+        .await
+        .unwrap();
+    let router = app(Some(db.app.clone()));
+    let ayse = signed_in(&router, "ayse").await;
+    let long = "a".repeat(101);
+    for (query, field) in [
+        ("view=hepsi".to_owned(), "view"),
+        ("q=x".to_owned(), ""),
+        ("view=mine&type=kule".to_owned(), "type"),
+        ("view=mine&sort=opened".to_owned(), "sort"),
+        ("view=mine&after=bozuk".to_owned(), "after"),
+        (format!("view=mine&q={long}"), "q"),
+    ] {
+        let (status, _, body) = send(&router, get(&format!("/v1/me/catalog?{query}"), &ayse)).await;
+        assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{query}");
+        let refused: ApiError = serde_json::from_slice(&body).unwrap();
+        // Without `view` the first refusal is about `view` itself.
+        let want = if field.is_empty() { "view" } else { field };
+        assert_eq!(
+            (
+                refused.error.as_str(),
+                refused.path.as_deref(),
+                refused.retryable
+            ),
+            ("invalid", Some(want), false),
+            "{query}"
+        );
+    }
+    db.close().await;
+}

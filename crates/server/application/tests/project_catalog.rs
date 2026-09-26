@@ -94,7 +94,7 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
         assert!(
             matches!(
                 run(&db, &owner, PROJECT_METADATA_UPDATE, bad.clone()).await,
-                Err(AppError::Invalid(_))
+                Err(AppError::Invalid { .. })
             ),
             "{bad}"
         );
@@ -465,7 +465,7 @@ async fn views_are_searched_sorted_paged_and_counted_after_the_access_check() {
             }
         )
         .await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     assert!(matches!(
         page(
@@ -477,7 +477,7 @@ async fn views_are_searched_sorted_paged_and_counted_after_the_access_check() {
             }
         )
         .await,
-        Err(AppError::Invalid(_))
+        Err(AppError::Invalid { .. })
     ));
     let _ = (unshared, foreign);
     db.close().await;

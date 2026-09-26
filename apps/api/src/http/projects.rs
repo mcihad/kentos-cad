@@ -251,12 +251,13 @@ fn named<T: serde::de::DeserializeOwned>(value: &str, what: &str) -> Result<T, A
 impl CatalogParams {
     fn query(self) -> Result<listing::CatalogQuery, AppError> {
         let view = self.view.as_deref().ok_or_else(|| {
-            AppError::invalid(
+            AppError::invalid_at(
+                "view",
                 "view gerekli: mine, organization, shared, recent, favorites, archived ya da trash.",
             )
         })?;
         Ok(listing::CatalogQuery {
-            view: named::<CatalogView>(view, "Liste (view)")?,
+            view: named::<CatalogView>(view, "Liste (view)").map_err(|e| e.at("view"))?,
             // A tenant that is not a UUID is no one's: the organisation's view answers 404 as for any other.
             tenant: match self.tenant.as_deref() {
                 None | Some("") => None,
@@ -267,13 +268,13 @@ impl CatalogParams {
                 .project_type
                 .as_deref()
                 .filter(|t| !t.is_empty())
-                .map(|t| named::<ProjectType>(t, "Proje türü"))
+                .map(|t| named::<ProjectType>(t, "Proje türü").map_err(|e| e.at("type")))
                 .transpose()?,
             sort: self
                 .sort
                 .as_deref()
                 .filter(|s| !s.is_empty())
-                .map(|s| named::<CatalogSort>(s, "Sıralama"))
+                .map(|s| named::<CatalogSort>(s, "Sıralama").map_err(|e| e.at("sort")))
                 .transpose()?,
             limit: self.limit,
             after: self.after.filter(|a| !a.is_empty()),
