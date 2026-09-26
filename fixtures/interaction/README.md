@@ -24,6 +24,9 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/circle-methods.json` | Daire aracı (ADR 0032): merkez ve yarıçap (tıklanan, yazılan, Çap ile), 2N, 3N, iki nesneye teğet ve yarıçaplı (TTY; yazılan, sonra Enter ile son yarıçap), üç nesneye teğet (TTT) |
 | `v1/arc-variants.json` | Yay aracı (ADR 0032): nesne yokken Devam uyarısı; üç nokta; başlangıç–merkez ve açı; başlangıç–bitiş ve yarıçap; önce merkez; çizgiye teğet Devam |
 | `v1/rect-options.json` | Dikdörtgen aracı (ADR 0032): iki köşe, köşe yuvarlama, döndürme ve boyutlar, pah; döndürülmüş dikdörtgen; düzgün çokgen |
+| `v1/move-copy.json` | Taşı ve Kopyala ([ADR 0037](../../docs/adr/0037-desktop-modify-tools.md)): seçim yokken araç önce seçer (tıklama, pencere, sağ tıkla devam); kenetlenen temel nokta; yazılan `@dY,dX` ile taşıma, tek adımda geri alma; her tık bir kopya, kilitli katmandaki nesne kopyalanmaz; Bitir (Enter) |
+| `v1/rotate-scale.json` | Döndür ve Ölçekle (ADR 0037): kenetlenen merkez, Kopya (K) ile yazılan 90°; referans uzunluğuyla (R) ve yazılan faktörle ölçekleme |
+| `v1/mirror.json` | Aynala (ADR 0037): kenetlenen eksenle simetrik kopya; Kaynağı sil (S) ile yazılan eksene göre yerinde çevirme, tek adımda geri alma |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
 | `v1/objects.kcad` | Seçim ve kenet izlerinin çizimi: çizgiler (1–3; 2 ile 3 (9,6; 8,8)'de kesişir), kapalı alan (4), nokta (5), kilitli katmanda çizgi (6), gizli katmanda çizgi (7) |
 
@@ -77,6 +80,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | `hover` | İmlecin altında vurgulanan nesnenin kimliği; yoksa `null` |
 | `snap` | Kenet işaretinin türü (`endpoint`, `midpoint`, `center`, `node`, `quadrant`, `intersection`, `perpendicular`, `tangent`, `nearest`); yoksa `null` |
 | `ids` | Çizimdeki nesnelerin kimlikleri, belge sırasıyla: geri alınan silmenin nesneleri yerlerine döner |
+| `objects` | Kimliğiyle verilen nesneler, her biri `newest` gibi (`id`, `kind`, `points` …): yerinde taşınan, döndürülen ya da aynalanan nesne (ADR 0037) |
 
 `note`, adımın neyi gösterdiğini okura anlatır; denetlenmez.
 

@@ -2,6 +2,7 @@
 //! step by step, and reads back what a step can see (the web runner's
 //! `act` and `observe`).
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -49,6 +50,41 @@ pub struct Seen {
     pub radius: Option<f64>,
 }
 
+impl Seen {
+    /// An object as a step sees it: a path's corners; a line's two ends; a
+    /// point's place; an arc's start and end (the web runner's `shape`).
+    pub fn of(e: &Entity) -> Self {
+        let (pts, bulges) = match e {
+            Entity::Polygon(p) | Entity::Polyline(p) => (
+                p.pts.iter().map(|v| [v.x, v.y]).collect(),
+                p.bulges.clone().unwrap_or_default(),
+            ),
+            Entity::Line(l) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], Vec::new()),
+            Entity::Point(p) => (vec![[p.p.x, p.p.y]], Vec::new()),
+            Entity::Arc(a) => (
+                [a.a0, a.a1]
+                    .iter()
+                    .map(|t| [a.c.x + a.r * t.cos(), a.c.y + a.r * t.sin()])
+                    .collect(),
+                Vec::new(),
+            ),
+            _ => (Vec::new(), Vec::new()),
+        };
+        let (center, radius) = match e {
+            Entity::Circle(c) => (Some([c.c.x, c.c.y]), Some(c.r)),
+            Entity::Arc(a) => (Some([a.c.x, a.c.y]), Some(a.r)),
+            _ => (None, None),
+        };
+        Seen {
+            kind: e.kind().to_owned(),
+            pts,
+            bulges,
+            center,
+            radius,
+        }
+    }
+}
+
 /// What a trace step can see (the web runner's `observe`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Observation {
@@ -70,6 +106,8 @@ pub struct Observation {
     pub snap: Option<String>,
     /// Every object's id in the drawing's order.
     pub ids: Vec<u32>,
+    /// Every object by its id (the `objects` expectation, docs/adr/0037).
+    pub objects: BTreeMap<u32, Seen>,
 }
 
 /// Plays a trace on an app.
@@ -438,37 +476,13 @@ impl<'a> Player<'a> {
         let doc = app.document.as_ref();
         let newest = doc
             .and_then(|d| d.model.entities().max_by_key(|e| e.base().id))
-            .map(|e| {
-                // A path's corners; a line's two ends; a point's place; an arc's start and end.
-                let (pts, bulges) = match e {
-                    Entity::Polygon(p) | Entity::Polyline(p) => (
-                        p.pts.iter().map(|v| [v.x, v.y]).collect(),
-                        p.bulges.clone().unwrap_or_default(),
-                    ),
-                    Entity::Line(l) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], Vec::new()),
-                    Entity::Point(p) => (vec![[p.p.x, p.p.y]], Vec::new()),
-                    Entity::Arc(a) => (
-                        [a.a0, a.a1]
-                            .iter()
-                            .map(|t| [a.c.x + a.r * t.cos(), a.c.y + a.r * t.sin()])
-                            .collect(),
-                        Vec::new(),
-                    ),
-                    _ => (Vec::new(), Vec::new()),
-                };
-                let (center, radius) = match e {
-                    Entity::Circle(c) => (Some([c.c.x, c.c.y]), Some(c.r)),
-                    Entity::Arc(a) => (Some([a.c.x, a.c.y]), Some(a.r)),
-                    _ => (None, None),
-                };
-                Seen {
-                    kind: e.kind().to_owned(),
-                    pts,
-                    bulges,
-                    center,
-                    radius,
-                }
-            });
+            .map(Seen::of);
+        let objects = doc.map_or_else(BTreeMap::new, |d| {
+            d.model
+                .entities()
+                .map(|e| (e.base().id, Seen::of(e)))
+                .collect()
+        });
         Observation {
             tool: app.session.tool_id().to_owned(),
             points: app.session.point_count(),
@@ -494,6 +508,7 @@ impl<'a> Player<'a> {
             ids: doc.map_or_else(Vec::new, |d| {
                 d.model.entities().map(|e| e.base().id).collect()
             }),
+            objects,
         }
     }
 }

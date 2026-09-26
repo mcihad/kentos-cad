@@ -1,0 +1,29 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "mirror",
+  "title": "Aynala: kenetlenen iki nokta eksen olur, asıl yerinde kalır ve simetrik kopya eklenir; Kaynağı sil (S) ile yazılan eksen noktalarına göre asıl yerinde çevrilir, tek adımda geri alınır",
+  "source": "Web'in MirrorTool ('tool.mirror') ve cad.entities.transform kuralları, ADR 0037",
+  "covers": ["UX-01", "UX-07", "CMD-04", "CMD-07"],
+  "document": "objects.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": true, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "click": [8, 10], "expect": { "tool": "select", "selected": [3] } },
+    { "run": "tool.mirror", "note": "Kaynağı sil kapalı: simetrik kopya eklenir.", "expect": { "tool": "mirror", "options": ["S"] } },
+    { "move": [-23.625, -12], "expect": { "snap": "endpoint" } },
+    { "click": [-23.625, -12], "note": "Eksenin ilk noktası çizginin ucuna kenetlenir.", "expect": { "options": ["S"] } },
+    { "move": [-8.375, -12], "expect": { "snap": "endpoint" } },
+    { "click": [-8.375, -12], "note": "Eksen doğu–batı: çizginin simetriği güneye düşer, asıl yerinde kalır.", "expect": { "tool": "select", "entities": 8, "log": "success", "newest": { "kind": "line", "points": [[0, -40], [16, -28]] }, "objects": [{ "id": 3, "kind": "line", "points": [[0, 16], [16, 4]] }] } },
+    { "click": [12, 10], "expect": { "selected": [2] } },
+    { "run": "tool.mirror" },
+    { "key": "S", "note": "Kaynağı sil açılır.", "expect": { "options": ["S"] } },
+    { "text": "486998,4419982" },
+    { "key": "Enter", "note": "Yazılan eksen noktası kesindir.", "expect": { "options": ["S"] } },
+    { "text": "486998,4420018" },
+    { "key": "Enter", "note": "Asıl yerinde çevrilir: kopya yok.", "expect": { "tool": "select", "entities": 8, "log": "success", "objects": [{ "id": 2, "kind": "line", "points": [[-4, 4], [-28, 16]] }] } },
+    { "key": "Ctrl+Z", "note": "Tek adımda geri alınır.", "expect": { "entities": 8, "objects": [{ "id": 2, "kind": "line", "points": [[0, 4], [24, 16]] }] } }
+  ]
+}

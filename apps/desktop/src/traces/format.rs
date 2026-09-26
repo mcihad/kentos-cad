@@ -111,11 +111,16 @@ pub struct Expect {
     pub(super) snap: Option<Option<String>>,
     /// Every object's id, in the drawing's order.
     pub(super) ids: Option<Vec<u32>>,
+    /// Objects by their ids, each as `newest` is read (docs/adr/0037): a moved one in place.
+    pub(super) objects: Option<Vec<Newest>>,
 }
 
+/// An object's expected shape: the newest one, or one of `objects` by its `id`.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Newest {
+    /// In `objects`: whose shape this is.
+    pub(super) id: Option<u32>,
     pub(super) kind: String,
     pub(super) points: Option<Vec<[f64; 2]>>,
     pub(super) edges: Option<Vec<[f64; 2]>>,
