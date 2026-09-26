@@ -18,6 +18,16 @@
 //! Objects on a locked layer are refused (CLAUDE.md §7), and so is any
 //! change to a deleted project (410); a command it had already committed is
 //! still answered from the log.
+//!
+//! An object's id is its persistent id, chosen by the client that made it
+//! (docs/adr/0014, 0026). A deleted object's row is removed, and the same id
+//! may be created again (an undone deletion, or "keep mine" over someone
+//! else's deletion). So that a version is never given to the same id twice,
+//! a created object's version is the commit's data revision: every version
+//! an id had is at most the data revision of the commit that wrote it, so
+//! the id comes back above all of them, and an edit based on a version from
+//! before the deletion is a conflict, never a silent overwrite. A change
+//! adds one to the version.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
@@ -164,13 +174,15 @@ pub async fn commit(
     // 1. Lock the project: commits of one project happen one after another.
     let now = lock(&mut tx, access).await?;
     let project = now.project;
-    let (srid, layers, meta_version): (i32, Value, i64) = sqlx::query_as(
-        "select srid, layers, meta_version from kentos.project where tenant_id = $1 and id = $2",
+    let (srid, layers, meta_version, data_revision): (i32, Value, i64, i64) = sqlx::query_as(
+        "select srid, layers, meta_version, data_revision from kentos.project where tenant_id = $1 and id = $2",
     )
     .bind(now.tenant)
     .bind(project)
     .fetch_one(&mut *tx)
     .await?;
+    // The version a created object gets: this commit's data revision (the module's comment says why).
+    let created_version = data_revision + 1;
 
     // 2. The same key again: the stored answer, or a refusal if the request differs.
     let text = idempotency::request_text(&envelope);
@@ -352,8 +364,8 @@ pub async fn commit(
             (op, Some(s)) => {
                 let version: i64 = sqlx::query_scalar(
                     "insert into kentos.feature (tenant_id, project_id, id, layer_id, kind, source_kind, srid, geom, cad_definition, properties,
-                                                 label, color, symbol, projection_version, created_by, updated_by)
-                     values ($1, $2, $3, $4, $5, $6, $7, public.st_geomfromewkb($8), $9, $10, $11, $12, $13, $14, $15, $15)
+                                                 label, color, symbol, projection_version, created_by, updated_by, version)
+                     values ($1, $2, $3, $4, $5, $6, $7, public.st_geomfromewkb($8), $9, $10, $11, $12, $13, $14, $15, $15, $16)
                      on conflict (tenant_id, project_id, id) do update set
                        layer_id = excluded.layer_id, kind = excluded.kind, source_kind = excluded.source_kind, srid = excluded.srid,
                        geom = excluded.geom, cad_definition = excluded.cad_definition, properties = excluded.properties,
@@ -377,6 +389,7 @@ pub async fn commit(
                 .bind(&s.symbol)
                 .bind(PROJECTION_VERSION)
                 .bind(actor)
+                .bind(created_version)
                 .fetch_one(&mut *tx)
                 .await?;
                 versions.insert(p.id.to_string(), version.to_string());
@@ -420,6 +433,8 @@ pub async fn commit(
     .bind(patch.styles.as_ref().map(|s| serde_json::to_value(s).expect("styles serialize")))
     .fetch_one(&mut *tx)
     .await?;
+    // The project row has been locked since the revision was read: created objects carry this commit's.
+    debug_assert_eq!(new_revision, created_version);
     sqlx::query(
         "insert into kentos.audit_event (tenant_id, project_id, actor, action, request_id, data_revision, detail)
          values ($1, $2, $3, $4, $5, $6, $7)",
