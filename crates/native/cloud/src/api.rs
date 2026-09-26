@@ -590,6 +590,33 @@ impl Cloud {
         self.get(url)
     }
 
+    /// The committed events after `after`, waiting up to `wait` for one when
+    /// none is new (a long poll, docs/adr/0044): the answer comes as soon as
+    /// a commit lands, or empty when the wait ends.
+    pub fn events_waiting(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        after: &str,
+        wait: Duration,
+    ) -> impl Future<Output = Result<EventPage, ApiFailure>> + Send + 'static {
+        let url = self
+            .inner
+            .project_url(tenant, project, "/events")
+            .map(|mut url| {
+                url.query_pairs_mut()
+                    .append_pair("after", after)
+                    .append_pair("wait", &wait.as_secs().max(1).to_string());
+                url
+            });
+        // The request may take the whole wait, and a little more.
+        let timeout = wait + Duration::from_secs(10);
+        self.call(move |inner| async move {
+            let b = inner.request(Method::GET, url?, timeout);
+            inner.json(b, timeout).await
+        })
+    }
+
     /// A file project's revisions, newest first (`GET …/files`).
     pub fn file_revisions(
         &self,

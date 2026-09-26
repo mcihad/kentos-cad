@@ -2,11 +2,13 @@
 //! after the sync's cursor (`GET …/events`, the route the web replays from),
 //! and what the server has now of the objects they name.
 //!
-//! The desktop asks every few seconds while a project is open, and again at
-//! once while a page comes full. The web's live channel (the WebSocket) is a
-//! later step for the desktop: it would only bring the same events sooner. A
-//! cursor the server cannot continue from (older than the events it still
-//! keeps) answers `resync_required`: the project is opened again.
+//! The desktop asks again as soon as an answer comes: a request that finds
+//! nothing new waits on the server for the project's next commit (a long
+//! poll, [`wait`], docs/adr/0044), so another editor's change arrives within
+//! a moment, over the same HTTP and TLS as every other request. A full page
+//! means more wait. A cursor the server cannot continue from (older than the
+//! events it still keeps, or beyond the newest) answers `resync_required`:
+//! the project is opened again.
 
 use std::future::Future;
 
@@ -33,6 +35,20 @@ pub fn events(
     after: &str,
 ) -> impl Future<Output = Result<EventPage, ApiFailure>> + Send + 'static {
     cloud.events(tenant, project, after)
+}
+
+/// How long one request waits on the server for a commit (the server's most).
+pub const WAIT: std::time::Duration = std::time::Duration::from_secs(25);
+
+/// The committed events after `after`, waiting on the server up to [`WAIT`]
+/// for the next commit when none is new: call it again as soon as it answers.
+pub fn wait(
+    cloud: &Cloud,
+    tenant: Uuid,
+    project: Uuid,
+    after: &str,
+) -> impl Future<Output = Result<EventPage, ApiFailure>> + Send + 'static {
+    cloud.events_waiting(tenant, project, after, WAIT)
 }
 
 /// What the server has now of what `incoming` names: the objects others

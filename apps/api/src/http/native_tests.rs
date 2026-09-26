@@ -1087,3 +1087,58 @@ async fn a_file_project_saved_offline_goes_out_when_connected_and_a_clash_keeps_
     let _ = std::fs::remove_dir_all(dir);
     db.close().await;
 }
+
+#[tokio::test]
+async fn a_waiting_request_answers_as_soon_as_another_editor_commits() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let drawing = sample();
+    let (info, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(&drawing, "Ada 109", ProjectStorage::Database),
+        kcad(&drawing),
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    let project = Uuid::parse_str(&info.id).unwrap();
+    let a = open(&ayse, tenant, project, None).await.unwrap();
+    let cursor = a.info.event_cursor.clone();
+    // Nothing new: a short wait ends empty, at its end.
+    let started = std::time::Instant::now();
+    let empty = ayse
+        .events_waiting(tenant, project, &cursor, std::time::Duration::from_secs(1))
+        .await
+        .unwrap();
+    assert!(empty.events.is_empty());
+    assert!(started.elapsed() >= std::time::Duration::from_millis(900));
+    // A long wait answers as soon as someone commits.
+    let waiting = follow::wait(&ayse, tenant, project, &cursor);
+    let commit = async {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        let mut d = open(&ayse, tenant, project, None).await.unwrap();
+        let mut sync = ProjectSync::new(&d).unwrap();
+        d.document.add(point(486600.0)).unwrap();
+        send_all(&ayse, &mut sync, &d.document).await.unwrap();
+    };
+    let started = std::time::Instant::now();
+    let (page, ()) = tokio::join!(waiting, commit);
+    let page = page.unwrap();
+    assert_eq!(page.events.len(), 1);
+    assert!(
+        started.elapsed() < std::time::Duration::from_secs(5),
+        "{:?}",
+        started.elapsed()
+    );
+    // With something new already, it answers at once.
+    let started = std::time::Instant::now();
+    let now = follow::wait(&ayse, tenant, project, &cursor).await.unwrap();
+    assert_eq!(now.events.len(), 1);
+    assert!(started.elapsed() < std::time::Duration::from_secs(2));
+    db.close().await;
+}

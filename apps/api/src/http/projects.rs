@@ -344,8 +344,21 @@ pub async fn share_candidates(
 pub struct EventQuery {
     after: Option<String>,
     limit: Option<i64>,
+    /// Seconds to wait for an event when none is new (a long poll, docs/adr/0044).
+    wait: Option<u64>,
 }
 
+/// The longest a request for events waits (the request timeout is 30 s).
+pub const EVENTS_WAIT_MAX: u64 = 25;
+/// How often a waiting request looks again without a signal: a commit of
+/// another process (another server, the command line) does not signal this one.
+const EVENTS_LOOK_EVERY: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// `GET …/events?after=&limit=&wait=`: the committed events after a cursor.
+/// With `wait` (at most [`EVENTS_WAIT_MAX`] seconds) a request that finds
+/// nothing new waits for a commit of the project, and answers as soon as one
+/// lands (a long poll): the desktop follows a project continuously over
+/// plain HTTP (docs/adr/0044). The access is asked again at every read.
 pub async fn event_log(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -361,7 +374,36 @@ pub async fn event_log(
             .unwrap_or("0")
             .parse::<i64>()
             .map_err(|_| AppError::invalid("after bir olay imleci olmalı."))?;
-        events::after(state.db()?, &a, after, q.limit.unwrap_or(events::PAGE_MAX)).await
+        let limit = q.limit.unwrap_or(events::PAGE_MAX);
+        let db = state.db()?;
+        let Some(wait) = q.wait.filter(|w| *w > 0) else {
+            return events::after(db, &a, after, limit).await;
+        };
+        // Listening before the first read: a commit between the read and the wait is not missed.
+        let mut changes = state.hub.subscribe();
+        let deadline =
+            tokio::time::Instant::now() + std::time::Duration::from_secs(wait.min(EVENTS_WAIT_MAX));
+        loop {
+            let page = events::after(db, &a, after, limit).await?;
+            let left = deadline.saturating_duration_since(tokio::time::Instant::now());
+            if !page.events.is_empty() || left.is_zero() {
+                return Ok(page);
+            }
+            let signal = async {
+                loop {
+                    match changes.recv().await {
+                        Ok((t, p)) if t == a.tenant && p == a.project => return,
+                        Ok(_) => {}
+                        // Missed signals: read again, one of them may be this project's.
+                        Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => return,
+                        Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                            std::future::pending::<()>().await
+                        }
+                    }
+                }
+            };
+            let _ = tokio::time::timeout(left.min(EVENTS_LOOK_EVERY), signal).await;
+        }
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
