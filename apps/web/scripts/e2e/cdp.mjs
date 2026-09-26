@@ -14,6 +14,14 @@ export const OUT = join(new URL('.', import.meta.url).pathname, 'out');
 const PORT = Number(process.env.CDP_PORT ?? 0);
 
 /**
+ * Each browser's clean-up, run again when this script ends: one 'exit' listener for them all. A
+ * listener per browser made Node warn past ten (MaxListenersExceededWarning) in visual.mjs, which
+ * opens a browser per page it compares.
+ */
+const atExit = [];
+process.once('exit', () => atExit.forEach((f) => f()));
+
+/**
  * Flags that give headless Chrome a working WebGPU device on SwiftShader.
  * With --enable-unsafe-webgpu alone an adapter is found but the device is
  * dropped at the first submit; Vulkan through ANGLE keeps it alive.
@@ -43,7 +51,7 @@ export async function launch(url, { width = 1600, height = 900, args = [] } = {}
     } catch {}
   };
   proc.once('exit', removeProfile);
-  process.once('exit', () => {
+  atExit.push(() => {
     proc.kill('SIGKILL');
     removeProfile();
   });
