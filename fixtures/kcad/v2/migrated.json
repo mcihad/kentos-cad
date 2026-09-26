@@ -1,0 +1,432 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Örnek pafta.kcad",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "hybrid",
+    "drawingFont": "barlow"
+  },
+  "origin": {
+    "x": 486512.34,
+    "y": 4420187.52
+  },
+  "homeView": {
+    "minX": 486502.34,
+    "minY": 4420177.52,
+    "maxX": 486572.34,
+    "maxY": 4420257.52
+  },
+  "layers": [
+    {
+      "id": "layer-g",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": [
+        {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#E06C75",
+            "lineType": "continuous",
+            "lineWeight": 0.35,
+            "pickInterior": true,
+            "label": {
+              "placement": "center",
+              "size": 12.0,
+              "weight": 600
+            }
+          },
+          "children": []
+        },
+        {
+          "id": "bina",
+          "name": "Bina",
+          "type": "layer",
+          "visible": true,
+          "locked": true,
+          "expanded": true,
+          "style": {
+            "color": "ink",
+            "lineType": "dashed",
+            "lineWeight": 0.25,
+            "fill": "#7FB2E526"
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "dashdot",
+        "lineWeight": 0.18,
+        "point": {
+          "symbol": "cross",
+          "size": 8.0
+        }
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "point",
+      "layerId": "cizim",
+      "p": {
+        "x": 486513.341,
+        "y": 4420189.522
+      },
+      "z": 1024.35,
+      "attrs": {
+        "Ad": "P1"
+      },
+      "label": "P1",
+      "id": 1
+    },
+    {
+      "kind": "line",
+      "layerId": "cizim",
+      "a": {
+        "x": 486512.34,
+        "y": 4420187.52
+      },
+      "b": {
+        "x": 486522.44,
+        "y": 4420187.72
+      },
+      "attrs": {},
+      "color": "#FF0000",
+      "id": 2
+    },
+    {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "pts": [
+        {
+          "x": 486512.34,
+          "y": 4420187.52
+        },
+        {
+          "x": 486517.34,
+          "y": 4420187.52
+        },
+        {
+          "x": 486517.34,
+          "y": 4420192.52
+        }
+      ],
+      "bulges": [
+        0.414213562373095,
+        0.0,
+        0.0
+      ],
+      "attrs": {},
+      "id": 3
+    },
+    {
+      "kind": "polygon",
+      "layerId": "parsel",
+      "pts": [
+        {
+          "x": 486512.34,
+          "y": 4420187.52
+        },
+        {
+          "x": 486535.75700000004,
+          "y": 4420188.722999999
+        },
+        {
+          "x": 486538.221,
+          "y": 4420218.986
+        },
+        {
+          "x": 486514.34400000004,
+          "y": 4420220.532
+        }
+      ],
+      "bulges": [
+        0.0,
+        0.12,
+        0.0,
+        -0.05
+      ],
+      "holes": [
+        {
+          "pts": [
+            {
+              "x": 486517.34,
+              "y": 4420192.52
+            },
+            {
+              "x": 486517.34,
+              "y": 4420197.52
+            },
+            {
+              "x": 486522.34,
+              "y": 4420197.52
+            },
+            {
+              "x": 486522.34,
+              "y": 4420192.52
+            }
+          ]
+        }
+      ],
+      "attrs": {
+        "Ada": "101",
+        "Parsel": "7",
+        "Tapu alanı": "723.52"
+      },
+      "label": "101/7",
+      "symbol": "mpyy.uip.konut.konut-alani",
+      "id": 4
+    },
+    {
+      "kind": "circle",
+      "layerId": "bina",
+      "c": {
+        "x": 486524.34,
+        "y": 4420199.52
+      },
+      "r": 3.25,
+      "attrs": {},
+      "id": 5
+    },
+    {
+      "kind": "arc",
+      "layerId": "bina",
+      "c": {
+        "x": 486524.34,
+        "y": 4420199.52
+      },
+      "r": 4.0,
+      "a0": 0.25,
+      "a1": 2.5,
+      "attrs": {},
+      "id": 6
+    },
+    {
+      "kind": "ellipse",
+      "layerId": "cizim",
+      "c": {
+        "x": 486542.34,
+        "y": 4420217.52
+      },
+      "major": {
+        "x": 6.0,
+        "y": 2.0
+      },
+      "ratio": 0.4,
+      "t0": 0.0,
+      "t1": 0.0,
+      "attrs": {},
+      "id": 7
+    },
+    {
+      "kind": "spline",
+      "layerId": "cizim",
+      "pts": [
+        {
+          "x": 486512.34,
+          "y": 4420227.52
+        },
+        {
+          "x": 486522.34,
+          "y": 4420232.52
+        },
+        {
+          "x": 486532.34,
+          "y": 4420225.52
+        }
+      ],
+      "closed": false,
+      "attrs": {},
+      "id": 8
+    },
+    {
+      "kind": "xline",
+      "layerId": "cizim",
+      "p": {
+        "x": 486512.34,
+        "y": 4420237.52
+      },
+      "dir": {
+        "x": 0.7071067811865476,
+        "y": 0.7071067811865476
+      },
+      "attrs": {},
+      "id": 9
+    },
+    {
+      "kind": "ray",
+      "layerId": "cizim",
+      "p": {
+        "x": 486512.34,
+        "y": 4420242.52
+      },
+      "dir": {
+        "x": 1.0,
+        "y": 0.0
+      },
+      "attrs": {},
+      "id": 10
+    },
+    {
+      "kind": "text",
+      "layerId": "cizim",
+      "p": {
+        "x": 486515.34,
+        "y": 4420247.52
+      },
+      "text": "Çınar sokağı",
+      "height": 2.5,
+      "rotation": 15.0,
+      "attrs": {},
+      "id": 11
+    },
+    {
+      "kind": "dimension",
+      "layerId": "cizim",
+      "a": {
+        "x": 486512.34,
+        "y": 4420187.52
+      },
+      "b": {
+        "x": 486535.75700000004,
+        "y": 4420188.722999999
+      },
+      "offset": 3.0,
+      "height": 1.8,
+      "style": "linear",
+      "angle": 0.0,
+      "attrs": {},
+      "id": 12
+    },
+    {
+      "kind": "hatch",
+      "layerId": "bina",
+      "ring": [
+        {
+          "x": 486552.34,
+          "y": 4420187.52
+        },
+        {
+          "x": 486562.34,
+          "y": 4420187.52
+        },
+        {
+          "x": 486562.34,
+          "y": 4420197.52
+        },
+        {
+          "x": 486552.34,
+          "y": 4420197.52
+        }
+      ],
+      "holes": [
+        [
+          {
+            "x": 486554.34,
+            "y": 4420189.52
+          },
+          {
+            "x": 486554.34,
+            "y": 4420191.52
+          },
+          {
+            "x": 486556.34,
+            "y": 4420191.52
+          },
+          {
+            "x": 486556.34,
+            "y": 4420189.52
+          }
+        ]
+      ],
+      "pattern": {
+        "type": "lines",
+        "angle": 45.0,
+        "spacing": 1.5
+      },
+      "attrs": {},
+      "id": 13
+    }
+  ],
+  "uids": [
+    "6d3c49da-b2d0-59b7-ac3a-cfe49b29490e",
+    "686a5035-0451-59ce-ad9c-d9f612fd169b",
+    "b1e0e4dd-af21-5a3e-af45-d19bc9bf7c3e",
+    "a0e4fd78-3033-50bd-8bc0-b24dc2d89da8",
+    "9da7e846-e460-5f9f-9c6f-5c4569623b76",
+    "328403d1-809b-5228-8909-c6a6fd50d0d9",
+    "74f6eafc-aeea-5e77-91d5-e359fcb46060",
+    "3ceeecbb-0020-538b-83bb-2834b95e748c",
+    "4061a8b5-b3a3-5d57-9e2f-a97d8e8a17dd",
+    "817ef069-7b54-5710-ab2e-0863083e9437",
+    "b8f5da1d-07b8-5b6f-832c-5cbc72af6145",
+    "46f66f53-f96a-5ed7-9f87-3c5f64197609",
+    "0e7f2460-1bec-56e5-b79a-c2fe8e5b23b1"
+  ],
+  "styles": {
+    "items": [
+      {
+        "kind": "symbol",
+        "id": "proje.sembol",
+        "name": "Proje sembolü",
+        "path": [
+          "Proje"
+        ],
+        "symbol": {
+          "type": "marker",
+          "layers": [
+            {
+              "id": "a",
+              "type": "shape",
+              "shape": "circle",
+              "size": 2,
+              "fill": "ink"
+            }
+          ]
+        }
+      }
+    ],
+    "categories": [
+      {
+        "path": [
+          "Proje"
+        ]
+      }
+    ]
+  },
+  "projectId": "bbe66b3a-6735-5aad-a407-a59712663053",
+  "migratedFrom": {
+    "format": "kentos.document",
+    "version": 1,
+    "sourceSha256": "6c4eb805e94f39189c1bbaa922c6082553b990df75fd6c68ef00461b45fcea2b"
+  }
+}

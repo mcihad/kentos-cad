@@ -1,0 +1,32 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Boş",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0
+  },
+  "origin": { "x": 500000.0, "y": 4400000.0 },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    { "kind": "point", "id": 1, "layerId": "0", "attrs": { "Ad": "P1" }, "p": { "x": 500001.25, "y": 4400002.5 } }
+  ],
+  "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e10"],
+  "styles": { "items": [], "categories": [] }
+}
