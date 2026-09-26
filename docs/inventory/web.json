@@ -72,10 +72,7 @@
       "partial": 0,
       "pending": 0
     },
-    "commandsWithoutPlace": [
-      "view.commandSearch",
-      "view.theme.toggle"
-    ],
+    "commandsWithoutPlace": [],
     "commandsWithoutTests": 58,
     "commandsOnDesktop": 105
   },
@@ -4809,8 +4806,12 @@
       "shortcutsInInput": [
         "Alt+Q"
       ],
-      "menus": [],
-      "ribbon": [],
+      "menus": [
+        "Yardım"
+      ],
+      "ribbon": [
+        "Araçlar › Yardım"
+      ],
       "quickAccess": false,
       "toolbox": false,
       "hiddenIn": [],
@@ -5230,7 +5231,9 @@
       "quickAccess": false,
       "toolbox": false,
       "hiddenIn": [],
-      "uiSources": [],
+      "uiSources": [
+        "apps/web/src/ui/ribbon/Ribbon.ts"
+      ],
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6187,6 +6190,7 @@
       "methods": [],
       "steps": 2,
       "description": "Tıklanan kapalı alanı desenle tarar; D ile desen değişir.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -12405,6 +12409,7 @@
           {
             "label": "",
             "items": [
+              "view.commandSearch",
               "help.shortcuts"
             ]
           },
@@ -13727,6 +13732,10 @@
             "icon": "more",
             "items": [
               {
+                "command": "view.commandSearch",
+                "size": "large"
+              },
+              {
                 "command": "help.about",
                 "size": "large"
               }
@@ -15022,6 +15031,10 @@
               "label": "Yardım",
               "icon": "more",
               "items": [
+                {
+                  "command": "view.commandSearch",
+                  "size": "large"
+                },
                 {
                   "command": "help.about",
                   "size": "large"
@@ -16380,6 +16393,10 @@
               "label": "Yardım",
               "icon": "more",
               "items": [
+                {
+                  "command": "view.commandSearch",
+                  "size": "large"
+                },
                 {
                   "command": "help.about",
                   "size": "large"

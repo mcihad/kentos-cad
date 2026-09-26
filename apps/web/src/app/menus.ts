@@ -190,7 +190,8 @@ export const MAIN_MENU: TopMenu[] = [
   {
     id: 'help',
     label: 'Yardım',
-    items: ['help.shortcuts', '-', 'help.about'],
+    // Komut ara is here for the mouse (Alt+Q): the ribbon's search field, the command line in the classic shell.
+    items: ['view.commandSearch', 'help.shortcuts', '-', 'help.about'],
   },
 ];
 
