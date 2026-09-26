@@ -96,7 +96,12 @@ impl Select {
         let dragging = std::mem::take(&mut self.dragging);
         match current {
             Some(current) if dragging => {
-                let crossing = current.screen[0] < start.screen[0];
+                // The box as it was drawn decides: one rule for the look and the query.
+                let crossing = SelectBox {
+                    from: start.screen,
+                    to: current.screen,
+                }
+                .crossing();
                 let ids = cx.spatial.in_rect(start.world, current.world, crossing);
                 if p.shift {
                     cx.selection.add(ids);
