@@ -1,6 +1,6 @@
 # Etkileşim izleri
 
-TODOS.md §5 (`UX-01`, `UX-04`, `UX-06`) ve [ADR 0018](../../docs/adr/0018-tool-session-and-input.md).
+TODOS.md §5 (`UX-01`, `UX-04`, `UX-06`, `UX-07`, `UX-09`) ve [ADR 0018](../../docs/adr/0018-tool-session-and-input.md).
 
 Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komut seçmek, tıklamak, yazmak, tuşa basmak. Her adımdan sonra görülmesi gerekeni de platformdan bağımsız olarak söyler.
 
@@ -44,16 +44,16 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | Eylem | Anlamı |
 |---|---|
 | `run` | Komutu kimliğiyle çalıştırır; şeritten, menüden ya da komut satırından seçmekle aynıdır (`tool.polygon`) |
-| `key` | Tek tuş: `Enter`, `Esc`, `Tab`, `Backspace`, `Space`, bir harf (`G`), `-`, `+` ya da `Ctrl+` akoru (`Ctrl+Z`) |
+| `key` | Tek tuş: `Enter`, `Esc`, `Tab`, `Backspace`, `Space`, `Delete`, `F3` (kenet), `F8` (orto), bir harf (`G`), `-`, `+` ya da `Ctrl+` akoru (`Ctrl+Z`) |
 | `text` | Karakterler tek tek yazılır. Klavyenin ürettiği metin sayılır, fiziksel tuş konumu değil |
 | `move` | İmleç çizimde bu noktaya gelir |
 | `click`, `doubleClick` | Sol tuşla tıklama ya da çift tıklama |
 | `drag` | `[[doğu, kuzey], [doğu, kuzey]]`: sol tuş ilk noktada basılır, imleç ortadan ikinci noktaya gider, orada bırakılır (seçim kutusu) |
 | `rightClick` | Sağ tuşa kısa basıp bırakma; menüyü açan basılı tutmadan kısa |
-
-`shift: true`, `click` ya da `drag` adımında tuşa basılıyken Shift'in basılı olduğunu söyler (seçime ekleme ve çıkarma). Tuşlar arasında `Delete`, `F3` (kenet) ve `F8` (orto) de vardır.
 | `focus` | Klavye odağı: `commandLine` (komut satırına tıklamak) |
 | `saveAndReopen` | Uygulamanın kendi kaydetme komutuyla yeni bir dosyaya yazar ve o dosyayı yeniden açar |
+
+`shift: true`, `click` ya da `drag` adımında tuşa basılıyken Shift'in basılı olduğunu söyler (seçime ekleme ve çıkarma).
 
 **Beklentiler.** `expect` isteğe bağlıdır ve eylemden sonra denetlenir. Yalnız yazılan alanlar karşılaştırılır:
 
