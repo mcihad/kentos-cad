@@ -4,7 +4,13 @@
 // is its owner's until she shares it (docs/adr/0015) through the share dialog
 // (finding him by name, a role change taking effect), autosave, reload
 // persistence, another editor's change arriving live, a conflict resolved
-// from the dialog, a server restart while an edit waits, renaming the open
+// from the dialog, a server restart while an edit waits, and persistent ids
+// (ADR 0014 slice 3, docs/adr/0026): an object's id on the server is its
+// `uid`; a command whose answer is lost is sent again and written once; an
+// undone deletion comes back under the same id above its old versions; the
+// same object brought back by two people stays one ("sunucuda zaten var");
+// the same v1 file uploaded twice gives two projects with the same ids.
+// Then renaming the open
 // project from the list, and deletion: by `zeynep` (an admin, under the
 // organisation's policy) while the project is open, and from the list after
 // a confirmation. Last, `mehmet` in the browser: a project shared with him
@@ -212,10 +218,13 @@ try {
   await b.key('Escape');
   await b.waitFor(`window.kentos.cloud.sync.value.state.value === 'pending' || window.kentos.cloud.sync.value.state.value === 'saving' || window.kentos.cloud.sync.value.state.value === 'saved'`, 2000);
   await b.waitFor(`window.kentos.cloud.sync.value.state.value === 'saved' && !window.kentos.doc.dirty.value`, 8000);
-  const lineId = await b.eval(`(() => { const k = window.kentos; const e = [...k.doc.all()].at(-1); return k.cloud.sync.value.featureOf(e.id); })()`);
+  // The line's persistent id is its id on the server (ADR 0014 slice 3).
+  const lineId = await b.eval(`[...window.kentos.doc.all()].at(-1).uid`);
   let got = await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}/features?ids=${lineId}`);
   const line = got.body.features[0];
-  check('autosave stores the line exactly', line?.entity.kind === 'line' && line.entity.a.x === X && line.entity.b.x === X + 100 && line.version === '1', JSON.stringify(line?.entity.b));
+  // A created object's version is its commit's data revision (docs/adr/0026); each change adds one.
+  const v0 = Number(line?.version);
+  check('autosave stores the line exactly, under its persistent id', line?.entity.kind === 'line' && line.entity.a.x === X && line.entity.b.x === X + 100 && v0 >= 1, `${lineId} v${line?.version}`);
   await b.shot('cloud-saved');
 
   // Reload: the session cookie survives; the project opens from the list with the line.
@@ -228,19 +237,19 @@ try {
   await press('.cloud-row', name);
   await press('.dialog__foot .btn', 'Aç');
   await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(name)} && window.kentos.cloud.link.value === 'online'`, 30000);
-  const reopened = await b.eval(`(() => { const k = window.kentos; return { size: k.doc.size, line: [...k.doc.all()].find((e) => k.cloud.sync.value.featureOf(e.id) === ${JSON.stringify(lineId)}) }; })()`);
-  check('after a reload the cloud project opens with the line', reopened.size === size + 1 && reopened.line?.b.x === X + 100, `${reopened.size} nesne`);
+  const reopened = await b.eval(`(() => { const k = window.kentos; return { size: k.doc.size, line: k.doc.byUid(${JSON.stringify(lineId)}) }; })()`);
+  check('after a reload the cloud project opens with the line, under the same id', reopened.size === size + 1 && reopened.line?.b.x === X + 100, `${reopened.size} nesne`);
 
   // Mehmet moves the line's end: the change arrives live, with no unsaved mark.
   const moved = { ...line.entity, b: { x: X + 120, y: N } };
-  const r1 = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'update', id: lineId, entity: moved }], { [lineId]: '1' });
+  const r1 = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'update', id: lineId, entity: moved }], { [lineId]: line.version });
   check('the other editor commits', r1.status === 200, r1.body.versions?.[lineId]);
   await b.waitFor(`[...window.kentos.doc.all()].some((e) => e.kind === 'line' && e.b.x === ${X + 120})`, 8000);
   check('another editor’s change arrives live', !(await b.eval('window.kentos.doc.dirty.value')));
 
   // Both change it at once: the browser gets a conflict, then takes the server's copy.
   const localId = await b.eval(`[...window.kentos.doc.all()].find((e) => e.kind === 'line' && e.b.x === ${X + 120}).id`);
-  const r2 = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'update', id: lineId, entity: { ...line.entity, b: { x: X + 140, y: N } } }], { [lineId]: '2' });
+  const r2 = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'update', id: lineId, entity: { ...line.entity, b: { x: X + 140, y: N } } }], { [lineId]: String(v0 + 1) });
   await b.eval(`window.kentos.doc.update(${localId}, { b: { x: ${X + 160}, y: ${N} } })`);
   await b.eval(`window.kentos.commands.execute('file.save')`);
   await b.waitFor(`window.kentos.cloud.sync.value.state.value === 'conflict'`, 8000);
@@ -265,9 +274,85 @@ try {
     await mehmet.call('POST', '/v1/auth/login', { login: 'mehmet', password: env.KENTOS_DEV_PASSWORD });
     got = await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}/features?ids=${lineId}`);
   }
-  check('the waiting edit is saved once when the server is back', got.body.features[0].entity.a.x === X - 10 && got.body.features[0].version === '4', got.body.features[0].version);
+  check('the waiting edit is saved once when the server is back', got.body.features[0].entity.a.x === X - 10 && got.body.features[0].version === String(v0 + 3), got.body.features[0].version);
   await b.waitFor(`window.kentos.cloud.link.value === 'online'`, 40000);
   check('the live channel reconnects', true);
+
+  // ── Persistent ids (ADR 0014 slice 3, docs/adr/0026) ──
+  const lineNow = () => mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}/features?ids=${lineId}`).then((r) => r.body.features[0] ?? null);
+  const saved = `window.kentos.cloud.sync.value.state.value === 'saved' && !window.kentos.doc.dirty.value`;
+  const save = async () => {
+    await b.eval(`window.kentos.commands.execute('file.save')`);
+    await b.waitFor(saved, 15000);
+  };
+  // A lost answer: the commit is made, the reply never arrives. The same command goes again with its key and is written once.
+  const cursorBefore = await b.eval('window.kentos.cloud.sync.value.cursor');
+  await b.eval(
+    `(() => { const real = window.fetch; window.__realFetch = real; window.__lost = null; window.fetch = async (url, init) => { const res = await real(url, init); if (!window.__lost && init?.method === 'POST' && String(url).endsWith('/commands')) { window.__lost = JSON.parse(init.body); throw new TypeError('Failed to fetch'); } return res; }; })()`,
+  );
+  await b.eval(`window.kentos.doc.update(${localId}, { a: { x: ${X - 5}, y: ${N} } })`);
+  await b.eval(`window.kentos.commands.execute('file.save')`);
+  await b.waitFor(`!!window.__lost && window.kentos.cloud.sync.value.state.value === 'offline_pending'`, 8000);
+  await b.waitFor(saved, 15000);
+  await b.eval('window.fetch = window.__realFetch');
+  const lost = await b.eval('window.__lost');
+  const logged = await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}/events?after=${cursorBefore}`);
+  const once = logged.body.events.filter((e) => e.requestId === lost.requestId).length;
+  const afterLost = await lineNow();
+  check('a command whose answer is lost is sent again with its key and written once', once === 1 && afterLost?.version === String(v0 + 4) && afterLost.entity.a.x === X - 5, `${once} kayıt, v${afterLost?.version}`);
+
+  // Deleted, then brought back by undo: the same id, created again above every version it had; an edit based on an older version is refused.
+  const vBefore = afterLost.version;
+  await b.eval(`(() => { const k = window.kentos; k.selection.clear(); k.doc.remove([${localId}]); })()`);
+  await save();
+  const whileGone = await lineNow();
+  await b.eval('window.kentos.doc.undo()');
+  await save();
+  const back = await lineNow();
+  const uidBack = await b.eval(`window.kentos.doc.get(${localId})?.uid`);
+  const stale = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'update', id: lineId, entity: { ...line.entity, b: { x: X + 180, y: N } } }], { [lineId]: vBefore });
+  check(
+    'an undone deletion comes back under the same id above its old versions; an edit based on an old one is a conflict',
+    whileGone === null && uidBack === lineId && Number(back?.version) > Number(vBefore) && back.entity.a.x === X - 5 && stale.status === 409 && stale.body.conflicts?.[0]?.reason === 'changed',
+    `v${vBefore} → v${back?.version}, ${stale.status}`,
+  );
+
+  // Brought back by two people: she does not hear his first (her live channel is stopped); her undo then finds
+  // the object on the server already. One object stays: she keeps hers over his.
+  await b.eval(`window.kentos.doc.remove([${localId}])`);
+  await save();
+  await b.eval('window.kentos.cloud.socket.stop()');
+  const his = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'create', id: lineId, entity: { ...line.entity, a: { x: X - 30, y: N } } }], {});
+  await b.eval('window.kentos.doc.undo()');
+  await b.eval(`window.kentos.commands.execute('file.save')`);
+  await b.waitFor(`window.kentos.cloud.sync.value.state.value === 'conflict'`, 8000);
+  await b.eval(`window.kentos.commands.execute('cloud.conflicts')`);
+  await b.waitFor(`document.querySelector('.cloud-conflicts')`, 3000);
+  const reason = await b.eval(`document.querySelector('.cloud-conflicts li .cloud-row__meta')?.textContent`);
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  await sleep(200);
+  await b.shot('cloud-conflict-exists-dark');
+  await b.eval(`window.kentos.commands.execute('view.theme.light')`);
+  await sleep(200);
+  await b.shot('cloud-conflict-exists-light');
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1.08')`);
+  await sleep(200);
+  await b.shot('cloud-conflict-exists-large');
+  await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1')`);
+  await sleep(100);
+  await press('.dialog__foot .btn', 'Benimkini kaydet');
+  await b.waitFor(saved, 8000);
+  const hers = await lineNow();
+  await b.eval('window.kentos.cloud.socket.start()');
+  await b.waitFor(`window.kentos.cloud.link.value === 'online'`, 10000);
+  await sleep(500);
+  const one = await b.eval(`[...window.kentos.doc.all()].filter((e) => e.uid === ${JSON.stringify(lineId)}).length`);
+  check(
+    'the same object brought back twice stays one: “sunucuda zaten var”, and keeping hers changes it over his',
+    reason === 'sunucuda zaten var' && his.status === 200 && Number(hers?.version) === Number(his.body.versions[lineId]) + 1 && hers.entity.a.x === X - 5 && one === 1,
+    `${reason} v${his.body.versions?.[lineId]} → v${hers?.version}`,
+  );
 
   // Themes and the large type size, with the save cell showing.
   for (const theme of ['dark', 'light']) {
@@ -321,6 +406,40 @@ try {
   const remaining = await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects`);
   check('the deleted project refuses opening and leaves the list', refused.status === 410 && refused.body.error === 'project_deleted' && !remaining.body.projects.some((p) => p.id === project.projectId), refused.body.message);
   await b.shot('cloud-deleted');
+
+  // The same v1 file opened and uploaded twice: two projects holding the same object ids, the ones the file's
+  // content derives (ADR 0014; fixtures/document/v1/identity, checked against an independent Python reference).
+  const idDir = new URL('../../../../fixtures/document/v1/identity/', import.meta.url);
+  const kcad = readFileSync(new URL('sample.compact.kcad', idDir), 'utf8');
+  const expectedIds = JSON.parse(readFileSync(new URL('expected.json', idDir), 'utf8'))
+    .cases[0].entities.map((e) => e.uid)
+    .sort();
+  const uploadFile = (title) =>
+    b.eval(`(async () => {
+      const k = window.kentos;
+      const keep = { picker: k.files.picker, ask: k.files.ask };
+      k.files.ask = async () => 'drop';
+      k.files.picker = { open: async () => ({ name: 'kimlik.kcad', getFile: async () => new Blob([${JSON.stringify(kcad)}]) }), save: async () => null };
+      try {
+        if (!(await k.files.open())) return null;
+        await k.cloud.upload(${JSON.stringify(project.tenantId)}, ${JSON.stringify(title)});
+        const p = k.cloud.project.value;
+        const page = await k.cloud.api.features(p.tenantId, p.projectId, null, 5000);
+        return { projectId: p.projectId, server: page.features.map((f) => f.id).sort(), drawing: [...k.doc.all()].map((e) => e.uid).sort() };
+      } finally {
+        k.files.picker = keep.picker;
+        k.files.ask = keep.ask;
+      }
+    })()`);
+  const stamp = new Date().toISOString().slice(0, 19);
+  const up1 = await uploadFile(`E2E kimlik ${stamp}`);
+  const up2 = await uploadFile(`E2E kimlik (yeniden) ${stamp}`);
+  const same = (x) => JSON.stringify(x) === JSON.stringify(expectedIds);
+  check(
+    'the same v1 file uploaded twice: two projects with the same object ids, the ones its content derives',
+    !!up1 && !!up2 && up1.projectId !== up2.projectId && same(up1.server) && same(up2.server) && same(up1.drawing) && same(up2.drawing),
+    `${up1?.server.length ?? 0} + ${up2?.server.length ?? 0} nesne`,
+  );
 
   // Signed in as zeynep, the browser deletes another project from the list, after asking.
   const spareName = `E2E silinecek ${new Date().toISOString().slice(0, 19)}`;
@@ -407,7 +526,7 @@ try {
   await press('.cloud-row--shared', sharedName);
   await press('.dialog__foot .btn', 'Aç');
   await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(sharedName)} && window.kentos.cloud.link.value === 'online'`, 30000);
-  const localPoint = await b.eval(`[...window.kentos.doc.all()].find((e) => window.kentos.cloud.sync.value.featureOf(e.id) === ${JSON.stringify(pointId)}).id`);
+  const localPoint = await b.eval(`window.kentos.doc.slotOf(${JSON.stringify(pointId)})`);
   await b.eval(`window.kentos.doc.update(${localPoint}, { p: { x: 486520, y: 4420210 } })`);
   await b.eval(`window.kentos.commands.execute('file.save')`);
   await b.waitFor(`window.kentos.cloud.sync.value.state.value === 'saved' && !window.kentos.doc.dirty.value`, 8000);
