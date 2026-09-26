@@ -39,7 +39,7 @@ export class FakeServer implements CloudApi {
   metaVersion = 1;
   revision = 0;
   history: EventRecord[] = [];
-  private readonly log = new Map<string, CommitResult>();
+  private readonly log = new Map<string, { text: string; result: CommitResult }>();
   /** Fail every call as if the network were down. */
   offline = false;
   /** Commit the next command, then fail as if its answer were lost. */
@@ -55,6 +55,8 @@ export class FakeServer implements CloudApi {
   /** The caller's access taken away: everything answers 404, retries too (the access is checked first). */
   revoked = false;
   commits = 0;
+  /** Commands answered from the log (a retry after a lost answer). */
+  replays = 0;
 
   constructor(meta: FakeServer['meta']) {
     this.meta = structuredClone(meta);
@@ -105,15 +107,21 @@ export class FakeServer implements CloudApi {
     return f && { id, version: String(f.version), entity: structuredClone(f.entity) };
   }
 
-  /** Another editor's commit, straight into the store (returns the event). */
+  /**
+   * Another editor's commit, straight into the store (returns the event).
+   * Versions as the server gives them: a created object's is the commit's
+   * data revision, above any the same id had before it was deleted
+   * (docs/adr/0026); a change adds one. Deleting removes the object.
+   */
   commitAs(requestId: string, changes: FeatureChange[], meta?: Partial<FakeServer['meta']>): EventRecord {
     const out: EventRecord['features'] = [];
+    const revision = this.revision + 1;
     for (const c of changes) {
       if (c.op === 'delete') {
         this.store.delete(c.id);
         out.push({ id: c.id, op: 'delete' });
       } else {
-        const version = (this.store.get(c.id)?.version ?? 0) + 1;
+        const version = c.op === 'create' ? revision : (this.store.get(c.id)?.version ?? 0) + 1;
         this.store.set(c.id, { version, entity: structuredClone(c.entity) });
         out.push({ id: c.id, op: c.op, version: String(version) });
       }
@@ -136,8 +144,15 @@ export class FakeServer implements CloudApi {
       this.waiting--;
     }
     this.hidden();
+    // As the server's command log: the same key answers the same request only (crates/server/application/src/idempotency.rs).
+    const text = JSON.stringify({ command: envelope.commandName, version: envelope.version, project: envelope.projectId, expected: envelope.expectedVersions, input: envelope.input });
     const earlier = this.log.get(envelope.idempotencyKey);
-    if (earlier) return { ...earlier, replayed: true };
+    if (earlier && earlier.text !== text)
+      throw new ApiFailure(400, { error: 'invalid', message: 'Bu idempotency anahtarı başka bir istek için kullanılmış; her komuta yeni bir anahtar verin.' }, 'Geçersiz istek.');
+    if (earlier) {
+      this.replays++;
+      return { ...earlier.result, replayed: true };
+    }
     this.gone();
     const input = envelope.input as ProjectChanges;
     const may = this.permissions();
@@ -167,7 +182,7 @@ export class FakeServer implements CloudApi {
       eventSeq: event.seq,
       replayed: false,
     };
-    this.log.set(envelope.idempotencyKey, result);
+    this.log.set(envelope.idempotencyKey, { text, result });
     this.commits++;
     if (this.loseNextAnswer) {
       this.loseNextAnswer = false;

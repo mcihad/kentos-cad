@@ -2,6 +2,7 @@ import type { Bounds as ContractBounds } from '../../contracts/generated/Bounds'
 import type { LayerNode as ContractLayerNode } from '../../contracts/generated/LayerNode';
 import type { ProjectSettings as ContractSettings } from '../../contracts/generated/ProjectSettings';
 import type { ProjectStyles as ContractStyles } from '../../contracts/generated/ProjectStyles';
+import { isUuid } from '../../core/uuid';
 import type { CadDocument, DocumentContent } from '../../model/document';
 import type { Entity } from '../../model/entities';
 import { DOCUMENT_FORMAT, DOCUMENT_VERSION, readSnapshot } from '../../model/snapshot';
@@ -50,6 +51,25 @@ export function readIncoming(meta: IncomingMeta, entities: readonly unknown[]): 
   if (!read.ok) return read;
   const styles = projectStylesProblem(read.content.styles);
   return styles ? { ok: false, error: styles } : read;
+}
+
+/**
+ * A project as the server sent it, as document content: the metadata and
+ * its objects in the given order, each with the server's id as its
+ * persistent id (ADR 0014 slice 3; the file reader drops any `uid`, so the
+ * ids come beside the objects). An id that is not a UUID as KentOS writes
+ * it refuses the project, like any unreadable object.
+ */
+export function readProject(meta: IncomingMeta, records: readonly { id: string; entity: unknown }[]): Checked {
+  const read = readIncoming(meta, records.map((r) => r.entity));
+  if (!read.ok) return read;
+  const entities = read.content.entities as Entity[];
+  for (let i = 0; i < entities.length; i++) {
+    const id = records[i].id;
+    if (!isUuid(id)) return { ok: false, error: `Nesne ${i + 1}: kimliği “${id}” küçük harfli, tireli bir UUID değil` };
+    entities[i].uid = id;
+  }
+  return read;
 }
 
 /** The drawing's current metadata, to check incoming objects against its layers. */

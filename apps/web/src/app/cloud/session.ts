@@ -1,5 +1,6 @@
 import { Signal } from '../../core/signal';
 import type { AuthConfig } from '../../contracts/generated/AuthConfig';
+import type { CommandEnvelope } from '../../contracts/generated/CommandEnvelope';
 import type { FeatureRecord } from '../../contracts/generated/FeatureRecord';
 import type { LayerNode } from '../../contracts/generated/LayerNode';
 import type { Me } from '../../contracts/generated/Me';
@@ -9,23 +10,29 @@ import type { ProjectList } from '../../contracts/generated/ProjectList';
 import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { ProjectRole } from '../../contracts/generated/ProjectRole';
 import type { TenantKind } from '../../contracts/generated/TenantKind';
+import type { DrawingEntity } from '../../model/entities';
 import type { AppContext } from '../context';
 import { replaceDrawing } from '../fileIO';
 import { AccessWatch } from './accessWatch';
 import { ApiFailure, HttpCloudApi, type CloudApi } from './api';
 import { browserDraftStore, draftKey, type DraftStore } from './drafts';
-import { readIncoming } from './incoming';
+import { readProject } from './incoming';
 import { ProjectSocket, socketUrl, type LinkState } from './socket';
 import { ProjectSync } from './sync';
+import { again, uploadObjects } from './upload';
 
 /**
  * The cloud side of the app (`ctx.cloud`, Faz B): who is signed in, which
  * cloud project is open, and the machinery that keeps it in step with the
  * server (autosave: sync.ts, live events: socket.ts). Opening is paged and
  * can be cancelled; a slow answer for a project the user already left is
- * thrown away (`generation`, CLAUDE.md §21.2). Uploading a local drawing
- * creates the project with every layer unlocked, sends the objects in
- * batches and then restores the drawing's own layer tree, locks included.
+ * thrown away (`generation`, CLAUDE.md §21.2). An object's persistent id is
+ * its id on the server both ways (ADR 0014 slice 3, docs/adr/0026): opening
+ * gives each object the server's id as its `uid`, uploading sends each one
+ * under its `uid`. Uploading a local drawing creates the project with every
+ * layer unlocked, sends the objects in batches (upload.ts) and then
+ * restores the drawing's own layer tree, locks included; a step whose
+ * answer is lost goes again with the same idempotency key.
  * A project can be renamed (a metadata change) and, by its owner or an
  * organisation's admin, deleted; when someone else deletes the open one, its
  * sync stops sending and the drawing stays on screen, its edits kept on this
@@ -303,7 +310,7 @@ export class CloudSession {
     this.accessLost.set(null);
   }
 
-  private attach(info: ProjectInfo, records: { localId: number; featureId: string; version: string }[], cursor: string): ProjectSync {
+  private attach(info: ProjectInfo, records: { id: string; version: string }[], cursor: string): ProjectSync {
     const me = this.me.value!;
     // A project shared from someone else's personal space comes without a membership there.
     const own = !!this.membership(info.tenantId);
@@ -408,7 +415,8 @@ export class CloudSession {
       after = page.next ?? null;
       progress(records.length, Math.max(total, records.length));
     } while (after);
-    const read = readIncoming(info, records.map((r) => r.entity));
+    // Each object's persistent id is the server's id for it.
+    const read = readProject(info, records);
     if (!read.ok) throw new Error(`“${info.name}” okunamadı: ${read.error}`);
     if (stale()) return false;
     await this.sync.value?.flush().catch(() => false);
@@ -416,12 +424,9 @@ export class CloudSession {
     if (stale()) return false;
     this.detach(false);
     replaceDrawing(this.ctx, read.content);
-    const sync = this.attach(info, records.map((r, i) => ({ localId: i + 1, featureId: r.id, version: r.version })), info.eventCursor);
+    const sync = this.attach(info, records.map((r) => ({ id: r.id, version: r.version })), info.eventCursor);
     const draft = await this.drafts.get(draftKey(this.me.value!.user.id, tenantId, projectId)).catch(() => null);
-    if (draft) {
-      await sync.restore(draft);
-      this.ctx.log.info('Bu cihazda gönderilmemiş değişiklikler vardı; çizime geri kondu.');
-    }
+    if (draft && (await sync.restore(draft))) this.ctx.log.info('Bu cihazda gönderilmemiş değişiklikler vardı; çizime geri kondu.');
     this.ctx.log.success(`“${info.name}” bulut projesi açıldı: ${records.length} nesne.`);
     return true;
   }
@@ -433,41 +438,24 @@ export class CloudSession {
     await this.sync.value?.flush().catch(() => false);
     this.detach();
     const tree = structuredClone([...doc.layers.tree]) as LayerNode[];
-    const info = await this.api.createProject(
-      tenantId,
-      {
-        name,
-        settings: doc.settings.toJSON(),
-        origin: { ...doc.origin },
-        homeView: doc.homeView ? { ...doc.homeView } : undefined,
-        layers: unlocked(tree),
-        activeLayer: doc.layers.active.value,
-        styles: { items: structuredClone([...doc.styles.value.items]), categories: structuredClone([...doc.styles.value.categories]) },
-      },
-      uuid(),
-    );
-    const entities = [...doc.all()];
-    const records = entities.map((e) => ({ localId: e.id, featureId: uuid(), version: '1' }));
-    let cursor = info.eventCursor;
+    const create = {
+      name,
+      settings: doc.settings.toJSON(),
+      origin: { ...doc.origin },
+      homeView: doc.homeView ? { ...doc.homeView } : undefined,
+      layers: unlocked(tree),
+      activeLayer: doc.layers.active.value,
+      styles: { items: structuredClone([...doc.styles.value.items]), categories: structuredClone([...doc.styles.value.categories]) },
+    };
+    // Each step keeps its idempotency key through its tries: a lost answer is answered from the server's log.
+    const createKey = uuid();
+    const info = await again(() => this.api.createProject(tenantId, create, createKey));
+    const entities = [...doc.all()] as DrawingEntity[];
+    const sent = await uploadObjects(this.api, { tenantId, projectId: info.id, cursor: info.eventCursor }, entities, progress);
+    let cursor = sent.cursor;
     let metaVersion = info.metaVersion;
-    progress(0, entities.length);
-    for (let i = 0; i < entities.length; i += PAGE) {
-      const part = entities.slice(i, i + PAGE);
-      const result = await this.api.command({
-        commandName: 'project.changes',
-        version: 1,
-        tenantId,
-        projectId: info.id,
-        requestId: `web-${uuid()}`,
-        idempotencyKey: uuid(),
-        expectedVersions: {},
-        input: { features: part.map((e, j) => ({ op: 'create', id: records[i + j].featureId, entity: structuredClone(e) })) },
-      });
-      cursor = result.eventSeq;
-      progress(Math.min(entities.length, i + PAGE), entities.length);
-    }
     if (hasLocks(tree)) {
-      const result = await this.api.command({
+      const locks: CommandEnvelope = {
         commandName: 'project.changes',
         version: 1,
         tenantId,
@@ -476,12 +464,13 @@ export class CloudSession {
         idempotencyKey: uuid(),
         expectedVersions: { '@project': metaVersion },
         input: { features: [], project: { layers: tree, activeLayer: doc.layers.active.value } },
-      });
+      };
+      const result = await again(() => this.api.command(locks));
       cursor = result.eventSeq;
       metaVersion = result.metaVersion;
     }
     doc.applyExternal({ meta: { name } });
-    this.attach({ ...info, name, metaVersion }, records, cursor);
+    this.attach({ ...info, name, metaVersion }, sent.records, cursor);
     doc.markSaved(doc.revision);
     this.ctx.log.success(`“${name}” buluta yüklendi: ${entities.length} nesne. Bundan sonra değişiklikler kendiliğinden kaydedilir.`);
     return true;

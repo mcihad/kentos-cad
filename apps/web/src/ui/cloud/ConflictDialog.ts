@@ -14,7 +14,8 @@ const REASON: Record<SyncConflict['reason'], string> = {
   changed: 'başkası değiştirdi',
   remote: 'başkası değiştirdi',
   deleted: 'başkası sildi',
-  exists: 'kimliği başkasında',
+  // The same object (the same persistent id) is on the server already: someone else brought it back first.
+  exists: 'sunucuda zaten var',
   project: 'proje bilgileri değişti',
 };
 
@@ -32,7 +33,7 @@ export function openConflictDialog(ctx: AppContext): void {
   }
   const describe = (c: SyncConflict) => {
     if (c.reason === 'project') return 'Proje bilgileri (katman ağacı, ayarlar, ad, stiller)';
-    const e = c.localId !== null ? ctx.doc.get(c.localId) : undefined;
+    const e = ctx.doc.byUid(c.featureId);
     const layer = e ? (ctx.doc.layers.get(e.layerId)?.name ?? e.layerId) : '';
     return `${e ? KIND[e.kind] ?? e.kind : 'Nesne'}${layer ? ` · ${layer}` : ''}${e?.label ? ` · ${e.label}` : ''}`;
   };

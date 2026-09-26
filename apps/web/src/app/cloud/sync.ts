@@ -5,7 +5,7 @@ import type { FeatureConflict } from '../../contracts/generated/FeatureConflict'
 import type { ExternalMeta } from '../../model/document';
 import type { Entity } from '../../model/entities';
 import { ApiFailure } from './api';
-import type { Draft } from './drafts';
+import { DRAFT_VERSION, keptDraftKey, readDraft, type Draft } from './drafts';
 import { BATCH, PROJECT_ACCESS, PROJECT_DELETED, SyncCore, uuid, type Inflight, type SaveState, type SyncConflict, type SyncOptions } from './syncCore';
 import { applyEvents } from './syncRemote';
 import { restoreDraft } from './syncRestore';
@@ -19,7 +19,9 @@ export type { SaveState, SyncConflict, SyncOptions } from './syncCore';
  * (tracker.ts), kept on this device as a draft while they wait, and sent a
  * second after the last edit (at most five seconds after the first) as one
  * `project.changes` command at a time. "Kaydedildi" is shown only after the
- * server's answer, with nothing left to send.
+ * server's answer, with nothing left to send. An object's persistent id is
+ * its id on the server (docs/adr/0026): a new object is created under its
+ * `uid`, and an undone deletion creates it again under the same one.
  *
  * - A lost answer or a dead network: the same command goes again with the
  *   same idempotency key (the server answers from its log, never twice).
@@ -84,7 +86,11 @@ export class ProjectSync {
     this.unsubscribe.push(
       doc.events.on('touched', (e) => {
         if (e.external) return;
-        for (const id of e.ids) this.core.dirty.add(id);
+        for (const id of e.uids) {
+          this.core.dirty.add(id);
+          // Edited here: this edit replaces an older one the drawing could not take from the device draft.
+          this.core.held.delete(id);
+        }
         if (e.layerStyles) this.core.metaDirty = true;
         this.changed();
       }),
@@ -121,9 +127,9 @@ export class ProjectSync {
     for (const u of this.unsubscribe) u();
   }
 
-  /** The server id of a local object (for tests and the conflict list). */
-  featureOf(localId: number): string | undefined {
-    return this.core.tracker.get(localId)?.featureId;
+  /** The server's version of an object (by persistent id) as this sync last saw it; for tests and diagnostics. */
+  versionOf(id: string): string | undefined {
+    return this.core.tracker.get(id)?.version;
   }
 
   private metaChanged(): void {
@@ -173,16 +179,18 @@ export class ProjectSync {
 
   private draft(): Draft | null {
     const { core } = this;
-    const changes: Draft['changes'] = {};
+    // What the drawing could not take from an earlier draft is kept too; an edit made here replaces it.
+    const changes: Draft['changes'] = Object.fromEntries(core.held);
     for (const id of core.dirty) {
       const p = core.tracker.plan(this.o.doc, id);
       if (!p) continue;
       const base = p.op === 'create' ? null : p.expected;
-      changes[p.featureId] = { base, entity: p.op === 'delete' ? null : structuredClone(p.entity) };
+      changes[p.id] = { base, entity: p.op === 'delete' ? null : structuredClone(p.entity) };
     }
     const patch = core.sendsMeta() ? metaPatch(this.o.doc, core.metaBase) : null;
     if (!Object.keys(changes).length && !patch && !core.inflight) return null;
     return {
+      version: DRAFT_VERSION,
       userId: this.o.userId,
       changes,
       meta: patch ? { base: core.metaVersion, patch } : undefined,
@@ -254,7 +262,7 @@ export class ProjectSync {
       if (!patch) core.metaDirty = core.metaDirty && !core.canEditMeta && metaPatch(doc, core.metaBase) !== null;
       if (!planned.length && !patch) break;
       const expectedVersions: Record<string, string> = {};
-      for (const p of planned) if (p.op !== 'create') expectedVersions[p.featureId] = p.expected;
+      for (const p of planned) if (p.op !== 'create') expectedVersions[p.id] = p.expected;
       if (patch) expectedVersions['@project'] = core.metaVersion;
       const envelope: CommandEnvelope = {
         commandName: 'project.changes',
@@ -289,8 +297,8 @@ export class ProjectSync {
       // Left while it was on its way: the answer belongs to a drawing that is gone.
       if (this.disposed) return false;
       for (const p of f.planned) {
-        core.tracker.acknowledge(p, result.versions[p.featureId]);
-        if (core.tracker.settled(this.o.doc, p)) core.dirty.delete(p.localId);
+        core.tracker.acknowledge(p, result.versions[p.id]);
+        if (core.tracker.settled(this.o.doc, p)) core.dirty.delete(p.id);
       }
       if (f.meta) {
         core.metaVersion = result.metaVersion;
@@ -340,15 +348,7 @@ export class ProjectSync {
   // ── Conflicts ──────────────────────────────────────────────────────────
 
   private enterConflicts(list: readonly FeatureConflict[]): void {
-    this.addConflicts(
-      list.map((c): SyncConflict => ({
-        featureId: c.id,
-        localId: c.id === '@project' ? null : (this.core.tracker.localOf(c.id) ?? null),
-        reason: c.reason,
-        server: c.current ?? null,
-        actual: c.actual ?? null,
-      })),
-    );
+    this.addConflicts(list.map((c): SyncConflict => ({ featureId: c.id, reason: c.reason, server: c.current ?? null, actual: c.actual ?? null })));
   }
 
   private addConflicts(list: readonly SyncConflict[]): void {
@@ -360,41 +360,47 @@ export class ProjectSync {
     this.state.set('conflict');
   }
 
-  /** Ends the conflicts: take the server's copies, or keep mine and send them over the server's versions. */
+  /**
+   * Ends the conflicts: take the server's copies, or keep mine and send them
+   * over the server's versions. An object is the same object whoever changed
+   * it or brought it back (`exists`: the server already has this id): mine
+   * goes as a change over the server's version, or is created again under
+   * its id when the server no longer has it.
+   */
   async resolve(choice: 'server' | 'mine'): Promise<void> {
     const { core } = this;
     const list = this.conflicts.value;
     const doc = this.o.doc;
     if (choice === 'server') {
-      const put: Entity[] = [];
-      const remove: number[] = [];
       let meta: ExternalMeta | undefined;
-      for (const c of list) {
-        if (c.reason === 'project') {
-          const m = await core.serverMeta();
-          if (this.disposed) return;
-          if (m) {
-            meta = m.meta;
-            core.metaVersion = m.version;
-          }
-          continue;
-        }
-        if (c.localId === null && !c.server) continue;
-        const incoming = c.server ? core.checked([{ key: c.featureId, entity: c.server.entity }]).get(c.featureId) : undefined;
-        if (c.server && incoming) {
-          const id = c.localId ?? doc.allocateId();
-          const e = { ...incoming, id } as Entity;
-          put.push(e);
-          core.tracker.set(id, { featureId: c.featureId, version: c.server.version, json: entityJson(e) });
-          core.dirty.delete(id);
-        } else if (!c.server && c.localId !== null) {
-          remove.push(c.localId);
-          core.tracker.set(c.localId, { featureId: c.featureId, version: null, json: null });
-          core.dirty.delete(c.localId);
+      if (list.some((c) => c.reason === 'project')) {
+        const m = await core.serverMeta();
+        if (this.disposed) return;
+        if (m) {
+          meta = m.meta;
+          core.metaVersion = m.version;
         }
       }
+      const objects = list.filter((c) => c.reason !== 'project');
+      const good = core.checked(objects.flatMap((c) => (c.server ? [{ key: c.featureId, entity: c.server.entity }] : [])));
+      // Decided once no edit is open, and applied at once: no edit slips in between.
       await core.whenIdle();
       if (this.disposed) return;
+      const put: Entity[] = [];
+      const remove: number[] = [];
+      for (const c of objects) {
+        const slot = doc.slotOf(c.featureId);
+        const incoming = good.get(c.featureId);
+        if (c.server && incoming) {
+          put.push({ ...incoming, id: slot ?? doc.allocateId(), uid: c.featureId } as Entity);
+          core.tracker.set(c.featureId, { version: c.server.version, json: entityJson(incoming) });
+          core.dirty.delete(c.featureId);
+        } else if (!c.server) {
+          if (slot !== undefined) remove.push(slot);
+          core.tracker.set(c.featureId, null);
+          core.dirty.delete(c.featureId);
+        }
+      }
       doc.applyExternal({ put, remove, meta });
       if (meta) {
         core.metaBase = metaParts(doc);
@@ -406,11 +412,9 @@ export class ProjectSync {
           core.metaVersion = c.actual ?? core.metaVersion;
           continue;
         }
-        if (c.localId === null) continue;
-        const t = core.tracker.get(c.localId);
-        if (c.reason === 'exists') core.tracker.set(c.localId, { featureId: (this.o.newId ?? uuid)(), version: null, json: null });
-        else if (t) core.tracker.set(c.localId, { featureId: t.featureId, version: c.actual, json: c.server ? entityJson({ ...c.server.entity, id: c.localId } as Entity) : null });
-        core.dirty.add(c.localId);
+        // What the server has now is the base mine goes over (nothing: mine is created again).
+        core.tracker.set(c.featureId, c.actual === null ? null : { version: c.actual, json: c.server ? entityJson(c.server.entity as Entity) : '' });
+        core.dirty.add(c.featureId);
       }
     }
     this.conflicts.set([]);
@@ -501,15 +505,40 @@ export class ProjectSync {
     return this.remoteQueue;
   }
 
-  /** Puts a draft saved on this device back into the drawing (tried again every 5 s while the server does not answer). */
-  async restore(draft: Draft): Promise<void> {
-    if (draft.userId !== this.o.userId || this.disposed) return;
+  /**
+   * Puts a draft saved on this device back into the drawing (tried again
+   * every 5 s while the server does not answer). What the store gave back
+   * is read first (`readDraft`): a draft of the earlier format is brought
+   * over (docs/adr/0026). One that cannot be fully read, or is not this
+   * account's, is first kept aside as it was, under a key of its own, so the
+   * next save cannot lose it; what can be read of it still comes back.
+   * Returns whether a draft of this account was found.
+   */
+  async restore(raw: unknown): Promise<boolean> {
+    if (this.disposed) return false;
+    const read = readDraft(raw);
+    const mine = !!read && read.draft.userId === this.o.userId;
+    if (!mine || read.problems.length) {
+      const kept = await this.o.drafts.put(keptDraftKey(this.o.draftKey, Date.now()), raw).then(
+        () => true,
+        () => false,
+      );
+      const what = !read ? 'okunamadı' : !mine ? 'başka bir hesabın' : `bir kısmı okunamadı (${read.problems.join('; ')})`;
+      this.o.warn(`Bu projenin cihazdaki taslağı ${what}; taslak olduğu gibi ${kept ? 'ayrıca saklandı' : 'ayrıca saklanamadı'}.`);
+    }
+    if (!mine || this.disposed) return false;
+    await this.restoreRead(read.draft);
+    return true;
+  }
+
+  private async restoreRead(draft: Draft): Promise<void> {
+    if (this.disposed) return;
     const r = await restoreDraft(this.core, draft);
     if (this.disposed) return;
     if (r.waiting) {
       this.state.set('offline_pending');
       clearTimeout(this.restoreTimer);
-      this.restoreTimer = setTimeout(() => void this.restore(draft), RESTORE_RETRY_MS) as unknown as number;
+      this.restoreTimer = setTimeout(() => void this.restoreRead(draft), RESTORE_RETRY_MS) as unknown as number;
       return;
     }
     if (r.changed) {

@@ -1,58 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Entity as ContractEntity } from '../../contracts/generated/Entity';
-import { CadDocument } from '../../model/document';
 import type { Entity } from '../../model/entities';
-import { LayerStore } from '../../model/layers';
 import { MemoryDraftStore } from './drafts';
-import { FakeServer } from './fakeServer';
-import { ProjectSync, type SyncOptions } from './sync';
+import { disposeAll, layers, pt, reopen, setup, storedDraft, wire, xOf } from './syncTesting';
 
-const layers = () => new LayerStore([{ id: 'cizim', name: 'Çizim' }, { id: 'parsel', name: 'Parsel' }], 'cizim');
-const newDoc = () => new CadDocument({ name: 'Ada 101', layers: layers(), origin: { x: 486500, y: 4420200 } });
-const pt = (x: number, layerId = 'cizim') => ({ kind: 'point' as const, layerId, p: { x, y: 4420210 }, attrs: {} });
-const wire = (e: Entity): ContractEntity => structuredClone(e);
-
-let open: ProjectSync[] = [];
-afterEach(() => {
-  for (const s of open) s.dispose();
-  open = [];
-});
-
-type Records = SyncOptions['records'];
-
-function setup(opts: { canEditMeta?: boolean; canWrite?: boolean; drafts?: MemoryDraftStore; doc?: CadDocument; server?: FakeServer; records?: Records } = {}) {
-  const doc = opts.doc ?? newDoc();
-  const server =
-    opts.server ??
-    new FakeServer({ name: doc.name.value, settings: doc.settings.toJSON(), layers: [...doc.layers.tree], activeLayer: 'cizim', styles: structuredClone({ items: [...doc.styles.value.items], categories: [...doc.styles.value.categories] }), origin: doc.origin });
-  const warnings: string[] = [];
-  const drafts = opts.drafts ?? new MemoryDraftStore();
-  const records = opts.records ?? [];
-  const told = { deleted: 0, revoked: [] as string[], asked: 0 };
-  const o: SyncOptions = {
-    doc,
-    api: server,
-    drafts,
-    draftKey: 'u1/t/p',
-    userId: 'u1',
-    tenantId: 't',
-    projectId: 'p',
-    canEditMeta: opts.canEditMeta ?? true,
-    canWrite: opts.canWrite,
-    metaVersion: String(server.metaVersion),
-    cursor: String(server.history.length),
-    records,
-    warn: (t) => warnings.push(t),
-    onDeleted: () => told.deleted++,
-    onRevoked: (reason) => told.revoked.push(reason),
-    onAccessChanged: () => told.asked++,
-    debounceMs: 60_000,
-    maxDelayMs: 60_000,
-  };
-  const sync = new ProjectSync(o);
-  open.push(sync);
-  return { doc, server, sync, warnings, drafts, told };
-}
+afterEach(disposeAll);
 
 describe('cloud autosave', () => {
   it('sends an edit once and says saved only after the answer', async () => {
@@ -61,11 +12,12 @@ describe('cloud autosave', () => {
     expect([sync.state.value, sync.pending.value, doc.dirty.value]).toEqual(['pending', 1, true]);
     expect(await sync.flush()).toBe(true);
     expect([sync.state.value, sync.pending.value, doc.dirty.value]).toEqual(['saved', 0, false]);
-    const id = sync.featureOf(e.id)!;
-    expect(server.store.get(id)).toMatchObject({ version: 1, entity: { kind: 'point', p: { x: 486512 } } });
+    // The object's persistent id is its id on the server (ADR 0014 slice 3).
+    expect([...server.store.keys()]).toEqual([e.uid]);
+    expect(server.store.get(e.uid)).toMatchObject({ version: 1, entity: { kind: 'point', p: { x: 486512 } } });
     doc.update(e.id, { p: { x: 486513, y: 4420210 } });
     await sync.flush();
-    expect(server.store.get(id)?.version).toBe(2);
+    expect(server.store.get(e.uid)?.version).toBe(2);
     // Undo back to what the server has: nothing to send.
     doc.update(e.id, { p: { x: 486514, y: 4420210 } });
     doc.undo();
@@ -76,20 +28,21 @@ describe('cloud autosave', () => {
     // Deleting and undoing the delete creates it again under the same id.
     doc.remove([e.id]);
     await sync.flush();
-    expect(server.store.has(id)).toBe(false);
+    expect(server.store.has(e.uid)).toBe(false);
     doc.undo();
     await sync.flush();
-    expect(server.store.get(id)?.entity.kind).toBe('point');
+    expect(server.store.get(e.uid)?.entity.kind).toBe('point');
+    expect(doc.get(e.id)?.uid).toBe(e.uid);
   });
 
   it('keeps unsent changes through a dead network and never commits twice', async () => {
     const { doc, server, sync, drafts } = setup();
-    doc.add(pt(1));
+    const e = doc.add(pt(1));
     server.offline = true;
     expect(await sync.flush()).toBe(false);
     expect(sync.state.value).toBe('offline_pending');
-    const kept = await drafts.get('u1/t/p');
-    expect(Object.keys(kept!.changes)).toHaveLength(1);
+    const kept = await storedDraft(drafts);
+    expect(Object.keys(kept!.changes)).toEqual([e.uid]);
     expect(kept!.inflight).toBeDefined();
     server.offline = false;
     // The answer of the retry is lost too: the commit happened, the client does not know.
@@ -97,7 +50,7 @@ describe('cloud autosave', () => {
     expect(await sync.flush()).toBe(false);
     expect(server.commits).toBe(1);
     expect(await sync.flush()).toBe(true);
-    expect([server.commits, server.store.size, sync.state.value]).toEqual([1, 1, 'saved']);
+    expect([server.commits, server.replays, server.store.size, sync.state.value]).toEqual([1, 1, 1, 'saved']);
     expect(await drafts.get('u1/t/p')).toBeNull();
   });
 
@@ -105,18 +58,19 @@ describe('cloud autosave', () => {
     const { doc, server, sync } = setup();
     const e = doc.add(pt(10));
     await sync.flush();
-    const id = sync.featureOf(e.id)!;
+    const id = e.uid;
     // Another editor moves it; we move it too, without having seen theirs.
     server.commitAs('baska', [{ op: 'update', id, entity: wire({ ...e, p: { x: 20, y: 4420210 } } as Entity) }]);
     doc.update(e.id, { p: { x: 30, y: 4420210 } });
     expect(await sync.flush()).toBe(false);
     expect(sync.state.value).toBe('conflict');
-    expect(sync.conflicts.value).toMatchObject([{ featureId: id, localId: e.id, reason: 'changed', actual: '2' }]);
+    expect(sync.conflicts.value).toMatchObject([{ featureId: id, reason: 'changed', actual: '2' }]);
     // Nothing is sent while the conflict stands.
     doc.add(pt(99));
     expect(await sync.flush()).toBe(false);
     await sync.resolve('server');
-    expect((doc.get(e.id) as { p: { x: number } }).p.x).toBe(20);
+    expect(xOf(doc.get(e.id))).toBe(20);
+    expect(doc.get(e.id)?.uid).toBe(id);
     expect(sync.state.value).toBe('saved');
     expect(server.store.size).toBe(2);
     // Again, now keeping ours: it goes over the server's newer version.
@@ -131,7 +85,7 @@ describe('cloud autosave', () => {
     const { doc, server, sync } = setup();
     const mine = doc.add(pt(1));
     await sync.flush();
-    const id = sync.featureOf(mine.id)!;
+    const id = mine.uid;
     const theirs = crypto.randomUUID();
     const events = [
       server.commitAs('baska', [{ op: 'create', id: theirs, entity: wire({ ...pt(7), id: 0 } as Entity) }]),
@@ -140,7 +94,9 @@ describe('cloud autosave', () => {
     // Our own commit's event comes too and is skipped.
     await sync.receive([...server.history.slice(0, 1), ...events]);
     expect(doc.size).toBe(2);
-    expect((doc.get(mine.id) as { p: { x: number } }).p.x).toBe(2);
+    expect(xOf(doc.get(mine.id))).toBe(2);
+    // The new object's persistent id is the server's id for it.
+    expect(xOf(doc.byUid(theirs))).toBe(7);
     expect(doc.dirty.value).toBe(false);
     expect(doc.canUndo.value).toBe(false);
     expect(sync.cursor).toBe(events[1].seq);
@@ -151,7 +107,7 @@ describe('cloud autosave', () => {
     doc.update(mine.id, { p: { x: 3, y: 4420210 } });
     await sync.receive([server.commitAs('baska', [{ op: 'update', id, entity: wire({ ...mine, p: { x: 4, y: 4420210 } } as Entity) }])]);
     expect(sync.conflicts.value[0]).toMatchObject({ featureId: id, reason: 'remote', actual: '3' });
-    expect((doc.get(mine.id) as { p: { x: number } }).p.x).toBe(3);
+    expect(xOf(doc.get(mine.id))).toBe(3);
   });
 
   it('brings back a device draft after a reload and sends its lost command with the same key', async () => {
@@ -159,29 +115,24 @@ describe('cloud autosave', () => {
     const first = setup({ drafts });
     const a = first.doc.add(pt(1));
     await first.sync.flush();
-    const id = first.sync.featureOf(a.id)!;
     first.doc.update(a.id, { p: { x: 5, y: 4420210 } });
-    first.doc.add(pt(6));
+    const b = first.doc.add(pt(6));
     first.server.loseNextAnswer = true;
     await first.sync.flush();
     expect(first.server.commits).toBe(2);
     // "Reload": a fresh drawing from the server, then the device draft on top.
     first.sync.dispose();
-    const doc = newDoc();
-    const records: Records = [...first.server.store].map(([featureId, f]) => {
-      const localId = doc.allocateId();
-      doc.applyExternal({ put: [{ ...(f.entity as Entity), id: localId }] });
-      return { localId, featureId, version: String(f.version) };
-    });
+    const { doc, records } = await reopen(first.server);
     const again = setup({ drafts, doc, server: first.server, records });
-    const draft = await drafts.get('u1/t/p');
-    await again.sync.restore(draft!);
+    expect(await again.sync.restore(await drafts.get('u1/t/p'))).toBe(true);
     // The lost command was answered from the server's log: nothing is committed twice.
-    expect(first.server.commits).toBe(2);
+    expect([first.server.commits, first.server.replays]).toEqual([2, 1]);
     expect(await again.sync.flush()).toBe(true);
     expect(first.server.commits).toBe(2);
-    expect(first.server.store.get(id)?.entity).toMatchObject({ p: { x: 5 } });
-    expect(first.server.store.size).toBe(2);
+    expect(first.server.store.get(a.uid)?.entity).toMatchObject({ p: { x: 5 } });
+    // The same two objects, under the ids they had before the reload.
+    expect([...first.server.store.keys()].sort()).toEqual([a.uid, b.uid].sort());
+    expect([doc.size, xOf(doc.byUid(b.uid))]).toEqual([2, 6]);
   });
 
   it('an edit made after reopening wins over an older device draft', async () => {
@@ -189,22 +140,20 @@ describe('cloud autosave', () => {
     const first = setup({ drafts });
     const a = first.doc.add(pt(1));
     await first.sync.flush();
-    const id = first.sync.featureOf(a.id)!;
     first.server.offline = true;
     first.doc.update(a.id, { p: { x: 5, y: 4420210 } });
     await first.sync.flush();
     first.sync.dispose();
     first.server.offline = false;
     // Reopen, and edit the same object before the draft comes back in.
-    const doc = newDoc();
-    const localId = doc.allocateId();
-    doc.applyExternal({ put: [{ ...(first.server.store.get(id)!.entity as Entity), id: localId }] });
-    const again = setup({ drafts, doc, server: first.server, records: [{ localId, featureId: id, version: '1' }] });
-    doc.update(localId, { p: { x: 9, y: 4420210 } });
-    await again.sync.restore((await drafts.get('u1/t/p'))!);
-    expect((doc.get(localId) as { p: { x: number } }).p.x).toBe(9);
+    const { doc, records } = await reopen(first.server);
+    const again = setup({ drafts, doc, server: first.server, records });
+    const slot = doc.slotOf(a.uid)!;
+    doc.update(slot, { p: { x: 9, y: 4420210 } });
+    await again.sync.restore(await drafts.get('u1/t/p'));
+    expect(xOf(doc.get(slot))).toBe(9);
     await again.sync.flush();
-    expect(first.server.store.get(id)?.entity).toMatchObject({ p: { x: 9 } });
+    expect(first.server.store.get(a.uid)?.entity).toMatchObject({ p: { x: 9 } });
   });
 
   it('sends metadata with its version, and keeps it local without the right to change it', async () => {
@@ -242,7 +191,7 @@ describe('cloud autosave', () => {
     expect([server.commits, server.store.size]).toEqual([1, 1]);
     expect([...server.store.values()][0].entity).toMatchObject({ p: { x: 1 } });
     // The device draft still holds both changes and the command, for the next time the project opens.
-    const draft = await drafts.get('u1/t/p');
+    const draft = await storedDraft(drafts);
     expect([Object.keys(draft!.changes).length, !!draft!.inflight]).toEqual([2, true]);
     await sync.receive([server.commitAs('baska', [{ op: 'create', id: crypto.randomUUID(), entity: wire(other(0, 70)) }])]);
     expect(doc.size).toBe(2);
@@ -258,11 +207,11 @@ describe('cloud autosave', () => {
     await sync.receive([theirs, gone]);
     expect([sync.state.value, told.deleted, sync.cursor, doc.size]).toEqual(['deleted', 1, gone.seq, 1]);
     const commits = server.commits;
-    doc.add(pt(2));
+    const later = doc.add(pt(2));
     expect(await sync.flush()).toBe(false);
     expect([server.commits, sync.state.value, sync.pending.value]).toEqual([commits, 'deleted', 1]);
     await sync.keepDraft();
-    expect(Object.values((await drafts.get('u1/t/p'))!.changes)[0].entity).toMatchObject({ p: { x: 2 } });
+    expect((await storedDraft(drafts))!.changes[later.uid].entity).toMatchObject({ p: { x: 2 } });
     // Hearing it again changes nothing.
     await sync.receive([gone]);
     expect(told.deleted).toBe(1);
@@ -274,7 +223,7 @@ describe('cloud autosave', () => {
     server.deleted = true;
     expect(await sync.flush()).toBe(false);
     expect([sync.state.value, told.deleted, server.commits, warnings.length]).toEqual(['deleted', 1, 0, 0]);
-    const draft = await drafts.get('u1/t/p');
+    const draft = await storedDraft(drafts);
     expect([Object.keys(draft!.changes).length, draft!.inflight]).toEqual([1, undefined]);
   });
 
@@ -296,12 +245,12 @@ describe('cloud autosave when the account’s access changes (docs/adr/0015, TOD
     expect(await sync.flush()).toBe(false);
     expect([sync.state.value, told.revoked, server.commits, doc.size]).toEqual(['revoked', [''], 1, 1]);
     // Refused before anything was written: the command stays in the draft with its key, for when access comes back.
-    let kept = await drafts.get('u1/t/p');
-    expect([Object.keys(kept!.changes).length, !!kept!.inflight]).toEqual([1, true]);
+    let kept = await storedDraft(drafts);
+    expect([Object.keys(kept!.changes), !!kept!.inflight]).toEqual([[a.uid], true]);
     // Later edits are kept on the device too, and nothing is tried again.
     doc.add(pt(3));
     await sync.keepDraft();
-    kept = await drafts.get('u1/t/p');
+    kept = await storedDraft(drafts);
     expect(Object.keys(kept!.changes)).toHaveLength(2);
     expect(await sync.flush()).toBe(false);
     expect(server.commits).toBe(1);
@@ -322,7 +271,6 @@ describe('cloud autosave when the account’s access changes (docs/adr/0015, TOD
     const { doc, server, sync, drafts } = setup();
     const a = doc.add(pt(1));
     await sync.flush();
-    const id = sync.featureOf(a.id)!;
     server.role = 'viewer';
     expect(sync.setAccess(false, false)).toBe('held');
     expect(sync.state.value).toBe('readonly');
@@ -330,13 +278,13 @@ describe('cloud autosave when the account’s access changes (docs/adr/0015, TOD
     expect(await sync.flush()).toBe(false);
     expect([server.commits, sync.pending.value, sync.state.value]).toEqual([1, 1, 'readonly']);
     await sync.keepDraft();
-    expect(Object.values((await drafts.get('u1/t/p'))!.changes)[0].entity).toMatchObject({ p: { x: 5 } });
+    expect((await storedDraft(drafts))!.changes[a.uid].entity).toMatchObject({ p: { x: 5 } });
     // The same role again changes nothing.
     expect(sync.setAccess(false, false)).toBe('same');
     server.role = 'editor';
     expect(sync.setAccess(true, false)).toBe('resumed');
     await vi.waitFor(() => expect(sync.state.value).toBe('saved'));
-    expect(server.store.get(id)).toMatchObject({ version: 2, entity: { p: { x: 5 } } });
+    expect(server.store.get(a.uid)).toMatchObject({ version: 2, entity: { p: { x: 5 } } });
   });
 
   it('a refusal for a missing right says so and asks again; once lowered, it is not an error', async () => {
