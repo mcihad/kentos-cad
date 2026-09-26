@@ -133,6 +133,12 @@ export interface ToolDescriptor {
   methods?: readonly ToolMethod[];
   /** Ribbon: seldom used; listed under the panel's ▾ instead of on the panel. */
   rare?: boolean;
+  /**
+   * The product command (docs/adr/0013, 0022) the tool's confirm runs, by
+   * catalog id: the typed operation the interaction ends in. The inventory
+   * records it; only tools that write through one name it.
+   */
+  productCommand?: string;
   /** False for tools whose behaviour is not built yet. */
   ready: boolean;
   create(ctx: AppContext): Tool;

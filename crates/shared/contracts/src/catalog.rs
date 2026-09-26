@@ -155,8 +155,9 @@ fn schema<T: schemars::JsonSchema>() -> serde_json::Value {
 #[cfg(feature = "schema")]
 pub fn catalog() -> CommandCatalog {
     use crate::{
-        CommitResult, PROJECT_ACCESS_REVOKE, PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES,
-        PROJECT_CHANGES_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION, ProjectAccessChange,
+        CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION, CommitResult, PROJECT_ACCESS_REVOKE,
+        PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_SHARE,
+        PROJECT_SHARE_VERSION, PolygonCreate, PolygonCreated, ProjectAccessChange,
         ProjectAccessRevoke, ProjectChanges, ProjectPermission, ProjectShare,
     };
     use serde_json::json;
@@ -247,6 +248,72 @@ pub fn catalog() -> CommandCatalog {
                 input: json!({ "userId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f" }),
                 output: None,
             }],
+        },
+        // The first document command (docs/adr/0022): the web's and the desktop's own
+        // handlers, held together by fixtures/commands/v1/cad.polygon.create.json.
+        CommandDescriptor {
+            id: CAD_POLYGON_CREATE.into(),
+            version: CAD_POLYGON_CREATE_VERSION,
+            title: "Kapalı alan oluştur".into(),
+            summary: "Açık çizimde verilen katmana köşeleri, isteğe bağlı yay değerleri ve delikleriyle bir kapalı alan ekler; tek geri alma adımıdır. \
+                      Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<PolygonCreate>(),
+            output: schema::<PolygonCreated>(),
+            examples: vec![
+                CommandExample {
+                    title: "Dikdörtgen bir alan".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "pts": [
+                            { "x": 423500.0, "y": 4512300.0 },
+                            { "x": 423520.0, "y": 4512300.0 },
+                            { "x": 423520.0, "y": 4512312.5 },
+                            { "x": 423500.0, "y": 4512312.5 }
+                        ]
+                    }),
+                    output: Some(json!({
+                        "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                        "id": 12,
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Doğu kenarı yarım daire, ortasında delik olan renkli alan; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "pts": [
+                            { "x": 423500.0, "y": 4512300.0 },
+                            { "x": 423520.0, "y": 4512300.0 },
+                            { "x": 423520.0, "y": 4512312.5 },
+                            { "x": 423500.0, "y": 4512312.5 }
+                        ],
+                        "bulges": [0.0, 1.0, 0.0, 0.0],
+                        "holes": [{
+                            "pts": [
+                                { "x": 423505.0, "y": 4512304.0 },
+                                { "x": 423509.0, "y": 4512304.0 },
+                                { "x": 423509.0, "y": 4512308.0 },
+                                { "x": 423505.0, "y": 4512308.0 }
+                            ]
+                        }],
+                        "color": "#E5484D",
+                        "attrs": { "Ad": "Avlu" },
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -254,7 +321,10 @@ pub fn catalog() -> CommandCatalog {
 #[cfg(all(test, feature = "schema"))]
 mod tests {
     use super::*;
-    use crate::{ProjectAccessRevoke, ProjectChanges, ProjectPermission, ProjectShare};
+    use crate::{
+        PolygonCreate, PolygonCreated, ProjectAccessRevoke, ProjectChanges, ProjectPermission,
+        ProjectShare,
+    };
     use std::path::PathBuf;
 
     fn catalog_file() -> PathBuf {
@@ -307,9 +377,22 @@ mod tests {
                     crate::PROJECT_ACCESS_REVOKE => {
                         serde_json::from_value::<ProjectAccessRevoke>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_POLYGON_CREATE => {
+                        serde_json::from_value::<PolygonCreate>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
+                // And an example's output its output type.
+                if let Some(output) = &e.output {
+                    let parsed = match d.id.as_str() {
+                        crate::CAD_POLYGON_CREATE => {
+                            serde_json::from_value::<PolygonCreated>(output.clone()).map(|_| ())
+                        }
+                        other => panic!("{other}: add its output type to this test"),
+                    };
+                    parsed.unwrap_or_else(|err| panic!("{}: {}: output: {err}", d.id, e.title));
+                }
             }
         }
     }

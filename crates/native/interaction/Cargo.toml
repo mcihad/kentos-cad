@@ -9,8 +9,10 @@ publish.workspace = true
 # Pure Rust, native only (TODOS.md §2.1 `native/interaction`): no Iced, no GPU,
 # no runtime (scripts/arch/deps.mjs, group `interaction`). The web keeps its
 # own TypeScript session (apps/web/src/tools). The geometry comes from the
-# shared core; a finished object is written through the native document.
+# shared core; a finished object is written through a product command
+# (native/application, docs/adr/0022) over the native document.
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-domain = { path = "../domain" }
+kentos-native-application = { path = "../application" }

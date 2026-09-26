@@ -22,6 +22,7 @@
 //!   in v1 and become typed when the style core moves to Rust.
 
 pub mod api;
+pub mod cad;
 pub mod catalog;
 pub mod cloud;
 pub mod command;
@@ -35,6 +36,7 @@ pub mod numeric;
 pub mod style;
 
 pub use api::*;
+pub use cad::*;
 pub use catalog::*;
 pub use cloud::*;
 pub use command::*;

@@ -15,9 +15,11 @@ members = [
     "crates/wasm/formats-wasm",
     "crates/wasm/svg-wasm",
     # Native libraries (desktop, later the server; never the browser): the drawing
-    # document, the counterpart of the web's TypeScript one (docs/adr/0020), and the
-    # tool session, the counterpart of the web's tools (docs/adr/0021).
+    # document, the counterpart of the web's TypeScript one (docs/adr/0020), the
+    # product commands over it (docs/adr/0022), and the tool session, the counterpart
+    # of the web's tools (docs/adr/0021).
     "crates/native/domain",
+    "crates/native/application",
     "crates/native/interaction",
     # Server-only libraries: PostgreSQL/PostGIS and the use cases.
     "crates/server/postgres",
@@ -43,6 +45,7 @@ default-members = [
     "crates/wasm/formats-wasm",
     "crates/wasm/svg-wasm",
     "crates/native/domain",
+    "crates/native/application",
     "crates/native/interaction",
     "crates/server/postgres",
     "crates/server/application",

@@ -2507,6 +2507,16 @@ dependencies = [
  "kentos-contracts",
  "kentos-domain",
  "kentos-geometry-core",
+ "kentos-native-application",
+]
+
+[[package]]
+name = "kentos-native-application"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
+ "serde_json",
 ]
 
 [[package]]

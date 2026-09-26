@@ -6171,6 +6171,7 @@
       "methods": [],
       "steps": 2,
       "description": "Kapalı çoklu çizgi (alan) çizer.",
+      "productCommand": "cad.polygon.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

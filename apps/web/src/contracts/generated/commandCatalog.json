@@ -1837,6 +1837,255 @@
           }
         }
       ]
+    },
+    {
+      "id": "cad.polygon.create",
+      "version": 1,
+      "title": "Kapalı alan oluştur",
+      "summary": "Açık çizimde verilen katmana köşeleri, isteğe bağlı yay değerleri ve delikleriyle bir kapalı alan ekler; tek geri alma adımıdır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "RingGeometry": {
+            "description": "A closed ring in vertex + bulge form (a polygon hole).",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.polygon.create` v1: one closed area on a named layer, written\nas one undo step. Everything the command depends on is here (TODOS.md\nCMD-07): the closed-area tool fills `layerId` from the active layer and\n`color` from the current colour; the command reads neither.\n\nRefusals (`CommandError.code`), checked in this order: `too_few_corners`,\n`not_finite`, `bulge_count` (the outer ring, then each hole),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also\n`slots_exhausted`. Warning: `layer_hidden` (it is written all the same).\nGeometric validity (self-intersection, zero area, a hole outside the\nring) is not checked, as the drawing tools and the file reader do not.",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "GIS attributes, text in v1. Absent: none.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "bulges": {
+            "description": "One bulge per edge, the closing edge (last corner → first) last:\ntan(θ/4) of the edge's included angle, positive counter-clockwise, 0\nstraight. Absent: every edge is straight.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "color": {
+            "description": "Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "holes": {
+            "description": "Holes: closed rings of at least 3 corners, each with one bulge per edge when it has bulges.",
+            "items": {
+              "$ref": "#/$defs/RingGeometry"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "layerId": {
+            "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
+            "type": "string"
+          },
+          "pts": {
+            "description": "Corners of the outer ring in order: x east (Y), y north (X), in the\nproject's units (m), float64. At least 3; the first is not repeated.",
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layerId",
+          "pts"
+        ],
+        "title": "PolygonCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.polygon.create` v1: the object written.",
+        "properties": {
+          "id": {
+            "description": "Its slot in the open document (`Entity.id`); it means nothing once the document is closed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text. Inside an\nopen transaction or group the write joins it, and the revision\nchanges when that ends.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uid": {
+            "description": "Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "id",
+          "revision"
+        ],
+        "title": "PolygonCreated",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Dikdörtgen bir alan",
+          "input": {
+            "layerId": "yapi",
+            "pts": [
+              {
+                "x": 423500.0,
+                "y": 4512300.0
+              },
+              {
+                "x": 423520.0,
+                "y": 4512300.0
+              },
+              {
+                "x": 423520.0,
+                "y": 4512312.5
+              },
+              {
+                "x": 423500.0,
+                "y": 4512312.5
+              }
+            ]
+          },
+          "output": {
+            "id": 12,
+            "revision": "38",
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        },
+        {
+          "title": "Doğu kenarı yarım daire, ortasında delik olan renkli alan; yalnız planlandığı sürümde yazılır",
+          "input": {
+            "attrs": {
+              "Ad": "Avlu"
+            },
+            "bulges": [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            "color": "#E5484D",
+            "expectedRevision": "37",
+            "holes": [
+              {
+                "pts": [
+                  {
+                    "x": 423505.0,
+                    "y": 4512304.0
+                  },
+                  {
+                    "x": 423509.0,
+                    "y": 4512304.0
+                  },
+                  {
+                    "x": 423509.0,
+                    "y": 4512308.0
+                  },
+                  {
+                    "x": 423505.0,
+                    "y": 4512308.0
+                  }
+                ]
+              }
+            ],
+            "layerId": "yapi",
+            "pts": [
+              {
+                "x": 423500.0,
+                "y": 4512300.0
+              },
+              {
+                "x": 423520.0,
+                "y": 4512300.0
+              },
+              {
+                "x": 423520.0,
+                "y": 4512312.5
+              },
+              {
+                "x": 423500.0,
+                "y": 4512312.5
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

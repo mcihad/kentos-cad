@@ -89,3 +89,4 @@ TODOS.md §4, UI düğmesinin, komut satırının, Python'un, HTTP'nin, CLI'nin 
   - tek geri alma adımı;
   - web işleyicisi ve native işleyici;
   - ikisinin aynı fixture'dan aynı sonucu verdiği test.
+  - **26 Eylül:** uygulandı, [ADR 0022](0022-first-product-command.md). Web ve masaüstü kaydı katalogla eşit tutuluyor (yukarıdaki uyum denetimi); sonuç zarfı `CommandResult`, ortak durumlar `fixtures/commands/v1`.
