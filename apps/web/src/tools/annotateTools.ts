@@ -79,8 +79,9 @@ export class TextTool extends PointInputTool {
       height,
       rotation: TextTool.angle,
       commit: (text) => {
-        // Refused (the layer was locked meanwhile): the refusal was said, nothing was added.
-        if (this.create({ kind: 'text', p, text, height, rotation: TextTool.angle })) this.ctx.log.success(`Yazı eklendi: “${text}”`);
+        // Written by `cad.entities.create` (step “Ekle”). Refused (the layer was locked meanwhile): the refusal
+        // was said, nothing was added.
+        if (this.writeObjects([{ kind: 'text', p, text, height, rotation: TextTool.angle }])) this.ctx.log.success(`Yazı eklendi: “${text}”`);
         this.afterTyping();
       },
       cancel: () => this.afterTyping(),

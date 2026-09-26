@@ -1,0 +1,262 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.set",
+  "commandVersion": 1,
+  "title": "Nesnelerin özelliklerini değiştir: doğrulama, plan, yazma, geri alma",
+  "note": "Denetim sırası: en az bir kimlik; her kimliğin yazımı; bir özellik verilmesi (katman, renk, sembol, öznitelik ya da etiket); öznitelik adlarının boş olmaması (yalnız boşluk da boştur, Unicode White_Space); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; verilen katmanın var ve grup değil olması; nesnelerin katmanının, sonra verilen katmanın kilitli olmaması (biri kilitliyse hiçbir şey yazılmaz). Verilmeyen özellik değişmez; renk, sembol ve etiket null ile kaldırılır; öznitelik adıyla yazılır, null ile silinir, adı geçmeyenler kalır. Zaten istendiği gibi olan nesne değişmez ve çıktıda yoktur; hiçbiri değişmezse adım yazılmaz. Gizli katmana taşınan olursa layer_hidden uyarısı. Adım işlemin adıdır: Katman değiştir, Renk değiştir, Sembol ata (sembol null ise Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir. Kurulumdaki en büyük kimlik 8. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+    "origin": {"x": 487000, "y": 4420000},
+    "layers": [
+      {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "yol", "name": "Yol", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "altyapi", "name": "Altyapı", "type": "group", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "su", "name": "Su", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "sakli", "name": "Saklı grup", "type": "group", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "icerde", "name": "İçerideki", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}},
+      {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]},
+      {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}},
+      {"kind": "line", "id": 4, "layerId": "yol", "attrs": {}, "a": {"x": 487000, "y": 4420030}, "b": {"x": 487020, "y": 4420030}},
+      {"kind": "line", "id": 5, "layerId": "kilitli", "attrs": {}, "a": {"x": 487000, "y": 4420035}, "b": {"x": 487010, "y": 4420035}},
+      {"kind": "line", "id": 6, "layerId": "eski", "attrs": {}, "a": {"x": 487000, "y": 4420040}, "b": {"x": 487010, "y": 4420040}},
+      {"kind": "line", "id": 7, "layerId": "gizli", "attrs": {}, "a": {"x": 487000, "y": 4420045}, "b": {"x": 487010, "y": 4420045}},
+      {"kind": "circle", "id": 8, "layerId": "su", "color": "#3E63DD", "attrs": {}, "c": {"x": 487070, "y": 4420010}, "r": 3}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "cases": [
+    {
+      "name": "Katman değiştir: nesneler başka katmana taşınır; yuvası, kalıcı kimliği ve öbür alanları kalır; tek adımda geri alınır, yinelenir",
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "duvar"},
+        {"op": "captureUid", "id": 2, "as": "parsel"},
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:2"], "layerId": "yol", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1", "$uidOf:2"], "ids": [1, 2], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "entities": {"1": {"kind": "line", "id": 1, "layerId": "yol", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, "2": {"kind": "polygon", "id": 2, "layerId": "yol", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}}, "uids": {"1": "duvar", "2": "parsel"}, "canUndo": true, "canRedo": false, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Katman değiştir", "note": "Öznitelikler'in Katman ▾ satırının adımı.", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, "2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}}, "canUndo": false, "canRedo": true}},
+        {"op": "redo", "returns": "Katman değiştir", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yol", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, "2": {"kind": "polygon", "id": 2, "layerId": "yol", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}}, "uids": {"1": "duvar", "2": "parsel"}}}
+      ]
+    },
+    {
+      "name": "zaten o katmandaki nesne değişmez ve çıktıda yoktur",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:4", "$uidOf:3"], "layerId": "yol", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yol", "attrs": {}, "p": {"x": 487060, "y": 4420000}}, "4": {"kind": "line", "id": 4, "layerId": "yol", "attrs": {}, "a": {"x": 487000, "y": 4420030}, "b": {"x": 487020, "y": 4420030}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "grubun içindeki katmana da taşınır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "layerId": "su", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "su", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "gizli katmana uyarıyla taşınır; gizli grubun katmanına da, uyarı katmanın adını verir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "layerId": "gizli", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; taşınan nesneler görünmeyecek.", "path": "layerId"}]}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "gizli", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:3", "$uidOf:1"], "layerId": "icerde", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3", "$uidOf:1"], "ids": [3, 1], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“İçerideki” katmanı gizli; taşınan nesneler görünmeyecek.", "path": "layerId"}]}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "icerde", "attrs": {}, "p": {"x": 487060, "y": 4420000}}, "1": {"kind": "line", "id": 1, "layerId": "icerde", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "gizli katmana taşınan olmazsa uyarı da yoktur: gizli katmandaki nesne yerinde kalır, hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:7"], "layerId": "gizli", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "Renk değiştir: renk verilir; null nesneyi katmanının rengine döndürür; her yazma kendi adımıdır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:3"], "color": "#30A46C", "operation": "color"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2", "$uidOf:3"], "ids": [2, 3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "color": "#30A46C"}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "color": "#30A46C"}}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "color": null, "operation": "color"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Renk değiştir", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}}},
+        {"op": "undo", "returns": "Renk değiştir", "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Sembol ata ve Sembolü kaldır: sembol verilir, null katman stiline döndürür; kimliği kitaplıkta aranmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:3"], "symbol": "agac", "operation": "symbol"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2", "$uidOf:3"], "ids": [2, 3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}], "symbol": "agac"}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "symbol": "agac"}}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "symbol": null, "operation": "symbol"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Sembolü kaldır", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}}},
+        {"op": "undo", "returns": "Sembol ata", "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Değiştir (öznitelik): değer değişir, yeni ad eklenir, null adı siler; olmayan adı silmek değişiklik değildir; adı geçmeyenler kalır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "attrs": {"Tür": "Çit", "Yükseklik": "2", "Yok": null}, "operation": "attributes"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Çit", "Yükseklik": "2"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "note": "Öznitelikler'in öznitelik satırları komuttan önce de böyle yazıyordu.", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "öznitelik ve onu gösteren etiket birlikte (Parsel): tek adım, adı “Değiştir”",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "attrs": {"Parsel": "8"}, "label": "8", "operation": "attributes"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "ids": [2], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "8"}, "label": "8", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Ada": "101", "Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "öznitelik silmek: yalnız o adı taşıyan nesne değişir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:3"], "attrs": {"Ada": null}, "operation": "attributes"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "ids": [2], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"kind": "polygon", "id": 2, "layerId": "yapi", "attrs": {"Parsel": "7"}, "label": "7", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}, {"x": 487050, "y": 4420020}, {"x": 487030, "y": 4420020}]}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Etiket değiştir: etiket verilir; null kaldırır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "label": "N1", "operation": "label"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "label": "N1"}}, "revision": "changed"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "label": null, "operation": "label"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Etiket değiştir"},
+        {"op": "undo", "returns": "Etiket değiştir", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, "3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "birden çok özellik tek adımda; adım işlemin adıdır, işlem neyin değişeceğini sınırlamaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "layerId": "yol", "color": "#E5484D", "symbol": "agac", "attrs": {"Ad": "N1"}, "label": "N1", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yol", "attrs": {"Ad": "N1"}, "p": {"x": 487060, "y": 4420000}, "color": "#E5484D", "symbol": "agac", "label": "N1"}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Katman değiştir", "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "aynı kimlik iki kez verilirse nesne bir kez değişir, çıktıda bir kez geçer",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3", "$uidOf:3"], "color": "#E5484D", "operation": "color"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "color": "#E5484D"}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "gizli katmandaki nesnenin özellikleri de değişir; uyarı yok",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:7"], "color": "#E5484D", "operation": "color"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:7"], "ids": [7], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"7": {"kind": "line", "id": 7, "layerId": "gizli", "attrs": {}, "a": {"x": 487000, "y": 4420045}, "b": {"x": 487010, "y": 4420045}, "color": "#E5484D"}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "hiçbir nesne değişmezse hiçbir şey yazılmaz: aynı katman, renk, sembol, öznitelik ve etiket; olmayanı kaldırmak da değişiklik değildir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "layerId": "yapi", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:8"], "color": "#3E63DD", "operation": "color"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:2", "$uidOf:3"], "color": null, "operation": "color"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "symbol": "cit", "operation": "symbol"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "symbol": null, "operation": "symbol"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "attrs": {"Tür": "Duvar", "Yok": null}, "operation": "attributes"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:2"], "label": "7", "operation": "label"}, "result": {"status": "completed", "output": {"changed": [], "ids": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "nesne verilmedi: no_entities; her şeyden önce",
+      "steps": [
+        {"op": "execute", "input": {"uids": [], "color": "#E5484D", "operation": "color"}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Özellikleri değişecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": [], "operation": "layer", "layerId": "kilitli"}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Özellikleri değişecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kimlik küçük harfli, tireli bir UUID yazısıdır; ilk bozuk kimlik söylenir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "12"], "color": "#E5484D", "operation": "color"}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“12” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["01925F3E-7C1A-7D2B-9E4F-0A1B2C3D4E5F"], "color": "#E5484D", "operation": "color"}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“01925F3E-7C1A-7D2B-9E4F-0A1B2C3D4E5F” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "değişecek özellik verilmedi: nothing_to_set (yolu yok); boş öznitelik tablosu da bir şey vermez",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "operation": "color"}, "result": {"status": "failed", "error": {"code": "nothing_to_set", "message": "Değişecek özellik verilmedi. Katman, renk, sembol, öznitelik ya da etiket verin."}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "attrs": {}, "operation": "attributes"}, "result": {"status": "failed", "error": {"code": "nothing_to_set", "message": "Değişecek özellik verilmedi. Katman, renk, sembol, öznitelik ya da etiket verin."}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "öznitelik adı boş olamaz: invalid_attribute; yalnız boşluk da boştur (Unicode White_Space)",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "attrs": {"": "x"}, "operation": "attributes"}, "result": {"status": "failed", "error": {"code": "invalid_attribute", "message": "Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin.", "path": "attrs"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "attrs": {"Ad": "y", " \t\u00a0\u3000": "x"}, "operation": "attributes"}, "result": {"status": "failed", "error": {"code": "invalid_attribute", "message": "Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin.", "path": "attrs"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "attrs": {"\u0085": null}, "operation": "attributes"}, "result": {"status": "failed", "error": {"code": "invalid_attribute", "message": "Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin.", "path": "attrs"}}, "note": "U+0085 de boşluktur (JavaScript'in trim'i onu almaz; komut Unicode'unkini kullanır).", "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "girdinin hatası çizimin durumundan önce gelir: öznitelik adı ve verilmeyen özellik, sürümden, nesneden ve katmandan önce denetlenir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "layerId": "yok", "attrs": {"": "x"}, "operation": "attributes", "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "invalid_attribute", "message": "Öznitelik adı boş olamaz; yalnız boşluktan oluşan ad da boştur. Özniteliğe bir ad verin.", "path": "attrs"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "operation": "label", "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "nothing_to_set", "message": "Değişecek özellik verilmedi. Katman, renk, sembol, öznitelik ya da etiket verin."}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm ondalık bir tamsayı yazısıdır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "color": "#E5484D", "operation": "color", "expectedRevision": "07"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict; çakışma nesneden, katmandan ve kilitten önce",
+      "steps": [
+        {"op": "captureRevision", "as": "r0"},
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "color": "#E5484D", "operation": "color"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "color": "#30A46C", "operation": "color", "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:5", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "layerId": "yok", "operation": "layer", "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1"], "color": "#30A46C", "operation": "color", "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "ids": [1], "revision": "$current"}, "warnings": []}, "note": "Şimdiki sürümle hazırlanan girdi yazılır.", "expect": {"entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#30A46C", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "çizimde olmayan kimlik: entity_not_found; hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "color": "#30A46C", "operation": "color"}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}}}
+      ]
+    },
+    {
+      "name": "bilinmeyen katman: layer_not_found; ad kimlik değildir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "layerId": "Yol", "operation": "layer"}, "result": {"status": "failed", "error": {"code": "layer_not_found", "message": "“Yol” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "layerId": "", "operation": "layer"}, "result": {"status": "failed", "error": {"code": "layer_not_found", "message": "“” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "grup katman değildir: not_a_layer",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "layerId": "altyapi", "operation": "layer"}, "result": {"status": "failed", "error": {"code": "not_a_layer", "message": "“Altyapı” bir katman grubu; nesneler yalnız bir katmana taşınır. Grubun içinden bir katman seçin.", "path": "layerId"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kilitli katmandaki nesne değişmez: layer_locked; biri kilitliyse hiçbiri yazılmaz; kilitli grubun katmanı da kilitlidir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:5"], "color": "#30A46C", "operation": "color"}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "uids[1]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same", "entities": {"1": {"kind": "line", "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Duvar"}, "label": "D1", "symbol": "cit", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}, "5": {"kind": "line", "id": 5, "layerId": "kilitli", "attrs": {}, "a": {"x": 487000, "y": 4420035}, "b": {"x": 487010, "y": 4420035}}}}},
+        {"op": "execute", "input": {"uids": ["$uidOf:6"], "label": "E1", "operation": "label"}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Eski” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kilitli katmana nesne taşınmaz: layer_locked; kilitli grubun katmanına da",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "layerId": "kilitli", "operation": "layer"}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli; nesneler ona taşınamaz. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin.", "path": "layerId"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:1", "$uidOf:3"], "layerId": "eski", "operation": "layer"}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Eski” katmanı kilitli; nesneler ona taşınamaz. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin.", "path": "layerId"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "katman sırası: hedefin varlığı nesnenin kilidinden, nesnenin kilidi hedefin kilidinden önce",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:5"], "layerId": "yok", "operation": "layer"}, "result": {"status": "failed", "error": {"code": "layer_not_found", "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:6"], "layerId": "kilitli", "operation": "layer"}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Eski” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "uids[0]"}}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "doğrulama hiçbir şey yazmaz; plan değişecek nesneleri yuvalarıyla gösterir; yazma planın sürümüyle planı yazar; uyarı üç kipte de",
+      "steps": [
+        {"op": "validate", "input": {"uids": ["$uidOf:3", "$uidOf:4"], "layerId": "gizli", "operation": "layer"}, "result": {"status": "completed", "output": null, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; taşınan nesneler görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"uids": ["$uidOf:3", "$uidOf:4"], "layerId": "gizli", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": [{"kind": "point", "id": 3, "layerId": "gizli", "attrs": {}, "p": {"x": 487060, "y": 4420000}}, {"kind": "line", "id": 4, "layerId": "gizli", "attrs": {}, "a": {"x": 487000, "y": 4420030}, "b": {"x": 487020, "y": 4420030}}], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; taşınan nesneler görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "captureRevision", "as": "plan"},
+        {"op": "execute", "input": {"uids": ["$uidOf:3", "$uidOf:4"], "layerId": "gizli", "operation": "layer", "expectedRevision": "$plan"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3", "$uidOf:4"], "ids": [3, 4], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; taşınan nesneler görünmeyecek.", "path": "layerId"}]}, "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "gizli", "attrs": {}, "p": {"x": 487060, "y": 4420000}}, "4": {"kind": "line", "id": 4, "layerId": "gizli", "attrs": {}, "a": {"x": 487000, "y": 4420030}, "b": {"x": 487020, "y": 4420030}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "değişmeyecek nesnenin planı boştur; doğrulama ve plan geçmişe dokunmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:3"], "label": "N1", "operation": "label"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}},
+        {"op": "undo", "returns": "Etiket değiştir", "expect": {"canUndo": false, "canRedo": true}},
+        {"op": "validate", "input": {"uids": ["$uidOf:4"], "layerId": "yol", "operation": "layer"}, "result": {"status": "completed", "output": null, "warnings": []}},
+        {"op": "plan", "input": {"uids": ["$uidOf:4"], "layerId": "yol", "operation": "layer"}, "result": {"status": "completed", "output": {"changed": [], "revision": "$current"}, "warnings": []}, "expect": {"canUndo": false, "canRedo": true, "revision": "same"}},
+        {"op": "redo", "returns": "Etiket değiştir", "expect": {"entities": {"3": {"kind": "point", "id": 3, "layerId": "yapi", "attrs": {}, "p": {"x": 487060, "y": 4420000}, "label": "N1"}}}}
+      ]
+    }
+  ]
+}

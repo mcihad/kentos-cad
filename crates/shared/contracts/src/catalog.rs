@@ -1165,9 +1165,10 @@ pub fn catalog() -> CommandCatalog {
             version: CAD_ENTITIES_EDIT_VERSION,
             title: "Nesneleri düzenle".into(),
             summary: "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. \
-                      Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. \
+                      Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; \
+                      Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir) bu komutla yazar. \
                       update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; \
-                      add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. \
+                      add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz. \
                       Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
@@ -1354,6 +1355,72 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // Öznitelikler's layer, colour, symbol and attribute rows and the symbol commands'
+        // command, held together by fixtures/commands/v1/cad.entities.set.json.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_SET.into(),
+            version: crate::CAD_ENTITIES_SET_VERSION,
+            title: "Nesnelerin özelliklerini değiştir".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesnelerin katmanını, rengini, sembolünü, özniteliklerini ya da etiketini değiştirir; hepsi tek geri alma adımında, adı işlemin: Katman değiştir, Renk değiştir, Sembol ata (null ile Sembolü kaldır), Değiştir (öznitelik), Etiket değiştir. \
+                      Verilmeyen özellik değişmez. Renk, sembol ve etiket null ile kaldırılır: nesne katmanının rengiyle ve stiliyle çizilir. Öznitelik adıyla verilir ya da null ile silinir; adı geçmeyenler kalır. \
+                      Öznitelikler panelinin katman, renk, sembol ve öznitelik satırları, Sembol ver ve Sembolü kaldır bu komutla yazar. \
+                      Kilitli katmandaki nesne değişmez, kilitli katmana nesne taşınmaz: böyle bir nesne ya da katman verilirse hiçbir şey yazılmaz. Gizli katmana uyarıyla taşınır. \
+                      Zaten istendiği gibi olan nesne değişmez; hiçbiri değişmiyorsa hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesSetProperties>(),
+            output: schema::<crate::EntitiesPropertiesSet>(),
+            examples: vec![
+                CommandExample {
+                    title: "Katman değiştir: iki nesne Yol katmanına".into(),
+                    input: json!({
+                        "uids": [
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+                        ],
+                        "layerId": "yol",
+                        "operation": "layer"
+                    }),
+                    output: Some(json!({
+                        "changed": [
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+                        ],
+                        "ids": [12, 41],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Renk katmana göre: nesnenin kendi rengi kaldırılır".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "color": null,
+                        "operation": "color"
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parsel numarası ve onu gösteren etiket birlikte; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "attrs": { "Parsel": "8" },
+                        "label": "8",
+                        "operation": "attributes",
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -1508,6 +1575,10 @@ mod tests {
                     crate::CAD_ENTITIES_CREATE => {
                         serde_json::from_value::<crate::EntitiesCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_SET => {
+                        serde_json::from_value::<crate::EntitiesSetProperties>(e.input.clone())
+                            .map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1551,6 +1622,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_CREATE => {
                             serde_json::from_value::<crate::EntitiesCreated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_SET => {
+                            serde_json::from_value::<crate::EntitiesPropertiesSet>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

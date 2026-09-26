@@ -473,9 +473,144 @@ cases.append({
     ],
 })
 
+# ── Öznitelikler: a value typed into a geometry row (operation properties) ──
+
+# Their own drawing: a point with its elevation, a text, a dimension with its own
+# text, a hatch with a symbol, and a text on the locked layer.
+PROPS_RING = [P(487030, 4420060), P(487050, 4420060), P(487050, 4420080), P(487030, 4420080)]
+PROPS_ENTITIES = [
+    {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": P(487080, 4420000), "z": 12.5},
+    {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": P(487080, 4420010), "text": "Park", "height": 2.5, "rotation": 0},
+    {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": P(487000, 4420050), "b": P(487020, 4420050), "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+    {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": PROPS_RING, "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+    {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": P(487080, 4420030), "text": "Kilit", "height": 2.5, "rotation": 0},
+]
+PROPS_SETUP = {**SETUP, "entities": PROPS_ENTITIES}
+PROPS_BY_ID = {e["id"]: e for e in PROPS_ENTITIES}
+PROPS_NOTHING = {"ids": [e["id"] for e in PROPS_ENTITIES], "canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+
+
+def PE(i):
+    return json.loads(json.dumps(PROPS_BY_ID[i]))
+
+
+def geometry_of(i, **fields):
+    """The object's geometry with some of its fields changed; a field given None is left out."""
+    e = PE(i)
+    g = {k: v for k, v in e.items() if k == "kind" or k in GEOMETRY[e["kind"]]}
+    g.update(fields)
+    return {k: v for k, v in g.items() if v is not None}
+
+
+def properties(i, geometry):
+    return {"operation": "properties", "changes": [{"kind": "update", "uid": uid(i), "geometry": geometry}]}
+
+
+EMPTY_TEXT = "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin."
+
+moved_point = geometry_of(1, p=P(487081.25, 4420000))
+cases.append({
+    "name": "properties (Öznitelikler): noktanın Y'si yazılır; kotu, öznitelikleri ve etiketi kalır; adım “Değiştir”",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "captureUid", "id": 1, "as": "nokta"},
+        {"op": "execute", "input": properties(1, moved_point), "result": done(changed=[uid(1)]),
+         "expect": {"entities": {"1": reshaped(PE(1), moved_point)}, "uids": {"1": "nokta"}, "canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "note": "Belgenin kendi adı: Öznitelikler komuttan önce de böyle yazıyordu.", "expect": {"entities": {"1": PE(1)}, "uids": {"1": "nokta"}, "canUndo": False}},
+    ],
+})
+
+retyped = geometry_of(2, text="Park alanı", height=3, rotation=90)
+cases.append({
+    "name": "properties: yazının metni, yüksekliği ve açısı; rengi kalır",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(2, retyped), "result": done(changed=[uid(2)]),
+         "expect": {"entities": {"2": reshaped(PE(2), retyped)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"2": PE(2)}}},
+    ],
+})
+
+farther = geometry_of(3, offset=5, height=0.75)
+measured = geometry_of(3, offset=5, height=0.75, text=None)
+cases.append({
+    "name": "properties: ölçünün ötelenmesi ve yazı yüksekliği; kendi yazısı verilmezse kalkar (ölçülen değer gösterilir); her yazma kendi adımıdır",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(3, farther), "result": done(changed=[uid(3)]),
+         "expect": {"entities": {"3": reshaped(PE(3), farther)}, "revision": "changed"}},
+        {"op": "execute", "input": properties(3, measured), "result": done(changed=[uid(3)]),
+         "expect": {"entities": {"3": reshaped(PE(3), measured)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"3": reshaped(PE(3), farther)}, "canUndo": True}},
+    ],
+})
+
+crossed = geometry_of(4, pattern={"type": "cross", "angle": 30, "spacing": 2})
+cases.append({
+    "name": "properties: taramanın deseni, açısı ve aralığı; simgesi ve öznitelikleri kalır",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(4, crossed), "result": done(changed=[uid(4)]),
+         "expect": {"entities": {"4": reshaped(PE(4), crossed)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"4": PE(4)}}},
+    ],
+})
+
+cases.append({
+    "name": "yazının metni boş olamaz: empty_text; yalnız boşluk da boştur (Unicode White_Space: sekme, satır sonu, U+0085, bölünmez boşluk…); sayılardan önce denetlenir",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(2, geometry_of(2, text="")), "result": failed("empty_text", EMPTY_TEXT, "changes[0].geometry.text"), "expect": PROPS_NOTHING},
+        {"op": "execute", "input": properties(2, geometry_of(2, text=" \t\n\u0085\u00a0\u3000")), "result": failed("empty_text", EMPTY_TEXT, "changes[0].geometry.text"), "expect": PROPS_NOTHING},
+        {"op": "execute", "input": properties(2, geometry_of(2, text="")), "nonFinite": {"changes[0].geometry.height": "NaN"},
+         "result": failed("empty_text", EMPTY_TEXT, "changes[0].geometry.text"), "expect": PROPS_NOTHING},
+        {"op": "execute", "input": {"operation": "offset", "changes": [{"kind": "add", "from": uid(1), "geometry": {"kind": "text", "p": P(487090, 4420000), "text": "", "height": 2.5, "rotation": 0}}]},
+         "result": failed("empty_text", EMPTY_TEXT, "changes[0].geometry.text"), "note": "Her işlemde: yeni nesne de boş metinle yazılmaz.", "expect": PROPS_NOTHING},
+    ],
+})
+
+cases.append({
+    "name": "properties: kilitli katmandaki yazı değişmez: layer_locked",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "execute", "input": properties(5, geometry_of(5, text="Açık")), "result": failed("layer_locked", locked_message("Kilitli katman"), "changes[0].uid"), "expect": PROPS_NOTHING},
+    ],
+})
+
+cases.append({
+    "name": "properties planı değişen nesneyi yuvasıyla ve yazılacağı gibi gösterir; kalıcı kimliği planda yoktur",
+    "setup": PROPS_SETUP,
+    "steps": [
+        {"op": "plan", "input": properties(2, retyped),
+         "result": {"status": "completed", "output": {"changed": [reshaped(PE(2), retyped)], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": PROPS_NOTHING},
+    ],
+})
+
+
+# White space other than the plain space, escaped so a reader sees it (the empty text cases).
+INVISIBLE = "\u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
+
 
 def compact(v):
-    return json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
+    text = json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
+    return "".join(f"\\u{ord(c):04x}" if c in INVISIBLE else c for c in text)
+
+
+def setup_lines(s, indent):
+    """A drawing as the file writes it: its fields, then a layer or an object per line."""
+    pad = " " * indent
+    out = []
+    for key in ["format", "version", "name", "settings", "origin"]:
+        out.append(f'{pad}  "{key}": {compact(s[key])},')
+    out.append(f'{pad}  "layers": [')
+    out.append(",\n".join(f"{pad}    {compact(item)}" for item in s["layers"]))
+    out.append(f"{pad}  ],")
+    out.append(f'{pad}  "activeLayer": {compact(s["activeLayer"])},')
+    out.append(f'{pad}  "entities": [')
+    out.append(",\n".join(f"{pad}    {compact(e)}" for e in s["entities"]))
+    out.append(f"{pad}  ],")
+    out.append(f'{pad}  "styles": {compact(s["styles"])}')
+    return out
 
 
 def write(command, title, note, cases):
@@ -483,18 +618,8 @@ def write(command, title, note, cases):
     out = ["{"]
     for key in ["format", "version", "command", "commandVersion", "title", "note"]:
         out.append(f'  "{key}": {compact(fixture[key])},')
-    s = fixture["setup"]
     out.append('  "setup": {')
-    for key in ["format", "version", "name", "settings", "origin"]:
-        out.append(f'    "{key}": {compact(s[key])},')
-    out.append('    "layers": [')
-    out.append(",\n".join(f"      {compact(item)}" for item in s["layers"]))
-    out.append("    ],")
-    out.append(f'    "activeLayer": {compact(s["activeLayer"])},')
-    out.append('    "entities": [')
-    out.append(",\n".join(f"      {compact(e)}" for e in s["entities"]))
-    out.append("    ],")
-    out.append(f'    "styles": {compact(s["styles"])}')
+    out.extend(setup_lines(fixture["setup"], 2))
     out.append("  },")
     out.append('  "cases": [')
     blocks = []
@@ -502,6 +627,10 @@ def write(command, title, note, cases):
         lines = ["    {", f'      "name": {compact(c["name"])},']
         if "note" in c:
             lines.append(f'      "note": {compact(c["note"])},')
+        if "setup" in c:
+            lines.append('      "setup": {')
+            lines.extend(setup_lines(c["setup"], 6))
+            lines.append("      },")
         lines.append('      "steps": [')
         lines.append(",\n".join(f"        {compact(st)}" for st in c["steps"]))
         lines.append("      ]")
@@ -524,7 +653,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",
-    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

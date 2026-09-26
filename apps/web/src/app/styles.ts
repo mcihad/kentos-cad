@@ -3,6 +3,7 @@ import type { CadDocument } from '../model/document';
 import type { LibraryCategory, LibraryItem } from '../model/style';
 import { StyleLibrary } from '../style/library';
 import { geometryClassOf } from '../style/geometry';
+import { setProperties, uidsOf } from '../ui/properties/write';
 import type { AppContext } from './context';
 import { persistedSignals } from './state';
 
@@ -134,19 +135,25 @@ export function registerStyleCommands(ctx: AppContext): void {
   for (const c of list) ctx.commands.register(c);
 }
 
-/** Gives (or takes away) the selected objects' own symbol in one undo step; locked layers are skipped. */
+/**
+ * Gives (or takes away) the selected objects' own symbol in one undo step,
+ * through `cad.entities.set`; locked layers are skipped and counted.
+ */
 export function assignSymbol(ctx: AppContext, id: string | undefined): void {
   const { doc } = ctx;
   const name = id ? (ctx.styles.library.get(id)?.name ?? id) : '';
   let locked = 0;
-  const patches: { id: number; symbol: string | undefined }[] = [];
+  const ids: number[] = [];
   for (const eid of ctx.selection.ids.value) {
     const e = doc.get(eid);
     if (!e || e.symbol === id) continue;
     if (doc.layers.isLocked(e.layerId)) locked++;
-    else patches.push({ id: eid, symbol: id });
+    else ids.push(eid);
   }
-  const done = doc.updateMany(patches, id ? `Sembol: ${name}` : 'Sembolü kaldır');
+  const write = () => setProperties(ctx, { uids: uidsOf(ctx, ids), symbol: id ?? null, operation: 'symbol' });
+  // The step keeps the symbol's name, “Sembol: …”: the command knows no library and would say “Sembol ata”.
+  const out = !ids.length ? null : id ? doc.transact(`Sembol: ${name}`, write) : write();
+  const done = out?.changed.length ?? 0;
   const skipped = locked ? `; kilitli katmandaki ${locked} nesne atlandı` : '';
   if (id) ctx.log.info(`${done} nesneye “${name}” verildi${skipped}.`);
   else ctx.log.info(`${done} nesnenin sembolü kaldırıldı${skipped}.`);

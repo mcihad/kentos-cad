@@ -4,7 +4,7 @@
   "command": "cad.entities.edit",
   "commandVersion": 1,
   "title": "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",
-  "note": "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+  "note": "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -245,6 +245,211 @@
         {"op": "plan", "input": {"operation": "trim", "changes": [{"kind": "replace", "uid": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487008, "y": 4420000}}}, {"kind": "add", "from": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487012, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}]}, "result": {"status": "completed", "output": {"changed": [{"kind": "line", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487008, "y": 4420000}, "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {}}], "created": [{"kind": "line", "a": {"x": 487012, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "id": 0, "layerId": "yapi", "color": "#E5484D", "attrs": {}}], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
         {"op": "captureRevision", "as": "plan"},
         {"op": "execute", "input": {"operation": "trim", "changes": [{"kind": "replace", "uid": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487008, "y": 4420000}}}, {"kind": "add", "from": "$uidOf:1", "geometry": {"kind": "line", "a": {"x": 487012, "y": 4420000}, "b": {"x": 487020, "y": 4420000}}}], "expectedRevision": "$plan"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": ["$uidOf:9"], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"kind": "line", "a": {"x": 487000, "y": 4420000}, "b": {"x": 487008, "y": 4420000}, "id": 1, "layerId": "yapi", "color": "#E5484D", "attrs": {}}, "9": {"kind": "line", "a": {"x": 487012, "y": 4420000}, "b": {"x": 487020, "y": 4420000}, "id": 9, "layerId": "yapi", "color": "#E5484D", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "properties (Öznitelikler): noktanın Y'si yazılır; kotu, öznitelikleri ve etiketi kalır; adım “Değiştir”",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5},
+          {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0},
+          {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+          {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+          {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 487080, "y": 4420030}, "text": "Kilit", "height": 2.5, "rotation": 0}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "captureUid", "id": 1, "as": "nokta"},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:1", "geometry": {"kind": "point", "p": {"x": 487081.25, "y": 4420000}, "z": 12.5}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:1"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"1": {"id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "kind": "point", "p": {"x": 487081.25, "y": 4420000}, "z": 12.5}}, "uids": {"1": "nokta"}, "canUndo": true, "canRedo": false, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "note": "Belgenin kendi adı: Öznitelikler komuttan önce de böyle yazıyordu.", "expect": {"entities": {"1": {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5}}, "uids": {"1": "nokta"}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "properties: yazının metni, yüksekliği ve açısı; rengi kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5},
+          {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0},
+          {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+          {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+          {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 487080, "y": 4420030}, "text": "Kilit", "height": 2.5, "rotation": 0}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park alanı", "height": 3, "rotation": 90}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:2"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"2": {"id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park alanı", "height": 3, "rotation": 90}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"2": {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0}}}}
+      ]
+    },
+    {
+      "name": "properties: ölçünün ötelenmesi ve yazı yüksekliği; kendi yazısı verilmezse kalkar (ölçülen değer gösterilir); her yazma kendi adımıdır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5},
+          {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0},
+          {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+          {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+          {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 487080, "y": 4420030}, "text": "Kilit", "height": 2.5, "rotation": 0}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:3", "geometry": {"kind": "dimension", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 5, "height": 0.75, "text": "20 m", "style": "linear", "angle": 0}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"id": 3, "layerId": "yapi", "attrs": {}, "kind": "dimension", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 5, "height": 0.75, "text": "20 m", "style": "linear", "angle": 0}}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:3", "geometry": {"kind": "dimension", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 5, "height": 0.75, "style": "linear", "angle": 0}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:3"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"id": 3, "layerId": "yapi", "attrs": {}, "kind": "dimension", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 5, "height": 0.75, "style": "linear", "angle": 0}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"3": {"id": 3, "layerId": "yapi", "attrs": {}, "kind": "dimension", "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 5, "height": 0.75, "text": "20 m", "style": "linear", "angle": 0}}, "canUndo": true}}
+      ]
+    },
+    {
+      "name": "properties: taramanın deseni, açısı ve aralığı; simgesi ve öznitelikleri kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5},
+          {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0},
+          {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+          {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+          {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 487080, "y": 4420030}, "text": "Kilit", "height": 2.5, "rotation": 0}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:4", "geometry": {"kind": "hatch", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "cross", "angle": 30, "spacing": 2}}}]}, "result": {"status": "completed", "output": {"changed": ["$uidOf:4"], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "kind": "hatch", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "cross", "angle": 30, "spacing": 2}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Değiştir", "expect": {"entities": {"4": {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}}}}}
+      ]
+    },
+    {
+      "name": "yazının metni boş olamaz: empty_text; yalnız boşluk da boştur (Unicode White_Space: sekme, satır sonu, U+0085, bölünmez boşluk…); sayılardan önce denetlenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5},
+          {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0},
+          {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+          {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+          {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 487080, "y": 4420030}, "text": "Kilit", "height": 2.5, "rotation": 0}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "", "height": 2.5, "rotation": 0}}]}, "result": {"status": "failed", "error": {"code": "empty_text", "message": "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.", "path": "changes[0].geometry.text"}}, "expect": {"ids": [1, 2, 3, 4, 5], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420010}, "text": " \t\n\u0085\u00a0\u3000", "height": 2.5, "rotation": 0}}]}, "result": {"status": "failed", "error": {"code": "empty_text", "message": "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.", "path": "changes[0].geometry.text"}}, "expect": {"ids": [1, 2, 3, 4, 5], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "", "height": 2.5, "rotation": 0}}]}, "nonFinite": {"changes[0].geometry.height": "NaN"}, "result": {"status": "failed", "error": {"code": "empty_text", "message": "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.", "path": "changes[0].geometry.text"}}, "expect": {"ids": [1, 2, 3, 4, 5], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"operation": "offset", "changes": [{"kind": "add", "from": "$uidOf:1", "geometry": {"kind": "text", "p": {"x": 487090, "y": 4420000}, "text": "", "height": 2.5, "rotation": 0}}]}, "result": {"status": "failed", "error": {"code": "empty_text", "message": "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.", "path": "changes[0].geometry.text"}}, "note": "Her işlemde: yeni nesne de boş metinle yazılmaz.", "expect": {"ids": [1, 2, 3, 4, 5], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "properties: kilitli katmandaki yazı değişmez: layer_locked",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5},
+          {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0},
+          {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+          {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+          {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 487080, "y": 4420030}, "text": "Kilit", "height": 2.5, "rotation": 0}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "execute", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:5", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420030}, "text": "Açık", "height": 2.5, "rotation": 0}}]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.", "path": "changes[0].uid"}}, "expect": {"ids": [1, 2, 3, 4, 5], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "properties planı değişen nesneyi yuvasıyla ve yazılacağı gibi gösterir; kalıcı kimliği planda yoktur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+        "origin": {"x": 487000, "y": 4420000},
+        "layers": [
+          {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+          {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+        ],
+        "activeLayer": "yapi",
+        "entities": [
+          {"kind": "point", "id": 1, "layerId": "yapi", "attrs": {"Ad": "P1"}, "label": "P1", "p": {"x": 487080, "y": 4420000}, "z": 12.5},
+          {"kind": "text", "id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "p": {"x": 487080, "y": 4420010}, "text": "Park", "height": 2.5, "rotation": 0},
+          {"kind": "dimension", "id": 3, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420050}, "b": {"x": 487020, "y": 4420050}, "offset": 3, "height": 0.5, "text": "20 m", "style": "linear", "angle": 0},
+          {"kind": "hatch", "id": 4, "layerId": "yapi", "attrs": {"Tür": "Yeşil"}, "symbol": "cim", "ring": [{"x": 487030, "y": 4420060}, {"x": 487050, "y": 4420060}, {"x": 487050, "y": 4420080}, {"x": 487030, "y": 4420080}], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}},
+          {"kind": "text", "id": 5, "layerId": "kilitli", "attrs": {}, "p": {"x": 487080, "y": 4420030}, "text": "Kilit", "height": 2.5, "rotation": 0}
+        ],
+        "styles": {"items": [], "categories": []}
+      },
+      "steps": [
+        {"op": "plan", "input": {"operation": "properties", "changes": [{"kind": "update", "uid": "$uidOf:2", "geometry": {"kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park alanı", "height": 3, "rotation": 90}}]}, "result": {"status": "completed", "output": {"changed": [{"id": 2, "layerId": "yapi", "color": "#E5484D", "attrs": {}, "kind": "text", "p": {"x": 487080, "y": 4420010}, "text": "Park alanı", "height": 3, "rotation": 90}], "created": [], "removed": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
       ]
     }
   ]

@@ -5,6 +5,7 @@ import { entitiesArray } from './entitiesArray';
 import { entitiesCreate } from './entitiesCreate';
 import { entitiesDelete } from './entitiesDelete';
 import { entitiesEdit } from './entitiesEdit';
+import { entitiesSet } from './entitiesSet';
 import { entitiesTransform } from './entitiesTransform';
 import { lineCreate } from './lineCreate';
 import { pointCreate } from './pointCreate';
@@ -18,7 +19,7 @@ import { polylineCreate } from './polylineCreate';
  * `SERVER_COMMANDS` are kept to theirs: a command in the catalog without a
  * handler here, or a handler without its catalog entry, fails there.
  */
-export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = [polygonCreate, lineCreate, polylineCreate, entitiesDelete, pointCreate, circleCreate, arcCreate, entitiesTransform, entitiesEdit, entitiesArray, entitiesCreate];
+export const WEB_COMMANDS: readonly ProductCommand<never, unknown, unknown>[] = [polygonCreate, lineCreate, polylineCreate, entitiesDelete, pointCreate, circleCreate, arcCreate, entitiesTransform, entitiesEdit, entitiesArray, entitiesCreate, entitiesSet];
 
 /** The handler of a command id and version; undefined for one the web does not run (never guessed). */
 export function findProductCommand(id: string, version: number): ProductCommand<never, unknown, unknown> | undefined {

@@ -333,6 +333,67 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
     assert_eq!(value(&app, "Geometri", "Alan"), "10.00 m²");
 }
 
+/// The last line said in the command history, when it is a warning.
+fn warned(app: &App) -> Option<String> {
+    match app.history.last() {
+        Some(kentos_ui::widget::command_line::Entry::Warning(t)) => Some(t.clone()),
+        _ => None,
+    }
+}
+
+/// The panel writes through the product commands (docs/adr/0066): what they
+/// refuse is said and nothing is written.
+#[test]
+fn what_the_commands_refuse_is_said_and_not_written() {
+    let mut app = objects();
+    select(&mut app, &[4]);
+    // Its layer locked while the panel still offers the row: `layer_locked`.
+    let layer = entity(&app, 4).base().layer_id.clone();
+    let name = {
+        let doc = app.document.as_mut().expect("open");
+        doc.model.toggle_layer_locked(&layer);
+        doc.model.layers().get(&layer).expect("its layer").name.clone()
+    };
+    let before = entity(&app, 4);
+    event(
+        &mut app,
+        Event::Commit(Field::Attribute(Slot(4), "Parsel".into()), "9".into()),
+    );
+    assert_eq!(entity(&app, 4), before);
+    assert_eq!(
+        warned(&app).as_deref(),
+        Some(
+            format!(
+                "“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
+            )
+            .as_str()
+        )
+    );
+    // A text of U+0085 alone, which JavaScript's trim leaves: `empty_text`.
+    let text = add(
+        &mut app,
+        Entity::Text(TextEntity {
+            base: base("cizim"),
+            p: Wire { x: E, y: N },
+            text: "Park".to_owned(),
+            height: 2.5,
+            rotation: 0.0,
+        }),
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::Text(Slot(text)), "\u{85}".into()),
+    );
+    let Entity::Text(t) = entity(&app, text) else {
+        panic!("a text");
+    };
+    assert_eq!(t.text, "Park");
+    assert_eq!(
+        warned(&app).as_deref(),
+        Some("Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.")
+    );
+}
+
 #[test]
 fn an_object_on_a_locked_layer_is_named_not_edited() {
     let mut app = objects();

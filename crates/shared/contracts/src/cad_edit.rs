@@ -4,8 +4,9 @@
 //! named after the modify tool. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır,
 //! Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil and Esnet write through
 //! `cad.entities.edit` on the web (`apps/web/src/product`) and on the
-//! desktop (`crates/native/application`); both pass the shared cases in
-//! `fixtures/commands/v1`.
+//! desktop (`crates/native/application`); so do Öznitelikler's geometry rows
+//! and the in-place text editor (operation `properties`). Both pass the
+//! shared cases in `fixtures/commands/v1`.
 //!
 //! The geometry is given, not computed here: the tools compute it with the
 //! shared geometry core, from what they picked and what the view shows (the
@@ -57,6 +58,11 @@ pub enum EditOperation {
     VertexRemove,
     /// Esnet: the vertices in a window move, the rest stay.
     Stretch,
+    /// Öznitelikler: a value typed into a geometry row (a point's Y and X; a
+    /// text's content, height and angle; a dimension's offset, text height
+    /// and text; a hatch's pattern, angle and spacing), or a text or a
+    /// dimension's text edited in place. The step is “Değiştir”.
+    Properties,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -236,8 +242,9 @@ pub enum EntityEdit {
 /// Refusals (`CommandError.code`), checked in this order: `no_changes`,
 /// `invalid_uid` (each change's id in order), then each geometry in order:
 /// `too_few_points` (a polyline), `too_few_corners` (a closed area's or a
-/// hatch's ring or hole), `not_finite`, `invalid_radius`; then
-/// `invalid_revision`, `revision_conflict` (status `conflict`),
+/// hatch's ring or hole), `empty_text` (a text whose text is empty or only
+/// white space, Unicode's `White_Space`), `not_finite`, `invalid_radius`;
+/// then `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `entity_not_found` (each id in order), `repeated_entity` (an object
 /// changed twice), `layer_locked`; on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -248,7 +255,7 @@ pub enum EntityEdit {
 pub struct EntitiesEdit {
     /// The modify tool the edit comes from; it names the undo step: Ötele,
     /// Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
-    /// Köşe ekle, Köşe sil, Esnet.
+    /// Köşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler.
     pub operation: EditOperation,
     /// What changes, at least one.
     pub changes: Vec<EntityEdit>,

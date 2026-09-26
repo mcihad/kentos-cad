@@ -1,6 +1,8 @@
 import type { AppContext } from '../app/context';
+import type { EntityGeometry as NewGeometry } from '../contracts/generated/EntityGeometry';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { bulgeArc, bulgeOfSweep, bulgePathLength, bulgePathOutline, bulgeRingArea, bulgeThrough, hasBulges, segmentTangent, tangentBulge } from '../model/geom/bulge';
+import { entitiesCreate } from '../product/entitiesCreate';
 import { polygonCreate } from '../product/polygonCreate';
 import { polylineCreate } from '../product/polylineCreate';
 import type { ViewTransform } from '../viewport/Camera';
@@ -310,8 +312,8 @@ export class PathTool extends PointInputTool {
    * explicit in the command's input (CMD-07): the active layer and the
    * current colour. The messages stay the tool's: the command's refusal or
    * warning (the locked and hidden layer texts, word for word), then the
-   * area. Parcels still write directly (their number, deed area and
-   * selection are the parcel tool's own); measuring writes nothing.
+   * area. Parcels are written by `cad.entities.create` (createParcel);
+   * measuring writes nothing.
    */
   private createPolygon(pts: Vec2[], bulges: number[] | undefined, area: () => number): void {
     const color = this.ctx.settings.color.value;
@@ -324,19 +326,35 @@ export class PathTool extends PointInputTool {
     this.ctx.log.success(`Kapalı alan eklendi: ${this.ctx.format.area(area())}`);
   }
 
+  /**
+   * A parcel is written by the product command `cad.entities.create` on the
+   * parcel layer (docs/adr/0057), in the current colour: the next number on
+   * that layer as its label and its Parsel, Nitelik “Arsa”, the other
+   * attributes left for Öznitelikler. The deed area is left empty too: it is
+   * the title deed's, not the drawing's (CLAUDE.md §7, §23); the log gives
+   * the geometric area. The new parcel is selected, so Öznitelikler shows it.
+   */
   private createParcel(geom: { kind: 'polygon' | 'polyline'; pts: Vec2[]; bulges?: number[] }, layerId: string): void {
     const parcels = this.ctx.doc.byLayer(layerId);
     const next = parcels.reduce((m, e) => Math.max(m, parseInt(e.attrs.Parsel ?? '0', 10) || 0), 0) + 1;
     const area = Math.abs(bulgeRingArea(geom.pts, geom.bulges));
-    const e = this.create(geom, {
-      layerId,
+    const color = this.ctx.settings.color.value;
+    const parcel = {
+      geometry: geom as unknown as NewGeometry,
+      ...(color !== null && { color }),
+      attrs: { Ada: '', Parsel: String(next), Mahalle: '', Nitelik: 'Arsa', 'Tapu alanı (m²)': '', Pafta: '' },
       label: String(next),
-      attrs: { Ada: '', Parsel: String(next), Mahalle: '', Nitelik: 'Arsa', 'Tapu alanı (m²)': area.toFixed(2), Pafta: '' },
-    });
-    if (e) {
-      this.ctx.selection.set([e.id]);
-      this.ctx.log.success(`Parsel ${next} oluşturuldu: ${this.ctx.format.area(area)}. Ada ve mahalle bilgisini Öznitelikler panelinden girin.`);
+    };
+    const result = entitiesCreate.execute({ doc: this.ctx.doc }, { layerId, objects: [parcel] });
+    if (result.status !== 'completed') {
+      if ('error' in result) this.ctx.log.warn(result.error.message);
+      return;
     }
+    for (const w of result.warnings) this.ctx.log.warn(w.message);
+    const [id] = result.output.ids;
+    this.noteMade(id);
+    this.ctx.selection.set([id]);
+    this.ctx.log.success(`Parsel ${next} oluşturuldu; geometrik alanı ${this.ctx.format.area(area)}. Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.`);
   }
 
   override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {

@@ -3,7 +3,7 @@ import type { CommandResult } from '../contracts/generated/CommandResult';
 import type { CreateOperation } from '../contracts/generated/CreateOperation';
 import type { EntitiesCreated } from '../contracts/generated/EntitiesCreated';
 import { Signal } from '../core/signal';
-import type { Entity, EntityGeometry, NewEntity } from '../model/entities';
+import type { EntityGeometry } from '../model/entities';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { entitiesDelete } from '../product/entitiesDelete';
 import { lineCreate } from '../product/lineCreate';
@@ -171,15 +171,6 @@ export abstract class PointInputTool implements Tool {
   /** Target layer for new entities, or null (with a message) when not writable. */
   protected targetLayer(preferred?: string): string | null {
     return writableLayer(this.ctx, preferred);
-  }
-
-  protected create(geom: EntityGeometry, extra: { attrs?: Record<string, string>; label?: string; layerId?: string } = {}): Entity | null {
-    const layerId = this.targetLayer(extra.layerId);
-    if (!layerId) return null;
-    const color = this.ctx.settings.color.value ?? undefined;
-    const e = this.ctx.doc.add({ ...geom, layerId, color, attrs: extra.attrs ?? {}, label: extra.label } as NewEntity);
-    this.noteMade(e.id);
-    return e;
   }
 
   /** Records an object written for the object being drawn, so Ctrl+Z and Geri (G) can take it back as an undo. */

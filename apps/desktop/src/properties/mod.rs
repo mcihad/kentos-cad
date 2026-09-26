@@ -11,9 +11,12 @@
 //!   zero) leaves the drawing as it was, and the cell shows its value again.
 //! - Katman ▾, Renk ▾ and Sembol ▾ are drop-downs; an object on a locked
 //!   layer, or a selection holding one, is not edited, its values still named.
-//! - Every edit is one undo step with the web's name: “Katman değiştir”,
-//!   “Renk değiştir”, else “Değiştir”. Nothing is said, but for objects
-//!   moved to a hidden layer.
+//! - Every edit goes through a product command, as the web's panel writes
+//!   (docs/adr/0066): the layer, colour and attributes through
+//!   `cad.entities.set`, a geometry value through `cad.entities.edit`'s
+//!   `properties`. One undo step with the web's name: “Katman değiştir”,
+//!   “Renk değiştir”, else “Değiştir”. Nothing is said but the command's
+//!   refusal or warning (objects moved to a hidden layer).
 //! - Sections close on their header and stay closed while the app runs.
 //!
 //! The rows are data (`rows`), drawn by KentOS UI's `PropertySheet`.
@@ -24,8 +27,11 @@ mod tests;
 
 use iced::widget::{Column, column, container, row, space};
 use iced::{Center, Color, Element, Fill, Theme};
-use kentos_contracts::{Entity, HatchPatternType};
+use std::collections::BTreeMap;
+
+use kentos_contracts::{Entity, EntitiesSetProperties, HatchPatternType, PropertiesOperation};
 use kentos_domain::Slot;
+use kentos_interaction::properties;
 use kentos_ui::label;
 use kentos_ui::widget::property_grid::{self, PropertySheet};
 use kentos_ui::widget::{EditCell, Menu, swatch};
@@ -237,7 +243,9 @@ impl App {
             .map_or_else(|| crate::view::hex_color(value), crate::view::rgba_color)
     }
 
-    /// What the panel asked for: an edit of the drawing, or a section toggled.
+    /// What the panel asked for: an edit of the drawing, through the
+    /// product commands as the web's panel writes (docs/adr/0066), or a
+    /// section toggled. The command's refusal and warnings are said.
     pub(crate) fn properties_event(&mut self, event: Event) {
         if let Event::Toggle(id) = event {
             if !self.props_closed.remove(id) {
@@ -249,56 +257,69 @@ impl App {
             return;
         };
         let model = &mut doc.model;
-        match event {
-            Event::Toggle(_) => {}
+        let said = match event {
+            Event::Toggle(_) => Vec::new(),
+            // On a hidden layer they vanish from the drawing, still selected: the command's warning says so.
             Event::Layer(ids, layer) => {
-                let changes: Vec<(Slot, Entity)> = ids
-                    .iter()
-                    .filter_map(|slot| {
-                        let mut e = model.get(*slot)?.clone();
-                        e.base_mut().layer_id = layer.clone();
-                        Some((*slot, e))
-                    })
-                    .collect();
-                let moved = model.update_many(changes, "Katman değiştir");
-                // On a hidden layer they vanish from the drawing, still selected:
-                // said, as the tools say it when they draw there.
-                if moved > 0 && !model.layers().is_visible(&layer) {
-                    let name = model
-                        .layers()
-                        .get(&layer)
-                        .map_or(layer.clone(), |n| n.name.clone());
-                    self.warn(format!(
-                        "“{name}” katmanı gizli; taşınan nesneler görünmeyecek."
-                    ));
-                }
+                let mut input = set_input(model, &ids, PropertiesOperation::Layer);
+                input.layer_id = Some(layer);
+                properties::set_properties(model, input)
             }
             Event::Color(ids, color) => {
-                let changes: Vec<(Slot, Entity)> = ids
-                    .iter()
-                    .filter_map(|slot| {
-                        let mut e = model.get(*slot)?.clone();
-                        e.base_mut().color = color.clone();
-                        Some((*slot, e))
-                    })
-                    .collect();
-                model.update_many(changes, "Renk değiştir");
+                let mut input = set_input(model, &ids, PropertiesOperation::Color);
+                input.color = Some(color);
+                properties::set_properties(model, input)
             }
-            Event::Pattern(slot, kind) => {
-                if let Some(Entity::Hatch(h)) = model.get(slot) {
+            Event::Pattern(slot, kind) => match model.get(slot) {
+                Some(Entity::Hatch(h)) => {
                     let mut h = h.clone();
                     h.pattern.kind = kind;
-                    model.update(slot, Entity::Hatch(h));
+                    properties::set_geometry(model, slot, &Entity::Hatch(h))
                 }
-            }
+                _ => Vec::new(),
+            },
             Event::Commit(field, text) => commit(model, &field, &text),
+        };
+        for text in said {
+            self.warn(text);
         }
     }
 }
 
+/// `cad.entities.set`'s input for the objects in `slots`, nothing set yet.
+fn set_input(
+    model: &kentos_domain::Document,
+    slots: &[Slot],
+    operation: PropertiesOperation,
+) -> EntitiesSetProperties {
+    EntitiesSetProperties {
+        uids: properties::uids_of(model, slots),
+        layer_id: None,
+        color: None,
+        symbol: None,
+        attrs: None,
+        label: None,
+        operation,
+        expected_revision: None,
+    }
+}
+
 /// A cell's text into the drawing, as the web's editors take it; what they
-/// do not take changes nothing.
-fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) {
+/// do not take changes nothing. What to say: the command's refusal.
+fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec<String> {
+    if let Field::Attribute(slot, key) = field {
+        let Some(base) = model.get(*slot).map(Entity::base) else {
+            return Vec::new();
+        };
+        // Keep the drawn number in step with the cadastral attribute, in the same step.
+        let follows = (key == "Parsel" || key == "Ada")
+            && base.label.is_some()
+            && base.label.as_ref() == base.attrs.get(key);
+        let mut input = set_input(model, &[*slot], PropertiesOperation::Attributes);
+        input.attrs = Some(BTreeMap::from([(key.clone(), Some(text.to_owned()))]));
+        input.label = follows.then(|| Some(text.to_owned()));
+        return properties::set_properties(model, input);
+    }
     let n = web_number(text);
     let finite = n.is_finite();
     let slot = match field {
@@ -315,7 +336,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) {
         | Field::Attribute(s, _) => *s,
     };
     let Some(mut e) = model.get(slot).cloned() else {
-        return;
+        return Vec::new();
     };
     let taken = match (field, &mut e) {
         (Field::PointX(_), Entity::Point(p)) if finite => {
@@ -365,21 +386,12 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) {
             t.rotation = ((n % 360.0) + 360.0) % 360.0;
             true
         }
-        (Field::Attribute(_, key), e) => {
-            let base = e.base_mut();
-            let old = base.attrs.get(key).cloned();
-            // Keep the drawn number in step with the cadastral attribute.
-            if (key == "Parsel" || key == "Ada") && base.label.is_some() && base.label == old {
-                base.label = Some(text.to_owned());
-            }
-            base.attrs.insert(key.clone(), text.to_owned());
-            true
-        }
         _ => false,
     };
-    if taken {
-        model.update(slot, e);
+    if !taken {
+        return Vec::new();
     }
+    properties::set_geometry(model, slot, &e)
 }
 
 /// The drop-down's menu: its choices, their swatches, the commands.

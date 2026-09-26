@@ -12,8 +12,13 @@ import { colorSwatch, layerSwatch } from '../layers/swatch';
 import { DRAW_COLORS } from '../toolbar/fields';
 import type { MenuItem } from '../widgets/PopupMenu';
 import { PropertyGrid, type PropRow, type PropSection } from '../widgets/PropertyGrid';
+import { setGeometry, setProperties, uidsOf } from './write';
 
-/** Öznitelikler: geometry and GIS attributes of the selection, editable. */
+/**
+ * Öznitelikler: geometry and GIS attributes of the selection, editable. It
+ * writes through product commands (./write.ts): the layer, colour and
+ * attributes with `cad.entities.set`, a geometry value with `cad.entities.edit`.
+ */
 export class PropertiesPanel extends Panel {
   private readonly ctx: AppContext;
   private readonly grid = new PropertyGrid();
@@ -112,11 +117,8 @@ export class PropertiesPanel extends Panel {
             radio: true,
             checked: l.id === currentId,
             disabled: doc.layers.isLocked(l.id),
-            run: () => {
-              const moved = doc.updateMany(ids.map((id) => ({ id, layerId: l.id })), 'Katman değiştir');
-              // On a hidden layer they vanish from the drawing (still selected): said, as the tools say it when they draw there.
-              if (moved && !doc.layers.isVisible(l.id)) this.ctx.log.warn(`“${l.name}” katmanı gizli; taşınan nesneler görünmeyecek.`);
-            },
+            // On a hidden layer they vanish from the drawing (still selected): the command's warning says so.
+            run: () => setProperties(this.ctx, { uids: uidsOf(this.ctx, ids), layerId: l.id, operation: 'layer' }),
           }),
         ),
     };
@@ -137,8 +139,7 @@ export class PropertiesPanel extends Panel {
   }
 
   private colorEditor(ids: number[], current: string | undefined | null): PropRow['editor'] {
-    const { doc } = this.ctx;
-    const set = (color: string | undefined) => doc.updateMany(ids.map((id) => ({ id, color })), 'Renk değiştir');
+    const set = (color: string | undefined) => setProperties(this.ctx, { uids: uidsOf(this.ctx, ids), color: color ?? null, operation: 'color' });
     return {
       type: 'select',
       display: () => {
@@ -202,7 +203,7 @@ export class PropertiesPanel extends Panel {
                 type: 'number',
                 commit: (v: string) => {
                   const n = parseFloat(v.replace(',', '.'));
-                  if (Number.isFinite(n)) doc.update(e.id, { p: { ...e.p, [axis]: n } } as Partial<Entity>);
+                  if (Number.isFinite(n)) setGeometry(this.ctx, e, { p: { ...e.p, [axis]: n } });
                 },
               } as const);
         geo.push({ ...num('Y (sağa)', e.p.x, 'm'), editor: edit('x') }, { ...num('X (yukarı)', e.p.y, 'm'), editor: edit('y') });
@@ -291,7 +292,7 @@ export class PropertiesPanel extends Panel {
                 type: 'number',
                 commit: (t: string) => {
                   const x = parseFloat(t.replace(',', '.'));
-                  if (Number.isFinite(x) && (key !== 'height' || x > 0)) doc.update(e.id, { [key]: x } as Partial<Entity>);
+                  if (Number.isFinite(x) && (key !== 'height' || x > 0)) setGeometry(this.ctx, e, { [key]: x });
                 },
               },
         });
@@ -307,14 +308,14 @@ export class PropertiesPanel extends Panel {
           {
             label: 'Yazı',
             value: e.text ?? '',
-            editor: locked ? undefined : { type: 'text', commit: (v) => doc.update(e.id, { text: v.trim() || undefined } as Partial<Entity>) },
+            editor: locked ? undefined : { type: 'text', commit: (v) => setGeometry(this.ctx, e, { text: v.trim() || undefined }) },
           },
         );
         break;
       }
       case 'hatch': {
         const types = Object.keys(HATCH_PATTERN_LABEL) as HatchPatternType[];
-        const setPattern = (patch: Partial<typeof e.pattern>) => doc.update(e.id, { pattern: { ...e.pattern, ...patch } } as Partial<Entity>);
+        const setPattern = (patch: Partial<typeof e.pattern>) => setGeometry(this.ctx, e, { pattern: { ...e.pattern, ...patch } });
         const numEdit = (key: 'angle' | 'spacing') =>
           locked
             ? undefined
@@ -346,7 +347,7 @@ export class PropertiesPanel extends Panel {
       case 'text':
         geo.push(
           // Trimmed, as the in-place editor stores it; an empty text is not taken.
-          { label: 'Metin', value: e.text, editor: locked ? undefined : { type: 'text', commit: (v) => v.trim() && doc.update(e.id, { text: v.trim() } as Partial<Entity>) } },
+          { label: 'Metin', value: e.text, editor: locked ? undefined : { type: 'text', commit: (v) => v.trim() && setGeometry(this.ctx, e, { text: v.trim() }) } },
           {
             ...num('Yükseklik', e.height, 'm'),
             editor: locked
@@ -355,7 +356,7 @@ export class PropertiesPanel extends Panel {
                   type: 'number',
                   commit: (t: string) => {
                     const x = parseFloat(t.replace(',', '.'));
-                    if (Number.isFinite(x) && x > 0) doc.update(e.id, { height: x } as Partial<Entity>);
+                    if (Number.isFinite(x) && x > 0) setGeometry(this.ctx, e, { height: x });
                   },
                 },
           },
@@ -370,7 +371,7 @@ export class PropertiesPanel extends Panel {
                   type: 'number',
                   commit: (t: string) => {
                     const x = parseFloat(t.replace(',', '.'));
-                    if (Number.isFinite(x)) doc.update(e.id, { rotation: ((x % 360) + 360) % 360 } as Partial<Entity>);
+                    if (Number.isFinite(x)) setGeometry(this.ctx, e, { rotation: ((x % 360) + 360) % 360 });
                   },
                 },
           },
@@ -395,10 +396,9 @@ export class PropertiesPanel extends Panel {
             : {
                 type: 'text',
                 commit: (v: string) => {
-                  const patch: Partial<Entity> = { attrs: { ...e.attrs, [k]: v } };
                   // Keep the drawn number in sync with the cadastral attribute.
-                  if ((k === 'Parsel' || k === 'Ada') && e.label === e.attrs[k]) patch.label = v;
-                  doc.update(e.id, patch);
+                  const label = (k === 'Parsel' || k === 'Ada') && e.label === e.attrs[k] ? { label: v } : {};
+                  setProperties(this.ctx, { uids: uidsOf(this.ctx, [e.id]), attrs: { [k]: v }, ...label, operation: 'attributes' });
                 },
               },
         })),

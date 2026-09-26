@@ -1,5 +1,5 @@
 //! The shared product command cases (fixtures/commands/v1, docs/adr/0022,
-//! 0027, 0029, 0032, 0037, 0047) run against the desktop's handlers over the native document. The web
+//! 0027, 0029, 0032, 0037, 0047, 0057, 0066) run against the desktop's handlers over the native document. The web
 //! runs the same files against its own handlers
 //! (apps/web/src/product/fixtures.test.ts); the format is in
 //! fixtures/commands/README.md.
@@ -10,7 +10,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use kentos_domain::contracts::EntitiesCreate;
+use kentos_domain::contracts::{CAD_ENTITIES_SET, EntitiesCreate, EntitiesSetProperties};
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
     CAD_ENTITIES_DELETE, CAD_ENTITIES_EDIT, CAD_ENTITIES_TRANSFORM, CAD_LINE_CREATE,
@@ -22,7 +22,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, circle, delete, edit, line, point, polygon,
-    polyline, transform,
+    polyline, set, transform,
 };
 use serde_json::{Value, json};
 
@@ -218,6 +218,13 @@ impl Input for EntitiesDelete {
     }
 }
 
+impl Input for EntitiesSetProperties {
+    /// No number: the input is ids and texts.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 /// A coordinate of a named point: `c.x`, `p.y`.
 fn coordinate<'a>(
     p: &'a mut kentos_domain::contracts::Vec2,
@@ -341,7 +348,7 @@ impl Input for EntitiesCreate {
 }
 
 /// The number of a geometry at `rest`: `a.x`, `r`, `pts[1].y`, `bulges[0]`,
-/// `major.y`, `ratio`, `dir.x`, `ring[2].x`, `pattern.angle` …
+/// `major.y`, `ratio`, `dir.x`, a text's `height`, `ring[2].x`, `pattern.angle` …
 fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&'a mut f64> {
     match geometry {
         EntityGeometry::Point { p, z } => match rest {
@@ -384,6 +391,16 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
         EntityGeometry::Xline { p, dir } | EntityGeometry::Ray { p, dir } => {
             coordinate(p, "p", rest).or_else(|| coordinate(dir, "dir", rest))
         }
+        EntityGeometry::Text {
+            p,
+            height,
+            rotation,
+            ..
+        } => match rest {
+            "height" => Some(height),
+            "rotation" => Some(rotation),
+            _ => coordinate(p, "p", rest),
+        },
         EntityGeometry::Dimension {
             a,
             b,
@@ -408,7 +425,6 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
                 }
             }
         },
-        _ => None,
     }
 }
 
@@ -474,6 +490,7 @@ fn run_op(
         CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
         CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
+        CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))

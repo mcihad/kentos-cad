@@ -207,11 +207,81 @@ try {
     await b.click(...row);
     await sleep(150);
     const moved = await b.eval(`(() => { const k = window.kentos; return { layer: k.doc.get(${setup.id}).layerId, selected: k.selection.has(${setup.id}), said: k.log.entries.value.at(-1)?.text ?? '' }; })()`);
-    await b.eval(`(() => { const k = window.kentos; k.doc.undo(); k.doc.layers.setVisible(${JSON.stringify(setup.target)}, true); k.selection.clear(); k.view.focus(); })()`);
+    moved.step = await b.eval(`(() => { const k = window.kentos; const step = k.doc.undo(); k.doc.layers.setVisible(${JSON.stringify(setup.target)}, true); k.selection.clear(); k.view.focus(); return step; })()`);
     check(
-      'Katman ▾ onto a hidden layer moves the object, keeps it selected and warns it will not show',
-      moved.layer === setup.target && moved.selected && moved.said.includes('katmanı gizli; taşınan nesneler görünmeyecek'),
+      'Katman ▾ onto a hidden layer moves the object, keeps it selected and warns it will not show; the step is “Katman değiştir”',
+      moved.layer === setup.target && moved.selected && moved.said.includes('katmanı gizli; taşınan nesneler görünmeyecek') && moved.step === 'Katman değiştir',
       JSON.stringify({ setup, moved }),
+    );
+  }
+
+  // Öznitelikler and the symbol commands write through product commands (cad.entities.set), and the steps
+  // keep their names: Renk değiştir; Değiştir for an attribute row, the parcel's label kept with its Parsel;
+  // Sembol: <ad> from Sembol ver; Sembolü kaldır from Sembol ▾ → Katman stiline göre.
+  {
+    const parcel = await b.eval(`(() => {
+      const k = window.kentos;
+      const L = k.doc.layers;
+      const e = [...k.doc.all()].find((x) => x.attrs.Parsel && x.label === x.attrs.Parsel && !x.symbol && !L.isLocked(x.layerId) && L.isVisible(x.layerId));
+      k.selection.set([e.id]);
+      return { id: e.id, parsel: e.attrs.Parsel, color: e.color ?? null };
+    })()`);
+    await sleep(150);
+    const centre = (sel) => b.eval(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); el.scrollIntoView({ block: "nearest" }); const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const menuItem = (label) => b.eval(`(() => { const el = [...document.querySelectorAll('.menu__item')].find((r) => r.querySelector('.menu__label')?.textContent === ${JSON.stringify(label)}); el.scrollIntoView({ block: 'nearest' }); const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const lastSaid = () => b.eval(`window.kentos.log.entries.value.at(-1)?.text ?? ''`);
+    const undo = () => b.eval(`window.kentos.doc.undo()`);
+    // Renk ▾ → Mavi.
+    await b.click(...(await centre('.panel--props [aria-label="Renk"]')));
+    await sleep(150);
+    await b.click(...(await menuItem('Mavi')));
+    await sleep(150);
+    const colored = await b.eval(`window.kentos.doc.get(${parcel.id}).color ?? null`);
+    const colorStep = await undo();
+    // The Parsel row: the attribute and the label drawn from it change together.
+    await sleep(150);
+    await b.click(...(await centre('.panel--props input[aria-label="Parsel"]')));
+    // Ctrl+A outside the field would select the whole drawing for the steps below.
+    const focused = await b.eval(`document.activeElement?.getAttribute('aria-label') ?? ''`);
+    if (focused === 'Parsel') {
+      await b.key('a', { ctrl: true });
+      await b.type('999');
+      await b.key('Enter');
+    }
+    await sleep(150);
+    const renumbered = await b.eval(`(() => { const e = window.kentos.doc.get(${parcel.id}); return { parsel: e.attrs.Parsel, label: e.label }; })()`);
+    const attrStep = await undo();
+    const back = await b.eval(`(() => { const e = window.kentos.doc.get(${parcel.id}); return { parsel: e.attrs.Parsel, label: e.label, color: e.color ?? null }; })()`);
+    check(
+      'Öznitelikler: Renk ▾ is the step “Renk değiştir”; the Parsel row changes the label with it, the step “Değiştir”',
+      colored !== parcel.color && colorStep === 'Renk değiştir' && renumbered.parsel === '999' && renumbered.label === '999' && attrStep === 'Değiştir' &&
+        back.parsel === parcel.parsel && back.label === parcel.parsel && back.color === parcel.color,
+      JSON.stringify({ parcel, colored, colorStep, focused, renumbered, attrStep, back }),
+    );
+    // Sembol ver: the library opens to pick; Seç gives the chosen symbol, the step named after it.
+    await b.eval(`window.kentos.commands.execute('style.assign')`);
+    await b.waitFor(`!!document.querySelector('.dialog--styles .scard')`, 8000);
+    const card = await b.eval(`(() => { const lib = window.kentos.styles.library; const c = [...document.querySelectorAll('.dialog--styles .scard')].find((x) => lib.get(x.dataset.id)?.kind === 'symbol'); c.scrollIntoView({ block: 'nearest' }); return { id: c.dataset.id, name: lib.get(c.dataset.id).name }; })()`);
+    await b.click(...(await centre(`.dialog--styles .scard[data-id="${card.id}"]`)));
+    await sleep(100);
+    const pick = await b.eval(`(() => { const el = [...document.querySelectorAll('.dialog--styles .dialog__foot .btn--primary')].find((x) => x.textContent.trim() === 'Seç'); const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await b.click(...pick);
+    await sleep(200);
+    const given = { symbol: await b.eval(`window.kentos.doc.get(${parcel.id}).symbol ?? null`), said: await lastSaid() };
+    // Sembol ▾ → Katman stiline göre takes it away again.
+    await b.click(...(await centre('.panel--props [aria-label="Sembol"]')));
+    await sleep(150);
+    await b.click(...(await menuItem('Katman stiline göre')));
+    await sleep(150);
+    const taken = { symbol: await b.eval(`window.kentos.doc.get(${parcel.id}).symbol ?? null`), said: await lastSaid() };
+    const clearStep = await undo();
+    const giveStep = await undo();
+    await b.eval(`(() => { const k = window.kentos; k.selection.clear(); k.view.focus(); })()`);
+    check(
+      'Sembol ver writes the step “Sembol: <ad>”; Sembol ▾ → Katman stiline göre writes “Sembolü kaldır”; both say what they did',
+      given.symbol === card.id && given.said === `1 nesneye “${card.name}” verildi.` && taken.symbol === null && taken.said === '1 nesnenin sembolü kaldırıldı.' &&
+        clearStep === 'Sembolü kaldır' && giveStep === `Sembol: ${card.name}` && (await b.eval(`window.kentos.doc.get(${parcel.id}).symbol ?? null`)) === null,
+      JSON.stringify({ card, given, taken, clearStep, giveStep }),
     );
   }
 
@@ -326,6 +396,30 @@ try {
   await b.key('Escape');
   check('hatch fills the rectangle', (await b.eval(`[...window.kentos.doc.all()].at(-1).kind`)) === 'hatch');
 
+  // Parsel oluştur: the parcel takes the next number on the parcel layer as its label and Parsel, is selected and
+  // is one step (“Ekle”); its deed area is left empty for the title deed's value, and the log gives the geometric area.
+  {
+    const next = await b.eval(`window.kentos.doc.byLayer('parsel').reduce((m, e) => Math.max(m, parseInt(e.attrs.Parsel ?? '0', 10) || 0), 0) + 1`);
+    await b.eval(`window.kentos.tools.activate('parcel')`);
+    for (const [dx, dy] of [[-15, 62], [-5, 62], [-5, 75], [-15, 75]]) await b.click(...(await at(dx, dy)));
+    await b.key('Enter');
+    await sleep(100);
+    const made = await b.eval(`(() => {
+      const k = window.kentos;
+      const e = [...k.doc.all()].at(-1);
+      return { kind: e.kind, layer: e.layerId, label: e.label, attrs: e.attrs, selected: [...k.selection.ids.value], id: e.id, said: k.log.entries.value.filter((x) => x.level === 'success').at(-1)?.text ?? '' };
+    })()`);
+    const step = await b.eval(`window.kentos.doc.undo()`);
+    await b.key('Escape');
+    check(
+      'Parsel oluştur numbers the parcel, selects it, leaves Tapu alanı empty and says the geometric area; one step “Ekle”',
+      made.kind === 'polygon' && made.layer === 'parsel' && made.label === String(next) && made.attrs.Parsel === String(next) && made.attrs['Tapu alanı (m²)'] === '' &&
+        made.attrs.Nitelik === 'Arsa' && JSON.stringify(made.selected) === JSON.stringify([made.id]) &&
+        made.said.startsWith(`Parsel ${next} oluşturuldu; geometrik alanı `) && made.said.endsWith('Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.') && step === 'Ekle',
+      JSON.stringify({ next, made, step }),
+    );
+  }
+
   // Double-click text → inline editor
   const tid = await b.eval(`[...window.kentos.doc.all()].find(e => e.kind === 'text' && e.text === 'Deneme').id`);
   const tp = await b.eval(`(() => { const t = window.kentos.doc.get(${tid}); return [t.p.x + t.height, t.p.y + t.height * 0.4]; })()`);
@@ -336,7 +430,9 @@ try {
   await b.type('Düzenlendi');
   await b.key('Enter');
   const edited = await b.eval(`window.kentos.doc.get(${tid}).text`);
-  check('inline edit commits the new text', edited === 'Düzenlendi', edited);
+  // Written as Öznitelikler writes a geometry value (cad.entities.edit): the step is “Değiştir”.
+  const editStep = await b.eval(`(() => { const k = window.kentos; const step = k.doc.undo(); k.doc.redo(); return step; })()`);
+  check('inline edit commits the new text, the step “Değiştir”', edited === 'Düzenlendi' && editStep === 'Değiştir', JSON.stringify({ edited, editStep }));
 
   // Ctrl+Z while the dimension tool holds a picked circle drops that pick (newest first), not the drawing's last step.
   {

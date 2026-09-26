@@ -328,6 +328,22 @@ cases.append({
     ],
 })
 
+TEXT = {"kind": "text", "p": P(487060, 4420100), "text": "Ada 101", "height": 2, "rotation": 30}
+EMPTY_TEXT = "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin."
+cases.append({
+    "name": "yazının metni boş olamaz: empty_text; yalnız boşluk da boştur (Unicode White_Space: sekme, satır sonu, U+0085, bölünmez boşluk…); yol nesnenin sırasını verir; sayılardan önce denetlenir",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "text": ""})]},
+         "result": failed("empty_text", EMPTY_TEXT, "objects[0].geometry.text"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(TEXT), O({**TEXT, "text": " \t\r\n\u0085\u00a0\u2007\u3000"})]},
+         "result": failed("empty_text", EMPTY_TEXT, "objects[1].geometry.text"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**TEXT, "text": ""})]}, "nonFinite": {"objects[0].geometry.p.x": "NaN"},
+         "result": failed("empty_text", EMPTY_TEXT, "objects[0].geometry.text"), "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "kilitli", "objects": [O({**TEXT, "text": " "})], "expectedRevision": "999"},
+         "result": failed("empty_text", EMPTY_TEXT, "objects[0].geometry.text"), "note": "Girdinin hatası: sürümden ve katmandan önce.", "expect": NOTHING},
+    ],
+})
+
 cases.append({
     "name": "dairenin ve yayın yarıçapı sıfırdan büyük olmalı",
     "steps": [
@@ -426,8 +442,13 @@ cases.append({
 })
 
 
+# White space other than the plain space, escaped so a reader sees it (the empty text case).
+INVISIBLE = "\u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
+
+
 def compact(v):
-    return json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
+    text = json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
+    return "".join(f"\\u{ord(c):04x}" if c in INVISIBLE else c for c in text)
 
 
 def write(command, title, note, cases):
@@ -476,7 +497,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı, yazının boş olmayan metni, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

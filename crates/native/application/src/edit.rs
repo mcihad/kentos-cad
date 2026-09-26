@@ -8,13 +8,15 @@
 //! The edge, corner and object tools (Ötele, Buda, Uzat, Köşe yuvarla, Pah,
 //! Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil) and Esnet compute the
 //! geometry with the shared core and write it here (TODOS.md CMD-07);
-//! nothing is computed in this module.
+//! nothing is computed in this module. Öznitelikler's geometry rows and the
+//! text field over the drawing write the value typed (operation
+//! `properties`, docs/adr/0066).
 //!
 //! The checks, in order (the first that fails answers):
 //! 1. at least one change; every change's id lowercase UUID text with
 //!    hyphens (in order);
-//! 2. every geometry, in order: enough points for its kind, every number
-//!    finite, a circle's or an arc's radius above zero;
+//! 2. every geometry, in order: enough points for its kind, a text that is
+//!    not blank, every number finite, a circle's or an arc's radius above zero;
 //! 3. the expected revision (every command's, `checks.rs`);
 //! 4. every id names an object of the document (in order);
 //! 5. no object changed twice;
@@ -29,7 +31,7 @@ use kentos_contracts::{
 use kentos_domain::{Document, Slot, Uuid};
 
 use crate::ExecutionContext;
-use crate::checks::{self, Stop, error};
+use crate::checks::{self, Stop, error, is_blank};
 /// The stable codes of the answers (`CommandError.code`, `CommandWarning.code`).
 pub use crate::codes;
 use crate::geometry::entity_of;
@@ -117,7 +119,7 @@ pub fn execute(
     }
 }
 
-/// The undo step's name: the tool's (docs/adr/0047).
+/// The undo step's name: the tool's (docs/adr/0047); Öznitelikler's is the document's own “Değiştir”.
 pub fn label(operation: EditOperation) -> &'static str {
     match operation {
         EditOperation::Offset => "Ötele",
@@ -132,6 +134,8 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::VertexAdd => "Köşe ekle",
         EditOperation::VertexRemove => "Köşe sil",
         EditOperation::Stretch => "Esnet",
+        // Öznitelikler and the text field over the drawing: the document's own “Değiştir” (docs/adr/0066).
+        EditOperation::Properties => "Değiştir",
     }
 }
 
@@ -308,8 +312,9 @@ fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
 }
 
 /// The `i`-th geometry of the input's `list` (`changes`; `objects` of
-/// `cad.entities.create`): enough points for its kind, every number finite,
-/// a positive radius. `whose` names it in a message: “değişikliğin”.
+/// `cad.entities.create`): enough points for its kind, a text that is not
+/// empty or only white space, every number finite, a positive radius.
+/// `whose` names it in a message: “değişikliğin”.
 pub(crate) fn check_geometry(
     g: &EntityGeometry,
     list: &str,
@@ -377,6 +382,14 @@ pub(crate) fn check_geometry(
                     )));
                 }
             }
+        }
+        // A dimension's text is not checked: an empty one shows the measured value.
+        EntityGeometry::Text { text, .. } if is_blank(text) => {
+            return Err(Stop::Failed(error(
+                codes::EMPTY_TEXT,
+                "Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.".into(),
+                at(".text"),
+            )));
         }
         _ => {}
     }

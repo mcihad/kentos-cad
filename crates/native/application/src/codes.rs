@@ -1,5 +1,5 @@
 //! The stable codes of the drawing commands' answers (`CommandError.code`,
-//! `CommandWarning.code`; docs/adr/0022, 0027, 0029, 0032, 0037, 0047). Programs branch on
+//! `CommandWarning.code`; docs/adr/0022, 0027, 0029, 0032, 0037, 0047, 0066). Programs branch on
 //! these, never on the Turkish message.
 
 /// A closed area with fewer than 3 corners (`cad.polygon.create`).
@@ -46,3 +46,9 @@ pub const INVALID_SPACING: &str = "invalid_spacing";
 pub const INVALID_FILL: &str = "invalid_fill";
 /// No object given (`cad.entities.create`).
 pub const NO_OBJECTS: &str = "no_objects";
+/// A text whose text is empty or only white space (`cad.entities.edit`, `cad.entities.create`).
+pub const EMPTY_TEXT: &str = "empty_text";
+/// No property given (`cad.entities.set`).
+pub const NOTHING_TO_SET: &str = "nothing_to_set";
+/// An attribute name empty or only white space (`cad.entities.set`).
+pub const INVALID_ATTRIBUTE: &str = "invalid_attribute";

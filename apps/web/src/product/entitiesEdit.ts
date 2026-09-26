@@ -9,7 +9,7 @@ import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
 import type { Entity, NewEntity } from '../model/entities';
 import { geometryIsFinite, SHAPE_FIELDS } from '../model/ops/transform';
-import { checkRevision, error, failed, validated, type Stop } from './checks';
+import { checkRevision, error, failed, isBlank, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -23,17 +23,18 @@ import type { ProductCommand } from './command';
  * The edge, corner and object tools (Ötele, Buda, Uzat, Köşe yuvarla, Pah,
  * Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil) and Esnet compute the
  * geometry with the shared core and write it here (TODOS.md CMD-07);
- * nothing is computed in this module.
+ * nothing is computed in this module. Öznitelikler's geometry rows and the
+ * in-place text editor write the value typed (operation `properties`).
  *
  * The checks, in order (the first that fails answers): at least one change,
  * each change's id lowercase UUID text with hyphens; every geometry, in
- * order: enough points for its kind, every number finite, a positive
- * radius; the expected revision (checks.ts); each id names an object; no
- * object changed twice; no object on a locked layer (an edit is written
- * whole or not at all).
+ * order: enough points for its kind, a text that is not blank, every number
+ * finite, a positive radius; the expected revision (checks.ts); each id
+ * names an object; no object changed twice; no object on a locked layer (an
+ * edit is written whole or not at all).
  */
 
-/** The undo step's name: the tool's (docs/adr/0047). */
+/** The undo step's name: the tool's (docs/adr/0047); Öznitelikler's is the document's own “Değiştir”. */
 export const EDIT_LABEL: Record<EditOperation, string> = {
   offset: 'Ötele',
   trim: 'Buda',
@@ -47,6 +48,7 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   vertexAdd: 'Köşe ekle',
   vertexRemove: 'Köşe sil',
   stretch: 'Esnet',
+  properties: 'Değiştir',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -116,8 +118,9 @@ function inherited(e: Entity, g: EntityGeometry, keepData: boolean): NewEntity {
 
 /**
  * The `i`-th geometry of the input's `list` (`changes`; `objects` of
- * `cad.entities.create`): enough points for its kind, every number finite, a
- * positive radius. `whose` names it in a message: “değişikliğin”.
+ * `cad.entities.create`): enough points for its kind, a text that is not
+ * empty or only white space, every number finite, a positive radius.
+ * `whose` names it in a message: “değişikliğin”.
  */
 export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', whose = 'değişikliğin'): Stop | null {
   const at = (field: string) => `${list}[${i}].geometry${field}`;
@@ -135,6 +138,8 @@ export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', wh
       if (hole.length < 3)
         return failed(error('too_few_corners', `${h + 1}. deliğin en az 3 köşesi olmalı; ${hole.length} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.`, at(`.holes[${h}]`)));
   }
+  if (g.kind === 'text' && isBlank(g.text))
+    return failed(error('empty_text', 'Yazının metni boş olamaz; yalnız boşluktan oluşan metin de boştur. Yazıya bir metin verin.', at('.text')));
   if (!geometryIsFinite(g as unknown as Entity))
     return failed(error('not_finite', `${i + 1}. ${whose} geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.`, at('')));
   if ((g.kind === 'circle' || g.kind === 'arc') && !(g.r > 0)) return failed(error('invalid_radius', 'Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.', at('.r')));
@@ -197,8 +202,15 @@ function check(doc: CadDocument, input: EntitiesEdit): Stop | Checked {
 
 const isStop = (c: Stop | Checked): c is Stop => 'status' in c;
 
-/** An object as the plan shows it, without undefined fields: its slot, or 0 for a new one. */
-const planned = (init: NewEntity, id: number): PlannedEntity => JSON.parse(JSON.stringify({ ...init, id })) as PlannedEntity;
+/**
+ * An object as the plan shows it, without undefined fields or its persistent
+ * id (an updated object's carries one; the contract's `Entity` has none): its
+ * slot, or 0 for a new one.
+ */
+function planned(init: NewEntity, id: number): PlannedEntity {
+  const { uid: _uid, ...rest } = JSON.parse(JSON.stringify({ ...init, id })) as NewEntity & { uid?: string };
+  return rest as unknown as PlannedEntity;
+}
 
 export const entitiesEdit: ProductCommand<EntitiesEdit, EntitiesEdited, EntitiesEditPlan> = {
   id: 'cad.entities.edit',

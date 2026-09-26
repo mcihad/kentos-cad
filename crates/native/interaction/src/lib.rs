@@ -45,6 +45,9 @@
 //!   koordinatlara yapıştır ([`clipboard`]) and the paste tool ([`paste`]),
 //!   writing through the document as the web's do; Kaydır and Pencere
 //!   yakınlaştır ([`navigate`]), which ask the host for view changes;
+//! - Öznitelikler's writes ([`properties`], docs/adr/0066): the layer, colour,
+//!   symbol, attributes and label through `cad.entities.set`, a geometry
+//!   value through `cad.entities.edit`;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -96,6 +99,7 @@ pub mod point;
 mod points;
 pub mod polar;
 mod prompt;
+pub mod properties;
 pub mod rectangle;
 pub mod regular;
 pub mod revcloud;
