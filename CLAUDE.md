@@ -31,9 +31,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   olası tile/harita servisi ayrı bir gelecek kararıdır.
 - Hem CAD hem GIS projeleri PostGIS'te saklanıp çalışılabilecek. CAD tanımı
   sessizce GIS polyline'ına indirgenmeyecek; kaynak ve türev ayrımı korunacak.
-- Hedef `.kcad`, yalnız kayıt/yükleme için açık, sürümlü binary/byte snapshot'tır;
-  DB, SQL, kalıcı sorgu indeksi veya tile dosyası değildir. Mevcut v1 JSON'dur;
-  binary geçişte eski dosyaların göçü gerekir. Cloud dosyaları da aynı formatı kullanır.
+- `.kcad` yalnız kayıt/yükleme için açık, sürümlü binary snapshot'tır (KCAD v2, ADR 0025,
+  `docs/specs/kcad-v2.md`); DB, SQL, kalıcı sorgu indeksi veya tile dosyası değildir.
+  Web ve masaüstü v2 yazar; eski v1 JSON okunur, göçü kimlikleri ve kaynağı kaydeder.
+  Cloud dosyaları da aynı formatı kullanacak.
 - Python embed/SDK ve AI yüzeyi sürümlü command sözleşmelerini kullanacak;
   yetki/transaction kurallarını atlayan ayrı mutasyon yolu kurulmayacak.
 - Yeni mimariyi bir seferde baştan yazmayın; çalışan web'i koruyan dikey dilimler
@@ -53,18 +54,19 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | TS/DOM web, komut/araç kataloğu, dinamik giriş, WebGL2/WebGPU | `apps/web/src/` |
 | Rust geometri, sayısal politika, pick/snap deposu, stil/ifade, SVG ve format hesapları | `crates/shared/` |
 | Dar WASM bağlayıcıları ve Rust → TS sözleşme üretimi | `crates/wasm/`, `crates/shared/contracts/` |
-| Belge transaction/rollback, undo/redo ve yerel JSON `.kcad` kaydet/aç | `model/document.ts`, `model/snapshot.ts`, `app/fileIO.ts` |
+| Belge transaction/rollback, undo/redo; yerel `.kcad`: KCAD v2 yazılır (biçim işçisinde doğrulanır), v1 JSON okunur (ADR 0025) | `model/document.ts`, `model/snapshot.ts`, `app/fileIO.ts`, `app/drawingFile.ts`, `io/kcad.ts` |
+| KCAD v2 kodeki (kap, CBOR profili, şema, koklama), `kcad` aracı; bağımsız Python okuyucusu ve örnek dosyalar | `crates/shared/kcad/`, `tools/kcad/`, `fixtures/kcad/v2/`, `docs/specs/kcad-v2.md` |
 | Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015) | `apps/api/`, `crates/server/` |
 | Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict, paylaşım penceresi, “Benimle paylaşılanlar”, açık projede rol/erişim değişikliği (ADR 0024) | `app/cloud/`, `ui/cloud/` |
 | KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
-| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet, geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan, çizgi ve çoklu çizgi araçları, değer alanı ve web'in tuş anlamları (ADR 0021, 0027) | `apps/desktop/` |
+| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç (v1, v2) / kaydet (v2; geçici dosya ve doğrulama), geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan, çizgi ve çoklu çizgi araçları, değer alanı ve web'in tuş anlamları (ADR 0021, 0027) | `apps/desktop/` |
 | Native wgpu çizim hattı ve paylaşılan WGSL sözleşmesi | `crates/render/wgpu/`, `shaders/wgsl/` |
 | Masaüstü belgesi (`kentos-domain`): web `CadDocument`'inin anlamı native olarak, ortak işlem fixture'larıyla sınanır | `crates/native/domain/`, `fixtures/document-ops/` |
 | Masaüstü araç oturumu (`kentos-interaction`): durumlar, veri olarak istem, kapalı alan/çoklu çizgi (tek yol aracı) ve çizgi araçları; iki platform `fixtures/interaction/v1` izlerini ve `fixtures/point-input/v1` dilbilgisini geçer | `crates/native/interaction/` |
 | Ürün komutları `cad.polygon.create`, `cad.line.create`, `cad.polyline.create` v1: web ve masaüstü işleyicileri, `CommandResult`, katalogla eşit kayıtlar; kapalı alan, çizgi ve çoklu çizgi araçları bu komutlardan yazar (ADR 0022, 0027) | `product/`, `crates/native/application/`, `fixtures/commands/` |
 | Tipli ayarlar: şema, katmanlı çözüm, ortak durumlar; web servisi, masaüstü ayar dosyası ve penceresi, canlı MSAA/HiDPI (ADR 0023) | `crates/shared/contracts/src/settings/`, `core/settings/`, `app/settings/`, `apps/desktop/src/settings*.rs`, `fixtures/settings/` |
 
-Kapalı alan, çizgi ve çoklu çizgi dışındaki desktop çizim araçları, çizim alanında yazı/seçim/yakalama, binary KCAD, embed Python, tam AI yüzeyi,
+Kapalı alan, çizgi ve çoklu çizgi dışındaki desktop çizim araçları, çizim alanında yazı/seçim/yakalama, embed Python, tam AI yüzeyi,
 genişletilmiş proje bazlı paylaşım ve kalıcı server worker kabulü gelecek
 işlerdir. Mevcut tenant/cloud altyapısını yok saymayın; onu bu kapsamla tamamlayın.
 Web'e göre verilen kısa dosya yolları `apps/web/src/` altındadır.
@@ -92,6 +94,9 @@ pnpm e2e:interaction     # etkileşim izleri: poligon kabul izi, tuş anlamları
 cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan (ADR 0021)
 cargo test -p kentos-native-application   # ürün komutlarının durumları masaüstünde (fixtures/commands, ADR 0022, 0027)
 KENTOS_WRITE_SETTINGS=1 cargo test -p kentos-contracts settings   # ayar şeması değişince settingsSchema.json'u yeniden yaz (ADR 0023)
+cargo run -q -p kentos-kcad --bin kcad -- inspect|validate|sniff DOSYA   # KCAD v2 dosyasını incele (ADR 0025)
+python3 tools/kcad/kcad.py validate DOSYA   # bağımsız Python okuyucusu
+python3 scripts/fixtures/kcad_v2_reference.py --check   # örnek dosyaları bağımsız yazıcıyla denetle
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 node scripts/wgsl/browser-check.mjs   # paylaşılan WGSL'yi Chrome WebGPU'da derler ve çizer
 KENTOS_GPU_TESTS=1 cargo test -p kentos-render-wgpu --test gpu   # gerçek GPU'da hassasiyet
@@ -221,13 +226,16 @@ yoludur. Transaction hata verirse rollback; nested işlem savepoint; çoklu edit
 tek mantıksal undo adımıdır. Async grup işlemlerinde mevcut group/cancel yolunu kullanın.
 `markSaved(revision)` yalnız gerçekten kaydedilen güncel sürümü temizler.
 Kaydetme sürerken yapılan yeni değişikliği dirty=false yapmayın.
-Mevcut `.kcad` JSON `DocumentSnapshotV1`'dir; okuyucu sürüm/alan/SRID doğrular.
+`.kcad` KCAD v2'dir (`DocumentSnapshotV2`, ADR 0025): web biçim işçisinde, masaüstü yerel
+olarak aynı Rust kodeğiyle yazar; baytlar geri okunup doğrulanmadan dosyaya yazılmaz.
+v1 JSON okunur ama üzerine yazılmaz: Kaydet v2'nin yerini sorar. Tür içerikten anlaşılır;
+okuyucu sürüm/alan/SRID/kimlik doğrular.
 `replaceWith` öncesi aday belge doğrulansın; başarısız açılış mevcut işi kaybettirmesin.
 Masaüstünün karşılığı `kentos_domain::Document`'tir; iki belge `fixtures/document-ops/v1`'i
 geçer, davranış değişikliği fixture'la birlikte yapılır (ADR 0020).
 Her nesnenin kalıcı `uid`'i vardır (ADR 0014): yeni nesne yeni `uid` alır, düzenleme ve
-geri alma korur, `replace` yuvayı ve kimliği tutar. v1 dosyası `uid` yazmaz; açılışta
-içerikten türetilir. Bulutta nesnenin kimliği `uid`'idir (ADR 0026): açılış sunucunun
+geri alma korur, `replace` yuvayı ve kimliği tutar. v2 her nesnenin `uid`'ini yazar ve korur;
+v1 yazmaz, açılışta içerikten türetilir, v2 kaydı göç kaynağını ve proje kimliğini yazar. Bulutta nesnenin kimliği `uid`'idir (ADR 0026): açılış sunucunun
 kimliğini `uid` yapar, `applyExternal` gelen kimliği alır ve aynı kimliğe dokunan geri
 alma adımlarını düşürür; ayrı eşleme kurmayın.
 
@@ -383,7 +391,10 @@ Reader/writer `crates/shared/formats`, şema `contracts`, dar binding
 `crates/wasm/formats-wasm`, web akışı `io/` ve `app/fileExchange.ts` içindedir.
 Bozuk/kötücül girdide panic yok; boyut, nesting/karmaşıklık ve iptal sınırı vardır.
 CRS sorulur, kayıp raporlanır, import tek undo olur; Rust ve WASM aynı fixture'ı
-okur. Ayrıntı ADR 0009; yeni KCAD binary tasarımı TODOS.md §9'dadır.
+okur. Ayrıntı ADR 0009. Proje dosyası değişim biçimi değildir: kodek `crates/shared/kcad`,
+spesifikasyon `docs/specs/kcad-v2.md`, karar ADR 0025; değişiklik spesifikasyon,
+`fixtures/kcad/v2` (bağımsız Python yazıcısıyla), Rust kodeği ve `tools/kcad/kcad.py`
+ile birlikte yapılır.
 
 ## 10. Yol haritası
 
@@ -396,7 +407,7 @@ Yapılmış işin durumunu §1'de kısa tutun; kanıtı test/ADR/ölçümde sakl
 Borçları TODOS.md'de ilgili görev/kabul koşuluyla izleyin. Mevcut kodda
 olmayan kusuru eski nottan hareketle yeniden düzeltmeye çalışmayın:
 transaction rollback, gerçek kaydet/aç, backend, cloud, stil/SVG Rust çekirdeği
-ve sanallaştırma temelleri zaten vardır. Binary KCAD, native desktop, geniş
+ve sanallaştırma temelleri zaten vardır. Native desktop, geniş
 paylaşım, typed attributes ve otomasyonun kalan kapsamı ayrı gelecek iştir.
 Production DB TLS ve bağımsız gerçek ortam doğrulaması gibi eksikleri özellik
 varlığına bakarak kapatmayın.
@@ -412,11 +423,12 @@ crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
 crates/native/         native belge (domain), ürün komutları (application) ve araç oturumu (interaction); web'e derlenmez
 crates/render/wgpu/    native wgpu çizim hattı (Iced bilmez)
 shaders/wgsl/          paylaşılabilir WGSL ve sürümlü düzen sözleşmesi
-crates/shared/         contracts, geometry-core, style-core, svg-core, formats
+crates/shared/         contracts, geometry-core, style-core, svg-core, formats, kcad
 crates/wasm/           yalnız hesap/codec bağlayıcıları
 crates/server/         application ve postgres
 fixtures/              sürümlü ortak test verisi
 scripts/               ortak build/fixture araçları
+tools/                 bağımsız araçlar (KCAD v2 Python okuyucusu)
 docs/adr/              karar ve geçiş kanıtları
 docs/perf/             tarihli ölçümler ve ortam sınırlamaları
 docs/inventory/        web özellik envanteri (üretilir) ve elle notları

@@ -1,6 +1,6 @@
 # ADR 0014: Kalıcı nesne kimliği, çalışma yuvası ve eski dosya göçü
 
-- **Durum:** kabul edildi (yön, 2026-09-25). Uygulama dilimleri aşağıdadır. Dilim 1 (web belgesi) ve dilim 2 (v1 göçü) 25 Eylül'de, dilim 3 (bulut eşitlemesi) 26 Eylül'de uygulandı; sonda uygulama notları vardır, dilim 3'ün kararları [ADR 0026](0026-cloud-sync-persistent-ids.md)'dadır. Dilim 4 açıktır.
+- **Durum:** kabul edildi (yön, 2026-09-25). Uygulama dilimleri aşağıdadır. Dilim 1 (web belgesi) ve dilim 2 (v1 göçü) 25 Eylül'de, dilim 3 (bulut eşitlemesi) 26 Eylül'de uygulandı; sonda uygulama notları vardır, dilim 3'ün kararları [ADR 0026](0026-cloud-sync-persistent-ids.md)'dadır. Dilim 4 (sözleşme ve `.kcad` v2) de 26 Eylül'de uygulandı; kararları [ADR 0025](0025-kcad-v2-encoding.md)'tedir.
 - **Tarih:** 2026-09-25
 - **Bağlam belgesi:** TODOS.md `DOM-03`, `DOM-04`, `DOM-05`, `FILE-05`, `SYNC-06/07`, `PY-11`, `AI-06`; ADR 0002, 0003, 0011, 0012
 
@@ -168,3 +168,11 @@ Kararlar ve gerekçeleri [ADR 0026](0026-cloud-sync-persistent-ids.md)'dadır; k
 - **Çizgiye çevir:** alanın dış halkası aynı nesnedir, artık çoklu çizgi. Deliklerden çıkan çizgiler yeni nesnedir.
 - **Birleştir:** her zincir ilk nesnesidir (AutoCAD JOIN); öbürleri silinir.
 - **Tevhit (alan birleştir), alan çıkar, kesiştir:** sonuç yeni nesnedir. Tevhit yeni parsel doğurur; ilk seçilen alanın verisi sonuca geçer.
+
+## Uygulama notu: dilim 4, sözleşme ve `.kcad` v2 (26 Eylül 2026)
+
+- Sözleşmede `EntityId`, `ProjectId`, `MigrationSource` ve `DocumentSnapshotV2` tipleri var (`crates/shared/contracts`).
+- v2 dosyası her nesnenin kimliğini 16 bayt olarak yazar; kimlikler dosyada benzersizdir ve boş (nil) olamaz. Yuva dosyaya yazılmaz; okuyucu nesneleri 1…n diye numaralar.
+- Web belgesi (`CadDocument`) ve masaüstü belgesi (`kentos_domain::Document`) kaydet ve aç boyunca kimlikleri korur; düzenlenen nesne de düzenlenmeyen de aynı kimliği taşır. Masaüstü → web → masaüstü → web zinciri `fixtures/kcad/v2/exchange` ile sınanır.
+- v1 dosyası açılışta kimliklerini içerikten türetmeye devam eder. v2 olarak kaydedilince dosya projenin türetilen kimliğini ve göçün kaynağını yazar: `migratedFrom { format, version: 1, sourceSha256 }`.
+- Yeni yerel projelerin proje kimliği yoktur; bulutla bağlanınca verilir (ADR 0025, sahibin önerilen varsayılanı).
