@@ -255,7 +255,7 @@ function appearance(api: DraftApi<AppDraft>) {
       ),
       settingRow(
         'Komut şeridi',
-        'Komut çalışırken çizim alanının üstünde aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken aynı seçenekler alttaki komut satırındadır.',
+        'Komut çalışırken çizim alanının üstünde de aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken (varsayılan) bunların hepsi, nokta hesabı ve tek seferlik kenet alttaki komut satırındadır.',
         toggleSwitch({ label: 'Komut şeridi', checked: d.commandBar, onChange: (v) => api.set('commandBar', v) }),
       ),
       settingRow(

@@ -200,13 +200,12 @@ try {
   await b.click(...titleAt);
   check('a toolbox group folds and opens from its title', folded && !(await b.eval(`document.querySelector('.toolbox__grid').hidden`)));
 
-  // Mouse only: the command bar's "Yay" button, then a corner rounded by pulling the mouse.
+  // Mouse only: the command line's "Yay" button, then a corner rounded by pulling the mouse.
   const chip = async (label) => {
-    const at = await b.eval(`(() => { const el = [...document.querySelectorAll('.cmdbar__opt')].find((x) => x.textContent.startsWith(${JSON.stringify(label)})); if (!el) return null; const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const at = await b.eval(`(() => { const el = [...document.querySelectorAll('.cmdline__chip')].find((x) => x.textContent.startsWith(${JSON.stringify(label)})); if (!el) return null; const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
     if (at) await b.click(...at);
     return !!at;
   };
-  // Kept below the command bar, which floats over the top of the drawing.
   await key('p');
   await b.click(...(await toScreen(X, N + 40)));
   await b.click(...(await toScreen(X + 30, N + 40)));
@@ -215,18 +214,22 @@ try {
   await b.click(...(await toScreen(X + 30, N + 25)));
   await key('Enter');
   const bulged = await newest();
-  check('command bar option buttons work with the mouse', yay && bulged.kind === 'polyline' && (bulged.bulges ?? []).some((x) => Math.abs(x) > 0.5), JSON.stringify(bulged.bulges));
+  check('the command line option buttons work with the mouse', yay && bulged.kind === 'polyline' && (bulged.bulges ?? []).some((x) => Math.abs(x) > 0.5), JSON.stringify(bulged.bulges));
   await key('Escape');
-  // The strip is a preference (drafting.commandBar; Uygulama ayarları → Görünüm → Fare yardımcıları): turned off
-  // there, it stays hidden while a command runs and the command line keeps the options.
+  // The strip over the drawing is a preference (drafting.commandBar; Uygulama ayarları → Görünüm → Fare
+  // yardımcıları), off by default: the command line shows the step, the options, Nokta hesabı and a one-shot
+  // snap. Turned on there, the strip shows them too, and the command line keeps its options.
   {
-    const strip = () => b.eval(`({ hidden: document.querySelector('.cmdbar').hidden, opts: document.querySelectorAll('.cmdbar__opts .cmdbar__opt').length, chips: document.querySelectorAll('.cmdline__chip').length })`);
+    const strip = () =>
+      b.eval(`({ hidden: document.querySelector('.cmdbar').hidden, opts: document.querySelectorAll('.cmdbar__opts .cmdbar__opt').length, chips: document.querySelectorAll('.cmdline__chip:not(.cmdbar__calc)').length, calc: !!document.querySelector('.cmdline .cmdbar__calc'), snap: document.querySelector('.cmdline .cmdline__snap')?.textContent ?? null })`);
     const middle = (js) => b.eval(`(() => { const e = ${js}; if (!e) return null; e.scrollIntoView({ block: 'center' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
     const drawnBefore = await b.eval('window.kentos.doc.size');
     await key('p');
     await b.click(...(await toScreen(X, N + 40)));
-    const stripOn = await strip();
-    await b.shot('cmdbar-polygon');
+    await b.eval(`window.kentos.view.snapOverride.set('midpoint')`);
+    const byDefault = { ...(await strip()), pref: await b.eval('window.kentos.prefs.commandBar.value') };
+    await b.shot('cmdline-polygon');
+    await b.eval(`window.kentos.view.snapOverride.set(null)`);
     await key('Escape');
     await b.eval(`window.kentos.commands.execute('tools.options', 'appearance')`);
     await b.waitFor(`!!document.querySelector('.switch[aria-label="Komut şeridi"]')`, 3000).catch(() => {});
@@ -237,14 +240,17 @@ try {
     if (save) await b.click(...save);
     await key('p');
     await b.click(...(await toScreen(X, N + 40)));
-    const stripOff = { ...(await strip()), pref: await b.eval('window.kentos.prefs.commandBar.value') };
-    await b.eval('window.kentos.prefs.commandBar.set(true)');
-    const stripBack = await strip();
+    const turnedOn = { ...(await strip()), pref: await b.eval('window.kentos.prefs.commandBar.value') };
+    await b.shot('cmdbar-polygon');
+    await b.eval('window.kentos.prefs.commandBar.set(false)');
+    const back = await strip();
     await key('Escape');
     check(
-      'the command bar follows its preference, turned off in Uygulama ayarları; the command line keeps the options',
-      !!toggle && !stripOn.hidden && stripOn.opts > 0 && stripOff.pref === false && stripOff.hidden && stripOff.chips === stripOn.opts && !stripBack.hidden && (await b.eval('window.kentos.doc.size')) === drawnBefore,
-      JSON.stringify({ toggle, stripOn, stripOff, stripBack }),
+      'the strip over the drawing is off by default and the command line shows the options, Nokta hesabı and a one-shot snap; turned on in Uygulama ayarları the strip shows too',
+      byDefault.pref === false && byDefault.hidden && byDefault.chips > 0 && byDefault.calc && byDefault.snap?.includes('Sonraki tık') &&
+        !!toggle && turnedOn.pref === true && !turnedOn.hidden && turnedOn.opts === byDefault.chips && turnedOn.chips === byDefault.chips && !turnedOn.calc &&
+        back.hidden && back.calc && (await b.eval('window.kentos.doc.size')) === drawnBefore,
+      JSON.stringify({ toggle, byDefault, turnedOn, back }),
     );
   }
   await key('r');

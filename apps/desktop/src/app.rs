@@ -298,7 +298,7 @@ impl App {
             field: None,
             draft: Draft::default(),
             cursor_input: true,
-            command_bar: true,
+            command_bar: false,
             settings,
             settings_draft: None,
             reported_failure: None,

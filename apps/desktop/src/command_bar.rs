@@ -1,9 +1,9 @@
 //! The strip over the drawing while a command runs (the web's
 //! `ui/shell/CommandBar.ts`; DESIGN.md §7.4.1): the tool, the step it waits
 //! for, its options as buttons with their values and keys, and what the right
-//! button and Esc do. Mouse users read and act here rather than in the command
-//! line at the bottom, which offers the same options. The preference
-//! `drafting.commandBar` turns it off (docs/adr/0023).
+//! button and Esc do, over the drawing, besides the command line at the bottom,
+//! which offers the same options. A preference (`drafting.commandBar`, off by
+//! default: the owner found the command line's options neater) turns it on.
 //!
 //! It floats at the top centre of the drawing and takes the presses on it: a
 //! click on the strip never reaches the drawing under it.
@@ -134,26 +134,35 @@ mod tests {
         let _ = app.update(message);
     }
 
+    fn strip(app: &mut App, on: bool) {
+        let _ = app.run("tools.options");
+        update(
+            app,
+            Message::Settings(Edit::Value("drafting.commandBar", Value::Bool(on))),
+        );
+        update(app, Message::Settings(Edit::Save));
+    }
+
     #[test]
-    fn the_strip_shows_the_running_command_and_its_preference_hides_it() {
+    fn the_strip_is_off_by_default_and_its_preference_turns_it_on() {
         let mut app = app_with_drawing();
-        // The idle select tool has nothing to say.
-        assert!(app.command_bar().is_none());
         let _ = app.run("tool.regularPolygon");
-        assert!(app.command_bar().is_some());
+        // Off by default: the command line keeps the step and the options.
+        assert!(!app.command_bar && app.command_bar().is_none());
+        assert!(app.line_prompt().is_some());
+        assert!(!app.session.prompt().options.is_empty());
 
         let _ = app.run("tools.options");
         update(
             &mut app,
-            Message::Settings(Edit::Value("drafting.commandBar", Value::Bool(false))),
+            Message::Settings(Edit::Value("drafting.commandBar", Value::Bool(true))),
         );
-        assert!(app.command_bar().is_some(), "nothing changes before Kaydet");
+        assert!(app.command_bar().is_none(), "nothing changes before Kaydet");
         update(&mut app, Message::Settings(Edit::Save));
-        assert!(!app.command_bar);
+        assert!(app.command_bar().is_some());
+        // The idle select tool has nothing to say, strip or not.
+        let _ = app.run("tool.cancel");
         assert!(app.command_bar().is_none());
-        // The command line keeps the step and the options.
-        assert!(app.line_prompt().is_some());
-        assert!(!app.session.prompt().options.is_empty());
     }
 
     /// A press on the strip is the strip's: the drawing under it gets no
@@ -161,6 +170,7 @@ mod tests {
     #[test]
     fn a_press_on_the_strip_never_reaches_the_drawing_under_it() {
         let mut app = app_with_drawing();
+        strip(&mut app, true);
         let _ = app.run("tool.regularPolygon");
         let mut snapshot = Snapshot::software(Size::new(1440.0, 900.0)).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
@@ -178,12 +188,7 @@ mod tests {
         snapshot.input(&mut app, App::view, &mut update, Input::Click(on_strip));
         assert_eq!(app.session.prompt(), first, "the drawing got no point");
 
-        let _ = app.run("tools.options");
-        update(
-            &mut app,
-            Message::Settings(Edit::Value("drafting.commandBar", Value::Bool(false))),
-        );
-        update(&mut app, Message::Settings(Edit::Save));
+        strip(&mut app, false);
         snapshot.input(&mut app, App::view, &mut update, Input::Click(on_strip));
         assert_ne!(
             app.session.prompt(),

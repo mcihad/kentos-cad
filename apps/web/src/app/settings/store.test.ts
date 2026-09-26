@@ -88,7 +88,7 @@ const MIGRATED: PreferencesData = {
   hiDpi: true,
   cursorInput: false,
   // Newer than the old store: the schema's default.
-  commandBar: true,
+  commandBar: false,
   hoverInfo: false,
   symbolSize: 'screen',
   lineWeights: false,

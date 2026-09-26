@@ -813,6 +813,11 @@
 .cmdline__chip:first-of-type {
   margin-left: 6px;
 }
+.cmdline__snap {
+  flex: none;
+  height: calc(22px * var(--ui-scale));
+  margin-left: 6px;
+}
 .cmdline__prompt b {
   color: var(--c-text);
   font-weight: 600;

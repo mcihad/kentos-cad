@@ -7952,7 +7952,7 @@
       "scope": "user",
       "persistence": "localStorage kentos.settings.v1",
       "type": "boolean",
-      "default": true,
+      "default": false,
       "status": "implemented",
       "platforms": {
         "web": "implemented",

@@ -135,11 +135,13 @@ fn settings() -> Vec<SettingDescriptor> {
                 "İmleç yanında değer girişi",
                 "Komut sırasında yazılan mesafe ve koordinatlar imlecin yanında açılır; kapalıyken komut satırına gider.",
             ),
-        boolean("drafting.commandBar", true)
+        // Off by default (the owner, 26 Sep 2026): the command line shows the same step and
+        // options more neatly; the strip stays a choice.
+        boolean("drafting.commandBar", false)
             .hosts(&[Web, Desktop])
             .text(
                 "Komut şeridi",
-                "Komut çalışırken çizim alanının üstünde aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken aynı seçenekler alttaki komut satırındadır.",
+                "Komut çalışırken çizim alanının üstünde de aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken (varsayılan) bunların hepsi, nokta hesabı ve tek seferlik kenet alttaki komut satırındadır.",
             ),
         boolean("drafting.hoverInfo", true)
             .hosts(&[Web])

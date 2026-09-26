@@ -163,7 +163,7 @@
     {
       "key": "drafting.commandBar",
       "type": "boolean",
-      "default": true,
+      "default": false,
       "scope": "user",
       "hosts": [
         "web",
@@ -172,7 +172,7 @@
       "version": 1,
       "group": "drafting",
       "title": "Komut şeridi",
-      "description": "Komut çalışırken çizim alanının üstünde aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken aynı seçenekler alttaki komut satırındadır.",
+      "description": "Komut çalışırken çizim alanının üstünde de aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken (varsayılan) bunların hepsi, nokta hesabı ve tek seferlik kenet alttaki komut satırındadır.",
       "sensitive": false,
       "apply": "live"
     },
