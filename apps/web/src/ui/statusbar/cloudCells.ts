@@ -59,7 +59,7 @@ function ago(ms: number | null): string {
 
 /** The save cell: hidden without a cloud project; a click does the next useful thing. */
 export function saveCell(ctx: AppContext, d: DisposableStore): HTMLElement {
-  const text = h('span');
+  const text = h('span', { class: 'status__save-text' });
   const cell = h('button', { class: 'status__cell status__btn status__save', type: 'button', hidden: true }, h('span', { class: 'status__lamp', 'aria-hidden': 'true' }), text);
   // Subscriptions to the current project's sync; replaced when another project opens.
   let per: (() => void)[] = [];

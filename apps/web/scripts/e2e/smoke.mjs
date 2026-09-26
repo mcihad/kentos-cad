@@ -187,6 +187,42 @@ try {
     );
   }
 
+  // The classic bars fit the shell's narrowest window (DESIGN.md §7.1, §7.3, §7.7): nothing is cut off or
+  // left to an invisible scroll, at the standard and the largest type scale.
+  {
+    const bars = () =>
+      b.eval(`(() => {
+        const over = (el) => !!el && el.scrollWidth > el.clientWidth + 1;
+        const s = document.querySelector('.status');
+        const shown = [...s.children].filter((c) => !c.hidden && getComputedStyle(c).display !== 'none');
+        const scale = document.querySelector('.toolbar [aria-label="Çizim ölçeği"] .dropdown__text');
+        return {
+          menus: over(document.querySelector('.menubar__menus')),
+          toolbar: over(document.querySelector('.toolbar')),
+          status: over(s) || Math.max(...shown.map((c) => c.getBoundingClientRect().right)) > innerWidth + 1,
+          scale: scale.scrollWidth <= scale.clientWidth,
+          fit: document.querySelector('.toolbar').dataset.fit,
+        };
+      })()`);
+    const scaleTo = (name, value) => b.eval(`(() => { document.documentElement.style.setProperty('--ui-scale', '${value}'); window.kentos.prefs.uiScale.set('${name}'); })()`);
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1100, height: 650, deviceScaleFactor: 1, mobile: false });
+    await sleep(300);
+    const standard = await bars();
+    await scaleTo('xxlarge', 1.25);
+    await sleep(300);
+    const largest = await bars();
+    await scaleTo('standard', 1);
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 900, deviceScaleFactor: 1, mobile: false });
+    await sleep(300);
+    const wide = await bars();
+    const whole = (r) => !r.menus && !r.toolbar && !r.status && r.scale;
+    check(
+      'at 1100 px the classic menu bar, toolbar and status bar fit, at the standard and the largest type; at 1600 px the toolbar is whole',
+      whole(standard) && whole(largest) && whole(wide) && standard.fit !== '0' && wide.fit === '0',
+      JSON.stringify({ standard, largest, wide }),
+    );
+  }
+
   const base = await b.eval('window.kentos.doc.size');
   const toScreen = (x, y) =>
     b.eval(`(() => { const k = window.kentos; const s = k.view.camera.worldToScreen({x:${x}, y:${y}}); const r = k.view.clientRect(); return [Math.round(s.x + r.left), Math.round(s.y + r.top)]; })()`);
