@@ -325,6 +325,11 @@ impl<'a> Player<'a> {
         Ok(())
     }
 
+    /// Whether the command line's text box has the keyboard now (the snapshot shows it so).
+    pub fn line_has_keyboard(&self) -> bool {
+        self.line.has_keyboard()
+    }
+
     /// What the step can see, read from the app (the web runner's `observe`).
     pub fn observe(&self) -> Observation {
         let app = &*self.app;

@@ -363,9 +363,15 @@ mod tests {
             }
         }
 
+        /// Keys one by one; the first where the model and the widget part stops the test.
         fn keys(&mut self, names: &[&str]) {
             for name in names {
                 self.key(name);
+                assert!(
+                    self.problems.is_empty(),
+                    "the model is not the widget:\n{}",
+                    self.problems.join("\n")
+                );
             }
         }
     }
@@ -437,7 +443,7 @@ mod tests {
         // first, and the keyboard goes back to the drawing (an unfocus operation).
         twin.keys(&["k", "a", "Esc", "k", "a", "Tab", "Backspace", "a"]);
         assert_eq!(twin.app.command_input, "Ka");
-        twin.key("Enter");
+        twin.keys(&["Enter"]);
         assert_eq!(twin.app.session.tool_id(), "polygon", "KA is Kapalı alan");
         assert!(!twin.model.has_keyboard() && !twin.app.line_focused);
 

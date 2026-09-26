@@ -22,11 +22,12 @@
 
 use std::path::Path;
 
+use iced::advanced::widget::operation;
 use iced::{Point, Size};
 use kentos_render_wgpu::Vec2;
 use kentos_ui::snapshot::Snapshot;
 
-use crate::app::{App, Message};
+use crate::app::{App, COMMAND_INPUT, Message};
 use crate::catalog::catalog;
 use crate::document::Document;
 use crate::traces::{self, Player, Trace, VARIANTS, Variant};
@@ -168,7 +169,15 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
         for problem in player.play(steps) {
             eprintln!("Uyarı: {problem}");
         }
+        // The command line keeps the keyboard the trace left it with, so its suggestion list shows.
+        let line = player.line_has_keyboard();
         drop(player);
+        if line {
+            snapshot.operate(
+                app.view(),
+                Box::new(operation::focusable::focus(COMMAND_INPUT.into())),
+            );
+        }
         snapshot.settle(&mut app, App::view, &mut update);
     }
     for view in views {
