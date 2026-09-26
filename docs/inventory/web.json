@@ -76,8 +76,8 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 96,
-    "commandsOnDesktop": 36
+    "commandsWithoutTests": 92,
+    "commandsOnDesktop": 41
   },
   "commands": [
     {
@@ -2953,9 +2953,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/move-copy.json"
+      ]
     },
     {
       "id": "tool.dimension",
@@ -3448,9 +3450,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/mirror.json"
+      ]
     },
     {
       "id": "tool.move",
@@ -3484,10 +3488,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/scripts/e2e/smoke.mjs"
+        "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/move-copy.json"
       ]
     },
     {
@@ -4036,9 +4041,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/rotate-scale.json"
+      ]
     },
     {
       "id": "tool.scale",
@@ -4070,9 +4077,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/rotate-scale.json"
+      ]
     },
     {
       "id": "tool.select",
@@ -5715,12 +5724,15 @@
       "methods": [],
       "steps": 3,
       "description": "Seçili nesnelerin bir ya da daha fazla kopyasını çıkarır.",
+      "productCommand": "cad.entities.transform",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/move-copy.json"
+      ]
     },
     {
       "id": "dimension",
@@ -6073,12 +6085,15 @@
       "methods": [],
       "steps": 3,
       "description": "Seçili nesnelerin iki noktalı eksene göre simetriğini alır; S ile kaynağı siler.",
+      "productCommand": "cad.entities.transform",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/mirror.json"
+      ]
     },
     {
       "id": "move",
@@ -6097,13 +6112,15 @@
       "methods": [],
       "steps": 3,
       "description": "Seçili nesneleri temel noktadan hedefe taşır.",
+      "productCommand": "cad.entities.transform",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
       "tests": [
-        "apps/web/scripts/e2e/smoke.mjs"
+        "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/move-copy.json"
       ]
     },
     {
@@ -6488,12 +6505,15 @@
       "methods": [],
       "steps": 3,
       "description": "Seçili nesneleri bir nokta etrafında döndürür. Açı yazılabilir; K ile kopya.",
+      "productCommand": "cad.entities.transform",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/rotate-scale.json"
+      ]
     },
     {
       "id": "scale",
@@ -6512,12 +6532,15 @@
       "methods": [],
       "steps": 3,
       "description": "Seçili nesneleri temel noktaya göre büyütür ya da küçültür: faktör ya da referans uzunluk.",
+      "productCommand": "cad.entities.transform",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/rotate-scale.json"
+      ]
     },
     {
       "id": "select",
