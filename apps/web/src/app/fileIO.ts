@@ -127,6 +127,9 @@ const withExtension = (name: string) => `${withoutExtension(name)}${DOCUMENT_EXT
 const count = (n: number) => n.toLocaleString('tr-TR');
 const share = (done: number, total: number) => (total > 0 ? Math.min(1, done / total) : 1);
 
+/** After the next frame is drawn (at once where there are no frames: tests). */
+const nextFrame = () => (typeof requestAnimationFrame === 'function' ? new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))) : Promise.resolve());
+
 /** An open's window where there is none (tests, a window that did not load): the open goes on without it. */
 const unseen: OpeningView = { step: () => {}, project: () => {}, close: () => {} };
 
@@ -389,7 +392,15 @@ export class DocumentFiles {
         ctx.log.warn(`${src.handle ? `“${src.label}”` : src.label} açılmadı: açılış sürerken ekrandaki çizim değişti ya da başka bir çizim açıldı; o çizim olduğu gibi duruyor. Dosyayı yeniden açın.`);
         return false;
       }
-      (src.put ?? ((r) => this.show(r, src.handle, src.readOnly)))(read);
+      try {
+        (src.put ?? ((r) => this.show(r, src.handle, src.readOnly)))(read);
+      } catch (e) {
+        // The document refuses a drawing it cannot hold before it changes anything (`replaceWith`).
+        ctx.log.error(`${src.handle ? `“${src.label}”` : src.label} açılamadı: ${message(e)} Ekrandaki çizim olduğu gibi duruyor.`);
+        return false;
+      }
+      // The window stays until the drawing's first frame is drawn: a large one takes a moment.
+      await nextFrame();
       return true;
     } finally {
       view.close();

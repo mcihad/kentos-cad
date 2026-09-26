@@ -63,7 +63,13 @@ pub(crate) fn write(payload: &[u8]) -> Result<Vec<u8>, KcadError> {
     out.extend_from_slice(&0u16.to_le_bytes());
     out.extend_from_slice(&0u16.to_le_bytes());
     out.extend_from_slice(payload);
-    let hash = Sha256::digest(&out);
+    // In chunks, as the reader hashes: many short calls, which a browser's WebAssembly engine
+    // optimises, not one long one it would run in its baseline code (docs/adr/0030).
+    let mut hasher = Sha256::new();
+    for chunk in out.chunks(HASH_CHUNK) {
+        hasher.update(chunk);
+    }
+    let hash = hasher.finalize();
     out.extend_from_slice(&hash);
     Ok(out)
 }

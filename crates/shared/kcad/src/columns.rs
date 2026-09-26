@@ -191,7 +191,8 @@ impl Packer {
         self.out.text_lengths.push(count(units));
     }
 
-    /// One object, its layer already a table index.
+    /// One object, its layer already a table index. Out of line: see `Encoder::object`.
+    #[inline(never)]
     fn object(&mut self, entity: &Entity, uid: &EntityId, layer: u32) {
         self.out.kinds.push(kind_index(entity));
         self.out.uids.extend_from_slice(&uid.0);
@@ -538,50 +539,7 @@ pub fn unpack(cols: &Columns) -> Result<(Vec<Entity>, Vec<EntityId>), KcadError>
     let mut entities = Vec::with_capacity(n);
     let mut uids = Vec::with_capacity(n);
     for (i, &k) in cols.kinds.iter().enumerate() {
-        let kind = *KINDS
-            .get(usize::from(k))
-            .ok_or_else(|| broken(&format!("{}. nesnenin türü {k}", i + 1)))?;
-        let place = |field: &str| format!("entities/{i} ({kind}) › {field}");
-        let layer = table
-            .get(c.usize()?)
-            .ok_or_else(|| broken(&format!("{}. nesnenin katmanı tabloda yok", i + 1)))?
-            .clone();
-        let flags = c.int()?;
-        let attr_count = c.usize()?;
-        if attr_count > cols.text_lengths.len() {
-            return Err(broken("öznitelik sayısı metinlerden fazla"));
-        }
-        let color = (flags & COLOR != 0)
-            .then(|| c.text(|| place("color")))
-            .transpose()?;
-        let label = (flags & LABEL != 0)
-            .then(|| c.text(|| place("label")))
-            .transpose()?;
-        let symbol = (flags & SYMBOL != 0)
-            .then(|| c.text(|| place("symbol")))
-            .transpose()?;
-        let mut attrs = BTreeMap::new();
-        for _ in 0..attr_count {
-            let key = c.text(|| place("attrs"))?;
-            let value = c.text(|| place(&format!("attrs/{key}")))?;
-            attrs.insert(key, value);
-        }
-        let base = EntityBase {
-            id: count(i + 1),
-            layer_id: layer,
-            color,
-            attrs,
-            label,
-            symbol,
-        };
-        let known = COLOR | LABEL | SYMBOL | allowed(k);
-        if flags & !known != 0 {
-            return Err(broken(&format!(
-                "{}. nesnenin bayrakları {flags:#x}",
-                i + 1
-            )));
-        }
-        entities.push(geometry(&mut c, k, base, flags, &place)?);
+        entities.push(object(&mut c, &table, i, k)?);
         let mut id = [0u8; 16];
         id.copy_from_slice(&cols.uids[i * 16..i * 16 + 16]);
         uids.push(EntityId(id));
@@ -590,6 +548,55 @@ pub fn unpack(cols: &Columns) -> Result<(Vec<Entity>, Vec<EntityId>), KcadError>
         return Err(broken("nesnelerden sonra fazladan değer var"));
     }
     Ok((entities, uids))
+}
+
+/// The `i`th object, of kind `k`. Out of line: see `Encoder::object`.
+#[inline(never)]
+fn object(c: &mut Cursor<'_>, table: &[String], i: usize, k: u8) -> Result<Entity, KcadError> {
+    let kind = *KINDS
+        .get(usize::from(k))
+        .ok_or_else(|| broken(&format!("{}. nesnenin türü {k}", i + 1)))?;
+    let place = |field: &str| format!("entities/{i} ({kind}) › {field}");
+    let layer = table
+        .get(c.usize()?)
+        .ok_or_else(|| broken(&format!("{}. nesnenin katmanı tabloda yok", i + 1)))?
+        .clone();
+    let flags = c.int()?;
+    let attr_count = c.usize()?;
+    if attr_count > c.cols.text_lengths.len() {
+        return Err(broken("öznitelik sayısı metinlerden fazla"));
+    }
+    let color = (flags & COLOR != 0)
+        .then(|| c.text(|| place("color")))
+        .transpose()?;
+    let label = (flags & LABEL != 0)
+        .then(|| c.text(|| place("label")))
+        .transpose()?;
+    let symbol = (flags & SYMBOL != 0)
+        .then(|| c.text(|| place("symbol")))
+        .transpose()?;
+    let mut attrs = BTreeMap::new();
+    for _ in 0..attr_count {
+        let key = c.text(|| place("attrs"))?;
+        let value = c.text(|| place(&format!("attrs/{key}")))?;
+        attrs.insert(key, value);
+    }
+    let base = EntityBase {
+        id: count(i + 1),
+        layer_id: layer,
+        color,
+        attrs,
+        label,
+        symbol,
+    };
+    let known = COLOR | LABEL | SYMBOL | allowed(k);
+    if flags & !known != 0 {
+        return Err(broken(&format!(
+            "{}. nesnenin bayrakları {flags:#x}",
+            i + 1
+        )));
+    }
+    geometry(c, k, base, flags, &place)
 }
 
 /// The optional-field flags a kind may have.
@@ -774,6 +781,8 @@ fn geometry(
 // ── Comparing ───────────────────────────────────────────────────────────
 
 /// Whether two slices of floats are the same bit for bit (−0 is not 0).
+/// Out of line: called once per object (see `Encoder::object`).
+#[inline(never)]
 fn same_bits(a: &[f64], b: &[f64]) -> bool {
     a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.to_bits() == y.to_bits())
 }

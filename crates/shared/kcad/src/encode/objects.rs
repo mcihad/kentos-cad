@@ -55,6 +55,11 @@ impl<'d> Encoder<'d> {
         self.report(Step::Writing { done: total, total })
     }
 
+    // Out of line on purpose: a browser's WebAssembly engine runs a function in its
+    // baseline code until the function is called again (no on-stack replacement), so the
+    // work of each object must be a function called once per object, not inlined into the
+    // one loop that runs once for the whole drawing (docs/adr/0030).
+    #[inline(never)]
     fn object(
         &mut self,
         entity: &'d Entity,

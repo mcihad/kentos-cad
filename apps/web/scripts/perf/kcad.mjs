@@ -179,6 +179,25 @@ async function prepare(n) {
     };
     k.files.picker = { save: async () => handle, open: async () => handle };
     k.files.handle = null;
+    // Where the time goes: the codec's calls and the worker's progress, stamped as the page hears them.
+    const marks = (window.__marks = []);
+    const mark = (what) => marks.push([what, performance.now()]);
+    if (!k.files.__origKcad) k.files.__origKcad = k.files.kcad;
+    k.files.kcad = async () => {
+      const c = await k.files.__origKcad();
+      return {
+        ...c,
+        encode: (d, p) => (mark('encode'), c.encode(d, (x) => (mark('encode:' + x.stage), p?.(x))).then((r) => (mark('encoded'), r))),
+        decode: (b, p) => (mark('decode'), c.decode(b, (x) => (mark('decode:' + x.stage), p?.(x))).then((r) => (mark('decoded'), r))),
+      };
+    };
+    // The open's window, where the app has one: the page's own stages (its checks, the drawing put on screen).
+    if (k.files.opening && !k.files.__origOpening) k.files.__origOpening = k.files.opening;
+    if (k.files.__origOpening)
+      k.files.opening = async (name, cancel) => {
+        const v = await k.files.__origOpening(name, cancel);
+        return { ...v, step: (text, f) => (mark(text.startsWith('Çizim ekrana') ? 'view' : text.startsWith('Nesneler denetleniyor') ? 'checks' : 'step'), v.step(text, f)), close: () => (mark('closed'), v.close()) };
+      };
     const tasks = (window.__longTasks = []);
     new PerformanceObserver((list) => { for (const e of list.getEntries()) tasks.push({ start: e.startTime, duration: e.duration }); }).observe({ type: 'longtask' });
     return { entities: k.doc.size, buildMs: performance.now() - t0 };
@@ -196,7 +215,10 @@ const operation = (call, check) =>
     const t2 = performance.now();
     await new Promise((r) => setTimeout(r, 100));
     const tasks = window.__longTasks.filter((t) => t.start >= t0 - 1 && t.start <= t2);
-    return { ok, ms: t1 - t0, drawnMs: t2 - t0, longest: Math.max(0, ...tasks.map((t) => t.duration)), blocked: tasks.reduce((s, t) => s + t.duration - 50, 0), tasks: tasks.length, ${check} };
+    // The first time each mark was heard, after the start.
+    const stages = {};
+    for (const [what, at] of window.__marks) if (at >= t0 && !(what in stages)) stages[what] = at - t0;
+    return { ok, ms: t1 - t0, drawnMs: t2 - t0, longest: Math.max(0, ...tasks.map((t) => t.duration)), blocked: tasks.reduce((s, t) => s + t.duration - 50, 0), tasks: tasks.length, stages, ${check} };
   })()`);
 
 const results = [];
@@ -232,11 +254,12 @@ for (const n of sizes) {
       run,
       buildMs: prepared.buildMs,
       bytes: save.value.bytes,
-      save: { ms: save.value.ms, longestTaskMs: save.value.longest, blockedMs: save.value.blocked, longTasks: save.value.tasks, peakAboveMb: save.peakMb - before, chromeBeforeMb: before, ok: save.value.ok && !save.value.dirty },
-      open: { ms: open.value.ms, drawnMs: open.value.drawnMs, longestTaskMs: open.value.longest, blockedMs: open.value.blocked, longTasks: open.value.tasks, peakAboveMb: open.peakMb - beforeOpen, chromeBeforeMb: beforeOpen, ok: open.value.ok && open.value.size === n },
+      save: { ms: save.value.ms, longestTaskMs: save.value.longest, blockedMs: save.value.blocked, longTasks: save.value.tasks, peakAboveMb: save.peakMb - before, chromeBeforeMb: before, stages: save.value.stages, ok: save.value.ok && !save.value.dirty },
+      open: { ms: open.value.ms, drawnMs: open.value.drawnMs, longestTaskMs: open.value.longest, blockedMs: open.value.blocked, longTasks: open.value.tasks, peakAboveMb: open.peakMb - beforeOpen, chromeBeforeMb: beforeOpen, stages: open.value.stages, ok: open.value.ok && open.value.size === n },
       log,
     });
     const last = results.at(-1);
+    if (process.env.KCAD_STAGES) console.log(JSON.stringify({ save: last.save.stages, open: last.open.stages }));
     console.log(
       `${n} parsel, koşu ${run}: ${(last.bytes / 1e6).toFixed(1)} MB; kayıt ${Math.round(last.save.ms)} ms (en uzun görev ${Math.round(last.save.longestTaskMs)} ms, +${Math.round(last.save.peakAboveMb)} MB); açma ${Math.round(last.open.ms)} ms, çizildi ${Math.round(last.open.drawnMs)} ms (en uzun görev ${Math.round(last.open.longestTaskMs)} ms, +${Math.round(last.open.peakAboveMb)} MB)${failed ? ` BAŞARISIZ: ${log.join(' | ')}` : ''}`,
     );

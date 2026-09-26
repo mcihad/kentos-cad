@@ -152,6 +152,11 @@ pub(super) fn objects(
     Ok((entities, uids))
 }
 
+// Out of line on purpose: a browser's WebAssembly engine runs a function in its
+// baseline code until the function is called again (no on-stack replacement), so the
+// work of each object must be a function called once per object, not inlined into the
+// one loop that runs once for the whole drawing (docs/adr/0030).
+#[inline(never)]
 fn object(r: &mut Reader<'_>, index: usize) -> Result<(Entity, EntityId), KcadError> {
     let (n, at) = r.map()?;
     if n != 1 {

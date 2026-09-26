@@ -51,8 +51,9 @@ impl<F: FnMut(Step<'_>) -> bool> Watch for F {
 /// Objects between two reports of a long list: often enough for a progress
 /// bar and a prompt cancel, rare enough to cost nothing.
 pub(crate) const EVERY: usize = 2048;
-/// Bytes hashed between two reports of the integrity check.
-pub(crate) const HASH_CHUNK: usize = 4 << 20;
+/// Bytes hashed between two reports of the integrity check (and per call into the
+/// hash: a browser optimises a function it calls again, not one long call).
+pub(crate) const HASH_CHUNK: usize = 1 << 20;
 
 /// The error of work the watcher stopped.
 pub(crate) fn cancelled() -> KcadError {
