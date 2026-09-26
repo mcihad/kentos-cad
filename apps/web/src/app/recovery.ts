@@ -1,4 +1,5 @@
 import { uuidv7 } from '../core/uuid';
+import { packDrawing } from '../io/columns';
 import { snapshotHead } from '../model/snapshot';
 import { confirmDialog } from '../ui/widgets/confirm';
 import type { AppContext } from './context';
@@ -277,7 +278,7 @@ export class RecoveryCopies {
       const name = doc.name.value;
       let bytes = saving;
       if (!bytes) {
-        const [codec, { packDrawing }] = await Promise.all([files.kcad(), import('../io/columns')]);
+        const codec = await files.kcad();
         // The drawing of this moment (one turn), as a save takes it.
         if (doc.revision !== revision || this.current !== id) return this.changed();
         bytes = await codec.encode(packDrawing(snapshotHead(doc), doc.all()).drawing);
