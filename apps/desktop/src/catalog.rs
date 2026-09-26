@@ -125,6 +125,9 @@ pub const PORTED: &[&str] = &[
     "tool.array",
     "tool.arrayPolar",
     "tool.align",
+    // The bottom panel's tabs (bottom.rs): F2, the history, the coordinate list, warnings.
+    "view.bottomPanel",
+    "view.coords",
     // The clipboard and the view tools (docs/adr/0056): cut, copy and the pastes over the
     // session's clipboard, written through the document as on the web; pan, zoom window,
     // zoom to the selection and repeating the last command.

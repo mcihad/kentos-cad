@@ -76,6 +76,8 @@
     "tool.array",
     "tool.arrayPolar",
     "tool.align",
+    "view.bottomPanel",
+    "view.coords",
     "edit.cut",
     "edit.copy",
     "edit.paste",

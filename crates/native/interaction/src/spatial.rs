@@ -27,7 +27,7 @@ use std::collections::HashSet;
 
 use kentos_contracts::{Entity, LabelPlacement, LabelStyle, LayerNode};
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
-use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::entity::{Shape, entity_area, entity_length, entity_vertices};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::labels::{
     LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER, LABEL_DIMENSION, LABEL_STRIDE,
@@ -276,6 +276,21 @@ pub enum LabelSpot {
     Beside { slot: Slot, at: Vec2 },
     /// A label along the edge from `a` to `b`.
     Along { slot: Slot, a: Vec2, b: Vec2 },
+}
+
+/// An object's characteristic vertices, as the shared core gives them for
+/// grips, snapping and the coordinate list (`entity_vertices`); a polygon's
+/// holes follow its outer ring.
+pub fn vertices(entity: &Entity) -> Vec<Vec2> {
+    entity_vertices(&shape(entity))
+}
+
+/// An object's area and length as the shared core measures them
+/// (`entity_area`, `entity_length`): arcs of bulged edges followed, holes
+/// taken out of the area and counted in the perimeter.
+pub fn measures(entity: &Entity) -> (Option<f64>, Option<f64>) {
+    let s = shape(entity);
+    (entity_area(&s), entity_length(&s))
 }
 
 /// A store id back to the document's slot (ids are the slots, exactly).

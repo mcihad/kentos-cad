@@ -65,7 +65,7 @@ impl App {
         let base = container(column![
             self.ribbon(),
             docked,
-            self.command_line(),
+            self.bottom(),
             self.status_bar()
         ])
         .width(Fill)
@@ -372,7 +372,18 @@ impl App {
         }
     }
 
+    /// The command line as the window shows it now (the traces drive it).
+    #[cfg(test)]
     pub(crate) fn command_line(&self) -> Element<'_, Message> {
+        self.command_line_as(
+            self.command_expanded && self.bottom_tab == crate::bottom::BottomTab::History,
+            None,
+        )
+    }
+
+    /// The command line; `open`: its whole history (the bottom panel's first
+    /// tab); `lines`: history lines shown while closed, when not the default.
+    pub(crate) fn command_line_as(&self, open: bool, lines: Option<usize>) -> Element<'_, Message> {
         let line = CommandLine::new(&self.history, &self.command_input).id(COMMAND_INPUT);
         // A running command's step already says what to type; the hint would
         // repeat it and, in a narrow window, be cut at the field's edge.
@@ -392,7 +403,15 @@ impl App {
             .escape_clears()
             .on_cancel(Message::CommandCancelled)
             .on_focus(Message::CommandFocus)
-            .expanded(self.command_expanded, |_| Message::CommandHistoryToggled)
+            // Geçmiş opens the panel on its history tab, or closes the panel.
+            .expanded(open, |open| {
+                if open {
+                    Message::BottomTab(crate::bottom::BottomTab::History)
+                } else {
+                    Message::CommandHistoryToggled
+                }
+            })
+            .lines(lines.unwrap_or(kentos_ui::widget::command_line::LINES))
             .into()
     }
 
@@ -435,11 +454,11 @@ impl App {
             // The web's status cell: how many are selected, in the accent (DESIGN.md, durum çubuğu).
             let n = self.selection.len();
             bar = bar.separator().push(
-                Readout::new(text(format!("{n} seçili")).style(|theme: &iced::Theme| {
-                    text::Style {
+                Readout::new(
+                    label::body(format!("{n} seçili")).style(|theme: &iced::Theme| text::Style {
                         color: Some(Tokens::of(theme).accent),
-                    }
-                }))
+                    }),
+                )
                 .tip("Seçili nesne sayısı; Esc seçimi kaldırır"),
             );
         }
@@ -453,7 +472,7 @@ impl App {
             bar = bar
                 .separator()
                 .push(
-                    Readout::new(text(format!(
+                    Readout::new(label::muted(format!(
                         "Ekran 1:{}",
                         thousands(self.viewport.camera.screen_scale())
                     )))
@@ -463,20 +482,20 @@ impl App {
                 )
                 .separator()
                 .push(
-                    Readout::new(text(format!("1:{}", settings.plot_scale)))
+                    Readout::new(label::muted(format!("1:{}", settings.plot_scale)))
                         .tip("Pafta ölçeği (proje ayarı)"),
                 )
                 .separator()
                 .push(self.mode_cell())
                 .separator()
                 .push(
-                    Readout::new(text(crs))
+                    Readout::new(label::muted(crs))
                         .icon(Icon::Globe)
                         .tip("Projenin koordinat sistemi"),
                 )
                 .spacer()
                 .push(
-                    Readout::new(text(objects.clone()))
+                    Readout::new(label::muted(objects.clone()))
                         .tip(Tip::new(objects).body(kinds_text(doc))),
                 );
         } else {
@@ -488,7 +507,7 @@ impl App {
         }
         bar.separator()
             .push(
-                Readout::new(text("wgpu"))
+                Readout::new(label::muted("wgpu"))
                     .icon(Icon::Cube)
                     .tip(self.engine_tip()),
             )

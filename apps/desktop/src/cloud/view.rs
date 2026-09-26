@@ -626,7 +626,8 @@ impl App {
     /// where its save stands and the connection's dot, then the account with
     /// Çıkış. One line each, bounded, so they fit beside the drawing's cells.
     pub(crate) fn cloud_cells(&self) -> Vec<Element<'_, Message>> {
-        let line = |s: String| text(s).wrapping(Wrapping::None);
+        // The interface's text size, as every cell of the bar (the web's `--fs-xs`).
+        let line = |s: String| label::muted(s).wrapping(Wrapping::None);
         let mut cells: Vec<Element<'_, Message>> = Vec::new();
         if let Some((doc, source)) = self
             .document
@@ -658,7 +659,7 @@ impl App {
             let signed_out = self.cloud.me.is_none();
             let save = Readout::new(
                 row![
-                    text("●").style(move |theme: &iced::Theme| dot_tone.style(theme)),
+                    label::body("●").style(move |theme: &iced::Theme| dot_tone.style(theme)),
                     line(state).style(move |theme: &iced::Theme| tone.style(theme)),
                 ]
                 .spacing(5)
