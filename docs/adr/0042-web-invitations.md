@@ -110,3 +110,22 @@ Aşağıdakiler karar verilene kadar önerilen varsayılanla çalışır:
   - kullanılan bağlantı 404'tür ve unutulur;
   - bekleyen davete yeniden davet sorulur; yenilenen ve geri alınan davetin bağlantıları 404'tür;
   - misafir erişim listesinde doğru okunur; erişimi kaldırılınca proje ona 404'tür.
+
+## Bilerek bozma (26 Eylül)
+
+Her kural kaynakta bilerek bozuldu, adı geçen denetim düştü, kaynak geri alındı ve ağaç temiz kaldı (`853d165` üzerinde).
+
+| Kural | Bozma | Düşen denetim |
+|---|---|---|
+| belirteç adresten hemen alınır | `replaceState` yok | `is taken off the address at once…`, `leaves an address without one alone…` |
+| belirteç sayfadan ayrılan girişte de kalır | sessionStorage'a yazılmaz | `is taken off the address at once and kept for this tab only…` |
+| yalnız 403 belirteci tutar | her ret tutar | `each refusal says its own reason; only a 403 keeps the token` |
+| davet bir kez kabul edilir | kabulden sonra yeni giriş yeniden gönderir | `…then accepts once…` |
+| biten oturum girişi sorar, belirteç kalır | 401 ret sayılır | `…a session that ended asks to sign in` |
+| yanıt gelmezse yeniden denenir | ağ hatası ret sayılır, belirteç unutulur | `no answer: said, and tried again…` |
+| davet en çok düzenleyici rolü verir | Yönetici de sunulur | `takes the e-mails the server takes, and no manager` |
+| en uzun bekleme 90 günün içinde gönderilir | tam 90 gün gönderilir | `…the longest inside 90` |
+| bekleyen davetin yerine yenisi sorulmadan gönderilmez | bekleyen davet aranmaz | `asks before replacing a waiting invitation…` |
+| misafirin rolü paylaşımla değiştirilmez | misafir satırında rol seçilir | `a guest who accepted an invitation reads as one…` |
+| e-posta sunucunun kuralıyla denetlenir | alan adında nokta aranmaz | `takes the e-mails the server takes…` |
+| bağlantı hiçbir yerde tutulmaz | bağlantı günlüğe yazılır | e2e: `the token is kept nowhere: not in the log…` (98 denetimden yalnız o düştü) |
