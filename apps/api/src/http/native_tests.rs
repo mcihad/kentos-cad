@@ -616,3 +616,71 @@ async fn other_editors_changes_come_in_by_following_the_events() {
     assert!(far.resync(), "{far:?}");
     db.close().await;
 }
+
+#[tokio::test]
+async fn a_lost_answer_survives_the_program_ending_through_the_device_draft() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let me = ayse.me().await.unwrap().user.id;
+    let drawing = sample();
+    let (info, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(&drawing, "Ada 105", ProjectStorage::Database),
+        kcad(&drawing),
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    let project = Uuid::parse_str(&info.id).unwrap();
+    let mut a = open(&ayse, tenant, project, None).await.unwrap();
+    let mut sync = ProjectSync::new(&a).unwrap();
+
+    // A new point goes out and is committed, but its answer never arrives.
+    let added = a.document.add(point(486600.0)).unwrap();
+    let new_id = a.document.uid(added).unwrap();
+    let lost = sync.next(&a.document).unwrap();
+    ayse.command::<CommitResult>(lost.clone()).await.unwrap();
+    // More work meanwhile, then the program ends; the draft was written as edits happened.
+    let the_point = slot_of(&a.document, "point");
+    assert!(a.document.update(the_point, point(486700.0)));
+    let draft = sync.draft(&a.document, &me).unwrap();
+    let dir = std::env::temp_dir().join(format!("kentos-native-drafts-{}", Uuid::now_v7()));
+    let store = kentos_cloud::DraftStore::new(&dir);
+    let key = store.key(ayse.server(), &me, tenant, project);
+    store.save_later(key.clone(), draft).await.unwrap();
+
+    // The program starts again: the project opens, and the draft goes back in.
+    let mut b = open(&ayse, tenant, project, None).await.unwrap();
+    let kentos_cloud::Loaded::Found(draft) = store.load(&key).unwrap() else {
+        panic!("the draft was not found");
+    };
+    let mut sync = ProjectSync::new(&b).unwrap();
+    let restored = sync.restore(&mut b.document, *draft).unwrap();
+    assert!(restored.resends);
+    assert_eq!(restored.conflicts, 0);
+    // The same command, same key: the server answers from its log, and writes nothing twice.
+    let again = sync.next(&b.document).unwrap();
+    assert_eq!(again.idempotency_key, lost.idempotency_key);
+    let answer = ayse.command::<CommitResult>(again).await.unwrap();
+    assert!(answer.replayed);
+    sync.answered(&b.document, &answer);
+    send_all(&ayse, &mut sync, &b.document).await.unwrap();
+    assert!(sync.all_sent());
+    store.remove(&key).unwrap();
+
+    // The server has the drawing of this device, the new point once.
+    let back = open(&ayse, tenant, project, None).await.unwrap();
+    assert_eq!(
+        by_uid(&back.document.to_snapshot_v2()),
+        by_uid(&b.document.to_snapshot_v2())
+    );
+    assert_eq!(back.document.len(), 14);
+    assert!(back.document.slot_of(new_id).is_some());
+    let _ = std::fs::remove_dir_all(dir);
+    db.close().await;
+}

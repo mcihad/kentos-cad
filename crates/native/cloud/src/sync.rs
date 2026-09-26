@@ -18,9 +18,10 @@
 //!   a passing failure waits a little longer each time (1 s … 30 s); a
 //!   refusal for good says why and waits for the next edit.
 //!
-//! Other editors' commits come in through remote.rs. Not in this slice
-//! (docs/adr/0040): the device draft that keeps unsent changes over a
-//! crash; until it comes “Kaydedildi” means only what the server acknowledged.
+//! Other editors' commits come in through remote.rs. What is not sent yet,
+//! and the command on its way, go to a device draft (draft.rs, drafts.rs)
+//! that a new opening puts back, so a crash loses nothing and a command
+//! whose answer was lost is still answered once.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::time::Duration;
@@ -230,6 +231,10 @@ pub struct ProjectSync {
     cursor: String,
     /// Request ids of this sync's own commands: their events are skipped.
     own: HashSet<String>,
+    /// Changes from a device draft the drawing could not take (an object on a
+    /// layer that is gone): never sent, but written to the next draft again,
+    /// so unsent work is not lost, until an edit here replaces them (draft.rs).
+    held: BTreeMap<Uuid, DraftChange>,
     tries: u32,
 }
 
@@ -281,6 +286,7 @@ impl ProjectSync {
             error: None,
             cursor: opened.info.event_cursor.clone(),
             own: HashSet::new(),
+            held: BTreeMap::new(),
             tries: 0,
         })
     }
@@ -346,6 +352,10 @@ impl ProjectSync {
                     };
                     self.dirty.extend(now);
                     self.dirty.extend(before.filter(|b| Some(*b) != now));
+                    // Edited here: this edit replaces what an earlier draft could not put back.
+                    for id in now.into_iter().chain(before) {
+                        self.held.remove(&id);
+                    }
                 }
             }
             Changes::All => {
@@ -644,8 +654,10 @@ impl ProjectSync {
     }
 }
 
+mod draft;
 mod remote;
 #[cfg(test)]
 mod tests;
 
+pub use draft::{DRAFT_VERSION, Draft, DraftChange, DraftMeta, Restored};
 pub use remote::{Incoming, Remote, Taken};

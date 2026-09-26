@@ -704,7 +704,7 @@
       "version": 1,
       "group": "graphics",
       "title": "Kenar yumuşatma (MSAA)",
-      "description": "Pikseldeki örnek sayısı. Aygıtın desteklemediği bir değer istenirse desteklediği en yakın alt değer kullanılır ve nedeni gösterilir.",
+      "description": "Çizimin pikseldeki örnek sayısı. Aygıtın desteklemediği bir değer istenirse desteklediği en yakın alt değer kullanılır ve nedeni gösterilir. Arayüz ve çizim alanındaki araç önizlemeleri, etiket kutuları ve işaretler bu ayardan etkilenmez.",
       "sensitive": false,
       "apply": "recreate"
     },
@@ -720,7 +720,7 @@
       "version": 1,
       "group": "graphics",
       "title": "Tam çözünürlük (HiDPI)",
-      "description": "Retina ve 4K ekranda çizim ekranın tam çözünürlüğünde çizilir. Kapalıyken mantıksal piksel başına bir piksel çizilir: 2× ekranda dörtte bir piksel, daha akıcı kaydırma.",
+      "description": "Retina ve 4K ekranda çizim ekranın tam çözünürlüğünde çizilir. Kapalıyken çizim mantıksal piksel başına bir piksel çizilir: 2× ekranda dörtte bir piksel, daha akıcı kaydırma. Arayüz ve çizim alanındaki araç önizlemeleri, etiket kutuları ve işaretler her zaman tam çözünürlüktedir.",
       "sensitive": false,
       "apply": "recreate"
     },
@@ -982,7 +982,7 @@
       "id": "fast",
       "group": "graphics",
       "title": "Hızlı",
-      "description": "Kenar yumuşatma yok, mantıksal piksel başına bir piksel: çok büyük çizimlerde en akıcı kaydırma.",
+      "description": "Çizimde kenar yumuşatma yok, mantıksal piksel başına bir piksel: çok büyük çizimlerde en akıcı kaydırma. Arayüz tam kalitede kalır.",
       "values": {
         "graphics.hiDpi": false,
         "graphics.msaa": 1

@@ -12,7 +12,8 @@
 //!   cloud project of either kind.
 //! - [`ProjectSync`]: a database project's changes as `project.changes`
 //!   commands, the web's tracker rules, driven by the desktop; other
-//!   editors' commits taken in from the events ([`follow`]).
+//!   editors' commits taken in from the events ([`follow`]); what is not sent
+//!   yet kept on this device ([`drafts`]) and put back when the project opens again.
 //!
 //! Every call runs on the crate's own runtime (runtime.rs) and can be
 //! awaited on any executor, Iced's included. No UI here.
@@ -24,6 +25,7 @@
 )]
 
 pub mod api;
+pub mod drafts;
 pub mod failure;
 pub mod follow;
 pub mod open;
@@ -32,7 +34,11 @@ pub mod saving;
 pub mod sync;
 
 pub use api::{CatalogQuery, Cloud, Download, Progress};
+pub use drafts::{DraftKey, DraftStore, Loaded};
 pub use failure::{ApiFailure, Failure};
 pub use open::{Opened, Revision, Source, open};
 pub use saving::{Uploaded, conflicting_revision, project_create, save_revision, upload_new};
-pub use sync::{After, Conflict, Incoming, ProjectSync, Remote, SaveState, Taken};
+pub use sync::{
+    After, Conflict, Draft, DraftChange, DraftMeta, Incoming, ProjectSync, Remote, Restored,
+    SaveState, Taken,
+};

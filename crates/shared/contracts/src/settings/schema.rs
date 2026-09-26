@@ -338,7 +338,7 @@ fn settings() -> Vec<SettingDescriptor> {
             .apply(SettingApply::Recreate)
             .text(
                 "Kenar yumuşatma (MSAA)",
-                "Pikseldeki örnek sayısı. Aygıtın desteklemediği bir değer istenirse desteklediği en yakın alt değer kullanılır ve nedeni gösterilir.",
+                "Çizimin pikseldeki örnek sayısı. Aygıtın desteklemediği bir değer istenirse desteklediği en yakın alt değer kullanılır ve nedeni gösterilir. Arayüz ve çizim alanındaki araç önizlemeleri, etiket kutuları ve işaretler bu ayardan etkilenmez.",
             ),
         boolean("graphics.hiDpi", true)
             .scope(SettingScope::Device)
@@ -346,7 +346,7 @@ fn settings() -> Vec<SettingDescriptor> {
             .apply(SettingApply::Recreate)
             .text(
                 "Tam çözünürlük (HiDPI)",
-                "Retina ve 4K ekranda çizim ekranın tam çözünürlüğünde çizilir. Kapalıyken mantıksal piksel başına bir piksel çizilir: 2× ekranda dörtte bir piksel, daha akıcı kaydırma.",
+                "Retina ve 4K ekranda çizim ekranın tam çözünürlüğünde çizilir. Kapalıyken çizim mantıksal piksel başına bir piksel çizilir: 2× ekranda dörtte bir piksel, daha akıcı kaydırma. Arayüz ve çizim alanındaki araç önizlemeleri, etiket kutuları ve işaretler her zaman tam çözünürlüktedir.",
             ),
         choice(
             "graphics.symbolSize",
@@ -477,7 +477,7 @@ fn presets() -> Vec<SettingsPreset> {
         preset(
             "fast",
             "Hızlı",
-            "Kenar yumuşatma yok, mantıksal piksel başına bir piksel: çok büyük çizimlerde en akıcı kaydırma.",
+            "Çizimde kenar yumuşatma yok, mantıksal piksel başına bir piksel: çok büyük çizimlerde en akıcı kaydırma. Arayüz tam kalitede kalır.",
             1,
             false,
         ),
