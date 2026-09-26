@@ -79,16 +79,18 @@ function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E {
 /**
  * `transformEntities(list, ms)` read from a geometry store's packed answer
  * (`CoreStore.transformPacked` over `ids`, the list's objects as that store
- * numbers them, and `count` affines): the store transforms its own copies
- * and only the new geometry crosses, as numbers (docs/adr/0008). Each
- * object keeps its other fields; the result is the JSON call's, field for
- * field, except that −0 survives here as everywhere the store is packed.
+ * numbers them, and `count` affines; null: as many as the answer holds, an
+ * array's copies): the store transforms its own copies and only the new
+ * geometry crosses, as numbers (docs/adr/0008). Each object keeps its other
+ * fields; the result is the JSON call's, field for field, except that −0
+ * survives here as everywhere the store is packed.
  */
-export function transformedFrom<E extends Entity | NewEntity>(list: readonly E[], ids: ArrayLike<number>, count: number, packed: Packed): E[] {
+export function transformedFrom<E extends Entity | NewEntity>(list: readonly E[], ids: ArrayLike<number>, count: number | null, packed: Packed): E[] {
   const records = unpackEntities(packed);
   const out: E[] = [];
   let at = 0;
-  for (let k = 0; k < count; k++)
+  const runs = count ?? records.length / list.length;
+  for (let k = 0; k < runs; k++)
     for (let i = 0; i < list.length; i++) {
       const r = records[at++];
       // The store skips an id it does not hold: the drawing and its copy would have drifted apart.
@@ -146,11 +148,6 @@ export function arrayNumbers(layout: ArrayLayout): [string, number[]] {
   return ['polar', [layout.center.x, layout.center.y, layout.count, layout.fill, layout.rotate ? 1 : 0]];
 }
 
-/** How many copies of each object an array makes: its places less the originals' own. */
-export function arrayCopyCount(layout: ArrayLayout): number {
-  return layout.kind === 'grid' ? layout.rows * layout.cols - 1 : layout.count - 1;
-}
-
 /**
  * Copies of `list` laid out by an array of the product command
  * `cad.entities.array` (docs/adr/0047), with no store and no JSON: the core
@@ -165,10 +162,11 @@ export function arrayCopies<E extends Entity>(list: readonly E[], layout: ArrayL
   const packed = packEntities(list);
   const [kind, params] = arrayNumbers(layout);
   const copies = coreArrayObjects(packed.nums, packed.strings, kind, Float64Array.from(params), font);
+  // As many runs of the list as the core laid places out (rows × cols − 1, or count − 1).
   return transformedFrom(
     list,
     list.map((e) => e.id),
-    arrayCopyCount(layout),
+    null,
     copies,
   );
 }
