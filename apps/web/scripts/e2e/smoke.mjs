@@ -110,6 +110,83 @@ try {
     );
   }
 
+  // The layer tree follows the drawing's selection (the owner's request, docs/adr/0058): the selected
+  // objects' layers show selected and their closed group opens, without an edit and without changing the
+  // active layer; a row clicked in the tree wins until the selection changes, and an empty selection
+  // shows the row last clicked again.
+  {
+    const tick = () => b.eval('new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))');
+    const setup = await b.eval(`(() => {
+      const k = window.kentos;
+      const layers = k.doc.layers;
+      const active = layers.active.value;
+      const all = [...k.doc.all()];
+      const e = all.find((x) => x.layerId !== active && layers.parentOf(x.layerId));
+      const other = all.find((x) => x.layerId !== active && x.layerId !== e.layerId);
+      const group = layers.parentOf(e.layerId).id;
+      const wasOpen = layers.get(group).expanded;
+      layers.setExpanded(group, false);
+      return { active, id: e.id, layer: e.layerId, otherId: other.id, otherLayer: other.layerId, group, wasOpen };
+    })()`);
+    await tick();
+    const state = () =>
+      b.eval(`(() => {
+        const k = window.kentos;
+        const tree = document.querySelector('.panel--layers .tree');
+        const row = (id) => tree.querySelector('.tree__row[data-id="' + CSS.escape(id) + '"]');
+        const selected = [...tree.querySelectorAll('.tree__row[aria-selected="true"]')].map((r) => r.dataset.id);
+        const r = row(${JSON.stringify(setup.layer)})?.getBoundingClientRect();
+        const box = tree.getBoundingClientRect();
+        return {
+          selected,
+          multi: tree.getAttribute('aria-multiselectable'),
+          inView: !!r && r.top >= box.top - 1 && r.bottom <= box.bottom + 1,
+          open: k.doc.layers.get(${JSON.stringify(setup.group)}).expanded,
+          active: k.doc.layers.active.value,
+          revision: k.doc.revision,
+          dirty: k.doc.dirty.value,
+          undo: k.doc.undoStack.length,
+        };
+      })()`);
+    const before = await state();
+    await b.eval(`window.kentos.selection.set([${setup.id}])`);
+    await tick();
+    const followed = await state();
+    // A click on the active layer's row: it is chosen until the selection changes.
+    const at = await b.eval(`(() => {
+      const row = document.querySelector('.panel--layers .tree__row[data-id="' + CSS.escape(${JSON.stringify(setup.active)}) + '"]');
+      row.scrollIntoView({ block: 'nearest' });
+      const r = row.querySelector('.tree__name').getBoundingClientRect();
+      return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)];
+    })()`);
+    await b.click(...at);
+    const clicked = await state();
+    await b.eval(`window.kentos.selection.clear()`);
+    await tick();
+    const emptied = await state();
+    await b.eval(`window.kentos.selection.set([${setup.id}, ${setup.otherId}])`);
+    await tick();
+    const two = await state();
+    await b.eval(`window.kentos.selection.clear()`);
+    await tick();
+    const back = await state();
+    await b.eval(`(() => { const k = window.kentos; k.doc.layers.setExpanded(${JSON.stringify(setup.group)}, ${setup.wasOpen}); k.view.focus(); })()`);
+    const same = (s) => s.active === setup.active && s.revision === before.revision && s.dirty === before.dirty && s.undo === before.undo;
+    check(
+      'selecting an object shows its layer selected in the tree and opens its group; no edit, the active layer stays',
+      !before.open && followed.open && followed.inView && JSON.stringify(followed.selected) === JSON.stringify([setup.layer]) && same(followed),
+      JSON.stringify({ setup, followed }),
+    );
+    check(
+      'a row clicked in the tree wins until the selection changes; several layers show selected; an empty selection shows the clicked row again',
+      JSON.stringify(clicked.selected) === JSON.stringify([setup.active]) &&
+        JSON.stringify(emptied.selected) === JSON.stringify([setup.active]) &&
+        two.selected.length === 2 && two.selected.includes(setup.layer) && two.selected.includes(setup.otherLayer) && two.multi === 'true' &&
+        JSON.stringify(back.selected) === JSON.stringify([setup.active]) && back.multi === null && same(back),
+      JSON.stringify({ clicked: clicked.selected, emptied: emptied.selected, two: two.selected, multi: two.multi, back: back.selected }),
+    );
+  }
+
   const base = await b.eval('window.kentos.doc.size');
   const toScreen = (x, y) =>
     b.eval(`(() => { const k = window.kentos; const s = k.view.camera.worldToScreen({x:${x}, y:${y}}); const r = k.view.clientRect(); return [Math.round(s.x + r.left), Math.round(s.y + r.top)]; })()`);
