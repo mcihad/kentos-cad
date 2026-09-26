@@ -247,6 +247,11 @@ impl App {
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
         }
+        if let Some(why) = app.recovery.why_unavailable().map(str::to_owned) {
+            app.warn(format!(
+                "Kaydedilmemiş çalışmanın kurtarma kopyaları tutulamıyor ({why}); KentOS çökerse kaydedilmemiş değişiklikler kaybolur. Veri klasörünün yazılabilir olduğunu denetleyin, o zamana dek sık kaydedin."
+            ));
+        }
         // The organisation's policy: no server sends one yet; a local file may stand in (docs/adr/0023).
         match Settings::policy_from_env() {
             Some(Ok(policy)) => {

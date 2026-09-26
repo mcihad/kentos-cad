@@ -57,10 +57,7 @@ fn main() -> iced::Result {
             let recovery =
                 match recovery::default_root().map(|root| recovery::Recovery::open(&root)) {
                     Some(Ok(recovery)) => recovery,
-                    Some(Err(error)) => {
-                        eprintln!("Kurtarma kopyaları tutulamıyor: {error}");
-                        recovery::Recovery::off()
-                    }
+                    Some(Err(error)) => recovery::Recovery::unavailable(error),
                     None => recovery::Recovery::off(),
                 };
             app::App::start_with(path.clone(), settings, recovery)

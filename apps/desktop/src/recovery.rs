@@ -116,6 +116,8 @@ pub struct Recovery {
     first_unwritten: Option<Instant>,
     writing: bool,
     failed: bool,
+    /// Why no copies are kept, when the data folder could not be used (said at start).
+    unavailable: Option<String>,
     /// Copies gone KentOS processes left, newest first, still to be offered.
     pub offers: Vec<Offer>,
 }
@@ -190,6 +192,19 @@ impl Recovery {
             offers,
             ..Self::default()
         })
+    }
+
+    /// No copies, because the data folder could not be used: the app says why when it starts.
+    pub fn unavailable(reason: String) -> Self {
+        Self {
+            unavailable: Some(reason),
+            ..Self::default()
+        }
+    }
+
+    /// Why no copies are kept, if the data folder could not be used.
+    pub fn why_unavailable(&self) -> Option<&str> {
+        self.unavailable.as_deref()
     }
 
     /// Whether copies are kept.
@@ -702,5 +717,24 @@ mod tests {
         let _ = app.recovery_due(now);
         let task = app.recovery_due(now + LONGEST);
         assert_eq!(task.units(), 0);
+    }
+
+    #[test]
+    fn a_data_folder_that_cannot_be_used_is_said_at_start() {
+        let (app, _) = App::start_with(
+            None,
+            Settings::memory(),
+            Recovery::unavailable("/salt/okunur: izin yok".into()),
+        );
+        assert!(!app.recovery.on());
+        assert!(
+            app.history.iter().any(|e| matches!(
+                e,
+                kentos_ui::widget::command_line::Entry::Warning(t)
+                    if t.contains("kurtarma kopyaları tutulamıyor (/salt/okunur: izin yok)")
+            )),
+            "{}",
+            last_said(&app)
+        );
     }
 }
