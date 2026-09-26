@@ -46,6 +46,8 @@ pub enum CreateOperation {
     Divide,
     /// Tarama: a hatch filling the region clicked inside.
     Hatch,
+    /// İçine tıklayarak alan: the region clicked inside, as an area. The step is “Alan oluştur”.
+    Boundary,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the
@@ -82,8 +84,9 @@ pub struct NewObject {
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_objects`, then
 /// each object's geometry in order: `too_few_points` (a polyline),
-/// `too_few_corners` (a closed area's or a hatch's ring or hole),
-/// `empty_text` (a text whose text is empty or only white space),
+/// `too_few_corners` (a closed area's or a hatch's ring or hole, by
+/// `cad.entities.edit`'s rule: a closed area's may have 2 corners when an
+/// edge is an arc), `empty_text` (a text whose text is empty or only white space),
 /// `not_finite`, `invalid_radius`; then `invalid_revision`,
 /// `revision_conflict` (status `conflict`), `layer_not_found`,
 /// `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
@@ -99,7 +102,7 @@ pub struct EntitiesCreate {
     /// What is written, at least one, in this order.
     pub objects: Vec<NewObject>,
     /// The drawing tool the objects come from, when its step has its own
-    /// name: Paralel çizgi, Dik in, Dik çık, Böl. Absent: “Ekle”.
+    /// name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Absent: “Ekle”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub operation: Option<CreateOperation>,

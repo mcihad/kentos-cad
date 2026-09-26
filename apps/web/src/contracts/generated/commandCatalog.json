@@ -9852,7 +9852,7 @@
       "id": "cad.entities.edit",
       "version": 1,
       "title": "Nesneleri düzenle",
-      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir) bu komutla yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -9944,6 +9944,36 @@
               {
                 "const": "properties",
                 "description": "Öznitelikler: a value typed into a geometry row (a point's Y and X; a\ntext's content, height and angle; a dimension's offset, text height\nand text; a hatch's pattern, angle and spacing), or a text or a\ndimension's text edited in place. The step is “Değiştir”.",
+                "type": "string"
+              },
+              {
+                "const": "areaUnion",
+                "description": "Alan birleştir: the areas go, their union comes from the first.",
+                "type": "string"
+              },
+              {
+                "const": "areaIntersect",
+                "description": "Alan kesiştir: the areas' overlap, a new area (the areas go with it when erased).",
+                "type": "string"
+              },
+              {
+                "const": "areaSubtract",
+                "description": "Alan çıkar: areas with others cut out of them; the pieces left come from each.",
+                "type": "string"
+              },
+              {
+                "const": "areaSplit",
+                "description": "Alan böl: areas split along a line; the first piece is the area itself.",
+                "type": "string"
+              },
+              {
+                "const": "toArea",
+                "description": "Alana çevir: closed objects become areas in their places; the regions line work closes are new areas.",
+                "type": "string"
+              },
+              {
+                "const": "toPolyline",
+                "description": "Çizgiye çevir: an area's outer ring becomes a closed polyline in its place; its holes are new polylines.",
                 "type": "string"
               }
             ]
@@ -10529,7 +10559,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.edit` v1: changes to objects named by their\npersistent ids, written as one undo step named after `operation`. The\nmodify tools give the objects they picked and the geometry the shared\ncore computed (TODOS.md CMD-07); the command reads no selection, layer or\nview.\n\nThe changes are made in their order, against the document as it was\nbefore them: an `add` may come from an object the same edit replaces or\ndeletes. An object is changed (`update`, `replace`, `remove`) by one\nchange at most.\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and nothing is made from it: when one is named, nothing is\nwritten and the answer is `layer_locked`. The pieces of a split object\nbelong together, so an edit is written whole or not at all.\n\nRefusals (`CommandError.code`), checked in this order: `no_changes`,\n`invalid_uid` (each change's id in order), then each geometry in order:\n`too_few_points` (a polyline), `too_few_corners` (a closed area's or a\nhatch's ring or hole), `empty_text` (a text whose text is empty or only\nwhite space, Unicode's `White_Space`), `not_finite`, `invalid_radius`;\nthen `invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `repeated_entity` (an object\nchanged twice), `layer_locked`; on the desktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.edit` v1: changes to objects named by their\npersistent ids, written as one undo step named after `operation`. The\nmodify tools give the objects they picked and the geometry the shared\ncore computed (TODOS.md CMD-07); the command reads no selection, layer or\nview.\n\nThe changes are made in their order, against the document as it was\nbefore them: an `add` may come from an object the same edit replaces or\ndeletes. An object is changed (`update`, `replace`, `remove`) by one\nchange at most.\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and nothing is made from it: when one is named, nothing is\nwritten and the answer is `layer_locked`. The pieces of a split object\nbelong together, so an edit is written whole or not at all.\n\nRefusals (`CommandError.code`), checked in this order: `no_changes`,\n`invalid_uid` (each change's id in order), then each geometry in order:\n`too_few_points` (a polyline), `too_few_corners` (a closed area's ring or\nhole with fewer than 3 corners, or 2 whose two edges are both straight, a\nbulge absent or 0; a hatch's ring or hole with fewer than 3), `empty_text`\n(a text whose text is empty or only white space, Unicode's `White_Space`),\n`not_finite`, `invalid_radius`;\nthen `invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `repeated_entity` (an object\nchanged twice), `layer_locked`; on the desktop also `slots_exhausted`.",
         "properties": {
           "changes": {
             "description": "What changes, at least one.",
@@ -10548,7 +10578,7 @@
           },
           "operation": {
             "$ref": "#/$defs/EditOperation",
-            "description": "The modify tool the edit comes from; it names the undo step: Ötele,\nBuda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,\nKöşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler."
+            "description": "The modify tool the edit comes from; it names the undo step: Ötele,\nBuda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,\nKöşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,\nAlan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir."
           }
         },
         "required": [
@@ -10902,7 +10932,7 @@
       "id": "cad.entities.create",
       "version": 1,
       "title": "Nesneleri ekle",
-      "summary": "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın adı (Paralel çizgi, Dik in, Dik çık, Böl). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın adı (Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -10944,6 +10974,11 @@
               {
                 "const": "hatch",
                 "description": "Tarama: a hatch filling the region clicked inside.",
+                "type": "string"
+              },
+              {
+                "const": "boundary",
+                "description": "İçine tıklayarak alan: the region clicked inside, as an area. The step is “Alan oluştur”.",
                 "type": "string"
               }
             ]
@@ -11473,7 +11508,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.create` v1: new objects on a named layer, written\nas one undo step. Everything the command depends on is here (TODOS.md\nCMD-07): the tool fills `layerId` from the active layer and each object's\n`color` from the current colour; the command reads neither.\n\nThe objects are written in their order, each with a new persistent id.\nThe undo step is named after `operation`, or “Ekle”.\n\nRefusals (`CommandError.code`), checked in this order: `no_objects`, then\neach object's geometry in order: `too_few_points` (a polyline),\n`too_few_corners` (a closed area's or a hatch's ring or hole),\n`empty_text` (a text whose text is empty or only white space),\n`not_finite`, `invalid_radius`; then `invalid_revision`,\n`revision_conflict` (status `conflict`), `layer_not_found`,\n`not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden` (they are written all the same).",
+        "description": "Input of `cad.entities.create` v1: new objects on a named layer, written\nas one undo step. Everything the command depends on is here (TODOS.md\nCMD-07): the tool fills `layerId` from the active layer and each object's\n`color` from the current colour; the command reads neither.\n\nThe objects are written in their order, each with a new persistent id.\nThe undo step is named after `operation`, or “Ekle”.\n\nRefusals (`CommandError.code`), checked in this order: `no_objects`, then\neach object's geometry in order: `too_few_points` (a polyline),\n`too_few_corners` (a closed area's or a hatch's ring or hole, by\n`cad.entities.edit`'s rule: a closed area's may have 2 corners when an\nedge is an arc), `empty_text` (a text whose text is empty or only white space),\n`not_finite`, `invalid_radius`; then `invalid_revision`,\n`revision_conflict` (status `conflict`), `layer_not_found`,\n`not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden` (they are written all the same).",
         "properties": {
           "expectedRevision": {
             "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
@@ -11503,7 +11538,7 @@
                 "type": "null"
               }
             ],
-            "description": "The drawing tool the objects come from, when its step has its own\nname: Paralel çizgi, Dik in, Dik çık, Böl. Absent: “Ekle”."
+            "description": "The drawing tool the objects come from, when its step has its own\nname: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Absent: “Ekle”."
           }
         },
         "required": [

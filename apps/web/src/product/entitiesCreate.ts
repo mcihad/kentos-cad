@@ -35,6 +35,7 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   perpendicularOut: 'Dik çık',
   divide: 'Böl',
   hatch: 'Tarama',
+  boundary: 'Alan oluştur',
 };
 
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */

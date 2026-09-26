@@ -3,4 +3,4 @@
 /**
  * The modify tool an edit comes from; it names the undo step.
  */
-export type EditOperation = "offset" | "trim" | "extend" | "fillet" | "chamfer" | "break" | "join" | "explode" | "lengthen" | "vertexAdd" | "vertexRemove" | "stretch" | "properties";
+export type EditOperation = "offset" | "trim" | "extend" | "fillet" | "chamfer" | "break" | "join" | "explode" | "lengthen" | "vertexAdd" | "vertexRemove" | "stretch" | "properties" | "areaUnion" | "areaIntersect" | "areaSubtract" | "areaSplit" | "toArea" | "toPolyline";

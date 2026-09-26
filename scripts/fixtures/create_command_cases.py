@@ -96,6 +96,11 @@ def locked(name):
     return failed("layer_locked", f"“{name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId")
 
 
+# A closed area's ring may have 2 corners when one of its two edges is an arc (cad.entities.edit's rule); a hatch's may not.
+RING_TOO_FEW = "Kapalı alanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin."
+HOLE_TOO_FEW = "{}. deliğin en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın."
+
+
 def not_finite(n):
     return failed("not_finite", f"{n}. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", f"objects[{n - 1}].geometry")
 
@@ -236,6 +241,36 @@ cases.append({
     ],
 })
 
+# İçine tıklayarak alan: the region clicked inside a circle, as the region core writes it (two corners, two
+# half-circle arcs), and a region with a half-disc island.
+DISC = {"kind": "polygon", "pts": [P(487045, 4420000), P(487035, 4420000)], "bulges": [1, 1]}
+FRAMED = {"kind": "polygon", "pts": [P(487060, 4420060), P(487080, 4420060), P(487080, 4420080), P(487060, 4420080)],
+          "holes": [{"pts": [P(487066, 4420070), P(487074, 4420070)], "bulges": [0, 1]}]}
+
+cases.append({
+    "name": "İçine tıklayarak alan: bölge alan olarak tek adımda yazılır, adı “Alan oluştur”; dairenin içi iki köşeli, yaylı halkadır; yarım daire ada da yazılır",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "boundary", "objects": [O(DISC)]}, "result": done([3]),
+         "expect": {"ids": IDS + [3], "entities": {"3": made(O(DISC), 3)}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "boundary", "objects": [O(FRAMED, color="#E5484D")]}, "result": done([4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {"4": made(O(FRAMED, color="#E5484D"), 4)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Alan oluştur"},
+        {"op": "undo", "returns": "Alan oluştur", "expect": {"ids": IDS, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "kapalı alanın halkası 2 köşeli olabilir, iki kenarından biri yaysa; iki kenarı düzse reddedilir, delik de öyle; taramanın halkası en az 3 köşelidir",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DISC, "bulges": [0, 0]})]}, "result": failed("too_few_corners", RING_TOO_FEW.format(2), "objects[0].geometry.pts"),
+         "note": "Yay değerleri 0: iki kenar da düz.", "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**FRAMED, "holes": [{"pts": FRAMED["holes"][0]["pts"]}]})]},
+         "result": failed("too_few_corners", HOLE_TOO_FEW.format(1, 2), "objects[0].geometry.holes[0].pts"), "note": "Yay değeri verilmemiş delik düzdür.", "expect": NOTHING},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O({"kind": "hatch", "ring": DISC["pts"], "pattern": {"type": "solid", "angle": 0, "spacing": 1}})]},
+         "result": failed("too_few_corners", "Taramanın en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin.", "objects[0].geometry.ring"), "note": "Taramanın halkasında yay yok.", "expect": NOTHING},
+    ],
+})
+
 marked = [
     O({"kind": "point", "p": P(487060, 4420010), "z": 12.5}, color="#E5484D", attrs={"Tür": "Kot noktası", "Z (m)": "12.500"}, label="12.50"),
     O(FOOT),
@@ -306,9 +341,9 @@ cases.append({
         {"op": "execute", "input": {"layerId": "yapi", "operation": "parallel", "objects": [O(LEFT), O({"kind": "polyline", "pts": [P(487000, 4420010)]})]},
          "result": failed("too_few_points", "Çoklu çizginin en az 2 noktası olmalı; 1 nokta verildi. Eksik noktaları ekleyin.", "objects[1].geometry.pts"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({"kind": "polygon", "pts": [P(487030, 4420000), P(487050, 4420000)]})]},
-         "result": failed("too_few_corners", "Kapalı alanın en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin.", "objects[0].geometry.pts"), "expect": NOTHING},
+         "result": failed("too_few_corners", RING_TOO_FEW.format(2), "objects[0].geometry.pts"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**CORRIDOR, "holes": [CORRIDOR["holes"][0], {"pts": [P(487110, 4420110), P(487112, 4420110)]}]})]},
-         "result": failed("too_few_corners", "2. deliğin en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.", "objects[0].geometry.holes[1].pts"), "expect": NOTHING},
+         "result": failed("too_few_corners", HOLE_TOO_FEW.format(2, 2), "objects[0].geometry.holes[1].pts"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DONUT, "ring": RING[:2]})]},
          "result": failed("too_few_corners", "Taramanın en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin.", "objects[0].geometry.ring"), "expect": NOTHING},
         {"op": "execute", "input": {"layerId": "yapi", "objects": [O({**DONUT, "holes": [HOLE[:2]]})]},
@@ -497,7 +532,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.create",
     "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı, yazının boş olmayan metni, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı: kapalı alanın halkası en az 3 köşeli, iki kenarından biri yaysa 2; yazının boş olmayan metni, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))
