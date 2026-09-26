@@ -209,6 +209,7 @@ impl Tool for Donut {
                 fill: 0.35,
                 width: 1.0,
                 dash: None,
+                fill_tone: crate::tool::Tone::Accent,
             }],
             ..Preview::default()
         }

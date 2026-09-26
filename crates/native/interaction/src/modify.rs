@@ -97,6 +97,31 @@ pub trait Stages {
     fn tag(&self, _hover: Vec2, _format: &Format) -> Vec<String> {
         Vec::new()
     }
+    /// After [`Stages::begin`] kept the tool: pick again (Alan çıkar's
+    /// second selection; Alan böl with no area to cut).
+    fn repick(&self) -> bool {
+        false
+    }
+    /// The picking prompt in place of the base's (Alan çıkar's two rounds);
+    /// `n` is the selection's size.
+    fn picking_prompt(&self, _n: usize) -> Option<Prompt> {
+        None
+    }
+    /// What is drawn while picking (Alan çıkar: the areas to cut from).
+    fn picking_preview(&self) -> Preview {
+        Preview::default()
+    }
+    /// The stages' own drawing in place of the ghosts and the anchor's line
+    /// (Alan böl: the cut line and the pieces it would leave).
+    fn stage_preview(&self, _hover: Option<Vec2>, _format: &Format) -> Option<Preview> {
+        None
+    }
+    /// The pointer in the stages, before it becomes a point (Alan böl picks
+    /// its cutting line): whether the stage took it. A press that took it
+    /// may end the tool.
+    fn pointer(&mut self, _p: &Pointer, _down: bool, _cx: &mut Context<'_>) -> Option<Flow> {
+        None
+    }
 }
 
 /// A press on the drawing while picking: where it began and where the pointer is.
@@ -193,6 +218,11 @@ impl<S: Stages> Tool for Modify<S> {
     }
 
     fn prompt(&self) -> Prompt {
+        if self.picking
+            && let Some(prompt) = self.stages.picking_prompt(self.selected)
+        {
+            return prompt;
+        }
         if self.picking {
             self.stages.picking_hint(Prompt::new(
                 self.stages.label(),
@@ -213,8 +243,11 @@ impl<S: Stages> Tool for Modify<S> {
     /// With a selection the stages start at once; without one, picking first.
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.picking = cx.selection.is_empty();
-        if !self.picking && self.stages.begin(cx) == Flow::Exit {
-            return Flow::Exit;
+        if !self.picking {
+            if self.stages.begin(cx) == Flow::Exit {
+                return Flow::Exit;
+            }
+            self.picking = self.stages.repick();
         }
         self.refresh(cx);
         Flow::Stay
@@ -249,6 +282,7 @@ impl<S: Stages> Tool for Modify<S> {
         }
         let point = self.constrain(p, cx);
         self.hover = Some(point);
+        let _ = self.stages.pointer(p, false, cx);
         self.refresh(cx);
     }
 
@@ -262,6 +296,10 @@ impl<S: Stages> Tool for Modify<S> {
                 to_world: p.raw,
                 dragging: false,
             });
+            return;
+        }
+        if let Some(flow) = self.stages.pointer(p, true, cx) {
+            self.after(flow, cx);
             return;
         }
         let point = self.constrain(p, cx);
@@ -329,6 +367,7 @@ impl<S: Stages> Tool for Modify<S> {
         if self.stages.begin(cx) == Flow::Exit {
             return Flow::Exit;
         }
+        self.picking = self.stages.repick();
         self.refresh(cx);
         Flow::Stay
     }
@@ -352,7 +391,13 @@ impl<S: Stages> Tool for Modify<S> {
 
     fn preview(&self, format: &Format) -> Preview {
         if self.picking {
-            return Preview::default();
+            return self.stages.picking_preview();
+        }
+        if let Some(preview) = self.stages.stage_preview(self.hover, format) {
+            return Preview {
+                tracking: self.hover.and(self.tracking),
+                ..preview
+            };
         }
         let mut strokes = self.ghosts.clone();
         if let (Some(a), Some(hover)) = (self.stages.anchor(), self.hover) {

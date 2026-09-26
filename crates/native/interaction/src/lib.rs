@@ -61,7 +61,9 @@
 
 pub mod align;
 pub mod arc;
+pub mod area;
 pub mod array;
+pub mod boundary;
 pub mod breaking;
 pub mod circle;
 pub mod clipboard;
@@ -73,6 +75,7 @@ pub mod donut;
 mod edge;
 pub mod ellipse;
 pub mod erase;
+mod faces;
 mod format;
 pub mod hatch;
 pub mod lengthen;

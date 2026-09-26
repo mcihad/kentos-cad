@@ -17,11 +17,11 @@
 //! the shared core's.
 
 use kentos_contracts::{CreateOperation, EntityGeometry, HatchPattern, HatchPatternType};
-use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, polygon_ring};
+use kentos_geometry_core::entity::{Shape, polygon_ring};
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::hatch::hatch_lines;
-use kentos_geometry_core::geom::region::{FaceIndex, inside_area, net_area, subtract_areas};
-use kentos_geometry_core::ops::areas::{area_of_entity, line_source};
+use kentos_geometry_core::geom::region::{inside_area, net_area, subtract_areas};
+use kentos_geometry_core::ops::areas::area_of_entity;
 use kentos_geometry_core::tools::point_text::js_trim;
 
 use crate::Vec2;
@@ -29,7 +29,8 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points::{self, wire_all};
 use crate::prompt::{Prompt, upper_tr};
-use crate::spatial::{measures, slot};
+use crate::faces;
+use crate::spatial::measures;
 use crate::tool::{self, Context, Flow, Memory, Pointer, Preview, Tool};
 
 /// The tool's id: its command is `tool.hatch`.
@@ -84,26 +85,9 @@ fn pattern_label(kind: HatchPatternType) -> &'static str {
     }
 }
 
-/// Kinds whose line work bounds faces: fills, texts and dimensions do not
-/// (the web's `isBoundaryKind`).
-fn bounds_faces(shape: &Shape) -> bool {
-    !matches!(
-        shape,
-        Shape::Point { .. } | Shape::Text { .. } | Shape::Dimension { .. } | Shape::Hatch { .. }
-    )
-}
-
 /// A ring's points, arcs tessellated (the web's `polygonRing`).
 fn ring_points(r: &Ring) -> Vec<Vec2> {
     polygon_ring(&r.pts, r.bulges.as_deref())
-}
-
-/// The faces of the visible line work, and what they were built from: the
-/// view, the boundary layer and the drawing's revision (the web's
-/// `VisibleFaces`, rebuilt when any of them changes).
-struct Faces {
-    key: ([f64; 4], Option<String>, u64),
-    index: FaceIndex,
 }
 
 /// The hatch tool.
@@ -118,7 +102,7 @@ pub struct Hatch {
     /// Kapalı nesne: the boundary object's region with its islands cut out,
     /// kept while the drawing stays as it was (revision, object).
     cache: Option<(u64, f64, Vec<Area>)>,
-    faces: Option<Faces>,
+    faces: Option<faces::Faces>,
     /// The region under the cursor, and its hatch lines when the preview draws them.
     hover: Option<Area>,
     hover_lines: Vec<[Vec2; 2]>,
@@ -196,38 +180,14 @@ impl Hatch {
 
     /// Sınır: çizgiler: the face of the visible line work around `p`.
     fn face_at(&mut self, p: Vec2, cx: &Context<'_>) -> Option<Area> {
-        let b = cx.view.visible();
-        let key = (
-            [b.min_x, b.min_y, b.max_x, b.max_y],
-            self.boundary.clone(),
-            cx.doc.revision(),
-        );
-        if self.faces.as_ref().is_none_or(|f| f.key != key) {
-            let doc = &*cx.doc;
-            let layer = self.boundary.as_deref();
-            let lines: Vec<CoreEntity> = cx
-                .spatial
-                .store()
-                .overlapping(&b, None)
-                .into_iter()
-                .filter(|it| bounds_faces(&it.shape))
-                .filter(|it| {
-                    layer.is_none_or(|layer| {
-                        slot(it.id)
-                            .and_then(|s| doc.get(s))
-                            .is_some_and(|e| e.base().layer_id == layer)
-                    })
-                })
-                .map(|it| CoreEntity::new(it.shape.clone()))
-                .collect();
-            self.faces = Some(Faces {
-                key,
-                index: FaceIndex::new(&[line_source(&lines)]),
-            });
-        }
-        self.faces
-            .as_ref()
-            .and_then(|f| f.index.at(p, self.memory.hatch_islands))
+        let layer = self.boundary.clone();
+        faces::face_at(
+            &mut self.faces,
+            p,
+            self.memory.hatch_islands,
+            layer.as_deref(),
+            cx,
+        )
     }
 
     /// The region and the lines the preview draws of it.
@@ -471,6 +431,7 @@ impl Tool for Hatch {
                 fill: if solid { 0.25 } else { 0.0 },
                 width: 1.5,
                 dash: Some([4.0, 3.0]),
+                fill_tone: tool::Tone::Accent,
             }],
             hatch: self.hover_lines.clone(),
             ..Preview::default()

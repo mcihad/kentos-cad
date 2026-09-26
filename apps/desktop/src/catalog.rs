@@ -170,6 +170,15 @@ pub const PORTED: &[&str] = &[
     // Tarama: the region by a closed object or by the line work, islands left
     // out, through cad.entities.create as “Tarama” (docs/adr/0062).
     "tool.hatch",
+    // Alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine
+    // tıklayarak alan; into the document as the web's (docs/adr/0065).
+    "tool.areaUnion",
+    "tool.areaIntersect",
+    "tool.areaSubtract",
+    "tool.areaSplit",
+    "tool.toArea",
+    "tool.toPolyline",
+    "tool.boundary",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

@@ -104,7 +104,14 @@
     "tool.divide",
     "tool.text",
     "tool.dimension",
-    "tool.hatch"
+    "tool.hatch",
+    "tool.areaUnion",
+    "tool.areaIntersect",
+    "tool.areaSubtract",
+    "tool.areaSplit",
+    "tool.toArea",
+    "tool.toPolyline",
+    "tool.boundary"
   ],
   "format": "kentos.desktop-ported",
   "version": 1
