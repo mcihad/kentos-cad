@@ -598,7 +598,8 @@ Python/3D/ileri analiz sıradan 2D açılışa zorunlu yük olmamalı.
 
 ### 21.1 Sürekli bağlantı
 
-Mevcut WS heartbeat/reconnect/replay/resync akışını koruyun. Auth, offline,
+Mevcut WS heartbeat/reconnect/replay/resync akışını koruyun (web). Masaüstü olayları
+uzun sorguyla izler (`GET …/events?wait=`, ADR 0044). Auth, offline,
 uyumsuz protokol ve server hatası ayrı durumlardır; socket açık diye veri güncel değildir.
 
 ### 21.2 Asenkron açılış

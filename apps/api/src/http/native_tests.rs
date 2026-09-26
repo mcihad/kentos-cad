@@ -842,3 +842,303 @@ async fn a_project_goes_on_offline_and_catches_up_when_the_connection_returns() 
     let _ = std::fs::remove_dir_all(dir);
     db.close().await;
 }
+
+#[tokio::test]
+async fn a_long_offline_spell_past_the_kept_events_reopens_and_loses_nothing() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let me = ayse.me().await.unwrap().user.id;
+    let drawing = sample();
+    let (info, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(&drawing, "Ada 107", ProjectStorage::Database),
+        kcad(&drawing),
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    let project = Uuid::parse_str(&info.id).unwrap();
+    ayse.command::<ProjectAccessChange>(envelope(
+        tenant,
+        project,
+        "project.share",
+        1,
+        Uuid::new_v4(),
+        BTreeMap::new(),
+        json!({ "userId": admin::user_id(&db.owner, "dilek").await.unwrap().to_string(), "role": GrantRole::Editor }),
+    ))
+    .await
+    .unwrap();
+    let dilek = signed_in(&base, "dilek").await;
+    let dir = std::env::temp_dir().join(format!("kentos-native-long-{}", Uuid::now_v7()));
+    let replicas = kentos_cloud::ReplicaStore::new(dir.join("kopya"));
+    let drafts = kentos_cloud::DraftStore::new(dir.join("taslak"));
+    let key = drafts.key(ayse.server(), &me, tenant, project);
+
+    // Ayşe opens the project once; the copy is kept.
+    {
+        let mut replica = replicas.open(ayse.server(), &me, tenant, project).unwrap();
+        let a = open(&ayse, tenant, project, None).await.unwrap();
+        replica.reset(&a).unwrap();
+    }
+    // While she is away, Dilek labels the line and adds a point, and weeks go by:
+    // the server no longer keeps the events after Ayşe's cursor.
+    let mut d = open(&dilek, tenant, project, None).await.unwrap();
+    let mut sd = ProjectSync::new(&d).unwrap();
+    let the_line = slot_of(&d.document, "line");
+    let line_uid = d.document.uid(the_line).unwrap();
+    let mut line = d.document.get(the_line).unwrap().clone();
+    line.base_mut().label = Some("Dilek".into());
+    assert!(d.document.update(the_line, line));
+    let dilek_point = d.document.add(point(486800.0)).unwrap();
+    let dilek_uid = d.document.uid(dilek_point).unwrap();
+    send_all(&dilek, &mut sd, &d.document).await.unwrap();
+    sqlx::query("update kentos.outbox_event set created_at = now() - interval '8 days' where project_id = $1")
+        .bind(project)
+        .execute(&db.owner)
+        .await
+        .unwrap();
+    while kentos_application::events::prune(
+        &db.app,
+        std::time::Duration::from_secs(7 * 24 * 3600),
+        100,
+    )
+    .await
+    .unwrap()
+        > 0
+    {}
+
+    // Offline, Ayşe edits the point and the same line; the work waits in the draft.
+    let point_uid;
+    {
+        let replica = replicas.open(ayse.server(), &me, tenant, project).unwrap();
+        let mut a = replica.load().unwrap().unwrap();
+        let mut sync = ProjectSync::new(&a).unwrap();
+        let the_point = slot_of(&a.document, "point");
+        point_uid = a.document.uid(the_point).unwrap();
+        assert!(a.document.update(the_point, point(486700.0)));
+        let slot = a.document.slot_of(line_uid).unwrap();
+        let mut line = a.document.get(slot).unwrap().clone();
+        line.base_mut().label = Some("Ayşe".into());
+        assert!(a.document.update(slot, line));
+        drafts
+            .save(&key, &sync.draft(&a.document, &me).unwrap())
+            .unwrap();
+    }
+
+    // Back online: the copy's cursor is past what the server keeps.
+    let mut replica = replicas.open(ayse.server(), &me, tenant, project).unwrap();
+    let a = replica.load().unwrap().unwrap();
+    let sync = ProjectSync::new(&a).unwrap();
+    let gone = follow::events(&ayse, tenant, project, sync.cursor())
+        .await
+        .unwrap_err();
+    assert!(gone.resync(), "{gone:?}");
+    // So the project opens from the server, the copy starts again from it, and the draft goes on top.
+    let mut a = open(&ayse, tenant, project, None).await.unwrap();
+    replica.reset(&a).unwrap();
+    let mut sync = ProjectSync::new(&a).unwrap();
+    let kentos_cloud::Loaded::Found(draft) = drafts.load(&key).unwrap() else {
+        panic!("the draft was not found");
+    };
+    let restored = sync.restore(&mut a.document, *draft).unwrap();
+    // The line both changed is a conflict; the point is not; Dilek's new point is there.
+    assert_eq!(restored.conflicts, 1);
+    assert_eq!(sync.conflicts()[0].id, line_uid.to_string());
+    assert!(a.document.slot_of(dilek_uid).is_some());
+    let slot = a.document.slot_of(line_uid).unwrap();
+    assert_eq!(
+        a.document.get(slot).unwrap().base().label.as_deref(),
+        Some("Ayşe")
+    );
+    // Ayşe keeps hers: everything goes out, nothing was lost.
+    sync.keep_mine();
+    send_all(&ayse, &mut sync, &a.document).await.unwrap();
+    replica.compact(&sync.base(&a.document)).unwrap();
+    drafts.remove(&key).unwrap();
+    let server = open(&ayse, tenant, project, None).await.unwrap();
+    assert_eq!(
+        by_uid(&server.document.to_snapshot_v2()),
+        by_uid(&a.document.to_snapshot_v2())
+    );
+    let s = server.document.slot_of(line_uid).unwrap();
+    assert_eq!(
+        server.document.get(s).unwrap().base().label.as_deref(),
+        Some("Ayşe")
+    );
+    assert!(
+        matches!(server.document.get(server.document.slot_of(point_uid).unwrap()), Some(Entity::Point(p)) if p.p.x == 486700.0)
+    );
+    assert!(server.document.slot_of(dilek_uid).is_some());
+    assert_eq!(
+        by_uid(&replica.load().unwrap().unwrap().document.to_snapshot_v2()),
+        by_uid(&server.document.to_snapshot_v2())
+    );
+    drop(replica);
+    let _ = std::fs::remove_dir_all(dir);
+    db.close().await;
+}
+
+#[tokio::test]
+async fn a_file_project_saved_offline_goes_out_when_connected_and_a_clash_keeps_both() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let me = ayse.me().await.unwrap().user.id;
+    let drawing = sample();
+    let (info, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(&drawing, "Ada 108 dosyası", ProjectStorage::File),
+        kcad(&drawing),
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    let project = Uuid::parse_str(&info.id).unwrap();
+    let dir = std::env::temp_dir().join(format!("kentos-native-file-{}", Uuid::now_v7()));
+    let replicas = kentos_cloud::ReplicaStore::new(&dir);
+    let mut replica = replicas.open(ayse.server(), &me, tenant, project).unwrap();
+    let a = open(&ayse, tenant, project, None).await.unwrap();
+    replica.reset(&a).unwrap();
+
+    // Offline: the copy opens at revision 1; a save waits on this device.
+    let mut a = replica.load().unwrap().unwrap();
+    let Source::File { revision: Some(r) } = &a.source else {
+        panic!("{:?}", a.source)
+    };
+    assert_eq!(r.number, 1);
+    a.document.add(point(486600.0)).unwrap();
+    replica.keep_save(&kcad(&a.document), 1).unwrap();
+    // Connected again: it goes out as revision 2 and no longer waits.
+    let (bytes, based_on) = replica.kept_save().unwrap().unwrap();
+    let saved = save_revision(&ayse, tenant, project, bytes, based_on)
+        .await
+        .unwrap();
+    assert_eq!(saved.revision, "2");
+    replica.clear_save().unwrap();
+    assert_eq!(replica.kept_save().unwrap(), None);
+
+    // Offline again, while Dilek saves revision 3 on the server.
+    let a2 = open(&ayse, tenant, project, None).await.unwrap();
+    replica.reset(&a2).unwrap();
+    let mut mine = replica.load().unwrap().unwrap();
+    mine.document.add(point(486650.0)).unwrap();
+    replica.keep_save(&kcad(&mine.document), 2).unwrap();
+    ayse.command::<ProjectAccessChange>(envelope(
+        tenant,
+        project,
+        "project.share",
+        1,
+        Uuid::new_v4(),
+        BTreeMap::new(),
+        json!({ "userId": admin::user_id(&db.owner, "dilek").await.unwrap().to_string(), "role": GrantRole::Editor }),
+    ))
+    .await
+    .unwrap();
+    let dilek = signed_in(&base, "dilek").await;
+    let mut theirs = open(&dilek, tenant, project, None).await.unwrap();
+    theirs.document.add(point(486900.0)).unwrap();
+    save_revision(&dilek, tenant, project, kcad(&theirs.document), 2)
+        .await
+        .unwrap();
+    // Connected: the waiting save meets Dilek's revision. Both are kept: hers stays the
+    // project's newest, this device's work becomes a separate project, nothing is dropped.
+    let (bytes, based_on) = replica.kept_save().unwrap().unwrap();
+    let clash = save_revision(&ayse, tenant, project, bytes.clone(), based_on)
+        .await
+        .unwrap_err();
+    assert_eq!(conflicting_revision(&clash), Some(3));
+    let (copy, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(
+            &mine.document,
+            "Ada 108 dosyası (kopya)",
+            ProjectStorage::File,
+        ),
+        bytes,
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    replica.clear_save().unwrap();
+    let copy = open(&ayse, tenant, Uuid::parse_str(&copy.id).unwrap(), None)
+        .await
+        .unwrap();
+    assert_eq!(
+        by_uid(&copy.document.to_snapshot_v2()),
+        by_uid(&mine.document.to_snapshot_v2())
+    );
+    let newest = open(&ayse, tenant, project, None).await.unwrap();
+    assert_eq!(
+        by_uid(&newest.document.to_snapshot_v2()),
+        by_uid(&theirs.document.to_snapshot_v2())
+    );
+    drop(replica);
+    let _ = std::fs::remove_dir_all(dir);
+    db.close().await;
+}
+
+#[tokio::test]
+async fn a_waiting_request_answers_as_soon_as_another_editor_commits() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let drawing = sample();
+    let (info, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(&drawing, "Ada 109", ProjectStorage::Database),
+        kcad(&drawing),
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    let project = Uuid::parse_str(&info.id).unwrap();
+    let a = open(&ayse, tenant, project, None).await.unwrap();
+    let cursor = a.info.event_cursor.clone();
+    // Nothing new: a short wait ends empty, at its end.
+    let started = std::time::Instant::now();
+    let empty = ayse
+        .events_waiting(tenant, project, &cursor, std::time::Duration::from_secs(1))
+        .await
+        .unwrap();
+    assert!(empty.events.is_empty());
+    assert!(started.elapsed() >= std::time::Duration::from_millis(900));
+    // A long wait answers as soon as someone commits.
+    let waiting = follow::wait(&ayse, tenant, project, &cursor);
+    let commit = async {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        let mut d = open(&ayse, tenant, project, None).await.unwrap();
+        let mut sync = ProjectSync::new(&d).unwrap();
+        d.document.add(point(486600.0)).unwrap();
+        send_all(&ayse, &mut sync, &d.document).await.unwrap();
+    };
+    let started = std::time::Instant::now();
+    let (page, ()) = tokio::join!(waiting, commit);
+    let page = page.unwrap();
+    assert_eq!(page.events.len(), 1);
+    assert!(
+        started.elapsed() < std::time::Duration::from_secs(5),
+        "{:?}",
+        started.elapsed()
+    );
+    // With something new already, it answers at once.
+    let started = std::time::Instant::now();
+    let now = follow::wait(&ayse, tenant, project, &cursor).await.unwrap();
+    assert_eq!(now.events.len(), 1);
+    assert!(started.elapsed() < std::time::Duration::from_secs(2));
+    db.close().await;
+}
