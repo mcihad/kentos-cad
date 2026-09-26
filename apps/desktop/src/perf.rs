@@ -168,11 +168,14 @@ fn child() {
             let doc = Document::from_v2(drawing(n), None).expect("the drawing opens");
             let (rss, _) = memory();
             reset_peak();
-            // What the save takes from the open drawing on the UI thread, then writes in the background.
+            // What the save takes from the open drawing on the UI thread (a copy whose objects are
+            // shared, saving.rs), then does on its own thread: the snapshot, and the verified write.
             let t = Instant::now();
-            let snapshot = doc.model.to_snapshot_v2();
+            let model = doc.model.clone();
             let snapshot_ms = ms(t);
             let t = Instant::now();
+            let snapshot = model.to_snapshot_v2();
+            drop(model);
             document::write(&snapshot, &file).expect("writes");
             let write_ms = ms(t);
             let (_, peak) = memory();
@@ -352,9 +355,9 @@ fn kcad() {
             "{cpu}, {threads} iş parçacığı, {memory_gb} GB; {os} ({kernel}); {rustc}, `--release` (lto thin). {runs} koşu, her hücre ortanca. Test `apps/desktop/src/perf.rs`: her işlem kendi sürecinde çalışır, bellek o sürecin en yüksek yerleşik belleğinin (VmHWM) işlemden önceki düzeyin üstündeki payıdır. Dosyalar `.run/perf`'e yazılır (yerel disk, `fsync` dahil)."
         ),
         String::new(),
-        "Çizim: parsel başına 20 köşeli bir alan, üç öznitelik ve etiket, tek katman (`crates/shared/kcad/tests/measure.rs` ile aynı). “Anlık görüntü” kaydın arayüz iş parçacığındaki payıdır (`to_snapshot_v2`); “yazma” doğrulamalı kodlama, geçici dosya, `fsync`, geri okuma ve yer değiştirmedir (`document::write`). “Açma” dosyanın okunması, çözülmesi ve belgenin kurulmasıdır (`Document::read`); “sahne” ilk karenin arayüz iş parçacığında kurulan sahnesidir (çizgiler ve eğriler, bütün çizim görünürken).".to_owned(),
+        "Çizim: parsel başına 20 köşeli bir alan, üç öznitelik ve etiket, tek katman (`crates/shared/kcad/tests/measure.rs` ile aynı). “Arayüzde” kaydın arayüz iş parçacığındaki payıdır (önce `to_snapshot_v2`, ADR 0030'dan beri nesneleri paylaşan kopya `Document::clone`); “yazma” kaydın kendi iş parçacığındaki payıdır: anlık görüntü (ADR 0030'dan beri), doğrulamalı kodlama, geçici dosya, `fsync`, geri okuma ve yer değiştirme (`document::write`). “Açma” dosyanın okunması, çözülmesi ve belgenin kurulmasıdır (`Document::read`); “sahne” ilk karenin arayüz iş parçacığında kurulan sahnesidir (çizgiler ve eğriler, bütün çizim görünürken).".to_owned(),
         String::new(),
-        "| Parsel | Dosya | Anlık görüntü | Yazma | Kayıtta bellek artışı | Açma | Açışta bellek artışı | Sahne | Açık çizimle süreç |".to_owned(),
+        "| Parsel | Dosya | Arayüzde | Yazma | Kayıtta bellek artışı | Açma | Açışta bellek artışı | Sahne | Açık çizimle süreç |".to_owned(),
         "|---|---|---|---|---|---|---|---|---|".to_owned(),
     ];
     for r in &rows {
