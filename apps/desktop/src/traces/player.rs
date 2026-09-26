@@ -44,7 +44,7 @@ pub struct Observation {
     pub dynamic_input: Option<String>,
     pub command_line: String,
     pub entities: usize,
-    /// The newest object's kind, corners (absolute) and bulges.
+    /// The newest object's kind, corners (a line's two ends; absolute) and bulges.
     pub newest: Option<(String, Vec<[f64; 2]>, Vec<f64>)>,
     pub can_undo: bool,
     pub can_redo: bool,
@@ -333,11 +333,13 @@ impl<'a> Player<'a> {
         let newest = doc
             .and_then(|d| d.model.entities().max_by_key(|e| e.base().id))
             .map(|e| {
+                // A path's corners; a line's two ends.
                 let (pts, bulges) = match e {
                     Entity::Polygon(p) | Entity::Polyline(p) => (
                         p.pts.iter().map(|v| [v.x, v.y]).collect(),
                         p.bulges.clone().unwrap_or_default(),
                     ),
+                    Entity::Line(l) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], Vec::new()),
                     _ => (Vec::new(), Vec::new()),
                 };
                 (e.kind().to_owned(), pts, bulges)

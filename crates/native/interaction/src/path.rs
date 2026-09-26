@@ -1,6 +1,7 @@
-//! Kapalı alan: the closed-area tool, the web's `PathTool` with
-//! `closed: true` (`apps/web/src/tools/pathTool.ts`) on its
-//! `PointInputTool` base (`drawTools.ts`), step for step:
+//! Kapalı alan and Çoklu çizgi: the web's `PathTool`
+//! (`apps/web/src/tools/pathTool.ts`) with `closed: true` and `closed:
+//! false`, on its `PointInputTool` base (`drawTools.ts`), step for step. One
+//! tool, two shapes (docs/adr/0021, 0027):
 //!
 //! - points come from clicks (ortho and polar tracking applied) and from
 //!   typed text (the shared grammar, `point_text`);
@@ -8,47 +9,79 @@
 //!   once by Açı, Merkez, Yarıçap, İkinci nokta, Doğrultu), D back to lines;
 //!   in line mode U continues the last direction by a typed length; G takes
 //!   the last point back;
-//! - giving the first corner again closes and finishes the area: typed
-//!   exactly, or clicked within the snap aperture once there are three
+//! - closed: giving the first corner again closes and finishes the area:
+//!   typed exactly, or clicked within the snap aperture once there are three
 //!   corners; in arc mode the closing edge is the arc being drawn (ADR 0018);
-//! - a confirm with three corners or more writes one polygon in one undo
-//!   step, through the product command `cad.polygon.create` (docs/adr/0022),
-//!   as the web's tool does; with fewer it warns, writes nothing and starts
-//!   over.
+//! - a confirm with enough points (3 closed, 2 open) writes one object in
+//!   one undo step through a product command, as the web's tool does: a
+//!   closed area through `cad.polygon.create` (docs/adr/0022), a polyline
+//!   through `cad.polyline.create` (docs/adr/0027); with fewer it warns,
+//!   writes nothing and starts over.
 //!
 //! The web's messages are kept word for word. Every calculation is the
 //! shared core's (`kentos-geometry-core`); none is written here.
 
-use kentos_contracts::{CommandResult, PolygonCreate};
+use kentos_contracts::{PolygonCreate, PolylineCreate};
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::bulge::{
-    bulge_arc, bulge_of_sweep, bulge_path_outline, bulge_ring_area, bulge_through, has_bulges,
-    segment_tangent, tangent_bulge,
+    bulge_arc, bulge_of_sweep, bulge_path_length, bulge_path_outline, bulge_ring_area,
+    bulge_through, has_bulges, segment_tangent, tangent_bulge,
 };
 use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::jsmath::{PI, js_hypot};
 use kentos_geometry_core::tools::drawing::{
     centre_bulge, offset_along, radial_point, radius_bulge, unit_toward,
 };
-use kentos_geometry_core::tools::point_input::{Tracking, constrain_cursor};
+use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
-use kentos_native_application::ExecutionContext;
-use kentos_native_application::polygon::{self as command, codes};
+use kentos_native_application::{ExecutionContext, polygon, polyline};
 
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
+use crate::points::{self, SAME, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow, Pointer, Preview, Tag, Tool};
 
-pub const ID: &str = "polygon";
-pub const LABEL: &str = "Kapalı alan";
-/// Corners a closed area needs.
-const MIN: usize = 3;
-/// How near the cursor must be to a polar ray to lock onto it, logical pixels (web `CAPTURE_PX`).
-const CAPTURE_PX: f64 = 10.0;
-/// Two points closer than this are the same point.
-const SAME: f64 = 1e-9;
+/// The closed-area tool's id: its command is `tool.polygon`.
+pub const POLYGON_ID: &str = "polygon";
+pub const POLYGON_LABEL: &str = "Kapalı alan";
+/// The polyline tool's id: its command is `tool.polyline`.
+pub const POLYLINE_ID: &str = "polyline";
+pub const POLYLINE_LABEL: &str = "Çoklu çizgi";
+
+/// Which of the two the tool draws.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Shape {
+    /// A closed area (kapalı alan): at least 3 corners, closed on its first.
+    Closed,
+    /// An open polyline (çoklu çizgi): at least 2 points.
+    Open,
+}
+
+impl Shape {
+    fn id(self) -> &'static str {
+        match self {
+            Shape::Closed => POLYGON_ID,
+            Shape::Open => POLYLINE_ID,
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Shape::Closed => POLYGON_LABEL,
+            Shape::Open => POLYLINE_LABEL,
+        }
+    }
+
+    /// Points the shape needs.
+    fn min(self) -> usize {
+        match self {
+            Shape::Closed => 3,
+            Shape::Open => 2,
+        }
+    }
+}
 
 /// How the next arc segment is shaped (AutoCAD's PLINE arc options). The
 /// default follows the path's end tangent; the others last one segment.
@@ -77,9 +110,10 @@ enum Spec {
     },
 }
 
-/// The closed-area tool.
+/// The path tool: a closed area or an open polyline.
 #[derive(Clone, Debug)]
-pub struct Polygon {
+pub struct Path {
+    shape: Shape,
     pts: Vec<Vec2>,
     /// One bulge per drawn segment (pts[i] → pts[i+1]).
     bulges: Vec<f64>,
@@ -98,15 +132,10 @@ pub struct Polygon {
     pressed_at: Option<[f64; 2]>,
 }
 
-impl Default for Polygon {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Polygon {
-    pub fn new() -> Self {
+impl Path {
+    pub fn new(shape: Shape) -> Self {
         Self {
+            shape,
             pts: Vec::new(),
             bulges: Vec::new(),
             hover: None,
@@ -118,6 +147,20 @@ impl Polygon {
             closing: 0.0,
             pressed_at: None,
         }
+    }
+
+    /// The closed-area tool (`tool.polygon`).
+    pub fn polygon() -> Self {
+        Self::new(Shape::Closed)
+    }
+
+    /// The polyline tool (`tool.polyline`).
+    pub fn polyline() -> Self {
+        Self::new(Shape::Open)
+    }
+
+    fn closed(&self) -> bool {
+        self.shape == Shape::Closed
     }
 
     fn last(&self) -> Option<Vec2> {
@@ -167,8 +210,7 @@ impl Polygon {
     }
 
     fn accept(&mut self, p: Vec2, cx: &mut Context<'_>) {
-        let line = format!("  {}", cx.format().point(p));
-        cx.say(Level::Info, line);
+        points::echo(p, cx);
         self.on_point(p, cx);
     }
 
@@ -229,9 +271,10 @@ impl Polygon {
 
     /// A closed shape ends when its first corner is given again (ADR 0018):
     /// typed exactly, or clicked within the snap aperture once there are
-    /// three corners. The first corner is never written twice.
+    /// three corners. The first corner is never written twice. An open
+    /// polyline never closes this way.
     fn closes_at(&self, end: Vec2, cx: &Context<'_>) -> bool {
-        let Some(&first) = self.pts.first() else {
+        let Some(&first) = self.pts.first().filter(|_| self.closed()) else {
             return false;
         };
         if dist(first, end) <= SAME {
@@ -240,7 +283,7 @@ impl Polygon {
         let Some(pressed) = self.pressed_at else {
             return false;
         };
-        if self.pts.len() < MIN {
+        if self.pts.len() < self.shape.min() {
             return false;
         }
         let s = cx.view.to_screen(first);
@@ -248,10 +291,13 @@ impl Polygon {
     }
 
     fn close_on_first(&mut self, cx: &mut Context<'_>) {
-        if self.pts.len() < MIN {
+        if self.pts.len() < self.shape.min() {
             cx.say(
                 Level::Warn,
-                format!("{LABEL} için en az 3 köşe gerekir; ilk köşe ikinci kez eklenmedi."),
+                format!(
+                    "{} için en az 3 köşe gerekir; ilk köşe ikinci kez eklenmedi.",
+                    self.shape.label()
+                ),
             );
             return;
         }
@@ -305,74 +351,82 @@ impl Polygon {
         true
     }
 
-    /// Commits the area when it has enough corners, then starts over.
+    /// Commits the shape when it has enough points, then starts over.
     fn finish(&mut self, cx: &mut Context<'_>) {
-        if self.pts.len() < MIN {
+        let min = self.shape.min();
+        if self.pts.len() < min {
             cx.say(
                 Level::Warn,
-                format!("{LABEL} için en az {MIN} nokta gerekir."),
+                format!("{} için en az {min} nokta gerekir.", self.shape.label()),
             );
             self.reset();
             return;
         }
         let pts = self.pts.clone();
         let bulges = self.full_bulges();
-        let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
-        if self.create(&pts, bulges, cx) {
-            let text = format!("Kapalı alan eklendi: {}", cx.format().area(area));
-            cx.say(Level::Success, text);
+        match self.shape {
+            Shape::Closed => {
+                let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
+                if self.create_polygon(&pts, bulges, cx) {
+                    let text = format!("Kapalı alan eklendi: {}", cx.format().area(area));
+                    cx.say(Level::Success, text);
+                }
+            }
+            Shape::Open => {
+                let length = bulge_path_length(&pts, bulges.as_deref(), false);
+                if self.create_polyline(&pts, cx) {
+                    let text = format!("Çoklu çizgi eklendi: {}", cx.format().length(length));
+                    cx.say(Level::Success, text);
+                }
+            }
         }
         self.reset();
     }
 
-    /// Bulges of the finished shape: it closes straight unless it was closed
-    /// on its first corner with an arc; none when every edge is straight.
+    /// Bulges of the finished shape: one per point, the last for the closing
+    /// edge (straight unless the area was closed on its first corner with an
+    /// arc; an open polyline has none); none when every edge is straight.
     fn full_bulges(&self) -> Option<Vec<f64>> {
         let mut all = self.bulges.clone();
         all.push(self.closing);
         has_bulges(Some(&all)).then_some(all)
     }
 
-    /// Writes the polygon through the product command `cad.polygon.create`
+    /// Writes the area through the product command `cad.polygon.create`
     /// (docs/adr/0022), as one undo step. What the web's tool knows
     /// implicitly is explicit in its input (CMD-07): the active layer; the
     /// desktop has no current colour, so the layer's colour applies. False,
     /// with the command's message, when it refused (a locked layer); a hidden
     /// layer is written with its warning.
-    fn create(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) -> bool {
+    fn create_polygon(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) -> bool {
         let input = PolygonCreate {
             layer_id: cx.doc.layers().active().to_owned(),
-            pts: pts
-                .iter()
-                .map(|p| kentos_contracts::Vec2 { x: p.x, y: p.y })
-                .collect(),
+            pts: pts.iter().copied().map(wire).collect(),
             bulges,
             holes: None,
             color: None,
             attrs: None,
             expected_revision: None,
         };
-        match command::execute(&mut ExecutionContext::new(cx.doc), input) {
-            CommandResult::Completed { warnings, .. } => {
-                for warning in warnings {
-                    cx.say(Level::Warn, warning.message);
-                }
-                true
-            }
-            CommandResult::Failed { error }
-            | CommandResult::Conflict { error }
-            | CommandResult::NeedsInput { error } => {
-                // A document out of slots is not the user's to fix here; the rest are.
-                let level = if error.code == codes::SLOTS_EXHAUSTED {
-                    Level::Error
-                } else {
-                    Level::Warn
-                };
-                cx.say(level, error.message);
-                false
-            }
-            CommandResult::Queued { .. } | CommandResult::Cancelled => false,
-        }
+        let result = polygon::execute(&mut ExecutionContext::new(cx.doc), input);
+        points::written(result, cx).is_some()
+    }
+
+    /// Writes the polyline through the product command `cad.polyline.create`
+    /// (docs/adr/0027), as one undo step, with one bulge per drawn segment;
+    /// the command stores the document's per-point form. As for the area:
+    /// the active layer, no current colour; false when refused.
+    fn create_polyline(&self, pts: &[Vec2], cx: &mut Context<'_>) -> bool {
+        let input = PolylineCreate {
+            layer_id: cx.doc.layers().active().to_owned(),
+            pts: pts.iter().copied().map(wire).collect(),
+            bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
+            color: None,
+            attrs: None,
+            expected_revision: None,
+        };
+        let result = polyline::execute(&mut ExecutionContext::new(cx.doc), input);
+        points::written(result, cx).is_some()
     }
 
     fn reset(&mut self) {
@@ -388,20 +442,9 @@ impl Polygon {
     /// The effective cursor for the next point: ortho (Shift turns it over)
     /// and polar tracking from the last point, by the shared core.
     fn constrain(&mut self, p: &Pointer, cx: &Context<'_>) -> Vec2 {
-        let Some(from) = self.last() else {
-            self.tracking = None;
-            return p.world;
-        };
-        let c = constrain_cursor(
-            Some(from),
-            p.world,
-            false,
-            cx.draft.ortho != p.shift,
-            cx.draft.polar,
-            cx.view.world_length(CAPTURE_PX),
-        );
-        self.tracking = c.tracking;
-        c.point
+        let (point, tracking) = points::constrain(self.last(), p, cx);
+        self.tracking = tracking;
+        point
     }
 
     fn arc_options(prompt: Prompt, done: bool) -> Prompt {
@@ -421,26 +464,27 @@ impl Polygon {
     }
 }
 
-impl Tool for Polygon {
+impl Tool for Path {
     fn id(&self) -> &'static str {
-        ID
+        self.shape.id()
     }
 
     fn label(&self) -> &'static str {
-        LABEL
+        self.shape.label()
     }
 
     fn prompt(&self) -> Prompt {
+        let label = self.shape.label();
         let n = self.pts.len();
         if n == 0 {
-            return Prompt::new(LABEL, "ilk noktayı belirtin");
+            return Prompt::new(label, "ilk noktayı belirtin");
         }
-        let done = n >= MIN;
+        let done = n >= self.shape.min();
         if self.ask_length {
-            return Prompt::new(LABEL, "son doğrultuda devam edilecek uzunluğu yazın");
+            return Prompt::new(label, "son doğrultuda devam edilecek uzunluğu yazın");
         }
         if !self.arc_mode {
-            let prompt = Prompt::new(LABEL, "sonraki noktayı belirtin")
+            let prompt = Prompt::new(label, "sonraki noktayı belirtin")
                 .option("Yay", "Y")
                 .option("Uzunluk", "U")
                 .option("Geri", "G");
@@ -453,11 +497,11 @@ impl Tool for Polygon {
         let step = match self.spec {
             Spec::Angle { sweep: None } => {
                 return Prompt::new(
-                    LABEL,
+                    label,
                     "yayın iç açısını derece olarak yazın (artı saat yönünün tersine)",
                 );
             }
-            Spec::Radius { r: None } => return Prompt::new(LABEL, "yayın yarıçapını yazın"),
+            Spec::Radius { r: None } => return Prompt::new(label, "yayın yarıçapını yazın"),
             Spec::Angle { .. } | Spec::Radius { .. } => "yayın bitiş noktasını belirtin",
             Spec::Centre { c: Some(_) } => "yayın bitiş doğrultusunu gösterin",
             Spec::Centre { c: None } => "yayın merkezini gösterin",
@@ -471,7 +515,7 @@ impl Tool for Polygon {
             }
             Spec::Tangent => "yayın bitiş noktasını belirtin",
         };
-        Self::arc_options(Prompt::new(LABEL, step), done)
+        Self::arc_options(Prompt::new(label, step), done)
     }
 
     fn point_count(&self) -> usize {
@@ -563,8 +607,8 @@ impl Tool for Polygon {
             bulges.push(hb);
         }
         bulges.push(0.0);
-        let ring =
-            (pts.len() >= MIN).then(|| bulge_path_outline(&pts, Some(&bulges), true, DEFAULT_STEP));
+        let area_shape = self.closed() && pts.len() >= 3;
+        let ring = area_shape.then(|| bulge_path_outline(&pts, Some(&bulges), true, DEFAULT_STEP));
         let path = bulge_path_outline(&pts, Some(&bulges), false, DEFAULT_STEP);
         let last = self.last();
         let mut guides = Vec::new();
@@ -597,7 +641,7 @@ impl Tool for Polygon {
                         format!("Semt {}", format.bearing(bearing_grad(last, end))),
                     ],
                 };
-                if pts.len() >= MIN {
+                if area_shape {
                     let area = bulge_ring_area(&pts, Some(&bulges)).abs();
                     lines.push(format!("Alan {}", format.area(area)));
                 }

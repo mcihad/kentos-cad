@@ -21,7 +21,9 @@
     "view.zoomExtents",
     "tools.options",
     "draft.ortho",
-    "draft.polar"
+    "draft.polar",
+    "tool.line",
+    "tool.polyline"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

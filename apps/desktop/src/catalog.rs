@@ -48,6 +48,9 @@ pub const PORTED: &[&str] = &[
     "tools.options",
     "draft.ortho",
     "draft.polar",
+    // The line and polyline tools (docs/adr/0027), each writing through its product command.
+    "tool.line",
+    "tool.polyline",
 ];
 
 /// Where a command stands, from the desktop's point of view.
