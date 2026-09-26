@@ -7,7 +7,7 @@
 //!
 //! The suggestion list is the widget's own: its order comes from
 //! `kentos_ui::widget::command_line::suggested`, fed with what view.rs gives
-//! the widget (`line_commands`, `App::line_prompt`); this model only says
+//! the widget (`App::line_commands`, `App::line_prompt`); this model only says
 //! when the list is open and what its keys do. With `escape_clears` Esc never
 //! leaves the list closed over a text, so the list is open whenever the text
 //! box has the keyboard, the text is not blank and something matches.
@@ -20,7 +20,6 @@ use iced::keyboard::{self, Key};
 use kentos_ui::widget::command_line::{Suggested, suggested};
 
 use crate::app::{App, COMMAND_INPUT, Message};
-use crate::view::line_commands;
 
 /// The widget's state the player follows.
 #[derive(Debug, Default)]
@@ -112,7 +111,7 @@ impl CommandLine {
         };
         let value = app.command_input.as_str();
         let plain = !modifiers.command() && !modifiers.alt();
-        let suggestions = suggested(&line_commands(), app.line_prompt().as_ref(), value);
+        let suggestions = suggested(&app.line_commands(), app.line_prompt().as_ref(), value);
         let open = !value.trim().is_empty() && !suggestions.is_empty();
         if let Key::Named(named) = key {
             // Esc on an empty line with the list closed ends the command and lets the keyboard go.

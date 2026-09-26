@@ -932,4 +932,33 @@ mod tests {
             assert_eq!(app.session.tool_id(), tool, "{name}");
         }
     }
+
+    /// While a command runs the command line suggests its options, never
+    /// another command: a name typed there goes to the tool, as on the web
+    /// (docs/adr/0027), and the draft stays.
+    #[test]
+    fn a_running_command_owns_what_is_typed() {
+        use kentos_ui::widget::command_line::{Suggested, suggested};
+        let mut app = with_demo();
+        assert!(!app.line_commands().is_empty());
+        let _ = app.run("tool.polygon");
+        assert!(app.line_commands().is_empty());
+        let _ = app.update(Message::Viewport(viewport::Event::Pressed(
+            iced::Point::new(10.0, 10.0),
+        )));
+        assert_eq!(app.session.point_count(), 1);
+        // After the first corner the prompt has options; they are still suggested.
+        let offered = suggested(&app.line_commands(), app.line_prompt().as_ref(), "Ya");
+        assert!(
+            matches!(offered.as_slice(), [Suggested::Option { label, .. }] if label == "Yay"),
+            "{offered:?}"
+        );
+        let _ = app.update(Message::CommandInput("KA".into()));
+        let _ = app.update(Message::CommandSubmitted);
+        assert_eq!(app.session.tool_id(), "polygon");
+        assert_eq!(app.session.point_count(), 1, "the draft stays");
+        assert!(
+            matches!(app.history.last(), Some(Entry::Warning(text)) if text.contains("“KA” anlaşılamadı"))
+        );
+    }
 }

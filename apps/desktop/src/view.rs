@@ -207,7 +207,7 @@ impl App {
         CommandLine::new(&self.history, &self.command_input)
             .id(COMMAND_INPUT)
             .placeholder("Komut ya da koordinat yazın; Enter ya da Boşluk onaylar")
-            .commands(line_commands())
+            .commands(self.line_commands())
             .prompt(self.line_prompt())
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)
@@ -543,9 +543,19 @@ fn tip(command: &Command) -> Tip {
     }
 }
 
-/// Every command, as the command line suggests them: the web's order.
-pub(crate) fn line_commands() -> Vec<LineCommand<'static>> {
-    catalog().commands().iter().map(line_command).collect()
+impl App {
+    /// The commands the command line suggests: every command in the web's
+    /// order, and none while a command runs. Then what is typed belongs to
+    /// the running command, as on the web (`CommandLine.suggest`, ADR 0018:
+    /// Enter applies what is typed): a command's name typed there is a value
+    /// the tool answers, it does not start another command and drop the
+    /// draft. The prompt's options are still suggested (docs/adr/0027).
+    pub(crate) fn line_commands(&self) -> Vec<LineCommand<'static>> {
+        if self.session.is_running() {
+            return Vec::new();
+        }
+        catalog().commands().iter().map(line_command).collect()
+    }
 }
 
 fn line_command(command: &Command) -> LineCommand<'static> {

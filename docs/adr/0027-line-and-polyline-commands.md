@@ -182,9 +182,8 @@
 
 ## Ertelenenler
 
-- **Komut çalışırken komut satırının önerileri** (sahibin kararı). Masaüstü çalışan komutun seçeneklerini ve bütün komutları önerir; web komut çalışırken öneri göstermez, yazılan araca gider.
-  - Sonuç 1: komut çalışırken bir komut adı yazıp Enter'a basmak masaüstünde o komutu başlatır, taslak bırakılır. Web'de araç “anlaşılamadı” der.
-  - Sonuç 2: seçenek adının başı (`uzu`) masaüstünde seçeneği seçer, web'de seçmez.
+- **Komut çalışırken komut satırının önerileri: karar verildi (26 Eylül, önerilen varsayılan).** Masaüstü de web gibi komut çalışırken komut önermez (`App::line_commands`); yazılan çalışan komutundur, Enter onu araca verir (ADR 0018). Komut adı yazıp Enter'a basmak artık başka komutu başlatıp taslağı bırakmaz; araç “anlaşılamadı” der, taslak kalır (`a_running_command_owns_what_is_typed`).
+  - Masaüstü çalışan komutun seçeneklerini önermeye devam eder. Kalan küçük fark: seçenek adının başı (`uzu`) masaüstünde öneriden seçilir, web'de seçilmez. Seçeneğin harfi iki platformda aynıdır.
   - İzlere girmedi.
 - **Bilinmeyen komut adı:** web yazıyı komut satırında seçili bırakır; masaüstü satırı boşaltır ve “Bilinmeyen komut” der. Küçük fark, izlere girmedi (`UX-10`).
 - Öneri listesinde ok tuşları izlerin tuşları arasında yok.

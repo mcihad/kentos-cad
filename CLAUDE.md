@@ -21,8 +21,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 - Desktop Rust ile; `kentos-rc` 25 Eylül'de bu depoya `crates/ui`
   (`kentos-ui` / `kentos_ui`) olarak geçmişiyle alındı (ADR 0016). İlk masaüstü
   kabuğu `apps/desktop`'tadır (ADR 0017); ana CAD çizim alanı `crates/render/wgpu`
-  ile Iced'in aygıtında çizilir (ADR 0019); ilk araç kapalı alandır (ADR 0021),
-  yazı ve seçim henüz yok.
+  ile Iced'in aygıtında çizilir (ADR 0019); araçları kapalı alan, çizgi ve çoklu
+  çizgidir (ADR 0021, 0027); yazı ve seçim henüz yok.
   Web özellikleri envanter üzerinden adım adım masaüstüne taşınır.
 - Web WebGPU/WebGL2 renderer'larını korur. Uygun WGSL kaynakları native ile
   paylaşılabilir; native Iced/application/wgpu runtime'ı web'e derlenmez.
@@ -57,14 +57,14 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015) | `apps/api/`, `crates/server/` |
 | Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict, paylaşım penceresi, “Benimle paylaşılanlar”, açık projede rol/erişim değişikliği (ADR 0024) | `app/cloud/`, `ui/cloud/` |
 | KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
-| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet, geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan aracı, değer alanı ve web'in tuş anlamları (ADR 0021) | `apps/desktop/` |
+| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet, geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan, çizgi ve çoklu çizgi araçları, değer alanı ve web'in tuş anlamları (ADR 0021, 0027) | `apps/desktop/` |
 | Native wgpu çizim hattı ve paylaşılan WGSL sözleşmesi | `crates/render/wgpu/`, `shaders/wgsl/` |
 | Masaüstü belgesi (`kentos-domain`): web `CadDocument`'inin anlamı native olarak, ortak işlem fixture'larıyla sınanır | `crates/native/domain/`, `fixtures/document-ops/` |
-| Masaüstü araç oturumu (`kentos-interaction`): durumlar, veri olarak istem, kapalı alan aracı; iki platform `fixtures/interaction/v1` izlerini ve `fixtures/point-input/v1` dilbilgisini geçer | `crates/native/interaction/` |
-| Ürün komutu `cad.polygon.create` v1: web ve masaüstü işleyicileri, `CommandResult`, katalogla eşit kayıtlar; kapalı alan aracı bu komuttan yazar (ADR 0022) | `product/`, `crates/native/application/`, `fixtures/commands/` |
+| Masaüstü araç oturumu (`kentos-interaction`): durumlar, veri olarak istem, kapalı alan/çoklu çizgi (tek yol aracı) ve çizgi araçları; iki platform `fixtures/interaction/v1` izlerini ve `fixtures/point-input/v1` dilbilgisini geçer | `crates/native/interaction/` |
+| Ürün komutları `cad.polygon.create`, `cad.line.create`, `cad.polyline.create` v1: web ve masaüstü işleyicileri, `CommandResult`, katalogla eşit kayıtlar; kapalı alan, çizgi ve çoklu çizgi araçları bu komutlardan yazar (ADR 0022, 0027) | `product/`, `crates/native/application/`, `fixtures/commands/` |
 | Tipli ayarlar: şema, katmanlı çözüm, ortak durumlar; web servisi, masaüstü ayar dosyası ve penceresi, canlı MSAA/HiDPI (ADR 0023) | `crates/shared/contracts/src/settings/`, `core/settings/`, `app/settings/`, `apps/desktop/src/settings*.rs`, `fixtures/settings/` |
 
-Kapalı alan dışındaki desktop çizim araçları, çizim alanında yazı/seçim/yakalama, binary KCAD, embed Python, tam AI yüzeyi,
+Kapalı alan, çizgi ve çoklu çizgi dışındaki desktop çizim araçları, çizim alanında yazı/seçim/yakalama, binary KCAD, embed Python, tam AI yüzeyi,
 genişletilmiş proje bazlı paylaşım ve kalıcı server worker kabulü gelecek
 işlerdir. Mevcut tenant/cloud altyapısını yok saymayın; onu bu kapsamla tamamlayın.
 Web'e göre verilen kısa dosya yolları `apps/web/src/` altındadır.
@@ -90,7 +90,7 @@ pnpm e2e                 # gerçek tarayıcı duman testi
 pnpm e2e:visual          # görsel karşılaştırma
 pnpm e2e:interaction     # etkileşim izleri: poligon kabul izi, tuş anlamları (fixtures/interaction, ADR 0018)
 cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan (ADR 0021)
-cargo test -p kentos-native-application   # ürün komutu durumları masaüstünde (fixtures/commands, ADR 0022)
+cargo test -p kentos-native-application   # ürün komutlarının durumları masaüstünde (fixtures/commands, ADR 0022, 0027)
 KENTOS_WRITE_SETTINGS=1 cargo test -p kentos-contracts settings   # ayar şeması değişince settingsSchema.json'u yeniden yaz (ADR 0023)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 node scripts/wgsl/browser-check.mjs   # paylaşılan WGSL'yi Chrome WebGPU'da derler ve çizer
