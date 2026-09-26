@@ -17,6 +17,7 @@
     { "move": [-24, -12], "expect": { "snap": "endpoint" } },
     { "click": [-24, -12], "note": "Aralığın ilk noktası." },
     { "click": [-24, -12], "note": "Aynı nokta: aralık yok, tık dikkate alınmaz.", "expect": { "tool": "array", "entities": 7 } },
+    { "move": [-20, -8], "note": "Önizleme: kopyalar imlecin aralığıyla görünür.", "expect": { "tool": "array" } },
     { "click": [-20, -8], "note": "Sütunlar 4 m, satırlar 4 m arayla beş kopya; adım Dizi.", "expect": { "tool": "select", "entities": 12, "log": "success", "selected": [1], "newest": { "kind": "line", "points": [[-16, -8], [0, -8]] } } },
     { "key": "Ctrl+Z", "note": "Beş kopya tek adımda geri alınır.", "expect": { "entities": 7 } },
     { "run": "tool.array" },

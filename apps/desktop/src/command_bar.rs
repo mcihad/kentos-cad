@@ -244,6 +244,19 @@ mod tests {
             "the step wraps before the hints"
         );
         assert!(step.height > esc.height * 1.5, "the step takes two lines");
+        // `KENTOS_STRIP_SHOT=out` keeps what was laid out, dark and light
+        // (`out.png`, `out-acik.png`), for a look; the software renderer
+        // leaves the drawing area itself empty.
+        if let Ok(path) = std::env::var("KENTOS_STRIP_SHOT") {
+            for (theme, name) in [("view.theme.dark", ""), ("view.theme.light", "-acik")] {
+                let _ = app.run(theme);
+                snapshot.settle(&mut app, App::view, &mut update);
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(format!("{path}{name}.png"))
+                    .expect("the image is written");
+            }
+        }
     }
 
     fn update(app: &mut App, message: Message) {
