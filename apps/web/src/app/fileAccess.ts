@@ -79,6 +79,21 @@ export async function writeFile(handle: DrawingFileHandle, bytes: Uint8Array): P
 const STREAMED = 8 << 20;
 
 /**
+ * The largest drawing file the browser opens (docs/adr/0030): a 97 MB file
+ * took the page and its worker about 0.85 GB on top of the drawing on screen,
+ * so a file near the format's 1 GiB would exhaust a tab. The format allows a
+ * platform a smaller limit if it says so (docs/specs/kcad-v2.md §3.4).
+ */
+export const BROWSER_LIMIT = 256 * 1024 * 1024;
+
+/** Why a file is too large for the browser, or null. */
+export function tooLarge(name: string, size: number): string | null {
+  if (size <= BROWSER_LIMIT) return null;
+  const mb = (n: number) => Math.round(n / (1024 * 1024)).toLocaleString('tr-TR');
+  return `“${name}” ${mb(size)} MB; tarayıcı en çok ${mb(BROWSER_LIMIT)} MB'lık bir çizim dosyası açar (daha büyüğü sekmenin belleğini aşar). Dosyayı masaüstü uygulamasıyla açın ya da çizimi birkaç dosyaya bölün.`;
+}
+
+/**
  * A file's bytes. A large one is read in chunks into one buffer of its size:
  * `progress` hears how far, and a read whose `stale` turns true stops (null).
  */

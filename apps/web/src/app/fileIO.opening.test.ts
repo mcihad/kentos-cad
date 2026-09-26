@@ -112,6 +112,18 @@ describe.skipIf(!formatsBuilt)('opening in stages (TODOS.md FILE-20)', () => {
     expect(messages.at(-1)).toMatch(/^uyarı: “Büyük\.kcad” açılmadı: açılış sürerken ekrandaki çizim değişti ya da başka bir çizim açıldı; o çizim olduğu gibi duruyor/);
   });
 
+  it('refuses a file larger than the browser opens, before reading it', async () => {
+    const { doc, files, messages } = setup();
+    const before = doc.revision;
+    let read = false;
+    // A file that says it is 300 MB: its bytes are never asked for.
+    const huge = { size: 300 * 1024 * 1024, arrayBuffer: async () => ((read = true), new ArrayBuffer(0)), stream: () => ((read = true), new ReadableStream()) } as unknown as Blob;
+    files.picker = pick(null, { name: 'Dev.kcad', getFile: async () => huge, createWritable: async () => ({ write: async () => {}, close: async () => {} }) });
+    expect(await files.open()).toBe(false);
+    expect([read, doc.revision]).toEqual([false, before]);
+    expect(messages.at(-1)).toMatch(/^hata: “Dev\.kcad” 300 MB; tarayıcı en çok 256 MB'lık bir çizim dosyası açar .*masaüstü uygulamasıyla açın/);
+  });
+
   it('a v1 file is read in stages too, and a broken one never becomes the drawing', async () => {
     const { doc, files, messages } = setup();
     const text = JSON.stringify(toSnapshot(snapshotSampleDocument()));

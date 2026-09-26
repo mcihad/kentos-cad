@@ -9,7 +9,7 @@ import { askUnsaved } from '../ui/widgets/confirm';
 import type { AppContext } from './context';
 import type { DocumentContent } from '../model/document';
 import { describeDropped, readDrawing, yieldToPage, type DrawingCodec, type ReadDrawing, type ReadProgress } from './drawingFile';
-import { readFile, writeAccess, writeFailure, writeFile } from './fileAccess';
+import { readFile, tooLarge, writeAccess, writeFailure, writeFile } from './fileAccess';
 import { RecentFiles, type RecentFile } from './recentFiles';
 
 /**
@@ -363,6 +363,11 @@ export class DocumentFiles {
       if (!bytes) {
         try {
           const file = await src.handle!.getFile();
+          const large = tooLarge(src.label, file.size);
+          if (large) {
+            ctx.log.error(large);
+            return false;
+          }
           bytes = (await readFile(file, (done, total) => view.step(`Dosya okunuyor: ${count(Math.round(done / 1e6))} / ${count(Math.round(total / 1e6))} MB`, 0.1 * share(done, total)), stale)) ?? undefined;
         } catch (e) {
           const gone = (e as DOMException).name === 'NotFoundError';
