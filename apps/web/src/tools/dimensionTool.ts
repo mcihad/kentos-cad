@@ -300,8 +300,9 @@ export class DimensionTool extends PointInputTool {
       return;
     }
     const { style, ...rest } = g;
-    const e = this.create({ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }) });
-    if (e) this.ctx.log.success(`${ADDED[style ?? 'aligned']}: ${this.ctx.view.dimensionText(l)}`);
+    // Written by `cad.entities.create` (step “Ekle”); a refusal (a locked layer) is said by it, nothing is added.
+    if (this.writeObjects([{ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }) }]))
+      this.ctx.log.success(`${ADDED[style ?? 'aligned']}: ${this.ctx.view.dimensionText(l)}`);
     this.reset();
   }
 

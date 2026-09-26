@@ -5972,6 +5972,7 @@
       "methods": [],
       "steps": 3,
       "description": "Ölçü ekler: hizalı, doğrusal (ΔY yatay / ΔX düşey), açı, yarıçap ve çap; değer proje birimini izler.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6980,6 +6981,7 @@
       "methods": [],
       "steps": 3,
       "description": "Tek satır yazı: tıklanan yerde açılan kutuya yazılır. Yükseklik kâğıt mm olarak, açı derece ya da iki noktayla verilir; yazıya çift tıklayarak düzenleyin.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
