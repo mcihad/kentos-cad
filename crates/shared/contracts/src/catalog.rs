@@ -528,6 +528,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // A file's drawing into a new database project (docs/adr/0036).
+        CommandDescriptor {
+            id: crate::PROJECT_IMPORT.into(),
+            version: crate::PROJECT_IMPORT_VERSION,
+            title: "Dosyayı projeye aktar".into(),
+            summary: "Doğrulanmış bir .kcad yüklemesini (POST …/uploads, PUT …/uploads/{yükleme}) henüz kaydı olmayan bir veritabanı projesine tek işlemde aktarır: \
+                      dosyanın ayarları, katmanları, stilleri ve her nesne kalıcı kimliğiyle. Sunucunun almadığı ilk nesne bütün dosyayı yerini söyleyerek reddeder; \
+                      o zaman hiçbir şey yazılmaz. feature.write ve project.edit ister."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![
+                ProjectPermission::FeatureWrite.name().into(),
+                ProjectPermission::Edit.name().into(),
+            ],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProjectImport>(),
+            output: schema::<crate::ProjectImported>(),
+            examples: vec![CommandExample {
+                title: "Yerel çizimi yeni projeye aktar".into(),
+                input: json!({ "uploadId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
+                output: None,
+            }],
+        },
         // Invitations by link (docs/adr/0035).
         CommandDescriptor {
             id: crate::PROJECT_INVITE.into(),
@@ -964,6 +992,9 @@ mod tests {
                     }
                     crate::PROJECT_FILE_COMMIT => {
                         serde_json::from_value::<crate::FileCommit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_IMPORT => {
+                        serde_json::from_value::<crate::ProjectImport>(e.input.clone()).map(|_| ())
                     }
                     crate::PROJECT_INVITE => {
                         serde_json::from_value::<crate::ProjectInvite>(e.input.clone()).map(|_| ())

@@ -284,10 +284,19 @@ async fn an_upload_is_checked_before_anything_is_kept() {
     let kept = walk(store.root());
     assert!(kept.is_empty(), "{kept:?}");
 
-    // A project kept object by object takes no files; a file project takes no object changes.
+    // A project kept object by object takes an upload only to import it (docs/adr/0036), never
+    // as a file revision. A file project takes no object changes.
     let db_project = new_project(&db, &ayse, "Nesneler").await;
     let db_access = open(&db, &ayse, db_project).await;
-    match files::begin(&db.app, &db_access, begin(3, &sha(b"abc"))).await {
+    let for_import = upload(&db, &store, &db_access, MINIMAL).await.unwrap();
+    match commit(
+        &db,
+        &store,
+        commit_envelope(&db_access, for_import, "0"),
+        &db_access,
+    )
+    .await
+    {
         Err(AppError::Invalid { message, .. }) => {
             assert!(message.contains("nesne nesne"), "{message}")
         }

@@ -19,6 +19,7 @@ pub mod events;
 pub mod files;
 mod idempotency;
 pub mod identity;
+pub mod importing;
 pub mod invitations;
 mod journal;
 pub mod lifecycle;
@@ -113,6 +114,10 @@ pub const SERVER_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::PROJECT_CHECKPOINT_RESTORE,
         kentos_contracts::PROJECT_CHECKPOINT_RESTORE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_IMPORT,
+        kentos_contracts::PROJECT_IMPORT_VERSION,
     ),
     (
         kentos_contracts::PROJECT_FILE_COMMIT,

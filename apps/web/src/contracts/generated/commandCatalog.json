@@ -6702,6 +6702,79 @@
       ]
     },
     {
+      "id": "project.import",
+      "version": 1,
+      "title": "Dosyayı projeye aktar",
+      "summary": "Doğrulanmış bir .kcad yüklemesini (POST …/uploads, PUT …/uploads/{yükleme}) henüz kaydı olmayan bir veritabanı projesine tek işlemde aktarır: dosyanın ayarları, katmanları, stilleri ve her nesne kalıcı kimliğiyle. Sunucunun almadığı ilk nesne bütün dosyayı yerini söyleyerek reddeder; o zaman hiçbir şey yazılmaz. feature.write ve project.edit ister.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "feature.write",
+        "project.edit"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.import` v1: the caller's own verified upload of a\n`.kcad` file, into a database project that has nothing in it yet.",
+        "properties": {
+          "uploadId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uploadId"
+        ],
+        "title": "ProjectImport",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `project.import` v1.",
+        "properties": {
+          "dataRevision": {
+            "description": "The project's data revision and metadata version after it (decimal text).",
+            "type": "string"
+          },
+          "metaVersion": {
+            "type": "string"
+          },
+          "objects": {
+            "description": "How many objects came in (decimal text).",
+            "type": "string"
+          },
+          "replayed": {
+            "default": false,
+            "description": "The stored answer of an earlier identical command (its key was seen).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "objects",
+          "dataRevision",
+          "metaVersion"
+        ],
+        "title": "ProjectImported",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Yerel çizimi yeni projeye aktar",
+          "input": {
+            "uploadId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b"
+          }
+        }
+      ]
+    },
+    {
       "id": "project.invite",
       "version": 1,
       "title": "Projeye davet et",

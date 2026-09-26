@@ -21,25 +21,21 @@ use kentos_contracts::{
 };
 use kentos_postgres::{Scope, rescope};
 use serde_json::json;
-use sha2::{Digest, Sha256};
 use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::access::ProjectAccess;
 use crate::blobs::Blobs;
-use crate::cad::{PROJECTION_VERSION, Stored, to_stored};
+use crate::cad::Stored;
 use crate::changes::{check_target, lock};
 use crate::checkpoints::missing;
 use crate::commands::input;
 use crate::duplicate::{self, Copy, Origin};
 use crate::error::{AppError, AppResult};
-use crate::files::{self, RevisionRow, verifying};
+use crate::files::{self, RevisionRow};
 use crate::projects::{check_name, check_srid, check_tree, gone, opened, storage_of};
 use crate::tenancy::{self, Capability};
-use crate::{idempotency, journal, listing};
-
-/// Objects inserted by one statement.
-const BATCH: usize = 1000;
+use crate::{idempotency, importing, journal, listing};
 
 /// The point asked for.
 enum Asked {
@@ -247,23 +243,9 @@ pub async fn restore(
             let name = name
                 .map(|n| n.trim().to_string())
                 .unwrap_or_else(|| restore_name(&access.name, &label));
-            let doc = read_checkpoint(blobs, &key, &sha256).await?;
-            let rows = doc
-                .uids
-                .iter()
-                .zip(&doc.entities)
-                .enumerate()
-                .map(|(i, (uid, e))| {
-                    to_stored(e, doc.settings.srid)
-                        .map(|s| (Uuid::from_bytes(uid.0), s))
-                        .map_err(|why| {
-                            AppError::invalid(format!(
-                                "Kontrol noktasının {}. nesnesi içe aktarılamadı: {why}",
-                                i + 1
-                            ))
-                        })
-                })
-                .collect::<AppResult<Vec<_>>>()?;
+            let doc =
+                importing::read(blobs, &key, Some(&sha256), "kontrol noktasının dosyası").await?;
+            let rows = importing::objects(&doc)?;
             check_tree(&doc.layers, &doc.active_layer)?;
             let mut tx = db.scoped(access.scope()).await?;
             let written = async {
@@ -355,33 +337,6 @@ async fn finish(
     }
 }
 
-/// A checkpoint's file, checked against its hash and decoded off the async threads.
-async fn read_checkpoint(blobs: &Blobs, key: &str, sha256: &str) -> AppResult<DocumentSnapshotV2> {
-    let _turn = verifying()
-        .acquire()
-        .await
-        .map_err(|e| AppError::Storage(std::io::Error::other(e)))?;
-    let bytes = blobs.read(key).await?;
-    let got: String = Sha256::digest(&bytes)
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect();
-    if got != sha256 {
-        return Err(AppError::Storage(std::io::Error::other(format!(
-            "kontrol noktasının dosyası bozulmuş ({key}: SHA-256 {got}, beklenen {sha256})"
-        ))));
-    }
-    tokio::task::spawn_blocking(move || kentos_kcad::decode(&bytes))
-        .await
-        .map_err(|e| AppError::Storage(std::io::Error::other(e)))?
-        .map_err(|e| {
-            AppError::Storage(std::io::Error::other(format!(
-                "kontrol noktasının dosyası okunamadı: {}",
-                e.message
-            )))
-        })
-}
-
 /// A database project's checkpoint to import as a new project.
 struct Import<'a> {
     target: Uuid,
@@ -469,8 +424,8 @@ async fn import_into(
     .bind(&tags)
     .execute(&mut **tx)
     .await?;
-    for batch in rows.chunks(BATCH) {
-        insert_objects(tx, target, id, doc.settings.srid, actor, batch).await?;
+    for batch in rows.chunks(importing::BATCH) {
+        importing::insert_objects(tx, target, id, doc.settings.srid, actor, batch).await?;
     }
     if !rows.is_empty() {
         // A created object's version is its commit's data revision (docs/adr/0026): this is the first.
@@ -506,56 +461,6 @@ async fn import_into(
     };
     idempotency::record(tx, now, envelope, text, &result).await?;
     Ok(result)
-}
-
-/// Up to [`BATCH`] objects in one statement, each at version 1.
-async fn insert_objects(
-    tx: &mut Transaction<'static, Postgres>,
-    tenant: Uuid,
-    project: Uuid,
-    srid: u32,
-    actor: Uuid,
-    rows: &[(Uuid, Stored)],
-) -> AppResult<()> {
-    let ids: Vec<Uuid> = rows.iter().map(|(id, _)| *id).collect();
-    let layers: Vec<&str> = rows.iter().map(|(_, s)| s.layer_id.as_str()).collect();
-    let kinds: Vec<&str> = rows.iter().map(|(_, s)| s.kind.as_str()).collect();
-    let sources: Vec<&str> = rows.iter().map(|(_, s)| s.source_kind).collect();
-    let geoms: Vec<Option<&[u8]>> = rows.iter().map(|(_, s)| s.geom.as_deref()).collect();
-    let definitions: Vec<Option<&serde_json::Value>> = rows
-        .iter()
-        .map(|(_, s)| s.cad_definition.as_ref())
-        .collect();
-    let properties: Vec<&serde_json::Value> = rows.iter().map(|(_, s)| &s.properties).collect();
-    let labels: Vec<Option<&str>> = rows.iter().map(|(_, s)| s.label.as_deref()).collect();
-    let colors: Vec<Option<&str>> = rows.iter().map(|(_, s)| s.color.as_deref()).collect();
-    let symbols: Vec<Option<&str>> = rows.iter().map(|(_, s)| s.symbol.as_deref()).collect();
-    sqlx::query(
-        "insert into kentos.feature (tenant_id, project_id, id, layer_id, kind, source_kind, srid, geom, cad_definition, properties,
-                                     label, color, symbol, projection_version, created_by, updated_by, version)
-         select $1, $2, f.id, f.layer_id, f.kind, f.source_kind, $3, public.st_geomfromewkb(f.geom), f.cad_definition, f.properties,
-                f.label, f.color, f.symbol, $4, $5, $5, 1
-           from unnest($6::uuid[], $7::text[], $8::text[], $9::text[], $10::bytea[], $11::jsonb[], $12::jsonb[], $13::text[], $14::text[], $15::text[])
-             as f(id, layer_id, kind, source_kind, geom, cad_definition, properties, label, color, symbol)",
-    )
-    .bind(tenant)
-    .bind(project)
-    .bind(srid as i32)
-    .bind(PROJECTION_VERSION)
-    .bind(actor)
-    .bind(&ids)
-    .bind(&layers)
-    .bind(&kinds)
-    .bind(&sources)
-    .bind(&geoms)
-    .bind(&definitions)
-    .bind(&properties)
-    .bind(&labels)
-    .bind(&colors)
-    .bind(&symbols)
-    .execute(&mut **tx)
-    .await?;
-    Ok(())
 }
 
 #[cfg(test)]

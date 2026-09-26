@@ -16,10 +16,11 @@ use kentos_contracts::{
     CheckpointChange, CommandEnvelope, CommitResult, FileCommitted, InvitationChange,
     PROJECT_ACCESS_REVOKE, PROJECT_ARCHIVE, PROJECT_CHANGES, PROJECT_CHECKPOINT_CREATE,
     PROJECT_CHECKPOINT_DELETE, PROJECT_CHECKPOINT_RESTORE, PROJECT_CREATE, PROJECT_CREATE_VERSION,
-    PROJECT_DUPLICATE, PROJECT_FAVORITE, PROJECT_FILE_COMMIT, PROJECT_INVITATION_REVOKE,
-    PROJECT_INVITE, PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME, PROJECT_RESTORE,
-    PROJECT_SHARE, PROJECT_TRASH, PROJECT_UNARCHIVE, ProjectAccessChange, ProjectCatalogChange,
-    ProjectCreate, ProjectDuplicated, ProjectInfo, ProjectPurged,
+    PROJECT_DUPLICATE, PROJECT_FAVORITE, PROJECT_FILE_COMMIT, PROJECT_IMPORT,
+    PROJECT_INVITATION_REVOKE, PROJECT_INVITE, PROJECT_METADATA_UPDATE, PROJECT_PURGE,
+    PROJECT_RENAME, PROJECT_RESTORE, PROJECT_SHARE, PROJECT_TRASH, PROJECT_UNARCHIVE,
+    ProjectAccessChange, ProjectCatalogChange, ProjectCreate, ProjectDuplicated, ProjectImported,
+    ProjectInfo, ProjectPurged,
 };
 use serde::de::DeserializeOwned;
 use serde_json::Value;
@@ -30,8 +31,8 @@ use crate::error::{AppError, AppResult};
 use crate::lifecycle::StateChange;
 use crate::tenancy::Access;
 use crate::{
-    catalog, changes, checkpoints, duplicate, files, idempotency, invitations, lifecycle, projects,
-    restore, sharing,
+    catalog, changes, checkpoints, duplicate, files, idempotency, importing, invitations,
+    lifecycle, projects, restore, sharing,
 };
 
 /// How the server keeps its catalog (docs/adr/0028): how long a project
@@ -67,6 +68,8 @@ pub enum CommandOutcome {
     Checkpoint(CheckpointChange),
     /// An invitation made or withdrawn (docs/adr/0035).
     Invitation(InvitationChange),
+    /// A file's drawing brought into a new database project (docs/adr/0036).
+    Imported(ProjectImported),
 }
 
 impl CommandOutcome {
@@ -85,6 +88,7 @@ impl CommandOutcome {
             Self::Checkpoint(r) => !r.replayed,
             // Nobody's access changes until an invitation is accepted.
             Self::Invitation(_) => false,
+            Self::Imported(r) => !r.replayed,
         }
     }
 
@@ -100,6 +104,7 @@ impl CommandOutcome {
             Self::FileCommitted(r) => serde_json::to_value(r),
             Self::Checkpoint(r) => serde_json::to_value(r),
             Self::Invitation(r) => serde_json::to_value(r),
+            Self::Imported(r) => serde_json::to_value(r),
         }
         .expect("command results serialize")
     }
@@ -165,6 +170,9 @@ pub async fn run(
         PROJECT_FILE_COMMIT => files::commit(db, blobs, access, envelope)
             .await
             .map(O::FileCommitted),
+        PROJECT_IMPORT => importing::import(db, blobs, access, envelope)
+            .await
+            .map(O::Imported),
         PROJECT_CHECKPOINT_CREATE => checkpoints::create(db, blobs, access, envelope)
             .await
             .map(O::Checkpoint),

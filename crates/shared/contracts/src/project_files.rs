@@ -43,6 +43,16 @@ pub const FILE_UPLOAD_MAX: u32 = 256 * 1024 * 1024;
 /// Hours an upload waits to be committed before it is removed with its bytes.
 pub const UPLOAD_LIFETIME_HOURS: u32 = 24;
 
+/// Imports a verified upload into a new, empty database project in one
+/// transaction (docs/adr/0036): the file's settings, layers, styles and
+/// every object under its persistent id.
+pub const PROJECT_IMPORT: &str = "project.import";
+pub const PROJECT_IMPORT_VERSION: u32 = 1;
+
+/// Event kind of an import (`EventRecord.kind`, no objects listed): the
+/// project's content came in whole; an open connection opens it again.
+pub const PROJECT_IMPORTED: &str = "project.import";
+
 /// Opening an upload: what the client will send.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -144,4 +154,32 @@ pub struct FileRevisions {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub current: Option<String>,
     pub revisions: Vec<FileRevision>,
+}
+
+/// Input of `project.import` v1: the caller's own verified upload of a
+/// `.kcad` file, into a database project that has nothing in it yet.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectImport {
+    pub upload_id: String,
+}
+
+/// Output of `project.import` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectImported {
+    /// How many objects came in (decimal text).
+    pub objects: String,
+    /// The project's data revision and metadata version after it (decimal text).
+    pub data_revision: String,
+    pub meta_version: String,
+    /// The stored answer of an earlier identical command (its key was seen).
+    #[serde(default)]
+    pub replayed: bool,
 }

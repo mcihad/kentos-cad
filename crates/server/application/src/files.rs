@@ -17,6 +17,9 @@
 //!    final key: committing the same upload again finds it there, and the
 //!    project's next commit removes it otherwise.
 //!
+//! A new database project takes an upload too: `project.import` brings the
+//! file's drawing into it in one transaction (docs/adr/0036).
+//!
 //! Only the person who opened an upload sends its bytes and commits it; for
 //! anyone else it does not exist. An upload not committed within a day is
 //! removed with its bytes ([`cleanup`]).
@@ -117,9 +120,9 @@ pub async fn begin(
         ));
     }
     let sha256 = check_sha256(&begin.sha256)?;
+    // Either kind of project takes uploads: a file project commits them as
+    // revisions, a new database project imports one (`project.import`, docs/adr/0036).
     let mut tx = db.scoped(access.scope()).await?;
-    let (storage, _, _) = file_state(&mut tx, access).await?;
-    needs_file(storage, &access.name)?;
     let id = Uuid::now_v7();
     let created: OffsetDateTime = sqlx::query_scalar(
         "insert into kentos.project_upload (tenant_id, project_id, id, created_by, size, sha256, blob_key)
@@ -147,14 +150,14 @@ pub async fn begin(
 }
 
 /// One of the caller's own uploads of this project.
-struct Upload {
-    size: i64,
-    sha256: String,
-    received: bool,
-    blob_key: String,
+pub(crate) struct Upload {
+    pub size: i64,
+    pub sha256: String,
+    pub received: bool,
+    pub blob_key: String,
     created: OffsetDateTime,
     /// Counted when the bytes were verified.
-    objects: Option<i64>,
+    pub objects: Option<i64>,
 }
 
 /// An upload's row: size, SHA-256, when it was received, its object's key, when it was opened, its object count.
@@ -167,7 +170,7 @@ type UploadRow = (
     Option<i64>,
 );
 
-async fn own_upload(
+pub(crate) async fn own_upload(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
     upload: Uuid,
@@ -194,7 +197,7 @@ async fn own_upload(
     ))
 }
 
-fn upload_gone() -> AppError {
+pub(crate) fn upload_gone() -> AppError {
     AppError::not_found(
         "Yükleme bulunamadı: süresi dolmuş, kaydedilmiş ya da başkasına ait olabilir. Yeni bir yükleme başlatın.",
     )
