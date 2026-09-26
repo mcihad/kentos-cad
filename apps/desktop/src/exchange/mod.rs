@@ -1,5 +1,6 @@
 //! File exchange (the web's `app/fileExchange.ts` and `ui/io/`): coordinate
-//! lists (Netcad NCN, TXT, CSV) and DXF, in and out, through the shared
+//! lists (Netcad NCN, TXT, CSV) and DXF, in and out; GeoJSON in and out and
+//! Shapefile in, from its files or a zip archive; through the shared
 //! readers and writers (`crates/shared/formats`, the ones the web runs in its
 //! formats worker; CLAUDE.md §9.7, docs/adr/0009). Files are read and
 //! written off the UI thread. The source coordinate system is always asked,
@@ -15,6 +16,10 @@ mod coord_export;
 mod coord_import;
 mod dxf_export;
 mod dxf_import;
+mod geojson_export;
+mod gis_import;
+#[cfg(test)]
+mod gis_tests;
 #[cfg(test)]
 mod tests;
 pub(crate) mod words;
@@ -25,6 +30,7 @@ use std::sync::Arc;
 use iced::futures::channel::mpsc;
 use iced::{Element, Task};
 use kentos_domain::Slot;
+use kentos_interaction::Format;
 use kentos_render_wgpu::Bounds;
 use kentos_render_wgpu::scene;
 
@@ -42,6 +48,9 @@ pub struct Picked {
 pub enum Kind {
     Dxf,
     Coords,
+    GeoJson,
+    /// A Shapefile layer's files chosen together, or its zip archive.
+    Shapefile,
 }
 
 /// The open exchange window.
@@ -51,6 +60,9 @@ pub enum Window {
     CoordImport(coord_import::State),
     DxfExport(dxf_export::State),
     CoordExport(coord_export::State),
+    /// Boxed: the largest window's state.
+    GisImport(Box<gis_import::State>),
+    GeoJsonExport(geojson_export::State),
 }
 
 #[derive(Debug, Clone)]
@@ -58,10 +70,14 @@ pub enum Event {
     /// A file picked for an import; `None` when the dialog was cancelled or
     /// the file could not be read (`Err`: why).
     Picked(Kind, Option<Result<Picked, String>>),
+    /// Files picked together (a Shapefile's parts, or its archive).
+    PickedMany(Kind, Option<Result<Vec<Picked>, String>>),
     DxfImport(dxf_import::Event),
     CoordImport(coord_import::Event),
     DxfExport(dxf_export::Event),
     CoordExport(coord_export::Event),
+    GisImport(gis_import::Event),
+    GeoJsonExport(geojson_export::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -69,12 +85,15 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 5] = [
+pub const COMMANDS: [&str; 8] = [
     "file.import.dxf",
     "file.import.ncn",
     "crs.points",
     "file.export.dxf",
     "file.export.ncn",
+    "file.import.geojson",
+    "file.import.shp",
+    "file.export.geojson",
 ];
 
 fn message(event: Event) -> Message {
@@ -101,6 +120,8 @@ impl App {
         match id {
             "file.import.dxf" => self.pick(Kind::Dxf),
             "file.import.ncn" | "crs.points" => self.pick(Kind::Coords),
+            "file.import.geojson" => self.pick(Kind::GeoJson),
+            "file.import.shp" => self.pick(Kind::Shapefile),
             "file.export.dxf" => {
                 let state = dxf_export::State::new(self);
                 self.open_window(Window::DxfExport(state));
@@ -109,6 +130,11 @@ impl App {
             "file.export.ncn" => {
                 let state = coord_export::State::new(self);
                 self.open_window(Window::CoordExport(state));
+                Task::none()
+            }
+            "file.export.geojson" => {
+                let state = geojson_export::State::new(self);
+                self.open_window(Window::GeoJsonExport(state));
                 Task::none()
             }
             _ => Task::none(),
@@ -124,6 +150,12 @@ impl App {
     fn pick(&mut self, kind: Kind) -> Task<Message> {
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
+            if kind == Kind::Shapefile {
+                return Task::perform(
+                    async move { Some(read_file(&path).map(|f| vec![f])) },
+                    move |files| message(Event::PickedMany(kind, files)),
+                );
+            }
             return Task::perform(async move { Some(read_file(&path)) }, move |file| {
                 message(Event::Picked(kind, file))
             });
@@ -135,7 +167,36 @@ impl App {
                 "Koordinat listesi (NCN, TXT, CSV)",
                 &["ncn", "txt", "csv", "xyz", "dat", "asc"],
             ),
+            Kind::GeoJson => ("GeoJSON içe aktar", "GeoJSON", &["geojson", "json"]),
+            Kind::Shapefile => (
+                "Shapefile içe aktar",
+                "Shapefile katmanı (.shp, .shx, .dbf, .prj, .cpg) ya da .zip",
+                &["shp", "shx", "dbf", "prj", "cpg", "zip"],
+            ),
         };
+        if kind == Kind::Shapefile {
+            // A layer's parts are chosen together.
+            return Task::perform(
+                async move {
+                    let picked = rfd::AsyncFileDialog::new()
+                        .set_title(title)
+                        .add_filter(filter, extensions)
+                        .pick_files()
+                        .await?;
+                    let mut files = Vec::with_capacity(picked.len());
+                    for file in picked {
+                        let name = file.file_name();
+                        let bytes = file.read().await;
+                        files.push(Picked {
+                            name,
+                            bytes: bytes.into(),
+                        });
+                    }
+                    Some(Ok(files))
+                },
+                move |files| message(Event::PickedMany(kind, files)),
+            );
+        }
         Task::perform(
             async move {
                 let file = rfd::AsyncFileDialog::new()
@@ -163,10 +224,30 @@ impl App {
             }
             Event::Picked(Kind::Dxf, Some(Ok(file))) => self.dxf_import_picked(file),
             Event::Picked(Kind::Coords, Some(Ok(file))) => self.coord_import_picked(file),
+            Event::Picked(Kind::GeoJson, Some(Ok(file))) => {
+                self.gis_import_picked(Ok(gis_import::Source::GeoJson(file)))
+            }
+            Event::Picked(Kind::Shapefile, Some(Ok(file))) => {
+                self.gis_import_picked(gis_import::shapefile_source(vec![file]))
+            }
+            Event::PickedMany(_, None) => Task::none(),
+            Event::PickedMany(_, Some(Err(e))) => {
+                self.error(e);
+                Task::none()
+            }
+            Event::PickedMany(Kind::Shapefile, Some(Ok(files))) => {
+                self.gis_import_picked(gis_import::shapefile_source(files))
+            }
+            Event::PickedMany(kind, Some(Ok(mut files))) => match files.len() {
+                1 => self.exchange_event(Event::Picked(kind, files.pop().map(Ok))),
+                _ => Task::none(),
+            },
             Event::DxfImport(e) => self.dxf_import_event(e),
             Event::CoordImport(e) => self.coord_import_event(e),
             Event::DxfExport(e) => self.dxf_export_event(e),
             Event::CoordExport(e) => self.coord_export_event(e),
+            Event::GisImport(e) => self.gis_import_event(e),
+            Event::GeoJsonExport(e) => self.geojson_export_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -189,6 +270,8 @@ impl App {
             Some(Window::CoordImport(s)) => self.coord_import_view(s),
             Some(Window::DxfExport(s)) => self.dxf_export_view(s),
             Some(Window::CoordExport(s)) => self.coord_export_view(s),
+            Some(Window::GisImport(s)) => self.gis_import_view(s),
+            Some(Window::GeoJsonExport(s)) => self.geojson_export_view(s),
             None => iced::widget::text("").into(),
         }
     }
@@ -254,8 +337,16 @@ impl App {
         match self.exchange {
             Some(Window::DxfExport(_)) => self.dxf_export_written(outcome),
             Some(Window::CoordExport(_)) => self.coord_export_written(outcome),
+            Some(Window::GeoJsonExport(_)) => self.geojson_export_written(outcome),
             _ => Task::none(),
         }
+    }
+
+    /// How the open drawing writes numbers (its units and decimals).
+    fn number_format(&self) -> Format {
+        self.document
+            .as_ref()
+            .map_or_else(Format::default, |d| Format::of(d.settings()))
     }
 
     /// The file name an export suggests: the drawing's name without `.kcad`

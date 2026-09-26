@@ -11,31 +11,31 @@ use super::{Event, Window, coord_export, coord_import, dxf_export, dxf_import};
 use crate::app::{App, Dialog, Message, Picker};
 use crate::files_testing::{app_with_drawing, drive, last_said, scratch};
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/formats/v1")
         .join(name)
 }
 
-fn send(app: &mut App, event: Event) {
+pub(super) fn send(app: &mut App, event: Event) {
     let task = app.update(Message::Exchange(Box::new(event)));
     drive(app, task);
 }
 
-fn run(app: &mut App, id: &'static str) {
+pub(super) fn run(app: &mut App, id: &'static str) {
     let task = app.run(id);
     drive(app, task);
 }
 
 /// Whether the command line said a line starting so.
-fn said(app: &App, start: &str) -> bool {
+pub(super) fn said(app: &App, start: &str) -> bool {
     use kentos_ui::widget::command_line::Entry;
     app.history.iter().any(|e| {
         matches!(e, Entry::Output(t) | Entry::Warning(t) | Entry::Error(t) if t.starts_with(start))
     })
 }
 
-fn count(app: &App) -> usize {
+pub(super) fn count(app: &App) -> usize {
     app.document.as_ref().expect("open").model.len()
 }
 
@@ -230,7 +230,8 @@ fn a_coordinate_list_export_writes_every_point_exactly() {
 }
 
 /// Pictures of the four windows for the owner, in the dark and the light
-/// theme, written to `.run/shots` (never committed); not run by default:
+/// theme, at 1440×900 and at the smallest window (1100×650), written to
+/// `.run/shots` (never committed); not run by default:
 ///
 /// ```text
 /// cargo test -p kentos-desktop exchange::tests::screens -- --ignored --nocapture
@@ -243,48 +244,50 @@ fn screens() {
 
     let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let picture = |app: &mut App, name: &str| {
-        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
-        let mut update = |app: &mut App, message| {
-            let _ = app.update(message);
+    for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+        let picture = |app: &mut App, name: &str| {
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(app, App::view, &mut update);
+            let _ = snapshot.render(app.view(), &app.theme());
+            let file = out.join(format!("{name}-{width}x{height}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
         };
-        snapshot.settle(app, App::view, &mut update);
-        let _ = snapshot.render(app.view(), &app.theme());
-        let file = out.join(format!("{name}.png"));
-        snapshot
-            .render(app.view(), &app.theme())
-            .save(&file)
-            .expect("writes the picture");
-        println!("{}", file.display());
-    };
-    for mode in ["dark", "light"] {
-        let fresh = || {
-            let mut app = app_with_drawing();
-            let _ = app
-                .settings
-                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
-            app.apply_settings();
-            app
-        };
-        let mut app = fresh();
-        app.picker = Picker::File(fixture("entities.dxf"));
-        run(&mut app, "file.import.dxf");
-        picture(&mut app, &format!("aktar-{mode}-1-dxf"));
-        send(&mut app, Event::DxfImport(dxf_import::Event::Crs(2322)));
-        picture(&mut app, &format!("aktar-{mode}-2-dxf-baska-sistem"));
+        for mode in ["dark", "light"] {
+            let fresh = || {
+                let mut app = app_with_drawing();
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                app
+            };
+            let mut app = fresh();
+            app.picker = Picker::File(fixture("entities.dxf"));
+            run(&mut app, "file.import.dxf");
+            picture(&mut app, &format!("aktar-{mode}-1-dxf"));
+            send(&mut app, Event::DxfImport(dxf_import::Event::Crs(2322)));
+            picture(&mut app, &format!("aktar-{mode}-2-dxf-baska-sistem"));
 
-        let mut app = fresh();
-        app.picker = Picker::File(fixture("netcad.ncn"));
-        run(&mut app, "file.import.ncn");
-        picture(&mut app, &format!("aktar-{mode}-3-koordinat"));
-        send(&mut app, Event::CoordImport(coord_import::Event::Run));
-        picture(&mut app, &format!("aktar-{mode}-4-koordinat-alindi"));
+            let mut app = fresh();
+            app.picker = Picker::File(fixture("netcad.ncn"));
+            run(&mut app, "file.import.ncn");
+            picture(&mut app, &format!("aktar-{mode}-3-koordinat"));
+            send(&mut app, Event::CoordImport(coord_import::Event::Run));
+            picture(&mut app, &format!("aktar-{mode}-4-koordinat-alindi"));
 
-        let mut app = fresh();
-        run(&mut app, "file.export.dxf");
-        picture(&mut app, &format!("aktar-{mode}-5-dxf-ver"));
-        let mut app = fresh();
-        run(&mut app, "file.export.ncn");
-        picture(&mut app, &format!("aktar-{mode}-6-koordinat-ver"));
+            let mut app = fresh();
+            run(&mut app, "file.export.dxf");
+            picture(&mut app, &format!("aktar-{mode}-5-dxf-ver"));
+            let mut app = fresh();
+            run(&mut app, "file.export.ncn");
+            picture(&mut app, &format!("aktar-{mode}-6-koordinat-ver"));
+        }
     }
 }

@@ -241,7 +241,7 @@ impl App {
     pub(super) fn coord_import_picked(&mut self, file: Picked) -> Task<Message> {
         let srid = self.project_srid();
         let (crs, target) = match &self.exchange {
-            Some(Window::CoordImport(s)) => (s.crs, s.target.clone()),
+            Some(Window::CoordImport(s)) => (s.crs.clone(), s.target.clone()),
             _ => (CrsQuestion::new(srid), None),
         };
         let id = READS.fetch_add(1, Ordering::Relaxed) + 1;
@@ -322,7 +322,7 @@ impl App {
             }
             Event::Target(t) => s.target = t,
             Event::Name(name) => s.name = name,
-            Event::Crs(srid) => s.crs.srid = srid,
+            Event::Crs(srid) => s.crs.pick(srid),
             Event::Another | Event::Run | Event::Imported { .. } => {}
         }
         if again {
@@ -519,7 +519,10 @@ impl App {
             .push(self.coord_options(s))
             .push(self.coord_table(s))
             .push(self.coord_summary(s))
-            .push(s.crs.view(srid, |srid| event(Event::Crs(srid))))
+            .push(
+                s.crs
+                    .view(srid, &self.number_format(), |srid| event(Event::Crs(srid))),
+            )
             .push(self.coord_layer(s));
         let status = self
             .coord_locked(s)
@@ -536,7 +539,7 @@ impl App {
         overlay::blocking(
             Dialog::new("Koordinat listesi içe aktar")
                 // The body scrolls; the buttons stay in view whatever the window's height.
-                .push(scrollable(body).height(Fill))
+                .scroll(body)
                 .action(words::ghost("Başka dosya…", Some(event(Event::Another))))
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))

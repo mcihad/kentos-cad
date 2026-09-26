@@ -33,5 +33,6 @@ pub mod nurbs;
 pub mod report;
 pub mod shp;
 pub mod text;
+pub mod zip;
 
 pub use kentos_contracts as contracts;

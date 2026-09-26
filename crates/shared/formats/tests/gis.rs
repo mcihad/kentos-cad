@@ -365,3 +365,47 @@ fn cut_or_damaged_files_never_panic() {
         }
     }
 }
+
+/// Zipped Shapefiles (docs/adr/0053). The archives in the fixtures were
+/// written by Python's `zipfile` (deflated; one stored, one with two layers
+/// in a folder): each layer inside reads exactly as its files beside it,
+/// which the independent reader checks above.
+#[test]
+fn zipped_shapefiles_read_as_their_files() {
+    let opts = |layer: &str| ShapefileReadOptions {
+        layer: layer.into(),
+        max_entities: 0,
+    };
+    for (archive, layers) in [
+        ("parseller.zip", vec!["parseller"]),
+        (
+            "katmanlar.zip",
+            vec!["katmanlar/parseller", "katmanlar/yollar"],
+        ),
+        ("kuyular-stored.zip", vec!["kuyular"]),
+    ] {
+        let bytes = read_file(&dir().join(archive));
+        assert_eq!(shp::zip_layers(&bytes).expect(archive), layers, "{archive}");
+        for layer in layers {
+            let name = shp::zip_layer_name(layer);
+            let zipped = shp::read_zip(&bytes, layer, &opts(name))
+                .unwrap_or_else(|e| panic!("{archive} {layer}: {e}"));
+            let (plain, encoding) = read_fixture(name);
+            assert_eq!(
+                canonical(&zipped, encoding),
+                canonical(&plain, encoding),
+                "{archive} {layer}"
+            );
+            assert_eq!(zipped.report.source[0].label, "Zip arşivinden");
+        }
+    }
+    // A layer the archive does not have, and every cut of an archive: refused, never a panic.
+    let bytes = read_file(&dir().join("katmanlar.zip"));
+    assert!(shp::read_zip(&bytes, "katmanlar/kuyular", &opts("kuyular")).is_err());
+    // A layer is its path: the same name outside its folder is not it.
+    assert!(shp::read_zip(&bytes, "yollar", &opts("yollar")).is_err());
+    for n in 0..bytes.len() {
+        let _ = shp::zip_layers(&bytes[..n]);
+        let _ = shp::read_zip(&bytes[..n], "katmanlar/yollar", &opts("yollar"));
+    }
+}

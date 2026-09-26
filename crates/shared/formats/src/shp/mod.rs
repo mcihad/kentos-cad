@@ -4,8 +4,9 @@
 //! system (.prj) and the table's code page (.cpg). Points keep their
 //! height; lines, paths and areas with holes are plane; M values are
 //! dropped; each record's attributes go on every object it makes. What is
-//! dropped or converted is counted in the report. A .zip is not read: that
-//! needs a deflate decoder, a new dependency the owner has not approved.
+//! dropped or converted is counted in the report. A zipped Shapefile is
+//! read the same way from inside the archive ([`zip_layers`], [`read_zip`];
+//! docs/adr/0053): each .shp in it is a layer, its parts found by name.
 
 pub mod dbf;
 pub mod prj;
@@ -18,6 +19,82 @@ use kentos_contracts::{CrsSource, DeclaredCrs, ImportResult, ShapefileReadOption
 use crate::gis::{Collect, Shape};
 use dbf::EncodingSource;
 use shape::{Found, Records};
+
+/// The Shapefile layers of a zip archive: the paths of its .shp files
+/// without extension (`katmanlar/yollar`), in the archive's order. A
+/// layer's parts are the files beside its .shp with its name.
+pub fn zip_layers(bytes: &[u8]) -> Result<Vec<String>, String> {
+    let listed = crate::zip::list(bytes, &crate::zip::Limits::default())?;
+    let layers: Vec<String> = listed
+        .iter()
+        .filter_map(|l| stem_of(&l.name, "shp").map(str::to_owned))
+        .collect();
+    if layers.is_empty() {
+        return Err(
+            "Zip arşivinde Shapefile (.shp) yok. Arşivde .shp, .shx ve .dbf dosyaları olmalı."
+                .to_owned(),
+        );
+    }
+    Ok(layers)
+}
+
+/// A zip layer's name: its path's last part (`katmanlar/yollar` → `yollar`).
+pub fn zip_layer_name(layer: &str) -> &str {
+    layer.rsplit('/').next().unwrap_or(layer)
+}
+
+/// Reads the layer `layer` of a zipped Shapefile (a path of [`zip_layers`]):
+/// its .shp, .shx, .dbf, .prj and .cpg, found beside each other by name
+/// whatever their case, unpacked and read as [`read`] reads them. The report
+/// says the parts came from the archive.
+pub fn read_zip(
+    bytes: &[u8],
+    layer: &str,
+    opts: &ShapefileReadOptions,
+) -> Result<ImportResult, String> {
+    const PARTS: [&str; 5] = ["shp", "shx", "dbf", "prj", "cpg"];
+    let limits = crate::zip::Limits::default();
+    let listed = crate::zip::list(bytes, &limits)?;
+    let is =
+        |name: &str, ext: &str| stem_of(name, ext).is_some_and(|s| s.eq_ignore_ascii_case(layer));
+    let entries = crate::zip::unpack(bytes, &listed, &limits, |l| {
+        PARTS.iter().any(|ext| is(&l.name, ext))
+    })?;
+    let find = |ext: &str| {
+        entries
+            .iter()
+            .find(|e| is(&e.name, ext))
+            .map(|e| e.data.as_slice())
+    };
+    let shp = find("shp").ok_or_else(|| format!("Zip arşivinde “{layer}.shp” yok."))?;
+    let files = Files {
+        shp,
+        shx: find("shx"),
+        dbf: find("dbf"),
+        prj: find("prj"),
+        cpg: find("cpg"),
+    };
+    let mut result = read(&files, opts)?;
+    let found: Vec<String> = PARTS
+        .into_iter()
+        .filter(|ext| find(ext).is_some())
+        .map(|ext| format!(".{ext}"))
+        .collect();
+    result.report.source.insert(
+        0,
+        kentos_contracts::SourceFact {
+            label: "Zip arşivinden".to_owned(),
+            value: found.join(", "),
+        },
+    );
+    Ok(result)
+}
+
+/// `name` without the extension `ext` (case aside), when it has it.
+fn stem_of<'a>(name: &'a str, ext: &str) -> Option<&'a str> {
+    let (stem, e) = name.rsplit_once('.')?;
+    (e.eq_ignore_ascii_case(ext) && !stem.is_empty() && !stem.ends_with('/')).then_some(stem)
+}
 
 /// The files of one Shapefile layer.
 #[derive(Clone, Copy, Default)]

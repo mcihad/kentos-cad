@@ -17,6 +17,12 @@ Shapefile set is parsed again here on its own (headers, extents, record and
 index offsets, the table) and its rings' orientation and holes checked with
 exact rational arithmetic.
 
+Three zip archives hold Shapefile sets as portals hand them out (ARCHIVES,
+docs/adr/0053), written with Python's zipfile. Deflate's bytes depend on the
+zlib that wrote them, so the archives are not compared byte for byte: `--check`
+opens each with zipfile (which checks every CRC) and compares its members'
+names, methods and bytes with the files built here.
+
     python3 scripts/fixtures/gis_reference.py           # writes the fixtures
     python3 scripts/fixtures/gis_reference.py --check   # writes nothing; compares and reads
 
@@ -27,10 +33,12 @@ expected file and with SUMMARY. It also checks the Rust GeoJSON writer's output
 in export/ (each `<name>.geojson` against the `<name>.input.json` it was written
 from), reading it back with the same reader; the files there are not written here.
 """
+import io
 import json
 import math
 import struct
 import sys
+import zipfile
 from fractions import Fraction
 from pathlib import Path
 
@@ -1260,6 +1268,68 @@ def read_set(name, files):
     return gis.read_shapefile_files({ext: files[f"{name}{ext}"] for ext in (".shp", ".shx", ".dbf", ".prj", ".cpg") if f"{name}{ext}" in files}, name)
 
 
+# ── Zipped Shapefiles (docs/adr/0053) ───────────────────────────────────
+# archive → (method, folder inside it, the sets it holds). Each set's files go in
+# the order .shp, .shx, .dbf, .prj, .cpg (those it has), at a fixed time, as Unix
+# files (0644). The Rust reader must read each set inside exactly as its files
+# beside it (crates/shared/formats/tests/gis.rs).
+ARCHIVES = {
+    "parseller.zip": (zipfile.ZIP_DEFLATED, "", ["parseller"]),
+    "katmanlar.zip": (zipfile.ZIP_DEFLATED, "katmanlar/", ["parseller", "yollar"]),
+    "kuyular-stored.zip": (zipfile.ZIP_STORED, "", ["kuyular"]),
+}
+PARTS = (".shp", ".shx", ".dbf", ".prj", ".cpg")
+
+
+def archive_members(name, files):
+    """[(name in the archive, file it holds)] of one archive."""
+    _, folder, sets = ARCHIVES[name]
+    return [(f"{folder}{s}{ext}", f"{s}{ext}") for s in sets for ext in PARTS if f"{s}{ext}" in files]
+
+
+def archive(name, files):
+    """One archive's bytes, from the files built here."""
+    method = ARCHIVES[name][0]
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as z:
+        for member, source in archive_members(name, files):
+            info = zipfile.ZipInfo(member, date_time=(2026, 9, 26, 12, 0, 0))
+            info.compress_type = method
+            info.create_system = 3
+            info.external_attr = 0o644 << 16
+            z.writestr(info, files[source])
+    return out.getvalue()
+
+
+def check_archives(files):
+    """Each archive on disk opens, its CRCs hold, and its members are the files built here."""
+    problems = []
+    for name, (method, _, _) in ARCHIVES.items():
+        path = DIR / name
+        if not path.is_file():
+            problems.append(f"{name}: diskte yok (betiği --check olmadan çalıştırın)")
+            continue
+        try:
+            with zipfile.ZipFile(path) as z:
+                bad = z.testzip()
+                if bad is not None:
+                    problems.append(f"{name}: {bad} bozuk (CRC)")
+                    continue
+                infos = z.infolist()
+                want = archive_members(name, files)
+                if [i.filename for i in infos] != [m for m, _ in want]:
+                    problems.append(f"{name}: içindekiler {[i.filename for i in infos]}, beklenen {[m for m, _ in want]}")
+                    continue
+                for info, (member, source) in zip(infos, want):
+                    if info.compress_type != method:
+                        problems.append(f"{name}: {member} yöntemi {info.compress_type}, beklenen {method}")
+                    if z.read(info) != files[source]:
+                        problems.append(f"{name}: {member} betiğin yazdığı {source} değil")
+        except zipfile.BadZipFile as e:
+            problems.append(f"{name}: açılamadı: {e}")
+    return problems
+
+
 def build():
     """Every file of the fixture directory but README.md: {file name: bytes}."""
     out = {}
@@ -1302,8 +1372,9 @@ def check(files):
             problems.append(f"{rel}: diskteki dosya yeniden üretilenle aynı değil (betiği --check olmadan çalıştırın)")
     if DIR.is_dir():
         for path in sorted(DIR.iterdir()):
-            if path.name not in files and path.name not in ("README.md", EXPORT.name):
+            if path.name not in files and path.name not in ARCHIVES and path.name not in ("README.md", EXPORT.name):
                 problems.append(f"{path.name}: betiğin yazmadığı dosya")
+    problems += check_archives(files)
     if problems:
         return problems, []
     disk = {rel: (DIR / rel).read_bytes() for rel in files}
@@ -1330,7 +1401,7 @@ def main():
         print(f"export/: {len(pairs)} çift denetlendi" + (f" ({', '.join(pairs)})" if pairs else " (dizin yok ya da boş)"))
         if problems:
             return 1
-        print(f"GIS fixture'ları tutarlı: {len(files)} dosya, {len(SUMMARY)} fixture; her biri okuyucuyla expected.json'ı ve SUMMARY'yi veriyor.")
+        print(f"GIS fixture'ları tutarlı: {len(files)} dosya, {len(SUMMARY)} fixture; her biri okuyucuyla expected.json'ı ve SUMMARY'yi veriyor; {len(ARCHIVES)} zip arşivinin içindekiler betiğin dosyaları.")
         return 0
     problems = verify(files)
     for p in problems:
@@ -1341,7 +1412,9 @@ def main():
     DIR.mkdir(parents=True, exist_ok=True)
     for rel, data in files.items():
         (DIR / rel).write_bytes(data)
-    print(f"{len(files)} dosya yazıldı: {DIR.relative_to(ROOT)}")
+    for name in ARCHIVES:
+        (DIR / name).write_bytes(archive(name, files))
+    print(f"{len(files) + len(ARCHIVES)} dosya yazıldı: {DIR.relative_to(ROOT)}")
     return 0
 
 

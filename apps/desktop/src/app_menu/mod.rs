@@ -122,7 +122,8 @@ const IMPORTS: [Format; 5] = [
     Format {
         id: "file.import.shp",
         label: "Shapefile",
-        detail: "SHP, SHX, DBF, PRJ ve CPG birlikte; öznitelikleriyle",
+        // The desktop reads the zipped layer too (docs/adr/0053).
+        detail: "SHP, SHX, DBF, PRJ ve CPG birlikte ya da .zip; öznitelikleriyle",
         badge: "SHP",
     },
     Format {

@@ -33,6 +33,16 @@ python3 tools/formats/gis.py read fixtures/formats/v1/gis/noktalar.shp   # bir f
 | `karisik.shp` | PointM, araya Null kayıt; tabloda bir kayıt eksik (son noktanın özniteliği yok); tanınmayan `.cpg` `KOI8-R` (0x03 dil sürücüsüne dönülmez); UTM 36N'in bütün parametreleriyle Lambert Conformal Conic | null, Windows-1254; 3 nokta |
 | `alanlarz.shp` | PolygonZ (M'li): dış halka ve iki delik (z düşer); dil sürücüsü 0x03, `é` içeren metin; AUTHORITY'siz WGS 84 / UTM 36N ESRI WKT | 32636, Windows-1252; 1 alan (2 delik) |
 
+## Zip arşivleri
+
+Portalların dağıttığı gibi zip'lenmiş Shapefile takımları ([ADR 0053](../../../../docs/adr/0053-desktop-geojson-shapefile-and-zip.md)). Betik onları kendi yazdığı takımlardan Python'un `zipfile`'ıyla yazar: üyeler `.shp`, `.shx`, `.dbf`, `.prj`, `.cpg` sırasıyla (takımda olanlar), sabit tarihle (26 Eylül 2026 12:00), Unix dosyası (0644) olarak. Deflate'in baytları yazan zlib'e bağlıdır (bunlar zlib 1.3.1); bu yüzden `--check` arşivleri bayt bayt karşılaştırmaz: her birini `zipfile` ile açar (CRC'leri de denetler), üyelerin adlarını, yöntemlerini ve baytlarını betiğin dosyalarıyla karşılaştırır. Rust okuyucusu (`tests/gis.rs`) her katmanı arşivin içinden, yanındaki düz dosyalardan okuduğuyla aynı okur.
+
+| Dosya | İçindekiler | Yöntem |
+|---|---|---|
+| `parseller.zip` | `parseller` takımı (.shp, .shx, .dbf, .prj) | deflate |
+| `katmanlar.zip` | `katmanlar/` klasöründe `parseller` ve `yollar` takımları (.cpg ile): iki katmanlı arşiv, katman yoluyla anılır | deflate |
+| `kuyular-stored.zip` | `kuyular` takımı (.prj yok) | stored (sıkıştırmasız) |
+
 Fixture'larda bilerek bulunmayanlar: tek başına vekil (lone surrogate), iç içe nesnede yinelenen anahtar ve kod sayfasına göre okuyucularda farklı çözülen baytlar (Windows-1252/1254'te 0x81, 0x8D, 0x8E, 0x8F, 0x90, 0x9D, 0x9E; CP857'de 0xD5, 0xE7, 0xF2; ISO-8859-9'da 0x80–0x9F, çünkü WHATWG bu adı Windows-1254 okur). Betik bu baytları tabloda arar.
 
 ## `export/`: GeoJSON yazıcısının çıktısı

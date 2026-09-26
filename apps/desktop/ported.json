@@ -68,7 +68,10 @@
     "file.start",
     "workspace.hybrid",
     "workspace.cad",
-    "workspace.gis"
+    "workspace.gis",
+    "file.import.geojson",
+    "file.import.shp",
+    "file.export.geojson"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

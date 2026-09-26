@@ -389,7 +389,8 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 ### 7.9 Pencereler
 
-- Karartılmış arka plan, 10 px köşe ve pop gölgesi. Başlık 16 px. Esc ve arka plana tıklama kapatır.
+- Karartılmış arka plan, 10 px köşe ve pop gölgesi. Başlık 16 px. Esc ve arka plana tıklama kapatır; pencerenin içine (yazıya, boşluğa) tıklamak kapatmaz.
+- **Boy:** pencere içeriği kadardır, en çok kendi sınırı ya da uygulama penceresi kadar; sığmayınca gövde kayar, başlık ve alt çubuk hep görünür. Kaydırma çubuğu gövdenin yanında durur, içeriğin üstüne binmez. Sekmeli pencereler (ayarlar, yeni proje) sekme değişince boy değiştirmesin diye sabit boydadır. Masaüstünde `Dialog::scroll` ve `max_height` (KentOS UI).
 - **Pencere açıkken uygulama kısayolları çalışmaz.** Tab pencerenin denetimleri arasında döner; arka plandakilere geçmez.
 - **Alt çubuk:** solda ikincil eylem (hayalet düğme), sağda "Vazgeç" ve birincil eylem. Birincil eylem, değişiklik yoksa devre dışıdır.
 - **Tek birincil düğme** kuralı: bir yüzeyde yalnızca bir dolu amber düğme bulunur.
@@ -484,6 +485,8 @@ Uygulama bir şeyi yapmadan önce sorduğunda **tek yol budur** (`ui/widgets/con
   - Katman tablosu (önizleme tablosu gibi): başta bütün katmanları seçen ve her satırda katmanı alan onay kutusu, katman rengi örneği ve adı, nesne sayısı (tabular, sağa dayalı) ve "Nereye" sütunu üçüncül renkte: "“Parsel” katmanına eklenir", "yeni katman, gizli" ya da (satır hata tonunda, kutusu devre dışı) "“Parsel” katmanı kilitli; alınmaz. Kilidini Katmanlar panelinden açın.".
   - Özet kutusu: yeşil onayla "n nesne alınacak: 12 çizgi, 3 yay …" ve kaç yeni katmanın dosya adlı grupta kurulacağı; ⓘ ile dönüştürülenler (bloklar patlatıldı, ölçüler çizgi ve yazıya patlatıldı, tarama yayları parçalandı …), amber ⚠ ile alınmayanlar (tür, sayı, neden ve ilk satır numaraları); kapsam satırı.
   - Altında aynı "Bu koordinatlar hangi sistemde?" sorusu; alt çubuk koordinat listesindekiyle aynı.
+- **GeoJSON ve Shapefile içe aktar** (900 px): DXF'inki gibi; katman tablosunun başlığı "Katman", "Nereye" yeni katmanda yalnız "yeni katman" der. Koordinat sistemi sorusu özetten önce gelir: dosyanın dediği sistem seçili gelir ve listede ", dosyanın dediği" eklidir; altında dosyanın beyanı üçüncül satırda ("Dosyanın .prj'si: “TUREF_TM36” (EPSG:5256)."). Beyan okunamazsa liste "Sistemi seçin…" der, ⓘ notu seçmeyi ister. Dosyanın dediğinden başka sistem seçilince amber uyarı, koordinatlar seçilen sistemde olamayacak gibiyse (derece aralığı ile metre) ikinci amber uyarı çıkar. Shapefile'da dosya satırı bulunan parçaları söyler (".shp, .dbf, .shx, .prj"), özet kullanılmayan dosyaları; birden çok katmanlı `.zip`'te dosya satırının altında "Arşivdeki katman" açılır listesi (katmanın arşivdeki yolu) ve üçüncül ipucu.
+- **GeoJSON dışa aktar** (820 px): DXF dışa aktarınınki gibi kapsam ve katman tablosu ("GeoJSON'da" sütunu: `kentos.layer: “Parsel”`); özet RFC 7946 olup olmayacağını yeşil onay ya da amber uyarıyla, örneklenecek eğrileri, taramaları, halka yönünü, yazılmayanları ve öznitelikleri ⓘ ile söyler.
 - **Koordinat listesi dışa aktar** (720 px): Yazılacak noktalar (Seçili | Görünen katmanlar | Tümü, sayılarıyla; boş kapsam seçilemez), Biçim (NCN, TXT, CSV `;`, CSV `,`), Sütun sırası, İlk satır (başlık), Karakter kodlaması (UTF-8 | Windows-1254); özet kutusunda yazılacak nokta sayısı ve kotsuz ya da adsız noktalar. Birincil düğme "Dışa aktar…" kaydetme penceresini açar.
 
 ### 7.13 Kontroller (genel)

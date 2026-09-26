@@ -2493,6 +2493,7 @@ dependencies = [
  "kentos-contracts",
  "kentos-geometry-core",
  "libm",
+ "miniz_oxide 0.9.1",
  "serde",
  "serde_json",
 ]

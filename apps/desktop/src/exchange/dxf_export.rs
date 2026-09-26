@@ -11,7 +11,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use iced::widget::{Column, column, row, scrollable};
+use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::{
     AngleUnit, DxfWriteInput, DxfWriteLayer, Entity, ExportReport, LayerNodeType,
@@ -125,7 +125,7 @@ impl App {
 
     /// The scope's objects by layer: the tree's order, then layers the tree
     /// does not have (their objects go to DXF layer 0), empty ones left out.
-    fn by_layer(&self, scope: Scope) -> Vec<(String, Vec<&Entity>)> {
+    pub(super) fn by_layer(&self, scope: Scope) -> Vec<(String, Vec<&Entity>)> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
@@ -359,8 +359,8 @@ impl App {
         }
         overlay::blocking(
             Dialog::new("DXF dışa aktar")
-                // The body scrolls (a drawing with many layers); the buttons stay in view.
-                .push(scrollable(body).height(Fill))
+                // As tall as its content; a long body (a drawing with many layers) scrolls, the buttons stay in view.
+                .scroll(body)
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary(
                     "Dışa aktar…",
@@ -431,14 +431,16 @@ impl App {
                 label::caption(state).into(),
             ])
         });
-        let table = Table::new([
-            TableColumn::new("").width(22),
-            TableColumn::new("Katman").width(Length::FillPortion(3)),
-            TableColumn::new("Nesne").width(60).align_right(),
-            TableColumn::new("DXF'te").width(Length::FillPortion(2)),
-        ])
-        .extend(rows)
-        .height(Length::Fixed(220.0));
+        let table = words::fitted(
+            Table::new([
+                TableColumn::new("").width(22),
+                TableColumn::new("Katman").width(Length::FillPortion(3)),
+                TableColumn::new("Nesne").width(60).align_right(),
+                TableColumn::new("DXF'te").width(Length::FillPortion(2)),
+            ])
+            .extend(rows),
+            all.len(),
+        );
         column![head, table].spacing(6).width(Fill).into()
     }
 

@@ -1,16 +1,25 @@
 //! “Bu koordinatlar hangi sistemde?” (the web's `CrsQuestion`,
-//! apps/web/src/ui/io/common.ts). A source file carries no reliable
-//! coordinate system, so the user says which; the project's is the default.
-//! Another system blocks the import: datum and zone transformations do not
-//! exist yet and coordinates are never reprojected silently (CLAUDE.md §5).
-//! The systems are the web's registry (fixtures/crs/v1/registry.json), in its
-//! order and grouped by datum as the web's list is; a new project and the
-//! project settings choose from the same list.
+//! apps/web/src/ui/io/common.ts). A file that says nothing of its system
+//! (DXF, a coordinate list, a Shapefile without .prj) starts at the
+//! project's system; one that says (GeoJSON, a .prj; [`CrsQuestion::declare`])
+//! starts at what it says, or at no choice when that could not be read: a
+//! statement is never guessed into a system. Another system than the
+//! project's blocks the import: datum and zone transformations do not exist
+//! yet and coordinates are never reprojected silently (CLAUDE.md §5). The
+//! user may say the file is in the project's system after all (a file that
+//! claims WGS 84 but holds TM coordinates); the window then says what that
+//! means. Where the extent is known, coordinates that cannot be in the
+//! chosen system are pointed out. The systems are the web's registry
+//! (fixtures/crs/v1/registry.json), in its order and grouped by datum as the
+//! web's list is; a new project and the project settings choose from the
+//! same list.
 
 use std::sync::OnceLock;
 
 use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
 use iced::{Center, Element, Fill, Length};
+use kentos_contracts::{Bounds, CrsSource, DeclaredCrs};
+use kentos_interaction::Format;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::typography;
 use kentos_ui::widget::Banner;
@@ -87,85 +96,260 @@ pub fn datum_label(datum: &str) -> &str {
     }
 }
 
-/// The answer to the question: the source's system.
+/// Where a file's statement of its system comes from (the web's `CrsStatement.source`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Said {
+    /// RFC 7946 GeoJSON: no `crs` member, so WGS 84 longitude, latitude.
+    Rfc7946,
+    /// A GeoJSON file's legacy `crs` member.
+    GeoJsonCrs,
+    /// A Shapefile's .prj.
+    Prj,
+    /// The file says nothing (a Shapefile without .prj).
+    Nothing,
+}
+
+/// What a file says of its coordinate system (GeoJSON, Shapefile; docs/adr/0046).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Statement {
+    /// The EPSG code the statement names, when it could be read.
+    pub srid: Option<u32>,
+    /// The statement as the file writes it; empty when the file says nothing.
+    pub text: String,
+    pub source: Said,
+}
+
+impl Statement {
+    /// What a reader found (the web's `statement`): a GeoJSON file that
+    /// declares nothing is RFC 7946's; a Shapefile without .prj says nothing.
+    pub fn of(declared: Option<&DeclaredCrs>, shapefile: bool) -> Self {
+        let Some(d) = declared else {
+            return Self {
+                srid: None,
+                text: String::new(),
+                source: if shapefile {
+                    Said::Nothing
+                } else {
+                    Said::Rfc7946
+                },
+            };
+        };
+        Self {
+            srid: d.srid,
+            text: d.text.clone(),
+            source: match d.source {
+                CrsSource::Rfc7946 => Said::Rfc7946,
+                CrsSource::GeoJsonCrs => Said::GeoJsonCrs,
+                CrsSource::Prj => Said::Prj,
+            },
+        }
+    }
+}
+
+/// A line under the list: a hint, or a note that informs or warns.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Note {
+    Hint(String),
+    Info(String),
+    Warn(String),
+}
+
+/// The answer to the question: the source's system.
+#[derive(Debug, Clone, PartialEq)]
 pub struct CrsQuestion {
-    pub srid: u32,
+    /// The chosen system; none yet when the file's statement could not be read.
+    pub srid: Option<u32>,
+    statement: Option<Statement>,
+    bounds: Option<Bounds>,
 }
 
 impl CrsQuestion {
     /// The project's system, the default answer.
     pub fn new(project: u32) -> Self {
-        Self { srid: project }
+        Self {
+            srid: Some(project),
+            statement: None,
+            bounds: None,
+        }
+    }
+
+    /// The user's answer.
+    pub fn pick(&mut self, srid: u32) {
+        self.srid = Some(srid);
+    }
+
+    /// What the file says of its system, and the extent of its coordinates:
+    /// the choice starts at the statement's system (the project's when the
+    /// file says nothing, none when the statement cannot be read).
+    pub fn declare(&mut self, project: u32, statement: Option<Statement>, bounds: Option<Bounds>) {
+        self.srid = match &statement {
+            Some(st) if st.source != Said::Nothing => {
+                st.srid.filter(|srid| system(*srid).is_some())
+            }
+            _ => Some(project),
+        };
+        self.statement = statement;
+        self.bounds = bounds;
     }
 
     /// Whether the file's system is the project's: the only case that can be imported.
     pub fn matches(&self, project: u32) -> bool {
-        self.srid == project
+        self.srid == Some(project)
     }
 
-    /// Under the list: the hint when the systems agree, else why the import is off.
-    fn note(&self, project: u32) -> Result<String, String> {
-        let project_name =
-            system(project).map_or_else(|| format!("EPSG:{project}"), |s| s.name.clone());
-        let source = system(self.srid);
-        let (Some(source), Some(target)) = (source, system(project)) else {
-            return Ok(format!(
-                "Projenin sistemi ({project_name}). Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz."
-            ));
-        };
-        if self.matches(project) {
-            return Ok(format!(
-                "Projenin sistemi ({project_name}). Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz."
+    /// What the file said, as a line.
+    fn said(&self) -> Option<String> {
+        let st = self.statement.as_ref()?;
+        let code = st
+            .srid
+            .map_or_else(String::new, |srid| format!(" (EPSG:{srid})"));
+        Some(match (st.source, st.srid) {
+            (Said::Rfc7946, _) => "Dosya: RFC 7946 GeoJSON, crs üyesi yok; koordinatları WGS 84 boylam, enlem (EPSG:4326) olmalı.".to_owned(),
+            (Said::GeoJsonCrs, Some(_)) => format!("Dosyanın crs üyesi: “{}”{code}.", st.text),
+            (Said::GeoJsonCrs, None) => format!(
+                "Dosyanın crs üyesi okunamadı ({}); koordinatların sistemini siz seçin.",
+                st.text
+            ),
+            (Said::Prj, Some(_)) => format!("Dosyanın .prj'si: “{}”{code}.", st.text),
+            (Said::Prj, None) => format!(
+                "Dosyanın .prj'si tanınmadı (“{}”); koordinatların sistemini siz seçin.",
+                st.text
+            ),
+            (Said::Nothing, _) => "Dosya koordinat sistemini belirtmiyor (.prj yok): projenin sistemi seçili; koordinatların bu sistemde olduğundan emin olun.".to_owned(),
+        })
+    }
+
+    /// Coordinates that cannot be in the chosen system (degrees in a metre system, or the reverse).
+    fn implausible(&self, chosen: &System, format: &Format) -> Option<String> {
+        let b = self.bounds.as_ref()?;
+        let degrees = b.min_x.abs() <= 180.0
+            && b.max_x.abs() <= 180.0
+            && b.min_y.abs() <= 90.0
+            && b.max_y.abs() <= 90.0;
+        if chosen.kind == "geographic" && !degrees {
+            return Some(format!(
+                "Koordinatlar boylam, enlem aralığının dışında ({} … {}): {} olamaz. Dosyayı yazan program metre koordinatı yazmış olabilir; sistemini biliyorsanız onu seçin.",
+                format.coord(b.min_x),
+                format.coord(b.max_x),
+                chosen.name
             ));
         }
-        let what = if source.datum != target.datum {
-            format!(
-                "{} → {} datum dönüşümü",
-                datum_label(&source.datum),
-                datum_label(&target.datum)
-            )
-        } else if source.kind != target.kind {
-            "coğrafi ile projeksiyonlu sistem arasında dönüşüm".to_owned()
-        } else {
-            "dilim dönüşümü".to_owned()
-        };
-        Err(format!(
-            "Koordinatlar dönüştürülemez. Proje {project_name} (EPSG:{project}) sisteminde. {} koordinatlarını almak için {what} gerekir; bu dönüşüm henüz yok (geliştirme aşamasında) ve koordinatlar sessizce dönüştürülmez, bu yüzden içe aktarma kapalı. Dosya aslında projenin sistemindeyse onu seçin; proje de bu sistemdeyse projenin sistemini Proje ayarları → Koordinat sistemi'nden atayın.",
-            source.name
-        ))
+        if chosen.kind == "projected" && degrees {
+            return Some(format!(
+                "Koordinatların hepsi ±180, ±90 içinde: derece (boylam, enlem) gibi görünüyor; {} sisteminde anlamsız bir yere düşer. Dosyanın sistemini denetleyin.",
+                chosen.name
+            ));
+        }
+        None
     }
 
-    /// The question: the list of systems and the note under it.
+    /// The lines under the list (the web's `render`).
+    pub fn notes(&self, project: u32, format: &Format) -> Vec<Note> {
+        let project_name =
+            system(project).map_or_else(|| format!("EPSG:{project}"), |s| s.name.clone());
+        let mut notes: Vec<Note> = self.said().map(Note::Hint).into_iter().collect();
+        let st = self.statement.as_ref();
+        if let Some(srid) = st.and_then(|st| st.srid)
+            && system(srid).is_none()
+        {
+            notes.push(Note::Warn(format!(
+                "Dosyanın dediği EPSG:{srid} KentOS'ta tanımlı değil. Koordinatlar gerçekte projenin sisteminde ise onu seçin; değilse bu dosya dönüştürülmeden alınamaz."
+            )));
+        }
+        let Some(source) = self.srid.and_then(system) else {
+            if self.srid.is_none() {
+                notes.push(Note::Info("Koordinatların hangi sistemde olduğunu seçin; içe aktarma ancak seçilen sistem projeninki olunca açılır.".to_owned()));
+            } else {
+                notes.push(Note::Hint(format!(
+                    "Projenin sistemi ({project_name}). Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz."
+                )));
+            }
+            return notes;
+        };
+        if let Some(st) = st
+            && st.source != Said::Nothing
+            && let Some(said) = st.srid
+            && said != source.srid
+        {
+            notes.push(Note::Warn(format!(
+                "Dosyanın dediğinden başka bir sistem seçtiniz. Dosya EPSG:{said} diyor; koordinatlar {} (EPSG:{}) sayılacak, dönüştürülmeden. Yalnız dosyanın gerçekte bu sistemde olduğunu biliyorsanız seçin.",
+                source.name, source.srid
+            )));
+        }
+        match system(project) {
+            _ if self.matches(project) => notes.push(Note::Hint(format!(
+                "Projenin sistemi ({project_name}). Koordinatlar olduğu gibi alınır; dönüştürülmez, yuvarlanmaz."
+            ))),
+            None => notes.push(Note::Warn(format!(
+                "Proje EPSG:{project} sisteminde; bu sistem bu sürümde tanımlı değil. Koordinatlar dönüştürülemez, bu yüzden içe aktarma kapalı."
+            ))),
+            Some(target) => {
+                let what = if source.datum != target.datum {
+                    format!(
+                        "{} → {} datum dönüşümü",
+                        datum_label(&source.datum),
+                        datum_label(&target.datum)
+                    )
+                } else if source.kind != target.kind {
+                    "coğrafi ile projeksiyonlu sistem arasında dönüşüm".to_owned()
+                } else {
+                    "dilim dönüşümü".to_owned()
+                };
+                notes.push(Note::Warn(format!(
+                    "Koordinatlar dönüştürülemez. Proje {project_name} (EPSG:{project}) sisteminde. {} koordinatlarını almak için {what} gerekir; bu dönüşüm henüz yok (geliştirme aşamasında) ve koordinatlar sessizce dönüştürülmez, bu yüzden içe aktarma kapalı. Dosya aslında projenin sistemindeyse onu seçin; proje de bu sistemdeyse projenin sistemini Proje ayarları → Koordinat sistemi'nden atayın.",
+                    source.name
+                )));
+            }
+        }
+        if let Some(odd) = self.implausible(source, format) {
+            notes.push(Note::Warn(odd));
+        }
+        notes
+    }
+
+    /// The question: the list of systems and the notes under it.
     pub fn view<'a, Message: Clone + 'a>(
         &self,
         project: u32,
+        format: &Format,
         on_pick: impl Fn(u32) -> Message + 'a,
     ) -> Element<'a, Message> {
         let list = systems();
+        let said = self
+            .statement
+            .as_ref()
+            .filter(|st| st.source != Said::Nothing)
+            .and_then(|st| st.srid);
         let choices = list.iter().map(|s| {
             let own = if s.srid == project {
                 ", projenin sistemi"
             } else {
                 ""
             };
-            Choice::new(format!("{} (EPSG:{}){own}", s.name, s.srid)).detail(datum_label(&s.datum))
+            let file = if said == Some(s.srid) {
+                ", dosyanın dediği"
+            } else {
+                ""
+            };
+            Choice::new(format!("{} (EPSG:{}){own}{file}", s.name, s.srid))
+                .detail(datum_label(&s.datum))
         });
-        let selected = list.iter().position(|s| s.srid == self.srid);
+        let selected = self
+            .srid
+            .and_then(|srid| list.iter().position(|s| s.srid == srid));
         let pick = Select::new(choices, selected, move |i| {
             on_pick(list.get(i).map_or(project, |s| s.srid))
-        });
-        let note: Element<'a, Message> = match self.note(project) {
-            Ok(hint) => label::caption(hint).into(),
-            Err(warning) => Banner::warning(warning).into(),
-        };
-        column![
-            label::caption("Bu koordinatlar hangi sistemde?"),
-            pick,
-            note
-        ]
-        .spacing(6)
-        .into()
+        })
+        .placeholder("Sistemi seçin…");
+        let mut parts = column![label::caption("Bu koordinatlar hangi sistemde?"), pick].spacing(6);
+        for note in self.notes(project, format) {
+            parts = parts.push(match note {
+                Note::Hint(hint) => Element::from(label::caption(hint)),
+                Note::Info(info) => Banner::info(info).into(),
+                Note::Warn(warning) => Banner::warning(warning).into(),
+            });
+        }
+        parts.into()
     }
 }
 
@@ -324,7 +508,7 @@ pub fn picker<'a, Message: Clone + 'a>(
     let browser = browser.push(
         container(
             scrollable(list)
-                .direction(style::field::thin_scrollbar())
+                .direction(style::field::body_scrollbar())
                 .height(Length::Fixed(230.0)),
         )
         .style(style::container::bordered),
@@ -463,22 +647,110 @@ mod tests {
         assert_eq!(grouped(25_000.0), "25.000");
     }
 
+    fn warnings(q: &CrsQuestion, project: u32) -> Vec<String> {
+        q.notes(project, &Format::default())
+            .into_iter()
+            .filter_map(|n| match n {
+                Note::Warn(w) => Some(w),
+                _ => None,
+            })
+            .collect()
+    }
+
     #[test]
     fn only_the_projects_system_imports_and_the_reason_is_named() {
         let q = CrsQuestion::new(5256);
-        assert!(q.matches(5256) && q.note(5256).is_ok());
-        let zone = CrsQuestion { srid: 5254 }
-            .note(5256)
-            .expect_err("another zone");
+        assert!(q.matches(5256) && warnings(&q, 5256).is_empty());
+        let mut zone = CrsQuestion::new(5256);
+        zone.pick(5254);
+        let zone = warnings(&zone, 5256).join(" ");
         assert!(zone.contains("dilim dönüşümü"), "{zone}");
-        let datum = CrsQuestion { srid: 2322 }.note(5256).expect_err("ED50");
+        let mut datum = CrsQuestion::new(5256);
+        datum.pick(2322);
+        let datum = warnings(&datum, 5256).join(" ");
         assert!(
             datum.contains("ED50 → TUREF (ITRF96) datum dönüşümü"),
             "{datum}"
         );
-        let kind = CrsQuestion { srid: 5252 }
-            .note(5256)
-            .expect_err("geographic");
+        let mut kind = CrsQuestion::new(5256);
+        kind.pick(5252);
+        let kind = warnings(&kind, 5256).join(" ");
         assert!(kind.contains("coğrafi ile projeksiyonlu"), "{kind}");
+    }
+
+    fn statement(srid: Option<u32>, text: &str, source: Said) -> Option<Statement> {
+        Some(Statement {
+            srid,
+            text: text.to_owned(),
+            source,
+        })
+    }
+
+    #[test]
+    fn a_files_statement_is_the_first_answer_and_never_a_guess() {
+        let degrees = Bounds {
+            min_x: 32.8,
+            min_y: 39.9,
+            max_x: 32.9,
+            max_y: 40.0,
+        };
+        // RFC 7946: WGS 84, which a TM36 project cannot take in.
+        let mut q = CrsQuestion::new(5256);
+        q.declare(
+            5256,
+            statement(Some(4326), "", Said::Rfc7946),
+            Some(degrees),
+        );
+        assert_eq!(q.srid, Some(4326));
+        assert!(!q.matches(5256));
+        let notes = q.notes(5256, &Format::default());
+        assert!(matches!(&notes[0], Note::Hint(h) if h.starts_with("Dosya: RFC 7946")));
+        // The user says it is TM36 after all: allowed, and what it means is said;
+        // degrees in a metre system are pointed out.
+        q.pick(5256);
+        assert!(q.matches(5256));
+        let w = warnings(&q, 5256).join(" ");
+        assert!(w.contains("Dosya EPSG:4326 diyor"), "{w}");
+        assert!(w.contains("derece (boylam, enlem) gibi görünüyor"), "{w}");
+        // A .prj that could not be read: no answer until the user gives one.
+        q.declare(5256, statement(None, "Garip_Sistem", Said::Prj), None);
+        assert_eq!(q.srid, None);
+        assert!(!q.matches(5256));
+        assert!(
+            q.notes(5256, &Format::default()).iter().any(
+                |n| matches!(n, Note::Info(i) if i.starts_with("Koordinatların hangi sistemde"))
+            )
+        );
+        // A system KentOS does not know: said, and no answer.
+        q.declare(
+            5256,
+            statement(Some(2193), "EPSG:2193", Said::GeoJsonCrs),
+            None,
+        );
+        assert_eq!(q.srid, None);
+        assert!(
+            warnings(&q, 5256)
+                .join(" ")
+                .contains("EPSG:2193 KentOS'ta tanımlı değil")
+        );
+        // Nothing said (no .prj): the project's system, and the user is asked to be sure.
+        q.declare(5256, statement(None, "", Said::Nothing), None);
+        assert!(q.matches(5256));
+        assert!(
+            matches!(&q.notes(5256, &Format::default())[0], Note::Hint(h) if h.contains(".prj yok"))
+        );
+        // Metres in a geographic system.
+        let metres = Bounds {
+            min_x: 452_000.0,
+            min_y: 4_420_000.0,
+            max_x: 453_000.0,
+            max_y: 4_421_000.0,
+        };
+        q.declare(5256, statement(Some(4326), "", Said::Rfc7946), Some(metres));
+        assert!(
+            warnings(&q, 5256)
+                .join(" ")
+                .contains("boylam, enlem aralığının dışında")
+        );
     }
 }

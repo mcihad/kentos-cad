@@ -79,13 +79,15 @@ fn what_the_desktop_does_not_run_yet_is_dimmed_and_says_why() {
     let app = app_with_drawing();
     assert!(!app.menu_runs("file.print"));
     assert_eq!(app.menu_why("file.print"), Some("Geliştirme aşamasında"));
-    assert!(!app.menu_runs("file.import.geojson"));
+    assert!(!app.menu_runs("cloud.rename"));
     assert_eq!(
-        app.menu_why("file.import.geojson"),
+        app.menu_why("cloud.rename"),
         Some("Web'de var; masaüstüne henüz taşınmadı")
     );
-    assert!(app.menu_runs("file.import.dxf"));
-    assert_eq!(app.menu_why("file.import.dxf"), None);
+    for id in ["file.import.dxf", "file.import.shp", "file.import.geojson"] {
+        assert!(app.menu_runs(id), "{id}");
+        assert_eq!(app.menu_why(id), None, "{id}");
+    }
     // Without a drawing there is nothing to save, set or export; opening is.
     let (empty, _) = App::boot(None);
     assert!(!empty.menu_runs("file.save"));
@@ -141,9 +143,13 @@ fn the_keyboard_walks_the_rows_and_enter_runs_one() {
         Some(Focus::Pane(1)),
         "the coordinate list"
     );
-    // NCZ, Shapefile and GeoJSON do not run here yet: the keyboard passes them.
+    // NCZ does not run here yet: the keyboard passes it.
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(0)));
+    assert_eq!(state(&app).focus, Some(Focus::Pane(3)), "Shapefile");
+    key(&mut app, Named::ArrowDown);
+    assert_eq!(state(&app).focus, Some(Focus::Pane(4)), "GeoJSON");
+    key(&mut app, Named::ArrowDown);
+    assert_eq!(state(&app).focus, Some(Focus::Pane(0)), "round to DXF");
     key(&mut app, Named::ArrowLeft);
     assert_eq!(state(&app).focus, Some(Focus::Nav(4)), "back to İçe aktar");
     // Enter on a command row runs it.

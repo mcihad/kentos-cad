@@ -113,7 +113,20 @@ pub const PORTED: &[&str] = &[
     "workspace.hybrid",
     "workspace.cad",
     "workspace.gis",
+    // GeoJSON in and out, a Shapefile in from its files or its zip archive
+    // (exchange/gis_import.rs, geojson_export.rs; docs/adr/0046, 0053): what the file
+    // says of its coordinate system is shown and checked, never reprojected.
+    "file.import.geojson",
+    "file.import.shp",
+    "file.export.geojson",
 ];
+
+/// Where the desktop does more than the web, its own description: the web's
+/// would say otherwise (docs/adr/0053: the desktop reads a zipped Shapefile).
+const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[(
+    "file.import.shp",
+    "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte ya da katmanın .zip arşivi seçilir (arşivdeki her .shp bir katmandır, biri seçilir). Noktalar (Z ile), çizgiler ve delikli alanlar; .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz.",
+)];
 
 /// Where a command stands, from the desktop's point of view.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -359,7 +372,10 @@ impl Catalog {
                     id,
                     title,
                     short: c.short.map_or(title, leak),
-                    description: leak(c.description.unwrap_or_default()),
+                    description: DESKTOP_DESCRIPTIONS
+                        .iter()
+                        .find(|(desktop, _)| *desktop == id)
+                        .map_or_else(|| leak(c.description.unwrap_or_default()), |(_, d)| *d),
                     aliases: leak_list(c.aliases),
                     shortcuts: leak_list(c.shortcuts),
                     shortcuts_in_input: leak_list(c.shortcuts_in_input),

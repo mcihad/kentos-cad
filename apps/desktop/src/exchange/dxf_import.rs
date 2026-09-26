@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use iced::widget::{Column, column, row, scrollable};
+use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::{DxfReadOptions, ImportLayer, ImportResult, LayerStyle};
 use kentos_interaction::{Format, Level};
@@ -108,7 +108,7 @@ impl App {
         let srid = self.project_srid();
         // “Başka dosya…” keeps the chosen coordinate system.
         let crs = match &self.exchange {
-            Some(Window::DxfImport(s)) => s.crs,
+            Some(Window::DxfImport(s)) => s.crs.clone(),
             _ => CrsQuestion::new(srid),
         };
         let read = READS.fetch_add(1, Ordering::Relaxed) + 1;
@@ -185,7 +185,7 @@ impl App {
                     s.excluded.clear();
                 }
             }
-            Event::Crs(srid) => s.crs.srid = srid,
+            Event::Crs(srid) => s.crs.pick(srid),
             Event::Another | Event::Run => {}
         }
         Task::none()
@@ -300,7 +300,10 @@ impl App {
             .push(words::file_line(&s.file.name, meta))
             .push(self.dxf_layers(s))
             .push(self.dxf_summary(s))
-            .push(s.crs.view(srid, |srid| event(Event::Crs(srid))));
+            .push(
+                s.crs
+                    .view(srid, &self.number_format(), |srid| event(Event::Crs(srid))),
+            );
         if let Some((error, words)) = &s.status {
             body = body.push(words::text_line(
                 if *error { Line::Error } else { Line::Info },
@@ -310,8 +313,8 @@ impl App {
         let can = self.dxf_can_import(s);
         overlay::blocking(
             Dialog::new("DXF içe aktar")
-                // The body scrolls (a file with many layers); the buttons stay in view.
-                .push(scrollable(body).height(Fill))
+                // As tall as its content; a long body (a file with many layers) scrolls, the buttons stay in view.
+                .scroll(body)
                 .action(words::ghost("Başka dosya…", Some(event(Event::Another))))
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
@@ -381,14 +384,16 @@ impl App {
                 },
             ])
         });
-        let table = Table::new([
-            TableColumn::new("").width(22),
-            TableColumn::new("DXF katmanı").width(Length::FillPortion(2)),
-            TableColumn::new("Nesne").width(60).align_right(),
-            TableColumn::new("Nereye").width(Length::FillPortion(3)),
-        ])
-        .extend(rows)
-        .height(Length::Fixed(200.0));
+        let table = words::fitted(
+            Table::new([
+                TableColumn::new("").width(22),
+                TableColumn::new("DXF katmanı").width(Length::FillPortion(2)),
+                TableColumn::new("Nesne").width(60).align_right(),
+                TableColumn::new("Nereye").width(Length::FillPortion(3)),
+            ])
+            .extend(rows),
+            r.layers.len(),
+        );
         column![head, table].spacing(6).width(Fill).into()
     }
 

@@ -19,5 +19,6 @@ publish.workspace = true
 kentos-contracts = { path = "../contracts", default-features = false }
 kentos-geometry-core = { path = "../geometry-core" }
 libm = { workspace = true }
+miniz_oxide = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

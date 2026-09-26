@@ -73,6 +73,10 @@ serde_json = { version = "=1.0.151", features = ["float_roundtrip"] }
 # Transcendental functions of the geometry core: the same code on every target, so native
 # and WASM agree bit for bit (CLAUDE.md §23.4, docs/adr/0008).
 libm = "=0.2.16"
+# Zipped Shapefiles (docs/adr/0046 question 4, the owner's approval of 26 Sep; docs/adr/0053):
+# inflate only, pure Rust, no unsafe of its own; already locked through the desktop's
+# image decoders, so nothing new is downloaded.
+miniz_oxide = { version = "=0.9.1", default-features = false, features = ["with-alloc"] }
 rust_decimal = { version = "=1.43.0", default-features = false, features = ["std"] }
 # Persistent object identity (docs/adr/0014): a v1 drawing's objects get ids derived from
 # the sha256 of its canonical text through UUIDv5 (SHA-1). Both were locked already (axum

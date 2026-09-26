@@ -1,6 +1,6 @@
 # Bağımlılık kaydı
 
-Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 30 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
+Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 32 Rust bağımlılığı aşağıdadır (26 Eylül; `miniz_oxide` eklendi). Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
 
 ## Kurallar
 
@@ -46,6 +46,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | time | 0.3.55 | MIT OR Apache-2.0 | native | application, api | ADR 0007 |
 | tracing | 0.1.44 | MIT | native | api | ADR 0007 |
 | tracing-subscriber | 0.3.23 | MIT | native | api | ADR 0007 |
+| miniz_oxide | 0.9.1, varsayılan özellikler kapalı, `with-alloc` (yalnız inflate kullanılır) | MIT OR Zlib OR Apache-2.0 | native, wasm32 (saf Rust) | formats (zip'li Shapefile, `zip.rs`) | ADR 0046 soru 4 (sahibin onayı, 26 Eylül), ADR 0053; `flate2` üzerinden zaten kilitliydi (`adler2` ile), kilide yeni paket girmedi. Biçim WASM modülü zip okumaz: +183 bayt |
 
 **Geçişli bağımlılıklar** (`Cargo.lock`): 633 paket, 19'u çalışma alanının kendi crate'leri (26 Eylül; `kentos-kcad` eklendi).
 
@@ -87,6 +88,5 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | sqlx TLS özelliği (`rustls`) | Üretim veritabanı bağlantısı | `OPS-03` |
 | S3 uyumlu nesne deposu istemcisi | Bulut dosya revizyonları | `SYNC-02`, `SYNC-03` |
 | PROJ, GDAL bağlayıcıları | Dönüşüm ve biçimler (native/sunucu) | `NUM-05`, `NUM-06`, `FMT-04` |
-| miniz_oxide (yalnız inflate) | Shapefile `.zip` içe aktarma (tarayıcı, masaüstü ve sunucu) | [ADR 0046](../adr/0046-geojson-and-shapefile.md) soru 4; `FMT-07`. Sahip 26 Eylül'de onayladı; kurulunca yukarıdaki tabloya sürümüyle taşınır |
 | PyO3 + gömülü CPython; Pyodide | Python | `PY-01`, `PY-02`, `PY-18` |
 | MCP uygulaması | AI yüzeyi | `AI-03`, `AI-04` |

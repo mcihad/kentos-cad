@@ -169,7 +169,7 @@
 4. **`.zip` Shapefile:**
    - (a) `miniz_oxide` eklenir (yalnız inflate; saf Rust, MIT/Zlib/Apache-2.0). Yanında küçük bir ZIP dizin okuyucusu yazılır; boyut, oran ve girdi sayısı sınırlarıyla (zip bombası).
    - (b) `.zip` olmaz; dosyalar birlikte seçilir (bugünkü hâl).
-   - **Karar (sahip, 26 Eylül):** (a). Masaüstünün GeoJSON/Shapefile dilimiyle birlikte yapılır; bağımlılık kaydına eklenmeden önce sürümü, lisansı ve boyutu yazılır.
+   - **Karar (sahip, 26 Eylül):** (a). Masaüstünün GeoJSON/Shapefile dilimiyle birlikte yapılır; bağımlılık kaydına eklenmeden önce sürümü, lisansı ve boyutu yazılır. Ortak okuyucu ve masaüstü: [ADR 0053](0053-desktop-geojson-shapefile-and-zip.md).
 5. **`.prj`'siz Shapefile:**
    - (a) DXF gibi projenin sistemi seçili gelir ve söylenir.
    - (b) Kullanıcı açıkça seçmeden içe aktarma kapalı kalır.

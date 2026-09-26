@@ -3,12 +3,13 @@
 //! sentence, object counts by kind and where the data lies.
 
 use iced::widget::{Column, button, column, container, row, text};
-use iced::{Center, Element, Fill};
+use iced::{Center, Element, Fill, Length};
 use kentos_contracts::{Bounds, ReportItem};
 use kentos_interaction::Format;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::style;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::table::{Table, row_height};
 use kentos_ui::widget::tree_view::Check;
 use kentos_ui::{label, widget::tree_view};
 
@@ -188,6 +189,20 @@ pub fn empty<'a, Message: 'a>(words: &'a str) -> Element<'a, Message> {
         .width(Fill)
         .style(style::container::bordered)
         .into()
+}
+
+/// A layer table: up to eight rows show whole; more scroll inside the
+/// table under its header, so a long list does not push the rest away.
+pub fn fitted<'a, Message: Clone + 'a>(
+    table: Table<'a, Message>,
+    rows: usize,
+) -> Table<'a, Message> {
+    const SHOWN: usize = 8;
+    if rows > SHOWN {
+        table.height(Length::Fixed(SHOWN as f32 * row_height()))
+    } else {
+        table
+    }
 }
 
 /// The window's main button.
