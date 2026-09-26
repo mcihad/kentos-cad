@@ -170,12 +170,7 @@ impl Document {
         let (entities, uids) = self
             .store
             .iter()
-            .map(|stored| {
-                (
-                    (*stored.entity).clone(),
-                    EntityId(stored.uid.into_bytes()),
-                )
-            })
+            .map(|stored| ((*stored.entity).clone(), EntityId(stored.uid.into_bytes())))
             .unzip();
         DocumentSnapshotV2 {
             format: DOCUMENT_FORMAT.to_owned(),

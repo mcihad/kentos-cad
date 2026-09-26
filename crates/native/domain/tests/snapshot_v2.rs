@@ -116,14 +116,18 @@ fn a_v2_snapshot_with_bad_ids_is_refused() {
     };
     assert!(refused(&|s| s.uids[3] = s.uids[2]).contains("Nesne 4 (polygon) › kalıcı kimlik"));
     assert!(refused(&|s| s.uids[0] = EntityId([0; 16])).contains("Nesne 1"));
-    assert!(refused(&|s| {
-        s.uids.pop();
-    })
-    .contains("13 nesne ama 12 kimlik"));
-    assert!(refused(&|s| {
-        if let Entity::Point(p) = &mut s.entities[0] {
-            p.base.layer_id = "yok".into();
-        }
-    })
-    .contains("“yok” katmanı dosyada yok"));
+    assert!(
+        refused(&|s| {
+            s.uids.pop();
+        })
+        .contains("13 nesne ama 12 kimlik")
+    );
+    assert!(
+        refused(&|s| {
+            if let Entity::Point(p) = &mut s.entities[0] {
+                p.base.layer_id = "yok".into();
+            }
+        })
+        .contains("“yok” katmanı dosyada yok")
+    );
 }

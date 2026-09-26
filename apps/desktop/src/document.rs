@@ -67,8 +67,7 @@ impl Document {
     /// is refused with the reason.
     pub fn read(path: &Path) -> Result<Self, String> {
         let at = |e: String| format!("{}: {e}", path.display());
-        let data =
-            std::fs::read(path).map_err(|e| format!("{} okunamadı: {e}", path.display()))?;
+        let data = std::fs::read(path).map_err(|e| format!("{} okunamadı: {e}", path.display()))?;
         match kentos_kcad::sniff(&data) {
             Sniff::Kcad | Sniff::KcadDamaged => {
                 let snapshot = kentos_kcad::decode(&data).map_err(|e| at(e.message))?;
@@ -238,10 +237,8 @@ mod tests {
 
     /// A fresh directory under the system's temporary one; never the user's files.
     fn scratch(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!(
-            "kentos-desktop-{name}-{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("kentos-desktop-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("temporary directory");
         dir
@@ -313,7 +310,10 @@ mod tests {
         let blocked = dir.join("dolu.kcad");
         std::fs::create_dir_all(blocked.join("içerik")).expect("a directory in the way");
         let error = write(&doc.model.to_snapshot_v2(), &blocked).expect_err("refused");
-        assert!(error.contains("Önceki dosya olduğu gibi duruyor"), "{error}");
+        assert!(
+            error.contains("Önceki dosya olduğu gibi duruyor"),
+            "{error}"
+        );
         assert!(blocked.join("içerik").is_dir());
         let left: Vec<String> = std::fs::read_dir(&dir)
             .expect("lists")
