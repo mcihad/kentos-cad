@@ -269,7 +269,7 @@ Web'de dördü eski yoldaydı (koddan doğrulandı, 26 Eylül): Esnet `doc.updat
 Her kural bilerek bozuldu, düştüğü görüldü, geri alındı (`.run/breaks-0047b.log`).
 
 - **Komut şeridi:** adımın genişlik sınırı kaldırıldı: test “Sağ tık 0 piksele sıkıştı” diye düştü.
-- **Kilit, araçta:** masaüstü ve web Esnet'inde kilit süzgeci kaldırıldı: `stretch-align` iki platformda aynı adımlarda düştü (10. adımda pencere yeniden istenmedi, 15. adımda komut kilitli çizgiyi reddetti).
+- **Kilit, araçta:** masaüstü ve web Esnet'inde kilit süzgeci kaldırıldı: `stretch-align` iki platformda aynı adımlarda düştü (kilitli çizgiye değen sürüklenen pencere yeniden istenmedi; kapalı alanı esnetecek adımda komut kilitli çizgiyi de gördüğü için hepsini reddetti). Adım numaraları önizleme hareketleri eklenmeden önceki izindir.
 - **Kilit, komutta:** dizi komutunda (masaüstü ve web) kilit denetimi kaldırıldı: iki koşucuda aynı 4 durum düştü.
 - **Tek adım:** masaüstünde her kopya kendi adımıyla yazıldı: 4 durum geri almada (“Ekle”, beklenen “Dizi”/“Kutupsal dizi”) düştü.
 - **Ortak hesap:** `grid_array_transforms`'ta satır ve sütun yer değiştirdi: çağrı durumları, bağımsız referans ve 9 ortak durum düştü. `align`'da dönüşün işareti çevrildi: 4 hizalama durumu düştü.
