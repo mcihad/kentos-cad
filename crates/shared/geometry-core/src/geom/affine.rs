@@ -2,7 +2,8 @@
 //! x' = a·x + c·y + e, y' = b·x + d·y + f.
 
 use crate::api::Op;
-use crate::jsmath::{cos, or, sin};
+use crate::geometry::dist;
+use crate::jsmath::{atan2, cos, or, sin};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -51,20 +52,55 @@ pub fn mirror(p: Vec2, q: Vec2) -> Affine {
     ]
 }
 
+/// Align (Hizala, AutoCAD's ALIGN; docs/adr/0047): the first source point
+/// onto the first target; with a second pair the direction from the first
+/// source point to the second turns onto the direction from the first target
+/// to the second, and with `scale` the one length becomes the other. `pts`
+/// is s1, d1, s2, d2 as far as given; a third point alone is not a pair.
+/// None without a first pair, or when a second pair's points lie within a
+/// nanometre of the first's (the direction is lost).
+pub fn align(pts: &[Vec2], scale: bool) -> Option<Affine> {
+    let (Some(&s1), Some(&d1)) = (pts.first(), pts.get(1)) else {
+        return None;
+    };
+    let (Some(&s2), Some(&d2)) = (pts.get(2), pts.get(3)) else {
+        return Some(translation(d1.x - s1.x, d1.y - s1.y));
+    };
+    let ls = dist(s1, s2);
+    let ld = dist(d1, d2);
+    if ls < 1e-9 || ld < 1e-9 {
+        return None;
+    }
+    let turn = atan2(d2.y - d1.y, d2.x - d1.x) - atan2(s2.y - s1.y, s2.x - s1.x);
+    let k = if scale { ld / ls } else { 1.0 };
+    // Around s1: scale, turn, then carry s1 onto d1.
+    Some(compose(
+        &translation(d1.x - s1.x, d1.y - s1.y),
+        &compose(&rotation(turn, s1), &scaling(k, s1)),
+    ))
+}
+
 /// The affine of a similarity as the modify tools and the product command
-/// `cad.entities.transform` give it (docs/adr/0037): `move` (dx, dy),
+/// `cad.entities.transform` give it (docs/adr/0037, 0047): `move` (dx, dy),
 /// `rotate` (cx, cy, angle in radians, counter-clockwise), `scale` (cx, cy,
-/// factor) or `mirror` (ax, ay, bx, by). None for another kind, or another
-/// count of numbers. The web's handler reaches it through WASM with the
-/// numbers as float64 (no JSON), the desktop's natively: one matrix, bit for
-/// bit, on both. Whether the numbers make sense (a factor above zero, an
-/// axis with a direction) is the command's to check first.
+/// factor), `mirror` (ax, ay, bx, by), `align` (the first source and target
+/// points sx, sy, tx, ty, then the second pair's when it is given) or
+/// `alignScale` (both pairs, scaled to fit). None for another kind, another
+/// count of numbers, or an alignment whose second pair has no direction. The
+/// web's handler reaches it through WASM with the numbers as float64 (no
+/// JSON), the desktop's natively: one matrix, bit for bit, on both. Whether
+/// the numbers make sense (a factor above zero, an axis with a direction) is
+/// the command's to check first.
 pub fn similarity(kind: &str, p: &[f64]) -> Option<Affine> {
+    let at = |i: usize| Vec2::new(p[i], p[i + 1]);
     match (kind, p) {
         ("move", &[dx, dy]) => Some(translation(dx, dy)),
         ("rotate", &[cx, cy, angle]) => Some(rotation(angle, Vec2::new(cx, cy))),
         ("scale", &[cx, cy, factor]) => Some(scaling(factor, Vec2::new(cx, cy))),
         ("mirror", &[ax, ay, bx, by]) => Some(mirror(Vec2::new(ax, ay), Vec2::new(bx, by))),
+        ("align", [_, _, _, _]) => align(&[at(0), at(2)], false),
+        ("align", [_, _, _, _, _, _, _, _]) => align(&[at(0), at(2), at(4), at(6)], false),
+        ("alignScale", [_, _, _, _, _, _, _, _]) => align(&[at(0), at(2), at(4), at(6)], true),
         _ => None,
     }
 }
@@ -161,5 +197,41 @@ mod tests {
         assert_eq!(similarity("move", &[1.0]), None);
         assert_eq!(similarity("rotate", &[1.0, 2.0]), None);
         assert_eq!(similarity("shear", &[1.0, 2.0]), None);
+    }
+
+    /// An alignment is `align` of its pairs: one pair a translation, two
+    /// pairs a turn (scaled with `alignScale`); a second pair without a
+    /// direction, or a pair and a half, is none.
+    #[test]
+    fn an_alignment_is_align_of_its_pairs() {
+        let (s1, d1) = (
+            Vec2::new(487010.0, 4420010.0),
+            Vec2::new(487040.0, 4420030.0),
+        );
+        let (s2, d2) = (
+            Vec2::new(487020.0, 4420010.0),
+            Vec2::new(487040.0, 4420050.0),
+        );
+        assert_eq!(
+            bits(similarity("align", &[s1.x, s1.y, d1.x, d1.y]).unwrap()),
+            bits(translation(30.0, 20.0))
+        );
+        let pairs = [s1.x, s1.y, d1.x, d1.y, s2.x, s2.y, d2.x, d2.y];
+        assert_eq!(
+            bits(similarity("align", &pairs).unwrap()),
+            bits(align(&[s1, d1, s2, d2], false).unwrap())
+        );
+        let scaled = similarity("alignScale", &pairs).unwrap();
+        assert_eq!(bits(scaled), bits(align(&[s1, d1, s2, d2], true).unwrap()));
+        // The second source point lands on the second target: 10 m become 20 m, turned a quarter.
+        let q = apply(&scaled, s2);
+        assert!(
+            (q.x - d2.x).abs() < 1e-8 && (q.y - d2.y).abs() < 1e-8,
+            "{q:?}"
+        );
+        let lost = [s1.x, s1.y, d1.x, d1.y, s1.x, s1.y, d2.x, d2.y];
+        assert_eq!(similarity("align", &lost), None);
+        assert_eq!(similarity("alignScale", &[s1.x, s1.y, d1.x, d1.y]), None);
+        assert_eq!(similarity("align", &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]), None);
     }
 }
