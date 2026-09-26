@@ -68,11 +68,37 @@ impl Seen {
                     .collect(),
                 Vec::new(),
             ),
+            // A spline's fit points; an ellipse's axis ends (major, minor,
+            // counter-clockwise) or an elliptical arc's start and end; a
+            // construction line's point and one metre along it (docs/adr/0057).
+            Entity::Spline(s) => (s.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
+            Entity::Ellipse(e) => {
+                let at = |t: f64| {
+                    let (m, r) = (e.major, e.ratio);
+                    [
+                        e.c.x + m.x * t.cos() - m.y * r * t.sin(),
+                        e.c.y + m.y * t.cos() + m.x * r * t.sin(),
+                    ]
+                };
+                let pts = if e.t0 == e.t1 {
+                    (0..4)
+                        .map(|i| at(f64::from(i) * std::f64::consts::FRAC_PI_2))
+                        .collect()
+                } else {
+                    vec![at(e.t0), at(e.t1)]
+                };
+                (pts, Vec::new())
+            }
+            Entity::Xline(x) | Entity::Ray(x) => (
+                vec![[x.p.x, x.p.y], [x.p.x + x.dir.x, x.p.y + x.dir.y]],
+                Vec::new(),
+            ),
             _ => (Vec::new(), Vec::new()),
         };
         let (center, radius) = match e {
             Entity::Circle(c) => (Some([c.c.x, c.c.y]), Some(c.r)),
             Entity::Arc(a) => (Some([a.c.x, a.c.y]), Some(a.r)),
+            Entity::Ellipse(e) => (Some([e.c.x, e.c.y]), None),
             _ => (None, None),
         };
         Seen {
