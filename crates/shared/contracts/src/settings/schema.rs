@@ -456,6 +456,14 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Sunucu adresi",
                 "Bulut projelerinin saklandığı KentOS sunucusu. Bu bilgisayardaki sunucuya http, başka her sunucuya https ile bağlanılır.",
             ),
+        // The last signed-in account's id (not a secret; the session never is kept): the
+        // projects this device keeps for it open without a connection (docs/adr/0043).
+        text("cloud.account", "", 64)
+            .hosts(&[Desktop])
+            .text(
+                "Son hesap",
+                "Bu bilgisayarda son giriş yapan hesabın kimliği; bağlantı yokken o hesabın bu cihazdaki projeleri açılır. Oturum ve parola saklanmaz.",
+            ),
     ]
     .into_iter()
     .map(|s| s.0)

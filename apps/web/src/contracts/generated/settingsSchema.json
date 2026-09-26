@@ -996,6 +996,22 @@
       "description": "Bulut projelerinin saklandığı KentOS sunucusu. Bu bilgisayardaki sunucuya http, başka her sunucuya https ile bağlanılır.",
       "sensitive": false,
       "apply": "live"
+    },
+    {
+      "key": "cloud.account",
+      "type": "text",
+      "default": "",
+      "max": 64.0,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "cloud",
+      "title": "Son hesap",
+      "description": "Bu bilgisayarda son giriş yapan hesabın kimliği; bağlantı yokken o hesabın bu cihazdaki projeleri açılır. Oturum ve parola saklanmaz.",
+      "sensitive": false,
+      "apply": "live"
     }
   ],
   "presets": [

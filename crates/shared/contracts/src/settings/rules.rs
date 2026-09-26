@@ -32,7 +32,10 @@ impl SettingDescriptor {
             SettingType::Text => {
                 let text = value.as_str().ok_or(Code::WrongType)?;
                 // Characters, not bytes: the web counts code points the same way.
-                if self.max.is_some_and(|max| text.chars().count() as f64 > max) {
+                if self
+                    .max
+                    .is_some_and(|max| text.chars().count() as f64 > max)
+                {
                     return Err(Code::OutOfRange);
                 }
                 Value::String(text.to_owned())
