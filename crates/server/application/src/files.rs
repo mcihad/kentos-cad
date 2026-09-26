@@ -590,6 +590,23 @@ pub(crate) async fn newest(
     .await?)
 }
 
+/// One revision of the project in `tx`'s scope, if it exists (a restore starts from it).
+pub(crate) async fn revision(
+    tx: &mut Transaction<'static, Postgres>,
+    tenant: Uuid,
+    project: Uuid,
+    revision: i64,
+) -> AppResult<Option<RevisionRow>> {
+    Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{REVISION_SELECT} and r.revision = $3"
+    )))
+    .bind(tenant)
+    .bind(project)
+    .bind(revision)
+    .fetch_optional(&mut **tx)
+    .await?)
+}
+
 /// One committed revision and its bytes (`project.download`).
 pub async fn download(
     db: &kentos_postgres::Db,

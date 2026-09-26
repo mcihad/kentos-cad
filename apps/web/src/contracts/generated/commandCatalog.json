@@ -7008,6 +7008,454 @@
       ]
     },
     {
+      "id": "project.checkpoint.restore",
+      "version": 1,
+      "title": "Yeni proje olarak geri yükle",
+      "summary": "Bir kontrol noktasından ya da dosya projesinin bir revizyonundan yeni bir proje açar; kaynak proje değişmez. Dosya projesinin noktası, o revizyonla başlayan bir dosya projesi olur; veritabanı projesinin kontrol noktası, dosyasından içe aktarılan bir veritabanı projesi olur (nesneler kalıcı kimlikleriyle). Yeni proje çağıranındır; geçmiş ve paylaşımlar gelmez. Kaynakta project.history ve project.download, hedef çalışma alanında proje açma hakkı ister.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.history",
+        "project.download"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.checkpoint.restore` v1: exactly one of `checkpointId`\nand `fileRevision` (a file project's revision). The answer is the new\nproject, as `project.duplicate` gives it (`ProjectDuplicated`).",
+        "properties": {
+          "checkpointId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fileRevision": {
+            "description": "A file project's revision (decimal text).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "The new project's name; the source's with the point's name after it when absent.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tenantId": {
+            "description": "The workspace of the new project; the source's when absent.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "CheckpointRestore",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once.",
+                "type": "string"
+              },
+              {
+                "const": "file",
+                "description": "As a file: a sequence of immutable, verified `.kcad` v2 revisions in\nthe server's object store (docs/adr/0031); each save is a new\nrevision, based on the one it replaces.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSummary": {
+            "properties": {
+              "access": {
+                "$ref": "#/$defs/ProjectAccessView"
+              },
+              "archivedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit",
+                "description": "The unit its areas are given in (lengths and coordinates are metres of its coordinate system)."
+              },
+              "catalogVersion": {
+                "description": "Counts changes of its name, description, type and tags; a catalog edit\nsends it as `expectedVersions[\"@catalog\"]`. Decimal text.",
+                "type": "string"
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "creatorName": {
+                "description": "Who created it; empty when the caller cannot see them.",
+                "type": "string"
+              },
+              "dataRevision": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "favorite": {
+                "description": "One of the caller's favourites.",
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openedAt": {
+                "description": "When the caller last opened it (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ownerName": {
+                "description": "The owner's name (\"Benimle paylaşılanlar\" says whose it is); empty\nwhen the caller cannot see the owner (one who left the organisation).",
+                "type": "string"
+              },
+              "projectType": {
+                "$ref": "#/$defs/ProjectType",
+                "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+              },
+              "purgeAfter": {
+                "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/ProjectState"
+              },
+              "storage": {
+                "$ref": "#/$defs/ProjectStorage"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "tenantKind": {
+                "$ref": "#/$defs/TenantKind"
+              },
+              "tenantName": {
+                "type": "string"
+              },
+              "trashedAt": {
+                "description": "When it was moved to the trash (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "trashedByName": {
+                "description": "Who moved it there, when the caller can see them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "srid",
+              "dataRevision",
+              "updatedAt",
+              "tenantId",
+              "tenantName",
+              "tenantKind",
+              "ownerName",
+              "access",
+              "projectType",
+              "description",
+              "tags",
+              "state",
+              "catalogVersion",
+              "createdAt",
+              "creatorName",
+              "areaUnit",
+              "storage",
+              "favorite"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "The result of `project.duplicate`.",
+        "properties": {
+          "objects": {
+            "description": "How many objects were copied (decimal text).",
+            "type": "string"
+          },
+          "project": {
+            "$ref": "#/$defs/ProjectSummary",
+            "description": "The copy, as its owner (the caller) sees it."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          },
+          "sourceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project",
+          "sourceId",
+          "objects"
+        ],
+        "title": "ProjectDuplicated",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Teslim hâlinden yeni proje",
+          "input": {
+            "checkpointId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b",
+            "name": "Ada 101 (teslim)"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.polygon.create",
       "version": 1,
       "title": "Kapalı alan oluştur",

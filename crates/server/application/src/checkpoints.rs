@@ -128,7 +128,7 @@ fn note_of(note: Option<String>) -> AppResult<Option<String>> {
     Ok((!note.is_empty()).then(|| note.to_string()))
 }
 
-fn missing() -> AppError {
+pub(crate) fn missing() -> AppError {
     AppError::not_found("Kontrol noktası bulunamadı; silinmiş olabilir. Listeyi yenileyin.")
 }
 

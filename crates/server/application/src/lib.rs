@@ -24,6 +24,7 @@ pub mod lifecycle;
 pub mod listing;
 pub mod people;
 pub mod projects;
+pub mod restore;
 pub mod sharing;
 pub mod snapshot;
 pub mod tenancy;
@@ -98,6 +99,10 @@ pub const SERVER_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::PROJECT_CHECKPOINT_DELETE,
         kentos_contracts::PROJECT_CHECKPOINT_DELETE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_CHECKPOINT_RESTORE,
+        kentos_contracts::PROJECT_CHECKPOINT_RESTORE_VERSION,
     ),
     (
         kentos_contracts::PROJECT_FILE_COMMIT,

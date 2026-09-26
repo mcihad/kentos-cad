@@ -15,10 +15,10 @@ use std::time::Duration;
 use kentos_contracts::{
     CheckpointChange, CommandEnvelope, CommitResult, FileCommitted, PROJECT_ACCESS_REVOKE,
     PROJECT_ARCHIVE, PROJECT_CHANGES, PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_DELETE,
-    PROJECT_CREATE, PROJECT_CREATE_VERSION, PROJECT_DUPLICATE, PROJECT_FAVORITE,
-    PROJECT_FILE_COMMIT, PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME, PROJECT_RESTORE,
-    PROJECT_SHARE, PROJECT_TRASH, PROJECT_UNARCHIVE, ProjectAccessChange, ProjectCatalogChange,
-    ProjectCreate, ProjectDuplicated, ProjectInfo, ProjectPurged,
+    PROJECT_CHECKPOINT_RESTORE, PROJECT_CREATE, PROJECT_CREATE_VERSION, PROJECT_DUPLICATE,
+    PROJECT_FAVORITE, PROJECT_FILE_COMMIT, PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME,
+    PROJECT_RESTORE, PROJECT_SHARE, PROJECT_TRASH, PROJECT_UNARCHIVE, ProjectAccessChange,
+    ProjectCatalogChange, ProjectCreate, ProjectDuplicated, ProjectInfo, ProjectPurged,
 };
 use serde::de::DeserializeOwned;
 use serde_json::Value;
@@ -29,7 +29,8 @@ use crate::error::{AppError, AppResult};
 use crate::lifecycle::StateChange;
 use crate::tenancy::Access;
 use crate::{
-    catalog, changes, checkpoints, duplicate, files, idempotency, lifecycle, projects, sharing,
+    catalog, changes, checkpoints, duplicate, files, idempotency, lifecycle, projects, restore,
+    sharing,
 };
 
 /// How the server keeps its catalog (docs/adr/0028): how long a project
@@ -158,6 +159,9 @@ pub async fn run(
         PROJECT_CHECKPOINT_DELETE => checkpoints::delete(db, blobs, access, envelope)
             .await
             .map(O::Checkpoint),
+        PROJECT_CHECKPOINT_RESTORE => restore::restore(db, blobs, access, envelope)
+            .await
+            .map(O::Duplicated),
         PROJECT_CREATE => Err(AppError::invalid(
             "project.create bir çalışma alanına gönderilir: POST /v1/tenants/{çalışma alanı}/commands (projectId boş).",
         )),

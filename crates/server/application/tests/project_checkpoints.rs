@@ -13,11 +13,12 @@ use common::{a_point, blobs, catalog_envelope, envelope, member, new_project, op
 use kentos_application::access::ProjectAccess;
 use kentos_application::blobs::Blobs;
 use kentos_application::commands::{CatalogPolicy, CommandOutcome, run};
-use kentos_application::{AppError, admin, changes, checkpoints, files, projects};
+use kentos_application::{AppError, admin, changes, checkpoints, files, projects, snapshot};
 use kentos_contracts::{
-    CheckpointChange, CheckpointKind, CommandEnvelope, DocumentSnapshotV1, FileUploadBegin,
-    GrantRole, PROJECT_ARCHIVE, PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_DELETE,
-    PROJECT_FILE_COMMIT, ProjectCreate, ProjectStorage, TenantRole,
+    CheckpointChange, CheckpointKind, CommandEnvelope, DocumentSnapshotV1, EntityId, FeatureChange,
+    FileUploadBegin, GrantRole, PROJECT_ARCHIVE, PROJECT_CHECKPOINT_CREATE,
+    PROJECT_CHECKPOINT_DELETE, PROJECT_CHECKPOINT_RESTORE, PROJECT_FILE_COMMIT, ProjectChanges,
+    ProjectCreate, ProjectDuplicated, ProjectPatch, ProjectStorage, TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::json;
@@ -496,5 +497,280 @@ async fn the_cleanup_removes_checkpoint_objects_of_no_checkpoint() {
         .unwrap();
     assert_eq!(done.purged, 1);
     assert!(walk(store.root()).is_empty());
+    db.close().await;
+}
+
+async fn restore(
+    db: &TestDb,
+    store: &Blobs,
+    by: &ProjectAccess,
+    envelope: CommandEnvelope,
+) -> Result<ProjectDuplicated, AppError> {
+    match run(&db.app, store, &CatalogPolicy::default(), by, envelope).await? {
+        CommandOutcome::Duplicated(d) => Ok(d),
+        other => panic!("not a restore: {other:?}"),
+    }
+}
+
+/// Every object by its persistent id, without its slot (a file keeps no slots).
+fn by_uid(
+    doc: &kentos_contracts::DocumentSnapshotV2,
+) -> std::collections::BTreeMap<EntityId, serde_json::Value> {
+    doc.uids
+        .iter()
+        .zip(&doc.entities)
+        .map(|(uid, e)| {
+            let mut v = serde_json::to_value(e).unwrap();
+            v.as_object_mut().unwrap().remove("id");
+            (*uid, v)
+        })
+        .collect()
+}
+
+fn unlock(layers: &mut [kentos_contracts::LayerNode]) {
+    for l in layers {
+        l.locked = false;
+        unlock(&mut l.children);
+    }
+}
+
+#[tokio::test]
+async fn a_database_checkpoint_is_restored_as_a_new_project() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 3)
+        .await
+        .unwrap();
+    let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
+    let store = blobs();
+    // The drawing of the snapshot tests (docs/adr/0033), less its object of extreme values.
+    let source = kentos_kcad::decode(DRAWING).unwrap();
+    let mut unlocked = source.layers.clone();
+    unlock(&mut unlocked);
+    let input = ProjectCreate {
+        name: "Ada 5".into(),
+        settings: source.settings.clone(),
+        origin: source.origin,
+        home_view: source.home_view,
+        layers: unlocked,
+        active_layer: source.active_layer.clone(),
+        styles: source.styles.clone(),
+        description: Some("İfraz dosyası".into()),
+        project_type: None,
+        tags: Some(vec!["ifraz".into()]),
+        storage: None,
+    };
+    let project = Uuid::parse_str(
+        &projects::create(&db.app, &ayse, input, None)
+            .await
+            .unwrap()
+            .id,
+    )
+    .unwrap();
+    let by = open(&db, &ayse, project).await;
+    let features = source
+        .uids
+        .iter()
+        .zip(&source.entities)
+        .enumerate()
+        .filter(|(i, _)| *i != 13)
+        .map(|(_, (uid, e))| FeatureChange::Create {
+            id: uid.to_text(),
+            entity: e.clone(),
+        })
+        .collect();
+    let batch = ProjectChanges {
+        features,
+        project: None,
+    };
+    changes::commit(&db.app, &by, envelope(&ayse, project, batch, &[]))
+        .await
+        .unwrap();
+    let meta = projects::info(&db.app, &by).await.unwrap().meta_version;
+    let lock = ProjectChanges {
+        features: vec![],
+        project: Some(ProjectPatch {
+            layers: Some(source.layers.clone()),
+            ..Default::default()
+        }),
+    };
+    changes::commit(
+        &db.app,
+        &by,
+        envelope(&ayse, project, lock, &[("@project", &meta)]),
+    )
+    .await
+    .unwrap();
+    let point = make(&db, &store, &by, json!({ "name": "Teslim" }))
+        .await
+        .unwrap()
+        .checkpoint;
+    let (_, file) =
+        checkpoints::download(&db.app, &store, &by, Uuid::parse_str(&point.id).unwrap())
+            .await
+            .unwrap();
+    let kept = kentos_kcad::decode(&read_all(file).await).unwrap();
+
+    // The drawing goes on after the checkpoint.
+    let later: kentos_contracts::Entity = serde_json::from_value(json!({ "kind": "point", "id": 1, "layerId": "parsel", "attrs": {}, "p": { "x": 486520.0, "y": 4420220.0 } })).unwrap();
+    let more = ProjectChanges {
+        features: vec![FeatureChange::Create {
+            id: Uuid::now_v7().to_string(),
+            entity: later,
+        }],
+        project: None,
+    };
+    changes::commit(&db.app, &by, envelope(&ayse, project, more, &[]))
+        .await
+        .unwrap();
+
+    let asked = catalog_envelope(
+        &by,
+        PROJECT_CHECKPOINT_RESTORE,
+        json!({ "checkpointId": point.id }),
+        &[],
+    );
+    let restored = restore(&db, &store, &by, asked.clone()).await.unwrap();
+    assert_eq!(
+        (restored.project.name.as_str(), restored.objects.as_str()),
+        ("Ada 5 (Teslim)", "14")
+    );
+    assert_eq!(restored.source_id, project.to_string());
+    let copy = Uuid::parse_str(&restored.project.id).unwrap();
+    let c = open(&db, &ayse, copy).await;
+    let info = projects::info(&db.app, &c).await.unwrap();
+    assert_eq!(
+        (info.feature_count.as_str(), info.data_revision.as_str()),
+        ("14", "1")
+    );
+    // What the checkpoint kept, object by object, with the same ids, settings, layers and styles.
+    let now = kentos_kcad::decode(&snapshot::snapshot(&db.app, &c).await.unwrap().bytes).unwrap();
+    assert_eq!(by_uid(&now), by_uid(&kept));
+    assert_eq!(
+        (now.settings.clone(), now.layers.clone(), now.styles.clone()),
+        (
+            kept.settings.clone(),
+            kept.layers.clone(),
+            kept.styles.clone()
+        )
+    );
+    assert_eq!(
+        (now.origin, now.home_view, now.active_layer.clone()),
+        (kept.origin, kept.home_view, kept.active_layer.clone())
+    );
+    // Its catalog metadata came along; its history did not.
+    assert_eq!(info.feature_count, "14");
+    assert!(
+        checkpoints::list(&db.app, &c)
+            .await
+            .unwrap()
+            .checkpoints
+            .is_empty()
+    );
+    // The same command again (its answer lost): the same new project, nothing restored twice.
+    let again = restore(&db, &store, &by, asked).await.unwrap();
+    assert_eq!(
+        (again.project.id.as_str(), again.replayed),
+        (restored.project.id.as_str(), true)
+    );
+    // The source did not change.
+    assert_eq!(
+        projects::info(&db.app, &by).await.unwrap().feature_count,
+        "15"
+    );
+    db.close().await;
+}
+
+#[tokio::test]
+async fn a_file_point_is_restored_as_a_new_file_project() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 4)
+        .await
+        .unwrap();
+    let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
+    let dilek = member(&db, "buro", "dilek", TenantRole::Viewer).await;
+    let project = file_project(&db, &ayse, "Ada 12 dosyası").await;
+    let by = open(&db, &ayse, project).await;
+    common::share(&db, &by, &dilek.actor, GrantRole::Viewer).await;
+    let store = blobs();
+    save(&db, &store, &by, MINIMAL, "0").await;
+    save(&db, &store, &by, DRAWING, "1").await;
+    let first = make(
+        &db,
+        &store,
+        &by,
+        json!({ "name": "İlk", "fileRevision": "1" }),
+    )
+    .await
+    .unwrap()
+    .checkpoint;
+
+    // A revision by its number.
+    let asked = catalog_envelope(
+        &by,
+        PROJECT_CHECKPOINT_RESTORE,
+        json!({ "fileRevision": "2" }),
+        &[],
+    );
+    let two = restore(&db, &store, &by, asked).await.unwrap();
+    assert_eq!(two.project.name, "Ada 12 dosyası (r2)");
+    let t = open(&db, &ayse, Uuid::parse_str(&two.project.id).unwrap()).await;
+    let listed = files::list(&db.app, &t).await.unwrap();
+    assert_eq!(
+        (listed.current.as_deref(), listed.revisions.len()),
+        (Some("1"), 1)
+    );
+    assert_eq!(listed.revisions[0].sha256, sha(DRAWING));
+    // A checkpoint, under another name.
+    let asked = catalog_envelope(
+        &by,
+        PROJECT_CHECKPOINT_RESTORE,
+        json!({ "checkpointId": first.id, "name": "Ada 12 ilk hâli" }),
+        &[],
+    );
+    let one = restore(&db, &store, &by, asked).await.unwrap();
+    assert_eq!(one.project.name, "Ada 12 ilk hâli");
+    let o = open(&db, &ayse, Uuid::parse_str(&one.project.id).unwrap()).await;
+    let (_, file) = files::download(&db.app, &store, &o, 1).await.unwrap();
+    assert_eq!(read_all(file).await, MINIMAL);
+
+    // Exactly one point; a database project has no file revisions.
+    for input in [
+        json!({}),
+        json!({ "checkpointId": first.id, "fileRevision": "1" }),
+    ] {
+        let asked = catalog_envelope(&by, PROJECT_CHECKPOINT_RESTORE, input, &[]);
+        assert!(matches!(
+            restore(&db, &store, &by, asked).await,
+            Err(AppError::Invalid { .. })
+        ));
+    }
+    let plain = new_project(&db, &ayse, "Nesneler").await;
+    let p = open(&db, &ayse, plain).await;
+    let asked = catalog_envelope(
+        &p,
+        PROJECT_CHECKPOINT_RESTORE,
+        json!({ "fileRevision": "1" }),
+        &[],
+    );
+    match restore(&db, &store, &p, asked).await {
+        Err(e) => assert_eq!(e.path(), Some("fileRevision")),
+        Ok(r) => panic!("restored a revision of a database project: {r:?}"),
+    }
+    // A viewer may not open projects in the organisation: nothing is restored for them.
+    let d = open(&db, &dilek, project).await;
+    let asked = catalog_envelope(
+        &d,
+        PROJECT_CHECKPOINT_RESTORE,
+        json!({ "fileRevision": "1" }),
+        &[],
+    );
+    assert!(matches!(
+        restore(&db, &store, &d, asked).await,
+        Err(AppError::Forbidden(_))
+    ));
     db.close().await;
 }

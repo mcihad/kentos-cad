@@ -10,7 +10,9 @@
 //!
 //! `project.checkpoint.create` makes one ([`CheckpointCreate`]) and
 //! `project.checkpoint.delete` removes one ([`CheckpointDelete`]); both
-//! answer with [`CheckpointChange`]. `GET …/checkpoints` lists them
+//! answer with [`CheckpointChange`]. `project.checkpoint.restore`
+//! ([`CheckpointRestore`]) makes a new project of one, or of a file
+//! project's revision. `GET …/checkpoints` lists them
 //! ([`ProjectCheckpoints`], `project.history`); `GET …/checkpoints/{id}`
 //! downloads one's file (`project.history` and `project.download`).
 
@@ -25,6 +27,10 @@ pub const PROJECT_CHECKPOINT_CREATE_VERSION: u32 = 1;
 /// Removes a checkpoint (never the revision a file project's checkpoint names).
 pub const PROJECT_CHECKPOINT_DELETE: &str = "project.checkpoint.delete";
 pub const PROJECT_CHECKPOINT_DELETE_VERSION: u32 = 1;
+
+/// A new project from a checkpoint or a file revision, as a copy is made.
+pub const PROJECT_CHECKPOINT_RESTORE: &str = "project.checkpoint.restore";
+pub const PROJECT_CHECKPOINT_RESTORE_VERSION: u32 = 1;
 
 /// Event kind of a checkpoint made or removed (`EventRecord.kind`, no objects).
 pub const PROJECT_CHECKPOINT_EVENT: &str = "project.checkpoint";
@@ -76,6 +82,32 @@ pub struct CheckpointCreate {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct CheckpointDelete {
     pub checkpoint_id: String,
+}
+
+/// Input of `project.checkpoint.restore` v1: exactly one of `checkpointId`
+/// and `fileRevision` (a file project's revision). The answer is the new
+/// project, as `project.duplicate` gives it (`ProjectDuplicated`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CheckpointRestore {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub checkpoint_id: Option<String>,
+    /// A file project's revision (decimal text).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file_revision: Option<String>,
+    /// The new project's name; the source's with the point's name after it when absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    /// The workspace of the new project; the source's when absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tenant_id: Option<String>,
 }
 
 /// One checkpoint of a project.

@@ -28,8 +28,8 @@
 //!   they come, are a choice of this command (docs/adr/0028).
 
 use kentos_contracts::{
-    CommandEnvelope, PROJECT_DUPLICATE, PROJECT_DUPLICATE_VERSION, ProjectDuplicate,
-    ProjectDuplicated, ProjectPermission,
+    CommandEnvelope, PROJECT_CHECKPOINT_RESTORE, PROJECT_DUPLICATE, PROJECT_DUPLICATE_VERSION,
+    ProjectDuplicate, ProjectDuplicated, ProjectPermission,
 };
 use kentos_postgres::{Scope, rescope};
 use serde_json::json;
@@ -122,6 +122,7 @@ pub async fn duplicate(
         id,
         name: &name,
         file: newest.as_ref().zip(shared.as_deref()),
+        origin: Origin::Duplicate,
     };
     let result = match write(&mut tx, &now, &envelope, &text, copy).await {
         Ok(result) => result,
@@ -139,17 +140,51 @@ pub async fn duplicate(
     Ok(result)
 }
 
-/// The copy to make: where, its id and name, and for a file project the
-/// source's newest revision with the key its object was shared under.
-struct Copy<'a> {
-    target: Uuid,
-    id: Uuid,
-    name: &'a str,
-    file: Option<(&'a RevisionRow, &'a str)>,
+/// Where a copy comes from: the source as it is, or a point of its
+/// history (`project.checkpoint.restore`, docs/adr/0034).
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum Origin {
+    Duplicate,
+    Restore {
+        checkpoint: Option<Uuid>,
+        revision: i64,
+    },
+}
+
+impl Origin {
+    /// The source's audit action.
+    pub(crate) fn action(self) -> &'static str {
+        match self {
+            Self::Duplicate => PROJECT_DUPLICATE,
+            Self::Restore { .. } => PROJECT_CHECKPOINT_RESTORE,
+        }
+    }
+
+    /// What the audit records say of the point (nothing for a copy).
+    pub(crate) fn detail(self) -> serde_json::Value {
+        match self {
+            Self::Duplicate => serde_json::Value::Null,
+            Self::Restore {
+                checkpoint,
+                revision,
+            } => json!({ "checkpoint": checkpoint, "revision": revision }),
+        }
+    }
+}
+
+/// The copy to make: where, its id and name, for a file project the
+/// revision it starts from with the key its object was shared under, and
+/// where it comes from.
+pub(crate) struct Copy<'a> {
+    pub target: Uuid,
+    pub id: Uuid,
+    pub name: &'a str,
+    pub file: Option<(&'a RevisionRow, &'a str)>,
+    pub origin: Origin,
 }
 
 /// The copy's rows, both projects' audit records and the stored answer, in the open transaction.
-async fn write(
+pub(crate) async fn write(
     tx: &mut Transaction<'static, Postgres>,
     now: &ProjectAccess,
     envelope: &CommandEnvelope,
@@ -161,6 +196,7 @@ async fn write(
         id,
         name,
         file,
+        origin,
     } = copy;
     let request = Some(envelope.request_id.as_str());
     let features: i64 = sqlx::query_scalar("select kentos.duplicate_project($1, $2, $3, $4, $5)")
@@ -180,10 +216,10 @@ async fn write(
     journal::audit(
         tx,
         now,
-        PROJECT_DUPLICATE,
+        origin.action(),
         request,
         revision,
-        json!({ "copy": id, "tenant": target, "name": name, "objects": objects }),
+        json!({ "copy": id, "tenant": target, "name": name, "objects": objects, "from": origin.detail() }),
     )
     .await?;
     // The copy's own rows, in its scope: its file revision, its creation and its owner's recent use.
@@ -230,7 +266,7 @@ async fn write(
         "project.create",
         request,
         i64::from(objects > 0 || file.is_some()),
-        json!({ "name": name, "copyOf": { "tenant": now.tenant, "project": now.project }, "objects": objects }),
+        json!({ "name": name, "copyOf": { "tenant": now.tenant, "project": now.project }, "from": origin.detail(), "objects": objects }),
     )
     .await?;
     opened(tx, target, id, now.actor.user_id).await?;

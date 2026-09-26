@@ -1,6 +1,6 @@
-# ADR 0034: Proje geçmişi: kontrol noktaları
+# ADR 0034: Proje geçmişi: kontrol noktaları ve yeni proje olarak geri yükleme
 
-- **Durum:** kabul edildi (2026-09-26). Yön TODOS.md `SYNC-11` (adlandırılmış kontrol noktası, karşılaştırma, yeni proje olarak geri yükleme) ve `CLOUD-07`'den (sürüm geçmişi ile kontrol noktası tek modelde; aç, indir, yeni proje olarak geri yükle) gelir. Bu kayıt birinci adımdır: kontrol noktası oluşturma, listeleme, indirme ve silme. Yeni proje olarak geri yükleme ikinci adımdır ve bu ADR'ye eklenecektir.
+- **Durum:** kabul edildi (2026-09-26). Yön TODOS.md `SYNC-11` (adlandırılmış kontrol noktası, karşılaştırma, yeni proje olarak geri yükleme) ve `CLOUD-07`'den (sürüm geçmişi ile kontrol noktası tek modelde; aç, indir, yeni proje olarak geri yükle) gelir. Birinci adım kontrol noktası oluşturma, listeleme, indirme ve silmedir; ikinci adım yeni proje olarak geri yüklemedir (aşağıda, aynı gün).
 - **Tarih:** 2026-09-26
 - **Bağlam belgesi:** CLAUDE.md §13, §16, §21; TODOS.md §10, §12; ADR 0015 (erişim), 0028 (katalog), 0031 (dosya projeleri), 0033 (tek anlık görüntü)
 
@@ -41,7 +41,7 @@
 
 ## Bu adımda olmayanlar
 
-- **Yeni proje olarak geri yükleme** (`SYNC-11`): ikinci adım. Dosya projesinde revizyonun paylaşılmasıyla, veritabanı projesinde kontrol noktasının sunucuda içe aktarılmasıyla (`PG-15`'in ters yönü) gelecek.
+- ~~Yeni proje olarak geri yükleme~~: ikinci adımda geldi, aşağıya bakın.
 - Revizyonlar ya da kontrol noktaları arasında karşılaştırma; dal ve senaryo.
 - Kontrol noktalarının otomatik alınması (sıklık politikası) ve kota (`CLOUD-26`).
 - Web ve masaüstü arayüzü: geçmiş paneli, oluşturma ve indirme. Web tarafı web ajanının dosya projesi işine eklenecek.
@@ -57,3 +57,22 @@
   - temizlik: kaydı olmayan kontrol noktası nesnesi bekleme süresi içinde kalır, sonra gider; kaydı olan kalır; kalıcı silinen projenin kontrol noktaları gider.
 - HTTP (`apps/api/src/http/checkpoints_tests.rs`): komut yolundan oluşturma, liste, başlıklarıyla indirme, başka kurumdan birine iki yolda da aynı 404.
 - Kasıtlı bozma: silmedeki “oluşturan ya da yönetici” denetimi kaldırılınca test düştü; geri alındı.
+
+## İkinci adım: yeni proje olarak geri yükleme (26 Eylül)
+
+- `project.checkpoint.restore` v1 `{ checkpointId? , fileRevision?, name?, tenantId? }`: `checkpointId` ile `fileRevision`'dan tam olarak biri verilir. Kaynak proje değişmez; geri yükleme her zaman yeni bir proje açar (`SYNC-11`: başkasının güncel işi ezilmez).
+- Yeni proje bir kopya gibi açılır (ADR 0028): kendi kimliği vardır, çağıranındır; geçmiş, paylaşım, sık kullanılanlar ve arşiv durumu gelmez. Kaynağın açıklaması, türü ve etiketleri gelir. Adı verilmezse kaynağın adına noktanın adı eklenir: “Ada 101 (Teslim)”, revizyonda “Ada 101 (r3)”. Yanıt kopyanınkiyle aynıdır (`ProjectDuplicated`); web onu kopya gibi açar.
+- **Dosya projesinin noktası** (kontrol noktası ya da numarasıyla bir revizyon), 1. revizyonu o revizyon olan bir dosya projesi olur. Nesne depoda paylaşılır (sabit bağlantı ya da kopya, ADR 0031 eki); dosya çözülmez.
+- **Veritabanı projesinin kontrol noktası**, dosyasından içe aktarılan bir veritabanı projesi olur:
+  - dosyanın ayarları, katmanları, stilleri, orijini ve görünümü projenin olur;
+  - her nesne kalıcı kimliğiyle ve 1. sürümüyle yazılır, veri revizyonu 1'dir (ADR 0026);
+  - nesneler binerli toplu eklemeyle yazılır (`unnest`);
+  - dosya önce SHA-256'sıyla karşılaştırılır. Çözme ve nesnelere çevirme kaynağın kilidi alınmadan, async iş parçacıklarının dışında yapılır; kilit yalnız satırlar yazılırken tutulur (kopyada olduğu gibi).
+- **Yetki:** kaynakta `project.history` ve `project.download`, hedef çalışma alanında proje açma hakkı. Kaynak, kilit altında yeniden sorulur.
+- Kaynağın denetim kaydı geri yüklemeyi, yeni projeninki kaynağını (`restoredFrom`: kurum, proje, kontrol noktası, revizyon) tutar. Aynı idempotency anahtarıyla gelen yeniden deneme aynı yeni projeyi alır; dosya noktasında bu denemenin paylaştığı nesne silinir.
+- Sınandı (`project_checkpoints.rs`):
+  - veritabanı kontrol noktasından geri yüklenen proje, kontrol noktasının dosyasıyla nesne nesne aynıdır (kimlikler, ayarlar, katmanlar, stiller). Kontrol noktasından sonraki değişiklik gelmez, kaynak değişmez, geçmiş gelmez, yeniden deneme aynı projeyi verir;
+  - dosya projesinde numarayla revizyon ve adlandırılmış kontrol noktası geri yüklenir; baytlar aynıdır;
+  - iki nokta birden ya da hiçbiri reddedilir; veritabanı projesinde `fileRevision` reddedilir; proje açamayan görüntüleyici 403 alır.
+  - HTTP: komut yolundan geri yükleme.
+  - Kasıtlı bozma: içe aktarmada öznitelikler boş yazılınca nesne karşılaştırması düştü; geri alındı.

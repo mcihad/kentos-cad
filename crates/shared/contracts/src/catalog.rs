@@ -576,6 +576,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        CommandDescriptor {
+            id: crate::PROJECT_CHECKPOINT_RESTORE.into(),
+            version: crate::PROJECT_CHECKPOINT_RESTORE_VERSION,
+            title: "Yeni proje olarak geri yükle".into(),
+            summary: "Bir kontrol noktasından ya da dosya projesinin bir revizyonundan yeni bir proje açar; kaynak proje değişmez. \
+                      Dosya projesinin noktası, o revizyonla başlayan bir dosya projesi olur; veritabanı projesinin kontrol noktası, \
+                      dosyasından içe aktarılan bir veritabanı projesi olur (nesneler kalıcı kimlikleriyle). Yeni proje çağıranındır; \
+                      geçmiş ve paylaşımlar gelmez. Kaynakta project.history ve project.download, hedef çalışma alanında proje açma hakkı ister."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![
+                ProjectPermission::History.name().into(),
+                ProjectPermission::Download.name().into(),
+            ],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::CheckpointRestore>(),
+            output: schema::<crate::ProjectDuplicated>(),
+            examples: vec![CommandExample {
+                title: "Teslim hâlinden yeni proje".into(),
+                input: json!({ "checkpointId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b", "name": "Ada 101 (teslim)" }),
+                output: None,
+            }],
+        },
         // The first document command (docs/adr/0022): the web's and the desktop's own
         // handlers, held together by fixtures/commands/v1/cad.polygon.create.json.
         CommandDescriptor {
@@ -895,6 +923,10 @@ mod tests {
                     }
                     crate::PROJECT_CHECKPOINT_DELETE => {
                         serde_json::from_value::<crate::CheckpointDelete>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::PROJECT_CHECKPOINT_RESTORE => {
+                        serde_json::from_value::<crate::CheckpointRestore>(e.input.clone())
                             .map(|_| ())
                     }
                     crate::CAD_POLYGON_CREATE => {
