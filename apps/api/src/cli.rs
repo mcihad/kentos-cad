@@ -182,25 +182,44 @@ pub async fn run(config: &Config, args: &Args) -> Result<(), String> {
                 } else {
                     "görüntüleyici indiremez"
                 };
+                let guests = if t.kind == "personal" {
+                    "-"
+                } else if t.allow_guests {
+                    "misafir alır"
+                } else {
+                    "misafir almaz"
+                };
                 println!(
-                    "{}\t{}\t{kind}\t{}/{} koltuk\t{} üye\t{admins}\t{download}",
+                    "{}\t{}\t{kind}\t{}/{} koltuk\t{} üye\t{admins}\t{download}\t{guests}",
                     t.slug, t.name, t.seats_used, t.seat_limit, t.members
                 );
             }
         }
         ["tenant", "policy"] => {
-            admin::set_tenant_policy(
-                &owner_pool(config).await?,
-                args.required("slug")?,
-                args.value("admins-access-all")
-                    .map(|v| on_off("admins-access-all", v))
-                    .transpose()?,
-                args.value("viewer-download")
-                    .map(|v| on_off("viewer-download", v))
-                    .transpose()?,
-            )
-            .await
-            .map_err(fail)?;
+            let pool = owner_pool(config).await?;
+            let slug = args.required("slug")?;
+            let admins = args
+                .value("admins-access-all")
+                .map(|v| on_off("admins-access-all", v))
+                .transpose()?;
+            let download = args
+                .value("viewer-download")
+                .map(|v| on_off("viewer-download", v))
+                .transpose()?;
+            let guests = args
+                .value("guests")
+                .map(|v| on_off("guests", v))
+                .transpose()?;
+            if admins.is_some() || download.is_some() || guests.is_none() {
+                admin::set_tenant_policy(&pool, slug, admins, download)
+                    .await
+                    .map_err(fail)?;
+            }
+            if let Some(allow) = guests {
+                admin::set_tenant_guests(&pool, slug, allow)
+                    .await
+                    .map_err(fail)?;
+            }
             println!("kurum politikası kaydedildi");
         }
         ["user", "add"] => {
@@ -354,7 +373,7 @@ pub const USAGE: &str = "kullanım:
   kentosd migrate
   kentosd tenant add --slug KISA --name AD --seats N
   kentosd tenant list                         kurumlar ve kişisel alanlar, koltuklar, politikalar
-  kentosd tenant policy --slug KISA [--admins-access-all on|off] [--viewer-download on|off]
+  kentosd tenant policy --slug KISA [--admins-access-all on|off] [--viewer-download on|off] [--guests on|off]
   kentosd user add --login GİRİŞ --name AD [--email E] (--password-stdin | --password-env DEĞİŞKEN)
   kentosd user password --login GİRİŞ (--password-stdin | --password-env DEĞİŞKEN)
   kentosd member add --tenant KISA --user GİRİŞ|KİMLİK --role owner|admin|project_manager|editor|viewer [--seat]

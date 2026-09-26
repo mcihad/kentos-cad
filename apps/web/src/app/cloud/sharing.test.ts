@@ -5,7 +5,7 @@ import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { ApiFailure } from './api';
 import { dateText, endOfDay, failureText, personRows, sharedWithMe, sourceText } from './sharing';
 
-const person = (p: Partial<ProjectAccessHolder> & Pick<ProjectAccessHolder, 'userId' | 'displayName'>): ProjectAccessHolder => ({ expired: false, ...p });
+const person = (p: Partial<ProjectAccessHolder> & Pick<ProjectAccessHolder, 'userId' | 'displayName'>): ProjectAccessHolder => ({ expired: false, guest: false, ...p });
 
 /** The owner, an admin through the policy (with a grant too), the caller (a manager), an editor with an end, an ended grant, a member without a seat. */
 const list: ProjectAccessList = {
@@ -59,6 +59,9 @@ describe('the share dialog’s list', () => {
     expect(rows.get('can')!.source).toBe('Kurumda koltuğu yok · paylaşım: Düzenleyici');
     expect(sourceText(person({ userId: 'x', displayName: 'X', role: 'viewer', via: 'grant', grant: 'viewer' }))).toBe('Paylaşım');
     expect(sourceText(person({ userId: 'x', displayName: 'X', blocked: 'inactive', grant: 'viewer' }))).toBe('Hesabı ya da kurum üyeliği etkin değil · paylaşım: Görüntüleyici');
+    // A guest (docs/adr/0035): outside the organisation through an invitation; blocked while it takes no guests.
+    expect(sourceText(person({ userId: 'x', displayName: 'X', role: 'editor', via: 'grant', grant: 'editor', guest: true }))).toBe('Misafir (davetle)');
+    expect(sourceText(person({ userId: 'x', displayName: 'X', blocked: 'guestsOff', grant: 'editor', guest: true }))).toBe('Misafir; kurum dışarıdan misafir kabul etmiyor · paylaşım: Düzenleyici');
     // An owner who left the organisation comes without a name.
     expect(personRows({ ...list, people: [person({ userId: 'ayse', displayName: '', blocked: 'notMember' })] }, 'dilek', true)[0].name).toBe('Adı görünmeyen hesap');
   });

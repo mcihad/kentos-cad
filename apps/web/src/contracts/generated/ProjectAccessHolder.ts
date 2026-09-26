@@ -31,4 +31,9 @@ expiresAt?: string,
 /**
  * The grant's end has passed: it no longer counts.
  */
-expired: boolean, };
+expired: boolean, 
+/**
+ * Their grant is a guest's (docs/adr/0035): they are outside the
+ * project's organisation and reach it through an accepted invitation.
+ */
+guest: boolean, };

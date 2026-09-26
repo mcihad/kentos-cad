@@ -13,12 +13,13 @@
 use std::time::Duration;
 
 use kentos_contracts::{
-    CheckpointChange, CommandEnvelope, CommitResult, FileCommitted, PROJECT_ACCESS_REVOKE,
-    PROJECT_ARCHIVE, PROJECT_CHANGES, PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_DELETE,
-    PROJECT_CHECKPOINT_RESTORE, PROJECT_CREATE, PROJECT_CREATE_VERSION, PROJECT_DUPLICATE,
-    PROJECT_FAVORITE, PROJECT_FILE_COMMIT, PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME,
-    PROJECT_RESTORE, PROJECT_SHARE, PROJECT_TRASH, PROJECT_UNARCHIVE, ProjectAccessChange,
-    ProjectCatalogChange, ProjectCreate, ProjectDuplicated, ProjectInfo, ProjectPurged,
+    CheckpointChange, CommandEnvelope, CommitResult, FileCommitted, InvitationChange,
+    PROJECT_ACCESS_REVOKE, PROJECT_ARCHIVE, PROJECT_CHANGES, PROJECT_CHECKPOINT_CREATE,
+    PROJECT_CHECKPOINT_DELETE, PROJECT_CHECKPOINT_RESTORE, PROJECT_CREATE, PROJECT_CREATE_VERSION,
+    PROJECT_DUPLICATE, PROJECT_FAVORITE, PROJECT_FILE_COMMIT, PROJECT_INVITATION_REVOKE,
+    PROJECT_INVITE, PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME, PROJECT_RESTORE,
+    PROJECT_SHARE, PROJECT_TRASH, PROJECT_UNARCHIVE, ProjectAccessChange, ProjectCatalogChange,
+    ProjectCreate, ProjectDuplicated, ProjectInfo, ProjectPurged,
 };
 use serde::de::DeserializeOwned;
 use serde_json::Value;
@@ -29,8 +30,8 @@ use crate::error::{AppError, AppResult};
 use crate::lifecycle::StateChange;
 use crate::tenancy::Access;
 use crate::{
-    catalog, changes, checkpoints, duplicate, files, idempotency, lifecycle, projects, restore,
-    sharing,
+    catalog, changes, checkpoints, duplicate, files, idempotency, invitations, lifecycle, projects,
+    restore, sharing,
 };
 
 /// How the server keeps its catalog (docs/adr/0028): how long a project
@@ -64,6 +65,8 @@ pub enum CommandOutcome {
     FileCommitted(FileCommitted),
     /// A checkpoint made or removed (docs/adr/0034).
     Checkpoint(CheckpointChange),
+    /// An invitation made or withdrawn (docs/adr/0035).
+    Invitation(InvitationChange),
 }
 
 impl CommandOutcome {
@@ -80,6 +83,8 @@ impl CommandOutcome {
             Self::Purged(_) => true,
             Self::FileCommitted(r) => !r.replayed,
             Self::Checkpoint(r) => !r.replayed,
+            // Nobody's access changes until an invitation is accepted.
+            Self::Invitation(_) => false,
         }
     }
 
@@ -94,6 +99,7 @@ impl CommandOutcome {
             Self::Created(r) => serde_json::to_value(r),
             Self::FileCommitted(r) => serde_json::to_value(r),
             Self::Checkpoint(r) => serde_json::to_value(r),
+            Self::Invitation(r) => serde_json::to_value(r),
         }
         .expect("command results serialize")
     }
@@ -136,6 +142,12 @@ pub async fn run(
     match envelope.command_name.as_str() {
         PROJECT_CHANGES => changes::commit(db, access, envelope).await.map(O::Changes),
         PROJECT_SHARE => sharing::share(db, access, envelope).await.map(O::Access),
+        PROJECT_INVITE => invitations::invite(db, access, envelope)
+            .await
+            .map(O::Invitation),
+        PROJECT_INVITATION_REVOKE => invitations::revoke(db, access, envelope)
+            .await
+            .map(O::Invitation),
         PROJECT_ACCESS_REVOKE => sharing::revoke(db, access, envelope).await.map(O::Access),
         PROJECT_RENAME => catalog::rename(db, access, envelope).await.map(O::Catalog),
         PROJECT_METADATA_UPDATE => catalog::update(db, access, envelope).await.map(O::Catalog),

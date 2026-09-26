@@ -528,6 +528,54 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Invitations by link (docs/adr/0035).
+        CommandDescriptor {
+            id: crate::PROJECT_INVITE.into(),
+            version: crate::PROJECT_INVITE_VERSION,
+            title: "Projeye davet et".into(),
+            summary: "Bir e-posta adresine projeye davet bağlantısı açar: rol en çok düzenleyici, bitiş verilmezse 14 gün, en çok 90 gün. \
+                      Belirteç yalnız ilk yanıtta döner; bağlantıyı davet eden iletir. Aynı adrese bekleyen davet yenisiyle değişir. \
+                      Daveti yalnız o adresin doğrulanmış hesabı kabul eder; kurum dışından biri misafir olur. project.share ister."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Share.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProjectInvite>(),
+            output: schema::<crate::InvitationChange>(),
+            examples: vec![CommandExample {
+                title: "Belediyedeki mühendisi görüntüleyici olarak davet et".into(),
+                input: json!({ "email": "muhendis@belediye.gov.tr", "role": "viewer" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_INVITATION_REVOKE.into(),
+            version: crate::PROJECT_INVITATION_REVOKE_VERSION,
+            title: "Daveti geri al".into(),
+            summary: "Bekleyen bir daveti geri alır; bağlantısı artık çalışmaz. Kabul edilmiş davetin verdiği erişim project.access.revoke ile kaldırılır. \
+                      project.share ister."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Share.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::InvitationRevoke>(),
+            output: schema::<crate::InvitationChange>(),
+            examples: vec![CommandExample {
+                title: "Bekleyen daveti geri al".into(),
+                input: json!({ "invitationId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
+                output: None,
+            }],
+        },
         // Checkpoints: named points of a project's history (docs/adr/0034).
         CommandDescriptor {
             id: crate::PROJECT_CHECKPOINT_CREATE.into(),
@@ -916,6 +964,13 @@ mod tests {
                     }
                     crate::PROJECT_FILE_COMMIT => {
                         serde_json::from_value::<crate::FileCommit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_INVITE => {
+                        serde_json::from_value::<crate::ProjectInvite>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_INVITATION_REVOKE => {
+                        serde_json::from_value::<crate::InvitationRevoke>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::PROJECT_CHECKPOINT_CREATE => {
                         serde_json::from_value::<crate::CheckpointCreate>(e.input.clone())

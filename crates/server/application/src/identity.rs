@@ -39,13 +39,17 @@ pub async fn check_local_login(db: &Db, login: &str, password: &str) -> AppResul
     )
 }
 
-/// Finds or creates the account of an OpenID identity; `None` when that account is disabled.
+/// Finds or creates the account of an OpenID identity; `None` when that
+/// account is disabled. `email_verified` is the provider's word that the
+/// e-mail is the person's (an invitation is accepted only with one,
+/// docs/adr/0035).
 pub async fn resolve_identity(
     db: &Db,
     issuer: &str,
     subject: &str,
     name: &str,
     email: Option<&str>,
+    email_verified: bool,
 ) -> AppResult<Option<Uuid>> {
     if issuer == LOCAL_ISSUER || issuer.is_empty() || subject.is_empty() {
         return Err(AppError::invalid(
@@ -58,12 +62,13 @@ pub async fn resolve_identity(
         name.trim()
     };
     Ok(
-        sqlx::query_scalar("select kentos.resolve_identity($1, $2, $3, $4, $5)")
+        sqlx::query_scalar("select kentos.resolve_identity($1, $2, $3, $4, $5, $6)")
             .bind(Uuid::now_v7())
             .bind(issuer)
             .bind(subject)
             .bind(name)
             .bind(email)
+            .bind(email_verified)
             .fetch_one(&db.pool)
             .await?,
     )

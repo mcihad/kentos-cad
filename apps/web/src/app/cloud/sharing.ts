@@ -42,6 +42,7 @@ export const BLOCK_TEXT: Record<AccessBlock, string> = {
   notMember: 'Kurumun üyesi değil',
   inactive: 'Hesabı ya da kurum üyeliği etkin değil',
   noSeat: 'Kurumda koltuğu yok',
+  guestsOff: 'Misafir; kurum dışarıdan misafir kabul etmiyor',
 };
 
 export const STORAGE_TEXT: Record<ProjectStorage, { title: string; detail: string }> = {
@@ -116,8 +117,11 @@ export function sourceText(p: ProjectAccessHolder): string {
       return 'Proje sahibi';
     case 'policy':
       return ['Kurum politikası: kurum yöneticisi', grant].filter(Boolean).join(' · ');
-    default:
-      return p.expiresAt ? `Paylaşım, ${dateText(p.expiresAt)} tarihine kadar` : 'Paylaşım';
+    default: {
+      // A guest: outside the organisation, through an accepted invitation (docs/adr/0035).
+      const kind = p.guest ? 'Misafir (davetle)' : 'Paylaşım';
+      return p.expiresAt ? `${kind}, ${dateText(p.expiresAt)} tarihine kadar` : kind;
+    }
   }
 }
 

@@ -3,4 +3,4 @@
 /**
  * Why a person listed with a project cannot use it now.
  */
-export type AccessBlock = "expired" | "notMember" | "inactive" | "noSeat";
+export type AccessBlock = "expired" | "notMember" | "inactive" | "noSeat" | "guestsOff";

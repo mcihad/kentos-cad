@@ -431,6 +431,7 @@ async fn openid_identities_are_found_by_issuer_and_subject() {
         "abc",
         "Ayla",
         Some("ayla@example.org"),
+        true,
     )
     .await
     .unwrap();
@@ -440,6 +441,7 @@ async fn openid_identities_are_found_by_issuer_and_subject() {
         "abc",
         "Ayla K.",
         None,
+        true,
     )
     .await
     .unwrap();
@@ -451,12 +453,13 @@ async fn openid_identities_are_found_by_issuer_and_subject() {
         "abc",
         "Ayla",
         Some("ayla@example.org"),
+        false,
     )
     .await
     .unwrap();
     assert_ne!(other, first);
     assert!(
-        identity::resolve_identity(&db.app, LOCAL_ISSUER, "x", "x", None)
+        identity::resolve_identity(&db.app, LOCAL_ISSUER, "x", "x", None, false)
             .await
             .is_err()
     );
@@ -466,5 +469,25 @@ async fn openid_identities_are_found_by_issuer_and_subject() {
         .await
         .unwrap();
     assert_eq!(name, "Ayla K.");
+    // Whether the e-mail is the person's is the provider's word at the last sign-in (docs/adr/0035):
+    // no e-mail is none verified; the other issuer did not verify it.
+    let verified = |id: Option<uuid::Uuid>| {
+        sqlx::query_scalar::<_, bool>("select email_verified from kentos.app_user where id = $1")
+            .bind(id)
+            .fetch_one(&db.owner)
+    };
+    assert!(!verified(first).await.unwrap());
+    assert!(!verified(other).await.unwrap());
+    let deniz = identity::resolve_identity(
+        &db.app,
+        "https://kimlik.example.org",
+        "def",
+        "Deniz",
+        Some("deniz@example.org"),
+        true,
+    )
+    .await
+    .unwrap();
+    assert!(verified(deniz).await.unwrap());
     db.close().await;
 }

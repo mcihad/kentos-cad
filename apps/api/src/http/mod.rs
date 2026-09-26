@@ -11,6 +11,9 @@ pub mod error;
 pub mod files;
 #[cfg(test)]
 mod files_tests;
+pub mod invitations;
+#[cfg(test)]
+mod invitations_tests;
 pub mod limit;
 #[cfg(test)]
 mod people_tests;
@@ -105,6 +108,7 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/me", get(auth::me))
         .route("/v1/me/projects", get(projects::mine))
         .route("/v1/me/catalog", get(projects::catalog))
+        .route("/v1/invitations/accept", post(invitations::accept))
         .route(
             "/v1/tenants/{tenant}/projects",
             get(projects::list).post(projects::create),
@@ -160,6 +164,10 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/v1/tenants/{tenant}/projects/{project}/checkpoints",
             get(checkpoints::list),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/invitations",
+            get(invitations::list),
         )
         .route(
             "/v1/tenants/{tenant}/projects/{project}/checkpoints/{checkpoint}",

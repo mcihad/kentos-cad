@@ -94,6 +94,7 @@ pub async fn create_local_user(
     }
     let id = Uuid::now_v7();
     let mut tx = owner.begin().await?;
+    // An administrator sets a local account's e-mail: the database counts it as verified (docs/adr/0035).
     sqlx::query("insert into kentos.app_user (id, issuer, subject, display_name, email) values ($1, $2, $1::text, $3, $4)")
         .bind(id)
         .bind(LOCAL_ISSUER)
@@ -241,16 +242,18 @@ pub struct TenantLine {
     /// Owners and admins reach projects not shared with them (docs/adr/0015).
     pub admins_access_all_projects: bool,
     pub viewer_download: bool,
+    /// It takes guests from outside (docs/adr/0035).
+    pub allow_guests: bool,
 }
 
 /// Every tenant: organisations first, then personal spaces.
 pub async fn list_tenants(owner: &PgPool) -> AppResult<Vec<TenantLine>> {
-    type Row = (String, String, String, i64, i32, i64, bool, bool);
+    type Row = (String, String, String, i64, i32, i64, bool, bool, bool);
     let rows: Vec<Row> = sqlx::query_as(
         "select t.slug, t.name, t.kind,
                 (select count(*) from kentos.seat_allocation s where s.tenant_id = t.id), t.seat_limit,
                 (select count(*) from kentos.membership m where m.tenant_id = t.id),
-                t.admins_access_all_projects, t.viewer_download
+                t.admins_access_all_projects, t.viewer_download, t.allow_guests
            from kentos.tenant t order by t.kind = 'personal', t.slug",
     )
     .fetch_all(owner)
@@ -258,15 +261,18 @@ pub async fn list_tenants(owner: &PgPool) -> AppResult<Vec<TenantLine>> {
     Ok(rows
         .into_iter()
         .map(
-            |(slug, name, kind, seats_used, seat_limit, members, admins, download)| TenantLine {
-                slug,
-                name,
-                kind,
-                seats_used,
-                seat_limit,
-                members,
-                admins_access_all_projects: admins,
-                viewer_download: download,
+            |(slug, name, kind, seats_used, seat_limit, members, admins, download, guests)| {
+                TenantLine {
+                    slug,
+                    name,
+                    kind,
+                    seats_used,
+                    seat_limit,
+                    members,
+                    admins_access_all_projects: admins,
+                    viewer_download: download,
+                    allow_guests: guests,
+                }
             },
         )
         .collect())
@@ -306,6 +312,34 @@ pub async fn set_tenant_policy(
         "viewerDownload": download,
         "by": "kentosd",
     }))
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+/// Whether an organisation takes guests (docs/adr/0035): people outside it
+/// who accepted an invitation to one of its projects. Turned off, their
+/// grants stop working at once and invitations cannot make new guests;
+/// turned on again, the grants work again.
+pub async fn set_tenant_guests(owner: &PgPool, tenant_slug: &str, allow: bool) -> AppResult<()> {
+    let (tenant, _, organization) = tenant_row(owner, tenant_slug).await?;
+    if !organization {
+        return Err(AppError::invalid(format!(
+            "“{tenant_slug}” bir kişisel alan; misafir kuralı yalnız kurumlarda vardır."
+        )));
+    }
+    let mut tx = owner.begin().await?;
+    sqlx::query("update kentos.tenant set allow_guests = $2 where id = $1")
+        .bind(tenant)
+        .bind(allow)
+        .execute(&mut *tx)
+        .await?;
+    sqlx::query(
+        "insert into kentos.audit_event (tenant_id, action, detail) values ($1, 'tenant.policy', $2)",
+    )
+    .bind(tenant)
+    .bind(serde_json::json!({ "allowGuests": allow, "by": "kentosd" }))
     .execute(&mut *tx)
     .await?;
     tx.commit().await?;

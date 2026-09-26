@@ -731,6 +731,8 @@ pub enum AccessBlock {
     Inactive,
     /// No seat is allocated to them in the organisation.
     NoSeat,
+    /// A guest (docs/adr/0035), and the organisation takes no guests now.
+    GuestsOff,
 }
 
 /// One person with a role or a grant in a project, as the share dialog shows
@@ -770,6 +772,10 @@ pub struct ProjectAccessHolder {
     pub expires_at: Option<String>,
     /// The grant's end has passed: it no longer counts.
     pub expired: bool,
+    /// Their grant is a guest's (docs/adr/0035): they are outside the
+    /// project's organisation and reach it through an accepted invitation.
+    #[serde(default)]
+    pub guest: bool,
 }
 
 /// `GET …/projects/{project}/access`: who may use the project and why

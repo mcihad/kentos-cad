@@ -49,6 +49,9 @@ pub struct Facts {
     pub grant: Option<GrantRole>,
     /// The grant's end has passed.
     pub expired: bool,
+    /// The grant is a guest's: given to someone outside the organisation by
+    /// an accepted invitation (docs/adr/0035).
+    pub guest: bool,
 }
 
 /// A person's role in a project now and where it comes from, or why they
@@ -58,7 +61,8 @@ pub struct Facts {
 ///   needs an unexpired grant, no membership.
 /// - An organisation: an active membership with a seat first; then
 ///   ownership, the policy (owners and admins, a manager who may delete),
-///   an unexpired grant.
+///   an unexpired grant. Someone who is not a member at all works with a
+///   guest's grant while the organisation takes guests (`guests`).
 ///
 /// `owner` is the personal space's person, or the organisation project's
 /// owner. A disabled account cannot sign in, so it is listed as inactive
@@ -66,6 +70,7 @@ pub struct Facts {
 pub fn standing(
     kind: TenantKind,
     policy: bool,
+    guests: bool,
     owner: Uuid,
     f: &Facts,
 ) -> Result<(ProjectRole, AccessSource), AccessBlock> {
@@ -76,6 +81,15 @@ pub fn standing(
     };
     if kind == TenantKind::Organization {
         match f.member_role {
+            None if f.guest && f.grant.is_some() => {
+                if !guests {
+                    return Err(AccessBlock::GuestsOff);
+                }
+                if !f.account_active {
+                    return Err(AccessBlock::Inactive);
+                }
+                return granted();
+            }
             None => return Err(AccessBlock::NotMember),
             Some(_) if !f.member_active => return Err(AccessBlock::Inactive),
             Some(_) if !f.seat => return Err(AccessBlock::NoSeat),
@@ -108,6 +122,7 @@ type PersonRow = (
     Option<String>,
     Option<OffsetDateTime>,
     bool,
+    bool,
 );
 
 /// Everyone with a role or a grant in the project in scope: the owner, the
@@ -121,7 +136,7 @@ const PEOPLE_SELECT: &str = "with people as (
         union select user_id from kentos.membership where $3 and tenant_id = $1 and role in ('owner', 'admin'))
      select x.user_id, u.display_name, u.email, u.status, m.role, m.status,
             exists (select 1 from kentos.seat_allocation s where s.tenant_id = $1 and s.user_id = x.user_id),
-            g.role, g.expires_at, coalesce(g.expires_at <= now(), false)
+            g.role, g.expires_at, coalesce(g.expires_at <= now(), false), coalesce(g.guest, false)
        from people x
        left join kentos.app_user u on u.id = x.user_id
        left join kentos.membership m on m.tenant_id = $1 and m.user_id = x.user_id
@@ -141,8 +156,8 @@ pub async fn list(db: &Db, access: &ProjectAccess) -> AppResult<ProjectAccessLis
     .fetch_optional(&mut *tx)
     .await?;
     let (owner_id, owner_name) = project.ok_or_else(not_found)?;
-    let (space_owner, admins_policy): (Option<Uuid>, bool) = sqlx::query_as(
-        "select owner_user_id, admins_access_all_projects from kentos.tenant where id = $1",
+    let (space_owner, admins_policy, guests): (Option<Uuid>, bool, bool) = sqlx::query_as(
+        "select owner_user_id, admins_access_all_projects, allow_guests from kentos.tenant where id = $1",
     )
     .bind(access.tenant)
     .fetch_one(&mut *tx)
@@ -175,6 +190,7 @@ pub async fn list(db: &Db, access: &ProjectAccess) -> AppResult<ProjectAccessLis
                 grant,
                 expires,
                 expired,
+                guest,
             )| {
                 let facts = Facts {
                     user,
@@ -184,8 +200,9 @@ pub async fn list(db: &Db, access: &ProjectAccess) -> AppResult<ProjectAccessLis
                     seat,
                     grant: grant.as_deref().and_then(GrantRole::from_name),
                     expired,
+                    guest,
                 };
-                let now = standing(kind, policy, owner, &facts);
+                let now = standing(kind, policy, guests, owner, &facts);
                 // Listed only for the policy, which does not apply to them now: not one of the project's people.
                 if now.is_err() && user != owner && facts.grant.is_none() {
                     return None;
@@ -200,6 +217,7 @@ pub async fn list(db: &Db, access: &ProjectAccess) -> AppResult<ProjectAccessLis
                     grant: facts.grant,
                     expires_at: expires.map(rfc3339),
                     expired,
+                    guest: guest && facts.grant.is_some(),
                 })
             },
         )
@@ -354,6 +372,7 @@ mod tests {
             seat: true,
             grant: None,
             expired: false,
+            guest: false,
         }
     }
 
@@ -364,7 +383,7 @@ mod tests {
         let person = Uuid::from_u128(2);
         // The owner, the policy's admin, a grant; the highest counts.
         assert_eq!(
-            standing(org, true, owner, &member(owner, "project_manager")),
+            standing(org, true, true, owner, &member(owner, "project_manager")),
             Ok((ProjectRole::Owner, AccessSource::Owner))
         );
         let admin = Facts {
@@ -372,12 +391,12 @@ mod tests {
             ..member(person, "admin")
         };
         assert_eq!(
-            standing(org, true, owner, &admin),
+            standing(org, true, true, owner, &admin),
             Ok((ProjectRole::Manager, AccessSource::Policy))
         );
         // The policy off: the admin works with the grant.
         assert_eq!(
-            standing(org, false, owner, &admin),
+            standing(org, false, true, owner, &admin),
             Ok((ProjectRole::Viewer, AccessSource::Grant))
         );
         // Membership, seat and account come before everything, the owner's too.
@@ -411,7 +430,7 @@ mod tests {
                 AccessBlock::Inactive,
             ),
         ] {
-            assert_eq!(standing(org, true, owner, &facts), Err(block));
+            assert_eq!(standing(org, true, true, owner, &facts), Err(block));
         }
         // An ended grant does not count.
         let ended = Facts {
@@ -420,7 +439,7 @@ mod tests {
             ..member(person, "editor")
         };
         assert_eq!(
-            standing(org, true, owner, &ended),
+            standing(org, true, true, owner, &ended),
             Err(AccessBlock::Expired)
         );
         // A personal space: no membership needed, the space's person owns it.
@@ -432,12 +451,52 @@ mod tests {
             ..member(person, "")
         };
         assert_eq!(
-            standing(TenantKind::Personal, false, owner, &guest),
+            standing(TenantKind::Personal, false, true, owner, &guest),
             Ok((ProjectRole::Commenter, AccessSource::Grant))
         );
         assert_eq!(
-            standing(TenantKind::Personal, false, owner, &member(owner, "owner")),
+            standing(
+                TenantKind::Personal,
+                false,
+                true,
+                owner,
+                &member(owner, "owner")
+            ),
             Ok((ProjectRole::Owner, AccessSource::Owner))
+        );
+        // Outside an organisation (docs/adr/0035): a guest's grant works while it takes guests;
+        // a plain grant does not; nor does a guest's for a member whose membership is gone.
+        let outsider = Facts {
+            guest: true,
+            ..guest.clone()
+        };
+        assert_eq!(
+            standing(org, true, true, owner, &outsider),
+            Ok((ProjectRole::Commenter, AccessSource::Grant))
+        );
+        assert_eq!(
+            standing(org, true, false, owner, &outsider),
+            Err(AccessBlock::GuestsOff)
+        );
+        assert_eq!(
+            standing(org, true, true, owner, &guest),
+            Err(AccessBlock::NotMember)
+        );
+        let left = Facts {
+            member_role: Some("editor".into()),
+            ..outsider.clone()
+        };
+        assert_eq!(
+            standing(org, true, true, owner, &left),
+            Err(AccessBlock::Inactive)
+        );
+        let ended_guest = Facts {
+            expired: true,
+            ..outsider
+        };
+        assert_eq!(
+            standing(org, true, true, owner, &ended_guest),
+            Err(AccessBlock::Expired)
         );
     }
 

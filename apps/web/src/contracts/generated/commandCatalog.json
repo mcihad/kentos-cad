@@ -6702,6 +6702,350 @@
       ]
     },
     {
+      "id": "project.invite",
+      "version": 1,
+      "title": "Projeye davet et",
+      "summary": "Bir e-posta adresine projeye davet bağlantısı açar: rol en çok düzenleyici, bitiş verilmezse 14 gün, en çok 90 gün. Belirteç yalnız ilk yanıtta döner; bağlantıyı davet eden iletir. Aynı adrese bekleyen davet yenisiyle değişir. Daveti yalnız o adresin doğrulanmış hesabı kabul eder; kurum dışından biri misafir olur. project.share ister.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.share"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "GrantRole": {
+            "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
+            "enum": [
+              "viewer",
+              "commenter",
+              "editor",
+              "manager"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.invite` v1.",
+        "properties": {
+          "email": {
+            "description": "The invited person's e-mail; kept in lower case.",
+            "type": "string"
+          },
+          "expiresAt": {
+            "description": "When it stops waiting (RFC 3339); [`INVITATION_DAYS`] from now when\nabsent, at most [`INVITATION_MAX_DAYS`].",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "$ref": "#/$defs/GrantRole",
+            "description": "Viewer, commenter or editor: managing and sharing stay with members."
+          }
+        },
+        "required": [
+          "email",
+          "role"
+        ],
+        "title": "ProjectInvite",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GrantRole": {
+            "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
+            "enum": [
+              "viewer",
+              "commenter",
+              "editor",
+              "manager"
+            ],
+            "type": "string"
+          },
+          "InvitationState": {
+            "description": "Where an invitation is.",
+            "oneOf": [
+              {
+                "enum": [
+                  "accepted",
+                  "revoked"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "pending",
+                "description": "Waiting to be accepted.",
+                "type": "string"
+              },
+              {
+                "const": "expired",
+                "description": "Its end passed before anyone accepted it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectInvitation": {
+            "description": "One invitation of a project.",
+            "properties": {
+              "acceptedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "acceptedByName": {
+                "description": "Who accepted it, when it was accepted.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "createdBy": {
+                "type": "string"
+              },
+              "createdByName": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "expiresAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "role": {
+                "$ref": "#/$defs/GrantRole"
+              },
+              "state": {
+                "$ref": "#/$defs/InvitationState"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "role",
+              "state",
+              "createdBy",
+              "createdByName",
+              "createdAt",
+              "expiresAt"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `project.invite` and `project.invitation.revoke` v1.",
+        "properties": {
+          "invitation": {
+            "$ref": "#/$defs/ProjectInvitation"
+          },
+          "replayed": {
+            "default": false,
+            "description": "The stored answer of an earlier identical command (its key was seen).",
+            "type": "boolean"
+          },
+          "token": {
+            "description": "A new invitation's token (64 hexadecimal digits), for the link the\ninviter sends. Only in the first answer: the server keeps only its\nhash, and a retry's stored answer has none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "invitation"
+        ],
+        "title": "InvitationChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Belediyedeki mühendisi görüntüleyici olarak davet et",
+          "input": {
+            "email": "muhendis@belediye.gov.tr",
+            "role": "viewer"
+          }
+        }
+      ]
+    },
+    {
+      "id": "project.invitation.revoke",
+      "version": 1,
+      "title": "Daveti geri al",
+      "summary": "Bekleyen bir daveti geri alır; bağlantısı artık çalışmaz. Kabul edilmiş davetin verdiği erişim project.access.revoke ile kaldırılır. project.share ister.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.share"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.invitation.revoke` v1.",
+        "properties": {
+          "invitationId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "invitationId"
+        ],
+        "title": "InvitationRevoke",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GrantRole": {
+            "description": "A role a share gives: every project role but the owner's (ownership is transferred, not shared).",
+            "enum": [
+              "viewer",
+              "commenter",
+              "editor",
+              "manager"
+            ],
+            "type": "string"
+          },
+          "InvitationState": {
+            "description": "Where an invitation is.",
+            "oneOf": [
+              {
+                "enum": [
+                  "accepted",
+                  "revoked"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "pending",
+                "description": "Waiting to be accepted.",
+                "type": "string"
+              },
+              {
+                "const": "expired",
+                "description": "Its end passed before anyone accepted it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectInvitation": {
+            "description": "One invitation of a project.",
+            "properties": {
+              "acceptedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "acceptedByName": {
+                "description": "Who accepted it, when it was accepted.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "createdBy": {
+                "type": "string"
+              },
+              "createdByName": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "expiresAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "role": {
+                "$ref": "#/$defs/GrantRole"
+              },
+              "state": {
+                "$ref": "#/$defs/InvitationState"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "role",
+              "state",
+              "createdBy",
+              "createdByName",
+              "createdAt",
+              "expiresAt"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `project.invite` and `project.invitation.revoke` v1.",
+        "properties": {
+          "invitation": {
+            "$ref": "#/$defs/ProjectInvitation"
+          },
+          "replayed": {
+            "default": false,
+            "description": "The stored answer of an earlier identical command (its key was seen).",
+            "type": "boolean"
+          },
+          "token": {
+            "description": "A new invitation's token (64 hexadecimal digits), for the link the\ninviter sends. Only in the first answer: the server keeps only its\nhash, and a retry's stored answer has none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "invitation"
+        ],
+        "title": "InvitationChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Bekleyen daveti geri al",
+          "input": {
+            "invitationId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b"
+          }
+        }
+      ]
+    },
+    {
       "id": "project.checkpoint.create",
       "version": 1,
       "title": "Kontrol noktası oluştur",

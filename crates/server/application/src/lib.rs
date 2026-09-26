@@ -19,6 +19,7 @@ pub mod events;
 pub mod files;
 mod idempotency;
 pub mod identity;
+pub mod invitations;
 mod journal;
 pub mod lifecycle;
 pub mod listing;
@@ -48,6 +49,15 @@ pub const SERVER_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::PROJECT_ACCESS_REVOKE,
         kentos_contracts::PROJECT_ACCESS_REVOKE_VERSION,
+    ),
+    // Invitations by link (docs/adr/0035).
+    (
+        kentos_contracts::PROJECT_INVITE,
+        kentos_contracts::PROJECT_INVITE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_INVITATION_REVOKE,
+        kentos_contracts::PROJECT_INVITATION_REVOKE_VERSION,
     ),
     // The project catalog and lifecycle (docs/adr/0028).
     (

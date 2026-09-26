@@ -73,9 +73,21 @@ struct Claims {
     preferred_username: Option<String>,
     #[serde(default)]
     email: Option<String>,
+    /// A boolean in the standard; some providers send the text "true".
+    #[serde(default)]
+    email_verified: Option<serde_json::Value>,
 }
 
 impl Claims {
+    /// The provider says the e-mail is the person's (docs/adr/0035).
+    fn email_verified(&self) -> bool {
+        match &self.email_verified {
+            Some(serde_json::Value::Bool(b)) => *b,
+            Some(serde_json::Value::String(s)) => s.eq_ignore_ascii_case("true"),
+            _ => false,
+        }
+    }
+
     fn display_name(&self) -> &str {
         self.name
             .as_deref()
@@ -316,6 +328,7 @@ impl Oidc {
             &claims.sub,
             claims.display_name(),
             claims.email.as_deref(),
+            claims.email_verified(),
         )
         .await?
         .ok_or_else(|| AppError::forbidden("Hesabınız devre dışı; kurum yöneticinize başvurun."))?;
@@ -342,6 +355,7 @@ impl Oidc {
                     &claims.sub,
                     claims.display_name(),
                     claims.email.as_deref(),
+                    claims.email_verified(),
                 )
                 .await?
                 .ok_or_else(|| {
