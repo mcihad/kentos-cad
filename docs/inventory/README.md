@@ -43,6 +43,7 @@ Komut kayıtlarının yanında menü ve şerit yerleri de hesaplanır: menü yol
   - Komutta kimlik tırnak içinde aranır. Araçta `tool.<id>` ya da `activate('<id>')`, işlem araçlarında kimlik ya da komut kimliği aranır.
   - Kimliğin geçmesi davranışın sınandığını göstermez. Boş liste de sınanmadığı anlamına gelmez: test komutu başka bir yoldan çalıştırıyor olabilir.
 - **`uiSources`** (komutlar): kimliğin tırnak içinde geçtiği `src/ui` dosyaları. Panel düğmeleri, durum çubuğu, uygulama menüsü ve pencereler böyle bulunur.
+- **`shortcutsInInput`** (komutlar): `shortcuts`'tan, bir metin alanı klavyedeyken de çalışanlar (tuş eşleminde `allowInInput`, `app/keybindings.ts`: Ctrl+S, F tuşları …). Yalnız böyle bir akoru olan komutlarda bulunur. Masaüstü metin alanlarında hangi akorun geçeceğini buradan okur (`apps/desktop/src/catalog.rs`); elle kopyalanmış liste yoktur.
 - **`productCommand`** (araçlar): aracın onayında çalışan ürün komutu, katalogdaki kimliğiyle (ADR 0013, 0022). Araç kataloğundan (`tools/catalog.ts`) gelir; yalnız bir ürün komutundan yazan araçlarda bulunur. Arayüz komutu ile ürün komutu arasındaki eşleme budur (`AI-01`).
 - **`note`, `acceptance`:** `annotations.json`'dan. `acceptance`, TODOS.md'deki kabul izidir. Otomatik testin yerine geçmez.
 

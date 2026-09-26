@@ -76,6 +76,10 @@ pub struct Command {
     pub aliases: &'static [&'static str],
     /// Key chords as the web writes them (`Ctrl+S`, `Shift+H`, `F2`).
     pub shortcuts: &'static [&'static str],
+    /// Those of them that work while a text field has the keyboard too: the
+    /// web binds them with `allowInInput` (app/keybindings.ts; the
+    /// inventory's `shortcutsInInput`).
+    pub shortcuts_in_input: &'static [&'static str],
     pub icon: Icon,
     pub standing: Standing,
     /// Why the web itself does not run it yet (e.g. “Yakında”).
@@ -195,6 +199,7 @@ impl Catalog {
                     description: leak(c.description.unwrap_or_default()),
                     aliases: leak_list(c.aliases),
                     shortcuts: leak_list(c.shortcuts),
+                    shortcuts_in_input: leak_list(c.shortcuts_in_input),
                     icon: icons::from_web(c.icon.as_deref()),
                     standing,
                     pending_note: c.pending_note.map(leak),
@@ -312,6 +317,8 @@ struct RawCommand {
     aliases: Vec<String>,
     #[serde(default)]
     shortcuts: Vec<String>,
+    #[serde(default)]
+    shortcuts_in_input: Vec<String>,
     status: String,
     pending_note: Option<String>,
 }
@@ -415,6 +422,28 @@ mod tests {
                 catalog.get(id).is_some(),
                 "{id} is not in the web inventory"
             );
+        }
+    }
+
+    /// The chords that pass a text field are the web's `allowInInput`
+    /// bindings, read from the inventory: Ctrl+S and the F-keys, not Ctrl+Z
+    /// (the text field's own), each also a shortcut of its command.
+    #[test]
+    fn chords_that_work_in_text_fields_come_from_the_web() {
+        let catalog = Catalog::load(INVENTORY).expect("the web inventory parses");
+        let in_input: Vec<&str> = catalog
+            .commands()
+            .iter()
+            .flat_map(|c| c.shortcuts_in_input.iter().copied())
+            .collect();
+        for chord in ["Ctrl+S", "Ctrl+O", "F8", "Ctrl+,"] {
+            assert!(in_input.contains(&chord), "{chord} works in a text field");
+        }
+        assert!(!in_input.contains(&"Ctrl+Z"));
+        for c in catalog.commands() {
+            for chord in c.shortcuts_in_input {
+                assert!(c.shortcuts.contains(chord), "{}: {chord}", c.id);
+            }
         }
     }
 
