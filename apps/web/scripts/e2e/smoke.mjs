@@ -1485,29 +1485,48 @@ try {
     await b.eval(`(() => { const k = window.kentos; k.files.picker = window.__io.original; k.selection.clear(); })()`);
   }
 
-  // Local .kcad files: Ctrl+S writes (dirty clears only after the write), Ctrl+O asks about unsaved changes and reopens it.
-  // Headless Chrome has no native file dialogs, so an in-memory picker stands in for them.
+  // Local .kcad files: Ctrl+S writes KCAD v2 (dirty clears only after the write), Ctrl+O asks about unsaved changes and
+  // reopens it with every persistent id. Headless Chrome has no native file dialogs, so an in-memory picker stands in.
   {
     await b.eval(`(() => {
       const k = window.kentos;
       const disk = (window.__disk = {});
       const file = (name, fail) => ({
         name,
-        getFile: async () => new Blob([disk[name] ?? '']),
-        createWritable: async () => { let s = ''; return { write: async (d) => { s += d; }, close: async () => { if (fail) throw new Error('disk dolu'); disk[name] = s; } }; },
+        getFile: async () => disk[name] ?? new Blob([]),
+        createWritable: async () => {
+          const parts = [];
+          return {
+            write: async (d) => { parts.push(typeof d === 'string' ? new TextEncoder().encode(d) : new Uint8Array(d)); },
+            close: async () => { if (fail) throw new Error('disk dolu'); disk[name] = new Blob(parts); },
+          };
+        },
       });
       window.__files = { original: k.files.picker, file };
       k.files.picker = { save: async (n) => file(n), open: async () => file(Object.keys(disk)[0]) };
       k.files.handle = null;
       k.selection.clear();
     })()`);
-    // What the file holds: persistent ids are not written in v1; opening derives them (ADR 0014, checked at the end).
-    const saved = await b.eval(`JSON.stringify([...window.kentos.doc.all()].map(({ uid, ...e }) => e))`);
+    // What the drawing holds, persistent ids included (KCAD v2 keeps them); slots are the open drawing's own.
+    const drawing = `JSON.stringify([...window.kentos.doc.all()].map(({ id, ...e }) => { const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v); return canon(e); }))`;
+    const saved = await b.eval(drawing);
     await b.key('s', { ctrl: true });
-    await b.waitFor(`!window.kentos.files.busy.value && Object.keys(window.__disk).length === 1`, 5000).catch(() => {});
-    const written = await b.eval(`(() => { const [name, text] = Object.entries(window.__disk)[0] ?? []; const f = text ? JSON.parse(text) : {}; return { name, format: f.format, n: f.entities?.length, dirty: window.kentos.doc.dirty.value }; })()`);
+    await b.waitFor(`!window.kentos.files.busy.value && Object.keys(window.__disk).length === 1`, 8000).catch(() => {});
+    const written = await b.eval(`(async () => {
+      const [name, blob] = Object.entries(window.__disk)[0] ?? [];
+      if (!blob) return { name };
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const signature = [...bytes.slice(0, 9)].map((x) => x.toString(16).padStart(2, '0')).join('');
+      const doc = await (await window.kentos.files.kcad()).decode(bytes);
+      return { name, signature, format: doc.format, version: doc.version, n: doc.entities.length, uids: doc.uids.length, dirty: window.kentos.doc.dirty.value };
+    })()`);
     const size = await b.eval('window.kentos.doc.size');
-    check('Ctrl+S writes a .kcad file and the drawing turns clean', /\.kcad$/.test(written.name ?? '') && written.format === 'kentos.document' && written.n === size && !written.dirty, JSON.stringify(written));
+    await b.shot('kcad-v2-saved');
+    check(
+      'Ctrl+S writes a KCAD v2 .kcad file (signature, drawing, one persistent id per object) and the drawing turns clean',
+      /\.kcad$/.test(written.name ?? '') && written.signature === '894b4341440d0a1a0a' && written.format === 'kentos.document' && written.version === 2 && written.n === size && written.uids === size && !written.dirty,
+      JSON.stringify(written),
+    );
     await b.eval(`(() => { const k = window.kentos; k.doc.remove([[...k.doc.all()].at(-1).id]); })()`);
     check('an edit after saving marks the drawing unsaved', await b.eval('window.kentos.doc.dirty.value'));
     await b.key('o', { ctrl: true });
@@ -1516,8 +1535,8 @@ try {
     check('Ctrl+O asks before dropping unsaved changes', !!drop);
     if (drop) await b.click(...drop);
     await b.waitFor(`!window.kentos.files.busy.value && !window.kentos.doc.dirty.value`, 5000).catch(() => {});
-    const reopened = await b.eval(`JSON.stringify([...window.kentos.doc.all()].map(({ uid, ...e }) => e))`);
-    check('the reopened file holds the saved drawing, with no undo history', reopened === saved && !(await b.eval('window.kentos.doc.canUndo.value')), `${await b.eval('window.kentos.doc.size')} nesne`);
+    const reopened = await b.eval(drawing);
+    check('the reopened file holds the saved drawing with the same persistent ids, with no undo history', reopened === saved && !(await b.eval('window.kentos.doc.canUndo.value')), `${await b.eval('window.kentos.doc.size')} nesne`);
     await b.eval(`(() => { const k = window.kentos; k.doc.remove([[...k.doc.all()].at(-1).id]); k.files.picker = { save: async (n) => window.__files.file(n, true), open: async () => null }; k.commands.execute('file.saveAs'); })()`);
     await b.waitFor(`!window.kentos.files.busy.value`, 3000).catch(() => {});
     const failed = await b.eval(`window.kentos.log.entries.value.at(-1)?.text ?? ''`);
@@ -2029,6 +2048,10 @@ try {
       }
     })()`);
     check('opening a v1 drawing gives its objects the ids its content derives', opened.ok && JSON.stringify(opened.ids) === JSON.stringify(expected), JSON.stringify(opened.ids.slice(0, 2)));
+    // A v1 file is kept read-only: the log says Save will ask where to write the v2 file (docs/adr/0025).
+    const said = await b.eval(`window.kentos.log.entries.value.at(-1)?.text ?? ''`);
+    await b.shot('kcad-v1-opened');
+    check('a v1 file opens read-only: Save will ask where to write KCAD v2', /eski biçimde \(KCAD v1\)/.test(said) && (await b.eval('window.kentos.files.handle')) === null, said);
   }
 
   const errors = b.consoleLog.filter((l) => /^(error|EXCEPTION)/.test(l));
