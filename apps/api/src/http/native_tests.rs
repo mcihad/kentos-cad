@@ -1142,3 +1142,143 @@ async fn a_waiting_request_answers_as_soon_as_another_editor_commits() {
     assert!(started.elapsed() < std::time::Duration::from_secs(2));
     db.close().await;
 }
+
+#[tokio::test]
+async fn a_file_goes_in_parts_and_a_cut_goes_on_from_what_arrived() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let made = ayse
+        .create_project(
+            tenant,
+            project_create(&sample(), "Ada 110 dosyası", ProjectStorage::File),
+            Uuid::new_v4(),
+        )
+        .await
+        .unwrap();
+    let project = Uuid::parse_str(&made.id).unwrap();
+    let bytes = kcad(&sample());
+    assert!(
+        bytes.len() > 3 * 1024,
+        "the sample should need several parts"
+    );
+
+    // Saved in parts of 1 KiB: the progress climbs to the whole file, then revision 1.
+    let seen = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let log = seen.clone();
+    let progress: kentos_cloud::Progress = std::sync::Arc::new(move |done, total| {
+        log.lock().unwrap().push((done, total));
+    });
+    let saved = kentos_cloud::save_revision_watched(
+        &ayse,
+        tenant,
+        project,
+        bytes.clone(),
+        0,
+        1024,
+        Some(progress),
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        (saved.revision.as_str(), saved.objects.as_deref()),
+        ("1", Some("13"))
+    );
+    let seen = seen.lock().unwrap().clone();
+    assert!(seen.len() >= 3, "{seen:?}");
+    assert!(seen.windows(2).all(|w| w[0].0 < w[1].0), "{seen:?}");
+    assert_eq!(seen.last().unwrap().1, bytes.len() as u64);
+    assert_eq!(
+        open(&ayse, tenant, project, None)
+            .await
+            .unwrap()
+            .document
+            .len(),
+        13
+    );
+
+    // A cut: the first part arrived; a part out of step is refused and says where to go on.
+    let begun = ayse
+        .begin_upload(
+            tenant,
+            project,
+            FileUploadBegin {
+                size: bytes.len() as u32,
+                sha256: hex_sha256(&bytes),
+            },
+        )
+        .await
+        .unwrap();
+    let upload = Uuid::parse_str(&begun.id).unwrap();
+    let first = ayse
+        .send_part(tenant, project, upload, 0, bytes[..1024].to_vec().into())
+        .await
+        .unwrap();
+    assert_eq!(
+        (first.received, first.received_bytes.as_deref()),
+        (false, Some("1024"))
+    );
+    let stale = ayse
+        .send_part(tenant, project, upload, 0, bytes[..1024].to_vec().into())
+        .await
+        .unwrap_err();
+    assert_eq!(stale.path.as_deref(), Some("offset"));
+    let status = ayse.upload_status(tenant, project, upload).await.unwrap();
+    assert_eq!(status.received_bytes.as_deref(), Some("1024"));
+    // Going on from there completes and verifies the file; it commits as revision 2.
+    let rest = ayse
+        .send_part(tenant, project, upload, 1024, bytes[1024..].to_vec().into())
+        .await
+        .unwrap();
+    assert!(rest.received);
+    let committed = ayse
+        .command::<kentos_contracts::FileCommitted>(envelope(
+            tenant,
+            project,
+            "project.file.commit",
+            1,
+            Uuid::new_v4(),
+            [("@file".to_string(), "1".to_string())].into(),
+            json!({ "uploadId": upload.to_string() }),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(committed.revision, "2");
+
+    // A file whose parts do not add up to the declared hash keeps nothing.
+    let wrong = ayse
+        .begin_upload(
+            tenant,
+            project,
+            FileUploadBegin {
+                size: bytes.len() as u32,
+                sha256: "0".repeat(64),
+            },
+        )
+        .await
+        .unwrap();
+    let wrong_id = Uuid::parse_str(&wrong.id).unwrap();
+    ayse.send_part(tenant, project, wrong_id, 0, bytes[..1024].to_vec().into())
+        .await
+        .unwrap();
+    let refused = ayse
+        .send_part(
+            tenant,
+            project,
+            wrong_id,
+            1024,
+            bytes[1024..].to_vec().into(),
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(refused.path.as_deref(), Some("sha256"));
+    let after = ayse.upload_status(tenant, project, wrong_id).await.unwrap();
+    assert_eq!(
+        (after.received, after.received_bytes.as_deref()),
+        (false, Some("0"))
+    );
+    db.close().await;
+}

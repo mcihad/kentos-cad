@@ -31,6 +31,7 @@ pub mod restore;
 pub mod sharing;
 pub mod snapshot;
 pub mod tenancy;
+pub mod upload_parts;
 
 pub use error::{AppError, AppResult};
 

@@ -17,6 +17,12 @@ expiresAt: string,
  */
 received: boolean, 
 /**
+ * How many of its bytes arrived so far (decimal text): an upload sent in
+ * parts goes on from here (`PUT …?offset=`, docs/adr/0045). Absent from
+ * servers before parts.
+ */
+receivedBytes?: string, 
+/**
  * How many objects the file holds (decimal text), counted when it was
  * verified; absent before that (and for revisions saved before it was counted).
  */

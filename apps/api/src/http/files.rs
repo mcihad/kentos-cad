@@ -47,14 +47,22 @@ pub async fn begin(
         .map_err(|e| Failure::with(e, &headers))
 }
 
+#[derive(serde::Deserialize)]
+pub struct PartQuery {
+    offset: Option<String>,
+}
+
 /// `PUT …/projects/{project}/uploads/{upload}`: the upload's bytes
 /// (`application/octet-stream`). They are kept only when the size and the
-/// SHA-256 are the declared ones and they read as a KCAD v2 file.
+/// SHA-256 are the declared ones and they read as a KCAD v2 file. With
+/// `?offset=N` the body is one part of the file, going on from the bytes
+/// that arrived (docs/adr/0045).
 pub async fn receive(
     State(state): State<AppState>,
     headers: HeaderMap,
     caller: Caller,
     Path((tenant, project, upload)): Path<(String, String, String)>,
+    axum::extract::Query(part): axum::extract::Query<PartQuery>,
     body: Body,
 ) -> Result<Json<FileUpload>, Failure> {
     let run = async {
@@ -63,6 +71,29 @@ pub async fn receive(
             AppError::not_found("Yükleme bulunamadı: adresteki yükleme kimliği geçersiz.")
         })?;
         let db = state.db()?;
+        if let Some(offset) = part.offset {
+            let offset: u64 = offset.parse().map_err(|_| {
+                AppError::invalid_at("offset", "offset bir bayt sırası (sayı) olmalı.")
+            })?;
+            // A part is taken whole before anything is written: one cut short changes nothing.
+            let bytes = axum::body::to_bytes(body, kentos_application::upload_parts::PART_MAX)
+                .await
+                .map_err(|e| {
+                    AppError::invalid(format!(
+                        "Parça alınamadı ({e}); en çok {} MiB olabilir. Aynı parçayı yeniden gönderin.",
+                        kentos_application::upload_parts::PART_MAX / (1024 * 1024)
+                    ))
+                })?;
+            return kentos_application::upload_parts::receive_part(
+                db,
+                &state.blobs,
+                &a,
+                upload,
+                offset,
+                &bytes,
+            )
+            .await;
+        }
         let mut receiving = files::start_receive(db, &state.blobs, &a, upload).await?;
         let mut body = body;
         loop {
@@ -102,7 +133,7 @@ pub async fn upload(
         let upload = Uuid::parse_str(&upload).map_err(|_| {
             AppError::not_found("Yükleme bulunamadı: adresteki yükleme kimliği geçersiz.")
         })?;
-        files::upload(state.db()?, &a, upload).await
+        files::upload(state.db()?, &state.blobs, &a, upload).await
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }

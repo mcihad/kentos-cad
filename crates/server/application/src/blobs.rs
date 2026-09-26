@@ -110,6 +110,49 @@ impl Blobs {
         })
     }
 
+    /// How many bytes an object has (0 when there is none yet): an upload in parts so far.
+    pub async fn len(&self, key: &str) -> io::Result<u64> {
+        match tokio::fs::metadata(self.path(key)?).await {
+            Ok(m) => Ok(m.len()),
+            Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(0),
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Adds `bytes` at the end of an object (made when there is none), flushed
+    /// to the disk; returns its new length. The caller holds the upload's row
+    /// lock, so two parts never interleave (upload_parts.rs).
+    pub async fn append(&self, key: &str, bytes: &[u8]) -> io::Result<u64> {
+        let path = self.path(key)?;
+        if let Some(dir) = path.parent() {
+            tokio::fs::create_dir_all(dir).await?;
+        }
+        let mut file = tokio::fs::OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(&path)
+            .await?;
+        file.write_all(bytes).await?;
+        file.sync_data().await?;
+        Ok(file.metadata().await?.len())
+    }
+
+    /// An object's SHA-256 (lowercase hex), read in parts.
+    pub async fn sha256(&self, key: &str) -> io::Result<String> {
+        use tokio::io::AsyncReadExt as _;
+        let mut file = tokio::fs::File::open(self.path(key)?).await?;
+        let mut hasher = Sha256::new();
+        let mut buf = vec![0u8; 1 << 20];
+        loop {
+            let n = file.read(&mut buf).await?;
+            if n == 0 {
+                break;
+            }
+            hasher.update(&buf[..n]);
+        }
+        Ok(hasher.finalize().iter().map(|b| format!("{b:02x}")).collect())
+    }
+
     /// Reads an object whole.
     pub async fn read(&self, key: &str) -> io::Result<Vec<u8>> {
         tokio::fs::read(self.path(key)?).await

@@ -82,6 +82,12 @@ pub struct FileUpload {
     pub expires_at: String,
     /// The bytes arrived and were verified; it can be committed.
     pub received: bool,
+    /// How many of its bytes arrived so far (decimal text): an upload sent in
+    /// parts goes on from here (`PUT …?offset=`, docs/adr/0045). Absent from
+    /// servers before parts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub received_bytes: Option<String>,
     /// How many objects the file holds (decimal text), counted when it was
     /// verified; absent before that (and for revisions saved before it was counted).
     #[serde(default, skip_serializing_if = "Option::is_none")]

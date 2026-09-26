@@ -686,6 +686,28 @@ impl Cloud {
         })
     }
 
+    /// One part of an upload's bytes, going on at `offset` (`PUT …/uploads/{upload}?offset=`,
+    /// docs/adr/0045): the answer says how many bytes arrived, and whether the file is complete.
+    pub fn send_part(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        upload: Uuid,
+        offset: u64,
+        bytes: bytes::Bytes,
+    ) -> impl Future<Output = Result<FileUpload, ApiFailure>> + Send + 'static {
+        self.call(move |inner| async move {
+            let mut url = inner.project_url(tenant, project, &format!("/uploads/{upload}"))?;
+            url.query_pairs_mut()
+                .append_pair("offset", &offset.to_string());
+            let b = inner
+                .request(Method::PUT, url, FILE_TIMEOUT)
+                .header(header::CONTENT_TYPE, "application/octet-stream")
+                .body(bytes);
+            inner.json(b, FILE_TIMEOUT).await
+        })
+    }
+
     /// How an upload stands (`GET …/uploads/{upload}`): whether its bytes
     /// arrived, asked after the answer to them was lost.
     pub fn upload_status(

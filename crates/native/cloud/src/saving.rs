@@ -30,12 +30,16 @@ use kentos_domain::Document;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::api::{Cloud, hex_sha256};
+use crate::api::{Cloud, Progress, hex_sha256};
 use crate::failure::ApiFailure;
 use crate::runtime::run;
 
 /// Tries of one step whose answer does not come, before the failure is given back.
 pub const TRIES: u32 = 5;
+
+/// A file larger than this goes in parts of this size (docs/adr/0045): a
+/// connection cut short costs only the part on its way.
+pub const PART: usize = 8 * 1024 * 1024;
 
 /// The expected-version key of a file project's revision (the server's `PROJECT_FILE_KEY`).
 pub const FILE_KEY: &str = "@file";
@@ -94,6 +98,65 @@ fn checked_size(len: usize) -> Result<u32, ApiFailure> {
         })
 }
 
+/// How many bytes of an upload arrived, as the server says.
+fn arrived(u: &FileUpload) -> u64 {
+    u.received_bytes
+        .as_deref()
+        .and_then(|b| b.parse().ok())
+        .unwrap_or(0)
+}
+
+/// The file's bytes in parts of `part`, each going on from what the server
+/// has: after a failure the upload is asked how far it came, so a part whose
+/// answer was lost is not sent twice, and the rest goes on from there.
+/// `progress`: the bytes the server has, of all of them.
+async fn send_in_parts(
+    cloud: &Cloud,
+    tenant: Uuid,
+    project: Uuid,
+    id: Uuid,
+    bytes: &Bytes,
+    part: usize,
+    progress: Option<&Progress>,
+) -> Result<FileUpload, ApiFailure> {
+    let total = bytes.len() as u64;
+    let mut offset = 0u64;
+    let mut tries = 1;
+    loop {
+        let start = usize::try_from(offset)
+            .unwrap_or(usize::MAX)
+            .min(bytes.len());
+        let end = start.saturating_add(part).min(bytes.len());
+        match cloud
+            .send_part(tenant, project, id, offset, bytes.slice(start..end))
+            .await
+        {
+            Ok(u) if u.received => return Ok(u),
+            Ok(u) => {
+                offset = arrived(&u);
+                tries = 1;
+            }
+            Err(f) if f.path.as_deref() == Some("offset") || (f.transient() && tries < TRIES) => {
+                if f.transient() {
+                    tokio::time::sleep(f.backoff(tries)).await;
+                    tries += 1;
+                }
+                // Where it stands now: a part may have arrived with its answer lost.
+                match cloud.upload_status(tenant, project, id).await {
+                    Ok(u) if u.received => return Ok(u),
+                    Ok(u) => offset = arrived(&u),
+                    Err(e) if e.transient() => {}
+                    Err(e) => return Err(e),
+                }
+            }
+            Err(f) => return Err(f),
+        }
+        if let Some(p) = progress {
+            p(offset, total);
+        }
+    }
+}
+
 /// The file's bytes in an upload of the project, received and verified by
 /// the server. Only its own caller can commit or import it.
 async fn upload(
@@ -101,6 +164,18 @@ async fn upload(
     tenant: Uuid,
     project: Uuid,
     bytes: Bytes,
+) -> Result<FileUpload, ApiFailure> {
+    upload_parted(cloud, tenant, project, bytes, PART, None).await
+}
+
+/// `upload`, a file larger than `part` in parts of that size.
+async fn upload_parted(
+    cloud: &Cloud,
+    tenant: Uuid,
+    project: Uuid,
+    bytes: Bytes,
+    part: usize,
+    progress: Option<&Progress>,
 ) -> Result<FileUpload, ApiFailure> {
     let size = checked_size(bytes.len())?;
     let sha256 = hex_sha256(&bytes);
@@ -122,6 +197,9 @@ async fn upload(
             format!("“{}” bir yükleme kimliği değil", begun.id),
         )
     })?;
+    if bytes.len() > part {
+        return send_in_parts(cloud, tenant, project, id, &bytes, part, progress).await;
+    }
     let mut tries = 1;
     loop {
         match cloud.send_upload(tenant, project, id, bytes.clone()).await {
@@ -185,9 +263,31 @@ pub fn save_revision(
     bytes: Vec<u8>,
     based_on: u64,
 ) -> impl Future<Output = Result<FileCommitted, ApiFailure>> + Send + 'static {
+    save_revision_watched(cloud, tenant, project, bytes, based_on, PART, None)
+}
+
+/// `save_revision`, reporting the bytes the server has, of all of them, to
+/// `progress`, a file larger than `part` sent in parts of that size.
+pub fn save_revision_watched(
+    cloud: &Cloud,
+    tenant: Uuid,
+    project: Uuid,
+    bytes: Vec<u8>,
+    based_on: u64,
+    part: usize,
+    progress: Option<Progress>,
+) -> impl Future<Output = Result<FileCommitted, ApiFailure>> + Send + 'static {
     let cloud = cloud.clone();
     run(async move {
-        let sent = upload(&cloud, tenant, project, Bytes::from(bytes)).await?;
+        let sent = upload_parted(
+            &cloud,
+            tenant,
+            project,
+            Bytes::from(bytes),
+            part.max(1),
+            progress.as_ref(),
+        )
+        .await?;
         commit(&cloud, tenant, project, &sent, based_on).await
     })
 }

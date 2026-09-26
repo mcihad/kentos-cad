@@ -97,7 +97,7 @@ fn check_sha256(text: &str) -> AppResult<String> {
     }
 }
 
-fn expires(created: OffsetDateTime) -> String {
+pub(crate) fn expires(created: OffsetDateTime) -> String {
     rfc3339(created + time::Duration::hours(i64::from(UPLOAD_LIFETIME_HOURS)))
 }
 
@@ -145,6 +145,7 @@ pub async fn begin(
         created_at: rfc3339(created),
         expires_at: expires(created),
         received: false,
+        received_bytes: Some("0".into()),
         objects: None,
     })
 }
@@ -155,7 +156,7 @@ pub(crate) struct Upload {
     pub sha256: String,
     pub received: bool,
     pub blob_key: String,
-    created: OffsetDateTime,
+    pub created: OffsetDateTime,
     /// Counted when the bytes were verified.
     pub objects: Option<i64>,
 }
@@ -203,6 +204,7 @@ pub(crate) async fn own_upload(
 /// (docs/adr/0040). Asks the access again like every step of an upload.
 pub async fn upload(
     db: &kentos_postgres::Db,
+    blobs: &Blobs,
     access: &ProjectAccess,
     upload: Uuid,
 ) -> AppResult<FileUpload> {
@@ -213,6 +215,11 @@ pub async fn upload(
         .await?
         .ok_or_else(upload_gone)?;
     tx.commit().await?;
+    let arrived = if found.received {
+        u64::try_from(found.size).unwrap_or(0)
+    } else {
+        blobs.len(&found.blob_key).await?
+    };
     Ok(FileUpload {
         id: upload.to_string(),
         size: u32::try_from(found.size).unwrap_or(u32::MAX),
@@ -220,6 +227,7 @@ pub async fn upload(
         created_at: rfc3339(found.created),
         expires_at: expires(found.created),
         received: found.received,
+        received_bytes: Some(arrived.to_string()),
         objects: found.objects.map(|n| n.to_string()),
     })
 }
@@ -315,10 +323,33 @@ pub async fn finish_receive(
             ),
         ));
     }
-    let objects = match verify(blobs, &key).await {
+    let objects = verified(db, blobs, access, upload, &key).await?;
+    Ok(FileUpload {
+        id: upload.to_string(),
+        size: u32::try_from(size).unwrap_or(u32::MAX),
+        sha256,
+        created_at: rfc3339(created),
+        expires_at: expires(created),
+        received: true,
+        received_bytes: Some(size.to_string()),
+        objects: Some(objects.to_string()),
+    })
+}
+
+/// The whole object arrived with the declared size and hash: it must read
+/// as a KCAD v2 file, then the upload is marked received. Otherwise the
+/// object is removed and the error says why. Returns its object count.
+pub(crate) async fn verified(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    access: &ProjectAccess,
+    upload: Uuid,
+    key: &str,
+) -> AppResult<i64> {
+    let objects = match verify(blobs, key).await {
         Ok(n) => n,
         Err(why) => {
-            let _ = blobs.remove(&key).await;
+            let _ = blobs.remove(key).await;
             return Err(why);
         }
     };
@@ -337,18 +368,10 @@ pub async fn finish_receive(
     tx.commit().await?;
     if marked.rows_affected() == 0 {
         // Expired or committed meanwhile: the bytes belong to nothing.
-        let _ = blobs.remove(&key).await;
+        let _ = blobs.remove(key).await;
         return Err(upload_gone());
     }
-    Ok(FileUpload {
-        id: upload.to_string(),
-        size: u32::try_from(size).unwrap_or(u32::MAX),
-        sha256,
-        created_at: rfc3339(created),
-        expires_at: expires(created),
-        received: true,
-        objects: Some(objects.to_string()),
-    })
+    Ok(objects)
 }
 
 /// Reads the object back and decodes it with the shared KCAD v2 codec, off
