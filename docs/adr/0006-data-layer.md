@@ -63,6 +63,7 @@ Faz B'nin ilk dikey dilimi: tek tenant'ta gerçek proje, izinli kayıt, iki edit
   - Sunucu kimlikleri UUIDv7'dir.
   - Nesne kimliğini (UUID) istemci seçer; aynı komutun tekrarı nesneyi iki kez yaratamaz.
   - Tarayıcının numaralı nesne kimlikleri sunucuya gitmez.
+  - **2026-09-26:** nesne kimliği, nesnenin kalıcı kimliğidir (`uid`, ADR 0014). Silinen kimlik yeniden oluşturulabilir. Oluşturulan nesnenin sürümü commit'in veri revizyonudur; değişiklik 1 ekler. Böylece bir sürüm aynı kimliğe iki kez verilmez ([ADR 0026](0026-cloud-sync-persistent-ids.md)).
 - **Sayılar:** sürüm, revizyon ve imleç API'de ondalık metindir (§24.1).
 
 ## Sonuçlar

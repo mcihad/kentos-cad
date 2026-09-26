@@ -1,6 +1,6 @@
 # ADR 0014: Kalıcı nesne kimliği, çalışma yuvası ve eski dosya göçü
 
-- **Durum:** kabul edildi (yön, 2026-09-25). Uygulama dilimleri aşağıdadır. Dilim 1 (web belgesi) ve dilim 2 (v1 göçü) 25 Eylül'de uygulandı; sonda uygulama notu vardır. Dilim 3 ve 4 açıktır.
+- **Durum:** kabul edildi (yön, 2026-09-25). Uygulama dilimleri aşağıdadır. Dilim 1 (web belgesi) ve dilim 2 (v1 göçü) 25 Eylül'de, dilim 3 (bulut eşitlemesi) 26 Eylül'de uygulandı; sonda uygulama notları vardır, dilim 3'ün kararları [ADR 0026](0026-cloud-sync-persistent-ids.md)'dadır. Dilim 4 açıktır.
 - **Tarih:** 2026-09-25
 - **Bağlam belgesi:** TODOS.md `DOM-03`, `DOM-04`, `DOM-05`, `FILE-05`, `SYNC-06/07`, `PY-11`, `AI-06`; ADR 0002, 0003, 0011, 0012
 
@@ -148,14 +148,19 @@ v1 dosyasında kalıcı kimlik yoktur. Göç **belirlenimlidir**: aynı dosya ka
 - **v1 kimlik yazmaz.** Yeniden açılan dosya yalnız içeriği değişmediyse aynı kimlikleri alır. Düzenlenip v1 olarak kaydedilen dosya başka bir anlık görüntüdür: bütün nesneler, düzenlenmeyenler de, yeni kimlik alır. Proje adı da içeriktir. Kalıcılık binary v2 ile gelir (`FILE-05`, `FILE-21`); v2 göçün kaynağını da yazar (biçim, sürüm, `sourceSha256`).
 - Projenin türetilen kimliği (`project`) hesaplanır, ama web belgesi henüz tutmuyor.
 - **Açık soru:** Birleştir, Alan birleştir (tevhit), Alan çıkar, Alana çevir ve Çizgiye çevir'de sonuçlardan biri kaynağın kendisi sayılsın mı? Bu işlemler verisini ilk kaynaktan taşır (tevhit “kalan parsel” der), ama kimlik bugün yenidir. Karar verilince `replace` ile değişir.
-- **Dilim 3 (bulut) için gerekenler:**
-  - İzleyici nesnenin `uid`'ini `featureId` yapar; ayrı eşleme ve v4 üretimi kalkar (`app/cloud/tracker.ts`).
-  - Buluttan açılışta `readIncoming` sunucunun kimliğini `uid` olarak verir. v1 okuyucusu dosyadaki `uid`'i attığı için bulut yolu kendi kimliğini ayrı taşımalı.
-  - `applyExternal` yeni nesneye sunucunun kimliğini verir; bugün yeni v7 verir.
-  - Aygıt taslağı ve gönderilen değişiklik kimliği taşır; `entityJson` onu karşılaştırmaya almaz.
-  - Testler: aynı dosyanın iki kez yüklenmesi, ACK kaybı, geri alınan silme.
+- **Dilim 3 (bulut) için gerekenler:** 26 Eylül'de uygulandı; aşağıdaki nota ve ADR 0026'ya bakın.
 - **Dilim 4:** sözleşmede `EntityId` tipi, v2 dosyada 16 baytlık kimlik.
 - Masaüstünde `replace`'in karşılığı ve araçlar henüz yok (ADR 0020).
+
+## Uygulama notu: dilim 3, bulut eşitlemesi (26 Eylül 2026)
+
+Kararlar ve gerekçeleri [ADR 0026](0026-cloud-sync-persistent-ids.md)'dadır; kısaca:
+
+- Nesnenin `uid`'i sunucudaki `feature.id`'dir. İzleyicinin ayrı eşlemesi ve v4 üretimi kalktı (`app/cloud/tracker.ts`).
+- Buluttan açılışta her nesne sunucunun kimliğini `uid` olarak alır (`readProject`). `applyExternal` yeni nesneye getirdiği kimliği verir, geçmişi kalıcı kimliğe göre de temizler.
+- Cihaz taslağı biçim 2'dir, kalıcı kimlikle anahtarlıdır. Eski taslaklar aynı kimliklere, kayıpsız ve çoğaltmasız taşınır.
+- Sunucuda oluşturulan nesnenin sürümü commit'in veri revizyonudur: silinip geri gelen kimlik eski sürümlerinin üstünden başlar. Şema ve migration değişmedi.
+- Testler: aynı dosyanın iki kez yüklenmesi (sunucu ve e2e), ACK kaybı (web ve e2e), geri alınan silme (web, sunucu ve e2e).
 
 ## Çevirme ve birleştirmede kimlik (25 Eylül, sahibin varsayılanı)
 
