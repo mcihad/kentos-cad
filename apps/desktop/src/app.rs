@@ -191,6 +191,8 @@ pub struct App {
     pub draft: Draft,
     /// Typed values open beside the cursor (`drafting.cursorInput`).
     pub cursor_input: bool,
+    /// The strip over the drawing while a command runs (`drafting.commandBar`, command_bar.rs).
+    pub command_bar: bool,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
     pub settings: Settings,
     /// The settings window's draft while it is open.
@@ -257,6 +259,7 @@ impl App {
             field: None,
             draft: Draft::default(),
             cursor_input: true,
+            command_bar: true,
             settings,
             settings_draft: None,
             reported_failure: None,
@@ -511,6 +514,7 @@ impl App {
             pick_aperture: s.number("drafting.pickAperture"),
         };
         self.cursor_input = s.bool("drafting.cursorInput");
+        self.command_bar = s.bool("drafting.commandBar");
         self.mode = match s.effective("appearance.theme").as_str() {
             Some("light") => Mode::Light,
             _ => Mode::Dark,

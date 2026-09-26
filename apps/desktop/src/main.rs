@@ -6,6 +6,7 @@
 
 mod app;
 mod catalog;
+mod command_bar;
 mod document;
 #[cfg(test)]
 mod files_testing;

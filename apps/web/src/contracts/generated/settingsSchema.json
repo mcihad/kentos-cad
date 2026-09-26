@@ -156,6 +156,22 @@
       "apply": "live"
     },
     {
+      "key": "drafting.commandBar",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Komut şeridi",
+      "description": "Komut çalışırken çizim alanının üstünde aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken aynı seçenekler alttaki komut satırındadır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
       "key": "drafting.hoverInfo",
       "type": "boolean",
       "default": true,

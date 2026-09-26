@@ -14,8 +14,8 @@
 
 use std::borrow::Cow;
 
-use iced::widget::{Column, Row, button, column, container, row, scrollable, stack, text};
-use iced::{Center, Color, Element, Fill};
+use iced::widget::{Column, button, column, container, row, scrollable, stack, text};
+use iced::{Color, Element, Fill};
 
 use kentos_contracts::{LayerNode, LayerNodeType};
 use kentos_interaction::Format;
@@ -23,7 +23,7 @@ use kentos_render_wgpu::Rgba8;
 use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::theme::Tokens;
 use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LinePrompt};
 use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon, Stack};
 use kentos_ui::widget::status_bar::{Readout, StatusBar};
@@ -144,7 +144,8 @@ impl App {
                     &self.selection,
                     accent,
                 );
-                stack![area, over].into()
+                // The running command's strip on top (command_bar.rs).
+                stack![area, over].extend(self.command_bar()).into()
             }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")
@@ -280,43 +281,6 @@ impl App {
         })
     }
 
-    /// The running command in the status bar: its name, the step and the
-    /// options as buttons, each with its value when it has one (the web
-    /// shows them in the strip over its drawing).
-    fn prompt_bar(&self) -> Option<Element<'_, Message>> {
-        let p = self.session.prompt();
-        let tool = p.tool?;
-        let head = row![
-            text(tool)
-                .font(typography::ui_strong())
-                .size(typography::caption()),
-            label::caption(p.step.clone()),
-        ]
-        .spacing(6)
-        .align_y(Center);
-        let options = p.options.iter().map(|o| {
-            let mut content = row![label::caption(o.label)].spacing(4).align_y(Center);
-            if let Some(value) = &o.value {
-                content = content.push(
-                    text(value.clone())
-                        .font(typography::ui_strong())
-                        .size(typography::caption()),
-                );
-            }
-            button(content.push(label::mono_caption(o.key)))
-                .on_press(Message::PromptOption(o.key))
-                .padding([0, 5])
-                .style(style::button::keyword)
-                .into()
-        });
-        Some(
-            Row::with_children(std::iter::once(head.into()).chain(options))
-                .spacing(4)
-                .align_y(Center)
-                .into(),
-        )
-    }
-
     fn status_bar(&self) -> Element<'_, Message> {
         let coordinates = match (&self.document, self.viewport.cursor) {
             (Some(doc), Some(p)) => {
@@ -332,9 +296,6 @@ impl App {
                 .icon(Icon::Crosshair)
                 .tip("İmleç koordinatı: Y sağa (doğu), X yukarı (kuzey)"),
         );
-        if let Some(prompt) = self.prompt_bar() {
-            bar = bar.separator().push(prompt);
-        }
         if !self.selection.is_empty() {
             // The web's status cell: how many are selected, in the accent (DESIGN.md, durum çubuğu).
             let n = self.selection.len();

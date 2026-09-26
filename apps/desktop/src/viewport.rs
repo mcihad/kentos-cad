@@ -542,6 +542,9 @@ pub fn gesture(
                 state.pan = Some(at);
                 return Some((Some(Event::Panned { by: at - last, at }), true));
             }
+            // A left press that began over the area follows the pointer over the
+            // command strip above it too (command_bar.rs; the web captures the pointer).
+            let cursor = if state.left { cursor.land() } else { cursor };
             if cursor.position_in(bounds).is_some() {
                 state.inside = true;
                 Some((Some(Event::Moved(at)), false))
@@ -580,11 +583,12 @@ pub fn gesture(
             Some((Some(Event::Pressed(at)), true))
         }
         mouse::Event::ButtonReleased(mouse::Button::Left) => {
-            // Released anywhere: the press began over the area (the web captures the pointer).
+            // Released anywhere, the command strip above the area included: the press
+            // began over the area (the web captures the pointer).
             if !std::mem::take(&mut state.left) {
                 return None;
             }
-            let position = cursor.position()?;
+            let position = cursor.land().position()?;
             let at = Point::new(position.x - bounds.x, position.y - bounds.y);
             Some((Some(Event::Released(at)), true))
         }
@@ -594,9 +598,10 @@ pub fn gesture(
             Some((None, true))
         }
         mouse::Event::ButtonReleased(mouse::Button::Right) => {
-            // Released anywhere: the press began over the area (the web captures the pointer).
+            // Released anywhere, the command strip above the area included: the press
+            // began over the area (the web captures the pointer).
             let pressed = state.right.take()?;
-            let position = cursor.position()?;
+            let position = cursor.land().position()?;
             let at = Point::new(position.x - bounds.x, position.y - bounds.y);
             let quick = now.saturating_duration_since(pressed) < RIGHT_HOLD;
             Some((quick.then_some(Event::RightClick(at)), true))
@@ -865,6 +870,69 @@ mod tests {
         );
         assert_eq!(release, Some((None, true)));
         assert!(state.pan.is_none());
+    }
+
+    /// The command strip over the area (command_bar.rs) levitates the
+    /// pointer: a press that began over the area still moves and ends there,
+    /// as the web's captured pointer does; with no press, the pointer has
+    /// left the area.
+    #[test]
+    fn a_press_goes_on_and_ends_over_the_strip_above_the_area() {
+        let mut state = sized();
+        let press = mouse_event(
+            &mut state,
+            mouse::Event::ButtonPressed(mouse::Button::Left),
+            over(500.0, 300.0),
+        );
+        assert_eq!(
+            press,
+            Some((Some(Event::Pressed(Point::new(400.0, 250.0))), true))
+        );
+        let strip = mouse::Cursor::Levitating(Point::new(500.0, 70.0));
+        let moved = mouse_event(
+            &mut state,
+            mouse::Event::CursorMoved {
+                position: Point::new(500.0, 70.0),
+            },
+            strip,
+        );
+        assert_eq!(
+            moved,
+            Some((Some(Event::Moved(Point::new(400.0, 20.0))), false))
+        );
+        let released = mouse_event(
+            &mut state,
+            mouse::Event::ButtonReleased(mouse::Button::Left),
+            strip,
+        );
+        assert_eq!(
+            released,
+            Some((Some(Event::Released(Point::new(400.0, 20.0))), true))
+        );
+        // A quick right press in the area let go over the strip is still Enter.
+        let _ = mouse_event(
+            &mut state,
+            mouse::Event::ButtonPressed(mouse::Button::Right),
+            over(500.0, 300.0),
+        );
+        let enter = mouse_event(
+            &mut state,
+            mouse::Event::ButtonReleased(mouse::Button::Right),
+            strip,
+        );
+        assert_eq!(
+            enter,
+            Some((Some(Event::RightClick(Point::new(400.0, 20.0))), true))
+        );
+        // With no button down, over the strip is off the area.
+        let left = mouse_event(
+            &mut state,
+            mouse::Event::CursorMoved {
+                position: Point::new(500.0, 72.0),
+            },
+            strip,
+        );
+        assert_eq!(left, Some((Some(Event::Left), false)));
     }
 
     #[test]

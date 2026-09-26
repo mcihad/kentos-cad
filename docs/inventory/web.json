@@ -49,8 +49,8 @@
       "pending": 2
     },
     "settings": {
-      "total": 64,
-      "implemented": 64,
+      "total": 65,
+      "implemented": 65,
       "partial": 0,
       "pending": 0
     },
@@ -7943,6 +7943,20 @@
       "platforms": {
         "web": "implemented",
         "desktop": "none"
+      }
+    },
+    {
+      "id": "user.commandBar",
+      "key": "commandBar",
+      "setting": "drafting.commandBar",
+      "scope": "user",
+      "persistence": "localStorage kentos.settings.v1",
+      "type": "boolean",
+      "default": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
       }
     },
     {

@@ -217,6 +217,36 @@ try {
   const bulged = await newest();
   check('command bar option buttons work with the mouse', yay && bulged.kind === 'polyline' && (bulged.bulges ?? []).some((x) => Math.abs(x) > 0.5), JSON.stringify(bulged.bulges));
   await key('Escape');
+  // The strip is a preference (drafting.commandBar; Uygulama ayarları → Görünüm → Fare yardımcıları): turned off
+  // there, it stays hidden while a command runs and the command line keeps the options.
+  {
+    const strip = () => b.eval(`({ hidden: document.querySelector('.cmdbar').hidden, opts: document.querySelectorAll('.cmdbar__opts .cmdbar__opt').length, chips: document.querySelectorAll('.cmdline__chip').length })`);
+    const middle = (js) => b.eval(`(() => { const e = ${js}; if (!e) return null; e.scrollIntoView({ block: 'center' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const drawnBefore = await b.eval('window.kentos.doc.size');
+    await key('p');
+    await b.click(...(await toScreen(X, N + 40)));
+    const stripOn = await strip();
+    await b.shot('cmdbar-polygon');
+    await key('Escape');
+    await b.eval(`window.kentos.commands.execute('tools.options', 'appearance')`);
+    await b.waitFor(`!!document.querySelector('.switch[aria-label="Komut şeridi"]')`, 3000).catch(() => {});
+    const toggle = await middle(`document.querySelector('.switch[aria-label="Komut şeridi"]')`);
+    if (toggle) await b.click(...toggle);
+    await b.shot('settings-command-bar');
+    const save = await middle(`[...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Kaydet')`);
+    if (save) await b.click(...save);
+    await key('p');
+    await b.click(...(await toScreen(X, N + 40)));
+    const stripOff = { ...(await strip()), pref: await b.eval('window.kentos.prefs.commandBar.value') };
+    await b.eval('window.kentos.prefs.commandBar.set(true)');
+    const stripBack = await strip();
+    await key('Escape');
+    check(
+      'the command bar follows its preference, turned off in Uygulama ayarları; the command line keeps the options',
+      !!toggle && !stripOn.hidden && stripOn.opts > 0 && stripOff.pref === false && stripOff.hidden && stripOff.chips === stripOn.opts && !stripBack.hidden && (await b.eval('window.kentos.doc.size')) === drawnBefore,
+      JSON.stringify({ toggle, stripOn, stripOff, stripBack }),
+    );
+  }
   await key('r');
   await cmd(`${X + 70},${N + 20}`);
   await cmd(`${X + 120},${N + 60}`);
