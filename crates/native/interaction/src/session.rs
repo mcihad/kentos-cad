@@ -13,7 +13,9 @@
 //! “Repeat the last command” and what a key means are the host's: it asks
 //! [`Session::last`] and routes keys by ADR 0018's order. So is the object
 //! snap: the host asks [`Session::snap`] with the pointer and gives the tool
-//! the snapped pointer, as the web's viewport does before its tools.
+//! the snapped pointer, as the web's viewport does before its tools. Kaydır
+//! is not remembered for repeat, nor is a tool that is not in the catalog
+//! ([`Session::run`]: Yapıştır), as on the web (docs/adr/0056).
 
 use kentos_geometry_core::store::snap::SnapHit;
 
@@ -30,6 +32,7 @@ use crate::lengthen::{self, Lengthen};
 use crate::line::{self, Line};
 use crate::mirror::{self, Mirror};
 use crate::move_copy::{self, Move};
+use crate::navigate::{self, Pan, ZoomWindow};
 use crate::object::{self, ObjectAction};
 use crate::offset::{self, Offset};
 use crate::path::{self, Path};
@@ -44,7 +47,7 @@ use crate::scale::{self, Scale};
 use crate::select::{Select, SelectBox};
 use crate::spatial::Spatial;
 use crate::stretch::{self, Stretch};
-use crate::tool::{Context, Draft, Flow, Pointer, Preview, Tool, View};
+use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 
@@ -79,6 +82,8 @@ pub const TOOLS: &[&str] = &[
     object::EXPLODE_ID,
     lengthen::ID,
     vertex::ID,
+    navigate::PAN_ID,
+    navigate::ZOOM_WINDOW_ID,
 ];
 
 /// The running tool, if any, the last one started, and the select tool that
@@ -134,12 +139,25 @@ impl Session {
             object::EXPLODE_ID => Box::new(ObjectAction::explode()),
             lengthen::ID => Box::new(Lengthen::new()),
             vertex::ID => Box::new(Vertex::new()),
+            navigate::PAN_ID => Box::new(Pan::new()),
+            navigate::ZOOM_WINDOW_ID => Box::new(ZoomWindow::new()),
             _ => return false,
         };
-        self.last = Some(tool.id());
+        // Kaydır is not repeated: Enter while panning repeats the command
+        // before it (the web's `lastRepeatable`).
+        if tool.id() != navigate::PAN_ID {
+            self.last = Some(tool.id());
+        }
+        self.run(tool);
+        true
+    }
+
+    /// Runs a tool that is not in the catalog (Yapıştır with the clipboard's
+    /// objects), dropping whatever ran; it is not remembered for repeat (the
+    /// web's `ToolManager.run`). The host calls [`Session::activate`] right after.
+    pub fn run(&mut self, tool: Box<dyn Tool>) {
         self.tool = Some(tool);
         self.select.reset();
-        true
     }
 
     /// Right after a start: the select tool lets go of the hovered object,
@@ -191,6 +209,18 @@ impl Session {
     /// Points the running command has taken; 0 when none runs.
     pub fn point_count(&self) -> usize {
         self.tool.as_ref().map_or(0, |t| t.point_count())
+    }
+
+    /// Whether a running tool takes Enter, Space and a quick right click as
+    /// its confirm. Kaydır and Pencere yakınlaştır do not: Enter repeats the
+    /// last command instead (the web's `tool.confirm`, docs/adr/0056).
+    pub fn confirms(&self) -> bool {
+        self.tool.as_ref().is_some_and(|t| t.confirms())
+    }
+
+    /// The pointer's look over the drawing: the running tool's, else the crosshair.
+    pub fn cursor(&self) -> Cursor {
+        self.tool.as_ref().map_or(Cursor::Cross, |t| t.cursor())
     }
 
     pub fn prompt(&self) -> Prompt {

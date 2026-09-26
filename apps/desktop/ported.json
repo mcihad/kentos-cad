@@ -75,7 +75,15 @@
     "tool.stretch",
     "tool.array",
     "tool.arrayPolar",
-    "tool.align"
+    "tool.align",
+    "edit.cut",
+    "edit.copy",
+    "edit.paste",
+    "edit.pasteOriginal",
+    "tool.pan",
+    "tool.zoomWindow",
+    "view.zoomSelection",
+    "tool.repeat"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

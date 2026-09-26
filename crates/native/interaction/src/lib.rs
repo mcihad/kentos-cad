@@ -41,6 +41,10 @@
 //!   stretch ([`stretch`], `cad.entities.edit`), the rectangular and polar
 //!   arrays ([`array`], [`polar`], `cad.entities.array`) and align
 //!   ([`align`], `cad.entities.transform`);
+//! - the clipboard (docs/adr/0056): Kes, Panoya kopyala and Özgün
+//!   koordinatlara yapıştır ([`clipboard`]) and the paste tool ([`paste`]),
+//!   writing through the document as the web's do; Kaydır and Pencere
+//!   yakınlaştır ([`navigate`]), which ask the host for view changes;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -60,6 +64,7 @@ pub mod arc;
 pub mod array;
 pub mod breaking;
 pub mod circle;
+pub mod clipboard;
 pub mod corner;
 mod edge;
 pub mod erase;
@@ -70,9 +75,11 @@ mod log;
 pub mod mirror;
 pub mod modify;
 pub mod move_copy;
+pub mod navigate;
 pub mod object;
 pub mod offset;
 mod outlines;
+pub mod paste;
 pub mod path;
 pub mod point;
 mod points;
@@ -92,6 +99,7 @@ mod tool;
 pub mod trim;
 pub mod vertex;
 
+pub use clipboard::Clipboard;
 pub use format::Format;
 pub use kentos_geometry_core::Vec2;
 pub use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
@@ -105,6 +113,6 @@ pub use selection::Selection;
 pub use session::Session;
 pub use spatial::Spatial;
 pub use tool::{
-    Context, Corners, Draft, Flow, LengthenMode, Marker, MarkerShape, Memory, Pointer, Preview,
-    Stroke, Tag, Tone, Tool, View, snap_kinds,
+    Context, Corners, Cursor, Draft, Flow, LengthenMode, Marker, MarkerShape, Memory, Pointer,
+    Preview, Stroke, Tag, Tone, Tool, View, ViewChange, snap_kinds,
 };

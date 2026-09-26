@@ -61,7 +61,9 @@ impl View for CameraView<'_> {
 
 impl App {
     /// Runs something on the session with the open drawing; `None` when no
-    /// drawing is open. What the tool says goes to the command line.
+    /// drawing is open. What the tool says goes to the command line; the
+    /// view changes it asks for (Kaydır, Pencere yakınlaştır) go to the
+    /// camera, in order (docs/adr/0056).
     pub(crate) fn with_tool<T>(
         &mut self,
         act: impl FnOnce(&mut Session, &mut Context<'_>) -> T,
@@ -70,6 +72,7 @@ impl App {
         // The store answers for the drawing as it is now (docs/adr/0029).
         self.spatial.sync(&doc.model);
         let mut log = Vec::new();
+        let mut changes = Vec::new();
         let view = CameraView(&self.viewport.camera);
         let out = act(
             &mut self.session,
@@ -81,8 +84,12 @@ impl App {
                 spatial: &self.spatial,
                 selection: &mut self.selection,
                 memory: &mut self.memory,
+                view_changes: &mut changes,
             },
         );
+        for change in changes {
+            self.viewport.change(change);
+        }
         for line in log {
             self.say(line.level, line.text);
         }
@@ -118,16 +125,23 @@ impl App {
     }
 
     /// `tool.confirm`: Enter, Space or the Onayla button. The running tool
-    /// commits (or leaves when it has nothing); with no command, the last one
-    /// starts again.
+    /// commits (or leaves when it has nothing); with no command, or one that
+    /// takes no confirm (Kaydır, Pencere yakınlaştır), the last one starts
+    /// again (the web's `t.confirm ? t.confirm() : tools.repeatLast()`).
     pub(crate) fn confirm(&mut self) -> Task<Message> {
-        if self.session.is_running() {
+        if self.session.confirms() {
             self.with_tool(|s, cx| s.confirm(cx));
             if !self.session.is_running() {
                 self.field = None;
             }
             return Task::none();
         }
+        self.repeat_last()
+    }
+
+    /// `tool.repeat`: the last command started again, if there was one.
+    /// Kaydır and Yapıştır are not remembered (docs/adr/0056).
+    pub(crate) fn repeat_last(&mut self) -> Task<Message> {
         match self.session.last() {
             Some(last) => self.start_tool(last),
             None => Task::none(),
@@ -212,8 +226,9 @@ impl App {
             viewport::Event::RightClick(_) => {
                 self.field = None;
                 self.line_focused = false;
-                // Enter for a running command; the idle menu is not on the desktop yet.
-                if self.session.is_running() {
+                // Enter for a running command that takes a confirm; the menu the
+                // web opens otherwise (the idle one) is not on the desktop yet.
+                if self.session.confirms() {
                     self.with_tool(|s, cx| s.confirm(cx));
                 }
             }

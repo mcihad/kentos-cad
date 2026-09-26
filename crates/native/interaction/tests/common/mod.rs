@@ -10,6 +10,7 @@ use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_domain::Document;
 use kentos_interaction::{
     Context, Draft, Level, Line, Memory, Pointer, Selection, Session, Spatial, Vec2, View,
+    ViewChange,
 };
 
 const EMPTY: &str = include_str!("../../../../../fixtures/interaction/v1/empty.kcad");
@@ -49,6 +50,8 @@ pub struct Bench {
     pub memory: Memory,
     /// Shift held for the next pointer events.
     pub shift: bool,
+    /// The view changes the tools asked for, oldest first (the desktop applies them).
+    pub views: Vec<ViewChange>,
 }
 
 impl Bench {
@@ -73,6 +76,7 @@ impl Bench {
             selection: Selection::new(),
             memory: Memory::default(),
             shift: false,
+            views: Vec::new(),
         }
     }
 
@@ -92,6 +96,7 @@ impl Bench {
             spatial: &self.spatial,
             selection: &mut self.selection,
             memory: &mut self.memory,
+            view_changes: &mut self.views,
         };
         act(&mut self.session, &mut cx)
     }

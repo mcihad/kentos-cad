@@ -57,6 +57,27 @@ pub trait View {
     fn visible(&self) -> Bounds;
 }
 
+/// A change of the view a tool asks for (docs/adr/0056): Kaydır drags it,
+/// Pencere yakınlaştır fits a box. The web's tools move `ctx.view.camera`
+/// themselves; here the host's camera takes the changes, in order, right
+/// after the call that made them.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ViewChange {
+    /// The view follows the pointer by logical pixels, right and down (the web's `camera.panBy`).
+    Pan { dx: f64, dy: f64 },
+    /// This world box as large as it fits, `padding` logical pixels in from the edges (`camera.fit`).
+    Fit { bounds: Bounds, padding: f64 },
+}
+
+/// The pointer's look over the drawing while a tool runs (the web's `Tool.cursor`):
+/// the drawing's crosshair (the web's `pick` and `cross`), or an open hand for Kaydır.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Cursor {
+    #[default]
+    Cross,
+    Grab,
+}
+
 /// Drafting aids that change where a point goes, and what a click picks
 /// (the typed settings' `drafting.*` and `snap.*`, docs/adr/0023, 0029).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -226,6 +247,9 @@ pub struct Context<'a> {
     pub selection: &'a mut Selection,
     /// What the drawing tools remember between runs.
     pub memory: &'a mut Memory,
+    /// Changes of the view the tool asks for (Kaydır, Pencere yakınlaştır):
+    /// the host applies them after the call.
+    pub view_changes: &'a mut Vec<ViewChange>,
 }
 
 impl Context<'_> {
@@ -392,6 +416,17 @@ pub trait Tool {
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool;
     /// Enter, Space or a quick right click.
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow;
+    /// Whether the tool takes a confirm at all (the web's `Tool.confirm`
+    /// being there). Kaydır and Pencere yakınlaştır take none: Enter and
+    /// Space repeat the last command, a quick right click does what it does
+    /// with no command running (docs/adr/0056).
+    fn confirms(&self) -> bool {
+        true
+    }
+    /// The pointer's look over the drawing while it runs.
+    fn cursor(&self) -> Cursor {
+        Cursor::Cross
+    }
     /// Ctrl+Z while the tool runs: takes back its newest step and returns
     /// true, or false when nothing is pending and the drawing is undone instead.
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool;

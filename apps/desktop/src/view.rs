@@ -260,6 +260,7 @@ impl App {
                     self.graphics(),
                     &self.selection,
                     accent,
+                    self.session.cursor(),
                 );
                 // The running command's strip on top (command_bar.rs).
                 stack![area, over].extend(self.command_bar()).into()

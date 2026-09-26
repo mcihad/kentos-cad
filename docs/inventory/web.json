@@ -77,7 +77,7 @@
       "view.theme.toggle"
     ],
     "commandsWithoutTests": 80,
-    "commandsOnDesktop": 76
+    "commandsOnDesktop": 84
   },
   "commands": [
     {
@@ -983,7 +983,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -1011,7 +1011,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -1100,7 +1100,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/ribbon.test.ts"
@@ -1134,7 +1134,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -3684,7 +3684,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4100,7 +4100,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4642,7 +4642,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -5347,7 +5347,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
