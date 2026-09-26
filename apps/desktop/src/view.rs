@@ -100,27 +100,10 @@ impl App {
                     .on_press(Message::AppMenu(crate::app_menu::Event::Toggle)),
             )
             .collapsible(self.ribbon_collapsed, Message::Run("view.ribbonCollapse"))
-            .trailing(
-                row![
-                    label::caption(self.document.as_ref().map_or(
-                        "Açık çizim yok".to_owned(),
-                        |doc| {
-                            // A cloud project with its workspace (docs/adr/0041).
-                            let place = doc
-                                .cloud_source()
-                                .map_or(String::new(), |s| format!("{} › ", s.workspace));
-                            format!(
-                                "{place}{}{}",
-                                doc.name(),
-                                if doc.dirty() { " • kaydedilmedi" } else { "" }
-                            )
-                        },
-                    )),
-                    self.fullscreen_button(),
-                ]
-                .spacing(6)
-                .align_y(iced::Center),
-            );
+            // The web's tab row, after the tabs: the drawing's name (an accent
+            // dot before it while unsaved), the coordinate system, Tam ekran
+            // and Yardım (docs/adr/0064).
+            .trailing(self.tab_row_end());
         for command in catalog.quick().iter().filter_map(|id| catalog.get(id)) {
             // Undo and redo are dimmed with no step to take (web: isEnabled).
             let on_press = enabled(command).filter(|_| self.available(command.id));
@@ -147,27 +130,75 @@ impl App {
         ribbon.into()
     }
 
-    /// Tam ekran at the end of the tab row, as on the web: four corners out,
-    /// or in while the window fills the screen.
-    fn fullscreen_button(&self) -> Element<'static, Message> {
-        let (glyph, title) = if self.fullscreen {
-            ("fullscreenExit", "Tam ekrandan çık")
-        } else {
-            ("fullscreen", "Tam ekran")
-        };
-        let about = Tip::new(title).body("Uygulamayı ekranın tamamına yayar.");
-        kentos_ui::widget::tip(
-            button(kentos_ui::icon::icon(crate::icons::from_web(Some(glyph))).size(14.0))
-                .on_press(Message::Run("view.fullscreen"))
-                .padding([4, 5])
-                .style(style::button::flat),
-            if self.fullscreen {
-                about.detail("Esc")
+    /// The tab row after the tabs, as the web's (docs/adr/0064): the
+    /// drawing's name (an accent dot before it while unsaved), the coordinate
+    /// system, Tam ekran and Yardım. In a narrow window the row gives way as
+    /// the web's (`Ribbon.fitBar`): the coordinate system's name first (its
+    /// icon stays), then the drawing's name is cut.
+    fn tab_row_end(&self) -> Element<'static, Message> {
+        let title = self.document.as_ref().map(|doc| {
+            // A cloud project with its workspace (docs/adr/0041).
+            let place = doc
+                .cloud_source()
+                .map_or(String::new(), |s| format!("{} › ", s.workspace));
+            (format!("{place}{}", doc.name()), doc.dirty(), doc.settings().srid)
+        });
+        // Built now, as the ribbon's elements own what they show.
+        let help = catalog()
+            .menu("help")
+            .iter()
+            .fold(Menu::new(), |menu, block| {
+                block
+                    .iter()
+                    .fold(menu.separator(), |menu, id| self.command_item(menu, id))
+            });
+        let full = self.fullscreen;
+        iced::widget::responsive(move |size| {
+            let name = title
+                .as_ref()
+                .map_or_else(|| "Açık çizim yok".to_owned(), |(name, ..)| name.clone());
+            let crs = title.as_ref().map(|(_, _, srid)| {
+                let srid = *srid;
+                (
+                    srid,
+                    crs_name(srid).map_or_else(|| format!("EPSG:{srid}"), str::to_owned),
+                )
+            });
+            // The widths the row needs, from the caption size: an estimate
+            // that errs wide, as the web's steps test for overflow.
+            let glyph = kentos_ui::theme::typography::caption() * 0.6;
+            let text = |s: &str| s.chars().count() as f32 * glyph;
+            let buttons = 2.0 * kentos_ui::theme::typography::scaled(28.0) + 3.0 * 4.0;
+            let crs_name_width = crs.as_ref().map_or(0.0, |(_, n)| text(n) + 6.0);
+            let crs_icon = if crs.is_some() {
+                kentos_ui::theme::typography::scaled(32.0)
             } else {
-                about
-            },
-            iced::widget::tooltip::Position::Bottom,
-        )
+                0.0
+            };
+            let needed = text(&name) + 12.0 + crs_icon + crs_name_width + buttons;
+            let crs_named = needed <= size.width;
+            let mut row = row![
+                container(document_title(&name, title.as_ref().is_some_and(|t| t.1)))
+                    .width(Fill)
+                    .align_x(iced::alignment::Horizontal::Right)
+                    .clip(true)
+            ]
+            .width(Fill)
+            .spacing(4)
+            .align_y(iced::Center);
+            if let Some((srid, crs)) = crs {
+                row = row.push(crs_button(srid, crs, crs_named));
+            }
+            // The area is the tab row's height: the row sits in its middle.
+            container(
+                row.push(fullscreen_view(full))
+                    .push(help_button(help.clone())),
+            )
+            .height(Fill)
+            .align_y(iced::Center)
+            .into()
+        })
+        .into()
     }
 
     /// A panel of the web's ribbon: its buttons, which the ribbon shrinks to
@@ -906,6 +937,88 @@ fn thousands(value: f64) -> String {
         out.push(c);
     }
     if value < 0.0 { format!("-{out}") } else { out }
+}
+
+/// The drawing's name in the tab row (the web's `ribbon__doc`), on one line;
+/// an accent dot before it while unsaved.
+fn document_title(name: &str, dirty: bool) -> Element<'static, Message> {
+    let name = label::caption(name.to_owned()).wrapping(iced::widget::text::Wrapping::None);
+    if !dirty {
+        return name.into();
+    }
+    let dot = container(iced::widget::space::horizontal())
+        .width(6)
+        .height(6)
+        .style(|theme: &iced::Theme| container::Style {
+            background: Some(kentos_ui::theme::Tokens::of(theme).accent.into()),
+            border: iced::border::rounded(3),
+            ..container::Style::default()
+        });
+    row![
+        kentos_ui::widget::tip(
+            dot,
+            Tip::new("Kaydedilmemiş değişiklikler var"),
+            iced::widget::tooltip::Position::Bottom,
+        ),
+        name
+    ]
+    .spacing(6)
+    .align_y(iced::Center)
+    .into()
+}
+
+/// The project's coordinate system in the tab row (the web's `ribbon__crs`):
+/// its icon and, with room, its name; a click opens Koordinat sistemi.
+fn crs_button(srid: u32, name: String, named: bool) -> Element<'static, Message> {
+    let mut face = row![kentos_ui::icon::icon(crate::icons::from_web(Some("crs"))).size(14.0)]
+        .spacing(6)
+        .align_y(iced::Center);
+    if named {
+        face = face.push(
+            label::caption(name.clone()).wrapping(iced::widget::text::Wrapping::None),
+        );
+    }
+    kentos_ui::widget::tip(
+        button(face)
+            .on_press(Message::Run("crs.set"))
+            .padding([4, 8])
+            .style(style::button::flat),
+        Tip::new("Koordinat sistemi").body(format!("{name}, EPSG:{srid}. Değiştirmek için tıklayın.")),
+        iced::widget::tooltip::Position::Bottom,
+    )
+}
+
+/// Tam ekran's button: four corners out, or in while the window fills the screen.
+fn fullscreen_view(on: bool) -> Element<'static, Message> {
+    let (glyph, title) = if on {
+        ("fullscreenExit", "Tam ekrandan çık")
+    } else {
+        ("fullscreen", "Tam ekran")
+    };
+    let about = Tip::new(title).body("Uygulamayı ekranın tamamına yayar.");
+    kentos_ui::widget::tip(
+        button(kentos_ui::icon::icon(crate::icons::from_web(Some(glyph))).size(14.0))
+            .on_press(Message::Run("view.fullscreen"))
+            .padding([4, 5])
+            .style(style::button::flat),
+        if on { about.detail("Esc") } else { about },
+        iced::widget::tooltip::Position::Bottom,
+    )
+}
+
+/// Yardım at the end of the tab row (the web's ribbon ?): the menu bar's
+/// Yardım menu from the inventory (Komut ara, Klavye kısayolları, KentOS CAD hakkında).
+fn help_button(items: Menu<Message>) -> Element<'static, Message> {
+    let menu = MenuButton::new(
+        container(kentos_ui::icon::icon(crate::icons::from_web(Some("help"))).size(16.0))
+            .padding([4, 5]),
+        move || items.clone(),
+    );
+    kentos_ui::widget::tip(
+        menu,
+        Tip::new("Yardım").body("Klavye kısayolları ve KentOS CAD hakkında."),
+        iced::widget::tooltip::Position::Bottom,
+    )
 }
 
 /// A theme colour as the drawing pipeline takes it.

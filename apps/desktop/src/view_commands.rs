@@ -142,6 +142,18 @@ mod tests {
         let _ = app.update(Message::Run(id));
     }
 
+    /// The ribbon's ? is the web's Yardım menu, from the inventory (docs/adr/0064).
+    #[test]
+    fn the_ribbons_help_menu_is_the_webs() {
+        assert_eq!(
+            crate::catalog::catalog().menu("help"),
+            [
+                vec!["view.commandSearch", "help.shortcuts"],
+                vec!["help.about"]
+            ]
+        );
+    }
+
     #[test]
     fn f4_closes_and_opens_both_side_panels() {
         let mut app = app_with_drawing();
@@ -232,7 +244,7 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["odak", "komut-ara", "koordinat-sistemi", "sunucu"] {
+            for name in ["odak", "komut-ara", "koordinat-sistemi", "sunucu", "yardim"] {
                 let mut app = crate::files_testing::app_with_drawing();
                 let _ = app
                     .settings
@@ -253,6 +265,21 @@ fn screens() {
                     }
                     "komut-ara" => app.update(Message::Run("view.commandSearch")),
                     "koordinat-sistemi" => app.update(Message::Run("crs.set")),
+                    // An unsaved change (the accent dot before the name), and Yardım open.
+                    "yardim" => {
+                        let _ = app.update(Message::Properties(crate::properties::Event::Color(
+                            vec![kentos_domain::Slot(1)],
+                            Some("#E5484D".into()),
+                        )));
+                        snapshot.settle(&mut app, App::view, &mut update);
+                        snapshot.input(
+                            &mut app,
+                            App::view,
+                            &mut update,
+                            kentos_ui::snapshot::Input::Click(iced::Point::new(width - HELP_X, 19.0)),
+                        );
+                        Task::none()
+                    }
                     _ => {
                         app.tab = "tools";
                         app.output("Sunucuya soruluyor: http://127.0.0.1:8787…");
@@ -290,3 +317,7 @@ fn screens() {
         }
     }
 }
+
+/// The ribbon's ? from the window's right edge (read off the pictures).
+#[cfg(test)]
+const HELP_X: f32 = 45.0;
