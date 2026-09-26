@@ -5938,6 +5938,7 @@
       "methods": [],
       "steps": 3,
       "description": "Uç uca bağlı çizgi parçaları çizer.",
+      "productCommand": "cad.line.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6241,6 +6242,7 @@
       "methods": [],
       "steps": 3,
       "description": "Tek parça, açık çoklu çizgi çizer; Y ile yay parçası (teğet, açı, merkez, yarıçap, ikinci nokta, doğrultu), D ile düz parça, U ile son doğrultuda uzunluk.",
+      "productCommand": "cad.polyline.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
