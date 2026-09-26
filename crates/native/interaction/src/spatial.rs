@@ -293,6 +293,21 @@ pub fn measures(entity: &Entity) -> (Option<f64>, Option<f64>) {
     (entity_area(&s), entity_length(&s))
 }
 
+/// An arc's sweep from `a0` to `a1`, counter-clockwise, radians (the core's
+/// `sweep`, the properties panel's Yay açısı).
+pub fn arc_sweep(a0: f64, a1: f64) -> f64 {
+    kentos_geometry_core::geom::arc::sweep(a0, a1)
+}
+
+/// Whether an ellipse object is whole rather than an elliptical arc (the
+/// core's `is_full_ellipse`).
+pub fn full_ellipse(e: &kentos_contracts::EllipseEntity) -> bool {
+    let v = |p: kentos_contracts::Vec2| Vec2::new(p.x, p.y);
+    kentos_geometry_core::geom::ellipse::is_full_ellipse(
+        &kentos_geometry_core::entity::ellipse_geom(v(e.c), v(e.major), e.ratio, e.t0, e.t1),
+    )
+}
+
 /// A dimension's layout as the shared core lays it out (`layout_dimension`):
 /// where its value is written, turned how, and the value; none for another
 /// object or a dimension that cannot be laid out.

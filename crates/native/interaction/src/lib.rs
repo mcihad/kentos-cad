@@ -111,10 +111,10 @@ pub mod trim;
 pub mod vertex;
 
 pub use clipboard::Clipboard;
-pub use format::Format;
+pub use format::{Format, fixed};
 pub use kentos_geometry_core::Vec2;
 /// Measures of a vertex list, from the shared core (the coordinate list's).
-pub use kentos_geometry_core::geometry::{bearing_grad, dist, path_length, signed_area};
+pub use kentos_geometry_core::geometry::{angle_deg, bearing_grad, dist, path_length, signed_area};
 pub use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
 pub use kentos_geometry_core::tools::point_input::Tracking;
 /// JavaScript's `trim()`, as typed input is read (the shared grammar).
@@ -124,9 +124,11 @@ pub use prompt::{Prompt, PromptOption, upper_tr};
 pub use select::SelectBox;
 pub use selection::Selection;
 pub use session::Session;
-pub use spatial::{LabelSpot, Spatial, dimension_layout, measures, vertices};
+pub use spatial::{
+    LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,
+};
 pub use tool::{Area, Label};
 pub use tool::{
-    Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape, Memory, Pointer,
-    Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange, snap_kinds,
+    Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape,
+    Memory, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange, snap_kinds,
 };

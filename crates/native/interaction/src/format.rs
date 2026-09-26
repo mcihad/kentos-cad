@@ -55,6 +55,25 @@ impl Format {
         fixed(metres, self.length_decimals)
     }
 
+    /// An area in the project's unit without the unit (the web's `area(m2, false)`).
+    pub fn area_bare(&self, square_metres: f64) -> String {
+        let d = self.area_decimals;
+        match self.area_unit {
+            AreaUnit::Donum => fixed(square_metres / 1000.0, d),
+            AreaUnit::Ha => fixed(square_metres / 10_000.0, d),
+            AreaUnit::M2 => fixed(square_metres, d),
+        }
+    }
+
+    /// The area unit's name (the web's `areaUnitLabel`): `m²`, `dönüm` or `ha`.
+    pub fn area_unit_label(&self) -> &'static str {
+        match self.area_unit {
+            AreaUnit::Donum => "dönüm",
+            AreaUnit::Ha => "ha",
+            AreaUnit::M2 => "m²",
+        }
+    }
+
     pub fn area(&self, square_metres: f64) -> String {
         let d = self.area_decimals;
         match self.area_unit {
@@ -95,6 +114,11 @@ impl Format {
         self.bearing((rad * 200.0) / std::f64::consts::PI)
     }
 
+    /// The same without its unit (the web's `angle(rad, false)`).
+    pub fn angle_bare(&self, rad: f64) -> String {
+        self.bearing_bare((rad * 200.0) / std::f64::consts::PI)
+    }
+
     /// A dimension's measured value as drawn (the web's `dimensionText`): its
     /// prefix (“R ”, “Ø ”), then a length without its unit or an angle in the
     /// project's angle unit.
@@ -116,7 +140,7 @@ impl Format {
 /// exact half rounds away from zero (Rust's formatting rounds it to even:
 /// 487012.0625 is `…063` on the web, `…062` in Rust), and a negative zero
 /// is written without its sign. Display only (CLAUDE.md §23.2).
-pub(crate) fn fixed(v: f64, d: usize) -> String {
+pub fn fixed(v: f64, d: usize) -> String {
     if v.is_nan() {
         return "NaN".to_owned();
     }

@@ -12,9 +12,7 @@
 //! disabled button) and its tooltip says why; typed or keyed, it says so in
 //! the command line.
 
-use std::borrow::Cow;
-
-use iced::widget::{Column, button, column, container, row, scrollable, stack, text};
+use iced::widget::{button, column, container, row, scrollable, stack, text};
 use iced::{Color, Element, Fill};
 
 use kentos_contracts::{LayerNode, LayerNodeType};
@@ -25,10 +23,10 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LinePrompt};
+use kentos_ui::widget::context_menu::{ContextMenu, MenuButton};
 use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon};
 use kentos_ui::widget::status_bar::{Readout, StatusBar};
 use kentos_ui::widget::table::Column as TreeColumn;
-use kentos_ui::widget::context_menu::{ContextMenu, MenuButton};
 use kentos_ui::widget::tree_view::{self, Node, Toggle, TreeView};
 use kentos_ui::widget::{
     CommandLine, Confirm, Dialog, DockSpace, EmptyState, Menu, Pane, ShortcutList, Tip, overlay,
@@ -42,7 +40,6 @@ use crate::catalog::{
 use crate::document::{Document, crs_name};
 use crate::marks::Marks;
 use crate::preview;
-use crate::selecting::Row as PropertyRow;
 use crate::viewport::mark_colors;
 
 impl App {
@@ -58,6 +55,11 @@ impl App {
                     (Panel::Layers, Some(doc)) => {
                         pane.actions(self.layers_actions(doc.layer_count()))
                     }
+                    // The header's meta: “#12”, “3 nesne” (the web's panel meta).
+                    (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
+                        Some(meta) => pane.actions(label::caption(meta)).scrollable(),
+                        None => pane.scrollable(),
+                    },
                     _ => pane.scrollable(),
                 }
             },
@@ -159,7 +161,11 @@ impl App {
                 .on_press(Message::Run("view.fullscreen"))
                 .padding([4, 5])
                 .style(style::button::flat),
-            if self.fullscreen { about.detail("Esc") } else { about },
+            if self.fullscreen {
+                about.detail("Esc")
+            } else {
+                about
+            },
             iced::widget::tooltip::Position::Bottom,
         )
     }
@@ -352,42 +358,17 @@ impl App {
                 ])
                 .virtualized(rows.len(), move |index| {
                     let row = &rows[index];
-                    (row.depth, self.layer_node(doc, row.node, row.parent_visible))
+                    (
+                        row.depth,
+                        self.layer_node(doc, row.node, row.parent_visible),
+                    )
                 })
                 .reveal(reveal)
                 .height(Fill)
                 .into()
             }
-            Panel::Properties => {
-                // The selection first, as the web's panel shows it (docs/adr/0029).
-                let borrowed = |rows: Vec<(&'static str, String)>| -> Vec<PropertyRow> {
-                    rows.into_iter()
-                        .map(|(k, v)| (Cow::Borrowed(k), v))
-                        .collect()
-                };
-                let rows = match (
-                    self.selection_rows(doc),
-                    self.selected_layer.as_deref().and_then(|id| doc.find(id)),
-                ) {
-                    (Some(rows), _) => rows,
-                    (None, Some(layer)) => borrowed(layer_rows(doc, layer)),
-                    (None, None) => borrowed(project_rows(doc)),
-                };
-                rows.into_iter()
-                    .fold(
-                        Column::new().spacing(6).padding(12),
-                        |column, (key, value)| {
-                            column.push(
-                                row![
-                                    label::caption(key).width(128),
-                                    label::body(value).width(Fill)
-                                ]
-                                .spacing(8),
-                            )
-                        },
-                    )
-                    .into()
-            }
+            // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
+            Panel::Properties => self.properties_view(doc),
         }
     }
 
@@ -502,34 +483,33 @@ impl App {
     /// The running command's step and options, as buttons (the web's
     /// CommandLine.setPrompt); the command line suggests the options too.
     pub(crate) fn line_prompt(&self) -> Option<LinePrompt<'_, Message>> {
-        self.session.is_running().then(|| {
-            let p = self.session.prompt();
-            // The notes after the step in brackets, as the web's command line reads them.
-            p.options.iter().fold(
-                LinePrompt::new(p.step_with_notes()).command(p.tool.unwrap_or("")),
-                |prompt, o| {
-                    // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).
-                    let name = match &o.value {
-                        Some(value) => format!("{}: {value}", o.label),
-                        None => o.label.to_owned(),
-                    };
-                    prompt.option(name, Message::PromptOption(o.key)).key(o.key)
-                },
-            )
-        })
-        // The one-shot snap waits for the next click; its × drops it (the web's stripParts).
-        .map(|prompt| match self.snap_once() {
-            Some(kind) => prompt
-                .option(
-                    format!(
-                        "Sonraki tık: {}",
-                        crate::drawing_menus::snap_label(kind)
-                    ),
-                    Message::DrawingMenu(crate::drawing_menus::Event::SnapOnce(None)),
+        self.session
+            .is_running()
+            .then(|| {
+                let p = self.session.prompt();
+                // The notes after the step in brackets, as the web's command line reads them.
+                p.options.iter().fold(
+                    LinePrompt::new(p.step_with_notes()).command(p.tool.unwrap_or("")),
+                    |prompt, o| {
+                        // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).
+                        let name = match &o.value {
+                            Some(value) => format!("{}: {value}", o.label),
+                            None => o.label.to_owned(),
+                        };
+                        prompt.option(name, Message::PromptOption(o.key)).key(o.key)
+                    },
                 )
-                .key("×"),
-            None => prompt,
-        })
+            })
+            // The one-shot snap waits for the next click; its × drops it (the web's stripParts).
+            .map(|prompt| match self.snap_once() {
+                Some(kind) => prompt
+                    .option(
+                        format!("Sonraki tık: {}", crate::drawing_menus::snap_label(kind)),
+                        Message::DrawingMenu(crate::drawing_menus::Event::SnapOnce(None)),
+                    )
+                    .key("×"),
+                None => prompt,
+            })
     }
 
     fn status_bar(&self) -> Element<'_, Message> {
@@ -880,116 +860,6 @@ fn line_command(command: &Command) -> LineCommand<'static> {
         .dimmed(command.standing != Standing::Ported)
 }
 
-fn project_rows(doc: &Document) -> Vec<(&'static str, String)> {
-    let s = doc.settings();
-    let crs = crs_name(s.srid).map_or(format!("EPSG:{}", s.srid), |name| {
-        format!("EPSG:{} · {name}", s.srid)
-    });
-    let area = match word(&s.area_unit).as_str() {
-        "m2" => "m²",
-        "donum" => "dönüm (1000 m²)",
-        "ha" => "hektar (10 000 m²)",
-        _ => "?",
-    };
-    let angle = match word(&s.angle_unit).as_str() {
-        "grad" => "grad",
-        "deg" => "derece",
-        _ => "?",
-    };
-    let workspace = match s.workspace.as_ref().map(word).as_deref() {
-        None | Some("hybrid") => "Hibrit",
-        Some("cad") => "CAD",
-        Some("gis") => "CBS",
-        Some(other) => return_other(other),
-    };
-    // A cloud project says where it is kept instead of a file (docs/adr/0041).
-    let kept = match doc.cloud_source() {
-        Some(c) => (
-            "Bulut",
-            match &c.revision {
-                Some(r) => format!(
-                    "{} · {} · revizyon {}",
-                    c.workspace,
-                    crate::cloud::words::storage_title(c.storage()),
-                    r.number
-                ),
-                None => format!(
-                    "{} · {}",
-                    c.workspace,
-                    crate::cloud::words::storage_title(c.storage())
-                ),
-            },
-        ),
-        None => (
-            "Dosya",
-            doc.path
-                .as_ref()
-                .map_or("kaydedilmedi".to_owned(), |p| p.display().to_string()),
-        ),
-    };
-    vec![
-        ("Proje", doc.name().to_owned()),
-        kept,
-        ("Koordinat sistemi", crs),
-        ("Pafta ölçeği", format!("1:{}", s.plot_scale)),
-        ("Uzunluk", format!("m · {} basamak", s.length_decimals)),
-        ("Alan", format!("{area} · {} basamak", s.area_decimals)),
-        ("Açı", angle.to_owned()),
-        ("Çalışma modu", workspace.to_owned()),
-        (
-            "Çizim yazı tipi",
-            s.drawing_font.as_ref().map_or("barlow".to_owned(), word),
-        ),
-        ("Nesne", doc.entity_count().to_string()),
-        ("Katman", doc.layer_count().to_string()),
-    ]
-}
-
-fn return_other(other: &str) -> &'static str {
-    match other {
-        "plan3d" => "3D Plan",
-        "disaster" => "Afet analizi",
-        _ => "?",
-    }
-}
-
-fn layer_rows(doc: &Document, layer: &LayerNode) -> Vec<(&'static str, String)> {
-    let yes = |b: bool| if b { "Evet" } else { "Hayır" }.to_owned();
-    let mut rows = vec![
-        ("Ad", layer.name.clone()),
-        ("Kimlik", layer.id.clone()),
-        (
-            "Tür",
-            match layer.kind {
-                LayerNodeType::Group => "Grup",
-                LayerNodeType::Layer => "Katman",
-            }
-            .to_owned(),
-        ),
-        ("Görünür", yes(layer.visible)),
-        ("Kilitli", yes(layer.locked)),
-        ("Nesne", doc.count_below(layer).to_string()),
-    ];
-    if layer.kind == LayerNodeType::Layer {
-        rows.push(("Renk", layer.style.color.clone()));
-        rows.push(("Çizgi türü", word(&layer.style.line_type)));
-        rows.push(("Çizgi kalınlığı", format!("{}", layer.style.line_weight)));
-        rows.push((
-            "Dolgu",
-            layer.style.fill.clone().unwrap_or_else(|| "yok".to_owned()),
-        ));
-    }
-    rows
-}
-
-/// An enum's value as written in the file (`donum`, `grad`, `dashed` …).
-fn word<T: serde::Serialize>(value: &T) -> String {
-    serde_json::to_value(value)
-        .ok()
-        .and_then(|v| v.as_str().map(str::to_owned))
-        .unwrap_or_default()
-}
-
 /// An object kind as the interface names it.
 pub(crate) fn kind_name(kind: &str) -> &'static str {
     match kind {
@@ -1040,7 +910,7 @@ fn thousands(value: f64) -> String {
 
 /// A theme colour as the drawing pipeline takes it.
 /// A drawing colour for the interface (the layer tree's swatch).
-fn rgba_color(c: Rgba8) -> Color {
+pub(crate) fn rgba_color(c: Rgba8) -> Color {
     let [r, g, b, a] = c.0;
     Color::from_rgba8(r, g, b, f32::from(a) / 255.0)
 }

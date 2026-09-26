@@ -181,7 +181,9 @@ impl App {
                 restyle(model, &id, "Çizgi tipi", |s| s.line_type = line_type);
             }
             Event::LineWeight(id, weight) => {
-                restyle(model, &id, "Çizgi kalınlığı", |s| s.line_weight = weight);
+                restyle(model, &id, "Çizgi kalınlığı", |s| {
+                    s.line_weight = weight
+                });
             }
             Event::RenameInput(text) => {
                 if let Some((_, name)) = &mut self.renaming {
@@ -224,12 +226,20 @@ impl App {
                 if node.visible { "Gizle" } else { "Göster" },
                 Message::LayerVisible(id.clone()),
             )
-            .icon(if node.visible { Icon::EyeOff } else { Icon::Eye })
+            .icon(if node.visible {
+                Icon::EyeOff
+            } else {
+                Icon::Eye
+            })
             .item(
                 if node.locked { "Kilidi aç" } else { "Kilitle" },
                 Message::LayerLocked(id.clone()),
             )
-            .icon(if node.locked { Icon::Unlock } else { Icon::Lock })
+            .icon(if node.locked {
+                Icon::Unlock
+            } else {
+                Icon::Lock
+            })
             .item("Yalnızca bunu göster", event(Event::Isolate(id.clone())))
             .item("Tüm katmanları göster", Message::Run("layer.showAll"))
             .separator()
@@ -237,15 +247,16 @@ impl App {
             .separator();
         if is_layer {
             let style = &node.style;
+            // One of each group, as the web's radio items.
             let types = LINE_TYPES.iter().fold(Menu::new(), |menu, (t, name)| {
-                menu.check(
+                menu.radio(
                     *name,
                     style.line_type == *t,
                     event(Event::LineType(id.clone(), *t)),
                 )
             });
             let weights = LINE_WEIGHTS.iter().fold(Menu::new(), |menu, w| {
-                menu.check(
+                menu.radio(
                     format!("{w:.2} mm"),
                     (style.line_weight - w).abs() < 1e-9,
                     event(Event::LineWeight(id.clone(), *w)),
@@ -278,29 +289,33 @@ impl App {
             .icon(Icon::Layers)
     }
 
-    /// The layer's colour menu from its swatch (the web's `colorItems`).
+    /// The layer's colour menu, from its swatch (the web's `colorItems`): the ink colours,
+    /// then the colours, each with its sample, the layer's chosen.
     pub(crate) fn layer_colors(&self, node: &LayerNode) -> Menu<Message> {
         let id = node.id.clone();
         let current = node.style.color.clone();
         COLORS.iter().fold(
             Menu::new()
-                .check(
+                .radio(
                     "Ana mürekkep",
                     current == "fg",
                     Message::Layer(Event::Color(id.clone(), "fg".into())),
                 )
-                .check(
+                .swatch(self.drawing_color("fg"))
+                .radio(
                     "İkincil mürekkep",
                     current == "fg-dim",
                     Message::Layer(Event::Color(id.clone(), "fg-dim".into())),
                 )
+                .swatch(self.drawing_color("fg-dim"))
                 .separator(),
             |menu, (name, value)| {
-                menu.check(
+                menu.radio(
                     *name,
                     current.eq_ignore_ascii_case(value),
                     Message::Layer(Event::Color(id.clone(), (*value).into())),
                 )
+                .swatch(self.drawing_color(value))
             },
         )
     }
@@ -455,8 +470,15 @@ mod tests {
         let _ = app.update(Message::Run("view.zoomIn"));
         assert!(app.layer_row_selected(&layer));
         let model = &app.document.as_ref().expect("open").model;
-        assert_eq!(model.layers().active(), active, "new objects still go there");
-        assert!(model.layers().get(&group).expect("group").expanded, "opened to show it");
+        assert_eq!(
+            model.layers().active(),
+            active,
+            "new objects still go there"
+        );
+        assert!(
+            model.layers().get(&group).expect("group").expanded,
+            "opened to show it"
+        );
         assert_eq!(model.revision(), revision, "not an edit");
 
         // A click in the tree chooses the rows, until the selection changes.
@@ -480,7 +502,11 @@ mod tests {
         };
         press(&mut app, "cizim");
         let model = &app.document.as_ref().expect("open").model;
-        assert_eq!(model.layers().active(), "parsel", "one click only chooses the row");
+        assert_eq!(
+            model.layers().active(),
+            "parsel",
+            "one click only chooses the row"
+        );
         press(&mut app, "cizim");
         let model = &app.document.as_ref().expect("open").model;
         assert_eq!(model.layers().active(), "cizim");
@@ -489,11 +515,17 @@ mod tests {
         press(&mut app, "layer-g");
         press(&mut app, "layer-g");
         let model = &app.document.as_ref().expect("open").model;
-        assert_eq!(model.layers().get("layer-g").expect("group").expanded, !open);
+        assert_eq!(
+            model.layers().get("layer-g").expect("group").expanded,
+            !open
+        );
         // A third press starts over: one click.
         press(&mut app, "layer-g");
         let model = &app.document.as_ref().expect("open").model;
-        assert_eq!(model.layers().get("layer-g").expect("group").expanded, !open);
+        assert_eq!(
+            model.layers().get("layer-g").expect("group").expanded,
+            !open
+        );
     }
 
     #[test]
@@ -517,7 +549,10 @@ mod tests {
         assert_eq!(last_said(&app), "Kadastro: 4 nesne seçildi.");
         // Colour, line type and weight: one undo step each.
         layer(&mut app, Event::Color("bina".into(), "#4F8EF7".into()));
-        layer(&mut app, Event::LineType("bina".into(), kentos_contracts::LineType::Dashed));
+        layer(
+            &mut app,
+            Event::LineType("bina".into(), kentos_contracts::LineType::Dashed),
+        );
         layer(&mut app, Event::LineWeight("bina".into(), 0.35));
         let model = &app.document.as_ref().expect("open").model;
         let style = &model.layers().get("bina").expect("layer").style;
@@ -526,7 +561,10 @@ mod tests {
         assert_eq!(style.line_weight, 0.35);
         let _ = app.update(Message::Run("edit.undo"));
         let model = &app.document.as_ref().expect("open").model;
-        assert_eq!(model.layers().get("bina").expect("layer").style.line_weight, 0.25);
+        assert_eq!(
+            model.layers().get("bina").expect("layer").style.line_weight,
+            0.25
+        );
         // Yeniden adlandır: typed, then Enter; Esc leaves the name.
         layer(&mut app, Event::Rename("bina".into()));
         layer(&mut app, Event::RenameInput("Yapı".into()));
@@ -632,11 +670,16 @@ fn screens() {
                 let swatch = iced::Point::new(panel + 21.0, 261.0);
                 use kentos_ui::snapshot::Input;
                 match name {
-                    "menu" => snapshot.input(&mut app, App::view, &mut update, Input::RightClick(bina)),
-                    "renk" => snapshot.input(&mut app, App::view, &mut update, Input::Click(swatch)),
+                    "menu" => {
+                        snapshot.input(&mut app, App::view, &mut update, Input::RightClick(bina))
+                    }
+                    "renk" => {
+                        snapshot.input(&mut app, App::view, &mut update, Input::Click(swatch))
+                    }
                     "ad" => {
                         let _ = app.update(Message::Layer(Event::Rename("bina".into())));
-                        let _ = app.update(Message::Layer(Event::RenameInput("Bina ve yapılar".into())));
+                        let _ = app
+                            .update(Message::Layer(Event::RenameInput("Bina ve yapılar".into())));
                     }
                     _ => {}
                 }
