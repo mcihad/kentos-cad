@@ -274,6 +274,30 @@ try {
   const edited = await b.eval(`window.kentos.doc.get(${tid}).text`);
   check('inline edit commits the new text', edited === 'Düzenlendi', edited);
 
+  // Ctrl+Z while the dimension tool holds a picked circle drops that pick (newest first), not the drawing's last step.
+  {
+    await b.key('c');
+    await b.click(...(await at(120, 40)));
+    await b.click(...(await at(128, 40)));
+    await b.key('Escape');
+    const size = await b.eval('window.kentos.doc.size');
+    await b.key('d');
+    await b.key('r');
+    await b.move(...(await at(128, 40)));
+    await b.click(...(await at(128, 40)));
+    const picked = await b.eval('window.kentos.tools.prompt.value');
+    await b.key('z', { ctrl: true });
+    const back = await b.eval('window.kentos.tools.prompt.value');
+    const after = await b.eval('window.kentos.doc.size');
+    await b.key('h');
+    await b.key('Escape');
+    check(
+      'Ctrl+Z in the dimension tool drops the picked circle, not the drawing’s last step',
+      picked.includes('doğrultusunu') && back.includes('yarıçapı ölçülecek') && after === size,
+      JSON.stringify({ picked, back, size, after }),
+    );
+  }
+
   // Editing tools on exact, typed geometry (a second work area further east).
   const X = E + 200;
   const focusCanvas = () => b.eval('window.kentos.view.focus()');
