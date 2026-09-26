@@ -9765,6 +9765,685 @@
           }
         }
       ]
+    },
+    {
+      "id": "cad.entities.edit",
+      "version": 1,
+      "title": "Nesneleri düzenle",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt ve Köşe ekle/sil araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "EditOperation": {
+            "description": "The modify tool an edit comes from; it names the undo step.",
+            "oneOf": [
+              {
+                "const": "offset",
+                "description": "Ötele: a parallel copy.",
+                "type": "string"
+              },
+              {
+                "const": "trim",
+                "description": "Buda: the part between two boundaries goes.",
+                "type": "string"
+              },
+              {
+                "const": "extend",
+                "description": "Uzat: an end grows to a boundary.",
+                "type": "string"
+              },
+              {
+                "const": "fillet",
+                "description": "Köşe yuvarla: a corner rounded by an arc.",
+                "type": "string"
+              },
+              {
+                "const": "chamfer",
+                "description": "Pah: a corner cut by a line.",
+                "type": "string"
+              },
+              {
+                "const": "break",
+                "description": "Kır: the part between two points goes, or the object splits at one.",
+                "type": "string"
+              },
+              {
+                "const": "join",
+                "description": "Birleştir: chains of objects meeting end to end become one each.",
+                "type": "string"
+              },
+              {
+                "const": "explode",
+                "description": "Patlat: an object comes apart into simple ones.",
+                "type": "string"
+              },
+              {
+                "const": "lengthen",
+                "description": "Uzat-kısalt: a new total length, changed at one end.",
+                "type": "string"
+              },
+              {
+                "const": "vertexAdd",
+                "description": "Köşe ekle: a vertex added on an edge.",
+                "type": "string"
+              },
+              {
+                "const": "vertexRemove",
+                "description": "Köşe sil: a vertex removed.",
+                "type": "string"
+              },
+              {
+                "const": "stretch",
+                "description": "Esnet: the vertices in a window move, the rest stay.",
+                "type": "string"
+              }
+            ]
+          },
+          "EntityEdit": {
+            "description": "One change of an edit. The objects are named by their persistent ids\n(docs/adr/0014).",
+            "oneOf": [
+              {
+                "description": "The object takes a new geometry and keeps everything else: its slot,\npersistent id, layer, colour, attributes, label and symbol (an end\nextended, a corner rounded, a vertex added).",
+                "properties": {
+                  "geometry": {
+                    "$ref": "#/$defs/EntityGeometry"
+                  },
+                  "kind": {
+                    "const": "update",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid",
+                  "geometry"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The object becomes another in its place: the new geometry in its slot,\nwith its persistent id, layer and colour; its attributes and label only\nwith `keepData`; not its symbol (the part a trim leaves, the first part\nof a break, a chain joined into its first object).",
+                "properties": {
+                  "geometry": {
+                    "$ref": "#/$defs/EntityGeometry"
+                  },
+                  "keepData": {
+                    "description": "True: the attributes and the label carry over.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "replace",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid",
+                  "geometry"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A new object made from `from`: its layer and colour; its attributes and\nlabel only with `keepData` (an offset copy, a piece of a break or an\nexplode, a fillet's arc).",
+                "properties": {
+                  "from": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  },
+                  "geometry": {
+                    "$ref": "#/$defs/EntityGeometry"
+                  },
+                  "keepData": {
+                    "description": "True: the attributes and the label carry over.",
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "add",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "from",
+                  "geometry"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The object is deleted.",
+                "properties": {
+                  "kind": {
+                    "const": "remove",
+                    "type": "string"
+                  },
+                  "uid": {
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uid"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "EntityGeometry": {
+            "description": "A drawing object's geometry alone: its kind and the fields that place and\nshape it, without the fields every object has (layer, colour, attributes,\nlabel, symbol). Coordinates are x east (Y), y north (X), in the project's\nunits (m), float64; angles in radians unless said otherwise. Dimensions\nand hatches are not edited through this command in v1.",
+            "oneOf": [
+              {
+                "properties": {
+                  "kind": {
+                    "const": "point",
+                    "type": "string"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "z": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "p"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "line",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the\none at vertex i bending the edge to vertex i + 1.",
+                "properties": {
+                  "bulges": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "polyline",
+                    "type": "string"
+                  },
+                  "pts": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "pts"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A closed area: its ring and, when it has any, its holes.",
+                "properties": {
+                  "bulges": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "holes": {
+                    "items": {
+                      "$ref": "#/$defs/RingGeometry"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "polygon",
+                    "type": "string"
+                  },
+                  "pts": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "pts"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "c": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "circle",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "r"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Counter-clockwise from `a0` to `a1`.",
+                "properties": {
+                  "a0": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "a1": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "c": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "arc",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "r",
+                  "a0",
+                  "a1"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Centre, major axis vector, minor/major ratio, parameters `t0` → `t1`.",
+                "properties": {
+                  "c": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "ellipse",
+                    "type": "string"
+                  },
+                  "major": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "ratio": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "t0": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "t1": {
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "major",
+                  "ratio",
+                  "t0",
+                  "t1"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "closed": {
+                    "type": "boolean"
+                  },
+                  "kind": {
+                    "const": "spline",
+                    "type": "string"
+                  },
+                  "pts": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "pts",
+                  "closed"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A construction line through `p` along the unit direction `dir`.",
+                "properties": {
+                  "dir": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "xline",
+                    "type": "string"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "p",
+                  "dir"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A ray from `p` along the unit direction `dir`.",
+                "properties": {
+                  "dir": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "ray",
+                    "type": "string"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "p",
+                  "dir"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Text at `p`; `height` in metres, `rotation` in degrees counter-clockwise from east.",
+                "properties": {
+                  "height": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "rotation": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "p",
+                  "text",
+                  "height",
+                  "rotation"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "RingGeometry": {
+            "description": "A closed ring in vertex + bulge form (a polygon hole).",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.entities.edit` v1: changes to objects named by their\npersistent ids, written as one undo step named after `operation`. The\nmodify tools give the objects they picked and the geometry the shared\ncore computed (TODOS.md CMD-07); the command reads no selection, layer or\nview.\n\nThe changes are made in their order, against the document as it was\nbefore them: an `add` may come from an object the same edit replaces or\ndeletes. An object is changed (`update`, `replace`, `remove`) by one\nchange at most.\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and nothing is made from it: when one is named, nothing is\nwritten and the answer is `layer_locked`. The pieces of a split object\nbelong together, so an edit is written whole or not at all.\n\nRefusals (`CommandError.code`), checked in this order: `no_changes`,\n`invalid_uid` (each change's id in order), `not_finite`,\n`too_few_points`, `too_few_corners`, `invalid_radius` (each geometry in\norder), `invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `repeated_entity` (an object\nchanged twice), `layer_locked`; on the desktop also `slots_exhausted`.",
+        "properties": {
+          "changes": {
+            "description": "What changes, at least one.",
+            "items": {
+              "$ref": "#/$defs/EntityEdit"
+            },
+            "type": "array"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/EditOperation",
+            "description": "The modify tool the edit comes from; it names the undo step: Ötele,\nBuda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,\nKöşe ekle, Köşe sil, Esnet."
+          }
+        },
+        "required": [
+          "operation",
+          "changes"
+        ],
+        "title": "EntitiesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.edit` v1: what changed, what was made and what went.",
+        "properties": {
+          "changed": {
+            "description": "The objects updated or replaced in place, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "created": {
+            "description": "The new objects' persistent ids, in the order of their `add`s.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "The objects deleted, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text. Inside an\nopen transaction or group the write joins it, and the revision\nchanges when that ends.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "created",
+          "removed",
+          "revision"
+        ],
+        "title": "EntitiesEdited",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Budama: çizginin kalan iki parçası; ilki çizginin kendisidir",
+          "input": {
+            "changes": [
+              {
+                "geometry": {
+                  "a": {
+                    "x": 423500.0,
+                    "y": 4512300.0
+                  },
+                  "b": {
+                    "x": 423508.0,
+                    "y": 4512300.0
+                  },
+                  "kind": "line"
+                },
+                "kind": "replace",
+                "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              },
+              {
+                "from": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                "geometry": {
+                  "a": {
+                    "x": 423512.0,
+                    "y": 4512300.0
+                  },
+                  "b": {
+                    "x": 423520.0,
+                    "y": 4512300.0
+                  },
+                  "kind": "line"
+                },
+                "kind": "add"
+              }
+            ],
+            "operation": "trim"
+          },
+          "output": {
+            "changed": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ],
+            "created": [
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+            ],
+            "removed": [],
+            "revision": "38"
+          }
+        },
+        {
+          "title": "Uzatma: çizginin ucu sınıra kadar; yalnız planlandığı sürümde yazılır",
+          "input": {
+            "changes": [
+              {
+                "geometry": {
+                  "a": {
+                    "x": 423500.0,
+                    "y": 4512300.0
+                  },
+                  "b": {
+                    "x": 423530.0,
+                    "y": 4512300.0
+                  },
+                  "kind": "line"
+                },
+                "kind": "update",
+                "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+              }
+            ],
+            "expectedRevision": "37",
+            "operation": "extend"
+          }
+        }
+      ]
     }
   ]
 }

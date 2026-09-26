@@ -11,14 +11,15 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use kentos_domain::contracts::{
-    ArcCreate, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_DELETE, CAD_ENTITIES_TRANSFORM,
-    CAD_LINE_CREATE, CAD_POINT_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, CircleCreate,
-    DocumentSnapshotV1, EntitiesDelete, EntitiesTransform, LineCreate, PointCreate, PolygonCreate,
+    ArcCreate, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_DELETE, CAD_ENTITIES_EDIT,
+    CAD_ENTITIES_TRANSFORM, CAD_LINE_CREATE, CAD_POINT_CREATE, CAD_POLYGON_CREATE,
+    CAD_POLYLINE_CREATE, CircleCreate, DocumentSnapshotV1, EntitiesDelete, EntitiesEdit,
+    EntitiesTransform, EntityEdit, EntityGeometry, LineCreate, PointCreate, PolygonCreate,
     PolylineCreate, Transform,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, arc, circle, delete, line, point, polygon, polyline,
+    DESKTOP_COMMANDS, ExecutionContext, arc, circle, delete, edit, line, point, polygon, polyline,
     transform,
 };
 use serde_json::{Value, json};
@@ -285,6 +286,48 @@ impl Input for EntitiesTransform {
     }
 }
 
+impl Input for EntitiesEdit {
+    /// `changes[0].geometry.a.x`, `changes[1].geometry.r`, `changes[0].geometry.pts[1].y`,
+    /// `changes[2].geometry.bulges[0]` …
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let (i, rest) = path.strip_prefix("changes[")?.split_once("].geometry.")?;
+        let geometry = match self.changes.get_mut(i.parse::<usize>().ok()?)? {
+            EntityEdit::Update { geometry, .. }
+            | EntityEdit::Replace { geometry, .. }
+            | EntityEdit::Add { geometry, .. } => geometry,
+            EntityEdit::Remove { .. } => return None,
+        };
+        match geometry {
+            EntityGeometry::Point { p, z } => match rest {
+                "z" => z.as_mut(),
+                _ => coordinate(p, "p", rest),
+            },
+            EntityGeometry::Line { a, b } => {
+                coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest))
+            }
+            EntityGeometry::Polyline { pts, bulges }
+            | EntityGeometry::Polygon { pts, bulges, .. } => {
+                if rest.starts_with("pts[") {
+                    point_number(pts, rest)
+                } else {
+                    bulge_number(bulges, rest)
+                }
+            }
+            EntityGeometry::Circle { c, r } => match rest {
+                "r" => Some(r),
+                _ => coordinate(c, "c", rest),
+            },
+            EntityGeometry::Arc { c, r, a0, a1 } => match rest {
+                "r" => Some(r),
+                "a0" => Some(a0),
+                "a1" => Some(a1),
+                _ => coordinate(c, "c", rest),
+            },
+            _ => None,
+        }
+    }
+}
+
 /// Puts NaN or ±∞ into the typed input at the paths the step's `nonFinite` names.
 fn put_non_finite(input: &mut impl Input, step: &Value, at: &str) -> Outcome<()> {
     let Some(table) = step.get("nonFinite") else {
@@ -344,6 +387,7 @@ fn run_op(
         CAD_CIRCLE_CREATE => run!(circle, CircleCreate),
         CAD_ARC_CREATE => run!(arc, ArcCreate),
         CAD_ENTITIES_TRANSFORM => run!(transform, EntitiesTransform),
+        CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))

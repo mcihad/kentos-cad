@@ -35,6 +35,7 @@ pub mod circle;
 pub mod codes;
 mod context;
 pub mod delete;
+pub mod edit;
 pub mod geometry;
 pub mod line;
 pub mod point;
@@ -47,15 +48,15 @@ pub use kentos_contracts::{CommandError, CommandResult, CommandWarning};
 
 use kentos_contracts::{
     CAD_ARC_CREATE, CAD_ARC_CREATE_VERSION, CAD_CIRCLE_CREATE, CAD_CIRCLE_CREATE_VERSION,
-    CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION, CAD_ENTITIES_TRANSFORM,
-    CAD_ENTITIES_TRANSFORM_VERSION, CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE,
-    CAD_POINT_CREATE_VERSION, CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE,
-    CAD_POLYLINE_CREATE_VERSION,
+    CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION, CAD_ENTITIES_EDIT, CAD_ENTITIES_EDIT_VERSION,
+    CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION, CAD_LINE_CREATE,
+    CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE, CAD_POINT_CREATE_VERSION, CAD_POLYGON_CREATE,
+    CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION,
 };
 
 /// The product commands the desktop runs, by name and version (docs/adr/0013).
 /// Each has its module here ([`polygon`], [`line`], [`polyline`], [`delete`],
-/// [`point`], [`circle`], [`arc`], [`transform`]); `tests/catalog.rs` keeps the
+/// [`point`], [`circle`], [`arc`], [`transform`], [`edit`]); `tests/catalog.rs` keeps the
 /// list equal to the catalog's commands marked `desktop`, as the server's
 /// `SERVER_COMMANDS` is kept to those marked `server`.
 pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
@@ -67,4 +68,5 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (CAD_CIRCLE_CREATE, CAD_CIRCLE_CREATE_VERSION),
     (CAD_ARC_CREATE, CAD_ARC_CREATE_VERSION),
     (CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION),
+    (CAD_ENTITIES_EDIT, CAD_ENTITIES_EDIT_VERSION),
 ];

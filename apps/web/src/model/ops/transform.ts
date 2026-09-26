@@ -24,7 +24,7 @@ export const translateEntity = entityOp<<E extends Entity>(e: E, dx: number, dy:
 export const transformEntities = entityOp<<E extends Entity>(list: readonly E[], ms: readonly Affine[]) => E[]>('transformEntities');
 
 /** A kind's geometry fields, as the core's JSON names them (geometry-core entity.rs `Shape`). */
-const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
+export const SHAPE_FIELDS: Record<EntityKind, readonly string[]> = {
   point: ['p', 'z'],
   line: ['a', 'b'],
   polyline: ['pts', 'bulges', 'holes'],

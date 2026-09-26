@@ -157,11 +157,12 @@ pub fn catalog() -> CommandCatalog {
     use crate::{
         ArcCreate, ArcCreated, CAD_ARC_CREATE, CAD_ARC_CREATE_VERSION, CAD_CIRCLE_CREATE,
         CAD_CIRCLE_CREATE_VERSION, CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION,
-        CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION, CAD_LINE_CREATE,
-        CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE, CAD_POINT_CREATE_VERSION, CAD_POLYGON_CREATE,
-        CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION, CircleCreate,
-        CircleCreated, CommitResult, EntitiesDelete, EntitiesDeleted, EntitiesTransform,
-        EntitiesTransformed, LineCreate, LineCreated, PROJECT_ACCESS_REVOKE,
+        CAD_ENTITIES_EDIT, CAD_ENTITIES_EDIT_VERSION, CAD_ENTITIES_TRANSFORM,
+        CAD_ENTITIES_TRANSFORM_VERSION, CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE,
+        CAD_POINT_CREATE_VERSION, CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION,
+        CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION, CircleCreate, CircleCreated,
+        CommitResult, EntitiesDelete, EntitiesDeleted, EntitiesEdit, EntitiesEdited,
+        EntitiesTransform, EntitiesTransformed, LineCreate, LineCreated, PROJECT_ACCESS_REVOKE,
         PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_SHARE,
         PROJECT_SHARE_VERSION, PointCreate, PointCreated, PolygonCreate, PolygonCreated,
         PolylineCreate, PolylineCreated, ProjectAccessChange, ProjectAccessRevoke, ProjectChanges,
@@ -1135,6 +1136,82 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // The edge, corner and object modify tools' command (docs/adr/0047), held together
+        // by fixtures/commands/v1/cad.entities.edit.json.
+        CommandDescriptor {
+            id: CAD_ENTITIES_EDIT.into(),
+            version: CAD_ENTITIES_EDIT_VERSION,
+            title: "Nesneleri düzenle".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. \
+                      Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt ve Köşe ekle/sil araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. \
+                      update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; \
+                      add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. \
+                      Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<EntitiesEdit>(),
+            output: schema::<EntitiesEdited>(),
+            examples: vec![
+                CommandExample {
+                    title: "Budama: çizginin kalan iki parçası; ilki çizginin kendisidir".into(),
+                    input: json!({
+                        "operation": "trim",
+                        "changes": [
+                            {
+                                "kind": "replace",
+                                "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                                "geometry": {
+                                    "kind": "line",
+                                    "a": { "x": 423500.0, "y": 4512300.0 },
+                                    "b": { "x": 423508.0, "y": 4512300.0 }
+                                }
+                            },
+                            {
+                                "kind": "add",
+                                "from": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                                "geometry": {
+                                    "kind": "line",
+                                    "a": { "x": 423512.0, "y": 4512300.0 },
+                                    "b": { "x": 423520.0, "y": 4512300.0 }
+                                }
+                            }
+                        ]
+                    }),
+                    output: Some(json!({
+                        "changed": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "created": ["01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"],
+                        "removed": [],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Uzatma: çizginin ucu sınıra kadar; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "operation": "extend",
+                        "changes": [{
+                            "kind": "update",
+                            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "geometry": {
+                                "kind": "line",
+                                "a": { "x": 423500.0, "y": 4512300.0 },
+                                "b": { "x": 423530.0, "y": 4512300.0 }
+                            }
+                        }],
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -1280,6 +1357,9 @@ mod tests {
                         serde_json::from_value::<crate::EntitiesTransform>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_ENTITIES_EDIT => {
+                        serde_json::from_value::<crate::EntitiesEdit>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1311,6 +1391,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_TRANSFORM => {
                             serde_json::from_value::<crate::EntitiesTransformed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_EDIT => {
+                            serde_json::from_value::<crate::EntitiesEdited>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

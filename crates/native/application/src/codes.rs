@@ -31,3 +31,7 @@ pub const LAYER_HIDDEN: &str = "layer_hidden";
 pub const INVALID_FACTOR: &str = "invalid_factor";
 /// A mirror axis whose two points give it no direction (`cad.entities.transform`).
 pub const INVALID_AXIS: &str = "invalid_axis";
+/// No change given (`cad.entities.edit`).
+pub const NO_CHANGES: &str = "no_changes";
+/// One object changed by two changes of the same edit (`cad.entities.edit`).
+pub const REPEATED_ENTITY: &str = "repeated_entity";
