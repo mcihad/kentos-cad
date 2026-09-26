@@ -100,7 +100,7 @@ fn the_sample_draws_its_visible_layers_bottom_first_in_their_colours() {
 }
 
 #[test]
-fn showing_the_hidden_layer_draws_its_objects_and_counts_what_is_not_drawn_yet() {
+fn showing_the_hidden_layer_draws_its_objects_its_dimension_and_its_construction_lines() {
     let mut doc = sample();
     find(&mut doc.layers, "cizim").expect("the layer").visible = true;
     let fixed = scene::build_fixed(&doc, &palette(), origin(&doc));
@@ -120,11 +120,48 @@ fn showing_the_hidden_layer_draws_its_objects_and_counts_what_is_not_drawn_yet()
     );
     // Bulged polyline, ellipse and spline are curves.
     assert!(curves.layers[0].segments.len() > 3);
-    let undrawn: Vec<(&str, usize)> = fixed.not_drawn.iter().map(|(k, v)| (*k, *v)).collect();
-    assert_eq!(
-        undrawn,
-        [("dimension", 1), ("ray", 1), ("text", 1), ("xline", 1)]
+    // The dimension is its layout's lines; text is the host's, over the scene.
+    let without: Vec<kentos_contracts::Entity> = doc
+        .entities
+        .iter()
+        .filter(|e| e.kind() != "dimension")
+        .cloned()
+        .collect();
+    let no_dimension = kentos_contracts::DocumentSnapshotV1 {
+        entities: without,
+        ..doc.clone()
+    };
+    let plain = scene::build_fixed(&no_dimension, &palette(), origin(&doc));
+    assert!(
+        fixed.layers[0].segments.len() >= plain.layers[0].segments.len() + 3,
+        "extension lines, the dimension line, its arrows"
     );
+    assert!(fixed.not_drawn.is_empty(), "{:?}", fixed.not_drawn);
+    // The infinite line and the ray, clipped to a box around the drawing.
+    let b = scene::extents(&doc).expect("objects");
+    let around = kentos_render_wgpu::Bounds {
+        min_x: b.min_x - 100.0,
+        min_y: b.min_y - 100.0,
+        max_x: b.max_x + 100.0,
+        max_y: b.max_y + 100.0,
+    };
+    let construction = scene::build_construction(&doc, &palette(), origin(&doc), &around);
+    assert_eq!(
+        construction.layers.len(),
+        3,
+        "the same layers as the other parts"
+    );
+    let lines = &construction.layers[0].segments;
+    assert!(lines.end > lines.start, "both drawn inside the box");
+    // A box they do not cross draws nothing.
+    let far = kentos_render_wgpu::Bounds {
+        min_x: b.max_x + 1.0e6,
+        min_y: b.max_y + 1.0e6,
+        max_x: b.max_x + 1.0e6 + 1.0,
+        max_y: b.max_y + 1.0e6 + 1.0,
+    };
+    let nothing = scene::build_construction(&doc, &palette(), origin(&doc), &far);
+    assert!(nothing.segments.len() <= construction.segments.len());
 }
 
 #[test]
@@ -430,7 +467,13 @@ fn a_highlight_draws_after_the_scene_in_one_colour() {
         mark_shape: kentos_render_wgpu::layout::marker_shape::RING,
     };
     let all: Vec<&Entity> = doc.entities.iter().collect();
-    let part = scene::build_highlight(all.iter().copied(), &style, o, 0.05, below);
+    let clip = kentos_render_wgpu::Bounds {
+        min_x: -1e6,
+        min_y: -1e6,
+        max_x: 1e6,
+        max_y: 1e6,
+    };
+    let part = scene::build_highlight(all.iter().copied(), &style, o, 0.05, below, &clip);
     assert_eq!(part.layers.len(), below + 1, "one layer past the scene's");
     assert!(
         part.layers[..below]
@@ -462,13 +505,14 @@ fn a_highlight_draws_after_the_scene_in_one_colour() {
         o,
         0.05,
         below,
+        &clip,
     );
     assert!(
         hover.fills.is_empty(),
         "the hovered object is outlined only"
     );
     assert!(
-        scene::build_highlight(std::iter::empty(), &style, o, 0.05, below)
+        scene::build_highlight(std::iter::empty(), &style, o, 0.05, below, &clip)
             .segments
             .is_empty()
     );

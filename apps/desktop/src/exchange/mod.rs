@@ -24,6 +24,8 @@ mod gis_tests;
 mod tests;
 pub(crate) mod words;
 
+pub(crate) use dxf_export::dimension_text;
+
 use std::path::PathBuf;
 use std::sync::Arc;
 

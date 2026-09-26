@@ -17,7 +17,7 @@ use std::sync::Arc;
 use kentos_domain::Slot;
 use kentos_interaction::Selection;
 use kentos_render_wgpu::scene::{self, Highlight};
-use kentos_render_wgpu::{Rgba8, ScenePart};
+use kentos_render_wgpu::{Bounds, Rgba8, ScenePart};
 
 use super::{Viewport, changes};
 use crate::document::Document;
@@ -44,6 +44,8 @@ struct HighlightKey {
     below: usize,
     /// The curves' tolerance (its bits): curves are highlighted as finely as drawn.
     tolerance: u64,
+    /// The construction lines' box (its bits): they are highlighted as clipped.
+    clip: [u64; 4],
 }
 
 /// The selection's fill of closed areas, and the hovered object's alpha (the web's).
@@ -62,6 +64,7 @@ impl Viewport {
         accent: Rgba8,
         fixed: &ScenePart,
         curves: &ScenePart,
+        clip: &Bounds,
     ) -> (Arc<ScenePart>, Arc<ScenePart>) {
         let key = HighlightKey {
             generation: self.generation,
@@ -71,6 +74,7 @@ impl Viewport {
             accent,
             below: fixed.layers.len(),
             tolerance: curves.tolerance.to_bits(),
+            clip: [clip.min_x, clip.min_y, clip.max_x, clip.max_y].map(f64::to_bits),
         };
         let ring = kentos_render_wgpu::layout::marker_shape::RING;
         let build = |ids: &mut dyn Iterator<Item = Slot>, style: Highlight| {
@@ -81,6 +85,7 @@ impl Viewport {
                 fixed.origin,
                 curves.tolerance,
                 key.below,
+                clip,
             ))
         };
         let mut cache = self.highlight.borrow_mut();
@@ -154,22 +159,22 @@ mod tests {
         let viewport = Viewport::new();
         let palette = palette(Mode::Dark);
         let settings = RenderSettings::new(palette.background);
-        let (_, fixed, curves) = viewport.scene(&doc, Mode::Dark, &palette, &settings);
+        let (_, fixed, curves, _, clip) = viewport.scene(&doc, Mode::Dark, &palette, &settings);
         let accent = Rgba8::rgb(0x4c, 0x9b, 0xe8);
         let mut selection = Selection::new();
         let ids: Vec<Slot> = doc.model.entities().map(|e| Slot(e.base().id)).collect();
         selection.set(ids.iter().copied().take(ids.len() - 1));
-        let (sel, hover) = viewport.highlights(&doc, &selection, accent, &fixed, &curves);
+        let (sel, hover) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
         assert!(!sel.segments.is_empty() && hover.segments.is_empty());
         selection.set_hover(ids.last().copied());
-        let (sel2, hover2) = viewport.highlights(&doc, &selection, accent, &fixed, &curves);
+        let (sel2, hover2) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
         assert_eq!(sel2.id, sel.id, "the selection's part is kept");
         assert_ne!(hover2.id, hover.id);
-        let (sel3, hover3) = viewport.highlights(&doc, &selection, accent, &fixed, &curves);
+        let (sel3, hover3) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
         assert_eq!((sel3.id, hover3.id), (sel.id, hover2.id), "nothing changed");
         // A selected object is not hovered over its own highlight.
         selection.set_hover(ids.first().copied());
-        let (_, hover4) = viewport.highlights(&doc, &selection, accent, &fixed, &curves);
+        let (_, hover4) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
         assert!(hover4.segments.is_empty() && hover4.fills.is_empty());
         // Its colour and layer: after every layer of the scene.
         assert!(sel.segments.iter().all(|s| s.color == accent.0));
@@ -266,16 +271,16 @@ mod tests {
             let palette = palette(Mode::Dark);
             let settings = RenderSettings::new(palette.background);
             let t = Instant::now();
-            let (_, fixed, curves) = viewport.scene(&doc, Mode::Dark, &palette, &settings);
+            let (_, fixed, curves, _, clip) = viewport.scene(&doc, Mode::Dark, &palette, &settings);
             let scene_time = t.elapsed();
             let mut selection = Selection::new();
             selection.set(doc.model.entities().map(|e| Slot(e.base().id)));
             let accent = Rgba8::rgb(0x4c, 0x9b, 0xe8);
             let t = Instant::now();
-            let (part, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves);
+            let (part, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
             let part_time = t.elapsed();
             let t = Instant::now();
-            let _ = viewport.highlights(&doc, &selection, accent, &fixed, &curves);
+            let _ = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip);
             let cached = t.elapsed();
 
             // The same highlight on Iced's canvas: every frame the view moves.

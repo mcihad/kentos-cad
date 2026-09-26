@@ -96,6 +96,12 @@ impl Store {
         Ok(())
     }
 
+    /// The same defaults, typed: `[polygon, circle, point, polyline, line]`
+    /// (the desktop's, which has no JSON on the way).
+    pub fn set_label_defaults(&mut self, rules: [Option<LabelRule>; 5]) {
+        self.label_defaults = rules;
+    }
+
     /// What the overlay draws in `view` at `scale` px/m, in the document's
     /// order, `LABEL_STRIDE` numbers each: `id, what, x, y, a, b, c, d`.
     /// - dimension: x, y the value's place, a its angle (degrees), b the

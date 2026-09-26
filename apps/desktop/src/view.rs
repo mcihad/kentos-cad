@@ -254,6 +254,15 @@ impl App {
                     self.field.as_ref().map(|f| (f.text.as_str(), f.at)),
                 );
                 let accent = rgba8(Tokens::of(&self.theme()).accent);
+                // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).
+                let labels = crate::labels::layer(
+                    &doc.model,
+                    &self.spatial,
+                    &self.viewport.camera,
+                    self.canvas(),
+                    &crate::viewport::palette(self.canvas()),
+                    &format,
+                );
                 let area = self.viewport.view(
                     doc,
                     self.canvas(),
@@ -263,7 +272,9 @@ impl App {
                     self.session.cursor(),
                 );
                 // The running command's strip on top (command_bar.rs).
-                stack![area, over].extend(self.command_bar()).into()
+                stack![area, labels, over]
+                    .extend(self.command_bar())
+                    .into()
             }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")
@@ -362,10 +373,15 @@ impl App {
     }
 
     pub(crate) fn command_line(&self) -> Element<'_, Message> {
-        CommandLine::new(&self.history, &self.command_input)
-            .id(COMMAND_INPUT)
-            .placeholder("Komut ya da koordinat yazın; Enter ya da Boşluk onaylar")
-            .commands(self.line_commands())
+        let line = CommandLine::new(&self.history, &self.command_input).id(COMMAND_INPUT);
+        // A running command's step already says what to type; the hint would
+        // repeat it and, in a narrow window, be cut at the field's edge.
+        let line = if self.session.is_running() {
+            line
+        } else {
+            line.placeholder("Komut ya da koordinat yazın; Enter ya da Boşluk onaylar")
+        };
+        line.commands(self.line_commands())
             .prompt(self.line_prompt())
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)

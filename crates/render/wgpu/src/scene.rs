@@ -14,12 +14,17 @@
 //!   than the on-screen tolerance at the current zoom. They are built again
 //!   when the zoom leaves their band ([`lod`]), never per frame.
 //!
-//! Both parts list the same layers in the same order: the leaves of the layer
+//! - the construction lines ([`build_construction`]): infinite lines and
+//!   rays, clipped to a box around the view (the web clips them to the view);
+//!   built again when the view leaves the box.
+//!
+//! The parts list the same layers in the same order: the leaves of the layer
 //! tree that are visible with all their ancestors, the top of the list drawn
 //! last (the web's order). Colours are resolved here: the object's own
 //! colour, else its layer's; theme tokens through the host's palette.
-//! What is not drawn yet (text, dimensions, construction lines) is counted,
-//! not guessed at.
+//! Dimensions are their layout's lines here, their values text over the
+//! scene (the host's, as on the web); text objects are the host's too. A
+//! dimension the core cannot lay out is counted, not guessed at.
 
 use std::collections::{BTreeMap, HashMap};
 use std::ops::Range;
@@ -29,11 +34,13 @@ use kentos_contracts::{
     DimensionStyle, DocumentSnapshotV1, DrawingFont, Entity, HatchEntity, HatchPatternType,
     LayerNode, LayerNodeType, PathEntity, PointSymbol, RingGeometry,
 };
-use kentos_geometry_core::entity::{HatchPattern, Shape, entity_bounds_in};
+use kentos_geometry_core::entity::{HatchPattern, Shape, dimension_geom, entity_bounds_in};
 use kentos_geometry_core::geom::arc::sweep;
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::bulge::has_bulges;
+use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::geom::hatch::hatch_lines;
+use kentos_geometry_core::store::draw::clip_line;
 use kentos_geometry_core::tessellate::{
     arc_points, bulge_path, catmull_rom, circle_ring, ellipse_points,
 };
@@ -159,16 +166,66 @@ pub fn build_fixed<D: Drawing + ?Sized>(doc: &D, palette: &Palette, origin: Vec2
                     b.polygon(&rings, color, layer.fill);
                 }
                 Entity::Hatch(h) => b.hatch(h, color),
-                Entity::Text(_) | Entity::Dimension(_) | Entity::Xline(_) | Entity::Ray(_) => {
-                    *not_drawn.entry(entity.kind()).or_insert(0) += 1;
+                Entity::Dimension(_) => {
+                    let drawn = dimension_lines(&mut b, entity, color);
+                    if !drawn {
+                        *not_drawn.entry(entity.kind()).or_insert(0) += 1;
+                    }
                 }
-                // Curves and bulged paths: the curves part.
+                // Text over the scene (the host's); curves and bulged paths in the
+                // curves part; construction lines in theirs.
                 _ => {}
             }
         }
         b.finish(start);
     }
     b.into_part(0.0, not_drawn)
+}
+
+/// A dimension's layout lines (`layout_dimension`: extension lines, the
+/// dimension line and its arrows); false when the core cannot lay it out.
+fn dimension_lines(b: &mut Builder, entity: &Entity, color: Rgba8) -> bool {
+    let Some(layout) = dimension_geom(&shape(entity)).and_then(|d| layout_dimension(&d)) else {
+        return false;
+    };
+    for [from, to] in layout.lines {
+        b.segment(from, to, color);
+    }
+    true
+}
+
+/// A construction line's part inside `clip` (`clip_line`), when it crosses it.
+fn construction_line(b: &mut Builder, entity: &Entity, clip: &Bounds, color: Rgba8) {
+    let (p, dir, ray) = match entity {
+        Entity::Xline(c) => (v(&c.p), v(&c.dir), false),
+        Entity::Ray(c) => (v(&c.p), v(&c.dir), true),
+        _ => return,
+    };
+    if let Some([from, to]) = clip_line(p, dir, ray, clip) {
+        b.segment(from, to, color);
+    }
+}
+
+/// Infinite lines and rays, clipped to `clip` (the web clips them to the
+/// view; a host keeps a box around the view and builds this part again when
+/// the view leaves it). Layers as the other parts list them.
+pub fn build_construction<D: Drawing + ?Sized>(
+    doc: &D,
+    palette: &Palette,
+    origin: Vec2,
+    clip: &Bounds,
+) -> ScenePart {
+    let layers = draw_layers(doc.layer_tree(), palette);
+    let groups = by_layer(doc, &layers);
+    let mut b = Builder::new(origin);
+    for (layer, entities) in layers.iter().zip(&groups) {
+        let start = b.start();
+        for entity in entities {
+            construction_line(&mut b, entity, clip, entity_color(entity, layer, palette));
+        }
+        b.finish(start);
+    }
+    b.into_part(0.0, BTreeMap::new())
 }
 
 /// Circles, arcs, ellipses, splines and bulged paths, tessellated with the
@@ -283,15 +340,16 @@ pub struct Highlight {
 /// selection, or the hovered object. Straight and curved geometry in one
 /// part, curves tessellated within `tolerance` world units as the curves
 /// part is. Its one layer comes after `below` empty ones, so every pass
-/// draws it after the scene's layers (the scene has `below`). What the scene
-/// does not draw yet (text, dimensions, construction lines) is not
-/// highlighted either.
+/// draws it after the scene's layers (the scene has `below`). A dimension is
+/// highlighted by its layout's lines, a construction line inside `clip`
+/// (the construction part's box); text is the host's.
 pub fn build_highlight<'a>(
     objects: impl IntoIterator<Item = &'a Entity>,
     style: &Highlight,
     origin: Vec2,
     tolerance: f64,
     below: usize,
+    clip: &Bounds,
 ) -> ScenePart {
     let tol = if tolerance.is_finite() && tolerance > 0.0 {
         tolerance
@@ -352,6 +410,10 @@ pub fn build_highlight<'a>(
                     color,
                 );
             }
+            Entity::Dimension(_) => {
+                dimension_lines(&mut b, entity, color);
+            }
+            Entity::Xline(_) | Entity::Ray(_) => construction_line(&mut b, entity, clip, color),
             _ => {}
         }
     }
