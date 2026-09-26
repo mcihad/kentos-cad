@@ -8,6 +8,7 @@
 //! `input.rs` by ADR 0018's rules.
 
 use std::path::PathBuf;
+use std::time::Instant;
 
 use iced::widget::operation;
 use iced::{Subscription, Task, Theme, event, keyboard, window};
@@ -21,6 +22,7 @@ use kentos_ui::widget::command_line::Entry;
 use kentos_ui::widget::docking::{self, Docks, Side};
 
 use crate::catalog::{Standing, catalog};
+use crate::cloud::{self, CloudState};
 use crate::document::Document;
 use crate::input::{Field, release_keyboard};
 use crate::keys::{self, KeyPress};
@@ -78,12 +80,37 @@ pub enum Dialog {
     Settings,
     /// Unsaved work a crash left: the first of `App::recovery.offers` (recovery.rs).
     Recovery,
+    /// “Buluta giriş” (cloud/account.rs); its fields are `App::cloud.sign_in`.
+    SignIn,
+    /// “Bulut projeleri” (cloud/catalog.rs).
+    Catalog,
+    /// “Buluta yükle” (cloud/upload.rs).
+    Upload,
+    /// A database project's save conflicts (cloud/follow.rs).
+    Conflicts,
+    /// A file project's revision refused: someone saved first (cloud/file.rs).
+    FileConflict,
+    /// A copy to remove from this device whose draft holds unsent work (cloud/catalog.rs).
+    RemoveCopy,
 }
 
+/// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Then {
+    /// A local file (Aç).
     Open,
     Close(window::Id),
+    /// Bulut oturumunu kapat.
+    SignOut,
+    /// A cloud project from the catalog.
+    OpenCloud {
+        tenant: kentos_domain::Uuid,
+        project: kentos_domain::Uuid,
+    },
+    /// Buluta yükle.
+    Upload,
+    /// The drawing's own cloud project again, from the server.
+    Reopen,
 }
 
 /// Where the open and save dialogs are answered.
@@ -145,6 +172,8 @@ pub enum Message {
     Saving(saving::Event),
     /// Recovery copies of unsaved work (recovery.rs).
     Recovery(recovery::Event),
+    /// The cloud: signing in, the catalog, cloud projects (cloud/, docs/adr/0041).
+    Cloud(Box<cloud::Event>),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -211,6 +240,8 @@ pub struct App {
     pub save_faults: saving::Faults,
     /// Recovery copies of unsaved work; kept only when `main` opens their folder.
     pub recovery: Recovery,
+    /// The cloud: the account, its windows, the open project's autosave (cloud/).
+    pub cloud: CloudState,
 }
 
 impl App {
@@ -268,6 +299,7 @@ impl App {
             saving: None,
             save_faults: saving::Faults::NONE,
             recovery,
+            cloud: CloudState::default(),
         };
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
@@ -299,11 +331,20 @@ impl App {
 
     pub fn title(&self) -> String {
         match &self.document {
-            Some(doc) => format!(
-                "{}{} — KentOS CAD",
-                doc.name(),
-                if doc.dirty() { " •" } else { "" }
-            ),
+            // A cloud project says its workspace too (docs/adr/0041).
+            Some(doc) => match doc.cloud_source() {
+                Some(source) => format!(
+                    "{}{} — {} — KentOS CAD",
+                    doc.name(),
+                    if doc.dirty() { " •" } else { "" },
+                    source.workspace
+                ),
+                None => format!(
+                    "{}{} — KentOS CAD",
+                    doc.name(),
+                    if doc.dirty() { " •" } else { "" }
+                ),
+            },
             None => "KentOS CAD".to_owned(),
         }
     }
@@ -313,13 +354,24 @@ impl App {
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
-        // While the drawing has unsaved changes, the app looks every few seconds whether a recovery copy is due.
-        let unsaved = self.recovery.on() && self.document.as_ref().is_some_and(Document::dirty);
+        // While the drawing has unsaved changes, the app looks every few seconds whether a
+        // recovery copy is due; a database project's unsent work goes to its device draft instead.
+        let unsaved = self.recovery.on()
+            && self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.dirty() && !d.is_database());
         Subscription::batch([
             event::listen_with(keys::key_event),
             window::close_requests().map(Message::CloseRequested),
             if unsaved {
                 Subscription::run(recovery::ticks)
+            } else {
+                Subscription::none()
+            },
+            // The cloud's timers: autosave, the draft, following, the catalog's search.
+            if self.cloud.wants_ticks() {
+                Subscription::run(cloud::ticks)
             } else {
                 Subscription::none()
             },
@@ -329,6 +381,7 @@ impl App {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         let task = self.handle(message);
         self.follow_document();
+        self.cloud_after(Instant::now());
         task
     }
 
@@ -419,17 +472,31 @@ impl App {
             }
             Message::Opened(None) | Message::Saved(None) => {}
             Message::Opened(Some(Ok(doc))) => {
-                self.output(format!(
-                    "{} açıldı: {} nesne, {} katman.",
-                    doc.name(),
-                    doc.entity_count(),
-                    doc.layer_count()
-                ));
+                match doc.cloud_source() {
+                    Some(source) => self.say(
+                        Level::Success,
+                        format!(
+                            "“{}” bulut projesi açıldı ({}, {}): {} nesne.",
+                            doc.name(),
+                            source.workspace,
+                            cloud::words::storage_title(source.storage()),
+                            doc.entity_count()
+                        ),
+                    ),
+                    None => self.output(format!(
+                        "{} açıldı: {} nesne, {} katman.",
+                        doc.name(),
+                        doc.entity_count(),
+                        doc.layer_count()
+                    )),
+                }
                 if doc.legacy {
                     self.output(
                         "Dosya eski biçimde (KCAD v1). Kaydet, yeni biçimde (v2) yazmak için yer sorar; eski dosyanın üzerine kendiliğinden yazmaz.",
                     );
                 }
+                // The cloud project on screen is left: its copy written whole and let go (cloud/copy.rs).
+                self.close_cloud_project();
                 // A draft belongs to the drawing it was drawn on; so do the selection and the store.
                 self.cancel();
                 self.selected_layer = None;
@@ -461,34 +528,25 @@ impl App {
                 // A save stopped by the window closing would leave no file (the previous one
                 // stays): it finishes first.
                 if let Some(s) = &self.saving {
-                    let path = s.path.display().to_string();
+                    let name = s.name();
                     self.warn(format!(
-                        "{path} kaydediliyor; kayıt bitince pencereyi yeniden kapatın."
+                        "{name} kaydediliyor; kayıt bitince pencereyi yeniden kapatın."
                     ));
-                } else if self.document.as_ref().is_some_and(Document::dirty) {
-                    self.dialog = Some(Dialog::Unsaved(Then::Close(window)));
                 } else {
-                    self.recovery.finish();
-                    return window::close(window);
+                    // Unsent cloud work to its draft first, else the question (cloud/leaving.rs).
+                    return self.leave(Then::Close(window));
                 }
             }
             Message::DialogConfirmed => {
                 if let Some(Dialog::Unsaved(then)) = self.dialog.take() {
                     // The unsaved changes are dropped on purpose: their recovery copy goes too.
                     self.recovery.discard();
-                    return match then {
-                        Then::Open => self.open(),
-                        Then::Close(window) => {
-                            self.recovery.finish();
-                            window::close(window)
-                        }
-                    };
+                    self.cloud.leave_failure = None;
+                    return self.proceed(then);
                 }
             }
-            Message::DialogClosed => {
-                self.dialog = None;
-                self.settings_draft = None;
-            }
+            Message::DialogClosed => self.close_dialog(),
+            Message::Cloud(event) => return self.cloud_event(*event),
             Message::Viewport(event) => return self.pointer(event),
             Message::Settings(edit) => return self.settings_edit(edit),
             Message::Opening(event) => return self.opening_event(event),
@@ -632,13 +690,20 @@ impl App {
         {
             return self.start_tool(tool);
         }
+        if id.starts_with("cloud.") {
+            return self.cloud_command(id);
+        }
         match id {
-            "file.open" => {
-                if self.document.as_ref().is_some_and(Document::dirty) {
-                    self.dialog = Some(Dialog::Unsaved(Then::Open));
-                    return Task::none();
-                }
-                return self.open();
+            // The drawing on screen is left first: its unsent cloud work to its draft, or the question.
+            "file.open" => return self.leave(Then::Open),
+            // A cloud project saves to the server (cloud/file.rs); Farklı kaydet writes a local file.
+            "file.save"
+                if self
+                    .document
+                    .as_ref()
+                    .is_some_and(|d| d.cloud_source().is_some()) =>
+            {
+                return self.save_cloud();
             }
             "file.save" => return self.save(false),
             "file.saveAs" => return self.save(true),
@@ -716,6 +781,7 @@ impl App {
             }
             "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
             "edit.deselect" => !self.selection.is_empty(),
+            id if id.starts_with("cloud.") => self.cloud_available(id),
             _ => true,
         }
     }
@@ -748,7 +814,7 @@ impl App {
     }
 
     /// Asks for a drawing and opens it in stages, off the UI thread (opening.rs).
-    fn open(&mut self) -> Task<Message> {
+    pub(crate) fn open(&mut self) -> Task<Message> {
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
             return self.start_opening(path, Purpose::File);
@@ -833,7 +899,7 @@ impl App {
         self.say(Level::Warn, text);
     }
 
-    fn error(&mut self, text: impl Into<String>) {
+    pub(crate) fn error(&mut self, text: impl Into<String>) {
         self.say(Level::Error, text);
     }
 }

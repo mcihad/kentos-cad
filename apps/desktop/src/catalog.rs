@@ -74,6 +74,13 @@ pub const PORTED: &[&str] = &[
     "tool.rotate",
     "tool.scale",
     "tool.mirror",
+    // The cloud interface (docs/adr/0041): signing in and out, the catalog of cloud
+    // projects, a drawing uploaded as a new project, and the save conflicts.
+    "cloud.signIn",
+    "cloud.signOut",
+    "cloud.open",
+    "cloud.upload",
+    "cloud.conflicts",
 ];
 
 /// Where a command stands, from the desktop's point of view.

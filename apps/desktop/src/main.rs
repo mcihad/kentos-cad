@@ -6,6 +6,7 @@
 
 mod app;
 mod catalog;
+mod cloud;
 mod document;
 #[cfg(test)]
 mod files_testing;
@@ -62,7 +63,12 @@ fn main() -> iced::Result {
                     Some(Err(error)) => recovery::Recovery::unavailable(error),
                     None => recovery::Recovery::off(),
                 };
-            app::App::start_with(path.clone(), settings, recovery)
+            let (mut app, task) = app::App::start_with(path.clone(), settings, recovery);
+            // Device drafts of cloud projects (docs/adr/0040, 0041), next to the recovery copies.
+            app.cloud.drafts = cloud::default_drafts();
+            // Local copies of cloud projects: they open without a connection (docs/adr/0043).
+            app.cloud.replicas = cloud::default_replicas();
+            (app, task)
         },
         app::App::update,
         app::App::view,

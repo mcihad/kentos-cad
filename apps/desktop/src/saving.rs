@@ -42,6 +42,8 @@ pub enum Stage {
     Writing { done: u64, total: u64 },
     /// The file is flushed to the disk and read back.
     Checking,
+    /// A cloud save's bytes the server has so far (docs/adr/0045).
+    Uploading { done: u64, total: u64 },
 }
 
 impl Stage {
@@ -69,6 +71,14 @@ impl Stage {
                 0.6 + 0.3 * part(*done as f64, *total as f64) as f32,
             ),
             Stage::Checking => ("Diskteki dosya denetleniyor".to_owned(), 0.95),
+            // The web's words (docs/adr/0038): “Yükleniyor %N”.
+            Stage::Uploading { done, total } => {
+                let p = part(*done as f64, *total as f64);
+                (
+                    format!("Yükleniyor %{}", (p * 100.0).round()),
+                    0.45 + 0.5 * p as f32,
+                )
+            }
         }
     }
 }
@@ -159,6 +169,28 @@ pub fn disk_failure(path: &Path, e: &std::io::Error) -> String {
     }
 }
 
+/// The drawing as `.kcad` v2 bytes, read back to the same drawing before
+/// they are used (`encode_verified`), telling `tell` its stages; `stop` ends it.
+pub fn encode_watched(
+    snapshot: &DocumentSnapshotV2,
+    stop: &AtomicBool,
+    tell: &mut dyn FnMut(Stage),
+) -> Result<Vec<u8>, SaveError> {
+    let mut watch = |s: Step<'_>| {
+        match s {
+            Step::Writing { done, total } => tell(Stage::Encoding { done, total }),
+            Step::Verifying => tell(Stage::Verifying),
+            _ => {}
+        }
+        !stop.load(Ordering::Relaxed)
+    };
+    match kentos_kcad::encode_verified_watched(snapshot, &mut watch) {
+        Ok(bytes) => Ok(bytes),
+        Err(e) if e.code == Code::Cancelled => Err(SaveError::Stopped),
+        Err(e) => Err(SaveError::Failed(e.message)),
+    }
+}
+
 /// Writes a drawing as a `.kcad` v2 file (see the module comment), telling
 /// `tell` its stages; `stop` ends it before the file is replaced. On any
 /// failure or stop the previous file is as it was and no temporary file stays.
@@ -169,19 +201,7 @@ pub fn write_watched(
     tell: &mut dyn FnMut(Stage),
     faults: &Faults,
 ) -> Result<(), SaveError> {
-    let mut watch = |s: Step<'_>| {
-        match s {
-            Step::Writing { done, total } => tell(Stage::Encoding { done, total }),
-            Step::Verifying => tell(Stage::Verifying),
-            _ => {}
-        }
-        !stop.load(Ordering::Relaxed)
-    };
-    let bytes = match kentos_kcad::encode_verified_watched(snapshot, &mut watch) {
-        Ok(bytes) => bytes,
-        Err(e) if e.code == Code::Cancelled => return Err(SaveError::Stopped),
-        Err(e) => return Err(SaveError::Failed(e.message)),
-    };
+    let bytes = encode_watched(snapshot, stop, tell)?;
     let dir = path
         .parent()
         .filter(|p| !p.as_os_str().is_empty())
@@ -263,14 +283,34 @@ pub enum Event {
         id: u64,
         result: Result<(), SaveError>,
     },
+    /// A cloud save's drawing is written and checked: its bytes go to the server now.
+    Encoded {
+        id: u64,
+        result: Result<crate::cloud::Once<Vec<u8>>, SaveError>,
+    },
     /// Durdur in the save's panel.
     Stop,
+}
+
+/// Where a save goes.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Target {
+    /// A `.kcad` file on this computer.
+    File(PathBuf),
+    /// A file project's next revision on the server (cloud/file.rs, docs/adr/0041),
+    /// based on the revision the drawing stands on (0 before the first).
+    Cloud {
+        tenant: kentos_domain::Uuid,
+        project: kentos_domain::Uuid,
+        based_on: u64,
+        name: String,
+    },
 }
 
 /// A save under way.
 pub struct Saving {
     pub id: u64,
-    pub path: PathBuf,
+    pub target: Target,
     /// Which opened drawing, and the revision being written.
     pub session: u64,
     pub revision: u64,
@@ -278,6 +318,20 @@ pub struct Saving {
     pub fraction: f32,
     started: Instant,
     stop: Arc<AtomicBool>,
+    /// A cloud save's request, once its bytes are ready: stopping drops it.
+    pub upload: Option<iced::task::Handle>,
+    /// A cloud save's bytes, kept for this device's copy should the server not answer (docs/adr/0043).
+    pub bytes: Option<Vec<u8>>,
+}
+
+impl Saving {
+    /// What is being saved, as the messages name it.
+    pub fn name(&self) -> String {
+        match &self.target {
+            Target::File(path) => path.display().to_string(),
+            Target::Cloud { name, .. } => format!("“{name}”"),
+        }
+    }
 }
 
 /// How long a save runs before its panel shows (a quick save does not flash one).
@@ -294,6 +348,13 @@ impl App {
     /// so the file holds the drawing of this moment and a later edit stays
     /// unsaved. One save at a time.
     pub(crate) fn start_saving(&mut self, path: PathBuf) -> Task<Message> {
+        self.start_save(Target::File(path))
+    }
+
+    /// Starts a save to `target`: a file is written as above; a cloud save's
+    /// drawing is written into verified bytes here the same way, and they go
+    /// to the server from the app (cloud/file.rs).
+    pub(crate) fn start_save(&mut self, target: Target) -> Task<Message> {
         if self.saving.is_some() {
             self.warn("Bir kayıt sürüyor; bitince yeniden kaydedin.");
             return Task::none();
@@ -307,13 +368,15 @@ impl App {
         let faults = self.save_faults;
         self.saving = Some(Saving {
             id,
-            path: path.clone(),
+            target: target.clone(),
             session,
             revision,
             stage: "Çizim hazırlanıyor".to_owned(),
             fraction: 0.0,
             started: Instant::now(),
             stop: stop.clone(),
+            upload: None,
+            bytes: None,
         });
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
             let mut last = Instant::now();
@@ -326,10 +389,20 @@ impl App {
             };
             let snapshot = model.to_snapshot_v2();
             drop(model);
-            let result = write_watched(&snapshot, &path, &stop, &mut tell, &faults);
+            let done = match &target {
+                Target::File(path) => Event::Done {
+                    id,
+                    result: write_watched(&snapshot, path, &stop, &mut tell, &faults),
+                },
+                Target::Cloud { .. } => Event::Encoded {
+                    id,
+                    result: encode_watched(&snapshot, &stop, &mut tell)
+                        .map(crate::cloud::Once::new),
+                },
+            };
             let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
                 &mut out,
-                Message::Saving(Event::Done { id, result }),
+                Message::Saving(done),
             ));
         })
     }
@@ -345,25 +418,61 @@ impl App {
                 }
             }
             Event::Stop => {
-                if let Some(s) = self.saving.as_mut() {
-                    s.stop.store(true, Ordering::Relaxed);
-                    s.stage = "Durduruluyor…".to_owned();
+                let sent = match self.saving.as_mut() {
+                    Some(s) => {
+                        s.stop.store(true, Ordering::Relaxed);
+                        s.stage = "Durduruluyor…".to_owned();
+                        s.upload.is_some()
+                    }
+                    None => false,
+                };
+                // A cloud save's request, once sent, stops by being dropped.
+                if sent && let Some(s) = self.saving.take() {
+                    self.warn(format!(
+                        "{} buluta kaydı durduruldu; çizim kaydedilmemiş sayılıyor. Sunucuya ulaştıysa sonraki kayıt çakışma olarak görünür; hiçbir şeyin üzerine yazılmaz.",
+                        s.name()
+                    ));
                 }
+            }
+            Event::Encoded { id, result } => {
+                if self.saving.as_ref().is_none_or(|s| s.id != id) {
+                    return Task::none();
+                }
+                return match result {
+                    Ok(bytes) => self.upload_revision(id, bytes),
+                    Err(e) => {
+                        let s = self.saving.take();
+                        let name = s.map(|s| s.name()).unwrap_or_default();
+                        match e {
+                            SaveError::Stopped => self.warn(format!(
+                                "{name} kaydı durduruldu; buluta bir şey gönderilmedi, çizim kaydedilmemiş sayılıyor."
+                            )),
+                            SaveError::Failed(why) => self.say(
+                                Level::Error,
+                                format!("{why} Çizim kaydedilmemiş sayılıyor."),
+                            ),
+                        }
+                        Task::none()
+                    }
+                };
             }
             Event::Done { id, result } => {
                 let Some(s) = self.saving.take_if(|s| s.id == id) else {
                     return Task::none();
                 };
+                let name = s.name();
                 return match result {
-                    Ok(()) => self.update(Message::Saved(Some(Ok(Written {
-                        session: s.session,
-                        path: s.path,
-                        revision: s.revision,
-                    })))),
+                    Ok(()) => match s.target {
+                        Target::File(path) => self.update(Message::Saved(Some(Ok(Written {
+                            session: s.session,
+                            path,
+                            revision: s.revision,
+                        })))),
+                        Target::Cloud { .. } => Task::none(),
+                    },
                     Err(SaveError::Stopped) => {
                         self.warn(format!(
-                            "{} kaydı durduruldu; dosyaya dokunulmadı, çizim kaydedilmemiş sayılıyor.",
-                            s.path.display()
+                            "{name} kaydı durduruldu; dosyaya dokunulmadı, çizim kaydedilmemiş sayılıyor."
                         ));
                         Task::none()
                     }
@@ -386,10 +495,13 @@ impl App {
             .saving
             .as_ref()
             .filter(|s| s.started.elapsed() >= QUIET)?;
-        let name = s.path.file_name().map_or_else(
-            || s.path.display().to_string(),
-            |n| n.to_string_lossy().into_owned(),
-        );
+        let name = match &s.target {
+            Target::File(path) => path.file_name().map_or_else(
+                || path.display().to_string(),
+                |n| n.to_string_lossy().into_owned(),
+            ),
+            Target::Cloud { name, .. } => name.clone(),
+        };
         let list = TaskList::new().push(
             Job::new(format!("Kaydediliyor: {name}"))
                 .detail(s.stage.clone())
@@ -519,6 +631,7 @@ mod tests {
                     Stage::Verifying => "verifying",
                     Stage::Writing { .. } => "writing",
                     Stage::Checking => "checking",
+                    Stage::Uploading { .. } => "uploading",
                 };
                 if now == stage {
                     stop.store(true, Ordering::Relaxed);
