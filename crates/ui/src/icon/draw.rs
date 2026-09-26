@@ -15,6 +15,10 @@ use super::Icon;
 
 /// İkonu çerçeveye, çerçevenin boyutunu dolduracak şekilde çizer.
 pub(super) fn icon(frame: &mut Frame, icon: Icon, color: Color, weight: Option<f32>) {
+    if let Icon::Svg(markup) = icon {
+        super::svg::draw(frame, markup, color, weight);
+        return;
+    }
     let size = frame.size();
     let pen = Pen {
         unit: size.width.min(size.height) / 16.0,
@@ -984,6 +988,8 @@ impl Pen {
                 self.triangle(frame, (1.75, 3.75), (1.75, 12.25), (8.0, 8.0));
                 self.triangle(frame, (8.0, 3.75), (8.0, 12.25), (14.25, 8.0));
             }
+            // Drawn from its SVG before the pen is made (`icon`).
+            Icon::Svg(_) => {}
             Icon::Measure => {
                 self.line(frame, (1.75, 4.0), (1.75, 12.0));
                 self.line(frame, (14.25, 4.0), (14.25, 12.0));

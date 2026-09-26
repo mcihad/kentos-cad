@@ -206,3 +206,56 @@ fn screens() {
         }
     }
 }
+
+/// The tip over a ribbon button, and the button's menu without it
+/// (DESIGN.md §7.8: a tip opens after 450 ms and closes on a click), in
+/// `.run/shots/serit-ipucu-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop ribbon_tests::tip_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn tip_screens() {
+    use iced::Point;
+    use kentos_ui::snapshot::{Input, Snapshot};
+
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut app = app_with_drawing();
+    app.tab = "modify";
+    let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let save = |snapshot: &mut Snapshot, app: &App, name: &str| {
+        let file = out.join(format!("serit-ipucu-{name}.png"));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
+        println!("{}", file.display());
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    // Dizi, the split button of the Dönüştür panel.
+    snapshot.input(
+        &mut app,
+        App::view,
+        &mut update,
+        Input::Move(Point::new(361.0, 62.0)),
+    );
+    save(&mut snapshot, &app, "1-hemen");
+    std::thread::sleep(std::time::Duration::from_millis(500));
+    snapshot.settle(&mut app, App::view, &mut update);
+    save(&mut snapshot, &app, "2-bekleyince");
+    snapshot.input(
+        &mut app,
+        App::view,
+        &mut update,
+        Input::Click(Point::new(361.0, 100.0)),
+    );
+    std::thread::sleep(std::time::Duration::from_millis(500));
+    snapshot.settle(&mut app, App::view, &mut update);
+    save(&mut snapshot, &app, "3-menu");
+}

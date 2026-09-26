@@ -4,7 +4,8 @@
  */
 const grip = (x: number, y: number) => `<rect x="${x - 1.5}" y="${y - 1.5}" width="3" height="3" fill="currentColor" stroke="none"/>`;
 
-const ICONS = {
+// Exported for the feature inventory: the desktop draws the same icons from it (docs/adr/0054).
+export const ICONS = {
   // Tools
   select: '<path d="M5 3.2 15 9.3l-4.4 1.2-2.3 4.3z"/>',
   pan: '<path d="M7.2 10V4.7a1.2 1.2 0 0 1 2.4 0V9M9.6 8.6V3.6a1.2 1.2 0 0 1 2.4 0V9M12 9V4.8a1.2 1.2 0 0 1 2.4 0V11c0 3.4-2 6-5.3 6-2.2 0-3.5-1.2-4.6-3.1l-1.6-2.8a1.25 1.25 0 0 1 2.1-1.4L7.2 12"/>',

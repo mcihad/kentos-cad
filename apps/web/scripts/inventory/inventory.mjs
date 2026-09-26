@@ -1,7 +1,7 @@
 // Feature inventory of the web app (TODOS.md BASE-04): commands, tools,
 // processing tools and models, work modes, settings, browser storage, the
-// `.kcad` fields (v1 read, v2 written), windows and panels, and the menu and ribbon layout in
-// order. Each item has a status
+// `.kcad` fields (v1 read, v2 written), windows and panels, the menu and ribbon layout in
+// order, and the icon set. Each item has a status
 // (implemented / partial / pending), per-platform status and the tests that
 // mention it. The inventory is derived, never typed in:
 //   - the running app's registries (collect.mjs, dev server + headless Chrome);
@@ -125,6 +125,8 @@ const inventory = {
   ...sections,
   // Menus and ribbon in the web's order (the desktop shell mirrors them, docs/adr/0017).
   layout: live.layout,
+  // The web's icons, name → SVG markup of a 20×20 stroke icon (ui/icons.ts); the desktop draws them (docs/adr/0054).
+  icons: live.icons,
 };
 const files = { 'web.json': `${JSON.stringify(inventory, null, 2)}\n`, 'web.md': summaryMarkdown(inventory) };
 

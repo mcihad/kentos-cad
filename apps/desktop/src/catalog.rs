@@ -358,8 +358,15 @@ impl Catalog {
     /// (the catalog is built once), which the command line's borrowed
     /// suggestions need.
     fn load(text: &str) -> Result<Self, String> {
-        let raw: RawInventory =
+        let mut raw: RawInventory =
             serde_json::from_str(text).map_err(|e| format!("web envanteri okunamadı: {e}"))?;
+        // Before the commands and panels take their icons.
+        icons::keep_web_set(
+            std::mem::take(&mut raw.icons)
+                .into_iter()
+                .map(|(name, markup)| (leak(name), leak(markup)))
+                .collect(),
+        );
 
         let commands: Vec<Command> = raw
             .commands
@@ -535,6 +542,9 @@ struct RawInventory {
     layout: RawLayout,
     #[serde(default)]
     workspaces: Vec<RawMode>,
+    /// The web's icon set, name → SVG markup (docs/adr/0054).
+    #[serde(default)]
+    icons: HashMap<String, String>,
 }
 
 #[derive(Deserialize)]

@@ -282,7 +282,7 @@ Menü çubuğu, araç çubuğu ve araç kutusunun sekmeli karşılığıdır; Uy
 - **Klavye:** sekmelerde ←/→, Home/End; ↓ panellere iner; panellerde oklar düğmeler arasında gezer, Esc sekmeye döner. Düğmeye fareyle tıklamak odağı almaz: Enter son komutu yinelemeye devam eder.
 - Hareket yoktur: açılma, daralma ve panel küçülmesi anlıktır (§12).
 - Şeritle birlikte araç kutusu kapalıdır (Görünüm → Araç kutusu ya da F9 ile açılır ve ayrı hatırlanır).
-- **Masaüstü** (KentOS UI, ADR 0051): aynı sığdırma kuralı ve seviyeler; genişlikler yazı ölçümünden hesaplanır. Katlanmış panel tıklayınca araçlarını menüde açar (aileler alt menü, seyrek araçlar “Diğer araçlar”). Düğmeler web'in ölçülerindedir: satır 24 px, büyük ikon 28 px ve sabit 1,55 px çizgi; ikon dinlenirken ikincil, üzerine gelince ana renk; çalışan araç dolu vurgu, açık anahtar yumuşak vurgu. Görünüm sekmesinde web panellerinden sonra arayüzün kendi grupları durur: Tema (Koyu, Aydınlık, Gece, Yüksek karşıtlık; sekiz vurgu ve özel renk), Çizim zemini (temaya uy, arduvaz, siyah, kâğıt), Yazı tipi (IBM Plex Sans, Inter, Plus Jakarta Sans), Eş aralıklı (IBM Plex Mono, JetBrains Mono) ve Yazı boyutu (11–18 px). Web'in Tema ve Çizim motoru menüleri masaüstünde yoktur.
+- **Masaüstü** (KentOS UI, ADR 0051): aynı sığdırma kuralı ve seviyeler; genişlikler yazı ölçümünden hesaplanır. Katlanmış panel tıklayınca araçlarını menüde açar (aileler alt menü, seyrek araçlar “Diğer araçlar”). Düğmeler web'in ölçülerindedir ve web'in ikonlarını taşır (envanterden, [ADR 0054](docs/adr/0054-desktop-draws-the-web-icons.md)): satır 24 px, büyük ikon 28 px ve sabit 1,55 px çizgi; ikon dinlenirken ikincil, üzerine gelince ana renk; çalışan araç dolu vurgu, açık anahtar yumuşak vurgu. Görünüm sekmesinde web panellerinden sonra arayüzün kendi grupları durur: Tema (Koyu, Aydınlık, Gece, Yüksek karşıtlık; sekiz vurgu ve özel renk), Çizim zemini (temaya uy, arduvaz, siyah, kâğıt), Yazı tipi (IBM Plex Sans, Inter, Plus Jakarta Sans), Eş aralıklı (IBM Plex Mono, JetBrains Mono) ve Yazı boyutu (11–18 px). Web'in Tema ve Çizim motoru menüleri masaüstünde yoktur.
 
 ### 7.3.2 Çalışma modları
 
@@ -385,7 +385,8 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 - Başlık (600), kısayol tuşu ve açıklama (ikincil renk). Hazır değilse amber not eklenir.
 - 450 ms gecikmeyle açılır; bir ipucu kapandıktan sonraki 600 ms içinde komşu öğelerde anında açılır (araç çubuğunda gezinirken).
-- Tıklamada ve basılı tutmada kapanır.
+- Tıklamada ve basılı tutmada kapanır; öğenin açılır menüsü açıkken görünmez.
+- Masaüstünde KentOS UI'nin `tip`'i aynı kurallarla çalışır ([ADR 0054](docs/adr/0054-desktop-draws-the-web-icons.md)).
 
 ### 7.9 Pencereler
 

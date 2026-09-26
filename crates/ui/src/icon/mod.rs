@@ -15,6 +15,7 @@
 //! renkleri ikona da kendiliğinden yansır.
 
 mod draw;
+mod svg;
 
 use std::cell::Cell;
 
@@ -135,6 +136,10 @@ pub enum Icon {
     StepBack,
     StepForward,
     Legend,
+    /// Web uygulamasının 20×20'lik çizgi ikonlarından biri, SVG metniyle
+    /// (apps/web/src/ui/icons.ts; masaüstü onları envanterden alır). Web'in
+    /// çizdiği gibi çizilir: 1,4 birim çizgi, yuvarlak uçlar, tutamaçlar dolu.
+    Svg(&'static str),
 }
 
 impl Icon {
@@ -276,6 +281,12 @@ impl Tone {
             Tone::Custom(color) => color,
         }
     }
+}
+
+/// Bir web ikonunun ([`Icon::Svg`]) çizilen öğelerinin sayısı: okunamayan
+/// öğe sayılmaz. Uygulama ikon setini bununla denetler.
+pub fn svg_elements(markup: &str) -> usize {
+    svg::parse(markup).len()
 }
 
 /// Varsayılan (16 piksel, miras renkli) bir ikon oluşturur.

@@ -10,7 +10,7 @@
 
 export async function collectInPage() {
   const k = window.kentos;
-  const [menus, ribbon, workspaces, processing, projectSettings, state, schema] = await Promise.all([
+  const [menus, ribbon, workspaces, processing, projectSettings, state, schema, iconSet] = await Promise.all([
     import('/src/app/menus.ts'),
     import('/src/app/ribbon.ts'),
     import('/src/app/workspaces.ts'),
@@ -18,6 +18,7 @@ export async function collectInPage() {
     import('/src/model/projectSettings.ts'),
     import('/src/app/state.ts'),
     import('/src/core/settings/schema.ts'),
+    import('/src/ui/icons.ts'),
   ]);
   const tools = k.tools.list();
   const registry = k.processing.registry;
@@ -198,5 +199,8 @@ export async function collectInPage() {
     ...session,
   ];
 
-  return { commands, tools: toolItems, processing: processingItems, models: modelItems, workspaces: workspaceItems, settings, layout };
+  // The icon set as SVG markup (20×20 stroke icons, grips drawn in): the desktop draws the same icons (docs/adr/0054).
+  const icons = { ...iconSet.ICONS };
+
+  return { commands, tools: toolItems, processing: processingItems, models: modelItems, workspaces: workspaceItems, settings, layout, icons };
 }

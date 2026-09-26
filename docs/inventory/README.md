@@ -27,6 +27,8 @@ Bir komut, araç, işlem aracı, ayar, depo, pencere ya da `.kcad` alanı ekleni
 | `storage` | Kaynak taraması: `persistedSignals('…')` localStorage anahtarları; tipli ayarların `SETTINGS_STORAGE`, `SETTINGS_BACKUP` ve eski `LEGACY_PREFS` sabitleri; `indexedDB.open` yanındaki `const DB`/`STORE`; sessionStorage kullanan modülün `export const …_KEY` sabitleri (sekmeye özgü depo) |
 | `fileFields` | `.kcad`: `DocumentSnapshotV1`'den (okunan v1 JSON) ve `DocumentSnapshotV2`'den (yazılan binary v2, [docs/specs/kcad-v2.md](../specs/kcad-v2.md)) erişilen bütün sözleşmeler. Rust'tan üretilen TS tiplerinden okunur, tanımlandıkları Rust dosyasıyla birlikte |
 | `screens` | Kaynak taraması (`src/ui`): `export function open…` pencereleri, `Component`/`Panel`'den türeyen paneller |
+| `layout` | Menü çubuğu, şerit (çalışma moduna göre de: `ribbonByMode`) ve hızlı erişim, web'in sırasıyla; masaüstü menüsünü ve şeridini bundan kurar ([ADR 0017](../adr/0017-desktop-shell.md)) |
+| `icons` | İkon seti (`ui/icons.ts`, `ICONS`): ad → 20×20'lik çizgi ikonun SVG metni (tutamaçlar içinde). Masaüstü komutların ikonlarını bundan, web'in çizdiği gibi çizer ([ADR 0054](../adr/0054-desktop-draws-the-web-icons.md)) |
 
 Komut kayıtlarının yanında menü ve şerit yerleri de hesaplanır: menü yolu, şerit sekmesi ve paneli, hızlı erişim, araç kutusu. Kısayollar tuş eşleminden gelir. `hiddenIn`, komutu hangi hazır çalışma modunun gizlediğini söyler.
 
