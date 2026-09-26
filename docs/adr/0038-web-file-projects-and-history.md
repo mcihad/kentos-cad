@@ -158,6 +158,7 @@ Sunucu tarafı ADR 0034'tür (kontrol noktası oluşturma, listeleme, indirme, s
 
 ### Saklama biçimi
 
+- Bilgiler sekmesi dosya projesinin nesne sayısını en yeni revizyondan verir: “3 nesne (revizyon 5)”. Sunucu yalnız veritabanı projesinin satırlarını sayar; dosya projesinin kapsamı hesaplanmaz ve bu söylenir.
 - Açık projenin biçimi, oturumun onu açtığı biçimdir (`HistoryPanel.storageOf`). Katalog kaydının biçimi (`ProjectSummary.storage`) bu dal açılırken sunucuda her proje için “database” diyordu; main'deki 5c3d2a6 (ADR 0039) bunu düzeltti. Açık olmayan dosya projesinin geçmişi, indirmesi ve dönüştürmesi o düzeltmeye dayanır.
 
 ### Bu adımda olmayanlar
@@ -184,7 +185,8 @@ Sunucu tarafı ADR 0034'tür (kontrol noktası oluşturma, listeleme, indirme, s
 - `pnpm e2e:cloud` (gerçek sunucu, geçici veritabanı):
   - açık dosya projesinin revizyonuna kontrol noktası; indirilen baytların özeti; yeni dosya projesi olarak geri yükleme ve açılması; kaynağın değişmemesi;
   - veritabanı projesinin kontrol noktası; “.kcad olarak indir” ile okunabilir tek dosya; aynı kimliklerle yeni veritabanı projesi olarak geri yükleme; sorulduktan sonra silme;
-  - açık olmayan dosya projesinin revizyonları ve revizyon geri yükleme; “PostGIS'e aktar” ve “Dosya projesine çevir”. Bu son adımlar main'deki sunucuya dayanır (5c3d2a6).
+  - açık olmayan dosya projesinin revizyonları, bilgileri ve revizyon geri yükleme; “PostGIS'e aktar” ve “Dosya projesine çevir”. Bu son adımlar main'deki sunucuya dayanır (5c3d2a6).
+- Sonuç (26 Eylül): bu dalın sunucusunda bütün geçmiş ve kontrol noktası adımları geçti; açık olmayan dosya projesinin geçmişinde durdu (katalog onu veritabanı projesi sanıyordu). main'in sunucusuyla (`893a63b`'nin yapısı, `KENTOS_E2E_SERVER`) bütün adımlar geçti.
 
 
 ## Bilerek bozma (26 Eylül)

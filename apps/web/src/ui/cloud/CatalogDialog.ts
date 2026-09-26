@@ -5,14 +5,13 @@ import { CatalogPager, PROJECT_TYPES, SORT_LABEL, TYPE_LABEL, VIEWS, viewDef } f
 import type { ProjectRef } from '../../app/cloud/lifecycle';
 import type { CatalogSort } from '../../contracts/generated/CatalogSort';
 import type { CatalogView } from '../../contracts/generated/CatalogView';
-import type { ProjectDetails } from '../../contracts/generated/ProjectDetails';
 import type { ProjectDuplicated } from '../../contracts/generated/ProjectDuplicated';
 import type { ProjectStorage } from '../../contracts/generated/ProjectStorage';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { Dialog } from '../widgets/Dialog';
-import { renderDetails, type DetailActions, type DetailsState, type DetailsTab } from './catalogDetails';
+import { renderDetails, type DetailActions, type DetailsState, type DetailsTab, type FileDetails } from './catalogDetails';
 import { catalogRow } from './catalogRows';
 import { downloadKcad } from './downloads';
 import { HistoryPanel } from './historyPanel';
@@ -202,8 +201,16 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
     else {
       details = 'loading';
       detailsTimer = setTimeout(() => {
-        cloud.api.details(p.tenantId, p.id).then(
-          (d: ProjectDetails) => {
+        // A file project's content is its newest revision (the server counts no rows of it).
+        const asked: Promise<DetailsState> =
+          history.storageOf(p) === 'file'
+            ? cloud.api.fileRevisions(p.tenantId, p.id).then((r): FileDetails => {
+                const objects = r.revisions.find((x) => x.revision === r.current)?.objects;
+                return { kind: 'file', project: p, revision: r.current ?? null, ...(objects === undefined ? {} : { objects }) };
+              })
+            : cloud.api.details(p.tenantId, p.id);
+        asked.then(
+          (d) => {
             if (gen !== detailsGen) return;
             details = d;
             paintDetails();

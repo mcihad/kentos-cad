@@ -49,8 +49,21 @@ export interface DetailsView {
   storage?: ProjectSummary['storage'];
 }
 
+/**
+ * A file project's content as its newest revision holds it: the server
+ * counts rows of a database project only (a file project has none), so
+ * its objects are the revision's and its extent is not worked out.
+ */
+export interface FileDetails {
+  kind: 'file';
+  project: ProjectSummary;
+  /** The newest revision; null before the first Kaydet. */
+  revision: string | null;
+  objects?: string;
+}
+
 /** What the server worked out on asking, while it is on its way, or why it is not there. */
-export type DetailsState = ProjectDetails | 'loading' | 'none' | Error;
+export type DetailsState = ProjectDetails | FileDetails | 'loading' | 'none' | Error;
 
 const AREA_UNIT = { m2: 'm²', donum: 'dönüm', ha: 'hektar' } as const;
 
@@ -92,8 +105,13 @@ export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSumm
   ];
   const crs = crsBySrid(p.srid);
   const row = (term: string, value: Child) => [h('dt', null, term), h('dd', null, value)];
-  const counted = (f: (x: ProjectDetails) => Child): Child =>
-    d === 'loading' ? h('span', { class: 'catalog-details__muted' }, 'Hesaplanıyor…') : d instanceof Error ? h('span', { class: 'catalog-details__muted' }, 'Okunamadı') : d === 'none' ? '—' : f(d);
+  const muted = (text: string) => h('span', { class: 'catalog-details__muted' }, text);
+  const counted = (f: (x: ProjectDetails) => Child, file: (x: FileDetails) => Child): Child =>
+    d === 'loading' ? muted('Hesaplanıyor…') : d instanceof Error ? muted('Okunamadı') : d === 'none' ? '—' : 'kind' in d ? file(d) : f(d);
+  const fileObjects = (x: FileDetails): Child =>
+    x.revision === null
+      ? muted('Henüz kaydedilmiş revizyon yok')
+      : h('span', { class: 'num' }, `${x.objects === undefined ? 'Nesne sayısı bilinmiyor' : `${Number(x.objects).toLocaleString('tr-TR')} nesne`} (revizyon ${x.revision})`);
   const extent = (x: ProjectDetails): Child => {
     const b = x.bounds;
     if (!b) return h('span', { class: 'catalog-details__muted' }, 'Geometrili nesne yok');
@@ -107,8 +125,8 @@ export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSumm
     row('Koordinat sistemi', crs ? `${crs.name} (EPSG:${p.srid})` : `EPSG:${p.srid}`),
     row('Alan birimi', AREA_UNIT[p.areaUnit]),
     // Nothing of a project in the trash is counted (it does not open).
-    p.state === 'trashed' ? null : row('Nesne', counted((x) => h('span', { class: 'num' }, `${x.featureCount} nesne, ${x.layerCount} katman`))),
-    p.state === 'trashed' ? null : row('Kapsam', counted(extent)),
+    p.state === 'trashed' ? null : row('Nesne', counted((x) => h('span', { class: 'num' }, `${x.featureCount} nesne, ${x.layerCount} katman`), fileObjects)),
+    p.state === 'trashed' ? null : row('Kapsam', counted(extent, () => muted('Dosya projesinde hesaplanmaz'))),
     row('Oluşturan', `${p.creatorName || 'görünmüyor'}, ${when(p.createdAt)}`),
     row('Son değişiklik', when(p.updatedAt)),
     row('Revizyon', h('span', { class: 'num' }, p.dataRevision)),

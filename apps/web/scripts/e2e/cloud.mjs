@@ -44,6 +44,10 @@
 //                      kentos_cad is not touched (a migration not applied
 //                      there yet can be tried end to end)
 //   KENTOS_E2E_SHOTS=dir  where the screenshots go (default scripts/e2e/out)
+//   KENTOS_E2E_SERVER=dir the server's build to run against: the directory
+//                      holding kentosd and examples/e2e_database (default
+//                      this checkout's target/debug; run the script with
+//                      node then, since `pnpm e2e:cloud` builds this one)
 //
 // Projects it creates stay in the development database, named "E2E …"; the
 // ones this run deletes are only moved to the trash (`kentosd project
@@ -58,6 +62,8 @@ import { OUT, launch, sleep } from './cdp.mjs';
 
 /** The repository root: .env.local and the Cargo target directory. */
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
+/** The server's build: this checkout's, or another one's (KENTOS_E2E_SERVER). */
+const SERVER = process.env.KENTOS_E2E_SERVER ?? `${ROOT}target/debug`;
 
 const env = Object.fromEntries(
   readFileSync(`${ROOT}.env.local`, 'utf8')
@@ -72,7 +78,7 @@ if (!env.KENTOS_DEV_PASSWORD) throw new Error('.env.local içinde KENTOS_DEV_PAS
 let scratch = null;
 let scratchUrl = null;
 if (process.env.KENTOS_E2E_DB === 'scratch') {
-  scratch = spawn('./target/debug/examples/e2e_database', [], {
+  scratch = spawn(`${SERVER}/examples/e2e_database`, [], {
     cwd: ROOT,
     env: { ...process.env, KENTOS_DEV_PASSWORD: env.KENTOS_DEV_PASSWORD },
     stdio: ['pipe', 'pipe', 'inherit'],
@@ -104,7 +110,7 @@ const publicUrl = url.replace(/\/$/, '');
 let api = null;
 async function startApi() {
   // From the repository root: the workspace's target/ and kentosd's .env.local are there.
-  api = spawn('./target/debug/kentosd', ['serve'], {
+  api = spawn(`${SERVER}/kentosd`, ['serve'], {
     cwd: ROOT,
     env: { ...process.env, KENTOS_API_PORT: String(apiPort), KENTOS_PUBLIC_URL: publicUrl, KENTOS_LOG: 'warn', ...(scratchUrl ? { KENTOS_DATABASE_URL: scratchUrl } : {}) },
     stdio: ['ignore', 'ignore', 'inherit'],
@@ -181,8 +187,9 @@ try {
   await b.waitFor(ready, 20000);
   await b.waitFor(`window.kentos.server.state.value === 'online'`, 8000);
   await b.waitFor(`window.kentos.cloud.auth.value === 'signedOut'`, 5000);
+  // Scrolled into view first, as a user would: a button below a pane's fold is clicked where it shows.
   const center = (sel, text = '') =>
-    b.eval(`(() => { const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.textContent.trim().startsWith(${JSON.stringify(text)})); if (!e) return null; const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    b.eval(`(() => { const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => x.textContent.trim().startsWith(${JSON.stringify(text)})); if (!e) return null; e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
   const press = async (sel, text) => {
     const p = await center(sel, text);
     if (!p) throw new Error(`bulunamadı: ${sel} ${text ?? ''}`);
@@ -1109,16 +1116,20 @@ try {
 
   // ── Another storage mode (docs/adr/0039): a new project from this one, opened; the source unchanged ──
   // “PostGIS'e aktar” on the file project: its newest revision, object by object.
+  const r5objects = (await ayse.call('GET', `${fbase}/files`)).body.revisions.find((r) => r.revision === '5')?.objects;
   await openCatalog();
   await showList('Projelerim');
   await pickExact(fileName);
+  // Its details: the objects of its newest revision (the server counts no rows of a file project).
+  await b.waitFor(detailsReady, 8000);
+  const fileFacts = await b.eval(`document.querySelector('.catalog-details__facts').textContent`);
+  check('a file project’s details count its newest revision’s objects', fileFacts.includes(`${r5objects} nesne (revizyon 5)`) && fileFacts.includes('Dosya projesinde hesaplanmaz'), fileFacts.slice(0, 200));
   await press('.catalog-details__actions .btn', "PostGIS'e aktar");
   const toDb = '.dialog[aria-label="PostGIS\'e aktar"]';
   await b.waitFor(`!!document.querySelector(${JSON.stringify(toDb)})`, 3000);
   await themed('cloud-convert');
   await press(`${toDb} .dialog__foot .btn`, "PostGIS'e aktar");
   await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(`${fileName} (PostGIS)`)} && window.kentos.cloud.sync.value?.state.value === 'saved'`, 60000);
-  const r5objects = (await ayse.call('GET', `${fbase}/files`)).body.revisions.find((r) => r.revision === '5')?.objects;
   const asDb = await b.eval(`({ storage: window.kentos.cloud.project.value.storage, size: window.kentos.doc.size })`);
   check('“PostGIS\'e aktar” makes the newest revision a database project and opens it', asDb.storage === 'database' && String(asDb.size) === r5objects, `${asDb.size} nesne`);
   // “Dosya projesine çevir” on a database project: its present state as revision 1 of a new file project.
