@@ -15,6 +15,7 @@ use kentos_interaction::clipboard;
 use kentos_interaction::paste::{self, Paste};
 
 use crate::app::{App, Message};
+use crate::catalog::catalog;
 
 /// The web command ids this module runs.
 pub const COMMANDS: &[&str] = &["edit.cut", "edit.copy", "edit.paste", "edit.pasteOriginal"];
@@ -74,7 +75,11 @@ impl App {
         self.field = None;
         let tool = Paste::new(self.clipboard.items().to_vec(), self.clipboard.base());
         self.session.run(Box::new(tool));
-        self.say(Level::Command, paste::LABEL);
+        // Named as the tools are (`start_tool`): the command's name, shown with its title.
+        let name = catalog()
+            .get("edit.paste")
+            .map_or(paste::LABEL, |command| command.name());
+        self.say(Level::Command, name);
         self.with_tool(|s, cx| s.activate(cx));
         Task::none()
     }
@@ -185,10 +190,10 @@ mod tests {
         assert_eq!(said(&app), Some("1 nesne panoya kopyalandı."));
         assert!(app.available("edit.paste") && app.available("edit.pasteOriginal"));
 
-        // Ctrl+V: the paste tool, named in the command line as the web names it.
+        // Ctrl+V: the paste tool, named in the command line as the tools are.
         chord(&mut app, Modifiers::CTRL, "v", Code::KeyV);
         assert_eq!(app.session.tool_id(), "paste");
-        assert_eq!(said(&app), Some("Yapıştır"));
+        assert_eq!(said(&app), Some("YAPISTIR"));
         click(&mut app, -4.0, -18.0);
         assert_eq!(
             (app.session.tool_id(), count(&app), selected(&app)),
@@ -302,5 +307,88 @@ mod tests {
         let c = app.viewport.camera.center;
         assert_eq!((c.x, c.y), (487000.0 - 16.0, 4420000.0 + 1.0));
         assert_eq!(app.viewport.camera.scale, 408.0 / 26.0);
+    }
+}
+
+/// Pictures for the owner, played from the clipboard and navigation traces:
+/// the paste tool's ghost, the pasted line, the typed value, a cut that
+/// leaves the locked line selected, Kaydır, Seçime yakınlaştır and the zoom
+/// window's box; dark and light, at 1440×900 and 1100×650;
+/// `.run/shots/pano-*`, `.run/shots/gorunum-*`:
+///
+/// ```text
+/// cargo test -p kentos-desktop clipboard::screens -- --ignored --nocapture
+/// ```
+#[cfg(test)]
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    use crate::traces::{Player, Trace, VARIANTS, scratch_file};
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    // Name, trace, the steps played, the last one played halfway (a drag with the button down).
+    let shots = [
+        ("pano-hayalet", "clipboard", 4, false),
+        ("pano-yapistirildi", "clipboard", 5, false),
+        ("pano-deger", "clipboard", 8, false),
+        ("pano-kes", "clipboard", 12, false),
+        ("gorunum-kaydir", "navigation", 4, false),
+        ("gorunum-secime", "navigation", 9, false),
+        ("gorunum-pencere", "navigation", 14, true),
+    ];
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            for (name, id, steps, half) in shots {
+                let (mut app, _) = App::boot(None);
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                // The view tools' panel for the navigation pictures, the clipboard's for the others.
+                if id == "navigation" {
+                    app.tab = "view";
+                }
+                // The command line open, so the messages of a cut show; the smaller
+                // window keeps it closed, or the trace's box would not fit the drawing.
+                app.command_expanded = name == "pano-kes" && width > 1400.0;
+                let trace = Trace::by_id(id).expect("the trace");
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                let text = std::fs::read_to_string(crate::traces::folder().join(&trace.document))
+                    .expect("the drawing");
+                let doc = crate::document::Document::new(
+                    kentos_contracts::DocumentSnapshotV1::from_json(&text).expect("reads"),
+                    None,
+                )
+                .expect("opens");
+                let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+                snapshot.settle(&mut app, App::view, &mut update);
+                let area = app.viewport.bounds;
+                let file = scratch_file(&trace, VARIANTS[0]);
+                let mut player =
+                    Player::new(&mut app, &trace, VARIANTS[0], area, file).expect("plays");
+                let whole = if half { steps - 1 } else { steps };
+                let problems = player.play(Some(whole));
+                assert!(problems.is_empty(), "{name}: {problems:?}");
+                if half {
+                    player.halfway(steps - 1).expect("halfway");
+                }
+                drop(player);
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("{name}-{width}x{height}{suffix}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
     }
 }
