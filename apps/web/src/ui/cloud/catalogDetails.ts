@@ -7,6 +7,7 @@ import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { crsBySrid } from '../../geo/crs';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
+import { renderHistory, type HistoryActions, type HistoryState } from './catalogHistory';
 import { placeOf } from './catalogRows';
 
 /**
@@ -16,7 +17,8 @@ import { placeOf } from './catalogRows';
  * objects, layers and extent), and every action the catalog offers on it.
  * An action the account may not take stays visible, disabled, and says
  * which right it needs; an archived project says it must be unarchived
- * first. Nothing here asks the server: the dialog does, and redraws.
+ * first. Its history (a file project's revisions, docs/adr/0038) is the
+ * second tab. Nothing here asks the server: the dialog does, and redraws.
  */
 
 export interface DetailActions {
@@ -28,6 +30,21 @@ export interface DetailActions {
   trash(): void;
   purge(): void;
   favorite(): void;
+  /** “.kcad olarak indir”: a file project's newest revision, a database project's snapshot. */
+  download(): void;
+  /** A new project in the other storage mode (“PostGIS'e aktar”, “Dosya projesine çevir”; docs/adr/0039). */
+  convert(): void;
+}
+
+/** The pane's two tabs. */
+export type DetailsTab = 'info' | 'history';
+
+/** The history tab: which tab shows, the history as it is, what its rows do. */
+export interface DetailsView {
+  tab: DetailsTab;
+  onTab(tab: DetailsTab): void;
+  history: HistoryState;
+  historyActions: HistoryActions;
 }
 
 /** What the server worked out on asking, while it is on its way, or why it is not there. */
@@ -37,7 +54,7 @@ const AREA_UNIT = { m2: 'm²', donum: 'dönüm', ha: 'hektar' } as const;
 
 const may = (p: ProjectSummary, permission: ProjectPermission) => p.access.permissions.includes(permission);
 
-export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSummary | null, d: DetailsState, actions: DetailActions): void {
+export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSummary | null, d: DetailsState, actions: DetailActions, view: DetailsView): void {
   if (!p) {
     replaceChildren(host, h('div', { class: 'catalog-details__body' }, h('p', { class: 'catalog-details__empty' }, 'Bilgilerini görmek ve üzerinde işlem yapmak için listeden bir proje seçin.')));
     return;
@@ -98,18 +115,40 @@ export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSumm
     p.trashedAt ? row('Çöpe taşınma', `${when(p.trashedAt)}${p.trashedByName ? `, ${p.trashedByName}` : ''}`) : null,
     p.state === 'trashed' ? row('Kalıcı silinme', p.purgeAfter ? day(p.purgeAfter) : 'Elle silinene kadar kalır') : null,
   ];
+  const toDatabase = p.storage === 'file';
   const buttons =
     p.state === 'trashed'
       ? [button('Kalıcı olarak sil…', 'trash', actions.purge, needs('project.delete', 'kalıcı olarak silme'), true)]
       : [
           button('Paylaş…', 'share', actions.share, needs('project.share', 'paylaşma')),
           button('Bilgileri düzenle…', 'edit', actions.edit, writable('project.edit', 'bilgileri değiştirme')),
+          button('.kcad olarak indir', 'export', actions.download, needs('project.download', 'indirme')),
           button('Kopyasını oluştur…', 'copy', actions.duplicate, needs('project.download', 'kopyalama')),
+          button(toDatabase ? "PostGIS'e aktar…" : 'Dosya projesine çevir…', toDatabase ? 'server' : 'save', actions.convert, needs('project.download', 'dönüştürme')),
           p.state === 'archived'
             ? button('Arşivden çıkar', 'archive', actions.unarchive, needs('project.edit', 'arşivden çıkarma'))
             : button('Arşivle…', 'archive', actions.archive, needs('project.edit', 'arşivleme')),
           button('Çöpe taşı…', 'trash', actions.trash, needs('project.delete', 'çöpe taşıma'), true),
         ];
+  // Nothing of a project in the trash has a history to show (it does not open).
+  const tabs =
+    p.state === 'trashed'
+      ? null
+      : h(
+          'div',
+          { class: 'catalog-details__tabs', role: 'tablist', 'aria-label': 'Proje bilgileri' },
+          (
+            [
+              ['info', 'Bilgiler'],
+              ['history', 'Geçmiş'],
+            ] as const
+          ).map(([id, text]) => {
+            const b = h('button', { class: 'catalog-details__tab', type: 'button', role: 'tab', 'aria-selected': String(view.tab === id), dataset: { tab: id } }, text);
+            b.addEventListener('click', () => view.onTab(id));
+            return b;
+          }),
+        );
+  const history = view.tab === 'history' && p.state !== 'trashed';
   // The facts scroll; the actions stay in view below them.
   replaceChildren(
     host,
@@ -118,9 +157,14 @@ export function renderDetails(ctx: AppContext, host: HTMLElement, p: ProjectSumm
       { class: 'catalog-details__body' },
       h('header', { class: 'catalog-details__head' }, h('h3', { class: 'catalog-details__name' }, p.name), favorite),
       h('div', { class: 'catalog-details__chips' }, chips),
-      p.description ? h('p', { class: 'catalog-details__desc' }, p.description) : h('p', { class: 'catalog-details__desc catalog-details__muted' }, 'Açıklama yok.'),
-      p.tags.length ? h('div', { class: 'catalog-details__tags', 'aria-label': 'Etiketler' }, p.tags.map((t) => h('span', { class: 'catalog-tag' }, t))) : null,
-      h('dl', { class: 'catalog-details__facts' }, facts),
+      tabs,
+      ...(history
+        ? renderHistory(ctx, p, view.history, view.historyActions)
+        : [
+            p.description ? h('p', { class: 'catalog-details__desc' }, p.description) : h('p', { class: 'catalog-details__desc catalog-details__muted' }, 'Açıklama yok.'),
+            p.tags.length ? h('div', { class: 'catalog-details__tags', 'aria-label': 'Etiketler' }, p.tags.map((t) => h('span', { class: 'catalog-tag' }, t))) : null,
+            h('dl', { class: 'catalog-details__facts' }, facts),
+          ]),
     ),
     h('div', { class: 'catalog-details__actions' }, buttons),
   );

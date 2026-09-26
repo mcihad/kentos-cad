@@ -1,6 +1,7 @@
 import type { ProjectCatalogChange } from '../../contracts/generated/ProjectCatalogChange';
 import type { ProjectDuplicated } from '../../contracts/generated/ProjectDuplicated';
 import type { ProjectPurged } from '../../contracts/generated/ProjectPurged';
+import type { ProjectStorage } from '../../contracts/generated/ProjectStorage';
 import type { ProjectType } from '../../contracts/generated/ProjectType';
 import { catalogEnvelope, day } from './catalog';
 import type { CloudSession } from './session';
@@ -8,7 +9,8 @@ import type { CloudSession } from './session';
 /**
  * The catalog's commands on a cloud project (docs/adr/0028, TODOS.md
  * CLOUD-05): archive and unarchive, the trash and restoring from it,
- * removing for good, copying, the catalog metadata and favourites. Each is
+ * removing for good, copying, a new project in the other storage mode
+ * (docs/adr/0039), the catalog metadata and favourites. Each is
  * one product command with its own idempotency key; the server checks the
  * rights and answers. When the project is the one open here, the session
  * follows: its unsent edits go first, archiving it makes it read-only,
@@ -97,6 +99,22 @@ export class ProjectLifecycle {
       ...(into.name?.trim() ? { name: into.name.trim() } : {}),
       ...(into.tenantId ? { tenantId: into.tenantId } : {}),
     });
+  }
+
+  /**
+   * A new project kept as `to` from this one's present state (`project.convert`,
+   * docs/adr/0039): a file project's newest revision imported into a
+   * database project (“PostGIS'e aktar”), or a database project's snapshot
+   * as a file project's revision 1. The source does not change; its unsent
+   * edits go first. The answer is the new project, as a copy's.
+   */
+  async convert(ref: ProjectRef, to: ProjectStorage, into: { name?: string; tenantId?: string } = {}): Promise<ProjectDuplicated> {
+    await this.settle(ref);
+    // The input of `ProjectConvert` v1 (crates/shared/contracts, docs/adr/0039).
+    const input: { to: ProjectStorage; name?: string; tenantId?: string } = { to };
+    if (into.name?.trim()) input.name = into.name.trim();
+    if (into.tenantId) input.tenantId = into.tenantId;
+    return this.send<ProjectDuplicated>('project.convert', ref, input);
   }
 
   setFavorite(ref: ProjectRef, favorite: boolean): Promise<ProjectCatalogChange> {

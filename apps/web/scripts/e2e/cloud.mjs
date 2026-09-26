@@ -24,6 +24,12 @@
 // the trash, restored and removed for good after a question; the open
 // project archived by an admin (saving stops, the edit stays on the device,
 // and goes once it is unarchived and opened again).
+// The upload goes through one import (docs/adr/0036, 0038). File projects
+// (docs/adr/0031, 0038): the drawing saved as a file project, Kaydet twice
+// with its stages said apart, another client's revision heard and offered,
+// a conflict answered twice (the newest revision opened; the drawing saved
+// as a separate copy), the history's revisions, and downloads whose bytes
+// are the ones uploaded.
 //
 //   pnpm e2e:cloud     (needs `pnpm db:setup` once; builds kentosd first)
 //   KENTOS_E2E_DB=scratch pnpm e2e:cloud
@@ -38,6 +44,7 @@
 // ones this run deletes are only moved to the trash (`kentosd project
 // deleted`), but the one it removes for good.
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import net from 'node:net';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'vite';
@@ -201,6 +208,9 @@ try {
   await b.waitFor(`window.kentos.cloud.project.value && window.kentos.cloud.sync.value.state.value === 'saved'`, 60000);
   const project = await b.eval('window.kentos.cloud.project.value');
   check('uploads the drawing as a cloud project', project.name === name && !(await b.eval('window.kentos.doc.dirty.value')), `${size} nesne`);
+  // Through one import (docs/adr/0036): the project's log holds the import and no batch of object commands.
+  const importLog = await b.eval(`window.kentos.cloud.api.events(${JSON.stringify(project.tenantId)}, ${JSON.stringify(project.projectId)}, '0').then((p) => p.events.map((e) => e.kind))`);
+  check('the upload is one import, not batches of objects', importLog.includes('project.import') && !importLog.includes('project.changes'), importLog.join(', '));
   const uploaded = await b.eval(`window.kentos.cloud.api.details(${JSON.stringify(project.tenantId)}, ${JSON.stringify(project.projectId)})`);
   check('with the type and tags chosen at the upload', uploaded.project.projectType === 'subdivision' && uploaded.project.tags.join() === 'E2E,Kadıköy', `${uploaded.project.projectType} ${uploaded.project.tags}`);
   await b.waitFor(`window.kentos.cloud.link.value === 'online'`, 8000);
@@ -847,6 +857,135 @@ try {
   const stillListed = await b.eval(`[...document.querySelectorAll('.catalog-row')].some((r) => r.textContent.startsWith(${JSON.stringify(sharedName)}))`);
   const onShared = await b.eval(`document.querySelector('.catalog-nav [aria-selected="true"]')?.textContent`);
   check('taken away, it leaves “Benimle paylaşılanlar”', onShared === 'Benimle paylaşılanlar' && !stillListed, onShared);
+  await b.key('Escape');
+
+  // ── File projects (docs/adr/0031, 0038) ──
+  const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  /** A client's raw request: a file's bytes down, or up. */
+  const raw = async (who, method, path, body) => {
+    const res = await fetch(`http://127.0.0.1:${apiPort}${path}`, {
+      method,
+      headers: { 'x-kentos-client': 'web', cookie: who.cookie, ...(body ? { 'content-type': 'application/octet-stream' } : {}) },
+      body,
+    });
+    return { status: res.status, bytes: new Uint8Array(await res.arrayBuffer()) };
+  };
+  /** Another client saves a revision: the bytes of revision `from`, committed on `base`. */
+  const commitAs = async (who, fp, from, base) => {
+    const bytes = (await raw(who, 'GET', `/v1/tenants/${fp.tenantId}/projects/${fp.projectId}/files/${from}`)).bytes;
+    const up = await who.call('POST', `/v1/tenants/${fp.tenantId}/projects/${fp.projectId}/uploads`, { size: bytes.length, sha256: sha(bytes) });
+    const put = await raw(who, 'PUT', `/v1/tenants/${fp.tenantId}/projects/${fp.projectId}/uploads/${up.body.id}`, bytes);
+    return who.call('POST', `/v1/tenants/${fp.tenantId}/projects/${fp.projectId}/commands`, {
+      commandName: 'project.file.commit', version: 1, ...fp, requestId: `e2e-${crypto.randomUUID()}`, idempotencyKey: crypto.randomUUID(), expectedVersions: { '@file': base }, input: { uploadId: up.body.id },
+    }).then((r) => ({ ...r, put: put.status }));
+  };
+  const themed = async (shot) => {
+    for (const theme of ['dark', 'light']) {
+      await b.eval(`window.kentos.commands.execute('view.theme.${theme}')`);
+      await sleep(250);
+      await b.shot(`${shot}-${theme}`);
+    }
+    await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1.08')`);
+    await sleep(250);
+    await b.shot(`${shot}-large`);
+    await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1')`);
+    await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  };
+  // Ayşe again, in the browser: the drawing on screen saved to the cloud as a file project.
+  await b.eval(`window.kentos.commands.execute('cloud.signOut')`);
+  await b.waitFor(`window.kentos.cloud.auth.value === 'signedOut'`, 5000);
+  await b.eval(`window.kentos.commands.execute('cloud.uploadFile')`);
+  await b.waitFor(`document.querySelector('.dialog--cloud input[name=login]')`, 3000);
+  await b.type('ayse');
+  await b.key('Tab');
+  await b.type(env.KENTOS_DEV_PASSWORD);
+  await b.key('Enter');
+  await b.waitFor(`window.kentos.cloud.auth.value === 'signedIn' && !!document.querySelector('.cloud-storage')`, 8000);
+  const fileName = `E2E dosya ${new Date().toISOString().slice(0, 19)}`;
+  await b.eval(`(() => { const i = document.querySelector('.dialog--cloud input[aria-label="Proje adı"]'); i.value = ${JSON.stringify(fileName)}; i.dispatchEvent(new Event('input')); })()`);
+  const uploadForm = await b.eval(`({ file: document.querySelector('.cloud-storage input[value=file]').checked, button: [...document.querySelectorAll('.dialog__foot .btn')].map((x) => x.textContent) })`);
+  check('“Buluta dosya olarak kaydet” offers the storage mode, file chosen', uploadForm.file && uploadForm.button.includes('Buluta dosya olarak kaydet'), JSON.stringify(uploadForm));
+  await themed('cloud-file-upload');
+  await press('.dialog__foot .btn', 'Buluta dosya olarak kaydet');
+  await b.waitFor(`window.kentos.cloud.file.value?.base.value === '1' && window.kentos.cloud.link.value === 'online'`, 60000);
+  const fp = await b.eval(`(({ tenantId, projectId, storage }) => ({ tenantId, projectId, storage }))(window.kentos.cloud.project.value)`);
+  const fbase = `/v1/tenants/${fp.tenantId}/projects/${fp.projectId}`;
+  const ayseFiles = await ayse.call('GET', `${fbase}/files`);
+  check('the drawing is a file project whose revision 1 holds it', fp.storage === 'file' && ayseFiles.body.current === '1' && !(await b.eval('window.kentos.doc.dirty.value')), JSON.stringify(ayseFiles.body.revisions?.map((r) => r.revision)));
+
+  // Kaydet twice (Ctrl+S): the stages said apart, “saved” only once the server committed (SYNC-04).
+  await b.eval(`(() => { window.__fileStates = []; window.kentos.cloud.file.value.state.subscribe((s) => window.__fileStates.push(s)); })()`);
+  const addPoint = (x) => b.eval(`(() => { const d = window.kentos.doc; const layer = d.layers.leaves().find((l) => !d.layers.isLocked(l.id))?.id; d.add({ kind: 'point', layerId: layer, p: { x: ${x}, y: 4420260 }, attrs: {} }); })()`);
+  await addPoint(486600);
+  await b.key('s', { ctrl: true });
+  await b.waitFor(`window.kentos.cloud.file.value.base.value === '2' && window.kentos.cloud.file.value.state.value === 'saved'`, 30000);
+  await addPoint(486601);
+  await b.key('s', { ctrl: true });
+  await b.waitFor(`window.kentos.cloud.file.value.base.value === '3' && window.kentos.cloud.file.value.state.value === 'saved'`, 30000);
+  const states = await b.eval('window.__fileStates');
+  const stages = states.filter((x, i) => x !== states[i - 1]);
+  check('Kaydet says its stages apart and “saved” comes last', JSON.stringify(stages.slice(0, 5)) === JSON.stringify(['pending', 'encoding', 'uploading', 'verifying', 'saved']), stages.join(' → '));
+  const saved3 = await b.eval('window.kentos.cloud.file.value.lastSaved.value');
+  const down3 = await raw(ayse, 'GET', `${fbase}/files/3`);
+  check('a revision downloads as the bytes that were uploaded', down3.status === 200 && sha(down3.bytes) === saved3.sha256 && down3.bytes.length === saved3.size, `${down3.bytes.length} bayt`);
+  await themed('cloud-file-saved');
+
+  // Mehmet saves a revision from elsewhere: heard, said, offered; nothing is reloaded by itself.
+  await ayse.call('POST', `${fbase}/commands`, { commandName: 'project.share', version: 1, ...fp, requestId: `e2e-${crypto.randomUUID()}`, idempotencyKey: crypto.randomUUID(), expectedVersions: {}, input: { userId: mehmetMe.body.user.id, role: 'editor' } });
+  const r4 = await commitAs(mehmet, fp, '3', '3');
+  await b.waitFor(`window.kentos.cloud.file.value.newer.value?.revision === '4'`, 8000);
+  const outdated = await b.eval(`({ cell: document.querySelector('.status__save')?.textContent, base: window.kentos.cloud.file.value.base.value })`);
+  check('another client’s revision is said and offered, not loaded', r4.status === 200 && r4.put === 200 && outdated.base === '3' && /Yeni revizyon: r4/.test(outdated.cell), JSON.stringify(outdated));
+  // An edit saved over it: refused (SYNC-06); the question offers a copy, a local file or the newest revision.
+  await addPoint(486602);
+  await b.key('s', { ctrl: true });
+  await b.waitFor(`!!document.querySelector('.dialog[aria-label="Dosya başka biri tarafından kaydedildi"]')`, 15000);
+  const asked4 = await b.eval(`(() => { const d = document.querySelector('.dialog[aria-label="Dosya başka biri tarafından kaydedildi"]'); return { answers: [...d.querySelectorAll('.dialog__foot .btn')].map((x) => x.textContent), text: d.textContent }; })()`);
+  const kept4 = await ayse.call('GET', `${fbase}/files`);
+  check(
+    'a Kaydet over another’s revision is refused and asks; nothing is written',
+    kept4.body.current === '4' && asked4.answers.join('|') === 'Son revizyonu aç|Vazgeç|Yerel dosyaya kaydet|Ayrı kopya olarak kaydet' && /revizyon 4/.test(asked4.text),
+    asked4.answers.join(' | '),
+  );
+  await themed('cloud-file-conflict');
+  await press('.dialog[aria-label="Dosya başka biri tarafından kaydedildi"] .dialog__foot .btn', 'Son revizyonu aç');
+  await b.waitFor(`window.kentos.cloud.file.value?.base.value === '4' && !window.kentos.doc.dirty.value`, 30000);
+  const r4size = await b.eval('window.kentos.doc.size');
+  const r4objects = (await ayse.call('GET', `${fbase}/files`)).body.revisions.find((r) => r.revision === '4')?.objects;
+  check('“Son revizyonu aç” opens revision 4 and drops the edit', String(r4size) === r4objects && (await b.eval(`window.kentos.cloud.file.value.state.value`)) === 'saved', `${r4size} nesne`);
+  // Once more, answered with a separate copy: the drawing, the edit included, becomes a new file project.
+  await addPoint(486603);
+  const r5 = await commitAs(mehmet, fp, '4', '4');
+  await b.waitFor(`window.kentos.cloud.file.value.newer.value?.revision === '5'`, 8000);
+  await b.key('s', { ctrl: true });
+  await b.waitFor(`!!document.querySelector('.dialog[aria-label="Dosya başka biri tarafından kaydedildi"]')`, 15000);
+  await press('.dialog[aria-label="Dosya başka biri tarafından kaydedildi"] .dialog__foot .btn', 'Ayrı kopya olarak kaydet');
+  await b.waitFor(`!!document.querySelector('.cloud-storage input[value=file]:checked')`, 5000);
+  await press('.dialog__foot .btn', 'Buluta dosya olarak kaydet');
+  await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(`${fileName} (kopya)`)} && window.kentos.cloud.file.value?.base.value === '1'`, 60000);
+  const fileCopy = await b.eval(`({ id: window.kentos.cloud.project.value.projectId, size: window.kentos.doc.size, dirty: window.kentos.doc.dirty.value })`);
+  const original = await ayse.call('GET', `${fbase}/files`);
+  check('“Ayrı kopya olarak kaydet” makes the drawing, its edit included, a new file project; the original keeps its revisions', r5.status === 200 && fileCopy.size === r4size + 1 && !fileCopy.dirty && original.body.current === '5', `${fileCopy.size} nesne`);
+
+  // The history: the original's revisions, newest first, each downloadable; “.kcad olarak indir” gives its newest revision's bytes.
+  await b.eval(`(() => { const disk = (window.__disk = { bytes: null }); window.kentos.files.picker = { save: async (name) => ({ name, getFile: async () => new Blob([disk.bytes ?? new Uint8Array()]), createWritable: async () => { const parts = []; return { write: async (d) => parts.push(d), close: async () => { disk.bytes = new Uint8Array(await new Blob(parts).arrayBuffer()); } }; } }), open: async () => null }; })()`);
+  await b.eval(`window.kentos.commands.execute('cloud.open')`);
+  await b.waitFor(listReady, 8000);
+  await press('.catalog-nav__item', 'Projelerim');
+  await b.waitFor(`[...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent === ${JSON.stringify(fileName)})`, 8000);
+  // The row whose title is exactly the original's (its copy's title starts the same).
+  await b.eval(`[...document.querySelectorAll('.catalog-row')].find((r) => r.querySelector('.catalog-row__title')?.textContent === ${JSON.stringify(fileName)}).click()`);
+  await sleep(150);
+  await press('.catalog-details__tab', 'Geçmiş');
+  await b.waitFor(`document.querySelectorAll('.catalog-history__row').length === 5`, 8000);
+  const revRows = await b.eval(`[...document.querySelectorAll('.catalog-history__row')].map((r) => r.dataset.revision)`);
+  check('the history lists the revisions, newest first', revRows.join() === '5,4,3,2,1', revRows.join());
+  await themed('cloud-file-history');
+  await press('.catalog-details__actions .btn', '.kcad olarak indir');
+  await b.waitFor(`!!window.__disk.bytes`, 15000);
+  const written = await b.eval(`crypto.subtle.digest('SHA-256', window.__disk.bytes).then((d) => [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, '0')).join(''))`);
+  const newest = await raw(ayse, 'GET', `${fbase}/files/5`);
+  check('“.kcad olarak indir” writes the newest revision’s bytes', written === sha(newest.bytes), `${newest.bytes.length} bayt`);
   await b.key('Escape');
 
   const errors = b.consoleLog.filter((l) => /^(error|EXCEPTION)/.test(l));

@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 164,
-      "implemented": 146,
+      "total": 167,
+      "implemented": 149,
       "partial": 0,
       "pending": 18
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 55,
-      "implemented": 55,
+      "total": 56,
+      "implemented": 56,
       "partial": 0,
       "pending": 0
     },
@@ -76,7 +76,7 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 96,
+    "commandsWithoutTests": 98,
     "commandsOnDesktop": 36
   },
   "commands": [
@@ -307,7 +307,7 @@
       "short": "Çakışmaları çöz",
       "category": "Bulut",
       "icon": "conflict",
-      "description": "Başkasının daha önce kaydettiği nesneler için sunucudakini alır ya da sizinkini kaydeder.",
+      "description": "Başkasının daha önce kaydettiği nesneler için sunucudakini alır ya da sizinkini kaydeder. Dosya projesinde: ayrı kopya olarak kaydeder, yerel dosyaya kaydeder ya da son revizyonu açar.",
       "aliases": [],
       "kind": "action",
       "shortcuts": [],
@@ -365,6 +365,35 @@
       "tests": []
     },
     {
+      "id": "cloud.history",
+      "title": "Proje geçmişi…",
+      "short": "Geçmiş",
+      "category": "Bulut",
+      "icon": "history",
+      "description": "Açık bulut projesinin revizyonlarını ve kontrol noktalarını gösterir: indirir, kontrol noktası oluşturur, yeni proje olarak geri yükler (project.history yetkisi).",
+      "aliases": [
+        "GECMIS",
+        "HISTORY"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "toolbox": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/appmenu/AppMenu.ts",
+        "apps/web/src/ui/statusbar/cloudCells.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
+    },
+    {
       "id": "cloud.open",
       "title": "Bulut projesi aç…",
       "category": "Bulut",
@@ -400,6 +429,30 @@
         "apps/web/scripts/e2e/cloud.mjs"
       ],
       "note": "Kurum (tenant) projelerini açar. Kişisel çalışma alanı, proje düzeyinde yetki ve paylaşım henüz yok (ADR 0012, TODOS.md §12)."
+    },
+    {
+      "id": "cloud.openNewest",
+      "title": "Son revizyonu aç…",
+      "category": "Bulut",
+      "icon": "history",
+      "description": "Açık dosya projesinin sunucudaki en yeni revizyonunu açar; açık çizimdeki kaydedilmemiş değişiklikler için önce sorar.",
+      "aliases": [],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "toolbox": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/statusbar/cloudCells.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": []
     },
     {
       "id": "cloud.rename",
@@ -532,7 +585,7 @@
       "title": "Buluta yükle…",
       "category": "Bulut",
       "icon": "cloudUpload",
-      "description": "Açık çizimi kişisel alanınızda ya da kurumunuzda yeni bir bulut projesi yapar; proje sizindir, başkaları paylaşımla eklenir. Sonra her değişiklik kendiliğinden kaydedilir.",
+      "description": "Açık çizimi kişisel alanınızda ya da kurumunuzda yeni bir bulut projesi yapar; proje sizindir, başkaları paylaşımla eklenir. Saklama biçimini seçersiniz: veritabanı (çizim tek işlemde aktarılır, sonra her değişiklik kendiliğinden kaydedilir) ya da dosya (KCAD revizyonları; Kaydet yeni revizyon yazar).",
       "aliases": [
         "BULUTAYUKLE",
         "UPLOAD"
@@ -562,6 +615,36 @@
         "apps/web/scripts/e2e/cloud.mjs"
       ],
       "note": "Nesneleri `project.changes` komutlarıyla PostGIS'e yazar. Binary `.kcad` bulut revizyonu henüz yok (TODOS.md SYNC-02..06)."
+    },
+    {
+      "id": "cloud.uploadFile",
+      "title": "Buluta dosya olarak kaydet…",
+      "category": "Bulut",
+      "icon": "cloudUpload",
+      "description": "Açık çizimi yeni bir bulut dosya projesi yapar: sunucuda değişmez .kcad revizyonları olarak saklanır, ilk revizyonu bu çizimdir. Sonra Kaydet (Ctrl+S) yeni bir revizyon yazar; kendiliğinden kaydedilmez.",
+      "aliases": [
+        "BULUTADOSYA",
+        "CLOUDFILE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [],
+      "ribbon": [],
+      "quickAccess": false,
+      "toolbox": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/cloud/ProjectsDialog.ts",
+        "apps/web/src/ui/statusbar/cloudCells.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/cloud.mjs"
+      ]
     },
     {
       "id": "commandline.focus",
@@ -1533,7 +1616,7 @@
       "title": "Kaydet",
       "category": "Dosya",
       "icon": "save",
-      "description": "Bulut projesinde bekleyen değişiklikleri hemen gönderir (zaten kendiliğinden kaydedilir). Yerel çizimi .kcad dosyasına yazar; dosya yazılamazsa değişiklikler kaydedilmemiş sayılır.",
+      "description": "Bulut projesinde bekleyen değişiklikleri hemen gönderir (zaten kendiliğinden kaydedilir). Bulut dosya projesinde yeni bir revizyon yazar. Yerel çizimi .kcad dosyasına yazar; dosya yazılamazsa değişiklikler kaydedilmemiş sayılır.",
       "aliases": [
         "KAYDET",
         "SAVE"
@@ -10970,6 +11053,17 @@
       "name": "openRenameDialog",
       "role": "window",
       "source": "apps/web/src/ui/cloud/ProjectActions.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/cloud/ProjectForms.ts#openConvertDialog",
+      "name": "openConvertDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/ProjectForms.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

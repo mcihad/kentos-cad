@@ -2,13 +2,13 @@ import type { V1Identities } from '../contracts/generated/V1Identities';
 import { Signal } from '../core/signal';
 import { crsBySrid } from '../geo/crs';
 import { sheetAround } from '../model/newProject';
-import { DOCUMENT_EXTENSION, DOCUMENT_MIME, snapshotHead } from '../model/snapshot';
+import { DOCUMENT_EXTENSION, DOCUMENT_MIME } from '../model/snapshot';
 import type { OpeningView } from '../ui/io/OpeningDialog';
 import { h } from '../ui/dom';
 import { askUnsaved } from '../ui/widgets/confirm';
 import type { AppContext } from './context';
 import type { DocumentContent } from '../model/document';
-import { describeDropped, readDrawing, yieldToPage, type DrawingCodec, type ReadDrawing, type ReadProgress } from './drawingFile';
+import { encodeDrawing, readDrawing, yieldToPage, type DrawingCodec, type EncodedDrawing, type ReadDrawing, type ReadProgress } from './drawingFile';
 import { readFile, tooLarge, writeAccess, writeFailure, writeFile } from './fileAccess';
 import { ENDED } from './cloud/syncCore';
 import { RecentFiles, type RecentFile } from './recentFiles';
@@ -134,6 +134,12 @@ const nextFrame = () => (typeof requestAnimationFrame === 'function' ? new Promi
 /** An open's window where there is none (tests, a window that did not load): the open goes on without it. */
 const unseen: OpeningView = { step: () => {}, project: () => {}, close: () => {} };
 
+/**
+ * A cloud file's bytes, fetched inside the open's window (docs/adr/0038):
+ * `progress` hears how far, `signal` is Vazgeç.
+ */
+export type FetchBytes = (progress: (done: number, total: number) => void, signal: AbortSignal) => Promise<Uint8Array>;
+
 /** Where an open's bytes come from, and what it becomes once on screen. */
 interface Source {
   /** The file's name, or what the bytes are (a recovery copy). */
@@ -141,6 +147,8 @@ interface Source {
   handle: DrawingFileHandle | null;
   /** The bytes, when they are in hand already (`load`, a recovery copy). */
   bytes?: Uint8Array;
+  /** Where to get the bytes from otherwise (a cloud file project's revision). */
+  fetch?: FetchBytes;
   /** Save does not write back to it (a read-only file, a v1 file, a recovery copy). */
   readOnly: boolean;
   /** Leaves an open cloud project before the drawing is replaced (else only detaches from it). */
@@ -321,6 +329,20 @@ export class DocumentFiles {
   }
 
   /**
+   * Opens a cloud file project's revision (docs/adr/0038): its bytes fetched
+   * (`fetch`, with progress and Vazgeç) and read and checked in stages as a
+   * file's are; `put` puts the drawing on screen and attaches the project.
+   * The open cloud project is left only when the open goes through. Nothing
+   * is asked, as for any cloud project: a drawing replaced without the
+   * question keeps its unsaved work in its recovery copy (app/recovery.ts).
+   * Throws when another file command is running.
+   */
+  async openCloud(label: string, fetch: FetchBytes, put: (read: Extract<ReadDrawing, { ok: true }>) => void): Promise<boolean> {
+    if (this.busy.value) throw new Error('Bir dosya işlemi sürüyor (açma ya da kaydetme); bitince yeniden deneyin.');
+    return this.run(() => this.openStaged({ label, handle: null, fetch, readOnly: true, leaveCloud: true, put }));
+  }
+
+  /**
    * Replaces the drawing with a new, empty project (Dosya → Yeni proje).
    * Unsaved local changes are asked about first; an open cloud project is
    * left. The new drawing has no file yet, so the next Save asks where.
@@ -367,9 +389,12 @@ export class DocumentFiles {
     let committed = false;
     const stale = () => stopped || open !== this.opens;
     let codec: DrawingCodec | null = null;
+    // Vazgeç stops a download too (a cloud file project's revision).
+    const abort = new AbortController();
     const view = await this.opening(src.label, () => {
       if (committed) return;
       stopped = true;
+      abort.abort();
       codec?.cancel?.();
     }).catch((e: unknown) => {
       offReset();
@@ -378,7 +403,15 @@ export class DocumentFiles {
     const said = (p: ReadProgress) => this.step(view, p);
     try {
       let bytes = src.bytes;
-      if (!bytes) {
+      if (!bytes && src.fetch) {
+        try {
+          bytes = await src.fetch((done, total) => view.step(`Sunucudan indiriliyor: ${count(Math.round(done / 1e6))} / ${count(Math.round(total / 1e6))} MB`, 0.1 * share(done, total)), abort.signal);
+        } catch (e) {
+          if (stale()) return this.stopped(src.label);
+          ctx.log.error(`${src.label} indirilemedi: ${message(e)}`);
+          return false;
+        }
+      } else if (!bytes) {
         try {
           const file = await src.handle!.getFile();
           const large = tooLarge(src.label, file.size);
@@ -507,14 +540,9 @@ export class DocumentFiles {
    * file holds the drawing of that moment), checked in the worker; null
    * (said) when the drawing cannot be written, and then nothing is.
    */
-  private async encode(target: string): Promise<{ bytes: Uint8Array<ArrayBuffer>; revision: number; dropped: string | null } | null> {
-    const doc = this.ctx.doc;
+  private async encode(target: string): Promise<EncodedDrawing | null> {
     try {
-      const [codec, { packDrawing }] = await Promise.all([this.kcad(), import('../io/columns')]);
-      const revision = doc.revision;
-      const { drawing, dropped } = packDrawing(snapshotHead(doc), doc.all());
-      const bytes = await codec.encode(drawing);
-      return { bytes, revision, dropped: describeDropped(dropped) };
+      return await encodeDrawing(this.ctx.doc, this.kcad);
     } catch (e) {
       this.ctx.log.error(`${target} yazılamadı: ${message(e)} Değişiklikler kaydedilmemiş sayılıyor.`);
       return null;
@@ -570,6 +598,8 @@ export class DocumentFiles {
     const choice = await this.ask(this.ctx.doc.name.value, after);
     if (choice === 'drop') this.discarded();
     if (choice !== 'save') return choice === 'drop';
+    // An open file project is saved as its next revision (its conflict and failures are said there).
+    if (this.ctx.cloud.file?.value) return this.ctx.cloud.saveFile();
     // Saving is part of this command: the busy flag is already held.
     return this.handle ? this.writeTo(this.handle) : this.chooseAndWrite();
   }
@@ -590,7 +620,7 @@ export class DocumentFiles {
     // this file: it leaves the project first (nothing more goes there; its unsent edits stay in the
     // device draft).
     const cloud = this.ctx.cloud;
-    const state = cloud.sync.value?.state.value;
+    const state = cloud.sync.value?.state.value ?? cloud.file?.value?.endedBy ?? undefined;
     if (cloud.project.value && state && ENDED.includes(state)) cloud.detach();
     this.handle = handle;
     // The drawing takes the file's name (before writing, so the file holds it).
