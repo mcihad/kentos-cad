@@ -150,7 +150,11 @@ impl Blobs {
             }
             hasher.update(&buf[..n]);
         }
-        Ok(hasher.finalize().iter().map(|b| format!("{b:02x}")).collect())
+        Ok(hasher
+            .finalize()
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect())
     }
 
     /// Reads an object whole.
