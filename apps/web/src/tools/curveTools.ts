@@ -1,4 +1,4 @@
-import { entityLength, tessellateCircle, type Entity } from '../model/entities';
+import { entityLength, tessellateCircle } from '../model/entities';
 import { angleDeg, dist, type Vec2 } from '../model/geometry';
 import { arcThrough, circleThrough, normAngle, tessellateArc, type ArcGeom } from '../model/geom/arc';
 import {
@@ -10,10 +10,10 @@ import {
   arcStartEndDirection,
   arcStartEndRadius,
 } from '../model/geom/shapes';
-import { closestOnEdge, type Edge } from '../model/geom/intersect';
+import type { Edge } from '../model/geom/intersect';
 import { catmullRom } from '../model/geom/spline';
 import { tangentTangentRadius, tangentTangentTangent } from '../model/geom/tangentCircle';
-import { entityEdges } from '../model/ops/edges';
+import { nearestEdge } from '../model/ops/edges';
 import type { ViewTransform } from '../viewport/Camera';
 import { circleOnDiameter, degDirection, endTangent } from './constructions';
 import { parseNumber } from './coordinateInput';
@@ -394,16 +394,6 @@ export class CircleTool extends PointInputTool {
     strokePath(g, view, [this.mode === 'center' ? a : circle.c, h], { color: pal.accent, dash: [3, 3] });
     drawTag(g, view.worldToScreen(h), [`r ${this.ctx.format.length(circle.r)}`], pal.accent, pal.labelHalo);
   }
-}
-
-/** The edge of `e` nearest to p (a polyline's clicked segment, a circle itself). */
-function nearestEdge(e: Entity, p: Vec2): Edge | null {
-  let best: { edge: Edge; d: number } | null = null;
-  for (const edge of entityEdges(e)) {
-    const d = closestOnEdge(edge, p).d;
-    if (!best || d < best.d) best = { edge, d };
-  }
-  return best?.edge ?? null;
 }
 
 // ── Eğri ───────────────────────────────────────────────────────────────

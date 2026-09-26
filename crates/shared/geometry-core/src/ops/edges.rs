@@ -7,7 +7,7 @@ use crate::geom::arc::sweep;
 use crate::geom::bulge::bulge_path_edges;
 use crate::geom::dimension::layout_dimension;
 use crate::geom::ellipse::{is_full_ellipse, tessellate_ellipse};
-use crate::geom::intersect::{Edge, full_circle};
+use crate::geom::intersect::{Edge, closest_on_edge, full_circle};
 use crate::geom::spline::catmull_rom;
 use crate::jsmath::js_hypot;
 use crate::op;
@@ -72,6 +72,21 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
     }
 }
 
+/// The edge of `e` nearest to `p`: the clicked segment of a polyline, a
+/// circle itself (the tangent circle tools' pick, `CircleTool`; docs/adr/0032).
+/// The first of equally near edges; None for a point or a text.
+pub fn nearest_edge(e: &Shape, p: Vec2) -> Option<Edge> {
+    let mut best: Option<(Edge, f64)> = None;
+    for edge in entity_edges(e) {
+        let d = closest_on_edge(&edge, p).d;
+        // `d < best.d`, as in TypeScript: a NaN distance never wins.
+        if best.as_ref().is_none_or(|(_, bd)| d < *bd) {
+            best = Some((edge, d));
+        }
+    }
+    best.map(|(edge, _)| edge)
+}
+
 pub fn edge_length(e: &Edge) -> f64 {
     match *e {
         Edge::Seg { a, b } => js_hypot(b.x - a.x, b.y - a.y),
@@ -93,4 +108,58 @@ pub fn path_edges(pts: &[Vec2], closed: bool) -> Vec<Edge> {
 pub(crate) static OPS: &[Op] = &[
     op!("entityEdges", |e: Entity| entity_edges(&e.shape)),
     op!("edgeLength", |e: Edge| edge_length(&e)),
+    op!("nearestEdge", |e: Entity, p: Vec2| nearest_edge(
+        &e.shape, p
+    )),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_nearest_edge_is_the_clicked_segment_or_the_circle() {
+        let path = Shape::Polyline {
+            pts: vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(10.0, 0.0),
+                Vec2::new(10.0, 10.0),
+            ],
+            bulges: None,
+            holes: None,
+        };
+        assert_eq!(
+            nearest_edge(&path, Vec2::new(9.0, 6.0)),
+            Some(Edge::Seg {
+                a: Vec2::new(10.0, 0.0),
+                b: Vec2::new(10.0, 10.0)
+            })
+        );
+        // Equally near both: the first.
+        assert_eq!(
+            nearest_edge(&path, Vec2::new(11.0, -1.0)),
+            Some(Edge::Seg {
+                a: Vec2::new(0.0, 0.0),
+                b: Vec2::new(10.0, 0.0)
+            })
+        );
+        let circle = Shape::Circle {
+            c: Vec2::new(5.0, 5.0),
+            r: 2.0,
+        };
+        assert!(matches!(
+            nearest_edge(&circle, Vec2::new(0.0, 0.0)),
+            Some(Edge::Arc { r, .. }) if r == 2.0
+        ));
+        assert_eq!(
+            nearest_edge(
+                &Shape::Point {
+                    p: Vec2::new(1.0, 1.0),
+                    z: None
+                },
+                Vec2::new(0.0, 0.0)
+            ),
+            None
+        );
+    }
+}

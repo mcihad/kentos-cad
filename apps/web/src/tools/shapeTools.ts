@@ -1,7 +1,7 @@
 import { tessellateCircle } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { dist, signedArea } from '../model/geometry';
-import { cornerOfPath } from '../model/ops/fillet';
+import { cornersOfRing } from '../model/ops/fillet';
 import { rectFromCorners, rectFromEdge, rectFromSize, regularPolygon, regularPolygonOnEdge, sideDistance } from '../model/geom/shapes';
 import type { ViewTransform } from '../viewport/Camera';
 import { directionAngle, regularPolygonRadius } from './constructions';
@@ -116,20 +116,16 @@ export class RectangleTool extends PointInputTool {
     return rectFromCorners(a, p, RectangleTool.rotation);
   }
 
-  /** Corner style applied to every vertex (last first, so indices stay valid). */
+  /** Corner style applied to every vertex, by the core (`cornersOfRing`, docs/adr/0032); the plain ring when it cannot be. */
   private styled(ring: Vec2[]): { pts: Vec2[]; bulges?: number[] } {
     const c = RectangleTool.corners;
     if (c.kind === 'none') return { pts: ring };
-    let cur: { pts: Vec2[]; bulges?: number[] } = { pts: ring };
-    for (let i = ring.length - 1; i >= 0; i--) {
-      const r = cornerOfPath(cur.pts, cur.bulges, true, i, c.kind === 'fillet' ? { radius: c.size } : { d1: c.size, d2: c.size });
-      if ('error' in r) {
-        this.ctx.log.warn(`Köşeler işlenmedi: ${r.error}`);
-        return { pts: ring };
-      }
-      cur = r;
+    const r = cornersOfRing(ring, c.kind === 'fillet' ? { radius: c.size } : { d1: c.size, d2: c.size });
+    if ('error' in r) {
+      this.ctx.log.warn(`Köşeler işlenmedi: ${r.error}`);
+      return { pts: ring };
     }
-    return cur;
+    return r;
   }
 
   private commit(ring: Vec2[]): void {

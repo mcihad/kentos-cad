@@ -174,6 +174,22 @@ export const S5_TOOLS: CallSet = {
     { name: 'yarıçap ölçüsü: merkezde', fn: 'radialDimension', args: [v(0, 0), 5, v(0, 0)] },
     { name: 'yarıçap ölçüsü: içte', fn: 'radialDimension', args: [v(E, N), 5, v(E + 1, N + 2)] },
     { name: 'yarıçap ölçüsü: dışta', fn: 'radialDimension', args: [v(E, N), 5, v(E + 30, N - 40)] },
+    // The rectangle tool's corner style and the tangent circles' picked edge (docs/adr/0032).
+    { name: 'köşeler: yuvarlanan dikdörtgen, TM', fn: 'cornersOfRing', args: [[v(E, N), v(E + 20, N), v(E + 20, N + 10), v(E, N + 10)], { radius: 2 }] },
+    { name: 'köşeler: pahlı dikdörtgen', fn: 'cornersOfRing', args: [[v(0, 0), v(20, 0), v(20, 10), v(0, 10)], { d1: 1.5, d2: 1.5 }] },
+    { name: 'köşeler: döndürülmüş, saat yönü', fn: 'cornersOfRing', args: [[v(0, 0), v(6, 8), v(14, 2), v(8, -6)], { radius: 1 }] },
+    { name: 'köşeler: yarıçap kenara sığmaz', fn: 'cornersOfRing', args: [[v(0, 0), v(20, 0), v(20, 10), v(0, 10)], { radius: 6 }] },
+    { name: 'köşeler: yarıçap kenarın yarısı', fn: 'cornersOfRing', args: [[v(0, 0), v(20, 0), v(20, 10), v(0, 10)], { radius: 5 }] },
+    { name: 'köşeler: sıfır yarıçap', fn: 'cornersOfRing', args: [[v(0, 0), v(20, 0), v(20, 10), v(0, 10)], { radius: 0 }] },
+    { name: 'köşeler: sıfır pah', fn: 'cornersOfRing', args: [[v(0, 0), v(20, 0), v(20, 10), v(0, 10)], { d1: 0, d2: 0 }] },
+    { name: 'köşeler: düz devam eden köşe', fn: 'cornersOfRing', args: [[v(0, 0), v(10, 0), v(20, 0), v(20, 10), v(0, 10)], { radius: 1 }] },
+    { name: 'köşeler: boş halka', fn: 'cornersOfRing', args: [[], { radius: 1 }] },
+    { name: 'en yakın kenar: çoklu çizginin tıklanan parçası', fn: 'nearestEdge', args: [{ kind: 'polyline', pts: [v(E, N), v(E + 10, N), v(E + 10, N + 10)] }, v(E + 9, N + 6)] },
+    { name: 'en yakın kenar: eşit uzaklıkta ilki', fn: 'nearestEdge', args: [{ kind: 'polyline', pts: [v(0, 0), v(10, 0), v(10, 10)] }, v(11, -1)] },
+    { name: 'en yakın kenar: daire', fn: 'nearestEdge', args: [{ kind: 'circle', c: v(E, N), r: 5 }, v(E + 1, N + 1)] },
+    { name: 'en yakın kenar: yay', fn: 'nearestEdge', args: [{ kind: 'arc', c: v(0, 0), r: 10, a0: 0, a1: Math.PI / 2 }, v(-3, -3)] },
+    { name: 'en yakın kenar: kapalı alanın deliği', fn: 'nearestEdge', args: [{ kind: 'polygon', pts: [v(0, 0), v(20, 0), v(20, 20), v(0, 20)], holes: [{ pts: [v(8, 8), v(12, 8), v(12, 12), v(8, 12)] }] }, v(10, 9)] },
+    { name: 'en yakın kenar: nokta', fn: 'nearestEdge', args: [{ kind: 'point', p: v(1, 1) }, v(0, 0)] },
   ],
   random: (g, n) => [
     ...repeat(g, 'directionAngle', n, () => [g.pt(), g.pt()]),
@@ -234,5 +250,24 @@ export const S5_TOOLS: CallSet = {
       const c = g.pt();
       return [c, g.num(0.5, 40), g.chance(0.1) ? c : g.pt()];
     }),
+    // Appended: the calls above keep their random draws (docs/adr/0032).
+    ...repeat(g, 'cornersOfRing', n, () => {
+      // A rectangle at any angle and size (the rectangle tool's rings), sometimes another ring.
+      const ring = g.chance(0.8) ? rotatedRect(g) : g.ring(g.int(3, 6), 30);
+      const size = g.chance(0.1) ? g.pick([0, -1]) : g.num(0.05, 12);
+      return [ring, g.chance(0.5) ? { radius: size } : { d1: size, d2: size }];
+    }),
+    ...repeat(g, 'nearestEdge', n, () => [entity(g), g.chance(0.3) ? g.gridPt(5, 3) : g.pt()]),
   ],
 };
+
+/** A rectangle as the rectangle tool gives it: four corners, any rotation, either turning. */
+function rotatedRect(g: Gen): Vec2[] {
+  const a = g.pt();
+  const t = g.chance(0.3) ? g.pick([0, Math.PI / 2, Math.PI / 6]) : g.num(0, TAU);
+  const [w, h] = [g.num(0.5, 40), g.num(0.5, 40)];
+  const u = v(Math.cos(t), Math.sin(t));
+  const side = g.chance(0.5) ? 1 : -1;
+  const n = v(-u.y * side, u.x * side);
+  return [a, v(a.x + u.x * w, a.y + u.y * w), v(a.x + u.x * w + n.x * h, a.y + u.y * w + n.y * h), v(a.x + n.x * h, a.y + n.y * h)];
+}
