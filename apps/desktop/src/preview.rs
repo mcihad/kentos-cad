@@ -20,15 +20,18 @@ use kentos_render_wgpu::Camera;
 use kentos_ui::theme::{Tokens, typography};
 
 use crate::app::Message;
+use crate::marks::Marks;
 
 /// The value field's hint (the web's `.cursor-input__hint`).
 const HINT: &str = "mesafe · Y,X · @dY,dX · @mesafe<açı";
 
-/// The layer over the drawing area: the draft, the tag and the value field.
+/// The layer over the drawing area: the selection box and the snap marker
+/// (marks.rs, docs/adr/0029), the draft, the tag and the value field.
 /// Always present, empty when there is nothing to show, so the drawing
 /// area keeps its place in the widget tree (and its gesture state).
 pub fn layer<'a>(
     camera: &Camera,
+    marks: Marks,
     preview: Option<Preview>,
     field: Option<(&'a str, Vec2)>,
 ) -> Element<'a, Message> {
@@ -37,6 +40,9 @@ pub fn layer<'a>(
         Point::new(x as f32, y as f32)
     };
     let mut layers: Vec<Element<'a, Message>> = Vec::new();
+    if !marks.is_empty() {
+        layers.push(canvas_widget(marks).width(Fill).height(Fill).into());
+    }
     if let Some(preview) = preview {
         let tag = preview.tag.clone();
         layers.push(

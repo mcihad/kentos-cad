@@ -17,6 +17,7 @@ use std::collections::VecDeque;
 
 use kentos_contracts::LayerStyle;
 
+use crate::changes::Journal;
 use crate::document::Document;
 use crate::store::Stored;
 
@@ -83,6 +84,9 @@ pub(crate) struct History {
     pending: Option<Step>,
     group: Option<OpenGroup>,
     groups_begun: u64,
+    /// The slots every applied op touched, for readers that follow the
+    /// document (`changes.rs`); kept with the ops since every change passes here.
+    pub(crate) journal: Journal,
 }
 
 /// An open group (`Document::begin_group`); hand it back to `end_group` or
@@ -274,13 +278,25 @@ impl Document {
     }
 
     fn apply(&mut self, op: &Op) {
-        match op {
-            Op::Add(stored) => self.store.put(stored.clone()),
+        let touched = match op {
+            Op::Add(stored) => {
+                self.store.put(stored.clone());
+                stored.slot()
+            }
             Op::Remove(stored) => {
                 self.store.remove(stored.slot());
+                stored.slot()
             }
-            Op::Update { after, .. } => self.store.put(after.clone()),
-            Op::LayerStyle { layer, after, .. } => self.layers.replace_style(layer, after),
-        }
+            Op::Update { after, .. } => {
+                self.store.put(after.clone());
+                after.slot()
+            }
+            Op::LayerStyle { layer, after, .. } => {
+                self.layers.replace_style(layer, after);
+                return;
+            }
+        };
+        let objects = self.store.len();
+        self.history.journal.touch(touched, objects);
     }
 }

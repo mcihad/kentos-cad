@@ -89,8 +89,17 @@ class Run {
     this.doc.replaceWith(read.content);
   }
 
-  /** `value` with its `$…` placeholders filled in: `$current` is the revision now, `$name` one taken by `captureRevision`. */
+  /**
+   * `value` with its `$…` placeholders filled in: `$current` is the revision now, `$name` one taken by
+   * `captureRevision`; `$uid:name`, anywhere in a text (an id list, a message), the persistent id taken by `captureUid`.
+   */
   private fill(value: Json, where: string): Json {
+    if (typeof value === 'string' && value.includes('$uid:'))
+      return value.replace(/\$uid:([A-Za-z0-9_-]+)/g, (_, name: string) => {
+        const uid = this.uids.get(name);
+        if (uid === undefined) throw new Error(`${where}: “${name}” kimliği alınmadı`);
+        return uid;
+      });
     if (typeof value === 'string' && value.startsWith('$')) {
       const name = value.slice(1);
       if (name === 'current') return String(this.doc.revision);

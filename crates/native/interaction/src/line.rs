@@ -165,6 +165,11 @@ impl Tool for Line {
         ID
     }
 
+    /// Perpendicular and tangent snaps are taken from the last point (the web's `snapFrom`).
+    fn snap_from(&self) -> Option<Vec2> {
+        self.last()
+    }
+
     fn label(&self) -> &'static str {
         LABEL
     }

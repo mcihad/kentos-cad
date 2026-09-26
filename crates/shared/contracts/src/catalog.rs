@@ -155,9 +155,10 @@ fn schema<T: schemars::JsonSchema>() -> serde_json::Value {
 #[cfg(feature = "schema")]
 pub fn catalog() -> CommandCatalog {
     use crate::{
-        CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION,
-        CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION, CommitResult, LineCreate, LineCreated,
-        PROJECT_ACCESS_REVOKE, PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES,
+        CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION, CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION,
+        CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE,
+        CAD_POLYLINE_CREATE_VERSION, CommitResult, EntitiesDelete, EntitiesDeleted, LineCreate,
+        LineCreated, PROJECT_ACCESS_REVOKE, PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES,
         PROJECT_CHANGES_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION, PolygonCreate,
         PolygonCreated, PolylineCreate, PolylineCreated, ProjectAccessChange, ProjectAccessRevoke,
         ProjectChanges, ProjectPermission, ProjectShare,
@@ -695,6 +696,56 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // The erase tool's command (docs/adr/0029): the selection made explicit, held
+        // together by fixtures/commands/v1/cad.entities.delete.json.
+        CommandDescriptor {
+            id: CAD_ENTITIES_DELETE.into(),
+            version: CAD_ENTITIES_DELETE_VERSION,
+            title: "Nesneleri sil".into(),
+            summary: "Açık çizimden kalıcı kimlikleriyle verilen nesneleri siler; tek geri alma adımıdır, geri alma onları aynı kimlikleriyle yerlerine getirir. \
+                      Silinecekler girdide açıkça verilir, seçim okunmaz: Sil aracı ve Delete tuşu seçimi ya da tıklanan nesneyi buraya yazar. \
+                      Kilitli katmandaki nesneler silinmez: başkaları varsa uyarıyla yerinde kalır, hepsi kilitliyse hiçbir şey silinmez. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey silinmez, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<EntitiesDelete>(),
+            output: schema::<EntitiesDeleted>(),
+            examples: vec![
+                CommandExample {
+                    title: "İki nesneyi sil".into(),
+                    input: json!({
+                        "uids": [
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+                        ]
+                    }),
+                    output: Some(json!({
+                        "removed": [
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+                        ],
+                        "locked": [],
+                        "revision": "39"
+                    })),
+                },
+                CommandExample {
+                    title: "Bir nesneyi yalnız planlandığı sürümde sil".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "expectedRevision": "38"
+                    }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -703,8 +754,9 @@ pub fn catalog() -> CommandCatalog {
 mod tests {
     use super::*;
     use crate::{
-        LineCreate, LineCreated, PolygonCreate, PolygonCreated, PolylineCreate, PolylineCreated,
-        ProjectAccessRevoke, ProjectChanges, ProjectPermission, ProjectShare,
+        EntitiesDelete, EntitiesDeleted, LineCreate, LineCreated, PolygonCreate, PolygonCreated,
+        PolylineCreate, PolylineCreated, ProjectAccessRevoke, ProjectChanges, ProjectPermission,
+        ProjectShare,
     };
     use std::path::PathBuf;
 
@@ -798,6 +850,9 @@ mod tests {
                     crate::CAD_POLYLINE_CREATE => {
                         serde_json::from_value::<PolylineCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_DELETE => {
+                        serde_json::from_value::<EntitiesDelete>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -812,6 +867,9 @@ mod tests {
                         }
                         crate::CAD_POLYLINE_CREATE => {
                             serde_json::from_value::<PolylineCreated>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_DELETE => {
+                            serde_json::from_value::<EntitiesDeleted>(output.clone()).map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };

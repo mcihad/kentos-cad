@@ -16,6 +16,7 @@ use kentos_render_wgpu::Vec2;
 use crate::app::{App, Message, Picker};
 use crate::document::Document;
 use crate::keys;
+use crate::marks::snap_name;
 use crate::viewport::{self, Gesture};
 
 use super::command_line::CommandLine;
@@ -51,6 +52,12 @@ pub struct Observation {
     pub dirty: bool,
     pub log: Option<String>,
     pub metres_per_pixel: f64,
+    pub selected: Vec<u32>,
+    pub hover: Option<u32>,
+    /// The snap marker's kind, as the web names it.
+    pub snap: Option<String>,
+    /// Every object's id in the drawing's order.
+    pub ids: Vec<u32>,
 }
 
 /// Plays a trace on an app.
@@ -79,9 +86,9 @@ impl<'a> Player<'a> {
         file: PathBuf,
     ) -> Result<Self, String> {
         let d = &trace.draft;
-        if d.snap || d.grid || d.tracking {
+        if d.grid || d.tracking {
             return Err(format!(
-                "{}: kenet, ızgara ve kenet izlemesi masaüstünde henüz yok; iz oynatılamaz",
+                "{}: ızgara ve nesne izleme masaüstünde henüz yok; iz oynatılamaz",
                 trace.id
             ));
         }
@@ -103,9 +110,22 @@ impl<'a> Player<'a> {
             file,
         };
         player.app.picker = Picker::File(player.file.clone());
-        player.app.draft.ortho = d.ortho;
-        player.app.draft.polar = d.polar.then_some(90.0);
-        player.app.cursor_input = trace.prefs.cursor_input.unwrap_or(true);
+        // Through the settings, as the web runner sets its signals: a toggle
+        // later (F3, F8) starts from these, and the other drafting values
+        // (snap kinds, apertures, polar step) are the settings' defaults.
+        let refused = player.app.settings.choose(&[
+            ("drafting.ortho", d.ortho.into()),
+            ("drafting.polar", d.polar.into()),
+            ("drafting.snap", d.snap.into()),
+            (
+                "drafting.cursorInput",
+                trace.prefs.cursor_input.unwrap_or(true).into(),
+            ),
+        ]);
+        if !refused.is_empty() {
+            return Err(format!("{}: ayarlar alınmadı: {refused:?}", trace.id));
+        }
+        player.app.apply_settings();
         // The area reports its place first, as it does before any pointer event.
         player.mouse(mouse::Event::CursorLeft, mouse::Cursor::Unavailable)?;
         player.apply(Message::Opened(Some(Ok(Box::new(doc)))))?;
@@ -160,7 +180,10 @@ impl<'a> Player<'a> {
             return self.cursor_to(position);
         }
         if let Some(at) = step.click {
-            return self.click(at, mouse::Button::Left);
+            return self.holding(step, |player| player.click(at, mouse::Button::Left));
+        }
+        if let Some([from, to]) = step.drag {
+            return self.holding(step, |player| player.drag(from, to));
         }
         if let Some(at) = step.double_click {
             self.click(at, mouse::Button::Left)?;
@@ -243,6 +266,73 @@ impl<'a> Player<'a> {
             self.clock += Duration::from_millis(40);
         }
         self.mouse(mouse::Event::ButtonReleased(button), cursor)?;
+        self.clock += Duration::from_millis(40);
+        Ok(())
+    }
+
+    /// Runs a pointer action with the step's keys held: the window reports
+    /// the modifiers before and after, as for a key.
+    fn holding(
+        &mut self,
+        step: &Step,
+        act: impl FnOnce(&mut Self) -> Result<(), String>,
+    ) -> Result<(), String> {
+        let shift = step.shift == Some(true);
+        if shift {
+            self.apply(Message::Modifiers(Modifiers::SHIFT))?;
+        }
+        let done = act(self);
+        if shift {
+            self.apply(Message::Modifiers(Modifiers::empty()))?;
+        }
+        done
+    }
+
+    /// Plays step `index` (from 0) halfway, for an image: a drag stops with
+    /// the button still down at its end, the box showing. Other steps play whole.
+    pub fn halfway(&mut self, index: usize) -> Result<(), String> {
+        let step = self
+            .trace
+            .steps
+            .get(index)
+            .ok_or(format!("{}. adım yok", index + 1))?;
+        let Some([from, to]) = step.drag else {
+            return self.act(step);
+        };
+        let shift = step.shift == Some(true);
+        if shift {
+            self.apply(Message::Modifiers(Modifiers::SHIFT))?;
+        }
+        let a = self.window_point(from)?;
+        let b = self.window_point(to)?;
+        self.cursor_to(a)?;
+        self.mouse(
+            mouse::Event::ButtonPressed(mouse::Button::Left),
+            mouse::Cursor::Available(a),
+        )?;
+        self.cursor_to(b)
+    }
+
+    /// The left button down at `from`, moved through the middle to `to`,
+    /// released there (the web runner's `drag`).
+    fn drag(&mut self, from: [f64; 2], to: [f64; 2]) -> Result<(), String> {
+        let a = self.window_point(from)?;
+        let middle = self.window_point([(from[0] + to[0]) / 2.0, (from[1] + to[1]) / 2.0])?;
+        let b = self.window_point(to)?;
+        self.cursor_to(a)?;
+        self.mouse(
+            mouse::Event::ButtonPressed(mouse::Button::Left),
+            mouse::Cursor::Available(a),
+        )?;
+        if let Some(report) = self.line.click_elsewhere() {
+            self.apply(report)?;
+        }
+        self.cursor_to(middle)?;
+        self.cursor_to(b)?;
+        self.mouse(
+            mouse::Event::ButtonReleased(mouse::Button::Left),
+            mouse::Cursor::Available(b),
+        )?;
         self.clock += Duration::from_millis(40);
         Ok(())
     }
@@ -367,6 +457,12 @@ impl<'a> Player<'a> {
             dirty: doc.is_some_and(Document::dirty),
             log: app.last_level.map(|l| l.as_str().to_owned()),
             metres_per_pixel: 1.0 / app.viewport.camera.scale,
+            selected: app.selection.ids().iter().map(|s| s.0).collect(),
+            hover: app.selection.hover().map(|s| s.0),
+            snap: app.snap.map(|s| snap_name(s.kind).to_owned()),
+            ids: doc.map_or_else(Vec::new, |d| {
+                d.model.entities().map(|e| e.base().id).collect()
+            }),
         }
     }
 }
@@ -389,7 +485,19 @@ fn describe(step: &Step) -> String {
     } else if let Some(at) = step.move_to {
         format!("move {}", pair(at))
     } else if let Some(at) = step.click {
-        format!("click {}", pair(at))
+        let held = if step.shift == Some(true) {
+            "Shift+"
+        } else {
+            ""
+        };
+        format!("{held}click {}", pair(at))
+    } else if let Some([from, to]) = step.drag {
+        let held = if step.shift == Some(true) {
+            "Shift+"
+        } else {
+            ""
+        };
+        format!("{held}drag {} → {}", pair(from), pair(to))
     } else if let Some(at) = step.double_click {
         format!("doubleClick {}", pair(at))
     } else if let Some(at) = step.right_click {

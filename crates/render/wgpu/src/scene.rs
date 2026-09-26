@@ -265,6 +265,100 @@ fn curves(
     Some(b.into_part(tol, BTreeMap::new()))
 }
 
+/// How a highlight draws its objects: the web's overrides for the selection
+/// and the hovered object (`uploadHighlight` in ViewportController:
+/// `overrideColor`, `overrideFill`, `pointStyle`). Every stroke and mark in
+/// one colour; closed areas and hatches outlined and, with `fill`, filled.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Highlight {
+    pub color: Rgba8,
+    /// The fill of closed areas and hatches; none draws outlines only.
+    pub fill: Option<Rgba8>,
+    /// Point marks' diameter in logical pixels, and their shape (`marker_shape`).
+    pub mark_size: f32,
+    pub mark_shape: u32,
+}
+
+/// Objects drawn over the scene as a highlight (docs/adr/0029): the
+/// selection, or the hovered object. Straight and curved geometry in one
+/// part, curves tessellated within `tolerance` world units as the curves
+/// part is. Its one layer comes after `below` empty ones, so every pass
+/// draws it after the scene's layers (the scene has `below`). What the scene
+/// does not draw yet (text, dimensions, construction lines) is not
+/// highlighted either.
+pub fn build_highlight<'a>(
+    objects: impl IntoIterator<Item = &'a Entity>,
+    style: &Highlight,
+    origin: Vec2,
+    tolerance: f64,
+    below: usize,
+) -> ScenePart {
+    let tol = if tolerance.is_finite() && tolerance > 0.0 {
+        tolerance
+    } else {
+        1.0
+    };
+    let mut b = Builder::new(origin);
+    for _ in 0..below {
+        let start = b.start();
+        b.finish(start);
+    }
+    let start = b.start();
+    let color = style.color;
+    for entity in objects {
+        match entity {
+            Entity::Point(p) => b.marker(v(&p.p), color, style.mark_size, style.mark_shape),
+            Entity::Line(l) => b.segment(v(&l.a), v(&l.b), color),
+            Entity::Polyline(p) => {
+                b.path(
+                    &bulge_path(&points(&p.pts), p.bulges.as_deref(), false, tol),
+                    false,
+                    color,
+                );
+            }
+            Entity::Polygon(p) => {
+                let mut rings = vec![bulge_path(&points(&p.pts), p.bulges.as_deref(), true, tol)];
+                rings.extend(
+                    p.holes
+                        .iter()
+                        .flatten()
+                        .map(|h| bulge_path(&points(&h.pts), h.bulges.as_deref(), true, tol)),
+                );
+                b.polygon(&rings, color, style.fill);
+            }
+            Entity::Hatch(h) => {
+                let mut rings = vec![points(&h.ring)];
+                rings.extend(h.holes.iter().flatten().map(|r| points(r)));
+                b.polygon(&rings, color, style.fill);
+            }
+            Entity::Circle(c) if valid_radius(c.r) => {
+                b.path(&circle_ring(v(&c.c), c.r, tol), true, color);
+            }
+            Entity::Arc(a) if valid_radius(a.r) => {
+                b.path(
+                    &arc_points(v(&a.c), a.r, a.a0, sweep(a.a0, a.a1), tol),
+                    false,
+                    color,
+                );
+            }
+            Entity::Ellipse(e) => {
+                let (pts, closed) = ellipse_points(v(&e.c), v(&e.major), e.ratio, e.t0, e.t1, tol);
+                b.path(&pts, closed, color);
+            }
+            Entity::Spline(s) => {
+                b.path(
+                    &catmull_rom(&points(&s.pts), s.closed, tol),
+                    s.closed,
+                    color,
+                );
+            }
+            _ => {}
+        }
+    }
+    b.finish(start);
+    b.into_part(tol, BTreeMap::new())
+}
+
 /// The box around every object, as zoom to extents takes it on the web: the
 /// union of each object's box from the geometry core (`entity_bounds_in`, the
 /// store's `extent`), hidden layers included, text measured in the project's

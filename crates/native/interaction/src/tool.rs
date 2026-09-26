@@ -4,22 +4,44 @@
 //! the document and says what to draw as [`Preview`] data.
 
 use kentos_domain::Document;
+use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
 use kentos_geometry_core::tools::point_input::Tracking;
 
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::{Level, Line};
 use crate::prompt::Prompt;
+use crate::selection::Selection;
+use crate::spatial::Spatial;
 
-/// Where the pointer is, as a tool sees it.
+/// Where the pointer is, as a tool sees it (the web's `ToolPointer`).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Pointer {
-    /// The world point under it (x east, y north), through the view's float64 camera.
+    /// The world point it stands for (x east, y north): the object snap's
+    /// point when one applies, else `raw`.
     pub world: Vec2,
+    /// The world point under it, through the view's float64 camera, before snapping.
+    pub raw: Vec2,
     /// Logical pixels from the drawing area's top-left corner.
     pub screen: [f64; 2],
-    /// Shift held: turns ortho over for this point (web).
+    /// Shift held: turns ortho over for this point, and adds to the selection (web).
     pub shift: bool,
+    /// The object snap `world` came from. A snapped point is exact: ortho and
+    /// polar tracking never move it (the web's `constrainPoint`).
+    pub snap: Option<SnapHit>,
+}
+
+impl Pointer {
+    /// The pointer at `raw`, on `snap`'s point when there is one.
+    pub fn new(raw: Vec2, screen: [f64; 2], shift: bool, snap: Option<SnapHit>) -> Self {
+        Self {
+            world: snap.map_or(raw, |s| s.point),
+            raw,
+            screen,
+            shift,
+            snap,
+        }
+    }
 }
 
 /// The drawing area as a tool needs it: the camera's mapping, nothing else.
@@ -30,7 +52,8 @@ pub trait View {
     fn world_length(&self, px: f64) -> f64;
 }
 
-/// Drafting aids that change where a point goes (the project's draft settings).
+/// Drafting aids that change where a point goes, and what a click picks
+/// (the typed settings' `drafting.*` and `snap.*`, docs/adr/0023, 0029).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Draft {
     pub ortho: bool,
@@ -38,17 +61,52 @@ pub struct Draft {
     pub polar: Option<f64>,
     /// How near a click must be to a point to be that point (kenet yarıçapı), logical pixels.
     pub snap_aperture: f64,
+    /// Object snap is on (F3, `drafting.snap`).
+    pub snap: bool,
+    /// The snap kinds that apply, as `SnapKind::bit`s (`snap.*`, see [`snap_kinds`]).
+    pub snap_kinds: u32,
+    /// How near a click must be to an object to pick it (`drafting.pickAperture`), logical pixels.
+    pub pick_aperture: f64,
 }
 
 impl Default for Draft {
-    /// The web's defaults: ortho and polar off, an 11 px aperture (app/state.ts).
+    /// The web's defaults: ortho and polar off, an 11 px snap aperture,
+    /// snapping on with its default kinds (all but nearest), a 5 px pick
+    /// aperture (app/state.ts, the settings schema).
     fn default() -> Self {
         Self {
             ortho: false,
             polar: None,
             snap_aperture: 11.0,
+            snap: true,
+            snap_kinds: snap_kinds(|key| key != "snap.nearest"),
+            pick_aperture: 5.0,
         }
     }
+}
+
+/// The snap kinds the settings turn on, as `SnapKind::bit`s: the web's
+/// `snapKinds` (ViewportController), where the endpoint setting also brings
+/// quadrants (its text says so: “dairelerin çeyrek noktaları”). `on` reads
+/// a `snap.*` setting.
+pub fn snap_kinds(on: impl Fn(&str) -> bool) -> u32 {
+    let mut kinds = 0;
+    for (key, kind) in [
+        ("snap.endpoint", SnapKind::Endpoint),
+        ("snap.midpoint", SnapKind::Midpoint),
+        ("snap.center", SnapKind::Center),
+        ("snap.node", SnapKind::Node),
+        ("snap.endpoint", SnapKind::Quadrant),
+        ("snap.intersection", SnapKind::Intersection),
+        ("snap.perpendicular", SnapKind::Perpendicular),
+        ("snap.nearest", SnapKind::Nearest),
+        ("snap.tangent", SnapKind::Tangent),
+    ] {
+        if on(key) {
+            kinds |= kind.bit();
+        }
+    }
+    kinds
 }
 
 /// What a tool works with during one call.
@@ -59,6 +117,11 @@ pub struct Context<'a> {
     pub draft: Draft,
     /// Messages for the user, newest last; the host shows them.
     pub log: &'a mut Vec<Line>,
+    /// The geometry store, in step with the document when the call began
+    /// (docs/adr/0029): what a click picks.
+    pub spatial: &'a Spatial,
+    /// The selection: the select tool changes it, the erase tool deletes it.
+    pub selection: &'a mut Selection,
 }
 
 impl Context<'_> {
@@ -68,6 +131,12 @@ impl Context<'_> {
 
     pub(crate) fn say(&mut self, level: Level, text: impl Into<String>) {
         self.log.push(Line::new(level, text));
+    }
+
+    /// The world length the pick aperture spans at this zoom (the web's
+    /// `pickAperture / camera.scale`).
+    pub(crate) fn pick_tolerance(&self) -> f64 {
+        self.view.world_length(self.draft.pick_aperture)
     }
 }
 
@@ -111,9 +180,25 @@ pub trait Tool {
     fn prompt(&self) -> Prompt;
     /// Points the running command has taken (the web's `Tool.pointCount`).
     fn point_count(&self) -> usize;
+    /// Right after it starts, with what the session knows (the web's
+    /// `activate`): the erase tool deletes the selection and leaves.
+    fn activate(&mut self, _cx: &mut Context<'_>) -> Flow {
+        Flow::Stay
+    }
+    /// Whether object snaps apply while it runs (the web's `Tool.snaps`).
+    fn snaps(&self) -> bool {
+        true
+    }
+    /// The point perpendicular and tangent snaps are taken from: the last
+    /// point given (the web's `snapFrom`).
+    fn snap_from(&self) -> Option<Vec2> {
+        None
+    }
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>);
     /// The left button went down.
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>);
+    /// The left button came up.
+    fn pointer_up(&mut self, _p: &Pointer, _cx: &mut Context<'_>) {}
     /// Typed text: a coordinate, a number or an option. False when not understood.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool;
     /// Enter, Space or a quick right click.

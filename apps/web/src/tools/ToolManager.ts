@@ -55,9 +55,11 @@ export class ToolManager {
     this.current = d.create(this.ctx);
     if (id !== 'select' && id !== 'pan') this.lastRepeatable = id;
     this.promptSub = this.current.prompt.subscribe((p) => this.prompt.set(p), true);
+    // The command's name first, then what the tool says as it starts (the erase tool deletes a
+    // selection at once): the history reads in order, as on the desktop (docs/adr/0029).
+    if (id !== 'select') this.ctx.log.command(d.label);
     this.current.activate?.();
     this.activeId.set(id);
-    if (id !== 'select') this.ctx.log.command(d.label);
     this.ctx.view.requestRender();
   }
 
@@ -71,9 +73,9 @@ export class ToolManager {
     this.promptSub?.();
     this.current = tool;
     this.promptSub = tool.prompt.subscribe((p) => this.prompt.set(p), true);
+    this.ctx.log.command(label);
     tool.activate?.();
     this.activeId.set(tool.id);
-    this.ctx.log.command(label);
     this.ctx.view.requestRender();
   }
 
@@ -88,8 +90,8 @@ export class ToolManager {
     this.promptSub?.();
     this.current = child;
     this.promptSub = child.prompt.subscribe((p) => this.prompt.set(p), true);
-    child.activate?.();
     this.ctx.log.command(label);
+    child.activate?.();
     this.ctx.view.requestOverlay();
   }
 

@@ -411,3 +411,65 @@ fn every_build_is_a_new_part() {
         "the same document gives the same data"
     );
 }
+
+/// A highlight (the selection, the hovered object; docs/adr/0029) draws its
+/// objects in one colour after every layer of the scene: its ranges sit
+/// past the scene's layers, closed areas take the highlight's fill, points
+/// its marks, and curves come tessellated in the same part.
+#[test]
+fn a_highlight_draws_after_the_scene_in_one_colour() {
+    let doc = sample();
+    let o = origin(&doc);
+    let fixed = scene::build_fixed(&doc, &palette(), o);
+    let below = fixed.layers.len();
+    let accent = Rgba8::rgb(0x4c, 0x9b, 0xe8);
+    let style = scene::Highlight {
+        color: accent,
+        fill: Some(accent.with_alpha(0.13)),
+        mark_size: 15.0,
+        mark_shape: kentos_render_wgpu::layout::marker_shape::RING,
+    };
+    let all: Vec<&Entity> = doc.entities.iter().collect();
+    let part = scene::build_highlight(all.iter().copied(), &style, o, 0.05, below);
+    assert_eq!(part.layers.len(), below + 1, "one layer past the scene's");
+    assert!(
+        part.layers[..below]
+            .iter()
+            .all(|l| l.segments.is_empty() && l.fills.is_empty() && l.markers.is_empty())
+    );
+    assert!(!part.segments.is_empty());
+    assert!(part.segments.iter().all(|s| s.color == accent.0));
+    let polygons = doc
+        .entities
+        .iter()
+        .filter(|e| matches!(e, Entity::Polygon(_) | Entity::Hatch(_)))
+        .count();
+    assert!(
+        polygons > 0 && !part.fills.is_empty(),
+        "closed areas are filled"
+    );
+    assert!(
+        part.fills
+            .iter()
+            .all(|f| f.color == accent.with_alpha(0.13).0)
+    );
+    let hover = scene::build_highlight(
+        all.iter().copied(),
+        &scene::Highlight {
+            fill: None,
+            ..style
+        },
+        o,
+        0.05,
+        below,
+    );
+    assert!(
+        hover.fills.is_empty(),
+        "the hovered object is outlined only"
+    );
+    assert!(
+        scene::build_highlight(std::iter::empty(), &style, o, 0.05, below)
+            .segments
+            .is_empty()
+    );
+}

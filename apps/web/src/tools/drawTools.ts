@@ -2,6 +2,7 @@ import type { AppContext } from '../app/context';
 import { Signal } from '../core/signal';
 import type { Entity, EntityGeometry, NewEntity } from '../model/entities';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
+import { entitiesDelete } from '../product/entitiesDelete';
 import { lineCreate } from '../product/lineCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
@@ -344,18 +345,25 @@ export class EraseTool implements Tool {
     if (hit) this.eraseIds([hit.id]);
   }
 
+  /**
+   * Deletes through the product command `cad.entities.delete` (docs/adr/0029),
+   * as the desktop does: the selection (or the picked object) is made explicit
+   * as persistent ids (CMD-07). Objects on a locked layer stay: the command
+   * warns and deletes the rest, or refuses when every one is locked; one undo
+   * step, “Sil”.
+   */
   private eraseIds(ids: number[]): void {
     const { doc, log, selection } = this.ctx;
-    const ok = ids.filter((id) => {
-      const e = doc.get(id);
-      return e && !doc.layers.isLocked(e.layerId);
-    });
-    if (ok.length < ids.length) log.warn(`${ids.length - ok.length} nesne kilitli katmanda olduğu için silinmedi.`);
-    if (!ok.length) return;
-    doc.remove(ok);
+    const uids = ids.map((id) => doc.uidOf(id)).filter((uid): uid is string => uid !== undefined);
+    const result = entitiesDelete.execute({ doc }, { uids });
+    if (result.status !== 'completed') {
+      if ('error' in result) log.warn(result.error.message);
+      return;
+    }
+    for (const w of result.warnings) log.warn(w.message);
     selection.retain((id) => !!doc.get(id));
     selection.hover.set(null);
-    log.success(`${ok.length} nesne silindi.`);
+    log.success(`${result.output.removed.length} nesne silindi.`);
   }
 }
 

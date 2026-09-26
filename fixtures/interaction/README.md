@@ -1,6 +1,6 @@
 # Etkileşim izleri
 
-TODOS.md §5 (`UX-01`, `UX-04`, `UX-06`) ve [ADR 0018](../../docs/adr/0018-tool-session-and-input.md).
+TODOS.md §5 (`UX-01`, `UX-04`, `UX-06`, `UX-07`, `UX-09`) ve [ADR 0018](../../docs/adr/0018-tool-session-and-input.md).
 
 Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komut seçmek, tıklamak, yazmak, tuşa basmak. Her adımdan sonra görülmesi gerekeni de platformdan bağımsız olarak söyler.
 
@@ -18,7 +18,10 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/line-chain.json` | Çizgi aracı ([ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md)): tıkla, `12` yaz, Enter, Geri (G), Ctrl+Z, Kapat (K), her parçanın ayrı geri alınması, sağ tık, tek noktayla onay |
 | `v1/polyline-arc.json` | Çoklu çizgi aracı (ADR 0027): tıkla, `12` yaz, Enter, yay parçası, Geri (G), düz parça, Ctrl+Z, sağ tıkla bitirme, tek adımda geri alma, Uzunluk (U) |
 | `v1/command-name.json` | Çizim alanından komut adı yazmak (ADR 0018, 6. adım): kısayolu olmayan harf komut satırını açar, Esc yazılanı siler, Enter önerilen komutu (`ka` → Kapalı alan) başlatır, klavye çizime döner |
+| `v1/snap-polygon.json` | Kenet ([ADR 0029](../../docs/adr/0029-desktop-selection-and-snap.md)): kapalı alanın köşeleri var olan çizimin uç, orta ve kesişim noktalarına tam oturur; orto (F8) kenetlenen noktayı kaydırmaz; F3 keneti kapatır; gizli katman kenetlenmez, kilitli katman kenetlenir; nokta nesnesi; seçim aracı kenetlenmez |
+| `v1/select-delete.json` | Seçim (ADR 0029): üzerine gelme, tıklama, Shift ile ekleme ve çıkarma, soldan sağa pencere ve sağdan sola kesişim, Esc, gizli ve kilitli katmanlar; Delete seçimi `cad.entities.delete` ile siler, kilitli nesne kalır, Ctrl+Z aynı nesneleri yerlerine getirir; seçimsiz Delete tıklananı siler |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
+| `v1/objects.kcad` | Seçim ve kenet izlerinin çizimi: çizgiler (1–3; 2 ile 3 (9,6; 8,8)'de kesişir), kapalı alan (4), nokta (5), kilitli katmanda çizgi (6), gizli katmanda çizgi (7) |
 
 ## Biçim (`kentos.interaction-trace`, sürüm 1)
 
@@ -29,7 +32,7 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `source`, `covers` | Kaynak ve kapsanan TODOS maddeleri |
 | `document` | İlk adımdan önce açılan çizim. Açılınca geri alma geçmişi boştur, çizim kirli değildir |
 | `view` | Çizim alanının merkezi `[doğu, kuzey]` ve ölçeği `metresPerPixel` |
-| `draft` | Kenet (`snap`), ızgara, ortho, kutupsal izleme ve kenet izlemesi; açık ya da kapalı |
+| `draft` | Kenet (`snap`), ızgara, ortho, kutupsal izleme ve kenet izlemesi; açık ya da kapalı. Kenet türleri, kenet ve seçim yarıçapı ve kutupsal açı adımı ayarların varsayılanlarıdır (en yakın dışında bütün türler; 11 ve 5 piksel; 45°). Masaüstü ızgara ve nesne izlemesi açık bir izi oynatmaz, açık bir iletiyle durur |
 | `prefs` | Kullanıcı tercihleri; bugün yalnız `cursorInput` (imleç yanında değer girişi) |
 | `clickTolerance` | Tıklanan noktaların karşılaştırılacağı mesafe, metre |
 | `steps` | Adımlar |
@@ -41,13 +44,16 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | Eylem | Anlamı |
 |---|---|
 | `run` | Komutu kimliğiyle çalıştırır; şeritten, menüden ya da komut satırından seçmekle aynıdır (`tool.polygon`) |
-| `key` | Tek tuş: `Enter`, `Esc`, `Tab`, `Backspace`, `Space`, bir harf (`G`), `-`, `+` ya da `Ctrl+` akoru (`Ctrl+Z`) |
+| `key` | Tek tuş: `Enter`, `Esc`, `Tab`, `Backspace`, `Space`, `Delete`, `F3` (kenet), `F8` (orto), bir harf (`G`), `-`, `+` ya da `Ctrl+` akoru (`Ctrl+Z`) |
 | `text` | Karakterler tek tek yazılır. Klavyenin ürettiği metin sayılır, fiziksel tuş konumu değil |
 | `move` | İmleç çizimde bu noktaya gelir |
 | `click`, `doubleClick` | Sol tuşla tıklama ya da çift tıklama |
+| `drag` | `[[doğu, kuzey], [doğu, kuzey]]`: sol tuş ilk noktada basılır, imleç ortadan ikinci noktaya gider, orada bırakılır (seçim kutusu) |
 | `rightClick` | Sağ tuşa kısa basıp bırakma; menüyü açan basılı tutmadan kısa |
 | `focus` | Klavye odağı: `commandLine` (komut satırına tıklamak) |
 | `saveAndReopen` | Uygulamanın kendi kaydetme komutuyla yeni bir dosyaya yazar ve o dosyayı yeniden açar |
+
+`shift: true`, `click` ya da `drag` adımında tuşa basılıyken Shift'in basılı olduğunu söyler (seçime ekleme ve çıkarma).
 
 **Beklentiler.** `expect` isteğe bağlıdır ve eylemden sonra denetlenir. Yalnız yazılan alanlar karşılaştırılır:
 
@@ -63,6 +69,10 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | `canUndo`, `canRedo`, `dirty` | Geri al, yinele ve kaydedilmemiş değişiklik |
 | `log` | Son iletinin düzeyi: `success`, `info`, `warn`, `error` |
 | `metresPerPixel` | Görünümün ölçeği |
+| `selected` | Seçili nesnelerin kimlikleri, seçildikleri sırayla (`[1, 4]`) |
+| `hover` | İmlecin altında vurgulanan nesnenin kimliği; yoksa `null` |
+| `snap` | Kenet işaretinin türü (`endpoint`, `midpoint`, `center`, `node`, `quadrant`, `intersection`, `perpendicular`, `tangent`, `nearest`); yoksa `null` |
+| `ids` | Çizimdeki nesnelerin kimlikleri, belge sırasıyla: geri alınan silmenin nesneleri yerlerine döner |
 
 `note`, adımın neyi gösterdiğini okura anlatır; denetlenmez.
 

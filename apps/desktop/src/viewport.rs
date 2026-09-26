@@ -20,6 +20,11 @@
 //! targets and composes the picture into Iced's frame (`Primitive::render`).
 //! A change reaches the next frame; the status says which sample counts the
 //! device takes and which one it could not make.
+//!
+//! The selection and the hovered object are two more scene parts, drawn after
+//! every layer (`highlight.rs`, docs/adr/0029).
+
+mod highlight;
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -33,6 +38,7 @@ use iced::widget::{container, shader, stack};
 use iced::{Element, Fill, Point, Rectangle, Vector, mouse, wgpu};
 
 use kentos_contracts::{DrawingFont, Entity, LayerNode};
+use kentos_interaction::Selection;
 use kentos_render_wgpu::camera::FIT_PADDING;
 use kentos_render_wgpu::scene::{self, lod};
 use kentos_render_wgpu::{
@@ -113,6 +119,9 @@ pub enum Event {
     CenterOn(Vec2),
     /// The left button went down here (logical pixels from the area's top-left).
     Pressed(Point),
+    /// The left button came up here, after going down over the area (the
+    /// web's pointer capture: wherever it is released).
+    Released(Point),
     /// The right button went down and up here within [`RIGHT_HOLD`].
     RightClick(Point),
 }
@@ -159,6 +168,8 @@ pub struct Viewport {
     generation: u64,
     id: ViewId,
     scene: RefCell<Option<Cached>>,
+    /// The highlight parts as last built, and what they were built from.
+    highlight: RefCell<highlight::Highlighted>,
     status: Arc<Mutex<Status>>,
 }
 
@@ -191,6 +202,7 @@ impl Viewport {
             generation: 0,
             id: NEXT_VIEW.fetch_add(1, Ordering::Relaxed),
             scene: RefCell::new(None),
+            highlight: RefCell::new(highlight::Highlighted::default()),
             status: Arc::new(Mutex::new(Status::default())),
         }
     }
@@ -238,6 +250,8 @@ impl Viewport {
             Event::CenterOn(p) => self.camera.center_on(p),
             // The app gives these to the tool session (app.rs); the pointer is there too.
             Event::Pressed(at) | Event::RightClick(at) => self.cursor = Some(self.world(at)),
+            // It may come from off the area; the last move placed the pointer.
+            Event::Released(_) => {}
         }
     }
 
@@ -267,14 +281,17 @@ impl Viewport {
             .unwrap_or_default()
     }
 
-    /// The drawing area showing `doc`, drawn as `graphics` says. A change of
-    /// either value reaches the next frame: new targets on the same device,
-    /// nothing reopened (TODOS.md AA-02).
+    /// The drawing area showing `doc`, drawn as `graphics` says, with the
+    /// selection and the hovered object highlighted in `accent` (docs/adr/0029).
+    /// A change of either value reaches the next frame: new targets on the
+    /// same device, nothing reopened (TODOS.md AA-02).
     pub fn view<'a>(
         &'a self,
         doc: &Document,
         mode: Mode,
         graphics: Graphics,
+        selection: &Selection,
+        accent: Rgba8,
     ) -> Element<'a, Message> {
         let palette = palette(mode);
         let settings = RenderSettings {
@@ -283,9 +300,10 @@ impl Viewport {
             ..RenderSettings::new(palette.background)
         };
         let (origin, fixed, curves) = self.scene(doc, mode, &palette, &settings);
+        let (selected, hovered) = self.highlights(doc, selection, accent, &fixed, &curves);
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
-            parts: [fixed, curves],
+            parts: [fixed, curves, selected, hovered],
             origin,
             camera: self.camera,
             settings,
@@ -396,10 +414,40 @@ pub fn palette(mode: Mode) -> Palette {
     }
 }
 
+/// The colours of the marks drawn over the drawing on Iced's canvas
+/// (marks.rs, docs/adr/0029).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct MarkColors {
+    /// The snap marker and the crossing box: `--canvas-snap` (DESIGN.md §3.1–3.2, §8).
+    pub snap: iced::Color,
+    /// The window box: the web's blue (`drawSelectionBox`, the dark theme's
+    /// `--c-info`), in both themes as on the web.
+    pub window: iced::Color,
+    /// The halo around the snap marker's name: the area's colour.
+    pub halo: iced::Color,
+}
+
+pub fn mark_colors(mode: Mode) -> MarkColors {
+    let rgb = |c: Rgba8| iced::Color::from_rgb8(c.0[0], c.0[1], c.0[2]);
+    let window = iced::Color::from_rgb8(0x6d, 0xb3, 0xf2);
+    match mode {
+        Mode::Light => MarkColors {
+            snap: iced::Color::from_rgb8(0x1a, 0x9a, 0x48),
+            window,
+            halo: rgb(palette(mode).background),
+        },
+        Mode::Dark | Mode::Night | Mode::HighContrast => MarkColors {
+            snap: iced::Color::from_rgb8(0x6f, 0xd0, 0x8c),
+            window,
+            halo: rgb(palette(mode).background),
+        },
+    }
+}
+
 /// The shader widget's program: a frame's inputs, and the pointer's gestures.
 struct Program {
     id: ViewId,
-    parts: [Arc<ScenePart>; 2],
+    parts: [Arc<ScenePart>; 4],
     origin: Vec2,
     camera: Camera,
     settings: RenderSettings,
@@ -416,6 +464,8 @@ pub struct Gesture {
     last_middle: Option<(Instant, Point)>,
     /// When the right button went down over the area.
     right: Option<Instant>,
+    /// The left button went down over the area and is still down.
+    left: bool,
 }
 
 impl shader::Program<Message> for Program {
@@ -526,7 +576,17 @@ pub fn gesture(
         }
         mouse::Event::ButtonPressed(mouse::Button::Left) => {
             let at = cursor.position_in(bounds)?;
+            state.left = true;
             Some((Some(Event::Pressed(at)), true))
+        }
+        mouse::Event::ButtonReleased(mouse::Button::Left) => {
+            // Released anywhere: the press began over the area (the web captures the pointer).
+            if !std::mem::take(&mut state.left) {
+                return None;
+            }
+            let position = cursor.position()?;
+            let at = Point::new(position.x - bounds.x, position.y - bounds.y);
+            Some((Some(Event::Released(at)), true))
         }
         mouse::Event::ButtonPressed(mouse::Button::Right) => {
             cursor.position_in(bounds)?;
@@ -558,7 +618,7 @@ pub fn gesture(
 /// One frame of the drawing area, handed to the renderer.
 pub struct Frame {
     id: ViewId,
-    parts: [Arc<ScenePart>; 2],
+    parts: [Arc<ScenePart>; 4],
     origin: Vec2,
     camera: Camera,
     settings: RenderSettings,
@@ -569,7 +629,7 @@ impl fmt::Debug for Frame {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Frame")
             .field("id", &self.id)
-            .field("parts", &[self.parts[0].id, self.parts[1].id])
+            .field("parts", &self.parts.each_ref().map(|p| p.id))
             .field("camera", &self.camera)
             .finish_non_exhaustive()
     }
@@ -589,7 +649,7 @@ impl shader::Primitive for Frame {
         let scale = viewport.scale_factor();
         let status = match &mut pipeline.0 {
             Ok(renderer) => {
-                let parts = [&*self.parts[0], &*self.parts[1]];
+                let parts = self.parts.each_ref().map(|p| &**p);
                 let prepared = renderer.prepare(
                     device,
                     queue,
@@ -746,6 +806,30 @@ mod tests {
             over(10.0, 10.0),
         );
         assert_eq!(left, Some((Some(Event::Left), false)));
+    }
+
+    /// The left button's release reaches the app wherever it happens, once
+    /// it went down over the area (a selection box ends off the area too);
+    /// a release that began elsewhere is not the area's.
+    #[test]
+    fn the_left_release_follows_a_press_over_the_area() {
+        let mut state = sized();
+        let release = mouse::Event::ButtonReleased(mouse::Button::Left);
+        assert_eq!(mouse_event(&mut state, release, over(150.0, 70.0)), None);
+        let press = mouse_event(
+            &mut state,
+            mouse::Event::ButtonPressed(mouse::Button::Left),
+            over(150.0, 70.0),
+        );
+        assert_eq!(
+            press,
+            Some((Some(Event::Pressed(Point::new(50.0, 20.0))), true))
+        );
+        assert_eq!(
+            mouse_event(&mut state, release, over(1000.0, 20.0)),
+            Some((Some(Event::Released(Point::new(900.0, -30.0))), true))
+        );
+        assert_eq!(mouse_event(&mut state, release, over(150.0, 70.0)), None);
     }
 
     #[test]

@@ -51,6 +51,14 @@ pub const PORTED: &[&str] = &[
     // The line and polyline tools (docs/adr/0027), each writing through its product command.
     "tool.line",
     "tool.polyline",
+    // Selecting, deleting and snapping (docs/adr/0029): the select tool, the erase tool
+    // through cad.entities.delete (Delete), F3 and the selection commands.
+    "tool.select",
+    "tool.erase",
+    "draft.snap",
+    "edit.deselect",
+    "edit.selectAll",
+    "edit.invertSelection",
 ];
 
 /// Where a command stands, from the desktop's point of view.

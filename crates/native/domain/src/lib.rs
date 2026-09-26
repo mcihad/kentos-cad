@@ -25,6 +25,7 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+mod changes;
 mod document;
 mod edit;
 mod history;
@@ -33,6 +34,7 @@ mod layers;
 mod snapshot;
 mod store;
 
+pub use changes::{ChangeMark, Changes};
 pub use document::Document;
 pub use edit::{SlotsExhausted, labels};
 pub use history::{Group, UNDO_LIMIT};

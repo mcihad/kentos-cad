@@ -158,7 +158,25 @@ impl Store {
         Ok(list.len())
     }
 
-    /// Adds or replaces one object.
+    /// Adds or replaces objects in order, as `put` does one by one, then
+    /// builds the tree again when enough changed (as `put_json` and
+    /// `put_packed` do): how a host that holds typed objects follows its
+    /// document (the desktop, docs/adr/0029); the page sends packed numbers.
+    pub fn put_many<'a>(
+        &mut self,
+        items: impl IntoIterator<Item = (f64, &'a str, bool, Shape)>,
+    ) -> usize {
+        let mut n = 0;
+        for (id, layer, label, shape) in items {
+            self.put(id, layer, label, shape);
+            n += 1;
+        }
+        self.maybe_rebuild();
+        n
+    }
+
+    /// Adds or replaces one object. The tree is not built again here: a host
+    /// putting many objects calls `put_many` (or a packed form), which does.
     pub fn put(&mut self, id: f64, layer_id: &str, label: bool, shape: Shape) {
         let layer = self.layer_index(layer_id);
         let bounds = entity_bounds_in(&shape, self.font);
@@ -278,16 +296,29 @@ impl Store {
         self.font = font;
     }
 
+    /// Replaces the layer table: every node of the layer tree with its flags
+    /// already resolved through its ancestors. A layer left out behaves as
+    /// an unlisted one (visible, unlocked, interior picking on). The page
+    /// sends the same rows as JSON (`set_layers_json`).
+    pub fn set_layers<'a>(&mut self, rows: impl IntoIterator<Item = (&'a str, LayerFlags)>) {
+        for f in self.flags.iter_mut() {
+            *f = UNLISTED;
+        }
+        for (id, flags) in rows {
+            let l = self.layer_index(id);
+            self.flags[l as usize] = flags;
+        }
+    }
+
     /// Replaces the layer table: `[{ id, visible, locked, pickInterior, label? }]`,
     /// the flags already resolved with the ancestors (every node of the
-    /// tree); `label` is the layer's label style, when it has one.
+    /// tree); `label` is the layer's label style, when it has one. A table
+    /// that does not read changes nothing.
     pub fn set_layers_json(&mut self, text: &str) -> Result<(), String> {
         let Json::Arr(list) = Json::parse(text)? else {
             return Err("katman dizisi bekleniyordu".into());
         };
-        for f in self.flags.iter_mut() {
-            *f = UNLISTED;
-        }
+        let mut rows = Vec::with_capacity(list.len());
         for (i, v) in list.iter().enumerate() {
             let field = |k: &str| -> Result<bool, String> {
                 bool::from_json(v.get(k)).map_err(|e| format!("[{i}].{k}: {e}"))
@@ -305,9 +336,9 @@ impl Store {
                 pick_interior: field("pickInterior")?,
                 label,
             };
-            let l = self.layer_index(id);
-            self.flags[l as usize] = flags;
+            rows.push((id.as_str(), flags));
         }
+        self.set_layers(rows);
         Ok(())
     }
 
@@ -636,6 +667,63 @@ mod tests {
             ..q
         };
         assert_eq!(s.candidates(&nan).len(), 600);
+    }
+
+    #[test]
+    fn typed_puts_and_layers_are_the_json_ones() {
+        let lines: Vec<String> = (1..=600)
+            .map(|i| {
+                line(
+                    f64::from(i),
+                    if i % 2 == 0 { "a" } else { "b" },
+                    f64::from(i),
+                )
+            })
+            .collect();
+        let mut json = Store::new();
+        json.put_json(&format!("[{}]", lines.join(","))).unwrap();
+        json.set_layers_json(
+            r#"[{"id":"a","visible":false,"locked":true,"pickInterior":false},{"id":"b","visible":true,"locked":false,"pickInterior":true}]"#,
+        )
+        .unwrap();
+        let mut typed = Store::new();
+        let n = typed.put_many((1..=600).map(|i| {
+            let x = f64::from(i);
+            let layer = if i % 2 == 0 { "a" } else { "b" };
+            let shape = Shape::Line {
+                a: crate::Vec2::new(x, 0.0),
+                b: crate::Vec2::new(x, 10.0),
+            };
+            (x, layer, false, shape)
+        }));
+        assert_eq!(n, 600);
+        assert!(typed.tree.is_some(), "a big batch builds the tree");
+        let hidden = LayerFlags {
+            visible: false,
+            locked: true,
+            pick_interior: false,
+            label: None,
+        };
+        typed.set_layers([("a", hidden), ("b", UNLISTED)]);
+        assert_eq!(typed.ids(), json.ids());
+        for id in [1.0, 2.0, 599.0, 600.0] {
+            let (t, j) = (typed.get(id).unwrap(), json.get(id).unwrap());
+            assert_eq!((&t.shape, t.bounds), (&j.shape, j.bounds));
+            assert_eq!(typed.flags(t), json.flags(j));
+        }
+        let r = Bounds {
+            min_x: 0.0,
+            min_y: -1.0,
+            max_x: 50.5,
+            max_y: 11.0,
+        };
+        assert_eq!(typed.in_rect(&r, false), json.in_rect(&r, false));
+        // A table that does not read leaves the one in place.
+        assert!(
+            json.set_layers_json(r#"[{"id":"a","visible":true}]"#)
+                .is_err()
+        );
+        assert_eq!(json.flags(json.get(2.0).unwrap()), hidden);
     }
 
     #[test]

@@ -1,6 +1,6 @@
 # Ürün komutu fixture'ları (`kentos.command-cases` v1)
 
-TODOS.md `CMD-04..07`, [ADR 0013](../../docs/adr/0013-product-command-contract.md), [ADR 0022](../../docs/adr/0022-first-product-command.md), [ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md). Bir ürün komutunun doğrulama (`validate`), plan (`plan`) ve yürütme (`execute`) davranışını durum durum yazar: sonucun durumu, hata kodu, alan yolu, ileti ve uyarılar; yürütmeden sonra da belgenin hâli.
+TODOS.md `CMD-04..07`, [ADR 0013](../../docs/adr/0013-product-command-contract.md), [ADR 0022](../../docs/adr/0022-first-product-command.md), [ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md), [ADR 0029](../../docs/adr/0029-desktop-selection-and-snap.md). Bir ürün komutunun doğrulama (`validate`), plan (`plan`) ve yürütme (`execute`) davranışını durum durum yazar: sonucun durumu, hata kodu, alan yolu, ileti ve uyarılar; yürütmeden sonra da belgenin hâli.
 
 Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts` (`CadDocument`), masaüstü `crates/native/application/tests/fixtures.rs` (`kentos_domain::Document`, `cargo test -p kentos-native-application`). İkisi de bütün durumları geçmelidir. Kayıttaki her komutun bir dosyası vardır; her dosyada en az 20 durum bulunur.
 
@@ -9,6 +9,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.polygon.create.json` | `cad.polygon.create` v1 (ADR 0022) | 23 |
 | `v1/cad.line.create.json` | `cad.line.create` v1 (ADR 0027) | 20 |
 | `v1/cad.polyline.create.json` | `cad.polyline.create` v1 (ADR 0027) | 23 |
+| `v1/cad.entities.delete.json` | `cad.entities.delete` v1 (ADR 0029) | 23 |
 
 ## Dosya
 
@@ -40,19 +41,20 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 
 Her adımda `expect` (aşağıda) ve `note` de bulunabilir. Komut adımında `result` zorunludur.
 
-- **`input`** komutun girdisidir, sözleşmenin tipiyle (`PolygonCreate`, `LineCreate`, `PolylineCreate`; JSON adlarıyla).
+- **`input`** komutun girdisidir, sözleşmenin tipiyle (`PolygonCreate`, `LineCreate`, `PolylineCreate`, `EntitiesDelete`; JSON adlarıyla).
 - **`nonFinite`**: JSON NaN ve ±∞ taşıyamaz. `{ "pts[1].y": "NaN" }` ya da `{ "a.x": "Infinity" }` gibi bir tablo, girdi okunduktan sonra o alana `NaN`, `Infinity` ya da `-Infinity` koyar. Yol, hata iletisinin `path` alanıyla aynı yazılır.
 - **`result`** sonucun tamamıdır (`CommandResult`): `status` ve duruma göre `output` ve `warnings`, ya da `error`. Alan alan tam eşit olmalıdır. Sayılar sayı olarak karşılaştırılır (dosyanın `1`'i belgenin `1.0`'ıdır).
 
 ## Yer tutucular
 
-Sürüm ve kalıcı kimlik iki uygulamada aynı sayı değildir; dosya onları adla yazar.
+Sürüm ve kalıcı kimlik iki uygulamada aynı sayı değildir; dosya onları adla yazar. Var olan nesneye kalıcı kimliğiyle başvuran komut (`cad.entities.delete`) kimliği önce `captureUid` ile alır, sonra `$uid:ad` ile yazar.
 
 | Yazılan | `input` içinde | `result` içinde |
 |---|---|---|
 | `"$current"` | adımdan önceki sürüm, ondalık metin | adımdan sonraki sürüm |
 | `"$ad"` | `captureRevision` ile `ad` adıyla saklanan sürüm | aynı |
 | `"$uid"` | — | yazılan nesnenin kalıcı kimliği: küçük harfli, tireli bir UUID ve `output.id` yuvasındaki nesnenin kimliği |
+| `$uid:ad` (bir metnin içinde de) | `captureUid` ile `ad` adıyla alınan kalıcı kimlik | aynı; bir iletinin içinde de (`“$uid:a” kimlikli nesne çizimde yok…`) |
 
 **Sürüm neden yalnız karşılaştırılır?** Sürüm bir sayaçtır; sözleşmesi eşitliktir. Web açılışı bir kez sayar, masaüstü saymaz (ADR 0020). Kimlik yeni nesnede rastgeledir (UUIDv7, ADR 0014).
 

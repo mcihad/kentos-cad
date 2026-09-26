@@ -22,7 +22,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   (`kentos-ui` / `kentos_ui`) olarak geçmişiyle alındı (ADR 0016). İlk masaüstü
   kabuğu `apps/desktop`'tadır (ADR 0017); ana CAD çizim alanı `crates/render/wgpu`
   ile Iced'in aygıtında çizilir (ADR 0019); araçları kapalı alan, çizgi ve çoklu
-  çizgidir (ADR 0021, 0027); yazı ve seçim henüz yok.
+  çizgidir (ADR 0021, 0027); seçim, kenet ve silme vardır (ADR 0029); yazı henüz yok.
   Web özellikleri envanter üzerinden adım adım masaüstüne taşınır.
 - Web WebGPU/WebGL2 renderer'larını korur. Uygun WGSL kaynakları native ile
   paylaşılabilir; native Iced/application/wgpu runtime'ı web'e derlenmez.
@@ -59,14 +59,14 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015); proje kataloğu ve yaşam döngüsü komutları, migration 0005 (ADR 0028); dosya olarak saklanan proje: doğrulanan yükleme, değişmez KCAD v2 revizyonları, klasör nesne deposu, migration 0006 (ADR 0031) | `apps/api/`, `crates/server/` |
 | Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict, paylaşım penceresi, “Benimle paylaşılanlar”, açık projede rol/erişim değişikliği (ADR 0024), proje kataloğu: listeler, sunucuda arama/sayfalama, bilgiler, kopya, arşiv, çöp kutusu (ADR 0028) | `app/cloud/`, `ui/cloud/` |
 | KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
-| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç (v1, v2) / kaydet (v2; geçici dosya ve doğrulama), geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan, çizgi ve çoklu çizgi araçları, değer alanı ve web'in tuş anlamları (ADR 0021, 0027) | `apps/desktop/` |
+| Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç (v1, v2) / kaydet (v2; geçici dosya ve doğrulama), geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan, çizgi ve çoklu çizgi araçları, değer alanı ve web'in tuş anlamları; seçim (tıklama, Shift, pencere/kesişim, üzerine gelme), kenet (F3), Sil, özellikler panelinde seçim özeti (ADR 0021, 0027, 0029) | `apps/desktop/` |
 | Native wgpu çizim hattı ve paylaşılan WGSL sözleşmesi | `crates/render/wgpu/`, `shaders/wgsl/` |
 | Masaüstü belgesi (`kentos-domain`): web `CadDocument`'inin anlamı native olarak, ortak işlem fixture'larıyla sınanır | `crates/native/domain/`, `fixtures/document-ops/` |
-| Masaüstü araç oturumu (`kentos-interaction`): durumlar, veri olarak istem, kapalı alan/çoklu çizgi (tek yol aracı) ve çizgi araçları; iki platform `fixtures/interaction/v1` izlerini ve `fixtures/point-input/v1` dilbilgisini geçer | `crates/native/interaction/` |
-| Ürün komutları `cad.polygon.create`, `cad.line.create`, `cad.polyline.create` v1: web ve masaüstü işleyicileri, `CommandResult`, katalogla eşit kayıtlar; kapalı alan, çizgi ve çoklu çizgi araçları bu komutlardan yazar (ADR 0022, 0027) | `product/`, `crates/native/application/`, `fixtures/commands/` |
+| Masaüstü araç oturumu (`kentos-interaction`): durumlar, veri olarak istem, kapalı alan/çoklu çizgi (tek yol aracı), çizgi, seçim ve Sil araçları; belgenin günlüğüyle izlenen geometri deposu (`Spatial`, ADR 0029); iki platform `fixtures/interaction/v1` izlerini ve `fixtures/point-input/v1` dilbilgisini geçer | `crates/native/interaction/` |
+| Ürün komutları `cad.polygon.create`, `cad.line.create`, `cad.polyline.create`, `cad.entities.delete` v1: web ve masaüstü işleyicileri, `CommandResult`, katalogla eşit kayıtlar; kapalı alan, çizgi ve çoklu çizgi araçları bu komutlardan yazar, Sil aracı `cad.entities.delete` ile siler (ADR 0022, 0027, 0029) | `product/`, `crates/native/application/`, `fixtures/commands/` |
 | Tipli ayarlar: şema, katmanlı çözüm, ortak durumlar; web servisi, masaüstü ayar dosyası ve penceresi, canlı MSAA/HiDPI (ADR 0023) | `crates/shared/contracts/src/settings/`, `core/settings/`, `app/settings/`, `apps/desktop/src/settings*.rs`, `fixtures/settings/` |
 
-Kapalı alan, çizgi ve çoklu çizgi dışındaki desktop çizim araçları, çizim alanında yazı/seçim/yakalama, embed Python, tam AI yüzeyi,
+Kapalı alan, çizgi ve çoklu çizgi dışındaki desktop çizim araçları, çizim alanında yazı ve tutamaçlar, embed Python, tam AI yüzeyi,
 genişletilmiş proje bazlı paylaşım ve kalıcı server worker kabulü gelecek
 işlerdir. Mevcut tenant/cloud altyapısını yok saymayın; onu bu kapsamla tamamlayın.
 Web'e göre verilen kısa dosya yolları `apps/web/src/` altındadır.
@@ -92,7 +92,8 @@ pnpm e2e                 # gerçek tarayıcı duman testi
 pnpm e2e:visual          # görsel karşılaştırma
 pnpm e2e:interaction     # etkileşim izleri: poligon kabul izi, tuş anlamları (fixtures/interaction, ADR 0018)
 cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan (ADR 0021)
-cargo test -p kentos-native-application   # ürün komutlarının durumları masaüstünde (fixtures/commands, ADR 0022, 0027)
+cargo test -p kentos-native-application   # ürün komutlarının durumları masaüstünde (fixtures/commands, ADR 0022, 0027, 0029)
+cargo test --release -p kentos-interaction --test perf -- --ignored --nocapture   # masaüstü deposu: eşitleme, kenet ve seçme süreleri (ADR 0029)
 KENTOS_WRITE_SETTINGS=1 cargo test -p kentos-contracts settings   # ayar şeması değişince settingsSchema.json'u yeniden yaz (ADR 0023)
 cargo run -q -p kentos-kcad --bin kcad -- inspect|validate|sniff DOSYA   # KCAD v2 dosyasını incele (ADR 0025)
 python3 tools/kcad/kcad.py validate DOSYA   # bağımsız Python okuyucusu
@@ -220,7 +221,9 @@ Akış/istem/önizleme TS'te, hesap Rust'tadır. Enter/onay, Esc/iptal ve nested
 Kenet pointerdown/up'ta yeniden hesaplanır; eski pointermove sonucuna güvenilmez.
 Masaüstünün karşılığı `kentos_interaction`'dır (ADR 0021): iki taraf `fixtures/interaction/v1`
 izlerini ve yazılan değerin `fixtures/point-input/v1` dilbilgisini geçer; davranış
-değişikliği ADR 0018'in sırasıyla yapılır.
+değişikliği ADR 0018'in sırasıyla yapılır. Kenet ve seçim iki platformda aynı Rust
+deposundan gelir; masaüstü depoyu belgenin günlüğüyle (`changes_since`) izler, olay
+başına yeniden kurmaz (ADR 0029).
 
 ### 4.8 Belge ve kayıt
 
@@ -254,6 +257,8 @@ fixture'ları ve bağımsız referanslar korunur. Yeni hesap için §14 ve ADR 0
 - CPU kaynak koordinatı f64; GPU'ya yerel orijine göre float32 fark gider.
   Mutlak büyük dünya koordinatını GPU'ya yüklemeyin.
 - Kirli katmanlar güncellenir; seçim/hover/ızgara ayrı cache/katmanlardır.
+  Masaüstünde seçim ve üzerine gelme ayrı wgpu sahne parçasıdır; kenet işareti ve
+  seçim kutusu Iced canvas'ıdır (ADR 0029).
   `requestRender/requestOverlay` istekleri birleşir; her olayda tam belge rebuild yok.
 - Canvas resize sonrası siyah kareyi önleyen mevcut senkron redraw istisnasını koruyun.
 - Pick/snap/geometri kararları `PickIndex` → Rust store üzerinden gelir.
