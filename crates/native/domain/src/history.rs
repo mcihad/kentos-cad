@@ -13,12 +13,13 @@
 //! Only undoable data are ops: objects and layer styles. Layer visibility,
 //! lock, names and fold are changed at once and never recorded (web).
 
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 use kentos_contracts::LayerStyle;
 
 use crate::changes::Journal;
 use crate::document::Document;
+use crate::identity::{Slot, Uuid};
 use crate::store::Stored;
 
 /// Undo steps kept; an older step is dropped when a new one comes (web; TODOS.md TX-06).
@@ -275,6 +276,30 @@ impl Document {
         for op in ops.iter().rev() {
             self.apply(&op.inverse());
         }
+    }
+
+    /// Applies one op outside the history (a change from outside, external.rs).
+    pub(crate) fn apply_op(&mut self, op: &Op) {
+        self.apply(op);
+    }
+
+    /// Drops the undo and redo steps that touch any of these objects, named
+    /// by slot or by persistent id (an object deleted here that someone else
+    /// brought back sits in a new slot under the same id). Web: `forgetHistoryOf`.
+    pub(crate) fn forget_history_of(&mut self, slots: &HashSet<Slot>, uids: &HashSet<Uuid>) {
+        if slots.is_empty() && uids.is_empty() {
+            return;
+        }
+        let hit = |s: &Stored| slots.contains(&s.slot()) || uids.contains(&s.uid);
+        let touches = |step: &Step| {
+            step.ops.iter().any(|op| match op {
+                Op::Add(s) | Op::Remove(s) => hit(s),
+                Op::Update { before, .. } => hit(before),
+                Op::LayerStyle { .. } => false,
+            })
+        };
+        self.history.undo.retain(|step| !touches(step));
+        self.history.redo.retain(|step| !touches(step));
     }
 
     fn apply(&mut self, op: &Op) {

@@ -323,3 +323,368 @@ fn refusals_end_or_stop_as_on_the_web() {
         assert_eq!(sync.pending(), 1, "{code}");
     }
 }
+
+// ── Other editors' commits (remote.rs) ─────────────────────────────────────
+
+use kentos_contracts::{EventFeature, EventPage, EventRecord, FeatureOp};
+
+fn event(
+    seq: u64,
+    request: Option<&str>,
+    features: &[(Uuid, FeatureOp)],
+    meta: bool,
+) -> EventRecord {
+    EventRecord {
+        seq: seq.to_string(),
+        data_revision: seq.to_string(),
+        kind: "project.changes".into(),
+        actor: None,
+        request_id: request.map(str::to_string),
+        features: features
+            .iter()
+            .map(|(id, op)| EventFeature {
+                id: id.to_string(),
+                op: *op,
+                version: None,
+            })
+            .collect(),
+        meta,
+    }
+}
+
+fn page(events: Vec<EventRecord>) -> EventPage {
+    let next = events.last().map_or("9".to_string(), |e| e.seq.clone());
+    EventPage { events, next }
+}
+
+fn record(id: Uuid, version: &str, entity: Entity) -> FeatureRecord {
+    FeatureRecord {
+        id: id.to_string(),
+        version: version.into(),
+        entity,
+    }
+}
+
+fn x_of(doc: &Document, id: Uuid) -> Option<f64> {
+    match doc.slot_of(id).and_then(|s| doc.get(s)) {
+        Some(Entity::Point(p)) => Some(p.p.x),
+        _ => None,
+    }
+}
+
+#[test]
+fn others_objects_come_in_and_this_syncs_own_are_skipped() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    // One of ours on its way and answered: its event comes back and is skipped.
+    o.document.add(point(486600.0)).unwrap();
+    let mine = sync.next(&o.document).unwrap();
+    sync.answered(&o.document, &committed(&mine, 2));
+    let first = o.document.uid(Slot(1)).unwrap();
+    let second = o.document.uid(Slot(2)).unwrap();
+    let theirs = Uuid::now_v7();
+    let events = page(vec![
+        event(
+            10,
+            Some(&mine.request_id),
+            &[(Uuid::now_v7(), FeatureOp::Create)],
+            false,
+        ),
+        event(
+            11,
+            Some("web-baska"),
+            &[(first, FeatureOp::Update), (theirs, FeatureOp::Create)],
+            false,
+        ),
+        event(12, None, &[(second, FeatureOp::Delete)], false),
+    ]);
+    let incoming = sync.incoming(&events);
+    assert_eq!(incoming.fetch, vec![first, theirs]);
+    assert_eq!(incoming.removed, vec![second]);
+    assert_eq!(incoming.cursor, "12");
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![
+                    record(first, "3", point(486900.0)),
+                    record(theirs, "3", point(486950.0)),
+                ],
+                info: None,
+            },
+        )
+        .unwrap();
+    assert_eq!((taken.changed, taken.conflicts), (3, 0));
+    assert_eq!(x_of(&o.document, first), Some(486900.0));
+    assert_eq!(x_of(&o.document, theirs), Some(486950.0));
+    assert!(o.document.slot_of(second).is_none());
+    assert_eq!(
+        (
+            sync.version_of(first),
+            sync.version_of(theirs),
+            sync.version_of(second)
+        ),
+        (Some("3"), Some("3"), None)
+    );
+    assert_eq!(sync.cursor(), "12");
+    // What came from outside is not sent back, and is not this user's to undo.
+    assert_eq!(sync.next(&o.document), None);
+    assert_eq!(sync.state(), SaveState::Saved);
+    // An edit of the object that came in goes over the version it came with.
+    let slot = o.document.slot_of(theirs).unwrap();
+    assert!(o.document.update(slot, point(486951.0)));
+    let env = sync.next(&o.document).unwrap();
+    assert_eq!(
+        env.expected_versions
+            .get(&theirs.to_string())
+            .map(String::as_str),
+        Some("3")
+    );
+}
+
+#[test]
+fn an_object_changed_here_and_elsewhere_is_a_conflict_until_theirs_is_taken() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let id = o.document.uid(Slot(1)).unwrap();
+    let gone = o.document.uid(Slot(2)).unwrap();
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    let removed_line = o.document.get(Slot(2)).unwrap().clone();
+    let mut changed_line = removed_line.clone();
+    changed_line.base_mut().label = Some("benim".into());
+    assert!(o.document.update(Slot(2), changed_line));
+    sync.observe(&o.document);
+    let incoming = sync.incoming(&page(vec![event(
+        10,
+        None,
+        &[(id, FeatureOp::Update), (gone, FeatureOp::Delete)],
+        false,
+    )]));
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![record(id, "5", point(486800.0))],
+                info: None,
+            },
+        )
+        .unwrap();
+    // Neither is overwritten: both wait for the user's choice, and nothing is sent.
+    assert_eq!((taken.changed, taken.conflicts), (0, 2));
+    assert_eq!(x_of(&o.document, id), Some(486700.0));
+    assert_eq!(sync.state(), SaveState::Conflict);
+    assert_eq!(sync.next(&o.document), None);
+    let reasons: Vec<_> = sync
+        .conflicts()
+        .iter()
+        .map(|c| (c.id.clone(), c.reason))
+        .collect();
+    assert_eq!(
+        reasons,
+        vec![
+            (id.to_string(), ConflictReason::Changed),
+            (gone.to_string(), ConflictReason::Deleted)
+        ]
+    );
+    // Theirs: the server's copy comes in, the removed one goes, nothing is left to send.
+    sync.take_theirs(&mut o.document, None).unwrap();
+    assert_eq!(x_of(&o.document, id), Some(486800.0));
+    assert!(o.document.slot_of(gone).is_none());
+    assert_eq!(sync.version_of(id), Some("5"));
+    assert_eq!(sync.state(), SaveState::Saved);
+    assert_eq!(sync.next(&o.document), None);
+}
+
+#[test]
+fn new_metadata_comes_first_so_objects_on_its_new_layer_come_in() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let mut info = o.info.clone();
+    let mut layer = info.layers[1].clone();
+    layer.id = "yeni".into();
+    layer.name = "Yeni katman".into();
+    info.layers.push(layer);
+    info.meta_version = "6".into();
+    let on_new = {
+        let mut e = point(486600.0);
+        e.base_mut().layer_id = "yeni".into();
+        e
+    };
+    let (a, b) = (Uuid::now_v7(), Uuid::now_v7());
+    // Without the metadata the object's layer is not in the drawing: skipped and named.
+    let incoming = sync.incoming(&page(vec![event(
+        10,
+        None,
+        &[(a, FeatureOp::Create)],
+        false,
+    )]));
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![record(a, "2", on_new.clone())],
+                info: None,
+            },
+        )
+        .unwrap();
+    assert_eq!(taken.skipped.len(), 1);
+    assert!(taken.skipped[0].contains("yeni"));
+    assert!(o.document.slot_of(a).is_none());
+    // With it, the layer comes first and the object with it; not an edit to send back.
+    let incoming = sync.incoming(&page(vec![event(
+        11,
+        None,
+        &[(b, FeatureOp::Create)],
+        true,
+    )]));
+    assert!(incoming.meta && incoming.needs_fetch());
+    sync.take_remote(
+        &mut o.document,
+        incoming,
+        Remote {
+            records: vec![record(b, "3", on_new)],
+            info: Some(info),
+        },
+    )
+    .unwrap();
+    assert!(o.document.layers().get("yeni").is_some());
+    assert!(o.document.slot_of(b).is_some());
+    assert_eq!(sync.next(&o.document), None);
+    // The next metadata change here goes over the version that came in.
+    o.document.rename_layer("yeni", "Yeni katman 2");
+    let env = sync.next(&o.document).unwrap();
+    assert_eq!(
+        env.expected_versions.get(PROJECT_KEY).map(String::as_str),
+        Some("6")
+    );
+}
+
+#[test]
+fn metadata_changed_here_and_elsewhere_is_a_conflict() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    o.document.rename_layer("bina", "Yapılar");
+    sync.observe(&o.document);
+    let mut info = o.info.clone();
+    info.name = "Ada 101 (yeni ad)".into();
+    info.meta_version = "7".into();
+    let incoming = sync.incoming(&page(vec![event(10, None, &[], true)]));
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![],
+                info: Some(info.clone()),
+            },
+        )
+        .unwrap();
+    assert_eq!(taken.conflicts, 1);
+    assert_eq!(sync.conflicts()[0].id, PROJECT_KEY);
+    assert_eq!(o.document.layers().get("bina").unwrap().name, "Yapılar");
+    // Mine: the renamed layer goes over the server's metadata version.
+    sync.keep_mine();
+    let env = sync.next(&o.document).unwrap();
+    assert_eq!(
+        env.expected_versions.get(PROJECT_KEY).map(String::as_str),
+        Some("7")
+    );
+    // Or theirs: the server's metadata replaces the drawing's.
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    o.document.rename_layer("bina", "Yapılar");
+    let incoming = sync.incoming(&page(vec![event(10, None, &[], true)]));
+    sync.take_remote(
+        &mut o.document,
+        incoming,
+        Remote {
+            records: vec![],
+            info: Some(info.clone()),
+        },
+    )
+    .unwrap();
+    sync.take_theirs(&mut o.document, Some(&info)).unwrap();
+    assert_eq!(o.document.name(), "Ada 101 (yeni ad)");
+    assert_eq!(o.document.layers().get("bina").unwrap().name, "Bina");
+    assert_eq!(sync.next(&o.document), None);
+}
+
+#[test]
+fn a_deleted_project_ends_the_sync_and_an_archived_one_after_its_events() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    o.document.add(point(486600.0)).unwrap();
+    sync.observe(&o.document);
+    let mut deleted = event(10, None, &[], false);
+    deleted.kind = "project.deleted".into();
+    let incoming = sync.incoming(&page(vec![deleted]));
+    assert!(!incoming.needs_fetch());
+    assert_eq!(sync.state(), SaveState::Deleted);
+    assert_eq!(sync.next(&o.document), None);
+    // The edit made here is not lost: it still waits.
+    assert_eq!(sync.pending(), 1);
+
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let id = o.document.uid(Slot(1)).unwrap();
+    let mut archived = event(11, None, &[], false);
+    archived.kind = "project.archived".into();
+    let after = event(12, None, &[(Uuid::now_v7(), FeatureOp::Create)], false);
+    let incoming = sync.incoming(&page(vec![
+        event(10, None, &[(id, FeatureOp::Update)], false),
+        archived,
+        after,
+    ]));
+    assert!(incoming.archived);
+    assert_eq!(
+        (incoming.fetch.clone(), incoming.cursor.clone()),
+        (vec![id], "11".to_string())
+    );
+    sync.take_remote(
+        &mut o.document,
+        incoming,
+        Remote {
+            records: vec![record(id, "4", point(486900.0))],
+            info: None,
+        },
+    )
+    .unwrap();
+    assert_eq!(x_of(&o.document, id), Some(486900.0));
+    assert_eq!(sync.state(), SaveState::Archived);
+    o.document.add(point(486601.0)).unwrap();
+    assert_eq!(sync.next(&o.document), None);
+}
+
+#[test]
+fn changes_from_outside_wait_while_an_edit_is_open() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let id = o.document.uid(Slot(1)).unwrap();
+    let incoming = sync.incoming(&page(vec![event(
+        10,
+        None,
+        &[(id, FeatureOp::Update)],
+        false,
+    )]));
+    let remote = Remote {
+        records: vec![record(id, "2", point(486900.0))],
+        info: None,
+    };
+    let group = o.document.begin_group("Taşı");
+    assert!(
+        sync.take_remote(&mut o.document, incoming.clone(), remote.clone())
+            .is_err()
+    );
+    o.document.end_group(group);
+    assert_eq!(sync.cursor(), "9");
+    sync.take_remote(&mut o.document, incoming, remote).unwrap();
+    assert_eq!(x_of(&o.document, id), Some(486900.0));
+    assert_eq!(sync.cursor(), "10");
+    // An access event says to ask the server what this account may do now.
+    let mut access = event(11, None, &[], false);
+    access.kind = "project.access".into();
+    assert!(sync.incoming(&page(vec![access])).access);
+}

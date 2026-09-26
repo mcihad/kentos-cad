@@ -172,6 +172,11 @@ impl Failure {
         self.code == "conflict"
     }
 
+    /// The events after the cursor are no longer kept (410): open the project again.
+    pub fn resync(&self) -> bool {
+        self.code == "resync_required"
+    }
+
     /// The session is gone (401): sign in again.
     pub fn signed_out(&self) -> bool {
         self.status == 401 || self.code == "unauthenticated"

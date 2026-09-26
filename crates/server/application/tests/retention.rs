@@ -101,6 +101,19 @@ async fn old_events_go_and_older_cursors_must_reopen() {
             .collect::<Vec<_>>(),
         vec![seqs[2].to_string()]
     );
+    // At the newest event nothing is new; beyond it (a restored database) the
+    // client reopens too, or it would wait for events it already missed.
+    assert!(
+        events::after(&db.app, &busy_pm, seqs[2], 10)
+            .await
+            .unwrap()
+            .events
+            .is_empty()
+    );
+    assert!(matches!(
+        events::after(&db.app, &busy_pm, seqs[2] + 1000, 10).await,
+        Err(AppError::ResyncRequired(_))
+    ));
     assert_eq!(
         projects::info(&db.app, &busy_pm)
             .await
@@ -147,6 +160,10 @@ async fn old_events_go_and_older_cursors_must_reopen() {
             .events
             .is_empty()
     );
+    assert!(matches!(
+        events::after(&db.app, &fresh_pm, 5, 10).await,
+        Err(AppError::ResyncRequired(_))
+    ));
 
     // New events follow a prune as before.
     let next = commit_point(&db, &pm, busy, 4.0).await;

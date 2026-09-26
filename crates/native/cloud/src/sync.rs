@@ -18,12 +18,11 @@
 //!   a passing failure waits a little longer each time (1 s … 30 s); a
 //!   refusal for good says why and waits for the next edit.
 //!
-//! Not in this slice (docs/adr/0040): other editors' events (the live
-//! channel), taking the server's copy in a conflict, and the device draft
-//! that keeps unsent changes over a crash. Until then “Kaydedildi” still
-//! means only what the server acknowledged.
+//! Other editors' commits come in through remote.rs. Not in this slice
+//! (docs/adr/0040): the device draft that keeps unsent changes over a
+//! crash; until it comes “Kaydedildi” means only what the server acknowledged.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::time::Duration;
 
 use kentos_contracts::{
@@ -227,8 +226,10 @@ pub struct ProjectSync {
     state: SaveState,
     conflicts: Vec<Conflict>,
     error: Option<String>,
-    /// The event cursor of the opening (the live channel follows from it, docs/adr/0040).
+    /// The newest event cursor taken in: the opening's, then the events' (remote.rs).
     cursor: String,
+    /// Request ids of this sync's own commands: their events are skipped.
+    own: HashSet<String>,
     tries: u32,
 }
 
@@ -279,6 +280,7 @@ impl ProjectSync {
             conflicts: Vec::new(),
             error: None,
             cursor: opened.info.event_cursor.clone(),
+            own: HashSet::new(),
             tries: 0,
         })
     }
@@ -297,7 +299,7 @@ impl ProjectSync {
         self.error.as_deref()
     }
 
-    /// The event cursor of the opening.
+    /// The newest event cursor taken in: ask for the events after it.
     pub fn cursor(&self) -> &str {
         &self.cursor
     }
@@ -396,6 +398,16 @@ impl ProjectSync {
         }
     }
 
+    /// Whether the object has changes here the server does not have: not sent
+    /// yet, or in the command on its way.
+    fn busy_locally(&self, doc: &Document, id: Uuid) -> bool {
+        self.plan(doc, id).is_some()
+            || self
+                .inflight
+                .as_ref()
+                .is_some_and(|f| f.planned.iter().any(|p| p.id() == id))
+    }
+
     /// The command to send now: the one on its way again (its answer did not
     /// come), or the next batch of what differs. `None` when nothing waits,
     /// sending is stopped, or an edit is open in the drawing (look again soon).
@@ -461,6 +473,7 @@ impl ProjectSync {
             expected,
             serde_json::to_value(&input).unwrap_or_default(),
         );
+        self.own.insert(envelope.request_id.clone());
         self.inflight = Some(Inflight {
             envelope: envelope.clone(),
             planned,
@@ -631,5 +644,8 @@ impl ProjectSync {
     }
 }
 
+mod remote;
 #[cfg(test)]
 mod tests;
+
+pub use remote::{Incoming, Remote, Taken};

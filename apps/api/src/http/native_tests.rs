@@ -8,6 +8,7 @@ use std::collections::BTreeMap;
 
 use kentos_application::admin;
 use kentos_cloud::api::hex_sha256;
+use kentos_cloud::follow;
 use kentos_cloud::saving::envelope;
 use kentos_cloud::{
     After, ApiFailure, CatalogQuery, Cloud, Opened, ProjectSync, SaveState, Source, Uploaded,
@@ -514,5 +515,104 @@ async fn a_drawing_the_server_does_not_keep_leaves_no_project() {
         .await
         .unwrap();
     assert!(trash.projects.iter().any(|p| p.name == "Uç değerler"));
+    db.close().await;
+}
+
+#[tokio::test]
+async fn other_editors_changes_come_in_by_following_the_events() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let drawing = sample();
+    let (info, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(&drawing, "Ada 104", ProjectStorage::Database),
+        kcad(&drawing),
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    let project = Uuid::parse_str(&info.id).unwrap();
+    ayse.command::<ProjectAccessChange>(envelope(
+        tenant,
+        project,
+        "project.share",
+        1,
+        Uuid::new_v4(),
+        BTreeMap::new(),
+        json!({ "userId": admin::user_id(&db.owner, "dilek").await.unwrap().to_string(), "role": GrantRole::Editor }),
+    ))
+    .await
+    .unwrap();
+    let dilek = signed_in(&base, "dilek").await;
+    let mut a = open(&ayse, tenant, project, None).await.unwrap();
+    let mut d = open(&dilek, tenant, project, None).await.unwrap();
+    let mut sa = ProjectSync::new(&a).unwrap();
+    let mut sd = ProjectSync::new(&d).unwrap();
+
+    // Ayşe moves the point, removes the line, adds a point and renames a layer.
+    let (the_point, the_line) = (slot_of(&a.document, "point"), slot_of(&a.document, "line"));
+    assert!(a.document.update(the_point, point(486700.0)));
+    a.document.remove(&[the_line]);
+    a.document.add(point(486600.0)).unwrap();
+    a.document.rename_layer("cizim", "Çizim (Ayşe)");
+    send_all(&ayse, &mut sa, &a.document).await.unwrap();
+
+    // Dilek follows the events: her drawing becomes Ayşe's, and nothing goes back.
+    let page = follow::events(&dilek, tenant, project, sd.cursor())
+        .await
+        .unwrap();
+    let incoming = sd.incoming(&page);
+    assert!(incoming.meta && incoming.needs_fetch());
+    let remote = follow::fetch(&dilek, tenant, project, &incoming)
+        .await
+        .unwrap();
+    let taken = sd.take_remote(&mut d.document, incoming, remote).unwrap();
+    assert_eq!(
+        (taken.changed, taken.conflicts, taken.skipped.len()),
+        (3, 0, 0)
+    );
+    assert_eq!(
+        by_uid(&d.document.to_snapshot_v2()),
+        by_uid(&a.document.to_snapshot_v2())
+    );
+    assert_eq!(
+        d.document.layers().get("cizim").unwrap().name,
+        "Çizim (Ayşe)"
+    );
+    assert!(!d.document.is_dirty());
+    assert_eq!(sd.next(&d.document), None);
+
+    // Dilek's own commit comes back in the events and is skipped; Ayşe takes it in.
+    let added = d.document.add(point(486650.0)).unwrap();
+    send_all(&dilek, &mut sd, &d.document).await.unwrap();
+    let mine = follow::events(&dilek, tenant, project, sd.cursor())
+        .await
+        .unwrap();
+    assert!(!sd.incoming(&mine).needs_fetch());
+    let page = follow::events(&ayse, tenant, project, sa.cursor())
+        .await
+        .unwrap();
+    let incoming = sa.incoming(&page);
+    let remote = follow::fetch(&ayse, tenant, project, &incoming)
+        .await
+        .unwrap();
+    sa.take_remote(&mut a.document, incoming, remote).unwrap();
+    let uid = d.document.uid(added).unwrap();
+    assert!(a.document.slot_of(uid).is_some());
+    assert_eq!(
+        by_uid(&a.document.to_snapshot_v2()),
+        by_uid(&d.document.to_snapshot_v2())
+    );
+
+    // A cursor the log cannot continue from asks for the project to be opened again.
+    let far = follow::events(&ayse, tenant, project, "999999")
+        .await
+        .unwrap_err();
+    assert!(far.resync(), "{far:?}");
     db.close().await;
 }

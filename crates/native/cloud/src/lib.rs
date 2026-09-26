@@ -11,7 +11,8 @@
 //! - [`saving`]: a file project's next revision, and a drawing as a new
 //!   cloud project of either kind.
 //! - [`ProjectSync`]: a database project's changes as `project.changes`
-//!   commands, the web's tracker rules, driven by the desktop.
+//!   commands, the web's tracker rules, driven by the desktop; other
+//!   editors' commits taken in from the events ([`follow`]).
 //!
 //! Every call runs on the crate's own runtime (runtime.rs) and can be
 //! awaited on any executor, Iced's included. No UI here.
@@ -24,6 +25,7 @@
 
 pub mod api;
 pub mod failure;
+pub mod follow;
 pub mod open;
 mod runtime;
 pub mod saving;
@@ -33,4 +35,4 @@ pub use api::{CatalogQuery, Cloud, Download, Progress};
 pub use failure::{ApiFailure, Failure};
 pub use open::{Opened, Revision, Source, open};
 pub use saving::{Uploaded, conflicting_revision, project_create, save_revision, upload_new};
-pub use sync::{After, Conflict, ProjectSync, SaveState};
+pub use sync::{After, Conflict, Incoming, ProjectSync, Remote, SaveState, Taken};

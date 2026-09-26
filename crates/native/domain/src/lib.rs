@@ -28,6 +28,7 @@
 mod changes;
 mod document;
 mod edit;
+mod external;
 mod history;
 mod identity;
 mod layers;
@@ -37,6 +38,7 @@ mod store;
 pub use changes::{ChangeMark, Changes};
 pub use document::Document;
 pub use edit::{SlotsExhausted, labels};
+pub use external::{External, ExternalMeta};
 pub use history::{Group, UNDO_LIMIT};
 pub use identity::{Slot, Uuid, v1_entity_uids};
 pub use kentos_contracts as contracts;

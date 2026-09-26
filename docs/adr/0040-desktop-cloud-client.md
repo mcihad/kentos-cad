@@ -80,10 +80,35 @@
 
 - Çakışmada "benimkini koru" (`keep_mine`) var: benim kopyam sunucunun şimdiki sürümünün üstüne gider.
 
+### Başkalarının değişiklikleri (ikinci dilim, 26 Eylül)
+
+- **Belgede dışarıdan değişiklik** (`Document::apply_external`, `kentos-domain`), web'in `applyExternal`'ı gibi:
+  - başkasının değişikliği ve çakışmada seçilen sunucu kopyası kullanıcının düzenlemesi değildir: geri al geçmişine girmez, çizim kaydedilmemiş olmaz, revizyonu değişmez;
+  - dokunduğu nesnelerin geri al ve yinele adımları yuva ya da kalıcı kimlikle atılır (web: `forgetHistoryOf`); geri alma başkasının yerine koyduğu hâli geri getirmez;
+  - nesneler kalıcı kimlikle gelir: çizimde olan yuvasını korur, yeni olan sıradaki yuvayı alır;
+  - aynı kimliği iki kez ya da boş kimliği anan değişiklik, bir de açık düzenleme sırasında gelen her değişiklik, hiçbir şey değişmeden reddedilir;
+  - yeni katman ağacında kullanıcının etkin katmanı hâlâ katmansa kalır, değilse ilk katman etkin olur.
+
+  Ortak fixture'lar bu işlemi kapsam dışı sayar (`fixtures/document-ops/README.md`); web'in kuralları masaüstünün kendi testinde yazılıdır (`crates/native/domain/tests/external.rs`).
+- **Olaylar** (`ProjectSync::incoming`, `take_remote`, web'in `syncRemote.ts`'i gibi):
+  - olaylar sırayla okunur; bu eşitlemenin kendi komutlarının olayları istek kimliğiyle atlanır;
+  - adı geçen her nesne en yeni sürümüyle bir kez getirilir ve dışarıdan değişiklik olarak konur;
+  - burada sunucuda olmayan değişikliği olan nesne ezilmez, çakışma olur: başkası değiştirdiyse `changed`, sildiyse `deleted`;
+  - yeni üst veri önce gelir, çünkü yeni nesne onun getirdiği katmanda olabilir; burada gönderilmemiş üst veri varsa `@project` çakışmasıdır;
+  - çizimde olmayan katmandaki nesne atlanır ve adıyla bildirilir;
+  - projenin silinmesi eşitlemeyi hemen bitirir. Arşivlenmesi, ondan önceki olaylar geldikten sonra bitirir. Yetki olayı, hesabın yetkisinin yeniden sorulmasını ister (`set_access`).
+- **Çakışmada “sunucudakini al”** (`take_theirs`): sunucunun kopyası gelir, silinen gider, üst veri çakışmasında projenin şimdiki üst verisi gelir. Gönderilecek bir şey kalmaz.
+- **İzleme, sorarak** (`follow`): masaüstü proje açıkken birkaç saniyede bir `GET …/events?after=` ile sorar; sayfa doluysa hemen yeniden sorar. Adı geçen nesneler 500'erli kimlik listeleriyle getirilir.
+  - Web'in canlı kanalı (WebSocket) aynı olayları yalnız daha erken getirir. wss için TLS bağlayıcısını elle kurmak gerekir; bu yüzden masaüstünde sonraki adımdır.
+  - Sorarak izlemede imleç sürer, kaçırılan olaylar sırayla gelir, saklanmayan imleç `resync_required` (410) ile yeniden açtırır.
+- **Sunucuda bulunan hata:** `events` modülünün yorumu, en yeni olaydan ileride kalan imlecin de (geri yüklenmiş veritabanı) `ResyncRequired` aldığını söylüyordu. WS aboneliği öyle davranıyordu, HTTP yolu (`events::after`) ise boş sayfa veriyordu.
+  - Sonuç: sorarak izleyen istemci, kaçırdığı olayları hiç bilmeden bekleyecekti.
+  - Düzeltme: `after`, imleci aboneliğin kuralıyla (`Bounds::can_continue`) denetliyor. `retention.rs`'e gerileme denetimi eklendi. Eski denetim geri konunca test düştü.
+
 ## Bu dilimde olmayanlar
 
 - Masaüstü arayüzü (giriş penceresi, bulut kataloğu, açma, kaydetme, durum çubuğu, çakışma iletisi). Masaüstü ajanına gider; bu kütüphaneyi kullanır.
-- **Başkalarının değişiklikleri:** canlı kanal (WebSocket, `tokio-tungstenite` kilitte var) ve olayların çizime konması. Bunun için masaüstü belgesine web'in `applyExternal` işlemi gerekir: geri al geçmişine girmeden dışarıdan değişiklik. Aynı işlem çakışmada "sunucudakini al" için de gerekir. Bugün başkasının değişikliği projeyi yeniden açınca görünür; onun üstüne kaydetmek çakışma verir.
+- Masaüstünde canlı kanal (WebSocket): bugün sorarak izlenir, olaylar birkaç saniye geç gelir.
 - **Cihaz taslağı:** gönderilmemiş değişiklikler ve yoldaki komut, çökmeye karşı diske yazılmıyor. Web'de bu IndexedDB'dedir. Taslak gelene kadar "Kaydedildi" yalnız sunucunun onayladığını söyler (CLAUDE.md §21.3).
 - Yetki değişikliğini izleme (web'de `accessWatch.ts`). `set_access` hazırdır, besleyen yoktur.
 - Masaüstünde OpenID girişi ve oturumun anahtarlıkta saklanması.
@@ -119,3 +144,26 @@
 
   Hepsi geri alındı.
 - `pnpm rust:test` (veritabanı zorunlu, clippy `-D warnings`, bağımlılık yönü: 20 crate), `pnpm typecheck`, `pnpm test` (1303 test) geçti.
+
+### İkinci dilim
+
+- **`kentos-domain`, `tests/external.rs` (8 test):**
+  - başkasının nesnesi geri al adımı ve kaydedilmemiş işareti olmadan gelir, izleyenler onu görür;
+  - dokunduğu nesnelerin geri al adımları atılır, öbürleri kalır;
+  - burada silinip başka yerde geri getirilen nesnenin geri alması düşer;
+  - silinenler gider, bilinmeyenler atlanır;
+  - bozuk değişiklik ve açık düzenleme sırasında gelen değişiklik hiçbir şeyi değiştirmez;
+  - yeni üst veride etkin katman kuralı;
+  - kaydedilmemiş çizim kaydedilmemiş kalır;
+  - aynı kopya hiçbir şeyi değiştirmez.
+- **`kentos-cloud`, 6 yeni birim testi:**
+  - başkasının nesneleri gelir, kendi olaylarımız atlanır, gelen geri gönderilmez;
+  - iki tarafta değişen ve burada değişip orada silinen nesneler çakışma olur, “sunucudakini al” ile çözülür;
+  - üst veri önce gelir, yeni katmandaki nesne onunla gelir, katmansız nesne adıyla atlanır;
+  - üst veri çakışması iki seçenekle çözülür;
+  - silinen ve arşivlenen proje;
+  - açık düzenleme sırasında bekleme ve yetki olayı.
+- **Gerçek sunucu testi `other_editors_changes_come_in_by_following_the_events`:**
+  - Ayşe'nin değiştirme, silme, ekleme ve katman adı Dilek'in çizimine sorarak gelir; iki çizim nesne nesne aynıdır, Dilek'in çizimi kaydedilmemiş olmaz, geri gönderecek bir şey yoktur;
+  - Dilek'in kendi komutu olaylarda atlanır, Ayşe'ye gelir;
+  - ileride kalan imleç `resync_required` alır.

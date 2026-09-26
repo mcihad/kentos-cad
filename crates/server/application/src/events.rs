@@ -80,7 +80,9 @@ async fn horizon(
 }
 
 /// Events with `seq > after`, at most `limit`; `next` is the cursor to continue
-/// from. A cursor older than what is kept is refused (`ResyncRequired`).
+/// from. A cursor older than what is kept, or beyond the newest event (a
+/// restored database), is refused (`ResyncRequired`): a client that asks
+/// from there would otherwise wait for events it already missed.
 pub async fn after(
     db: &kentos_postgres::Db,
     access: &ProjectAccess,
@@ -103,8 +105,24 @@ pub async fn after(
     // horizon before, so it shows here. (One committing in between only makes
     // this a resync that was not needed.)
     let pruned = horizon(&mut tx, access).await?;
+    // Nothing after it: the cursor must not be beyond what the log has ever held.
+    let newest: i64 = if rows.is_empty() {
+        sqlx::query_scalar(
+            "select coalesce(max(seq), 0) from kentos.outbox_event where tenant_id = $1 and project_id = $2",
+        )
+        .bind(access.tenant)
+        .bind(access.project)
+        .fetch_one(&mut *tx)
+        .await?
+    } else {
+        after
+    };
     tx.commit().await?;
-    if after < pruned {
+    let bounds = Bounds {
+        newest: newest.max(pruned),
+        pruned_through: pruned,
+    };
+    if !bounds.can_continue(after) {
         return Err(resync());
     }
     let next = rows.last().map(|(s, _)| *s).unwrap_or(after);
