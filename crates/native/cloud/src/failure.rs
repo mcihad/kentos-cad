@@ -72,6 +72,13 @@ impl ApiFailure {
         self
     }
 
+    /// The same failure about this field (`entities[13]`): an interface names
+    /// the refused object from it (docs/adr/0041).
+    pub fn with_path(mut self, path: impl Into<String>) -> Self {
+        self.0.path = Some(path.into());
+        self
+    }
+
     /// The same failure under another code.
     pub(crate) fn with_code(mut self, code: &str) -> Self {
         self.0.code = code.into();
