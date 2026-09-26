@@ -7,9 +7,10 @@ import type { CloudApi } from './api';
 /**
  * Moving a `.kcad` between the browser and a cloud project
  * (docs/adr/0031, 0036, 0038): the hash, sizes as they are said, an upload
- * sent again after a cut connection or opened again when it expired, a
- * download checked against the server's hash, the commit's envelope, and
- * telling a server without the import from a real refusal.
+ * sent again after a cut connection, asked before its bytes go twice, or
+ * opened again when it expired, a download checked against the server's
+ * hash, the commit's envelope, and telling a server without the import
+ * from a real refusal.
  */
 
 describe('file transfers of cloud projects', () => {
@@ -37,6 +38,36 @@ describe('file transfers of cloud projects', () => {
     const gone = { ...api, sendUpload: async () => Promise.reject(new ApiFailure(404, { error: 'not_found', message: 'Proje bulunamadı.' }, 'yok')) } as unknown as CloudApi;
     const e = (await uploadBytes(gone, { tenantId: 't', projectId: 'p' }, new Uint8Array(3), 'x', { waits: [1] }).catch((x: unknown) => x)) as ApiFailure;
     expect([e.notFound, uploadGone(e)]).toEqual([true, false]);
+  });
+
+  it('asks an upload whose answer was lost before sending its bytes again (docs/adr/0040)', async () => {
+    const calls: string[] = [];
+    let received = false;
+    const view = () => ({ id: 'u1', size: 3, sha256: 'x', createdAt: '', expiresAt: '', received, objects: '4' });
+    const api = {
+      beginUpload: async () => view(),
+      sendUpload: async () => {
+        calls.push('send');
+        // The server refuses bytes it already has.
+        if (received) throw new ApiFailure(422, { error: 'invalid', message: 'Bu yüklemenin baytları zaten alındı.' }, 'x');
+        received = true;
+        throw new ApiFailure(0, { error: 'network' }, 'yanıt gelmedi');
+      },
+      uploadState: async () => (calls.push('state'), view()),
+    } as unknown as CloudApi;
+    const up = await uploadBytes(api, { tenantId: 't', projectId: 'p' }, new Uint8Array(3), 'x', { waits: [1, 1] });
+    expect([up.received, up.objects, calls]).toEqual([true, '4', ['send', 'state']]);
+    // A server without the route (405): the bytes go again, and that send says what became of them.
+    let sends = 0;
+    const older = {
+      beginUpload: async () => view(),
+      sendUpload: async () => {
+        if (++sends === 1) throw new ApiFailure(0, { error: 'network' }, 'kesildi');
+        return { ...view(), received: true };
+      },
+      uploadState: async () => Promise.reject(new ApiFailure(405, {}, 'Sunucu 405 yanıtı verdi.')),
+    } as unknown as CloudApi;
+    expect([(await uploadBytes(older, { tenantId: 't', projectId: 'p' }, new Uint8Array(3), 'x', { waits: [1] })).received, sends]).toEqual([true, 2]);
   });
 
   it('never takes a download whose bytes are not the server’s', async () => {

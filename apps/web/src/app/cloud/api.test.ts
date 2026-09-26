@@ -124,6 +124,16 @@ describe('the cloud API client: files (docs/adr/0031, 0033, 0034, 0038)', () => 
     expect([e.code, e.path, e.status]).toEqual(['invalid', 'sha256', 422]);
   });
 
+  it('asks one of its uploads as it stands (docs/adr/0040)', async () => {
+    const calls: { url: string; method?: string }[] = [];
+    const api = new HttpCloudApi((async (url: string, init: RequestInit) => {
+      calls.push({ url, method: init.method });
+      return new Response(JSON.stringify({ id: 'u/1', size: 3, sha256: 'ab', createdAt: '', expiresAt: '', received: true }));
+    }) as unknown as typeof fetch);
+    const up = await api.uploadState('t 1', 'p', 'u/1');
+    expect([up.received, calls]).toEqual([true, [{ url: '/v1/tenants/t%201/projects/p/uploads/u%2F1', method: 'GET' }]]);
+  });
+
   it('reads a .kcad with its hash, revision, cursor and file name; a refusal is the server’s words', async () => {
     const body = new Uint8Array([0x89, 0x4b, 0x43, 0x41, 0x44, 1, 2, 3]);
     const calls: string[] = [];

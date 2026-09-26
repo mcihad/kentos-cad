@@ -43,6 +43,7 @@
 - `FileCommitted` gelmeden hiçbir şey “kaydedildi” denmez.
 - Yalnız yazılan revizyon kaydedilmiş sayılır (`markSaved(revizyon)`, CLAUDE.md §4.8). Kayıt sürerken yapılan değişiklik kaydedilmemiş kalır.
 - Bağlantı baytlar giderken koparsa aynı yükleme yeniden gönderilir (sunucu kopan gövdeden bir şey saklamaz). Süresi dolan yükleme bir kez yeniden açılır.
+- Yanıtı kaybolan gönderimde baytlar sunucuya ulaşmış olabilir; sunucu aynı baytları ikinci kez almaz. Bu yüzden yeniden göndermeden önce yükleme sorulur (`GET …/uploads/{id}`, ADR 0040). Baytlar alınmışsa yeniden gönderilmez. Bu yolu bilmeyen sunucuda baytlar yeniden gider; ret gelirse Kaydet hatayı söyler, sonraki Kaydet yeni bir yüklemeyle yazar.
 - Yanıtı kaybolan kayıt aynı idempotency anahtarıyla yeniden gönderilir; sunucu saklı yanıtı verir. Bu yüzden istemci kendi kaydıyla asla çakışmaz. Yanıtı hiç gelmeyen kayıt sonraki Kaydet'te, anahtarıyla, önce gönderilir.
 - Kayıt hatası durumda ve iletide görünür; çizim olduğu gibi durur, Kaydet yeniden denenir.
 - “Kaydedilmemiş değişiklikler” sorusundaki **Kaydet** da açık dosya projesine yeni revizyon yazar.
@@ -98,7 +99,7 @@
 ## Doğrulama (birinci adım)
 
 - Vitest, sahte sunucuyla (`app/cloud/fakeFiles.ts`):
-  - `fileProject.test.ts`: aşamaların sırası; “kaydedildi”nin kayıttan sonra gelmesi; kirli kuralı; kopan yükleme; kaybolan yanıt; başkasının önce kaydettiği revizyon; açıkken gelen başkasının revizyonu ve bu pencerenin kendi olayı; rol düşmesi ve silinme; sunucuya ulaşılamaması ve yeniden deneme.
+  - `fileProject.test.ts`: aşamaların sırası; “kaydedildi”nin kayıttan sonra gelmesi; kirli kuralı; kopan yükleme; baytları ulaşmış ama yanıtı kaybolmuş gönderim (yükleme sorulur, ikinci kez gönderilmez; yolu bilmeyen sunucuda sonraki Kaydet yazar); kaybolan kayıt yanıtı; başkasının önce kaydettiği revizyon; açıkken gelen başkasının revizyonu ve bu pencerenin kendi olayı; rol düşmesi ve silinme; sunucuya ulaşılamaması ve yeniden deneme.
   - `fileSession.test.ts`:
     - dosya olarak kaydetme ve açma, bozuk indirme, revizyonsuz proje;
     - soru üzerinden Kaydet;

@@ -95,6 +95,10 @@ export class FakeFiles {
   noImport = false;
   /** Which object of an imported file the server refuses (its index), as for a value beyond ±10⁹. */
   refuseImportAt: number | null = null;
+  /** The next upload's bytes are received and kept, but the answer is lost. */
+  loseNextSendAnswer = false;
+  /** A server before `GET …/uploads/{id}` (docs/adr/0040). */
+  noUploadState = false;
   /** Projects made by restoring or converting, for the tests. */
   readonly restored: ProjectDuplicated[] = [];
   sends = 0;
@@ -154,6 +158,21 @@ export class FakeFiles {
     if (!MAGIC.every((b, i) => bytes[i] === b)) throw invalid('Yüklenen dosya geçerli bir KCAD v2 dosyası değil.');
     u.bytes = bytes.slice();
     if (this.decode) u.objects = String((await this.decode(bytes)).entities.length);
+    if (this.loseNextSendAnswer) {
+      // Received and kept: only the answer never arrives.
+      this.loseNextSendAnswer = false;
+      throw new ApiFailure(0, { error: 'network' }, 'Sunucuya ulaşılamadı; yanıt gelmedi.');
+    }
+    return this.view(u);
+  }
+
+  /** `GET …/uploads/{id}` (docs/adr/0040): the caller's upload as it stands; a server before it answers 405. */
+  async uploadState(id: string): Promise<FileUpload> {
+    this.host.guard(true);
+    this.may('feature.write');
+    if (this.noUploadState) throw new ApiFailure(405, {}, 'Sunucu 405 yanıtı verdi.');
+    const u = this.uploads.get(id);
+    if (!u) throw uploadGone();
     return this.view(u);
   }
 

@@ -175,6 +175,8 @@ export interface CloudApi {
   beginUpload(tenant: string, project: string, begin: FileUploadBegin): Promise<FileUpload>;
   /** Sends an upload's bytes; the answer is the upload once the server verified them. */
   sendUpload(tenant: string, project: string, upload: string, bytes: Uint8Array, progress?: Transfer, signal?: AbortSignal): Promise<FileUpload>;
+  /** One of the caller's own uploads as it stands: whether its bytes arrived (`GET …/uploads/{id}`, docs/adr/0040). */
+  uploadState(tenant: string, project: string, upload: string, signal?: AbortSignal): Promise<FileUpload>;
   /** A file project's revisions, newest first (`GET …/files`). */
   fileRevisions(tenant: string, project: string, signal?: AbortSignal): Promise<FileRevisions>;
   /** One revision's bytes (`GET …/files/{n}`). */
@@ -364,6 +366,9 @@ export class HttpCloudApi implements CloudApi {
     } catch {
       throw new ApiFailure(r.status, {}, 'Sunucunun yanıtı okunamadı.');
     }
+  }
+  uploadState(tenant: string, project: string, upload: string, signal?: AbortSignal) {
+    return this.call<FileUpload>('GET', `${this.base(tenant, project)}/uploads/${encodeURIComponent(upload)}`, undefined, {}, signal);
   }
   fileRevisions(tenant: string, project: string, signal?: AbortSignal) {
     return this.call<FileRevisions>('GET', `${this.base(tenant, project)}/files`, undefined, {}, signal);

@@ -56,13 +56,31 @@ export interface UploadOptions {
 export const UPLOAD_WAITS_MS = [1000, 2000, 4000, 8000, 16000];
 
 /**
+ * The upload, when its bytes already arrived and only the answer to them
+ * was lost (docs/adr/0040): the server refuses them a second time. Null
+ * when they did not, or when it cannot be told (a server without the
+ * route, the connection still down): the bytes are then sent again, and
+ * that send says whether the upload is still there.
+ */
+async function arrived(api: CloudApi, target: UploadTarget, upload: string, signal?: AbortSignal): Promise<FileUpload | null> {
+  try {
+    const state = await api.uploadState(target.tenantId, target.projectId, upload, signal);
+    return state.received ? state : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Uploads `bytes` (with their SHA-256) into the project: opens an upload,
  * sends the bytes, and answers the upload once the server has verified
  * them (size, hash, a KCAD v2 it can read). A connection cut while the
  * bytes go is tried again with the same upload (the server kept nothing
- * of it); an upload the server no longer has (expired) is opened again
- * once. A refusal (the file is not what was declared, no right) is thrown
- * with the server's words.
+ * of a body cut short); before that the upload is asked whether its bytes
+ * arrived after all, so bytes whose answer was lost are not sent twice.
+ * An upload the server no longer has (expired) is opened again once. A
+ * refusal (the file is not what was declared, no right) is thrown with
+ * the server's words.
  */
 export async function uploadBytes(api: CloudApi, target: UploadTarget, bytes: Uint8Array, sha256: string, o: UploadOptions = {}): Promise<FileUpload> {
   const waits = o.waits ?? UPLOAD_WAITS_MS;
@@ -86,6 +104,11 @@ export async function uploadBytes(api: CloudApi, target: UploadTarget, bytes: Ui
       }
       if (!e.transient || tries >= waits.length) throw e;
       await new Promise((resolve) => setTimeout(resolve, Math.max(waits[tries], (e.retryAfter ?? 0) * 1000)));
+      const done = await arrived(api, target, upload.id, o.signal);
+      if (done) {
+        o.progress?.(bytes.byteLength, bytes.byteLength);
+        return done;
+      }
     }
   }
 }

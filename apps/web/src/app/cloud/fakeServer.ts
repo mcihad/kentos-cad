@@ -340,6 +340,7 @@ export class FakeServer implements CloudApi {
 
   beginUpload = (_t: string, _p: string, begin: FileUploadBegin) => this.files.beginUpload(begin);
   sendUpload = (_t: string, _p: string, upload: string, bytes: Uint8Array, progress?: Transfer) => this.files.sendUpload(upload, bytes, progress);
+  uploadState = (_t: string, _p: string, upload: string) => this.files.uploadState(upload);
   fileRevisions = async () => this.files.fileRevisions();
   fileRevision = (_t: string, _p: string, revision: string, progress?: Transfer) => this.files.fileRevision(revision, progress);
   snapshot = (_t: string, _p: string, progress?: Transfer) => this.files.snapshot(progress);

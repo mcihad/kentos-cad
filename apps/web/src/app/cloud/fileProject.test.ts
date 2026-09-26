@@ -96,6 +96,25 @@ describe.skipIf(!formatsBuilt)('Kaydet on a file project (docs/adr/0038)', () =>
     expect([server.files.sends, server.files.revisions.length, server.files.uploads.size]).toEqual([2, 2, 0]);
   });
 
+  it('bytes that arrived but whose answer was lost are not sent twice: the upload is asked (docs/adr/0040)', async () => {
+    const { doc, server, file } = await setup();
+    server.files.loseNextSendAnswer = true;
+    doc.add(point(486501));
+    expect(await file.save()).toBe('saved');
+    expect([server.files.sends, server.files.revisions.length, file.base.value]).toEqual([1, 2, '2']);
+  });
+
+  it('a server that cannot say (no upload route): the second send is refused, and the next Kaydet writes the revision', async () => {
+    const { doc, server, file } = await setup();
+    server.files.loseNextSendAnswer = true;
+    server.files.noUploadState = true;
+    doc.add(point(486501));
+    expect(await file.save()).toBe('failed');
+    expect([file.state.value, file.error.value, doc.dirty.value, server.files.revisions.length]).toEqual(['error', expect.stringMatching(/zaten alındı/), true, 1]);
+    expect(await file.save()).toBe('saved');
+    expect([server.files.revisions.length, file.base.value, doc.dirty.value]).toEqual([2, '2', false]);
+  });
+
   it('a commit whose answer is lost goes again with its key: written once, never a conflict with itself', async () => {
     const { doc, server, file } = await setup();
     server.files.loseNextCommitAnswer = true;
