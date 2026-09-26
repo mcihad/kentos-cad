@@ -218,3 +218,17 @@
   - masaüstü göçü temayı atınca 1 test düştü.
   - İkisi de geri alındı.
 - **Görüntüler:** `kentos-cad snapshot --ayar graphics.msaa=8 --komut tools.options`, koyu ve açık temada; web pencereleri `pnpm e2e` ile.
+
+## Ek (26 Eylül 2026): kalite ayarı yalnız çizimi etkiler
+
+- **Sahibin isteği:** "Performans için kaliteyi düşürdüğümde arayüz de kalitesiz görünüyor; arayüz yüksek kalite olmalı."
+- **Neden:** web'de `graphics.hiDpi`'nin piksel oranı çizim alanının üst katmanına da (`viewport__overlay`) uygulanıyordu. Bu katmanda araç önizlemesi, ölçü kutuları, kenet işaretleri ve adları, tutamaçlar, artı imleç, ölçek çubuğu ve kuzey oku vardır. "Hızlı" kalitede 2× ekranda hepsi yarı çözünürlükte çiziliyordu.
+- **Karar:**
+  - Üst katman her zaman ekranın piksel oranındadır (`ViewportController.overlayDpr`). Birkaç çizgi ve yazıdır; tam çözünürlüğün maliyeti yok denecek kadar azdır.
+  - `graphics.hiDpi` ve `graphics.msaa` yalnız çizimi etkiler: GPU sahnesini ve çizimin kendi yazılarını (nesne etiketleri, ölçü değerleri). Etiketler çizimin içeriğidir; çok etiketli büyük çizimde en pahalı kısım olduğu için ayarı izler ve HiDPI kapalıyken üst katmana ölçeklenerek konur.
+  - Ayar açıklamaları bunu söyler ("Arayüz ... her zaman tam çözünürlüktedir").
+- **Masaüstünde değişiklik gerekmedi:** arayüz, önizleme, değer alanı ve kenet işaretleri Iced'in kendi katmanında, kenar yumuşatması hep açık çizilir. Ayar yalnız çizim alanının kendi hedeflerini değiştirir.
+- **Doğrulama:** 2× ekranda "Hızlı" kaliteyle çizgi aracının önizlemesi.
+  - Önce: üst katman tuvali 1288 × 759 px.
+  - Sonra: 2576 × 1518 px; sahne tuvali 1288 × 759'da kalır.
+  - Ölçü kutusu, "Uç nokta" etiketi ve artı imleç keskin; çizim etiketi ("P.108") çizimle aynı kalitede.

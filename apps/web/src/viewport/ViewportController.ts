@@ -96,7 +96,14 @@ export class ViewportController {
   private overlay!: HTMLCanvasElement;
   private g!: CanvasRenderingContext2D;
   private host!: HTMLElement;
+  /** The drawing's pixel ratio: the screen's, or one pixel per CSS pixel with HiDPI off (`graphics.hiDpi`). */
   private dpr = 1;
+  /**
+   * The overlay's pixel ratio: always the screen's. What it draws is the interface over the drawing (tool
+   * previews, tags, snap marks, grips, the cross-hair, the scale bar); lowering the drawing's quality for
+   * speed must not blur it, and it holds little enough that full resolution costs next to nothing.
+   */
+  private overlayDpr = 1;
   /**
    * The labels drawn last, as a picture: the overlay is redrawn at every pointer move (cross-hair, snap
    * marker), the labels only when the view, the drawing or their look changed (`labelsKey`).
@@ -806,13 +813,16 @@ export class ViewportController {
   private resize(): void {
     const w = this.host.clientWidth;
     const h = this.host.clientHeight;
-    // HiDPI (Uygulama ayarları → Çizim motoru): the screen's pixel ratio, or one pixel per CSS pixel.
-    const dpr = this.ctx.prefs.hiDpi.value ? window.devicePixelRatio || 1 : 1;
-    if (w === this.size.w && h === this.size.h && dpr === this.dpr) return;
+    // HiDPI (Uygulama ayarları → Çizim motoru) is the drawing's: the screen's pixel ratio, or one pixel
+    // per CSS pixel. The overlay above it is the interface and always has the screen's.
+    const screen = window.devicePixelRatio || 1;
+    const dpr = this.ctx.prefs.hiDpi.value ? screen : 1;
+    if (w === this.size.w && h === this.size.h && dpr === this.dpr && screen === this.overlayDpr) return;
     this.size = { w, h };
     this.dpr = dpr;
-    this.overlay.width = Math.round(w * dpr);
-    this.overlay.height = Math.round(h * dpr);
+    this.overlayDpr = screen;
+    this.overlay.width = Math.round(w * screen);
+    this.overlay.height = Math.round(h * screen);
     this.backend?.resize(w, h, dpr);
     this.camera.setSize(w, h);
     // Resizing a canvas clears it. Waiting for the next animation frame would
@@ -1048,9 +1058,15 @@ export class ViewportController {
       sx = -mx * dpr;
       sy = -my * dpr;
     }
+    // The labels are the drawing's text: drawn at the drawing's pixel ratio, and scaled onto the overlay
+    // when HiDPI is off (then they are as soft as the drawing, the rest of the overlay stays sharp).
+    const x = moving ? sx : Math.round(sx);
+    const y = moving ? sy : Math.round(sy);
+    const k = this.overlayDpr / dpr;
     g.save();
     g.setTransform(1, 0, 0, 1, 0, 0);
-    g.drawImage(cache.canvas, moving ? sx : Math.round(sx), moving ? sy : Math.round(sy));
+    if (k === 1) g.drawImage(cache.canvas, x, y);
+    else g.drawImage(cache.canvas, x * k, y * k, cache.canvas.width * k, cache.canvas.height * k);
     g.restore();
   }
 
@@ -1058,7 +1074,7 @@ export class ViewportController {
     const g = this.g;
     const cam = this.camera;
     const pal = this.palette;
-    g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    g.setTransform(this.overlayDpr, 0, 0, this.overlayDpr, 0, 0);
     g.clearRect(0, 0, cam.width, cam.height);
     const l0 = import.meta.env.DEV ? performance.now() : 0;
     this.drawCachedLabels(g);
