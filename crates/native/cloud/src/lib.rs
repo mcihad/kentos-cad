@@ -39,7 +39,10 @@ pub use drafts::{DraftKey, DraftStore, Loaded};
 pub use failure::{ApiFailure, Failure};
 pub use open::{Opened, Revision, Source, open};
 pub use replica::{Ended, Kept, Replica, ReplicaError, ReplicaStore};
-pub use saving::{Uploaded, conflicting_revision, project_create, save_revision, upload_new};
+pub use saving::{
+    Uploaded, conflicting_revision, project_create, save_revision, save_revision_watched,
+    upload_new,
+};
 pub use sync::{
     After, BaseMeta, BaseObject, BaseSnapshot, BaseStep, Conflict, Draft, DraftChange, DraftMeta,
     Incoming, ProjectSync, Remote, Restored, SaveState, Taken,
