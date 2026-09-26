@@ -18,6 +18,8 @@ mod perf;
 mod preview;
 mod recovery;
 mod saving;
+#[cfg(test)]
+mod screens;
 mod settings;
 mod settings_view;
 mod snapshot;
