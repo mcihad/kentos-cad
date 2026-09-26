@@ -74,6 +74,15 @@
   - Yazılanı öneri listesi değil çalışan komut alır, ADR 0018'deki gibi.
 - Yazılarak başlatılan araç geçmişe iki kez düşüyordu: önce yazılan metin ("çizgi"), sonra aracın kendi adı ("L"). Web yalnız aracın adını yazar. Masaüstü de öyle yapar; araç olmayan komutta yazılan metin kalır.
 
+### Katman ağacı seçimi izler (sahibin isteği, 26 Eylül)
+
+- Sahip: “Sahnede bir öğe seçilince sağdaki katman listesinde ilgili katmanda seçilmeli.” Web'in katman paneli seçimi izlemiyor; bu yeni bir davranıştır. Web'e de aynısı gelecek (web ajanına verildi).
+- Çizimdeki seçim değişince ağaç, seçili nesnelerin katmanlarını seçili gösterir (birden çok katmanda hepsini). Bu katmanları içeren gruplar açılır; tek katmanda ağaç o satıra kayar.
+- **Etkin katman değişmez.** Yeni nesnelerin çizildiği katman seçimle değişmez; web'de de etkin katman çift tık, Enter ya da “Etkin katman yap” ile değişir.
+- Son hareket kazanır: ağaçta bir satıra tıklamak satırları seçer, sonraki seçim değişikliğine dek. Seçim boşalınca ağaç son tıklanan katmana döner.
+- Grubu açmak düzenleme sayılmaz. Açık/kapalı hâl dosyada saklanır ama kaydedilmemiş iş yapmaz ve geri alınmaz (kentos-domain `set_layer_expanded`).
+- Ağaç web'in `VirtualRows`'u gibi sanal satırlarla kurulur. Yalnız görünen satırlar kurulur; seçilen katman görünüme kaydırılabilir (KentOS UI `TreeView::virtualized`, `reveal`).
+
 ### Koordinat sistemi…
 
 - `crs.set` Proje ayarları'nı koordinat sistemi sayfasında açar (`project::COMMANDS`). Açık çizim yoksa Proje ayarları gibi bunu söyler.
@@ -117,4 +126,5 @@
   - Alt+Q ile komut listesi;
   - Proje ayarları'nın koordinat sistemi sayfası;
   - Araçlar sekmesinde sunucu denetiminin iletileri;
-  - alt panelin üç sekmesi ve sürüklenerek büyütülmüş geçmiş (komut çalışırken adlarıyla).
+  - alt panelin üç sekmesi ve sürüklenerek büyütülmüş geçmiş (komut çalışırken adlarıyla);
+  - seçimi izleyen katman ağacı: tek katman (grubu açılmış) ve üç katman (`layering::screens`, `.run/shots/katman-secimi-*`).

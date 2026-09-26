@@ -323,17 +323,29 @@ impl App {
                 .into();
         };
         match panel {
-            Panel::Layers => TreeView::new([
-                TreeColumn::new("Ad").width(Fill),
-                TreeColumn::new("Öğe").width(44).align_right(),
-            ])
-            .extend(
-                doc.layers()
-                    .iter()
-                    .map(|node| self.layer_node(doc, node, true)),
-            )
-            .height(Fill)
-            .into(),
+            Panel::Layers => {
+                // The open tree as flat rows, built only as they scroll into view
+                // (the web's VirtualRows): a DXF can bring hundreds of layers.
+                let rows = open_rows(doc.layers());
+                // The selection's one layer is brought into view (layering.rs).
+                let reveal = match self.selection_layers.as_slice() {
+                    [layer] if self.layers_follow => {
+                        rows.iter().position(|row| row.node.id == *layer)
+                    }
+                    _ => None,
+                };
+                TreeView::new([
+                    TreeColumn::new("Ad").width(Fill),
+                    TreeColumn::new("Öğe").width(44).align_right(),
+                ])
+                .virtualized(rows.len(), move |index| {
+                    let row = &rows[index];
+                    (row.depth, self.layer_node(doc, row.node, row.parent_visible))
+                })
+                .reveal(reveal)
+                .height(Fill)
+                .into()
+            }
             Panel::Properties => {
                 // The selection first, as the web's panel shows it (docs/adr/0029).
                 let borrowed = |rows: Vec<(&'static str, String)>| -> Vec<PropertyRow> {
@@ -367,6 +379,7 @@ impl App {
         }
     }
 
+    /// One row of the layer tree; its children are rows of their own (open_rows).
     fn layer_node<'a>(
         &'a self,
         doc: &'a Document,
@@ -377,17 +390,12 @@ impl App {
             .check(node.visible, Message::LayerVisible(node.id.clone()))
             .cells([label::caption(doc.count_below(node).to_string()).into()])
             .on_press(Message::LayerSelected(node.id.clone()))
-            .selected(self.selected_layer.as_deref() == Some(node.id.as_str()))
+            .selected(self.layer_row_selected(&node.id))
             .muted(!parent_visible);
         match node.kind {
             LayerNodeType::Group => base
                 .folder()
-                .expanded(node.expanded, Message::LayerExpanded(node.id.clone()))
-                .extend(
-                    node.children
-                        .iter()
-                        .map(|child| self.layer_node(doc, child, parent_visible && node.visible)),
-                ),
+                .expanded(node.expanded, Message::LayerExpanded(node.id.clone())),
             LayerNodeType::Layer => {
                 base.icon(swatch(hex_color(&node.style.color)))
                     .toggle(Toggle::locked(
@@ -733,6 +741,34 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
                 None => menu,
             }
         })
+}
+
+/// A row of the open layer tree: its depth, its node and whether the groups
+/// above it are shown.
+struct OpenRow<'a> {
+    depth: usize,
+    node: &'a LayerNode,
+    parent_visible: bool,
+}
+
+/// The layer tree's rows as shown: every node, and the children of the open
+/// groups, depth first.
+fn open_rows(nodes: &[LayerNode]) -> Vec<OpenRow<'_>> {
+    fn walk<'a>(nodes: &'a [LayerNode], depth: usize, visible: bool, rows: &mut Vec<OpenRow<'a>>) {
+        for node in nodes {
+            rows.push(OpenRow {
+                depth,
+                node,
+                parent_visible: visible,
+            });
+            if node.kind == LayerNodeType::Group && node.expanded {
+                walk(&node.children, depth + 1, visible && node.visible, rows);
+            }
+        }
+    }
+    let mut rows = Vec::new();
+    walk(nodes, 0, true, &mut rows);
+    rows
 }
 
 /// A launcher's message: another tab, or a command the desktop runs.

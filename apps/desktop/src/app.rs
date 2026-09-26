@@ -226,6 +226,14 @@ pub struct App {
     pub accent: Accent,
     pub docks: Docks<Panel>,
     pub selected_layer: Option<String>,
+    /// The layers of the drawing's selection, in the order first met; the
+    /// layer tree shows them selected while `layers_follow` (layering.rs).
+    pub(crate) selection_layers: Vec<String>,
+    /// The last thing that chose the tree's selected rows was the drawing's
+    /// selection, not a click in the tree.
+    pub(crate) layers_follow: bool,
+    /// The selection's version the tree last followed.
+    pub(crate) followed_selection: u64,
     pub history: Vec<Entry>,
     pub command_input: String,
     pub command_expanded: bool,
@@ -338,6 +346,9 @@ impl App {
             accent: Accent::default(),
             docks: Panel::layout(),
             selected_layer: None,
+            selection_layers: Vec::new(),
+            layers_follow: false,
+            followed_selection: 0,
             history: vec![Entry::Output(
                 "KentOS CAD masaüstü hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler."
                     .to_owned(),
@@ -463,6 +474,7 @@ impl App {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         let task = self.handle(message);
         self.follow_document();
+        self.follow_selection_layers();
         self.cloud_after(Instant::now());
         task
     }
@@ -535,6 +547,8 @@ impl App {
             Message::Dock(event) => self.docks.update(event),
             Message::LayerSelected(id) => {
                 self.selected_layer = (self.selected_layer.as_deref() != Some(&id)).then_some(id);
+                // A click in the tree chooses its rows until the selection changes again.
+                self.layers_follow = false;
             }
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
