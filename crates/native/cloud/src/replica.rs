@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::open::{Opened, Revision, Source};
-use crate::sync::{BaseSnapshot, BaseStep, objects_by_id};
+use crate::sync::{BaseSnapshot, BaseStep, SaveState, objects_by_id};
 
 /// What the copy's files say they are.
 const FORMAT: &str = "kentos.cloud-replica";
@@ -107,6 +107,33 @@ struct Listed {
     info: ProjectInfo,
     /// When it was written, in milliseconds since 1970.
     saved_at: u64,
+    /// The server ended the project for this account since it was listed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    ended: Option<Ended>,
+}
+
+/// Why the server no longer takes this account's work on a project.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Ended {
+    /// Moved to the trash.
+    Deleted,
+    /// This account's access was taken away.
+    Revoked,
+    /// Archived: read-only until it is unarchived.
+    Archived,
+}
+
+impl Ended {
+    /// The ending a sync reached, if it reached one.
+    pub fn of(state: SaveState) -> Option<Self> {
+        match state {
+            SaveState::Deleted => Some(Self::Deleted),
+            SaveState::Revoked => Some(Self::Revoked),
+            SaveState::Archived => Some(Self::Archived),
+            _ => None,
+        }
+    }
 }
 
 /// A copy in the offline catalog.
@@ -114,6 +141,8 @@ struct Listed {
 pub struct Kept {
     pub info: ProjectInfo,
     pub saved_at: u64,
+    /// The server ended the project for this account: it opens read-only here.
+    pub ended: Option<Ended>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -227,6 +256,25 @@ impl ReplicaStore {
         })
     }
 
+    /// Removes a project's copy from this device (to free the disk); refused
+    /// while a program holds it. The device draft of unsent work is apart
+    /// (drafts.rs): remove it only when nothing in it is still wanted.
+    pub fn remove(
+        &self,
+        server: &str,
+        user: &str,
+        tenant: Uuid,
+        project: Uuid,
+    ) -> Result<(), ReplicaError> {
+        let held = self.open(server, user, tenant, project)?;
+        let dir = held.dir.clone();
+        drop(held);
+        match fs::remove_dir_all(&dir) {
+            Err(e) if e.kind() != io::ErrorKind::NotFound => Err(e.into()),
+            _ => Ok(()),
+        }
+    }
+
     /// The projects this account keeps on this device from this server, as
     /// they were last listed (what opens without a connection).
     pub fn list(&self, server: &str, user: &str) -> Vec<Kept> {
@@ -241,6 +289,7 @@ impl ReplicaStore {
             .map(|l| Kept {
                 info: l.info,
                 saved_at: l.saved_at,
+                ended: l.ended,
             })
             .collect();
         kept.sort_by_key(|k| std::cmp::Reverse(k.saved_at));
@@ -284,11 +333,27 @@ impl Replica {
             version: VERSION,
             info: info.clone(),
             saved_at: now_ms(),
+            ended: None,
         };
         write_durably(
             &self.path("bilgi.json"),
             &serde_json::to_vec(&listed).map_err(io::Error::other)?,
         )
+    }
+
+    /// Records that the server ended the project for this account (a sync's
+    /// `Deleted`, `Revoked` or `Archived`): the offline catalog says so, and
+    /// an opening from the copy is read-only. The next listing from the
+    /// server (`list_as`, `reset`) clears it.
+    pub fn mark_ended(&self, ended: Ended) -> Result<(), ReplicaError> {
+        let mut listed: Listed = serde_json::from_slice(&fs::read(self.path("bilgi.json"))?)
+            .map_err(|e| unreadable("bilgi.json", e))?;
+        listed.ended = Some(ended);
+        write_durably(
+            &self.path("bilgi.json"),
+            &serde_json::to_vec(&listed).map_err(io::Error::other)?,
+        )?;
+        Ok(())
     }
 
     /// Starts the copy again from a project just opened from the server:
@@ -411,6 +476,12 @@ impl Replica {
         let mut snapshot =
             kentos_kcad::decode(&fs::read(&kcad)?).map_err(|e| unreadable("taban çizimi", e))?;
         let mut info = listed.info;
+        if listed.ended.is_some() {
+            // Nothing more goes to the server from here: the opening is read-only.
+            info.access
+                .permissions
+                .retain(|p| *p == kentos_contracts::ProjectPermission::Read);
+        }
         let source = match head.storage {
             ProjectStorage::File => Source::File {
                 revision: head.revision.clone(),

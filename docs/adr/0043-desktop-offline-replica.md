@@ -43,6 +43,12 @@
   - ya da yeni kopyayı eski taslakla bırakır; eski taslaktaki yoldaki komutu sunucu kaydından yeniden yanıtlar.
 - `ProjectSync::base` bütün tabanı verir (nesneler kimlik sırasında, sürümleri, üst veri, imleç). Kopya ondan toplanır: günlük uzayınca ve proje kapanırken.
 
+### Bitmiş projeler ve cihazdan kaldırma
+
+- Sunucu projeyi bu hesap için bitirdiyse (çöpe taşındı, erişim kalktı, arşivlendi; eşitlemenin `Deleted`, `Revoked`, `Archived` hâli) kopyaya işlenir (`mark_ended`). Çevrimdışı katalog nedenini gösterir; kopyadan açılış salt okunurdur. Gönderilmemiş iş taslakta kalır; "Farklı kaydet" ile yerel dosyaya alınabilir.
+- Sunucudan yeni bir listeleme (`list_as`, `reset`), örneğin yeniden paylaşılınca, işareti kaldırır.
+- `ReplicaStore::remove` kopyayı cihazdan kaldırır (disk yeri için). Bir program tutarken reddedilir. Taslak ayrıdır; ondaki iş istenmiyorsa ayrıca silinir.
+
 ### Çevrimdışı açma ve yeniden bağlanma
 
 - `Replica::load`, çevrimiçi açılışla aynı yapıyı (`Opened`) verir. Veritabanı projesinde nesneler sunucunun kimlik sırasındadır.
