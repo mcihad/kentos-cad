@@ -147,8 +147,9 @@ pub struct Panel {
 pub enum Item {
     /// A command button, large or small.
     Command { id: &'static str, large: bool },
-    /// A family of tools behind one button (Dikdörtgen ▾): the first is shown.
-    Split { ids: Vec<&'static str>, large: bool },
+    /// A family of tools behind one button (Dikdörtgen ▾), or one tool's
+    /// methods (Daire ▾: 2 nokta, 3 nokta …): the first is shown.
+    Split { entries: Vec<Entry>, large: bool },
     /// A drop-down button with a submenu of commands.
     Menu {
         label: &'static str,
@@ -158,6 +159,18 @@ pub enum Item {
     /// A panel the web draws itself (layer picker, properties, selection);
     /// the desktop has these as docked panels.
     Builtin,
+}
+
+/// One entry of a split button's menu (the web's `SplitEntry`, docs/adr/0032).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Entry {
+    pub id: &'static str,
+    /// Its name in the menu: a family's tool by its title (`Düzgün çokgen`),
+    /// a method by its own (`2 nokta`).
+    pub label: &'static str,
+    /// What a method gives the tool once it runs, as if typed (`2N`); none
+    /// for a tool's default method and for a family's tools.
+    pub option: Option<&'static str>,
 }
 
 /// The catalog: commands by id and the ribbon.
@@ -276,7 +289,14 @@ fn item(raw: RawItem) -> Item {
             large: large(&size),
         },
         RawItem::Split { split, size } => Item::Split {
-            ids: split.into_iter().map(|s| leak(s.command)).collect(),
+            entries: split
+                .into_iter()
+                .map(|s| Entry {
+                    id: leak(s.command),
+                    label: leak(s.label),
+                    option: s.option.map(leak),
+                })
+                .collect(),
             large: large(&size),
         },
         RawItem::Menu { menu, size, blocks } => Item::Menu {
@@ -382,6 +402,9 @@ enum RawItem {
 #[derive(Deserialize)]
 struct RawSplit {
     command: String,
+    label: String,
+    #[serde(default)]
+    option: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -414,7 +437,8 @@ mod tests {
                 for item in &panel.items {
                     let ids = match item {
                         Item::Command { id, .. } => vec![*id],
-                        Item::Split { ids, .. } | Item::Menu { ids, .. } => ids.clone(),
+                        Item::Split { entries, .. } => entries.iter().map(|e| e.id).collect(),
+                        Item::Menu { ids, .. } => ids.clone(),
                         Item::Builtin => vec![],
                     };
                     for id in ids {
@@ -428,6 +452,60 @@ mod tests {
                 }
             }
         }
+    }
+
+    /// A tool's methods keep their names and options (Daire ▾: 2 nokta is
+    /// the circle tool, then 2N), a family's tools their titles (docs/adr/0032).
+    #[test]
+    fn split_entries_keep_their_methods() {
+        let catalog = Catalog::load(INVENTORY).expect("the web inventory parses");
+        let splits: Vec<&Vec<Entry>> = catalog
+            .tabs()
+            .flat_map(|tab| tab.panels.iter())
+            .flat_map(|panel| panel.items.iter())
+            .filter_map(|item| match item {
+                Item::Split { entries, .. } => Some(entries),
+                _ => None,
+            })
+            .collect();
+        let of = |id: &str| {
+            let entries = splits
+                .iter()
+                .find(|entries| entries[0].id == id)
+                .unwrap_or_else(|| panic!("a split button starts with {id}"));
+            entries
+                .iter()
+                .map(|e| (e.id, e.label, e.option))
+                .collect::<Vec<_>>()
+        };
+        let circle = "tool.circle";
+        assert_eq!(
+            of(circle),
+            [
+                (circle, "Merkez, yarıçap", None),
+                (circle, "2 nokta", Some("2N")),
+                (circle, "3 nokta", Some("3N")),
+                (circle, "Teğet, teğet, yarıçap", Some("TTY")),
+                (circle, "Teğet, teğet, teğet", Some("TTT")),
+            ]
+        );
+        let arc = "tool.arc";
+        assert_eq!(
+            of(arc),
+            [
+                (arc, "3 nokta", None),
+                (arc, "Merkez, başlangıç, bitiş", Some("M")),
+                (arc, "Devam", Some("D")),
+            ]
+        );
+        assert_eq!(
+            of("tool.rectangle"),
+            [
+                ("tool.rectangle", "Dikdörtgen", None),
+                ("tool.rectangle3", "Döndürülmüş dikdörtgen", None),
+                ("tool.regularPolygon", "Düzgün çokgen", None),
+            ]
+        );
     }
 
     #[test]
