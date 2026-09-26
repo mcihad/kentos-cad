@@ -611,8 +611,8 @@ impl App {
                     "“Sunucudaki son revizyonu aç” sizin değişikliklerinizi bırakır (önce sorulur). “Ayrı proje olarak kaydet” çiziminizi aynı çalışma alanında “{name} (kopya)” adıyla yeni bir dosya projesi yapar."
                 )))
                 .action(secondary("Vazgeç", Some(cloud(Event::Close))))
-                .action(secondary("Ayrı proje olarak kaydet", Some(cloud(Event::SaveCopy))))
-                .action(primary("Sunucudaki son revizyonu aç", Some(cloud(Event::OpenLatest))))
+                .action(secondary("Sunucudaki son revizyonu aç", Some(cloud(Event::OpenLatest))))
+                .action(primary("Ayrı proje olarak kaydet", Some(cloud(Event::SaveCopy))))
                 .width(600.0),
         )
     }
@@ -633,7 +633,7 @@ impl App {
                 .map_or(String::new(), |r| format!(" Revizyon {}.", r.number));
             cells.push(
                 Readout::new(line(format!("{} › {}", source.workspace, doc.name())))
-                    .width(200.0)
+                    .width(170.0)
                     .icon(Icon::Globe)
                     .tip(Tip::new("Bulut projesi").body(format!(
                         "{} › {}. Saklama: {}. Rolünüz: {}.{revision}",
@@ -680,7 +680,6 @@ impl App {
             Some(me) => {
                 cells.push(
                     Readout::new(line(me.user.display_name.clone()))
-                        .icon(Icon::Globe)
                         .tip(Tip::new("Bulut hesabı").body(format!(
                             "{} olarak giriş yapıldı ({}).",
                             me.user.display_name,

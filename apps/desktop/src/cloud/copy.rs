@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 
 use iced::Task;
 use iced::task::Handle;
-use kentos_cloud::{ApiFailure, Cloud as Client, Replica, ReplicaError};
+use kentos_cloud::{ApiFailure, Cloud as Client, Replica, ReplicaError, SaveState};
 use kentos_contracts::{Me, ProjectStorage};
 use kentos_domain::Uuid;
 use serde_json::Value;
@@ -258,11 +258,9 @@ impl App {
 
     /// Whether the open cloud project's work is on its way (the dot says eşitleniyor).
     pub(crate) fn syncing(&self) -> bool {
-        self.cloud
-            .live
-            .as_ref()
-            .is_some_and(|l| l.sending() || !l.sync.all_sent())
-            || self.saving.is_some()
+        self.cloud.live.as_ref().is_some_and(|l| {
+            l.sending() || matches!(l.sync.state(), SaveState::Pending | SaveState::Saving)
+        }) || self.saving.is_some()
             || self
                 .cloud
                 .held
