@@ -51,7 +51,7 @@ impl Panel {
     pub fn title(self) -> &'static str {
         match self {
             Panel::Layers => "Katmanlar",
-            Panel::Properties => "Özellikler",
+            Panel::Properties => "Öznitelikler",
         }
     }
 
@@ -167,6 +167,8 @@ pub enum Message {
     DrawingMenu(crate::drawing_menus::Event),
     /// The text field over the drawing (text_field.rs).
     TextField(crate::text_field::Event),
+    /// Öznitelikler: an edit or a section toggled (properties/).
+    Properties(crate::properties::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -256,6 +258,8 @@ pub struct App {
     pub(crate) text_field_focus: bool,
     pub(crate) text_field_select: bool,
     pub(crate) text_field_release: bool,
+    /// Öznitelikler's closed sections, by id, while the app runs (the web's `collapsed`).
+    pub(crate) props_closed: std::collections::HashSet<&'static str>,
     /// The last left press's object with no command running, and when (a double click edits a text).
     pub(crate) last_click: Option<(kentos_domain::Slot, Instant)>,
     pub history: Vec<Entry>,
@@ -382,6 +386,7 @@ impl App {
             text_field_focus: false,
             text_field_select: false,
             text_field_release: false,
+            props_closed: std::collections::HashSet::new(),
             last_click: None,
             history: vec![Entry::Output(
                 "KentOS CAD masaüstü hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler."
@@ -588,6 +593,7 @@ impl App {
             Message::Layer(event) => return self.layer_event(event),
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
             Message::TextField(event) => self.text_field_event(event),
+            Message::Properties(event) => self.properties_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -991,8 +997,7 @@ impl App {
         // typed text is not said a second time.
         let says_itself = self.document.is_some()
             && found.is_some_and(|c| {
-                c.id
-                    .strip_prefix("tool.")
+                c.id.strip_prefix("tool.")
                     .is_some_and(|tool| Session::tools().contains(&tool))
             });
         if !says_itself {
@@ -1409,7 +1414,10 @@ mod tests {
         // The typed point, then the tool's echo of it.
         let before = app.history.len();
         let _ = app.submit_line("0,0");
-        assert_eq!(app.history.get(before), Some(&Entry::Value("0,0".to_owned())));
+        assert_eq!(
+            app.history.get(before),
+            Some(&Entry::Value("0,0".to_owned()))
+        );
         assert_eq!(
             app.session.prompt().text(),
             "Ölçü: ikinci ölçü noktasını belirtin"

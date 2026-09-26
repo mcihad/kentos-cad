@@ -130,6 +130,11 @@ pub enum Demo {
     CommandExpanded(bool),
     /// Öznitelikler sayfası: tabloda satır seçildi.
     RecordSelected(usize),
+    /// Öznitelikler ızgarası örneği: bölüm açıldı ya da kapandı, katman
+    /// seçildi, hücreye yazılan onaylandı.
+    SheetToggled(usize),
+    SheetLayer(usize),
+    SheetHeight(String),
     Inspector(inspector::Event),
     QueryEdited(Edit),
     ModeSelected(SelectionMode),
@@ -434,6 +439,10 @@ pub struct Gallery {
     pub project_selected: Option<ProjectRow>,
     /// Panel örneğindeki panellerin kapalı olması.
     pub panels_collapsed: [bool; 2],
+    /// Öznitelikler ızgarası örneği: kapalı bölümler, seçili katman ve yükseklik.
+    pub sheet_closed: [bool; 2],
+    pub sheet_layer: usize,
+    pub sheet_height: f64,
     /// Kayan pencere örneği: pencereler, açık yakalama türleri ve arkadaki
     /// düğmeye basılma sayısı.
     pub panes: Windows<DemoPane>,
@@ -824,6 +833,9 @@ impl Default for Gallery {
             project_checked: [true, true, true, false, true],
             project_selected: Some(ProjectRow::File(2)),
             panels_collapsed: [false, false],
+            sheet_closed: [false, false],
+            sheet_layer: 0,
+            sheet_height: 2.5,
             panes: demo_panes(),
             snaps: [true, true, false, true],
             stage_presses: 0,
@@ -1013,6 +1025,21 @@ impl Gallery {
             Demo::PanelToggled(panel) => {
                 if let Some(collapsed) = self.panels_collapsed.get_mut(panel) {
                     *collapsed = !*collapsed;
+                }
+            }
+            Demo::SheetToggled(section) => {
+                if let Some(closed) = self.sheet_closed.get_mut(section) {
+                    *closed = !*closed;
+                }
+            }
+            Demo::SheetLayer(layer) => self.sheet_layer = layer,
+            // Ondalık virgül noktadır; sayı olmayan ya da sıfırdan büyük
+            // olmayan değer alınmaz, hücre eski değere döner.
+            Demo::SheetHeight(text) => {
+                if let Ok(height) = text.trim().replacen(',', ".", 1).parse::<f64>()
+                    && height > 0.0
+                {
+                    self.sheet_height = height;
                 }
             }
             Demo::Window(event) => self.panes.update(event),

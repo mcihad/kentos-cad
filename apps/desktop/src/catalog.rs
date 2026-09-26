@@ -170,6 +170,15 @@ pub const PORTED: &[&str] = &[
     // Tarama: the region by a closed object or by the line work, islands left
     // out, through cad.entities.create as “Tarama” (docs/adr/0062).
     "tool.hatch",
+    // Alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine
+    // tıklayarak alan; into the document as the web's (docs/adr/0065).
+    "tool.areaUnion",
+    "tool.areaIntersect",
+    "tool.areaSubtract",
+    "tool.areaSplit",
+    "tool.toArea",
+    "tool.toPolyline",
+    "tool.boundary",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the
@@ -376,9 +385,19 @@ pub struct Catalog {
     mode_tabs: Vec<(kentos_contracts::Workspace, Vec<Tab>)>,
     quick: Vec<&'static str>,
     modes: Vec<Mode>,
+    /// The menu bar's menus by id: their blocks of command ids, in order.
+    menus: Vec<(&'static str, Vec<Vec<&'static str>>)>,
 }
 
 impl Catalog {
+    /// A menu bar menu's blocks of command ids (`help` is the ribbon's ?).
+    pub fn menu(&self, id: &str) -> &[Vec<&'static str>] {
+        self.menus
+            .iter()
+            .find(|(menu, _)| *menu == id)
+            .map_or(&[], |(_, blocks)| blocks.as_slice())
+    }
+
     pub fn get(&self, id: &str) -> Option<&Command> {
         self.by_id.get(id).map(|&i| &self.commands[i])
     }
@@ -527,6 +546,19 @@ impl Catalog {
             tabs,
             mode_tabs,
             quick: raw.layout.quick_access.into_iter().map(leak).collect(),
+            menus: raw
+                .layout
+                .menus
+                .into_iter()
+                .map(|menu| {
+                    let blocks = menu
+                        .blocks
+                        .into_iter()
+                        .map(|block| flatten(vec![block]))
+                        .collect();
+                    (leak(menu.id), blocks)
+                })
+                .collect(),
             modes,
         })
     }
@@ -664,6 +696,15 @@ struct RawLayout {
     #[serde(default)]
     ribbon_by_mode: std::collections::BTreeMap<String, Vec<RawTab>>,
     quick_access: Vec<String>,
+    /// The menu bar's menus (the web's `MAIN_MENU`): the ribbon's ? opens Yardım.
+    #[serde(default)]
+    menus: Vec<RawMenu>,
+}
+
+#[derive(Deserialize)]
+struct RawMenu {
+    id: String,
+    blocks: Vec<RawBlock>,
 }
 
 #[derive(Deserialize)]

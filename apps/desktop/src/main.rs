@@ -31,6 +31,7 @@ mod opening;
 mod perf;
 mod preview;
 mod project;
+mod properties;
 mod recent;
 mod recovery;
 #[cfg(test)]

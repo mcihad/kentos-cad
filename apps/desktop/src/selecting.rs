@@ -1,21 +1,12 @@
 //! The selection on the desktop (docs/adr/0029): the web's selection
 //! commands (`app/commands.ts`: Tümünü seç, Seçimi kaldır, Seçimi ters
-//! çevir, Seçime yakınlaştır) and what the properties panel says about a
-//! selection (`ui/properties/PropertiesPanel.ts`): how many, of which kinds,
-//! on which layer, in which colour, their total length and area, and for one
-//! object its attributes. Editing them there is a later slice.
+//! çevir, Seçime yakınlaştır). What the Öznitelikler panel shows of it and
+//! edits there is `properties/` (docs/adr/0063).
 
-use std::borrow::Cow;
-
-use kentos_contracts::Entity;
-use kentos_domain::{LayerTree, Slot};
-use kentos_interaction::{Format, ViewChange};
+use kentos_domain::Slot;
+use kentos_interaction::ViewChange;
 
 use crate::app::App;
-use crate::document::Document;
-
-/// A row of the properties panel: its name and its value.
-pub type Row = (Cow<'static, str>, String);
 
 /// Seçime yakınlaştır's margin, logical pixels (the web's `camera.fit(b, 96)`).
 const SELECTION_PADDING: f64 = 96.0;
@@ -79,119 +70,6 @@ impl App {
             });
         }
     }
-
-    /// The properties panel's rows for the selection; none when nothing is selected.
-    pub(crate) fn selection_rows(&self, doc: &Document) -> Option<Vec<Row>> {
-        let objects: Vec<&Entity> = self
-            .selection
-            .ids()
-            .iter()
-            .filter_map(|slot| doc.model.get(*slot))
-            .collect();
-        let first = *objects.first()?;
-        let layers = doc.model.layers();
-        let format = Format::of(doc.settings());
-        let ids: Vec<f64> = objects.iter().map(|e| f64::from(e.base().id)).collect();
-        // Summed by the geometry store, as the web sums them: a selection can be large.
-        let (length, area) = self.spatial.store().measure(&ids);
-        let mut rows: Vec<Row> = Vec::new();
-        let mut row = |key: &'static str, value: String| rows.push((Cow::Borrowed(key), value));
-        if let [one] = objects.as_slice() {
-            let base = one.base();
-            let kind = match base.label.as_deref().filter(|l| !l.is_empty()) {
-                Some(label) => format!("{} · {label}", kind_title(one.kind())),
-                None => kind_title(one.kind()).to_owned(),
-            };
-            let layer = layer_path(layers, &base.layer_id);
-            row("Nesne", format!("#{}", base.id));
-            row("Tür", kind);
-            row(
-                "Katman",
-                if layers.is_locked(&base.layer_id) {
-                    format!("{layer} (kilitli)")
-                } else {
-                    layer
-                },
-            );
-            row(
-                "Renk",
-                base.color.clone().unwrap_or_else(|| "Katmana göre".into()),
-            );
-        } else {
-            // Kinds in the order first met, lower case (the web's summary).
-            let mut kinds: Vec<(&'static str, usize)> = Vec::new();
-            for e in &objects {
-                match kinds.iter_mut().find(|(k, _)| *k == e.kind()) {
-                    Some((_, n)) => *n += 1,
-                    None => kinds.push((e.kind(), 1)),
-                }
-            }
-            let kinds: Vec<String> = kinds
-                .iter()
-                .map(|(k, n)| format!("{n} {}", kind_title(k).to_lowercase()))
-                .collect();
-            let same_layer = objects
-                .iter()
-                .all(|e| e.base().layer_id == first.base().layer_id);
-            let any_locked = objects.iter().any(|e| layers.is_locked(&e.base().layer_id));
-            let same_color = objects.iter().all(|e| e.base().color == first.base().color);
-            row("Seçim", format!("{} nesne seçili", objects.len()));
-            row("Türler", kinds.join(", "));
-            row(
-                "Katman",
-                if any_locked {
-                    "Kilitli katman içeriyor".to_owned()
-                } else if same_layer {
-                    layer_path(layers, &first.base().layer_id)
-                } else {
-                    "Çeşitli".to_owned()
-                },
-            );
-            row(
-                "Renk",
-                match (same_color, &first.base().color) {
-                    (false, _) => "Çeşitli".to_owned(),
-                    (true, Some(color)) => color.clone(),
-                    (true, None) => "Katmana göre".to_owned(),
-                },
-            );
-        }
-        let total = objects.len() > 1;
-        if length > 0.0 {
-            row(
-                if total { "Toplam uzunluk" } else { "Uzunluk" },
-                format.length(length),
-            );
-        }
-        if area > 0.0 {
-            row(
-                if total { "Toplam alan" } else { "Alan" },
-                format.area(area),
-            );
-        }
-        if let [one] = objects.as_slice() {
-            // Its attributes, by name.
-            for (key, value) in &one.base().attrs {
-                rows.push((Cow::Owned(key.clone()), value.clone()));
-            }
-        }
-        Some(rows)
-    }
-}
-
-/// A layer's place in the tree, groups first: `Kadastro / Parsel` (the web's `path`).
-fn layer_path(layers: &LayerTree, id: &str) -> String {
-    let mut names = Vec::new();
-    let mut at = layers.get(id);
-    while let Some(node) = at {
-        names.push(node.name.clone());
-        at = layers.parent(&node.id);
-    }
-    if names.is_empty() {
-        return id.to_owned();
-    }
-    names.reverse();
-    names.join(" / ")
 }
 
 /// An object kind as the web titles it (`ENTITY_KIND_LABEL`).
@@ -215,8 +93,7 @@ pub fn kind_title(kind: &str) -> &'static str {
 }
 
 #[cfg(test)]
-mod tests {
-    use iced::keyboard::Modifiers;
+pub(crate) mod tests {
     use iced::{Point, Rectangle, Size};
     use kentos_contracts::DocumentSnapshotV1;
     use kentos_domain::Slot;
@@ -228,7 +105,7 @@ mod tests {
 
     /// The selection traces' drawing (fixtures/interaction/v1/objects.kcad),
     /// open in an area of 800 × 600 at 0.125 m per pixel around its centre.
-    fn objects() -> App {
+    pub(crate) fn objects() -> App {
         let (mut app, _) = App::boot(None);
         let snapshot = DocumentSnapshotV1::from_json(include_str!(
             "../../../fixtures/interaction/v1/objects.kcad"
@@ -246,11 +123,11 @@ mod tests {
     }
 
     /// The area's pixel of a point given east and north of the centre.
-    fn at(de: f32, dn: f32) -> Point {
+    pub(crate) fn at(de: f32, dn: f32) -> Point {
         Point::new(400.0 + de * 8.0, 300.0 - dn * 8.0)
     }
 
-    fn click(app: &mut App, de: f32, dn: f32) {
+    pub(crate) fn click(app: &mut App, de: f32, dn: f32) {
         let p = at(de, dn);
         let _ = app.update(Message::Viewport(Event::Moved(p)));
         let _ = app.update(Message::Viewport(Event::Pressed(p)));
@@ -290,35 +167,6 @@ mod tests {
         let _ = app.run("tool.polygon");
         let _ = app.run("tool.select");
         assert_eq!((app.session.tool_id(), selected(&app)), ("select", vec![1]));
-    }
-
-    #[test]
-    fn the_properties_panel_says_what_is_selected() {
-        let mut app = objects();
-        let doc = app.document.clone().expect("open");
-        assert!(app.selection_rows(&doc).is_none());
-        click(&mut app, -18.0, 9.0);
-        let rows = app.selection_rows(&doc).expect("one object");
-        let get = |rows: &[super::Row], key: &str| {
-            rows.iter()
-                .find(|(k, _)| k == key)
-                .map(|(_, v)| v.clone())
-                .unwrap_or_default()
-        };
-        assert_eq!(get(&rows, "Tür"), "Kapalı alan");
-        assert_eq!(get(&rows, "Katman"), "Parsel");
-        assert_eq!(get(&rows, "Alan"), "120.00 m²");
-        assert_eq!(get(&rows, "Parsel"), "7", "its attributes");
-        let _ = app.update(Message::Modifiers(Modifiers::SHIFT));
-        click(&mut app, -16.0, -12.25);
-        click(&mut app, 10.0, -16.25);
-        let _ = app.update(Message::Modifiers(Modifiers::empty()));
-        let rows = app.selection_rows(&doc).expect("three objects");
-        assert_eq!(get(&rows, "Seçim"), "3 nesne seçili");
-        assert_eq!(get(&rows, "Türler"), "1 kapalı alan, 2 çizgi");
-        assert_eq!(get(&rows, "Katman"), "Kilitli katman içeriyor");
-        assert_eq!(get(&rows, "Toplam uzunluk"), "28.000 m");
-        assert_eq!(get(&rows, "Toplam alan"), "120.00 m²");
     }
 
     #[test]

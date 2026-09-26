@@ -252,6 +252,12 @@ pub struct Memory {
     pub hatch_preset: usize,
     pub hatch_by_lines: bool,
     pub hatch_islands: bool,
+    /// Alan kesiştir's Kaynakları sil, Alan çıkar's Çıkarılanları sil and
+    /// İçine tıklayarak alan's Adalar (`AreaIntersectTool.erase`,
+    /// `AreaSubtractTool.eraseCutters`, `BoundaryTool.islands`).
+    pub area_intersect_erase: bool,
+    pub area_subtract_erase: bool,
+    pub boundary_islands: bool,
     /// Ölçülendirme's style, its linear direction lock in degrees (0 ΔY, 90 ΔX;
     /// none: from where the line is placed) and whether an angle is measured
     /// from its vertex (`DimensionTool.mode`, `.lock`, `.byVertex`).
@@ -303,6 +309,9 @@ impl Default for Memory {
             hatch_preset: 0,
             hatch_by_lines: false,
             hatch_islands: true,
+            area_intersect_erase: false,
+            area_subtract_erase: false,
+            boundary_islands: true,
             dimension_mode: DimensionMode::Aligned,
             dimension_lock: None,
             dimension_by_vertex: false,
@@ -461,6 +470,9 @@ pub struct Area {
     pub width: f32,
     /// The outline's dash and gap, logical pixels; solid when none (a hatch's region, docs/adr/0062).
     pub dash: Option<[f32; 2]>,
+    /// The fill's colour: the accent, or the snap colour for every other
+    /// piece Alan böl would leave (docs/adr/0065).
+    pub fill_tone: Tone,
 }
 
 /// A text at a world point, moved by a logical pixel offset (right and down).

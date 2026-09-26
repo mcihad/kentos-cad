@@ -52,7 +52,8 @@ use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::{
-    construction, dimension, divide, donut, ellipse, hatch, parallel, revcloud, spline, text,
+    area, boundary, construction, dimension, divide, donut, ellipse, hatch, parallel, revcloud,
+    spline, text,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -103,6 +104,14 @@ pub const TOOLS: &[&str] = &[
     text::ID,
     dimension::ID,
     hatch::ID,
+    // Alan işlemleri (docs/adr/0065).
+    area::UNION_ID,
+    area::INTERSECT_ID,
+    area::SUBTRACT_ID,
+    area::SPLIT_ID,
+    area::TO_AREA_ID,
+    area::TO_POLYLINE_ID,
+    boundary::ID,
 ];
 
 /// The running tool, if any, the last one started, and the select tool that
@@ -174,6 +183,13 @@ impl Session {
             text::ID => Box::new(crate::text::Text::new()),
             dimension::ID => Box::new(crate::dimension::Dimension::new()),
             hatch::ID => Box::new(crate::hatch::Hatch::new()),
+            area::UNION_ID => Box::new(crate::area::AreaAction::union()),
+            area::INTERSECT_ID => Box::new(crate::area::AreaAction::intersect()),
+            area::SUBTRACT_ID => Box::new(crate::area::AreaSubtract::tool()),
+            area::SPLIT_ID => Box::new(crate::area::AreaSplit::tool()),
+            area::TO_AREA_ID => Box::new(crate::area::AreaAction::to_area()),
+            area::TO_POLYLINE_ID => Box::new(crate::area::AreaAction::to_polyline()),
+            boundary::ID => Box::new(crate::boundary::Boundary::new()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command

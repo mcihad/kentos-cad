@@ -12,9 +12,7 @@
 //! disabled button) and its tooltip says why; typed or keyed, it says so in
 //! the command line.
 
-use std::borrow::Cow;
-
-use iced::widget::{Column, button, column, container, row, scrollable, stack, text};
+use iced::widget::{button, column, container, row, scrollable, stack, text};
 use iced::{Color, Element, Fill};
 
 use kentos_contracts::{LayerNode, LayerNodeType};
@@ -25,10 +23,10 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LinePrompt};
+use kentos_ui::widget::context_menu::{ContextMenu, MenuButton};
 use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon};
 use kentos_ui::widget::status_bar::{Readout, StatusBar};
 use kentos_ui::widget::table::Column as TreeColumn;
-use kentos_ui::widget::context_menu::{ContextMenu, MenuButton};
 use kentos_ui::widget::tree_view::{self, Node, Toggle, TreeView};
 use kentos_ui::widget::{
     CommandLine, Confirm, Dialog, DockSpace, EmptyState, Menu, Pane, ShortcutList, Tip, overlay,
@@ -42,7 +40,6 @@ use crate::catalog::{
 use crate::document::{Document, crs_name};
 use crate::marks::Marks;
 use crate::preview;
-use crate::selecting::Row as PropertyRow;
 use crate::viewport::mark_colors;
 
 impl App {
@@ -58,6 +55,11 @@ impl App {
                     (Panel::Layers, Some(doc)) => {
                         pane.actions(self.layers_actions(doc.layer_count()))
                     }
+                    // The header's meta: “#12”, “3 nesne” (the web's panel meta).
+                    (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
+                        Some(meta) => pane.actions(label::caption(meta)).scrollable(),
+                        None => pane.scrollable(),
+                    },
                     _ => pane.scrollable(),
                 }
             },
@@ -98,27 +100,10 @@ impl App {
                     .on_press(Message::AppMenu(crate::app_menu::Event::Toggle)),
             )
             .collapsible(self.ribbon_collapsed, Message::Run("view.ribbonCollapse"))
-            .trailing(
-                row![
-                    label::caption(self.document.as_ref().map_or(
-                        "Açık çizim yok".to_owned(),
-                        |doc| {
-                            // A cloud project with its workspace (docs/adr/0041).
-                            let place = doc
-                                .cloud_source()
-                                .map_or(String::new(), |s| format!("{} › ", s.workspace));
-                            format!(
-                                "{place}{}{}",
-                                doc.name(),
-                                if doc.dirty() { " • kaydedilmedi" } else { "" }
-                            )
-                        },
-                    )),
-                    self.fullscreen_button(),
-                ]
-                .spacing(6)
-                .align_y(iced::Center),
-            );
+            // The web's tab row, after the tabs: the drawing's name (an accent
+            // dot before it while unsaved), the coordinate system, Tam ekran
+            // and Yardım (docs/adr/0064).
+            .trailing(self.tab_row_end());
         for command in catalog.quick().iter().filter_map(|id| catalog.get(id)) {
             // Undo and redo are dimmed with no step to take (web: isEnabled).
             let on_press = enabled(command).filter(|_| self.available(command.id));
@@ -145,23 +130,75 @@ impl App {
         ribbon.into()
     }
 
-    /// Tam ekran at the end of the tab row, as on the web: four corners out,
-    /// or in while the window fills the screen.
-    fn fullscreen_button(&self) -> Element<'static, Message> {
-        let (glyph, title) = if self.fullscreen {
-            ("fullscreenExit", "Tam ekrandan çık")
-        } else {
-            ("fullscreen", "Tam ekran")
-        };
-        let about = Tip::new(title).body("Uygulamayı ekranın tamamına yayar.");
-        kentos_ui::widget::tip(
-            button(kentos_ui::icon::icon(crate::icons::from_web(Some(glyph))).size(14.0))
-                .on_press(Message::Run("view.fullscreen"))
-                .padding([4, 5])
-                .style(style::button::flat),
-            if self.fullscreen { about.detail("Esc") } else { about },
-            iced::widget::tooltip::Position::Bottom,
-        )
+    /// The tab row after the tabs, as the web's (docs/adr/0064): the
+    /// drawing's name (an accent dot before it while unsaved), the coordinate
+    /// system, Tam ekran and Yardım. In a narrow window the row gives way as
+    /// the web's (`Ribbon.fitBar`): the coordinate system's name first (its
+    /// icon stays), then the drawing's name is cut.
+    fn tab_row_end(&self) -> Element<'static, Message> {
+        let title = self.document.as_ref().map(|doc| {
+            // A cloud project with its workspace (docs/adr/0041).
+            let place = doc
+                .cloud_source()
+                .map_or(String::new(), |s| format!("{} › ", s.workspace));
+            (format!("{place}{}", doc.name()), doc.dirty(), doc.settings().srid)
+        });
+        // Built now, as the ribbon's elements own what they show.
+        let help = catalog()
+            .menu("help")
+            .iter()
+            .fold(Menu::new(), |menu, block| {
+                block
+                    .iter()
+                    .fold(menu.separator(), |menu, id| self.command_item(menu, id))
+            });
+        let full = self.fullscreen;
+        iced::widget::responsive(move |size| {
+            let name = title
+                .as_ref()
+                .map_or_else(|| "Açık çizim yok".to_owned(), |(name, ..)| name.clone());
+            let crs = title.as_ref().map(|(_, _, srid)| {
+                let srid = *srid;
+                (
+                    srid,
+                    crs_name(srid).map_or_else(|| format!("EPSG:{srid}"), str::to_owned),
+                )
+            });
+            // The widths the row needs, from the caption size: an estimate
+            // that errs wide, as the web's steps test for overflow.
+            let glyph = kentos_ui::theme::typography::caption() * 0.6;
+            let text = |s: &str| s.chars().count() as f32 * glyph;
+            let buttons = 2.0 * kentos_ui::theme::typography::scaled(28.0) + 3.0 * 4.0;
+            let crs_name_width = crs.as_ref().map_or(0.0, |(_, n)| text(n) + 6.0);
+            let crs_icon = if crs.is_some() {
+                kentos_ui::theme::typography::scaled(32.0)
+            } else {
+                0.0
+            };
+            let needed = text(&name) + 12.0 + crs_icon + crs_name_width + buttons;
+            let crs_named = needed <= size.width;
+            let mut row = row![
+                container(document_title(&name, title.as_ref().is_some_and(|t| t.1)))
+                    .width(Fill)
+                    .align_x(iced::alignment::Horizontal::Right)
+                    .clip(true)
+            ]
+            .width(Fill)
+            .spacing(4)
+            .align_y(iced::Center);
+            if let Some((srid, crs)) = crs {
+                row = row.push(crs_button(srid, crs, crs_named));
+            }
+            // The area is the tab row's height: the row sits in its middle.
+            container(
+                row.push(fullscreen_view(full))
+                    .push(help_button(help.clone())),
+            )
+            .height(Fill)
+            .align_y(iced::Center)
+            .into()
+        })
+        .into()
     }
 
     /// A panel of the web's ribbon: its buttons, which the ribbon shrinks to
@@ -352,42 +389,17 @@ impl App {
                 ])
                 .virtualized(rows.len(), move |index| {
                     let row = &rows[index];
-                    (row.depth, self.layer_node(doc, row.node, row.parent_visible))
+                    (
+                        row.depth,
+                        self.layer_node(doc, row.node, row.parent_visible),
+                    )
                 })
                 .reveal(reveal)
                 .height(Fill)
                 .into()
             }
-            Panel::Properties => {
-                // The selection first, as the web's panel shows it (docs/adr/0029).
-                let borrowed = |rows: Vec<(&'static str, String)>| -> Vec<PropertyRow> {
-                    rows.into_iter()
-                        .map(|(k, v)| (Cow::Borrowed(k), v))
-                        .collect()
-                };
-                let rows = match (
-                    self.selection_rows(doc),
-                    self.selected_layer.as_deref().and_then(|id| doc.find(id)),
-                ) {
-                    (Some(rows), _) => rows,
-                    (None, Some(layer)) => borrowed(layer_rows(doc, layer)),
-                    (None, None) => borrowed(project_rows(doc)),
-                };
-                rows.into_iter()
-                    .fold(
-                        Column::new().spacing(6).padding(12),
-                        |column, (key, value)| {
-                            column.push(
-                                row![
-                                    label::caption(key).width(128),
-                                    label::body(value).width(Fill)
-                                ]
-                                .spacing(8),
-                            )
-                        },
-                    )
-                    .into()
-            }
+            // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
+            Panel::Properties => self.properties_view(doc),
         }
     }
 
@@ -502,34 +514,33 @@ impl App {
     /// The running command's step and options, as buttons (the web's
     /// CommandLine.setPrompt); the command line suggests the options too.
     pub(crate) fn line_prompt(&self) -> Option<LinePrompt<'_, Message>> {
-        self.session.is_running().then(|| {
-            let p = self.session.prompt();
-            // The notes after the step in brackets, as the web's command line reads them.
-            p.options.iter().fold(
-                LinePrompt::new(p.step_with_notes()).command(p.tool.unwrap_or("")),
-                |prompt, o| {
-                    // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).
-                    let name = match &o.value {
-                        Some(value) => format!("{}: {value}", o.label),
-                        None => o.label.to_owned(),
-                    };
-                    prompt.option(name, Message::PromptOption(o.key)).key(o.key)
-                },
-            )
-        })
-        // The one-shot snap waits for the next click; its × drops it (the web's stripParts).
-        .map(|prompt| match self.snap_once() {
-            Some(kind) => prompt
-                .option(
-                    format!(
-                        "Sonraki tık: {}",
-                        crate::drawing_menus::snap_label(kind)
-                    ),
-                    Message::DrawingMenu(crate::drawing_menus::Event::SnapOnce(None)),
+        self.session
+            .is_running()
+            .then(|| {
+                let p = self.session.prompt();
+                // The notes after the step in brackets, as the web's command line reads them.
+                p.options.iter().fold(
+                    LinePrompt::new(p.step_with_notes()).command(p.tool.unwrap_or("")),
+                    |prompt, o| {
+                        // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).
+                        let name = match &o.value {
+                            Some(value) => format!("{}: {value}", o.label),
+                            None => o.label.to_owned(),
+                        };
+                        prompt.option(name, Message::PromptOption(o.key)).key(o.key)
+                    },
                 )
-                .key("×"),
-            None => prompt,
-        })
+            })
+            // The one-shot snap waits for the next click; its × drops it (the web's stripParts).
+            .map(|prompt| match self.snap_once() {
+                Some(kind) => prompt
+                    .option(
+                        format!("Sonraki tık: {}", crate::drawing_menus::snap_label(kind)),
+                        Message::DrawingMenu(crate::drawing_menus::Event::SnapOnce(None)),
+                    )
+                    .key("×"),
+                None => prompt,
+            })
     }
 
     fn status_bar(&self) -> Element<'_, Message> {
@@ -880,116 +891,6 @@ fn line_command(command: &Command) -> LineCommand<'static> {
         .dimmed(command.standing != Standing::Ported)
 }
 
-fn project_rows(doc: &Document) -> Vec<(&'static str, String)> {
-    let s = doc.settings();
-    let crs = crs_name(s.srid).map_or(format!("EPSG:{}", s.srid), |name| {
-        format!("EPSG:{} · {name}", s.srid)
-    });
-    let area = match word(&s.area_unit).as_str() {
-        "m2" => "m²",
-        "donum" => "dönüm (1000 m²)",
-        "ha" => "hektar (10 000 m²)",
-        _ => "?",
-    };
-    let angle = match word(&s.angle_unit).as_str() {
-        "grad" => "grad",
-        "deg" => "derece",
-        _ => "?",
-    };
-    let workspace = match s.workspace.as_ref().map(word).as_deref() {
-        None | Some("hybrid") => "Hibrit",
-        Some("cad") => "CAD",
-        Some("gis") => "CBS",
-        Some(other) => return_other(other),
-    };
-    // A cloud project says where it is kept instead of a file (docs/adr/0041).
-    let kept = match doc.cloud_source() {
-        Some(c) => (
-            "Bulut",
-            match &c.revision {
-                Some(r) => format!(
-                    "{} · {} · revizyon {}",
-                    c.workspace,
-                    crate::cloud::words::storage_title(c.storage()),
-                    r.number
-                ),
-                None => format!(
-                    "{} · {}",
-                    c.workspace,
-                    crate::cloud::words::storage_title(c.storage())
-                ),
-            },
-        ),
-        None => (
-            "Dosya",
-            doc.path
-                .as_ref()
-                .map_or("kaydedilmedi".to_owned(), |p| p.display().to_string()),
-        ),
-    };
-    vec![
-        ("Proje", doc.name().to_owned()),
-        kept,
-        ("Koordinat sistemi", crs),
-        ("Pafta ölçeği", format!("1:{}", s.plot_scale)),
-        ("Uzunluk", format!("m · {} basamak", s.length_decimals)),
-        ("Alan", format!("{area} · {} basamak", s.area_decimals)),
-        ("Açı", angle.to_owned()),
-        ("Çalışma modu", workspace.to_owned()),
-        (
-            "Çizim yazı tipi",
-            s.drawing_font.as_ref().map_or("barlow".to_owned(), word),
-        ),
-        ("Nesne", doc.entity_count().to_string()),
-        ("Katman", doc.layer_count().to_string()),
-    ]
-}
-
-fn return_other(other: &str) -> &'static str {
-    match other {
-        "plan3d" => "3D Plan",
-        "disaster" => "Afet analizi",
-        _ => "?",
-    }
-}
-
-fn layer_rows(doc: &Document, layer: &LayerNode) -> Vec<(&'static str, String)> {
-    let yes = |b: bool| if b { "Evet" } else { "Hayır" }.to_owned();
-    let mut rows = vec![
-        ("Ad", layer.name.clone()),
-        ("Kimlik", layer.id.clone()),
-        (
-            "Tür",
-            match layer.kind {
-                LayerNodeType::Group => "Grup",
-                LayerNodeType::Layer => "Katman",
-            }
-            .to_owned(),
-        ),
-        ("Görünür", yes(layer.visible)),
-        ("Kilitli", yes(layer.locked)),
-        ("Nesne", doc.count_below(layer).to_string()),
-    ];
-    if layer.kind == LayerNodeType::Layer {
-        rows.push(("Renk", layer.style.color.clone()));
-        rows.push(("Çizgi türü", word(&layer.style.line_type)));
-        rows.push(("Çizgi kalınlığı", format!("{}", layer.style.line_weight)));
-        rows.push((
-            "Dolgu",
-            layer.style.fill.clone().unwrap_or_else(|| "yok".to_owned()),
-        ));
-    }
-    rows
-}
-
-/// An enum's value as written in the file (`donum`, `grad`, `dashed` …).
-fn word<T: serde::Serialize>(value: &T) -> String {
-    serde_json::to_value(value)
-        .ok()
-        .and_then(|v| v.as_str().map(str::to_owned))
-        .unwrap_or_default()
-}
-
 /// An object kind as the interface names it.
 pub(crate) fn kind_name(kind: &str) -> &'static str {
     match kind {
@@ -1038,9 +939,91 @@ fn thousands(value: f64) -> String {
     if value < 0.0 { format!("-{out}") } else { out }
 }
 
+/// The drawing's name in the tab row (the web's `ribbon__doc`), on one line;
+/// an accent dot before it while unsaved.
+fn document_title(name: &str, dirty: bool) -> Element<'static, Message> {
+    let name = label::caption(name.to_owned()).wrapping(iced::widget::text::Wrapping::None);
+    if !dirty {
+        return name.into();
+    }
+    let dot = container(iced::widget::space::horizontal())
+        .width(6)
+        .height(6)
+        .style(|theme: &iced::Theme| container::Style {
+            background: Some(kentos_ui::theme::Tokens::of(theme).accent.into()),
+            border: iced::border::rounded(3),
+            ..container::Style::default()
+        });
+    row![
+        kentos_ui::widget::tip(
+            dot,
+            Tip::new("Kaydedilmemiş değişiklikler var"),
+            iced::widget::tooltip::Position::Bottom,
+        ),
+        name
+    ]
+    .spacing(6)
+    .align_y(iced::Center)
+    .into()
+}
+
+/// The project's coordinate system in the tab row (the web's `ribbon__crs`):
+/// its icon and, with room, its name; a click opens Koordinat sistemi.
+fn crs_button(srid: u32, name: String, named: bool) -> Element<'static, Message> {
+    let mut face = row![kentos_ui::icon::icon(crate::icons::from_web(Some("crs"))).size(14.0)]
+        .spacing(6)
+        .align_y(iced::Center);
+    if named {
+        face = face.push(
+            label::caption(name.clone()).wrapping(iced::widget::text::Wrapping::None),
+        );
+    }
+    kentos_ui::widget::tip(
+        button(face)
+            .on_press(Message::Run("crs.set"))
+            .padding([4, 8])
+            .style(style::button::flat),
+        Tip::new("Koordinat sistemi").body(format!("{name}, EPSG:{srid}. Değiştirmek için tıklayın.")),
+        iced::widget::tooltip::Position::Bottom,
+    )
+}
+
+/// Tam ekran's button: four corners out, or in while the window fills the screen.
+fn fullscreen_view(on: bool) -> Element<'static, Message> {
+    let (glyph, title) = if on {
+        ("fullscreenExit", "Tam ekrandan çık")
+    } else {
+        ("fullscreen", "Tam ekran")
+    };
+    let about = Tip::new(title).body("Uygulamayı ekranın tamamına yayar.");
+    kentos_ui::widget::tip(
+        button(kentos_ui::icon::icon(crate::icons::from_web(Some(glyph))).size(14.0))
+            .on_press(Message::Run("view.fullscreen"))
+            .padding([4, 5])
+            .style(style::button::flat),
+        if on { about.detail("Esc") } else { about },
+        iced::widget::tooltip::Position::Bottom,
+    )
+}
+
+/// Yardım at the end of the tab row (the web's ribbon ?): the menu bar's
+/// Yardım menu from the inventory (Komut ara, Klavye kısayolları, KentOS CAD hakkında).
+fn help_button(items: Menu<Message>) -> Element<'static, Message> {
+    let menu = MenuButton::new(
+        container(kentos_ui::icon::icon(crate::icons::from_web(Some("help"))).size(16.0))
+            .padding([4, 5]),
+        move || items.clone(),
+    );
+    kentos_ui::widget::tip(
+        menu,
+        Tip::new("Yardım").body("Klavye kısayolları ve KentOS CAD hakkında."),
+        iced::widget::tooltip::Position::Bottom,
+    )
+}
+
 /// A theme colour as the drawing pipeline takes it.
 /// A drawing colour for the interface (the layer tree's swatch).
-fn rgba_color(c: Rgba8) -> Color {
+pub(crate) fn rgba_color(c: Rgba8) -> Color {
     let [r, g, b, a] = c.0;
     Color::from_rgba8(r, g, b, f32::from(a) / 255.0)
 }

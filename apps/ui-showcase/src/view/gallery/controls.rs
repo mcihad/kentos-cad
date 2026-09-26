@@ -18,8 +18,8 @@ use kentos_ui::widget::ribbon::{self, AppButton, Field, Group, Preview, Ribbon, 
 use kentos_ui::widget::table::{self, Table};
 use kentos_ui::widget::tree_view::{self, Check, Node, Toggle, TreeView};
 use kentos_ui::widget::{
-    AssetBrowser, Legend, Menu, NumberInput, Panel, PropertyGrid, Tip, badge, swatch, tip,
-    vertical_divider,
+    AssetBrowser, EditCell, Legend, Menu, NumberInput, Panel, PropertyGrid, PropertySheet, Tip,
+    badge, property_grid, swatch, tip, vertical_divider,
 };
 
 use super::{entry, pressed};
@@ -407,6 +407,59 @@ impl Showcase {
             .figure("Nüfus (2024)", "15.840.900")
             .figure("Plaka", "34");
 
+        // Öznitelikler ızgarası: katlanan bölümler, düz yazı, hücre ve liste.
+        const SHEET_LAYERS: [(&str, u32); 3] = [
+            ("Kadastro / Parsel", 0xe5_48_4d),
+            ("Kadastro / Bina", 0x4f_8e_f7),
+            ("Çizim", 0x8c_9a_aa),
+        ];
+        let sheet_layer = self.gallery.sheet_layer;
+        let hex = |rgb: u32| iced::Color::from_rgb8((rgb >> 16) as u8, (rgb >> 8) as u8, rgb as u8);
+        let sheet = PropertySheet::new()
+            .section(
+                "Genel",
+                !self.gallery.sheet_closed[0],
+                Message::Gallery(Demo::SheetToggled(0)),
+            )
+            .row("Tür", property_grid::value("Kapalı alan", false, None))
+            .row(
+                "Katman",
+                property_grid::choice(
+                    SHEET_LAYERS[sheet_layer].0,
+                    Some(hex(SHEET_LAYERS[sheet_layer].1)),
+                    move || {
+                        SHEET_LAYERS.iter().enumerate().fold(
+                            Menu::new(),
+                            |menu, (i, (name, rgb))| {
+                                menu.radio(
+                                    *name,
+                                    i == sheet_layer,
+                                    Message::Gallery(Demo::SheetLayer(i)),
+                                )
+                                .swatch(hex(*rgb))
+                            },
+                        )
+                    },
+                ),
+            )
+            .section(
+                "Geometri",
+                !self.gallery.sheet_closed[1],
+                Message::Gallery(Demo::SheetToggled(1)),
+            )
+            .row(
+                "Yükseklik",
+                EditCell::new(format!("{:.3}", self.gallery.sheet_height), |text| {
+                    Message::Gallery(Demo::SheetHeight(text))
+                })
+                .numeric(true)
+                .unit("m"),
+            )
+            .row(
+                "Alan",
+                property_grid::value("742.25", true, Some("m²".to_owned())),
+            );
+
         let panels = row![
             container(
                 Panel::new("Katmanlar", panel_body("Başlık, meta bilgisi ve gövde."))
@@ -559,6 +612,19 @@ impl Showcase {
                     "PropertyGrid::new()\n    .category(\"Genel\")\n    \
                      .property(\"Katman\", \"Şehirler\")\n    \
                      .figure(\"Merkez\", \"41.00820, 28.97840\")",
+                ),
+            ),
+            entry(
+                "Öznitelikler ızgarası",
+                "kentos_ui::widget::PropertySheet",
+                "Öznitelikler panelinin ızgarası: başlığına tıklanınca katlanan bölümler; \
+                 değer düz yazı, düzenlenene dek yazı gibi görünen hücre (EditCell: Enter ya da \
+                 hücreden çıkmak onaylar, Esc vazgeçer) ya da renk örnekli açılır liste olabilir.",
+                container(sheet).width(380),
+                Some(
+                    "PropertySheet::new()\n    .section(\"Genel\", open, Message::Toggle(0))\n    \
+                     .row(\"Katman\", property_grid::choice(name, Some(color), menu))\n    \
+                     .row(\"Yükseklik\", EditCell::new(value, Message::Height).numeric(true).unit(\"m\"))",
                 ),
             ),
             entry(

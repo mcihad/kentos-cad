@@ -179,9 +179,13 @@ impl App {
                     }
                     _ => None,
                 };
-                // The web's `doc.update`: one undo step, “Değiştir”.
-                if let Some(entity) = changed {
-                    doc.model.update(slot, entity);
+                // Written as Öznitelikler writes it (`cad.entities.edit`, the step
+                // “Değiştir”, docs/adr/0066); a cleared dimension text shows its value again.
+                let said = changed.map_or_else(Vec::new, |entity| {
+                    kentos_interaction::properties::set_geometry(&mut doc.model, slot, &entity)
+                });
+                for text in said {
+                    self.warn(text);
                 }
             }
             Some(_) => {}

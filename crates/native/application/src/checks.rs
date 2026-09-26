@@ -190,6 +190,18 @@ pub(crate) fn objects<'a>(
     doc: &'a Document,
     uids: &'a [String],
 ) -> Result<Vec<(Slot, &'a Entity, &'a String)>, Stop> {
+    Ok(named(doc, uids)?
+        .into_iter()
+        .map(|(_, slot, entity, uid)| (slot, entity, uid))
+        .collect())
+}
+
+/// [`objects`], each with where the input first names it (`uids[at]`), for
+/// a refusal about one of them.
+pub(crate) fn named<'a>(
+    doc: &'a Document,
+    uids: &'a [String],
+) -> Result<Vec<(usize, Slot, &'a Entity, &'a String)>, Stop> {
     let mut seen = HashSet::new();
     let mut out = Vec::with_capacity(uids.len());
     for (i, uid) in uids.iter().enumerate() {
@@ -209,9 +221,16 @@ pub(crate) fn objects<'a>(
                 Some(format!("uids[{i}]")),
             )));
         };
-        out.push((slot, entity, uid));
+        out.push((i, slot, entity, uid));
     }
     Ok(out)
+}
+
+/// A text that is empty or only white space, as Unicode's `White_Space` has
+/// it (the web's `isBlank`; not JavaScript's `trim`, which takes U+FEFF and
+/// leaves U+0085).
+pub(crate) fn is_blank(text: &str) -> bool {
+    text.chars().all(char::is_whitespace)
 }
 
 /// A persistent id as the contract writes it: lowercase hexadecimal with

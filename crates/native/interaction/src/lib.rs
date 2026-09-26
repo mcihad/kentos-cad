@@ -45,6 +45,9 @@
 //!   koordinatlara yapıştır ([`clipboard`]) and the paste tool ([`paste`]),
 //!   writing through the document as the web's do; Kaydır and Pencere
 //!   yakınlaştır ([`navigate`]), which ask the host for view changes;
+//! - Öznitelikler's writes ([`properties`], docs/adr/0066): the layer, colour,
+//!   symbol, attributes and label through `cad.entities.set`, a geometry
+//!   value through `cad.entities.edit`;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -61,7 +64,9 @@
 
 pub mod align;
 pub mod arc;
+pub mod area;
 pub mod array;
+pub mod boundary;
 pub mod breaking;
 pub mod circle;
 pub mod clipboard;
@@ -73,6 +78,7 @@ pub mod donut;
 mod edge;
 pub mod ellipse;
 pub mod erase;
+mod faces;
 mod format;
 pub mod hatch;
 pub mod lengthen;
@@ -93,6 +99,7 @@ pub mod point;
 mod points;
 pub mod polar;
 mod prompt;
+pub mod properties;
 pub mod rectangle;
 pub mod regular;
 pub mod revcloud;
@@ -111,10 +118,10 @@ pub mod trim;
 pub mod vertex;
 
 pub use clipboard::Clipboard;
-pub use format::Format;
+pub use format::{Format, fixed};
 pub use kentos_geometry_core::Vec2;
 /// Measures of a vertex list, from the shared core (the coordinate list's).
-pub use kentos_geometry_core::geometry::{bearing_grad, dist, path_length, signed_area};
+pub use kentos_geometry_core::geometry::{angle_deg, bearing_grad, dist, path_length, signed_area};
 pub use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
 pub use kentos_geometry_core::tools::point_input::Tracking;
 /// JavaScript's `trim()`, as typed input is read (the shared grammar).
@@ -124,9 +131,11 @@ pub use prompt::{Prompt, PromptOption, upper_tr};
 pub use select::SelectBox;
 pub use selection::Selection;
 pub use session::Session;
-pub use spatial::{LabelSpot, Spatial, dimension_layout, measures, vertices};
+pub use spatial::{
+    LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,
+};
 pub use tool::{Area, Label};
 pub use tool::{
-    Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape, Memory, Pointer,
-    Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange, snap_kinds,
+    Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape,
+    Memory, Pointer, Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange, snap_kinds,
 };

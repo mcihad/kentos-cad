@@ -73,8 +73,8 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 58,
-    "commandsOnDesktop": 105
+    "commandsWithoutTests": 55,
+    "commandsOnDesktop": 112
   },
   "commands": [
     {
@@ -2693,7 +2693,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -2725,9 +2725,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "tool.areaSubtract",
@@ -2758,9 +2760,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "tool.areaUnion",
@@ -2792,10 +2796,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/areas.json"
       ]
     },
     {
@@ -2903,10 +2908,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/areas.json"
       ]
     },
     {
@@ -4534,7 +4540,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -4564,9 +4570,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "tool.trim",
@@ -5699,7 +5707,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "areaSubtract",
@@ -5723,7 +5733,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "areaUnion",
@@ -5749,7 +5761,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/areas.json"
       ]
     },
     {
@@ -5834,7 +5847,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/areas.json"
       ]
     },
     {
@@ -7035,7 +7049,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/areas.json"
+      ]
     },
     {
       "id": "trim",

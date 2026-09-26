@@ -256,7 +256,7 @@ impl canvas::Program<Message> for Draft {
             frame.fill(
                 &shape,
                 canvas::Fill {
-                    style: canvas::Style::Solid(accent.scale_alpha(area.fill)),
+                    style: canvas::Style::Solid(tone(area.fill_tone).scale_alpha(area.fill)),
                     rule: canvas::fill::Rule::EvenOdd,
                 },
             );
@@ -435,8 +435,9 @@ impl canvas::Program<Message> for Draft {
 }
 
 /// Pictures of the round-3 drawing tools' previews (docs/adr/0057), of
-/// Ölçülendirme's (docs/adr/0061) and of Tarama's (docs/adr/0062), for the
-/// owner: each trace played up to a pointer move that shows its preview.
+/// Ölçülendirme's (docs/adr/0061), Tarama's (docs/adr/0062) and the area
+/// tools' (docs/adr/0065), for the owner: each trace played up to a pointer
+/// move that shows its preview.
 /// Not run by default: `cargo test -p kentos-desktop preview::screens -- --ignored --nocapture`.
 #[cfg(test)]
 #[test]
@@ -467,6 +468,9 @@ fn screens() {
         ("tarama-parsel", "hatches", 2),
         ("tarama-cizgiler", "hatches", 10),
         ("tarama-dolu", "hatches", 23),
+        ("alan-bol", "areas", 10),
+        ("alan-cikar", "areas", 18),
+        ("alan-icine-tikla", "areas", 22),
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {

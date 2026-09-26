@@ -162,7 +162,7 @@ impl App {
 
     /// A catalog command as a menu item (the web's `commandItem`): its title,
     /// icon and key, its check where it has one; dimmed where it cannot run.
-    fn command_item(&self, menu: Menu<Message>, id: &'static str) -> Menu<Message> {
+    pub(crate) fn command_item(&self, menu: Menu<Message>, id: &'static str) -> Menu<Message> {
         let Some(command) = catalog().get(id) else {
             return menu;
         };

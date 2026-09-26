@@ -64,8 +64,8 @@ use iced::advanced::widget::{self, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Shell, overlay, renderer};
 use iced::widget::{Column, container, row, rule, space};
 use iced::{
-    Background, Center, Element, Event, Fill, Length, Point, Rectangle, Renderer, Size, Theme,
-    Vector, border, keyboard, mouse, window,
+    Background, Center, Color, Element, Event, Fill, Length, Point, Rectangle, Renderer, Size,
+    Theme, Vector, border, keyboard, mouse, window,
 };
 
 use crate::icon::{Icon, icon};
@@ -129,6 +129,10 @@ struct Command<Message> {
     shortcut: Option<String>,
     on_press: Option<Message>,
     checked: Option<bool>,
+    /// One of a group: a dot instead of ✓ when chosen.
+    radio: bool,
+    /// A colour sample before the label (a layer's, a colour's).
+    swatch: Option<Color>,
     danger: bool,
 }
 
@@ -164,6 +168,8 @@ impl<Message> Menu<Message> {
             shortcut: None,
             on_press: on_press.into(),
             checked: None,
+            radio: false,
+            swatch: None,
             danger: false,
         }));
         self
@@ -182,8 +188,41 @@ impl<Message> Menu<Message> {
             shortcut: None,
             on_press: on_press.into(),
             checked: Some(checked),
+            radio: false,
+            swatch: None,
             danger: false,
         }));
+        self
+    }
+
+    /// Bir gruptan tek seçilen komut (katman, renk, desen); seçiliyse ikon
+    /// sütununda vurgu renginde bir nokta gösterilir.
+    pub fn radio(
+        mut self,
+        label: impl Into<String>,
+        chosen: bool,
+        on_press: impl Into<Option<Message>>,
+    ) -> Self {
+        self.items.push(Item::Command(Command {
+            icon: None,
+            label: label.into(),
+            shortcut: None,
+            on_press: on_press.into(),
+            checked: Some(chosen),
+            radio: true,
+            swatch: None,
+            danger: false,
+        }));
+        self
+    }
+
+    /// Son eklenen komutun adından önce renk örneği. Örneği olan bir menüde
+    /// örneksiz komutların adları da aynı hizadan başlar.
+    pub fn swatch(mut self, color: Color) -> Self {
+        if let Some(Item::Command(command)) = self.items.last_mut() {
+            command.swatch = Some(color);
+        }
+
         self
     }
 
@@ -246,6 +285,13 @@ impl<Message> Menu<Message> {
         }
 
         self
+    }
+
+    /// Bir komutunda renk örneği var mı: varsa her satır örneğin yerini ayırır.
+    fn has_swatches(&self) -> bool {
+        self.items
+            .iter()
+            .any(|item| matches!(item, Item::Command(command) if command.swatch.is_some()))
     }
 
     /// Menüde gösterilecek bir şey var mı. Sondaki bölücü sayılmaz.
@@ -1170,16 +1216,25 @@ fn control_click(event: &Event, modifiers: keyboard::Modifiers, macos: bool) -> 
         )
 }
 
+/// A row's mark in the icon column.
+#[derive(Clone, Copy)]
+enum Mark {
+    Icon(Icon),
+    Dot,
+    None,
+}
+
 /// Menü kutusu; `highlighted` komut vurgulanır.
 fn panel<'a, Message: 'a>(
     menu: &Menu<Message>,
     highlighted: Option<usize>,
 ) -> Element<'a, Message> {
+    let swatches = menu.has_swatches();
     let rows = menu
         .items
         .iter()
         .enumerate()
-        .map(|(index, item)| item_row(item, highlighted == Some(index)));
+        .map(|(index, item)| item_row(item, highlighted == Some(index), swatches));
 
     container(Column::with_children(rows))
         .padding(PADDING)
@@ -1188,23 +1243,36 @@ fn panel<'a, Message: 'a>(
         .into()
 }
 
-fn item_row<'a, Message: 'a>(item: &Item<Message>, highlighted: bool) -> Element<'a, Message> {
-    let (glyph, text, shortcut, submenu, enabled, danger) = match item {
+fn item_row<'a, Message: 'a>(
+    item: &Item<Message>,
+    highlighted: bool,
+    swatches: bool,
+) -> Element<'a, Message> {
+    let (mark, text, shortcut, submenu, enabled, danger, sample) = match item {
         Item::Command(command) => (
-            // A check shows its ✓ when on, else its own icon (e.g. a snap kind's marker).
-            match command.checked {
-                Some(true) => Some(Icon::Check),
-                Some(false) | None => command.icon,
+            // A check shows its ✓ when on, a radio its dot, else its own icon
+            // (e.g. a snap kind's marker).
+            match (command.checked, command.radio) {
+                (Some(true), true) => Mark::Dot,
+                (Some(true), false) => Mark::Icon(Icon::Check),
+                _ => command.icon.map_or(Mark::None, Mark::Icon),
             },
             command.label.clone(),
             command.shortcut.clone(),
             false,
             command.on_press.is_some(),
             command.danger,
+            command.swatch,
         ),
-        Item::Submenu { icon, label, menu } => {
-            (*icon, label.clone(), None, true, !menu.is_empty(), false)
-        }
+        Item::Submenu { icon, label, menu } => (
+            icon.map_or(Mark::None, Mark::Icon),
+            label.clone(),
+            None,
+            true,
+            !menu.is_empty(),
+            false,
+            None,
+        ),
         Item::Separator => {
             return container(rule::horizontal(1).style(style::field::hairline))
                 .padding([0.0, PADDING])
@@ -1221,17 +1289,30 @@ fn item_row<'a, Message: 'a>(item: &Item<Message>, highlighted: bool) -> Element
         }
     };
 
-    let slot: Element<'a, Message> = match glyph {
-        Some(glyph) => icon(glyph).size(14.0).into(),
-        None => space::horizontal().width(14).into(),
+    let slot: Element<'a, Message> = match mark {
+        Mark::Icon(glyph) => icon(glyph).size(14.0).into(),
+        Mark::Dot => container(space::horizontal())
+            .width(6)
+            .height(6)
+            .style(move |theme: &Theme| container::Style {
+                background: Some(Tokens::of(theme).accent.into()),
+                border: iced::border::rounded(3),
+                ..container::Style::default()
+            })
+            .into(),
+        Mark::None => space::horizontal().width(14).into(),
     };
 
-    let mut content = row![
-        container(slot).width(ICON_SLOT).center_x(ICON_SLOT),
-        label::body(text).width(Fill),
-    ]
-    .spacing(8)
-    .align_y(Center);
+    let mut content = row![container(slot).width(ICON_SLOT).center_x(ICON_SLOT)]
+        .spacing(8)
+        .align_y(Center);
+    if swatches {
+        content = content.push(match sample {
+            Some(color) => crate::widget::swatch(color),
+            None => space::horizontal().width(11).into(),
+        });
+    }
+    content = content.push(label::body(text).width(Fill));
 
     if let Some(shortcut) = shortcut {
         content = content.push(label::mono_caption(shortcut).style(move |theme: &Theme| {
@@ -1277,6 +1358,20 @@ mod tests {
             .item("Sil", 3_u8)
             .danger()
             .separator()
+    }
+
+    #[test]
+    fn a_swatch_reserves_its_column_for_the_whole_menu() {
+        let plain = Menu::new()
+            .item("Katmana göre", 1_u8)
+            .radio("Kırmızı", true, 2_u8);
+        assert!(!plain.has_swatches());
+        let colours = plain.swatch(Color::from_rgb8(0xe5, 0x48, 0x4d));
+        assert!(colours.has_swatches());
+        let Some(Item::Command(red)) = colours.items.last() else {
+            panic!("the last command");
+        };
+        assert!(red.radio && red.checked == Some(true) && red.swatch.is_some());
     }
 
     #[test]

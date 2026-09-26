@@ -390,6 +390,7 @@ impl Tool for Parallel {
                     fill: 0.16,
                     width: 1.5,
                     dash: None,
+                    fill_tone: tool::Tone::Accent,
                 });
             }
         } else {
