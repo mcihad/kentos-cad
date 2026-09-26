@@ -50,7 +50,15 @@ fn every_fixture_reads_as_expected_json_says() {
             (Err(e), None) => panic!("{file}: {} ({e})", e.code.as_str()),
             (Ok(_), Some(code)) => panic!("{file}: read, but {code} was expected"),
             (Ok(doc), None) => {
-                let want = content(case["content"].as_str().expect("content"));
+                // A drawing written by hand, or a file the apps wrote (only its object count here).
+                let want = match case["content"].as_str() {
+                    Some(name) => content(name),
+                    None => {
+                        let count = case["entities"].as_u64().expect("entities");
+                        assert_eq!(doc.entities.len() as u64, count, "{file}");
+                        doc.clone()
+                    }
+                };
                 assert_eq!(json(&doc), json(&want), "{file}: the drawing");
                 if case.get("rewrite") != Some(&Value::Bool(false)) {
                     let written = kentos_kcad::encode(&want).expect("writes");
@@ -61,7 +69,7 @@ fn every_fixture_reads_as_expected_json_says() {
             }
         }
     }
-    assert_eq!((valid, broken), (4, cases.len() - 4));
+    assert_eq!((valid, broken), (6, cases.len() - 6));
 }
 
 #[test]

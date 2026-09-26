@@ -603,9 +603,12 @@ def check(files):
         if "error" in case:
             problems.append(f"{name}: okundu, beklenen hata {case['error']}")
             continue
-        want = normalized(load(case["content"]))
-        if bits(doc) != bits(want):
-            problems.append(f"{name}: okunan çizim {case['content']} ile bit bit aynı değil")
+        if "content" in case:
+            want = normalized(load(case["content"]))
+            if bits(doc) != bits(want):
+                problems.append(f"{name}: okunan çizim {case['content']} ile bit bit aynı değil")
+        elif len(doc["entities"]) != case["entities"]:
+            problems.append(f"{name}: {len(doc['entities'])} nesne, beklenen {case['entities']}")
         # A 2.0 writer writes the same drawing to the same bytes; `rewrite: false` marks a file another writer version wrote.
         if case.get("rewrite", True) and container(document(doc)) != data:
             problems.append(f"{name}: yeniden yazınca aynı baytlar çıkmıyor")

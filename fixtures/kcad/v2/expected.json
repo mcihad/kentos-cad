@@ -1,12 +1,14 @@
 {
   "format": "kentos.kcad-fixtures",
   "version": 1,
-  "note": "Written by hand from docs/specs/kcad-v2.md: what every reader must say about each file. `sniff` is the kind by content (§8); `content` names the drawing a valid file holds (the contract's JSON form, floats bit for bit); `error` is the code a reader refuses it with (§9). `rewrite: false` marks a file another writer version wrote, which a 2.0 writer does not reproduce byte for byte. The Rust codec (crates/shared/kcad/tests/fixtures.rs), its browser build (apps/web/src/io/kcad.wasm.test.ts) and tools/kcad/kcad.py (scripts/fixtures/kcad_v2_reference.py --check) read every file listed here.",
+  "note": "Written by hand from docs/specs/kcad-v2.md: what every reader must say about each file. `sniff` is the kind by content (§8); `content` names the drawing a valid file holds (the contract's JSON form, floats bit for bit); `entities` is the object count of a valid file the apps wrote (exchange/, the desktop–web acceptance: their own tests check every value); `error` is the code a reader refuses it with (§9). `rewrite: false` marks a file another writer version wrote, which a 2.0 writer does not reproduce byte for byte. The Rust codec (crates/shared/kcad/tests/fixtures.rs), its browser build (apps/web/src/io/kcad.wasm.test.ts) and tools/kcad/kcad.py (scripts/fixtures/kcad_v2_reference.py --check) read every file listed here.",
   "files": [
     { "file": "minimal.kcad", "sniff": "kcad", "content": "minimal.json" },
     { "file": "drawing.kcad", "sniff": "kcad", "content": "drawing.json" },
     { "file": "migrated.kcad", "sniff": "kcad", "content": "migrated.json" },
     { "file": "readable-minor.kcad", "sniff": "kcad", "content": "minimal.json", "rewrite": false },
+    { "file": "exchange/web-edited.kcad", "sniff": "kcad", "entities": 13 },
+    { "file": "exchange/desktop-edited.kcad", "sniff": "kcad", "entities": 12 },
 
     { "file": "broken/empty.kcad", "sniff": "empty", "error": "empty" },
     { "file": "broken/bad-magic.kcad", "sniff": "foreign", "error": "not_kcad" },

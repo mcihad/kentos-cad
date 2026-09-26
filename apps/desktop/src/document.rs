@@ -255,6 +255,148 @@ mod tests {
             .collect()
     }
 
+    // ── TODOS.md §9 acceptance: the desktop's part of the exchange with the web ──
+    // (apps/web/src/app/kcadExchange.test.ts has the chain and the web's part).
+
+    /// The persistent id the web gave its new point.
+    const NEW_POINT: &str = "0192f5a0-7c3e-7000-8000-00000000e001";
+
+    fn decode_fixture(name: &str) -> DocumentSnapshotV2 {
+        let bytes = std::fs::read(format!("{KCAD}{name}")).expect("fixture");
+        kentos_kcad::decode(&bytes).expect("reads")
+    }
+
+    /// A drawing as JSON without the objects' slots, which a file does not keep: equal means bit for bit.
+    fn without_slots(doc: &DocumentSnapshotV2) -> serde_json::Value {
+        let mut v = serde_json::to_value(doc).expect("serializes");
+        for e in v["entities"].as_array_mut().expect("entities") {
+            e.as_object_mut().expect("an object").remove("id");
+        }
+        v
+    }
+
+    fn index_of(s: &DocumentSnapshotV2, kind: &str) -> usize {
+        s.entities
+            .iter()
+            .position(|e| e.kind() == kind)
+            .expect("the kind")
+    }
+
+    fn layer_mut<'a>(nodes: &'a mut [LayerNode], id: &str) -> Option<&'a mut LayerNode> {
+        for n in nodes {
+            if n.id == id {
+                return Some(n);
+            }
+            if let Some(found) = layer_mut(&mut n.children, id) {
+                return Some(found);
+            }
+        }
+        None
+    }
+
+    fn remove_at(s: &mut DocumentSnapshotV2, i: usize) {
+        s.entities.remove(i);
+        s.uids.remove(i);
+    }
+
+    /// The web's edits, applied by hand to the drawing before them: what the web must have saved.
+    fn web_edits(mut s: DocumentSnapshotV2) -> DocumentSnapshotV2 {
+        use kentos_contracts::{Entity, EntityBase, EntityId, PointEntity, Vec2};
+        let i = index_of(&s, "point");
+        if let Entity::Point(p) = &mut s.entities[i] {
+            p.base.attrs = [("Ad".to_owned(), "P1-web".to_owned())].into();
+        }
+        let i = index_of(&s, "line");
+        if let Entity::Line(l) = &mut s.entities[i] {
+            l.b.x += 1.5;
+        }
+        let i = index_of(&s, "ellipse");
+        remove_at(&mut s, i);
+        s.entities.push(Entity::Point(PointEntity {
+            base: EntityBase {
+                id: 0,
+                layer_id: "cizim".into(),
+                color: None,
+                attrs: [("Ad".to_owned(), "P2-web".to_owned())].into(),
+                label: None,
+                symbol: None,
+            },
+            p: Vec2 {
+                x: 486_520.125,
+                y: 4_420_195.75,
+            },
+            z: None,
+        }));
+        s.uids.push(EntityId::parse(NEW_POINT).expect("a UUID"));
+        if let Some(n) = layer_mut(&mut s.layers, "bina") {
+            n.locked = false;
+        }
+        s
+    }
+
+    /// The desktop's edits, applied by hand: what the desktop must have saved.
+    fn desktop_edits(mut s: DocumentSnapshotV2) -> DocumentSnapshotV2 {
+        use kentos_contracts::Entity;
+        let i = index_of(&s, "polygon");
+        if let Entity::Polygon(p) = &mut s.entities[i] {
+            p.base.attrs.insert("Nitelik".into(), "Arsa".into());
+        }
+        let i = index_of(&s, "text");
+        remove_at(&mut s, i);
+        if let Some(n) = layer_mut(&mut s.layers, "cizim") {
+            n.visible = true;
+        }
+        s
+    }
+
+    /// The desktop opens what the web saved of the desktop's drawing
+    /// (`exchange/web-edited.kcad`), finds the web's edits and nothing else
+    /// changed, edits it and saves it: `exchange/desktop-edited.kcad`, which the
+    /// web reads back. `KENTOS_WRITE_EXCHANGE=1` writes that file instead of
+    /// comparing it.
+    #[test]
+    fn the_desktop_reads_the_webs_edits_without_loss_and_saves_its_own() {
+        use kentos_contracts::Entity;
+        let dir = scratch("exchange");
+        let from_web = dir.join("web-edited.kcad");
+        std::fs::copy(format!("{KCAD}exchange/web-edited.kcad"), &from_web).expect("copies");
+        let mut doc = Document::read(&from_web).expect("the web's file reads");
+        assert!(!doc.legacy);
+        let want = web_edits(decode_fixture("migrated.kcad"));
+        assert_eq!(
+            without_slots(&doc.model.to_snapshot_v2()),
+            without_slots(&want)
+        );
+
+        let snapshot = doc.model.to_snapshot_v2();
+        let slot = |kind: &str| {
+            kentos_domain::Slot(snapshot.entities[index_of(&snapshot, kind)].base().id)
+        };
+        let parcel = slot("polygon");
+        let mut polygon = doc.model.get(parcel).cloned().expect("the parcel");
+        if let Entity::Polygon(p) = &mut polygon {
+            p.base.attrs.insert("Nitelik".into(), "Arsa".into());
+        }
+        assert!(doc.model.update(parcel, polygon));
+        assert_eq!(doc.model.remove(&[slot("text")]), 1);
+        doc.model.toggle_layer_visible("cizim");
+
+        let out = dir.join("desktop-edited.kcad");
+        write(&doc.model.to_snapshot_v2(), &out).expect("writes");
+        let bytes = std::fs::read(&out).expect("written");
+        let back = kentos_kcad::decode(&bytes).expect("reads back");
+        assert_eq!(
+            without_slots(&back),
+            without_slots(&desktop_edits(decode_fixture("exchange/web-edited.kcad")))
+        );
+        let committed = format!("{KCAD}exchange/desktop-edited.kcad");
+        if std::env::var_os("KENTOS_WRITE_EXCHANGE").is_some() {
+            std::fs::write(&committed, &bytes).expect("writes the fixture");
+        }
+        assert!(bytes == std::fs::read(&committed).expect("fixture"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
     #[test]
     fn a_web_v1_file_opens_read_only_and_saves_as_the_reference_v2() {
         let dir = scratch("v1");

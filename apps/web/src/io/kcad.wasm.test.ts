@@ -15,6 +15,7 @@ interface Case {
   file: string;
   sniff: string;
   content?: string;
+  entities?: number;
   error?: string;
   rewrite?: boolean;
 }
@@ -90,13 +91,19 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         expect(error, c.file).toBeInstanceOf(KcadError);
         expect((error as KcadError).code, c.file).toBe(c.error);
         expect((error as KcadError).message.length).toBeGreaterThan(20);
-      } else {
+      } else if (c.content) {
         // Every number with Object.is: −0 is not 0.
-        expect(difference(decodeWith(m, data), drawing(c.content!)), c.file).toBeNull();
+        expect(difference(decodeWith(m, data), drawing(c.content)), c.file).toBeNull();
+        valid++;
+      } else {
+        // A file the apps wrote (exchange/): read, and written again to the same bytes here too.
+        const doc = decodeWith(m, data);
+        expect(doc.entities.length, c.file).toBe(c.entities);
+        expect(encodeWith(m, doc).bytes, c.file).toEqual(data);
         valid++;
       }
     }
-    expect(valid).toBe(4);
+    expect(valid).toBe(6);
   });
 
   it('writes the reference files byte for byte from their drawings', async () => {
