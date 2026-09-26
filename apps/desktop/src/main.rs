@@ -14,6 +14,7 @@ mod files_testing;
 mod icons;
 mod input;
 mod keys;
+mod layering;
 mod marks;
 mod opening;
 #[cfg(test)]

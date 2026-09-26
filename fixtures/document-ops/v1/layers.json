@@ -443,6 +443,100 @@
           }
         }
       ]
+    },
+    {
+      "name": "Katman ekleme: grubun içine, katmanın grubuna, en üste; girdiği grup açılır; düzenlemedir ama geri alınmaz",
+      "note": "Kimliksiz katman layer-N alır; sayaç platformun kendisidir (web modül genelinde sayar), bu yüzden senaryolar kimliği verir.",
+      "steps": [
+        {"op": "setExpanded", "id": "g", "expanded": false, "expect": {"dirty": false, "layers": {"g": {"expanded": false}}}},
+        {
+          "op": "addLayer",
+          "layer": {"id": "d", "name": "Duvar"},
+          "parent": "g",
+          "returns": "d",
+          "expect": {
+            "tree": {"": ["g", "c"], "g": ["a", "b", "d"]},
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "activeLayer": "a",
+            "layers": {
+              "g": {"expanded": true},
+              "d": {"name": "Duvar", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18}, "isVisible": true, "isLocked": false}
+            }
+          }
+        },
+        {
+          "op": "addLayer",
+          "layer": {"id": "e", "name": "Kapı"},
+          "parent": "a",
+          "returns": "e",
+          "note": "Katmanın altına değil, katmanın grubuna, en sona.",
+          "expect": {"tree": {"g": ["a", "b", "d", "e"]}}
+        },
+        {
+          "op": "addLayer",
+          "layer": {"id": "f", "name": "Ağaç"},
+          "parent": "c",
+          "returns": "f",
+          "note": "En üstteki katmanın grubu yoktur: en üste.",
+          "expect": {"tree": {"": ["g", "c", "f"]}}
+        },
+        {
+          "op": "addLayer",
+          "layer": {"id": "h", "name": "Harita", "type": "group"},
+          "parent": null,
+          "returns": "h",
+          "expect": {"tree": {"": ["g", "c", "f", "h"], "h": []}, "layers": {"h": {"expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.18}}}}
+        },
+        {"op": "addLayer", "layer": {"id": "i", "name": "Pafta"}, "parent": "h", "returns": "i", "expect": {"tree": {"h": ["i"]}}},
+        {
+          "op": "addLayer",
+          "layer": {"id": "j", "name": "Sınır"},
+          "parent": "yok",
+          "returns": "j",
+          "note": "Bilinmeyen üst: en üste.",
+          "expect": {"tree": {"": ["g", "c", "f", "h", "j"]}}
+        },
+        {"op": "undo", "returns": null, "expect": {"tree": {"": ["g", "c", "f", "h", "j"]}, "dirty": true}}
+      ]
+    },
+    {
+      "name": "Yeni katmanın görünürlüğü, kilidi ve stili verilir; verilmeyen stil alanı varsayılandır; gizli gruba giren katman görünmez",
+      "steps": [
+        {
+          "op": "addLayer",
+          "layer": {"id": "k", "name": "Kot", "visible": false, "locked": true, "style": {"color": "#ff0000", "lineWeight": 0.35}},
+          "parent": null,
+          "returns": "k",
+          "expect": {
+            "layers": {
+              "k": {"visible": false, "locked": true, "isVisible": false, "isLocked": true, "style": {"color": "#ff0000", "lineType": "continuous", "lineWeight": 0.35}}
+            }
+          }
+        },
+        {"op": "setVisible", "id": "g", "visible": false},
+        {
+          "op": "addLayer",
+          "layer": {"id": "m", "name": "Merdiven"},
+          "parent": "g",
+          "returns": "m",
+          "expect": {"layers": {"m": {"visible": true, "isVisible": false}, "g": {"visible": false}}}
+        }
+      ]
+    },
+    {
+      "name": "Benzersiz ad: kullanılan ada sayı eklenir; grupların adları da sayılır; büyük küçük harf ayrıdır",
+      "steps": [
+        {"op": "uniqueLayerName", "base": "Yeni katman", "returns": "Yeni katman"},
+        {"op": "addLayer", "layer": {"id": "n1", "name": "Yeni katman"}, "parent": null},
+        {"op": "uniqueLayerName", "base": "Yeni katman", "returns": "Yeni katman 2"},
+        {"op": "addLayer", "layer": {"id": "n2", "name": "Yeni katman 2"}, "parent": null},
+        {"op": "uniqueLayerName", "base": "Yeni katman", "returns": "Yeni katman 3"},
+        {"op": "uniqueLayerName", "base": "Yapılar", "returns": "Yapılar 2"},
+        {"op": "uniqueLayerName", "base": "bina", "returns": "bina"},
+        {"op": "check", "expect": {"dirty": true}}
+      ]
     }
   ]
 }

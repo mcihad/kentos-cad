@@ -81,6 +81,9 @@ pub const PORTED: &[&str] = &[
     "cloud.open",
     "cloud.upload",
     "cloud.conflicts",
+    // New layers and groups (layering.rs): edits that are not undone, as on the web.
+    "layer.new",
+    "layer.newGroup",
 ];
 
 /// Where a command stands, from the desktop's point of view.

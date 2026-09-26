@@ -45,7 +45,9 @@
     "cloud.signOut",
     "cloud.open",
     "cloud.upload",
-    "cloud.conflicts"
+    "cloud.conflicts",
+    "layer.new",
+    "layer.newGroup"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

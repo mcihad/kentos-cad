@@ -743,6 +743,9 @@ impl App {
                 Some(doc) => doc.model.show_all_layers(),
                 None => self.output("Açık çizim yok."),
             },
+            // Edits, not undo steps (layering.rs).
+            "layer.new" => self.new_layer(),
+            "layer.newGroup" => self.new_group(),
             "edit.undo" => self.undo(),
             "edit.redo" => self.step_history(false),
             "tool.confirm" => return self.confirm(),

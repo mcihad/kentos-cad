@@ -53,7 +53,7 @@ impl App {
                     Pane::new(panel.title(), move || self.panel_body(panel)).icon(panel.icon());
                 match (panel, &self.document) {
                     (Panel::Layers, Some(doc)) => {
-                        pane.actions(label::caption(format!("{} katman", doc.layer_count())))
+                        pane.actions(self.layers_actions(doc.layer_count()))
                     }
                     _ => pane.scrollable(),
                 }

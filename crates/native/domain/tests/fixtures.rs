@@ -11,8 +11,8 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use kentos_domain::contracts::{DocumentSnapshotV1, Entity, LayerStyle};
-use kentos_domain::{Document, Group, Slot, Uuid};
+use kentos_domain::contracts::{DocumentSnapshotV1, Entity, LayerNodeType, LayerStyle};
+use kentos_domain::{Document, Group, NewLayer, Slot, Uuid, default_style};
 use serde_json::{Map, Value, json};
 
 /// Why a step stopped: the fixture's own `throw`, or a failed expectation.
@@ -342,6 +342,38 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             );
             Value::Null
         }
+        "addLayer" => {
+            let layer = &step["layer"];
+            // The web lays the given style fields over its default one.
+            let style: LayerStyle = match layer.get("style") {
+                None => default_style(),
+                Some(patch) => {
+                    let base = serde_json::to_value(default_style())
+                        .or_else(|e| fail(format!("{at}: {e}")))?;
+                    serde_json::from_value(patched(base, patch, at)?)
+                        .or_else(|e| fail(format!("{at}: stil okunamadı: {e}")))?
+                }
+            };
+            let new = NewLayer {
+                id: layer.get("id").and_then(Value::as_str).map(str::to_owned),
+                name: text(layer, "name", at)?.to_owned(),
+                kind: match layer.get("type").and_then(Value::as_str) {
+                    Some("group") => LayerNodeType::Group,
+                    _ => LayerNodeType::Layer,
+                },
+                visible: layer
+                    .get("visible")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(true),
+                locked: layer
+                    .get("locked")
+                    .and_then(Value::as_bool)
+                    .unwrap_or(false),
+                style,
+            };
+            json!(doc.add_layer(new, step.get("parent").and_then(Value::as_str)))
+        }
+        "uniqueLayerName" => json!(doc.layers().unique_name(text(step, "base", at)?)),
         other => return fail(format!("{at}: bilinmeyen işlem “{other}”")),
     })
 }
@@ -392,6 +424,20 @@ fn check(
                 expect_same(&json!(got), want, "sürüm", at)?;
             }
             "activeLayer" => expect_same(&json!(doc.layers().active()), want, "etkin katman", at)?,
+            "tree" => {
+                for (container, ids) in want.as_object().unwrap_or(&empty) {
+                    let nodes = if container.is_empty() {
+                        Some(doc.layers().nodes())
+                    } else {
+                        doc.layers().get(container).map(|n| n.children.as_slice())
+                    };
+                    let Some(nodes) = nodes else {
+                        return fail(format!("{at}: “{container}” grubu yok"));
+                    };
+                    let got: Vec<&str> = nodes.iter().map(|n| n.id.as_str()).collect();
+                    expect_same(&json!(got), ids, &format!("“{container}” altındakiler"), at)?;
+                }
+            }
             "uids" => {
                 for (id, name) in want.as_object().unwrap_or(&empty) {
                     let target = slot(&json!(id.parse::<u64>().unwrap_or(0)), at)?;
