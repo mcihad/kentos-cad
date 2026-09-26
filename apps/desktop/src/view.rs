@@ -361,10 +361,15 @@ impl App {
     }
 
     pub(crate) fn command_line(&self) -> Element<'_, Message> {
-        CommandLine::new(&self.history, &self.command_input)
-            .id(COMMAND_INPUT)
-            .placeholder("Komut ya da koordinat yazın; Enter ya da Boşluk onaylar")
-            .commands(self.line_commands())
+        let line = CommandLine::new(&self.history, &self.command_input).id(COMMAND_INPUT);
+        // A running command's step already says what to type; the hint would
+        // repeat it and, in a narrow window, be cut at the field's edge.
+        let line = if self.session.is_running() {
+            line
+        } else {
+            line.placeholder("Komut ya da koordinat yazın; Enter ya da Boşluk onaylar")
+        };
+        line.commands(self.line_commands())
             .prompt(self.line_prompt())
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)
