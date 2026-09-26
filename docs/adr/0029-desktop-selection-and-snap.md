@@ -118,7 +118,7 @@ Kurallar web'in `SelectTool`'udur. Komut çalışmazken fare seçim aracınınd�
 - **Kilitli katman web'in bugünkü kuralıdır:** kilitliler kalır, öbürleri uyarıyla silinir; hepsi kilitliyse hiçbir şey silinmez. Üç küçük fark kayıtlıdır:
   - İleti çözümü de söyler (“Silmek için … açın.”, CLAUDE.md §8).
   - Hepsi kilitliyken sonuç `failed`'dır; araç yine yalnız uyarı gösterir.
-  - Çizimde olmayan kimlik artık reddedilir. Eski araç onu sessizce atlıyordu. Arayüzde görünmezdi: seçim silinen nesneyi hep bırakır.
+  - Çizimde olmayan kimlik artık reddedilir. Eski araç onu atlıyor ve kilitli sayıyordu. Arayüzde görünmezdi: seçim silinen nesneyi hep bırakır.
 - **Gizli katmandaki nesne silinir, uyarısız,** web'in bugünkü davranışı gibi. Durum dosyası bunu tutar.
 - **Yürütme** belgenin kendi `remove`'udur: tek geri alma adımı, adı “Sil”. Açık işlem ya da grup varsa ona katılır (`tests/delete.rs`). Geri alma nesneleri aynı kimlik ve aynı yerle getirir. İz bunu belge sırasıyla denetler (`ids`).
 - **Ortak durumlar:** `fixtures/commands/v1/cad.entities.delete.json` (23 durum), iki koşucu. Var olan nesnenin kimliği için yeni yer tutucu: `captureUid` ile alınır, `$uid:ad` ile yazılır (bir iletinin içinde de).
