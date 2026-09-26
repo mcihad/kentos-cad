@@ -12,7 +12,8 @@ import { UploadFailed } from './uploading';
  * 0038): the drawing on screen made a new file project (revision 1 on "0")
  * or a new database project (one import); a file project opened from its
  * newest revision, checked against the server's hash and read in stages;
- * an import refused by one object; a server without the import; Kaydet from
+ * another's revision said, never loaded by itself; an import refused by
+ * one object; a server without the import; Kaydet from
  * the unsaved-changes question; recovery copies of a file project's work.
  */
 
@@ -61,6 +62,20 @@ describe.skipIf(!formatsBuilt)('file projects in the cloud session (docs/adr/003
     doc.add(point(486556));
     expect(await session.saveFile()).toBe(true);
     expect([server.files.revisions.length, session.file.value?.base.value, doc.dirty.value]).toEqual([3, '3', false]);
+  });
+
+  it('another’s revision on the open file project is said and offered; the drawing and its base stay (never reloaded by itself)', async () => {
+    const { session, server, doc, sockets, messages } = setup();
+    expect(await session.uploadFile('t', 'Ada', undefined, {})).toBe(true);
+    const before = { size: doc.size, revision: doc.revision };
+    const e = await server.files.commitAs(await bytesOf(emptyDoc()), 'Mehmet Demir');
+    sockets.push([e]);
+    for (let i = 0; i < 50 && !messages.some((m) => m.includes('başka bir yerde kaydedildi')); i++) await new Promise((r) => setTimeout(r, 5));
+    // Time for a reload that must not come.
+    await new Promise((r) => setTimeout(r, 150));
+    const file = session.file.value!;
+    expect([file.newer.value, file.base.value, file.state.value, doc.size, doc.revision]).toEqual([{ revision: '2', by: 'Mehmet Demir' }, '1', 'outdated', before.size, before.revision]);
+    expect(messages.filter((m) => m.includes('başka bir yerde kaydedildi'))).toEqual([expect.stringMatching(/revizyon 2 \(Mehmet Demir\)\. Açık çizim revizyon 1'e dayanıyor; .*Kendiliğinden yeniden yüklenmez\.$/)]);
   });
 
   it('a download that changed on the way never becomes the drawing', async () => {

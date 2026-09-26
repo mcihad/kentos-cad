@@ -186,3 +186,24 @@ Sunucu tarafı ADR 0034'tür (kontrol noktası oluşturma, listeleme, indirme, s
   - veritabanı projesinin kontrol noktası; “.kcad olarak indir” ile okunabilir tek dosya; aynı kimliklerle yeni veritabanı projesi olarak geri yükleme; sorulduktan sonra silme;
   - açık olmayan dosya projesinin revizyonları ve revizyon geri yükleme; “PostGIS'e aktar” ve “Dosya projesine çevir”. Bu son adımlar main'deki sunucuya dayanır (5c3d2a6).
 
+
+## Bilerek bozma (26 Eylül)
+
+Her kural kaynakta bilerek bozuldu, adı geçen Vitest testi düştü, kaynak geri alındı ve ağaç temiz kaldı (`ece5a95`'in kaynağı, bu kaydın testleriyle). “Başkasının revizyonu kendiliğinden yüklenmez” kuralını oturum düzeyinde yakalayan test yoktu; `fileSession.test.ts`'e eklendi, bozma onunla düştü. Kaynağın değişmemesi ve yeni projenin açılması sunucunun ve arayüzün işidir; web'de bozulacak bir satırı yoktur, `pnpm e2e:cloud` sınar.
+
+| Kural | Bozma | Düşen test |
+|---|---|---|
+| “kaydedildi” yalnız kayıttan sonra | yükleme biter bitmez “kaydedildi” | `…calls it saved only once the server committed it` |
+| yalnız yazılan revizyon kaydedilmiş sayılır (§4.8) | `markSaved` çizimin o anki sürümüyle | `an edit made while the file goes up stays unsaved…` |
+| `@file` çakışmasında hiçbir şey yazılmaz | çakışmada en yeni revizyonun üstüne yeniden kaydedilir | `someone else saved first: nothing is written…` |
+| yanıtı kaybolan kayıt aynı anahtarla gider | her denemede yeni anahtar | `a commit whose answer is lost goes again with its key…` |
+| kopan yükleme aynı yüklemeyle yeniden gönderilir | ilk kopuşta vazgeçilir | `a connection cut while the bytes go…`, `sends a cut-off upload again…` |
+| baytları ulaşmış gönderim ikinci kez gönderilmez (ADR 0040) | yükleme sorulmaz | `bytes that arrived but whose answer was lost…`, `asks an upload whose answer was lost…` |
+| indirilen baytlar SHA-256'yla denetlenir | denetim yok | `never takes a download whose bytes are not the server’s`, `a download that changed on the way…` |
+| reddedilen içe aktarımda proje boş, çizim yerel kalır | ret parça parça yola düşer | `an import refused by one object leaves the new project empty…` |
+| eski yol yalnız içe aktarımı olmayan sunucu için | her `invalid` “içe aktarım yok” sayılır | `tells a server without the import from a refusal`, `an import refused by one object…` |
+| başkasının revizyonu kendiliğinden yüklenmez | duyulunca en yeni revizyon açılır | `…never reloaded by itself` |
+| dosya projesinin işine kurtarma kopyası yazılır | açık dosya projesi de cihaz taslağı sayılır | `a file project’s unsaved work gets a copy…` |
+| kontrol noktasını yalnız oluşturanı ya da `project.edit` siler | yazabilen herkes | `removing a checkpoint: its maker…` |
+| `project.checkpoint` olayı açık listeyi yeniler | yalnız `project.file` dinlenir | `a project.checkpoint event asks for the list again…` |
+| sekme kapanınca projenin kanalı kapanır | kanal açık kalır | `a project.checkpoint event asks for the list again…` |
