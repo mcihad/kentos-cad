@@ -43,6 +43,11 @@ export function validateSetting(d: SettingDescriptor, value: unknown): Checked {
   } else if (d.type === 'enum') {
     if (typeof value !== 'string') return fail('wrong_type');
     v = value;
+  } else if (d.type === 'text') {
+    if (typeof value !== 'string') return fail('wrong_type');
+    // Characters (code points), as the Rust side counts them.
+    if (d.max !== undefined && [...value].length > d.max) return fail('out_of_range');
+    v = value;
   } else {
     if (typeof value !== 'number' || !Number.isFinite(value)) return fail('wrong_type');
     if (d.type === 'integer' && !Number.isInteger(value)) return fail('not_integer');

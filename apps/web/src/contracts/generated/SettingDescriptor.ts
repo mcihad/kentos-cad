@@ -18,7 +18,7 @@ key: string, type: SettingType, default: boolean | number | string,
  */
 min?: number, 
 /**
- * Largest value of a number, inclusive.
+ * Largest value of a number, inclusive; the most characters of a text.
  */
 max?: number, 
 /**

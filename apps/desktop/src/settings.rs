@@ -195,6 +195,11 @@ impl Settings {
         self.effective(key).as_f64().unwrap_or(0.0)
     }
 
+    /// A text setting's value in use (`cloud.server`).
+    pub fn text(&self, key: &str) -> String {
+        self.effective(key).as_str().unwrap_or_default().to_owned()
+    }
+
     /// What `key` would resolve to if `value` were chosen (the settings window shows it before Kaydet).
     pub fn preview(&self, key: &str, value: &Value) -> Option<ResolvedSetting> {
         let mut layers = self.layers();

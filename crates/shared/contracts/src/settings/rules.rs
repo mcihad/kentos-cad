@@ -7,7 +7,7 @@
 //!
 //! Checks run in a fixed order, so both hosts report the same code for a
 //! value wrong in two ways: the key, the layer, the type, whole number, the
-//! range, the choices.
+//! range (a text's length), the choices.
 
 use std::collections::BTreeMap;
 
@@ -29,6 +29,14 @@ impl SettingDescriptor {
         let value = match self.kind {
             SettingType::Boolean => Value::Bool(value.as_bool().ok_or(Code::WrongType)?),
             SettingType::Enum => Value::String(value.as_str().ok_or(Code::WrongType)?.to_owned()),
+            SettingType::Text => {
+                let text = value.as_str().ok_or(Code::WrongType)?;
+                // Characters, not bytes: the web counts code points the same way.
+                if self.max.is_some_and(|max| text.chars().count() as f64 > max) {
+                    return Err(Code::OutOfRange);
+                }
+                Value::String(text.to_owned())
+            }
             SettingType::Integer | SettingType::Number => {
                 let n = value
                     .as_f64()
