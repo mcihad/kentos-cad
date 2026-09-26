@@ -20,7 +20,6 @@ use kentos_contracts::{
     PROJECT_ACCESS_REVOKE_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION, ProjectAccessChange,
     ProjectAccessRevoke, ProjectGrant, ProjectPermission, ProjectShare, TenantKind,
 };
-use serde::de::DeserializeOwned;
 use sqlx::{Postgres, Transaction};
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
@@ -28,6 +27,9 @@ use uuid::Uuid;
 
 use crate::access::ProjectAccess;
 use crate::changes::{check_target, lock};
+// The command's name, version and input (a role outside viewer, commenter,
+// editor and manager does not parse: ownership is not given by sharing).
+use crate::commands::input;
 use crate::error::{AppError, AppResult};
 use crate::idempotency;
 use crate::projects::{gone, rfc3339};
@@ -52,29 +54,6 @@ fn grant((user, name, role, expires, updated): GrantRow) -> Option<ProjectGrant>
         expires_at: expires.map(rfc3339),
         updated_at: rfc3339(updated),
     })
-}
-
-/// The command's name, version and input (a role outside viewer, commenter,
-/// editor and manager does not parse: ownership is not given by sharing).
-fn input<T: DeserializeOwned>(
-    envelope: &CommandEnvelope,
-    name: &str,
-    version: u32,
-) -> AppResult<T> {
-    if envelope.command_name != name {
-        return Err(AppError::invalid(format!(
-            "Bilinmeyen komut: {}",
-            envelope.command_name
-        )));
-    }
-    if envelope.version != version {
-        return Err(AppError::invalid(format!(
-            "{name} komutunun {} sürümü desteklenmiyor (desteklenen: {version}).",
-            envelope.version
-        )));
-    }
-    serde_json::from_value(envelope.input.clone())
-        .map_err(|e| AppError::invalid(format!("Komut girdisi okunamadı: {e}")))
 }
 
 fn person(text: &str) -> AppResult<Uuid> {

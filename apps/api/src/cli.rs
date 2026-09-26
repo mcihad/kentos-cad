@@ -259,11 +259,19 @@ pub async fn run(config: &Config, args: &Args) -> Result<(), String> {
                 .await
                 .map_err(fail)?
             {
-                let at = p
-                    .deleted_at
-                    .format(&time::format_description::well_known::Rfc3339)
-                    .unwrap_or_default();
-                println!("{}\t{}\t{at}\t{}", p.id, p.name, p.deleted_by);
+                let text = |t: time::OffsetDateTime| {
+                    t.format(&time::format_description::well_known::Rfc3339)
+                        .unwrap_or_default()
+                };
+                // When the trash's retention removes it for good; "-" for one deleted before it existed.
+                let purge = p.purge_after.map(text).unwrap_or_else(|| "-".into());
+                println!(
+                    "{}\t{}\t{}\t{}\t{purge}",
+                    p.id,
+                    p.name,
+                    text(p.deleted_at),
+                    p.deleted_by
+                );
             }
         }
         ["project", "restore"] => {
@@ -349,7 +357,7 @@ pub const USAGE: &str = "kullanım:
   kentosd user password --login GİRİŞ (--password-stdin | --password-env DEĞİŞKEN)
   kentosd member add --tenant KISA --user GİRİŞ|KİMLİK --role owner|admin|project_manager|editor|viewer [--seat]
   kentosd member list --tenant KISA
-  kentosd project deleted --tenant KISA       silinmiş projeler: kimlik, ad, silinme zamanı, silen
+  kentosd project deleted --tenant KISA       çöp kutusundakiler: kimlik, ad, silinme zamanı, silen, kalıcı silinme
   kentosd project restore --tenant KISA --project KİMLİK
   kentosd dev-seed                            geliştirme kurumu ve üç hesap (ayse, mehmet, zeynep)";
 

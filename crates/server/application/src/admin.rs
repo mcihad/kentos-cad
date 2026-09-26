@@ -348,19 +348,28 @@ pub async fn list_members(owner: &PgPool, tenant_slug: &str) -> AppResult<Vec<Me
         .collect())
 }
 
-/// A deleted project, for the operator (`kentosd project deleted`).
+/// A deleted project (in the trash), for the operator (`kentosd project deleted`).
 #[derive(Debug)]
 pub struct DeletedProject {
     pub id: Uuid,
     pub name: String,
     pub deleted_at: time::OffsetDateTime,
     pub deleted_by: String,
+    /// When the retention removes it for good; none for one deleted before the retention existed.
+    pub purge_after: Option<time::OffsetDateTime>,
 }
 
 pub async fn deleted_projects(owner: &PgPool, tenant_slug: &str) -> AppResult<Vec<DeletedProject>> {
     let (tenant, _) = tenant_id(owner, tenant_slug).await?;
-    let rows: Vec<(Uuid, String, time::OffsetDateTime, String)> = sqlx::query_as(
-        "select p.id, p.name, p.deleted_at, u.display_name
+    type Row = (
+        Uuid,
+        String,
+        time::OffsetDateTime,
+        String,
+        Option<time::OffsetDateTime>,
+    );
+    let rows: Vec<Row> = sqlx::query_as(
+        "select p.id, p.name, p.deleted_at, u.display_name, p.purge_after
            from kentos.project p join kentos.app_user u on u.id = p.deleted_by
           where p.tenant_id = $1 and p.deleted_at is not null order by p.deleted_at desc",
     )
@@ -369,18 +378,22 @@ pub async fn deleted_projects(owner: &PgPool, tenant_slug: &str) -> AppResult<Ve
     .await?;
     Ok(rows
         .into_iter()
-        .map(|(id, name, deleted_at, deleted_by)| DeletedProject {
-            id,
-            name,
-            deleted_at,
-            deleted_by,
-        })
+        .map(
+            |(id, name, deleted_at, deleted_by, purge_after)| DeletedProject {
+                id,
+                name,
+                deleted_at,
+                deleted_by,
+                purge_after,
+            },
+        )
         .collect())
 }
 
 /// Undoes a deletion (lifecycle.rs): the project is listed and opens again,
-/// with everything it had. Recorded in the audit log without an actor (the
-/// operator works from the command line). Returns the project's name.
+/// with everything it had, and the retention no longer counts for it.
+/// Recorded in the audit log without an actor (the operator works from the
+/// command line). Returns the project's name.
 pub async fn restore_project(
     owner: &PgPool,
     tenant_slug: &str,
@@ -389,7 +402,7 @@ pub async fn restore_project(
     let (tenant, _) = tenant_id(owner, tenant_slug).await?;
     let mut tx = owner.begin().await?;
     let name: Option<String> = sqlx::query_scalar(
-        "update kentos.project set deleted_at = null, deleted_by = null, updated_at = now()
+        "update kentos.project set deleted_at = null, deleted_by = null, purge_after = null, updated_at = now()
           where tenant_id = $1 and id = $2 and deleted_at is not null returning name",
     )
     .bind(tenant)

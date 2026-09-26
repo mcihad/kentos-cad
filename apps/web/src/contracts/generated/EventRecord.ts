@@ -6,8 +6,10 @@ import type { EventFeature } from "./EventFeature";
  */
 export type EventRecord = { seq: string, dataRevision: string, 
 /**
- * `project.changes`; `project.deleted` (no objects; nothing is committed
- * after it); `project.access` (a grant changed; no objects).
+ * `project.changes`; `project.deleted` (moved to the trash; no objects;
+ * nothing is committed after it); `project.access` (a grant changed; no
+ * objects); `project.archived`, `project.unarchived`, `project.restored`
+ * and `project.metadata` (the catalog, docs/adr/0028; no objects).
  */
 kind: string, actor?: string, 
 /**

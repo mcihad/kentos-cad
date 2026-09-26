@@ -205,7 +205,7 @@ async fn the_owner_or_an_admin_deletes_softly_and_editors_are_told() {
     // Nothing was removed; the deletion is audited; the operator lists and restores it.
     let (objects, audited): (i64, i64) = sqlx::query_as(
         "select (select count(*) from kentos.feature where project_id = $1),
-                (select count(*) from kentos.audit_event where project_id = $1 and action = 'project.delete' and actor = $2)",
+                (select count(*) from kentos.audit_event where project_id = $1 and action = 'project.trash' and actor = $2)",
     )
     .bind(project)
     .bind(boss.actor.user_id)

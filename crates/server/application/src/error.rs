@@ -16,8 +16,10 @@ pub enum AppError {
     NotFound(String),
     /// The request is malformed or breaks a rule (400/422).
     Invalid(String),
-    /// The project was deleted: kept for recovery, but it can no longer be opened or changed (410).
+    /// The project was deleted (moved to the trash): kept for recovery, but it can no longer be opened or changed (410).
     Deleted(String),
+    /// The project is archived: it opens, but nothing in it changes until it is unarchived (409).
+    Archived(String),
     /// The events after this cursor are no longer kept (or never existed): reopen the project (410).
     ResyncRequired(String),
     /// Someone changed what this edit was based on (409); nothing was written.
@@ -44,6 +46,9 @@ impl AppError {
     pub fn deleted(message: impl Into<String>) -> Self {
         Self::Deleted(message.into())
     }
+    pub fn archived(message: impl Into<String>) -> Self {
+        Self::Archived(message.into())
+    }
 
     /// A stable machine-readable code for the client (`error` in the response).
     pub fn code(&self) -> &'static str {
@@ -53,6 +58,7 @@ impl AppError {
             Self::NotFound(_) => "not_found",
             Self::Invalid(_) => "invalid",
             Self::Deleted(_) => "project_deleted",
+            Self::Archived(_) => "project_archived",
             Self::ResyncRequired(_) => "resync_required",
             Self::Conflict { .. } => "conflict",
             Self::Limited { .. } => "rate_limited",
@@ -78,6 +84,7 @@ impl fmt::Display for AppError {
             | Self::NotFound(m)
             | Self::Invalid(m)
             | Self::Deleted(m)
+            | Self::Archived(m)
             | Self::ResyncRequired(m) => f.write_str(m),
             Self::Conflict { message, .. } | Self::Limited { message, .. } => f.write_str(message),
             Self::Database(e) if is_unavailable(e) => {

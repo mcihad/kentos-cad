@@ -8,12 +8,15 @@
 pub mod access;
 pub mod admin;
 pub mod cad;
+pub mod catalog;
 pub mod changes;
 pub mod commands;
+pub mod duplicate;
 pub mod error;
 pub mod events;
 mod idempotency;
 pub mod identity;
+mod journal;
 pub mod lifecycle;
 pub mod listing;
 pub mod people;
@@ -24,9 +27,10 @@ pub mod tenancy;
 pub use error::{AppError, AppResult};
 
 /// The product commands this server runs, by name and version (docs/adr/0013).
-/// The HTTP command route hands every envelope to [`commands::run`], which
-/// accepts exactly these; `tests/catalog.rs` keeps the list equal to the
-/// catalog's commands marked `server`.
+/// The HTTP command routes hand every envelope to [`commands::run`] (a
+/// project's) or [`commands::run_in_tenant`] (`project.create`), which accept
+/// exactly these; `tests/catalog.rs` keeps the list equal to the catalog's
+/// commands marked `server`.
 pub const SERVER_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::PROJECT_CHANGES,
@@ -39,5 +43,46 @@ pub const SERVER_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::PROJECT_ACCESS_REVOKE,
         kentos_contracts::PROJECT_ACCESS_REVOKE_VERSION,
+    ),
+    // The project catalog and lifecycle (docs/adr/0028).
+    (
+        kentos_contracts::PROJECT_CREATE,
+        kentos_contracts::PROJECT_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_RENAME,
+        kentos_contracts::PROJECT_RENAME_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_METADATA_UPDATE,
+        kentos_contracts::PROJECT_METADATA_UPDATE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_DUPLICATE,
+        kentos_contracts::PROJECT_DUPLICATE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_ARCHIVE,
+        kentos_contracts::PROJECT_ARCHIVE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_UNARCHIVE,
+        kentos_contracts::PROJECT_UNARCHIVE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_TRASH,
+        kentos_contracts::PROJECT_TRASH_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_RESTORE,
+        kentos_contracts::PROJECT_RESTORE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_PURGE,
+        kentos_contracts::PROJECT_PURGE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_FAVORITE,
+        kentos_contracts::PROJECT_FAVORITE_VERSION,
     ),
 ];

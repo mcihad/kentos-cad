@@ -1,11 +1,14 @@
 //! Projects, their objects, the product commands, the access list, the
-//! people to share with and the event log over HTTP (docs/adr/0015). A
-//! tenant's list and creating a project start from the caller's membership
-//! of the tenant in the path; a project's own routes from the caller's
-//! access to that project (`access::project`), which answers 404 alike for a
-//! project that does not exist and one the caller has no role in. The use
-//! cases check the permissions. A deleted project answers 410
-//! (`project_deleted`) to opening and writing, for those who had access.
+//! people to share with, the event log and the catalog over HTTP
+//! (docs/adr/0015, 0028). A tenant's list and creating a project (also as the
+//! `project.create` command) start from the caller's membership of the
+//! tenant in the path; a project's own routes from the caller's access to
+//! that project (`access::project`), which answers 404 alike for a project
+//! that does not exist and one the caller has no role in. The catalog's
+//! views are the caller's own, filtered by row-level security. The use cases
+//! check the permissions. A deleted project (in the trash) answers 410
+//! (`project_deleted`) to opening and writing, for those who had access; an
+//! archived one answers 409 (`project_archived`) to writing.
 
 use axum::Json;
 use axum::extract::{Path, Query, State};
@@ -14,8 +17,9 @@ use kentos_application::access::{self, ProjectAccess, not_found};
 use kentos_application::tenancy::{self, Access};
 use kentos_application::{AppError, commands, events, lifecycle, listing, people, projects};
 use kentos_contracts::{
-    CommandEnvelope, EventPage, FeaturePage, ProjectAccessList, ProjectCreate, ProjectInfo,
-    ProjectList, ShareCandidates,
+    CatalogSort, CatalogView, CommandEnvelope, EventPage, FeaturePage, ProjectAccessList,
+    ProjectCreate, ProjectDetails, ProjectInfo, ProjectList, ProjectPage, ProjectType,
+    ShareCandidates,
 };
 use serde::Deserialize;
 use uuid::Uuid;
@@ -105,7 +109,8 @@ pub async fn info(
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
-/// `DELETE …/projects/{project}`: 204 whether it was deleted now or before (a retry); its open editors are told live.
+/// `DELETE …/projects/{project}`: moves it to the trash (as `project.trash`);
+/// 204 whether it went now or before (a retry); its open editors are told live.
 pub async fn delete(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -115,7 +120,7 @@ pub async fn delete(
     let run = async {
         let a = project_access(&state, &caller, &tenant, &project).await?;
         let rid = request_id(&headers);
-        if lifecycle::delete(state.db()?, &a, rid.as_deref())
+        if lifecycle::delete_with(state.db()?, &state.catalog_policy(), &a, rid.as_deref())
             .await?
             .is_some()
         {
@@ -171,8 +176,9 @@ pub async fn features(
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
-/// `POST …/projects/{project}/commands`: a product command (`project.changes`,
-/// `project.share`, `project.access.revoke`); the answer is the command's own output.
+/// `POST …/projects/{project}/commands`: a project's product command
+/// (`project.changes`, sharing, the catalog and lifecycle commands); the
+/// answer is the command's own output.
 pub async fn command(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -182,11 +188,111 @@ pub async fn command(
 ) -> Result<Json<serde_json::Value>, Failure> {
     let run = async {
         let a = project_access(&state, &caller, &tenant, &project).await?;
-        let outcome = commands::run(state.db()?, &a, envelope).await?;
+        let outcome = commands::run(state.db()?, &state.catalog_policy(), &a, envelope).await?;
         if outcome.committed() {
             state.hub.notify(a.tenant, a.project);
         }
         Ok(outcome.to_json())
+    };
+    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+}
+
+/// `POST /v1/tenants/{tenant}/commands`: a command with no project yet
+/// (`project.create`, the envelope's `projectId` empty), answered with 201.
+pub async fn tenant_command(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path(tenant): Path<String>,
+    Body(envelope): Body<CommandEnvelope>,
+) -> Result<(StatusCode, Json<serde_json::Value>), Failure> {
+    let run = async {
+        let a = tenant_access(&state, &caller, &tenant).await?;
+        commands::run_in_tenant(state.db()?, &a, envelope).await
+    };
+    run.await
+        .map(|o| (StatusCode::CREATED, Json(o.to_json())))
+        .map_err(|e| Failure::with(e, &headers))
+}
+
+/// `GET …/projects/{project}/details`: the project's catalog entry, its object
+/// and layer counts and the extent of its objects (any role; 410 in the trash).
+pub async fn details(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path((tenant, project)): Path<(String, String)>,
+) -> Result<Json<ProjectDetails>, Failure> {
+    let run = async {
+        let a = project_access(&state, &caller, &tenant, &project).await?;
+        listing::details(state.db()?, &a).await
+    };
+    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+}
+
+#[derive(Deserialize)]
+pub struct CatalogParams {
+    view: Option<String>,
+    tenant: Option<String>,
+    q: Option<String>,
+    #[serde(rename = "type")]
+    project_type: Option<String>,
+    sort: Option<String>,
+    limit: Option<u32>,
+    after: Option<String>,
+}
+
+/// A query parameter that must be one of a contract enum's names.
+fn named<T: serde::de::DeserializeOwned>(value: &str, what: &str) -> Result<T, AppError> {
+    serde_json::from_value(serde_json::Value::String(value.into()))
+        .map_err(|_| AppError::invalid(format!("{what} bilinmiyor: {value}")))
+}
+
+impl CatalogParams {
+    fn query(self) -> Result<listing::CatalogQuery, AppError> {
+        let view = self.view.as_deref().ok_or_else(|| {
+            AppError::invalid(
+                "view gerekli: mine, organization, shared, recent, favorites, archived ya da trash.",
+            )
+        })?;
+        Ok(listing::CatalogQuery {
+            view: named::<CatalogView>(view, "Liste (view)")?,
+            // A tenant that is not a UUID is no one's: the organisation's view answers 404 as for any other.
+            tenant: match self.tenant.as_deref() {
+                None | Some("") => None,
+                Some(t) => Some(uuid(t, "Kurum")?),
+            },
+            search: self.q.unwrap_or_default(),
+            project_type: self
+                .project_type
+                .as_deref()
+                .filter(|t| !t.is_empty())
+                .map(|t| named::<ProjectType>(t, "Proje türü"))
+                .transpose()?,
+            sort: self
+                .sort
+                .as_deref()
+                .filter(|s| !s.is_empty())
+                .map(|s| named::<CatalogSort>(s, "Sıralama"))
+                .transpose()?,
+            limit: self.limit,
+            after: self.after.filter(|a| !a.is_empty()),
+        })
+    }
+}
+
+/// `GET /v1/me/catalog?view=&tenant=&q=&type=&sort=&limit=&after=`: one page
+/// of one of the caller's catalog views, searched, sorted and counted after
+/// the access check.
+pub async fn catalog(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Query(params): Query<CatalogParams>,
+) -> Result<Json<ProjectPage>, Failure> {
+    let run = async {
+        let query = params.query()?;
+        listing::page(state.db()?, &caller.0, &query, state.config.trash_retention).await
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }

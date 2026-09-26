@@ -209,6 +209,7 @@ export class FakeServer implements CloudApi {
       tenantKind: 'organization',
       // The fake's caller owns the project (every permission; docs/adr/0015) unless a test gave it a role.
       access: { role: this.role, via: this.role === 'owner' ? 'owner' : 'grant', permissions: this.permissions() },
+      state: 'active',
       ...structuredClone(this.meta),
       metaVersion: String(this.metaVersion),
       dataRevision: String(this.revision),

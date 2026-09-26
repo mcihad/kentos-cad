@@ -14,7 +14,7 @@
 //!   project's lock and every flush of a live connection asks again.
 
 use kentos_contracts::{
-    AccessSource, ProjectAccessView, ProjectPermission, ProjectRole, TenantKind,
+    AccessSource, ProjectAccessView, ProjectPermission, ProjectRole, ProjectState, TenantKind,
 };
 use kentos_postgres::{Db, Scope};
 use sqlx::{Postgres, Transaction};
@@ -92,6 +92,13 @@ pub fn not_found() -> AppError {
     AppError::not_found("Proje bulunamadı.")
 }
 
+/// The refusal of a change to an archived project, the same wherever it is asked for.
+pub fn archived(name: &str) -> AppError {
+    AppError::archived(format!(
+        "“{name}” projesi arşivlenmiş; salt okunurdur. Değiştirmek için proje sahibi ya da yöneticisi onu arşivden çıkarmalı; dilerseniz kopyasını oluşturup kopyada çalışın."
+    ))
+}
+
 pub fn tenant_kind(text: &str) -> TenantKind {
     if text == "personal" {
         TenantKind::Personal
@@ -108,8 +115,10 @@ pub struct ProjectAccess {
     pub project: Uuid,
     /// The project's name (the caller may see it).
     pub name: String,
-    /// Deleted projects are kept; opening and writing answer 410, the event log stays readable.
+    /// Deleted projects (in the trash) are kept; opening and writing answer 410, the event log stays readable.
     pub deleted: bool,
+    /// Archived projects open read-only: writing answers 409 (docs/adr/0028).
+    pub archived: bool,
     pub tenant_name: String,
     pub tenant_kind: TenantKind,
     pub role: ProjectRole,
@@ -157,6 +166,27 @@ impl ProjectAccess {
         }
     }
 
+    /// Refuses a deleted project (410) and an archived one (409): what changes a project's content or catalog metadata.
+    pub fn writable(&self) -> AppResult<()> {
+        self.live()?;
+        if self.archived {
+            Err(archived(&self.name))
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Where the project is in its life, as the caller sees it.
+    pub fn state(&self) -> ProjectState {
+        if self.deleted {
+            ProjectState::Trashed
+        } else if self.archived {
+            ProjectState::Archived
+        } else {
+            ProjectState::Active
+        }
+    }
+
     pub fn view(&self) -> ProjectAccessView {
         ProjectAccessView {
             role: self.role,
@@ -197,14 +227,14 @@ pub async fn evaluate(
     project: Uuid,
 ) -> AppResult<ProjectAccess> {
     tenancy::check_member(tx, actor, tenant).await?;
-    let row: Option<(String, String, bool, String, String, bool)> = sqlx::query_as(
-        "select role, name, deleted, tenant_name, tenant_kind, viewer_download from kentos.project_access($1, $2)",
+    let row: Option<(String, String, bool, bool, String, String, bool)> = sqlx::query_as(
+        "select role, name, deleted, archived, tenant_name, tenant_kind, viewer_download from kentos.project_access($1, $2)",
     )
     .bind(tenant)
     .bind(project)
     .fetch_optional(&mut **tx)
     .await?;
-    let Some((role, name, deleted, tenant_name, kind, viewer_download)) = row else {
+    let Some((role, name, deleted, archived, tenant_name, kind, viewer_download)) = row else {
         return Err(not_found());
     };
     let (role, via) = role_of(&role).ok_or_else(not_found)?;
@@ -214,6 +244,7 @@ pub async fn evaluate(
         project,
         name,
         deleted,
+        archived,
         tenant_name,
         tenant_kind: tenant_kind(&kind),
         role,

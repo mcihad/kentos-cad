@@ -1,7 +1,8 @@
 //! `kentosd`: the KentOS server (CLAUDE.md §14, §18). `serve` runs the API
 //! on 127.0.0.1 (`KENTOS_API_PORT`, default 8787) and, in the background,
 //! removes project events older than the retention window
-//! (`KENTOS_EVENT_RETENTION_DAYS`); the other subcommands set up the
+//! (`KENTOS_EVENT_RETENTION_DAYS`) and projects whose time in the trash is
+//! over (`KENTOS_TRASH_RETENTION_DAYS`); the other subcommands set up the
 //! database and administer tenants and accounts (see `cli::USAGE`). Without
 //! a database configured, `serve` answers `/v1/health` only, so the drawing
 //! app keeps working as before.
@@ -16,7 +17,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use kentos_application::events;
+use kentos_application::{events, lifecycle};
 use kentos_postgres::Db;
 
 use crate::config::Config;
@@ -54,6 +55,46 @@ async fn prune_events(db: Db, keep: Duration) {
         }
         if removed > 0 {
             tracing::info!(silinen = removed, "eski olaylar budandı");
+        }
+    }
+}
+
+/// Projects whose time in the trash is over are removed for good (docs/adr/0028) a
+/// minute and a half after the start, then every hour, this many at a time.
+const PURGE_FIRST: Duration = Duration::from_secs(90);
+const PURGE_EVERY: Duration = Duration::from_secs(3600);
+const PURGE_BATCH: i32 = 20;
+
+/// The trash's retention: removes for good the projects whose `purge_after`
+/// passed (fixed when each was moved there). Each project is its own short
+/// transaction in the database; a failure is logged and the next round tries
+/// again. Open editors of such a project had stopped when it was trashed.
+async fn purge_trash(db: Db) {
+    let mut every =
+        tokio::time::interval_at(tokio::time::Instant::now() + PURGE_FIRST, PURGE_EVERY);
+    every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    loop {
+        every.tick().await;
+        let mut removed = 0;
+        loop {
+            match lifecycle::purge_expired(&db, PURGE_BATCH).await {
+                Ok(n) => {
+                    removed += n;
+                    if n < i64::from(PURGE_BATCH) {
+                        break;
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!(error = ?e, "süresi dolan çöp kutusu projeleri silinemedi; bir sonraki turda yeniden denenecek");
+                    break;
+                }
+            }
+        }
+        if removed > 0 {
+            tracing::info!(
+                silinen = removed,
+                "süresi dolan çöp kutusu projeleri kalıcı olarak silindi"
+            );
         }
     }
 }
@@ -101,6 +142,7 @@ async fn serve(config: Config) -> Result<(), String> {
     };
     if let Some(db) = &database {
         tokio::spawn(prune_events(db.clone(), config.event_retention));
+        tokio::spawn(purge_trash(db.clone()));
     }
     let state = AppState {
         config: Arc::new(config),

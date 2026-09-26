@@ -2,6 +2,8 @@
 //! every request passes (request id, trace, panic guard, timeout, body limit).
 
 pub mod auth;
+#[cfg(test)]
+mod catalog_tests;
 pub mod error;
 pub mod limit;
 #[cfg(test)]
@@ -52,6 +54,13 @@ impl AppState {
             .as_ref()
             .ok_or_else(|| AppError::Database(sqlx::Error::PoolClosed))
     }
+
+    /// How this server keeps its catalog (the trash's retention, docs/adr/0028).
+    pub fn catalog_policy(&self) -> kentos_application::commands::CatalogPolicy {
+        kentos_application::commands::CatalogPolicy {
+            trash_retention: self.config.trash_retention,
+        }
+    }
 }
 
 async fn health() -> Json<Health> {
@@ -84,13 +93,22 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/auth/oidc/callback", get(auth::oidc_callback))
         .route("/v1/me", get(auth::me))
         .route("/v1/me/projects", get(projects::mine))
+        .route("/v1/me/catalog", get(projects::catalog))
         .route(
             "/v1/tenants/{tenant}/projects",
             get(projects::list).post(projects::create),
         )
         .route(
+            "/v1/tenants/{tenant}/commands",
+            post(projects::tenant_command),
+        )
+        .route(
             "/v1/tenants/{tenant}/projects/{project}",
             get(projects::info).delete(projects::delete),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/details",
+            get(projects::details),
         )
         .route(
             "/v1/tenants/{tenant}/projects/{project}/features",

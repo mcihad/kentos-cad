@@ -7,9 +7,12 @@
 //! [`ProjectAccess`]; the lists are listing.rs. The creator of a project is
 //! its owner.
 //!
-//! A deleted project (lifecycle.rs) is left out of the lists and refuses
-//! opening (410, `project_deleted`) to those who had access; its rows stay
-//! for recovery.
+//! A deleted project (in the trash, lifecycle.rs) is left out of the lists
+//! and refuses opening (410, `project_deleted`) to those who had access; its
+//! rows stay for recovery. An archived one opens read-only.
+//!
+//! Opening a project (its first page of objects) and creating one mark it in
+//! the person's recently used projects (docs/adr/0028).
 
 use kentos_contracts::{
     FeaturePage, FeatureRecord, LayerNode, LayerNodeType, ProjectCreate, ProjectInfo,
@@ -119,9 +122,28 @@ async fn created_with(
     .await?)
 }
 
-/// Opens a new, empty project owned by its creator; `idempotency_key` makes
-/// a retried create return the same project, also when two copies of the
-/// request arrive at once.
+/// Marks the project in scope as opened by the caller now (their recently used projects).
+pub(crate) async fn opened(
+    tx: &mut Transaction<'static, Postgres>,
+    tenant: Uuid,
+    project: Uuid,
+    user: Uuid,
+) -> AppResult<()> {
+    sqlx::query(
+        "insert into kentos.project_recent (tenant_id, project_id, user_id) values ($1, $2, $3)
+         on conflict (tenant_id, project_id, user_id) do update set opened_at = now()",
+    )
+    .bind(tenant)
+    .bind(project)
+    .bind(user)
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
+/// Opens a new, empty project owned by its creator, with its catalog
+/// metadata (docs/adr/0028); `idempotency_key` makes a retried create return
+/// the same project, also when two copies of the request arrive at once.
 pub async fn create(
     db: &kentos_postgres::Db,
     access: &Access,
@@ -131,6 +153,10 @@ pub async fn create(
     access.require(Capability::ProjectCreate)?;
     check_name(&input.name)?;
     check_tree(&input.layers, &input.active_layer)?;
+    let description =
+        crate::catalog::check_description(input.description.as_deref().unwrap_or(""))?;
+    let tags = crate::catalog::normalize_tags(input.tags.as_deref().unwrap_or(&[]))?;
+    let project_type = input.project_type.unwrap_or_default();
     let id = Uuid::now_v7();
     // The new project is in scope from the start: its audit and command log rows belong to it.
     let mut tx = db
@@ -151,8 +177,9 @@ pub async fn create(
     }
     check_srid(&mut tx, input.settings.srid).await?;
     sqlx::query(
-        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12)",
+        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
+                                     description, project_type, tags)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15)",
     )
     .bind(access.tenant)
     .bind(id)
@@ -166,15 +193,19 @@ pub async fn create(
     .bind(input.home_view.map(|b| json(&b)).transpose()?)
     .bind(json(&input.styles)?)
     .bind(access.actor.user_id)
+    .bind(&description)
+    .bind(project_type.name())
+    .bind(&tags)
     .execute(&mut *tx)
     .await?;
     sqlx::query("insert into kentos.audit_event (tenant_id, project_id, actor, action, detail) values ($1, $2, $3, 'project.create', $4)")
         .bind(access.tenant)
         .bind(id)
         .bind(access.actor.user_id)
-        .bind(serde_json::json!({ "name": input.name.trim() }))
+        .bind(serde_json::json!({ "name": input.name.trim(), "projectType": project_type.name() }))
         .execute(&mut *tx)
         .await?;
+    opened(&mut tx, access.tenant, id, access.actor.user_id).await?;
     if let Some(key) = idempotency_key {
         let logged = sqlx::query(
             "insert into kentos.command_log (tenant_id, idempotency_key, project_id, command_name, request_hash, response, actor)
@@ -217,10 +248,10 @@ pub async fn create(
     .await
 }
 
-/// The refusal for a deleted project, the same wherever it is asked for.
+/// The refusal for a deleted project (in the trash), the same wherever it is asked for.
 pub(crate) fn gone(name: &str) -> AppError {
     AppError::deleted(format!(
-        "“{name}” projesi silindi; açılamaz ve değiştirilemez. Yanlışlıkla silindiyse proje sahibine ya da kurum yöneticinize başvurun."
+        "“{name}” projesi silindi (çöp kutusunda); açılamaz ve değiştirilemez. Proje sahibi ya da kurum yöneticisi onu çöp kutusundan geri yükleyebilir."
     ))
 }
 
@@ -285,6 +316,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         tenant_name: access.tenant_name.clone(),
         tenant_kind: access.tenant_kind,
         access: access.view(),
+        state: access.state(),
         name,
         settings: serde_json::from_value(settings).map_err(bad)?,
         origin: kentos_contracts::Vec2 { x: ox, y: oy },
@@ -371,7 +403,8 @@ async fn live_project(
     }
 }
 
-/// Objects in id order after `after`, at most `limit` (≤ 2 000).
+/// Objects in id order after `after`, at most `limit` (≤ 2 000). The first
+/// page is opening the project: it goes to the caller's recently used ones.
 pub async fn features(
     db: &kentos_postgres::Db,
     access: &ProjectAccess,
@@ -382,6 +415,9 @@ pub async fn features(
     let limit = limit.clamp(1, PAGE_MAX);
     let mut tx = db.scoped(access.scope()).await?;
     live_project(&mut tx, access).await?;
+    if after.is_none() {
+        opened(&mut tx, access.tenant, access.project, access.actor.user_id).await?;
+    }
     let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and id > $3 order by id limit $4"
     )))

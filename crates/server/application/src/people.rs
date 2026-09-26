@@ -226,8 +226,8 @@ pub async fn list(db: &Db, access: &ProjectAccess) -> AppResult<ProjectAccessLis
 /// "ayse" finds "Ayşe", "isik" finds "IŞIK". The database folds its side with
 /// the same two strings (`translate`); both then lowercase ASCII only, so a
 /// search does not depend on the database's locale.
-const FOLD_FROM: &str = "ÇĞİIÖŞÜÂÎÛçğıöşüâîû";
-const FOLD_TO: &str = "cgiiosuaiucgiosuaiu";
+pub(crate) const FOLD_FROM: &str = "ÇĞİIÖŞÜÂÎÛçğıöşüâîû";
+pub(crate) const FOLD_TO: &str = "cgiiosuaiucgiosuaiu";
 
 /// `text` as a search compares it (see [`FOLD_FROM`]).
 pub fn fold(text: &str) -> String {

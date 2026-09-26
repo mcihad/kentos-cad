@@ -3,6 +3,7 @@ import type { Bounds } from "./Bounds";
 import type { LayerNode } from "./LayerNode";
 import type { ProjectAccessView } from "./ProjectAccessView";
 import type { ProjectSettings } from "./ProjectSettings";
+import type { ProjectState } from "./ProjectState";
 import type { ProjectStyles } from "./ProjectStyles";
 import type { TenantKind } from "./TenantKind";
 import type { Vec2 } from "./Vec2";
@@ -14,7 +15,11 @@ export type ProjectInfo = { id: string, tenantId: string, tenantName: string, te
 /**
  * What the caller may do in it.
  */
-access: ProjectAccessView, name: string, settings: ProjectSettings, origin: Vec2, homeView?: Bounds, layers: Array<LayerNode>, activeLayer: string, styles: ProjectStyles, metaVersion: string, dataRevision: string, featureCount: string, 
+access: ProjectAccessView, 
+/**
+ * Active or archived (an archived project opens read-only; one in the trash does not open).
+ */
+state: ProjectState, name: string, settings: ProjectSettings, origin: Vec2, homeView?: Bounds, layers: Array<LayerNode>, activeLayer: string, styles: ProjectStyles, metaVersion: string, dataRevision: string, featureCount: string, 
 /**
  * Event cursor at the moment this was read: subscribe after it to miss nothing.
  */

@@ -1839,6 +1839,4723 @@
       ]
     },
     {
+      "id": "project.create",
+      "version": 1,
+      "title": "Proje oluştur",
+      "summary": "Bir çalışma alanında (kişisel alan ya da kurum) boş bir bulut projesi açar: adı, ayarları, katman ağacı ve stilleriyle; isteğe bağlı açıklama, tür ve etiketlerle. Proje açanındır; başkaları paylaşımla eklenir. Çalışma alanında project.create hakkı ister (kurumda proje yöneticisi ve üstü); projeye bağlı bir izin istemez. Zarfın tenantId'si çalışma alanıdır, projectId boş kalır. Aynı idempotency anahtarıyla tekrar aynı projeyi verir.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "AngleUnit": {
+            "enum": [
+              "grad",
+              "deg"
+            ],
+            "type": "string"
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "Bounds": {
+            "properties": {
+              "maxX": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxY": {
+                "format": "double",
+                "type": "number"
+              },
+              "minX": {
+                "format": "double",
+                "type": "number"
+              },
+              "minY": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "minX",
+              "minY",
+              "maxX",
+              "maxY"
+            ],
+            "type": "object"
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LayerNode": {
+            "description": "A node of the layer tree: a group or a layer.",
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/LayerNode"
+                },
+                "type": "array"
+              },
+              "expanded": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LayerStyle"
+              },
+              "type": {
+                "$ref": "#/$defs/LayerNodeType"
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "type",
+              "visible",
+              "locked",
+              "expanded",
+              "style",
+              "children"
+            ],
+            "type": "object"
+          },
+          "LayerNodeType": {
+            "enum": [
+              "group",
+              "layer"
+            ],
+            "type": "string"
+          },
+          "LayerStyle": {
+            "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
+            "properties": {
+              "color": {
+                "description": "Hex colour or a theme token (fg, fg-dim, ink, paper).",
+                "type": "string"
+              },
+              "fill": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "description": "Plot line weight in mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "pickInterior": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "renderer": true
+            },
+            "required": [
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "PointStyle": {
+            "properties": {
+              "size": {
+                "description": "Diameter in CSS px.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "$ref": "#/$defs/PointSymbol"
+              }
+            },
+            "required": [
+              "symbol",
+              "size"
+            ],
+            "type": "object"
+          },
+          "PointSymbol": {
+            "enum": [
+              "ring",
+              "cross",
+              "triangle"
+            ],
+            "type": "string"
+          },
+          "ProjectSettings": {
+            "description": "Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.",
+            "properties": {
+              "angleUnit": {
+                "$ref": "#/$defs/AngleUnit"
+              },
+              "areaDecimals": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit"
+              },
+              "drawingFont": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Absent in files written before drawing typefaces (read as Barlow)."
+              },
+              "lengthDecimals": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "plotScale": {
+                "description": "Plot scale denominator (1:1000 → 1000).",
+                "format": "double",
+                "type": "number"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "workspace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Workspace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Absent in files written before work modes (read as hybrid)."
+              }
+            },
+            "required": [
+              "srid",
+              "lengthDecimals",
+              "areaDecimals",
+              "areaUnit",
+              "angleUnit",
+              "plotScale"
+            ],
+            "type": "object"
+          },
+          "ProjectStyles": {
+            "description": "The project's own style library (opaque items in v1, see `style`).",
+            "properties": {
+              "categories": {
+                "items": true,
+                "type": "array"
+              },
+              "items": {
+                "items": true,
+                "type": "array"
+              }
+            },
+            "required": [
+              "items",
+              "categories"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "Workspace": {
+            "description": "The work mode a project opens in (`app/workspaces.ts`): which menus, ribbon\ntabs and tools the interface shows. Presentation only, never what the data\nmeans: every command still runs in every mode. `plan3d` and `disaster` are\nannounced (\"Yakında\") and cannot be chosen yet; a file naming them opens in\nthe hybrid presentation. Files written before modes existed have none\n(hybrid).",
+            "enum": [
+              "hybrid",
+              "cad",
+              "gis",
+              "plan3d",
+              "disaster"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "`POST /v1/tenants/{tenant}/projects`: a new project's metadata (its objects follow as commands).",
+        "properties": {
+          "activeLayer": {
+            "type": "string"
+          },
+          "description": {
+            "description": "The catalog's description (docs/adr/0028); absent: none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "homeView": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Bounds"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/LayerNode"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "projectType": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProjectType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Absent: the general type (`cad`)."
+          },
+          "settings": {
+            "$ref": "#/$defs/ProjectSettings"
+          },
+          "styles": {
+            "$ref": "#/$defs/ProjectStyles"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "settings",
+          "origin",
+          "layers",
+          "activeLayer",
+          "styles"
+        ],
+        "title": "ProjectCreate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AngleUnit": {
+            "enum": [
+              "grad",
+              "deg"
+            ],
+            "type": "string"
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "Bounds": {
+            "properties": {
+              "maxX": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxY": {
+                "format": "double",
+                "type": "number"
+              },
+              "minX": {
+                "format": "double",
+                "type": "number"
+              },
+              "minY": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "minX",
+              "minY",
+              "maxX",
+              "maxY"
+            ],
+            "type": "object"
+          },
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
+          "LabelInk": {
+            "enum": [
+              "fg",
+              "fg-dim",
+              "label"
+            ],
+            "type": "string"
+          },
+          "LabelPlacement": {
+            "enum": [
+              "center",
+              "corner",
+              "beside",
+              "along"
+            ],
+            "type": "string"
+          },
+          "LabelStyle": {
+            "description": "How entity labels on a layer are drawn; sizes in CSS px.",
+            "properties": {
+              "grow": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelInk"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "maxSize": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minFeaturePx": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "minScale": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "placement": {
+                "$ref": "#/$defs/LabelPlacement"
+              },
+              "size": {
+                "format": "double",
+                "type": "number"
+              },
+              "template": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "description": "400, 500 or 600.",
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "placement",
+              "size"
+            ],
+            "type": "object"
+          },
+          "LayerNode": {
+            "description": "A node of the layer tree: a group or a layer.",
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/LayerNode"
+                },
+                "type": "array"
+              },
+              "expanded": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "locked": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "style": {
+                "$ref": "#/$defs/LayerStyle"
+              },
+              "type": {
+                "$ref": "#/$defs/LayerNodeType"
+              },
+              "visible": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "type",
+              "visible",
+              "locked",
+              "expanded",
+              "style",
+              "children"
+            ],
+            "type": "object"
+          },
+          "LayerNodeType": {
+            "enum": [
+              "group",
+              "layer"
+            ],
+            "type": "string"
+          },
+          "LayerStyle": {
+            "description": "A layer's look. `renderer` (the style engine, docs/STYLE.md) is opaque JSON in v1.",
+            "properties": {
+              "color": {
+                "description": "Hex colour or a theme token (fg, fg-dim, ink, paper).",
+                "type": "string"
+              },
+              "fill": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/LabelStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lineType": {
+                "$ref": "#/$defs/LineType"
+              },
+              "lineWeight": {
+                "description": "Plot line weight in mm.",
+                "format": "double",
+                "type": "number"
+              },
+              "pickInterior": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "point": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/PointStyle"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "renderer": true
+            },
+            "required": [
+              "color",
+              "lineType",
+              "lineWeight"
+            ],
+            "type": "object"
+          },
+          "LineType": {
+            "enum": [
+              "continuous",
+              "dashed",
+              "dashdot",
+              "dotted"
+            ],
+            "type": "string"
+          },
+          "PointStyle": {
+            "properties": {
+              "size": {
+                "description": "Diameter in CSS px.",
+                "format": "double",
+                "type": "number"
+              },
+              "symbol": {
+                "$ref": "#/$defs/PointSymbol"
+              }
+            },
+            "required": [
+              "symbol",
+              "size"
+            ],
+            "type": "object"
+          },
+          "PointSymbol": {
+            "enum": [
+              "ring",
+              "cross",
+              "triangle"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSettings": {
+            "description": "Project settings (`ProjectSettingsData`): saved with the drawing, the same for everyone who opens it.",
+            "properties": {
+              "angleUnit": {
+                "$ref": "#/$defs/AngleUnit"
+              },
+              "areaDecimals": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit"
+              },
+              "drawingFont": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DrawingFont"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Absent in files written before drawing typefaces (read as Barlow)."
+              },
+              "lengthDecimals": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "plotScale": {
+                "description": "Plot scale denominator (1:1000 → 1000).",
+                "format": "double",
+                "type": "number"
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "workspace": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Workspace"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Absent in files written before work modes (read as hybrid)."
+              }
+            },
+            "required": [
+              "srid",
+              "lengthDecimals",
+              "areaDecimals",
+              "areaUnit",
+              "angleUnit",
+              "plotScale"
+            ],
+            "type": "object"
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStyles": {
+            "description": "The project's own style library (opaque items in v1, see `style`).",
+            "properties": {
+              "categories": {
+                "items": true,
+                "type": "array"
+              },
+              "items": {
+                "items": true,
+                "type": "array"
+              }
+            },
+            "required": [
+              "items",
+              "categories"
+            ],
+            "type": "object"
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "Workspace": {
+            "description": "The work mode a project opens in (`app/workspaces.ts`): which menus, ribbon\ntabs and tools the interface shows. Presentation only, never what the data\nmeans: every command still runs in every mode. `plan3d` and `disaster` are\nannounced (\"Yakında\") and cannot be chosen yet; a file naming them opens in\nthe hybrid presentation. Files written before modes existed have none\n(hybrid).",
+            "enum": [
+              "hybrid",
+              "cad",
+              "gis",
+              "plan3d",
+              "disaster"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "`GET /v1/tenants/{tenant}/projects/{project}`: what opening needs before the objects.",
+        "properties": {
+          "access": {
+            "$ref": "#/$defs/ProjectAccessView",
+            "description": "What the caller may do in it."
+          },
+          "activeLayer": {
+            "type": "string"
+          },
+          "dataRevision": {
+            "type": "string"
+          },
+          "eventCursor": {
+            "description": "Event cursor at the moment this was read: subscribe after it to miss nothing.",
+            "type": "string"
+          },
+          "featureCount": {
+            "type": "string"
+          },
+          "homeView": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Bounds"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/$defs/LayerNode"
+            },
+            "type": "array"
+          },
+          "metaVersion": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "settings": {
+            "$ref": "#/$defs/ProjectSettings"
+          },
+          "state": {
+            "$ref": "#/$defs/ProjectState",
+            "description": "Active or archived (an archived project opens read-only; one in the trash does not open)."
+          },
+          "styles": {
+            "$ref": "#/$defs/ProjectStyles"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "tenantKind": {
+            "$ref": "#/$defs/TenantKind"
+          },
+          "tenantName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tenantId",
+          "tenantName",
+          "tenantKind",
+          "access",
+          "state",
+          "name",
+          "settings",
+          "origin",
+          "layers",
+          "activeLayer",
+          "styles",
+          "metaVersion",
+          "dataRevision",
+          "featureCount",
+          "eventCursor"
+        ],
+        "title": "ProjectInfo",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Boş bir ifraz projesi aç",
+          "input": {
+            "activeLayer": "cizim",
+            "layers": [
+              {
+                "children": [],
+                "expanded": true,
+                "id": "cizim",
+                "locked": false,
+                "name": "Çizim",
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "type": "layer",
+                "visible": true
+              }
+            ],
+            "name": "Ada 101 ifrazı",
+            "origin": {
+              "x": 486500.0,
+              "y": 4420200.0
+            },
+            "projectType": "subdivision",
+            "settings": {
+              "angleUnit": "grad",
+              "areaDecimals": 2,
+              "areaUnit": "m2",
+              "lengthDecimals": 3,
+              "plotScale": 1000,
+              "srid": 5256
+            },
+            "styles": {
+              "categories": [],
+              "items": []
+            },
+            "tags": [
+              "Kadıköy",
+              "2026"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "project.rename",
+      "version": 1,
+      "title": "Projeyi yeniden adlandır",
+      "summary": "Projenin adını erişimi olan herkes için değiştirir; açık editörler yeni adı hemen görür. project.edit ister. Arşivlenmiş ya da çöp kutusundaki proje yeniden adlandırılamaz. expectedVersions[\"@catalog\"] verilmişse ve proje bilgileri o sürümde değilse hiçbir şey yazılmaz (409).",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.edit"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.rename` v1.",
+        "properties": {
+          "name": {
+            "description": "Not empty, at most 200 bytes; surrounding spaces are dropped.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProjectRename",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once. Every cloud\nproject today.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSummary": {
+            "properties": {
+              "access": {
+                "$ref": "#/$defs/ProjectAccessView"
+              },
+              "archivedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit",
+                "description": "The unit its areas are given in (lengths and coordinates are metres of its coordinate system)."
+              },
+              "catalogVersion": {
+                "description": "Counts changes of its name, description, type and tags; a catalog edit\nsends it as `expectedVersions[\"@catalog\"]`. Decimal text.",
+                "type": "string"
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "creatorName": {
+                "description": "Who created it; empty when the caller cannot see them.",
+                "type": "string"
+              },
+              "dataRevision": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "favorite": {
+                "description": "One of the caller's favourites.",
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openedAt": {
+                "description": "When the caller last opened it (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ownerName": {
+                "description": "The owner's name (\"Benimle paylaşılanlar\" says whose it is); empty\nwhen the caller cannot see the owner (one who left the organisation).",
+                "type": "string"
+              },
+              "projectType": {
+                "$ref": "#/$defs/ProjectType",
+                "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+              },
+              "purgeAfter": {
+                "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/ProjectState"
+              },
+              "storage": {
+                "$ref": "#/$defs/ProjectStorage"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "tenantKind": {
+                "$ref": "#/$defs/TenantKind"
+              },
+              "tenantName": {
+                "type": "string"
+              },
+              "trashedAt": {
+                "description": "When it was moved to the trash (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "trashedByName": {
+                "description": "Who moved it there, when the caller can see them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "srid",
+              "dataRevision",
+              "updatedAt",
+              "tenantId",
+              "tenantName",
+              "tenantKind",
+              "ownerName",
+              "access",
+              "projectType",
+              "description",
+              "tags",
+              "state",
+              "catalogVersion",
+              "createdAt",
+              "creatorName",
+              "areaUnit",
+              "storage",
+              "favorite"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What a catalog or lifecycle command did (rename, metadata, archive,\nunarchive, trash, restore, favourite); a retry with the same\nidempotency key gets the same answer (`replayed`).",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (archiving an archived project does not).",
+            "type": "boolean"
+          },
+          "eventSeq": {
+            "description": "The event open connections hear, when something changed that they hear of.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "$ref": "#/$defs/ProjectSummary",
+            "description": "The project as the caller sees it after the command."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "project",
+          "changed"
+        ],
+        "title": "ProjectCatalogChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Projeye yeni bir ad ver",
+          "input": {
+            "name": "Ada 101 (revize)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "project.metadata.update",
+      "version": 1,
+      "title": "Proje bilgilerini değiştir",
+      "summary": "Projenin katalog bilgilerini değiştirir: ad, açıklama, tür ve etiketler; verilmeyen alan olduğu gibi kalır. Tür yalnız katalogda düzen içindir: mevzuata uygunluk ya da resmî onay anlamına gelmez, bir modül açmaz, saklama biçimini değiştirmez. project.edit ister; arşivlenmiş ya da çöp kutusundaki projede yapılamaz. expectedVersions[\"@catalog\"] verilmişse ve proje bilgileri o sürümde değilse hiçbir şey yazılmaz (409).",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.edit"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.metadata.update` v1: the fields given replace the\nproject's; absent ones stay.",
+        "properties": {
+          "description": {
+            "description": "At most 2 000 characters; surrounding spaces are dropped.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "projectType": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProjectType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "description": "At most 12, each 1–32 characters; spaces inside are collapsed, and a\ntag that differs from an earlier one only by case or Turkish letters is dropped.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "ProjectMetadataUpdate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once. Every cloud\nproject today.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSummary": {
+            "properties": {
+              "access": {
+                "$ref": "#/$defs/ProjectAccessView"
+              },
+              "archivedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit",
+                "description": "The unit its areas are given in (lengths and coordinates are metres of its coordinate system)."
+              },
+              "catalogVersion": {
+                "description": "Counts changes of its name, description, type and tags; a catalog edit\nsends it as `expectedVersions[\"@catalog\"]`. Decimal text.",
+                "type": "string"
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "creatorName": {
+                "description": "Who created it; empty when the caller cannot see them.",
+                "type": "string"
+              },
+              "dataRevision": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "favorite": {
+                "description": "One of the caller's favourites.",
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openedAt": {
+                "description": "When the caller last opened it (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ownerName": {
+                "description": "The owner's name (\"Benimle paylaşılanlar\" says whose it is); empty\nwhen the caller cannot see the owner (one who left the organisation).",
+                "type": "string"
+              },
+              "projectType": {
+                "$ref": "#/$defs/ProjectType",
+                "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+              },
+              "purgeAfter": {
+                "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/ProjectState"
+              },
+              "storage": {
+                "$ref": "#/$defs/ProjectStorage"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "tenantKind": {
+                "$ref": "#/$defs/TenantKind"
+              },
+              "tenantName": {
+                "type": "string"
+              },
+              "trashedAt": {
+                "description": "When it was moved to the trash (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "trashedByName": {
+                "description": "Who moved it there, when the caller can see them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "srid",
+              "dataRevision",
+              "updatedAt",
+              "tenantId",
+              "tenantName",
+              "tenantKind",
+              "ownerName",
+              "access",
+              "projectType",
+              "description",
+              "tags",
+              "state",
+              "catalogVersion",
+              "createdAt",
+              "creatorName",
+              "areaUnit",
+              "storage",
+              "favorite"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What a catalog or lifecycle command did (rename, metadata, archive,\nunarchive, trash, restore, favourite); a retry with the same\nidempotency key gets the same answer (`replayed`).",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (archiving an archived project does not).",
+            "type": "boolean"
+          },
+          "eventSeq": {
+            "description": "The event open connections hear, when something changed that they hear of.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "$ref": "#/$defs/ProjectSummary",
+            "description": "The project as the caller sees it after the command."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "project",
+          "changed"
+        ],
+        "title": "ProjectCatalogChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Türü ve etiketleri değiştir, açıklama ekle",
+          "input": {
+            "description": "Kadıköy 18. madde uygulaması; dağıtım cetveli ayrı dosyada.",
+            "projectType": "landReadjustment",
+            "tags": [
+              "Kadıköy",
+              "DOP %40"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "project.duplicate",
+      "version": 1,
+      "title": "Projenin kopyasını oluştur",
+      "summary": "Projeyi yeni kimlikli yeni bir projeye kopyalar: ayarlar, katman ağacı, stiller, açıklama, tür, etiketler ve bütün nesneler; her nesne kalıcı kimliğini korur. Geçmiş (komut günlüğü, olaylar, denetim kayıtları), paylaşımlar, favoriler ve arşiv durumu kopyalanmaz; kopya çağıranındır ve yalnız onun (ve kurum politikasının) erişimindedir. Kaynakta project.download, kopyanın gideceği çalışma alanında project.create ister. Çöp kutusundaki proje kopyalanamaz.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.download"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.duplicate` v1.",
+        "properties": {
+          "name": {
+            "description": "The copy's name; absent: the source's with \" (kopya)\".",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tenantId": {
+            "description": "The workspace the copy goes to; absent: the source's.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "ProjectDuplicate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once. Every cloud\nproject today.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSummary": {
+            "properties": {
+              "access": {
+                "$ref": "#/$defs/ProjectAccessView"
+              },
+              "archivedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit",
+                "description": "The unit its areas are given in (lengths and coordinates are metres of its coordinate system)."
+              },
+              "catalogVersion": {
+                "description": "Counts changes of its name, description, type and tags; a catalog edit\nsends it as `expectedVersions[\"@catalog\"]`. Decimal text.",
+                "type": "string"
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "creatorName": {
+                "description": "Who created it; empty when the caller cannot see them.",
+                "type": "string"
+              },
+              "dataRevision": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "favorite": {
+                "description": "One of the caller's favourites.",
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openedAt": {
+                "description": "When the caller last opened it (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ownerName": {
+                "description": "The owner's name (\"Benimle paylaşılanlar\" says whose it is); empty\nwhen the caller cannot see the owner (one who left the organisation).",
+                "type": "string"
+              },
+              "projectType": {
+                "$ref": "#/$defs/ProjectType",
+                "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+              },
+              "purgeAfter": {
+                "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/ProjectState"
+              },
+              "storage": {
+                "$ref": "#/$defs/ProjectStorage"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "tenantKind": {
+                "$ref": "#/$defs/TenantKind"
+              },
+              "tenantName": {
+                "type": "string"
+              },
+              "trashedAt": {
+                "description": "When it was moved to the trash (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "trashedByName": {
+                "description": "Who moved it there, when the caller can see them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "srid",
+              "dataRevision",
+              "updatedAt",
+              "tenantId",
+              "tenantName",
+              "tenantKind",
+              "ownerName",
+              "access",
+              "projectType",
+              "description",
+              "tags",
+              "state",
+              "catalogVersion",
+              "createdAt",
+              "creatorName",
+              "areaUnit",
+              "storage",
+              "favorite"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "The result of `project.duplicate`.",
+        "properties": {
+          "objects": {
+            "description": "How many objects were copied (decimal text).",
+            "type": "string"
+          },
+          "project": {
+            "$ref": "#/$defs/ProjectSummary",
+            "description": "The copy, as its owner (the caller) sees it."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          },
+          "sourceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "project",
+          "sourceId",
+          "objects"
+        ],
+        "title": "ProjectDuplicated",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Kişisel alana bir kopya",
+          "input": {
+            "name": "Ada 101 (deneme)",
+            "tenantId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        }
+      ]
+    },
+    {
+      "id": "project.archive",
+      "version": 1,
+      "title": "Projeyi arşivle",
+      "summary": "Projeyi arşivler: salt okunur olur, Arşivlenmişler listesinde durur; açık editörlerin kaydı durur, gönderilmemiş değişiklikleri cihazlarında kalır. Paylaşımı değiştirilebilir, kopyası oluşturulabilir. project.edit ister; tersi project.unarchive'dır.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.edit"
+      ],
+      "undo": "inverse",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of commands that need nothing but the project the envelope names\n(`project.archive`, `project.unarchive`, `project.trash`, `project.restore`).",
+        "title": "EmptyInput",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once. Every cloud\nproject today.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSummary": {
+            "properties": {
+              "access": {
+                "$ref": "#/$defs/ProjectAccessView"
+              },
+              "archivedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit",
+                "description": "The unit its areas are given in (lengths and coordinates are metres of its coordinate system)."
+              },
+              "catalogVersion": {
+                "description": "Counts changes of its name, description, type and tags; a catalog edit\nsends it as `expectedVersions[\"@catalog\"]`. Decimal text.",
+                "type": "string"
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "creatorName": {
+                "description": "Who created it; empty when the caller cannot see them.",
+                "type": "string"
+              },
+              "dataRevision": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "favorite": {
+                "description": "One of the caller's favourites.",
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openedAt": {
+                "description": "When the caller last opened it (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ownerName": {
+                "description": "The owner's name (\"Benimle paylaşılanlar\" says whose it is); empty\nwhen the caller cannot see the owner (one who left the organisation).",
+                "type": "string"
+              },
+              "projectType": {
+                "$ref": "#/$defs/ProjectType",
+                "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+              },
+              "purgeAfter": {
+                "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/ProjectState"
+              },
+              "storage": {
+                "$ref": "#/$defs/ProjectStorage"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "tenantKind": {
+                "$ref": "#/$defs/TenantKind"
+              },
+              "tenantName": {
+                "type": "string"
+              },
+              "trashedAt": {
+                "description": "When it was moved to the trash (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "trashedByName": {
+                "description": "Who moved it there, when the caller can see them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "srid",
+              "dataRevision",
+              "updatedAt",
+              "tenantId",
+              "tenantName",
+              "tenantKind",
+              "ownerName",
+              "access",
+              "projectType",
+              "description",
+              "tags",
+              "state",
+              "catalogVersion",
+              "createdAt",
+              "creatorName",
+              "areaUnit",
+              "storage",
+              "favorite"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What a catalog or lifecycle command did (rename, metadata, archive,\nunarchive, trash, restore, favourite); a retry with the same\nidempotency key gets the same answer (`replayed`).",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (archiving an archived project does not).",
+            "type": "boolean"
+          },
+          "eventSeq": {
+            "description": "The event open connections hear, when something changed that they hear of.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "$ref": "#/$defs/ProjectSummary",
+            "description": "The project as the caller sees it after the command."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "project",
+          "changed"
+        ],
+        "title": "ProjectCatalogChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Biten projeyi arşivle",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "project.unarchive",
+      "version": 1,
+      "title": "Projeyi arşivden çıkar",
+      "summary": "Arşivlenmiş projeyi yeniden düzenlenebilir yapar. Açık tutanlar projeyi yeniden açınca kaydetmeye başlar; cihazlarında saklanan değişiklikler geri gelir. project.edit ister; tersi project.archive'dır.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.edit"
+      ],
+      "undo": "inverse",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of commands that need nothing but the project the envelope names\n(`project.archive`, `project.unarchive`, `project.trash`, `project.restore`).",
+        "title": "EmptyInput",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once. Every cloud\nproject today.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSummary": {
+            "properties": {
+              "access": {
+                "$ref": "#/$defs/ProjectAccessView"
+              },
+              "archivedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit",
+                "description": "The unit its areas are given in (lengths and coordinates are metres of its coordinate system)."
+              },
+              "catalogVersion": {
+                "description": "Counts changes of its name, description, type and tags; a catalog edit\nsends it as `expectedVersions[\"@catalog\"]`. Decimal text.",
+                "type": "string"
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "creatorName": {
+                "description": "Who created it; empty when the caller cannot see them.",
+                "type": "string"
+              },
+              "dataRevision": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "favorite": {
+                "description": "One of the caller's favourites.",
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openedAt": {
+                "description": "When the caller last opened it (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ownerName": {
+                "description": "The owner's name (\"Benimle paylaşılanlar\" says whose it is); empty\nwhen the caller cannot see the owner (one who left the organisation).",
+                "type": "string"
+              },
+              "projectType": {
+                "$ref": "#/$defs/ProjectType",
+                "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+              },
+              "purgeAfter": {
+                "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/ProjectState"
+              },
+              "storage": {
+                "$ref": "#/$defs/ProjectStorage"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "tenantKind": {
+                "$ref": "#/$defs/TenantKind"
+              },
+              "tenantName": {
+                "type": "string"
+              },
+              "trashedAt": {
+                "description": "When it was moved to the trash (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "trashedByName": {
+                "description": "Who moved it there, when the caller can see them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "srid",
+              "dataRevision",
+              "updatedAt",
+              "tenantId",
+              "tenantName",
+              "tenantKind",
+              "ownerName",
+              "access",
+              "projectType",
+              "description",
+              "tags",
+              "state",
+              "catalogVersion",
+              "createdAt",
+              "creatorName",
+              "areaUnit",
+              "storage",
+              "favorite"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What a catalog or lifecycle command did (rename, metadata, archive,\nunarchive, trash, restore, favourite); a retry with the same\nidempotency key gets the same answer (`replayed`).",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (archiving an archived project does not).",
+            "type": "boolean"
+          },
+          "eventSeq": {
+            "description": "The event open connections hear, when something changed that they hear of.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "$ref": "#/$defs/ProjectSummary",
+            "description": "The project as the caller sees it after the command."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "project",
+          "changed"
+        ],
+        "title": "ProjectCatalogChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Arşivden çıkar",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "project.trash",
+      "version": 1,
+      "title": "Projeyi çöp kutusuna taşı",
+      "summary": "Projeyi erişimi olan herkes için çöp kutusuna taşır: listelerden kalkar, açılamaz ve değiştirilemez (410); açık editörlerin kaydı durur. Hiçbir şey silinmez: proje sahibi ya da kurum yöneticisi saklama süresi dolana kadar geri yükleyebilir, sonra proje kalıcı olarak silinir. project.delete ister (proje sahibi; kurum politikası açıksa kurum sahibi ve yöneticisi); tersi project.restore'dur.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.delete"
+      ],
+      "undo": "inverse",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of commands that need nothing but the project the envelope names\n(`project.archive`, `project.unarchive`, `project.trash`, `project.restore`).",
+        "title": "EmptyInput",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once. Every cloud\nproject today.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSummary": {
+            "properties": {
+              "access": {
+                "$ref": "#/$defs/ProjectAccessView"
+              },
+              "archivedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit",
+                "description": "The unit its areas are given in (lengths and coordinates are metres of its coordinate system)."
+              },
+              "catalogVersion": {
+                "description": "Counts changes of its name, description, type and tags; a catalog edit\nsends it as `expectedVersions[\"@catalog\"]`. Decimal text.",
+                "type": "string"
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "creatorName": {
+                "description": "Who created it; empty when the caller cannot see them.",
+                "type": "string"
+              },
+              "dataRevision": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "favorite": {
+                "description": "One of the caller's favourites.",
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openedAt": {
+                "description": "When the caller last opened it (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ownerName": {
+                "description": "The owner's name (\"Benimle paylaşılanlar\" says whose it is); empty\nwhen the caller cannot see the owner (one who left the organisation).",
+                "type": "string"
+              },
+              "projectType": {
+                "$ref": "#/$defs/ProjectType",
+                "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+              },
+              "purgeAfter": {
+                "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/ProjectState"
+              },
+              "storage": {
+                "$ref": "#/$defs/ProjectStorage"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "tenantKind": {
+                "$ref": "#/$defs/TenantKind"
+              },
+              "tenantName": {
+                "type": "string"
+              },
+              "trashedAt": {
+                "description": "When it was moved to the trash (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "trashedByName": {
+                "description": "Who moved it there, when the caller can see them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "srid",
+              "dataRevision",
+              "updatedAt",
+              "tenantId",
+              "tenantName",
+              "tenantKind",
+              "ownerName",
+              "access",
+              "projectType",
+              "description",
+              "tags",
+              "state",
+              "catalogVersion",
+              "createdAt",
+              "creatorName",
+              "areaUnit",
+              "storage",
+              "favorite"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What a catalog or lifecycle command did (rename, metadata, archive,\nunarchive, trash, restore, favourite); a retry with the same\nidempotency key gets the same answer (`replayed`).",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (archiving an archived project does not).",
+            "type": "boolean"
+          },
+          "eventSeq": {
+            "description": "The event open connections hear, when something changed that they hear of.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "$ref": "#/$defs/ProjectSummary",
+            "description": "The project as the caller sees it after the command."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "project",
+          "changed"
+        ],
+        "title": "ProjectCatalogChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Çöp kutusuna taşı",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "project.restore",
+      "version": 1,
+      "title": "Projeyi çöp kutusundan geri yükle",
+      "summary": "Çöp kutusundaki projeyi her şeyiyle geri getirir: listelerde görünür ve açılır; arşivlenmişse arşivde kalır. project.delete ister; tersi project.trash'tir.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.delete"
+      ],
+      "undo": "inverse",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of commands that need nothing but the project the envelope names\n(`project.archive`, `project.unarchive`, `project.trash`, `project.restore`).",
+        "title": "EmptyInput",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once. Every cloud\nproject today.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSummary": {
+            "properties": {
+              "access": {
+                "$ref": "#/$defs/ProjectAccessView"
+              },
+              "archivedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit",
+                "description": "The unit its areas are given in (lengths and coordinates are metres of its coordinate system)."
+              },
+              "catalogVersion": {
+                "description": "Counts changes of its name, description, type and tags; a catalog edit\nsends it as `expectedVersions[\"@catalog\"]`. Decimal text.",
+                "type": "string"
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "creatorName": {
+                "description": "Who created it; empty when the caller cannot see them.",
+                "type": "string"
+              },
+              "dataRevision": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "favorite": {
+                "description": "One of the caller's favourites.",
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openedAt": {
+                "description": "When the caller last opened it (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ownerName": {
+                "description": "The owner's name (\"Benimle paylaşılanlar\" says whose it is); empty\nwhen the caller cannot see the owner (one who left the organisation).",
+                "type": "string"
+              },
+              "projectType": {
+                "$ref": "#/$defs/ProjectType",
+                "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+              },
+              "purgeAfter": {
+                "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/ProjectState"
+              },
+              "storage": {
+                "$ref": "#/$defs/ProjectStorage"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "tenantKind": {
+                "$ref": "#/$defs/TenantKind"
+              },
+              "tenantName": {
+                "type": "string"
+              },
+              "trashedAt": {
+                "description": "When it was moved to the trash (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "trashedByName": {
+                "description": "Who moved it there, when the caller can see them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "srid",
+              "dataRevision",
+              "updatedAt",
+              "tenantId",
+              "tenantName",
+              "tenantKind",
+              "ownerName",
+              "access",
+              "projectType",
+              "description",
+              "tags",
+              "state",
+              "catalogVersion",
+              "createdAt",
+              "creatorName",
+              "areaUnit",
+              "storage",
+              "favorite"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What a catalog or lifecycle command did (rename, metadata, archive,\nunarchive, trash, restore, favourite); a retry with the same\nidempotency key gets the same answer (`replayed`).",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (archiving an archived project does not).",
+            "type": "boolean"
+          },
+          "eventSeq": {
+            "description": "The event open connections hear, when something changed that they hear of.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "$ref": "#/$defs/ProjectSummary",
+            "description": "The project as the caller sees it after the command."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "project",
+          "changed"
+        ],
+        "title": "ProjectCatalogChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Geri yükle",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "project.purge",
+      "version": 1,
+      "title": "Projeyi kalıcı olarak sil",
+      "summary": "Çöp kutusundaki projeyi nesneleri, paylaşımları, komut günlüğü ve olaylarıyla birlikte kalıcı olarak siler; geri alınamaz, denetim kaydı kalır. Açık onay ister: confirmName projenin şimdiki adıyla aynı olmalıdır. Önce çöp kutusuna taşınmamış proje silinmez. project.delete ister. Önceden indirilmiş kopyalar ve sunucu yedekleri bu komutla silinmez.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.delete"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.purge` v1: the explicit confirmation of removing a project for good.",
+        "properties": {
+          "confirmName": {
+            "description": "The project's name now, exactly: the caller names what goes.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "confirmName"
+        ],
+        "title": "ProjectPurge",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "The result of `project.purge`. The project is gone: a retry after a lost\nanswer finds nothing (404).",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "objects": {
+            "description": "How many objects went with it (decimal text).",
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectId",
+          "name",
+          "objects"
+        ],
+        "title": "ProjectPurged",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Adını yazarak kalıcı olarak sil",
+          "input": {
+            "confirmName": "Ada 101 (eski)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "project.favorite",
+      "version": 1,
+      "title": "Favorilere ekle ya da çıkar",
+      "summary": "Projeyi çağıranın favorilerine ekler (favorite: true) ya da çıkarır; yalnız o kişinin listesini değiştirir, projeye ve başkalarına dokunmaz. project.read ister.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "project.read"
+      ],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.favorite` v1.",
+        "properties": {
+          "favorite": {
+            "description": "Add to the caller's favourites (true) or take it out (false).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "favorite"
+        ],
+        "title": "ProjectFavorite",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccessSource": {
+            "description": "Where a person's role in a project comes from.",
+            "oneOf": [
+              {
+                "const": "owner",
+                "description": "They own it.",
+                "type": "string"
+              },
+              {
+                "const": "grant",
+                "description": "It was shared with them.",
+                "type": "string"
+              },
+              {
+                "const": "policy",
+                "description": "The organisation's policy lets its owners and admins into projects not shared with them.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaUnit": {
+            "enum": [
+              "m2",
+              "donum",
+              "ha"
+            ],
+            "type": "string"
+          },
+          "ProjectAccessView": {
+            "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
+            "properties": {
+              "permissions": {
+                "items": {
+                  "$ref": "#/$defs/ProjectPermission"
+                },
+                "type": "array"
+              },
+              "role": {
+                "$ref": "#/$defs/ProjectRole"
+              },
+              "via": {
+                "$ref": "#/$defs/AccessSource"
+              }
+            },
+            "required": [
+              "role",
+              "via",
+              "permissions"
+            ],
+            "type": "object"
+          },
+          "ProjectPermission": {
+            "description": "A permission in a project. The names are fixed: commands (`permissions`\nin the catalog), the web, the desktop, Python and AI use them as they are.",
+            "oneOf": [
+              {
+                "const": "project.read",
+                "description": "See it in lists, open it, read its objects and events.",
+                "type": "string"
+              },
+              {
+                "const": "feature.write",
+                "description": "Change its objects.",
+                "type": "string"
+              },
+              {
+                "const": "project.edit",
+                "description": "Its name, settings, layer tree and styles.",
+                "type": "string"
+              },
+              {
+                "const": "project.delete",
+                "description": "Delete it (softly: the operator can restore it).",
+                "type": "string"
+              },
+              {
+                "const": "project.comment",
+                "description": "Comments and review notes.",
+                "type": "string"
+              },
+              {
+                "const": "project.download",
+                "description": "Download and export its files and revisions (viewing is not DRM: what is seen can be copied).",
+                "type": "string"
+              },
+              {
+                "const": "project.history",
+                "description": "See and open earlier revisions.",
+                "type": "string"
+              },
+              {
+                "const": "project.share",
+                "description": "Give and take away roles in it.",
+                "type": "string"
+              },
+              {
+                "const": "project.transfer",
+                "description": "Hand its ownership over.",
+                "type": "string"
+              },
+              {
+                "const": "project.jobs.run",
+                "description": "Start server jobs on it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectRole": {
+            "description": "A role in one project. Each has the rights of the ones before it.",
+            "oneOf": [
+              {
+                "enum": [
+                  "viewer",
+                  "commenter",
+                  "editor",
+                  "manager"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "owner",
+                "description": "The project's owner; not given by sharing (ownership is transferred).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectState": {
+            "description": "Where a project is in its life. Removed for good, it is gone: every request answers 404.",
+            "oneOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "archived",
+                "description": "Read-only: it opens, but its content and catalog metadata do not change until it is unarchived.",
+                "type": "string"
+              },
+              {
+                "const": "trashed",
+                "description": "Soft-deleted (410 to opening and writing); restorable until the retention removes it for good.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once. Every cloud\nproject today.",
+                "type": "string"
+              }
+            ]
+          },
+          "ProjectSummary": {
+            "properties": {
+              "access": {
+                "$ref": "#/$defs/ProjectAccessView"
+              },
+              "archivedAt": {
+                "description": "RFC 3339.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "areaUnit": {
+                "$ref": "#/$defs/AreaUnit",
+                "description": "The unit its areas are given in (lengths and coordinates are metres of its coordinate system)."
+              },
+              "catalogVersion": {
+                "description": "Counts changes of its name, description, type and tags; a catalog edit\nsends it as `expectedVersions[\"@catalog\"]`. Decimal text.",
+                "type": "string"
+              },
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "creatorName": {
+                "description": "Who created it; empty when the caller cannot see them.",
+                "type": "string"
+              },
+              "dataRevision": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "favorite": {
+                "description": "One of the caller's favourites.",
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openedAt": {
+                "description": "When the caller last opened it (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ownerName": {
+                "description": "The owner's name (\"Benimle paylaşılanlar\" says whose it is); empty\nwhen the caller cannot see the owner (one who left the organisation).",
+                "type": "string"
+              },
+              "projectType": {
+                "$ref": "#/$defs/ProjectType",
+                "description": "What kind of work it is: a label, not a claim of compliance, independent of `storage`."
+              },
+              "purgeAfter": {
+                "description": "In the trash: when the retention removes it for good (RFC 3339).\nAbsent there: it was moved before the retention existed and stays until removed by hand.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "state": {
+                "$ref": "#/$defs/ProjectState"
+              },
+              "storage": {
+                "$ref": "#/$defs/ProjectStorage"
+              },
+              "tags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "tenantKind": {
+                "$ref": "#/$defs/TenantKind"
+              },
+              "tenantName": {
+                "type": "string"
+              },
+              "trashedAt": {
+                "description": "When it was moved to the trash (RFC 3339).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "trashedByName": {
+                "description": "Who moved it there, when the caller can see them.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "updatedAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "srid",
+              "dataRevision",
+              "updatedAt",
+              "tenantId",
+              "tenantName",
+              "tenantKind",
+              "ownerName",
+              "access",
+              "projectType",
+              "description",
+              "tags",
+              "state",
+              "catalogVersion",
+              "createdAt",
+              "creatorName",
+              "areaUnit",
+              "storage",
+              "favorite"
+            ],
+            "type": "object"
+          },
+          "ProjectType": {
+            "description": "What kind of work a project is (TODOS.md CLOUD-02). A label only (see the module notes).",
+            "oneOf": [
+              {
+                "const": "cad",
+                "description": "General CAD work; also every project made before types existed.",
+                "type": "string"
+              },
+              {
+                "const": "gis",
+                "description": "GIS work.",
+                "type": "string"
+              },
+              {
+                "const": "landReadjustment",
+                "description": "A land readjustment under article 18 of the Zoning Law (18 uygulaması).",
+                "type": "string"
+              },
+              {
+                "const": "zoningPlan",
+                "description": "A zoning plan (imar planı).",
+                "type": "string"
+              },
+              {
+                "const": "subdivision",
+                "description": "Dividing and merging parcels (ifraz and tevhit).",
+                "type": "string"
+              },
+              {
+                "const": "road",
+                "description": "Road design.",
+                "type": "string"
+              },
+              {
+                "const": "architecture",
+                "description": "Architecture.",
+                "type": "string"
+              }
+            ]
+          },
+          "TenantKind": {
+            "description": "A tenant is an organisation or a person's personal space (docs/adr/0015).",
+            "oneOf": [
+              {
+                "enum": [
+                  "organization"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "personal",
+                "description": "Opened by the server for one person; its only member is its owner, others come through sharing.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What a catalog or lifecycle command did (rename, metadata, archive,\nunarchive, trash, restore, favourite); a retry with the same\nidempotency key gets the same answer (`replayed`).",
+        "properties": {
+          "changed": {
+            "description": "Whether anything changed (archiving an archived project does not).",
+            "type": "boolean"
+          },
+          "eventSeq": {
+            "description": "The event open connections hear, when something changed that they hear of.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "project": {
+            "$ref": "#/$defs/ProjectSummary",
+            "description": "The project as the caller sees it after the command."
+          },
+          "replayed": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "project",
+          "changed"
+        ],
+        "title": "ProjectCatalogChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Favorilere ekle",
+          "input": {
+            "favorite": true
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.polygon.create",
       "version": 1,
       "title": "Kapalı alan oluştur",
