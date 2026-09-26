@@ -97,6 +97,11 @@ export function openShortcutsDialog(ctx: AppContext): void {
   search.focus();
 }
 
+/**
+ * KentOS CAD hakkında: the product's version (the Rust workspace's, as the
+ * desktop and the API report it), the drawing backend, the project's
+ * coordinate system and the server this page talks to.
+ */
 export function openAboutDialog(ctx: AppContext): void {
   new Dialog({
     title: 'KentOS CAD',
@@ -107,12 +112,24 @@ export function openAboutDialog(ctx: AppContext): void {
         'dl',
         { class: 'about' },
         h('dt', null, 'Sürüm'),
-        h('dd', { class: 'num' }, '0.1.0 (arayüz önizlemesi)'),
+        h('dd', { class: 'num' }, __KENTOS_VERSION__),
         h('dt', null, 'Çizim motoru'),
         h('dd', null, ctx.view.backendLabel.value),
         h('dt', null, 'Koordinat sistemi'),
         h('dd', null, `${ctx.doc.crs.value.name} (EPSG:${ctx.doc.crs.value.srid})`),
+        h('dt', null, 'Sunucu'),
+        h('dd', null, serverText(ctx)),
       ),
     ],
   });
+}
+
+/** The server as the About window names it: its service, version and commit, or why there is none. */
+function serverText(ctx: AppContext): string {
+  const state = ctx.server.state.value;
+  const health = ctx.server.health.value;
+  const name = health ? `${health.service} ${health.version}${health.commit ? ` (${health.commit.slice(0, 8)})` : ''}` : '';
+  if (state === 'online' && health) return name;
+  if (state === 'incompatible' && health) return `${name}, uyumsuz`;
+  return state === 'checking' ? 'soruluyor…' : 'bağlı değil';
 }
