@@ -1830,3 +1830,82 @@ fn after_the_connection_returns_the_next_edit_still_waits_its_second() {
     let _ = app.cloud_tick(t0 + Duration::from_millis(1100));
     assert_eq!(state(&app), SaveState::Saving);
 }
+
+/// An answer goes to the copy's log first, then the draft says what is left
+/// (docs/adr/0043): here nothing, so the draft is gone.
+#[test]
+fn an_answer_is_appended_to_the_copy_before_the_draft_is_written() {
+    let dir = scratch("bulut-adim");
+    let mut app = keeping(&dir);
+    database(&mut app);
+    assert_eq!(app.cloud.held.as_ref().map(|h| h.steps), Some(0));
+    edit(&mut app, 1.0);
+    app.cloud_after(Instant::now());
+    let task = app.run("file.save");
+    // The draft with the command on its way reaches the disk (the command itself is not sent here).
+    let Some(mut stream) = iced_runtime::task::into_stream(task) else {
+        panic!("a task");
+    };
+    use iced::futures::StreamExt as _;
+    while let Some(action) = iced::futures::executor::block_on(stream.next()) {
+        if let iced_runtime::Action::Output(Message::Cloud(e)) = action
+            && matches!(*e, Event::DraftWritten { .. })
+        {
+            // Written: the command would go now (its request is dropped here).
+            let _ = app.update(Message::Cloud(e));
+            break;
+        }
+    }
+    assert_eq!(
+        walk(&dir.join("taslak")).len(),
+        1,
+        "the draft holds the command"
+    );
+    let answer = answer(&app, "2");
+    let session = session(&app);
+    let task = app.update(crate::cloud::msg(Event::Committed {
+        session,
+        result: Ok(answer),
+    }));
+    assert_eq!(
+        app.cloud.held.as_ref().map(|h| h.steps),
+        Some(1),
+        "the step is in the copy before the draft is written"
+    );
+    drive(&mut app, task);
+    assert!(
+        walk(&dir.join("taslak")).is_empty(),
+        "nothing is left to keep"
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// The server does not answer an open: the project opens from this device's copy.
+#[test]
+fn an_open_the_server_does_not_answer_comes_from_the_copy() {
+    let dir = scratch("bulut-yedek-acilis");
+    let mut app = keeping(&dir);
+    database(&mut app);
+    let before = session(&app);
+    app.cloud.open_hint = Some(("Ada 101".into(), ProjectStorage::Database));
+    let _ = app.start_cloud_open(uuid(TENANT), uuid(PROJECT));
+    let id = app.cloud.opening.as_ref().expect("opening").id;
+    let task = app.update(crate::cloud::msg(Event::Opened {
+        id,
+        result: Err(ApiFailure::new(
+            0,
+            "network",
+            "Sunucuya ulaşılamadı; bağlantınızı ve sunucu adresini denetleyin.",
+        )),
+    }));
+    drive(&mut app, task);
+    assert_ne!(session(&app), before, "opened again, from the copy");
+    assert_eq!(app.cloud.link, crate::cloud::copy::Link::Offline);
+    assert!(
+        said(&app)
+            .iter()
+            .any(|t| t.contains("bu cihazdaki kopyasından açıldı"))
+    );
+    assert!(app.cloud.held.is_some(), "the copy stays locked");
+    let _ = std::fs::remove_dir_all(dir);
+}
