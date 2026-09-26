@@ -121,9 +121,13 @@ impl Live {
         self.retry_at = None;
     }
 
-    /// After a new sign-in: what waited for a session goes, and following resumes.
+    /// After a new sign-in or the connection's return: what waited goes at
+    /// once, and following resumes. Nothing waiting, the next edit waits its second.
     pub fn kick(&mut self) {
-        self.send_soon();
+        if self.sync.wants_to_send() {
+            self.send_soon();
+        }
+        self.retry_at = None;
         self.poll_at = Instant::now();
     }
 

@@ -1116,6 +1116,13 @@ fn a_deletion_seen_while_following_ends_sending() {
     assert_eq!(state(&app), SaveState::Deleted);
     assert_eq!(app.save_cell().0, "Çöp kutusunda");
     assert!(last_said(&app).starts_with("“Ada 101” bulut projesi silindi."));
+    // The web's notice: what happened, what stays, a local copy offered.
+    assert_eq!(app.dialog, Some(Dialog::Ended));
+    let (title, _, detail) = app.ended_notice().expect("a notice");
+    assert_eq!(title, "Proje çöp kutusuna taşındı");
+    assert!(detail.contains("yerel bir .kcad"), "{detail}");
+    cloud(&mut app, Event::SaveLocal);
+    assert_eq!(app.dialog, None, "Farklı kaydet asks where");
     // Nothing is asked any more.
     let _ = app.cloud_tick(Instant::now() + Duration::from_secs(10));
     assert!(app.cloud.live.as_ref().expect("live").polling.is_none());
@@ -1620,7 +1627,10 @@ fn a_project_opens_from_this_device_s_copy_without_a_connection_and_its_work_wai
         app.save_cell().0,
         "Çevrimdışı — değişiklikler bu cihazda saklanıyor"
     );
-    assert_eq!(app.link_cell().0, "Çevrimdışı");
+    assert_eq!(
+        app.link_cell().0,
+        "Çevrimdışı — değişiklikler bu cihazda saklanıyor"
+    );
     // Nothing goes without a session; the work waits in the draft.
     let _ = app.cloud_tick(Instant::now() + Duration::from_secs(10));
     assert!(!app.cloud.live.as_ref().expect("live").sending());
@@ -1797,4 +1807,26 @@ fn the_dot_says_online_offline_or_syncing() {
     assert_eq!(app.link_cell().0, "Eşitleniyor");
     app.cloud.link = crate::cloud::copy::Link::Offline;
     assert_eq!(app.link_cell().0, "Çevrimdışı");
+}
+
+/// The connection's return with nothing waiting sends nothing, and the next
+/// edit still waits its second (a bug the real-server run found).
+#[test]
+fn after_the_connection_returns_the_next_edit_still_waits_its_second() {
+    let mut app = signed_in();
+    database(&mut app);
+    app.cloud.link = crate::cloud::copy::Link::Offline;
+    let _ = app.came_online();
+    assert!(
+        said(&app)
+            .iter()
+            .any(|t| t.starts_with("Sunucuya yeniden ulaşıldı"))
+    );
+    let t0 = Instant::now();
+    edit(&mut app, 1.0);
+    app.cloud_after(t0);
+    let _ = app.cloud_tick(t0 + Duration::from_millis(500));
+    assert_eq!(state(&app), SaveState::Pending, "not before its second");
+    let _ = app.cloud_tick(t0 + Duration::from_millis(1100));
+    assert_eq!(state(&app), SaveState::Saving);
 }

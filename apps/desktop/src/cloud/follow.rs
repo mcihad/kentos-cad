@@ -351,7 +351,52 @@ impl App {
             ),
         };
         self.warn(text);
+        // The web's notice (AccessLostNotice.ts): what happened, what stays, and
+        // a local copy offered, unless another window is up.
+        if self.dialog.is_none() {
+            self.dialog = Some(Dialog::Ended);
+        }
         self.write_draft(false)
+    }
+
+    /// The notice of an ended project: its words by how it ended.
+    pub(crate) fn ended_notice(&self) -> Option<(&'static str, String, String)> {
+        let live = self.cloud.live.as_ref()?;
+        let name = self.document.as_ref().map_or("", |d| d.name());
+        let unsent = live.sync.pending();
+        let kept = if unsent > 0 {
+            format!(
+                "Çizim ekranda kalıyor; gönderilmemiş {unsent} değişiklik bu cihazda saklanıyor."
+            )
+        } else {
+            "Çizim ekranda kalıyor.".to_owned()
+        };
+        let (title, message) = match live.sync.state() {
+            SaveState::Deleted => (
+                "Proje çöp kutusuna taşındı",
+                format!(
+                    "“{name}” projesi çöp kutusuna taşındı; değişiklikleriniz bundan sonra buluta kaydedilmez."
+                ),
+            ),
+            SaveState::Archived => (
+                "Proje arşivlendi",
+                format!(
+                    "“{name}” projesi arşivlendi: salt okunurdur, değişiklikleriniz buluta kaydedilmez. Arşivden çıkarılınca yeniden açın; saklanan değişiklikler geri gelir."
+                ),
+            ),
+            SaveState::Revoked => (
+                "Projeye erişiminiz kaldırıldı",
+                format!(
+                    "“{name}” projesine artık erişemiyorsunuz; değişiklikleriniz bundan sonra buluta kaydedilmez."
+                ),
+            ),
+            _ => return None,
+        };
+        Some((
+            title,
+            message,
+            format!("{kept} Saklamak için yerel bir .kcad dosyasına kaydedin."),
+        ))
     }
 
     /// Opens the conflict window, if there is a conflict to choose on.

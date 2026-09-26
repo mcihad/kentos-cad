@@ -497,6 +497,7 @@ impl App {
             Asking::Conflicts => self.conflicts_view(),
             Asking::FileConflict => self.file_conflict_view(),
             Asking::RemoveCopy => self.remove_copy_view(),
+            Asking::Ended => self.ended_view(),
         }
     }
 }
@@ -698,14 +699,34 @@ fn project_rows(doc: &Document) -> Vec<(&'static str, String)> {
         Some("gis") => "CBS",
         Some(other) => return_other(other),
     };
-    vec![
-        ("Proje", doc.name().to_owned()),
-        (
+    // A cloud project says where it is kept instead of a file (docs/adr/0041).
+    let kept = match doc.cloud_source() {
+        Some(c) => (
+            "Bulut",
+            match &c.revision {
+                Some(r) => format!(
+                    "{} · {} · revizyon {}",
+                    c.workspace,
+                    crate::cloud::words::storage_title(c.storage()),
+                    r.number
+                ),
+                None => format!(
+                    "{} · {}",
+                    c.workspace,
+                    crate::cloud::words::storage_title(c.storage())
+                ),
+            },
+        ),
+        None => (
             "Dosya",
             doc.path
                 .as_ref()
                 .map_or("kaydedilmedi".to_owned(), |p| p.display().to_string()),
         ),
+    };
+    vec![
+        ("Proje", doc.name().to_owned()),
+        kept,
         ("Koordinat sistemi", crs),
         ("Pafta ölçeği", format!("1:{}", s.plot_scale)),
         ("Uzunluk", format!("m · {} basamak", s.length_decimals)),

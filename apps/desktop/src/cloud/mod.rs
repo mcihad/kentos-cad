@@ -42,6 +42,9 @@ pub mod words;
 
 #[cfg(test)]
 mod tests;
+// Against a real server (apps/desktop/scripts/cloud-live.sh), ignored otherwise.
+#[cfg(test)]
+mod live_run;
 
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -212,6 +215,8 @@ pub enum Event {
     },
     /// A window's Vazgeç or ×.
     Close,
+    /// “Yerel kopya kaydet…” on an ended project's notice: Farklı kaydet.
+    SaveLocal,
 }
 
 /// The cloud's part of the app.
@@ -377,6 +382,10 @@ impl App {
             Event::Close => {
                 self.close_dialog();
                 Task::none()
+            }
+            Event::SaveLocal => {
+                self.close_dialog();
+                self.run("file.saveAs")
             }
         }
     }

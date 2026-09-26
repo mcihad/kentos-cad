@@ -261,7 +261,7 @@ impl App {
         self.cloud
             .live
             .as_ref()
-            .is_some_and(|l| l.sending() || l.polling.is_some() || !l.sync.all_sent())
+            .is_some_and(|l| l.sending() || !l.sync.all_sent())
             || self.saving.is_some()
             || self
                 .cloud

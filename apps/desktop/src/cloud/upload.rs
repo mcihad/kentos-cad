@@ -170,11 +170,15 @@ impl App {
         u.drawing = Some((doc.session, doc.model.revision()));
         u.work = Some((id, None));
         let model = doc.model.clone();
+        // The file is the project: it carries the project's name (a file project's drawing is named by it).
+        let name = name.to_owned();
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
-            let result = kentos_kcad::encode_verified(&model.to_snapshot_v2())
+            let mut snapshot = model.to_snapshot_v2();
+            drop(model);
+            snapshot.name = name;
+            let result = kentos_kcad::encode_verified(&snapshot)
                 .map(Once::new)
                 .map_err(|e| e.message);
-            drop(model);
             let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
                 &mut out,
                 crate::cloud::msg(Event::UploadEncoded { id, result }),

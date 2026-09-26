@@ -92,6 +92,8 @@ pub enum Dialog {
     FileConflict,
     /// A copy to remove from this device whose draft holds unsent work (cloud/catalog.rs).
     RemoveCopy,
+    /// The open cloud project ended for this account (deleted, archived, access taken away).
+    Ended,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).

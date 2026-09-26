@@ -3,6 +3,7 @@
 //! windows and an open's progress; in the status bar the account with Çıkış,
 //! the open project and where its save stands.
 
+use iced::widget::text::Wrapping;
 use iced::widget::{
     Column, button, column, container, mouse_area, row, scrollable, text, text_input,
 };
@@ -221,14 +222,16 @@ impl App {
             .spacing(8)
             .into()
         } else if device && !c.device.is_empty() {
-            let rows = c.device.iter().fold(Column::new().spacing(2), |col, k| {
-                col.push(self.kept_row(k, c))
-            });
+            let rows = c.device.iter().fold(
+                Column::new().spacing(2).padding(iced::padding::right(14)),
+                |col, k| col.push(self.kept_row(k, c)),
+            );
             scrollable(rows).height(Fill).into()
         } else if !device && !c.projects.is_empty() {
-            let rows = c.projects.iter().fold(Column::new().spacing(2), |col, p| {
-                col.push(self.catalog_row(p, c))
-            });
+            let rows = c.projects.iter().fold(
+                Column::new().spacing(2).padding(iced::padding::right(14)),
+                |col, p| col.push(self.catalog_row(p, c)),
+            );
             scrollable(rows).height(Fill).into()
         } else {
             let empty = if c.loading() {
@@ -408,6 +411,22 @@ impl App {
     }
 
     /// “Bu cihazdan kaldır” over a copy whose draft still holds unsent work.
+    /// The notice of a project the server ended for this account (the web's
+    /// AccessLostNotice): what happened, what stays, and a local copy offered.
+    pub(crate) fn ended_view(&self) -> Element<'_, Message> {
+        let Some((title, message, detail)) = self.ended_notice() else {
+            return text("").into();
+        };
+        overlay::modal(
+            kentos_ui::widget::Confirm::new(title, cloud(Event::SaveLocal), cloud(Event::Close))
+                .message(message)
+                .detail(detail)
+                .confirm("Yerel kopya kaydet…")
+                .cancel("Tamam"),
+            cloud(Event::Close),
+        )
+    }
+
     pub(crate) fn remove_copy_view(&self) -> Element<'_, Message> {
         let Some(r) = &self.cloud.removing else {
             return text("").into();
@@ -597,9 +616,11 @@ impl App {
                 .width(600.0),
         )
     }
-    /// The status bar's cloud cells: the open project, its save and the
-    /// connection's dot, then the account with Çıkış.
+    /// The status bar's cloud cells: the open project with its workspace,
+    /// where its save stands and the connection's dot, then the account with
+    /// Çıkış. One line each, bounded, so they fit beside the drawing's cells.
     pub(crate) fn cloud_cells(&self) -> Vec<Element<'_, Message>> {
+        let line = |s: String| text(s).wrapping(Wrapping::None);
         let mut cells: Vec<Element<'_, Message>> = Vec::new();
         if let Some((doc, source)) = self
             .document
@@ -611,7 +632,8 @@ impl App {
                 .as_ref()
                 .map_or(String::new(), |r| format!(" Revizyon {}.", r.number));
             cells.push(
-                Readout::new(text(format!("{} › {}", source.workspace, doc.name())))
+                Readout::new(line(format!("{} › {}", source.workspace, doc.name())))
+                    .width(200.0)
                     .icon(Icon::Globe)
                     .tip(Tip::new("Bulut projesi").body(format!(
                         "{} › {}. Saklama: {}. Rolünüz: {}.{revision}",
@@ -624,35 +646,40 @@ impl App {
             );
             let (state, tone, on) = self.save_cell();
             let tip = self.save_tip();
-            cells.push(
-                Readout::new(text(state).style(move |theme: &iced::Theme| tone.style(theme)))
-                    .on_press(on)
-                    .tip(Tip::new("Bulut kaydı").body(tip))
-                    .into(),
-            );
-            let (dot, tone, about) = self.link_cell();
-            cells.push(
-                Readout::new(
-                    row![
-                        text("●").style(move |theme: &iced::Theme| tone.style(theme)),
-                        text(dot),
-                    ]
-                    .spacing(5)
-                    .align_y(Center),
-                )
-                .tip(Tip::new("Bağlantı").body(about))
-                .into(),
-            );
+            let (dot, dot_tone, about) = self.link_cell();
+            // Signed out, the save cell says it all (“Çevrimdışı — değişiklikler bu
+            // cihazda saklanıyor”); signed in, the dot beside it says how the connection is.
+            let signed_out = self.cloud.me.is_none();
+            let save = Readout::new(
+                row![
+                    text("●").style(move |theme: &iced::Theme| dot_tone.style(theme)),
+                    line(state).style(move |theme: &iced::Theme| tone.style(theme)),
+                ]
+                .spacing(5)
+                .align_y(Center),
+            )
+            .on_press(on)
+            .tip(Tip::new("Bulut kaydı").body(tip));
+            cells.push(save.into());
+            // The connection's word, unless the save's words say it already.
+            let says = signed_out
+                || self
+                    .cloud
+                    .live
+                    .as_ref()
+                    .is_some_and(|l| l.sync.state() == SaveState::Offline);
+            if !says {
+                cells.push(
+                    Readout::new(line(dot.to_owned()))
+                        .tip(Tip::new("Bağlantı").body(about))
+                        .into(),
+                );
+            }
         }
         match &self.cloud.me {
             Some(me) => {
-                let workspace = self
-                    .document
-                    .as_ref()
-                    .and_then(|d| d.cloud_source())
-                    .map_or(String::new(), |s| format!(" · {}", s.workspace));
                 cells.push(
-                    Readout::new(text(format!("{}{workspace}", me.user.display_name)))
+                    Readout::new(line(me.user.display_name.clone()))
                         .icon(Icon::Globe)
                         .tip(Tip::new("Bulut hesabı").body(format!(
                             "{} olarak giriş yapıldı ({}).",
@@ -662,14 +689,14 @@ impl App {
                         .into(),
                 );
                 cells.push(
-                    Readout::new(text("Çıkış"))
+                    Readout::new(line("Çıkış".to_owned()))
                         .on_press(Message::Run("cloud.signOut"))
                         .tip("Bulut oturumunu kapatır")
                         .into(),
                 );
             }
             None => cells.push(
-                Readout::new(text("Buluta giriş"))
+                Readout::new(line("Buluta giriş".to_owned()))
                     .icon(Icon::Globe)
                     .on_press(Message::Run("cloud.signIn"))
                     .tip("KentOS sunucusunda hesabınızla oturum açar")
@@ -679,20 +706,26 @@ impl App {
         cells
     }
 
-    /// The connection's dot: çevrimiçi, çevrimdışı or eşitleniyor.
+    /// The connection's dot: çevrimiçi, çevrimdışı or eşitleniyor. Without a
+    /// session the work stays on this device, and the dot says so.
     pub(crate) fn link_cell(&self) -> (&'static str, Tone, &'static str) {
-        let offline = self.cloud.me.is_none() || self.cloud.link == Link::Offline;
-        if offline {
+        if self.cloud.me.is_none() {
+            (
+                "Çevrimdışı — değişiklikler bu cihazda saklanıyor",
+                Tone::Danger,
+                "Oturum açık değil ya da sunucuya ulaşılamıyor. Çalışmaya devam edebilirsiniz: değişiklikler bu cihazda saklanır; giriş yapınca gönderilir.",
+            )
+        } else if self.cloud.link == Link::Offline {
             (
                 "Çevrimdışı",
                 Tone::Danger,
-                "Sunucuya ulaşılamıyor ya da oturum açık değil. Çalışmaya devam edebilirsiniz: değişiklikler bu cihazda saklanır ve bağlantı gelince gönderilir.",
+                "Sunucuya ulaşılamıyor. Çalışmaya devam edebilirsiniz: değişiklikler bu cihazda saklanır ve bağlantı gelince gönderilir; sunucu 15 saniyede bir yeniden denenir.",
             )
         } else if self.syncing() {
             (
                 "Eşitleniyor",
                 Tone::Accent,
-                "Değişiklikler sunucuya gidiyor ya da başkalarının değişiklikleri alınıyor.",
+                "Değişiklikler sunucuya gidiyor.",
             )
         } else {
             (
