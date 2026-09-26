@@ -319,6 +319,11 @@ impl App {
                     doc.entity_count(),
                     doc.layer_count()
                 ));
+                if doc.legacy {
+                    self.output(
+                        "Dosya eski biçimde (KCAD v1). Kaydet, yeni biçimde (v2) yazmak için yer sorar; eski dosyanın üzerine kendiliğinden yazmaz.",
+                    );
+                }
                 // A draft belongs to the drawing it was drawn on.
                 self.cancel();
                 self.selected_layer = None;
@@ -627,21 +632,32 @@ impl App {
         )
     }
 
-    /// Saves to the drawing's file, or asks where (always, with `choose`).
-    /// What is written is the drawing as it is now, with its revision: a change
-    /// made while the file is written stays unsaved.
+    /// Saves to the drawing's file as `.kcad` v2, or asks where (always, with
+    /// `choose`, and for a drawing opened from a v1 file, which is never
+    /// written over by itself; docs/adr/0025). What is written is the drawing
+    /// as it is now, with its revision: a change made while the file is
+    /// written stays unsaved.
     fn save(&mut self, choose: bool) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Kaydedilecek çizim yok. Önce bir çizim açın (Ctrl+O).");
             return Task::none();
         };
-        let snapshot = doc.model.to_snapshot();
+        let snapshot = doc.model.to_snapshot_v2();
         let revision = doc.model.revision();
         let session = doc.session;
-        let known = doc.path.clone().filter(|_| !choose).or(match &self.picker {
-            Picker::File(path) => Some(path.clone()),
-            Picker::Dialog => None,
-        });
+        let title = if doc.legacy && !choose {
+            "Yeni biçimde kaydet (KCAD v2)"
+        } else {
+            "Farklı kaydet"
+        };
+        let known = doc
+            .path
+            .clone()
+            .filter(|_| !choose && !doc.legacy)
+            .or(match &self.picker {
+                Picker::File(path) => Some(path.clone()),
+                Picker::Dialog => None,
+            });
         Task::perform(
             async move {
                 let path = match known {
@@ -649,7 +665,7 @@ impl App {
                     None => {
                         let suggested = snapshot.name.trim_end_matches(".kcad").to_owned();
                         let file = rfd::AsyncFileDialog::new()
-                            .set_title("Farklı kaydet")
+                            .set_title(title)
                             .add_filter("KentOS çizimi (.kcad)", &["kcad"])
                             .set_file_name(format!("{suggested}.kcad"))
                             .save_file()

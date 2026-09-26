@@ -13,6 +13,8 @@ path = "src/main.rs"
 [dependencies]
 kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }
 kentos-contracts = { path = "../../crates/shared/contracts", default-features = false }
+# The project file, .kcad v2 (docs/specs/kcad-v2.md, docs/adr/0025): the shared codec the web runs in WASM.
+kentos-kcad = { path = "../../crates/shared/kcad" }
 # The drawing document: the web's CadDocument semantics, natively (docs/adr/0020).
 kentos-domain = { path = "../../crates/native/domain" }
 # The drawing area's wgpu pipeline (docs/adr/0019), fed through Iced's shader widget.

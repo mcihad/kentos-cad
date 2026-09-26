@@ -1,18 +1,24 @@
 //! The open drawing: a native document (`kentos_domain::Document`,
 //! docs/adr/0020) and the file it came from.
 //!
-//! Opening reads a `.kcad` v1 snapshot (`DocumentSnapshotV1`, ADR 0002)
-//! through the shared contracts into the document; saving writes the
-//! document's snapshot as the web writes it, so the desktop reads what the
-//! web saves and the other way round (ADR 0011 keeps v1 readable when the
-//! binary format comes). Every change goes through the document, with the
+//! Opening tells the file's kind by its content (docs/specs/kcad-v2.md §8):
+//! a `.kcad` v2 (binary, `kentos-kcad`) opens with every object's persistent
+//! id; a v1 (JSON, `DocumentSnapshotV1`) opens with ids derived from its
+//! content (docs/adr/0014) and is kept read-only: Save asks where to write the
+//! v2 file and never replaces the v1 original by itself (docs/adr/0025).
+//! Saving writes v2 as the web does, so the desktop reads what the web saves
+//! and the other way round. Every change goes through the document, with the
 //! web's rules: undo, the dirty flag and the saved revision.
 
 use std::collections::{BTreeMap, HashMap};
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use kentos_contracts::{DocumentSnapshotV1, LayerNode, LayerNodeType, ProjectSettings};
+use kentos_contracts::{
+    DocumentSnapshotV1, DocumentSnapshotV2, LayerNode, LayerNodeType, ProjectSettings,
+};
+use kentos_kcad::Sniff;
 
 /// A drawing and where it came from.
 #[derive(Debug, Clone)]
@@ -24,34 +30,70 @@ pub struct Document {
     /// that finishes after another drawing was opened applies to its own
     /// drawing only (CLAUDE.md §21.2).
     pub session: u64,
+    /// Opened from a `.kcad` v1 file: Save asks where to write the v2 file
+    /// instead of replacing the old one (docs/adr/0025).
+    pub legacy: bool,
+}
+
+fn session() -> u64 {
+    static OPENED: AtomicU64 = AtomicU64::new(0);
+    OPENED.fetch_add(1, Ordering::Relaxed) + 1
 }
 
 impl Document {
-    /// A drawing from a snapshot; refused when the document cannot hold it
+    /// A drawing from a v1 snapshot; refused when the document cannot hold it
     /// (a repeated object id, an object on a layer the file does not have).
+    /// With a path it came from a v1 file, which Save does not write over.
     pub fn new(snapshot: DocumentSnapshotV1, path: Option<PathBuf>) -> Result<Self, String> {
-        static OPENED: AtomicU64 = AtomicU64::new(0);
         Ok(Self {
             model: kentos_domain::Document::from_snapshot(snapshot)?,
+            legacy: path.is_some(),
             path,
-            session: OPENED.fetch_add(1, Ordering::Relaxed) + 1,
+            session: session(),
         })
     }
 
-    /// Reads a `.kcad` file; the reader refuses other formats and versions.
+    /// A drawing from a v2 snapshot, every object with the id the file gave it.
+    pub fn from_v2(snapshot: DocumentSnapshotV2, path: Option<PathBuf>) -> Result<Self, String> {
+        Ok(Self {
+            model: kentos_domain::Document::from_snapshot_v2(snapshot)?,
+            legacy: false,
+            path,
+            session: session(),
+        })
+    }
+
+    /// Reads a `.kcad` file, v2 or v1, whatever its name says; anything else
+    /// is refused with the reason.
     pub fn read(path: &Path) -> Result<Self, String> {
-        let text = std::fs::read_to_string(path)
-            .map_err(|e| format!("{} okunamadı: {e}", path.display()))?;
-        let snapshot =
-            DocumentSnapshotV1::from_json(&text).map_err(|e| format!("{}: {e}", path.display()))?;
-        Self::new(snapshot, Some(path.to_path_buf()))
-            .map_err(|e| format!("{}: {e}", path.display()))
+        let at = |e: String| format!("{}: {e}", path.display());
+        let data =
+            std::fs::read(path).map_err(|e| format!("{} okunamadı: {e}", path.display()))?;
+        match kentos_kcad::sniff(&data) {
+            Sniff::Kcad | Sniff::KcadDamaged => {
+                let snapshot = kentos_kcad::decode(&data).map_err(|e| at(e.message))?;
+                Self::from_v2(snapshot, Some(path.to_path_buf())).map_err(at)
+            }
+            Sniff::Json => {
+                let text = std::str::from_utf8(&data).map_err(|_| {
+                    at("metin UTF-8 değil; eski (v1) bir KentOS çizimi okunamadı.".to_owned())
+                })?;
+                let snapshot = DocumentSnapshotV1::from_json(text).map_err(at)?;
+                Self::new(snapshot, Some(path.to_path_buf())).map_err(at)
+            }
+            Sniff::Empty => Err(at("dosya boş; içinde çizim yok.".to_owned())),
+            Sniff::Foreign => Err(at(
+                "KentOS çizim dosyası değil. DXF ve koordinat listeleri İçe aktar ile açılır."
+                    .to_owned(),
+            )),
+        }
     }
 
     /// A save of `revision` to `path` finished: the drawing is clean unless it
-    /// changed meanwhile (CLAUDE.md §4.8).
+    /// changed meanwhile (CLAUDE.md §4.8), and it lives in a v2 file now.
     pub fn saved(&mut self, path: PathBuf, revision: u64) {
         self.path = Some(path);
+        self.legacy = false;
         self.model.mark_saved(revision);
     }
 
@@ -107,18 +149,55 @@ impl Document {
     }
 }
 
-/// Writes a drawing as the web does: one line of JSON and a newline. Written
-/// to a temporary file first and renamed over the old one, so a failed save
-/// never leaves a half-written drawing (TODOS.md FILE-16).
-pub fn write(snapshot: &DocumentSnapshotV1, path: &Path) -> Result<(), String> {
-    let text = serde_json::to_string(snapshot).map_err(|e| format!("çizim yazılamadı: {e}"))?;
-    let temporary = path.with_extension("kcad.yaziliyor");
-    std::fs::write(&temporary, format!("{text}\n"))
-        .and_then(|()| std::fs::rename(&temporary, path))
-        .map_err(|e| {
-            let _ = std::fs::remove_file(&temporary);
-            format!("{} yazılamadı: {e}", path.display())
-        })
+/// Writes a drawing as a `.kcad` v2 file, as the web does (TODOS.md FILE-16):
+/// the bytes are read back to the same drawing before anything touches the
+/// disk (`encode_verified`); they go to a new temporary file beside the
+/// target, which is flushed to the disk and read back, and only then renamed
+/// over the target in one step. A save that fails anywhere leaves the
+/// previous file as it was and removes the temporary one.
+pub fn write(snapshot: &DocumentSnapshotV2, path: &Path) -> Result<(), String> {
+    let bytes = kentos_kcad::encode_verified(snapshot).map_err(|e| e.message)?;
+    let dir = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let name = path
+        .file_name()
+        .map_or_else(|| "cizim".into(), |n| n.to_string_lossy());
+    static SAVES: AtomicU64 = AtomicU64::new(0);
+    let temporary = dir.join(format!(
+        ".{name}.{}-{}.yaziliyor",
+        std::process::id(),
+        SAVES.fetch_add(1, Ordering::Relaxed)
+    ));
+    let result = (|| -> std::io::Result<()> {
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)?;
+        file.write_all(&bytes)?;
+        file.sync_all()?;
+        drop(file);
+        if std::fs::read(&temporary)? != bytes {
+            return Err(std::io::Error::other(
+                "diskten geri okunan baytlar yazılanlarla aynı değil",
+            ));
+        }
+        std::fs::rename(&temporary, path)?;
+        // The new name itself is on the disk only when the directory is flushed (POSIX).
+        #[cfg(unix)]
+        if let Ok(d) = std::fs::File::open(dir) {
+            let _ = d.sync_all();
+        }
+        Ok(())
+    })();
+    result.map_err(|e| {
+        let _ = std::fs::remove_file(&temporary);
+        format!(
+            "{} yazılamadı: {e}. Önceki dosya olduğu gibi duruyor; başka bir yere kaydetmeyi deneyin (Farklı kaydet).",
+            path.display()
+        )
+    })
 }
 
 /// The name of an EPSG code, from the shared CRS registry the web also reads
@@ -155,29 +234,123 @@ mod tests {
     use super::*;
 
     const DEMO: &str = include_str!("../../../fixtures/document/v1/sample.json");
+    const KCAD: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/kcad/v2/");
+
+    /// A fresh directory under the system's temporary one; never the user's files.
+    fn scratch(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "kentos-desktop-{name}-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("temporary directory");
+        dir
+    }
+
+    fn uids(doc: &Document) -> Vec<kentos_domain::Uuid> {
+        doc.model
+            .entities()
+            .map(|e| {
+                doc.model
+                    .uid(kentos_domain::Slot(e.base().id))
+                    .expect("an id")
+            })
+            .collect()
+    }
 
     #[test]
-    fn a_web_file_is_read_counted_and_written_back_unchanged() {
-        let snapshot = DocumentSnapshotV1::from_json(DEMO).expect("the web's demo file reads");
-        let doc = Document::new(snapshot.clone(), None).expect("the document holds it");
+    fn a_web_v1_file_opens_read_only_and_saves_as_the_reference_v2() {
+        let dir = scratch("v1");
+        let old = dir.join("örnek.kcad");
+        std::fs::write(&old, DEMO).expect("a v1 file");
+        let doc = Document::read(&old).expect("the web's v1 file reads");
+        assert!(doc.legacy, "a v1 file is not written over");
         assert!(doc.layer_count() > 0);
         assert_eq!(doc.kinds().values().sum::<usize>(), doc.entity_count());
-        assert_eq!(doc.entity_count(), snapshot.entities.len());
+        assert_eq!(doc.entity_count(), 13);
 
-        let dir = std::env::temp_dir().join(format!("kentos-desktop-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).expect("temporary directory");
+        // Saved as v2: exactly the bytes the independent writer made of the same file
+        // (fixtures/kcad/v2/migrated.kcad): ids, project id and source record included.
+        let new = dir.join("örnek-v2.kcad");
+        write(&doc.model.to_snapshot_v2(), &new).expect("writes");
+        let bytes = std::fs::read(&new).expect("written");
+        assert!(bytes == std::fs::read(format!("{KCAD}migrated.kcad")).expect("fixture"));
+        assert_eq!(std::fs::read_to_string(&old).expect("still there"), DEMO);
+
+        let again = Document::read(&new).expect("reads back");
+        assert!(!again.legacy);
+        assert_eq!(uids(&again), uids(&doc));
+        assert_eq!(again.model.project_id(), doc.model.project_id());
+        assert_eq!(again.model.migrated_from(), doc.model.migrated_from());
+        assert_eq!(again.model.to_snapshot(), doc.model.to_snapshot());
+        // No temporary file is left beside the saved one.
+        let names: Vec<String> = std::fs::read_dir(&dir)
+            .expect("lists")
+            .map(|e| e.expect("entry").file_name().to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(names.len(), 2, "{names:?}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_failed_save_leaves_the_previous_file_as_it_was() {
+        let dir = scratch("failed");
         let path = dir.join("cizim.kcad");
-        write(&doc.model.to_snapshot(), &path).expect("writes");
-        // Byte for byte what writing the file's own snapshot gives: nothing lost or reordered.
-        assert_eq!(
-            std::fs::read_to_string(&path).expect("written"),
-            format!(
-                "{}\n",
-                serde_json::to_string(&snapshot).expect("serializes")
-            )
-        );
-        let again = Document::read(&path).expect("reads back");
-        assert_eq!(again.model.to_snapshot(), snapshot);
+        let doc = Document::new(DocumentSnapshotV1::from_json(DEMO).expect("reads"), None)
+            .expect("opens");
+        write(&doc.model.to_snapshot_v2(), &path).expect("writes");
+        let good = std::fs::read(&path).expect("written");
+
+        // The drawing cannot be encoded: nothing is written.
+        let mut broken = doc.model.to_snapshot_v2();
+        broken.origin.x = f64::NAN;
+        let error = write(&broken, &path).expect_err("refused");
+        assert!(error.contains("NaN"), "{error}");
+        assert!(std::fs::read(&path).expect("still there") == good);
+
+        // The disk refuses the last step (the target is a directory now): the temporary file
+        // goes, the target stays.
+        let blocked = dir.join("dolu.kcad");
+        std::fs::create_dir_all(blocked.join("içerik")).expect("a directory in the way");
+        let error = write(&doc.model.to_snapshot_v2(), &blocked).expect_err("refused");
+        assert!(error.contains("Önceki dosya olduğu gibi duruyor"), "{error}");
+        assert!(blocked.join("içerik").is_dir());
+        let left: Vec<String> = std::fs::read_dir(&dir)
+            .expect("lists")
+            .map(|e| e.expect("entry").file_name().to_string_lossy().into_owned())
+            .filter(|n| n.ends_with(".yaziliyor"))
+            .collect();
+        assert!(left.is_empty(), "{left:?}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn what_is_not_a_drawing_is_refused_with_the_reason() {
+        let dir = scratch("foreign");
+        let cases = [
+            ("bos.kcad", Vec::new(), "dosya boş"),
+            (
+                "cizim.dxf.kcad",
+                b"  0\nSECTION\n".to_vec(),
+                "İçe aktar ile açılır",
+            ),
+            (
+                "bozuk.kcad",
+                std::fs::read(format!("{KCAD}broken/bad-hash.kcad")).expect("fixture"),
+                "SHA-256",
+            ),
+            (
+                "stil.kcad",
+                br#"{"format":"kentos-style","version":1}"#.to_vec(),
+                "KentOS çizim dosyası değil",
+            ),
+        ];
+        for (name, data, says) in cases {
+            let path = dir.join(name);
+            std::fs::write(&path, data).expect("written");
+            let error = Document::read(&path).expect_err(name);
+            assert!(error.contains(says), "{name}: {error}");
+        }
         let _ = std::fs::remove_dir_all(&dir);
     }
 
