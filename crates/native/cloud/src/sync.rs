@@ -235,6 +235,8 @@ pub struct ProjectSync {
     /// layer that is gone): never sent, but written to the next draft again,
     /// so unsent work is not lost, until an edit here replaces them (draft.rs).
     held: BTreeMap<Uuid, DraftChange>,
+    /// What the server's side changed since the local copy last took it (base.rs).
+    gathered: base::Gathered,
     tries: u32,
 }
 
@@ -287,6 +289,7 @@ impl ProjectSync {
             cursor: opened.info.event_cursor.clone(),
             own: HashSet::new(),
             held: BTreeMap::new(),
+            gathered: base::Gathered::default(),
             tries: 0,
         })
     }
@@ -510,23 +513,17 @@ impl ProjectSync {
         for p in &f.planned {
             let id = p.id();
             match p {
-                Planned::Delete { .. } => {
-                    self.known.remove(&id);
-                }
+                Planned::Delete { .. } => self.forget(id),
                 Planned::Create { entity, .. } | Planned::Update { entity, .. } => {
                     match result.versions.get(&id.to_string()) {
-                        Some(version) => {
-                            self.known.insert(
-                                id,
-                                Tracked {
-                                    version: version.clone(),
-                                    entity: entity.clone(),
-                                },
-                            );
-                        }
-                        None => {
-                            self.known.remove(&id);
-                        }
+                        Some(version) => self.know(
+                            id,
+                            Tracked {
+                                version: version.clone(),
+                                entity: entity.clone(),
+                            },
+                        ),
+                        None => self.forget(id),
                     }
                 }
             }
@@ -539,6 +536,7 @@ impl ProjectSync {
             self.meta_version = result.meta_version.clone();
             self.meta_base = meta;
             self.meta_dirty = self.meta_base.patch(doc).is_some();
+            self.meta_known();
         }
         self.tries = 0;
         self.error = None;
@@ -607,6 +605,7 @@ impl ProjectSync {
             if c.reason == ConflictReason::Project {
                 if let Some(v) = c.actual {
                     self.meta_version = v;
+                    self.meta_known();
                 }
                 continue;
             }
@@ -614,18 +613,14 @@ impl ProjectSync {
                 continue;
             };
             match (c.actual, c.server) {
-                (Some(version), Some(record)) => {
-                    self.known.insert(
-                        id,
-                        Tracked {
-                            version,
-                            entity: record.entity,
-                        },
-                    );
-                }
-                _ => {
-                    self.known.remove(&id);
-                }
+                (Some(version), Some(record)) => self.know(
+                    id,
+                    Tracked {
+                        version,
+                        entity: record.entity,
+                    },
+                ),
+                _ => self.forget(id),
             }
             self.dirty.insert(id);
         }
@@ -654,10 +649,13 @@ impl ProjectSync {
     }
 }
 
+mod base;
 mod draft;
 mod remote;
 #[cfg(test)]
 mod tests;
 
+pub(crate) use base::objects_by_id;
+pub use base::{BaseMeta, BaseObject, BaseSnapshot, BaseStep};
 pub use draft::{DRAFT_VERSION, Draft, DraftChange, DraftMeta, Restored};
 pub use remote::{Incoming, Remote, Taken};

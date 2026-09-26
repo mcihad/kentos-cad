@@ -41,13 +41,18 @@ export function memoryFile(name: string, opts: { data?: string | Uint8Array; fai
   return file satisfies DrawingFileHandle;
 }
 
-/** A cloud project as the file service sees it: open or not, autosaving or not, and how many changes stay unsent. */
-export function fakeCloud(open: { name: string; canWrite: boolean; unsent: number } | null) {
+/**
+ * A cloud project as the file service sees it: open or not, autosaving or
+ * not, and how many changes stay unsent. A database project (the default)
+ * keeps its changes in a device draft; a file project's are saved by Kaydet.
+ */
+export function fakeCloud(open: { name: string; canWrite: boolean; unsent: number; storage?: 'database' | 'file' } | null) {
   const cloud = {
-    project: { value: open ? { name: open.name, canWrite: open.canWrite } : null },
+    project: { value: open ? { name: open.name, canWrite: open.canWrite, storage: open.storage ?? 'database' } : null },
     sync: { value: null as { state: { value: string } } | null },
     left: 0,
-    autosaves: () => !!cloud.project.value?.canWrite,
+    autosaves: () => !!cloud.project.value?.canWrite && cloud.project.value.storage !== 'file',
+    keepsDeviceDraft: () => !!cloud.project.value && cloud.project.value.storage !== 'file',
     leave: async () => {
       cloud.left++;
       cloud.project.value = null;

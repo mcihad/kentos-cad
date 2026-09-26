@@ -29,6 +29,7 @@ pub mod drafts;
 pub mod failure;
 pub mod follow;
 pub mod open;
+pub mod replica;
 mod runtime;
 pub mod saving;
 pub mod sync;
@@ -37,8 +38,9 @@ pub use api::{CatalogQuery, Cloud, Download, Progress};
 pub use drafts::{DraftKey, DraftStore, Loaded};
 pub use failure::{ApiFailure, Failure};
 pub use open::{Opened, Revision, Source, open};
+pub use replica::{Kept, Replica, ReplicaError, ReplicaStore};
 pub use saving::{Uploaded, conflicting_revision, project_create, save_revision, upload_new};
 pub use sync::{
-    After, Conflict, Draft, DraftChange, DraftMeta, Incoming, ProjectSync, Remote, Restored,
-    SaveState, Taken,
+    After, BaseMeta, BaseObject, BaseSnapshot, BaseStep, Conflict, Draft, DraftChange, DraftMeta,
+    Incoming, ProjectSync, Remote, Restored, SaveState, Taken,
 };

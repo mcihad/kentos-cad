@@ -12,7 +12,8 @@
 //!
 //! - the command that was on its way goes first, as it was: if it had been
 //!   committed the server answers from its log, and its changes are the
-//!   server's then;
+//!   server's then. Its changes are in the drawing at once (this device may
+//!   have no connection to wait for) and count as unsent until it is answered;
 //! - every other change goes into the drawing as unsent local work, without
 //!   an undo step; one whose base the server moved past meanwhile is a
 //!   conflict (the drawing shows the local copy until the user chooses), and
@@ -20,7 +21,7 @@
 //! - a change the drawing cannot take (its layer is gone) stays in the next
 //!   draft, unsent, and the user is told.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use kentos_contracts::{
@@ -32,7 +33,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use super::remote::is_layer;
-use super::{Conflict, Inflight, Meta, PROJECT_KEY, Planned, ProjectSync, SaveState, same};
+use super::{Conflict, Inflight, Meta, PROJECT_KEY, Planned, ProjectSync, SaveState};
 
 /// The draft format this code writes (the web's `DRAFT_VERSION`).
 pub const DRAFT_VERSION: u32 = 2;
@@ -106,15 +107,6 @@ fn planned_of(change: &FeatureChange, expected: &BTreeMap<String, String>) -> Op
             expected: expected.get(id)?.clone(),
         },
     })
-}
-
-/// Whether two object states are the same but for the objects' slots.
-fn same_state(a: &Option<Entity>, b: &Option<Entity>) -> bool {
-    match (a, b) {
-        (Some(a), Some(b)) => same(a, b),
-        (None, None) => true,
-        _ => false,
-    }
 }
 
 impl Meta {
@@ -200,7 +192,7 @@ impl ProjectSync {
         self.observe(doc);
         let mut restored = Restored::default();
         // The command on its way goes again first, with its key; its changes are its own.
-        let mut carried: HashMap<Uuid, Option<Entity>> = HashMap::new();
+        let mut carried: HashSet<Uuid> = HashSet::new();
         if let Some(envelope) = draft.inflight
             && self.inflight.is_none()
         {
@@ -211,15 +203,7 @@ impl ProjectSync {
                         .iter()
                         .filter_map(|c| planned_of(c, &envelope.expected_versions))
                         .collect();
-                    for p in &planned {
-                        let entity = match p {
-                            Planned::Create { entity, .. } | Planned::Update { entity, .. } => {
-                                Some(entity.clone())
-                            }
-                            Planned::Delete { .. } => None,
-                        };
-                        carried.insert(p.id(), entity);
-                    }
+                    carried.extend(planned.iter().map(Planned::id));
                     let meta = input.project.as_ref().map(|patch| self.meta_base.patched(patch));
                     self.own.insert(envelope.request_id.clone());
                     self.inflight = Some(Inflight {
@@ -267,10 +251,6 @@ impl ProjectSync {
                 ));
                 continue;
             };
-            // In the command on its way, exactly as it went: its answer settles it.
-            if carried.get(&id).is_some_and(|e| same_state(e, &c.entity)) {
-                continue;
-            }
             // Edited in this opening already: the newer edit wins.
             if self.plan(doc, id).is_some() {
                 continue;
@@ -290,9 +270,10 @@ impl ProjectSync {
                 self.held.insert(id, c);
                 continue;
             }
-            // The server moved past its base meanwhile (a command the draft carried is answered first).
-            if !carried.contains_key(&id) && c.base.as_deref() != server.map(|t| t.version.as_str())
-            {
+            // The server moved past its base meanwhile. What the command on its way carries is
+            // not checked here: its answer (or its refusal, a conflict then) settles it, and the
+            // drawing shows it at once, since this device may have no connection to wait for.
+            if !carried.contains(&id) && c.base.as_deref() != server.map(|t| t.version.as_str()) {
                 conflicts.push(Conflict {
                     id: id.to_string(),
                     reason: if server.is_some() {

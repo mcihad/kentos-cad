@@ -129,8 +129,12 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   };
   registerCloudCommands(ctx, {
     signIn: (then) => lazy(ctx, import('../ui/cloud/LoginDialog'), (m) => m.openLoginDialog(ctx, then)),
-    projects: (mode, pick) => lazy(ctx, import('../ui/cloud/ProjectsDialog'), (m) => m.openProjectsDialog(ctx, mode, pick)),
-    conflicts: () => lazy(ctx, import('../ui/cloud/ConflictDialog'), (m) => m.openConflictDialog(ctx)),
+    projects: (mode, pick, tab) => lazy(ctx, import('../ui/cloud/ProjectsDialog'), (m) => m.openProjectsDialog(ctx, mode, pick, tab)),
+    conflicts: () =>
+      ctx.cloud.file.value
+        ? lazy(ctx, import('../ui/cloud/FileConflict'), (m) => void m.resolveFileConflict(ctx))
+        : lazy(ctx, import('../ui/cloud/ConflictDialog'), (m) => m.openConflictDialog(ctx)),
+    openNewest: () => lazy(ctx, import('../ui/cloud/FileConflict'), (m) => void m.offerNewest(ctx)),
     rename: () => {
       const t = openTarget();
       if (t) lazy(ctx, import('../ui/cloud/ProjectActions'), (m) => m.openRenameDialog(ctx, t));
@@ -144,6 +148,15 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
       if (t) lazy(ctx, import('../ui/cloud/ShareDialog'), (m) => m.openShareDialog(ctx, t));
     },
   });
+  // A file project's Kaydet that met a newer revision asks what to do with the drawing (docs/adr/0038).
+  ctx.cloud.fileConflict = () =>
+    import('../ui/cloud/FileConflict').then(
+      (m) => m.resolveFileConflict(ctx),
+      (e: Error) => {
+        ctx.log.error(`Pencere yüklenemedi: ${e.message}. Bağlantıyı denetleyip yeniden deneyin.`);
+        return false;
+      },
+    );
   // The open cloud project's access taken away: say so, and offer a local copy (TODOS.md CLOUD-13).
   ctx.cloud.accessLost.subscribe((lost) => lost && lazy(ctx, import('../ui/cloud/AccessLostNotice'), (m) => m.openAccessLostNotice(ctx, lost)));
   registerDefaultKeybindings(ctx);

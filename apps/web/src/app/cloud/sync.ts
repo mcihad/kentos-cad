@@ -475,6 +475,11 @@ export class ProjectSync {
     this.core.own.add(requestId);
   }
 
+  /** Whether a request was this window's own (its event is not someone else's). */
+  ownRequest(requestId: string): boolean {
+    return this.core.own.has(requestId);
+  }
+
   /**
    * What this account may do changed while the project is open (a manager
    * changed its role). Losing the right to write stops sending: what waits,

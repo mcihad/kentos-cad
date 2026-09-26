@@ -185,11 +185,14 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       category: F,
       icon: 'save',
       description:
-        'Bulut projesinde bekleyen değişiklikleri hemen gönderir (zaten kendiliğinden kaydedilir). Yerel çizimi .kcad dosyasına yazar; dosya yazılamazsa değişiklikler kaydedilmemiş sayılır.',
+        'Bulut projesinde bekleyen değişiklikleri hemen gönderir (zaten kendiliğinden kaydedilir). Bulut dosya projesinde yeni bir revizyon yazar. Yerel çizimi .kcad dosyasına yazar; dosya yazılamazsa değişiklikler kaydedilmemiş sayılır.',
       aliases: ['KAYDET', 'SAVE'],
       run: () => {
         if (!ctx.cloud.project.value) return void ctx.files.save();
-        const state = ctx.cloud.sync.value?.state.value;
+        // A file project: a new revision on the one the drawing came from (docs/adr/0038).
+        const file = ctx.cloud.file.value;
+        const state = ctx.cloud.sync.value?.state.value ?? file?.endedBy ?? undefined;
+        if (file && !file.endedBy) return void ctx.cloud.saveFile();
         if (state === 'deleted' || state === 'revoked') {
           // Nothing can be saved to a deleted project, or one this account may not reach: the next useful step is a local file.
           ctx.log.warn(
@@ -202,7 +205,7 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
         if (state === 'archived') {
           // Nothing is saved to an archived project (docs/adr/0028): the drawing goes to a local file and leaves the project.
           ctx.log.warn('Bu bulut projesi arşivlenmiş; çizim buluta kaydedilemez. Yerel bir dosyaya kaydedin.');
-          return void ctx.files.saveAs().then((saved) => saved && ctx.cloud.sync.value?.state.value === 'archived' && ctx.cloud.detach());
+          return void ctx.files.saveAs().then((saved) => saved && (ctx.cloud.sync.value?.state.value ?? ctx.cloud.file.value?.endedBy) === 'archived' && ctx.cloud.detach());
         }
         void ctx.cloud.flush().then((ok) =>
           ok ? ctx.log.success('Buluta kaydedildi.') : ctx.log.warn('Bulut kaydı tamamlanamadı; durum çubuğundaki kayıt durumuna bakın.'),

@@ -76,3 +76,11 @@
   - iki nokta birden ya da hiçbiri reddedilir; veritabanı projesinde `fileRevision` reddedilir; proje açamayan görüntüleyici 403 alır.
   - HTTP: komut yolundan geri yükleme.
   - Kasıtlı bozma: içe aktarmada öznitelikler boş yazılınca nesne karşılaştırması düştü; geri alındı.
+
+## Web (26 Eylül, ADR 0038)
+
+- Katalogun **Geçmiş** sekmesi kontrol noktalarını (ad, not, tür, revizyon, kim, ne zaman, nesne) ve dosya projesinin revizyonlarını listeler; her biri indirilir ve yeni proje olarak geri yüklenir.
+- “Kontrol noktası oluştur…” adı ve notu sorar; dosya projesinde revizyon seçilir, varsayılan en yenisidir. Açık veritabanı projesinin gönderilmemiş değişiklikleri önce gönderilir.
+- “Sil…” sorar. Düğme yalnız oluşturana ya da `project.edit` sahibine açıktır; ötekilere kapalıdır ve nedenini söyler.
+- Geri yükleme isteğe bağlı adı ve çalışma alanını sorar; yeni proje kopya gibi açılır, kaynak değişmez.
+- Sekme açıkken `project.checkpoint` (ve `project.file`) olayı listeyi yeniden sordurur; açık olmayan proje için sekmenin kendi kanalı vardır.

@@ -7,9 +7,13 @@ import type { CommitResult } from '../../contracts/generated/CommitResult';
 import type { EventPage } from '../../contracts/generated/EventPage';
 import type { FeatureConflict } from '../../contracts/generated/FeatureConflict';
 import type { FeaturePage } from '../../contracts/generated/FeaturePage';
+import type { FileRevisions } from '../../contracts/generated/FileRevisions';
+import type { FileUpload } from '../../contracts/generated/FileUpload';
+import type { FileUploadBegin } from '../../contracts/generated/FileUploadBegin';
 import type { Me } from '../../contracts/generated/Me';
 import type { ProjectAccessChange } from '../../contracts/generated/ProjectAccessChange';
 import type { ProjectAccessList } from '../../contracts/generated/ProjectAccessList';
+import type { ProjectCheckpoints } from '../../contracts/generated/ProjectCheckpoints';
 import type { ProjectCreate } from '../../contracts/generated/ProjectCreate';
 import type { ProjectDetails } from '../../contracts/generated/ProjectDetails';
 import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
@@ -24,6 +28,13 @@ import type { ShareCandidates } from '../../contracts/generated/ShareCandidates'
  * `x-kentos-client: web`, which the server requires of browser requests
  * that change something (cross-site request forgery). Failures, network
  * ones included, become `ApiFailure` with the server's Turkish message.
+ *
+ * Files (docs/adr/0031, 0033, 0034): an upload's bytes go in one `PUT`
+ * whose progress is heard (`XMLHttpRequest`: `fetch` cannot report what it
+ * sent); a `.kcad` comes back as bytes, read in parts with progress, with
+ * what its headers say (SHA-256, revision, event cursor, file name). A
+ * download gives up only when no byte arrived for half a minute, however
+ * long the whole file takes.
  */
 
 export class ApiFailure extends Error {
@@ -82,6 +93,25 @@ export class ApiFailure extends Error {
   }
 }
 
+/** How far a transfer is: bytes so far, of all (0 when the total is not known). */
+export type Transfer = (done: number, total: number) => void;
+
+/** A `.kcad` file as the server sent it, with what its headers said. */
+export interface KcadDownload {
+  bytes: Uint8Array<ArrayBuffer>;
+  /** The server's SHA-256 of the bytes (`ETag`), lowercase hex; null when it gave none. */
+  sha256: string | null;
+  /** `X-Kentos-Revision`: the file revision, or the data revision of a snapshot. */
+  revision: string | null;
+  /** `X-Kentos-Event-Cursor`: the event cursor of a snapshot's moment. */
+  cursor: string | null;
+  /** The file name the server suggests. */
+  fileName: string | null;
+}
+
+/** Sends an upload's bytes (`PUT`); the browser's is `XMLHttpRequest`, tests pass their own. */
+export type BytesSender = (url: string, bytes: Uint8Array, headers: Record<string, string>, progress: Transfer, signal?: AbortSignal) => Promise<{ status: number; text: string }>;
+
 /** One page of a view of the account's catalog (`GET /v1/me/catalog`, docs/adr/0028). */
 export interface CatalogRequest {
   view: CatalogView;
@@ -136,19 +166,95 @@ export interface CloudApi {
   /** A project's catalog entry with its object and layer counts and extent (410 in the trash). */
   details(tenant: string, project: string, signal?: AbortSignal): Promise<ProjectDetails>;
   /**
-   * A catalog or lifecycle command (`project.rename` … `project.favorite`,
-   * docs/adr/0028) on the project the envelope names; the answer is the command's own output.
+   * A product command other than `project.changes` on the project the
+   * envelope names (the catalog's, `project.file.commit`, `project.import`,
+   * the checkpoints'); the answer is the command's own output.
    */
   lifecycle<T>(envelope: CommandEnvelope): Promise<T>;
+  /** Opens an upload of a file of this size and SHA-256 (`POST …/uploads`, docs/adr/0031). */
+  beginUpload(tenant: string, project: string, begin: FileUploadBegin): Promise<FileUpload>;
+  /** Sends an upload's bytes; the answer is the upload once the server verified them. */
+  sendUpload(tenant: string, project: string, upload: string, bytes: Uint8Array, progress?: Transfer, signal?: AbortSignal): Promise<FileUpload>;
+  /** One of the caller's own uploads as it stands: whether its bytes arrived (`GET …/uploads/{id}`, docs/adr/0040). */
+  uploadState(tenant: string, project: string, upload: string, signal?: AbortSignal): Promise<FileUpload>;
+  /** A file project's revisions, newest first (`GET …/files`). */
+  fileRevisions(tenant: string, project: string, signal?: AbortSignal): Promise<FileRevisions>;
+  /** One revision's bytes (`GET …/files/{n}`). */
+  fileRevision(tenant: string, project: string, revision: string, progress?: Transfer, signal?: AbortSignal): Promise<KcadDownload>;
+  /** A database project as one `.kcad` of one moment (`GET …/snapshot`, docs/adr/0033). */
+  snapshot(tenant: string, project: string, progress?: Transfer, signal?: AbortSignal): Promise<KcadDownload>;
+  /** A project's checkpoints, newest first (`GET …/checkpoints`, docs/adr/0034). */
+  checkpoints(tenant: string, project: string, signal?: AbortSignal): Promise<ProjectCheckpoints>;
+  /** A checkpoint's file (`GET …/checkpoints/{id}`). */
+  checkpointFile(tenant: string, project: string, checkpoint: string, progress?: Transfer, signal?: AbortSignal): Promise<KcadDownload>;
 }
 
 const TIMEOUT_MS = 30_000;
+/** An upload's `PUT` may take as long as the server allows it (docs/adr/0031: ten minutes). */
+const UPLOAD_TIMEOUT_MS = 10 * 60_000;
+
+/** A failure from a body the server sent as text (JSON when it is the server's own). */
+function failureOf(status: number, text: string): ApiFailure {
+  let body: Partial<ApiError> = {};
+  try {
+    body = (JSON.parse(text) ?? {}) as Partial<ApiError>;
+  } catch {
+    // A proxy's page, or nothing: the status says enough.
+  }
+  return new ApiFailure(status, body, `Sunucu ${status} yanıtı verdi.`);
+}
+
+/** The browser's upload: `XMLHttpRequest`, whose upload reports its progress. */
+export const xhrSender: BytesSender = (url, bytes, headers, progress, signal) =>
+  new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', url);
+    xhr.withCredentials = true;
+    xhr.timeout = UPLOAD_TIMEOUT_MS;
+    for (const [k, v] of Object.entries(headers)) xhr.setRequestHeader(k, v);
+    xhr.upload.onprogress = (e) => progress(e.loaded, e.lengthComputable ? e.total : bytes.byteLength);
+    const stop = () => xhr.abort();
+    signal?.addEventListener('abort', stop);
+    const done = () => signal?.removeEventListener('abort', stop);
+    xhr.onload = () => {
+      done();
+      resolve({ status: xhr.status, text: xhr.responseText });
+    };
+    xhr.onerror = xhr.ontimeout = () => {
+      done();
+      reject(new ApiFailure(0, { error: 'network' }, 'Sunucuya ulaşılamadı; dosyanın gönderimi yarıda kaldı.'));
+    };
+    xhr.onabort = () => {
+      done();
+      reject(new ApiFailure(499, { error: 'aborted' }, 'Gönderim durduruldu.'));
+    };
+    xhr.send(bytes as Uint8Array<ArrayBuffer>);
+  });
+
+/** The quoted value of a header, unquoted (`"abc"` → `abc`). */
+const unquoted = (v: string | null) => (v ? v.replace(/^W\//, '').replace(/^"|"$/g, '') : null);
+
+/** The file name of a `Content-Disposition`: its UTF-8 form when it has one. */
+export function dispositionName(v: string | null): string | null {
+  if (!v) return null;
+  const utf8 = /filename\*=UTF-8''([^;]+)/i.exec(v);
+  if (utf8) {
+    try {
+      return decodeURIComponent(utf8[1]);
+    } catch {
+      // Not percent-encoding after all: the plain name below.
+    }
+  }
+  return /filename="([^"]*)"/i.exec(v)?.[1] ?? null;
+}
 
 export class HttpCloudApi implements CloudApi {
   private readonly fetcher: typeof fetch;
+  private readonly sender: BytesSender;
 
-  constructor(fetcher: typeof fetch = (...a) => fetch(...a)) {
+  constructor(fetcher: typeof fetch = (...a) => fetch(...a), sender: BytesSender = xhrSender) {
     this.fetcher = fetcher;
+    this.sender = sender;
   }
 
   private async call<T>(method: string, path: string, body?: unknown, headers: Record<string, string> = {}, signal?: AbortSignal): Promise<T> {
@@ -246,5 +352,95 @@ export class HttpCloudApi implements CloudApi {
   }
   lifecycle<T>(envelope: CommandEnvelope) {
     return this.call<T>('POST', `${this.base(envelope.tenantId, envelope.projectId)}/commands`, envelope);
+  }
+  beginUpload(tenant: string, project: string, begin: FileUploadBegin) {
+    return this.call<FileUpload>('POST', `${this.base(tenant, project)}/uploads`, begin);
+  }
+  async sendUpload(tenant: string, project: string, upload: string, bytes: Uint8Array, progress: Transfer = () => {}, signal?: AbortSignal) {
+    const url = `${this.base(tenant, project)}/uploads/${encodeURIComponent(upload)}`;
+    const headers = { accept: 'application/json', 'content-type': 'application/octet-stream', 'x-kentos-client': 'web' };
+    const r = await this.sender(url, bytes, headers, progress, signal);
+    if (r.status < 200 || r.status >= 300) throw failureOf(r.status, r.text);
+    try {
+      return JSON.parse(r.text) as FileUpload;
+    } catch {
+      throw new ApiFailure(r.status, {}, 'Sunucunun yanıtı okunamadı.');
+    }
+  }
+  uploadState(tenant: string, project: string, upload: string, signal?: AbortSignal) {
+    return this.call<FileUpload>('GET', `${this.base(tenant, project)}/uploads/${encodeURIComponent(upload)}`, undefined, {}, signal);
+  }
+  fileRevisions(tenant: string, project: string, signal?: AbortSignal) {
+    return this.call<FileRevisions>('GET', `${this.base(tenant, project)}/files`, undefined, {}, signal);
+  }
+  fileRevision(tenant: string, project: string, revision: string, progress?: Transfer, signal?: AbortSignal) {
+    return this.download(`${this.base(tenant, project)}/files/${encodeURIComponent(revision)}`, progress, signal);
+  }
+  snapshot(tenant: string, project: string, progress?: Transfer, signal?: AbortSignal) {
+    return this.download(`${this.base(tenant, project)}/snapshot`, progress, signal);
+  }
+  checkpoints(tenant: string, project: string, signal?: AbortSignal) {
+    return this.call<ProjectCheckpoints>('GET', `${this.base(tenant, project)}/checkpoints`, undefined, {}, signal);
+  }
+  checkpointFile(tenant: string, project: string, checkpoint: string, progress?: Transfer, signal?: AbortSignal) {
+    return this.download(`${this.base(tenant, project)}/checkpoints/${encodeURIComponent(checkpoint)}`, progress, signal);
+  }
+
+  /**
+   * A file's bytes, read part by part (`progress` hears them), with what its
+   * headers say. It gives up when no byte arrived for `TIMEOUT_MS`, not after
+   * a fixed time: a large file on a slow line is still coming.
+   */
+  private async download(path: string, progress: Transfer = () => {}, signal?: AbortSignal): Promise<KcadDownload> {
+    const abort = new AbortController();
+    let quiet = setTimeout(() => abort.abort(), TIMEOUT_MS);
+    const alive = () => {
+      clearTimeout(quiet);
+      quiet = setTimeout(() => abort.abort(), TIMEOUT_MS);
+    };
+    const onAbort = () => abort.abort();
+    signal?.addEventListener('abort', onAbort);
+    const lost = () =>
+      new ApiFailure(signal?.aborted ? 499 : 0, { error: signal?.aborted ? 'aborted' : 'network' }, signal?.aborted ? 'İndirme durduruldu.' : 'Sunucuya ulaşılamadı; dosya indirilemedi.');
+    try {
+      let res: Response;
+      try {
+        res = await this.fetcher(path, { method: 'GET', credentials: 'same-origin', cache: 'no-store', headers: { accept: 'application/octet-stream, application/json', 'x-kentos-client': 'web' }, signal: abort.signal });
+      } catch {
+        throw lost();
+      }
+      if (!res.ok) throw failureOf(res.status, await res.text().catch(() => ''));
+      const total = Number(res.headers.get('content-length') ?? 0) || 0;
+      const parts: Uint8Array[] = [];
+      let done = 0;
+      try {
+        if (res.body) {
+          const reader = res.body.getReader();
+          for (;;) {
+            const { done: end, value } = await reader.read();
+            if (end) break;
+            alive();
+            parts.push(value);
+            done += value.byteLength;
+            progress(done, total);
+          }
+        } else {
+          const all = new Uint8Array(await res.arrayBuffer());
+          parts.push(all);
+          done = all.byteLength;
+          progress(done, total);
+        }
+      } catch {
+        throw lost();
+      }
+      const bytes = new Uint8Array(done);
+      let at = 0;
+      for (const p of parts) (bytes.set(p, at), (at += p.byteLength));
+      const h = res.headers;
+      return { bytes, sha256: unquoted(h.get('etag')), revision: h.get('x-kentos-revision'), cursor: h.get('x-kentos-event-cursor'), fileName: dispositionName(h.get('content-disposition')) };
+    } finally {
+      clearTimeout(quiet);
+      signal?.removeEventListener('abort', onAbort);
+    }
   }
 }

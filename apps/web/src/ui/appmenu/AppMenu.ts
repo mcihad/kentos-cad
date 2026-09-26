@@ -7,7 +7,7 @@ import { DisposableStore, listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
-import { LINK_TEXT, SAVE_TEXT } from '../statusbar/cloudCells';
+import { LINK_TEXT, SAVE_TEXT, fileSaveText } from '../statusbar/cloudCells';
 import { brandMark } from '../shell/brandButton';
 import { recentFileRow } from '../start/recentList';
 
@@ -64,6 +64,8 @@ const PANE_TITLE: Record<Pane, string> = { overview: 'Bu çizim', import: 'İçe
 
 function saveWhere(ctx: AppContext): string {
   const p = ctx.cloud.project.value;
+  const cloudFile = ctx.cloud.file.value;
+  if (p && cloudFile) return `Bulut dosya projesi · ${fileSaveText(cloudFile)}`;
   if (p) return ctx.cloud.autosaves() ? 'Bulut projesi: kendiliğinden kaydediliyor' : 'Bulut projesi';
   const file = ctx.files.handle?.name;
   return file ? file : 'İlk kayıtta yer sorulur';
@@ -200,7 +202,12 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
     const doc = ctx.doc;
     const s = doc.settings;
     const cloud = ctx.cloud.project.value;
-    const where = cloud ? `Bulut · ${cloud.tenantName}` : ctx.files.handle ? `Dosya · ${ctx.files.handle.name}` : 'Bir dosyaya bağlı değil; ilk kayıtta yer sorulur';
+    const cloudFile = ctx.cloud.file.value;
+    const where = cloud
+      ? `Bulut · ${cloud.tenantName}${cloudFile ? ` · dosya projesi, ${cloudFile.base.value === '0' ? 'henüz revizyonu yok' : `revizyon ${cloudFile.base.value}`}` : ''}`
+      : ctx.files.handle
+        ? `Dosya · ${ctx.files.handle.name}`
+        : 'Bir dosyaya bağlı değil; ilk kayıtta yer sorulur';
     const chip = (ic: string, text: string) => h('span', { class: 'appmenu__chip' }, icon(ic, 13), text);
     const save = h('button', { class: 'btn btn--primary btn--small', type: 'button', dataset: { command: 'file.save' } }, 'Kaydet');
     save.addEventListener('click', () => run('file.save'));
@@ -228,7 +235,12 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
         ),
         doc.dirty.value && !ctx.cloud.autosaves()
           ? h('div', { class: 'appmenu__dirty' }, h('span', { class: 'appmenu__dot' }), h('span', null, 'Kaydedilmemiş değişiklikler var'), save)
-          : h('div', { class: 'appmenu__clean' }, icon('check', 14), cloud && ctx.cloud.autosaves() ? 'Değişiklikler buluta kendiliğinden kaydediliyor' : ctx.files.handle ? 'Tüm değişiklikler kaydedildi' : 'Kaydedilmemiş değişiklik yok'),
+          : h(
+              'div',
+              { class: 'appmenu__clean' },
+              icon('check', 14),
+              cloud && ctx.cloud.autosaves() ? 'Değişiklikler buluta kendiliğinden kaydediliyor' : ctx.files.handle || cloudFile ? 'Tüm değişiklikler kaydedildi' : 'Kaydedilmemiş değişiklik yok',
+            ),
       ),
       h(
         'div',
@@ -305,12 +317,16 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
       ? h(
           'div',
           { class: 'appmenu__card appmenu__open' },
-          h('span', { class: 'appmenu__lamp', dataset: { state: sync?.state.value ?? '' } }),
+          h('span', { class: 'appmenu__lamp', dataset: { state: sync?.state.value ?? ctx.cloud.file.value?.state.value ?? '' } }),
           h(
             'div',
             { class: 'appmenu__who' },
             h('b', null, p.name),
-            h('span', null, `${p.tenantName} · ${sync ? SAVE_TEXT[sync.state.value](sync.state.value === 'conflict' ? sync.conflicts.value.length : sync.pending.value) : ''}${LINK_TEXT[ctx.cloud.link.value] ? ` · ${LINK_TEXT[ctx.cloud.link.value]}` : ''}`),
+            h(
+              'span',
+              null,
+              `${p.tenantName} · ${sync ? SAVE_TEXT[sync.state.value](sync.state.value === 'conflict' ? sync.conflicts.value.length : sync.pending.value) : ctx.cloud.file.value ? fileSaveText(ctx.cloud.file.value) : ''}${LINK_TEXT[ctx.cloud.link.value] ? ` · ${LINK_TEXT[ctx.cloud.link.value]}` : ''}`,
+            ),
           ),
         )
       : null;
@@ -352,7 +368,9 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
         { class: 'appmenu__ctas' },
         action('cloud.open', 'Proje aç', 'cloud', true),
         action('cloud.upload', 'Buluta yükle', 'cloudUpload'),
-        ...(p ? [action('cloud.share', 'Paylaş', 'share'), action('cloud.rename', 'Yeniden adlandır', 'edit'), action('cloud.delete', 'Sil', 'trash')] : []),
+        ...(p
+          ? [action('cloud.history', 'Geçmiş', 'history'), action('cloud.share', 'Paylaş', 'share'), action('cloud.rename', 'Yeniden adlandır', 'edit'), action('cloud.delete', 'Sil', 'trash')]
+          : []),
       ),
       h('div', { class: 'appmenu__section' }, 'Son projeler'),
       recent,
@@ -381,7 +399,7 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
     pane.replaceChildren();
     showPane(keep);
   };
-  d.add(watchAll([ctx.doc.name, ctx.doc.dirty, ctx.cloud.me, ctx.cloud.project, ctx.server.state, ctx.cloud.link, ctx.files.recent.list], refresh));
+  d.add(watchAll([ctx.doc.name, ctx.doc.dirty, ctx.cloud.me, ctx.cloud.project, ctx.cloud.file, ctx.server.state, ctx.cloud.link, ctx.files.recent.list], refresh));
   refresh();
 
   // ── Place, focus, dismiss ──────────────────────────────────────────

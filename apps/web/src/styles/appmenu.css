@@ -367,12 +367,17 @@
 }
 .appmenu__lamp[data-state='pending'],
 .appmenu__lamp[data-state='saving'],
+.appmenu__lamp[data-state='encoding'],
+.appmenu__lamp[data-state='uploading'],
+.appmenu__lamp[data-state='verifying'],
+.appmenu__lamp[data-state='outdated'],
 .appmenu__lamp[data-state='offline_pending'] {
   background: var(--c-warn);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-warn) 20%, transparent);
 }
 .appmenu__lamp[data-state='conflict'],
 .appmenu__lamp[data-state='error'],
+.appmenu__lamp[data-state='revoked'],
 .appmenu__lamp[data-state='deleted'] {
   background: var(--c-danger);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-danger) 20%, transparent);

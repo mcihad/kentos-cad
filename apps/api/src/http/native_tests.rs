@@ -684,3 +684,161 @@ async fn a_lost_answer_survives_the_program_ending_through_the_device_draft() {
     let _ = std::fs::remove_dir_all(dir);
     db.close().await;
 }
+
+#[tokio::test]
+async fn a_project_goes_on_offline_and_catches_up_when_the_connection_returns() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let me = ayse.me().await.unwrap().user.id;
+    let drawing = sample();
+    let (info, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(&drawing, "Ada 106", ProjectStorage::Database),
+        kcad(&drawing),
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    let project = Uuid::parse_str(&info.id).unwrap();
+    ayse.command::<ProjectAccessChange>(envelope(
+        tenant,
+        project,
+        "project.share",
+        1,
+        Uuid::new_v4(),
+        BTreeMap::new(),
+        json!({ "userId": admin::user_id(&db.owner, "dilek").await.unwrap().to_string(), "role": GrantRole::Editor }),
+    ))
+    .await
+    .unwrap();
+    let dilek = signed_in(&base, "dilek").await;
+    let dir = std::env::temp_dir().join(format!("kentos-native-offline-{}", Uuid::now_v7()));
+    let replicas = kentos_cloud::ReplicaStore::new(dir.join("kopya"));
+    let drafts = kentos_cloud::DraftStore::new(dir.join("taslak"));
+    let key = drafts.key(ayse.server(), &me, tenant, project);
+
+    // 1. Online: the project opens, its copy is kept, an edit goes out.
+    {
+        let mut replica = replicas.open(ayse.server(), &me, tenant, project).unwrap();
+        let mut a = open(&ayse, tenant, project, None).await.unwrap();
+        replica.reset(&a).unwrap();
+        let mut sync = ProjectSync::new(&a).unwrap();
+        let the_point = slot_of(&a.document, "point");
+        assert!(a.document.update(the_point, point(486700.0)));
+        send_all(&ayse, &mut sync, &a.document).await.unwrap();
+        replica.append(&sync.take_base_step().unwrap()).unwrap();
+        assert!(sync.draft(&a.document, &me).is_none());
+    }
+
+    // Meanwhile Dilek, online, labels the line and adds a point.
+    let mut d = open(&dilek, tenant, project, None).await.unwrap();
+    let mut sd = ProjectSync::new(&d).unwrap();
+    let the_line = slot_of(&d.document, "line");
+    let mut line = d.document.get(the_line).unwrap().clone();
+    line.base_mut().label = Some("Dilek".into());
+    assert!(d.document.update(the_line, line));
+    let dilek_point = d.document.add(point(486800.0)).unwrap();
+    let dilek_uid = d.document.uid(dilek_point).unwrap();
+    send_all(&dilek, &mut sd, &d.document).await.unwrap();
+
+    // 2. No connection: the project opens from the copy; the work waits on this device.
+    let unreachable = Cloud::new("http://127.0.0.1:9").unwrap();
+    let offline_uid;
+    let removed_uid;
+    {
+        let replica = replicas.open(ayse.server(), &me, tenant, project).unwrap();
+        let mut a = replica.load().unwrap().unwrap();
+        let the_point = slot_of(&a.document, "point");
+        assert!(matches!(a.document.get(the_point), Some(Entity::Point(p)) if p.p.x == 486700.0));
+        assert!(a.document.slot_of(dilek_uid).is_none());
+        let mut sync = ProjectSync::new(&a).unwrap();
+        let added = a.document.add(point(486650.0)).unwrap();
+        offline_uid = a.document.uid(added).unwrap();
+        let polyline = slot_of(&a.document, "polyline");
+        removed_uid = a.document.uid(polyline).unwrap();
+        a.document.remove(&[polyline]);
+        let command = sync.next(&a.document).unwrap();
+        // The draft reaches the disk before the command goes out.
+        drafts
+            .save(&key, &sync.draft(&a.document, &me).unwrap())
+            .unwrap();
+        let failure = unreachable
+            .command::<CommitResult>(command)
+            .await
+            .unwrap_err();
+        assert!(failure.transient(), "{failure:?}");
+        assert!(matches!(sync.failed(&failure), After::Retry(_)));
+        assert_eq!(sync.state(), SaveState::Offline);
+        drafts
+            .save(&key, &sync.draft(&a.document, &me).unwrap())
+            .unwrap();
+    }
+
+    // 3. The connection is back: the copy opens, the draft goes back in, others' work comes in, this work goes out.
+    {
+        let mut replica = replicas.open(ayse.server(), &me, tenant, project).unwrap();
+        let mut a = replica.load().unwrap().unwrap();
+        let mut sync = ProjectSync::new(&a).unwrap();
+        let kentos_cloud::Loaded::Found(draft) = drafts.load(&key).unwrap() else {
+            panic!("the draft was not found");
+        };
+        let restored = sync.restore(&mut a.document, *draft).unwrap();
+        assert!(restored.resends);
+        assert_eq!(restored.conflicts, 0);
+        loop {
+            let page = follow::events(&ayse, tenant, project, sync.cursor())
+                .await
+                .unwrap();
+            let full = page.events.len() >= follow::EVENTS_PAGE;
+            let incoming = sync.incoming(&page);
+            let remote = if incoming.needs_fetch() {
+                follow::fetch(&ayse, tenant, project, &incoming)
+                    .await
+                    .unwrap()
+            } else {
+                kentos_cloud::Remote::default()
+            };
+            // Its own commit of the first session is known already: only Dilek's work is new, no conflict.
+            let taken = sync.take_remote(&mut a.document, incoming, remote).unwrap();
+            assert_eq!(taken.conflicts, 0, "{:?}", sync.conflicts());
+            if let Some(step) = sync.take_base_step() {
+                replica.append(&step).unwrap();
+            }
+            if !full {
+                break;
+            }
+        }
+        assert!(a.document.slot_of(dilek_uid).is_some());
+        send_all(&ayse, &mut sync, &a.document).await.unwrap();
+        if let Some(step) = sync.take_base_step() {
+            replica.append(&step).unwrap();
+        }
+        assert!(sync.all_sent());
+        assert!(sync.draft(&a.document, &me).is_none());
+        drafts.remove(&key).unwrap();
+
+        // The server has both editors' work, and so does the copy on this device.
+        let server = open(&ayse, tenant, project, None).await.unwrap();
+        let theirs = by_uid(&server.document.to_snapshot_v2());
+        assert_eq!(by_uid(&a.document.to_snapshot_v2()), theirs);
+        assert!(server.document.slot_of(offline_uid).is_some());
+        assert!(server.document.slot_of(removed_uid).is_none());
+        assert_eq!(
+            by_uid(&replica.load().unwrap().unwrap().document.to_snapshot_v2()),
+            theirs
+        );
+        replica.compact(&sync.base(&a.document)).unwrap();
+        assert_eq!(replica.steps().unwrap(), 0);
+        assert_eq!(
+            by_uid(&replica.load().unwrap().unwrap().document.to_snapshot_v2()),
+            theirs
+        );
+    }
+    let _ = std::fs::remove_dir_all(dir);
+    db.close().await;
+}

@@ -158,7 +158,8 @@
   border-color: var(--c-ok);
   background: var(--c-ok);
 }
-.status__save[data-state='offline_pending'] {
+.status__save[data-state='offline_pending'],
+.status__save[data-state='outdated'] {
   color: var(--c-warn);
 }
 .status__save[data-state='conflict'],
@@ -419,4 +420,47 @@
 }
 .dialog--cloud .cloud-hint--tight + .cloud-field {
   margin-top: 0;
+}
+
+/* The storage mode of a new project (docs/adr/0031, 0038): two options, each saying what it means; chosen for good. */
+.cloud-storage {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 12px 0;
+  padding: 0;
+  border: 0;
+}
+.cloud-storage > legend {
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+.cloud-storage__option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.cloud-storage__option:has(input:checked) {
+  border-color: var(--c-accent-line);
+  background: var(--c-accent-soft);
+}
+.cloud-storage__option input {
+  margin-top: 3px;
+}
+.cloud-storage__text {
+  display: grid;
+  gap: 2px;
+  font-size: var(--fs-sm);
+}
+.cloud-storage__text > span {
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--c-text-2);
 }

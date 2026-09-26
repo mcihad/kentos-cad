@@ -1,5 +1,6 @@
 import type { CommandEnvelope } from '../../contracts/generated/CommandEnvelope';
 import type { CommitResult } from '../../contracts/generated/CommitResult';
+import type { DocumentSnapshotV2 } from '../../contracts/generated/DocumentSnapshotV2';
 import type { Entity as ContractEntity } from '../../contracts/generated/Entity';
 import type { EventRecord } from '../../contracts/generated/EventRecord';
 import type { FeatureChange } from '../../contracts/generated/FeatureChange';
@@ -13,8 +14,10 @@ import type { ProjectDetails } from '../../contracts/generated/ProjectDetails';
 import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
 import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { ProjectRole } from '../../contracts/generated/ProjectRole';
+import type { FileUploadBegin } from '../../contracts/generated/FileUploadBegin';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
-import { ApiFailure, type CloudApi } from './api';
+import { ApiFailure, type CloudApi, type Transfer } from './api';
+import { FakeFiles } from './fakeFiles';
 
 /** Every project permission: the fake's caller owns the project unless a test lowers it. */
 const ALL: ProjectPermission[] = ['project.read', 'feature.write', 'project.edit', 'project.delete', 'project.comment', 'project.download', 'project.history', 'project.share', 'project.transfer', 'project.jobs.run'];
@@ -33,9 +36,11 @@ export const ROLE_PERMISSIONS: Record<Exclude<ProjectRole, 'owner'>, ProjectPerm
  * deleted project (410), an archived one (409 `project_archived`, the
  * lifecycle commands of docs/adr/0028), the caller's role and access taken
  * away (403 and 404, docs/adr/0015), and switches for a dead network and a
- * lost answer. It follows crates/server/application/src/changes.rs,
- * lifecycle.rs and sharing.rs; the real thing is tested against PostgreSQL
- * in Rust and end to end in the browser.
+ * lost answer. Its file side (uploads, file revisions, the snapshot, the
+ * import and checkpoints) is `files` (fakeFiles.ts). It follows
+ * crates/server/application/src/changes.rs, lifecycle.rs and sharing.rs;
+ * the real thing is tested against PostgreSQL in Rust and end to end in the
+ * browser.
  */
 export class FakeServer implements CloudApi {
   store = new Map<string, { version: number; entity: ContractEntity }>();
@@ -65,9 +70,40 @@ export class FakeServer implements CloudApi {
   commits = 0;
   /** Commands answered from the log (a retry after a lost answer). */
   replays = 0;
+  /** The file side: uploads, revisions, snapshot, import, checkpoints. */
+  readonly files: FakeFiles;
 
   constructor(meta: FakeServer['meta']) {
     this.meta = structuredClone(meta);
+    const server = this;
+    this.files = new FakeFiles({
+      get name() {
+        return server.meta.name;
+      },
+      userId: 'u1',
+      permissions: () => server.permissions(),
+      guard: (writing) => {
+        server.check();
+        server.hidden();
+        server.gone();
+        if (writing && server.archived)
+          throw new ApiFailure(409, { error: 'project_archived', message: `“${server.meta.name}” projesi arşivlenmiş; salt okunurdur.` }, 'Proje arşivlenmiş.');
+      },
+      event: (kind, requestId, meta = false) => {
+        server.revision++;
+        const e: EventRecord = { seq: String(server.history.length + 1), dataRevision: String(server.revision), kind, requestId, features: [], meta };
+        server.history.push(e);
+        return e;
+      },
+      imported: (doc: DocumentSnapshotV2) => {
+        doc.entities.forEach((entity, i) => server.store.set(doc.uids[i], { version: 1, entity: structuredClone(entity) }));
+        Object.assign(server.meta, { settings: doc.settings, layers: doc.layers, activeLayer: doc.activeLayer, styles: doc.styles, origin: doc.origin });
+        server.metaVersion++;
+        server.revision = 0;
+      },
+      hasContent: () => server.store.size > 0 || server.revision > 0,
+      summary: () => server.summary(),
+    });
   }
 
   private check(): void {
@@ -83,7 +119,7 @@ export class FakeServer implements CloudApi {
     if (this.revoked) throw new ApiFailure(404, { error: 'not_found', message: 'Proje bulunamadı.' }, 'Proje bulunamadı.');
   }
 
-  private permissions(): ProjectPermission[] {
+  permissions(): ProjectPermission[] {
     return this.role === 'owner' ? ALL : ROLE_PERMISSIONS[this.role];
   }
 
@@ -233,8 +269,8 @@ export class FakeServer implements CloudApi {
       dataRevision: String(this.revision),
       featureCount: String(this.store.size),
       eventCursor: String(this.history.length),
-      // The fake keeps its content object by object.
-      storage: 'database',
+      // As the project was made: a file project gets its content from its revisions.
+      storage: this.files.storage,
     };
   }
 
@@ -259,7 +295,12 @@ export class FakeServer implements CloudApi {
   logout = async () => {};
   projects = async () => ({ projects: [] });
   myProjects = async () => ({ projects: [] });
-  createProject = async () => this.project();
+  /** A new project: this one, kept as it asks (a file project gets its content from its first revision). */
+  createProject = async (_t: string, input: { name: string; storage?: 'database' | 'file' }) => {
+    this.files.storage = input.storage ?? 'database';
+    this.meta.name = input.name;
+    return this.project();
+  };
   access = async (): Promise<ProjectAccessList> => {
     this.hidden();
     return { tenantKind: 'organization', storage: 'database', adminsAccessAllProjects: true, ownerId: 'u1', ownerName: 'Ayşe', people: [] };
@@ -291,13 +332,22 @@ export class FakeServer implements CloudApi {
       createdAt: '2026-09-26T09:00:00Z',
       creatorName: 'Ayşe',
       areaUnit: 'm2',
-      storage: 'database',
+      storage: this.files.storage,
       favorite: false,
       ...(this.deleted ? { trashedAt: '2026-09-26T10:00:00Z', purgeAfter: '2026-10-26T10:00:00Z' } : {}),
     };
   }
 
   catalog = async () => ({ projects: [this.summary()], total: 1, trashRetentionDays: 30 });
+
+  beginUpload = (_t: string, _p: string, begin: FileUploadBegin) => this.files.beginUpload(begin);
+  sendUpload = (_t: string, _p: string, upload: string, bytes: Uint8Array, progress?: Transfer) => this.files.sendUpload(upload, bytes, progress);
+  uploadState = (_t: string, _p: string, upload: string) => this.files.uploadState(upload);
+  fileRevisions = async () => this.files.fileRevisions();
+  fileRevision = (_t: string, _p: string, revision: string, progress?: Transfer) => this.files.fileRevision(revision, progress);
+  snapshot = (_t: string, _p: string, progress?: Transfer) => this.files.snapshot(progress);
+  checkpoints = async () => this.files.listCheckpoints();
+  checkpointFile = (_t: string, _p: string, id: string, progress?: Transfer) => this.files.checkpointFile(id, progress);
 
   details = async (): Promise<ProjectDetails> => {
     this.hidden();
@@ -310,6 +360,8 @@ export class FakeServer implements CloudApi {
     this.check();
     this.hidden();
     this.lifecycleLog.push(envelope);
+    const file = await this.files.command(envelope);
+    if (file !== null) return file as T;
     const event = (kind: string) => {
       const e: EventRecord = { seq: String(this.history.length + 1), dataRevision: String(this.revision), kind, requestId: envelope.requestId, features: [], meta: false };
       this.history.push(e);
