@@ -18,6 +18,7 @@ import {
   scratchPathLength as wasmScratchPathLength,
   scratchPointInPolygon as wasmScratchPointInPolygon,
   scratchSignedArea as wasmScratchSignedArea,
+  transformObjects as wasmTransformObjects,
   triangulateMany as wasmTriangulateMany,
 } from './pkg/kentos_geometry_wasm.js';
 import wasmUrl from './pkg/kentos_geometry_wasm_bg.wasm?url';
@@ -268,6 +269,22 @@ export function fromXY(xy: Float64Array, from = 0, to = xy.length): { x: number;
   const pts = new Array<{ x: number; y: number }>((to - from) >> 1);
   for (let i = 0, k = from; k + 1 < to; i++, k += 2) pts[i] = { x: xy[k], y: xy[k + 1] };
   return pts;
+}
+
+/**
+ * Packed objects (./pack.ts) moved by one similarity and packed again, with
+ * no store and no JSON (docs/adr/0037): the product command
+ * `cad.entities.transform`. `kind` and `params` are its transform: `move`
+ * (dx, dy), `rotate` (cx, cy, angle), `scale` (cx, cy, factor), `mirror`
+ * (ax, ay, bx, by); the core builds the matrix, so −0 stays −0.
+ */
+export function transformObjects(nums: Float64Array, strings: string, kind: string, params: Float64Array): { nums: Float64Array; strings: string } {
+  return typed(() => {
+    const r = wasmTransformObjects(nums, strings, kind, params);
+    const out = r.strings;
+    // Hands the numbers over and frees the answer: a large one is not copied twice.
+    return { nums: r.intoNums(), strings: out };
+  });
 }
 
 /** `offsetPath` on flat coordinates: the style engine offsets a path per object while a layer is built. */

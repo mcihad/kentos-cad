@@ -25,18 +25,15 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
-    DimensionStyle, DrawingFont, Entity, HatchPatternType, LabelPlacement, LabelStyle, LayerNode,
-    RingGeometry,
-};
+use kentos_contracts::{DrawingFont, Entity, LabelPlacement, LabelStyle, LayerNode};
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
-use kentos_geometry_core::entity::{HatchPattern, Shape};
-use kentos_geometry_core::geom::arrangement::Ring;
+use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::labels::{LabelRule, Placement};
 use kentos_geometry_core::store::snap::SnapHit;
 use kentos_geometry_core::store::{LayerFlags, Store};
 use kentos_geometry_core::text::Font;
+use kentos_native_application::geometry::shape;
 
 use crate::Vec2;
 
@@ -188,8 +185,9 @@ fn slot(id: f64) -> Option<Slot> {
 
 /// An object as the store takes it: its id (the slot), layer, whether it
 /// has a label, and its geometry. The one conversion of the desktop's
-/// objects into the store's shapes; `fixtures/store-records/v1` holds it to
-/// what the web packs for the same object.
+/// objects into the store's shapes (`kentos_native_application::geometry`,
+/// which the transform command shares); `fixtures/store-records/v1` holds
+/// it to what the web packs for the same object.
 pub fn record(entity: &Entity) -> (f64, &str, bool, Shape) {
     let base = entity.base();
     let label = base.label.as_deref().is_some_and(|l| !l.is_empty());
@@ -199,112 +197,6 @@ pub fn record(entity: &Entity) -> (f64, &str, bool, Shape) {
         label,
         shape(entity),
     )
-}
-
-fn v(p: &kentos_contracts::Vec2) -> Vec2 {
-    Vec2::new(p.x, p.y)
-}
-
-fn points(pts: &[kentos_contracts::Vec2]) -> Vec<Vec2> {
-    pts.iter().map(v).collect()
-}
-
-fn ring(r: &RingGeometry) -> Ring {
-    Ring {
-        pts: points(&r.pts),
-        bulges: r.bulges.clone(),
-    }
-}
-
-/// An object's geometry as the geometry core takes it.
-fn shape(entity: &Entity) -> Shape {
-    match entity {
-        Entity::Point(p) => Shape::Point { p: v(&p.p), z: p.z },
-        Entity::Line(l) => Shape::Line {
-            a: v(&l.a),
-            b: v(&l.b),
-        },
-        Entity::Polyline(p) => Shape::Polyline {
-            pts: points(&p.pts),
-            bulges: p.bulges.clone(),
-            holes: p.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
-        },
-        Entity::Polygon(p) => Shape::Polygon {
-            pts: points(&p.pts),
-            bulges: p.bulges.clone(),
-            holes: p.holes.as_ref().map(|hs| hs.iter().map(ring).collect()),
-        },
-        Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
-        Entity::Arc(a) => Shape::Arc {
-            c: v(&a.c),
-            r: a.r,
-            a0: a.a0,
-            a1: a.a1,
-        },
-        Entity::Ellipse(e) => Shape::Ellipse {
-            c: v(&e.c),
-            major: v(&e.major),
-            ratio: e.ratio,
-            t0: e.t0,
-            t1: e.t1,
-        },
-        Entity::Spline(s) => Shape::Spline {
-            pts: points(&s.pts),
-            closed: s.closed,
-        },
-        Entity::Xline(c) => Shape::Xline {
-            p: v(&c.p),
-            dir: v(&c.dir),
-        },
-        Entity::Ray(c) => Shape::Ray {
-            p: v(&c.p),
-            dir: v(&c.dir),
-        },
-        Entity::Text(t) => Shape::Text {
-            p: v(&t.p),
-            text: t.text.clone(),
-            height: t.height,
-            rotation: t.rotation,
-        },
-        Entity::Dimension(d) => Shape::Dimension {
-            a: v(&d.a),
-            b: v(&d.b),
-            offset: d.offset,
-            height: d.height,
-            text: d.text.clone(),
-            style: d.style.map(|s| dimension_style(s).to_owned()),
-            angle: d.angle,
-            c: d.c.as_ref().map(v),
-        },
-        Entity::Hatch(h) => Shape::Hatch {
-            ring: points(&h.ring),
-            holes: h
-                .holes
-                .as_ref()
-                .map(|hs| hs.iter().map(|r| points(r)).collect()),
-            pattern: HatchPattern {
-                kind: match h.pattern.kind {
-                    HatchPatternType::Solid => "solid",
-                    HatchPatternType::Lines => "lines",
-                    HatchPatternType::Cross => "cross",
-                }
-                .to_owned(),
-                angle: h.pattern.angle,
-                spacing: h.pattern.spacing,
-            },
-        },
-    }
-}
-
-/// A dimension style as files write it.
-fn dimension_style(style: DimensionStyle) -> &'static str {
-    match style {
-        DimensionStyle::Aligned => "aligned",
-        DimensionStyle::Linear => "linear",
-        DimensionStyle::Angular => "angular",
-        DimensionStyle::Radius => "radius",
-        DimensionStyle::Diameter => "diameter",
-    }
 }
 
 /// The drawing typeface by its id, as the store measures text in it.

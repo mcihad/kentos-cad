@@ -9511,6 +9511,260 @@
           }
         }
       ]
+    },
+    {
+      "id": "cad.entities.transform",
+      "version": 1,
+      "title": "Nesneleri dönüştür",
+      "summary": "Kalıcı kimlikleriyle verilen nesneleri taşır, bir merkez etrafında döndürür, bir merkeze göre ölçekler ya da iki noktalı bir eksene göre aynalar; yerinde ya da kopya olarak, tek geri alma adımında. Taşı, Kopyala, Döndür, Ölçekle ve Aynala araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır, aynalanan yazı okunur kalır. Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "Transform": {
+            "description": "One similarity of the plane, given as the modify tools ask for it\n(docs/adr/0037). Coordinates are x east (Y), y north (X), in the\nproject's units (m), float64.",
+            "oneOf": [
+              {
+                "description": "Move (taşı) by a displacement: `dx` east, `dy` north.",
+                "properties": {
+                  "dx": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "dy": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "move",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "dx",
+                  "dy"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Rotate (döndür) about `center` by `angle` radians, counter-clockwise.",
+                "properties": {
+                  "angle": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "center": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "rotate",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "center",
+                  "angle"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Scale (ölçekle) about `center` by `factor`, above zero.",
+                "properties": {
+                  "center": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "factor": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "scale",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "center",
+                  "factor"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Mirror (aynala) across the line through `a` and `b`, two different points.",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "mirror",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.entities.transform` v1: objects named by their persistent\nids (docs/adr/0014) moved by one transform as one undo step, in place or\nas copies. The modify tools make the selection explicit here (TODOS.md\nCMD-07): they give the selected objects' ids; the command reads no\nselection, layer or view.\n\nIn place, each object keeps its slot, its persistent id and every other\nfield; only its geometry changes. As copies, each new object takes every\nfield of its original (layer, colour, attributes, label, symbol) and a new\npersistent id; the originals stay. The undo step is the tool's name:\n“Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,\n“Aynala”.\n\nObjects on a locked layer (by itself or a group above it) stay where they\nare and are not copied: with others to transform they are named in the\noutput's `locked` with a `layer_locked` warning; when every one is locked\nnothing is written and the answer is `layer_locked`. A repeated id counts\nonce.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the transform's numbers,\nin their order), `invalid_factor` (a scale not above zero),\n`invalid_axis` (a mirror axis without a direction), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found` (each id in\norder), `layer_locked`, then `not_finite` again (path `transform`) when\nthe transform would carry a coordinate past the largest float64; on the\ndesktop also `slots_exhausted` for copies.",
+        "properties": {
+          "copy": {
+            "description": "True: copies are made and the originals stay (Kopyala, Kopya (K),\nAynala keeping its source). Absent or false: the objects themselves change.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "transform": {
+            "$ref": "#/$defs/Transform",
+            "description": "What happens to them."
+          },
+          "uids": {
+            "description": "The objects' persistent ids (lowercase UUID text with hyphens), at least one.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "transform"
+        ],
+        "title": "EntitiesTransform",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.transform` v1: what changed, what was made and\nwhat stayed.",
+        "properties": {
+          "changed": {
+            "description": "In place: the ids of the objects transformed, in the input's order (a\nrepeated one once). Empty for copies.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "created": {
+            "description": "As copies: the new objects' persistent ids, in the order of their\noriginals in the input. Empty in place.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "locked": {
+            "description": "The ids left alone because their layer is locked, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text. Inside an\nopen transaction or group the write joins it, and the revision\nchanges when that ends.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "created",
+          "locked",
+          "revision"
+        ],
+        "title": "EntitiesTransformed",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "İki nesneyi 12,5 m doğuya, 7,25 m güneye taşıma",
+          "input": {
+            "transform": {
+              "dx": 12.5,
+              "dy": -7.25,
+              "kind": "move"
+            },
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"
+            ]
+          },
+          "output": {
+            "changed": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"
+            ],
+            "created": [],
+            "locked": [],
+            "revision": "38"
+          }
+        },
+        {
+          "title": "Bir nesnenin bir nokta etrafında 90° döndürülmüş kopyası; yalnız planlandığı sürümde yazılır",
+          "input": {
+            "copy": true,
+            "expectedRevision": "37",
+            "transform": {
+              "angle": 1.5707963267948966,
+              "center": {
+                "x": 423510.0,
+                "y": 4512300.0
+              },
+              "kind": "rotate"
+            },
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

@@ -11,6 +11,7 @@ use crate::Vec2;
 use crate::format::Format;
 use crate::log::{Level, Line};
 use crate::prompt::Prompt;
+use crate::select::SelectBox;
 use crate::selection::Selection;
 use crate::spatial::Spatial;
 
@@ -248,6 +249,9 @@ pub struct Preview {
     pub strokes: Vec<Stroke>,
     /// Points marked with a 9 px square: the objects picked for a tangent circle.
     pub squares: Vec<Vec2>,
+    /// Points marked with a 7 px square, solid: points and texts among a
+    /// modify tool's ghosts (the web's `strokePaths` markers, docs/adr/0037).
+    pub marks: Vec<Vec2>,
     pub tag: Option<Tag>,
     /// A polar tracking ray the cursor is locked to.
     pub tracking: Option<Tracking>,
@@ -289,4 +293,14 @@ pub trait Tool {
     /// true, or false when nothing is pending and the drawing is undone instead.
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool;
     fn preview(&self, format: &Format) -> Preview;
+    /// The tool is done and leaves after the call that finished it (the web's
+    /// `ctx.tools.exit()` from a click or typed text: a move written).
+    fn finished(&self) -> bool {
+        false
+    }
+    /// The selection box being drawn by a tool that picks objects itself
+    /// (the modify tools before their points), for the host to show.
+    fn select_box(&self) -> Option<SelectBox> {
+        None
+    }
 }

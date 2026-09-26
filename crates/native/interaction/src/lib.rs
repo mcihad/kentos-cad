@@ -29,6 +29,10 @@
 //! - selecting and deleting (docs/adr/0029): the [`Selection`], the select
 //!   tool that has the pointer while no command runs ([`select`]), the erase
 //!   tool ([`erase`], `cad.entities.delete`);
+//! - the modify tools (docs/adr/0037): move and copy ([`move_copy`]),
+//!   rotate ([`rotate`]), scale ([`scale`]) and mirror ([`mirror`]) on one
+//!   selection-first base ([`modify`]), writing through
+//!   `cad.entities.transform`;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -49,13 +53,18 @@ pub mod erase;
 mod format;
 pub mod line;
 mod log;
+pub mod mirror;
+pub mod modify;
+pub mod move_copy;
 pub mod path;
 pub mod point;
 mod points;
 mod prompt;
 pub mod rectangle;
 pub mod regular;
+pub mod rotate;
 pub mod rotated;
+pub mod scale;
 pub mod select;
 mod selection;
 mod session;

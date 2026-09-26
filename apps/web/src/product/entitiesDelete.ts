@@ -2,9 +2,8 @@ import type { CommandWarning } from '../contracts/generated/CommandWarning';
 import type { EntitiesDelete } from '../contracts/generated/EntitiesDelete';
 import type { EntitiesDeleted } from '../contracts/generated/EntitiesDeleted';
 import type { EntitiesDeletePlan } from '../contracts/generated/EntitiesDeletePlan';
-import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
-import { checkRevision, error, failed, validated, type Stop } from './checks';
+import { checkRevision, checkUids, error, failed, findObjects, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -37,29 +36,13 @@ const lockedMessage = (n: number) => `${n} nesne kilitli katmanda olduğu için 
 
 /** The checks in the contract's order: why nothing may be deleted, or what may. */
 function check(doc: CadDocument, input: EntitiesDelete): Stop | Checked {
-  if (!input.uids.length) return failed(error('no_entities', 'Silinecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.', 'uids'));
-  for (const [i, uid] of input.uids.entries())
-    if (!isUuid(uid))
-      return failed(
-        error(
-          'invalid_uid',
-          `“${uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.`,
-          `uids[${i}]`,
-        ),
-      );
-  const stop = checkRevision(doc, input.expectedRevision);
+  const stop = checkUids(input.uids, 'Silinecek nesne verilmedi.') ?? checkRevision(doc, input.expectedRevision);
   if (stop) return stop;
-  const seen = new Set<string>();
+  const found = findObjects(doc, input.uids);
+  if ('status' in found) return found;
   const removed: Checked['removed'] = [];
   const locked: string[] = [];
-  for (const [i, uid] of input.uids.entries()) {
-    if (seen.has(uid)) continue;
-    seen.add(uid);
-    const e = doc.byUid(uid);
-    if (!e)
-      return failed(
-        error('entity_not_found', `“${uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.`, `uids[${i}]`),
-      );
+  for (const { entity: e, uid } of found) {
     if (doc.layers.isLocked(e.layerId)) locked.push(uid);
     else removed.push({ id: e.id, uid });
   }

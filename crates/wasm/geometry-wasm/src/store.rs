@@ -7,10 +7,11 @@
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::api::json::{self, FromJson, Json};
 use kentos_geometry_core::entity::Entity;
+use kentos_geometry_core::geom::affine::similarity;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
-use kentos_geometry_core::store::Store;
+use kentos_geometry_core::store::{Store, transform_packed_objects};
 use kentos_style_core::style::build::{LayerObjects, Program, build_layer};
 use wasm_bindgen::prelude::*;
 
@@ -70,6 +71,40 @@ impl PackedObjects {
     pub fn into_nums(self) -> Vec<f64> {
         self.nums
     }
+}
+
+/// Packed objects (`apps/web/src/wasm/pack.ts`) moved by one similarity,
+/// packed again, with no store (`transform_packed_objects`, docs/adr/0037):
+/// the web's `cad.entities.transform` handler. `kind` and `params` are the
+/// command's transform (`similarity`: `move` dx, dy; `rotate` cx, cy,
+/// angle; `scale` cx, cy, factor; `mirror` ax, ay, bx, by); the matrix is
+/// built here, so none of its numbers crosses as JSON either and −0 stays −0.
+#[wasm_bindgen(js_name = transformObjects)]
+pub fn transform_objects(
+    nums: &[f64],
+    strings: &str,
+    kind: &str,
+    params: &[f64],
+) -> Result<PackedObjects, JsError> {
+    let m = similarity(kind, params).ok_or_else(|| {
+        JsError::new(&format!(
+            "Bilinmeyen dönüşüm: {kind} ({} sayı).",
+            params.len()
+        ))
+    })?;
+    let strings = Json::parse(strings)
+        .and_then(|v| Vec::<String>::from_json(&v))
+        .map_err(|e| {
+            JsError::new(&format!(
+                "Dönüştürülecek nesnelerin metinleri okunamadı: {e}"
+            ))
+        })?;
+    let p = transform_packed_objects(nums, &strings, &[m])
+        .map_err(|e| JsError::new(&format!("Dönüştürülecek nesneler okunamadı: {e}")))?;
+    Ok(PackedObjects {
+        strings: json::to_string(&p.strings),
+        nums: p.nums,
+    })
 }
 
 /// A layer's symbols and expressions for one styled build

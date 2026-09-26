@@ -1,5 +1,5 @@
 //! The shared product command cases (fixtures/commands/v1, docs/adr/0022,
-//! 0027, 0029, 0032) run against the desktop's handlers over the native document. The web
+//! 0027, 0029, 0032, 0037) run against the desktop's handlers over the native document. The web
 //! runs the same files against its own handlers
 //! (apps/web/src/product/fixtures.test.ts); the format is in
 //! fixtures/commands/README.md.
@@ -11,13 +11,15 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use kentos_domain::contracts::{
-    ArcCreate, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_DELETE, CAD_LINE_CREATE,
-    CAD_POINT_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, CircleCreate, DocumentSnapshotV1,
-    EntitiesDelete, LineCreate, PointCreate, PolygonCreate, PolylineCreate,
+    ArcCreate, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_DELETE, CAD_ENTITIES_TRANSFORM,
+    CAD_LINE_CREATE, CAD_POINT_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, CircleCreate,
+    DocumentSnapshotV1, EntitiesDelete, EntitiesTransform, LineCreate, PointCreate, PolygonCreate,
+    PolylineCreate, Transform,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, circle, delete, line, point, polygon, polyline,
+    transform,
 };
 use serde_json::{Value, json};
 
@@ -68,9 +70,19 @@ fn expect_same(got: &Value, want: &Value, what: &str, at: &str) -> Outcome<()> {
 /// `value` with its `$…` placeholders filled in: `$current` is the
 /// document's revision now, `$name` one `captureRevision` took; `$uid:name`,
 /// anywhere in a text (an id list, a message), the persistent id
-/// `captureUid` took, lowercase with hyphens.
+/// `captureUid` took, lowercase with hyphens; `$uidOf:12`, the persistent id
+/// the object in slot 12 has now (a copy a command just wrote).
 fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value> {
     Ok(match value {
+        Value::String(text) if text.starts_with("$uidOf:") => {
+            let slot = text["$uidOf:".len()..]
+                .parse::<u32>()
+                .map_err(|_| format!("{at}: {text}: yuva bir sayı olmalı"))?;
+            let uid = doc
+                .uid(Slot(slot))
+                .ok_or_else(|| format!("{at}: {slot} yuvasında nesne yok"))?;
+            Value::String(uid.to_string())
+        }
         Value::String(text) if text.contains("$uid:") => Value::String(with_uids(text, state, at)?),
         Value::String(text) if text.starts_with('$') => {
             let name = &text[1..];
@@ -248,6 +260,31 @@ impl Input for ArcCreate {
     }
 }
 
+impl Input for EntitiesTransform {
+    /// `transform.dx`, `transform.center.x`, `transform.angle`, `transform.factor`, `transform.a.y` …
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let rest = path.strip_prefix("transform.")?;
+        match &mut self.transform {
+            Transform::Move { dx, dy } => match rest {
+                "dx" => Some(dx),
+                "dy" => Some(dy),
+                _ => None,
+            },
+            Transform::Rotate { center, angle } => match rest {
+                "angle" => Some(angle),
+                _ => coordinate(center, "center", rest),
+            },
+            Transform::Scale { center, factor } => match rest {
+                "factor" => Some(factor),
+                _ => coordinate(center, "center", rest),
+            },
+            Transform::Mirror { a, b } => {
+                coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest))
+            }
+        }
+    }
+}
+
 /// Puts NaN or ±∞ into the typed input at the paths the step's `nonFinite` names.
 fn put_non_finite(input: &mut impl Input, step: &Value, at: &str) -> Outcome<()> {
     let Some(table) = step.get("nonFinite") else {
@@ -306,6 +343,7 @@ fn run_op(
         CAD_POINT_CREATE => run!(point, PointCreate),
         CAD_CIRCLE_CREATE => run!(circle, CircleCreate),
         CAD_ARC_CREATE => run!(arc, ArcCreate),
+        CAD_ENTITIES_TRANSFORM => run!(transform, EntitiesTransform),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))

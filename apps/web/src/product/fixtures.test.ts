@@ -9,7 +9,7 @@ import { findProductCommand, WEB_COMMANDS } from './registry';
 
 /**
  * The shared product command cases (fixtures/commands/v1/*.json, TODOS.md
- * CMD-04..07, docs/adr/0022, 0027) run against the web's handlers over
+ * CMD-04..07, docs/adr/0022, 0027, 0029, 0032, 0037) run against the web's handlers over
  * CadDocument. The desktop runs the same files against its own
  * (crates/native/application/tests/fixtures.rs). The format is in
  * fixtures/commands/README.md.
@@ -91,9 +91,15 @@ class Run {
 
   /**
    * `value` with its `$…` placeholders filled in: `$current` is the revision now, `$name` one taken by
-   * `captureRevision`; `$uid:name`, anywhere in a text (an id list, a message), the persistent id taken by `captureUid`.
+   * `captureRevision`; `$uid:name`, anywhere in a text (an id list, a message), the persistent id taken by `captureUid`;
+   * `$uidOf:12`, the persistent id the object in slot 12 has now (a copy a command just wrote).
    */
   private fill(value: Json, where: string): Json {
+    if (typeof value === 'string' && value.startsWith('$uidOf:')) {
+      const uid = this.doc.uidOf(Number(value.slice('$uidOf:'.length)));
+      if (uid === undefined) throw new Error(`${where}: ${value}: o yuvada nesne yok`);
+      return uid;
+    }
     if (typeof value === 'string' && value.includes('$uid:'))
       return value.replace(/\$uid:([A-Za-z0-9_-]+)/g, (_, name: string) => {
         const uid = this.uids.get(name);

@@ -67,6 +67,13 @@ pub const PORTED: &[&str] = &[
     "tool.rectangle",
     "tool.rectangle3",
     "tool.regularPolygon",
+    // Modify tools, round 1 (docs/adr/0037): move, copy, rotate, scale and mirror on the
+    // selection, through cad.entities.transform.
+    "tool.move",
+    "tool.copy",
+    "tool.rotate",
+    "tool.scale",
+    "tool.mirror",
 ];
 
 /// Where a command stands, from the desktop's point of view.

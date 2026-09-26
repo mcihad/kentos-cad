@@ -258,6 +258,18 @@ impl canvas::Program<Message> for Draft {
                 Stroke::default().with_color(accent).with_width(1.0),
             );
         }
+        // Points and texts among a modify tool's ghosts: a 7 px square each, solid (docs/adr/0037).
+        for p in &self.preview.marks {
+            let at = self.screen(*p);
+            let square = Path::rectangle(
+                Point::new(at.x.round() - 3.5, at.y.round() - 3.5),
+                iced::Size::new(7.0, 7.0),
+            );
+            frame.stroke(
+                &square,
+                Stroke::default().with_color(accent).with_width(1.0),
+            );
+        }
         // A polar tracking ray across the area.
         if let Some(tracking) = self.preview.tracking {
             let o = self.screen(tracking.origin);

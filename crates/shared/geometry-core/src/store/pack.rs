@@ -38,7 +38,9 @@ use std::collections::HashMap;
 
 use super::Store;
 use crate::entity::{HatchPattern, Shape};
+use crate::geom::affine::Affine;
 use crate::geom::arrangement::Ring;
+use crate::ops::transform::transform_shape;
 use crate::vec2::Vec2;
 
 /// A path's points, bulges and holes.
@@ -435,6 +437,36 @@ pub(crate) fn unpack(
     Ok(out)
 }
 
+/// Packed objects moved by each affine in turn, packed again: what
+/// `Store::transform_packed` answers, without a store (docs/adr/0037). The
+/// web's `cad.entities.transform` handler packs the objects it names and
+/// only numbers cross: ids and coordinates, −0 and NaN included, arrive and
+/// leave bit for bit, which JSON could not do. Records come affine after
+/// affine, each run in the order the objects were packed; nothing is read
+/// unless every record is.
+pub fn transform_packed_objects(
+    nums: &[f64],
+    strings: &[String],
+    affines: &[Affine],
+) -> Result<Packer, String> {
+    let mut r = Reader {
+        nums,
+        at: 0,
+        strings,
+    };
+    let mut objects = Vec::new();
+    while r.at < nums.len() {
+        objects.push(r.object()?);
+    }
+    let mut out = Packer::default();
+    for m in affines {
+        for (id, layer, label, shape) in &objects {
+            out.object(*id, layer, *label, &transform_shape(shape, m));
+        }
+    }
+    Ok(out)
+}
+
 impl Store {
     /// Adds or replaces packed objects in order (see the module's table);
     /// `strings` holds the layer ids and texts the numbers point at.
@@ -644,6 +676,65 @@ mod tests {
             let it = s.get(i as f64 + 1.0).unwrap();
             assert_eq!(json::to_string(&it.shape), json::to_string(want));
         }
+    }
+
+    /// Without a store, the same records as `Store::transform_packed`:
+    /// every kind by every affine, affine after affine, id, layer and label
+    /// kept, the geometry `transform_shape`'s, −0 and NaN bit for bit.
+    #[test]
+    fn transforms_packed_objects_as_the_store_does() {
+        use crate::api::json::{self, FromJson, Json};
+        use crate::geom::affine::{mirror, rotation, scaling, translation};
+        let shapes: Vec<Shape> = SHAPES
+            .iter()
+            .map(|t| Shape::from_json(&Json::parse(t).unwrap()).unwrap())
+            .collect();
+        let layers = ["parsel", "", "Bina çatısı"];
+        let mut w = Packer::default();
+        for (i, s) in shapes.iter().enumerate() {
+            w.object(i as f64 + 1.0, layers[i % 3], i % 2 == 0, s);
+        }
+        let affines = [
+            translation(12.5, -0.0),
+            rotation(0.7, Vec2::new(486520.0, 4420200.0)),
+            scaling(2.5, Vec2::new(-0.0, 3.0)),
+            mirror(
+                Vec2::new(486500.0, 4420100.0),
+                Vec2::new(486540.0, 4420160.0),
+            ),
+        ];
+        let out = transform_packed_objects(&w.nums, &w.strings, &affines).unwrap();
+        let back = unpack(&out.nums, &out.strings).unwrap();
+        assert_eq!(back.len(), shapes.len() * affines.len());
+        let mut store = Store::new();
+        store.put_packed(&w.nums, &w.strings).unwrap();
+        let ids: Vec<f64> = (1..=shapes.len()).map(|i| i as f64).collect();
+        let stored = store.transform_packed(&ids, &affines);
+        assert_eq!(bits(&out.nums), bits(&stored.nums));
+        assert_eq!(out.strings, stored.strings);
+        for (k, m) in affines.iter().enumerate() {
+            for (i, shape) in shapes.iter().enumerate() {
+                let (id, layer, label, got) = &back[k * shapes.len() + i];
+                assert_eq!(
+                    (*id, layer.as_str(), *label),
+                    (i as f64 + 1.0, layers[i % 3], i % 2 == 0)
+                );
+                // The core's JSON tells −0 from 0 and keeps NaN and ±∞.
+                assert_eq!(
+                    json::to_string(got),
+                    json::to_string(&transform_shape(shape, m)),
+                    "{k}, {i}"
+                );
+            }
+        }
+        // Nothing to move, nothing back; a broken pack is an error.
+        assert!(
+            transform_packed_objects(&[], &w.strings, &affines)
+                .unwrap()
+                .nums
+                .is_empty()
+        );
+        assert!(transform_packed_objects(&w.nums[..5], &w.strings, &affines).is_err());
     }
 
     #[test]

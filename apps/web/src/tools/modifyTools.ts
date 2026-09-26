@@ -1,8 +1,10 @@
 import type { AppContext } from '../app/context';
+import type { Transform } from '../contracts/generated/Transform';
 import { Signal } from '../core/signal';
 import type { Entity, NewEntity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
 import { mirror, rotation, scaling, translation, type Affine } from '../model/geom/affine';
+import { entitiesTransform } from '../product/entitiesTransform';
 import type { ViewTransform } from '../viewport/Camera';
 import { directionAngle, rotationAngle, scaleFactor } from './constructions';
 import { parseNumber } from './coordinateInput';
@@ -18,7 +20,10 @@ const deg = (rad: number) => (rad * 180) / Math.PI;
 /**
  * Pick objects (unless something is already selected), press Enter, then
  * answer the tool's stages. Results are applied as one undo step through
- * an affine transform, so every entity kind is supported uniformly.
+ * an affine transform, so every entity kind is supported uniformly: the
+ * move, copy, rotate, scale and mirror tools write it through the product
+ * command `cad.entities.transform` (docs/adr/0037), the arrays and the
+ * align tool through `applyTransforms`.
  */
 export abstract class SelectionFirstTool implements Tool {
   abstract readonly id: string;
@@ -160,7 +165,32 @@ export abstract class SelectionFirstTool implements Tool {
     return [...this.ctx.selection.ids.value].map((id) => this.ctx.doc.get(id)).filter((e): e is Entity => !!e);
   }
 
-  /** Applies `ms` to the selection: copies when `copy`, otherwise edits in place. */
+  /**
+   * Writes a transform of the selection through the product command
+   * `cad.entities.transform` (docs/adr/0037): the selected objects'
+   * persistent ids explicit in the input (CMD-07), in place or as copies,
+   * one undo step named after the tool. The command's refusal or warning is
+   * the tool's message; objects on locked layers are neither changed nor
+   * copied. How many objects were written, or null when nothing was.
+   */
+  protected transformSelection(transform: Transform, copy: boolean): number | null {
+    const { doc, log } = this.ctx;
+    const uids = [...this.ctx.selection.ids.value].map((id) => doc.uidOf(id)).filter((uid): uid is string => uid !== undefined);
+    const result = entitiesTransform.execute({ doc }, { uids, transform, ...(copy ? { copy: true } : {}) });
+    if (result.status !== 'completed') {
+      if ('error' in result) log.warn(result.error.message);
+      return null;
+    }
+    for (const w of result.warnings) log.warn(w.message);
+    return copy ? result.output.created.length : result.output.changed.length;
+  }
+
+  /**
+   * Applies `ms` to the selection: copies when `copy`, otherwise edits in
+   * place. The arrays and the align tool still write this way; the move,
+   * copy, rotate, scale and mirror tools go through the product command
+   * (`transformSelection`).
+   */
   protected applyTransforms(label: string, ms: Affine[], copy: boolean): number {
     const { doc, log } = this.ctx;
     const ents = this.targets();
@@ -222,9 +252,9 @@ export class MoveTool extends SelectionFirstTool {
     }
     const dx = p.x - this.base.x;
     const dy = p.y - this.base.y;
-    const n = this.applyTransforms(this.label, [translation(dx, dy)], this.copy);
+    const n = this.transformSelection({ kind: 'move', dx, dy }, this.copy);
     const f = this.ctx.format;
-    this.ctx.log.success(`${n} nesne ${this.copy ? 'kopyalandı' : 'taşındı'}: ΔY ${f.length(dx, false)}  ΔX ${f.length(dy, false)}`);
+    if (n !== null) this.ctx.log.success(`${n} nesne ${this.copy ? 'kopyalandı' : 'taşındı'}: ΔY ${f.length(dx, false)}  ΔX ${f.length(dy, false)}`);
     if (!this.copy) this.ctx.tools.exit();
   }
   protected override previewTransforms(): Affine[] {
@@ -307,8 +337,8 @@ export class RotateTool extends SelectionFirstTool {
     return super.input(text);
   }
   private rotate(angle: number): void {
-    const n = this.applyTransforms(this.label, [rotation(angle, this.base!)], this.copy);
-    this.ctx.log.success(`${n} nesne ${deg(angle).toFixed(4)}° döndürüldü${this.copy ? ' (kopya)' : ''}.`);
+    const n = this.transformSelection({ kind: 'rotate', center: { x: this.base!.x, y: this.base!.y }, angle }, this.copy);
+    if (n !== null) this.ctx.log.success(`${n} nesne ${deg(angle).toFixed(4)}° döndürüldü${this.copy ? ' (kopya)' : ''}.`);
     this.ctx.tools.exit();
   }
   private turn(): number | null {
@@ -406,8 +436,8 @@ export class ScaleTool extends SelectionFirstTool {
   }
   private scale(f: number): void {
     if (!(f > 0) || !Number.isFinite(f)) return;
-    const n = this.applyTransforms(this.label, [scaling(f, this.base!)], this.copy);
-    this.ctx.log.success(`${n} nesne ${f.toFixed(4)} faktörüyle ölçeklendi${this.copy ? ' (kopya)' : ''}.`);
+    const n = this.transformSelection({ kind: 'scale', center: { x: this.base!.x, y: this.base!.y }, factor: f }, this.copy);
+    if (n !== null) this.ctx.log.success(`${n} nesne ${f.toFixed(4)} faktörüyle ölçeklendi${this.copy ? ' (kopya)' : ''}.`);
     this.ctx.tools.exit();
   }
   private factor(): number | null {
@@ -447,8 +477,8 @@ export class MirrorTool extends SelectionFirstTool {
       return;
     }
     if (dist(this.p1, p) < 1e-9) return;
-    const n = this.applyTransforms(this.label, [mirror(this.p1, p)], !this.eraseSource);
-    this.ctx.log.success(`${n} nesnenin simetriği ${this.eraseSource ? 'alındı; kaynaklar yerinde değiştirildi' : 'kopya olarak oluşturuldu'}.`);
+    const n = this.transformSelection({ kind: 'mirror', a: { x: this.p1.x, y: this.p1.y }, b: { x: p.x, y: p.y } }, !this.eraseSource);
+    if (n !== null) this.ctx.log.success(`${n} nesnenin simetriği ${this.eraseSource ? 'alındı; kaynaklar yerinde değiştirildi' : 'kopya olarak oluşturuldu'}.`);
     this.ctx.tools.exit();
   }
   override input(text: string): boolean {
