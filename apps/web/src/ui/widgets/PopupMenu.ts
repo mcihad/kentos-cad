@@ -73,6 +73,8 @@ export class PopupMenu {
     this.render();
     overlayRoot().append(this.el);
     this.position(anchor);
+    // A label the menu's width cuts keeps its whole text on hover (long layer names).
+    for (const l of this.el.querySelectorAll<HTMLElement>('.menu__label:not(.menu__label--2), .menu__title')) if (l.scrollWidth > l.clientWidth + 1) l.title = l.textContent ?? '';
     if (!parent) {
       this.d.add(listen<KeyboardEvent>(window, 'keydown', (e) => this.leaf().onKey(e), true));
       this.d.add(

@@ -103,6 +103,7 @@ pnpm test:rust           # Rust ve WASM/format entegrasyon testleri
 pnpm wasm                # değişen ortak kaynakların WASM paketlerini derle
 pnpm e2e                 # gerçek tarayıcı duman testi
 pnpm e2e:visual          # görsel karşılaştırma
+pnpm e2e:layout          # her pencere, menü ve çubuk 1100×650 ve 1440×900'de, iki temada: taşma, kesik düğme ve yazı; resimler scripts/e2e/out/layout
 pnpm e2e:interaction     # etkileşim izleri: poligon kabul izi, tuş anlamları (fixtures/interaction, ADR 0018)
 cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan (ADR 0021)
 apps/desktop/scripts/cloud-live.sh   # masaüstünün bulut arayüzü gerçek kentosd ile (geliştirme veritabanı; görüntüler .run/shots/bulut-*; ADR 0041)

@@ -1060,7 +1060,8 @@
 .font-pick--drawing .font-pick__sample {
   max-width: 100%;
   overflow: hidden;
-  font-size: calc(18px * var(--ui-scale));
+  /* The sample reads whole in the narrowest card, in the widest face (Overpass). */
+  font-size: calc(16px * var(--ui-scale));
   font-weight: 500;
   text-overflow: ellipsis;
 }

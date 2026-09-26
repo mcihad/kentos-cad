@@ -12,6 +12,7 @@
     "test:watch": "node ../../scripts/wasm/ensure.mjs && vitest",
     "e2e": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/smoke.mjs",
     "e2e:visual": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/visual.mjs",
+    "e2e:layout": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/layout.mjs",
     "e2e:interaction": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/interaction.mjs",
     "e2e:cloud": "node ../../scripts/wasm/ensure.mjs && cargo build -q -p kentos-api --bin kentosd --example e2e_database && node scripts/e2e/cloud.mjs",
     "perf:interaction": "node ../../scripts/wasm/ensure.mjs && node scripts/perf/interaction.mjs",

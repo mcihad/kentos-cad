@@ -852,6 +852,10 @@
   color: var(--c-text-3);
   font-family: var(--font-ui);
 }
+/* The hint shortens with an ellipsis when a command's chips take the line (not cut mid-word). */
+.cmdline__input:placeholder-shown {
+  text-overflow: ellipsis;
+}
 .cmdline__suggest {
   position: absolute;
   left: -6px;

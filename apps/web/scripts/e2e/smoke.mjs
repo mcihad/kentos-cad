@@ -824,6 +824,14 @@ try {
   check('linear dimension ΔX (X), typed offset', lin.kind === 'dimension' && lin.style === 'linear' && lin.angle === 90 && lin.offset === -6);
   await key('c');
   check('C selects “Çap (Ç)” instead of the circle tool', (await b.eval('window.kentos.tools.prompt.value')).includes('çapı ölçülecek'));
+  // A typed point while a circle is expected picks nothing and is refused: the style options stay (docs/adr/0061).
+  await cmd(`${AX},${N - 40}`);
+  const refusedPoint = await b.eval(`({ prompt: window.kentos.tools.prompt.value, said: window.kentos.log.entries.value.at(-1)?.text ?? '' })`);
+  check(
+    'a typed point is refused while the dimension tool waits for a circle; its style options stay',
+    refusedPoint.prompt.includes('Hizalı (H)') && refusedPoint.said.includes('anlaşılamadı'),
+    JSON.stringify(refusedPoint),
+  );
   await key('h');
   await key('Escape');
 
