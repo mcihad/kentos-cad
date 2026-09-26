@@ -14,6 +14,7 @@
     "e2e": "pnpm -C apps/web e2e",
     "e2e:cloud": "pnpm -C apps/web e2e:cloud",
     "e2e:visual": "pnpm -C apps/web e2e:visual",
+    "e2e:layout": "pnpm -C apps/web e2e:layout",
     "e2e:interaction": "pnpm -C apps/web e2e:interaction",
     "perf:interaction": "pnpm -C apps/web perf:interaction",
     "perf:kcad": "pnpm -C apps/web perf:kcad",
