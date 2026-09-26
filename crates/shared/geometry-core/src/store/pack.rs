@@ -419,8 +419,8 @@ impl Reader<'_> {
     }
 }
 
-/// Every packed object in order (tests read the store's packed answers back).
-#[cfg(test)]
+/// Every packed object in order: id, layer, label flag and shape (tests
+/// read the store's packed answers back with it too).
 pub(crate) fn unpack(
     nums: &[f64],
     strings: &[String],
@@ -449,22 +449,35 @@ pub fn transform_packed_objects(
     strings: &[String],
     affines: &[Affine],
 ) -> Result<Packer, String> {
-    let mut r = Reader {
-        nums,
-        at: 0,
-        strings,
-    };
-    let mut objects = Vec::new();
-    while r.at < nums.len() {
-        objects.push(r.object()?);
-    }
+    let objects = unpack(nums, strings)?;
+    Ok(moved_packed(&objects, affines))
+}
+
+/// Packed objects copied into an array, packed again (the web's
+/// `cad.entities.array` handler, docs/adr/0047): `affines` makes the
+/// copies' affines from the objects' shapes (`array_transforms`: a polar
+/// array that does not turn is placed by their middle), then every object
+/// goes by every affine as in [`transform_packed_objects`]. None when
+/// `affines` makes none.
+pub fn array_packed_objects(
+    nums: &[f64],
+    strings: &[String],
+    affines: impl FnOnce(&[Shape]) -> Option<Vec<Affine>>,
+) -> Result<Option<Packer>, String> {
+    let objects = unpack(nums, strings)?;
+    let shapes: Vec<Shape> = objects.iter().map(|(.., s)| s.clone()).collect();
+    Ok(affines(&shapes).map(|ms| moved_packed(&objects, &ms)))
+}
+
+/// Every object by every affine, affine after affine, packed.
+fn moved_packed(objects: &[(f64, String, bool, Shape)], affines: &[Affine]) -> Packer {
     let mut out = Packer::default();
     for m in affines {
-        for (id, layer, label, shape) in &objects {
+        for (id, layer, label, shape) in objects {
             out.object(*id, layer, *label, &transform_shape(shape, m));
         }
     }
-    Ok(out)
+    out
 }
 
 impl Store {

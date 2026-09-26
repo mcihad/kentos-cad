@@ -71,7 +71,11 @@
     "workspace.gis",
     "file.import.geojson",
     "file.import.shp",
-    "file.export.geojson"
+    "file.export.geojson",
+    "tool.stretch",
+    "tool.array",
+    "tool.arrayPolar",
+    "tool.align"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

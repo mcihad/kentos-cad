@@ -76,8 +76,8 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 82,
-    "commandsOnDesktop": 72
+    "commandsWithoutTests": 80,
+    "commandsOnDesktop": 76
   },
   "commands": [
     {
@@ -2553,9 +2553,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/stretch-align.json"
+      ]
     },
     {
       "id": "tool.arc",
@@ -2792,10 +2794,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/arrays.json"
       ]
     },
     {
@@ -2828,10 +2831,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/scripts/e2e/smoke.mjs"
+        "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/arrays.json"
       ]
     },
     {
@@ -4364,9 +4368,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/stretch-align.json"
+      ]
     },
     {
       "id": "tool.subdivide",
@@ -5505,12 +5511,15 @@
       "methods": [],
       "steps": 3,
       "description": "Seçimi iki nokta çiftiyle yerine oturtur: birinci kaynak birinci hedefe taşınır, ikinci çift yönü (isterseniz ölçeği) verir.",
+      "productCommand": "cad.entities.transform",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/stretch-align.json"
+      ]
     },
     {
       "id": "arc",
@@ -5685,13 +5694,15 @@
       "methods": [],
       "steps": 3,
       "description": "Seçili nesneleri satır ve sütun düzeninde çoğaltır.",
+      "productCommand": "cad.entities.array",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/arrays.json"
       ]
     },
     {
@@ -5712,13 +5723,15 @@
       "methods": [],
       "steps": 3,
       "description": "Seçili nesneleri bir merkez çevresinde çoğaltır: adet, doldurma açısı, nesneler dönsün ya da dönmesin.",
+      "productCommand": "cad.entities.array",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
       "tests": [
-        "apps/web/scripts/e2e/smoke.mjs"
+        "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/arrays.json"
       ]
     },
     {
@@ -6804,12 +6817,15 @@
       "methods": [],
       "steps": 3,
       "description": "Pencerenin içinde kalan köşeleri taşır; dışındakiler yerinde kalır.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/stretch-align.json"
+      ]
     },
     {
       "id": "subdivide",

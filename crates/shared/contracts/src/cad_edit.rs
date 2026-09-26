@@ -2,7 +2,7 @@
 //! named by their persistent ids given a new geometry, replaced by pieces,
 //! followed by new objects made from them, or deleted, as one undo step
 //! named after the modify tool. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır,
-//! Birleştir, Patlat, Uzat-kısalt and Köşe ekle/sil write through
+//! Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil and Esnet write through
 //! `cad.entities.edit` on the web (`apps/web/src/product`) and on the
 //! desktop (`crates/native/application`); both pass the shared cases in
 //! `fixtures/commands/v1`.
@@ -20,7 +20,7 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::entity::{Entity, RingGeometry, Vec2};
+use crate::entity::{DimensionStyle, Entity, HatchPattern, RingGeometry, Vec2};
 
 /// Reshapes, splits, joins and explodes objects in one undo step.
 pub const CAD_ENTITIES_EDIT: &str = "cad.entities.edit";
@@ -62,8 +62,7 @@ pub enum EditOperation {
 /// A drawing object's geometry alone: its kind and the fields that place and
 /// shape it, without the fields every object has (layer, colour, attributes,
 /// label, symbol). Coordinates are x east (Y), y north (X), in the project's
-/// units (m), float64; angles in radians unless said otherwise. Dimensions
-/// and hatches are not edited through this command in v1.
+/// units (m), float64; angles in radians unless said otherwise.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -138,6 +137,36 @@ pub enum EntityGeometry {
         height: f64,
         rotation: f64,
     },
+    /// A dimension from `a` to `b` (an angular one's vertex is `c`), its line
+    /// `offset` metres away, its text `height` metres high; `text` replaces
+    /// the measured value, `angle` is a linear one's measured direction in
+    /// degrees counter-clockwise from east (0 = ΔY, 90 = ΔX).
+    Dimension {
+        a: Vec2,
+        b: Vec2,
+        offset: f64,
+        height: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        text: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        style: Option<DimensionStyle>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        angle: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        c: Option<Vec2>,
+    },
+    /// A hatched area: its ring, its holes when it has any, and its pattern.
+    Hatch {
+        ring: Vec<Vec2>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        holes: Option<Vec<Vec<Vec2>>>,
+        pattern: HatchPattern,
+    },
 }
 
 /// One change of an edit. The objects are named by their persistent ids
@@ -205,9 +234,10 @@ pub enum EntityEdit {
 /// belong together, so an edit is written whole or not at all.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_changes`,
-/// `invalid_uid` (each change's id in order), `not_finite`,
-/// `too_few_points`, `too_few_corners`, `invalid_radius` (each geometry in
-/// order), `invalid_revision`, `revision_conflict` (status `conflict`),
+/// `invalid_uid` (each change's id in order), then each geometry in order:
+/// `too_few_points` (a polyline), `too_few_corners` (a closed area's or a
+/// hatch's ring or hole), `not_finite`, `invalid_radius`; then
+/// `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `entity_not_found` (each id in order), `repeated_entity` (an object
 /// changed twice), `layer_locked`; on the desktop also `slots_exhausted`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

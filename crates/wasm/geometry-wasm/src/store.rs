@@ -11,7 +11,9 @@ use kentos_geometry_core::geom::affine::similarity;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::processing::numbering::{CornerWalk, StartCorner};
-use kentos_geometry_core::store::{Store, transform_packed_objects};
+use kentos_geometry_core::store::{Store, array_packed_objects, transform_packed_objects};
+use kentos_geometry_core::text::Font;
+use kentos_geometry_core::tools::editing::array_transforms;
 use kentos_style_core::style::build::{LayerObjects, Program, build_layer};
 use wasm_bindgen::prelude::*;
 
@@ -101,6 +103,40 @@ pub fn transform_objects(
         })?;
     let p = transform_packed_objects(nums, &strings, &[m])
         .map_err(|e| JsError::new(&format!("Dönüştürülecek nesneler okunamadı: {e}")))?;
+    Ok(PackedObjects {
+        strings: json::to_string(&p.strings),
+        nums: p.nums,
+    })
+}
+
+/// Packed objects (`apps/web/src/wasm/pack.ts`) copied into an array,
+/// packed again, with no store (`array_packed_objects`, docs/adr/0047): the
+/// web's `cad.entities.array` handler. `kind` and `params` are the array
+/// (`array_transforms`: `grid` rows, cols, dx, dy; `polar` cx, cy, count,
+/// fill, rotate 1 or 0); `font` is the drawing's typeface id, which measures
+/// text for a polar array's middle. The copies come affine after affine,
+/// each run in the order the objects were packed; no number crosses as JSON.
+#[wasm_bindgen(js_name = arrayObjects)]
+pub fn array_objects(
+    nums: &[f64],
+    strings: &str,
+    kind: &str,
+    params: &[f64],
+    font: &str,
+) -> Result<PackedObjects, JsError> {
+    let strings = Json::parse(strings)
+        .and_then(|v| Vec::<String>::from_json(&v))
+        .map_err(|e| {
+            JsError::new(&format!(
+                "Diziye alınacak nesnelerin metinleri okunamadı: {e}"
+            ))
+        })?;
+    let font = Font::from_id(font);
+    let p = array_packed_objects(nums, &strings, |shapes| {
+        array_transforms(kind, params, shapes, font)
+    })
+    .map_err(|e| JsError::new(&format!("Diziye alınacak nesneler okunamadı: {e}")))?
+    .ok_or_else(|| JsError::new(&format!("Dizi kurulamadı: {kind} ({} sayı).", params.len())))?;
     Ok(PackedObjects {
         strings: json::to_string(&p.strings),
         nums: p.nums,

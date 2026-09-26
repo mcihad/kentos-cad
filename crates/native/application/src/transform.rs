@@ -1,11 +1,11 @@
-//! `cad.entities.transform` v1 (docs/adr/0037): objects named by their
-//! persistent ids moved, rotated, scaled or mirrored as one undo step, in
-//! place or as copies. The desktop's handler over the native document; the
-//! web's is `apps/web/src/product/entitiesTransform.ts`. Both pass the shared
-//! cases in `fixtures/commands/v1/cad.entities.transform.json`.
+//! `cad.entities.transform` v1 (docs/adr/0037, 0047): objects named by their
+//! persistent ids moved, rotated, scaled, mirrored or aligned as one undo
+//! step, in place or as copies. The desktop's handler over the native
+//! document; the web's is `apps/web/src/product/entitiesTransform.ts`. Both
+//! pass the shared cases in `fixtures/commands/v1/cad.entities.transform.json`.
 //!
-//! The modify tools (Taşı, Kopyala, Döndür, Ölçekle, Aynala) make the
-//! selection explicit here (TODOS.md CMD-07): they give the selected
+//! The modify tools (Taşı, Kopyala, Döndür, Ölçekle, Aynala, Hizala) make
+//! the selection explicit here (TODOS.md CMD-07): they give the selected
 //! objects' ids. The geometry is the shared core's, as on the web: the
 //! matrix of the transform (`similarity`) and what it does to each kind of
 //! object (`transform_shape`); nothing is computed here.
@@ -13,7 +13,8 @@
 //! The checks, in order (the first that fails answers):
 //! 1. at least one id; every id lowercase UUID text with hyphens (in order);
 //! 2. the transform's numbers finite, in their order; a scale factor above
-//!    zero; a mirror axis with a direction;
+//!    zero; a mirror axis with a direction; an alignment's second pair whole,
+//!    its points apart from the first pair's;
 //! 3. the expected revision (every command's, `checks.rs`);
 //! 4. every id names an object of the document (in order);
 //! 5. not every object on a locked layer (with others, a warning);
@@ -27,8 +28,10 @@ use kentos_contracts::{
     EntitiesTransformed, Entity, Transform,
 };
 use kentos_domain::{Document, Slot};
+use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::affine::{Affine, similarity};
+use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::ops::transform::transform_shape;
 
 use crate::ExecutionContext;
@@ -144,6 +147,7 @@ pub fn label(transform: &Transform, copy: bool) -> &'static str {
         Transform::Rotate { .. } => "Döndür",
         Transform::Scale { .. } => "Ölçekle",
         Transform::Mirror { .. } => "Aynala",
+        Transform::Align { .. } => "Hizala",
     }
 }
 
@@ -156,6 +160,71 @@ pub fn affine(transform: &Transform) -> Option<Affine> {
         Transform::Rotate { center, angle } => similarity("rotate", &[center.x, center.y, angle]),
         Transform::Scale { center, factor } => similarity("scale", &[center.x, center.y, factor]),
         Transform::Mirror { a, b } => similarity("mirror", &[a.x, a.y, b.x, b.y]),
+        Transform::Align {
+            source: s,
+            target: t,
+            source2,
+            target2,
+            scale,
+        } => match (source2, target2) {
+            (Some(s2), Some(t2)) => similarity(
+                if scale == Some(true) {
+                    "alignScale"
+                } else {
+                    "align"
+                },
+                &[s.x, s.y, t.x, t.y, s2.x, s2.y, t2.x, t2.y],
+            ),
+            (None, None) => similarity("align", &[s.x, s.y, t.x, t.y]),
+            _ => None,
+        },
+    }
+}
+
+/// An alignment's own checks after its numbers (`invalid_align`): the second
+/// pair whole, its points apart from the first pair's by the core's own
+/// measure (`align`: within a nanometre the direction is lost).
+fn check_align(
+    source: kentos_contracts::Vec2,
+    target: kentos_contracts::Vec2,
+    source2: Option<kentos_contracts::Vec2>,
+    target2: Option<kentos_contracts::Vec2>,
+) -> Result<(), Stop> {
+    let refuse = |message: &str, path: &str| {
+        Err(Stop::Failed(checks::error(
+            codes::INVALID_ALIGN,
+            message.into(),
+            Some(path.into()),
+        )))
+    };
+    let apart = |a: kentos_contracts::Vec2, b: kentos_contracts::Vec2| {
+        dist(Vec2::new(a.x, a.y), Vec2::new(b.x, b.y)) >= 1e-9
+    };
+    match (source2, target2) {
+        (None, None) => Ok(()),
+        (Some(_), None) => refuse(
+            "Hizalamanın ikinci hedef noktası verilmedi; ikinci çift iki noktayla verilir. İkinci hedef noktasını verin ya da ikinci kaynak noktasını çıkarın.",
+            "transform.target2",
+        ),
+        (None, Some(_)) => refuse(
+            "Hizalamanın ikinci kaynak noktası verilmedi; ikinci çift iki noktayla verilir. İkinci kaynak noktasını verin ya da ikinci hedef noktasını çıkarın.",
+            "transform.source2",
+        ),
+        (Some(s2), Some(t2)) => {
+            if !apart(source, s2) {
+                return refuse(
+                    "Kaynak noktaları çakışıyor; kaynak doğrultusunun yönü yok. Birbirinden ayrı iki kaynak noktası verin.",
+                    "transform.source2",
+                );
+            }
+            if !apart(target, t2) {
+                return refuse(
+                    "Hedef noktaları çakışıyor; hedef doğrultusunun yönü yok. Birbirinden ayrı iki hedef noktası verin.",
+                    "transform.target2",
+                );
+            }
+            Ok(())
+        }
     }
 }
 
@@ -222,6 +291,23 @@ fn check_transform(transform: &Transform) -> Result<Affine, Stop> {
                     Some("transform.b".into()),
                 )));
             }
+        }
+        Transform::Align {
+            source,
+            target,
+            source2,
+            target2,
+            ..
+        } => {
+            checks::point(source, "Birinci kaynak noktasının", "transform.source")?;
+            checks::point(target, "Birinci hedef noktasının", "transform.target")?;
+            if let Some(p) = source2 {
+                checks::point(p, "İkinci kaynak noktasının", "transform.source2")?;
+            }
+            if let Some(p) = target2 {
+                checks::point(p, "İkinci hedef noktasının", "transform.target2")?;
+            }
+            check_align(source, target, source2, target2)?;
         }
     }
     affine(transform).ok_or_else(|| {
@@ -294,8 +380,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
 /// Every number of a shape's geometry is finite (the fields the web's
 /// handler walks: points, radii, angles, bulges, heights, offsets, the
 /// hatch pattern's angle and spacing).
-fn finite_shape(s: &Shape) -> bool {
-    use kentos_geometry_core::Vec2;
+pub(crate) fn finite_shape(s: &Shape) -> bool {
     fn pt(p: &Vec2) -> bool {
         p.x.is_finite() && p.y.is_finite()
     }
@@ -371,7 +456,7 @@ fn finite_shape(s: &Shape) -> bool {
     }
 }
 
-fn base_mut(e: &mut Entity) -> &mut kentos_contracts::EntityBase {
+pub(crate) fn base_mut(e: &mut Entity) -> &mut kentos_contracts::EntityBase {
     match e {
         Entity::Point(e) => &mut e.base,
         Entity::Line(e) => &mut e.base,

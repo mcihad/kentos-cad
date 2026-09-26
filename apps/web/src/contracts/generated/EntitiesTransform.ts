@@ -13,7 +13,7 @@ import type { Transform } from "./Transform";
  * field of its original (layer, colour, attributes, label, symbol) and a new
  * persistent id; the originals stay. The undo step is the tool's name:
  * “Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,
- * “Aynala”.
+ * “Aynala”, “Hizala”.
  *
  * Objects on a locked layer (by itself or a group above it) stay where they
  * are and are not copied: with others to transform they are named in the
@@ -24,7 +24,9 @@ import type { Transform } from "./Transform";
  * Refusals (`CommandError.code`), checked in this order: `no_entities`,
  * `invalid_uid` (each id in order), `not_finite` (the transform's numbers,
  * in their order), `invalid_factor` (a scale not above zero),
- * `invalid_axis` (a mirror axis without a direction), `invalid_revision`,
+ * `invalid_axis` (a mirror axis without a direction), `invalid_align` (an
+ * alignment's second pair given by half, or its source or target points
+ * within a nanometre of the first's), `invalid_revision`,
  * `revision_conflict` (status `conflict`), `entity_not_found` (each id in
  * order), `layer_locked`, then `not_finite` again (path `transform`) when
  * the transform would carry a coordinate past the largest float64; on the

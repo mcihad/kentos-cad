@@ -1,5 +1,5 @@
 //! The shared product command cases (fixtures/commands/v1, docs/adr/0022,
-//! 0027, 0029, 0032, 0037) run against the desktop's handlers over the native document. The web
+//! 0027, 0029, 0032, 0037, 0047) run against the desktop's handlers over the native document. The web
 //! runs the same files against its own handlers
 //! (apps/web/src/product/fixtures.test.ts); the format is in
 //! fixtures/commands/README.md.
@@ -11,16 +11,16 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use kentos_domain::contracts::{
-    ArcCreate, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_DELETE, CAD_ENTITIES_EDIT,
-    CAD_ENTITIES_TRANSFORM, CAD_LINE_CREATE, CAD_POINT_CREATE, CAD_POLYGON_CREATE,
-    CAD_POLYLINE_CREATE, CircleCreate, DocumentSnapshotV1, EntitiesDelete, EntitiesEdit,
-    EntitiesTransform, EntityEdit, EntityGeometry, LineCreate, PointCreate, PolygonCreate,
-    PolylineCreate, Transform,
+    ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
+    CAD_ENTITIES_DELETE, CAD_ENTITIES_EDIT, CAD_ENTITIES_TRANSFORM, CAD_LINE_CREATE,
+    CAD_POINT_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, CircleCreate, DocumentSnapshotV1,
+    EntitiesArray, EntitiesDelete, EntitiesEdit, EntitiesTransform, EntityEdit, EntityGeometry,
+    LineCreate, PointCreate, PolygonCreate, PolylineCreate, Transform,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, arc, circle, delete, edit, line, point, polygon, polyline,
-    transform,
+    DESKTOP_COMMANDS, ExecutionContext, arc, array, circle, delete, edit, line, point, polygon,
+    polyline, transform,
 };
 use serde_json::{Value, json};
 
@@ -282,6 +282,34 @@ impl Input for EntitiesTransform {
             Transform::Mirror { a, b } => {
                 coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest))
             }
+            Transform::Align {
+                source,
+                target,
+                source2,
+                target2,
+                ..
+            } => coordinate(source, "source", rest)
+                .or_else(|| coordinate(target, "target", rest))
+                .or_else(|| coordinate(source2.as_mut()?, "source2", rest))
+                .or_else(|| coordinate(target2.as_mut()?, "target2", rest)),
+        }
+    }
+}
+
+impl Input for EntitiesArray {
+    /// `layout.dx`, `layout.dy`, `layout.center.x`, `layout.fill`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let rest = path.strip_prefix("layout.")?;
+        match &mut self.layout {
+            ArrayLayout::Grid { dx, dy, .. } => match rest {
+                "dx" => Some(dx),
+                "dy" => Some(dy),
+                _ => None,
+            },
+            ArrayLayout::Polar { center, fill, .. } => match rest {
+                "fill" => Some(fill),
+                _ => coordinate(center, "center", rest),
+            },
         }
     }
 }
@@ -322,6 +350,30 @@ impl Input for EntitiesEdit {
                 "a0" => Some(a0),
                 "a1" => Some(a1),
                 _ => coordinate(c, "c", rest),
+            },
+            EntityGeometry::Dimension {
+                a,
+                b,
+                offset,
+                height,
+                ..
+            } => match rest {
+                "offset" => Some(offset),
+                "height" => Some(height),
+                _ => coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest)),
+            },
+            EntityGeometry::Hatch { ring, pattern, .. } => match rest {
+                "pattern.angle" => Some(&mut pattern.angle),
+                "pattern.spacing" => Some(&mut pattern.spacing),
+                _ => {
+                    let (i, axis) = rest.strip_prefix("ring[")?.split_once("].")?;
+                    let p = ring.get_mut(i.parse::<usize>().ok()?)?;
+                    match axis {
+                        "x" => Some(&mut p.x),
+                        "y" => Some(&mut p.y),
+                        _ => None,
+                    }
+                }
             },
             _ => None,
         }
@@ -388,6 +440,7 @@ fn run_op(
         CAD_ARC_CREATE => run!(arc, ArcCreate),
         CAD_ENTITIES_TRANSFORM => run!(transform, EntitiesTransform),
         CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
+        CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))

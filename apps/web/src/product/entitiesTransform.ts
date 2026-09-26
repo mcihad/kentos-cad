@@ -11,13 +11,13 @@ import { checkRevision, checkUids, error, failed, findObjects, notFinite, notFin
 import type { ProductCommand } from './command';
 
 /**
- * `cad.entities.transform` v1 (docs/adr/0037): objects named by their
- * persistent ids moved, rotated, scaled or mirrored as one undo step, in
- * place or as copies. The web's handler over `CadDocument`; the desktop's is
- * `crates/native/application/src/transform.rs`. Both pass the shared cases
- * in fixtures/commands/v1/cad.entities.transform.json.
+ * `cad.entities.transform` v1 (docs/adr/0037, 0047): objects named by their
+ * persistent ids moved, rotated, scaled, mirrored or aligned as one undo
+ * step, in place or as copies. The web's handler over `CadDocument`; the
+ * desktop's is `crates/native/application/src/transform.rs`. Both pass the
+ * shared cases in fixtures/commands/v1/cad.entities.transform.json.
  *
- * The modify tools (Taşı, Kopyala, Döndür, Ölçekle, Aynala) make the
+ * The modify tools (Taşı, Kopyala, Döndür, Ölçekle, Aynala, Hizala) make the
  * selection explicit here (TODOS.md CMD-07). The geometry is the shared
  * core's, as on the desktop: the core builds the matrix from the
  * transform's numbers and moves every kind of object, packed, with no JSON
@@ -25,10 +25,11 @@ import type { ProductCommand } from './command';
  *
  * The checks, in order (the first that fails answers): at least one id,
  * each lowercase UUID text with hyphens; the transform's numbers finite in
- * their order, a scale factor above zero, a mirror axis with a direction;
- * the expected revision (checks.ts); each id names an object; not every
- * object on a locked layer; no coordinate carried past the largest float64.
- * A repeated id counts once.
+ * their order, a scale factor above zero, a mirror axis with a direction,
+ * an alignment's second pair whole and apart from the first; the expected
+ * revision (checks.ts); each id names an object; not every object on a
+ * locked layer; no coordinate carried past the largest float64. A repeated
+ * id counts once.
  *
  * Objects on a locked layer are neither changed nor copied. The tools used
  * to copy them onto their locked layer; ADR 0037 records the change.
@@ -57,7 +58,36 @@ export function transformLabel(t: Transform, copy: boolean): string {
       return 'Ölçekle';
     case 'mirror':
       return 'Aynala';
+    case 'align':
+      return 'Hizala';
   }
+}
+
+/**
+ * An alignment's own checks after its numbers (`invalid_align`): the second
+ * pair whole, its points apart from the first pair's by the core's own
+ * measure (`align`: within a nanometre the direction is lost; `Math.hypot`
+ * is the core's `js_hypot`).
+ */
+function checkAlign(t: Extract<Transform, { kind: 'align' }>): Stop | null {
+  const refuse = (message: string, path: string) => failed(error('invalid_align', message, path));
+  const { source2, target2 } = t;
+  if (source2 && !target2)
+    return refuse(
+      'Hizalamanın ikinci hedef noktası verilmedi; ikinci çift iki noktayla verilir. İkinci hedef noktasını verin ya da ikinci kaynak noktasını çıkarın.',
+      'transform.target2',
+    );
+  if (!source2 && target2)
+    return refuse(
+      'Hizalamanın ikinci kaynak noktası verilmedi; ikinci çift iki noktayla verilir. İkinci kaynak noktasını verin ya da ikinci hedef noktasını çıkarın.',
+      'transform.source2',
+    );
+  if (!source2 || !target2) return null;
+  if (!(Math.hypot(source2.x - t.source.x, source2.y - t.source.y) >= 1e-9))
+    return refuse('Kaynak noktaları çakışıyor; kaynak doğrultusunun yönü yok. Birbirinden ayrı iki kaynak noktası verin.', 'transform.source2');
+  if (!(Math.hypot(target2.x - t.target.x, target2.y - t.target.y) >= 1e-9))
+    return refuse('Hedef noktaları çakışıyor; hedef doğrultusunun yönü yok. Birbirinden ayrı iki hedef noktası verin.', 'transform.target2');
+  return null;
 }
 
 /** The transform's own checks, in its fields' order: finite numbers, then what they mean. */
@@ -83,6 +113,14 @@ function checkTransform(t: Transform): Stop | null {
       const dy = t.b.y - t.a.y;
       return dx * dx + dy * dy === 0 ? failed(error('invalid_axis', 'Simetri ekseninin iki noktası aynı; eksenin yönü yok. Birbirinden ayrı iki nokta verin.', 'transform.b')) : null;
     }
+    case 'align':
+      return (
+        notFinite(t.source, 'Birinci kaynak noktasının', 'transform.source') ??
+        notFinite(t.target, 'Birinci hedef noktasının', 'transform.target') ??
+        (t.source2 ? notFinite(t.source2, 'İkinci kaynak noktasının', 'transform.source2') : null) ??
+        (t.target2 ? notFinite(t.target2, 'İkinci hedef noktasının', 'transform.target2') : null) ??
+        checkAlign(t)
+      );
   }
 }
 

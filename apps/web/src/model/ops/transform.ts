@@ -1,7 +1,8 @@
+import type { ArrayLayout } from '../../contracts/generated/ArrayLayout';
 import type { Transform } from '../../contracts/generated/Transform';
 import type { Entity, EntityKind, NewEntity } from '../entities';
 import type { Affine } from '../geom/affine';
-import { transformObjects as coreTransformObjects } from '../../wasm/core';
+import { arrayObjects as coreArrayObjects, transformObjects as coreTransformObjects } from '../../wasm/core';
 import { packEntities, unpackEntities, type Geometry, type Packed } from '../../wasm/pack';
 import { entityOp } from './entityOp';
 
@@ -78,16 +79,18 @@ function withGeometry<E extends Entity | NewEntity>(e: E, g: Geometry): E {
 /**
  * `transformEntities(list, ms)` read from a geometry store's packed answer
  * (`CoreStore.transformPacked` over `ids`, the list's objects as that store
- * numbers them, and `count` affines): the store transforms its own copies
- * and only the new geometry crosses, as numbers (docs/adr/0008). Each
- * object keeps its other fields; the result is the JSON call's, field for
- * field, except that −0 survives here as everywhere the store is packed.
+ * numbers them, and `count` affines; null: as many as the answer holds, an
+ * array's copies): the store transforms its own copies and only the new
+ * geometry crosses, as numbers (docs/adr/0008). Each object keeps its other
+ * fields; the result is the JSON call's, field for field, except that −0
+ * survives here as everywhere the store is packed.
  */
-export function transformedFrom<E extends Entity | NewEntity>(list: readonly E[], ids: ArrayLike<number>, count: number, packed: Packed): E[] {
+export function transformedFrom<E extends Entity | NewEntity>(list: readonly E[], ids: ArrayLike<number>, count: number | null, packed: Packed): E[] {
   const records = unpackEntities(packed);
   const out: E[] = [];
   let at = 0;
-  for (let k = 0; k < count; k++)
+  const runs = count ?? records.length / list.length;
+  for (let k = 0; k < runs; k++)
     for (let i = 0; i < list.length; i++) {
       const r = records[at++];
       // The store skips an id it does not hold: the drawing and its copy would have drifted apart.
@@ -109,6 +112,11 @@ function similarityOf(t: Transform): [string, number[]] {
       return ['scale', [t.center.x, t.center.y, t.factor]];
     case 'mirror':
       return ['mirror', [t.a.x, t.a.y, t.b.x, t.b.y]];
+    case 'align': {
+      const first = [t.source.x, t.source.y, t.target.x, t.target.y];
+      if (!t.source2 || !t.target2) return ['align', first];
+      return [t.scale === true ? 'alignScale' : 'align', [...first, t.source2.x, t.source2.y, t.target2.x, t.target2.y]];
+    }
   }
 }
 
@@ -131,5 +139,34 @@ export function transformObjects<E extends Entity>(list: readonly E[], t: Transf
     list.map((e) => e.id),
     1,
     moved,
+  );
+}
+
+/** An array of `cad.entities.array` as the core's `array_transforms` takes it: its kind and numbers. */
+export function arrayNumbers(layout: ArrayLayout): [string, number[]] {
+  if (layout.kind === 'grid') return ['grid', [layout.rows, layout.cols, layout.dx, layout.dy]];
+  return ['polar', [layout.center.x, layout.center.y, layout.count, layout.fill, layout.rotate ? 1 : 0]];
+}
+
+/**
+ * Copies of `list` laid out by an array of the product command
+ * `cad.entities.array` (docs/adr/0047), with no store and no JSON: the core
+ * lays the copies out (`array_transforms`; a polar array that does not turn
+ * places them by the middle of the list's box, text measured in `font`, a
+ * `DrawingFont` id) and moves every object, packed. The copies come place
+ * after place, each place in the list's order, each with its original's
+ * other fields.
+ */
+export function arrayCopies<E extends Entity>(list: readonly E[], layout: ArrayLayout, font: string): E[] {
+  if (!list.length) return [];
+  const packed = packEntities(list);
+  const [kind, params] = arrayNumbers(layout);
+  const copies = coreArrayObjects(packed.nums, packed.strings, kind, Float64Array.from(params), font);
+  // As many runs of the list as the core laid places out (rows × cols − 1, or count − 1).
+  return transformedFrom(
+    list,
+    list.map((e) => e.id),
+    null,
+    copies,
   );
 }

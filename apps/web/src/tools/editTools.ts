@@ -114,7 +114,8 @@ export class ExplodeTool extends SelectionActionTool {
 /**
  * Stretch: a crossing window picks the vertices to move (click two corners
  * or drag), then base and target points. With a selection, only selected
- * objects are affected.
+ * objects are affected. The core stretches each object; the tool writes
+ * them through the product command `cad.entities.edit` (docs/adr/0047).
  */
 export class StretchTool implements Tool {
   readonly id = 'stretch';
@@ -214,14 +215,16 @@ export class StretchTool implements Tool {
     if (this.stage !== 'target' || !this.base || !this.window) return;
     const dx = p.x - this.base.x;
     const dy = p.y - this.base.y;
-    const { doc, log, format } = this.ctx;
-    const patches: (Partial<Entity> & { id: number })[] = [];
+    const { log, format } = this.ctx;
+    // Each object's new geometry from the core, written through cad.entities.edit as one
+    // undo step, “Esnet” (docs/adr/0047): slot, persistent id and every other field kept.
+    const changes: EntityEdit[] = [];
     for (const e of this.targets) {
       const g = stretchEntity(e, this.window!, dx, dy);
-      if (g) patches.push({ ...(g as Partial<Entity>), id: e.id });
+      if (g) changes.push({ kind: 'update', uid: uidOf(this.ctx, e), geometry: editGeometry(g) });
     }
-    const n = doc.updateMany(patches, 'Esnet');
-    log.success(`${n} nesne esnetildi: ΔY ${format.length(dx, false)}  ΔX ${format.length(dy, false)}`);
+    const out = changes.length ? writeEdit(this.ctx, 'stretch', changes) : { changed: [] };
+    if (out) log.success(`${out.changed.length} nesne esnetildi: ΔY ${format.length(dx, false)}  ΔX ${format.length(dy, false)}`);
     this.ctx.tools.exit();
   }
 

@@ -1,20 +1,22 @@
 //! The modify, corner and dimension tools' constructions
 //! (`apps/web/src/tools/modifyTools.ts`, `arrangeTools.ts`, `cornerTools.ts`,
-//! `dimensionTool.ts`): rotation and scale parameters, polar array and align
-//! transforms, the corner a fillet or chamfer works on and its pieces, and
-//! the arms of angular and radial dimensions — what those tools computed
-//! inline before (docs/adr/0008, S5).
+//! `dimensionTool.ts`): rotation and scale parameters, rectangular and polar
+//! array and align transforms, the corner a fillet or chamfer works on and
+//! its pieces, and the arms of angular and radial dimensions — what those
+//! tools computed inline before (docs/adr/0008, S5, 0047).
 
 use crate::api::Op;
-use crate::entity::{Entity, Shape};
-use crate::geom::affine::{Affine, compose, rotation, scaling, translation};
+use crate::entity::{Entity, Shape, entity_bounds_in};
+use crate::geom::affine::{Affine, align, rotation, translation};
 use crate::geom::arc::{ArcGeom, norm_angle};
 use crate::geom::bulge::bulge_at;
 use crate::geom::dimension::sector_arms;
 use crate::geom::intersect::line_line;
-use crate::geometry::dist;
+use crate::geometry::{dist, empty_bounds, is_empty_bounds};
 use crate::jsmath::{PI, acos, atan2, cos, js_max, js_min, js_round, or, pow, sin, tan};
 use crate::op;
+use crate::text::Font;
+use crate::tools::point_input::midpoint;
 use crate::vec2::Vec2;
 
 /// Rotation by the direction from `base` to p, less a reference angle (radians).
@@ -62,28 +64,112 @@ pub fn polar_array_transforms(
     out
 }
 
-/// ALIGN: the first source point onto the first destination; with a second
-/// pair the source direction turns onto the destination direction, and
-/// scales to fit when `scale`. `pts` is s1, d1, s2, d2 as far as given.
-pub fn align_transform(pts: &[Vec2], scale: bool) -> Option<Affine> {
-    let (Some(&s1), Some(&d1)) = (pts.first(), pts.get(1)) else {
-        return None;
-    };
-    let (Some(&s2), Some(&d2)) = (pts.get(2), pts.get(3)) else {
-        return Some(translation(d1.x - s1.x, d1.y - s1.y));
-    };
-    let ls = dist(s1, s2);
-    let ld = dist(d1, d2);
-    if ls < 1e-9 || ld < 1e-9 {
+/// Most places a rectangular array fills, the originals' among them, and the
+/// most items of a polar array (docs/adr/0047): what the web's tools took.
+pub const GRID_PLACES_MAX: f64 = 10_000.0;
+pub const POLAR_COUNT_MAX: f64 = 1_000.0;
+
+/// Rectangular array (Dizi): `rows` × `cols` places, row after row and each
+/// row column after column, the originals' place left out; the copy `j`
+/// columns and `i` rows away moves `j·dx` east and `i·dy` north. Nothing
+/// for fewer than one row or column, or more than [`GRID_PLACES_MAX`] places.
+pub fn grid_array_transforms(rows: f64, cols: f64, dx: f64, dy: f64) -> Vec<Affine> {
+    let mut out = Vec::new();
+    if !(rows >= 1.0 && cols >= 1.0 && rows * cols <= GRID_PLACES_MAX) {
+        return out;
+    }
+    let mut i = 0.0;
+    while i < rows {
+        let mut j = 0.0;
+        while j < cols {
+            if i != 0.0 || j != 0.0 {
+                out.push(translation(j * dx, i * dy));
+            }
+            j += 1.0;
+        }
+        i += 1.0;
+    }
+    out
+}
+
+/// The middle of the box around `shapes`, text measured in `font`, as the
+/// geometry store's `extent` takes it and the web's polar array tool took
+/// its middle: where copies that do not turn are placed by. None when there
+/// is nothing to measure.
+pub fn shapes_middle(shapes: &[Shape], font: Font) -> Option<Vec2> {
+    let mut b = empty_bounds();
+    for s in shapes {
+        let e = entity_bounds_in(s, font);
+        b.min_x = js_min(b.min_x, e.min_x);
+        b.min_y = js_min(b.min_y, e.min_y);
+        b.max_x = js_max(b.max_x, e.max_x);
+        b.max_y = js_max(b.max_y, e.max_y);
+    }
+    if is_empty_bounds(&b) {
         return None;
     }
-    let turn = atan2(d2.y - d1.y, d2.x - d1.x) - atan2(s2.y - s1.y, s2.x - s1.x);
-    let k = if scale { ld / ls } else { 1.0 };
-    // Around s1: scale, turn, then carry s1 onto d1.
-    Some(compose(
-        &translation(d1.x - s1.x, d1.y - s1.y),
-        &compose(&rotation(turn, s1), &scaling(k, s1)),
+    Some(midpoint(
+        Vec2::new(b.min_x, b.min_y),
+        Vec2::new(b.max_x, b.max_y),
     ))
+}
+
+/// The copies' affines of an array, in the order its copies are written
+/// (the product command `cad.entities.array`, docs/adr/0047): `grid` with
+/// rows, cols, dx, dy ([`grid_array_transforms`]); `polar` with cx, cy,
+/// count, fill in degrees and rotate (1 turns the copies, 0 does not), the
+/// copies that do not turn placed by the middle of `shapes`
+/// ([`shapes_middle`], text measured in `font`). None for another kind or
+/// count of numbers, counts out of their ranges (whole numbers; 2 to
+/// [`GRID_PLACES_MAX`] places, 2 to [`POLAR_COUNT_MAX`] items), or a polar
+/// array that does not turn with nothing to measure. Whether the numbers are
+/// finite and the spacing or the angle make sense is the command's to check
+/// first.
+pub fn array_transforms(
+    kind: &str,
+    p: &[f64],
+    shapes: &[Shape],
+    font: Font,
+) -> Option<Vec<Affine>> {
+    let whole = |n: f64| n.fract() == 0.0;
+    match (kind, p) {
+        ("grid", &[rows, cols, dx, dy]) => {
+            let fits = whole(rows)
+                && whole(cols)
+                && rows >= 1.0
+                && cols >= 1.0
+                && (2.0..=GRID_PLACES_MAX).contains(&(rows * cols));
+            fits.then(|| grid_array_transforms(rows, cols, dx, dy))
+        }
+        ("polar", &[cx, cy, count, fill, rotate]) => {
+            if !(whole(count) && (2.0..=POLAR_COUNT_MAX).contains(&count)) {
+                return None;
+            }
+            let turns = rotate != 0.0;
+            // A copy that turns does not need the middle; one that does not is placed by it.
+            let reference = if turns {
+                Vec2::new(cx, cy)
+            } else {
+                shapes_middle(shapes, font)?
+            };
+            Some(polar_array_transforms(
+                Vec2::new(cx, cy),
+                count,
+                fill,
+                turns,
+                reference,
+            ))
+        }
+        _ => None,
+    }
+}
+
+/// ALIGN: the first source point onto the first destination; with a second
+/// pair the source direction turns onto the destination direction, and
+/// scales to fit when `scale`. `pts` is s1, d1, s2, d2 as far as given
+/// ([`align`]: the transform command builds its alignment there too).
+pub fn align_transform(pts: &[Vec2], scale: bool) -> Option<Affine> {
+    align(pts, scale)
 }
 
 /// A corner that can be rounded or cut: `u1`/`u2` point along the kept
@@ -465,6 +551,25 @@ pub(crate) static OPS: &[Op] = &[
     op!("alignTransform", |pts: Vec<Vec2>, scale: bool| {
         align_transform(&pts, scale)
     }),
+    op!(
+        "gridArrayTransforms",
+        |rows: f64, cols: f64, dx: f64, dy: f64| { grid_array_transforms(rows, cols, dx, dy) }
+    ),
+    op!(
+        "shapesMiddle",
+        |objects: Vec<Entity>, font: Option<String>| {
+            let shapes: Vec<Shape> = objects.into_iter().map(|e| e.shape).collect();
+            shapes_middle(&shapes, font.map_or(Font::DEFAULT, |id| Font::from_id(&id)))
+        }
+    ),
+    op!(
+        "arrayTransforms",
+        |kind: String, params: Vec<f64>, objects: Vec<Entity>, font: Option<String>| {
+            let shapes: Vec<Shape> = objects.into_iter().map(|e| e.shape).collect();
+            let font = font.map_or(Font::DEFAULT, |id| Font::from_id(&id));
+            array_transforms(&kind, &params, &shapes, font)
+        }
+    ),
     op!("vertexCorner", |prev: Vec2,
                          at: Vec2,
                          next: Vec2,
@@ -536,6 +641,110 @@ mod tests {
         );
         assert_eq!(near.len(), 10);
         assert_eq!(near, tm);
+    }
+
+    /// A 2 × 3 grid: five copies, row after row, each a product of its
+    /// place and the spacing; one row or column alone is a line of copies;
+    /// nothing outside the places the web's tool took.
+    #[test]
+    fn a_grid_array_goes_row_after_row() {
+        let t = |x: f64, y: f64| translation(x, y);
+        assert_eq!(
+            grid_array_transforms(2.0, 3.0, 12.5, -4.0),
+            vec![
+                t(12.5, 0.0),
+                t(25.0, 0.0),
+                t(0.0, -4.0),
+                t(12.5, -4.0),
+                t(25.0, -4.0)
+            ]
+        );
+        assert_eq!(
+            grid_array_transforms(3.0, 1.0, 7.0, 2.0),
+            vec![t(0.0, 2.0), t(0.0, 4.0)]
+        );
+        assert!(grid_array_transforms(1.0, 1.0, 1.0, 1.0).is_empty());
+        assert!(grid_array_transforms(0.0, 5.0, 1.0, 1.0).is_empty());
+        assert!(grid_array_transforms(101.0, 100.0, 1.0, 1.0).is_empty());
+        assert_eq!(grid_array_transforms(100.0, 100.0, 1.0, 1.0).len(), 9_999);
+    }
+
+    /// The middle of a line and a circle's box; text measured in the face
+    /// it is drawn in; nothing to measure is none.
+    #[test]
+    fn the_middle_is_the_middle_of_the_box() {
+        let line = Shape::Line {
+            a: Vec2::new(487000.0, 4420000.0),
+            b: Vec2::new(487010.0, 4420000.0),
+        };
+        let circle = Shape::Circle {
+            c: Vec2::new(487020.0, 4420010.0),
+            r: 2.5,
+        };
+        assert_eq!(
+            shapes_middle(&[line.clone(), circle], Font::DEFAULT),
+            Some(Vec2::new(487011.25, 4420006.25))
+        );
+        let text = Shape::Text {
+            p: Vec2::new(0.0, 0.0),
+            text: "Ada 101".into(),
+            height: 2.0,
+            rotation: 0.0,
+        };
+        let wide = shapes_middle(std::slice::from_ref(&text), Font::from_id("courier-prime"));
+        let narrow = shapes_middle(std::slice::from_ref(&text), Font::DEFAULT);
+        assert_ne!(wide, narrow, "the face measures the text");
+        assert_eq!(shapes_middle(&[], Font::DEFAULT), None);
+    }
+
+    /// An array's affines by kind: the grid's, the polar array's (turning,
+    /// or placed by the middle); counts outside their ranges, another kind
+    /// or count of numbers, and a polar array with nothing to place by are none.
+    #[test]
+    fn an_array_is_its_kind_of_transforms() {
+        let line = Shape::Line {
+            a: Vec2::new(487000.0, 4420000.0),
+            b: Vec2::new(487010.0, 4420000.0),
+        };
+        let f = Font::DEFAULT;
+        assert_eq!(
+            array_transforms("grid", &[2.0, 3.0, 12.5, -4.0], &[], f),
+            Some(grid_array_transforms(2.0, 3.0, 12.5, -4.0))
+        );
+        let c = Vec2::new(487005.0, 4420010.0);
+        assert_eq!(
+            array_transforms("polar", &[c.x, c.y, 4.0, 360.0, 1.0], &[], f),
+            Some(polar_array_transforms(c, 4.0, 360.0, true, c))
+        );
+        assert_eq!(
+            array_transforms(
+                "polar",
+                &[c.x, c.y, 3.0, 90.0, 0.0],
+                std::slice::from_ref(&line),
+                f
+            ),
+            Some(polar_array_transforms(
+                c,
+                3.0,
+                90.0,
+                false,
+                Vec2::new(487005.0, 4420000.0)
+            ))
+        );
+        for (kind, p) in [
+            ("grid", vec![1.0, 1.0, 1.0, 1.0]),
+            ("grid", vec![2.5, 2.0, 1.0, 1.0]),
+            ("grid", vec![0.0, 3.0, 1.0, 1.0]),
+            ("grid", vec![10_001.0, 1.0, 1.0, 1.0]),
+            ("grid", vec![2.0, 2.0, 1.0]),
+            ("polar", vec![c.x, c.y, 1.0, 360.0, 1.0]),
+            ("polar", vec![c.x, c.y, 1_001.0, 360.0, 1.0]),
+            ("polar", vec![c.x, c.y, 3.5, 360.0, 1.0]),
+            ("polar", vec![c.x, c.y, 3.0, 90.0, 0.0]),
+            ("spiral", vec![1.0, 2.0, 3.0, 4.0]),
+        ] {
+            assert_eq!(array_transforms(kind, &p, &[], f), None, "{kind} {p:?}");
+        }
     }
 
     #[test]

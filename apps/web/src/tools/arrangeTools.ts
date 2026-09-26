@@ -1,4 +1,5 @@
 import type { AppContext } from '../app/context';
+import type { Transform } from '../contracts/generated/Transform';
 import type { Entity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
 import type { Affine } from '../model/geom/affine';
@@ -8,13 +9,20 @@ import { SelectionFirstTool } from './modifyTools';
 
 /**
  * Polar array and align: selection-first tools that place copies or move
- * the selection by one similarity transform (so every entity kind works),
- * with ghosts previewing the result.
+ * the selection by similarity transforms (so every entity kind works), with
+ * ghosts previewing the result. They write through the product commands
+ * `cad.entities.array` and `cad.entities.transform` (docs/adr/0047).
  */
 
-/** Middle of the selection's bounds (from the geometry store): the point a non-rotating polar copy is placed by. */
+/**
+ * Middle of the bounds of the objects a polar array copies (from the
+ * geometry store): the point a non-rotating copy is placed by, as the
+ * command measures it (`shapes_middle`: the objects on locked layers, which
+ * it does not copy, left out).
+ */
 function centreOf(ctx: AppContext, list: readonly Entity[]): Vec2 {
-  const b = ctx.view.extent(list.map((e) => e.id)) ?? { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+  const ids = list.filter((e) => !ctx.doc.layers.isLocked(e.layerId)).map((e) => e.id);
+  const b = ctx.view.extent(ids) ?? { minX: 0, minY: 0, maxX: 0, maxY: 0 };
   return midpoint({ x: b.minX, y: b.minY }, { x: b.maxX, y: b.maxY });
 }
 
@@ -80,9 +88,9 @@ export class PolarArrayTool extends SelectionFirstTool {
       return this.refresh();
     }
     if (!this.centre) return this.ctx.tools.exit();
-    const n = this.applyTransforms(this.label, this.transforms(), true);
     const l = PolarArrayTool.last;
-    this.ctx.log.success(`Kutupsal dizi: ${l.count} adet, ${l.fill}° içinde, ${n} yeni nesne.`);
+    const n = this.arraySelection({ kind: 'polar', center: { x: this.centre.x, y: this.centre.y }, count: l.count, fill: l.fill, rotate: l.rotate });
+    if (n !== null) this.ctx.log.success(`Kutupsal dizi: ${l.count} adet, ${l.fill}° içinde, ${n} yeni nesne.`);
     this.ctx.tools.exit();
   }
 
@@ -167,15 +175,23 @@ export class AlignTool extends SelectionFirstTool {
     return alignTransform(pts, AlignTool.scale);
   }
 
+  /** The points as the transform command's alignment: the first pair, and the second when it is given. */
+  private alignment(): Transform {
+    const at = (p: Vec2) => ({ x: p.x, y: p.y });
+    const [s1, d1, s2, d2] = this.pts;
+    if (!s2 || !d2) return { kind: 'align', source: at(s1), target: at(d1) };
+    return { kind: 'align', source: at(s1), target: at(d1), source2: at(s2), target2: at(d2), ...(AlignTool.scale ? { scale: true } : {}) };
+  }
+
   private finish(): void {
-    const m = this.transform(this.pts);
-    if (!m) {
+    if (!this.transform(this.pts)) {
       this.ctx.log.warn('Kaynak ya da hedef noktaları çakışıyor; hizalama yapılamaz.');
       this.pts = this.pts.slice(0, 2);
       return this.refresh();
     }
-    const n = this.applyTransforms(this.label, [m], false);
-    this.ctx.log.success(`${n} nesne hizalandı${this.pts.length === 4 && AlignTool.scale ? ' ve ölçeklendi' : ''}.`);
+    // Through cad.entities.transform (docs/adr/0047): one undo step, “Hizala”; locked objects stay.
+    const n = this.transformSelection(this.alignment(), false);
+    if (n !== null) this.ctx.log.success(`${n} nesne hizalandı${this.pts.length === 4 && AlignTool.scale ? ' ve ölçeklendi' : ''}.`);
     this.ctx.tools.exit();
   }
 

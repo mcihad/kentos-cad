@@ -38,6 +38,9 @@
 //!   ([`corner`]), break ([`breaking`]), vertex ([`vertex`]), lengthen
 //!   ([`lengthen`]) on an edge-picking base, join and explode ([`object`])
 //!   on the selection-first one, writing through `cad.entities.edit`;
+//!   stretch ([`stretch`], `cad.entities.edit`), the rectangular and polar
+//!   arrays ([`array`], [`polar`], `cad.entities.array`) and align
+//!   ([`align`], `cad.entities.transform`);
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -52,7 +55,9 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod align;
 pub mod arc;
+pub mod array;
 pub mod breaking;
 pub mod circle;
 pub mod corner;
@@ -67,9 +72,11 @@ pub mod modify;
 pub mod move_copy;
 pub mod object;
 pub mod offset;
+mod outlines;
 pub mod path;
 pub mod point;
 mod points;
+pub mod polar;
 mod prompt;
 pub mod rectangle;
 pub mod regular;
@@ -80,6 +87,7 @@ pub mod select;
 mod selection;
 mod session;
 pub mod spatial;
+pub mod stretch;
 mod tool;
 pub mod trim;
 pub mod vertex;

@@ -167,6 +167,18 @@ pub struct Memory {
     pub lengthen_delta: f64,
     pub lengthen_percent: f64,
     pub lengthen_total: f64,
+    /// Dizi's last rows, columns and spacing, east and north (`ArrayTool.last`).
+    pub array_rows: u32,
+    pub array_cols: u32,
+    pub array_dx: f64,
+    pub array_dy: f64,
+    /// Kutupsal dizi's count, fill angle in degrees and whether the copies
+    /// turn (`PolarArrayTool.last`).
+    pub polar_count: u32,
+    pub polar_fill: f64,
+    pub polar_rotate: bool,
+    /// Whether Hizala scales to fit its second pair (`AlignTool.scale`).
+    pub align_scale: bool,
 }
 
 impl Default for Memory {
@@ -187,6 +199,14 @@ impl Default for Memory {
             lengthen_delta: 1.0,
             lengthen_percent: 100.0,
             lengthen_total: 10.0,
+            array_rows: 2,
+            array_cols: 3,
+            array_dx: 10.0,
+            array_dy: 10.0,
+            polar_count: 6,
+            polar_fill: 360.0,
+            polar_rotate: true,
+            align_scale: false,
         }
     }
 }

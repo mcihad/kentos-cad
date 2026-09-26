@@ -3,7 +3,7 @@ import type { Vec2 } from "./Vec2";
 
 /**
  * One similarity of the plane, given as the modify tools ask for it
- * (docs/adr/0037). Coordinates are x east (Y), y north (X), in the
+ * (docs/adr/0037, 0047). Coordinates are x east (Y), y north (X), in the
  * project's units (m), float64.
  */
-export type Transform = { "kind": "move", dx: number, dy: number, } | { "kind": "rotate", center: Vec2, angle: number, } | { "kind": "scale", center: Vec2, factor: number, } | { "kind": "mirror", a: Vec2, b: Vec2, };
+export type Transform = { "kind": "move", dx: number, dy: number, } | { "kind": "rotate", center: Vec2, angle: number, } | { "kind": "scale", center: Vec2, factor: number, } | { "kind": "mirror", a: Vec2, b: Vec2, } | { "kind": "align", source: Vec2, target: Vec2, source2?: Vec2, target2?: Vec2, scale?: boolean, };

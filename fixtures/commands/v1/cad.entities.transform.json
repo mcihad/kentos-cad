@@ -114,6 +114,70 @@
       ]
     },
     {
+      "name": "hizalama (Hizala), tek çiftle: birinci kaynak noktası birinci hedefe taşınır; adım Hizala",
+      "steps": [
+        {"op": "captureUid", "id": 10, "as": "cizgi"},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:10"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487040.0, "y": 4420030.0}, "b": {"x": 487050.0, "y": 4420030.0}}}, "uids": {"10": "cizgi"}, "canUndo": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Hizala", "note": "Hizala aracının adımı.", "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}}, "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "iki çiftle hizalama: nesneler birinci kaynak noktası etrafında döner, kaynak doğrultusu hedef doğrultusuna oturur; boy değişmez",
+      "note": "Kaynak doğrultusu doğu, hedef doğrultusu kuzey: çeyrek tur. Yay, yazı ve kapalı alanın yay değerleri aynı kuralla döner.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10", "$uidOf:11", "$uidOf:14", "$uidOf:9"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487020, "y": 4420010}, "target2": {"x": 487040, "y": 4420050}}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:10", "$uidOf:11", "$uidOf:14", "$uidOf:9"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487040.0, "y": 4420030.0}, "b": {"x": 487040.0, "y": 4420040.0}}, "11": {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487030.0, "y": 4420040.0}, "r": 4.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}, "14": {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487025.0, "y": 4420025.0}, "text": "Ada 101", "height": 2.0, "rotation": 90.0}, "9": {"kind": "polygon", "id": 9, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [{"x": 487050.0, "y": 4420020.0}, {"x": 487050.0, "y": 4420060.0}, {"x": 487020.0, "y": 4420060.0}], "bulges": [0.25, 0.5, -0.25]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Hizala", "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}, "11": {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420020}, "r": 4, "a0": 0, "a1": 1.5707963267948966}, "14": {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487005, "y": 4420025}, "text": "Ada 101", "height": 2, "rotation": 0}, "9": {"kind": "polygon", "id": 9, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [{"x": 487000, "y": 4420000}, {"x": 487040, "y": 4420000}, {"x": 487040, "y": 4420030}], "bulges": [0.25, 0.5, -0.25]}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "scale ile boy da eşitlenir: 10 m'lik kaynak doğrultusu 20 m'lik hedefe; yarıçap ve yazı yüksekliği iki katına",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13", "$uidOf:14", "$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487020, "y": 4420010}, "target2": {"x": 487040, "y": 4420050}, "scale": true}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:13", "$uidOf:14", "$uidOf:10"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"13": {"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487040.0, "y": 4420070.0}, "r": 5.0}, "14": {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487010.0, "y": 4420020.0}, "text": "Ada 101", "height": 4.0, "rotation": 90.0}, "10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487040.0, "y": 4420030.0}, "b": {"x": 487040.0, "y": 4420050.0}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "scale ikinci çift olmadan bir şey değiştirmez; hizalanmış kopya da yapılabilir, adım yine Hizala",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "scale": true}, "copy": true}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22], "entities": {"13": {"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487030, "y": 4420010}, "r": 2.5}, "22": {"kind": "circle", "id": 22, "layerId": "yapi", "attrs": {}, "c": {"x": 487060.0, "y": 4420030.0}, "r": 2.5}}, "uids": {"22": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Hizala", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21]}}
+      ]
+    },
+    {
+      "name": "kilitli katmandaki nesne hizalanmaz; öbürleri uyarıyla hizalanır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:12", "$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487020, "y": 4420010}, "target2": {"x": 487040, "y": 4420050}}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:10"], "created": [], "locked": ["$uidOf:12"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487040.0, "y": 4420030.0}, "b": {"x": 487040.0, "y": 4420040.0}}, "12": {"kind": "line", "id": 12, "layerId": "kilitli", "attrs": {}, "a": {"x": 487005, "y": 4420005}, "b": {"x": 487015, "y": 4420005}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "ikinci çift yarım verilemez: invalid_align; eksik nokta söylenir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487020, "y": 4420010}}}, "result": {"status": "failed", "error": {"code": "invalid_align", "message": "Hizalamanın ikinci hedef noktası verilmedi; ikinci çift iki noktayla verilir. İkinci hedef noktasını verin ya da ikinci kaynak noktasını çıkarın.", "path": "transform.target2"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "target2": {"x": 487040, "y": 4420050}, "scale": true}}, "result": {"status": "failed", "error": {"code": "invalid_align", "message": "Hizalamanın ikinci kaynak noktası verilmedi; ikinci çift iki noktayla verilir. İkinci kaynak noktasını verin ya da ikinci hedef noktasını çıkarın.", "path": "transform.source2"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ikinci çiftin noktası birincinin bir nanometre yakınındaysa doğrultu yoktur: invalid_align",
+      "note": "Hedef noktası 487040'tan yaklaşık 5,2e-10 m uzakta: çekirdeğin ölçüsüyle aynı nokta.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487010, "y": 4420010}, "target2": {"x": 487040, "y": 4420050}}}, "result": {"status": "failed", "error": {"code": "invalid_align", "message": "Kaynak noktaları çakışıyor; kaynak doğrultusunun yönü yok. Birbirinden ayrı iki kaynak noktası verin.", "path": "transform.source2"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487020, "y": 4420010}, "target2": {"x": 487040.0000000005, "y": 4420030}, "scale": true}}, "result": {"status": "failed", "error": {"code": "invalid_align", "message": "Hedef noktaları çakışıyor; hedef doğrultusunun yönü yok. Birbirinden ayrı iki hedef noktası verin.", "path": "transform.target2"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "hizalamanın noktaları sırayla denetlenir: önce sonlu olmayan değer, sonra ikinci çift",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487020, "y": 4420010}, "target2": {"x": 487040, "y": 4420050}}}, "nonFinite": {"transform.target.y": "NaN", "transform.source2.x": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Birinci hedef noktasının kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "transform.target.y"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487020, "y": 4420010}}}, "nonFinite": {"transform.source2.y": "-Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "İkinci kaynak noktasının kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "transform.source2.y"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487020, "y": 4420010}, "target2": {"x": 487040, "y": 4420050}}}, "nonFinite": {"transform.target2.x": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "İkinci hedef noktasının doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "transform.target2.x"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "hizalamanın planı yazılacak nesneleri gösterir; hiçbir şey yazmaz",
+      "steps": [
+        {"op": "plan", "input": {"uids": ["$uidOf:11"], "transform": {"kind": "align", "source": {"x": 487010, "y": 4420010}, "target": {"x": 487040, "y": 4420030}, "source2": {"x": 487020, "y": 4420010}, "target2": {"x": 487040, "y": 4420050}, "scale": true}}, "result": {"status": "completed", "output": {"sources": ["$uidOf:11"], "entities": [{"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487020.0, "y": 4420050.0}, "r": 8.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
       "name": "kilitli katmandaki nesne yerinde kalır; öbürleri uyarıyla taşınır",
       "steps": [
         {"op": "execute", "input": {"uids": ["$uidOf:10", "$uidOf:12"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:10"], "created": [], "locked": ["$uidOf:12"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487022.5, "y": 4420002.75}, "b": {"x": 487032.5, "y": 4420002.75}}, "12": {"kind": "line", "id": 12, "layerId": "kilitli", "attrs": {}, "a": {"x": 487005, "y": 4420005}, "b": {"x": 487015, "y": 4420005}}}, "revision": "changed"}}

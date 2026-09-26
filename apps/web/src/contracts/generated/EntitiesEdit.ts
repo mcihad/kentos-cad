@@ -20,9 +20,10 @@ import type { EntityEdit } from "./EntityEdit";
  * belong together, so an edit is written whole or not at all.
  *
  * Refusals (`CommandError.code`), checked in this order: `no_changes`,
- * `invalid_uid` (each change's id in order), `not_finite`,
- * `too_few_points`, `too_few_corners`, `invalid_radius` (each geometry in
- * order), `invalid_revision`, `revision_conflict` (status `conflict`),
+ * `invalid_uid` (each change's id in order), then each geometry in order:
+ * `too_few_points` (a polyline), `too_few_corners` (a closed area's or a
+ * hatch's ring or hole), `not_finite`, `invalid_radius`; then
+ * `invalid_revision`, `revision_conflict` (status `conflict`),
  * `entity_not_found` (each id in order), `repeated_entity` (an object
  * changed twice), `layer_locked`; on the desktop also `slots_exhausted`.
  */

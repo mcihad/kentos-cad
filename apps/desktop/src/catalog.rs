@@ -119,6 +119,12 @@ pub const PORTED: &[&str] = &[
     "file.import.geojson",
     "file.import.shp",
     "file.export.geojson",
+    // Modify tools, round 3 (docs/adr/0047, part 2): stretch through cad.entities.edit,
+    // the arrays through cad.entities.array, align through cad.entities.transform.
+    "tool.stretch",
+    "tool.array",
+    "tool.arrayPolar",
+    "tool.align",
 ];
 
 /// Where the desktop does more than the web, its own description: the web's

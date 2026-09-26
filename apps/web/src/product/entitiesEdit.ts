@@ -21,9 +21,9 @@ import type { ProductCommand } from './command';
  * fixtures/commands/v1/cad.entities.edit.json.
  *
  * The edge, corner and object tools (Ötele, Buda, Uzat, Köşe yuvarla, Pah,
- * Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil) compute the geometry
- * with the shared core and write it here (TODOS.md CMD-07); nothing is
- * computed in this module.
+ * Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil) and Esnet compute the
+ * geometry with the shared core and write it here (TODOS.md CMD-07);
+ * nothing is computed in this module.
  *
  * The checks, in order (the first that fails answers): at least one change,
  * each change's id lowercase UUID text with hyphens; every geometry, in
@@ -62,6 +62,8 @@ const FIELDS: Record<EntityGeometry['kind'], readonly string[]> = {
   xline: ['p', 'dir'],
   ray: ['p', 'dir'],
   text: ['p', 'text', 'height', 'rotation'],
+  dimension: ['a', 'b', 'offset', 'height', 'text', 'style', 'angle', 'c'],
+  hatch: ['ring', 'holes', 'pattern'],
 };
 
 interface Checked {
@@ -122,6 +124,12 @@ function checkGeometry(g: EntityGeometry, i: number): Stop | null {
     for (const [h, ring] of (g.holes ?? []).entries())
       if (ring.pts.length < 3)
         return failed(error('too_few_corners', `${h + 1}. deliğin en az 3 köşesi olmalı; ${ring.pts.length} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.`, at(`.holes[${h}].pts`)));
+  }
+  if (g.kind === 'hatch') {
+    if (g.ring.length < 3) return failed(error('too_few_corners', `Taramanın en az 3 köşesi olmalı; ${g.ring.length} köşe verildi. Eksik köşeleri ekleyin.`, at('.ring')));
+    for (const [h, hole] of (g.holes ?? []).entries())
+      if (hole.length < 3)
+        return failed(error('too_few_corners', `${h + 1}. deliğin en az 3 köşesi olmalı; ${hole.length} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.`, at(`.holes[${h}]`)));
   }
   if (!geometryIsFinite(g as unknown as Entity))
     return failed(error('not_finite', `${i + 1}. değişikliğin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.`, at('')));

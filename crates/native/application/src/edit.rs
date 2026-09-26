@@ -6,9 +6,9 @@
 //! `fixtures/commands/v1/cad.entities.edit.json`.
 //!
 //! The edge, corner and object tools (Ötele, Buda, Uzat, Köşe yuvarla, Pah,
-//! Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil) compute the geometry
-//! with the shared core and write it here (TODOS.md CMD-07); nothing is
-//! computed in this module.
+//! Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil) and Esnet compute the
+//! geometry with the shared core and write it here (TODOS.md CMD-07);
+//! nothing is computed in this module.
 //!
 //! The checks, in order (the first that fails answers):
 //! 1. at least one change; every change's id lowercase UUID text with
@@ -347,6 +347,31 @@ fn check_geometry(g: &EntityGeometry, i: usize) -> Result<(), Stop> {
                 }
             }
         }
+        EntityGeometry::Hatch { ring, holes, .. } => {
+            if ring.len() < 3 {
+                return Err(Stop::Failed(error(
+                    codes::TOO_FEW_CORNERS,
+                    format!(
+                        "Taramanın en az 3 köşesi olmalı; {} köşe verildi. Eksik köşeleri ekleyin.",
+                        ring.len()
+                    ),
+                    at(".ring"),
+                )));
+            }
+            for (h, hole) in holes.iter().flatten().enumerate() {
+                if hole.len() < 3 {
+                    return Err(Stop::Failed(error(
+                        codes::TOO_FEW_CORNERS,
+                        format!(
+                            "{}. deliğin en az 3 köşesi olmalı; {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.",
+                            h + 1,
+                            hole.len()
+                        ),
+                        at(&format!(".holes[{h}]")),
+                    )));
+                }
+            }
+        }
         _ => {}
     }
     if !finite(g) {
@@ -417,5 +442,31 @@ fn finite(g: &EntityGeometry) -> bool {
             rotation,
             ..
         } => pt(p) && height.is_finite() && rotation.is_finite(),
+        EntityGeometry::Dimension {
+            a,
+            b,
+            offset,
+            height,
+            angle,
+            c,
+            ..
+        } => {
+            pt(a)
+                && pt(b)
+                && offset.is_finite()
+                && height.is_finite()
+                && angle.is_none_or(f64::is_finite)
+                && c.as_ref().is_none_or(pt)
+        }
+        EntityGeometry::Hatch {
+            ring,
+            holes,
+            pattern,
+        } => {
+            pts(ring)
+                && holes.iter().flatten().all(|h| pts(h))
+                && pattern.angle.is_finite()
+                && pattern.spacing.is_finite()
+        }
     }
 }

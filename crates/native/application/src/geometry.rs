@@ -6,13 +6,15 @@
 //! field is carried over as it is, float64 bit for bit.
 
 use kentos_contracts::{
-    ArcEntity, CircleEntity, ConstructionEntity, DimensionStyle, EllipseEntity, Entity, EntityBase,
-    EntityGeometry, HatchPatternType, LineEntity, PathEntity, PointEntity, RingGeometry,
-    SplineEntity, TextEntity, Vec2 as Point,
+    ArcEntity, CircleEntity, ConstructionEntity, DimensionEntity, DimensionStyle, DrawingFont,
+    EllipseEntity, Entity, EntityBase, EntityGeometry, HatchEntity,
+    HatchPattern as ContractPattern, HatchPatternType, LineEntity, PathEntity, PointEntity,
+    RingGeometry, SplineEntity, TextEntity, Vec2 as Point,
 };
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::{HatchPattern, Shape};
 use kentos_geometry_core::geom::arrangement::Ring;
+use kentos_geometry_core::text::Font;
 
 fn v(p: &Point) -> Vec2 {
     Vec2::new(p.x, p.y)
@@ -46,6 +48,43 @@ fn pattern_name(kind: HatchPatternType) -> &'static str {
         HatchPatternType::Lines => "lines",
         HatchPatternType::Cross => "cross",
     }
+}
+
+/// A dimension style by the name the core carries; None for a name the contract does not know.
+fn style_of(name: &str) -> Option<DimensionStyle> {
+    Some(match name {
+        "aligned" => DimensionStyle::Aligned,
+        "linear" => DimensionStyle::Linear,
+        "angular" => DimensionStyle::Angular,
+        "radius" => DimensionStyle::Radius,
+        "diameter" => DimensionStyle::Diameter,
+        _ => return None,
+    })
+}
+
+/// A hatch pattern's type by the name the core carries; None for a name the contract does not know.
+fn pattern_of(name: &str) -> Option<HatchPatternType> {
+    Some(match name {
+        "solid" => HatchPatternType::Solid,
+        "lines" => HatchPatternType::Lines,
+        "cross" => HatchPatternType::Cross,
+        _ => return None,
+    })
+}
+
+/// The drawing's typeface as the geometry core measures text in it (the
+/// project's `drawingFont`; Barlow without one): what text boxes, the
+/// geometry store and a polar array's middle are measured in.
+pub fn drawing_font(font: Option<DrawingFont>) -> Font {
+    Font::from_id(match font {
+        None | Some(DrawingFont::Barlow) => "barlow",
+        Some(DrawingFont::Arimo) => "arimo",
+        Some(DrawingFont::Overpass) => "overpass",
+        Some(DrawingFont::Quicksand) => "quicksand",
+        Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
+        Some(DrawingFont::CourierPrime) => "courier-prime",
+        Some(DrawingFont::PlexMono) => "plex-mono",
+    })
 }
 
 /// An object's geometry as the geometry core takes it.
@@ -301,12 +340,43 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             height,
             rotation,
         }),
+        EntityGeometry::Dimension {
+            a,
+            b,
+            offset,
+            height,
+            text,
+            style,
+            angle,
+            c,
+        } => Entity::Dimension(DimensionEntity {
+            base,
+            a,
+            b,
+            offset,
+            height,
+            text,
+            style,
+            angle,
+            c,
+        }),
+        EntityGeometry::Hatch {
+            ring,
+            holes,
+            pattern,
+        } => Entity::Hatch(HatchEntity {
+            base,
+            ring,
+            holes,
+            pattern,
+        }),
     }
 }
 
 /// A shape the core computed as `cad.entities.edit` takes it: its kind and
-/// geometry fields, float64 bit for bit. None for a dimension or a hatch,
-/// which the command does not write; a polyline's holes are left out.
+/// geometry fields, float64 bit for bit; a polyline's holes are left out.
+/// None for a dimension style or a hatch pattern the contract does not
+/// know (the core carries them as names).
 pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
     Some(match shape {
         Shape::Point { p: at, z } => EntityGeometry::Point { p: p(at), z },
@@ -358,7 +428,41 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             height,
             rotation,
         },
-        Shape::Dimension { .. } | Shape::Hatch { .. } => return None,
+        Shape::Dimension {
+            a,
+            b,
+            offset,
+            height,
+            text,
+            style,
+            angle,
+            c,
+        } => EntityGeometry::Dimension {
+            a: p(a),
+            b: p(b),
+            offset,
+            height,
+            text,
+            style: match style {
+                Some(name) => Some(style_of(&name)?),
+                None => None,
+            },
+            angle,
+            c: c.map(p),
+        },
+        Shape::Hatch {
+            ring,
+            holes,
+            pattern,
+        } => EntityGeometry::Hatch {
+            ring: back(ring),
+            holes: holes.map(|hs| hs.into_iter().map(back).collect()),
+            pattern: ContractPattern {
+                kind: pattern_of(&pattern.kind)?,
+                angle: pattern.angle,
+                spacing: pattern.spacing,
+            },
+        },
     })
 }
 
@@ -409,5 +513,41 @@ mod tests {
             panic!("a point");
         };
         assert!(p.p.y == 0.0 && p.p.y.is_sign_negative());
+    }
+
+    /// Every kind's geometry as the edit command takes it, written back
+    /// onto its object, is that object (Esnet writes dimensions and
+    /// hatches too); a name the contract does not know is no geometry.
+    #[test]
+    fn every_kind_is_written_as_the_core_gives_it() {
+        let objects = [
+            r#"{"kind":"point","id":1,"layerId":"a","attrs":{},"p":{"x":486512.34,"y":-0.0},"z":850.5}"#,
+            r#"{"kind":"polyline","id":3,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":4,"y":0}],"bulges":[0.5]}"#,
+            r#"{"kind":"polygon","id":4,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"holes":[{"pts":[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}],"bulges":[0,0,-0.1]}]}"#,
+            r#"{"kind":"arc","id":6,"layerId":"a","attrs":{},"c":{"x":1,"y":2},"r":3,"a0":0.5,"a1":2}"#,
+            r#"{"kind":"text","id":11,"layerId":"a","attrs":{},"p":{"x":1,"y":2},"text":"Ada 104","height":2,"rotation":-30}"#,
+            r#"{"kind":"dimension","id":12,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":-2,"height":0.5,"text":"12,5 m","style":"linear","angle":90}"#,
+            r#"{"kind":"dimension","id":14,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":2,"height":0.5,"style":"angular","c":{"x":1,"y":1}}"#,
+            r#"{"kind":"hatch","id":13,"layerId":"a","attrs":{},"ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"holes":[[{"x":1,"y":1},{"x":2,"y":1},{"x":2,"y":2}]],"pattern":{"type":"cross","angle":30,"spacing":0.5}}"#,
+        ];
+        for text in objects {
+            let e = entity(text);
+            let g = edit_geometry(shape(&e)).expect("a geometry");
+            assert_eq!(
+                serde_json::to_string(&entity_of(&g, e.base().clone())).unwrap(),
+                serde_json::to_string(&e).unwrap(),
+                "{text}"
+            );
+        }
+        let odd = Shape::Hatch {
+            ring: vec![Vec2::new(0.0, 0.0); 3],
+            holes: None,
+            pattern: HatchPattern {
+                kind: "dots".into(),
+                angle: 0.0,
+                spacing: 1.0,
+            },
+        };
+        assert_eq!(edit_geometry(odd), None);
     }
 }

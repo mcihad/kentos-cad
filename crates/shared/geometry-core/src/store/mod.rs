@@ -21,7 +21,7 @@ mod rtree;
 pub mod snap;
 pub mod tools;
 
-pub use pack::{Packer, transform_packed_objects};
+pub use pack::{Packer, array_packed_objects, transform_packed_objects};
 
 use std::collections::{HashMap, HashSet};
 

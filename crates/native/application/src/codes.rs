@@ -1,5 +1,5 @@
 //! The stable codes of the drawing commands' answers (`CommandError.code`,
-//! `CommandWarning.code`; docs/adr/0022, 0027, 0029, 0032, 0037). Programs branch on
+//! `CommandWarning.code`; docs/adr/0022, 0027, 0029, 0032, 0037, 0047). Programs branch on
 //! these, never on the Turkish message.
 
 /// A closed area with fewer than 3 corners (`cad.polygon.create`).
@@ -35,3 +35,12 @@ pub const INVALID_AXIS: &str = "invalid_axis";
 pub const NO_CHANGES: &str = "no_changes";
 /// One object changed by two changes of the same edit (`cad.entities.edit`).
 pub const REPEATED_ENTITY: &str = "repeated_entity";
+/// An alignment's second pair given by half, or its points within a nanometre
+/// of the first pair's (`cad.entities.transform`).
+pub const INVALID_ALIGN: &str = "invalid_align";
+/// Rows and columns, or a polar array's count, out of their range (`cad.entities.array`).
+pub const INVALID_COUNT: &str = "invalid_count";
+/// A grid direction with more than one place and no spacing (`cad.entities.array`).
+pub const INVALID_SPACING: &str = "invalid_spacing";
+/// A polar array's fill of zero or past a full turn (`cad.entities.array`).
+pub const INVALID_FILL: &str = "invalid_fill";

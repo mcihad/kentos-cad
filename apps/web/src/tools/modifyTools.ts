@@ -1,9 +1,11 @@
 import type { AppContext } from '../app/context';
+import type { ArrayLayout } from '../contracts/generated/ArrayLayout';
 import type { Transform } from '../contracts/generated/Transform';
 import { Signal } from '../core/signal';
-import type { Entity, NewEntity } from '../model/entities';
+import type { Entity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
 import { mirror, rotation, scaling, translation, type Affine } from '../model/geom/affine';
+import { entitiesArray } from '../product/entitiesArray';
 import { entitiesTransform } from '../product/entitiesTransform';
 import type { ViewTransform } from '../viewport/Camera';
 import { directionAngle, rotationAngle, scaleFactor } from './constructions';
@@ -20,10 +22,10 @@ const deg = (rad: number) => (rad * 180) / Math.PI;
 /**
  * Pick objects (unless something is already selected), press Enter, then
  * answer the tool's stages. Results are applied as one undo step through
- * an affine transform, so every entity kind is supported uniformly: the
- * move, copy, rotate, scale and mirror tools write it through the product
- * command `cad.entities.transform` (docs/adr/0037), the arrays and the
- * align tool through `applyTransforms`.
+ * affine transforms, so every entity kind is supported uniformly: the
+ * move, copy, rotate, scale, mirror and align tools write through the
+ * product command `cad.entities.transform` (docs/adr/0037, 0047), the
+ * arrays through `cad.entities.array` (docs/adr/0047).
  */
 export abstract class SelectionFirstTool implements Tool {
   abstract readonly id: string;
@@ -175,8 +177,7 @@ export abstract class SelectionFirstTool implements Tool {
    */
   protected transformSelection(transform: Transform, copy: boolean): number | null {
     const { doc, log } = this.ctx;
-    const uids = [...this.ctx.selection.ids.value].map((id) => doc.uidOf(id)).filter((uid): uid is string => uid !== undefined);
-    const result = entitiesTransform.execute({ doc }, { uids, transform, ...(copy ? { copy: true } : {}) });
+    const result = entitiesTransform.execute({ doc }, { uids: this.selectedUids(), transform, ...(copy ? { copy: true } : {}) });
     if (result.status !== 'completed') {
       if ('error' in result) log.warn(result.error.message);
       return null;
@@ -186,23 +187,28 @@ export abstract class SelectionFirstTool implements Tool {
   }
 
   /**
-   * Applies `ms` to the selection: copies when `copy`, otherwise edits in
-   * place. The arrays and the align tool still write this way; the move,
-   * copy, rotate, scale and mirror tools go through the product command
-   * (`transformSelection`).
+   * Writes copies of the selection laid out by `layout` through the product
+   * command `cad.entities.array` (docs/adr/0047): the selected objects'
+   * persistent ids explicit in the input (CMD-07), one undo step named after
+   * the tool. The command's refusal or warning is the tool's message; objects
+   * on locked layers are not copied. How many copies were made, or null when
+   * none was.
    */
-  protected applyTransforms(label: string, ms: Affine[], copy: boolean): number {
+  protected arraySelection(layout: ArrayLayout): number | null {
     const { doc, log } = this.ctx;
-    const ents = this.targets();
-    const editable = copy ? ents : ents.filter((e) => !doc.layers.isLocked(e.layerId));
-    if (editable.length < ents.length) log.warn(`${ents.length - editable.length} nesne kilitli katmanda olduğu için atlandı.`);
-    // Every object by every affine, affine after affine, in one call to the
-    // geometry store, which holds the objects: only their new geometry comes back.
-    const moved = this.ctx.view.transformEntities(editable, ms);
-    // One undo step and one change for all of them (the panels and the store hear it once).
-    if (copy) return doc.addMany(moved.map(({ id: _id, ...rest }) => rest as NewEntity), label).length;
-    doc.updateMany(moved, label);
-    return editable.length;
+    const result = entitiesArray.execute({ doc }, { uids: this.selectedUids(), layout });
+    if (result.status !== 'completed') {
+      if ('error' in result) log.warn(result.error.message);
+      return null;
+    }
+    for (const w of result.warnings) log.warn(w.message);
+    return result.output.created.length;
+  }
+
+  /** The selected objects' persistent ids, as the commands name them. */
+  private selectedUids(): string[] {
+    const { doc } = this.ctx;
+    return [...this.ctx.selection.ids.value].map((id) => doc.uidOf(id)).filter((uid): uid is string => uid !== undefined);
   }
 
   draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
@@ -494,7 +500,13 @@ export class MirrorTool extends SelectionFirstTool {
   }
 }
 
-/** Rectangular array: rows × columns with dY (column) and dX (row) spacing. */
+/**
+ * Rectangular array: rows × columns with dY (column) and dX (row) spacing,
+ * written through the product command `cad.entities.array` (docs/adr/0047):
+ * one undo step, “Dizi”; objects on locked layers are not copied. A refused
+ * array (a direction with more than one place and no spacing) leaves the
+ * tool where it was, for another spacing.
+ */
 export class ArrayTool extends SelectionFirstTool {
   readonly id = 'array';
   protected readonly label = 'Dizi';
@@ -559,8 +571,9 @@ export class ArrayTool extends SelectionFirstTool {
   }
   private build(dx: number, dy: number): void {
     if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return;
+    const n = this.arraySelection({ kind: 'grid', rows: this.rows, cols: this.cols, dx, dy });
+    if (n === null) return;
     ArrayTool.last = { rows: this.rows, cols: this.cols, dx, dy };
-    const n = this.applyTransforms(this.label, this.offsets(dx, dy), true);
     this.ctx.log.success(`${this.rows} × ${this.cols} dizi oluşturuldu: ${n} yeni nesne.`);
     this.ctx.tools.exit();
   }
