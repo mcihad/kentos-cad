@@ -233,6 +233,7 @@ Tek istisna şeridin gölgesidir (§7.3.1): şeridin altında yalnız çizim ala
 
 - **Solda:** logo, KentOS ve menüler. **Ortada:** proje adı; kaydedilmemiş değişiklik varsa önünde amber nokta. **Sağda:** koordinat sistemi düğmesi (tıklayınca Proje ayarları → Koordinat sistemi) ve **Tam ekran** düğmesi (dört köşe dışa; tam ekrandayken içe, Esc de çıkar). Şeritte aynı düğme Yardım'ın solundadır; komut Görünüm → Paneller'dedir (`view.fullscreen`).
 - Menü tıklayınca açılır. Açıkken fare başka bir menünün üstüne gelince o menüye geçer. ←/→ menüler arasında gezer, Esc kapatır.
+- **Pencere daralınca** proje adı önce kendiliğinden kısalır. Menüler yine sığmazsa (büyük yazı boyutunda) çubuk adım adım yer açar: önce “KentOS” yazısı, sonra koordinat sisteminin adı (düğmesi ve ipucu kalır), en sonda menülerin iç boşluğu. 1100 px'te, En büyük yazıda da her menü görünür.
 
 ### 7.1.1 Uygulama menüsü
 
@@ -260,6 +261,12 @@ KentOS logosuna (klasik arayüzde menü çubuğunda, şeritte sekme satırında)
 - **Gruplar ve aralarındaki ayırıcılar:** dosya │ geçmiş │ görünüm │ geçerli özellikler (katman, renk, tip, kalınlık) ··· çizim ölçeği │ panel düğmeleri.
 - Düğme 30×30'dur; basılıyken yumuşak amber zemin ve amber simge gösterir.
 - Açılır listelerin önünde küçük üçüncül bir etiket bulunur ("Renk", "Tip"). Etkin katman listesi renk örneğiyle başlar ve katmanları grup başlıklarıyla gösterir.
+- **Pencere daralınca** araç çubuğu adım adım küçülür; sığan ilk adımda kalır, hiçbir şey kesilmez ya da görünmez kaydırmaya kalmaz:
+  1. katman, renk, tip ve kalınlık listeleri daralır (değerleri üç noktayla kısalır; ölçek listesi daralmaz, "1:1000" tam okunur);
+  2. Görünüm grubunda Yakınlaştır, Uzaklaştır ve Kaydır grubun sonundaki ⋯ düğmesinin menüsüne girer (tekerlek ve orta tuş aynı işi yapar);
+  3. Renk, Tip ve Kalınlık tek bir “Özellikler” listesine katlanır; menüsünde üçü birer alt menüdür ve güncel değerlerini sağda gösterir; katman listesi genişliğine döner;
+  4. katman listesi yeniden daralır (en büyük yazı boyutları).
+  Standart yazıda 1280 px'te 1. adım, 1100 px'te 3. adım yeter.
 
 ### 7.3.1 Şerit
 
@@ -359,6 +366,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 - Hücreler: Y/X imleç koordinatı (tabular) │ son mesaj (5–9 sn görünür) │ seçim sayısı (amber) │ çizim yardımcıları │ ekran ölçeği │ koordinat sistemi │ sunucu │ çizim motoru (en sağda; çip simgesi ve "WebGL2" / "WebGPU"; WebGPU'da simge amber; tıklayınca motor seçme menüsü).
 - **Çizim yardımcısı düğmeleri** bir gösterge lambası taşır: kapalıyken boş kare, açıkken dolu amber kare. Metin kapalıyken üçüncül renktedir.
+- **Pencere daralınca** hücreler, son mesaja kısa bir ileti sığacak yer (yazı boyunun 15 katı) kalana dek sırayla yer açar; her hücre ipucunu ve tıklamasını korur: çizim motorunun adı (çip simgesi kalır), koordinat sistemi hücresi (menü çubuğunda da vardır), ekran ölçeği, sunucu ve kayıt hücrelerinin yazısı (lambaları kalır), çalışma modunun adı (simgesi kalır), en sonda yardımcı düğmelerinin iç boşluğu. Koordinat, seçim sayısı ve yardımcıların adları her zaman görünür.
 - **Sunucu hücresi** yuvarlak bir lamba taşır (yardımcıların kare lambasından ayrılsın diye): bağlıyken dolu yeşil (`--c-ok`), sunucu yokken boş halka ve üçüncül metin (Faz A'da olağan durumdur, hata rengi kullanılmaz), sözleşme sürümü uyuşmazken dolu amber (`--c-warn`). Tıklamak yeniden denetler; ipucu sürümü ya da nedeni yazar.
 - **Kayıt hücresi** yalnızca bir bulut projesi açıkken görünür, sunucu hücresinin solunda durur ve aynı yuvarlak lambayı taşır. Yazısı ve lambası:
   - dolu yeşil “Buluta kaydedildi”: yalnızca sunucu yanıtladıktan sonra ve bekleyen bir şey yokken;

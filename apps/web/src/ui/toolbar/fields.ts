@@ -76,58 +76,118 @@ export function layerField(ctx: AppContext, d: DisposableStore, opts: FieldOptio
   return dd.el;
 }
 
-export function colorField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
+/** The current colour for new objects: its name and swatch, or “Katmana göre”. */
+export function currentColor(ctx: AppContext): { text: string; swatch?: string } {
+  const c = DRAW_COLORS.find((x) => x.value === ctx.settings.color.value);
+  return c ? { text: c.name, swatch: colorSwatch(c.value, ctx.view.palette) } : { text: 'Katmana göre' };
+}
+
+/** The colours new objects can take (a menu: the field's list, the folded toolbar's submenu). */
+export function colorItems(ctx: AppContext): MenuItem[] {
   const s = ctx.settings.color;
+  return [
+    { label: 'Katmana göre', radio: true, checked: s.value === null, run: () => s.set(null) },
+    { kind: 'separator' },
+    ...DRAW_COLORS.map((c): MenuItem => ({ label: c.name, swatch: colorSwatch(c.value, ctx.view.palette), radio: true, checked: s.value === c.value, run: () => s.set(c.value) })),
+  ];
+}
+
+/** The current line type for new objects, or “Katmana göre”. */
+export function currentLineType(ctx: AppContext): string {
+  const v = ctx.settings.lineType.value;
+  return v ? LINE_TYPE_LABEL[v] : 'Katmana göre';
+}
+
+export function lineTypeItems(ctx: AppContext): MenuItem[] {
+  const s = ctx.settings.lineType;
+  const types = Object.keys(LINE_TYPE_LABEL) as LineType[];
+  return [
+    { label: 'Katmana göre', radio: true, checked: s.value === null, run: () => s.set(null) },
+    { kind: 'separator' },
+    ...types.map((t): MenuItem => ({ label: LINE_TYPE_LABEL[t], radio: true, checked: s.value === t, run: () => s.set(t) })),
+  ];
+}
+
+const weightText = (w: number) => `${w.toFixed(2)} mm`;
+
+/** The current line weight for new objects, or “Katmana göre”. */
+export function currentWeight(ctx: AppContext): string {
+  const v = ctx.settings.lineWeight.value;
+  return v ? weightText(v) : 'Katmana göre';
+}
+
+export function weightItems(ctx: AppContext): MenuItem[] {
+  const s = ctx.settings.lineWeight;
+  return [
+    { label: 'Katmana göre', radio: true, checked: s.value === null, run: () => s.set(null) },
+    { kind: 'separator' },
+    ...LINE_WEIGHTS.map((w): MenuItem => ({ label: weightText(w), radio: true, checked: s.value === w, run: () => s.set(w) })),
+  ];
+}
+
+export function colorField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
   const dd = new Dropdown({
     ariaLabel: 'Renk',
     label: opts.label === false ? undefined : (opts.label ?? 'Renk'),
     width: opts.width ?? 150,
-    items: () => [
-      { label: 'Katmana göre', radio: true, checked: s.value === null, run: () => s.set(null) },
-      { kind: 'separator' },
-      ...DRAW_COLORS.map((c): MenuItem => ({ label: c.name, swatch: colorSwatch(c.value, ctx.view.palette), radio: true, checked: s.value === c.value, run: () => s.set(c.value) })),
-    ],
+    items: () => colorItems(ctx),
   });
   const sync = () => {
-    const c = DRAW_COLORS.find((x) => x.value === s.value);
-    dd.set(c ? h('span', { class: 'swatch', style: `--swatch:${colorSwatch(c.value, ctx.view.palette)}` }) : null, h('span', { class: 'dropdown__text' }, c?.name ?? 'Katmana göre'));
+    const c = currentColor(ctx);
+    dd.set(c.swatch ? h('span', { class: 'swatch', style: `--swatch:${c.swatch}` }) : null, h('span', { class: 'dropdown__text' }, c.text));
   };
-  d.add(watchAll([s, ctx.ui.theme], sync));
+  d.add(watchAll([ctx.settings.color, ctx.ui.theme], sync));
   sync();
   return dd.el;
 }
 
 export function lineTypeField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
-  const s = ctx.settings.lineType;
-  const types = Object.keys(LINE_TYPE_LABEL) as LineType[];
   const dd = new Dropdown({
     ariaLabel: 'Çizgi tipi',
     label: opts.label === false ? undefined : (opts.label ?? 'Tip'),
     width: opts.width ?? 150,
-    items: () => [
-      { label: 'Katmana göre', radio: true, checked: s.value === null, run: () => s.set(null) },
-      { kind: 'separator' },
-      ...types.map((t): MenuItem => ({ label: LINE_TYPE_LABEL[t], radio: true, checked: s.value === t, run: () => s.set(t) })),
-    ],
+    items: () => lineTypeItems(ctx),
   });
-  d.add(s.subscribe((v) => dd.set(h('span', { class: 'dropdown__text' }, v ? LINE_TYPE_LABEL[v] : 'Katmana göre')), true));
+  d.add(ctx.settings.lineType.subscribe(() => dd.set(h('span', { class: 'dropdown__text' }, currentLineType(ctx))), true));
   return dd.el;
 }
 
 export function weightField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
-  const s = ctx.settings.lineWeight;
-  const fmt = (w: number) => `${w.toFixed(2)} mm`;
   const dd = new Dropdown({
     ariaLabel: 'Çizgi kalınlığı',
     label: opts.label === false ? undefined : (opts.label ?? 'Kalınlık'),
     width: opts.width ?? 160,
-    items: () => [
-      { label: 'Katmana göre', radio: true, checked: s.value === null, run: () => s.set(null) },
-      { kind: 'separator' },
-      ...LINE_WEIGHTS.map((w): MenuItem => ({ label: fmt(w), radio: true, checked: s.value === w, run: () => s.set(w) })),
-    ],
+    items: () => weightItems(ctx),
   });
-  d.add(s.subscribe((v) => dd.set(h('span', { class: 'dropdown__text' }, v ? fmt(v) : 'Katmana göre')), true));
+  d.add(ctx.settings.lineWeight.subscribe(() => dd.set(h('span', { class: 'dropdown__text' }, currentWeight(ctx))), true));
+  return dd.el;
+}
+
+/**
+ * The colour, line type and weight fields folded into one (the classic
+ * toolbar at its narrowest, DESIGN.md §7.3): each is a submenu showing its
+ * current value, the same lists as the fields.
+ */
+export function propertiesField(ctx: AppContext, d: DisposableStore, opts: FieldOptions = {}): HTMLElement {
+  const dd = new Dropdown({
+    ariaLabel: 'Geçerli özellikler: renk, çizgi tipi, kalınlık',
+    width: opts.width ?? 128,
+    items: () => {
+      const c = currentColor(ctx);
+      return [
+        { kind: 'header', label: 'Yeni nesnelerin özellikleri' },
+        { label: 'Renk', swatch: c.swatch, hint: c.text, items: () => colorItems(ctx) },
+        { label: 'Çizgi tipi', hint: currentLineType(ctx), items: () => lineTypeItems(ctx) },
+        { label: 'Çizgi kalınlığı', hint: currentWeight(ctx), items: () => weightItems(ctx) },
+      ];
+    },
+  });
+  const sync = () => {
+    const c = currentColor(ctx);
+    dd.set(c.swatch ? h('span', { class: 'swatch', style: `--swatch:${c.swatch}` }) : null, h('span', { class: 'dropdown__text' }, 'Özellikler'));
+  };
+  d.add(watchAll([ctx.settings.color, ctx.ui.theme], sync));
+  sync();
   return dd.el;
 }
 

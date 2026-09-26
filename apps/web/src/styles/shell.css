@@ -183,6 +183,17 @@
   background: var(--c-hover);
   color: var(--c-text);
 }
+/* Every menu stays in view (MenuBar.ts, DESIGN.md §7.1): the bar makes room in steps at a narrow window. */
+.menubar[data-tight='1'] .brand__word,
+.menubar[data-tight='2'] .brand__word,
+.menubar[data-tight='3'] .brand__word,
+.menubar[data-tight='2'] .menubar__crs-name,
+.menubar[data-tight='3'] .menubar__crs-name {
+  display: none;
+}
+.menubar[data-tight='3'] .menubar__item {
+  padding: 0 6px;
+}
 .menubar__icon {
   display: grid;
   place-items: center;
@@ -1034,6 +1045,24 @@
 .status__toggle[aria-pressed='true']::before {
   background: var(--c-accent);
   box-shadow: none;
+}
+
+/*
+ * A narrow window (DESIGN.md §7.7): the status bar's cells give way in order until the message has room,
+ * each keeping its tooltip and click (StatusBar.ts): the engine's name, the CRS (also in the title bar),
+ * the screen scale, the cloud cells' words (their lamps stay), the mode's name, the aids' padding.
+ */
+.status[data-fit-renderer] .status__renderer-name,
+.status[data-fit-crs] .status__crs,
+.status[data-fit-zoom] .status__zoom,
+.status[data-fit-cloud] .status__server-text,
+.status[data-fit-cloud] .status__save-text,
+.status[data-fit-mode] .status__mode-name {
+  display: none;
+}
+.status[data-fit-toggles] .status__toggle {
+  gap: 4px;
+  padding: 0 6px;
 }
 
 /* ── Inline text editor (double click on text / dimension) ───────── */
