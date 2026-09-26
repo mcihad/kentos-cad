@@ -125,6 +125,9 @@ pub const PORTED: &[&str] = &[
     "tool.array",
     "tool.arrayPolar",
     "tool.align",
+    // The bottom panel's tabs (bottom.rs): F2, the history, the coordinate list, warnings.
+    "view.bottomPanel",
+    "view.coords",
 ];
 
 /// Where the desktop does more than the web, its own description: the web's

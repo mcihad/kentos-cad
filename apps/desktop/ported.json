@@ -75,7 +75,9 @@
     "tool.stretch",
     "tool.array",
     "tool.arrayPolar",
-    "tool.align"
+    "tool.align",
+    "view.bottomPanel",
+    "view.coords"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

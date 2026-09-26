@@ -72,6 +72,23 @@ impl Format {
         }
     }
 
+    /// A bearing without its unit (the web's `bearing(g, false)`), for a
+    /// column whose heading names the unit ([`Format::angle_unit_label`]).
+    pub fn bearing_bare(&self, grad: f64) -> String {
+        match self.angle_unit {
+            AngleUnit::Deg => fixed(grad / GRAD_PER_DEG, 4),
+            AngleUnit::Grad => fixed(grad, 4),
+        }
+    }
+
+    /// The angle unit's mark (the web's `angleUnitLabel`): `°` or `g`.
+    pub fn angle_unit_label(&self) -> &'static str {
+        match self.angle_unit {
+            AngleUnit::Deg => "°",
+            AngleUnit::Grad => "g",
+        }
+    }
+
     /// An angle in radians (an angular dimension's), in the project's angle
     /// unit: the web's `angle`, a bearing of `rad × 200 / π` grads.
     pub fn angle(&self, rad: f64) -> String {

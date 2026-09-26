@@ -7,6 +7,7 @@
 mod app;
 mod app_menu;
 mod appearance;
+mod bottom;
 mod catalog;
 mod cloud;
 mod command_bar;
