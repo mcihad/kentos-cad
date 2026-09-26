@@ -134,7 +134,7 @@ fn trim_cuts_between_the_visible_edges_and_shift_extends() {
     assert!(near(&line(&b, 1), &[[-28.0, 12.0], [-8.0, 12.0]]));
     // A locked object is not an edge to edit.
     let before = b.doc.revision();
-    b.click(5.0, -18.0);
+    b.click(8.0, -15.0);
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(
         b.last_text(),
