@@ -65,9 +65,15 @@ interface Upload {
   id: string;
   size: number;
   sha256: string;
+  /** The whole file, once it arrived and was verified. */
   bytes: Uint8Array | null;
+  /** The parts that arrived so far (an upload sent in parts, docs/adr/0045). */
+  parts: Uint8Array[];
   objects?: string;
 }
+
+/** The largest part the server takes (docs/adr/0045). */
+const PART_MAX = 32 * 1024 * 1024;
 
 interface Stored {
   revision: FileRevision;
@@ -99,6 +105,10 @@ export class FakeFiles {
   loseNextSendAnswer = false;
   /** A server before `GET …/uploads/{id}` (docs/adr/0040). */
   noUploadState = false;
+  /** A server before parts: its uploads say nothing of the bytes that arrived (docs/adr/0045). */
+  noReceivedBytes = false;
+  /** The `offset` of every `PUT`, in order (null: the whole file). */
+  readonly offsets: (number | null)[] = [];
   /** Projects made by restoring or converting, for the tests. */
   readonly restored: ProjectDuplicated[] = [];
   sends = 0;
@@ -130,35 +140,76 @@ export class FakeFiles {
     if (begin.size < 1 || begin.size > MAX) throw invalid(`Dosya 1 bayt ile 256 MiB arasında olmalı (${begin.size} bayt bildirildi).`, 'size');
     if (!/^[0-9a-f]{64}$/.test(begin.sha256)) throw invalid('sha256, dosyanın SHA-256 özeti olmalı: 64 küçük harfli onaltılık rakam.', 'sha256');
     const id = crypto.randomUUID();
-    this.uploads.set(id, { id, size: begin.size, sha256: begin.sha256, bytes: null });
+    this.uploads.set(id, { id, size: begin.size, sha256: begin.sha256, bytes: null, parts: [] });
     return this.view(this.uploads.get(id)!);
   }
 
   private view(u: Upload): FileUpload {
-    return { id: u.id, size: u.size, sha256: u.sha256, createdAt: '2026-09-26T10:00:00Z', expiresAt: '2026-09-27T10:00:00Z', received: !!u.bytes, ...(u.objects ? { objects: u.objects } : {}) };
+    const arrived = u.bytes ? u.size : u.parts.reduce((n, p) => n + p.byteLength, 0);
+    return {
+      id: u.id,
+      size: u.size,
+      sha256: u.sha256,
+      createdAt: '2026-09-26T10:00:00Z',
+      expiresAt: '2026-09-27T10:00:00Z',
+      received: !!u.bytes,
+      ...(this.noReceivedBytes ? {} : { receivedBytes: String(arrived) }),
+      ...(u.objects ? { objects: u.objects } : {}),
+    };
   }
 
-  async sendUpload(id: string, bytes: Uint8Array, progress: Transfer = () => {}): Promise<FileUpload> {
+  async sendUpload(id: string, bytes: Uint8Array, progress: Transfer = () => {}, offset?: number): Promise<FileUpload> {
     this.host.guard(true);
     this.may('feature.write');
     this.sends++;
+    this.offsets.push(offset ?? null);
     const u = this.uploads.get(id);
     if (!u) throw uploadGone();
     if (u.bytes) throw invalid('Bu yüklemenin baytları zaten alındı; project.file.commit ile kaydedin ya da yeni bir yükleme başlatın.');
     if (this.cutNextSend) {
       this.cutNextSend--;
       progress(Math.floor(bytes.byteLength / 2), bytes.byteLength);
-      // Nothing is kept of a body cut short: the same upload can be sent again.
+      // Nothing is kept of a body cut short: the same upload (or part) can be sent again.
       throw new ApiFailure(0, { error: 'network' }, 'Sunucuya ulaşılamadı; dosyanın gönderimi yarıda kaldı.');
     }
     progress(bytes.byteLength, bytes.byteLength);
+    if (offset !== undefined) return this.part(u, bytes, offset);
+    return this.whole(u, bytes);
+  }
+
+  /** One part at `offset` (docs/adr/0045): it must go on from the bytes that arrived; the last completes the file. */
+  private async part(u: Upload, bytes: Uint8Array, offset: number): Promise<FileUpload> {
+    if (!bytes.byteLength || bytes.byteLength > PART_MAX) throw invalid(`Bir parça 1 bayt ile 32 MiB arasında olmalı (${bytes.byteLength} bayt geldi).`, 'size');
+    const arrived = u.parts.reduce((n, p) => n + p.byteLength, 0);
+    if (offset !== arrived) throw invalid(`Yüklemenin ${arrived} baytı geldi; sonraki parça ${arrived}. bayttan başlamalı (${offset} değil).`, 'offset');
+    if (arrived + bytes.byteLength > u.size) throw invalid(`Bu parçayla bildirilenden (${u.size} bayt) fazla bayt gelirdi; parça alınmadı.`, 'size');
+    u.parts.push(bytes.slice());
+    const answer = async (): Promise<FileUpload> => {
+      if (arrived + bytes.byteLength < u.size) return this.view(u);
+      const all = new Uint8Array(u.size);
+      let at = 0;
+      for (const p of u.parts) (all.set(p, at), (at += p.byteLength));
+      u.parts = [];
+      return this.whole(u, all);
+    };
+    if (this.loseNextSendAnswer) {
+      // Received and kept: only the answer never arrives.
+      this.loseNextSendAnswer = false;
+      await answer();
+      throw new ApiFailure(0, { error: 'network' }, 'Sunucuya ulaşılamadı; yanıt gelmedi.');
+    }
+    return answer();
+  }
+
+  /** The whole file: kept only when its size, hash and form are the declared ones. */
+  private async whole(u: Upload, bytes: Uint8Array): Promise<FileUpload> {
     const sha = await sha256Hex(bytes);
     if (bytes.byteLength !== u.size || sha !== u.sha256)
       throw invalid(`Gelen dosya bildirilenle aynı değil (${bytes.byteLength} bayt, SHA-256 ${sha}; beklenen ${u.size} bayt, ${u.sha256}). Hiçbir şey saklanmadı.`, bytes.byteLength !== u.size ? 'size' : 'sha256');
     if (!MAGIC.every((b, i) => bytes[i] === b)) throw invalid('Yüklenen dosya geçerli bir KCAD v2 dosyası değil.');
     u.bytes = bytes.slice();
     if (this.decode) u.objects = String((await this.decode(bytes)).entities.length);
-    if (this.loseNextSendAnswer) {
+    if (this.loseNextSendAnswer && !u.parts.length) {
       // Received and kept: only the answer never arrives.
       this.loseNextSendAnswer = false;
       throw new ApiFailure(0, { error: 'network' }, 'Sunucuya ulaşılamadı; yanıt gelmedi.');

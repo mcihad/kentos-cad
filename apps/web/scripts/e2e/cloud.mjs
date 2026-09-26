@@ -943,9 +943,44 @@ try {
   await addPoint(486600);
   await b.key('s', { ctrl: true });
   await b.waitFor(`window.kentos.cloud.file.value.base.value === '2' && window.kentos.cloud.file.value.state.value === 'saved'`, 30000);
+  // The second Kaydet goes in parts (docs/adr/0045): 128-byte parts through the session's test hook
+  // (the drawing is about 700 bytes, so six parts), and the third part's answer is lost on its way
+  // back (the part itself reaches the server); the client asks what arrived and goes on from there.
+  await b.eval(`(() => {
+    window.kentos.cloud.uploadPart = 128;
+    window.__puts = [];
+    const proto = XMLHttpRequest.prototype;
+    window.__xhr = { open: proto.open, send: proto.send };
+    proto.open = function (method, url, ...rest) {
+      this.__url = String(url);
+      return window.__xhr.open.call(this, method, url, ...rest);
+    };
+    proto.send = function (body) {
+      const m = /[?]offset=(\\d+)/.exec(this.__url ?? '');
+      if (m && window.__puts.push(Number(m[1])) === 3) {
+        const answered = this.onerror;
+        this.addEventListener('load', () => answered?.(), { once: true });
+        this.onload = null;
+      }
+      return window.__xhr.send.call(this, body);
+    };
+  })()`);
   await addPoint(486601);
   await b.key('s', { ctrl: true });
   await b.waitFor(`window.kentos.cloud.file.value.base.value === '3' && window.kentos.cloud.file.value.state.value === 'saved'`, 30000);
+  const puts = await b.eval(`(() => {
+    const p = XMLHttpRequest.prototype;
+    p.open = window.__xhr.open;
+    p.send = window.__xhr.send;
+    window.kentos.cloud.uploadPart = undefined;
+    return window.__puts;
+  })()`);
+  const fileSize = (await b.eval("window.kentos.cloud.file.value.lastSaved.value")).size;
+  check(
+    'a drawing goes in parts, each from the bytes the server holds; the part whose answer was lost does not go twice',
+    puts.length >= 4 && puts.every((o, i) => o === i * 128) && puts.at(-1) + 128 >= fileSize,
+    puts.join(' '),
+  );
   const states = await b.eval('window.__fileStates');
   const stages = states.filter((x, i) => x !== states[i - 1]);
   check('Kaydet says its stages apart and “saved” comes last', JSON.stringify(stages.slice(0, 5)) === JSON.stringify(['pending', 'encoding', 'uploading', 'verifying', 'saved']), stages.join(' → '));
@@ -972,8 +1007,34 @@ try {
     asked4.answers.join(' | '),
   );
   await themed('cloud-file-conflict');
+  // The newest revision's download is cut halfway (docs/adr/0045): it goes on with Range from the bytes that arrived.
+  await b.eval(`(() => {
+    const real = window.fetch;
+    window.__fetch = real;
+    window.__ranges = [];
+    let cut = false;
+    window.fetch = async (input, init) => {
+      if (!/[/]files[/][0-9]+$/.test(String(input))) return real(input, init);
+      window.__ranges.push(init?.headers?.range ?? null);
+      const res = await real(input, init);
+      if (cut) return res;
+      cut = true;
+      const all = new Uint8Array(await res.arrayBuffer());
+      let given = false;
+      const body = new ReadableStream({
+        pull(c) {
+          if (given) return c.error(new TypeError('bağlantı koptu'));
+          given = true;
+          c.enqueue(all.slice(0, all.length >> 1));
+        },
+      });
+      return new Response(body, { status: res.status, headers: res.headers });
+    };
+  })()`);
   await press('.dialog[aria-label="Dosya başka biri tarafından kaydedildi"] .dialog__foot .btn', 'Son revizyonu aç');
   await b.waitFor(`window.kentos.cloud.file.value?.base.value === '4' && !window.kentos.doc.dirty.value`, 30000);
+  const ranges = await b.eval(`(() => { window.fetch = window.__fetch; return window.__ranges; })()`);
+  check('a revision download cut halfway goes on with Range from the bytes that arrived', ranges.length === 2 && ranges[0] === null && /^bytes=[1-9][0-9]*-$/.test(ranges[1] ?? ''), ranges.join(' | '));
   const r4size = await b.eval('window.kentos.doc.size');
   const r4objects = (await ayse.call('GET', `${fbase}/files`)).body.revisions.find((r) => r.revision === '4')?.objects;
   check('“Son revizyonu aç” opens revision 4 and drops the edit', String(r4size) === r4objects && (await b.eval(`window.kentos.cloud.file.value.state.value`)) === 'saved', `${r4size} nesne`);

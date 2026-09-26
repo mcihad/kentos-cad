@@ -18,7 +18,7 @@ afterEach(() => {
   for (const f of made.splice(0)) f.dispose();
 });
 
-async function setup(opts: { base?: string; revisions?: number; canWrite?: boolean; api?: (a: CloudApi) => CloudApi } = {}) {
+async function setup(opts: { base?: string; revisions?: number; canWrite?: boolean; api?: (a: CloudApi) => CloudApi; part?: number } = {}) {
   const doc = snapshotSampleDocument();
   const server = serverFor(doc);
   server.files.storage = 'file';
@@ -41,6 +41,7 @@ async function setup(opts: { base?: string; revisions?: number; canWrite?: boole
     onArchived: () => told.archived++,
     onAccessChanged: () => told.asked++,
     waits: [1, 1, 1],
+    ...(opts.part ? { part: () => opts.part } : {}),
   });
   made.push(file);
   file.state.subscribe((s) => states.push(s));
@@ -113,6 +114,26 @@ describe.skipIf(!formatsBuilt)('Kaydet on a file project (docs/adr/0038)', () =>
     expect([file.state.value, file.error.value, doc.dirty.value, server.files.revisions.length]).toEqual(['error', expect.stringMatching(/zaten alındı/), true, 1]);
     expect(await file.save()).toBe('saved');
     expect([server.files.revisions.length, file.base.value, doc.dirty.value]).toEqual([2, '2', false]);
+  });
+
+  it('a large drawing goes in parts (docs/adr/0045): a part cut on its way goes on from what arrived, one revision is written', async () => {
+    const { doc, server, file, states } = await setup({ part: 256 });
+    server.files.cutNextSend = 0;
+    // The second part is cut on its way; nothing of it is kept, the upload is asked and the part goes again.
+    let parts = 0;
+    const send = server.files.sendUpload.bind(server.files);
+    server.files.sendUpload = (...a: Parameters<typeof send>) => {
+      if (++parts === 2) server.files.cutNextSend = 1;
+      return send(...a);
+    };
+    doc.add(point(486501));
+    expect(await file.save()).toBe('saved');
+    const offsets = server.files.offsets;
+    expect([offsets.slice(0, 3), offsets.every((o) => o !== null && o % 256 === 0), server.files.revisions.length]).toEqual([[0, 256, 256], true, 2]);
+    expect(states.slice(states.indexOf('encoding'))).toEqual(['encoding', 'uploading', 'verifying', 'saved']);
+    // The revision holds the drawing, byte for byte what was sent.
+    const back = await server.files.decode!(server.files.revisions[1].bytes);
+    expect(back.entities).toHaveLength(doc.size);
   });
 
   it('a commit whose answer is lost goes again with its key: written once, never a conflict with itself', async () => {

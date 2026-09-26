@@ -50,22 +50,32 @@ export interface UploadOptions {
   signal?: AbortSignal;
   /** Waits before each next try of a cut-off `PUT` (then it fails and says why). */
   waits?: readonly number[];
+  /** A file larger than this goes in parts of this size (tests use a small one; docs/adr/0045). */
+  part?: number;
 }
 
 /** How long to wait before each next try of an upload whose connection was cut. */
 export const UPLOAD_WAITS_MS = [1000, 2000, 4000, 8000, 16000];
 
 /**
+ * A file larger than this goes to the server in parts of this size
+ * (docs/adr/0045): the desktop's part, a quarter of the most one request
+ * takes (32 MiB). A cut then costs only the part on its way.
+ */
+export const UPLOAD_PART = 8 * 1024 * 1024;
+
+/**
  * The upload, when its bytes already arrived and only the answer to them
  * was lost (docs/adr/0040): the server refuses them a second time. Null
  * when they did not, or when it cannot be told (a server without the
  * route, the connection still down): the bytes are then sent again, and
- * that send says whether the upload is still there.
+ * that send says whether the upload is still there. With `any`, the upload
+ * as it stands also before all its bytes arrived (parts, docs/adr/0045).
  */
-async function arrived(api: CloudApi, target: UploadTarget, upload: string, signal?: AbortSignal): Promise<FileUpload | null> {
+async function arrived(api: CloudApi, target: UploadTarget, upload: string, signal?: AbortSignal, any = false): Promise<FileUpload | null> {
   try {
     const state = await api.uploadState(target.tenantId, target.projectId, upload, signal);
-    return state.received ? state : null;
+    return state.received || any ? state : null;
   } catch {
     return null;
   }
@@ -83,6 +93,8 @@ async function arrived(api: CloudApi, target: UploadTarget, upload: string, sign
  * the server's words.
  */
 export async function uploadBytes(api: CloudApi, target: UploadTarget, bytes: Uint8Array, sha256: string, o: UploadOptions = {}): Promise<FileUpload> {
+  const part = o.part ?? UPLOAD_PART;
+  if (bytes.byteLength > part) return uploadInParts(api, target, bytes, sha256, part, o);
   const waits = o.waits ?? UPLOAD_WAITS_MS;
   const begin = () => api.beginUpload(target.tenantId, target.projectId, { size: bytes.byteLength, sha256 });
   let upload = await begin();
@@ -109,6 +121,75 @@ export async function uploadBytes(api: CloudApi, target: UploadTarget, bytes: Ui
         o.progress?.(bytes.byteLength, bytes.byteLength);
         return done;
       }
+    }
+  }
+}
+
+/** How many of an upload's bytes the server holds, when it says (servers before parts do not). */
+const held = (u: FileUpload): number | null => (u.receivedBytes === undefined ? null : Number(u.receivedBytes));
+
+/**
+ * The file in parts (docs/adr/0045): each goes on from the bytes the server
+ * holds (`?offset=N`). After a cut, or a part the server refused as out of
+ * step, the upload is asked how far it came and the next part goes on from
+ * there; so a part whose answer was lost is not sent twice, and the last
+ * one's lost answer finds the file verified. The tries without progress
+ * are counted per part; an expired upload is opened again once.
+ */
+async function uploadInParts(api: CloudApi, target: UploadTarget, bytes: Uint8Array, sha256: string, part: number, o: UploadOptions): Promise<FileUpload> {
+  const waits = o.waits ?? UPLOAD_WAITS_MS;
+  const size = bytes.byteLength;
+  const begin = () => api.beginUpload(target.tenantId, target.projectId, { size, sha256 });
+  let upload = await begin();
+  let at = 0;
+  let reopened = false;
+  let tries = 0;
+  o.progress?.(0, size);
+  for (;;) {
+    const from = at;
+    const end = Math.min(from + part, size);
+    try {
+      const answer = await api.sendUpload(
+        target.tenantId,
+        target.projectId,
+        upload.id,
+        bytes.subarray(from, end),
+        (done) => {
+          o.progress?.(from + done, size);
+          if (from + done >= size) o.verifying?.();
+        },
+        o.signal,
+        from,
+      );
+      if (answer.received) return answer;
+      at = held(answer) ?? end;
+      if (at > from) tries = 0;
+      continue;
+    } catch (e) {
+      if (!(e instanceof ApiFailure) || o.signal?.aborted) throw e;
+      // Gone meanwhile (it expired): a new upload from the start, once.
+      if (uploadGone(e) && !reopened) {
+        reopened = true;
+        upload = await begin();
+        at = 0;
+        tries = 0;
+        continue;
+      }
+      const outOfStep = e.code === 'invalid' && e.path === 'offset';
+      if ((!e.transient && !outOfStep) || tries >= waits.length) throw e;
+      if (!outOfStep) await new Promise((resolve) => setTimeout(resolve, Math.max(waits[tries], (e.retryAfter ?? 0) * 1000)));
+      tries++;
+    }
+    // Where the server is now: a part whose answer was lost may be there; the last one completes the file.
+    const state = await arrived(api, target, upload.id, o.signal, true);
+    if (state?.received) {
+      o.progress?.(size, size);
+      return state;
+    }
+    const got = state ? held(state) : null;
+    if (got !== null && got !== at) {
+      if (got > at) tries = 0;
+      at = got;
     }
   }
 }

@@ -88,14 +88,14 @@ export async function sendDrawing(
   doc: CadDocument,
   codec: () => Promise<DrawingCodec>,
   target: UploadTarget,
-  o: { stage?: (s: FileStage) => void; progress?: Transfer; warn?: (text: string) => void; waits?: readonly number[] } = {},
+  o: { stage?: (s: FileStage) => void; progress?: Transfer; warn?: (text: string) => void; waits?: readonly number[]; part?: number } = {},
 ): Promise<SentDrawing> {
   o.stage?.('encoding');
   const encoded = await encodeDrawing(doc, codec);
   if (encoded.dropped) o.warn?.(`KCAD v2'nin tanımadığı alanlar yüklenmedi: ${encoded.dropped}.`);
   const sha256 = await sha256Hex(encoded.bytes);
   o.stage?.('uploading');
-  const upload = await uploadBytes(api, target, encoded.bytes, sha256, { progress: o.progress, verifying: () => o.stage?.('verifying'), waits: o.waits });
+  const upload = await uploadBytes(api, target, encoded.bytes, sha256, { progress: o.progress, verifying: () => o.stage?.('verifying'), waits: o.waits, part: o.part });
   o.stage?.('verifying');
   return { encoded, sha256, upload };
 }
