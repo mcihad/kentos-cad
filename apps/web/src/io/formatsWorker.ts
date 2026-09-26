@@ -1,4 +1,16 @@
-import init, { decodeKcad, encodeKcad, formatsVersion, readCoords, readDxf, v1Identities, writeCoords, writeDxf } from './pkg/kentos_formats_wasm.js';
+import init, {
+  decodeKcad,
+  encodeKcad,
+  formatsVersion,
+  readCoords,
+  readDxf,
+  readGeoJson,
+  readShapefile,
+  v1Identities,
+  writeCoords,
+  writeDxf,
+  writeGeoJson,
+} from './pkg/kentos_formats_wasm.js';
 import wasmUrl from './pkg/kentos_formats_wasm_bg.wasm?url';
 import { KcadError, decodeWith, encodeWith, transferables, type KcadProgress } from './kcad';
 import type { FormatsReply, FormatsRequest } from './protocol';
@@ -49,9 +61,14 @@ scope.onmessage = (e) => {
       return;
     }
     try {
-      if (m.op === 'readCoords' || m.op === 'readDxf') {
-        const read = m.op === 'readCoords' ? readCoords : readDxf;
+      if (m.op === 'readCoords' || m.op === 'readDxf' || m.op === 'readGeoJson') {
+        const read = m.op === 'readCoords' ? readCoords : m.op === 'readDxf' ? readDxf : readGeoJson;
         const json = own(read(new Uint8Array(m.bytes), JSON.stringify(m.options)));
+        scope.postMessage({ id: m.id, ok: true, json }, [json]);
+      } else if (m.op === 'readShapefile') {
+        const f = m.files;
+        const part = (b?: ArrayBuffer) => (b ? new Uint8Array(b) : undefined);
+        const json = own(readShapefile(new Uint8Array(f.shp), part(f.shx), part(f.dbf), part(f.prj), part(f.cpg), JSON.stringify(m.options)));
         scope.postMessage({ id: m.id, ok: true, json }, [json]);
       } else if (m.op === 'v1Identities') {
         const json = own(v1Identities(m.text));
@@ -63,7 +80,8 @@ scope.onmessage = (e) => {
         const drawing = decodeWith(kcad, new Uint8Array(m.bytes), progress(m.id));
         scope.postMessage({ id: m.id, ok: true, drawing }, transferables(drawing.columns));
       } else {
-        const written = m.op === 'writeCoords' ? writeCoords(JSON.stringify(m.input)) : writeDxf(JSON.stringify(m.input));
+        const input = JSON.stringify(m.input);
+        const written = m.op === 'writeCoords' ? writeCoords(input) : m.op === 'writeGeoJson' ? writeGeoJson(input) : writeDxf(input);
         try {
           const file = own(written.takeBytes());
           scope.postMessage({ id: m.id, ok: true, file, report: written.report }, [file]);

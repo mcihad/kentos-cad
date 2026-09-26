@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::5256" } },
+  "features": [
+    {
+      "type": "Feature",
+      "kentos": { "layer": "Parsel", "label": "101/5" },
+      "properties": { "ada": "101", "parsel": "5", "alan": 2345.678, "mahalle": "Çamlıbel" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[486512.3456789, 4420187.12345678], [486562.3456789, 4420187.12345678], [486562.34567891234, 4420237.123456789012], [486512.3456789, 4420237.12345678], [486512.3456789, 4420187.12345678]],
+          [[486530.001, 4420200.002], [486530.007, 4420210.008], [486540.005, 4420210.006], [486540.003, 4420200.004], [486530.001, 4420200.002]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "kentos": { "layer": "Bina", "label": "B-1" },
+      "properties": { "kat": 4, "yapi": "betonarme" },
+      "geometry": { "type": "Polygon", "coordinates": [[[486545.125, 4420215.25], [486555.875, 4420215.25], [486555.875, 4420228.5], [486545.125, 4420228.5], [486545.125, 4420215.25]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "poligon noktas\u0131" },
+      "geometry": { "type": "MultiPoint", "coordinates": [[486512.3456789, 4420187.12345678, 1021.345], [486562.3456789, 4420187.12345678, 1019.8765]] }
+    },
+    {
+      "type": "Feature",
+      "kentos": { "layer": "Bina" },
+      "properties": { "ad": "kap\u0131" },
+      "geometry": { "type": "Point", "coordinates": [4.8655e5, 4.4202155e6] }
+    }
+  ]
+}

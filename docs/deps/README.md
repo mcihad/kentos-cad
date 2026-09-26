@@ -87,5 +87,6 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | sqlx TLS özelliği (`rustls`) | Üretim veritabanı bağlantısı | `OPS-03` |
 | S3 uyumlu nesne deposu istemcisi | Bulut dosya revizyonları | `SYNC-02`, `SYNC-03` |
 | PROJ, GDAL bağlayıcıları | Dönüşüm ve biçimler (native/sunucu) | `NUM-05`, `NUM-06`, `FMT-04` |
+| miniz_oxide (yalnız inflate) | Shapefile `.zip` içe aktarma (tarayıcı ve sunucu) | [ADR 0046](../adr/0046-geojson-and-shapefile.md) soru 4; `FMT-07` |
 | PyO3 + gömülü CPython; Pyodide | Python | `PY-01`, `PY-02`, `PY-18` |
 | MCP uygulaması | AI yüzeyi | `AI-03`, `AI-04` |

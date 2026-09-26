@@ -1,0 +1,51 @@
+{
+ "declaredSrid": 5256,
+ "encoding": "Windows-1254",
+ "objects": [
+  {
+   "kind": "point",
+   "layer": "noktalar",
+   "p": [
+    512345.678,
+    4423456.789
+   ],
+   "z": 105.2,
+   "attrs": {
+    "AD": "ÇŞĞÜÖİ çşğüöı",
+    "KOT": "105.200",
+    "ALAN": "1.23456780000e+003",
+    "VAR": "true",
+    "TARIH": "2026-09-26"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "noktalar",
+   "p": [
+    512400.125,
+    4423500.5
+   ],
+   "z": 107.85,
+   "attrs": {
+    "AD": "Işıklı Köprü",
+    "KOT": "107.850",
+    "ALAN": "-4.50000000000e-001",
+    "VAR": "false",
+    "ACIKLAMA": "Sınır taşı"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "noktalar",
+   "p": [
+    512450.0,
+    4423400.25
+   ],
+   "z": 99.5,
+   "attrs": {
+    "AD": " Kuzey Çeşme",
+    "ALAN": "0.00000000000e+000"
+   }
+  }
+ ]
+}

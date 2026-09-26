@@ -1,0 +1,6 @@
+{
+  "type": "Feature",
+  "crs": { "type": "EPSG", "properties": { "code": 2320 } },
+  "properties": { "yol": "D-100", "serit": 3 },
+  "geometry": { "type": "LineString", "coordinates": [[415678.901, 4541234.567], [415800.25, 4541300.125], [416012.5, 4541288.75]] }
+}

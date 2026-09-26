@@ -87,7 +87,7 @@ export async function uploadAsDatabaseProject(s: CloudSession, tenantId: string,
   let landed: Landed;
   let how: 'import' | 'batches' = 'import';
   try {
-    const sent = await sendDrawing(api, doc, () => ctx.files.kcad(), target, { stage, progress, warn: (t) => ctx.log.warn(t) });
+    const sent = await sendDrawing(api, doc, () => ctx.files.kcad(), target, { stage, progress, warn: (t) => ctx.log.warn(t), part: s.uploadPart });
     stage?.('importing');
     const envelope = importEnvelope(target, sent.upload.id);
     const imported = await again(() => api.lifecycle<ProjectImported>(envelope));

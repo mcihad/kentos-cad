@@ -2,6 +2,9 @@ import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
+import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
+import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
+import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
 import type { PackedDrawing } from './columns';
 import type { KcadProgress } from './kcad';
 
@@ -20,12 +23,25 @@ export type FormatsRequest =
   | { id: number; op: 'writeCoords'; input: CoordWriteInput }
   | { id: number; op: 'readDxf'; bytes: ArrayBuffer; options: DxfReadOptions }
   | { id: number; op: 'writeDxf'; input: DxfWriteInput }
+  /** GeoJSON and Shapefile (docs/adr/0046); a Shapefile layer's files go together, the .shp required. */
+  | { id: number; op: 'readGeoJson'; bytes: ArrayBuffer; options: GeoJsonReadOptions }
+  | { id: number; op: 'writeGeoJson'; input: GeoJsonWriteInput }
+  | { id: number; op: 'readShapefile'; files: ShapefileBuffers; options: ShapefileReadOptions }
   /** The persistent ids of a v1 drawing's objects (`V1Identities`, docs/adr/0014), from the drawing's text. */
   | { id: number; op: 'v1Identities'; text: string }
   /** A packed drawing to write as `.kcad` v2 (docs/specs/kcad-v2.md): its bytes come back verified. */
   | { id: number; op: 'encodeKcad'; drawing: PackedDrawing }
   /** A `.kcad` v2 file's bytes to read. */
   | { id: number; op: 'decodeKcad'; bytes: ArrayBuffer };
+
+/** A Shapefile layer's files by extension, as transferred buffers. */
+export interface ShapefileBuffers {
+  shp: ArrayBuffer;
+  shx?: ArrayBuffer;
+  dbf?: ArrayBuffer;
+  prj?: ArrayBuffer;
+  cpg?: ArrayBuffer;
+}
 
 export type FormatsReply =
   /** A reader's result: JSON. */

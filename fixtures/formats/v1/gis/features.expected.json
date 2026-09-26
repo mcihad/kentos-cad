@@ -1,0 +1,344 @@
+{
+ "declaredSrid": 4326,
+ "objects": [
+  {
+   "kind": "point",
+   "layer": "ornek",
+   "p": [
+    32.8597,
+    39.9334
+   ],
+   "z": 938.5,
+   "attrs": {
+    "ad": "Çankaya İlçesi Şehit Öğretmen Işık Üstün Sokağı",
+    "no": "12",
+    "oran": "1.50",
+    "bin": "1e3",
+    "sifir": "-0.0",
+    "durum": "yeni",
+    "aktif": "true",
+    "kapali": "false",
+    "detay": "{\"kat\":3,\"cephe\":\"güney\",\"alan\":120.750,\"isaret\":\"📍\",\"ic\":{\"x\":null,\"y\":[true,false]}}",
+    "notlar": "[\"ilk satır\\nikinci \\\"söz\\\"\",\"a/b\\tc\\u0001d\\\\e\",2,-1.5E-3]"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "ornek",
+   "p": [
+    28.9784,
+    41.0082
+   ],
+   "z": 39.25,
+   "attrs": {
+    "ad": "Kadıköy",
+    "bos_metin": "",
+    "bos_nesne": "{}",
+    "bos_dizi": "[]",
+    "eksi_sifir": "-0",
+    "buyuk": "123456789012345678901234567890",
+    "pi": "3.14159265358979323846264338327950288"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "ornek",
+   "p": [
+    29.0277,
+    41.0422
+   ],
+   "attrs": {
+    "ad": "Kadıköy",
+    "bos_metin": "",
+    "bos_nesne": "{}",
+    "bos_dizi": "[]",
+    "eksi_sifir": "-0",
+    "buyuk": "123456789012345678901234567890",
+    "pi": "3.14159265358979323846264338327950288"
+   }
+  },
+  {
+   "kind": "line",
+   "layer": "ornek",
+   "a": [
+    27.1428,
+    38.4237
+   ],
+   "b": [
+    27.2,
+    38.46
+   ],
+   "attrs": {
+    "tur": "yol"
+   }
+  },
+  {
+   "kind": "polyline",
+   "layer": "ornek",
+   "pts": [
+    [
+     30.7133,
+     36.8969
+    ],
+    [
+     30.72,
+     36.9
+    ],
+    [
+     30.7288,
+     36.8841
+    ],
+    [
+     30.74,
+     36.89
+    ]
+   ],
+   "attrs": {}
+  },
+  {
+   "kind": "line",
+   "layer": "ornek",
+   "a": [
+    35.4787,
+    38.7312
+   ],
+   "b": [
+    35.49,
+    38.74
+   ],
+   "attrs": {
+    "tur": "dere"
+   }
+  },
+  {
+   "kind": "polyline",
+   "layer": "ornek",
+   "pts": [
+    [
+     35.5,
+     38.75
+    ],
+    [
+     35.51,
+     38.76
+    ],
+    [
+     35.52,
+     38.755
+    ]
+   ],
+   "attrs": {
+    "tur": "dere"
+   }
+  },
+  {
+   "kind": "polygon",
+   "layer": "ornek",
+   "pts": [
+    [
+     32.4,
+     37.8
+    ],
+    [
+     32.6,
+     37.8
+    ],
+    [
+     32.6,
+     37.95
+    ],
+    [
+     32.4,
+     37.95
+    ]
+   ],
+   "holes": [
+    [
+     [
+      32.45,
+      37.85
+     ],
+     [
+      32.5,
+      37.9
+     ],
+     [
+      32.55,
+      37.85
+     ]
+    ]
+   ],
+   "attrs": {
+    "tur": "park"
+   }
+  },
+  {
+   "kind": "polygon",
+   "layer": "ornek",
+   "pts": [
+    [
+     39.7,
+     40.98
+    ],
+    [
+     39.74,
+     40.98
+    ],
+    [
+     39.74,
+     41.02
+    ],
+    [
+     39.7,
+     41.02
+    ]
+   ],
+   "attrs": {
+    "tur": "ada"
+   }
+  },
+  {
+   "kind": "polygon",
+   "layer": "ornek",
+   "pts": [
+    [
+     41.25,
+     39.88
+    ],
+    [
+     41.3,
+     39.88
+    ],
+    [
+     41.32,
+     39.9
+    ],
+    [
+     41.3,
+     39.92
+    ],
+    [
+     41.25,
+     39.92
+    ]
+   ],
+   "attrs": {
+    "tur": "ada"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "ornek",
+   "p": [
+    43.3833,
+    38.4942
+   ],
+   "attrs": {
+    "tur": "koleksiyon"
+   }
+  },
+  {
+   "kind": "polyline",
+   "layer": "ornek",
+   "pts": [
+    [
+     43.38,
+     38.49
+    ],
+    [
+     43.4,
+     38.5
+    ],
+    [
+     43.42,
+     38.505
+    ]
+   ],
+   "attrs": {
+    "tur": "koleksiyon"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "ornek",
+   "p": [
+    34.5,
+    39.1
+   ],
+   "z": 1100.5,
+   "attrs": {
+    "tur": "dort sayi"
+   }
+  },
+  {
+   "kind": "polygon",
+   "layer": "Sınır",
+   "pts": [
+    [
+     33.0,
+     39.0
+    ],
+    [
+     33.1,
+     39.0
+    ],
+    [
+     33.1,
+     39.1
+    ],
+    [
+     33.0,
+     39.1
+    ]
+   ],
+   "label": "P-12",
+   "attrs": {
+    "ada": "12",
+    "parsel": "7"
+   }
+  },
+  {
+   "kind": "line",
+   "layer": "ornek",
+   "a": [
+    36.0,
+    37.0
+   ],
+   "b": [
+    36.1,
+    37.05
+   ],
+   "label": "K-1",
+   "attrs": {
+    "tur": "sadece etiket"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "ornek",
+   "p": [
+    38.0,
+    37.5
+   ],
+   "z": -12.25,
+   "attrs": {
+    "tur": "ic ice"
+   }
+  },
+  {
+   "kind": "line",
+   "layer": "ornek",
+   "a": [
+    36.5,
+    37.5
+   ],
+   "b": [
+    36.6,
+    37.55
+   ],
+   "attrs": {
+    "tur": "bos kentos"
+   }
+  }
+ ]
+}

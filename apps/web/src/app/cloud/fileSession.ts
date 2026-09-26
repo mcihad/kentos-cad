@@ -101,7 +101,7 @@ export async function uploadAsFileProject(s: CloudSession, tenantId: string, nam
   const before = doc.name.value;
   if (before !== name) doc.applyExternal({ meta: { name } });
   try {
-    const sent = await sendDrawing(api, doc, () => ctx.files.kcad(), target, { stage, progress, warn: (t) => ctx.log.warn(t) });
+    const sent = await sendDrawing(api, doc, () => ctx.files.kcad(), target, { stage, progress, warn: (t) => ctx.log.warn(t), part: s.uploadPart });
     const envelope = commitEnvelope(target, sent.upload.id, '0');
     const done = await again(() => api.lifecycle<FileCommitted>(envelope));
     const file = s.attachFile({ ...info, name }, done.revision, info.eventCursor, noticeNewer(s, { ...info, name }));

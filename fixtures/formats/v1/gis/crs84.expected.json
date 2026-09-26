@@ -1,0 +1,16 @@
+{
+ "declaredSrid": 4326,
+ "objects": [
+  {
+   "kind": "point",
+   "layer": "crs84",
+   "p": [
+    32.8369,
+    39.9253
+   ],
+   "attrs": {
+    "ad": "Anıtkabir"
+   }
+  }
+ ]
+}

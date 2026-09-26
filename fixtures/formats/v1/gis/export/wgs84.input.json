@@ -1,0 +1,10 @@
+{
+  "name": "Ankara noktaları",
+  "srid": 4326,
+  "layers": [ { "id": "n", "name": "Noktalar" } ],
+  "entities": [
+    { "kind": "point", "id": 1, "layerId": "n", "attrs": { "ad": "Kızılay" }, "label": "K1", "p": { "x": 32.8541, "y": 39.9208 }, "z": 850.25 },
+    { "kind": "line", "id": 2, "layerId": "n", "attrs": {}, "a": { "x": 32.85, "y": 39.92 }, "b": { "x": 32.86, "y": 39.93 } },
+    { "kind": "polygon", "id": 3, "layerId": "n", "attrs": { "ad": "Güvenpark" }, "pts": [ { "x": 32.853, "y": 39.919 }, { "x": 32.856, "y": 39.919 }, { "x": 32.856, "y": 39.921 }, { "x": 32.853, "y": 39.921 } ] }
+  ]
+}

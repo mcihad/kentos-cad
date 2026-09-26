@@ -153,3 +153,70 @@ describe('the cloud API client: files (docs/adr/0031, 0033, 0034, 0038)', () => 
     expect(calls).toEqual(['/v1/tenants/t/projects/p/snapshot', '/v1/tenants/t/projects/p/files/3']);
   });
 });
+
+describe('a download cut short (docs/adr/0045)', () => {
+  const file = new Uint8Array(Array.from({ length: 40 }, (_, i) => i));
+  /** A body that gives `bytes`, then breaks when `cut` (the connection dropped). */
+  const body = (bytes: Uint8Array, cut: boolean) => {
+    let sent = false;
+    return new ReadableStream<Uint8Array>({
+      // The bytes are read before the break (an error at once would discard what was queued).
+      pull(c) {
+        if (!sent && bytes.byteLength) {
+          sent = true;
+          c.enqueue(bytes);
+        } else if (cut) c.error(new TypeError('network'));
+        else c.close();
+      },
+    });
+  };
+  /** A server that answers from `script`, recording each request's range. */
+  function server(script: ((range: string | null) => Response)[]) {
+    const ranges: (string | null)[] = [];
+    const api = new HttpCloudApi((async (_url: string, init: RequestInit) => {
+      const range = (init.headers as Record<string, string>).range ?? null;
+      ranges.push(range);
+      return script[ranges.length - 1](range);
+    }) as unknown as typeof fetch);
+    api.downloadWaits = [0];
+    return { api, ranges };
+  }
+  const whole = (etag: string, cutAt?: number) => () =>
+    new Response(body(cutAt === undefined ? file : file.slice(0, cutAt), cutAt !== undefined), { headers: { etag: `"${etag}"`, 'content-length': String(file.length), 'x-kentos-revision': '3' } });
+  const rest = (etag: string, from: number) => () =>
+    new Response(body(file.slice(from), false), { status: 206, headers: { etag: `"${etag}"`, 'content-range': `bytes ${from}-${file.length - 1}/${file.length}`, 'content-length': String(file.length - from) } });
+
+  it('a revision goes on from the bytes that arrived with Range, and the parts join into the file', async () => {
+    const { api, ranges } = server([whole('abc', 15), rest('abc', 15)]);
+    const heard: number[] = [];
+    const d = await api.fileRevision('t', 'p', '3', (done) => heard.push(done));
+    expect([[...d.bytes], d.sha256, d.revision, ranges]).toEqual([[...file], 'abc', '3', [null, 'bytes=15-']]);
+    expect(heard.at(-1)).toBe(40);
+  });
+
+  it('a continuation of another file, or the whole file again, starts over; nothing mixes', async () => {
+    // Another tag in the 206 (the file changed): from the start.
+    const other = server([whole('abc', 15), rest('xyz', 15), whole('xyz')]);
+    const d = await other.api.fileRevision('t', 'p', '3');
+    expect([[...d.bytes], d.sha256, other.ranges]).toEqual([[...file], 'xyz', [null, 'bytes=15-', null]]);
+    // A server that does not continue sends the whole file: read from its start.
+    const again = server([whole('abc', 15), whole('abc')]);
+    const e = await again.api.checkpointFile('t', 'p', 'c1');
+    expect([[...e.bytes], again.ranges]).toEqual([[...file], [null, 'bytes=15-']]);
+  });
+
+  it('a snapshot, made anew for each request, starts over without Range', async () => {
+    const { api, ranges } = server([whole('s1', 15), whole('s2')]);
+    const d = await api.snapshot('t', 'p');
+    expect([[...d.bytes], d.sha256, ranges]).toEqual([[...file], 's2', [null, null]]);
+  });
+
+  it('gives up after five tries in a row that bring nothing, and a refusal is never tried again', async () => {
+    const dead = server(Array.from({ length: 9 }, () => () => new Response(body(new Uint8Array(0), true), { headers: { etag: '"abc"' } })));
+    const e = (await dead.api.fileRevision('t', 'p', '3').catch((x: unknown) => x)) as ApiFailure;
+    expect([e.code, dead.ranges.length]).toEqual(['network', 5]);
+    const refused = server([() => new Response(JSON.stringify({ error: 'forbidden', message: 'İndirme izniniz yok.' }), { status: 403 })]);
+    const f = (await refused.api.fileRevision('t', 'p', '3').catch((x: unknown) => x)) as ApiFailure;
+    expect([f.code, refused.ranges.length]).toEqual(['forbidden', 1]);
+  });
+});

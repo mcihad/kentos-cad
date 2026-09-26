@@ -199,10 +199,11 @@ pub enum Event {
     Crs(u32),
     Another,
     Run,
-    /// The full read for the import: its objects, or why not.
+    /// The full read for the import: its objects, or why not (boxed: a
+    /// message stays small whatever the reader's result holds).
     Imported {
         id: u64,
-        result: Result<ImportResult, String>,
+        result: Box<Result<ImportResult, String>>,
     },
 }
 
@@ -270,7 +271,7 @@ impl App {
             Event::Another => return self.pick(Kind::Coords),
             Event::Run => return self.coord_import_run(),
             Event::Imported { id, result } => {
-                self.coord_import_apply(id, result);
+                self.coord_import_apply(id, *result);
                 return Task::none();
             }
             _ => {}
@@ -418,7 +419,12 @@ impl App {
                     },
                 }
             },
-            move |result| Exchange::CoordImport(Event::Imported { id, result }),
+            move |result| {
+                Exchange::CoordImport(Event::Imported {
+                    id,
+                    result: Box::new(result),
+                })
+            },
         )
     }
 

@@ -49,13 +49,13 @@ const FORMATS: Record<'import' | 'export', readonly { id: string; label: string;
     { id: 'file.import.dxf', label: 'DXF', detail: 'AutoCAD R12–2018: katmanlar, bloklar, ölçüler ve taramalar', badge: 'DXF' },
     { id: 'file.import.ncn', label: 'Koordinat listesi', detail: 'Netcad NCN, TXT ya da CSV nokta listesi', badge: 'NCN' },
     { id: 'file.import.ncz', label: 'Netcad çizimi', detail: 'Netcad NCZ dosyası', badge: 'NCZ' },
-    { id: 'file.import.shp', label: 'Shapefile', detail: 'ESRI SHP, öznitelikleriyle', badge: 'SHP' },
-    { id: 'file.import.geojson', label: 'GeoJSON', detail: 'Coğrafi JSON; öznitelikler dahil', badge: 'JSON' },
+    { id: 'file.import.shp', label: 'Shapefile', detail: 'SHP, SHX, DBF, PRJ ve CPG birlikte; öznitelikleriyle', badge: 'SHP' },
+    { id: 'file.import.geojson', label: 'GeoJSON', detail: 'RFC 7946; özellikler öznitelik olur', badge: 'JSON' },
   ],
   export: [
     { id: 'file.export.dxf', label: 'DXF', detail: 'AutoCAD 2007: ölçüler DXF ölçüsü, Türkçe yazılar UTF-8', badge: 'DXF' },
     { id: 'file.export.ncn', label: 'Koordinat listesi', detail: 'Noktalar NCN, TXT ya da CSV olarak', badge: 'NCN' },
-    { id: 'file.export.geojson', label: 'GeoJSON', detail: 'Coğrafi JSON; öznitelikler dahil', badge: 'JSON' },
+    { id: 'file.export.geojson', label: 'GeoJSON', detail: 'Öznitelikleriyle; WGS 84 projesi RFC 7946', badge: 'JSON' },
     { id: 'file.export.pdf', label: 'PDF pafta', detail: 'Ölçekli pafta çıktısı', badge: 'PDF' },
   ],
 };

@@ -3,12 +3,15 @@ import type { CoordReadOptions } from '../contracts/generated/CoordReadOptions';
 import type { CoordWriteInput } from '../contracts/generated/CoordWriteInput';
 import type { DxfReadOptions } from '../contracts/generated/DxfReadOptions';
 import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
+import type { GeoJsonReadOptions } from '../contracts/generated/GeoJsonReadOptions';
+import type { GeoJsonWriteInput } from '../contracts/generated/GeoJsonWriteInput';
+import type { ShapefileReadOptions } from '../contracts/generated/ShapefileReadOptions';
 import type { ImportResult } from '../contracts/generated/ImportResult';
 import type { ExportReport } from '../contracts/generated/ExportReport';
 import type { V1Identities } from '../contracts/generated/V1Identities';
 import type { PackedDrawing } from './columns';
 import { KcadError, transferables, type KcadProgress } from './kcad';
-import type { FormatsReply, FormatsRequest } from './protocol';
+import type { FormatsReply, FormatsRequest, ShapefileBuffers } from './protocol';
 
 /**
  * The page's side of the formats worker. The worker, and the Rust formats
@@ -72,9 +75,35 @@ export class FormatsClient {
    * sends a copy of its own bytes.
    */
   async readDxf(bytes: Uint8Array, options: DxfReadOptions): Promise<ImportResult> {
-    const whole = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength && bytes.buffer instanceof ArrayBuffer;
-    const buffer = whole ? (bytes.buffer as ArrayBuffer) : bytes.slice().buffer;
+    const buffer = handOver(bytes);
     return json<ImportResult>(await this.request({ op: 'readDxf', bytes: buffer, options }, [buffer]));
+  }
+
+  /**
+   * Reads a GeoJSON file (docs/adr/0046): the objects, their layers, the
+   * report and the coordinate system the file declares. Like `readDxf`, a
+   * whole buffer is handed over to the worker and `bytes` left empty.
+   */
+  async readGeoJson(bytes: Uint8Array, options: GeoJsonReadOptions): Promise<ImportResult> {
+    const buffer = handOver(bytes);
+    return json<ImportResult>(await this.request({ op: 'readGeoJson', bytes: buffer, options }, [buffer]));
+  }
+
+  /** Reads a Shapefile layer from its files (the .shp; the others when chosen); the files go as copies. */
+  async readShapefile(files: ShapefileFiles, options: ShapefileReadOptions): Promise<ImportResult> {
+    const copy = (b?: Uint8Array) => (b ? (b.slice().buffer as ArrayBuffer) : undefined);
+    const buffers: ShapefileBuffers = { shp: copy(files.shp)! };
+    for (const k of ['shx', 'dbf', 'prj', 'cpg'] as const) {
+      const b = copy(files[k]);
+      if (b) buffers[k] = b;
+    }
+    const transfer = Object.values(buffers).filter((b): b is ArrayBuffer => !!b);
+    return json<ImportResult>(await this.request({ op: 'readShapefile', files: buffers, options }, transfer));
+  }
+
+  /** Writes a GeoJSON FeatureCollection of the objects (docs/adr/0046). */
+  async writeGeoJson(input: GeoJsonWriteInput): Promise<WrittenFile> {
+    return written(await this.request({ op: 'writeGeoJson', input }, []));
   }
 
   async writeCoords(input: CoordWriteInput): Promise<WrittenFile> {
@@ -184,6 +213,21 @@ export class FormatsClient {
     for (const p of this.pending.values()) p.reject(code ? new KcadError(code, text) : new Error(text));
     this.pending.clear();
   }
+}
+
+/** A Shapefile layer's files by extension (docs/adr/0046). */
+export interface ShapefileFiles {
+  shp: Uint8Array;
+  shx?: Uint8Array;
+  dbf?: Uint8Array;
+  prj?: Uint8Array;
+  cpg?: Uint8Array;
+}
+
+/** A buffer to transfer: the bytes' own when they span it (left empty here), else a copy. */
+function handOver(bytes: Uint8Array): ArrayBuffer {
+  const whole = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength && bytes.buffer instanceof ArrayBuffer;
+  return whole ? (bytes.buffer as ArrayBuffer) : (bytes.slice().buffer as ArrayBuffer);
 }
 
 function json<T>(r: Ok): T {

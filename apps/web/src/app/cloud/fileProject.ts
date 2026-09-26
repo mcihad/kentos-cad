@@ -87,6 +87,8 @@ export interface FileProjectOptions {
   onAccessChanged?: () => void;
   /** Waits before each next try of a request whose answer did not come (tests pass short ones). */
   waits?: readonly number[];
+  /** The part size of a large file's upload (docs/adr/0045; the session's, tests set a small one). */
+  part?: () => number | undefined;
 }
 
 /** A commit on its way, or one whose answer was lost: sent again unchanged. */
@@ -203,6 +205,7 @@ export class FileProjectSave {
         progress: (done, total) => this.progress.set(total ? Math.min(1, done / total) : 0),
         verifying: () => !this.disposed && this.state.set('verifying'),
         waits: o.waits,
+        part: o.part?.(),
       });
       if (this.disposed) return 'failed';
       this.inflight = { envelope: commitEnvelope(target, upload.id, this.base.value), revision: encoded.revision };

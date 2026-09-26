@@ -8,7 +8,10 @@
 //! the shortest round-trip decimal, so coordinates arrive bit for bit. A
 //! drawing to save or one read crosses as typed columns (docs/adr/0030).
 
-use kentos_contracts::{CoordReadOptions, CoordWriteInput, DxfReadOptions, FORMATS_VERSION};
+use kentos_contracts::{
+    CoordReadOptions, CoordWriteInput, DxfReadOptions, FORMATS_VERSION, GeoJsonReadOptions,
+    ShapefileReadOptions,
+};
 use wasm_bindgen::prelude::*;
 
 fn bad_input(what: &str, e: &serde_json::Error) -> JsError {
@@ -289,4 +292,55 @@ pub fn write_dxf(input: &str) -> Result<Written, JsError> {
         bytes,
         report: String::from_utf8(to_json(&report)?).unwrap_or_default(),
     })
+}
+
+// ── GIS files: GeoJSON and Shapefile (docs/adr/0046) ────────────────────
+
+/// Reads a GeoJSON file: `options` is `GeoJsonReadOptions`, the result
+/// `ImportResult` (JSON bytes) with the coordinate system the file
+/// declares. A file that is not GeoJSON (or not UTF-8) throws the reason.
+#[wasm_bindgen(js_name = readGeoJson)]
+pub fn read_geojson(bytes: &[u8], options: &str) -> Result<Vec<u8>, JsError> {
+    let opts: GeoJsonReadOptions =
+        serde_json::from_str(options).map_err(|e| bad_input("Okuma seçenekleri", &e))?;
+    let result = kentos_formats::geojson::read(bytes, &opts).map_err(|e| JsError::new(&e))?;
+    to_json(&result)
+}
+
+/// Writes a GeoJSON FeatureCollection from `GeoJsonWriteInput` (JSON), its
+/// objects read by the formats crate's own visitor.
+#[wasm_bindgen(js_name = writeGeoJson)]
+pub fn write_geojson(input: &str) -> Result<Written, JsError> {
+    let input: kentos_formats::geojson::WriteInput =
+        serde_json::from_str(input).map_err(|e| bad_input("Yazılacak nesneler", &e))?;
+    let (bytes, report) = kentos_formats::geojson::write(&input.0);
+    Ok(Written {
+        bytes,
+        report: String::from_utf8(to_json(&report)?).unwrap_or_default(),
+    })
+}
+
+/// Reads a Shapefile layer from its files (the .shp; the others when the
+/// user chose them): `options` is `ShapefileReadOptions`, the result
+/// `ImportResult` (JSON bytes). A .shp that is not a Shapefile throws the reason.
+#[wasm_bindgen(js_name = readShapefile)]
+pub fn read_shapefile(
+    shp: &[u8],
+    shx: Option<Vec<u8>>,
+    dbf: Option<Vec<u8>>,
+    prj: Option<Vec<u8>>,
+    cpg: Option<Vec<u8>>,
+    options: &str,
+) -> Result<Vec<u8>, JsError> {
+    let opts: ShapefileReadOptions =
+        serde_json::from_str(options).map_err(|e| bad_input("Okuma seçenekleri", &e))?;
+    let files = kentos_formats::shp::Files {
+        shp,
+        shx: shx.as_deref(),
+        dbf: dbf.as_deref(),
+        prj: prj.as_deref(),
+        cpg: cpg.as_deref(),
+    };
+    let result = kentos_formats::shp::read(&files, &opts).map_err(|e| JsError::new(&e))?;
+    to_json(&result)
 }

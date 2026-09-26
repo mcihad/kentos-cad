@@ -147,6 +147,12 @@ export class CloudSession {
    * drawing ended up saved somewhere.
    */
   fileConflict: (() => Promise<boolean>) | null = null;
+  /**
+   * A file larger than this goes to the server in parts of this size
+   * (docs/adr/0045); unset, the standard 8 MiB. The cloud end-to-end test
+   * sets a small one to send a drawing in parts.
+   */
+  uploadPart: number | undefined = undefined;
   /** The app's services this session works with (the file project's modules use it too). */
   readonly ctx: AppContext;
   private readonly drafts: DraftStore;
@@ -533,6 +539,7 @@ export class CloudSession {
       onRevoked: (reason) => this.accessRevoked(project, reason),
       onArchived: () => this.projectArchived(project),
       onAccessChanged: () => void watch?.check(),
+      part: () => this.uploadPart,
     });
     watch = this.connect(info, project, (events) => file.receive(events), file, () => file.cursor, true);
     this.file.set(file);

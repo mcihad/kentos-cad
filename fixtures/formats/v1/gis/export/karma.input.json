@@ -1,0 +1,37 @@
+{
+  "name": "Karma pafta \"B\"",
+  "srid": 5256,
+  "layers": [
+    { "id": "kot", "name": "Kot noktaları" },
+    { "id": "parsel", "name": "Parseller" },
+    { "id": "egri", "name": "Eğriler" }
+  ],
+  "entities": [
+    { "kind": "point", "id": 1, "layerId": "kot", "attrs": { "Ad": "P1", "Kot": "105.20", "Not": "tırnak \" ve ters bölü \\" }, "label": "P1", "p": { "x": 512345.678, "y": 4423456.789 }, "z": 105.2 },
+    { "kind": "point", "id": 2, "layerId": "kot", "attrs": {}, "p": { "x": 512400.125, "y": 4423500.5 }, "color": "#d04040", "symbol": "survey.nail" },
+    { "kind": "line", "id": 3, "layerId": "kot", "attrs": { "tur": "sınır" }, "a": { "x": 512300, "y": 4423400 }, "b": { "x": 512310.5, "y": 4423410.25 } },
+    { "kind": "polyline", "id": 4, "layerId": "kot", "attrs": {}, "pts": [ { "x": 512000, "y": 4423000 }, { "x": 512010, "y": 4423005 }, { "x": 512020, "y": 4423000.000000001 } ] },
+    { "kind": "polygon", "id": 5, "layerId": "parsel", "attrs": { "ada": "101", "parsel": "7" }, "label": "101/7",
+      "pts": [ { "x": 512100, "y": 4423100 }, { "x": 512100, "y": 4423140 }, { "x": 512150, "y": 4423140 }, { "x": 512150, "y": 4423100 } ],
+      "holes": [ { "pts": [ { "x": 512110, "y": 4423110 }, { "x": 512120, "y": 4423110 }, { "x": 512120, "y": 4423120 }, { "x": 512110, "y": 4423120 } ] } ] },
+    { "kind": "polygon", "id": 6, "layerId": "parsel", "attrs": { "ada": "101", "parsel": "8" },
+      "pts": [ { "x": 512200, "y": 4423100 }, { "x": 512240, "y": 4423100 }, { "x": 512240, "y": 4423130 }, { "x": 512200, "y": 4423130 } ],
+      "holes": [ { "pts": [ { "x": 512210, "y": 4423110 }, { "x": 512211, "y": 4423110 } ] } ] },
+    { "kind": "polygon", "id": 7, "layerId": "parsel", "attrs": {}, "pts": [ { "x": 512300, "y": 4423100 }, { "x": 512340, "y": 4423100 }, { "x": 512340, "y": 4423130 } ], "bulges": [ 0, 0.4142135623730951, 0 ] },
+    { "kind": "polyline", "id": 8, "layerId": "egri", "attrs": {}, "pts": [ { "x": 512400, "y": 4423100 }, { "x": 512420, "y": 4423100 }, { "x": 512420, "y": 4423120 } ], "bulges": [ 1, 0 ] },
+    { "kind": "circle", "id": 9, "layerId": "egri", "attrs": { "cap": "4" }, "c": { "x": 512500, "y": 4423200 }, "r": 2 },
+    { "kind": "arc", "id": 10, "layerId": "egri", "attrs": {}, "c": { "x": 512550, "y": 4423200 }, "r": 5.5, "a0": 0.25, "a1": 2.0 },
+    { "kind": "ellipse", "id": 11, "layerId": "egri", "attrs": {}, "c": { "x": 512600, "y": 4423200 }, "major": { "x": 8, "y": 2 }, "ratio": 0.5, "t0": 0, "t1": 6.283185307179586 },
+    { "kind": "ellipse", "id": 12, "layerId": "egri", "attrs": {}, "c": { "x": 512650, "y": 4423200 }, "major": { "x": 3, "y": 0 }, "ratio": 0.4, "t0": 0.5, "t1": 2.5 },
+    { "kind": "spline", "id": 13, "layerId": "egri", "attrs": {}, "pts": [ { "x": 512700, "y": 4423200 }, { "x": 512710, "y": 4423215 }, { "x": 512725, "y": 4423205 }, { "x": 512735, "y": 4423220 } ], "closed": false },
+    { "kind": "spline", "id": 14, "layerId": "egri", "attrs": {}, "pts": [ { "x": 512800, "y": 4423200 }, { "x": 512815, "y": 4423210 }, { "x": 512805, "y": 4423225 } ], "closed": true },
+    { "kind": "hatch", "id": 15, "layerId": "parsel", "attrs": { "desen": "çapraz" },
+      "ring": [ { "x": 512900, "y": 4423100 }, { "x": 512900, "y": 4423150 }, { "x": 512950, "y": 4423150 }, { "x": 512950, "y": 4423100 } ],
+      "holes": [ [ { "x": 512910, "y": 4423110 }, { "x": 512920, "y": 4423110 }, { "x": 512920, "y": 4423120 } ] ],
+      "pattern": { "type": "cross", "angle": 45, "spacing": 0.75 } },
+    { "kind": "text", "id": 16, "layerId": "kot", "attrs": {}, "p": { "x": 512345, "y": 4423456 }, "text": "Ağaç", "height": 2.5, "rotation": 0 },
+    { "kind": "dimension", "id": 17, "layerId": "kot", "attrs": {}, "a": { "x": 512000, "y": 4423000 }, "b": { "x": 512010, "y": 4423000 }, "offset": 2, "height": 0.5 },
+    { "kind": "xline", "id": 18, "layerId": "kot", "attrs": {}, "p": { "x": 512000, "y": 4423000 }, "dir": { "x": 0.6, "y": 0.8 } },
+    { "kind": "point", "id": 19, "layerId": "silinmis-katman", "attrs": { "not": "katmanı listede yok" }, "p": { "x": 512001.5, "y": 4423001.5 } }
+  ]
+}

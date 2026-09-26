@@ -22,6 +22,7 @@ pub mod xdata;
 /// and unit): the desktop's DXF export gives each dimension without its own
 /// text the value it shows, as the web does with the same function.
 pub use dimension::layout as dimension_layout;
+pub(crate) use writer::Objects;
 pub use writer::{WriteInput, input_from_json, write};
 
 use std::collections::{HashMap, HashSet};
@@ -503,5 +504,6 @@ pub fn read(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, String>
         layers,
         report: out.report.import(),
         bounds: out.bounds,
+        declared_crs: None,
     })
 }

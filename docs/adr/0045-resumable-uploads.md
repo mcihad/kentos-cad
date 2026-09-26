@@ -41,7 +41,7 @@
 
 - **Programın kapanıp açılmasından sonra aynı yüklemeye devam etmek:** bugün yeni yükleme başlar. Bekleyen kayıt cihazda durduğu için (ADR 0043) iş kaybolmaz, yalnız yeniden gönderilir.
 - **256 MiB üstü dosyalar:** akışla doğrulama gerekir.
-- **Web'de parçalı yükleme:** web çevrimiçi kalır; ihtiyaç olursa aynı yol kullanılır.
+- ~~**Web'de parçalı yükleme**~~: aynı gün geldi, aşağıdaki “Web” bölümüne bakın.
 
 ## Doğrulama (26 Eylül 2026, Linux)
 
@@ -55,3 +55,32 @@
   - `files_tests.rs`: 10. bayttan aralık 206, doğru `Content-Range` ve baytlar verir; dosya boyunda başlangıç 416, kapalı aralık bütün dosyayı getirir.
   - `crates/native/cloud/tests/download_resume.rs`: yerel bir sahte sunucu ilk yanıtı yarıda keser. İstemci ikinci istekte `Range: bytes=<yarı>-` sorar, parçaları birleştirir, SHA-256 tutar.
   - Kasıtlı bozma: revizyon sürdürülemez sayılınca istemci baştan istedi, sunucu artık yanıt vermedi ve test düştü; geri alındı.
+
+## Web (26 Eylül)
+
+- **Yükleme** (`app/cloud/transfer.ts`, `uploadInParts`): 8 MiB'tan büyük dosya 8 MiB'lık parçalarla gider (`UPLOAD_PART`, masaüstünün parçası). Daha küçük dosya eskisi gibi tek `PUT` ile gider.
+  - Her parça sunucudaki bayt sayısından sürer (`?offset=N`).
+  - Bağlantı koparsa ya da parça sıra dışı diye reddedilirse yükleme sorulur (`receivedBytes`). Sonraki parça sunucunun aldığı yerden gider. Yanıtı kaybolan parça böylece iki kez gönderilmez. Son parçanın yanıtı kaybolduysa yükleme doğrulanmış bulunur.
+  - Ardışık deneme sınırı parça başınadır; ilerleme olunca sıfırlanır. Süresi dolan yükleme bir kez baştan açılır.
+  - İlerleme bütün dosyanın gönderilen baytıdır.
+  - Parça boyu için bir test kancası vardır: `CloudSession.uploadPart`. Uçtan uca test onu 128 bayta indirir.
+- **İndirme** (`app/cloud/download.ts`):
+  - Revizyon ve kontrol noktası dosyası yarıda koparsa `Range: bytes=N-` ile sürer. Veritabanı projesinin görüntüsü her istekte yeniden üretildiği için baştan istenir.
+  - 206 aynı varlık etiketini ve istenen başlangıcı taşımalıdır. Başka etiket ya da başlangıç, 416 ya da bütün dosya (200) gelirse indirme baştan okunur; parçalar karışmaz.
+  - İlerleme olmayan en çok 5 deneme yapılır. Ret (403, 404, 410) yeniden denenmez.
+  - Sonuç, eskisi gibi, varlık etiketiyle (SHA-256) denetlenir.
+- **Doğrulama:**
+  - Vitest:
+    - `api.test.ts`: `Range` ile süren revizyon; başka etiketle gelen devam ve bütün dosya baştan okunur; görüntü baştan istenir; beş boş denemede vazgeçilir; ret bir kez sorulur.
+    - `transfer.test.ts`: parçalar sunucunun aldığı yerden gider, küçük dosya tek parçadır; kesilen parça yeniden gider; yanıtı kaybolan parça iki kez gitmez; son parçanın yanıtı kaybolunca yükleme doğrulanmış bulunur; sıra dışı parça sunucunun sayısından sürer.
+    - `fileProject.test.ts`: büyük çizimin Kaydet'i parçalarla, kesilen parçayla bir revizyon yazar.
+  - `KENTOS_E2E_DB=scratch pnpm e2e:cloud`, gerçek sunucuyla (100 denetim geçti):
+    - ikinci Kaydet 128 baytlık parçalarla gider (yaklaşık 700 baytlık çizim, altı parça); üçüncü parçanın yanıtı tarayıcıda düşürülür; parçalar 0, 128, 256, 384, 512, 640 sırasıyla ve tekrarsız gider; revizyonun baytları yüklenenlerle aynıdır;
+    - “Son revizyonu aç”ın indirmesi yarıda kesilir ve `Range: bytes=N-` ile sürer (`bytes=353-`).
+    - İlk koşuda parça 256 bayttı ve yanıtı düşürülen üçüncü parça son parçaydı: istemci yüklemeyi sorup doğrulanmış buldu, dördüncü parça gitmedi. Davranış doğruydu, denetim yanlış kurulmuştu; parça 128 bayta indirildi ki yanıtı düşen parça ortada kalsın.
+  - Kasıtlı bozmalar (her biri tek başına, sonra geri alındı):
+    - A: başarısız parçadan sonra yükleme sorulmadı: `transfer.test.ts`'in iki testi düştü (kesilen parça, yanıtı kaybolan parça).
+    - B: kesilen indirme `Range` yerine baştan istendi: `api.test.ts`'in iki testi düştü.
+    - C: başka etiketli 206 devam sayıldı: “başka dosyanın devamı baştan okunur” testi düştü.
+    - D: parça `offset`'siz gönderildi: `transfer.test.ts`'in üç, `fileProject.test.ts`'in bir testi düştü.
+

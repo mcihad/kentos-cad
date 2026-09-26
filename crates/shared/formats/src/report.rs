@@ -64,6 +64,13 @@ impl Report {
         self.skipped.add(what, reason, line, 1);
     }
 
+    /// `n` of the same thing left out at once.
+    pub fn skip_n(&mut self, what: &str, reason: &str, line: u32, n: u32) {
+        if n > 0 {
+            self.skipped.add(what, reason, line, n);
+        }
+    }
+
     /// Something at `line` was read with a change the user should know about.
     pub fn note(&mut self, what: &str, reason: &str, line: u32) {
         self.notes.add(what, reason, line, 1);
