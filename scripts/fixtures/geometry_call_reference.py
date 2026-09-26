@@ -495,6 +495,36 @@ case("TM iki çizginin ortak ucu köşedir", "cornerNear",
      {"site": {"kind": "lines", "first": 0, "pick1": PD(*c1[1]), "second": 1, "pick2": PD(*c2[1])},
       "corner": {"at": PD(*c0[1]), "u1": PD(*u1), "u2": PD(*u2), "reach": "25", "phi": format(phi_, "f")}}, "1e-8")
 
+# gridArrayTransforms (docs/adr/0047): row after row, the copy j columns and i
+# rows away moved by (j·dx, i·dy); exact.
+gdx, gdy = F(Decimal("12.25")), F(Decimal("-7.5"))
+case("Dizi 3 × 2, satır satır", "gridArrayTransforms", [3, 2, 12.25, -7.5],
+     [["1", "0", "0", "1", D(j * gdx), D(i * gdy)] for i in range(3) for j in range(2) if i or j], "0")
+# shapesMiddle: a TM line and a circle; the box's middle, exact.
+(la, LA), (lb, LB), (cc, CC) = TMP("0", "0"), TMP("10", "2"), TMP("20", "10")
+mx = (min(LA[0], LB[0], CC[0] - F(5, 2)) + max(LA[0], LB[0], CC[0] + F(5, 2))) / 2
+my = (min(LA[1], LB[1], CC[1] - F(5, 2)) + max(LA[1], LB[1], CC[1] + F(5, 2))) / 2
+case("TM çizgi ve dairenin kutusunun ortası", "shapesMiddle",
+     [[{"kind": "line", "a": la, "b": lb}, {"kind": "circle", "c": cc, "r": 2.5}], "barlow"],
+     {"x": D(mx), "y": D(my)}, "1e-9")
+# arrayTransforms, polar: 5 items over 180° (45° steps) about a TM centre.
+# Turning: the k-th copy is the rotation by 45k° about the centre. Not
+# turning: it moves as the middle of the line's box goes round, the middle's
+# offset from the centre turned less the offset.
+(pc, PC), (qa, QA), (qb, QB) = TMP("0", "0"), TMP("10", "0"), TMP("20", "5")
+ox = (min(QA[0], QB[0]) + max(QA[0], QB[0])) / 2 - PC[0]
+oy = (min(QA[1], QB[1]) + max(QA[1], QB[1])) / 2 - PC[1]
+turns, moves = [], []
+for k in range(1, 5):
+    a = PI * 45 * k / 180
+    cs, sn = dcos(a), dsin(a)
+    cx_, cy_ = dd(PC[0]), dd(PC[1])
+    turns.append([format(v, "f") for v in (cs, sn, -sn, cs, cx_ - cs * cx_ + sn * cy_, cy_ - sn * cx_ - cs * cy_)])
+    moves.append(["1", "0", "0", "1", format(cs * dd(ox) - sn * dd(oy) - dd(ox), "f"), format(sn * dd(ox) + cs * dd(oy) - dd(oy), "f")])
+case("TM merkez çevresinde 180° içinde 5 öğe, dönerek", "arrayTransforms", ["polar", [pc["x"], pc["y"], 5, 180, 1], [], "barlow"], turns, "1e-8")
+case("TM merkez çevresinde 180° içinde 5 öğe, dönmeden", "arrayTransforms",
+     ["polar", [pc["x"], pc["y"], 5, 180, 0], [{"kind": "line", "a": qa, "b": qb}], "barlow"], moves, "1e-9")
+
 doc = {
     "format": "kentos.geometry-call-reference",
     "version": 1,

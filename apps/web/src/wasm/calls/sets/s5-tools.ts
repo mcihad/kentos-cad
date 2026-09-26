@@ -212,6 +212,25 @@ export const S5_TOOLS: CallSet = {
     { name: 'köşe: eşit uzaklıkta ilki', fn: 'cornerNear', args: [[{ kind: 'polyline', pts: [v(-5, 5), v(0, 0), v(-5, -5)] }, { kind: 'polyline', pts: [v(7, 5), v(2, 0), v(7, -5)] }], v(1, 0), 1.5, 0.25] },
     { name: 'köşe: daire köşe değil', fn: 'cornerNear', args: [[{ kind: 'circle', c: v(0, 0), r: 5 }], v(5, 0), 1.5, 0.25] },
     { name: 'köşe: aday yok', fn: 'cornerNear', args: [[], v(0, 0), 1.5, 0.25] },
+    // The arrays of cad.entities.array (docs/adr/0047, part 2).
+    { name: 'dizi: 2 × 3, satır satır', fn: 'gridArrayTransforms', args: [2, 3, 12.5, -4] },
+    { name: 'dizi: tek sütun', fn: 'gridArrayTransforms', args: [3, 1, 0, 7.5] },
+    { name: 'dizi: tek yer', fn: 'gridArrayTransforms', args: [1, 1, 5, 5] },
+    { name: 'dizi: sıfır satır', fn: 'gridArrayTransforms', args: [0, 3, 5, 5] },
+    { name: 'dizi: 10 000 yerden çok', fn: 'gridArrayTransforms', args: [101, 100, 5, 5] },
+    { name: 'dizi: TM aralıklar, eksi', fn: 'gridArrayTransforms', args: [3, 2, -0.1, 1e-9] },
+    { name: 'orta: çizgi ve daire, TM', fn: 'shapesMiddle', args: [[{ kind: 'line', a: v(E, N), b: v(E + 10, N) }, { kind: 'circle', c: v(E + 20, N + 10), r: 2.5 }], 'barlow'] },
+    { name: 'orta: yazı yazı tipiyle ölçülür', fn: 'shapesMiddle', args: [[{ kind: 'text', p: v(E, N), text: 'Ada 101', height: 2, rotation: 30 }], 'courier-prime'] },
+    { name: 'orta: yazı tipi yok, Barlow', fn: 'shapesMiddle', args: [[{ kind: 'text', p: v(E, N), text: 'Ada 101', height: 2, rotation: 30 }], null] },
+    { name: 'orta: yaylı kapalı alan', fn: 'shapesMiddle', args: [[{ kind: 'polygon', pts: [v(0, 0), v(40, 0), v(40, 30)], bulges: [0.25, 0.5, -0.25] }], 'barlow'] },
+    { name: 'orta: nesne yok', fn: 'shapesMiddle', args: [[], 'barlow'] },
+    { name: 'dizi kur: ızgara', fn: 'arrayTransforms', args: ['grid', [2, 3, 12.5, -4], [], 'barlow'] },
+    { name: 'dizi kur: ızgara, kesirli satır', fn: 'arrayTransforms', args: ['grid', [2.5, 3, 12.5, -4], [], 'barlow'] },
+    { name: 'dizi kur: kutupsal, döner', fn: 'arrayTransforms', args: ['polar', [E, N, 6, 360, 1], [], 'barlow'] },
+    { name: 'dizi kur: kutupsal, dönmeden, ortasıyla', fn: 'arrayTransforms', args: ['polar', [E, N, 5, 180, 0], [{ kind: 'line', a: v(E + 10, N), b: v(E + 20, N + 5) }], 'barlow'] },
+    { name: 'dizi kur: kutupsal, dönmeden, nesne yok', fn: 'arrayTransforms', args: ['polar', [E, N, 5, 180, 0], [], 'barlow'] },
+    { name: 'dizi kur: kutupsal, 1000 öğeden çok', fn: 'arrayTransforms', args: ['polar', [0, 0, 1001, 360, 1], [], 'barlow'] },
+    { name: 'dizi kur: bilinmeyen tür', fn: 'arrayTransforms', args: ['spiral', [1, 2, 3, 4], [], 'barlow'] },
   ],
   random: (g, n) => [
     ...repeat(g, 'directionAngle', n, () => [g.pt(), g.pt()]),
@@ -284,6 +303,14 @@ export const S5_TOOLS: CallSet = {
     ...repeat(g, 'offsetThroughDistance', n, () => [entity(g), g.chance(0.3) ? g.gridPt(5, 3) : g.pt()]),
     ...repeat(g, 'nearHole', n, () => holed(g)),
     ...repeat(g, 'cornerNear', n, () => cornerCandidates(g)),
+    // Appended: the calls above keep their random draws (docs/adr/0047, part 2).
+    ...repeat(g, 'gridArrayTransforms', n, () => [g.int(0, 6), g.int(0, 6), g.chance(0.2) ? 0 : g.num(-50, 50), g.chance(0.2) ? 0 : g.num(-50, 50)]),
+    ...repeat(g, 'shapesMiddle', n, () => [Array.from({ length: g.int(0, 4) }, () => entity(g)), g.pick(['barlow', 'arimo', 'courier-prime', null])]),
+    ...repeat(g, 'arrayTransforms', n, () =>
+      g.chance(0.4)
+        ? ['grid', [g.int(0, 6), g.int(0, 6), g.num(-50, 50), g.num(-50, 50)], [], 'barlow']
+        : ['polar', [g.pt().x, g.pt().y, g.int(1, 12), g.pick([360, -360, 180, 90, g.num(-360, 360)]), g.pick([0, 1])], Array.from({ length: g.int(0, 3) }, () => entity(g)), g.pick(['barlow', 'plex-mono'])],
+    ),
   ],
 };
 
