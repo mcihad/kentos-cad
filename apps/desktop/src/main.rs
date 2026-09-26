@@ -44,6 +44,7 @@ mod snapshot;
 mod start;
 mod traces;
 mod view;
+mod view_commands;
 mod viewport;
 
 use kentos_ui::theme::typography;

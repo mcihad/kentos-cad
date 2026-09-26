@@ -44,8 +44,9 @@ fn message(event: Event) -> Message {
     Message::Project(Box::new(event))
 }
 
-/// The web command ids this module runs.
-pub const COMMANDS: [&str; 2] = ["file.new", "file.settings"];
+/// The web command ids this module runs; Koordinat sistemi… is Proje
+/// ayarları on its coordinate system page (the web's `openProjectSettings('crs')`).
+pub const COMMANDS: [&str; 3] = ["file.new", "file.settings", "crs.set"];
 
 impl App {
     pub(crate) fn project_command(&mut self, id: &'static str) -> Task<Message> {
@@ -54,9 +55,12 @@ impl App {
                 let state = new::State::new(self);
                 self.open_project_window(Window::New(Box::new(state)));
             }
-            "file.settings" => match &self.document {
+            "file.settings" | "crs.set" => match &self.document {
                 Some(doc) => {
-                    let state = settings::State::new(doc);
+                    let mut state = settings::State::new(doc);
+                    if id == "crs.set" {
+                        state.section = settings::Section::Crs;
+                    }
                     self.open_project_window(Window::Settings(Box::new(state)));
                 }
                 None => self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O)."),

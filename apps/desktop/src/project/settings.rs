@@ -95,7 +95,8 @@ impl fmt::Display for Angle {
 
 #[derive(Debug, Clone)]
 pub struct State {
-    section: Section,
+    /// The page shown; Koordinat sistemi… opens on `Crs`.
+    pub(super) section: Section,
     name: String,
     settings: ProjectSettings,
     initial_name: String,

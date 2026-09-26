@@ -85,7 +85,12 @@
     "tool.pan",
     "tool.zoomWindow",
     "view.zoomSelection",
-    "tool.repeat"
+    "tool.repeat",
+    "view.rightPanel",
+    "view.fullscreen",
+    "view.commandSearch",
+    "crs.set",
+    "server.check"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

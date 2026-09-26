@@ -97,20 +97,27 @@ impl App {
                     .on_press(Message::AppMenu(crate::app_menu::Event::Toggle)),
             )
             .collapsible(self.ribbon_collapsed, Message::Run("view.ribbonCollapse"))
-            .trailing(label::caption(self.document.as_ref().map_or(
-                "Açık çizim yok".to_owned(),
-                |doc| {
-                    // A cloud project with its workspace (docs/adr/0041).
-                    let place = doc
-                        .cloud_source()
-                        .map_or(String::new(), |s| format!("{} › ", s.workspace));
-                    format!(
-                        "{place}{}{}",
-                        doc.name(),
-                        if doc.dirty() { " • kaydedilmedi" } else { "" }
-                    )
-                },
-            )));
+            .trailing(
+                row![
+                    label::caption(self.document.as_ref().map_or(
+                        "Açık çizim yok".to_owned(),
+                        |doc| {
+                            // A cloud project with its workspace (docs/adr/0041).
+                            let place = doc
+                                .cloud_source()
+                                .map_or(String::new(), |s| format!("{} › ", s.workspace));
+                            format!(
+                                "{place}{}{}",
+                                doc.name(),
+                                if doc.dirty() { " • kaydedilmedi" } else { "" }
+                            )
+                        },
+                    )),
+                    self.fullscreen_button(),
+                ]
+                .spacing(6)
+                .align_y(iced::Center),
+            );
         for command in catalog.quick().iter().filter_map(|id| catalog.get(id)) {
             // Undo and redo are dimmed with no step to take (web: isEnabled).
             let on_press = enabled(command).filter(|_| self.available(command.id));
@@ -135,6 +142,25 @@ impl App {
             }
         }
         ribbon.into()
+    }
+
+    /// Tam ekran at the end of the tab row, as on the web: four corners out,
+    /// or in while the window fills the screen.
+    fn fullscreen_button(&self) -> Element<'static, Message> {
+        let (glyph, title) = if self.fullscreen {
+            ("fullscreenExit", "Tam ekrandan çık")
+        } else {
+            ("fullscreen", "Tam ekran")
+        };
+        let about = Tip::new(title).body("Uygulamayı ekranın tamamına yayar.");
+        kentos_ui::widget::tip(
+            button(kentos_ui::icon::icon(crate::icons::from_web(Some(glyph))).size(14.0))
+                .on_press(Message::Run("view.fullscreen"))
+                .padding([4, 5])
+                .style(style::button::flat),
+            if self.fullscreen { about.detail("Esc") } else { about },
+            iced::widget::tooltip::Position::Bottom,
+        )
     }
 
     /// A panel of the web's ribbon: its buttons, which the ribbon shrinks to
@@ -385,13 +411,14 @@ impl App {
     /// tab); `lines`: history lines shown while closed, when not the default.
     pub(crate) fn command_line_as(&self, open: bool, lines: Option<usize>) -> Element<'_, Message> {
         let line = CommandLine::new(&self.history, &self.command_input).id(COMMAND_INPUT);
-        // A running command's step already says what to type; the hint would
-        // repeat it and, in a narrow window, be cut at the field's edge.
-        let line = if self.session.is_running() {
-            line
+        // A running command's step already says what to type; a hint (the
+        // widget's own “Komut yazın” too) would repeat it and, in a narrow
+        // window, be cut at the field's edge.
+        let line = line.placeholder(if self.session.is_running() {
+            ""
         } else {
-            line.placeholder("Komut ya da koordinat yazın; Enter ya da Boşluk onaylar")
-        };
+            "Komut ya da koordinat yazın; Enter ya da Boşluk onaylar"
+        });
         line.commands(self.line_commands())
             .prompt(self.line_prompt())
             .on_input(Message::CommandInput)
@@ -488,10 +515,15 @@ impl App {
                 .separator()
                 .push(self.mode_cell())
                 .separator()
+                // Clicked, Proje ayarları on its coordinate system page (the web's cell).
                 .push(
                     Readout::new(label::muted(crs))
-                        .icon(Icon::Globe)
-                        .tip("Projenin koordinat sistemi"),
+                        .icon(crate::icons::from_web(Some("crs")))
+                        .on_press(Message::Run("crs.set"))
+                        .tip(Tip::new("Koordinat sistemi").body(format!(
+                            "EPSG:{}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın.",
+                            settings.srid
+                        ))),
                 )
                 .spacer()
                 .push(
@@ -734,10 +766,12 @@ impl App {
 
 fn line_command(command: &Command) -> LineCommand<'static> {
     let others: &'static [&'static str] = command.aliases.get(1..).unwrap_or(&[]);
+    // Listed like the ribbon's buttons: dimmed where the desktop does not run it yet.
     LineCommand::new(command.name(), command.title)
         .aliases(others)
-        .description(command.description)
+        .description(command.line_note)
         .icon(command.icon)
+        .dimmed(command.standing != Standing::Ported)
 }
 
 fn project_rows(doc: &Document) -> Vec<(&'static str, String)> {
