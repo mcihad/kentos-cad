@@ -35,7 +35,12 @@
     "tool.arc",
     "tool.rectangle",
     "tool.rectangle3",
-    "tool.regularPolygon"
+    "tool.regularPolygon",
+    "tool.move",
+    "tool.copy",
+    "tool.rotate",
+    "tool.scale",
+    "tool.mirror"
   ],
   "format": "kentos.desktop-ported",
   "version": 1
