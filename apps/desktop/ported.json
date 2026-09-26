@@ -40,7 +40,12 @@
     "tool.copy",
     "tool.rotate",
     "tool.scale",
-    "tool.mirror"
+    "tool.mirror",
+    "cloud.signIn",
+    "cloud.signOut",
+    "cloud.open",
+    "cloud.upload",
+    "cloud.conflicts"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -15,15 +15,66 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use kentos_contracts::{
-    DocumentSnapshotV1, DocumentSnapshotV2, LayerNode, LayerNodeType, ProjectSettings,
+    DocumentSnapshotV1, DocumentSnapshotV2, LayerNode, LayerNodeType, ProjectInfo,
+    ProjectPermission, ProjectSettings, ProjectState, ProjectStorage,
 };
+use kentos_domain::Uuid;
+
+/// Where a drawing lives (docs/adr/0041).
+#[derive(Debug, Clone, Default)]
+pub enum Source {
+    /// On this computer: its file is [`Document::path`], if it has one.
+    #[default]
+    Local,
+    /// A cloud project; saving goes to the server.
+    Cloud(Box<CloudSource>),
+}
+
+/// The cloud project a drawing is.
+#[derive(Debug, Clone)]
+pub struct CloudSource {
+    pub tenant: Uuid,
+    pub project: Uuid,
+    /// The project as the server gave it when it was opened: its name,
+    /// workspace, this account's access and how it is kept.
+    pub info: ProjectInfo,
+    /// Its workspace as the interface names it (an organisation, “Kişisel”).
+    pub workspace: String,
+    /// A file project's revision the drawing stands on: a save is based on
+    /// it. None for a database project and before a file project's first save.
+    pub revision: Option<kentos_cloud::Revision>,
+}
+
+impl CloudSource {
+    pub fn storage(&self) -> ProjectStorage {
+        self.info.storage
+    }
+
+    /// Archived: read-only until it is unarchived and opened again (docs/adr/0028).
+    pub fn archived(&self) -> bool {
+        self.info.state == ProjectState::Archived
+    }
+
+    /// Whether this account may change its objects (a file project: save revisions).
+    pub fn can_write(&self) -> bool {
+        !self.archived()
+            && self
+                .info
+                .access
+                .permissions
+                .contains(&ProjectPermission::FeatureWrite)
+    }
+}
 
 /// A drawing and where it came from.
 #[derive(Debug, Clone)]
 pub struct Document {
     /// What the drawing holds and every change to it.
     pub model: kentos_domain::Document,
+    /// The local file it came from or was saved to; none for a cloud project.
     pub path: Option<PathBuf>,
+    /// On this computer, or a cloud project.
+    pub source: Source,
     /// Which opened drawing this is, unique while the program runs: a save
     /// that finishes after another drawing was opened applies to its own
     /// drawing only (CLAUDE.md §21.2).
@@ -47,6 +98,7 @@ impl Document {
             model: kentos_domain::Document::from_snapshot(snapshot)?,
             legacy: path.is_some(),
             path,
+            source: Source::Local,
             session: session(),
         })
     }
@@ -57,6 +109,7 @@ impl Document {
             model: kentos_domain::Document::from_snapshot_v2(snapshot)?,
             legacy: false,
             path,
+            source: Source::Local,
             session: session(),
         })
     }
@@ -68,12 +121,47 @@ impl Document {
             .ok_or_else(|| format!("{}: açılış durduruldu.", path.display()))
     }
 
+    /// A cloud project just read from the server (docs/adr/0041): clean,
+    /// without a file, a new opening.
+    pub fn cloud(model: kentos_domain::Document, source: CloudSource) -> Self {
+        Self {
+            model,
+            path: None,
+            source: Source::Cloud(Box::new(source)),
+            session: session(),
+            legacy: false,
+        }
+    }
+
     /// A save of `revision` to `path` finished: the drawing is clean unless it
-    /// changed meanwhile (CLAUDE.md §4.8), and it lives in a v2 file now.
+    /// changed meanwhile (CLAUDE.md §4.8), and it lives in a v2 file now: a
+    /// cloud project saved to a file is a local drawing from then on.
     pub fn saved(&mut self, path: PathBuf, revision: u64) {
         self.path = Some(path);
         self.legacy = false;
+        self.source = Source::Local;
         self.model.mark_saved(revision);
+    }
+
+    /// The cloud project this drawing is, if it is one.
+    pub fn cloud_source(&self) -> Option<&CloudSource> {
+        match &self.source {
+            Source::Cloud(c) => Some(c),
+            Source::Local => None,
+        }
+    }
+
+    pub fn cloud_source_mut(&mut self) -> Option<&mut CloudSource> {
+        match &mut self.source {
+            Source::Cloud(c) => Some(c),
+            Source::Local => None,
+        }
+    }
+
+    /// A cloud project kept object by object: its changes go as they happen.
+    pub fn is_database(&self) -> bool {
+        self.cloud_source()
+            .is_some_and(|c| c.storage() == ProjectStorage::Database)
     }
 
     pub fn name(&self) -> &str {

@@ -241,7 +241,8 @@ impl App {
         // 1. A dialog: Esc closes it; its own buttons do the rest.
         if self.dialog.is_some() {
             if press.named() == Some(Named::Escape) {
-                self.dialog = None;
+                // What the window held goes with it (a password, a request).
+                self.close_dialog();
             }
             return Task::none();
         }

@@ -2464,6 +2464,7 @@ version = "0.1.0"
 dependencies = [
  "iced",
  "iced_runtime",
+ "kentos-cloud",
  "kentos-contracts",
  "kentos-domain",
  "kentos-interaction",

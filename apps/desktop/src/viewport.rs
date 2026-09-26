@@ -53,7 +53,8 @@ use crate::document::Document;
 
 // ── How the drawing area reads the open drawing ─────────────────────────────
 // The one place that knows the document's fields. The scene reads the live
-// document in place, with no copy, and is rebuilt when its revision changes.
+// document in place, with no copy, and is rebuilt when what it holds changes
+// (its generation: edits and changes from outside alike).
 
 impl Drawing for Document {
     fn layer_tree(&self) -> &[LayerNode] {
@@ -73,9 +74,11 @@ impl Drawing for Document {
     }
 }
 
-/// Changes with every change to what the drawing holds (kentos-domain, docs/adr/0020).
-fn revision(doc: &Document) -> u64 {
-    doc.model.revision()
+/// Changes with every change to what the drawing holds: this user's edits,
+/// undo and redo, layer changes, and other editors' changes taken in from
+/// the cloud, which leave the revision alone (kentos-domain, docs/adr/0040).
+fn changes(doc: &Document) -> u64 {
+    doc.model.generation()
 }
 
 /// The drawing's start view, when it has one.
@@ -164,7 +167,7 @@ pub struct Viewport {
     sized: bool,
     /// A drawing was opened and waits for the area's size to be fitted.
     fit_pending: bool,
-    /// Bumped when a drawing is opened: its scene is built even if the revision matches.
+    /// Bumped when a drawing is opened: its scene is built even if its changes count matches.
     generation: u64,
     id: ViewId,
     scene: RefCell<Option<Cached>>,
@@ -176,7 +179,7 @@ pub struct Viewport {
 /// The scene as last built, and what it was built from.
 struct Cached {
     generation: u64,
-    revision: u64,
+    changes: u64,
     mode: Mode,
     origin: Vec2,
     fixed: Arc<ScenePart>,
@@ -338,16 +341,16 @@ impl Viewport {
         let needed = lod::band(self.camera.scale, settings.curve_tolerance_px);
         let band = lod::build_band(self.camera.scale, settings.curve_tolerance_px);
         let budget = settings.curve_segment_budget;
-        let revision = revision(doc);
+        let changes = changes(doc);
         let mut cache = self.scene.borrow_mut();
         let current = cache.as_ref().is_some_and(|c| {
-            c.generation == self.generation && c.revision == revision && c.mode == mode
+            c.generation == self.generation && c.changes == changes && c.mode == mode
         });
         if !current {
             let origin = scene::scene_origin(doc);
             *cache = Some(Cached {
                 generation: self.generation,
-                revision,
+                changes,
                 mode,
                 origin,
                 fixed: Arc::new(scene::build_fixed(doc, palette, origin)),

@@ -379,11 +379,18 @@ impl App {
     /// window's own buttons work; everything else waits (the drawing is about
     /// to be replaced). None: the message goes on as usual.
     pub(crate) fn while_opening(&mut self, message: &Message) -> Option<Task<Message>> {
-        self.opening.as_ref()?;
+        // A cloud project being opened holds the app the same way (cloud/opening.rs).
+        if self.opening.is_none() && self.cloud.opening.is_none() {
+            return None;
+        }
         match message {
             Message::Key(press) => {
                 if press.named() == Some(iced::keyboard::key::Named::Escape) {
-                    return Some(self.opening_event(Event::Cancel));
+                    return Some(if self.opening.is_some() {
+                        self.opening_event(Event::Cancel)
+                    } else {
+                        self.cloud_event(crate::cloud::Event::OpenCancel)
+                    });
                 }
                 Some(Task::none())
             }

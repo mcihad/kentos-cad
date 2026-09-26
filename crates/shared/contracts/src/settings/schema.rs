@@ -75,6 +75,11 @@ fn groups() -> Vec<SettingGroup> {
             "Proje",
             "Projeyle kaydedilen ayarlar (.kcad, bulut revizyonu); tercihler onları değiştirmez.",
         ),
+        group(
+            "cloud",
+            "Bulut",
+            "Projelerin saklandığı, paylaşıldığı KentOS sunucusu.",
+        ),
     ]
 }
 
@@ -448,6 +453,23 @@ fn settings() -> Vec<SettingDescriptor> {
                 "Çizim yazı tipi",
                 "Çizimin kendi yazıları: yazı nesneleri, ölçü değerleri, etiketler. Projeyi açan herkes aynı harfleri görür.",
             ),
+        // ── Cloud ───────────────────────────────────────────────────────
+        // The web talks to the server it was loaded from; the desktop is told
+        // which (docs/adr/0041). Plain http only to this computer (kentos-cloud).
+        text("cloud.server", "http://127.0.0.1:8787", 2048)
+            .hosts(&[Desktop])
+            .text(
+                "Sunucu adresi",
+                "Bulut projelerinin saklandığı KentOS sunucusu. Bu bilgisayardaki sunucuya http, başka her sunucuya https ile bağlanılır.",
+            ),
+        // The last signed-in account's id (not a secret; the session never is kept): the
+        // projects this device keeps for it open without a connection (docs/adr/0043).
+        text("cloud.account", "", 64)
+            .hosts(&[Desktop])
+            .text(
+                "Son hesap",
+                "Bu bilgisayarda son giriş yapan hesabın kimliği; bağlantı yokken o hesabın bu cihazdaki projeleri açılır. Oturum ve parola saklanmaz.",
+            ),
     ]
     .into_iter()
     .map(|s| s.0)
@@ -538,6 +560,13 @@ fn integer(key: &str, default: i64) -> Build {
 
 fn number(key: &str, default: i64) -> Build {
     build(key, SettingType::Number, json!(default))
+}
+
+/// Free text of at most `max` characters.
+fn text(key: &str, default: &str, max: u32) -> Build {
+    let mut b = build(key, SettingType::Text, json!(default));
+    b.0.max = Some(f64::from(max));
+    b
 }
 
 fn choice(key: &str, default: &str, choices: &[(&str, &str)]) -> Build {
