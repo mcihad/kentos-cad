@@ -4,6 +4,7 @@ import { lengthenEntity, lengthOf, lengthToward, nearEnd } from '../model/ops/le
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
 import { EdgePickTool } from './edgeTools';
+import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { drawTag, strokeGeometry } from './preview';
 import type { ToolPointer } from './Tool';
 
@@ -86,8 +87,8 @@ export class LengthenTool extends EdgePickTool {
     const r = lengthenEntity(e, atEnd, length);
     if ('error' in r) return this.ctx.log.warn(r.error);
     const before = lengthOf(e) ?? 0;
-    // Replace the whole geometry: the result may drop or change bulges.
-    this.ctx.doc.transact('Uzat-kısalt', () => this.ctx.doc.update(e.id, { bulges: undefined, ...r.geometry } as Partial<Entity>));
+    // The whole geometry is written, through the edit command (docs/adr/0047): the result may drop or change bulges.
+    if (!writeEdit(this.ctx, 'lengthen', [{ kind: 'update', uid: uidOf(this.ctx, e), geometry: editGeometry(r.geometry) }])) return;
     const f = this.ctx.format;
     this.ctx.log.success(`Uzunluk ${f.length(before)} → ${f.length(length)}.`);
     this.hover = null;

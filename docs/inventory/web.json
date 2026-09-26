@@ -5724,6 +5724,7 @@
       "methods": [],
       "steps": 3,
       "description": "Nesnenin iki nokta arasındaki kısmını siler; Enter ile tek noktadan böler.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -5749,6 +5750,7 @@
       "methods": [],
       "steps": 3,
       "description": "Köşeyi iki mesafeyle keser: iki çizgi ya da çoklu çizginin komşu kenarları (imar köşe kesmesi).",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -5964,6 +5966,7 @@
       "methods": [],
       "steps": 2,
       "description": "Çoklu çizgi ve alanı çizgi ve yaylara, eğriyi çoklu çizgiye, ölçüyü çizgi ve yazıya ayırır.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -5988,6 +5991,7 @@
       "methods": [],
       "steps": 2,
       "description": "Çizgi ya da yay ucunu ilk rastladığı kenara kadar uzatır.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6013,6 +6017,7 @@
       "methods": [],
       "steps": 3,
       "description": "İki çizgiyi ya da çoklu çizginin komşu iki kenarını yarıçaplı yayla (0: keskin köşe) birleştirir.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6064,6 +6069,7 @@
       "methods": [],
       "steps": 2,
       "description": "Uç uca gelen çizgi, yay ve çoklu çizgileri tek çoklu çizgiye; kapanırsa kapalı alana çevirir.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6088,6 +6094,7 @@
       "methods": [],
       "steps": 3,
       "description": "Çizgi, yay ya da açık çoklu çizginin boyunu bir ucundan değiştirir: fareyle, farkla, yüzdeyle ya da toplam uzunlukla.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6223,6 +6230,7 @@
       "methods": [],
       "steps": 3,
       "description": "Çizgi, çoklu çizgi, alan, daire ya da yayın paralel kopyasını çıkarır.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6858,6 +6866,7 @@
       "methods": [],
       "steps": 2,
       "description": "Tıklanan parçayı, onu kesen en yakın iki kenar arasında siler.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6881,6 +6890,7 @@
       "methods": [],
       "steps": 3,
       "description": "Kenara tıklayınca köşe ekler, köşeye tıklayınca siler.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

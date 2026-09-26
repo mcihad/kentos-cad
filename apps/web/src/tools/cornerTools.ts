@@ -1,4 +1,5 @@
-import { entityGeometry, type Entity, type EntityGeometry, type LineEntity, type NewEntity, type PolylineEntity } from '../model/entities';
+import type { EntityEdit } from '../contracts/generated/EntityEdit';
+import { entityGeometry, type Entity, type EntityGeometry, type LineEntity, type PolylineEntity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { bulgeAt } from '../model/geom/bulge';
 import { chamferLines, cornerOfPath, filletLines } from '../model/ops/fillet';
@@ -7,6 +8,7 @@ import type { ViewTransform } from '../viewport/Camera';
 import { chamferLine, cornerNear, filletArc, filletRadiusFor, linesCornerAt, offsetAlong, pulledDistance, vertexCorner, type CornerGeom } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { EdgePickTool } from './edgeTools';
+import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { drawTag, strokeGeometry, strokePath } from './preview';
 import type { ToolPointer } from './Tool';
 
@@ -49,7 +51,9 @@ function pathCorner(e: PolylineEntity, i: number, known?: CornerGeom): Corner | 
     plan: (op) => {
       const r = cornerOfPath(e.pts, e.bulges, closed, i, op);
       if ('error' in r) return r;
-      return { updates: [{ entity: e, geometry: { kind: e.kind, pts: r.pts, ...(r.bulges && { bulges: r.bulges }) } }], add: null };
+      // The whole geometry is written (docs/adr/0047): a closed area keeps its holes.
+      const holes = e.kind === 'polygon' && e.holes?.length ? { holes: e.holes } : {};
+      return { updates: [{ entity: e, geometry: { kind: e.kind, pts: r.pts, ...(r.bulges && { bulges: r.bulges }), ...holes } as EntityGeometry }], add: null };
     },
   };
 }
@@ -93,6 +97,8 @@ abstract class CornerTool extends EdgePickTool {
   protected override editable = (e: Entity) => (e.kind === 'line' || e.kind === 'polyline' || e.kind === 'polygon') && !this.ctx.doc.layers.isLocked(e.layerId);
 
   protected abstract readonly title: string;
+  /** What the edit command names the undo step after (docs/adr/0047). */
+  protected abstract readonly operation: 'fillet' | 'chamfer';
   /** Operation for a size pulled out with the mouse (distance t from the corner along a side). */
   protected abstract opForPull(t: number, c: Corner): CornerOp;
   /** Parses a typed value; null when not understood. */
@@ -240,24 +246,26 @@ abstract class CornerTool extends EdgePickTool {
     this.refresh();
   }
 
+  /**
+   * Writes the corner through `cad.entities.edit` (docs/adr/0047): the sides
+   * take their whole new geometry, the arc or cut is a new object from the
+   * first side (its layer and colour). A refusal leaves the corner picked.
+   */
   private commit(op: CornerOp): void {
     const plan = this.corner!.plan(op);
     if ('error' in plan) return this.ctx.log.warn(plan.error);
-    const { doc } = this.ctx;
     if (!CornerTool.trimSides) {
       const extra = this.piece(op, this.corner!);
       if (!extra) return this.ctx.log.warn('Kırpmadan çalışırken sıfırdan büyük bir boyut verin; yoksa eklenecek bir şey yok.');
       const like = this.corner!.entities[0];
-      doc.transact(this.title, () => doc.add({ ...extra, layerId: like.layerId, color: like.color, attrs: {} } as NewEntity));
+      if (!writeEdit(this.ctx, this.operation, [{ kind: 'add', from: uidOf(this.ctx, like), geometry: editGeometry(extra) }])) return;
       this.remember(op);
       this.ctx.log.success(`${this.done(op)} Kenarlar kırpılmadı.`);
       return this.reset();
     }
-    doc.transact(this.title, () => {
-      // Whole geometry replaced: a shape without arcs must not keep old bulges.
-      for (const u of plan.updates) doc.update(u.entity.id, { bulges: undefined, ...u.geometry } as Partial<Entity>);
-      if (plan.add) doc.add({ ...plan.add.geometry, layerId: plan.add.like.layerId, color: plan.add.like.color, attrs: {} } as NewEntity);
-    });
+    const changes: EntityEdit[] = plan.updates.map((u) => ({ kind: 'update', uid: uidOf(this.ctx, u.entity), geometry: editGeometry(u.geometry) }));
+    if (plan.add) changes.push({ kind: 'add', from: uidOf(this.ctx, plan.add.like), geometry: editGeometry(plan.add.geometry) });
+    if (!writeEdit(this.ctx, this.operation, changes)) return;
     this.remember(op);
     this.ctx.log.success(this.done(op));
     this.reset();
@@ -301,6 +309,7 @@ abstract class CornerTool extends EdgePickTool {
 export class FilletTool extends CornerTool {
   readonly id = 'fillet';
   protected readonly title = 'Köşe yuvarla';
+  protected readonly operation = 'fillet';
   private static last: number | null = null;
 
   protected prompts() {
@@ -342,6 +351,7 @@ export class FilletTool extends CornerTool {
 export class ChamferTool extends CornerTool {
   readonly id = 'chamfer';
   protected readonly title = 'Pah';
+  protected readonly operation = 'chamfer';
   private static last: { d1: number; d2: number } | null = null;
 
   private text(op: { d1: number; d2: number }): string {

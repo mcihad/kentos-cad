@@ -1,10 +1,13 @@
 import type { AppContext } from '../app/context';
+import type { EditOperation } from '../contracts/generated/EditOperation';
+import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import { Signal } from '../core/signal';
-import { entityGeometry, type Entity, type EntityGeometry, type NewEntity } from '../model/entities';
+import { entityGeometry, type Entity, type EntityGeometry } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { offsetEntity, offsetThroughDistance } from '../model/ops/offset';
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
+import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { drawTag, strokeGeometry } from './preview';
 import type { Tool, ToolPointer } from './Tool';
 
@@ -56,29 +59,28 @@ export abstract class EdgePickTool implements Tool {
     return true;
   }
 
-  /** Common attributes carried over to pieces of an edited entity. */
-  protected inherit(e: Entity, geom: EntityGeometry, keepData: boolean): NewEntity {
-    return { ...geom, layerId: e.layerId, color: e.color, attrs: keepData ? { ...e.attrs } : {}, label: keepData ? e.label : undefined } as NewEntity;
-  }
-
   /**
-   * Replaces `e` by `pieces` in one undo step (attributes survive a single
-   * piece). The first piece is `e` itself, changed: the part a trim leaves,
-   * the first part of a break, a line that took a vertex. It keeps its slot
-   * and persistent id; the other pieces are new objects (docs/adr/0014).
+   * Replaces `e` by `pieces` in one undo step, through `cad.entities.edit`
+   * (docs/adr/0047); attributes and the label survive a single piece. The
+   * first piece is `e` itself, changed: the part a trim leaves, the first
+   * part of a break, a line that took a vertex. It keeps its slot and
+   * persistent id; the other pieces are new objects (docs/adr/0014).
+   * Whether it was written; the command's refusal is said.
    */
-  protected replace(label: string, e: Entity, pieces: EntityGeometry[]): void {
+  protected replace(operation: EditOperation, e: Entity, pieces: EntityGeometry[]): boolean {
     const { doc } = this.ctx;
     const keep = pieces.length === 1 && e.kind !== 'polygon';
+    const uid = uidOf(this.ctx, e);
     const [first, ...others] = pieces;
-    doc.transact(label, () => {
-      if (first) doc.replace(e.id, this.inherit(e, first, keep));
-      else doc.remove([e.id]);
-      for (const piece of others) doc.add(this.inherit(e, piece, keep));
-    });
+    const changes: EntityEdit[] = [
+      first ? { kind: 'replace', uid, geometry: editGeometry(first), ...(keep && { keepData: true }) } : { kind: 'remove', uid },
+      ...others.map((piece): EntityEdit => ({ kind: 'add', from: uid, geometry: editGeometry(piece), ...(keep && { keepData: true }) })),
+    ];
+    const written = writeEdit(this.ctx, operation, changes) !== null;
     this.ctx.selection.retain((id) => !!doc.get(id));
     this.hover = null;
     this.ctx.selection.hover.set(null);
+    return written;
   }
 }
 
@@ -131,8 +133,9 @@ export class OffsetTool extends EdgePickTool {
     if ('error' in r) this.ctx.log.warn(r.error);
     else {
       OffsetTool.distance = d;
-      this.ctx.doc.add(this.inherit(this.target, r.geometry, false));
-      this.ctx.log.success(`${this.ctx.format.length(d)} ötelenmiş kopya eklendi.`);
+      // A new object from the target: its layer and colour (docs/adr/0047).
+      if (writeEdit(this.ctx, 'offset', [{ kind: 'add', from: uidOf(this.ctx, this.target), geometry: editGeometry(r.geometry) }]))
+        this.ctx.log.success(`${this.ctx.format.length(d)} ötelenmiş kopya eklendi.`);
     }
     this.target = null;
     this.refresh();
@@ -269,15 +272,13 @@ abstract class BoundaryEdgeTool extends EdgePickTool {
     if (this.refuseHoled(e, 'budama')) return;
     const r = this.ctx.view.trim(e, at, this.bounds);
     if ('error' in r) return this.ctx.log.warn(r.error);
-    this.replace('Buda', e, r.pieces);
-    this.ctx.log.success(`Budandı: ${r.pieces.length} parça kaldı.`);
+    if (this.replace('trim', e, r.pieces)) this.ctx.log.success(`Budandı: ${r.pieces.length} parça kaldı.`);
   }
 
   protected extendAt(e: Entity, at: Vec2): void {
     const r = this.ctx.view.extend(e, at, this.bounds);
     if ('error' in r) return this.ctx.log.warn(r.error);
-    this.ctx.doc.update(e.id, r.geometry as Partial<Entity>);
-    this.ctx.log.success('Uzatıldı.');
+    if (writeEdit(this.ctx, 'extend', [{ kind: 'update', uid: uidOf(this.ctx, e), geometry: editGeometry(r.geometry) }])) this.ctx.log.success('Uzatıldı.');
   }
 
   /** Preview of trim (red goes, accent stays) or extend (dashed result). */

@@ -6,6 +6,7 @@ import { insertVertex, nearestSegment, nearHole, removeVertex } from '../model/o
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
 import { EdgePickTool } from './edgeTools';
+import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { drawTag, strokeGeometry } from './preview';
 import type { ToolPointer } from './Tool';
 
@@ -58,10 +59,7 @@ export class BreakTool extends EdgePickTool {
     const t = this.target!;
     const r = breakEntity(t.entity, t.p1, p2);
     if ('error' in r) this.ctx.log.warn(r.error);
-    else {
-      this.replace('Kır', t.entity, r.pieces);
-      this.ctx.log.success(dist(t.p1, p2) < 1e-9 ? `Nesne bölündü: ${r.pieces.length} parça.` : 'Aradaki kısım silindi.');
-    }
+    else if (this.replace('break', t.entity, r.pieces)) this.ctx.log.success(dist(t.p1, p2) < 1e-9 ? `Nesne bölündü: ${r.pieces.length} parça.` : 'Aradaki kısım silindi.');
     this.target = null;
     this.p2 = null;
     this.refresh();
@@ -248,11 +246,12 @@ export class VertexTool extends EdgePickTool {
     const a = this.plan(e, p);
     const r = a.remove !== null ? removeVertex(e, a.remove) : insertVertex(e, a.seg, a.at);
     if ('error' in r) return this.ctx.log.warn(r.error);
-    const { doc } = this.ctx;
-    if (r.geometry.kind !== e.kind) this.replace('Köşe ekle', e, [r.geometry]);
-    // Replace the whole geometry: an update keeps `bulges` when the new shape has none.
-    else doc.transact(a.remove !== null ? 'Köşe sil' : 'Köşe ekle', () => doc.update(e.id, { bulges: undefined, ...r.geometry } as Partial<Entity>));
-    this.ctx.log.success(a.remove !== null ? 'Köşe silindi.' : 'Köşe eklendi.');
+    const operation = a.remove !== null ? 'vertexRemove' : 'vertexAdd';
+    // The whole geometry is written (docs/adr/0047): a closed area keeps its holes, the core's path is the outer ring.
+    const geometry = r.geometry.kind === 'polygon' && e.kind === 'polygon' && e.holes?.length ? { ...r.geometry, holes: e.holes } : r.geometry;
+    const written =
+      r.geometry.kind !== e.kind ? this.replace(operation, e, [r.geometry]) : writeEdit(this.ctx, operation, [{ kind: 'update', uid: uidOf(this.ctx, e), geometry: editGeometry(geometry) }]) !== null;
+    if (written) this.ctx.log.success(a.remove !== null ? 'Köşe silindi.' : 'Köşe eklendi.');
     this.action = null;
     this.ctx.view.requestOverlay();
   }
