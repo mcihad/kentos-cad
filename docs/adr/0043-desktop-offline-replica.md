@@ -91,3 +91,13 @@
   4. Bağlantı dönünce kopya açılır, taslak geri konur (`resends`), olaylar kopyanın imlecinden alınır. Ayşe'nin ilk oturumdaki komutu bilinen sürüm olarak atlanır, çakışma çıkmaz. Dilek'in işi gelir, Ayşe'nin çevrimdışı işi gider.
   5. Sunucu, Ayşe'nin çizimi ve kopya nesne nesne aynıdır; toplama sonrası da.
 - Bu test yukarıdaki hatayı buldu; düzeltmeden önce düşüyordu.
+- **Gerçek sunucu, `a_long_offline_spell_past_the_kept_events_reopens_and_loses_nothing`:**
+  1. Ayşe'nin kopyası tutulur, program kapanır.
+  2. Dilek çizgiyi etiketler ve bir nokta ekler; olaylar 8 günlük yapılıp temizlenir. Sunucu Ayşe'nin imlecinden sonrasını artık saklamaz.
+  3. Ayşe bağlantısız olarak noktayı ve aynı çizgiyi değiştirir; iş taslakta kalır.
+  4. Bağlanınca imleç `resync_required` alır. Proje sunucudan açılır, kopya ondan yeniden kurulur, taslak üstüne konur. Aynı çizgi tek çakışmadır, çizimde Ayşe'nin kopyası görünür. Dilek'in noktası gelir.
+  5. "Benimkini koru" ile her şey gider. Sunucu, çizim ve kopya aynıdır; hiçbir iş kaybolmaz.
+- **Gerçek sunucu, `a_file_project_saved_offline_goes_out_when_connected_and_a_clash_keeps_both`:**
+  1. Dosya projesi kopyadan 1. revizyonla açılır. Bağlantısız kayıt bekler; bağlanınca 2. revizyon olur, bekleyen kayıt temizlenir.
+  2. Yeniden bağlantısızken bekleyen kayıt, arada Dilek'in kaydettiği 3. revizyonla karşılaşır (`conflicting_revision` 3).
+  3. İki iş de korunur: Dilek'inki projenin en yenisi kalır, bu cihazın işi ayrı dosya projesi olarak yüklenir. Nesne nesne ikisi de doğrudur.
