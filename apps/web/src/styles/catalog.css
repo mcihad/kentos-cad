@@ -1,0 +1,361 @@
+/* The project catalog window (ui/cloud/CatalogDialog.ts, docs/adr/0028): its lists on the
+ * left, the chosen list in the middle, the selected project on the right. Fixed height, so
+ * switching lists never makes the window jump; loaded with the window (CLAUDE.md §20). */
+
+.dialog--catalog {
+  height: min(700px, 90vh);
+  max-height: none;
+}
+.dialog--catalog .dialog__head {
+  padding: 14px 12px 12px 20px;
+  border-bottom: 1px solid var(--c-line);
+}
+.dialog--catalog .dialog__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.catalog {
+  display: grid;
+  grid-template-columns: calc(196px * var(--ui-scale)) minmax(0, 1fr) calc(320px * var(--ui-scale));
+  height: 100%;
+}
+
+/* ── The lists ───────────────────────────────────────────────────── */
+.catalog-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 10px;
+  background: var(--c-panel-head);
+  border-right: 1px solid var(--c-line);
+  overflow-y: auto;
+}
+.catalog-nav__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  height: calc(34px * var(--ui-scale));
+  padding: 0 10px;
+  border-radius: var(--r-md);
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  text-align: left;
+  white-space: nowrap;
+}
+.catalog-nav__item .icon {
+  flex: none;
+  color: var(--c-text-3);
+}
+.catalog-nav__item:hover {
+  background: var(--c-hover);
+  color: var(--c-text);
+}
+.catalog-nav__item[aria-selected='true'] {
+  background: var(--c-press);
+  color: var(--c-text);
+  font-weight: 600;
+}
+.catalog-nav__item[aria-selected='true'] .icon {
+  color: var(--c-accent-text);
+}
+.catalog-nav__item[aria-selected='true']::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--c-accent);
+}
+/* The trash apart from the working lists. */
+.catalog-nav__item[data-view='archived'] {
+  margin-top: 10px;
+}
+
+/* ── The chosen list ─────────────────────────────────────────────── */
+.catalog-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px 16px 12px;
+}
+.catalog-main__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.catalog-main__title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.catalog-main__count {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.catalog-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(132px * var(--ui-scale)) calc(132px * var(--ui-scale));
+  gap: 8px;
+}
+.catalog-search {
+  position: relative;
+}
+.catalog-search .field-icon {
+  left: 8px;
+}
+.catalog-org {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+.catalog-org[hidden] {
+  display: none;
+}
+.catalog-note {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+.catalog-note:empty {
+  display: none;
+}
+.catalog-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.catalog-list:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 1px;
+}
+.catalog-list .cloud-empty {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+.catalog-list .cloud-empty > p {
+  margin: 0;
+}
+.catalog-more {
+  align-self: center;
+}
+.catalog-main .cloud-progress {
+  margin-top: 0;
+}
+.catalog-main .cloud-status {
+  margin: 0;
+}
+
+/* One project of a list: name and marks, type and place under it, the list's time on the right. */
+.catalog-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--c-line-soft);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.catalog-row:last-child {
+  border-bottom: 0;
+}
+.catalog-row:hover {
+  background: var(--c-hover);
+}
+.catalog-row[aria-selected='true'] {
+  background: var(--c-accent-soft);
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+.catalog-row__main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.catalog-row__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.catalog-row__title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.catalog-row__fav {
+  display: inline-flex;
+  flex: none;
+  color: var(--c-accent-text);
+}
+.catalog-row__sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.catalog-row__sub > span:last-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.catalog-row__side {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.catalog-row__role {
+  color: var(--c-text-2);
+}
+.catalog-row__when--warn {
+  color: var(--c-warn);
+}
+
+/* Small labels: a project's type, its state, the open one. */
+.catalog-chip {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 0 7px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: 999px;
+  color: var(--c-text-2);
+  font-size: var(--fs-2xs);
+  line-height: calc(16px * var(--ui-scale));
+  white-space: nowrap;
+}
+.catalog-chip--type {
+  border-color: var(--c-line);
+  background: var(--c-panel-head);
+}
+.catalog-chip--open {
+  border-color: var(--c-accent-line);
+  color: var(--c-accent-text);
+}
+.catalog-chip--trashed {
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+}
+
+/* ── The selected project: its facts scroll, its actions stay in view ── */
+.catalog-details {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--c-line);
+  background: var(--c-panel-head);
+  font-size: var(--fs-sm);
+}
+.catalog-details__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+  padding: 14px 16px;
+  overflow-y: auto;
+}
+.catalog-details__empty {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.catalog-details__head {
+  display: grid;
+  gap: 6px;
+}
+.catalog-details__name {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.catalog-details__fav {
+  justify-self: start;
+  gap: 6px;
+  margin-left: -8px;
+}
+.catalog-details__fav[aria-pressed='true'] .icon {
+  color: var(--c-accent-text);
+}
+.catalog-details__chips,
+.catalog-details__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.catalog-details__desc {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.catalog-details__muted {
+  color: var(--c-text-3);
+}
+.catalog-tag {
+  padding: 1px 8px;
+  border-radius: var(--r-sm);
+  background: var(--c-press);
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.catalog-details__facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 12px;
+  margin: 2px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-line);
+  font-size: var(--fs-xs);
+}
+.catalog-details__facts dt {
+  color: var(--c-text-3);
+}
+.catalog-details__facts dd {
+  margin: 0;
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+.catalog-details__extent {
+  display: grid;
+  white-space: nowrap;
+}
+.catalog-details__actions {
+  display: flex;
+  flex-wrap: wrap;
+  flex: none;
+  gap: 6px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--c-line);
+}
+.catalog-details__actions .btn {
+  gap: 6px;
+}

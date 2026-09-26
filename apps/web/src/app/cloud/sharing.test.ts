@@ -76,6 +76,16 @@ describe('“Benimle paylaşılanlar”', () => {
     tenantKind: 'organization',
     ownerName: 'Ayşe Yılmaz',
     access: { role: via === 'owner' ? 'owner' : via === 'policy' ? 'manager' : 'viewer', via, permissions: ['project.read'] },
+    projectType: 'cad',
+    description: '',
+    tags: [],
+    state: 'active',
+    catalogVersion: '1',
+    createdAt: updatedAt,
+    creatorName: 'Ayşe Yılmaz',
+    areaUnit: 'm2',
+    storage: 'database',
+    favorite: false,
   });
 
   it('holds the projects shared with the account, newest first; its own and the policy’s stay in their lists', () => {

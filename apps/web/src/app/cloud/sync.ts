@@ -6,7 +6,7 @@ import type { ExternalMeta } from '../../model/document';
 import type { Entity } from '../../model/entities';
 import { ApiFailure } from './api';
 import { DRAFT_VERSION, keptDraftKey, readDraft, type Draft } from './drafts';
-import { BATCH, PROJECT_ACCESS, PROJECT_DELETED, SyncCore, uuid, type Inflight, type SaveState, type SyncConflict, type SyncOptions } from './syncCore';
+import { BATCH, PROJECT_ACCESS, PROJECT_ARCHIVED, PROJECT_DELETED, SyncCore, uuid, type Inflight, type SaveState, type SyncConflict, type SyncOptions } from './syncCore';
 import { applyEvents } from './syncRemote';
 import { restoreDraft } from './syncRestore';
 import { changeOf, entityJson, metaParts, metaPatch, type Planned } from './tracker';
@@ -31,10 +31,11 @@ export type { SaveState, SyncConflict, SyncOptions } from './syncCore';
  *   object has unsent local changes, which makes it a conflict too.
  * - A device draft from an earlier session (syncRestore.ts) goes back in
  *   when the project is opened again.
- * - The project deleted on the server (its event, or a 410), or this
- *   account's access taken away (a 404; docs/adr/0015, TODOS.md CLOUD-13):
- *   nothing more is sent, and edits keep going to the device draft (a
- *   restored project, or one shared again, brings them back when opened).
+ * - The project deleted on the server (its event, or a 410), archived (its
+ *   event, or a 409 `project_archived`; docs/adr/0028), or this account's
+ *   access taken away (a 404; docs/adr/0015, TODOS.md CLOUD-13): nothing
+ *   more is sent, and edits keep going to the device draft (a restored,
+ *   unarchived or again shared project brings them back when opened).
  * - The account's role changed while the project is open (`setAccess`, after
  *   a `project.access` event or a 403): without the right to write nothing
  *   is sent, and edits are kept on the device until it comes back.
@@ -66,8 +67,8 @@ export class ProjectSync {
   private readonly unsubscribe: (() => void)[] = [];
   private noticeShown = false;
   private disposed = false;
-  /** Why nothing is sent any more: the project was deleted, or this account lost its access. */
-  private ended: 'deleted' | 'revoked' | null = null;
+  /** Why nothing is sent any more: the project was deleted or archived, or this account lost its access. */
+  private ended: 'deleted' | 'revoked' | 'archived' | null = null;
   /** Whether this account may change objects now. */
   private writable: boolean;
   /**
@@ -144,7 +145,11 @@ export class ProjectSync {
     if (!this.keeps) {
       if (!this.noticeShown) {
         this.noticeShown = true;
-        this.o.warn('Bu projeyi yalnız görüntüleyebilirsiniz; değişiklikleriniz buluta kaydedilmez.');
+        this.o.warn(
+          this.ended === 'archived'
+            ? 'Bu proje arşivlenmiş, salt okunurdur; değişiklikleriniz buluta kaydedilmez. Düzenlemek için arşivden çıkarılmalı ya da kopyası oluşturulmalı.'
+            : 'Bu projeyi yalnız görüntüleyebilirsiniz; değişiklikleriniz buluta kaydedilmez.',
+        );
       }
       if (!this.ended) this.state.set('readonly');
       return;
@@ -320,6 +325,10 @@ export class ProjectSync {
         // Refused, not committed: its changes stay dirty and so in the device draft.
         core.inflight = null;
         this.markDeleted();
+      } else if (failure.archived) {
+        // The same: archived before this command reached it.
+        core.inflight = null;
+        this.markArchived();
       } else if (failure.notFound) {
         // The project is gone for this account: its access was taken away. The command stays in the
         // device draft with its key: shared again and opened, it goes once more and the server answers it once.
@@ -427,7 +436,7 @@ export class ProjectSync {
   // ── Deletion and access ────────────────────────────────────────────────
 
   /** Stops sending for good: what was not sent, and every edit from now on, stays in the device draft. */
-  private end(why: 'deleted' | 'revoked'): boolean {
+  private end(why: 'deleted' | 'revoked' | 'archived'): boolean {
     if (this.ended || this.disposed) return false;
     this.ended = why;
     clearTimeout(this.timer);
@@ -449,6 +458,20 @@ export class ProjectSync {
    */
   markRevoked(reason = ''): void {
     if (this.end('revoked')) this.o.onRevoked?.(reason);
+  }
+
+  /**
+   * The project was archived (docs/adr/0028): read-only until it is
+   * unarchived and opened again. `quiet`: nothing is announced (it was
+   * archived already when it was opened, or this window archived it).
+   */
+  markArchived(quiet = false): void {
+    if (this.end('archived') && !quiet) this.o.onArchived?.();
+  }
+
+  /** A request this window sends outside the autosave (a lifecycle command): its event is its own. */
+  expect(requestId: string): void {
+    this.core.own.add(requestId);
   }
 
   /**
@@ -495,6 +518,14 @@ export class ProjectSync {
         if (events.some((e) => e.kind === PROJECT_DELETED)) {
           this.core.cursor = events[events.length - 1].seq;
           return this.markDeleted();
+        }
+        // Archived: the changes of the events before it still come in; nothing is sent after it.
+        const archived = events.findIndex((e) => e.kind === PROJECT_ARCHIVED);
+        if (archived >= 0) {
+          const found = await applyEvents(this.core, events.slice(0, archived + 1));
+          if (!this.disposed) this.addConflicts(found);
+          const by = events[archived].requestId;
+          return this.markArchived(!!by && this.core.own.has(by));
         }
         // Someone changed who may do what here: the session asks what this account may do now.
         if (events.some((e) => e.kind === PROJECT_ACCESS)) this.o.onAccessChanged?.();

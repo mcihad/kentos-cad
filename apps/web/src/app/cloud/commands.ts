@@ -30,11 +30,12 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
     (args?: unknown) =>
       signedIn() ? next(args) : hooks.signIn(() => next(args));
   const watch = [cloud.auth, ctx.server.state];
-  // The open project, while it exists for this account, and whether this account may do `permission` in it.
-  const openMay = (permission: ProjectPermission) => {
+  // The open project, while it exists for this account, and whether this account may do `permission` in it
+  // (`writes`: it changes the project, which an archived one refuses, docs/adr/0028).
+  const openMay = (permission: ProjectPermission, writes = false) => {
     const p = cloud.project.value;
     const state = cloud.sync.value?.state.value;
-    return !!p && state !== 'deleted' && state !== 'revoked' && cloud.may(permission) && reachable();
+    return !!p && state !== 'deleted' && state !== 'revoked' && !(writes && p.state === 'archived') && cloud.may(permission) && reachable();
   };
   ctx.commands.registerAll([
     {
@@ -68,7 +69,8 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
       title: 'Bulut projesi aç…',
       category: C,
       icon: 'cloud',
-      description: 'Kişisel alanınızdaki ya da kurumunuzdaki, size açık bir bulut projesini açar. Açık projedeki değişiklikler kendiliğinden kaydedilir.',
+      description:
+        'Bulut projeleriniz: son kullanılanlar, favoriler, projelerim, kurum projeleri, benimle paylaşılanlar, arşivlenmişler ve çöp kutusu; sunucuda aranır ve sıralanır. Seçilen projeyi açar, paylaşır, bilgilerini değiştirir, kopyalar, arşivler ya da çöpe taşır. Açık projedeki değişiklikler kendiliğinden kaydedilir.',
       aliases: ['BULUTAC', 'CLOUDOPEN'],
       run: needAccount((pick) => hooks.projects('open', isPick(pick) ? pick : undefined)),
       isEnabled: () => reachable(),
@@ -96,17 +98,17 @@ export function registerCloudCommands(ctx: AppContext, hooks: CloudHooks): void 
         'Açık bulut projesinin adını projeye erişen herkes için değiştirir (project.edit yetkisi gerekir). Başka bir projeyi Bulut projesi aç listesinden yeniden adlandırın.',
       aliases: ['BULUTAD', 'RENAME'],
       run: () => hooks.rename(),
-      isEnabled: () => openMay('project.edit'),
+      isEnabled: () => openMay('project.edit', true),
       watch: [cloud.project, cloud.sync, cloud.me, ctx.server.state],
     },
     {
       id: 'cloud.delete',
-      title: 'Bulut projesini sil…',
-      short: 'Projeyi sil',
+      title: 'Bulut projesini çöp kutusuna taşı…',
+      short: 'Çöpe taşı',
       category: C,
       icon: 'trash',
       description:
-        'Açık bulut projesini erişen herkes için siler (project.delete yetkisi: proje sahibi ya da kurum yöneticisi). Nesneler sunucuda saklanır; yanlışlıkla silineni sunucu yöneticisi geri getirebilir.',
+        'Açık bulut projesini erişen herkes için çöp kutusuna taşır (project.delete yetkisi: proje sahibi ya da kurum yöneticisi). Hiçbir şey silinmez: saklama süresi dolana kadar Bulut projeleri → Çöp kutusu’ndan geri yüklenebilir, sonra kalıcı olarak silinir.',
       aliases: ['BULUTSIL'],
       run: () => hooks.remove(),
       isEnabled: () => openMay('project.delete'),

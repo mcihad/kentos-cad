@@ -34,25 +34,41 @@ pub struct Config {
     pub oidc: Option<OidcSettings>,
     /// How long project events are kept (`KENTOS_EVENT_RETENTION_DAYS`, 1–3650 days, default 7).
     pub event_retention: Duration,
+    /// How long a project moved to the trash stays restorable before it is
+    /// removed for good (`KENTOS_TRASH_RETENTION_DAYS`, 1–3650 days, default
+    /// 30; docs/adr/0028). Fixed for each project when it is moved there.
+    pub trash_retention: Duration,
 }
 
 /// Days of event log kept unless `KENTOS_EVENT_RETENTION_DAYS` says otherwise.
 pub const DEFAULT_RETENTION_DAYS: u64 = 7;
 
+/// Days a project moved to the trash stays there unless `KENTOS_TRASH_RETENTION_DAYS` says otherwise.
+pub const DEFAULT_TRASH_RETENTION_DAYS: u64 = 30;
+
 /// `KENTOS_EVENT_RETENTION_DAYS`: whole days, at least one (a client away longer reopens the project).
 pub fn retention(value: Option<&str>) -> Result<Duration, String> {
+    days("KENTOS_EVENT_RETENTION_DAYS", value, DEFAULT_RETENTION_DAYS)
+}
+
+/// `KENTOS_TRASH_RETENTION_DAYS`: whole days, at least one.
+pub fn trash_retention(value: Option<&str>) -> Result<Duration, String> {
+    days(
+        "KENTOS_TRASH_RETENTION_DAYS",
+        value,
+        DEFAULT_TRASH_RETENTION_DAYS,
+    )
+}
+
+fn days(name: &str, value: Option<&str>, default: u64) -> Result<Duration, String> {
     let days = match value {
-        None => DEFAULT_RETENTION_DAYS,
+        None => default,
         Some(v) => v
             .trim()
             .parse::<u64>()
             .ok()
             .filter(|d| (1..=3650).contains(d))
-            .ok_or_else(|| {
-                format!(
-                    "KENTOS_EVENT_RETENTION_DAYS 1 ile 3650 arasında bir gün sayısı olmalı: {v}"
-                )
-            })?,
+            .ok_or_else(|| format!("{name} 1 ile 3650 arasında bir gün sayısı olmalı: {v}"))?,
     };
     Ok(Duration::from_secs(days * 24 * 3600))
 }
@@ -103,6 +119,7 @@ impl Config {
             local_login: flag("KENTOS_LOCAL_LOGIN", true),
             oidc,
             event_retention: retention(get("KENTOS_EVENT_RETENTION_DAYS").as_deref())?,
+            trash_retention: trash_retention(get("KENTOS_TRASH_RETENTION_DAYS").as_deref())?,
             env_file,
             vars,
         })
@@ -120,6 +137,15 @@ mod tests {
         assert_eq!(retention(Some(" 30 ")).unwrap().as_secs(), 30 * day);
         for bad in ["0", "3651", "7.5", "yedi", "-1", ""] {
             assert!(retention(Some(bad)).is_err(), "{bad}");
+            assert!(trash_retention(Some(bad)).is_err(), "{bad}");
         }
+        // The trash keeps a project 30 days unless told otherwise; the error names the setting.
+        assert_eq!(trash_retention(None).unwrap().as_secs(), 30 * day);
+        assert_eq!(trash_retention(Some("90")).unwrap().as_secs(), 90 * day);
+        assert!(
+            trash_retention(Some("0"))
+                .unwrap_err()
+                .contains("KENTOS_TRASH_RETENTION_DAYS")
+        );
     }
 }

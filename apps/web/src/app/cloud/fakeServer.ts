@@ -7,10 +7,13 @@ import type { FeatureConflict } from '../../contracts/generated/FeatureConflict'
 import type { FeatureRecord } from '../../contracts/generated/FeatureRecord';
 import type { ProjectAccessChange } from '../../contracts/generated/ProjectAccessChange';
 import type { ProjectAccessList } from '../../contracts/generated/ProjectAccessList';
+import type { ProjectCatalogChange } from '../../contracts/generated/ProjectCatalogChange';
 import type { ProjectChanges } from '../../contracts/generated/ProjectChanges';
+import type { ProjectDetails } from '../../contracts/generated/ProjectDetails';
 import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
 import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { ProjectRole } from '../../contracts/generated/ProjectRole';
+import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { ApiFailure, type CloudApi } from './api';
 
 /** Every project permission: the fake's caller owns the project unless a test lowers it. */
@@ -27,11 +30,12 @@ export const ROLE_PERMISSIONS: Record<Exclude<ProjectRole, 'owner'>, ProjectPerm
 /**
  * An in-memory stand-in for the server's edit protocol, for the sync tests:
  * versions and 409s, idempotent replays, events with request ids, a
- * deleted project (410), the caller's role and access taken away (403 and
- * 404, docs/adr/0015), and switches for a dead network and a lost answer. It
- * follows crates/server/application/src/changes.rs, lifecycle.rs and
- * sharing.rs; the real thing is tested against PostgreSQL in Rust and end to
- * end in the browser.
+ * deleted project (410), an archived one (409 `project_archived`, the
+ * lifecycle commands of docs/adr/0028), the caller's role and access taken
+ * away (403 and 404, docs/adr/0015), and switches for a dead network and a
+ * lost answer. It follows crates/server/application/src/changes.rs,
+ * lifecycle.rs and sharing.rs; the real thing is tested against PostgreSQL
+ * in Rust and end to end in the browser.
  */
 export class FakeServer implements CloudApi {
   store = new Map<string, { version: number; entity: ContractEntity }>();
@@ -50,6 +54,10 @@ export class FakeServer implements CloudApi {
   waiting = 0;
   /** Deleted: reading and writing answer 410; the command log still answers retries. */
   deleted = false;
+  /** Archived: it reads, writing answers 409 (docs/adr/0028). */
+  archived = false;
+  /** Lifecycle commands received, by name (the catalog's). */
+  readonly lifecycleLog: CommandEnvelope[] = [];
   /** The caller's role; `grant` lowers or raises it (a `project.access` event). */
   role: ProjectRole = 'owner';
   /** The caller's access taken away: everything answers 404, retries too (the access is checked first). */
@@ -84,6 +92,14 @@ export class FakeServer implements CloudApi {
     if (role) this.role = role;
     else this.revoked = true;
     const e: EventRecord = { seq: String(this.history.length + 1), dataRevision: String(this.revision), kind: 'project.access', requestId, features: [], meta: false };
+    this.history.push(e);
+    return e;
+  }
+
+  /** Someone archives the project (returns its event). */
+  archiveAs(requestId: string): EventRecord {
+    this.archived = true;
+    const e: EventRecord = { seq: String(this.history.length + 1), dataRevision: String(this.revision), kind: 'project.archived', requestId, features: [], meta: false };
     this.history.push(e);
     return e;
   }
@@ -154,6 +170,8 @@ export class FakeServer implements CloudApi {
       return { ...earlier.result, replayed: true };
     }
     this.gone();
+    if (this.archived)
+      throw new ApiFailure(409, { error: 'project_archived', message: `“${this.meta.name}” projesi arşivlenmiş; salt okunurdur.` }, 'Proje arşivlenmiş.');
     const input = envelope.input as ProjectChanges;
     const may = this.permissions();
     if ((input.features.length && !may.includes('feature.write')) || (input.project && !may.includes('project.edit')))
@@ -209,6 +227,7 @@ export class FakeServer implements CloudApi {
       tenantKind: 'organization',
       // The fake's caller owns the project (every permission; docs/adr/0015) unless a test gave it a role.
       access: { role: this.role, via: this.role === 'owner' ? 'owner' : 'grant', permissions: this.permissions() },
+      state: this.archived ? 'archived' : 'active',
       ...structuredClone(this.meta),
       metaVersion: String(this.metaVersion),
       dataRevision: String(this.revision),
@@ -247,5 +266,86 @@ export class FakeServer implements CloudApi {
   accessCommand = async (envelope: CommandEnvelope): Promise<ProjectAccessChange> => {
     this.hidden();
     return { userId: String((envelope.input as { userId?: string }).userId), changed: true, replayed: false };
+  };
+
+  /** The project as a catalog list shows it. */
+  summary(): ProjectSummary {
+    return {
+      id: 'p',
+      name: this.meta.name,
+      srid: 5256,
+      dataRevision: String(this.revision),
+      updatedAt: '2026-09-26T10:00:00Z',
+      tenantId: 't',
+      tenantName: 'Büro',
+      tenantKind: 'organization',
+      ownerName: 'Ayşe',
+      access: { role: this.role, via: this.role === 'owner' ? 'owner' : 'grant', permissions: this.permissions() },
+      projectType: 'cad',
+      description: '',
+      tags: [],
+      state: this.deleted ? 'trashed' : this.archived ? 'archived' : 'active',
+      catalogVersion: '1',
+      createdAt: '2026-09-26T09:00:00Z',
+      creatorName: 'Ayşe',
+      areaUnit: 'm2',
+      storage: 'database',
+      favorite: false,
+      ...(this.deleted ? { trashedAt: '2026-09-26T10:00:00Z', purgeAfter: '2026-10-26T10:00:00Z' } : {}),
+    };
+  }
+
+  catalog = async () => ({ projects: [this.summary()], total: 1, trashRetentionDays: 30 });
+
+  details = async (): Promise<ProjectDetails> => {
+    this.hidden();
+    this.gone();
+    return { project: this.summary(), featureCount: String(this.store.size), layerCount: 1 };
+  };
+
+  /** The lifecycle commands as the server runs them, as far as the sync tests need: archive, unarchive, trash, restore. */
+  lifecycle = async <T>(envelope: CommandEnvelope): Promise<T> => {
+    this.check();
+    this.hidden();
+    this.lifecycleLog.push(envelope);
+    const event = (kind: string) => {
+      const e: EventRecord = { seq: String(this.history.length + 1), dataRevision: String(this.revision), kind, requestId: envelope.requestId, features: [], meta: false };
+      this.history.push(e);
+      return e.seq;
+    };
+    let seq: string | undefined;
+    switch (envelope.commandName) {
+      case 'project.archive':
+        this.gone();
+        if (!this.archived) {
+          this.archived = true;
+          seq = event('project.archived');
+        }
+        break;
+      case 'project.unarchive':
+        this.gone();
+        if (this.archived) {
+          this.archived = false;
+          seq = event('project.unarchived');
+        }
+        break;
+      case 'project.trash':
+        if (!this.deleted) {
+          this.deleted = true;
+          this.revision++;
+          seq = event('project.deleted');
+        }
+        break;
+      case 'project.restore':
+        if (this.deleted) {
+          this.deleted = false;
+          seq = event('project.restored');
+        }
+        break;
+      default:
+        this.gone();
+    }
+    const result: ProjectCatalogChange = { project: this.summary(), changed: !!seq, ...(seq ? { eventSeq: seq } : {}), replayed: false };
+    return result as T;
   };
 }

@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 50,
-      "implemented": 50,
+      "total": 54,
+      "implemented": 54,
       "partial": 0,
       "pending": 0
     },
@@ -334,11 +334,11 @@
     },
     {
       "id": "cloud.delete",
-      "title": "Bulut projesini sil…",
-      "short": "Projeyi sil",
+      "title": "Bulut projesini çöp kutusuna taşı…",
+      "short": "Çöpe taşı",
       "category": "Bulut",
       "icon": "trash",
-      "description": "Açık bulut projesini erişen herkes için siler (project.delete yetkisi: proje sahibi ya da kurum yöneticisi). Nesneler sunucuda saklanır; yanlışlıkla silineni sunucu yöneticisi geri getirebilir.",
+      "description": "Açık bulut projesini erişen herkes için çöp kutusuna taşır (project.delete yetkisi: proje sahibi ya da kurum yöneticisi). Hiçbir şey silinmez: saklama süresi dolana kadar Bulut projeleri → Çöp kutusu’ndan geri yüklenebilir, sonra kalıcı olarak silinir.",
       "aliases": [
         "BULUTSIL"
       ],
@@ -369,7 +369,7 @@
       "title": "Bulut projesi aç…",
       "category": "Bulut",
       "icon": "cloud",
-      "description": "Kişisel alanınızdaki ya da kurumunuzdaki, size açık bir bulut projesini açar. Açık projedeki değişiklikler kendiliğinden kaydedilir.",
+      "description": "Bulut projeleriniz: son kullanılanlar, favoriler, projelerim, kurum projeleri, benimle paylaşılanlar, arşivlenmişler ve çöp kutusu; sunucuda aranır ve sıralanır. Seçilen projeyi açar, paylaşır, bilgilerini değiştirir, kopyalar, arşivler ya da çöpe taşır. Açık projedeki değişiklikler kendiliğinden kaydedilir.",
       "aliases": [
         "BULUTAC",
         "CLOUDOPEN"
@@ -387,6 +387,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
+        "apps/web/src/ui/cloud/ProjectsDialog.ts",
         "apps/web/src/ui/start/StartScreen.ts",
         "apps/web/src/ui/statusbar/cloudCells.ts"
       ],
@@ -549,6 +550,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
+        "apps/web/src/ui/cloud/ProjectsDialog.ts",
         "apps/web/src/ui/statusbar/cloudCells.ts"
       ],
       "status": "implemented",
@@ -10875,6 +10877,17 @@
       }
     },
     {
+      "id": "apps/web/src/ui/cloud/CatalogDialog.ts#openCatalog",
+      "name": "openCatalog",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/CatalogDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "apps/web/src/ui/cloud/ConflictDialog.ts#openConflictDialog",
       "name": "openConflictDialog",
       "role": "window",
@@ -10919,6 +10932,28 @@
       }
     },
     {
+      "id": "apps/web/src/ui/cloud/ProjectForms.ts#openDuplicateDialog",
+      "name": "openDuplicateDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/ProjectForms.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/cloud/ProjectForms.ts#openMetadataDialog",
+      "name": "openMetadataDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/ProjectForms.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "apps/web/src/ui/cloud/ProjectsDialog.ts#openProjectsDialog",
       "name": "openProjectsDialog",
       "role": "window",
@@ -10934,6 +10969,17 @@
       "name": "openShareDialog",
       "role": "window",
       "source": "apps/web/src/ui/cloud/ShareDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/cloud/UploadDialog.ts#openUploadDialog",
+      "name": "openUploadDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/UploadDialog.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

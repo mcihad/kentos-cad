@@ -16,8 +16,10 @@
 //!    and records audit, an outbox event and the idempotent answer.
 //!
 //! Objects on a locked layer are refused (CLAUDE.md §7), and so is any
-//! change to a deleted project (410); a command it had already committed is
-//! still answered from the log.
+//! change to a deleted project (410) or an archived one (409,
+//! docs/adr/0028); a command it had already committed is still answered
+//! from the log. A new name is also a change of the catalog's metadata: it
+//! raises the project's catalog version and the audit records it.
 //!
 //! An object's id is its persistent id, chosen by the client that made it
 //! (docs/adr/0014, 0026). A deleted object's row is removed, and the same id
@@ -174,8 +176,8 @@ pub async fn commit(
     // 1. Lock the project: commits of one project happen one after another.
     let now = lock(&mut tx, access).await?;
     let project = now.project;
-    let (srid, layers, meta_version, data_revision): (i32, Value, i64, i64) = sqlx::query_as(
-        "select srid, layers, meta_version, data_revision from kentos.project where tenant_id = $1 and id = $2",
+    let (srid, layers, meta_version, data_revision, old_name): (i32, Value, i64, i64, String) = sqlx::query_as(
+        "select srid, layers, meta_version, data_revision, name from kentos.project where tenant_id = $1 and id = $2",
     )
     .bind(now.tenant)
     .bind(project)
@@ -195,6 +197,9 @@ pub async fn commit(
     }
     if now.deleted {
         return Err(gone(&now.name));
+    }
+    if now.archived {
+        return Err(access::archived(&now.name));
     }
     // 3. The rights, as they are now.
     if !input.features.is_empty() {
@@ -403,6 +408,12 @@ pub async fn commit(
         }
     }
     let meta_changed = input.project.is_some();
+    // The name is the catalog's too: a new one raises its version (docs/adr/0028).
+    let new_name = patch
+        .name
+        .as_ref()
+        .map(|n| n.trim().to_string())
+        .filter(|n| *n != old_name);
     if new_srid != srid as u32 {
         // Assigning a CRS relabels the coordinates, it does not transform them (CLAUDE.md §5).
         sqlx::query("update kentos.feature set srid = $3, geom = public.st_setsrid(geom, $3) where tenant_id = $1 and project_id = $2")
@@ -418,7 +429,7 @@ pub async fn commit(
             meta_version = meta_version + $3::int,
             name = coalesce($4, name), settings = coalesce($5, settings), srid = $6,
             layers = coalesce($7, layers), active_layer = coalesce($8, active_layer), styles = coalesce($9, styles),
-            updated_at = now()
+            catalog_version = catalog_version + $10::int, updated_at = now()
           where tenant_id = $1 and id = $2
           returning data_revision, meta_version",
     )
@@ -431,6 +442,7 @@ pub async fn commit(
     .bind(patch.layers.as_ref().map(|l| serde_json::to_value(l).expect("layers serialize")))
     .bind(&patch.active_layer)
     .bind(patch.styles.as_ref().map(|s| serde_json::to_value(s).expect("styles serialize")))
+    .bind(i32::from(new_name.is_some()))
     .fetch_one(&mut *tx)
     .await?;
     // The project row has been locked since the revision was read: created objects carry this commit's.
@@ -445,13 +457,19 @@ pub async fn commit(
     .bind(PROJECT_CHANGES)
     .bind(&envelope.request_id)
     .bind(new_revision)
-    .bind(serde_json::json!({
-        "created": plan.iter().filter(|p| p.op == FeatureOp::Create).count(),
-        "updated": plan.iter().filter(|p| p.op == FeatureOp::Update).count(),
-        "deleted": deleted.len(),
-        "meta": meta_changed,
-        "idempotencyKey": key,
-    }))
+    .bind({
+        let mut detail = serde_json::json!({
+            "created": plan.iter().filter(|p| p.op == FeatureOp::Create).count(),
+            "updated": plan.iter().filter(|p| p.op == FeatureOp::Update).count(),
+            "deleted": deleted.len(),
+            "meta": meta_changed,
+            "idempotencyKey": key,
+        });
+        if let Some(name) = &new_name {
+            detail["rename"] = serde_json::json!({ "from": old_name, "to": name });
+        }
+        detail
+    })
     .execute(&mut *tx)
     .await?;
     let mut event = EventRecord {

@@ -18,17 +18,31 @@
 // is open, then his access taken away: the warning, saving stopped, the
 // drawing and his edits kept on the device, further saves refused (TODOS.md
 // CLOUD-13, CLOUD-21).
+// The catalog (docs/adr/0028, CLOUD-02..05): the upload's type and tags;
+// every list of “Bulut projeleri” with a server-side search; favourites and
+// recents; the project's information edited; a copy made, archived, moved to
+// the trash, restored and removed for good after a question; the open
+// project archived by an admin (saving stops, the edit stays on the device,
+// and goes once it is unarchived and opened again).
 //
 //   pnpm e2e:cloud     (needs `pnpm db:setup` once; builds kentosd first)
+//   KENTOS_E2E_DB=scratch pnpm e2e:cloud
+//                      the same against a throwaway database with this build's
+//                      migrations and the development accounts
+//                      (apps/api/examples/e2e_database.rs), dropped at the end;
+//                      kentos_cad is not touched (a migration not applied
+//                      there yet can be tried end to end)
+//   KENTOS_E2E_SHOTS=dir  where the screenshots go (default scripts/e2e/out)
 //
 // Projects it creates stay in the development database, named "E2E …"; the
-// ones this run deletes are only marked deleted (`kentosd project deleted`).
+// ones this run deletes are only moved to the trash (`kentosd project
+// deleted`), but the one it removes for good.
 import { spawn } from 'node:child_process';
 import net from 'node:net';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { fileURLToPath } from 'node:url';
-import { launch, sleep } from './cdp.mjs';
+import { OUT, launch, sleep } from './cdp.mjs';
 
 /** The repository root: .env.local and the Cargo target directory. */
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
@@ -41,6 +55,32 @@ const env = Object.fromEntries(
 );
 if (!env.KENTOS_DEV_PASSWORD) throw new Error('.env.local içinde KENTOS_DEV_PASSWORD yok: önce `pnpm db:setup` çalıştırın.');
 
+// A throwaway database instead of the development one (KENTOS_E2E_DB=scratch): its name comes back on the
+// helper's first line; its address is the development one's with that name. Neither address is printed.
+let scratch = null;
+let scratchUrl = null;
+if (process.env.KENTOS_E2E_DB === 'scratch') {
+  scratch = spawn('./target/debug/examples/e2e_database', [], {
+    cwd: ROOT,
+    env: { ...process.env, KENTOS_DEV_PASSWORD: env.KENTOS_DEV_PASSWORD },
+    stdio: ['pipe', 'pipe', 'inherit'],
+  });
+  const name = await new Promise((resolve, reject) => {
+    let out = '';
+    scratch.stdout.on('data', (d) => {
+      out += d;
+      if (out.includes('\n')) resolve(out.slice(0, out.indexOf('\n')).trim());
+    });
+    scratch.once('exit', (code) => reject(new Error(`geçici veritabanı açılamadı (${code})`)));
+  });
+  if (!/^kentos_cad_test_[0-9a-z_]+$/.test(name)) throw new Error('geçici veritabanının adı beklenmedik');
+  const url = new URL(env.KENTOS_DATABASE_URL);
+  url.pathname = `/${name}`;
+  scratchUrl = url.toString();
+  console.log(`geçici veritabanı: ${name} (kentos_cad'e dokunulmuyor)`);
+}
+const SHOTS = process.env.KENTOS_E2E_SHOTS ?? OUT;
+
 const freePort = () => new Promise((resolve) => { const s = net.createServer().listen(0, '127.0.0.1', () => { const { port } = s.address(); s.close(() => resolve(port)); }); });
 const apiPort = await freePort();
 process.env.KENTOS_API_PORT = String(apiPort);
@@ -52,7 +92,11 @@ const publicUrl = url.replace(/\/$/, '');
 let api = null;
 async function startApi() {
   // From the repository root: the workspace's target/ and kentosd's .env.local are there.
-  api = spawn('./target/debug/kentosd', ['serve'], { cwd: ROOT, env: { ...process.env, KENTOS_API_PORT: String(apiPort), KENTOS_PUBLIC_URL: publicUrl, KENTOS_LOG: 'warn' }, stdio: ['ignore', 'ignore', 'inherit'] });
+  api = spawn('./target/debug/kentosd', ['serve'], {
+    cwd: ROOT,
+    env: { ...process.env, KENTOS_API_PORT: String(apiPort), KENTOS_PUBLIC_URL: publicUrl, KENTOS_LOG: 'warn', ...(scratchUrl ? { KENTOS_DATABASE_URL: scratchUrl } : {}) },
+    stdio: ['ignore', 'ignore', 'inherit'],
+  });
   for (let i = 0; i < 100; i++) {
     try {
       if ((await fetch(`http://127.0.0.1:${apiPort}/v1/health`)).ok) return;
@@ -88,7 +132,21 @@ const client = () => ({
       idempotencyKey: crypto.randomUUID(), expectedVersions: expected, input: { features },
     });
   },
+  /** A catalog or lifecycle command (docs/adr/0028). */
+  run(tenantId, projectId, commandName, input = {}) {
+    return this.call('POST', `/v1/tenants/${tenantId}/projects/${projectId}/commands`, {
+      commandName, version: 1, tenantId, projectId, requestId: `e2e-${crypto.randomUUID()}`, idempotencyKey: crypto.randomUUID(), expectedVersions: {}, input,
+    });
+  },
 });
+/** A new project's metadata, as the API takes it (no objects). */
+const emptyProject = {
+  settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000 },
+  origin: { x: 486500, y: 4420200 },
+  layers: [{ id: 'cizim', name: 'Çizim', type: 'layer', visible: true, locked: false, expanded: true, style: { color: 'ink', lineType: 'continuous', lineWeight: 0.25 }, children: [] }],
+  activeLayer: 'cizim',
+  styles: { items: [], categories: [] },
+};
 const mehmet = client();
 const zeynep = client();
 
@@ -100,6 +158,10 @@ const check = (name, ok, detail = '') => {
 
 await startApi();
 const b = await launch(url);
+{
+  const raw = b.shot;
+  b.shot = (name, clip) => raw(name, clip, SHOTS);
+}
 try {
   const ready = 'window.kentos && window.kentos.view.backendKind.value';
   await b.waitFor(ready, 20000);
@@ -131,11 +193,16 @@ try {
   await b.waitFor(`document.querySelector('.dialog--cloud')?.textContent.includes('Proje adı')`, 3000);
   const name = `E2E ${new Date().toISOString().slice(0, 19)}`;
   await b.eval(`(() => { const i = document.querySelector('.dialog--cloud input[aria-label="Proje adı"]'); i.value = ${JSON.stringify(name)}; i.dispatchEvent(new Event('input')); })()`);
+  // The catalog's type and tags go with it (docs/adr/0028).
+  await b.eval(`(() => { const d = document.querySelector('.dialog--cloud'); const t = d.querySelector('select[aria-label="Proje türü"]'); t.value = 'subdivision'; t.dispatchEvent(new Event('change')); const g = d.querySelector('input[aria-label="Etiketler"]'); g.value = 'E2E, Kadıköy'; g.dispatchEvent(new Event('input')); })()`);
+  await b.shot('cloud-upload');
   const size = await b.eval('window.kentos.doc.size');
   await press('.dialog__foot .btn', 'Buluta yükle');
   await b.waitFor(`window.kentos.cloud.project.value && window.kentos.cloud.sync.value.state.value === 'saved'`, 60000);
   const project = await b.eval('window.kentos.cloud.project.value');
   check('uploads the drawing as a cloud project', project.name === name && !(await b.eval('window.kentos.doc.dirty.value')), `${size} nesne`);
+  const uploaded = await b.eval(`window.kentos.cloud.api.details(${JSON.stringify(project.tenantId)}, ${JSON.stringify(project.projectId)})`);
+  check('with the type and tags chosen at the upload', uploaded.project.projectType === 'subdivision' && uploaded.project.tags.join() === 'E2E,Kadıköy', `${uploaded.project.projectType} ${uploaded.project.tags}`);
   await b.waitFor(`window.kentos.cloud.link.value === 'online'`, 8000);
   check('the live channel is open', true);
 
@@ -233,8 +300,8 @@ try {
   await b.waitFor(ready, 20000);
   await b.waitFor(`window.kentos.cloud.auth.value === 'signedIn'`, 8000);
   await b.eval(`window.kentos.commands.execute('cloud.open')`);
-  await b.waitFor(`document.querySelector('.cloud-row')`, 5000);
-  await press('.cloud-row', name);
+  await b.waitFor(`document.querySelector('.catalog-row')`, 5000);
+  await press('.catalog-row', name);
   await press('.dialog__foot .btn', 'Aç');
   await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(name)} && window.kentos.cloud.link.value === 'online'`, 30000);
   const reopened = await b.eval(`(() => { const k = window.kentos; return { size: k.doc.size, line: k.doc.byUid(${JSON.stringify(lineId)}) }; })()`);
@@ -248,7 +315,7 @@ try {
   check('another editor’s change arrives live', !(await b.eval('window.kentos.doc.dirty.value')));
 
   // Both change it at once: the browser gets a conflict, then takes the server's copy.
-  const localId = await b.eval(`[...window.kentos.doc.all()].find((e) => e.kind === 'line' && e.b.x === ${X + 120}).id`);
+  let localId = await b.eval(`[...window.kentos.doc.all()].find((e) => e.kind === 'line' && e.b.x === ${X + 120}).id`);
   const r2 = await mehmet.commit(project.tenantId, project.projectId, [{ op: 'update', id: lineId, entity: { ...line.entity, b: { x: X + 140, y: N } } }], { [lineId]: String(v0 + 1) });
   await b.eval(`window.kentos.doc.update(${localId}, { b: { x: ${X + 160}, y: ${N} } })`);
   await b.eval(`window.kentos.commands.execute('file.save')`);
@@ -363,35 +430,244 @@ try {
   // The "Büyük" type size with a cloud dialog open.
   await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1.08')`);
   await b.eval(`window.kentos.commands.execute('cloud.open')`);
-  await b.waitFor(`document.querySelector('.cloud-row')`, 5000);
+  await b.waitFor(`document.querySelector('.catalog-row')`, 5000);
+  await press('.catalog-row', name);
+  await b.waitFor(`!!document.querySelector('.catalog-details__facts') && !document.querySelector('.catalog-details')?.textContent.includes('Hesaplanıyor')`, 5000);
   await sleep(200);
   await b.shot('cloud-projects-large');
   await b.key('Escape');
   await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1')`);
 
-  // Renaming the open project from the list (ayse owns it: project.edit and project.delete are hers).
+  // Renaming the open project from the catalog, with its information (ayse owns it: project.edit and project.delete are hers).
   await b.eval(`window.kentos.commands.execute('cloud.open')`);
-  await b.waitFor(`document.querySelector('.cloud-row')`, 5000);
-  const before = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Sil…'); return e && { disabled: e.disabled, title: e.title }; })()`);
-  check('with nothing picked the buttons wait and say why', !!before?.disabled && /seçin/.test(before.title), before?.title);
-  await press('.cloud-row', name);
-  const del = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Sil…'); return e && { disabled: e.disabled, title: e.title }; })()`);
-  check('the owner may delete her project (the permission comes with the project)', del && !del.disabled, del?.title);
-  await press('.dialog__foot .btn', 'Yeniden adlandır');
-  await b.waitFor(`document.querySelector('.dialog[aria-label="Bulut projesini yeniden adlandır"]')`, 3000);
+  await b.waitFor(`document.querySelector('.catalog-row')`, 5000);
+  const before = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Aç'); return e && { disabled: e.disabled, title: e.title, pane: document.querySelector('.catalog-details')?.textContent }; })()`);
+  check('with nothing picked the window waits and says why', !!before?.disabled && /seçin/.test(before.title) && /seçin/.test(before.pane), before?.title);
+  await press('.catalog-row', name);
+  const del = await b.eval(`(() => { const e = [...document.querySelectorAll('.catalog-details__actions .btn')].find((x) => x.textContent === 'Çöpe taşı…'); return e && { disabled: e.disabled, title: e.title }; })()`);
+  check('the owner may move her project to the trash (the permission comes with the project)', del && !del.disabled, del?.title);
+  await press('.catalog-details__actions .btn', 'Bilgileri düzenle');
+  await b.waitFor(`document.querySelector('.dialog[aria-label="Proje bilgileri"]')`, 3000);
   const renamedTo = `${name} (revize)`;
-  // The field opens with the old name selected: typing replaces it.
-  await b.type(renamedTo);
-  await b.key('Enter');
+  await b.eval(`(() => { const i = document.querySelector('.dialog[aria-label="Proje bilgileri"] input[aria-label="Proje adı"]'); i.value = ${JSON.stringify(renamedTo)}; i.dispatchEvent(new Event('input')); const d = document.querySelector('.dialog[aria-label="Proje bilgileri"] textarea'); d.value = 'Kadıköy ifrazı; e2e'; d.dispatchEvent(new Event('input')); })()`);
+  await b.shot('cloud-project-info');
+  await press('.dialog[aria-label="Proje bilgileri"] .dialog__foot .btn', 'Kaydet');
   await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(renamedTo)} && window.kentos.cloud.sync.value.state.value === 'saved'`, 8000).catch(() => {});
-  await b.waitFor(`[...document.querySelectorAll('.cloud-row__name')].some((e) => e.textContent === ${JSON.stringify(renamedTo)})`, 5000).catch(() => {});
+  await b.waitFor(`[...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent === ${JSON.stringify(renamedTo)})`, 5000).catch(() => {});
   const named = await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}`);
-  check('renaming the open project saves the name for everyone and the list shows it', named.body.name === renamedTo && (await b.eval('window.kentos.doc.name.value')) === renamedTo, named.body.name);
+  const described = await b.eval(`window.kentos.cloud.api.details(${JSON.stringify(project.tenantId)}, ${JSON.stringify(project.projectId)})`);
+  check(
+    'renaming the open project saves the name for everyone, the description with it, and the list shows it',
+    named.body.name === renamedTo && (await b.eval('window.kentos.doc.name.value')) === renamedTo && described.project.description === 'Kadıköy ifrazı; e2e',
+    named.body.name,
+  );
   await b.key('Escape');
 
-  // zeynep (an admin) deletes it while ayse has it open: her app stops saving, the drawing stays, edits stay on the device.
+  // ── The catalog (docs/adr/0028): its lists, a search, a favourite, a copy archived, moved to the trash, restored, removed for good ──
+  const stamp2 = new Date().toISOString().slice(0, 19);
+  const catalogReady = `!!document.querySelector('.catalog-list > *') && !document.querySelector('.catalog-list')?.textContent.includes('yükleniyor')`;
+  const detailsReady = `!!document.querySelector('.catalog-details__facts') && !document.querySelector('.catalog-details')?.textContent.includes('Hesaplanıyor')`;
+  const openCatalog = async () => {
+    await b.eval(`window.kentos.commands.execute('cloud.open')`);
+    await b.waitFor(catalogReady, 8000);
+  };
+  const showList = async (label) => {
+    await press('.catalog-nav__item', label);
+    await b.waitFor(`document.querySelector('.catalog-nav [aria-selected="true"]')?.textContent === ${JSON.stringify(label)} && ${catalogReady}`, 8000);
+  };
+  const rowNames = () => b.eval(`[...document.querySelectorAll('.catalog-row__title')].map((e) => e.textContent)`);
+  const pick = async (rowName) => {
+    await press('.catalog-row', rowName);
+    await b.waitFor(`document.querySelector('.catalog-row[aria-selected="true"]')?.textContent.startsWith(${JSON.stringify(rowName)})`, 5000);
+  };
+  // Mehmet shares a project of his personal space with her, for “Benimle paylaşılanlar”.
+  const mehmetSpace = mehmetMe.body.memberships.find((m) => m.tenantKind === 'personal')?.tenantId;
+  const hisName = `E2E Mehmet'in ${stamp2}`;
+  const hisProject = await mehmet.call('POST', `/v1/tenants/${mehmetSpace}/projects`, { name: hisName, ...emptyProject, projectType: 'gis', tags: ['CBS'] });
+  const ayseId = await b.eval('window.kentos.cloud.me.value.user.id');
+  const toAyse = await mehmet.call('POST', `/v1/tenants/${mehmetSpace}/projects/${hisProject.body.id}/commands`, {
+    commandName: 'project.share', version: 1, tenantId: mehmetSpace, projectId: hisProject.body.id, requestId: 'e2e-paylas',
+    idempotencyKey: crypto.randomUUID(), expectedVersions: {}, input: { userId: ayseId, role: 'viewer' },
+  });
+  check('mehmet shares a project of his personal space with her', hisProject.status === 201 && toAyse.status === 200, `${hisProject.status} ${toAyse.status}`);
+
+  await openCatalog();
+  await showList('Projelerim');
+  await pick(renamedTo);
+  await b.waitFor(detailsReady, 5000);
+  const facts = await b.eval(`document.querySelector('.catalog-details__facts').textContent`);
+  check('the details say where it is, its type and objects and extent', /Örnek Harita Bürosu/.test(facts) && /nesne/.test(facts) && /Y \d/.test(facts), facts.slice(0, 120));
+  await press('.catalog-details__fav', 'Favorilere ekle');
+  await b.waitFor(`document.querySelector('.catalog-details__fav')?.getAttribute('aria-pressed') === 'true'`, 5000);
+  await showList('Favoriler');
+  check('a favourite is listed under “Favoriler”', (await rowNames()).includes(renamedTo));
+  await showList('Son kullanılanlar');
+  check('the project she opened is her most recent one', (await rowNames())[0] === renamedTo, (await rowNames()).join(' | '));
+  await showList('Benimle paylaşılanlar');
+  const sharedToHer = await b.eval(
+    `(() => { const r = [...document.querySelectorAll('.catalog-row')].find((x) => x.textContent.startsWith(${JSON.stringify(hisName)})); return r && { sub: r.querySelector('.catalog-row__sub').textContent, role: r.querySelector('.catalog-row__role').textContent }; })()`,
+  );
+  check('“Benimle paylaşılanlar” lists his project with its owner and her role', !!sharedToHer && /Mehmet Demir/.test(sharedToHer.sub) && sharedToHer.role === 'Görüntüleyici', JSON.stringify(sharedToHer));
+  await showList('Kurum projeleri');
+  check('the organisation’s list has her project', (await rowNames()).includes(renamedTo));
+
+  // A search on the server: every word, in the name, description or tags, Turkish letters folded.
+  await showList('Projelerim');
+  await b.eval(`document.querySelector('.catalog-search input').focus()`);
+  // Her tag, Turkish letters folded, and this run's time (the development database keeps earlier runs' projects).
+  await b.type(`KADIKOY ${name.slice(4)}`);
+  await b.waitFor(`document.querySelector('.catalog-main__count')?.textContent === '1 proje' && ${catalogReady}`, 8000);
+  check('a search finds her project by its tag and name, Turkish letters folded', JSON.stringify(await rowNames()) === JSON.stringify([renamedTo]), (await rowNames()).join(' | '));
+  for (const theme of ['dark', 'light']) {
+    await b.eval(`window.kentos.commands.execute('view.theme.${theme}')`);
+    await sleep(200);
+    await b.shot(`cloud-catalog-search-${theme}`);
+  }
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  await b.eval(`(() => { const t = document.querySelector('select[aria-label="Proje türü"]'); t.value = 'gis'; t.dispatchEvent(new Event('change')); })()`);
+  await b.waitFor(`document.querySelector('.catalog-list')?.textContent.includes('Aramanıza uyan proje yok')`, 8000);
+  check('the type filter leaves out what is not of that type', true);
+  await b.eval(`(() => { const i = document.querySelector('.catalog-search input'); i.value = ''; i.dispatchEvent(new Event('input')); const t = document.querySelector('select[aria-label="Proje türü"]'); t.value = ''; t.dispatchEvent(new Event('change')); })()`);
+  await b.waitFor(`(${catalogReady}) && [...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent === ${JSON.stringify(renamedTo)})`, 8000);
+
+  // Two copies: one archived, one moved to the trash. A copy keeps every object under its persistent id.
+  const copy = async (copyName) => {
+    await pick(renamedTo);
+    await press('.catalog-details__actions .btn', 'Kopyasını oluştur');
+    await b.waitFor(`document.querySelector('.dialog[aria-label="Projenin kopyasını oluştur"]')`, 3000);
+    await b.eval(`(() => { const i = document.querySelector('.dialog[aria-label="Projenin kopyasını oluştur"] input[aria-label="Kopyanın adı"]'); i.value = ${JSON.stringify(copyName)}; i.dispatchEvent(new Event('input')); })()`);
+    if (copyName.endsWith('A')) await b.shot('cloud-catalog-copy');
+    await press('.dialog[aria-label="Projenin kopyasını oluştur"] .dialog__foot .btn', 'Kopyasını oluştur');
+    await b.waitFor(`!document.querySelector('.dialog[aria-label="Projenin kopyasını oluştur"]') && document.querySelector('.catalog-row[aria-selected="true"]')?.textContent.startsWith(${JSON.stringify(copyName)})`, 30000);
+    return b.eval(`document.querySelector('.catalog-row[aria-selected="true"]').dataset.id`);
+  };
+  const copyA = await copy(`E2E kopya ${stamp2} A`);
+  const copyB = await copy(`E2E kopya ${stamp2} B`);
+  const ayseClient = client();
+  await ayseClient.call('POST', '/v1/auth/login', { login: 'ayse', password: env.KENTOS_DEV_PASSWORD });
+  const srcIds = (await ayseClient.call('GET', `/v1/tenants/${project.tenantId}/projects/${project.projectId}/features?limit=5000`)).body.features.map((f) => f.id).sort();
+  const copyIds = (await ayseClient.call('GET', `/v1/tenants/${project.tenantId}/projects/${copyA}/features?limit=5000`)).body.features;
+  check(
+    'a copy has every object under its persistent id, at version 1, and is hers alone',
+    JSON.stringify(copyIds.map((f) => f.id).sort()) === JSON.stringify(srcIds) && copyIds.every((f) => f.version === '1') && (await mehmet.call('GET', `/v1/tenants/${project.tenantId}/projects/${copyA}`)).status === 404,
+    `${copyIds.length} / ${srcIds.length}`,
+  );
+  await pick(`E2E kopya ${stamp2} A`);
+  await press('.catalog-details__actions .btn', 'Arşivle');
+  await b.waitFor(`document.querySelector('.dialog[aria-label="Projeyi arşivle"]')`, 3000);
+  await b.shot('cloud-catalog-archive-confirm');
+  await press('.dialog[aria-label="Projeyi arşivle"] .dialog__foot .btn', 'Arşivle');
+  await b.waitFor(`!document.querySelector('.dialog[aria-label="Projeyi arşivle"]') && ${catalogReady} && ![...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent.endsWith(' A'))`, 8000);
+  const archivedA = await ayseClient.run(project.tenantId, copyA, 'project.changes', { features: [] });
+  check('an archived copy leaves her list and refuses writing (409)', archivedA.status === 409 && archivedA.body.error === 'project_archived', `${archivedA.status}`);
+  await pick(`E2E kopya ${stamp2} B`);
+  await press('.catalog-details__actions .btn', 'Çöpe taşı');
+  await b.waitFor(`document.querySelector('.dialog[aria-label="Çöp kutusuna taşı"]')`, 3000);
+  await press('.dialog[aria-label="Çöp kutusuna taşı"] .dialog__foot .btn', 'Çöpe taşı');
+  await b.waitFor(`!document.querySelector('.dialog[aria-label="Çöp kutusuna taşı"]') && ${catalogReady} && ![...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent.endsWith(' B'))`, 8000);
+  await showList('Arşivlenmişler');
+  check('“Arşivlenmişler” lists the archived copy', (await rowNames()).includes(`E2E kopya ${stamp2} A`));
+  await showList('Çöp kutusu');
+  const inTrash = await b.eval(
+    `(() => { const r = [...document.querySelectorAll('.catalog-row')].find((x) => x.textContent.startsWith(${JSON.stringify(`E2E kopya ${stamp2} B`)})); return r && r.querySelector('.catalog-row__side').textContent; })()`,
+  );
+  check('the trash lists the other with the day it goes for good', !!inTrash && /tarihinde silinir/.test(inTrash), inTrash);
+
+  // Every list in both themes, a project selected; the trash with its restore button; the large type size once.
+  const LISTS = [
+    ['Son kullanılanlar', 'recent', renamedTo],
+    ['Favoriler', 'favorites', renamedTo],
+    ['Projelerim', 'mine', renamedTo],
+    ['Kurum projeleri', 'organization', renamedTo],
+    ['Benimle paylaşılanlar', 'shared', hisName],
+    ['Arşivlenmişler', 'archived', `E2E kopya ${stamp2} A`],
+    ['Çöp kutusu', 'trash', `E2E kopya ${stamp2} B`],
+  ];
+  for (const theme of ['dark', 'light']) {
+    await b.eval(`window.kentos.commands.execute('view.theme.${theme}')`);
+    for (const [label, id, row] of LISTS) {
+      await showList(label);
+      await pick(row);
+      if (id !== 'trash') await b.waitFor(detailsReady, 5000);
+      await sleep(150);
+      await b.shot(`cloud-catalog-${id}-${theme}`);
+    }
+  }
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  const restoreButton = await b.eval(`[...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.classList.contains('btn--primary'))?.textContent`);
+  check('in the trash the main action is restoring', restoreButton === 'Geri yükle', restoreButton);
+  await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1.08')`);
+  await showList('Projelerim');
+  await pick(renamedTo);
+  await b.waitFor(detailsReady, 5000);
+  await sleep(200);
+  await b.shot('cloud-catalog-large');
+  await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1')`);
+
+  // Restored, it is back where it was; moved to the trash again, it is removed for good after a question.
+  await showList('Çöp kutusu');
+  await pick(`E2E kopya ${stamp2} B`);
+  await press('.dialog__foot .btn', 'Geri yükle');
+  await b.waitFor(`${catalogReady} && ![...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent.endsWith(' B'))`, 8000);
+  await showList('Projelerim');
+  check('restored from the trash, it is in her list again', (await rowNames()).includes(`E2E kopya ${stamp2} B`));
+  await pick(`E2E kopya ${stamp2} B`);
+  await press('.catalog-details__actions .btn', 'Çöpe taşı');
+  await b.waitFor(`document.querySelector('.dialog[aria-label="Çöp kutusuna taşı"]')`, 3000);
+  await press('.dialog[aria-label="Çöp kutusuna taşı"] .dialog__foot .btn', 'Çöpe taşı');
+  await b.waitFor(`!document.querySelector('.dialog[aria-label="Çöp kutusuna taşı"]')`, 8000);
+  await showList('Çöp kutusu');
+  await pick(`E2E kopya ${stamp2} B`);
+  await press('.catalog-details__actions .btn', 'Kalıcı olarak sil');
+  await b.waitFor(`document.querySelector('.dialog[aria-label="Kalıcı olarak sil"]')`, 3000);
+  const purgeAsk = await b.eval(`(() => { const d = document.querySelector('.dialog[aria-label="Kalıcı olarak sil"]'); return { safe: document.activeElement?.textContent, text: d.textContent }; })()`);
+  check('removing for good asks, says it cannot be undone, and the safe answer has the focus', purgeAsk.safe === 'Vazgeç' && /geri alınamaz/.test(purgeAsk.text), JSON.stringify(purgeAsk));
+  for (const theme of ['dark', 'light']) {
+    await b.eval(`window.kentos.commands.execute('view.theme.${theme}')`);
+    await sleep(200);
+    await b.shot(`cloud-catalog-purge-confirm-${theme}`);
+  }
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  await press('.dialog[aria-label="Kalıcı olarak sil"] .dialog__foot .btn', 'Kalıcı olarak sil');
+  await b.waitFor(`!document.querySelector('.dialog[aria-label="Kalıcı olarak sil"]') && ${catalogReady} && ![...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent.endsWith(' B'))`, 8000);
+  const purged = await ayseClient.call('GET', `/v1/tenants/${project.tenantId}/projects/${copyB}`);
+  check('removed for good: the project is gone (404)', purged.status === 404, String(purged.status));
+  await b.key('Escape');
+
+  // zeynep (an admin) archives it while ayse has it open: saving stops like a deletion, the edit stays on the device;
+  // unarchived and opened again, the edit goes out.
   const signedZ = await zeynep.call('POST', '/v1/auth/login', { login: 'zeynep', password: env.KENTOS_DEV_PASSWORD });
   if (signedZ.status !== 200) throw new Error('zeynep giriş yapamadı: geliştirme verisini yenileyin (`pnpm kentosd -- dev-seed`).');
+  const archivedOpen = await zeynep.run(project.tenantId, project.projectId, 'project.archive');
+  await b.waitFor(`window.kentos.cloud.sync.value?.state.value === 'archived'`, 10000).catch(() => {});
+  const archivedCell = await b.eval(`document.querySelector('.status__save')?.textContent`);
+  await b.eval(`window.kentos.doc.update(${localId}, { a: { x: ${X - 15}, y: ${N} } })`);
+  await sleep(700);
+  const heldArchived = await b.eval(
+    `new Promise((resolve) => { const r = indexedDB.open('kentos.cloud'); r.onsuccess = () => { const q = r.result.transaction('drafts').objectStore('drafts').getAll(); q.onsuccess = () => resolve(q.result.filter((d) => Object.values(d.changes).some((c) => c.entity?.a?.x === ${X - 15})).length); }; })`,
+  );
+  check(
+    'archived by an admin while open: saving stops, the drawing and the edit stay on the device',
+    archivedOpen.status === 200 && archivedCell === 'Proje arşivde' && heldArchived === 1 && (await lineNow()).entity.a.x !== X - 15,
+    archivedCell,
+  );
+  for (const theme of ['dark', 'light']) {
+    await b.eval(`window.kentos.commands.execute('view.theme.${theme}')`);
+    await sleep(200);
+    await b.shot(`cloud-archived-open-${theme}`);
+  }
+  await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
+  const unarchived = await zeynep.run(project.tenantId, project.projectId, 'project.unarchive');
+  await openCatalog();
+  await showList('Son kullanılanlar');
+  await pick(renamedTo);
+  await press('.dialog__foot .btn', 'Aç');
+  await b.waitFor(`window.kentos.cloud.project.value?.state === 'active' && window.kentos.cloud.link.value === 'online'`, 30000);
+  await b.waitFor(saved, 15000).catch(() => {});
+  check('unarchived and opened again, the edit kept on the device is saved', unarchived.status === 200 && (await lineNow()).entity.a.x === X - 15);
+  localId = await b.eval(`window.kentos.doc.slotOf(${JSON.stringify(lineId)})`);
+
+  // zeynep (an admin) deletes it while ayse has it open: her app stops saving, the drawing stays, edits stay on the device.
   const sizeBefore = await b.eval('window.kentos.doc.size');
   const gone = await zeynep.call('DELETE', `/v1/tenants/${project.tenantId}/projects/${project.projectId}`);
   check('an admin deletes the project', gone.status === 204, String(gone.status));
@@ -443,14 +719,7 @@ try {
 
   // Signed in as zeynep, the browser deletes another project from the list, after asking.
   const spareName = `E2E silinecek ${new Date().toISOString().slice(0, 19)}`;
-  const spare = await zeynep.call('POST', `/v1/tenants/${project.tenantId}/projects`, {
-    name: spareName,
-    settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000 },
-    origin: { x: 486500, y: 4420200 },
-    layers: [{ id: 'cizim', name: 'Çizim', type: 'layer', visible: true, locked: false, expanded: true, style: { color: 'ink', lineType: 'continuous', lineWeight: 0.25 }, children: [] }],
-    activeLayer: 'cizim',
-    styles: { items: [], categories: [] },
-  });
+  const spare = await zeynep.call('POST', `/v1/tenants/${project.tenantId}/projects`, { name: spareName, ...emptyProject });
   await b.eval(`window.kentos.commands.execute('cloud.signOut')`);
   await b.waitFor(`window.kentos.cloud.auth.value === 'signedOut'`, 5000);
   await b.eval(`window.kentos.commands.execute('cloud.open')`);
@@ -459,31 +728,26 @@ try {
   await b.key('Tab');
   await b.type(env.KENTOS_DEV_PASSWORD);
   await b.key('Enter');
-  await b.waitFor(`window.kentos.cloud.auth.value === 'signedIn' && !!document.querySelector('.cloud-row')`, 8000);
-  await press('.cloud-row', spareName);
-  await press('.dialog__foot .btn', 'Sil');
-  await b.waitFor(`document.querySelector('.dialog[aria-label="Bulut projesini sil"]')`, 3000);
-  const asked = await b.eval(`(() => { const d = document.querySelector('.dialog[aria-label="Bulut projesini sil"]'); return { safe: document.activeElement?.textContent, says: d.querySelectorAll('.cloud-consequences li').length }; })()`);
-  check('deleting asks first, with the safe button focused', asked.safe === 'Vazgeç' && asked.says >= 3, JSON.stringify(asked));
+  await b.waitFor(`window.kentos.cloud.auth.value === 'signedIn' && !!document.querySelector('.catalog-list > *') && !document.querySelector('.catalog-list')?.textContent.includes('yükleniyor')`, 8000);
+  await press('.catalog-nav__item', 'Projelerim');
+  await b.waitFor(`[...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent === ${JSON.stringify(spareName)})`, 8000);
+  await press('.catalog-row', spareName);
+  await press('.catalog-details__actions .btn', 'Çöpe taşı');
+  await b.waitFor(`document.querySelector('.dialog[aria-label="Çöp kutusuna taşı"]')`, 3000);
+  const asked = await b.eval(`(() => { const d = document.querySelector('.dialog[aria-label="Çöp kutusuna taşı"]'); return { safe: document.activeElement?.textContent, says: d.querySelectorAll('.confirm__details li').length, text: d.textContent }; })()`);
+  check('moving to the trash asks first, with the safe button focused and the retention said', asked.safe === 'Vazgeç' && asked.says >= 3 && /\d+ gün/.test(asked.text), JSON.stringify(asked));
   await b.shot('cloud-delete-confirm');
-  await press('.dialog[aria-label="Bulut projesini sil"] .dialog__foot .btn', 'Projeyi sil');
-  await b.waitFor(`!document.querySelector('.dialog[aria-label="Bulut projesini sil"]') && ![...document.querySelectorAll('.cloud-row__name')].some((e) => e.textContent === ${JSON.stringify(spareName)})`, 8000).catch(() => {});
+  await press('.dialog[aria-label="Çöp kutusuna taşı"] .dialog__foot .btn', 'Çöpe taşı');
+  await b.waitFor(`!document.querySelector('.dialog[aria-label="Çöp kutusuna taşı"]') && ![...document.querySelectorAll('.catalog-row__title')].some((e) => e.textContent === ${JSON.stringify(spareName)})`, 8000).catch(() => {});
   const spareGone = await zeynep.call('GET', `/v1/tenants/${project.tenantId}/projects/${spare.body.id}`);
-  check('the confirmed delete removes it from the list for everyone', spare.status === 201 && spareGone.status === 410, `${spare.status} → ${spareGone.status}`);
+  check('the confirmed move takes it out of the lists for everyone', spare.status === 201 && spareGone.status === 410, `${spare.status} → ${spareGone.status}`);
   await b.key('Escape');
 
   // ── Mehmet in the browser: shared with him, opened, his role lowered and raised, then his access taken away. ──
   const ayse = client();
   await ayse.call('POST', '/v1/auth/login', { login: 'ayse', password: env.KENTOS_DEV_PASSWORD });
   const sharedName = `E2E paylaşılan ${new Date().toISOString().slice(0, 19)}`;
-  const made = await ayse.call('POST', `/v1/tenants/${project.tenantId}/projects`, {
-    name: sharedName,
-    settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000 },
-    origin: { x: 486500, y: 4420200 },
-    layers: [{ id: 'cizim', name: 'Çizim', type: 'layer', visible: true, locked: false, expanded: true, style: { color: 'ink', lineType: 'continuous', lineWeight: 0.25 }, children: [] }],
-    activeLayer: 'cizim',
-    styles: { items: [], categories: [] },
-  });
+  const made = await ayse.call('POST', `/v1/tenants/${project.tenantId}/projects`, { name: sharedName, ...emptyProject });
   const sp = { tenantId: made.body.tenantId, projectId: made.body.id };
   const pointId = crypto.randomUUID();
   await ayse.commit(sp.tenantId, sp.projectId, [{ op: 'create', id: pointId, entity: { kind: 'point', id: 1, layerId: 'cizim', attrs: {}, p: { x: 486510, y: 4420210 } } }], {});
@@ -508,12 +772,12 @@ try {
   await b.type(env.KENTOS_DEV_PASSWORD);
   await b.key('Enter');
   // The window grows when its list arrives (it stays centred): the tab is pressed once the list is there.
-  const listReady = `!!document.querySelector('.cloud-tabs') && !!document.querySelector('.cloud-list > *') && !document.querySelector('.cloud-list')?.textContent.includes('yükleniyor')`;
+  const listReady = `!!document.querySelector('.catalog-nav') && !!document.querySelector('.catalog-list > *') && !document.querySelector('.catalog-list')?.textContent.includes('yükleniyor')`;
   await b.waitFor(`window.kentos.cloud.auth.value === 'signedIn' && ${listReady}`, 8000);
-  await press('.cloud-tabs .tab', 'Benimle paylaşılanlar');
-  await b.waitFor(`[...document.querySelectorAll('.cloud-row--shared')].some((r) => r.textContent.startsWith(${JSON.stringify(sharedName)}))`, 8000);
+  await press('.catalog-nav__item', 'Benimle paylaşılanlar');
+  await b.waitFor(`[...document.querySelectorAll('.catalog-row')].some((r) => r.textContent.startsWith(${JSON.stringify(sharedName)}))`, 8000);
   const sharedRow = await b.eval(
-    `(() => { const r = [...document.querySelectorAll('.cloud-row--shared')].find((x) => x.textContent.startsWith(${JSON.stringify(sharedName)})); return { sub: r.querySelector('.cloud-row__sub').textContent, role: r.querySelector('.cloud-row__role').textContent }; })()`,
+    `(() => { const r = [...document.querySelectorAll('.catalog-row')].find((x) => x.textContent.startsWith(${JSON.stringify(sharedName)})); return { sub: r.querySelector('.catalog-row__sub').textContent, role: r.querySelector('.catalog-row__role').textContent }; })()`,
   );
   check('“Benimle paylaşılanlar” lists it with its owner and my role', granted.status === 200 && sharedRow.sub.includes('Ayşe Yılmaz') && sharedRow.role === 'Düzenleyici', JSON.stringify(sharedRow));
   await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
@@ -523,7 +787,7 @@ try {
   await sleep(200);
   await b.shot('cloud-shared-light');
   await b.eval(`window.kentos.commands.execute('view.theme.dark')`);
-  await press('.cloud-row--shared', sharedName);
+  await press('.catalog-row', sharedName);
   await press('.dialog__foot .btn', 'Aç');
   await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(sharedName)} && window.kentos.cloud.link.value === 'online'`, 30000);
   const localPoint = await b.eval(`window.kentos.doc.slotOf(${JSON.stringify(pointId)})`);
@@ -578,10 +842,10 @@ try {
   );
   await b.eval(`window.kentos.commands.execute('cloud.open')`);
   await b.waitFor(listReady, 5000);
-  await press('.cloud-tabs .tab', 'Benimle paylaşılanlar');
-  await b.waitFor(`!document.querySelector('.cloud-list')?.textContent.includes('yükleniyor')`, 8000);
-  const stillListed = await b.eval(`[...document.querySelectorAll('.cloud-row--shared')].some((r) => r.textContent.startsWith(${JSON.stringify(sharedName)}))`);
-  const onShared = await b.eval(`document.querySelector('.cloud-tabs [aria-selected="true"]')?.textContent`);
+  await press('.catalog-nav__item', 'Benimle paylaşılanlar');
+  await b.waitFor(`!document.querySelector('.catalog-list')?.textContent.includes('yükleniyor')`, 8000);
+  const stillListed = await b.eval(`[...document.querySelectorAll('.catalog-row')].some((r) => r.textContent.startsWith(${JSON.stringify(sharedName)}))`);
+  const onShared = await b.eval(`document.querySelector('.catalog-nav [aria-selected="true"]')?.textContent`);
   check('taken away, it leaves “Benimle paylaşılanlar”', onShared === 'Benimle paylaşılanlar' && !stillListed, onShared);
   await b.key('Escape');
 
@@ -597,6 +861,10 @@ try {
   b.close();
   await vite.close();
   await stopApi();
+  if (scratch && scratch.exitCode === null) {
+    scratch.stdin.end();
+    await new Promise((r) => scratch.once('exit', r));
+  }
 }
 console.log(failures.length ? `\n${failures.length} kontrol başarısız.` : '\nTüm kontroller geçti.');
 process.exit(failures.length ? 1 : 0);

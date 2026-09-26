@@ -92,6 +92,9 @@ async fn sample_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
         layers: unlocked(&s.layers),
         active_layer: s.active_layer,
         styles: s.styles,
+        description: None,
+        project_type: None,
+        tags: None,
     };
     Uuid::parse_str(
         &projects::create(&db.app, who, input, None)

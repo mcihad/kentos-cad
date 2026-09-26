@@ -63,6 +63,9 @@ pub async fn new_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
             "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] })).unwrap()],
         active_layer: "cizim".into(),
         styles: s.styles,
+        description: None,
+        project_type: None,
+        tags: None,
     };
     Uuid::parse_str(
         &projects::create(&db.app, who, input, None)
@@ -133,6 +136,42 @@ fn command(
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect::<BTreeMap<_, _>>(),
         input,
+    }
+}
+
+/// A catalog or lifecycle command (`project.archive` …) from `by`'s access, version 1.
+pub fn catalog_envelope(
+    by: &ProjectAccess,
+    name: &str,
+    input: serde_json::Value,
+    expected: &[(&str, &str)],
+) -> CommandEnvelope {
+    command(name, by.tenant, by.project, input, expected)
+}
+
+/// Runs a project's command as the server's route does (the default retention).
+pub async fn run(
+    db: &TestDb,
+    by: &ProjectAccess,
+    name: &str,
+    input: serde_json::Value,
+) -> Result<kentos_application::commands::CommandOutcome, kentos_application::AppError> {
+    kentos_application::commands::run(
+        &db.app,
+        &kentos_application::commands::CatalogPolicy::default(),
+        by,
+        catalog_envelope(by, name, input, &[]),
+    )
+    .await
+}
+
+/// The catalog entry a command answered with.
+pub fn changed(
+    outcome: kentos_application::commands::CommandOutcome,
+) -> kentos_contracts::ProjectCatalogChange {
+    match outcome {
+        kentos_application::commands::CommandOutcome::Catalog(c) => c,
+        other => panic!("expected a catalog change, got {other:?}"),
     }
 }
 

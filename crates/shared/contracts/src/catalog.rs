@@ -251,6 +251,257 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // The project catalog and lifecycle (docs/adr/0028). Every one runs on the
+        // server under the caller's access to the project (docs/adr/0015), writes its
+        // audit record and answers a retry with the same idempotency key once.
+        CommandDescriptor {
+            id: crate::PROJECT_CREATE.into(),
+            version: crate::PROJECT_CREATE_VERSION,
+            title: "Proje oluştur".into(),
+            summary: "Bir çalışma alanında (kişisel alan ya da kurum) boş bir bulut projesi açar: adı, ayarları, katman ağacı ve stilleriyle; isteğe bağlı açıklama, tür ve etiketlerle. \
+                      Proje açanındır; başkaları paylaşımla eklenir. Çalışma alanında project.create hakkı ister (kurumda proje yöneticisi ve üstü); projeye bağlı bir izin istemez. \
+                      Zarfın tenantId'si çalışma alanıdır, projectId boş kalır. Aynı idempotency anahtarıyla tekrar aynı projeyi verir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProjectCreate>(),
+            output: schema::<crate::ProjectInfo>(),
+            examples: vec![CommandExample {
+                title: "Boş bir ifraz projesi aç".into(),
+                input: json!({
+                    "name": "Ada 101 ifrazı",
+                    "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+                    "origin": { "x": 486500.0, "y": 4420200.0 },
+                    "layers": [{ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
+                                 "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],
+                    "activeLayer": "cizim",
+                    "styles": { "items": [], "categories": [] },
+                    "projectType": "subdivision",
+                    "tags": ["Kadıköy", "2026"]
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_RENAME.into(),
+            version: crate::PROJECT_RENAME_VERSION,
+            title: "Projeyi yeniden adlandır".into(),
+            summary: "Projenin adını erişimi olan herkes için değiştirir; açık editörler yeni adı hemen görür. project.edit ister. \
+                      Arşivlenmiş ya da çöp kutusundaki proje yeniden adlandırılamaz. expectedVersions[\"@catalog\"] verilmişse ve proje bilgileri o sürümde değilse hiçbir şey yazılmaz (409)."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Edit.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProjectRename>(),
+            output: schema::<crate::ProjectCatalogChange>(),
+            examples: vec![CommandExample {
+                title: "Projeye yeni bir ad ver".into(),
+                input: json!({ "name": "Ada 101 (revize)" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_METADATA_UPDATE.into(),
+            version: crate::PROJECT_METADATA_UPDATE_VERSION,
+            title: "Proje bilgilerini değiştir".into(),
+            summary: "Projenin katalog bilgilerini değiştirir: ad, açıklama, tür ve etiketler; verilmeyen alan olduğu gibi kalır. \
+                      Tür yalnız katalogda düzen içindir: mevzuata uygunluk ya da resmî onay anlamına gelmez, bir modül açmaz, saklama biçimini değiştirmez. \
+                      project.edit ister; arşivlenmiş ya da çöp kutusundaki projede yapılamaz. expectedVersions[\"@catalog\"] verilmişse ve proje bilgileri o sürümde değilse hiçbir şey yazılmaz (409)."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Edit.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProjectMetadataUpdate>(),
+            output: schema::<crate::ProjectCatalogChange>(),
+            examples: vec![CommandExample {
+                title: "Türü ve etiketleri değiştir, açıklama ekle".into(),
+                input: json!({
+                    "projectType": "landReadjustment",
+                    "description": "Kadıköy 18. madde uygulaması; dağıtım cetveli ayrı dosyada.",
+                    "tags": ["Kadıköy", "DOP %40"]
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_DUPLICATE.into(),
+            version: crate::PROJECT_DUPLICATE_VERSION,
+            title: "Projenin kopyasını oluştur".into(),
+            summary: "Projeyi yeni kimlikli yeni bir projeye kopyalar: ayarlar, katman ağacı, stiller, açıklama, tür, etiketler ve bütün nesneler; her nesne kalıcı kimliğini korur. \
+                      Geçmiş (komut günlüğü, olaylar, denetim kayıtları), paylaşımlar, favoriler ve arşiv durumu kopyalanmaz; kopya çağıranındır ve yalnız onun (ve kurum politikasının) erişimindedir. \
+                      Kaynakta project.download, kopyanın gideceği çalışma alanında project.create ister. Çöp kutusundaki proje kopyalanamaz."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Download.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProjectDuplicate>(),
+            output: schema::<crate::ProjectDuplicated>(),
+            examples: vec![CommandExample {
+                title: "Kişisel alana bir kopya".into(),
+                input: json!({ "name": "Ada 101 (deneme)", "tenantId": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_ARCHIVE.into(),
+            version: crate::PROJECT_ARCHIVE_VERSION,
+            title: "Projeyi arşivle".into(),
+            summary: "Projeyi arşivler: salt okunur olur, Arşivlenmişler listesinde durur; açık editörlerin kaydı durur, gönderilmemiş değişiklikleri cihazlarında kalır. \
+                      Paylaşımı değiştirilebilir, kopyası oluşturulabilir. project.edit ister; tersi project.unarchive'dır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Edit.name().into()],
+            undo: CommandUndo::Inverse,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::EmptyInput>(),
+            output: schema::<crate::ProjectCatalogChange>(),
+            examples: vec![CommandExample {
+                title: "Biten projeyi arşivle".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_UNARCHIVE.into(),
+            version: crate::PROJECT_UNARCHIVE_VERSION,
+            title: "Projeyi arşivden çıkar".into(),
+            summary: "Arşivlenmiş projeyi yeniden düzenlenebilir yapar. Açık tutanlar projeyi yeniden açınca kaydetmeye başlar; cihazlarında saklanan değişiklikler geri gelir. \
+                      project.edit ister; tersi project.archive'dır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Edit.name().into()],
+            undo: CommandUndo::Inverse,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::EmptyInput>(),
+            output: schema::<crate::ProjectCatalogChange>(),
+            examples: vec![CommandExample {
+                title: "Arşivden çıkar".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_TRASH.into(),
+            version: crate::PROJECT_TRASH_VERSION,
+            title: "Projeyi çöp kutusuna taşı".into(),
+            summary: "Projeyi erişimi olan herkes için çöp kutusuna taşır: listelerden kalkar, açılamaz ve değiştirilemez (410); açık editörlerin kaydı durur. \
+                      Hiçbir şey silinmez: proje sahibi ya da kurum yöneticisi saklama süresi dolana kadar geri yükleyebilir, sonra proje kalıcı olarak silinir. \
+                      project.delete ister (proje sahibi; kurum politikası açıksa kurum sahibi ve yöneticisi); tersi project.restore'dur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Delete.name().into()],
+            undo: CommandUndo::Inverse,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::EmptyInput>(),
+            output: schema::<crate::ProjectCatalogChange>(),
+            examples: vec![CommandExample {
+                title: "Çöp kutusuna taşı".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_RESTORE.into(),
+            version: crate::PROJECT_RESTORE_VERSION,
+            title: "Projeyi çöp kutusundan geri yükle".into(),
+            summary: "Çöp kutusundaki projeyi her şeyiyle geri getirir: listelerde görünür ve açılır; arşivlenmişse arşivde kalır. \
+                      project.delete ister; tersi project.trash'tir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Delete.name().into()],
+            undo: CommandUndo::Inverse,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::EmptyInput>(),
+            output: schema::<crate::ProjectCatalogChange>(),
+            examples: vec![CommandExample {
+                title: "Geri yükle".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_PURGE.into(),
+            version: crate::PROJECT_PURGE_VERSION,
+            title: "Projeyi kalıcı olarak sil".into(),
+            summary: "Çöp kutusundaki projeyi nesneleri, paylaşımları, komut günlüğü ve olaylarıyla birlikte kalıcı olarak siler; geri alınamaz, denetim kaydı kalır. \
+                      Açık onay ister: confirmName projenin şimdiki adıyla aynı olmalıdır. Önce çöp kutusuna taşınmamış proje silinmez. project.delete ister. \
+                      Önceden indirilmiş kopyalar ve sunucu yedekleri bu komutla silinmez."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Delete.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProjectPurge>(),
+            output: schema::<crate::ProjectPurged>(),
+            examples: vec![CommandExample {
+                title: "Adını yazarak kalıcı olarak sil".into(),
+                input: json!({ "confirmName": "Ada 101 (eski)" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_FAVORITE.into(),
+            version: crate::PROJECT_FAVORITE_VERSION,
+            title: "Favorilere ekle ya da çıkar".into(),
+            summary: "Projeyi çağıranın favorilerine ekler (favorite: true) ya da çıkarır; yalnız o kişinin listesini değiştirir, projeye ve başkalarına dokunmaz. project.read ister."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Read.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProjectFavorite>(),
+            output: schema::<crate::ProjectCatalogChange>(),
+            examples: vec![CommandExample {
+                title: "Favorilere ekle".into(),
+                input: json!({ "favorite": true }),
+                output: None,
+            }],
+        },
         // The first document command (docs/adr/0022): the web's and the desktop's own
         // handlers, held together by fixtures/commands/v1/cad.polygon.create.json.
         CommandDescriptor {
@@ -481,6 +732,34 @@ mod tests {
                     }
                     crate::PROJECT_ACCESS_REVOKE => {
                         serde_json::from_value::<ProjectAccessRevoke>(e.input.clone()).map(|_| ())
+                    }
+                    // The catalog and lifecycle commands (docs/adr/0028).
+                    crate::PROJECT_CREATE => {
+                        serde_json::from_value::<crate::ProjectCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_RENAME => {
+                        serde_json::from_value::<crate::ProjectRename>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_METADATA_UPDATE => {
+                        serde_json::from_value::<crate::ProjectMetadataUpdate>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::PROJECT_DUPLICATE => {
+                        serde_json::from_value::<crate::ProjectDuplicate>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::PROJECT_ARCHIVE
+                    | crate::PROJECT_UNARCHIVE
+                    | crate::PROJECT_TRASH
+                    | crate::PROJECT_RESTORE => {
+                        serde_json::from_value::<crate::EmptyInput>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_PURGE => {
+                        serde_json::from_value::<crate::ProjectPurge>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_FAVORITE => {
+                        serde_json::from_value::<crate::ProjectFavorite>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_POLYGON_CREATE => {
                         serde_json::from_value::<PolygonCreate>(e.input.clone()).map(|_| ())

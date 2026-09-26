@@ -26,6 +26,7 @@ function setup() {
     projectId: 'p',
     name: 'Ada 101',
     role: 'owner',
+    state: 'active',
     permissions: ['project.read', 'feature.write', 'project.edit', 'project.delete', 'project.comment', 'project.download', 'project.history', 'project.share', 'project.transfer', 'project.jobs.run'],
     canWrite: true,
     canEditMeta: true,

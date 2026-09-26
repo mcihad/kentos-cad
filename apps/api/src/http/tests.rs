@@ -25,6 +25,7 @@ fn config() -> Config {
         local_login: true,
         oidc: None,
         event_retention: std::time::Duration::from_secs(7 * 24 * 3600),
+        trash_retention: std::time::Duration::from_secs(30 * 24 * 3600),
     }
 }
 

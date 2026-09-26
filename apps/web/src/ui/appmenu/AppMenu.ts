@@ -315,32 +315,34 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
         )
       : null;
     const recent = h('div', { class: 'appmenu__recent' }, h('div', { class: 'appmenu__skeleton' }), h('div', { class: 'appmenu__skeleton' }), h('div', { class: 'appmenu__skeleton' }));
-    const tenant = memberships.find((m) => m.seat && m.tenantId === p?.tenantId) ?? memberships.find((m) => m.seat);
-    if (tenant) {
-      void ctx.cloud
-        .projects(tenant.tenantId)
-        .then(({ projects }) => {
-          if (!recent.isConnected) return;
-          const top = [...projects].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)).slice(0, 5);
-          replaceChildren(
-            recent,
-            top.length
-              ? top.map((x) => {
-                  const r = h(
-                    'button',
-                    { class: 'appmenu__row appmenu__row--project', type: 'button', role: 'menuitem', dataset: { project: x.id } },
-                    h('span', { class: 'appmenu__projicon' }, icon('cloud', 16)),
-                    h('span', { class: 'appmenu__text' }, h('span', { class: 'appmenu__label' }, x.name), h('span', { class: 'appmenu__sub' }, `${workspaceName(tenant.tenantKind, tenant.tenantName, true)} · ${ago(x.updatedAt)}`)),
-                    x.id === p?.projectId ? h('span', { class: 'appmenu__soon appmenu__soon--open' }, 'Açık') : null,
-                  );
-                  r.addEventListener('click', () => run('cloud.open', { tenantId: tenant.tenantId, projectId: x.id }));
-                  return r;
-                })
-              : h('p', { class: 'appmenu__empty' }, tenant.tenantKind === 'personal' ? 'Kişisel alanınızda henüz proje yok. Açık çizimi “Buluta yükle” ile gönderin.' : 'Bu kurumda size açık bir proje yok. Açık çizimi “Buluta yükle” ile gönderin.'),
-          );
-        })
-        .catch(() => recent.isConnected && replaceChildren(recent, h('p', { class: 'appmenu__empty' }, 'Projeler okunamadı.')));
-    } else replaceChildren(recent, h('p', { class: 'appmenu__empty' }, 'Koltuk atanmış bir kurum üyeliğiniz yok; kurum yöneticinize başvurun.'));
+    // The projects this account opened last, in every workspace (the server's recent list, docs/adr/0028).
+    void ctx.cloud.api
+      .catalog({ view: 'recent', limit: 5 })
+      .then(({ projects }) => {
+        if (!recent.isConnected) return;
+        replaceChildren(
+          recent,
+          projects.length
+            ? projects.map((x) => {
+                const r = h(
+                  'button',
+                  { class: 'appmenu__row appmenu__row--project', type: 'button', role: 'menuitem', dataset: { project: x.id } },
+                  h('span', { class: 'appmenu__projicon' }, icon('cloud', 16)),
+                  h(
+                    'span',
+                    { class: 'appmenu__text' },
+                    h('span', { class: 'appmenu__label' }, x.name),
+                    h('span', { class: 'appmenu__sub' }, `${workspaceName(x.tenantKind, x.tenantName, !!ctx.cloud.membership(x.tenantId))} · ${ago(x.openedAt ?? x.updatedAt)}`),
+                  ),
+                  x.id === p?.projectId ? h('span', { class: 'appmenu__soon appmenu__soon--open' }, 'Açık') : null,
+                );
+                r.addEventListener('click', () => run('cloud.open', { tenantId: x.tenantId, projectId: x.id }));
+                return r;
+              })
+            : h('p', { class: 'appmenu__empty' }, 'Henüz açtığınız bir bulut projesi yok. “Proje aç” ile açın ya da açık çizimi “Buluta yükle” ile gönderin.'),
+        );
+      })
+      .catch(() => recent.isConnected && replaceChildren(recent, h('p', { class: 'appmenu__empty' }, 'Son projeler okunamadı.')));
     return [
       paneHead('Bulut'),
       account,

@@ -9,16 +9,18 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::document::{Bounds, ProjectSettings, ProjectStyles};
+use crate::document::{AreaUnit, Bounds, ProjectSettings, ProjectStyles};
 use crate::entity::{Entity, Vec2};
 use crate::layer::LayerNode;
+use crate::project_catalog::{ProjectState, ProjectType};
 
 /// Name and version of the one lasting edit command of Faz B.
 pub const PROJECT_CHANGES: &str = "project.changes";
 pub const PROJECT_CHANGES_VERSION: u32 = 1;
 /// Key of the project's metadata (name, settings, layer tree, styles) in `expectedVersions`.
 pub const PROJECT_META_KEY: &str = "@project";
-/// Event kind of a deleted project (`EventRecord.kind`): its editors stop sending.
+/// Event kind of a deleted project (`EventRecord.kind`): its editors stop
+/// sending. Deleting is moving to the trash (`project.trash`, docs/adr/0028).
 pub const PROJECT_DELETED: &str = "project.deleted";
 /// Sharing a project with a person or changing their role (docs/adr/0015).
 pub const PROJECT_SHARE: &str = "project.share";
@@ -350,6 +352,45 @@ pub struct ProjectSummary {
     /// when the caller cannot see the owner (one who left the organisation).
     pub owner_name: String,
     pub access: ProjectAccessView,
+    // The catalog (docs/adr/0028).
+    /// What kind of work it is: a label, not a claim of compliance, independent of `storage`.
+    pub project_type: ProjectType,
+    pub description: String,
+    pub tags: Vec<String>,
+    pub state: ProjectState,
+    /// Counts changes of its name, description, type and tags; a catalog edit
+    /// sends it as `expectedVersions["@catalog"]`. Decimal text.
+    pub catalog_version: String,
+    /// RFC 3339.
+    pub created_at: String,
+    /// Who created it; empty when the caller cannot see them.
+    pub creator_name: String,
+    /// The unit its areas are given in (lengths and coordinates are metres of its coordinate system).
+    pub area_unit: AreaUnit,
+    pub storage: ProjectStorage,
+    /// One of the caller's favourites.
+    pub favorite: bool,
+    /// When the caller last opened it (RFC 3339).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub opened_at: Option<String>,
+    /// RFC 3339.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub archived_at: Option<String>,
+    /// When it was moved to the trash (RFC 3339).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub trashed_at: Option<String>,
+    /// Who moved it there, when the caller can see them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub trashed_by_name: Option<String>,
+    /// In the trash: when the retention removes it for good (RFC 3339).
+    /// Absent there: it was moved before the retention existed and stays until removed by hand.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub purge_after: Option<String>,
 }
 
 /// A tenant's projects the caller may see (`GET /v1/tenants/{tenant}/projects`), or
@@ -378,6 +419,17 @@ pub struct ProjectCreate {
     pub layers: Vec<LayerNode>,
     pub active_layer: String,
     pub styles: ProjectStyles,
+    /// The catalog's description (docs/adr/0028); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub description: Option<String>,
+    /// Absent: the general type (`cad`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub project_type: Option<ProjectType>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tags: Option<Vec<String>>,
 }
 
 /// `GET /v1/tenants/{tenant}/projects/{project}`: what opening needs before the objects.
@@ -393,6 +445,8 @@ pub struct ProjectInfo {
     pub tenant_kind: TenantKind,
     /// What the caller may do in it.
     pub access: ProjectAccessView,
+    /// Active or archived (an archived project opens read-only; one in the trash does not open).
+    pub state: ProjectState,
     pub name: String,
     pub settings: ProjectSettings,
     pub origin: Vec2,
@@ -791,8 +845,10 @@ pub struct EventFeature {
 pub struct EventRecord {
     pub seq: String,
     pub data_revision: String,
-    /// `project.changes`; `project.deleted` (no objects; nothing is committed
-    /// after it); `project.access` (a grant changed; no objects).
+    /// `project.changes`; `project.deleted` (moved to the trash; no objects;
+    /// nothing is committed after it); `project.access` (a grant changed; no
+    /// objects); `project.archived`, `project.unarchived`, `project.restored`
+    /// and `project.metadata` (the catalog, docs/adr/0028; no objects).
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

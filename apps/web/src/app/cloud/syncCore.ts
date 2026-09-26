@@ -18,17 +18,24 @@ import { Tracker, entityJson, metaParts, type MetaParts, type Planned } from './
  */
 
 /**
- * `deleted`: the project was deleted on the server; `revoked`: this account
- * lost its access to it. Either way nothing more is sent and edits stay in
- * the device draft. `readonly`: this account may only view (from the start,
- * or since its role was lowered: then its edits are kept on the device too).
+ * `deleted`: the project was deleted on the server (moved to the trash);
+ * `revoked`: this account lost its access to it; `archived`: it was archived
+ * (read-only until it is unarchived, docs/adr/0028). Either way nothing more
+ * is sent and edits stay in the device draft (a viewer's never are).
+ * `readonly`: this account may only view (from the start, or since its role
+ * was lowered: then its edits are kept on the device too).
  */
-export type SaveState = 'saved' | 'pending' | 'saving' | 'offline_pending' | 'conflict' | 'error' | 'readonly' | 'deleted' | 'revoked';
+export type SaveState = 'saved' | 'pending' | 'saving' | 'offline_pending' | 'conflict' | 'error' | 'readonly' | 'deleted' | 'revoked' | 'archived';
+
+/** The states in which nothing more is sent to the project: it is gone, out of reach, or archived. */
+export const ENDED: readonly SaveState[] = ['deleted', 'revoked', 'archived'];
 
 /** Event kind of a deleted project (`PROJECT_DELETED` in crates/shared/contracts). */
 export const PROJECT_DELETED = 'project.deleted';
 /** Event kind of a changed grant (`PROJECT_ACCESS_CHANGED`): what this account may do is asked again. */
 export const PROJECT_ACCESS = 'project.access';
+/** Event kind of an archived project (`PROJECT_ARCHIVED`): nothing more is sent until it is opened again unarchived. */
+export const PROJECT_ARCHIVED = 'project.archived';
 
 export interface SyncConflict {
   /** The object's persistent id (its id on the server), or `@project` for the metadata. */
@@ -61,6 +68,8 @@ export interface SyncOptions {
   onDeleted?: () => void;
   /** This account lost its access (a command answered 404, or the session found out); called once, with the server's reason when it gave one. */
   onRevoked?: (reason: string) => void;
+  /** The project was archived (an event, or a command refused with 409); called once. */
+  onArchived?: () => void;
   /** A grant of the project changed, or a command was refused (403): the session asks what this account may do now. */
   onAccessChanged?: () => void;
   debounceMs?: number;

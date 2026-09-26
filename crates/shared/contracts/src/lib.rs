@@ -17,6 +17,9 @@
 //! `settings` (docs/adr/0023) is the typed settings schema and the rules every
 //! host validates, resolves and stores settings by.
 //!
+//! `project_catalog` (docs/adr/0028) is the cloud's project catalog: project
+//! types, catalog metadata, the lifecycle commands and the per-person lists.
+//!
 //! Rules (docs/adr/0002-contracts-fixtures.md):
 //! - every stored or sent document carries `format` and `version`; readers
 //!   reject versions they do not know instead of guessing;
@@ -36,6 +39,7 @@ pub mod identity;
 pub mod job;
 pub mod layer;
 pub mod numeric;
+pub mod project_catalog;
 pub mod settings;
 pub mod style;
 
@@ -51,6 +55,7 @@ pub use identity::*;
 pub use job::*;
 pub use layer::*;
 pub use numeric::*;
+pub use project_catalog::*;
 pub use settings::*;
 pub use style::*;
 
