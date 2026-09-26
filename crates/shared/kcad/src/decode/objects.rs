@@ -11,9 +11,10 @@ use kentos_contracts::{
     PathEntity, PointEntity, RingGeometry, SplineEntity, TextEntity, Vec2,
 };
 
-use super::{floats, id16, list, map, named, point, points, required, text, unknown};
+use super::{PREALLOCATE, floats, id16, list, map, named, point, points, required, text, unknown};
 use crate::cbor::{Reader, Seg};
 use crate::error::{Code, KcadError};
+use crate::watch::{EVERY, Step};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Kind {
@@ -109,11 +110,29 @@ struct Fields {
     pattern: Option<HatchPattern>,
 }
 
-/// The objects and their persistent ids, each id once (§6.8).
-pub(super) fn objects(r: &mut Reader<'_>) -> Result<(Vec<Entity>, Vec<EntityId>), KcadError> {
-    let mut seen = HashSet::new();
-    let mut uids = Vec::new();
-    let entities = list(r, |r, i| {
+/// The objects and their persistent ids, each id once (§6.8). The project
+/// (`name`, `layers`, the number of objects) is reported first, then the
+/// objects every few thousand.
+pub(super) fn objects(
+    r: &mut Reader<'_>,
+    name: Option<&str>,
+    layers: usize,
+) -> Result<(Vec<Entity>, Vec<EntityId>), KcadError> {
+    let n = r.array()?;
+    r.report(Step::Project {
+        name: name.unwrap_or_default(),
+        layers,
+        objects: n,
+    })?;
+    let mut seen = HashSet::with_capacity(n.min(PREALLOCATE));
+    let mut uids = Vec::with_capacity(n.min(PREALLOCATE));
+    // As `list`: `array` checked that n items fit the bytes left; the rest grows as they are read.
+    let mut entities = Vec::with_capacity(n.min(PREALLOCATE));
+    for i in 0..n {
+        if i % EVERY == 0 {
+            r.report(Step::Reading { done: i, total: n })?;
+        }
+        r.push(Seg::Index(i));
         let (entity, uid) = object(r, i)?;
         if !seen.insert(uid) {
             r.push(Seg::Name("uid"));
@@ -125,11 +144,19 @@ pub(super) fn objects(r: &mut Reader<'_>) -> Result<(Vec<Entity>, Vec<EntityId>)
             return Err(e);
         }
         uids.push(uid);
-        Ok(entity)
-    })?;
+        entities.push(entity);
+        r.pop();
+    }
+    r.leave();
+    r.report(Step::Reading { done: n, total: n })?;
     Ok((entities, uids))
 }
 
+// Out of line on purpose: a browser's WebAssembly engine runs a function in its
+// baseline code until the function is called again (no on-stack replacement), so the
+// work of each object must be a function called once per object, not inlined into the
+// one loop that runs once for the whole drawing (docs/adr/0030).
+#[inline(never)]
 fn object(r: &mut Reader<'_>, index: usize) -> Result<(Entity, EntityId), KcadError> {
     let (n, at) = r.map()?;
     if n != 1 {

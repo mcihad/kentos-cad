@@ -1,7 +1,5 @@
-import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { V1Identities } from '../contracts/generated/V1Identities';
-import type { EncodedDrawing } from './client';
-import { decodeWith, encodeWith, type KcadModule } from './kcad';
+import { decodeWith, encodeWith, type KcadCodec, type KcadModule } from './kcad';
 
 /**
  * The formats WASM module (crates/wasm/formats-wasm → src/io/pkg, built by
@@ -40,18 +38,18 @@ export async function v1IdentitiesInProcess(text: string): Promise<V1Identities>
 /**
  * The `.kcad` v2 codec as `DocumentFiles` takes it, without the worker: the
  * worker's own code (io/kcad.ts) around the same module. `encode` works
- * before it returns, as the worker client copies the drawing before it returns.
+ * before it returns, as the worker client hands the drawing over before it returns.
  */
-export async function kcadInProcess(): Promise<{ encode(s: DocumentSnapshotV2): Promise<EncodedDrawing>; decode(b: Uint8Array): Promise<DocumentSnapshotV2> }> {
+export async function kcadInProcess(): Promise<KcadCodec> {
   const m = await formatsModule();
   return {
-    encode(snapshot) {
+    encode(drawing, progress) {
       try {
-        return Promise.resolve(encodeWith(m, structuredClone(snapshot)));
+        return Promise.resolve(encodeWith(m, drawing, progress));
       } catch (e) {
         return Promise.reject(e);
       }
     },
-    decode: async (bytes) => structuredClone(decodeWith(m, bytes)),
+    decode: async (bytes, progress) => decodeWith(m, bytes, progress),
   };
 }

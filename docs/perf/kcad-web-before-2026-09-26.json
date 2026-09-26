@@ -1,0 +1,740 @@
+{
+  "label": "before",
+  "date": "2026-09-26T04:45:53.562Z",
+  "commit": "82dcbb9",
+  "dirtyTree": false,
+  "machine": {
+    "cpu": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz",
+    "threads": 8,
+    "memoryGb": 15,
+    "os": "Ubuntu 26.04.1 LTS",
+    "kernel": "7.0.0-34-generic",
+    "loadAverageAtStart": [
+      2.48,
+      1.93,
+      1.94
+    ],
+    "chrome": "Google Chrome 154.0.8037.57",
+    "node": "v24.16.0",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)"
+  },
+  "setup": {
+    "runs": 3,
+    "sizes": [
+      1,
+      25000,
+      50000,
+      100000,
+      200000
+    ],
+    "memoryLimitMb": 4500,
+    "chromeArgs": [
+      "--use-angle=gl",
+      "--ignore-gpu-blocklist"
+    ],
+    "backend": "webgl2",
+    "glRenderer": "ANGLE (Intel, Mesa Intel(R) Iris(R) Xe Graphics (TGL GT2), OpenGL ES 3.2)",
+    "crossOriginIsolated": true,
+    "server": "vite dev (window.kentos), WASM --profile wasm",
+    "durationS": 189
+  },
+  "summary": [
+    {
+      "parcels": 1,
+      "bytes": 1002,
+      "ok": true,
+      "saveMs": {
+        "median": 2.3049999997019768,
+        "range": [
+          2.2400000020861626,
+          2.3599999994039536
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 0,
+        "range": [
+          0,
+          0
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 0.34375,
+        "range": [
+          0.216796875,
+          0.375
+        ]
+      },
+      "openMs": {
+        "median": 21.309999994933605,
+        "range": [
+          20.91499999910593,
+          22.21000000089407
+        ]
+      },
+      "openDrawnMs": {
+        "median": 25.434999994933605,
+        "range": [
+          23.979999996721745,
+          32.45000000298023
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 0,
+        "range": [
+          0,
+          0
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 6.78125,
+        "range": [
+          6.59375,
+          7.0849609375
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 620.36328125,
+        "range": [
+          587.67578125,
+          622.5732421875
+        ]
+      }
+    },
+    {
+      "parcels": 25000,
+      "bytes": 12041528,
+      "ok": true,
+      "saveMs": {
+        "median": 1641.1150000020862,
+        "range": [
+          1634.679999999702,
+          1677.3800000026822
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 115,
+        "range": [
+          108,
+          116
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 316.4658203125,
+        "range": [
+          283.84375,
+          331.44140625
+        ]
+      },
+      "openMs": {
+        "median": 1070.7949999943376,
+        "range": [
+          1059.3400000035763,
+          1209.3100000023842
+        ]
+      },
+      "openDrawnMs": {
+        "median": 1195.1299999952316,
+        "range": [
+          1149.0050000026822,
+          1290.140000000596
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 297,
+        "range": [
+          283,
+          338
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 225.9404296875,
+        "range": [
+          220.0625,
+          229.5126953125
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 815.9736328125,
+        "range": [
+          735.5673828125,
+          853.5654296875
+        ]
+      }
+    },
+    {
+      "parcels": 50000,
+      "bytes": 24092528,
+      "ok": true,
+      "saveMs": {
+        "median": 3121.509999997914,
+        "range": [
+          3093.484999999404,
+          3194.4250000044703
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 251,
+        "range": [
+          250,
+          264
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 562.7109375,
+        "range": [
+          562.40234375,
+          591.5927734375
+        ]
+      },
+      "openMs": {
+        "median": 2149.405000001192,
+        "range": [
+          2132.7900000065565,
+          2201.0350000038743
+        ]
+      },
+      "openDrawnMs": {
+        "median": 2333.0900000035763,
+        "range": [
+          2327.820000000298,
+          2396.630000002682
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 588,
+        "range": [
+          580,
+          613
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 419.41015625,
+        "range": [
+          399.474609375,
+          431.1875
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 965.466796875,
+        "range": [
+          945.4521484375,
+          965.822265625
+        ]
+      }
+    },
+    {
+      "parcels": 100000,
+      "bytes": 48274531,
+      "ok": true,
+      "saveMs": {
+        "median": 6436.429999999702,
+        "range": [
+          6333.365000002086,
+          6553.4000000059605
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 591,
+        "range": [
+          589,
+          595
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 1138.6962890625,
+        "range": [
+          1109.369140625,
+          1224.443359375
+        ]
+      },
+      "openMs": {
+        "median": 4363.9049999937415,
+        "range": [
+          4327.395000003278,
+          4461.089999996126
+        ]
+      },
+      "openDrawnMs": {
+        "median": 4720.695000000298,
+        "range": [
+          4688.5,
+          4844.314999997616
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 1244,
+        "range": [
+          1223,
+          1247
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 950.2041015625,
+        "range": [
+          912.5791015625,
+          964.2255859375
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 1263.5595703125,
+        "range": [
+          1158.427734375,
+          1267.26171875
+        ]
+      }
+    },
+    {
+      "parcels": 200000,
+      "bytes": 96638531,
+      "ok": true,
+      "saveMs": {
+        "median": 14416.695000000298,
+        "range": [
+          14202.795000001788,
+          14551.829999998212
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 1227,
+        "range": [
+          1214,
+          1239
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 2192.4921875,
+        "range": [
+          2191.39453125,
+          2325.1181640625
+        ]
+      },
+      "openMs": {
+        "median": 10149.695000000298,
+        "range": [
+          9385.594999998808,
+          10826.820000000298
+        ]
+      },
+      "openDrawnMs": {
+        "median": 10877.865000002086,
+        "range": [
+          10105.329999998212,
+          11544.340000003576
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 3263,
+        "range": [
+          2430,
+          3347
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 1684.1220703125,
+        "range": [
+          1681.3828125,
+          1753.0751953125
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 1775.66796875,
+        "range": [
+          1632.0673828125,
+          1777.10546875
+        ]
+      }
+    }
+  ],
+  "runs": [
+    {
+      "parcels": 1,
+      "run": 1,
+      "buildMs": 0.6649999991059303,
+      "bytes": 1002,
+      "save": {
+        "ms": 2.2400000020861626,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 0.375,
+        "chromeBeforeMb": 587.67578125,
+        "ok": true
+      },
+      "open": {
+        "ms": 22.21000000089407,
+        "drawnMs": 32.45000000298023,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 7.0849609375,
+        "chromeBeforeMb": 609.6220703125,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 1,
+      "run": 2,
+      "buildMs": 0.625,
+      "bytes": 1002,
+      "save": {
+        "ms": 2.3049999997019768,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 0.216796875,
+        "chromeBeforeMb": 620.36328125,
+        "ok": true
+      },
+      "open": {
+        "ms": 21.309999994933605,
+        "drawnMs": 25.434999994933605,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 6.78125,
+        "chromeBeforeMb": 613.4052734375,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 1,
+      "run": 3,
+      "buildMs": 0.6099999994039536,
+      "bytes": 1002,
+      "save": {
+        "ms": 2.3599999994039536,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 0.34375,
+        "chromeBeforeMb": 622.5732421875,
+        "ok": true
+      },
+      "open": {
+        "ms": 20.91499999910593,
+        "drawnMs": 23.979999996721745,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 6.59375,
+        "chromeBeforeMb": 615.5810546875,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 25000,
+      "run": 1,
+      "buildMs": 93.20000000298023,
+      "bytes": 12041528,
+      "save": {
+        "ms": 1677.3800000026822,
+        "longestTaskMs": 108,
+        "blockedMs": 58,
+        "longTasks": 1,
+        "peakAboveMb": 331.44140625,
+        "chromeBeforeMb": 735.5673828125,
+        "ok": true
+      },
+      "open": {
+        "ms": 1209.3100000023842,
+        "drawnMs": 1290.140000000596,
+        "longestTaskMs": 338,
+        "blockedMs": 318,
+        "longTasks": 2,
+        "peakAboveMb": 225.9404296875,
+        "chromeBeforeMb": 911.27734375,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 25000,
+      "run": 2,
+      "buildMs": 69.0899999961257,
+      "bytes": 12041528,
+      "save": {
+        "ms": 1641.1150000020862,
+        "longestTaskMs": 115,
+        "blockedMs": 65,
+        "longTasks": 1,
+        "peakAboveMb": 316.4658203125,
+        "chromeBeforeMb": 815.9736328125,
+        "ok": true
+      },
+      "open": {
+        "ms": 1059.3400000035763,
+        "drawnMs": 1149.0050000026822,
+        "longestTaskMs": 297,
+        "blockedMs": 286,
+        "longTasks": 2,
+        "peakAboveMb": 220.0625,
+        "chromeBeforeMb": 964.2548828125,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 25000,
+      "run": 3,
+      "buildMs": 80.5300000011921,
+      "bytes": 12041528,
+      "save": {
+        "ms": 1634.679999999702,
+        "longestTaskMs": 116,
+        "blockedMs": 66,
+        "longTasks": 1,
+        "peakAboveMb": 283.84375,
+        "chromeBeforeMb": 853.5654296875,
+        "ok": true
+      },
+      "open": {
+        "ms": 1070.7949999943376,
+        "drawnMs": 1195.1299999952316,
+        "longestTaskMs": 283,
+        "blockedMs": 299,
+        "longTasks": 2,
+        "peakAboveMb": 229.5126953125,
+        "chromeBeforeMb": 967.654296875,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 50000,
+      "run": 1,
+      "buildMs": 157.6199999973178,
+      "bytes": 24092528,
+      "save": {
+        "ms": 3194.4250000044703,
+        "longestTaskMs": 264,
+        "blockedMs": 214,
+        "longTasks": 1,
+        "peakAboveMb": 591.5927734375,
+        "chromeBeforeMb": 945.4521484375,
+        "ok": true
+      },
+      "open": {
+        "ms": 2201.0350000038743,
+        "drawnMs": 2396.630000002682,
+        "longestTaskMs": 613,
+        "blockedMs": 707,
+        "longTasks": 2,
+        "peakAboveMb": 419.41015625,
+        "chromeBeforeMb": 1188.498046875,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 50000,
+      "run": 2,
+      "buildMs": 147.0899999961257,
+      "bytes": 24092528,
+      "save": {
+        "ms": 3093.484999999404,
+        "longestTaskMs": 251,
+        "blockedMs": 201,
+        "longTasks": 1,
+        "peakAboveMb": 562.7109375,
+        "chromeBeforeMb": 965.466796875,
+        "ok": true
+      },
+      "open": {
+        "ms": 2132.7900000065565,
+        "drawnMs": 2327.820000000298,
+        "longestTaskMs": 580,
+        "blockedMs": 674,
+        "longTasks": 2,
+        "peakAboveMb": 431.1875,
+        "chromeBeforeMb": 1180.533203125,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 50000,
+      "run": 3,
+      "buildMs": 146.22499999403954,
+      "bytes": 24092528,
+      "save": {
+        "ms": 3121.509999997914,
+        "longestTaskMs": 250,
+        "blockedMs": 200,
+        "longTasks": 1,
+        "peakAboveMb": 562.40234375,
+        "chromeBeforeMb": 965.822265625,
+        "ok": true
+      },
+      "open": {
+        "ms": 2149.405000001192,
+        "drawnMs": 2333.0900000035763,
+        "longestTaskMs": 588,
+        "blockedMs": 671,
+        "longTasks": 2,
+        "peakAboveMb": 399.474609375,
+        "chromeBeforeMb": 1180.9921875,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 100000,
+      "run": 1,
+      "buildMs": 279.51500000059605,
+      "bytes": 48274531,
+      "save": {
+        "ms": 6553.4000000059605,
+        "longestTaskMs": 591,
+        "blockedMs": 541,
+        "longTasks": 1,
+        "peakAboveMb": 1224.443359375,
+        "chromeBeforeMb": 1158.427734375,
+        "ok": true
+      },
+      "open": {
+        "ms": 4461.089999996126,
+        "drawnMs": 4844.314999997616,
+        "longestTaskMs": 1244,
+        "blockedMs": 1526,
+        "longTasks": 2,
+        "peakAboveMb": 964.2255859375,
+        "chromeBeforeMb": 1615.7841796875,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 100000,
+      "run": 2,
+      "buildMs": 287.58500000089407,
+      "bytes": 48274531,
+      "save": {
+        "ms": 6436.429999999702,
+        "longestTaskMs": 589,
+        "blockedMs": 546,
+        "longTasks": 2,
+        "peakAboveMb": 1109.369140625,
+        "chromeBeforeMb": 1267.26171875,
+        "ok": true
+      },
+      "open": {
+        "ms": 4327.395000003278,
+        "drawnMs": 4688.5,
+        "longestTaskMs": 1223,
+        "blockedMs": 1483,
+        "longTasks": 2,
+        "peakAboveMb": 912.5791015625,
+        "chromeBeforeMb": 1628.9306640625,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 100000,
+      "run": 3,
+      "buildMs": 287.17499999701977,
+      "bytes": 48274531,
+      "save": {
+        "ms": 6333.365000002086,
+        "longestTaskMs": 595,
+        "blockedMs": 545,
+        "longTasks": 1,
+        "peakAboveMb": 1138.6962890625,
+        "chromeBeforeMb": 1263.5595703125,
+        "ok": true
+      },
+      "open": {
+        "ms": 4363.9049999937415,
+        "drawnMs": 4720.695000000298,
+        "longestTaskMs": 1247,
+        "blockedMs": 1503,
+        "longTasks": 2,
+        "peakAboveMb": 950.2041015625,
+        "chromeBeforeMb": 1628.7392578125,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 200000,
+      "run": 1,
+      "buildMs": 552.6649999991059,
+      "bytes": 96638531,
+      "save": {
+        "ms": 14551.829999998212,
+        "longestTaskMs": 1214,
+        "blockedMs": 1176,
+        "longTasks": 2,
+        "peakAboveMb": 2325.1181640625,
+        "chromeBeforeMb": 1632.0673828125,
+        "ok": true
+      },
+      "open": {
+        "ms": 10149.695000000298,
+        "drawnMs": 10877.865000002086,
+        "longestTaskMs": 3263,
+        "blockedMs": 3890,
+        "longTasks": 2,
+        "peakAboveMb": 1681.3828125,
+        "chromeBeforeMb": 2510.1650390625,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 200000,
+      "run": 2,
+      "buildMs": 557.2950000017881,
+      "bytes": 96638531,
+      "save": {
+        "ms": 14416.695000000298,
+        "longestTaskMs": 1227,
+        "blockedMs": 1196,
+        "longTasks": 2,
+        "peakAboveMb": 2191.39453125,
+        "chromeBeforeMb": 1777.10546875,
+        "ok": true
+      },
+      "open": {
+        "ms": 9385.594999998808,
+        "drawnMs": 10105.329999998212,
+        "longestTaskMs": 2430,
+        "blockedMs": 3048,
+        "longTasks": 2,
+        "peakAboveMb": 1753.0751953125,
+        "chromeBeforeMb": 2514.03125,
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 200000,
+      "run": 3,
+      "buildMs": 566.8000000044703,
+      "bytes": 96638531,
+      "save": {
+        "ms": 14202.795000001788,
+        "longestTaskMs": 1239,
+        "blockedMs": 1208,
+        "longTasks": 2,
+        "peakAboveMb": 2192.4921875,
+        "chromeBeforeMb": 1775.66796875,
+        "ok": true
+      },
+      "open": {
+        "ms": 10826.820000000298,
+        "drawnMs": 11544.340000003576,
+        "longestTaskMs": 3347,
+        "blockedMs": 3963,
+        "longTasks": 2,
+        "peakAboveMb": 1684.1220703125,
+        "chromeBeforeMb": 2513.73046875,
+        "ok": true
+      },
+      "log": []
+    }
+  ]
+}

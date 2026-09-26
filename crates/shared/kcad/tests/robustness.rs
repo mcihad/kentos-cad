@@ -536,3 +536,46 @@ fn a_declared_length_never_reserves_more_than_the_file_holds() {
     let e = kentos_kcad::decode(&container(&p)).expect_err("refused");
     assert_eq!(e.code, Code::WrongType, "{e}");
 }
+
+/// Floats as their bits, so −0 and 0 differ.
+fn bits(cols: &kentos_kcad::Columns) -> Vec<u64> {
+    cols.floats.iter().map(|x| x.to_bits()).collect()
+}
+
+#[test]
+fn random_drawings_cross_the_browsers_typed_boundary_unchanged() {
+    // What the browser's page and formats worker do (docs/adr/0030): the drawing
+    // taken apart into its head (JSON) and typed columns, written from them and
+    // checked against the columns as they were sent; read back into columns again.
+    let mut rng = Rng(20_260_927);
+    for round in 0..600 {
+        let doc = drawing(&mut rng);
+        let want = kentos_kcad::encode(&doc).expect("writes");
+        let (head, cols) = kentos_kcad::split(doc).expect("splits");
+        let (bytes, head_back) = kentos_kcad::encode_columns(&head, &cols, &mut kentos_kcad::Quiet)
+            .unwrap_or_else(|e| panic!("round {round}: {} {e}", e.code.as_str()));
+        assert!(bytes == want, "round {round}: other bytes than encode");
+        assert_eq!(head_back, head, "round {round}: head");
+        let (head2, cols2) =
+            kentos_kcad::split(kentos_kcad::decode(&bytes).expect("reads")).expect("splits");
+        assert_eq!(head2, head, "round {round}");
+        assert_eq!(bits(&cols2), bits(&cols), "round {round}: floats");
+        assert_eq!(
+            (
+                &cols2.kinds,
+                &cols2.uids,
+                &cols2.ints,
+                &cols2.text,
+                &cols2.text_lengths
+            ),
+            (
+                &cols.kinds,
+                &cols.uids,
+                &cols.ints,
+                &cols.text,
+                &cols.text_lengths
+            ),
+            "round {round}"
+        );
+    }
+}

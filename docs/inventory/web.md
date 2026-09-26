@@ -10,9 +10,9 @@
 | İşlem modelleri | 1 | 1 | 0 | 0 |
 | Çalışma modları | 5 | 3 | 0 | 2 |
 | Ayarlar | 64 | 64 | 0 | 0 |
-| Tarayıcı depoları | 8 | 8 | 0 | 0 |
+| Tarayıcı depoları | 9 | 9 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 192 | 0 | 0 |
-| Pencereler ve paneller | 54 | 54 | 0 | 0 |
+| Pencereler ve paneller | 55 | 55 | 0 | 0 |
 
 ## Kısmi (0)
 

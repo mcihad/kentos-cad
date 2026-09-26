@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
-import { KcadError, decodeWith, difference, encodeWith, exactJson, project, sniffDrawing } from './kcad';
+import { ColumnsReader, packDrawing, unpackSnapshot, type DrawingColumns, type PackedDrawing } from './columns';
+import { KcadError, decodeWith, difference, encodeWith, exactJson, sniffDrawing, type KcadProgress } from './kcad';
 import { formatsBuilt, formatsModule } from './testFormats';
 
 /**
  * `.kcad` v2 in the browser (docs/specs/kcad-v2.md): the shared Rust codec in
- * the formats WASM module, with what surrounds it in the worker (io/kcad.ts),
- * on the byte-level fixtures the independent Python writer made
- * (fixtures/kcad/v2, expected.json written by hand). The native codec
- * (crates/shared/kcad/tests) and tools/kcad/kcad.py read the same files.
+ * the formats WASM module, with what surrounds it in the worker (io/kcad.ts)
+ * and the page's typed columns (io/columns.ts, docs/adr/0030), on the
+ * byte-level fixtures the independent Python writer made (fixtures/kcad/v2,
+ * expected.json written by hand). The native codec (crates/shared/kcad/tests)
+ * and tools/kcad/kcad.py read the same files.
  */
 
 interface Case {
@@ -26,6 +28,22 @@ const read = (name: string) => new Uint8Array(fs.readFileSync(new URL(`../../../
 const text = (b: Uint8Array) => new TextDecoder().decode(b);
 const cases = (JSON.parse(text(read('expected.json'))) as { files: Case[] }).files;
 const drawing = (name: string) => JSON.parse(text(read(name))) as DocumentSnapshotV2;
+
+/** A drawing in the contract's JSON form, packed as the page packs one. */
+function pack(d: DocumentSnapshotV2): PackedDrawing {
+  const { entities, uids, ...head } = structuredClone(d);
+  return packDrawing(
+    head,
+    entities.map((e, i) => ({ ...e, uid: uids[i] })),
+  ).drawing;
+}
+
+/** Whether two sets of columns are the same, every float bit for bit. */
+function sameColumns(a: DrawingColumns, b: DrawingColumns): boolean {
+  const bits = (f: Float64Array) => new Uint32Array(f.buffer, f.byteOffset, f.length * 2);
+  const eq = (x: ArrayLike<number>, y: ArrayLike<number>) => x.length === y.length && Array.prototype.every.call(x, (v: number, i: number) => v === y[i]);
+  return eq(a.kinds, b.kinds) && eq(a.uids, b.uids) && eq(a.ints, b.ints) && eq(bits(a.floats), bits(b.floats)) && eq(a.text, b.text) && eq(a.textLengths, b.textLengths);
+}
 
 describe('what a file is, by content (spec §8), as the page tells before choosing a reader', () => {
   it('agrees with expected.json on every fixture', () => {
@@ -58,20 +76,23 @@ describe('JSON the Rust contracts read bit for bit', () => {
   });
 });
 
-describe('the drawing reduced to the contract', () => {
+describe('the drawing packed for the worker', () => {
   it('keeps every field of every kind and counts what the contract does not know', () => {
     const all = drawing('drawing.json');
-    const { snapshot, dropped } = project(all);
-    expect(dropped).toEqual({});
-    expect(difference(snapshot, all)).toBeNull();
+    const clean = pack(all);
+    expect(difference(unpackSnapshot(clean), all)).toBeNull();
     const extra = structuredClone(all) as unknown as { entities: Record<string, unknown>[]; layers: { style: Record<string, unknown> }[] };
     extra.entities[2].note = 'bilinmeyen';
     extra.entities[3].note = 'bilinmeyen';
     (extra.entities[0].p as Record<string, unknown>).w = 1;
     extra.layers[1].style.glow = true;
-    const out = project(extra as unknown as DocumentSnapshotV2);
+    const { entities, uids, ...head } = extra as unknown as DocumentSnapshotV2;
+    const out = packDrawing(
+      head,
+      entities.map((e, i) => ({ ...e, uid: uids[i] })),
+    );
     expect(out.dropped).toEqual({ 'polyline.note': 1, 'polygon.note': 1, 'point.p.w': 1, 'belge.layers.style.glow': 1 });
-    expect(difference(out.snapshot, all)).toBeNull();
+    expect(difference(unpackSnapshot(out.drawing), all)).toBeNull();
   });
 });
 
@@ -93,17 +114,26 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
         expect((error as KcadError).message.length).toBeGreaterThan(20);
       } else if (c.content) {
         // Every number with Object.is: −0 is not 0.
-        expect(difference(decodeWith(m, data), drawing(c.content)), c.file).toBeNull();
+        expect(difference(unpackSnapshot(decodeWith(m, data)), drawing(c.content)), c.file).toBeNull();
         valid++;
       } else {
         // A file the apps wrote (exchange/): read, and written again to the same bytes here too.
-        const doc = decodeWith(m, data);
+        const doc = unpackSnapshot(decodeWith(m, data));
         expect(doc.entities.length, c.file).toBe(c.entities);
-        expect(encodeWith(m, doc).bytes, c.file).toEqual(data);
+        expect(encodeWith(m, pack(doc)), c.file).toEqual(data);
         valid++;
       }
     }
     expect(valid).toBe(6);
+  });
+
+  it('packs every file as the Rust codec does: the page and the module lay the columns out the same', async () => {
+    const m = await formatsModule();
+    for (const c of cases.filter((c) => !c.error && c.sniff === 'kcad')) {
+      const rust = decodeWith(m, read(c.file));
+      const page = pack(unpackSnapshot(rust));
+      expect(sameColumns(page.columns, rust.columns), c.file).toBe(true);
+    }
   });
 
   it('writes the reference files byte for byte from their drawings', async () => {
@@ -112,9 +142,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
       ['minimal.json', 'minimal.kcad'],
       ['migrated.json', 'migrated.kcad'],
     ]) {
-      const { bytes, dropped } = encodeWith(m, drawing(content));
-      expect(bytes, file).toEqual(read(file));
-      expect(dropped).toEqual({});
+      expect(encodeWith(m, pack(drawing(content))), file).toEqual(read(file));
     }
   });
 
@@ -124,7 +152,7 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
     // tell from integers: the browser writes them as integers, so the bytes differ from drawing.kcad
     // there (ADR 0025) while every value reads back the same.
     const all = drawing('drawing.json');
-    const back = decodeWith(m, encodeWith(m, all).bytes);
+    const back = unpackSnapshot(decodeWith(m, encodeWith(m, pack(all))));
     expect(difference(back, all)).toBeNull();
     const text = back.entities.find((e) => e.kind === 'text');
     expect(text?.kind === 'text' && Object.is(text.rotation, -0)).toBe(true);
@@ -139,15 +167,54 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
       const d = structuredClone(base);
       change(d);
       try {
-        encodeWith(m, d);
+        encodeWith(m, pack(d));
       } catch (e) {
         return (e as Error).message;
       }
       return null;
     };
     expect(refuse((d) => (d.origin.x = Number.NaN))).toMatch(/origin\/x: sayı NaN ya da sonsuz/);
-    expect(refuse((d) => d.uids.push(d.uids[0]))).toMatch(/nesne ama|kimlik/);
+    expect(refuse((d) => ((d.entities[0] as { p: { x: number } }).p.x = Number.POSITIVE_INFINITY))).toMatch(/entities\/0\/p\/x: sayı NaN ya da sonsuz/);
+    expect(
+      refuse((d) => {
+        d.entities.push({ ...d.entities[0], id: 2 });
+        d.uids.push(d.uids[0]);
+      }),
+    ).toMatch(/kimlik/);
     expect(refuse((d) => (d.uids[0] = 'BÜYÜK'))).toMatch(/UUID değil/);
     expect(refuse((d) => (d.migratedFrom = { format: 'kentos.document', version: 1, sourceSha256: 'ab' }))).toMatch(/göç kaynağı/);
+    // A lone UTF-16 surrogate (JavaScript allows it, UTF-8 does not) is refused with its place, not replaced.
+    expect(refuse((d) => (d.entities[0].attrs = { Ad: 'P\ud8001' }))).toMatch(/entities\/0 \(point\) › attrs\/Ad: .*vekili/);
+  });
+
+  it('refuses bytes whose head reads back otherwise than it was sent: nothing unverified leaves the worker', async () => {
+    const m = await formatsModule();
+    const packed = pack(drawing('minimal.json'));
+    // A field the contract does not read, past the page's projection (io/kcad.ts `projectHead`): the file
+    // would not hold it, so the bytes are refused with the place, not handed out.
+    const head = JSON.parse(packed.head) as { settings: Record<string, unknown> };
+    head.settings.gridSize = 5;
+    let error: unknown = null;
+    try {
+      encodeWith(m, { ...packed, head: JSON.stringify(head) });
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(KcadError);
+    expect((error as KcadError).code).toBe('verify_failed');
+    expect((error as KcadError).message).toMatch(/^KCAD v2 baytları geri okununca çizimle aynı çıkmadı \(belge\/settings\/gridSize\); dosya yazılmadı/);
+  });
+
+  it('reports the project before its objects, and the objects as they are read and written', async () => {
+    const m = await formatsModule();
+    const d = drawing('drawing.json');
+    const seen: KcadProgress[] = [];
+    const bytes = encodeWith(m, pack(d), (p) => seen.push(p));
+    expect(seen.map((p) => p.stage).filter((s, i, a) => s !== a[i - 1])).toEqual(['writing', 'verifying', 'checking', 'project', 'reading']);
+    seen.length = 0;
+    const back = decodeWith(m, bytes, (p) => seen.push(p));
+    expect(seen.find((p) => p.stage === 'project')).toEqual({ stage: 'project', name: d.name, layers: d.layers.length, objects: d.entities.length });
+    expect(seen.at(-1)).toEqual({ stage: 'reading', done: d.entities.length, total: d.entities.length });
+    expect(new ColumnsReader(back.columns).count).toBe(d.entities.length);
   });
 });

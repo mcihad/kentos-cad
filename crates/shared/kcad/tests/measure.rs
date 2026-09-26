@@ -150,3 +150,40 @@ fn a_large_drawing() {
         "v2 yazma {encode:.0} ms, doğrulamalı yazma {encode_verified:.0} ms, okuma {decode:.0} ms; v1 JSON yazma {json_write:.0} ms, okuma {json_read:.0} ms"
     );
 }
+
+#[test]
+#[ignore = "a measurement, run by hand in release mode"]
+fn a_large_drawing_through_the_browsers_columns() {
+    // The browser's typed boundary (docs/adr/0030): what the formats worker does for a save
+    // (columns in, bytes out, verified against the columns) and an open (bytes in, columns out).
+    let doc = drawing(200_000);
+    let t = Instant::now();
+    let (head, cols) = kentos_kcad::split(doc.clone()).expect("splits");
+    let split = ms(t);
+    let t = Instant::now();
+    let (entities, uids) = kentos_kcad::columns::unpack(&cols).expect("unpacks");
+    let unpack = ms(t);
+    let t = Instant::now();
+    let bytes = kentos_kcad::encode(&doc).expect("writes");
+    let encode = ms(t);
+    let t = Instant::now();
+    let back = kentos_kcad::decode(&bytes).expect("reads");
+    let decode = ms(t);
+    let t = Instant::now();
+    assert_eq!(
+        kentos_kcad::columns::differs(&cols, &back.entities, &back.uids),
+        None
+    );
+    let differs = ms(t);
+    let t = Instant::now();
+    let _ = kentos_kcad::encode_columns(&head, &cols, &mut kentos_kcad::Quiet).expect("verified");
+    let whole = ms(t);
+    let t = Instant::now();
+    let _ = kentos_kcad::encode_verified(&doc).expect("verified");
+    let verified = ms(t);
+    drop((entities, uids));
+    println!(
+        "200 000 nesne, {} bayt: sütunlara ayırma {split:.0} ms, sütunlardan çizim {unpack:.0} ms, yazma {encode:.0} ms, okuma {decode:.0} ms, sütunlarla karşılaştırma {differs:.0} ms; encode_columns bütünü {whole:.0} ms; encode_verified {verified:.0} ms",
+        bytes.len()
+    );
+}

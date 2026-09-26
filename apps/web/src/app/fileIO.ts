@@ -2,12 +2,14 @@ import type { V1Identities } from '../contracts/generated/V1Identities';
 import { Signal } from '../core/signal';
 import { crsBySrid } from '../geo/crs';
 import { sheetAround } from '../model/newProject';
-import { DOCUMENT_EXTENSION, DOCUMENT_MIME, toSnapshotV2 } from '../model/snapshot';
+import { DOCUMENT_EXTENSION, DOCUMENT_MIME, snapshotHead } from '../model/snapshot';
+import type { OpeningView } from '../ui/io/OpeningDialog';
 import { h } from '../ui/dom';
 import { askUnsaved } from '../ui/widgets/confirm';
 import type { AppContext } from './context';
 import type { DocumentContent } from '../model/document';
-import { describeDropped, readDrawing, type DrawingCodec, type ReadDrawing } from './drawingFile';
+import { describeDropped, readDrawing, yieldToPage, type DrawingCodec, type ReadDrawing, type ReadProgress } from './drawingFile';
+import { readFile, tooLarge, writeAccess, writeFailure, writeFile } from './fileAccess';
 import { ENDED } from './cloud/syncCore';
 import { RecentFiles, type RecentFile } from './recentFiles';
 
@@ -20,14 +22,26 @@ import { RecentFiles, type RecentFile } from './recentFiles';
  * A save counts only when the file was really written: the drawing turns
  * clean after the writer closes without error, and only for the revision
  * that was written (an edit made meanwhile stays unsaved; CLAUDE.md §13.1,
- * §21.3). Where the browser cannot write files, the drawing is offered as a
- * download and stays marked unsaved, since nothing confirms it was kept. A
- * drawing opened from a v1 file is not written back there: Save asks where
- * to write the v2 file, and only the user's own choice replaces the old one
- * (FILE-21). Yeni proje replaces the drawing with an empty one. Whatever
- * replaces the drawing asks first about unsaved local changes; an open
- * cloud project needs no question, since its changes are sent or kept in
- * the device draft (it is left first, `CloudSession.leave`).
+ * §21.3). The drawing is packed into typed columns in one turn, so the file
+ * holds the drawing of that moment (docs/adr/0030). A write that fails
+ * (permission taken back, disk full, the tab closed) leaves the previous
+ * file as it was: the browser writes to a copy and puts it in place only
+ * when the writer closes (app/fileAccess.ts). Where the browser cannot write
+ * files, the drawing is offered as a download and stays marked unsaved,
+ * since nothing confirms it was kept. A drawing opened from a v1 file is not
+ * written back there: Save asks where to write the v2 file, and only the
+ * user's own choice replaces the old one (FILE-21). Yeni proje replaces the
+ * drawing with an empty one. Whatever replaces the drawing asks first about
+ * unsaved local changes; an open cloud project needs no question, since its
+ * changes are sent or kept in the device draft (it is left first,
+ * `CloudSession.leave`).
+ *
+ * Opening is staged and can be stopped (TODOS.md FILE-20, docs/adr/0030): a
+ * modal window shows the file, the project once it is known and how far the
+ * reading and the checks are; Vazgeç stops it. The drawing on screen is
+ * replaced in one step, and only by a drawing read and checked whole, only
+ * if the open was not stopped or overtaken and the drawing did not change
+ * meanwhile (generation and revision, CLAUDE.md §21.2).
  *
  * Objects keep their persistent ids (docs/adr/0014): a v2 file holds them; a
  * v1 file's are derived from its content, the same every time, here and in
@@ -38,7 +52,7 @@ import { RecentFiles, type RecentFile } from './recentFiles';
 export interface DrawingFileHandle {
   readonly name: string;
   getFile(): Promise<Blob>;
-  createWritable(): Promise<{ write(data: string | Uint8Array): Promise<void>; close(): Promise<void> }>;
+  createWritable(): Promise<{ write(data: string | Uint8Array): Promise<void>; close(): Promise<void>; abort?(): Promise<void> }>;
 }
 
 /**
@@ -111,6 +125,31 @@ export function replaceDrawing(ctx: AppContext, content: DocumentContent): void 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const withoutExtension = (name: string) => (name.toLowerCase().endsWith(DOCUMENT_EXTENSION) ? name.slice(0, -DOCUMENT_EXTENSION.length) : name);
 const withExtension = (name: string) => `${withoutExtension(name)}${DOCUMENT_EXTENSION}`;
+const count = (n: number) => n.toLocaleString('tr-TR');
+const share = (done: number, total: number) => (total > 0 ? Math.min(1, done / total) : 1);
+
+/** After the next frame is drawn (at once where there are no frames: tests). */
+const nextFrame = () => (typeof requestAnimationFrame === 'function' ? new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))) : Promise.resolve());
+
+/** An open's window where there is none (tests, a window that did not load): the open goes on without it. */
+const unseen: OpeningView = { step: () => {}, project: () => {}, close: () => {} };
+
+/** Where an open's bytes come from, and what it becomes once on screen. */
+interface Source {
+  /** The file's name, or what the bytes are (a recovery copy). */
+  label: string;
+  handle: DrawingFileHandle | null;
+  /** The bytes, when they are in hand already (`load`, a recovery copy). */
+  bytes?: Uint8Array;
+  /** Save does not write back to it (a read-only file, a v1 file, a recovery copy). */
+  readOnly: boolean;
+  /** Leaves an open cloud project before the drawing is replaced (else only detaches from it). */
+  leaveCloud: boolean;
+  /** The file vanished while it was being read (the recent list forgets it). */
+  gone?: () => void;
+  /** Puts the drawing on screen once read; the default is `show`. */
+  put?: (read: Extract<ReadDrawing, { ok: true }>) => void;
+}
 
 export class DocumentFiles {
   /** The file the drawing was opened from or last saved to; Save writes here without asking. */
@@ -118,6 +157,13 @@ export class DocumentFiles {
   picker: DrawingFilePicker = browserPicker;
   /** A save or open is in progress (commands stay disabled meanwhile). */
   readonly busy = new Signal(false);
+  /**
+   * The verified bytes a save is writing and the revision they hold, while
+   * the file is written: the recovery copy takes them when the tab is hidden
+   * then (app/recovery.ts), as the tab may be closed or discarded before the
+   * save ends.
+   */
+  writing: { bytes: Uint8Array; revision: number } | null = null;
   /** Drawings opened or saved lately (Son dosyalar): the start screen and the application menu list them. */
   readonly recent = new RecentFiles();
   /** Asks about unsaved changes; `after` says what would lose them. A dialog in the app; tests answer themselves. */
@@ -130,13 +176,26 @@ export class DocumentFiles {
   identities: (text: string) => Promise<V1Identities> = async (text) => (await import('../io/client')).formats().v1Identities(text);
   /**
    * The `.kcad` v2 codec: the formats worker, loaded like `identities`; tests
-   * run the module in process. Its `encode` copies the drawing before it returns.
+   * run the module in process. `cancel` ends the worker (an open stopped).
    */
   kcad: () => Promise<DrawingCodec> = async () => {
     const f = (await import('../io/client')).formats();
-    return { encode: (snapshot) => f.encodeKcad(snapshot), decode: (bytes) => f.decodeKcad(bytes) };
+    return { encode: (drawing, progress) => f.encodeKcad(drawing, progress), decode: (bytes, progress) => f.decodeKcad(bytes, progress), cancel: () => f.cancel() };
   };
+  /** An open's window (loaded with the first open); tests have none. `cancel` is Vazgeç. */
+  opening: (name: string, cancel: () => void) => Promise<OpeningView> = async (name, cancel) => {
+    if (typeof document === 'undefined') return unseen;
+    try {
+      return (await import('../ui/io/OpeningDialog')).openOpeningDialog(name, cancel);
+    } catch {
+      return unseen;
+    }
+  };
+  /** The user chose to drop the drawing's unsaved changes (the recovery copy goes too, app/recovery.ts). */
+  discarded: () => void = () => {};
   private readonly ctx: AppContext;
+  /** Counts opens: a later one overtakes an earlier that is still running. */
+  private opens = 0;
 
   constructor(ctx: AppContext) {
     this.ctx = ctx;
@@ -167,19 +226,8 @@ export class DocumentFiles {
       const readOnly = handle === undefined;
       if (readOnly) handle = await pickWithInput();
       if (!handle) return false;
-      let bytes: Uint8Array;
-      try {
-        bytes = new Uint8Array(await (await handle.getFile()).arrayBuffer());
-      } catch (e) {
-        this.ctx.log.error(`“${handle.name}” okunamadı: ${message(e)}.`);
-        return false;
-      }
-      const read = await this.read(bytes, handle);
-      if (!read) return false;
       // A local file replaces an open cloud project: what waits is sent, the rest stays in the device draft.
-      await this.leaveCloud();
-      this.show(read, handle, readOnly);
-      return true;
+      return this.openStaged({ label: handle.name, handle, readOnly, leaveCloud: true });
     });
   }
 
@@ -207,20 +255,7 @@ export class DocumentFiles {
         this.ctx.log.error(`“${entry.name}” için izin istenemedi: ${message(e)}. Dosyayı Aç ile seçin.`);
         return false;
       }
-      let bytes: Uint8Array;
-      try {
-        bytes = new Uint8Array(await (await handle.getFile()).arrayBuffer());
-      } catch (e) {
-        const gone = (e as DOMException).name === 'NotFoundError';
-        if (gone) void this.recent.remove(entry.id);
-        this.ctx.log.error(gone ? `“${entry.name}” artık bulunamıyor (taşınmış ya da silinmiş); son dosyalardan kaldırıldı.` : `“${entry.name}” okunamadı: ${message(e)}.`);
-        return false;
-      }
-      const read = await this.read(bytes, handle);
-      if (!read) return false;
-      await this.leaveCloud();
-      this.show(read, handle, false);
-      return true;
+      return this.openStaged({ label: entry.name, handle, readOnly: false, leaveCloud: true, gone: () => void this.recent.remove(entry.id) });
     });
   }
 
@@ -252,13 +287,36 @@ export class DocumentFiles {
    * becomes the file Save writes to unless `readOnly` or the file is v1.
    */
   load(data: string | Uint8Array, handle: DrawingFileHandle | null, readOnly = false): Promise<boolean> {
-    return this.run(async () => {
-      const read = await this.read(typeof data === 'string' ? new TextEncoder().encode(data) : data, handle);
-      if (!read) return false;
+    return this.run(() =>
       // Nothing is waited for here: an open cloud project's unsent changes stay in its device draft.
-      this.ctx.cloud.detach();
-      this.show(read, handle, readOnly);
-      return true;
+      this.openStaged({ label: handle?.name ?? 'Dosya', handle, bytes: typeof data === 'string' ? new TextEncoder().encode(data) : data, readOnly, leaveCloud: false }),
+    );
+  }
+
+  /**
+   * Puts a recovery copy of unsaved work on screen (app/recovery.ts): read
+   * and checked as a file is, with its persistent ids; it stays unsaved and
+   * has no file, so Save asks where and no file is replaced by itself.
+   */
+  recover(bytes: Uint8Array, name: string): Promise<boolean> {
+    return this.run(async () => {
+      if (this.mustAsk() && !(await this.confirmDiscard('Kurtarma kopyası açılırsa bu değişiklikler kaybolur.'))) return false;
+      return this.openStaged({
+        label: `“${name}” kurtarma kopyası`,
+        handle: null,
+        bytes,
+        readOnly: true,
+        leaveCloud: false,
+        put: (read) => {
+          const { ctx } = this;
+          replaceDrawing(ctx, read.content);
+          this.handle = null;
+          ctx.doc.markUnsaved();
+          ctx.log.success(
+            `“${ctx.doc.name.value}” kaydedilmemiş çalışması geri yüklendi: ${count(ctx.doc.size)} nesne. Çizim kaydedilmemiş sayılıyor; Kaydet dosyanın yerini sorar, hiçbir dosyanın üzerine kendiliğinden yazılmaz.`,
+          );
+        },
+      });
     });
   }
 
@@ -289,21 +347,117 @@ export class DocumentFiles {
   }
 
   /**
-   * The drawing in a file's bytes (v2 or v1, by content), checked like any
-   * file someone sent, its objects with their persistent ids (ADR 0014);
-   * null (and the reason, said) when unreadable. A v1 file's ids that cannot
-   * be derived do not stop the drawing: its objects get new ones for this
-   * opening, and the log says so.
+   * Opens a drawing in stages behind the open's window: the file's bytes,
+   * then the drawing read and checked whole (app/drawingFile.ts), then the
+   * drawing replaced in one step. A stopped or overtaken open replaces
+   * nothing; nor does one during which another drawing was put on screen or
+   * the drawing changed in a way nothing keeps. True when opened.
    */
-  private async read(bytes: Uint8Array, handle: DrawingFileHandle | null): Promise<Extract<ReadDrawing, { ok: true }> | null> {
-    const where = handle ? `“${handle.name}”` : 'Dosya';
-    const read = await readDrawing(bytes, { codec: this.kcad, identities: this.identities });
-    if (!read.ok) {
-      this.ctx.log.error(`${where} açılamadı: ${read.error}`);
-      return null;
+  private async openStaged(src: Source): Promise<boolean> {
+    const { ctx } = this;
+    const open = ++this.opens;
+    // The drawing this open may replace, as it is now (CLAUDE.md §21.2): another drawing put on
+    // screen meanwhile makes this open give way, and so does a change nothing keeps (a processing
+    // result on a local drawing); a cloud project's own changes stay in the project.
+    const revision = ctx.doc.revision;
+    let replaced = false;
+    const offReset = ctx.doc.events.on('reset', () => (replaced = true));
+    let stopped = false;
+    // Once the drawing is being put on screen, Vazgeç comes too late.
+    let committed = false;
+    const stale = () => stopped || open !== this.opens;
+    let codec: DrawingCodec | null = null;
+    const view = await this.opening(src.label, () => {
+      if (committed) return;
+      stopped = true;
+      codec?.cancel?.();
+    }).catch((e: unknown) => {
+      offReset();
+      throw e;
+    });
+    const said = (p: ReadProgress) => this.step(view, p);
+    try {
+      let bytes = src.bytes;
+      if (!bytes) {
+        try {
+          const file = await src.handle!.getFile();
+          const large = tooLarge(src.label, file.size);
+          if (large) {
+            ctx.log.error(large);
+            return false;
+          }
+          bytes = (await readFile(file, (done, total) => view.step(`Dosya okunuyor: ${count(Math.round(done / 1e6))} / ${count(Math.round(total / 1e6))} MB`, 0.1 * share(done, total)), stale)) ?? undefined;
+        } catch (e) {
+          const gone = (e as DOMException).name === 'NotFoundError';
+          if (gone) src.gone?.();
+          ctx.log.error(gone ? `“${src.label}” artık bulunamıyor (taşınmış ya da silinmiş)${src.gone ? '; son dosyalardan kaldırıldı' : ''}.` : `“${src.label}” okunamadı: ${message(e)}.`);
+          return false;
+        }
+      }
+      if (!bytes || stale()) return this.stopped(src.label);
+      codec = await this.kcad();
+      const got = codec;
+      const read = await readDrawing(bytes, { codec: async () => got, identities: this.identities }, { progress: said, stale });
+      if (!read.ok) {
+        if (read.cancelled || stale()) return this.stopped(src.label);
+        ctx.log.error(`${src.handle ? `“${src.label}”` : src.label} açılamadı: ${read.error}`);
+        return false;
+      }
+      if (stale()) return this.stopped(src.label);
+      view.step('Çizim ekrana getiriliyor…', 0.97);
+      // The window shows the last stage before the page is busy with the drawing.
+      await yieldToPage();
+      if (stale()) return this.stopped(src.label);
+      if (replaced || (ctx.doc.revision !== revision && this.mustAsk())) {
+        ctx.log.warn(`${src.handle ? `“${src.label}”` : src.label} açılmadı: açılış sürerken ekrandaki çizim değişti ya da başka bir çizim açıldı; o çizim olduğu gibi duruyor. Dosyayı yeniden açın.`);
+        return false;
+      }
+      // From here the open goes through: the cloud project is left only now, so an open that gives way
+      // above leaves it attached.
+      committed = true;
+      if (read.warning) ctx.log.warn(`${src.handle ? `“${src.label}”` : src.label}: ${read.warning}`);
+      if (src.leaveCloud) await this.leaveCloud();
+      else ctx.cloud.detach();
+      try {
+        (src.put ?? ((r) => this.show(r, src.handle, src.readOnly)))(read);
+      } catch (e) {
+        // The document refuses a drawing it cannot hold before it changes anything (`replaceWith`).
+        ctx.log.error(`${src.handle ? `“${src.label}”` : src.label} açılamadı: ${message(e)} Ekrandaki çizim olduğu gibi duruyor.`);
+        return false;
+      }
+      // The window stays until the drawing's first frame is drawn: a large one takes a moment.
+      await nextFrame();
+      return true;
+    } finally {
+      offReset();
+      view.close();
     }
-    if (read.warning) this.ctx.log.warn(`${where}: ${read.warning}`);
-    return read;
+  }
+
+  /** An open that was stopped: said once; the drawing on screen is as it was. */
+  private stopped(label: string): false {
+    this.ctx.log.info(`${label.startsWith('“') ? label : `“${label}”`} açılışı durduruldu; ekrandaki çizim olduğu gibi duruyor.`);
+    return false;
+  }
+
+  /** A stage of an open in the open's window. */
+  private step(view: OpeningView, p: ReadProgress): void {
+    switch (p.stage) {
+      case 'checking':
+        view.step(`Dosya denetleniyor (bütünlük özeti): %${Math.round(100 * share(p.done, p.total))}`, 0.1 + 0.1 * share(p.done, p.total));
+        break;
+      case 'project':
+        view.project(`“${p.name}”: ${count(p.objects)} nesne, ${count(p.layers)} üst katman`);
+        break;
+      case 'reading':
+        view.step(`Nesneler okunuyor: ${count(p.done)} / ${count(p.total)}`, 0.2 + 0.4 * share(p.done, p.total));
+        break;
+      case 'objects':
+        view.step(`Nesneler denetleniyor: ${count(p.done)} / ${count(p.total)}`, 0.6 + 0.35 * share(p.done, p.total));
+        break;
+      default:
+        break;
+    }
   }
 
   /** Puts a drawing read from `handle` on screen; Save writes back there unless it was read-only or v1. */
@@ -349,15 +503,17 @@ export class DocumentFiles {
 
   /**
    * The drawing's `.kcad` v2 bytes and its revision, taken in one turn (the
-   * codec copies the drawing before it returns), checked in the worker; null
+   * drawing is packed into typed columns before anything else runs, so the
+   * file holds the drawing of that moment), checked in the worker; null
    * (said) when the drawing cannot be written, and then nothing is.
    */
   private async encode(target: string): Promise<{ bytes: Uint8Array<ArrayBuffer>; revision: number; dropped: string | null } | null> {
     const doc = this.ctx.doc;
     try {
-      const codec = await this.kcad();
+      const [codec, { packDrawing }] = await Promise.all([this.kcad(), import('../io/columns')]);
       const revision = doc.revision;
-      const { bytes, dropped } = await codec.encode(toSnapshotV2(doc));
+      const { drawing, dropped } = packDrawing(snapshotHead(doc), doc.all());
+      const bytes = await codec.encode(drawing);
       return { bytes, revision, dropped: describeDropped(dropped) };
     } catch (e) {
       this.ctx.log.error(`${target} yazılamadı: ${message(e)} Değişiklikler kaydedilmemiş sayılıyor.`);
@@ -367,15 +523,22 @@ export class DocumentFiles {
 
   private async writeTo(handle: DrawingFileHandle): Promise<boolean> {
     const doc = this.ctx.doc;
+    // Asked while the user's Ctrl+S or click still counts, before the drawing is encoded.
+    const denied = await writeAccess(handle);
+    if (denied) {
+      this.ctx.log.error(`${denied} Değişiklikler kaydedilmemiş sayılıyor.`);
+      return false;
+    }
     const encoded = await this.encode(`“${handle.name}”`);
     if (!encoded) return false;
+    this.writing = encoded;
     try {
-      const w = await handle.createWritable();
-      await w.write(encoded.bytes);
-      await w.close();
+      await writeFile(handle, encoded.bytes);
     } catch (e) {
-      this.ctx.log.error(`“${handle.name}” yazılamadı: ${message(e)}. Değişiklikler kaydedilmemiş sayılıyor; başka bir yere kaydetmeyi deneyin (Farklı kaydet).`);
+      this.ctx.log.error(`${writeFailure(handle.name, e)} Değişiklikler kaydedilmemiş sayılıyor.`);
       return false;
+    } finally {
+      this.writing = null;
     }
     doc.markSaved(encoded.revision);
     this.remember(handle);
@@ -405,6 +568,7 @@ export class DocumentFiles {
   /** Unsaved changes: save them, drop them, or stay. Resolves true when the caller may go on. */
   private async confirmDiscard(after: string): Promise<boolean> {
     const choice = await this.ask(this.ctx.doc.name.value, after);
+    if (choice === 'drop') this.discarded();
     if (choice !== 'save') return choice === 'drop';
     // Saving is part of this command: the busy flag is already held.
     return this.handle ? this.writeTo(this.handle) : this.chooseAndWrite();

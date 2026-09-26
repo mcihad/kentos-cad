@@ -8,9 +8,27 @@ node apps/web/scripts/perf/startup.mjs --label baseline   # vite preview + başs
 pnpm perf:interaction --label baseline           # etkileşim tabanı: Vite + başsız Chrome (GPU), parsel-50k ve hat-1m × 3 koşu
 pnpm perf:interaction --label s1                 # sonraki ölçüm: interaction-s1.{json,md}, tabanla karşılaştırmalı
 node apps/web/scripts/perf/modules.mjs --label y4 # pnpm build'den sonra: ağır modüllerin ilk ve ikinci açılışı (boş profil × 3)
+pnpm perf:kcad --label after                     # KCAD v2 kaydet/aç: Vite + başsız Chrome (GPU), 1–200 000 parsel × 3 koşu
+KENTOS_PERF_LABEL=after KENTOS_PERF_OUT=docs/perf \
+  cargo test --release -p kentos-desktop perf::kcad -- --ignored --nocapture --test-threads=1   # aynısı masaüstünde
 ```
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
+
+## KCAD v2 kaydet ve aç: tipli işçi sınırı, aşamalı açılış (2026-09-26, `82dcbb9` → `35caac8`)
+
+- **Kaynak:** önce [kcad-web-before-2026-09-26.md](kcad-web-before-2026-09-26.md), [kcad-desktop-before-2026-09-26.md](kcad-desktop-before-2026-09-26.md); sonra [kcad-web-after-2026-09-26.md](kcad-web-after-2026-09-26.md), [kcad-desktop-after-2026-09-26.md](kcad-desktop-after-2026-09-26.md) (ham veri `.json`). Kararlar [ADR 0030](../adr/0030-kcad-v2-performance-and-recovery.md)'dadır.
+- **Ortam:** i5-11300H, 15 GB, Ubuntu 26.04.1; Chrome 154 başsız, WebGL2 (ANGLE, Iris Xe), Vite geliştirme sunucusu, biçim modülü `--profile wasm`; masaüstü `--release`, her işlem kendi sürecinde. 3 koşunun ortancası.
+- **Çizim:** parsel başına 20 köşeli alan, üç öznitelik ve etiket (`crates/shared/kcad/tests/measure.rs` ile aynı).
+
+| 200 000 parsel, 96,6 MB | Önce | Sonra |
+|---|---|---|
+| Web Kaydet / en uzun donma / bellek artışı | 14 417 ms / 1 227 ms / 2 192 MB | 2 168 ms / 361 ms / 663 MB |
+| Web Aç, çizim ekranda / en uzun donma / bellek artışı | 10 878 ms / 3 263 ms / 1 684 MB | 3 704 ms / 716 ms / 850 MB |
+| Masaüstü kaydın arayüzdeki payı / yazma / bellek artışı | 176 ms / 1 418 ms / 641 MB | 18 ms / 1 049 ms / 637 MB |
+| Masaüstü açma / bellek artışı | 635 ms / 448 MB | 627 ms / 367 MB |
+
+- 100 000 parselde (48,3 MB) web Kaydet 6 436 → 1 094 ms, Aç (çizim ekranda) 4 721 → 1 781 ms. Açıştaki en uzun donma artık çizicinin ilk karesidir; masaüstünde ilk karenin sahnesi değişmedi (212 → 220 ms).
 
 ## S6 kabul ölçümü: kullanıcının makinesinde etkileşim (2026-09-25, `405c364`)
 

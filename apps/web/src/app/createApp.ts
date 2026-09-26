@@ -17,6 +17,7 @@ import { CloudSession } from './cloud/session';
 import { registerCalcCommands } from './calc';
 import { registerFileExchangeCommands } from './fileExchange';
 import { DocumentFiles } from './fileIO';
+import { RecoveryCopies } from './recovery';
 import { ServerStatus } from './server';
 import { registerDefaultKeybindings } from './keybindings';
 import { createProcessing, registerProcessingCommands } from './processing';
@@ -85,11 +86,15 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
     processing: createProcessing(doc, selection, () => ctx.view.camera.visibleBounds(), { inBox: (r) => ctx.view.inBox(r), measures: (ids) => ctx.view.measures(ids) }),
     styles: createStyles(doc, system),
     server: new ServerStatus(),
-  } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession };
+  } as AppContext & { tools: ToolManager; view: ViewportController; files: DocumentFiles; cloud: CloudSession; recovery: RecoveryCopies };
   ctx.tools = new ToolManager(ctx);
   ctx.view = new ViewportController(ctx);
   ctx.files = new DocumentFiles(ctx);
   ctx.cloud = new CloudSession(ctx);
+  // Unsaved work is kept on this device as it changes, apart from any file (docs/adr/0030).
+  ctx.recovery = new RecoveryCopies(ctx);
+  ctx.files.discarded = () => ctx.recovery.discard();
+  ctx.recovery.start();
   // Closing the tab with unsaved changes asks first. Not in development, where Vite reloads the page on every edit.
   if (import.meta.env.PROD) window.addEventListener('beforeunload', (e) => doc.dirty.value && e.preventDefault());
   TOOL_CATALOG.forEach((d) => ctx.tools.register(d));
@@ -171,6 +176,8 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
   ctx.log.info(`${doc.name.value} açıldı: ${doc.size} nesne, ${doc.layers.leaves().length} katman.`);
   reportSettingsOpen(settingsStore, ctx.log);
   if (startScreenOnOpen(ctx)) void openStart(ctx);
+  // Work a crash or a closed tab left unsaved is offered once the app is up (over the start screen).
+  void ctx.recovery.offer();
   return ctx;
 }
 

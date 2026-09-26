@@ -19,7 +19,8 @@ use crate::layer::LineType;
 /// 3: dimensions are written as DXF dimensions (`dimensionValues`) and read back.
 /// 4: `v1Identities`, the persistent ids of a v1 drawing's objects (`identity`, docs/adr/0014).
 /// 5: `encodeKcad`, `decodeKcad`: the binary `.kcad` v2 (docs/specs/kcad-v2.md, docs/adr/0025).
-pub const FORMATS_VERSION: u32 = 5;
+/// 6: the drawing crosses as typed columns (`kentos_kcad::columns`) with progress, not as JSON (docs/adr/0030).
+pub const FORMATS_VERSION: u32 = 6;
 
 // ── Every import ────────────────────────────────────────────────────────
 

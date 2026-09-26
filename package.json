@@ -16,6 +16,7 @@
     "e2e:visual": "pnpm -C apps/web e2e:visual",
     "e2e:interaction": "pnpm -C apps/web e2e:interaction",
     "perf:interaction": "pnpm -C apps/web perf:interaction",
+    "perf:kcad": "pnpm -C apps/web perf:kcad",
     "inventory": "pnpm -C apps/web inventory",
     "inventory:check": "pnpm -C apps/web inventory:check",
     "rust:test": "cargo test && cargo clippy --all-targets -- -D warnings && node scripts/arch/deps.mjs",

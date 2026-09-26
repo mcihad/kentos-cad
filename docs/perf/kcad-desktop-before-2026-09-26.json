@@ -1,0 +1,259 @@
+{
+  "commit": "aa567ea",
+  "date": "2026-09-26",
+  "dirtyTree": false,
+  "label": "before",
+  "machine": {
+    "cpu": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz",
+    "kernel": "7.0.0-34-generic",
+    "memoryGb": 15.0,
+    "os": "Ubuntu 26.04.1 LTS",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "threads": 8
+  },
+  "setup": {
+    "files": ".run/perf",
+    "profile": "release (lto thin)",
+    "runs": 3,
+    "sizes": [
+      25000,
+      50000,
+      100000,
+      200000
+    ]
+  },
+  "summary": [
+    {
+      "bytes": 12041446,
+      "drawingRssMb": 43.47265625,
+      "openPeakAboveMb": 56.58203125,
+      "parcels": 25000,
+      "readMs": 77.95034000000001,
+      "runs": [
+        {
+          "open": {
+            "peakAboveMb": 56.58203125,
+            "readMs": 77.53536,
+            "rssBeforeMb": 5.64453125,
+            "sceneMs": 26.136929
+          },
+          "save": {
+            "bytes": 12041446,
+            "peakAboveMb": 80.01171875,
+            "rssBeforeMb": 43.48046875,
+            "snapshotMs": 20.536327,
+            "writeMs": 180.895175
+          }
+        },
+        {
+          "open": {
+            "peakAboveMb": 56.5234375,
+            "readMs": 78.411236,
+            "rssBeforeMb": 5.8203125,
+            "sceneMs": 25.360051000000002
+          },
+          "save": {
+            "bytes": 12041446,
+            "peakAboveMb": 80.05859375,
+            "rssBeforeMb": 43.43359375,
+            "snapshotMs": 24.224687000000003,
+            "writeMs": 180.180272
+          }
+        },
+        {
+          "open": {
+            "peakAboveMb": 56.59375,
+            "readMs": 77.95034000000001,
+            "rssBeforeMb": 5.77734375,
+            "sceneMs": 25.45663
+          },
+          "save": {
+            "bytes": 12041446,
+            "peakAboveMb": 79.94921875,
+            "rssBeforeMb": 43.47265625,
+            "snapshotMs": 20.042976,
+            "writeMs": 187.625352
+          }
+        }
+      ],
+      "savePeakAboveMb": 80.01171875,
+      "sceneMs": 25.45663,
+      "snapshotMs": 20.536327,
+      "writeMs": 180.895175
+    },
+    {
+      "bytes": 24092446,
+      "drawingRssMb": 80.71875,
+      "openPeakAboveMb": 112.47265625,
+      "parcels": 50000,
+      "readMs": 154.56930699999998,
+      "runs": [
+        {
+          "open": {
+            "peakAboveMb": 112.4765625,
+            "readMs": 154.760246,
+            "rssBeforeMb": 5.78515625,
+            "sceneMs": 54.299439
+          },
+          "save": {
+            "bytes": 24092446,
+            "peakAboveMb": 167.6796875,
+            "rssBeforeMb": 80.609375,
+            "snapshotMs": 41.19475,
+            "writeMs": 349.899355
+          }
+        },
+        {
+          "open": {
+            "peakAboveMb": 112.47265625,
+            "readMs": 153.917897,
+            "rssBeforeMb": 5.71875,
+            "sceneMs": 56.393079
+          },
+          "save": {
+            "bytes": 24092446,
+            "peakAboveMb": 167.48046875,
+            "rssBeforeMb": 80.71875,
+            "snapshotMs": 48.879364,
+            "writeMs": 350.467692
+          }
+        },
+        {
+          "open": {
+            "peakAboveMb": 112.37109375,
+            "readMs": 154.56930699999998,
+            "rssBeforeMb": 5.76953125,
+            "sceneMs": 54.324237999999994
+          },
+          "save": {
+            "bytes": 24092446,
+            "peakAboveMb": 167.5703125,
+            "rssBeforeMb": 80.7890625,
+            "snapshotMs": 40.955251999999994,
+            "writeMs": 355.454586
+          }
+        }
+      ],
+      "savePeakAboveMb": 167.5703125,
+      "sceneMs": 54.324237999999994,
+      "snapshotMs": 41.19475,
+      "writeMs": 350.467692
+    },
+    {
+      "bytes": 48274449,
+      "drawingRssMb": 155.1953125,
+      "openPeakAboveMb": 224.37890625,
+      "parcels": 100000,
+      "readMs": 308.01493800000003,
+      "runs": [
+        {
+          "open": {
+            "peakAboveMb": 224.37890625,
+            "readMs": 306.964285,
+            "rssBeforeMb": 5.765625,
+            "sceneMs": 107.110867
+          },
+          "save": {
+            "bytes": 48274449,
+            "peakAboveMb": 337.84765625,
+            "rssBeforeMb": 155.19140625,
+            "snapshotMs": 84.622282,
+            "writeMs": 693.237462
+          }
+        },
+        {
+          "open": {
+            "peakAboveMb": 224.4296875,
+            "readMs": 317.165892,
+            "rssBeforeMb": 5.75390625,
+            "sceneMs": 107.89256
+          },
+          "save": {
+            "bytes": 48274449,
+            "peakAboveMb": 337.921875,
+            "rssBeforeMb": 155.1953125,
+            "snapshotMs": 87.006946,
+            "writeMs": 704.3514640000001
+          }
+        },
+        {
+          "open": {
+            "peakAboveMb": 224.37890625,
+            "readMs": 308.01493800000003,
+            "rssBeforeMb": 5.8359375,
+            "sceneMs": 105.75602
+          },
+          "save": {
+            "bytes": 48274449,
+            "peakAboveMb": 337.93359375,
+            "rssBeforeMb": 155.265625,
+            "snapshotMs": 85.737341,
+            "writeMs": 688.5624799999999
+          }
+        }
+      ],
+      "savePeakAboveMb": 337.921875,
+      "sceneMs": 107.110867,
+      "snapshotMs": 85.737341,
+      "writeMs": 693.237462
+    },
+    {
+      "bytes": 96638449,
+      "drawingRssMb": 304.23046875,
+      "openPeakAboveMb": 448.42578125,
+      "parcels": 200000,
+      "readMs": 634.508578,
+      "runs": [
+        {
+          "open": {
+            "peakAboveMb": 448.39453125,
+            "readMs": 625.3338210000001,
+            "rssBeforeMb": 5.53515625,
+            "sceneMs": 211.82213099999998
+          },
+          "save": {
+            "bytes": 96638449,
+            "peakAboveMb": 640.93359375,
+            "rssBeforeMb": 304.26953125,
+            "snapshotMs": 172.166289,
+            "writeMs": 1394.3339830000002
+          }
+        },
+        {
+          "open": {
+            "peakAboveMb": 448.42578125,
+            "readMs": 634.508578,
+            "rssBeforeMb": 5.8125,
+            "sceneMs": 213.012958
+          },
+          "save": {
+            "bytes": 96638449,
+            "peakAboveMb": 640.8125,
+            "rssBeforeMb": 304.23046875,
+            "snapshotMs": 176.355417,
+            "writeMs": 1418.0564900000002
+          }
+        },
+        {
+          "open": {
+            "peakAboveMb": 448.58203125,
+            "readMs": 634.735061,
+            "rssBeforeMb": 5.71484375,
+            "sceneMs": 211.35741
+          },
+          "save": {
+            "bytes": 96638449,
+            "peakAboveMb": 640.828125,
+            "rssBeforeMb": 304.23046875,
+            "snapshotMs": 179.53819800000002,
+            "writeMs": 1463.426563
+          }
+        }
+      ],
+      "savePeakAboveMb": 640.828125,
+      "sceneMs": 211.82213099999998,
+      "snapshotMs": 176.355417,
+      "writeMs": 1418.0564900000002
+    }
+  ]
+}

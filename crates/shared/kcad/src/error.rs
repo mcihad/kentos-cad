@@ -45,6 +45,11 @@ pub enum Code {
     DuplicateUid,
     /// A writer's own check (§12): the bytes it made did not read back to the drawing.
     VerifyFailed,
+    /// Not the file's fault: the user stopped the work (`watch`, docs/adr/0030).
+    Cancelled,
+    /// Not the file's fault: the drawing's typed columns (`columns`) do not
+    /// hold together; a bug in the side that made them.
+    BadColumns,
 }
 
 impl Code {
@@ -88,6 +93,8 @@ impl Code {
             Code::UnknownKind => "unknown_kind",
             Code::DuplicateUid => "duplicate_uid",
             Code::VerifyFailed => "verify_failed",
+            Code::Cancelled => "cancelled",
+            Code::BadColumns => "bad_columns",
         }
     }
 }
