@@ -178,7 +178,7 @@ export class DocumentFiles {
   opening: (name: string, cancel: () => void) => Promise<OpeningView> = async (name, cancel) => {
     if (typeof document === 'undefined') return unseen;
     try {
-      return (await import('../ui/io/OpeningDialog')).openingDialog(name, cancel);
+      return (await import('../ui/io/OpeningDialog')).openOpeningDialog(name, cancel);
     } catch {
       return unseen;
     }

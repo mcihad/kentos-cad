@@ -39,6 +39,14 @@
   "storage:kentos.settings.v1.backup": {
     "note": "Okunamayan ya da geçersiz değer içeren ayar kaydının tam metni; kurtarma üstüne yazmadan önce buraya kopyalar (ADR 0023)."
   },
+  "screen:apps/web/src/ui/io/OpeningDialog.ts#openOpeningDialog": {
+    "desktop": "implemented",
+    "note": "Çizim açılırken: dosya, proje (ad, nesne, katman), aşama ve ilerleme; Vazgeç açık çizime dokunmaz (ADR 0030). Masaüstünde opening.rs."
+  },
+  "storage:kentos.recovery/copies": {
+    "desktop": "implemented",
+    "note": "Kaydedilmemiş çalışmanın kurtarma kopyası: çizimin KCAD v2 baytları ve birkaç bilgisi, hiçbir .kcad dosyasının içinde değil. Kayıt ya da değişikliklerin bilerek bırakılması onu siler; kapanan sekmenin kopyası açılışta sorulur (ADR 0030). Masaüstünde $XDG_DATA_HOME/kentos-cad/kurtarma."
+  },
   "tool:subdivide": {
     "note": "İfraz hesabı henüz yok. Alan ve hisse kuralları bağımsız referans ve kurum kabulü ister (CLAUDE.md §7, §23; TODOS.md GIS-06, GIS-13)."
   }

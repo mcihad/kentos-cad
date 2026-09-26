@@ -55,8 +55,8 @@
       "pending": 0
     },
     "storage": {
-      "total": 8,
-      "implemented": 8,
+      "total": 9,
+      "implemented": 9,
       "partial": 0,
       "pending": 0
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 50,
-      "implemented": 50,
+      "total": 51,
+      "implemented": 51,
       "partial": 0,
       "pending": 0
     },
@@ -8169,6 +8169,17 @@
       }
     },
     {
+      "id": "kentos.recovery/copies",
+      "kind": "indexedDB",
+      "source": "apps/web/src/app/recovery.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "note": "Kaydedilmemiş çalışmanın kurtarma kopyası: çizimin KCAD v2 baytları ve birkaç bilgisi, hiçbir .kcad dosyasının içinde değil. Kayıt ya da değişikliklerin bilerek bırakılması onu siler; kapanan sekmenin kopyası açılışta sorulur (ADR 0030). Masaüstünde $XDG_DATA_HOME/kentos-cad/kurtarma."
+    },
+    {
       "id": "kentos.settings.v1",
       "kind": "localStorage",
       "source": "apps/web/src/app/settings/store.ts",
@@ -11016,6 +11027,18 @@
         "web": "implemented",
         "desktop": "none"
       }
+    },
+    {
+      "id": "apps/web/src/ui/io/OpeningDialog.ts#openOpeningDialog",
+      "name": "openOpeningDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/io/OpeningDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "implemented"
+      },
+      "note": "Çizim açılırken: dosya, proje (ad, nesne, katman), aşama ve ilerleme; Vazgeç açık çizime dokunmaz (ADR 0030). Masaüstünde opening.rs."
     },
     {
       "id": "apps/web/src/ui/layers/LayersPanel.ts#LayersPanel",

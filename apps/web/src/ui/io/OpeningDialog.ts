@@ -24,7 +24,7 @@ export interface OpeningView {
 /** How long an open runs before its window shows (ms). */
 const QUIET_MS = 250;
 
-export function openingDialog(name: string, cancel: () => void): OpeningView {
+export function openOpeningDialog(name: string, cancel: () => void): OpeningView {
   const project = h('p', { class: 'opening__project' });
   const bar = h('span');
   const stage = h('p', { class: 'opening__stage', role: 'status' }, 'Dosya okunuyor…');
