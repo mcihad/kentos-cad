@@ -238,6 +238,10 @@ impl App {
 
     /// A key no text box captured, by ADR 0018's order (see the module).
     pub(crate) fn key(&mut self, press: KeyPress) -> Task<Message> {
+        // 1. The application menu takes every key while it is open (app_menu.rs).
+        if self.app_menu.is_some() {
+            return self.app_menu_key(&press);
+        }
         // 1. A dialog: Esc closes it; its own buttons do the rest.
         if self.dialog.is_some() {
             if press.named() == Some(Named::Escape) {

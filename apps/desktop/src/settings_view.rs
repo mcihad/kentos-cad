@@ -23,7 +23,7 @@ use crate::app::{App, Message};
 use crate::settings::schema;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 22] = [
+pub const KEYS: [&str; 23] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -43,6 +43,7 @@ pub const KEYS: [&str; 22] = [
     "graphics.msaa",
     "graphics.hiDpi",
     "appearance.theme",
+    "appearance.startScreen",
     "newProjects.srid",
     "newProjects.workspace",
     "newProjects.drawingFont",
@@ -399,6 +400,11 @@ impl App {
                 choices("appearance.theme", &value("appearance.theme")),
             )
             .help(help("appearance.theme"))
+            .field(
+                title("appearance.startScreen"),
+                switch("appearance.startScreen", None),
+            )
+            .help(help("appearance.startScreen"))
             .section("Yeni projeler")
             .field(
                 title("newProjects.srid"),

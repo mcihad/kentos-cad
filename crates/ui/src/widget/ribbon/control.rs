@@ -338,8 +338,9 @@ impl<'a, Message: Clone + 'a> From<AppButton<'a, Message>> for Element<'a, Messa
     }
 }
 
-/// KentOS marka işareti: köşesinde dolu kare olan çerçeve.
-fn logo_mark<'a, Message: 'a>() -> Element<'a, Message> {
+/// KentOS marka işareti: köşesinde dolu kare olan çerçeve. Vurgu
+/// zemininde durur (şeridin marka düğmesi, uygulama menüsünün başlığı).
+pub fn logo_mark<'a, Message: 'a>() -> Element<'a, Message> {
     let on_accent = |theme: &iced::Theme| Tokens::of(theme).on_accent;
 
     container(

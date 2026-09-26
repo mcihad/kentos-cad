@@ -833,7 +833,7 @@ pub enum Tone {
 }
 
 impl Tone {
-    fn style(self, theme: &iced::Theme) -> iced::widget::text::Style {
+    pub(crate) fn style(self, theme: &iced::Theme) -> iced::widget::text::Style {
         match self {
             Tone::Plain => style::text::default(theme),
             Tone::Muted => style::text::muted(theme),

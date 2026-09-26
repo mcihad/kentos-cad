@@ -54,7 +54,8 @@
     "file.export.dxf",
     "file.export.ncn",
     "file.new",
-    "file.settings"
+    "file.settings",
+    "file.start"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

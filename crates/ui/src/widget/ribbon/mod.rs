@@ -26,7 +26,7 @@
 mod control;
 mod layout;
 
-pub use control::{AppButton, Button};
+pub use control::{AppButton, Button, logo_mark};
 pub use layout::{Field, Gallery, Group, Preview, Row, Stack, Tile};
 
 use iced::widget::text::{Fragment, IntoFragment};

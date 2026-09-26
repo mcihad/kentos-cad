@@ -29,7 +29,12 @@ impl Then {
     fn replaces(self) -> bool {
         matches!(
             self,
-            Then::Open | Then::Close(_) | Then::OpenCloud { .. } | Then::Reopen | Then::NewProject
+            Then::Open
+                | Then::Close(_)
+                | Then::OpenCloud { .. }
+                | Then::Reopen
+                | Then::NewProject
+                | Then::OpenRecent
         )
     }
 }
@@ -113,6 +118,7 @@ impl App {
             }
             Then::Reopen => self.reopen(),
             Then::NewProject => self.new_project_ready(),
+            Then::OpenRecent => self.open_recent_ready(),
         }
     }
 
@@ -127,6 +133,7 @@ impl App {
                 self.dialog = Some(Dialog::FileConflict);
             }
             Then::NewProject => self.new_project_declined(),
+            Then::OpenRecent => self.opening_recent = None,
             _ => {}
         }
     }
@@ -174,7 +181,7 @@ impl App {
                     Then::SignOut => "Göndermeden oturumu kapat",
                     Then::Upload => "Göndermeden yükle",
                     Then::Reopen => "Göndermeden yeniden aç",
-                    Then::Open | Then::OpenCloud { .. } => "Göndermeden aç",
+                    Then::Open | Then::OpenCloud { .. } | Then::OpenRecent => "Göndermeden aç",
                     Then::NewProject => "Göndermeden yeni proje aç",
                 },
             };

@@ -245,6 +245,7 @@ KentOS logosuna (klasik arayüzde menü çubuğunda, şeritte sekme satırında)
   - **Bulut:** sunucu yoksa gri resim, açıklama ve “Yeniden dene”; oturum yoksa vurgu parıltılı resim, “Projeleriniz her yerde” ve “Giriş yap”; oturum varsa baş harfli vurgu dairesiyle hesap kartı ve Çıkış, açık bulut projesi kayıt lambasıyla (yeşil kayıtlı, turuncu bekliyor, kırmızı çakışma ya da hata), hap düğmeler (Proje aç, Buluta yükle, açık projede Yeniden adlandır ve Sil) ve kurumun son beş projesi (tıklayınca Bulut projesi aç penceresi o proje seçili açılır; yüklenirken iskelet satırlar).
 - **Alt şerit:** Uygulama ayarları, Kısayollar, Hakkında; sağda “KentOS CAD”.
 - **Klavye:** logoda Enter, Boşluk ya da ↓ açar; ↑/↓ satırlar arasında, → sağ bölmeye, ← geri; Esc kapatır ve odağı logoya verir. Bir satır komutunu çalıştırınca, dışarı basınca ya da pencere boyutu değişince kapanır.
+- **Masaüstü** (`apps/desktop/src/app_menu/`, ADR 0050): aynı satırlar ve bölmeler, KentOS UI'nin `AppMenu` bileşeniyle; şeridin marka düğmesi açar. Masaüstünde henüz olmayan komut şeritteki gibi soluk durur ve nedenini söyler (“Web'de var; masaüstüne henüz taşınmadı”). Kısayol başlığın satırındadır. Menü açıkken bütün tuşlar ona gider; odak kavramı olmadığından logodan klavyeyle açılmaz. Bulut bölmesindeki son proje tek tıkla açılır.
 
 ### 7.2 Açılır menü (PopupMenu)
 

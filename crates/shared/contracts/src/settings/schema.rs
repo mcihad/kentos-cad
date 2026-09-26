@@ -295,7 +295,7 @@ fn settings() -> Vec<SettingDescriptor> {
         .hosts(&[Web])
         .text("Artı imleç", "Çizim alanındaki imlecin kol uzunluğu."),
         boolean("appearance.startScreen", true)
-            .hosts(&[Web])
+            .hosts(&[Web, Desktop])
             .text(
                 "Başlangıç ekranı",
                 "Uygulama açılınca yeni proje, dosya aç, bulut ve son dosyalar gösterilir.",

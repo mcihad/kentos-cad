@@ -5,6 +5,7 @@
 //! çıktı.png [çizim.kcad]` draws the window into an image without opening it.
 
 mod app;
+mod app_menu;
 mod catalog;
 mod cloud;
 mod command_bar;
@@ -23,6 +24,7 @@ mod opening;
 mod perf;
 mod preview;
 mod project;
+mod recent;
 mod recovery;
 mod saving;
 #[cfg(test)]
@@ -31,6 +33,7 @@ mod selecting;
 mod settings;
 mod settings_view;
 mod snapshot;
+mod start;
 mod traces;
 mod view;
 mod viewport;
@@ -73,6 +76,14 @@ fn main() -> iced::Result {
             app.cloud.drafts = cloud::default_drafts();
             // Local copies of cloud projects: they open without a connection (docs/adr/0043).
             app.cloud.replicas = cloud::default_replicas();
+            // The recent files, kept beside the program's other history.
+            if let Some(folder) = recent::RecentFiles::default_folder() {
+                app.recent = recent::RecentFiles::open(&folder);
+            }
+            // Without a drawing named, the start screen (when the preference wants it).
+            if path.is_none() {
+                app.start_at_launch();
+            }
             (app, task)
         },
         app::App::update,

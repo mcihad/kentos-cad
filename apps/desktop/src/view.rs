@@ -71,6 +71,8 @@ impl App {
         .style(style::container::window);
 
         let mut layers: Vec<Element<'_, Message>> = vec![base.into()];
+        // The application menu over the window, under any dialog (app_menu.rs).
+        layers.extend(self.app_menu_view());
         if let Some(dialog) = self.dialog {
             layers.push(self.dialog_view(dialog));
         }
@@ -86,9 +88,12 @@ impl App {
 
     fn ribbon(&self) -> Element<'_, Message> {
         let catalog = catalog();
-        let first = catalog.tabs().next().map_or("file", |tab| tab.id);
         let mut ribbon = Ribbon::new()
-            .application(AppButton::new("KentOS CAD").on_press(Message::RibbonTab(first)))
+            .application(
+                AppButton::new("KentOS CAD")
+                    .open(self.app_menu.is_some())
+                    .on_press(Message::AppMenu(crate::app_menu::Event::Toggle)),
+            )
             .collapsible(self.ribbon_collapsed, Message::Run("view.ribbonCollapse"))
             .trailing(label::caption(self.document.as_ref().map_or(
                 "Açık çizim yok".to_owned(),
@@ -461,6 +466,7 @@ impl App {
             Asking::Ended => self.ended_view(),
             Asking::Exchange => self.exchange_view(),
             Asking::Project => self.project_view(),
+            Asking::Start => self.start_view(),
         }
     }
 }

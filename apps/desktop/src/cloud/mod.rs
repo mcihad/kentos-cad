@@ -41,7 +41,7 @@ mod view;
 pub mod words;
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 // Against a real server (apps/desktop/scripts/cloud-live.sh), ignored otherwise.
 #[cfg(test)]
 mod live_run;

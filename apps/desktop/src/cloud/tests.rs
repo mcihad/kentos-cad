@@ -23,9 +23,9 @@ use crate::cloud::catalog::List;
 use crate::cloud::{Event, Once, words};
 use crate::files_testing::{drive, scratch};
 
-const TENANT: &str = "0199aaaa-0000-7000-8000-000000000002";
+pub(crate) const TENANT: &str = "0199aaaa-0000-7000-8000-000000000002";
 const PERSONAL: &str = "0199aaaa-0000-7000-8000-000000000003";
-const PROJECT: &str = "0199aaaa-0000-7000-8000-000000000001";
+pub(crate) const PROJECT: &str = "0199aaaa-0000-7000-8000-000000000001";
 const OTHER: &str = "0199aaaa-0000-7000-8000-000000000009";
 const USER: &str = "0199aaaa-0000-7000-8000-00000000a1a1";
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
@@ -65,7 +65,7 @@ fn me() -> Me {
 }
 
 /// The app signed in (a connection that never reaches a server: nothing is driven).
-fn signed_in() -> App {
+pub(crate) fn signed_in() -> App {
     let (mut app, _) = App::boot(None);
     app.cloud.client = Some(Client::new("http://127.0.0.1:9").expect("a local address"));
     app.cloud.me = Some(me());
@@ -270,7 +270,7 @@ fn state(app: &App) -> SaveState {
         .state()
 }
 
-fn summary(id: &str, name: &str, storage: ProjectStorage) -> ProjectSummary {
+pub(crate) fn summary(id: &str, name: &str, storage: ProjectStorage) -> ProjectSummary {
     ProjectSummary {
         id: id.into(),
         name: name.into(),
@@ -304,7 +304,7 @@ fn summary(id: &str, name: &str, storage: ProjectStorage) -> ProjectSummary {
     }
 }
 
-fn page(projects: Vec<ProjectSummary>, total: u32, next: Option<&str>) -> ProjectPage {
+pub(crate) fn page(projects: Vec<ProjectSummary>, total: u32, next: Option<&str>) -> ProjectPage {
     ProjectPage {
         projects,
         total,

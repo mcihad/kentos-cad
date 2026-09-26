@@ -95,6 +95,8 @@ pub const PORTED: &[&str] = &[
     // standard layer tree checked against the web's drawings (fixtures/project/v1).
     "file.new",
     "file.settings",
+    // The start screen with the recent files (start.rs).
+    "file.start",
 ];
 
 /// Where a command stands, from the desktop's point of view.
@@ -166,6 +168,19 @@ pub struct Mode {
     pub highlights: &'static [&'static str],
     /// Announced but not built: shown last, dimmed, “Yakında”.
     pub ready: bool,
+}
+
+/// The name of the mode a project works in: its own when it can be
+/// chosen, else Hibrit (the web's `effectiveWorkspace`).
+pub fn mode_of(workspace: Option<kentos_contracts::Workspace>) -> &'static str {
+    use kentos_contracts::Workspace;
+    let modes = catalog().modes();
+    let wanted = workspace.unwrap_or(Workspace::Hybrid);
+    modes
+        .iter()
+        .find(|m| m.id == wanted && m.ready)
+        .or_else(|| modes.iter().find(|m| m.id == Workspace::Hybrid))
+        .map_or("Hibrit", |m| m.label)
 }
 
 /// A ribbon tab and its panels, in the web's order.

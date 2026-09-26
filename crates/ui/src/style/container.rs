@@ -34,6 +34,19 @@ pub fn header(theme: &Theme) -> Style {
     fill(Tokens::of(theme).header)
 }
 
+/// Simge karosu: başlık renginde, yuvarlak köşeli (ör. uygulama
+/// menüsündeki komutun simgesi).
+pub fn tile(theme: &Theme) -> Style {
+    Style {
+        background: Some(Background::Color(Tokens::of(theme).header)),
+        border: Border {
+            radius: RADIUS.into(),
+            ..Border::default()
+        },
+        ..Style::default()
+    }
+}
+
 /// Giriş alanı zemini (ör. komut satırı).
 pub fn field(theme: &Theme) -> Style {
     fill(Tokens::of(theme).field)

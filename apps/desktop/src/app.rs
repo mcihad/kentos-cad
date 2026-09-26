@@ -98,6 +98,8 @@ pub enum Dialog {
     Exchange,
     /// Yeni proje or Proje ayarları (project/).
     Project,
+    /// Başlangıç (start.rs).
+    Start,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -119,6 +121,8 @@ pub enum Then {
     Reopen,
     /// The new project the Yeni proje window built (project/new.rs).
     NewProject,
+    /// A recent file (start.rs); its path waits in `App::opening_recent`.
+    OpenRecent,
 }
 
 /// Where the open and save dialogs are answered.
@@ -186,6 +190,10 @@ pub enum Message {
     Exchange(Box<crate::exchange::Event>),
     /// Yeni proje and Proje ayarları (project/).
     Project(Box<crate::project::Event>),
+    /// The application menu (app_menu.rs).
+    AppMenu(crate::app_menu::Event),
+    /// Başlangıç (start.rs).
+    Start(crate::start::Event),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -260,6 +268,12 @@ pub struct App {
     pub exchange: Option<crate::exchange::Window>,
     /// The open project window (project/).
     pub project: Option<crate::project::Window>,
+    /// The application menu, while it is open (app_menu.rs).
+    pub app_menu: Option<crate::app_menu::State>,
+    /// Drawings opened or saved lately (recent.rs); kept in a file when `main` opens its folder.
+    pub recent: crate::recent::RecentFiles,
+    /// The recent file to open once the drawing on screen is left (start.rs).
+    pub opening_recent: Option<PathBuf>,
 }
 
 impl App {
@@ -321,6 +335,9 @@ impl App {
             cloud: CloudState::default(),
             exchange: None,
             project: None,
+            app_menu: None,
+            recent: crate::recent::RecentFiles::memory(),
+            opening_recent: None,
         };
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
@@ -517,6 +534,8 @@ impl App {
                     );
                 }
                 self.show_document(*doc);
+                // A drawing opened from a file goes first in the recent files (a recovered one has none).
+                self.remember_file();
             }
             Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
                 self.error(error)
@@ -531,6 +550,7 @@ impl App {
                     };
                     self.output(format!("Kaydedildi: {}.{later}", written.path.display()));
                     self.recovery_saved();
+                    self.remember_file();
                 }
                 // Another drawing was opened meanwhile: the file is written, but it is
                 // not the open drawing's file, which keeps its path and its state.
@@ -561,6 +581,8 @@ impl App {
             Message::Cloud(event) => return self.cloud_event(*event),
             Message::Exchange(event) => return self.exchange_event(*event),
             Message::Project(event) => return self.project_event(*event),
+            Message::AppMenu(event) => return self.app_menu_event(event),
+            Message::Start(event) => return self.start_event(event),
             Message::Viewport(event) => return self.pointer(event),
             Message::Settings(edit) => return self.settings_edit(edit),
             Message::Opening(event) => return self.opening_event(event),
@@ -695,6 +717,8 @@ impl App {
 
     /// Runs a web command id: the desktop's handler, or a note that it is not here yet.
     pub fn run(&mut self, id: &'static str) -> Task<Message> {
+        // Whatever runs a command closes the application menu (the web's `executed`).
+        self.app_menu = None;
         let Some(command) = catalog().get(id) else {
             self.error(format!("Komut bulunamadı: {id}"));
             return Task::none();
@@ -732,6 +756,7 @@ impl App {
         match id {
             // The drawing on screen is left first: its unsent cloud work to its draft, or the question.
             "file.open" => return self.leave(Then::Open),
+            "file.start" => self.open_start(),
             // A cloud project saves to the server (cloud/file.rs); Farklı kaydet writes a local file.
             "file.save"
                 if self
