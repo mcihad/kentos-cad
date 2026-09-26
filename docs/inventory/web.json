@@ -61,8 +61,8 @@
       "pending": 0
     },
     "fileFields": {
-      "total": 174,
-      "implemented": 174,
+      "total": 192,
+      "implemented": 192,
       "partial": 0,
       "pending": 0
     },
@@ -8900,6 +8900,175 @@
       }
     },
     {
+      "id": "DocumentSnapshotV2.activeLayer",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "activeLayer",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.entities",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "entities",
+      "type": "Array<Entity>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.format",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "format",
+      "type": "\"kentos.document\"",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.homeView",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "homeView",
+      "type": "Bounds",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.layers",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "layers",
+      "type": "Array<LayerNode>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.migratedFrom",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "migratedFrom",
+      "type": "MigrationSource",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.name",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "name",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.origin",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "origin",
+      "type": "Vec2",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.projectId",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "projectId",
+      "type": "ProjectId",
+      "optional": true,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.settings",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "settings",
+      "type": "ProjectSettings",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.styles",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "styles",
+      "type": "ProjectStyles",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.uids",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "uids",
+      "type": "Array<EntityId>",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "DocumentSnapshotV2.version",
+      "contract": "DocumentSnapshotV2",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "version",
+      "type": "2",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "DrawingFont",
       "contract": "DrawingFont",
       "rust": "crates/shared/contracts/src/document.rs",
@@ -9119,6 +9288,17 @@
           "type": "HatchEntity"
         }
       ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "EntityId",
+      "contract": "EntityId",
+      "rust": "crates/shared/contracts/src/identity.rs",
+      "type": "string",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -9800,6 +9980,45 @@
       }
     },
     {
+      "id": "MigrationSource.format",
+      "contract": "MigrationSource",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "format",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "MigrationSource.sourceSha256",
+      "contract": "MigrationSource",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "sourceSha256",
+      "type": "string",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "MigrationSource.version",
+      "contract": "MigrationSource",
+      "rust": "crates/shared/contracts/src/document.rs",
+      "field": "version",
+      "type": "number",
+      "optional": false,
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "PathEntity.attrs",
       "contract": "PathEntity",
       "rust": "crates/shared/contracts/src/entity.rs",
@@ -10055,6 +10274,17 @@
         "cross",
         "triangle"
       ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "ProjectId",
+      "contract": "ProjectId",
+      "rust": "crates/shared/contracts/src/identity.rs",
+      "type": "string",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

@@ -9,7 +9,7 @@ const SECTIONS = {
   workspaces: 'Çalışma modları',
   settings: 'Ayarlar',
   storage: 'Tarayıcı depoları',
-  fileFields: '`.kcad` v1 alanları',
+  fileFields: '`.kcad` alanları (v1 okunur, v2 yazılır)',
   screens: 'Pencereler ve paneller',
 };
 

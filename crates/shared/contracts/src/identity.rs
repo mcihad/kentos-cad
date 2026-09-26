@@ -74,18 +74,28 @@ pub struct V1EntityIdentity {
     pub uid: String,
 }
 
-/// A UUID in the contracts: its 16 bytes in memory and in `.kcad` v2 files
-/// (docs/specs/kcad-v2.md §6.3), lowercase text with hyphens in JSON and on the
-/// wire (docs/adr/0014). Reading text refuses anything else: upper case,
-/// braces, missing hyphens.
-macro_rules! uuid_newtype {
-    ($(#[$doc:meta])* $name:ident) => {
-        $(#[$doc])*
-        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-        #[cfg_attr(feature = "ts", derive(TS))]
-        #[cfg_attr(feature = "ts", ts(export, type = "string"))]
-        pub struct $name(pub [u8; 16]);
+/// An object's persistent id (docs/adr/0014): given when the object is
+/// created (UUIDv7) or derived from a v1 file (UUIDv5), kept by every edit,
+/// never reused. Files, the server, Python and AI name objects by it; the
+/// open document's slot (`EntityBase.id`) never leaves the document.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+pub struct EntityId(pub [u8; 16]);
 
+/// A project's persistent id, when it has one: derived from a v1 file
+/// (`UUIDv5(namespace, "project")`, docs/adr/0014) or read from a v2 file.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export, type = "string"))]
+pub struct ProjectId(pub [u8; 16]);
+
+/// What a UUID of the contracts is: its 16 bytes in memory and in `.kcad` v2
+/// files (docs/specs/kcad-v2.md §6.3), lowercase text with hyphens in JSON and
+/// on the wire (docs/adr/0014). Reading text refuses anything else: upper
+/// case, braces, missing hyphens.
+macro_rules! uuid_impls {
+    ($name:ident) => {
         impl $name {
             /// The UUID as KentOS writes it: lowercase, with hyphens.
             pub fn to_text(&self) -> String {
@@ -143,19 +153,8 @@ macro_rules! uuid_newtype {
     };
 }
 
-uuid_newtype!(
-    /// An object's persistent id (docs/adr/0014): given when the object is
-    /// created (UUIDv7) or derived from a v1 file (UUIDv5), kept by every edit,
-    /// never reused. Files, the server, Python and AI name objects by it; the
-    /// open document's slot (`EntityBase.id`) never leaves the document.
-    EntityId
-);
-
-uuid_newtype!(
-    /// A project's persistent id, when it has one: derived from a v1 file
-    /// (`UUIDv5(namespace, "project")`, docs/adr/0014) or read from a v2 file.
-    ProjectId
-);
+uuid_impls!(EntityId);
+uuid_impls!(ProjectId);
 
 /// Reads a UUID written lowercase with hyphens (8-4-4-4-12), as `uuid_text` writes it.
 pub fn uuid_from_text(text: &str) -> Option<[u8; 16]> {

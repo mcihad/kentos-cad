@@ -1,6 +1,6 @@
 // Feature inventory of the web app (TODOS.md BASE-04): commands, tools,
 // processing tools and models, work modes, settings, browser storage, the
-// `.kcad` v1 fields, windows and panels, and the menu and ribbon layout in
+// `.kcad` fields (v1 read, v2 written), windows and panels, and the menu and ribbon layout in
 // order. Each item has a status
 // (implemented / partial / pending), per-platform status and the tests that
 // mention it. The inventory is derived, never typed in:

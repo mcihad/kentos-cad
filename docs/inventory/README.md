@@ -25,7 +25,7 @@ Bir komut, araç, işlem aracı, ayar, depo, pencere ya da `.kcad` alanı ekleni
 | `workspaces` | `app/workspaces.ts` |
 | `settings` | Tercihler: tipli ayarlar ([ADR 0023](../adr/0023-typed-settings.md); `localStorage kentos.settings.v1`, kapsamı `user` ya da `device`, `default`'u şemadan). Yerleşim (`kentos.ui.v1`), proje ayarları (`PROJECT_SETTINGS_DEFAULTS`, `.kcad`'e yazılır) ve oturum yardımcıları (kalıcı değil). `setting`, tipli ayarın anahtarıdır. Yerleşimde ve oturumda `default` taze profilin değeridir |
 | `storage` | Kaynak taraması: `persistedSignals('…')` localStorage anahtarları; tipli ayarların `SETTINGS_STORAGE`, `SETTINGS_BACKUP` ve eski `LEGACY_PREFS` sabitleri; `indexedDB.open` yanındaki `const DB`/`STORE` |
-| `fileFields` | `.kcad` v1: `DocumentSnapshotV1`'den erişilen bütün sözleşmeler. Rust'tan üretilen TS tiplerinden okunur, tanımlandıkları Rust dosyasıyla birlikte |
+| `fileFields` | `.kcad`: `DocumentSnapshotV1`'den (okunan v1 JSON) ve `DocumentSnapshotV2`'den (yazılan binary v2, [docs/specs/kcad-v2.md](../specs/kcad-v2.md)) erişilen bütün sözleşmeler. Rust'tan üretilen TS tiplerinden okunur, tanımlandıkları Rust dosyasıyla birlikte |
 | `screens` | Kaynak taraması (`src/ui`): `export function open…` pencereleri, `Component`/`Panel`'den türeyen paneller |
 
 Komut kayıtlarının yanında menü ve şerit yerleri de hesaplanır: menü yolu, şerit sekmesi ve paneli, hızlı erişim, araç kutusu. Kısayollar tuş eşleminden gelir. `hiddenIn`, komutu hangi hazır çalışma modunun gizlediğini söyler.

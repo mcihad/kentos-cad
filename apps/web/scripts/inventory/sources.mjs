@@ -1,5 +1,5 @@
 // The part of the feature inventory (TODOS.md BASE-04) read from the source
-// tree: windows and panels, browser storage, the `.kcad` v1 fields as the
+// tree: windows and panels, browser storage, the `.kcad` fields (v1, v2) as the
 // Rust contracts define them (through their generated TypeScript), and which
 // tests mention an id. Plain text scans; the patterns are the conventions the
 // code already follows (`open…` window functions, `persistedSignals`, ts-rs
@@ -96,8 +96,10 @@ function parseContract(text) {
 }
 
 /**
- * The `.kcad` v1 fields: every contract reachable from `DocumentSnapshotV1`
- * in the ts-rs output, with the Rust file that defines it.
+ * The `.kcad` fields: every contract reachable from `DocumentSnapshotV1`
+ * (the v1 JSON, still read) and `DocumentSnapshotV2` (what the binary v2
+ * holds, docs/specs/kcad-v2.md) in the ts-rs output, with the Rust file that
+ * defines it.
  */
 export function scanFileFields(root, generatedDir, rustDir) {
   const contracts = new Map();
@@ -111,7 +113,7 @@ export function scanFileFields(root, generatedDir, rustDir) {
     for (const m of text.matchAll(/pub (?:struct|enum|type) (\w+)/g)) if (!rust.has(m[1])) rust.set(m[1], relative(root, join(rustDir, f)));
   }
   const seen = [];
-  const queue = ['DocumentSnapshotV1'];
+  const queue = ['DocumentSnapshotV1', 'DocumentSnapshotV2'];
   while (queue.length) {
     const name = queue.shift();
     if (seen.includes(name) || !contracts.has(name)) continue;
