@@ -731,7 +731,7 @@ Bu bölümde bir aracın listelenmesi sıfırdan yazılması gerektiği anlamın
 - [ ] `FMT-04` Gerekli GDAL/PROJ/native codec'leri adapter veya server işine bağla; bütün C/C++ bağımlılığını browser'a taşımayı şart koşma. Web yerel desteklenmeyen formatı açık server conversion seçeneğiyle ele alsın.
 - [ ] `FMT-05` DWG gibi formatların SDK/lisans/dağıtım kararını ayrı değerlendir; lisanslı dönüştürücü seçilmeden tam yerel DWG desteği sözü verme.
 - [ ] `FMT-06` Her importer için boyut/karmaşıklık bütçesi, iptal, provenance, unknown-object preservation ve raporlanan kayıp politikası oluştur. — **26 Eylül, kısmen:** GeoJSON/Shapefile: iç içe 64 düzey, bir milyon nesne (kalan sayılır), uzunluklar dosyaya karşı denetlenir, pencere kapanınca işçi durur; kesik/bozuk girdi testi ([ADR 0046](docs/adr/0046-geojson-and-shapefile.md)). Açık: provenance, bilinmeyen nesnenin korunması.
-- [ ] `FMT-07` Shapefile `.zip` içe aktarma: yalnız inflate eden `miniz_oxide` ve boyut, oran ve girdi sınırlı küçük bir ZIP dizini okuyucusu; yeni bağımlılık sahibin onayını ister ([ADR 0046](docs/adr/0046-geojson-and-shapefile.md) soru 4).
+- [ ] `FMT-07` Shapefile `.zip` içe aktarma: yalnız inflate eden `miniz_oxide` ve boyut, oran ve girdi sınırlı küçük bir ZIP dizini okuyucusu ([ADR 0046](docs/adr/0046-geojson-and-shapefile.md) soru 4). **Sahip 26 Eylül'de onayladı;** masaüstünün GeoJSON/Shapefile dilimiyle yapılacak.
 - [ ] `FMT-08` Çok katmanlı Shapefile içe aktarma, tek geri alma adımı (ADR 0046 soru 6; şimdilik içe aktarma başına bir katman).
 - [ ] `FMT-09` Shapefile dışa aktarma: 10 karakterlik alan adı, tip ve kodlama kaybı raporuyla.
 

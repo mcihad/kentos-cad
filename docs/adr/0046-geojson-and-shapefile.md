@@ -154,7 +154,7 @@
 
 ## Sahibe sorular ve varsayılanlar
 
-Önerilen seçenek ilk sıradadır; uygulanan odur.
+Önerilen seçenek ilk sıradadır; uygulanan odur. Sahip 26 Eylül'de 4. soruya (a) dedi: `miniz_oxide` eklenecek (`FMT-07`); öbürlerinde uygulanan varsayılanlar geçerlidir.
 
 1. **WGS 84 GeoJSON'u TM projesine almak:**
    - (a) Dönüşüm (`crs.transform`) bağımsız referanslarla gelene kadar kapalı kalır. Kullanıcı dosyanın gerçekte projenin sisteminde olduğunu açıkça seçebilir.
@@ -169,6 +169,7 @@
 4. **`.zip` Shapefile:**
    - (a) `miniz_oxide` eklenir (yalnız inflate; saf Rust, MIT/Zlib/Apache-2.0). Yanında küçük bir ZIP dizin okuyucusu yazılır; boyut, oran ve girdi sayısı sınırlarıyla (zip bombası).
    - (b) `.zip` olmaz; dosyalar birlikte seçilir (bugünkü hâl).
+   - **Karar (sahip, 26 Eylül):** (a). Masaüstünün GeoJSON/Shapefile dilimiyle birlikte yapılır; bağımlılık kaydına eklenmeden önce sürümü, lisansı ve boyutu yazılır.
 5. **`.prj`'siz Shapefile:**
    - (a) DXF gibi projenin sistemi seçili gelir ve söylenir.
    - (b) Kullanıcı açıkça seçmeden içe aktarma kapalı kalır.
