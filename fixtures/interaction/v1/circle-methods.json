@@ -13,6 +13,7 @@
   "steps": [
     { "run": "tool.circle", "expect": { "tool": "circle", "points": 0, "options": ["2N", "3N", "TTY", "TTT"], "entities": 7 } },
     { "click": [10, -4], "expect": { "points": 1, "options": ["Ç"] } },
+    { "move": [13, 0], "note": "Önizleme: merkezden imlece daire ve yarıçapı." },
     { "click": [13, 0], "note": "Merkezden 5 m.", "expect": { "entities": 8, "newest": { "kind": "circle", "center": [10, -4], "radius": 5 }, "points": 0, "log": "success" } },
     { "click": [-4, -8] },
     { "key": "C", "note": "C, Ç seçeneğini seçer: ikinci değer çaptır.", "expect": { "options": ["R"], "points": 1 } },

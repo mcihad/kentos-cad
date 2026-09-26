@@ -3,7 +3,7 @@
   "version": 1,
   "id": "select-delete",
   "title": "Seçim: üzerine gelme, tıklama, Shift ile ekleyip çıkarma, soldan sağa pencere ve sağdan sola kesişim kutusu, Esc, gizli ve kilitli katmanlar; Delete seçimi siler, kilitli nesne kalır, Ctrl+Z aynı nesneleri yerlerine getirir; seçimsiz Delete tıklananı siler",
-  "source": "Web'in SelectTool, EraseTool ve cad.entities.delete kuralları, ADR 0029",
+  "source": "Web'in SelectTool ('tool.select'), EraseTool ('tool.erase', Delete) ve cad.entities.delete kuralları, ADR 0029",
   "covers": ["UX-09", "CMD-07"],
   "document": "objects.kcad",
   "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },

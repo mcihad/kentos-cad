@@ -15,6 +15,7 @@
     { "key": "D", "note": "Devam edilecek çizgi, yay ya da çoklu çizgi yok.", "expect": { "log": "warn", "points": 0, "entities": 0 } },
     { "click": [10, 0], "expect": { "points": 1, "options": ["M", "B"] } },
     { "click": [0, 10], "expect": { "points": 2, "options": [] } },
+    { "move": [-6, 8], "note": "Önizleme: üç noktadan geçen yay, yarıçapı ve açısı." },
     { "click": [-10, 0], "note": "Üç noktadan: saat yönünün tersine saklanır.", "expect": { "entities": 1, "newest": { "kind": "arc", "center": [0, 0], "radius": 10, "points": [[10, 0], [-10, 0]] }, "log": "success", "points": 0, "options": ["M", "D"] } },
     { "click": [25, 0] },
     { "key": "M", "expect": { "options": [], "points": 1 } },
@@ -38,6 +39,7 @@
     { "key": "Enter", "expect": { "entities": 5, "tool": "line" } },
     { "run": "tool.arc", "expect": { "options": ["M", "D"] } },
     { "key": "D", "note": "Son çizginin ucundan, doğrultusuna teğet.", "expect": { "points": 1, "options": [] } },
+    { "move": [-15, -5], "note": "Önizleme: çizgiye teğet devam eden yay." },
     { "click": [-15, -5], "expect": { "entities": 6, "newest": { "kind": "arc", "center": [-15, -10], "radius": 5, "points": [[-15, -15], [-15, -5]] }, "log": "success" } },
     { "key": "Ctrl+Z", "expect": { "entities": 5, "tool": "arc", "canRedo": true } },
     { "key": "Esc", "expect": { "tool": "select" } }
