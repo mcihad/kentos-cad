@@ -170,7 +170,7 @@
 - **Testler:**
   - `kentos-native-application`: katalog eşitliği; 66 ortak durum (23 + 20 + 23); masaüstüne özgü iki test.
   - `kentos-interaction`: kapalı alanın 13, çizginin 11, çoklu çizginin 8 kuralı, tek test tezgâhında (`tests/common`).
-  - Masaüstü: 41 test. Yedi iz üç varyantta, komut satırı modeli ve metin alanındaki akorlar bunlara dahil.
+  - Masaüstü: 42 test. Yedi iz üç varyantta, komut satırı modeli, metin alanındaki akorlar ve iki aracın kısayolundan ve adından başlaması bunlara dahil.
   - KentOS UI: `suggested`'ın sırası.
   - Web: 66 ortak durum, kayıt eşitliği, her komutun dosyası.
 - **Bağımlılıklar:** yeni paket yok. `Cargo.lock` değişmedi.
@@ -197,7 +197,7 @@
   - 508 test geçti, clippy temiz;
   - bağımlılık yönü temiz (18 crate, 23 crate × hedef);
   - veritabanı testleri yerel sunucuda çalıştı: `KENTOS_TEST_DB=required cargo test -p kentos-application -p kentos-postgres -p kentos-api` 56 test geçti.
-- `pnpm rust:test:desktop`: masaüstü 41, render 28, KentOS UI 171, vitrin 55 test geçti; clippy temiz.
+- `pnpm rust:test:desktop`: masaüstü 42, render 28, KentOS UI 171, vitrin 55 test geçti; clippy temiz.
 - `cargo test -p kentos-desktop traces`: 7 iz × 3 varyant ve komut satırı modeli geçti.
 - `cargo test -p kentos-native-application`: 66 ortak durum ve masaüstüne özgü iki test geçti. `cargo test -p kentos-interaction`: 36 test geçti.
 - `pnpm typecheck` temiz. `pnpm test`: 1098 geçti, 13 atlandı (başlangıçtaki 13).

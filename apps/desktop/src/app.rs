@@ -900,4 +900,36 @@ mod tests {
         let _ = app.update(Message::Opened(Some(Ok(Box::new(other)))));
         assert!(!app.session.is_running());
     }
+
+    /// The line and polyline tools (docs/adr/0027) start from their web
+    /// shortcuts (L, P) and from their names in the command line.
+    #[test]
+    fn the_line_and_polyline_tools_start_from_their_keys_and_names() {
+        use keyboard::key::{Code, Physical};
+        use keyboard::{Key, Modifiers};
+        let letter = |c: &str, code: Code| {
+            Message::Key(KeyPress {
+                key: Key::Character(c.into()),
+                physical: Physical::Code(code),
+                modifiers: Modifiers::empty(),
+                text: Some(c.to_owned()),
+                repeat: false,
+            })
+        };
+        let mut app = with_demo();
+        let _ = app.update(letter("l", Code::KeyL));
+        assert_eq!(app.session.tool_id(), "line");
+        let _ = app.run("tool.cancel");
+        let _ = app.update(letter("p", Code::KeyP));
+        assert_eq!(app.session.tool_id(), "polyline");
+        for (name, tool) in [
+            ("çizgi", "line"),
+            ("PL", "polyline"),
+            ("coklucizgi", "polyline"),
+        ] {
+            let _ = app.run("tool.cancel");
+            let _ = app.update(Message::CommandRun(name.into()));
+            assert_eq!(app.session.tool_id(), tool, "{name}");
+        }
+    }
 }
