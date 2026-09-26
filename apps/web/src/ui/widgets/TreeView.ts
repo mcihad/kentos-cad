@@ -98,7 +98,10 @@ export class TreeView<T> {
     this.el = h('div', { class: 'tree', role: 'tree', 'aria-label': label, tabindex: '0' }, this.probe, this.above, this.below);
     this.el.addEventListener('keydown', (e) => this.onKey(e));
     this.el.addEventListener('focus', () => {
-      if (!this.focusedId && this.lines.length) this.focus(this.lines[0].id);
+      // The keyboard arriving with no row chosen takes the first row in view. A click chooses its own
+      // row: choosing one here scrolled the tree to the top before the click landed, on another row.
+      if (this.focusedId || !this.lines.length || !this.el.matches(':focus-visible')) return;
+      this.focus(this.lines[Math.min(this.lines.length - 1, Math.ceil(this.el.scrollTop / this.rowHeight()))].id);
     });
     this.el.addEventListener('scroll', () => this.schedule(), { passive: true });
     // The window grows or shrinks with the panel; the rows with the UI scale (the probe).
@@ -119,6 +122,8 @@ export class TreeView<T> {
   render(roots: readonly T[]): void {
     this.roots = roots;
     const a = this.adapter;
+    // Where the tree is scrolled, read before its rows go: the shorter page would pull it up.
+    const scroll = this.el.scrollTop;
     // Rows are replaced: a tooltip of an old row would stay open with nothing under the pointer.
     hideTooltip(this.el);
     for (const id of [...this.built.keys()]) this.release(id);
@@ -144,6 +149,10 @@ export class TreeView<T> {
       this.emptyEl = h('div', { class: 'tree__empty' }, a.empty?.(!!q) ?? (q ? 'Aramayla eşleşen katman yok.' : 'Katman yok.'));
       this.el.append(this.emptyEl);
     }
+    // One spacer stands for every line until paint sizes the window, so the tree stays where it was.
+    this.above.style.height = '0px';
+    this.below.style.height = `${lines.length * this.rowHeight()}px`;
+    this.el.scrollTop = scroll;
     this.paint();
   }
 

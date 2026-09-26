@@ -66,6 +66,50 @@ try {
     check('the Uyarılar badge counts new warnings: opening the tab hides it; after Geçmişi temizle it counts from zero', two === '2' && opened === '' && afterClear === '1', JSON.stringify({ two, opened, afterClear }));
   }
 
+  // A scrolled layer tree stays where it is when it is rendered again (a group closes below the view), and
+  // the first click in it chooses the clicked row: it used to scroll to the top and choose the first row.
+  {
+    const groups = await b.eval(`(() => {
+      const L = window.kentos.doc.layers;
+      const groups = [];
+      const walk = (ns) => ns.forEach((n) => { if (n.type === 'group') { groups.push([n.id, n.expanded]); walk(n.children); } });
+      walk(L.tree);
+      for (const [id] of groups) L.setExpanded(id, true);
+      return groups;
+    })()`);
+    await sleep(200);
+    const view = () =>
+      b.eval(`(() => {
+        const t = document.querySelector('.panel--layers .tree');
+        const box = t.getBoundingClientRect();
+        const rows = [...t.querySelectorAll('.tree__row[data-id]')].filter((r) => r.getBoundingClientRect().bottom > box.top + 2);
+        rows.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+        return { top: Math.round(t.scrollTop), first: rows[0]?.dataset.id, chosen: [...t.querySelectorAll('.tree__row[aria-selected="true"]')].map((r) => r.dataset.id) };
+      })()`);
+    await b.eval(`(() => { const t = document.querySelector('.panel--layers .tree'); t.scrollTop = (t.scrollHeight - t.clientHeight) / 2; })()`);
+    await sleep(200);
+    const before = await view();
+    await b.eval(`window.kentos.doc.layers.setExpanded(${JSON.stringify(groups.at(-1)[0])}, false)`);
+    await sleep(200);
+    const rendered = await view();
+    const target = await b.eval(`(() => {
+      const t = document.querySelector('.panel--layers .tree');
+      const box = t.getBoundingClientRect();
+      const row = [...t.querySelectorAll('.tree__row[data-id]')].find((r) => r.getBoundingClientRect().top > box.top + box.height / 2);
+      const n = row.querySelector('.tree__name').getBoundingClientRect();
+      return { id: row.dataset.id, xy: [Math.round(n.left + n.width / 2), Math.round(n.top + n.height / 2)] };
+    })()`);
+    await b.click(...target.xy);
+    await sleep(200);
+    const clicked = await view();
+    await b.eval(`(() => { const L = window.kentos.doc.layers; for (const [id, open] of ${JSON.stringify(groups)}) L.setExpanded(id, open); window.kentos.view.focus(); })()`);
+    check(
+      'a scrolled layer tree stays put when it is rendered again, and the first click chooses the clicked row',
+      before.top > 0 && rendered.top === before.top && rendered.first === before.first && clicked.top === before.top && JSON.stringify(clicked.chosen) === JSON.stringify([target.id]),
+      JSON.stringify({ before, rendered, clicked, target: target.id }),
+    );
+  }
+
   const base = await b.eval('window.kentos.doc.size');
   const toScreen = (x, y) =>
     b.eval(`(() => { const k = window.kentos; const s = k.view.camera.worldToScreen({x:${x}, y:${y}}); const r = k.view.clientRect(); return [Math.round(s.x + r.left), Math.round(s.y + r.top)]; })()`);
