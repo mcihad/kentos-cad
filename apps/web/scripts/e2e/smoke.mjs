@@ -187,6 +187,34 @@ try {
     );
   }
 
+  // Öznitelikler → Katman ▾ onto a hidden layer: the objects move and stay selected, and the warning says they
+  // will not show (as the tools say when they draw on a hidden layer).
+  {
+    const setup = await b.eval(`(() => {
+      const k = window.kentos;
+      const L = k.doc.layers;
+      const e = [...k.doc.all()].find((x) => !L.isLocked(x.layerId) && L.isVisible(x.layerId));
+      const target = L.leaves().find((l) => l.id !== e.layerId && !L.isLocked(l.id) && L.parentOf(l.id));
+      L.setVisible(target.id, false);
+      k.selection.set([e.id]);
+      return { id: e.id, from: e.layerId, target: target.id, path: L.path(target.id) };
+    })()`);
+    await sleep(150);
+    const open = await b.eval(`(() => { const r = document.querySelector('.panel--props [aria-label="Katman"]').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await b.click(...open);
+    await sleep(200);
+    const row = await b.eval(`(() => { const el = [...document.querySelectorAll('.menu__item')].find((r) => r.querySelector('.menu__label')?.textContent === ${JSON.stringify(setup.path)}); el.scrollIntoView({ block: 'nearest' }); const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await b.click(...row);
+    await sleep(150);
+    const moved = await b.eval(`(() => { const k = window.kentos; return { layer: k.doc.get(${setup.id}).layerId, selected: k.selection.has(${setup.id}), said: k.log.entries.value.at(-1)?.text ?? '' }; })()`);
+    await b.eval(`(() => { const k = window.kentos; k.doc.undo(); k.doc.layers.setVisible(${JSON.stringify(setup.target)}, true); k.selection.clear(); k.view.focus(); })()`);
+    check(
+      'Katman ▾ onto a hidden layer moves the object, keeps it selected and warns it will not show',
+      moved.layer === setup.target && moved.selected && moved.said.includes('katmanı gizli; taşınan nesneler görünmeyecek'),
+      JSON.stringify({ setup, moved }),
+    );
+  }
+
   // The classic bars fit the shell's narrowest window (DESIGN.md §7.1, §7.3, §7.7): nothing is cut off or
   // left to an invisible scroll, at the standard and the largest type scale.
   {

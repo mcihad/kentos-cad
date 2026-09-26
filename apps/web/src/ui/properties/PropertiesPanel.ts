@@ -112,7 +112,11 @@ export class PropertiesPanel extends Panel {
             radio: true,
             checked: l.id === currentId,
             disabled: doc.layers.isLocked(l.id),
-            run: () => doc.updateMany(ids.map((id) => ({ id, layerId: l.id })), 'Katman değiştir'),
+            run: () => {
+              const moved = doc.updateMany(ids.map((id) => ({ id, layerId: l.id })), 'Katman değiştir');
+              // On a hidden layer they vanish from the drawing (still selected): said, as the tools say it when they draw there.
+              if (moved && !doc.layers.isVisible(l.id)) this.ctx.log.warn(`“${l.name}” katmanı gizli; taşınan nesneler görünmeyecek.`);
+            },
           }),
         ),
     };
