@@ -88,6 +88,25 @@ pub async fn receive(
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
+/// `GET …/projects/{project}/uploads/{upload}`: the caller's own upload as it
+/// stands (`feature.write`): whether its bytes arrived. A client whose answer
+/// to `PUT` was lost asks this before sending them again (docs/adr/0040).
+pub async fn upload(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path((tenant, project, upload)): Path<(String, String, String)>,
+) -> Result<Json<FileUpload>, Failure> {
+    let run = async {
+        let a = project_access(&state, &caller, &tenant, &project).await?;
+        let upload = Uuid::parse_str(&upload).map_err(|_| {
+            AppError::not_found("Yükleme bulunamadı: adresteki yükleme kimliği geçersiz.")
+        })?;
+        files::upload(state.db()?, &a, upload).await
+    };
+    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+}
+
 /// `GET …/projects/{project}/files`: the revisions, newest first (`project.read`).
 pub async fn list(
     State(state): State<AppState>,

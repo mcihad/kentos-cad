@@ -4,6 +4,7 @@ import type { LayerNode } from "./LayerNode";
 import type { ProjectAccessView } from "./ProjectAccessView";
 import type { ProjectSettings } from "./ProjectSettings";
 import type { ProjectState } from "./ProjectState";
+import type { ProjectStorage } from "./ProjectStorage";
 import type { ProjectStyles } from "./ProjectStyles";
 import type { TenantKind } from "./TenantKind";
 import type { Vec2 } from "./Vec2";
@@ -23,4 +24,10 @@ state: ProjectState, name: string, settings: ProjectSettings, origin: Vec2, home
 /**
  * Event cursor at the moment this was read: subscribe after it to miss nothing.
  */
-eventCursor: string, };
+eventCursor: string, 
+/**
+ * How it keeps its content: a file project opens from its newest
+ * revision (`GET …/files`), not from `…/features` (docs/adr/0031). An
+ * older server's answer without it is a database project.
+ */
+storage: ProjectStorage, };

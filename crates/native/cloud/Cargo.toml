@@ -1,0 +1,26 @@
+[package]
+name = "kentos-cloud"
+description = "The desktop's cloud client: the web's protocol through a native adapter (docs/adr/0040, TODOS.md SYNC-01)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Native only (scripts/arch/deps.mjs, group `native`): no UI, GPU, database
+# driver, server framework or browser. HTTP goes through reqwest on a tokio
+# runtime of the crate's own (runtime.rs), so the desktop keeps Iced's executor.
+# Nothing here is new to the lockfile: reqwest and tokio were in the workspace
+# for the server, and the contracts, the codec and the document are ours.
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+# The project file, .kcad v2: a file project's revisions (docs/adr/0031).
+kentos-kcad = { path = "../../shared/kcad" }
+# The drawing document an opened project becomes, and whose changes a database project sends.
+kentos-domain = { path = "../domain" }
+reqwest = { workspace = true }
+bytes = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+uuid = { workspace = true }

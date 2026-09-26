@@ -16,6 +16,8 @@ pub mod invitations;
 mod invitations_tests;
 pub mod limit;
 #[cfg(test)]
+mod native_tests;
+#[cfg(test)]
 mod people_tests;
 pub mod projects;
 #[cfg(test)]
@@ -187,10 +189,11 @@ pub fn router(state: AppState) -> Router {
         .layer(CatchPanicLayer::new())
         .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, UPLOAD_TIMEOUT))
         .layer(RequestBodyLimitLayer::new(kentos_contracts::FILE_UPLOAD_MAX as usize));
+    // Asking how an upload stands shares its path, so its route too (a short answer under the long limits).
     let uploads = Router::new()
         .route(
             "/v1/tenants/{tenant}/projects/{project}/uploads/{upload}",
-            put(files::receive),
+            put(files::receive).get(files::upload),
         )
         .layer(upload_layers);
     api.merge(uploads).with_state(state)

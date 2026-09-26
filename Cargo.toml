@@ -23,6 +23,8 @@ members = [
     "crates/native/domain",
     "crates/native/application",
     "crates/native/interaction",
+    # The desktop's cloud client (docs/adr/0040): the web's protocol through a native adapter.
+    "crates/native/cloud",
     # Server-only libraries: PostgreSQL/PostGIS and the use cases.
     "crates/server/postgres",
     "crates/server/application",
@@ -50,6 +52,7 @@ default-members = [
     "crates/native/domain",
     "crates/native/application",
     "crates/native/interaction",
+    "crates/native/cloud",
     "crates/server/postgres",
     "crates/server/application",
     "apps/api",
@@ -95,6 +98,9 @@ tower-http = { version = "=0.7.1", features = ["request-id", "timeout", "limit",
 uuid = { version = "=1.26.1", features = ["v4", "v7", "serde"] }
 jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["rust_crypto", "use_pem"] }
 reqwest = { version = "=0.13.5", default-features = false, features = ["rustls", "json", "form"] }
+# The desktop's cloud client (docs/adr/0040): a file's bytes as a request body that every retry of
+# an upload shares without a copy. Already in every binary that has reqwest (hyper's buffer type).
+bytes = { version = "=1.12.1" }
 time = { version = "=0.3.55", features = ["serde", "formatting", "parsing"] }
 tracing = "=0.1.44"
 tracing-subscriber = { version = "=0.3.23", features = ["env-filter", "fmt"] }

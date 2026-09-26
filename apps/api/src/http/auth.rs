@@ -5,6 +5,10 @@
 //!   request that changes something must also carry `x-kentos-client: web`;
 //!   another site's page cannot add that header without a CORS preflight,
 //!   which this server never grants, so cross-site request forgery fails.
+//! - Desktop (docs/adr/0040): the same session, signed in with a local
+//!   account; the program holds the token in memory and sends it as the
+//!   cookie with `x-kentos-client: desktop`. Any custom header stops a
+//!   cross-site form, so the rule is the same; the name only says who asked.
 //! - API clients: `Authorization: Bearer <OpenID access token>`.
 
 use axum::Json;
@@ -21,6 +25,8 @@ use super::error::{Body, Failure, request_id};
 
 pub const SESSION_COOKIE: &str = "kentos_session";
 pub const CLIENT_HEADER: &str = "x-kentos-client";
+/// The programs that send [`CLIENT_HEADER`]: the web app and the desktop app.
+pub const CLIENTS: [&str; 2] = ["web", "desktop"];
 
 pub fn cookie(headers: &HeaderMap, name: &str) -> Option<String> {
     headers
@@ -43,13 +49,16 @@ fn bearer(headers: &HeaderMap) -> Option<&str> {
         .map(str::trim)
 }
 
-/// Unsafe methods from the browser must say they come from the app (see the module comment).
+/// Unsafe methods with the session cookie must say they come from one of the apps (see the module comment).
 pub fn check_client_header(
     parts_method: &axum::http::Method,
     headers: &HeaderMap,
 ) -> Result<(), AppError> {
     if parts_method.is_safe()
-        || headers.get(CLIENT_HEADER).and_then(|v| v.to_str().ok()) == Some("web")
+        || headers
+            .get(CLIENT_HEADER)
+            .and_then(|v| v.to_str().ok())
+            .is_some_and(|c| CLIENTS.contains(&c))
     {
         Ok(())
     } else {

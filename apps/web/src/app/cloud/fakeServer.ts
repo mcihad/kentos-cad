@@ -233,6 +233,8 @@ export class FakeServer implements CloudApi {
       dataRevision: String(this.revision),
       featureCount: String(this.store.size),
       eventCursor: String(this.history.length),
+      // The fake keeps its content object by object.
+      storage: 'database',
     };
   }
 

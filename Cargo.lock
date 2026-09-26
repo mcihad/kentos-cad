@@ -2394,7 +2394,9 @@ dependencies = [
  "http-body",
  "jsonwebtoken",
  "kentos-application",
+ "kentos-cloud",
  "kentos-contracts",
+ "kentos-domain",
  "kentos-kcad",
  "kentos-postgres",
  "reqwest",
@@ -2424,6 +2426,22 @@ dependencies = [
  "sha2 0.10.9",
  "sqlx",
  "time",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "kentos-cloud"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "kentos-contracts",
+ "kentos-domain",
+ "kentos-kcad",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
  "tokio",
  "uuid",
 ]

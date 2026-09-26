@@ -303,6 +303,24 @@ impl Entity {
         }
     }
 
+    /// The fields every object has, to change (a reader numbers the objects
+    /// it reads: `id` is the slot, meaningless on the wire).
+    pub fn base_mut(&mut self) -> &mut EntityBase {
+        match self {
+            Entity::Point(e) => &mut e.base,
+            Entity::Line(e) => &mut e.base,
+            Entity::Polyline(e) | Entity::Polygon(e) => &mut e.base,
+            Entity::Circle(e) => &mut e.base,
+            Entity::Arc(e) => &mut e.base,
+            Entity::Ellipse(e) => &mut e.base,
+            Entity::Spline(e) => &mut e.base,
+            Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
+            Entity::Text(e) => &mut e.base,
+            Entity::Dimension(e) => &mut e.base,
+            Entity::Hatch(e) => &mut e.base,
+        }
+    }
+
     /// The `kind` tag as written in files and on the wire.
     pub fn kind(&self) -> &'static str {
         match self {

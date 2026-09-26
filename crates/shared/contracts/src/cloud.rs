@@ -467,6 +467,11 @@ pub struct ProjectInfo {
     pub feature_count: String,
     /// Event cursor at the moment this was read: subscribe after it to miss nothing.
     pub event_cursor: String,
+    /// How it keeps its content: a file project opens from its newest
+    /// revision (`GET …/files`), not from `…/features` (docs/adr/0031). An
+    /// older server's answer without it is a database project.
+    #[serde(default)]
+    pub storage: ProjectStorage,
 }
 
 /// One stored object. `entity.id` is meaningless on the wire (the browser numbers objects itself).
@@ -701,7 +706,7 @@ pub struct ProjectGrant {
 /// Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).
 /// File projects (binary `.kcad` revisions) and references to an outside
 /// PostGIS come as their own kinds.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "lowercase")]
@@ -709,6 +714,7 @@ pub struct ProjectGrant {
 pub enum ProjectStorage {
     /// Object by object in the server's PostGIS database (managed): every
     /// save is one transaction and the others see it at once.
+    #[default]
     Database,
     /// As a file: a sequence of immutable, verified `.kcad` v2 revisions in
     /// the server's object store (docs/adr/0031); each save is a new

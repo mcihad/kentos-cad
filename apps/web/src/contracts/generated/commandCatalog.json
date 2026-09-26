@@ -2888,6 +2888,21 @@
               }
             ]
           },
+          "ProjectStorage": {
+            "description": "Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).\nFile projects (binary `.kcad` revisions) and references to an outside\nPostGIS come as their own kinds.",
+            "oneOf": [
+              {
+                "const": "database",
+                "description": "Object by object in the server's PostGIS database (managed): every\nsave is one transaction and the others see it at once.",
+                "type": "string"
+              },
+              {
+                "const": "file",
+                "description": "As a file: a sequence of immutable, verified `.kcad` v2 revisions in\nthe server's object store (docs/adr/0031); each save is a new\nrevision, based on the one it replaces.",
+                "type": "string"
+              }
+            ]
+          },
           "ProjectStyles": {
             "description": "The project's own style library (opaque items in v1, see `style`).",
             "properties": {
@@ -3006,6 +3021,11 @@
           "state": {
             "$ref": "#/$defs/ProjectState",
             "description": "Active or archived (an archived project opens read-only; one in the trash does not open)."
+          },
+          "storage": {
+            "$ref": "#/$defs/ProjectStorage",
+            "default": "database",
+            "description": "How it keeps its content: a file project opens from its newest\nrevision (`GET …/files`), not from `…/features` (docs/adr/0031). An\nolder server's answer without it is a database project."
           },
           "styles": {
             "$ref": "#/$defs/ProjectStyles"

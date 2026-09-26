@@ -213,17 +213,5 @@ fn changed(mut entity: Entity, slot: Slot) -> Entity {
 }
 
 pub(crate) fn base_mut(entity: &mut Entity) -> &mut EntityBase {
-    match entity {
-        Entity::Point(e) => &mut e.base,
-        Entity::Line(e) => &mut e.base,
-        Entity::Polyline(e) | Entity::Polygon(e) => &mut e.base,
-        Entity::Circle(e) => &mut e.base,
-        Entity::Arc(e) => &mut e.base,
-        Entity::Ellipse(e) => &mut e.base,
-        Entity::Spline(e) => &mut e.base,
-        Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
-        Entity::Text(e) => &mut e.base,
-        Entity::Dimension(e) => &mut e.base,
-        Entity::Hatch(e) => &mut e.base,
-    }
+    entity.base_mut()
 }

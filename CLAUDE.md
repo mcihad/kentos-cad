@@ -63,6 +63,7 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç (v1, v2; aşamalı, durdurulabilir) / kaydet (v2; kendi iş parçacığında, paneli ve durdurmasıyla; geçici dosya ve doğrulama), kurtarma kopyası (ADR 0030), geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan, çizgi ve çoklu çizgi araçları, değer alanı ve web'in tuş anlamları; seçim (tıklama, Shift, pencere/kesişim, üzerine gelme), kenet (F3), Sil, özellikler panelinde seçim özeti; nokta, daire, yay, dikdörtgen ve düzgün çokgen araçları, şeritte yöntem menüleri (ADR 0021, 0027, 0029, 0032) | `apps/desktop/` |
 | Native wgpu çizim hattı ve paylaşılan WGSL sözleşmesi | `crates/render/wgpu/`, `shaders/wgsl/` |
 | Masaüstü belgesi (`kentos-domain`): web `CadDocument`'inin anlamı native olarak, ortak işlem fixture'larıyla sınanır | `crates/native/domain/`, `fixtures/document-ops/` |
+| Masaüstünün bulut istemcisi (`kentos-cloud`, ADR 0040): yerel hesapla giriş, katalog, iki tür projeyi açma, dosya projesine revizyon, çizimden yeni proje, veritabanı projesine değişiklik; arayüzü, canlı kanalı ve cihaz taslağı henüz yok | `crates/native/cloud/` |
 | Masaüstü araç oturumu (`kentos-interaction`): durumlar, veri olarak istem, kapalı alan/çoklu çizgi (tek yol aracı), çizgi, nokta, daire, yay, dikdörtgen, döndürülmüş dikdörtgen, düzgün çokgen, seçim ve Sil araçları; araçların oturum belleği (`Memory`); belgenin günlüğüyle izlenen geometri deposu (`Spatial`, ADR 0029); iki platform `fixtures/interaction/v1` izlerini ve `fixtures/point-input/v1` dilbilgisini geçer | `crates/native/interaction/` |
 | Ürün komutları `cad.polygon.create`, `cad.line.create`, `cad.polyline.create`, `cad.point.create`, `cad.circle.create`, `cad.arc.create`, `cad.entities.delete` v1: web ve masaüstü işleyicileri, `CommandResult`, katalogla eşit kayıtlar; kapalı alan, çizgi ve çoklu çizgi araçları bu komutlardan yazar, nokta, daire ve yay araçları kendi komutlarından, dikdörtgen ve düzgün çokgen `cad.polygon.create`'ten yazar, Sil aracı `cad.entities.delete` ile siler (ADR 0022, 0027, 0029, 0032) | `product/`, `crates/native/application/`, `fixtures/commands/` |
 | Tipli ayarlar: şema, katmanlı çözüm, ortak durumlar; web servisi, masaüstü ayar dosyası ve penceresi, canlı MSAA/HiDPI (ADR 0023) | `crates/shared/contracts/src/settings/`, `core/settings/`, `app/settings/`, `apps/desktop/src/settings*.rs`, `fixtures/settings/` |
@@ -442,7 +443,7 @@ apps/api/              kentosd: HTTP/WS, auth ve yönetim CLI
 apps/desktop/          masaüstü kabuğu (kentos-cad): Iced + KentOS UI
 apps/ui-showcase/      KentOS UI bileşen vitrini
 crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
-crates/native/         native belge (domain), ürün komutları (application) ve araç oturumu (interaction); web'e derlenmez
+crates/native/         native belge (domain), ürün komutları (application), araç oturumu (interaction) ve bulut istemcisi (cloud); web'e derlenmez
 crates/render/wgpu/    native wgpu çizim hattı (Iced bilmez)
 shaders/wgsl/          paylaşılabilir WGSL ve sürümlü düzen sözleşmesi
 crates/shared/         contracts, geometry-core, style-core, svg-core, formats, kcad

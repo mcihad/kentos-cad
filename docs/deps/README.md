@@ -33,15 +33,16 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | pollster | 0.4.0 (yalnız test) | Apache-2.0 OR MIT | native (test) | render-wgpu GPU testi | ADR 0019 |
 | axum | 0.8.9, `ws` | MIT | native | api | ADR 0001 |
 | http-body | 1.1.0 | MIT | native | api (akışla indirilen dosyanın gövdesi, yalnız `Frame` türü) | ADR 0031; zaten kilitliydi (axum, hyper), kilide yeni paket girmedi |
-| tokio | 1.53.1 | MIT | native | api, postgres; application (`fs`, `io-util`: dosya projelerinin nesne deposu, ADR 0031) | ADR 0001 |
+| tokio | 1.53.1 | MIT | native | api, postgres; application (`fs`, `io-util`: dosya projelerinin nesne deposu, ADR 0031); cloud (masaüstü bulut istemcisinin kendi çalışma zamanı, ADR 0040) | ADR 0001 |
 | sqlx | 0.9.0, `tls-none` | MIT OR Apache-2.0 | native | postgres, application, api | ADR 0006, 0007. TLS'siz yalnız yerel sunucu içindir; üretim TLS'i açıktır (`OPS-03`) |
 | tower | 0.5.3 | MIT | native | api | ADR 0007 |
 | tower-http | 0.7.1 | MIT | native | api | ADR 0007 |
-| uuid | 1.26.1, `v4`, `v7` | Apache-2.0 OR MIT | native | postgres, application, api, domain | ADR 0007, 0020 |
+| uuid | 1.26.1, `v4`, `v7` | Apache-2.0 OR MIT | native | postgres, application, api, domain, cloud | ADR 0007, 0020 |
 | sha1 | 0.10.7, varsayılan özellikler kapalı | MIT OR Apache-2.0 | native, wasm32 | contracts (UUIDv5) | ADR 0014; zaten kilitliydi (axum). wasm32 hedefi sahibin onayıyla, 25 Eylül |
 | sha2 | 0.10.9, varsayılan özellikler kapalı | MIT OR Apache-2.0 | native, wasm32 | contracts (sha256); kcad (dosya özeti, ADR 0025); application (yüklenen dosyanın özeti, ADR 0031); api testleri | ADR 0014; zaten kilitliydi (sqlx). wasm32 hedefi sahibin onayıyla, 25 Eylül |
 | jsonwebtoken | 11.1.0, `rust_crypto` | MIT | native | api (OpenID) | ADR 0007 |
-| reqwest | 0.13.5, `rustls` | MIT OR Apache-2.0 | native | api (OpenID) | ADR 0007 |
+| reqwest | 0.13.5, `rustls` | MIT OR Apache-2.0 | native | api (OpenID); cloud (masaüstünün bulut istemcisi) | ADR 0007, 0040; masaüstüne girişi kilide yeni paket getirmedi |
+| bytes | 1.12.1 | MIT | native | cloud (bir yüklemenin baytları, her denemede kopyasız) | ADR 0040; reqwest ve hyper üzerinden zaten her ikilideydi, kilide yeni paket girmedi |
 | time | 0.3.55 | MIT OR Apache-2.0 | native | application, api | ADR 0007 |
 | tracing | 0.1.44 | MIT | native | api | ADR 0007 |
 | tracing-subscriber | 0.3.23 | MIT | native | api | ADR 0007 |

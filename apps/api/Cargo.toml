@@ -35,3 +35,7 @@ tokio = { workspace = true, features = ["io-util"] }
 sha2 = { workspace = true }
 # Reading back a project's snapshot in the file routes' tests (docs/adr/0033).
 kentos-kcad = { path = "../../crates/shared/kcad" }
+# The desktop's cloud client against this server over a real socket (docs/adr/0040), and
+# the drawing document it opens projects into.
+kentos-cloud = { path = "../../crates/native/cloud" }
+kentos-domain = { path = "../../crates/native/domain" }

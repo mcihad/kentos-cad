@@ -293,6 +293,7 @@ type ProjectRow = (
     i64,
     i64,
     bool,
+    String,
 );
 
 /// A project's metadata, object count and the event cursor of this moment:
@@ -307,7 +308,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
                 (select count(*) from kentos.feature f where f.tenant_id = p.tenant_id and f.project_id = p.id),
                 greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
                          coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0)),
-                p.deleted_at is not null
+                p.deleted_at is not null, p.storage
            from kentos.project p where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
@@ -329,6 +330,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         count,
         cursor,
         deleted,
+        storage,
     ) = row.ok_or_else(not_found)?;
     if deleted {
         return Err(gone(&name));
@@ -352,6 +354,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         data_revision: rev.to_string(),
         feature_count: count.to_string(),
         event_cursor: cursor.to_string(),
+        storage: storage_of(&storage),
     })
 }
 

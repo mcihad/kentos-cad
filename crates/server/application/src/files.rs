@@ -197,6 +197,33 @@ pub(crate) async fn own_upload(
     ))
 }
 
+/// One of the caller's own uploads as it stands: whether its bytes arrived.
+/// A client whose answer to the bytes was lost asks this before sending
+/// them again, since a second send of received bytes is refused
+/// (docs/adr/0040). Asks the access again like every step of an upload.
+pub async fn upload(
+    db: &kentos_postgres::Db,
+    access: &ProjectAccess,
+    upload: Uuid,
+) -> AppResult<FileUpload> {
+    access.writable()?;
+    access.require(ProjectPermission::FeatureWrite)?;
+    let mut tx = db.scoped(access.scope()).await?;
+    let found = own_upload(&mut tx, access, upload)
+        .await?
+        .ok_or_else(upload_gone)?;
+    tx.commit().await?;
+    Ok(FileUpload {
+        id: upload.to_string(),
+        size: u32::try_from(found.size).unwrap_or(u32::MAX),
+        sha256: found.sha256,
+        created_at: rfc3339(found.created),
+        expires_at: expires(found.created),
+        received: found.received,
+        objects: found.objects.map(|n| n.to_string()),
+    })
+}
+
 pub(crate) fn upload_gone() -> AppError {
     AppError::not_found(
         "Yükleme bulunamadı: süresi dolmuş, kaydedilmiş ya da başkasına ait olabilir. Yeni bir yükleme başlatın.",
