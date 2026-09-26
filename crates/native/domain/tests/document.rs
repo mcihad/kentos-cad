@@ -283,6 +283,49 @@ fn the_last_slot_is_given_and_then_adding_is_refused_whole() {
     );
 }
 
+/// Readers that follow the document (the geometry store, docs/adr/0029)
+/// learn every object an applied op touched: edits, undo, redo, a failed
+/// transaction and a cancelled group; layer changes touch no object.
+#[test]
+fn changes_name_every_object_an_applied_op_touched() {
+    use kentos_domain::Changes;
+    let slots = |doc: &Document, mark| match doc.changes_since(mark) {
+        Changes::Slots(s) => s.iter().map(|s| s.0).collect::<Vec<_>>(),
+        Changes::All => panic!("the journal reaches back"),
+    };
+    let mut doc = empty();
+    let start = doc.change_mark();
+    let a = doc.add(point("a", 1.0)).expect("a slot");
+    let b = doc.add(point("b", 2.0)).expect("a slot");
+    assert_eq!(slots(&doc, start), [a.0, b.0]);
+    let after_adds = doc.change_mark();
+    assert!(doc.update(a, moved(&doc, a, 5.0)));
+    assert_eq!(doc.remove(&[b]), 1);
+    assert_eq!(slots(&doc, after_adds), [a.0, b.0]);
+    let before_undo = doc.change_mark();
+    doc.undo();
+    doc.redo();
+    assert_eq!(slots(&doc, before_undo), [b.0, b.0]);
+    // A transaction that fails reverts what it did: both the op and its reversal are named.
+    let before_failure = doc.change_mark();
+    let failed: Result<(), &str> = doc.transact("Deneme", |doc| {
+        doc.add(point("a", 9.0)).map_err(|_| "slots")?;
+        Err("vazgeç")
+    });
+    assert!(failed.is_err());
+    let named = slots(&doc, before_failure);
+    assert_eq!(named.len(), 2);
+    assert_eq!(named[0], named[1]);
+    // Layer state is not an object.
+    let before_layers = doc.change_mark();
+    doc.toggle_layer_visible("a");
+    doc.toggle_layer_locked("g");
+    assert_eq!(slots(&doc, before_layers), Vec::<u32>::new());
+    // A document read afresh has an empty journal: an old mark reads everything again.
+    let fresh = empty();
+    assert_eq!(fresh.changes_since(doc.change_mark()), Changes::All);
+}
+
 fn entity_base_mut(entity: &mut Entity) -> &mut EntityBase {
     match entity {
         Entity::Point(e) => &mut e.base,
