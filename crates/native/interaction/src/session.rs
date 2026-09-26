@@ -61,6 +61,10 @@ pub const TOOLS: &[&str] = &[
     path::POLYGON_ID,
     line::ID,
     path::POLYLINE_ID,
+    // Mesafe ölç, Alan hesapla and Parsel oluştur: the path tool's other shapes (docs/adr/0067).
+    path::MEASURE_ID,
+    path::AREA_ID,
+    path::PARCEL_ID,
     erase::ID,
     point::ID,
     circle::ID,
@@ -140,6 +144,9 @@ impl Session {
         let tool: Box<dyn Tool> = match id {
             path::POLYGON_ID => Box::new(Path::polygon()),
             path::POLYLINE_ID => Box::new(Path::polyline()),
+            path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
+            path::AREA_ID => Box::new(Path::new(path::Shape::MeasureArea)),
+            path::PARCEL_ID => Box::new(Path::new(path::Shape::Parcel)),
             line::ID => Box::new(Line::new()),
             erase::ID => Box::new(Erase::new()),
             point::ID => Box::new(Point::new()),

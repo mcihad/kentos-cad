@@ -355,6 +355,27 @@ fn a_spot_elevation_goes_on_its_layer_with_its_elevation() {
         Some("“kot” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.")
     );
     assert_eq!(b.doc.len(), 7);
+    // A locked spot layer: the tool's own words, another active layer would not help (docs/adr/0067).
+    let mut b = on(TOOLS, "cizim", "spot");
+    b.doc.toggle_layer_locked("kot");
+    let name = b.doc.layers().get("kot").expect("the spot layer").name.clone();
+    let count = b.doc.len();
+    b.click(-4.0, -4.0);
+    assert!(b.type_text("1"));
+    assert_eq!(
+        b.last_text(),
+        Some(
+            format!(
+                "“{name}” katmanı kilitli; Kot noktası bu katmana yazar. Kilidi Katmanlar panelinden açın."
+            )
+            .as_str()
+        )
+    );
+    assert_eq!(b.doc.len(), count);
+    assert_eq!(
+        b.session.prompt().text(),
+        "Kot noktası: nokta konumunu belirtin"
+    );
 }
 
 // ── Böl ─────────────────────────────────────────────────────────────────────
