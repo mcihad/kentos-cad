@@ -12,12 +12,14 @@ mod cloud;
 mod command_bar;
 mod crs;
 mod document;
+mod drawing_fonts;
 mod exchange;
 #[cfg(test)]
 mod files_testing;
 mod icons;
 mod input;
 mod keys;
+mod labels;
 mod layering;
 mod marks;
 mod modes;

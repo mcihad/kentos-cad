@@ -29,7 +29,10 @@ use kentos_contracts::{Entity, LabelPlacement, LabelStyle, LayerNode};
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
-use kentos_geometry_core::store::labels::{LabelRule, Placement};
+use kentos_geometry_core::store::labels::{
+    LABEL_ALONG, LABEL_BESIDE, LABEL_CENTER, LABEL_CORNER, LABEL_DIMENSION, LABEL_STRIDE,
+    LABEL_TEXT, LabelRule, Placement,
+};
 use kentos_geometry_core::store::snap::SnapHit;
 use kentos_geometry_core::store::{LayerFlags, Store};
 use kentos_native_application::geometry::{drawing_font, shape};
@@ -68,6 +71,9 @@ impl Spatial {
     pub fn reload(&mut self, doc: &Document) {
         self.reloads += 1;
         self.store.clear();
+        self.store.set_label_defaults(
+            LABELLED_KINDS.map(|kind| default_label(kind).as_ref().map(label_rule)),
+        );
         self.store
             .set_font(drawing_font(doc.settings().drawing_font));
         self.store.put_many(doc.entities().map(record));
@@ -173,6 +179,63 @@ impl Spatial {
         self.store.extent(None)
     }
 
+    /// What a view from `min` to `max` at `scale` pixels per unit draws as
+    /// text, in the document's order (`Store::labels`, the web's
+    /// `drawLabels`): dimension values, text objects and object labels on
+    /// visible layers, near the view, readable at this size and inside
+    /// their label style's scale range.
+    pub fn labels(&self, min: Vec2, max: Vec2, scale: f64) -> Vec<LabelSpot> {
+        let view = Bounds {
+            min_x: min.x,
+            min_y: min.y,
+            max_x: max.x,
+            max_y: max.y,
+        };
+        self.store
+            .labels(&view, scale, None)
+            .chunks_exact(LABEL_STRIDE)
+            .filter_map(|r| {
+                let slot = slot(r[0])?;
+                let at = Vec2::new(r[2], r[3]);
+                let what = r[1];
+                Some(if what == LABEL_DIMENSION {
+                    LabelSpot::Dimension {
+                        slot,
+                        at,
+                        angle: r[4],
+                        value: r[5],
+                        angular: r[6] == 1.0,
+                        prefix: match r[7] as u8 {
+                            1 => "R ",
+                            2 => "Ø ",
+                            _ => "",
+                        },
+                    }
+                } else if what == LABEL_TEXT {
+                    LabelSpot::Text {
+                        slot,
+                        at,
+                        rotation: r[4],
+                    }
+                } else if what == LABEL_CENTER {
+                    LabelSpot::Center { slot, at }
+                } else if what == LABEL_CORNER {
+                    LabelSpot::Corner { slot, at }
+                } else if what == LABEL_BESIDE {
+                    LabelSpot::Beside { slot, at }
+                } else if what == LABEL_ALONG {
+                    LabelSpot::Along {
+                        slot,
+                        a: at,
+                        b: Vec2::new(r[4], r[5]),
+                    }
+                } else {
+                    return None;
+                })
+            })
+            .collect()
+    }
+
     /// How many times every object was read again: once per opened drawing
     /// while the journal keeps up (tests hold the store to that).
     pub fn reloads(&self) -> u64 {
@@ -187,6 +250,32 @@ impl Spatial {
     pub fn is_empty(&self) -> bool {
         self.store.is_empty()
     }
+}
+
+/// One thing a view draws as text (the store's label records, typed).
+/// Points are in world units; angles in degrees, counter-clockwise.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LabelSpot {
+    /// A dimension's value at its place, turned by `angle`; `angular`: an
+    /// angle (else a length); `prefix` "R " or "Ø " for a radius or diameter.
+    Dimension {
+        slot: Slot,
+        at: Vec2,
+        angle: f64,
+        value: f64,
+        angular: bool,
+        prefix: &'static str,
+    },
+    /// A text object at its insertion point, turned by `rotation`.
+    Text { slot: Slot, at: Vec2, rotation: f64 },
+    /// A label centred on its anchor.
+    Center { slot: Slot, at: Vec2 },
+    /// A label at the top left of the object's box.
+    Corner { slot: Slot, at: Vec2 },
+    /// A label beside a point.
+    Beside { slot: Slot, at: Vec2 },
+    /// A label along the edge from `a` to `b`.
+    Along { slot: Slot, a: Vec2, b: Vec2 },
 }
 
 /// A store id back to the document's slot (ids are the slots, exactly).
@@ -230,6 +319,48 @@ pub fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
     let mut out = Vec::new();
     walk(tree.nodes(), tree, &mut out);
     out
+}
+
+/// The kinds with a label style of their own, in the store's order (`set_label_defaults`).
+pub const LABELLED_KINDS: [&str; 5] = ["polygon", "circle", "point", "polyline", "line"];
+
+/// The label style of an object whose layer has none: the web's
+/// `DEFAULT_LABELS` (apps/web/src/viewport/storeRecords.ts); the desktop
+/// app's tests hold the two to each other (labels.rs).
+pub fn default_label(kind: &str) -> Option<LabelStyle> {
+    let style = |placement, size| LabelStyle {
+        placement,
+        size,
+        grow: None,
+        max_size: None,
+        weight: None,
+        template: None,
+        min_feature_px: None,
+        min_scale: None,
+        max_scale: None,
+        ink: None,
+    };
+    Some(match kind {
+        "polygon" => LabelStyle {
+            grow: Some(1.0),
+            max_size: Some(14.0),
+            min_feature_px: Some(26.0),
+            ..style(LabelPlacement::Center, 10.0)
+        },
+        "circle" => LabelStyle {
+            min_feature_px: Some(26.0),
+            ..style(LabelPlacement::Center, 10.0)
+        },
+        "point" => LabelStyle {
+            min_scale: Some(2.0),
+            ..style(LabelPlacement::Beside, 10.5)
+        },
+        "polyline" | "line" => LabelStyle {
+            min_scale: Some(1.6),
+            ..style(LabelPlacement::Along, 10.0)
+        },
+        _ => return None,
+    })
 }
 
 /// What of a label style decides whether and where a label is drawn (the web's `labelRule`).

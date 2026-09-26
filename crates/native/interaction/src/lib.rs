@@ -103,7 +103,7 @@ pub use prompt::{Prompt, PromptOption, upper_tr};
 pub use select::SelectBox;
 pub use selection::Selection;
 pub use session::Session;
-pub use spatial::Spatial;
+pub use spatial::{LabelSpot, Spatial};
 pub use tool::{
     Context, Corners, Draft, Flow, LengthenMode, Marker, MarkerShape, Memory, Pointer, Preview,
     Stroke, Tag, Tone, Tool, View, snap_kinds,

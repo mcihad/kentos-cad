@@ -301,6 +301,8 @@ impl App {
         settings: Settings,
         recovery: Recovery,
     ) -> (Self, Task<Message>) {
+        // The drawing's typefaces before the first frame (docs/adr/0055).
+        crate::drawing_fonts::load();
         let mut app = Self {
             document: None,
             tab: catalog().tabs().nth(1).or(catalog().tabs().next()).map_or("home", |tab| tab.id),

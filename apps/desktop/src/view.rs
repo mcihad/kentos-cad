@@ -254,6 +254,15 @@ impl App {
                     self.field.as_ref().map(|f| (f.text.as_str(), f.at)),
                 );
                 let accent = rgba8(Tokens::of(&self.theme()).accent);
+                // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).
+                let labels = crate::labels::layer(
+                    &doc.model,
+                    &self.spatial,
+                    &self.viewport.camera,
+                    self.canvas(),
+                    &crate::viewport::palette(self.canvas()),
+                    &format,
+                );
                 let area = self.viewport.view(
                     doc,
                     self.canvas(),
@@ -262,7 +271,9 @@ impl App {
                     accent,
                 );
                 // The running command's strip on top (command_bar.rs).
-                stack![area, over].extend(self.command_bar()).into()
+                stack![area, labels, over]
+                    .extend(self.command_bar())
+                    .into()
             }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")

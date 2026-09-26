@@ -186,6 +186,32 @@ struct Cached {
     curves: Arc<ScenePart>,
     /// The zoom band the curves were tessellated for.
     band: i32,
+    /// Infinite lines and rays, clipped to `clip`: a box around the view
+    /// when they were built.
+    construction: Arc<ScenePart>,
+    clip: Bounds,
+}
+
+/// The box construction lines are clipped to: the view and three times its
+/// size around it, so a pan builds them again only once it leaves the box.
+fn construction_clip(view: &Bounds) -> Bounds {
+    let (w, h) = (view.max_x - view.min_x, view.max_y - view.min_y);
+    Bounds {
+        min_x: view.min_x - 3.0 * w,
+        min_y: view.min_y - 3.0 * h,
+        max_x: view.max_x + 3.0 * w,
+        max_y: view.max_y + 3.0 * h,
+    }
+}
+
+/// Whether the construction lines must be clipped again: the view left the
+/// box, or zoomed in so far that the box holds needlessly long lines.
+fn clip_stale(view: &Bounds, clip: &Bounds) -> bool {
+    let inside = view.min_x >= clip.min_x
+        && view.min_y >= clip.min_y
+        && view.max_x <= clip.max_x
+        && view.max_y <= clip.max_y;
+    !inside || (clip.max_x - clip.min_x) > 20.0 * (view.max_x - view.min_x)
 }
 
 impl Default for Viewport {
@@ -303,11 +329,12 @@ impl Viewport {
             hi_dpi: graphics.hi_dpi,
             ..RenderSettings::new(palette.background)
         };
-        let (origin, fixed, curves) = self.scene(doc, canvas, &palette, &settings);
-        let (selected, hovered) = self.highlights(doc, selection, accent, &fixed, &curves);
+        let (origin, fixed, curves, construction, clip) =
+            self.scene(doc, canvas, &palette, &settings);
+        let (selected, hovered) = self.highlights(doc, selection, accent, &fixed, &curves, &clip);
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
-            parts: [fixed, curves, selected, hovered],
+            parts: [fixed, curves, construction, selected, hovered],
             origin,
             camera: self.camera,
             settings,
@@ -338,8 +365,9 @@ impl Viewport {
         canvas: impl Into<Canvas>,
         palette: &Palette,
         settings: &RenderSettings,
-    ) -> (Vec2, Arc<ScenePart>, Arc<ScenePart>) {
+    ) -> (Vec2, Arc<ScenePart>, Arc<ScenePart>, Arc<ScenePart>, Bounds) {
         let canvas = canvas.into();
+        let view = self.camera.visible_bounds();
         let needed = lod::band(self.camera.scale, settings.curve_tolerance_px);
         let band = lod::build_band(self.camera.scale, settings.curve_tolerance_px);
         let budget = settings.curve_segment_budget;
@@ -350,6 +378,7 @@ impl Viewport {
         });
         if !current {
             let origin = scene::scene_origin(doc);
+            let clip = construction_clip(&view);
             *cache = Some(Cached {
                 generation: self.generation,
                 changes,
@@ -364,22 +393,45 @@ impl Viewport {
                     budget,
                 )),
                 band,
+                construction: Arc::new(scene::build_construction(doc, palette, origin, &clip)),
+                clip,
             });
-        } else if let Some(cached) = cache.as_mut()
-            && lod::stale(cached.band, needed)
-        {
-            cached.curves = Arc::new(scene::build_curves(
-                doc,
-                palette,
-                cached.origin,
-                lod::tolerance(band),
-                budget,
-            ));
-            cached.band = band;
+        } else if let Some(cached) = cache.as_mut() {
+            if lod::stale(cached.band, needed) {
+                cached.curves = Arc::new(scene::build_curves(
+                    doc,
+                    palette,
+                    cached.origin,
+                    lod::tolerance(band),
+                    budget,
+                ));
+                cached.band = band;
+            }
+            if clip_stale(&view, &cached.clip) {
+                cached.clip = construction_clip(&view);
+                cached.construction = Arc::new(scene::build_construction(
+                    doc,
+                    palette,
+                    cached.origin,
+                    &cached.clip,
+                ));
+            }
         }
         match cache.as_ref() {
-            Some(c) => (c.origin, c.fixed.clone(), c.curves.clone()),
-            None => (Vec2::default(), Arc::default(), Arc::default()),
+            Some(c) => (
+                c.origin,
+                c.fixed.clone(),
+                c.curves.clone(),
+                c.construction.clone(),
+                c.clip,
+            ),
+            None => (
+                Vec2::default(),
+                Arc::default(),
+                Arc::default(),
+                Arc::default(),
+                construction_clip(&view),
+            ),
         }
     }
 
@@ -495,7 +547,7 @@ pub fn mark_colors(canvas: impl Into<Canvas>) -> MarkColors {
 /// The shader widget's program: a frame's inputs, and the pointer's gestures.
 struct Program {
     id: ViewId,
-    parts: [Arc<ScenePart>; 4],
+    parts: [Arc<ScenePart>; 5],
     origin: Vec2,
     camera: Camera,
     settings: RenderSettings,
@@ -671,7 +723,7 @@ pub fn gesture(
 /// One frame of the drawing area, handed to the renderer.
 pub struct Frame {
     id: ViewId,
-    parts: [Arc<ScenePart>; 4],
+    parts: [Arc<ScenePart>; 5],
     origin: Vec2,
     camera: Camera,
     settings: RenderSettings,
@@ -1098,7 +1150,7 @@ mod tests {
         let settings = RenderSettings::new(palette.background);
         let scene = |app: &App, mode: Mode, palette: &Palette| {
             let doc = app.document.as_ref().expect("the sample is open");
-            let (_, fixed, curves) = app.viewport.scene(doc, mode, palette, &settings);
+            let (_, fixed, curves, _, _) = app.viewport.scene(doc, mode, palette, &settings);
             (fixed, curves)
         };
         let (fixed, curves) = scene(&app, Mode::Dark, &palette);
