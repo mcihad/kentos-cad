@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import type { Entity } from '../contracts/generated/Entity';
 import { difference } from '../io/kcad';
+import { unpackSnapshot } from '../io/columns';
 import { formatsBuilt, kcadInProcess } from '../io/testFormats';
 import { CadDocument } from '../model/document';
 import { LayerStore } from '../model/layers';
@@ -79,7 +80,7 @@ function web() {
   return { doc, files };
 }
 
-const decode = async (bytes: Uint8Array) => (await kcadInProcess()).decode(bytes);
+const decode = async (bytes: Uint8Array) => unpackSnapshot(await (await kcadInProcess()).decode(bytes));
 
 /** The object with this persistent id, and its index. */
 function byUid(s: DocumentSnapshotV2, uid: string): [Entity, number] {

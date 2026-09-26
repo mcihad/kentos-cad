@@ -2,14 +2,13 @@ import { describe, expect, it } from 'vitest';
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
 import { isUuid } from '../core/uuid';
 import { difference } from '../io/kcad';
+import { unpackSnapshot } from '../io/columns';
 import { formatsBuilt, kcadInProcess, v1IdentitiesInProcess } from '../io/testFormats';
-import { CadDocument } from '../model/document';
-import { LayerStore } from '../model/layers';
+import type { CadDocument } from '../model/document';
 import { newProjectContent } from '../model/newProject';
 import { toSnapshot, toSnapshotV2 } from '../model/snapshot';
 import { snapshotSampleDocument } from '../model/snapshotSample';
-import type { AppContext } from './context';
-import { DocumentFiles, type DiscardChoice, type DrawingFileHandle, type DrawingFilePicker } from './fileIO';
+import { fakeCloud, memoryFile, pick, setup } from './fileTesting';
 
 /** The objects without their persistent ids, which v1 files do not hold. */
 const bare = (doc: CadDocument) => [...doc.all()].map(({ uid: _uid, ...e }) => e);
@@ -19,95 +18,12 @@ const fs = (globalThis as unknown as { process: { getBuiltinModule(id: 'node:fs'
 /** A fixture's bytes (a plain Uint8Array: Node gives a Buffer). */
 const fixture = (path: string) => new Uint8Array(fs.readFileSync(new URL(`../../../../fixtures/${path}`, import.meta.url)));
 
-/**
- * An in-memory file holding bytes; `fail` makes its writer throw on close,
- * `during` runs while it is being written.
- */
-function memoryFile(name: string, opts: { data?: string | Uint8Array; fail?: boolean; during?: () => void } = {}) {
-  const encode = (d: string | Uint8Array) => (typeof d === 'string' ? new TextEncoder().encode(d) : new Uint8Array(d));
-  const file = {
-    name,
-    bytes: encode(opts.data ?? ''),
-    getFile: async () => new Blob([file.bytes]),
-    createWritable: async () => {
-      const parts: Uint8Array[] = [];
-      return {
-        write: async (data: string | Uint8Array) => {
-          parts.push(encode(data));
-          opts.during?.();
-        },
-        close: async () => {
-          if (opts.fail) throw new Error('disk dolu');
-          const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
-          let at = 0;
-          for (const p of parts) (out.set(p, at), (at += p.length));
-          file.bytes = out;
-        },
-      };
-    },
-  };
-  return file satisfies DrawingFileHandle;
-}
-
-/** A cloud project as the file service sees it: open or not, autosaving or not, and how many changes stay unsent. */
-function fakeCloud(open: { name: string; canWrite: boolean; unsent: number } | null) {
-  const cloud = {
-    project: { value: open ? { name: open.name, canWrite: open.canWrite } : null },
-    sync: { value: null as { state: { value: string } } | null },
-    left: 0,
-    autosaves: () => !!cloud.project.value?.canWrite,
-    leave: async () => {
-      cloud.left++;
-      cloud.project.value = null;
-      return open?.unsent ?? 0;
-    },
-    detach: () => {
-      cloud.project.value = null;
-    },
-  };
-  return cloud;
-}
-
-function setup(doc = new CadDocument({ name: 'Proje', layers: new LayerStore([{ id: 'x', name: 'X' }], 'x'), origin: { x: 0, y: 0 } }), cloud = fakeCloud(null)) {
-  const messages: string[] = [];
-  const say = (kind: string) => (text: string) => messages.push(`${kind}: ${text}`);
-  const fitted: unknown[] = [];
-  const ctx = {
-    doc,
-    log: { success: say('ok'), warn: say('uyarı'), error: say('hata'), info: say('bilgi') },
-    tools: { activate: () => {} },
-    selection: { clear: () => {} },
-    view: { camera: { fit: (b: unknown) => fitted.push(b) }, zoomExtents: () => {} },
-    cloud,
-  } as unknown as AppContext;
-  const files = new DocumentFiles(ctx);
-  // The formats module in this process instead of its worker.
-  files.identities = v1IdentitiesInProcess;
-  files.kcad = kcadInProcess;
-  // Every question is recorded and answered with the next choice (none left: the test did not expect one).
-  const asked: string[] = [];
-  const answers: DiscardChoice[] = [];
-  files.ask = async (_name, after) => {
-    asked.push(after);
-    const next = answers.shift();
-    if (!next) throw new Error(`beklenmeyen soru: ${after}`);
-    return next;
-  };
-  return { doc, files, messages, asked, answers, cloud, fitted };
-}
-
 /** What a v2 file holds, read by the same module. */
 async function readV2(bytes: Uint8Array): Promise<DocumentSnapshotV2> {
-  return (await kcadInProcess()).decode(bytes);
+  return unpackSnapshot(await (await kcadInProcess()).decode(bytes));
 }
 
 const fresh = () => newProjectContent({ name: 'Ada 200', srid: 5254, plotScale: 500 });
-
-/** A picker that hands out these files and records the names Save as suggested. */
-const pick = (save: DrawingFileHandle | null, open: DrawingFileHandle | null = null, suggested: string[] = []): DrawingFilePicker => ({
-  save: async (name) => (suggested.push(name), save),
-  open: async () => open,
-});
 
 const v1Text = (doc: CadDocument) => JSON.stringify(toSnapshot(doc));
 
@@ -139,7 +55,7 @@ describe.skipIf(!formatsBuilt)('local drawing files', () => {
     files.picker = pick(memoryFile('a.kcad', { fail: true }));
     expect(await files.saveAs()).toBe(false);
     expect(doc.dirty.value).toBe(true);
-    expect(messages.at(-1)).toMatch(/^hata: “a\.kcad” yazılamadı: disk dolu\. Değişiklikler kaydedilmemiş sayılıyor/);
+    expect(messages.at(-1)).toMatch(/^hata: “a\.kcad” yazılamadı: disk dolu\. Önceki dosya olduğu gibi duruyor; .*Değişiklikler kaydedilmemiş sayılıyor\.$/);
     files.picker = pick(null);
     expect(await files.saveAs()).toBe(false);
     expect(doc.dirty.value).toBe(true);

@@ -1,0 +1,47 @@
+/* The open's progress window (ui/io/OpeningDialog.ts, docs/adr/0030).
+   Loaded with the window, not at start-up (CLAUDE.md §20). */
+
+/* Modal at once (input stops) but shown only if the open takes a moment: a
+   quick open does not flash a window. */
+.dialog-backdrop.opening--quiet {
+  background: transparent;
+}
+.dialog-backdrop.opening--quiet > .dialog {
+  visibility: hidden;
+}
+
+.dialog--opening .dialog__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 18px 18px;
+}
+.opening__project {
+  min-height: 1.4em;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+.opening__bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--c-line);
+  overflow: hidden;
+}
+.opening__bar > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--c-accent);
+  transition: width var(--dur);
+}
+.opening__stage {
+  min-height: 1.4em;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+.opening__note {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}

@@ -1,6 +1,6 @@
 import init, { decodeKcad, encodeKcad, formatsVersion, readCoords, readDxf, v1Identities, writeCoords, writeDxf } from './pkg/kentos_formats_wasm.js';
 import wasmUrl from './pkg/kentos_formats_wasm_bg.wasm?url';
-import { KcadError, decodeWith, encodeWith } from './kcad';
+import { KcadError, decodeWith, encodeWith, transferables, type KcadProgress } from './kcad';
 import type { FormatsReply, FormatsRequest } from './protocol';
 import { FORMATS_VERSION } from './version';
 
@@ -9,7 +9,10 @@ import { FORMATS_VERSION } from './version';
  * file is imported or exported, or a drawing opened or saved). It loads the
  * Rust formats module (crates/wasm/formats-wasm) on its first message;
  * parsing a large file, and writing and checking a `.kcad` v2 (io/kcad.ts),
- * never block the page. One request at a time, in order.
+ * never block the page. One request at a time, in order. A drawing comes and
+ * goes as typed columns whose buffers are transferred (io/columns.ts); a
+ * long KCAD read or write posts its progress as it goes. The page stops one
+ * by ending the worker: a call into the module cannot be interrupted.
  */
 const scope = self as unknown as {
   onmessage: ((e: MessageEvent<FormatsRequest>) => void) | null;
@@ -29,6 +32,9 @@ const own = (a: Uint8Array): ArrayBuffer => (a.byteOffset === 0 && a.byteLength 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 const kcad = { encodeKcad, decodeKcad };
+
+/** Posts a request's progress to the page. */
+const progress = (id: number) => (p: KcadProgress) => scope.postMessage({ id, progress: p });
 
 let queue = Promise.resolve();
 
@@ -51,11 +57,11 @@ scope.onmessage = (e) => {
         const json = own(v1Identities(m.text));
         scope.postMessage({ id: m.id, ok: true, json }, [json]);
       } else if (m.op === 'encodeKcad') {
-        const { bytes, dropped } = encodeWith(kcad, m.snapshot);
-        const buffer = own(bytes);
-        scope.postMessage({ id: m.id, ok: true, kcad: buffer, dropped }, [buffer]);
+        const buffer = own(encodeWith(kcad, m.drawing, progress(m.id)));
+        scope.postMessage({ id: m.id, ok: true, kcad: buffer }, [buffer]);
       } else if (m.op === 'decodeKcad') {
-        scope.postMessage({ id: m.id, ok: true, snapshot: decodeWith(kcad, new Uint8Array(m.bytes)) });
+        const drawing = decodeWith(kcad, new Uint8Array(m.bytes), progress(m.id));
+        scope.postMessage({ id: m.id, ok: true, drawing }, transferables(drawing.columns));
       } else {
         const written = m.op === 'writeCoords' ? writeCoords(JSON.stringify(m.input)) : writeDxf(JSON.stringify(m.input));
         try {

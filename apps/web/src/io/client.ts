@@ -6,18 +6,20 @@ import type { DxfWriteInput } from '../contracts/generated/DxfWriteInput';
 import type { ImportResult } from '../contracts/generated/ImportResult';
 import type { ExportReport } from '../contracts/generated/ExportReport';
 import type { V1Identities } from '../contracts/generated/V1Identities';
-import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
-import { KcadError, type Dropped } from './kcad';
+import type { PackedDrawing } from './columns';
+import { KcadError, transferables, type KcadProgress } from './kcad';
 import type { FormatsReply, FormatsRequest } from './protocol';
 
 /**
  * The page's side of the formats worker. The worker, and the Rust formats
  * module in it, start with the first request (an import, an export, a
  * drawing opened; never at start-up, CLAUDE.md §20) and stop after a quiet
- * half minute, so the memory a large file took
- * is given back. A trap in the module or a worker that fails to load fails
- * the waiting requests with a Turkish message; the next request starts a
- * fresh worker.
+ * half minute, so the memory a large file took is given back; after a large
+ * drawing was read or written they stop at once (the module's memory never
+ * shrinks while it lives, docs/adr/0030). A trap in the module or a worker
+ * that fails to load fails the waiting requests with a Turkish message; the
+ * next request starts a fresh worker. `cancel` ends the worker and fails
+ * what waits with the code `cancelled`.
  */
 
 /** The part of a Worker the client uses (a fake in tests). */
@@ -34,25 +36,23 @@ export interface WrittenFile {
   report: ExportReport;
 }
 
-/** A drawing's `.kcad` v2 bytes, and what the drawing held that KCAD v2 does not keep (io/kcad.ts). */
-export interface EncodedDrawing {
-  bytes: Uint8Array<ArrayBuffer>;
-  dropped: Dropped;
-}
-
 type Ok = Extract<FormatsReply, { ok: true }>;
 type Request = FormatsRequest extends infer R ? (R extends FormatsRequest ? Omit<R, 'id'> : never) : never;
 
 /** An idle worker is stopped after this long. */
 const IDLE_MS = 30_000;
+/** A drawing this large (bytes) was read or written: the worker stops as soon as it is idle. */
+const LARGE = 16 << 20;
 
 const decoder = new TextDecoder();
 
 export class FormatsClient {
   private worker: WorkerLike | null = null;
   private seq = 0;
-  private readonly pending = new Map<number, { resolve(r: Ok): void; reject(e: Error): void }>();
+  private readonly pending = new Map<number, { resolve(r: Ok): void; reject(e: Error): void; progress?: (p: KcadProgress) => void }>();
   private idle: ReturnType<typeof setTimeout> | null = null;
+  /** A large drawing went through since the worker was last idle. */
+  private large = false;
   private readonly spawn: () => WorkerLike;
 
   constructor(spawn: () => WorkerLike = spawnWorker) {
@@ -97,42 +97,48 @@ export class FormatsClient {
   }
 
   /**
-   * A drawing's `.kcad` v2 bytes (docs/specs/kcad-v2.md), made and checked in
-   * the worker (io/kcad.ts): read back to the same drawing before they come
-   * here. The drawing is copied when this is called, before it returns, so
-   * it is the drawing of that moment. Rejects with the reason (and a KCAD
-   * code) when the drawing cannot be written.
+   * A packed drawing's `.kcad` v2 bytes (docs/specs/kcad-v2.md), made and
+   * checked in the worker (io/kcad.ts): read back to the same drawing before
+   * they come here. The drawing's buffers go to the worker (they are its now).
+   * Rejects with the reason (and a KCAD code) when the drawing cannot be
+   * written; `progress` hears the objects written and the reading back.
    */
-  encodeKcad(snapshot: DocumentSnapshotV2): Promise<EncodedDrawing> {
-    return this.request({ op: 'encodeKcad', snapshot }, []).then((r) => {
-      if (!('kcad' in r)) throw new Error('Dosya biçimi modülü beklenmeyen bir yanıt verdi.');
-      return { bytes: new Uint8Array(r.kcad), dropped: r.dropped };
-    });
+  async encodeKcad(drawing: PackedDrawing, progress?: (p: KcadProgress) => void): Promise<Uint8Array<ArrayBuffer>> {
+    if (drawing.columns.floats.byteLength + drawing.columns.text.byteLength > LARGE) this.large = true;
+    const r = await this.request({ op: 'encodeKcad', drawing }, transferables(drawing.columns), progress);
+    if (!('kcad' in r)) throw new Error('Dosya biçimi modülü beklenmeyen bir yanıt verdi.');
+    return new Uint8Array(r.kcad);
   }
 
   /**
-   * The drawing in a `.kcad` v2 file. A large file is not copied: when
-   * `bytes` spans its whole buffer, the buffer goes to the worker and `bytes`
-   * is left empty. A file the reader refuses rejects with a KcadError (the
-   * specification's code and a Turkish message).
+   * The drawing in a `.kcad` v2 file, packed (io/columns.ts). A large file is
+   * not copied: when `bytes` spans its whole buffer, the buffer goes to the
+   * worker and `bytes` is left empty. A file the reader refuses rejects with
+   * a KcadError (the specification's code and a Turkish message); `progress`
+   * hears the integrity check, the project and the objects as they are read.
    */
-  async decodeKcad(bytes: Uint8Array): Promise<DocumentSnapshotV2> {
+  async decodeKcad(bytes: Uint8Array, progress?: (p: KcadProgress) => void): Promise<PackedDrawing> {
+    if (bytes.byteLength > LARGE) this.large = true;
     const whole = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength && bytes.buffer instanceof ArrayBuffer;
     const buffer = whole ? (bytes.buffer as ArrayBuffer) : bytes.slice().buffer;
-    const r = await this.request({ op: 'decodeKcad', bytes: buffer }, [buffer]);
-    if (!('snapshot' in r)) throw new Error('Dosya biçimi modülü beklenmeyen bir yanıt verdi.');
-    return r.snapshot;
+    const r = await this.request({ op: 'decodeKcad', bytes: buffer }, [buffer], progress);
+    if (!('drawing' in r)) throw new Error('Dosya biçimi modülü beklenmeyen bir yanıt verdi.');
+    return r.drawing;
   }
 
-  /** Stops the worker now (a dialog closed while its file was being read). */
+  /**
+   * Stops the worker now (a dialog closed while its file was being read, an
+   * open cancelled): what waits fails with the code `cancelled`, and the
+   * memory the worker took goes back.
+   */
   cancel(): void {
-    this.stop('İşlem durduruldu.');
+    this.stop('İşlem durduruldu.', 'cancelled');
   }
 
-  private request(m: Request, transfer: Transferable[]): Promise<Ok> {
+  private request(m: Request, transfer: Transferable[], progress?: (p: KcadProgress) => void): Promise<Ok> {
     return new Promise((resolve, reject) => {
       const id = ++this.seq;
-      this.pending.set(id, { resolve, reject });
+      this.pending.set(id, { resolve, reject, progress });
       if (this.idle) clearTimeout(this.idle);
       this.idle = null;
       try {
@@ -151,25 +157,31 @@ export class FormatsClient {
       const r = e.data;
       const p = this.pending.get(r.id);
       if (!p) return;
+      if ('progress' in r) return p.progress?.(r.progress);
       this.pending.delete(r.id);
       if (r.ok) p.resolve(r);
       else {
         p.reject(r.code ? new KcadError(r.code, r.message) : new Error(r.message));
         if (r.fatal) return this.stop(r.message);
       }
-      if (!this.pending.size && this.worker) this.idle = setTimeout(() => this.stop(null), IDLE_MS);
+      if (this.pending.size || !this.worker) return;
+      // A large drawing left the module's memory at its high-water mark: give it back now.
+      if (this.large) return this.stop(null);
+      this.idle = setTimeout(() => this.stop(null), IDLE_MS);
     };
     w.onerror = () => this.stop('Dosya biçimi modülü yüklenemedi ya da beklenmedik biçimde durdu. Bağlantınızı denetleyip yeniden deneyin.');
     this.worker = w;
     return w;
   }
 
-  private stop(message: string | null): void {
+  private stop(message: string | null, code?: string): void {
     this.worker?.terminate();
     this.worker = null;
+    this.large = false;
     if (this.idle) clearTimeout(this.idle);
     this.idle = null;
-    for (const p of this.pending.values()) p.reject(new Error(message ?? 'İşlem durduruldu.'));
+    const text = message ?? 'İşlem durduruldu.';
+    for (const p of this.pending.values()) p.reject(code ? new KcadError(code, text) : new Error(text));
     this.pending.clear();
   }
 }

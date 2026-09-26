@@ -1,26 +1,69 @@
 import type { DocumentSnapshotV2 } from '../contracts/generated/DocumentSnapshotV2';
+import type { DrawingColumns, DrawingHead, PackedDrawing } from './columns';
 
 /**
- * The binary project file, `.kcad` v2 (docs/specs/kcad-v2.md, docs/adr/0025),
- * as the browser runs it. The codec is the shared Rust one (crates/shared/kcad
- * in the formats WASM module); this module is what surrounds it, and it runs
- * in the formats worker (and in process in tests), never on the page:
+ * The binary project file, `.kcad` v2 (docs/specs/kcad-v2.md, docs/adr/0025,
+ * 0030), as the browser runs it. The codec is the shared Rust one
+ * (crates/shared/kcad in the formats WASM module); this module is what
+ * surrounds it in the formats worker (and in process in tests):
  *
  * - `sniffDrawing`: what a file is by content (spec §8), so the page knows
  *   whether to hand it to the worker (v2) or read it as v1 text;
- * - `encodeWith`: the drawing reduced to what the contract holds (anything
- *   else is reported, not dropped silently), written as JSON the Rust
- *   contracts read bit for bit (JSON.stringify writes −0 as 0; here it stays
- *   −0), encoded, decoded again and compared with what was sent: only bytes
- *   that read back to the same drawing leave the worker;
- * - `decodeWith`: bytes to the drawing, or the specification's error code and
- *   a Turkish message.
+ * - `encodeWith`: a drawing the page packed (io/columns.ts) to bytes. The
+ *   module reads them back and compares the objects with the columns as
+ *   they came, every float bit for bit; here the head the file holds is
+ *   compared with the head the page sent (a field the contract does not read
+ *   would show there). Only bytes that read back to the same drawing leave
+ *   the worker;
+ * - `decodeWith`: bytes to the drawing (its head and its objects as columns),
+ *   or the specification's error code and a Turkish message.
+ *
+ * Both report their stages (`KcadProgress`), which the worker posts to the page.
  */
+
+/** A stage of a long read or write (the formats module's `KcadProgress`). */
+export type KcadProgress =
+  | { stage: 'checking' | 'reading' | 'writing' | 'verifying'; done: number; total: number }
+  | { stage: 'project'; name: string; layers: number; objects: number };
+
+/** What the module's KCAD calls give back (`Kcad` in crates/wasm/formats-wasm). */
+export interface KcadResult {
+  readonly ok: boolean;
+  readonly code: string;
+  readonly message: string;
+  takeHead(): string;
+  takeBytes(): Uint8Array;
+  takeKinds(): Uint8Array;
+  takeUids(): Uint8Array;
+  takeInts(): Uint32Array;
+  takeFloats(): Float64Array;
+  takeText(): Uint16Array;
+  takeTextLengths(): Uint32Array;
+  free(): void;
+}
+
+/** The progress object the module calls (`KcadProgress` in crates/wasm/formats-wasm). */
+interface Relay {
+  step(stage: string, done: number, total: number): void;
+  project(name: string, layers: number, objects: number): void;
+}
+
+/**
+ * The `.kcad` v2 codec as the page uses it: the formats worker (client.ts),
+ * or the same module in process in tests (testFormats.ts). `encode` takes
+ * the drawing's buffers (they are the codec's once called).
+ */
+export interface KcadCodec {
+  encode(drawing: PackedDrawing, progress?: (p: KcadProgress) => void): Promise<Uint8Array<ArrayBuffer>>;
+  decode(bytes: Uint8Array, progress?: (p: KcadProgress) => void): Promise<PackedDrawing>;
+  /** Stops what the codec is doing now: the waiting call fails with the code `cancelled` (the worker ends). */
+  cancel?(): void;
+}
 
 /** The formats module's two KCAD calls (crates/wasm/formats-wasm). */
 export interface KcadModule {
-  encodeKcad(json: string): Uint8Array;
-  decodeKcad(bytes: Uint8Array): Uint8Array;
+  encodeKcad(head: string, kinds: Uint8Array, uids: Uint8Array, ints: Uint32Array, floats: Float64Array, text: Uint16Array, textLengths: Uint32Array, progress: Relay): KcadResult;
+  decodeKcad(bytes: Uint8Array, progress: Relay): KcadResult;
 }
 
 /** A file refused or a drawing not written: the specification's code (§9) and a Turkish message. */
@@ -84,16 +127,15 @@ class Projection {
 const same: Pick = (v) => v;
 
 /**
- * A drawing reduced to the contract's fields (`DocumentSnapshotV2`), fresh
- * objects all the way down; what else it held is counted in `dropped`.
- * Opaque parts (project styles, renderers) are the style engine's own and
- * stay whole.
+ * The drawing without its objects reduced to the contract's fields, fresh
+ * objects all the way down; what else it held is counted in `dropped`
+ * (`belge.layers.style.glow`). The objects are packed field by field
+ * (io/columns.ts), which counts theirs. Opaque parts (project styles,
+ * renderers) are the style engine's own and stay whole.
  */
-export function project(snapshot: DocumentSnapshotV2): { snapshot: DocumentSnapshotV2; dropped: Dropped } {
+export function projectHead(head: DrawingHead): { head: DrawingHead; dropped: Dropped } {
   const p = new Projection();
   const vec = (v: unknown, where: string) => p.fields(v, { x: same, y: same }, where);
-  const vecs = p.list(vec);
-  const ring = (v: unknown, where: string) => p.fields(v, { pts: vecs, bulges: same }, where);
   const label = (v: unknown, where: string) =>
     p.fields(
       v,
@@ -116,29 +158,8 @@ export function project(snapshot: DocumentSnapshotV2): { snapshot: DocumentSnaps
       where,
     );
   const layer: Pick = (v, where) => p.fields(v, { id: same, name: same, type: same, visible: same, locked: same, expanded: same, style, children: (c, w) => p.list(layer)(c, w) }, where);
-  const common = { kind: same, id: same, layerId: same, color: same, attrs: same, label: same, symbol: same };
-  const kinds: Record<string, Record<string, Pick>> = {
-    point: { p: vec, z: same },
-    line: { a: vec, b: vec },
-    polyline: { pts: vecs, bulges: same },
-    polygon: { pts: vecs, bulges: same, holes: p.list(ring) },
-    circle: { c: vec, r: same },
-    arc: { c: vec, r: same, a0: same, a1: same },
-    ellipse: { c: vec, major: vec, ratio: same, t0: same, t1: same },
-    spline: { pts: vecs, closed: same },
-    xline: { p: vec, dir: vec },
-    ray: { p: vec, dir: vec },
-    text: { p: vec, text: same, height: same, rotation: same },
-    dimension: { a: vec, b: vec, offset: same, height: same, text: same, style: same, angle: same, c: vec },
-    hatch: { ring: vecs, holes: p.list(vecs), pattern: (x, w) => p.fields(x, { type: same, angle: same, spacing: same }, w) },
-  };
-  const entity = (v: unknown) => {
-    const kind = isObj(v) && typeof v.kind === 'string' ? v.kind : '?';
-    return p.fields(v, { ...common, ...(kinds[kind] ?? {}) }, kind);
-  };
-  const s = snapshot as unknown as Obj;
   const out = p.fields(
-    s,
+    head,
     {
       format: same,
       version: same,
@@ -148,15 +169,16 @@ export function project(snapshot: DocumentSnapshotV2): { snapshot: DocumentSnaps
       homeView: (x, w) => p.fields(x, { minX: same, minY: same, maxX: same, maxY: same }, w),
       layers: p.list(layer),
       activeLayer: same,
-      entities: (x) => (Array.isArray(x) ? x.map(entity) : x),
-      uids: same,
+      // The objects are the columns' (an empty list here, if any).
+      entities: () => [],
+      uids: () => [],
       styles: (x, w) => p.fields(x, { items: same, categories: same }, w),
       projectId: same,
       migratedFrom: (x, w) => p.fields(x, { format: same, version: same, sourceSha256: same }, w),
     },
     'belge',
   );
-  return { snapshot: out as DocumentSnapshotV2, dropped: p.dropped };
+  return { head: out as DrawingHead, dropped: p.dropped };
 }
 
 // ── JSON the Rust contracts read bit for bit ────────────────────────────
@@ -199,35 +221,53 @@ export function exactJson(value: unknown): string {
 
 // ── Encoding and decoding ───────────────────────────────────────────────
 
-const decoder = new TextDecoder();
+/** The buffers of columns, each once: what goes in a message's transfer list. */
+export function transferables(c: DrawingColumns): ArrayBuffer[] {
+  return [...new Set([c.kinds, c.uids, c.ints, c.floats, c.text, c.textLengths].map((a) => a.buffer as ArrayBuffer))];
+}
 
-type Envelope = { ok: true; document: DocumentSnapshotV2 } | { ok: false; code: string; message: string };
+/** The module's progress object, telling `progress`. */
+const relay = (progress: (p: KcadProgress) => void): Relay => ({
+  step: (stage, done, total) => progress({ stage: stage as 'checking', done, total }),
+  project: (name, layers, objects) => progress({ stage: 'project', name, layers, objects }),
+});
 
-/** The drawing in a `.kcad` v2 file's bytes; a file the reader refuses throws a KcadError with its code. */
-export function decodeWith(m: KcadModule, bytes: Uint8Array): DocumentSnapshotV2 {
-  const r = JSON.parse(decoder.decode(m.decodeKcad(bytes))) as Envelope;
-  if (!r.ok) throw new KcadError(r.code, r.message);
-  return r.document;
+const quiet = () => {};
+
+/**
+ * A `.kcad` v2 file's drawing: its head (JSON) and its objects as columns. A
+ * file the reader refuses throws a KcadError with its code. `progress`
+ * hears the integrity check, the project and the objects as they are read.
+ */
+export function decodeWith(m: KcadModule, bytes: Uint8Array, progress: (p: KcadProgress) => void = quiet): PackedDrawing {
+  const r = m.decodeKcad(bytes, relay(progress));
+  try {
+    if (!r.ok) throw new KcadError(r.code, r.message);
+    const columns: DrawingColumns = { kinds: r.takeKinds(), uids: r.takeUids(), ints: r.takeInts(), floats: r.takeFloats(), text: r.takeText(), textLengths: r.takeTextLengths() };
+    return { head: r.takeHead(), columns };
+  } finally {
+    r.free();
+  }
 }
 
 /**
- * A drawing as a `.kcad` v2 file's bytes, read back and compared with the
- * drawing first (every number with Object.is, so −0 ≠ 0; only the objects'
- * slots, which the file does not keep, may differ). `dropped` counts what the
- * drawing held beyond the contract, which the file does not keep either.
+ * A packed drawing as a `.kcad` v2 file's bytes, verified: the module read
+ * them back and compared the objects with the columns; here the head the
+ * file holds is compared with the head sent (every number with Object.is, so
+ * −0 ≠ 0). `progress` hears the objects written and the reading back.
  */
-export function encodeWith(m: KcadModule, snapshot: DocumentSnapshotV2): { bytes: Uint8Array<ArrayBuffer>; dropped: Dropped } {
-  const { snapshot: clean, dropped } = project(snapshot);
-  const bytes = m.encodeKcad(exactJson(clean)) as Uint8Array<ArrayBuffer>;
-  let back: DocumentSnapshotV2;
+export function encodeWith(m: KcadModule, drawing: PackedDrawing, progress: (p: KcadProgress) => void = quiet): Uint8Array<ArrayBuffer> {
+  const c = drawing.columns;
+  const r = m.encodeKcad(drawing.head, c.kinds, c.uids, c.ints, c.floats, c.text, c.textLengths, relay(progress));
   try {
-    back = decodeWith(m, bytes);
-  } catch (e) {
-    throw unverified((e as Error).message);
+    if (!r.ok) throw new KcadError(r.code, r.message);
+    const bytes = r.takeBytes() as Uint8Array<ArrayBuffer>;
+    const where = diff(JSON.parse(drawing.head), JSON.parse(r.takeHead()), 'belge');
+    if (where) throw unverified(where);
+    return bytes;
+  } finally {
+    r.free();
   }
-  const where = difference(clean, back);
-  if (where) throw unverified(where);
-  return { bytes, dropped };
 }
 
 const unverified = (what: string) =>

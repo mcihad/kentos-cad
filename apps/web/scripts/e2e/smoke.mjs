@@ -1517,8 +1517,10 @@ try {
       if (!blob) return { name };
       const bytes = new Uint8Array(await blob.arrayBuffer());
       const signature = [...bytes.slice(0, 9)].map((x) => x.toString(16).padStart(2, '0')).join('');
-      const doc = await (await window.kentos.files.kcad()).decode(bytes);
-      return { name, signature, format: doc.format, version: doc.version, n: doc.entities.length, uids: doc.uids.length, dirty: window.kentos.doc.dirty.value };
+      // The worker gives the drawing back as its head (JSON) and its objects as typed columns (docs/adr/0030).
+      const read = await (await window.kentos.files.kcad()).decode(bytes);
+      const head = JSON.parse(read.head);
+      return { name, signature, format: head.format, version: head.version, n: read.columns.kinds.length, uids: read.columns.uids.length / 16, dirty: window.kentos.doc.dirty.value };
     })()`);
     const size = await b.eval('window.kentos.doc.size');
     await b.shot('kcad-v2-saved');
