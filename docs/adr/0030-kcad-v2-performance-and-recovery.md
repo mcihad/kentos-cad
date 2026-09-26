@@ -76,7 +76,7 @@ Nesneler altı tipli dizide geçer. Nesneler dışındaki her şey (ad, ayarlar,
 
 - **Ne:** kaydedilmemiş çizimin KCAD v2 baytları (kaydın doğrulanmış kodeği; kalıcı kimlikler dahil) ve birkaç bilgi (ad, dosyanın adı, zaman, nesne sayısı). Hiçbir `.kcad` dosyasının içinde ya da yanında değildir.
 - **Nerede:** web IndexedDB `kentos.recovery/copies`. Bulut taslaklarının deposu (`kentos.cloud/drafts`) kullanılmadı: ömürleri ve biçimleri ayrıdır; bulut projesinin değişikliklerini cihaz taslağı tutar, ona kopya yazılmaz. Masaüstü `$XDG_DATA_HOME/kentos-cad/kurtarma` (yoksa `~/.local/share/…`): her çalışan KentOS'un kendi klasörü ve çalıştıkça kilitli tuttuğu `kilit` dosyası; kopya `<n>.kurtarma` ve `<n>.json`, geçici dosyaya yazılıp yer değiştirilir. Klasör kullanılamazsa açılışta komut satırında söylenir.
-- **Ne zaman:** çizim değiştikten 3 s sonra, değişmeye devam ederse en geç 30 s'de bir; web'de sekme gizlenince hemen. Açılış sürerken yazılmaz. Kayıt dosyayı yazarken sekme gizlenirse kaydın doğrulanmış baytları kopya olur (ikinci kodlama yok).
+- **Ne zaman:** çizim değiştikten 3 s sonra, değişmeye devam ederse en geç 30 s'de bir; web'de sekme gizlenince hemen. Açılış sürerken yazılmaz. Kayıt dosyayı yazarken sekme gizlenirse kaydın doğrulanmış baytları kopya olur (ikinci kodlama yok). Kopya biçim işçisinde kodlanırken açılışın Vazgeç'i işçiyi sonlandırırsa kopya uyarısız, çizim durulunca yeniden yazılır.
 - **Silinir:** kayıt çizimi temizlediğinde ya da değişiklikler bilerek bırakıldığında (Kaydetmeden devam et, aç, çık). Sorusuz değiştirilen çizimin (üstüne bulut projesi açıldı) kopyası kalır ve sonra sorulur: kaydedilmemiş iş kendiliğinden silinmez.
 - **Sorulur:** uygulama açılınca, sahibi artık çalışmayan kopyalar (web: sekmenin `navigator.locks` ile tuttuğu kilit; masaüstü: klasör kilidi) en yeniden başlayarak birer birer sorulur. **Geri yükle** kopyayı aşamalı açılışla açar; çizim kaydedilmemiş ve dosyasız olur (Kaydet yer sorar, hiçbir dosyanın üzerine kendiliğinden yazılmaz); kopya silinir ve yerine hemen yenisi yazılır. **Sonra** kopyayı sonraki açılışa bırakır, **Sil** siler. Web'de `ui/widgets/confirm.ts`, masaüstünde KentOS UI `Dialog`.
 - Web Locks olmayan tarayıcıda başka bir sekmenin açık olup olmadığı bilinemez; bugünkü tarayıcıların hepsinde vardır.
@@ -102,6 +102,7 @@ Nesneler altı tipli dizide geçer. Nesneler dışındaki her şey (ad, ayarlar,
 - Bütün boylar: [kcad-web-before](../perf/kcad-web-before-2026-09-26.md), [kcad-web-after](../perf/kcad-web-after-2026-09-26.md), [kcad-desktop-before](../perf/kcad-desktop-before-2026-09-26.md), [kcad-desktop-after](../perf/kcad-desktop-after-2026-09-26.md).
 - **Tarayıcıda 200 000 parselin aşamaları** (tek koşu, yaklaşık). Kayıt: sayfada paketleme 0,37 s (tek görev; dosya bir anın çizimidir), işçide sütunlardan çizim 0,25 s, kodlama 0,64 s, özet 0,37 s, doğrulamanın çözmesi 0,52 s. Açılış: işçinin başlaması 0,45 s, özet 0,39 s, çözme ve sütunlar 0,77 s, sayfada denetim 0,74 s (dilimli), belgenin değişmesi 0,22 s, ilk kare ~0,7 s. Açıştaki en uzun donma artık çizicinin ilk karesidir.
 - Sıkıştırma maliyeti ölçülmedi: v2.0'da kodek yoktur (`FILE-10/11`).
+- **Denetim koşusu** (`9f018d7`, aynı makine, 1 koşu, 200 000 parsel): web Kaydet 2 188 ms (en uzun görev 360 ms, +731 MB), Aç çizildi 3 782 ms (en uzun görev 827 ms, +947 MB); yerel kodek 100 000 parselde doğrulamalı yazma 376 ms, 200 000 parselde `encode_columns` 907 ms. Tablodaki ortancalarla aynı düzeyde; tek koşu olduğu için tabloya girmedi.
 
 ### Kod yerleşimi
 
@@ -114,10 +115,48 @@ Nesneler altı tipli dizide geçer. Nesneler dışındaki her şey (ad, ayarlar,
 
 ### Doğrulama
 
-- **Rust:** sütunların birim testleri; her geçerli örnek dosya sütunlardan geçip kodeğin kendi baytlarını verir (`tests/columns.rs`); 600 rastgele çizim sütunlardan geçip değişmeden döner (`tests/robustness.rs`); ilerlemenin sırası, her adımda durdurma, sütunların ret nedenleri.
-- **Web:** JS ve Rust her örnek dosyada aynı sütunları üretir; −0, uç değerler, her tür ve isteğe bağlı alan yazılıp okunur (`io/columns.test.ts`, `io/kcad.wasm.test.ts`). Açılışın sırası, her aşamada Vazgeç, geç gelen cevap, değişen ya da değiştirilen çizim, bulut projesi, 256 MB (`app/fileIO.opening.test.ts`); kayıt hataları ve kayıt sürerken kapanan sekme (`app/fileIO.failures.test.ts`); kurtarma kopyaları (`app/recovery.test.ts`).
-- **Masaüstü:** her adımda disk hataları, her aşamada durdurma, açılışın aşamaları, Vazgeç ve Esc, geride kalan açılış, değişen çizim, açılışta tıklama, bozuk dosya, kurtarma (`opening.rs`, `saving.rs`, `recovery.rs` testleri).
-- **Bilerek bozma:** açılışın bayat denetimi kaldırılınca iki web testi, açılış sırasında tıklamayı kesen satır kaldırılınca bir masaüstü testi düştü; ikisi de geri alındı.
+- **Rust:** sütunların birim testleri; her geçerli örnek dosya sütunlardan geçip kodeğin kendi baytlarını verir (`tests/columns.rs`); 600 rastgele çizim sütunlardan geçip değişmeden döner (`tests/robustness.rs`); ilerlemenin sırası, her adımda durdurma, sütunların ret nedenleri; geri okununca gönderilen sütunları vermeyen baytlar (UTF-16 sırasındaki öznitelikler) `verify_failed` ile reddedilir.
+- **Web:** JS ve Rust her örnek dosyada aynı sütunları üretir; −0, uç değerler, her tür ve isteğe bağlı alan yazılıp okunur (`io/columns.test.ts`, `io/kcad.wasm.test.ts`). Açılışın sırası, her aşamada Vazgeç, geç gelen cevap, değişen ya da değiştirilen çizim, bulut projesi, 256 MB (`app/fileIO.opening.test.ts`); kayıt hataları ve kayıt sürerken kapanan sekme (`app/fileIO.failures.test.ts`); kurtarma kopyaları, değişmeye devam eden çizimin en geç yarım dakikada bir kopyası, geri yüklenen kopyanın açık dosyaya gitmemesi ve işçinin sonlanmasıyla duran kopyanın yeniden yazılması (`app/recovery.test.ts`); işçinin sayfanın gönderdiği başla karşılaştırması (`io/kcad.wasm.test.ts`); tamponların işçiye aktarılması ve büyük çizimden sonra işçinin hemen durması (`io/client.test.ts`).
+- **Masaüstü:** her adımda disk hataları ve geri okunan baytları değiştiren disk (`Faults::garbled`), her aşamada durdurma, açılışın aşamaları, Vazgeç ve Esc, geride kalan açılış (iki sırada da), değişen çizim, açılışta tıklama, bozuk dosya, kurtarma ve en geç yarım dakikada bir kopya (`opening.rs`, `saving.rs`, `recovery.rs` testleri).
+- **Bilerek bozma** (26 Eylül): her kural kaynakta bilerek bozuldu, adı geçen test düştü, kaynak geri alındı ve ağaç temiz kaldı. İlk kayıttaki iki bozma da geçerlidir: açılışın bayat denetimi kaldırılınca iki web testi, açılış sırasında tıklamayı kesen satır kaldırılınca bir masaüstü testi düştü. \* işaretli kuralları dilimin ilk testleri yakalamıyordu: bozma `9f018d7`'nin testleriyle bütün pakette denendi ve hiçbir test düşmedi; test eklendi (`7110077`, `8edc4bc`), bozma yeniden denendi ve düştü.
+
+| Yer | Kural | Bozma | Düşen test |
+|---|---|---|---|
+| web | 256 MB sınırı dosya okunmadan uygulanır | `tooLarge` hiç reddetmez | `refuses a file larger than the browser opens…` |
+| web | unutulan izin kodlamadan önce yeniden istenir | izin sorulmadan yazılır | `asks for a forgotten permission again…` |
+| web | hata veren yazıcı iptal edilir | `abort` çağrılmaz | `a permission taken back while the file is written…`, `a full disk…` |
+| web | hiçbir yerin tutmadığı değişiklik açılışı geri çeker | yalnız başka çizim açılması denetlenir | `a change nothing keeps stops it…` |
+| web | bulut projesinin kendi değişiklikleri açılışı durdurmaz | her değişiklik durdurur | `a change nothing keeps stops it…` |
+| web | ekrana başka çizim gelirse açılış geri çekilir | `reset` dinlenmez | `gives way when the drawing on screen changed or another was opened…` |
+| web | buluttan yalnız açılış kesinleşince çıkılır | proje açılışın başında bırakılır | `a change nothing keeps stops it…` |
+| web | \* geri yüklenen kopya dosyasız açılır | ekrandaki çizimin dosyası kalır | `offers what gone tabs left…` |
+| web | geri yüklenen kopya kaydedilmemiş sayılır | `markUnsaved` yok | `offers what gone tabs left…` |
+| web | yalnız sahibi çalışmayan sekmelerin kopyaları sorulur | Web Locks denetimi yok | `offers what gone tabs left…` |
+| web | kayıt çizimi temizleyince kopya silinir | silinmez | `keeps a copy of unsaved work; a save removes it`, `a save that fails keeps the recovery copy…` |
+| web | bilerek bırakılan değişikliklerin kopyası silinir | silinmez | `dropping the changes on purpose removes the copy…` |
+| web | sorusuz değiştirilen çizimin kopyası kalır | çizim değişince silinir | `dropping the changes on purpose removes the copy…` |
+| web | açık bulut projesine kopya yazılmaz | yazılır | `keeps no copy of an open cloud project…` |
+| web | kayıt sürerken gizlenen sekmede yalnız o anın baytları kopya olur | eski sürümün baytları da kopya olur | `the tab hidden while a save writes an older revision…` |
+| web | \* değişmeye devam eden çizimin kopyası en geç 30 s'de yazılır | yalnız 3 s sessizlikten sonra | `writes a copy at least every half minute…` |
+| web | \* çizimin tamponları işçiye aktarılır, kopyalanmaz | aktarım listesi boş | `hands a drawing and a file over without a copy…` |
+| web | \* büyük çizimden sonra işçi boşta kalır kalmaz durur | 30 s beklenir | `hands a drawing and a file over without a copy…` |
+| web | \* işçi dosyanın başını sayfanın gönderdiğiyle karşılaştırır | karşılaştırma yok | `refuses bytes whose head reads back otherwise…` |
+| web | işçinin sonlanmasıyla duran kopya uyarısız yeniden yazılır (`1bf2eaa`'daki düzeltme) | yeniden yazılmaz, uyarı çıkar | `a copy stopped with the worker…` |
+| kodek | \* geri okunan nesneler gönderilen sütunlarla karşılaştırılır | `columns::differs` yok sayılır | `columns_that_do_not_read_back_as_sent_are_refused_as_unverified` |
+| kodek | eşi olmayan UTF-16 vekili yeri söylenerek reddedilir | kayıplı dönüştürülür (U+FFFD) | `unpacking_gives_back_the_objects…`, `columns_the_codec_cannot_take…` |
+| kodek | durdurulan okuma çizim, durdurulan yazma bayt vermez | izleyicinin `false`'u yok sayılır | `a_read_reports_the_project_before_its_objects…`, `a_write_stopped_at_any_step_gives_no_bytes` |
+| masaüstü | kayıt geçici dosyaya yazılıp yer değiştirmeyle konur | doğrudan hedefe yazılır | `a_failing_disk_leaves_the_previous_file_and_says_what_to_do` |
+| masaüstü | \* diskten geri okunan baytlar yazılanlarla karşılaştırılır | karşılaştırma yok | `a_failing_disk_leaves_the_previous_file_and_says_what_to_do` |
+| masaüstü | durdurma yer değiştirmeden önceki son ana dek geçerlidir | son denetim yok | `a_save_stopped_at_any_stage_before_the_rename_leaves_the_previous_file` |
+| masaüstü | kayıt sürerken pencere kapanmaz | kapanır | `a_window_closing_while_a_save_runs_waits_for_it` |
+| masaüstü | \* önce başlayıp sonra biten açılış hiçbir şeyi değiştirmez | açılışın kimliği denetlenmez | `a_later_open_overtakes_an_earlier_one` |
+| masaüstü | açılış sürerken çizim değiştiyse açılış geri çekilir | denetlenmez | `an_open_gives_way_when_the_drawing_on_screen_changed_meanwhile` |
+| masaüstü | durdurulan açılış son aşamada da hiçbir şey vermez | belge kurulmadan önceki denetim yok | `a_read_stopped_at_any_stage_gives_nothing` |
+| masaüstü | yalnız çalışmayan KentOS'ların kopyaları sorulur | klasör kilidi denetlenmez | `a_gone_kentos_copy_is_offered_and_restored…` |
+| masaüstü | geri yüklenen kopya dosyasız açılır | kopyanın yolu kalır | `a_gone_kentos_copy_is_offered_and_restored…` |
+| masaüstü | kayıt çizimi temizleyince kopya silinir | silinmez | `unsaved_work_gets_a_copy_that_a_save_removes` |
+| masaüstü | bilerek bırakılan değişikliklerin kopyası silinir | silinmez | `dropping_the_changes_on_purpose_removes_the_copy` |
+| masaüstü | \* değişmeye devam eden çizimin kopyası en geç 30 s'de yazılır | yalnız 3 s sessizlikten sonra | `a_copy_is_written_at_least_every_half_minute…` |
 
 ## Sonuçlar
 
