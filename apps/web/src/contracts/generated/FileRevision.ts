@@ -7,4 +7,9 @@ export type FileRevision = { revision: string, size: number, sha256: string, cre
 /**
  * RFC 3339.
  */
-createdAt: string, };
+createdAt: string, 
+/**
+ * How many objects the file holds (decimal text), counted when it was
+ * verified; absent before that (and for revisions saved before it was counted).
+ */
+objects?: string, };

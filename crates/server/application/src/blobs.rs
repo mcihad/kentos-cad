@@ -136,6 +136,33 @@ impl Blobs {
         Ok(())
     }
 
+    /// Gives an object a second key (a copied project's revision): the same
+    /// bytes under both, and neither ever changes. A hard link where the
+    /// file system allows it, else a copy written beside and renamed into
+    /// place; the new folder is flushed either way. An object already at
+    /// `to` is kept: a revision's key carries its content's hash.
+    pub async fn share(&self, from: &str, to: &str) -> io::Result<()> {
+        let (from, to) = (self.path(from)?, self.path(to)?);
+        let Some(dir) = to.parent().map(Path::to_path_buf) else {
+            return Err(io::Error::other("nesne anahtarının klasörü yok"));
+        };
+        tokio::fs::create_dir_all(&dir).await?;
+        match tokio::fs::hard_link(&from, &to).await {
+            Ok(()) => {}
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
+            Err(_) => {
+                let part = to.with_extension("part");
+                tokio::fs::copy(&from, &part).await?;
+                tokio::fs::File::open(&part).await?.sync_all().await?;
+                tokio::fs::rename(&part, &to).await?;
+            }
+        }
+        tokio::task::spawn_blocking(move || std::fs::File::open(dir)?.sync_all())
+            .await
+            .map_err(io::Error::other)??;
+        Ok(())
+    }
+
     /// Removes an object; one that is not there is already removed.
     pub async fn remove(&self, key: &str) -> io::Result<()> {
         match tokio::fs::remove_file(self.path(key)?).await {
@@ -199,20 +226,31 @@ impl Blobs {
         Ok(())
     }
 
-    /// The projects that have revisions in the store, as (tenant, project).
-    pub async fn projects(&self) -> io::Result<Vec<(Uuid, Uuid)>> {
+    /// The projects that have revisions in the store, as (tenant, project),
+    /// whose folder has not changed for `settled`: a copy's folder is made
+    /// just before its project's row is committed (docs/adr/0031), so a
+    /// fresh folder may belong to a project that exists a moment later.
+    pub async fn projects(&self, settled: Duration) -> io::Result<Vec<(Uuid, Uuid)>> {
         let mut found = Vec::new();
         let revisions = self.root.join("revisions");
         let Ok(mut tenants) = tokio::fs::read_dir(&revisions).await else {
             return Ok(found);
         };
+        let now = SystemTime::now();
         while let Some(t) = tenants.next_entry().await? {
             let Some(tenant) = uuid_name(&t.path()) else {
                 continue;
             };
             let mut projects = tokio::fs::read_dir(t.path()).await?;
             while let Some(p) = projects.next_entry().await? {
-                if let Some(project) = uuid_name(&p.path()) {
+                let still = p
+                    .metadata()
+                    .await?
+                    .modified()
+                    .ok()
+                    .and_then(|m| now.duration_since(m).ok())
+                    .is_some_and(|d| d >= settled);
+                if let (Some(project), true) = (uuid_name(&p.path()), still) {
                     found.push((tenant, project));
                 }
             }
@@ -342,7 +380,15 @@ mod tests {
             blobs.promote(&key, &nowhere).await.unwrap_err().kind(),
             io::ErrorKind::NotFound
         );
-        assert_eq!(blobs.projects().await.unwrap(), vec![(t, p)]);
+        assert_eq!(blobs.projects(Duration::ZERO).await.unwrap(), vec![(t, p)]);
+        // A folder that changed within the hour is left alone.
+        assert!(
+            blobs
+                .projects(Duration::from_secs(3600))
+                .await
+                .unwrap()
+                .is_empty()
+        );
         // Objects above the newest committed revision go, but for the one kept.
         for (n, content) in [(2, "b"), (3, "c")] {
             let mut w = blobs

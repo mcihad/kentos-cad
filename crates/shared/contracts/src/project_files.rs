@@ -72,6 +72,11 @@ pub struct FileUpload {
     pub expires_at: String,
     /// The bytes arrived and were verified; it can be committed.
     pub received: bool,
+    /// How many objects the file holds (decimal text), counted when it was
+    /// verified; absent before that (and for revisions saved before it was counted).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub objects: Option<String>,
 }
 
 /// Input of `project.file.commit` v1: the verified upload that becomes the
@@ -97,6 +102,11 @@ pub struct FileCommitted {
     pub revision: String,
     pub size: u32,
     pub sha256: String,
+    /// How many objects the file holds (decimal text), counted when it was
+    /// verified; absent before that (and for revisions saved before it was counted).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub objects: Option<String>,
     /// The stored answer of an earlier identical command (its key was seen).
     pub replayed: bool,
 }
@@ -115,6 +125,11 @@ pub struct FileRevision {
     pub created_by_name: String,
     /// RFC 3339.
     pub created_at: String,
+    /// How many objects the file holds (decimal text), counted when it was
+    /// verified; absent before that (and for revisions saved before it was counted).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub objects: Option<String>,
 }
 
 /// `GET …/files`: a file project's revisions, newest first.

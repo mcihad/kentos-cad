@@ -6659,6 +6659,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `project.file.commit` v1.",
         "properties": {
+          "objects": {
+            "description": "How many objects the file holds (decimal text), counted when it was\nverified; absent before that (and for revisions saved before it was counted).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "replayed": {
             "description": "The stored answer of an earlier identical command (its key was seen).",
             "type": "boolean"

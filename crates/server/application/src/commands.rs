@@ -138,7 +138,7 @@ pub async fn run(
         PROJECT_UNARCHIVE => state(StateChange::Unarchive).await.map(O::Catalog),
         PROJECT_TRASH => state(StateChange::Trash).await.map(O::Catalog),
         PROJECT_RESTORE => state(StateChange::Restore).await.map(O::Catalog),
-        PROJECT_DUPLICATE => duplicate::duplicate(db, access, envelope)
+        PROJECT_DUPLICATE => duplicate::duplicate(db, blobs, access, envelope)
             .await
             .map(O::Duplicated),
         PROJECT_PURGE => lifecycle::purge(db, access, envelope).await.map(O::Purged),

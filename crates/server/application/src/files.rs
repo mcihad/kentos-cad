@@ -142,6 +142,7 @@ pub async fn begin(
         created_at: rfc3339(created),
         expires_at: expires(created),
         received: false,
+        objects: None,
     })
 }
 
@@ -152,33 +153,45 @@ struct Upload {
     received: bool,
     blob_key: String,
     created: OffsetDateTime,
+    /// Counted when the bytes were verified.
+    objects: Option<i64>,
 }
+
+/// An upload's row: size, SHA-256, when it was received, its object's key, when it was opened, its object count.
+type UploadRow = (
+    i64,
+    String,
+    Option<OffsetDateTime>,
+    String,
+    OffsetDateTime,
+    Option<i64>,
+);
 
 async fn own_upload(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
     upload: Uuid,
 ) -> AppResult<Option<Upload>> {
-    let row: Option<(i64, String, Option<OffsetDateTime>, String, OffsetDateTime)> =
-        sqlx::query_as(
-            "select size, sha256, received_at, blob_key, created_at from kentos.project_upload
+    let row: Option<UploadRow> = sqlx::query_as(
+        "select size, sha256, received_at, blob_key, created_at, objects from kentos.project_upload
               where tenant_id = $1 and project_id = $2 and id = $3 and created_by = $4",
-        )
-        .bind(access.tenant)
-        .bind(access.project)
-        .bind(upload)
-        .bind(access.actor.user_id)
-        .fetch_optional(&mut **tx)
-        .await?;
-    Ok(
-        row.map(|(size, sha256, received_at, blob_key, created)| Upload {
+    )
+    .bind(access.tenant)
+    .bind(access.project)
+    .bind(upload)
+    .bind(access.actor.user_id)
+    .fetch_optional(&mut **tx)
+    .await?;
+    Ok(row.map(
+        |(size, sha256, received_at, blob_key, created, objects)| Upload {
             size,
             sha256,
             received: received_at.is_some(),
             blob_key,
             created,
-        }),
-    )
+            objects,
+        },
+    ))
 }
 
 fn upload_gone() -> AppError {
@@ -272,19 +285,23 @@ pub async fn finish_receive(
             ),
         ));
     }
-    if let Err(why) = verify(blobs, &key).await {
-        let _ = blobs.remove(&key).await;
-        return Err(why);
-    }
+    let objects = match verify(blobs, &key).await {
+        Ok(n) => n,
+        Err(why) => {
+            let _ = blobs.remove(&key).await;
+            return Err(why);
+        }
+    };
     let mut tx = db.scoped(access.scope()).await?;
     let marked = sqlx::query(
-        "update kentos.project_upload set received_at = now()
+        "update kentos.project_upload set received_at = now(), objects = $5
           where tenant_id = $1 and project_id = $2 and id = $3 and created_by = $4 and received_at is null",
     )
     .bind(access.tenant)
     .bind(access.project)
     .bind(upload)
     .bind(access.actor.user_id)
+    .bind(objects)
     .execute(&mut *tx)
     .await?;
     tx.commit().await?;
@@ -300,19 +317,24 @@ pub async fn finish_receive(
         created_at: rfc3339(created),
         expires_at: expires(created),
         received: true,
+        objects: Some(objects.to_string()),
     })
 }
 
-/// Reads the object back and decodes it with the shared KCAD v2 codec, off the async threads.
-async fn verify(blobs: &Blobs, key: &str) -> AppResult<()> {
+/// Reads the object back and decodes it with the shared KCAD v2 codec, off
+/// the async threads; returns how many objects it holds.
+async fn verify(blobs: &Blobs, key: &str) -> AppResult<i64> {
     let _turn = verifying()
         .acquire()
         .await
         .map_err(|e| AppError::Storage(std::io::Error::other(e)))?;
     let bytes = blobs.read(key).await.map_err(missing_is_gone)?;
-    let read = tokio::task::spawn_blocking(move || kentos_kcad::read(&bytes).map(|_| ()))
-        .await
-        .map_err(|e| AppError::Storage(std::io::Error::other(e)))?;
+    let read = tokio::task::spawn_blocking(move || {
+        kentos_kcad::read(&bytes)
+            .map(|(_, doc)| i64::try_from(doc.entities.len()).unwrap_or(i64::MAX))
+    })
+    .await
+    .map_err(|e| AppError::Storage(std::io::Error::other(e)))?;
     read.map_err(|e| {
         AppError::invalid(format!(
             "Yüklenen dosya geçerli bir KCAD v2 dosyası değil: {e}. Çizimi KentOS ile yeniden kaydedip yükleyin."
@@ -442,8 +464,8 @@ async fn record(
     final_key: &str,
 ) -> AppResult<FileCommitted> {
     sqlx::query(
-        "insert into kentos.project_file_revision (tenant_id, project_id, revision, size, sha256, blob_key, created_by, request_id)
-         values ($1, $2, $3, $4, $5, $6, $7, $8)",
+        "insert into kentos.project_file_revision (tenant_id, project_id, revision, size, sha256, blob_key, created_by, request_id, objects)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
     )
     .bind(now.tenant)
     .bind(now.project)
@@ -453,6 +475,7 @@ async fn record(
     .bind(final_key)
     .bind(now.actor.user_id)
     .bind(&envelope.request_id)
+    .bind(found.objects)
     .execute(&mut **tx)
     .await?;
     sqlx::query(
@@ -479,7 +502,7 @@ async fn record(
         PROJECT_FILE_COMMIT,
         request,
         data_revision,
-        json!({ "revision": revision, "size": found.size, "sha256": found.sha256 }),
+        json!({ "revision": revision, "size": found.size, "sha256": found.sha256, "objects": found.objects }),
     )
     .await?;
     journal::event(
@@ -495,15 +518,27 @@ async fn record(
         revision: revision.to_string(),
         size: u32::try_from(found.size).unwrap_or(u32::MAX),
         sha256: found.sha256.clone(),
+        objects: found.objects.map(|n| n.to_string()),
         replayed: false,
     };
     idempotency::record(tx, now, envelope, text, &result).await?;
     Ok(result)
 }
 
-type RevisionRow = (i64, i64, String, Uuid, String, OffsetDateTime);
+/// A revision's row: number, size, SHA-256, author and their name, time,
+/// object count (null before migration 0007) and the object's key.
+pub(crate) type RevisionRow = (
+    i64,
+    i64,
+    String,
+    Uuid,
+    String,
+    OffsetDateTime,
+    Option<i64>,
+    String,
+);
 
-fn revision_of((revision, size, sha256, by, name, at): RevisionRow) -> FileRevision {
+fn revision_of((revision, size, sha256, by, name, at, objects, _key): RevisionRow) -> FileRevision {
     FileRevision {
         revision: revision.to_string(),
         size: u32::try_from(size).unwrap_or(u32::MAX),
@@ -511,11 +546,11 @@ fn revision_of((revision, size, sha256, by, name, at): RevisionRow) -> FileRevis
         created_by: by.to_string(),
         created_by_name: name,
         created_at: rfc3339(at),
+        objects: objects.map(|n| n.to_string()),
     }
 }
 
-const REVISION_SELECT: &str =
-    "select r.revision, r.size, r.sha256, r.created_by, coalesce(u.display_name, ''), r.created_at
+const REVISION_SELECT: &str = "select r.revision, r.size, r.sha256, r.created_by, coalesce(u.display_name, ''), r.created_at, r.objects, r.blob_key
    from kentos.project_file_revision r left join kentos.app_user u on u.id = r.created_by
   where r.tenant_id = $1 and r.project_id = $2";
 
@@ -540,6 +575,21 @@ pub async fn list(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
     })
 }
 
+/// The newest revision of the project in `tx`'s scope, if it has one (a copy starts from it).
+pub(crate) async fn newest(
+    tx: &mut Transaction<'static, Postgres>,
+    tenant: Uuid,
+    project: Uuid,
+) -> AppResult<Option<RevisionRow>> {
+    Ok(sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{REVISION_SELECT} and r.revision = (select p.file_revision from kentos.project p where p.tenant_id = $1 and p.id = $2)"
+    )))
+    .bind(tenant)
+    .bind(project)
+    .fetch_optional(&mut **tx)
+    .await?)
+}
+
 /// One committed revision and its bytes (`project.download`).
 pub async fn download(
     db: &kentos_postgres::Db,
@@ -552,25 +602,22 @@ pub async fn download(
     let mut tx = db.scoped(access.scope()).await?;
     let (storage, _, _) = file_state(&mut tx, access).await?;
     needs_file(storage, &access.name)?;
-    let row: Option<(RevisionRow, String)> = sqlx::query_as::<_, (i64, i64, String, Uuid, String, OffsetDateTime, String)>(
-        "select r.revision, r.size, r.sha256, r.created_by, coalesce(u.display_name, ''), r.created_at, r.blob_key
-           from kentos.project_file_revision r left join kentos.app_user u on u.id = r.created_by
-          where r.tenant_id = $1 and r.project_id = $2 and r.revision = $3",
-    )
+    let row: Option<RevisionRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{REVISION_SELECT} and r.revision = $3"
+    )))
     .bind(access.tenant)
     .bind(access.project)
     .bind(revision)
     .fetch_optional(&mut *tx)
-    .await?
-    .map(|(r, s, h, b, n, a, key)| ((r, s, h, b, n, a), key));
+    .await?;
     tx.commit().await?;
-    let (row, key) = row.ok_or_else(|| {
+    let row = row.ok_or_else(|| {
         AppError::not_found(format!(
             "“{}” projesinin {revision}. revizyonu yok.",
             access.name
         ))
     })?;
-    let file = blobs.open(&key).await?;
+    let file = blobs.open(&row.7).await?;
     Ok((revision_of(row), file))
 }
 
@@ -585,9 +632,19 @@ pub struct Cleanup {
     pub purged: usize,
 }
 
+/// How long a project's folder in the store stays unchanged before the
+/// cleanup may take it for a folder of a project removed for good: a copy's
+/// object is shared a moment before the copy's row is committed.
+pub const SETTLED: std::time::Duration = std::time::Duration::from_secs(3600);
+
 /// The store's cleanup, run by the server every hour: expired uploads (rows
-/// and bytes), stray upload files, and the objects of projects removed for good.
-pub async fn cleanup(db: &kentos_postgres::Db, blobs: &Blobs) -> AppResult<Cleanup> {
+/// and bytes), stray upload files, and the objects of projects removed for
+/// good whose folder has been still for `settled` ([`SETTLED`]).
+pub async fn cleanup(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    settled: std::time::Duration,
+) -> AppResult<Cleanup> {
     const BATCH: i32 = 200;
     let lifetime = std::time::Duration::from_secs(u64::from(UPLOAD_LIFETIME_HOURS) * 3600);
     let mut done = Cleanup::default();
@@ -608,7 +665,7 @@ pub async fn cleanup(db: &kentos_postgres::Db, blobs: &Blobs) -> AppResult<Clean
         }
     }
     done.swept = blobs.sweep_uploads(lifetime * 2).await?;
-    let stored = blobs.projects().await?;
+    let stored = blobs.projects(settled).await?;
     if !stored.is_empty() {
         let ids: Vec<Uuid> = stored.iter().map(|(_, p)| *p).collect();
         let existing: Vec<Uuid> = sqlx::query_scalar("select id from kentos.existing_projects($1)")

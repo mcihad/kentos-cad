@@ -138,7 +138,7 @@ mod tests {
     /// (the layout move of 595ecf1 edited a path in 0001's comment and
     /// stopped the development database). Change the schema with a new
     /// migration, and pin it here once a kept database has applied it.
-    const RELEASED: [(i64, &str); 6] = [
+    const RELEASED: [(i64, &str); 7] = [
         (
             1,
             "63c0207c18858174260b3de415ec2beb450cde6d8d80e8d8b01c54dbf67fc845621290e7855212f41dc82a8a1b888d02",
@@ -162,6 +162,10 @@ mod tests {
         (
             6,
             "e924cf7281cef923655989e02f52ade07eb5649a161d1c2b2ca92ffd2e5181f8f3426551e048f57f86630a15bbc3f31f",
+        ),
+        (
+            7,
+            "57184bf82f8bec5bdf8e82355de6baf0eba3987100d48177a46c7ffa5953611c16e51c4ada6bb1686581b532c741f130",
         ),
     ];
 

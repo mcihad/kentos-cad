@@ -56,13 +56,13 @@
 - Sunucu saatte bir çalıştırır (`files::cleanup`):
   - 24 saat içinde kaydedilmeyen yükleme satırı ve baytları silinir (`kentos.expire_uploads`);
   - 48 saatten eski yükleme dosyası, veritabanı ne derse desin, silinir: yüklemeler zaten geçicidir;
-  - kalıcı silinen projelerin depodaki revizyonları silinir (`kentos.existing_projects`).
+  - kalıcı silinen projelerin depodaki revizyonları silinir (`kentos.existing_projects`); klasörü bir saattir değişmemiş olmak şartıyla (`files::SETTLED`, aşağıdaki ek).
 - İki işlev de sahibin haklarıyla çalışır, çünkü sunucunun rolü başka projelerin satırlarını göremez. Yalnız yukarıdakileri yapar.
 
 ## Bu dilimde olmayanlar
 
 - **Web ve masaüstü arayüzü:** dosya projesi açma, kaydetme, revizyon listesi ve durumlar (`SYNC-04`, `SYNC-15`). Web tarafını web ajanı yapar; masaüstünde bulut henüz yok.
-- **Dosya projesinin kopyası:** `project.duplicate` açık bir iletiyle reddeder. Kopya, son revizyonun nesnesini yeni projeye kopyalamayı ister.
+- ~~Dosya projesinin kopyası~~: 26 Eylül'de geldi, aşağıdaki eke bakın.
 - **Revizyon geçmişi işlemleri:** karşılaştırma, adlandırılmış checkpoint, yeni proje olarak geri yükleme (`SYNC-11`, `CLOUD-07`).
 - **Parçalı ve sürdürülebilir yükleme** ve 256 MiB'den büyük dosyalar (`SYNC-10`).
 - **Veritabanı projesinden dosya snapshot'ı** (`SYNC-05`).
@@ -83,3 +83,16 @@
   - beklenen revizyon denetimi kapatılınca çakışma testi düştü;
   - kayıttaki artık silme kapatılınca yarım kalan kayıt testi düştü (3 nesne, beklenen 2).
 - Migration 0006 geliştirme veritabanına yedek alınarak uygulandı; sağlama toplamı `RELEASED`'de sabit.
+
+## Ek (26 Eylül): kopya, nesne sayısı, temizlikte bekleme
+
+- **Kopya** (`project.duplicate`, ADR 0028): dosya projesinin kopyası da dosya projesidir. Kaynağın en yeni revizyonu kopyanın 1. revizyonu olur; eski revizyonlar geçmiştir, kopyalanmaz.
+  - Nesne önce depoda kopyanın anahtarıyla paylaşılır (`Blobs::share`): aynı dosya sisteminde sabit bağlantı, olmazsa yanına yazılıp yerine taşınan kopya. İki anahtar da hiç değişmez; kaynağın kalıcı silinmesi kopyanın baytlarına dokunmaz.
+  - Sonra satırlar yazılır: `kentos.duplicate_project` artık saklama biçimini de kopyalar (migration 0007); kopyanın revizyon satırı kendi kapsamında yazılır.
+  - Satırlar yazılamazsa paylaşılan nesne silinir. İşlemin sonucu bilinmiyorsa nesne kalır; kopya yazılmadıysa temizlik onu projesi olmayan klasör olarak siler.
+- **Nesne sayısı:** yükleme doğrulanırken dosya zaten çözülür; içindeki nesne sayısı yüklemeyle ve olduğu revizyonla saklanır (migration 0007). `FileUpload`, `FileCommitted` ve `FileRevision` sayıyı `objects` olarak verir; bu ekten önce kaydedilmiş revizyonda yoktur. Kopyanın sonucu (`ProjectDuplicated.objects`) dosya projesinde bu sayıdır.
+- **Temizlikte bekleme:** kopyanın klasörü, projesinin satırı yazılmadan bir an önce açılır. Saatlik temizlik bu arada çalışırsa klasörü “projesi olmayan” sanıp silebilirdi. Bu yüzden projesi olmayan klasör ancak bir saattir değişmemişse silinir (`files::SETTLED`). Kalıcı silinen projenin baytları en geç iki temizlik turunda gider.
+- Sınandı:
+  - `a_file_project_is_copied_with_its_newest_revision`: sayılar, kopyanın tek revizyonu, baytları, kopyanın kendi kaydı, kaynağın kalıcı silinmesinden sonra da kopyanın baytları;
+  - `the_cleanup_leaves_a_fresh_folder_alone`.
+  - Kasıtlı bozma, ikisi de geri alındı: bekleme yok sayılınca taze klasör silindi, test düştü; migration saklama biçimini kopyalamayınca kopya `project_file_revision_storage` kısıtına takıldı.

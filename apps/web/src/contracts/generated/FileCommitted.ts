@@ -9,6 +9,11 @@ export type FileCommitted = {
  */
 revision: string, size: number, sha256: string, 
 /**
+ * How many objects the file holds (decimal text), counted when it was
+ * verified; absent before that (and for revisions saved before it was counted).
+ */
+objects?: string, 
+/**
  * The stored answer of an earlier identical command (its key was seen).
  */
 replayed: boolean, };

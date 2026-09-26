@@ -71,7 +71,9 @@ async fn clean_store(db: Db, blobs: kentos_application::blobs::Blobs) {
     every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     loop {
         every.tick().await;
-        match kentos_application::files::cleanup(&db, &blobs).await {
+        match kentos_application::files::cleanup(&db, &blobs, kentos_application::files::SETTLED)
+            .await
+        {
             Ok(done) if done != Default::default() => tracing::info!(
                 suresi_dolan = done.expired,
                 sahipsiz = done.swept,

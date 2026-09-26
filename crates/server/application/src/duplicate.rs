@@ -6,8 +6,13 @@
 //!   persistent id (docs/adr/0014, 0026: the same ids in two projects are two
 //!   independent objects), each at version 1: the copy's first commit is its
 //!   data revision 1.
-//! - **Not copied:** history (command log, events, audit records), grants,
-//!   favourites and recents, the archived state. The copy is the caller's:
+//! - **A file project** (docs/adr/0031) is copied as a file project whose
+//!   revision 1 is the source's newest revision: the object is shared in the
+//!   store under the copy's key before the rows are written; a copy that is
+//!   not committed leaves an object of no project, which the store's
+//!   cleanup removes.
+//! - **Not copied:** history (command log, events, audit records, older file
+//!   revisions), grants, favourites and recents, the archived state. The copy is the caller's:
 //!   they own it, and only they (and, in an organisation, its owners and
 //!   admins under its policy) see it until they share it.
 //! - **Who:** the source needs `project.download` (a copy is a download into
@@ -28,12 +33,15 @@ use kentos_contracts::{
 };
 use kentos_postgres::{Scope, rescope};
 use serde_json::json;
+use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::access::ProjectAccess;
+use crate::blobs::Blobs;
 use crate::changes::{check_target, lock};
 use crate::commands::input;
 use crate::error::{AppError, AppResult};
+use crate::files::{self, RevisionRow};
 use crate::projects::{check_name, gone, opened};
 use crate::tenancy::{self, Capability};
 use crate::{idempotency, journal, listing};
@@ -53,6 +61,7 @@ pub fn copy_name(name: &str) -> String {
 
 pub async fn duplicate(
     db: &kentos_postgres::Db,
+    blobs: &Blobs,
     access: &ProjectAccess,
     envelope: CommandEnvelope,
 ) -> AppResult<ProjectDuplicated> {
@@ -72,7 +81,6 @@ pub async fn duplicate(
     let into = tenancy::access(db, &access.actor, target).await?;
     into.require(Capability::ProjectCreate)?;
     let text = idempotency::request_text(&envelope);
-    let request = Some(envelope.request_id.as_str());
     let mut tx = db.scoped(access.scope()).await?;
     let now = lock(&mut tx, access).await?;
     if let Some(mut earlier) =
@@ -86,49 +94,106 @@ pub async fn duplicate(
         return Err(gone(&now.name));
     }
     now.require(ProjectPermission::Download)?;
-    // A file project's content is in the object store (docs/adr/0031); copying it is a later slice.
     let storage: String =
         sqlx::query_scalar("select storage from kentos.project where tenant_id = $1 and id = $2")
             .bind(now.tenant)
             .bind(now.project)
             .fetch_one(&mut *tx)
             .await?;
-    if storage == "file" {
-        return Err(AppError::invalid(format!(
-            "“{}” projesi dosya olarak saklanıyor; dosya projelerinin kopyası henüz yok. Son revizyonu indirip yeni bir dosya projesine yükleyin.",
-            now.name
-        )));
-    }
     let name = name
         .map(|n| n.trim().to_string())
         .unwrap_or_else(|| copy_name(&now.name));
     let id = Uuid::now_v7();
-    let objects: i64 = sqlx::query_scalar("select kentos.duplicate_project($1, $2, $3, $4, $5)")
+    // A file project's content is its newest revision (docs/adr/0031): its object goes first.
+    let newest = match storage.as_str() {
+        "file" => files::newest(&mut tx, now.tenant, now.project).await?,
+        _ => None,
+    };
+    let shared = match &newest {
+        Some(row) => {
+            let key = Blobs::revision_key(target, id, 1, &row.2);
+            blobs.share(&row.7, &key).await?;
+            Some(key)
+        }
+        None => None,
+    };
+    let copy = Copy {
+        target,
+        id,
+        name: &name,
+        file: newest.as_ref().zip(shared.as_deref()),
+    };
+    let result = match write(&mut tx, &now, &envelope, &text, copy).await {
+        Ok(result) => result,
+        Err(e) => {
+            // Nothing was written: the shared object goes too.
+            if let Some(key) = &shared {
+                let _ = blobs.remove(key).await;
+            }
+            return Err(e);
+        }
+    };
+    // A commit that fails may still have been written (its answer lost), so the object
+    // stays; if nothing was written, the store's cleanup removes it with its project.
+    tx.commit().await?;
+    Ok(result)
+}
+
+/// The copy to make: where, its id and name, and for a file project the
+/// source's newest revision with the key its object was shared under.
+struct Copy<'a> {
+    target: Uuid,
+    id: Uuid,
+    name: &'a str,
+    file: Option<(&'a RevisionRow, &'a str)>,
+}
+
+/// The copy's rows, both projects' audit records and the stored answer, in the open transaction.
+async fn write(
+    tx: &mut Transaction<'static, Postgres>,
+    now: &ProjectAccess,
+    envelope: &CommandEnvelope,
+    text: &str,
+    copy: Copy<'_>,
+) -> AppResult<ProjectDuplicated> {
+    let Copy {
+        target,
+        id,
+        name,
+        file,
+    } = copy;
+    let request = Some(envelope.request_id.as_str());
+    let features: i64 = sqlx::query_scalar("select kentos.duplicate_project($1, $2, $3, $4, $5)")
         .bind(now.tenant)
         .bind(now.project)
         .bind(target)
         .bind(id)
-        .bind(&name)
-        .fetch_one(&mut *tx)
+        .bind(name)
+        .fetch_one(&mut **tx)
         .await?;
-    let revision = journal::revision(&mut tx, &now).await?;
+    let revision = journal::revision(tx, now).await?;
+    // A file project's objects are in its file: the count its newest revision was verified with.
+    let objects = match file {
+        Some((row, _)) => row.6.unwrap_or(0),
+        None => features,
+    };
     journal::audit(
-        &mut tx,
-        &now,
+        tx,
+        now,
         PROJECT_DUPLICATE,
         request,
         revision,
         json!({ "copy": id, "tenant": target, "name": name, "objects": objects }),
     )
     .await?;
-    // The copy's own rows, in its scope: its creation and its owner's recent use.
-    let copy = journal::Subject {
+    // The copy's own rows, in its scope: its file revision, its creation and its owner's recent use.
+    let subject = journal::Subject {
         tenant: target,
         project: id,
         actor: now.actor.user_id,
     };
     rescope(
-        &mut tx,
+        tx,
         Scope {
             tenant: Some(target),
             user: Some(now.actor.user_id),
@@ -136,27 +201,49 @@ pub async fn duplicate(
         },
     )
     .await?;
+    if let Some((row, key)) = file {
+        sqlx::query(
+            "insert into kentos.project_file_revision (tenant_id, project_id, revision, size, sha256, blob_key, created_by, request_id, objects)
+             values ($1, $2, 1, $3, $4, $5, $6, $7, $8)",
+        )
+        .bind(target)
+        .bind(id)
+        .bind(row.1)
+        .bind(&row.2)
+        .bind(key)
+        .bind(now.actor.user_id)
+        .bind(&envelope.request_id)
+        .bind(row.6)
+        .execute(&mut **tx)
+        .await?;
+        sqlx::query(
+            "update kentos.project set file_revision = 1, data_revision = 1 where tenant_id = $1 and id = $2",
+        )
+        .bind(target)
+        .bind(id)
+        .execute(&mut **tx)
+        .await?;
+    }
     journal::audit(
-        &mut tx,
-        copy,
+        tx,
+        subject,
         "project.create",
         request,
-        i64::from(objects > 0),
+        i64::from(objects > 0 || file.is_some()),
         json!({ "name": name, "copyOf": { "tenant": now.tenant, "project": now.project }, "objects": objects }),
     )
     .await?;
-    opened(&mut tx, target, id, now.actor.user_id).await?;
-    let project = listing::entry(&mut tx, target, id).await?;
+    opened(tx, target, id, now.actor.user_id).await?;
+    let project = listing::entry(tx, target, id).await?;
     // Back in the source's scope, where its command log is.
-    rescope(&mut tx, now.scope()).await?;
+    rescope(tx, now.scope()).await?;
     let result = ProjectDuplicated {
         project,
         source_id: now.project.to_string(),
         objects: objects.to_string(),
         replayed: false,
     };
-    idempotency::record(&mut tx, &now, &envelope, &text, &result).await?;
-    tx.commit().await?;
+    idempotency::record(tx, now, envelope, text, &result).await?;
     Ok(result)
 }
 

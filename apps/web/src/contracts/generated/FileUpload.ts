@@ -15,4 +15,9 @@ expiresAt: string,
 /**
  * The bytes arrived and were verified; it can be committed.
  */
-received: boolean, };
+received: boolean, 
+/**
+ * How many objects the file holds (decimal text), counted when it was
+ * verified; absent before that (and for revisions saved before it was counted).
+ */
+objects?: string, };

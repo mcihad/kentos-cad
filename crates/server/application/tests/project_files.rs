@@ -1,10 +1,13 @@
 //! Projects kept as files (docs/adr/0031): an upload is verified before it
 //! is kept, a commit based on an older revision is a conflict, only writers
-//! upload and only those allowed download, and the store's cleanup removes
-//! what nobody will commit or what belongs to projects removed for good.
+//! upload and only those allowed download, a copy starts from the newest
+//! revision, and the store's cleanup removes what nobody will commit or what
+//! belongs to projects removed for good (never a folder still settling).
 //! Real database (`KENTOS_TEST_DB=required` makes a missing one a failure).
 
 mod common;
+
+use std::time::Duration;
 
 use common::{blobs, member, new_project, open};
 use kentos_application::access::ProjectAccess;
@@ -13,8 +16,8 @@ use kentos_application::commands::{CatalogPolicy, CommandOutcome, run};
 use kentos_application::tenancy::Access;
 use kentos_application::{AppError, admin, changes, files, projects};
 use kentos_contracts::{
-    CommandEnvelope, DocumentSnapshotV1, FileUploadBegin, PROJECT_FILE_COMMIT, ProjectCreate,
-    ProjectStorage, TenantRole,
+    CommandEnvelope, DocumentSnapshotV1, FileUploadBegin, PROJECT_DUPLICATE, PROJECT_FILE_COMMIT,
+    ProjectCreate, ProjectStorage, TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use sha2::{Digest, Sha256};
@@ -407,6 +410,125 @@ async fn a_commit_cut_short_is_finished_or_cleared_by_the_next() {
 }
 
 #[tokio::test]
+async fn a_file_project_is_copied_with_its_newest_revision() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 3)
+        .await
+        .unwrap();
+    let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
+    let project = file_project(&db, &ayse, "Ada 9 dosyası").await;
+    let by = open(&db, &ayse, project).await;
+    let store = blobs();
+    let count = |bytes: &[u8]| {
+        kentos_kcad::decode(bytes)
+            .unwrap()
+            .entities
+            .len()
+            .to_string()
+    };
+
+    // Each revision keeps the number of objects its file was verified with.
+    let first = upload(&db, &store, &by, MINIMAL).await.unwrap();
+    let one = commit(&db, &store, commit_envelope(&by, first, "0"), &by)
+        .await
+        .unwrap();
+    assert_eq!(one.objects, Some(count(MINIMAL)));
+    let second = upload(&db, &store, &by, DRAWING).await.unwrap();
+    commit(&db, &store, commit_envelope(&by, second, "1"), &by)
+        .await
+        .unwrap();
+    let listed = files::list(&db.app, &by).await.unwrap();
+    assert_eq!(
+        listed
+            .revisions
+            .iter()
+            .map(|r| r.objects.clone())
+            .collect::<Vec<_>>(),
+        [Some(count(DRAWING)), Some(count(MINIMAL))]
+    );
+
+    // The copy is a file project whose revision 1 is the source's newest.
+    let envelope = common::catalog_envelope(&by, PROJECT_DUPLICATE, serde_json::json!({}), &[]);
+    let copied = match run(&db.app, &store, &CatalogPolicy::default(), &by, envelope)
+        .await
+        .unwrap()
+    {
+        CommandOutcome::Duplicated(d) => d,
+        other => panic!("not a copy: {other:?}"),
+    };
+    assert_eq!(copied.objects, count(DRAWING));
+    let copy = Uuid::parse_str(&copied.project.id).unwrap();
+    let c = open(&db, &ayse, copy).await;
+    let revisions = files::list(&db.app, &c).await.unwrap();
+    assert_eq!(revisions.current.as_deref(), Some("1"));
+    assert_eq!(
+        revisions.revisions.len(),
+        1,
+        "older revisions are history, not copied"
+    );
+    assert_eq!(revisions.revisions[0].sha256, sha(DRAWING));
+    let read = |file: tokio::fs::File| async move {
+        let mut file = file;
+        let mut bytes = Vec::new();
+        tokio::io::AsyncReadExt::read_to_end(&mut file, &mut bytes)
+            .await
+            .unwrap();
+        bytes
+    };
+    let (_, file) = files::download(&db.app, &store, &c, 1).await.unwrap();
+    assert_eq!(read(file).await, DRAWING);
+    // It is saved on as any file project: the next revision is based on 1.
+    let next = upload(&db, &store, &c, MINIMAL).await.unwrap();
+    let two = commit(&db, &store, commit_envelope(&c, next, "1"), &c)
+        .await
+        .unwrap();
+    assert_eq!(two.revision, "2");
+
+    // The source removed for good takes its objects, never the copy's.
+    sqlx::query("select kentos.remove_project($1, $2)")
+        .bind(by.tenant)
+        .bind(project)
+        .execute(&db.owner)
+        .await
+        .unwrap();
+    let done = files::cleanup(&db.app, &store, Duration::ZERO)
+        .await
+        .unwrap();
+    assert_eq!(done.purged, 1);
+    let (_, file) = files::download(&db.app, &store, &c, 1).await.unwrap();
+    assert_eq!(read(file).await, DRAWING);
+    db.close().await;
+}
+
+#[tokio::test]
+async fn the_cleanup_leaves_a_fresh_folder_alone() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let store = blobs();
+    // A copy's object is shared a moment before its project's row is committed.
+    let (tenant, project) = (Uuid::now_v7(), Uuid::now_v7());
+    let key = Blobs::revision_key(tenant, project, 1, &sha(MINIMAL));
+    let mut w = store.create(&key, MINIMAL.len() as u64).await.unwrap();
+    w.write(MINIMAL).await.unwrap();
+    w.finish().await.unwrap();
+    let done = files::cleanup(&db.app, &store, files::SETTLED)
+        .await
+        .unwrap();
+    assert_eq!(done.purged, 0);
+    assert!(store.read(&key).await.is_ok());
+    // Still there after the settle time: no project has it.
+    let done = files::cleanup(&db.app, &store, Duration::ZERO)
+        .await
+        .unwrap();
+    assert_eq!(done.purged, 1);
+    assert!(store.read(&key).await.is_err());
+    db.close().await;
+}
+
+#[tokio::test]
 async fn the_cleanup_removes_expired_uploads_and_removed_projects() {
     let Some(db) = TestDb::create().await else {
         return;
@@ -425,7 +547,9 @@ async fn the_cleanup_removes_expired_uploads_and_removed_projects() {
     let forgotten = upload(&db, &store, &by, DRAWING).await.unwrap();
 
     // Nothing is due yet.
-    let done = files::cleanup(&db.app, &store).await.unwrap();
+    let done = files::cleanup(&db.app, &store, Duration::ZERO)
+        .await
+        .unwrap();
     assert_eq!((done.expired, done.purged), (0, 0));
     // A day later the upload nobody committed goes with its bytes.
     sqlx::query(
@@ -435,7 +559,9 @@ async fn the_cleanup_removes_expired_uploads_and_removed_projects() {
     .execute(&db.owner)
     .await
     .unwrap();
-    let done = files::cleanup(&db.app, &store).await.unwrap();
+    let done = files::cleanup(&db.app, &store, Duration::ZERO)
+        .await
+        .unwrap();
     assert_eq!(done.expired, 1);
     assert!(
         store
@@ -452,7 +578,9 @@ async fn the_cleanup_removes_expired_uploads_and_removed_projects() {
         .execute(&db.owner)
         .await
         .unwrap();
-    let done = files::cleanup(&db.app, &store).await.unwrap();
+    let done = files::cleanup(&db.app, &store, Duration::ZERO)
+        .await
+        .unwrap();
     assert_eq!(done.purged, 1);
     assert!(walk(store.root()).is_empty());
     db.close().await;
