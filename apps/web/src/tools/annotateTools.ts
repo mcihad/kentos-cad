@@ -68,6 +68,9 @@ export class TextTool extends PointInputTool {
       return;
     }
     if (this.stage !== 'pos') return;
+    // A locked layer is said at the click, before the field opens, not after the text is typed.
+    const layers = this.ctx.doc.layers;
+    if (layers.isLocked(layers.active.value)) return void this.targetLayer();
     this.at = p;
     this.stage = 'typing';
     const height = paper(this.ctx, TextTool.heightMm);
@@ -76,8 +79,8 @@ export class TextTool extends PointInputTool {
       height,
       rotation: TextTool.angle,
       commit: (text) => {
-        this.create({ kind: 'text', p, text, height, rotation: TextTool.angle });
-        this.ctx.log.success(`Yazı eklendi: “${text}”`);
+        // Refused (the layer was locked meanwhile): the refusal was said, nothing was added.
+        if (this.create({ kind: 'text', p, text, height, rotation: TextTool.angle })) this.ctx.log.success(`Yazı eklendi: “${text}”`);
         this.afterTyping();
       },
       cancel: () => this.afterTyping(),

@@ -233,6 +233,20 @@ try {
   await b.type('Deneme');
   await b.key('Enter');
   check('text tool opens a focused field where you click', fieldOpen);
+  // A locked active layer is said at the click: no field opens, nothing is added, no “Yazı eklendi”.
+  {
+    const layer = await b.eval(`(() => { const L = window.kentos.doc.layers; const id = L.active.value; L.toggleLocked(id); return id; })()`);
+    const size = await b.eval('window.kentos.doc.size');
+    const since = await b.eval('window.kentos.log.entries.value.at(-1)?.id ?? 0');
+    await b.click(...(await at(20, -60)));
+    const refused = await b.eval(`({ open: !document.querySelector('.inline-text').hidden, said: window.kentos.log.entries.value.filter((e) => e.id > ${since}).map((e) => e.text), size: window.kentos.doc.size })`);
+    await b.eval(`window.kentos.doc.layers.toggleLocked(${JSON.stringify(layer)})`);
+    check(
+      'on a locked active layer the text tool says so at the click and opens no field',
+      !refused.open && refused.size === size && refused.said.some((t) => t.includes('katmanı kilitli')) && !refused.said.some((t) => t.startsWith('Yazı eklendi')),
+      JSON.stringify(refused),
+    );
+  }
   await b.key('Escape');
   const kinds = await b.eval(`[...window.kentos.doc.all()].slice(-3).map(e => e.kind).join(',')`);
   check('spline, dimension and text are created', kinds === 'spline,dimension,text', kinds);
