@@ -1282,3 +1282,61 @@ async fn a_file_goes_in_parts_and_a_cut_goes_on_from_what_arrived() {
     );
     db.close().await;
 }
+
+/// How long a large database project takes to open on the desktop: page by
+/// page (`open`, what the sync needs: every object's version) against the
+/// one-file snapshot (`GET …/snapshot`). A measurement, not run by default:
+/// `KENTOS_TEST_DB=required cargo test --release -p kentos-api --bin kentosd
+/// native_tests::opening_a_large -- --ignored --nocapture` (`KENTOS_PERF_SIZES`).
+#[tokio::test]
+#[ignore = "a measurement, run by hand in release mode"]
+async fn opening_a_large_project_measured() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let sizes: Vec<usize> = std::env::var("KENTOS_PERF_SIZES")
+        .ok()
+        .map(|s| s.split(',').filter_map(|n| n.trim().parse().ok()).collect())
+        .unwrap_or_else(|| vec![10_000, 100_000]);
+    println!("| Nesne | İçe aktarım | Açılış (sayfalar) | Görüntü (tek dosya) | Görüntü boyu |");
+    println!("|---:|---:|---:|---:|---:|");
+    for n in sizes {
+        let mut doc = sample();
+        let entities: Vec<Entity> = (0..n)
+            .map(|i| point(486000.0 + (i % 1000) as f64 * 2.0 + (i / 1000) as f64 * 0.001))
+            .collect();
+        doc.add_many(entities, "ölçüm").unwrap();
+        let bytes = kcad(&doc);
+        let t = std::time::Instant::now();
+        let (info, _) = upload_new(
+            &ayse,
+            tenant,
+            project_create(&doc, &format!("Ölçüm {n}"), ProjectStorage::Database),
+            bytes,
+            Uuid::new_v4(),
+        )
+        .await
+        .unwrap();
+        let import = t.elapsed();
+        let project = Uuid::parse_str(&info.id).unwrap();
+        let t = std::time::Instant::now();
+        let opened = open(&ayse, tenant, project, None).await.unwrap();
+        let paged = t.elapsed();
+        assert_eq!(opened.document.len(), n + 13);
+        let t = std::time::Instant::now();
+        let snap = ayse.snapshot(tenant, project, None).await.unwrap();
+        let snapshot = t.elapsed();
+        println!(
+            "| {} | {:.1} s | {:.1} s | {:.1} s | {:.1} MB |",
+            n + 13,
+            import.as_secs_f64(),
+            paged.as_secs_f64(),
+            snapshot.as_secs_f64(),
+            snap.bytes.len() as f64 / 1e6
+        );
+    }
+    db.close().await;
+}
