@@ -688,3 +688,186 @@ fn changes_from_outside_wait_while_an_edit_is_open() {
     access.kind = "project.access".into();
     assert!(sync.incoming(&page(vec![access])).access);
 }
+
+// ── Device drafts (draft.rs) ───────────────────────────────────────────────
+
+/// The same project opened again: a fresh sync of what the server has.
+fn reopened(o: &Opened) -> Opened {
+    opened(o.info.access.permissions.clone(), o.info.state)
+}
+
+#[test]
+fn unsent_work_goes_to_a_draft_and_comes_back_in_a_new_opening() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    assert_eq!(sync.draft(&o.document, "ayse"), None);
+    let first = o.document.uid(Slot(1)).unwrap();
+    let second = o.document.uid(Slot(2)).unwrap();
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    o.document.remove(&[Slot(2)]);
+    let added = o.document.add(point(486600.0)).unwrap();
+    let new_id = o.document.uid(added).unwrap();
+    o.document.rename_layer("bina", "Yapılar");
+    let draft = sync.draft(&o.document, "ayse").unwrap();
+    assert_eq!(
+        (draft.version, draft.user_id.as_str(), draft.changes.len()),
+        (2, "ayse", 3)
+    );
+    assert_eq!(
+        draft.changes[&second.to_string()],
+        DraftChange {
+            base: Some("1".into()),
+            entity: None
+        }
+    );
+    assert_eq!(draft.changes[&new_id.to_string()].base, None);
+    assert_eq!(draft.meta.as_ref().map(|m| m.base.as_str()), Some("4"));
+    // Written as the web writes it: camelCase, nulls kept.
+    let text = serde_json::to_string(&draft).unwrap();
+    assert!(
+        text.contains("\"userId\":\"ayse\"") && text.contains("\"base\":null"),
+        "{text}"
+    );
+
+    // The program ends; the project opens again with what the server has.
+    let mut again = reopened(&o);
+    let mut sync = ProjectSync::new(&again).unwrap();
+    let restored = sync.restore(&mut again.document, draft).unwrap();
+    assert_eq!(
+        (restored.changed, restored.conflicts, restored.resends),
+        (4, 0, false)
+    );
+    assert!(again.document.is_dirty());
+    assert_eq!(x_of(&again.document, first), Some(486700.0));
+    assert!(again.document.slot_of(second).is_none());
+    assert_eq!(x_of(&again.document, new_id), Some(486600.0));
+    assert_eq!(again.document.layers().get("bina").unwrap().name, "Yapılar");
+    // It is not this user's to undo (it came back, it was not drawn now), but it is to send.
+    assert!(!again.document.can_undo());
+    let env = sync.next(&again.document).unwrap();
+    let input = input(&env);
+    assert_eq!(input.features.len(), 3);
+    assert!(input.project.is_some());
+    assert_eq!(
+        env.expected_versions
+            .get(&first.to_string())
+            .map(String::as_str),
+        Some("1")
+    );
+}
+
+#[test]
+fn the_command_on_its_way_goes_again_with_its_key() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    o.document.add(point(486600.0)).unwrap();
+    let sent = sync.next(&o.document).unwrap();
+    // Edited again while the command is on its way, then the program ends.
+    let slot = o
+        .document
+        .slot_of(
+            Uuid::parse_str(&match &input(&sent).features[0] {
+                FeatureChange::Create { id, .. } => id.clone(),
+                other => panic!("{other:?}"),
+            })
+            .unwrap(),
+        )
+        .unwrap();
+    assert!(o.document.update(slot, point(486605.0)));
+    let draft = sync.draft(&o.document, "ayse").unwrap();
+    assert_eq!(draft.inflight.as_ref(), Some(&sent));
+
+    let mut again = reopened(&o);
+    let mut sync = ProjectSync::new(&again).unwrap();
+    let restored = sync.restore(&mut again.document, draft).unwrap();
+    assert!(restored.resends);
+    // First the same command, same key; its answer settles it.
+    let resent = sync.next(&again.document).unwrap();
+    assert_eq!(resent, sent);
+    sync.answered(
+        &again.document,
+        &CommitResult {
+            replayed: true,
+            ..committed(&resent, 2)
+        },
+    );
+    // Then the newer edit, over the version the command got: no conflict with oneself.
+    let id = Uuid::parse_str(match &input(&sent).features[0] {
+        FeatureChange::Create { id, .. } => id,
+        other => panic!("{other:?}"),
+    })
+    .unwrap();
+    assert_eq!(x_of(&again.document, id), Some(486605.0));
+    let next = sync.next(&again.document).unwrap();
+    assert_eq!(
+        next.expected_versions
+            .get(&id.to_string())
+            .map(String::as_str),
+        Some("2")
+    );
+    assert!(sync.conflicts().is_empty());
+}
+
+#[test]
+fn a_draft_the_server_moved_past_is_a_conflict_and_a_lost_layer_is_held() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let id = o.document.uid(Slot(1)).unwrap();
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    let on_gone_layer = {
+        let mut e = point(486650.0);
+        e.base_mut().layer_id = "yok".into();
+        e
+    };
+    let mut draft = sync.draft(&o.document, "ayse").unwrap();
+    let lost = Uuid::now_v7();
+    draft.changes.insert(
+        lost.to_string(),
+        DraftChange {
+            base: None,
+            entity: Some(on_gone_layer),
+        },
+    );
+    // Meanwhile someone else saved the object: the new opening has it at version 3.
+    let mut again = reopened(&o);
+    let versions = match &mut again.source {
+        Source::Database { versions } => versions,
+        other => panic!("{other:?}"),
+    };
+    versions.iter_mut().find(|(v, _)| *v == id).unwrap().1 = "3".into();
+    let mut sync = ProjectSync::new(&again).unwrap();
+    let restored = sync.restore(&mut again.document, draft.clone()).unwrap();
+    assert_eq!((restored.changed, restored.conflicts), (1, 1));
+    assert_eq!(restored.held.len(), 1);
+    assert!(restored.held[0].contains("yok"), "{:?}", restored.held);
+    // The drawing shows this device's copy until the user chooses; nothing goes meanwhile.
+    assert_eq!(x_of(&again.document, id), Some(486700.0));
+    assert_eq!(sync.state(), SaveState::Conflict);
+    assert_eq!(sync.next(&again.document), None);
+    assert_eq!(sync.conflicts()[0].actual.as_deref(), Some("3"));
+    // The held change is never sent, but the next draft keeps it.
+    let kept = sync.draft(&again.document, "ayse").unwrap();
+    assert!(kept.changes.contains_key(&lost.to_string()));
+    sync.keep_mine();
+    let env = sync.next(&again.document).unwrap();
+    assert!(
+        input(&env)
+            .features
+            .iter()
+            .all(|f| !matches!(f, FeatureChange::Create { id, .. } if *id == lost.to_string()))
+    );
+    assert_eq!(
+        env.expected_versions
+            .get(&id.to_string())
+            .map(String::as_str),
+        Some("3")
+    );
+}
+
+#[test]
+fn a_viewers_edits_never_go_to_a_draft() {
+    let mut viewer = opened(vec![ProjectPermission::Read], ProjectState::Active);
+    let mut sync = ProjectSync::new(&viewer).unwrap();
+    viewer.document.add(point(486600.0)).unwrap();
+    assert_eq!(sync.draft(&viewer.document, "dilek"), None);
+}

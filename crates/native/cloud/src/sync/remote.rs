@@ -69,7 +69,7 @@ pub struct Taken {
 }
 
 /// Whether `id` is a layer (not a group) of this tree.
-fn is_layer(nodes: &[LayerNode], id: &str) -> bool {
+pub(super) fn is_layer(nodes: &[LayerNode], id: &str) -> bool {
     nodes
         .iter()
         .any(|n| (n.id == id && n.kind == LayerNodeType::Layer) || is_layer(&n.children, id))
@@ -85,7 +85,8 @@ fn meta_of(info: &ProjectInfo) -> ExternalMeta {
     }
 }
 
-const BUSY: &str = "Açık bir düzenleme var; başkalarının değişiklikleri o bitince alınır.";
+pub(super) const BUSY: &str =
+    "Açık bir düzenleme var; başkalarının değişiklikleri o bitince alınır.";
 
 impl ProjectSync {
     /// Reads committed events after the cursor (a page of `GET …/events`), in
@@ -332,7 +333,7 @@ impl ProjectSync {
     }
 
     /// A conflict, replacing an earlier one of the same object; sending stops.
-    fn conflict(&mut self, c: Conflict) {
+    pub(super) fn conflict(&mut self, c: Conflict) {
         match self.conflicts.iter_mut().find(|k| k.id == c.id) {
             Some(k) => *k = c,
             None => self.conflicts.push(c),
@@ -344,7 +345,7 @@ impl ProjectSync {
 
     /// Applies a change from outside and moves past it: the slots it touched
     /// are not this user's edits, and the objects it brought are followed.
-    fn apply(&mut self, doc: &mut Document, change: External) -> Result<(), String> {
+    pub(super) fn apply(&mut self, doc: &mut Document, change: External) -> Result<(), String> {
         let put: Vec<Uuid> = change.put.iter().map(|(id, _)| *id).collect();
         let gone: Vec<_> = change
             .remove

@@ -105,11 +105,26 @@
   - Sonuç: sorarak izleyen istemci, kaçırdığı olayları hiç bilmeden bekleyecekti.
   - Düzeltme: `after`, imleci aboneliğin kuralıyla (`Bounds::can_continue`) denetliyor. `retention.rs`'e gerileme denetimi eklendi. Eski denetim geri konunca test düştü.
 
+### Cihaz taslağı (üçüncü dilim, 26 Eylül)
+
+- **Taslak** (`ProjectSync::draft`): gönderilmemiş her nesne, kalıcı kimliğiyle, dayandığı sunucu sürümüyle ve son hâliyle (silindiyse boş) yazılır; yanına gönderilmemiş üst veri yaması ve yoldaki komut (idempotency anahtarıyla) konur.
+  - Biçim web'in taslağıdır (biçim 2, `drafts.ts`): aynı JSON alanları.
+  - Görüntüleyicinin kendi düzenlemeleri taslağa girmez (web'de de).
+- **Depo** (`DraftStore`): masaüstünün seçtiği klasörde, sunucu / hesap / `kurum_proje.json`. Masaüstünde `$XDG_DATA_HOME/kentos-cad/bulut-taslak` önerilir, kurtarma kopyalarının yanında.
+  - Yazma kalıcıdır: geçici dosyaya yazılır, diske işlenir, eskisinin yerine adlandırılır, klasör işlenir. Çökme ya eskiyi ya yeniyi bırakır.
+  - Okunamayan ya da başka hesabın taslağı silinmez; olduğu gibi `…#unreadable-<ms>.json` olarak kenara alınır ve kullanıcıya söylenir (web gibi).
+  - Taslakta oturum, parola ya da adres yoktur; klasörü yalnız sunucunun adını taşır.
+- **Geri koyma** (`ProjectSync::restore`), yeni açılışın hemen ardından:
+  - yoldaki komut önce, aynı anahtarla gider; yazılmışsa sunucu kaydından yanıtlar (`replayed`) ve hiçbir şey iki kez yazılmaz;
+  - kalan her değişiklik çizime geri alma adımı olmadan, gönderilmemiş iş olarak konur;
+  - dayandığı sürümü sunucunun o arada geçtiği değişiklik çakışmadır; çizim kullanıcı seçene kadar bu cihazın kopyasını gösterir. Yoldaki komutun taşıdığı nesnede bu denetim yapılmaz: onun yanıtı sürümü getirir, kendi komutuyla çakışma olmaz (web'de burada gereksiz bir çakışma çıkabiliyordu);
+  - iki tarafta da silinmiş nesne için yapılacak bir şey yoktur;
+  - katmanı artık olmayan değişiklik gönderilmez, sonraki taslakta saklanır, kullanıcıya söylenir; aynı nesnenin burada düzenlenmesi onun yerini alır.
+
 ## Bu dilimde olmayanlar
 
-- Masaüstü arayüzü (giriş penceresi, bulut kataloğu, açma, kaydetme, durum çubuğu, çakışma iletisi). Masaüstü ajanına gider; bu kütüphaneyi kullanır.
+- Masaüstü arayüzü (giriş penceresi, bulut kataloğu, açma, kaydetme, durum çubuğu, çakışma iletisi, taslağın ne zaman yazılacağı). Masaüstü ajanına gider (ADR 0041); bu kütüphaneyi kullanır.
 - Masaüstünde canlı kanal (WebSocket): bugün sorarak izlenir, olaylar birkaç saniye geç gelir.
-- **Cihaz taslağı:** gönderilmemiş değişiklikler ve yoldaki komut, çökmeye karşı diske yazılmıyor. Web'de bu IndexedDB'dedir. Taslak gelene kadar "Kaydedildi" yalnız sunucunun onayladığını söyler (CLAUDE.md §21.3).
 - Yetki değişikliğini izleme (web'de `accessWatch.ts`). `set_access` hazırdır, besleyen yoktur.
 - Masaüstünde OpenID girişi ve oturumun anahtarlıkta saklanması.
 - Parçalı ve sürdürülebilir yükleme (`SYNC-10`): 256 MiB sınırı sürer.
@@ -163,6 +178,17 @@
   - üst veri çakışması iki seçenekle çözülür;
   - silinen ve arşivlenen proje;
   - açık düzenleme sırasında bekleme ve yetki olayı.
+- **Cihaz taslağı:** `kentos-cloud`'da 4 taslak testi ve 3 depo testi:
+  - gönderilmemiş iş taslağa girer, web'in biçimindedir, yeni açılışta geri gelir ve gönderilir;
+  - yoldaki komut aynı anahtarla yeniden gider, ardından gelen düzenleme kendi komutuyla çakışmaz;
+  - sunucunun geçtiği değişiklik çakışma, katmansız değişiklik saklanır;
+  - görüntüleyicinin düzenlemesi taslağa girmez;
+  - depo sunucu, hesap ve projeye göre ayırır; okunamayan ya da başka hesabın taslağı kenara alınır; dışarıdan gelen adlar klasörün dışına çıkamaz.
+
+  Gerçek sunucu testi `a_lost_answer_survives_the_program_ending_through_the_device_draft`:
+  - yazılan ama yanıtı kaybolan komut ve sonraki düzenleme taslakla diske yazılır ve geri okunur;
+  - yeniden açılışta sunucu aynı anahtara kaydından yanıt verir (`replayed`); yeni nokta bir kez vardır, sunucudaki çizim cihazdakiyle nesne nesne aynıdır.
+  - Kasıtlı bozma: taslak yoldaki komutu yazmayınca test düştü; geri alındı.
 - **Gerçek sunucu testi `other_editors_changes_come_in_by_following_the_events`:**
   - Ayşe'nin değiştirme, silme, ekleme ve katman adı Dilek'in çizimine sorarak gelir; iki çizim nesne nesne aynıdır, Dilek'in çizimi kaydedilmemiş olmaz, geri gönderecek bir şey yoktur;
   - Dilek'in kendi komutu olaylarda atlanır, Ayşe'ye gelir;
