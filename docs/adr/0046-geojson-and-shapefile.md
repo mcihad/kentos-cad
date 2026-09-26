@@ -214,7 +214,13 @@
     - GeoJSON dışa aktarma: pencere RFC 7946 olmayacağını söyler; dosyada `crs` üyesi, 3 özellik ve kotlar vardır. Geri okununca aynı adlı katmana aynı nesneler gelir. Geri almalar çizimi ilk hâline döndürür.
   - `pnpm inventory`: `file.import.geojson`, `file.export.geojson`, `file.import.shp` çalışıyor; bekleyen komut 18 → 15, pencere 59 → 62.
 - Ekran görüntüleri (koyu, açık, Büyük yazı), `apps/web/scripts/e2e/out/` altında: `io-geojson-import-*`, `io-geojson-wgs84-*`, `io-shp-import-*`, `io-geojson-export-*`.
-- Bu adımda çalıştırılmayan: `pnpm e2e:cloud` (bulut kodu değişmedi; biçim modülünün yeni sürümüyle yerel `.kcad` kaydet/aç smoke'ta geçti).
+- `main` birleştirildikten sonra (ADR 0041 ve 0048 ile) yeniden:
+  - `pnpm rust:test` geçti; masaüstünün dosya alışverişi testleri (`cargo test -p kentos-desktop exchange`) de geçti: 18 test, 1 yok sayılan.
+  - `pnpm typecheck` ve `pnpm build` geçti.
+  - `pnpm test`: 1425 test geçti.
+  - `pnpm e2e`: 177 denetim geçti.
+  - `pnpm inventory:check`: envanter güncel.
+- Bu adımda çalıştırılmayan: `pnpm e2e:cloud`. Bulut kodu değişmedi; biçim modülünün yeni sürümüyle yerel `.kcad` kaydet/aç smoke'ta geçti.
 
 ## Bilerek bozma (26 Eylül)
 
