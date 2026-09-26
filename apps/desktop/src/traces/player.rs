@@ -1,0 +1,398 @@
+//! The player: it drives the real [`App`] with what its window would send,
+//! step by step, and reads back what a step can see (the web runner's
+//! `act` and `observe`).
+
+use std::path::PathBuf;
+use std::time::Duration;
+
+use iced::futures::StreamExt;
+use iced::keyboard::Modifiers;
+use iced::time::Instant;
+use iced::{Point, Rectangle, Task, event, mouse, window};
+
+use kentos_contracts::{DocumentSnapshotV1, Entity};
+use kentos_render_wgpu::Vec2;
+
+use crate::app::{App, Message, Picker};
+use crate::document::Document;
+use crate::keys;
+use crate::viewport::{self, Gesture};
+
+use super::command_line::line_messages;
+use super::compare::compare;
+use super::folder;
+use super::format::{Step, Trace};
+use super::keyboard::{Stroke, Variant, chord_stroke, stroke_for};
+
+/// Where the drawing area is in the test runner's window (logical pixels): the
+/// place a 1440 × 900 window gives it, with an odd size and a half-pixel
+/// top so pixel rounding is exercised.
+#[cfg(test)]
+pub const AREA: Rectangle = Rectangle {
+    x: 0.0,
+    y: 123.5,
+    width: 1119.0,
+    height: 641.0,
+};
+
+/// What a trace step can see (the web runner's `observe`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Observation {
+    pub tool: String,
+    pub points: usize,
+    pub options: Vec<String>,
+    pub dynamic_input: Option<String>,
+    pub command_line: String,
+    pub entities: usize,
+    /// The newest object's kind, corners (absolute) and bulges.
+    pub newest: Option<(String, Vec<[f64; 2]>, Vec<f64>)>,
+    pub can_undo: bool,
+    pub can_redo: bool,
+    pub dirty: bool,
+    pub log: Option<String>,
+    pub metres_per_pixel: f64,
+}
+
+/// Plays a trace on an app.
+pub struct Player<'a> {
+    pub app: &'a mut App,
+    trace: &'a Trace,
+    variant: Variant,
+    origin: Vec2,
+    area: Rectangle,
+    gesture: Gesture,
+    clock: Instant,
+    /// Whether the command line's text box has the keyboard (the widget's state).
+    line_focused: bool,
+    file: PathBuf,
+}
+
+impl<'a> Player<'a> {
+    /// Opens the trace's drawing in `app` and sets the view, the draft aids
+    /// and the preferences (the web runner's `setUp`). `area` is where the
+    /// drawing area is; `file` answers the file picker.
+    pub fn new(
+        app: &'a mut App,
+        trace: &'a Trace,
+        variant: Variant,
+        area: Rectangle,
+        file: PathBuf,
+    ) -> Result<Self, String> {
+        let d = &trace.draft;
+        if d.snap || d.grid || d.tracking {
+            return Err(format!(
+                "{}: kenet, ızgara ve kenet izlemesi masaüstünde henüz yok; iz oynatılamaz",
+                trace.id
+            ));
+        }
+        let text = std::fs::read_to_string(folder().join(&trace.document))
+            .map_err(|e| format!("{}: {e}", trace.document))?;
+        let snapshot =
+            DocumentSnapshotV1::from_json(&text).map_err(|e| format!("{}: {e}", trace.document))?;
+        // Opened as a new drawing: no path, so a save goes to the picker's file.
+        let doc = Document::new(snapshot, None)?;
+        let mut player = Self {
+            app,
+            trace,
+            variant,
+            origin: Vec2::new(trace.view.center[0], trace.view.center[1]),
+            area,
+            gesture: Gesture::default(),
+            clock: Instant::now(),
+            line_focused: false,
+            file,
+        };
+        player.app.picker = Picker::File(player.file.clone());
+        player.app.draft.ortho = d.ortho;
+        player.app.draft.polar = d.polar.then_some(90.0);
+        player.app.cursor_input = trace.prefs.cursor_input.unwrap_or(true);
+        // The area reports its place first, as it does before any pointer event.
+        player.mouse(mouse::Event::CursorLeft, mouse::Cursor::Unavailable)?;
+        player.apply(Message::Opened(Some(Ok(Box::new(doc)))))?;
+        let camera = &mut player.app.viewport.camera;
+        camera.center = player.origin;
+        camera.scale = 1.0 / trace.view.metres_per_pixel;
+        Ok(player)
+    }
+
+    /// Plays the steps up to and including `last` (all when `None`);
+    /// returns every expectation that did not hold, by step. A step that
+    /// cannot be played ends the trace.
+    pub fn play(&mut self, last: Option<usize>) -> Vec<String> {
+        let mut problems = Vec::new();
+        for (i, step) in self.trace.steps.iter().enumerate() {
+            if last.is_some_and(|last| i >= last) {
+                break;
+            }
+            let label = format!("adım {} {}", i + 1, describe(step));
+            if let Err(error) = self.act(step) {
+                problems.push(format!("{label}: {error}"));
+                break;
+            }
+            if let Some(expect) = &step.expect {
+                let bad = compare(expect, &self.observe(), self.trace);
+                if !bad.is_empty() {
+                    problems.push(format!("{label}: {}", bad.join("; ")));
+                }
+            }
+        }
+        problems
+    }
+
+    fn act(&mut self, step: &Step) -> Result<(), String> {
+        if let Some(id) = &step.run {
+            let command = crate::catalog::catalog()
+                .get(id)
+                .ok_or(format!("{id}: böyle bir komut yok"))?;
+            return self.apply(Message::Run(command.id));
+        }
+        if let Some(key) = &step.key {
+            return self.press(&chord_stroke(key, self.variant.layout)?);
+        }
+        if let Some(text) = &step.text {
+            for ch in text.chars() {
+                self.press(&stroke_for(&ch.to_string(), self.variant.layout)?)?;
+            }
+            return Ok(());
+        }
+        if let Some(at) = step.move_to {
+            let position = self.window_point(at)?;
+            return self.cursor_to(position);
+        }
+        if let Some(at) = step.click {
+            return self.click(at, mouse::Button::Left);
+        }
+        if let Some(at) = step.double_click {
+            self.click(at, mouse::Button::Left)?;
+            return self.click(at, mouse::Button::Left);
+        }
+        if let Some(at) = step.right_click {
+            return self.click(at, mouse::Button::Right);
+        }
+        if let Some(target) = &step.focus {
+            if target != "commandLine" {
+                return Err(format!("bilinmeyen odak {target}"));
+            }
+            // The pointer goes down to the command line, off the drawing, and clicks it.
+            let below = Point::new(
+                self.area.x + self.area.width / 2.0,
+                self.area.y + self.area.height + 20.0,
+            );
+            self.cursor_to(below)?;
+            self.mouse(
+                mouse::Event::ButtonPressed(mouse::Button::Left),
+                mouse::Cursor::Available(below),
+            )?;
+            if !self.line_focused {
+                self.line_focused = true;
+                self.apply(Message::CommandFocus(true))?;
+            }
+            return self.mouse(
+                mouse::Event::ButtonReleased(mouse::Button::Left),
+                mouse::Cursor::Available(below),
+            );
+        }
+        if step.save_and_reopen == Some(true) {
+            self.press(&chord_stroke("Ctrl+S", self.variant.layout)?)?;
+            return self.press(&chord_stroke("Ctrl+O", self.variant.layout)?);
+        }
+        if step.expect.is_some() {
+            return Ok(());
+        }
+        Err("adımda eylem yok".to_owned())
+    }
+
+    /// The window pixel a trace point (east, north from the view's centre)
+    /// falls on, rounded to the screen's device pixels. A point off the
+    /// drawing area stops the trace instead of missing silently.
+    fn window_point(&self, [de, dn]: [f64; 2]) -> Result<Point, String> {
+        let world = Vec2::new(self.origin.x + de, self.origin.y + dn);
+        let [x, y] = self.app.viewport.camera.world_to_screen(world);
+        let dpr = f64::from(self.variant.dpr);
+        let round = |v: f64| (v * dpr).round() / dpr;
+        let window = Point::new(
+            round(f64::from(self.area.x) + x) as f32,
+            round(f64::from(self.area.y) + y) as f32,
+        );
+        if !self.area.contains(window) {
+            return Err(format!(
+                "[{de}, {dn}] çizim alanının dışında ({}, {} px); izin noktalarını README'deki kutuda tutun",
+                window.x, window.y
+            ));
+        }
+        Ok(window)
+    }
+
+    fn cursor_to(&mut self, position: Point) -> Result<(), String> {
+        self.mouse(
+            mouse::Event::CursorMoved { position },
+            mouse::Cursor::Available(position),
+        )
+    }
+
+    fn click(&mut self, at: [f64; 2], button: mouse::Button) -> Result<(), String> {
+        let position = self.window_point(at)?;
+        self.cursor_to(position)?;
+        let cursor = mouse::Cursor::Available(position);
+        self.mouse(mouse::Event::ButtonPressed(button), cursor)?;
+        // A click anywhere outside the command line's text box takes its keyboard.
+        if self.line_focused {
+            self.line_focused = false;
+            self.apply(Message::CommandFocus(false))?;
+        }
+        // A right press shorter than the hold that would open the command menu.
+        if button == mouse::Button::Right {
+            self.clock += Duration::from_millis(40);
+        }
+        self.mouse(mouse::Event::ButtonReleased(button), cursor)?;
+        self.clock += Duration::from_millis(40);
+        Ok(())
+    }
+
+    /// A mouse event through the drawing area's own gesture code.
+    fn mouse(&mut self, event: mouse::Event, cursor: mouse::Cursor) -> Result<(), String> {
+        self.clock += Duration::from_millis(1);
+        let event = iced::Event::Mouse(event);
+        if let Some((Some(e), _)) =
+            viewport::gesture(&mut self.gesture, &event, self.area, cursor, self.clock)
+        {
+            self.apply(Message::Viewport(e))?;
+        }
+        Ok(())
+    }
+
+    /// A key press: to the command line when it has the keyboard, else (and
+    /// when it lets the key through) to the app's subscription. The modifier
+    /// state goes before and after, as the window reports it.
+    fn press(&mut self, stroke: &Stroke) -> Result<(), String> {
+        if !stroke.modifiers.is_empty() {
+            self.apply(Message::Modifiers(stroke.modifiers))?;
+        }
+        let event = stroke.event();
+        let taken = if self.line_focused {
+            line_messages(&self.app.command_input, &event)
+        } else {
+            None
+        };
+        match taken {
+            Some(messages) => {
+                for message in messages {
+                    if let Message::CommandFocus(focused) = message {
+                        self.line_focused = focused;
+                    }
+                    self.apply(message)?;
+                }
+            }
+            None => {
+                if let Some(message) =
+                    keys::key_event(event, event::Status::Ignored, window::Id::unique())
+                {
+                    self.apply(message)?;
+                }
+            }
+        }
+        if !stroke.modifiers.is_empty() {
+            self.apply(Message::Modifiers(Modifiers::empty()))?;
+        }
+        Ok(())
+    }
+
+    /// Gives the app a message and runs the task it returns to its end.
+    pub(super) fn apply(&mut self, message: Message) -> Result<(), String> {
+        let task = self.app.update(message);
+        self.run(task)
+    }
+
+    /// Runs a task: its messages go back to the app. A widget operation
+    /// (a focus change) is not played: it stops the trace rather than let
+    /// the command line's state go wrong unseen.
+    fn run(&mut self, task: Task<Message>) -> Result<(), String> {
+        let Some(stream) = iced_runtime::task::into_stream(task) else {
+            return Ok(());
+        };
+        let actions: Vec<_> = iced::futures::executor::block_on(stream.collect());
+        for action in actions {
+            match action {
+                iced_runtime::Action::Output(message) => self.apply(message)?,
+                iced_runtime::Action::Widget(_) => {
+                    return Err(
+                        "iz, oynatıcının izlemediği bir odak değişikliği üretti (widget işlemi)"
+                            .to_owned(),
+                    );
+                }
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+
+    /// What the step can see, read from the app (the web runner's `observe`).
+    pub fn observe(&self) -> Observation {
+        let app = &*self.app;
+        let doc = app.document.as_ref();
+        let newest = doc
+            .and_then(|d| d.model.entities().max_by_key(|e| e.base().id))
+            .map(|e| {
+                let (pts, bulges) = match e {
+                    Entity::Polygon(p) | Entity::Polyline(p) => (
+                        p.pts.iter().map(|v| [v.x, v.y]).collect(),
+                        p.bulges.clone().unwrap_or_default(),
+                    ),
+                    _ => (Vec::new(), Vec::new()),
+                };
+                (e.kind().to_owned(), pts, bulges)
+            });
+        Observation {
+            tool: app.session.tool_id().to_owned(),
+            points: app.session.point_count(),
+            options: app
+                .session
+                .prompt()
+                .keys()
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+            dynamic_input: app.field.as_ref().map(|f| f.text.clone()),
+            command_line: app.command_input.clone(),
+            entities: doc.map_or(0, Document::entity_count),
+            newest,
+            can_undo: doc.is_some_and(|d| d.model.can_undo()),
+            can_redo: doc.is_some_and(|d| d.model.can_redo()),
+            dirty: doc.is_some_and(Document::dirty),
+            log: app.last_level.map(|l| l.as_str().to_owned()),
+            metres_per_pixel: 1.0 / app.viewport.camera.scale,
+        }
+    }
+}
+
+impl Drop for Player<'_> {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.file);
+    }
+}
+
+/// A step's action for the report, without its expectations and note.
+fn describe(step: &Step) -> String {
+    let pair = |[a, b]: [f64; 2]| format!("[{a}, {b}]");
+    if let Some(id) = &step.run {
+        format!("run {id}")
+    } else if let Some(key) = &step.key {
+        format!("key {key}")
+    } else if let Some(text) = &step.text {
+        format!("text {text:?}")
+    } else if let Some(at) = step.move_to {
+        format!("move {}", pair(at))
+    } else if let Some(at) = step.click {
+        format!("click {}", pair(at))
+    } else if let Some(at) = step.double_click {
+        format!("doubleClick {}", pair(at))
+    } else if let Some(at) = step.right_click {
+        format!("rightClick {}", pair(at))
+    } else if let Some(target) = &step.focus {
+        format!("focus {target}")
+    } else if step.save_and_reopen.is_some() {
+        "saveAndReopen".to_owned()
+    } else {
+        "beklenti".to_owned()
+    }
+}
