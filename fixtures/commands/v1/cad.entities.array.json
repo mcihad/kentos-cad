@@ -1,0 +1,226 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.array",
+  "commandVersion": 1,
+  "title": "Nesneleri diziye kopyala: doğrulama, plan, yazma, geri alma",
+  "note": "ADR 0047. Denetim sırası: en az bir nesne; her kimliğin yazımı; yerleşimin sayılarının sonlu olması (sırasıyla), satır ve sütunun ya da adedin aralığı, birden çok yeri olan yönün aralığı ya da doldurma açısı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; hepsinin kilitli katmanda olmaması; kopyaların sonlu kalması. Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır; kopyalar yer yer, her yerde girdinin sırasıyla yazılır. Kilitli katmandaki nesnenin kopyası yapılmaz. Adım aracın adıdır: Dizi, Kutupsal dizi. Kurulumdaki en büyük kimlik 20; kopyalar 21'den başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+    "origin": {"x": 487000, "y": 4420000},
+    "layers": [
+      {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "pafta", "name": "Pafta", "type": "group", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "sinir", "name": "Sınır", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {"kind": "point", "id": 4, "layerId": "yapi", "attrs": {"Ad": "N1"}, "label": "N1", "p": {"x": 487001, "y": 4420001}, "z": 12.5},
+      {"kind": "polygon", "id": 9, "layerId": "sinir", "attrs": {"Ada": "101"}, "symbol": "parsel", "pts": [{"x": 487000, "y": 4420000}, {"x": 487040, "y": 4420000}, {"x": 487040, "y": 4420030}], "bulges": [0.25, 0.5, -0.25]},
+      {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}},
+      {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420020}, "r": 4, "a0": 0, "a1": 1.5707963267948966},
+      {"kind": "line", "id": 12, "layerId": "kilitli", "attrs": {}, "a": {"x": 487005, "y": 4420005}, "b": {"x": 487015, "y": 4420005}},
+      {"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487030, "y": 4420010}, "r": 2.5},
+      {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487005, "y": 4420025}, "text": "Ada 101", "height": 2, "rotation": 0},
+      {"kind": "line", "id": 15, "layerId": "eski", "attrs": {}, "a": {"x": 487005, "y": 4420010}, "b": {"x": 487015, "y": 4420010}},
+      {"kind": "hatch", "id": 16, "layerId": "yapi", "attrs": {}, "ring": [{"x": 487050, "y": 4420000}, {"x": 487060, "y": 4420000}, {"x": 487060, "y": 4420010}, {"x": 487050, "y": 4420010}], "holes": [[{"x": 487053, "y": 4420003}, {"x": 487057, "y": 4420003}, {"x": 487057, "y": 4420007}]], "pattern": {"type": "lines", "angle": 0, "spacing": 1.5}},
+      {"kind": "dimension", "id": 17, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420040}, "b": {"x": 487010, "y": 4420040}, "offset": 2, "height": 0.5},
+      {"kind": "line", "id": 20, "layerId": "gizli", "attrs": {}, "a": {"x": 487005, "y": 4420015}, "b": {"x": 487015, "y": 4420015}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "cases": [
+    {
+      "name": "Dizi: 2 × 3 yerde beş kopya, satır satır, her satırda sütun sütun; kopya bütün alanları ve yeni bir kalıcı kimlik alır; tek adımda geri alınır, yinelenir",
+      "steps": [
+        {"op": "captureUid", "id": 10, "as": "cizgi"},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 2, "cols": 3, "dx": 12.5, "dy": -4}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21", "$uidOf:22", "$uidOf:23", "$uidOf:24", "$uidOf:25"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25], "entities": {"21": {"kind": "line", "id": 21, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487022.5, "y": 4420010.0}, "b": {"x": 487032.5, "y": 4420010.0}}, "22": {"kind": "line", "id": 22, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487035.0, "y": 4420010.0}, "b": {"x": 487045.0, "y": 4420010.0}}, "23": {"kind": "line", "id": 23, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487010.0, "y": 4420006.0}, "b": {"x": 487020.0, "y": 4420006.0}}, "24": {"kind": "line", "id": 24, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487022.5, "y": 4420006.0}, "b": {"x": 487032.5, "y": 4420006.0}}, "25": {"kind": "line", "id": 25, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487035.0, "y": 4420006.0}, "b": {"x": 487045.0, "y": 4420006.0}}}, "revision": "changed", "uids": {"10": "cizgi", "21": "new", "22": "new", "23": "new", "24": "new", "25": "new"}, "canUndo": true, "canRedo": false, "dirty": true}},
+        {"op": "undo", "returns": "Dizi", "note": "Dizi aracının adımı: bütün kopyalar tek adımda.", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}}, "uids": {"10": "cizgi"}, "canUndo": false, "canRedo": true}},
+        {"op": "redo", "returns": "Dizi", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25], "canUndo": true, "canRedo": false}}
+      ]
+    },
+    {
+      "name": "birden çok nesne: her yerde nesneler girdinin sırasıyla; tekrarlanan kimlik bir kez; tek satırda satır aralığı gerekmez",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13", "$uidOf:4", "$uidOf:13"], "layout": {"kind": "grid", "rows": 1, "cols": 3, "dx": 10, "dy": 0}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21", "$uidOf:22", "$uidOf:23", "$uidOf:24"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24], "entities": {"21": {"kind": "circle", "id": 21, "layerId": "yapi", "attrs": {}, "c": {"x": 487040.0, "y": 4420010.0}, "r": 2.5}, "22": {"kind": "point", "id": 22, "layerId": "yapi", "attrs": {"Ad": "N1"}, "label": "N1", "p": {"x": 487011.0, "y": 4420001.0}, "z": 12.5}, "23": {"kind": "circle", "id": 23, "layerId": "yapi", "attrs": {}, "c": {"x": 487050.0, "y": 4420010.0}, "r": 2.5}, "24": {"kind": "point", "id": 24, "layerId": "yapi", "attrs": {"Ad": "N1"}, "label": "N1", "p": {"x": 487021.0, "y": 4420001.0}, "z": 12.5}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "tek sütunda sütun aralığı gerekmez: yazı ve kapalı alan (yay değerleri, simgesi) üç satıra",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:14", "$uidOf:9"], "layout": {"kind": "grid", "rows": 3, "cols": 1, "dx": 0, "dy": 7.5}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21", "$uidOf:22", "$uidOf:23", "$uidOf:24"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24], "entities": {"21": {"kind": "text", "id": 21, "layerId": "yapi", "attrs": {}, "p": {"x": 487005.0, "y": 4420032.5}, "text": "Ada 101", "height": 2.0, "rotation": 0.0}, "22": {"kind": "polygon", "id": 22, "layerId": "sinir", "attrs": {"Ada": "101"}, "symbol": "parsel", "pts": [{"x": 487000.0, "y": 4420007.5}, {"x": 487040.0, "y": 4420007.5}, {"x": 487040.0, "y": 4420037.5}], "bulges": [0.25, 0.5, -0.25]}, "23": {"kind": "text", "id": 23, "layerId": "yapi", "attrs": {}, "p": {"x": 487005.0, "y": 4420040.0}, "text": "Ada 101", "height": 2.0, "rotation": 0.0}, "24": {"kind": "polygon", "id": 24, "layerId": "sinir", "attrs": {"Ada": "101"}, "symbol": "parsel", "pts": [{"x": 487000.0, "y": 4420015.0}, {"x": 487040.0, "y": 4420015.0}, {"x": 487040.0, "y": 4420045.0}], "bulges": [0.25, 0.5, -0.25]}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "her tür aynı kuralla kopyalanır: yay, delikli tarama (desenin açısı ve aralığı), ölçü",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:11", "$uidOf:16", "$uidOf:17"], "layout": {"kind": "grid", "rows": 2, "cols": 2, "dx": 25, "dy": 30}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21", "$uidOf:22", "$uidOf:23", "$uidOf:24", "$uidOf:25", "$uidOf:26", "$uidOf:27", "$uidOf:28", "$uidOf:29"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], "entities": {"21": {"kind": "arc", "id": 21, "layerId": "yapi", "attrs": {}, "c": {"x": 487045.0, "y": 4420020.0}, "r": 4.0, "a0": 0.0, "a1": 1.5707963267948966}, "22": {"kind": "hatch", "id": 22, "layerId": "yapi", "attrs": {}, "ring": [{"x": 487075.0, "y": 4420000.0}, {"x": 487085.0, "y": 4420000.0}, {"x": 487085.0, "y": 4420010.0}, {"x": 487075.0, "y": 4420010.0}], "holes": [[{"x": 487078.0, "y": 4420003.0}, {"x": 487082.0, "y": 4420003.0}, {"x": 487082.0, "y": 4420007.0}]], "pattern": {"type": "lines", "angle": 0.0, "spacing": 1.5}}, "23": {"kind": "dimension", "id": 23, "layerId": "yapi", "attrs": {}, "a": {"x": 487025.0, "y": 4420040.0}, "b": {"x": 487035.0, "y": 4420040.0}, "offset": 2.0, "height": 0.5}, "24": {"kind": "arc", "id": 24, "layerId": "yapi", "attrs": {}, "c": {"x": 487020.0, "y": 4420050.0}, "r": 4.0, "a0": 0.0, "a1": 1.5707963267948966}, "25": {"kind": "hatch", "id": 25, "layerId": "yapi", "attrs": {}, "ring": [{"x": 487050.0, "y": 4420030.0}, {"x": 487060.0, "y": 4420030.0}, {"x": 487060.0, "y": 4420040.0}, {"x": 487050.0, "y": 4420040.0}], "holes": [[{"x": 487053.0, "y": 4420033.0}, {"x": 487057.0, "y": 4420033.0}, {"x": 487057.0, "y": 4420037.0}]], "pattern": {"type": "lines", "angle": 0.0, "spacing": 1.5}}, "26": {"kind": "dimension", "id": 26, "layerId": "yapi", "attrs": {}, "a": {"x": 487000.0, "y": 4420070.0}, "b": {"x": 487010.0, "y": 4420070.0}, "offset": 2.0, "height": 0.5}, "27": {"kind": "arc", "id": 27, "layerId": "yapi", "attrs": {}, "c": {"x": 487045.0, "y": 4420050.0}, "r": 4.0, "a0": 0.0, "a1": 1.5707963267948966}, "28": {"kind": "hatch", "id": 28, "layerId": "yapi", "attrs": {}, "ring": [{"x": 487075.0, "y": 4420030.0}, {"x": 487085.0, "y": 4420030.0}, {"x": 487085.0, "y": 4420040.0}, {"x": 487075.0, "y": 4420040.0}], "holes": [[{"x": 487078.0, "y": 4420033.0}, {"x": 487082.0, "y": 4420033.0}, {"x": 487082.0, "y": 4420037.0}]], "pattern": {"type": "lines", "angle": 0.0, "spacing": 1.5}}, "29": {"kind": "dimension", "id": 29, "layerId": "yapi", "attrs": {}, "a": {"x": 487025.0, "y": 4420070.0}, "b": {"x": 487035.0, "y": 4420070.0}, "offset": 2.0, "height": 0.5}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Dizi", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20]}}
+      ]
+    },
+    {
+      "name": "gizli katmandaki nesne de kopyalanır; uyarı yok",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:20"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21], "entities": {"21": {"kind": "line", "id": 21, "layerId": "gizli", "attrs": {}, "a": {"x": 487010.0, "y": 4420015.0}, "b": {"x": 487020.0, "y": 4420015.0}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Kutupsal dizi: tam turda 4 öğe, kopyalar merkez etrafında 90°, 180°, 270° döner; adım Kutupsal dizi",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487010, "y": 4420010}, "count": 4, "fill": 360, "rotate": true}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21", "$uidOf:22", "$uidOf:23"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23], "entities": {"21": {"kind": "line", "id": 21, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487010.0, "y": 4420010.0}, "b": {"x": 487010.0, "y": 4420020.0}}, "22": {"kind": "line", "id": 22, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487010.00000000006, "y": 4420010.0}, "b": {"x": 487000.00000000006, "y": 4420010.0}}, "23": {"kind": "line", "id": 23, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487010.0, "y": 4420010.0}, "b": {"x": 487010.0, "y": 4420000.0}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Kutupsal dizi", "note": "Kutupsal dizi aracının adımı.", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "kısmi dolgu: son kopya bitiş açısındadır (180° içinde 3 öğe, 90° arayla); yay saat yönünün tersine kalır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13", "$uidOf:11"], "layout": {"kind": "polar", "center": {"x": 487010, "y": 4420010}, "count": 3, "fill": 180, "rotate": true}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21", "$uidOf:22", "$uidOf:23", "$uidOf:24"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24], "entities": {"21": {"kind": "circle", "id": 21, "layerId": "yapi", "attrs": {}, "c": {"x": 487010.0, "y": 4420030.0}, "r": 2.5}, "22": {"kind": "arc", "id": 22, "layerId": "yapi", "attrs": {}, "c": {"x": 487000.0, "y": 4420020.0}, "r": 4.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}, "23": {"kind": "circle", "id": 23, "layerId": "yapi", "attrs": {}, "c": {"x": 486990.00000000006, "y": 4420010.0}, "r": 2.5}, "24": {"kind": "arc", "id": 24, "layerId": "yapi", "attrs": {}, "c": {"x": 487000.00000000006, "y": 4420000.0}, "r": 4.0, "a0": 3.141592653589793, "a1": 4.71238898038469}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "eksi açı saat yönündedir: -360° tam turda 4 öğe, -90° arayla",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487010, "y": 4420010}, "count": 4, "fill": -360, "rotate": true}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21", "$uidOf:22", "$uidOf:23"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23], "entities": {"21": {"kind": "line", "id": 21, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487010.0, "y": 4420010.0}, "b": {"x": 487010.0, "y": 4420000.0}}, "22": {"kind": "line", "id": 22, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487009.99999999994, "y": 4420010.0}, "b": {"x": 486999.99999999994, "y": 4420010.0}}, "23": {"kind": "line", "id": 23, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487010.0, "y": 4420010.0}, "b": {"x": 487010.0, "y": 4420020.0}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "dönmeden: kopyalar yönünü korur, kopyalanan nesnelerin kutusunun ortası merkez etrafında döner",
+      "note": "Çizginin ve dairenin kutusu doğuda 487010–487032,5, kuzeyde 4420007,5–4420012,5: ortası 487021,25; 4420010.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10", "$uidOf:13"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 4, "fill": 360, "rotate": false}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21", "$uidOf:22", "$uidOf:23", "$uidOf:24", "$uidOf:25", "$uidOf:26"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25, 26], "entities": {"21": {"kind": "line", "id": 21, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 486978.75, "y": 4420021.25}, "b": {"x": 486988.75, "y": 4420021.25}}, "22": {"kind": "circle", "id": 22, "layerId": "yapi", "attrs": {}, "c": {"x": 486998.75, "y": 4420021.25}, "r": 2.5}, "23": {"kind": "line", "id": 23, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 486967.5, "y": 4419990.0}, "b": {"x": 486977.5, "y": 4419990.0}}, "24": {"kind": "circle", "id": 24, "layerId": "yapi", "attrs": {}, "c": {"x": 486987.5, "y": 4419990.0}, "r": 2.5}, "25": {"kind": "line", "id": 25, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 486998.75, "y": 4419978.75}, "b": {"x": 487008.75, "y": 4419978.75}}, "26": {"kind": "circle", "id": 26, "layerId": "yapi", "attrs": {}, "c": {"x": 487018.75, "y": 4419978.75}, "r": 2.5}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "dönmeden, kilitli nesne kopyalanmaz ve ortayı değiştirmez: orta yalnız kopyalanan nesnelerin kutusudur",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:12", "$uidOf:13"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 3, "fill": 90, "rotate": false}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21", "$uidOf:22"], "locked": ["$uidOf:12"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22], "entities": {"21": {"kind": "circle", "id": 21, "layerId": "yapi", "attrs": {}, "c": {"x": 487014.1421356237, "y": 4420028.284271248}, "r": 2.5}, "22": {"kind": "circle", "id": 22, "layerId": "yapi", "attrs": {}, "c": {"x": 486990.0, "y": 4420030.0}, "r": 2.5}, "12": {"kind": "line", "id": 12, "layerId": "kilitli", "attrs": {}, "a": {"x": 487005, "y": 4420005}, "b": {"x": 487015, "y": 4420005}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "kilitli katmandaki nesnenin kopyası yapılmaz; öbürleri uyarıyla kopyalanır",
+      "note": "Web'in dizi araçları eskiden kilitli nesneyi de kilitli katmanına kopyalıyordu; ADR 0047 bu farkı kaydeder.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:12", "$uidOf:10"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 20, "dy": 0}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21"], "locked": ["$uidOf:12"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21], "entities": {"21": {"kind": "line", "id": 21, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487030.0, "y": 4420010.0}, "b": {"x": 487040.0, "y": 4420010.0}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "kilitli grubun katmanı da kilitlidir; hepsi kilitliyse hiçbir şey yazılmaz: layer_locked",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:12", "$uidOf:15"], "layout": {"kind": "grid", "rows": 2, "cols": 2, "dx": 5, "dy": 5}}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "2 nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:15"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 4, "fill": 360, "rotate": true}}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "nesne verilmedi: no_entities",
+      "steps": [
+        {"op": "execute", "input": {"uids": [], "layout": {"kind": "grid", "rows": 2, "cols": 2, "dx": 5, "dy": 5}}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Diziye alınacak nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"uids": [], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 4, "fill": 360, "rotate": true}}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Diziye alınacak nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kimlik küçük harfli, tireli bir UUID yazısıdır; ilk bozuk kimlik söylenir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10", "ABC"], "layout": {"kind": "grid", "rows": 2, "cols": 2, "dx": 5, "dy": 5}}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“ABC” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[1]"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "çizimde olmayan kimlik: entity_not_found, hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "layout": {"kind": "grid", "rows": 2, "cols": 2, "dx": 5, "dy": 5}}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[1]"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "dizinin sayıları sonlu olmalı: önce doğu aralığı, sonra kuzey; kutupsalda önce merkez, sonra açı",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 2, "cols": 2, "dx": 5, "dy": 5}}, "nonFinite": {"layout.dx": "NaN", "layout.dy": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Doğu (Y) yönündeki aralık sonlu bir sayı değil (NaN ya da sonsuz). Aralığı sonlu bir sayıyla verin.", "path": "layout.dx"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 2, "cols": 2, "dx": 5, "dy": 5}}, "nonFinite": {"layout.dy": "-Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Kuzey (X) yönündeki aralık sonlu bir sayı değil (NaN ya da sonsuz). Aralığı sonlu bir sayıyla verin.", "path": "layout.dy"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 4, "fill": 360, "rotate": true}}, "nonFinite": {"layout.center.y": "NaN", "layout.fill": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Merkezin kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "layout.center.y"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 4, "fill": 360, "rotate": true}}, "nonFinite": {"layout.fill": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Doldurma açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.", "path": "layout.fill"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "satır ve sütun en az 1, yerleri 2 ile 10 000 arası: invalid_count; 100 × 100 olur",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 0, "cols": 3, "dx": 5, "dy": 5}}, "result": {"status": "failed", "error": {"code": "invalid_count", "message": "Satır × sütun 2 ile 10 000 arasında olmalı; satır ve sütun en az 1'dir. Başka bir satır ve sütun sayısı verin.", "path": "layout.rows"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 3, "cols": 0, "dx": 5, "dy": 5}}, "result": {"status": "failed", "error": {"code": "invalid_count", "message": "Satır × sütun 2 ile 10 000 arasında olmalı; satır ve sütun en az 1'dir. Başka bir satır ve sütun sayısı verin.", "path": "layout.cols"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 1, "cols": 1, "dx": 5, "dy": 5}}, "result": {"status": "failed", "error": {"code": "invalid_count", "message": "Satır × sütun 2 ile 10 000 arasında olmalı; satır ve sütun en az 1'dir. Başka bir satır ve sütun sayısı verin.", "path": "layout"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 101, "cols": 100, "dx": 5, "dy": 5}}, "result": {"status": "failed", "error": {"code": "invalid_count", "message": "Satır × sütun 2 ile 10 000 arasında olmalı; satır ve sütun en az 1'dir. Başka bir satır ve sütun sayısı verin.", "path": "layout"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 100, "cols": 100, "dx": 5, "dy": 5}}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kutupsal dizinin adedi 2 ile 1000 arası: invalid_count; 1000 olur",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 1, "fill": 360, "rotate": true}}, "result": {"status": "failed", "error": {"code": "invalid_count", "message": "Adet 2 ile 1000 arasında bir tam sayı olmalı. Başka bir adet verin.", "path": "layout.count"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 1001, "fill": 360, "rotate": true}}, "result": {"status": "failed", "error": {"code": "invalid_count", "message": "Adet 2 ile 1000 arasında bir tam sayı olmalı. Başka bir adet verin.", "path": "layout.count"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 1000, "fill": 360, "rotate": true}}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "birden çok yeri olan yönün aralığı sıfır olamaz: invalid_spacing; bir nanometreden küçük aralık sıfırdır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 1, "cols": 3, "dx": 0, "dy": 5}}, "result": {"status": "failed", "error": {"code": "invalid_spacing", "message": "Sütunlar arasındaki aralık (dY) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.", "path": "layout.dx"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 3, "cols": 1, "dx": 4, "dy": 0}}, "result": {"status": "failed", "error": {"code": "invalid_spacing", "message": "Satırlar arasındaki aralık (dX) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.", "path": "layout.dy"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 2, "cols": 2, "dx": 1e-10, "dy": 0}}, "result": {"status": "failed", "error": {"code": "invalid_spacing", "message": "Sütunlar arasındaki aralık (dY) sıfır; kopyalar üst üste düşer. Sıfırdan farklı bir aralık verin.", "path": "layout.dx"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 2, "cols": 2, "dx": 1e-09, "dy": -1e-09}}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "doldurma açısı 0 olamaz, ±360'ı geçemez: invalid_fill; -360 tam turdur",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 4, "fill": 0, "rotate": true}}, "result": {"status": "failed", "error": {"code": "invalid_fill", "message": "Doldurma açısı 0 ile ±360 derece arasında olmalı; 0 olamaz. Başka bir açı verin.", "path": "layout.fill"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 4, "fill": 360.5, "rotate": true}}, "result": {"status": "failed", "error": {"code": "invalid_fill", "message": "Doldurma açısı 0 ile ±360 derece arasında olmalı; 0 olamaz. Başka bir açı verin.", "path": "layout.fill"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 4, "fill": -400, "rotate": false}}, "result": {"status": "failed", "error": {"code": "invalid_fill", "message": "Doldurma açısı 0 ile ±360 derece arasında olmalı; 0 olamaz. Başka bir açı verin.", "path": "layout.fill"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 4, "fill": -360, "rotate": false}}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm ondalık bir tamsayı yazısıdır; çizimin sürümüyse yazılır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}, "expectedRevision": "01"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “01” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}, "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"created": ["$uidOf:21"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21], "entities": {"21": {"kind": "line", "id": 21, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487015.0, "y": 4420010.0}, "b": {"x": 487025.0, "y": 4420010.0}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict; girdinin hatası çakışmadan, çakışma nesneden ve kilitten önce",
+      "steps": [
+        {"op": "captureRevision", "as": "r0"},
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21"], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}, "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21], "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "layout": {"kind": "grid", "rows": 1, "cols": 1, "dx": 5, "dy": 0}, "expectedRevision": "$r0"}, "result": {"status": "failed", "error": {"code": "invalid_count", "message": "Satır × sütun 2 ile 10 000 arasında olmalı; satır ve sütun en az 1'dir. Başka bir satır ve sütun sayısı verin.", "path": "layout"}}, "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}, "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:12"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}, "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "doğrulama hiçbir şey yazmaz; plan kopyaları yuvaları 0 olarak gösterir; yazma planın sürümüyle planı yazar",
+      "steps": [
+        {"op": "validate", "input": {"uids": ["$uidOf:10", "$uidOf:12"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}}, "result": {"status": "completed", "output": null, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"uids": ["$uidOf:10", "$uidOf:12"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}}, "result": {"status": "completed", "output": {"sources": ["$uidOf:10"], "entities": [{"kind": "line", "id": 0, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487015.0, "y": 4420010.0}, "b": {"x": 487025.0, "y": 4420010.0}}], "locked": ["$uidOf:12"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "captureRevision", "as": "plan"},
+        {"op": "execute", "input": {"uids": ["$uidOf:10", "$uidOf:12"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}, "expectedRevision": "$plan"}, "result": {"status": "completed", "output": {"created": ["$uidOf:21"], "locked": ["$uidOf:12"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Kopyalamak için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21], "entities": {"21": {"kind": "line", "id": 21, "layerId": "yapi", "attrs": {"Tür": "Duvar"}, "color": "#E5484D", "a": {"x": 487015.0, "y": 4420010.0}, "b": {"x": 487025.0, "y": 4420010.0}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "kutupsal dizinin planı da yazmaz; plan ve doğrulama geçmişe dokunmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 5, "dy": 0}}, "result": {"status": "completed", "output": {"created": ["$uidOf:21"], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "undo", "returns": "Dizi"},
+        {"op": "plan", "input": {"uids": ["$uidOf:4"], "layout": {"kind": "polar", "center": {"x": 487000, "y": 4420000}, "count": 2, "fill": 180, "rotate": false}}, "result": {"status": "completed", "output": {"sources": ["$uidOf:4"], "entities": [{"kind": "point", "id": 0, "layerId": "yapi", "attrs": {"Ad": "N1"}, "label": "N1", "p": {"x": 486999.0, "y": 4419999.0}, "z": 12.5}], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"canRedo": true, "revision": "same"}},
+        {"op": "redo", "returns": "Dizi"}
+      ]
+    },
+    {
+      "name": "sayı taşması: bir kopya sonlu olmayan bir değere düşerse hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "layout": {"kind": "grid", "rows": 1, "cols": 3, "dx": 1e+308, "dy": 0}}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Dönüşüm sonucunda sonlu olmayan bir değer çıktı (sayı taşması). Daha küçük bir değer verin.", "path": "layout"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"uids": ["$uidOf:13"], "layout": {"kind": "grid", "rows": 1, "cols": 2, "dx": 1e+308, "dy": 0}}, "result": {"status": "completed", "output": {"sources": ["$uidOf:13"], "entities": [{"kind": "circle", "id": 0, "layerId": "yapi", "attrs": {}, "c": {"x": 1e+308, "y": 4420010.0}, "r": 2.5}], "locked": [], "revision": "$current"}, "warnings": []}, "note": "Doğuya 1e308 metre sonludur: taşma yok.", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    }
+  ]
+}

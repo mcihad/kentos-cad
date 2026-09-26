@@ -8,7 +8,6 @@ use kentos_domain::contracts::{
     EntityGeometry, Vec2,
 };
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::entity::Shape;
 use kentos_native_application::geometry::{edit_geometry, entity_of, shape};
 use kentos_native_application::{ExecutionContext, edit};
 use serde_json::Value;
@@ -157,24 +156,22 @@ fn the_geometry_is_written_as_given() {
 }
 
 /// What a tool computed with the core becomes the command's geometry, and
-/// the object written from it is the same shape again; a dimension or a
-/// hatch is not the command's.
+/// the object written from it is the same shape again; a hatch and a
+/// dimension too, since Esnet writes them (docs/adr/0047, part 2).
 #[test]
 fn a_core_shape_goes_to_the_command_and_back() {
     let doc = drawing(|_| {});
-    for e in doc.entities() {
+    let more = [
+        r#"{"kind":"hatch","id":1,"layerId":"a","attrs":{},"ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"pattern":{"type":"solid","angle":0,"spacing":1}}"#,
+        r#"{"kind":"dimension","id":2,"layerId":"a","attrs":{},"a":{"x":0,"y":0},"b":{"x":3,"y":4},"offset":2,"height":0.5,"style":"angular","c":{"x":-1,"y":1}}"#,
+    ]
+    .map(|text| serde_json::from_str::<Entity>(text).expect("an object"));
+    for e in doc.entities().chain(more.iter()) {
         let s = shape(e);
         let geometry = edit_geometry(s.clone()).expect("an edit geometry");
         let back = entity_of(&geometry, e.base().clone());
         assert_eq!(shape(&back), s, "{}", e.kind());
     }
-    let hatch: Shape = shape(
-        &serde_json::from_str::<Entity>(
-            r#"{"kind":"hatch","id":1,"layerId":"a","attrs":{},"ring":[{"x":0,"y":0},{"x":4,"y":0},{"x":4,"y":4}],"pattern":{"type":"solid","angle":0,"spacing":1}}"#,
-        )
-        .expect("a hatch"),
-    );
-    assert_eq!(edit_geometry(hatch), None);
 }
 
 /// Each operation names its undo step as the web's tool did.

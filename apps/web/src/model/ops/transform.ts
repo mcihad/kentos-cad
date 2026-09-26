@@ -1,7 +1,8 @@
+import type { ArrayLayout } from '../../contracts/generated/ArrayLayout';
 import type { Transform } from '../../contracts/generated/Transform';
 import type { Entity, EntityKind, NewEntity } from '../entities';
 import type { Affine } from '../geom/affine';
-import { transformObjects as coreTransformObjects } from '../../wasm/core';
+import { arrayObjects as coreArrayObjects, transformObjects as coreTransformObjects } from '../../wasm/core';
 import { packEntities, unpackEntities, type Geometry, type Packed } from '../../wasm/pack';
 import { entityOp } from './entityOp';
 
@@ -109,6 +110,11 @@ function similarityOf(t: Transform): [string, number[]] {
       return ['scale', [t.center.x, t.center.y, t.factor]];
     case 'mirror':
       return ['mirror', [t.a.x, t.a.y, t.b.x, t.b.y]];
+    case 'align': {
+      const first = [t.source.x, t.source.y, t.target.x, t.target.y];
+      if (!t.source2 || !t.target2) return ['align', first];
+      return [t.scale === true ? 'alignScale' : 'align', [...first, t.source2.x, t.source2.y, t.target2.x, t.target2.y]];
+    }
   }
 }
 
@@ -131,5 +137,38 @@ export function transformObjects<E extends Entity>(list: readonly E[], t: Transf
     list.map((e) => e.id),
     1,
     moved,
+  );
+}
+
+/** An array of `cad.entities.array` as the core's `array_transforms` takes it: its kind and numbers. */
+export function arrayNumbers(layout: ArrayLayout): [string, number[]] {
+  if (layout.kind === 'grid') return ['grid', [layout.rows, layout.cols, layout.dx, layout.dy]];
+  return ['polar', [layout.center.x, layout.center.y, layout.count, layout.fill, layout.rotate ? 1 : 0]];
+}
+
+/** How many copies of each object an array makes: its places less the originals' own. */
+export function arrayCopyCount(layout: ArrayLayout): number {
+  return layout.kind === 'grid' ? layout.rows * layout.cols - 1 : layout.count - 1;
+}
+
+/**
+ * Copies of `list` laid out by an array of the product command
+ * `cad.entities.array` (docs/adr/0047), with no store and no JSON: the core
+ * lays the copies out (`array_transforms`; a polar array that does not turn
+ * places them by the middle of the list's box, text measured in `font`, a
+ * `DrawingFont` id) and moves every object, packed. The copies come place
+ * after place, each place in the list's order, each with its original's
+ * other fields.
+ */
+export function arrayCopies<E extends Entity>(list: readonly E[], layout: ArrayLayout, font: string): E[] {
+  if (!list.length) return [];
+  const packed = packEntities(list);
+  const [kind, params] = arrayNumbers(layout);
+  const copies = coreArrayObjects(packed.nums, packed.strings, kind, Float64Array.from(params), font);
+  return transformedFrom(
+    list,
+    list.map((e) => e.id),
+    arrayCopyCount(layout),
+    copies,
   );
 }

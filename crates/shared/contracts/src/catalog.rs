@@ -156,12 +156,13 @@ fn schema<T: schemars::JsonSchema>() -> serde_json::Value {
 pub fn catalog() -> CommandCatalog {
     use crate::{
         ArcCreate, ArcCreated, CAD_ARC_CREATE, CAD_ARC_CREATE_VERSION, CAD_CIRCLE_CREATE,
-        CAD_CIRCLE_CREATE_VERSION, CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION,
-        CAD_ENTITIES_EDIT, CAD_ENTITIES_EDIT_VERSION, CAD_ENTITIES_TRANSFORM,
-        CAD_ENTITIES_TRANSFORM_VERSION, CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE,
-        CAD_POINT_CREATE_VERSION, CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION,
-        CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION, CircleCreate, CircleCreated,
-        CommitResult, EntitiesDelete, EntitiesDeleted, EntitiesEdit, EntitiesEdited,
+        CAD_CIRCLE_CREATE_VERSION, CAD_ENTITIES_ARRAY, CAD_ENTITIES_ARRAY_VERSION,
+        CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION, CAD_ENTITIES_EDIT,
+        CAD_ENTITIES_EDIT_VERSION, CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION,
+        CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE, CAD_POINT_CREATE_VERSION,
+        CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE,
+        CAD_POLYLINE_CREATE_VERSION, CircleCreate, CircleCreated, CommitResult, EntitiesArray,
+        EntitiesArrayed, EntitiesDelete, EntitiesDeleted, EntitiesEdit, EntitiesEdited,
         EntitiesTransform, EntitiesTransformed, LineCreate, LineCreated, PROJECT_ACCESS_REVOKE,
         PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_SHARE,
         PROJECT_SHARE_VERSION, PointCreate, PointCreated, PolygonCreate, PolygonCreated,
@@ -1077,14 +1078,15 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
-        // The move, copy, rotate, scale and mirror tools' command (docs/adr/0037), held
-        // together by fixtures/commands/v1/cad.entities.transform.json.
+        // The move, copy, rotate, scale, mirror and align tools' command (docs/adr/0037,
+        // 0047), held together by fixtures/commands/v1/cad.entities.transform.json.
         CommandDescriptor {
             id: CAD_ENTITIES_TRANSFORM.into(),
             version: CAD_ENTITIES_TRANSFORM_VERSION,
             title: "Nesneleri dönüştür".into(),
-            summary: "Kalıcı kimlikleriyle verilen nesneleri taşır, bir merkez etrafında döndürür, bir merkeze göre ölçekler ya da iki noktalı bir eksene göre aynalar; yerinde ya da kopya olarak, tek geri alma adımında. \
-                      Taşı, Kopyala, Döndür, Ölçekle ve Aynala araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. \
+            summary: "Kalıcı kimlikleriyle verilen nesneleri taşır, bir merkez etrafında döndürür, bir merkeze göre ölçekler, iki noktalı bir eksene göre aynalar ya da kaynak noktalarını hedef noktalarına hizalar; yerinde ya da kopya olarak, tek geri alma adımında. \
+                      Hizalamada birinci kaynak noktası birinci hedefe gider; ikinci çift verilirse nesneler kaynak doğrultusu hedef doğrultusuna oturacak kadar döner, scale ile boyları da eşitlenir. \
+                      Taşı, Kopyala, Döndür, Ölçekle, Aynala ve Hizala araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. \
                       Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır, aynalanan yazı okunur kalır. \
                       Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. \
                       Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. \
@@ -1135,6 +1137,25 @@ pub fn catalog() -> CommandCatalog {
                     }),
                     output: None,
                 },
+                CommandExample {
+                    title: "Bir yapıyı yolun kenarına hizalama: köşesi hedef noktaya, cephesi yol doğrultusuna".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "transform": {
+                            "kind": "align",
+                            "source": { "x": 423510.0, "y": 4512300.0 },
+                            "target": { "x": 423540.0, "y": 4512320.0 },
+                            "source2": { "x": 423530.0, "y": 4512300.0 },
+                            "target2": { "x": 423552.0, "y": 4512336.0 }
+                        }
+                    }),
+                    output: Some(json!({
+                        "changed": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "created": [],
+                        "locked": [],
+                        "revision": "38"
+                    })),
+                },
             ],
         },
         // The edge, corner and object modify tools' command (docs/adr/0047), held together
@@ -1144,7 +1165,7 @@ pub fn catalog() -> CommandCatalog {
             version: CAD_ENTITIES_EDIT_VERSION,
             title: "Nesneleri düzenle".into(),
             summary: "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. \
-                      Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt ve Köşe ekle/sil araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. \
+                      Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. \
                       update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; \
                       add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. \
                       Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. \
@@ -1207,6 +1228,66 @@ pub fn catalog() -> CommandCatalog {
                                 "b": { "x": 423530.0, "y": 4512300.0 }
                             }
                         }],
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        // The array tools' command (docs/adr/0047), held together by
+        // fixtures/commands/v1/cad.entities.array.json.
+        CommandDescriptor {
+            id: CAD_ENTITIES_ARRAY.into(),
+            version: CAD_ENTITIES_ARRAY_VERSION,
+            title: "Nesneleri diziye kopyala".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesnelerin kopyalarını satır ve sütunlara ya da bir merkezin çevresine dizer; bütün kopyalar tek geri alma adımındadır. \
+                      Dizi: satır × sütun yer (2 ile 10 000 arası), sütunlar dx, satırlar dy aralıkla; birden çok yeri olan yönün aralığı sıfır olamaz. \
+                      Kutupsal dizi: merkezin çevresinde adet kadar öğe (2 ile 1000 arası, asıllar dahil), fill derecelik açıya; 360 tam turu eşit böler, eksi saat yönündedir. rotate ile kopyalar merkez etrafında döner, yoksa yönünü koruyup kopyalanan nesnelerin kutusunun ortasıyla yer değiştirir. \
+                      Dizi ve Kutupsal dizi araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Yerleşim geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır. \
+                      Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki nesnenin kopyası yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<EntitiesArray>(),
+            output: schema::<EntitiesArrayed>(),
+            examples: vec![
+                CommandExample {
+                    title: "Bir parseli 2 satır × 3 sütun diziye kopyalama: sütunlar 25 m, satırlar 40 m arayla".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "layout": { "kind": "grid", "rows": 2, "cols": 3, "dx": 25.0, "dy": 40.0 }
+                    }),
+                    output: Some(json!({
+                        "created": [
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7082",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7083",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7084",
+                            "01925f3e-7c1b-7a10-8c21-3b4d5e6f7085"
+                        ],
+                        "locked": [],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Bir direği bir meydanın çevresine 8 kez, tam turda; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "layout": {
+                            "kind": "polar",
+                            "center": { "x": 423510.0, "y": 4512300.0 },
+                            "count": 8,
+                            "fill": 360.0,
+                            "rotate": true
+                        },
                         "expectedRevision": "37"
                     }),
                     output: None,
@@ -1360,6 +1441,9 @@ mod tests {
                     crate::CAD_ENTITIES_EDIT => {
                         serde_json::from_value::<crate::EntitiesEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_ARRAY => {
+                        serde_json::from_value::<crate::EntitiesArray>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1395,6 +1479,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_EDIT => {
                             serde_json::from_value::<crate::EntitiesEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_ARRAY => {
+                            serde_json::from_value::<crate::EntitiesArrayed>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

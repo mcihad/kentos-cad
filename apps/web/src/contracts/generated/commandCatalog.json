@@ -9516,7 +9516,7 @@
       "id": "cad.entities.transform",
       "version": 1,
       "title": "Nesneleri dönüştür",
-      "summary": "Kalıcı kimlikleriyle verilen nesneleri taşır, bir merkez etrafında döndürür, bir merkeze göre ölçekler ya da iki noktalı bir eksene göre aynalar; yerinde ya da kopya olarak, tek geri alma adımında. Taşı, Kopyala, Döndür, Ölçekle ve Aynala araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır, aynalanan yazı okunur kalır. Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesneleri taşır, bir merkez etrafında döndürür, bir merkeze göre ölçekler, iki noktalı bir eksene göre aynalar ya da kaynak noktalarını hedef noktalarına hizalar; yerinde ya da kopya olarak, tek geri alma adımında. Hizalamada birinci kaynak noktası birinci hedefe gider; ikinci çift verilirse nesneler kaynak doğrultusu hedef doğrultusuna oturacak kadar döner, scale ile boyları da eşitlenir. Taşı, Kopyala, Döndür, Ölçekle, Aynala ve Hizala araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır, aynalanan yazı okunur kalır. Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -9533,7 +9533,7 @@
       "input": {
         "$defs": {
           "Transform": {
-            "description": "One similarity of the plane, given as the modify tools ask for it\n(docs/adr/0037). Coordinates are x east (Y), y north (X), in the\nproject's units (m), float64.",
+            "description": "One similarity of the plane, given as the modify tools ask for it\n(docs/adr/0037, 0047). Coordinates are x east (Y), y north (X), in the\nproject's units (m), float64.",
             "oneOf": [
               {
                 "description": "Move (taşı) by a displacement: `dx` east, `dy` north.",
@@ -9622,6 +9622,53 @@
                   "b"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "Align (hizala, AutoCAD's ALIGN): `source` goes onto `target`. With a\nsecond pair (`source2` and `target2`, given together) the objects\nalso turn about `source` so that the direction from `source` to\n`source2` lies along the one from `target` to `target2`, and with\n`scale` they are scaled about it so that the one length becomes the\nother. The second pair's points must lie apart from the first's;\n`scale` means nothing without a second pair.",
+                "properties": {
+                  "kind": {
+                    "const": "align",
+                    "type": "string"
+                  },
+                  "scale": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "source": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "source2": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Vec2"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "target": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "target2": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Vec2"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "source",
+                  "target"
+                ],
+                "type": "object"
               }
             ]
           },
@@ -9645,7 +9692,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.transform` v1: objects named by their persistent\nids (docs/adr/0014) moved by one transform as one undo step, in place or\nas copies. The modify tools make the selection explicit here (TODOS.md\nCMD-07): they give the selected objects' ids; the command reads no\nselection, layer or view.\n\nIn place, each object keeps its slot, its persistent id and every other\nfield; only its geometry changes. As copies, each new object takes every\nfield of its original (layer, colour, attributes, label, symbol) and a new\npersistent id; the originals stay. The undo step is the tool's name:\n“Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,\n“Aynala”.\n\nObjects on a locked layer (by itself or a group above it) stay where they\nare and are not copied: with others to transform they are named in the\noutput's `locked` with a `layer_locked` warning; when every one is locked\nnothing is written and the answer is `layer_locked`. A repeated id counts\nonce.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the transform's numbers,\nin their order), `invalid_factor` (a scale not above zero),\n`invalid_axis` (a mirror axis without a direction), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found` (each id in\norder), `layer_locked`, then `not_finite` again (path `transform`) when\nthe transform would carry a coordinate past the largest float64; on the\ndesktop also `slots_exhausted` for copies.",
+        "description": "Input of `cad.entities.transform` v1: objects named by their persistent\nids (docs/adr/0014) moved by one transform as one undo step, in place or\nas copies. The modify tools make the selection explicit here (TODOS.md\nCMD-07): they give the selected objects' ids; the command reads no\nselection, layer or view.\n\nIn place, each object keeps its slot, its persistent id and every other\nfield; only its geometry changes. As copies, each new object takes every\nfield of its original (layer, colour, attributes, label, symbol) and a new\npersistent id; the originals stay. The undo step is the tool's name:\n“Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,\n“Aynala”, “Hizala”.\n\nObjects on a locked layer (by itself or a group above it) stay where they\nare and are not copied: with others to transform they are named in the\noutput's `locked` with a `layer_locked` warning; when every one is locked\nnothing is written and the answer is `layer_locked`. A repeated id counts\nonce.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the transform's numbers,\nin their order), `invalid_factor` (a scale not above zero),\n`invalid_axis` (a mirror axis without a direction), `invalid_align` (an\nalignment's second pair given by half, or its source or target points\nwithin a nanometre of the first's), `invalid_revision`,\n`revision_conflict` (status `conflict`), `entity_not_found` (each id in\norder), `layer_locked`, then `not_finite` again (path `transform`) when\nthe transform would carry a coordinate past the largest float64; on the\ndesktop also `slots_exhausted` for copies.",
         "properties": {
           "copy": {
             "description": "True: copies are made and the originals stay (Kopyala, Kopya (K),\nAynala keeping its source). Absent or false: the objects themselves change.",
@@ -9763,6 +9810,41 @@
               "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
             ]
           }
+        },
+        {
+          "title": "Bir yapıyı yolun kenarına hizalama: köşesi hedef noktaya, cephesi yol doğrultusuna",
+          "input": {
+            "transform": {
+              "kind": "align",
+              "source": {
+                "x": 423510.0,
+                "y": 4512300.0
+              },
+              "source2": {
+                "x": 423530.0,
+                "y": 4512300.0
+              },
+              "target": {
+                "x": 423540.0,
+                "y": 4512320.0
+              },
+              "target2": {
+                "x": 423552.0,
+                "y": 4512336.0
+              }
+            },
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          },
+          "output": {
+            "changed": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ],
+            "created": [],
+            "locked": [],
+            "revision": "38"
+          }
         }
       ]
     },
@@ -9770,7 +9852,7 @@
       "id": "cad.entities.edit",
       "version": 1,
       "title": "Nesneleri düzenle",
-      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt ve Köşe ekle/sil araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -9786,6 +9868,16 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "DimensionStyle": {
+            "enum": [
+              "aligned",
+              "linear",
+              "angular",
+              "radius",
+              "diameter"
+            ],
+            "type": "string"
+          },
           "EditOperation": {
             "description": "The modify tool an edit comes from; it names the undo step.",
             "oneOf": [
@@ -9955,7 +10047,7 @@
             ]
           },
           "EntityGeometry": {
-            "description": "A drawing object's geometry alone: its kind and the fields that place and\nshape it, without the fields every object has (layer, colour, attributes,\nlabel, symbol). Coordinates are x east (Y), y north (X), in the project's\nunits (m), float64; angles in radians unless said otherwise. Dimensions\nand hatches are not edited through this command in v1.",
+            "description": "A drawing object's geometry alone: its kind and the fields that place and\nshape it, without the fields every object has (layer, colour, attributes,\nlabel, symbol). Coordinates are x east (Y), y north (X), in the project's\nunits (m), float64; angles in radians unless said otherwise.",
             "oneOf": [
               {
                 "properties": {
@@ -10253,8 +10345,139 @@
                   "rotation"
                 ],
                 "type": "object"
+              },
+              {
+                "description": "A dimension from `a` to `b` (an angular one's vertex is `c`), its line\n`offset` metres away, its text `height` metres high; `text` replaces\nthe measured value, `angle` is a linear one's measured direction in\ndegrees counter-clockwise from east (0 = ΔY, 90 = ΔX).",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "angle": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "b": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "c": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Vec2"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "height": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "dimension",
+                    "type": "string"
+                  },
+                  "offset": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "style": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DimensionStyle"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "text": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b",
+                  "offset",
+                  "height"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A hatched area: its ring, its holes when it has any, and its pattern.",
+                "properties": {
+                  "holes": {
+                    "items": {
+                      "items": {
+                        "$ref": "#/$defs/Vec2"
+                      },
+                      "type": "array"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "hatch",
+                    "type": "string"
+                  },
+                  "pattern": {
+                    "$ref": "#/$defs/HatchPattern"
+                  },
+                  "ring": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "ring",
+                  "pattern"
+                ],
+                "type": "object"
               }
             ]
+          },
+          "HatchPattern": {
+            "properties": {
+              "angle": {
+                "description": "Degrees, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "spacing": {
+                "description": "Metres.",
+                "format": "double",
+                "type": "number"
+              },
+              "type": {
+                "$ref": "#/$defs/HatchPatternType"
+              }
+            },
+            "required": [
+              "type",
+              "angle",
+              "spacing"
+            ],
+            "type": "object"
+          },
+          "HatchPatternType": {
+            "enum": [
+              "solid",
+              "lines",
+              "cross"
+            ],
+            "type": "string"
           },
           "RingGeometry": {
             "description": "A closed ring in vertex + bulge form (a polygon hole).",
@@ -10301,7 +10524,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.entities.edit` v1: changes to objects named by their\npersistent ids, written as one undo step named after `operation`. The\nmodify tools give the objects they picked and the geometry the shared\ncore computed (TODOS.md CMD-07); the command reads no selection, layer or\nview.\n\nThe changes are made in their order, against the document as it was\nbefore them: an `add` may come from an object the same edit replaces or\ndeletes. An object is changed (`update`, `replace`, `remove`) by one\nchange at most.\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and nothing is made from it: when one is named, nothing is\nwritten and the answer is `layer_locked`. The pieces of a split object\nbelong together, so an edit is written whole or not at all.\n\nRefusals (`CommandError.code`), checked in this order: `no_changes`,\n`invalid_uid` (each change's id in order), `not_finite`,\n`too_few_points`, `too_few_corners`, `invalid_radius` (each geometry in\norder), `invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `repeated_entity` (an object\nchanged twice), `layer_locked`; on the desktop also `slots_exhausted`.",
+        "description": "Input of `cad.entities.edit` v1: changes to objects named by their\npersistent ids, written as one undo step named after `operation`. The\nmodify tools give the objects they picked and the geometry the shared\ncore computed (TODOS.md CMD-07); the command reads no selection, layer or\nview.\n\nThe changes are made in their order, against the document as it was\nbefore them: an `add` may come from an object the same edit replaces or\ndeletes. An object is changed (`update`, `replace`, `remove`) by one\nchange at most.\n\nAn object on a locked layer (by itself or a group above it) is not\nchanged, and nothing is made from it: when one is named, nothing is\nwritten and the answer is `layer_locked`. The pieces of a split object\nbelong together, so an edit is written whole or not at all.\n\nRefusals (`CommandError.code`), checked in this order: `no_changes`,\n`invalid_uid` (each change's id in order), then each geometry in order:\n`too_few_points` (a polyline), `too_few_corners` (a closed area's or a\nhatch's ring or hole), `not_finite`, `invalid_radius`; then\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `repeated_entity` (an object\nchanged twice), `layer_locked`; on the desktop also `slots_exhausted`.",
         "properties": {
           "changes": {
             "description": "What changes, at least one.",
@@ -10441,6 +10664,231 @@
             ],
             "expectedRevision": "37",
             "operation": "extend"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.entities.array",
+      "version": 1,
+      "title": "Nesneleri diziye kopyala",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelerin kopyalarını satır ve sütunlara ya da bir merkezin çevresine dizer; bütün kopyalar tek geri alma adımındadır. Dizi: satır × sütun yer (2 ile 10 000 arası), sütunlar dx, satırlar dy aralıkla; birden çok yeri olan yönün aralığı sıfır olamaz. Kutupsal dizi: merkezin çevresinde adet kadar öğe (2 ile 1000 arası, asıllar dahil), fill derecelik açıya; 360 tam turu eşit böler, eksi saat yönündedir. rotate ile kopyalar merkez etrafında döner, yoksa yönünü koruyup kopyalanan nesnelerin kutusunun ortasıyla yer değiştirir. Dizi ve Kutupsal dizi araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. Yerleşim geometri çekirdeğindedir: her nesne türü aynı kuralla kopyalanır. Kopya aslının bütün alanlarını ve yeni bir kalıcı kimlik alır. Kilitli katmandaki nesnenin kopyası yapılmaz: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "ArrayLayout": {
+            "description": "How the copies are laid out. The originals take the first place and stay\nwhere they are. Coordinates are x east (Y), y north (X), in the\nproject's units (m), float64.",
+            "oneOf": [
+              {
+                "description": "Dizi: `rows` × `cols` places, 2 to 10 000 of them; the copy `j`\ncolumns and `i` rows from the originals moves `j·dx` east and `i·dy`\nnorth. The copies are made row after row, each row column after\ncolumn. A direction with more than one place needs a spacing.",
+                "properties": {
+                  "cols": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "dx": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "dy": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "grid",
+                    "type": "string"
+                  },
+                  "rows": {
+                    "format": "uint32",
+                    "maximum": 10000,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "rows",
+                  "cols",
+                  "dx",
+                  "dy"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Kutupsal dizi: `count` items around `center`, 2 to 1000, the\noriginals among them, over `fill` degrees (counter-clockwise; minus\nclockwise; 360 a full turn). A full turn shares the circle out; a\npartial fill puts the last copy on its end. With `rotate` each copy\nturns about the centre; without, it keeps its direction and moves as\nthe middle of the copied objects' box goes round.",
+                "properties": {
+                  "center": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "count": {
+                    "format": "uint32",
+                    "maximum": 1000,
+                    "minimum": 2,
+                    "type": "integer"
+                  },
+                  "fill": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "polar",
+                    "type": "string"
+                  },
+                  "rotate": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "center",
+                  "count",
+                  "fill",
+                  "rotate"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.entities.array` v1: copies of objects named by their\npersistent ids (docs/adr/0014) laid out by `layout`, as one undo step.\nThe array tools make the selection explicit here (TODOS.md CMD-07): they\ngive the selected objects' ids; the command reads no selection, layer or\nview.\n\nEach copy takes every field of its original (layer, colour, attributes,\nlabel, symbol) and a new persistent id; the originals stay. The copies\nare written place after place, each place the objects in the input's\norder. The undo step is the tool's name: “Dizi” or “Kutupsal dizi”.\n\nObjects on a locked layer (by itself or a group above it) are not\ncopied: with others they are named in the output's `locked` with a\n`layer_locked` warning; when every one is locked nothing is written and\nthe answer is `layer_locked`. A polar array's copies that do not turn are\nplaced by the middle of the box of the objects that are copied. A\nrepeated id counts once.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `not_finite` (the layout's numbers, in\ntheir order), `invalid_count` (rows and columns, or the count, out of\ntheir range), `invalid_spacing` (a grid direction with more than one\nplace and no spacing), `invalid_fill` (a polar fill of zero or past a\nfull turn), `invalid_revision`, `revision_conflict` (status `conflict`),\n`entity_not_found` (each id in order), `layer_locked`, then `not_finite`\nagain (path `layout`) when a copy would lie past the largest float64; on\nthe desktop also `slots_exhausted`.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layout": {
+            "$ref": "#/$defs/ArrayLayout",
+            "description": "Where the copies go."
+          },
+          "uids": {
+            "description": "The objects' persistent ids (lowercase UUID text with hyphens), at least one.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "layout"
+        ],
+        "title": "EntitiesArray",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.array` v1: what was made and what stayed.",
+        "properties": {
+          "created": {
+            "description": "The copies' persistent ids, place after place, each place in the order\nof their originals in the input.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "locked": {
+            "description": "The ids not copied because their layer is locked, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text. Inside an\nopen transaction or group the write joins it, and the revision\nchanges when that ends.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "created",
+          "locked",
+          "revision"
+        ],
+        "title": "EntitiesArrayed",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Bir parseli 2 satır × 3 sütun diziye kopyalama: sütunlar 25 m, satırlar 40 m arayla",
+          "input": {
+            "layout": {
+              "cols": 3,
+              "dx": 25.0,
+              "dy": 40.0,
+              "kind": "grid",
+              "rows": 2
+            },
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          },
+          "output": {
+            "created": [
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081",
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7082",
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7083",
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7084",
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7085"
+            ],
+            "locked": [],
+            "revision": "38"
+          }
+        },
+        {
+          "title": "Bir direği bir meydanın çevresine 8 kez, tam turda; yalnız planlandığı sürümde yazılır",
+          "input": {
+            "expectedRevision": "37",
+            "layout": {
+              "center": {
+                "x": 423510.0,
+                "y": 4512300.0
+              },
+              "count": 8,
+              "fill": 360.0,
+              "kind": "polar",
+              "rotate": true
+            },
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
           }
         }
       ]

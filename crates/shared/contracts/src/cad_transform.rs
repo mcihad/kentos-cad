@@ -1,15 +1,16 @@
-//! The modify commands of the product command catalog (docs/adr/0037):
-//! objects named by their persistent ids moved, rotated, scaled or mirrored,
-//! in place or as copies. The move, copy, rotate, scale and mirror tools
-//! write through `cad.entities.transform` on the web (`apps/web/src/product`)
-//! and on the desktop (`crates/native/application`); both pass the shared
-//! cases in `fixtures/commands/v1`.
+//! The modify commands of the product command catalog (docs/adr/0037,
+//! 0047): objects named by their persistent ids moved, rotated, scaled,
+//! mirrored or aligned, in place or as copies. The move, copy, rotate,
+//! scale, mirror and align tools write through `cad.entities.transform` on
+//! the web (`apps/web/src/product`) and on the desktop
+//! (`crates/native/application`); both pass the shared cases in
+//! `fixtures/commands/v1`.
 //!
 //! The transform is typed by what the tools ask for (a displacement, a
-//! centre and an angle, a centre and a factor, the two points of an axis),
-//! not a matrix: the shared geometry core builds the matrix from it on both
-//! platforms and moves every kind of object with it (arcs stay counter-
-//! clockwise, mirrored text stays readable).
+//! centre and an angle, a centre and a factor, the two points of an axis,
+//! source and target points), not a matrix: the shared geometry core builds
+//! the matrix from it on both platforms and moves every kind of object with
+//! it (arcs stay counter-clockwise, mirrored text stays readable).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -24,7 +25,7 @@ pub const CAD_ENTITIES_TRANSFORM: &str = "cad.entities.transform";
 pub const CAD_ENTITIES_TRANSFORM_VERSION: u32 = 1;
 
 /// One similarity of the plane, given as the modify tools ask for it
-/// (docs/adr/0037). Coordinates are x east (Y), y north (X), in the
+/// (docs/adr/0037, 0047). Coordinates are x east (Y), y north (X), in the
 /// project's units (m), float64.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -40,6 +41,26 @@ pub enum Transform {
     Scale { center: Vec2, factor: f64 },
     /// Mirror (aynala) across the line through `a` and `b`, two different points.
     Mirror { a: Vec2, b: Vec2 },
+    /// Align (hizala, AutoCAD's ALIGN): `source` goes onto `target`. With a
+    /// second pair (`source2` and `target2`, given together) the objects
+    /// also turn about `source` so that the direction from `source` to
+    /// `source2` lies along the one from `target` to `target2`, and with
+    /// `scale` they are scaled about it so that the one length becomes the
+    /// other. The second pair's points must lie apart from the first's;
+    /// `scale` means nothing without a second pair.
+    Align {
+        source: Vec2,
+        target: Vec2,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        source2: Option<Vec2>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        target2: Option<Vec2>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        scale: Option<bool>,
+    },
 }
 
 /// Input of `cad.entities.transform` v1: objects named by their persistent
@@ -53,7 +74,7 @@ pub enum Transform {
 /// field of its original (layer, colour, attributes, label, symbol) and a new
 /// persistent id; the originals stay. The undo step is the tool's name:
 /// “Taşı” (a move), “Kopyala” (a move as copies), “Döndür”, “Ölçekle”,
-/// “Aynala”.
+/// “Aynala”, “Hizala”.
 ///
 /// Objects on a locked layer (by itself or a group above it) stay where they
 /// are and are not copied: with others to transform they are named in the
@@ -64,7 +85,9 @@ pub enum Transform {
 /// Refusals (`CommandError.code`), checked in this order: `no_entities`,
 /// `invalid_uid` (each id in order), `not_finite` (the transform's numbers,
 /// in their order), `invalid_factor` (a scale not above zero),
-/// `invalid_axis` (a mirror axis without a direction), `invalid_revision`,
+/// `invalid_axis` (a mirror axis without a direction), `invalid_align` (an
+/// alignment's second pair given by half, or its source or target points
+/// within a nanometre of the first's), `invalid_revision`,
 /// `revision_conflict` (status `conflict`), `entity_not_found` (each id in
 /// order), `layer_locked`, then `not_finite` again (path `transform`) when
 /// the transform would carry a coordinate past the largest float64; on the

@@ -25,15 +25,14 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{DrawingFont, Entity, LabelPlacement, LabelStyle, LayerNode};
+use kentos_contracts::{Entity, LabelPlacement, LabelStyle, LayerNode};
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::labels::{LabelRule, Placement};
 use kentos_geometry_core::store::snap::SnapHit;
 use kentos_geometry_core::store::{LayerFlags, Store};
-use kentos_geometry_core::text::Font;
-use kentos_native_application::geometry::shape;
+use kentos_native_application::geometry::{drawing_font, shape};
 
 use crate::Vec2;
 
@@ -70,7 +69,7 @@ impl Spatial {
         self.reloads += 1;
         self.store.clear();
         self.store
-            .set_font(Font::from_id(font_id(doc.settings().drawing_font)));
+            .set_font(drawing_font(doc.settings().drawing_font));
         self.store.put_many(doc.entities().map(record));
         self.mark = doc.change_mark();
         self.revision = Some(doc.revision());
@@ -87,7 +86,7 @@ impl Spatial {
             return;
         }
         self.store
-            .set_font(Font::from_id(font_id(doc.settings().drawing_font)));
+            .set_font(drawing_font(doc.settings().drawing_font));
         match doc.changes_since(self.mark) {
             Changes::All => return self.reload(doc),
             Changes::Slots(slots) => {
@@ -209,19 +208,6 @@ pub fn record(entity: &Entity) -> (f64, &str, bool, Shape) {
         label,
         shape(entity),
     )
-}
-
-/// The drawing typeface by its id, as the store measures text in it.
-pub(crate) fn font_id(font: Option<DrawingFont>) -> &'static str {
-    match font {
-        None | Some(DrawingFont::Barlow) => "barlow",
-        Some(DrawingFont::Arimo) => "arimo",
-        Some(DrawingFont::Overpass) => "overpass",
-        Some(DrawingFont::Quicksand) => "quicksand",
-        Some(DrawingFont::ArchitectsDaughter) => "architects-daughter",
-        Some(DrawingFont::CourierPrime) => "courier-prime",
-        Some(DrawingFont::PlexMono) => "plex-mono",
-    }
 }
 
 /// Every node of the layer tree with its flags resolved through the groups

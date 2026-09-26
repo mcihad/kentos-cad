@@ -1,16 +1,19 @@
-"""The shared cases of the product command cad.entities.transform (docs/adr/0037).
+"""The shared cases of the product command cad.entities.transform (docs/adr/0037, 0047).
 
     python3 scripts/fixtures/transform_command_cases.py           # writes the file
     python3 scripts/fixtures/transform_command_cases.py --check   # writes nothing; compares
 
 Writes fixtures/commands/v1/cad.entities.transform.json. The checks, their
 order, codes, paths and messages are written here by hand from the ADR. The
-expected geometry is computed here independently, from the definitions of
-the transforms (a displacement; a rotation, a scale and a reflection as 2D
-affine maps x' = a*x + c*y + e, y' = b*x + d*y + f), in IEEE double
-arithmetic in the same order of operations, with Python's own
-math.cos/sin/atan2. Nothing is copied from an implementation's output; the
-web's and the desktop's handlers must meet these values bit for bit.
+expected geometry is computed independently (affine_reference.py, beside
+this file), from the definitions of the transforms (a displacement; a
+rotation, a scale and a reflection as 2D affine maps x' = a*x + c*y + e,
+y' = b*x + d*y + f; an alignment as the maps composed: scale about the
+first source point, turn about it, carry it onto the first target), in IEEE
+double arithmetic in the same order of operations, with Python's own
+math.cos/sin/atan2/hypot. Nothing is copied from an implementation's
+output; the web's and the desktop's handlers must meet these values bit
+for bit.
 
 `--check` rebuilds the file in memory and compares it with the one on disk.
 """
@@ -18,7 +21,9 @@ import json
 import math
 import sys
 
-TAU = math.pi * 2.0
+sys.dont_write_bytecode = True  # no __pycache__ in the tree
+from affine_reference import alignment, assert_no_negative_zero, mirror, moved, rotation, scaling, translation  # noqa: E402  (the maps, beside this file)
+
 style = {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}
 
 
@@ -72,137 +77,6 @@ SETUP = {
     "entities": ENTITIES,
     "styles": {"items": [], "categories": []},
 }
-
-# ── The transforms, as affine maps [a, b, c, d, e, f] ──────────────────
-
-
-def translation(dx, dy):
-    return [1.0, 0.0, 0.0, 1.0, dx, dy]
-
-
-def rotation(angle, o):
-    c = math.cos(angle)
-    s = math.sin(angle)
-    return [c, s, -s, c, o[0] - c * o[0] + s * o[1], o[1] - s * o[0] - c * o[1]]
-
-
-def scaling(s, o):
-    return [s, 0.0, 0.0, s, o[0] * (1.0 - s), o[1] * (1.0 - s)]
-
-
-def mirror(p, q):
-    dx = q[0] - p[0]
-    dy = q[1] - p[1]
-    l2 = dx * dx + dy * dy
-    a = (dx * dx - dy * dy) / l2
-    b = (2.0 * dx * dy) / l2
-    return [a, b, b, -a, p[0] - a * p[0] - b * p[1], p[1] - b * p[0] + a * p[1]]
-
-
-def apply(m, p):
-    return (m[0] * p[0] + m[2] * p[1] + m[4], m[1] * p[0] + m[3] * p[1] + m[5])
-
-
-def linear(m, v):
-    return (m[0] * v[0] + m[2] * v[1], m[1] * v[0] + m[3] * v[1])
-
-
-def det(m):
-    return m[0] * m[3] - m[1] * m[2]
-
-
-def scale_of(m):
-    return math.sqrt(abs(det(m)))
-
-
-def reflects(m):
-    return det(m) < 0.0
-
-
-def norm_angle(a):
-    r = math.fmod(a, TAU)
-    return r + TAU if r < 0.0 else r
-
-
-def xy(p):
-    return (p["x"], p["y"])
-
-
-def pt(t):
-    return {"x": t[0], "y": t[1]}
-
-
-def moved(e, m, new_id=None):
-    """`e` under `m`: the geometry by the transforms' definitions, every other field kept."""
-    e = json.loads(json.dumps(e))
-    if new_id is not None:
-        e["id"] = new_id
-    k = e["kind"]
-    s = scale_of(m)
-    if k == "point":
-        e["p"] = pt(apply(m, xy(e["p"])))
-    elif k == "line":
-        e["a"] = pt(apply(m, xy(e["a"])))
-        e["b"] = pt(apply(m, xy(e["b"])))
-    elif k in ("polyline", "polygon"):
-        e["pts"] = [pt(apply(m, xy(p))) for p in e["pts"]]
-        if "bulges" in e and reflects(m):
-            e["bulges"] = [-b for b in e["bulges"]]
-    elif k == "circle":
-        e["c"] = pt(apply(m, xy(e["c"])))
-        e["r"] = e["r"] * s
-    elif k == "arc":
-        c, r = xy(e["c"]), e["r"]
-        start = (c[0] + math.cos(e["a0"]) * r, c[1] + math.sin(e["a0"]) * r)
-        end = (c[0] + math.cos(e["a1"]) * r, c[1] + math.sin(e["a1"]) * r)
-        c2 = apply(m, c)
-        s2, e2 = apply(m, start), apply(m, end)
-        ang = lambda q: norm_angle(math.atan2(q[1] - c2[1], q[0] - c2[0]))
-        e["c"] = pt(c2)
-        e["r"] = r * s
-        if reflects(m):
-            e["a0"], e["a1"] = ang(e2), ang(s2)
-        else:
-            e["a0"], e["a1"] = ang(s2), ang(e2)
-    elif k == "ellipse":
-        e["c"] = pt(apply(m, xy(e["c"])))
-        e["major"] = pt(linear(m, xy(e["major"])))
-        if reflects(m):
-            e["t0"], e["t1"] = norm_angle(-e["t1"]), norm_angle(-e["t0"])
-    elif k == "spline":
-        e["pts"] = [pt(apply(m, xy(p))) for p in e["pts"]]
-    elif k == "text":
-        rad = (e["rotation"] * math.pi) / 180.0
-        d = linear(m, (math.cos(rad), math.sin(rad)))
-        rot = (math.atan2(d[1], d[0]) * 180.0) / math.pi
-        if reflects(m):
-            rot += 180.0
-        rot = math.fmod(math.fmod(rot, 360.0) + 360.0, 360.0)
-        e["p"] = pt(apply(m, xy(e["p"])))
-        e["height"] = e["height"] * s
-        e["rotation"] = rot
-    elif k == "dimension":
-        assert e.get("style", "aligned") == "aligned"
-        e["a"] = pt(apply(m, xy(e["a"])))
-        e["b"] = pt(apply(m, xy(e["b"])))
-        e["offset"] = e["offset"] * s * (-1.0 if reflects(m) else 1.0)
-        e["height"] = e["height"] * s
-    else:
-        raise ValueError(k)
-    return e
-
-
-def assert_no_negative_zero(v, where):
-    """JSON cannot hold what JavaScript writes of −0: the cases keep clear of it."""
-    if isinstance(v, float) and v == 0.0 and math.copysign(1.0, v) < 0:
-        raise AssertionError(f"−0 at {where}")
-    if isinstance(v, dict):
-        for k, x in v.items():
-            assert_no_negative_zero(x, f"{where}.{k}")
-    if isinstance(v, list):
-        for i, x in enumerate(v):
-            assert_no_negative_zero(x, f"{where}[{i}]")
-
 
 # ── Answers ──────────────────────────────────────────────────────────────
 
@@ -288,6 +162,17 @@ def mirror_t(ax, ay, bx, by):
     return {"kind": "mirror", "a": P(ax, ay), "b": P(bx, by)}
 
 
+def align_t(s, t, s2=None, t2=None, scale=None):
+    out = {"kind": "align", "source": P(*s), "target": P(*t)}
+    if s2 is not None:
+        out["source2"] = P(*s2)
+    if t2 is not None:
+        out["target2"] = P(*t2)
+    if scale is not None:
+        out["scale"] = scale
+    return out
+
+
 def entities(*pairs):
     return {str(i): e for i, e in pairs}
 
@@ -303,6 +188,15 @@ M_SCALE2 = scaling(2, (487000, 4420000))
 M_SCALE_HALF = scaling(0.5, (487030, 4420010))
 AX = (487025, 4420000, 487025, 4420010)
 M_MIRROR = mirror((AX[0], AX[1]), (AX[2], AX[3]))
+# Hizala: the line's start onto a point 30 m east, 20 m north; its direction (east) onto north.
+S1, D1 = (487010, 4420010), (487040, 4420030)
+S2, D2 = (487020, 4420010), (487040, 4420050)
+M_ALIGN_MOVE = alignment(S1, D1)
+M_ALIGN = alignment(S1, D1, S2, D2)
+M_ALIGN_SCALED = alignment(S1, D1, S2, D2, scale=True)
+# Within a nanometre of D1 (the nearest float64 to 487040 + 5e-10 lies about 5.2e-10 m away).
+D1_NEAR = (487040 + 5e-10, 4420030)
+assert 0 < D1_NEAR[0] - D1[0] < 1e-9
 NEXT = 22
 
 cases = []
@@ -399,6 +293,91 @@ cases.append({
     "steps": [
         {"op": "execute", "input": {"uids": [U(16), U(17), U(18)], "transform": mirror_t(*AX)}, "result": done(changed=[U(16), U(17), U(18)]),
          "expect": {"entities": entities((16, moved(ORIG(16), M_MIRROR)), (17, moved(ORIG(17), M_MIRROR)), (18, moved(ORIG(18), M_MIRROR))), "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "hizalama (Hizala), tek çiftle: birinci kaynak noktası birinci hedefe taşınır; adım Hizala",
+    "steps": [
+        {"op": "captureUid", "id": 10, "as": "cizgi"},
+        {"op": "execute", "input": {"uids": [U(10)], "transform": align_t(S1, D1)}, "result": done(changed=[U(10)]),
+         "expect": {"entities": entities((10, moved(ORIG(10), M_ALIGN_MOVE))), "uids": {"10": "cizgi"}, "canUndo": True, "revision": "changed"}},
+        {"op": "undo", "returns": "Hizala", "note": "Hizala aracının adımı.", "expect": {"entities": entities((10, ORIG(10))), "canUndo": False, "canRedo": True}},
+    ],
+})
+
+cases.append({
+    "name": "iki çiftle hizalama: nesneler birinci kaynak noktası etrafında döner, kaynak doğrultusu hedef doğrultusuna oturur; boy değişmez",
+    "note": "Kaynak doğrultusu doğu, hedef doğrultusu kuzey: çeyrek tur. Yay, yazı ve kapalı alanın yay değerleri aynı kuralla döner.",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(10), U(11), U(14), U(9)], "transform": align_t(S1, D1, S2, D2)}, "result": done(changed=[U(10), U(11), U(14), U(9)]),
+         "expect": {"entities": entities((10, moved(ORIG(10), M_ALIGN)), (11, moved(ORIG(11), M_ALIGN)), (14, moved(ORIG(14), M_ALIGN)), (9, moved(ORIG(9), M_ALIGN))), "revision": "changed"}},
+        {"op": "undo", "returns": "Hizala", "expect": {"entities": entities((10, ORIG(10)), (11, ORIG(11)), (14, ORIG(14)), (9, ORIG(9))), "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "scale ile boy da eşitlenir: 10 m'lik kaynak doğrultusu 20 m'lik hedefe; yarıçap ve yazı yüksekliği iki katına",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(13), U(14), U(10)], "transform": align_t(S1, D1, S2, D2, scale=True)}, "result": done(changed=[U(13), U(14), U(10)]),
+         "expect": {"entities": entities((13, moved(ORIG(13), M_ALIGN_SCALED)), (14, moved(ORIG(14), M_ALIGN_SCALED)), (10, moved(ORIG(10), M_ALIGN_SCALED))), "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "scale ikinci çift olmadan bir şey değiştirmez; hizalanmış kopya da yapılabilir, adım yine Hizala",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(13)], "transform": align_t(S1, D1, scale=True), "copy": True}, "result": done(created=[U(NEXT)]),
+         "expect": {"ids": IDS + [NEXT], "entities": entities((13, ORIG(13)), (NEXT, moved(ORIG(13), M_ALIGN_MOVE, NEXT))), "uids": {str(NEXT): "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Hizala", "expect": {"ids": IDS}},
+    ],
+})
+
+cases.append({
+    "name": "kilitli katmandaki nesne hizalanmaz; öbürleri uyarıyla hizalanır",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(12), U(10)], "transform": align_t(S1, D1, S2, D2)}, "result": done(changed=[U(10)], locked=[U(12)], warnings=[locked_warning(1)]),
+         "expect": {"entities": entities((10, moved(ORIG(10), M_ALIGN)), (12, ORIG(12))), "revision": "changed"}},
+    ],
+})
+
+cases.append({
+    "name": "ikinci çift yarım verilemez: invalid_align; eksik nokta söylenir",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(10)], "transform": align_t(S1, D1, s2=S2)},
+         "result": failed("invalid_align", "Hizalamanın ikinci hedef noktası verilmedi; ikinci çift iki noktayla verilir. İkinci hedef noktasını verin ya da ikinci kaynak noktasını çıkarın.", "transform.target2"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10)], "transform": align_t(S1, D1, t2=D2, scale=True)},
+         "result": failed("invalid_align", "Hizalamanın ikinci kaynak noktası verilmedi; ikinci çift iki noktayla verilir. İkinci kaynak noktasını verin ya da ikinci hedef noktasını çıkarın.", "transform.source2"), "expect": untouched},
+    ],
+})
+
+cases.append({
+    "name": "ikinci çiftin noktası birincinin bir nanometre yakınındaysa doğrultu yoktur: invalid_align",
+    "note": "Hedef noktası 487040'tan yaklaşık 5,2e-10 m uzakta: çekirdeğin ölçüsüyle aynı nokta.",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(10)], "transform": align_t(S1, D1, S1, D2)},
+         "result": failed("invalid_align", "Kaynak noktaları çakışıyor; kaynak doğrultusunun yönü yok. Birbirinden ayrı iki kaynak noktası verin.", "transform.source2"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10)], "transform": align_t(S1, D1, S2, D1_NEAR, scale=True)},
+         "result": failed("invalid_align", "Hedef noktaları çakışıyor; hedef doğrultusunun yönü yok. Birbirinden ayrı iki hedef noktası verin.", "transform.target2"), "expect": untouched},
+    ],
+})
+
+cases.append({
+    "name": "hizalamanın noktaları sırayla denetlenir: önce sonlu olmayan değer, sonra ikinci çift",
+    "steps": [
+        {"op": "execute", "input": {"uids": [U(10)], "transform": align_t(S1, D1, S2, D2)}, "nonFinite": {"transform.target.y": "NaN", "transform.source2.x": "Infinity"},
+         "result": failed("not_finite", NFC("Birinci hedef noktasının", "y"), "transform.target.y"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10)], "transform": align_t(S1, D1, s2=S2)}, "nonFinite": {"transform.source2.y": "-Infinity"},
+         "result": failed("not_finite", NFC("İkinci kaynak noktasının", "y"), "transform.source2.y"), "expect": untouched},
+        {"op": "execute", "input": {"uids": [U(10)], "transform": align_t(S1, D1, S2, D2)}, "nonFinite": {"transform.target2.x": "NaN"},
+         "result": failed("not_finite", NFC("İkinci hedef noktasının", "x"), "transform.target2.x"), "expect": untouched},
+    ],
+})
+
+cases.append({
+    "name": "hizalamanın planı yazılacak nesneleri gösterir; hiçbir şey yazmaz",
+    "steps": [
+        {"op": "plan", "input": {"uids": [U(11)], "transform": align_t(S1, D1, S2, D2, scale=True)}, "result": planned([U(11)], [moved(ORIG(11), M_ALIGN_SCALED)]), "expect": untouched},
     ],
 })
 

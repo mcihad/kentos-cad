@@ -1,5 +1,6 @@
 import {
   angleDeg as wasmAngleDeg,
+  arrayObjects as wasmArrayObjects,
   bearingGrad as wasmBearingGrad,
   callOp,
   cornerTexts as wasmCornerTexts,
@@ -283,6 +284,23 @@ export function transformObjects(nums: Float64Array, strings: string, kind: stri
     const r = wasmTransformObjects(nums, strings, kind, params);
     const out = r.strings;
     // Hands the numbers over and frees the answer: a large one is not copied twice.
+    return { nums: r.intoNums(), strings: out };
+  });
+}
+
+/**
+ * Packed objects (./pack.ts) copied into an array and packed again, with no
+ * store and no JSON (docs/adr/0047): the product command
+ * `cad.entities.array`. `kind` and `params` are its layout as the core's
+ * `array_transforms` takes it: `grid` (rows, cols, dx, dy) or `polar` (cx,
+ * cy, count, fill, rotate 1 or 0); `font` is the drawing's typeface id,
+ * which measures text for a polar array's middle. The copies come place
+ * after place, each place in the order the objects were packed.
+ */
+export function arrayObjects(nums: Float64Array, strings: string, kind: string, params: Float64Array, font: string): { nums: Float64Array; strings: string } {
+  return typed(() => {
+    const r = wasmArrayObjects(nums, strings, kind, params, font);
+    const out = r.strings;
     return { nums: r.intoNums(), strings: out };
   });
 }

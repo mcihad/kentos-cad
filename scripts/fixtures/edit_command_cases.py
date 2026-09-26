@@ -78,6 +78,8 @@ GEOMETRY = {
     "xline": ["p", "dir"],
     "ray": ["p", "dir"],
     "text": ["p", "text", "height", "rotation"],
+    "dimension": ["a", "b", "offset", "height", "text", "style", "angle", "c"],
+    "hatch": ["ring", "holes", "pattern"],
 }
 
 
@@ -85,12 +87,16 @@ def E(i):
     return json.loads(json.dumps(BY_ID[i]))
 
 
-def updated(i, geometry):
-    """`update`: the object with another geometry; every other field of its own stays."""
-    e = E(i)
+def reshaped(e, geometry):
+    """`update` of the object `e`: another geometry; every other field of its own stays."""
     out = {k: v for k, v in e.items() if k != "kind" and k not in GEOMETRY[e["kind"]]}
     out.update(json.loads(json.dumps(geometry)))
     return out
+
+
+def updated(i, geometry):
+    """`update`: the object with another geometry; every other field of its own stays."""
+    return reshaped(E(i), geometry)
 
 
 def inherited(i, geometry, keep, slot):
@@ -266,6 +272,42 @@ cases.append({
         {"op": "undo", "returns": "Esnet"},
         {"op": "undo", "returns": "Uzat-kısalt"},
         {"op": "undo", "returns": "Kır", "expect": {"entities": {"1": E(1), "4": E(4), "8": E(8)}, "canUndo": False}},
+    ],
+})
+
+HATCH = {"kind": "hatch", "ring": [P(487030, 4420000), P(487050, 4420000), P(487050, 4420020), P(487030, 4420020)],
+         "holes": [[P(487038, 4420008), P(487042, 4420008), P(487042, 4420012)]], "pattern": {"type": "lines", "angle": 45, "spacing": 1.5}}
+DIMENSION = {"kind": "dimension", "a": P(487000, 4420000), "b": P(487020, 4420000), "offset": 3, "height": 0.5, "text": "20,00", "style": "linear", "angle": 0}
+HATCH_STRETCHED = {**HATCH, "ring": [P(487030, 4420000), P(487055, 4420000), P(487055, 4420020), P(487030, 4420020)]}
+DIMENSION_STRETCHED = {**DIMENSION, "b": P(487025, 4420000)}
+hatch_made, dimension_made = inherited(3, HATCH, False, 9), inherited(1, DIMENSION, False, 10)
+cases.append({
+    "name": "tarama ve ölçü de yazılır: add ile yapılır, Esnet ile köşeleri update edilir; deseni, stili, yazısı kalır",
+    "note": "Esnet taramanın ve ölçünün pencerede kalan köşelerini taşır (ADR 0047, 2. kısım).",
+    "steps": [
+        {"op": "execute", "input": {"operation": "offset", "changes": [{"kind": "add", "from": uid(3), "geometry": HATCH}, {"kind": "add", "from": uid(1), "geometry": DIMENSION}]},
+         "result": done(created=[uid(9), uid(10)]),
+         "expect": {"ids": ids_after(added=[9, 10]), "entities": {"9": hatch_made, "10": dimension_made}, "revision": "changed"}},
+        {"op": "execute", "input": {"operation": "stretch", "changes": [{"kind": "update", "uid": uid(9), "geometry": HATCH_STRETCHED}, {"kind": "update", "uid": uid(10), "geometry": DIMENSION_STRETCHED}]},
+         "result": done(changed=[uid(9), uid(10)]),
+         "expect": {"entities": {"9": reshaped(hatch_made, HATCH_STRETCHED), "10": reshaped(dimension_made, DIMENSION_STRETCHED)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Esnet", "expect": {"entities": {"9": hatch_made, "10": dimension_made}}},
+    ],
+})
+
+cases.append({
+    "name": "taramanın ve deliklerinin en az 3 köşesi olmalı; ölçünün ve taramanın sayıları sonlu olmalı",
+    "steps": [
+        {"op": "execute", "input": {"operation": "stretch", "changes": [{"kind": "add", "from": uid(3), "geometry": {**HATCH, "ring": HATCH["ring"][:2]}}]},
+         "result": failed("too_few_corners", "Taramanın en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin.", "changes[0].geometry.ring"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "stretch", "changes": [{"kind": "add", "from": uid(3), "geometry": {**HATCH, "holes": [HATCH["holes"][0][:2]]}}]},
+         "result": failed("too_few_corners", "1. deliğin en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.", "changes[0].geometry.holes[0]"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "stretch", "changes": [{"kind": "add", "from": uid(1), "geometry": DIMENSION}]}, "nonFinite": {"changes[0].geometry.offset": "NaN"},
+         "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "stretch", "changes": [{"kind": "add", "from": uid(1), "geometry": DIMENSION}, {"kind": "add", "from": uid(3), "geometry": HATCH}]}, "nonFinite": {"changes[1].geometry.pattern.spacing": "Infinity"},
+         "result": failed("not_finite", not_finite_message(2), "changes[1].geometry"), "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "stretch", "changes": [{"kind": "add", "from": uid(3), "geometry": HATCH}]}, "nonFinite": {"changes[0].geometry.ring[2].y": "-Infinity"},
+         "result": failed("not_finite", not_finite_message(1), "changes[0].geometry"), "expect": NOTHING},
     ],
 })
 

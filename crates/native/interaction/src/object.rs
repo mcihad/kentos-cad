@@ -28,9 +28,8 @@ use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::ops::explode::explode_entity;
 use kentos_geometry_core::ops::join::join_entities;
-use kentos_geometry_core::text::Font;
 use kentos_geometry_core::tools::point_text::parse_number;
-use kentos_native_application::geometry::shape;
+use kentos_native_application::geometry::{drawing_font, shape};
 
 use crate::Vec2;
 use crate::edge;
@@ -38,7 +37,6 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
 use crate::prompt::Prompt;
-use crate::spatial::font_id;
 use crate::tool::{Context, Flow, Memory};
 
 /// The join tool's id: its command is `tool.join`.
@@ -212,7 +210,7 @@ impl ObjectAction {
     /// Patlat (the web's `ExplodeTool.run`).
     fn run_explode(targets: &[Slot], cx: &mut Context<'_>) {
         let f = cx.format();
-        let font = Font::from_id(font_id(cx.doc.settings().drawing_font));
+        let font = drawing_font(cx.doc.settings().drawing_font);
         let mut changes = Vec::new();
         let mut exploded = 0;
         let mut first_error: Option<String> = None;

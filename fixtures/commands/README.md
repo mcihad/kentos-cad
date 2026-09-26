@@ -13,8 +13,9 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.point.create.json` | `cad.point.create` v1 (ADR 0032) | 23 |
 | `v1/cad.circle.create.json` | `cad.circle.create` v1 (ADR 0032) | 23 |
 | `v1/cad.arc.create.json` | `cad.arc.create` v1 (ADR 0032) | 23 |
-| `v1/cad.entities.transform.json` | `cad.entities.transform` v1 (ADR 0037) | 29 |
-| `v1/cad.entities.edit.json` | `cad.entities.edit` v1 (ADR 0047) | 26 |
+| `v1/cad.entities.transform.json` | `cad.entities.transform` v1 (ADR 0037; hizalama ADR 0047) | 38 |
+| `v1/cad.entities.edit.json` | `cad.entities.edit` v1 (ADR 0047) | 28 |
+| `v1/cad.entities.array.json` | `cad.entities.array` v1 (ADR 0047) | 25 |
 
 ## Dosya
 
@@ -46,7 +47,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 
 Her adımda `expect` (aşağıda) ve `note` de bulunabilir. Komut adımında `result` zorunludur.
 
-- **`input`** komutun girdisidir, sözleşmenin tipiyle (`PolygonCreate`, `LineCreate`, `PolylineCreate`, `EntitiesDelete`, `PointCreate`, `CircleCreate`, `ArcCreate`, `EntitiesTransform`, `EntitiesEdit`; JSON adlarıyla).
+- **`input`** komutun girdisidir, sözleşmenin tipiyle (`PolygonCreate`, `LineCreate`, `PolylineCreate`, `EntitiesDelete`, `PointCreate`, `CircleCreate`, `ArcCreate`, `EntitiesTransform`, `EntitiesEdit`, `EntitiesArray`; JSON adlarıyla).
 - **`nonFinite`**: JSON NaN ve ±∞ taşıyamaz. `{ "pts[1].y": "NaN" }` ya da `{ "a.x": "Infinity" }` gibi bir tablo, girdi okunduktan sonra o alana `NaN`, `Infinity` ya da `-Infinity` koyar. Yol, hata iletisinin `path` alanıyla aynı yazılır (`c.x`, `r`, `a0`, `transform.center.y`). İsteğe bağlı bir sayının (`z`) yerini girdi bir sayıyla verir; tablo o sayıyı değiştirir.
 - **`result`** sonucun tamamıdır (`CommandResult`): `status` ve duruma göre `output` ve `warnings`, ya da `error`. Alan alan tam eşit olmalıdır. Sayılar sayı olarak karşılaştırılır (dosyanın `1`'i belgenin `1.0`'ıdır).
 
@@ -81,6 +82,7 @@ Yalnız yazılan alanlar denetlenir.
 - Beklenen değerler sözleşmeden (ADR 0022: denetimler, sıraları, kodlar, yollar, iletiler) elle yazılır ve iki koşucuyla doğrulanır. Bir uygulamanın çıktısından kopyalanmaz. Değiştirmek incelenmiş bir davranış değişikliğidir (CLAUDE.md §23.4).
 - İletiler kelimesi kelimesine karşılaştırılır: iki uygulama aynı cümleyi kurar. Kapalı alan aracının iletileri (kilitli ve gizli katman) değişmeden buradan gelir; izler (`fixtures/interaction/v1`) de onları geçer.
 - Yalnız bir uygulamada olabilen durum buraya konmaz: masaüstünde yuvaların tükenmesi (`slots_exhausted`) kendi testindedir.
-- Bir dönüşümün beklenen geometrisi (`cad.entities.transform`) dönüşümün tanımından, aynı işlem sırasıyla çift duyarlıkla bağımsız hesaplanır; uygulamanın çıktısından alınmaz. Dosyayı `scripts/fixtures/transform_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
+- Bir dönüşümün beklenen geometrisi (`cad.entities.transform`) dönüşümün tanımından, aynı işlem sırasıyla çift duyarlıkla bağımsız hesaplanır (`scripts/fixtures/affine_reference.py`); uygulamanın çıktısından alınmaz. Dosyayı `scripts/fixtures/transform_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
+- Bir dizinin (`cad.entities.array`) kopyaları sözleşmenin tanımından aynı yolla hesaplanır: ızgarada yer yer öteleme, kutupsal dizide adım adım dönüş ya da kopyalanan nesnelerin kutusunun ortasının dönüşü. Kutupsal durumlar çeyrek ve sekizde bir turlarla kurulur: orada çekirdeğin sinüs ve kosinüsü (fdlibm'inki, V8'inki gibi) Python'unkiyle aynıdır; başka açılarda son bitte ayrılabilir. Dosyayı `scripts/fixtures/array_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
 - Bir düzenlemenin (`cad.entities.edit`) geometrisi girdide verilir; beklenen nesneyi sözleşmenin kuralı kurar (update yalnız geometriyi değiştirir; replace ve add katmanı ve rengi, keepData ile öznitelikleri ve etiketi alır, simgeyi almaz). Dosyayı `scripts/fixtures/edit_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
 - −0 dosyada yazılmaz: JavaScript'in yazdığı JSON onu 0 yapar. −0'ın korunduğu iki koşucunun kendi testlerindedir (`apps/web/src/wasm/transform.wasm.test.ts`, `crates/native/application/tests/transform.rs`).
