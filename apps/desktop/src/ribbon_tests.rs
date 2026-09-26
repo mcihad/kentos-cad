@@ -173,6 +173,21 @@ fn screens() {
     let _ = app.update(Message::Run("workspace.gis"));
     app.tab = "home";
     picture(&mut app, "serit-cbs-giris-1440", 1440.0);
+    // Every other window at a low window size: nothing cut off (the owner's rule).
+    for (id, name) in [
+        ("file.start", "baslangic"),
+        ("help.shortcuts", "kisayollar"),
+        ("help.about", "hakkinda"),
+        ("cloud.signIn", "bulut-giris"),
+        ("cloud.open", "bulut-projeleri"),
+    ] {
+        let mut app = app_with_drawing();
+        let _ = app.update(Message::Run(id));
+        sized(&mut app, &format!("pencere-{name}-1100x650"), 1100.0, 650.0);
+    }
+    let mut app = app_with_drawing();
+    let _ = app.update(Message::AppMenu(crate::app_menu::Event::Toggle));
+    sized(&mut app, "pencere-uygulama-menusu-1100x650", 1100.0, 650.0);
     // The long windows keep their buttons in view: the body scrolls (a low window too).
     for (id, name) in [
         ("tools.options", "ayarlar"),

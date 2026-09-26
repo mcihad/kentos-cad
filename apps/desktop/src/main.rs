@@ -97,9 +97,15 @@ fn main() -> iced::Result {
     .theme(app::App::theme)
     .default_font(typography::ui())
     .subscription(app::App::subscription)
-    .window_size(iced::Size::new(1440.0, 900.0))
-    // A drawing with unsaved changes asks before the window closes.
-    .exit_on_close_request(false)
+    .window(iced::window::Settings {
+        size: iced::Size::new(1440.0, 900.0),
+        // The smallest window the layouts are checked at: the ribbon fits (docs/adr/0051),
+        // the windows keep their buttons in view.
+        min_size: Some(iced::Size::new(1100.0, 650.0)),
+        // A drawing with unsaved changes asks before the window closes.
+        exit_on_close_request: false,
+        ..iced::window::Settings::default()
+    })
     .antialiasing(true)
     .run()
 }

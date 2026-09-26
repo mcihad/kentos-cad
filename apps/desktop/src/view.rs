@@ -546,8 +546,10 @@ impl App {
                     });
                 overlay::modal(
                     Dialog::new("Klavye kısayolları")
-                        .hint("Masaüstünde taşınan komutların kısayolları, bütün komutların Ctrl, Alt ve F tuşlu kısayolları çalışır; “(web)” olanlar henüz yalnız web'de.")
-                        .push(scrollable(list).height(420))
+                        .hint("F1")
+                        .push(label::muted("Masaüstünde taşınan komutların kısayolları, bütün komutların Ctrl, Alt ve F tuşlu kısayolları çalışır; “(web)” olanlar henüz yalnız web'de."))
+                        // The list spans the window's width: long command names are not cut.
+                        .push(scrollable(list).width(Fill).height(420))
                         .action(close())
                         .width(560.0),
                     Message::DialogClosed,
