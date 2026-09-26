@@ -6222,7 +6222,7 @@
         "fixtures/interaction/v1/polygon-keys.json",
         "fixtures/interaction/v1/polygon-signs.json"
       ],
-      "acceptance": "TODOS.md §5 kabul izi: polygon başlat → tıkla → 12 yaz → imleç yanındaki alan açılır ve “12” görünür → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç. Web e2e ile native etkileşim fixture'ının ortak başvurusudur (UX-01, UX-04, UX-06). Henüz otomatik test değildir."
+      "acceptance": "TODOS.md §5 kabul izi: polygon başlat → tıkla → 12 yaz → imleç yanındaki alan açılır ve “12” görünür → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç. Web e2e ile native etkileşim fixture'ının ortak başvurusudur (UX-01, UX-04, UX-06). Otomatik: `fixtures/interaction/v1/polygon-accept.json`, web `pnpm e2e:interaction`, masaüstü `cargo test -p kentos-desktop traces` (ADR 0018, 0021)."
     },
     {
       "id": "polyline",

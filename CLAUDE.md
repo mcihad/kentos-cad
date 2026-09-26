@@ -21,7 +21,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 - Desktop Rust ile; `kentos-rc` 25 Eylül'de bu depoya `crates/ui`
   (`kentos-ui` / `kentos_ui`) olarak geçmişiyle alındı (ADR 0016). İlk masaüstü
   kabuğu `apps/desktop`'tadır (ADR 0017); ana CAD çizim alanı `crates/render/wgpu`
-  ile Iced'in aygıtında çizilir (ADR 0019); yazı, seçim ve araçlar henüz yok.
+  ile Iced'in aygıtında çizilir (ADR 0019); ilk araç kapalı alandır (ADR 0021),
+  yazı ve seçim henüz yok.
   Web özellikleri envanter üzerinden adım adım masaüstüne taşınır.
 - Web WebGPU/WebGL2 renderer'larını korur. Uygun WGSL kaynakları native ile
   paylaşılabilir; native Iced/application/wgpu runtime'ı web'e derlenmez.
@@ -54,12 +55,14 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Dar WASM bağlayıcıları ve Rust → TS sözleşme üretimi | `crates/wasm/`, `crates/shared/contracts/` |
 | Belge transaction/rollback, undo/redo ve yerel JSON `.kcad` kaydet/aç | `model/document.ts`, `model/snapshot.ts`, `app/fileIO.ts` |
 | Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015) | `apps/api/`, `crates/server/` |
-| Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict | `app/cloud/`, `ui/cloud/` |
+| Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict, paylaşım penceresi, “Benimle paylaşılanlar”, açık projede rol/erişim değişikliği (ADR 0024) | `app/cloud/`, `ui/cloud/` |
 | KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
 | Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç/kaydet, geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan aracı, değer alanı ve web'in tuş anlamları (ADR 0021) | `apps/desktop/` |
 | Native wgpu çizim hattı ve paylaşılan WGSL sözleşmesi | `crates/render/wgpu/`, `shaders/wgsl/` |
 | Masaüstü belgesi (`kentos-domain`): web `CadDocument`'inin anlamı native olarak, ortak işlem fixture'larıyla sınanır | `crates/native/domain/`, `fixtures/document-ops/` |
 | Masaüstü araç oturumu (`kentos-interaction`): durumlar, veri olarak istem, kapalı alan aracı; iki platform `fixtures/interaction/v1` izlerini ve `fixtures/point-input/v1` dilbilgisini geçer | `crates/native/interaction/` |
+| Ürün komutu `cad.polygon.create` v1: web ve masaüstü işleyicileri, `CommandResult`, katalogla eşit kayıtlar; kapalı alan aracı bu komuttan yazar (ADR 0022) | `product/`, `crates/native/application/`, `fixtures/commands/` |
+| Tipli ayarlar: şema, katmanlı çözüm, ortak durumlar; web servisi, masaüstü ayar dosyası ve penceresi, canlı MSAA/HiDPI (ADR 0023) | `crates/shared/contracts/src/settings/`, `core/settings/`, `app/settings/`, `apps/desktop/src/settings*.rs`, `fixtures/settings/` |
 
 Kapalı alan dışındaki desktop çizim araçları, çizim alanında yazı/seçim/yakalama, binary KCAD, embed Python, tam AI yüzeyi,
 genişletilmiş proje bazlı paylaşım ve kalıcı server worker kabulü gelecek
@@ -87,6 +90,8 @@ pnpm e2e                 # gerçek tarayıcı duman testi
 pnpm e2e:visual          # görsel karşılaştırma
 pnpm e2e:interaction     # etkileşim izleri: poligon kabul izi, tuş anlamları (fixtures/interaction, ADR 0018)
 cargo test -p kentos-desktop traces   # aynı izler masaüstünde, pencere açmadan (ADR 0021)
+cargo test -p kentos-native-application   # ürün komutu durumları masaüstünde (fixtures/commands, ADR 0022)
+KENTOS_WRITE_SETTINGS=1 cargo test -p kentos-contracts settings   # ayar şeması değişince settingsSchema.json'u yeniden yaz (ADR 0023)
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
 node scripts/wgsl/browser-check.mjs   # paylaşılan WGSL'yi Chrome WebGPU'da derler ve çizer
 KENTOS_GPU_TESTS=1 cargo test -p kentos-render-wgpu --test gpu   # gerçek GPU'da hassasiyet
@@ -114,9 +119,12 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
 - Geliştirmede `window.kentos` tanı yüzeyi vardır; production'da yoktur.
   WebGL2 varsayılan, WebGPU tercihe bağlıdır; `?renderer=webgpu|webgl2`
   başlangıç tercihini değiştirir. WebGPU başlatılamazsa uyarıyla fallback olur.
-- `kentos.ui.v1`, `kentos.prefs.v1`, `kentos.processing.v1`, `kentos.styles.v1`
-  localStorage anahtarlarıdır. Gönderilmemiş cloud taslakları IndexedDB
-  `kentos.cloud/drafts` içindedir; hata ayıklarken kullanıcı verisini izinsiz silmeyin.
+- `kentos.ui.v1`, `kentos.settings.v1` (tipli ayarlar, ADR 0023), `kentos.processing.v1`,
+  `kentos.styles.v1` localStorage anahtarlarıdır. Eski `kentos.prefs.v1` bir kez taşınır
+  ve yedek olarak kalır; kurtarılan kayıt `kentos.settings.v1.backup`'tadır. Masaüstü
+  ayarları `~/.config/kentos-cad/ayarlar.json`'dadır (vitrinin `ayarlar`'ı ayrıdır).
+  Gönderilmemiş cloud taslakları IndexedDB `kentos.cloud/drafts` içindedir; hata
+  ayıklarken kullanıcı verisini izinsiz silmeyin.
 
 ## 3. Teknik kısıtlar
 
@@ -137,12 +145,13 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
 
 ### 4.1 Katmanlar
 
-Temel sıra: `core → geo → model → style/processing → render → viewport → tools → ui → app`.
+Temel sıra: `core → geo → model → style/processing/product → render → viewport → tools → ui → app`.
 Bu bir yerleşim sırasıdır: sonraki katman öncekini kullanır; ters yönde runtime
 bağımlılığı kurulmaz. `AppContext`, viewport/tool arayüzleri için mevcut
 `import type` istisnalarını koruyun; somut servisleri yukarıya bağımlı kılmayın.
 `model`, `style`, `processing` DOM/UI bilmez; `render` UI/tools bilmez.
-`io/` model/contracts düzeyinde, `wasm/` hesap bağlayıcısıdır.
+`io/` model/contracts düzeyinde, `wasm/` hesap bağlayıcısıdır. `product/` ürün
+komutlarıdır (ADR 0013, 0022): belgeyi alır, DOM/UI bilmez; araçlar çağırır.
 `contracts/generated/` Rust'tan üretilir, elle düzenlenmez.
 
 ### 4.2 Kompozisyon kökü
@@ -161,10 +170,13 @@ lifecycle kompozisyon kökündedir; reusable widget'ları `AppContext`'e bağlam
 | Kapsam | Sahip / kalıcılık |
 |---|---|
 | Proje verisi/ayarı | `CadDocument`, `doc.settings`; proje dosyası/cloud revision |
-| Kullanıcı tercihi | `ctx.prefs`; web localStorage, ileride native adapter |
+| Kullanıcı tercihi | `ctx.prefs` (tipli ayarların cephesi, `ctx.settingsStore`); web `kentos.settings.v1`, masaüstü `ayarlar.json` |
+| Cihaz | grafik (`graphics.*`: arka uç, MSAA, HiDPI); başka cihaza taşınmaz |
 | Yerleşim | `ctx.ui`; kullanıcıya özgü panel/ribbon düzeni |
 | Oturum | seçim, etkin araç, drafting durumu, pano; proje verisi değil |
 
+Çözüm sırası: varsayılan → kullanıcı → cihaz → oturum; proje ayarı yalnız projeden gelir;
+kurum politikası üst sınırdır (ADR 0023).
 Proje varsayılanını değiştirmek açık projenin değerini değiştirmez.
 Proje değişikliği dirty/revision üretir. Ayar pencereleri taslakla çalışır;
 Kaydet'te uygular. Aynı ayarı hem proje hem uygulama penceresinde çoğaltmayın.
@@ -177,6 +189,10 @@ kaydeder. Menü, ribbon, kısayol ve komut satırı aynı command ID'yi çağır
 özellik `pending(...)` ile açıkça belirtilir; sessiz no-op düğme koymayın.
 `app/menus.ts` ve `tools/catalog.ts` tek kaynaklardır; ribbon'a ayrı araç listesi
 yazmayın. Mevcut UI registry, hedefteki tam async/headless command bus değildir.
+Ürün komutları ayrı düzeydir (ADR 0013, 0022): katalog `contracts/generated/commandCatalog.json`,
+işleyiciler `product/` (web) ve `crates/native/application` (masaüstü); iki kayıt katalogla,
+davranış `fixtures/commands/v1` ile eşit tutulur. Girdi örtük arayüz durumunu okumaz (CMD-07);
+sonuç `CommandResult`'tır.
 
 ### 4.6 Klavye ve odak
 
@@ -327,7 +343,10 @@ kilitli katman ve tek undo testlerini tamamlayın. Hesabı ortak Rust'a ekleyin.
 ### 9.3 Ayar
 
 Önce kapsamını belirleyin (§4.4); tip, varsayılan, validasyon, migration,
-kalıcılık ve live-apply davranışını birlikte ekleyin.
+kalıcılık ve live-apply davranışını birlikte ekleyin. Ayar
+`crates/shared/contracts/src/settings/schema.rs`'e eklenir, `KENTOS_WRITE_SETTINGS=1 cargo test
+-p kentos-contracts settings` ile üretilir; yeni kural `fixtures/settings/v1` ve iki
+çalıştırıcıyla birlikte değişir (ADR 0023).
 
 ### 9.4 Test
 
@@ -387,7 +406,7 @@ apps/api/              kentosd: HTTP/WS, auth ve yönetim CLI
 apps/desktop/          masaüstü kabuğu (kentos-cad): Iced + KentOS UI
 apps/ui-showcase/      KentOS UI bileşen vitrini
 crates/ui/             KentOS UI bileşen kütüphanesi (kentos-ui)
-crates/native/         native belge (domain) ve araç oturumu (interaction); web'e derlenmez
+crates/native/         native belge (domain), ürün komutları (application) ve araç oturumu (interaction); web'e derlenmez
 crates/render/wgpu/    native wgpu çizim hattı (Iced bilmez)
 shaders/wgsl/          paylaşılabilir WGSL ve sürümlü düzen sözleşmesi
 crates/shared/         contracts, geometry-core, style-core, svg-core, formats
@@ -403,7 +422,8 @@ docs/deps/             bağımlılık kaydı
 ```
 
 `crates/ui`, `apps/ui-showcase`, `apps/desktop` (ilk kabuk), `crates/native/domain`
-(belge, ADR 0020), `crates/native/interaction` (araç oturumu, ADR 0021),
+(belge, ADR 0020), `crates/native/interaction` (araç oturumu, ADR 0021), `crates/native/application`
+(ürün komutları, ADR 0022),
 `crates/render/wgpu` ve `shaders/wgsl` (ADR 0019) kuruldu.
 Stil sistemi: [docs/STYLE.md](docs/STYLE.md). Processing:
 [docs/PROCESSING.md](docs/PROCESSING.md). Tarihli devir notları:
@@ -454,6 +474,9 @@ ve WS aboneliği `access::project` ile başlar; yazanlar proje kilidi altında y
 Erişilemeyen proje var olmayan gibi 404'tür. Projeye bağlı satırlar yalnız `app.project_id`
 kapsamında görünür.
 Kimlik/izin server'da doğrulanır; tenant üyeliği her projeyi görme hakkı değildir.
+Paylaşılacak kişi yalnız arayanın görebildiği kişiler arasında aranır (projenin kurumu;
+kişisel projede arayanın kurumları); hesabın varlığını sızdıran genel e-posta/giriş adı
+araması yoktur (ADR 0024).
 API, WS, sorgu, dosya/asset, job, Python ve AI aynı erişim modelini kullanır.
 Kişisel ve kurumsal sahiplik, davet, paylaşım ve izin iptali TODOS.md §12'dedir.
 RLS/pool context ve runtime/admin rolleri test edilir. İndirilmiş kopyanın

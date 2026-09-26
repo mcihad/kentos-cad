@@ -16,12 +16,12 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | Crate | Sürüm ve özellikler | Lisans | Hedef | Kullanan | Karar |
 |---|---|---|---|---|---|
 | serde | 1.0.229, `derive` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api | ADR 0001 |
-| serde_json | 1.0.151, `float_roundtrip` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api; test (domain dahil) | ADR 0001, 0008 |
+| serde_json | 1.0.151, `float_roundtrip` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api; test (domain, native-application dahil) | ADR 0001, 0008 |
 | libm | 0.2.16 | MIT | native, wasm32 | geometry-core, formats | ADR 0008 |
 | rust_decimal | 1.43.0, yalnız `std` | MIT | native, wasm32 | geometry-core | ADR 0001, 0004 |
 | ts-rs | 12.0.1, `serde-json-impl` | MIT | native (yalnız TS üretimi, `ts` özelliği) | contracts | ADR 0001, 0002 |
 | wasm-bindgen | 0.2.128 | MIT OR Apache-2.0 | wasm32 | geometry-wasm, formats-wasm, svg-wasm | ADR 0001 (`wasm-bindgen-cli` aynı sürüm) |
-| schemars | 1.2.2, `derive`, `std` | MIT | native, wasm32 (derlenebilir; tarayıcı paketlerine girmez) | contracts (`schema` özelliği) | ADR 0013 (sahibin onayı, 25 Eylül). Getirdikleri: `schemars_derive` (MIT), `dyn-clone`, `ref-cast`, `ref-cast-impl`, `serde_derive_internals` (MIT OR Apache-2.0) |
+| schemars | 1.2.2, `derive`, `std` | MIT | native, wasm32 (derlenebilir; tarayıcı paketlerine girmez) | contracts (`schema` özelliği); katalog testlerinde application ve native-application (`schema` özelliği, yalnız geliştirme) | ADR 0013 (sahibin onayı, 25 Eylül). Getirdikleri: `schemars_derive` (MIT), `dyn-clone`, `ref-cast`, `ref-cast-impl`, `serde_derive_internals` (MIT OR Apache-2.0) |
 | iced | 0.14.0 (varsayılan özellikler; `canvas`, `advanced`, vitrinde `debug`, `tokio`) | MIT | native (masaüstü) | ui, ui-showcase, desktop (`canvas`: araç önizlemesi, ADR 0021) | ADR 0016 (`kentos-rc`'nin test edilmiş sürümü) |
 | iced_runtime | 0.14.0 (isteğe bağlı: `snapshot`) | MIT | native | ui; desktop (iz oynatıcısı uygulamanın görevlerini çalıştırır) | ADR 0016, 0021; paket zaten Iced ve KentOS UI üzerinden ikilideydi, kilide yeni paket girmedi |
 | glam | 0.30.10 (isteğe bağlı: `spatial`) | MIT OR Apache-2.0 | native | ui | ADR 0016 |
@@ -45,7 +45,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | tracing | 0.1.44 | MIT | native | api | ADR 0007 |
 | tracing-subscriber | 0.3.23 | MIT | native | api | ADR 0007 |
 
-**Geçişli bağımlılıklar** (`Cargo.lock`): 628 paket, 14'ü çalışma alanının kendi crate'leri.
+**Geçişli bağımlılıklar** (`Cargo.lock`): 632 paket, 18'i çalışma alanının kendi crate'leri (26 Eylül).
 
 - Masaüstü arayüzü (Iced, wgpu, winit, cosmic-text, tiny-skia …) 291 paket getirdi (ADR 0016). Hepsi taranmıştır.
 - Yalnız masaüstü derlemesine girerler; web ve sunucu derlemesi (`default-members`) onları derlemez.

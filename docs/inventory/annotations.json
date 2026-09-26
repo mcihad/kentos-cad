@@ -28,7 +28,7 @@
     "note": "Öznitelikler v1'de metindir; tipli öznitelik şeması henüz yok (CLAUDE.md §24.1, TODOS.md DOM-09..11)."
   },
   "tool:polygon": {
-    "acceptance": "TODOS.md §5 kabul izi: polygon başlat → tıkla → 12 yaz → imleç yanındaki alan açılır ve “12” görünür → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç. Web e2e ile native etkileşim fixture'ının ortak başvurusudur (UX-01, UX-04, UX-06). Henüz otomatik test değildir."
+    "acceptance": "TODOS.md §5 kabul izi: polygon başlat → tıkla → 12 yaz → imleç yanındaki alan açılır ve “12” görünür → Enter → sonraki nokta → kapat → tek undo → redo → kaydet/aç. Web e2e ile native etkileşim fixture'ının ortak başvurusudur (UX-01, UX-04, UX-06). Otomatik: `fixtures/interaction/v1/polygon-accept.json`, web `pnpm e2e:interaction`, masaüstü `cargo test -p kentos-desktop traces` (ADR 0018, 0021)."
   },
   "tool:stakeout": {
     "note": "Aplikasyon aracı hazır değil. Hesap menüsündeki `calc.stakeout` penceresi ayrıdır ve çalışır."
