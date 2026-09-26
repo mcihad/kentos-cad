@@ -1,15 +1,20 @@
-//! A whole drawing as stored or sent (`DocumentSnapshotV1`): project
-//! settings, the layer tree, the objects and the project's styles.
+//! A whole drawing as stored or sent: project settings, the layer tree, the
+//! objects and the project's styles. `DocumentSnapshotV1` is the v1 `.kcad`
+//! (JSON); `DocumentSnapshotV2` is what a binary `.kcad` v2 holds
+//! (docs/specs/kcad-v2.md), with every object's persistent id.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
 use crate::entity::{Entity, Vec2};
+use crate::identity::{EntityId, ProjectId};
 use crate::layer::LayerNode;
 
 pub const DOCUMENT_FORMAT: &str = "kentos.document";
 pub const DOCUMENT_VERSION: u32 = 1;
+/// The document schema inside a `.kcad` v2 file (docs/specs/kcad-v2.md §6.1).
+pub const DOCUMENT_VERSION_2: u32 = 2;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -139,6 +144,77 @@ pub struct DocumentSnapshotV1 {
     pub active_layer: String,
     pub entities: Vec<Entity>,
     pub styles: ProjectStyles,
+}
+
+/// Where a drawing kept as v2 was migrated from: the v1 file it was opened
+/// from (docs/adr/0014, TODOS.md FILE-05, FILE-21). A v2 file keeps it in
+/// every later save; it says where the objects' derived ids came from.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MigrationSource {
+    /// `kentos.document`.
+    pub format: String,
+    /// 1: the only migration there is.
+    pub version: u32,
+    /// sha256 of the v1 file's canonical text, 64 lowercase hexadecimal
+    /// digits: the namespace of the derived ids comes from it (`V1Identities`).
+    pub source_sha256: String,
+}
+
+impl MigrationSource {
+    /// A v1 `.kcad` whose canonical text has this sha256 (64 lowercase hexadecimal digits).
+    pub fn v1(source_sha256: String) -> Self {
+        Self {
+            format: DOCUMENT_FORMAT.to_owned(),
+            version: DOCUMENT_VERSION,
+            source_sha256,
+        }
+    }
+}
+
+/// A whole drawing as a binary `.kcad` v2 holds it (docs/specs/kcad-v2.md):
+/// what v1 holds, every object's persistent id, the project's id and, for a
+/// drawing migrated from v1, where it came from. This is its JSON form, which
+/// the browser and the formats WASM module exchange; the file itself is
+/// written and read by `kentos-kcad`.
+///
+/// The objects' `id`s are the open document's slots: a v2 file does not write
+/// them, and a reader numbers the objects 1, 2, 3 … in file order.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DocumentSnapshotV2 {
+    #[cfg_attr(feature = "ts", ts(type = "\"kentos.document\""))]
+    pub format: String,
+    #[cfg_attr(feature = "ts", ts(type = "2"))]
+    pub version: u32,
+    pub name: String,
+    pub settings: ProjectSettings,
+    /// Local anchor near the data (the GPU works relative to it).
+    pub origin: Vec2,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub home_view: Option<Bounds>,
+    pub layers: Vec<LayerNode>,
+    pub active_layer: String,
+    /// The objects in document order (drawing order).
+    pub entities: Vec<Entity>,
+    /// Each object's persistent id, in the order of `entities`.
+    pub uids: Vec<EntityId>,
+    pub styles: ProjectStyles,
+    /// The project's persistent id, when it has one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub project_id: Option<ProjectId>,
+    /// The v1 file a migrated drawing came from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub migrated_from: Option<MigrationSource>,
 }
 
 /// The two fields a reader checks before the rest; every other field is skipped unread.

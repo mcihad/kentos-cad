@@ -33,7 +33,9 @@ use sha2::Sha256;
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::document::DocumentSnapshotV1;
+use crate::document::{
+    DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV1, DocumentSnapshotV2, MigrationSource,
+};
 use crate::layer::LayerNode;
 
 /// `4a5259a1-97f7-4742-88ce-b747287025ed`: the namespace every v1 drawing's
@@ -70,6 +72,115 @@ pub struct V1EntityIdentity {
     pub id: u32,
     /// `UUIDv5(namespace, "entity/" + id)`, lowercase with hyphens.
     pub uid: String,
+}
+
+/// A UUID in the contracts: its 16 bytes in memory and in `.kcad` v2 files
+/// (docs/specs/kcad-v2.md §6.3), lowercase text with hyphens in JSON and on the
+/// wire (docs/adr/0014). Reading text refuses anything else: upper case,
+/// braces, missing hyphens.
+macro_rules! uuid_newtype {
+    ($(#[$doc:meta])* $name:ident) => {
+        $(#[$doc])*
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[cfg_attr(feature = "ts", derive(TS))]
+        #[cfg_attr(feature = "ts", ts(export, type = "string"))]
+        pub struct $name(pub [u8; 16]);
+
+        impl $name {
+            /// The UUID as KentOS writes it: lowercase, with hyphens.
+            pub fn to_text(&self) -> String {
+                uuid_text(&self.0)
+            }
+
+            /// Reads a UUID written as KentOS writes it; anything else is `None`.
+            pub fn parse(text: &str) -> Option<Self> {
+                uuid_from_text(text).map(Self)
+            }
+
+            /// The nil UUID (16 zero bytes): never a valid id in a file.
+            pub fn is_nil(&self) -> bool {
+                self.0 == [0; 16]
+            }
+        }
+
+        impl std::fmt::Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str(&self.to_text())
+            }
+        }
+
+        impl Serialize for $name {
+            fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+                s.serialize_str(&self.to_text())
+            }
+        }
+
+        impl<'de> Deserialize<'de> for $name {
+            fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+                let text = std::borrow::Cow::<str>::deserialize(d)?;
+                Self::parse(&text).ok_or_else(|| {
+                    serde::de::Error::custom(format!(
+                        "“{text}” küçük harfli, tireli bir UUID değil (8-4-4-4-12 onaltılık hane)"
+                    ))
+                })
+            }
+        }
+
+        #[cfg(feature = "schema")]
+        impl schemars::JsonSchema for $name {
+            fn schema_name() -> std::borrow::Cow<'static, str> {
+                stringify!($name).into()
+            }
+
+            fn json_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
+                schemars::json_schema!({
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                })
+            }
+        }
+    };
+}
+
+uuid_newtype!(
+    /// An object's persistent id (docs/adr/0014): given when the object is
+    /// created (UUIDv7) or derived from a v1 file (UUIDv5), kept by every edit,
+    /// never reused. Files, the server, Python and AI name objects by it; the
+    /// open document's slot (`EntityBase.id`) never leaves the document.
+    EntityId
+);
+
+uuid_newtype!(
+    /// A project's persistent id, when it has one: derived from a v1 file
+    /// (`UUIDv5(namespace, "project")`, docs/adr/0014) or read from a v2 file.
+    ProjectId
+);
+
+/// Reads a UUID written lowercase with hyphens (8-4-4-4-12), as `uuid_text` writes it.
+pub fn uuid_from_text(text: &str) -> Option<[u8; 16]> {
+    let raw = text.as_bytes();
+    if raw.len() != 36 {
+        return None;
+    }
+    let digit = |c: u8| match c {
+        b'0'..=b'9' => Some(c - b'0'),
+        b'a'..=b'f' => Some(c - b'a' + 10),
+        _ => None,
+    };
+    let mut out = [0u8; 16];
+    let mut at = 0;
+    for (i, byte) in out.iter_mut().enumerate() {
+        if matches!(i, 4 | 6 | 8 | 10) {
+            if raw[at] != b'-' {
+                return None;
+            }
+            at += 1;
+        }
+        *byte = (digit(raw[at])? << 4) | digit(raw[at + 1])?;
+        at += 2;
+    }
+    Some(out)
 }
 
 /// UUIDv5 (RFC 9562 §5.5): SHA-1 of the namespace's 16 bytes and the name,
@@ -262,6 +373,41 @@ pub fn v1_identities_of(snapshot: &DocumentSnapshotV1) -> Result<V1Identities, S
 /// `DocumentSnapshotV1::from_json` reads it.
 pub fn v1_identities(text: &str) -> Result<V1Identities, String> {
     v1_identities_of(&DocumentSnapshotV1::from_json(text)?)
+}
+
+/// A v1 drawing as a v2 snapshot (docs/specs/kcad-v2.md §7): every object gets
+/// its derived persistent id, the project its derived id, and the source is
+/// recorded, so a v2 file keeps where the ids came from (TODOS.md FILE-05,
+/// FILE-21). The objects keep their v1 local ids as slots; a v2 file does not
+/// write them.
+pub fn migrate_v1(snapshot: DocumentSnapshotV1) -> Result<DocumentSnapshotV2, String> {
+    let ids = v1_uids(&snapshot)?;
+    let DocumentSnapshotV1 {
+        name,
+        settings,
+        origin,
+        home_view,
+        layers,
+        active_layer,
+        entities,
+        styles,
+        ..
+    } = snapshot;
+    Ok(DocumentSnapshotV2 {
+        format: DOCUMENT_FORMAT.to_owned(),
+        version: DOCUMENT_VERSION_2,
+        name,
+        settings,
+        origin,
+        home_view,
+        layers,
+        active_layer,
+        entities,
+        uids: ids.entities.iter().map(|&(_, uid)| EntityId(uid)).collect(),
+        styles,
+        project_id: Some(ProjectId(ids.project)),
+        migrated_from: Some(MigrationSource::v1(ids.source_sha256)),
+    })
 }
 
 /// A hash that takes what `serde_json` writes, piece by piece.

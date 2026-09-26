@@ -31,6 +31,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DIR = ROOT / "fixtures/kcad/v2"
+sys.dont_write_bytecode = True  # no __pycache__ in the tree
 sys.path.insert(0, str(ROOT / "tools/kcad"))
 import kcad  # noqa: E402  (the independent reader, for --check)
 
