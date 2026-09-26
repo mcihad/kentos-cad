@@ -182,7 +182,7 @@ pub struct App {
     pub selection: Selection,
     /// The object snap under the pointer while a tool snaps: its marker.
     pub snap: Option<SnapHit>,
-    /// The drawing (its session) and revision the store and the selection last followed.
+    /// The drawing (its session) and generation the store and the selection last followed.
     followed: Option<(u64, u64)>,
     /// The value field beside the cursor, while it is open (ADR 0018).
     pub field: Option<Field>,
@@ -334,8 +334,11 @@ impl App {
 
     /// After every message: the geometry store takes the drawing's changes
     /// and the selection lets go of objects that are gone (an undo, a
-    /// delete; the web's `selection.retain` on `changed`), only when the
-    /// drawing changed (docs/adr/0029). The snap marker belongs to a running tool.
+    /// delete, another editor's deletion taken in from the cloud; the web's
+    /// `selection.retain` on `changed`), only when the drawing changed
+    /// (docs/adr/0029). It keys on the generation, which changes from outside
+    /// move too; the revision is the saves' (docs/adr/0040). The snap marker
+    /// belongs to a running tool.
     fn follow_document(&mut self) {
         if !self.session.is_running() {
             self.snap = None;
@@ -343,7 +346,7 @@ impl App {
         let Some(doc) = &self.document else {
             return;
         };
-        let now = (doc.session, doc.model.revision());
+        let now = (doc.session, doc.model.generation());
         if self.followed == Some(now) {
             return;
         }
@@ -433,7 +436,7 @@ impl App {
                 self.viewport.opened(&doc);
                 self.spatial.reload(&doc.model);
                 self.selection = Selection::new();
-                self.followed = Some((doc.session, doc.model.revision()));
+                self.followed = Some((doc.session, doc.model.generation()));
                 self.document = Some(*doc);
             }
             Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
@@ -995,6 +998,38 @@ mod tests {
         );
         assert!(doc.dirty());
         assert_eq!(last_output(&app), "Kaydedildi: ilk.kcad.");
+    }
+
+    /// Another editor's deletion comes in from outside (docs/adr/0040): the
+    /// revision stays, so nothing is to save, but the store, the selection
+    /// and the screen follow the generation and let the object go.
+    #[test]
+    fn changes_from_outside_reach_the_store_and_the_selection() {
+        let (mut app, _) = App::boot(None);
+        let demo = with_demo().document.expect("open");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(demo)))));
+        let doc = app.document.as_ref().expect("open");
+        let slot = kentos_domain::Slot(doc.model.entities().next().expect("an object").base().id);
+        let uid = doc.model.uid(slot).expect("a persistent id");
+        let (revision, objects) = (doc.model.revision(), app.spatial.len());
+        assert!(objects > 0, "the store follows the drawing");
+        app.selection.set([slot]);
+        let _ = app.update(Message::Modifiers(keyboard::Modifiers::default()));
+        assert_eq!(app.selection.len(), 1);
+
+        let doc = app.document.as_mut().expect("open");
+        doc.model
+            .apply_external(kentos_domain::External {
+                remove: vec![uid],
+                ..Default::default()
+            })
+            .expect("taken in");
+        let _ = app.update(Message::Modifiers(keyboard::Modifiers::default()));
+        assert!(app.selection.is_empty(), "the selection lets it go");
+        assert_eq!(app.spatial.len(), objects - 1, "the store follows");
+        let doc = app.document.as_ref().expect("open");
+        assert_eq!(doc.model.revision(), revision);
+        assert!(!doc.dirty(), "a change from outside is nothing to save");
     }
 
     #[test]
