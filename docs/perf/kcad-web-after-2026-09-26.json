@@ -1,0 +1,1040 @@
+{
+  "label": "after",
+  "date": "2026-09-26T06:15:21.301Z",
+  "commit": "35caac8",
+  "dirtyTree": false,
+  "machine": {
+    "cpu": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz",
+    "threads": 8,
+    "memoryGb": 15,
+    "os": "Ubuntu 26.04.1 LTS",
+    "kernel": "7.0.0-34-generic",
+    "loadAverageAtStart": [
+      2.23,
+      2.68,
+      2.59
+    ],
+    "chrome": "Google Chrome 154.0.8037.57",
+    "node": "v24.16.0",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)"
+  },
+  "setup": {
+    "runs": 3,
+    "sizes": [
+      1,
+      25000,
+      50000,
+      100000,
+      200000
+    ],
+    "memoryLimitMb": 4500,
+    "chromeArgs": [
+      "--use-angle=gl",
+      "--ignore-gpu-blocklist"
+    ],
+    "backend": "webgl2",
+    "glRenderer": "ANGLE (Intel, Mesa Intel(R) Iris(R) Xe Graphics (TGL GT2), OpenGL ES 3.2)",
+    "crossOriginIsolated": true,
+    "server": "vite dev (window.kentos), WASM --profile wasm",
+    "durationS": 86
+  },
+  "summary": [
+    {
+      "parcels": 1,
+      "bytes": 1002,
+      "ok": true,
+      "saveMs": {
+        "median": 2.7849999964237213,
+        "range": [
+          2.4149999991059303,
+          2.8250000029802322
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 0,
+        "range": [
+          0,
+          0
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 0.3505859375,
+        "range": [
+          0.029296875,
+          0.390625
+        ]
+      },
+      "openMs": {
+        "median": 53.7850000038743,
+        "range": [
+          41.269999995827675,
+          56.394999995827675
+        ]
+      },
+      "openDrawnMs": {
+        "median": 86.93500000238419,
+        "range": [
+          74.32000000029802,
+          89.5599999949336
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 0,
+        "range": [
+          0,
+          0
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 7.44140625,
+        "range": [
+          7.05859375,
+          7.912109375
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 625.0390625,
+        "range": [
+          590.8232421875,
+          628.34765625
+        ]
+      }
+    },
+    {
+      "parcels": 25000,
+      "bytes": 12041528,
+      "ok": true,
+      "saveMs": {
+        "median": 309.5900000035763,
+        "range": [
+          305.5050000026822,
+          317.73499999940395
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 0,
+        "range": [
+          0,
+          0
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 102.73046875,
+        "range": [
+          101.365234375,
+          102.95703125
+        ]
+      },
+      "openMs": {
+        "median": 449.21000000089407,
+        "range": [
+          406.54999999701977,
+          461.29999999701977
+        ]
+      },
+      "openDrawnMs": {
+        "median": 494.4099999964237,
+        "range": [
+          452.17499999701977,
+          505.85999999940395
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 79,
+        "range": [
+          76,
+          89
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 186.3828125,
+        "range": [
+          185.09765625,
+          194.1474609375
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 818.61328125,
+        "range": [
+          743.2529296875,
+          837.244140625
+        ]
+      }
+    },
+    {
+      "parcels": 50000,
+      "bytes": 24092528,
+      "ok": true,
+      "saveMs": {
+        "median": 565.1450000032783,
+        "range": [
+          552.7299999967217,
+          579.1850000023842
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 91,
+        "range": [
+          90,
+          99
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 160.07421875,
+        "range": [
+          158.58984375,
+          162.25390625
+        ]
+      },
+      "openMs": {
+        "median": 760.7300000041723,
+        "range": [
+          745.7250000014901,
+          806.8249999955297
+        ]
+      },
+      "openDrawnMs": {
+        "median": 846.5500000044703,
+        "range": [
+          829.5799999982119,
+          891.5649999976158
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 177,
+        "range": [
+          177,
+          194
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 269.5615234375,
+        "range": [
+          258.95703125,
+          271.08203125
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 958.0185546875,
+        "range": [
+          931.7138671875,
+          961.880859375
+        ]
+      }
+    },
+    {
+      "parcels": 100000,
+      "bytes": 48274531,
+      "ok": true,
+      "saveMs": {
+        "median": 1093.6899999976158,
+        "range": [
+          1074.164999999106,
+          1097.0799999982119
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 187,
+        "range": [
+          185,
+          189
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 322.3203125,
+        "range": [
+          317.96484375,
+          371.55859375
+        ]
+      },
+      "openMs": {
+        "median": 1600.8699999973178,
+        "range": [
+          1540.2299999967217,
+          1650.4549999982119
+        ]
+      },
+      "openDrawnMs": {
+        "median": 1781.4199999943376,
+        "range": [
+          1720.109999999404,
+          1824.6449999958277
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 347,
+        "range": [
+          333,
+          363
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 523.3203125,
+        "range": [
+          523.2802734375,
+          525.75
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 1159.71875,
+        "range": [
+          1159.001953125,
+          1160.27734375
+        ]
+      }
+    },
+    {
+      "parcels": 200000,
+      "bytes": 96638531,
+      "ok": true,
+      "saveMs": {
+        "median": 2168.3250000029802,
+        "range": [
+          2151.3799999952316,
+          2242.4899999946356
+        ]
+      },
+      "saveLongestTaskMs": {
+        "median": 361,
+        "range": [
+          360,
+          384
+        ]
+      },
+      "savePeakAboveMb": {
+        "median": 662.515625,
+        "range": [
+          640.6484375,
+          733.9599609375
+        ]
+      },
+      "openMs": {
+        "median": 3313.244999997318,
+        "range": [
+          3106.6600000038743,
+          3358.9100000038743
+        ]
+      },
+      "openDrawnMs": {
+        "median": 3704.454999998212,
+        "range": [
+          3507.234999999404,
+          3744.880000002682
+        ]
+      },
+      "openLongestTaskMs": {
+        "median": 716,
+        "range": [
+          637,
+          720
+        ]
+      },
+      "openPeakAboveMb": {
+        "median": 849.734375,
+        "range": [
+          832.1279296875,
+          927.091796875
+        ]
+      },
+      "chromeWithDrawingMb": {
+        "median": 1643.8740234375,
+        "range": [
+          1633.484375,
+          1646.0029296875
+        ]
+      }
+    }
+  ],
+  "runs": [
+    {
+      "parcels": 1,
+      "run": 1,
+      "buildMs": 0.48000000417232513,
+      "bytes": 1002,
+      "save": {
+        "ms": 2.4149999991059303,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 0.390625,
+        "chromeBeforeMb": 590.8232421875,
+        "stages": {
+          "encode": 0.5750000029802322,
+          "encode:writing": 1.7250000014901161,
+          "encode:verifying": 1.7400000020861626,
+          "encode:checking": 1.7450000047683716,
+          "encode:project": 1.760000005364418,
+          "encode:reading": 1.760000005364418,
+          "encoded": 1.8150000050663948
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 56.394999995827675,
+        "drawnMs": 89.5599999949336,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 7.912109375,
+        "chromeBeforeMb": 613.0927734375,
+        "stages": {
+          "decode": 2.9849999994039536,
+          "decode:checking": 18.70499999821186,
+          "step": 18.719999998807907,
+          "decode:project": 20.66499999910593,
+          "decode:reading": 20.75,
+          "decoded": 23.74499999731779,
+          "checks": 24.03499999642372,
+          "view": 24.07499999552965,
+          "closed": 56.14000000059605
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 1,
+      "run": 2,
+      "buildMs": 0.6000000014901161,
+      "bytes": 1002,
+      "save": {
+        "ms": 2.8250000029802322,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 0.3505859375,
+        "chromeBeforeMb": 625.0390625,
+        "stages": {
+          "encode": 0.6450000032782555,
+          "encode:writing": 2.0750000029802322,
+          "encode:verifying": 2.0950000062584877,
+          "encode:checking": 2.100000001490116,
+          "encode:project": 2.1150000020861626,
+          "encode:reading": 2.1200000047683716,
+          "encoded": 2.185000002384186
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 53.7850000038743,
+        "drawnMs": 86.93500000238419,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 7.44140625,
+        "chromeBeforeMb": 617.5693359375,
+        "stages": {
+          "decode": 3.2450000047683716,
+          "decode:checking": 18.29500000178814,
+          "step": 18.310000002384186,
+          "decode:project": 21.49500000476837,
+          "decode:reading": 21.640000000596046,
+          "decoded": 23.125,
+          "checks": 23.385000005364418,
+          "view": 23.41500000655651,
+          "closed": 53.565000005066395
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 1,
+      "run": 3,
+      "buildMs": 0.6150000020861626,
+      "bytes": 1002,
+      "save": {
+        "ms": 2.7849999964237213,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 0.029296875,
+        "chromeBeforeMb": 628.34765625,
+        "stages": {
+          "encode": 0.6849999949336052,
+          "encode:writing": 1.9600000008940697,
+          "encode:verifying": 1.9799999967217445,
+          "encode:checking": 1.9849999994039536,
+          "encode:project": 2.0049999952316284,
+          "encode:reading": 2.0150000005960464,
+          "encoded": 2.0850000008940697
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 41.269999995827675,
+        "drawnMs": 74.32000000029802,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 7.05859375,
+        "chromeBeforeMb": 621.6875,
+        "stages": {
+          "decode": 3.0349999964237213,
+          "decode:checking": 17.570000000298023,
+          "step": 17.58499999344349,
+          "decode:project": 19.554999999701977,
+          "decode:reading": 19.684999994933605,
+          "decoded": 21.904999993741512,
+          "checks": 22.149999998509884,
+          "view": 22.179999999701977,
+          "closed": 41.07999999821186
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 25000,
+      "run": 1,
+      "buildMs": 96.39499999582767,
+      "bytes": 12041528,
+      "save": {
+        "ms": 317.73499999940395,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 102.95703125,
+        "chromeBeforeMb": 743.2529296875,
+        "stages": {
+          "encode": 39.4100000038743,
+          "encode:writing": 76.42000000178814,
+          "encode:verifying": 186.52500000596046,
+          "encode:checking": 186.54500000178814,
+          "encode:project": 231.07000000029802,
+          "encode:reading": 231.08500000089407,
+          "encoded": 303.82500000298023
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 449.21000000089407,
+        "drawnMs": 494.4099999964237,
+        "longestTaskMs": 89,
+        "blockedMs": 39,
+        "longTasks": 1,
+        "peakAboveMb": 194.1474609375,
+        "chromeBeforeMb": 748.5107421875,
+        "stages": {
+          "step": 4.219999998807907,
+          "decode": 21.90999999642372,
+          "decode:checking": 48.50499999523163,
+          "decode:project": 126.42999999970198,
+          "decode:reading": 126.5899999961257,
+          "decoded": 220.2449999973178,
+          "checks": 243.1199999973178,
+          "view": 327.17499999701977,
+          "closed": 449.0300000011921
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 25000,
+      "run": 2,
+      "buildMs": 100.9699999988079,
+      "bytes": 12041528,
+      "save": {
+        "ms": 309.5900000035763,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 101.365234375,
+        "chromeBeforeMb": 837.244140625,
+        "stages": {
+          "encode": 42.51500000059605,
+          "encode:writing": 75.64500000327826,
+          "encode:verifying": 182.30499999970198,
+          "encode:checking": 182.32000000029802,
+          "encode:project": 226.42999999970198,
+          "encode:reading": 226.4350000023842,
+          "encoded": 304.20499999821186
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 461.29999999701977,
+        "drawnMs": 505.85999999940395,
+        "longestTaskMs": 79,
+        "blockedMs": 29,
+        "longTasks": 1,
+        "peakAboveMb": 186.3828125,
+        "chromeBeforeMb": 832.47265625,
+        "stages": {
+          "step": 4.909999996423721,
+          "decode": 19.41499999910593,
+          "decode:checking": 49.80499999970198,
+          "decode:project": 121.18999999761581,
+          "decode:reading": 121.3449999988079,
+          "decoded": 207.52499999850988,
+          "checks": 223.32999999821186,
+          "view": 343.3349999934435,
+          "closed": 461.1299999952316
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 25000,
+      "run": 3,
+      "buildMs": 90.32000000029802,
+      "bytes": 12041528,
+      "save": {
+        "ms": 305.5050000026822,
+        "longestTaskMs": 0,
+        "blockedMs": 0,
+        "longTasks": 0,
+        "peakAboveMb": 102.73046875,
+        "chromeBeforeMb": 818.61328125,
+        "stages": {
+          "encode": 39.99000000208616,
+          "encode:writing": 85.57500000298023,
+          "encode:verifying": 192.98000000417233,
+          "encode:checking": 193,
+          "encode:project": 235.72500000149012,
+          "encode:reading": 235.73499999940395,
+          "encoded": 300.11500000208616
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 406.54999999701977,
+        "drawnMs": 452.17499999701977,
+        "longestTaskMs": 76,
+        "blockedMs": 26,
+        "longTasks": 1,
+        "peakAboveMb": 185.09765625,
+        "chromeBeforeMb": 823.52734375,
+        "stages": {
+          "step": 4.834999993443489,
+          "decode": 18.489999994635582,
+          "decode:checking": 44.00999999791384,
+          "decode:project": 116.56499999761581,
+          "decode:reading": 116.66999999433756,
+          "decoded": 204.1199999973178,
+          "checks": 219.4349999949336,
+          "view": 303.29499999433756,
+          "closed": 406.4049999937415
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 50000,
+      "run": 1,
+      "buildMs": 169.20499999821186,
+      "bytes": 24092528,
+      "save": {
+        "ms": 552.7299999967217,
+        "longestTaskMs": 91,
+        "blockedMs": 41,
+        "longTasks": 1,
+        "peakAboveMb": 160.07421875,
+        "chromeBeforeMb": 958.0185546875,
+        "stages": {
+          "encode": 93.54500000178814,
+          "encode:writing": 148.1899999976158,
+          "encode:verifying": 327.9649999961257,
+          "encode:checking": 327.97999999672174,
+          "encode:project": 412.8999999985099,
+          "encode:reading": 412.9050000011921,
+          "encoded": 542.9399999976158
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 760.7300000041723,
+        "drawnMs": 846.5500000044703,
+        "longestTaskMs": 194,
+        "blockedMs": 144,
+        "longTasks": 1,
+        "peakAboveMb": 269.5615234375,
+        "chromeBeforeMb": 974.3427734375,
+        "stages": {
+          "step": 3.8049999997019768,
+          "decode": 35.78000000119209,
+          "decode:checking": 63.49000000208616,
+          "decode:project": 176.42999999970198,
+          "decode:reading": 177.2200000062585,
+          "decoded": 346.5100000053644,
+          "checks": 364.2800000011921,
+          "view": 516.3150000050664,
+          "closed": 760.5
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 50000,
+      "run": 2,
+      "buildMs": 167.46000000089407,
+      "bytes": 24092528,
+      "save": {
+        "ms": 565.1450000032783,
+        "longestTaskMs": 90,
+        "blockedMs": 40,
+        "longTasks": 1,
+        "peakAboveMb": 158.58984375,
+        "chromeBeforeMb": 961.880859375,
+        "stages": {
+          "encode": 90.50500000268221,
+          "encode:writing": 148.0600000023842,
+          "encode:verifying": 334.875,
+          "encode:checking": 334.89500000327826,
+          "encode:project": 422.32500000298023,
+          "encode:reading": 422.33500000089407,
+          "encoded": 554.7300000041723
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 745.7250000014901,
+        "drawnMs": 829.5799999982119,
+        "longestTaskMs": 177,
+        "blockedMs": 127,
+        "longTasks": 2,
+        "peakAboveMb": 271.08203125,
+        "chromeBeforeMb": 975.650390625,
+        "stages": {
+          "step": 5.3900000005960464,
+          "decode": 28.78499999642372,
+          "decode:checking": 66.78499999642372,
+          "decode:project": 184.2449999973178,
+          "decode:reading": 184.39000000059605,
+          "decoded": 352.804999999702,
+          "checks": 370.2250000014901,
+          "view": 516.5300000011921,
+          "closed": 745.5499999970198
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 50000,
+      "run": 3,
+      "buildMs": 162.99500000476837,
+      "bytes": 24092528,
+      "save": {
+        "ms": 579.1850000023842,
+        "longestTaskMs": 99,
+        "blockedMs": 49,
+        "longTasks": 1,
+        "peakAboveMb": 162.25390625,
+        "chromeBeforeMb": 931.7138671875,
+        "stages": {
+          "encode": 99.32999999821186,
+          "encode:writing": 166.28999999910593,
+          "encode:verifying": 353.0600000023842,
+          "encode:checking": 353.1050000041723,
+          "encode:project": 440.48499999940395,
+          "encode:reading": 440.49000000208616,
+          "encoded": 565.3950000032783
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 806.8249999955297,
+        "drawnMs": 891.5649999976158,
+        "longestTaskMs": 177,
+        "blockedMs": 127,
+        "longTasks": 1,
+        "peakAboveMb": 258.95703125,
+        "chromeBeforeMb": 949.7333984375,
+        "stages": {
+          "step": 5.16499999910593,
+          "decode": 41.61999999731779,
+          "decode:checking": 106.61499999463558,
+          "decode:project": 225.48499999940395,
+          "decode:reading": 225.63499999791384,
+          "decoded": 392.39000000059605,
+          "checks": 409.7449999973178,
+          "view": 578.3999999985099,
+          "closed": 806.6550000011921
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 100000,
+      "run": 1,
+      "buildMs": 349.61500000208616,
+      "bytes": 48274531,
+      "save": {
+        "ms": 1093.6899999976158,
+        "longestTaskMs": 187,
+        "blockedMs": 137,
+        "longTasks": 1,
+        "peakAboveMb": 322.3203125,
+        "chromeBeforeMb": 1159.001953125,
+        "stages": {
+          "encode": 187.50999999791384,
+          "encode:writing": 303.97499999403954,
+          "encode:verifying": 636.1849999949336,
+          "encode:checking": 636.2099999934435,
+          "encode:project": 811.125,
+          "encode:reading": 811.1349999979138,
+          "encoded": 1075.4549999982119
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 1600.8699999973178,
+        "drawnMs": 1781.4199999943376,
+        "longestTaskMs": 363,
+        "blockedMs": 370,
+        "longTasks": 2,
+        "peakAboveMb": 523.2802734375,
+        "chromeBeforeMb": 1197.994140625,
+        "stages": {
+          "step": 4.96000000089407,
+          "decode": 64.73999999463558,
+          "decode:checking": 176.66999999433756,
+          "decode:project": 387.4349999949336,
+          "decode:reading": 387.53999999910593,
+          "decoded": 768.4099999964237,
+          "checks": 794.2899999991059,
+          "view": 1128.905000001192,
+          "closed": 1600.7250000014901
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 100000,
+      "run": 2,
+      "buildMs": 390.375,
+      "bytes": 48274531,
+      "save": {
+        "ms": 1074.164999999106,
+        "longestTaskMs": 185,
+        "blockedMs": 135,
+        "longTasks": 1,
+        "peakAboveMb": 317.96484375,
+        "chromeBeforeMb": 1160.27734375,
+        "stages": {
+          "encode": 185.5949999988079,
+          "encode:writing": 299.2199999988079,
+          "encode:verifying": 626.2550000026822,
+          "encode:checking": 626.2800000011921,
+          "encode:project": 799.3949999958277,
+          "encode:reading": 799.4200000017881,
+          "encoded": 1054.695000000298
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 1540.2299999967217,
+        "drawnMs": 1720.109999999404,
+        "longestTaskMs": 333,
+        "blockedMs": 340,
+        "longTasks": 2,
+        "peakAboveMb": 523.3203125,
+        "chromeBeforeMb": 1197.98828125,
+        "stages": {
+          "step": 5.130000002682209,
+          "decode": 47.44500000029802,
+          "decode:checking": 180.85999999940395,
+          "decode:project": 389.28999999910593,
+          "decode:reading": 396.1550000011921,
+          "decoded": 776.2049999982119,
+          "checks": 806.5300000011921,
+          "view": 1097.6150000020862,
+          "closed": 1539.9799999967217
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 100000,
+      "run": 3,
+      "buildMs": 393.0300000011921,
+      "bytes": 48274531,
+      "save": {
+        "ms": 1097.0799999982119,
+        "longestTaskMs": 189,
+        "blockedMs": 139,
+        "longTasks": 1,
+        "peakAboveMb": 371.55859375,
+        "chromeBeforeMb": 1159.71875,
+        "stages": {
+          "encode": 189.63499999791384,
+          "encode:writing": 304.85499999672174,
+          "encode:verifying": 638.7999999970198,
+          "encode:checking": 638.820000000298,
+          "encode:project": 813.6599999964237,
+          "encode:reading": 813.6649999991059,
+          "encoded": 1075.9799999967217
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 1650.4549999982119,
+        "drawnMs": 1824.6449999958277,
+        "longestTaskMs": 347,
+        "blockedMs": 371,
+        "longTasks": 3,
+        "peakAboveMb": 525.75,
+        "chromeBeforeMb": 1199.13671875,
+        "stages": {
+          "step": 5,
+          "decode": 108.57999999821186,
+          "decode:checking": 218.2199999988079,
+          "decode:project": 435.78999999910593,
+          "decode:reading": 438.51500000059605,
+          "decoded": 822.1300000026822,
+          "checks": 845.984999999404,
+          "view": 1186.2599999979138,
+          "closed": 1650.234999999404
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 200000,
+      "run": 1,
+      "buildMs": 673.7850000038743,
+      "bytes": 96638531,
+      "save": {
+        "ms": 2168.3250000029802,
+        "longestTaskMs": 361,
+        "blockedMs": 311,
+        "longTasks": 1,
+        "peakAboveMb": 662.515625,
+        "chromeBeforeMb": 1633.484375,
+        "stages": {
+          "encode": 361.15000000596046,
+          "encode:writing": 615.9200000017881,
+          "encode:verifying": 1269.664999999106,
+          "encode:checking": 1269.6850000023842,
+          "encode:project": 1637.3250000029802,
+          "encode:reading": 1637.3450000062585,
+          "encoded": 2128.435000002384
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 3313.244999997318,
+        "drawnMs": 3704.454999998212,
+        "longestTaskMs": 720,
+        "blockedMs": 834,
+        "longTasks": 2,
+        "peakAboveMb": 832.1279296875,
+        "chromeBeforeMb": 1713.2822265625,
+        "stages": {
+          "step": 10.780000001192093,
+          "decode": 142.64999999850988,
+          "decode:checking": 344.320000000298,
+          "decode:project": 753.515000000596,
+          "decode:reading": 763.2950000017881,
+          "decoded": 1584.7999999970198,
+          "checks": 1617.1899999976158,
+          "view": 2376.8799999952316,
+          "closed": 3312.994999997318
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 200000,
+      "run": 2,
+      "buildMs": 767.8100000023842,
+      "bytes": 96638531,
+      "save": {
+        "ms": 2242.4899999946356,
+        "longestTaskMs": 384,
+        "blockedMs": 334,
+        "longTasks": 1,
+        "peakAboveMb": 640.6484375,
+        "chromeBeforeMb": 1646.0029296875,
+        "stages": {
+          "encode": 385.1449999958277,
+          "encode:writing": 668.3149999976158,
+          "encode:verifying": 1310.945000000298,
+          "encode:checking": 1310.9599999934435,
+          "encode:project": 1661.8649999946356,
+          "encode:reading": 1661.8699999973178,
+          "encoded": 2199.454999998212
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 3358.9100000038743,
+        "drawnMs": 3744.880000002682,
+        "longestTaskMs": 716,
+        "blockedMs": 889,
+        "longTasks": 4,
+        "peakAboveMb": 927.091796875,
+        "chromeBeforeMb": 1724.07421875,
+        "stages": {
+          "step": 102.76000000536442,
+          "decode": 212.54500000178814,
+          "decode:checking": 484.4350000023842,
+          "decode:project": 881.515000000596,
+          "decode:reading": 881.6200000047684,
+          "decoded": 1637.3000000044703,
+          "checks": 1688.8500000014901,
+          "view": 2430.255000002682,
+          "closed": 3357.9950000047684
+        },
+        "ok": true
+      },
+      "log": []
+    },
+    {
+      "parcels": 200000,
+      "run": 3,
+      "buildMs": 606.7549999952316,
+      "bytes": 96638531,
+      "save": {
+        "ms": 2151.3799999952316,
+        "longestTaskMs": 360,
+        "blockedMs": 310,
+        "longTasks": 1,
+        "peakAboveMb": 733.9599609375,
+        "chromeBeforeMb": 1643.8740234375,
+        "stages": {
+          "encode": 360.47499999403954,
+          "encode:writing": 629.0649999976158,
+          "encode:verifying": 1271.539999999106,
+          "encode:checking": 1271.5599999949336,
+          "encode:project": 1622.609999999404,
+          "encode:reading": 1622.6149999946356,
+          "encoded": 2113.1599999964237
+        },
+        "ok": true
+      },
+      "open": {
+        "ms": 3106.6600000038743,
+        "drawnMs": 3507.234999999404,
+        "longestTaskMs": 637,
+        "blockedMs": 732,
+        "longTasks": 2,
+        "peakAboveMb": 849.734375,
+        "chromeBeforeMb": 1722.6357421875,
+        "stages": {
+          "step": 9.560000002384186,
+          "decode": 145.21500000357628,
+          "decode:checking": 328.9800000041723,
+          "decode:project": 725.9650000035763,
+          "decode:reading": 726.1550000011921,
+          "decoded": 1511.7700000032783,
+          "checks": 1544.5450000017881,
+          "view": 2272.740000002086,
+          "closed": 3106.4400000050664
+        },
+        "ok": true
+      },
+      "log": []
+    }
+  ]
+}
