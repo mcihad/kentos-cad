@@ -118,15 +118,28 @@ export class PropertiesPanel extends Panel {
     };
   }
 
+  /** A colour as the panel names it: “Çeşitli” for a mixed selection, “Katmana göre”, or the colour's name. */
+  private colorText(current: string | undefined | null): string {
+    if (current === null) return 'Çeşitli';
+    if (current === undefined) return 'Katmana göre';
+    return DRAW_COLORS.find((x) => x.value === current)?.name ?? current;
+  }
+
+  /** A symbol as the panel names it: “Çeşitli”, “Katman stiline göre”, or its name in the library. */
+  private symbolText(current: string | undefined | null): string {
+    if (current === null) return 'Çeşitli';
+    if (current === undefined) return 'Katman stiline göre';
+    return this.ctx.styles.library.get(current)?.name ?? 'Kitaplıkta yok';
+  }
+
   private colorEditor(ids: number[], current: string | undefined | null): PropRow['editor'] {
     const { doc } = this.ctx;
     const set = (color: string | undefined) => doc.updateMany(ids.map((id) => ({ id, color })), 'Renk değiştir');
     return {
       type: 'select',
       display: () => {
-        if (current === null) return { text: 'Çeşitli' };
         const c = DRAW_COLORS.find((x) => x.value === current);
-        return c ? { text: c.name, swatch: colorSwatch(c.value, this.ctx.view.palette) } : { text: 'Katmana göre' };
+        return c ? { text: c.name, swatch: colorSwatch(c.value, this.ctx.view.palette) } : { text: this.colorText(current) };
       },
       items: () => [
         { label: 'Katmana göre', radio: true, checked: current === undefined, run: () => set(undefined) },
@@ -138,10 +151,10 @@ export class PropertiesPanel extends Panel {
 
   /** An object's own symbol (drawn instead of its layer's style); picked from the library. */
   private symbolEditor(current: string | undefined | null): PropRow['editor'] {
-    const { commands, styles } = this.ctx;
+    const { commands } = this.ctx;
     return {
       type: 'select',
-      display: () => (current === null ? { text: 'Çeşitli' } : current ? { text: styles.library.get(current)?.name ?? 'Kitaplıkta yok' } : { text: 'Katman stiline göre' }),
+      display: () => ({ text: this.symbolText(current) }),
       items: () => [
         { label: 'Katman stiline göre', radio: true, checked: current === undefined, run: () => commands.execute('style.clearSymbol') },
         { kind: 'separator' },
@@ -160,8 +173,8 @@ export class PropertiesPanel extends Panel {
       rows: [
         { label: 'Tür', value: ENTITY_KIND_LABEL[e.kind] },
         { label: 'Katman', value: '', editor: locked ? undefined : this.layerEditor([e.id], e.layerId) },
-        { label: 'Renk', value: e.color ?? 'Katmana göre', editor: locked ? undefined : this.colorEditor([e.id], e.color) },
-        ...(geometryClassOf(e) ? [{ label: 'Sembol', value: e.symbol ? (this.ctx.styles.library.get(e.symbol)?.name ?? e.symbol) : 'Katman stiline göre', editor: locked ? undefined : this.symbolEditor(e.symbol) }] : []),
+        { label: 'Renk', value: this.colorText(e.color), editor: locked ? undefined : this.colorEditor([e.id], e.color) },
+        ...(geometryClassOf(e) ? [{ label: 'Sembol', value: this.symbolText(e.symbol), editor: locked ? undefined : this.symbolEditor(e.symbol) }] : []),
       ],
     };
     if (locked) general.rows[1].value = doc.layers.path(e.layerId) + ' (kilitli)';
@@ -328,7 +341,8 @@ export class PropertiesPanel extends Panel {
       }
       case 'text':
         geo.push(
-          { label: 'Metin', value: e.text, editor: locked ? undefined : { type: 'text', commit: (v) => v.trim() && doc.update(e.id, { text: v } as Partial<Entity>) } },
+          // Trimmed, as the in-place editor stores it; an empty text is not taken.
+          { label: 'Metin', value: e.text, editor: locked ? undefined : { type: 'text', commit: (v) => v.trim() && doc.update(e.id, { text: v.trim() } as Partial<Entity>) } },
           {
             ...num('Yükseklik', e.height, 'm'),
             editor: locked
@@ -396,10 +410,12 @@ export class PropertiesPanel extends Panel {
     const anyLocked = ents.some((e) => this.ctx.doc.layers.isLocked(e.layerId));
     // Summed by the geometry store: a selection can hold tens of thousands of objects.
     const { length, area } = this.ctx.view.measure(ids);
+    const symbol = ents.every((e) => e.symbol === ents[0].symbol) ? ents[0].symbol : null;
+    // With a locked object in the selection nothing is editable: the values are still named.
     const rows: PropRow[] = [
       { label: 'Katman', value: 'Kilitli katman içeriyor', editor: anyLocked ? undefined : this.layerEditor(ids, layer) },
-      { label: 'Renk', value: '', editor: anyLocked ? undefined : this.colorEditor(ids, color) },
-      { label: 'Sembol', value: '', editor: anyLocked ? undefined : this.symbolEditor(ents.every((e) => e.symbol === ents[0].symbol) ? ents[0].symbol : null) },
+      { label: 'Renk', value: this.colorText(color), editor: anyLocked ? undefined : this.colorEditor(ids, color) },
+      { label: 'Sembol', value: this.symbolText(symbol), editor: anyLocked ? undefined : this.symbolEditor(symbol) },
     ];
     const totals: PropRow[] = [];
     const f = this.ctx.format;
