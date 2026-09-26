@@ -78,6 +78,7 @@ async fn clean_store(db: Db, blobs: kentos_application::blobs::Blobs) {
                 suresi_dolan = done.expired,
                 sahipsiz = done.swept,
                 silinen_proje = done.purged,
+                kontrol_noktasi = done.checkpoints,
                 "dosya deposu temizlendi"
             ),
             Ok(_) => {}

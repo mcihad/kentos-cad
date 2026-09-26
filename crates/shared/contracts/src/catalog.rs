@@ -528,6 +528,54 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Checkpoints: named points of a project's history (docs/adr/0034).
+        CommandDescriptor {
+            id: crate::PROJECT_CHECKPOINT_CREATE.into(),
+            version: crate::PROJECT_CHECKPOINT_CREATE_VERSION,
+            title: "Kontrol noktası oluştur".into(),
+            summary: "Projenin şimdiki hâline ad verir. Veritabanı projesinde o anın tek revizyonlu .kcad görüntüsü nesne deposunda saklanır; \
+                      dosya projesinde bir revizyon (verilmezse en yenisi) adlandırılır, bir şey kopyalanmaz. feature.write ister; \
+                      arşivdeki ya da çöpteki projede alınmaz."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::FeatureWrite.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::CheckpointCreate>(),
+            output: schema::<crate::CheckpointChange>(),
+            examples: vec![CommandExample {
+                title: "Teslim öncesi".into(),
+                input: json!({ "name": "Belediyeye teslim", "note": "Ada 101 ifraz dosyası" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::PROJECT_CHECKPOINT_DELETE.into(),
+            version: crate::PROJECT_CHECKPOINT_DELETE_VERSION,
+            title: "Kontrol noktasını sil".into(),
+            summary: "Bir kontrol noktasını kaldırır: veritabanı projesinde saklanan görüntüsü de gider; dosya projesinde adlandırdığı revizyon kalır. \
+                      Kontrol noktasını oluşturan kişi (feature.write ile) ya da project.edit sahibi siler."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::FeatureWrite.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::CheckpointDelete>(),
+            output: schema::<crate::CheckpointChange>(),
+            examples: vec![CommandExample {
+                title: "Kontrol noktasını kaldır".into(),
+                input: json!({ "checkpointId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
+                output: None,
+            }],
+        },
         // The first document command (docs/adr/0022): the web's and the desktop's own
         // handlers, held together by fixtures/commands/v1/cad.polygon.create.json.
         CommandDescriptor {
@@ -840,6 +888,14 @@ mod tests {
                     }
                     crate::PROJECT_FILE_COMMIT => {
                         serde_json::from_value::<crate::FileCommit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_CHECKPOINT_CREATE => {
+                        serde_json::from_value::<crate::CheckpointCreate>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::PROJECT_CHECKPOINT_DELETE => {
+                        serde_json::from_value::<crate::CheckpointDelete>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_POLYGON_CREATE => {
                         serde_json::from_value::<PolygonCreate>(e.input.clone()).map(|_| ())

@@ -4,6 +4,9 @@
 pub mod auth;
 #[cfg(test)]
 mod catalog_tests;
+pub mod checkpoints;
+#[cfg(test)]
+mod checkpoints_tests;
 pub mod error;
 pub mod files;
 #[cfg(test)]
@@ -153,6 +156,14 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/v1/tenants/{tenant}/projects/{project}/snapshot",
             get(files::snapshot),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/checkpoints",
+            get(checkpoints::list),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/checkpoints/{checkpoint}",
+            get(checkpoints::download),
         )
         .route("/v1/ws", get(ws::upgrade))
         .layer(middleware);

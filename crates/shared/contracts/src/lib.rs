@@ -30,6 +30,7 @@
 pub mod api;
 pub mod cad;
 pub mod catalog;
+pub mod checkpoints;
 pub mod cloud;
 pub mod command;
 pub mod document;
@@ -47,6 +48,7 @@ pub mod style;
 pub use api::*;
 pub use cad::*;
 pub use catalog::*;
+pub use checkpoints::*;
 pub use cloud::*;
 pub use command::*;
 pub use document::*;

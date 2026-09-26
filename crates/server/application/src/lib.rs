@@ -11,6 +11,7 @@ pub mod blobs;
 pub mod cad;
 pub mod catalog;
 pub mod changes;
+pub mod checkpoints;
 pub mod commands;
 pub mod duplicate;
 pub mod error;
@@ -89,6 +90,15 @@ pub const SERVER_COMMANDS: &[(&str, u32)] = &[
         kentos_contracts::PROJECT_FAVORITE_VERSION,
     ),
     // File projects (docs/adr/0031).
+    // Checkpoints (docs/adr/0034).
+    (
+        kentos_contracts::PROJECT_CHECKPOINT_CREATE,
+        kentos_contracts::PROJECT_CHECKPOINT_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_CHECKPOINT_DELETE,
+        kentos_contracts::PROJECT_CHECKPOINT_DELETE_VERSION,
+    ),
     (
         kentos_contracts::PROJECT_FILE_COMMIT,
         kentos_contracts::PROJECT_FILE_COMMIT_VERSION,

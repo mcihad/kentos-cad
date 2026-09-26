@@ -630,6 +630,9 @@ pub struct Cleanup {
     pub swept: usize,
     /// Projects removed for good whose revisions were still in the store.
     pub purged: usize,
+    /// Checkpoint objects of no checkpoint: its row was never committed, or
+    /// was removed and the object was not (docs/adr/0034).
+    pub checkpoints: usize,
 }
 
 /// How long a project's folder in the store stays unchanged before the
@@ -638,8 +641,9 @@ pub struct Cleanup {
 pub const SETTLED: std::time::Duration = std::time::Duration::from_secs(3600);
 
 /// The store's cleanup, run by the server every hour: expired uploads (rows
-/// and bytes), stray upload files, and the objects of projects removed for
-/// good whose folder has been still for `settled` ([`SETTLED`]).
+/// and bytes), stray upload files, the objects of projects removed for good
+/// and the checkpoint objects of no checkpoint, once their folder or file has
+/// been still for `settled` ([`SETTLED`]).
 pub async fn cleanup(
     db: &kentos_postgres::Db,
     blobs: &Blobs,
@@ -676,6 +680,21 @@ pub async fn cleanup(
             if !existing.contains(&project) {
                 blobs.remove_project(tenant, project).await?;
                 done.purged += 1;
+            }
+        }
+    }
+    let objects = blobs.checkpoint_objects(settled).await?;
+    if !objects.is_empty() {
+        let ids: Vec<Uuid> = objects.iter().map(|(id, _)| *id).collect();
+        let existing: Vec<Uuid> =
+            sqlx::query_scalar("select id from kentos.existing_checkpoints($1)")
+                .bind(&ids)
+                .fetch_all(&db.pool)
+                .await?;
+        for (id, key) in objects {
+            if !existing.contains(&id) {
+                blobs.remove(&key).await?;
+                done.checkpoints += 1;
             }
         }
     }

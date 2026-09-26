@@ -155,7 +155,7 @@ pub async fn snapshot(
 
 /// The headers of a `.kcad` response: its type, its SHA-256 as the entity
 /// tag, its revision and its file name (non-ASCII names in the RFC 5987 form).
-fn kcad_headers(h: &mut HeaderMap, sha256: &str, revision: &str, name: &str) {
+pub(crate) fn kcad_headers(h: &mut HeaderMap, sha256: &str, revision: &str, name: &str) {
     h.insert(
         header::CONTENT_TYPE,
         HeaderValue::from_static("application/octet-stream"),
@@ -194,7 +194,7 @@ fn kcad_headers(h: &mut HeaderMap, sha256: &str, revision: &str, name: &str) {
 }
 
 /// A file read in parts as a response body.
-struct FileBody {
+pub(crate) struct FileBody {
     file: tokio::fs::File,
     buffer: Vec<u8>,
 }
@@ -202,7 +202,7 @@ struct FileBody {
 impl FileBody {
     const PART: usize = 64 * 1024;
 
-    fn new(file: tokio::fs::File) -> Self {
+    pub(crate) fn new(file: tokio::fs::File) -> Self {
         Self {
             file,
             buffer: vec![0; Self::PART],

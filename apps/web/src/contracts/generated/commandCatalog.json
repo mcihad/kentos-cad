@@ -6702,6 +6702,312 @@
       ]
     },
     {
+      "id": "project.checkpoint.create",
+      "version": 1,
+      "title": "Kontrol noktası oluştur",
+      "summary": "Projenin şimdiki hâline ad verir. Veritabanı projesinde o anın tek revizyonlu .kcad görüntüsü nesne deposunda saklanır; dosya projesinde bir revizyon (verilmezse en yenisi) adlandırılır, bir şey kopyalanmaz. feature.write ister; arşivdeki ya da çöpteki projede alınmaz.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "feature.write"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.checkpoint.create` v1.",
+        "properties": {
+          "fileRevision": {
+            "description": "A file project's revision to name (decimal text); its newest when\nabsent. A database project takes none: its checkpoint is its present state.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "1 to [`CHECKPOINT_NAME_MAX`] characters, e.g. \"Belediyeye teslim\".",
+            "type": "string"
+          },
+          "note": {
+            "description": "At most [`CHECKPOINT_NOTE_MAX`] characters.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CheckpointCreate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "Checkpoint": {
+            "description": "One checkpoint of a project.",
+            "properties": {
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "createdBy": {
+                "type": "string"
+              },
+              "createdByName": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/CheckpointKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "description": "How many objects the file holds (decimal text), when it is known.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "revision": {
+                "description": "The data revision a snapshot shows, or the file revision a file\nproject's checkpoint names (decimal text).",
+                "type": "string"
+              },
+              "sha256": {
+                "description": "The file's SHA-256, lowercase hex.",
+                "type": "string"
+              },
+              "size": {
+                "description": "The file's size in bytes (decimal text).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "revision",
+              "size",
+              "sha256",
+              "createdBy",
+              "createdByName",
+              "createdAt"
+            ],
+            "type": "object"
+          },
+          "CheckpointKind": {
+            "description": "What a checkpoint keeps.",
+            "oneOf": [
+              {
+                "const": "snapshot",
+                "description": "A database project's snapshot, kept in the object store.",
+                "type": "string"
+              },
+              {
+                "const": "revision",
+                "description": "A file project's revision, named.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `project.checkpoint.create` and `project.checkpoint.delete` v1.",
+        "properties": {
+          "checkpoint": {
+            "$ref": "#/$defs/Checkpoint"
+          },
+          "removed": {
+            "description": "It was removed (`project.checkpoint.delete`).",
+            "type": "boolean"
+          },
+          "replayed": {
+            "default": false,
+            "description": "The stored answer of an earlier identical command (its key was seen).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "checkpoint",
+          "removed"
+        ],
+        "title": "CheckpointChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Teslim öncesi",
+          "input": {
+            "name": "Belediyeye teslim",
+            "note": "Ada 101 ifraz dosyası"
+          }
+        }
+      ]
+    },
+    {
+      "id": "project.checkpoint.delete",
+      "version": 1,
+      "title": "Kontrol noktasını sil",
+      "summary": "Bir kontrol noktasını kaldırır: veritabanı projesinde saklanan görüntüsü de gider; dosya projesinde adlandırdığı revizyon kalır. Kontrol noktasını oluşturan kişi (feature.write ile) ya da project.edit sahibi siler.",
+      "aliases": [],
+      "effect": "project",
+      "hosts": [
+        "server"
+      ],
+      "headless": true,
+      "requires": [
+        "signedIn",
+        "cloudProject"
+      ],
+      "permissions": [
+        "feature.write"
+      ],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `project.checkpoint.delete` v1.",
+        "properties": {
+          "checkpointId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "checkpointId"
+        ],
+        "title": "CheckpointDelete",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "Checkpoint": {
+            "description": "One checkpoint of a project.",
+            "properties": {
+              "createdAt": {
+                "description": "RFC 3339.",
+                "type": "string"
+              },
+              "createdBy": {
+                "type": "string"
+              },
+              "createdByName": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/CheckpointKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "note": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "description": "How many objects the file holds (decimal text), when it is known.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "revision": {
+                "description": "The data revision a snapshot shows, or the file revision a file\nproject's checkpoint names (decimal text).",
+                "type": "string"
+              },
+              "sha256": {
+                "description": "The file's SHA-256, lowercase hex.",
+                "type": "string"
+              },
+              "size": {
+                "description": "The file's size in bytes (decimal text).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind",
+              "revision",
+              "size",
+              "sha256",
+              "createdBy",
+              "createdByName",
+              "createdAt"
+            ],
+            "type": "object"
+          },
+          "CheckpointKind": {
+            "description": "What a checkpoint keeps.",
+            "oneOf": [
+              {
+                "const": "snapshot",
+                "description": "A database project's snapshot, kept in the object store.",
+                "type": "string"
+              },
+              {
+                "const": "revision",
+                "description": "A file project's revision, named.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `project.checkpoint.create` and `project.checkpoint.delete` v1.",
+        "properties": {
+          "checkpoint": {
+            "$ref": "#/$defs/Checkpoint"
+          },
+          "removed": {
+            "description": "It was removed (`project.checkpoint.delete`).",
+            "type": "boolean"
+          },
+          "replayed": {
+            "default": false,
+            "description": "The stored answer of an earlier identical command (its key was seen).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "checkpoint",
+          "removed"
+        ],
+        "title": "CheckpointChange",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Kontrol noktasını kaldır",
+          "input": {
+            "checkpointId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.polygon.create",
       "version": 1,
       "title": "Kapalı alan oluştur",

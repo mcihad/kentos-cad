@@ -10,6 +10,9 @@
 //! - A committed revision is renamed to
 //!   `revisions/{tenant}/{project}/{revision}-{sha256}` and never changes;
 //!   the folder goes when the project is removed for good.
+//! - A database project's checkpoint is written to
+//!   `checkpoints/{tenant}/{project}/{checkpoint}-{sha256}` (docs/adr/0034)
+//!   and never changes either.
 //!
 //! Keys are built here from ids and numbers only, so a key never leaves the
 //! store's folder. Writes are flushed to disk before they are reported.
@@ -61,6 +64,11 @@ impl Blobs {
 
     pub fn revision_key(tenant: Uuid, project: Uuid, revision: i64, sha256: &str) -> String {
         format!("revisions/{tenant}/{project}/{revision:010}-{sha256}")
+    }
+
+    /// A database project's checkpoint (docs/adr/0034): its snapshot's object.
+    pub fn checkpoint_key(tenant: Uuid, project: Uuid, checkpoint: Uuid, sha256: &str) -> String {
+        format!("checkpoints/{tenant}/{project}/{checkpoint}-{sha256}")
     }
 
     fn path(&self, key: &str) -> io::Result<PathBuf> {
@@ -212,7 +220,7 @@ impl Blobs {
 
     /// Removes everything of a project removed for good.
     pub async fn remove_project(&self, tenant: Uuid, project: Uuid) -> io::Result<()> {
-        for kind in ["uploads", "revisions"] {
+        for kind in ["uploads", "revisions", "checkpoints"] {
             let dir = self
                 .root
                 .join(kind)
@@ -226,32 +234,65 @@ impl Blobs {
         Ok(())
     }
 
-    /// The projects that have revisions in the store, as (tenant, project),
-    /// whose folder has not changed for `settled`: a copy's folder is made
-    /// just before its project's row is committed (docs/adr/0031), so a
-    /// fresh folder may belong to a project that exists a moment later.
+    /// The projects that have revisions or checkpoints in the store, as
+    /// (tenant, project), whose folder has not changed for `settled`: a
+    /// copy's folder is made just before its project's row is committed
+    /// (docs/adr/0031), so a fresh folder may belong to a project that exists
+    /// a moment later.
     pub async fn projects(&self, settled: Duration) -> io::Result<Vec<(Uuid, Uuid)>> {
         let mut found = Vec::new();
-        let revisions = self.root.join("revisions");
-        let Ok(mut tenants) = tokio::fs::read_dir(&revisions).await else {
+        let now = SystemTime::now();
+        for kind in ["revisions", "checkpoints"] {
+            let Ok(mut tenants) = tokio::fs::read_dir(self.root.join(kind)).await else {
+                continue;
+            };
+            while let Some(t) = tenants.next_entry().await? {
+                let Some(tenant) = uuid_name(&t.path()) else {
+                    continue;
+                };
+                let mut projects = tokio::fs::read_dir(t.path()).await?;
+                while let Some(p) = projects.next_entry().await? {
+                    let still = age(&p.metadata().await?, now).is_some_and(|d| d >= settled);
+                    if let (Some(project), true) = (uuid_name(&p.path()), still)
+                        && !found.contains(&(tenant, project))
+                    {
+                        found.push((tenant, project));
+                    }
+                }
+            }
+        }
+        Ok(found)
+    }
+
+    /// The checkpoint objects unchanged for `settled`, as (checkpoint id,
+    /// key): a snapshot's object is written a moment before its row is
+    /// committed, and one whose row never was belongs to nothing.
+    pub async fn checkpoint_objects(&self, settled: Duration) -> io::Result<Vec<(Uuid, String)>> {
+        let mut found = Vec::new();
+        let now = SystemTime::now();
+        let Ok(mut tenants) = tokio::fs::read_dir(self.root.join("checkpoints")).await else {
             return Ok(found);
         };
-        let now = SystemTime::now();
         while let Some(t) = tenants.next_entry().await? {
             let Some(tenant) = uuid_name(&t.path()) else {
                 continue;
             };
             let mut projects = tokio::fs::read_dir(t.path()).await?;
             while let Some(p) = projects.next_entry().await? {
-                let still = p
-                    .metadata()
-                    .await?
-                    .modified()
-                    .ok()
-                    .and_then(|m| now.duration_since(m).ok())
-                    .is_some_and(|d| d >= settled);
-                if let (Some(project), true) = (uuid_name(&p.path()), still) {
-                    found.push((tenant, project));
+                let Some(project) = uuid_name(&p.path()) else {
+                    continue;
+                };
+                let mut objects = tokio::fs::read_dir(p.path()).await?;
+                while let Some(o) = objects.next_entry().await? {
+                    let name = o.file_name().to_string_lossy().into_owned();
+                    let id = name
+                        .split_once('-')
+                        .and_then(|_| name.get(..36))
+                        .and_then(|id| Uuid::parse_str(id).ok());
+                    let still = age(&o.metadata().await?, now).is_some_and(|d| d >= settled);
+                    if let (Some(id), true) = (id, still) {
+                        found.push((id, format!("checkpoints/{tenant}/{project}/{name}")));
+                    }
                 }
             }
         }
@@ -267,6 +308,13 @@ impl Blobs {
             .await
             .map_err(io::Error::other)?
     }
+}
+
+/// How long ago something last changed (none when the clock or the file system cannot say).
+fn age(meta: &std::fs::Metadata, now: SystemTime) -> Option<Duration> {
+    meta.modified()
+        .ok()
+        .and_then(|m| now.duration_since(m).ok())
 }
 
 fn uuid_name(path: &Path) -> Option<Uuid> {

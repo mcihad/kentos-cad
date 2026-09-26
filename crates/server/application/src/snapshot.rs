@@ -52,6 +52,15 @@ pub async fn snapshot(
 ) -> AppResult<ProjectSnapshot> {
     access.live()?;
     access.require(ProjectPermission::Download)?;
+    take(db, access).await
+}
+
+/// The file itself, for a caller that checked what it needs (a checkpoint
+/// is kept by `feature.write`, docs/adr/0034); row security still applies.
+pub(crate) async fn take(
+    db: &kentos_postgres::Db,
+    access: &ProjectAccess,
+) -> AppResult<ProjectSnapshot> {
     let mut tx = db.snapshot(access.scope()).await?;
     let (doc, revision, event_cursor) = read(&mut tx, access).await?;
     tx.commit().await?;

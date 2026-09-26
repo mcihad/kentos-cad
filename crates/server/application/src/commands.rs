@@ -13,8 +13,9 @@
 use std::time::Duration;
 
 use kentos_contracts::{
-    CommandEnvelope, CommitResult, FileCommitted, PROJECT_ACCESS_REVOKE, PROJECT_ARCHIVE,
-    PROJECT_CHANGES, PROJECT_CREATE, PROJECT_CREATE_VERSION, PROJECT_DUPLICATE, PROJECT_FAVORITE,
+    CheckpointChange, CommandEnvelope, CommitResult, FileCommitted, PROJECT_ACCESS_REVOKE,
+    PROJECT_ARCHIVE, PROJECT_CHANGES, PROJECT_CHECKPOINT_CREATE, PROJECT_CHECKPOINT_DELETE,
+    PROJECT_CREATE, PROJECT_CREATE_VERSION, PROJECT_DUPLICATE, PROJECT_FAVORITE,
     PROJECT_FILE_COMMIT, PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME, PROJECT_RESTORE,
     PROJECT_SHARE, PROJECT_TRASH, PROJECT_UNARCHIVE, ProjectAccessChange, ProjectCatalogChange,
     ProjectCreate, ProjectDuplicated, ProjectInfo, ProjectPurged,
@@ -27,7 +28,9 @@ use crate::blobs::Blobs;
 use crate::error::{AppError, AppResult};
 use crate::lifecycle::StateChange;
 use crate::tenancy::Access;
-use crate::{catalog, changes, duplicate, files, idempotency, lifecycle, projects, sharing};
+use crate::{
+    catalog, changes, checkpoints, duplicate, files, idempotency, lifecycle, projects, sharing,
+};
 
 /// How the server keeps its catalog (docs/adr/0028): how long a project
 /// moved to the trash stays there before it is removed for good.
@@ -58,6 +61,8 @@ pub enum CommandOutcome {
     Created(ProjectInfo),
     /// A file project's new revision (docs/adr/0031).
     FileCommitted(FileCommitted),
+    /// A checkpoint made or removed (docs/adr/0034).
+    Checkpoint(CheckpointChange),
 }
 
 impl CommandOutcome {
@@ -73,6 +78,7 @@ impl CommandOutcome {
             // Its connections ask again and learn it is gone.
             Self::Purged(_) => true,
             Self::FileCommitted(r) => !r.replayed,
+            Self::Checkpoint(r) => !r.replayed,
         }
     }
 
@@ -86,6 +92,7 @@ impl CommandOutcome {
             Self::Purged(r) => serde_json::to_value(r),
             Self::Created(r) => serde_json::to_value(r),
             Self::FileCommitted(r) => serde_json::to_value(r),
+            Self::Checkpoint(r) => serde_json::to_value(r),
         }
         .expect("command results serialize")
     }
@@ -145,6 +152,12 @@ pub async fn run(
         PROJECT_FILE_COMMIT => files::commit(db, blobs, access, envelope)
             .await
             .map(O::FileCommitted),
+        PROJECT_CHECKPOINT_CREATE => checkpoints::create(db, blobs, access, envelope)
+            .await
+            .map(O::Checkpoint),
+        PROJECT_CHECKPOINT_DELETE => checkpoints::delete(db, blobs, access, envelope)
+            .await
+            .map(O::Checkpoint),
         PROJECT_CREATE => Err(AppError::invalid(
             "project.create bir çalışma alanına gönderilir: POST /v1/tenants/{çalışma alanı}/commands (projectId boş).",
         )),
