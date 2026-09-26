@@ -290,6 +290,9 @@ export class RecoveryCopies {
       else this.changed();
       this.failed = false;
     } catch (e) {
+      // The worker was ended under the copy (Vazgeç of an open ends it, io/client.ts): nothing failed,
+      // and the copy is written again once the drawing rests.
+      if ((e as { code?: unknown } | null)?.code === 'cancelled') return this.changed();
       // Said once: the drawing itself is untouched, only the safety copy is missing.
       if (!this.failed)
         this.ctx.log.warn(

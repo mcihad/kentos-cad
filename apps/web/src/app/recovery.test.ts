@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { unpackSnapshot } from '../io/columns';
+import { KcadError } from '../io/kcad';
 import { formatsBuilt, kcadInProcess } from '../io/testFormats';
 import { snapshotSampleDocument } from '../model/snapshotSample';
 import { fakeCloud, memoryFile, pick, setup } from './fileTesting';
@@ -97,6 +98,28 @@ describe.skipIf(!formatsBuilt)('local recovery copies (TODOS.md FILE-19)', () =>
     doc.add({ kind: 'point', layerId: 'cizim', p: { x: 5, y: 6 }, attrs: {} });
     await recovery.flush();
     expect([...store.items.keys()].sort()).toEqual([second, recovery.current].sort());
+    recovery.dispose();
+  });
+
+  it('a copy stopped with the worker (Vazgeç of an open ends it) is written again later, and nothing is said', async () => {
+    const s = setup();
+    const store = memoryStore();
+    const inProcess = await kcadInProcess();
+    let encodes = 0;
+    // The first copy's encoding is in the worker when Vazgeç of an open ends it (io/client.ts).
+    s.files.kcad = async () => ({
+      ...inProcess,
+      encode: (drawing, progress) => (encodes++ === 0 ? Promise.reject(new KcadError('cancelled', 'İşlem durduruldu.')) : inProcess.encode(drawing, progress)),
+    });
+    const recovery = new RecoveryCopies({ ...s.ctx, files: s.files }, { store, live: async () => new Set(), ask: async () => 'later', quietMs: 10, maxMs: 1e9 });
+    recovery.start();
+    s.doc.add({ kind: 'point', layerId: 'x', p: { x: 1, y: 2 }, attrs: {} });
+    await recovery.flush();
+    expect(store.items.size).toBe(0);
+    // Nothing failed: no warning, and the copy is written once the drawing rests again.
+    for (let i = 0; i < 200 && store.items.size === 0; i++) await new Promise((r) => setTimeout(r, 5));
+    expect([store.items.size, encodes]).toEqual([1, 2]);
+    expect(s.messages.filter((m) => /kurtarma kopyası yazılamadı/.test(m))).toEqual([]);
     recovery.dispose();
   });
 
