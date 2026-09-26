@@ -97,8 +97,8 @@ const WHEEL_PIXEL: f64 = 0.0015;
 /// Two middle presses this close in time and place are a double click.
 const DOUBLE_CLICK: Duration = Duration::from_millis(500);
 const DOUBLE_CLICK_DISTANCE: f32 = 4.0;
-/// A right press released sooner is a click (Enter); held longer it would
-/// open the command menu (the web's `RIGHT_HOLD_MS`; no menu on the desktop yet).
+/// A right press released sooner is a click (Enter, or the idle menu); held
+/// longer it opens the command menu (the web's `RIGHT_HOLD_MS`, drawing_menus.rs).
 pub const RIGHT_HOLD: Duration = Duration::from_millis(300);
 
 static NEXT_VIEW: AtomicU64 = AtomicU64::new(1);
@@ -125,6 +125,10 @@ pub enum Event {
     /// The left button came up here, after going down over the area (the
     /// web's pointer capture: wherever it is released).
     Released(Point),
+    /// The right button went down here (Shift and it: the snap menu, drawing_menus.rs).
+    RightPressed(Point),
+    /// The right button pressed here has been held for [`RIGHT_HOLD`]: a menu opens.
+    RightHeld(Point),
     /// The right button went down and up here within [`RIGHT_HOLD`].
     RightClick(Point),
 }
@@ -278,7 +282,12 @@ impl Viewport {
             }
             Event::CenterOn(p) => self.camera.center_on(p),
             // The app gives these to the tool session (app.rs); the pointer is there too.
-            Event::Pressed(at) | Event::RightClick(at) => self.cursor = Some(self.world(at)),
+            Event::Pressed(at)
+            | Event::RightPressed(at)
+            | Event::RightHeld(at)
+            | Event::RightClick(at) => {
+                self.cursor = Some(self.world(at));
+            }
             // It may come from off the area; the last move placed the pointer.
             Event::Released(_) => {}
         }
@@ -579,8 +588,9 @@ pub struct Gesture {
     pan: Option<Point>,
     inside: bool,
     last_middle: Option<(Instant, Point)>,
-    /// When the right button went down over the area.
-    right: Option<Instant>,
+    /// The right button went down over the area: when, where, and whether
+    /// holding it has been told (a menu opened).
+    right: Option<(Instant, Point, bool)>,
     /// The left button went down over the area and is still down.
     left: bool,
 }
@@ -596,6 +606,17 @@ impl shader::Program<Message> for Program {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Option<shader::Action<Message>> {
+        // A held right button: told once its time is up, else a frame then.
+        if let iced::Event::Window(iced::window::Event::RedrawRequested(now)) = event
+            && let Some(hold) = right_hold(state, *now)
+        {
+            return Some(match hold {
+                Hold::Held(at) => {
+                    shader::Action::publish(Message::Viewport(Event::RightHeld(at)))
+                }
+                Hold::Wait(until) => shader::Action::request_redraw_at(until),
+            });
+        }
         let (event, capture) = gesture(state, event, bounds, cursor, Instant::now())?;
         let action = match event {
             Some(event) => shader::Action::publish(Message::Viewport(event)),
@@ -636,6 +657,29 @@ impl shader::Program<Message> for Program {
         } else {
             mouse::Interaction::default()
         }
+    }
+}
+
+/// A right press still down at a frame: its time is up, or when it will be.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Hold {
+    Held(Point),
+    Wait(Instant),
+}
+
+/// At a frame (`now`), what a right press still down means: the hold's time
+/// is up (told once) or when to look again; nothing without one.
+pub fn right_hold(state: &mut Gesture, now: Instant) -> Option<Hold> {
+    let (pressed, at, told) = state.right.as_mut()?;
+    if *told {
+        return None;
+    }
+    let until = *pressed + RIGHT_HOLD;
+    if now >= until {
+        *told = true;
+        Some(Hold::Held(*at))
+    } else {
+        Some(Hold::Wait(until))
     }
 }
 
@@ -714,18 +758,24 @@ pub fn gesture(
             Some((Some(Event::Released(at)), true))
         }
         mouse::Event::ButtonPressed(mouse::Button::Right) => {
-            cursor.position_in(bounds)?;
-            state.right = Some(now);
-            Some((None, true))
+            let at = cursor.position_in(bounds)?;
+            state.right = Some((now, at, false));
+            Some((Some(Event::RightPressed(at)), true))
         }
         mouse::Event::ButtonReleased(mouse::Button::Right) => {
             // Released anywhere, the command strip above the area included: the press
             // began over the area (the web captures the pointer).
-            let pressed = state.right.take()?;
+            let (pressed, pressed_at, told) = state.right.take()?;
             let position = cursor.land().position()?;
             let at = Point::new(position.x - bounds.x, position.y - bounds.y);
             let quick = now.saturating_duration_since(pressed) < RIGHT_HOLD;
-            Some((quick.then_some(Event::RightClick(at)), true))
+            let event = match (told, quick) {
+                (true, _) => None,
+                (false, true) => Some(Event::RightClick(at)),
+                // Held long enough without a frame to tell it: its menu opens now.
+                (false, false) => Some(Event::RightHeld(pressed_at)),
+            };
+            Some((event, true))
         }
         mouse::Event::WheelScrolled { delta } => {
             let at = cursor.position_in(bounds)?;
@@ -1054,6 +1104,37 @@ mod tests {
             strip,
         );
         assert_eq!(left, Some((Some(Event::Left), false)));
+    }
+
+    #[test]
+    fn a_held_right_button_is_told_once_and_its_release_is_no_click() {
+        let mut state = sized();
+        let now = Instant::now();
+        let at = Point::new(300.0, 200.0);
+        state.right = Some((now, at, false));
+        // Before its time: a frame then.
+        assert_eq!(right_hold(&mut state, now), Some(Hold::Wait(now + RIGHT_HOLD)));
+        // Its time up: told once.
+        assert_eq!(right_hold(&mut state, now + RIGHT_HOLD), Some(Hold::Held(at)));
+        assert_eq!(right_hold(&mut state, now + RIGHT_HOLD * 2), None);
+        let released = gesture(
+            &mut state,
+            &iced::Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)),
+            AREA,
+            mouse::Cursor::Available(Point::new(300.0, 200.0)),
+            now + RIGHT_HOLD * 2,
+        );
+        assert_eq!(released, Some((None, true)), "no Enter after a menu");
+        // Held long enough with no frame to tell it: the release opens the menu.
+        state.right = Some((now, at, false));
+        let released = gesture(
+            &mut state,
+            &iced::Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)),
+            AREA,
+            mouse::Cursor::Available(Point::new(310.0, 205.0)),
+            now + RIGHT_HOLD * 2,
+        );
+        assert_eq!(released, Some((Some(Event::RightHeld(at)), true)));
     }
 
     #[test]

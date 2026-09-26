@@ -23,7 +23,7 @@ use iced::advanced::widget::operation;
 use iced::keyboard::key::Named;
 use iced::widget::operation as widget_operation;
 
-use kentos_interaction::{Context, Level, Pointer, Session, Vec2, View, js_trim};
+use kentos_interaction::{Context, Draft, Level, Pointer, Session, Vec2, View, js_trim};
 use kentos_render_wgpu::Camera;
 
 use crate::app::{App, COMMAND_INPUT, Message};
@@ -148,16 +148,16 @@ impl App {
         }
     }
 
-    /// `tool.cancel`: Esc. The running tool steps back when it can (an edge
-    /// tool drops the object it picked, docs/adr/0047); otherwise it leaves and
-    /// its draft is dropped: nothing reaches the drawing. With no command
-    /// running, it clears the selection (the web's `ToolManager.exit`).
     /// Whether Esc has something to cancel: a value being typed, a running
     /// command, a selection.
     pub(crate) fn cancellable(&self) -> bool {
         self.field.is_some() || self.session.is_running() || !self.selection.is_empty()
     }
 
+    /// `tool.cancel`: Esc. The running tool steps back when it can (an edge
+    /// tool drops the object it picked, docs/adr/0047); otherwise it leaves and
+    /// its draft is dropped: nothing reaches the drawing. With no command
+    /// running, it clears the selection (the web's `ToolManager.exit`).
     pub(crate) fn cancel(&mut self) {
         self.field = None;
         // The snap marker belongs to the command (the web drops it when the tool changes).
@@ -218,6 +218,8 @@ impl App {
                 // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
                 let p = self.pointer_at(at);
                 self.with_tool(|s, cx| s.pointer_down(&p, cx));
+                // A one-shot snap was for this press (the web drops it on a left press).
+                self.snap_once = None;
             }
             viewport::Event::Released(at) => {
                 let p = self.pointer_at(at);
@@ -229,15 +231,10 @@ impl App {
                     self.selection.set_hover(None);
                 }
             }
-            viewport::Event::RightClick(_) => {
-                self.field = None;
-                self.line_focused = false;
-                // Enter for a running command that takes a confirm; the menu the
-                // web opens otherwise (the idle one) is not on the desktop yet.
-                if self.session.confirms() {
-                    self.with_tool(|s, cx| s.confirm(cx));
-                }
-            }
+            // Held, a menu; a quick click, Enter or the idle menu (drawing_menus.rs).
+            viewport::Event::RightPressed(at) => self.right_pressed(at),
+            viewport::Event::RightHeld(at) => self.right_held(at),
+            viewport::Event::RightClick(at) => self.right_clicked(at),
             _ => {}
         }
         Task::none()
@@ -249,11 +246,21 @@ impl App {
     /// kept for its marker.
     fn pointer_at(&mut self, at: iced::Point) -> Pointer {
         let raw = self.viewport.world(at);
+        // A one-shot snap works even with running snaps off (F3), and only
+        // for its own kind (the web's `updateSnap`, drawing_menus.rs).
+        let draft = match self.snap_once() {
+            Some(kind) => Draft {
+                snap: true,
+                snap_kinds: kind.bit(),
+                ..self.draft
+            },
+            None => self.draft,
+        };
         self.snap = match &self.document {
             Some(doc) => {
                 self.spatial.sync(&doc.model);
                 let view = CameraView(&self.viewport.camera);
-                self.session.snap(&self.spatial, raw, &view, &self.draft)
+                self.session.snap(&self.spatial, raw, &view, &draft)
             }
             None => None,
         };

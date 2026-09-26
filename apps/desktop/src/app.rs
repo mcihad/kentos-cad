@@ -163,6 +163,8 @@ pub enum Message {
     HistoryCleared,
     /// The layer tree's rows and their menu (layering.rs).
     Layer(crate::layering::Event),
+    /// The right button's menus over the drawing and the one-shot snap (drawing_menus.rs).
+    DrawingMenu(crate::drawing_menus::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -242,6 +244,10 @@ pub struct App {
     pub(crate) last_layer_press: Option<(String, Instant)>,
     /// Warnings and errors said so far (the Uyarılar tab counts the unseen).
     pub(crate) warnings_total: usize,
+    /// The menu open over the drawing (drawing_menus.rs).
+    pub(crate) drawing_menu: Option<crate::drawing_menus::Open>,
+    /// The one-shot snap and the command it was chosen in.
+    pub(crate) snap_once: Option<(kentos_interaction::SnapKind, &'static str)>,
     pub history: Vec<Entry>,
     pub command_input: String,
     pub command_expanded: bool,
@@ -360,6 +366,8 @@ impl App {
             renaming: None,
             last_layer_press: None,
             warnings_total: 0,
+            drawing_menu: None,
+            snap_once: None,
             history: vec![Entry::Output(
                 "KentOS CAD masaüstü hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler."
                     .to_owned(),
@@ -558,6 +566,7 @@ impl App {
             Message::Dock(event) => self.docks.update(event),
             Message::LayerSelected(id) => self.layer_pressed(id),
             Message::Layer(event) => return self.layer_event(event),
+            Message::DrawingMenu(event) => self.drawing_menu_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {

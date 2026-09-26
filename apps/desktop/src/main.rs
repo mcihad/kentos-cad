@@ -15,6 +15,7 @@ mod command_bar;
 mod crs;
 mod document;
 mod drawing_fonts;
+mod drawing_menus;
 mod exchange;
 #[cfg(test)]
 mod files_testing;

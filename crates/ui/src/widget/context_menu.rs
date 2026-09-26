@@ -365,6 +365,9 @@ pub struct ContextMenu<'a, Message> {
     menu: Box<dyn Fn(Point) -> Menu<Message> + 'a>,
     trigger: Trigger,
     open: Option<Open<'a, Message>>,
+    /// Uygulamanın açıp kapattığı menü: nerede (içerikteki nokta; `None`
+    /// kapalı) ve kapanınca gönderilen mesaj.
+    controlled: Option<(Option<Point>, Message)>,
 }
 
 /// Menüyü açan tıklama ve menünün yeri.
@@ -395,7 +398,46 @@ impl<'a, Message: Clone + 'a> ContextMenu<'a, Message> {
             menu: Box::new(menu),
             trigger: Trigger::Secondary,
             open: None,
+            controlled: None,
         }
+    }
+
+    /// Uygulamanın açtığı menü: `at` içerikteki noktadır, `None` iken
+    /// kapalıdır. Sağ tık kendiliğinden açmaz (ör. çizim alanı, sağ tuşu
+    /// basılı tutunca ya da bırakınca açar). Komut seçilince, dışarı
+    /// tıklanınca ya da Esc'e basılınca kapanır ve `on_close` gönderilir;
+    /// uygulama `at`'i `None` yapar.
+    pub fn controlled(
+        content: impl Into<Element<'a, Message>>,
+        at: Option<Point>,
+        menu: impl Fn(Point) -> Menu<Message> + 'a,
+        on_close: Message,
+    ) -> Self {
+        Self {
+            controlled: Some((at, on_close)),
+            ..Self::new(content, menu)
+        }
+    }
+
+    /// Uygulamanın açtığı menünün yeri durumla eşleşir: yeni bir yer menüyü
+    /// orada yeniden açar; kapanmış menü, uygulama yerini değiştirene dek
+    /// yeniden açılmaz.
+    fn sync(&self, state: &mut State) -> bool {
+        let Some((at, _)) = &self.controlled else {
+            return false;
+        };
+        let wanted = at.map(|p| p - Point::ORIGIN);
+        if wanted == state.synced {
+            return false;
+        }
+        *state = State {
+            anchor: wanted,
+            synced: wanted,
+            over: state.over,
+            modifiers: state.modifiers,
+            ..State::default()
+        };
+        true
     }
 }
 
@@ -434,6 +476,8 @@ enum Target {
 struct State {
     /// Açıksa sağ tıklanan noktanın içerik içindeki konumu.
     anchor: Option<Vector>,
+    /// Uygulamanın açtığı menüde son eşlenen yer ([`ContextMenu::controlled`]).
+    synced: Option<Vector>,
     hovered: Option<Target>,
     /// Açık alt menünün ana menüdeki sırası.
     submenu: Option<usize>,
@@ -500,6 +544,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
             state.modifiers = *modifiers;
         }
 
+        if self.sync(state) {
+            shell.invalidate_layout();
+            shell.request_redraw();
+        }
+
         let secondary;
         let event =
             if self.trigger == Trigger::Secondary && is_control_click(event, state.modifiers) {
@@ -534,7 +583,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
             }
         }
 
-        if shell.is_event_captured() {
+        // The app opens its own menu.
+        if shell.is_event_captured() || self.controlled.is_some() {
             return;
         }
 
@@ -664,6 +714,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
             state, children, ..
         } = tree;
         let state = state.downcast_mut::<State>();
+        self.sync(state);
         let [content_tree, main_tree, sub_tree] = children.as_mut_slice() else {
             return None;
         };
@@ -723,6 +774,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
                     main_tree,
                     sub_tree,
                     state,
+                    on_close: self.controlled.as_ref().map(|(_, message)| message.clone()),
                 })))
             }
             None => {
@@ -759,6 +811,8 @@ struct Overlay<'a, 'b, Message> {
     main_tree: &'b mut Tree,
     sub_tree: &'b mut Tree,
     state: &'b mut State,
+    /// The app's menu tells it when it closes ([`ContextMenu::controlled`]).
+    on_close: Option<Message>,
 }
 
 impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
@@ -766,8 +820,13 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
         *self.state = State {
             over: self.state.over,
             modifiers: self.state.modifiers,
+            // Closed: not opened again until the app gives another place.
+            synced: self.state.synced,
             ..State::default()
         };
+        if let Some(message) = &self.on_close {
+            shell.publish(message.clone());
+        }
         shell.invalidate_layout();
         shell.request_redraw();
     }
@@ -1132,10 +1191,10 @@ fn panel<'a, Message: 'a>(
 fn item_row<'a, Message: 'a>(item: &Item<Message>, highlighted: bool) -> Element<'a, Message> {
     let (glyph, text, shortcut, submenu, enabled, danger) = match item {
         Item::Command(command) => (
+            // A check shows its ✓ when on, else its own icon (e.g. a snap kind's marker).
             match command.checked {
                 Some(true) => Some(Icon::Check),
-                Some(false) => None,
-                None => command.icon,
+                Some(false) | None => command.icon,
             },
             command.label.clone(),
             command.shortcut.clone(),

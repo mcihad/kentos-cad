@@ -28,7 +28,7 @@ use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LineProm
 use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon};
 use kentos_ui::widget::status_bar::{Readout, StatusBar};
 use kentos_ui::widget::table::Column as TreeColumn;
-use kentos_ui::widget::context_menu::MenuButton;
+use kentos_ui::widget::context_menu::{ContextMenu, MenuButton};
 use kentos_ui::widget::tree_view::{self, Node, Toggle, TreeView};
 use kentos_ui::widget::{
     CommandLine, Confirm, Dialog, DockSpace, EmptyState, Menu, Pane, ShortcutList, Tip, overlay,
@@ -298,10 +298,15 @@ impl App {
                     accent,
                     self.session.cursor(),
                 );
-                // The running command's strip on top (command_bar.rs).
-                stack![area, labels, over]
-                    .extend(self.command_bar())
-                    .into()
+                // The running command's strip on top (command_bar.rs); the right
+                // button's menus over it all (drawing_menus.rs).
+                ContextMenu::controlled(
+                    stack![area, labels, over].extend(self.command_bar()),
+                    self.drawing_menu.map(|open| open.at),
+                    move |_| self.drawing_menu_items(),
+                    Message::DrawingMenu(crate::drawing_menus::Event::Closed),
+                )
+                .into()
             }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")
@@ -505,6 +510,19 @@ impl App {
                     prompt.option(name, Message::PromptOption(o.key)).key(o.key)
                 },
             )
+        })
+        // The one-shot snap waits for the next click; its × drops it (the web's stripParts).
+        .map(|prompt| match self.snap_once() {
+            Some(kind) => prompt
+                .option(
+                    format!(
+                        "Sonraki tık: {}",
+                        crate::drawing_menus::snap_label(kind)
+                    ),
+                    Message::DrawingMenu(crate::drawing_menus::Event::SnapOnce(None)),
+                )
+                .key("×"),
+            None => prompt,
         })
     }
 
