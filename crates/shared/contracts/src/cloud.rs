@@ -430,6 +430,12 @@ pub struct ProjectCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub tags: Option<Vec<String>>,
+    /// How the project is kept, for good (docs/adr/0031); absent: object by
+    /// object in PostGIS (`database`). A `file` project gets its content
+    /// from its first committed revision.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub storage: Option<ProjectStorage>,
 }
 
 /// `GET /v1/tenants/{tenant}/projects/{project}`: what opening needs before the objects.
@@ -702,9 +708,12 @@ pub struct ProjectGrant {
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ProjectStorage {
     /// Object by object in the server's PostGIS database (managed): every
-    /// save is one transaction and the others see it at once. Every cloud
-    /// project today.
+    /// save is one transaction and the others see it at once.
     Database,
+    /// As a file: a sequence of immutable, verified `.kcad` v2 revisions in
+    /// the server's object store (docs/adr/0031); each save is a new
+    /// revision, based on the one it replaces.
+    File,
 }
 
 /// Why a person listed with a project cannot use it now.

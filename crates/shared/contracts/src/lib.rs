@@ -40,6 +40,7 @@ pub mod job;
 pub mod layer;
 pub mod numeric;
 pub mod project_catalog;
+pub mod project_files;
 pub mod settings;
 pub mod style;
 
@@ -56,6 +57,7 @@ pub use job::*;
 pub use layer::*;
 pub use numeric::*;
 pub use project_catalog::*;
+pub use project_files::*;
 pub use settings::*;
 pub use style::*;
 

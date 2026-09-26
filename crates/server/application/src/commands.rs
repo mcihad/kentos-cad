@@ -13,20 +13,21 @@
 use std::time::Duration;
 
 use kentos_contracts::{
-    CommandEnvelope, CommitResult, PROJECT_ACCESS_REVOKE, PROJECT_ARCHIVE, PROJECT_CHANGES,
-    PROJECT_CREATE, PROJECT_CREATE_VERSION, PROJECT_DUPLICATE, PROJECT_FAVORITE,
-    PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME, PROJECT_RESTORE, PROJECT_SHARE,
-    PROJECT_TRASH, PROJECT_UNARCHIVE, ProjectAccessChange, ProjectCatalogChange, ProjectCreate,
-    ProjectDuplicated, ProjectInfo, ProjectPurged,
+    CommandEnvelope, CommitResult, FileCommitted, PROJECT_ACCESS_REVOKE, PROJECT_ARCHIVE,
+    PROJECT_CHANGES, PROJECT_CREATE, PROJECT_CREATE_VERSION, PROJECT_DUPLICATE, PROJECT_FAVORITE,
+    PROJECT_FILE_COMMIT, PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME, PROJECT_RESTORE,
+    PROJECT_SHARE, PROJECT_TRASH, PROJECT_UNARCHIVE, ProjectAccessChange, ProjectCatalogChange,
+    ProjectCreate, ProjectDuplicated, ProjectInfo, ProjectPurged,
 };
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
 use crate::access::ProjectAccess;
+use crate::blobs::Blobs;
 use crate::error::{AppError, AppResult};
 use crate::lifecycle::StateChange;
 use crate::tenancy::Access;
-use crate::{catalog, changes, duplicate, idempotency, lifecycle, projects, sharing};
+use crate::{catalog, changes, duplicate, files, idempotency, lifecycle, projects, sharing};
 
 /// How the server keeps its catalog (docs/adr/0028): how long a project
 /// moved to the trash stays there before it is removed for good.
@@ -55,6 +56,8 @@ pub enum CommandOutcome {
     Duplicated(ProjectDuplicated),
     Purged(ProjectPurged),
     Created(ProjectInfo),
+    /// A file project's new revision (docs/adr/0031).
+    FileCommitted(FileCommitted),
 }
 
 impl CommandOutcome {
@@ -69,6 +72,7 @@ impl CommandOutcome {
             Self::Duplicated(_) | Self::Created(_) => false,
             // Its connections ask again and learn it is gone.
             Self::Purged(_) => true,
+            Self::FileCommitted(r) => !r.replayed,
         }
     }
 
@@ -81,6 +85,7 @@ impl CommandOutcome {
             Self::Duplicated(r) => serde_json::to_value(r),
             Self::Purged(r) => serde_json::to_value(r),
             Self::Created(r) => serde_json::to_value(r),
+            Self::FileCommitted(r) => serde_json::to_value(r),
         }
         .expect("command results serialize")
     }
@@ -109,9 +114,11 @@ pub(crate) fn input<T: DeserializeOwned>(
         .map_err(|e| AppError::invalid(format!("Komut girdisi okunamadı: {e}")))
 }
 
-/// Runs the envelope's command on the project `access` names.
+/// Runs the envelope's command on the project `access` names; `blobs` is the
+/// object store of file projects (docs/adr/0031).
 pub async fn run(
     db: &kentos_postgres::Db,
+    blobs: &Blobs,
     policy: &CatalogPolicy,
     access: &ProjectAccess,
     envelope: CommandEnvelope,
@@ -135,6 +142,9 @@ pub async fn run(
             .await
             .map(O::Duplicated),
         PROJECT_PURGE => lifecycle::purge(db, access, envelope).await.map(O::Purged),
+        PROJECT_FILE_COMMIT => files::commit(db, blobs, access, envelope)
+            .await
+            .map(O::FileCommitted),
         PROJECT_CREATE => Err(AppError::invalid(
             "project.create bir çalışma alanına gönderilir: POST /v1/tenants/{çalışma alanı}/commands (projectId boş).",
         )),

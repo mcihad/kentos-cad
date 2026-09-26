@@ -16,6 +16,7 @@
 
 use kentos_contracts::{
     FeaturePage, FeatureRecord, LayerNode, LayerNodeType, ProjectCreate, ProjectInfo,
+    ProjectStorage,
 };
 use kentos_postgres::Scope;
 use serde_json::Value;
@@ -69,6 +70,23 @@ pub fn check_tree(tree: &[LayerNode], active: &str) -> AppResult<()> {
         _ => Err(AppError::invalid(format!(
             "Etkin katman “{active}” ağaçta bir katman değil."
         ))),
+    }
+}
+
+/// The stored name of a storage mode (`project.storage`, migration 0006).
+pub fn storage_name(storage: ProjectStorage) -> &'static str {
+    match storage {
+        ProjectStorage::Database => "database",
+        ProjectStorage::File => "file",
+    }
+}
+
+/// A stored storage mode; anything else is the database's (the column's check allows no other).
+pub fn storage_of(name: &str) -> ProjectStorage {
+    if name == "file" {
+        ProjectStorage::File
+    } else {
+        ProjectStorage::Database
     }
 }
 
@@ -179,8 +197,8 @@ pub async fn create(
     check_srid(&mut tx, input.settings.srid).await?;
     sqlx::query(
         "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
-                                     description, project_type, tags)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15)",
+                                     description, project_type, tags, storage)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16)",
     )
     .bind(access.tenant)
     .bind(id)
@@ -197,13 +215,18 @@ pub async fn create(
     .bind(&description)
     .bind(project_type.name())
     .bind(&tags)
+    .bind(storage_name(input.storage.unwrap_or(ProjectStorage::Database)))
     .execute(&mut *tx)
     .await?;
     sqlx::query("insert into kentos.audit_event (tenant_id, project_id, actor, action, detail) values ($1, $2, $3, 'project.create', $4)")
         .bind(access.tenant)
         .bind(id)
         .bind(access.actor.user_id)
-        .bind(serde_json::json!({ "name": input.name.trim(), "projectType": project_type.name() }))
+        .bind(serde_json::json!({
+            "name": input.name.trim(),
+            "projectType": project_type.name(),
+            "storage": storage_name(input.storage.unwrap_or(ProjectStorage::Database)),
+        }))
         .execute(&mut *tx)
         .await?;
     opened(&mut tx, access.tenant, id, access.actor.user_id).await?;

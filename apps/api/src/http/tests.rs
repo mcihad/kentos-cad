@@ -26,6 +26,7 @@ fn config() -> Config {
         oidc: None,
         event_retention: std::time::Duration::from_secs(7 * 24 * 3600),
         trash_retention: std::time::Duration::from_secs(30 * 24 * 3600),
+        blob_dir: std::env::temp_dir().join("kentos-api-tests-blobs"),
     }
 }
 
@@ -36,6 +37,10 @@ pub(super) fn app(database: Option<Db>) -> Router {
         oidc: None,
         hub: crate::hub::Hub::default(),
         logins: Default::default(),
+        // Each router its own store, so tests never see each other's objects.
+        blobs: kentos_application::blobs::Blobs::new(
+            std::env::temp_dir().join(format!("kentos-api-blobs-{}", uuid::Uuid::now_v7())),
+        ),
     })
 }
 

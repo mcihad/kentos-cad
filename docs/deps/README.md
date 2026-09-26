@@ -1,6 +1,6 @@
 # Bağımlılık kaydı
 
-Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 29 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
+Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.md `BASE-06`'nın karşılığıdır. Bugünkü 30 Rust bağımlılığı aşağıdadır. Lisans taramasını ve SBOM'u CI'a bağlamak ayrı iştir (`OPS-13`).
 
 ## Kurallar
 
@@ -32,13 +32,14 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 | naga | 27.0.3, `wgsl-in` (yalnız test) | MIT OR Apache-2.0 | native (test) | render-wgpu | ADR 0019 |
 | pollster | 0.4.0 (yalnız test) | Apache-2.0 OR MIT | native (test) | render-wgpu GPU testi | ADR 0019 |
 | axum | 0.8.9, `ws` | MIT | native | api | ADR 0001 |
-| tokio | 1.53.1 | MIT | native | api, postgres; application testleri | ADR 0001 |
+| http-body | 1.1.0 | MIT | native | api (akışla indirilen dosyanın gövdesi, yalnız `Frame` türü) | ADR 0031; zaten kilitliydi (axum, hyper), kilide yeni paket girmedi |
+| tokio | 1.53.1 | MIT | native | api, postgres; application (`fs`, `io-util`: dosya projelerinin nesne deposu, ADR 0031) | ADR 0001 |
 | sqlx | 0.9.0, `tls-none` | MIT OR Apache-2.0 | native | postgres, application, api | ADR 0006, 0007. TLS'siz yalnız yerel sunucu içindir; üretim TLS'i açıktır (`OPS-03`) |
 | tower | 0.5.3 | MIT | native | api | ADR 0007 |
 | tower-http | 0.7.1 | MIT | native | api | ADR 0007 |
 | uuid | 1.26.1, `v4`, `v7` | Apache-2.0 OR MIT | native | postgres, application, api, domain | ADR 0007, 0020 |
 | sha1 | 0.10.7, varsayılan özellikler kapalı | MIT OR Apache-2.0 | native, wasm32 | contracts (UUIDv5) | ADR 0014; zaten kilitliydi (axum). wasm32 hedefi sahibin onayıyla, 25 Eylül |
-| sha2 | 0.10.9, varsayılan özellikler kapalı | MIT OR Apache-2.0 | native, wasm32 | contracts (sha256); kcad (dosya özeti, ADR 0025) | ADR 0014; zaten kilitliydi (sqlx). wasm32 hedefi sahibin onayıyla, 25 Eylül |
+| sha2 | 0.10.9, varsayılan özellikler kapalı | MIT OR Apache-2.0 | native, wasm32 | contracts (sha256); kcad (dosya özeti, ADR 0025); application (yüklenen dosyanın özeti, ADR 0031); api testleri | ADR 0014; zaten kilitliydi (sqlx). wasm32 hedefi sahibin onayıyla, 25 Eylül |
 | jsonwebtoken | 11.1.0, `rust_crypto` | MIT | native | api (OpenID) | ADR 0007 |
 | reqwest | 0.13.5, `rustls` | MIT OR Apache-2.0 | native | api (OpenID) | ADR 0007 |
 | time | 0.3.55 | MIT OR Apache-2.0 | native | application, api | ADR 0007 |

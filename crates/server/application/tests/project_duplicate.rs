@@ -223,8 +223,8 @@ async fn a_copy_takes_the_content_and_ids_but_not_history_or_sharing() {
         &[],
     );
     let policy = CatalogPolicy::default();
-    let one = copied(commands::run(&db.app, &policy, &owner, env.clone()).await);
-    let two = copied(commands::run(&db.app, &policy, &owner, env).await);
+    let one = copied(commands::run(&db.app, &common::blobs(), &policy, &owner, env.clone()).await);
+    let two = copied(commands::run(&db.app, &common::blobs(), &policy, &owner, env).await);
     assert!(
         two.replayed && two.project.id == one.project.id && one.project.name == "Ada 101 yedek"
     );

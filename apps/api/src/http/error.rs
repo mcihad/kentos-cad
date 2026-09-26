@@ -50,7 +50,7 @@ pub fn status_of(error: &AppError) -> StatusCode {
         AppError::Conflict { .. } | AppError::Archived(_) => StatusCode::CONFLICT,
         AppError::Limited { .. } => StatusCode::TOO_MANY_REQUESTS,
         AppError::Database(_) if error.code() == "unavailable" => StatusCode::SERVICE_UNAVAILABLE,
-        AppError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        AppError::Database(_) | AppError::Storage(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
 
@@ -59,6 +59,9 @@ impl IntoResponse for Failure {
         let status = status_of(&self.error);
         if let AppError::Database(e) = &self.error {
             tracing::error!(request_id = self.request_id.as_deref().unwrap_or("-"), error = %e, "veritabanı hatası");
+        }
+        if let AppError::Storage(e) = &self.error {
+            tracing::error!(request_id = self.request_id.as_deref().unwrap_or("-"), error = %e, "dosya deposu hatası");
         }
         let (conflicts, revision) = match &self.error {
             AppError::Conflict {

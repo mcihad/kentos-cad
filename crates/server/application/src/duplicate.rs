@@ -86,6 +86,19 @@ pub async fn duplicate(
         return Err(gone(&now.name));
     }
     now.require(ProjectPermission::Download)?;
+    // A file project's content is in the object store (docs/adr/0031); copying it is a later slice.
+    let storage: String =
+        sqlx::query_scalar("select storage from kentos.project where tenant_id = $1 and id = $2")
+            .bind(now.tenant)
+            .bind(now.project)
+            .fetch_one(&mut *tx)
+            .await?;
+    if storage == "file" {
+        return Err(AppError::invalid(format!(
+            "“{}” projesi dosya olarak saklanıyor; dosya projelerinin kopyası henüz yok. Son revizyonu indirip yeni bir dosya projesine yükleyin.",
+            now.name
+        )));
+    }
     let name = name
         .map(|n| n.trim().to_string())
         .unwrap_or_else(|| copy_name(&now.name));

@@ -59,6 +59,33 @@ async fn prune_events(db: Db, keep: Duration) {
     }
 }
 
+/// The object store of file projects is cleaned (docs/adr/0031) two minutes after
+/// the start, then every hour: uploads nobody committed, stray upload files, and
+/// the objects of projects removed for good.
+const CLEAN_FIRST: Duration = Duration::from_secs(120);
+const CLEAN_EVERY: Duration = Duration::from_secs(3600);
+
+async fn clean_store(db: Db, blobs: kentos_application::blobs::Blobs) {
+    let mut every =
+        tokio::time::interval_at(tokio::time::Instant::now() + CLEAN_FIRST, CLEAN_EVERY);
+    every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    loop {
+        every.tick().await;
+        match kentos_application::files::cleanup(&db, &blobs).await {
+            Ok(done) if done != Default::default() => tracing::info!(
+                suresi_dolan = done.expired,
+                sahipsiz = done.swept,
+                silinen_proje = done.purged,
+                "dosya deposu temizlendi"
+            ),
+            Ok(_) => {}
+            Err(e) => {
+                tracing::warn!(error = ?e, "dosya deposu temizlenemedi; bir sonraki turda yeniden denenecek")
+            }
+        }
+    }
+}
+
 /// Projects whose time in the trash is over are removed for good (docs/adr/0028) a
 /// minute and a half after the start, then every hour, this many at a time.
 const PURGE_FIRST: Duration = Duration::from_secs(90);
@@ -140,9 +167,11 @@ async fn serve(config: Config) -> Result<(), String> {
         )?)),
         None => None,
     };
+    let blobs = kentos_application::blobs::Blobs::new(&config.blob_dir);
     if let Some(db) = &database {
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
+        tokio::spawn(clean_store(db.clone(), blobs.clone()));
     }
     let state = AppState {
         config: Arc::new(config),
@@ -150,6 +179,7 @@ async fn serve(config: Config) -> Result<(), String> {
         oidc,
         hub: hub::Hub::default(),
         logins: Default::default(),
+        blobs,
     };
     let listener = tokio::net::TcpListener::bind(addr)
         .await

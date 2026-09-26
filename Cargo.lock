@@ -2391,6 +2391,7 @@ name = "kentos-api"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "http-body",
  "jsonwebtoken",
  "kentos-application",
  "kentos-contracts",
@@ -2398,6 +2399,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "sqlx",
  "time",
  "tokio",
@@ -2414,9 +2416,11 @@ version = "0.1.0"
 dependencies = [
  "kentos-contracts",
  "kentos-geometry-core",
+ "kentos-kcad",
  "kentos-postgres",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "sqlx",
  "time",
  "tokio",

@@ -66,6 +66,7 @@ pub async fn new_project(db: &TestDb, who: &Access, name: &str) -> Uuid {
         description: None,
         project_type: None,
         tags: None,
+        storage: None,
     };
     Uuid::parse_str(
         &projects::create(&db.app, who, input, None)
@@ -158,6 +159,7 @@ pub async fn run(
 ) -> Result<kentos_application::commands::CommandOutcome, kentos_application::AppError> {
     kentos_application::commands::run(
         &db.app,
+        &blobs(),
         &kentos_application::commands::CatalogPolicy::default(),
         by,
         catalog_envelope(by, name, input, &[]),
@@ -237,4 +239,12 @@ pub fn a_point(x: f64) -> ProjectChanges {
         }],
         project: None,
     }
+}
+
+/// An object store of its own for a test (file projects, docs/adr/0031), in a
+/// temporary folder no other test uses.
+pub fn blobs() -> kentos_application::blobs::Blobs {
+    kentos_application::blobs::Blobs::new(
+        std::env::temp_dir().join(format!("kentos-app-blobs-{}", Uuid::now_v7())),
+    )
 }

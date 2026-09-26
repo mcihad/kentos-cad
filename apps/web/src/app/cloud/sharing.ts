@@ -49,6 +49,10 @@ export const STORAGE_TEXT: Record<ProjectStorage, { title: string; detail: strin
     title: 'Yönetilen PostGIS veritabanı',
     detail: 'Nesneler sunucudaki veritabanında tek tek saklanır; her kayıt tek işlemde yazılır ve erişimi olan herkes hemen görür. Paylaşım alıcıya veritabanı hesabı ya da parolası vermez.',
   },
+  file: {
+    title: 'Dosya (KCAD revizyonları)',
+    detail: 'Proje sunucuda değişmez .kcad revizyonları olarak saklanır; her kayıt yeni bir revizyondur ve dayandığı revizyonla karşılaştırılır, arada başkası kaydettiyse üzerine yazılmaz. Paylaşım alıcıya dosya deposuna ayrı bir erişim vermez.',
+  },
 };
 
 const envelope = (commandName: string, tenantId: string, projectId: string, input: unknown): CommandEnvelope => ({

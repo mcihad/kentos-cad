@@ -2,6 +2,7 @@
 import type { Bounds } from "./Bounds";
 import type { LayerNode } from "./LayerNode";
 import type { ProjectSettings } from "./ProjectSettings";
+import type { ProjectStorage } from "./ProjectStorage";
 import type { ProjectStyles } from "./ProjectStyles";
 import type { ProjectType } from "./ProjectType";
 import type { Vec2 } from "./Vec2";
@@ -17,4 +18,10 @@ description?: string,
 /**
  * Absent: the general type (`cad`).
  */
-projectType?: ProjectType, tags?: Array<string>, };
+projectType?: ProjectType, tags?: Array<string>, 
+/**
+ * How the project is kept, for good (docs/adr/0031); absent: object by
+ * object in PostGIS (`database`). A `file` project gets its content
+ * from its first committed revision.
+ */
+storage?: ProjectStorage, };

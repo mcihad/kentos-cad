@@ -56,7 +56,7 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Dar WASM bağlayıcıları ve Rust → TS sözleşme üretimi | `crates/wasm/`, `crates/shared/contracts/` |
 | Belge transaction/rollback, undo/redo; yerel `.kcad`: KCAD v2 yazılır (biçim işçisinde doğrulanır), v1 JSON okunur (ADR 0025) | `model/document.ts`, `model/snapshot.ts`, `app/fileIO.ts`, `app/drawingFile.ts`, `io/kcad.ts` |
 | KCAD v2 kodeki (kap, CBOR profili, şema, koklama), `kcad` aracı; bağımsız Python okuyucusu ve örnek dosyalar | `crates/shared/kcad/`, `tools/kcad/`, `fixtures/kcad/v2/`, `docs/specs/kcad-v2.md` |
-| Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015); proje kataloğu ve yaşam döngüsü komutları, migration 0005 (ADR 0028) | `apps/api/`, `crates/server/` |
+| Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015); proje kataloğu ve yaşam döngüsü komutları, migration 0005 (ADR 0028); dosya olarak saklanan proje: doğrulanan yükleme, değişmez KCAD v2 revizyonları, klasör nesne deposu, migration 0006 (ADR 0031) | `apps/api/`, `crates/server/` |
 | Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict, paylaşım penceresi, “Benimle paylaşılanlar”, açık projede rol/erişim değişikliği (ADR 0024), proje kataloğu: listeler, sunucuda arama/sayfalama, bilgiler, kopya, arşiv, çöp kutusu (ADR 0028) | `app/cloud/`, `ui/cloud/` |
 | KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
 | Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç (v1, v2) / kaydet (v2; geçici dosya ve doğrulama), geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan, çizgi ve çoklu çizgi araçları, değer alanı ve web'in tuş anlamları (ADR 0021, 0027) | `apps/desktop/` |
@@ -118,7 +118,9 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
 - Vite `/v1/` ve `/v1/ws` isteklerini API'ye iletir. Ayarlar
   `apps/api/src/config.rs`: ortam değişkenleri, ardından `.env.local`.
   DB bağlantı bilgilerini, OIDC sırlarını ve token'ları log'a/depoya yazmayın;
-  migration/owner hesabını runtime hesabından ayırın.
+  migration/owner hesabını runtime hesabından ayırın. Dosya projelerinin nesne
+  deposu `KENTOS_BLOB_DIR`'dir (yoksa env dosyasının yanında `.run/blobs`);
+  üretimde veritabanıyla birlikte yedeklenen diskte olmalıdır (ADR 0031).
 - DB testleri için `KENTOS_TEST_ADMIN_URL`; DB zorunluluğu için
   `KENTOS_TEST_DB=required` kullanılır. Atlanan DB testi geçmiş test değildir.
   Kurulum/seed komutlarını üretime veya bilinmeyen veritabanına uygulamayın.
@@ -450,7 +452,10 @@ TODOS.md ile karşılaştırın.
 
 Backend vardır: Axum/Tokio/SQLx ile PostGIS, kimlik/tenant, proje işlemleri ve WS.
 Cloud dosya modunda binary revizyonlar nesne deposunda, katalog/izinler DB'de
-olabilir; projeyi buluta koymak zorunlu CAD→GIS import'u değildir. Canlı DB
+olabilir; projeyi buluta koymak zorunlu CAD→GIS import'u değildir. Saklama biçimi
+(`database`/`file`) proje açılırken seçilir ve değişmez; dosya revizyonu yükleme →
+doğrulama → `project.file.commit` ile yazılır, depo ile DB arasında ortak işlem
+varsayılmaz (ADR 0031). Canlı DB
 modunda PostgreSQL/PostGIS otoritedir. Özel DB/WAL/MVCC motoru tasarlamayın.
 Sunucu transaction'ı istemcinin undo/transaction sorumluluğunun yerine geçmez.
 

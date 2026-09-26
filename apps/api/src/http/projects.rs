@@ -188,7 +188,14 @@ pub async fn command(
 ) -> Result<Json<serde_json::Value>, Failure> {
     let run = async {
         let a = project_access(&state, &caller, &tenant, &project).await?;
-        let outcome = commands::run(state.db()?, &state.catalog_policy(), &a, envelope).await?;
+        let outcome = commands::run(
+            state.db()?,
+            &state.blobs,
+            &state.catalog_policy(),
+            &a,
+            envelope,
+        )
+        .await?;
         if outcome.committed() {
             state.hub.notify(a.tenant, a.project);
         }

@@ -5,6 +5,9 @@ pub mod auth;
 #[cfg(test)]
 mod catalog_tests;
 pub mod error;
+pub mod files;
+#[cfg(test)]
+mod files_tests;
 pub mod limit;
 #[cfg(test)]
 mod people_tests;
@@ -19,7 +22,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::http::StatusCode;
-use axum::routing::{get, post};
+use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use kentos_application::AppError;
 use kentos_contracts::{CONTRACTS_VERSION, Health};
@@ -38,6 +41,9 @@ use crate::oidc::Oidc;
 /// Largest request body: a batch of object changes (a whole imported sheet goes in several).
 pub const BODY_LIMIT: usize = 16 * 1024 * 1024;
 
+/// How long one upload's bytes may take to arrive (docs/adr/0031).
+pub const UPLOAD_TIMEOUT: Duration = Duration::from_secs(600);
+
 #[derive(Clone)]
 pub struct AppState {
     pub config: Arc<Config>,
@@ -46,6 +52,8 @@ pub struct AppState {
     pub oidc: Option<Arc<Oidc>>,
     pub hub: Hub,
     pub logins: Arc<limit::LoginLimiter>,
+    /// The object store of file projects (docs/adr/0031).
+    pub blobs: kentos_application::blobs::Blobs,
 }
 
 impl AppState {
@@ -84,7 +92,7 @@ pub fn router(state: AppState) -> Router {
         .layer(CatchPanicLayer::new())
         .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(30)))
         .layer(RequestBodyLimitLayer::new(BODY_LIMIT));
-    Router::new()
+    let api = Router::new()
         .route("/v1/health", get(health))
         .route("/v1/auth/config", get(auth::config))
         .route("/v1/auth/login", post(auth::login))
@@ -130,7 +138,37 @@ pub fn router(state: AppState) -> Router {
             "/v1/tenants/{tenant}/projects/{project}/access/candidates",
             get(projects::share_candidates),
         )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/uploads",
+            post(files::begin),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/files",
+            get(files::list),
+        )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/files/{revision}",
+            get(files::download),
+        )
         .route("/v1/ws", get(ws::upgrade))
-        .layer(middleware)
-        .with_state(state)
+        .layer(middleware);
+    // An upload's bytes are larger and slower than any other request: their
+    // route has its own limit (the largest file) and timeout.
+    let upload_layers = ServiceBuilder::new()
+        .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+        .layer(TraceLayer::new_for_http().make_span_with(|req: &axum::http::Request<_>| {
+            let rid = req.headers().get("x-request-id").and_then(|v| v.to_str().ok()).unwrap_or("-");
+            tracing::info_span!("yükleme", method = %req.method(), path = %req.uri().path(), request_id = %rid)
+        }))
+        .layer(PropagateRequestIdLayer::x_request_id())
+        .layer(CatchPanicLayer::new())
+        .layer(TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, UPLOAD_TIMEOUT))
+        .layer(RequestBodyLimitLayer::new(kentos_contracts::FILE_UPLOAD_MAX as usize));
+    let uploads = Router::new()
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/uploads/{upload}",
+            put(files::receive),
+        )
+        .layer(upload_layers);
+    api.merge(uploads).with_state(state)
 }

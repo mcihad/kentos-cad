@@ -83,6 +83,9 @@ ts-rs = { version = "=12.0.1", features = ["serde-json-impl"] }
 schemars = { version = "=1.2.2", default-features = false, features = ["derive", "std"] }
 wasm-bindgen = "=0.2.128"
 axum = { version = "=0.8.9", features = ["ws"] }
+# The response body of a streamed download (apps/api http/files.rs, docs/adr/0031): already in the
+# binary through axum and hyper; named here only for its `Frame` type.
+http-body = { version = "=1.1.0" }
 tokio = { version = "=1.53.1", features = ["rt-multi-thread", "macros", "net", "signal", "sync", "time"] }
 # Faz B (docs/adr/0006, 0007): PostgreSQL/PostGIS, HTTP middleware, identity.
 # Database TLS is off for the local server; production enables a TLS feature (ADR 0006).

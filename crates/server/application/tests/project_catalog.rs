@@ -132,6 +132,7 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
     // An edit prepared from an older version is refused, nothing written; from the current one it goes.
     let stale = commands::run(
         &db.app,
+        &common::blobs(),
         &CatalogPolicy::default(),
         &owner,
         catalog_envelope(
@@ -149,6 +150,7 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
     let renamed = changed(
         commands::run(
             &db.app,
+            &common::blobs(),
             &CatalogPolicy::default(),
             &owner,
             catalog_envelope(

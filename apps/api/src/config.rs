@@ -38,6 +38,10 @@ pub struct Config {
     /// removed for good (`KENTOS_TRASH_RETENTION_DAYS`, 1–3650 days, default
     /// 30; docs/adr/0028). Fixed for each project when it is moved there.
     pub trash_retention: Duration,
+    /// Where file projects' objects are kept (`KENTOS_BLOB_DIR`; docs/adr/0031).
+    /// Absent: `.run/blobs` beside the env file, for development; a server
+    /// sets its own, on storage that is backed up with the database.
+    pub blob_dir: PathBuf,
 }
 
 /// Days of event log kept unless `KENTOS_EVENT_RETENTION_DAYS` says otherwise.
@@ -120,6 +124,14 @@ impl Config {
             oidc,
             event_retention: retention(get("KENTOS_EVENT_RETENTION_DAYS").as_deref())?,
             trash_retention: trash_retention(get("KENTOS_TRASH_RETENTION_DAYS").as_deref())?,
+            blob_dir: get("KENTOS_BLOB_DIR")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| {
+                    env_file
+                        .parent()
+                        .unwrap_or_else(|| std::path::Path::new("."))
+                        .join(".run/blobs")
+                }),
             env_file,
             vars,
         })

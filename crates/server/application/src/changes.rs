@@ -179,13 +179,19 @@ pub async fn commit(
     // 1. Lock the project: commits of one project happen one after another.
     let now = lock(&mut tx, access).await?;
     let project = now.project;
-    let (srid, layers, meta_version, data_revision, old_name): (i32, Value, i64, i64, String) = sqlx::query_as(
-        "select srid, layers, meta_version, data_revision, name from kentos.project where tenant_id = $1 and id = $2",
+    let (srid, layers, meta_version, data_revision, old_name, storage): (i32, Value, i64, i64, String, String) = sqlx::query_as(
+        "select srid, layers, meta_version, data_revision, name, storage from kentos.project where tenant_id = $1 and id = $2",
     )
     .bind(now.tenant)
     .bind(project)
     .fetch_one(&mut *tx)
     .await?;
+    // A file project's content is its revisions (docs/adr/0031): objects are not written one by one.
+    if storage == "file" {
+        return Err(AppError::invalid(format!(
+            "“{old_name}” projesi dosya olarak saklanıyor; nesneler tek tek yazılmaz. Çizimi kaydedip yeni bir dosya revizyonu olarak yükleyin (project.file.commit)."
+        )));
+    }
     // The version a created object gets: this commit's data revision (the module's comment says why).
     let created_version = data_revision + 1;
 

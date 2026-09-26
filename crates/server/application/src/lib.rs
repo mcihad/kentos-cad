@@ -7,6 +7,7 @@
 
 pub mod access;
 pub mod admin;
+pub mod blobs;
 pub mod cad;
 pub mod catalog;
 pub mod changes;
@@ -14,6 +15,7 @@ pub mod commands;
 pub mod duplicate;
 pub mod error;
 pub mod events;
+pub mod files;
 mod idempotency;
 pub mod identity;
 mod journal;
@@ -84,5 +86,10 @@ pub const SERVER_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::PROJECT_FAVORITE,
         kentos_contracts::PROJECT_FAVORITE_VERSION,
+    ),
+    // File projects (docs/adr/0031).
+    (
+        kentos_contracts::PROJECT_FILE_COMMIT,
+        kentos_contracts::PROJECT_FILE_COMMIT_VERSION,
     ),
 ];

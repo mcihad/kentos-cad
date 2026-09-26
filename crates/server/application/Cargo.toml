@@ -10,6 +10,11 @@ publish.workspace = true
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-postgres = { path = "../postgres" }
+# File projects (docs/adr/0031): uploads are verified as KCAD v2 with the shared codec,
+# hashed with SHA-256 and written to the object store with tokio's file system calls.
+kentos-kcad = { path = "../../shared/kcad" }
+sha2 = { workspace = true }
+tokio = { workspace = true, features = ["fs", "io-util"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }

@@ -502,6 +502,31 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // A file project's save (docs/adr/0031): the verified upload becomes the next revision.
+        CommandDescriptor {
+            id: crate::PROJECT_FILE_COMMIT.into(),
+            version: crate::PROJECT_FILE_COMMIT_VERSION,
+            title: "Dosya revizyonunu kaydet".into(),
+            summary: "Dosya olarak saklanan projede doğrulanmış bir yüklemeyi (POST …/uploads, PUT …/uploads/{yükleme}) projenin yeni revizyonu yapar. \
+                      expectedVersions[\"@file\"] dosyanın dayandığı revizyondur (ilk kayıtta \"0\"); proje o arada değiştiyse hiçbir şey yazılmaz, çakışma döner. \
+                      Yetki kayıt anında yeniden sorulur. feature.write ister; revizyonlar değişmez, eski revizyon silinmez."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::FeatureWrite.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::FileCommit>(),
+            output: schema::<crate::FileCommitted>(),
+            examples: vec![CommandExample {
+                title: "İlk revizyonu kaydet".into(),
+                input: json!({ "uploadId": "0199a1b2-3c4d-7e5f-8a9b-0c1d2e3f4a5b" }),
+                output: None,
+            }],
+        },
         // The first document command (docs/adr/0022): the web's and the desktop's own
         // handlers, held together by fixtures/commands/v1/cad.polygon.create.json.
         CommandDescriptor {
@@ -760,6 +785,9 @@ mod tests {
                     crate::PROJECT_FAVORITE => {
                         serde_json::from_value::<crate::ProjectFavorite>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::PROJECT_FILE_COMMIT => {
+                        serde_json::from_value::<crate::FileCommit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_POLYGON_CREATE => {
                         serde_json::from_value::<PolygonCreate>(e.input.clone()).map(|_| ())

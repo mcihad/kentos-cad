@@ -5,4 +5,4 @@
  * File projects (binary `.kcad` revisions) and references to an outside
  * PostGIS come as their own kinds.
  */
-export type ProjectStorage = "database";
+export type ProjectStorage = "database" | "file";

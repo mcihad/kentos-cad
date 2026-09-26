@@ -67,6 +67,7 @@ async fn new_project(db: &TestDb, who: &Access) -> Uuid {
         description: None,
         project_type: None,
         tags: None,
+        storage: None,
     };
     Uuid::parse_str(
         &projects::create(&db.app, who, input, None)

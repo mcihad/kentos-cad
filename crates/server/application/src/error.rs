@@ -38,6 +38,8 @@ pub enum AppError {
     Limited { message: String, retry_after: u64 },
     /// The database failed; the detail is logged, the client sees a generic message (500/503).
     Database(sqlx::Error),
+    /// The object store of file projects failed (docs/adr/0031); the detail is logged (500).
+    Storage(std::io::Error),
 }
 
 impl AppError {
@@ -81,6 +83,7 @@ impl AppError {
             Self::Limited { .. } => "rate_limited",
             Self::Database(e) if is_unavailable(e) => "unavailable",
             Self::Database(_) => "internal",
+            Self::Storage(_) => "storage",
         }
     }
 }
@@ -145,6 +148,9 @@ impl fmt::Display for AppError {
             Self::Database(_) => {
                 f.write_str("Sunucuda beklenmeyen bir hata oldu; ayrıntı sunucu günlüğünde.")
             }
+            Self::Storage(_) => f.write_str(
+                "Sunucunun dosya deposunda bir hata oldu; ayrıntı sunucu günlüğünde. Sorun sürerse yöneticiye bildirin.",
+            ),
         }
     }
 }
@@ -154,6 +160,12 @@ impl std::error::Error for AppError {}
 impl From<sqlx::Error> for AppError {
     fn from(e: sqlx::Error) -> Self {
         Self::Database(e)
+    }
+}
+
+impl From<std::io::Error> for AppError {
+    fn from(e: std::io::Error) -> Self {
+        Self::Storage(e)
     }
 }
 
