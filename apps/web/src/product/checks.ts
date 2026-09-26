@@ -36,6 +36,16 @@ export function notFinite(p: Vec2, whose: string, path: string): Stop | null {
   return null;
 }
 
+/** A number that is NaN or ±∞ (a radius, an angle, an elevation), as its message names it: “Yarıçap sonlu bir sayı değil …”. */
+export function notFiniteValue(value: number, what: string, fix: string, path: string): Stop | null {
+  return Number.isFinite(value) ? null : failed(error('not_finite', `${what} sonlu bir sayı değil (NaN ya da sonsuz). ${fix}`, path));
+}
+
+/** A circle's or an arc's radius: above zero (`invalid_radius`), once it is finite. */
+export function checkRadius(r: number): Stop | null {
+  return r > 0 ? null : failed(error('invalid_radius', 'Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.', 'r'));
+}
+
 /** The expected revision, when given: decimal text, then the document's own (`conflict` when not, with the revision now). */
 export function checkRevision(doc: CadDocument, expected: string | null | undefined): Stop | null {
   if (expected == null) return null;

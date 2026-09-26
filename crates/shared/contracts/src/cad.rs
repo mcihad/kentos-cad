@@ -72,7 +72,7 @@ pub struct PolygonCreate {
 /// leading zero (DOM-12: revisions cross JSON as text, never as a float).
 /// Only equality means something; the step between two revisions does not.
 #[cfg(feature = "schema")]
-const REVISION_TEXT: &str = "^(0|[1-9][0-9]*)$";
+pub(crate) const REVISION_TEXT: &str = "^(0|[1-9][0-9]*)$";
 
 /// Output of `cad.polygon.create` v1: the object written.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

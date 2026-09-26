@@ -49,6 +49,41 @@ pub(crate) fn not_finite(whose: &str, axis: &str, path: String) -> Stop {
     ))
 }
 
+/// The first coordinate of `p` that is NaN or ±∞, x before y (`whose`: “Merkezin”).
+pub(crate) fn point(p: kentos_contracts::Vec2, whose: &str, path: &str) -> Result<(), Stop> {
+    for (axis, value) in [("x", p.x), ("y", p.y)] {
+        if !value.is_finite() {
+            return Err(not_finite(whose, axis, format!("{path}.{axis}")));
+        }
+    }
+    Ok(())
+}
+
+/// A number that is NaN or ±∞ (a radius, an angle, an elevation), as its
+/// message names it: “Yarıçap sonlu bir sayı değil …”.
+pub(crate) fn finite(value: f64, what: &str, fix: &str, path: &str) -> Result<(), Stop> {
+    if value.is_finite() {
+        return Ok(());
+    }
+    Err(Stop::Failed(error(
+        codes::NOT_FINITE,
+        format!("{what} sonlu bir sayı değil (NaN ya da sonsuz). {fix}"),
+        Some(path.into()),
+    )))
+}
+
+/// A circle's or an arc's radius: above zero (`invalid_radius`), once it is finite.
+pub(crate) fn radius(r: f64) -> Result<(), Stop> {
+    if r > 0.0 {
+        return Ok(());
+    }
+    Err(Stop::Failed(error(
+        codes::INVALID_RADIUS,
+        "Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.".into(),
+        Some("r".into()),
+    )))
+}
+
 /// The expected revision, when given: decimal text, then the document's own
 /// (`conflict` when not, with the revision now).
 pub(crate) fn revision(doc: &Document, expected: Option<&str>) -> Result<(), Stop> {

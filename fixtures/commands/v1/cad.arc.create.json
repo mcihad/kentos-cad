@@ -1,0 +1,210 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.arc.create",
+  "commandVersion": 1,
+  "title": "Yay oluştur: doğrulama, plan, yazma, geri alma",
+  "note": "ADR 0032. Denetim sırası: merkezin (önce x, sonra y), yarıçapın, başlangıç ve bitiş açılarının sonlu olması, yarıçapın sıfırdan büyük olması; beklenen sürümün yazımı, sonra çizimin sürümü; katman (var mı, katman mı, kilitli mi). Gizli katmana uyarıyla yazılır. Kurulumdaki çizimde iki nesne var (4 ve 9); yeni nesne 10'dan başlar. Açılar radyandır; yay a0'dan a1'e saat yönünün tersine gider ve açılar verildiği gibi saklanır. Yay aracı yöntemlerinin yayını ortak çekirdekle bulur ve bu komutla yazar.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+    "origin": {"x": 487000, "y": 4420000},
+    "layers": [
+      {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "pafta", "name": "Pafta", "type": "group", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "sinir", "name": "Sınır", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "taslak", "name": "Taslak", "type": "group", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "notlar", "name": "Notlar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {"kind": "point", "id": 4, "layerId": "yapi", "attrs": {}, "p": {"x": 487001, "y": 4420001}},
+      {"kind": "polygon", "id": 9, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [{"x": 487000, "y": 4420000}, {"x": 487040, "y": 4420000}, {"x": 487040, "y": 4420030}]}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "cases": [
+    {
+      "name": "yazılır, tek adımda geri alınır, aynı kalıcı kimlikle yinelenir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "arc", "id": 10, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}}, "canUndo": true, "canRedo": false, "dirty": true, "revision": "changed"}},
+        {"op": "captureUid", "id": 10, "as": "created"},
+        {"op": "undo", "returns": "Ekle", "note": "Aracın hep yazdığı adım adı.", "expect": {"ids": [4, 9], "canUndo": false, "canRedo": true, "dirty": true, "revision": "changed"}},
+        {"op": "redo", "returns": "Ekle", "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "arc", "id": 10, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}}, "uids": {"10": "created"}, "canUndo": true, "canRedo": false, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "her çağrı ayrı nesne ve ayrı adımdır: geri alma yalnız sonuncuyu kaldırır; her nesnenin kendi kimliği vardır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}},
+        {"op": "captureUid", "id": 10, "as": "first"},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "note": "Aynı girdi ikinci kez: ikinci bir nesne.", "result": {"status": "completed", "output": {"uid": "$uid", "id": 11, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11], "entities": {"11": {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}}, "uids": {"10": "first", "11": "new"}}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [4, 9, 10], "uids": {"10": "first"}, "canUndo": true, "canRedo": true}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [4, 9], "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "renk ve öznitelikler olduğu gibi yazılır; grubun içindeki katmana da",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "sinir", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "color": "#E5484D", "attrs": {"Tür": "Aplikasyon"}}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "arc", "id": 10, "layerId": "sinir", "color": "#E5484D", "attrs": {"Tür": "Aplikasyon"}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}}}}
+      ]
+    },
+    {
+      "name": "gizli katmana uyarıyla yazılır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "gizli", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "arc", "id": 10, "layerId": "gizli", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "gizli grubun katmanı da gizlidir; uyarı katmanın adını verir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "notlar", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Notlar” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [4, 9, 10], "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "kilitli katmana hiçbir şey yazılmaz; ileti nasıl düzeltileceğini söyler",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "kilitli", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kilitli grubun katmanı da kilitlidir; ileti katmanın adını verir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "eski", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Eski” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "bilinmeyen katman",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yok", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "layer_not_found", "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "layer_not_found", "message": "“” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "grup katman değildir; kilitli grup da önce grup olduğu için reddedilir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "pafta", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "not_a_layer", "message": "“Pafta” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "path": "layerId"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "arsiv", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "not_a_layer", "message": "“Arşiv” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "path": "layerId"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm çizimin sürümüyse yazılır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10], "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict",
+      "steps": [
+        {"op": "captureRevision", "as": "prepared"},
+        {"op": "execute", "note": "Girdi hazırlandıktan sonra çizim başka bir düzenlemeyle değişir.", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "$prepared"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [4, 9, 10], "canUndo": true, "canRedo": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm ondalık bir tamsayı yazısıdır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "12.0"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “12.0” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "-1"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “-1” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "01"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “01” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "abc"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": ""}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "girdinin hatası çizimin durumundan önce gelir; çakışma katmandan önce",
+      "steps": [
+        {"op": "captureRevision", "as": "old"},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "$old"}, "nonFinite": {"a1": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Bitiş açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.", "path": "a1"}}, "expect": {"ids": [4, 9, 10], "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "kilitli", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "$old"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [4, 9, 10], "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "kilitli", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "abc"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "doğrulama hiçbir şey yazmaz; yazmanın vereceği cevabı verir",
+      "steps": [
+        {"op": "validate", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"layerId": "gizli", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": null, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"layerId": "kilitli", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "99"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "plan yazılacak nesneyi gösterir ve hiçbir şey yazmaz; yazma planın sürümüyle planı yazar",
+      "steps": [
+        {"op": "plan", "input": {"layerId": "gizli", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "color": "#3B82F6"}, "result": {"status": "completed", "output": {"entity": {"kind": "arc", "id": 0, "layerId": "gizli", "color": "#3B82F6", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "captureRevision", "as": "planned"},
+        {"op": "execute", "input": {"layerId": "gizli", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "color": "#3B82F6", "expectedRevision": "$planned"}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [4, 9, 10], "entities": {"10": {"kind": "arc", "id": 10, "layerId": "gizli", "color": "#3B82F6", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "plan ve doğrulama geçmişe dokunmaz: yinelenecek adım kalır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [4, 9], "canRedo": true}},
+        {"op": "plan", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": {"entity": {"kind": "arc", "id": 0, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": true, "revision": "same"}},
+        {"op": "validate", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"canRedo": true, "revision": "same"}},
+        {"op": "redo", "returns": "Ekle", "expect": {"ids": [4, 9, 10]}}
+      ]
+    },
+    {
+      "name": "plan da aynı nedenlerle reddeder",
+      "steps": [
+        {"op": "plan", "input": {"layerId": "eski", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Eski” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966, "expectedRevision": "7"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"a1": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Bitiş açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.", "path": "a1"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "açılar verildiği gibi saklanır: sıfırı geçen, eksi ve tam turdan büyük açılar",
+      "note": "Yay a0'dan a1'e saat yönünün tersine gider; komut açıları düzeltmez.",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 4.71238898038469, "a1": 1.5707963267948966}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "arc", "id": 10, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 4.71238898038469, "a1": 1.5707963267948966}}}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 3.141592653589793, "a1": -1.5707963267948966}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 11, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"11": {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 3.141592653589793, "a1": -1.5707963267948966}}}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 7.5, "a1": 13}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 12, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"12": {"kind": "arc", "id": 12, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 7.5, "a1": 13}}}}
+      ]
+    },
+    {
+      "name": "eşit açılar da yazılır: belge onları tam tur okur",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 1, "a1": 1}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "arc", "id": 10, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 1, "a1": 1}}}}
+      ]
+    },
+    {
+      "name": "NaN ya da sonsuz merkez, yarıçap ya da açı yazılmaz; yol ve ileti hangi değer olduğunu söyler",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"c.x": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Merkezin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "c.x"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"c.y": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Merkezin kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "c.y"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"r": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Yarıçap sonlu bir sayı değil (NaN ya da sonsuz). Yarıçapı sonlu bir sayıyla verin.", "path": "r"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"a0": "-Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Başlangıç açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.", "path": "a0"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"a1": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Bitiş açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.", "path": "a1"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ilk bozuk değer söylenir: merkez, yarıçap, başlangıç açısı, bitiş açısı",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"a1": "NaN", "a0": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Başlangıç açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.", "path": "a0"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"a0": "NaN", "r": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Yarıçap sonlu bir sayı değil (NaN ya da sonsuz). Yarıçapı sonlu bir sayıyla verin.", "path": "r"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 10, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"r": "NaN", "c.x": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Merkezin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "c.x"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "yarıçap sıfırdan büyük olmalı; sonlu olmayan açı sıfır yarıçaptan önce söylenir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 0, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "invalid_radius", "message": "Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.", "path": "r"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": -3, "a0": 0, "a1": 1.5707963267948966}, "result": {"status": "failed", "error": {"code": "invalid_radius", "message": "Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.", "path": "r"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487020, "y": 4420015}, "r": 0, "a0": 0, "a1": 1.5707963267948966}, "nonFinite": {"a1": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Bitiş açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.", "path": "a1"}}, "expect": {"ids": [4, 9], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "büyük koordinattaki yay olduğu gibi saklanır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "c": {"x": 487012.3456789, "y": 4420001.2345678}, "r": 0.0125, "a0": 0.123456789, "a1": 2.987654321}, "result": {"status": "completed", "output": {"uid": "$uid", "id": 10, "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "arc", "id": 10, "layerId": "yapi", "attrs": {}, "c": {"x": 487012.3456789, "y": 4420001.2345678}, "r": 0.0125, "a0": 0.123456789, "a1": 2.987654321}}}}
+      ]
+    }
+  ]
+}

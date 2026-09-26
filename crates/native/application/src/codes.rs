@@ -6,8 +6,10 @@
 pub const TOO_FEW_CORNERS: &str = "too_few_corners";
 /// A polyline with fewer than 2 points (`cad.polyline.create`).
 pub const TOO_FEW_POINTS: &str = "too_few_points";
-/// A coordinate or a bulge that is NaN or ±∞.
+/// A coordinate, a bulge, a radius, an angle or an elevation that is NaN or ±∞.
 pub const NOT_FINITE: &str = "not_finite";
+/// A circle's or an arc's radius that is not above zero (`cad.circle.create`, `cad.arc.create`).
+pub const INVALID_RADIUS: &str = "invalid_radius";
 /// Bulges given, but not one per edge.
 pub const BULGE_COUNT: &str = "bulge_count";
 pub const INVALID_REVISION: &str = "invalid_revision";

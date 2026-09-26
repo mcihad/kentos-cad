@@ -7384,6 +7384,479 @@
           }
         }
       ]
+    },
+    {
+      "id": "cad.point.create",
+      "version": 1,
+      "title": "Nokta oluştur",
+      "summary": "Açık çizimde verilen katmana bir nokta nesnesi ekler; isteğe bağlı kotu ve yanında görünen yazısıyla. Tek geri alma adımıdır. Nokta aracı her nokta için bu komutu bir kez çalıştırır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.point.create` v1: one point object on a named layer, written\nas one undo step. The point tool calls it once per point it places.\nEverything the command depends on is here (TODOS.md CMD-07): the tool fills\n`layerId` from the active layer (or its own layer, as the spot elevation\ntool does) and `color` from the current colour; the command reads neither.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite` (`p`,\nx before y, then `z`), `invalid_revision`, `revision_conflict` (status\n`conflict`), `layer_not_found`, `not_a_layer`, `layer_locked`; on the\ndesktop also `slots_exhausted`. Warning: `layer_hidden` (it is written\nall the same).",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "GIS attributes, text in v1. Absent: none.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "color": {
+            "description": "Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "label": {
+            "description": "The text shown beside it (`EntityBase.label`): a point's name, a spot\nelevation. Absent: none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
+            "type": "string"
+          },
+          "p": {
+            "$ref": "#/$defs/Vec2",
+            "description": "Where it is: x east (Y), y north (X), in the project's units (m), float64."
+          },
+          "z": {
+            "description": "Its elevation (kot), in metres. Absent: none.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "layerId",
+          "p"
+        ],
+        "title": "PointCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.point.create` v1: the object written.",
+        "properties": {
+          "id": {
+            "description": "Its slot in the open document (`Entity.id`); it means nothing once the document is closed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text. Inside an\nopen transaction or group the write joins it, and the revision\nchanges when that ends.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uid": {
+            "description": "Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "id",
+          "revision"
+        ],
+        "title": "PointCreated",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Bir nokta",
+          "input": {
+            "layerId": "nokta",
+            "p": {
+              "x": 423510.25,
+              "y": 4512300.5
+            }
+          },
+          "output": {
+            "id": 12,
+            "revision": "38",
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        },
+        {
+          "title": "Kotlu ve adlı bir nokta; yalnız planlandığı sürümde yazılır",
+          "input": {
+            "attrs": {
+              "Tür": "Kot noktası"
+            },
+            "expectedRevision": "37",
+            "label": "812.35",
+            "layerId": "kot",
+            "p": {
+              "x": 423510.25,
+              "y": 4512300.5
+            },
+            "z": 812.35
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.circle.create",
+      "version": 1,
+      "title": "Daire oluştur",
+      "summary": "Açık çizimde verilen katmana merkezi ve yarıçapıyla bir daire ekler; tek geri alma adımıdır. Daire aracı yöntemlerinin (merkez ve yarıçap ya da çap, iki nokta, üç nokta, iki nesneye teğet ve yarıçap, üç nesneye teğet) dairesini ortak geometri çekirdeğiyle bulur ve bu komutla yazar. Yarıçap sıfırdan büyük olmalıdır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.circle.create` v1: one circle by its centre and radius on a\nnamed layer, written as one undo step. The circle tool computes the circle\nof each of its methods (centre and radius or diameter, two points, three\npoints, tangent-tangent-radius, three tangents) through the shared core\nand gives it here. Everything the command depends on is here (TODOS.md\nCMD-07): the tool fills `layerId` from the active layer and `color` from\nthe current colour; the command reads neither.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite` (`c`,\nx before y, then `r`), `invalid_radius` (not above zero),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also\n`slots_exhausted`. Warning: `layer_hidden` (it is written all the same).",
+        "properties": {
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "GIS attributes, text in v1. Absent: none.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "c": {
+            "$ref": "#/$defs/Vec2",
+            "description": "Its centre: x east (Y), y north (X), in the project's units (m), float64."
+          },
+          "color": {
+            "description": "Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
+            "type": "string"
+          },
+          "r": {
+            "description": "Its radius, in the project's units; above zero.",
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "layerId",
+          "c",
+          "r"
+        ],
+        "title": "CircleCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.circle.create` v1: the object written.",
+        "properties": {
+          "id": {
+            "description": "Its slot in the open document (`Entity.id`); it means nothing once the document is closed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text. Inside an\nopen transaction or group the write joins it, and the revision\nchanges when that ends.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uid": {
+            "description": "Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "id",
+          "revision"
+        ],
+        "title": "CircleCreated",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Yarıçapı 12,5 m olan bir daire",
+          "input": {
+            "c": {
+              "x": 423510.0,
+              "y": 4512300.0
+            },
+            "layerId": "yapi",
+            "r": 12.5
+          },
+          "output": {
+            "id": 12,
+            "revision": "38",
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        },
+        {
+          "title": "Renkli bir daire; yalnız planlandığı sürümde yazılır",
+          "input": {
+            "c": {
+              "x": 423510.0,
+              "y": 4512300.0
+            },
+            "color": "#E5484D",
+            "expectedRevision": "37",
+            "layerId": "yapi",
+            "r": 3.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.arc.create",
+      "version": 1,
+      "title": "Yay oluştur",
+      "summary": "Açık çizimde verilen katmana merkezi, yarıçapı ve saat yönünün tersine başlangıç ile bitiş açısıyla (radyan) bir yay ekler; tek geri alma adımıdır. Yay aracı yöntemlerinin (üç nokta; başlangıç, merkez ve bitiş, açı ya da kiriş; başlangıç, bitiş ve merkez, açı, yön ya da yarıçap; önce merkez; son nesneye teğet devam) yayını ortak geometri çekirdeğiyle bulur ve bu komutla yazar. Yarıçap sıfırdan büyük olmalıdır; açılar verildiği gibi saklanır, eşit açılar tam turdur. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.arc.create` v1: one circular arc on a named layer, as the\ndocument stores it (centre, radius, and the angles it runs between counter-\nclockwise), written as one undo step. The arc tool computes the arc of each\nof its methods (three points; start, centre and end, angle or chord; start,\nend and centre, angle, direction or radius; centre first; continuing the\nlast object) through the shared core and gives it here. Everything the\ncommand depends on is here (TODOS.md CMD-07): the tool fills `layerId`\nfrom the active layer and `color` from the current colour.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite` (`c`,\nx before y, then `r`, `a0`, `a1`), `invalid_radius` (not above zero),\n`invalid_revision`, `revision_conflict` (status `conflict`),\n`layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also\n`slots_exhausted`. Warning: `layer_hidden` (it is written all the same).\nThe angles are stored as given: equal angles are a full turn, as the\ndocument reads them; no angle is refused for its size.",
+        "properties": {
+          "a0": {
+            "description": "Where it starts: radians, counter-clockwise from east (a geometry\nangle, not a surveying bearing).",
+            "format": "double",
+            "type": "number"
+          },
+          "a1": {
+            "description": "Where it ends: the arc runs counter-clockwise from `a0` to `a1`.",
+            "format": "double",
+            "type": "number"
+          },
+          "attrs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "GIS attributes, text in v1. Absent: none.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "c": {
+            "$ref": "#/$defs/Vec2",
+            "description": "Its centre: x east (Y), y north (X), in the project's units (m), float64."
+          },
+          "color": {
+            "description": "Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "description": "The layer it goes on: a layer's id (`LayerNode.id`), not a group's.",
+            "type": "string"
+          },
+          "r": {
+            "description": "Its radius, in the project's units; above zero.",
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "layerId",
+          "c",
+          "r",
+          "a0",
+          "a1"
+        ],
+        "title": "ArcCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.arc.create` v1: the object written.",
+        "properties": {
+          "id": {
+            "description": "Its slot in the open document (`Entity.id`); it means nothing once the document is closed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text. Inside an\nopen transaction or group the write joins it, and the revision\nchanges when that ends.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uid": {
+            "description": "Its persistent id (UUIDv7, docs/adr/0014): the name files, the cloud, Python and AI use.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "id",
+          "revision"
+        ],
+        "title": "ArcCreated",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Doğudan kuzeye çeyrek yay",
+          "input": {
+            "a0": 0.0,
+            "a1": 1.5707963267948966,
+            "c": {
+              "x": 423510.0,
+              "y": 4512300.0
+            },
+            "layerId": "yapi",
+            "r": 10.0
+          },
+          "output": {
+            "id": 12,
+            "revision": "38",
+            "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+          }
+        },
+        {
+          "title": "Batıdan güneye çeyrek yay, eksi bitiş açısıyla; yalnız planlandığı sürümde yazılır",
+          "input": {
+            "a0": 3.141592653589793,
+            "a1": -1.5707963267948966,
+            "c": {
+              "x": 423510.0,
+              "y": 4512300.0
+            },
+            "expectedRevision": "37",
+            "layerId": "yapi",
+            "r": 4.0
+          }
+        }
+      ]
     }
   ]
 }

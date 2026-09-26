@@ -155,13 +155,16 @@ fn schema<T: schemars::JsonSchema>() -> serde_json::Value {
 #[cfg(feature = "schema")]
 pub fn catalog() -> CommandCatalog {
     use crate::{
-        CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION, CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION,
+        ArcCreate, ArcCreated, CAD_ARC_CREATE, CAD_ARC_CREATE_VERSION, CAD_CIRCLE_CREATE,
+        CAD_CIRCLE_CREATE_VERSION, CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION,
+        CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE, CAD_POINT_CREATE_VERSION,
         CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE,
-        CAD_POLYLINE_CREATE_VERSION, CommitResult, EntitiesDelete, EntitiesDeleted, LineCreate,
-        LineCreated, PROJECT_ACCESS_REVOKE, PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES,
-        PROJECT_CHANGES_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION, PolygonCreate,
-        PolygonCreated, PolylineCreate, PolylineCreated, ProjectAccessChange, ProjectAccessRevoke,
-        ProjectChanges, ProjectPermission, ProjectShare,
+        CAD_POLYLINE_CREATE_VERSION, CircleCreate, CircleCreated, CommitResult, EntitiesDelete,
+        EntitiesDeleted, LineCreate, LineCreated, PROJECT_ACCESS_REVOKE,
+        PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_SHARE,
+        PROJECT_SHARE_VERSION, PointCreate, PointCreated, PolygonCreate, PolygonCreated,
+        PolylineCreate, PolylineCreated, ProjectAccessChange, ProjectAccessRevoke, ProjectChanges,
+        ProjectPermission, ProjectShare,
     };
     use serde_json::json;
     CommandCatalog {
@@ -746,6 +749,153 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // The point, circle and arc tools' commands (docs/adr/0032), held together by
+        // fixtures/commands/v1/cad.{point,circle,arc}.create.json.
+        CommandDescriptor {
+            id: CAD_POINT_CREATE.into(),
+            version: CAD_POINT_CREATE_VERSION,
+            title: "Nokta oluştur".into(),
+            summary: "Açık çizimde verilen katmana bir nokta nesnesi ekler; isteğe bağlı kotu ve yanında görünen yazısıyla. Tek geri alma adımıdır. \
+                      Nokta aracı her nokta için bu komutu bir kez çalıştırır. \
+                      Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<PointCreate>(),
+            output: schema::<PointCreated>(),
+            examples: vec![
+                CommandExample {
+                    title: "Bir nokta".into(),
+                    input: json!({
+                        "layerId": "nokta",
+                        "p": { "x": 423510.25, "y": 4512300.5 }
+                    }),
+                    output: Some(json!({
+                        "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                        "id": 12,
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Kotlu ve adlı bir nokta; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "layerId": "kot",
+                        "p": { "x": 423510.25, "y": 4512300.5 },
+                        "z": 812.35,
+                        "label": "812.35",
+                        "attrs": { "Tür": "Kot noktası" },
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: CAD_CIRCLE_CREATE.into(),
+            version: CAD_CIRCLE_CREATE_VERSION,
+            title: "Daire oluştur".into(),
+            summary: "Açık çizimde verilen katmana merkezi ve yarıçapıyla bir daire ekler; tek geri alma adımıdır. \
+                      Daire aracı yöntemlerinin (merkez ve yarıçap ya da çap, iki nokta, üç nokta, iki nesneye teğet ve yarıçap, üç nesneye teğet) dairesini ortak geometri çekirdeğiyle bulur ve bu komutla yazar. \
+                      Yarıçap sıfırdan büyük olmalıdır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<CircleCreate>(),
+            output: schema::<CircleCreated>(),
+            examples: vec![
+                CommandExample {
+                    title: "Yarıçapı 12,5 m olan bir daire".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "c": { "x": 423510.0, "y": 4512300.0 },
+                        "r": 12.5
+                    }),
+                    output: Some(json!({
+                        "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                        "id": 12,
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Renkli bir daire; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "c": { "x": 423510.0, "y": 4512300.0 },
+                        "r": 3.0,
+                        "color": "#E5484D",
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: CAD_ARC_CREATE.into(),
+            version: CAD_ARC_CREATE_VERSION,
+            title: "Yay oluştur".into(),
+            summary: "Açık çizimde verilen katmana merkezi, yarıçapı ve saat yönünün tersine başlangıç ile bitiş açısıyla (radyan) bir yay ekler; tek geri alma adımıdır. \
+                      Yay aracı yöntemlerinin (üç nokta; başlangıç, merkez ve bitiş, açı ya da kiriş; başlangıç, bitiş ve merkez, açı, yön ya da yarıçap; önce merkez; son nesneye teğet devam) yayını ortak geometri çekirdeğiyle bulur ve bu komutla yazar. \
+                      Yarıçap sıfırdan büyük olmalıdır; açılar verildiği gibi saklanır, eşit açılar tam turdur. \
+                      Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<ArcCreate>(),
+            output: schema::<ArcCreated>(),
+            examples: vec![
+                CommandExample {
+                    title: "Doğudan kuzeye çeyrek yay".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "c": { "x": 423510.0, "y": 4512300.0 },
+                        "r": 10.0,
+                        "a0": 0.0,
+                        "a1": std::f64::consts::FRAC_PI_2
+                    }),
+                    output: Some(json!({
+                        "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                        "id": 12,
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Batıdan güneye çeyrek yay, eksi bitiş açısıyla; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "c": { "x": 423510.0, "y": 4512300.0 },
+                        "r": 4.0,
+                        "a0": std::f64::consts::PI,
+                        "a1": -std::f64::consts::FRAC_PI_2,
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -853,6 +1003,15 @@ mod tests {
                     crate::CAD_ENTITIES_DELETE => {
                         serde_json::from_value::<EntitiesDelete>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_POINT_CREATE => {
+                        serde_json::from_value::<crate::PointCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_CIRCLE_CREATE => {
+                        serde_json::from_value::<crate::CircleCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ARC_CREATE => {
+                        serde_json::from_value::<crate::ArcCreate>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -870,6 +1029,17 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_DELETE => {
                             serde_json::from_value::<EntitiesDeleted>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_POINT_CREATE => {
+                            serde_json::from_value::<crate::PointCreated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_CIRCLE_CREATE => {
+                            serde_json::from_value::<crate::CircleCreated>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ARC_CREATE => {
+                            serde_json::from_value::<crate::ArcCreated>(output.clone()).map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };
