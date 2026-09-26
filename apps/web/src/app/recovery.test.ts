@@ -116,6 +116,9 @@ describe.skipIf(!formatsBuilt)('local recovery copies (TODOS.md FILE-19)', () =>
     for (const c of [old, newest, live]) await store.put(c);
     store.items.set('bozuk', { id: 'bozuk', version: 9 });
     const { doc, files, recovery, asked, messages } = app({ store, alive: ['canli-sekme'], answers: ['later', 'restore'] });
+    // The drawing on screen came from a file: the restored work never goes there by itself.
+    const open = memoryFile('Açık.kcad', { data: 'açık dosya' });
+    files.handle = open;
     expect(await recovery.offer()).toBe(true);
     // The live tab's copy and the unreadable record are not offered.
     expect(asked).toEqual(['Yeni', 'Eski']);
@@ -123,6 +126,34 @@ describe.skipIf(!formatsBuilt)('local recovery copies (TODOS.md FILE-19)', () =>
     expect(messages.at(-1)).toMatch(/^ok: “Eski” kaydedilmemiş çalışması geri yüklendi: 13 nesne\. .*Kaydet dosyanın yerini sorar, hiçbir dosyanın üzerine kendiliğinden yazılmaz\.$/);
     // Kept for later, left alone, the restored one gone; the drawing on screen has its own copy now.
     expect([...store.items.keys()].sort()).toEqual([newest.id, live.id, 'bozuk', recovery.current].sort());
+    // Kaydet asks where; the file that was open stays as it was.
+    const suggested: string[] = [];
+    files.picker = pick(memoryFile('Eski.kcad'), null, suggested);
+    expect(await files.save()).toBe(true);
+    expect([suggested, new TextDecoder().decode(open.bytes)]).toEqual([['Eski.kcad'], 'açık dosya']);
+    recovery.dispose();
+  });
+
+  it('writes a copy at least every half minute while the drawing keeps changing, though it never rests', async () => {
+    // The module is loaded first: only the copies' own clock counts below.
+    await kcadInProcess();
+    let now = 1_000_000;
+    const s = setup();
+    const store = memoryStore();
+    const recovery = new RecoveryCopies({ ...s.ctx, files: s.files }, { store, live: async () => new Set(), ask: async () => 'later', now: () => now });
+    recovery.start();
+    // A change every two seconds, never three quiet ones: no copy in the first half minute…
+    for (let i = 0; i < 15; i++) {
+      s.doc.add({ kind: 'point', layerId: 'x', p: { x: i, y: 0 }, attrs: {} });
+      now += 2000;
+    }
+    await new Promise((r) => setTimeout(r, 20));
+    expect(store.items.size).toBe(0);
+    // …then the change half a minute after the first is written at once, with everything before it.
+    s.doc.add({ kind: 'point', layerId: 'x', p: { x: 15, y: 0 }, attrs: {} });
+    for (let i = 0; i < 200 && store.items.size === 0; i++) await new Promise((r) => setTimeout(r, 5));
+    expect(store.items.size).toBe(1);
+    expect((await decode(readCopy([...store.items.values()][0])!.bytes)).entities).toHaveLength(16);
     recovery.dispose();
   });
 

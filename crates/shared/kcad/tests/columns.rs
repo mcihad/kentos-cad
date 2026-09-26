@@ -167,6 +167,40 @@ fn a_write_stopped_at_any_step_gives_no_bytes() {
 }
 
 #[test]
+fn columns_that_do_not_read_back_as_sent_are_refused_as_unverified() {
+    // Two attributes whose order differs in UTF-8 (the contract's, the file's) and in UTF-16 (what a
+    // page sorting JavaScript strings would send): ～ U+FF5E and 😀 U+1F600.
+    let mut doc = points(1);
+    if let Entity::Point(p) = &mut doc.entities[0] {
+        p.base.attrs.insert("\u{ff5e}".into(), "a".into());
+        p.base.attrs.insert("\u{1f600}".into(), "b".into());
+    }
+    let (head, mut cols) = kentos_kcad::split(doc).expect("splits");
+    let mut texts: Vec<Vec<u16>> = Vec::new();
+    let mut at = 0;
+    for &n in &cols.text_lengths {
+        texts.push(cols.text[at..at + n as usize].to_vec());
+        at += n as usize;
+    }
+    let as_text = |t: &[Vec<u16>]| -> Vec<String> {
+        t.iter()
+            .map(|u| String::from_utf16(u).expect("text"))
+            .collect()
+    };
+    assert_eq!(as_text(&texts), ["0", "\u{ff5e}", "a", "\u{1f600}", "b"]);
+    // The pairs in UTF-16 order: the columns hold together and unpack, but the file holds the
+    // attributes in its own order, so the bytes do not read back to what was sent and never
+    // leave the codec (docs/adr/0030).
+    texts.swap(1, 3);
+    texts.swap(2, 4);
+    cols.text = texts.concat();
+    cols.text_lengths = texts.iter().map(|t| t.len() as u32).collect();
+    let e = kentos_kcad::encode_columns(&head, &cols, &mut Quiet).expect_err("refused");
+    assert_eq!(e.code, Code::VerifyFailed, "{e}");
+    assert!(e.message.contains("nesne 1 (point)"), "{e}");
+}
+
+#[test]
 fn columns_the_codec_cannot_take_are_refused_with_the_reason() {
     let (head, cols) = kentos_kcad::split(points(3)).expect("splits");
     let refuse = |head: &str, cols: &Columns| {

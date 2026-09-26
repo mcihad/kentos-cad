@@ -173,6 +173,32 @@ describe('FormatsClient', () => {
     expect(workers).toHaveLength(1);
   });
 
+  it('hands a drawing and a file over without a copy, and stops the worker as soon as a large one is through (docs/adr/0030)', async () => {
+    vi.useFakeTimers();
+    const { client, workers } = setup();
+    const columns = () => ({ kinds: new Uint8Array(1), uids: new Uint8Array(16), ints: new Uint32Array(3), floats: new Float64Array(2), text: new Uint16Array(1), textLengths: new Uint32Array(1) });
+    // A save: every buffer of the columns goes over, once; they are the worker's from now on.
+    const sent = columns();
+    const saving = client.encodeKcad({ head: '{}', columns: sent });
+    const w = workers[0];
+    const transfer = w.sent[0].transfer;
+    expect(transfer).toHaveLength(6);
+    for (const a of Object.values(sent)) expect(transfer).toContain(a.buffer);
+    w.reply({ id: w.id(0), ok: true, kcad: new Uint8Array([1, 2]).buffer });
+    expect([...(await saving)]).toEqual([1, 2]);
+    // A small drawing: the worker waits for the idle half minute.
+    expect(w.terminated).toBe(false);
+    // An open of a file above 16 MB: its buffer goes over whole, and once it is read the worker
+    // stops at once, giving back the memory the module took.
+    const file = new Uint8Array(17 << 20);
+    const reading = client.decodeKcad(file);
+    expect(w.sent[1].transfer).toHaveLength(1);
+    expect(w.sent[1].transfer[0]).toBe(file.buffer);
+    w.reply({ id: w.id(1), ok: true, drawing: { head: '{}', columns: columns() } });
+    await reading;
+    expect(w.terminated).toBe(true);
+  });
+
   it('cancel stops the worker and fails what waits', async () => {
     const { client, workers } = setup();
     const r = client.readDxf(new Uint8Array(1), { maxEntities: 0 });

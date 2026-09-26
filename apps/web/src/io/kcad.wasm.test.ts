@@ -187,6 +187,24 @@ describe.skipIf(!formatsBuilt)('KCAD v2 in the browser (formats WASM module)', (
     expect(refuse((d) => (d.entities[0].attrs = { Ad: 'P\ud8001' }))).toMatch(/entities\/0 \(point\) › attrs\/Ad: .*vekili/);
   });
 
+  it('refuses bytes whose head reads back otherwise than it was sent: nothing unverified leaves the worker', async () => {
+    const m = await formatsModule();
+    const packed = pack(drawing('minimal.json'));
+    // A field the contract does not read, past the page's projection (io/kcad.ts `projectHead`): the file
+    // would not hold it, so the bytes are refused with the place, not handed out.
+    const head = JSON.parse(packed.head) as { settings: Record<string, unknown> };
+    head.settings.gridSize = 5;
+    let error: unknown = null;
+    try {
+      encodeWith(m, { ...packed, head: JSON.stringify(head) });
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(KcadError);
+    expect((error as KcadError).code).toBe('verify_failed');
+    expect((error as KcadError).message).toMatch(/^KCAD v2 baytları geri okununca çizimle aynı çıkmadı \(belge\/settings\/gridSize\); dosya yazılmadı/);
+  });
+
   it('reports the project before its objects, and the objects as they are read and written', async () => {
     const m = await formatsModule();
     const d = drawing('drawing.json');
