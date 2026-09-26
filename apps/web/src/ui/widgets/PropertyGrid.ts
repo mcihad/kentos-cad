@@ -75,7 +75,13 @@ export class PropertyGrid {
       dataset: { propKey: key },
     });
     const commit = () => {
-      if (input.value !== r.value) e.commit(input.value);
+      if (input.value === r.value) return;
+      e.commit(input.value);
+      // A value the editor did not take (an empty text, not a number) goes back to the one shown. A taken
+      // one changes the drawing, whose panel renders again first: this input is gone by then.
+      queueMicrotask(() => {
+        if (input.isConnected) input.value = r.value;
+      });
     };
     input.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter') {

@@ -14,6 +14,15 @@ import type { ToolPointer } from './Tool';
 /** Paper sizes (mm) converted to world metres at the project's plot scale. */
 const paper = (ctx: AppContext, mm: number) => (mm / 1000) * ctx.doc.settings.plotScale.value;
 
+/** What the log says when a dimension is added (a compound noun takes -sü: “Açı ölçüsü”, not “Açı ölçü”). */
+const ADDED: Record<DimensionStyle, string> = {
+  aligned: 'Hizalı ölçü eklendi',
+  linear: 'Doğrusal ölçü eklendi',
+  angular: 'Açı ölçüsü eklendi',
+  radius: 'Yarıçap ölçüsü eklendi',
+  diameter: 'Çap ölçüsü eklendi',
+};
+
 const MODE_KEYS: [DimensionStyle, string][] = [
   ['aligned', 'H'],
   ['linear', 'D'],
@@ -201,7 +210,8 @@ export class DimensionTool extends PointInputTool {
   override input(text: string): boolean {
     if (this.option(text.trim().toLocaleUpperCase('tr-TR'))) return true;
     const n = parseNumber(text);
-    if (this.placing && n !== null && !/[,;@<]/.test(text)) {
+    // Radius and diameter are placed by pointing only (their prompt asks for no number).
+    if (this.placing && n !== null && !/[,;@<]/.test(text) && this.mode !== 'radius' && this.mode !== 'diameter') {
       this.commit(this.geomAt(this.hover ?? this.pts[0] ?? this.edges[0]?.at ?? { x: 0, y: 0 }, n));
       return true;
     }
@@ -213,13 +223,32 @@ export class DimensionTool extends PointInputTool {
     super.confirm();
   }
 
+  /**
+   * Ctrl+Z (docs/adr/0018), newest first: a picked circle or the last picked
+   * edge goes back before what the base takes back (a point, the dimension
+   * just written). It used to skip the picks: the previous dimension, or the
+   * drawing, was undone while the picks stayed.
+   */
+  override undoStep(): boolean {
+    if (this.circle) this.circle = null;
+    else if (this.edges.length) this.edges.pop();
+    else return super.undoStep();
+    this.refreshPrompt();
+    this.ctx.view.requestOverlay();
+    return true;
+  }
+
   protected override reset(): void {
     this.edges = [];
     this.circle = null;
     super.reset();
   }
 
-  /** The dimension placed at `loc`; a typed value replaces the offset (distance, radius). */
+  /**
+   * The dimension placed at `loc`. A typed value replaces the signed distance
+   * of the dimension line (positive = left of the measured direction, so the
+   * keyboard alone gives the side), or the arc's radius.
+   */
   private geomAt(loc: Vec2, typed?: number): DimensionGeom | null {
     const height = this.height();
     switch (this.mode) {
@@ -236,7 +265,7 @@ export class DimensionTool extends PointInputTool {
       case 'angular': {
         const pick = this.armsAt(loc);
         if (!pick) return null;
-        return { ...pick, offset: typed ?? dist(pick.c, loc), height, style: 'angular' };
+        return { ...pick, offset: typed === undefined ? dist(pick.c, loc) : Math.abs(typed), height, style: 'angular' };
       }
       default: {
         const circle = this.circle;
@@ -269,7 +298,7 @@ export class DimensionTool extends PointInputTool {
     }
     const { style, ...rest } = g;
     const e = this.create({ kind: 'dimension', ...rest, ...(style && style !== 'aligned' && { style }) });
-    if (e) this.ctx.log.success(`${DIMENSION_STYLE_LABEL[style ?? 'aligned']} ölçü eklendi: ${this.ctx.view.dimensionText(l)}`);
+    if (e) this.ctx.log.success(`${ADDED[style ?? 'aligned']}: ${this.ctx.view.dimensionText(l)}`);
     this.reset();
   }
 

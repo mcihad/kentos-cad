@@ -233,6 +233,20 @@ try {
   await b.type('Deneme');
   await b.key('Enter');
   check('text tool opens a focused field where you click', fieldOpen);
+  // A locked active layer is said at the click: no field opens, nothing is added, no “Yazı eklendi”.
+  {
+    const layer = await b.eval(`(() => { const L = window.kentos.doc.layers; const id = L.active.value; L.toggleLocked(id); return id; })()`);
+    const size = await b.eval('window.kentos.doc.size');
+    const since = await b.eval('window.kentos.log.entries.value.at(-1)?.id ?? 0');
+    await b.click(...(await at(20, -60)));
+    const refused = await b.eval(`({ open: !document.querySelector('.inline-text').hidden, said: window.kentos.log.entries.value.filter((e) => e.id > ${since}).map((e) => e.text), size: window.kentos.doc.size })`);
+    await b.eval(`window.kentos.doc.layers.toggleLocked(${JSON.stringify(layer)})`);
+    check(
+      'on a locked active layer the text tool says so at the click and opens no field',
+      !refused.open && refused.size === size && refused.said.some((t) => t.includes('katmanı kilitli')) && !refused.said.some((t) => t.startsWith('Yazı eklendi')),
+      JSON.stringify(refused),
+    );
+  }
   await b.key('Escape');
   const kinds = await b.eval(`[...window.kentos.doc.all()].slice(-3).map(e => e.kind).join(',')`);
   check('spline, dimension and text are created', kinds === 'spline,dimension,text', kinds);
@@ -259,6 +273,30 @@ try {
   await b.key('Enter');
   const edited = await b.eval(`window.kentos.doc.get(${tid}).text`);
   check('inline edit commits the new text', edited === 'Düzenlendi', edited);
+
+  // Ctrl+Z while the dimension tool holds a picked circle drops that pick (newest first), not the drawing's last step.
+  {
+    await b.key('c');
+    await b.click(...(await at(120, 40)));
+    await b.click(...(await at(128, 40)));
+    await b.key('Escape');
+    const size = await b.eval('window.kentos.doc.size');
+    await b.key('d');
+    await b.key('r');
+    await b.move(...(await at(128, 40)));
+    await b.click(...(await at(128, 40)));
+    const picked = await b.eval('window.kentos.tools.prompt.value');
+    await b.key('z', { ctrl: true });
+    const back = await b.eval('window.kentos.tools.prompt.value');
+    const after = await b.eval('window.kentos.doc.size');
+    await b.key('h');
+    await b.key('Escape');
+    check(
+      'Ctrl+Z in the dimension tool drops the picked circle, not the drawing’s last step',
+      picked.includes('doğrultusunu') && back.includes('yarıçapı ölçülecek') && after === size,
+      JSON.stringify({ picked, back, size, after }),
+    );
+  }
 
   // Editing tools on exact, typed geometry (a second work area further east).
   const X = E + 200;
