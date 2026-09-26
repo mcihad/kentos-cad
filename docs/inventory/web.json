@@ -3779,7 +3779,7 @@
       "title": "Parsel oluştur",
       "category": "Harita",
       "icon": "parcel",
-      "description": "Köşe noktalarından parsel çizer, numara ve tapu alanını yazar.",
+      "description": "Köşe noktalarından parsel çizer ve numaralar; tapu alanı çizimden hesaplanmaz, tapudan girilir.",
       "aliases": [
         "PARSEL"
       ],
@@ -6464,7 +6464,8 @@
       "rare": false,
       "methods": [],
       "steps": 3,
-      "description": "Köşe noktalarından parsel çizer, numara ve tapu alanını yazar.",
+      "description": "Köşe noktalarından parsel çizer ve numaralar; tapu alanı çizimden hesaplanmaz, tapudan girilir.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -6472,7 +6473,8 @@
       },
       "tests": [
         "apps/web/src/app/menus.test.ts",
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
     {

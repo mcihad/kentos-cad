@@ -396,6 +396,30 @@ try {
   await b.key('Escape');
   check('hatch fills the rectangle', (await b.eval(`[...window.kentos.doc.all()].at(-1).kind`)) === 'hatch');
 
+  // Parsel oluştur: the parcel takes the next number on the parcel layer as its label and Parsel, is selected and
+  // is one step (“Ekle”); its deed area is left empty for the title deed's value, and the log gives the geometric area.
+  {
+    const next = await b.eval(`window.kentos.doc.byLayer('parsel').reduce((m, e) => Math.max(m, parseInt(e.attrs.Parsel ?? '0', 10) || 0), 0) + 1`);
+    await b.eval(`window.kentos.tools.activate('parcel')`);
+    for (const [dx, dy] of [[-15, 62], [-5, 62], [-5, 75], [-15, 75]]) await b.click(...(await at(dx, dy)));
+    await b.key('Enter');
+    await sleep(100);
+    const made = await b.eval(`(() => {
+      const k = window.kentos;
+      const e = [...k.doc.all()].at(-1);
+      return { kind: e.kind, layer: e.layerId, label: e.label, attrs: e.attrs, selected: [...k.selection.ids.value], id: e.id, said: k.log.entries.value.filter((x) => x.level === 'success').at(-1)?.text ?? '' };
+    })()`);
+    const step = await b.eval(`window.kentos.doc.undo()`);
+    await b.key('Escape');
+    check(
+      'Parsel oluştur numbers the parcel, selects it, leaves Tapu alanı empty and says the geometric area; one step “Ekle”',
+      made.kind === 'polygon' && made.layer === 'parsel' && made.label === String(next) && made.attrs.Parsel === String(next) && made.attrs['Tapu alanı (m²)'] === '' &&
+        made.attrs.Nitelik === 'Arsa' && JSON.stringify(made.selected) === JSON.stringify([made.id]) &&
+        made.said.startsWith(`Parsel ${next} oluşturuldu; geometrik alanı `) && made.said.endsWith('Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.') && step === 'Ekle',
+      JSON.stringify({ next, made, step }),
+    );
+  }
+
   // Double-click text → inline editor
   const tid = await b.eval(`[...window.kentos.doc.all()].find(e => e.kind === 'text' && e.text === 'Deneme').id`);
   const tp = await b.eval(`(() => { const t = window.kentos.doc.get(${tid}); return [t.p.x + t.height, t.p.y + t.height * 0.4]; })()`);
