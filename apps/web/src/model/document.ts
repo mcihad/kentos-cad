@@ -1,3 +1,4 @@
+import type { MigrationSource } from '../contracts/generated/MigrationSource';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
 import { isUuid, uuidv7 } from '../core/uuid';
@@ -56,7 +57,9 @@ export interface ExternalMeta {
 /**
  * Everything a drawing file holds (see model/snapshot.ts for its versioned
  * form). Objects come with their slots; those without a persistent id get
- * one when the drawing takes them (`replaceWith`).
+ * one when the drawing takes them (`replaceWith`). A drawing from a v1 file
+ * or a v2 file brings the project's id and the migration source when it has
+ * them (docs/adr/0014, docs/specs/kcad-v2.md §6.8); anything else has none.
  */
 export interface DocumentContent {
   name: string;
@@ -67,6 +70,8 @@ export interface DocumentContent {
   activeLayer: string;
   entities: readonly Entity[];
   styles: ProjectStyles;
+  projectId?: string | null;
+  migratedFrom?: MigrationSource | null;
 }
 
 /**
@@ -87,6 +92,14 @@ export class CadDocument {
   readonly styles = new Signal<ProjectStyles>({ items: [], categories: [] });
   /** Where the view opens (the project's start extent); all objects when unset. */
   homeView: Bounds | null = null;
+  /**
+   * The project's persistent id, when it has one: derived from a v1 file or
+   * read from a v2 file (docs/adr/0014). Set only with the whole drawing
+   * (`replaceWith`); not an edit. A v2 save writes it.
+   */
+  projectId: string | null = null;
+  /** The v1 file this drawing was migrated from; every v2 save keeps it (docs/specs/kcad-v2.md §6.8). */
+  migratedFrom: MigrationSource | null = null;
 
   private entities = new Map<number, DrawingEntity>();
   /**
@@ -443,6 +456,8 @@ export class CadDocument {
     this.nextId = data.entities.reduce((m, e) => Math.max(m, e.id), 0) + 1;
     this.anchor = { ...data.origin };
     this.homeView = data.homeView;
+    this.projectId = data.projectId ?? null;
+    this.migratedFrom = data.migratedFrom ?? null;
     this.layers.reset(data.layers, data.activeLayer);
     this.settings.assign(data.settings);
     this.name.set(data.name);

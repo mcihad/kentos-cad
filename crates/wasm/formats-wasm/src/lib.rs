@@ -1,12 +1,15 @@
 //! The file formats in the browser. The formats Web Worker
 //! (`apps/web/src/io/formatsWorker.ts`) loads this module the first time the user
-//! imports or exports a file, or opens a drawing (its objects' persistent ids);
-//! it never loads at start-up (CLAUDE.md §20).
+//! imports or exports a file, or opens or saves a drawing (the `.kcad` v2
+//! codec, `kentos-kcad`; a v1 drawing's persistent ids); it never loads at
+//! start-up (CLAUDE.md §20).
 //! Files cross as bytes; options and results as JSON (the contracts in
 //! `kentos_contracts::formats`), whose float64 values serde_json writes as
 //! the shortest round-trip decimal, so coordinates arrive bit for bit.
 
-use kentos_contracts::{CoordReadOptions, CoordWriteInput, DxfReadOptions, FORMATS_VERSION};
+use kentos_contracts::{
+    CoordReadOptions, CoordWriteInput, DocumentSnapshotV2, DxfReadOptions, FORMATS_VERSION,
+};
 use wasm_bindgen::prelude::*;
 
 fn bad_input(what: &str, e: &serde_json::Error) -> JsError {
@@ -84,6 +87,50 @@ pub fn write_coords(input: &str) -> Result<Written, JsError> {
 pub fn v1_identities(text: &str) -> Result<Vec<u8>, JsError> {
     let ids = kentos_contracts::v1_identities(text).map_err(|e| JsError::new(&e))?;
     to_json(&ids)
+}
+
+/// A drawing (`DocumentSnapshotV2`, JSON) as the bytes of a `.kcad` v2 file
+/// (docs/specs/kcad-v2.md). The formats worker reads them back and compares
+/// them with what the page sent before the page writes them (io/kcad.ts).
+/// A drawing the file cannot hold (a NaN, a repeated id) throws the reason.
+#[wasm_bindgen(js_name = encodeKcad)]
+pub fn encode_kcad(snapshot: &str) -> Result<Vec<u8>, JsError> {
+    let doc: DocumentSnapshotV2 =
+        serde_json::from_str(snapshot).map_err(|e| bad_input("Kaydedilecek çizim", &e))?;
+    kentos_kcad::encode(&doc).map_err(|e| JsError::new(&e.message))
+}
+
+/// Reads a `.kcad` v2 file. Never throws for a bad file: the result (JSON
+/// bytes) is `{"ok":true,"document":DocumentSnapshotV2}` or
+/// `{"ok":false,"code":…,"message":…}` with the specification's error code
+/// (§9) and a Turkish message that says the cause and the fix.
+#[wasm_bindgen(js_name = decodeKcad)]
+pub fn decode_kcad(bytes: &[u8]) -> Result<Vec<u8>, JsError> {
+    #[derive(serde::Serialize)]
+    #[serde(untagged)]
+    enum Read<'a> {
+        Ok {
+            ok: bool,
+            document: &'a DocumentSnapshotV2,
+        },
+        Refused {
+            ok: bool,
+            code: &'a str,
+            message: &'a str,
+        },
+    }
+    // Written straight from the typed drawing: no JSON value tree in between.
+    match kentos_kcad::decode(bytes) {
+        Ok(document) => to_json(&Read::Ok {
+            ok: true,
+            document: &document,
+        }),
+        Err(e) => to_json(&Read::Refused {
+            ok: false,
+            code: e.code.as_str(),
+            message: &e.message,
+        }),
+    }
 }
 
 /// Writes an AutoCAD 2007 DXF from `DxfWriteInput` (JSON). The objects are

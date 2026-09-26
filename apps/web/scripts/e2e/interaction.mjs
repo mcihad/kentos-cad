@@ -167,12 +167,13 @@ async function setUp(t) {
     if (!(await k.files.load(${JSON.stringify(doc)}, null))) throw new Error('${t.document} did not load');
     // Save and open write to memory; the drawing is asked about nowhere.
     const store = (window.__traceFiles = new Map());
+    // Bytes, not text: a drawing is saved as the binary KCAD v2 (docs/adr/0025).
     const handle = (name) => ({
       name,
-      async getFile() { return new Blob([store.get(name) ?? '']); },
+      async getFile() { return store.get(name) ?? new Blob([]); },
       async createWritable() {
         const parts = [];
-        return { async write(d) { parts.push(typeof d === 'string' ? d : new TextDecoder().decode(d)); }, async close() { store.set(name, parts.join('')); } };
+        return { async write(d) { parts.push(typeof d === 'string' ? new TextEncoder().encode(d) : new Uint8Array(d)); }, async close() { store.set(name, new Blob(parts)); } };
       },
     });
     k.files.picker = { async save() { return handle('${FILE}'); }, async open() { return handle('${FILE}'); } };

@@ -8,6 +8,8 @@ members = [
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/formats",
+    # The project file, .kcad v2 (docs/specs/kcad-v2.md, docs/adr/0025).
+    "crates/shared/kcad",
     "crates/shared/style-core",
     "crates/shared/svg-core",
     # Browser bindings (wasm-bindgen) of the shared libraries.
@@ -39,6 +41,7 @@ default-members = [
     "crates/shared/geometry-core",
     "crates/shared/contracts",
     "crates/shared/formats",
+    "crates/shared/kcad",
     "crates/shared/style-core",
     "crates/shared/svg-core",
     "crates/wasm/geometry-wasm",

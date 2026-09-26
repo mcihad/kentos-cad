@@ -1,0 +1,20 @@
+[package]
+name = "kentos-kcad"
+description = "The KentOS project file, .kcad v2 (docs/specs/kcad-v2.md): its container, CBOR profile and document schema; encoder, decoder and sniffer shared by the browser (WASM), the desktop and the server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust for every target, like the other shared libraries (CLAUDE.md §14):
+# the library never reaches for the file system, the network or a runtime; the
+# `kcad` developer tool (src/bin) reads and writes files on the host. The
+# snapshot is the versioned contract (`DocumentSnapshotV2`); the styles' opaque
+# parts are `serde_json::Value`, and the verification after writing compares
+# JSON text. SHA-256 is the locked `sha2` (docs/adr/0014); the CBOR profile is
+# written here, with no CBOR crate (owner's decision, docs/adr/0025).
+[dependencies]
+kentos-contracts = { path = "../contracts", default-features = false }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
