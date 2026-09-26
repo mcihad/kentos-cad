@@ -341,21 +341,31 @@ export class DocumentFiles {
   /**
    * Opens a drawing in stages behind the open's window: the file's bytes,
    * then the drawing read and checked whole (app/drawingFile.ts), then the
-   * drawing replaced in one step. A stopped or overtaken open, or one during
-   * which the drawing on screen changed, replaces nothing. True when opened.
+   * drawing replaced in one step. A stopped or overtaken open replaces
+   * nothing; nor does one during which another drawing was put on screen or
+   * the drawing changed in a way nothing keeps. True when opened.
    */
   private async openStaged(src: Source): Promise<boolean> {
     const { ctx } = this;
     const open = ++this.opens;
-    // The drawing this open may replace, as it is now: another open, a cloud project or an edit
-    // replacing or changing it meanwhile makes this open give way (CLAUDE.md §21.2).
+    // The drawing this open may replace, as it is now (CLAUDE.md §21.2): another drawing put on
+    // screen meanwhile makes this open give way, and so does a change nothing keeps (a processing
+    // result on a local drawing); a cloud project's own changes stay in the project.
     const revision = ctx.doc.revision;
+    let replaced = false;
+    const offReset = ctx.doc.events.on('reset', () => (replaced = true));
     let stopped = false;
+    // Once the drawing is being put on screen, Vazgeç comes too late.
+    let committed = false;
     const stale = () => stopped || open !== this.opens;
     let codec: DrawingCodec | null = null;
     const view = await this.opening(src.label, () => {
+      if (committed) return;
       stopped = true;
       codec?.cancel?.();
+    }).catch((e: unknown) => {
+      offReset();
+      throw e;
     });
     const said = (p: ReadProgress) => this.step(view, p);
     try {
@@ -386,17 +396,20 @@ export class DocumentFiles {
         return false;
       }
       if (stale()) return this.stopped(src.label);
-      if (read.warning) ctx.log.warn(`${src.handle ? `“${src.label}”` : src.label}: ${read.warning}`);
-      if (src.leaveCloud) await this.leaveCloud();
-      else ctx.cloud.detach();
       view.step('Çizim ekrana getiriliyor…', 0.97);
       // The window shows the last stage before the page is busy with the drawing.
       await yieldToPage();
       if (stale()) return this.stopped(src.label);
-      if (ctx.doc.revision !== revision) {
+      if (replaced || (ctx.doc.revision !== revision && this.mustAsk())) {
         ctx.log.warn(`${src.handle ? `“${src.label}”` : src.label} açılmadı: açılış sürerken ekrandaki çizim değişti ya da başka bir çizim açıldı; o çizim olduğu gibi duruyor. Dosyayı yeniden açın.`);
         return false;
       }
+      // From here the open goes through: the cloud project is left only now, so an open that gives way
+      // above leaves it attached.
+      committed = true;
+      if (read.warning) ctx.log.warn(`${src.handle ? `“${src.label}”` : src.label}: ${read.warning}`);
+      if (src.leaveCloud) await this.leaveCloud();
+      else ctx.cloud.detach();
       try {
         (src.put ?? ((r) => this.show(r, src.handle, src.readOnly)))(read);
       } catch (e) {
@@ -408,6 +421,7 @@ export class DocumentFiles {
       await nextFrame();
       return true;
     } finally {
+      offReset();
       view.close();
     }
   }

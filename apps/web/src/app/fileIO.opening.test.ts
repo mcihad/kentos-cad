@@ -4,7 +4,7 @@ import { formatsBuilt, kcadInProcess } from '../io/testFormats';
 import { toSnapshot } from '../model/snapshot';
 import { snapshotSampleDocument } from '../model/snapshotSample';
 import type { DrawingCodec } from './drawingFile';
-import { memoryFile, pick, recordingView, setup } from './fileTesting';
+import { fakeCloud, memoryFile, pick, recordingView, setup } from './fileTesting';
 
 /**
  * Opening in stages (TODOS.md FILE-20, docs/adr/0030; CLAUDE.md §21.2): the
@@ -110,6 +110,43 @@ describe.skipIf(!formatsBuilt)('opening in stages (TODOS.md FILE-20)', () => {
     expect(await files.open()).toBe(false);
     expect([doc.name.value, doc.size]).toEqual([other.name.value, 0]);
     expect(messages.at(-1)).toMatch(/^uyarı: “Büyük\.kcad” açılmadı: açılış sürerken ekrandaki çizim değişti ya da başka bir çizim açıldı; o çizim olduğu gibi duruyor/);
+  });
+
+  it('a change nothing keeps stops it; a cloud project, whose changes the project keeps, is left only when the open goes through', async () => {
+    const { file } = await savedDrawing(3000);
+    for (const inCloud of [false, true]) {
+      const cloud = fakeCloud(inCloud ? { name: 'Ada', canWrite: true, unsent: 0 } : null);
+      const { doc, files, messages } = setup(undefined, cloud);
+      // A change made while the file is checked: a processing result on a local drawing, a collaborator's edit in the cloud.
+      let changed = false;
+      files.opening = async () =>
+        recordingView([], (text) => {
+          if (!changed && /^Nesneler denetleniyor/.test(text)) {
+            changed = true;
+            doc.add({ kind: 'point', layerId: 'x', p: { x: 1, y: 2 }, attrs: {} });
+          }
+        });
+      files.picker = pick(null, file);
+      expect(await files.open(), `cloud ${inCloud}`).toBe(inCloud);
+      if (inCloud) {
+        expect([doc.name.value, cloud.left]).toEqual(['Büyük', 1]);
+      } else {
+        expect([doc.name.value, doc.size, cloud.left]).toEqual(['Proje', 1, 0]);
+        expect(messages.at(-1)).toMatch(/^uyarı: “Büyük\.kcad” açılmadı: açılış sürerken ekrandaki çizim değişti/);
+      }
+    }
+    // An open that gives way leaves the cloud project attached.
+    const cloud = fakeCloud({ name: 'Ada', canWrite: true, unsent: 0 });
+    const { doc, files } = setup(undefined, cloud);
+    const other = snapshotSampleDocument();
+    files.opening = async () =>
+      recordingView([], (text) => {
+        if (/^Nesneler denetleniyor/.test(text) && doc.name.value !== other.name.value)
+          doc.replaceWith({ name: other.name.value, settings: other.settings.toJSON(), origin: other.origin, homeView: null, layers: [...other.layers.tree], activeLayer: 'cizim', entities: [], styles: { items: [], categories: [] } });
+      });
+    files.picker = pick(null, file);
+    expect(await files.open()).toBe(false);
+    expect([cloud.left, cloud.project.value?.name]).toEqual([0, 'Ada']);
   });
 
   it('refuses a file larger than the browser opens, before reading it', async () => {
