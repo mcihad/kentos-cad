@@ -45,7 +45,20 @@ pub trait Stages {
     fn id(&self) -> &'static str;
     fn label(&self) -> &'static str;
     /// The selection is confirmed: the stages start over (the web's `begin`).
-    fn begin(&mut self);
+    /// A tool that acts at once on the selection (Birleştir, Patlat) does so
+    /// here and answers [`Flow::Exit`].
+    fn begin(&mut self, cx: &mut Context<'_>) -> Flow;
+    /// Sees what the session remembers and the project's units at every
+    /// event, for a prompt that shows them while picking.
+    fn see(&mut self, _cx: &Context<'_>) {}
+    /// The picking prompt, with what the tool adds to it (the web's `pickHint`).
+    fn picking_hint(&self, prompt: Prompt) -> Prompt {
+        prompt
+    }
+    /// Typed text while picking (Birleştir's tolerance): whether it was taken.
+    fn picking_input(&mut self, _text: &str, _cx: &mut Context<'_>) -> bool {
+        false
+    }
     /// Where ortho, polar tracking, perpendicular snaps and typed `@` points
     /// are measured from (the web's `anchor`).
     fn anchor(&self) -> Option<Vec2>;
@@ -116,6 +129,7 @@ impl<S: Stages> Modify<S> {
     /// The ghosts where the transform would put the selection, from the
     /// geometry store (the web draws them every frame from `ghosts`).
     fn refresh(&mut self, cx: &Context<'_>) {
+        self.stages.see(cx);
         self.ghosts.clear();
         self.marks.clear();
         self.selected = cx.selection.len();
@@ -175,13 +189,13 @@ impl<S: Stages> Tool for Modify<S> {
 
     fn prompt(&self) -> Prompt {
         if self.picking {
-            Prompt::new(
+            self.stages.picking_hint(Prompt::new(
                 self.stages.label(),
                 format!(
                     "nesnelere tıklayın ya da pencereyle seçin, bitince sağ tıklayın ({} seçili)",
                     self.selected
                 ),
-            )
+            ))
         } else {
             self.stages.prompt(self.selected)
         }
@@ -194,8 +208,8 @@ impl<S: Stages> Tool for Modify<S> {
     /// With a selection the stages start at once; without one, picking first.
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.picking = cx.selection.is_empty();
-        if !self.picking {
-            self.stages.begin();
+        if !self.picking && self.stages.begin(cx) == Flow::Exit {
+            return Flow::Exit;
         }
         self.refresh(cx);
         Flow::Stay
@@ -273,7 +287,9 @@ impl<S: Stages> Tool for Modify<S> {
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         if self.picking {
-            return false;
+            let taken = self.stages.picking_input(text, cx);
+            self.refresh(cx);
+            return taken;
         }
         if let Some(flow) = self.stages.typed(text, cx) {
             self.after(flow, cx);
@@ -293,7 +309,9 @@ impl<S: Stages> Tool for Modify<S> {
             self.picking = false;
             self.press = None;
             cx.selection.set_hover(None);
-            self.stages.begin();
+            if self.stages.begin(cx) == Flow::Exit {
+                return Flow::Exit;
+            }
             self.refresh(cx);
             return Flow::Stay;
         }

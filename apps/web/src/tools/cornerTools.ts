@@ -1,12 +1,14 @@
-import { entityGeometry, type Entity, type EntityGeometry, type LineEntity, type NewEntity, type PolylineEntity } from '../model/entities';
-import { dist, type Vec2 } from '../model/geometry';
+import type { EntityEdit } from '../contracts/generated/EntityEdit';
+import { entityGeometry, type Entity, type EntityGeometry, type LineEntity, type PolylineEntity } from '../model/entities';
+import type { Vec2 } from '../model/geometry';
 import { bulgeAt } from '../model/geom/bulge';
 import { chamferLines, cornerOfPath, filletLines } from '../model/ops/fillet';
 import { nearestSegment } from '../model/ops/vertex';
 import type { ViewTransform } from '../viewport/Camera';
-import { chamferLine, filletArc, filletRadiusFor, linesCornerAt, offsetAlong, pulledDistance, vertexCorner, type CornerGeom } from './constructions';
+import { chamferLine, cornerNear, filletArc, filletRadiusFor, linesCornerAt, offsetAlong, pulledDistance, vertexCorner, type CornerGeom } from './constructions';
 import { parseNumber } from './coordinateInput';
 import { EdgePickTool } from './edgeTools';
+import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { drawTag, strokeGeometry, strokePath } from './preview';
 import type { ToolPointer } from './Tool';
 
@@ -35,12 +37,13 @@ const HOVER_PX = 12;
 /** The corner's geometry alone, for the core (its entities stay out of the call). */
 const geomOf = (c: Corner): CornerGeom => ({ at: c.at, u1: c.u1, u2: c.u2, reach: c.reach, phi: c.phi });
 
-function pathCorner(e: PolylineEntity, i: number): Corner | null {
+/** The corner at vertex `i` of a path; `known` when the core has found it already (`cornerNear`). */
+function pathCorner(e: PolylineEntity, i: number, known?: CornerGeom): Corner | null {
   const n = e.pts.length;
   const closed = e.kind === 'polygon';
   if (!closed && (i <= 0 || i >= n - 1)) return null;
   const iPrev = (i - 1 + n) % n;
-  const g = vertexCorner(e.pts[iPrev], e.pts[i], e.pts[(i + 1) % n], bulgeAt(e.bulges, iPrev), bulgeAt(e.bulges, i));
+  const g = known ?? vertexCorner(e.pts[iPrev], e.pts[i], e.pts[(i + 1) % n], bulgeAt(e.bulges, iPrev), bulgeAt(e.bulges, i));
   if (!g) return null;
   return {
     ...g,
@@ -48,14 +51,16 @@ function pathCorner(e: PolylineEntity, i: number): Corner | null {
     plan: (op) => {
       const r = cornerOfPath(e.pts, e.bulges, closed, i, op);
       if ('error' in r) return r;
-      return { updates: [{ entity: e, geometry: { kind: e.kind, pts: r.pts, ...(r.bulges && { bulges: r.bulges }) } }], add: null };
+      // The whole geometry is written (docs/adr/0047): a closed area keeps its holes.
+      const holes = e.kind === 'polygon' && e.holes?.length ? { holes: e.holes } : {};
+      return { updates: [{ entity: e, geometry: { kind: e.kind, pts: r.pts, ...(r.bulges && { bulges: r.bulges }), ...holes } as EntityGeometry }], add: null };
     },
   };
 }
 
-/** Corner of two lines; each keeps the side its pick point is on. */
-function linesCorner(l1: LineEntity, p1: Vec2, l2: LineEntity, p2: Vec2): Corner | null {
-  const g = linesCornerAt(l1.a, l1.b, p1, l2.a, l2.b, p2);
+/** Corner of two lines; each keeps the side its pick point is on. `known` when the core has found it already. */
+function linesCorner(l1: LineEntity, p1: Vec2, l2: LineEntity, p2: Vec2, known?: CornerGeom): Corner | null {
+  const g = known ?? linesCornerAt(l1.a, l1.b, p1, l2.a, l2.b, p2);
   if (!g) return null;
   return {
     ...g,
@@ -75,8 +80,6 @@ function linesCorner(l1: LineEntity, p1: Vec2, l2: LineEntity, p2: Vec2): Corner
   };
 }
 
-const farEnd = (l: LineEntity, near: Vec2) => (dist(l.a, near) <= dist(l.b, near) ? l.b : l.a);
-
 /**
  * Fillet and chamfer. Point at a corner (a polyline vertex, or where two
  * lines meet), click, then pull the mouse along a side: the rounding or
@@ -94,6 +97,8 @@ abstract class CornerTool extends EdgePickTool {
   protected override editable = (e: Entity) => (e.kind === 'line' || e.kind === 'polyline' || e.kind === 'polygon') && !this.ctx.doc.layers.isLocked(e.layerId);
 
   protected abstract readonly title: string;
+  /** What the edit command names the undo step after (docs/adr/0047). */
+  protected abstract readonly operation: 'fillet' | 'chamfer';
   /** Operation for a size pulled out with the mouse (distance t from the corner along a side). */
   protected abstract opForPull(t: number, c: Corner): CornerOp;
   /** Parses a typed value; null when not understood. */
@@ -115,7 +120,11 @@ abstract class CornerTool extends EdgePickTool {
     this.ctx.view.requestOverlay();
   }
 
-  /** Nearest corner within reach of the cursor: polyline vertices and shared line ends. */
+  /**
+   * Nearest corner within reach of the cursor: polyline vertices and shared
+   * line ends among the editable objects around it. The core finds it
+   * (`cornerNear`, docs/adr/0047); the desktop asks the same.
+   */
   private cornerAt(p: ToolPointer): Corner | null {
     const { view, doc } = this.ctx;
     const tol = view.worldTolerance(HOVER_PX);
@@ -124,26 +133,12 @@ abstract class CornerTool extends EdgePickTool {
       .pickRect(box, true)
       .map((id) => doc.get(id))
       .filter((e): e is LineEntity | PolylineEntity => !!e && this.editable(e));
-    let best: { c: Corner; d: number } | null = null;
-    const consider = (c: Corner | null) => {
-      if (!c) return;
-      const d = dist(c.at, p.raw);
-      if (d <= tol && (!best || d < best.d)) best = { c, d };
-    };
-    const same = view.worldTolerance(2);
-    for (const e of near) {
-      if (e.kind === 'line') {
-        for (const end of [e.a, e.b]) {
-          if (dist(end, p.raw) > tol) continue;
-          for (const o of near) {
-            if (o === e || o.kind !== 'line') continue;
-            const oEnd = dist(o.a, end) <= same ? o.a : dist(o.b, end) <= same ? o.b : null;
-            if (oEnd) consider(linesCorner(e, farEnd(e, end), o, farEnd(o, oEnd)));
-          }
-        }
-      } else e.pts.forEach((_, i) => dist(e.pts[i], p.raw) <= tol && consider(pathCorner(e, i)));
-    }
-    return (best as { c: Corner } | null)?.c ?? null;
+    const hit = cornerNear(near, p.raw, tol, view.worldTolerance(2));
+    if (!hit) return null;
+    const s = hit.site;
+    return s.kind === 'vertex'
+      ? pathCorner(near[s.object] as PolylineEntity, s.vertex, hit.corner)
+      : linesCorner(near[s.first] as LineEntity, s.pick1, near[s.second] as LineEntity, s.pick2, hit.corner);
   }
 
   override pointerMove(p: ToolPointer): void {
@@ -251,24 +246,26 @@ abstract class CornerTool extends EdgePickTool {
     this.refresh();
   }
 
+  /**
+   * Writes the corner through `cad.entities.edit` (docs/adr/0047): the sides
+   * take their whole new geometry, the arc or cut is a new object from the
+   * first side (its layer and colour). A refusal leaves the corner picked.
+   */
   private commit(op: CornerOp): void {
     const plan = this.corner!.plan(op);
     if ('error' in plan) return this.ctx.log.warn(plan.error);
-    const { doc } = this.ctx;
     if (!CornerTool.trimSides) {
       const extra = this.piece(op, this.corner!);
       if (!extra) return this.ctx.log.warn('Kırpmadan çalışırken sıfırdan büyük bir boyut verin; yoksa eklenecek bir şey yok.');
       const like = this.corner!.entities[0];
-      doc.transact(this.title, () => doc.add({ ...extra, layerId: like.layerId, color: like.color, attrs: {} } as NewEntity));
+      if (!writeEdit(this.ctx, this.operation, [{ kind: 'add', from: uidOf(this.ctx, like), geometry: editGeometry(extra) }])) return;
       this.remember(op);
       this.ctx.log.success(`${this.done(op)} Kenarlar kırpılmadı.`);
       return this.reset();
     }
-    doc.transact(this.title, () => {
-      // Whole geometry replaced: a shape without arcs must not keep old bulges.
-      for (const u of plan.updates) doc.update(u.entity.id, { bulges: undefined, ...u.geometry } as Partial<Entity>);
-      if (plan.add) doc.add({ ...plan.add.geometry, layerId: plan.add.like.layerId, color: plan.add.like.color, attrs: {} } as NewEntity);
-    });
+    const changes: EntityEdit[] = plan.updates.map((u) => ({ kind: 'update', uid: uidOf(this.ctx, u.entity), geometry: editGeometry(u.geometry) }));
+    if (plan.add) changes.push({ kind: 'add', from: uidOf(this.ctx, plan.add.like), geometry: editGeometry(plan.add.geometry) });
+    if (!writeEdit(this.ctx, this.operation, changes)) return;
     this.remember(op);
     this.ctx.log.success(this.done(op));
     this.reset();
@@ -312,6 +309,7 @@ abstract class CornerTool extends EdgePickTool {
 export class FilletTool extends CornerTool {
   readonly id = 'fillet';
   protected readonly title = 'Köşe yuvarla';
+  protected readonly operation = 'fillet';
   private static last: number | null = null;
 
   protected prompts() {
@@ -353,6 +351,7 @@ export class FilletTool extends CornerTool {
 export class ChamferTool extends CornerTool {
   readonly id = 'chamfer';
   protected readonly title = 'Pah';
+  protected readonly operation = 'chamfer';
   private static last: { d1: number; d2: number } | null = null;
 
   private text(op: { d1: number; d2: number }): string {

@@ -5,7 +5,11 @@
 //! transform command read objects through here. Nothing is computed: each
 //! field is carried over as it is, float64 bit for bit.
 
-use kentos_contracts::{DimensionStyle, Entity, HatchPatternType, RingGeometry, Vec2 as Point};
+use kentos_contracts::{
+    ArcEntity, CircleEntity, ConstructionEntity, DimensionStyle, EllipseEntity, Entity, EntityBase,
+    EntityGeometry, HatchPatternType, LineEntity, PathEntity, PointEntity, RingGeometry,
+    SplineEntity, TextEntity, Vec2 as Point,
+};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::{HatchPattern, Shape};
 use kentos_geometry_core::geom::arrangement::Ring;
@@ -244,6 +248,118 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         _ => return None,
     }
     Some(out)
+}
+
+/// An object of `geometry` with the fields every object has from `base`:
+/// what `cad.entities.edit` writes (docs/adr/0047). A polyline has no holes.
+pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
+    match geometry.clone() {
+        EntityGeometry::Point { p, z } => Entity::Point(PointEntity { base, p, z }),
+        EntityGeometry::Line { a, b } => Entity::Line(LineEntity { base, a, b }),
+        EntityGeometry::Polyline { pts, bulges } => Entity::Polyline(PathEntity {
+            base,
+            pts,
+            bulges,
+            holes: None,
+        }),
+        EntityGeometry::Polygon { pts, bulges, holes } => Entity::Polygon(PathEntity {
+            base,
+            pts,
+            bulges,
+            holes,
+        }),
+        EntityGeometry::Circle { c, r } => Entity::Circle(CircleEntity { base, c, r }),
+        EntityGeometry::Arc { c, r, a0, a1 } => Entity::Arc(ArcEntity { base, c, r, a0, a1 }),
+        EntityGeometry::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => Entity::Ellipse(EllipseEntity {
+            base,
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        }),
+        EntityGeometry::Spline { pts, closed } => {
+            Entity::Spline(SplineEntity { base, pts, closed })
+        }
+        EntityGeometry::Xline { p, dir } => Entity::Xline(ConstructionEntity { base, p, dir }),
+        EntityGeometry::Ray { p, dir } => Entity::Ray(ConstructionEntity { base, p, dir }),
+        EntityGeometry::Text {
+            p,
+            text,
+            height,
+            rotation,
+        } => Entity::Text(TextEntity {
+            base,
+            p,
+            text,
+            height,
+            rotation,
+        }),
+    }
+}
+
+/// A shape the core computed as `cad.entities.edit` takes it: its kind and
+/// geometry fields, float64 bit for bit. None for a dimension or a hatch,
+/// which the command does not write; a polyline's holes are left out.
+pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
+    Some(match shape {
+        Shape::Point { p: at, z } => EntityGeometry::Point { p: p(at), z },
+        Shape::Line { a, b } => EntityGeometry::Line { a: p(a), b: p(b) },
+        Shape::Polyline { pts, bulges, .. } => EntityGeometry::Polyline {
+            pts: back(pts),
+            bulges,
+        },
+        Shape::Polygon { pts, bulges, holes } => EntityGeometry::Polygon {
+            pts: back(pts),
+            bulges,
+            holes: holes.map(|hs| hs.into_iter().map(ring_back).collect()),
+        },
+        Shape::Circle { c, r } => EntityGeometry::Circle { c: p(c), r },
+        Shape::Arc { c, r, a0, a1 } => EntityGeometry::Arc { c: p(c), r, a0, a1 },
+        Shape::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => EntityGeometry::Ellipse {
+            c: p(c),
+            major: p(major),
+            ratio,
+            t0,
+            t1,
+        },
+        Shape::Spline { pts, closed } => EntityGeometry::Spline {
+            pts: back(pts),
+            closed,
+        },
+        Shape::Xline { p: at, dir } => EntityGeometry::Xline {
+            p: p(at),
+            dir: p(dir),
+        },
+        Shape::Ray { p: at, dir } => EntityGeometry::Ray {
+            p: p(at),
+            dir: p(dir),
+        },
+        Shape::Text {
+            p: at,
+            text,
+            height,
+            rotation,
+        } => EntityGeometry::Text {
+            p: p(at),
+            text,
+            height,
+            rotation,
+        },
+        Shape::Dimension { .. } | Shape::Hatch { .. } => return None,
+    })
 }
 
 #[cfg(test)]

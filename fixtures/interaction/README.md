@@ -27,8 +27,13 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/move-copy.json` | Taşı ve Kopyala ([ADR 0037](../../docs/adr/0037-desktop-modify-tools.md)): seçim yokken araç önce seçer (tıklama, pencere, sağ tıkla devam); kenetlenen temel nokta; yazılan `@dY,dX` ile taşıma, tek adımda geri alma; her tık bir kopya, kilitli katmandaki nesne kopyalanmaz; Bitir (Enter) |
 | `v1/rotate-scale.json` | Döndür ve Ölçekle (ADR 0037): kenetlenen merkez, Kopya (K) ile yazılan 90°; referans uzunluğuyla (R) ve yazılan faktörle ölçekleme |
 | `v1/mirror.json` | Aynala (ADR 0037): kenetlenen eksenle simetrik kopya; Kaynağı sil (S) ile yazılan eksene göre yerinde çevirme, tek adımda geri alma |
+| `v1/edge-tools.json` | Buda, Uzat ve Ötele ([ADR 0047](../../docs/adr/0047-desktop-edit-tools.md)): görünen kenarlarla budama, Shift ile öbür işlem, Sınır seç (S) ve Tüm kenarlar (T), kilitli çizgi düzenlenmez, tek adımda geri alma; yazılan mesafe ve Noktadan geç (N) |
+| `v1/corner-tools.json` | Köşe yuvarla ve Pah (ADR 0047): imleç altındaki köşe, yazılan yarıçap, Enter ile son yarıçap, sırayla seçilen iki çizgi, iki mesafeli pah, Kırp (K) kapalıyken yalnız pah çizgisi |
+| `v1/path-edit-tools.json` | Kır, Köşe ekle/sil ve Uzat-kısalt (ADR 0047): kenetlenen kırılma noktası, Enter ile tek noktadan bölme; köşe ekleme ve silme; ucu fareyle izleme, yazılan toplam uzunluk, Toplam (T) kipi |
+| `v1/object-tools.json` | Birleştir ve Patlat (ADR 0047): seçimden önce seçme, kesişim penceresi, kilitli çizgi atlanır; seçimle hemen çalışma, parçalar seçilir; temel nesne patlatılmaz |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
 | `v1/objects.kcad` | Seçim ve kenet izlerinin çizimi: çizgiler (1–3; 2 ile 3 (9,6; 8,8)'de kesişir), kapalı alan (4), nokta (5), kilitli katmanda çizgi (6), gizli katmanda çizgi (7) |
+| `v1/edits.kcad` | Değiştirme izlerinin çizimi (ADR 0047): (−20, 12)'de kesişen 1 ve 2, x = −4'te sınır 3, köşesi (0, 4)'te L biçimli çoklu çizgi 4, (14, 4)'te birleşen 5 ve 6, kırılacak 7, (8, −4)'te uç uca gelen 8 ve 9, kapalı alan 10, 10 m'lik 11, 12, 9'un ucundan devam eden, kilitli katmandaki 13 |
 
 ## Biçim (`kentos.interaction-trace`, sürüm 1)
 
@@ -100,7 +105,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
   3. izin güncellenmesi.
 - Beklenen değeri hataya göre yenilemek yasaktır (CLAUDE.md §9.4).
 - Yeni bir iz ya da alan eklenince bu belge ve iki oynatıcı birlikte güncellenir: web (`apps/web/scripts/e2e/interaction.mjs`) ve masaüstü (`apps/desktop/src/traces/`). Masaüstü oynatıcısı bilmediği alanda durur.
-- İz, araçların oturum boyunca hatırladıklarını (web'in statik alanları: son daire yarıçapı, dikdörtgenin dönmesi ve köşeleri, düzgün çokgenin kenar sayısı ve çemberi) başladığı gibi bırakır. Web oynatıcısı sayfayı izler ve varyantlar arasında yeniden açmaz; masaüstü her izi yeni bir uygulamada oynatır (ADR 0032).
+- İz, araçların oturum boyunca hatırladıklarını (web'in statik alanları: son daire yarıçapı, dikdörtgenin dönmesi ve köşeleri, düzgün çokgenin kenar sayısı ve çemberi, öteleme mesafesi ve Noktadan geç, Kırp, uzat-kısalt kipi ve değerleri) başladığı gibi bırakır. Geri kurulamayanlar (son köşe yarıçapı ve pah mesafeleri) izin ilk yazdığıyla kurulur; ondan önceki beklentiler onlara bağlı değildir. Web oynatıcısı sayfayı izler ve varyantlar arasında yeniden açmaz; masaüstü her izi yeni bir uygulamada oynatır (ADR 0032).
 - Yazılan değerin dilbilgisi ayrı bir dosyadadır: `fixtures/point-input/v1/cases.json`. Web'in ve masaüstünün okuyucusu onu okur.
 
 ## Varyantlar

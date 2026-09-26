@@ -190,6 +190,28 @@ export const S5_TOOLS: CallSet = {
     { name: 'en yakın kenar: yay', fn: 'nearestEdge', args: [{ kind: 'arc', c: v(0, 0), r: 10, a0: 0, a1: Math.PI / 2 }, v(-3, -3)] },
     { name: 'en yakın kenar: kapalı alanın deliği', fn: 'nearestEdge', args: [{ kind: 'polygon', pts: [v(0, 0), v(20, 0), v(20, 20), v(0, 20)], holes: [{ pts: [v(8, 8), v(12, 8), v(12, 12), v(8, 12)] }] }, v(10, 9)] },
     { name: 'en yakın kenar: nokta', fn: 'nearestEdge', args: [{ kind: 'point', p: v(1, 1) }, v(0, 0)] },
+    { name: 'noktadan geç: çizgi, TM', fn: 'offsetThroughDistance', args: [{ kind: 'line', a: v(E, N), b: v(E + 30, N + 40) }, v(E + 8, N - 6)] },
+    { name: 'noktadan geç: daire içinde', fn: 'offsetThroughDistance', args: [{ kind: 'circle', c: v(0, 0), r: 5 }, v(1, 1)] },
+    { name: 'noktadan geç: yaylı çoklu çizgi', fn: 'offsetThroughDistance', args: [{ kind: 'polyline', pts: [v(0, 0), v(10, 0), v(10, 10)], bulges: [0, 0.5, 0] }, v(14, 5)] },
+    { name: 'noktadan geç: delikli alanın deliğine yakın', fn: 'offsetThroughDistance', args: [{ kind: 'polygon', pts: [v(0, 0), v(20, 0), v(20, 20), v(0, 20)], holes: [{ pts: [v(8, 8), v(12, 8), v(12, 12), v(8, 12)] }] }, v(10, 9)] },
+    { name: 'noktadan geç: kenarı olmayan nokta', fn: 'offsetThroughDistance', args: [{ kind: 'point', p: v(1, 1) }, v(0, 0)] },
+    { name: 'deliğe yakın: delik', fn: 'nearHole', args: [{ kind: 'polygon', pts: [v(0, 0), v(20, 0), v(20, 20), v(0, 20)], holes: [{ pts: [v(8, 8), v(12, 8), v(12, 12), v(8, 12)] }] }, v(10, 9)] },
+    { name: 'deliğe yakın: dış halka', fn: 'nearHole', args: [{ kind: 'polygon', pts: [v(0, 0), v(20, 0), v(20, 20), v(0, 20)], holes: [{ pts: [v(8, 8), v(12, 8), v(12, 12), v(8, 12)] }] }, v(1, 10)] },
+    { name: 'deliğe yakın: eşit uzaklık dış halkanın', fn: 'nearHole', args: [{ kind: 'polygon', pts: [v(0, 0), v(20, 0), v(20, 20), v(0, 20)], holes: [{ pts: [v(8, 8), v(12, 8), v(12, 12), v(8, 12)] }] }, v(4, 10)] },
+    { name: 'deliğe yakın: deliksiz alan', fn: 'nearHole', args: [{ kind: 'polygon', pts: [v(E, N), v(E + 20, N), v(E + 20, N + 20)] }, v(E + 10, N + 5)] },
+    { name: 'deliğe yakın: çoklu çizgi', fn: 'nearHole', args: [{ kind: 'polyline', pts: [v(0, 0), v(20, 0)], holes: [{ pts: [v(8, 8), v(12, 8), v(12, 12)] }] }, v(10, 9)] },
+    { name: 'köşe: iki çizginin ortak ucu, TM', fn: 'cornerNear', args: [[{ kind: 'line', a: v(E, N), b: v(E + 20, N) }, { kind: 'line', a: v(E, N + 15), b: v(E, N) }], v(E + 0.5, N + 0.25), 1.5, 0.25] },
+    { name: 'köşe: uçlar yakın ama ayrı', fn: 'cornerNear', args: [[{ kind: 'line', a: v(0, 0), b: v(20, 0) }, { kind: 'line', a: v(0.2, 15), b: v(0.2, 0.1) }], v(0.3, 0.3), 1.5, 0.25] },
+    { name: 'köşe: uçlar same’den uzak', fn: 'cornerNear', args: [[{ kind: 'line', a: v(0, 0), b: v(20, 0) }, { kind: 'line', a: v(1, 15), b: v(1, 0.5) }], v(0.5, 0.3), 1.5, 0.25] },
+    { name: 'köşe: çoklu çizginin köşesi', fn: 'cornerNear', args: [[{ kind: 'polyline', pts: [v(0, 0), v(10, 0), v(10, 10)] }], v(9.5, 0.5), 1.5, 0.25] },
+    { name: 'köşe: açık çoklu çizginin ucu değil', fn: 'cornerNear', args: [[{ kind: 'polyline', pts: [v(0, 0), v(10, 0), v(10, 10)] }], v(0.2, 0.1), 1.5, 0.25] },
+    { name: 'köşe: kapalı alanın ilk köşesi', fn: 'cornerNear', args: [[{ kind: 'polygon', pts: [v(0, 0), v(10, 0), v(10, 10), v(0, 10)] }], v(0.2, 0.1), 1.5, 0.25] },
+    { name: 'köşe: yay yanındaki köşe değil', fn: 'cornerNear', args: [[{ kind: 'polyline', pts: [v(0, 0), v(10, 0), v(10, 10)], bulges: [0.4, 0, 0] }], v(10, 0), 1.5, 0.25] },
+    { name: 'köşe: düz devam köşe değil', fn: 'cornerNear', args: [[{ kind: 'polyline', pts: [v(0, 0), v(10, 0), v(20, 0)] }], v(10, 0), 1.5, 0.25] },
+    { name: 'köşe: en yakını kazanır', fn: 'cornerNear', args: [[{ kind: 'polyline', pts: [v(0, 0), v(10, 0), v(10, 1)] }, { kind: 'polygon', pts: [v(10.8, 0), v(20, 0), v(20, 10)] }], v(10.6, 0.1), 1.5, 0.25] },
+    { name: 'köşe: eşit uzaklıkta ilki', fn: 'cornerNear', args: [[{ kind: 'polyline', pts: [v(-5, 5), v(0, 0), v(-5, -5)] }, { kind: 'polyline', pts: [v(7, 5), v(2, 0), v(7, -5)] }], v(1, 0), 1.5, 0.25] },
+    { name: 'köşe: daire köşe değil', fn: 'cornerNear', args: [[{ kind: 'circle', c: v(0, 0), r: 5 }], v(5, 0), 1.5, 0.25] },
+    { name: 'köşe: aday yok', fn: 'cornerNear', args: [[], v(0, 0), 1.5, 0.25] },
   ],
   random: (g, n) => [
     ...repeat(g, 'directionAngle', n, () => [g.pt(), g.pt()]),
@@ -258,8 +280,52 @@ export const S5_TOOLS: CallSet = {
       return [ring, g.chance(0.5) ? { radius: size } : { d1: size, d2: size }];
     }),
     ...repeat(g, 'nearestEdge', n, () => [entity(g), g.chance(0.3) ? g.gridPt(5, 3) : g.pt()]),
+    // Appended: the calls above keep their random draws (docs/adr/0047).
+    ...repeat(g, 'offsetThroughDistance', n, () => [entity(g), g.chance(0.3) ? g.gridPt(5, 3) : g.pt()]),
+    ...repeat(g, 'nearHole', n, () => holed(g)),
+    ...repeat(g, 'cornerNear', n, () => cornerCandidates(g)),
   ],
 };
+
+/** A closed area with holes (or without), and a point among its rings: the vertex tool's click. */
+function holed(g: Gen): unknown[] {
+  const c = g.pt();
+  const box = (r: number, at: Vec2) => [v(at.x - r, at.y - r), v(at.x + r, at.y - r), v(at.x + r, at.y + r), v(at.x - r, at.y + r)];
+  const outer = box(g.num(20, 40), c);
+  const holes = Array.from({ length: g.chance(0.2) ? 0 : g.int(1, 2) }, () => ({ pts: box(g.num(1, 6), { x: c.x + g.num(-10, 10), y: c.y + g.num(-10, 10) }) }));
+  const kind = g.chance(0.1) ? 'polyline' : 'polygon';
+  return [{ kind, pts: outer, ...(holes.length && { holes }), ...(g.chance(0.2) && { bulges: outer.map(() => (g.chance(0.5) ? 0 : g.num(-0.5, 0.5))) }) }, { x: c.x + g.num(-45, 45), y: c.y + g.num(-45, 45) }];
+}
+
+/**
+ * Candidates as the corner tools gather them around the cursor: lines that
+ * meet end to end (or nearly), paths with a vertex near it, now and then an
+ * object that has no corners; the cursor, the reach and how near two ends
+ * must be to meet (12 and 2 pixels at some zoom).
+ */
+function cornerCandidates(g: Gen): unknown[] {
+  const x = g.chance(0.4) ? g.gridPt(5, 3) : g.pt();
+  const px = g.pick([0.01, 0.05, 0.125, 0.5, g.num(0.005, 1)]);
+  const tol = 12 * px;
+  const same = 2 * px;
+  const near = (d: number) => ({ x: x.x + g.num(-d, d), y: x.y + g.num(-d, d) });
+  const away = () => {
+    const a = g.num(0, 2 * Math.PI);
+    const d = g.num(1, 40);
+    return { x: x.x + d * Math.cos(a), y: x.y + d * Math.sin(a) };
+  };
+  const candidates = Array.from({ length: g.int(0, 5) }, (): EntityGeometry => {
+    const kind = g.pick(['line', 'line', 'line', 'polyline', 'polygon', 'circle']);
+    // An end at the corner, exactly or within a few pixels.
+    const end = () => (g.chance(0.5) ? x : near(g.pick([same / 2, same * 3, tol])));
+    if (kind === 'line') return g.chance(0.5) ? { kind, a: end(), b: away() } : { kind, a: away(), b: end() };
+    if (kind === 'circle') return { kind, c: away(), r: g.num(1, 20) };
+    const pts = [away(), end(), away(), ...(g.chance(0.5) ? [away()] : [])];
+    if (g.chance(0.3)) pts.reverse();
+    return { kind, pts, ...(g.chance(0.2) && { bulges: pts.map(() => (g.chance(0.6) ? 0 : g.num(-0.5, 0.5))) }) } as EntityGeometry;
+  });
+  return [candidates, near(tol * 1.5), tol, same];
+}
 
 /** A rectangle as the rectangle tool gives it: four corners, any rotation, either turning. */
 function rotatedRect(g: Gen): Vec2[] {

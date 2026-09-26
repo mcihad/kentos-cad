@@ -27,6 +27,15 @@ impl View for Camera {
     fn world_length(&self, px: f64) -> f64 {
         px / 8.0
     }
+
+    fn visible(&self) -> kentos_geometry_core::geometry::Bounds {
+        kentos_geometry_core::geometry::Bounds {
+            min_x: E - 50.0,
+            min_y: N - 37.5,
+            max_x: E + 50.0,
+            max_y: N + 37.5,
+        }
+    }
 }
 
 pub struct Bench {

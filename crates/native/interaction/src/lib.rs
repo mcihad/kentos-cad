@@ -33,6 +33,11 @@
 //!   rotate ([`rotate`]), scale ([`scale`]) and mirror ([`mirror`]) on one
 //!   selection-first base ([`modify`]), writing through
 //!   `cad.entities.transform`;
+//! - the edge, corner and object modify tools (docs/adr/0047): offset
+//!   ([`offset`]), trim and extend ([`trim`]), fillet and chamfer
+//!   ([`corner`]), break ([`breaking`]), vertex ([`vertex`]), lengthen
+//!   ([`lengthen`]) on an edge-picking base, join and explode ([`object`])
+//!   on the selection-first one, writing through `cad.entities.edit`;
 //! - the geometry store kept in step with the document ([`Spatial`]): what
 //!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
@@ -48,14 +53,20 @@
 )]
 
 pub mod arc;
+pub mod breaking;
 pub mod circle;
+pub mod corner;
+mod edge;
 pub mod erase;
 mod format;
+pub mod lengthen;
 pub mod line;
 mod log;
 pub mod mirror;
 pub mod modify;
 pub mod move_copy;
+pub mod object;
+pub mod offset;
 pub mod path;
 pub mod point;
 mod points;
@@ -70,6 +81,8 @@ mod selection;
 mod session;
 pub mod spatial;
 mod tool;
+pub mod trim;
+pub mod vertex;
 
 pub use format::Format;
 pub use kentos_geometry_core::Vec2;
@@ -84,5 +97,6 @@ pub use selection::Selection;
 pub use session::Session;
 pub use spatial::Spatial;
 pub use tool::{
-    Context, Corners, Draft, Flow, Memory, Pointer, Preview, Stroke, Tag, Tool, View, snap_kinds,
+    Context, Corners, Draft, Flow, LengthenMode, Marker, MarkerShape, Memory, Pointer, Preview,
+    Stroke, Tag, Tone, Tool, View, snap_kinds,
 };

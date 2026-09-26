@@ -50,8 +50,9 @@ impl Stages for Mirror {
         LABEL
     }
 
-    fn begin(&mut self) {
+    fn begin(&mut self, _cx: &mut Context<'_>) -> Flow {
         self.p1 = None;
+        Flow::Stay
     }
 
     fn anchor(&self) -> Option<Vec2> {

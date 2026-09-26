@@ -76,8 +76,8 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 91,
-    "commandsOnDesktop": 56
+    "commandsWithoutTests": 82,
+    "commandsOnDesktop": 66
   },
   "commands": [
     {
@@ -2898,9 +2898,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "tool.cancel",
@@ -2958,9 +2960,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/corner-tools.json"
+      ]
     },
     {
       "id": "tool.circle",
@@ -3274,9 +3278,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/object-tools.json"
+      ]
     },
     {
       "id": "tool.extend",
@@ -3307,9 +3313,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "tool.fillet",
@@ -3342,10 +3350,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/corner-tools.json"
       ]
     },
     {
@@ -3414,9 +3423,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/object-tools.json"
+      ]
     },
     {
       "id": "tool.lengthen",
@@ -3448,9 +3459,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "tool.line",
@@ -3629,9 +3642,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "tool.pan",
@@ -4512,9 +4527,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "tool.vertex",
@@ -4545,9 +4562,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "tool.xline",
@@ -5746,12 +5765,15 @@
       "methods": [],
       "steps": 3,
       "description": "Nesnenin iki nokta arasındaki kısmını siler; Enter ile tek noktadan böler.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "chamfer",
@@ -5771,12 +5793,15 @@
       "methods": [],
       "steps": 3,
       "description": "Köşeyi iki mesafeyle keser: iki çizgi ya da çoklu çizginin komşu kenarları (imar köşe kesmesi).",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/corner-tools.json"
+      ]
     },
     {
       "id": "circle",
@@ -5986,12 +6011,15 @@
       "methods": [],
       "steps": 2,
       "description": "Çoklu çizgi ve alanı çizgi ve yaylara, eğriyi çoklu çizgiye, ölçüyü çizgi ve yazıya ayırır.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/object-tools.json"
+      ]
     },
     {
       "id": "extend",
@@ -6010,12 +6038,15 @@
       "methods": [],
       "steps": 2,
       "description": "Çizgi ya da yay ucunu ilk rastladığı kenara kadar uzatır.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "fillet",
@@ -6035,13 +6066,15 @@
       "methods": [],
       "steps": 3,
       "description": "İki çizgiyi ya da çoklu çizginin komşu iki kenarını yarıçaplı yayla (0: keskin köşe) birleştirir.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/corner-tools.json"
       ]
     },
     {
@@ -6086,12 +6119,15 @@
       "methods": [],
       "steps": 2,
       "description": "Uç uca gelen çizgi, yay ve çoklu çizgileri tek çoklu çizgiye; kapanırsa kapalı alana çevirir.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/object-tools.json"
+      ]
     },
     {
       "id": "lengthen",
@@ -6110,12 +6146,15 @@
       "methods": [],
       "steps": 3,
       "description": "Çizgi, yay ya da açık çoklu çizginin boyunu bir ucundan değiştirir: fareyle, farkla, yüzdeyle ya da toplam uzunlukla.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "line",
@@ -6245,12 +6284,15 @@
       "methods": [],
       "steps": 3,
       "description": "Çizgi, çoklu çizgi, alan, daire ya da yayın paralel kopyasını çıkarır.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "pan",
@@ -6880,12 +6922,15 @@
       "methods": [],
       "steps": 2,
       "description": "Tıklanan parçayı, onu kesen en yakın iki kenar arasında siler.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "vertex",
@@ -6903,12 +6948,15 @@
       "methods": [],
       "steps": 3,
       "description": "Kenara tıklayınca köşe ekler, köşeye tıklayınca siler.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "xline",

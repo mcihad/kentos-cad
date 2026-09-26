@@ -7,7 +7,7 @@ use crate::entity::{Entity, Shape};
 use crate::geom::bulge::has_bulges;
 use crate::geom::intersect::{Edge, closest_on_edge};
 use crate::geom::offset::{OffsetResult, offset_bulge_path, offset_path, side_of};
-use crate::jsmath::js_hypot;
+use crate::jsmath::{js_hypot, js_min};
 use crate::op;
 use crate::ops::curve_cuts::{
     Geometry, construction_of, ellipse_of, offset_construction, offset_ellipse,
@@ -99,6 +99,17 @@ pub fn offset_entity(e: &Shape, distance: f64, through: Vec2) -> Geometry {
     }
 }
 
+/// The distance “Noktadan geç” (through) offsets by: from `p` to the
+/// object's nearest edge, so the copy passes through `p` (the offset tool's
+/// `distanceFor`, docs/adr/0047); +∞ for an object without edges.
+pub fn through_distance(e: &Shape, p: Vec2) -> f64 {
+    let mut d = f64::INFINITY;
+    for ed in entity_edges(e) {
+        d = js_min(d, closest_on_edge(&ed, p).d);
+    }
+    d
+}
+
 /// Side of a bulged path a point lies on (+1 left of travel), judged at the nearest edge.
 fn bulged_side(e: &Shape, p: Vec2) -> i32 {
     let (mut best_d, mut best_side) = (f64::INFINITY, 1);
@@ -127,7 +138,11 @@ fn bulged_side(e: &Shape, p: Vec2) -> i32 {
     best_side
 }
 
-pub(crate) static OPS: &[Op] = &[op!(
-    "offsetEntity",
-    |e: Entity, distance: f64, through: Vec2| offset_entity(&e.shape, distance, through)
-)];
+pub(crate) static OPS: &[Op] = &[
+    op!("offsetEntity", |e: Entity, distance: f64, through: Vec2| {
+        offset_entity(&e.shape, distance, through)
+    }),
+    op!("offsetThroughDistance", |e: Entity, p: Vec2| {
+        through_distance(&e.shape, p)
+    }),
+];

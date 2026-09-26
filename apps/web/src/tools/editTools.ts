@@ -1,4 +1,5 @@
 import type { AppContext } from '../app/context';
+import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import { Signal } from '../core/signal';
 import { ENTITY_KIND_LABEL, type Entity, type NewEntity } from '../model/entities';
 import { dist, type Bounds, type Vec2 } from '../model/geometry';
@@ -12,6 +13,7 @@ import type { ViewTransform } from '../viewport/Camera';
 import { CoreStore } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
 import { parseNumber } from './coordinateInput';
+import { createdIds, editGeometry, uidOf, writeEdit } from './editCommand';
 import { MAX_GHOSTS, SelectionFirstTool } from './modifyTools';
 import { drawTag, strokePath, strokePaths } from './preview';
 import type { Tool, ToolPointer } from './Tool';
@@ -57,25 +59,21 @@ export class JoinTool extends SelectionActionTool {
   }
 
   protected run(targets: Entity[]): void {
-    const { doc, log, selection } = this.ctx;
+    const { log, selection } = this.ctx;
     const { groups } = joinEntities(targets, Math.max(JoinTool.tolerance, 1e-9));
     if (!groups.length) {
       log.warn('Uçları birleşen çizgi, yay ya da açık çoklu çizgi bulunamadı. Toleransı artırmayı deneyin.');
       return;
     }
-    // Each chain takes its first object's layer, colour, attributes and label.
-    const joined = groups.map((g) => {
-      const first = doc.get(g.sources[0])!;
-      return { ...g.geometry, layerId: first.layerId, color: first.color, attrs: { ...first.attrs }, label: first.label } as NewEntity;
-    });
-    const created = doc.transact('Birleştir', () => {
-      // Each chain is its first object, joined (AutoCAD JOIN): it keeps its slot and persistent id
-      // (docs/adr/0014); the others are gone.
-      groups.forEach((g, i) => doc.replace(g.sources[0], joined[i]));
-      doc.remove(groups.flatMap((g) => g.sources.slice(1)));
-      return groups.map((g) => g.sources[0]);
-    });
-    selection.set(created);
+    // Each chain is its first object, joined (AutoCAD JOIN): it keeps its slot, persistent id
+    // (docs/adr/0014), layer, colour, attributes and label; the others are gone. One edit
+    // through cad.entities.edit (docs/adr/0047).
+    const changes = groups.flatMap((g): EntityEdit[] => [
+      { kind: 'replace', uid: uidOf(this.ctx, g.sources[0]), geometry: editGeometry(g.geometry), keepData: true },
+      ...g.sources.slice(1).map((id): EntityEdit => ({ kind: 'remove', uid: uidOf(this.ctx, id) })),
+    ]);
+    if (!writeEdit(this.ctx, 'join', changes)) return;
+    selection.set(groups.map((g) => g.sources[0]));
     const kinds = groups.map((g) => ENTITY_KIND_LABEL[g.geometry.kind].toLocaleLowerCase('tr-TR'));
     log.success(`${groups.reduce((n, g) => n + g.sources.length, 0)} nesne birleştirildi: ${kinds.join(', ')}.`);
   }
@@ -86,9 +84,11 @@ export class ExplodeTool extends SelectionActionTool {
   protected readonly label = 'Patlat';
 
   protected run(targets: Entity[]): void {
-    const { doc, log, selection, format } = this.ctx;
-    const gone: number[] = [];
-    const pieces: NewEntity[] = [];
+    const { log, selection, format } = this.ctx;
+    // Each object exploded goes; its pieces are new objects from it (its layer and colour), all
+    // in one edit through cad.entities.edit (docs/adr/0047).
+    const changes: EntityEdit[] = [];
+    let exploded = 0;
     let firstError: string | null = null;
     for (const e of targets) {
       const r = explodeEntity(e, (l) => dimensionLabel(undefined, l, { length: (m) => format.length(m, false), angle: (a) => format.angle(a) }), this.ctx.doc.settings.drawingFont.value);
@@ -96,15 +96,14 @@ export class ExplodeTool extends SelectionActionTool {
         firstError ??= r.error;
         continue;
       }
-      gone.push(e.id);
-      for (const piece of r.pieces) pieces.push({ ...piece, layerId: e.layerId, color: e.color, attrs: {} } as NewEntity);
+      const uid = uidOf(this.ctx, e);
+      exploded++;
+      changes.push({ kind: 'remove', uid }, ...r.pieces.map((piece): EntityEdit => ({ kind: 'add', from: uid, geometry: editGeometry(piece) })));
     }
-    const exploded = gone.length;
-    const created = doc.transact('Patlat', () => {
-      doc.remove(gone);
-      return doc.addMany(pieces).map((e) => e.id);
-    });
     if (firstError && !exploded) return log.warn(firstError);
+    const out = writeEdit(this.ctx, 'explode', changes);
+    if (!out) return;
+    const created = createdIds(this.ctx, out);
     selection.set(created);
     log.success(`${exploded} nesne patlatıldı: ${created.length} parça.${firstError ? ` Bazı nesneler atlandı: ${firstError}` : ''}`);
   }

@@ -468,6 +468,33 @@ case("TM çoklu çizginin tıklanan kenarı", "nearestEdge",
      [{"kind": "polyline", "pts": [q[0] for q in chain]}, TMP("29", "11")[0]],
      {"kind": "seg", "a": PD(*chain[1][1]), "b": PD(*chain[2][1])}, "0")
 
+# offsetThroughDistance (docs/adr/0047): “Noktadan geç” offsets a TM line by
+# the point's distance to it, |AB × AP| / |AB| = |30·5 − 40·20| / 50 = 13.
+ta, tb, tp = TMP("0", "0"), TMP("30", "40"), TMP("20", "5")
+(ax_, ay_), (bx_, by_), (px_, py_) = ta[1], tb[1], tp[1]
+cross_ = (bx_ - ax_) * (py_ - ay_) - (by_ - ay_) * (px_ - ax_)
+case("TM çizgiye noktadan geçen öteleme uzaklığı", "offsetThroughDistance",
+     [{"kind": "line", "a": ta[0], "b": tb[0]}, tp[0]],
+     format(abs(Decimal(cross_.numerator) / Decimal(cross_.denominator)) / sqrt((bx_ - ax_) ** 2 + (by_ - ay_) ** 2), "f"), "1e-8")
+# nearHole: a click 1 m from a hole's edge and 9 m from the outer ring is at the hole.
+case("Delikli alanda deliğe yakın tıklama", "nearHole",
+     [{"kind": "polygon", "pts": [{"x": 0, "y": 0}, {"x": 20, "y": 0}, {"x": 20, "y": 20}, {"x": 0, "y": 20}],
+       "holes": [{"pts": [{"x": 8, "y": 8}, {"x": 12, "y": 8}, {"x": 12, "y": 12}, {"x": 8, "y": 12}]}]}, {"x": 10, "y": 9}],
+     True, "0")
+# cornerNear: two TM lines meeting end to end (3-4-5 and 7-24-25 sides); the
+# corner is their shared end, each side's unit direction exact, its reach
+# the shorter side, the angle atan2(|u1 × u2|, u1 · u2).
+c0, c1, c2 = TMP("0", "0"), TMP("30", "40"), TMP("24", "-7")
+u1 = (F(3, 5), F(4, 5))
+u2 = (F(24, 25), F(-7, 25))
+dot_ = u1[0] * u2[0] + u1[1] * u2[1]
+crs_ = abs(u1[0] * u2[1] - u1[1] * u2[0])
+phi_ = datan2(Decimal(crs_.numerator) / Decimal(crs_.denominator), Decimal(dot_.numerator) / Decimal(dot_.denominator))
+case("TM iki çizginin ortak ucu köşedir", "cornerNear",
+     [[{"kind": "line", "a": c0[0], "b": c1[0]}, {"kind": "line", "a": c2[0], "b": c0[0]}], TMP("0.3", "0.2")[0], 1.5, 0.25],
+     {"site": {"kind": "lines", "first": 0, "pick1": PD(*c1[1]), "second": 1, "pick2": PD(*c2[1])},
+      "corner": {"at": PD(*c0[1]), "u1": PD(*u1), "u2": PD(*u2), "reach": "25", "phi": format(phi_, "f")}}, "1e-8")
+
 doc = {
     "format": "kentos.geometry-call-reference",
     "version": 1,

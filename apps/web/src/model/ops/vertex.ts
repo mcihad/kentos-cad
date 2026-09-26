@@ -22,3 +22,9 @@ export const insertVertex = entityOp<(e: Entity, seg: number, p: Vec2) => Vertex
 
 /** Removes vertex `index`; its two segments merge into one straight segment. */
 export const removeVertex = entityOp<(e: Entity, index: number) => VertexResult>('removeVertex');
+
+/**
+ * Whether p is nearer to one of a closed area's holes than to its outer
+ * ring; false for anything else. Computed by the geometry core (docs/adr/0047).
+ */
+export const nearHole = op<(e: Entity, p: Vec2) => boolean>('nearHole');

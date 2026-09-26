@@ -4,6 +4,7 @@
 //! the document and says what to draw as [`Preview`] data.
 
 use kentos_domain::Document;
+use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
 use kentos_geometry_core::tools::point_input::Tracking;
 
@@ -51,6 +52,9 @@ pub trait View {
     fn to_screen(&self, p: Vec2) -> [f64; 2];
     /// How much world `px` logical pixels span at the current zoom.
     fn world_length(&self, px: f64) -> f64;
+    /// The world box the area shows: the edges a trim or an extend meets by
+    /// default (the web's `camera.visibleBounds()`).
+    fn visible(&self) -> Bounds;
 }
 
 /// Drafting aids that change where a point goes, and what a click picks
@@ -119,9 +123,20 @@ pub enum Corners {
     Chamfer(f64),
 }
 
+/// Uzat-kısalt's mode (the web's `LengthenTool.mode`): the moving end
+/// follows the mouse, or every clicked end changes by a difference, a
+/// percentage or to a total length.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LengthenMode {
+    Dynamic,
+    Delta,
+    Percent,
+    Total,
+}
+
 /// What the web's drawing tools keep from one run to the next for as long as
-/// the page lives (their static fields; docs/adr/0032): the host keeps it for
-/// as long as the app lives. A new app starts with the web's values.
+/// the page lives (their static fields; docs/adr/0032, 0047): the host keeps
+/// it for as long as the app lives. A new app starts with the web's values.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Memory {
     /// The last circle's radius, offered by Teğet-teğet-yarıçap (`CircleTool.lastRadius`); 0: none yet.
@@ -135,6 +150,23 @@ pub struct Memory {
     /// Whether the regular polygon's circle passes through its corners
     /// (`RegularPolygonTool.inscribed`), else it touches its edges.
     pub polygon_inscribed: bool,
+    /// Ötele's distance (`OffsetTool.distance`), metres.
+    pub offset_distance: f64,
+    /// Ötele's “Noktadan geç” (`OffsetTool.through`): the copy passes through the clicked point.
+    pub offset_through: bool,
+    /// Whether fillet and chamfer cut the corner's sides back (`CornerTool.trimSides`, Kırp).
+    pub corner_trim: bool,
+    /// The last fillet radius (`FilletTool.last`); none yet.
+    pub fillet_radius: Option<f64>,
+    /// The last chamfer distances (`ChamferTool.last`); none yet.
+    pub chamfer: Option<(f64, f64)>,
+    /// Birleştir's end gap tolerance (`JoinTool.tolerance`), metres.
+    pub join_tolerance: f64,
+    /// Uzat-kısalt's mode and values (`LengthenTool.mode`, `LengthenTool.values`).
+    pub lengthen_mode: LengthenMode,
+    pub lengthen_delta: f64,
+    pub lengthen_percent: f64,
+    pub lengthen_total: f64,
 }
 
 impl Default for Memory {
@@ -145,6 +177,16 @@ impl Default for Memory {
             rect_corners: Corners::Sharp,
             polygon_sides: 6,
             polygon_inscribed: true,
+            offset_distance: 1.0,
+            offset_through: false,
+            corner_trim: true,
+            fillet_radius: None,
+            chamfer: None,
+            join_tolerance: 0.001,
+            lengthen_mode: LengthenMode::Dynamic,
+            lengthen_delta: 1.0,
+            lengthen_percent: 100.0,
+            lengthen_total: 10.0,
         }
     }
 }
@@ -197,6 +239,17 @@ pub struct Tag {
     pub lines: Vec<String>,
 }
 
+/// The colour a preview part is drawn in, from the theme (the web's palette):
+/// the accent, the danger colour (what a trim takes away, a vertex to go) or
+/// the snap colour (a corner's reach).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Tone {
+    #[default]
+    Accent,
+    Danger,
+    Snap,
+}
+
 /// A line of a draft drawn as the web's `strokePath` draws it: the circle,
 /// the arc or the rectangle that would be written, a dashed guide circle.
 #[derive(Clone, Debug, PartialEq)]
@@ -208,6 +261,7 @@ pub struct Stroke {
     pub dash: Option<[f32; 2]>,
     /// Logical pixels.
     pub width: f32,
+    pub tone: Tone,
 }
 
 impl Stroke {
@@ -218,7 +272,13 @@ impl Stroke {
             closed,
             dash: None,
             width: 1.0,
+            tone: Tone::Accent,
         }
+    }
+
+    pub fn tone(mut self, tone: Tone) -> Self {
+        self.tone = tone;
+        self
     }
 
     pub fn dashed(pts: Vec<Vec2>, closed: bool, dash: [f32; 2]) -> Self {
@@ -253,8 +313,31 @@ pub struct Preview {
     /// modify tool's ghosts (the web's `strokePaths` markers, docs/adr/0037).
     pub marks: Vec<Vec2>,
     pub tag: Option<Tag>,
+    /// The tag's colour: the danger colour where it names what goes (web `drawTag`).
+    pub tag_tone: Tone,
+    /// Marks at points, drawn 2 px wide: a corner found under the cursor, a
+    /// vertex to add or remove (docs/adr/0047).
+    pub markers: Vec<Marker>,
     /// A polar tracking ray the cursor is locked to.
     pub tracking: Option<Tracking>,
+}
+
+/// A mark at a world point, sized in logical pixels.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Marker {
+    pub at: Vec2,
+    pub shape: MarkerShape,
+    pub tone: Tone,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum MarkerShape {
+    /// A circle of this radius (the corner tools' 7 px ring).
+    Ring(f32),
+    /// An × this far from its centre (a vertex to remove).
+    Cross(f32),
+    /// A + this far from its centre (a vertex to add).
+    Plus(f32),
 }
 
 /// An interactive tool.
@@ -292,6 +375,12 @@ pub trait Tool {
     /// Ctrl+Z while the tool runs: takes back its newest step and returns
     /// true, or false when nothing is pending and the drawing is undone instead.
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool;
+    /// Esc while the tool runs: it steps back (drops the object it picked,
+    /// leaves a sub-step) and returns true, or false when it has nothing to
+    /// drop and the session leaves it (the web's `Tool.cancel`).
+    fn cancel(&mut self, _cx: &mut Context<'_>) -> bool {
+        false
+    }
     fn preview(&self, format: &Format) -> Preview;
     /// The tool is done and leaves after the call that finished it (the web's
     /// `ctx.tools.exit()` from a click or typed text: a move written).

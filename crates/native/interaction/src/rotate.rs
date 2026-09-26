@@ -86,11 +86,12 @@ impl Stages for Rotate {
         LABEL
     }
 
-    fn begin(&mut self) {
+    fn begin(&mut self, _cx: &mut Context<'_>) -> Flow {
         self.base = None;
         self.ref_mode = false;
         self.ref_from = None;
         self.ref_angle = None;
+        Flow::Stay
     }
 
     fn anchor(&self) -> Option<Vec2> {
