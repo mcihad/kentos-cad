@@ -64,6 +64,8 @@ Her adımda `op` ve işleme göre alanlar bulunur. Bütün adımlarda şu alanla
 | `setActive` | `id` | `layers.setActive` | `set_active_layer` | |
 | `rename` | `id`, `name` | `layers.rename` | `rename_layer` | |
 | `setLayerStyle` | `id`, `patch`, `label`? | `setLayerStyle` | `set_layer_style` (yamalı tam stil) | |
+| `addLayer` | `layer`: `{ id, name, type?, visible?, locked?, style? }`, `parent`: kimlik ya da `null` | `layers.add` | `add_layer` (`NewLayer`; verilmeyen stil alanı varsayılandır) | yeni düğümün kimliği |
+| `uniqueLayerName` | `base` | `layers.uniqueName` | `LayerTree::unique_name` | ad |
 
 - **Yama** web'deki gibi sığdır: yamanın her alanı nesnenin (ya da stilin) aynı adlı alanının yerine geçer; `null` alanı siler (web'de `undefined`). Nesnenin kimliği yamayla değişmez. Masaüstü tam nesne alır: koşucu yamayı JSON üstünde nesneye uygular ve sonucu verir.
 - **`transact`:** `steps` işlemin gövdesidir, içinde başka `transact` olabilir. `throw` verilmişse gövde adımlarından sonra bu iletiyle hata verir. Yakalanmayan hata dıştaki işleme geçer, en dışta senaryoyu düşürür.
@@ -83,6 +85,7 @@ Yalnız yazılan alanlar denetlenir.
 | `revision` | `"same"`: adımdan önceki sürümle aynı; `"changed"`: farklı |
 | `layers` | `{ "katman": { visible, locked, expanded, name, style, isVisible, isLocked } }`. İlk beşi düğümün kendi değeridir; `isVisible` ve `isLocked` üst grupları da hesaba katan yanıttır |
 | `activeLayer` | etkin katmanın kimliği |
+| `tree` | `{ "grup": [kimlik…] }`: grubun düğümleri sırasıyla; `""` ağacın en üstü |
 | `uids` | `{ "kimlik": ad }`: nesnenin kalıcı kimliği `captureUid`'in bu adla sakladığıdır; `"new"`: saklananların hiçbiri değildir |
 
 **Kalıcı kimlik neden yalnız karşılaştırılır?** Yeni nesnenin kimliği rastgeledir (UUIDv7), açılan v1 dosyasınınki dosyanın içeriğinden türetilir (UUIDv5, ADR 0014). Fixture elle yazıldığından değeri yazamaz; kimlik aynı senaryoda alınan kimliklerle karşılaştırılır. `entities` karşılaştırmasına kalıcı kimlik girmez.
@@ -93,4 +96,5 @@ Yalnız yazılan alanlar denetlenir.
 
 - Beklenen değerler web'in kodundan elle yazılır, iki koşucuyla doğrulanır. Bir uygulamanın çıktısından kopyalanmaz. Değiştirmek incelenmiş bir davranış değişikliğidir (CLAUDE.md §23.4).
 - Web'in yazılı bir kararla çeliştiği davranışlar fixture'a konmaz; ADR 0020'de bildirilir, masaüstü karara uyar ve kendi testinde (`crates/native/domain/tests/document.rs`) sınanır. Örnek: başarısız işlemdeki katman stili değişikliği web'de belgeyi kirletir (ADR 0003'e aykırı).
-- Kapsam dışında: dışarıdan gelen değişiklik (`applyExternal`, `forgetHistoryOf`), `load`, açılıştan sonra `replaceWith`, katman ekleme (`layers.add`), ad/ayar/stil kitaplığı değişikliği ve belge olayları (`changed`, `attrs`, `touched`). Bir v1 dosyasından türetilen kimliklerin değerleri burada değil, `fixtures/document/v1/identity`'dedir (bağımsız Python referansı, ADR 0014).
+- Katman eklemede senaryolar kimliği verir. Kimliksiz katman `layer-N` alır; sayacı platformun kendisidir (web modül genelinde sayar, masaüstü ağaç başına), bu yüzden değeri fixture'a girmez. Var olan bir kimlik verilirse masaüstü yeni bir `layer-N` verir; web ikinci bir düğüm kurar (hiçbir çağıran bunu yapmaz), bu durum fixture'a konmaz.
+- Kapsam dışında: dışarıdan gelen değişiklik (`applyExternal`, `forgetHistoryOf`), `load`, açılıştan sonra `replaceWith`, ad/ayar/stil kitaplığı değişikliği ve belge olayları (`changed`, `attrs`, `touched`). Bir v1 dosyasından türetilen kimliklerin değerleri burada değil, `fixtures/document/v1/identity`'dedir (bağımsız Python referansı, ADR 0014).

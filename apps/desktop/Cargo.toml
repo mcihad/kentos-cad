@@ -21,6 +21,12 @@ kentos-domain = { path = "../../crates/native/domain" }
 kentos-render-wgpu = { path = "../../crates/render/wgpu" }
 # The tool session: tools, prompts and typed input over the document (docs/adr/0021).
 kentos-interaction = { path = "../../crates/native/interaction" }
+# The cloud client (docs/adr/0040): signing in, the catalog, opening, saving and following
+# cloud projects, device drafts; its own runtime, awaited on Iced's executor (docs/adr/0041).
+kentos-cloud = { path = "../../crates/native/cloud" }
+# File exchange (exchange/): the shared readers and writers of coordinate lists and DXF,
+# the ones the web runs in its formats worker (CLAUDE.md §9.7, docs/adr/0009).
+kentos-formats = { path = "../../crates/shared/formats" }
 iced = { workspace = true, features = ["canvas"] }
 # The trace player (traces.rs) runs the app's own tasks (save, open) without a
 # window: Iced's runtime crate, already in the binary through Iced and KentOS UI's

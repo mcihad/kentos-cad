@@ -14,8 +14,8 @@
 
 use std::borrow::Cow;
 
-use iced::widget::{Column, Row, button, column, container, row, scrollable, stack, text};
-use iced::{Center, Color, Element, Fill};
+use iced::widget::{Column, button, column, container, row, scrollable, stack, text};
+use iced::{Color, Element, Fill};
 
 use kentos_contracts::{LayerNode, LayerNodeType};
 use kentos_interaction::Format;
@@ -23,7 +23,7 @@ use kentos_render_wgpu::Rgba8;
 use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::theme::Tokens;
 use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LinePrompt};
 use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon, Stack};
 use kentos_ui::widget::status_bar::{Readout, StatusBar};
@@ -34,7 +34,7 @@ use kentos_ui::widget::{
     swatch,
 };
 
-use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel, Then};
+use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel};
 use crate::catalog::{Command, Entry, Item, Standing, catalog};
 use crate::document::{Document, crs_name};
 use crate::marks::Marks;
@@ -53,7 +53,7 @@ impl App {
                     Pane::new(panel.title(), move || self.panel_body(panel)).icon(panel.icon());
                 match (panel, &self.document) {
                     (Panel::Layers, Some(doc)) => {
-                        pane.actions(label::caption(format!("{} katman", doc.layer_count())))
+                        pane.actions(self.layers_actions(doc.layer_count()))
                     }
                     _ => pane.scrollable(),
                 }
@@ -77,6 +77,7 @@ impl App {
         // A save's panel and an open's window (saving.rs, opening.rs), over everything else.
         layers.extend(self.saving_view());
         layers.extend(self.opening_view());
+        layers.extend(self.cloud_opening_view());
         if layers.len() == 1 {
             return layers.remove(0);
         }
@@ -92,8 +93,12 @@ impl App {
             .trailing(label::caption(self.document.as_ref().map_or(
                 "Açık çizim yok".to_owned(),
                 |doc| {
+                    // A cloud project with its workspace (docs/adr/0041).
+                    let place = doc
+                        .cloud_source()
+                        .map_or(String::new(), |s| format!("{} › ", s.workspace));
                     format!(
-                        "{}{}",
+                        "{place}{}{}",
                         doc.name(),
                         if doc.dirty() { " • kaydedilmedi" } else { "" }
                     )
@@ -144,7 +149,8 @@ impl App {
                     &self.selection,
                     accent,
                 );
-                stack![area, over].into()
+                // The running command's strip on top (command_bar.rs).
+                stack![area, over].extend(self.command_bar()).into()
             }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")
@@ -280,43 +286,6 @@ impl App {
         })
     }
 
-    /// The running command in the status bar: its name, the step and the
-    /// options as buttons, each with its value when it has one (the web
-    /// shows them in the strip over its drawing).
-    fn prompt_bar(&self) -> Option<Element<'_, Message>> {
-        let p = self.session.prompt();
-        let tool = p.tool?;
-        let head = row![
-            text(tool)
-                .font(typography::ui_strong())
-                .size(typography::caption()),
-            label::caption(p.step.clone()),
-        ]
-        .spacing(6)
-        .align_y(Center);
-        let options = p.options.iter().map(|o| {
-            let mut content = row![label::caption(o.label)].spacing(4).align_y(Center);
-            if let Some(value) = &o.value {
-                content = content.push(
-                    text(value.clone())
-                        .font(typography::ui_strong())
-                        .size(typography::caption()),
-                );
-            }
-            button(content.push(label::mono_caption(o.key)))
-                .on_press(Message::PromptOption(o.key))
-                .padding([0, 5])
-                .style(style::button::keyword)
-                .into()
-        });
-        Some(
-            Row::with_children(std::iter::once(head.into()).chain(options))
-                .spacing(4)
-                .align_y(Center)
-                .into(),
-        )
-    }
-
     fn status_bar(&self) -> Element<'_, Message> {
         let coordinates = match (&self.document, self.viewport.cursor) {
             (Some(doc), Some(p)) => {
@@ -332,9 +301,6 @@ impl App {
                 .icon(Icon::Crosshair)
                 .tip("İmleç koordinatı: Y sağa (doğu), X yukarı (kuzey)"),
         );
-        if let Some(prompt) = self.prompt_bar() {
-            bar = bar.separator().push(prompt);
-        }
         if !self.selection.is_empty() {
             // The web's status cell: how many are selected, in the accent (DESIGN.md, durum çubuğu).
             let n = self.selection.len();
@@ -383,6 +349,10 @@ impl App {
                 );
         } else {
             bar = bar.spacer();
+        }
+        // The cloud: the open project and its save, the account with Çıkış (docs/adr/0041).
+        for cell in self.cloud_cells() {
+            bar = bar.separator().push(cell);
         }
         bar.separator()
             .push(
@@ -468,22 +438,28 @@ impl App {
                     Message::DialogClosed,
                 )
             }
-            Asking::Unsaved(then) => overlay::modal(
-                Confirm::new("Kaydedilmemiş değişiklikler var", Message::DialogConfirmed, Message::DialogClosed)
-                    .message(format!(
-                        "“{}” çiziminde kaydedilmemiş değişiklikler var.",
-                        self.document.as_ref().map_or("", |doc| doc.name())
-                    ))
-                    .detail("Önce kaydetmek için Vazgeç'e basıp Ctrl+S kullanın.")
-                    .confirm(match then {
-                        Then::Open => "Kaydetmeden aç",
-                        Then::Close(_) => "Kaydetmeden çık",
-                    })
-                    .destructive(),
-                Message::DialogClosed,
-            ),
+            Asking::Unsaved(then) => {
+                // What would be lost, with the count (cloud/leaving.rs).
+                let q = self.unsaved_question(then);
+                overlay::modal(
+                    Confirm::new(q.title, Message::DialogConfirmed, Message::DialogClosed)
+                        .message(q.message)
+                        .detail(q.detail)
+                        .confirm(q.confirm)
+                        .destructive(),
+                    Message::DialogClosed,
+                )
+            }
             Asking::Settings => self.settings_dialog(),
             Asking::Recovery => self.recovery_dialog(),
+            Asking::SignIn => self.sign_in_view(),
+            Asking::Catalog => self.catalog_view(),
+            Asking::Upload => self.upload_view(),
+            Asking::Conflicts => self.conflicts_view(),
+            Asking::FileConflict => self.file_conflict_view(),
+            Asking::RemoveCopy => self.remove_copy_view(),
+            Asking::Ended => self.ended_view(),
+            Asking::Exchange => self.exchange_view(),
         }
     }
 }
@@ -685,14 +661,34 @@ fn project_rows(doc: &Document) -> Vec<(&'static str, String)> {
         Some("gis") => "CBS",
         Some(other) => return_other(other),
     };
-    vec![
-        ("Proje", doc.name().to_owned()),
-        (
+    // A cloud project says where it is kept instead of a file (docs/adr/0041).
+    let kept = match doc.cloud_source() {
+        Some(c) => (
+            "Bulut",
+            match &c.revision {
+                Some(r) => format!(
+                    "{} · {} · revizyon {}",
+                    c.workspace,
+                    crate::cloud::words::storage_title(c.storage()),
+                    r.number
+                ),
+                None => format!(
+                    "{} · {}",
+                    c.workspace,
+                    crate::cloud::words::storage_title(c.storage())
+                ),
+            },
+        ),
+        None => (
             "Dosya",
             doc.path
                 .as_ref()
                 .map_or("kaydedilmedi".to_owned(), |p| p.display().to_string()),
         ),
+    };
+    vec![
+        ("Proje", doc.name().to_owned()),
+        kept,
         ("Koordinat sistemi", crs),
         ("Pafta ölçeği", format!("1:{}", s.plot_scale)),
         ("Uzunluk", format!("m · {} basamak", s.length_decimals)),
@@ -754,7 +750,7 @@ fn word<T: serde::Serialize>(value: &T) -> String {
 }
 
 /// An object kind as the interface names it.
-fn kind_name(kind: &str) -> &'static str {
+pub(crate) fn kind_name(kind: &str) -> &'static str {
     match kind {
         "point" => "nokta",
         "line" => "çizgi",
@@ -807,7 +803,7 @@ fn rgba8(color: Color) -> Rgba8 {
 }
 
 /// A layer colour from the file: `#rrggbb`; theme colours (`fg` …) as grey.
-fn hex_color(text: &str) -> Color {
+pub(crate) fn hex_color(text: &str) -> Color {
     let hex = text.trim_start_matches('#');
     if hex.len() == 6
         && let Ok(value) = u32::from_str_radix(hex, 16)

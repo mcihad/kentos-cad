@@ -12,7 +12,7 @@ use crate::theme::typography;
 
 /// Parçalı seçim.
 pub struct Segmented<'a, Message> {
-    segments: Vec<(String, bool, Message)>,
+    segments: Vec<(String, bool, Option<Message>)>,
     width: Length,
     _lifetime: std::marker::PhantomData<&'a ()>,
 }
@@ -27,10 +27,27 @@ impl<'a, Message: Clone + 'a> Segmented<'a, Message> {
     where
         T: Copy + PartialEq + Display,
     {
+        Self::new_with(options, selected, on_select, |_| true)
+    }
+
+    /// `new` gibi; `enabled` seçeneği kabul etmezse parça sönük ve basılamaz
+    /// olur (ör. içinde nesne olmayan kapsam).
+    pub fn new_with<T>(
+        options: impl IntoIterator<Item = T>,
+        selected: T,
+        on_select: impl Fn(T) -> Message,
+        enabled: impl Fn(T) -> bool,
+    ) -> Self
+    where
+        T: Copy + PartialEq + Display,
+    {
         Self {
             segments: options
                 .into_iter()
-                .map(|option| (option.to_string(), option == selected, on_select(option)))
+                .map(|option| {
+                    let press = enabled(option).then(|| on_select(option));
+                    (option.to_string(), option == selected, press)
+                })
                 .collect(),
             width: Length::Shrink,
             _lifetime: std::marker::PhantomData,
@@ -61,7 +78,7 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
                 };
 
                 let segment = button(content)
-                    .on_press(on_press)
+                    .on_press_maybe(on_press)
                     .padding([3, 12])
                     .style(style::button::segment(selected));
 

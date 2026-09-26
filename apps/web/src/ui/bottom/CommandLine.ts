@@ -1,6 +1,7 @@
 import type { AppContext } from '../../app/context';
 import type { Command } from '../../core/commands';
 import { listen } from '../../core/disposable';
+import { watchAll } from '../../core/signal';
 import { formatChord, isAltGrText, isTextInput } from '../../core/keymap';
 import { looksLikeCoordinate } from '../../tools/coordinateInput';
 import { CALC_KINDS, canCalcPoint, startPointCalc } from '../../tools/pointCalc';
@@ -8,11 +9,16 @@ import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { optionButtons, optionForKey, parsePrompt, runPromptOption } from '../promptOptions';
+import { calcMenuItems } from '../shell/calcMenu';
+import { SNAP_LABEL } from '../../viewport/picking';
+import { PopupMenu } from '../widgets/PopupMenu';
 
 /**
  * AutoCAD/Netcad-style command line. Accepts command aliases (L, PL,
  * PARSEL…), coordinates and tool options. Digits typed anywhere on the
- * drawing jump here so coordinates can be entered without clicking.
+ * drawing jump here so coordinates can be entered without clicking. While
+ * the strip over the drawing is off (`drafting.commandBar`, the default)
+ * the point calculator and a one-shot snap show here too.
  */
 export class CommandLine extends Component {
   readonly el: HTMLElement;
@@ -48,7 +54,9 @@ export class CommandLine extends Component {
       h('div', { class: 'cmdline__field' }, this.input, this.list),
     );
 
-    this.d.add(ctx.tools.prompt.subscribe((p) => this.setPrompt(p), true));
+    // The manager publishes a new tool's prompt before its id; follow both, and what the strip would show.
+    this.d.add(watchAll([ctx.tools.prompt, ctx.tools.activeId, ctx.prefs.commandBar, ctx.view.snapOverride], () => this.setPrompt(ctx.tools.prompt.value)));
+    this.setPrompt(ctx.tools.prompt.value);
     this.d.add(listen(this.input, 'input', () => this.suggest()));
     this.d.add(listen<KeyboardEvent>(this.input, 'keydown', (e) => this.onKey(e)));
     this.d.add(listen(this.input, 'blur', () => setTimeout(() => this.hideList(), 120)));
@@ -109,7 +117,31 @@ export class CommandLine extends Component {
     if (!p.tool) return replaceChildren(this.prompt, h('b', null, p.step));
     const notes = p.notes.length ? ` (${p.notes.join('; ')})` : '';
     // Options are buttons here too; typing their letter still works.
-    replaceChildren(this.prompt, h('span', { class: 'cmdline__text' }, h('b', null, p.tool), `: ${p.step}${notes}`), ...optionButtons(this.ctx, p.options, 'cmdline__chip'));
+    replaceChildren(this.prompt, h('span', { class: 'cmdline__text' }, h('b', null, p.tool), `: ${p.step}${notes}`), ...optionButtons(this.ctx, p.options, 'cmdline__chip'), ...this.stripParts());
+  }
+
+  /** What only the strip over the drawing showed, here while it is off: Nokta hesabı, and a one-shot snap with its ×. */
+  private stripParts(): HTMLElement[] {
+    const { ctx } = this;
+    if (ctx.prefs.commandBar.value) return [];
+    const parts: HTMLElement[] = [];
+    if (canCalcPoint(ctx)) {
+      const calc = h('button', { class: 'cmdline__chip cmdbar__calc', type: 'button', title: 'Ölçüyle nokta hesapla (yan nokta, kesişim, açı-mesafe…)' }, icon('calc', 14), h('span', null, 'Nokta hesabı'));
+      calc.addEventListener('pointerdown', (e) => e.preventDefault());
+      calc.addEventListener('click', () => {
+        const r = calc.getBoundingClientRect();
+        PopupMenu.open(calcMenuItems(ctx), { x: r.left, y: r.top - 4 }, { minWidth: 320 });
+      });
+      parts.push(calc);
+    }
+    const kind = ctx.view.snapOverride.value;
+    if (kind) {
+      const clear = h('button', { class: 'cmdbar__snap-clear', type: 'button', 'aria-label': 'Tek seferlik keneti kaldır' }, icon('close', 12));
+      clear.addEventListener('pointerdown', (e) => e.preventDefault());
+      clear.addEventListener('click', () => ctx.view.snapOverride.set(null));
+      parts.push(h('span', { class: 'cmdbar__snap cmdline__snap' }, icon('snap', 14), `Sonraki tık: ${SNAP_LABEL[kind]}`, clear));
+    }
+    return parts;
   }
 
   private suggest(): void {

@@ -1,13 +1,14 @@
 //! What the shared fixtures cannot say, because the web has no counterpart yet
 //! or does otherwise (docs/adr/0020 “Bilinçli farklar”):
 //! persistent ids (docs/adr/0014), the ADR 0003 rules the web breaks for layer
-//! styles, hatch islands, undo while busy, and the `.kcad` v1 round trip.
+//! styles, hatch islands, undo while busy, the `.kcad` v1 round trip, and
+//! the ids new layers get.
 
 use kentos_domain::contracts::{
     DocumentSnapshotV1, Entity, EntityBase, HatchEntity, HatchPattern, HatchPatternType,
     LayerStyle, PointEntity, Vec2,
 };
-use kentos_domain::{Document, Slot, labels};
+use kentos_domain::{Document, NewLayer, Slot, labels};
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 
@@ -340,4 +341,57 @@ fn entity_base_mut(entity: &mut Entity) -> &mut EntityBase {
         Entity::Dimension(e) => &mut e.base,
         Entity::Hatch(e) => &mut e.base,
     }
+}
+
+/// A layer without an id gets `layer-N` after the largest `layer-N` the file
+/// has (the web's counter), never one a node has, and never the same twice.
+/// A given id is kept unless a node has it already.
+#[test]
+fn new_layers_count_on_from_the_file_and_never_repeat_an_id() {
+    let text = r#"{"format":"kentos.document","version":1,"name":"Deneme","settings":{"srid":5256,"lengthDecimals":3,
+        "areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000},"origin":{"x":0,"y":0},
+        "layers":[{"id":"layer-3","name":"Üç","type":"layer","visible":true,"locked":false,"expanded":true,
+        "style":{"color":"fg","lineType":"continuous","lineWeight":0.18},"children":[]},
+        {"id":"layer-12","name":"On iki","type":"layer","visible":true,"locked":false,"expanded":true,
+        "style":{"color":"fg","lineType":"continuous","lineWeight":0.18},"children":[]}],
+        "activeLayer":"layer-3","entities":[],"styles":{"items":[],"categories":[]}}"#;
+    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(text).expect("reads"))
+        .expect("opens");
+    assert_eq!(doc.add_layer(NewLayer::layer("Bir"), None), "layer-13");
+    assert_eq!(doc.add_layer(NewLayer::group("İki"), None), "layer-14");
+    // A given id is kept, and a larger layer-N moves the counter on.
+    let forty = NewLayer {
+        id: Some("layer-40".into()),
+        ..NewLayer::layer("Kırk")
+    };
+    assert_eq!(doc.add_layer(forty, None), "layer-40");
+    assert_eq!(doc.add_layer(NewLayer::layer("Sonraki"), None), "layer-41");
+    // An id a node has already gets a new one; the old node keeps it.
+    let same = NewLayer {
+        id: Some("layer-12".into()),
+        ..NewLayer::layer("Aynı")
+    };
+    assert_eq!(doc.add_layer(same, None), "layer-42");
+    assert_eq!(
+        doc.layers().get("layer-12").map(|n| n.name.as_str()),
+        Some("On iki")
+    );
+    assert!(doc.is_dirty());
+    assert!(!doc.can_undo());
+}
+
+/// A group is made empty and open; a new layer is not made active by itself
+/// (the web's Yeni katman command does that).
+#[test]
+fn a_new_group_is_empty_and_the_active_layer_stays() {
+    let mut doc = empty();
+    let group = doc.add_layer(NewLayer::group("Yeni grup"), Some("a"));
+    let node = doc.layers().get(&group).expect("added").clone();
+    assert!(node.children.is_empty() && node.expanded);
+    assert_eq!(
+        doc.layers().parent(&group).map(|p| p.id.as_str()),
+        Some("g")
+    );
+    assert_eq!(doc.layers().active(), "a");
+    assert_eq!(doc.layers().unique_name("Yeni grup"), "Yeni grup 2");
 }

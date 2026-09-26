@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { isUuid } from '../core/uuid';
 import { CadDocument } from './document';
 import type { Entity, NewEntity } from './entities';
-import { LayerStore, type LayerStyle } from './layers';
+import { LayerStore, type LayerInit, type LayerStyle } from './layers';
 import { readSnapshot } from './snapshot';
 
 /**
@@ -38,6 +38,8 @@ interface Expect {
   revision?: 'same' | 'changed';
   layers?: Record<string, LayerExpect>;
   activeLayer?: string;
+  /** Container ("" for the top of the tree) → the ids of its nodes, in order. */
+  tree?: Record<string, string[]>;
   /** Object → the name of a persistent id taken with `captureUid`, or "new": one taken by none. */
   uids?: Record<string, string>;
 }
@@ -64,7 +66,7 @@ interface Fixture {
   scenarios: Scenario[];
 }
 
-const EXPECT_KEYS: readonly string[] = ['ids', 'count', 'entities', 'byLayer', 'canUndo', 'canRedo', 'dirty', 'revision', 'layers', 'activeLayer', 'uids'];
+const EXPECT_KEYS: readonly string[] = ['ids', 'count', 'entities', 'byLayer', 'canUndo', 'canRedo', 'dirty', 'revision', 'layers', 'activeLayer', 'tree', 'uids'];
 
 /**
  * An object as the fixtures write it: persistent ids are random (UUIDv7) or
@@ -199,6 +201,10 @@ class Run {
         return layers.rename(layerId, s.name as string);
       case 'setLayerStyle':
         return doc.setLayerStyle(layerId, patchOf(s.patch) as Partial<LayerStyle>, s.label as string | undefined);
+      case 'addLayer':
+        return layers.add(s.layer as LayerInit, (s.parent as string | null | undefined) ?? null).id;
+      case 'uniqueLayerName':
+        return layers.uniqueName(s.base as string);
       default:
         throw new Error(`${where}: bilinmeyen işlem “${s.op}”`);
     }
@@ -248,6 +254,11 @@ class Run {
       }
     }
     if (e.activeLayer !== undefined) expect(doc.layers.active.value, `${where}: etkin katman`).toBe(e.activeLayer);
+    for (const [container, ids] of Object.entries(e.tree ?? {})) {
+      const nodes = container === '' ? doc.layers.tree : doc.layers.get(container)?.children;
+      expect(nodes, `${where}: “${container}” grubu`).toBeDefined();
+      expect(nodes?.map((n) => n.id), `${where}: “${container}” altındakiler`).toEqual(ids);
+    }
   }
 }
 

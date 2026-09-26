@@ -8,6 +8,7 @@
 //! `input.rs` by ADR 0018's rules.
 
 use std::path::PathBuf;
+use std::time::Instant;
 
 use iced::widget::operation;
 use iced::{Subscription, Task, Theme, event, keyboard, window};
@@ -21,6 +22,7 @@ use kentos_ui::widget::command_line::Entry;
 use kentos_ui::widget::docking::{self, Docks, Side};
 
 use crate::catalog::{Standing, catalog};
+use crate::cloud::{self, CloudState};
 use crate::document::Document;
 use crate::input::{Field, release_keyboard};
 use crate::keys::{self, KeyPress};
@@ -78,12 +80,41 @@ pub enum Dialog {
     Settings,
     /// Unsaved work a crash left: the first of `App::recovery.offers` (recovery.rs).
     Recovery,
+    /// “Buluta giriş” (cloud/account.rs); its fields are `App::cloud.sign_in`.
+    SignIn,
+    /// “Bulut projeleri” (cloud/catalog.rs).
+    Catalog,
+    /// “Buluta yükle” (cloud/upload.rs).
+    Upload,
+    /// A database project's save conflicts (cloud/follow.rs).
+    Conflicts,
+    /// A file project's revision refused: someone saved first (cloud/file.rs).
+    FileConflict,
+    /// A copy to remove from this device whose draft holds unsent work (cloud/catalog.rs).
+    RemoveCopy,
+    /// The open cloud project ended for this account (deleted, archived, access taken away).
+    Ended,
+    /// A file exchange window (exchange/): DXF or a coordinate list, in or out.
+    Exchange,
 }
 
+/// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Then {
+    /// A local file (Aç).
     Open,
     Close(window::Id),
+    /// Bulut oturumunu kapat.
+    SignOut,
+    /// A cloud project from the catalog.
+    OpenCloud {
+        tenant: kentos_domain::Uuid,
+        project: kentos_domain::Uuid,
+    },
+    /// Buluta yükle.
+    Upload,
+    /// The drawing's own cloud project again, from the server.
+    Reopen,
 }
 
 /// Where the open and save dialogs are answered.
@@ -145,6 +176,10 @@ pub enum Message {
     Saving(saving::Event),
     /// Recovery copies of unsaved work (recovery.rs).
     Recovery(recovery::Event),
+    /// The cloud: signing in, the catalog, cloud projects (cloud/, docs/adr/0041).
+    Cloud(Box<cloud::Event>),
+    /// File exchange: DXF and coordinate lists, in and out (exchange/).
+    Exchange(Box<crate::exchange::Event>),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -182,7 +217,7 @@ pub struct App {
     pub selection: Selection,
     /// The object snap under the pointer while a tool snaps: its marker.
     pub snap: Option<SnapHit>,
-    /// The drawing (its session) and revision the store and the selection last followed.
+    /// The drawing (its session) and generation the store and the selection last followed.
     followed: Option<(u64, u64)>,
     /// The value field beside the cursor, while it is open (ADR 0018).
     pub field: Option<Field>,
@@ -191,6 +226,8 @@ pub struct App {
     pub draft: Draft,
     /// Typed values open beside the cursor (`drafting.cursorInput`).
     pub cursor_input: bool,
+    /// The strip over the drawing while a command runs (`drafting.commandBar`, command_bar.rs).
+    pub command_bar: bool,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
     pub settings: Settings,
     /// The settings window's draft while it is open.
@@ -211,6 +248,10 @@ pub struct App {
     pub save_faults: saving::Faults,
     /// Recovery copies of unsaved work; kept only when `main` opens their folder.
     pub recovery: Recovery,
+    /// The cloud: the account, its windows, the open project's autosave (cloud/).
+    pub cloud: CloudState,
+    /// The open file exchange window (exchange/).
+    pub exchange: Option<crate::exchange::Window>,
 }
 
 impl App {
@@ -257,6 +298,7 @@ impl App {
             field: None,
             draft: Draft::default(),
             cursor_input: true,
+            command_bar: false,
             settings,
             settings_draft: None,
             reported_failure: None,
@@ -268,6 +310,8 @@ impl App {
             saving: None,
             save_faults: saving::Faults::NONE,
             recovery,
+            cloud: CloudState::default(),
+            exchange: None,
         };
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
@@ -299,11 +343,20 @@ impl App {
 
     pub fn title(&self) -> String {
         match &self.document {
-            Some(doc) => format!(
-                "{}{} — KentOS CAD",
-                doc.name(),
-                if doc.dirty() { " •" } else { "" }
-            ),
+            // A cloud project says its workspace too (docs/adr/0041).
+            Some(doc) => match doc.cloud_source() {
+                Some(source) => format!(
+                    "{}{} — {} — KentOS CAD",
+                    doc.name(),
+                    if doc.dirty() { " •" } else { "" },
+                    source.workspace
+                ),
+                None => format!(
+                    "{}{} — KentOS CAD",
+                    doc.name(),
+                    if doc.dirty() { " •" } else { "" }
+                ),
+            },
             None => "KentOS CAD".to_owned(),
         }
     }
@@ -313,13 +366,24 @@ impl App {
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
-        // While the drawing has unsaved changes, the app looks every few seconds whether a recovery copy is due.
-        let unsaved = self.recovery.on() && self.document.as_ref().is_some_and(Document::dirty);
+        // While the drawing has unsaved changes, the app looks every few seconds whether a
+        // recovery copy is due; a database project's unsent work goes to its device draft instead.
+        let unsaved = self.recovery.on()
+            && self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.dirty() && !d.is_database());
         Subscription::batch([
             event::listen_with(keys::key_event),
             window::close_requests().map(Message::CloseRequested),
             if unsaved {
                 Subscription::run(recovery::ticks)
+            } else {
+                Subscription::none()
+            },
+            // The cloud's timers: autosave, the draft, following, the catalog's search.
+            if self.cloud.wants_ticks() {
+                Subscription::run(cloud::ticks)
             } else {
                 Subscription::none()
             },
@@ -329,13 +393,17 @@ impl App {
     pub fn update(&mut self, message: Message) -> Task<Message> {
         let task = self.handle(message);
         self.follow_document();
+        self.cloud_after(Instant::now());
         task
     }
 
     /// After every message: the geometry store takes the drawing's changes
     /// and the selection lets go of objects that are gone (an undo, a
-    /// delete; the web's `selection.retain` on `changed`), only when the
-    /// drawing changed (docs/adr/0029). The snap marker belongs to a running tool.
+    /// delete, another editor's deletion taken in from the cloud; the web's
+    /// `selection.retain` on `changed`), only when the drawing changed
+    /// (docs/adr/0029). It keys on the generation, which changes from outside
+    /// move too; the revision is the saves' (docs/adr/0040). The snap marker
+    /// belongs to a running tool.
     fn follow_document(&mut self) {
         if !self.session.is_running() {
             self.snap = None;
@@ -343,7 +411,7 @@ impl App {
         let Some(doc) = &self.document else {
             return;
         };
-        let now = (doc.session, doc.model.revision());
+        let now = (doc.session, doc.model.generation());
         if self.followed == Some(now) {
             return;
         }
@@ -416,24 +484,38 @@ impl App {
             }
             Message::Opened(None) | Message::Saved(None) => {}
             Message::Opened(Some(Ok(doc))) => {
-                self.output(format!(
-                    "{} açıldı: {} nesne, {} katman.",
-                    doc.name(),
-                    doc.entity_count(),
-                    doc.layer_count()
-                ));
+                match doc.cloud_source() {
+                    Some(source) => self.say(
+                        Level::Success,
+                        format!(
+                            "“{}” bulut projesi açıldı ({}, {}): {} nesne.",
+                            doc.name(),
+                            source.workspace,
+                            cloud::words::storage_title(source.storage()),
+                            doc.entity_count()
+                        ),
+                    ),
+                    None => self.output(format!(
+                        "{} açıldı: {} nesne, {} katman.",
+                        doc.name(),
+                        doc.entity_count(),
+                        doc.layer_count()
+                    )),
+                }
                 if doc.legacy {
                     self.output(
                         "Dosya eski biçimde (KCAD v1). Kaydet, yeni biçimde (v2) yazmak için yer sorar; eski dosyanın üzerine kendiliğinden yazmaz.",
                     );
                 }
+                // The cloud project on screen is left: its copy written whole and let go (cloud/copy.rs).
+                self.close_cloud_project();
                 // A draft belongs to the drawing it was drawn on; so do the selection and the store.
                 self.cancel();
                 self.selected_layer = None;
                 self.viewport.opened(&doc);
                 self.spatial.reload(&doc.model);
                 self.selection = Selection::new();
-                self.followed = Some((doc.session, doc.model.revision()));
+                self.followed = Some((doc.session, doc.model.generation()));
                 self.document = Some(*doc);
             }
             Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
@@ -458,34 +540,26 @@ impl App {
                 // A save stopped by the window closing would leave no file (the previous one
                 // stays): it finishes first.
                 if let Some(s) = &self.saving {
-                    let path = s.path.display().to_string();
+                    let name = s.name();
                     self.warn(format!(
-                        "{path} kaydediliyor; kayıt bitince pencereyi yeniden kapatın."
+                        "{name} kaydediliyor; kayıt bitince pencereyi yeniden kapatın."
                     ));
-                } else if self.document.as_ref().is_some_and(Document::dirty) {
-                    self.dialog = Some(Dialog::Unsaved(Then::Close(window)));
                 } else {
-                    self.recovery.finish();
-                    return window::close(window);
+                    // Unsent cloud work to its draft first, else the question (cloud/leaving.rs).
+                    return self.leave(Then::Close(window));
                 }
             }
             Message::DialogConfirmed => {
                 if let Some(Dialog::Unsaved(then)) = self.dialog.take() {
                     // The unsaved changes are dropped on purpose: their recovery copy goes too.
                     self.recovery.discard();
-                    return match then {
-                        Then::Open => self.open(),
-                        Then::Close(window) => {
-                            self.recovery.finish();
-                            window::close(window)
-                        }
-                    };
+                    self.cloud.leave_failure = None;
+                    return self.proceed(then);
                 }
             }
-            Message::DialogClosed => {
-                self.dialog = None;
-                self.settings_draft = None;
-            }
+            Message::DialogClosed => self.close_dialog(),
+            Message::Cloud(event) => return self.cloud_event(*event),
+            Message::Exchange(event) => return self.exchange_event(*event),
             Message::Viewport(event) => return self.pointer(event),
             Message::Settings(edit) => return self.settings_edit(edit),
             Message::Opening(event) => return self.opening_event(event),
@@ -511,6 +585,7 @@ impl App {
             pick_aperture: s.number("drafting.pickAperture"),
         };
         self.cursor_input = s.bool("drafting.cursorInput");
+        self.command_bar = s.bool("drafting.commandBar");
         self.mode = match s.effective("appearance.theme").as_str() {
             Some("light") => Mode::Light,
             _ => Mode::Dark,
@@ -629,13 +704,23 @@ impl App {
         {
             return self.start_tool(tool);
         }
+        if id.starts_with("cloud.") {
+            return self.cloud_command(id);
+        }
+        if crate::exchange::COMMANDS.contains(&id) {
+            return self.exchange_command(id);
+        }
         match id {
-            "file.open" => {
-                if self.document.as_ref().is_some_and(Document::dirty) {
-                    self.dialog = Some(Dialog::Unsaved(Then::Open));
-                    return Task::none();
-                }
-                return self.open();
+            // The drawing on screen is left first: its unsent cloud work to its draft, or the question.
+            "file.open" => return self.leave(Then::Open),
+            // A cloud project saves to the server (cloud/file.rs); Farklı kaydet writes a local file.
+            "file.save"
+                if self
+                    .document
+                    .as_ref()
+                    .is_some_and(|d| d.cloud_source().is_some()) =>
+            {
+                return self.save_cloud();
             }
             "file.save" => return self.save(false),
             "file.saveAs" => return self.save(true),
@@ -669,6 +754,9 @@ impl App {
                 Some(doc) => doc.model.show_all_layers(),
                 None => self.output("Açık çizim yok."),
             },
+            // Edits, not undo steps (layering.rs).
+            "layer.new" => self.new_layer(),
+            "layer.newGroup" => self.new_group(),
             "edit.undo" => self.undo(),
             "edit.redo" => self.step_history(false),
             "tool.confirm" => return self.confirm(),
@@ -713,6 +801,7 @@ impl App {
             }
             "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
             "edit.deselect" => !self.selection.is_empty(),
+            id if id.starts_with("cloud.") => self.cloud_available(id),
             _ => true,
         }
     }
@@ -745,7 +834,7 @@ impl App {
     }
 
     /// Asks for a drawing and opens it in stages, off the UI thread (opening.rs).
-    fn open(&mut self) -> Task<Message> {
+    pub(crate) fn open(&mut self) -> Task<Message> {
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
             return self.start_opening(path, Purpose::File);
@@ -830,7 +919,7 @@ impl App {
         self.say(Level::Warn, text);
     }
 
-    fn error(&mut self, text: impl Into<String>) {
+    pub(crate) fn error(&mut self, text: impl Into<String>) {
         self.say(Level::Error, text);
     }
 }
@@ -995,6 +1084,38 @@ mod tests {
         );
         assert!(doc.dirty());
         assert_eq!(last_output(&app), "Kaydedildi: ilk.kcad.");
+    }
+
+    /// Another editor's deletion comes in from outside (docs/adr/0040): the
+    /// revision stays, so nothing is to save, but the store, the selection
+    /// and the screen follow the generation and let the object go.
+    #[test]
+    fn changes_from_outside_reach_the_store_and_the_selection() {
+        let (mut app, _) = App::boot(None);
+        let demo = with_demo().document.expect("open");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(demo)))));
+        let doc = app.document.as_ref().expect("open");
+        let slot = kentos_domain::Slot(doc.model.entities().next().expect("an object").base().id);
+        let uid = doc.model.uid(slot).expect("a persistent id");
+        let (revision, objects) = (doc.model.revision(), app.spatial.len());
+        assert!(objects > 0, "the store follows the drawing");
+        app.selection.set([slot]);
+        let _ = app.update(Message::Modifiers(keyboard::Modifiers::default()));
+        assert_eq!(app.selection.len(), 1);
+
+        let doc = app.document.as_mut().expect("open");
+        doc.model
+            .apply_external(kentos_domain::External {
+                remove: vec![uid],
+                ..Default::default()
+            })
+            .expect("taken in");
+        let _ = app.update(Message::Modifiers(keyboard::Modifiers::default()));
+        assert!(app.selection.is_empty(), "the selection lets it go");
+        assert_eq!(app.spatial.len(), objects - 1, "the store follows");
+        let doc = app.document.as_ref().expect("open");
+        assert_eq!(doc.model.revision(), revision);
+        assert!(!doc.dirty(), "a change from outside is nothing to save");
     }
 
     #[test]

@@ -67,7 +67,8 @@ pub enum SettingScope {
     Session,
 }
 
-/// The value's type. `enum` values are text from [`SettingDescriptor::choices`].
+/// The value's type. `enum` values are text from [`SettingDescriptor::choices`];
+/// `text` is free text of at most `max` characters (a server's address).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -78,6 +79,7 @@ pub enum SettingType {
     Integer,
     Number,
     Enum,
+    Text,
 }
 
 /// How a change takes effect.
@@ -134,7 +136,7 @@ pub struct SettingDescriptor {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub min: Option<f64>,
-    /// Largest value of a number, inclusive.
+    /// Largest value of a number, inclusive; the most characters of a text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub max: Option<f64>,

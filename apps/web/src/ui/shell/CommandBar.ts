@@ -13,7 +13,8 @@ import { PopupMenu } from '../widgets/PopupMenu';
  * Strip at the top of the drawing while a command runs: tool, the step it
  * waits for, its options as buttons and a reminder of what the right mouse
  * button and Esc do. Mouse users read and act here instead of the command
- * line at the bottom.
+ * line at the bottom. A preference turns it off (`drafting.commandBar`);
+ * the command line keeps the same options then.
  */
 export class CommandBar extends Component {
   readonly el: HTMLElement;
@@ -59,7 +60,7 @@ export class CommandBar extends Component {
     );
     host.append(this.el);
     // The manager publishes a new tool's prompt before its id; follow both.
-    this.d.add(watchAll([ctx.tools.prompt, ctx.tools.activeId], () => this.render()));
+    this.d.add(watchAll([ctx.tools.prompt, ctx.tools.activeId, ctx.prefs.commandBar], () => this.render()));
     this.render();
     this.d.add(ctx.view.snapOverride.subscribe((k) => this.renderSnap(k), true));
   }
@@ -77,8 +78,8 @@ export class CommandBar extends Component {
   private render(): void {
     const p = parsePrompt(this.ctx.tools.prompt.value);
     // The idle select tool says just "Komut"; nothing to explain then.
-    this.el.hidden = !p.tool;
-    if (!p.tool) return;
+    this.el.hidden = !p.tool || !this.ctx.prefs.commandBar.value;
+    if (this.el.hidden) return;
     const d = this.ctx.tools.activeDescriptor;
     replaceChildren(this.tool, d ? icon(d.icon, 16) : null, h('b', null, p.tool));
     replaceChildren(this.step, p.step, ...p.notes.map((n) => h('span', { class: 'cmdbar__note' }, n)));

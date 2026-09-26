@@ -20,6 +20,7 @@ use kentos_contracts::{Entity, EntityBase, LayerStyle};
 use crate::document::Document;
 use crate::history::Op;
 use crate::identity::{Slot, new_uid};
+use crate::layers::NewLayer;
 use crate::store::Stored;
 
 /// Undo step names the web gives its edits; undo and redo return them.
@@ -198,6 +199,16 @@ impl Document {
         if self.layers.rename(id, name) {
             self.mark_edited();
         }
+    }
+
+    /// Adds a layer or group (web `layers.add`; where it goes: [`LayerTree`]'s
+    /// `add`). An edit that is not undone: the web's layer creation is not an
+    /// undo step either (an import's new layers stay when its objects are
+    /// undone). Returns the new node's id.
+    pub fn add_layer(&mut self, new: NewLayer, parent: Option<&str>) -> String {
+        let id = self.layers.add(new, parent);
+        self.mark_edited();
+        id
     }
 }
 

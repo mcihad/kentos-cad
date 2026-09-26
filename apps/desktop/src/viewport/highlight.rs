@@ -19,7 +19,7 @@ use kentos_interaction::Selection;
 use kentos_render_wgpu::scene::{self, Highlight};
 use kentos_render_wgpu::{Rgba8, ScenePart};
 
-use super::{Viewport, revision};
+use super::{Viewport, changes};
 use crate::document::Document;
 
 /// The highlight parts as last built, and what they were built from.
@@ -35,7 +35,7 @@ pub(super) struct Highlighted {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct HighlightKey {
     generation: u64,
-    revision: u64,
+    changes: u64,
     selection: u64,
     /// The hovered object's changes; 0 in the selection's key.
     hover: u64,
@@ -65,7 +65,7 @@ impl Viewport {
     ) -> (Arc<ScenePart>, Arc<ScenePart>) {
         let key = HighlightKey {
             generation: self.generation,
-            revision: revision(doc),
+            changes: changes(doc),
             selection: selection.version(),
             hover: 0,
             accent,

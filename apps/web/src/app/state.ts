@@ -215,6 +215,8 @@ export interface PreferencesData {
   hiDpi: boolean;
   /** Typed values open beside the cursor while a command runs (dynamic input). */
   cursorInput: boolean;
+  /** The strip over the drawing while a command runs: its step and options as buttons (ui/shell/CommandBar.ts). */
+  commandBar: boolean;
   /** Resting the mouse on an object shows its kind, layer and measures. */
   hoverInfo: boolean;
   /**
@@ -261,6 +263,7 @@ export const PREF_KEYS = {
   msaa: 'graphics.msaa',
   hiDpi: 'graphics.hiDpi',
   cursorInput: 'drafting.cursorInput',
+  commandBar: 'drafting.commandBar',
   hoverInfo: 'drafting.hoverInfo',
   symbolSize: 'graphics.symbolSize',
   lineWeights: 'graphics.lineWeights',

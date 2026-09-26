@@ -38,7 +38,7 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       icon: 'appearance',
       title: 'Görünüm',
       lead: 'Tema, vurgu rengi, yazı tipi, arayüz düzeni, yazı boyutu, artı imleç ve fare yardımcıları.',
-      keys: ['theme', 'accent', 'uiFont', 'shell', 'uiScale', 'crosshair', 'cursorInput', 'hoverInfo', 'startScreen'],
+      keys: ['theme', 'accent', 'uiFont', 'shell', 'uiScale', 'crosshair', 'cursorInput', 'commandBar', 'hoverInfo', 'startScreen'],
       render: (api) => appearance(api),
     },
     {
@@ -252,6 +252,11 @@ function appearance(api: DraftApi<AppDraft>) {
         'İmleç yanında değer girişi',
         'Komut sırasında yazılan mesafe ve koordinatlar imlecin yanında açılır; kapalıyken komut satırına gider.',
         toggleSwitch({ label: 'İmleç yanında değer girişi', checked: d.cursorInput, onChange: (v) => api.set('cursorInput', v) }),
+      ),
+      settingRow(
+        'Komut şeridi',
+        'Komut çalışırken çizim alanının üstünde de aracın adı, beklediği adım ve seçenekleri (kenar sayısı, yöntem, kopya…) düğme olarak gösterilir. Kapalıyken (varsayılan) bunların hepsi, nokta hesabı ve tek seferlik kenet alttaki komut satırındadır.',
+        toggleSwitch({ label: 'Komut şeridi', checked: d.commandBar, onChange: (v) => api.set('commandBar', v) }),
       ),
       settingRow(
         'Nesne bilgi kartı',

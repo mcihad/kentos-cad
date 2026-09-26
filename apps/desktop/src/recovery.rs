@@ -458,6 +458,10 @@ impl App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
+        // A database project's unsent work is in its device draft (docs/adr/0041).
+        if doc.is_database() {
+            return Task::none();
+        }
         let r = &mut self.recovery;
         if !r.on() {
             return Task::none();

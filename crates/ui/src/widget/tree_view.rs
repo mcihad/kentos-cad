@@ -460,7 +460,7 @@ fn node_row<'a, Message: Clone + 'a>(
 
     if let Some((check, on_toggle)) = check {
         tree = tree
-            .push(check_box(check, on_toggle))
+            .push(check_box(check, Some(on_toggle)))
             .push(space::horizontal().width(6));
     }
 
@@ -716,7 +716,12 @@ fn toggle<'a, Message: Clone + 'a>(expanded: Option<(bool, Message)>) -> Element
 }
 
 /// Üç durumlu onay kutusu.
-fn check_box<'a, Message: Clone + 'a>(check: Check, on_toggle: Message) -> Element<'a, Message> {
+/// Ağaçtaki onay kutusu; başka yerlerde de (ör. içe aktarılacak katmanlar).
+/// `on_toggle` yoksa kutu devre dışıdır.
+pub fn check_box<'a, Message: Clone + 'a>(
+    check: Check,
+    on_toggle: Option<Message>,
+) -> Element<'a, Message> {
     let mark: Element<'a, Message> = match check {
         Check::Checked => icon(Icon::Check).size(11.0).tone(Tone::OnAccent).into(),
         Check::Mixed => icon(Icon::Minus).size(11.0).tone(Tone::OnAccent).into(),
@@ -724,7 +729,7 @@ fn check_box<'a, Message: Clone + 'a>(check: Check, on_toggle: Message) -> Eleme
     };
 
     button(container(mark).center(CHECK_SIZE))
-        .on_press(on_toggle)
+        .on_press_maybe(on_toggle)
         .padding(0)
         .width(CHECK_SIZE)
         .height(CHECK_SIZE)

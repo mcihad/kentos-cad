@@ -383,6 +383,11 @@ fn every_setting_is_described_completely() {
             SettingType::Enum => assert!(!d.choices.is_empty(), "{}: an enum has choices", d.key),
             SettingType::Boolean => assert!(d.choices.is_empty() && d.min.is_none()),
             SettingType::Integer | SettingType::Number => {}
+            SettingType::Text => assert!(
+                d.choices.is_empty() && d.min.is_none() && d.max.is_some(),
+                "{}: a text has a length limit and no choices",
+                d.key
+            ),
         }
         for c in &d.choices {
             assert!(!c.label.is_empty(), "{}: every choice is labelled", d.key);

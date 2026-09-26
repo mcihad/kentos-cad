@@ -312,6 +312,8 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 - **Sağ sütun (sabit):** ince ayırıcıdan sonra fare hatırlatması: `Sağ tık` onayla / bitir, `Esc` çık.
 - Seçim aracı boştayken şerit gizlidir; tutamaç düzenlenirken görünür.
 - Alttaki komut satırı da aynı seçenekleri düğme olarak gösterir.
+- Şerit bir tercihtir: Uygulama ayarları → Görünüm → Fare yardımcıları → **Komut şeridi** (`drafting.commandBar`), **varsayılan kapalı**. Sahibin gözlemi (26 Eylül): aynı adım ve seçenekler alttaki komut satırında daha derli toplu duruyor. Kapalıyken komut satırı şeridin yalnız kendisinde olanları da gösterir: **Nokta hesabı** düğmesi ve tek seferlik kenet etiketi (“Sonraki tık: Orta nokta” ×).
+- Masaüstünde aynı şerit çizim alanının üst ortasında, açılır pencere zemininde yüzer (`apps/desktop/src/command_bar.rs`). Aynı tercihe bağlıdır; ayarı Uygulama ayarları → Çizim yardımcıları'ndadır. Masaüstünde basılı sağ tık menüsü henüz olmadığı için sağ sütunda yalnız `Sağ tık` onayla, `Esc` çık yazar. Şeridin üstüne yapılan tıklama alttaki çizime geçmez.
 
 ### 7.4.2 Fare yardımcıları
 

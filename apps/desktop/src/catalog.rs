@@ -74,6 +74,23 @@ pub const PORTED: &[&str] = &[
     "tool.rotate",
     "tool.scale",
     "tool.mirror",
+    // The cloud interface (docs/adr/0041): signing in and out, the catalog of cloud
+    // projects, a drawing uploaded as a new project, and the save conflicts.
+    "cloud.signIn",
+    "cloud.signOut",
+    "cloud.open",
+    "cloud.upload",
+    "cloud.conflicts",
+    // New layers and groups (layering.rs): edits that are not undone, as on the web.
+    "layer.new",
+    "layer.newGroup",
+    // File exchange (exchange/): DXF and coordinate lists in and out, through the shared
+    // readers and writers; the source coordinate system is asked, never reprojected.
+    "file.import.dxf",
+    "file.import.ncn",
+    "crs.points",
+    "file.export.dxf",
+    "file.export.ncn",
 ];
 
 /// Where a command stands, from the desktop's point of view.

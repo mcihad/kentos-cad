@@ -40,7 +40,19 @@
     "tool.copy",
     "tool.rotate",
     "tool.scale",
-    "tool.mirror"
+    "tool.mirror",
+    "cloud.signIn",
+    "cloud.signOut",
+    "cloud.open",
+    "cloud.upload",
+    "cloud.conflicts",
+    "layer.new",
+    "layer.newGroup",
+    "file.import.dxf",
+    "file.import.ncn",
+    "crs.points",
+    "file.export.dxf",
+    "file.export.ncn"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

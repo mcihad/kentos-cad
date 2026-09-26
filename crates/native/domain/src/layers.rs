@@ -6,9 +6,9 @@
 //! tree is kept exactly as the file has it (`LayerNode`), so a drawing writes
 //! back what it read.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-use kentos_contracts::{LayerNode, LayerNodeType, LayerStyle};
+use kentos_contracts::{LayerNode, LayerNodeType, LayerStyle, LineType};
 
 #[derive(Clone, Debug)]
 pub struct LayerTree {
@@ -17,6 +17,65 @@ pub struct LayerTree {
     /// Where each node is: child indices from the roots. An id a file repeats
     /// resolves to its last node in tree order, as the web's index does.
     paths: HashMap<String, Vec<usize>>,
+    /// The number in the last `layer-N` id given or read: new layers count on
+    /// from it, so an id is never given twice (the web's `uid`).
+    counter: u64,
+}
+
+/// A layer or group to add (the web's `LayerInit` for `LayerStore.add`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct NewLayer {
+    /// Kept when the tree has no node with it (an import's `import-parsel`);
+    /// otherwise the node gets the next `layer-N`.
+    pub id: Option<String>,
+    pub name: String,
+    pub kind: LayerNodeType,
+    pub visible: bool,
+    pub locked: bool,
+    pub style: LayerStyle,
+}
+
+impl NewLayer {
+    /// A shown, unlocked layer in the default style.
+    pub fn layer(name: impl Into<String>) -> Self {
+        Self {
+            id: None,
+            name: name.into(),
+            kind: LayerNodeType::Layer,
+            visible: true,
+            locked: false,
+            style: default_style(),
+        }
+    }
+
+    /// An empty, shown group.
+    pub fn group(name: impl Into<String>) -> Self {
+        Self {
+            kind: LayerNodeType::Group,
+            ..Self::layer(name)
+        }
+    }
+}
+
+/// A new node's style when none is given (the web's `defaultStyle`).
+pub fn default_style() -> LayerStyle {
+    LayerStyle {
+        color: "fg".into(),
+        line_type: LineType::Continuous,
+        line_weight: 0.18,
+        fill: None,
+        point: None,
+        label: None,
+        pick_interior: None,
+        renderer: None,
+    }
+}
+
+/// `N` of a `layer-N` id.
+fn counted(id: &str) -> Option<u64> {
+    id.strip_prefix("layer-")
+        .filter(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
+        .and_then(|n| n.parse().ok())
 }
 
 impl LayerTree {
@@ -25,10 +84,13 @@ impl LayerTree {
     pub(crate) fn new(roots: Vec<LayerNode>, active: &str) -> Self {
         let mut paths = HashMap::new();
         index(&roots, &mut Vec::new(), &mut paths);
+        // Ids read from a file (`layer-12`) keep the counter ahead of them (web `build`).
+        let counter = paths.keys().filter_map(|id| counted(id)).max().unwrap_or(0);
         let mut tree = Self {
             roots,
             active: String::new(),
             paths,
+            counter,
         };
         tree.active = match tree.get(active) {
             Some(node) if node.kind == LayerNodeType::Layer => active.to_owned(),
@@ -169,6 +231,84 @@ impl LayerTree {
         if let Some(node) = self.node_mut(id) {
             node.style.clone_from(style);
         }
+    }
+
+    /// Adds a node last in `parent` when that is a group, last in the group
+    /// of `parent` when that is a layer, last at the top of the tree otherwise
+    /// (an unknown `parent` too). The group it goes into is opened (web
+    /// `LayerStore.add`). Returns the new node's id.
+    pub(crate) fn add(&mut self, new: NewLayer, parent: Option<&str>) -> String {
+        let container = parent
+            .and_then(|id| Some((self.get(id)?.kind, self.paths.get(id)?.clone())))
+            .and_then(|(kind, path)| match kind {
+                LayerNodeType::Group => Some(path),
+                // A layer's group; none at the top of the tree.
+                LayerNodeType::Layer => {
+                    Some(path[..path.len() - 1].to_vec()).filter(|p| !p.is_empty())
+                }
+            });
+        let id = match new.id {
+            Some(id) if !self.paths.contains_key(&id) => {
+                self.counter = self.counter.max(counted(&id).unwrap_or(0));
+                id
+            }
+            _ => self.next_id(),
+        };
+        let node = LayerNode {
+            id: id.clone(),
+            name: new.name,
+            kind: new.kind,
+            visible: new.visible,
+            locked: new.locked,
+            expanded: true,
+            style: new.style,
+            children: Vec::new(),
+        };
+        match container
+            .as_deref()
+            .and_then(|path| node_mut(&mut self.roots, path))
+        {
+            Some(group) => {
+                group.children.push(node);
+                group.expanded = true;
+            }
+            None => self.roots.push(node),
+        }
+        self.paths.clear();
+        index(&self.roots, &mut Vec::new(), &mut self.paths);
+        id
+    }
+
+    /// The next `layer-N` no node has.
+    fn next_id(&mut self) -> String {
+        loop {
+            self.counter += 1;
+            let id = format!("layer-{}", self.counter);
+            if !self.paths.contains_key(&id) {
+                return id;
+            }
+        }
+    }
+
+    /// `base` when no node (layer or group) has that name, else `base 2`,
+    /// `base 3`… (web `LayerStore.uniqueName`).
+    pub fn unique_name(&self, base: &str) -> String {
+        let mut names = HashSet::new();
+        names_of(&self.roots, &mut names);
+        if !names.contains(base) {
+            return base.to_owned();
+        }
+        (2u64..)
+            .map(|i| format!("{base} {i}"))
+            .find(|name| !names.contains(name.as_str()))
+            .unwrap_or_else(|| base.to_owned())
+    }
+}
+
+fn names_of<'a>(nodes: &'a [LayerNode], out: &mut HashSet<&'a str>) {
+    for node in nodes {
+        out.insert(node.name.as_str());
+        names_of(&node.children, out);
     }
 }
 

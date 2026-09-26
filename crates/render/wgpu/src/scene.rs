@@ -364,9 +364,18 @@ pub fn build_highlight<'a>(
 /// store's `extent`), hidden layers included, text measured in the project's
 /// typeface. `None` for a drawing without a measurable object.
 pub fn extents<D: Drawing + ?Sized>(doc: &D) -> Option<Bounds> {
+    extents_of(doc, doc.objects())
+}
+
+/// The box around some of the drawing's objects (the ones an import added),
+/// measured as [`extents`] measures them.
+pub fn extents_of<'a, D: Drawing + ?Sized>(
+    doc: &D,
+    objects: impl IntoIterator<Item = &'a Entity>,
+) -> Option<Bounds> {
     let font = Font::from_id(font_id(doc.drawing_font()));
     let mut out: Option<Bounds> = None;
-    for entity in doc.objects() {
+    for entity in objects {
         let b = entity_bounds_in(&shape(entity), font);
         let usable = [b.min_x, b.min_y, b.max_x, b.max_y]
             .iter()

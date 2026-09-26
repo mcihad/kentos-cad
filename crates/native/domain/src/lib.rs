@@ -42,4 +42,4 @@ pub use external::{External, ExternalMeta};
 pub use history::{Group, UNDO_LIMIT};
 pub use identity::{Slot, Uuid, v1_entity_uids};
 pub use kentos_contracts as contracts;
-pub use layers::LayerTree;
+pub use layers::{LayerTree, NewLayer, default_style};
