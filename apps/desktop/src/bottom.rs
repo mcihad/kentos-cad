@@ -198,16 +198,14 @@ impl App {
     /// Geçmişi temizle: the history goes, and with it the warnings' count.
     pub(crate) fn clear_history(&mut self) {
         self.history.clear();
+        self.warnings_total = 0;
         self.seen_warnings = 0;
         self.last_level = None;
     }
 
-    /// Warnings and errors in the history.
+    /// Warnings and errors said since the history was last cleared.
     fn warning_count(&self) -> usize {
-        self.history
-            .iter()
-            .filter(|e| matches!(e, Entry::Warning(_) | Entry::Error(_)))
-            .count()
+        self.warnings_total
     }
 
     /// Opens the panel on a tab (`view.coords`, a tab clicked).

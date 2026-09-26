@@ -177,6 +177,7 @@ pub struct Node<'a, Message> {
     expanded: Option<(bool, Message)>,
     on_press: Option<Message>,
     selected: bool,
+    active: bool,
     muted: bool,
     menu: Option<MenuBuilder<'a, Message>>,
     id: Option<usize>,
@@ -196,6 +197,7 @@ impl<'a, Message: 'a> Node<'a, Message> {
             expanded: None,
             on_press: None,
             selected: false,
+            active: false,
             muted: false,
             menu: None,
             id: None,
@@ -273,6 +275,13 @@ impl<'a, Message: 'a> Node<'a, Message> {
     /// Seçili düğüm vurgu zeminiyle gösterilir.
     pub fn selected(mut self, selected: bool) -> Self {
         self.selected = selected;
+        self
+    }
+
+    /// Etkin düğüm (ör. yeni çizimin gittiği katman): solunda vurgu çubuğu,
+    /// adı kalın.
+    pub fn active(mut self, active: bool) -> Self {
+        self.active = active;
         self
     }
 
@@ -445,6 +454,7 @@ fn node_row<'a, Message: Clone + 'a>(
         expanded,
         on_press,
         selected,
+        active,
         muted,
         menu,
         id: _,
@@ -471,7 +481,12 @@ fn node_row<'a, Message: Clone + 'a>(
     tree = match editor {
         Some(editor) => tree.push(container(editor).width(Fill)),
         None => {
-            let name = label::body(name).wrapping(Wrapping::None);
+            let name = if active {
+                label::strong(name)
+            } else {
+                label::body(name)
+            }
+            .wrapping(Wrapping::None);
             let name = if muted {
                 name.style(style::text::muted)
             } else {
@@ -496,9 +511,27 @@ fn node_row<'a, Message: Clone + 'a>(
     .padding([0.0, table::PADDING_X])
     .style(style::button::table_row(selected, selected));
 
+    // The active node's accent bar at the row's left edge, over its padding.
+    let content: Element<'a, Message> = if active {
+        let bar = container(space::vertical().width(2))
+            .height(row_height() - 8.0)
+            .style(|theme: &Theme| container::Style {
+                background: Some(Tokens::of(theme).accent.into()),
+                border: iced::border::rounded(1),
+                ..container::Style::default()
+            });
+        iced::widget::stack![
+            content,
+            container(bar).height(row_height()).align_y(Center)
+        ]
+        .into()
+    } else {
+        content.into()
+    };
+
     match menu {
         Some(menu) => ContextMenu::new(content, menu).into(),
-        None => content.into(),
+        None => content,
     }
 }
 

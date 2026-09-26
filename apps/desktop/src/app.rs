@@ -161,6 +161,8 @@ pub enum Message {
     BottomReset,
     /// Geçmişi temizle (the bottom panel's tab row).
     HistoryCleared,
+    /// The layer tree's rows and their menu (layering.rs).
+    Layer(crate::layering::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -234,6 +236,12 @@ pub struct App {
     pub(crate) layers_follow: bool,
     /// The selection's version the tree last followed.
     pub(crate) followed_selection: u64,
+    /// The layer being renamed in the tree and the name typed so far.
+    pub(crate) renaming: Option<(String, String)>,
+    /// The tree's last row press and when: a second one soon is a double click.
+    pub(crate) last_layer_press: Option<(String, Instant)>,
+    /// Warnings and errors said so far (the Uyarılar tab counts the unseen).
+    pub(crate) warnings_total: usize,
     pub history: Vec<Entry>,
     pub command_input: String,
     pub command_expanded: bool,
@@ -349,6 +357,9 @@ impl App {
             selection_layers: Vec::new(),
             layers_follow: false,
             followed_selection: 0,
+            renaming: None,
+            last_layer_press: None,
+            warnings_total: 0,
             history: vec![Entry::Output(
                 "KentOS CAD masaüstü hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler."
                     .to_owned(),
@@ -545,11 +556,8 @@ impl App {
             Message::Key(press) => return self.key(press),
             Message::Modifiers(modifiers) => self.modifiers = modifiers,
             Message::Dock(event) => self.docks.update(event),
-            Message::LayerSelected(id) => {
-                self.selected_layer = (self.selected_layer.as_deref() != Some(&id)).then_some(id);
-                // A click in the tree chooses its rows until the selection changes again.
-                self.layers_follow = false;
-            }
+            Message::LayerSelected(id) => self.layer_pressed(id),
+            Message::Layer(event) => return self.layer_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -1052,6 +1060,13 @@ impl App {
             Level::Error => Entry::Error(text),
         });
         self.last_level = Some(level);
+        if matches!(level, Level::Warn | Level::Error) {
+            self.warnings_total += 1;
+            // Said while the Uyarılar tab is on screen: seen (the web's badge).
+            if self.command_expanded && self.bottom_tab == crate::bottom::BottomTab::Messages {
+                self.seen_warnings = self.warnings_total;
+            }
+        }
     }
 
     pub(crate) fn output(&mut self, text: impl Into<String>) {

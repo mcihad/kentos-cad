@@ -28,7 +28,8 @@ use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LineProm
 use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon};
 use kentos_ui::widget::status_bar::{Readout, StatusBar};
 use kentos_ui::widget::table::Column as TreeColumn;
-use kentos_ui::widget::tree_view::{Node, Toggle, TreeView};
+use kentos_ui::widget::context_menu::MenuButton;
+use kentos_ui::widget::tree_view::{self, Node, Toggle, TreeView};
 use kentos_ui::widget::{
     CommandLine, Confirm, Dialog, DockSpace, EmptyState, Menu, Pane, ShortcutList, Tip, overlay,
     swatch,
@@ -379,29 +380,56 @@ impl App {
         }
     }
 
-    /// One row of the layer tree; its children are rows of their own (open_rows).
+    /// One row of the layer tree, as the web's LayersPanel draws it: a
+    /// group's folder or a layer's colour (a click opens its colours), the
+    /// name (a text box while renamed), the eye and the lock, the object
+    /// count; the active layer's accent bar; the row's menu. Its children are
+    /// rows of their own (open_rows).
     fn layer_node<'a>(
         &'a self,
         doc: &'a Document,
         node: &'a LayerNode,
         parent_visible: bool,
     ) -> Node<'a, Message> {
-        let base = Node::new(node.name.as_str())
-            .check(node.visible, Message::LayerVisible(node.id.clone()))
+        let active = doc.model.layers().active() == node.id;
+        let mut row = Node::new(node.name.as_str())
             .cells([label::caption(doc.count_below(node).to_string()).into()])
             .on_press(Message::LayerSelected(node.id.clone()))
             .selected(self.layer_row_selected(&node.id))
-            .muted(!parent_visible);
+            .active(active)
+            .muted(!parent_visible)
+            .toggle(Toggle::visible(
+                node.visible,
+                Message::LayerVisible(node.id.clone()),
+            ))
+            .toggle(Toggle::locked(
+                node.locked,
+                Message::LayerLocked(node.id.clone()),
+            ))
+            .menu(move |_| self.layer_menu(node, active));
+        if let Some((id, name)) = &self.renaming
+            && *id == node.id
+        {
+            row = row.editor(tree_view::rename(
+                name,
+                |text| Message::Layer(crate::layering::Event::RenameInput(text)),
+                Message::Layer(crate::layering::Event::RenameDone),
+                Message::Layer(crate::layering::Event::RenameCancel),
+            ));
+        }
         match node.kind {
-            LayerNodeType::Group => base
+            LayerNodeType::Group => row
                 .folder()
+                .icon(kentos_ui::icon::icon(Icon::Folder).size(14.0))
                 .expanded(node.expanded, Message::LayerExpanded(node.id.clone())),
             LayerNodeType::Layer => {
-                base.icon(swatch(hex_color(&node.style.color)))
-                    .toggle(Toggle::locked(
-                        node.locked,
-                        Message::LayerLocked(node.id.clone()),
-                    ))
+                let palette = crate::viewport::palette(self.canvas());
+                let color = palette
+                    .resolve(&node.style.color)
+                    .map_or_else(|| hex_color(&node.style.color), rgba_color);
+                row.icon(MenuButton::new(swatch(color), move || {
+                    self.layer_colors(node)
+                }))
             }
         }
     }
@@ -987,6 +1015,12 @@ fn thousands(value: f64) -> String {
 }
 
 /// A theme colour as the drawing pipeline takes it.
+/// A drawing colour for the interface (the layer tree's swatch).
+fn rgba_color(c: Rgba8) -> Color {
+    let [r, g, b, a] = c.0;
+    Color::from_rgba8(r, g, b, f32::from(a) / 255.0)
+}
+
 fn rgba8(color: Color) -> Rgba8 {
     Rgba8(color.into_rgba8())
 }

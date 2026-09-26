@@ -83,6 +83,26 @@
 - Grubu açmak düzenleme sayılmaz. Açık/kapalı hâl dosyada saklanır ama kaydedilmemiş iş yapmaz ve geri alınmaz (kentos-domain `set_layer_expanded`).
 - Ağaç web'in `VirtualRows`'u gibi sanal satırlarla kurulur. Yalnız görünen satırlar kurulur; seçilen katman görünüme kaydırılabilir (KentOS UI `TreeView::virtualized`, `reveal`).
 
+### Katman ağacı web'inki gibi (LayersPanel)
+
+- **Satır:** grubun klasörü ya da katmanın rengi, ad, göz ve kilit (gruplarda da), nesne sayısı.
+  - Görünürlük artık onay kutusu değil, web'deki gibi göz düğmesidir.
+  - Etkin katmanın solunda vurgu çubuğu vardır, adı kalındır (KentOS UI `Node::active`).
+- **Tıklama:** tek tık satırı seçer; web gibi, ikinci tık seçimi kaldırmaz.
+  - Çift tık katmanı etkin yapar, grubu açar ya da kapatır (web'in `onActivate`'i). İki basış arası en çok 400 ms'dir.
+- **Renk kutusu:** tıklanınca renk menüsü açılır. İçinde temanın iki mürekkebi ve web'in sekiz rengi vardır (`DRAW_COLORS`).
+- **Sağ tık menüsü:** web'in `menuFor`'u öğe öğe.
+  - Etkin katman yap; Gizle/Göster; Kilitle/Kilidi aç; Yalnızca bunu göster; Tüm katmanları göster.
+  - Nesnelerini seç: grupta bütün katmanlarının nesneleri seçilir. İleti "{ad}: {n} nesne seçildi."
+  - Renk, Çizgi tipi ve Kalınlık: her değişiklik tek geri alma adımıdır.
+  - Katman stili…: stil penceresi masaüstünde henüz yok, öğe soluk görünür.
+  - Yeniden adlandır: satırda metin kutusu açılır. Enter ya da dışarı tıklamak kaydeder, Esc vazgeçer.
+  - Yanına yeni katman (katmanda) / İçine yeni katman (grupta): yeni katman etkin olur, ileti yazılmaz (web gibi).
+- **Bu dilimde olmayanlar:**
+  - Ağacın klavyesi: oklar, Enter, Boşluk ve F2. Masaüstü ağacı henüz odak almıyor; F2 alt paneli açar.
+  - Renk menüsünde renk kutucukları: web her rengin yanında bir kutucuk gösterir, KentOS UI menüsü henüz göstermiyor.
+- **Uyarı sayısı:** Uyarılar sekmesi açıkken söylenen uyarı görülmüş sayılır, web'in yeni kuralı gibi. Sayı artık geçmişin her karede taranmasıyla değil, sayaçla tutulur.
+
 ### Koordinat sistemi…
 
 - `crs.set` Proje ayarları'nı koordinat sistemi sayfasında açar (`project::COMMANDS`). Açık çizim yoksa Proje ayarları gibi bunu söyler.
@@ -127,4 +147,4 @@
   - Proje ayarları'nın koordinat sistemi sayfası;
   - Araçlar sekmesinde sunucu denetiminin iletileri;
   - alt panelin üç sekmesi ve sürüklenerek büyütülmüş geçmiş (komut çalışırken adlarıyla);
-  - seçimi izleyen katman ağacı: tek katman (grubu açılmış) ve üç katman (`layering::screens`, `.run/shots/katman-secimi-*`).
+  - seçimi izleyen katman ağacı: tek katman (grubu açılmış) ve üç katman; satırın sağ tık menüsü, renk menüsü, yerinde yeniden adlandırma (`layering::screens`, `.run/shots/katman-secimi-*`).
