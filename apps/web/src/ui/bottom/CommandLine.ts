@@ -5,6 +5,7 @@ import { watchAll } from '../../core/signal';
 import { formatChord, isAltGrText, isTextInput } from '../../core/keymap';
 import { looksLikeCoordinate } from '../../tools/coordinateInput';
 import { CALC_KINDS, canCalcPoint, startPointCalc } from '../../tools/pointCalc';
+import { takesTypedInput } from '../../tools/Tool';
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
@@ -147,7 +148,7 @@ export class CommandLine extends Component {
   private suggest(): void {
     const text = this.input.value.trim();
     this.historyIndex = -1;
-    if (!text || looksLikeCoordinate(text) || this.ctx.tools.activeId.value !== 'select') return this.hideList();
+    if (!text || looksLikeCoordinate(text) || takesTypedInput(this.ctx.tools.activeId.value, this.ctx.tools.active)) return this.hideList();
     this.suggestions = this.ctx.commands.search(text, 7);
     this.active = this.suggestions.length ? 0 : -1;
     this.renderList();
@@ -205,7 +206,8 @@ export class CommandLine extends Component {
     }
     if (this.active >= 0 && this.suggestions[this.active]) return this.run(this.suggestions[this.active]);
     const tool = tools.active;
-    if (tools.activeId.value !== 'select' && tool.input) {
+    // A running command takes the text, and so does selection while a grip waits for its new place.
+    if (takesTypedInput(tools.activeId.value, tool) && tool.input) {
       log.command(`› ${text}`);
       this.remember(text);
       this.input.value = '';

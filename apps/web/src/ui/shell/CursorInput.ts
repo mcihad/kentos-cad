@@ -1,5 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { listen } from '../../core/disposable';
+import { takesTypedInput } from '../../tools/Tool';
 import { Component } from '../Component';
 import { h } from '../dom';
 
@@ -49,7 +50,8 @@ export class CursorInput extends Component {
 
   /** Whether typed input should come here rather than to the command line. */
   accepts(): boolean {
-    return this.ctx.prefs.cursorInput.value && this.ctx.view.cursorWorld.value !== null && this.ctx.tools.activeId.value !== 'select';
+    const { tools } = this.ctx;
+    return this.ctx.prefs.cursorInput.value && this.ctx.view.cursorWorld.value !== null && takesTypedInput(tools.activeId.value, tools.active);
   }
 
   /** Opens the field holding the character that opened it. */

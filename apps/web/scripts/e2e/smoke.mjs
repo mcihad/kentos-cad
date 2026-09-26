@@ -662,6 +662,38 @@ try {
   check('grip menu deletes a vertex', (await b.eval(`window.kentos.doc.get(${box2.id})`)).pts.length === gripBefore - 1);
   await b.eval('window.kentos.selection.clear()');
 
+  // A clicked grip waits for its new place and its prompt asks for a coordinate: typed text reaches it, beside
+  // the cursor or on the command line, instead of naming a command.
+  {
+    const grip = async () => {
+      await b.eval(`window.kentos.selection.set([${typedLine.id}])`);
+      await sleep(60);
+      const end = await b.eval(`window.kentos.doc.get(${typedLine.id}).b`);
+      await b.click(...(await toScreen(end.x, end.y)));
+      return end;
+    };
+    const from = await grip();
+    await b.key('@');
+    await b.type('0,4');
+    await b.key('Enter');
+    const beside = await b.eval(`window.kentos.doc.get(${typedLine.id}).b`);
+    const stepBeside = await b.eval('window.kentos.doc.undo()');
+    await grip();
+    await b.click(...(await b.eval(`(() => { const r = document.querySelector('.cmdline__input').getBoundingClientRect(); return [Math.round(r.left + 20), Math.round(r.top + r.height / 2)]; })()`)));
+    await b.type('@0,-3');
+    await b.key('Enter');
+    const typed = await b.eval(`window.kentos.doc.get(${typedLine.id}).b`);
+    const said = await b.eval(`window.kentos.log.entries.value.slice(-3).map((e) => e.text)`);
+    const stepTyped = await b.eval('window.kentos.doc.undo()');
+    await b.eval('window.kentos.selection.clear()');
+    check(
+      'a clicked grip takes a typed “@0,4” beside the cursor and “@0,-3” on the command line; each one step “Tutamaçla düzenle”',
+      Math.abs(beside.x - from.x) < 1e-9 && Math.abs(beside.y - from.y - 4) < 1e-9 && Math.abs(typed.y - from.y + 3) < 1e-9 && stepBeside === 'Tutamaçla düzenle' && stepTyped === 'Tutamaçla düzenle' &&
+        !said.some((t) => t.includes('adında bir komut yok')),
+      JSON.stringify({ from, beside, typed, stepBeside, stepTyped, said }),
+    );
+  }
+
   // Object tracking: rest on a corner, then the point locks exactly level with it.
   await key('l');
   await b.move(...(await toScreen(X + 130, N - 30)));

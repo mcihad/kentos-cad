@@ -72,6 +72,16 @@ export interface Tool {
   readonly pointCount?: number;
 }
 
+/**
+ * Whether typed text goes to the running tool (`input`) rather than naming a
+ * command: any tool but selection, and selection while one of its grips is
+ * being moved, whose prompt asks for the new place (“koordinat yazın”).
+ * The command line and the field beside the cursor ask the same.
+ */
+export function takesTypedInput(activeId: string, tool: Pick<Tool, 'activeGrip'>): boolean {
+  return activeId !== 'select' || !!tool.activeGrip?.();
+}
+
 export type ToolGroup = 'select' | 'draw' | 'annotate' | 'transform' | 'modify' | 'area' | 'map';
 
 /** Short on purpose: these are the toolbox section headings. */

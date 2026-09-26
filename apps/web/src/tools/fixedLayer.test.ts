@@ -51,7 +51,7 @@ describe('path tool: G while U waits for a length', () => {
     tool.activate();
     for (const p of ['0,0', '10,0', '20,0']) expect(tool.input(p)).toBe(true);
     tool.input('U');
-    expect(tool.prompt.value).toBe('Mesafe ölç: son doğrultuda devam edilecek uzunluğu yazın');
+    expect(tool.prompt.value).toBe('Mesafe ölç: son doğrultuda devam edilecek uzunluğu yazın [Geri (G)]');
     tool.input('G');
     expect(tool.prompt.value).toBe('Mesafe ölç: sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / Geri (G) / Bitir (Enter)]');
     tool.input('G');
