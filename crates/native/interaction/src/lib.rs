@@ -72,6 +72,7 @@ pub mod modify;
 pub mod move_copy;
 pub mod object;
 pub mod offset;
+mod outlines;
 pub mod path;
 pub mod point;
 mod points;

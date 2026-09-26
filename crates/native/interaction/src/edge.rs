@@ -24,6 +24,7 @@ use kentos_native_application::{ExecutionContext, edit};
 
 use crate::Vec2;
 use crate::log::Level;
+use crate::outlines;
 use crate::points;
 use crate::tool::{Context, Pointer, Stroke, Tone};
 
@@ -164,28 +165,12 @@ impl Outline {
     pub fn of(shape: &Shape, dash: Option<[f32; 2]>, width: f32, tone: Tone) -> Self {
         let mut paths = Vec::new();
         outline_paths(shape, &mut paths);
-        let mut out = Self::default();
-        let mut at = 0;
-        // `flags, n, x0, y0, …` per path: 0 open, 1 closed, 2 a marker.
-        while at + 1 < paths.len() {
-            let flags = paths[at];
-            let n = paths[at + 1] as usize;
-            let pts: Vec<Vec2> = (0..n)
-                .filter_map(|k| {
-                    let (x, y) = (*paths.get(at + 2 + 2 * k)?, *paths.get(at + 3 + 2 * k)?);
-                    Some(Vec2::new(x, y))
-                })
-                .collect();
-            at += 2 + 2 * n;
-            if flags == 2.0 {
-                out.marks.extend(pts.first());
-            } else if pts.len() >= 2 {
-                let mut stroke = Stroke::solid(pts, flags == 1.0).width(width).tone(tone);
-                stroke.dash = dash;
-                out.strokes.push(stroke);
-            }
-        }
-        out
+        let (strokes, marks) = outlines::read(&paths, |pts, closed| {
+            let mut stroke = Stroke::solid(pts, closed).width(width).tone(tone);
+            stroke.dash = dash;
+            stroke
+        });
+        Self { strokes, marks }
     }
 
     /// Adds another outline after this one.

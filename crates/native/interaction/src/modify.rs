@@ -31,6 +31,7 @@ use kentos_native_application::{ExecutionContext, array, transform};
 
 use crate::Vec2;
 use crate::format::Format;
+use crate::outlines;
 use crate::points;
 use crate::prompt::Prompt;
 use crate::select::SelectBox;
@@ -372,30 +373,10 @@ impl<S: Stages> Tool for Modify<S> {
 }
 
 /// Ghost outlines as the geometry store gives them (`transform_outlines`,
-/// `stretch_outlines`: `flags, n, x0, y0, …` per path; 0 open, 1 closed, 2 a
-/// marker for a point or a text): the dashed lines and the point marks the
-/// web's `strokePaths` draws.
+/// `stretch_outlines`): dashed lines and point marks, as the web's
+/// `strokePaths` draws the ghosts.
 pub(crate) fn ghosts(paths: &[f64]) -> (Vec<Stroke>, Vec<Vec2>) {
-    let mut lines = Vec::new();
-    let mut marks = Vec::new();
-    let mut at = 0;
-    while at + 1 < paths.len() {
-        let flags = paths[at];
-        let n = paths[at + 1] as usize;
-        let pts: Vec<Vec2> = (0..n)
-            .filter_map(|k| {
-                let (x, y) = (*paths.get(at + 2 + 2 * k)?, *paths.get(at + 3 + 2 * k)?);
-                Some(Vec2::new(x, y))
-            })
-            .collect();
-        at += 2 + 2 * n;
-        if flags == 2.0 {
-            marks.extend(pts.first());
-        } else if pts.len() >= 2 {
-            lines.push(Stroke::dashed(pts, flags == 1.0, GHOST_DASH));
-        }
-    }
-    (lines, marks)
+    outlines::read(paths, |pts, closed| Stroke::dashed(pts, closed, GHOST_DASH))
 }
 
 /// The selected objects' persistent ids, as the commands name them.
