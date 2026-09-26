@@ -11,9 +11,10 @@ use kentos_application::commands::{CatalogPolicy, CommandOutcome};
 use kentos_application::listing::{self, CatalogQuery};
 use kentos_application::{AppError, admin, changes, events, lifecycle, projects};
 use kentos_contracts::{
-    CatalogView, GrantRole, PROJECT_ARCHIVE, PROJECT_ARCHIVED, PROJECT_DELETED,
-    PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME, PROJECT_RESTORE, PROJECT_RESTORED,
-    PROJECT_TRASH, PROJECT_UNARCHIVE, PROJECT_UNARCHIVED, ProjectState, TenantRole,
+    CatalogView, GrantRole, PROJECT_ACCESS_REVOKE, PROJECT_ARCHIVE, PROJECT_ARCHIVED,
+    PROJECT_DELETED, PROJECT_DUPLICATE, PROJECT_METADATA_UPDATE, PROJECT_PURGE, PROJECT_RENAME,
+    PROJECT_RESTORE, PROJECT_RESTORED, PROJECT_SHARE, PROJECT_TRASH, PROJECT_UNARCHIVE,
+    PROJECT_UNARCHIVED, ProjectState, TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::json;
@@ -554,5 +555,90 @@ async fn the_retention_removes_what_stayed_too_long_and_nothing_else() {
     let audit = audited(&db, old, PROJECT_PURGE).await;
     assert_eq!(audit.len(), 1);
     assert_eq!((audit[0].0, &audit[0].1["by"]), (None, &json!("retention")));
+    db.close().await;
+}
+
+#[tokio::test]
+async fn the_owner_is_kept_through_every_lifecycle_change() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 6)
+        .await
+        .unwrap();
+    let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
+    let partner = member(&db, "buro", "ortak", TenantRole::ProjectManager).await;
+    let boss = member(&db, "buro", "mudur", TenantRole::Admin).await;
+    let project = new_project(&db, &pm, "Ada 101").await;
+    let owner = open(&db, &pm, project).await;
+    share(&db, &owner, &partner.actor, GrantRole::Manager).await;
+    let owner_of = || async {
+        sqlx::query_scalar::<_, Uuid>("select owner_user_id from kentos.project where id = $1")
+            .bind(project)
+            .fetch_one(&db.owner)
+            .await
+            .unwrap()
+    };
+
+    // The admin archives, unarchives, trashes and restores it: its owner stays, with every right.
+    for name in [
+        PROJECT_ARCHIVE,
+        PROJECT_UNARCHIVE,
+        PROJECT_TRASH,
+        PROJECT_RESTORE,
+    ] {
+        let by_admin = open(&db, &boss, project).await;
+        changed(run(&db, &by_admin, name, json!({})).await.unwrap());
+        assert_eq!(owner_of().await, pm.actor.user_id, "{name}");
+    }
+    let owner = open(&db, &pm, project).await;
+    assert_eq!(owner.role, kentos_contracts::ProjectRole::Owner);
+
+    // Nobody takes the owner's access away or lowers it by sharing, the owner included.
+    let manages = open(&db, &partner, project).await;
+    for (who, name, input) in [
+        (
+            &manages,
+            PROJECT_SHARE,
+            json!({ "userId": pm.actor.user_id, "role": "viewer" }),
+        ),
+        (
+            &manages,
+            PROJECT_ACCESS_REVOKE,
+            json!({ "userId": pm.actor.user_id }),
+        ),
+        (
+            &owner,
+            PROJECT_ACCESS_REVOKE,
+            json!({ "userId": pm.actor.user_id }),
+        ),
+    ] {
+        let r = run(&db, who, name, input).await;
+        assert!(matches!(r, Err(AppError::Invalid(_))), "{name}: {r:?}");
+    }
+    // A copy is its maker's: the source keeps its owner.
+    let copy = match run(&db, &manages, PROJECT_DUPLICATE, json!({}))
+        .await
+        .unwrap()
+    {
+        CommandOutcome::Duplicated(d) => d,
+        other => panic!("{other:?}"),
+    };
+    let copy_owner: Uuid =
+        sqlx::query_scalar("select owner_user_id from kentos.project where id = $1")
+            .bind(Uuid::parse_str(&copy.project.id).unwrap())
+            .fetch_one(&db.owner)
+            .await
+            .unwrap();
+    assert_eq!(
+        (copy_owner, owner_of().await),
+        (partner.actor.user_id, pm.actor.user_id)
+    );
+    // And the database keeps a project from losing its owner at all.
+    let r = sqlx::query("update kentos.project set owner_user_id = null where id = $1")
+        .bind(project)
+        .execute(&db.owner)
+        .await;
+    assert!(r.is_err());
     db.close().await;
 }
