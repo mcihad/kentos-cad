@@ -21,17 +21,23 @@ use serde_json::Value;
 
 use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, render};
 use crate::error::{Code, KcadError};
+use crate::watch::{Step, Watch, report};
 use names::{
     angle_unit, area_unit, drawing_font, label_ink, label_placement, line_type, point_symbol,
     workspace,
 };
 
-/// The payload of a drawing.
-pub(crate) fn payload(doc: &DocumentSnapshotV2) -> Result<Vec<u8>, KcadError> {
+/// The payload of a drawing; `watch` hears the objects as they are written
+/// and may stop the writing (docs/adr/0030).
+pub(crate) fn payload(
+    doc: &DocumentSnapshotV2,
+    watch: &mut dyn Watch,
+) -> Result<Vec<u8>, KcadError> {
     let mut e = Encoder {
         w: Writer::default(),
         path: Vec::with_capacity(16),
         depth: 0,
+        watch,
     };
     e.root(doc)?;
     Ok(e.w.out)
@@ -41,11 +47,17 @@ struct Encoder<'d> {
     w: Writer,
     path: Vec<Seg<'d>>,
     depth: usize,
+    watch: &'d mut dyn Watch,
 }
 
 impl<'d> Encoder<'d> {
     fn fail(&self, code: Code, what: &str) -> KcadError {
         KcadError::unwritable(code, &render(&self.path), what)
+    }
+
+    /// Tells the watcher how far the writing is; stops when it says so.
+    fn report(&mut self, step: Step<'_>) -> Result<(), KcadError> {
+        report(self.watch, step)
     }
 
     fn at<T>(

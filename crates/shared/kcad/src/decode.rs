@@ -16,14 +16,17 @@ use kentos_contracts::{
 
 use crate::cbor::{Any, Reader, Seg};
 use crate::error::{Code, KcadError};
+use crate::watch::Watch;
 use objects::objects;
 
 /// The most items a list reserves before they are read.
 const PREALLOCATE: usize = 4096;
 
-/// The drawing in a payload whose container was checked.
-pub(crate) fn payload(data: &[u8]) -> Result<DocumentSnapshotV2, KcadError> {
-    let mut r = Reader::new(data);
+/// The drawing in a payload whose container was checked; `watch` hears the
+/// project before its objects, then the objects as they are read, and may
+/// stop the reading (docs/adr/0030).
+pub(crate) fn payload(data: &[u8], watch: &mut dyn Watch) -> Result<DocumentSnapshotV2, KcadError> {
+    let mut r = Reader::watched(data, watch);
     let doc = root(&mut r)?;
     if !r.at_end() {
         return Err(r.fail(Code::CborTrailing, "yükte belgeden sonra fazladan bayt var"));
@@ -231,7 +234,14 @@ fn body(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
             "layers" => layers = Some(list(r, |r, _| layer(r))?),
             "origin" => origin = Some(point(r)?),
             "styles" => styles = Some(project_styles(r)?),
-            "entities" => entities = Some(objects(r)?),
+            // Name and layers come first in the encoded order: the project is known before its objects.
+            "entities" => {
+                entities = Some(objects(
+                    r,
+                    name.as_deref(),
+                    layers.as_ref().map_or(0, Vec::len),
+                )?)
+            }
             "homeView" => home_view = Some(bounds(r)?),
             "settings" => settings_ = Some(settings(r)?),
             "projectId" => project_id = Some(ProjectId(id16(r)?)),

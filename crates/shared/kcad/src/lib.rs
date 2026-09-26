@@ -19,6 +19,11 @@
 //! (`tools/kcad/kcad.py`) and the byte-level fixtures (`fixtures/kcad/v2`)
 //! hold it to the specification.
 //!
+//! Large drawings (docs/adr/0030): every read and write can be watched and
+//! stopped (`watch`: the project first, then the objects, a few thousand at a
+//! time); the browser hands its drawings to and from the codec as typed
+//! columns (`columns`), not as JSON text.
+//!
 //! Rules: nothing a file holds may crash the reader or make it reserve more
 //! memory than the file itself could fill; a drawing is written only if a
 //! reader would take it back; the same drawing always gives the same bytes.
@@ -30,21 +35,25 @@
 )]
 
 mod cbor;
+pub mod columns;
 mod decode;
 mod encode;
 mod error;
 mod header;
+mod watch;
 
-use kentos_contracts::{DocumentSnapshotV2, Entity};
+use kentos_contracts::DocumentSnapshotV2;
 use serde::Serialize;
 
 pub use cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING};
+pub use columns::Columns;
 pub use error::{Code, KcadError};
 pub use header::{
     CODEC_NONE, ENCODING_CBOR_PROFILE_1, FIXED_HEADER, HASH_SIZE, Header, MAGIC, MAJOR,
     MAX_PAYLOAD, MINOR,
 };
 pub use kentos_contracts as contracts;
+pub use watch::{Quiet, Step, Watch};
 
 /// The file extension (with the dot).
 pub const EXTENSION: &str = ".kcad";
@@ -53,7 +62,15 @@ pub const MIME: &str = "application/octet-stream";
 
 /// The file a drawing is saved as.
 pub fn encode(doc: &DocumentSnapshotV2) -> Result<Vec<u8>, KcadError> {
-    header::write(&encode::payload(doc)?)
+    encode_watched(doc, &mut Quiet)
+}
+
+/// `encode`, the objects reported to `watch` as they are written; it may stop the writing.
+pub fn encode_watched(
+    doc: &DocumentSnapshotV2,
+    watch: &mut dyn Watch,
+) -> Result<Vec<u8>, KcadError> {
+    header::write(&encode::payload(doc, watch)?)
 }
 
 /// The file a drawing is saved as, read back before it is handed out: the
@@ -62,12 +79,31 @@ pub fn encode(doc: &DocumentSnapshotV2) -> Result<Vec<u8>, KcadError> {
 /// writes only verified bytes, so a file is never replaced by one that does
 /// not open again (TODOS.md FILE-16, FILE-21).
 pub fn encode_verified(doc: &DocumentSnapshotV2) -> Result<Vec<u8>, KcadError> {
-    let bytes = encode(doc)?;
-    let back = decode(&bytes).map_err(|e| unverified(&e.message))?;
+    encode_verified_watched(doc, &mut Quiet)
+}
+
+/// `encode_verified` with its stages reported to `watch` (writing, then
+/// `Verifying` and the reading back), which may stop it.
+pub fn encode_verified_watched(
+    doc: &DocumentSnapshotV2,
+    watch: &mut dyn Watch,
+) -> Result<Vec<u8>, KcadError> {
+    let bytes = encode_watched(doc, watch)?;
+    watch::report(watch, Step::Verifying)?;
+    let back = decode_watched(&bytes, watch).map_err(not_read_back)?;
     if let Some(what) = difference(doc, &back) {
         return Err(unverified(&what));
     }
     Ok(bytes)
+}
+
+/// Bytes that did not read back: a verification failure, unless the watcher stopped the reading.
+fn not_read_back(e: KcadError) -> KcadError {
+    if e.code == Code::Cancelled {
+        e
+    } else {
+        unverified(&e.message)
+    }
 }
 
 fn unverified(what: &str) -> KcadError {
@@ -81,13 +117,81 @@ fn unverified(what: &str) -> KcadError {
 
 /// The drawing in a file; the whole file is checked before anything is returned.
 pub fn decode(data: &[u8]) -> Result<DocumentSnapshotV2, KcadError> {
-    read(data).map(|(_, doc)| doc)
+    decode_watched(data, &mut Quiet)
+}
+
+/// `decode` with its stages reported to `watch` (the integrity check, the
+/// project, the objects), which may stop it: then nothing is returned, so
+/// half a file never becomes a drawing (TODOS.md FILE-20).
+pub fn decode_watched(data: &[u8], watch: &mut dyn Watch) -> Result<DocumentSnapshotV2, KcadError> {
+    let (_, payload) = header::read_watched(data, watch)?;
+    decode::payload(payload, watch)
 }
 
 /// The header and the drawing of a file (`kcad inspect`).
 pub fn read(data: &[u8]) -> Result<(Header, DocumentSnapshotV2), KcadError> {
     let (head, payload) = header::read(data)?;
-    Ok((head, decode::payload(payload)?))
+    Ok((head, decode::payload(payload, &mut Quiet)?))
+}
+
+// ── The browser's typed boundary (docs/adr/0030) ────────────────────────
+
+/// A drawing taken apart for the browser's page: the contract's JSON of
+/// everything but the objects (`entities` and `uids` empty), and the objects
+/// as columns. Each object is dropped once packed, so a large drawing is in
+/// memory about once.
+pub fn split(mut doc: DocumentSnapshotV2) -> Result<(String, Columns), KcadError> {
+    let entities = std::mem::take(&mut doc.entities);
+    let uids = std::mem::take(&mut doc.uids);
+    let head = head_json(&doc)?;
+    Ok((head, columns::pack(entities, uids)))
+}
+
+fn head_json(doc: &DocumentSnapshotV2) -> Result<String, KcadError> {
+    serde_json::to_string(doc).map_err(|e| {
+        KcadError::new(
+            Code::BadColumns,
+            format!(
+                "Çizimin proje bilgisi yazılamadı ({e}). Bu bir yazılım hatasıdır; durumu bildirin."
+            ),
+        )
+    })
+}
+
+/// The drawing the browser's page packed, as a `.kcad` v2 file's bytes,
+/// verified before they are handed out: `head` is the contract's JSON of
+/// everything but the objects, `cols` the objects. The bytes are read back
+/// and the objects compared with the columns as they were sent, every field
+/// and every float bit for bit (`columns::differs`). Returns the bytes and
+/// the head as the file holds it (JSON), for the page's side to compare with
+/// the head it sent: a field the contract does not read would show there.
+pub fn encode_columns(
+    head: &str,
+    cols: &Columns,
+    watch: &mut dyn Watch,
+) -> Result<(Vec<u8>, String), KcadError> {
+    let mut doc: DocumentSnapshotV2 = serde_json::from_str(head).map_err(|e| {
+        KcadError::new(
+            Code::BadColumns,
+            format!(
+                "Kaydedilecek çizimin proje bilgisi okunamadı ({e}); uygulama ile dosya biçimi paketi uyuşmuyor olabilir (pnpm wasm). Dosya yazılmadı."
+            ),
+        )
+    })?;
+    let (entities, uids) = columns::unpack(cols)?;
+    doc.entities = entities;
+    doc.uids = uids;
+    let bytes = encode_watched(&doc, watch)?;
+    // The drawing goes before it is read back: a large one is not in memory twice.
+    drop(doc);
+    watch::report(watch, Step::Verifying)?;
+    let mut back = decode_watched(&bytes, watch).map_err(not_read_back)?;
+    if let Some(what) = columns::differs(cols, &back.entities, &back.uids) {
+        return Err(unverified(&what));
+    }
+    back.entities = Vec::new();
+    back.uids = Vec::new();
+    Ok((bytes, head_json(&back)?))
 }
 
 /// What a file is by its content, not its name (docs/specs/kcad-v2.md §8, TODOS.md FILE-03).
@@ -136,8 +240,9 @@ pub fn sniff(data: &[u8]) -> Sniff {
     }
 }
 
-/// Where two drawings differ, compared as their JSON text (every float64 bit
-/// for bit, `-0.0` apart from `0.0`); the objects' slots are not compared.
+/// Where two drawings differ: the small parts as their JSON text (every
+/// float64 bit for bit, `-0.0` apart from `0.0`), the objects through their
+/// typed columns; the objects' slots are not compared.
 fn difference(a: &DocumentSnapshotV2, b: &DocumentSnapshotV2) -> Option<String> {
     fn same<T: Serialize + ?Sized>(x: &T, y: &T) -> bool {
         match (serde_json::to_vec(x), serde_json::to_vec(y)) {
@@ -164,28 +269,8 @@ fn difference(a: &DocumentSnapshotV2, b: &DocumentSnapshotV2) -> Option<String> 
     if a.entities.len() != b.entities.len() {
         return Some("nesne sayısı".to_owned());
     }
-    a.entities
-        .iter()
-        .zip(&b.entities)
-        .position(|(x, y)| !same(&with_slot(x, 0), &with_slot(y, 0)))
+    // Object by object through the typed columns: every field, every float bit for bit, no JSON
+    // text of a large drawing (docs/adr/0030).
+    columns::first_difference(&a.entities, &a.uids, &b.entities, &b.uids)
         .map(|i| format!("nesne {}", i + 1))
-}
-
-/// An object with another slot.
-fn with_slot(entity: &Entity, slot: u32) -> Entity {
-    let mut e = entity.clone();
-    match &mut e {
-        Entity::Point(x) => x.base.id = slot,
-        Entity::Line(x) => x.base.id = slot,
-        Entity::Polyline(x) | Entity::Polygon(x) => x.base.id = slot,
-        Entity::Circle(x) => x.base.id = slot,
-        Entity::Arc(x) => x.base.id = slot,
-        Entity::Ellipse(x) => x.base.id = slot,
-        Entity::Spline(x) => x.base.id = slot,
-        Entity::Xline(x) | Entity::Ray(x) => x.base.id = slot,
-        Entity::Text(x) => x.base.id = slot,
-        Entity::Dimension(x) => x.base.id = slot,
-        Entity::Hatch(x) => x.base.id = slot,
-    }
-    e
 }

@@ -11,6 +11,7 @@ use super::Encoder;
 use super::names::{dimension_style, hatch_pattern};
 use crate::cbor::{Seg, key_order};
 use crate::error::{Code, KcadError};
+use crate::watch::{EVERY, Step};
 
 /// One field of an object, before the fields are sorted by key.
 enum Val<'d> {
@@ -35,7 +36,11 @@ impl<'d> Encoder<'d> {
         self.open(doc.entities.len(), false)?;
         let mut seen = HashSet::with_capacity(doc.uids.len());
         let mut fields = Vec::with_capacity(16);
+        let total = doc.entities.len();
         for (i, (entity, uid)) in doc.entities.iter().zip(&doc.uids).enumerate() {
+            if i % EVERY == 0 {
+                self.report(Step::Writing { done: i, total })?;
+            }
             self.path.push(Seg::Index(i));
             if !seen.insert(uid.0) {
                 return Err(self.fail(
@@ -47,7 +52,7 @@ impl<'d> Encoder<'d> {
             self.path.pop();
         }
         self.close();
-        Ok(())
+        self.report(Step::Writing { done: total, total })
     }
 
     fn object(

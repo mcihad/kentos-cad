@@ -6,6 +6,7 @@
 use sha2::{Digest, Sha256};
 
 use crate::error::{Code, KcadError};
+use crate::watch::{HASH_CHUNK, Quiet, Step, Watch, report};
 
 /// `\x89KCAD\r\n\x1a\n` (§3.1).
 pub const MAGIC: [u8; 9] = [0x89, b'K', b'C', b'A', b'D', 0x0d, 0x0a, 0x1a, 0x0a];
@@ -89,6 +90,15 @@ fn bad_header(what: &str) -> KcadError {
 /// Checks the container in the specification's order (§4, steps 1–12) and
 /// returns the header and the payload.
 pub fn read(data: &[u8]) -> Result<(Header, &[u8]), KcadError> {
+    read_watched(data, &mut Quiet)
+}
+
+/// `read`, the integrity check reported to `watch` a few megabytes at a time
+/// (it is the longest part of reading the container) and stopped when it says so.
+pub(crate) fn read_watched<'d>(
+    data: &'d [u8],
+    watch: &mut dyn Watch,
+) -> Result<(Header, &'d [u8]), KcadError> {
     let size = data.len();
     if size == 0 {
         return Err(KcadError::new(
@@ -173,7 +183,16 @@ pub fn read(data: &[u8]) -> Result<(Header, &[u8]), KcadError> {
     let body = &data[..size - HASH_SIZE];
     let mut sha256 = [0u8; HASH_SIZE];
     sha256.copy_from_slice(&data[size - HASH_SIZE..]);
-    if Sha256::digest(body)[..] != sha256[..] {
+    let mut hasher = Sha256::new();
+    let all = body.len() as u64;
+    let mut done = 0u64;
+    for chunk in body.chunks(HASH_CHUNK) {
+        report(watch, Step::Checking { done, total: all })?;
+        hasher.update(chunk);
+        done += chunk.len() as u64;
+    }
+    report(watch, Step::Checking { done, total: all })?;
+    if hasher.finalize()[..] != sha256[..] {
         return Err(KcadError::new(
             Code::HashMismatch,
             "Dosya bozuk: bütünlük özeti (SHA-256) tutmuyor. Dosya diskte ya da aktarımda bozulmuş; özgün kopyayı ya da bir yedeği açın.",

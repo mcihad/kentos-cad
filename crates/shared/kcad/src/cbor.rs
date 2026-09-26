@@ -7,6 +7,7 @@
 //! against the limits and against the bytes left before anything is reserved.
 
 use crate::error::{Code, KcadError};
+use crate::watch::{Step, Watch, report};
 
 /// Nesting of arrays and maps; the payload's top map is 1 (§5.5).
 pub const MAX_DEPTH: usize = 64;
@@ -157,6 +158,8 @@ pub(crate) struct Reader<'a> {
     /// Arrays and maps entered and not yet left.
     depth: usize,
     path: Vec<Seg<'a>>,
+    /// Hears the reading's progress and may stop it (`watch`, docs/adr/0030).
+    watch: Option<&'a mut dyn Watch>,
 }
 
 impl<'a> Reader<'a> {
@@ -166,6 +169,23 @@ impl<'a> Reader<'a> {
             pos: 0,
             depth: 0,
             path: Vec::with_capacity(16),
+            watch: None,
+        }
+    }
+
+    /// A reader whose progress `watch` hears (and may stop).
+    pub fn watched(data: &'a [u8], watch: &'a mut dyn Watch) -> Self {
+        Self {
+            watch: Some(watch),
+            ..Self::new(data)
+        }
+    }
+
+    /// Tells the watcher how far the reading is; stops when it says so.
+    pub fn report(&mut self, step: Step<'_>) -> Result<(), KcadError> {
+        match self.watch.as_deref_mut() {
+            Some(w) => report(w, step),
+            None => Ok(()),
         }
     }
 
