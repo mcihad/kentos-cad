@@ -14,8 +14,10 @@ import type { AppContext } from './context';
  *
  * - Written a few seconds after the drawing changes (and at most every half
  *   minute while it keeps changing) and when the tab is hidden; never while
- *   an open runs and never for an open cloud project (its device draft keeps
- *   its changes, app/cloud/drafts.ts). While a save writes its file the copy
+ *   an open runs and never for an open database project (its device draft
+ *   keeps its changes, app/cloud/drafts.ts). An open file project's unsaved
+ *   work lives only in the drawing until Kaydet, as a local drawing's does:
+ *   it gets copies (docs/adr/0038). While a save writes its file the copy
  *   is the save's own verified bytes, taken when the tab is hidden (the tab
  *   may be closed or discarded before the save ends).
  * - Removed when the drawing is saved (clean again) or its changes are
@@ -124,7 +126,7 @@ export async function liveTabs(): Promise<ReadonlySet<string> | null> {
 
 /** What the copies need of the app (the whole context in the app; parts in tests). */
 export type RecoveryContext = Pick<AppContext, 'doc' | 'log'> & {
-  cloud: Pick<AppContext['cloud'], 'project'>;
+  cloud: Pick<AppContext['cloud'], 'project' | 'keepsDeviceDraft'>;
   files: Pick<AppContext['files'], 'busy' | 'handle' | 'kcad' | 'recover' | 'writing'>;
 };
 
@@ -262,8 +264,8 @@ export class RecoveryCopies {
   private async writeOnce(): Promise<void> {
     const { doc, cloud, files } = this.ctx;
     if (!doc.dirty.value) return this.saved();
-    // An open cloud project keeps its changes in its device draft.
-    if (cloud.project.value) return;
+    // An open database project keeps its changes in its device draft; a file project's are kept here.
+    if (cloud.keepsDeviceDraft()) return;
     const revision = doc.revision;
     if (revision === this.written) return;
     // A save writing the drawing of this moment: its bytes are the copy. Any other busy moment waits.

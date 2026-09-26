@@ -66,7 +66,7 @@ describe('the catalog’s commands on the open project', () => {
   function session(sync: ProjectSync, server: ReturnType<typeof setup>['server'], open = true) {
     const calls: string[] = [];
     let project: CloudProject | null = open
-      ? { tenantId: 't', tenantName: 'Büro', tenantKind: 'organization', projectId: 'p', name: 'Ada 101', role: 'owner', state: 'active', permissions: [], canWrite: true, canEditMeta: true }
+      ? { tenantId: 't', tenantName: 'Büro', tenantKind: 'organization', projectId: 'p', name: 'Ada 101', role: 'owner', state: 'active', storage: 'database', permissions: [], canWrite: true, canEditMeta: true }
       : null;
     const s = {
       api: server,
@@ -136,5 +136,24 @@ describe('the catalog’s commands on the open project', () => {
     await other.lifecycle.updateMetadata(ref, { name: 'Başka', projectType: 'gis' }, '7');
     expect([sent.at(-1)!.input, sent.at(-1)!.expectedVersions]).toEqual([{ name: 'Başka', projectType: 'gis' }, { '@catalog': '7' }]);
     expect(other.calls).toEqual([]);
+  });
+});
+
+describe('a new project in the other storage mode (docs/adr/0039)', () => {
+  it('converts a file project into a database project and back; the source stays; a refused object names its place', async () => {
+    const { FakeServer } = await import('./fakeServer');
+    const server = new FakeServer({ name: 'Ada 101', settings: { srid: 5256, lengthDecimals: 3, areaDecimals: 2, areaUnit: 'm2', angleUnit: 'grad', plotScale: 1000, workspace: 'cad', drawingFont: 'jakarta' } as never, layers: [], activeLayer: 'x', styles: { items: [], categories: [] }, origin: { x: 0, y: 0 } });
+    server.files.storage = 'file';
+    const session = { api: server, openProject: () => null, sync: { value: null }, flush: async () => true } as unknown as ConstructorParameters<typeof ProjectLifecycle>[0];
+    const life = new ProjectLifecycle(session, { info: () => {} });
+    const ref = { tenantId: 't', projectId: 'p', name: 'Ada 101' };
+    // Nothing saved yet: nothing to convert.
+    await expect(life.convert(ref, 'database')).rejects.toThrow(/kaydedilmiş revizyonu yok/);
+    await server.files.commitAs(new Uint8Array([0x89, 0x4b, 0x43, 0x41, 0x44, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const made = await life.convert(ref, 'database', { name: '  Ada 101 PostGIS  ' });
+    expect([made.project.name, made.project.storage, server.files.storage]).toEqual(['Ada 101 PostGIS', 'database', 'file']);
+    expect(server.lifecycleLog.at(-1)?.input).toEqual({ to: 'database', name: 'Ada 101 PostGIS' });
+    // The same mode is refused by its field.
+    await expect(life.convert(ref, 'file')).rejects.toMatchObject({ path: 'to' });
   });
 });

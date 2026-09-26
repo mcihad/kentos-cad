@@ -96,3 +96,11 @@
   - `a_file_project_is_copied_with_its_newest_revision`: sayılar, kopyanın tek revizyonu, baytları, kopyanın kendi kaydı, kaynağın kalıcı silinmesinden sonra da kopyanın baytları;
   - `the_cleanup_leaves_a_fresh_folder_alone`.
   - Kasıtlı bozma, ikisi de geri alındı: bekleme yok sayılınca taze klasör silindi, test düştü; migration saklama biçimini kopyalamayınca kopya `project_file_revision_storage` kısıtına takıldı.
+
+## Web (26 Eylül, ADR 0038)
+
+- “Buluta yükle” saklama biçimini sorar; “Buluta dosya olarak kaydet” çizimi 1. revizyonu olarak yazar. Baytlar yerel Kaydet'in doğrulanmış kodeğinden gelir; SHA-256 tarayıcıda hesaplanır; `@file = "0"`.
+- Dosya projesi en yeni revizyonundan açılır: SHA-256'sı denetlenir, aşamalı açılışla okunur, dayandığı revizyon saklanır.
+- Kaydet (Ctrl+S) yeni revizyon yazar. Durum çubuğu kodlamayı, yüklemeyi (%), sunucunun doğrulamasını ve “kaydedildi · rN”yi ayrı gösterir; kayıttan önce “kaydedildi” denmez. Kopan yükleme aynı yüklemeyle, kaybolan yanıt aynı anahtarla yeniden gönderilir.
+- `@file` çakışmasında web ayrı kopyayı (yeni dosya projesi ya da yerel dosya) ya da son revizyonu sorar; bayt birleştirme yoktur.
+- Başkasının revizyonu (`project.file`) söylenir, kendiliğinden yüklenmez. Revizyonlar katalogun Geçmiş sekmesinde listelenir ve indirilir.

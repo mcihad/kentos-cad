@@ -359,3 +359,102 @@
 .catalog-details__actions .btn {
   gap: 6px;
 }
+
+/* ── The selected project's two tabs: its facts, its history (docs/adr/0038) ── */
+.catalog-details__tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--c-line);
+}
+.catalog-details__tab {
+  margin-bottom: -1px;
+  padding: 5px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--c-text-2);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+.catalog-details__tab:hover {
+  color: var(--c-text);
+}
+.catalog-details__tab[aria-selected='true'] {
+  border-bottom-color: var(--c-accent);
+  color: var(--c-text);
+}
+.catalog-details__tab:focus-visible {
+  outline: 2px solid var(--c-accent-line);
+  outline-offset: -2px;
+}
+.catalog-history__head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--c-text-2);
+}
+.catalog-history__count {
+  font-weight: 500;
+  color: var(--c-text-3);
+}
+.catalog-history__list {
+  display: grid;
+  gap: 6px;
+}
+.catalog-history__row {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  background: var(--c-panel);
+}
+.catalog-history__main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.catalog-history__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.catalog-history__meta {
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+.catalog-history__note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--c-text-3);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.catalog-history__acts,
+.catalog-history__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.catalog-history__acts .btn,
+.catalog-history__tools .btn {
+  gap: 6px;
+}
+.catalog-history__error {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  color: var(--c-danger);
+}
+.catalog-history__error > p {
+  margin: 0;
+}

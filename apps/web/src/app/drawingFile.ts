@@ -1,9 +1,9 @@
 import type { V1Identities } from '../contracts/generated/V1Identities';
-import { ColumnsReader, type PackedDrawing } from '../io/columns';
+import { ColumnsReader, packDrawing, type PackedDrawing } from '../io/columns';
 import { KcadError, sniffDrawing, type Dropped, type KcadCodec, type KcadProgress } from '../io/kcad';
-import type { DocumentContent } from '../model/document';
+import type { CadDocument, DocumentContent } from '../model/document';
 import type { Entity } from '../model/entities';
-import { DOCUMENT_FORMAT, DOCUMENT_VERSION, DrawingObjects, attachV1Identities, readDrawingHead } from '../model/snapshot';
+import { DOCUMENT_FORMAT, DOCUMENT_VERSION, DrawingObjects, attachV1Identities, readDrawingHead, snapshotHead } from '../model/snapshot';
 import { projectStylesProblem } from './cloud/incoming';
 
 /**
@@ -168,6 +168,29 @@ async function readV1(text: string, deps: ReadDeps, watch: ReadWatch): Promise<R
     content.migratedFrom = { format: DOCUMENT_FORMAT, version: DOCUMENT_VERSION, sourceSha256: got.ids.sourceSha256 };
   }
   return { ok: true, content, format: 'v1' };
+}
+
+/** A drawing's `.kcad` v2 bytes, the revision they hold and what KCAD v2 left out (in words). */
+export interface EncodedDrawing {
+  bytes: Uint8Array<ArrayBuffer>;
+  revision: number;
+  dropped: string | null;
+}
+
+/**
+ * The drawing's `.kcad` v2 bytes and its revision, taken in one turn: the
+ * drawing is packed into typed columns before anything else runs, so the
+ * bytes hold the drawing of that moment (docs/adr/0030); the codec writes
+ * and verifies them (the formats worker; tests run the module in process).
+ * A local save and a cloud file project's revision are the same bytes.
+ * Throws with the reason when the drawing cannot be written.
+ */
+export async function encodeDrawing(doc: CadDocument, codec: () => Promise<DrawingCodec>): Promise<EncodedDrawing> {
+  const c = await codec();
+  const revision = doc.revision;
+  const { drawing, dropped } = packDrawing(snapshotHead(doc), doc.all());
+  const bytes = await c.encode(drawing);
+  return { bytes, revision, dropped: describeDropped(dropped) };
 }
 
 /** What a save left out, in words: fields KCAD v2 does not know, by where they were (`polyline.not` × 3). */

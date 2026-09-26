@@ -98,3 +98,58 @@ describe('the cloud API client: sharing', () => {
     expect([e.code, e.status, e.transient]).toEqual(['aborted', 499, false]);
   });
 });
+
+describe('the cloud API client: files (docs/adr/0031, 0033, 0034, 0038)', () => {
+  it('sends an upload’s bytes with the app header and hears how far it is; a refusal keeps the field', async () => {
+    const sent: { url: string; headers: Record<string, string>; size: number }[] = [];
+    let status = 200;
+    const api = new HttpCloudApi(
+      (async () => new Response('{}')) as unknown as typeof fetch,
+      async (url, bytes, headers, progress) => {
+        sent.push({ url, headers, size: bytes.byteLength });
+        progress(bytes.byteLength / 2, bytes.byteLength);
+        progress(bytes.byteLength, bytes.byteLength);
+        return status === 200
+          ? { status, text: JSON.stringify({ id: 'u1', size: bytes.byteLength, sha256: 'ab', createdAt: '', expiresAt: '', received: true, objects: '13' }) }
+          : { status, text: JSON.stringify({ error: 'invalid', message: 'Gelen dosya bildirilenle aynı değil.', path: 'sha256', retryable: false }) };
+      },
+    );
+    const heard: number[] = [];
+    const up = await api.sendUpload('t 1', 'p', 'u/1', new Uint8Array(10), (done) => heard.push(done));
+    expect([up.received, up.objects, heard]).toEqual([true, '13', [5, 10]]);
+    expect(sent[0].url).toBe('/v1/tenants/t%201/projects/p/uploads/u%2F1');
+    expect(sent[0].headers).toMatchObject({ 'content-type': 'application/octet-stream', 'x-kentos-client': 'web' });
+    status = 422;
+    const e = (await api.sendUpload('t', 'p', 'u', new Uint8Array(4)).catch((x: unknown) => x)) as ApiFailure;
+    expect([e.code, e.path, e.status]).toEqual(['invalid', 'sha256', 422]);
+  });
+
+  it('asks one of its uploads as it stands (docs/adr/0040)', async () => {
+    const calls: { url: string; method?: string }[] = [];
+    const api = new HttpCloudApi((async (url: string, init: RequestInit) => {
+      calls.push({ url, method: init.method });
+      return new Response(JSON.stringify({ id: 'u/1', size: 3, sha256: 'ab', createdAt: '', expiresAt: '', received: true }));
+    }) as unknown as typeof fetch);
+    const up = await api.uploadState('t 1', 'p', 'u/1');
+    expect([up.received, calls]).toEqual([true, [{ url: '/v1/tenants/t%201/projects/p/uploads/u%2F1', method: 'GET' }]]);
+  });
+
+  it('reads a .kcad with its hash, revision, cursor and file name; a refusal is the server’s words', async () => {
+    const body = new Uint8Array([0x89, 0x4b, 0x43, 0x41, 0x44, 1, 2, 3]);
+    const calls: string[] = [];
+    const api = new HttpCloudApi((async (url: string) => {
+      calls.push(url);
+      if (url.endsWith('/snapshot'))
+        return new Response(body, {
+          headers: { etag: '"abc"', 'x-kentos-revision': '7', 'x-kentos-event-cursor': '42', 'content-length': '8', 'content-disposition': "attachment; filename=\"Ada _.kcad\"; filename*=UTF-8''Ada%20%C3%A7-r7.kcad" },
+        });
+      return new Response(JSON.stringify({ error: 'forbidden', message: 'İndirme izniniz yok (project.download).' }), { status: 403 });
+    }) as unknown as typeof fetch);
+    const seen: number[] = [];
+    const d = await api.snapshot('t', 'p', (done) => seen.push(done));
+    expect([[...d.bytes], d.sha256, d.revision, d.cursor, d.fileName, seen.at(-1)]).toEqual([[...body], 'abc', '7', '42', 'Ada ç-r7.kcad', 8]);
+    const e = (await api.fileRevision('t', 'p', '3').catch((x: unknown) => x)) as ApiFailure;
+    expect([e.code, e.status, e.message]).toEqual(['forbidden', 403, 'İndirme izniniz yok (project.download).']);
+    expect(calls).toEqual(['/v1/tenants/t/projects/p/snapshot', '/v1/tenants/t/projects/p/files/3']);
+  });
+});

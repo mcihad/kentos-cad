@@ -27,6 +27,7 @@ function setup() {
     name: 'Ada 101',
     role: 'owner',
     state: 'active',
+    storage: 'database',
     permissions: ['project.read', 'feature.write', 'project.edit', 'project.delete', 'project.comment', 'project.download', 'project.history', 'project.share', 'project.transfer', 'project.jobs.run'],
     canWrite: true,
     canEditMeta: true,

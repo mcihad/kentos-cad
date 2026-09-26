@@ -38,3 +38,11 @@
   - düzenleyici aktaramaz (`project.edit` gerekir); başkasının yüklemesi yoktur (404); dosya projesi reddedilir.
 - `project_files.rs`: veritabanı projesine yükleme açılır, ama `project.file.commit` onu reddeder.
 - Kasıtlı bozma: “yalnız boş projeye” denetimi kaldırılınca test düştü; ikinci aktarım veritabanında yinelenen anahtar hatasına çarptı. Geri alındı.
+
+## Web (26 Eylül, ADR 0038)
+
+- “Buluta yükle” (veritabanı) bu yolu kullanır: proje açılır, çizimin `.kcad`'i yüklenir, `project.import` onu tek işlemde aktarır.
+- Otomatik kayıt her nesnenin 1. sürümüyle başlar; olay imleci içe aktarımdan sonraki projeden okunur.
+- Reddedilen nesne (`entities[i]`) sırası, türü ve katmanıyla söylenir ve çizimde seçilir. Proje boş kalır, çizim yerel kalır; kullanıcı boş projeyi siler ya da bırakır.
+- 2000'lik parçalar yalnız bu yolu bilmeyen sunucu için kalır.
+- Açık veritabanı projesine başkasının içe aktarımı (`project.import` olayı) projeyi yeniden açtırır.

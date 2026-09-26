@@ -55,3 +55,9 @@
   - yetki: görüntüleyici politika izin verdikçe alır, politika kapanınca 403; dosya projesi 422.
 - HTTP (`apps/api/src/http/files_tests.rs`): baytlar geri okunur, başlıklar, başka kurumdan birine 404.
 - Kasıtlı bozma: `Db::snapshot`'ta yalıtım düzeyi kaldırılınca “tek an” testi düştü; geri alındı.
+
+## Web (26 Eylül, ADR 0038)
+
+- Katalogun “.kcad olarak indir”i veritabanı projesinde bu görüntüyü indirir. Kaydedilecek yer önce sorulur; baytlar `ETag`'deki SHA-256'yla denetlenip yazılır.
+- “Dosya projesine çevir” (ADR 0039) bu görüntüden yeni bir dosya projesi açar.
+- Görüntüden açılış henüz yok: veritabanı projesi yine sayfa sayfa açılır.
