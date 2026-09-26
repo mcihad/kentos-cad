@@ -61,7 +61,7 @@ fn another_editors_objects_come_in_without_an_undo_step_or_an_unsaved_mark() {
     let (mut doc, a, _) = saved_two();
     let uid = doc.uid(a).unwrap();
     let fresh = Uuid::now_v7();
-    let (undo_before, revision) = (doc.can_undo(), doc.revision());
+    let (undo_before, revision, generation) = (doc.can_undo(), doc.revision(), doc.generation());
     let mark = doc.change_mark();
     doc.apply_external(External {
         put: vec![(uid, point("a", 10.0)), (fresh, point("b", 20.0))],
@@ -77,6 +77,8 @@ fn another_editors_objects_come_in_without_an_undo_step_or_an_unsaved_mark() {
     // Not an edit of this user's: still saved, same revision, nothing to undo for it.
     assert!(!doc.is_dirty());
     assert_eq!(doc.revision(), revision);
+    // But what the drawing shows changed: readers that redraw key on the generation.
+    assert!(doc.generation() > generation);
     assert_eq!(doc.can_undo(), undo_before);
     // Readers that follow the drawing see it like any change.
     assert_eq!(doc.changes_since(mark), Changes::Slots(&[a, added]));
@@ -235,12 +237,29 @@ fn a_file_of_the_same_drawing_is_unchanged_by_its_equal_copy() {
         .map(|e| (doc.uid(Slot(e.base().id)).unwrap(), e.clone()))
         .collect();
     let mark = doc.change_mark();
+    let generation = doc.generation();
     doc.apply_external(External {
         put: same,
         ..External::default()
     })
     .unwrap();
     assert_eq!(doc.to_snapshot_v2(), before);
+    assert_eq!(doc.generation(), generation);
     // Nothing changed, so nothing is reported changed.
     assert_eq!(doc.changes_since(mark), Changes::Slots(&[]));
+}
+
+#[test]
+fn every_edit_moves_the_generation_with_the_revision() {
+    let (mut doc, a, _) = saved_two();
+    let g = doc.generation();
+    moved(&mut doc, a, 8.0);
+    assert_eq!(doc.generation(), g + 1);
+    doc.undo();
+    doc.toggle_layer_visible("c");
+    assert_eq!(doc.generation(), g + 3);
+    // Folding a group or choosing the active layer is not a change of the drawing.
+    doc.set_layer_expanded("g", false);
+    doc.set_active_layer("a");
+    assert_eq!(doc.generation(), g + 3);
 }

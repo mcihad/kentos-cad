@@ -142,6 +142,7 @@ impl Document {
             next_slot: u64::from(largest) + 1,
             history: History::default(),
             edits: 0,
+            generation: 0,
             dirty: false,
         }
     }

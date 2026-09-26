@@ -120,6 +120,7 @@ impl Document {
                 ops.push(Op::Remove(stored.clone()));
             }
         }
+        let changed = !ops.is_empty() || change.meta.is_some();
         for op in &ops {
             self.apply_op(op);
         }
@@ -139,6 +140,10 @@ impl Document {
             }
         }
         self.forget_history_of(&slots, &named);
+        if changed {
+            // Not an edit (the revision stays), but what the drawing shows changed.
+            self.generation += 1;
+        }
         Ok(())
     }
 }

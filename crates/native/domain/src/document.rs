@@ -39,6 +39,8 @@ pub struct Document {
     pub(crate) history: History,
     /// Counts changes to what a saved file holds (see `mark_saved`).
     pub(crate) edits: u64,
+    /// Counts every change to what the drawing holds, changes from outside included.
+    pub(crate) generation: u64,
     pub(crate) dirty: bool,
 }
 
@@ -126,6 +128,14 @@ impl Document {
         self.edits
     }
 
+    /// Changes with every change to what the drawing holds: this user's
+    /// edits, undo and redo, layer changes, and changes from outside
+    /// (`apply_external`), which leave `revision` alone. Readers that redraw
+    /// or follow the drawing key on this; saving keys on `revision`.
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
     /// Whether the drawing has changes a save has not written.
     pub fn is_dirty(&self) -> bool {
         self.dirty
@@ -146,6 +156,7 @@ impl Document {
 
     pub(crate) fn mark_edited(&mut self) {
         self.edits += 1;
+        self.generation += 1;
         self.dirty = true;
     }
 }
