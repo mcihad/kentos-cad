@@ -374,6 +374,18 @@ fn apply(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outco
             json!(doc.add_layer(new, step.get("parent").and_then(Value::as_str)))
         }
         "uniqueLayerName" => json!(doc.layers().unique_name(text(step, "base", at)?)),
+        "setName" => {
+            doc.set_name(text(step, "name", at)?);
+            Value::Null
+        }
+        "setSettings" => {
+            let current =
+                serde_json::to_value(doc.settings()).or_else(|e| fail(format!("{at}: {e}")))?;
+            let settings = serde_json::from_value(patched(current, &step["patch"], at)?)
+                .or_else(|e| fail(format!("{at}: ayarlar okunamadı: {e}")))?;
+            doc.set_settings(settings);
+            Value::Null
+        }
         other => return fail(format!("{at}: bilinmeyen işlem “{other}”")),
     })
 }
@@ -424,6 +436,14 @@ fn check(
                 expect_same(&json!(got), want, "sürüm", at)?;
             }
             "activeLayer" => expect_same(&json!(doc.layers().active()), want, "etkin katman", at)?,
+            "name" => expect_same(&json!(doc.name()), want, "ad", at)?,
+            "settings" => {
+                let got = serde_json::to_value(doc.settings()).unwrap_or(Value::Null);
+                for (field, value) in want.as_object().unwrap_or(&empty) {
+                    let got = got.get(field).cloned().unwrap_or(Value::Null);
+                    expect_same(&got, value, &format!("ayar {field}"), at)?;
+                }
+            }
             "tree" => {
                 for (container, ids) in want.as_object().unwrap_or(&empty) {
                     let nodes = if container.is_empty() {

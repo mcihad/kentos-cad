@@ -16,13 +16,14 @@ use kentos_contracts::{ResolvedSetting, SettingErrorCode, SettingScope, same_val
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::number::Unit;
+use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Banner, Dialog, Form, NumberInput, Segmented, Switch, overlay};
 
 use crate::app::{App, Message};
 use crate::settings::schema;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 19] = [
+pub const KEYS: [&str; 22] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -42,6 +43,9 @@ pub const KEYS: [&str; 19] = [
     "graphics.msaa",
     "graphics.hiDpi",
     "appearance.theme",
+    "newProjects.srid",
+    "newProjects.workspace",
+    "newProjects.drawingFont",
 ];
 
 /// The snap kinds, in the web's order (docs/adr/0029).
@@ -394,7 +398,23 @@ impl App {
                 title("appearance.theme"),
                 choices("appearance.theme", &value("appearance.theme")),
             )
-            .help(help("appearance.theme"));
+            .help(help("appearance.theme"))
+            .section("Yeni projeler")
+            .field(
+                title("newProjects.srid"),
+                crs_choice(value("newProjects.srid").as_u64().unwrap_or(5256) as u32),
+            )
+            .help(help("newProjects.srid"))
+            .field(
+                title("newProjects.workspace"),
+                choices("newProjects.workspace", &value("newProjects.workspace")),
+            )
+            .help(help("newProjects.workspace"))
+            .field(
+                title("newProjects.drawingFont"),
+                listed("newProjects.drawingFont", &value("newProjects.drawingFont")),
+            )
+            .help(help("newProjects.drawingFont"));
         let mut graphics = Form::new()
             .label_width(150.0)
             .section("Grafik (bu cihaz)")
@@ -569,6 +589,42 @@ impl fmt::Display for Pick {
 }
 
 /// A setting's choices as a segmented control, the draft's value selected.
+/// A setting with many choices as a list (the drawing typefaces).
+fn listed(key: &'static str, current: &Value) -> Element<'static, Message> {
+    let choices: Vec<kentos_contracts::SettingChoice> = schema()
+        .get(key)
+        .map(|d| d.choices.clone())
+        .unwrap_or_default();
+    let selected = choices.iter().position(|c| same_value(&c.value, current));
+    let labels = choices.iter().map(|c| Choice::new(c.label.clone()));
+    let values: Vec<Value> = choices.iter().map(|c| c.value.clone()).collect();
+    Select::new(labels, selected, move |i| {
+        Message::Settings(Edit::Value(
+            key,
+            values.get(i).cloned().unwrap_or(Value::Null),
+        ))
+    })
+    .searchable(false)
+    .into()
+}
+
+/// The coordinate system new projects are offered with: the registry's list.
+fn crs_choice(srid: u32) -> Element<'static, Message> {
+    let systems = crate::crs::systems();
+    let labels = systems.iter().map(|s| {
+        Choice::new(format!("{} (EPSG:{})", s.name, s.srid))
+            .detail(crate::crs::datum_label(&s.datum))
+    });
+    let selected = systems.iter().position(|s| s.srid == srid);
+    Select::new(labels, selected, move |i| {
+        Message::Settings(Edit::Value(
+            "newProjects.srid",
+            Value::from(systems.get(i).map_or(5256, |s| s.srid)),
+        ))
+    })
+    .into()
+}
+
 fn choices(key: &'static str, current: &Value) -> Element<'static, Message> {
     let count = schema().get(key).map_or(0, |d| d.choices.len());
     let picks = (0..count).map(move |index| Pick { key, index });

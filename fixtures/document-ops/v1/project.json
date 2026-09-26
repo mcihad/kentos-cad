@@ -1,0 +1,276 @@
+{
+  "format": "kentos.document-ops",
+  "version": 1,
+  "title": "Proje adı ve ayarları",
+  "note": "Ad ve proje ayarları (koordinat sistemi, birimler, pafta ölçeği, çalışma modu, çizim yazı tipi) proje verisidir: belgeyi kirletir ama geri alma geçmişine girmez. Aynı değeri yeniden vermek düzenleme değildir. Koordinat sistemi atamak koordinatları dönüştürmez (CLAUDE.md §5).",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Proje",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "hybrid",
+      "drawingFont": "barlow"
+    },
+    "origin": {
+      "x": 486500,
+      "y": 4420100
+    },
+    "layers": [
+      {
+        "id": "g",
+        "name": "Yapılar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": [
+          {
+            "id": "a",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          },
+          {
+            "id": "b",
+            "name": "Yol",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.18
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "c",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.18
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "a",
+    "entities": [
+      {
+        "id": 1,
+        "kind": "point",
+        "layerId": "a",
+        "p": {
+          "x": 486512.34,
+          "y": 4420123.45
+        },
+        "attrs": {}
+      },
+      {
+        "id": 2,
+        "kind": "point",
+        "layerId": "b",
+        "p": {
+          "x": 486520.25,
+          "y": 4420110.5
+        },
+        "attrs": {}
+      },
+      {
+        "id": 3,
+        "kind": "point",
+        "layerId": "c",
+        "p": {
+          "x": 486530,
+          "y": 4420130
+        },
+        "attrs": {}
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Ad düzenlemedir ama geri alınmaz; aynı ad düzenleme değildir",
+      "steps": [
+        {
+          "op": "check",
+          "expect": {
+            "dirty": false,
+            "name": "Proje"
+          }
+        },
+        {
+          "op": "setName",
+          "name": "Ada 101",
+          "expect": {
+            "name": "Ada 101",
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false
+          }
+        },
+        {
+          "op": "captureRevision",
+          "as": "adli"
+        },
+        {
+          "op": "markSaved",
+          "revision": "adli",
+          "expect": {
+            "dirty": false
+          }
+        },
+        {
+          "op": "setName",
+          "name": "Ada 101",
+          "expect": {
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": null,
+          "expect": {
+            "name": "Ada 101"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ayarlar düzenlemedir ama geri alınmaz; değişmeyen ayar düzenleme değildir; sistem atamak nesneleri değiştirmez",
+      "steps": [
+        {
+          "op": "add",
+          "entity": {
+            "kind": "point",
+            "layerId": "c",
+            "p": {
+              "x": 500010.5,
+              "y": 4320020.25
+            },
+            "attrs": {}
+          },
+          "returns": 4
+        },
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "markSaved",
+          "revision": "once",
+          "expect": {
+            "dirty": false
+          }
+        },
+        {
+          "op": "setSettings",
+          "patch": {
+            "plotScale": 500,
+            "areaUnit": "donum",
+            "lengthDecimals": 2
+          },
+          "expect": {
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": true,
+            "settings": {
+              "plotScale": 500,
+              "areaUnit": "donum",
+              "lengthDecimals": 2,
+              "srid": 5256
+            }
+          }
+        },
+        {
+          "op": "captureRevision",
+          "as": "ayarli"
+        },
+        {
+          "op": "markSaved",
+          "revision": "ayarli",
+          "expect": {
+            "dirty": false
+          }
+        },
+        {
+          "op": "setSettings",
+          "patch": {
+            "plotScale": 500
+          },
+          "expect": {
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "setSettings",
+          "patch": {
+            "srid": 5254
+          },
+          "note": "Yalnız atama: noktanın koordinatları aynı kalır.",
+          "expect": {
+            "dirty": true,
+            "settings": {
+              "srid": 5254
+            },
+            "entities": {
+              "4": {
+                "kind": "point",
+                "id": 4,
+                "layerId": "c",
+                "p": {
+                  "x": 500010.5,
+                  "y": 4320020.25
+                },
+                "attrs": {}
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Ekle",
+          "expect": {
+            "count": 3,
+            "settings": {
+              "srid": 5254,
+              "plotScale": 500
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -303,7 +303,7 @@ fn settings() -> Vec<SettingDescriptor> {
         // ── New projects ────────────────────────────────────────────────
         integer("newProjects.srid", 5256)
             .range(1.0, 999_999.0)
-            .hosts(&[Web])
+            .hosts(&[Web, Desktop])
             .text(
                 "Koordinat sistemi (EPSG)",
                 "Yeni projelerde önerilen koordinat sistemi; açık projenin sistemi değişmez.",
@@ -313,13 +313,13 @@ fn settings() -> Vec<SettingDescriptor> {
             "hybrid",
             &[("hybrid", "Hibrit"), ("cad", "CAD"), ("gis", "CBS")],
         )
-        .hosts(&[Web])
+        .hosts(&[Web, Desktop])
         .text(
             "Çalışma modu",
             "Yeni projelerde önce önerilen çalışma modu; proje kendi modunu saklar.",
         ),
         choice("newProjects.drawingFont", "barlow", DRAWING_FONTS)
-            .hosts(&[Web])
+            .hosts(&[Web, Desktop])
             .text(
                 "Çizim yazı tipi",
                 "Yeni projelerin çizim yazı tipi; proje kendi yazı tipini saklar.",

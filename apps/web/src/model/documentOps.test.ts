@@ -3,6 +3,7 @@ import { isUuid } from '../core/uuid';
 import { CadDocument } from './document';
 import type { Entity, NewEntity } from './entities';
 import { LayerStore, type LayerInit, type LayerStyle } from './layers';
+import type { ProjectSettingsData } from './projectSettings';
 import { readSnapshot } from './snapshot';
 
 /**
@@ -40,6 +41,10 @@ interface Expect {
   activeLayer?: string;
   /** Container ("" for the top of the tree) → the ids of its nodes, in order. */
   tree?: Record<string, string[]>;
+  /** The drawing's name. */
+  name?: string;
+  /** Project settings fields to check (the others are not). */
+  settings?: Record<string, Json>;
   /** Object → the name of a persistent id taken with `captureUid`, or "new": one taken by none. */
   uids?: Record<string, string>;
 }
@@ -66,7 +71,7 @@ interface Fixture {
   scenarios: Scenario[];
 }
 
-const EXPECT_KEYS: readonly string[] = ['ids', 'count', 'entities', 'byLayer', 'canUndo', 'canRedo', 'dirty', 'revision', 'layers', 'activeLayer', 'tree', 'uids'];
+const EXPECT_KEYS: readonly string[] = ['ids', 'count', 'entities', 'byLayer', 'canUndo', 'canRedo', 'dirty', 'revision', 'layers', 'activeLayer', 'tree', 'name', 'settings', 'uids'];
 
 /**
  * An object as the fixtures write it: persistent ids are random (UUIDv7) or
@@ -205,6 +210,10 @@ class Run {
         return layers.add(s.layer as LayerInit, (s.parent as string | null | undefined) ?? null).id;
       case 'uniqueLayerName':
         return layers.uniqueName(s.base as string);
+      case 'setName':
+        return doc.name.set(s.name as string);
+      case 'setSettings':
+        return doc.settings.assign(patchOf(s.patch) as Partial<ProjectSettingsData>);
       default:
         throw new Error(`${where}: bilinmeyen işlem “${s.op}”`);
     }
@@ -254,6 +263,9 @@ class Run {
       }
     }
     if (e.activeLayer !== undefined) expect(doc.layers.active.value, `${where}: etkin katman`).toBe(e.activeLayer);
+    if (e.name !== undefined) expect(doc.name.value, `${where}: ad`).toBe(e.name);
+    for (const [field, want] of Object.entries(e.settings ?? {}))
+      expect((doc.settings.toJSON() as unknown as Record<string, Json>)[field], `${where}: ayar ${field}`).toEqual(want);
     for (const [container, ids] of Object.entries(e.tree ?? {})) {
       const nodes = container === '' ? doc.layers.tree : doc.layers.get(container)?.children;
       expect(nodes, `${where}: “${container}” grubu`).toBeDefined();

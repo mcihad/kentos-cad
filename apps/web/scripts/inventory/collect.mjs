@@ -148,7 +148,7 @@ export async function collectInPage() {
     command: processing.modelCommandId(m.id),
   }));
 
-  const workspaceItems = workspaces.WORKSPACES.map((w) => ({ id: w.id, label: w.label, title: w.title, ready: w.status === 'ready', hide: w.hide ?? {} }));
+  const workspaceItems = workspaces.WORKSPACES.map((w) => ({ id: w.id, label: w.label, title: w.title, description: w.description, highlights: w.highlights, ready: w.status === 'ready', hide: w.hide ?? {} }));
 
   // Settings: one signal per field; the values a fresh browser profile starts with.
   const isSignal = (v) => !!v && typeof v === 'object' && 'value' in v && typeof v.subscribe === 'function';

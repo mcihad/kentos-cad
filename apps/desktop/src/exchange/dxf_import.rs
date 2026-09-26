@@ -20,10 +20,10 @@ use kentos_ui::widget::tree_view::{Check, check_box};
 use kentos_ui::widget::{Dialog, overlay, swatch};
 
 use super::apply::{self, ImportPlan, LayerTarget, layer_named};
-use super::crs::CrsQuestion;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Kind, Picked, Window, message, off_thread};
 use crate::app::{App, Message};
+use crate::crs::CrsQuestion;
 use crate::view::hex_color;
 
 /// Reads told apart: a late answer to an older read is dropped.

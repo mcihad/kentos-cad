@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
+import text from '../../../../fixtures/project/v1/new-project.json?raw';
 import { CadDocument } from './document';
 import { LayerStore } from './layers';
 import { NEW_PROJECT_NAME, newProjectContent, sheetAround } from './newProject';
+import { newProjectFixture } from './newProjectFixture';
 import { PROJECT_SETTINGS_DEFAULTS } from './projectSettings';
 import { readSnapshot, toSnapshot } from './snapshot';
 
 const open = () => new CadDocument({ name: 'Eski', layers: new LayerStore([{ id: 'x', name: 'X' }], 'x'), origin: { x: 0, y: 0 } });
 
 describe('new project', () => {
+  it('is the file shared with the desktop (re-record after a deliberate change)', () => {
+    expect(JSON.parse(text)).toEqual(JSON.parse(JSON.stringify(newProjectFixture())));
+  });
+
   it('starts empty with the standard layers, the chosen system and scale, and default units', () => {
     const c = newProjectContent({ name: '  Ada 200  ', srid: 5254, plotScale: 500 });
     expect(c.name).toBe('Ada 200');

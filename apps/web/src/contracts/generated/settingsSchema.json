@@ -582,7 +582,8 @@
       "max": 999999.0,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "newProjects",
@@ -611,7 +612,8 @@
       ],
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "newProjects",
@@ -656,7 +658,8 @@
       ],
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "newProjects",

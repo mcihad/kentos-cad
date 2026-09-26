@@ -460,6 +460,7 @@ impl App {
             Asking::RemoveCopy => self.remove_copy_view(),
             Asking::Ended => self.ended_view(),
             Asking::Exchange => self.exchange_view(),
+            Asking::Project => self.project_view(),
         }
     }
 }

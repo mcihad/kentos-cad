@@ -77,7 +77,7 @@
       "view.theme.toggle"
     ],
     "commandsWithoutTests": 94,
-    "commandsOnDesktop": 53
+    "commandsOnDesktop": 55
   },
   "commands": [
     {
@@ -1534,7 +1534,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -1719,7 +1719,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
@@ -7320,6 +7320,12 @@
       "id": "cad",
       "label": "CAD",
       "title": "Teknik çizim",
+      "description": "Çizim, düzenleme ve ölçülendirmeye odaklı sade arayüz; harita ve işlem menüleri gizlenir.",
+      "highlights": [
+        "Çizim, değiştir ve alan işlemleri",
+        "Ölçü, yazı ve tarama",
+        "Mesafe ve alan ölçme"
+      ],
       "hide": {
         "menus": [
           "map",
@@ -7345,6 +7351,12 @@
       "id": "disaster",
       "label": "Afet Analizi",
       "title": "Afet ve risk analizi",
+      "description": "Deprem, sel ve heyelan riskinin parsel ve yapı düzeyinde analizi.",
+      "highlights": [
+        "Risk ve tehlike katmanları",
+        "Toplanma alanı ve erişim",
+        "Etkilenen yapı ve parsel raporu"
+      ],
       "hide": {},
       "status": "pending",
       "platforms": {
@@ -7356,6 +7368,12 @@
       "id": "gis",
       "label": "CBS",
       "title": "Coğrafi bilgi sistemi",
+      "description": "Katman, öznitelik ve harita işlerine odaklı arayüz; ileri çizim araçları gizlenir.",
+      "highlights": [
+        "Parsel, kot ve ölçme araçları",
+        "Koordinat sistemi ve dosya alışverişi",
+        "İşlem araçları, stiller ve modeller"
+      ],
       "hide": {
         "tools": [
           "draw/shape",
@@ -7383,6 +7401,12 @@
       "id": "hybrid",
       "label": "Hibrit",
       "title": "CAD + CBS",
+      "description": "Hassas çizim ile coğrafi veri bir arada: bütün menüler, sekmeler ve araçlar.",
+      "highlights": [
+        "Bütün çizim ve düzenleme araçları",
+        "Harita, parsel ve koordinat işleri",
+        "İşlem araçları ve modeller"
+      ],
       "hide": {},
       "status": "implemented",
       "platforms": {
@@ -7394,6 +7418,12 @@
       "id": "plan3d",
       "label": "3D Plan",
       "title": "İmar planından 3D kent tasarımı",
+      "description": "Parsel ve imar kurallarından yapı kütleleri, senaryolar ve 3D görünüm.",
+      "highlights": [
+        "İmar kısıtlarından yapı kütlesi",
+        "Senaryo karşılaştırma",
+        "3D sahne ve arazi"
+      ],
       "hide": {},
       "status": "pending",
       "platforms": {
@@ -7998,7 +8028,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8012,7 +8042,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {
@@ -8026,7 +8056,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {

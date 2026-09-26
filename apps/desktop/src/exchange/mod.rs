@@ -13,12 +13,11 @@
 pub mod apply;
 mod coord_export;
 mod coord_import;
-mod crs;
 mod dxf_export;
 mod dxf_import;
 #[cfg(test)]
 mod tests;
-mod words;
+pub(crate) mod words;
 
 use std::path::PathBuf;
 use std::sync::Arc;

@@ -15,7 +15,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::sync::Arc;
 
-use kentos_contracts::{Entity, EntityBase, LayerStyle};
+use kentos_contracts::{Entity, EntityBase, LayerStyle, ProjectSettings};
 
 use crate::document::Document;
 use crate::history::Op;
@@ -209,6 +209,25 @@ impl Document {
         let id = self.layers.add(new, parent);
         self.mark_edited();
         id
+    }
+
+    /// Names the drawing (web `doc.name.set`): an edit when the name
+    /// differs, never an undo step. The window that asks trims it.
+    pub fn set_name(&mut self, name: &str) {
+        if self.name != name {
+            name.clone_into(&mut self.name);
+            self.mark_edited();
+        }
+    }
+
+    /// Replaces the project settings (web `settings.assign`): an edit when
+    /// any differs, never an undo step. A new coordinate system is assigned,
+    /// never a transformation of the coordinates (CLAUDE.md §5).
+    pub fn set_settings(&mut self, settings: ProjectSettings) {
+        if self.settings != settings {
+            self.settings = settings;
+            self.mark_edited();
+        }
     }
 }
 

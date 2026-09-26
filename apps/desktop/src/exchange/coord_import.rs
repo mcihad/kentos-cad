@@ -24,10 +24,10 @@ use kentos_ui::widget::{Dialog, overlay};
 use kentos_ui::{label, style};
 
 use super::apply::{self, ImportPlan, LayerTarget, layer_named};
-use super::crs::CrsQuestion;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Kind, Picked, Window, message, off_thread};
 use crate::app::{App, Message};
+use crate::crs::CrsQuestion;
 
 /// Rows of the preview table.
 const PREVIEW_ROWS: u32 = 12;

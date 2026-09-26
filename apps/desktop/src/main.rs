@@ -8,6 +8,7 @@ mod app;
 mod catalog;
 mod cloud;
 mod command_bar;
+mod crs;
 mod document;
 mod exchange;
 #[cfg(test)]
@@ -21,6 +22,7 @@ mod opening;
 #[cfg(test)]
 mod perf;
 mod preview;
+mod project;
 mod recovery;
 mod saving;
 #[cfg(test)]

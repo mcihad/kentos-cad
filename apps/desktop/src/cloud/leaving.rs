@@ -29,7 +29,7 @@ impl Then {
     fn replaces(self) -> bool {
         matches!(
             self,
-            Then::Open | Then::Close(_) | Then::OpenCloud { .. } | Then::Reopen
+            Then::Open | Then::Close(_) | Then::OpenCloud { .. } | Then::Reopen | Then::NewProject
         )
     }
 }
@@ -112,6 +112,7 @@ impl App {
                 Task::none()
             }
             Then::Reopen => self.reopen(),
+            Then::NewProject => self.new_project_ready(),
         }
     }
 
@@ -125,6 +126,7 @@ impl App {
             Then::Reopen if self.cloud.file_conflict.is_some() => {
                 self.dialog = Some(Dialog::FileConflict);
             }
+            Then::NewProject => self.new_project_declined(),
             _ => {}
         }
     }
@@ -136,6 +138,7 @@ impl App {
             Then::Close(_) => "çıkarsanız",
             Then::SignOut => "oturumu kapatırsanız",
             Then::Upload => "yüklerseniz bu projeye",
+            Then::NewProject => "yeni proje açarsanız",
             _ => "başka bir çizim açarsanız",
         };
         let unsent = self
@@ -172,6 +175,7 @@ impl App {
                     Then::Upload => "Göndermeden yükle",
                     Then::Reopen => "Göndermeden yeniden aç",
                     Then::Open | Then::OpenCloud { .. } => "Göndermeden aç",
+                    Then::NewProject => "Göndermeden yeni proje aç",
                 },
             };
         }
@@ -197,6 +201,7 @@ impl App {
             confirm: match then {
                 Then::Close(_) => "Kaydetmeden çık",
                 Then::Reopen => "Değişiklikleri bırak ve aç",
+                Then::NewProject => "Kaydetmeden yeni proje aç",
                 _ => "Kaydetmeden aç",
             },
         }

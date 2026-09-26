@@ -91,6 +91,10 @@ pub const PORTED: &[&str] = &[
     "crs.points",
     "file.export.dxf",
     "file.export.ncn",
+    // A new project and the project's settings (project/): the web's windows; the
+    // standard layer tree checked against the web's drawings (fixtures/project/v1).
+    "file.new",
+    "file.settings",
 ];
 
 /// Where a command stands, from the desktop's point of view.
@@ -151,6 +155,19 @@ impl Command {
     }
 }
 
+/// A work mode (the web's `WORKSPACES`, app/workspaces.ts): what it is
+/// for, and whether it can be chosen yet.
+#[derive(Debug, Clone)]
+pub struct Mode {
+    pub id: kentos_contracts::Workspace,
+    pub label: &'static str,
+    pub title: &'static str,
+    pub description: &'static str,
+    pub highlights: &'static [&'static str],
+    /// Announced but not built: shown last, dimmed, “Yakında”.
+    pub ready: bool,
+}
+
 /// A ribbon tab and its panels, in the web's order.
 #[derive(Debug, Clone)]
 pub struct Tab {
@@ -204,6 +221,7 @@ pub struct Catalog {
     by_id: HashMap<&'static str, usize>,
     tabs: Vec<Tab>,
     quick: Vec<&'static str>,
+    modes: Vec<Mode>,
 }
 
 impl Catalog {
@@ -223,6 +241,11 @@ impl Catalog {
     /// Quick access bar (Kaydet, Geri al, Yinele).
     pub fn quick(&self) -> &[&'static str] {
         &self.quick
+    }
+
+    /// The work modes, in the web's order: the ones that can be chosen first.
+    pub fn modes(&self) -> &[Mode] {
+        &self.modes
     }
 
     /// Reads the embedded inventory. The strings live as long as the program
@@ -284,11 +307,29 @@ impl Catalog {
             })
             .collect();
 
+        // The web's order (the contract's): the inventory lists them by id.
+        let mut modes: Vec<Mode> = raw
+            .workspaces
+            .into_iter()
+            .filter_map(|w| {
+                Some(Mode {
+                    id: serde_json::from_value(serde_json::Value::String(w.id)).ok()?,
+                    label: leak(w.label),
+                    title: leak(w.title),
+                    description: leak(w.description.unwrap_or_default()),
+                    highlights: leak_list(w.highlights),
+                    ready: w.status == "implemented",
+                })
+            })
+            .collect();
+        modes.sort_by_key(|m| m.id as u8);
+
         Ok(Self {
             commands,
             by_id,
             tabs,
             quick: raw.layout.quick_access.into_iter().map(leak).collect(),
+            modes,
         })
     }
 }
@@ -363,6 +404,19 @@ fn leak_list(list: Vec<String>) -> &'static [&'static str] {
 struct RawInventory {
     commands: Vec<RawCommand>,
     layout: RawLayout,
+    #[serde(default)]
+    workspaces: Vec<RawMode>,
+}
+
+#[derive(Deserialize)]
+struct RawMode {
+    id: String,
+    label: String,
+    title: String,
+    description: Option<String>,
+    #[serde(default)]
+    highlights: Vec<String>,
+    status: String,
 }
 
 #[derive(Deserialize)]

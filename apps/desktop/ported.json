@@ -52,7 +52,9 @@
     "file.import.ncn",
     "crs.points",
     "file.export.dxf",
-    "file.export.ncn"
+    "file.export.ncn",
+    "file.new",
+    "file.settings"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -96,6 +96,8 @@ pub enum Dialog {
     Ended,
     /// A file exchange window (exchange/): DXF or a coordinate list, in or out.
     Exchange,
+    /// Yeni proje or Proje ayarları (project/).
+    Project,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -115,6 +117,8 @@ pub enum Then {
     Upload,
     /// The drawing's own cloud project again, from the server.
     Reopen,
+    /// The new project the Yeni proje window built (project/new.rs).
+    NewProject,
 }
 
 /// Where the open and save dialogs are answered.
@@ -180,6 +184,8 @@ pub enum Message {
     Cloud(Box<cloud::Event>),
     /// File exchange: DXF and coordinate lists, in and out (exchange/).
     Exchange(Box<crate::exchange::Event>),
+    /// Yeni proje and Proje ayarları (project/).
+    Project(Box<crate::project::Event>),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -252,6 +258,8 @@ pub struct App {
     pub cloud: CloudState,
     /// The open file exchange window (exchange/).
     pub exchange: Option<crate::exchange::Window>,
+    /// The open project window (project/).
+    pub project: Option<crate::project::Window>,
 }
 
 impl App {
@@ -312,6 +320,7 @@ impl App {
             recovery,
             cloud: CloudState::default(),
             exchange: None,
+            project: None,
         };
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
@@ -507,16 +516,7 @@ impl App {
                         "Dosya eski biçimde (KCAD v1). Kaydet, yeni biçimde (v2) yazmak için yer sorar; eski dosyanın üzerine kendiliğinden yazmaz.",
                     );
                 }
-                // The cloud project on screen is left: its copy written whole and let go (cloud/copy.rs).
-                self.close_cloud_project();
-                // A draft belongs to the drawing it was drawn on; so do the selection and the store.
-                self.cancel();
-                self.selected_layer = None;
-                self.viewport.opened(&doc);
-                self.spatial.reload(&doc.model);
-                self.selection = Selection::new();
-                self.followed = Some((doc.session, doc.model.generation()));
-                self.document = Some(*doc);
+                self.show_document(*doc);
             }
             Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
                 self.error(error)
@@ -560,6 +560,7 @@ impl App {
             Message::DialogClosed => self.close_dialog(),
             Message::Cloud(event) => return self.cloud_event(*event),
             Message::Exchange(event) => return self.exchange_event(*event),
+            Message::Project(event) => return self.project_event(*event),
             Message::Viewport(event) => return self.pointer(event),
             Message::Settings(edit) => return self.settings_edit(edit),
             Message::Opening(event) => return self.opening_event(event),
@@ -677,6 +678,21 @@ impl App {
         self.apply_settings();
     }
 
+    /// Puts a drawing on screen: the one there before is left (its cloud
+    /// project's copy written whole and let go), and so are the tool's draft,
+    /// the selection and the geometry store, which belong to the drawing they
+    /// were made on.
+    pub(crate) fn show_document(&mut self, doc: Document) {
+        self.close_cloud_project();
+        self.cancel();
+        self.selected_layer = None;
+        self.viewport.opened(&doc);
+        self.spatial.reload(&doc.model);
+        self.selection = Selection::new();
+        self.followed = Some((doc.session, doc.model.generation()));
+        self.document = Some(doc);
+    }
+
     /// Runs a web command id: the desktop's handler, or a note that it is not here yet.
     pub fn run(&mut self, id: &'static str) -> Task<Message> {
         let Some(command) = catalog().get(id) else {
@@ -709,6 +725,9 @@ impl App {
         }
         if crate::exchange::COMMANDS.contains(&id) {
             return self.exchange_command(id);
+        }
+        if crate::project::COMMANDS.contains(&id) {
+            return self.project_command(id);
         }
         match id {
             // The drawing on screen is left first: its unsent cloud work to its draft, or the question.
