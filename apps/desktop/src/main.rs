@@ -10,6 +10,8 @@ mod document;
 mod icons;
 mod input;
 mod keys;
+#[cfg(test)]
+mod perf;
 mod preview;
 mod settings;
 mod settings_view;
