@@ -20,6 +20,10 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/command-name.json` | Çizim alanından komut adı yazmak (ADR 0018, 6. adım): kısayolu olmayan harf komut satırını açar, Esc yazılanı siler, Enter önerilen komutu (`ka` → Kapalı alan) başlatır, klavye çizime döner |
 | `v1/snap-polygon.json` | Kenet ([ADR 0029](../../docs/adr/0029-desktop-selection-and-snap.md)): kapalı alanın köşeleri var olan çizimin uç, orta ve kesişim noktalarına tam oturur; orto (F8) kenetlenen noktayı kaydırmaz; F3 keneti kapatır; gizli katman kenetlenmez, kilitli katman kenetlenir; nokta nesnesi; seçim aracı kenetlenmez |
 | `v1/select-delete.json` | Seçim (ADR 0029): üzerine gelme, tıklama, Shift ile ekleme ve çıkarma, soldan sağa pencere ve sağdan sola kesişim, Esc, gizli ve kilitli katmanlar; Delete seçimi `cad.entities.delete` ile siler, kilitli nesne kalır, Ctrl+Z aynı nesneleri yerlerine getirir; seçimsiz Delete tıklananı siler |
+| `v1/point-series.json` | Nokta aracı ([ADR 0032](../../docs/adr/0032-desktop-drawing-tools.md)): kenetlenen, tıklanan ve yazılan noktalar; her nokta ayrı nesne ve adım; Ctrl+Z en yenisini geri alır; Enter araçtan çıkar |
+| `v1/circle-methods.json` | Daire aracı (ADR 0032): merkez ve yarıçap (tıklanan, yazılan, Çap ile), 2N, 3N, iki nesneye teğet ve yarıçaplı (TTY; yazılan, sonra Enter ile son yarıçap), üç nesneye teğet (TTT) |
+| `v1/arc-variants.json` | Yay aracı (ADR 0032): nesne yokken Devam uyarısı; üç nokta; başlangıç–merkez ve açı; başlangıç–bitiş ve yarıçap; önce merkez; çizgiye teğet Devam |
+| `v1/rect-options.json` | Dikdörtgen aracı (ADR 0032): iki köşe, köşe yuvarlama, döndürme ve boyutlar, pah; döndürülmüş dikdörtgen; düzgün çokgen |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
 | `v1/objects.kcad` | Seçim ve kenet izlerinin çizimi: çizgiler (1–3; 2 ile 3 (9,6; 8,8)'de kesişir), kapalı alan (4), nokta (5), kilitli katmanda çizgi (6), gizli katmanda çizgi (7) |
 
@@ -65,7 +69,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | `dynamicInput` | İmleç yanındaki değer alanının metni; kapalıysa `null` |
 | `commandLine` | Komut satırının metni |
 | `entities` | Çizimdeki nesne sayısı |
-| `newest` | En son oluşturulan nesne: `kind`, köşeler `points` (çizginin iki ucu: başlangıç, bitiş), ardışık köşe farkları `edges`, yaylı kenar sayısı `arcs` |
+| `newest` | En son oluşturulan nesne: `kind`, köşeler `points` (çizginin iki ucu: başlangıç, bitiş; noktanın yeri; yayın saat yönünün tersine başlangıcı ve bitişi), ardışık köşe farkları `edges`, yaylı kenar sayısı `arcs`, dairenin ya da yayın merkezi `center` ve yarıçapı `radius` (ikisi de `clickTolerance` içinde) |
 | `canUndo`, `canRedo`, `dirty` | Geri al, yinele ve kaydedilmemiş değişiklik |
 | `log` | Son iletinin düzeyi: `success`, `info`, `warn`, `error` |
 | `metresPerPixel` | Görünümün ölçeği |
@@ -92,6 +96,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
   3. izin güncellenmesi.
 - Beklenen değeri hataya göre yenilemek yasaktır (CLAUDE.md §9.4).
 - Yeni bir iz ya da alan eklenince bu belge ve iki oynatıcı birlikte güncellenir: web (`apps/web/scripts/e2e/interaction.mjs`) ve masaüstü (`apps/desktop/src/traces/`). Masaüstü oynatıcısı bilmediği alanda durur.
+- İz, araçların oturum boyunca hatırladıklarını (web'in statik alanları: son daire yarıçapı, dikdörtgenin dönmesi ve köşeleri, düzgün çokgenin kenar sayısı ve çemberi) başladığı gibi bırakır. Web oynatıcısı sayfayı izler ve varyantlar arasında yeniden açmaz; masaüstü her izi yeni bir uygulamada oynatır (ADR 0032).
 - Yazılan değerin dilbilgisi ayrı bir dosyadadır: `fixtures/point-input/v1/cases.json`. Web'in ve masaüstünün okuyucusu onu okur.
 
 ## Varyantlar

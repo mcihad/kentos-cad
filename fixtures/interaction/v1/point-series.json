@@ -1,0 +1,23 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "point-series",
+  "title": "Nokta aracı: kenetle, boşluğa ve yazılan koordinata nokta; her nokta ayrı nesne ve adım, Ctrl+Z en yenisini geri alır, Enter araçtan çıkar",
+  "source": "Web'in PointTool'u (drawTools.ts) ve cad.point.create, ADR 0032",
+  "covers": ["UX-01", "UX-07", "CMD-04"],
+  "document": "objects.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": true, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.point", "expect": { "tool": "point", "points": 0, "options": [], "entities": 7 } },
+    { "move": [-23.5, -11.625], "note": "Nokta aracı kenetlenir: 1 numaralı çizginin başlangıcı.", "expect": { "snap": "endpoint" } },
+    { "click": [-23.5, -11.625], "note": "Nokta kenet noktasına tam oturur; tek ileti noktanın yankısıdır.", "expect": { "entities": 8, "newest": { "kind": "point", "points": [[-24, -12]] }, "points": 0, "log": "info", "canUndo": true } },
+    { "click": [12, -6], "expect": { "entities": 9, "newest": { "kind": "point", "points": [[12, -6]] }, "points": 0, "tool": "point" } },
+    { "text": "487003,4419990", "expect": { "dynamicInput": "487003,4419990" } },
+    { "key": "Enter", "note": "Yazılan Y,X koordinatı.", "expect": { "entities": 10, "newest": { "kind": "point", "points": [[3, -10]] }, "dynamicInput": null } },
+    { "key": "Ctrl+Z", "note": "Ctrl+Z en yeni noktayı geri alır; araç sürer.", "expect": { "entities": 9, "tool": "point", "canRedo": true } },
+    { "key": "Enter", "note": "Nokta aracı nokta tutmaz: Enter araçtan çıkar.", "expect": { "tool": "select", "entities": 9 } }
+  ]
+}

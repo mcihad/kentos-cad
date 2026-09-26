@@ -137,13 +137,35 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
 
 fn compare_newest(want: &Newest, got: &Observation, trace: &Trace) -> Vec<String> {
     let mut bad = Vec::new();
-    let Some((kind, pts, bulges)) = &got.newest else {
+    let Some(seen) = &got.newest else {
         return vec![format!("newest: yok, beklenen {}", want.kind)];
     };
+    let (kind, pts, bulges) = (&seen.kind, &seen.pts, &seen.bulges);
     if *kind != want.kind {
         return vec![format!("newest: {kind}, beklenen {}", want.kind)];
     }
     let [ox, oy] = trace.view.center;
+    // A circle's or an arc's centre and radius: from clicks, within the click tolerance.
+    if let Some([wx, wy]) = want.center {
+        let have = seen.center.map(|[x, y]| [x - ox, y - oy]);
+        if !have.is_some_and(|[x, y]| (x - wx).hypot(y - wy) <= trace.click_tolerance) {
+            bad.push(format!(
+                "newest.center: {have:?}, beklenen {:?} (±{} m)",
+                [wx, wy],
+                trace.click_tolerance
+            ));
+        }
+    }
+    if let Some(r) = want.radius
+        && !seen
+            .radius
+            .is_some_and(|have| (have - r).abs() <= trace.click_tolerance)
+    {
+        bad.push(format!(
+            "newest.radius: {:?}, beklenen {r} (±{} m)",
+            seen.radius, trace.click_tolerance
+        ));
+    }
     if let Some(points) = &want.points {
         // Clicked points come from screen pixels: within the trace's tolerance.
         let near = pts.len() == points.len()
