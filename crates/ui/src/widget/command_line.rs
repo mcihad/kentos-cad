@@ -102,13 +102,18 @@ const FADE_FLOOR: f32 = 0.35;
 const ROW_HEIGHT: f32 = 26.0;
 /// Listede aynı anda görünen öneri sayısı; fazlası kaydırılır.
 const VISIBLE_ROWS: usize = 8;
-const PANEL_WIDTH: f32 = 460.0;
+const PANEL_WIDTH: f32 = 500.0;
 const PANEL_PADDING: f32 = 3.0;
 /// Listeyle giriş satırı arasındaki boşluk.
 const PANEL_GAP: f32 = 4.0;
 /// Öneri satırında ikon sütunu, komut adı sütunu ve aralarındaki boşluk.
 const ROW_ICON: f32 = 16.0;
+/// Ad sütununun en dar hâli; en uzun ada göre genişler, `NAME_CHARS`
+/// harften uzun ad kırpılır.
 const ROW_NAME: f32 = 100.0;
+const NAME_CHARS: usize = 20;
+/// Eş aralıklı yüzlerde (IBM Plex Mono, JetBrains Mono) harf genişliği, em.
+const MONO_ADVANCE: f32 = 0.6;
 const ROW_PADDING: f32 = 6.0;
 const ROW_SPACING: f32 = 6.0;
 /// Açıklama bölümü; iki satırlık açıklamaya yer vardır ve vurgu değiştikçe
@@ -178,6 +183,9 @@ pub struct Command<'a> {
     /// gösterilir.
     pub description: &'a str,
     pub icon: Option<Icon>,
+    /// Listelenir ama burada henüz çalışmaz: satırı soluk çizilir,
+    /// açıklaması nedenini söyler (ör. şeritteki soluk düğmeler gibi).
+    pub dimmed: bool,
 }
 
 impl<'a> Command<'a> {
@@ -188,6 +196,7 @@ impl<'a> Command<'a> {
             aliases: &[],
             description: "",
             icon: None,
+            dimmed: false,
         }
     }
 
@@ -203,6 +212,11 @@ impl<'a> Command<'a> {
 
     pub const fn icon(mut self, glyph: Icon) -> Self {
         self.icon = Some(glyph);
+        self
+    }
+
+    pub const fn dimmed(mut self, dimmed: bool) -> Self {
+        self.dimmed = dimmed;
         self
     }
 
@@ -468,6 +482,7 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
         let id = id.unwrap_or_else(widget::Id::unique);
         let focus = Rc::new(Cell::new(false));
         let suggestions = suggestions(&commands, prompt.as_ref(), value);
+        let name_width = name_width(&commands);
         let expand = on_expand.map(|on_expand| on_expand(!expanded));
 
         Element::new(Console {
@@ -484,6 +499,7 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
             input_id: id,
             value,
             suggestions,
+            name_width,
             recall: recall(history),
             callbacks,
             expand,
@@ -1059,18 +1075,35 @@ fn accept<Message: Clone>(
     }
 }
 
+/// Ad sütununun genişliği: bütün komutların en uzun adı (en çok
+/// `NAME_CHARS` harf), en az `ROW_NAME`. Liste süzülürken sütun oynamaz.
+fn name_width(commands: &[Command<'_>]) -> f32 {
+    let longest = commands
+        .iter()
+        .map(|command| command.name.chars().count())
+        .max()
+        .unwrap_or(0)
+        .min(NAME_CHARS);
+
+    (longest as f32 * MONO_ADVANCE * typography::body())
+        .ceil()
+        .max(typography::scaled(ROW_NAME))
+}
+
 /// Öneri listesi: görünen satırlar ve vurgulanan önerinin açıklaması.
 fn panel<'a, Message: 'a>(
     suggestions: &[Suggestion<'a, Message>],
     highlighted: usize,
     scroll: usize,
+    name_width: f32,
 ) -> Element<'a, Message> {
     let end = (scroll + VISIBLE_ROWS).min(suggestions.len());
 
-    let rows =
-        Column::with_children(suggestions[scroll..end].iter().enumerate().map(
-            |(offset, suggestion)| suggestion_row(suggestion, scroll + offset == highlighted),
-        ));
+    let rows = Column::with_children(suggestions[scroll..end].iter().enumerate().map(
+        |(offset, suggestion)| {
+            suggestion_row(suggestion, scroll + offset == highlighted, name_width)
+        },
+    ));
 
     let description = suggestions
         .get(highlighted)
@@ -1094,6 +1127,7 @@ fn panel<'a, Message: 'a>(
 fn suggestion_row<'a, Message: 'a>(
     suggestion: &Suggestion<'a, Message>,
     highlighted: bool,
+    name_width: f32,
 ) -> Element<'a, Message> {
     let tone = if highlighted {
         Tone::Accent
@@ -1120,13 +1154,24 @@ fn suggestion_row<'a, Message: 'a>(
                 }))
                 .spacing(6);
 
+            let title = label::body(command.title).wrapping(Wrapping::None);
+
             row![
                 container(glyph).width(ROW_ICON).align_x(Center),
-                container(command_name(command.name, suggestion.matched))
-                    .width(typography::scaled(ROW_NAME)),
-                label::body(command.title)
-                    .wrapping(Wrapping::None)
-                    .width(Fill),
+                container(command_name(
+                    command.name,
+                    suggestion.matched,
+                    command.dimmed
+                ))
+                .width(name_width)
+                .clip(true),
+                container(if command.dimmed {
+                    title.style(style::text::muted)
+                } else {
+                    title
+                })
+                .width(Fill)
+                .clip(true),
                 aliases,
             ]
         }
@@ -1162,12 +1207,25 @@ fn suggestion_row<'a, Message: 'a>(
         .into()
 }
 
-/// Komutun adı; yazılanla eşleşen baş kısmı vurgu renginde.
-fn command_name<'a, Message: 'a>(name: &'a str, matched: Match) -> Element<'a, Message> {
+/// Komutun adı; yazılanla eşleşen baş kısmı vurgu renginde, burada
+/// çalışmayan komutun geri kalanı soluk.
+fn command_name<'a, Message: 'a>(
+    name: &'a str,
+    matched: Match,
+    dimmed: bool,
+) -> Element<'a, Message> {
     let part = |content: &'a str| {
         text(content)
             .font(typography::mono_strong())
             .size(typography::body())
+            .wrapping(Wrapping::None)
+    };
+    let rest = |content: &'a str| {
+        if dimmed {
+            part(content).style(style::text::muted)
+        } else {
+            part(content)
+        }
     };
 
     match matched {
@@ -1179,11 +1237,11 @@ fn command_name<'a, Message: 'a>(name: &'a str, matched: Match) -> Element<'a, M
 
             row![
                 part(&name[..split]).style(style::text::accent),
-                part(&name[split..]),
+                rest(&name[split..]),
             ]
             .into()
         }
-        _ => part(name).into(),
+        _ => rest(name).into(),
     }
 }
 
@@ -1230,6 +1288,8 @@ struct Console<'a, Message> {
     input_id: widget::Id,
     value: &'a str,
     suggestions: Vec<Suggestion<'a, Message>>,
+    /// Öneri listesinde ad sütununun genişliği (bütün komutlara göre).
+    name_width: f32,
     recall: Vec<&'a str>,
     callbacks: Callbacks<'a, Message>,
     /// "Geçmiş" düğmesinin mesajı.
@@ -1861,7 +1921,12 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Console<'a, M
         let highlighted = self.highlighted(state);
         let panel = self
             .panel
-            .insert(panel(&self.suggestions, highlighted, state.scroll));
+            .insert(panel(
+                &self.suggestions,
+                highlighted,
+                state.scroll,
+                self.name_width,
+            ));
         let panel_tree = &mut children[3];
 
         panel_tree.diff(&*panel);

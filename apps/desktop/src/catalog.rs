@@ -139,6 +139,14 @@ pub const PORTED: &[&str] = &[
     "tool.zoomWindow",
     "view.zoomSelection",
     "tool.repeat",
+    // The window's arrangement and the server check (view_commands.rs): the side panels
+    // (F4), full screen, the command search (Alt+Q); Koordinat sistemi… is Proje ayarları
+    // on its page (project/).
+    "view.rightPanel",
+    "view.fullscreen",
+    "view.commandSearch",
+    "crs.set",
+    "server.check",
     // Drawing tools, round 3 (docs/adr/0057): the ellipse, spline, construction lines,
     // parallel line, perpendiculars, donut and divide through cad.entities.create; the
     // revision cloud through cad.polygon.create, the spot elevation through cad.point.create.
@@ -155,12 +163,23 @@ pub const PORTED: &[&str] = &[
     "tool.divide",
 ];
 
-/// Where the desktop does more than the web, its own description: the web's
-/// would say otherwise (docs/adr/0053: the desktop reads a zipped Shapefile).
-const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[(
-    "file.import.shp",
-    "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte ya da katmanın .zip arşivi seçilir (arşivdeki her .shp bir katmandır, biri seçilir). Noktalar (Z ile), çizgiler ve delikli alanlar; .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz.",
-)];
+/// Where the desktop does otherwise than the web, its own description: the
+/// web's would say otherwise (docs/adr/0053: the desktop reads a zipped
+/// Shapefile; docs/adr/0058: no search box in the ribbon yet, Esc cancels first).
+const DESKTOP_DESCRIPTIONS: &[(&str, &str)] = &[
+    (
+        "file.import.shp",
+        "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte ya da katmanın .zip arşivi seçilir (arşivdeki her .shp bir katmandır, biri seçilir). Noktalar (Z ile), çizgiler ve delikli alanlar; .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz.",
+    ),
+    (
+        "view.commandSearch",
+        "Bir komutu adıyla ya da takma adıyla bulup çalıştırır: komut satırı bütün komutların listesini açar, yazdıkça süzer.",
+    ),
+    (
+        "view.fullscreen",
+        "Uygulamayı ekranın tamamına yayar; aynı düğme ya da, iptal edilecek komut ve seçim yokken, Esc çıkar.",
+    ),
+];
 
 /// Where a command stands, from the desktop's point of view.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -181,6 +200,9 @@ pub struct Command {
     /// Short name for tight places (ribbon buttons); the title otherwise.
     pub short: &'static str,
     pub description: &'static str,
+    /// What the command line's list says of it: where it stands first, when
+    /// it does not run here, then what it does (the list has two lines).
+    pub line_note: &'static str,
     /// Command line spellings: the first is the shown name.
     pub aliases: &'static [&'static str],
     /// Key chords as the web writes them (`Ctrl+S`, `Shift+H`, `F2`).
@@ -409,20 +431,23 @@ impl Catalog {
                 } else {
                     Standing::OnTheWeb
                 };
+                let description = DESKTOP_DESCRIPTIONS
+                    .iter()
+                    .find(|(desktop, _)| *desktop == id)
+                    .map_or_else(|| leak(c.description.unwrap_or_default()), |(_, d)| *d);
+                let pending_note = c.pending_note.map(leak);
                 Command {
                     id,
                     title,
                     short: c.short.map_or(title, leak),
-                    description: DESKTOP_DESCRIPTIONS
-                        .iter()
-                        .find(|(desktop, _)| *desktop == id)
-                        .map_or_else(|| leak(c.description.unwrap_or_default()), |(_, d)| *d),
+                    description,
+                    line_note: line_note(standing, pending_note, description),
                     aliases: leak_list(c.aliases),
                     shortcuts: leak_list(c.shortcuts),
                     shortcuts_in_input: leak_list(c.shortcuts_in_input),
                     icon: icons::from_web(c.icon.as_deref()),
                     standing,
-                    pending_note: c.pending_note.map(leak),
+                    pending_note,
                 }
             })
             .collect();
@@ -547,6 +572,24 @@ fn flatten(blocks: Vec<RawBlock>) -> Vec<&'static str> {
             RawEntry::Submenu { items, .. } => flatten(items),
         })
         .collect()
+}
+
+/// The command line list's note of a command (`Command::line_note`).
+fn line_note(
+    standing: Standing,
+    pending_note: Option<&'static str>,
+    description: &'static str,
+) -> &'static str {
+    let standing = match standing {
+        Standing::Ported => return description,
+        Standing::OnTheWeb => "Web'de var; masaüstüne henüz taşınmadı.".to_owned(),
+        Standing::Pending => format!("{}.", pending_note.unwrap_or("Geliştirme aşamasında")),
+    };
+    leak(if description.is_empty() {
+        standing
+    } else {
+        format!("{standing} {description}")
+    })
 }
 
 fn leak(text: String) -> &'static str {

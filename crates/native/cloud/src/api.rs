@@ -20,8 +20,8 @@ use std::time::Duration;
 
 use kentos_contracts::{
     ApiError, AuthConfig, CatalogSort, CatalogView, CommandEnvelope, EventPage, FeaturePage,
-    FileRevisions, FileUpload, FileUploadBegin, LoginRequest, Me, ProjectCreate, ProjectInfo,
-    ProjectPage, ProjectType,
+    FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me, ProjectCreate,
+    ProjectInfo, ProjectPage, ProjectType,
 };
 use reqwest::header::{self, HeaderMap};
 use reqwest::{Method, RequestBuilder, Response, Url};
@@ -35,6 +35,8 @@ use crate::runtime::run;
 
 /// How long an ordinary request may take (the web's too).
 const TIMEOUT: Duration = Duration::from_secs(30);
+/// A health check's patience (the web's 4 s).
+const HEALTH_TIMEOUT: Duration = Duration::from_secs(4);
 /// How long a file's bytes may take either way (the server's upload limit, docs/adr/0031).
 pub const FILE_TIMEOUT: Duration = Duration::from_secs(600);
 /// Tries of a download in a row without progress, before its failure is given back.
@@ -426,6 +428,16 @@ impl Cloud {
         self.call(move |inner| async move {
             let b = inner.request(Method::GET, url?, TIMEOUT);
             inner.json(b, TIMEOUT).await
+        })
+    }
+
+    /// Whether the server answers and which build and contracts it speaks
+    /// (`GET /v1/health`), within a few seconds (the web's `ServerStatus`).
+    pub fn health(&self) -> impl Future<Output = Result<Health, ApiFailure>> + Send + 'static {
+        let url = self.inner.url("/v1/health");
+        self.call(move |inner| async move {
+            let b = inner.request(Method::GET, url?, HEALTH_TIMEOUT);
+            inner.json(b, HEALTH_TIMEOUT).await
         })
     }
 

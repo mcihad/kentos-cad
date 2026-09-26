@@ -200,6 +200,8 @@ pub enum Message {
     Start(crate::start::Event),
     /// The interface's look from the Görünüm tab (appearance.rs).
     Appearance(crate::appearance::Event),
+    /// The server's answer to `server.check` (view_commands.rs).
+    ServerChecked(Result<kentos_contracts::Health, String>),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -290,6 +292,12 @@ pub struct App {
     pub backdrop: crate::appearance::Backdrop,
     /// The interface's typefaces and text size as last applied (appearance.rs).
     pub typography: kentos_ui::theme::typography::Typography,
+    /// The window fills the screen (`view.fullscreen`, view_commands.rs).
+    pub fullscreen: bool,
+    /// The side panels' layout while F4 hides them, put back as it was.
+    pub(crate) hidden_docks: Option<Docks<Panel>>,
+    /// A server check is on its way (`server.check` waits for it).
+    pub server_checking: bool,
 }
 
 impl App {
@@ -361,6 +369,9 @@ impl App {
             opening_recent: None,
             backdrop: crate::appearance::Backdrop::default(),
             typography: kentos_ui::theme::typography::current(),
+            fullscreen: false,
+            hidden_docks: None,
+            server_checking: false,
         };
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
@@ -613,6 +624,7 @@ impl App {
             Message::Opening(event) => return self.opening_event(event),
             Message::Saving(event) => return self.saving_event(event),
             Message::Recovery(event) => return self.recovery_event(event),
+            Message::ServerChecked(answer) => self.server_checked(answer),
         }
         Task::none()
     }
@@ -774,6 +786,9 @@ impl App {
         if crate::clipboard::COMMANDS.contains(&id) {
             return self.clipboard_command(id);
         }
+        if crate::view_commands::COMMANDS.contains(&id) {
+            return self.view_command(id);
+        }
         match id {
             // The drawing on screen is left first: its unsent cloud work to its draft, or the question.
             "file.open" => return self.leave(Then::Open),
@@ -826,6 +841,10 @@ impl App {
             "edit.undo" => self.undo(),
             "edit.redo" => self.step_history(false),
             "tool.confirm" => return self.confirm(),
+            // Esc with nothing to cancel leaves full screen (view_commands.rs).
+            "tool.cancel" if self.fullscreen && !self.cancellable() => {
+                return self.toggle_fullscreen();
+            }
             "tool.cancel" => self.cancel(),
             "tool.repeat" => return self.repeat_last(),
             _ => self.error(format!(
@@ -867,6 +886,9 @@ impl App {
             "draft.snap" => self.draft.snap,
             "view.theme.dark" => self.mode == Mode::Dark,
             "view.theme.light" => self.mode == Mode::Light,
+            "view.bottomPanel" => self.command_expanded,
+            "view.rightPanel" => self.right_panel_shown(),
+            "view.fullscreen" => self.fullscreen,
             id if id.starts_with("workspace.") => {
                 crate::catalog::mode_command(self.work_mode()) == id
             }
@@ -884,6 +906,7 @@ impl App {
             "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
             "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
             id if crate::clipboard::COMMANDS.contains(&id) => self.clipboard_available(id),
+            "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
             _ => true,
         }

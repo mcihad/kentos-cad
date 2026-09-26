@@ -152,6 +152,12 @@ impl App {
     /// tool drops the object it picked, docs/adr/0047); otherwise it leaves and
     /// its draft is dropped: nothing reaches the drawing. With no command
     /// running, it clears the selection (the web's `ToolManager.exit`).
+    /// Whether Esc has something to cancel: a value being typed, a running
+    /// command, a selection.
+    pub(crate) fn cancellable(&self) -> bool {
+        self.field.is_some() || self.session.is_running() || !self.selection.is_empty()
+    }
+
     pub(crate) fn cancel(&mut self) {
         self.field = None;
         // The snap marker belongs to the command (the web drops it when the tool changes).
