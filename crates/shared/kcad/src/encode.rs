@@ -7,20 +7,24 @@
 //! Keys are written in their encoded order (RFC 8949 §4.2.1): by hand in the
 //! maps whose keys are fixed, sorted per object for the objects, whose fields
 //! depend on the kind; the reader checks that order, and the fixtures hold the
-//! bytes the independent Python writer gives.
+//! bytes the independent Python writer gives. The objects are written in
+//! `objects.rs`, the enumerations' names are in `names.rs`.
 
-use std::collections::{BTreeMap, HashSet};
+mod names;
+mod objects;
 
 use kentos_contracts::{
-    AngleUnit, AreaUnit, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DimensionStyle,
-    DocumentSnapshotV2, DrawingFont, Entity, EntityId, HatchPattern, HatchPatternType, LabelInk,
-    LabelPlacement, LabelStyle, LayerNode, LayerNodeType, LayerStyle, LineType, MigrationSource,
-    PointSymbol, ProjectSettings, RingGeometry, Vec2, Workspace,
+    DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, LabelStyle,
+    LayerNode, LayerNodeType, LayerStyle, MigrationSource, ProjectSettings, Vec2,
 };
 use serde_json::Value;
 
 use crate::cbor::{MAX_DEPTH, MAX_ITEMS, MAX_STRING, Seg, Writer, key_order, render};
 use crate::error::{Code, KcadError};
+use names::{
+    angle_unit, area_unit, drawing_font, label_ink, label_placement, line_type, point_symbol,
+    workspace,
+};
 
 /// The payload of a drawing.
 pub(crate) fn payload(doc: &DocumentSnapshotV2) -> Result<Vec<u8>, KcadError> {
@@ -31,22 +35,6 @@ pub(crate) fn payload(doc: &DocumentSnapshotV2) -> Result<Vec<u8>, KcadError> {
     };
     e.root(doc)?;
     Ok(e.w.out)
-}
-
-/// One field of an object, before the fields are sorted by key.
-enum Val<'d> {
-    Text(&'d str),
-    Name(&'static str),
-    Float(f64),
-    Bool(bool),
-    Uid(&'d EntityId),
-    Point(&'d Vec2),
-    Points(&'d [Vec2]),
-    Floats(&'d [f64]),
-    Attrs(&'d BTreeMap<String, String>),
-    Rings(&'d [RingGeometry]),
-    Loops(&'d [Vec<Vec2>]),
-    Pattern(&'d HatchPattern),
 }
 
 struct Encoder<'d> {
@@ -438,217 +426,6 @@ impl<'d> Encoder<'d> {
         Ok(())
     }
 
-    // ── Objects ─────────────────────────────────────────────────────────
-
-    fn objects(&mut self, doc: &'d DocumentSnapshotV2) -> Result<(), KcadError> {
-        self.open(doc.entities.len(), false)?;
-        let mut seen = HashSet::with_capacity(doc.uids.len());
-        let mut fields = Vec::with_capacity(16);
-        for (i, (entity, uid)) in doc.entities.iter().zip(&doc.uids).enumerate() {
-            self.path.push(Seg::Index(i));
-            if !seen.insert(uid.0) {
-                return Err(self.fail(
-                    Code::DuplicateUid,
-                    &format!("kalıcı kimlik {uid} iki nesnede var"),
-                ));
-            }
-            self.object(entity, uid, &mut fields)?;
-            self.path.pop();
-        }
-        self.close();
-        Ok(())
-    }
-
-    fn object(
-        &mut self,
-        entity: &'d Entity,
-        uid: &'d EntityId,
-        f: &mut Vec<(&'static str, Val<'d>)>,
-    ) -> Result<(), KcadError> {
-        let kind = entity.kind();
-        let base = entity.base();
-        f.clear();
-        f.push(("uid", Val::Uid(uid)));
-        f.push(("attrs", Val::Attrs(&base.attrs)));
-        f.push(("layerId", Val::Text(&base.layer_id)));
-        if let Some(c) = &base.color {
-            f.push(("color", Val::Text(c)));
-        }
-        if let Some(l) = &base.label {
-            f.push(("label", Val::Text(l)));
-        }
-        if let Some(s) = &base.symbol {
-            f.push(("symbol", Val::Text(s)));
-        }
-        match entity {
-            Entity::Point(e) => {
-                f.push(("p", Val::Point(&e.p)));
-                if let Some(z) = e.z {
-                    f.push(("z", Val::Float(z)));
-                }
-            }
-            Entity::Line(e) => {
-                f.push(("a", Val::Point(&e.a)));
-                f.push(("b", Val::Point(&e.b)));
-            }
-            Entity::Polyline(e) | Entity::Polygon(e) => {
-                f.push(("pts", Val::Points(&e.pts)));
-                if let Some(b) = &e.bulges {
-                    f.push(("bulges", Val::Floats(b)));
-                }
-                if let Some(h) = &e.holes {
-                    if matches!(entity, Entity::Polyline(_)) {
-                        self.path.push(Seg::Name(kind));
-                        return Err(self.fail(
-                            Code::BadValue,
-                            "çoklu çizginin adası (deliği) olamaz; yalnız kapalı alanın olur",
-                        ));
-                    }
-                    f.push(("holes", Val::Rings(h)));
-                }
-            }
-            Entity::Circle(e) => {
-                f.push(("c", Val::Point(&e.c)));
-                f.push(("r", Val::Float(e.r)));
-            }
-            Entity::Arc(e) => {
-                f.push(("c", Val::Point(&e.c)));
-                f.push(("r", Val::Float(e.r)));
-                f.push(("a0", Val::Float(e.a0)));
-                f.push(("a1", Val::Float(e.a1)));
-            }
-            Entity::Ellipse(e) => {
-                f.push(("c", Val::Point(&e.c)));
-                f.push(("major", Val::Point(&e.major)));
-                f.push(("ratio", Val::Float(e.ratio)));
-                f.push(("t0", Val::Float(e.t0)));
-                f.push(("t1", Val::Float(e.t1)));
-            }
-            Entity::Spline(e) => {
-                f.push(("pts", Val::Points(&e.pts)));
-                f.push(("closed", Val::Bool(e.closed)));
-            }
-            Entity::Xline(e) | Entity::Ray(e) => {
-                f.push(("p", Val::Point(&e.p)));
-                f.push(("dir", Val::Point(&e.dir)));
-            }
-            Entity::Text(e) => {
-                f.push(("p", Val::Point(&e.p)));
-                f.push(("text", Val::Text(&e.text)));
-                f.push(("height", Val::Float(e.height)));
-                f.push(("rotation", Val::Float(e.rotation)));
-            }
-            Entity::Dimension(e) => {
-                f.push(("a", Val::Point(&e.a)));
-                f.push(("b", Val::Point(&e.b)));
-                f.push(("offset", Val::Float(e.offset)));
-                f.push(("height", Val::Float(e.height)));
-                if let Some(t) = &e.text {
-                    f.push(("text", Val::Text(t)));
-                }
-                if let Some(s) = e.style {
-                    f.push(("style", Val::Name(dimension_style(s))));
-                }
-                if let Some(a) = e.angle {
-                    f.push(("angle", Val::Float(a)));
-                }
-                if let Some(c) = &e.c {
-                    f.push(("c", Val::Point(c)));
-                }
-            }
-            Entity::Hatch(e) => {
-                f.push(("ring", Val::Points(&e.ring)));
-                if let Some(h) = &e.holes {
-                    f.push(("holes", Val::Loops(h)));
-                }
-                f.push(("pattern", Val::Pattern(&e.pattern)));
-            }
-        }
-        f.sort_by(|a, b| key_order(a.0, b.0));
-        self.open(1, true)?;
-        self.key(kind);
-        self.path.push(Seg::Name(kind));
-        self.open(f.len(), true)?;
-        for (k, v) in f.drain(..) {
-            self.key(k);
-            self.path.push(Seg::Name(k));
-            self.val(v)?;
-            self.path.pop();
-        }
-        self.close();
-        self.path.pop();
-        self.close();
-        Ok(())
-    }
-
-    fn val(&mut self, v: Val<'d>) -> Result<(), KcadError> {
-        match v {
-            Val::Text(t) => self.text(t),
-            Val::Name(t) => {
-                self.w.text(t);
-                Ok(())
-            }
-            Val::Float(x) => self.float(x),
-            Val::Bool(b) => {
-                self.w.bool(b);
-                Ok(())
-            }
-            Val::Uid(id) => self.id(&id.0),
-            Val::Point(p) => self.point(p),
-            Val::Points(list) => self.points(list),
-            Val::Floats(list) => self.floats(list),
-            Val::Attrs(attrs) => {
-                let mut pairs: Vec<(&String, &String)> = attrs.iter().collect();
-                pairs.sort_by(|a, b| key_order(a.0, b.0));
-                self.open(pairs.len(), true)?;
-                for (k, v) in pairs {
-                    self.text(k)?;
-                    self.at(Seg::Key(k), |e| e.text(v))?;
-                }
-                self.close();
-                Ok(())
-            }
-            Val::Rings(rings) => {
-                self.open(rings.len(), false)?;
-                for (i, ring) in rings.iter().enumerate() {
-                    self.at(Seg::Index(i), |e| {
-                        e.open(1 + usize::from(ring.bulges.is_some()), true)?;
-                        e.key("pts");
-                        e.at(Seg::Name("pts"), |e| e.points(&ring.pts))?;
-                        if let Some(b) = &ring.bulges {
-                            e.key("bulges");
-                            e.at(Seg::Name("bulges"), |e| e.floats(b))?;
-                        }
-                        e.close();
-                        Ok(())
-                    })?;
-                }
-                self.close();
-                Ok(())
-            }
-            Val::Loops(loops) => {
-                self.open(loops.len(), false)?;
-                for (i, list) in loops.iter().enumerate() {
-                    self.at(Seg::Index(i), |e| e.points(list))?;
-                }
-                self.close();
-                Ok(())
-            }
-            Val::Pattern(p) => {
-                self.open(3, true)?;
-                // type (4), angle (5), spacing (7).
-                self.key("type");
-                self.w.text(hatch_pattern(p.kind));
-                self.key("angle");
-                self.at(Seg::Name("angle"), |e| e.float(p.angle))?;
-                self.key("spacing");
-                self.at(Seg::Name("spacing"), |e| e.float(p.spacing))?;
-                self.close();
-                Ok(())
-            }
-        }
-    }
-
     // ── Opaque parts (§6.7) ─────────────────────────────────────────────
 
     fn opaque_list(&mut self, list: &'d [Value]) -> Result<(), KcadError> {
@@ -710,183 +487,9 @@ fn parse_hex32(text: &str) -> Option<[u8; 32]> {
     Some(out)
 }
 
-// The enumerations as the contract's serde names them (the test below holds them equal).
-
-pub(crate) fn area_unit(u: AreaUnit) -> &'static str {
-    match u {
-        AreaUnit::M2 => "m2",
-        AreaUnit::Donum => "donum",
-        AreaUnit::Ha => "ha",
-    }
-}
-
-pub(crate) fn angle_unit(u: AngleUnit) -> &'static str {
-    match u {
-        AngleUnit::Grad => "grad",
-        AngleUnit::Deg => "deg",
-    }
-}
-
-pub(crate) fn workspace(w: Workspace) -> &'static str {
-    match w {
-        Workspace::Hybrid => "hybrid",
-        Workspace::Cad => "cad",
-        Workspace::Gis => "gis",
-        Workspace::Plan3d => "plan3d",
-        Workspace::Disaster => "disaster",
-    }
-}
-
-pub(crate) fn drawing_font(f: DrawingFont) -> &'static str {
-    match f {
-        DrawingFont::Barlow => "barlow",
-        DrawingFont::Arimo => "arimo",
-        DrawingFont::Overpass => "overpass",
-        DrawingFont::Quicksand => "quicksand",
-        DrawingFont::ArchitectsDaughter => "architects-daughter",
-        DrawingFont::CourierPrime => "courier-prime",
-        DrawingFont::PlexMono => "plex-mono",
-    }
-}
-
-pub(crate) fn line_type(t: LineType) -> &'static str {
-    match t {
-        LineType::Continuous => "continuous",
-        LineType::Dashed => "dashed",
-        LineType::Dashdot => "dashdot",
-        LineType::Dotted => "dotted",
-    }
-}
-
-pub(crate) fn point_symbol(s: PointSymbol) -> &'static str {
-    match s {
-        PointSymbol::Ring => "ring",
-        PointSymbol::Cross => "cross",
-        PointSymbol::Triangle => "triangle",
-    }
-}
-
-pub(crate) fn label_ink(i: LabelInk) -> &'static str {
-    match i {
-        LabelInk::Fg => "fg",
-        LabelInk::FgDim => "fg-dim",
-        LabelInk::Label => "label",
-    }
-}
-
-pub(crate) fn label_placement(p: LabelPlacement) -> &'static str {
-    match p {
-        LabelPlacement::Center => "center",
-        LabelPlacement::Corner => "corner",
-        LabelPlacement::Beside => "beside",
-        LabelPlacement::Along => "along",
-    }
-}
-
-pub(crate) fn dimension_style(s: DimensionStyle) -> &'static str {
-    match s {
-        DimensionStyle::Aligned => "aligned",
-        DimensionStyle::Linear => "linear",
-        DimensionStyle::Angular => "angular",
-        DimensionStyle::Radius => "radius",
-        DimensionStyle::Diameter => "diameter",
-    }
-}
-
-pub(crate) fn hatch_pattern(t: HatchPatternType) -> &'static str {
-    match t {
-        HatchPatternType::Solid => "solid",
-        HatchPatternType::Lines => "lines",
-        HatchPatternType::Cross => "cross",
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde::Serialize;
-
-    fn serde_name<T: Serialize>(v: T) -> String {
-        match serde_json::to_value(v) {
-            Ok(Value::String(s)) => s,
-            other => panic!("not a string: {other:?}"),
-        }
-    }
-
-    #[test]
-    fn enumerations_are_written_as_the_contract_names_them() {
-        for u in [AreaUnit::M2, AreaUnit::Donum, AreaUnit::Ha] {
-            assert_eq!(area_unit(u), serde_name(u));
-        }
-        for u in [AngleUnit::Grad, AngleUnit::Deg] {
-            assert_eq!(angle_unit(u), serde_name(u));
-        }
-        for w in [
-            Workspace::Hybrid,
-            Workspace::Cad,
-            Workspace::Gis,
-            Workspace::Plan3d,
-            Workspace::Disaster,
-        ] {
-            assert_eq!(workspace(w), serde_name(w));
-        }
-        for f in [
-            DrawingFont::Barlow,
-            DrawingFont::Arimo,
-            DrawingFont::Overpass,
-            DrawingFont::Quicksand,
-            DrawingFont::ArchitectsDaughter,
-            DrawingFont::CourierPrime,
-            DrawingFont::PlexMono,
-        ] {
-            assert_eq!(drawing_font(f), serde_name(f));
-        }
-        for t in [
-            LineType::Continuous,
-            LineType::Dashed,
-            LineType::Dashdot,
-            LineType::Dotted,
-        ] {
-            assert_eq!(line_type(t), serde_name(t));
-        }
-        for s in [PointSymbol::Ring, PointSymbol::Cross, PointSymbol::Triangle] {
-            assert_eq!(point_symbol(s), serde_name(s));
-        }
-        for i in [LabelInk::Fg, LabelInk::FgDim, LabelInk::Label] {
-            assert_eq!(label_ink(i), serde_name(i));
-        }
-        for p in [
-            LabelPlacement::Center,
-            LabelPlacement::Corner,
-            LabelPlacement::Beside,
-            LabelPlacement::Along,
-        ] {
-            assert_eq!(label_placement(p), serde_name(p));
-        }
-        for s in [
-            DimensionStyle::Aligned,
-            DimensionStyle::Linear,
-            DimensionStyle::Angular,
-            DimensionStyle::Radius,
-            DimensionStyle::Diameter,
-        ] {
-            assert_eq!(dimension_style(s), serde_name(s));
-        }
-        for t in [
-            HatchPatternType::Solid,
-            HatchPatternType::Lines,
-            HatchPatternType::Cross,
-        ] {
-            assert_eq!(hatch_pattern(t), serde_name(t));
-        }
-        for k in [LayerNodeType::Group, LayerNodeType::Layer] {
-            let written = match k {
-                LayerNodeType::Group => "group",
-                LayerNodeType::Layer => "layer",
-            };
-            assert_eq!(written, serde_name(k));
-        }
-    }
 
     #[test]
     fn the_fixed_keys_are_in_encoded_order() {
