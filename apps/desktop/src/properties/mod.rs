@@ -80,7 +80,13 @@ pub enum Field {
 /// panel's numbers: the first comma is the decimal point, the longest number
 /// at the start is taken (“12abc” is 12), none is NaN.
 pub(crate) fn web_number(text: &str) -> f64 {
-    let text = kentos_interaction::js_trim(text).replacen(',', ".", 1);
+    js_parse_float(&text.replacen(',', ".", 1))
+}
+
+/// JavaScript's `parseFloat`: white space at the start skipped, the longest
+/// number at the start taken (“12abc” is 12, “12,5” is 12), none is NaN.
+pub(crate) fn js_parse_float(text: &str) -> f64 {
+    let text = kentos_interaction::js_trim(text);
     let bytes = text.as_bytes();
     let mut end = 0;
     if matches!(bytes.first(), Some(b'+' | b'-')) {

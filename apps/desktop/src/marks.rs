@@ -7,7 +7,11 @@
 //!   (`--canvas-snap`), 1.5 px, and its Turkish name above-right of it with
 //!   a halo of the area's colour, so it never meets the measurement below-right;
 //! - the selection box: left to right a window (blue, solid), right to left
-//!   a crossing (the snap colour, dashed 5/4), each filled at 10 %.
+//!   a crossing (the snap colour, dashed 5/4), each filled at 10 %;
+//! - the selection's grips (`drawGrips`, docs/adr/0068), at most 150 objects':
+//!   accent squares edged in the area's colour, thinned to one per 9 px;
+//!   a path's mid grips as small hollow diamonds while their segment is 28 px
+//!   long; the grip being moved larger, in the drawing's ink.
 //!
 //! They change with every pointer move and hold one glyph or one box, so
 //! they are not scene parts; the selection's own highlight is (viewport.rs).
@@ -15,10 +19,12 @@
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Pixels, Point, Rectangle, Renderer, Size, Theme, Vector, mouse};
 
-use kentos_interaction::{SelectBox, SnapHit, SnapKind};
+use kentos_domain::Slot;
+use kentos_interaction::{GripSet, SelectBox, SnapHit, SnapKind};
 use kentos_render_wgpu::Camera;
-use kentos_ui::theme::typography;
+use kentos_ui::theme::{Tokens, typography};
 
+use crate::input::CameraView;
 use crate::viewport::MarkColors;
 
 /// A snap kind as the web names it beside the marker (`SNAP_LABEL`).
@@ -51,17 +57,21 @@ pub fn snap_name(kind: SnapKind) -> &'static str {
     }
 }
 
-/// The marks' canvas program: the snap marker and the selection box, when there are.
+/// The marks' canvas program: the snap marker, the selection box and the
+/// selection's grips, when there are.
 pub struct Marks {
     pub camera: Camera,
     pub snap: Option<SnapHit>,
     pub select: Option<SelectBox>,
+    pub grips: Vec<GripSet>,
+    /// The grip being moved.
+    pub hot: Option<(Slot, usize)>,
     pub colors: MarkColors,
 }
 
 impl Marks {
     pub fn is_empty(&self) -> bool {
-        self.snap.is_none() && self.select.is_none()
+        self.snap.is_none() && self.select.is_none() && self.grips.is_empty()
     }
 }
 
@@ -72,11 +82,13 @@ impl<Message> canvas::Program<Message> for Marks {
         &self,
         _state: &(),
         renderer: &Renderer,
-        _theme: &Theme,
+        theme: &Theme,
         bounds: Rectangle,
         _cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let accent = Tokens::of(theme).accent;
+        grips(&mut frame, &self.grips, self.hot, &self.camera, &self.colors, accent);
         if let Some(b) = self.select {
             select_box(&mut frame, b, &self.colors);
         }
@@ -87,6 +99,69 @@ impl<Message> canvas::Program<Message> for Marks {
             snap_marker(&mut frame, hit.kind, at, &self.colors);
         }
         vec![frame.into_geometry()]
+    }
+}
+
+/// The web's `drawGrips`: every grip but the one being moved, which is drawn
+/// last, larger and in the drawing's ink.
+fn grips(
+    frame: &mut canvas::Frame,
+    sets: &[GripSet],
+    hot: Option<(Slot, usize)>,
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+) {
+    let edge = |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    let view = CameraView(camera);
+    for set in sets {
+        let mut last: Option<[f64; 2]> = None;
+        for (i, &p) in set.points.iter().enumerate() {
+            if hot == Some((set.slot, i)) {
+                continue;
+            }
+            let s = camera.world_to_screen(p);
+            let (x, y) = (s[0].round() as f32, s[1].round() as f32);
+            if set.segments.get(i).is_some_and(Option::is_some) {
+                // Mid grips (add a vertex, bend an arc): small hollow diamonds, hidden on short segments.
+                if !set.shown(i, &view) {
+                    continue;
+                }
+                let diamond = Path::new(|b| {
+                    b.move_to(Point::new(x, y - 4.0));
+                    b.line_to(Point::new(x + 4.0, y));
+                    b.line_to(Point::new(x, y + 4.0));
+                    b.line_to(Point::new(x - 4.0, y));
+                    b.close();
+                });
+                frame.fill(&diamond, colors.halo);
+                frame.stroke(&diamond, edge(1.0, accent));
+                continue;
+            }
+            if last.is_some_and(|l| (s[0] - l[0]).abs() < 9.0 && (s[1] - l[1]).abs() < 9.0) {
+                continue;
+            }
+            last = Some(s);
+            frame.fill_rectangle(Point::new(x - 3.0, y - 3.0), Size::new(6.0, 6.0), accent);
+            frame.stroke(
+                &Path::rectangle(Point::new(x - 3.5, y - 3.5), Size::new(7.0, 7.0)),
+                edge(1.0, colors.halo),
+            );
+        }
+    }
+    let moving = hot.and_then(|(slot, index)| {
+        sets.iter()
+            .find(|set| set.slot == slot)
+            .and_then(|set| set.points.get(index))
+    });
+    if let Some(&p) = moving {
+        let s = camera.world_to_screen(p);
+        let (x, y) = (s[0].round() as f32, s[1].round() as f32);
+        frame.fill_rectangle(Point::new(x - 4.0, y - 4.0), Size::new(8.0, 8.0), colors.fg);
+        frame.stroke(
+            &Path::rectangle(Point::new(x - 4.5, y - 4.5), Size::new(9.0, 9.0)),
+            edge(1.5, accent),
+        );
     }
 }
 

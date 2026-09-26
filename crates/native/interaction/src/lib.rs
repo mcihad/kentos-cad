@@ -132,7 +132,7 @@ pub use select::SelectBox;
 pub use selection::Selection;
 pub use session::Session;
 pub use spatial::{
-    LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,
+    GripSet, LabelSpot, Spatial, arc_sweep, dimension_layout, full_ellipse, measures, vertices,
 };
 pub use tool::{Area, Label};
 pub use tool::{

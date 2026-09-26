@@ -305,10 +305,18 @@ impl App {
             Some(doc) => {
                 let format = Format::of(doc.settings());
                 // The selection box and the snap marker (docs/adr/0029) under the draft.
+                // The selection's grips, as many objects' as the web shows (docs/adr/0068).
+                let grips = if self.selection.len() <= kentos_interaction::select::GRIP_LIMIT {
+                    self.spatial.grips(self.selection.ids())
+                } else {
+                    Vec::new()
+                };
                 let marks = Marks {
                     camera: self.viewport.camera,
                     snap: self.snap,
                     select: self.session.select_box(),
+                    grips,
+                    hot: self.session.active_grip(),
                     colors: mark_colors(self.canvas()),
                 };
                 let over = preview::layer(
@@ -343,6 +351,8 @@ impl App {
                 let typing = self.text_field_view();
                 ContextMenu::controlled(
                     stack![area, labels, over]
+                        // The rollover card beside the pointer (hover_card.rs).
+                        .extend(self.hover_card_view())
                         .extend(typing)
                         .extend(self.command_bar()),
                     self.drawing_menu.map(|open| open.at),
@@ -473,7 +483,7 @@ impl App {
         // A running command's step already says what to type; a hint (the
         // widget's own “Komut yazın” too) would repeat it and, in a narrow
         // window, be cut at the field's edge.
-        let line = line.placeholder(if self.session.is_running() {
+        let line = line.placeholder(if self.session.is_running() || self.session.grip_active() {
             ""
         } else {
             "Komut ya da koordinat yazın; Enter ya da Boşluk onaylar"
@@ -482,7 +492,7 @@ impl App {
         // suggested then: what is typed is the running command's (line_commands).
         let line = line
             .commands(all_line_commands())
-            .suggest_commands(!self.session.is_running());
+            .suggest_commands(!self.session.is_running() && !self.session.grip_active());
         // Open, as tall as the bottom panel was dragged (bottom.rs).
         let line = if open {
             line.expanded_height(self.bottom_log())
@@ -514,8 +524,8 @@ impl App {
     /// The running command's step and options, as buttons (the web's
     /// CommandLine.setPrompt); the command line suggests the options too.
     pub(crate) fn line_prompt(&self) -> Option<LinePrompt<'_, Message>> {
-        self.session
-            .is_running()
+        // A running command's step, or a grip's while one moves (docs/adr/0068).
+        (self.session.is_running() || self.session.grip_active())
             .then(|| {
                 let p = self.session.prompt();
                 // The notes after the step in brackets, as the web's command line reads them.

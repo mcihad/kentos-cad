@@ -236,6 +236,10 @@ impl Session {
     /// Esc: the running tool steps back when it can (the web's `cancel`: an
     /// edge tool drops the object it picked); otherwise it is left. Whether it stays.
     pub fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
+        // No command: Esc leaves a grip being moved where it was.
+        if self.tool.is_none() {
+            return self.select.cancel();
+        }
         let stays = self.tool.as_mut().is_some_and(|t| t.cancel(cx));
         if !stays {
             self.tool = None;
@@ -269,9 +273,26 @@ impl Session {
 
     /// Whether a running tool takes Enter, Space and a quick right click as
     /// its confirm. Kaydır and Pencere yakınlaştır do not: Enter repeats the
-    /// last command instead (the web's `tool.confirm`, docs/adr/0056).
+    /// last command instead (the web's `tool.confirm`, docs/adr/0056). With no
+    /// command, a grip being moved takes them (docs/adr/0068).
     pub fn confirms(&self) -> bool {
-        self.tool.as_ref().is_some_and(|t| t.confirms())
+        self.tool
+            .as_ref()
+            .map_or(self.select.grip_active(), |t| t.confirms())
+    }
+
+    /// Whether no command runs and a grip of the selection is being moved
+    /// (docs/adr/0068): typed points, Enter and Esc are the grip's then.
+    pub fn grip_active(&self) -> bool {
+        self.tool.is_none() && self.select.grip_active()
+    }
+
+    /// The grip being moved, drawn larger (the web's `activeGrip`).
+    pub fn active_grip(&self) -> Option<(kentos_domain::Slot, usize)> {
+        if self.tool.is_some() {
+            return None;
+        }
+        self.select.active_grip()
     }
 
     /// The pointer's look over the drawing: the running tool's, else the crosshair.
@@ -280,14 +301,16 @@ impl Session {
     }
 
     pub fn prompt(&self) -> Prompt {
-        self.tool.as_ref().map_or_else(Prompt::idle, |t| t.prompt())
+        self.tool
+            .as_ref()
+            .map_or_else(|| self.select.prompt(), |t| t.prompt())
     }
 
     /// The object snap for the pointer at `at` (the web's `updateSnap`):
     /// while a tool that snaps runs and snapping is on, the store's snap
     /// point among the drafting kinds within the aperture, perpendicular and
-    /// tangent from the tool's last point. None otherwise: the select tool
-    /// and the erase tool do not snap.
+    /// tangent from the tool's last point. None otherwise: the erase tool
+    /// does not snap, the select tool only while a grip moves (from where it was).
     pub fn snap(
         &self,
         spatial: &Spatial,
@@ -295,12 +318,16 @@ impl Session {
         view: &dyn View,
         draft: &Draft,
     ) -> Option<SnapHit> {
-        let tool = self.tool.as_ref().filter(|t| t.snaps())?;
+        let from = match &self.tool {
+            Some(tool) if tool.snaps() => tool.snap_from(),
+            None if self.select.grip_active() => self.select.snap_from(),
+            _ => return None,
+        };
         if !draft.snap {
             return None;
         }
         let tol = view.world_length(draft.snap_aperture);
-        spatial.snap(at, tol, draft.snap_kinds, tool.snap_from())
+        spatial.snap(at, tol, draft.snap_kinds, from)
     }
 
     pub fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -314,7 +341,7 @@ impl Session {
     pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         match &mut self.tool {
             Some(tool) => tool.pointer_down(p, cx),
-            None => self.select.pointer_down(p),
+            None => self.select.pointer_down(p, cx),
         }
         self.settle();
     }
@@ -348,7 +375,11 @@ impl Session {
     }
 
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let taken = self.tool.as_mut().is_some_and(|t| t.input(text, cx));
+        let taken = match self.tool.as_mut() {
+            Some(tool) => tool.input(text, cx),
+            // A typed point places a grip being moved.
+            None => self.select.input(text, cx),
+        };
         self.settle();
         taken
     }
@@ -364,10 +395,15 @@ impl Session {
     /// Enter, Space or a quick right click while a tool runs: it commits what
     /// it has, or leaves when it has nothing (the web's `PointInputTool.confirm`).
     pub fn confirm(&mut self, cx: &mut Context<'_>) {
-        if let Some(tool) = &mut self.tool
-            && tool.confirm(cx) == Flow::Exit
-        {
-            self.tool = None;
+        match &mut self.tool {
+            Some(tool) => {
+                if tool.confirm(cx) == Flow::Exit {
+                    self.tool = None;
+                }
+            }
+            None => {
+                self.select.confirm(cx);
+            }
         }
     }
 
@@ -377,8 +413,11 @@ impl Session {
         self.tool.as_mut().is_some_and(|t| t.undo_step(cx))
     }
 
-    /// What to draw over the drawing while a tool runs.
+    /// What to draw over the drawing while a tool runs, or a grip moves.
     pub fn preview(&self, format: &Format) -> Option<Preview> {
-        self.tool.as_ref().map(|t| t.preview(format))
+        match &self.tool {
+            Some(tool) => Some(tool.preview(format)),
+            None => self.select.preview(format),
+        }
     }
 }

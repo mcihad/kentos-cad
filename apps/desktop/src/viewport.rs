@@ -548,8 +548,10 @@ pub struct MarkColors {
     /// The window box: the web's blue (`drawSelectionBox`, the dark theme's
     /// `--c-info`), in both themes as on the web.
     pub window: iced::Color,
-    /// The halo around the snap marker's name: the area's colour.
+    /// The halo around the snap marker's name, and the grips' edge: the area's colour.
     pub halo: iced::Color,
+    /// The grip being moved: the drawing's ink (the web's `pal.fg`).
+    pub fg: iced::Color,
 }
 
 pub fn mark_colors(canvas: impl Into<Canvas>) -> MarkColors {
@@ -561,11 +563,13 @@ pub fn mark_colors(canvas: impl Into<Canvas>) -> MarkColors {
             snap: iced::Color::from_rgb8(0x1a, 0x9a, 0x48),
             window,
             halo: rgb(palette(canvas).background),
+            fg: rgb(palette(canvas).fg),
         },
         Canvas::Slate | Canvas::Night | Canvas::Black => MarkColors {
             snap: iced::Color::from_rgb8(0x6f, 0xd0, 0x8c),
             window,
             halo: rgb(palette(canvas).background),
+            fg: rgb(palette(canvas).fg),
         },
     }
 }

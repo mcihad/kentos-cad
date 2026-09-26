@@ -19,6 +19,7 @@ mod drawing_menus;
 mod exchange;
 #[cfg(test)]
 mod files_testing;
+mod hover_card;
 mod icons;
 mod input;
 mod keys;

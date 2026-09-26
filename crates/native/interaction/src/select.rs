@@ -8,20 +8,40 @@
 //! - a drag past 4 px draws a box: left to right a window (objects wholly
 //!   inside), right to left a crossing (objects it touches); Shift adds them,
 //!   else they become the selection;
-//! - with no button down, the object under the pointer is hovered.
+//! - with no button down, the object under the pointer is hovered;
+//! - a press on a grip of a selected object moves that grip (docs/adr/0068):
+//!   dragged, it goes where the button comes up; clicked, it is hot and the
+//!   next click places it; a typed point places it too, Enter where the
+//!   pointer is, Esc leaves it. Snaps, ortho and polar tracking apply from
+//!   where the grip was. One undo step, “Tutamaçla düzenle”.
 //!
 //! Hidden layers' objects are never picked; locked layers' are, as on the
-//! web (the erase tool leaves them in place). Ctrl does nothing here, as on
-//! the web. Grips, the double click that edits text in place and the hold
-//! that opens the selection menu are not on the desktop yet.
+//! web (the erase tool leaves them in place), but their grips are not
+//! taken. Ctrl does nothing here, as on the web.
 
+use kentos_domain::Slot;
+use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
+use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::js_hypot;
+use kentos_geometry_core::ops::grips::move_grip;
+use kentos_geometry_core::tools::point_input::Tracking;
+use kentos_geometry_core::tools::point_text::point_from_text;
+use kentos_native_application::geometry::{shape, with_shape};
 
 use crate::Vec2;
-use crate::tool::{Context, Pointer};
+use crate::edge::Outline;
+use crate::format::Format;
+use crate::log::Level;
+use crate::points;
+use crate::prompt::Prompt;
+use crate::tool::{Context, Pointer, Preview, Stroke, Tag, Tone};
 
 /// How far the pointer must move with the button down to draw a box, logical pixels.
 const DRAG_THRESHOLD: f64 = 4.0;
+/// How near a grip the pointer must be to take it, logical pixels (the web's `gripAt`).
+const GRIP_REACH: f64 = 6.0;
+/// Past this many selected objects no grips are shown or taken (the web's limit).
+pub const GRIP_LIMIT: usize = 150;
 
 /// Where a press or the pointer is: on the area and in the world (before snapping).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -55,12 +75,31 @@ impl SelectBox {
     }
 }
 
+/// A grip being moved (the web's `GripEdit`).
+#[derive(Clone, Debug, PartialEq)]
+struct GripEdit {
+    slot: Slot,
+    index: usize,
+    /// Where the grip was.
+    origin: Vec2,
+    /// Where the button went down on it.
+    down: [f64; 2],
+    /// Clicked without dragging: the next click places it.
+    hot: bool,
+}
+
 /// The select tool's state between pointer events.
 #[derive(Clone, Debug, Default)]
 pub struct Select {
     start: Option<At>,
     current: Option<At>,
     dragging: bool,
+    grip: Option<GripEdit>,
+    /// Where the grip would go: the pointer, snapped, ortho and polar tracking applied.
+    grip_point: Option<Vec2>,
+    tracking: Option<Tracking>,
+    /// The object as the grip would leave it, for the preview.
+    moved: Option<Shape>,
 }
 
 impl Select {
@@ -68,8 +107,26 @@ impl Select {
         Self::default()
     }
 
-    /// The left button went down: a click or a box starts here.
-    pub fn pointer_down(&mut self, p: &Pointer) {
+    /// The left button went down: a hot grip is placed, a grip is taken, or
+    /// a click or a box starts here.
+    pub fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if self.grip.as_ref().is_some_and(|g| g.hot) {
+            let at = self.grip_point.unwrap_or(p.world);
+            return self.commit(at, cx);
+        }
+        if let Some((slot, index, origin)) = grip_at(p.screen, cx) {
+            self.grip = Some(GripEdit {
+                slot,
+                index,
+                origin,
+                down: p.screen,
+                hot: false,
+            });
+            self.grip_point = Some(origin);
+            self.moved = None;
+            cx.selection.set_hover(None);
+            return;
+        }
         let at = At {
             screen: p.screen,
             world: p.raw,
@@ -79,8 +136,20 @@ impl Select {
         self.dragging = false;
     }
 
-    /// The pointer moved: the box grows, or the object under it is hovered.
+    /// The pointer moved: a grip follows it, the box grows, or the object
+    /// under it is hovered.
     pub fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if let Some(g) = &self.grip {
+            let (point, tracking) = points::constrain(Some(g.origin), p, cx);
+            self.grip_point = Some(point);
+            self.tracking = tracking;
+            self.moved = cx
+                .doc
+                .get(g.slot)
+                .and_then(|e| move_grip(&CoreEntity::new(shape(e)), g.index, point))
+                .map(|e| e.shape);
+            return;
+        }
         let Some(start) = self.start else {
             let hit = cx.spatial.pick(p.raw, cx.pick_tolerance());
             cx.selection.set_hover(hit);
@@ -97,8 +166,18 @@ impl Select {
         }
     }
 
-    /// The left button came up: the box selects, or the click picks.
+    /// The left button came up: a dragged grip is placed (a clicked one
+    /// turns hot), the box selects, or the click picks.
     pub fn pointer_up(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if let Some(g) = self.grip.as_mut().filter(|g| !g.hot) {
+            if js_hypot(p.screen[0] - g.down[0], p.screen[1] - g.down[1]) > DRAG_THRESHOLD {
+                let at = self.grip_point.unwrap_or(p.world);
+                self.commit(at, cx);
+            } else {
+                g.hot = true;
+            }
+            return;
+        }
         let Some(start) = self.start.take() else {
             return;
         };
@@ -143,4 +222,145 @@ impl Select {
     pub fn reset(&mut self) {
         *self = Self::default();
     }
+
+    /// Whether a grip is being moved: the select tool then takes points,
+    /// Enter and Esc, and snaps (the web's `snaps`).
+    pub fn grip_active(&self) -> bool {
+        self.grip.is_some()
+    }
+
+    /// The grip being moved, drawn larger (the web's `activeGrip`).
+    pub fn active_grip(&self) -> Option<(Slot, usize)> {
+        self.grip.as_ref().map(|g| (g.slot, g.index))
+    }
+
+    /// Where perpendicular and tangent snaps are taken from: where the grip was.
+    pub fn snap_from(&self) -> Option<Vec2> {
+        self.grip.as_ref().map(|g| g.origin)
+    }
+
+    pub fn prompt(&self) -> Prompt {
+        if self.grip.is_some() {
+            Prompt::new("Tutamaç", "yeni konumu belirtin ya da koordinat yazın (Esc: vazgeç)")
+        } else {
+            Prompt::idle()
+        }
+    }
+
+    /// A typed point places the grip, relative to where it was (`@dY,dX`).
+    pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        let Some(g) = &self.grip else {
+            return false;
+        };
+        let Some(p) = point_from_text(text, Some(g.origin), self.grip_point, |_| None) else {
+            return false;
+        };
+        self.commit(p, cx);
+        true
+    }
+
+    /// Enter, Space or a quick right click: the grip goes where the pointer
+    /// is. False when no grip moves (the last command repeats then).
+    pub fn confirm(&mut self, cx: &mut Context<'_>) -> bool {
+        let Some(g) = &self.grip else {
+            return false;
+        };
+        let at = self.grip_point.unwrap_or(g.origin);
+        self.commit(at, cx);
+        true
+    }
+
+    /// Esc: the grip stays where it was. False when no grip moves.
+    pub fn cancel(&mut self) -> bool {
+        let moving = self.grip.is_some();
+        self.end_grip();
+        moving
+    }
+
+    fn end_grip(&mut self) {
+        self.grip = None;
+        self.grip_point = None;
+        self.tracking = None;
+        self.moved = None;
+    }
+
+    /// The object with its grip at `at`, written as one undo step, “Tutamaçla
+    /// düzenle”, as the web writes it; a shape it cannot take is said and
+    /// nothing changes (the web's `commitGrip`).
+    fn commit(&mut self, at: Vec2, cx: &mut Context<'_>) {
+        let Some(g) = self.grip.take() else {
+            return;
+        };
+        self.end_grip();
+        let Some(e) = cx.doc.get(g.slot).cloned() else {
+            return;
+        };
+        let moved = move_grip(&CoreEntity::new(shape(&e)), g.index, at)
+            .and_then(|m| with_shape(&e, m.shape));
+        match moved {
+            None => cx.say(
+                Level::Warn,
+                "Bu konum geçersiz bir şekil oluşturuyor; tutamaç yerinde bırakıldı.",
+            ),
+            Some(m) if dist(g.origin, at) > 1e-9 => {
+                cx.doc.update_many(vec![(g.slot, m)], "Tutamaçla düzenle");
+            }
+            Some(_) => {}
+        }
+    }
+
+    /// While a grip moves: the object as it would be, dashed; a dashed line
+    /// from where the grip was; its distance beside the pointer (the web's `draw`).
+    pub fn preview(&self, format: &Format) -> Option<Preview> {
+        let (g, at) = (self.grip.as_ref()?, self.grip_point?);
+        let mut strokes = Vec::new();
+        if let Some(moved) = &self.moved {
+            strokes.extend(Outline::of(moved, Some([4.0, 3.0]), 1.5, Tone::Accent).strokes);
+        }
+        strokes.push(Stroke::dashed(vec![g.origin, at], false, [2.0, 3.0]));
+        Some(Preview {
+            strokes,
+            tag: Some(Tag {
+                at,
+                lines: vec![format.length(dist(g.origin, at))],
+            }),
+            tracking: self.tracking,
+            ..Preview::default()
+        })
+    }
+}
+
+/// The grip under the pointer of a selected object not on a locked layer,
+/// the nearest within reach (the web's `gripAt`): the object, the grip's
+/// index and where it is.
+fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<(Slot, usize, Vec2)> {
+    let ids = cx.selection.ids();
+    if ids.len() > GRIP_LIMIT {
+        return None;
+    }
+    let doc = &*cx.doc;
+    let editable: Vec<Slot> = ids
+        .iter()
+        .copied()
+        .filter(|&s| {
+            doc.get(s)
+                .is_some_and(|e| !doc.layers().is_locked(&e.base().layer_id))
+        })
+        .collect();
+    let mut found = None;
+    let mut best = GRIP_REACH;
+    for set in cx.spatial.grips(&editable) {
+        for (index, &p) in set.points.iter().enumerate() {
+            if !set.shown(index, cx.view) {
+                continue;
+            }
+            let s = cx.view.to_screen(p);
+            let d = js_hypot(s[0] - screen[0], s[1] - screen[1]);
+            if d <= best {
+                best = d;
+                found = Some((set.slot, index, p));
+            }
+        }
+    }
+    found
 }
