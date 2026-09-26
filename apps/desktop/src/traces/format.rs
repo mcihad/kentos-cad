@@ -120,6 +120,9 @@ pub struct Newest {
     pub(super) points: Option<Vec<[f64; 2]>>,
     pub(super) edges: Option<Vec<[f64; 2]>>,
     pub(super) arcs: Option<usize>,
+    /// A circle's or an arc's centre, relative to the view's centre (docs/adr/0032).
+    pub(super) center: Option<[f64; 2]>,
+    pub(super) radius: Option<f64>,
 }
 
 /// A field that is there, even as `null`.

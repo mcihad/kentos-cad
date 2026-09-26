@@ -35,7 +35,7 @@ use kentos_ui::widget::{
 };
 
 use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel, Then};
-use crate::catalog::{Command, Item, Standing, catalog};
+use crate::catalog::{Command, Entry, Item, Standing, catalog};
 use crate::document::{Document, crs_name};
 use crate::marks::Marks;
 use crate::preview;
@@ -267,18 +267,22 @@ impl App {
         self.session.is_running().then(|| {
             let p = self.session.prompt();
             p.options.iter().fold(
-                LinePrompt::new(p.step).command(p.tool.unwrap_or("")),
+                LinePrompt::new(p.step.clone()).command(p.tool.unwrap_or("")),
                 |prompt, o| {
-                    prompt
-                        .option(o.label, Message::PromptOption(o.key))
-                        .key(o.key)
+                    // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).
+                    let name = match &o.value {
+                        Some(value) => format!("{}: {value}", o.label),
+                        None => o.label.to_owned(),
+                    };
+                    prompt.option(name, Message::PromptOption(o.key)).key(o.key)
                 },
             )
         })
     }
 
     /// The running command in the status bar: its name, the step and the
-    /// options as buttons (the web shows them in the strip over its drawing).
+    /// options as buttons, each with its value when it has one (the web
+    /// shows them in the strip over its drawing).
     fn prompt_bar(&self) -> Option<Element<'_, Message>> {
         let p = self.session.prompt();
         let tool = p.tool?;
@@ -286,20 +290,24 @@ impl App {
             text(tool)
                 .font(typography::ui_strong())
                 .size(typography::caption()),
-            label::caption(p.step),
+            label::caption(p.step.clone()),
         ]
         .spacing(6)
         .align_y(Center);
         let options = p.options.iter().map(|o| {
-            button(
-                row![label::caption(o.label), label::mono_caption(o.key)]
-                    .spacing(4)
-                    .align_y(Center),
-            )
-            .on_press(Message::PromptOption(o.key))
-            .padding([0, 5])
-            .style(style::button::keyword)
-            .into()
+            let mut content = row![label::caption(o.label)].spacing(4).align_y(Center);
+            if let Some(value) = &o.value {
+                content = content.push(
+                    text(value.clone())
+                        .font(typography::ui_strong())
+                        .size(typography::caption()),
+                );
+            }
+            button(content.push(label::mono_caption(o.key)))
+                .on_press(Message::PromptOption(o.key))
+                .padding([0, 5])
+                .style(style::button::keyword)
+                .into()
         });
         Some(
             Row::with_children(std::iter::once(head.into()).chain(options))
@@ -525,10 +533,13 @@ fn ribbon_button(item: &Item) -> Option<(Button<'static, Message>, bool)> {
     };
     match item {
         Item::Command { id, large } => Some((make(catalog.get(id)?, *large), *large)),
-        Item::Split { ids, large } => {
-            let first = catalog.get(ids.first()?)?;
+        Item::Split { entries, large } => {
+            let first = catalog.get(entries.first()?.id)?;
             let button = make(first, *large);
-            Some((with_family(button, ids, first.title), *large))
+            let ids: Vec<&'static str> = entries.iter().map(|e| e.id).collect();
+            let entries = entries.clone();
+            let menu = move || split_menu(&entries);
+            Some((with_family(button, &ids, first.title, menu), *large))
         }
         Item::Menu { label, ids, large } => {
             let icon = ids
@@ -540,24 +551,28 @@ fn ribbon_button(item: &Item) -> Option<(Button<'static, Message>, bool)> {
             } else {
                 Button::small(icon, *label)
             };
-            Some((with_family(button, ids, label), *large))
+            let members = ids.clone();
+            let menu = move || menu_of(&members);
+            Some((with_family(button, ids, label, menu), *large))
         }
         Item::Builtin => None,
     }
 }
 
-/// A split or drop-down button's menu. When no member is ported the button
-/// stays a dimmed one without a menu, like any command not ported, and its
-/// tooltip names the family.
+/// A split or drop-down button with its menu. When no member is ported the
+/// button stays a dimmed one without a menu, like any command not ported,
+/// and its tooltip names the family.
 fn with_family(
     button: Button<'static, Message>,
     ids: &[&'static str],
     title: &str,
+    menu: impl Fn() -> Menu<Message> + 'static,
 ) -> Button<'static, Message> {
-    let members: Vec<&Command> = ids.iter().filter_map(|id| catalog().get(id)).collect();
+    let mut members: Vec<&Command> = ids.iter().filter_map(|id| catalog().get(id)).collect();
+    // One tool's methods name the tool once.
+    members.dedup_by_key(|c| c.id);
     if members.iter().any(|c| c.standing == Standing::Ported) {
-        let ids = ids.to_vec();
-        return button.menu(move || menu_of(&ids));
+        return button.menu(menu);
     }
     let names: Vec<&str> = members.iter().map(|c| c.title).collect();
     button
@@ -566,6 +581,36 @@ fn with_family(
             "{}.\n\nWeb'de var; masaüstüne henüz taşınmadı.",
             names.join(", ")
         )))
+}
+
+/// A split button's menu as the web's `splitControl` lists it (docs/adr/0032):
+/// a family's tools by their titles; one tool's methods under the tool's
+/// name (Daire: Merkez, yarıçap / 2 nokta / …), each starting the tool with
+/// its option.
+fn split_menu(entries: &[Entry]) -> Menu<Message> {
+    let methods = entries.windows(2).all(|pair| pair[0].id == pair[1].id);
+    let head = match entries.first().and_then(|e| catalog().get(e.id)) {
+        Some(tool) if methods => Menu::new().header(tool.title),
+        _ => Menu::new(),
+    };
+    entries
+        .iter()
+        .filter_map(|entry| Some((entry, catalog().get(entry.id)?)))
+        .fold(head, |menu, (entry, command)| {
+            let run = enabled(command).map(|run| match entry.option {
+                Some(option) => Message::RunMethod {
+                    id: command.id,
+                    option,
+                    label: entry.label,
+                },
+                None => run,
+            });
+            let menu = menu.item(entry.label, run).icon(command.icon);
+            match command.shortcuts.first() {
+                Some(keys) => menu.shortcut(*keys),
+                None => menu,
+            }
+        })
 }
 
 fn menu_of(ids: &[&'static str]) -> Menu<Message> {

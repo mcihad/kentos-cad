@@ -433,6 +433,41 @@ assert abs(ang(P, Ra[1], Rb[1]) - al / k) < Decimal("1e-40") and abs(ang(P, Rb[1
 case("Geriden kestirme (grad)", "surveyResection", ["grad", Ra[0], Rb[0], Rc[0], float(al), float(be)],
      {"p": {"x": S(P[0]), "y": S(P[1])}}, "1e-7")
 
+# cornersOfRing (docs/adr/0032): the rectangle tool's corner style. A TM
+# rectangle rounded by 2 m: every tangent point 2 m from its corner along
+# the side, and a quarter arc per corner, bulge tan(22.5°) = √2 − 1. A
+# rotated square (3-4-5 sides, clockwise) cut by 1.5 m: every cut point
+# 1.5 m along its side, exact. Corners run from the first: its point
+# towards the previous corner, then towards the next.
+def TMP(dx, dy):
+    """A TM point as T gives it (the cases above reuse T and P as names)."""
+    x, y = format(E + Decimal(dx), "f"), format(N + Decimal(dy), "f")
+    return {"x": float(x), "y": float(y)}, (F(Decimal(x)), F(Decimal(y)))
+def PD(x, y):
+    return {"x": D(x), "y": D(y)}
+rect = [TMP("0", "0"), TMP("20.5", "0"), TMP("20.5", "10.25"), TMP("0", "10.25")]
+(x0, y0), (x1, y1) = rect[0][1], rect[2][1]
+fr = F(2)
+quarter = format(sqrt(F(2)) - 1, "f")
+case("TM dikdörtgenin köşeleri 2 m yuvarlanır", "cornersOfRing", [[q[0] for q in rect], {"radius": 2}],
+     {"pts": [PD(x0, y0 + fr), PD(x0 + fr, y0), PD(x1 - fr, y0), PD(x1, y0 + fr),
+              PD(x1, y1 - fr), PD(x1 - fr, y1), PD(x0 + fr, y1), PD(x0, y1 - fr)],
+      "bulges": [quarter, "0", quarter, "0", quarter, "0", quarter, "0"]}, "1e-8")
+square = [(F(0), F(0)), (F(6), F(8)), (F(14), F(2)), (F(8), F(-6))]
+cut = F(3, 2)
+cut_pts = []
+for i, (vx, vy) in enumerate(square):
+    for (qx, qy) in (square[i - 1], square[(i + 1) % 4]):
+        # Every side is 10 m long.
+        cut_pts.append(PD(vx + (qx - vx) / 10 * cut, vy + (qy - vy) / 10 * cut))
+case("Dönük karenin köşeleri 1,5 m pahlanır", "cornersOfRing",
+     [[{"x": float(x), "y": float(y)} for x, y in square], {"d1": 1.5, "d2": 1.5}], {"pts": cut_pts}, "1e-12")
+# nearestEdge: the clicked segment of a TM polyline, its own corners exactly.
+chain = [TMP("0", "0"), TMP("30.25", "0"), TMP("30.25", "18.5")]
+case("TM çoklu çizginin tıklanan kenarı", "nearestEdge",
+     [{"kind": "polyline", "pts": [q[0] for q in chain]}, TMP("29", "11")[0]],
+     {"kind": "seg", "a": PD(*chain[1][1]), "b": PD(*chain[2][1])}, "0")
+
 doc = {
     "format": "kentos.geometry-call-reference",
     "version": 1,

@@ -263,6 +263,7 @@ impl Tool for Line {
             guides: Vec::new(),
             tracking: tag.as_ref().and(self.tracking),
             tag,
+            ..Preview::default()
         }
     }
 }

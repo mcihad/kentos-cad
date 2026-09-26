@@ -230,6 +230,34 @@ impl canvas::Program<Message> for Draft {
                 frame.stroke(&guide, dashed(&[2.0, 3.0]));
             }
         }
+        // The circle, the arc or the rectangle a tool would write, and its guides
+        // (docs/adr/0032): as the web's `strokePath` draws them.
+        for line in &self.preview.strokes {
+            let Some(path) = self.path(&line.pts, line.closed) else {
+                continue;
+            };
+            let dash = line.dash.unwrap_or_default();
+            let stroke = Stroke {
+                line_dash: LineDash {
+                    segments: if line.dash.is_some() { &dash } else { &[] },
+                    offset: 0,
+                },
+                ..Stroke::default().with_color(accent).with_width(line.width)
+            };
+            frame.stroke(&path, stroke);
+        }
+        // The objects picked for a tangent circle: a 9 px square where each was clicked.
+        for p in &self.preview.squares {
+            let at = self.screen(*p);
+            let square = Path::rectangle(
+                Point::new(at.x.round() - 4.5, at.y.round() - 4.5),
+                iced::Size::new(9.0, 9.0),
+            );
+            frame.stroke(
+                &square,
+                Stroke::default().with_color(accent).with_width(1.0),
+            );
+        }
         // A polar tracking ray across the area.
         if let Some(tracking) = self.preview.tracking {
             let o = self.screen(tracking.origin);

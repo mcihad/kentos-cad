@@ -29,7 +29,13 @@
     "draft.snap",
     "edit.deselect",
     "edit.selectAll",
-    "edit.invertSelection"
+    "edit.invertSelection",
+    "tool.point",
+    "tool.circle",
+    "tool.arc",
+    "tool.rectangle",
+    "tool.rectangle3",
+    "tool.regularPolygon"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

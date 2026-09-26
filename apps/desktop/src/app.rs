@@ -14,7 +14,7 @@ use iced::{Subscription, Task, Theme, event, keyboard, window};
 use serde_json::Value;
 
 use kentos_contracts::{ResolveReason, SettingConstraint};
-use kentos_interaction::{Draft, Level, Selection, Session, SnapHit, Spatial, snap_kinds};
+use kentos_interaction::{Draft, Level, Memory, Selection, Session, SnapHit, Spatial, snap_kinds};
 use kentos_ui::icon::Icon;
 use kentos_ui::theme::{self, Accent, Mode};
 use kentos_ui::widget::command_line::Entry;
@@ -100,6 +100,13 @@ pub enum Picker {
 pub enum Message {
     /// Run a web command id (ribbon, shortcut, command line, dialog).
     Run(&'static str),
+    /// One of a tool's methods from its ribbon menu (Daire: 2 nokta): the
+    /// tool starts, then takes the method's option as if typed (docs/adr/0032).
+    RunMethod {
+        id: &'static str,
+        option: &'static str,
+        label: &'static str,
+    },
     RibbonTab(&'static str),
     CommandInput(String),
     CommandSubmitted,
@@ -167,6 +174,10 @@ pub struct App {
     /// The geometry store kept in step with the open drawing: what a click
     /// picks, a box selects and a point snaps to (docs/adr/0029).
     pub spatial: Spatial,
+    /// What the drawing tools remember between runs for as long as the app
+    /// lives: the last circle radius, the rectangle's rotation and corners, the
+    /// regular polygon's sides (the web's static tool fields, docs/adr/0032).
+    pub memory: Memory,
     /// The selected objects and the hovered one (session state, not the drawing's).
     pub selection: Selection,
     /// The object snap under the pointer while a tool snaps: its marker.
@@ -239,6 +250,7 @@ impl App {
             viewport: Viewport::new(),
             session: Session::new(),
             spatial: Spatial::new(),
+            memory: Memory::default(),
             selection: Selection::new(),
             snap: None,
             followed: None,
@@ -350,6 +362,9 @@ impl App {
         }
         match message {
             Message::Run(id) => return self.run(id),
+            Message::RunMethod { id, option, label } => {
+                return self.run_method(id, option, label);
+            }
             Message::RibbonTab(id) => self.tab = id,
             Message::CommandInput(text) => self.command_input = text,
             Message::CommandSubmitted => {
@@ -859,7 +874,7 @@ mod tests {
     fn a_command_not_ported_says_so_and_changes_nothing() {
         let (mut app, _) = App::boot(None);
         let before = app.history.len();
-        let _ = app.run("tool.circle");
+        let _ = app.run("tool.ellipse");
         assert_eq!(app.history.len(), before + 1);
         assert!(
             matches!(app.history.last(), Some(Entry::Output(text)) if text.contains("masaüstüne henüz taşınmadı"))
@@ -874,6 +889,51 @@ mod tests {
         .expect("the web's demo file reads");
         app.document = Some(Document::new(snapshot, None).expect("opens"));
         app
+    }
+
+    /// A tool's method from its ribbon menu starts the tool and gives it the
+    /// method's option, as the web's `runEntry` does (docs/adr/0032).
+    #[test]
+    fn a_method_from_the_ribbon_starts_its_tool_with_its_option() {
+        let mut app = with_demo();
+        let _ = app.update(Message::RunMethod {
+            id: "tool.circle",
+            option: "TTT",
+            label: "Teğet, teğet, teğet",
+        });
+        assert_eq!(app.session.tool_id(), "circle");
+        assert_eq!(
+            app.session.prompt().text(),
+            "Daire: birinci teğet çizgi, yay ya da daireyi seçin"
+        );
+        let _ = app.update(Message::RunMethod {
+            id: "tool.arc",
+            option: "M",
+            label: "Merkez, başlangıç, bitiş",
+        });
+        assert_eq!(app.session.tool_id(), "arc");
+        assert_eq!(app.session.prompt().text(), "Yay: yayın merkezini belirtin");
+        assert!(
+            !app.history
+                .iter()
+                .any(|e| matches!(e, Entry::Warning(text) if text.contains("başlatılamadı"))),
+            "both methods started"
+        );
+
+        // With no drawing open the tool does not start; that says why, once.
+        let (mut closed, _) = App::boot(None);
+        let before = closed.history.len();
+        let _ = closed.update(Message::RunMethod {
+            id: "tool.circle",
+            option: "2N",
+            label: "2 nokta",
+        });
+        assert!(!closed.session.is_running());
+        assert_eq!(closed.history.len(), before + 1);
+        assert_eq!(
+            last_output(&closed),
+            "Açık çizim yok. Önce bir çizim açın (Ctrl+O)."
+        );
     }
 
     fn last_output(app: &App) -> &str {

@@ -18,17 +18,34 @@
 use kentos_geometry_core::store::snap::SnapHit;
 
 use crate::Vec2;
+use crate::arc::{self, Arc};
+use crate::circle::{self, Circle};
 use crate::erase::{self, Erase};
 use crate::format::Format;
 use crate::line::{self, Line};
 use crate::path::{self, Path};
+use crate::point::{self, Point};
 use crate::prompt::Prompt;
+use crate::rectangle::{self, Rectangle};
+use crate::regular::{self, RegularPolygon};
+use crate::rotated::{self, RotatedRectangle};
 use crate::select::{Select, SelectBox};
 use crate::spatial::Spatial;
 use crate::tool::{Context, Draft, Flow, Pointer, Preview, Tool, View};
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
-pub const TOOLS: &[&str] = &[path::POLYGON_ID, line::ID, path::POLYLINE_ID, erase::ID];
+pub const TOOLS: &[&str] = &[
+    path::POLYGON_ID,
+    line::ID,
+    path::POLYLINE_ID,
+    erase::ID,
+    point::ID,
+    circle::ID,
+    arc::ID,
+    rectangle::ID,
+    rotated::ID,
+    regular::ID,
+];
 
 /// The running tool, if any, the last one started, and the select tool that
 /// has the pointer while none runs.
@@ -58,6 +75,12 @@ impl Session {
             path::POLYLINE_ID => Box::new(Path::polyline()),
             line::ID => Box::new(Line::new()),
             erase::ID => Box::new(Erase::new()),
+            point::ID => Box::new(Point::new()),
+            circle::ID => Box::new(Circle::new()),
+            arc::ID => Box::new(Arc::new()),
+            rectangle::ID => Box::new(Rectangle::new()),
+            rotated::ID => Box::new(RotatedRectangle::new()),
+            regular::ID => Box::new(RegularPolygon::new()),
             _ => return false,
         };
         self.last = Some(tool.id());

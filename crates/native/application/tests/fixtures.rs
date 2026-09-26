@@ -1,5 +1,5 @@
 //! The shared product command cases (fixtures/commands/v1, docs/adr/0022,
-//! 0027) run against the desktop's handlers over the native document. The web
+//! 0027, 0029, 0032) run against the desktop's handlers over the native document. The web
 //! runs the same files against its own handlers
 //! (apps/web/src/product/fixtures.test.ts); the format is in
 //! fixtures/commands/README.md.
@@ -11,12 +11,13 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use kentos_domain::contracts::{
-    CAD_ENTITIES_DELETE, CAD_LINE_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE,
-    DocumentSnapshotV1, EntitiesDelete, LineCreate, PolygonCreate, PolylineCreate,
+    ArcCreate, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_DELETE, CAD_LINE_CREATE,
+    CAD_POINT_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, CircleCreate, DocumentSnapshotV1,
+    EntitiesDelete, LineCreate, PointCreate, PolygonCreate, PolylineCreate,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{
-    DESKTOP_COMMANDS, ExecutionContext, delete, line, polygon, polyline,
+    DESKTOP_COMMANDS, ExecutionContext, arc, circle, delete, line, point, polygon, polyline,
 };
 use serde_json::{Value, json};
 
@@ -202,6 +203,51 @@ impl Input for EntitiesDelete {
     }
 }
 
+/// A coordinate of a named point: `c.x`, `p.y`.
+fn coordinate<'a>(
+    p: &'a mut kentos_domain::contracts::Vec2,
+    name: &str,
+    path: &str,
+) -> Option<&'a mut f64> {
+    match path.strip_prefix(name)?.strip_prefix('.')? {
+        "x" => Some(&mut p.x),
+        "y" => Some(&mut p.y),
+        _ => None,
+    }
+}
+
+impl Input for PointCreate {
+    /// `p.x`, `p.y`, `z` (which the step's input must give).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "z" => self.z.as_mut(),
+            _ => coordinate(&mut self.p, "p", path),
+        }
+    }
+}
+
+impl Input for CircleCreate {
+    /// `c.x`, `c.y`, `r`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "r" => Some(&mut self.r),
+            _ => coordinate(&mut self.c, "c", path),
+        }
+    }
+}
+
+impl Input for ArcCreate {
+    /// `c.x`, `c.y`, `r`, `a0`, `a1`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "r" => Some(&mut self.r),
+            "a0" => Some(&mut self.a0),
+            "a1" => Some(&mut self.a1),
+            _ => coordinate(&mut self.c, "c", path),
+        }
+    }
+}
+
 /// Puts NaN or ±∞ into the typed input at the paths the step's `nonFinite` names.
 fn put_non_finite(input: &mut impl Input, step: &Value, at: &str) -> Outcome<()> {
     let Some(table) = step.get("nonFinite") else {
@@ -257,6 +303,9 @@ fn run_op(
         CAD_LINE_CREATE => run!(line, LineCreate),
         CAD_POLYLINE_CREATE => run!(polyline, PolylineCreate),
         CAD_ENTITIES_DELETE => run!(delete, EntitiesDelete),
+        CAD_POINT_CREATE => run!(point, PointCreate),
+        CAD_CIRCLE_CREATE => run!(circle, CircleCreate),
+        CAD_ARC_CREATE => run!(arc, ArcCreate),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))

@@ -297,6 +297,25 @@ pub fn corner_of_path(
     )))
 }
 
+/// Every corner of a closed ring rounded (`radius`) or cut (`d1`, `d2`):
+/// the rectangle tool's corner style (`RectangleTool`, AutoCAD RECTANG's
+/// Fillet and Chamfer; docs/adr/0032). Corners are done last first, so the
+/// ones still to do keep their indices. The first corner that cannot be done
+/// answers with its reason, and nothing of the others is kept.
+pub fn corners_of_ring(ring: &[Vec2], op: &CornerOp) -> Result<CornerResult, String> {
+    let mut path = BulgePath {
+        pts: ring.to_vec(),
+        bulges: None,
+    };
+    for index in (0..ring.len()).rev() {
+        match corner_of_path(&path.pts, path.bulges.as_deref(), true, index, op)? {
+            CornerResult::Path(next) => path = next,
+            error => return Ok(error),
+        }
+    }
+    Ok(CornerResult::Path(path))
+}
+
 pub(crate) static OPS: &[Op] = &[
     op!("filletLines", |l1: Seg,
                         pick1: Vec2,
@@ -320,4 +339,52 @@ pub(crate) static OPS: &[Op] = &[
                          op: CornerOp| {
         corner_of_path(&pts, bulges.as_deref(), closed, index, &op)
     }),
+    op!("cornersOfRing", |ring: Vec<Vec2>, op: CornerOp| {
+        corners_of_ring(&ring, &op)
+    }),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn rect() -> Vec<Vec2> {
+        [(0.0, 0.0), (20.0, 0.0), (20.0, 10.0), (0.0, 10.0)]
+            .map(|(x, y)| Vec2::new(x, y))
+            .to_vec()
+    }
+
+    #[test]
+    fn a_rectangle_gets_every_corner_rounded_or_cut() {
+        let Ok(CornerResult::Path(round)) = corners_of_ring(&rect(), &CornerOp::Radius(2.0)) else {
+            panic!("rounded");
+        };
+        // Four tangent points a side, one quarter arc (tan 22.5°) per corner.
+        assert_eq!(round.pts.len(), 8);
+        let bulges = round.bulges.expect("arcs");
+        let arcs: Vec<f64> = bulges.iter().copied().filter(|b| *b != 0.0).collect();
+        assert_eq!(arcs.len(), 4);
+        assert!(arcs.iter().all(|b| (b - tan(PI / 8.0)).abs() < 1e-12));
+        let Ok(CornerResult::Path(cut)) = corners_of_ring(&rect(), &CornerOp::Chamfer(1.5, 1.5))
+        else {
+            panic!("cut");
+        };
+        assert_eq!(cut.pts.len(), 8);
+        assert!(cut.bulges.is_none_or(|b| b.iter().all(|x| *x == 0.0)));
+    }
+
+    #[test]
+    fn a_corner_that_cannot_be_done_answers_for_all() {
+        // Two radii of 6 do not fit on a side of 10.
+        match corners_of_ring(&rect(), &CornerOp::Radius(6.0)) {
+            Ok(CornerResult::Error(e)) => assert_eq!(e, "Yarıçap bu kenarlar için çok büyük."),
+            _ => panic!("refused"),
+        }
+        match corners_of_ring(&rect(), &CornerOp::Radius(0.0)) {
+            Ok(CornerResult::Error(e)) => {
+                assert_eq!(e, "Köşe zaten keskin; sıfırdan büyük bir yarıçap girin.")
+            }
+            _ => panic!("refused"),
+        }
+    }
+}

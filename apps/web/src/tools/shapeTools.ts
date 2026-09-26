@@ -1,7 +1,7 @@
 import { tessellateCircle } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { dist, signedArea } from '../model/geometry';
-import { cornerOfPath } from '../model/ops/fillet';
+import { cornersOfRing } from '../model/ops/fillet';
 import { rectFromCorners, rectFromEdge, rectFromSize, regularPolygon, regularPolygonOnEdge, sideDistance } from '../model/geom/shapes';
 import type { ViewTransform } from '../viewport/Camera';
 import { directionAngle, regularPolygonRadius } from './constructions';
@@ -116,27 +116,23 @@ export class RectangleTool extends PointInputTool {
     return rectFromCorners(a, p, RectangleTool.rotation);
   }
 
-  /** Corner style applied to every vertex (last first, so indices stay valid). */
+  /** Corner style applied to every vertex, by the core (`cornersOfRing`, docs/adr/0032); the plain ring when it cannot be. */
   private styled(ring: Vec2[]): { pts: Vec2[]; bulges?: number[] } {
     const c = RectangleTool.corners;
     if (c.kind === 'none') return { pts: ring };
-    let cur: { pts: Vec2[]; bulges?: number[] } = { pts: ring };
-    for (let i = ring.length - 1; i >= 0; i--) {
-      const r = cornerOfPath(cur.pts, cur.bulges, true, i, c.kind === 'fillet' ? { radius: c.size } : { d1: c.size, d2: c.size });
-      if ('error' in r) {
-        this.ctx.log.warn(`Köşeler işlenmedi: ${r.error}`);
-        return { pts: ring };
-      }
-      cur = r;
+    const r = cornersOfRing(ring, c.kind === 'fillet' ? { radius: c.size } : { d1: c.size, d2: c.size });
+    if ('error' in r) {
+      this.ctx.log.warn(`Köşeler işlenmedi: ${r.error}`);
+      return { pts: ring };
     }
-    return cur;
+    return r;
   }
 
   private commit(ring: Vec2[]): void {
     const g = this.styled(ring);
     const w = dist(ring[0], ring[1]);
     const h = dist(ring[1], ring[2]);
-    if (this.create({ kind: 'polygon', pts: g.pts, ...(g.bulges && { bulges: g.bulges }) })) {
+    if (this.writeRing(g.pts, g.bulges)) {
       this.ctx.log.success(`Dikdörtgen eklendi: ${this.ctx.format.length(w, false)} × ${this.ctx.format.length(h)}`);
     }
     this.size = null;
@@ -214,7 +210,7 @@ export class RotatedRectangleTool extends PointInputTool {
   private commit(width: number): void {
     const ring = rectFromEdge(this.pts[0], this.pts[1], width);
     if (!ring) return this.ctx.log.warn('Genişlik sıfır olamaz; kenardan uzaklaşarak tıklayın.');
-    if (this.create({ kind: 'polygon', pts: ring })) {
+    if (this.writeRing(ring)) {
       const f = this.ctx.format;
       this.ctx.log.success(`Dikdörtgen eklendi: ${f.length(dist(ring[0], ring[1]), false)} × ${f.length(Math.abs(width))}`);
     }
@@ -317,7 +313,7 @@ export class RegularPolygonTool extends PointInputTool {
 
   private commit(ring: Vec2[] | null): void {
     if (!ring) return this.ctx.log.warn('Çokgen için merkezden uzakta bir nokta gösterin.');
-    if (this.create({ kind: 'polygon', pts: ring })) {
+    if (this.writeRing(ring)) {
       const f = this.ctx.format;
       this.ctx.log.success(`${ring.length} kenarlı düzgün çokgen eklendi: kenar ${f.length(dist(ring[0], ring[1]))}, alan ${f.area(Math.abs(signedArea(ring)))}`);
     }

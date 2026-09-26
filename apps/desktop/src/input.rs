@@ -76,6 +76,7 @@ impl App {
                 log: &mut log,
                 spatial: &self.spatial,
                 selection: &mut self.selection,
+                memory: &mut self.memory,
             },
         );
         for line in log {
@@ -389,6 +390,26 @@ impl App {
                 Task::none()
             }
         }
+    }
+
+    /// A tool's method from its ribbon menu (docs/adr/0032), as the web's
+    /// `runEntry`: the tool starts, then its option goes in as if typed. A
+    /// method the tool refuses now says so; a tool that did not start has
+    /// said why already.
+    pub(crate) fn run_method(
+        &mut self,
+        id: &'static str,
+        option: &str,
+        label: &str,
+    ) -> Task<Message> {
+        let task = self.run(id);
+        let started =
+            self.session.is_running() && id.strip_prefix("tool.") == Some(self.session.tool_id());
+        if started && self.with_tool(|s, cx| s.input(option, cx)) != Some(true) {
+            let title = catalog().get(id).map_or(id, |command| command.title);
+            self.warn(format!("“{title}: {label}” şu an başlatılamadı."));
+        }
+        task
     }
 
     /// The command a chord runs. Single keys reach only the commands the

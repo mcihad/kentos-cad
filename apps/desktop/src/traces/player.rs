@@ -36,6 +36,19 @@ pub const AREA: Rectangle = Rectangle {
     height: 641.0,
 };
 
+/// The newest object as a step sees it (the web runner's `newest`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Seen {
+    pub kind: String,
+    /// A path's corners, a line's two ends, a point's place, an arc's start
+    /// and end (counter-clockwise, as stored); absolute.
+    pub pts: Vec<[f64; 2]>,
+    pub bulges: Vec<f64>,
+    /// A circle's or an arc's centre (absolute) and radius (docs/adr/0032).
+    pub center: Option<[f64; 2]>,
+    pub radius: Option<f64>,
+}
+
 /// What a trace step can see (the web runner's `observe`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Observation {
@@ -45,8 +58,7 @@ pub struct Observation {
     pub dynamic_input: Option<String>,
     pub command_line: String,
     pub entities: usize,
-    /// The newest object's kind, corners (a line's two ends; absolute) and bulges.
-    pub newest: Option<(String, Vec<[f64; 2]>, Vec<f64>)>,
+    pub newest: Option<Seen>,
     pub can_undo: bool,
     pub can_redo: bool,
     pub dirty: bool,
@@ -427,16 +439,35 @@ impl<'a> Player<'a> {
         let newest = doc
             .and_then(|d| d.model.entities().max_by_key(|e| e.base().id))
             .map(|e| {
-                // A path's corners; a line's two ends.
+                // A path's corners; a line's two ends; a point's place; an arc's start and end.
                 let (pts, bulges) = match e {
                     Entity::Polygon(p) | Entity::Polyline(p) => (
                         p.pts.iter().map(|v| [v.x, v.y]).collect(),
                         p.bulges.clone().unwrap_or_default(),
                     ),
                     Entity::Line(l) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], Vec::new()),
+                    Entity::Point(p) => (vec![[p.p.x, p.p.y]], Vec::new()),
+                    Entity::Arc(a) => (
+                        [a.a0, a.a1]
+                            .iter()
+                            .map(|t| [a.c.x + a.r * t.cos(), a.c.y + a.r * t.sin()])
+                            .collect(),
+                        Vec::new(),
+                    ),
                     _ => (Vec::new(), Vec::new()),
                 };
-                (e.kind().to_owned(), pts, bulges)
+                let (center, radius) = match e {
+                    Entity::Circle(c) => (Some([c.c.x, c.c.y]), Some(c.r)),
+                    Entity::Arc(a) => (Some([a.c.x, a.c.y]), Some(a.r)),
+                    _ => (None, None),
+                };
+                Seen {
+                    kind: e.kind().to_owned(),
+                    pts,
+                    bulges,
+                    center,
+                    radius,
+                }
             });
         Observation {
             tool: app.session.tool_id().to_owned(),

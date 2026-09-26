@@ -1,9 +1,12 @@
 import type { AppContext } from '../app/context';
+import type { CommandResult } from '../contracts/generated/CommandResult';
 import { Signal } from '../core/signal';
 import type { Entity, EntityGeometry, NewEntity } from '../model/entities';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { entitiesDelete } from '../product/entitiesDelete';
 import { lineCreate } from '../product/lineCreate';
+import { pointCreate } from '../product/pointCreate';
+import { polygonCreate } from '../product/polygonCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
 import { drawTag, strokePath } from './preview';
@@ -182,6 +185,38 @@ export abstract class PointInputTool implements Tool {
     this.madeAt = this.ctx.doc.revision;
   }
 
+  /**
+   * A product command's answer, as the drawing tools report it (docs/adr/0027,
+   * 0032): a refusal's message (the locked and hidden layer texts are the
+   * tools' own words, kept by the commands), else the warnings of the write;
+   * the object written is noted for Ctrl+Z. The output, or null when refused.
+   */
+  protected written<T extends { id: number }>(result: CommandResult<T>): T | null {
+    if (result.status !== 'completed') {
+      if ('error' in result) this.ctx.log.warn(result.error.message);
+      return null;
+    }
+    for (const w of result.warnings) this.ctx.log.warn(w.message);
+    this.noteMade(result.output.id);
+    return result.output;
+  }
+
+  /**
+   * A closed shape the tool built (a rectangle, a regular polygon) through
+   * the product command `cad.polygon.create` (docs/adr/0032): the active
+   * layer and the current colour explicit. Whether it was written.
+   */
+  protected writeRing(pts: Vec2[], bulges?: number[]): boolean {
+    const input = { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...this.colour() };
+    return this.written(polygonCreate.execute({ doc: this.ctx.doc }, input)) !== null;
+  }
+
+  /** The current colour, explicit in a command's input (CMD-07); absent: the layer's. */
+  protected colour(): { color?: string } {
+    const color = this.ctx.settings.color.value;
+    return color !== null ? { color } : {};
+  }
+
   draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
     const pal = this.ctx.view.palette;
     const chain = this.hover ? [...this.pts, this.hover] : this.pts;
@@ -231,15 +266,7 @@ export class LineTool extends PointInputTool {
    * texts, word for word). The new line's slot, or null when refused.
    */
   private createLine(a: Vec2, b: Vec2): number | null {
-    const color = this.ctx.settings.color.value;
-    const result = lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...(color !== null && { color }) });
-    if (result.status !== 'completed') {
-      if ('error' in result) this.ctx.log.warn(result.error.message);
-      return null;
-    }
-    for (const w of result.warnings) this.ctx.log.warn(w.message);
-    this.noteMade(result.output.id);
-    return result.output.id;
+    return this.written(lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...this.colour() }))?.id ?? null;
   }
 
   protected override option(key: string): boolean {
@@ -290,20 +317,30 @@ export class PointTool extends PointInputTool {
       this.pendingZ = p;
       return;
     }
-    this.create({ kind: 'point', p }, { layerId: this.layerId });
+    this.writePoint({ p });
   }
 
   override input(text: string): boolean {
     if (this.pendingZ) {
       const z = parseNumber(text);
       if (z === null) return false;
-      this.create({ kind: 'point', p: this.pendingZ, z }, { layerId: this.layerId, label: z.toFixed(2), attrs: { Tür: 'Kot noktası', 'Z (m)': z.toFixed(3) } });
+      this.writePoint({ p: this.pendingZ, z, label: z.toFixed(2), attrs: { Tür: 'Kot noktası', 'Z (m)': z.toFixed(3) } });
       this.pendingZ = null;
       this.refreshPrompt();
       this.ctx.view.requestOverlay();
       return true;
     }
     return super.input(text);
+  }
+
+  /**
+   * Writes one point through the product command `cad.point.create`
+   * (docs/adr/0032): the tool's own layer (the spot elevations') or the
+   * active one, and the current colour, explicit in its input (CMD-07).
+   */
+  private writePoint(fields: { p: Vec2; z?: number; label?: string; attrs?: Record<string, string> }): void {
+    const layerId = this.layerId ?? this.ctx.doc.layers.active.value;
+    this.written(pointCreate.execute({ doc: this.ctx.doc }, { layerId, ...fields, ...this.colour() }));
   }
 
   override pointerDown(p: ToolPointer): void {

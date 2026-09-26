@@ -35,3 +35,10 @@ export type CornerResult = { pts: Vec2[]; bulges?: number[] } | { error: string 
  * by an arc segment or a straight cut.
  */
 export const cornerOfPath = op<(pts: readonly Vec2[], bulges: readonly number[] | undefined, closed: boolean, index: number, op: { radius: number } | { d1: number; d2: number }) => CornerResult>('cornerOfPath');
+
+/**
+ * Every corner of a closed ring rounded (`radius`) or cut (`d1`, `d2`), the
+ * last first: the rectangle tool's corner style (docs/adr/0032). The first
+ * corner that cannot be done answers with its reason.
+ */
+export const cornersOfRing = op<(ring: readonly Vec2[], op: { radius: number } | { d1: number; d2: number }) => CornerResult>('cornersOfRing');

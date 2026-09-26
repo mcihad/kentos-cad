@@ -253,8 +253,8 @@ const observe = () =>
     const field = document.querySelector('.cursor-input');
     let newest = null;
     for (const e of k.doc.all()) if (!newest || e.id > newest.id) newest = e;
-    // A path's corners; a line's two ends.
-    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : null);
+    // A path's corners; a line's two ends; a point's place; an arc's start and end (counter-clockwise, as stored).
+    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : null);
     return {
       tool: k.tools.activeId.value,
       points: k.tools.active.pointCount ?? 0,
@@ -262,7 +262,7 @@ const observe = () =>
       dynamicInput: field && !field.hidden ? field.querySelector('input').value : null,
       commandLine: document.querySelector('.cmdline__input')?.value ?? null,
       entities: k.doc.size,
-      newest: newest && { kind: newest.kind, pts: pts(newest), bulges: newest.bulges ?? [] },
+      newest: newest && { kind: newest.kind, pts: pts(newest), bulges: newest.bulges ?? [], center: newest.c ? [newest.c.x, newest.c.y] : null, radius: newest.r ?? null },
       canUndo: k.doc.canUndo.value,
       canRedo: k.doc.canRedo.value,
       dirty: k.doc.dirty.value,
@@ -291,6 +291,14 @@ function compare(expect, got, t) {
         const near = shape.pts?.length === want.points.length && shape.pts.every(([x, y], i) => Math.hypot(x - want.points[i][0], y - want.points[i][1]) <= t.clickTolerance);
         if (!near) bad.push(`newest.points: ${JSON.stringify(shape.pts)}, beklenen ${JSON.stringify(want.points)} (±${t.clickTolerance} m)`);
       }
+      // A circle's or an arc's centre and radius: from clicks, within the click tolerance.
+      if (shape && want.center) {
+        const c = have.center && [have.center[0] - origin.x, have.center[1] - origin.y];
+        if (!c || Math.hypot(c[0] - want.center[0], c[1] - want.center[1]) > t.clickTolerance)
+          bad.push(`newest.center: ${JSON.stringify(c)}, beklenen ${JSON.stringify(want.center)} (±${t.clickTolerance} m)`);
+      }
+      if (shape && want.radius !== undefined && (have.radius === null || Math.abs(have.radius - want.radius) > t.clickTolerance))
+        bad.push(`newest.radius: ${have.radius}, beklenen ${want.radius} (±${t.clickTolerance} m)`);
       if (shape && want.arcs !== undefined) {
         const arcs = have.bulges.filter((bulge) => bulge !== 0).length;
         if (arcs !== want.arcs) bad.push(`newest.arcs: ${arcs}, beklenen ${want.arcs}`);

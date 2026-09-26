@@ -1,6 +1,7 @@
 //! `kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik]
 //! [--ayar anahtar=değer]… [--komut <id>]… [--tumu] [--merkez Y,X]
-//! [--yakinlastir <kat>] [--iz <iz> [--adim <n>] [--yarida] [--varyant us|tr-q|hidpi]]`:
+//! [--yakinlastir <kat>] [--iz <iz> [--adim <n>] [--yarida] [--varyant us|tr-q|hidpi]]
+//! [--tikla x,y]… [--imlec x,y]`:
 //! the window drawn without opening one (the KentOS UI snapshot renderer),
 //! for visual checks and documentation. Nothing is written but the image;
 //! `--ayar` chooses a typed setting in memory (`graphics.msaa=8`), never in
@@ -21,13 +22,18 @@
 //! empty). The view options act after the drawing opened at its start view:
 //! `--tumu` shows everything, `--merkez` puts a world point (Y east, X north)
 //! in the middle, `--yakinlastir` zooms about the middle by a factor.
+//!
+//! `--tikla x,y` clicks the window at a point in logical pixels from its top
+//! left, after everything else: a ribbon button's menu opens (Daire ▾, its
+//! methods; docs/adr/0032). `--imlec x,y` moves the pointer there, in the
+//! order given with the clicks: off the button, its tooltip goes.
 
 use std::path::Path;
 
 use iced::advanced::widget::operation;
 use iced::{Point, Size};
 use kentos_render_wgpu::Vec2;
-use kentos_ui::snapshot::Snapshot;
+use kentos_ui::snapshot::{Input, Snapshot};
 
 use crate::app::{App, COMMAND_INPUT, Message};
 use crate::catalog::catalog;
@@ -37,7 +43,7 @@ use crate::viewport::Event;
 
 const USAGE: &str = "kullanım: kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik] \
                      [--ayar anahtar=değer]… [--komut <id>]… [--tumu] [--merkez Y,X] [--yakinlastir <kat>] \
-                     [--iz <iz> [--adim <n>] [--yarida] [--varyant us|tr-q|hidpi]]";
+                     [--iz <iz> [--adim <n>] [--yarida] [--varyant us|tr-q|hidpi]] [--tikla x,y]… [--imlec x,y]";
 
 /// A view option, applied in the order given once the drawing is on screen.
 enum View {
@@ -55,6 +61,8 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let mut steps: Option<usize> = None;
     let mut halfway = false;
     let mut variant = VARIANTS[0];
+    // `--tikla` and `--imlec`, in the order given.
+    let mut pointer = Vec::new();
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--sekme" => {
@@ -129,6 +137,18 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
                         "{text}: yakınlaştırma katı pozitif bir sayı olmalı"
                     ))?;
                 views.push(View::Zoom(factor));
+            }
+            "--tikla" => {
+                let text = args
+                    .next()
+                    .ok_or("--tikla pencerede bir nokta ister: x,y piksel (ör. 746,95)")?;
+                pointer.push(Input::Click(screen(&text)?));
+            }
+            "--imlec" => {
+                let text = args
+                    .next()
+                    .ok_or("--imlec pencerede bir nokta ister: x,y piksel (ör. 800,400)")?;
+                pointer.push(Input::Move(screen(&text)?));
             }
             path => {
                 let doc = Document::read(Path::new(path))?;
@@ -209,6 +229,9 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
         let _ = app.update(Message::Viewport(event));
         snapshot.settle(&mut app, App::view, &mut update);
     }
+    for input in pointer {
+        snapshot.input(&mut app, App::view, &mut update, input);
+    }
     // The drawing area says what the device takes once it has drawn a frame (AA-01): one
     // frame first, so the settings window shows the device's sample counts and the value in use.
     let _ = snapshot.render(app.view(), &app.theme());
@@ -236,6 +259,17 @@ fn setting(app: &mut App, text: &str) -> Result<(), String> {
     }
     app.apply_settings();
     Ok(())
+}
+
+/// `x,y`: a point of the window in logical pixels from its top left.
+fn screen(text: &str) -> Result<Point, String> {
+    text.split_once(',')
+        .and_then(|(x, y)| Some((x.trim().parse::<f32>().ok()?, y.trim().parse::<f32>().ok()?)))
+        .filter(|(x, y)| x.is_finite() && y.is_finite())
+        .map(|(x, y)| Point::new(x, y))
+        .ok_or(format!(
+            "{text}: nokta x,y piksel biçiminde olmalı (ör. 746,95)"
+        ))
 }
 
 /// `Y,X` with a decimal point (CLAUDE.md §5): east, then north.
