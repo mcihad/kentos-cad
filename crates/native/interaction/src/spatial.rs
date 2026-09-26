@@ -293,6 +293,16 @@ pub fn measures(entity: &Entity) -> (Option<f64>, Option<f64>) {
     (entity_area(&s), entity_length(&s))
 }
 
+/// A dimension's layout as the shared core lays it out (`layout_dimension`):
+/// where its value is written, turned how, and the value; none for another
+/// object or a dimension that cannot be laid out.
+pub fn dimension_layout(
+    entity: &Entity,
+) -> Option<kentos_geometry_core::geom::dimension::DimensionLayout> {
+    kentos_geometry_core::entity::dimension_geom(&shape(entity))
+        .and_then(|d| kentos_geometry_core::geom::dimension::layout_dimension(&d))
+}
+
 /// A store id back to the document's slot (ids are the slots, exactly).
 fn slot(id: f64) -> Option<Slot> {
     (id >= 0.0 && id <= f64::from(u32::MAX) && id.fract() == 0.0).then_some(Slot(id as u32))

@@ -282,6 +282,7 @@ impl App {
                 );
                 let accent = rgba8(Tokens::of(&self.theme()).accent);
                 // The drawing's text over the scene, under the marks (labels.rs, docs/adr/0055).
+                // The text being edited in place is hidden meanwhile (text_field.rs).
                 let labels = crate::labels::layer(
                     &doc.model,
                     &self.spatial,
@@ -289,6 +290,7 @@ impl App {
                     self.canvas(),
                     &crate::viewport::palette(self.canvas()),
                     &format,
+                    self.text_field.as_ref().and_then(|f| f.editing),
                 );
                 let area = self.viewport.view(
                     doc,
@@ -300,8 +302,12 @@ impl App {
                 );
                 // The running command's strip on top (command_bar.rs); the right
                 // button's menus over it all (drawing_menus.rs).
+                // The text field over the drawing (text_field.rs).
+                let typing = self.text_field_view();
                 ContextMenu::controlled(
-                    stack![area, labels, over].extend(self.command_bar()),
+                    stack![area, labels, over]
+                        .extend(typing)
+                        .extend(self.command_bar()),
                     self.drawing_menu.map(|open| open.at),
                     move |_| self.drawing_menu_items(),
                     Message::DrawingMenu(crate::drawing_menus::Event::Closed),

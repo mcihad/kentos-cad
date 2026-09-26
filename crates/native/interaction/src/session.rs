@@ -51,7 +51,7 @@ use crate::stretch::{self, Stretch};
 use crate::tool::{Context, Cursor, Draft, Flow, Pointer, Preview, Tool, View};
 use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
-use crate::{construction, divide, donut, ellipse, parallel, revcloud, spline};
+use crate::{construction, divide, donut, ellipse, parallel, revcloud, spline, text};
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
 pub const TOOLS: &[&str] = &[
@@ -98,6 +98,7 @@ pub const TOOLS: &[&str] = &[
     revcloud::ID,
     point::SPOT_ID,
     divide::ID,
+    text::ID,
 ];
 
 /// The running tool, if any, the last one started, and the select tool that
@@ -166,6 +167,7 @@ impl Session {
             revcloud::ID => Box::new(crate::revcloud::RevCloud::new()),
             point::SPOT_ID => Box::new(Point::spot()),
             divide::ID => Box::new(crate::divide::Divide::new()),
+            text::ID => Box::new(crate::text::Text::new()),
             _ => return false,
         };
         // Kaydır is not repeated: Enter while panning repeats the command
@@ -308,6 +310,14 @@ impl Session {
 
     /// Typed text for the running tool; false when it does not understand it
     /// or no tool runs.
+    /// A text field's answer for the running tool (Yazı).
+    pub fn text_typed(&mut self, text: Option<&str>, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.text_typed(text, cx);
+        }
+        self.settle();
+    }
+
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let taken = self.tool.as_mut().is_some_and(|t| t.input(text, cx));
         self.settle();

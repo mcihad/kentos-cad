@@ -43,6 +43,7 @@ mod settings;
 mod settings_view;
 mod snapshot;
 mod start;
+mod text_field;
 mod traces;
 mod view;
 mod view_commands;

@@ -67,6 +67,19 @@ pub enum ViewChange {
     Pan { dx: f64, dy: f64 },
     /// This world box as large as it fits, `padding` logical pixels in from the edges (`camera.fit`).
     Fit { bounds: Bounds, padding: f64 },
+    /// A text field over the drawing where the text will start (Yazı, the
+    /// web's `view.requestTextInput`); the host gives back what was typed
+    /// with [`Tool::text_typed`].
+    Text(TextField),
+}
+
+/// Where a text field opens and how its text will look: its start, height in
+/// metres and angle in degrees counter-clockwise from east.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TextField {
+    pub at: Vec2,
+    pub height: f64,
+    pub rotation: f64,
 }
 
 /// The pointer's look over the drawing while a tool runs (the web's `Tool.cursor`):
@@ -219,6 +232,9 @@ pub struct Memory {
     pub divide_parts: u32,
     pub divide_step: f64,
     pub divide_by_step: bool,
+    /// Yazı's height in paper millimetres and angle in degrees (`TextTool.heightMm`, `.angle`).
+    pub text_height_mm: f64,
+    pub text_angle: f64,
 }
 
 impl Default for Memory {
@@ -259,6 +275,8 @@ impl Default for Memory {
             divide_parts: 4,
             divide_step: 10.0,
             divide_by_step: false,
+            text_height_mm: 2.5,
+            text_angle: 0.0,
         }
     }
 }
@@ -490,6 +508,9 @@ pub trait Tool {
     /// Ctrl+Z while the tool runs: takes back its newest step and returns
     /// true, or false when nothing is pending and the drawing is undone instead.
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool;
+    /// The answer of a text field it asked for ([`ViewChange::Text`]): the
+    /// typed text (Enter, a click elsewhere), or none (Esc).
+    fn text_typed(&mut self, _text: Option<&str>, _cx: &mut Context<'_>) {}
     /// Esc while the tool runs: it steps back (drops the object it picked,
     /// leaves a sub-step) and returns true, or false when it has nothing to
     /// drop and the session leaves it (the web's `Tool.cancel`).

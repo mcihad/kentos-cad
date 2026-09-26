@@ -165,6 +165,8 @@ pub enum Message {
     Layer(crate::layering::Event),
     /// The right button's menus over the drawing and the one-shot snap (drawing_menus.rs).
     DrawingMenu(crate::drawing_menus::Event),
+    /// The text field over the drawing (text_field.rs).
+    TextField(crate::text_field::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -248,6 +250,14 @@ pub struct App {
     pub(crate) drawing_menu: Option<crate::drawing_menus::Open>,
     /// The one-shot snap and the command it was chosen in.
     pub(crate) snap_once: Option<(kentos_interaction::SnapKind, &'static str)>,
+    /// The text field over the drawing (text_field.rs) and what it asks of the
+    /// next task: the keyboard, its text chosen, the keyboard back.
+    pub(crate) text_field: Option<crate::text_field::Open>,
+    pub(crate) text_field_focus: bool,
+    pub(crate) text_field_select: bool,
+    pub(crate) text_field_release: bool,
+    /// The last left press's object with no command running, and when (a double click edits a text).
+    pub(crate) last_click: Option<(kentos_domain::Slot, Instant)>,
     pub history: Vec<Entry>,
     pub command_input: String,
     pub command_expanded: bool,
@@ -368,6 +378,11 @@ impl App {
             warnings_total: 0,
             drawing_menu: None,
             snap_once: None,
+            text_field: None,
+            text_field_focus: false,
+            text_field_select: false,
+            text_field_release: false,
+            last_click: None,
             history: vec![Entry::Output(
                 "KentOS CAD masaüstü hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler."
                     .to_owned(),
@@ -494,6 +509,7 @@ impl App {
         let task = self.handle(message);
         self.follow_document();
         self.follow_selection_layers();
+        let task = Task::batch([task, self.text_field_tasks()]);
         self.cloud_after(Instant::now());
         task
     }
@@ -528,6 +544,10 @@ impl App {
         // While a drawing is being opened the app takes no command (opening.rs).
         if let Some(task) = self.while_opening(&message) {
             return task;
+        }
+        // A command from the ribbon or a menu keeps the text field's text first (the web's blur).
+        if matches!(message, Message::Run(_) | Message::RunMethod { .. }) {
+            self.close_text_field(true);
         }
         match message {
             Message::Run(id) => return self.run(id),
@@ -567,6 +587,7 @@ impl App {
             Message::LayerSelected(id) => self.layer_pressed(id),
             Message::Layer(event) => return self.layer_event(event),
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
+            Message::TextField(event) => self.text_field_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {

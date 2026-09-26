@@ -26,7 +26,7 @@ use iced::{
     Color, Element, Fill, Font, Pixels, Point, Rectangle, Renderer, Size, Theme, Vector, mouse,
 };
 use kentos_contracts::{DrawingFont, Entity, LabelInk, LabelStyle};
-use kentos_domain::Document;
+use kentos_domain::{Document, Slot};
 use kentos_interaction::spatial::default_label;
 use kentos_interaction::{Format, LabelSpot, Spatial, Vec2};
 use kentos_render_wgpu::Camera;
@@ -45,13 +45,21 @@ pub fn layer<'a>(
     canvas: Canvas,
     palette: &Palette,
     format: &Format,
+    hidden: Option<Slot>,
 ) -> Element<'a, Message> {
     let view = camera.visible_bounds();
-    let spots = spatial.labels(
+    let mut spots = spatial.labels(
         Vec2::new(view.min_x, view.min_y),
         Vec2::new(view.max_x, view.max_y),
         camera.scale,
     );
+    // A text or a dimension's value being edited in place (the web's `setEditing`).
+    if let Some(hidden) = hidden {
+        spots.retain(|spot| match spot {
+            LabelSpot::Text { slot, .. } | LabelSpot::Dimension { slot, .. } => *slot != hidden,
+            _ => true,
+        });
+    }
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
     let mut key = DefaultHasher::new();
     (
@@ -63,6 +71,7 @@ pub fn layer<'a>(
         doc.revision(),
         canvas as u8,
         font as u8,
+        hidden.map(|s| s.0),
     )
         .hash(&mut key);
     // The number formats decide a dimension's text.

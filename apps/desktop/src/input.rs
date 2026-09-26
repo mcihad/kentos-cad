@@ -23,7 +23,9 @@ use iced::advanced::widget::operation;
 use iced::keyboard::key::Named;
 use iced::widget::operation as widget_operation;
 
-use kentos_interaction::{Context, Draft, Level, Pointer, Session, Vec2, View, js_trim};
+use kentos_interaction::{
+    Context, Draft, Level, Pointer, Session, Vec2, View, ViewChange, js_trim,
+};
 use kentos_render_wgpu::Camera;
 
 use crate::app::{App, COMMAND_INPUT, Message};
@@ -88,7 +90,11 @@ impl App {
             },
         );
         for change in changes {
-            self.viewport.change(change);
+            match change {
+                // Yazı's field opens over the drawing (text_field.rs).
+                ViewChange::Text(field) => self.open_text_field(field),
+                change => self.viewport.change(change),
+            }
         }
         for line in log {
             self.say(line.level, line.text);
@@ -199,6 +205,16 @@ impl App {
     /// What the drawing area reports: the view changes, and the pointer goes
     /// to the running tool, or to the select tool while none runs (docs/adr/0029).
     pub(crate) fn pointer(&mut self, event: viewport::Event) -> Task<Message> {
+        // A press on the drawing, or a pan with the middle button, keeps the text
+        // field's text first (the web's blur); the wheel does not (text_field.rs).
+        if matches!(
+            event,
+            viewport::Event::Pressed(_)
+                | viewport::Event::RightPressed(_)
+                | viewport::Event::Panned { .. }
+        ) {
+            self.close_text_field(true);
+        }
         let doc = self.document.as_ref();
         self.viewport.update(event.clone(), doc);
         match event {
@@ -217,9 +233,14 @@ impl App {
                 self.line_focused = false;
                 // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
                 let p = self.pointer_at(at);
+                let running = self.session.is_running();
                 self.with_tool(|s, cx| s.pointer_down(&p, cx));
                 // A one-shot snap was for this press (the web drops it on a left press).
                 self.snap_once = None;
+                // No command: a second press on a text or a dimension edits it (text_field.rs).
+                if !running {
+                    self.maybe_edit_text(self.viewport.world(at));
+                }
             }
             viewport::Event::Released(at) => {
                 let p = self.pointer_at(at);
@@ -283,6 +304,14 @@ impl App {
             if press.named() == Some(Named::Escape) {
                 // What the window held goes with it (a password, a request).
                 self.close_dialog();
+            }
+            return Task::none();
+        }
+        // 1. The text field over the drawing takes the keys: Esc drops what
+        // was typed, nothing reaches the app (the web's InlineTextEditor).
+        if self.text_field.is_some() {
+            if press.named() == Some(Named::Escape) {
+                self.close_text_field(false);
             }
             return Task::none();
         }

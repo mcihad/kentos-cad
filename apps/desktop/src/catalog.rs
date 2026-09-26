@@ -161,6 +161,9 @@ pub const PORTED: &[&str] = &[
     "tool.revcloud",
     "tool.spot",
     "tool.divide",
+    // Yazı and the text field over the drawing, which also edits a text's or a
+    // dimension's value on a double click (docs/adr/0060).
+    "tool.text",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

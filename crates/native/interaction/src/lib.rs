@@ -103,6 +103,7 @@ mod session;
 pub mod spatial;
 pub mod spline;
 pub mod stretch;
+pub mod text;
 mod tool;
 pub mod trim;
 pub mod vertex;
@@ -121,9 +122,9 @@ pub use prompt::{Prompt, PromptOption, upper_tr};
 pub use select::SelectBox;
 pub use selection::Selection;
 pub use session::Session;
-pub use spatial::{LabelSpot, Spatial, measures, vertices};
+pub use spatial::{LabelSpot, Spatial, dimension_layout, measures, vertices};
 pub use tool::{Area, Label};
 pub use tool::{
     Context, Corners, Cursor, Draft, Flow, LengthenMode, Marker, MarkerShape, Memory, Pointer,
-    Preview, Stroke, Tag, Tone, Tool, View, ViewChange, snap_kinds,
+    Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange, snap_kinds,
 };

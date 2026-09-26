@@ -101,7 +101,8 @@
     "tool.donut",
     "tool.revcloud",
     "tool.spot",
-    "tool.divide"
+    "tool.divide",
+    "tool.text"
   ],
   "format": "kentos.desktop-ported",
   "version": 1
