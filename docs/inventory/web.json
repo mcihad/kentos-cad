@@ -76,7 +76,7 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 80,
+    "commandsWithoutTests": 72,
     "commandsOnDesktop": 84
   },
   "commands": [
@@ -985,7 +985,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/clipboard.json"
+      ]
     },
     {
       "id": "edit.cut",
@@ -1013,7 +1015,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/clipboard.json"
+      ]
     },
     {
       "id": "edit.deselect",
@@ -1103,7 +1107,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/ribbon.test.ts"
+        "apps/web/src/app/ribbon.test.ts",
+        "fixtures/interaction/v1/clipboard.json"
       ]
     },
     {
@@ -1136,7 +1141,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/clipboard.json"
+      ]
     },
     {
       "id": "edit.redo",
@@ -3032,7 +3039,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/navigation.json"
+      ]
     },
     {
       "id": "tool.copy",
@@ -3504,7 +3513,8 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/visual.mjs",
         "fixtures/interaction/v1/arc-variants.json",
-        "fixtures/interaction/v1/line-chain.json"
+        "fixtures/interaction/v1/line-chain.json",
+        "fixtures/interaction/v1/navigation.json"
       ]
     },
     {
@@ -3686,7 +3696,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/navigation.json"
+      ]
     },
     {
       "id": "tool.parallel",
@@ -4102,7 +4114,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/navigation.json"
+      ]
     },
     {
       "id": "tool.revcloud",
@@ -4644,7 +4658,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/navigation.json"
+      ]
     },
     {
       "id": "tools.options",
@@ -5349,7 +5365,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/navigation.json"
+      ]
     },
     {
       "id": "workspace.cad",
@@ -6196,7 +6214,8 @@
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/visual.mjs",
         "fixtures/interaction/v1/arc-variants.json",
-        "fixtures/interaction/v1/line-chain.json"
+        "fixtures/interaction/v1/line-chain.json",
+        "fixtures/interaction/v1/navigation.json"
       ]
     },
     {
@@ -6327,7 +6346,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/navigation.json"
+      ]
     },
     {
       "id": "parallel",
@@ -7022,7 +7043,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/navigation.json"
+      ]
     }
   ],
   "processing": [

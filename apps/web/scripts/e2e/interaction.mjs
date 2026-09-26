@@ -111,10 +111,15 @@ function keyFor(ch) {
 async function press(chord) {
   const parts = chord === '+' ? ['+'] : chord.split('+');
   const name = parts.pop();
-  const spec = keyFor(name);
+  let spec = keyFor(name);
   const altGr = Boolean(spec.altGr);
   const ctrl = parts.includes('Ctrl') || altGr;
   const alt = parts.includes('Alt') || altGr;
+  // Shift+letter (Shift+H, Ctrl+Shift+V): the keyboard gives the capital, the layout's way.
+  if (parts.includes('Shift') && /^\p{L}$/u.test(spec.key)) {
+    const capital = spec.key.toLocaleUpperCase(layout === LAYOUTS['tr-q'] ? 'tr-TR' : 'en-US');
+    spec = { ...spec, key: capital, text: capital, shift: true };
+  }
   const modifiers = (alt ? 1 : 0) | (ctrl ? 2 : 0) | (spec.shift ? 8 : 0);
   // A chord types nothing; AltGr types its character.
   const text = (ctrl || alt) && !altGr ? undefined : spec.text;
@@ -271,6 +276,7 @@ const observe = () =>
       dirty: k.doc.dirty.value,
       log: k.log.entries.value.at(-1)?.level ?? null,
       metresPerPixel: 1 / k.view.camera.scale,
+      viewCenter: [k.view.camera.center.x, k.view.camera.center.y],
       selected: [...k.selection.ids.value],
       hover: k.selection.hover.value,
       snap: k.view.currentSnap?.kind ?? null,
@@ -316,6 +322,11 @@ function compare(expect, got, t) {
     const have = got[key];
     if (key === 'metresPerPixel') {
       if (Math.abs(have - want) > want * 1e-9) bad.push(`${key}: ${have}, beklenen ${want}`);
+    } else if (key === 'viewCenter') {
+      // Where Kaydır and the zooms put the view (docs/adr/0056): from clicks, within the click tolerance.
+      const c = [have[0] - origin.x, have[1] - origin.y];
+      if (Math.hypot(c[0] - want[0], c[1] - want[1]) > t.clickTolerance)
+        bad.push(`${key}: ${JSON.stringify(c)}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
     } else if (key === 'newest') bad.push(...compareShape('newest', have, want, t));
     else if (key === 'objects') for (const w of want) bad.push(...compareShape(`objects[${w.id}]`, have[w.id] ?? null, w, t));
     else if (!same(have, want)) bad.push(`${key}: ${JSON.stringify(have)}, beklenen ${JSON.stringify(want)}`);

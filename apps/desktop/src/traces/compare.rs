@@ -1,6 +1,6 @@
 //! What a step expects against what the app shows, by the web runner's
-//! rules: clicked points within `clickTolerance`, typed edges exactly, the
-//! scale within a relative 1e-9.
+//! rules: clicked points and the view's centre within `clickTolerance`, typed
+//! edges exactly, the scale within a relative 1e-9.
 
 use super::format::{Expect, Newest, Trace};
 use super::player::{Observation, Seen};
@@ -95,6 +95,17 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             (got.metres_per_pixel - want).abs() <= want * 1e-9,
             got.metres_per_pixel.to_string(),
             want.to_string(),
+        );
+    }
+    if let Some([wx, wy]) = expect.view_center {
+        // Where Kaydır and the zooms put the view: from clicks, within the click tolerance.
+        let [ox, oy] = trace.view.center;
+        let have = [got.view_center[0] - ox, got.view_center[1] - oy];
+        check(
+            "viewCenter",
+            (have[0] - wx).hypot(have[1] - wy) <= trace.click_tolerance,
+            format!("{have:?}"),
+            format!("{:?} (±{} m)", [wx, wy], trace.click_tolerance),
         );
     }
     if let Some(want) = &expect.selected {

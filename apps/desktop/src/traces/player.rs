@@ -100,6 +100,8 @@ pub struct Observation {
     pub dirty: bool,
     pub log: Option<String>,
     pub metres_per_pixel: f64,
+    /// The view's centre, absolute.
+    pub view_center: [f64; 2],
     pub selected: Vec<u32>,
     pub hover: Option<u32>,
     /// The snap marker's kind, as the web names it.
@@ -502,6 +504,7 @@ impl<'a> Player<'a> {
             dirty: doc.is_some_and(Document::dirty),
             log: app.last_level.map(|l| l.as_str().to_owned()),
             metres_per_pixel: 1.0 / app.viewport.camera.scale,
+            view_center: [app.viewport.camera.center.x, app.viewport.camera.center.y],
             selected: app.selection.ids().iter().map(|s| s.0).collect(),
             hover: app.selection.hover().map(|s| s.0),
             snap: app.snap.map(|s| snap_name(s.kind).to_owned()),
