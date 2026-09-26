@@ -43,9 +43,10 @@ use crate::error::{AppError, AppResult};
 use crate::projects::{rfc3339, storage_of};
 use crate::{idempotency, journal};
 
-/// Files verified at once: each is read whole and decoded, so a few large
-/// uploads cannot take all the server's memory together.
-fn verifying() -> &'static Semaphore {
+/// Files verified (or, for a snapshot, written) at once: each is held whole
+/// with its decoded drawing, so a few large ones cannot take all the
+/// server's memory together.
+pub(crate) fn verifying() -> &'static Semaphore {
     static VERIFYING: OnceLock<Semaphore> = OnceLock::new();
     VERIFYING.get_or_init(|| Semaphore::new(2))
 }

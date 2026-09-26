@@ -24,6 +24,7 @@ pub mod listing;
 pub mod people;
 pub mod projects;
 pub mod sharing;
+pub mod snapshot;
 pub mod tenancy;
 
 pub use error::{AppError, AppResult};

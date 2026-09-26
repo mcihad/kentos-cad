@@ -33,3 +33,5 @@ time = { workspace = true }
 tokio = { workspace = true, features = ["io-util"] }
 # The SHA-256 of an uploaded file in the file routes' tests (docs/adr/0031).
 sha2 = { workspace = true }
+# Reading back a project's snapshot in the file routes' tests (docs/adr/0033).
+kentos-kcad = { path = "../../crates/shared/kcad" }

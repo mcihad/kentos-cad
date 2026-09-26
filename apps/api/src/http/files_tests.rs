@@ -1,5 +1,6 @@
 //! File projects over HTTP (docs/adr/0031): an upload's bytes stream in and
 //! a revision's stream out through the real router (its own upload limits);
+//! a database project downloads as one `.kcad` of one moment (docs/adr/0033);
 //! a stranger finds every route of the project missing alike.
 
 use std::pin::Pin;
@@ -60,11 +61,8 @@ impl HttpBody for BrokenBody {
     }
 }
 
-#[tokio::test]
-async fn a_revision_goes_up_and_comes_down_over_http() {
-    let Some(db) = TestDb::create().await else {
-        return;
-    };
+/// Two organisations: `ayse` manages projects in the first, `can` owns the second; both signed in.
+async fn two_offices(db: &TestDb) -> (axum::Router, uuid::Uuid, String, String) {
     let tenant = admin::create_tenant(&db.owner, "buro", "Harita Bürosu", 3)
         .await
         .unwrap();
@@ -87,23 +85,43 @@ async fn a_revision_goes_up_and_comes_down_over_http() {
         signed_in(&router, "ayse").await,
         signed_in(&router, "can").await,
     );
+    (router, tenant, ayse, can)
+}
+
+/// A new project with one layer, `cizim`, kept as `storage` ("database" or "file"); its id.
+async fn new_project(
+    router: &axum::Router,
+    tenant: uuid::Uuid,
+    cookie: &str,
+    name: &str,
+    storage: &str,
+) -> String {
     let layer = serde_json::json!({ "id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true,
         "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] });
-    let create = serde_json::json!({ "name": "Ada 7 dosyası", "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
+    let create = serde_json::json!({ "name": name, "settings": { "srid": 5256, "lengthDecimals": 2, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000 },
         "origin": { "x": 486500.0, "y": 4420200.0 }, "layers": [layer], "activeLayer": "cizim", "styles": { "items": [], "categories": [] },
-        "storage": "file" });
+        "storage": storage });
     let (status, _, body) = send(
-        &router,
+        router,
         json_req(
             "POST",
             &format!("/v1/tenants/{tenant}/projects"),
-            &ayse,
+            cookie,
             create,
         ),
     )
     .await;
     assert_eq!(status, StatusCode::CREATED);
-    let project = serde_json::from_slice::<ProjectInfo>(&body).unwrap().id;
+    serde_json::from_slice::<ProjectInfo>(&body).unwrap().id
+}
+
+#[tokio::test]
+async fn a_revision_goes_up_and_comes_down_over_http() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (router, tenant, ayse, can) = two_offices(&db).await;
+    let project = new_project(&router, tenant, &ayse, "Ada 7 dosyası", "file").await;
     let base = format!("/v1/tenants/{tenant}/projects/{project}");
 
     // Open an upload, send its bytes in one streamed body, commit it as revision 1.
@@ -225,6 +243,10 @@ async fn a_revision_goes_up_and_comes_down_over_http() {
     let (status, _, _) = send(&router, put_bytes(&uri, &ayse, MINIMAL)).await;
     assert_eq!(status, StatusCode::OK);
 
+    // A file project is its revisions already: no snapshot of it.
+    let (status, _, _) = send(&router, get(&format!("{base}/snapshot"), &ayse)).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+
     // Someone of another organisation finds nothing: every route answers as for no project.
     let missing = not_found_body(
         &router,
@@ -237,6 +259,7 @@ async fn a_revision_goes_up_and_comes_down_over_http() {
     for req in [
         get(&format!("{base}/files"), &can),
         get(&format!("{base}/files/1"), &can),
+        get(&format!("{base}/snapshot"), &can),
         json_req(
             "POST",
             &format!("{base}/uploads"),
@@ -247,5 +270,79 @@ async fn a_revision_goes_up_and_comes_down_over_http() {
     ] {
         assert_eq!(not_found_body(&router, req).await, missing);
     }
+    db.close().await;
+}
+
+#[tokio::test]
+async fn a_database_project_downloads_as_one_kcad_file() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let (router, tenant, ayse, can) = two_offices(&db).await;
+    let project = new_project(&router, tenant, &ayse, "Ada 8", "database").await;
+    let base = format!("/v1/tenants/{tenant}/projects/{project}");
+    let id = uuid::Uuid::now_v7().to_string();
+    let point = serde_json::json!({ "kind": "point", "id": 1, "layerId": "cizim", "attrs": {}, "p": { "x": 486510.0, "y": 4420210.0 } });
+    let envelope = CommandEnvelope {
+        command_name: "project.changes".into(),
+        version: 1,
+        tenant_id: tenant.to_string(),
+        project_id: project.clone(),
+        request_id: "istek-nesne-1".into(),
+        idempotency_key: uuid::Uuid::now_v7().to_string(),
+        expected_versions: Default::default(),
+        input: serde_json::json!({ "features": [{ "op": "create", "id": id, "entity": point }] }),
+    };
+    let (status, _, body) = send(
+        &router,
+        json_req(
+            "POST",
+            &format!("{base}/commands"),
+            &ayse,
+            serde_json::to_value(&envelope).unwrap(),
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
+
+    let (_, _, body) = send(&router, get(&base, &ayse)).await;
+    let info: ProjectInfo = serde_json::from_slice(&body).unwrap();
+    let (status, headers, body) = send(&router, get(&format!("{base}/snapshot"), &ayse)).await;
+    assert_eq!(status, StatusCode::OK, "{}", String::from_utf8_lossy(&body));
+    let doc = kentos_kcad::decode(&body).unwrap();
+    assert_eq!(doc.name, "Ada 8");
+    assert_eq!(
+        doc.uids.iter().map(|u| u.to_text()).collect::<Vec<_>>(),
+        [id]
+    );
+    assert_eq!(
+        headers[header::ETAG].to_str().unwrap(),
+        format!("\"{}\"", sha(&body))
+    );
+    assert_eq!(
+        headers["x-kentos-revision"].to_str().unwrap(),
+        info.data_revision
+    );
+    assert_eq!(
+        headers["x-kentos-event-cursor"].to_str().unwrap(),
+        info.event_cursor
+    );
+    let disposition = headers[header::CONTENT_DISPOSITION].to_str().unwrap();
+    let file = format!("filename*=UTF-8''Ada%208-r{}.kcad", info.data_revision);
+    assert!(disposition.contains(&file), "{disposition}");
+
+    // Someone of another organisation finds nothing, as for no project.
+    let missing = not_found_body(
+        &router,
+        get(
+            &format!("/v1/tenants/{tenant}/projects/{}", uuid::Uuid::now_v7()),
+            &can,
+        ),
+    )
+    .await;
+    assert_eq!(
+        not_found_body(&router, get(&format!("{base}/snapshot"), &can)).await,
+        missing
+    );
     db.close().await;
 }

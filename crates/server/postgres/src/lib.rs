@@ -67,6 +67,23 @@ impl Db {
         Ok(tx)
     }
 
+    /// A read-only transaction acting for `scope` that sees one moment of the
+    /// database in all its statements (repeatable read): a project's rows and
+    /// its revision are read together without locking it (TODOS.md SYNC-05,
+    /// docs/adr/0033). The moment is taken by the first statement, which is
+    /// setting the scope.
+    pub async fn snapshot(
+        &self,
+        scope: Scope,
+    ) -> Result<Transaction<'static, Postgres>, sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query("set transaction isolation level repeatable read, read only")
+            .execute(&mut *tx)
+            .await?;
+        rescope(&mut tx, scope).await?;
+        Ok(tx)
+    }
+
     /// Whether every migration of this build is applied (the server refuses to start otherwise).
     pub async fn schema_ready(&self) -> Result<bool, sqlx::Error> {
         let applied: Vec<i64> = match sqlx::query_scalar(

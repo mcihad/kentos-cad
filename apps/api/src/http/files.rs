@@ -1,6 +1,8 @@
 //! The routes of file projects (docs/adr/0031): opening an upload, sending
 //! its bytes, listing the revisions and downloading one. The commit is the
 //! product command `project.file.commit` on the project's command route.
+//! A database project comes as one `.kcad` file too: its snapshot of one
+//! moment (docs/adr/0033).
 //!
 //! Bodies stream: an upload goes to the object store frame by frame (the
 //! upload router's own size limit and timeout, `router`), and a download is
@@ -116,47 +118,79 @@ pub async fn download(
         let (info, file) = files::download(state.db()?, &state.blobs, &a, revision).await?;
         let mut response = Body::new(FileBody::new(file)).into_response();
         let h = response.headers_mut();
-        h.insert(
-            header::CONTENT_TYPE,
-            HeaderValue::from_static("application/octet-stream"),
-        );
         h.insert(header::CONTENT_LENGTH, HeaderValue::from(info.size));
-        if let Ok(tag) = HeaderValue::from_str(&format!("\"{}\"", info.sha256)) {
-            h.insert(header::ETAG, tag);
-        }
-        if let Ok(v) = HeaderValue::from_str(&info.revision) {
-            h.insert("x-kentos-revision", v);
-        }
-        // The file's name: the project's, with the revision; non-ASCII names in the RFC 5987 form.
-        let name = format!("{}-r{}.kcad", a.name, info.revision);
-        let ascii: String = name
-            .chars()
-            .map(|c| {
-                if c.is_ascii_alphanumeric() || "-_. ".contains(c) {
-                    c
-                } else {
-                    '_'
-                }
-            })
-            .collect();
-        let encoded: String = name
-            .bytes()
-            .map(|b| {
-                if b.is_ascii_alphanumeric() || b"-_.".contains(&b) {
-                    (b as char).to_string()
-                } else {
-                    format!("%{b:02X}")
-                }
-            })
-            .collect();
-        if let Ok(v) = HeaderValue::from_str(&format!(
-            "attachment; filename=\"{ascii}\"; filename*=UTF-8''{encoded}"
-        )) {
-            h.insert(header::CONTENT_DISPOSITION, v);
-        }
+        kcad_headers(
+            h,
+            &info.sha256,
+            &info.revision,
+            &format!("{}-r{}.kcad", a.name, info.revision),
+        );
         Ok(response)
     };
     run.await.map_err(|e| Failure::with(e, &headers))
+}
+
+/// `GET …/projects/{project}/snapshot`: a database project as one KCAD v2
+/// file of one data revision (`project.download`, docs/adr/0033), with that
+/// revision and the event cursor of the same moment.
+pub async fn snapshot(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path((tenant, project)): Path<(String, String)>,
+) -> Result<Response, Failure> {
+    let run = async {
+        let a = project_access(&state, &caller, &tenant, &project).await?;
+        let s = kentos_application::snapshot::snapshot(state.db()?, &a).await?;
+        let revision = s.revision.to_string();
+        let name = format!("{}-r{revision}.kcad", s.name);
+        let mut response = Body::from(s.bytes).into_response();
+        let h = response.headers_mut();
+        kcad_headers(h, &s.sha256, &revision, &name);
+        h.insert("x-kentos-event-cursor", HeaderValue::from(s.event_cursor));
+        Ok(response)
+    };
+    run.await.map_err(|e| Failure::with(e, &headers))
+}
+
+/// The headers of a `.kcad` response: its type, its SHA-256 as the entity
+/// tag, its revision and its file name (non-ASCII names in the RFC 5987 form).
+fn kcad_headers(h: &mut HeaderMap, sha256: &str, revision: &str, name: &str) {
+    h.insert(
+        header::CONTENT_TYPE,
+        HeaderValue::from_static("application/octet-stream"),
+    );
+    if let Ok(tag) = HeaderValue::from_str(&format!("\"{sha256}\"")) {
+        h.insert(header::ETAG, tag);
+    }
+    if let Ok(v) = HeaderValue::from_str(revision) {
+        h.insert("x-kentos-revision", v);
+    }
+    let ascii: String = name
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || "-_. ".contains(c) {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    let encoded: String = name
+        .bytes()
+        .map(|b| {
+            if b.is_ascii_alphanumeric() || b"-_.".contains(&b) {
+                (b as char).to_string()
+            } else {
+                format!("%{b:02X}")
+            }
+        })
+        .collect();
+    if let Ok(v) = HeaderValue::from_str(&format!(
+        "attachment; filename=\"{ascii}\"; filename*=UTF-8''{encoded}"
+    )) {
+        h.insert(header::CONTENT_DISPOSITION, v);
+    }
 }
 
 /// A file read in parts as a response body.

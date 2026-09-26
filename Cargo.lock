@@ -2395,6 +2395,7 @@ dependencies = [
  "jsonwebtoken",
  "kentos-application",
  "kentos-contracts",
+ "kentos-kcad",
  "kentos-postgres",
  "reqwest",
  "serde",

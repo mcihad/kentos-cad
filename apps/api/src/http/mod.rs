@@ -150,6 +150,10 @@ pub fn router(state: AppState) -> Router {
             "/v1/tenants/{tenant}/projects/{project}/files/{revision}",
             get(files::download),
         )
+        .route(
+            "/v1/tenants/{tenant}/projects/{project}/snapshot",
+            get(files::snapshot),
+        )
         .route("/v1/ws", get(ws::upgrade))
         .layer(middleware);
     // An upload's bytes are larger and slower than any other request: their
