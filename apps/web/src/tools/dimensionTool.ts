@@ -215,6 +215,9 @@ export class DimensionTool extends PointInputTool {
       this.commit(this.geomAt(this.hover ?? this.pts[0] ?? this.edges[0]?.at ?? { x: 0, y: 0 }, n));
       return true;
     }
+    // An edge or a circle is picked with the mouse: a typed point would pick nothing, yet end the tool's
+    // fresh start (its style options would go). It is refused, as on the desktop (docs/adr/0061).
+    if (this.picksEdge) return false;
     return super.input(text);
   }
 
