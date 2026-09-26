@@ -78,7 +78,8 @@ export class XlineTool extends PointInputTool {
     if (this.mode === 'bisect' && this.pts.length === 1) return void this.pts.push(p);
     const dir = this.dirFor(p);
     if (!dir) return;
-    if (this.create({ kind: 'xline', p: this.baseFor(p), dir })) this.ctx.log.success('Yardımcı çizgi eklendi.');
+    // Through `cad.entities.create` (docs/adr/0057): each line its own object and undo step, “Ekle”.
+    if (this.writeObjects([{ kind: 'xline', p: this.baseFor(p), dir }])) this.ctx.log.success('Yardımcı çizgi eklendi.');
   }
 
   protected override reset(): void {
@@ -116,7 +117,7 @@ export class RayTool extends PointInputTool {
   protected onPoint(p: Vec2): void {
     if (!this.pts.length) return void this.pts.push(p);
     const dir = unitToward(this.pts[0], p);
-    if (dir && this.create({ kind: 'ray', p: this.pts[0], dir })) this.ctx.log.success('Işın eklendi.');
+    if (dir && this.writeObjects([{ kind: 'ray', p: this.pts[0], dir }])) this.ctx.log.success('Işın eklendi.');
   }
 
   override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {

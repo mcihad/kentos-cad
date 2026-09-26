@@ -1293,6 +1293,67 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // The drawing tools' command for objects without one of their own (docs/adr/0057),
+        // held together by fixtures/commands/v1/cad.entities.create.json.
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_CREATE.into(),
+            version: crate::CAD_ENTITIES_CREATE_VERSION,
+            title: "Nesneleri ekle".into(),
+            summary: "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın adı (Paralel çizgi, Dik in, Dik çık, Böl). \
+                      Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. \
+                      Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. \
+                      Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesCreate>(),
+            output: schema::<crate::EntitiesCreated>(),
+            examples: vec![
+                CommandExample {
+                    title: "Bir elips: merkezi, büyük yarı ekseni (merkezden bir uca) ve küçük eksenin büyüğe oranı".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "objects": [{
+                            "geometry": {
+                                "kind": "ellipse",
+                                "c": { "x": 423510.0, "y": 4512300.0 },
+                                "major": { "x": 12.0, "y": 0.0 },
+                                "ratio": 0.5,
+                                "t0": 0.0,
+                                "t1": 0.0
+                            }
+                        }]
+                    }),
+                    output: Some(json!({
+                        "created": ["01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"],
+                        "ids": [41],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Paralel çizgi: eksenin iki yanı 5 m arayla ve eksen, tek adımda; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "layerId": "yol",
+                        "operation": "parallel",
+                        "objects": [
+                            { "geometry": { "kind": "polyline", "pts": [{ "x": 423500.0, "y": 4512305.0 }, { "x": 423600.0, "y": 4512305.0 }] } },
+                            { "geometry": { "kind": "polyline", "pts": [{ "x": 423500.0, "y": 4512295.0 }, { "x": 423600.0, "y": 4512295.0 }] } },
+                            { "geometry": { "kind": "polyline", "pts": [{ "x": 423500.0, "y": 4512300.0 }, { "x": 423600.0, "y": 4512300.0 }] } }
+                        ],
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -1444,6 +1505,9 @@ mod tests {
                     crate::CAD_ENTITIES_ARRAY => {
                         serde_json::from_value::<crate::EntitiesArray>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_CREATE => {
+                        serde_json::from_value::<crate::EntitiesCreate>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1483,6 +1547,10 @@ mod tests {
                         }
                         crate::CAD_ENTITIES_ARRAY => {
                             serde_json::from_value::<crate::EntitiesArrayed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_CREATE => {
+                            serde_json::from_value::<crate::EntitiesCreated>(output.clone())
                                 .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),

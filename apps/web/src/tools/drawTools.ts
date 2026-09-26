@@ -1,5 +1,7 @@
 import type { AppContext } from '../app/context';
 import type { CommandResult } from '../contracts/generated/CommandResult';
+import type { CreateOperation } from '../contracts/generated/CreateOperation';
+import type { EntitiesCreated } from '../contracts/generated/EntitiesCreated';
 import { Signal } from '../core/signal';
 import type { Entity, EntityGeometry, NewEntity } from '../model/entities';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
@@ -9,6 +11,7 @@ import { pointCreate } from '../product/pointCreate';
 import { polygonCreate } from '../product/polygonCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
+import * as createCommand from './createCommand';
 import { drawTag, strokePath } from './preview';
 import type { Tool, ToolPointer } from './Tool';
 import { writableLayer } from './targetLayer';
@@ -209,6 +212,19 @@ export abstract class PointInputTool implements Tool {
   protected writeRing(pts: Vec2[], bulges?: number[]): boolean {
     const input = { layerId: this.ctx.doc.layers.active.value, pts, ...(bulges && { bulges }), ...this.colour() };
     return this.written(polygonCreate.execute({ doc: this.ctx.doc }, input)) !== null;
+  }
+
+  /**
+   * Objects the tool built (an ellipse, a spline, a construction line …)
+   * through the product command `cad.entities.create` (docs/adr/0057): the
+   * active layer and the current colour explicit; one undo step, “Ekle” or
+   * the tool's `operation`, noted for Ctrl+Z. The output, or null when
+   * refused (the refusal said).
+   */
+  protected writeObjects(geometries: EntityGeometry[], operation?: CreateOperation): EntitiesCreated | null {
+    const out = createCommand.writeObjects(this.ctx, geometries, operation);
+    if (out) this.noteMade(out.ids[0]);
+    return out;
   }
 
   /** The current colour, explicit in a command's input (CMD-07); absent: the layer's. */

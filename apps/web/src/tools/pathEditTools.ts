@@ -5,6 +5,7 @@ import { divisionPoints, nearestS, pathOf, type Path } from '../model/ops/path';
 import { insertVertex, nearestSegment, nearHole, removeVertex } from '../model/ops/vertex';
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
+import { writeObjects } from './createCommand';
 import { EdgePickTool } from './edgeTools';
 import { editGeometry, uidOf, writeEdit } from './editCommand';
 import { drawTag, strokeGeometry } from './preview';
@@ -157,22 +158,19 @@ export class DivideTool extends EdgePickTool {
     return divisionPoints(entity, DivideTool.byStep ? { step: DivideTool.step } : { parts: DivideTool.parts }, fromEnd);
   }
 
+  /**
+   * The points go on the active layer through `cad.entities.create`
+   * (docs/adr/0057), one undo step “Böl”; on a locked layer the command says
+   * why none is placed.
+   */
   private commit(): void {
     const pts = this.points();
     if (!pts.length) {
       this.ctx.log.warn('Aralık nesne boyundan uzun; nokta konmadı.');
     } else if (pts.length > 10_000) {
       this.ctx.log.warn('10 000’den fazla nokta oluşacak; daha büyük bir aralık girin.');
-    } else {
-      const { doc } = this.ctx;
-      const layerId = doc.layers.active.value;
-      if (doc.layers.isLocked(layerId)) this.ctx.log.warn(`“${doc.layers.get(layerId)?.name}” katmanı kilitli; noktalar etkin katmana konur.`);
-      else {
-        doc.transact('Böl', () => {
-          for (const p of pts) doc.add({ kind: 'point', p, layerId, color: this.ctx.settings.color.value ?? undefined, attrs: {} });
-        });
-        this.ctx.log.success(`${pts.length} nokta kondu.`);
-      }
+    } else if (writeObjects(this.ctx, pts.map((p) => ({ kind: 'point', p })), 'divide')) {
+      this.ctx.log.success(`${pts.length} nokta kondu.`);
     }
     this.target = null;
     this.refresh();

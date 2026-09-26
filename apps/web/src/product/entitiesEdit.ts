@@ -79,7 +79,7 @@ interface Checked {
 const named = (c: EntityEdit): [string, 'uid' | 'from'] => (c.kind === 'add' ? [c.from, 'from'] : [c.uid, 'uid']);
 
 /** A geometry's own fields, copied: nothing else a caller put beside them reaches the drawing. */
-function geometryOf(g: EntityGeometry): Record<string, unknown> {
+export function geometryOf(g: EntityGeometry): Record<string, unknown> {
   const src = g as unknown as Record<string, unknown>;
   const out: Record<string, unknown> = { kind: g.kind };
   for (const key of FIELDS[g.kind]) if (src[key] !== undefined) out[key] = structuredClone(src[key]);
@@ -114,9 +114,13 @@ function inherited(e: Entity, g: EntityGeometry, keepData: boolean): NewEntity {
   return { ...geometryOf(g), layerId: e.layerId, color: e.color, attrs: keepData ? { ...e.attrs } : {}, label: keepData ? e.label : undefined } as unknown as NewEntity;
 }
 
-/** One change's geometry: enough points for its kind, every number finite, a positive radius. */
-function checkGeometry(g: EntityGeometry, i: number): Stop | null {
-  const at = (field: string) => `changes[${i}].geometry${field}`;
+/**
+ * The `i`-th geometry of the input's `list` (`changes`; `objects` of
+ * `cad.entities.create`): enough points for its kind, every number finite, a
+ * positive radius. `whose` names it in a message: “değişikliğin”.
+ */
+export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', whose = 'değişikliğin'): Stop | null {
+  const at = (field: string) => `${list}[${i}].geometry${field}`;
   if (g.kind === 'polyline' && g.pts.length < 2)
     return failed(error('too_few_points', `Çoklu çizginin en az 2 noktası olmalı; ${g.pts.length} nokta verildi. Eksik noktaları ekleyin.`, at('.pts')));
   if (g.kind === 'polygon') {
@@ -132,7 +136,7 @@ function checkGeometry(g: EntityGeometry, i: number): Stop | null {
         return failed(error('too_few_corners', `${h + 1}. deliğin en az 3 köşesi olmalı; ${hole.length} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.`, at(`.holes[${h}]`)));
   }
   if (!geometryIsFinite(g as unknown as Entity))
-    return failed(error('not_finite', `${i + 1}. değişikliğin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.`, at('')));
+    return failed(error('not_finite', `${i + 1}. ${whose} geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.`, at('')));
   if ((g.kind === 'circle' || g.kind === 'arc') && !(g.r > 0)) return failed(error('invalid_radius', 'Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.', at('.r')));
   return null;
 }

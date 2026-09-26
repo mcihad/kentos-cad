@@ -1,6 +1,7 @@
 import type { AppContext } from '../app/context';
+import type { CreateOperation } from '../contracts/generated/CreateOperation';
 import { Signal } from '../core/signal';
-import type { Entity, NewEntity } from '../model/entities';
+import type { Entity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
 import { closestOnEdge, type Edge } from '../model/geom/intersect';
 import { sideOffsets, sidePoint } from '../model/geom/survey';
@@ -8,8 +9,8 @@ import { entityEdges } from '../model/ops/edges';
 import type { ViewTransform } from '../viewport/Camera';
 import { radialPoint } from './constructions';
 import { parseNumber } from './coordinateInput';
+import { writeObjects } from './createCommand';
 import { drawTag, strokeGeometry, strokePath } from './preview';
-import { writableLayer } from './targetLayer';
 import type { Tool, ToolPointer } from './Tool';
 import { pointFromText } from './tracking';
 
@@ -77,6 +78,8 @@ abstract class PerpendicularTool implements Tool {
   abstract readonly id: string;
   protected abstract readonly label: string;
   protected abstract readonly straightOnly: boolean;
+  /** The undo step's name in the command's terms: “Dik in” or “Dik çık”. */
+  protected abstract readonly operation: CreateOperation;
   readonly prompt = new Signal('');
   readonly cursor = 'cross' as const;
   protected ref: Ref | null = null;
@@ -157,12 +160,14 @@ abstract class PerpendicularTool implements Tool {
     this.ctx.tools.exit();
   }
 
-  protected addLine(a: Vec2, b: Vec2): boolean {
-    if (dist(a, b) < 1e-9) return false;
-    const layerId = writableLayer(this.ctx);
-    if (!layerId) return false;
-    this.ctx.doc.transact(this.label, () => this.ctx.doc.add({ kind: 'line', a, b, layerId, color: this.ctx.settings.color.value ?? undefined, attrs: {} } as NewEntity));
-    return true;
+  /**
+   * The perpendicular, written through `cad.entities.create` (docs/adr/0057)
+   * as one undo step named after the tool. `short`: it has no length and
+   * nothing was written; `refused`: the command said why.
+   */
+  protected addLine(a: Vec2, b: Vec2): 'written' | 'short' | 'refused' {
+    if (dist(a, b) < 1e-9) return 'short';
+    return writeObjects(this.ctx, [{ kind: 'line', a, b }], this.operation) ? 'written' : 'refused';
   }
 
   protected drawRef(g: CanvasRenderingContext2D, view: ViewTransform): void {
@@ -193,6 +198,7 @@ export class PerpendicularInTool extends PerpendicularTool {
   readonly id = 'perpIn';
   protected readonly label = 'Dik in';
   protected readonly straightOnly = false;
+  protected readonly operation = 'perpendicularIn';
 
   protected stepPrompt(): string {
     return 'dik inilecek noktaları gösterin, bitince sağ tıklayın';
@@ -201,8 +207,9 @@ export class PerpendicularInTool extends PerpendicularTool {
   protected point(p: Vec2): void {
     const foot = this.ref && footOn(this.ref, p);
     if (!foot) return this.ctx.log.warn('Bu noktadan dik inilemez (nokta dairenin merkezinde).');
-    if (!this.addLine(p, foot)) return this.ctx.log.warn('Nokta zaten hattın üzerinde.');
-    this.ctx.log.success(`Dik inildi: dik boy ${this.ctx.format.length(dist(p, foot))}.`);
+    const added = this.addLine(p, foot);
+    if (added === 'short') return this.ctx.log.warn('Nokta zaten hattın üzerinde.');
+    if (added === 'written') this.ctx.log.success(`Dik inildi: dik boy ${this.ctx.format.length(dist(p, foot))}.`);
   }
 
   draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
@@ -232,6 +239,7 @@ export class PerpendicularOutTool extends PerpendicularTool {
   readonly id = 'perpOut';
   protected readonly label = 'Dik çık';
   protected readonly straightOnly = true;
+  protected readonly operation = 'perpendicularOut';
   private absis: number | null = null;
 
   protected override picked(): void {
@@ -272,7 +280,9 @@ export class PerpendicularOutTool extends PerpendicularTool {
     if (ref?.kind !== 'seg' || this.absis === null) return;
     const foot = sidePoint(ref.a, ref.b, this.absis, 0)!;
     const end = sidePoint(ref.a, ref.b, this.absis, ordinat)!;
-    if (!this.addLine(foot, end)) return this.ctx.log.warn('Dik boy sıfır olamaz.');
+    const added = this.addLine(foot, end);
+    if (added === 'short') return this.ctx.log.warn('Dik boy sıfır olamaz.');
+    if (added === 'refused') return;
     const f = this.ctx.format;
     this.ctx.log.success(`Dik çıkıldı: dik ayak ${f.length(this.absis)}, dik boy ${f.length(ordinat)}.`);
     // Next perpendicular on the same line.

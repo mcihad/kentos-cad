@@ -44,3 +44,5 @@ pub const INVALID_COUNT: &str = "invalid_count";
 pub const INVALID_SPACING: &str = "invalid_spacing";
 /// A polar array's fill of zero or past a full turn (`cad.entities.array`).
 pub const INVALID_FILL: &str = "invalid_fill";
+/// No object given (`cad.entities.create`).
+pub const NO_OBJECTS: &str = "no_objects";

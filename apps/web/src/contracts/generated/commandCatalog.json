@@ -10892,6 +10892,741 @@
           }
         }
       ]
+    },
+    {
+      "id": "cad.entities.create",
+      "version": 1,
+      "title": "Nesneleri ekle",
+      "summary": "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın adı (Paralel çizgi, Dik in, Dik çık, Böl). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "CreateOperation": {
+            "description": "The drawing tool whose step has its own name; without one the step is\n“Ekle”, as for every object a drawing tool adds.",
+            "oneOf": [
+              {
+                "const": "parallel",
+                "description": "Paralel çizgi: the lines beside an axis, the corridor between them, the axis.",
+                "type": "string"
+              },
+              {
+                "const": "perpendicularIn",
+                "description": "Dik in: a perpendicular from a point down to a reference line.",
+                "type": "string"
+              },
+              {
+                "const": "perpendicularOut",
+                "description": "Dik çık: a perpendicular up from a point of a reference line.",
+                "type": "string"
+              },
+              {
+                "const": "divide",
+                "description": "Böl: points along an object.",
+                "type": "string"
+              }
+            ]
+          },
+          "DimensionStyle": {
+            "enum": [
+              "aligned",
+              "linear",
+              "angular",
+              "radius",
+              "diameter"
+            ],
+            "type": "string"
+          },
+          "EntityGeometry": {
+            "description": "A drawing object's geometry alone: its kind and the fields that place and\nshape it, without the fields every object has (layer, colour, attributes,\nlabel, symbol). Coordinates are x east (Y), y north (X), in the project's\nunits (m), float64; angles in radians unless said otherwise.",
+            "oneOf": [
+              {
+                "properties": {
+                  "kind": {
+                    "const": "point",
+                    "type": "string"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "z": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "p"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "b": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "line",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "An open path: vertices and DXF bulges (tan(θ/4), CCW positive), the\none at vertex i bending the edge to vertex i + 1.",
+                "properties": {
+                  "bulges": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "polyline",
+                    "type": "string"
+                  },
+                  "pts": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "pts"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A closed area: its ring and, when it has any, its holes.",
+                "properties": {
+                  "bulges": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "holes": {
+                    "items": {
+                      "$ref": "#/$defs/RingGeometry"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "polygon",
+                    "type": "string"
+                  },
+                  "pts": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "pts"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "c": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "circle",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "r"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Counter-clockwise from `a0` to `a1`.",
+                "properties": {
+                  "a0": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "a1": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "c": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "arc",
+                    "type": "string"
+                  },
+                  "r": {
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "r",
+                  "a0",
+                  "a1"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Centre, major axis vector, minor/major ratio, parameters `t0` → `t1`.",
+                "properties": {
+                  "c": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "ellipse",
+                    "type": "string"
+                  },
+                  "major": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "ratio": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "t0": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "t1": {
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "c",
+                  "major",
+                  "ratio",
+                  "t0",
+                  "t1"
+                ],
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "closed": {
+                    "type": "boolean"
+                  },
+                  "kind": {
+                    "const": "spline",
+                    "type": "string"
+                  },
+                  "pts": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "pts",
+                  "closed"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A construction line through `p` along the unit direction `dir`.",
+                "properties": {
+                  "dir": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "xline",
+                    "type": "string"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "p",
+                  "dir"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A ray from `p` along the unit direction `dir`.",
+                "properties": {
+                  "dir": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "kind": {
+                    "const": "ray",
+                    "type": "string"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "p",
+                  "dir"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Text at `p`; `height` in metres, `rotation` in degrees counter-clockwise from east.",
+                "properties": {
+                  "height": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  },
+                  "p": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "rotation": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "p",
+                  "text",
+                  "height",
+                  "rotation"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A dimension from `a` to `b` (an angular one's vertex is `c`), its line\n`offset` metres away, its text `height` metres high; `text` replaces\nthe measured value, `angle` is a linear one's measured direction in\ndegrees counter-clockwise from east (0 = ΔY, 90 = ΔX).",
+                "properties": {
+                  "a": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "angle": {
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "b": {
+                    "$ref": "#/$defs/Vec2"
+                  },
+                  "c": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Vec2"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "height": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "kind": {
+                    "const": "dimension",
+                    "type": "string"
+                  },
+                  "offset": {
+                    "format": "double",
+                    "type": "number"
+                  },
+                  "style": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/DimensionStyle"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "text": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "a",
+                  "b",
+                  "offset",
+                  "height"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A hatched area: its ring, its holes when it has any, and its pattern.",
+                "properties": {
+                  "holes": {
+                    "items": {
+                      "items": {
+                        "$ref": "#/$defs/Vec2"
+                      },
+                      "type": "array"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "hatch",
+                    "type": "string"
+                  },
+                  "pattern": {
+                    "$ref": "#/$defs/HatchPattern"
+                  },
+                  "ring": {
+                    "items": {
+                      "$ref": "#/$defs/Vec2"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "ring",
+                  "pattern"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "HatchPattern": {
+            "properties": {
+              "angle": {
+                "description": "Degrees, counter-clockwise from east.",
+                "format": "double",
+                "type": "number"
+              },
+              "spacing": {
+                "description": "Metres.",
+                "format": "double",
+                "type": "number"
+              },
+              "type": {
+                "$ref": "#/$defs/HatchPatternType"
+              }
+            },
+            "required": [
+              "type",
+              "angle",
+              "spacing"
+            ],
+            "type": "object"
+          },
+          "HatchPatternType": {
+            "enum": [
+              "solid",
+              "lines",
+              "cross"
+            ],
+            "type": "string"
+          },
+          "NewObject": {
+            "description": "One new object: its geometry and what else it carries. The layer is the\ninput's; the persistent id and the slot are given when it is written.",
+            "properties": {
+              "attrs": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "GIS attributes, text in v1. Absent: none.",
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "color": {
+                "description": "Colour override (`EntityBase.color`). Absent: the layer's colour (katmana göre).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "geometry": {
+                "$ref": "#/$defs/EntityGeometry",
+                "description": "Its kind and the fields that place and shape it."
+              },
+              "label": {
+                "description": "The text shown beside it (`EntityBase.label`). Absent: none.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "geometry"
+            ],
+            "type": "object"
+          },
+          "RingGeometry": {
+            "description": "A closed ring in vertex + bulge form (a polygon hole).",
+            "properties": {
+              "bulges": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              },
+              "pts": {
+                "items": {
+                  "$ref": "#/$defs/Vec2"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "pts"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.entities.create` v1: new objects on a named layer, written\nas one undo step. Everything the command depends on is here (TODOS.md\nCMD-07): the tool fills `layerId` from the active layer and each object's\n`color` from the current colour; the command reads neither.\n\nThe objects are written in their order, each with a new persistent id.\nThe undo step is named after `operation`, or “Ekle”.\n\nRefusals (`CommandError.code`), checked in this order: `no_objects`, then\neach object's geometry in order: `too_few_points` (a polyline),\n`too_few_corners` (a closed area's or a hatch's ring or hole),\n`not_finite`, `invalid_radius`; then `invalid_revision`,\n`revision_conflict` (status `conflict`), `layer_not_found`,\n`not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden` (they are written all the same).",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is written and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "description": "The layer they go on: a layer's id (`LayerNode.id`), not a group's.",
+            "type": "string"
+          },
+          "objects": {
+            "description": "What is written, at least one, in this order.",
+            "items": {
+              "$ref": "#/$defs/NewObject"
+            },
+            "type": "array"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CreateOperation"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The drawing tool the objects come from, when its step has its own\nname: Paralel çizgi, Dik in, Dik çık, Böl. Absent: “Ekle”."
+          }
+        },
+        "required": [
+          "layerId",
+          "objects"
+        ],
+        "title": "EntitiesCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.create` v1: the objects written, in the input's order.",
+        "properties": {
+          "created": {
+            "description": "Their persistent ids (UUIDv7, docs/adr/0014): the names files, the\ncloud, Python and AI use.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "ids": {
+            "description": "Their slots in the open document (`Entity.id`); they mean nothing\nonce the document is closed.",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text. Inside an\nopen transaction or group the write joins it, and the revision\nchanges when that ends.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "created",
+          "ids",
+          "revision"
+        ],
+        "title": "EntitiesCreated",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "Bir elips: merkezi, büyük yarı ekseni (merkezden bir uca) ve küçük eksenin büyüğe oranı",
+          "input": {
+            "layerId": "yapi",
+            "objects": [
+              {
+                "geometry": {
+                  "c": {
+                    "x": 423510.0,
+                    "y": 4512300.0
+                  },
+                  "kind": "ellipse",
+                  "major": {
+                    "x": 12.0,
+                    "y": 0.0
+                  },
+                  "ratio": 0.5,
+                  "t0": 0.0,
+                  "t1": 0.0
+                }
+              }
+            ]
+          },
+          "output": {
+            "created": [
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+            ],
+            "ids": [
+              41
+            ],
+            "revision": "38"
+          }
+        },
+        {
+          "title": "Paralel çizgi: eksenin iki yanı 5 m arayla ve eksen, tek adımda; yalnız planlandığı sürümde yazılır",
+          "input": {
+            "expectedRevision": "37",
+            "layerId": "yol",
+            "objects": [
+              {
+                "geometry": {
+                  "kind": "polyline",
+                  "pts": [
+                    {
+                      "x": 423500.0,
+                      "y": 4512305.0
+                    },
+                    {
+                      "x": 423600.0,
+                      "y": 4512305.0
+                    }
+                  ]
+                }
+              },
+              {
+                "geometry": {
+                  "kind": "polyline",
+                  "pts": [
+                    {
+                      "x": 423500.0,
+                      "y": 4512295.0
+                    },
+                    {
+                      "x": 423600.0,
+                      "y": 4512295.0
+                    }
+                  ]
+                }
+              },
+              {
+                "geometry": {
+                  "kind": "polyline",
+                  "pts": [
+                    {
+                      "x": 423500.0,
+                      "y": 4512300.0
+                    },
+                    {
+                      "x": 423600.0,
+                      "y": 4512300.0
+                    }
+                  ]
+                }
+              }
+            ],
+            "operation": "parallel"
+          }
+        }
+      ]
     }
   ]
 }

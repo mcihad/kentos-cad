@@ -1,0 +1,226 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.create",
+  "commandVersion": 1,
+  "title": "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
+  "note": "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+    "origin": {"x": 487000, "y": 4420000},
+    "layers": [
+      {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "plan", "name": "Plan", "type": "group", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "ada", "name": "Ada", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "sakli", "name": "Saklı grup", "type": "group", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "icerde", "name": "İçerideki", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {"kind": "line", "id": 1, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420000}, "b": {"x": 487020, "y": 4420000}},
+      {"kind": "circle", "id": 2, "layerId": "kilitli", "attrs": {}, "c": {"x": 487040, "y": 4420000}, "r": 5}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "cases": [
+    {
+      "name": "Elips: tek nesne, adı “Ekle” olan tek adım; geri alınır, aynı kimlikle yinelenir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3], "entities": {"3": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0, "id": 3, "layerId": "yapi", "attrs": {}}}, "uids": {"3": "new"}, "canUndo": true, "canRedo": false, "dirty": true, "revision": "changed"}},
+        {"op": "captureUid", "id": 3, "as": "elips"},
+        {"op": "undo", "returns": "Ekle", "note": "Çizim araçlarının hep yazdığı ad.", "expect": {"ids": [1, 2], "canUndo": false, "canRedo": true, "revision": "changed"}},
+        {"op": "redo", "returns": "Ekle", "expect": {"ids": [1, 2, 3], "entities": {"3": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0, "id": 3, "layerId": "yapi", "attrs": {}}}, "uids": {"3": "elips"}, "canUndo": true, "canRedo": false, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "eliptik yay: parametreleri olduğu gibi yazılır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 0, "y": 10}, "ratio": 0.25, "t0": 0.5, "t1": 2.5}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 0, "y": 10}, "ratio": 0.25, "t0": 0.5, "t1": 2.5, "id": 3, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Eğri: açık ve kapalı iki eğri girdinin sırasıyla yazılır; ikisi tek adımdır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "spline", "pts": [{"x": 487000, "y": 4420030}, {"x": 487005, "y": 4420034}, {"x": 487010, "y": 4420030}, {"x": 487015, "y": 4420034}], "closed": false}}, {"geometry": {"kind": "spline", "pts": [{"x": 487020, "y": 4420030}, {"x": 487025, "y": 4420036}, {"x": 487030, "y": 4420030}], "closed": true}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4"], "ids": [3, 4], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4], "entities": {"3": {"kind": "spline", "pts": [{"x": 487000, "y": 4420030}, {"x": 487005, "y": 4420034}, {"x": 487010, "y": 4420030}, {"x": 487015, "y": 4420034}], "closed": false, "id": 3, "layerId": "yapi", "attrs": {}}, "4": {"kind": "spline", "pts": [{"x": 487020, "y": 4420030}, {"x": 487025, "y": 4420036}, {"x": 487030, "y": 4420030}], "closed": true, "id": 4, "layerId": "yapi", "attrs": {}}}, "uids": {"3": "new", "4": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": [1, 2], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Yardımcı çizgi ve Işın: nokta ve yön olduğu gibi yazılır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "xline", "p": {"x": 487000, "y": 4420040}, "dir": {"x": 0.6, "y": 0.8}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "xline", "p": {"x": 487000, "y": 4420040}, "dir": {"x": 0.6, "y": 0.8}, "id": 3, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:4"], "ids": [4], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}, "id": 4, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ekle", "note": "Her yazma kendi adımıdır.", "expect": {"ids": [1, 2, 3]}}
+      ]
+    },
+    {
+      "name": "Halka: dolu tarama, dış halka ve delik",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "hatch", "ring": [{"x": 487050.5, "y": 4420050.0}, {"x": 487050.3535533906, "y": 4420050.35355339}, {"x": 487050.0, "y": 4420050.5}, {"x": 487049.6464466094, "y": 4420050.35355339}, {"x": 487049.5, "y": 4420050.0}, {"x": 487049.6464466094, "y": 4420049.64644661}, {"x": 487050.0, "y": 4420049.5}, {"x": 487050.3535533906, "y": 4420049.64644661}], "holes": [[{"x": 487050.25, "y": 4420050.0}, {"x": 487050.1767766953, "y": 4420050.176776695}, {"x": 487050.0, "y": 4420050.25}, {"x": 487049.8232233047, "y": 4420050.176776695}, {"x": 487049.75, "y": 4420050.0}, {"x": 487049.8232233047, "y": 4420049.823223305}, {"x": 487050.0, "y": 4420049.75}, {"x": 487050.1767766953, "y": 4420049.823223305}]], "pattern": {"type": "solid", "angle": 0, "spacing": 1}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "hatch", "ring": [{"x": 487050.5, "y": 4420050.0}, {"x": 487050.3535533906, "y": 4420050.35355339}, {"x": 487050.0, "y": 4420050.5}, {"x": 487049.6464466094, "y": 4420050.35355339}, {"x": 487049.5, "y": 4420050.0}, {"x": 487049.6464466094, "y": 4420049.64644661}, {"x": 487050.0, "y": 4420049.5}, {"x": 487050.3535533906, "y": 4420049.64644661}], "holes": [[{"x": 487050.25, "y": 4420050.0}, {"x": 487050.1767766953, "y": 4420050.176776695}, {"x": 487050.0, "y": 4420050.25}, {"x": 487049.8232233047, "y": 4420050.176776695}, {"x": 487049.75, "y": 4420050.0}, {"x": 487049.8232233047, "y": 4420049.823223305}, {"x": 487050.0, "y": 4420049.75}, {"x": 487050.1767766953, "y": 4420049.823223305}]], "pattern": {"type": "solid", "angle": 0, "spacing": 1}, "id": 3, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "Paralel çizgi: iki yan ve eksen tek adımda; adım aracın adıdır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "parallel", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420065}, {"x": 487030, "y": 4420065}, {"x": 487030, "y": 4420095}]}}, {"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420055}, {"x": 487040, "y": 4420055}, {"x": 487040, "y": 4420095}]}}, {"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487035, "y": 4420060}, {"x": 487035, "y": 4420095}]}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4", "$uidOf:5"], "ids": [3, 4, 5], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5], "entities": {"3": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420065}, {"x": 487030, "y": 4420065}, {"x": 487030, "y": 4420095}], "id": 3, "layerId": "yapi", "attrs": {}}, "4": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420055}, {"x": 487040, "y": 4420055}, {"x": 487040, "y": 4420095}], "id": 4, "layerId": "yapi", "attrs": {}}, "5": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487035, "y": 4420060}, {"x": 487035, "y": 4420095}], "id": 5, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Paralel çizgi", "expect": {"ids": [1, 2], "canUndo": false, "canRedo": true}},
+        {"op": "redo", "returns": "Paralel çizgi", "expect": {"ids": [1, 2, 3, 4, 5]}}
+      ]
+    },
+    {
+      "name": "Paralel çizgi alan olarak, kapalı eksenle: delikli kapalı alan ve eksen",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "parallel", "objects": [{"geometry": {"kind": "polygon", "pts": [{"x": 487095, "y": 4420095}, {"x": 487165, "y": 4420095}, {"x": 487165, "y": 4420165}, {"x": 487095, "y": 4420165}], "holes": [{"pts": [{"x": 487105, "y": 4420105}, {"x": 487105, "y": 4420155}, {"x": 487155, "y": 4420155}, {"x": 487155, "y": 4420105}]}]}}, {"geometry": {"kind": "polygon", "pts": [{"x": 487100, "y": 4420100}, {"x": 487160, "y": 4420100}, {"x": 487160, "y": 4420160}, {"x": 487100, "y": 4420160}]}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4"], "ids": [3, 4], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "polygon", "pts": [{"x": 487095, "y": 4420095}, {"x": 487165, "y": 4420095}, {"x": 487165, "y": 4420165}, {"x": 487095, "y": 4420165}], "holes": [{"pts": [{"x": 487105, "y": 4420105}, {"x": 487105, "y": 4420155}, {"x": 487155, "y": 4420155}, {"x": 487155, "y": 4420105}]}], "id": 3, "layerId": "yapi", "attrs": {}}, "4": {"kind": "polygon", "pts": [{"x": 487100, "y": 4420100}, {"x": 487160, "y": 4420100}, {"x": 487160, "y": 4420160}, {"x": 487100, "y": 4420160}], "id": 4, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Paralel çizgi"}
+      ]
+    },
+    {
+      "name": "Dik in ve Dik çık: birer çizgi, adımın adı aracın adıdır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "perpendicularIn", "objects": [{"geometry": {"kind": "line", "a": {"x": 487012, "y": 4420007}, "b": {"x": 487012, "y": 4420000}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "line", "a": {"x": 487012, "y": 4420007}, "b": {"x": 487012, "y": 4420000}, "id": 3, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "perpendicularOut", "objects": [{"geometry": {"kind": "line", "a": {"x": 487005, "y": 4420000}, "b": {"x": 487005, "y": 4419996}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:4"], "ids": [4], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"4": {"kind": "line", "a": {"x": 487005, "y": 4420000}, "b": {"x": 487005, "y": 4419996}, "id": 4, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Dik çık"},
+        {"op": "undo", "returns": "Dik in", "expect": {"ids": [1, 2], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Böl: noktalar girdinin sırasıyla, tek adımda; adı “Böl”",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "divide", "objects": [{"geometry": {"kind": "point", "p": {"x": 487004, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487008, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487012, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487016, "y": 4420000}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4", "$uidOf:5", "$uidOf:6"], "ids": [3, 4, 5, 6], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "entities": {"3": {"kind": "point", "p": {"x": 487004, "y": 4420000}, "id": 3, "layerId": "yapi", "attrs": {}}, "4": {"kind": "point", "p": {"x": 487008, "y": 4420000}, "id": 4, "layerId": "yapi", "attrs": {}}, "5": {"kind": "point", "p": {"x": 487012, "y": 4420000}, "id": 5, "layerId": "yapi", "attrs": {}}, "6": {"kind": "point", "p": {"x": 487016, "y": 4420000}, "id": 6, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Böl", "expect": {"ids": [1, 2], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "renk, öznitelik ve etiket nesne nesne yazılır; verilmeyen yoktur, boş öznitelik boştur",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "point", "p": {"x": 487060, "y": 4420010}, "z": 12.5}, "color": "#E5484D", "attrs": {"Tür": "Kot noktası", "Z (m)": "12.500"}, "label": "12.50"}, {"geometry": {"kind": "line", "a": {"x": 487012, "y": 4420007}, "b": {"x": 487012, "y": 4420000}}}, {"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0}, "attrs": {}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4", "$uidOf:5"], "ids": [3, 4, 5], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "point", "p": {"x": 487060, "y": 4420010}, "z": 12.5, "id": 3, "layerId": "yapi", "color": "#E5484D", "attrs": {"Tür": "Kot noktası", "Z (m)": "12.500"}, "label": "12.50"}, "4": {"kind": "line", "a": {"x": 487012, "y": 4420007}, "b": {"x": 487012, "y": 4420000}, "id": 4, "layerId": "yapi", "attrs": {}}, "5": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0, "id": 5, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "öbür türler de yazılır: kapalı alan (yay değerleriyle), daire, yay, çoklu çizgi, yazı, ölçü",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "polygon", "pts": [{"x": 487000, "y": 4420100}, {"x": 487010, "y": 4420100}, {"x": 487010, "y": 4420110}], "bulges": [0, 0.5, 0]}}, {"geometry": {"kind": "circle", "c": {"x": 487020, "y": 4420105}, "r": 3}}, {"geometry": {"kind": "arc", "c": {"x": 487030, "y": 4420105}, "r": 3, "a0": 0, "a1": 2}}, {"geometry": {"kind": "polyline", "pts": [{"x": 487040, "y": 4420100}, {"x": 487050, "y": 4420110}], "bulges": [0.25]}}, {"geometry": {"kind": "text", "p": {"x": 487060, "y": 4420100}, "text": "Ada 101", "height": 2, "rotation": 30}}, {"geometry": {"kind": "dimension", "a": {"x": 487000, "y": 4420120}, "b": {"x": 487020, "y": 4420120}, "offset": 3, "height": 0.5, "style": "linear", "angle": 0}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4", "$uidOf:5", "$uidOf:6", "$uidOf:7", "$uidOf:8"], "ids": [3, 4, 5, 6, 7, 8], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6, 7, 8], "entities": {"3": {"kind": "polygon", "pts": [{"x": 487000, "y": 4420100}, {"x": 487010, "y": 4420100}, {"x": 487010, "y": 4420110}], "bulges": [0, 0.5, 0], "id": 3, "layerId": "yapi", "attrs": {}}, "4": {"kind": "circle", "c": {"x": 487020, "y": 4420105}, "r": 3, "id": 4, "layerId": "yapi", "attrs": {}}, "5": {"kind": "arc", "c": {"x": 487030, "y": 4420105}, "r": 3, "a0": 0, "a1": 2, "id": 5, "layerId": "yapi", "attrs": {}}, "6": {"kind": "polyline", "pts": [{"x": 487040, "y": 4420100}, {"x": 487050, "y": 4420110}], "bulges": [0.25], "id": 6, "layerId": "yapi", "attrs": {}}, "7": {"kind": "text", "p": {"x": 487060, "y": 4420100}, "text": "Ada 101", "height": 2, "rotation": 30, "id": 7, "layerId": "yapi", "attrs": {}}, "8": {"kind": "dimension", "a": {"x": 487000, "y": 4420120}, "b": {"x": 487020, "y": 4420120}, "offset": 3, "height": 0.5, "style": "linear", "angle": 0, "id": 8, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "grubun içindeki katmana yazılır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "ada", "objects": [{"geometry": {"kind": "spline", "pts": [{"x": 487000, "y": 4420030}, {"x": 487005, "y": 4420034}, {"x": 487010, "y": 4420030}, {"x": 487015, "y": 4420034}], "closed": false}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"3": {"kind": "spline", "pts": [{"x": 487000, "y": 4420030}, {"x": 487005, "y": 4420034}, {"x": 487010, "y": 4420030}, {"x": 487015, "y": 4420034}], "closed": false, "id": 3, "layerId": "ada", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "gizli katmana uyarıyla yazılır; nesneler yine yazılır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "gizli", "operation": "divide", "objects": [{"geometry": {"kind": "point", "p": {"x": 487004, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487008, "y": 4420000}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4"], "ids": [3, 4], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [1, 2, 3, 4], "entities": {"3": {"kind": "point", "p": {"x": 487004, "y": 4420000}, "id": 3, "layerId": "gizli", "attrs": {}}, "4": {"kind": "point", "p": {"x": 487008, "y": 4420000}, "id": 4, "layerId": "gizli", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "gizli grubun katmanı da gizlidir; uyarı katmanın adını verir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "icerde", "objects": [{"geometry": {"kind": "xline", "p": {"x": 487000, "y": 4420040}, "dir": {"x": 0.6, "y": 0.8}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“İçerideki” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"entities": {"3": {"kind": "xline", "p": {"x": 487000, "y": 4420040}, "dir": {"x": 0.6, "y": 0.8}, "id": 3, "layerId": "icerde", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "nesne verilmedi: no_objects",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": []}, "result": {"status": "failed", "error": {"code": "no_objects", "message": "Eklenecek nesne verilmedi. En az bir nesne verin.", "path": "objects"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "kilitli", "operation": "divide", "objects": []}, "result": {"status": "failed", "error": {"code": "no_objects", "message": "Eklenecek nesne verilmedi. En az bir nesne verin.", "path": "objects"}}, "note": "Boş girdi katmandan önce söylenir.", "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "çoklu çizginin en az 2 noktası, kapalı alanın, deliğinin ve taramanın en az 3 köşesi olmalı; yol nesnenin sırasını verir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "parallel", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420065}, {"x": 487030, "y": 4420065}, {"x": 487030, "y": 4420095}]}}, {"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420010}]}}]}, "result": {"status": "failed", "error": {"code": "too_few_points", "message": "Çoklu çizginin en az 2 noktası olmalı; 1 nokta verildi. Eksik noktaları ekleyin.", "path": "objects[1].geometry.pts"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "polygon", "pts": [{"x": 487030, "y": 4420000}, {"x": 487050, "y": 4420000}]}}]}, "result": {"status": "failed", "error": {"code": "too_few_corners", "message": "Kapalı alanın en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin.", "path": "objects[0].geometry.pts"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "polygon", "pts": [{"x": 487095, "y": 4420095}, {"x": 487165, "y": 4420095}, {"x": 487165, "y": 4420165}, {"x": 487095, "y": 4420165}], "holes": [{"pts": [{"x": 487105, "y": 4420105}, {"x": 487105, "y": 4420155}, {"x": 487155, "y": 4420155}, {"x": 487155, "y": 4420105}]}, {"pts": [{"x": 487110, "y": 4420110}, {"x": 487112, "y": 4420110}]}]}}]}, "result": {"status": "failed", "error": {"code": "too_few_corners", "message": "2. deliğin en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.", "path": "objects[0].geometry.holes[1].pts"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "hatch", "ring": [{"x": 487050.5, "y": 4420050.0}, {"x": 487050.3535533906, "y": 4420050.35355339}], "holes": [[{"x": 487050.25, "y": 4420050.0}, {"x": 487050.1767766953, "y": 4420050.176776695}, {"x": 487050.0, "y": 4420050.25}, {"x": 487049.8232233047, "y": 4420050.176776695}, {"x": 487049.75, "y": 4420050.0}, {"x": 487049.8232233047, "y": 4420049.823223305}, {"x": 487050.0, "y": 4420049.75}, {"x": 487050.1767766953, "y": 4420049.823223305}]], "pattern": {"type": "solid", "angle": 0, "spacing": 1}}}]}, "result": {"status": "failed", "error": {"code": "too_few_corners", "message": "Taramanın en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin.", "path": "objects[0].geometry.ring"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "hatch", "ring": [{"x": 487050.5, "y": 4420050.0}, {"x": 487050.3535533906, "y": 4420050.35355339}, {"x": 487050.0, "y": 4420050.5}, {"x": 487049.6464466094, "y": 4420050.35355339}, {"x": 487049.5, "y": 4420050.0}, {"x": 487049.6464466094, "y": 4420049.64644661}, {"x": 487050.0, "y": 4420049.5}, {"x": 487050.3535533906, "y": 4420049.64644661}], "holes": [[{"x": 487050.25, "y": 4420050.0}, {"x": 487050.1767766953, "y": 4420050.176776695}]], "pattern": {"type": "solid", "angle": 0, "spacing": 1}}}]}, "result": {"status": "failed", "error": {"code": "too_few_corners", "message": "1. deliğin en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.", "path": "objects[0].geometry.holes[0]"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "NaN ya da sonsuz değer yazılmaz; ileti hangi nesnenin olduğunu söyler, hiçbiri yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0}}]}, "nonFinite": {"objects[0].geometry.ratio": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "1. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "path": "objects[0].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0}}, {"geometry": {"kind": "spline", "pts": [{"x": 487000, "y": 4420030}, {"x": 487005, "y": 4420034}, {"x": 487010, "y": 4420030}, {"x": 487015, "y": 4420034}], "closed": false}}]}, "nonFinite": {"objects[1].geometry.pts[2].y": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "2. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "path": "objects[1].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "xline", "p": {"x": 487000, "y": 4420040}, "dir": {"x": 0.6, "y": 0.8}}}]}, "nonFinite": {"objects[0].geometry.dir.x": "-Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "1. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "path": "objects[0].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}}}]}, "nonFinite": {"objects[0].geometry.p.y": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "1. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "path": "objects[0].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "hatch", "ring": [{"x": 487050.5, "y": 4420050.0}, {"x": 487050.3535533906, "y": 4420050.35355339}, {"x": 487050.0, "y": 4420050.5}, {"x": 487049.6464466094, "y": 4420050.35355339}, {"x": 487049.5, "y": 4420050.0}, {"x": 487049.6464466094, "y": 4420049.64644661}, {"x": 487050.0, "y": 4420049.5}, {"x": 487050.3535533906, "y": 4420049.64644661}], "holes": [[{"x": 487050.25, "y": 4420050.0}, {"x": 487050.1767766953, "y": 4420050.176776695}, {"x": 487050.0, "y": 4420050.25}, {"x": 487049.8232233047, "y": 4420050.176776695}, {"x": 487049.75, "y": 4420050.0}, {"x": 487049.8232233047, "y": 4420049.823223305}, {"x": 487050.0, "y": 4420049.75}, {"x": 487050.1767766953, "y": 4420049.823223305}]], "pattern": {"type": "solid", "angle": 0, "spacing": 1}}}]}, "nonFinite": {"objects[0].geometry.ring[3].x": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "1. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "path": "objects[0].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 0, "y": 10}, "ratio": 0.25, "t0": 0.5, "t1": 2.5}}]}, "nonFinite": {"objects[0].geometry.t1": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "1. nesnenin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.", "path": "objects[0].geometry"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "dairenin ve yayın yarıçapı sıfırdan büyük olmalı",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "circle", "c": {"x": 487020, "y": 4420105}, "r": 0}}]}, "result": {"status": "failed", "error": {"code": "invalid_radius", "message": "Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.", "path": "objects[0].geometry.r"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "line", "a": {"x": 487012, "y": 4420007}, "b": {"x": 487012, "y": 4420000}}}, {"geometry": {"kind": "arc", "c": {"x": 487030, "y": 4420105}, "r": -3, "a0": 0, "a1": 2}}]}, "result": {"status": "failed", "error": {"code": "invalid_radius", "message": "Yarıçap sıfırdan büyük olmalı. Pozitif bir yarıçap verin.", "path": "objects[1].geometry.r"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "girdinin hatası çizimin durumundan önce gelir: geometri, sürümden ve katmandan önce denetlenir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "kilitli", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420010}]}}], "expectedRevision": "999"}, "result": {"status": "failed", "error": {"code": "too_few_points", "message": "Çoklu çizginin en az 2 noktası olmalı; 1 nokta verildi. Eksik noktaları ekleyin.", "path": "objects[0].geometry.pts"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm ondalık bir tamsayı yazısıdır",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0}}], "expectedRevision": "-1"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “-1” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0}}], "expectedRevision": "3.0"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “3.0” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict; çakışma katmandan önce",
+      "steps": [
+        {"op": "captureRevision", "as": "r0"},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "xline", "p": {"x": 487000, "y": 4420040}, "dir": {"x": 0.6, "y": 0.8}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}}}], "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [1, 2, 3], "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "kilitli", "objects": [{"geometry": {"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}}}], "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [1, 2, 3], "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}}}], "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"created": ["$uidOf:4"], "ids": [4], "revision": "$current"}, "warnings": []}, "note": "Şimdiki sürümle hazırlanan girdi yazılır.", "expect": {"ids": [1, 2, 3, 4], "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "bilinmeyen katman: layer_not_found; ad kimlik değildir",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "Yapı", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0}}]}, "result": {"status": "failed", "error": {"code": "layer_not_found", "message": "“Yapı” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0}}]}, "result": {"status": "failed", "error": {"code": "layer_not_found", "message": "“” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "path": "layerId"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "grup katman değildir: not_a_layer",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "plan", "operation": "parallel", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420065}, {"x": 487030, "y": 4420065}, {"x": 487030, "y": 4420095}]}}, {"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420055}, {"x": 487040, "y": 4420055}, {"x": 487040, "y": 4420095}]}}]}, "result": {"status": "failed", "error": {"code": "not_a_layer", "message": "“Plan” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.", "path": "layerId"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kilitli katmana hiçbir şey yazılmaz: layer_locked; kilitli grubun katmanına da",
+      "note": "Araçların metni: aracın iletisi komuttan gelir (ADR 0022).",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "kilitli", "operation": "divide", "objects": [{"geometry": {"kind": "point", "p": {"x": 487004, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487008, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487012, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487016, "y": 4420000}}}]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Kilitli katman” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"layerId": "eski", "objects": [{"geometry": {"kind": "ellipse", "c": {"x": 487010, "y": 4420020}, "major": {"x": 8, "y": 6}, "ratio": 0.5, "t0": 0, "t1": 0}}]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "“Eski” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "path": "layerId"}}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "doğrulama hiçbir şey yazmaz; plan yazılacak nesneleri gösterir (yuvaları 0); yazma planın sürümüyle planı yazar; uyarı üç kipte de",
+      "steps": [
+        {"op": "validate", "input": {"layerId": "gizli", "operation": "parallel", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420065}, {"x": 487030, "y": 4420065}, {"x": 487030, "y": 4420095}]}}, {"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487035, "y": 4420060}, {"x": 487035, "y": 4420095}]}}]}, "result": {"status": "completed", "output": null, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"layerId": "gizli", "operation": "parallel", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420065}, {"x": 487030, "y": 4420065}, {"x": 487030, "y": 4420095}]}}, {"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487035, "y": 4420060}, {"x": 487035, "y": 4420095}]}}]}, "result": {"status": "completed", "output": {"entities": [{"kind": "polyline", "pts": [{"x": 487000, "y": 4420065}, {"x": 487030, "y": 4420065}, {"x": 487030, "y": 4420095}], "id": 0, "layerId": "gizli", "attrs": {}}, {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487035, "y": 4420060}, {"x": 487035, "y": 4420095}], "id": 0, "layerId": "gizli", "attrs": {}}], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "captureRevision", "as": "plan"},
+        {"op": "execute", "input": {"layerId": "gizli", "operation": "parallel", "objects": [{"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420065}, {"x": 487030, "y": 4420065}, {"x": 487030, "y": 4420095}]}}, {"geometry": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487035, "y": 4420060}, {"x": 487035, "y": 4420095}]}}], "expectedRevision": "$plan"}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4"], "ids": [3, 4], "revision": "$current"}, "warnings": [{"code": "layer_hidden", "message": "“Gizli katman” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}]}, "expect": {"entities": {"3": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420065}, {"x": 487030, "y": 4420065}, {"x": 487030, "y": 4420095}], "id": 3, "layerId": "gizli", "attrs": {}}, "4": {"kind": "polyline", "pts": [{"x": 487000, "y": 4420060}, {"x": 487035, "y": 4420060}, {"x": 487035, "y": 4420095}], "id": 4, "layerId": "gizli", "attrs": {}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "doğrulama ve plan geri alma ve yineleme geçmişine dokunmaz",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "xline", "p": {"x": 487000, "y": 4420040}, "dir": {"x": 0.6, "y": 0.8}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}},
+        {"op": "undo", "returns": "Ekle", "expect": {"canUndo": false, "canRedo": true}},
+        {"op": "validate", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}}}]}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": true, "revision": "same"}},
+        {"op": "plan", "input": {"layerId": "yapi", "objects": [{"geometry": {"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}}}]}, "result": {"status": "completed", "output": {"entities": [{"kind": "ray", "p": {"x": 487000, "y": 4420040}, "dir": {"x": -1, "y": 0}, "id": 0, "layerId": "yapi", "attrs": {}}], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2], "canUndo": false, "canRedo": true, "revision": "same"}},
+        {"op": "redo", "returns": "Ekle", "expect": {"ids": [1, 2, 3]}}
+      ]
+    }
+  ]
+}

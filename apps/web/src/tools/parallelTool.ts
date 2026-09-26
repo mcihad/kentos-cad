@@ -1,3 +1,4 @@
+import type { EntityGeometry } from '../model/entities';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { cleanAxis, corridorArea, parallelSides } from '../model/geom/parallel';
 import { netArea } from '../model/geom/region';
@@ -113,30 +114,36 @@ export class ParallelLineTool extends PointInputTool {
     else this.reset();
   }
 
+  /**
+   * The sides (or the corridor) and the axis, written through
+   * `cad.entities.create` (docs/adr/0057) as one undo step, “Paralel çizgi”:
+   * all of them, or none with the command's reason.
+   */
   private commit(closed: boolean): void {
     const S = ParallelLineTool;
     const axis = cleanAxis(this.pts, closed);
     if (axis.length < (closed ? 3 : 2)) return this.reset();
-    const { doc, format, log } = this.ctx;
-    let made = 0;
+    const { format, log } = this.ctx;
+    const kind = closed ? 'polygon' : 'polyline';
+    const objects: EntityGeometry[] = [];
     let summary = '';
-    doc.transact(this.label, () => {
-      if (S.asArea) {
-        const area = corridorArea(axis, S.left, S.right, closed);
-        if (area && this.create(polygonOfArea(area))) {
-          made++;
-          summary = `alan ${format.area(netArea(area))}`;
-        }
-      } else {
-        const sides = parallelSides(axis, S.left, S.right, closed);
-        for (const side of [sides.left, sides.right]) if (side && this.create({ kind: closed ? 'polygon' : 'polyline', pts: side })) made++;
+    if (S.asArea) {
+      const area = corridorArea(axis, S.left, S.right, closed);
+      if (area) {
+        objects.push(polygonOfArea(area));
+        summary = `alan ${format.area(netArea(area))}`;
       }
-      if (S.axis && this.create({ kind: closed ? 'polygon' : 'polyline', pts: axis })) made++;
-    });
-    if (made) {
+    } else {
+      const sides = parallelSides(axis, S.left, S.right, closed);
+      for (const side of [sides.left, sides.right]) if (side) objects.push({ kind, pts: side });
+    }
+    if (S.axis) objects.push({ kind, pts: axis });
+    if (!objects.length) {
+      if (!S.axis && !(S.left > 0) && !(S.right > 0)) log.warn('Sol ve sağ mesafe sıfır ve eksen çizilmiyor: çizilecek bir şey yok.');
+    } else if (this.writeObjects(objects, 'parallel')) {
       const width = format.length(S.left + S.right);
-      log.success(`Paralel çizgi: ${made} nesne, genişlik ${width}${summary ? `, ${summary}` : ''}.`);
-    } else if (!S.axis && !(S.left > 0) && !(S.right > 0)) log.warn('Sol ve sağ mesafe sıfır ve eksen çizilmiyor: çizilecek bir şey yok.');
+      log.success(`Paralel çizgi: ${objects.length} nesne, genişlik ${width}${summary ? `, ${summary}` : ''}.`);
+    }
     this.reset();
   }
 

@@ -113,9 +113,10 @@ export class EllipseTool extends PointInputTool {
     this.commit({ ...this.geom!, t0: this.startT, t1: t });
   }
 
+  /** Writes through `cad.entities.create` (docs/adr/0057): its own object and undo step, “Ekle”. */
   private commit(g: EllipseGeom): void {
     const a = majorLength(g);
-    if (this.create({ kind: 'ellipse', ...g })) this.ctx.log.success(`${g.t0 === g.t1 ? 'Elips' : 'Eliptik yay'} eklendi: ${this.ctx.format.length(a, false)} × ${this.ctx.format.length(a * g.ratio)} (yarı eksenler)`);
+    if (this.writeObjects([{ kind: 'ellipse', ...g }])) this.ctx.log.success(`${g.t0 === g.t1 ? 'Elips' : 'Eliptik yay'} eklendi: ${this.ctx.format.length(a, false)} × ${this.ctx.format.length(a * g.ratio)} (yarı eksenler)`);
     this.reset();
   }
 

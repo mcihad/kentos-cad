@@ -1,6 +1,6 @@
 # Ürün komutu fixture'ları (`kentos.command-cases` v1)
 
-TODOS.md `CMD-04..07`, [ADR 0013](../../docs/adr/0013-product-command-contract.md), [ADR 0022](../../docs/adr/0022-first-product-command.md), [ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md), [ADR 0029](../../docs/adr/0029-desktop-selection-and-snap.md), [ADR 0032](../../docs/adr/0032-desktop-drawing-tools.md), [ADR 0037](../../docs/adr/0037-desktop-modify-tools.md), [ADR 0047](../../docs/adr/0047-desktop-edit-tools.md). Bir ürün komutunun doğrulama (`validate`), plan (`plan`) ve yürütme (`execute`) davranışını durum durum yazar: sonucun durumu, hata kodu, alan yolu, ileti ve uyarılar; yürütmeden sonra da belgenin hâli.
+TODOS.md `CMD-04..07`, [ADR 0013](../../docs/adr/0013-product-command-contract.md), [ADR 0022](../../docs/adr/0022-first-product-command.md), [ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md), [ADR 0029](../../docs/adr/0029-desktop-selection-and-snap.md), [ADR 0032](../../docs/adr/0032-desktop-drawing-tools.md), [ADR 0037](../../docs/adr/0037-desktop-modify-tools.md), [ADR 0047](../../docs/adr/0047-desktop-edit-tools.md), [ADR 0057](../../docs/adr/0057-desktop-drawing-tools-3.md). Bir ürün komutunun doğrulama (`validate`), plan (`plan`) ve yürütme (`execute`) davranışını durum durum yazar: sonucun durumu, hata kodu, alan yolu, ileti ve uyarılar; yürütmeden sonra da belgenin hâli.
 
 Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts` (`CadDocument`), masaüstü `crates/native/application/tests/fixtures.rs` (`kentos_domain::Document`, `cargo test -p kentos-native-application`). İkisi de bütün durumları geçmelidir. Kayıttaki her komutun bir dosyası vardır; her dosyada en az 20 durum bulunur.
 
@@ -16,6 +16,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.entities.transform.json` | `cad.entities.transform` v1 (ADR 0037; hizalama ADR 0047) | 38 |
 | `v1/cad.entities.edit.json` | `cad.entities.edit` v1 (ADR 0047) | 28 |
 | `v1/cad.entities.array.json` | `cad.entities.array` v1 (ADR 0047) | 25 |
+| `v1/cad.entities.create.json` | `cad.entities.create` v1 (ADR 0057) | 26 |
 
 ## Dosya
 
@@ -47,7 +48,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 
 Her adımda `expect` (aşağıda) ve `note` de bulunabilir. Komut adımında `result` zorunludur.
 
-- **`input`** komutun girdisidir, sözleşmenin tipiyle (`PolygonCreate`, `LineCreate`, `PolylineCreate`, `EntitiesDelete`, `PointCreate`, `CircleCreate`, `ArcCreate`, `EntitiesTransform`, `EntitiesEdit`, `EntitiesArray`; JSON adlarıyla).
+- **`input`** komutun girdisidir, sözleşmenin tipiyle (`PolygonCreate`, `LineCreate`, `PolylineCreate`, `EntitiesDelete`, `PointCreate`, `CircleCreate`, `ArcCreate`, `EntitiesTransform`, `EntitiesEdit`, `EntitiesArray`, `EntitiesCreate`; JSON adlarıyla).
 - **`nonFinite`**: JSON NaN ve ±∞ taşıyamaz. `{ "pts[1].y": "NaN" }` ya da `{ "a.x": "Infinity" }` gibi bir tablo, girdi okunduktan sonra o alana `NaN`, `Infinity` ya da `-Infinity` koyar. Yol, hata iletisinin `path` alanıyla aynı yazılır (`c.x`, `r`, `a0`, `transform.center.y`). İsteğe bağlı bir sayının (`z`) yerini girdi bir sayıyla verir; tablo o sayıyı değiştirir.
 - **`result`** sonucun tamamıdır (`CommandResult`): `status` ve duruma göre `output` ve `warnings`, ya da `error`. Alan alan tam eşit olmalıdır. Sayılar sayı olarak karşılaştırılır (dosyanın `1`'i belgenin `1.0`'ıdır).
 
@@ -85,4 +86,5 @@ Yalnız yazılan alanlar denetlenir.
 - Bir dönüşümün beklenen geometrisi (`cad.entities.transform`) dönüşümün tanımından, aynı işlem sırasıyla çift duyarlıkla bağımsız hesaplanır (`scripts/fixtures/affine_reference.py`); uygulamanın çıktısından alınmaz. Dosyayı `scripts/fixtures/transform_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
 - Bir dizinin (`cad.entities.array`) kopyaları sözleşmenin tanımından aynı yolla hesaplanır: ızgarada yer yer öteleme, kutupsal dizide adım adım dönüş ya da kopyalanan nesnelerin kutusunun ortasının dönüşü. Kutupsal durumlar çeyrek ve sekizde bir turlarla kurulur: orada çekirdeğin sinüs ve kosinüsü (fdlibm'inki, V8'inki gibi) Python'unkiyle aynıdır; başka açılarda son bitte ayrılabilir. Dosyayı `scripts/fixtures/array_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
 - Bir düzenlemenin (`cad.entities.edit`) geometrisi girdide verilir; beklenen nesneyi sözleşmenin kuralı kurar (update yalnız geometriyi değiştirir; replace ve add katmanı ve rengi, keepData ile öznitelikleri ve etiketi alır, simgeyi almaz). Dosyayı `scripts/fixtures/edit_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
+- Bir eklemenin (`cad.entities.create`) geometrisi de girdide verilir; beklenen nesneyi sözleşmenin kuralı kurar: geometrisi, girdinin katmanı, verildiyse rengi, öznitelikleri (verilmediyse boş) ve etiketi; simgesi yoktur. Dosyayı `scripts/fixtures/create_command_cases.py` yazar; `--check` onu yeniden kurup karşılaştırır.
 - −0 dosyada yazılmaz: JavaScript'in yazdığı JSON onu 0 yapar. −0'ın korunduğu iki koşucunun kendi testlerindedir (`apps/web/src/wasm/transform.wasm.test.ts`, `crates/native/application/tests/transform.rs`).

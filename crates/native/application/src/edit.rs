@@ -192,7 +192,7 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
     }
     for (i, change) in input.changes.iter().enumerate() {
         if let Some(g) = geometry_of(change) {
-            check_geometry(g, i)?;
+            check_geometry(g, "changes", i, "değişikliğin")?;
         }
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -307,10 +307,16 @@ fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
     }
 }
 
-/// One change's geometry: enough points for its kind, every number finite,
-/// a positive radius.
-fn check_geometry(g: &EntityGeometry, i: usize) -> Result<(), Stop> {
-    let at = |field: &str| Some(format!("changes[{i}].geometry{field}"));
+/// The `i`-th geometry of the input's `list` (`changes`; `objects` of
+/// `cad.entities.create`): enough points for its kind, every number finite,
+/// a positive radius. `whose` names it in a message: “değişikliğin”.
+pub(crate) fn check_geometry(
+    g: &EntityGeometry,
+    list: &str,
+    i: usize,
+    whose: &str,
+) -> Result<(), Stop> {
+    let at = |field: &str| Some(format!("{list}[{i}].geometry{field}"));
     match g {
         EntityGeometry::Polyline { pts, .. } if pts.len() < 2 => {
             return Err(Stop::Failed(error(
@@ -378,7 +384,7 @@ fn check_geometry(g: &EntityGeometry, i: usize) -> Result<(), Stop> {
         return Err(Stop::Failed(error(
             codes::NOT_FINITE,
             format!(
-                "{}. değişikliğin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.",
+                "{}. {whose} geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin.",
                 i + 1
             ),
             at(""),

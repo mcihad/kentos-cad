@@ -30,6 +30,7 @@
 pub mod api;
 pub mod cad;
 pub mod cad_array;
+pub mod cad_create;
 pub mod cad_edit;
 pub mod cad_primitives;
 pub mod cad_transform;
@@ -53,6 +54,7 @@ pub mod style;
 pub use api::*;
 pub use cad::*;
 pub use cad_array::*;
+pub use cad_create::*;
 pub use cad_edit::*;
 pub use cad_primitives::*;
 pub use cad_transform::*;

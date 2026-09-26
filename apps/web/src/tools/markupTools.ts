@@ -66,7 +66,8 @@ export class DonutTool extends PointInputTool {
   protected onPoint(p: Vec2): void {
     if (this.ask) return;
     // A solid fill with the inner circle left out: what AutoCAD's wide polyline looks like.
-    this.create({ kind: 'hatch', ...this.shape(p), pattern: { type: 'solid', angle: 0, spacing: 1 } });
+    // Through `cad.entities.create` (docs/adr/0057): each its own object and undo step, “Ekle”.
+    this.writeObjects([{ kind: 'hatch', ...this.shape(p), pattern: { type: 'solid', angle: 0, spacing: 1 } }]);
   }
 
   override draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
@@ -130,11 +131,17 @@ export class RevCloudTool extends PointInputTool {
     if (RevCloudTool.rect && this.pts.length === 2) this.finish();
   }
 
+  /**
+   * The cloud is a closed area of arcs, written through `cad.polygon.create`
+   * (docs/adr/0057): its own object and undo step, “Ekle”. A refused one says
+   * only the command's reason.
+   */
   protected override finish(): void {
     const ring = this.ringFor(this.pts);
     const cloud = ring.length >= 3 && Math.abs(signedArea(ring)) > 1e-9 ? cloudOf(ring, paper(this.ctx, RevCloudTool.arcMm)) : null;
-    if (cloud && this.create({ kind: 'polygon', ...cloud })) this.ctx.log.success(`Revizyon bulutu eklendi: ${cloud.pts.length} yay.`);
-    else if (this.pts.length) this.ctx.log.warn('Bulut için alanı olan bir dikdörtgen ya da en az üç köşe gerekir.');
+    if (cloud) {
+      if (this.writeRing(cloud.pts, cloud.bulges)) this.ctx.log.success(`Revizyon bulutu eklendi: ${cloud.pts.length} yay.`);
+    } else if (this.pts.length) this.ctx.log.warn('Bulut için alanı olan bir dikdörtgen ya da en az üç köşe gerekir.');
     super.finish();
   }
 

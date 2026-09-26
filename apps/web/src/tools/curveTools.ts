@@ -437,8 +437,10 @@ export class SplineTool extends PointInputTool {
     else super.finish();
   }
 
+  /** Writes through `cad.entities.create` (docs/adr/0057): its own object and undo step, “Ekle”. */
   private commit(closed: boolean): void {
-    const e = this.create({ kind: 'spline', pts: [...this.pts], closed });
+    const out = this.writeObjects([{ kind: 'spline', pts: [...this.pts], closed }]);
+    const e = out && this.ctx.doc.get(out.ids[0]);
     if (e) this.ctx.log.success(`${closed ? 'Kapalı eğri' : 'Eğri'} eklendi: ${this.pts.length} nokta, ${this.ctx.format.length(entityLength(e)!)}`);
     this.reset();
   }

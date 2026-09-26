@@ -10,6 +10,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use kentos_domain::contracts::EntitiesCreate;
 use kentos_domain::contracts::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
     CAD_ENTITIES_DELETE, CAD_ENTITIES_EDIT, CAD_ENTITIES_TRANSFORM, CAD_LINE_CREATE,
@@ -18,6 +19,7 @@ use kentos_domain::contracts::{
     LineCreate, PointCreate, PolygonCreate, PolylineCreate, Transform,
 };
 use kentos_domain::{Document, Slot, Uuid};
+use kentos_native_application::create;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, arc, array, circle, delete, edit, line, point, polygon,
     polyline, transform,
@@ -325,58 +327,88 @@ impl Input for EntitiesEdit {
             | EntityEdit::Add { geometry, .. } => geometry,
             EntityEdit::Remove { .. } => return None,
         };
-        match geometry {
-            EntityGeometry::Point { p, z } => match rest {
-                "z" => z.as_mut(),
-                _ => coordinate(p, "p", rest),
-            },
-            EntityGeometry::Line { a, b } => {
-                coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest))
-            }
-            EntityGeometry::Polyline { pts, bulges }
-            | EntityGeometry::Polygon { pts, bulges, .. } => {
-                if rest.starts_with("pts[") {
-                    point_number(pts, rest)
-                } else {
-                    bulge_number(bulges, rest)
-                }
-            }
-            EntityGeometry::Circle { c, r } => match rest {
-                "r" => Some(r),
-                _ => coordinate(c, "c", rest),
-            },
-            EntityGeometry::Arc { c, r, a0, a1 } => match rest {
-                "r" => Some(r),
-                "a0" => Some(a0),
-                "a1" => Some(a1),
-                _ => coordinate(c, "c", rest),
-            },
-            EntityGeometry::Dimension {
-                a,
-                b,
-                offset,
-                height,
-                ..
-            } => match rest {
-                "offset" => Some(offset),
-                "height" => Some(height),
-                _ => coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest)),
-            },
-            EntityGeometry::Hatch { ring, pattern, .. } => match rest {
-                "pattern.angle" => Some(&mut pattern.angle),
-                "pattern.spacing" => Some(&mut pattern.spacing),
-                _ => {
-                    let (i, axis) = rest.strip_prefix("ring[")?.split_once("].")?;
-                    let p = ring.get_mut(i.parse::<usize>().ok()?)?;
-                    match axis {
-                        "x" => Some(&mut p.x),
-                        "y" => Some(&mut p.y),
-                        _ => None,
-                    }
-                }
-            },
-            _ => None,
+        geometry_number(geometry, rest)
+    }
+}
+
+impl Input for EntitiesCreate {
+    /// `objects[0].geometry.major.x`, `objects[1].geometry.pts[2].y`, `objects[0].geometry.ratio` …
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let (i, rest) = path.strip_prefix("objects[")?.split_once("].geometry.")?;
+        let object = self.objects.get_mut(i.parse::<usize>().ok()?)?;
+        geometry_number(&mut object.geometry, rest)
+    }
+}
+
+/// The number of a geometry at `rest`: `a.x`, `r`, `pts[1].y`, `bulges[0]`,
+/// `major.y`, `ratio`, `dir.x`, `ring[2].x`, `pattern.angle` …
+fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&'a mut f64> {
+    match geometry {
+        EntityGeometry::Point { p, z } => match rest {
+            "z" => z.as_mut(),
+            _ => coordinate(p, "p", rest),
+        },
+        EntityGeometry::Line { a, b } => {
+            coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest))
         }
+        EntityGeometry::Polyline { pts, bulges } | EntityGeometry::Polygon { pts, bulges, .. } => {
+            if rest.starts_with("pts[") {
+                point_number(pts, rest)
+            } else {
+                bulge_number(bulges, rest)
+            }
+        }
+        EntityGeometry::Circle { c, r } => match rest {
+            "r" => Some(r),
+            _ => coordinate(c, "c", rest),
+        },
+        EntityGeometry::Arc { c, r, a0, a1 } => match rest {
+            "r" => Some(r),
+            "a0" => Some(a0),
+            "a1" => Some(a1),
+            _ => coordinate(c, "c", rest),
+        },
+        EntityGeometry::Ellipse {
+            c,
+            major,
+            ratio,
+            t0,
+            t1,
+        } => match rest {
+            "ratio" => Some(ratio),
+            "t0" => Some(t0),
+            "t1" => Some(t1),
+            _ => coordinate(c, "c", rest).or_else(|| coordinate(major, "major", rest)),
+        },
+        EntityGeometry::Spline { pts, .. } => point_number(pts, rest),
+        EntityGeometry::Xline { p, dir } | EntityGeometry::Ray { p, dir } => {
+            coordinate(p, "p", rest).or_else(|| coordinate(dir, "dir", rest))
+        }
+        EntityGeometry::Dimension {
+            a,
+            b,
+            offset,
+            height,
+            ..
+        } => match rest {
+            "offset" => Some(offset),
+            "height" => Some(height),
+            _ => coordinate(a, "a", rest).or_else(|| coordinate(b, "b", rest)),
+        },
+        EntityGeometry::Hatch { ring, pattern, .. } => match rest {
+            "pattern.angle" => Some(&mut pattern.angle),
+            "pattern.spacing" => Some(&mut pattern.spacing),
+            _ => {
+                let (i, axis) = rest.strip_prefix("ring[")?.split_once("].")?;
+                let p = ring.get_mut(i.parse::<usize>().ok()?)?;
+                match axis {
+                    "x" => Some(&mut p.x),
+                    "y" => Some(&mut p.y),
+                    _ => None,
+                }
+            }
+        },
+        _ => None,
     }
 }
 
@@ -441,6 +473,7 @@ fn run_op(
         CAD_ENTITIES_TRANSFORM => run!(transform, EntitiesTransform),
         CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
         CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
+        kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
