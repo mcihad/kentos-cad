@@ -471,6 +471,10 @@ fn screens() {
         ("alan-bol", "areas", 10),
         ("alan-cikar", "areas", 18),
         ("alan-icine-tikla", "areas", 22),
+        // On the Harita tab, where their commands are.
+        ("harita-mesafe", "measure-parcel", 7),
+        ("harita-alan", "measure-parcel", 16),
+        ("harita-parsel", "measure-parcel", 24),
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -480,7 +484,11 @@ fn screens() {
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
                 app.apply_settings();
-                app.tab = "draw";
+                app.tab = if name.starts_with("harita-") {
+                    "map"
+                } else {
+                    "draw"
+                };
                 let trace = Trace::by_id(id).expect("the trace");
                 let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
                 let mut update = |app: &mut App, message| {

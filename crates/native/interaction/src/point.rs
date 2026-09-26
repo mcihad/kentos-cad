@@ -26,6 +26,7 @@ use kentos_native_application::{ExecutionContext, point};
 
 use crate::Vec2;
 use crate::format::{Format, fixed};
+use crate::log::Level;
 use crate::points::{self, Taken, wire};
 use crate::prompt::Prompt;
 use crate::tool::{Context, Flow, Pointer, Preview, Tag, Tool};
@@ -75,6 +76,19 @@ impl Point {
     /// elevation, text and attributes, explicit in its input (CMD-07); the
     /// desktop has no current colour, so the layer's applies.
     fn write(&mut self, p: Vec2, z: Option<f64>, cx: &mut Context<'_>) {
+        // Another active layer would not help: the spot layer's lock is said in the tool's own words (docs/adr/0067).
+        let layers = cx.doc.layers();
+        if self.spot
+            && let Some(node) = layers.get(SPOT_LAYER)
+            && layers.is_locked(SPOT_LAYER)
+        {
+            let text = format!(
+                "“{}” katmanı kilitli; {SPOT_LABEL} bu katmana yazar. Kilidi Katmanlar panelinden açın.",
+                node.name
+            );
+            cx.say(Level::Warn, text);
+            return;
+        }
         let input = PointCreate {
             layer_id: if self.spot {
                 SPOT_LAYER.to_owned()

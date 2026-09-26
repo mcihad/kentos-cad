@@ -74,7 +74,7 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 55,
-    "commandsOnDesktop": 112
+    "commandsOnDesktop": 115
   },
   "commands": [
     {
@@ -2658,10 +2658,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/measure-parcel.json"
       ]
     },
     {
@@ -3588,10 +3589,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/measure-parcel.json"
       ]
     },
     {
@@ -3808,11 +3810,12 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/menus.test.ts",
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/measure-parcel.json"
       ]
     },
     {
@@ -5659,7 +5662,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/measure-parcel.json"
       ]
     },
     {
@@ -6331,7 +6335,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/measure-parcel.json"
       ]
     },
     {
@@ -6493,7 +6498,8 @@
       "tests": [
         "apps/web/src/app/menus.test.ts",
         "apps/web/src/app/workspaces.test.ts",
-        "apps/web/scripts/e2e/smoke.mjs"
+        "apps/web/scripts/e2e/smoke.mjs",
+        "fixtures/interaction/v1/measure-parcel.json"
       ]
     },
     {

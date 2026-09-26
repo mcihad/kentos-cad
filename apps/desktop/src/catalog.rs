@@ -172,6 +172,11 @@ pub const PORTED: &[&str] = &[
     "tool.hatch",
     // Alan işlemleri: birleştir, kesiştir, çıkar, böl, alana ve çizgiye çevir, içine
     // tıklayarak alan; into the document as the web's (docs/adr/0065).
+    // Mesafe ölç, Alan hesapla and Parsel oluştur: the path tool's other
+    // shapes; a parcel through cad.entities.create on the parcel layer (docs/adr/0067).
+    "tool.measure",
+    "tool.area",
+    "tool.parcel",
     "tool.areaUnion",
     "tool.areaIntersect",
     "tool.areaSubtract",

@@ -1,7 +1,8 @@
-//! Kapalı alan and Çoklu çizgi: the web's `PathTool`
-//! (`apps/web/src/tools/pathTool.ts`) with `closed: true` and `closed:
-//! false`, on its `PointInputTool` base (`drawTools.ts`), step for step. One
-//! tool, two shapes (docs/adr/0021, 0027):
+//! Kapalı alan, Çoklu çizgi, Mesafe ölç, Alan hesapla and Parsel oluştur:
+//! the web's `PathTool` (`apps/web/src/tools/pathTool.ts`) with its
+//! `closed`, `measureOnly` and `parcelLayer` flags, on its `PointInputTool`
+//! base (`drawTools.ts`), step for step. One tool, five shapes (docs/adr/0021,
+//! 0027, 0067):
 //!
 //! - points come from clicks (ortho and polar tracking applied) and from
 //!   typed text (the shared grammar, `point_text`);
@@ -15,13 +16,18 @@
 //! - a confirm with enough points (3 closed, 2 open) writes one object in
 //!   one undo step through a product command, as the web's tool does: a
 //!   closed area through `cad.polygon.create` (docs/adr/0022), a polyline
-//!   through `cad.polyline.create` (docs/adr/0027); with fewer it warns,
-//!   writes nothing and starts over.
+//!   through `cad.polyline.create` (docs/adr/0027), a parcel through
+//!   `cad.entities.create` on the parcel layer, numbered; the measuring
+//!   shapes write nothing and say the length, or the area and perimeter;
+//!   with fewer points it warns, writes nothing and starts over.
 //!
 //! The web's messages are kept word for word. Every calculation is the
 //! shared core's (`kentos-geometry-core`); none is written here.
 
-use kentos_contracts::{PolygonCreate, PolylineCreate};
+use std::collections::BTreeMap;
+
+use kentos_contracts::{EntitiesCreate, EntityGeometry, NewObject, PolygonCreate, PolylineCreate};
+use kentos_domain::Slot;
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::bulge::{
     bulge_arc, bulge_of_sweep, bulge_path_length, bulge_path_outline, bulge_ring_area,
@@ -34,12 +40,12 @@ use kentos_geometry_core::tools::drawing::{
 };
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number, point_from_text};
-use kentos_native_application::{ExecutionContext, polygon, polyline};
+use kentos_native_application::{ExecutionContext, create, polygon, polyline};
 
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
-use crate::points::{self, SAME, wire};
+use crate::points::{self, SAME, wire, wire_all};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Flow, Pointer, Preview, Tag, Tool};
 
@@ -49,14 +55,31 @@ pub const POLYGON_LABEL: &str = "Kapalı alan";
 /// The polyline tool's id: its command is `tool.polyline`.
 pub const POLYLINE_ID: &str = "polyline";
 pub const POLYLINE_LABEL: &str = "Çoklu çizgi";
+/// Mesafe ölç: `tool.measure`.
+pub const MEASURE_ID: &str = "measure";
+pub const MEASURE_LABEL: &str = "Mesafe ölç";
+/// Alan hesapla: `tool.area`.
+pub const AREA_ID: &str = "area";
+pub const AREA_LABEL: &str = "Alan hesapla";
+/// Parsel oluştur: `tool.parcel`. Its prompt names it “Parsel”, as the web's tool.
+pub const PARCEL_ID: &str = "parcel";
+pub const PARCEL_LABEL: &str = "Parsel";
+/// The layer parcels go on and are numbered by (the web's `LAYERS.parcel`, the project template's).
+pub const PARCEL_LAYER: &str = "parsel";
 
-/// Which of the two the tool draws.
+/// What the tool draws.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Shape {
     /// A closed area (kapalı alan): at least 3 corners, closed on its first.
     Closed,
     /// An open polyline (çoklu çizgi): at least 2 points.
     Open,
+    /// Mesafe ölç: an open path measured, nothing written.
+    MeasureLength,
+    /// Alan hesapla: a closed ring measured, nothing written.
+    MeasureArea,
+    /// Parsel oluştur: a closed area on the parcel layer, numbered.
+    Parcel,
 }
 
 impl Shape {
@@ -64,6 +87,9 @@ impl Shape {
         match self {
             Shape::Closed => POLYGON_ID,
             Shape::Open => POLYLINE_ID,
+            Shape::MeasureLength => MEASURE_ID,
+            Shape::MeasureArea => AREA_ID,
+            Shape::Parcel => PARCEL_ID,
         }
     }
 
@@ -71,15 +97,20 @@ impl Shape {
         match self {
             Shape::Closed => POLYGON_LABEL,
             Shape::Open => POLYLINE_LABEL,
+            Shape::MeasureLength => MEASURE_LABEL,
+            Shape::MeasureArea => AREA_LABEL,
+            Shape::Parcel => PARCEL_LABEL,
         }
+    }
+
+    /// Whether it is a ring: closed on its first corner, with an area.
+    fn closed(self) -> bool {
+        matches!(self, Shape::Closed | Shape::MeasureArea | Shape::Parcel)
     }
 
     /// Points the shape needs.
     fn min(self) -> usize {
-        match self {
-            Shape::Closed => 3,
-            Shape::Open => 2,
-        }
+        if self.closed() { 3 } else { 2 }
     }
 }
 
@@ -160,7 +191,7 @@ impl Path {
     }
 
     fn closed(&self) -> bool {
-        self.shape == Shape::Closed
+        self.shape.closed()
     }
 
     fn last(&self) -> Option<Vec2> {
@@ -345,6 +376,8 @@ impl Path {
             self.pts.pop();
             self.bulges.pop();
             self.spec = Spec::Tangent;
+            // A length waited for along the last direction is not waited for any more (docs/adr/0067).
+            self.ask_length = false;
         } else {
             return false;
         }
@@ -365,6 +398,23 @@ impl Path {
         let pts = self.pts.clone();
         let bulges = self.full_bulges();
         match self.shape {
+            Shape::MeasureLength => {
+                let length = bulge_path_length(&pts, bulges.as_deref(), false);
+                let text = format!(
+                    "Toplam uzunluk {} ({} kenar)",
+                    cx.format().length(length),
+                    pts.len() - 1
+                );
+                cx.say(Level::Success, text);
+            }
+            Shape::MeasureArea => {
+                let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
+                let perimeter = bulge_path_length(&pts, bulges.as_deref(), true);
+                let f = cx.format();
+                let text = format!("Alan {}   Çevre {}", f.area(area), f.length(perimeter));
+                cx.say(Level::Success, text);
+            }
+            Shape::Parcel => self.create_parcel(&pts, bulges, cx),
             Shape::Closed => {
                 let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
                 if self.create_polygon(&pts, bulges, cx) {
@@ -429,6 +479,63 @@ impl Path {
         points::written(result, cx).is_some()
     }
 
+    /// Writes the parcel through the product command `cad.entities.create`
+    /// on the parcel layer, whatever the active one (docs/adr/0067): the next
+    /// number on that layer as its label and its Parsel, Nitelik “Arsa”, the
+    /// other attributes left for Öznitelikler. The deed area is left empty:
+    /// it is the title deed's, not the drawing's (CLAUDE.md §7, §23); the
+    /// message gives the geometric area. The parcel is selected, so
+    /// Öznitelikler shows it. A locked parcel layer is said in the tool's own
+    /// words, since another active layer would not help.
+    fn create_parcel(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) {
+        let layers = cx.doc.layers();
+        if let Some(node) = layers.get(PARCEL_LAYER)
+            && layers.is_locked(PARCEL_LAYER)
+        {
+            let text = format!(
+                "“{}” katmanı kilitli; {PARCEL_LABEL} bu katmana yazar. Kilidi Katmanlar panelinden açın.",
+                node.name
+            );
+            cx.say(Level::Warn, text);
+            return;
+        }
+        let number = next_parcel(cx).to_string();
+        let area = bulge_ring_area(pts, bulges.as_deref()).abs();
+        let attrs = [
+            ("Ada", ""),
+            ("Parsel", number.as_str()),
+            ("Mahalle", ""),
+            ("Nitelik", "Arsa"),
+            ("Tapu alanı (m²)", ""),
+            ("Pafta", ""),
+        ];
+        let input = EntitiesCreate {
+            layer_id: PARCEL_LAYER.to_owned(),
+            objects: vec![NewObject {
+                geometry: EntityGeometry::Polygon {
+                    pts: wire_all(pts),
+                    bulges,
+                    holes: None,
+                },
+                color: None,
+                attrs: Some(BTreeMap::from(attrs.map(|(k, v)| (k.to_owned(), v.to_owned())))),
+                label: Some(number.clone()),
+            }],
+            operation: None,
+            expected_revision: None,
+        };
+        let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
+        let Some(out) = points::written(result, cx) else {
+            return;
+        };
+        cx.selection.set(out.ids.iter().map(|&id| Slot(id)).collect::<Vec<_>>());
+        let text = format!(
+            "Parsel {number} oluşturuldu; geometrik alanı {}. Ada, mahalle ve tapu alanı bilgisini Öznitelikler panelinden girin.",
+            cx.format().area(area)
+        );
+        cx.say(Level::Success, text);
+    }
+
     fn reset(&mut self) {
         self.pts.clear();
         self.bulges.clear();
@@ -462,6 +569,34 @@ impl Path {
             prompt
         }
     }
+}
+
+/// The next parcel number: the highest `Parsel` on the parcel layer, as
+/// JavaScript's `parseInt` reads it (“12/1” is 12, a text without leading
+/// digits 0), plus one (the web's `createParcel`).
+fn next_parcel(cx: &Context<'_>) -> u64 {
+    let doc = &*cx.doc;
+    doc.entities()
+        .filter(|e| e.base().layer_id == PARCEL_LAYER)
+        .filter_map(|e| e.base().attrs.get("Parsel"))
+        .map(|text| js_parse_int(text).unwrap_or(0))
+        .max()
+        .unwrap_or(0)
+        .saturating_add(1)
+}
+
+/// JavaScript's `parseInt(text, 10)` for a whole number that is not negative:
+/// white space at the start skipped, the digits up to the first other
+/// character; none when there is no digit or a minus sign (which counts as 0
+/// in the web's maximum too).
+fn js_parse_int(text: &str) -> Option<u64> {
+    let rest = text.trim_start_matches(|c: char| c.is_whitespace() || c == '\u{feff}');
+    let rest = rest.strip_prefix('+').unwrap_or(rest);
+    let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
+    if digits.is_empty() {
+        return None;
+    }
+    Some(digits.parse().unwrap_or(u64::MAX))
 }
 
 impl Tool for Path {
@@ -646,6 +781,10 @@ impl Tool for Path {
                         format!("Semt {}", format.bearing(bearing_grad(last, end))),
                     ],
                 };
+                if self.shape == Shape::MeasureLength {
+                    let total = bulge_path_length(&pts, Some(&bulges), false);
+                    lines.push(format!("Toplam {}", format.length(total)));
+                }
                 if area_shape {
                     let area = bulge_ring_area(&pts, Some(&bulges)).abs();
                     lines.push(format!("Alan {}", format.area(area)));
