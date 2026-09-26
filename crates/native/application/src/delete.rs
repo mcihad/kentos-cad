@@ -45,7 +45,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesDelete) -> CommandRes
 
 /// What execute would delete now and leave in place, and the revision to
 /// expect for exactly that; deletes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesDelete) -> CommandResult<EntitiesDeletePlan> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &EntitiesDelete,
+) -> CommandResult<EntitiesDeletePlan> {
     match check(cx.doc, input) {
         Ok(checked) => CommandResult::Completed {
             output: EntitiesDeletePlan {

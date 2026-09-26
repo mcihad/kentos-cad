@@ -672,7 +672,13 @@ mod tests {
     #[test]
     fn typed_puts_and_layers_are_the_json_ones() {
         let lines: Vec<String> = (1..=600)
-            .map(|i| line(f64::from(i), if i % 2 == 0 { "a" } else { "b" }, f64::from(i)))
+            .map(|i| {
+                line(
+                    f64::from(i),
+                    if i % 2 == 0 { "a" } else { "b" },
+                    f64::from(i),
+                )
+            })
             .collect();
         let mut json = Store::new();
         json.put_json(&format!("[{}]", lines.join(","))).unwrap();
@@ -713,7 +719,10 @@ mod tests {
         };
         assert_eq!(typed.in_rect(&r, false), json.in_rect(&r, false));
         // A table that does not read leaves the one in place.
-        assert!(json.set_layers_json(r#"[{"id":"a","visible":true}]"#).is_err());
+        assert!(
+            json.set_layers_json(r#"[{"id":"a","visible":true}]"#)
+                .is_err()
+        );
         assert_eq!(json.flags(json.get(2.0).unwrap()), hidden);
     }
 
