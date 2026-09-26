@@ -13,7 +13,7 @@
     "e2e": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/smoke.mjs",
     "e2e:visual": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/visual.mjs",
     "e2e:interaction": "node ../../scripts/wasm/ensure.mjs && node scripts/e2e/interaction.mjs",
-    "e2e:cloud": "node ../../scripts/wasm/ensure.mjs && cargo build -q -p kentos-api && node scripts/e2e/cloud.mjs",
+    "e2e:cloud": "node ../../scripts/wasm/ensure.mjs && cargo build -q -p kentos-api --bin kentosd --example e2e_database && node scripts/e2e/cloud.mjs",
     "perf:interaction": "node ../../scripts/wasm/ensure.mjs && node scripts/perf/interaction.mjs",
     "inventory": "node ../../scripts/wasm/ensure.mjs && node scripts/inventory/inventory.mjs",
     "inventory:check": "node ../../scripts/wasm/ensure.mjs && node scripts/inventory/inventory.mjs --check"
