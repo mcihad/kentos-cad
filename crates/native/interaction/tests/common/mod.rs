@@ -9,7 +9,7 @@
 use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_domain::Document;
 use kentos_interaction::{
-    Context, Draft, Level, Line, Pointer, Selection, Session, Spatial, Vec2, View,
+    Context, Draft, Level, Line, Memory, Pointer, Selection, Session, Spatial, Vec2, View,
 };
 
 const EMPTY: &str = include_str!("../../../../../fixtures/interaction/v1/empty.kcad");
@@ -36,6 +36,8 @@ pub struct Bench {
     pub draft: Draft,
     pub spatial: Spatial,
     pub selection: Selection,
+    /// What the drawing tools remember between runs (the web's static fields).
+    pub memory: Memory,
     /// Shift held for the next pointer events.
     pub shift: bool,
 }
@@ -60,6 +62,7 @@ impl Bench {
             log: Vec::new(),
             draft: Draft::default(),
             selection: Selection::new(),
+            memory: Memory::default(),
             shift: false,
         }
     }
@@ -79,6 +82,7 @@ impl Bench {
             log: &mut self.log,
             spatial: &self.spatial,
             selection: &mut self.selection,
+            memory: &mut self.memory,
         };
         act(&mut self.session, &mut cx)
     }

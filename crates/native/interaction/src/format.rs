@@ -50,6 +50,11 @@ impl Format {
         format!("{} m", fixed(metres, self.length_decimals))
     }
 
+    /// A length without its unit (the web's `length(m, false)`): `20.000 × 10.000 m`.
+    pub fn length_bare(&self, metres: f64) -> String {
+        fixed(metres, self.length_decimals)
+    }
+
     pub fn area(&self, square_metres: f64) -> String {
         let d = self.area_decimals;
         match self.area_unit {
@@ -77,7 +82,7 @@ impl Format {
 /// exact half rounds away from zero (Rust's formatting rounds it to even:
 /// 487012.0625 is `…063` on the web, `…062` in Rust), and a negative zero
 /// is written without its sign. Display only (CLAUDE.md §23.2).
-fn fixed(v: f64, d: usize) -> String {
+pub(crate) fn fixed(v: f64, d: usize) -> String {
     if v.is_nan() {
         return "NaN".to_owned();
     }
@@ -145,9 +150,45 @@ fn up_one(digits: &str) -> String {
     chars.into_iter().collect()
 }
 
+/// A number as JavaScript writes it (`String(n)`), for the values the tools
+/// show after `+x.toFixed(d)`: the shortest digits, no trailing zeros, no
+/// sign on zero. Numbers this small in magnitude are never written with an
+/// exponent by either.
+pub(crate) fn js_number(v: f64) -> String {
+    if v == 0.0 {
+        return "0".to_owned();
+    }
+    format!("{v}")
+}
+
+/// An angle in radians as the rectangle tool writes its rotation (the web's
+/// `fmtDeg`: `+((rad / DEG) % 360).toFixed(4)` and a degree sign): `30°`, `12.3457°`.
+pub(crate) fn short_degrees(rad: f64) -> String {
+    let deg = (rad / (kentos_geometry_core::jsmath::PI / 180.0)) % 360.0;
+    let rounded = fixed(deg, 4).parse::<f64>().unwrap_or(f64::NAN);
+    format!("{}°", js_number(rounded))
+}
+
+/// Radians in degrees as the arc tool writes them (the web's `deg`: `rad * 180 / π`).
+pub(crate) fn degrees(rad: f64) -> f64 {
+    (rad * 180.0) / kentos_geometry_core::jsmath::PI
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn degrees_read_as_the_web_writes_them() {
+        use kentos_geometry_core::jsmath::PI;
+        assert_eq!(short_degrees(0.0), "0°");
+        assert_eq!(short_degrees(PI / 6.0), "30°");
+        assert_eq!(short_degrees(-PI / 2.0), "-90°");
+        assert_eq!(short_degrees(1.0), "57.2958°");
+        // A tiny negative angle rounds to zero without its sign.
+        assert_eq!(short_degrees(-1e-9), "0°");
+        assert_eq!(fixed(degrees(PI / 2.0), 4), "90.0000");
+    }
 
     #[test]
     fn numbers_read_as_on_the_web() {

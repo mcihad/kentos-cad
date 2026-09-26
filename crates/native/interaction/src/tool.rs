@@ -109,6 +109,45 @@ pub fn snap_kinds(on: impl Fn(&str) -> bool) -> u32 {
     kinds
 }
 
+/// The rectangle tool's corners (the web's `CornerStyle`): sharp, rounded
+/// by a radius (Köşe yuvarla) or cut by a distance (Pah).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Corners {
+    Sharp,
+    Fillet(f64),
+    Chamfer(f64),
+}
+
+/// What the web's drawing tools keep from one run to the next for as long as
+/// the page lives (their static fields; docs/adr/0032): the host keeps it for
+/// as long as the app lives. A new app starts with the web's values.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Memory {
+    /// The last circle's radius, offered by Teğet-teğet-yarıçap (`CircleTool.lastRadius`); 0: none yet.
+    pub circle_radius: f64,
+    /// The rectangle tool's rotation, radians (`RectangleTool.rotation`).
+    pub rect_rotation: f64,
+    /// The rectangle tool's corners (`RectangleTool.corners`).
+    pub rect_corners: Corners,
+    /// The regular polygon's side count (`RegularPolygonTool.sides`).
+    pub polygon_sides: u32,
+    /// Whether the regular polygon's circle passes through its corners
+    /// (`RegularPolygonTool.inscribed`), else it touches its edges.
+    pub polygon_inscribed: bool,
+}
+
+impl Default for Memory {
+    fn default() -> Self {
+        Self {
+            circle_radius: 0.0,
+            rect_rotation: 0.0,
+            rect_corners: Corners::Sharp,
+            polygon_sides: 6,
+            polygon_inscribed: true,
+        }
+    }
+}
+
 /// What a tool works with during one call.
 pub struct Context<'a> {
     /// The open drawing: the only way a tool changes anything.
@@ -122,6 +161,8 @@ pub struct Context<'a> {
     pub spatial: &'a Spatial,
     /// The selection: the select tool changes it, the erase tool deletes it.
     pub selection: &'a mut Selection,
+    /// What the drawing tools remember between runs.
+    pub memory: &'a mut Memory,
 }
 
 impl Context<'_> {
@@ -155,6 +196,43 @@ pub struct Tag {
     pub lines: Vec<String>,
 }
 
+/// A line of a draft drawn as the web's `strokePath` draws it: the circle,
+/// the arc or the rectangle that would be written, a dashed guide circle.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Stroke {
+    /// World points, curves already tessellated by the shared core.
+    pub pts: Vec<Vec2>,
+    pub closed: bool,
+    /// Dash and gap, logical pixels; solid when none.
+    pub dash: Option<[f32; 2]>,
+    /// Logical pixels.
+    pub width: f32,
+}
+
+impl Stroke {
+    /// A solid 1 px line.
+    pub fn solid(pts: Vec<Vec2>, closed: bool) -> Self {
+        Self {
+            pts,
+            closed,
+            dash: None,
+            width: 1.0,
+        }
+    }
+
+    pub fn dashed(pts: Vec<Vec2>, closed: bool, dash: [f32; 2]) -> Self {
+        Self {
+            dash: Some(dash),
+            ..Self::solid(pts, closed)
+        }
+    }
+
+    pub fn width(mut self, width: f32) -> Self {
+        self.width = width;
+        self
+    }
+}
+
 /// What the running tool wants drawn over the drawing; the drawing itself
 /// does not change until a confirm (ADR 0018, “Önizleme”). World
 /// coordinates; arcs already tessellated by the shared core.
@@ -166,6 +244,10 @@ pub struct Preview {
     pub ring: Option<Vec<Vec2>>,
     /// Helper lines, dashed: to a point given before an arc's end, and the like.
     pub guides: Vec<[Vec2; 2]>,
+    /// Lines drawn as the web's `strokePath` draws them (docs/adr/0032).
+    pub strokes: Vec<Stroke>,
+    /// Points marked with a 9 px square: the objects picked for a tangent circle.
+    pub squares: Vec<Vec2>,
     pub tag: Option<Tag>,
     /// A polar tracking ray the cursor is locked to.
     pub tracking: Option<Tracking>,

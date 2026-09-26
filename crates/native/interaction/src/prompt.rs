@@ -1,16 +1,21 @@
 //! A tool's prompt as data: the step it waits for and its options, each with
 //! the key that chooses it. The web builds the same thing as text,
-//! `Araç: adım [Seçenek (TUŞ) / …]`, and parses it back into buttons
-//! (`apps/web/src/ui/promptOptions.ts`); [`Prompt::text`] writes exactly that
-//! text, so the command line, the status bar and the traces read the same
-//! words on both platforms. A typed `PromptSpec` is TODOS.md UX-02.
+//! `Araç: adım [Seçenek (TUŞ) / Seçenek (TUŞ): değer]`, and parses it back
+//! into buttons (`apps/web/src/ui/promptOptions.ts`); [`Prompt::text`] writes
+//! exactly that text, so the command line, the status bar and the traces read
+//! the same words on both platforms. A typed `PromptSpec` is TODOS.md UX-02.
 
-/// One option of a prompt: `Geri (G)`.
+use std::borrow::Cow;
+
+/// One option of a prompt: `Geri (G)`, or with its current value
+/// `Döndür (D): 30°` (the web's `PromptOption.value`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PromptOption {
     pub label: &'static str,
     /// What typing it sends: a letter for the tool, or `Enter` (confirm).
     pub key: &'static str,
+    /// The state of a toggle or a value option (`kapalı`, `6`), shown after it.
+    pub value: Option<String>,
 }
 
 /// What the running command waits for.
@@ -18,8 +23,9 @@ pub struct PromptOption {
 pub struct Prompt {
     /// The tool's name (`Kapalı alan`); none when no command runs.
     pub tool: Option<&'static str>,
-    /// The step: `sonraki noktayı belirtin`.
-    pub step: &'static str,
+    /// The step: `sonraki noktayı belirtin`; some steps carry a value
+    /// (`yarıçapı yazın (Enter: 12.500 m)`).
+    pub step: Cow<'static, str>,
     pub options: Vec<PromptOption>,
 }
 
@@ -28,35 +34,58 @@ impl Prompt {
     pub fn idle() -> Self {
         Self {
             tool: None,
-            step: "Komut",
+            step: Cow::Borrowed("Komut"),
             options: Vec::new(),
         }
     }
 
-    pub fn new(tool: &'static str, step: &'static str) -> Self {
+    pub fn new(tool: &'static str, step: impl Into<Cow<'static, str>>) -> Self {
         Self {
             tool: Some(tool),
-            step,
+            step: step.into(),
             options: Vec::new(),
         }
     }
 
     pub fn option(mut self, label: &'static str, key: &'static str) -> Self {
-        self.options.push(PromptOption { label, key });
+        self.options.push(PromptOption {
+            label,
+            key,
+            value: None,
+        });
         self
     }
 
-    /// The web's prompt text: `Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Geri (G)]`.
+    /// An option with its current value: `Kenar sayısı (S): 6`.
+    pub fn option_with(
+        mut self,
+        label: &'static str,
+        key: &'static str,
+        value: impl Into<String>,
+    ) -> Self {
+        self.options.push(PromptOption {
+            label,
+            key,
+            value: Some(value.into()),
+        });
+        self
+    }
+
+    /// The web's prompt text: `Kapalı alan: sonraki noktayı belirtin [Yay (Y) / Geri (G)]`,
+    /// `Dikdörtgen: karşı köşeyi belirtin [Döndür (D): 0° / Boyutlar (B)]`.
     pub fn text(&self) -> String {
         let mut text = match self.tool {
             Some(tool) => format!("{tool}: {}", self.step),
-            None => self.step.to_owned(),
+            None => self.step.to_string(),
         };
         if !self.options.is_empty() {
             let options: Vec<String> = self
                 .options
                 .iter()
-                .map(|o| format!("{} ({})", o.label, o.key))
+                .map(|o| match &o.value {
+                    Some(value) => format!("{} ({}): {value}", o.label, o.key),
+                    None => format!("{} ({})", o.label, o.key),
+                })
                 .collect();
             text.push_str(&format!(" [{}]", options.join(" / ")));
         }

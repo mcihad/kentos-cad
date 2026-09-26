@@ -660,6 +660,7 @@ impl Tool for Path {
             guides,
             tracking: tag.as_ref().and(self.tracking),
             tag,
+            ..Preview::default()
         }
     }
 }

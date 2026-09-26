@@ -21,7 +21,11 @@
 //!   area and the polyline ([`path`], `cad.polygon.create` and
 //!   `cad.polyline.create`, docs/adr/0022, 0027), one object in one undo
 //!   step; the line ([`line`], `cad.line.create`), one object and one undo
-//!   step per segment of its chain;
+//!   step per segment of its chain; the point ([`point`], `cad.point.create`),
+//!   the circle ([`circle`], `cad.circle.create`), the arc ([`arc`],
+//!   `cad.arc.create`), the rectangle, the rotated rectangle and the regular
+//!   polygon ([`rectangle`], [`rotated`], [`regular`], `cad.polygon.create`;
+//!   docs/adr/0032);
 //! - selecting and deleting (docs/adr/0029): the [`Selection`], the select
 //!   tool that has the pointer while no command runs ([`select`]), the erase
 //!   tool ([`erase`], `cad.entities.delete`);
@@ -39,13 +43,19 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod arc;
+pub mod circle;
 pub mod erase;
 mod format;
 pub mod line;
 mod log;
 pub mod path;
+pub mod point;
 mod points;
 mod prompt;
+pub mod rectangle;
+pub mod regular;
+pub mod rotated;
 pub mod select;
 mod selection;
 mod session;
@@ -64,4 +74,6 @@ pub use select::SelectBox;
 pub use selection::Selection;
 pub use session::Session;
 pub use spatial::Spatial;
-pub use tool::{Context, Draft, Flow, Pointer, Preview, Tag, Tool, View, snap_kinds};
+pub use tool::{
+    Context, Corners, Draft, Flow, Memory, Pointer, Preview, Stroke, Tag, Tool, View, snap_kinds,
+};
