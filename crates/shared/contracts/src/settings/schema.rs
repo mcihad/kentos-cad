@@ -119,7 +119,7 @@ fn settings() -> Vec<SettingDescriptor> {
         integer("drafting.pickAperture", 5)
             .range(2.0, 15.0)
             .unit("px")
-            .hosts(&[Web])
+            .hosts(&[Web, Desktop])
             .text(
                 "Seçim yarıçapı",
                 "Tıklamanın bir çizgiyi yakalaması için gereken yakınlık.",
@@ -138,7 +138,7 @@ fn settings() -> Vec<SettingDescriptor> {
             ),
         boolean("drafting.snap", true)
             .scope(SettingScope::Session)
-            .hosts(&[Web])
+            .hosts(&[Web, Desktop])
             .text(
                 "Kenetleme",
                 "Seçili kenet türlerinin tümünü birlikte açıp kapatır (F3).",
@@ -547,7 +547,10 @@ fn choice(key: &str, default: &str, choices: &[(&str, &str)]) -> Build {
 }
 
 fn snap_kind(key: &str, default: bool, title: &str, description: &str) -> Build {
-    boolean(key, default).hosts(&[Web]).text(title, description)
+    // The desktop's tools snap by the same kinds (docs/adr/0029).
+    boolean(key, default)
+        .hosts(&[Web, Desktop])
+        .text(title, description)
 }
 
 impl Build {

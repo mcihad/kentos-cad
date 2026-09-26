@@ -129,7 +129,8 @@
       "unit": "px",
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "drafting",
@@ -175,7 +176,8 @@
       "default": true,
       "scope": "session",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "drafting",
@@ -220,7 +222,8 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "snap",
@@ -235,7 +238,8 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "snap",
@@ -250,7 +254,8 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "snap",
@@ -265,7 +270,8 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "snap",
@@ -280,7 +286,8 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "snap",
@@ -295,7 +302,8 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "snap",
@@ -310,7 +318,8 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "snap",
@@ -325,7 +334,8 @@
       "default": false,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "snap",
