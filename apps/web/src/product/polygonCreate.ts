@@ -1,4 +1,3 @@
-import type { CommandError } from '../contracts/generated/CommandError';
 import type { CommandWarning } from '../contracts/generated/CommandWarning';
 import type { PolygonCreate } from '../contracts/generated/PolygonCreate';
 import type { PolygonCreated } from '../contracts/generated/PolygonCreated';
@@ -6,6 +5,7 @@ import type { PolygonPlan } from '../contracts/generated/PolygonPlan';
 import type { Vec2 } from '../contracts/generated/Vec2';
 import type { CadDocument } from '../model/document';
 import type { NewEntity } from '../model/entities';
+import { checkLayer, checkRevision, copy, error, failed, notFinite, validated, type Stop } from './checks';
 import type { ProductCommand } from './command';
 
 /**
@@ -22,7 +22,8 @@ import type { ProductCommand } from './command';
  * layer not a group, not locked by itself or a group above). A hidden layer
  * is written with a warning. An input broken by itself is refused before
  * the document is looked at; once the document has changed since the input
- * was prepared, the conflict comes before the layer's state.
+ * was prepared, the conflict comes before the layer's state. The last two
+ * are every create command's (checks.ts).
  *
  * Nothing here is geometry (CLAUDE.md §4.8.1): the checks are counts,
  * finite numbers and the layer tree. Geometric validity (a ring crossing
@@ -31,18 +32,6 @@ import type { ProductCommand } from './command';
  */
 
 const MIN_CORNERS = 3;
-/** A revision as text: a whole decimal number, no sign, no leading zero (DOM-12). */
-const REVISION_TEXT = /^(0|[1-9][0-9]*)$/;
-const AXES = [
-  ['x', 'doğu (Y)'],
-  ['y', 'kuzey (X)'],
-] as const;
-
-/** Why a call stops before anything is written. */
-type Stop = { status: 'failed'; error: CommandError } | { status: 'conflict'; error: CommandError };
-
-const error = (code: string, message: string, path: string): CommandError => ({ code, message, path });
-const failed = (e: CommandError): Stop => ({ status: 'failed', error: e });
 
 /** Which ring of the input: the outer one (null) or hole `h` (0-based). */
 type Ring = number | null;
@@ -53,38 +42,38 @@ const cornerOf = (ring: Ring, i: number) => (ring === null ? `${i + 1}. köşeni
 /** Edge `i` (0-based; the last closes the ring) as a message names it. */
 const edgeOf = (ring: Ring, i: number) => (ring === null ? `${i + 1}. kenarın` : `${ring + 1}. deliğin ${i + 1}. kenarının`);
 
-function checkRing(ring: Ring, pts: readonly Vec2[], bulges: readonly number[] | null | undefined): CommandError | null {
+function checkRing(ring: Ring, pts: readonly Vec2[], bulges: readonly number[] | null | undefined): Stop | null {
   const n = pts.length;
   if (n < MIN_CORNERS) {
     const message =
       ring === null
         ? `Kapalı alanın en az 3 köşesi olmalı; ${n} köşe verildi. Eksik köşeleri ekleyin.`
         : `${ring + 1}. deliğin en az 3 köşesi olmalı; ${n} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.`;
-    return error('too_few_corners', message, pathOf(ring, 'pts'));
+    return failed(error('too_few_corners', message, pathOf(ring, 'pts')));
   }
-  for (let i = 0; i < n; i++)
-    for (const [axis, name] of AXES)
-      if (!Number.isFinite(pts[i][axis]))
-        return error(
-          'not_finite',
-          `${cornerOf(ring, i)} ${name} değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.`,
-          `${pathOf(ring, 'pts')}[${i}].${axis}`,
-        );
+  for (let i = 0; i < n; i++) {
+    const broken = notFinite(pts[i], cornerOf(ring, i), `${pathOf(ring, 'pts')}[${i}]`);
+    if (broken) return broken;
+  }
   if (bulges == null) return null;
   if (bulges.length !== n) {
     const whose = ring === null ? 'Yay değerleri' : `${ring + 1}. deliğin yay değerleri`;
-    return error(
-      'bulge_count',
-      `${whose} köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: ${n} köşe, ${bulges.length} yay değeri verildi. Eksik ya da fazla değerleri düzeltin.`,
-      pathOf(ring, 'bulges'),
+    return failed(
+      error(
+        'bulge_count',
+        `${whose} köşe sayısı kadar olmalı, kapanış kenarı dahil her kenara bir değer: ${n} köşe, ${bulges.length} yay değeri verildi. Eksik ya da fazla değerleri düzeltin.`,
+        pathOf(ring, 'bulges'),
+      ),
     );
   }
   for (let i = 0; i < n; i++)
     if (!Number.isFinite(bulges[i]))
-      return error(
-        'not_finite',
-        `${edgeOf(ring, i)} yay değeri sonlu bir sayı değil (NaN ya da sonsuz). Düz kenar için 0, yay için tan(açı/4) verin.`,
-        `${pathOf(ring, 'bulges')}[${i}]`,
+      return failed(
+        error(
+          'not_finite',
+          `${edgeOf(ring, i)} yay değeri sonlu bir sayı değil (NaN ya da sonsuz). Düz kenar için 0, yay için tan(açı/4) verin.`,
+          `${pathOf(ring, 'bulges')}[${i}]`,
+        ),
       );
   return null;
 }
@@ -92,48 +81,13 @@ function checkRing(ring: Ring, pts: readonly Vec2[], bulges: readonly number[] |
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */
 function check(doc: CadDocument, input: PolygonCreate): Stop | CommandWarning[] {
   const outer = checkRing(null, input.pts, input.bulges);
-  if (outer) return failed(outer);
+  if (outer) return outer;
   for (const [h, hole] of (input.holes ?? []).entries()) {
     const broken = checkRing(h, hole.pts, hole.bulges);
-    if (broken) return failed(broken);
+    if (broken) return broken;
   }
-  const expected = input.expectedRevision;
-  if (expected != null) {
-    if (!REVISION_TEXT.test(expected))
-      return failed(
-        error(
-          'invalid_revision',
-          `Beklenen sürüm “${expected}” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.`,
-          'expectedRevision',
-        ),
-      );
-    const current = String(doc.revision);
-    if (expected !== current)
-      return {
-        status: 'conflict',
-        error: {
-          ...error(
-            'revision_conflict',
-            'Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.',
-            'expectedRevision',
-          ),
-          revision: current,
-        },
-      };
-  }
-  const layers = doc.layers;
-  const id = input.layerId;
-  const node = layers.get(id);
-  if (!node) return failed(error('layer_not_found', `“${id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.`, 'layerId'));
-  if (node.type !== 'layer')
-    return failed(error('not_a_layer', `“${node.name}” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.`, 'layerId'));
-  // The closed-area tool's words (tools/targetLayer.ts), kept since the tool writes through here.
-  if (layers.isLocked(id))
-    return failed(error('layer_locked', `“${node.name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.`, 'layerId'));
-  return layers.isVisible(id) ? [] : [{ code: 'layer_hidden', message: `“${node.name}” katmanı gizli; çizilen nesne görünmeyecek.`, path: 'layerId' }];
+  return checkRevision(doc, input.expectedRevision) ?? checkLayer(doc, input.layerId);
 }
-
-const copy = (p: Vec2): Vec2 => ({ x: p.x, y: p.y });
 
 /** The polygon `input` describes, as the document stores it: its own copies, never the caller's arrays. */
 function polygonOf(input: PolygonCreate): NewEntity & { kind: 'polygon' } {
@@ -153,8 +107,7 @@ export const polygonCreate: ProductCommand<PolygonCreate, PolygonCreated, Polygo
   version: 1,
 
   validate(cx, input) {
-    const checked = check(cx.doc, input);
-    return Array.isArray(checked) ? { status: 'completed', output: null, warnings: checked } : checked;
+    return validated(check(cx.doc, input));
   },
 
   plan(cx, input) {

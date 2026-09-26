@@ -1,7 +1,8 @@
-//! The shared product command cases (fixtures/commands/v1, docs/adr/0022) run
-//! against the desktop's handlers over the native document. The web runs the
-//! same files against its own handlers (apps/web/src/product/fixtures.test.ts);
-//! the format is in fixtures/commands/README.md.
+//! The shared product command cases (fixtures/commands/v1, docs/adr/0022,
+//! 0027) run against the desktop's handlers over the native document. The web
+//! runs the same files against its own handlers
+//! (apps/web/src/product/fixtures.test.ts); the format is in
+//! fixtures/commands/README.md.
 //!
 //! JSON carries no NaN or ±∞: a step's `nonFinite` puts them into the typed
 //! input after it is read, at the paths the errors name.
@@ -10,10 +11,11 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use kentos_domain::contracts::{
-    CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION, DocumentSnapshotV1, PolygonCreate,
+    CAD_LINE_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, DocumentSnapshotV1, LineCreate,
+    PolygonCreate, PolylineCreate,
 };
 use kentos_domain::{Document, Slot, Uuid};
-use kentos_native_application::{DESKTOP_COMMANDS, ExecutionContext, polygon};
+use kentos_native_application::{DESKTOP_COMMANDS, ExecutionContext, line, polygon, polyline};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -93,72 +95,149 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
     })
 }
 
-/// Puts NaN or ±∞ at `path` (`pts[1].y`, `bulges[3]`, `holes[0].pts[2].x`, `holes[1].bulges[0]`).
-fn put_non_finite(input: &mut PolygonCreate, path: &str, value: &Value, at: &str) -> Outcome<()> {
-    let number = match value.as_str() {
-        Some("NaN") => f64::NAN,
-        Some("Infinity") => f64::INFINITY,
-        Some("-Infinity") => f64::NEG_INFINITY,
-        _ => {
-            return Err(format!(
-                "{at}: {path}: NaN, Infinity ya da -Infinity olmalı"
-            ));
+/// The number of a point list at `rest` (`pts[1].y`, after any ring prefix).
+fn point_number<'a>(
+    pts: &'a mut [kentos_domain::contracts::Vec2],
+    rest: &str,
+) -> Option<&'a mut f64> {
+    let (i, axis) = rest.strip_prefix("pts[")?.split_once("].")?;
+    let p = pts.get_mut(i.parse::<usize>().ok()?)?;
+    match axis {
+        "x" => Some(&mut p.x),
+        "y" => Some(&mut p.y),
+        _ => None,
+    }
+}
+
+/// The bulge at `rest` (`bulges[3]`, after any ring prefix).
+fn bulge_number<'a>(bulges: &'a mut Option<Vec<f64>>, rest: &str) -> Option<&'a mut f64> {
+    let i = rest.strip_prefix("bulges[")?.strip_suffix(']')?;
+    bulges.as_mut()?.get_mut(i.parse::<usize>().ok()?)
+}
+
+/// A command's typed input, with the numbers `nonFinite` may name.
+trait Input {
+    /// The number at an error path; `None` when the input has no such place.
+    fn number(&mut self, path: &str) -> Option<&mut f64>;
+}
+
+impl Input for PolygonCreate {
+    /// `pts[1].y`, `bulges[3]`, `holes[0].pts[2].x`, `holes[1].bulges[0]`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let (pts, bulges, rest) = match path.strip_prefix("holes[") {
+            Some(rest) => {
+                let (h, rest) = rest.split_once("].")?;
+                let ring = self.holes.as_mut()?.get_mut(h.parse::<usize>().ok()?)?;
+                (&mut ring.pts, &mut ring.bulges, rest)
+            }
+            None => (&mut self.pts, &mut self.bulges, path),
+        };
+        if rest.starts_with("pts[") {
+            point_number(pts, rest)
+        } else {
+            bulge_number(bulges, rest)
         }
-    };
-    let bad = || format!("{at}: girdide böyle bir yer yok: {path}");
-    let index = |text: &str| text.parse::<usize>().map_err(|_| bad());
-    let (pts, bulges, rest) = match path.strip_prefix("holes[") {
-        Some(rest) => {
-            let (h, rest) = rest.split_once("].").ok_or_else(bad)?;
-            let ring = input
-                .holes
-                .as_mut()
-                .and_then(|holes| holes.get_mut(index(h).ok()?))
-                .ok_or_else(bad)?;
-            (&mut ring.pts, &mut ring.bulges, rest)
-        }
-        None => (&mut input.pts, &mut input.bulges, path),
-    };
-    if let Some(rest) = rest.strip_prefix("pts[") {
-        let (i, axis) = rest.split_once("].").ok_or_else(bad)?;
-        let p = pts.get_mut(index(i)?).ok_or_else(bad)?;
+    }
+}
+
+impl Input for LineCreate {
+    /// `a.x`, `b.y`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let (end, axis) = path.split_once('.')?;
+        let p = match end {
+            "a" => &mut self.a,
+            "b" => &mut self.b,
+            _ => return None,
+        };
         match axis {
-            "x" => p.x = number,
-            "y" => p.y = number,
-            _ => return Err(bad()),
+            "x" => Some(&mut p.x),
+            "y" => Some(&mut p.y),
+            _ => None,
         }
-    } else if let Some(i) = rest
-        .strip_prefix("bulges[")
-        .and_then(|r| r.strip_suffix(']'))
-    {
-        let i = index(i)?;
-        *bulges.as_mut().and_then(|b| b.get_mut(i)).ok_or_else(bad)? = number;
-    } else {
-        return Err(bad());
+    }
+}
+
+impl Input for PolylineCreate {
+    /// `pts[1].y`, `bulges[0]`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path.starts_with("pts[") {
+            point_number(&mut self.pts, path)
+        } else {
+            bulge_number(&mut self.bulges, path)
+        }
+    }
+}
+
+/// Puts NaN or ±∞ into the typed input at the paths the step's `nonFinite` names.
+fn put_non_finite(input: &mut impl Input, step: &Value, at: &str) -> Outcome<()> {
+    let Some(table) = step.get("nonFinite") else {
+        return Ok(());
+    };
+    let table = table
+        .as_object()
+        .ok_or_else(|| format!("{at}: nonFinite bir nesne olmalı"))?;
+    for (path, value) in table {
+        let number = match value.as_str() {
+            Some("NaN") => f64::NAN,
+            Some("Infinity") => f64::INFINITY,
+            Some("-Infinity") => f64::NEG_INFINITY,
+            _ => {
+                return Err(format!(
+                    "{at}: {path}: NaN, Infinity ya da -Infinity olmalı"
+                ));
+            }
+        };
+        *input
+            .number(path)
+            .ok_or_else(|| format!("{at}: girdide böyle bir yer yok: {path}"))? = number;
     }
     Ok(())
 }
 
+/// Runs `op` of the fixture's command on the document; its whole result as the wire carries it.
+fn run_op(
+    command: &str,
+    op: &str,
+    doc: &mut Document,
+    input: Value,
+    step: &Value,
+    at: &str,
+) -> Outcome<Value> {
+    // The step's input, read as the command's type, with its non-finite numbers put in.
+    macro_rules! run {
+        ($module:ident, $input:ty) => {{
+            let mut input: $input =
+                serde_json::from_value(input).map_err(|e| format!("{at}: girdi okunamadı: {e}"))?;
+            put_non_finite(&mut input, step, at)?;
+            match op {
+                "validate" => {
+                    serde_json::to_value($module::validate(&ExecutionContext::new(doc), &input))
+                }
+                "plan" => serde_json::to_value($module::plan(&ExecutionContext::new(doc), &input)),
+                _ => serde_json::to_value($module::execute(&mut ExecutionContext::new(doc), input)),
+            }
+        }};
+    }
+    match command {
+        CAD_POLYGON_CREATE => run!(polygon, PolygonCreate),
+        CAD_LINE_CREATE => run!(line, LineCreate),
+        CAD_POLYLINE_CREATE => run!(polyline, PolylineCreate),
+        other => return Err(format!("{at}: {other} için koşucu yok")),
+    }
+    .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
+}
+
 /// Runs one command step and compares its whole result.
-fn run_command(doc: &mut Document, state: &State, step: &Value, at: &str) -> Outcome<()> {
+fn run_command(
+    command: &str,
+    doc: &mut Document,
+    state: &State,
+    step: &Value,
+    at: &str,
+) -> Outcome<()> {
     let op = step["op"].as_str().unwrap_or("?");
     let input = fill(&step["input"], doc, state, at)?;
-    let mut input: PolygonCreate =
-        serde_json::from_value(input).map_err(|e| format!("{at}: girdi okunamadı: {e}"))?;
-    if let Some(table) = step.get("nonFinite") {
-        let table = table
-            .as_object()
-            .ok_or_else(|| format!("{at}: nonFinite bir nesne olmalı"))?;
-        for (path, value) in table {
-            put_non_finite(&mut input, path, value, at)?;
-        }
-    }
-    let got = match op {
-        "validate" => serde_json::to_value(polygon::validate(&ExecutionContext::new(doc), &input)),
-        "plan" => serde_json::to_value(polygon::plan(&ExecutionContext::new(doc), &input)),
-        _ => serde_json::to_value(polygon::execute(&mut ExecutionContext::new(doc), input)),
-    }
-    .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))?;
+    let got = run_op(command, op, doc, input, step, at)?;
     let Some(want) = step.get("result") else {
         return Err(format!("{at}: komut adımında “result” yok"));
     };
@@ -187,7 +266,13 @@ fn run_command(doc: &mut Document, state: &State, step: &Value, at: &str) -> Out
     expect_same(&got, &fill(&want, doc, state, at)?, "sonuç", at)
 }
 
-fn run_step(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Outcome<()> {
+fn run_step(
+    command: &str,
+    doc: &mut Document,
+    state: &mut State,
+    step: &Value,
+    at: &str,
+) -> Outcome<()> {
     if let Some(fields) = step.as_object() {
         // A misspelt field would otherwise pass unchecked.
         if let Some(key) = fields.keys().find(|k| !STEP_KEYS.contains(&k.as_str())) {
@@ -196,7 +281,7 @@ fn run_step(doc: &mut Document, state: &mut State, step: &Value, at: &str) -> Ou
     }
     let before = doc.revision();
     match step["op"].as_str().unwrap_or("?") {
-        "validate" | "plan" | "execute" => run_command(doc, state, step, at)?,
+        "validate" | "plan" | "execute" => run_command(command, doc, state, step, at)?,
         op @ ("undo" | "redo") => {
             let label = if op == "undo" { doc.undo() } else { doc.redo() };
             if let Some(want) = step.get("returns") {
@@ -300,7 +385,7 @@ fn check(
     Ok(())
 }
 
-fn run_case(setup: &Value, case: &Value, at: &str) -> Outcome<()> {
+fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()> {
     let snapshot = DocumentSnapshotV1::from_json(&setup.to_string())
         .map_err(|e| format!("{at}: kurulum: {e}"))?;
     let mut doc = Document::from_snapshot(snapshot).map_err(|e| format!("{at}: kurulum: {e}"))?;
@@ -315,6 +400,7 @@ fn run_case(setup: &Value, case: &Value, at: &str) -> Outcome<()> {
     for (i, step) in steps.iter().enumerate() {
         let op = step["op"].as_str().unwrap_or("?");
         run_step(
+            command,
             &mut doc,
             &mut state,
             step,
@@ -336,6 +422,7 @@ fn every_command_case_matches_the_desktop_handlers() {
     assert!(!files.is_empty(), "fixtures/commands/v1: no files");
     let mut problems = Vec::new();
     let mut cases = 0;
+    let mut commands = Vec::new();
     for path in &files {
         let file = path
             .file_name()
@@ -355,22 +442,25 @@ fn every_command_case_matches_the_desktop_handlers() {
                 .any(|(id, v)| (*id, u64::from(*v)) == command),
             "{file}: {command:?} is not a desktop command"
         );
-        // One handler so far; the next command adds its arm to `run_command`.
-        assert_eq!(
-            command,
-            (CAD_POLYGON_CREATE, u64::from(CAD_POLYGON_CREATE_VERSION)),
-            "{file}: no runner for {command:?}"
-        );
-        for case in fixture["cases"].as_array().expect("cases") {
+        commands.push(command.0.to_owned());
+        let listed = fixture["cases"].as_array().expect("cases");
+        assert!(listed.len() >= 20, "{file}: {} cases", listed.len());
+        for case in listed {
             cases += 1;
             let name = case["name"].as_str().unwrap_or("?");
             let setup = case.get("setup").unwrap_or(&fixture["setup"]);
-            if let Err(problem) = run_case(setup, case, &format!("{file} › {name}")) {
+            if let Err(problem) = run_case(command.0, setup, case, &format!("{file} › {name}")) {
                 problems.push(problem);
             }
         }
     }
-    assert!(cases >= 20, "{cases} cases");
+    // Every command the desktop runs has its cases.
+    for (id, _) in DESKTOP_COMMANDS {
+        assert!(
+            commands.iter().any(|c| c == id),
+            "{id}: no file in fixtures/commands/v1"
+        );
+    }
     assert!(
         problems.is_empty(),
         "{} of {cases} cases failed:\n{}",

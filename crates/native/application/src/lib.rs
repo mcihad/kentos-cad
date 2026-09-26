@@ -29,16 +29,27 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+mod checks;
+pub mod codes;
 mod context;
+pub mod line;
 pub mod polygon;
+pub mod polyline;
 
 pub use context::ExecutionContext;
 pub use kentos_contracts::{CommandError, CommandResult, CommandWarning};
 
-use kentos_contracts::{CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION};
+use kentos_contracts::{
+    CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION,
+    CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION,
+};
 
 /// The product commands the desktop runs, by name and version (docs/adr/0013).
-/// Each has its module here ([`polygon`]); `tests/catalog.rs` keeps the list
-/// equal to the catalog's commands marked `desktop`, as the server's
-/// `SERVER_COMMANDS` is kept to those marked `server`.
-pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[(CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION)];
+/// Each has its module here ([`polygon`], [`line`], [`polyline`]);
+/// `tests/catalog.rs` keeps the list equal to the catalog's commands marked
+/// `desktop`, as the server's `SERVER_COMMANDS` is kept to those marked `server`.
+pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
+    (CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION),
+    (CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION),
+    (CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION),
+];

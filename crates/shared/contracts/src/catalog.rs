@@ -155,10 +155,12 @@ fn schema<T: schemars::JsonSchema>() -> serde_json::Value {
 #[cfg(feature = "schema")]
 pub fn catalog() -> CommandCatalog {
     use crate::{
-        CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION, CommitResult, PROJECT_ACCESS_REVOKE,
-        PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_SHARE,
-        PROJECT_SHARE_VERSION, PolygonCreate, PolygonCreated, ProjectAccessChange,
-        ProjectAccessRevoke, ProjectChanges, ProjectPermission, ProjectShare,
+        CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION,
+        CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION, CommitResult, LineCreate, LineCreated,
+        PROJECT_ACCESS_REVOKE, PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES,
+        PROJECT_CHANGES_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION, PolygonCreate,
+        PolygonCreated, PolylineCreate, PolylineCreated, ProjectAccessChange, ProjectAccessRevoke,
+        ProjectChanges, ProjectPermission, ProjectShare,
     };
     use serde_json::json;
     CommandCatalog {
@@ -314,6 +316,109 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // The line and polyline tools' commands (docs/adr/0027), held together by
+        // fixtures/commands/v1/cad.line.create.json and cad.polyline.create.json.
+        CommandDescriptor {
+            id: CAD_LINE_CREATE.into(),
+            version: CAD_LINE_CREATE_VERSION,
+            title: "Çizgi oluştur".into(),
+            summary: "Açık çizimde verilen katmana iki uç noktası arasında düz bir çizgi ekler; tek geri alma adımıdır. \
+                      Çizgi aracı zincirin her parçası için bu komutu bir kez çalıştırır: her parça ayrı nesne ve ayrı adımdır. \
+                      Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<LineCreate>(),
+            output: schema::<LineCreated>(),
+            examples: vec![
+                CommandExample {
+                    title: "Bir çizgi".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "a": { "x": 423500.0, "y": 4512300.0 },
+                        "b": { "x": 423520.0, "y": 4512312.5 }
+                    }),
+                    output: Some(json!({
+                        "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                        "id": 12,
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Renkli ve öznitelikli bir çizgi; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "a": { "x": 423500.0, "y": 4512300.0 },
+                        "b": { "x": 423500.0, "y": 4512330.0 },
+                        "color": "#E5484D",
+                        "attrs": { "Tür": "İstinat duvarı" },
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: CAD_POLYLINE_CREATE.into(),
+            version: CAD_POLYLINE_CREATE_VERSION,
+            title: "Çoklu çizgi oluştur".into(),
+            summary: "Açık çizimde verilen katmana noktaları ve isteğe bağlı yay değerleriyle (kenar başına bir tane) açık bir çoklu çizgi ekler; tek geri alma adımıdır. \
+                      Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<PolylineCreate>(),
+            output: schema::<PolylineCreated>(),
+            examples: vec![
+                CommandExample {
+                    title: "Üç noktalı çoklu çizgi".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "pts": [
+                            { "x": 423500.0, "y": 4512300.0 },
+                            { "x": 423520.0, "y": 4512300.0 },
+                            { "x": 423520.0, "y": 4512312.5 }
+                        ]
+                    }),
+                    output: Some(json!({
+                        "uid": "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                        "id": 12,
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "İkinci kenarı çeyrek daire yayı olan renkli çoklu çizgi; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "layerId": "yapi",
+                        "pts": [
+                            { "x": 423500.0, "y": 4512300.0 },
+                            { "x": 423520.0, "y": 4512300.0 },
+                            { "x": 423530.0, "y": 4512310.0 }
+                        ],
+                        "bulges": [0.0, 0.41421356237309503],
+                        "color": "#E5484D",
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -322,8 +427,8 @@ pub fn catalog() -> CommandCatalog {
 mod tests {
     use super::*;
     use crate::{
-        PolygonCreate, PolygonCreated, ProjectAccessRevoke, ProjectChanges, ProjectPermission,
-        ProjectShare,
+        LineCreate, LineCreated, PolygonCreate, PolygonCreated, PolylineCreate, PolylineCreated,
+        ProjectAccessRevoke, ProjectChanges, ProjectPermission, ProjectShare,
     };
     use std::path::PathBuf;
 
@@ -380,6 +485,12 @@ mod tests {
                     crate::CAD_POLYGON_CREATE => {
                         serde_json::from_value::<PolygonCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LINE_CREATE => {
+                        serde_json::from_value::<LineCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_POLYLINE_CREATE => {
+                        serde_json::from_value::<PolylineCreate>(e.input.clone()).map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -388,6 +499,12 @@ mod tests {
                     let parsed = match d.id.as_str() {
                         crate::CAD_POLYGON_CREATE => {
                             serde_json::from_value::<PolygonCreated>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_LINE_CREATE => {
+                            serde_json::from_value::<LineCreated>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_POLYLINE_CREATE => {
+                            serde_json::from_value::<PolylineCreated>(output.clone()).map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };
