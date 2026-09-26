@@ -299,6 +299,21 @@ export class LineTool extends PointInputTool {
   }
 }
 
+/**
+ * A tool that always writes to its own layer (Parsel → parsel, Kot noktası →
+ * kot) says so when that layer is locked, in its own words, and writes
+ * nothing: activating another layer would not help, as the commands' text
+ * suggests. True when locked. A missing or hidden layer is left to the
+ * command, whose words fit them.
+ */
+export function fixedLayerLocked(ctx: AppContext, layerId: string, tool: string): boolean {
+  const layers = ctx.doc.layers;
+  const node = layers.get(layerId);
+  if (!node || !layers.isLocked(layerId)) return false;
+  ctx.log.warn(`“${node.name}” katmanı kilitli; ${tool} bu katmana yazar. Kilidi Katmanlar panelinden açın.`);
+  return true;
+}
+
 /** Places points; with `askZ` it waits for an elevation after each click (kot noktası). */
 export class PointTool extends PointInputTool {
   readonly id: string;
@@ -346,6 +361,7 @@ export class PointTool extends PointInputTool {
    * active one, and the current colour, explicit in its input (CMD-07).
    */
   private writePoint(fields: { p: Vec2; z?: number; label?: string; attrs?: Record<string, string> }): void {
+    if (this.layerId && fixedLayerLocked(this.ctx, this.layerId, this.label)) return;
     const layerId = this.layerId ?? this.ctx.doc.layers.active.value;
     this.written(pointCreate.execute({ doc: this.ctx.doc }, { layerId, ...fields, ...this.colour() }));
   }

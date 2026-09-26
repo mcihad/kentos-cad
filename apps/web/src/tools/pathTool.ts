@@ -8,7 +8,7 @@ import { polylineCreate } from '../product/polylineCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { centreBulge, offsetAlong, radialPoint, radiusBulge, unitToward } from './constructions';
 import { parseNumber } from './coordinateInput';
-import { PointInputTool } from './drawTools';
+import { fixedLayerLocked, PointInputTool } from './drawTools';
 import { drawTag, strokePath, tint } from './preview';
 import type { ToolPointer } from './Tool';
 
@@ -212,6 +212,8 @@ export class PathTool extends PointInputTool {
       this.pts.pop();
       this.bulges.pop();
       this.spec = { kind: 'tangent' };
+      // The length went with the direction it continued: the point prompt comes back.
+      this.askLength = false;
     } else return false;
     this.refreshPrompt();
     this.ctx.view.requestOverlay();
@@ -335,6 +337,7 @@ export class PathTool extends PointInputTool {
    * the geometric area. The new parcel is selected, so Öznitelikler shows it.
    */
   private createParcel(geom: { kind: 'polygon' | 'polyline'; pts: Vec2[]; bulges?: number[] }, layerId: string): void {
+    if (fixedLayerLocked(this.ctx, layerId, this.label)) return;
     const parcels = this.ctx.doc.byLayer(layerId);
     const next = parcels.reduce((m, e) => Math.max(m, parseInt(e.attrs.Parsel ?? '0', 10) || 0), 0) + 1;
     const area = Math.abs(bulgeRingArea(geom.pts, geom.bulges));
