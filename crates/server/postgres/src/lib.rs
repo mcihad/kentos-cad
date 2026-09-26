@@ -63,15 +63,7 @@ impl Db {
         scope: Scope,
     ) -> Result<Transaction<'static, Postgres>, sqlx::Error> {
         let mut tx = self.pool.begin().await?;
-        let text = |id: Option<Uuid>| id.map(|v| v.to_string()).unwrap_or_default();
-        sqlx::query(
-            "select set_config('app.tenant_id', $1, true), set_config('app.user_id', $2, true), set_config('app.project_id', $3, true)",
-        )
-        .bind(text(scope.tenant))
-        .bind(text(scope.user))
-        .bind(text(scope.project))
-        .execute(&mut *tx)
-        .await?;
+        rescope(&mut tx, scope).await?;
         Ok(tx)
     }
 
@@ -92,6 +84,26 @@ impl Db {
         };
         Ok(MIGRATOR.iter().all(|m| applied.contains(&m.version)))
     }
+}
+
+/// Moves an open transaction to another scope, for the rest of that
+/// transaction only (as [`Db::scoped`] sets it): one that touches two
+/// projects (duplicating one into another) writes each one's rows in its
+/// own scope, so row-level security still checks every row.
+pub async fn rescope(
+    tx: &mut Transaction<'static, Postgres>,
+    scope: Scope,
+) -> Result<(), sqlx::Error> {
+    let text = |id: Option<Uuid>| id.map(|v| v.to_string()).unwrap_or_default();
+    sqlx::query(
+        "select set_config('app.tenant_id', $1, true), set_config('app.user_id', $2, true), set_config('app.project_id', $3, true)",
+    )
+    .bind(text(scope.tenant))
+    .bind(text(scope.user))
+    .bind(text(scope.project))
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
 }
 
 /// Applies the pending migrations; must run as the owner role.
