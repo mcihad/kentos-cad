@@ -16,26 +16,24 @@
 //!   `project.create` in the workspace the new project goes to.
 
 use kentos_contracts::{
-    CheckpointRestore, CommandEnvelope, DocumentSnapshotV2, PROJECT_CHECKPOINT_RESTORE,
+    CheckpointRestore, CommandEnvelope, PROJECT_CHECKPOINT_RESTORE,
     PROJECT_CHECKPOINT_RESTORE_VERSION, ProjectDuplicated, ProjectPermission, ProjectStorage,
 };
-use kentos_postgres::{Scope, rescope};
-use serde_json::json;
 use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::access::ProjectAccess;
 use crate::blobs::Blobs;
-use crate::cad::Stored;
 use crate::changes::{check_target, lock};
 use crate::checkpoints::missing;
 use crate::commands::input;
 use crate::duplicate::{self, Copy, Origin};
 use crate::error::{AppError, AppResult};
 use crate::files::{self, RevisionRow};
-use crate::projects::{check_name, check_srid, check_tree, gone, opened, storage_of};
+use crate::projects::{check_name, check_tree, gone, storage_of};
+use crate::snapshot::DrawingMeta;
 use crate::tenancy::{self, Capability};
-use crate::{idempotency, importing, journal, listing};
+use crate::{idempotency, importing};
 
 /// The point asked for.
 enum Asked {
@@ -253,16 +251,18 @@ pub async fn restore(
                     Rechecked::Earlier(earlier) => return Ok(Done::Earlier(*earlier)),
                     Rechecked::Fresh(now) => now,
                 };
-                let import = Import {
+                let drawing = importing::Drawing {
                     target,
                     id,
                     name: &name,
-                    doc: &doc,
-                    rows: &rows,
-                    checkpoint,
-                    revision,
+                    meta: &DrawingMeta::of(&doc),
+                    content: importing::Content::Objects(&rows),
+                    origin: Origin::Restore {
+                        checkpoint: Some(checkpoint),
+                        revision,
+                    },
                 };
-                import_into(&mut tx, &now, &envelope, &text, import)
+                importing::create_from_drawing(&mut tx, &now, &envelope, &text, drawing)
                     .await
                     .map(Done::New)
             }
@@ -335,132 +335,6 @@ async fn finish(
             Err(e)
         }
     }
-}
-
-/// A database project's checkpoint to import as a new project.
-struct Import<'a> {
-    target: Uuid,
-    id: Uuid,
-    name: &'a str,
-    doc: &'a DocumentSnapshotV2,
-    rows: &'a [(Uuid, Stored)],
-    checkpoint: Uuid,
-    revision: i64,
-}
-
-/// The new project's rows, both projects' audit records and the stored answer, in the open transaction.
-async fn import_into(
-    tx: &mut Transaction<'static, Postgres>,
-    now: &ProjectAccess,
-    envelope: &CommandEnvelope,
-    text: &str,
-    import: Import<'_>,
-) -> AppResult<ProjectDuplicated> {
-    let Import {
-        target,
-        id,
-        name,
-        doc,
-        rows,
-        checkpoint,
-        revision,
-    } = import;
-    let request = Some(envelope.request_id.as_str());
-    let actor = now.actor.user_id;
-    let from = json!({ "checkpoint": checkpoint, "revision": revision });
-    // The source's catalog metadata goes with it, as a copy's does.
-    let (description, project_type, tags): (String, String, Vec<String>) = sqlx::query_as(
-        "select description, project_type, tags from kentos.project where tenant_id = $1 and id = $2",
-    )
-    .bind(now.tenant)
-    .bind(now.project)
-    .fetch_one(&mut **tx)
-    .await?;
-    let source_revision = journal::revision(tx, now).await?;
-    journal::audit(
-        tx,
-        now,
-        PROJECT_CHECKPOINT_RESTORE,
-        request,
-        source_revision,
-        json!({ "copy": id, "tenant": target, "name": name, "objects": rows.len(), "from": from }),
-    )
-    .await?;
-    // The new project's own rows, in its scope.
-    rescope(
-        tx,
-        Scope {
-            tenant: Some(target),
-            user: Some(actor),
-            project: Some(id),
-        },
-    )
-    .await?;
-    check_srid(tx, doc.settings.srid).await?;
-    let value = |v: serde_json::Result<serde_json::Value>| {
-        v.map_err(|e| AppError::invalid(format!("Kontrol noktasının kaydı yazılamadı: {e}")))
-    };
-    sqlx::query(
-        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
-                                     description, project_type, tags, storage)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, 'database')",
-    )
-    .bind(target)
-    .bind(id)
-    .bind(name)
-    .bind(doc.settings.srid as i32)
-    .bind(value(serde_json::to_value(&doc.settings))?)
-    .bind(value(serde_json::to_value(&doc.layers))?)
-    .bind(&doc.active_layer)
-    .bind(doc.origin.x)
-    .bind(doc.origin.y)
-    .bind(doc.home_view.map(serde_json::to_value).transpose().map_err(|e| {
-        AppError::invalid(format!("Kontrol noktasının kaydı yazılamadı: {e}"))
-    })?)
-    .bind(value(serde_json::to_value(&doc.styles))?)
-    .bind(actor)
-    .bind(&description)
-    .bind(&project_type)
-    .bind(&tags)
-    .execute(&mut **tx)
-    .await?;
-    for batch in rows.chunks(importing::BATCH) {
-        importing::insert_objects(tx, target, id, doc.settings.srid, actor, batch).await?;
-    }
-    if !rows.is_empty() {
-        // A created object's version is its commit's data revision (docs/adr/0026): this is the first.
-        sqlx::query("update kentos.project set data_revision = 1 where tenant_id = $1 and id = $2")
-            .bind(target)
-            .bind(id)
-            .execute(&mut **tx)
-            .await?;
-    }
-    let subject = journal::Subject {
-        tenant: target,
-        project: id,
-        actor,
-    };
-    journal::audit(
-        tx,
-        subject,
-        "project.create",
-        request,
-        i64::from(!rows.is_empty()),
-        json!({ "name": name, "restoredFrom": { "tenant": now.tenant, "project": now.project, "checkpoint": checkpoint, "revision": revision }, "objects": rows.len() }),
-    )
-    .await?;
-    opened(tx, target, id, actor).await?;
-    let project = listing::entry(tx, target, id).await?;
-    // Back in the source's scope, where its command log is.
-    rescope(tx, now.scope()).await?;
-    let result = ProjectDuplicated {
-        project,
-        source_id: now.project.to_string(),
-        objects: rows.len().to_string(),
-        replayed: false,
-    };
-    idempotency::record(tx, now, envelope, text, &result).await?;
-    Ok(result)
 }
 
 #[cfg(test)]

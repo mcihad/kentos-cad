@@ -148,6 +148,18 @@ async fn a_file_project_saves_verified_revisions_in_order() {
     let store = blobs();
 
     assert_eq!(files::list(&db.app, &by).await.unwrap().current, None);
+    // The catalog and the access list say how it is kept.
+    let listed = kentos_application::listing::mine(&db.app, &ayse.actor)
+        .await
+        .unwrap();
+    assert_eq!(listed.projects[0].storage, ProjectStorage::File);
+    assert_eq!(
+        kentos_application::people::list(&db.app, &by)
+            .await
+            .unwrap()
+            .storage,
+        ProjectStorage::File
+    );
     let first = upload(&db, &store, &by, MINIMAL).await.unwrap();
     let envelope = commit_envelope(&by, first, "0");
     let one = commit(&db, &store, envelope.clone(), &by).await.unwrap();

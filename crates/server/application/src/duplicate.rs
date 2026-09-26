@@ -28,8 +28,9 @@
 //!   they come, are a choice of this command (docs/adr/0028).
 
 use kentos_contracts::{
-    CommandEnvelope, PROJECT_CHECKPOINT_RESTORE, PROJECT_DUPLICATE, PROJECT_DUPLICATE_VERSION,
-    ProjectDuplicate, ProjectDuplicated, ProjectPermission,
+    CommandEnvelope, PROJECT_CHECKPOINT_RESTORE, PROJECT_CONVERT, PROJECT_DUPLICATE,
+    PROJECT_DUPLICATE_VERSION, ProjectDuplicate, ProjectDuplicated, ProjectPermission,
+    ProjectStorage,
 };
 use kentos_postgres::{Scope, rescope};
 use serde_json::json;
@@ -149,6 +150,12 @@ pub(crate) enum Origin {
         checkpoint: Option<Uuid>,
         revision: i64,
     },
+    /// Into the other storage mode (`project.convert`, docs/adr/0039), from
+    /// the source's revision (its data revision, or a file project's file revision).
+    Convert {
+        to: ProjectStorage,
+        revision: i64,
+    },
 }
 
 impl Origin {
@@ -157,6 +164,7 @@ impl Origin {
         match self {
             Self::Duplicate => PROJECT_DUPLICATE,
             Self::Restore { .. } => PROJECT_CHECKPOINT_RESTORE,
+            Self::Convert { .. } => PROJECT_CONVERT,
         }
     }
 
@@ -168,6 +176,9 @@ impl Origin {
                 checkpoint,
                 revision,
             } => json!({ "checkpoint": checkpoint, "revision": revision }),
+            Self::Convert { to, revision } => {
+                json!({ "to": crate::projects::storage_name(to), "revision": revision })
+            }
         }
     }
 }

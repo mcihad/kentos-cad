@@ -13,6 +13,7 @@ pub mod catalog;
 pub mod changes;
 pub mod checkpoints;
 pub mod commands;
+pub mod convert;
 pub mod duplicate;
 pub mod error;
 pub mod events;
@@ -114,6 +115,10 @@ pub const SERVER_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::PROJECT_CHECKPOINT_RESTORE,
         kentos_contracts::PROJECT_CHECKPOINT_RESTORE_VERSION,
+    ),
+    (
+        kentos_contracts::PROJECT_CONVERT,
+        kentos_contracts::PROJECT_CONVERT_VERSION,
     ),
     (
         kentos_contracts::PROJECT_IMPORT,

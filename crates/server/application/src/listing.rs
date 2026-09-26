@@ -20,7 +20,7 @@ use std::time::Duration;
 
 use kentos_contracts::{
     AreaUnit, Bounds, CatalogSort, CatalogView, LayerNode, LayerNodeType, ProjectDetails,
-    ProjectList, ProjectPage, ProjectState, ProjectStorage, ProjectSummary, ProjectType,
+    ProjectList, ProjectPage, ProjectState, ProjectSummary, ProjectType,
 };
 use kentos_postgres::{Db, Scope};
 use sqlx::{Postgres, Transaction};
@@ -32,7 +32,7 @@ use crate::access::{ProjectAccess, not_found, tenant_kind, view_of};
 use crate::error::{AppError, AppResult};
 use crate::identity::Actor;
 use crate::people::{FOLD_FROM, FOLD_TO, fold};
-use crate::projects::rfc3339;
+use crate::projects::{rfc3339, storage_of};
 use crate::tenancy::{self, Access};
 
 /// Rows of a page unless asked otherwise, and at most.
@@ -68,6 +68,8 @@ struct EntryRow {
     purge_after: Option<OffsetDateTime>,
     opened_at: Option<OffsetDateTime>,
     favorite: bool,
+    /// `database` or `file` (docs/adr/0031).
+    storage: String,
     sort_time: Option<OffsetDateTime>,
     sort_text: Option<String>,
 }
@@ -81,7 +83,7 @@ const ENTRY_COLUMNS: &str = "select p.id, p.name, p.srid, p.data_revision, p.upd
         ou.display_name as owner_name, p.project_type, p.description, p.tags, p.catalog_version,
         p.created_at, cu.display_name as creator_name, p.settings ->> 'areaUnit' as area_unit,
         p.archived_at, p.deleted_at as trashed_at, du.display_name as trashed_by_name, p.purge_after,
-        r.opened_at, f.user_id is not null as favorite";
+        r.opened_at, f.user_id is not null as favorite, p.storage";
 
 /// The projects of the scope's tenant (`$1`) the caller has a role in, with
 /// the caller's own recent and favourite marks.
@@ -136,7 +138,7 @@ impl EntryRow {
             created_at: rfc3339(self.created_at),
             creator_name: self.creator_name.unwrap_or_default(),
             area_unit,
-            storage: ProjectStorage::Database,
+            storage: storage_of(&self.storage),
             favorite: self.favorite,
             opened_at: self.opened_at.map(rfc3339),
             archived_at: self.archived_at.map(rfc3339),

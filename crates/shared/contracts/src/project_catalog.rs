@@ -31,6 +31,9 @@ pub const PROJECT_METADATA_UPDATE: &str = "project.metadata.update";
 pub const PROJECT_METADATA_UPDATE_VERSION: u32 = 1;
 pub const PROJECT_DUPLICATE: &str = "project.duplicate";
 pub const PROJECT_DUPLICATE_VERSION: u32 = 1;
+/// A new project in the other storage mode from this one's present state (docs/adr/0039).
+pub const PROJECT_CONVERT: &str = "project.convert";
+pub const PROJECT_CONVERT_VERSION: u32 = 1;
 pub const PROJECT_ARCHIVE: &str = "project.archive";
 pub const PROJECT_ARCHIVE_VERSION: u32 = 1;
 pub const PROJECT_UNARCHIVE: &str = "project.unarchive";
@@ -187,6 +190,29 @@ pub struct ProjectDuplicate {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
     /// The workspace the copy goes to; absent: the source's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tenant_id: Option<String>,
+}
+
+/// Input of `project.convert` v1 (docs/adr/0039): a new project kept as
+/// `to` (the other mode than the source's) from the source's present
+/// state: a file project's newest revision imported into a database
+/// project ("PostGIS'e aktar"), or a database project's snapshot of one
+/// moment kept as a file project's revision 1. The source does not change;
+/// the answer is the new project, as a copy's (`ProjectDuplicated`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectConvert {
+    pub to: crate::ProjectStorage,
+    /// The new project's name; the source's with the mode after it when absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    /// The workspace of the new project; the source's when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub tenant_id: Option<String>,

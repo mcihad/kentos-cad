@@ -17,8 +17,8 @@
 //!   opens the file follows the project's events after it.
 
 use kentos_contracts::{
-    Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, EntityId, ProjectId,
-    ProjectPermission, ProjectStorage, Vec2,
+    Bounds, DOCUMENT_FORMAT, DOCUMENT_VERSION_2, DocumentSnapshotV2, EntityId, LayerNode,
+    ProjectId, ProjectPermission, ProjectSettings, ProjectStorage, ProjectStyles, Vec2,
 };
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -28,6 +28,31 @@ use crate::access::{ProjectAccess, not_found};
 use crate::error::{AppError, AppResult};
 use crate::files::verifying;
 use crate::projects::{FEATURE_COLUMNS, FeatureRow, gone, record, storage_of};
+
+/// What a new project takes from a drawing besides its objects: its
+/// settings, origin, view, layers, active layer and styles.
+#[derive(Clone, Debug)]
+pub struct DrawingMeta {
+    pub settings: ProjectSettings,
+    pub origin: Vec2,
+    pub home_view: Option<Bounds>,
+    pub layers: Vec<LayerNode>,
+    pub active_layer: String,
+    pub styles: ProjectStyles,
+}
+
+impl DrawingMeta {
+    pub fn of(doc: &DocumentSnapshotV2) -> Self {
+        Self {
+            settings: doc.settings.clone(),
+            origin: doc.origin,
+            home_view: doc.home_view,
+            layers: doc.layers.clone(),
+            active_layer: doc.active_layer.clone(),
+            styles: doc.styles.clone(),
+        }
+    }
+}
 
 /// A database project written as one KCAD v2 file.
 #[derive(Debug)]
@@ -43,6 +68,8 @@ pub struct ProjectSnapshot {
     pub sha256: String,
     /// How many objects the file holds.
     pub objects: usize,
+    /// The drawing's settings, layers and styles, as the file has them.
+    pub meta: DrawingMeta,
 }
 
 /// The project in scope as one KCAD v2 file (`project.download`).
@@ -66,6 +93,7 @@ pub(crate) async fn take(
     tx.commit().await?;
     let name = doc.name.clone();
     let objects = doc.entities.len();
+    let meta = DrawingMeta::of(&doc);
     // The drawing and its bytes are in memory together: as many at once as uploads are verified.
     let _turn = verifying()
         .acquire()
@@ -91,6 +119,7 @@ pub(crate) async fn take(
         bytes,
         sha256,
         objects,
+        meta,
     })
 }
 

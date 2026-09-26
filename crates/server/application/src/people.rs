@@ -21,7 +21,7 @@ use std::collections::BTreeMap;
 
 use kentos_contracts::{
     AccessBlock, AccessSource, GrantRole, ProjectAccessHolder, ProjectAccessList,
-    ProjectPermission, ProjectRole, ProjectStorage, ShareCandidate, ShareCandidates, TenantKind,
+    ProjectPermission, ProjectRole, ShareCandidate, ShareCandidates, TenantKind,
 };
 use kentos_postgres::{Db, Scope};
 use time::OffsetDateTime;
@@ -147,15 +147,15 @@ pub async fn list(db: &Db, access: &ProjectAccess) -> AppResult<ProjectAccessLis
     access.live()?;
     access.require(ProjectPermission::Share)?;
     let mut tx = db.scoped(access.scope()).await?;
-    let project: Option<(Uuid, Option<String>)> = sqlx::query_as(
-        "select p.owner_user_id, u.display_name from kentos.project p left join kentos.app_user u on u.id = p.owner_user_id
+    let project: Option<(Uuid, Option<String>, String)> = sqlx::query_as(
+        "select p.owner_user_id, u.display_name, p.storage from kentos.project p left join kentos.app_user u on u.id = p.owner_user_id
           where p.tenant_id = $1 and p.id = $2",
     )
     .bind(access.tenant)
     .bind(access.project)
     .fetch_optional(&mut *tx)
     .await?;
-    let (owner_id, owner_name) = project.ok_or_else(not_found)?;
+    let (owner_id, owner_name, storage) = project.ok_or_else(not_found)?;
     let (space_owner, admins_policy, guests): (Option<Uuid>, bool, bool) = sqlx::query_as(
         "select owner_user_id, admins_access_all_projects, allow_guests from kentos.tenant where id = $1",
     )
@@ -232,7 +232,7 @@ pub async fn list(db: &Db, access: &ProjectAccess) -> AppResult<ProjectAccessLis
     });
     Ok(ProjectAccessList {
         tenant_kind: kind,
-        storage: ProjectStorage::Database,
+        storage: crate::projects::storage_of(&storage),
         admins_access_all_projects: policy,
         owner_id: owner_text,
         owner_name: owner_name.unwrap_or_default(),

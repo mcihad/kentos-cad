@@ -12,8 +12,9 @@
 
 use kentos_contracts::{
     CommandEnvelope, DocumentSnapshotV2, PROJECT_IMPORT, PROJECT_IMPORT_VERSION, PROJECT_IMPORTED,
-    ProjectImport, ProjectImported, ProjectPermission, ProjectStorage,
+    ProjectDuplicated, ProjectImport, ProjectImported, ProjectPermission, ProjectStorage,
 };
+use kentos_postgres::{Scope, rescope};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use sqlx::{Postgres, Transaction};
@@ -24,10 +25,12 @@ use crate::blobs::Blobs;
 use crate::cad::{PROJECTION_VERSION, Stored, to_stored};
 use crate::changes::{check_target, lock};
 use crate::commands::input;
+use crate::duplicate::Origin;
 use crate::error::{AppError, AppResult};
 use crate::files::{own_upload, upload_gone, verifying};
-use crate::projects::{check_srid, check_tree, storage_of};
-use crate::{idempotency, journal};
+use crate::projects::{check_srid, check_tree, opened, storage_name, storage_of};
+use crate::snapshot::DrawingMeta;
+use crate::{idempotency, journal, listing};
 
 /// Objects inserted by one statement.
 pub(crate) const BATCH: usize = 1000;
@@ -278,5 +281,189 @@ pub async fn import(
     tx.commit().await?;
     // Its drawing is in the database now: the upload's bytes are nobody's.
     let _ = blobs.remove(&found.blob_key).await;
+    Ok(result)
+}
+
+/// What a new project made from a drawing holds.
+pub(crate) enum Content<'a> {
+    /// A database project: these objects, each at version 1.
+    Objects(&'a [(Uuid, Stored)]),
+    /// A file project: its revision 1, an object already in the store.
+    File {
+        key: &'a str,
+        size: i64,
+        sha256: &'a str,
+        objects: i64,
+    },
+}
+
+/// A new project made from a drawing: where, its id and name, the drawing's
+/// settings, layers and styles, what it holds, and where it comes from.
+pub(crate) struct Drawing<'a> {
+    pub target: Uuid,
+    pub id: Uuid,
+    pub name: &'a str,
+    pub meta: &'a DrawingMeta,
+    pub content: Content<'a>,
+    pub origin: Origin,
+}
+
+/// The new project's rows, both projects' audit records and the stored
+/// answer, in the open transaction under the source's lock: the project
+/// restored from a checkpoint (docs/adr/0034) or converted into the other
+/// storage mode (docs/adr/0039). It takes the source's catalog metadata
+/// (description, type, tags), as a copy does; the caller owns it.
+pub(crate) async fn create_from_drawing(
+    tx: &mut Transaction<'static, Postgres>,
+    now: &ProjectAccess,
+    envelope: &CommandEnvelope,
+    text: &str,
+    drawing: Drawing<'_>,
+) -> AppResult<ProjectDuplicated> {
+    let Drawing {
+        target,
+        id,
+        name,
+        meta,
+        content,
+        origin,
+    } = drawing;
+    let request = Some(envelope.request_id.as_str());
+    let actor = now.actor.user_id;
+    let objects = match &content {
+        Content::Objects(rows) => i64::try_from(rows.len()).unwrap_or(i64::MAX),
+        Content::File { objects, .. } => *objects,
+    };
+    let storage = match &content {
+        Content::Objects(_) => ProjectStorage::Database,
+        Content::File { .. } => ProjectStorage::File,
+    };
+    let (description, project_type, tags): (String, String, Vec<String>) = sqlx::query_as(
+        "select description, project_type, tags from kentos.project where tenant_id = $1 and id = $2",
+    )
+    .bind(now.tenant)
+    .bind(now.project)
+    .fetch_one(&mut **tx)
+    .await?;
+    let source_revision = journal::revision(tx, now).await?;
+    journal::audit(
+        tx,
+        now,
+        origin.action(),
+        request,
+        source_revision,
+        json!({ "copy": id, "tenant": target, "name": name, "objects": objects, "from": origin.detail() }),
+    )
+    .await?;
+    // The new project's own rows, in its scope.
+    rescope(
+        tx,
+        Scope {
+            tenant: Some(target),
+            user: Some(actor),
+            project: Some(id),
+        },
+    )
+    .await?;
+    check_srid(tx, meta.settings.srid).await?;
+    let value = |v: serde_json::Result<serde_json::Value>| {
+        v.map_err(|e| AppError::invalid(format!("Çizimin kaydı yazılamadı: {e}")))
+    };
+    sqlx::query(
+        "insert into kentos.project (tenant_id, id, name, srid, settings, layers, active_layer, origin_x, origin_y, home_view, styles, created_by, owner_user_id,
+                                     description, project_type, tags, storage)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12, $13, $14, $15, $16)",
+    )
+    .bind(target)
+    .bind(id)
+    .bind(name)
+    .bind(meta.settings.srid as i32)
+    .bind(value(serde_json::to_value(&meta.settings))?)
+    .bind(value(serde_json::to_value(&meta.layers))?)
+    .bind(&meta.active_layer)
+    .bind(meta.origin.x)
+    .bind(meta.origin.y)
+    .bind(meta.home_view.map(serde_json::to_value).transpose().map_err(|e| {
+        AppError::invalid(format!("Çizimin kaydı yazılamadı: {e}"))
+    })?)
+    .bind(value(serde_json::to_value(&meta.styles))?)
+    .bind(actor)
+    .bind(&description)
+    .bind(&project_type)
+    .bind(&tags)
+    .bind(storage_name(storage))
+    .execute(&mut **tx)
+    .await?;
+    let written = match content {
+        Content::Objects(rows) => {
+            for batch in rows.chunks(BATCH) {
+                insert_objects(tx, target, id, meta.settings.srid, actor, batch).await?;
+            }
+            !rows.is_empty()
+        }
+        Content::File {
+            key,
+            size,
+            sha256,
+            objects,
+        } => {
+            sqlx::query(
+                "insert into kentos.project_file_revision (tenant_id, project_id, revision, size, sha256, blob_key, created_by, request_id, objects)
+                 values ($1, $2, 1, $3, $4, $5, $6, $7, $8)",
+            )
+            .bind(target)
+            .bind(id)
+            .bind(size)
+            .bind(sha256)
+            .bind(key)
+            .bind(actor)
+            .bind(&envelope.request_id)
+            .bind(objects)
+            .execute(&mut **tx)
+            .await?;
+            sqlx::query(
+                "update kentos.project set file_revision = 1 where tenant_id = $1 and id = $2",
+            )
+            .bind(target)
+            .bind(id)
+            .execute(&mut **tx)
+            .await?;
+            true
+        }
+    };
+    if written {
+        // A created object's version is its commit's data revision (docs/adr/0026): this is the first.
+        sqlx::query("update kentos.project set data_revision = 1 where tenant_id = $1 and id = $2")
+            .bind(target)
+            .bind(id)
+            .execute(&mut **tx)
+            .await?;
+    }
+    let subject = journal::Subject {
+        tenant: target,
+        project: id,
+        actor,
+    };
+    journal::audit(
+        tx,
+        subject,
+        "project.create",
+        request,
+        i64::from(written),
+        json!({ "name": name, "copyOf": { "tenant": now.tenant, "project": now.project }, "from": origin.detail(),
+                "storage": storage_name(storage), "objects": objects }),
+    )
+    .await?;
+    opened(tx, target, id, actor).await?;
+    let project = listing::entry(tx, target, id).await?;
+    // Back in the source's scope, where its command log is.
+    rescope(tx, now.scope()).await?;
+    let result = ProjectDuplicated {
+        project,
+        source_id: now.project.to_string(),
+        objects: objects.to_string(),
+        replayed: false,
+    };
+    idempotency::record(tx, now, envelope, text, &result).await?;
     Ok(result)
 }

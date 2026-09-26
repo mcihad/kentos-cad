@@ -531,6 +531,32 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Into the other storage mode, as a new project (docs/adr/0039).
+        CommandDescriptor {
+            id: crate::PROJECT_CONVERT.into(),
+            version: crate::PROJECT_CONVERT_VERSION,
+            title: "Öbür saklama biçimine dönüştür".into(),
+            summary: "Projenin şimdiki hâlinden öbür saklama biçiminde yeni bir proje açar; kaynak değişmez. \
+                      Dosya projesinin en yeni revizyonu veritabanı projesine aktarılır (PostGIS'e aktar; nesneler kalıcı kimlikleriyle); \
+                      veritabanı projesinin tek anlık görüntüsü dosya projesinin 1. revizyonu olur. Yeni proje çağıranındır. \
+                      Kaynakta project.download, hedef çalışma alanında proje açma hakkı ister."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Project,
+            hosts: vec![CommandHost::Server],
+            headless: true,
+            requires: vec![CommandRequirement::SignedIn, CommandRequirement::CloudProject],
+            permissions: vec![ProjectPermission::Download.name().into()],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProjectConvert>(),
+            output: schema::<crate::ProjectDuplicated>(),
+            examples: vec![CommandExample {
+                title: "Dosya projesini PostGIS'e aktar".into(),
+                input: json!({ "to": "database" }),
+                output: None,
+            }],
+        },
         // A file's drawing into a new database project (docs/adr/0036).
         CommandDescriptor {
             id: crate::PROJECT_IMPORT.into(),
@@ -1142,6 +1168,9 @@ mod tests {
                     }
                     crate::PROJECT_FILE_COMMIT => {
                         serde_json::from_value::<crate::FileCommit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::PROJECT_CONVERT => {
+                        serde_json::from_value::<crate::ProjectConvert>(e.input.clone()).map(|_| ())
                     }
                     crate::PROJECT_IMPORT => {
                         serde_json::from_value::<crate::ProjectImport>(e.input.clone()).map(|_| ())
