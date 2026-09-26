@@ -23,12 +23,16 @@ use crate::circle::{self, Circle};
 use crate::erase::{self, Erase};
 use crate::format::Format;
 use crate::line::{self, Line};
+use crate::mirror::{self, Mirror};
+use crate::move_copy::{self, Move};
 use crate::path::{self, Path};
 use crate::point::{self, Point};
 use crate::prompt::Prompt;
 use crate::rectangle::{self, Rectangle};
 use crate::regular::{self, RegularPolygon};
+use crate::rotate::{self, Rotate};
 use crate::rotated::{self, RotatedRectangle};
+use crate::scale::{self, Scale};
 use crate::select::{Select, SelectBox};
 use crate::spatial::Spatial;
 use crate::tool::{Context, Draft, Flow, Pointer, Preview, Tool, View};
@@ -45,6 +49,11 @@ pub const TOOLS: &[&str] = &[
     rectangle::ID,
     rotated::ID,
     regular::ID,
+    move_copy::MOVE_ID,
+    move_copy::COPY_ID,
+    rotate::ID,
+    scale::ID,
+    mirror::ID,
 ];
 
 /// The running tool, if any, the last one started, and the select tool that
@@ -81,6 +90,11 @@ impl Session {
             rectangle::ID => Box::new(Rectangle::new()),
             rotated::ID => Box::new(RotatedRectangle::new()),
             regular::ID => Box::new(RegularPolygon::new()),
+            move_copy::MOVE_ID => Box::new(Move::tool()),
+            move_copy::COPY_ID => Box::new(Move::copy_tool()),
+            rotate::ID => Box::new(Rotate::tool()),
+            scale::ID => Box::new(Scale::tool()),
+            mirror::ID => Box::new(Mirror::tool()),
             _ => return false,
         };
         self.last = Some(tool.id());
@@ -167,6 +181,7 @@ impl Session {
             Some(tool) => tool.pointer_down(p, cx),
             None => self.select.pointer_down(p),
         }
+        self.settle();
     }
 
     /// The left button came up (on the drawing, or wherever a press on it ended).
@@ -175,12 +190,14 @@ impl Session {
             Some(tool) => tool.pointer_up(p, cx),
             None => self.select.pointer_up(p, cx),
         }
+        self.settle();
     }
 
-    /// The selection box being drawn while no command runs.
+    /// The selection box being drawn: the select tool's while no command
+    /// runs, a modify tool's while it picks its objects.
     pub fn select_box(&self) -> Option<SelectBox> {
-        match self.tool {
-            Some(_) => None,
+        match &self.tool {
+            Some(tool) => tool.select_box(),
             None => self.select.select_box(),
         }
     }
@@ -188,7 +205,17 @@ impl Session {
     /// Typed text for the running tool; false when it does not understand it
     /// or no tool runs.
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        self.tool.as_mut().is_some_and(|t| t.input(text, cx))
+        let taken = self.tool.as_mut().is_some_and(|t| t.input(text, cx));
+        self.settle();
+        taken
+    }
+
+    /// A tool that finished with that call leaves: the web's modify tools
+    /// call `ctx.tools.exit()` once their transform is written.
+    fn settle(&mut self) {
+        if self.tool.as_ref().is_some_and(|t| t.finished()) {
+            self.tool = None;
+        }
     }
 
     /// Enter, Space or a quick right click while a tool runs: it commits what
