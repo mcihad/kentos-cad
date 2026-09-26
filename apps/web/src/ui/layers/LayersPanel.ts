@@ -39,6 +39,14 @@ interface Row {
  * edit costs the same beside 3 layers or 300 and a row stays the same
  * element across edits, undo and redo (hover, focus and an open rename
  * field survive them).
+ *
+ * The tree follows the drawing's selection (the owner's request, 26
+ * September; the desktop's `follow_selection_layers`, docs/adr/0058): the
+ * rows of the selected objects' layers show selected, the groups around
+ * them open, and a single such layer is scrolled into view. The active
+ * layer, where new objects go, does not change. A row clicked in the tree is
+ * shown selected until the selection changes again; an empty selection
+ * shows the row last clicked again (or none).
  */
 export class LayersPanel extends Panel {
   private readonly ctx: AppContext;
@@ -92,26 +100,57 @@ export class LayersPanel extends Panel {
     this.d.add(layers.events.on('state', () => this.writeStates()));
     this.d.add(watchAll([layers.active, ctx.ui.theme], () => this.writeStates()));
     this.d.add(ctx.doc.events.on('changed', () => this.writeCounts()));
+    this.d.add(ctx.selection.ids.subscribe(() => this.followSelection()));
     this.rebuild();
+    this.followSelection();
+  }
+
+  /**
+   * The drawing's selection changed: its objects' layers show selected in the
+   * tree, all of them, and the groups around them open so their rows can be
+   * seen; one such layer is scrolled into view. Opening a group is not an
+   * edit (nothing unsaved, no undo step), and the active layer stays. An
+   * empty selection gives the tree back the row last clicked.
+   */
+  private followSelection(): void {
+    const { doc, selection } = this.ctx;
+    const layers = doc.layers;
+    const ids = new Set<string>();
+    for (const id of selection.ids.value) {
+      const e = doc.get(id);
+      if (e) ids.add(e.layerId);
+    }
+    if (!ids.size) return this.tree.show(null);
+    let opened = false;
+    for (const id of ids)
+      for (let g = layers.parentOf(id); g; g = layers.parentOf(g.id))
+        if (!g.expanded) {
+          layers.setExpanded(g.id, true);
+          opened = true;
+        }
+    // The opened groups' rows are listed now, not at the end of the task, so the layer can be scrolled to.
+    if (opened) this.rebuild();
+    this.tree.show(ids, ids.size === 1);
   }
 
   /**
    * Rebuilds once, at the end of the current task: a DXF import adds its
    * layers one by one (300 for a large file), and each would otherwise
    * render the whole growing tree again. Until then counts and layer state
-   * go to the old rows, which the rebuild replaces.
+   * go to the old rows, which the rebuild replaces. A rebuild done meanwhile
+   * (followSelection) makes this one unneeded.
    */
   private scheduleRebuild(): void {
     if (this.rebuildQueued) return;
     this.rebuildQueued = true;
     queueMicrotask(() => {
-      this.rebuildQueued = false;
-      this.rebuild();
+      if (this.rebuildQueued) this.rebuild();
     });
   }
 
   /** Renders the whole tree again: its shape changed. */
   private rebuild(): void {
+    this.rebuildQueued = false;
     this.totals = this.countTotals();
     this.rows.clear();
     this.tree.render(this.ctx.doc.layers.tree);

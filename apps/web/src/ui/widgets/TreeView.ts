@@ -70,6 +70,9 @@ const GUESS_ROW_H = 28;
  * shows, and scrolling builds the rows that come in. Every row is one
  * `--row-h` high, read from a hidden probe row (again when the UI scale
  * changes it). `focus` and `rowOf` scroll a line in, so its row exists.
+ * One row is chosen (click, keys); `show` can mark others selected
+ * instead, several at once (the layers of the drawing's selection), until
+ * the user chooses a row again.
  */
 export class TreeView<T> {
   readonly el: HTMLElement;
@@ -84,7 +87,10 @@ export class TreeView<T> {
   private readonly probe: HTMLElement;
   private emptyEl: HTMLElement | null = null;
   private rowH = 0;
+  /** The row the user chose (click, keys, context menu) or `mark` set: the keyboard's row. */
   private focusedId: string | null = null;
+  /** Rows the owner shows selected instead of the chosen one (`show`), until the user chooses a row. */
+  private shown: ReadonlySet<string> | null = null;
   private query = '';
   private roots: readonly T[] = [];
   private frame = 0;
@@ -98,7 +104,10 @@ export class TreeView<T> {
     this.el = h('div', { class: 'tree', role: 'tree', 'aria-label': label, tabindex: '0' }, this.probe, this.above, this.below);
     this.el.addEventListener('keydown', (e) => this.onKey(e));
     this.el.addEventListener('focus', () => {
-      if (!this.focusedId && this.lines.length) this.focus(this.lines[0].id);
+      // The keyboard arriving with no row chosen takes the first row in view. A click chooses its own
+      // row: choosing one here scrolled the tree to the top before the click landed, on another row.
+      if (this.focusedId || this.shown || !this.lines.length || !this.el.matches(':focus-visible')) return;
+      this.focus(this.lines[Math.min(this.lines.length - 1, Math.ceil(this.el.scrollTop / this.rowHeight()))].id);
     });
     this.el.addEventListener('scroll', () => this.schedule(), { passive: true });
     // The window grows or shrinks with the panel; the rows with the UI scale (the probe).
@@ -119,6 +128,8 @@ export class TreeView<T> {
   render(roots: readonly T[]): void {
     this.roots = roots;
     const a = this.adapter;
+    // Where the tree is scrolled, read before its rows go: the shorter page would pull it up.
+    const scroll = this.el.scrollTop;
     // Rows are replaced: a tooltip of an old row would stay open with nothing under the pointer.
     hideTooltip(this.el);
     for (const id of [...this.built.keys()]) this.release(id);
@@ -144,6 +155,10 @@ export class TreeView<T> {
       this.emptyEl = h('div', { class: 'tree__empty' }, a.empty?.(!!q) ?? (q ? 'Aramayla eşleşen katman yok.' : 'Katman yok.'));
       this.el.append(this.emptyEl);
     }
+    // One spacer stands for every line until paint sizes the window, so the tree stays where it was.
+    this.above.style.height = '0px';
+    this.below.style.height = `${lines.length * this.rowHeight()}px`;
+    this.el.scrollTop = scroll;
     this.paint();
   }
 
@@ -156,12 +171,47 @@ export class TreeView<T> {
     if (changed) this.adapter.onSelect?.(this.lines[i].node);
   }
 
-  /** Marks a row selected without telling the adapter (the caller already knows). */
+  /** Marks a row selected without telling the adapter (the caller already knows); rows `show` chose give way. */
   mark(id: string | null): void {
-    const before = this.focusedId;
     this.focusedId = id;
-    if (before !== null) this.built.get(before)?.row.setAttribute('aria-selected', 'false');
-    if (id !== null) this.built.get(id)?.row.setAttribute('aria-selected', 'true');
+    this.shown = null;
+    this.writeSelected();
+  }
+
+  /**
+   * Shows these rows selected instead of the chosen one, without telling the
+   * adapter or moving the chosen row: the layers of the drawing's selection.
+   * The next row the user chooses takes over (the last action wins); null, or
+   * no ids, shows the chosen row again. With `reveal` the first of them in
+   * the tree is scrolled into view.
+   */
+  show(ids: Iterable<string> | null, reveal = false): void {
+    const set = new Set(ids ?? []);
+    this.shown = set.size ? set : null;
+    if (set.size > 1) this.el.setAttribute('aria-multiselectable', 'true');
+    else this.el.removeAttribute('aria-multiselectable');
+    this.writeSelected();
+    const first = this.firstShown();
+    if (reveal && first >= 0) this.reveal(first);
+  }
+
+  /** The line of the first shown row that is listed; -1 when none is. */
+  private firstShown(): number {
+    let first = -1;
+    for (const id of this.shown ?? []) {
+      const i = this.at.get(id);
+      if (i !== undefined && (first < 0 || i < first)) first = i;
+    }
+    return first;
+  }
+
+  private isSelected(id: string): boolean {
+    return this.shown ? this.shown.has(id) : id === this.focusedId;
+  }
+
+  /** Writes aria-selected on the rows on the page (the window's: a hundred or so). */
+  private writeSelected(): void {
+    for (const [id, b] of this.built) b.row.setAttribute('aria-selected', String(this.isSelected(id)));
   }
 
   /** The row of a listed node, scrolled into the window (so it is built); undefined when not listed. */
@@ -252,7 +302,7 @@ export class TreeView<T> {
         'aria-setsize': String(line.size),
         'aria-posinset': String(line.pos),
         'aria-expanded': hasKids ? String(expanded) : null,
-        'aria-selected': String(id === this.focusedId),
+        'aria-selected': String(this.isSelected(id)),
         style: `--depth:${depth}`,
         dataset: { id },
       },
@@ -300,7 +350,9 @@ export class TreeView<T> {
   private onKey(e: KeyboardEvent): void {
     if ((e.target as HTMLElement).closest('input')) return;
     const a = this.adapter;
-    const i = this.focusedId === null ? -1 : (this.at.get(this.focusedId) ?? -1);
+    // Rows shown for the owner (`show`) are where the keys start from, as they are what is seen selected.
+    const shown = this.firstShown();
+    const i = shown >= 0 ? shown : this.focusedId === null ? -1 : (this.at.get(this.focusedId) ?? -1);
     const cur = this.lines[i]?.node;
     const go = (k: number) => {
       const line = this.lines[Math.max(0, Math.min(this.lines.length - 1, k))];

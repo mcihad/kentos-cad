@@ -12,6 +12,7 @@ import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
 import { vertexListing } from './coordinates';
+import { unseenWarnings } from './warnings';
 
 const TABS: { id: BottomTab; label: string; icon: string }[] = [
   { id: 'history', label: 'Komut geçmişi', icon: 'history' },
@@ -33,7 +34,8 @@ export class BottomPanel extends Component {
   private readonly content: HTMLElement;
   private readonly tabButtons = new Map<BottomTab, HTMLButtonElement>();
   private readonly badge = h('span', { class: 'badge', hidden: true });
-  private seenWarnings = 0;
+  /** The newest log entry's id when the Uyarılar tab was last on screen: the badge counts the warnings after it. */
+  private seenUpTo = 0;
   /** The log list on screen, its tab and the entries it shows (new entries are appended, not the whole list rebuilt). */
   private log: { tab: BottomTab; list: HTMLElement; shown: LogEntry[] } | null = null;
   /** The coordinate table's rows, built only in its scroll window. */
@@ -99,14 +101,15 @@ export class BottomPanel extends Component {
         expandBtn.setAttribute('aria-expanded', String(open));
         expandBtn.replaceChildren(icon(open ? 'chevronDown' : 'chevronUp', 16));
         if (open) this.renderContent();
+        this.refreshBadge();
       }, true),
     );
     this.d.add(ui.bottomHeight.subscribe((v) => this.el.style.setProperty('--bottom-h', `${v}px`), true));
     this.d.add(
       ui.bottomTab.subscribe((t) => {
         this.tabButtons.forEach((b, id) => b.setAttribute('aria-selected', String(id === t)));
-        if (t === 'messages') this.seenWarnings = this.warningCount();
         this.renderContent();
+        this.refreshBadge();
       }, true),
     );
     this.d.add(watchAll([ctx.log.entries], () => this.onLog()));
@@ -115,17 +118,23 @@ export class BottomPanel extends Component {
     this.d.add(() => this.rows?.dispose());
   }
 
-  private warningCount(): number {
-    return this.ctx.log.entries.value.filter((e) => e.level === 'warn' || e.level === 'error').length;
+  /**
+   * The Uyarılar tab's badge: the warnings logged since the tab was last on screen. While it is on
+   * screen every warning is seen and the badge is hidden; after Geçmişi temizle it counts from zero.
+   */
+  private refreshBadge(): void {
+    const { ui, log } = this.ctx;
+    const entries = log.entries.value;
+    if (ui.bottomExpanded.value && ui.bottomTab.value === 'messages') this.seenUpTo = entries.at(-1)?.id ?? this.seenUpTo;
+    const n = unseenWarnings(entries, this.seenUpTo);
+    this.badge.hidden = n === 0;
+    this.badge.textContent = String(n);
   }
 
   private onLog(): void {
-    const n = this.warningCount() - this.seenWarnings;
-    this.badge.hidden = n <= 0;
-    this.badge.textContent = String(n);
+    this.refreshBadge();
     const tab = this.ctx.ui.bottomTab.value;
     if ((tab === 'history' || tab === 'messages') && !this.appendLog(tab)) this.renderContent();
-    if (tab === 'messages') this.seenWarnings = this.warningCount();
   }
 
   private entriesOf(tab: BottomTab): LogEntry[] {

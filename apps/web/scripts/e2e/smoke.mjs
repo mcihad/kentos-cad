@@ -44,6 +44,149 @@ try {
   await b.waitFor(`window.kentos.server.state.value === 'offline'`, 8000).catch(() => {});
   check('without the API it shows “Sunucu: yok” and says why', (await serverText()) === 'Sunucu: yok' && (await b.eval('window.kentos.server.detail.value')) === 'API çalışmıyor.', await b.eval('window.kentos.server.detail.value'));
 
+  // The Uyarılar tab's badge counts the warnings logged since the tab was last on screen: opening the tab
+  // hides it, and after Geçmişi temizle (here from Komut geçmişi) it counts again from zero.
+  {
+    const was = await b.eval(`({ open: window.kentos.ui.bottomExpanded.value, tab: window.kentos.ui.bottomTab.value })`);
+    await b.eval(`window.kentos.ui.bottomExpanded.set(true)`);
+    await sleep(100);
+    const centre = (sel) => b.eval(`(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const tab = (i) => centre(`.bottom__tabs [role=tab]:nth-child(${i})`);
+    const badgeText = () => b.eval(`(() => { const e = document.querySelector('.bottom__tabs .badge'); return e && !e.hidden ? e.textContent : ''; })()`);
+    await b.click(...(await tab(1)));
+    await b.eval(`(() => { const k = window.kentos; k.log.clear(); k.log.warn('e2e: birinci uyarı'); k.log.error('e2e: ikinci uyarı'); })()`);
+    const two = await badgeText();
+    await b.click(...(await tab(3)));
+    const opened = await badgeText();
+    await b.click(...(await tab(1)));
+    await b.click(...(await centre('[aria-label="Geçmişi temizle"]')));
+    await b.eval(`window.kentos.log.warn('e2e: temizledikten sonra')`);
+    const afterClear = await badgeText();
+    await b.eval(`(() => { const k = window.kentos; k.log.clear(); k.ui.bottomTab.set(${JSON.stringify(was.tab)}); k.ui.bottomExpanded.set(${was.open}); })()`);
+    check('the Uyarılar badge counts new warnings: opening the tab hides it; after Geçmişi temizle it counts from zero', two === '2' && opened === '' && afterClear === '1', JSON.stringify({ two, opened, afterClear }));
+  }
+
+  // A scrolled layer tree stays where it is when it is rendered again (a group closes below the view), and
+  // the first click in it chooses the clicked row: it used to scroll to the top and choose the first row.
+  {
+    const groups = await b.eval(`(() => {
+      const L = window.kentos.doc.layers;
+      const groups = [];
+      const walk = (ns) => ns.forEach((n) => { if (n.type === 'group') { groups.push([n.id, n.expanded]); walk(n.children); } });
+      walk(L.tree);
+      for (const [id] of groups) L.setExpanded(id, true);
+      return groups;
+    })()`);
+    await sleep(200);
+    const view = () =>
+      b.eval(`(() => {
+        const t = document.querySelector('.panel--layers .tree');
+        const box = t.getBoundingClientRect();
+        const rows = [...t.querySelectorAll('.tree__row[data-id]')].filter((r) => r.getBoundingClientRect().bottom > box.top + 2);
+        rows.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+        return { top: Math.round(t.scrollTop), first: rows[0]?.dataset.id, chosen: [...t.querySelectorAll('.tree__row[aria-selected="true"]')].map((r) => r.dataset.id) };
+      })()`);
+    await b.eval(`(() => { const t = document.querySelector('.panel--layers .tree'); t.scrollTop = (t.scrollHeight - t.clientHeight) / 2; })()`);
+    await sleep(200);
+    const before = await view();
+    await b.eval(`window.kentos.doc.layers.setExpanded(${JSON.stringify(groups.at(-1)[0])}, false)`);
+    await sleep(200);
+    const rendered = await view();
+    const target = await b.eval(`(() => {
+      const t = document.querySelector('.panel--layers .tree');
+      const box = t.getBoundingClientRect();
+      const row = [...t.querySelectorAll('.tree__row[data-id]')].find((r) => r.getBoundingClientRect().top > box.top + box.height / 2);
+      const n = row.querySelector('.tree__name').getBoundingClientRect();
+      return { id: row.dataset.id, xy: [Math.round(n.left + n.width / 2), Math.round(n.top + n.height / 2)] };
+    })()`);
+    await b.click(...target.xy);
+    await sleep(200);
+    const clicked = await view();
+    await b.eval(`(() => { const L = window.kentos.doc.layers; for (const [id, open] of ${JSON.stringify(groups)}) L.setExpanded(id, open); window.kentos.view.focus(); })()`);
+    check(
+      'a scrolled layer tree stays put when it is rendered again, and the first click chooses the clicked row',
+      before.top > 0 && rendered.top === before.top && rendered.first === before.first && clicked.top === before.top && JSON.stringify(clicked.chosen) === JSON.stringify([target.id]),
+      JSON.stringify({ before, rendered, clicked, target: target.id }),
+    );
+  }
+
+  // The layer tree follows the drawing's selection (the owner's request, docs/adr/0058): the selected
+  // objects' layers show selected and their closed group opens, without an edit and without changing the
+  // active layer; a row clicked in the tree wins until the selection changes, and an empty selection
+  // shows the row last clicked again.
+  {
+    const tick = () => b.eval('new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))');
+    const setup = await b.eval(`(() => {
+      const k = window.kentos;
+      const layers = k.doc.layers;
+      const active = layers.active.value;
+      const all = [...k.doc.all()];
+      const e = all.find((x) => x.layerId !== active && layers.parentOf(x.layerId));
+      const other = all.find((x) => x.layerId !== active && x.layerId !== e.layerId);
+      const group = layers.parentOf(e.layerId).id;
+      const wasOpen = layers.get(group).expanded;
+      layers.setExpanded(group, false);
+      return { active, id: e.id, layer: e.layerId, otherId: other.id, otherLayer: other.layerId, group, wasOpen };
+    })()`);
+    await tick();
+    const state = () =>
+      b.eval(`(() => {
+        const k = window.kentos;
+        const tree = document.querySelector('.panel--layers .tree');
+        const row = (id) => tree.querySelector('.tree__row[data-id="' + CSS.escape(id) + '"]');
+        const selected = [...tree.querySelectorAll('.tree__row[aria-selected="true"]')].map((r) => r.dataset.id);
+        const r = row(${JSON.stringify(setup.layer)})?.getBoundingClientRect();
+        const box = tree.getBoundingClientRect();
+        return {
+          selected,
+          multi: tree.getAttribute('aria-multiselectable'),
+          inView: !!r && r.top >= box.top - 1 && r.bottom <= box.bottom + 1,
+          open: k.doc.layers.get(${JSON.stringify(setup.group)}).expanded,
+          active: k.doc.layers.active.value,
+          revision: k.doc.revision,
+          dirty: k.doc.dirty.value,
+          undo: k.doc.undoStack.length,
+        };
+      })()`);
+    const before = await state();
+    await b.eval(`window.kentos.selection.set([${setup.id}])`);
+    await tick();
+    const followed = await state();
+    // A click on the active layer's row: it is chosen until the selection changes.
+    const at = await b.eval(`(() => {
+      const row = document.querySelector('.panel--layers .tree__row[data-id="' + CSS.escape(${JSON.stringify(setup.active)}) + '"]');
+      row.scrollIntoView({ block: 'nearest' });
+      const r = row.querySelector('.tree__name').getBoundingClientRect();
+      return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)];
+    })()`);
+    await b.click(...at);
+    const clicked = await state();
+    await b.eval(`window.kentos.selection.clear()`);
+    await tick();
+    const emptied = await state();
+    await b.eval(`window.kentos.selection.set([${setup.id}, ${setup.otherId}])`);
+    await tick();
+    const two = await state();
+    await b.eval(`window.kentos.selection.clear()`);
+    await tick();
+    const back = await state();
+    await b.eval(`(() => { const k = window.kentos; k.doc.layers.setExpanded(${JSON.stringify(setup.group)}, ${setup.wasOpen}); k.view.focus(); })()`);
+    const same = (s) => s.active === setup.active && s.revision === before.revision && s.dirty === before.dirty && s.undo === before.undo;
+    check(
+      'selecting an object shows its layer selected in the tree and opens its group; no edit, the active layer stays',
+      !before.open && followed.open && followed.inView && JSON.stringify(followed.selected) === JSON.stringify([setup.layer]) && same(followed),
+      JSON.stringify({ setup, followed }),
+    );
+    check(
+      'a row clicked in the tree wins until the selection changes; several layers show selected; an empty selection shows the clicked row again',
+      JSON.stringify(clicked.selected) === JSON.stringify([setup.active]) &&
+        JSON.stringify(emptied.selected) === JSON.stringify([setup.active]) &&
+        two.selected.length === 2 && two.selected.includes(setup.layer) && two.selected.includes(setup.otherLayer) && two.multi === 'true' &&
+        JSON.stringify(back.selected) === JSON.stringify([setup.active]) && back.multi === null && same(back),
+      JSON.stringify({ clicked: clicked.selected, emptied: emptied.selected, two: two.selected, multi: two.multi, back: back.selected }),
+    );
+  }
+
   const base = await b.eval('window.kentos.doc.size');
   const toScreen = (x, y) =>
     b.eval(`(() => { const k = window.kentos; const s = k.view.camera.worldToScreen({x:${x}, y:${y}}); const r = k.view.clientRect(); return [Math.round(s.x + r.left), Math.round(s.y + r.top)]; })()`);
