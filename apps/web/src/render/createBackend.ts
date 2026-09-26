@@ -15,7 +15,7 @@ const factories: Record<BackendKind, () => Promise<RenderBackend>> = {
 export async function createBackend(
   host: HTMLElement,
   preferred: BackendKind[] = ['webgl2'],
-  opts: { antialias?: boolean } = {},
+  opts: { samples?: number } = {},
 ): Promise<{ backend: RenderBackend; canvas: HTMLCanvasElement; errors: string[] }> {
   const errors: string[] = [];
   // WebGPU is only attempted where the browser exposes it; WebGL2 is the floor.

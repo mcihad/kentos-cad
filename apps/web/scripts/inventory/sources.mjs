@@ -28,13 +28,18 @@ export function scanScreens(root, src) {
   return out;
 }
 
-/** localStorage keys (`persistedSignals('key', …)`) and IndexedDB stores (`const DB`/`STORE` beside `indexedDB.open`). */
+/**
+ * localStorage keys (`persistedSignals('key', …)`, and the typed settings'
+ * `SETTINGS_STORAGE`, `SETTINGS_BACKUP` and the older `LEGACY_PREFS` constants)
+ * and IndexedDB stores (`const DB`/`STORE` beside `indexedDB.open`).
+ */
 export function scanStorage(root, src) {
   const out = new Map();
   for (const file of tsFiles(src)) {
     const text = readFileSync(file, 'utf8');
     const source = relative(root, file);
     for (const m of text.matchAll(/persistedSignals(?:<[^>]*>)?\('([^']+)'/g)) out.set(m[1], { id: m[1], kind: 'localStorage', source });
+    for (const m of text.matchAll(/^export const (?:SETTINGS_STORAGE|SETTINGS_BACKUP|LEGACY_PREFS) = '([^']+)'/gm)) out.set(m[1], { id: m[1], kind: 'localStorage', source });
     if (text.includes('indexedDB.open(')) {
       const db = text.match(/^const DB = '([^']+)'/m)?.[1];
       const store = text.match(/^const STORE = '([^']+)'/m)?.[1];

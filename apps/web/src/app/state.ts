@@ -1,17 +1,24 @@
-import type { RenderQuality } from '../render/quality';
 import type { AccentId, UiFontId } from './appearance';
 import type { DrawingFont, Workspace } from '../model/projectSettings';
 import { Signal } from '../core/signal';
+import { settingDefault } from '../core/settings/schema';
 import type { LineType } from '../model/layers';
+import type { SettingsStore } from './settings/store';
 
-/** Drafting aids toggled from the status bar (F3/F7/F8/F10). */
+const sessionDefault = (key: string) => settingDefault(key) as boolean;
+
+/**
+ * Drafting aids toggled from the status bar (F3/F7/F8/F10): the typed
+ * schema's session settings (`drafting.*`, docs/adr/0023), so every session
+ * starts from the schema's defaults.
+ */
 export class DraftingSettings {
-  readonly snap = new Signal(true);
-  readonly grid = new Signal(true);
-  readonly ortho = new Signal(false);
-  readonly polar = new Signal(false);
+  readonly snap = new Signal(sessionDefault('drafting.snap'));
+  readonly grid = new Signal(sessionDefault('drafting.grid'));
+  readonly ortho = new Signal(sessionDefault('drafting.ortho'));
+  readonly polar = new Signal(sessionDefault('drafting.polar'));
   /** Object snap tracking: alignment lines from acquired snap points. */
-  readonly tracking = new Signal(true);
+  readonly tracking = new Signal(sessionDefault('drafting.tracking'));
   /** Current properties for new entities; null = katmana göre. */
   readonly color = new Signal<string | null>(null);
   readonly lineType = new Signal<LineType | null>(null);
@@ -158,15 +165,17 @@ export function createUiState(): Signals<UiLayoutData> {
 export type UiState = Signals<UiLayoutData>;
 
 // ── Application preferences (Uygulama ayarları) ──────────────────────
-// User-scoped, stored in this browser, valid for every project. Anything a
-// colleague opening the same project must also see belongs in
+// Valid for every project. Each is a typed setting (docs/adr/0023): the
+// schema gives its type, domain, default and scope (the user's preference, or
+// this device's for the drawing engine); the settings service keeps and
+// resolves it (app/settings/store.ts, localStorage kentos.settings.v1).
+// Anything a colleague opening the same project must also see belongs in
 // model/projectSettings.ts instead.
 
 export type UiScale = 'small' | 'standard' | 'large' | 'xlarge' | 'xxlarge';
 /** Workbench chrome: menu bar, toolbar and floating toolbox, or the tabbed ribbon (Şerit). */
 export type ShellKind = 'classic' | 'ribbon';
 export type CrosshairSize = 'small' | 'medium' | 'full';
-
 
 export interface PreferencesData {
   /** EPSG code used for new projects. TUREF / TM36 by default. */
@@ -194,12 +203,16 @@ export interface PreferencesData {
   accent: AccentId;
   /** Interface typeface, bundled with the app (app/appearance.ts). */
   uiFont: UiFontId;
+  /** The drawing engine this device starts with (`?renderer=` overrides it for the session). */
   rendererPreference: 'webgl2' | 'webgpu';
   /**
-   * Drawing quality: high = 4× anti-aliasing at the screen's full resolution, balanced = full resolution
-   * without anti-aliasing, fast = neither (one pixel per CSS pixel). Lower trades smoothness for frame rate.
+   * Multisampling of the drawing: 1 (off), 2, 4, 8 or 16 samples per pixel;
+   * the count in use, which this device's GPU may hold below the one asked
+   * for (the settings service keeps that). Changes apply at once.
    */
-  renderQuality: RenderQuality;
+  msaa: number;
+  /** Draw at the screen's full resolution (Retina, 4K); off: one pixel per CSS pixel. */
+  hiDpi: boolean;
   /** Typed values open beside the cursor while a command runs (dynamic input). */
   cursorInput: boolean;
   /** Resting the mouse on an object shows its kind, layer and measures. */
@@ -224,36 +237,71 @@ export interface PreferencesData {
   shell: ShellKind;
 }
 
-export const PREFERENCE_DEFAULTS: PreferencesData = {
-  defaultSrid: 5256,
-  defaultWorkspace: 'hybrid',
-  defaultDrawingFont: 'barlow',
-  snapAperture: 11,
-  pickAperture: 5,
-  snapEndpoint: true,
-  snapMidpoint: true,
-  snapCenter: true,
-  snapNode: true,
-  snapIntersection: true,
-  snapPerpendicular: true,
-  snapNearest: false,
-  snapTangent: true,
-  polarIncrement: 45,
-  crosshair: 'medium',
-  uiScale: 'standard',
-  accent: 'navy',
-  uiFont: 'jakarta',
-  rendererPreference: 'webgl2',
-  renderQuality: 'high',
-  cursorInput: true,
-  hoverInfo: true,
-  symbolSize: 'plot',
-  lineWeights: true,
-  startScreen: true,
-  shell: 'classic',
-};
+/** The typed setting behind each preference (settingsSchema.json). */
+export const PREF_KEYS = {
+  defaultSrid: 'newProjects.srid',
+  defaultWorkspace: 'newProjects.workspace',
+  defaultDrawingFont: 'newProjects.drawingFont',
+  snapAperture: 'drafting.snapAperture',
+  pickAperture: 'drafting.pickAperture',
+  snapEndpoint: 'snap.endpoint',
+  snapMidpoint: 'snap.midpoint',
+  snapCenter: 'snap.center',
+  snapNode: 'snap.node',
+  snapIntersection: 'snap.intersection',
+  snapPerpendicular: 'snap.perpendicular',
+  snapNearest: 'snap.nearest',
+  snapTangent: 'snap.tangent',
+  polarIncrement: 'drafting.polarIncrement',
+  crosshair: 'appearance.crosshair',
+  uiScale: 'appearance.uiScale',
+  accent: 'appearance.accent',
+  uiFont: 'appearance.uiFont',
+  rendererPreference: 'graphics.backend',
+  msaa: 'graphics.msaa',
+  hiDpi: 'graphics.hiDpi',
+  cursorInput: 'drafting.cursorInput',
+  hoverInfo: 'drafting.hoverInfo',
+  symbolSize: 'graphics.symbolSize',
+  lineWeights: 'graphics.lineWeights',
+  startScreen: 'appearance.startScreen',
+  shell: 'appearance.shell',
+} as const satisfies Record<keyof PreferencesData, string>;
 
-export const createPreferences = () => persistedSignals<PreferencesData>('kentos.prefs.v1', PREFERENCE_DEFAULTS);
+/** The defaults, from the settings schema. */
+export const PREFERENCE_DEFAULTS = Object.fromEntries(Object.entries(PREF_KEYS).map(([field, key]) => [field, settingDefault(key)])) as unknown as PreferencesData;
+
+/**
+ * One signal per preference, holding the value in use: the effective one, as
+ * a device limit or the organisation's policy may keep it from the one asked
+ * for. Setting a signal writes the preference into the settings service; a
+ * value the rules refuse is not taken and the signal goes back to the value
+ * in use. An import, a reset or a new constraint updates the signals.
+ */
+export function createPreferences(store: SettingsStore): Preferences {
+  const fields = Object.entries(PREF_KEYS) as [keyof PreferencesData, string][];
+  const signals = new Map<keyof PreferencesData, Signal<unknown>>();
+  let syncing = false;
+  const sync = () => {
+    syncing = true;
+    try {
+      for (const [field, key] of fields) signals.get(field)!.set(store.effective(key));
+    } finally {
+      syncing = false;
+    }
+  };
+  for (const [field, key] of fields) {
+    const s = new Signal<unknown>(store.effective(key));
+    s.subscribe((value) => {
+      if (syncing) return;
+      store.choose({ [key]: value });
+      sync();
+    });
+    signals.set(field, s);
+  }
+  store.revision.subscribe(sync);
+  return Object.fromEntries(signals) as unknown as Preferences;
+}
 export type Preferences = Signals<PreferencesData>;
 
 /** Plain snapshot, used by the settings dialog as an editable draft. */

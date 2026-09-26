@@ -11,6 +11,8 @@ mod icons;
 mod input;
 mod keys;
 mod preview;
+mod settings;
+mod settings_view;
 mod snapshot;
 mod traces;
 mod view;
@@ -36,7 +38,14 @@ fn main() -> iced::Result {
     let path = std::env::args_os().nth(1).map(std::path::PathBuf::from);
 
     iced::application(
-        move || app::App::boot(path.clone()),
+        // The user's settings file (docs/adr/0023); in memory where no configuration folder is known.
+        move || {
+            let settings = settings::Settings::config_dir()
+                .map_or_else(settings::Settings::memory, |dir| {
+                    settings::Settings::open(&dir, std::time::SystemTime::now())
+                });
+            app::App::start(path.clone(), settings)
+        },
         app::App::update,
         app::App::view,
     )

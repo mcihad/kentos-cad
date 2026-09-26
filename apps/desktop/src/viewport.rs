@@ -13,6 +13,13 @@
 //! at the pointer, a middle double click shows everything. A left press gives
 //! the running tool a point; a quick right click (under 300 ms) is Enter
 //! (docs/adr/0018). The widget reports what happened; the app decides.
+//!
+//! Multisampling and the pixel ratio come from the typed settings
+//! (`graphics.msaa`, `graphics.hiDpi`; docs/adr/0023). Single-sampled at full
+//! resolution the area draws in Iced's pass; otherwise it draws into its own
+//! targets and composes the picture into Iced's frame (`Primitive::render`).
+//! A change reaches the next frame; the status says which sample counts the
+//! device takes and which one it could not make.
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -30,7 +37,7 @@ use kentos_render_wgpu::camera::FIT_PADDING;
 use kentos_render_wgpu::scene::{self, lod};
 use kentos_render_wgpu::{
     Bounds, Camera, Drawing, FrameInput, FrameStats, Palette, RenderError, RenderSettings,
-    Renderer, Rgba8, ScenePart, Vec2, ViewId,
+    Renderer, Rgba8, SampleFailure, ScenePart, Vec2, ViewId,
 };
 use kentos_ui::theme::Mode;
 use kentos_ui::widget::EmptyState;
@@ -115,6 +122,26 @@ pub enum Event {
 pub struct Status {
     pub stats: FrameStats,
     pub error: Option<String>,
+    /// The sample counts the device takes (TODOS.md AA-01); empty before the first frame.
+    pub supported: Vec<u32>,
+    /// A count the area could not draw with; it draws with the last that worked (AA-02).
+    pub failure: Option<SampleFailure>,
+}
+
+/// How the area draws: the settings' effective `graphics.msaa` and `graphics.hiDpi` (docs/adr/0023).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Graphics {
+    pub samples: u32,
+    pub hi_dpi: bool,
+}
+
+impl Default for Graphics {
+    fn default() -> Self {
+        Self {
+            samples: 1,
+            hi_dpi: true,
+        }
+    }
 }
 
 /// The drawing area's state in the app.
@@ -222,6 +249,14 @@ impl Viewport {
             .clone()
     }
 
+    /// Tests: what a frame would report about the device (no GPU in unit tests).
+    #[cfg(test)]
+    pub fn set_status_for_tests(&self, supported: Vec<u32>, failure: Option<SampleFailure>) {
+        let mut status = self.status.lock().unwrap_or_else(PoisonError::into_inner);
+        status.supported = supported;
+        status.failure = failure;
+    }
+
     /// Objects on shown layers the area does not draw yet, by kind (text,
     /// dimensions, construction lines): said, not hidden.
     pub fn not_drawn(&self) -> BTreeMap<&'static str, usize> {
@@ -232,10 +267,21 @@ impl Viewport {
             .unwrap_or_default()
     }
 
-    /// The drawing area showing `doc`.
-    pub fn view<'a>(&'a self, doc: &Document, mode: Mode) -> Element<'a, Message> {
+    /// The drawing area showing `doc`, drawn as `graphics` says. A change of
+    /// either value reaches the next frame: new targets on the same device,
+    /// nothing reopened (TODOS.md AA-02).
+    pub fn view<'a>(
+        &'a self,
+        doc: &Document,
+        mode: Mode,
+        graphics: Graphics,
+    ) -> Element<'a, Message> {
         let palette = palette(mode);
-        let settings = RenderSettings::new(palette.background);
+        let settings = RenderSettings {
+            samples: graphics.samples,
+            hi_dpi: graphics.hi_dpi,
+            ..RenderSettings::new(palette.background)
+        };
         let (origin, fixed, curves) = self.scene(doc, mode, &palette, &settings);
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
@@ -553,6 +599,7 @@ impl shader::Primitive for Frame {
                         camera: &self.camera,
                         origin: self.origin,
                         size_px: [bounds.width * scale, bounds.height * scale],
+                        origin_px: [bounds.x * scale, bounds.y * scale],
                         scale_factor: f64::from(scale),
                         settings: &self.settings,
                     },
@@ -563,21 +610,52 @@ impl shader::Primitive for Frame {
                         .err()
                         .or_else(|| renderer.error(self.id).cloned())
                         .map(|e| e.to_string()),
+                    supported: renderer.sample_counts().to_vec(),
+                    failure: renderer.sample_failure(self.id).cloned(),
                 }
             }
             Err(error) => Status {
-                stats: FrameStats::default(),
                 error: Some(error.to_string()),
+                ..Status::default()
             },
         };
         *self.status.lock().unwrap_or_else(PoisonError::into_inner) = status;
     }
 
+    /// Single-sampled at full resolution the area draws in Iced's pass; with
+    /// its own targets (MSAA, HiDPI off) it asks for `render` instead.
     fn draw(&self, pipeline: &Pipeline, render_pass: &mut wgpu::RenderPass<'_>) -> bool {
-        if let Ok(renderer) = &pipeline.0 {
-            renderer.draw(render_pass, self.id);
+        match &pipeline.0 {
+            Ok(renderer) if renderer.owns_targets(self.id) => false,
+            Ok(renderer) => {
+                renderer.draw(render_pass, self.id);
+                true
+            }
+            Err(_) => true,
         }
-        true
+    }
+
+    /// The area's own pass, then its picture composed into Iced's frame inside the area.
+    fn render(
+        &self,
+        pipeline: &Pipeline,
+        encoder: &mut wgpu::CommandEncoder,
+        target: &wgpu::TextureView,
+        clip_bounds: &Rectangle<u32>,
+    ) {
+        if let Ok(renderer) = &pipeline.0 {
+            renderer.render(
+                encoder,
+                target,
+                [
+                    clip_bounds.x,
+                    clip_bounds.y,
+                    clip_bounds.width,
+                    clip_bounds.height,
+                ],
+                self.id,
+            );
+        }
     }
 }
 

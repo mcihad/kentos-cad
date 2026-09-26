@@ -18,7 +18,10 @@
     "tool.cancel",
     "view.zoomIn",
     "view.zoomOut",
-    "view.zoomExtents"
+    "view.zoomExtents",
+    "tools.options",
+    "draft.ortho",
+    "draft.polar"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

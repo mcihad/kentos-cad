@@ -1,4 +1,4 @@
-import type { AtlasSource, FrameState, LineBatch, RenderBackend, RGBA, SceneLayer } from '../types';
+import { supportedSamples, type AtlasSource, type FrameState, type LineBatch, type RenderBackend, type RGBA, type SceneLayer } from '../types';
 import { FILL_FS, FILL_VS, LINE_FS, LINE_VS, POINT_FS, POINT_VS } from './shaders';
 import { StyledRenderer, type GpuStyled } from './styledRenderer';
 
@@ -58,8 +58,10 @@ void main() { o = texelFetch(u_base, ivec2(gl_FragCoord.xy), 0); }`;
  * formats, and the canvas has no alpha). When only the overlays changed (a hover or a selection,
  * FrameState.keepBase) the base is not drawn again: on a large drawing a
  * pointer move used to redraw every segment for a new highlight.
- * Anti-aliasing is the target's own 4× MSAA; the context has none (a copy
- * cannot write into a multisampled framebuffer).
+ * Anti-aliasing is the draw target's own MSAA, at the sample count asked for
+ * (setSamples, one of the counts the context reports for RGBA8); the context
+ * has none (a copy cannot write into a multisampled framebuffer), so the
+ * count changes without a new context: only `draw` is made again.
  */
 export class WebGL2Backend implements RenderBackend {
   readonly kind = 'webgl2' as const;
@@ -72,22 +74,28 @@ export class WebGL2Backend implements RenderBackend {
   private point!: Program;
   private styled!: StyledRenderer;
   private layers = new Map<string, GpuLayer>();
-  private samples = 0;
+  /** Samples of the draw target (1: none) and the last count its targets were made with. */
+  samples = 1;
+  private working = 1;
+  sampleCounts: readonly number[] = [1];
+  onSamplesFailed: ((requested: number, working: number, error: string) => void) | null = null;
   private copyProgram!: Program;
   private draw: Target | null = null;
   private base: Target | null = null;
   private out: Target | null = null;
   private targetSize: readonly [number, number] = [0, 0];
+  private targetSamples = 0;
   /** What the base holds (view, scale, order, background), or '' when it must be drawn again. */
   private baseKey = '';
   /** The overlays of the last frame: uploading them leaves the base as it is. */
   private overlayIds: ReadonlySet<string> = new Set();
 
-  async init(canvas: HTMLCanvasElement, opts: { antialias?: boolean } = {}): Promise<void> {
+  async init(canvas: HTMLCanvasElement, opts: { samples?: number } = {}): Promise<void> {
     const gl = canvas.getContext('webgl2', { antialias: false, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL2 desteklenmiyor');
     this.gl = gl;
-    this.samples = opts.antialias === false ? 0 : Math.min(4, gl.getParameter(gl.MAX_SAMPLES) as number);
+    this.sampleCounts = rgba8SampleCounts(gl);
+    this.samples = this.working = supportedSamples(this.sampleCounts, opts.samples ?? 4);
     this.canvas = canvas;
     this.line = this.createProgram(LINE_VS, LINE_FS, ['a_pos', 'a_dist'], ['u_offset', 'u_scale', 'u_color', 'u_dash', 'u_pxPerUnit']);
     this.fill = this.createProgram(FILL_VS, FILL_FS, ['a_pos'], ['u_offset', 'u_scale', 'u_color']);
@@ -104,8 +112,15 @@ export class WebGL2Backend implements RenderBackend {
     this.label = renderer ? `WebGL2 · ${renderer.replace(/^ANGLE \((.*)\)$/, '$1').split(',')[1]?.trim() ?? renderer}` : 'WebGL2';
   }
 
-  get antialiased(): boolean {
-    return this.samples > 0;
+  setSamples(count: number): number {
+    const n = supportedSamples(this.sampleCounts, count);
+    if (n !== this.samples) {
+      this.samples = n;
+      // Made again with the next frame; GL frees the old storage once no queued command reads it.
+      this.releaseTargets();
+      this.baseKey = '';
+    }
+    return n;
   }
 
   useAtlas(atlas: AtlasSource): void {
@@ -162,6 +177,8 @@ export class WebGL2Backend implements RenderBackend {
     const w = this.canvas.width;
     const h = this.canvas.height;
     this.ensureTargets(w, h);
+    // Not even a single-sampled target fits in memory: nothing to draw into (onSamplesFailed said why).
+    if (!this.draw || !this.base || !this.out) return;
     this.overlayIds = new Set(frame.overlays);
     const key = `${view.center.x},${view.center.y},${view.scale},${w}x${h},${frame.scaleDenominator},${frame.clearColor.join()},${frame.underlays.join()}|${frame.order.join()}`;
     const drawBase = !frame.keepBase || key !== this.baseKey;
@@ -260,18 +277,40 @@ export class WebGL2Backend implements RenderBackend {
     gl.enable(gl.BLEND);
   }
 
-  /** The off-screen targets at the canvas's size (made again when it changes). */
+  /**
+   * The off-screen targets at the canvas's size and sample count (made again
+   * when either changes). If the count asked for cannot be made (out of
+   * memory, a driver limit), the last count that drew is made instead and
+   * `onSamplesFailed` is told: the frame is drawn either way.
+   */
   private ensureTargets(w: number, h: number): void {
-    if (this.base && this.targetSize[0] === w && this.targetSize[1] === h) return;
+    if (this.base && this.targetSize[0] === w && this.targetSize[1] === h && this.targetSamples === this.samples) return;
+    const requested = this.samples;
+    const failure = this.makeTargets(w, h, requested);
+    if (!failure) {
+      this.working = requested;
+      return;
+    }
+    this.samples = requested === this.working ? 1 : this.working;
+    if (this.makeTargets(w, h, this.samples) && this.samples !== 1) this.makeTargets(w, h, (this.samples = 1));
+    this.working = this.samples;
+    this.onSamplesFailed?.(requested, this.samples, failure);
+  }
+
+  /** Makes the three targets; returns why it could not (and leaves none), or null. */
+  private makeTargets(w: number, h: number, samples: number): string | null {
     const gl = this.gl;
     this.releaseTargets();
+    // Error flags raised before are not this call's.
+    for (let i = 0; i < 8 && gl.getError() !== gl.NO_ERROR; i++);
     const rb = gl.createRenderbuffer()!;
     gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
-    if (this.samples > 0) gl.renderbufferStorageMultisample(gl.RENDERBUFFER, this.samples, gl.RGBA8, w, h);
+    if (samples > 1) gl.renderbufferStorageMultisample(gl.RENDERBUFFER, samples, gl.RGBA8, w, h);
     else gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, w, h);
     const drawFbo = gl.createFramebuffer()!;
     gl.bindFramebuffer(gl.FRAMEBUFFER, drawFbo);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rb);
+    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     this.draw = { fbo: drawFbo, rb, tex: null };
     const textured = (): Target => {
       const tex = gl.createTexture()!;
@@ -289,8 +328,17 @@ export class WebGL2Backend implements RenderBackend {
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const error = gl.getError();
+    if (status !== gl.FRAMEBUFFER_COMPLETE || error !== gl.NO_ERROR) {
+      this.releaseTargets();
+      return error === gl.OUT_OF_MEMORY
+        ? `${samples}× hedef için ekran belleği yetmedi (${w}×${h})`
+        : `${samples}× hedef kurulamadı (framebuffer 0x${status.toString(16)}, hata 0x${error.toString(16)})`;
+    }
     this.targetSize = [w, h];
+    this.targetSamples = samples;
     this.baseKey = '';
+    return null;
   }
 
   /** Copies a whole target (a multisampled one into the canvas resolves it). */
@@ -309,6 +357,7 @@ export class WebGL2Backend implements RenderBackend {
       if (t.tex) this.gl.deleteTexture(t.tex);
     }
     this.draw = this.base = this.out = null;
+    this.targetSamples = 0;
   }
 
   dispose(): void {
@@ -362,4 +411,17 @@ export class WebGL2Backend implements RenderBackend {
       uniforms: Object.fromEntries(uniforms.map((u) => [u, gl.getUniformLocation(program, u)])),
     };
   }
+}
+
+/**
+ * The sample counts an RGBA8 renderbuffer takes in this context, ascending,
+ * 1 (none) first: the context's own list (`getInternalformatParameter`),
+ * within `MAX_SAMPLES` (TODOS.md AA-01).
+ */
+export function rgba8SampleCounts(gl: WebGL2RenderingContext): number[] {
+  const max = gl.getParameter(gl.MAX_SAMPLES) as number;
+  const listed = gl.getInternalformatParameter(gl.RENDERBUFFER, gl.RGBA8, gl.SAMPLES) as Int32Array | null;
+  const counts = new Set<number>([1]);
+  for (const n of listed ?? []) if (n > 1 && n <= max) counts.add(n);
+  return [...counts].sort((a, b) => a - b);
 }

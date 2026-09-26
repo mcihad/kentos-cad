@@ -10,12 +10,14 @@
 
 export async function collectInPage() {
   const k = window.kentos;
-  const [menus, ribbon, workspaces, processing, projectSettings] = await Promise.all([
+  const [menus, ribbon, workspaces, processing, projectSettings, state, schema] = await Promise.all([
     import('/src/app/menus.ts'),
     import('/src/app/ribbon.ts'),
     import('/src/app/workspaces.ts'),
     import('/src/app/processing.ts'),
     import('/src/model/projectSettings.ts'),
+    import('/src/app/state.ts'),
+    import('/src/core/settings/schema.ts'),
   ]);
   const tools = k.tools.list();
   const registry = k.processing.registry;
@@ -147,11 +149,23 @@ export async function collectInPage() {
     Object.entries(owner)
       .filter(([, s]) => isSignal(s))
       .map(([key, s]) => ({ key, scope, persistence, type: typeOf(s.value), default: s.value }));
+  // Preferences are typed settings (docs/adr/0023): scope and default from the schema (not this
+  // browser's GPU), kept in the typed store.
+  const preferences = Object.entries(k.prefs)
+    .filter(([, s]) => isSignal(s))
+    .map(([key, s]) => {
+      const d = schema.settingDescriptor(state.PREF_KEYS[key]);
+      return { key, setting: d.key, scope: d.scope, persistence: 'localStorage kentos.settings.v1', type: typeOf(s.value), default: d.default };
+    });
+  const session = fields(k.settings, 'session', 'none').map((f) => {
+    const d = schema.settingDescriptor(`drafting.${f.key}`);
+    return d ? { ...f, setting: d.key } : f;
+  });
   const settings = [
-    ...fields(k.prefs, 'user', 'localStorage kentos.prefs.v1'),
+    ...preferences,
     ...fields(k.ui, 'layout', 'localStorage kentos.ui.v1'),
     ...Object.entries(projectSettings.PROJECT_SETTINGS_DEFAULTS).map(([key, v]) => ({ key, scope: 'project', persistence: '.kcad settings, cloud project', type: typeOf(v), default: v })),
-    ...fields(k.settings, 'session', 'none'),
+    ...session,
   ];
 
   return { commands, tools: toolItems, processing: processingItems, models: modelItems, workspaces: workspaceItems, settings, layout };

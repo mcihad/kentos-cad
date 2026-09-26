@@ -14,6 +14,9 @@
 //! contract type; the product command catalog (`catalog`, docs/adr/0013) is
 //! built from it.
 //!
+//! `settings` (docs/adr/0023) is the typed settings schema and the rules every
+//! host validates, resolves and stores settings by.
+//!
 //! Rules (docs/adr/0002-contracts-fixtures.md):
 //! - every stored or sent document carries `format` and `version`; readers
 //!   reject versions they do not know instead of guessing;
@@ -33,6 +36,7 @@ pub mod identity;
 pub mod job;
 pub mod layer;
 pub mod numeric;
+pub mod settings;
 pub mod style;
 
 pub use api::*;
@@ -47,6 +51,7 @@ pub use identity::*;
 pub use job::*;
 pub use layer::*;
 pub use numeric::*;
+pub use settings::*;
 pub use style::*;
 
 /// Version of this set of contracts, reported by the API's health endpoint.

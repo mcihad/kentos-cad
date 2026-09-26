@@ -1,0 +1,337 @@
+{
+  "format": "kentos.settings-cases",
+  "version": 1,
+  "note": "Tipli ayarların ortak durumları (TODOS.md SET-01..05; docs/adr/0023). Web apps/web/src/core/settings (settings.test.ts), masaüstü ve ileride sunucu crates/shared/contracts/src/settings (tests/settings.rs) bu dosyayı okur; iki taraf aynı hata kodunu vermelidir. values: bir değerin doğrulanması (anahtar yoksa unknown_key). writes: bir katmana yazma (anahtar, sonra katman, sonra değer). resolve: katmanlar, kurum politikası ve aygıt kısıtlarıyla istenen ve etkin değer; expect yalnız adı geçen ayarları, diagnostics bütün tanıları sırasız karşılaştırır. files: saklanan ayar belgesi; text ham metin, document JSON nesnesi olarak yazılır. presets: hazır ayarın tanınması ve doldurduğu değerler. Kod değişikliği iki uygulamada ve burada birlikte yapılır.",
+  "values": [
+    { "name": "anahtar açık", "key": "drafting.ortho", "value": true, "expect": { "value": true } },
+    { "name": "anahtar: sayı değil", "key": "drafting.ortho", "value": 1, "expect": { "error": "wrong_type" } },
+    { "name": "anahtar: metin değil", "key": "drafting.ortho", "value": "true", "expect": { "error": "wrong_type" } },
+    { "name": "anahtar: null değil", "key": "drafting.cursorInput", "value": null, "expect": { "error": "wrong_type" } },
+    { "name": "tam sayı aralıkta", "key": "drafting.snapAperture", "value": 11, "expect": { "value": 11 } },
+    { "name": "tam sayı: alt sınır dahil", "key": "drafting.snapAperture", "value": 4, "expect": { "value": 4 } },
+    { "name": "tam sayı: üst sınır dahil", "key": "drafting.snapAperture", "value": 30, "expect": { "value": 30 } },
+    { "name": "tam sayı: alt sınırın altında", "key": "drafting.snapAperture", "value": 3, "expect": { "error": "out_of_range" } },
+    { "name": "tam sayı: üst sınırın üstünde", "key": "drafting.snapAperture", "value": 31, "expect": { "error": "out_of_range" } },
+    { "name": "tam sayı: negatif", "key": "drafting.snapAperture", "value": -5, "expect": { "error": "out_of_range" } },
+    { "name": "tam sayı: kesirli", "key": "drafting.snapAperture", "value": 11.5, "expect": { "error": "not_integer" } },
+    { "name": "tam sayı: kesirli ve aralık dışı, önce tam sayı denetlenir", "key": "drafting.snapAperture", "value": 3.5, "expect": { "error": "not_integer" } },
+    { "name": "tam sayı: 11.0 tam sayıdır", "key": "drafting.snapAperture", "value": 11.0, "expect": { "value": 11 } },
+    { "name": "tam sayı: metin değil", "key": "drafting.snapAperture", "value": "11", "expect": { "error": "wrong_type" } },
+    { "name": "tam sayı: dizi değil", "key": "drafting.snapAperture", "value": [11], "expect": { "error": "wrong_type" } },
+    { "name": "seçenekli sayı", "key": "drafting.polarIncrement", "value": 30, "expect": { "value": 30 } },
+    { "name": "seçenekli sayı: 45.0 ile 45 aynı", "key": "drafting.polarIncrement", "value": 45.0, "expect": { "value": 45 } },
+    { "name": "seçenekli sayı: seçenek değil", "key": "drafting.polarIncrement", "value": 22.5, "expect": { "error": "not_allowed" } },
+    { "name": "MSAA 8×", "key": "graphics.msaa", "value": 8, "expect": { "value": 8 } },
+    { "name": "MSAA kapalı", "key": "graphics.msaa", "value": 1, "expect": { "value": 1 } },
+    { "name": "MSAA 3 seçenek değil", "key": "graphics.msaa", "value": 3, "expect": { "error": "not_allowed" } },
+    { "name": "MSAA 0 seçenek değil", "key": "graphics.msaa", "value": 0, "expect": { "error": "not_allowed" } },
+    { "name": "MSAA 2.5: önce tam sayı", "key": "graphics.msaa", "value": 2.5, "expect": { "error": "not_integer" } },
+    { "name": "MSAA \"4\" metin", "key": "graphics.msaa", "value": "4", "expect": { "error": "wrong_type" } },
+    { "name": "MSAA 4.0 = 4", "key": "graphics.msaa", "value": 4.0, "expect": { "value": 4 } },
+    { "name": "seçenek", "key": "graphics.backend", "value": "webgpu", "expect": { "value": "webgpu" } },
+    { "name": "seçenek: büyük harf başka değerdir", "key": "graphics.backend", "value": "WebGPU", "expect": { "error": "not_allowed" } },
+    { "name": "seçenek: boş metin", "key": "graphics.backend", "value": "", "expect": { "error": "not_allowed" } },
+    { "name": "seçenek: sayı değil", "key": "graphics.backend", "value": 2, "expect": { "error": "wrong_type" } },
+    { "name": "seçenek: nesne değil", "key": "appearance.theme", "value": { "value": "dark" }, "expect": { "error": "wrong_type" } },
+    { "name": "ondalıklı sayı", "key": "project.plotScale", "value": 2500.5, "expect": { "value": 2500.5 } },
+    { "name": "ondalıklı sayı: sıfır aralık dışı", "key": "project.plotScale", "value": 0, "expect": { "error": "out_of_range" } },
+    { "name": "bilinmeyen anahtar", "key": "graphics.fxaa", "value": true, "expect": { "error": "unknown_key" } }
+  ],
+  "writes": [
+    { "name": "tercih kullanıcı katmanında", "layer": "user", "key": "drafting.snapAperture", "value": 14, "expect": { "value": 14 } },
+    { "name": "tercih cihazda geçersiz kılınır", "layer": "device", "key": "drafting.snapAperture", "value": 14, "expect": { "value": 14 } },
+    { "name": "tercih oturumda geçersiz kılınır", "layer": "session", "key": "drafting.cursorInput", "value": false, "expect": { "value": false } },
+    { "name": "cihaz ayarı kullanıcı katmanına yazılmaz", "layer": "user", "key": "graphics.msaa", "value": 4, "expect": { "error": "wrong_scope" } },
+    { "name": "cihaz ayarı cihazda", "layer": "device", "key": "graphics.msaa", "value": 8, "expect": { "value": 8 } },
+    { "name": "cihaz ayarı oturumda geçersiz kılınır (?renderer=)", "layer": "session", "key": "graphics.backend", "value": "webgpu", "expect": { "value": "webgpu" } },
+    { "name": "oturum ayarı cihaza yazılmaz", "layer": "device", "key": "drafting.ortho", "value": true, "expect": { "error": "wrong_scope" } },
+    { "name": "oturum ayarı kullanıcıya yazılmaz", "layer": "user", "key": "drafting.polar", "value": true, "expect": { "error": "wrong_scope" } },
+    { "name": "oturum ayarı oturumda", "layer": "session", "key": "drafting.ortho", "value": true, "expect": { "value": true } },
+    { "name": "proje ayarı tercihe yazılmaz", "layer": "user", "key": "project.srid", "value": 2320, "expect": { "error": "wrong_scope" } },
+    { "name": "proje ayarı oturuma yazılmaz", "layer": "session", "key": "project.drawingFont", "value": "arimo", "expect": { "error": "wrong_scope" } },
+    { "name": "proje ayarı projede", "layer": "project", "key": "project.srid", "value": 2320, "expect": { "value": 2320 } },
+    { "name": "cihaz ayarı projeye yazılmaz", "layer": "project", "key": "graphics.msaa", "value": 8, "expect": { "error": "wrong_scope" } },
+    { "name": "tercih projeye yazılmaz", "layer": "project", "key": "drafting.snapAperture", "value": 11, "expect": { "error": "wrong_scope" } },
+    { "name": "önce katman, sonra değer", "layer": "user", "key": "graphics.msaa", "value": "çok", "expect": { "error": "wrong_scope" } },
+    { "name": "önce anahtar", "layer": "project", "key": "graphics.fxaa", "value": true, "expect": { "error": "unknown_key" } }
+  ],
+  "resolve": [
+    {
+      "name": "hiçbir katman yok: varsayılanlar",
+      "layers": {},
+      "expect": {
+        "graphics.msaa": { "requested": 4, "source": "default", "effective": 4 },
+        "drafting.ortho": { "requested": false, "source": "default", "effective": false },
+        "drafting.snapAperture": { "requested": 11, "source": "default", "effective": 11 }
+      },
+      "diagnostics": []
+    },
+    {
+      "name": "kullanıcı tercihi",
+      "layers": { "user": { "drafting.snapAperture": 14 } },
+      "expect": { "drafting.snapAperture": { "requested": 14, "source": "user", "effective": 14 } },
+      "diagnostics": []
+    },
+    {
+      "name": "cihaz kullanıcıyı geçersiz kılar",
+      "layers": { "user": { "drafting.snapAperture": 14 }, "device": { "drafting.snapAperture": 20 } },
+      "expect": { "drafting.snapAperture": { "requested": 20, "source": "device", "effective": 20 } },
+      "diagnostics": []
+    },
+    {
+      "name": "oturum cihazı geçersiz kılar",
+      "layers": { "device": { "graphics.backend": "webgl2" }, "session": { "graphics.backend": "webgpu" } },
+      "expect": { "graphics.backend": { "requested": "webgpu", "source": "session", "effective": "webgpu" } },
+      "diagnostics": []
+    },
+    {
+      "name": "geçersiz değer atlanır, alttaki katman karar verir",
+      "layers": { "user": { "drafting.snapAperture": 14 }, "device": { "drafting.snapAperture": 99 } },
+      "expect": { "drafting.snapAperture": { "requested": 14, "source": "user", "effective": 14 } },
+      "diagnostics": [{ "layer": "device", "key": "drafting.snapAperture", "code": "out_of_range" }]
+    },
+    {
+      "name": "proje ayarı tercihle ezilmez",
+      "layers": { "project": { "project.srid": 5256 }, "user": { "project.srid": 2320 } },
+      "expect": { "project.srid": { "requested": 5256, "source": "project", "effective": 5256 } },
+      "diagnostics": [{ "layer": "user", "key": "project.srid", "code": "wrong_scope" }]
+    },
+    {
+      "name": "proje başka cihazda açılınca çizim yazı tipi korunur",
+      "layers": { "project": { "project.drawingFont": "arimo" }, "device": { "project.drawingFont": "barlow" } },
+      "expect": { "project.drawingFont": { "requested": "arimo", "source": "project", "effective": "arimo" } },
+      "diagnostics": [{ "layer": "device", "key": "project.drawingFont", "code": "wrong_scope" }]
+    },
+    {
+      "name": "başka cihazın GPU ayarı projeyle gelmez",
+      "layers": { "project": { "graphics.msaa": 16 } },
+      "expect": { "graphics.msaa": { "requested": 4, "source": "default", "effective": 4 } },
+      "diagnostics": [{ "layer": "project", "key": "graphics.msaa", "code": "wrong_scope" }]
+    },
+    {
+      "name": "aygıt en çok 4×: 8× istenir, 4× kullanılır",
+      "layers": { "device": { "graphics.msaa": 8 } },
+      "constraints": { "graphics.msaa": { "allowed": [1, 4], "reason": "device_unsupported", "detail": "Bu aygıt en çok 4× destekliyor." } },
+      "expect": { "graphics.msaa": { "requested": 8, "source": "device", "effective": 4, "reason": "device_unsupported" } },
+      "diagnostics": []
+    },
+    {
+      "name": "aygıt 2× desteklemez: 2× istenince kapalı",
+      "layers": { "device": { "graphics.msaa": 2 } },
+      "constraints": { "graphics.msaa": { "allowed": [1, 4], "reason": "device_unsupported", "detail": "Bu aygıt 2× desteklemiyor." } },
+      "expect": { "graphics.msaa": { "requested": 2, "source": "device", "effective": 1, "reason": "device_unsupported" } },
+      "diagnostics": []
+    },
+    {
+      "name": "istenenin altında izinli değer yoksa en küçüğü",
+      "layers": { "device": { "graphics.msaa": 1 } },
+      "constraints": { "graphics.msaa": { "allowed": [4, 8], "reason": "device_unsupported", "detail": "" } },
+      "expect": { "graphics.msaa": { "requested": 1, "source": "device", "effective": 4, "reason": "device_unsupported" } },
+      "diagnostics": []
+    },
+    {
+      "name": "desteklenen istenirse kısıt dokunmaz",
+      "layers": { "device": { "graphics.msaa": 4 } },
+      "constraints": { "graphics.msaa": { "allowed": [1, 4], "reason": "device_unsupported", "detail": "" } },
+      "expect": { "graphics.msaa": { "requested": 4, "source": "device", "effective": 4 } },
+      "diagnostics": []
+    },
+    {
+      "name": "aygıt değeri uygulayamadı: son çalışan kullanılır",
+      "layers": { "device": { "graphics.msaa": 4 } },
+      "constraints": { "graphics.msaa": { "allowed": [1], "reason": "device_failed", "detail": "4× hedefi kurulamadı." } },
+      "expect": { "graphics.msaa": { "requested": 4, "source": "device", "effective": 1, "reason": "device_failed" } },
+      "diagnostics": []
+    },
+    {
+      "name": "tarayıcıda WebGPU yok",
+      "layers": { "device": { "graphics.backend": "webgpu" } },
+      "constraints": { "graphics.backend": { "allowed": ["webgl2"], "reason": "device_unsupported", "detail": "Bu tarayıcı WebGPU sunmuyor." } },
+      "expect": { "graphics.backend": { "requested": "webgpu", "source": "device", "effective": "webgl2", "reason": "device_unsupported" } },
+      "diagnostics": []
+    },
+    {
+      "name": "kurum üst sınırı",
+      "layers": { "device": { "graphics.msaa": 8 } },
+      "policy": { "source": "Kurum politikası", "rules": { "graphics.msaa": { "max": 4 } } },
+      "expect": { "graphics.msaa": { "requested": 8, "source": "device", "effective": 4, "reason": "organization_limit", "locked": false } },
+      "diagnostics": []
+    },
+    {
+      "name": "kurum üst sınırı seçeneğe iner",
+      "layers": { "device": { "graphics.msaa": 16 } },
+      "policy": { "source": "Kurum politikası", "rules": { "graphics.msaa": { "max": 6 } } },
+      "expect": { "graphics.msaa": { "requested": 16, "source": "device", "effective": 4, "reason": "organization_limit" } },
+      "diagnostics": []
+    },
+    {
+      "name": "kurum alt sınırı tam sayıya çıkar",
+      "layers": { "user": { "drafting.snapAperture": 5 } },
+      "policy": { "source": "Kurum politikası", "rules": { "drafting.snapAperture": { "min": 7.5 } } },
+      "expect": { "drafting.snapAperture": { "requested": 5, "source": "user", "effective": 8, "reason": "organization_limit" } },
+      "diagnostics": []
+    },
+    {
+      "name": "kurum sınırı içindeki değer değişmez",
+      "layers": { "device": { "graphics.msaa": 2 } },
+      "policy": { "source": "Kurum politikası", "rules": { "graphics.msaa": { "max": 4 } } },
+      "expect": { "graphics.msaa": { "requested": 2, "source": "device", "effective": 2, "locked": false } },
+      "diagnostics": []
+    },
+    {
+      "name": "kurum kilidi tercihi geçersiz kılar, tercih kaybolmaz",
+      "layers": { "user": { "drafting.cursorInput": false } },
+      "policy": { "source": "Kurum politikası", "rules": { "drafting.cursorInput": { "value": true } } },
+      "expect": { "drafting.cursorInput": { "requested": false, "source": "user", "effective": true, "reason": "organization_locked", "locked": true } },
+      "diagnostics": []
+    },
+    {
+      "name": "kilit istenenle aynıysa neden yok ama kilitli",
+      "layers": { "user": { "drafting.cursorInput": true } },
+      "policy": { "source": "Kurum politikası", "rules": { "drafting.cursorInput": { "value": true } } },
+      "expect": { "drafting.cursorInput": { "requested": true, "source": "user", "effective": true, "locked": true } },
+      "diagnostics": []
+    },
+    {
+      "name": "kurumun izin verdiği değerler",
+      "layers": { "device": { "graphics.backend": "webgpu" } },
+      "policy": { "source": "Kurum politikası", "rules": { "graphics.backend": { "allowed": ["webgl2"] } } },
+      "expect": { "graphics.backend": { "requested": "webgpu", "source": "device", "effective": "webgl2", "reason": "organization_limit" } },
+      "diagnostics": []
+    },
+    {
+      "name": "kurum sınırından sonra aygıt kısıtı",
+      "layers": { "device": { "graphics.msaa": 16 } },
+      "policy": { "source": "Kurum politikası", "rules": { "graphics.msaa": { "max": 8 } } },
+      "constraints": { "graphics.msaa": { "allowed": [1, 2, 4], "reason": "device_unsupported", "detail": "Bu aygıt en çok 4× destekliyor." } },
+      "expect": { "graphics.msaa": { "requested": 16, "source": "device", "effective": 4, "reason": "device_unsupported" } },
+      "diagnostics": []
+    },
+    {
+      "name": "kurum kilidi aygıtın üstündeyse aygıt kısar",
+      "layers": {},
+      "policy": { "source": "Kurum politikası", "rules": { "graphics.msaa": { "value": 8 } } },
+      "constraints": { "graphics.msaa": { "allowed": [1, 4], "reason": "device_unsupported", "detail": "Bu aygıt en çok 4× destekliyor." } },
+      "expect": { "graphics.msaa": { "requested": 4, "source": "default", "effective": 4, "locked": true } },
+      "diagnostics": []
+    },
+    {
+      "name": "geçersiz kurum kuralı yok sayılır",
+      "layers": {},
+      "policy": { "source": "Kurum politikası", "rules": { "drafting.snapAperture": { "value": 999 } } },
+      "expect": { "drafting.snapAperture": { "requested": 11, "source": "default", "effective": 11, "locked": false } },
+      "diagnostics": [{ "layer": "organization", "key": "drafting.snapAperture", "code": "out_of_range" }]
+    },
+    {
+      "name": "bilinmeyen anahtarlar bildirilir",
+      "layers": { "user": { "graphics.fxaa": true } },
+      "policy": { "source": "Kurum politikası", "rules": { "tool.limit": { "value": 1 } } },
+      "expect": {},
+      "diagnostics": [
+        { "layer": "user", "key": "graphics.fxaa", "code": "unknown_key" },
+        { "layer": "organization", "key": "tool.limit", "code": "unknown_key" }
+      ]
+    },
+    {
+      "name": "oturum ayarı yalnız oturumdan",
+      "layers": { "user": { "drafting.ortho": true }, "session": { "drafting.polar": true } },
+      "expect": {
+        "drafting.ortho": { "requested": false, "source": "default", "effective": false },
+        "drafting.polar": { "requested": true, "source": "session", "effective": true }
+      },
+      "diagnostics": [{ "layer": "user", "key": "drafting.ortho", "code": "wrong_scope" }]
+    }
+  ],
+  "files": [
+    {
+      "name": "geçerli dosya",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "drafting.snapAperture": 14, "drafting.cursorInput": false }, "device": { "graphics.msaa": 8, "graphics.hiDpi": false } },
+      "expect": { "user": { "drafting.snapAperture": 14, "drafting.cursorInput": false }, "device": { "graphics.msaa": 8, "graphics.hiDpi": false }, "migrations": 0, "diagnostics": [] }
+    },
+    {
+      "name": "baştaki BOM atlanır",
+      "text": "﻿{\"format\":\"kentos.settings\",\"version\":1,\"user\":{\"drafting.snapAperture\":9}}",
+      "expect": { "user": { "drafting.snapAperture": 9 }, "device": {}, "migrations": 0, "diagnostics": [] }
+    },
+    { "name": "JSON değil", "text": "{\"format\": \"kentos.settings\", ", "expect": { "error": "not_json" } },
+    { "name": "boş metin", "text": "", "expect": { "error": "not_json" } },
+    { "name": "dizi", "text": "[]", "expect": { "error": "not_settings" } },
+    { "name": "başka biçim", "document": { "format": "kentos.document", "version": 1 }, "expect": { "error": "not_settings" } },
+    { "name": "biçim yok", "document": { "version": 1 }, "expect": { "error": "not_settings" } },
+    { "name": "yeni sürüm okunmaz", "document": { "format": "kentos.settings", "version": 2, "user": { "drafting.snapAperture": 14 } }, "expect": { "error": "unsupported_version" } },
+    { "name": "sürüm yok", "document": { "format": "kentos.settings" }, "expect": { "error": "not_settings" } },
+    { "name": "sürüm metin", "document": { "format": "kentos.settings", "version": "1" }, "expect": { "error": "not_settings" } },
+    { "name": "katman nesne değil", "document": { "format": "kentos.settings", "version": 1, "user": [] }, "expect": { "error": "not_settings" } },
+    {
+      "name": "katman yok",
+      "document": { "format": "kentos.settings", "version": 1 },
+      "expect": { "user": {}, "device": {}, "migrations": 0, "diagnostics": [] }
+    },
+    {
+      "name": "bozuk değerler atılır, gerisi kalır; bilinmeyen anahtar saklanır",
+      "document": {
+        "format": "kentos.settings",
+        "version": 1,
+        "user": { "drafting.snapAperture": 99, "drafting.cursorInput": false, "graphics.msaa": 8, "zz.future": 5 },
+        "device": { "graphics.msaa": "x", "graphics.hiDpi": false }
+      },
+      "expect": {
+        "user": { "drafting.cursorInput": false, "zz.future": 5 },
+        "device": { "graphics.hiDpi": false },
+        "migrations": 0,
+        "diagnostics": [
+          { "layer": "user", "key": "drafting.snapAperture", "code": "out_of_range" },
+          { "layer": "user", "key": "graphics.msaa", "code": "wrong_scope" },
+          { "layer": "user", "key": "zz.future", "code": "unknown_key" },
+          { "layer": "device", "key": "graphics.msaa", "code": "wrong_type" }
+        ]
+      }
+    },
+    {
+      "name": "oturum ve proje ayarları dosyada tutulmaz",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "drafting.ortho": true, "project.srid": 2320, "drafting.polarIncrement": 30 } },
+      "expect": {
+        "user": { "drafting.polarIncrement": 30 },
+        "device": {},
+        "migrations": 0,
+        "diagnostics": [
+          { "layer": "user", "key": "drafting.ortho", "code": "wrong_scope" },
+          { "layer": "user", "key": "project.srid", "code": "wrong_scope" }
+        ]
+      }
+    },
+    {
+      "name": "sayılar normalleşir",
+      "document": { "format": "kentos.settings", "version": 1, "device": { "graphics.msaa": 4.0 } },
+      "expect": { "user": {}, "device": { "graphics.msaa": 4 }, "migrations": 0, "diagnostics": [] }
+    },
+    {
+      "name": "göç kaydı okunur",
+      "document": {
+        "format": "kentos.settings",
+        "version": 1,
+        "user": { "drafting.cursorInput": true },
+        "migrations": [{ "from": "localStorage kentos.prefs.v1", "at": "2026-09-25T20:00:00Z", "moved": 26, "dropped": [{ "layer": "user", "key": "snapAperture", "code": "out_of_range" }] }]
+      },
+      "expect": { "user": { "drafting.cursorInput": true }, "device": {}, "migrations": 1, "diagnostics": [] }
+    },
+    {
+      "name": "bozuk göç kaydı değerleri götürmez",
+      "document": { "format": "kentos.settings", "version": 1, "user": { "drafting.cursorInput": false }, "migrations": "dün" },
+      "expect": { "user": { "drafting.cursorInput": false }, "device": {}, "migrations": 0, "diagnostics": [] }
+    }
+  ],
+  "presets": {
+    "matching": [
+      { "name": "Kaliteli", "group": "graphics", "values": { "graphics.msaa": 4, "graphics.hiDpi": true }, "expect": "quality" },
+      { "name": "Dengeli", "group": "graphics", "values": { "graphics.msaa": 1, "graphics.hiDpi": true }, "expect": "balanced" },
+      { "name": "Hızlı", "group": "graphics", "values": { "graphics.msaa": 1, "graphics.hiDpi": false }, "expect": "fast" },
+      { "name": "Özel: 8× ve tam çözünürlük", "group": "graphics", "values": { "graphics.msaa": 8, "graphics.hiDpi": true }, "expect": null },
+      { "name": "Özel: 4× ve düşük çözünürlük", "group": "graphics", "values": { "graphics.msaa": 4, "graphics.hiDpi": false }, "expect": null }
+    ],
+    "fill": [
+      { "name": "Hızlı yalnız grafik değerlerini doldurur", "preset": "fast", "expect": { "graphics.msaa": 1, "graphics.hiDpi": false } },
+      { "name": "Kaliteli", "preset": "quality", "expect": { "graphics.msaa": 4, "graphics.hiDpi": true } }
+    ]
+  }
+}

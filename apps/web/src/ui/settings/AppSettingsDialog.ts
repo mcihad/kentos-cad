@@ -2,27 +2,34 @@ import { applyTheme, applyUiScale } from '../../app/commands';
 import { applyAccent, applyUiFont } from '../../app/appearance';
 import { accentPicker, drawingFontPicker, fontPicker } from './appearancePickers';
 import type { AppContext } from '../../app/context';
-import { PREFERENCE_DEFAULTS, snapshot, type PreferencesData, type ShellKind, type Theme } from '../../app/state';
-import type { Signal } from '../../core/signal';
+import { PREF_KEYS, PREFERENCE_DEFAULTS, type PreferencesData, type ShellKind, type Theme } from '../../app/state';
 import { crsBySrid } from '../../geo/crs';
-import { webgpuSupported } from '../../render/webgpu/support';
+import { settingDescriptor } from '../../core/settings/schema';
 import { h } from '../dom';
 import { note, segmented, settingRow, stepper, toggleSwitch } from '../widgets/controls';
 import { crsPicker } from './crsPicker';
 import { workspacePicker } from './workspacePicker';
 import { workspaceById } from '../../app/workspaces';
 import { group, SettingsShell, type DraftApi, type SectionDef } from './SettingsShell';
+import { engine } from './engineSection';
+import { settingsFile, type FileDraft, type FileState } from './settingsFileSection';
 
 /** Application settings: this user, this browser, every project. */
-interface AppDraft extends PreferencesData {
+export interface AppDraft extends PreferencesData, FileDraft {
   theme: Theme;
 }
 
-export type AppSettingsSection = 'appearance' | 'snap' | 'newProjects' | 'engine';
+export type AppSettingsSection = 'appearance' | 'snap' | 'newProjects' | 'engine' | 'file';
+
+const FIELDS = Object.keys(PREF_KEYS) as (keyof PreferencesData)[];
 
 export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): void {
   const crsState = { query: '' };
-  const initial: AppDraft = { ...snapshot(ctx.prefs), theme: ctx.ui.theme.value };
+  const fileState: FileState = { report: null };
+  const store = ctx.settingsStore;
+  // The draft edits what was asked for (a device limit keeps only the value in use lower; SET-03).
+  const requested = Object.fromEntries(FIELDS.map((f) => [f, store.requested(PREF_KEYS[f])])) as unknown as PreferencesData;
+  const initial: AppDraft = { ...requested, theme: ctx.ui.theme.value, importText: null, importName: null, resetAll: false };
 
   const sections: SectionDef<AppDraft>[] = [
     {
@@ -80,9 +87,18 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
       label: 'Çizim motoru',
       icon: 'chip',
       title: 'Çizim motoru',
-      lead: 'Çizim alanını ekran kartında çizen arka uç, çizim kalitesi, sembol boyutu ve çizgi kalınlığı.',
-      keys: ['rendererPreference', 'renderQuality', 'symbolSize', 'lineWeights'],
+      lead: 'Çizim alanını ekran kartında çizen arka uç, kenar yumuşatma, çözünürlük, sembol boyutu ve çizgi kalınlığı. Bu cihaza özgüdür.',
+      keys: ['rendererPreference', 'msaa', 'hiDpi', 'symbolSize', 'lineWeights'],
       render: (api) => engine(api, ctx),
+    },
+    {
+      id: 'file',
+      label: 'Ayar dosyası',
+      icon: 'fileOpen',
+      title: 'Ayar dosyası',
+      lead: 'Ayarları bir dosyaya aktarın, başka bir tarayıcıdan ya da masaüstü uygulamasından alın, varsayılanlara döndürün.',
+      keys: [],
+      render: (api) => settingsFile(api, ctx, fileState),
     },
   ];
 
@@ -91,11 +107,16 @@ export function openAppSettings(ctx: AppContext, section?: AppSettingsSection): 
     scope: { icon: 'settings', title: 'Bu tarayıcıda saklanır', detail: 'Tüm projeler için geçerlidir' },
     sections,
     initial,
-    defaults: { ...PREFERENCE_DEFAULTS, theme: 'dark' },
+    defaults: { ...PREFERENCE_DEFAULTS, theme: 'dark', importText: null, importName: null, resetAll: false },
     section,
     onSave: (draft, init) => {
-      const prefs = ctx.prefs as unknown as Record<string, Signal<unknown>>;
-      for (const k of Object.keys(PREFERENCE_DEFAULTS) as (keyof PreferencesData)[]) prefs[k].set(draft[k]);
+      // An imported file replaces the stored values first; “Varsayılanlara döndür” forgets them.
+      if (draft.importText !== null) store.importText(draft.importText);
+      else if (draft.resetAll) store.reset();
+      const base = Object.fromEntries(FIELDS.map((f) => [f, store.requested(PREF_KEYS[f])])) as unknown as PreferencesData;
+      const changed = Object.fromEntries(FIELDS.filter((f) => draft[f] !== base[f]).map((f) => [PREF_KEYS[f], draft[f]]));
+      const refused = Object.keys(store.choose(changed));
+      if (refused.length) ctx.log.warn(`Kaydedilemeyen ayar: ${refused.join(', ')}. Değerleri denetleyip yeniden deneyin.`);
       if (draft.uiScale !== init.uiScale) applyUiScale(draft.uiScale);
       if (draft.accent !== init.accent) applyAccent(draft.accent);
       if (draft.theme !== init.theme) applyTheme(ctx, draft.theme);
@@ -279,86 +300,22 @@ function snap(api: DraftApi<AppDraft>) {
         segmented({
           label: 'Açı adımı',
           value: String(d.polarIncrement),
-          options: [15, 30, 45, 90].map((v) => ({ value: String(v), label: `${v}°` })),
+          // The steps the typed schema allows (drafting.polarIncrement).
+          options: (settingDescriptor('drafting.polarIncrement')?.choices ?? []).map((c) => ({ value: String(c.value), label: c.label })),
           onChange: (v) => api.set('polarIncrement', Number(v)),
         }),
       ),
     ),
     group(
       'Yakalama mesafesi',
-      settingRow('Kenet yarıçapı', 'İmlecin bir noktaya yapışması için gereken yakınlık.', stepper({ label: 'Kenet yarıçapı', value: d.snapAperture, min: 4, max: 30, unit: 'px', onChange: (v) => api.set('snapAperture', v) })),
-      settingRow('Seçim yarıçapı', 'Tıklamanın bir çizgiyi yakalaması için gereken yakınlık.', stepper({ label: 'Seçim yarıçapı', value: d.pickAperture, min: 2, max: 15, unit: 'px', onChange: (v) => api.set('pickAperture', v) })),
+      settingRow('Kenet yarıçapı', 'İmlecin bir noktaya yapışması için gereken yakınlık.', stepper({ label: 'Kenet yarıçapı', value: d.snapAperture, ...range('drafting.snapAperture'), unit: 'px', onChange: (v) => api.set('snapAperture', v) })),
+      settingRow('Seçim yarıçapı', 'Tıklamanın bir çizgiyi yakalaması için gereken yakınlık.', stepper({ label: 'Seçim yarıçapı', value: d.pickAperture, ...range('drafting.pickAperture'), unit: 'px', onChange: (v) => api.set('pickAperture', v) })),
     ),
   ];
 }
 
-function engine(api: DraftApi<AppDraft>, ctx: AppContext) {
-  const d = api.draft;
-  const gpu = webgpuSupported();
-  const card = (value: 'webgl2' | 'webgpu', title: string, desc: string, badge: string, disabled: boolean) => {
-    const b = h(
-      'button',
-      { class: 'engine-card', type: 'button', role: 'radio', 'aria-checked': String(d.rendererPreference === value), disabled },
-      h('span', { class: 'engine-card__radio', 'aria-hidden': 'true' }),
-      h('span', { class: 'engine-card__text' }, h('span', { class: 'engine-card__title' }, title, h('span', { class: 'engine-card__badge' }, badge)), h('span', { class: 'engine-card__desc' }, desc)),
-    );
-    b.addEventListener('click', () => api.set('rendererPreference', value));
-    return b;
-  };
-  return [
-    group(
-      'Arka uç',
-      h(
-        'div',
-        { class: 'engine-cards', role: 'radiogroup', 'aria-label': 'Çizim arka ucu' },
-        card('webgl2', 'WebGL2', 'Tüm güncel tarayıcılarda çalışır. Varsayılan ve önerilen.', 'Varsayılan', false),
-        card(
-          'webgpu',
-          'WebGPU',
-          gpu ? 'Yeni nesil grafik arayüzü. Aynı çizimi üretir; büyük veride daha verimli olması hedeflenir.' : 'Bu tarayıcı WebGPU sunmuyor. Chrome ya da Edge’in güncel sürümünü kullanın.',
-          gpu ? 'Deneysel' : 'Desteklenmiyor',
-          !gpu,
-        ),
-      ),
-      note('info', `Şu an çalışan: ${ctx.view.backendLabel.value}. Seçim Kaydet ile hemen uygulanır; motor başlatılamazsa WebGL2’ye dönülür.`),
-    ),
-    group(
-      'Çizim kalitesi',
-      settingRow(
-        'Kalite',
-        'Yüksek: kenar yumuşatma (4× örnekleme) ve ekranın tam çözünürlüğü. Dengeli: tam çözünürlük, kenar yumuşatma yok; ince çizgiler biraz basamaklı, kare hızı yüksek. Hızlı: ikisi de yok; Retina ve 4K ekranda daha az piksel çizilir, çok büyük çizimlerde kaydırma en akıcısıdır.',
-        segmented({
-          label: 'Çizim kalitesi',
-          options: [
-            { value: 'high', label: 'Yüksek' },
-            { value: 'balanced', label: 'Dengeli' },
-            { value: 'fast', label: 'Hızlı' },
-          ],
-          value: d.renderQuality,
-          onChange: (v) => api.set('renderQuality', v),
-        }),
-      ),
-    ),
-    group(
-      'Semboller ve çizgiler',
-      settingRow(
-        'Semboller',
-        'Çizim ölçeğinde: basılı paftadaki boyları, harita ile büyür ve küçülür (yönetmelik ölçüleri böyle görünür). Ekranda sabit: her yakınlıkta aynı boy, gezinmek için.',
-        segmented({
-          label: 'Sembol boyutu',
-          options: [
-            { value: 'plot', label: 'Çizim ölçeğinde' },
-            { value: 'screen', label: 'Ekranda sabit' },
-          ],
-          value: d.symbolSize,
-          onChange: (v) => api.set('symbolSize', v),
-        }),
-      ),
-      settingRow(
-        'Çizgi kalınlığı',
-        'Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir (durum çubuğunda Kalınlık).',
-        toggleSwitch({ label: 'Çizgi kalınlığını göster', checked: d.lineWeights, onChange: (v) => api.set('lineWeights', v) }),
-      ),
-    ),
-  ];
+/** A number setting's bounds from the typed schema. */
+function range(key: string): { min: number; max: number } {
+  const d = settingDescriptor(key);
+  return { min: d?.min ?? 0, max: d?.max ?? 100 };
 }

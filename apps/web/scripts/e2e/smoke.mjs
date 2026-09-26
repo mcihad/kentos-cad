@@ -1873,23 +1873,95 @@ try {
     );
     await b.eval(`window.kentos.doc.settings.drawingFont.set('barlow')`);
 
-    // Çizim kalitesi: Hızlı makes the backend again without anti-aliasing (one canvas, same drawing); Yüksek brings it back.
-    const quality = () => b.eval(`({ aa: window.kentos.view.backend?.antialiased ?? null, canvases: document.querySelectorAll('canvas.viewport__gl').length, dpr: window.kentos.view.stats && document.querySelector('canvas.viewport__gl').width / document.querySelector('canvas.viewport__gl').clientWidth })`);
-    // On WebGL2 (the context's attributes say whether it anti-aliases).
+    // Kenar yumuşatma (TODOS.md AA-01/02, SET-03/05): the counts come from the context, a preset only fills
+    // values, a change applies live on the same canvas and backend, and a count the device lacks is kept as
+    // asked while the nearest one it has draws, with the reason in the window.
+    const gpu = () =>
+      b.eval(`({ kind: window.kentos.view.backendKind.value, samples: window.kentos.view.samples, counts: [...window.kentos.view.sampleCounts], same: document.querySelector('canvas.viewport__gl') === window.__smokeCanvas, canvases: document.querySelectorAll('canvas.viewport__gl').length, msaa: (({ requested, effective, reason }) => ({ requested, effective, reason }))(window.kentos.settingsStore.resolved('graphics.msaa')) })`);
+    const segment = (label, text) =>
+      b.eval(`(() => { const e = [...document.querySelectorAll('[aria-label="${label}"] .seg__opt')].find((x) => x.textContent === ${JSON.stringify(text)}); e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    for (const kind of ['webgl2', 'webgpu']) {
+      await b.eval(`window.kentos.commands.execute('view.renderer.${kind}')`);
+      await b.waitFor(`window.kentos.view.backendKind.value === '${kind}' && document.querySelectorAll('canvas.viewport__gl').length === 1`, 8000).catch(() => {});
+      await b.eval(`window.__smokeCanvas = document.querySelector('canvas.viewport__gl')`);
+      await b.eval(`window.kentos.commands.execute('tools.options', 'engine')`);
+      await b.waitFor(`!!document.querySelector('[aria-label="Grafik hazır ayarı"]')`, 3000).catch(() => {});
+      await b.click(...(await segment('Grafik hazır ayarı', 'Hızlı')));
+      await sleep(150);
+      await saveDialog();
+      await b.waitFor(`window.kentos.view.samples === 1`, 8000).catch(() => {});
+      const fast = await gpu();
+      // 8× asked for: WebGPU validates 1 and 4 only; SwiftShader's WebGL2 reports its own list.
+      await b.eval(`window.kentos.commands.execute('tools.options', 'engine')`);
+      await b.waitFor(`!!document.querySelector('[aria-label="Kenar yumuşatma (MSAA)"]')`, 3000).catch(() => {});
+      await b.click(...(await segment('Kenar yumuşatma (MSAA)', '8×')));
+      await b.eval(`document.querySelector('[aria-label="Tam çözünürlük (HiDPI)"]').click()`);
+      await sleep(200);
+      await b.eval(`document.querySelector('[aria-label="Kenar yumuşatma (MSAA)"]').scrollIntoView({ block: 'start' })`);
+      await b.shot(`settings-engine-${kind}-dark`);
+      const shown = await b.eval(`[...document.querySelectorAll('.settings__content .note')].map((n) => n.textContent).join(' | ')`);
+      await saveDialog();
+      await sleep(300);
+      const eight = await gpu();
+      const expected = Math.max(...eight.counts.filter((c) => c <= 8));
+      check(
+        `${kind}: kenar yumuşatma changes live on the same canvas; 8× asked for draws with the device's ${expected}× and the window says so`,
+        fast.samples === 1 &&
+          fast.same &&
+          fast.canvases === 1 &&
+          eight.same &&
+          eight.canvases === 1 &&
+          eight.samples === expected &&
+          eight.msaa.requested === 8 &&
+          eight.msaa.effective === expected &&
+          (expected === 8 ? !eight.msaa.reason : eight.msaa.reason === 'device_unsupported' && shown.includes('İstenen 8×')) &&
+          (kind !== 'webgpu' || JSON.stringify(eight.counts) === '[1,4]'),
+        JSON.stringify({ fast, eight, shown: shown.slice(0, 160) }),
+      );
+    }
+    // A count whose targets cannot be made (forced past the context's limit on WebGL2) falls back to the last
+    // working one and says so; the drawing keeps being drawn (TODOS.md AA-02).
     await b.eval(`window.kentos.commands.execute('view.renderer.webgl2')`);
-    await b.waitFor(`window.kentos.view.backendKind.value === 'webgl2' && document.querySelectorAll('canvas.viewport__gl').length === 1`, 8000).catch(() => {});
+    await b.waitFor(`window.kentos.view.backendKind.value === 'webgl2'`, 8000).catch(() => {});
+    await b.eval(`window.kentos.prefs.msaa.set(4)`);
+    await sleep(300);
+    const failed = await b.eval(`(async () => {
+      const k = window.kentos;
+      const backend = k.view.backend;
+      const before = backend.samples;
+      const counts = backend.sampleCounts;
+      backend.sampleCounts = [...counts, 64];
+      backend.setSamples(64);
+      k.view.requestRender();
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const warned = k.log.entries.value.some((e) => e.level === 'warn' && e.text.includes('64× bu aygıtta kurulamadı'));
+      const result = { before, after: backend.samples, warned, drawing: !!backend.draw, reason: k.settingsStore.resolved('graphics.msaa').reason ?? null };
+      // The forced count was the test's, not the device's.
+      backend.sampleCounts = counts;
+      k.log.clear();
+      return result;
+    })()`);
+    check('a sample count the device refuses falls back to the last working one and is reported', failed.after === failed.before && failed.warned && failed.drawing, JSON.stringify(failed));
     await b.eval(`window.kentos.commands.execute('tools.options', 'engine')`);
-    await b.waitFor(`!!document.querySelector('[aria-label="Çizim kalitesi"]')`, 3000).catch(() => {});
-    const fastBtn = await b.eval(`(() => { const e = [...document.querySelectorAll('[aria-label="Çizim kalitesi"] .seg__opt')].find((x) => x.textContent === 'Hızlı'); e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
-    await b.click(...fastBtn);
+    await b.waitFor(`!!document.querySelector('[aria-label="Grafik hazır ayarı"]')`, 3000).catch(() => {});
+    await b.click(...(await segment('Grafik hazır ayarı', 'Kaliteli')));
     await sleep(150);
     await saveDialog();
-    await b.waitFor(`window.kentos.view.backend?.antialiased === false`, 8000).catch(() => {});
-    const fast = await quality();
-    await b.eval(`window.kentos.prefs.renderQuality.set('high')`);
-    await b.waitFor(`window.kentos.view.backend?.antialiased === true`, 8000).catch(() => {});
-    const high = await quality();
-    check('Çizim kalitesi: Hızlı draws without anti-aliasing on one canvas, Yüksek with it again', fast.aa === false && fast.canvases === 1 && high.aa === true && high.canvases === 1, JSON.stringify({ fast, high }));
+    await b.waitFor(`window.kentos.view.samples === 4`, 8000).catch(() => {});
+    check('the Kaliteli preset brings 4× back', (await b.eval('window.kentos.view.samples')) === 4, String(await b.eval('window.kentos.view.samples')));
+    // The window in both themes (engine and settings file sections), for the design review.
+    for (const theme of ['light', 'dark']) {
+      await b.eval(`window.kentos.commands.execute('view.theme.${theme}')`);
+      for (const section of ['engine', 'file']) {
+        await b.eval(`window.kentos.commands.execute('tools.options', '${section}')`);
+        await b.waitFor(`!!document.querySelector('.dialog--settings')`, 3000).catch(() => {});
+        await b.eval(`document.querySelector('[aria-label="Grafik hazır ayarı"]')?.scrollIntoView({ block: 'start' })`);
+        await sleep(200);
+        await b.shot(`settings-${section}-${theme}`);
+        await b.key('Escape');
+        await sleep(150);
+      }
+    }
 
     // Tam ekran from the menu bar's button, and back.
     await press('.menubar__icon[data-command="view.fullscreen"]');
@@ -1919,14 +1991,14 @@ try {
     const save = await b.eval(`(() => { const e = [...document.querySelectorAll('.dialog__foot .btn')].find((x) => x.textContent === 'Kaydet'); const r = e.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
     await b.click(...save);
     await b.waitFor(`document.fonts.check('13px "Inter"')`, 5000).catch(() => {});
-    // Preferences are written a moment after they change.
-    await b.waitFor(`JSON.parse(localStorage.getItem('kentos.prefs.v1') ?? '{}').uiFont === 'inter'`, 3000).catch(() => {});
+    // Preferences are written to the typed settings a moment after they change (docs/adr/0023).
+    await b.waitFor(`JSON.parse(localStorage.getItem('kentos.settings.v1') ?? '{}').user?.['appearance.uiFont'] === 'inter'`, 3000).catch(() => {});
     const after = await b.eval(`({
       accent: document.documentElement.dataset.accent,
       fill: getComputedStyle(document.documentElement).getPropertyValue('--c-accent').trim(),
       font: getComputedStyle(document.body).fontFamily.split(',')[0].replaceAll('"', ''),
       inter: document.fonts.check('13px "Inter"'),
-      stored: JSON.parse(localStorage.getItem('kentos.prefs.v1')),
+      stored: Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem('kentos.settings.v1')).user).map(([k, v]) => [k.split('.')[1], v])),
       foreign: performance.getEntriesByType('resource').map((r) => r.name).filter((n) => !n.startsWith(location.origin) && !n.startsWith('data:') && !n.startsWith('blob:')),
     })`);
     check(

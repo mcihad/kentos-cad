@@ -45,6 +45,7 @@ export class SettingsShell<D extends object> implements DraftApi<D> {
   private readonly navList = h('div', { class: 'settings__navlist' });
   private readonly content = h('div', { class: 'settings__content' });
   private readonly saveBtn: HTMLButtonElement;
+  private readonly resetBtn: HTMLButtonElement;
   private readonly dialog: Dialog;
 
   constructor(opts: SettingsShellOptions<D>) {
@@ -64,6 +65,7 @@ export class SettingsShell<D extends object> implements DraftApi<D> {
     );
 
     const reset = h('button', { class: 'btn btn--ghost', type: 'button' }, 'Bu bölümü varsayılana döndür');
+    this.resetBtn = reset;
     const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
     this.saveBtn = h('button', { class: 'btn btn--primary', type: 'button', disabled: true }, 'Kaydet');
     reset.addEventListener('click', () => this.resetSection());
@@ -119,6 +121,9 @@ export class SettingsShell<D extends object> implements DraftApi<D> {
 
   private renderContent(): void {
     const sec = this.section;
+    // A section without values of its own (Ayar dosyası) has nothing to reset.
+    this.resetBtn.disabled = sec.keys.length === 0;
+    this.resetBtn.title = sec.keys.length === 0 ? 'Bu bölümde varsayılana dönecek ayar yok.' : '';
     const scrollTop = this.content.scrollTop;
     // Keep keyboard focus across re-renders: remember the nearest labelled control.
     const active = document.activeElement as HTMLElement | null;

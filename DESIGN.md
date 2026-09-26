@@ -112,7 +112,13 @@ Serin, kâğıt paftayı andıran griler. Krem ya da sıcak kâğıt tonu kullan
 
 ### 3.6 Çizim kalitesi
 
-**Uygulama ayarları → Çizim motoru → Çizim kalitesi** (`prefs.renderQuality`, `render/quality.ts`): **Yüksek** (varsayılan; 4× kenar yumuşatma ve ekranın tam çözünürlüğü), **Dengeli** (tam çözünürlük, kenar yumuşatma yok), **Hızlı** (ikisi de yok; Retina ve 4K ekranda dörtte bir piksel). Kalın ve kesikli çizgilerin kenarı gölgelendiricide yumuşatıldığı için her kademede düzgündür; fark ince çizgilerde görünür. Kenar yumuşatma değişince çizim motoru sayfa yenilenmeden yeniden kurulur.
+**Uygulama ayarları → Çizim motoru** (tipli ayarlar `graphics.msaa`, `graphics.hiDpi`; bu cihaza özgü, [ADR 0023](docs/adr/0023-typed-settings.md)):
+
+- **Hazır ayar:** **Hızlı** (kenar yumuşatma yok, mantıksal piksel başına bir piksel; Retina ve 4K ekranda dörtte bir piksel), **Dengeli** (tam çözünürlük, kenar yumuşatma yok), **Kaliteli** (varsayılan; 4× kenar yumuşatma ve tam çözünürlük). Hazır ayar yalnız iki değeri doldurur; değerler hiçbirine uymuyorsa seçili dilim **Özel**'dir (seçilemez).
+- **Kenar yumuşatma (MSAA):** Kapalı, 2×, 4×, 8×, 16×. Aygıtın desteklemediği sayı istenebilir; desteklenen en yakın alt sayı kullanılır ve altındaki not “İstenen 8×, kullanılan 4×.” diye nedeniyle söyler (uyarı notu). Eşitse bilgi notu kullanılanı ve aygıtın sayılarını söyler.
+- **Tam çözünürlük (HiDPI)** anahtarı ve çizim hedeflerinin yaklaşık ekran belleği.
+- Değişiklik Kaydet ile hemen uygulanır: aynı tuval ve bağlamda yalnız çizim hedefleri yeniden kurulur. Kalın ve kesikli çizgilerin kenarı gölgelendiricide yumuşatıldığı için her kademede düzgündür; fark ince çizgilerde ve dolgu kenarlarında görünür.
+- Masaüstünde aynı iki değer, Uygulama ayarları penceresinin Grafik grubundadır.
 
 ---
 
@@ -401,7 +407,7 @@ Uygulama bir şeyi yapmadan önce sorduğunda **tek yol budur** (`ui/widgets/con
 |---|---|---|
 | Açılış | Dosya → Proje ayarları…, CRS düğmeleri | Araçlar → Uygulama ayarları…, `Ctrl+,` |
 | Sol alttaki kapsam notu | kaydet simgesi + "Proje dosyasına kaydedilir" + dosya adı | ayar simgesi + "Bu tarayıcıda saklanır / Tüm projeler için geçerlidir" |
-| Bölümler | Genel, Koordinat sistemi, Birimler ve hassasiyet | Görünüm, Kenetleme, Yeni projeler, Çizim motoru |
+| Bölümler | Genel, Koordinat sistemi, Birimler ve hassasiyet | Görünüm, Kenetleme, Yeni projeler, Çizim motoru, Ayar dosyası (dışa/içe aktar, varsayılanlara döndür, kaydın yeri) |
 
 - **Yerleşim:** 940 px genişlik ve sabit yükseklik; bölüm değişince pencere zıplamaz. Solda bölüm menüsü (etkin bölümde 3 px amber çubuk ve amber simge), sağda başlık (19 px), bir satırlık açıklama ve gruplar.
 - **Satır (`settingRow`):** solda etiket (14 px, 500) ve açıklama (üçüncül renk, en fazla 52 karakter satır), sağda kontrol.

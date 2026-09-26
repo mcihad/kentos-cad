@@ -23,8 +23,8 @@ Bir komut, araç, işlem aracı, ayar, depo, pencere ya da `.kcad` alanı ekleni
 | `tools` | Araç kataloğu (`tools/catalog.ts`, `ToolManager.list()`) |
 | `processing`, `models` | İşlem kaydı ve model kitaplığı. Taze tarayıcı profilinde yalnız hazır modeller bulunur |
 | `workspaces` | `app/workspaces.ts` |
-| `settings` | Kullanıcı tercihleri (`kentos.prefs.v1`), yerleşim (`kentos.ui.v1`), proje ayarları (`PROJECT_SETTINGS_DEFAULTS`, `.kcad`'e yazılır) ve oturum yardımcıları (kalıcı değil). `default` taze profilin değeridir |
-| `storage` | Kaynak taraması: `persistedSignals('…')` localStorage anahtarları; `indexedDB.open` yanındaki `const DB`/`STORE` |
+| `settings` | Tercihler: tipli ayarlar ([ADR 0023](../adr/0023-typed-settings.md); `localStorage kentos.settings.v1`, kapsamı `user` ya da `device`, `default`'u şemadan). Yerleşim (`kentos.ui.v1`), proje ayarları (`PROJECT_SETTINGS_DEFAULTS`, `.kcad`'e yazılır) ve oturum yardımcıları (kalıcı değil). `setting`, tipli ayarın anahtarıdır. Yerleşimde ve oturumda `default` taze profilin değeridir |
+| `storage` | Kaynak taraması: `persistedSignals('…')` localStorage anahtarları; tipli ayarların `SETTINGS_STORAGE`, `SETTINGS_BACKUP` ve eski `LEGACY_PREFS` sabitleri; `indexedDB.open` yanındaki `const DB`/`STORE` |
 | `fileFields` | `.kcad` v1: `DocumentSnapshotV1`'den erişilen bütün sözleşmeler. Rust'tan üretilen TS tiplerinden okunur, tanımlandıkları Rust dosyasıyla birlikte |
 | `screens` | Kaynak taraması (`src/ui`): `export function open…` pencereleri, `Component`/`Panel`'den türeyen paneller |
 
@@ -38,7 +38,7 @@ Komut kayıtlarının yanında menü ve şerit yerleri de hesaplanır: menü yol
   - `partial` yalnız `annotations.json`'dan gelir ve nedenini `note` alanında taşır.
 - **`platforms`:** `{ web, desktop }`.
   - `web` `status`'la aynıdır.
-  - `desktop`: masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`, masaüstü testi onu `catalog::PORTED` ile eşit tutar) `implemented`'dır, öbürleri `none`. Bir özellik masaüstünde anlamsızsa notla `n/a` yazılır.
+  - `desktop`: masaüstü kabuğunun çalıştırdığı komutlar (`apps/desktop/ported.json`, masaüstü testi onu `catalog::PORTED` ile eşit tutar) `implemented`'dır, öbürleri `none`. Ayarlarda tipli ayarın `hosts`'unda masaüstü varsa `implemented`'dır (`settingsSchema.json`). Bir özellik masaüstünde anlamsızsa notla `n/a` yazılır.
 - **`tests`:** kimliğin geçtiği test dosyaları, e2e betikleri ve etkileşim izleri (`fixtures/interaction`, [ADR 0018](../adr/0018-tool-session-and-input.md)).
   - Komutta kimlik tırnak içinde aranır. Araçta `tool.<id>` ya da `activate('<id>')`, işlem araçlarında kimlik ya da komut kimliği aranır.
   - Kimliğin geçmesi davranışın sınandığını göstermez. Boş liste de sınanmadığı anlamına gelmez: test komutu başka bir yoldan çalıştırıyor olabilir.

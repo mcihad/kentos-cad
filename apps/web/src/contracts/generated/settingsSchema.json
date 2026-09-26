@@ -1,0 +1,1062 @@
+{
+  "format": "kentos.settings-schema",
+  "version": 1,
+  "groups": [
+    {
+      "id": "drafting",
+      "title": "Çizim yardımcıları",
+      "description": "Yeni noktanın nereye düşeceği ve yazılan değerin nerede açılacağı."
+    },
+    {
+      "id": "snap",
+      "title": "Kenetleme",
+      "description": "İmlecin hangi noktalara yapışacağı."
+    },
+    {
+      "id": "appearance",
+      "title": "Görünüm",
+      "description": "Tema, vurgu rengi, yazı tipi, arayüz düzeni ve yazı boyutu."
+    },
+    {
+      "id": "newProjects",
+      "title": "Yeni projeler",
+      "description": "Yeni projelerde önerilen başlangıç değerleri; açık projeyi değiştirmez."
+    },
+    {
+      "id": "graphics",
+      "title": "Çizim motoru",
+      "description": "Çizim alanını ekran kartında çizen arka uç, kenar yumuşatma ve çözünürlük."
+    },
+    {
+      "id": "project",
+      "title": "Proje",
+      "description": "Projeyle kaydedilen ayarlar (.kcad, bulut revizyonu); tercihler onları değiştirmez."
+    }
+  ],
+  "settings": [
+    {
+      "key": "drafting.ortho",
+      "type": "boolean",
+      "default": false,
+      "scope": "session",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Orto",
+      "description": "Yeni nokta son noktanın tam yatayına ya da dikeyine düşer. Shift basılıyken tersine döner (F8).",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.polar",
+      "type": "boolean",
+      "default": false,
+      "scope": "session",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Kutupsal izleme",
+      "description": "Son noktadan açı adımlarında kılavuz çıkar; imleç yaklaşınca yapışır (F10). Orto açıksa önceliklidir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.polarIncrement",
+      "type": "number",
+      "default": 45,
+      "choices": [
+        {
+          "value": 15,
+          "label": "15°"
+        },
+        {
+          "value": 30,
+          "label": "30°"
+        },
+        {
+          "value": 45,
+          "label": "45°"
+        },
+        {
+          "value": 90,
+          "label": "90°"
+        }
+      ],
+      "unit": "deg",
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Kutupsal izleme açı adımı",
+      "description": "Kutupsal izleme açıkken imleç bu açının katlarına kilitlenir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.snapAperture",
+      "type": "integer",
+      "default": 11,
+      "min": 4.0,
+      "max": 30.0,
+      "unit": "px",
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Kenet yarıçapı",
+      "description": "İmlecin bir noktaya yapışması için gereken yakınlık; kapalı alanın ilk köşesine tıklayıp kapatmak da bu yakınlıktadır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.pickAperture",
+      "type": "integer",
+      "default": 5,
+      "min": 2.0,
+      "max": 15.0,
+      "unit": "px",
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Seçim yarıçapı",
+      "description": "Tıklamanın bir çizgiyi yakalaması için gereken yakınlık.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.cursorInput",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "İmleç yanında değer girişi",
+      "description": "Komut sırasında yazılan mesafe ve koordinatlar imlecin yanında açılır; kapalıyken komut satırına gider.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.hoverInfo",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Nesne bilgi kartı",
+      "description": "Seçim aracında bir nesnenin üzerinde durunca türü, katmanı, uzunluğu ya da alanı gösterilir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.snap",
+      "type": "boolean",
+      "default": true,
+      "scope": "session",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Kenetleme",
+      "description": "Seçili kenet türlerinin tümünü birlikte açıp kapatır (F3).",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.grid",
+      "type": "boolean",
+      "default": true,
+      "scope": "session",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Izgara",
+      "description": "Çizim alanında ızgarayı gösterir (F7).",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "drafting.tracking",
+      "type": "boolean",
+      "default": true,
+      "scope": "session",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "drafting",
+      "title": "Nesne izleme",
+      "description": "Bir kenet noktasının üzerinde kısa süre beklenince o noktadan yatay ve dikey kılavuzlar çıkar (Shift+F3).",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "snap.endpoint",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "snap",
+      "title": "Uç nokta",
+      "description": "Çizgi, parsel ve bina köşeleri; dairelerin çeyrek noktaları.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "snap.midpoint",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "snap",
+      "title": "Orta nokta",
+      "description": "Kenarların ve yayların tam ortası.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "snap.center",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "snap",
+      "title": "Merkez",
+      "description": "Daire ve yay merkezleri.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "snap.node",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "snap",
+      "title": "Nokta",
+      "description": "Poligon, kot ve tekil noktalar.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "snap.intersection",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "snap",
+      "title": "Kesişim",
+      "description": "İki kenarın kesiştiği nokta.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "snap.perpendicular",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "snap",
+      "title": "Dik",
+      "description": "Son noktadan kenara inen dikmenin ayağı.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "snap.tangent",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "snap",
+      "title": "Teğet",
+      "description": "Son noktadan daire ya da yaya çizilen teğetin değme noktası.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "snap.nearest",
+      "type": "boolean",
+      "default": false,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "snap",
+      "title": "En yakın",
+      "description": "Kenar üzerindeki en yakın nokta; başka kenet yoksa devreye girer.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.theme",
+      "type": "enum",
+      "default": "dark",
+      "choices": [
+        {
+          "value": "dark",
+          "label": "Koyu grafit"
+        },
+        {
+          "value": "light",
+          "label": "Açık pafta"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Tema",
+      "description": "Arayüzün ve çizim alanının renkleri: koyu grafit ya da açık pafta.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.accent",
+      "type": "enum",
+      "default": "navy",
+      "choices": [
+        {
+          "value": "navy",
+          "label": "Lacivert"
+        },
+        {
+          "value": "amber",
+          "label": "Amber"
+        },
+        {
+          "value": "teal",
+          "label": "Petrol yeşili"
+        },
+        {
+          "value": "bordeaux",
+          "label": "Bordo"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Vurgu rengi",
+      "description": "Çalışan araç, seçim, odak ve seçili öğeler bu renkle gösterilir; çizimdeki seçim rengi de ona uyar.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.uiFont",
+      "type": "enum",
+      "default": "jakarta",
+      "choices": [
+        {
+          "value": "jakarta",
+          "label": "Plus Jakarta Sans"
+        },
+        {
+          "value": "inter",
+          "label": "Inter"
+        },
+        {
+          "value": "plex",
+          "label": "IBM Plex Sans"
+        },
+        {
+          "value": "source",
+          "label": "Source Sans 3"
+        },
+        {
+          "value": "noto",
+          "label": "Noto Sans"
+        },
+        {
+          "value": "roboto",
+          "label": "Roboto"
+        },
+        {
+          "value": "system",
+          "label": "Sistem yazı tipi"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Yazı tipi",
+      "description": "Menüler, paneller, pencereler ve çizim alanındaki işaret yazıları; çizimdeki yazı nesneleri etkilenmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.shell",
+      "type": "enum",
+      "default": "classic",
+      "choices": [
+        {
+          "value": "classic",
+          "label": "Klasik"
+        },
+        {
+          "value": "ribbon",
+          "label": "Şerit"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Arayüz düzeni",
+      "description": "Menüler, araç çubuğu ve kayan araç kutusu ya da sekmeli şerit; ikisi aynı araç ve komutları sunar.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.uiScale",
+      "type": "enum",
+      "default": "standard",
+      "choices": [
+        {
+          "value": "small",
+          "label": "Küçük"
+        },
+        {
+          "value": "standard",
+          "label": "Standart"
+        },
+        {
+          "value": "large",
+          "label": "Büyük"
+        },
+        {
+          "value": "xlarge",
+          "label": "Çok büyük"
+        },
+        {
+          "value": "xxlarge",
+          "label": "En büyük"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Yazı boyutu",
+      "description": "Menüler, paneller ve komut satırı. Çizim etiketleri etkilenmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.crosshair",
+      "type": "enum",
+      "default": "medium",
+      "choices": [
+        {
+          "value": "small",
+          "label": "Küçük"
+        },
+        {
+          "value": "medium",
+          "label": "Orta"
+        },
+        {
+          "value": "full",
+          "label": "Tam ekran"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Artı imleç",
+      "description": "Çizim alanındaki imlecin kol uzunluğu.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.startScreen",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Başlangıç ekranı",
+      "description": "Uygulama açılınca yeni proje, dosya aç, bulut ve son dosyalar gösterilir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "newProjects.srid",
+      "type": "integer",
+      "default": 5256,
+      "min": 1.0,
+      "max": 999999.0,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "newProjects",
+      "title": "Koordinat sistemi (EPSG)",
+      "description": "Yeni projelerde önerilen koordinat sistemi; açık projenin sistemi değişmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "newProjects.workspace",
+      "type": "enum",
+      "default": "hybrid",
+      "choices": [
+        {
+          "value": "hybrid",
+          "label": "Hibrit"
+        },
+        {
+          "value": "cad",
+          "label": "CAD"
+        },
+        {
+          "value": "gis",
+          "label": "CBS"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "newProjects",
+      "title": "Çalışma modu",
+      "description": "Yeni projelerde önce önerilen çalışma modu; proje kendi modunu saklar.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "newProjects.drawingFont",
+      "type": "enum",
+      "default": "barlow",
+      "choices": [
+        {
+          "value": "barlow",
+          "label": "Barlow"
+        },
+        {
+          "value": "arimo",
+          "label": "Arimo"
+        },
+        {
+          "value": "overpass",
+          "label": "Overpass"
+        },
+        {
+          "value": "quicksand",
+          "label": "Quicksand"
+        },
+        {
+          "value": "architects-daughter",
+          "label": "Architects Daughter"
+        },
+        {
+          "value": "courier-prime",
+          "label": "Courier Prime"
+        },
+        {
+          "value": "plex-mono",
+          "label": "IBM Plex Mono"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "newProjects",
+      "title": "Çizim yazı tipi",
+      "description": "Yeni projelerin çizim yazı tipi; proje kendi yazı tipini saklar.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.backend",
+      "type": "enum",
+      "default": "webgl2",
+      "choices": [
+        {
+          "value": "webgl2",
+          "label": "WebGL2"
+        },
+        {
+          "value": "webgpu",
+          "label": "WebGPU"
+        }
+      ],
+      "scope": "device",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Çizim arka ucu",
+      "description": "WebGL2 tüm güncel tarayıcılarda çalışır; WebGPU yeni nesil arayüzdür. Başlatılamazsa WebGL2'ye dönülür.",
+      "sensitive": false,
+      "apply": "recreate"
+    },
+    {
+      "key": "graphics.msaa",
+      "type": "integer",
+      "default": 4,
+      "choices": [
+        {
+          "value": 1,
+          "label": "Kapalı"
+        },
+        {
+          "value": 2,
+          "label": "2×"
+        },
+        {
+          "value": 4,
+          "label": "4×"
+        },
+        {
+          "value": 8,
+          "label": "8×"
+        },
+        {
+          "value": 16,
+          "label": "16×"
+        }
+      ],
+      "unit": "sample",
+      "scope": "device",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Kenar yumuşatma (MSAA)",
+      "description": "Pikseldeki örnek sayısı. Aygıtın desteklemediği bir değer istenirse desteklediği en yakın alt değer kullanılır ve nedeni gösterilir.",
+      "sensitive": false,
+      "apply": "recreate"
+    },
+    {
+      "key": "graphics.hiDpi",
+      "type": "boolean",
+      "default": true,
+      "scope": "device",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Tam çözünürlük (HiDPI)",
+      "description": "Retina ve 4K ekranda çizim ekranın tam çözünürlüğünde çizilir. Kapalıyken mantıksal piksel başına bir piksel çizilir: 2× ekranda dörtte bir piksel, daha akıcı kaydırma.",
+      "sensitive": false,
+      "apply": "recreate"
+    },
+    {
+      "key": "graphics.symbolSize",
+      "type": "enum",
+      "default": "plot",
+      "choices": [
+        {
+          "value": "plot",
+          "label": "Çizim ölçeğinde"
+        },
+        {
+          "value": "screen",
+          "label": "Ekranda sabit"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Semboller",
+      "description": "Çizim ölçeğinde: basılı paftadaki boyları, harita ile büyür ve küçülür. Ekranda sabit: her yakınlıkta aynı boy.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "graphics.lineWeights",
+      "type": "boolean",
+      "default": true,
+      "scope": "user",
+      "hosts": [
+        "web"
+      ],
+      "version": 1,
+      "group": "graphics",
+      "title": "Çizgi kalınlığı",
+      "description": "Katman çizgileri kalınlıklarıyla çizilir. Kapalıyken hepsi ince çizilir.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "project.srid",
+      "type": "integer",
+      "default": 5256,
+      "min": 1.0,
+      "max": 999999.0,
+      "scope": "project",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "project",
+      "title": "Koordinat sistemi (EPSG)",
+      "description": "Projenin koordinat sistemi. Atamak koordinatları dönüştürmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "project.lengthDecimals",
+      "type": "integer",
+      "default": 3,
+      "min": 0.0,
+      "max": 4.0,
+      "scope": "project",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "project",
+      "title": "Uzunluk basamağı",
+      "description": "Koordinatlar, kenar uzunlukları ve mesafeler kaç ondalıkla gösterilir; kaynak koordinat değişmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "project.areaDecimals",
+      "type": "integer",
+      "default": 2,
+      "min": 0.0,
+      "max": 4.0,
+      "scope": "project",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "project",
+      "title": "Alan basamağı",
+      "description": "Alanlar kaç ondalıkla gösterilir; kaynak geometri değişmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "project.areaUnit",
+      "type": "enum",
+      "default": "m2",
+      "choices": [
+        {
+          "value": "m2",
+          "label": "m²"
+        },
+        {
+          "value": "donum",
+          "label": "dönüm (1000 m²)"
+        },
+        {
+          "value": "ha",
+          "label": "hektar (10 000 m²)"
+        }
+      ],
+      "scope": "project",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "project",
+      "title": "Alan birimi",
+      "description": "Alanların gösterildiği birim.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "project.angleUnit",
+      "type": "enum",
+      "default": "grad",
+      "choices": [
+        {
+          "value": "grad",
+          "label": "Grad"
+        },
+        {
+          "value": "deg",
+          "label": "Derece"
+        }
+      ],
+      "scope": "project",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "project",
+      "title": "Açı birimi",
+      "description": "Semt ve açıların gösterildiği birim.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "project.plotScale",
+      "type": "number",
+      "default": 1000,
+      "min": 1.0,
+      "max": 1000000.0,
+      "scope": "project",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "project",
+      "title": "Pafta ölçeği",
+      "description": "Çizim ölçeğindeki sembollerin ve yazıların basılı boyunu belirler (1:1000 → 1000).",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "project.workspace",
+      "type": "enum",
+      "default": "hybrid",
+      "choices": [
+        {
+          "value": "hybrid",
+          "label": "Hibrit"
+        },
+        {
+          "value": "cad",
+          "label": "CAD"
+        },
+        {
+          "value": "gis",
+          "label": "CBS"
+        },
+        {
+          "value": "plan3d",
+          "label": "3D Plan"
+        },
+        {
+          "value": "disaster",
+          "label": "Afet analizi"
+        }
+      ],
+      "scope": "project",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "project",
+      "title": "Çalışma modu",
+      "description": "Projenin açıldığı çalışma modu; yalnız sunuşu değiştirir, veriyi değil.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "project.drawingFont",
+      "type": "enum",
+      "default": "barlow",
+      "choices": [
+        {
+          "value": "barlow",
+          "label": "Barlow"
+        },
+        {
+          "value": "arimo",
+          "label": "Arimo"
+        },
+        {
+          "value": "overpass",
+          "label": "Overpass"
+        },
+        {
+          "value": "quicksand",
+          "label": "Quicksand"
+        },
+        {
+          "value": "architects-daughter",
+          "label": "Architects Daughter"
+        },
+        {
+          "value": "courier-prime",
+          "label": "Courier Prime"
+        },
+        {
+          "value": "plex-mono",
+          "label": "IBM Plex Mono"
+        }
+      ],
+      "scope": "project",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "version": 1,
+      "group": "project",
+      "title": "Çizim yazı tipi",
+      "description": "Çizimin kendi yazıları: yazı nesneleri, ölçü değerleri, etiketler. Projeyi açan herkes aynı harfleri görür.",
+      "sensitive": false,
+      "apply": "live"
+    }
+  ],
+  "presets": [
+    {
+      "id": "fast",
+      "group": "graphics",
+      "title": "Hızlı",
+      "description": "Kenar yumuşatma yok, mantıksal piksel başına bir piksel: çok büyük çizimlerde en akıcı kaydırma.",
+      "values": {
+        "graphics.hiDpi": false,
+        "graphics.msaa": 1
+      }
+    },
+    {
+      "id": "balanced",
+      "group": "graphics",
+      "title": "Dengeli",
+      "description": "Ekranın tam çözünürlüğü, kenar yumuşatma yok; ince çizgiler biraz basamaklı.",
+      "values": {
+        "graphics.hiDpi": true,
+        "graphics.msaa": 1
+      }
+    },
+    {
+      "id": "quality",
+      "group": "graphics",
+      "title": "Kaliteli",
+      "description": "4× kenar yumuşatma ve ekranın tam çözünürlüğü.",
+      "values": {
+        "graphics.hiDpi": true,
+        "graphics.msaa": 4
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": "unknown_key",
+      "message": "Bu sürümde böyle bir ayar yok; değer saklanır ama kullanılmaz."
+    },
+    {
+      "code": "wrong_type",
+      "message": "Değerin türü yanlış; ayarın türünde bir değer girin."
+    },
+    {
+      "code": "not_integer",
+      "message": "Tam sayı olmalı; ondalık kısmı kaldırın."
+    },
+    {
+      "code": "out_of_range",
+      "message": "Değer izin verilen aralığın dışında; aralıktaki bir değer seçin."
+    },
+    {
+      "code": "not_allowed",
+      "message": "Bu değer seçeneklerden biri değil; listeden seçin."
+    },
+    {
+      "code": "wrong_scope",
+      "message": "Bu ayar bu katmanda saklanmaz (örneğin proje ayarı kullanıcı tercihinde)."
+    },
+    {
+      "code": "sensitive",
+      "message": "Gizli değerler ayar dosyasına yazılmaz ve dosyadan okunmaz; yeniden girin."
+    },
+    {
+      "code": "not_json",
+      "message": "Dosya JSON değil; KentOS'tan dışa aktarılmış bir ayar dosyası seçin."
+    },
+    {
+      "code": "not_settings",
+      "message": "Bu bir KentOS ayar dosyası değil (format ≠ kentos.settings); doğru dosyayı seçin."
+    },
+    {
+      "code": "unsupported_version",
+      "message": "Ayar dosyası bu uygulamanın okuyamadığı bir sürümde; uygulamayı güncelleyin."
+    }
+  ],
+  "reasons": [
+    {
+      "reason": "organization_locked",
+      "message": "Kurum politikası bu ayarı sabitliyor."
+    },
+    {
+      "reason": "organization_limit",
+      "message": "Kurum politikası bu değere izin vermiyor."
+    },
+    {
+      "reason": "device_unsupported",
+      "message": "Bu aygıt istenen değeri desteklemiyor."
+    },
+    {
+      "reason": "device_failed",
+      "message": "İstenen değer bu aygıtta uygulanamadı; son çalışan değer kullanılıyor."
+    }
+  ]
+}

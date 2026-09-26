@@ -76,6 +76,10 @@ if (unknownPorted.length) {
   console.error(`apps/desktop/ported.json web'de olmayan komutlar içeriyor: ${unknownPorted.join(', ')}`);
   process.exit(1);
 }
+// Typed settings the desktop uses too: the schema's hosts (docs/adr/0023).
+const settingsSchema = JSON.parse(readFileSync(join(WEB, 'src/contracts/generated/settingsSchema.json'), 'utf8'));
+const settingHosts = new Map(settingsSchema.settings.map((d) => [d.key, d.hosts]));
+for (const s of sections.settings) if (s.setting && settingHosts.get(s.setting)?.includes('desktop')) s.platforms.desktop = 'implemented';
 
 // ── Hand-written notes ───────────────────────────────────────────────
 /** Section of an annotation key `section:id` → the inventory section. */

@@ -1,6 +1,6 @@
 //! What the last frame of a view cost (TODOS.md REN-01): the host shows it,
 //! and measurements read it. Counts are of what was drawn, bytes of GPU
-//! buffers.
+//! buffers and textures.
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct FrameStats {
@@ -19,4 +19,9 @@ pub struct FrameStats {
     pub resident_bytes: u64,
     /// Frames the view has been prepared for since it appeared.
     pub frames: u64,
+    /// Samples per pixel the frame is drawn with (TODOS.md AA-01).
+    pub samples: u32,
+    /// Bytes of the view's own targets (multisampled colour and picture); 0
+    /// when it draws straight into the host's pass.
+    pub target_bytes: u64,
 }

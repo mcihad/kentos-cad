@@ -43,6 +43,11 @@ pub const PORTED: &[&str] = &[
     "view.zoomIn",
     "view.zoomOut",
     "view.zoomExtents",
+    // Typed settings (docs/adr/0023): the settings window, and the drafting
+    // aids of the session the tool session reads.
+    "tools.options",
+    "draft.ortho",
+    "draft.polar",
 ];
 
 /// Where a command stands, from the desktop's point of view.

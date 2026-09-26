@@ -1,5 +1,4 @@
 import type { AppContext } from '../app/context';
-import { RENDER_QUALITY } from '../render/quality';
 import { DisposableStore, listen } from '../core/disposable';
 import { Emitter } from '../core/emitter';
 import { Signal } from '../core/signal';
@@ -16,6 +15,7 @@ import { Atlas } from '../render/atlas';
 import { buildSceneLayer } from '../render/sceneBuilder';
 import { buildStyledLayer } from '../render/styledLayer';
 import type { BackendKind, RenderBackend } from '../render/types';
+import { webgpuSupported } from '../render/webgpu/support';
 import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
 import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, midGripVisible } from './overlay';
@@ -116,8 +116,6 @@ export class ViewportController {
   private allDirty = true;
   /** The scale symbols were last compiled at, and the wait before recompiling after a zoom (screen-sized symbols). */
   private builtSymbolScale = 0;
-  /** Whether the current backend was made with anti-aliasing. */
-  private antialias = true;
   private symbolTimer = 0;
   private highlightDirty = true;
   /** What the backend's grid was built for (null: it has none); rebuilt only when the view outgrows it. */
@@ -152,17 +150,19 @@ export class ViewportController {
     host.append(this.overlay);
     this.g = this.overlay.getContext('2d')!;
 
-    // ?renderer=webgpu overrides the saved preference (handy for testing).
-    const param = new URLSearchParams(location.search).get('renderer');
-    const preferred: BackendKind[] = [param === 'webgpu' || param === 'webgl2' ? param : this.ctx.prefs.rendererPreference.value];
+    // A browser without WebGPU cannot use it: the preference stays, the settings say why WebGL2 draws.
+    if (!webgpuSupported())
+      this.ctx.settingsStore.setConstraint('graphics.backend', { allowed: ['webgl2'], reason: 'device_unsupported', detail: 'Bu tarayıcı WebGPU sunmuyor; Chrome ya da Edge’in güncel sürümünü kullanın.' });
+    // The effective engine: the device's preference, or `?renderer=` for this session (app/settings/browser.ts).
+    const preferred: BackendKind[] = [this.ctx.prefs.rendererPreference.value];
     try {
-      const { backend, canvas, errors } = await createBackend(host, preferred, { antialias: this.quality().antialias });
-      this.antialias = this.quality().antialias;
+      const { backend, canvas, errors } = await createBackend(host, preferred, { samples: this.ctx.prefs.msaa.value });
       this.backend = backend;
       this.glCanvas = canvas;
       backend.useAtlas(this.atlas);
       this.backendKind.set(backend.kind);
       this.backendLabel.set(backend.label);
+      this.adopt(backend, preferred[0], errors);
       errors.forEach((e) => this.ctx.log.warn(`Çizim arka ucu atlandı: ${e}`));
       this.ctx.log.info(`Çizim motoru hazır: ${backend.label}`);
     } catch (err) {
@@ -178,6 +178,10 @@ export class ViewportController {
     this.d.add(() => ro.disconnect());
     // The engine preference applies live (settings dialog, status bar, menu).
     this.d.add(this.ctx.prefs.rendererPreference.subscribe((k) => void this.switchBackend(k)));
+    // Anti-aliasing applies live: new targets on the same canvas and context (TODOS.md AA-02).
+    this.d.add(this.ctx.prefs.msaa.subscribe(() => this.applySamples()));
+    // The pixel ratio applies at once: a resize of the same canvas.
+    this.d.add(this.ctx.prefs.hiDpi.subscribe(() => this.resize()));
     this.resize();
     const home = this.ctx.doc.homeView;
     if (home) this.camera.fit(home);
@@ -191,23 +195,69 @@ export class ViewportController {
   }
 
   /**
+   * What a new backend can draw with, for the settings (TODOS.md AA-01, SET-03): its sample counts, so
+   * a count it lacks resolves to the nearest one it has and the settings window says why; the engine
+   * that could not start, if it fell back. Then it draws with the effective count.
+   */
+  private adopt(backend: RenderBackend, wanted: BackendKind, errors: readonly string[]): void {
+    const store = this.ctx.settingsStore;
+    const counts = [...backend.sampleCounts];
+    const name = (n: number) => (n === 1 ? 'kapalı' : `${n}×`);
+    store.setConstraint('graphics.msaa', {
+      allowed: counts,
+      reason: 'device_unsupported',
+      detail: `${backend.label}: ${counts.map(name).join(', ')}.`,
+    });
+    if (backend.kind !== wanted) store.setConstraint('graphics.backend', { allowed: [backend.kind], reason: 'device_failed', detail: errors.join('; ') });
+    backend.onSamplesFailed = (requested, working, error) => {
+      // The count that failed and those above it are not asked for again with this backend.
+      store.setConstraint('graphics.msaa', {
+        allowed: counts.filter((c) => c < requested),
+        reason: 'device_failed',
+        detail: `${requested}× kurulamadı (${error}); ${working === 1 ? 'kenar yumuşatma kapalı' : `${working}×`} kullanılıyor.`,
+      });
+      this.ctx.log.warn(`Kenar yumuşatma ${requested}× bu aygıtta kurulamadı; son çalışan ayara (${name(working)}) dönüldü. Neden: ${error}`);
+      this.requestRender();
+    };
+    this.applySamples();
+  }
+
+  /** The sample counts the running backend can draw with (TODOS.md AA-01); none before one runs. */
+  get sampleCounts(): readonly number[] {
+    return this.backend?.sampleCounts ?? [];
+  }
+
+  /** The sample count frames are drawn with now. */
+  get samples(): number {
+    return this.backend?.samples ?? 1;
+  }
+
+  /** Draws with the effective sample count from the next frame: the same canvas and context, new targets (AA-02). */
+  private applySamples(): void {
+    const backend = this.backend;
+    if (!backend) return;
+    const before = backend.samples;
+    backend.setSamples(this.ctx.prefs.msaa.value);
+    if (backend.samples !== before) this.requestRender();
+  }
+
+  /**
    * Replaces the drawing backend without reloading: the new one gets its own
    * canvas (a canvas cannot change context type), every layer is uploaded
    * again from the document and drawn before the old canvas is removed, so
    * the view never shows an empty frame. Falls back to WebGL2 like mount().
+   * Anti-aliasing and the pixel ratio change without this (applySamples, resize).
    */
-  async switchBackend(kind: BackendKind, rebuild = false): Promise<void> {
+  async switchBackend(kind: BackendKind): Promise<void> {
     if (!this.backend) return;
-    // `rebuild`: the same kind again, for a setting fixed at creation (anti-aliasing).
-    if (this.backendKind.value === kind && !rebuild) {
+    if (this.backendKind.value === kind) {
       this.switching = null; // cancels a switch still initialising
       return;
     }
     if (this.switching === kind) return;
     this.switching = kind;
     try {
-      const antialias = this.quality().antialias;
-      const { backend, canvas, errors } = await createBackend(this.host, [kind], { antialias });
+      const { backend, canvas, errors } = await createBackend(this.host, [kind], { samples: this.ctx.settingsStore.requested('graphics.msaa') as number });
       if (this.switching !== kind) {
         // A newer switch started while this one initialised.
         backend.dispose();
@@ -228,11 +278,11 @@ export class ViewportController {
       this.frame();
       old.dispose();
       oldCanvas?.remove();
-      this.antialias = antialias;
       this.backendKind.set(backend.kind);
       this.backendLabel.set(backend.label);
+      this.adopt(backend, kind, errors);
       errors.forEach((e) => this.ctx.log.warn(`Çizim arka ucu atlandı: ${e}`));
-      this.ctx.log.info(rebuild ? `Çizim kalitesi uygulandı: ${antialias ? 'kenar yumuşatma açık' : 'kenar yumuşatma kapalı'}.` : `Çizim motoru değişti: ${backend.label}`);
+      this.ctx.log.info(`Çizim motoru değişti: ${backend.label}`);
     } catch (err) {
       this.ctx.log.error(`Çizim motoru değiştirilemedi: ${(err as Error).message}`);
     } finally {
@@ -509,13 +559,6 @@ export class ViewportController {
         }),
       );
     d.add(settings.grid.subscribe(() => this.requestRender()));
-    // Drawing quality: the pixel ratio applies at once; anti-aliasing is fixed per context, so the backend is made again.
-    d.add(
-      this.ctx.prefs.renderQuality.subscribe(() => {
-        this.resize();
-        if (this.backend && this.quality().antialias !== this.antialias) void this.switchBackend(this.backend.kind, true);
-      }),
-    );
     d.add(this.ctx.prefs.crosshair.subscribe(() => this.requestOverlay()));
     d.add(
       tools.activeId.subscribe(() => {
@@ -755,15 +798,11 @@ export class ViewportController {
     );
   }
 
-  /** What the drawing quality preference asks for (app/state.ts RENDER_QUALITY). */
-  private quality(): { antialias: boolean; hiDpi: boolean } {
-    return RENDER_QUALITY[this.ctx.prefs.renderQuality.value] ?? RENDER_QUALITY.high;
-  }
-
   private resize(): void {
     const w = this.host.clientWidth;
     const h = this.host.clientHeight;
-    const dpr = this.quality().hiDpi ? window.devicePixelRatio || 1 : 1;
+    // HiDPI (Uygulama ayarları → Çizim motoru): the screen's pixel ratio, or one pixel per CSS pixel.
+    const dpr = this.ctx.prefs.hiDpi.value ? window.devicePixelRatio || 1 : 1;
     if (w === this.size.w && h === this.size.h && dpr === this.dpr) return;
     this.size = { w, h };
     this.dpr = dpr;
