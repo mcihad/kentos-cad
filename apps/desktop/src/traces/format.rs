@@ -101,6 +101,9 @@ pub struct Expect {
     pub(super) dirty: Option<bool>,
     pub(super) log: Option<String>,
     pub(super) metres_per_pixel: Option<f64>,
+    /// The view's centre, east and north of `view.center`: where Kaydır and the
+    /// zooms left it (docs/adr/0056), within `clickTolerance`.
+    pub(super) view_center: Option<[f64; 2]>,
     /// The selected objects' ids, in the order they were selected.
     pub(super) selected: Option<Vec<u32>>,
     /// The hovered object's id; `null` (none) and absent differ.

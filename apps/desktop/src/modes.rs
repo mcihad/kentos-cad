@@ -7,7 +7,7 @@
 //! the drawing, never an undo step. Announced modes say “Yakında”.
 
 use iced::Element;
-use iced::widget::{row, text};
+use iced::widget::row;
 use kentos_contracts::Workspace;
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
@@ -96,7 +96,7 @@ impl App {
             icon(mode_icon(current))
                 .size(13.0)
                 .tone(kentos_ui::icon::Tone::Accent),
-            text(mode.label).font(kentos_ui::theme::typography::ui_strong()),
+            kentos_ui::label::strong(mode.label),
         ]
         .spacing(5)
         .align_y(iced::Center);

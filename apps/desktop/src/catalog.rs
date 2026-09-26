@@ -125,6 +125,20 @@ pub const PORTED: &[&str] = &[
     "tool.array",
     "tool.arrayPolar",
     "tool.align",
+    // The bottom panel's tabs (bottom.rs): F2, the history, the coordinate list, warnings.
+    "view.bottomPanel",
+    "view.coords",
+    // The clipboard and the view tools (docs/adr/0056): cut, copy and the pastes over the
+    // session's clipboard, written through the document as on the web; pan, zoom window,
+    // zoom to the selection and repeating the last command.
+    "edit.cut",
+    "edit.copy",
+    "edit.paste",
+    "edit.pasteOriginal",
+    "tool.pan",
+    "tool.zoomWindow",
+    "view.zoomSelection",
+    "tool.repeat",
 ];
 
 /// Where the desktop does more than the web, its own description: the web's

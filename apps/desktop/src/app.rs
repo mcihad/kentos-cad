@@ -15,7 +15,9 @@ use iced::{Subscription, Task, Theme, event, keyboard, window};
 use serde_json::Value;
 
 use kentos_contracts::{ResolveReason, SettingConstraint};
-use kentos_interaction::{Draft, Level, Memory, Selection, Session, SnapHit, Spatial, snap_kinds};
+use kentos_interaction::{
+    Clipboard, Draft, Level, Memory, Selection, Session, SnapHit, Spatial, snap_kinds,
+};
 use kentos_ui::icon::Icon;
 use kentos_ui::theme::{self, Accent, Mode};
 use kentos_ui::widget::command_line::Entry;
@@ -151,6 +153,8 @@ pub enum Message {
     CommandSubmitted,
     CommandRun(String),
     CommandHistoryToggled,
+    /// A tab of the bottom panel chosen: the panel opens on it.
+    BottomTab(crate::bottom::BottomTab),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -217,6 +221,9 @@ pub struct App {
     pub history: Vec<Entry>,
     pub command_input: String,
     pub command_expanded: bool,
+    /// The bottom panel's tab (bottom.rs), and the warnings seen on it.
+    pub bottom_tab: crate::bottom::BottomTab,
+    pub seen_warnings: usize,
     pub dialog: Option<Dialog>,
     /// The drawing area's camera and scene cache.
     pub viewport: Viewport,
@@ -231,6 +238,9 @@ pub struct App {
     pub memory: Memory,
     /// The selected objects and the hovered one (session state, not the drawing's).
     pub selection: Selection,
+    /// What Kes and Panoya kopyala put aside for Yapıştır (session state: it
+    /// outlives the drawing on screen; clipboard.rs, docs/adr/0056).
+    pub clipboard: Clipboard,
     /// The object snap under the pointer while a tool snaps: its marker.
     pub snap: Option<SnapHit>,
     /// The drawing (its session) and generation the store and the selection last followed.
@@ -317,12 +327,15 @@ impl App {
             )],
             command_input: String::new(),
             command_expanded: false,
+            bottom_tab: crate::bottom::BottomTab::default(),
+            seen_warnings: 0,
             dialog: None,
             viewport: Viewport::new(),
             session: Session::new(),
             spatial: Spatial::new(),
             memory: Memory::default(),
             selection: Selection::new(),
+            clipboard: Clipboard::new(),
             snap: None,
             followed: None,
             field: None,
@@ -480,6 +493,7 @@ impl App {
                 return self.run_typed(&name);
             }
             Message::CommandHistoryToggled => self.command_expanded = !self.command_expanded,
+            Message::BottomTab(tab) => self.show_bottom(tab),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -757,6 +771,9 @@ impl App {
         if crate::project::COMMANDS.contains(&id) {
             return self.project_command(id);
         }
+        if crate::clipboard::COMMANDS.contains(&id) {
+            return self.clipboard_command(id);
+        }
         match id {
             // The drawing on screen is left first: its unsent cloud work to its draft, or the question.
             "file.open" => return self.leave(Then::Open),
@@ -786,11 +803,15 @@ impl App {
             "edit.selectAll" => self.select_all(),
             "edit.invertSelection" => self.invert_selection(),
             "view.ribbonCollapse" => self.ribbon_collapsed = !self.ribbon_collapsed,
+            // The bottom panel (bottom.rs): F2, and the coordinate list.
+            "view.bottomPanel" => self.toggle_bottom(),
+            "view.coords" => self.show_bottom(crate::bottom::BottomTab::Coords),
             "view.zoomIn" => self.zoom_in(),
             "view.zoomOut" => self.zoom_out(),
             "view.zoomExtents" => self
                 .viewport
                 .update(viewport::Event::Extents, self.document.as_ref()),
+            "view.zoomSelection" => self.zoom_selection(),
             "commandline.focus" => return operation::focus(COMMAND_INPUT),
             "help.about" => self.dialog = Some(Dialog::About),
             "help.shortcuts" => self.dialog = Some(Dialog::Shortcuts),
@@ -806,6 +827,7 @@ impl App {
             "edit.redo" => self.step_history(false),
             "tool.confirm" => return self.confirm(),
             "tool.cancel" => self.cancel(),
+            "tool.repeat" => return self.repeat_last(),
             _ => self.error(format!(
                 "{id}: masaüstü işleyicisi eksik (catalog::PORTED ile karşılaştırın)"
             )),
@@ -860,7 +882,8 @@ impl App {
                     || (self.session.is_running() && self.session.point_count() > 0)
             }
             "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
-            "edit.deselect" => !self.selection.is_empty(),
+            "edit.deselect" | "view.zoomSelection" => !self.selection.is_empty(),
+            id if crate::clipboard::COMMANDS.contains(&id) => self.clipboard_available(id),
             id if id.starts_with("cloud.") => self.cloud_available(id),
             _ => true,
         }

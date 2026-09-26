@@ -38,7 +38,7 @@ use iced::widget::{container, shader, stack};
 use iced::{Element, Fill, Point, Rectangle, Vector, mouse, wgpu};
 
 use kentos_contracts::{DrawingFont, Entity, LayerNode};
-use kentos_interaction::Selection;
+use kentos_interaction::{Cursor, Selection, ViewChange};
 use kentos_render_wgpu::camera::FIT_PADDING;
 use kentos_render_wgpu::scene::{self, lod};
 use kentos_render_wgpu::{
@@ -311,7 +311,8 @@ impl Viewport {
     }
 
     /// The drawing area showing `doc`, drawn as `graphics` says, with the
-    /// selection and the hovered object highlighted in `accent` (docs/adr/0029).
+    /// selection and the hovered object highlighted in `accent` (docs/adr/0029)
+    /// and the pointer looking as the running tool asks (docs/adr/0056).
     /// A change of either value reaches the next frame: new targets on the
     /// same device, nothing reopened (TODOS.md AA-02).
     pub fn view<'a>(
@@ -321,6 +322,7 @@ impl Viewport {
         graphics: Graphics,
         selection: &Selection,
         accent: Rgba8,
+        cursor: Cursor,
     ) -> Element<'a, Message> {
         let canvas = canvas.into();
         let palette = palette(canvas);
@@ -339,6 +341,7 @@ impl Viewport {
             camera: self.camera,
             settings,
             status: self.status.clone(),
+            cursor,
         })
         .width(Fill)
         .height(Fill)
@@ -438,6 +441,18 @@ impl Viewport {
     /// Shows `b` as large as it fits, with the margin a fit keeps.
     pub fn show(&mut self, b: &Bounds) {
         self.camera.fit(b, FIT_PADDING);
+    }
+
+    /// A view change a tool asked for (Kaydır, Pencere yakınlaştır;
+    /// docs/adr/0056). The pointer stays where it is on the area, so the
+    /// world point under it follows the view.
+    pub fn change(&mut self, change: ViewChange) {
+        let at = self.cursor.map(|c| self.camera.world_to_screen(c));
+        match change {
+            ViewChange::Pan { dx, dy } => self.camera.pan_by(dx, dy),
+            ViewChange::Fit { bounds, padding } => self.camera.fit(&bounds, padding),
+        }
+        self.cursor = at.map(|[x, y]| self.camera.screen_to_world(x, y));
     }
 
     /// The document's start view, else its extents; its origin when it has neither.
@@ -552,6 +567,8 @@ struct Program {
     camera: Camera,
     settings: RenderSettings,
     status: Arc<Mutex<Status>>,
+    /// The pointer's look the running tool asks for over the area.
+    cursor: Cursor,
 }
 
 /// What the widget remembers between events.
@@ -611,7 +628,11 @@ impl shader::Program<Message> for Program {
         if state.pan.is_some() {
             mouse::Interaction::Grabbing
         } else if cursor.is_over(bounds) {
-            mouse::Interaction::Crosshair
+            match self.cursor {
+                Cursor::Cross => mouse::Interaction::Crosshair,
+                // Kaydır: the open hand, as the web's `grab` (docs/adr/0056).
+                Cursor::Grab => mouse::Interaction::Grab,
+            }
         } else {
             mouse::Interaction::default()
         }

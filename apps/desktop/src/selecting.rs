@@ -1,21 +1,24 @@
 //! The selection on the desktop (docs/adr/0029): the web's selection
 //! commands (`app/commands.ts`: Tümünü seç, Seçimi kaldır, Seçimi ters
-//! çevir) and what the properties panel says about a selection
-//! (`ui/properties/PropertiesPanel.ts`): how many, of which kinds, on which
-//! layer, in which colour, their total length and area, and for one object
-//! its attributes. Editing them there is a later slice.
+//! çevir, Seçime yakınlaştır) and what the properties panel says about a
+//! selection (`ui/properties/PropertiesPanel.ts`): how many, of which kinds,
+//! on which layer, in which colour, their total length and area, and for one
+//! object its attributes. Editing them there is a later slice.
 
 use std::borrow::Cow;
 
 use kentos_contracts::Entity;
 use kentos_domain::{LayerTree, Slot};
-use kentos_interaction::Format;
+use kentos_interaction::{Format, ViewChange};
 
 use crate::app::App;
 use crate::document::Document;
 
 /// A row of the properties panel: its name and its value.
 pub type Row = (Cow<'static, str>, String);
+
+/// Seçime yakınlaştır's margin, logical pixels (the web's `camera.fit(b, 96)`).
+const SELECTION_PADDING: f64 = 96.0;
 
 impl App {
     /// `edit.selectAll` (Ctrl+A): every object on a shown layer, and how many.
@@ -50,6 +53,31 @@ impl App {
             .filter(|slot| !selection.contains(*slot))
             .collect();
         self.selection.set(ids);
+    }
+
+    /// `view.zoomSelection` (Ctrl+Shift+F): the selection's box as large as
+    /// it fits, 96 px in from the edges (the web's `zoomToSelection`,
+    /// docs/adr/0056); nothing with no selection (the web's command is off).
+    pub(crate) fn zoom_selection(&mut self) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        if self.selection.is_empty() {
+            return;
+        }
+        self.spatial.sync(&doc.model);
+        let ids: Vec<f64> = self
+            .selection
+            .ids()
+            .iter()
+            .map(|slot| f64::from(slot.0))
+            .collect();
+        if let Some(bounds) = self.spatial.store().extent(Some(&ids)) {
+            self.viewport.change(ViewChange::Fit {
+                bounds,
+                padding: SELECTION_PADDING,
+            });
+        }
     }
 
     /// The properties panel's rows for the selection; none when nothing is selected.

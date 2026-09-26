@@ -33,6 +33,8 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/object-tools.json` | Birleştir ve Patlat (ADR 0047): seçimden önce seçme, kesişim penceresi, kilitli çizgi atlanır; seçimle hemen çalışma, parçalar seçilir; temel nesne patlatılmaz |
 | `v1/stretch-align.json` | Esnet ve Hizala (ADR 0047, 2. kısım): tıklanan ve sürüklenen pencere, yazılan fark, kilitli çizgi atlanıp pencerenin yeniden istenmesi, seçim varken yalnız seçili nesne; iki çiftle döndürme, Ölçekle (Ö), sağ tıkla yalnız taşıma, çakışan ikinci hedef |
 | `v1/arrays.json` | Dizi ve Kutupsal dizi (ADR 0047, 2. kısım): Enter ile son sayılar, iki noktayla aralık, yazılan sayılar ve aralık, reddedilen sıfır satır aralığı, kilitli çizginin kopyası yapılmaz; yazılan merkez, Adet (N), Açı (A), Nesneleri döndür (D), dönmeden yarım tur; her dizi tek adımda geri alınır |
+| `v1/clipboard.json` | Pano ([ADR 0056](../../docs/adr/0056-desktop-clipboard-and-view-tools.md)): Ctrl+C, Ctrl+V ile yapıştırma aracı (tıklanan yer, yazılan `@dY,dX` temel noktadan), her yapıştırmada yeni nesne ve tek adımda geri alma; Ctrl+X kilitli nesneyi kesmez; Ctrl+Shift+V özgün koordinatlara yapıştırır; Esc ve Enter yapıştırmadan çıkar |
+| `v1/navigation.json` | Görünüm araçları (ADR 0056): Kaydır (Shift+H) sürükleyerek taşır, onay almaz, son komut sayılmaz; Seçime yakınlaştır (Ctrl+Shift+F); Pencere yakınlaştır (Z) iki tıkla ve sürükleyerek, Enter onu yeniden başlatır; Son komutu yinele |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
 | `v1/objects.kcad` | Seçim ve kenet izlerinin çizimi: çizgiler (1–3; 2 ile 3 (9,6; 8,8)'de kesişir), kapalı alan (4), nokta (5), kilitli katmanda çizgi (6), gizli katmanda çizgi (7) |
 | `v1/edits.kcad` | Değiştirme izlerinin çizimi (ADR 0047): (−20, 12)'de kesişen 1 ve 2, x = −4'te sınır 3, köşesi (0, 4)'te L biçimli çoklu çizgi 4, (14, 4)'te birleşen 5 ve 6, kırılacak 7, (8, −4)'te uç uca gelen 8 ve 9, kapalı alan 10, 10 m'lik 11, 12, 9'un ucundan devam eden, kilitli katmandaki 13 |
@@ -58,7 +60,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | Eylem | Anlamı |
 |---|---|
 | `run` | Komutu kimliğiyle çalıştırır; şeritten, menüden ya da komut satırından seçmekle aynıdır (`tool.polygon`) |
-| `key` | Tek tuş: `Enter`, `Esc`, `Tab`, `Backspace`, `Space`, `Delete`, `F3` (kenet), `F8` (orto), bir harf (`G`), `-`, `+` ya da `Ctrl+` akoru (`Ctrl+Z`) |
+| `key` | Tek tuş: `Enter`, `Esc`, `Tab`, `Backspace`, `Space`, `Delete`, `F3` (kenet), `F8` (orto), bir harf (`G`), `-`, `+` ya da `Ctrl+`, `Shift+`, `Ctrl+Shift+` akoru (`Ctrl+Z`, `Shift+H`, `Ctrl+Shift+V`). Shift'le basılan harf, klavyenin yaptığı gibi büyük gelir |
 | `text` | Karakterler tek tek yazılır. Klavyenin ürettiği metin sayılır, fiziksel tuş konumu değil |
 | `move` | İmleç çizimde bu noktaya gelir |
 | `click`, `doubleClick` | Sol tuşla tıklama ya da çift tıklama |
@@ -83,6 +85,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | `canUndo`, `canRedo`, `dirty` | Geri al, yinele ve kaydedilmemiş değişiklik |
 | `log` | Son iletinin düzeyi: `success`, `info`, `warn`, `error` |
 | `metresPerPixel` | Görünümün ölçeği |
+| `viewCenter` | Görünümün merkezi, `view.center`'a göre doğu ve kuzey farkı: Kaydır'ın ve yakınlaştırmaların bıraktığı yer (ADR 0056) |
 | `selected` | Seçili nesnelerin kimlikleri, seçildikleri sırayla (`[1, 4]`) |
 | `hover` | İmlecin altında vurgulanan nesnenin kimliği; yoksa `null` |
 | `snap` | Kenet işaretinin türü (`endpoint`, `midpoint`, `center`, `node`, `quadrant`, `intersection`, `perpendicular`, `tangent`, `nearest`); yoksa `null` |
@@ -96,7 +99,9 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 - **Tıklanan nokta** ekran pikselinden gelir. `clickTolerance` içinde karşılaştırılır.
 - **Yazılan değer** kesindir. `edges` her köşeden sonrakine olan farktır ve tam eşit olmalıdır. Tıklanan ilk noktadan aynı piksel satırında `12` yazmak, tam `[12, 0]` verir.
 - **`metresPerPixel`** göreli `1e-9` ile karşılaştırılır.
+- **`viewCenter`** tıklamalardan gelir; `clickTolerance` içinde karşılaştırılır.
 - **Noktalar çizim alanında kalır.** Merkezden doğuya ve batıya en çok 240, kuzeye ve güneye en çok 160 piksel uzakta olurlar. `0,125` m/piksel ölçekte bu ±30 × ±20 m eder. En küçük desteklenen pencere (1100×600) bu kutuyu çizim alanında gösterir. Oynatıcı alanın dışına düşen noktayı sessizce kaçırmaz; izi hatayla durdurur.
+- **Görünüm değişince** noktalar o anki görünüme göre alanda kalır: Kaydır'dan sonra kutu görünümle birlikte kayar. Bir kutuya yakınlaştırmanın (Seçime yakınlaştır, Pencere yakınlaştır) ölçeği alanın boyutuna bağlıdır ve iki uygulamada farklıdır; o ölçek karşılaştırılmaz, sonraki noktalar sığdırılan kutunun içinden seçilir, çünkü kutu iki uygulamada da görünür.
 
 ## Kurallar
 
@@ -107,7 +112,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
   3. izin güncellenmesi.
 - Beklenen değeri hataya göre yenilemek yasaktır (CLAUDE.md §9.4).
 - Yeni bir iz ya da alan eklenince bu belge ve iki oynatıcı birlikte güncellenir: web (`apps/web/scripts/e2e/interaction.mjs`) ve masaüstü (`apps/desktop/src/traces/`). Masaüstü oynatıcısı bilmediği alanda durur.
-- İz, araçların oturum boyunca hatırladıklarını (web'in statik alanları: son daire yarıçapı, dikdörtgenin dönmesi ve köşeleri, düzgün çokgenin kenar sayısı ve çemberi, öteleme mesafesi ve Noktadan geç, Kırp, uzat-kısalt kipi ve değerleri, dizinin son satır, sütun ve aralığı, kutupsal dizinin adedi, açısı ve dönmesi, Hizala'nın Ölçekle'si) başladığı gibi bırakır. Geri kurulamayanlar (son köşe yarıçapı ve pah mesafeleri) izin ilk yazdığıyla kurulur; ondan önceki beklentiler onlara bağlı değildir. Web oynatıcısı sayfayı izler ve varyantlar arasında yeniden açmaz; masaüstü her izi yeni bir uygulamada oynatır (ADR 0032).
+- İz, araçların oturum boyunca hatırladıklarını (web'in statik alanları: son daire yarıçapı, dikdörtgenin dönmesi ve köşeleri, düzgün çokgenin kenar sayısı ve çemberi, öteleme mesafesi ve Noktadan geç, Kırp, uzat-kısalt kipi ve değerleri, dizinin son satır, sütun ve aralığı, kutupsal dizinin adedi, açısı ve dönmesi, Hizala'nın Ölçekle'si) başladığı gibi bırakır. Geri kurulamayanlar (son köşe yarıçapı ve pah mesafeleri) izin ilk yazdığıyla kurulur; ondan önceki beklentiler onlara bağlı değildir. Pano ve son komut da oturum boyunca kalır; iz onların başlangıcına dayanmaz: yapıştırmadan önce kendisi kopyalar ya da keser, Enter'la yinelemeden önce kendisi bir komut başlatır (ADR 0056). Web oynatıcısı sayfayı izler ve varyantlar arasında yeniden açmaz; masaüstü her izi yeni bir uygulamada oynatır (ADR 0032).
 - Yazılan değerin dilbilgisi ayrı bir dosyadadır: `fixtures/point-input/v1/cases.json`. Web'in ve masaüstünün okuyucusu onu okur.
 
 ## Varyantlar

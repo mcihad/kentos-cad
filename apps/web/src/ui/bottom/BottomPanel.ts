@@ -2,8 +2,8 @@ import type { AppContext } from '../../app/context';
 import type { BottomTab, LogEntry, LogLevel } from '../../app/state';
 import { listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
-import { entityVertices, type Entity } from '../../model/entities';
-import { bearingGrad, dist, pathLength, signedArea } from '../../model/geometry';
+import type { Entity } from '../../model/entities';
+import { bearingGrad, dist } from '../../model/geometry';
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
@@ -11,6 +11,7 @@ import { splitter } from '../widgets/Splitter';
 import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
+import { vertexListing } from './coordinates';
 
 const TABS: { id: BottomTab; label: string; icon: string }[] = [
   { id: 'history', label: 'Komut geçmişi', icon: 'history' },
@@ -205,12 +206,13 @@ export class BottomPanel extends Component {
     }
 
     const e = ents.find((x) => x.kind !== 'point' && x.kind !== 'text') ?? ents[0];
-    const pts = entityVertices(e);
-    const closed = e.kind === 'polygon';
+    // Edges within each ring; the area and length are the object's own (./coordinates).
+    const { pts, next: after, area, length } = vertexListing(e);
     // Rows are formatted when they scroll into view (a contour has hundreds of vertices).
     const row = (i: number) => {
       const p = pts[i];
-      const next = pts[i + 1] ?? (closed ? pts[0] : null);
+      const n = after(i);
+      const next = n === null ? null : pts[n];
       return [
         String(i + 1),
         f.coord(p.x),
@@ -220,9 +222,12 @@ export class BottomPanel extends Component {
       ];
     };
     const title = e.label ? `${e.attrs.Ada ? `${e.attrs.Ada} ada ` : ''}${e.label}` : `#${e.id}`;
-    const footer = closed
-      ? `${title}   Alan ${f.area(Math.abs(signedArea(pts)))}   Çevre ${f.length(pathLength(pts, true))}`
-      : `${title}   Uzunluk ${f.length(pathLength(pts))}`;
+    const footer =
+      area !== null
+        ? `${title}   Alan ${f.area(area)}${length !== null ? `   Çevre ${f.length(length)}` : ''}`
+        : length !== null
+          ? `${title}   Uzunluk ${f.length(length)}`
+          : title;
     return this.table(['Köşe', 'Y (sağa)', 'X (yukarı)', 'Kenar (m)', `Semt (${f.angleUnitLabel})`], pts.length, row, ents.length > 1 ? `${footer}   (ilk nesne gösteriliyor)` : footer, [0, 1, 2, 3, 4]);
   }
 

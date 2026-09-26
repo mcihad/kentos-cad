@@ -241,6 +241,18 @@ pub(super) fn chord_stroke(chord: &str, layout: Layout) -> Result<Stroke, String
             other => return Err(format!("bilinmeyen değiştirici tuş {other}")),
         };
     }
+    if stroke.modifiers.shift()
+        && let Key::Character(c) = &stroke.modified
+        && c.chars().all(char::is_alphabetic)
+    {
+        // Shift+letter (Shift+H, Ctrl+Shift+V): the keyboard gives the capital, the Turkish way.
+        let capital = match layout {
+            Layout::TurkishQ => kentos_interaction::upper_tr(c),
+            Layout::Us => c.to_uppercase(),
+        };
+        stroke.text = Some(capital.clone());
+        stroke.modified = character(&capital);
+    }
     if stroke.modifiers.control() && !matches!(stroke.key, Key::Named(_)) {
         // Ctrl+letter: the ASCII control character (Ctrl+Z is U+001A).
         stroke.text = stroke
