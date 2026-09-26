@@ -76,8 +76,8 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 63,
-    "commandsOnDesktop": 104
+    "commandsWithoutTests": 58,
+    "commandsOnDesktop": 105
   },
   "commands": [
     {
@@ -164,7 +164,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs"
       ]
     },
     {
@@ -197,7 +198,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs"
       ]
     },
     {
@@ -231,6 +233,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -264,7 +267,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs"
       ]
     },
     {
@@ -298,6 +302,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -548,7 +553,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "cloud.signOut",
@@ -759,7 +766,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs"
       ],
       "note": "Projenin SRID'sini atar, koordinatları dönüştürmez (CLAUDE.md §5). Dönüşüm bekleyen `crs.transform` ile gelecek (TODOS.md NUM-04..07)."
     },
@@ -1267,6 +1275,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ],
       "note": "AutoCAD 2007 ASCII DXF (AC1021), Rust yazıcısı (ADR 0009). Yalnız ezdxf ile denetlendi; AutoCAD, Netcad, BricsCAD ve QGIS'te açılması denenmedi (TODOS.md FMT-02)."
@@ -1301,6 +1310,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -1335,6 +1345,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -1396,6 +1407,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ],
       "note": "ASCII DXF, Rust okuyucusu (ADR 0009). Bloklar patlatılır; alınamayan ya da dönüştürülen nesneler raporlanır."
@@ -1430,6 +1442,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -1465,6 +1478,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -1525,6 +1539,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -1565,7 +1580,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "file.open",
@@ -1751,6 +1768,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -1784,6 +1802,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs",
         "apps/web/scripts/e2e/visual.mjs"
       ]
@@ -1813,7 +1832,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "help.shortcuts",
@@ -1849,7 +1870,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "layer.new",
@@ -1977,7 +2000,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/menus.test.ts"
+        "apps/web/src/app/menus.test.ts",
+        "apps/web/scripts/e2e/layout.mjs"
       ]
     },
     {
@@ -2147,6 +2171,7 @@
       "tests": [
         "apps/web/src/app/menus.test.ts",
         "apps/web/src/app/ribbon.test.ts",
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -2434,6 +2459,7 @@
         "desktop": "none"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -2465,7 +2491,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/layout.mjs"
+      ]
     },
     {
       "id": "style.manager",
@@ -2497,6 +2525,7 @@
         "desktop": "none"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -2530,6 +2559,7 @@
         "desktop": "none"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -3407,10 +3437,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/hatches.json"
       ]
     },
     {
@@ -3517,6 +3548,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/visual.mjs",
         "fixtures/interaction/v1/arc-variants.json",
         "fixtures/interaction/v1/line-chain.json",
@@ -4721,6 +4753,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs",
         "apps/web/scripts/e2e/visual.mjs"
       ]
@@ -6160,7 +6193,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/hatches.json"
       ]
     },
     {
@@ -6242,6 +6276,7 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/visual.mjs",
         "fixtures/interaction/v1/arc-variants.json",
         "fixtures/interaction/v1/line-chain.json",
@@ -6792,6 +6827,7 @@
         "apps/web/src/app/menus.test.ts",
         "apps/web/src/app/workspaces.test.ts",
         "apps/web/scripts/e2e/interaction.mjs",
+        "apps/web/scripts/e2e/layout.mjs",
         "fixtures/interaction/v1/select-delete.json"
       ]
     },

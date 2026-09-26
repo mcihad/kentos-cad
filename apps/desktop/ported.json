@@ -103,7 +103,8 @@
     "tool.spot",
     "tool.divide",
     "tool.text",
-    "tool.dimension"
+    "tool.dimension",
+    "tool.hatch"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

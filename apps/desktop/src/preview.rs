@@ -231,7 +231,8 @@ impl canvas::Program<Message> for Draft {
             ..Stroke::default().with_color(accent).with_width(1.0)
         };
         // Filled areas under the lines (the web's `drawArea`): a corridor, a
-        // donut; holes left out (even-odd), outlined solid (docs/adr/0057).
+        // donut; holes left out (even-odd), outlined solid (docs/adr/0057) or
+        // dashed, as the region a hatch will fill (docs/adr/0062).
         for area in &self.preview.areas {
             let rings: Vec<Path> = area
                 .rings
@@ -259,12 +260,34 @@ impl canvas::Program<Message> for Draft {
                     rule: canvas::fill::Rule::EvenOdd,
                 },
             );
+            let dash = area.dash.unwrap_or_default();
             for ring in &rings {
                 frame.stroke(
                     ring,
-                    Stroke::default().with_color(accent).with_width(area.width),
+                    Stroke {
+                        line_dash: LineDash {
+                            segments: if area.dash.is_some() { &dash } else { &[] },
+                            offset: 0,
+                        },
+                        ..Stroke::default().with_color(accent).with_width(area.width)
+                    },
                 );
             }
+        }
+        // A hatch's lines to come, faint (the web's 60 %; docs/adr/0062).
+        if !self.preview.hatch.is_empty() {
+            let lines = Path::new(|b| {
+                for [p, q] in &self.preview.hatch {
+                    b.move_to(self.screen(*p));
+                    b.line_to(self.screen(*q));
+                }
+            });
+            frame.stroke(
+                &lines,
+                Stroke::default()
+                    .with_color(accent.scale_alpha(0.6))
+                    .with_width(1.0),
+            );
         }
         // The closed shape once it has three corners: dashed, lightly filled.
         if let Some(ring) = self
@@ -411,9 +434,9 @@ impl canvas::Program<Message> for Draft {
     }
 }
 
-/// Pictures of the round-3 drawing tools' previews (docs/adr/0057) and of
-/// Ölçülendirme's (docs/adr/0061), for the owner: each trace played up to a
-/// pointer move that shows its preview.
+/// Pictures of the round-3 drawing tools' previews (docs/adr/0057), of
+/// Ölçülendirme's (docs/adr/0061) and of Tarama's (docs/adr/0062), for the
+/// owner: each trace played up to a pointer move that shows its preview.
 /// Not run by default: `cargo test -p kentos-desktop preview::screens -- --ignored --nocapture`.
 #[cfg(test)]
 #[test]
@@ -441,6 +464,9 @@ fn screens() {
         ("olcu-dogrusal", "dimensions", 11),
         ("olcu-aci", "dimensions", 24),
         ("olcu-yaricap", "dimensions", 31),
+        ("tarama-parsel", "hatches", 2),
+        ("tarama-cizgiler", "hatches", 10),
+        ("tarama-dolu", "hatches", 23),
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {

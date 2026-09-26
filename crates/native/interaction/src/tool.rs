@@ -246,6 +246,12 @@ pub struct Memory {
     /// Yazı's height in paper millimetres and angle in degrees (`TextTool.heightMm`, `.angle`).
     pub text_height_mm: f64,
     pub text_angle: f64,
+    /// Tarama's pattern (an index into its presets), whether the region is
+    /// found by the line work rather than a closed object, and whether closed
+    /// objects inside are left out (`HatchTool.preset`, `.byLines`, `.islands`).
+    pub hatch_preset: usize,
+    pub hatch_by_lines: bool,
+    pub hatch_islands: bool,
     /// Ölçülendirme's style, its linear direction lock in degrees (0 ΔY, 90 ΔX;
     /// none: from where the line is placed) and whether an angle is measured
     /// from its vertex (`DimensionTool.mode`, `.lock`, `.byVertex`).
@@ -294,6 +300,9 @@ impl Default for Memory {
             divide_by_step: false,
             text_height_mm: 2.5,
             text_angle: 0.0,
+            hatch_preset: 0,
+            hatch_by_lines: false,
+            hatch_islands: true,
             dimension_mode: DimensionMode::Aligned,
             dimension_lock: None,
             dimension_by_vertex: false,
@@ -437,10 +446,12 @@ pub struct Preview {
     pub areas: Vec<Area>,
     /// Short texts beside points: the reference line's start “A” (docs/adr/0057).
     pub labels: Vec<Label>,
+    /// The lines of a hatch to come, drawn faint (the web's 60 %; docs/adr/0062).
+    pub hatch: Vec<[Vec2; 2]>,
 }
 
-/// An area of a draft, filled in its tone and outlined solid: the outer ring,
-/// then its holes (even-odd).
+/// An area of a draft, filled in its tone and outlined: the outer ring, then
+/// its holes (even-odd).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Area {
     pub rings: Vec<Vec<Vec2>>,
@@ -448,6 +459,8 @@ pub struct Area {
     pub fill: f32,
     /// The outline, logical pixels.
     pub width: f32,
+    /// The outline's dash and gap, logical pixels; solid when none (a hatch's region, docs/adr/0062).
+    pub dash: Option<[f32; 2]>,
 }
 
 /// A text at a world point, moved by a logical pixel offset (right and down).

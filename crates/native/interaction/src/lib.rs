@@ -74,6 +74,7 @@ mod edge;
 pub mod ellipse;
 pub mod erase;
 mod format;
+pub mod hatch;
 pub mod lengthen;
 pub mod line;
 mod log;

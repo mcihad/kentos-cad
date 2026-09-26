@@ -44,6 +44,8 @@ pub enum CreateOperation {
     PerpendicularOut,
     /// Böl: points along an object.
     Divide,
+    /// Tarama: a hatch filling the region clicked inside.
+    Hatch,
 }
 
 /// One new object: its geometry and what else it carries. The layer is the

@@ -208,6 +208,7 @@ impl Tool for Donut {
                     .collect(),
                 fill: 0.35,
                 width: 1.0,
+                dash: None,
             }],
             ..Preview::default()
         }

@@ -16,7 +16,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.entities.transform.json` | `cad.entities.transform` v1 (ADR 0037; hizalama ADR 0047) | 38 |
 | `v1/cad.entities.edit.json` | `cad.entities.edit` v1 (ADR 0047) | 28 |
 | `v1/cad.entities.array.json` | `cad.entities.array` v1 (ADR 0047) | 25 |
-| `v1/cad.entities.create.json` | `cad.entities.create` v1 (ADR 0057) | 26 |
+| `v1/cad.entities.create.json` | `cad.entities.create` v1 (ADR 0057; `hatch` işlemi ADR 0062) | 27 |
 
 ## Dosya
 

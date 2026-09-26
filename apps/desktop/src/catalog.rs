@@ -167,6 +167,9 @@ pub const PORTED: &[&str] = &[
     // Ölçülendirme: aligned, linear, angular, radius and diameter dimensions
     // through cad.entities.create (docs/adr/0061).
     "tool.dimension",
+    // Tarama: the region by a closed object or by the line work, islands left
+    // out, through cad.entities.create as “Tarama” (docs/adr/0062).
+    "tool.hatch",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

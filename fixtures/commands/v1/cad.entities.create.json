@@ -4,7 +4,7 @@
   "command": "cad.entities.create",
   "commandVersion": 1,
   "title": "Nesneleri ekle: doğrulama, plan, yazma, geri alma",
-  "note": "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+  "note": "ADR 0057. Denetim sırası: en az bir nesne; her nesnenin geometrisi, sırayla, cad.entities.edit'in kurallarıyla (nokta ve köşe sayısı, sonlu sayılar, yarıçap); beklenen sürümün yazımı, sonra çizimin sürümü; katman (var, grup değil, kilitli değil; gizliyse uyarı). Nesne verilen geometrisi, girdinin katmanı ve verildiyse rengi, öznitelikleri (yoksa boş) ve etiketiyle yazılır. Adım “Ekle” ya da işlemin adıdır: Paralel çizgi, Dik in, Dik çık, Böl, Tarama. Kurulumdaki en büyük kimlik 2; yeni nesneler 3'ten başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -92,6 +92,14 @@
       "steps": [
         {"op": "execute", "input": {"layerId": "yapi", "operation": "divide", "objects": [{"geometry": {"kind": "point", "p": {"x": 487004, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487008, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487012, "y": 4420000}}}, {"geometry": {"kind": "point", "p": {"x": 487016, "y": 4420000}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3", "$uidOf:4", "$uidOf:5", "$uidOf:6"], "ids": [3, 4, 5, 6], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3, 4, 5, 6], "entities": {"3": {"kind": "point", "p": {"x": 487004, "y": 4420000}, "id": 3, "layerId": "yapi", "attrs": {}}, "4": {"kind": "point", "p": {"x": 487008, "y": 4420000}, "id": 4, "layerId": "yapi", "attrs": {}}, "5": {"kind": "point", "p": {"x": 487012, "y": 4420000}, "id": 5, "layerId": "yapi", "attrs": {}}, "6": {"kind": "point", "p": {"x": 487016, "y": 4420000}, "id": 6, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
         {"op": "undo", "returns": "Böl", "expect": {"ids": [1, 2], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "Tarama: halka, adası ve deseniyle tek adım; adı “Tarama”",
+      "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "hatch", "objects": [{"geometry": {"kind": "hatch", "ring": [{"x": 487000, "y": 4420120}, {"x": 487040, "y": 4420120}, {"x": 487040, "y": 4420150}, {"x": 487000, "y": 4420150}], "holes": [[{"x": 487010, "y": 4420130}, {"x": 487020, "y": 4420130}, {"x": 487020, "y": 4420138}, {"x": 487010, "y": 4420138}]], "pattern": {"type": "lines", "angle": 45, "spacing": 3}}}]}, "result": {"status": "completed", "output": {"created": ["$uidOf:3"], "ids": [3], "revision": "$current"}, "warnings": []}, "expect": {"ids": [1, 2, 3], "entities": {"3": {"kind": "hatch", "ring": [{"x": 487000, "y": 4420120}, {"x": 487040, "y": 4420120}, {"x": 487040, "y": 4420150}, {"x": 487000, "y": 4420150}], "holes": [[{"x": 487010, "y": 4420130}, {"x": 487020, "y": 4420130}, {"x": 487020, "y": 4420138}, {"x": 487010, "y": 4420138}]], "pattern": {"type": "lines", "angle": 45, "spacing": 3}, "id": 3, "layerId": "yapi", "attrs": {}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Tarama", "expect": {"ids": [1, 2], "canUndo": false, "canRedo": true}},
+        {"op": "redo", "returns": "Tarama", "expect": {"ids": [1, 2, 3]}}
       ]
     },
     {

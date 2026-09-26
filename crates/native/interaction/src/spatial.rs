@@ -304,7 +304,7 @@ pub fn dimension_layout(
 }
 
 /// A store id back to the document's slot (ids are the slots, exactly).
-fn slot(id: f64) -> Option<Slot> {
+pub(crate) fn slot(id: f64) -> Option<Slot> {
     (id >= 0.0 && id <= f64::from(u32::MAX) && id.fract() == 0.0).then_some(Slot(id as u32))
 }
 

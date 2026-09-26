@@ -34,6 +34,7 @@ export const CREATE_LABEL: Record<CreateOperation, string> = {
   perpendicularIn: 'Dik in',
   perpendicularOut: 'Dik çık',
   divide: 'Böl',
+  hatch: 'Tarama',
 };
 
 /** The checks in the contract's order: why nothing may be written, or the warnings when it may. */

@@ -389,6 +389,7 @@ impl Tool for Parallel {
                     rings: area_rings(&area),
                     fill: 0.16,
                     width: 1.5,
+                    dash: None,
                 });
             }
         } else {
