@@ -200,6 +200,10 @@ const ICONS = {
   pin: '<path d="M12.5 3.5 16.5 7.5 13 9.5 10.5 12l-.6 3.4L4.6 10l3.4-.6L10.5 7z"/><path d="m7.3 12.7-4 4"/>',
   plus: '<path d="M10 4v12M4 10h12"/>',
   trash: '<path d="M4 5.5h12M8 5.5v-2h4v2M5.6 5.5l.8 11h7.2l.8-11"/><path d="M8.6 8.5v5M11.4 8.5v5"/>',
+  // The project catalog (docs/adr/0028): a favourite (outline; marked, a deliberate 35 % fill) and an archive box.
+  star: '<path d="m10 3.2 2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7z"/>',
+  starOn: '<path d="m10 3.2 2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7z" fill="currentColor" fill-opacity=".35"/>',
+  archive: '<path d="M3 4.5h14v3H3z"/><path d="M4.5 7.5v8h11v-8M8.2 10.5h3.6"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

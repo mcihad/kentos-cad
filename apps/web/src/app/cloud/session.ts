@@ -9,16 +9,20 @@ import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
 import type { ProjectList } from '../../contracts/generated/ProjectList';
 import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { ProjectRole } from '../../contracts/generated/ProjectRole';
+import type { ProjectType } from '../../contracts/generated/ProjectType';
 import type { TenantKind } from '../../contracts/generated/TenantKind';
 import type { DrawingEntity } from '../../model/entities';
 import type { AppContext } from '../context';
 import { replaceDrawing } from '../fileIO';
 import { AccessWatch } from './accessWatch';
 import { ApiFailure, HttpCloudApi, type CloudApi } from './api';
+import { catalogEnvelope } from './catalog';
 import { browserDraftStore, draftKey, type DraftStore } from './drafts';
 import { readProject } from './incoming';
+import { ProjectLifecycle } from './lifecycle';
 import { ProjectSocket, socketUrl, type LinkState } from './socket';
 import { ProjectSync } from './sync';
+import { ENDED } from './syncCore';
 import { again, uploadObjects } from './upload';
 
 /**
@@ -34,9 +38,11 @@ import { again, uploadObjects } from './upload';
  * restores the drawing's own layer tree, locks included; a step whose
  * answer is lost goes again with the same idempotency key.
  * A project can be renamed (a metadata change) and, by its owner or an
- * organisation's admin, deleted; when someone else deletes the open one, its
- * sync stops sending and the drawing stays on screen, its edits kept on this
- * device.
+ * organisation's admin, deleted (moved to the trash); when someone else
+ * deletes or archives the open one, its sync stops sending and the drawing
+ * stays on screen, its edits kept on this device. An archived project opens
+ * read-only (docs/adr/0028). The catalog's commands (archive, trash,
+ * restore, duplicate, metadata, favourites) are `lifecycle` (lifecycle.ts).
  *
  * What the account may do comes with each project (docs/adr/0015): a tenant
  * role opens no project by itself, so buttons follow the project's own
@@ -59,6 +65,8 @@ export interface CloudProject {
   name: string;
   /** This account's role in it. */
   role: ProjectRole;
+  /** Active, or archived (read-only until it is unarchived and opened again). */
+  state: 'active' | 'archived';
   /** What this account may do in it. */
   permissions: readonly ProjectPermission[];
   canWrite: boolean;
@@ -87,6 +95,13 @@ export function workspaceName(kind: TenantKind, name: string, own: boolean): str
 
 export type Progress = (done: number, total: number) => void;
 
+/** What the catalog says of a drawing uploaded as a new project. */
+export interface UploadCatalog {
+  projectType?: ProjectType;
+  description?: string;
+  tags?: readonly string[];
+}
+
 const PAGE = 2000;
 const uuid = () => crypto.randomUUID();
 
@@ -111,6 +126,8 @@ export class CloudSession {
   /** Whether drafts survive a reload on this browser. */
   readonly durableDrafts: boolean;
   readonly api: CloudApi;
+  /** The catalog's commands on any project, the open one included (docs/adr/0028). */
+  readonly lifecycle: ProjectLifecycle;
   private readonly ctx: AppContext;
   private readonly drafts: DraftStore;
   private socket: ProjectSocket | null = null;
@@ -123,6 +140,7 @@ export class CloudSession {
     const store = drafts ? { store: drafts, durable: true } : browserDraftStore();
     this.drafts = store.store;
     this.durableDrafts = store.durable;
+    this.lifecycle = new ProjectLifecycle(this, ctx.log);
   }
 
   /** The membership of a tenant for the signed-in account. */
@@ -196,11 +214,11 @@ export class CloudSession {
    */
   autosaves(): boolean {
     const state = this.sync.value?.state.value;
-    return !!this.project.value?.canWrite && !!state && state !== 'deleted' && state !== 'revoked';
+    return !!this.project.value?.canWrite && !!state && !ENDED.includes(state);
   }
 
   /** The open cloud project, if it is this one. */
-  private isOpen(tenantId: string, projectId: string): CloudProject | null {
+  openProject(tenantId: string, projectId: string): CloudProject | null {
     const p = this.project.value;
     return p && p.tenantId === tenantId && p.projectId === projectId ? p : null;
   }
@@ -208,42 +226,50 @@ export class CloudSession {
   /**
    * Renames a cloud project for everyone. The open one is renamed through
    * its autosave (with whatever else waits, so it cannot conflict with
-   * itself); another one with a metadata change based on its current
-   * version. True when the server has the new name.
+   * itself); another one with the `project.rename` command (docs/adr/0028).
+   * True when the server has the new name.
    */
   async rename(tenantId: string, projectId: string, name: string): Promise<boolean> {
     const title = name.trim();
     if (!title || title.length > 200) throw new Error('Proje adı boş olamaz ve en çok 200 karakter olabilir.');
-    if (this.isOpen(tenantId, projectId)) {
+    if (this.openProject(tenantId, projectId)) {
       this.ctx.doc.name.set(title);
       return this.flush();
     }
-    const info = await this.api.project(tenantId, projectId);
-    await this.api.command({
-      commandName: 'project.changes',
-      version: 1,
-      tenantId,
-      projectId,
-      requestId: `web-${uuid()}`,
-      idempotencyKey: uuid(),
-      expectedVersions: { '@project': info.metaVersion },
-      input: { features: [], project: { name: title } },
-    });
+    await this.api.lifecycle(catalogEnvelope('project.rename', tenantId, projectId, { name: title }));
     return true;
   }
 
   /**
-   * Deletes a cloud project for everyone (`project.delete`: its owner, or an
-   * organisation's admin; the server keeps it, so the operator can restore
-   * it). The open one is left: the drawing stays on screen as an unsaved
-   * local drawing.
+   * Deletes a cloud project for everyone: moves it to the trash
+   * (`project.trash`: its owner, or an organisation's admin; restorable
+   * until the trash's retention ends). The open one is left: the drawing
+   * stays on screen as an unsaved local drawing.
    */
-  async deleteProject(tenantId: string, projectId: string): Promise<void> {
-    await this.api.deleteProject(tenantId, projectId);
-    const open = this.isOpen(tenantId, projectId);
-    if (!open) return;
+  async deleteProject(tenantId: string, projectId: string, name = ''): Promise<void> {
+    await this.lifecycle.trash({ tenantId, projectId, name });
+  }
+
+  /** The open project was moved to the trash from here: it is left, the drawing stays. */
+  leftTrashed(open: CloudProject, until: string): void {
     this.detach();
-    this.ctx.log.info(`“${open.name}” bulut projesi silindi. Çizim ekranda kaldı; saklamak için Dosya → Farklı kaydet ile yerel bir dosyaya kaydedin.`);
+    this.ctx.log.info(`“${open.name}” bulut projesi çöp kutusuna taşındı${until ? ` (${until})` : ''}. Çizim ekranda kaldı; saklamak için Dosya → Farklı kaydet ile yerel bir dosyaya kaydedin.`);
+  }
+
+  /**
+   * The open project is archived: nothing more is sent or heard; the drawing
+   * and its unsent edits stay here (`byMe`: archived from this window).
+   */
+  projectArchived(project: CloudProject, byMe = false): void {
+    const open = this.project.value;
+    if (open?.projectId !== project.projectId) return;
+    this.socket?.stop();
+    this.project.set({ ...open, state: 'archived', canWrite: false, canEditMeta: false });
+    if (byMe) this.ctx.log.info(`“${open.name}” arşivlendi: salt okunur. Değiştirmek için arşivden çıkarın; çizim ekranda kalıyor.`);
+    else
+      this.ctx.log.warn(
+        `“${open.name}” bulut projesi arşivlendi; değişiklikleriniz artık buluta kaydedilmiyor, gönderilmemiş olanlar bu cihazda saklanıyor. Proje arşivden çıkarılınca yeniden açın: saklanan değişiklikler geri gelir. Çizimi saklamak için Dosya → Farklı kaydet ile yerel bir dosyaya kaydedin.`,
+      );
   }
 
   /** Someone deleted the open project: nothing more is sent or heard; the drawing and its unsent edits stay here. */
@@ -315,6 +341,8 @@ export class CloudSession {
     // A project shared from someone else's personal space comes without a membership there.
     const own = !!this.membership(info.tenantId);
     const permissions = info.access.permissions;
+    // An archived project opens read-only, whatever the role (docs/adr/0028).
+    const archived = info.state === 'archived';
     const project: CloudProject = {
       tenantId: info.tenantId,
       tenantName: workspaceName(info.tenantKind, info.tenantName, own),
@@ -322,9 +350,10 @@ export class CloudSession {
       projectId: info.id,
       name: info.name,
       role: info.access.role,
+      state: archived ? 'archived' : 'active',
       permissions,
-      canWrite: permissions.includes('feature.write'),
-      canEditMeta: permissions.includes('project.edit'),
+      canWrite: !archived && permissions.includes('feature.write'),
+      canEditMeta: !archived && permissions.includes('project.edit'),
     };
     // Created right after the sync, which asks it when access may have changed.
     let watch: AccessWatch | null = null;
@@ -344,6 +373,7 @@ export class CloudSession {
       warn: (t) => this.ctx.log.warn(t),
       onDeleted: () => this.projectDeleted(project),
       onRevoked: (reason) => this.accessRevoked(project, reason),
+      onArchived: () => this.projectArchived(project),
       onAccessChanged: () => void watch?.check(),
     });
     watch = new AccessWatch({
@@ -391,7 +421,9 @@ export class CloudSession {
     };
     this.sync.set(sync);
     this.project.set(project);
-    socket.start();
+    // Nothing is sent to an archived project, and nothing of it changes: no live channel.
+    if (archived) sync.markArchived(true);
+    else socket.start();
     this.ctx.files.handle = null;
     return sync;
   }
@@ -428,11 +460,13 @@ export class CloudSession {
     const draft = await this.drafts.get(draftKey(this.me.value!.user.id, tenantId, projectId)).catch(() => null);
     if (draft && (await sync.restore(draft))) this.ctx.log.info('Bu cihazda gönderilmemiş değişiklikler vardı; çizime geri kondu.');
     this.ctx.log.success(`“${info.name}” bulut projesi açıldı: ${records.length} nesne.`);
+    if (info.state === 'archived')
+      this.ctx.log.info(`“${info.name}” arşivlenmiş bir proje: salt okunur açıldı; değişiklikler buluta kaydedilmez. Düzenlemek için arşivden çıkarılmalı ya da kopyası oluşturulmalı.`);
     return true;
   }
 
-  /** Makes the current drawing a new cloud project in `tenantId`. */
-  async upload(tenantId: string, name: string, progress: Progress = () => {}): Promise<boolean> {
+  /** Makes the current drawing a new cloud project in `tenantId`, with its catalog metadata (docs/adr/0028). */
+  async upload(tenantId: string, name: string, progress: Progress = () => {}, catalog: UploadCatalog = {}): Promise<boolean> {
     const doc = this.ctx.doc;
     // The drawing becomes the new project: the previous cloud project is left first (its changes sent).
     await this.sync.value?.flush().catch(() => false);
@@ -446,6 +480,9 @@ export class CloudSession {
       layers: unlocked(tree),
       activeLayer: doc.layers.active.value,
       styles: { items: structuredClone([...doc.styles.value.items]), categories: structuredClone([...doc.styles.value.categories]) },
+      ...(catalog.projectType ? { projectType: catalog.projectType } : {}),
+      ...(catalog.description?.trim() ? { description: catalog.description.trim() } : {}),
+      ...(catalog.tags?.length ? { tags: [...catalog.tags] } : {}),
     };
     // Each step keeps its idempotency key through its tries: a lost answer is answered from the server's log.
     const createKey = uuid();

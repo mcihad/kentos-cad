@@ -199,6 +199,11 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
           );
           return void ctx.files.saveAs();
         }
+        if (state === 'archived') {
+          // Nothing is saved to an archived project (docs/adr/0028): the drawing goes to a local file and leaves the project.
+          ctx.log.warn('Bu bulut projesi arşivlenmiş; çizim buluta kaydedilemez. Yerel bir dosyaya kaydedin.');
+          return void ctx.files.saveAs().then((saved) => saved && ctx.cloud.sync.value?.state.value === 'archived' && ctx.cloud.detach());
+        }
         void ctx.cloud.flush().then((ok) =>
           ok ? ctx.log.success('Buluta kaydedildi.') : ctx.log.warn('Bulut kaydı tamamlanamadı; durum çubuğundaki kayıt durumuna bakın.'),
         );

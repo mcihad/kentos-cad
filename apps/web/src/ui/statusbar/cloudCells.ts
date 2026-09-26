@@ -23,6 +23,7 @@ export const SAVE_TEXT: Record<SaveState, (n: number) => string> = {
   readonly: () => 'Salt okunur',
   deleted: () => 'Proje silindi',
   revoked: () => 'Erişim kaldırıldı',
+  archived: () => 'Proje arşivde',
 };
 
 export const LINK_TEXT = { none: '', connecting: 'bağlanıyor', online: 'canlı', reconnecting: 'yeniden bağlanıyor', offline: 'çevrimdışı', auth_required: 'oturum gerekli' } as const;
@@ -83,6 +84,11 @@ export function saveCell(ctx: AppContext, d: DisposableStore): HTMLElement {
           return {
             title: 'Bulut kaydı',
             description: `${p.tenantName} › ${p.name} projesine erişiminiz kaldırıldı. Değişiklikler buluta gönderilmiyor; bu cihazda saklanıyor. Tıklayın ya da Ctrl+S: çizimi yerel bir dosyaya kaydedin. Erişim için proje sahibine başvurun.`,
+          };
+        if (sync.state.value === 'archived')
+          return {
+            title: 'Bulut kaydı',
+            description: `${p.tenantName} › ${p.name} arşivlenmiş: salt okunurdur, değişiklikler buluta gönderilmiyor. Tıklayın ya da Ctrl+S: çizimi yerel bir dosyaya kaydedin. Proje sahibi ya da yöneticisi arşivden çıkarınca projeyi yeniden açın.`,
           };
         const lines = [
           `${p.tenantName} › ${p.name}. Değişiklikler kendiliğinden kaydedilir; Ctrl+S hemen gönderir.`,

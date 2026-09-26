@@ -41,7 +41,7 @@ export function setup(opts: { canEditMeta?: boolean; canWrite?: boolean; drafts?
   const server = opts.server ?? serverFor(doc);
   const warnings: string[] = [];
   const drafts = opts.drafts ?? new MemoryDraftStore();
-  const told = { deleted: 0, revoked: [] as string[], asked: 0 };
+  const told = { deleted: 0, revoked: [] as string[], asked: 0, archived: 0 };
   const o: SyncOptions = {
     doc,
     api: server,
@@ -58,6 +58,7 @@ export function setup(opts: { canEditMeta?: boolean; canWrite?: boolean; drafts?
     warn: (t) => warnings.push(t),
     onDeleted: () => told.deleted++,
     onRevoked: (reason) => told.revoked.push(reason),
+    onArchived: () => told.archived++,
     onAccessChanged: () => told.asked++,
     debounceMs: 60_000,
     maxDelayMs: 60_000,

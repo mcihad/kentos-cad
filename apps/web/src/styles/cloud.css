@@ -173,7 +173,8 @@
 .status__save[data-state='revoked'] .status__lamp {
   background: currentColor;
 }
-.status__save[data-state='readonly'] {
+.status__save[data-state='readonly'],
+.status__save[data-state='archived'] {
   color: var(--c-text-3);
 }
 
@@ -402,4 +403,20 @@
   display: inline-flex;
   padding: 0 8px;
   color: var(--c-text-3);
+}
+
+/* The catalog's forms (a project's information, a copy, the upload's type and tags; docs/adr/0028). */
+.cloud-textarea {
+  height: auto;
+  min-height: calc(64px * var(--ui-scale));
+  padding: 6px 8px;
+  resize: vertical;
+  line-height: 1.45;
+  font-family: inherit;
+}
+.dialog--cloud .dialog__body > .cloud-hint--tight {
+  margin: 4px 0 12px;
+}
+.dialog--cloud .cloud-hint--tight + .cloud-field {
+  margin-top: 0;
 }
