@@ -168,6 +168,19 @@ describe.skipIf(!formatsBuilt)('local drawing files', () => {
     expect(messages.at(-1)).toMatch(/^hata: “a\.kcad” yazılamadı: Çizim KCAD 2 olarak yazılamıyor: entities\/0\/p\/x: sayı NaN ya da sonsuz/);
   });
 
+  it('Save As leaves a cloud project that ended (deleted, access taken away, archived) before the file takes the drawing', async () => {
+    for (const state of ['deleted', 'revoked', 'archived']) {
+      const cloud = fakeCloud({ name: 'Bulut', canWrite: true, unsent: 0 });
+      cloud.sync.value = { state: { value: state } };
+      const { files } = setup(undefined, cloud);
+      const file = memoryFile('kopya.kcad');
+      files.picker = pick(file);
+      expect(await files.saveAs(), state).toBe(true);
+      expect(cloud.project.value, state).toBeNull();
+      expect(files.handle, state).toBe(file);
+    }
+  });
+
   it('opens v2 and v1 by content, and refuses a broken or foreign file without touching the open drawing', async () => {
     const { doc, files, messages } = setup();
     const src = snapshotSampleDocument();
