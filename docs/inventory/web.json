@@ -76,7 +76,7 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 94,
+    "commandsWithoutTests": 85,
     "commandsOnDesktop": 56
   },
   "commands": [
@@ -2878,7 +2878,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "tool.cancel",
@@ -2938,7 +2940,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/corner-tools.json"
+      ]
     },
     {
       "id": "tool.circle",
@@ -3254,7 +3258,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/object-tools.json"
+      ]
     },
     {
       "id": "tool.extend",
@@ -3287,7 +3293,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "tool.fillet",
@@ -3323,7 +3331,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/corner-tools.json"
       ]
     },
     {
@@ -3394,7 +3403,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/object-tools.json"
+      ]
     },
     {
       "id": "tool.lengthen",
@@ -3428,7 +3439,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "tool.line",
@@ -3609,7 +3622,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "tool.pan",
@@ -4492,7 +4507,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "tool.vertex",
@@ -4525,7 +4542,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "tool.xline",
@@ -5730,7 +5749,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "chamfer",
@@ -5756,7 +5777,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/corner-tools.json"
+      ]
     },
     {
       "id": "circle",
@@ -5972,7 +5995,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/object-tools.json"
+      ]
     },
     {
       "id": "extend",
@@ -5997,7 +6022,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "fillet",
@@ -6024,7 +6051,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/corner-tools.json"
       ]
     },
     {
@@ -6075,7 +6103,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/object-tools.json"
+      ]
     },
     {
       "id": "lengthen",
@@ -6100,7 +6130,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "line",
@@ -6236,7 +6268,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "pan",
@@ -6872,7 +6906,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/edge-tools.json"
+      ]
     },
     {
       "id": "vertex",
@@ -6896,7 +6932,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "fixtures/interaction/v1/path-edit-tools.json"
+      ]
     },
     {
       "id": "xline",
