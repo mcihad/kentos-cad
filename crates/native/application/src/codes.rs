@@ -1,5 +1,5 @@
 //! The stable codes of the drawing commands' answers (`CommandError.code`,
-//! `CommandWarning.code`; docs/adr/0022, 0027, 0029). Programs branch on
+//! `CommandWarning.code`; docs/adr/0022, 0027, 0029, 0032, 0037). Programs branch on
 //! these, never on the Turkish message.
 
 /// A closed area with fewer than 3 corners (`cad.polygon.create`).
@@ -27,3 +27,7 @@ pub const INVALID_UID: &str = "invalid_uid";
 pub const ENTITY_NOT_FOUND: &str = "entity_not_found";
 /// A warning: the layer is hidden, by itself or a group above it.
 pub const LAYER_HIDDEN: &str = "layer_hidden";
+/// A scale factor that is not above zero (`cad.entities.transform`).
+pub const INVALID_FACTOR: &str = "invalid_factor";
+/// A mirror axis whose two points give it no direction (`cad.entities.transform`).
+pub const INVALID_AXIS: &str = "invalid_axis";

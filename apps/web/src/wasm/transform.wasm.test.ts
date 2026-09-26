@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import type { Transform } from '../contracts/generated/Transform';
 import type { Entity, EntityKind, NewEntity } from '../model/entities';
 import { compose, mirror, rotation, scaling, translation, type Affine } from '../model/geom/affine';
-import { transformEntities, transformedFrom } from '../model/ops/transform';
+import { transformEntities, transformedFrom, transformObjects } from '../model/ops/transform';
 import { PickIndex } from '../viewport/picking';
 import { Gen } from './calls/harness';
 import { entity } from './calls/sets/p5-entities';
@@ -215,5 +216,62 @@ describe('move, copy and paste through the geometry store, packed', () => {
     const ids = Float64Array.of(1, 2);
     expect(() => transformedFrom([e, { ...e, id: 2 }], ids, 1, store.transformPacked(ids, Float64Array.from(translation(1, 1))))).toThrow(/Geometri deposu/);
     store.dispose();
+  });
+});
+
+/**
+ * The product command `cad.entities.transform` (docs/adr/0037) moves the
+ * objects it names with no store: `transformObjects` packs them, the core
+ * builds the matrix from the transform's numbers and moves each one. Its
+ * answer is the store's, bit for bit, and −0 survives where JSON drops it.
+ */
+describe('the transform command’s path, with no store', () => {
+  /** A random transform of the command, and the affine the core builds of it (`similarity`), for the store. */
+  function transform(g: Gen): [Transform, Affine] {
+    const c = g.pt();
+    switch (g.int(0, 3)) {
+      case 0: {
+        const [dx, dy] = [g.num(-100, 100), g.num(-100, 100)];
+        return [{ kind: 'move', dx, dy }, translation(dx, dy)];
+      }
+      case 1: {
+        const angle = g.chance(0.2) ? g.pick([0, Math.PI / 2, Math.PI, -Math.PI / 2]) : g.num(-7, 7);
+        return [{ kind: 'rotate', center: c, angle }, rotation(angle, c)];
+      }
+      case 2: {
+        const factor = g.num(0.1, 4);
+        return [{ kind: 'scale', center: c, factor }, scaling(factor, c)];
+      }
+      default: {
+        const b = g.pt();
+        return [{ kind: 'mirror', a: c, b }, mirror(c, b)];
+      }
+    }
+  }
+
+  it('gives what the store gives, bit for bit, on random objects and transforms', () => {
+    const g = new Gen(37_2026);
+    const failures: string[] = [];
+    for (let round = 0; round < ROUNDS && failures.length < 5; round++) {
+      const list = withoutNegativeZero([...objects(g, g.int(1, 40)), ...(round % 10 === 0 ? SPECIAL.map((e, i) => ({ ...e, id: 1001 + i }) as Entity) : [])]);
+      // The store's affine comes from the JSON constructors, whose answers keep −0 ("-0").
+      const [t, m] = transform(g);
+      const got = transformObjects(list, t);
+      const want = packedPath(list, [m]);
+      const d = got.length === want.length ? got.map((e, i) => difference(e, want[i])).find((x) => x) : `${got.length} ≠ ${want.length}`;
+      if (d) failures.push(`${round}. tur (${t.kind}): ${d}`);
+    }
+    expect(failures.join('\n')).toBe('');
+  });
+
+  it('keeps −0: a mirror turns zero bulges into −0, a move carries them over', () => {
+    type Polygon = Extract<Entity, { kind: 'polyline' | 'polygon' }>;
+    const area: Polygon = { id: 9, layerId: 'a', attrs: { Ada: '101' }, kind: 'polygon', pts: [{ x: 487000, y: 4420000 }, { x: 487040, y: 4420000 }, { x: 487040, y: 4420030 }], bulges: [0, 0.5, 0] };
+    const [mirrored] = transformObjects([area], { kind: 'mirror', a: { x: 487025, y: 4420000 }, b: { x: 487025, y: 4420010 } });
+    expect(mirrored.bulges!.map((b) => Object.is(b, -0))).toEqual([true, false, true]);
+    const [moved] = transformObjects([mirrored], { kind: 'move', dx: 1, dy: 2 });
+    expect(moved.bulges!.map((b) => Object.is(b, -0))).toEqual([true, false, true]);
+    expect([moved.id, moved.attrs.Ada, moved.attrs === area.attrs]).toEqual([9, '101', false]);
+    expect(transformObjects([], { kind: 'move', dx: 1, dy: 2 })).toEqual([]);
   });
 });

@@ -4,8 +4,10 @@
 //! cases of each (`fixtures/commands/v1`) hold them the same way. The web's
 //! counterpart is `apps/web/src/product/checks.ts`.
 
+use std::collections::HashSet;
+
 use kentos_contracts::{CommandError, CommandResult, CommandWarning, Entity, LayerNodeType};
-use kentos_domain::{Document, Slot};
+use kentos_domain::{Document, Slot, Uuid};
 
 use crate::codes;
 
@@ -155,6 +157,72 @@ pub(crate) fn layer(doc: &Document, id: &str) -> Result<Vec<CommandWarning>, Sto
         });
     }
     Ok(warnings)
+}
+
+/// The ids a command names (`cad.entities.delete`, `cad.entities.transform`):
+/// at least one (`no_entities`, with the command's own sentence `nothing`),
+/// each lowercase UUID text with hyphens (`invalid_uid`, the first that is not).
+pub(crate) fn uids(uids: &[String], nothing: &str) -> Result<(), Stop> {
+    if uids.is_empty() {
+        return Err(Stop::Failed(error(
+            codes::NO_ENTITIES,
+            format!("{nothing} En az bir nesnenin kalıcı kimliğini verin."),
+            Some("uids".into()),
+        )));
+    }
+    for (i, uid) in uids.iter().enumerate() {
+        if !is_uid_text(uid) {
+            return Err(Stop::Failed(error(
+                codes::INVALID_UID,
+                format!(
+                    "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın."
+                ),
+                Some(format!("uids[{i}]")),
+            )));
+        }
+    }
+    Ok(())
+}
+
+/// The objects the ids name, each once, in the input's order: its slot, the
+/// object and its id. `entity_not_found` for the first the document lacks.
+pub(crate) fn objects<'a>(
+    doc: &'a Document,
+    uids: &'a [String],
+) -> Result<Vec<(Slot, &'a Entity, &'a String)>, Stop> {
+    let mut seen = HashSet::new();
+    let mut out = Vec::with_capacity(uids.len());
+    for (i, uid) in uids.iter().enumerate() {
+        if !seen.insert(uid.as_str()) {
+            continue;
+        }
+        let found = Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|slot| Some((slot, doc.get(slot)?)));
+        let Some((slot, entity)) = found else {
+            return Err(Stop::Failed(error(
+                codes::ENTITY_NOT_FOUND,
+                format!(
+                    "“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
+                ),
+                Some(format!("uids[{i}]")),
+            )));
+        };
+        out.push((slot, entity, uid));
+    }
+    Ok(out)
+}
+
+/// A persistent id as the contract writes it: lowercase hexadecimal with
+/// hyphens, 8-4-4-4-12 (the web's `isUuid`).
+pub(crate) fn is_uid_text(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    bytes.len() == 36
+        && bytes.iter().enumerate().all(|(i, b)| match i {
+            8 | 13 | 18 | 23 => *b == b'-',
+            _ => b.is_ascii_digit() || (b'a'..=b'f').contains(b),
+        })
 }
 
 /// Writes one object as one undo step (“Ekle”, the document's own `add`),

@@ -277,7 +277,7 @@ pub const CAD_ENTITIES_DELETE_VERSION: u32 = 1;
 
 /// A persistent object id as text: lowercase, with hyphens (docs/adr/0014).
 #[cfg(feature = "schema")]
-const UID_TEXT: &str = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
+pub(crate) const UID_TEXT: &str = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
 
 /// Input of `cad.entities.delete` v1: the objects to delete, named by their
 /// persistent ids (docs/adr/0014), deleted as one undo step (“Sil”). What

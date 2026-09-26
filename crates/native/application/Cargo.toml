@@ -13,6 +13,9 @@ publish.workspace = true
 [dependencies]
 kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-domain = { path = "../domain" }
+# The shared geometry core: what a transform does to each kind of object (docs/adr/0037),
+# the same code the web reaches through WASM.
+kentos-geometry-core = { path = "../../shared/geometry-core" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

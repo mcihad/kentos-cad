@@ -51,6 +51,24 @@ pub fn mirror(p: Vec2, q: Vec2) -> Affine {
     ]
 }
 
+/// The affine of a similarity as the modify tools and the product command
+/// `cad.entities.transform` give it (docs/adr/0037): `move` (dx, dy),
+/// `rotate` (cx, cy, angle in radians, counter-clockwise), `scale` (cx, cy,
+/// factor) or `mirror` (ax, ay, bx, by). None for another kind, or another
+/// count of numbers. The web's handler reaches it through WASM with the
+/// numbers as float64 (no JSON), the desktop's natively: one matrix, bit for
+/// bit, on both. Whether the numbers make sense (a factor above zero, an
+/// axis with a direction) is the command's to check first.
+pub fn similarity(kind: &str, p: &[f64]) -> Option<Affine> {
+    match (kind, p) {
+        ("move", &[dx, dy]) => Some(translation(dx, dy)),
+        ("rotate", &[cx, cy, angle]) => Some(rotation(angle, Vec2::new(cx, cy))),
+        ("scale", &[cx, cy, factor]) => Some(scaling(factor, Vec2::new(cx, cy))),
+        ("mirror", &[ax, ay, bx, by]) => Some(mirror(Vec2::new(ax, ay), Vec2::new(bx, by))),
+        _ => None,
+    }
+}
+
 /// m2 ∘ m1: first m1, then m2.
 pub fn compose(m2: &Affine, m1: &Affine) -> Affine {
     let [a1, b1, c1, d1, e1, f1] = *m1;
@@ -109,3 +127,39 @@ pub(crate) static OPS: &[Op] = &[
     op!("lengthScale", |m: Affine| length_scale(&m)),
     op!("isReflection", |m: Affine| is_reflection(&m)),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn bits(m: Affine) -> [u64; 6] {
+        m.map(f64::to_bits)
+    }
+
+    /// Each kind is its constructor, bit for bit (−0 included); another
+    /// kind or another count of numbers is none.
+    #[test]
+    fn a_similarity_is_its_constructor() {
+        let c = Vec2::new(486520.25, -0.0);
+        assert_eq!(
+            bits(similarity("move", &[12.5, -0.0]).unwrap()),
+            bits(translation(12.5, -0.0))
+        );
+        assert_eq!(
+            bits(similarity("rotate", &[c.x, c.y, 0.7]).unwrap()),
+            bits(rotation(0.7, c))
+        );
+        assert_eq!(
+            bits(similarity("scale", &[c.x, c.y, 2.5]).unwrap()),
+            bits(scaling(2.5, c))
+        );
+        let (a, b) = (Vec2::new(1.0, 2.0), Vec2::new(4.0, 6.0));
+        assert_eq!(
+            bits(similarity("mirror", &[a.x, a.y, b.x, b.y]).unwrap()),
+            bits(mirror(a, b))
+        );
+        assert_eq!(similarity("move", &[1.0]), None);
+        assert_eq!(similarity("rotate", &[1.0, 2.0]), None);
+        assert_eq!(similarity("shear", &[1.0, 2.0]), None);
+    }
+}

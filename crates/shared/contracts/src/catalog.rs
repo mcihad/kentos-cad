@@ -157,10 +157,11 @@ pub fn catalog() -> CommandCatalog {
     use crate::{
         ArcCreate, ArcCreated, CAD_ARC_CREATE, CAD_ARC_CREATE_VERSION, CAD_CIRCLE_CREATE,
         CAD_CIRCLE_CREATE_VERSION, CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION,
-        CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE, CAD_POINT_CREATE_VERSION,
-        CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE,
-        CAD_POLYLINE_CREATE_VERSION, CircleCreate, CircleCreated, CommitResult, EntitiesDelete,
-        EntitiesDeleted, LineCreate, LineCreated, PROJECT_ACCESS_REVOKE,
+        CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION, CAD_LINE_CREATE,
+        CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE, CAD_POINT_CREATE_VERSION, CAD_POLYGON_CREATE,
+        CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION, CircleCreate,
+        CircleCreated, CommitResult, EntitiesDelete, EntitiesDeleted, EntitiesTransform,
+        EntitiesTransformed, LineCreate, LineCreated, PROJECT_ACCESS_REVOKE,
         PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_SHARE,
         PROJECT_SHARE_VERSION, PointCreate, PointCreated, PolygonCreate, PolygonCreated,
         PolylineCreate, PolylineCreated, ProjectAccessChange, ProjectAccessRevoke, ProjectChanges,
@@ -1048,6 +1049,66 @@ pub fn catalog() -> CommandCatalog {
                     output: None,
                 },
             ],
+        },
+        // The move, copy, rotate, scale and mirror tools' command (docs/adr/0037), held
+        // together by fixtures/commands/v1/cad.entities.transform.json.
+        CommandDescriptor {
+            id: CAD_ENTITIES_TRANSFORM.into(),
+            version: CAD_ENTITIES_TRANSFORM_VERSION,
+            title: "Nesneleri dönüştür".into(),
+            summary: "Kalıcı kimlikleriyle verilen nesneleri taşır, bir merkez etrafında döndürür, bir merkeze göre ölçekler ya da iki noktalı bir eksene göre aynalar; yerinde ya da kopya olarak, tek geri alma adımında. \
+                      Taşı, Kopyala, Döndür, Ölçekle ve Aynala araçları seçimi kimlik listesi olarak verip bu komutla yazar; adım aracın adını taşır. \
+                      Dönüşüm geometri çekirdeğindedir: her nesne türü (yay, daire, elips, eğri, yazı, ölçü, tarama) aynı kuralla döner; yaylar saat yönünün tersine kalır, aynalanan yazı okunur kalır. \
+                      Yerinde değişen nesne yuvasını, kalıcı kimliğini ve öbür alanlarını korur; kopya bütün alanları alır, yeni bir kalıcı kimlik alır. \
+                      Kilitli katmandaki nesne ne değişir ne kopyalanır: öbürleri uyarıyla yazılır, hepsi kilitliyse hiçbir şey yazılmaz. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Web, CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<EntitiesTransform>(),
+            output: schema::<EntitiesTransformed>(),
+            examples: vec![
+                CommandExample {
+                    title: "İki nesneyi 12,5 m doğuya, 7,25 m güneye taşıma".into(),
+                    input: json!({
+                        "uids": [
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"
+                        ],
+                        "transform": { "kind": "move", "dx": 12.5, "dy": -7.25 }
+                    }),
+                    output: Some(json!({
+                        "changed": [
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+                            "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"
+                        ],
+                        "created": [],
+                        "locked": [],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Bir nesnenin bir nokta etrafında 90° döndürülmüş kopyası; yalnız planlandığı sürümde yazılır".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "transform": {
+                            "kind": "rotate",
+                            "center": { "x": 423510.0, "y": 4512300.0 },
+                            "angle": std::f64::consts::FRAC_PI_2
+                        },
+                        "copy": true,
+                        "expectedRevision": "37"
+                    }),
+                    output: None,
+                },
+            ],
         }],
     }
 }
@@ -1186,6 +1247,10 @@ mod tests {
                     crate::CAD_ARC_CREATE => {
                         serde_json::from_value::<crate::ArcCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ENTITIES_TRANSFORM => {
+                        serde_json::from_value::<crate::EntitiesTransform>(e.input.clone())
+                            .map(|_| ())
+                    }
                     other => panic!("{other}: add its input type to this test"),
                 };
                 parsed.unwrap_or_else(|err| panic!("{}: {}: {err}", d.id, e.title));
@@ -1214,6 +1279,10 @@ mod tests {
                         }
                         crate::CAD_ARC_CREATE => {
                             serde_json::from_value::<crate::ArcCreated>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_TRANSFORM => {
+                            serde_json::from_value::<crate::EntitiesTransformed>(output.clone())
+                                .map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };

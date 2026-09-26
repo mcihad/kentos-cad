@@ -1,0 +1,257 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.transform",
+  "commandVersion": 1,
+  "title": "Nesneleri dönüştür: doğrulama, plan, yazma, geri alma",
+  "note": "ADR 0037. Denetim sırası: en az bir kimlik ve her kimliğin yazımı; dönüşümün sayılarının sonlu olması (alanların sırasıyla), ölçek faktörünün sıfırdan büyük olması, simetri ekseninin yönü olması; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; hepsinin kilitli katmanda olmaması; sonucun sonlu olması. Kilitli katmandaki nesne ne değişir ne kopyalanır. Adım aracın adıdır: Taşı, Kopyala, Döndür, Ölçekle, Aynala. Beklenen geometri dönüşümlerin tanımından, aynı işlem sırasıyla çift duyarlıkla hesaplandı. Kurulumdaki en büyük kimlik 21; kopyalar 22'den başlar. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+    "origin": {"x": 487000, "y": 4420000},
+    "layers": [
+      {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "pafta", "name": "Pafta", "type": "group", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "sinir", "name": "Sınır", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "taslak", "name": "Taslak", "type": "group", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "notlar", "name": "Notlar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {"kind": "point", "id": 4, "layerId": "yapi", "attrs": {"Ad": "N1"}, "label": "N1", "p": {"x": 487001, "y": 4420001}, "z": 12.5},
+      {"kind": "polygon", "id": 9, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [{"x": 487000, "y": 4420000}, {"x": 487040, "y": 4420000}, {"x": 487040, "y": 4420030}], "bulges": [0.25, 0.5, -0.25]},
+      {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}},
+      {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420020}, "r": 4, "a0": 0, "a1": 1.5707963267948966},
+      {"kind": "line", "id": 12, "layerId": "kilitli", "attrs": {}, "a": {"x": 487005, "y": 4420005}, "b": {"x": 487015, "y": 4420005}},
+      {"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487030, "y": 4420010}, "r": 2.5},
+      {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487005, "y": 4420025}, "text": "Ada 101", "height": 2, "rotation": 0},
+      {"kind": "line", "id": 15, "layerId": "eski", "attrs": {}, "a": {"x": 487005, "y": 4420010}, "b": {"x": 487015, "y": 4420010}},
+      {"kind": "ellipse", "id": 16, "layerId": "yapi", "attrs": {}, "c": {"x": 487050, "y": 4420050}, "major": {"x": 8, "y": 0}, "ratio": 0.5, "t0": 0.5, "t1": 1.5},
+      {"kind": "dimension", "id": 17, "layerId": "yapi", "attrs": {}, "a": {"x": 487000, "y": 4420040}, "b": {"x": 487010, "y": 4420040}, "offset": 2, "height": 0.5},
+      {"kind": "spline", "id": 18, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487060, "y": 4420000}, {"x": 487064, "y": 4420004}, {"x": 487068, "y": 4420000}], "closed": false},
+      {"kind": "line", "id": 20, "layerId": "gizli", "attrs": {}, "a": {"x": 487005, "y": 4420015}, "b": {"x": 487015, "y": 4420015}},
+      {"kind": "point", "id": 21, "layerId": "notlar", "attrs": {"Ad": "N2"}, "p": {"x": 487002, "y": 4420002}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "cases": [
+    {
+      "name": "yerinde taşınır: yuvası, kalıcı kimliği ve öbür alanları kalır; tek adımda geri alınır, yinelenir",
+      "steps": [
+        {"op": "captureUid", "id": 10, "as": "cizgi"},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:10"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487022.5, "y": 4420002.75}, "b": {"x": 487032.5, "y": 4420002.75}}}, "uids": {"10": "cizgi"}, "canUndo": true, "canRedo": false, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Taşı", "note": "Taşı aracının hep yazdığı adım adı.", "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}}, "uids": {"10": "cizgi"}, "canUndo": false, "canRedo": true, "revision": "changed"}},
+        {"op": "redo", "returns": "Taşı", "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487022.5, "y": 4420002.75}, "b": {"x": 487032.5, "y": 4420002.75}}}, "canUndo": true, "canRedo": false, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "kopya olarak taşınır (Kopyala): kopya bütün alanları ve yeni bir kalıcı kimlik alır, asıl yerinde kalır; adım Kopyala",
+      "steps": [
+        {"op": "captureUid", "id": 10, "as": "cizgi"},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 0, "dy": 20}, "copy": true}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22], "entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}, "22": {"kind": "line", "id": 22, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010.0, "y": 4420030.0}, "b": {"x": 487020.0, "y": 4420030.0}}}, "uids": {"10": "cizgi", "22": "new"}, "canUndo": true, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Kopyala", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": true, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "birden çok nesne ve tekrarlanan kimlik: her nesne bir kez, girdinin sırasıyla; yayın açıları ve noktanın kotu, yazısı, öznitelikleri kalır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:11", "$uidOf:4", "$uidOf:11"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:11", "$uidOf:4"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "entities": {"11": {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487032.5, "y": 4420012.75}, "r": 4.0, "a0": 0.0, "a1": 1.5707963267948966}, "4": {"kind": "point", "id": 4, "layerId": "yapi", "attrs": {"Ad": "N1"}, "label": "N1", "p": {"x": 487013.5, "y": 4419993.75}, "z": 12.5}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Taşı", "note": "İki nesne tek adımda geri gelir.", "expect": {"entities": {"11": {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420020}, "r": 4, "a0": 0, "a1": 1.5707963267948966}, "4": {"kind": "point", "id": 4, "layerId": "yapi", "attrs": {"Ad": "N1"}, "label": "N1", "p": {"x": 487001, "y": 4420001}, "z": 12.5}}, "canUndo": false}}
+      ]
+    },
+    {
+      "name": "döndürme: çizgi başlangıcı etrafında saat yönünün tersine 90°; adım Döndür",
+      "note": "Beklenen koordinatlar döndürme tanımından (cos, sin, aynı işlem sırası) çift duyarlıkla hesaplandı.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "rotate", "center": {"x": 487010, "y": 4420010}, "angle": 1.5707963267948966}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:10"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010.0, "y": 4420010.0}, "b": {"x": 487010.0, "y": 4420020.0}}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Döndür", "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}}}}
+      ]
+    },
+    {
+      "name": "döndürülmüş kopya (Kopya): asıl yerinde kalır, kopya 180° döner; adım yine Döndür",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "rotate", "center": {"x": 487010, "y": 4420010}, "angle": 3.141592653589793}, "copy": true}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22], "entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}, "22": {"kind": "line", "id": 22, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010.00000000006, "y": 4420010.0}, "b": {"x": 487000.00000000006, "y": 4420010.0}}}, "uids": {"22": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Döndür", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21]}}
+      ]
+    },
+    {
+      "name": "ölçekleme: daire, yazı ve eğri iki katına; yarıçap ve yazı yüksekliği de; adım Ölçekle",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13", "$uidOf:14", "$uidOf:18"], "transform": {"kind": "scale", "center": {"x": 487000, "y": 4420000}, "factor": 2}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:13", "$uidOf:14", "$uidOf:18"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"13": {"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487060.0, "y": 4420020.0}, "r": 5.0}, "14": {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487010.0, "y": 4420050.0}, "text": "Ada 101", "height": 4.0, "rotation": 0.0}, "18": {"kind": "spline", "id": 18, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487120.0, "y": 4420000.0}, {"x": 487128.0, "y": 4420008.0}, {"x": 487136.0, "y": 4420000.0}], "closed": false}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ölçekle", "expect": {"entities": {"13": {"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487030, "y": 4420010}, "r": 2.5}, "14": {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487005, "y": 4420025}, "text": "Ada 101", "height": 2, "rotation": 0}, "18": {"kind": "spline", "id": 18, "layerId": "yapi", "attrs": {}, "pts": [{"x": 487060, "y": 4420000}, {"x": 487064, "y": 4420004}, {"x": 487068, "y": 4420000}], "closed": false}}}}
+      ]
+    },
+    {
+      "name": "ölçeklenmiş kopya: merkezinde yarı yarıçaplı bir daire eklenir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "scale", "center": {"x": 487030, "y": 4420010}, "factor": 0.5}, "copy": true}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22], "entities": {"13": {"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487030, "y": 4420010}, "r": 2.5}, "22": {"kind": "circle", "id": 22, "layerId": "yapi", "attrs": {}, "c": {"x": 487030.0, "y": 4420010.0}, "r": 1.25}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Ölçekle", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21]}}
+      ]
+    },
+    {
+      "name": "aynalama: yay saat yönünün tersine kalır, kapalı alanın yay değerleri döner; adım Aynala",
+      "note": "Düşey eksen (doğu 487025): yayın çeyreği batıya döner, a0 π/2, a1 π olur.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:11", "$uidOf:9"], "transform": {"kind": "mirror", "a": {"x": 487025, "y": 4420000}, "b": {"x": 487025, "y": 4420010}}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:11", "$uidOf:9"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"11": {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487030.0, "y": 4420020.0}, "r": 4.0, "a0": 1.5707963267948966, "a1": 3.141592653589793}, "9": {"kind": "polygon", "id": 9, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [{"x": 487050.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420000.0}, {"x": 487010.0, "y": 4420030.0}], "bulges": [-0.25, -0.5, 0.25]}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Aynala", "expect": {"entities": {"11": {"kind": "arc", "id": 11, "layerId": "yapi", "attrs": {}, "c": {"x": 487020, "y": 4420020}, "r": 4, "a0": 0, "a1": 1.5707963267948966}, "9": {"kind": "polygon", "id": 9, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [{"x": 487000, "y": 4420000}, {"x": 487040, "y": 4420000}, {"x": 487040, "y": 4420030}], "bulges": [0.25, 0.5, -0.25]}}}}
+      ]
+    },
+    {
+      "name": "simetrik kopya (kaynağı korur): yazı okunur kalır; adım Aynala",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:14"], "transform": {"kind": "mirror", "a": {"x": 487025, "y": 4420000}, "b": {"x": 487025, "y": 4420010}}, "copy": true}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22], "entities": {"14": {"kind": "text", "id": 14, "layerId": "yapi", "attrs": {}, "p": {"x": 487005, "y": 4420025}, "text": "Ada 101", "height": 2, "rotation": 0}, "22": {"kind": "text", "id": 22, "layerId": "yapi", "attrs": {}, "p": {"x": 487045.0, "y": 4420025.0}, "text": "Ada 101", "height": 2.0, "rotation": 0.0}}, "revision": "changed"}},
+        {"op": "undo", "returns": "Aynala", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21]}}
+      ]
+    },
+    {
+      "name": "her tür aynı kuralla: elips yayı, ölçü ve eğrinin simetriği",
+      "note": "Elipsin parametreleri t → −t döner; hizalı ölçünün uzaklığı işaret değiştirir.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:16", "$uidOf:17", "$uidOf:18"], "transform": {"kind": "mirror", "a": {"x": 487025, "y": 4420000}, "b": {"x": 487025, "y": 4420010}}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:16", "$uidOf:17", "$uidOf:18"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"16": {"kind": "ellipse", "id": 16, "layerId": "yapi", "attrs": {}, "c": {"x": 487000.0, "y": 4420050.0}, "major": {"x": -8.0, "y": 0.0}, "ratio": 0.5, "t0": 4.783185307179586, "t1": 5.783185307179586}, "17": {"kind": "dimension", "id": 17, "layerId": "yapi", "attrs": {}, "a": {"x": 487050.0, "y": 4420040.0}, "b": {"x": 487040.0, "y": 4420040.0}, "offset": -2.0, "height": 0.5}, "18": {"kind": "spline", "id": 18, "layerId": "yapi", "attrs": {}, "pts": [{"x": 486990.0, "y": 4420000.0}, {"x": 486986.0, "y": 4420004.0}, {"x": 486982.0, "y": 4420000.0}], "closed": false}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "kilitli katmandaki nesne yerinde kalır; öbürleri uyarıyla taşınır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10", "$uidOf:12"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:10"], "created": [], "locked": ["$uidOf:12"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487022.5, "y": 4420002.75}, "b": {"x": 487032.5, "y": 4420002.75}}, "12": {"kind": "line", "id": 12, "layerId": "kilitli", "attrs": {}, "a": {"x": 487005, "y": 4420005}, "b": {"x": 487015, "y": 4420005}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "kilitli grubun katmanı da kilitlidir; kilitli nesnenin kopyası da yapılmaz",
+      "note": "Web'in araçları eskiden kilitli nesnenin kopyasını kilitli katmana ekliyordu; ADR 0037 bu farkı kaydeder.",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:15", "$uidOf:10"], "transform": {"kind": "move", "dx": 0, "dy": 20}, "copy": true}, "result": {"status": "completed", "output": {"changed": [], "created": ["$uidOf:22"], "locked": ["$uidOf:15"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22], "entities": {"22": {"kind": "line", "id": 22, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010.0, "y": 4420030.0}, "b": {"x": 487020.0, "y": 4420030.0}}, "15": {"kind": "line", "id": 15, "layerId": "eski", "attrs": {}, "a": {"x": 487005, "y": 4420010}, "b": {"x": 487015, "y": 4420010}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "hepsi kilitliyse hiçbir şey yazılmaz: layer_locked; kopya da yapılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:12", "$uidOf:15"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "2 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:12"], "transform": {"kind": "mirror", "a": {"x": 487025, "y": 4420000}, "b": {"x": 487025, "y": 4420010}}, "copy": true}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "gizli katmandaki ve gizli grubun katmanındaki nesne de dönüştürülür; uyarı yok",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:20", "$uidOf:21"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:20", "$uidOf:21"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"20": {"kind": "line", "id": 20, "layerId": "gizli", "attrs": {}, "a": {"x": 487017.5, "y": 4420007.75}, "b": {"x": 487027.5, "y": 4420007.75}}, "21": {"kind": "point", "id": 21, "layerId": "notlar", "attrs": {"Ad": "N2"}, "p": {"x": 487014.5, "y": 4419994.75}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "nesne verilmedi: no_entities",
+      "steps": [
+        {"op": "execute", "input": {"uids": [], "transform": {"kind": "move", "dx": 1, "dy": 1}}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Dönüştürülecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"uids": [], "transform": {"kind": "scale", "center": {"x": 0, "y": 0}, "factor": 2}}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Dönüştürülecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kimlik küçük harfli, tireli bir UUID yazısıdır; ilk bozuk kimlik söylenir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10", "ABC", "01925F3E-7C1A-7D2B-9E4F-0A1B2C3D4E5F"], "transform": {"kind": "move", "dx": 1, "dy": 1}}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“ABC” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[1]"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["01925F3E-7C1A-7D2B-9E4F-0A1B2C3D4E5F"], "transform": {"kind": "move", "dx": 1, "dy": 1}}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“01925F3E-7C1A-7D2B-9E4F-0A1B2C3D4E5F” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "çizimde olmayan kimlik: entity_not_found, hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "transform": {"kind": "move", "dx": 1, "dy": 1}}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[1]"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "NaN ya da sonsuz kaydırma yazılmaz; yol ve ileti hangi değer olduğunu söyler",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 1, "dy": 1}}, "nonFinite": {"transform.dy": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Kuzey (X) yönündeki kaydırma sonlu bir sayı değil (NaN ya da sonsuz). Kaydırmayı sonlu bir sayıyla verin.", "path": "transform.dy"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 1, "dy": 1}}, "nonFinite": {"transform.dx": "Infinity", "transform.dy": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Doğu (Y) yönündeki kaydırma sonlu bir sayı değil (NaN ya da sonsuz). Kaydırmayı sonlu bir sayıyla verin.", "path": "transform.dx"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ilk bozuk değer söylenir: önce merkez (x, sonra y), sonra açı; kimlik hatası dönüşümden önce",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "rotate", "center": {"x": 0, "y": 0}, "angle": 1}}, "nonFinite": {"transform.center.y": "-Infinity", "transform.angle": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Merkezin kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "transform.center.y"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "rotate", "center": {"x": 0, "y": 0}, "angle": 1}}, "nonFinite": {"transform.angle": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Dönme açısı sonlu bir sayı değil (NaN ya da sonsuz). Açıyı sonlu bir sayıyla verin.", "path": "transform.angle"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["ABC"], "transform": {"kind": "rotate", "center": {"x": 0, "y": 0}, "angle": 1}}, "nonFinite": {"transform.angle": "NaN"}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“ABC” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ölçek faktörü sıfırdan büyük olmalı: sıfır ve eksi reddedilir; sonsuz faktör sonlu değildir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "scale", "center": {"x": 487030, "y": 4420010}, "factor": 0}}, "result": {"status": "failed", "error": {"code": "invalid_factor", "message": "Ölçek faktörü sıfırdan büyük olmalı. Pozitif bir faktör verin.", "path": "transform.factor"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "scale", "center": {"x": 487030, "y": 4420010}, "factor": -2}}, "result": {"status": "failed", "error": {"code": "invalid_factor", "message": "Ölçek faktörü sıfırdan büyük olmalı. Pozitif bir faktör verin.", "path": "transform.factor"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "scale", "center": {"x": 487030, "y": 4420010}, "factor": 2}}, "nonFinite": {"transform.factor": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Ölçek faktörü sonlu bir sayı değil (NaN ya da sonsuz). Faktörü sonlu bir sayıyla verin.", "path": "transform.factor"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "simetri ekseninin iki noktası ayrı olmalı; eksenin noktaları sonlu olmalı",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "mirror", "a": {"x": 487025, "y": 4420000}, "b": {"x": 487025, "y": 4420000}}}, "result": {"status": "failed", "error": {"code": "invalid_axis", "message": "Simetri ekseninin iki noktası aynı; eksenin yönü yok. Birbirinden ayrı iki nokta verin.", "path": "transform.b"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "mirror", "a": {"x": 487025, "y": 4420000}, "b": {"x": 487025, "y": 4420000}}}, "nonFinite": {"transform.a.x": "NaN"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Eksenin ilk noktasının doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "transform.a.x"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "mirror", "a": {"x": 487025, "y": 4420000}, "b": {"x": 487025, "y": 4420010}}}, "nonFinite": {"transform.b.y": "Infinity"}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Eksenin ikinci noktasının kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.", "path": "transform.b.y"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm çizimin sürümüyse yazılır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "move", "dx": 1, "dy": 2}, "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:13"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"entities": {"13": {"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487031.0, "y": 4420012.0}, "r": 2.5}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "çizim beklenen sürümde değilse hiçbir şey yazılmaz: conflict; kopya da yapılmaz",
+      "steps": [
+        {"op": "captureRevision", "as": "r0"},
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "move", "dx": 1, "dy": 2}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:13"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}, "copy": true, "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487010, "y": 4420010}, "b": {"x": 487020, "y": 4420010}}}, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm ondalık bir tamsayı yazısıdır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 1, "dy": 1}, "expectedRevision": "01"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “01” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "move", "dx": 1, "dy": 1}, "expectedRevision": "-1"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “-1” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "girdinin hatası çizimin durumundan önce gelir; çakışma nesneden ve kilitten önce",
+      "steps": [
+        {"op": "captureRevision", "as": "r0"},
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "move", "dx": 1, "dy": 2}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:13"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {"uids": ["$uidOf:10"], "transform": {"kind": "scale", "center": {"x": 0, "y": 0}, "factor": 0}, "expectedRevision": "$r0"}, "result": {"status": "failed", "error": {"code": "invalid_factor", "message": "Ölçek faktörü sıfırdan büyük olmalı. Pozitif bir faktör verin.", "path": "transform.factor"}}, "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"], "transform": {"kind": "move", "dx": 1, "dy": 1}, "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uidOf:12"], "transform": {"kind": "move", "dx": 1, "dy": 1}, "expectedRevision": "$r0"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "doğrulama hiçbir şey yazmaz; plan yazılacak nesneleri gösterir; yazma planın sürümüyle planı yazar",
+      "steps": [
+        {"op": "validate", "input": {"uids": ["$uidOf:10", "$uidOf:12"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}}, "result": {"status": "completed", "output": null, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"uids": ["$uidOf:10", "$uidOf:12"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}}, "result": {"status": "completed", "output": {"sources": ["$uidOf:10"], "entities": [{"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487022.5, "y": 4420002.75}, "b": {"x": 487032.5, "y": 4420002.75}}], "locked": ["$uidOf:12"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "captureRevision", "as": "plan"},
+        {"op": "execute", "input": {"uids": ["$uidOf:10", "$uidOf:12"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}, "expectedRevision": "$plan"}, "result": {"status": "completed", "output": {"changed": ["$uidOf:10"], "created": [], "locked": ["$uidOf:12"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"entities": {"10": {"kind": "line", "id": 10, "layerId": "yapi", "attrs": {}, "color": "#E5484D", "a": {"x": 487022.5, "y": 4420002.75}, "b": {"x": 487032.5, "y": 4420002.75}}}, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "kopyanın planında nesnenin yuvası 0'dır: yuva yazılınca verilir",
+      "steps": [
+        {"op": "plan", "input": {"uids": ["$uidOf:11"], "transform": {"kind": "move", "dx": 12.5, "dy": -7.25}, "copy": true}, "result": {"status": "completed", "output": {"sources": ["$uidOf:11"], "entities": [{"kind": "arc", "id": 0, "layerId": "yapi", "attrs": {}, "c": {"x": 487032.5, "y": 4420012.75}, "r": 4.0, "a0": 0.0, "a1": 1.5707963267948966}], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "plan ve doğrulama geçmişe dokunmaz: yinelenecek adım kalır",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "move", "dx": 1, "dy": 2}}, "result": {"status": "completed", "output": {"changed": ["$uidOf:13"], "created": [], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "undo", "returns": "Taşı"},
+        {"op": "validate", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "move", "dx": 1, "dy": 2}}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"canRedo": true, "revision": "same"}},
+        {"op": "plan", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "move", "dx": 1, "dy": 2}}, "result": {"status": "completed", "output": {"sources": ["$uidOf:13"], "entities": [{"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487031.0, "y": 4420012.0}, "r": 2.5}], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"canRedo": true, "revision": "same"}},
+        {"op": "redo", "returns": "Taşı", "expect": {"entities": {"13": {"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 487031.0, "y": 4420012.0}, "r": 2.5}}}}
+      ]
+    },
+    {
+      "name": "sayı taşması: dönüşüm sonlu olmayan bir değer verirse hiçbir şey yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "scale", "center": {"x": 0, "y": 0}, "factor": 1e+308}}, "result": {"status": "failed", "error": {"code": "not_finite", "message": "Dönüşüm sonucunda sonlu olmayan bir değer çıktı (sayı taşması). Daha küçük bir değer verin.", "path": "transform"}}, "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "plan", "input": {"uids": ["$uidOf:13"], "transform": {"kind": "move", "dx": 1e+308, "dy": 0}}, "result": {"status": "completed", "output": {"sources": ["$uidOf:13"], "entities": [{"kind": "circle", "id": 13, "layerId": "yapi", "attrs": {}, "c": {"x": 1e+308, "y": 4420010.0}, "r": 2.5}], "locked": [], "revision": "$current"}, "warnings": []}, "note": "Doğuya 1e308 metre taşımak sonludur: taşma yok.", "expect": {"ids": [4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    }
+  ]
+}

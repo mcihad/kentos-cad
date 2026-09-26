@@ -20,12 +20,10 @@
 //! holds, and one prepared against another revision may name objects that
 //! have changed since (docs/adr/0022).
 
-use std::collections::HashSet;
-
 use kentos_contracts::{
     CommandResult, CommandWarning, EntitiesDelete, EntitiesDeletePlan, EntitiesDeleted,
 };
-use kentos_domain::{Document, Slot, Uuid};
+use kentos_domain::{Document, Slot};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -94,45 +92,11 @@ struct Checked {
 
 /// The checks in the contract's order.
 fn check(doc: &Document, input: &EntitiesDelete) -> Result<Checked, Stop> {
-    if input.uids.is_empty() {
-        return Err(Stop::Failed(checks::error(
-            codes::NO_ENTITIES,
-            "Silinecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.".into(),
-            Some("uids".into()),
-        )));
-    }
-    for (i, uid) in input.uids.iter().enumerate() {
-        if !is_uid_text(uid) {
-            return Err(Stop::Failed(checks::error(
-                codes::INVALID_UID,
-                format!(
-                    "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın."
-                ),
-                Some(format!("uids[{i}]")),
-            )));
-        }
-    }
+    checks::uids(&input.uids, "Silinecek nesne verilmedi.")?;
     checks::revision(doc, input.expected_revision.as_deref())?;
-    let mut seen = HashSet::new();
     let mut removed = Vec::new();
     let mut locked = Vec::new();
-    for (i, uid) in input.uids.iter().enumerate() {
-        if !seen.insert(uid.as_str()) {
-            continue;
-        }
-        let found = Uuid::parse_str(uid)
-            .ok()
-            .and_then(|u| doc.slot_of(u))
-            .and_then(|slot| Some((slot, doc.get(slot)?)));
-        let Some((slot, entity)) = found else {
-            return Err(Stop::Failed(checks::error(
-                codes::ENTITY_NOT_FOUND,
-                format!(
-                    "“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin."
-                ),
-                Some(format!("uids[{i}]")),
-            )));
-        };
+    for (slot, entity, uid) in checks::objects(doc, &input.uids)? {
         if doc.layers().is_locked(&entity.base().layer_id) {
             locked.push(uid.clone());
         } else {
@@ -167,20 +131,9 @@ fn check(doc: &Document, input: &EntitiesDelete) -> Result<Checked, Stop> {
     })
 }
 
-/// A persistent id as the contract writes it: lowercase hexadecimal with
-/// hyphens, 8-4-4-4-12 (the web's `isUuid`).
-fn is_uid_text(text: &str) -> bool {
-    let bytes = text.as_bytes();
-    bytes.len() == 36
-        && bytes.iter().enumerate().all(|(i, b)| match i {
-            8 | 13 | 18 | 23 => *b == b'-',
-            _ => b.is_ascii_digit() || (b'a'..=b'f').contains(b),
-        })
-}
-
 #[cfg(test)]
 mod tests {
-    use super::is_uid_text;
+    use crate::checks::is_uid_text;
 
     #[test]
     fn ids_are_lowercase_uuid_text_with_hyphens() {

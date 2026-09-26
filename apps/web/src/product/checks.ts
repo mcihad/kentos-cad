@@ -2,7 +2,9 @@ import type { CommandError } from '../contracts/generated/CommandError';
 import type { CommandResult } from '../contracts/generated/CommandResult';
 import type { CommandWarning } from '../contracts/generated/CommandWarning';
 import type { Vec2 } from '../contracts/generated/Vec2';
+import { isUuid } from '../core/uuid';
 import type { CadDocument } from '../model/document';
+import type { Entity } from '../model/entities';
 
 /**
  * What every create command checks after its own input (docs/adr/0022,
@@ -87,6 +89,43 @@ export function checkLayer(doc: CadDocument, id: string): Stop | CommandWarning[
   if (layers.isLocked(id))
     return failed(error('layer_locked', `“${node.name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.`, 'layerId'));
   return layers.isVisible(id) ? [] : [{ code: 'layer_hidden', message: `“${node.name}” katmanı gizli; çizilen nesne görünmeyecek.`, path: 'layerId' }];
+}
+
+/**
+ * The ids a command names (`cad.entities.delete`, `cad.entities.transform`):
+ * at least one (`no_entities`, with the command's own sentence `nothing`),
+ * each lowercase UUID text with hyphens (`invalid_uid`, the first that is not).
+ */
+export function checkUids(uids: readonly string[], nothing: string): Stop | null {
+  if (!uids.length) return failed(error('no_entities', `${nothing} En az bir nesnenin kalıcı kimliğini verin.`, 'uids'));
+  for (const [i, uid] of uids.entries())
+    if (!isUuid(uid))
+      return failed(
+        error(
+          'invalid_uid',
+          `“${uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.`,
+          `uids[${i}]`,
+        ),
+      );
+  return null;
+}
+
+/**
+ * The objects the ids name, each once, in the input's order, with their ids;
+ * `entity_not_found` for the first the document lacks.
+ */
+export function findObjects(doc: CadDocument, uids: readonly string[]): Stop | { entity: Entity; uid: string }[] {
+  const seen = new Set<string>();
+  const out: { entity: Entity; uid: string }[] = [];
+  for (const [i, uid] of uids.entries()) {
+    if (seen.has(uid)) continue;
+    seen.add(uid);
+    const entity = doc.byUid(uid);
+    if (!entity)
+      return failed(error('entity_not_found', `“${uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.`, `uids[${i}]`));
+    out.push({ entity, uid });
+  }
+  return out;
 }
 
 /** `validate`'s answer from the checks: nothing, with the warnings, or why not. */
