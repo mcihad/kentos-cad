@@ -18,7 +18,7 @@ use crate::document::Document;
 use crate::keys;
 use crate::viewport::{self, Gesture};
 
-use super::command_line::line_messages;
+use super::command_line::CommandLine;
 use super::compare::compare;
 use super::folder;
 use super::format::{Step, Trace};
@@ -62,8 +62,8 @@ pub struct Player<'a> {
     area: Rectangle,
     gesture: Gesture,
     clock: Instant,
-    /// Whether the command line's text box has the keyboard (the widget's state).
-    line_focused: bool,
+    /// The command line's own state: its keyboard, its suggestion list, its focus reports.
+    line: CommandLine,
     file: PathBuf,
 }
 
@@ -99,7 +99,7 @@ impl<'a> Player<'a> {
             area,
             gesture: Gesture::default(),
             clock: Instant::now(),
-            line_focused: false,
+            line: CommandLine::default(),
             file,
         };
         player.app.picker = Picker::File(player.file.clone());
@@ -183,9 +183,8 @@ impl<'a> Player<'a> {
                 mouse::Event::ButtonPressed(mouse::Button::Left),
                 mouse::Cursor::Available(below),
             )?;
-            if !self.line_focused {
-                self.line_focused = true;
-                self.apply(Message::CommandFocus(true))?;
+            if let Some(report) = self.line.click() {
+                self.apply(report)?;
             }
             return self.mouse(
                 mouse::Event::ButtonReleased(mouse::Button::Left),
@@ -236,9 +235,8 @@ impl<'a> Player<'a> {
         let cursor = mouse::Cursor::Available(position);
         self.mouse(mouse::Event::ButtonPressed(button), cursor)?;
         // A click anywhere outside the command line's text box takes its keyboard.
-        if self.line_focused {
-            self.line_focused = false;
-            self.apply(Message::CommandFocus(false))?;
+        if let Some(report) = self.line.click_elsewhere() {
+            self.apply(report)?;
         }
         // A right press shorter than the hold that would open the command menu.
         if button == mouse::Button::Right {
@@ -269,17 +267,14 @@ impl<'a> Player<'a> {
             self.apply(Message::Modifiers(stroke.modifiers))?;
         }
         let event = stroke.event();
-        let taken = if self.line_focused {
-            line_messages(&self.app.command_input, &event)
+        let taken = if self.line.has_keyboard() {
+            self.line.key(self.app, &event)
         } else {
             None
         };
         match taken {
             Some(messages) => {
                 for message in messages {
-                    if let Message::CommandFocus(focused) = message {
-                        self.line_focused = focused;
-                    }
                     self.apply(message)?;
                 }
             }
@@ -303,22 +298,26 @@ impl<'a> Player<'a> {
         self.run(task)
     }
 
-    /// Runs a task: its messages go back to the app. A widget operation
-    /// (a focus change) is not played: it stops the trace rather than let
-    /// the command line's state go wrong unseen.
+    /// Runs a task: its messages go back to the app; a widget operation
+    /// runs on the command line's model, which reports a focus change to the
+    /// app as the widget does. An operation the model cannot follow stops the
+    /// trace rather than let the command line's state go wrong unseen.
     fn run(&mut self, task: Task<Message>) -> Result<(), String> {
-        let Some(stream) = iced_runtime::task::into_stream(task) else {
+        let Some(mut stream) = iced_runtime::task::into_stream(task) else {
             return Ok(());
         };
-        let actions: Vec<_> = iced::futures::executor::block_on(stream.collect());
-        for action in actions {
+        // One action at a time, as the runtime takes them: the task of an
+        // operation that reports back (`widget::operate`) ends only once its
+        // operation has run and been dropped.
+        while let Some(action) = iced::futures::executor::block_on(stream.next()) {
             match action {
                 iced_runtime::Action::Output(message) => self.apply(message)?,
-                iced_runtime::Action::Widget(_) => {
-                    return Err(
-                        "iz, oynatıcının izlemediği bir odak değişikliği üretti (widget işlemi)"
-                            .to_owned(),
-                    );
+                iced_runtime::Action::Widget(mut operation) => {
+                    let report = self.line.operate(operation.as_mut())?;
+                    drop(operation);
+                    if let Some(report) = report {
+                        self.apply(report)?;
+                    }
                 }
                 _ => {}
             }

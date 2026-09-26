@@ -17,6 +17,7 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/polygon-close.json` | İlk köşeye dönmek alanı kapatır: tıklama, yakınına tıklama, yazma, üç köşeden az, yayla kapatma |
 | `v1/line-chain.json` | Çizgi aracı ([ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md)): tıkla, `12` yaz, Enter, Geri (G), Ctrl+Z, Kapat (K), her parçanın ayrı geri alınması, sağ tık, tek noktayla onay |
 | `v1/polyline-arc.json` | Çoklu çizgi aracı (ADR 0027): tıkla, `12` yaz, Enter, yay parçası, Geri (G), düz parça, Ctrl+Z, sağ tıkla bitirme, tek adımda geri alma, Uzunluk (U) |
+| `v1/command-name.json` | Çizim alanından komut adı yazmak (ADR 0018, 6. adım): kısayolu olmayan harf komut satırını açar, Esc yazılanı siler, Enter önerilen komutu (`ka` → Kapalı alan) başlatır, klavye çizime döner |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
 
 ## Biçim (`kentos.interaction-trace`, sürüm 1)
@@ -95,7 +96,7 @@ Web oynatıcısı her izi üç varyantta oynatır. Masaüstü de aynısını yap
 
 Bir varyantı seçmek için: `pnpm e2e:interaction -- --variant=tr-q`.
 
-**Odak başka bir metin alanındayken** yazma durumu `polygon-keys`'te.
+**Odak başka bir metin alanındayken** yazma durumu `polygon-keys`'te. **Çizim alanından komut satırına** yazma ve öneri listesi `command-name`'de. Masaüstü oynatıcısı komut satırını bileşenin bir modeliyle izler: odak işlemleri (bir harf komut satırını odaklar, komut satırından başlayan araç odağı çizime geri verir) ve öneri listesi (liste açıkken Enter ve Boşluk vurgulanan öneriyi çalıştırır, Tab adını yazar). Bir test modeli gerçek bileşene tuş tuş ve işlem işlem bağlar ([ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md)).
 
 §5 kabul izinin istediği şu varyantlar henüz yok:
 - Türkçe F klavye;

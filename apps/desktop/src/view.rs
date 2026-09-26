@@ -204,8 +204,28 @@ impl App {
     }
 
     pub(crate) fn command_line(&self) -> Element<'_, Message> {
-        // The running command's step and options, as buttons (the web's CommandLine.setPrompt).
-        let prompt = self.session.is_running().then(|| {
+        CommandLine::new(&self.history, &self.command_input)
+            .id(COMMAND_INPUT)
+            .placeholder("Komut ya da koordinat yazın; Enter ya da Boşluk onaylar")
+            .commands(line_commands())
+            .prompt(self.line_prompt())
+            .on_input(Message::CommandInput)
+            .on_submit(Message::CommandSubmitted)
+            .on_run(Message::CommandRun)
+            // As in AutoCAD, Space is a second Enter; Esc clears what is typed, then on an
+            // empty line ends the command (ADR 0018).
+            .space_submits()
+            .escape_clears()
+            .on_cancel(Message::CommandCancelled)
+            .on_focus(Message::CommandFocus)
+            .expanded(self.command_expanded, |_| Message::CommandHistoryToggled)
+            .into()
+    }
+
+    /// The running command's step and options, as buttons (the web's
+    /// CommandLine.setPrompt); the command line suggests the options too.
+    pub(crate) fn line_prompt(&self) -> Option<LinePrompt<'_, Message>> {
+        self.session.is_running().then(|| {
             let p = self.session.prompt();
             p.options.iter().fold(
                 LinePrompt::new(p.step).command(p.tool.unwrap_or("")),
@@ -215,21 +235,7 @@ impl App {
                         .key(o.key)
                 },
             )
-        });
-        CommandLine::new(&self.history, &self.command_input)
-            .id(COMMAND_INPUT)
-            .placeholder("Komut ya da koordinat yazın; Enter ya da Boşluk onaylar")
-            .commands(catalog().commands().iter().map(line_command))
-            .prompt(prompt)
-            .on_input(Message::CommandInput)
-            .on_submit(Message::CommandSubmitted)
-            .on_run(Message::CommandRun)
-            // As in AutoCAD, Space is a second Enter; Esc on an empty line ends the command (ADR 0018).
-            .space_submits()
-            .on_cancel(Message::CommandCancelled)
-            .on_focus(Message::CommandFocus)
-            .expanded(self.command_expanded, |_| Message::CommandHistoryToggled)
-            .into()
+        })
     }
 
     /// The running command in the status bar: its name, the step and the
@@ -535,6 +541,11 @@ fn tip(command: &Command) -> Tip {
         Some(keys) => tip.detail(*keys),
         None => tip,
     }
+}
+
+/// Every command, as the command line suggests them: the web's order.
+pub(crate) fn line_commands() -> Vec<LineCommand<'static>> {
+    catalog().commands().iter().map(line_command).collect()
 }
 
 fn line_command(command: &Command) -> LineCommand<'static> {

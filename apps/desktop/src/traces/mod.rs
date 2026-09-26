@@ -13,8 +13,11 @@
 //!   gesture code (`viewport::gesture`), at the window pixel the world point
 //!   falls on through the same camera, rounded to the screen's device pixels;
 //! - while the command line has the keyboard, keys go to a model of the
-//!   KentOS UI command line as `view.rs` configures it, which a test holds to
-//!   the real widget;
+//!   KentOS UI command line as `view.rs` configures it, its suggestion list
+//!   included; the widget operations of the app's own tasks (focusing the
+//!   command line when a letter is typed on the drawing, letting it go when a
+//!   tool starts from it) run on the model too. A test holds the model to the
+//!   real widget;
 //! - `run` is the command's message, as a ribbon button sends it;
 //!   `saveAndReopen` is Ctrl+S and Ctrl+O with the file picker answered by a
 //!   temporary file, and the app's own tasks run to their end.

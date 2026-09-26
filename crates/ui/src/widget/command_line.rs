@@ -27,7 +27,7 @@
 //! | Tab   | Vurgulanan öneriyi girişe yazar.                                 |
 //! | Enter | Vurgulanan öneriyi çalıştırır; öneri yoksa yazılanı iletir.      |
 //! | Boşluk | [`CommandLine::space_submits`] ile Enter gibidir (AutoCAD); yoksa boşluk yazar. |
-//! | Esc   | Önerileri kapatır; öneri yoksa yazılanı siler. Giriş boşsa [`CommandLine::on_cancel`] mesajını gönderir ve odağı bırakır. |
+//! | Esc   | Önerileri kapatır; öneri yoksa yazılanı siler ([`CommandLine::escape_clears`] ile öneriler açıkken de ikisini birden yapar). Giriş boşsa [`CommandLine::on_cancel`] mesajını gönderir ve odağı bırakır. |
 //!
 //! Giriş odağı değişince [`CommandLine::on_focus`] mesajı gider: uygulama
 //! odak metin kutusundayken kısayolları süzebilir.
@@ -336,6 +336,7 @@ pub struct CommandLine<'a, Message> {
     on_expand: Option<Box<dyn Fn(bool) -> Message + 'a>>,
     id: Option<widget::Id>,
     space_submits: bool,
+    escape_clears: bool,
 }
 
 impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
@@ -358,6 +359,7 @@ impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
             on_expand: None,
             id: None,
             space_submits: false,
+            escape_clears: false,
         }
     }
 
@@ -366,6 +368,14 @@ impl<'a, Message: Clone + 'a> CommandLine<'a, Message> {
     /// yazılamaz; `Y X` yerine `Y,X` yazılır.
     pub fn space_submits(mut self) -> Self {
         self.space_submits = true;
+        self
+    }
+
+    /// Öneriler açıkken Esc yalnız listeyi kapatmaz, yazılanı da siler: yazı
+    /// varken Esc hep yazıyı siler (KentOS CAD'de ADR 0018). Giriş boşken Esc
+    /// yine [`CommandLine::on_cancel`] mesajını gönderir.
+    pub fn escape_clears(mut self) -> Self {
+        self.escape_clears = true;
         self
     }
 
@@ -452,6 +462,7 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
             on_expand,
             id,
             space_submits,
+            escape_clears,
         } = line;
 
         let id = id.unwrap_or_else(widget::Id::unique);
@@ -479,6 +490,7 @@ impl<'a, Message: Clone + 'a> From<CommandLine<'a, Message>> for Element<'a, Mes
             focus,
             panel: None,
             space_submits,
+            escape_clears,
         })
     }
 }
@@ -944,6 +956,41 @@ fn suggestions<'a, Message: Clone>(
         .collect()
 }
 
+/// Öneri listesindeki bir satır, bileşenin dışından bakınca: seçilince ne
+/// olacağı.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Suggested<Message> {
+    /// İstemin seçeneği. Seçilince mesajı gider, giriş boşalır; Tab girişe
+    /// adını (`label`) yazar.
+    Option { label: String, message: Message },
+    /// Katalogdaki komut, adıyla. Seçilince [`CommandLine::on_run`] bu adla
+    /// gider; Tab girişe adı yazar.
+    Command(String),
+}
+
+/// `value` yazılıyken öneri listesinde görünenler, sırasıyla: önce istemin
+/// uyan seçenekleri, sonra komutlar eşleşmenin gücüne göre. Bileşenin kendi
+/// sıralamasıdır. Liste açıkken Enter (ve [`CommandLine::space_submits`] ile
+/// Boşluk) vurgulananı, ok tuşlarına basılmadıysa ilkini çalıştırır.
+///
+/// Liste, giriş odaktayken, yazı boş değilse (ya da bütün komutlar
+/// listelenirken), Esc ile kapatılmadıysa ve öneri varsa açıktır. Bileşeni
+/// ekransız süren araçlar (ör. etkileşim izlerinin oynatıcısı) Enter'ın ne
+/// yapacağını bununla bilir.
+pub fn suggested<'a, Message: Clone>(
+    commands: &[Command<'a>],
+    prompt: Option<&Prompt<'a, Message>>,
+    value: &str,
+) -> Vec<Suggested<Message>> {
+    suggestions(commands, prompt, value)
+        .into_iter()
+        .map(|suggestion| match suggestion.target {
+            Target::Option { label, message, .. } => Suggested::Option { label, message },
+            Target::Command(command) => Suggested::Command(command.name.to_owned()),
+        })
+        .collect()
+}
+
 /// Komutun sadeleştirilmiş `input` ile eşleşmesi ve gücü (küçük olan önce):
 /// tam ad ya da kısaltma, adın başı, kısaltmanın başı, başlıktaki sözcüğün
 /// başı, adın içi.
@@ -1193,6 +1240,8 @@ struct Console<'a, Message> {
     panel: Option<Element<'a, Message>>,
     /// Boşluk Enter gibidir.
     space_submits: bool,
+    /// Öneriler açıkken Esc yazılanı da siler.
+    escape_clears: bool,
 }
 
 impl<'a, Message: Clone + 'a> Console<'a, Message> {
@@ -1317,6 +1366,10 @@ impl<'a, Message: Clone + 'a> Console<'a, Message> {
                 if let Some(on_submit) = &self.callbacks.on_submit {
                     shell.publish(on_submit.clone());
                 }
+            }
+            Named::Escape if open && self.escape_clears => {
+                state.close_list();
+                self.set_value(state, String::new(), shell);
             }
             Named::Escape if open => {
                 state.dismissed = true;
@@ -2065,6 +2118,31 @@ mod tests {
         assert_eq!(prompt.find("KAPAT"), Some(&2));
         assert_eq!(prompt.find("bitir"), None);
         assert_eq!(prompt.find(" "), None);
+    }
+
+    #[test]
+    fn suggested_is_the_list_s_own_order() {
+        let prompt = Prompt::new("Sonraki köşeyi belirtin")
+            .command("ALAN")
+            .option("Geri al", 1)
+            .option("Kapat", 2);
+
+        assert_eq!(
+            suggested(&CATALOG, Some(&prompt), "c"),
+            [
+                Suggested::Command("DAIRE".to_owned()),
+                Suggested::Command("CIZGI".to_owned()),
+                Suggested::Command("CCIZGI".to_owned()),
+            ]
+        );
+        assert_eq!(
+            suggested(&CATALOG, Some(&prompt), "ge"),
+            [Suggested::Option {
+                label: "Geri al".to_owned(),
+                message: 1
+            }]
+        );
+        assert!(suggested::<()>(&CATALOG, None, "xyz").is_empty());
     }
 
     #[test]
