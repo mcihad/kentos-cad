@@ -6190,6 +6190,7 @@
       "methods": [],
       "steps": 2,
       "description": "Tıklanan kapalı alanı desenle tarar; D ile desen değişir.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

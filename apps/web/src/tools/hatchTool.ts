@@ -1,14 +1,14 @@
 import type { AppContext } from '../app/context';
 import type { Disposable } from '../core/disposable';
 import { Signal } from '../core/signal';
-import { entityArea, entityBounds, HATCH_PATTERN_LABEL, polygonRing, type Entity, type HatchPattern } from '../model/entities';
+import { entityArea, entityBounds, HATCH_PATTERN_LABEL, polygonRing, type Entity, type EntityGeometry, type HatchPattern } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import { hatchSegments } from '../model/geom/hatch';
 import { insideArea, netArea, subtractAreas, type Area } from '../model/geom/region';
 import { areaOfEntity } from '../model/ops/areas';
 import type { ViewTransform } from '../viewport/Camera';
 import { drawArea, strokePath, tint } from './preview';
-import { writableLayer } from './targetLayer';
+import { writeObjects } from './createCommand';
 import type { Tool, ToolPointer } from './Tool';
 import { VisibleFaces } from './visibleFaces';
 
@@ -144,21 +144,13 @@ export class HatchTool implements Tool {
     if (pattern.type !== 'solid' && hatchSegments(ring, pattern.angle, pattern.spacing, holes)[0] === 1) {
       return ctx.log.warn('Desen bu alan için çok sık; çizim ölçeğini büyütün ya da başka bir desen seçin.');
     }
-    const layerId = writableLayer(ctx);
-    if (!layerId) return;
-    let hatch: Entity | null = null;
-    ctx.doc.transact('Tarama', () => {
-      hatch = ctx.doc.add({
-        kind: 'hatch',
-        ring: ring.map((q) => ({ ...q })),
-        ...(holes.length && { holes: holes.map((h) => h.map((q) => ({ ...q }))) }),
-        pattern,
-        layerId,
-        color: ctx.settings.color.value ?? undefined,
-        attrs: {},
-      });
-    });
-    ctx.log.success(`${HATCH_PATTERN_LABEL[pattern.type]} tarama eklendi: ${ctx.format.area(entityArea(hatch!) ?? 0)}${holes.length ? `, ${holes.length} ada taranmadı` : ''}`);
+    // Through `cad.entities.create` (docs/adr/0062): the active layer and the current colour, one step
+    // named “Tarama”; the locked and hidden layer answers are the command's (the tools' own words).
+    const geometry = { kind: 'hatch', ring: ring.map((q) => ({ ...q })), ...(holes.length && { holes: holes.map((h) => h.map((q) => ({ ...q }))) }), pattern } as EntityGeometry;
+    const out = writeObjects(ctx, [geometry], 'hatch');
+    const hatch = out && ctx.doc.get(out.ids[0]);
+    if (!hatch) return;
+    ctx.log.success(`${HATCH_PATTERN_LABEL[pattern.type]} tarama eklendi: ${ctx.format.area(entityArea(hatch) ?? 0)}${holes.length ? `, ${holes.length} ada taranmadı` : ''}`);
   }
 
   input(text: string): boolean {
