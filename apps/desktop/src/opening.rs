@@ -5,8 +5,9 @@
 //! learns the project (name, layers, objects) before its objects, reads the
 //! objects and builds the document; each stage goes to a window over the
 //! drawing, with Vazgeç. Nothing is drawn or edited meanwhile: the window is
-//! modal and the app takes no command until the open ends (only Esc and
-//! Vazgeç). The drawing on screen is replaced in one step, and only by a
+//! modal and the app takes no command, key or click on the drawing until the
+//! open ends (only Esc and Vazgeç; the view may still be moved). The drawing
+//! on screen is replaced in one step, and only by a
 //! document read and checked whole, only by the latest open, and only if the
 //! drawing on screen did not change meanwhile. A stopped open returns
 //! nothing; the file's bytes go as soon as they are read, so a large file is
@@ -28,6 +29,7 @@ use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
 use crate::document::Document;
+use crate::viewport;
 use kentos_interaction::Level;
 
 /// A stage of an open.
@@ -385,13 +387,17 @@ impl App {
                 }
                 Some(Task::none())
             }
+            // A click on the drawing is a tool's point; moving the view is not an edit.
             Message::Run(_)
             | Message::CommandSubmitted
             | Message::CommandRun(_)
             | Message::PromptOption(_)
             | Message::LayerVisible(_)
             | Message::LayerLocked(_)
-            | Message::Settings(_) => Some(Task::none()),
+            | Message::Settings(_)
+            | Message::Viewport(viewport::Event::Pressed(_) | viewport::Event::RightClick(_)) => {
+                Some(Task::none())
+            }
             _ => None,
         }
     }
@@ -502,10 +508,15 @@ mod tests {
         let path = saved(&dir, "pafta.kcad", 3000);
         let mut app = app_with_drawing();
         let before = app.document.as_ref().expect("a drawing").session;
+        let _ = app.update(Message::Run("tool.polygon"));
         let task = app.start_opening(path.clone(), Purpose::File);
         assert!(app.opening.is_some());
-        // Commands wait while it runs; the drawing on screen is still the old one.
+        // Commands and clicks on the drawing wait while it runs; the drawing on screen is still the old one.
         let _ = app.update(Message::Run("layer.showAll"));
+        let _ = app.update(Message::Viewport(viewport::Event::Pressed(
+            iced::Point::new(10.0, 10.0),
+        )));
+        assert_eq!(app.session.point_count(), 0);
         assert_eq!(app.document.as_ref().expect("a drawing").session, before);
         drive(&mut app, task);
         let doc = app.document.as_ref().expect("a drawing");
