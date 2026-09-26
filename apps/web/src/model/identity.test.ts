@@ -159,9 +159,15 @@ describe('persistent object ids', () => {
           else g.end();
           break;
         }
-        case 10:
-          doc.applyExternal({ put: [{ ...(point(rnd(30)) as Entity), id: doc.allocateId() }, ...(e ? [{ ...e, uid: undefined, layerId: 'a' } as Entity] : [])], remove: rnd(3) ? [] : [any()?.id ?? 0] });
+        case 10: {
+          // Another editor: a new object, a change, now and then a removal, and now and then an object
+          // deleted here that they bring back under its id, in a new slot (the cloud's ids, docs/adr/0026).
+          const live = new Set([...doc.all()].map((x) => x.uid));
+          const gone = [...everSeen].filter((u) => !live.has(u));
+          const back = gone.length && !rnd(3) ? [{ ...(point(rnd(30)) as Entity), id: doc.allocateId(), uid: gone[rnd(gone.length)] }] : [];
+          doc.applyExternal({ put: [{ ...(point(rnd(30)) as Entity), id: doc.allocateId() }, ...back, ...(e ? [{ ...e, uid: undefined, layerId: 'a' } as Entity] : [])], remove: rnd(3) ? [] : [any()?.id ?? 0] });
           break;
+        }
         default: {
           if (rnd(4)) break;
           // Another drawing: some objects bring ids, the others get new ones.

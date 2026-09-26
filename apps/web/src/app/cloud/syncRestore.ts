@@ -11,13 +11,18 @@ export type Restored = { waiting: true } | { waiting: false; conflicts: SyncConf
 
 /**
  * Puts a draft saved on this device back into a freshly opened project
- * (CLAUDE.md §21.3). A command that was on its way is sent first, with its
- * own idempotency key: if it had been committed the server answers from its
- * log and those changes are the server's now. A remaining change whose base
- * is still the server's version waits to be sent; one the server moved past
- * is a conflict (the drawing shows the local copy until resolved). Still no
- * answer from the server: the whole draft is kept for the next attempt. An
- * object edited since the project reopened keeps that newer edit.
+ * (CLAUDE.md §21.3). Each change names its object by persistent id, the
+ * server's id (docs/adr/0026): an object the drawing has is changed in its
+ * slot, another comes in under that id. A command that was on its way is
+ * sent first, with its own idempotency key: if it had been committed the
+ * server answers from its log and those changes are the server's now. A
+ * remaining change whose base is still the server's version waits to be
+ * sent; one the server moved past is a conflict (the drawing shows the
+ * local copy until resolved); a deletion the server has too is done. Still
+ * no answer from the server: the whole draft is kept for the next attempt.
+ * An object edited since the project reopened keeps that newer edit. A
+ * change the drawing cannot take (its layer is gone, say) stays in the
+ * device draft, unsent, and the user is told (`SyncCore.held`).
  */
 export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restored> {
   const { o, tracker } = core;
@@ -43,31 +48,27 @@ export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restor
       carried.clear();
     }
   }
-  const put: Entity[] = [];
-  const remove: number[] = [];
-  const conflicts: SyncConflict[] = [];
-  const touched: number[] = [];
+  // Which changes still wait, and which moved on the server meanwhile.
+  const waiting: [string, Draft['changes'][string]][] = [];
   const moved: string[] = [];
-  for (const [featureId, change] of Object.entries(draft.changes)) {
-    if (carried.has(featureId) && carried.get(featureId) === (change.entity ? JSON.stringify(change.entity) : null)) continue;
-    const local = tracker.localOf(featureId);
+  for (const [id, change] of Object.entries(draft.changes)) {
+    if (carried.has(id) && carried.get(id) === (change.entity ? JSON.stringify(change.entity) : null)) continue;
     // An edit made since the project reopened is newer than the draft: it wins.
-    if (local !== undefined && core.dirty.has(local)) continue;
-    const serverVersion = local === undefined ? null : (tracker.get(local)?.version ?? null);
-    const lid = local ?? doc.allocateId();
-    if (local === undefined) tracker.set(lid, { featureId, version: null, json: null });
-    if (change.entity) put.push({ ...(change.entity as Entity), id: lid });
-    else if (local !== undefined) remove.push(lid);
-    touched.push(lid);
-    if (change.base !== serverVersion) moved.push(featureId);
+    if (core.dirty.has(id)) continue;
+    const serverVersion = tracker.get(id)?.version ?? null;
+    // Deleted here and on the server alike: nothing is left to do.
+    if (!change.entity && serverVersion === null && doc.slotOf(id) === undefined) continue;
+    waiting.push([id, change]);
+    if (change.base !== serverVersion) moved.push(id);
   }
+  const conflicts: SyncConflict[] = [];
   if (moved.length) {
     const fresh = await o.api.featuresById(o.tenantId, o.projectId, moved);
     if (core.closed) return { waiting: false, conflicts: [], changed: false };
     const byId = new Map(fresh.features.map((f) => [f.id, f]));
     for (const id of moved) {
       const rec = byId.get(id) ?? null;
-      conflicts.push({ featureId: id, localId: tracker.localOf(id) ?? null, reason: rec ? 'changed' : 'deleted', server: rec, actual: rec?.version ?? null });
+      conflicts.push({ featureId: id, reason: rec ? 'changed' : 'deleted', server: rec, actual: rec?.version ?? null });
     }
   }
   let meta: ExternalMeta | undefined;
@@ -87,15 +88,36 @@ export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restor
     if (read.ok) {
       const c = read.content;
       meta = { name: c.name, settings: c.settings, layers: c.layers, activeLayer: c.activeLayer, styles: c.styles };
-      if (draft.meta.base !== core.metaVersion) conflicts.push({ featureId: '@project', localId: null, reason: 'project', server: null, actual: core.metaVersion });
+      if (draft.meta.base !== core.metaVersion) conflicts.push({ featureId: '@project', reason: 'project', server: null, actual: core.metaVersion });
     } else o.warn(`Cihazdaki proje bilgisi taslağı okunamadı: ${read.error}`);
   }
   // The draft is local work: it goes in without history, then counts as unsent.
+  await core.whenIdle();
+  if (core.closed) return { waiting: false, conflicts: [], changed: false };
   if (meta) doc.applyExternal({ meta });
-  const good = core.checked(put.map((e) => ({ key: String(e.id), entity: e })));
-  const checkedPut = put.filter((e) => good.has(String(e.id))).map((e) => ({ ...good.get(String(e.id))!, id: e.id }) as Entity);
-  doc.applyExternal({ put: checkedPut, remove });
+  // Checked against the layers the drawing has now (the draft's own tree included).
+  const good = core.checked(
+    waiting.flatMap(([id, c]) => (c.entity ? [{ key: id, entity: c.entity }] : [])),
+    (id, error) => {
+      core.held.set(id, draft.changes[id]);
+      o.warn(`Cihazdaki taslakta bir nesne çizime konamadı (${id}): ${error}. Değişiklik bu cihazda saklanıyor, gönderilmedi.`);
+    },
+  );
+  const put: Entity[] = [];
+  const remove: number[] = [];
+  const touched: string[] = [];
+  for (const [id, change] of waiting) {
+    const slot = doc.slotOf(id);
+    if (change.entity) {
+      const e = good.get(id);
+      if (!e) continue;
+      put.push({ ...e, id: slot ?? doc.allocateId(), uid: id } as Entity);
+    } else if (slot !== undefined) remove.push(slot);
+    touched.push(id);
+  }
+  doc.applyExternal({ put, remove });
   for (const id of touched) core.dirty.add(id);
   if (meta) core.metaDirty = true;
-  return { waiting: false, conflicts, changed: touched.length > 0 || !!meta };
+  // A change kept aside is not in the drawing: there is nothing to choose between for it yet.
+  return { waiting: false, conflicts: conflicts.filter((c) => !core.held.has(c.featureId)), changed: touched.length > 0 || !!meta };
 }

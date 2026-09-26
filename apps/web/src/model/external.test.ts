@@ -63,6 +63,53 @@ describe('changes from elsewhere', () => {
     expect(d.canUndo.value).toBe(false);
   });
 
+  it('names every touched object by persistent id too, a removed one included', () => {
+    const d = doc();
+    const uids: string[][] = [];
+    d.events.on('touched', (e) => uids.push(e.uids));
+    const p = d.add(point(1));
+    const q = d.add(point(2));
+    d.update(p.id, { p: { x: 2, y: 0 } });
+    d.remove([p.id, q.id]);
+    d.undo();
+    expect(uids).toEqual([[p.uid], [q.uid], [p.uid], [p.uid, q.uid], [q.uid, p.uid]]);
+  });
+
+  it('gives a new object from elsewhere the persistent id it carries, and refuses what would give an id twice', () => {
+    const d = doc();
+    const mine = d.add(point(1));
+    const given = '0192a5c1-7c3e-7a31-8f2b-1c2d3e4f5a6b';
+    const theirs = { ...point(5), id: d.allocateId(), uid: given } as Entity;
+    d.applyExternal({ put: [theirs] });
+    expect([d.slotOf(given), d.byUid(given)?.uid]).toEqual([theirs.id, given]);
+    const fresh = () => ({ ...point(6), id: d.allocateId() }) as Entity;
+    const before = JSON.stringify([...d.all()]);
+    const refused: [Entity[], RegExp][] = [
+      [[{ ...fresh(), uid: 'P-1' }], /UUID değil/],
+      [[{ ...fresh(), uid: mine.uid }], /başka bir nesnenin/],
+      [[{ ...(d.get(mine.id) as Entity), uid: given }], /kimliği değişmez/],
+      [[{ ...fresh(), uid: '0192a5c1-7c3e-7a31-8f2b-000000000001' }, { ...fresh(), uid: '0192a5c1-7c3e-7a31-8f2b-000000000001' }], /iki kez/],
+    ];
+    // Refused before anything changes: the removal asked with it does not happen either.
+    for (const [put, why] of refused) expect(() => d.applyExternal({ put, remove: [mine.id] })).toThrow(why);
+    expect(JSON.stringify([...d.all()])).toBe(before);
+  });
+
+  it('an object someone else brings back drops my undo and redo steps for the same id', () => {
+    const d = doc();
+    const x = d.add(point(1));
+    d.remove([x.id]);
+    d.applyExternal({ put: [{ ...point(7), id: d.allocateId(), uid: x.uid } as Entity] });
+    // My undo would put the same object in its old slot too: two objects, one id.
+    expect([d.canUndo.value, d.undo()]).toEqual([false, null]);
+    expect([...d.all()].map((e) => e.uid)).toEqual([x.uid]);
+    const y = d.add(point(2));
+    d.undo();
+    d.applyExternal({ put: [{ ...point(8), id: d.allocateId(), uid: y.uid } as Entity] });
+    expect([d.canRedo.value, d.redo()]).toEqual([false, null]);
+    expect([...d.all()].map((e) => e.uid)).toEqual([x.uid, y.uid]);
+  });
+
   it('takes another editor’s metadata quietly, and waits while an edit is open', () => {
     const d = doc();
     d.applyExternal({ meta: { name: 'Yeni ad', settings: { ...d.settings.toJSON(), plotScale: 500 }, activeLayer: 'b' } });

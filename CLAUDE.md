@@ -123,8 +123,9 @@ pnpm kentosd -- <komut>  # yönetim CLI; yetkili hedefte bilinçli kullanılır
   `kentos.styles.v1` localStorage anahtarlarıdır. Eski `kentos.prefs.v1` bir kez taşınır
   ve yedek olarak kalır; kurtarılan kayıt `kentos.settings.v1.backup`'tadır. Masaüstü
   ayarları `~/.config/kentos-cad/ayarlar.json`'dadır (vitrinin `ayarlar`'ı ayrıdır).
-  Gönderilmemiş cloud taslakları IndexedDB `kentos.cloud/drafts` içindedir; hata
-  ayıklarken kullanıcı verisini izinsiz silmeyin.
+  Gönderilmemiş cloud taslakları IndexedDB `kentos.cloud/drafts` içindedir (biçim 2,
+  ADR 0026; okunamayan taslak `<anahtar>#unreadable-<zaman>` altında ayrıca saklanır);
+  hata ayıklarken kullanıcı verisini izinsiz silmeyin.
 
 ## 3. Teknik kısıtlar
 
@@ -226,7 +227,9 @@ Masaüstünün karşılığı `kentos_domain::Document`'tir; iki belge `fixtures
 geçer, davranış değişikliği fixture'la birlikte yapılır (ADR 0020).
 Her nesnenin kalıcı `uid`'i vardır (ADR 0014): yeni nesne yeni `uid` alır, düzenleme ve
 geri alma korur, `replace` yuvayı ve kimliği tutar. v1 dosyası `uid` yazmaz; açılışta
-içerikten türetilir.
+içerikten türetilir. Bulutta nesnenin kimliği `uid`'idir (ADR 0026): açılış sunucunun
+kimliğini `uid` yapar, `applyExternal` gelen kimliği alır ve aynı kimliğe dokunan geri
+alma adımlarını düşürür; ayrı eşleme kurmayın.
 
 ### 4.8.1 Hesaplama çekirdeği
 
@@ -443,6 +446,8 @@ Sunucu transaction'ı istemcinin undo/transaction sorumluluğunun yerine geçmez
 Mevcut `project.changes` expected version, idempotency, audit/outbox temellerini
 genişletin. UI command registry ile bu protokolü tek kavram sanmayın.
 Yerel hızlı edit, dosya dayanıklılığı ve server commit onayı ayrı anlam taşır.
+Oluşturulan nesnenin sürümü commit'in veri revizyonudur; silinen kimlik yeniden
+oluşturulabilir, eski sürüme dayanan değişiklik çakışmadır (ADR 0026).
 
 ## 14. Workspace ve tek hesaplama kaynağı
 

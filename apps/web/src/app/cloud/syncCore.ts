@@ -3,15 +3,18 @@ import type { FeatureRecord } from '../../contracts/generated/FeatureRecord';
 import type { CadDocument, ExternalMeta } from '../../model/document';
 import type { Entity } from '../../model/entities';
 import type { CloudApi } from './api';
-import type { DraftStore } from './drafts';
+import type { DraftChange, DraftStore } from './drafts';
 import { readEntities, readIncoming } from './incoming';
 import { Tracker, entityJson, metaParts, type MetaParts, type Planned } from './tracker';
 
 /**
  * The state one open cloud project's sync shares between its parts: sending
  * (sync.ts), other editors' events (syncRemote.ts) and device drafts
- * (syncRestore.ts). What the server has of each object lives in the
- * tracker; `dirty` holds the local objects that may differ from it.
+ * (syncRestore.ts). Objects are named by their persistent id everywhere
+ * here, which is their id on the server (docs/adr/0026); a slot is asked of
+ * the drawing only to put an object in or take it out. What the server has
+ * of each object lives in the tracker; `dirty` holds the objects that may
+ * differ from it.
  */
 
 /**
@@ -28,8 +31,8 @@ export const PROJECT_DELETED = 'project.deleted';
 export const PROJECT_ACCESS = 'project.access';
 
 export interface SyncConflict {
+  /** The object's persistent id (its id on the server), or `@project` for the metadata. */
   featureId: string;
-  localId: number | null;
   reason: 'changed' | 'deleted' | 'exists' | 'project' | 'remote';
   /** The server's current copy (null when deleted, or for the project's metadata). */
   server: FeatureRecord | null;
@@ -51,8 +54,8 @@ export interface SyncOptions {
   canWrite?: boolean;
   metaVersion: string;
   cursor: string;
-  /** What the server sent when the project was opened. */
-  records: readonly { localId: number; featureId: string; version: string }[];
+  /** What the server sent when the project was opened: each object's id (its `uid` in the drawing) and version. */
+  records: readonly { id: string; version: string }[];
   warn: (text: string) => void;
   /** The project was deleted on the server (an event or a refused command); called once. */
   onDeleted?: () => void;
@@ -60,7 +63,6 @@ export interface SyncOptions {
   onRevoked?: (reason: string) => void;
   /** A grant of the project changed, or a command was refused (403): the session asks what this account may do now. */
   onAccessChanged?: () => void;
-  newId?: () => string;
   debounceMs?: number;
   maxDelayMs?: number;
 }
@@ -78,8 +80,16 @@ export const uuid = () => crypto.randomUUID();
 
 export class SyncCore {
   readonly o: SyncOptions;
-  readonly tracker: Tracker;
-  readonly dirty = new Set<number>();
+  readonly tracker = new Tracker();
+  /** Persistent ids of the objects that may differ from the server (edited here, not sent yet). */
+  readonly dirty = new Set<string>();
+  /**
+   * Changes from a device draft the drawing could not take (an object on a
+   * layer that is gone, say): never sent, but written to the device draft
+   * again, so unsent work is not lost (CLAUDE.md §21.3), until an edit of the
+   * same object here replaces it.
+   */
+  readonly held = new Map<string, DraftChange>();
   /** Request ids of our own commits (their events are skipped). */
   readonly own = new Set<string>();
   metaDirty = false;
@@ -102,10 +112,9 @@ export class SyncCore {
     this.cursor = o.cursor;
     this.canEditMeta = o.canEditMeta;
     this.metaVersion = o.metaVersion;
-    this.tracker = new Tracker(o.newId ?? uuid);
     for (const r of o.records) {
-      const e = o.doc.get(r.localId);
-      this.tracker.set(r.localId, { featureId: r.featureId, version: r.version, json: e ? entityJson(e) : null });
+      const e = o.doc.byUid(r.id);
+      if (e) this.tracker.set(r.id, { version: r.version, json: entityJson(e) });
     }
     this.metaBase = metaParts(o.doc);
   }
@@ -119,10 +128,9 @@ export class SyncCore {
     return this.dirty.size + (this.sendsMeta() ? 1 : 0);
   }
 
-  /** Whether a local object has unsent edits (or is in the command on its way). */
-  busyLocally(localId: number | undefined): boolean {
-    if (localId === undefined) return false;
-    return this.dirty.has(localId) || !!this.inflight?.planned.some((p) => p.localId === localId);
+  /** Whether an object has unsent edits here (or is in the command on its way). */
+  busyLocally(id: string): boolean {
+    return this.dirty.has(id) || !!this.inflight?.planned.some((p) => p.id === id);
   }
 
   /** Resolves when no edit or group is open in the drawing. */
@@ -133,8 +141,12 @@ export class SyncCore {
     });
   }
 
-  /** Objects that came from the server or the device, checked like a file; a bad one is reported and left out. */
-  checked(list: readonly { key: string; entity: unknown }[]): Map<string, Entity> {
+  /**
+   * Objects that came from the server or the device, checked like a file; a
+   * bad one is left out and reported (`bad`; by default a warning that the
+   * server sent it).
+   */
+  checked(list: readonly { key: string; entity: unknown }[], bad?: (key: string, error: string) => void): Map<string, Entity> {
     const out = new Map<string, Entity>();
     if (!list.length) return out;
     // One check for the batch; only a failing batch is checked object by object, to name the bad one.
@@ -146,6 +158,7 @@ export class SyncCore {
     for (const item of list) {
       const read = readEntities(this.o.doc, [item.entity]);
       if (read.ok) out.set(item.key, read.entities[0]);
+      else if (bad) bad(item.key, read.error);
       else this.o.warn(`Buluttan gelen bir nesne okunamadı (${item.key}): ${read.error}`);
     }
     return out;
@@ -164,9 +177,11 @@ export class SyncCore {
   }
 
   /**
-   * Server records put into the drawing (keeping local ids), tracked at their
-   * versions; missing ones removed. An object with unsent local edits keeps
-   * them: only its server version is updated, so the edit goes out on top of it.
+   * Server records put into the drawing under their ids (an object already
+   * here keeps its slot), tracked at their versions; missing ones removed.
+   * An object with unsent local edits keeps them: only its server version is
+   * updated, so the edit goes out on top of it. Decided once no edit is
+   * open, and applied at once, so no edit slips in between.
    */
   async takeServerCopies(ids: readonly string[]): Promise<void> {
     if (!ids.length) return;
@@ -174,26 +189,24 @@ export class SyncCore {
     if (this.closed) return;
     const byId = new Map(fresh.features.map((f) => [f.id, f]));
     const good = this.checked(fresh.features.map((f) => ({ key: f.id, entity: f.entity })));
+    await this.whenIdle();
+    if (this.closed) return;
     const doc = this.o.doc;
     const put: Entity[] = [];
     const remove: number[] = [];
     for (const id of ids) {
-      const local = this.tracker.localOf(id);
+      const slot = doc.slotOf(id);
       const rec = byId.get(id);
       const incoming = good.get(id);
-      const keep = local !== undefined && this.dirty.has(local);
+      const keep = this.dirty.has(id);
       if (rec && incoming) {
-        const lid = local ?? doc.allocateId();
-        const e = { ...incoming, id: lid } as Entity;
-        if (!keep) put.push(e);
-        this.tracker.set(lid, { featureId: id, version: rec.version, json: entityJson(e) });
-      } else if (!rec && local !== undefined) {
-        if (!keep) remove.push(local);
-        this.tracker.set(local, { featureId: id, version: null, json: null });
+        if (!keep) put.push({ ...incoming, id: slot ?? doc.allocateId(), uid: id } as Entity);
+        this.tracker.set(id, { version: rec.version, json: entityJson(incoming) });
+      } else if (!rec) {
+        if (!keep && slot !== undefined) remove.push(slot);
+        this.tracker.set(id, null);
       }
     }
-    await this.whenIdle();
-    if (this.closed) return;
     doc.applyExternal({ put, remove });
   }
 }

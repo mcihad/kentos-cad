@@ -29,11 +29,13 @@ interface DocumentEvents {
   attrs: { ids: number[] };
   /**
    * Which objects an applied change touched (edit, undo, redo, rollback or an
-   * external change) and whether a layer's style changed. Cloud sync
-   * (app/cloud/sync.ts) diffs exactly these; `external` marks changes that
-   * came from the server and must not be sent back.
+   * external change) and whether a layer's style changed. `uids` are their
+   * persistent ids in the same order (a removed object can no longer be asked
+   * for its own). Cloud sync (app/cloud/sync.ts) diffs exactly these, by
+   * persistent id; `external` marks changes that came from the server and
+   * must not be sent back.
    */
-  touched: { ids: number[]; layerStyles: boolean; external: boolean };
+  touched: { ids: number[]; uids: string[]; layerStyles: boolean; external: boolean };
   /**
    * Objects were bulk-loaded or the whole drawing replaced (`load`,
    * `replaceWith`); no `touched` follows. Copies of the objects (the
@@ -412,10 +414,10 @@ export class CadDocument {
    * tree, settings, styles, anchor and start view. No history is kept and
    * the result is clean. Refused while an edit or a group is open. The
    * drawing takes the objects themselves; one without a persistent id gets a
-   * new one (a cloud project's until ADR 0014 slice 3, generated data), a v1
-   * file's come derived from the file (`attachV1Identities`). An id that is
-   * not a UUID or is given twice refuses the whole drawing, before anything
-   * changes.
+   * new one (generated data), a v1 file's come derived from the file
+   * (`attachV1Identities`), a cloud project's are the server's ids
+   * (`readProject`, ADR 0014 slice 3). An id that is not a UUID or is given
+   * twice refuses the whole drawing, before anything changes.
    */
   replaceWith(data: DocumentContent): void {
     if (this.pending || this.group) throw new Error('Açık bir düzenleme varken çizim değiştirilemez.');
@@ -468,19 +470,34 @@ export class CadDocument {
 
   /**
    * Applies changes that another editor already saved: no undo step, not an
-   * unsaved edit. Undo steps touching these objects are dropped, so undo can
-   * never silently revert someone else's change (CLAUDE.md §15). Objects are
-   * put with their id (`allocateId` for new ones). One already in the drawing
-   * keeps its persistent id; a new one gets a new id (how the server's ids
-   * become persistent ids is ADR 0014's slice 3). Refused while an edit is open.
+   * unsaved edit. Objects are put with their slot (`allocateId` for new
+   * ones). A new object takes the persistent id it carries (the server's id,
+   * ADR 0014 slice 3) or gets a new one; one already in the drawing keeps its
+   * own. Undo and redo steps touching these objects are dropped, by slot and
+   * by persistent id, so undo can never silently revert someone else's
+   * change (CLAUDE.md §15) nor bring back a second copy of an object that
+   * arrived in another slot (docs/adr/0026). A persistent id that is not a
+   * UUID, comes twice, belongs to another object of the drawing or would
+   * change an object's own refuses the whole change before anything
+   * happens. Refused while an edit is open.
    */
   applyExternal(changes: { put?: readonly Entity[]; remove?: readonly number[]; meta?: ExternalMeta }): void {
     if (this.busy) throw new Error('Açık bir düzenleme varken dışarıdan gelen değişiklik uygulanamaz.');
+    const given = new Set<string>();
+    for (const e of changes.put ?? []) {
+      if (e.uid === undefined) continue;
+      if (!isUuid(e.uid)) throw new Error(`Nesne ${e.id}: kalıcı kimlik “${e.uid}” küçük harfli, tireli bir UUID değil; değişiklik uygulanmadı.`);
+      if (given.has(e.uid)) throw new Error(`Kalıcı kimlik ${e.uid} değişiklikte iki kez var; değişiklik uygulanmadı.`);
+      given.add(e.uid);
+      const before = this.entities.get(e.id);
+      if (before && before.uid !== e.uid) throw new Error(`Nesne ${e.id}: kalıcı kimliği ${before.uid}, gelen ${e.uid}; bir nesnenin kimliği değişmez, değişiklik uygulanmadı.`);
+      if (!before && this.uids.has(e.uid)) throw new Error(`Nesne ${e.id}: kalıcı kimlik ${e.uid} çizimde başka bir nesnenin; değişiklik uygulanmadı.`);
+    }
     const ops: Op[] = [];
     for (const e of changes.put ?? []) {
       const before = this.entities.get(e.id);
       if (before) ops.push({ type: 'update', before, after: (e.uid === before.uid ? e : { ...e, uid: before.uid }) as DrawingEntity });
-      else ops.push({ type: 'add', entity: { ...e, uid: this.newUid() } as DrawingEntity });
+      else ops.push({ type: 'add', entity: { ...e, uid: e.uid ?? this.newUid() } as DrawingEntity });
       if (e.id >= this.nextId) this.nextId = e.id + 1;
     }
     for (const id of changes.remove ?? []) {
@@ -501,14 +518,26 @@ export class CadDocument {
       this.external = false;
       this.quiet--;
     }
-    this.forgetHistoryOf(new Set(ops.map((o) => (o.type === 'update' ? o.after.id : o.type === 'layerStyle' ? -1 : o.entity.id))));
+    const slots = new Set<number>();
+    const uids = new Set<string>();
+    for (const o of ops) {
+      if (o.type === 'layerStyle') continue;
+      const e = o.type === 'update' ? o.after : o.entity;
+      slots.add(e.id);
+      uids.add(e.uid);
+    }
+    this.forgetHistoryOf(slots, uids);
   }
 
-  /** Drops the undo and redo steps that touch any of these objects. */
-  forgetHistoryOf(ids: ReadonlySet<number>): void {
-    if (!ids.size) return;
-    const touches = (tx: Transaction) =>
-      tx.ops.some((o) => (o.type === 'update' ? ids.has(o.before.id) : o.type === 'layerStyle' ? false : ids.has(o.entity.id)));
+  /**
+   * Drops the undo and redo steps that touch any of these objects, named by
+   * slot or by persistent id (an object deleted here that someone else
+   * brought back sits in a new slot under the same id).
+   */
+  forgetHistoryOf(ids: ReadonlySet<number>, uids: ReadonlySet<string> = new Set()): void {
+    if (!ids.size && !uids.size) return;
+    const hit = (e: DrawingEntity) => ids.has(e.id) || uids.has(e.uid);
+    const touches = (tx: Transaction) => tx.ops.some((o) => (o.type === 'update' ? hit(o.before) : o.type === 'layerStyle' ? false : hit(o.entity)));
     this.undoStack = this.undoStack.filter((tx) => !touches(tx));
     this.redoStack = this.redoStack.filter((tx) => !touches(tx));
     this.syncHistory();
@@ -574,6 +603,7 @@ export class CadDocument {
     const layerIds = new Set<string>();
     const attrIds: number[] = [];
     const touched: number[] = [];
+    const uids: string[] = [];
     let layerStyles = false;
     for (const op of ops) {
       if (op.type === 'layerStyle') {
@@ -586,7 +616,9 @@ export class CadDocument {
         layerStyles = true;
         continue;
       }
-      touched.push(op.type === 'update' ? op.after.id : op.entity.id);
+      const e = op.type === 'update' ? op.after : op.entity;
+      touched.push(e.id);
+      uids.push(e.uid);
       if (op.type === 'add') {
         this.put(op.entity);
         layerIds.add(op.entity.layerId);
@@ -604,7 +636,7 @@ export class CadDocument {
     if (this.unsorted) this.sortByPlace(layerIds);
     if (layerIds.size) this.events.emit('changed', { layerIds });
     if (attrIds.length) this.events.emit('attrs', { ids: attrIds });
-    if (touched.length || layerStyles) this.events.emit('touched', { ids: touched, layerStyles, external: this.external });
+    if (touched.length || layerStyles) this.events.emit('touched', { ids: touched, uids, layerStyles, external: this.external });
   }
 
   /** Sets an object in the drawing, its persistent id's slot and its layer's index. */
