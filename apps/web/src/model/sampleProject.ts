@@ -121,7 +121,8 @@ export function createSampleProject(srid = DEFAULT_SRID): CadDocument {
             Parsel: no,
             Mahalle: MAHALLE,
             Nitelik: nitelik,
-            'Tapu alanı (m²)': fmtArea(ringLocal),
+            // The deed's value, not the drawing's: left for the title deed (CLAUDE.md §7, §23), as the parcel tool leaves it.
+            'Tapu alanı (m²)': '',
             Pafta: PAFTA,
           },
         });
