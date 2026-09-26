@@ -94,6 +94,8 @@ pub enum Dialog {
     RemoveCopy,
     /// The open cloud project ended for this account (deleted, archived, access taken away).
     Ended,
+    /// A file exchange window (exchange/): DXF or a coordinate list, in or out.
+    Exchange,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -176,6 +178,8 @@ pub enum Message {
     Recovery(recovery::Event),
     /// The cloud: signing in, the catalog, cloud projects (cloud/, docs/adr/0041).
     Cloud(Box<cloud::Event>),
+    /// File exchange: DXF and coordinate lists, in and out (exchange/).
+    Exchange(Box<crate::exchange::Event>),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -246,6 +250,8 @@ pub struct App {
     pub recovery: Recovery,
     /// The cloud: the account, its windows, the open project's autosave (cloud/).
     pub cloud: CloudState,
+    /// The open file exchange window (exchange/).
+    pub exchange: Option<crate::exchange::Window>,
 }
 
 impl App {
@@ -305,6 +311,7 @@ impl App {
             save_faults: saving::Faults::NONE,
             recovery,
             cloud: CloudState::default(),
+            exchange: None,
         };
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
@@ -552,6 +559,7 @@ impl App {
             }
             Message::DialogClosed => self.close_dialog(),
             Message::Cloud(event) => return self.cloud_event(*event),
+            Message::Exchange(event) => return self.exchange_event(*event),
             Message::Viewport(event) => return self.pointer(event),
             Message::Settings(edit) => return self.settings_edit(edit),
             Message::Opening(event) => return self.opening_event(event),
@@ -698,6 +706,9 @@ impl App {
         }
         if id.starts_with("cloud.") {
             return self.cloud_command(id);
+        }
+        if crate::exchange::COMMANDS.contains(&id) {
+            return self.exchange_command(id);
         }
         match id {
             // The drawing on screen is left first: its unsent cloud work to its draft, or the question.

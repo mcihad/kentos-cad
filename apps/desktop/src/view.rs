@@ -459,6 +459,7 @@ impl App {
             Asking::FileConflict => self.file_conflict_view(),
             Asking::RemoveCopy => self.remove_copy_view(),
             Asking::Ended => self.ended_view(),
+            Asking::Exchange => self.exchange_view(),
         }
     }
 }
@@ -749,7 +750,7 @@ fn word<T: serde::Serialize>(value: &T) -> String {
 }
 
 /// An object kind as the interface names it.
-fn kind_name(kind: &str) -> &'static str {
+pub(crate) fn kind_name(kind: &str) -> &'static str {
     match kind {
         "point" => "nokta",
         "line" => "çizgi",
@@ -802,7 +803,7 @@ fn rgba8(color: Color) -> Rgba8 {
 }
 
 /// A layer colour from the file: `#rrggbb`; theme colours (`fg` …) as grey.
-fn hex_color(text: &str) -> Color {
+pub(crate) fn hex_color(text: &str) -> Color {
     let hex = text.trim_start_matches('#');
     if hex.len() == 6
         && let Ok(value) = u32::from_str_radix(hex, 16)

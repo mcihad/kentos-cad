@@ -381,6 +381,11 @@ impl Viewport {
         }
     }
 
+    /// Shows `b` as large as it fits, with the margin a fit keeps.
+    pub fn show(&mut self, b: &Bounds) {
+        self.camera.fit(b, FIT_PADDING);
+    }
+
     /// The document's start view, else its extents; its origin when it has neither.
     fn fit(&mut self, doc: &Document) {
         self.fit_pending = false;

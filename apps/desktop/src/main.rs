@@ -9,6 +9,7 @@ mod catalog;
 mod cloud;
 mod command_bar;
 mod document;
+mod exchange;
 #[cfg(test)]
 mod files_testing;
 mod icons;

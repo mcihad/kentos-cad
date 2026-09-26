@@ -18,6 +18,10 @@ mod strings;
 mod writer;
 pub mod xdata;
 
+/// A dimension laid out as the drawing shows it (its measured value, prefix
+/// and unit): the desktop's DXF export gives each dimension without its own
+/// text the value it shows, as the web does with the same function.
+pub use dimension::layout as dimension_layout;
 pub use writer::{WriteInput, input_from_json, write};
 
 use std::collections::{HashMap, HashSet};

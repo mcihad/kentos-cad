@@ -310,10 +310,11 @@ pub fn segment(selected: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
         let t = Tokens::of(theme);
 
-        let (background, text) = match (selected, is_hovered(status)) {
+        let (background, text) = match (selected, status) {
             (true, _) => (t.accent, t.on_accent),
-            (false, true) => (t.surface_hover, t.text),
-            (false, false) => (t.surface_alt, t.text),
+            (false, Status::Disabled) => (t.surface_alt, t.disabled()),
+            (false, status) if is_hovered(status) => (t.surface_hover, t.text),
+            (false, _) => (t.surface_alt, t.text),
         };
 
         style(background, text, Border::default())

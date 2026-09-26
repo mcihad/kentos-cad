@@ -2467,6 +2467,7 @@ dependencies = [
  "kentos-cloud",
  "kentos-contracts",
  "kentos-domain",
+ "kentos-formats",
  "kentos-interaction",
  "kentos-kcad",
  "kentos-render-wgpu",

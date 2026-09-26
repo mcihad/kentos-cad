@@ -725,7 +725,7 @@ Bu bölümde bir aracın listelenmesi sıfırdan yazılması gerektiği anlamın
 
 ### 16.3 Formatlar ve gerçek birlikte çalışabilirlik
 
-- [ ] `FMT-01` Mevcut DXF reader/writer'ı native/web/server üzerinden aynı fixtures ile kullan; geometry yanında layer/style/font/dimension/block kayıp raporlarını koru.
+- [ ] `FMT-01` Mevcut DXF reader/writer'ı native/web/server üzerinden aynı fixtures ile kullan; geometry yanında layer/style/font/dimension/block kayıp raporlarını koru. — **26 Eylül, kısmen (masaüstü, [ADR 0048](docs/adr/0048-desktop-file-exchange.md)):** DXF ve koordinat listesi (NCN, TXT, CSV) masaüstünde de alınıp veriliyor: aynı ortak okuyucu ve yazıcılar (`kentos-formats`, kendi iş parçacığında), web'in pencereleri ve sözleri, koordinat sistemi sorulur ve dönüştürülmez, içe aktarım tek geri alma adımı, rapor gösterilir. Masaüstünde sonlu olmayan sayı taşıyan nesne içe aktarımı durdurur. Açık: sunucu tarafı, GeoJSON ve Shapefile'ın masaüstüne gelişi (ADR 0046'dan sonra).
 - [ ] `FMT-02` DXF ölçü ve bloklarını gerçek AutoCAD/BricsCAD/Netcad/QGIS gibi hedef uygulamalarda açıp görsel/semantik kontrol planla; yalnız aynı reader ile round-trip doğruluğu yeterli sayılmasın.
 - [ ] `FMT-03` GeoJSON, GeoPackage, Shapefile, CSV/XYZ ve kurum koordinat formatları için capability/kayıp matrisi çıkar; encoding, alan adı uzunluğu, tip kısıtları ve CRS farklarını görünür yap.
 - [ ] `FMT-04` Gerekli GDAL/PROJ/native codec'leri adapter veya server işine bağla; bütün C/C++ bağımlılığını browser'a taşımayı şart koşma. Web yerel desteklenmeyen formatı açık server conversion seçeneğiyle ele alsın.
