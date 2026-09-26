@@ -1,4 +1,4 @@
-import type { EntityGeometry } from '../model/entities';
+import type { Entity, EntityGeometry } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
 import type { Affine } from '../model/geom/affine';
 import type { ArcGeom } from '../model/geom/arc';
@@ -90,6 +90,17 @@ export const filletRadiusFor = op<(t: number, phi: number) => number>('filletRad
 export const filletArc = op<(c: CornerGeom, radius: number) => ArcGeom | null>('filletArc');
 /** The chamfer cut alone; null unless both distances are positive. */
 export const chamferLine = op<(c: CornerGeom, d1: number, d2: number) => { a: Vec2; b: Vec2 } | null>('chamferLine');
+
+/** Where a corner under the cursor is: a path's vertex, or two lines meeting end to end (by their place in the candidates). */
+export type CornerSite = { kind: 'vertex'; object: number; vertex: number } | { kind: 'lines'; first: number; pick1: Vec2; second: number; pick2: Vec2 };
+
+/**
+ * The corner nearest `p` within `tol` among the candidates (lines, polylines,
+ * closed areas): a path vertex, or two lines whose ends lie within `same` of
+ * each other; the first on a tie (docs/adr/0047). Each line of a pair keeps
+ * the side of its far end.
+ */
+export const cornerNear = op<(candidates: readonly Entity[], p: Vec2, tol: number, same: number) => { site: CornerSite; corner: CornerGeom } | null>('cornerNear');
 
 /** Angular dimension arms from a vertex and a point on each arm, in the sector `loc` is in. */
 export const vertexArms = op<(c: Vec2, p1: Vec2, p2: Vec2, loc: Vec2) => { c: Vec2; a: Vec2; b: Vec2 }>('vertexArms');

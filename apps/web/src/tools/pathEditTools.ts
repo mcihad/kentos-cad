@@ -1,10 +1,8 @@
-import { entityGeometry, type Entity, type PolylineEntity } from '../model/entities';
+import { entityGeometry, type Entity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
-import { bulgePathEdges } from '../model/geom/bulge';
-import { closestOnEdge, type Edge } from '../model/geom/intersect';
 import { breakEntity } from '../model/ops/break';
 import { divisionPoints, nearestS, pathOf, type Path } from '../model/ops/path';
-import { insertVertex, nearestSegment, removeVertex } from '../model/ops/vertex';
+import { insertVertex, nearestSegment, nearHole, removeVertex } from '../model/ops/vertex';
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
 import { EdgePickTool } from './edgeTools';
@@ -283,11 +281,4 @@ export class VertexTool extends EdgePickTool {
     g.restore();
     drawTag(g, s, [a.remove !== null ? 'Köşeyi sil' : 'Köşe ekle'], a.remove !== null ? pal.danger : pal.accent, pal.labelHalo);
   }
-}
-
-/** Whether p is nearer to one of a polygon's holes than to its outer ring. */
-function nearHole(e: PolylineEntity, p: Vec2): boolean {
-  if (!e.holes?.length) return false;
-  const d = (edges: Edge[]) => edges.reduce((m, ed) => Math.min(m, closestOnEdge(ed, p).d), Infinity);
-  return d(e.holes.flatMap((h) => bulgePathEdges(h.pts, h.bulges, true))) < d(bulgePathEdges(e.pts, e.bulges, true));
 }

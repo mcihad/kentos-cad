@@ -3,8 +3,11 @@
 
 use crate::api::Op;
 use crate::entity::{Entity, Shape};
-use crate::geom::bulge::{bulge_arc, bulge_at, bulge_of_sweep, clean_bulge_path, is_arc_bulge};
+use crate::geom::bulge::{
+    bulge_arc, bulge_at, bulge_of_sweep, bulge_path_edges, clean_bulge_path, is_arc_bulge,
+};
 use crate::geom::intersect::{Edge, closest_on_edge};
+use crate::jsmath::js_min;
 use crate::op;
 use crate::ops::curve_cuts::Geometry;
 use crate::ops::edges::entity_edges;
@@ -23,6 +26,33 @@ pub fn nearest_segment(e: &Shape, p: Vec2) -> usize {
         }
     }
     best_i
+}
+
+/// Whether `p` is nearer to one of a closed area's holes than to its outer
+/// ring (the vertex tool's `nearHole`, docs/adr/0047): there the tool says
+/// that a hole's corners move with grips. False for anything else.
+pub fn near_hole(e: &Shape, p: Vec2) -> bool {
+    let Shape::Polygon {
+        pts,
+        bulges,
+        holes: Some(holes),
+    } = e
+    else {
+        return false;
+    };
+    if holes.is_empty() {
+        return false;
+    }
+    let nearest = |edges: Vec<Edge>| {
+        edges
+            .iter()
+            .fold(f64::INFINITY, |m, ed| js_min(m, closest_on_edge(ed, p).d))
+    };
+    let inner: Vec<Edge> = holes
+        .iter()
+        .flat_map(|h| bulge_path_edges(&h.pts, h.bulges.as_deref(), true))
+        .collect();
+    nearest(inner) < nearest(bulge_path_edges(pts, bulges.as_deref(), true))
 }
 
 fn path_shape(closed: bool, pts: Vec<Vec2>, bulges: Option<Vec<f64>>) -> Shape {
@@ -168,4 +198,5 @@ pub(crate) static OPS: &[Op] = &[
     op!("removeVertex", |e: Entity, index: usize| remove_vertex(
         &e.shape, index
     )),
+    op!("nearHole", |e: Entity, p: Vec2| near_hole(&e.shape, p)),
 ];

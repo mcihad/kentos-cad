@@ -6,8 +6,10 @@
 //! inline before (docs/adr/0008, S5).
 
 use crate::api::Op;
+use crate::entity::{Entity, Shape};
 use crate::geom::affine::{Affine, compose, rotation, scaling, translation};
 use crate::geom::arc::{ArcGeom, norm_angle};
+use crate::geom::bulge::bulge_at;
 use crate::geom::dimension::sector_arms;
 use crate::geom::intersect::line_line;
 use crate::geometry::dist;
@@ -249,6 +251,121 @@ pub fn chamfer_line(c: &CornerGeom, d1: f64, d2: f64) -> Option<Piece> {
     })
 }
 
+/// Where a corner under the cursor is: a vertex of a path, or where two
+/// lines meet end to end. Objects are named by their place in the
+/// candidates given to [`corner_near`].
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum CornerSite {
+    /// Vertex `vertex` of the path `object`.
+    Vertex { object: usize, vertex: usize },
+    /// The lines `first` and `second`, whose ends meet; each keeps the side
+    /// of its pick point (its far end), as a fillet of two picked lines does.
+    Lines {
+        first: usize,
+        pick1: Vec2,
+        second: usize,
+        pick2: Vec2,
+    },
+}
+
+crate::json_tagged!(
+    CornerSite,
+    "kind",
+    Vertex => "vertex" { object, vertex },
+    Lines => "lines" { first, pick1, second, pick2 },
+);
+
+/// The corner nearest the cursor and its geometry.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CornerHit {
+    pub site: CornerSite,
+    pub corner: CornerGeom,
+}
+
+crate::json_struct!(out CornerHit { site, corner });
+
+/// The corner a fillet or chamfer finds under the cursor (the corner tools'
+/// `cornerAt`, docs/adr/0047): among `candidates` (lines, polylines and
+/// closed areas; anything else is passed over), a path vertex within `tol`
+/// of `p`, or two lines whose ends lie within `same` of each other with one
+/// of those ends within `tol` of `p`. The nearest corner wins, the first on
+/// a tie; a vertex beside an arc, on a straight run or where the path turns
+/// back is no corner (`vertex_corner`, `lines_corner_at`).
+pub fn corner_near(candidates: &[Shape], p: Vec2, tol: f64, same: f64) -> Option<CornerHit> {
+    let mut best: Option<(CornerHit, f64)> = None;
+    let mut consider = |site: CornerSite, corner: Option<CornerGeom>| {
+        let Some(corner) = corner else { return };
+        let d = dist(corner.at, p);
+        if d <= tol && best.as_ref().is_none_or(|(_, bd)| d < *bd) {
+            best = Some((CornerHit { site, corner }, d));
+        }
+    };
+    // The end of a line away from `near`: the side a pick there keeps.
+    let far_end = |a: Vec2, b: Vec2, near: Vec2| if dist(a, near) <= dist(b, near) { b } else { a };
+    for (i, e) in candidates.iter().enumerate() {
+        match e {
+            Shape::Line { a, b } => {
+                for end in [*a, *b] {
+                    if dist(end, p) > tol {
+                        continue;
+                    }
+                    for (j, o) in candidates.iter().enumerate() {
+                        let Shape::Line { a: oa, b: ob } = o else {
+                            continue;
+                        };
+                        if j == i {
+                            continue;
+                        }
+                        let o_end = if dist(*oa, end) <= same {
+                            *oa
+                        } else if dist(*ob, end) <= same {
+                            *ob
+                        } else {
+                            continue;
+                        };
+                        let (pick1, pick2) = (far_end(*a, *b, end), far_end(*oa, *ob, o_end));
+                        consider(
+                            CornerSite::Lines {
+                                first: i,
+                                pick1,
+                                second: j,
+                                pick2,
+                            },
+                            lines_corner_at(*a, *b, pick1, *oa, *ob, pick2),
+                        );
+                    }
+                }
+            }
+            Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
+                let closed = matches!(e, Shape::Polygon { .. });
+                let n = pts.len();
+                for (k, q) in pts.iter().enumerate() {
+                    if dist(*q, p) > tol || (!closed && (k == 0 || k + 1 >= n)) {
+                        continue;
+                    }
+                    let prev = (k + n - 1) % n;
+                    let corner = vertex_corner(
+                        pts[prev],
+                        *q,
+                        pts[(k + 1) % n],
+                        bulge_at(bulges.as_deref(), prev),
+                        bulge_at(bulges.as_deref(), k),
+                    );
+                    consider(
+                        CornerSite::Vertex {
+                            object: i,
+                            vertex: k,
+                        },
+                        corner,
+                    );
+                }
+            }
+            _ => {}
+        }
+    }
+    best.map(|(hit, _)| hit)
+}
+
 /// The vertex and arm points of an angular dimension.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Arms {
@@ -376,6 +493,13 @@ pub(crate) static OPS: &[Op] = &[
     )),
     op!("chamferLine", |c: CornerGeom, d1: f64, d2: f64| {
         chamfer_line(&c, d1, d2)
+    }),
+    op!("cornerNear", |candidates: Vec<Entity>,
+                       p: Vec2,
+                       tol: f64,
+                       same: f64| {
+        let shapes: Vec<Shape> = candidates.into_iter().map(|e| e.shape).collect();
+        corner_near(&shapes, p, tol, same)
     }),
     op!("vertexArms", |c: Vec2, p1: Vec2, p2: Vec2, loc: Vec2| {
         vertex_arms(c, p1, p2, loc)

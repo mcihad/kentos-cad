@@ -2,9 +2,7 @@ import type { AppContext } from '../app/context';
 import { Signal } from '../core/signal';
 import { entityGeometry, type Entity, type EntityGeometry, type NewEntity } from '../model/entities';
 import type { Vec2 } from '../model/geometry';
-import { closestOnEdge } from '../model/geom/intersect';
-import { entityEdges } from '../model/ops/edges';
-import { offsetEntity } from '../model/ops/offset';
+import { offsetEntity, offsetThroughDistance } from '../model/ops/offset';
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
 import { drawTag, strokeGeometry } from './preview';
@@ -101,12 +99,9 @@ export class OffsetTool extends EdgePickTool {
     else this.prompt.set(`Ötele: ${OffsetTool.through ? 'kopyanın geçeceği noktaya tıklayın' : 'kopyanın gideceği tarafa tıklayın'} [${opt}]`);
   }
 
-  /** Offset distance for a side point: fixed, or the point's distance to the object. */
+  /** Offset distance for a side point: fixed, or the point's distance to the object (the core's, docs/adr/0047). */
   private distanceFor(e: Entity, p: Vec2): number {
-    if (!OffsetTool.through) return OffsetTool.distance;
-    let d = Infinity;
-    for (const ed of entityEdges(e)) d = Math.min(d, closestOnEdge(ed, p).d);
-    return d;
+    return OffsetTool.through ? offsetThroughDistance(e, p) : OffsetTool.distance;
   }
 
   override get snaps(): boolean {
