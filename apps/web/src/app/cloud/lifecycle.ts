@@ -2,6 +2,7 @@ import type { CheckpointChange } from '../../contracts/generated/CheckpointChang
 import type { CheckpointCreate } from '../../contracts/generated/CheckpointCreate';
 import type { CheckpointRestore } from '../../contracts/generated/CheckpointRestore';
 import type { ProjectCatalogChange } from '../../contracts/generated/ProjectCatalogChange';
+import type { ProjectConvert } from '../../contracts/generated/ProjectConvert';
 import type { ProjectDuplicated } from '../../contracts/generated/ProjectDuplicated';
 import type { ProjectPurged } from '../../contracts/generated/ProjectPurged';
 import type { ProjectStorage } from '../../contracts/generated/ProjectStorage';
@@ -114,8 +115,7 @@ export class ProjectLifecycle {
    */
   async convert(ref: ProjectRef, to: ProjectStorage, into: { name?: string; tenantId?: string } = {}): Promise<ProjectDuplicated> {
     await this.settle(ref);
-    // The input of `ProjectConvert` v1 (crates/shared/contracts, docs/adr/0039).
-    const input: { to: ProjectStorage; name?: string; tenantId?: string } = { to };
+    const input: ProjectConvert = { to };
     if (into.name?.trim()) input.name = into.name.trim();
     if (into.tenantId) input.tenantId = into.tenantId;
     return this.send<ProjectDuplicated>('project.convert', ref, input);

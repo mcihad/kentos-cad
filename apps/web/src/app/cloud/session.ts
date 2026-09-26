@@ -481,7 +481,7 @@ export class CloudSession {
       },
       onResync: () => {
         this.ctx.log.warn('Canlı bağlantı kaçırılan değişiklikleri veremiyor; proje sunucudan yeniden açılıyor.');
-        this.open(info.tenantId, info.id, undefined, undefined, project.storage).catch((e: unknown) => {
+        this.open(info.tenantId, info.id).catch((e: unknown) => {
           // Deleted meanwhile (its event was among the ones no longer kept): the same as hearing it.
           if (e instanceof ApiFailure && e.deleted) target.markDeleted();
           // Or its access was taken away meanwhile.
@@ -575,7 +575,7 @@ export class CloudSession {
         // Someone imported a whole drawing into it (docs/adr/0036): opened again, as the event asks.
         if (events.some((e) => e.kind === 'project.import' && !(e.requestId && sync.ownRequest(e.requestId)))) {
           this.ctx.log.info(`“${info.name}” projesine bir çizim içe aktarıldı; proje sunucudan yeniden açılıyor.`);
-          void this.open(info.tenantId, info.id, undefined, undefined, 'database').catch((e: unknown) => this.ctx.log.error(`Proje yeniden açılamadı: ${(e as Error).message}`));
+          void this.open(info.tenantId, info.id).catch((e: unknown) => this.ctx.log.error(`Proje yeniden açılamadı: ${(e as Error).message}`));
           return;
         }
         void sync.receive(events);
@@ -600,12 +600,12 @@ export class CloudSession {
    * catalog); else the server is asked. True when opened; false when
    * cancelled or overtaken by another open.
    */
-  async open(tenantId: string, projectId: string, progress: Progress = () => {}, signal?: AbortSignal, storage?: ProjectStorage): Promise<boolean> {
+  async open(tenantId: string, projectId: string, progress: Progress = () => {}, signal?: AbortSignal): Promise<boolean> {
     const stale = this.beginOpen(signal);
-    const kind = storage ?? (await this.api.details(tenantId, projectId, signal)).project.storage;
-    if (stale()) return false;
     const info = await this.api.project(tenantId, projectId);
-    if (kind === 'file') return openFileProject(this, info, progress, signal, stale);
+    if (stale()) return false;
+    // How it keeps its content is the project's own (an older server's answer without it: a database project).
+    if (info.storage === 'file') return openFileProject(this, info, progress, signal, stale);
     const total = Number(info.featureCount);
     const records: FeatureRecord[] = [];
     let after: string | null = null;

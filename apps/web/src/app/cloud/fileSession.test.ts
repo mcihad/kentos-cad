@@ -56,7 +56,7 @@ describe.skipIf(!formatsBuilt)('file projects in the cloud session (docs/adr/003
     server.meta.name = 'Ada 101';
     await server.files.commitAs(await bytesOf(snapshotSampleDocument()), 'Ayşe Yılmaz');
     await server.files.commitAs(await bytesOf(newest), 'Mehmet Demir');
-    expect(await session.open('t', 'p', undefined, undefined, 'file')).toBe(true);
+    expect(await session.open('t', 'p')).toBe(true);
     expect([doc.size, doc.name.value, doc.dirty.value, session.file.value?.base.value, session.project.value?.storage]).toEqual([newest.size, 'Ada 101', false, '2', 'file']);
     expect(messages.at(-1)).toMatch(/^ok: “Ada 101” bulut projesi açıldı: revizyon 2, \d+ nesne\./);
     doc.add(point(486556));
@@ -84,7 +84,7 @@ describe.skipIf(!formatsBuilt)('file projects in the cloud session (docs/adr/003
     await server.files.commitAs(await bytesOf(snapshotSampleDocument()));
     server.files.corruptNextDownload = true;
     const before = doc.revision;
-    expect(await session.open('t', 'p', undefined, undefined, 'file')).toBe(false);
+    expect(await session.open('t', 'p')).toBe(false);
     expect([doc.revision, doc.size, session.project.value]).toEqual([before, 0, null]);
     expect(messages.at(-1)).toMatch(/indirilemedi: İndirilen dosya sunucudakiyle aynı değil \(SHA-256 tutmuyor\)/);
   });
@@ -92,7 +92,7 @@ describe.skipIf(!formatsBuilt)('file projects in the cloud session (docs/adr/003
   it('a file project without a revision opens with its own metadata and no objects; the first Kaydet writes revision 1', async () => {
     const { session, server, doc } = setup({ doc: snapshotSampleDocument() });
     server.files.storage = 'file';
-    expect(await session.open('t', 'p', undefined, undefined, 'file')).toBe(true);
+    expect(await session.open('t', 'p')).toBe(true);
     expect([doc.size, session.file.value?.base.value]).toEqual([0, '0']);
     doc.add(point(486501, doc.layers.leaves()[0].id));
     expect(await session.saveFile()).toBe(true);

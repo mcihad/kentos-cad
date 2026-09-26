@@ -30,7 +30,7 @@
 - Sonra yerel dosya gibi aşamalı okunup denetlenir (ADR 0030). Çizim yalnız bütün revizyon okununca tek adımda değişir. Açılan revizyon, çizimin **dayandığı revizyon** olarak saklanır.
 - Projenin adı katalogdakidir; revizyonun içindeki ad, kaydedildiği andaki addır.
 - Henüz revizyonu olmayan dosya projesi kendi bilgileriyle ve nesnesiz açılır; ilk Kaydet 1. revizyonu yazar.
-- Katalog projenin biçimini kendi kaydından (`ProjectSummary.storage`) bilir. Kopya, geri yükleme ve dönüştürmede yeni projenin biçimi komuttan bellidir; web onu açarken bu biçimi kullanır.
+- Katalog projenin biçimini kendi kaydından (`ProjectSummary.storage`) bilir. Kopya, geri yükleme ve dönüştürmede yeni projenin biçimi komuttan bellidir; web onu açarken bu biçimi kullanır. **26 Eylül, ADR 0042:** açılış biçimi projenin kendi bilgisinden (`ProjectInfo.storage`) alır; komuttan gelen biçim artık taşınmaz.
 
 ### Kaydet
 
@@ -159,7 +159,7 @@ Sunucu tarafı ADR 0034'tür (kontrol noktası oluşturma, listeleme, indirme, s
 ### Saklama biçimi
 
 - Bilgiler sekmesi dosya projesinin nesne sayısını en yeni revizyondan verir: “3 nesne (revizyon 5)”. Sunucu yalnız veritabanı projesinin satırlarını sayar; dosya projesinin kapsamı hesaplanmaz ve bu söylenir.
-- Açık projenin biçimi, oturumun onu açtığı biçimdir (`HistoryPanel.storageOf`). Katalog kaydının biçimi (`ProjectSummary.storage`) bu dal açılırken sunucuda her proje için “database” diyordu; main'deki 5c3d2a6 (ADR 0039) bunu düzeltti. Açık olmayan dosya projesinin geçmişi, indirmesi ve dönüştürmesi o düzeltmeye dayanır.
+- Açık projenin biçimi, oturumun onu açtığı biçimdir (`HistoryPanel.storageOf`). Katalog kaydının biçimi (`ProjectSummary.storage`) bu dal açılırken sunucuda her proje için “database” diyordu; main'deki 5c3d2a6 (ADR 0039) bunu düzeltti. Açık olmayan dosya projesinin geçmişi, indirmesi ve dönüştürmesi o düzeltmeye dayanır. **26 Eylül, ADR 0042:** düzeltme birleşti; `storageOf` kalktı, geçmiş sekmesi katalog kaydının biçimini kullanır.
 
 ### Bu adımda olmayanlar
 

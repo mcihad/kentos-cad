@@ -175,8 +175,8 @@ export function creatableWorkspaces(ctx: AppContext, first: string) {
  * may open projects in. The source does not change. `done` gets the new
  * project and the mode it is kept as.
  */
-export function openConvertDialog(ctx: AppContext, p: ProjectSummary, done?: (made: ProjectDuplicated, storage: ProjectStorage) => void, from: ProjectStorage = p.storage): void {
-  const to: ProjectStorage = from === 'file' ? 'database' : 'file';
+export function openConvertDialog(ctx: AppContext, p: ProjectSummary, done?: (made: ProjectDuplicated) => void): void {
+  const to: ProjectStorage = p.storage === 'file' ? 'database' : 'file';
   const title = to === 'database' ? "PostGIS'e aktar" : 'Dosya projesine çevir';
   const places = creatableWorkspaces(ctx, p.tenantId);
   const name = h('input', { class: 'field', value: '', placeholder: `${p.name} (${to === 'database' ? 'PostGIS' : 'dosya'})`, 'aria-label': 'Yeni projenin adı', spellcheck: 'false', maxlength: '200' });
@@ -226,7 +226,7 @@ export function openConvertDialog(ctx: AppContext, p: ProjectSummary, done?: (ma
       const made = await ctx.cloud.lifecycle.convert({ tenantId: p.tenantId, projectId: p.id, name: p.name }, to, { name: name.value, tenantId: place.value });
       dialog.close();
       ctx.log.success(`“${made.project.name}” oluşturuldu: ${Number(made.objects).toLocaleString('tr-TR')} nesne${to === 'database' ? ' veritabanına aktarıldı' : ', 1. revizyon'}.`);
-      done?.(made, to);
+      done?.(made);
     } catch (e) {
       status.dataset.kind = 'error';
       status.textContent = convertReason(e);
