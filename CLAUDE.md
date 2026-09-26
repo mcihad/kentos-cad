@@ -56,8 +56,8 @@ tanımlayıcılar ve kod yorumları İngilizcedir. Marka KentOS, başlık KentOS
 | Dar WASM bağlayıcıları ve Rust → TS sözleşme üretimi | `crates/wasm/`, `crates/shared/contracts/` |
 | Belge transaction/rollback, undo/redo; yerel `.kcad`: KCAD v2 yazılır (biçim işçisinde doğrulanır), v1 JSON okunur (ADR 0025) | `model/document.ts`, `model/snapshot.ts`, `app/fileIO.ts`, `app/drawingFile.ts`, `io/kcad.ts` |
 | KCAD v2 kodeki (kap, CBOR profili, şema, koklama), `kcad` aracı; bağımsız Python okuyucusu ve örnek dosyalar | `crates/shared/kcad/`, `tools/kcad/`, `fixtures/kcad/v2/`, `docs/specs/kcad-v2.md` |
-| Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015) | `apps/api/`, `crates/server/` |
-| Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict, paylaşım penceresi, “Benimle paylaşılanlar”, açık projede rol/erişim değişikliği (ADR 0024) | `app/cloud/`, `ui/cloud/` |
+| Axum/Tokio/SQLx API, PG/PostGIS, kimlik/tenant, `project.changes`, audit/outbox; proje sahipliği, kişisel alan ve paylaşım (ADR 0015); proje kataloğu ve yaşam döngüsü komutları, migration 0005 (ADR 0028) | `apps/api/`, `crates/server/` |
+| Web cloud aç/yükle, autosave, IndexedDB taslak, WS/reconnect ve conflict, paylaşım penceresi, “Benimle paylaşılanlar”, açık projede rol/erişim değişikliği (ADR 0024), proje kataloğu: listeler, sunucuda arama/sayfalama, bilgiler, kopya, arşiv, çöp kutusu (ADR 0028) | `app/cloud/`, `ui/cloud/` |
 | KentOS UI bileşenleri (Iced 0.14) ve vitrini | `crates/ui/`, `apps/ui-showcase/` |
 | Masaüstü kabuğu: şerit, katmanlar, özellikler, komut satırı, `.kcad` aç (v1, v2) / kaydet (v2; geçici dosya ve doğrulama), geri al/yinele; wgpu çizim alanı (çizgi/eğri/dolgu/nokta, kaydır/yakınlaştır); kapalı alan, çizgi ve çoklu çizgi araçları, değer alanı ve web'in tuş anlamları (ADR 0021, 0027) | `apps/desktop/` |
 | Native wgpu çizim hattı ve paylaşılan WGSL sözleşmesi | `crates/render/wgpu/`, `shaders/wgsl/` |
@@ -98,6 +98,7 @@ cargo run -q -p kentos-kcad --bin kcad -- inspect|validate|sniff DOSYA   # KCAD 
 python3 tools/kcad/kcad.py validate DOSYA   # bağımsız Python okuyucusu
 python3 scripts/fixtures/kcad_v2_reference.py --check   # örnek dosyaları bağımsız yazıcıyla denetle
 pnpm e2e:cloud           # gerçek API/PostGIS cloud akışı
+KENTOS_E2E_DB=scratch pnpm e2e:cloud   # aynı akış geçici veritabanında (bu yapının migration'ları), kentos_cad'e dokunmadan
 node scripts/wgsl/browser-check.mjs   # paylaşılan WGSL'yi Chrome WebGPU'da derler ve çizer
 KENTOS_GPU_TESTS=1 cargo test -p kentos-render-wgpu --test gpu   # gerçek GPU'da hassasiyet
 pnpm perf:interaction    # etkileşim ölçümleri
@@ -488,7 +489,10 @@ Mevcut tenant/rol altyapısını koruyup proje bazlı yetkiyle genişletin.
 Proje erişimi proje düzeyindedir (ADR 0015): rolü `kentos.project_role`, izinleri
 `application/src/access.rs` verir. Projeye dokunan her kullanım durumu, HTTP yolu, ürün komutu
 ve WS aboneliği `access::project` ile başlar; yazanlar proje kilidi altında yeniden sorar.
-Erişilemeyen proje var olmayan gibi 404'tür. Projeye bağlı satırlar yalnız `app.project_id`
+Erişilemeyen proje var olmayan gibi 404'tür. Yaşam döngüsü komutları katalogdadır (ADR 0028):
+arşiv `project.edit`, çöp kutusu/geri yükleme/kalıcı silme `project.delete` ister; kalıcı
+silme yalnız çöpten ve projenin adıyla onaylıdır, denetim kaydı kalır; çöpteki proje
+`KENTOS_TRASH_RETENTION_DAYS` (varsayılan 30) gün sonra kalıcı silinir. Projeye bağlı satırlar yalnız `app.project_id`
 kapsamında görünür.
 Kimlik/izin server'da doğrulanır; tenant üyeliği her projeyi görme hakkı değildir.
 Paylaşılacak kişi yalnız arayanın görebildiği kişiler arasında aranır (projenin kurumu;
