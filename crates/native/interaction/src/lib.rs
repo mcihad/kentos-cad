@@ -22,6 +22,11 @@
 //!   `cad.polyline.create`, docs/adr/0022, 0027), one object in one undo
 //!   step; the line ([`line`], `cad.line.create`), one object and one undo
 //!   step per segment of its chain;
+//! - selecting and deleting (docs/adr/0029): the [`Selection`], the select
+//!   tool that has the pointer while no command runs ([`select`]), the erase
+//!   tool ([`erase`], `cad.entities.delete`);
+//! - the geometry store kept in step with the document ([`Spatial`]): what
+//!   a click picks, a box selects and a point snaps to;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
 //!
 //! Pure Rust: no Iced, window system, GPU or runtime (scripts/arch/deps.mjs).
@@ -34,21 +39,29 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod erase;
 mod format;
 pub mod line;
 mod log;
 pub mod path;
 mod points;
 mod prompt;
+pub mod select;
+mod selection;
 mod session;
+pub mod spatial;
 mod tool;
 
 pub use format::Format;
 pub use kentos_geometry_core::Vec2;
+pub use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
 pub use kentos_geometry_core::tools::point_input::Tracking;
 /// JavaScript's `trim()`, as typed input is read (the shared grammar).
 pub use kentos_geometry_core::tools::point_text::js_trim;
 pub use log::{Level, Line};
 pub use prompt::{Prompt, PromptOption, upper_tr};
+pub use select::SelectBox;
+pub use selection::Selection;
 pub use session::Session;
-pub use tool::{Context, Draft, Flow, Pointer, Preview, Tag, Tool, View};
+pub use spatial::Spatial;
+pub use tool::{Context, Draft, Flow, Pointer, Preview, Tag, Tool, View, snap_kinds};

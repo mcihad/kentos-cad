@@ -1,12 +1,16 @@
-//! The tools' test bench: a tool running in the session over the traces'
-//! empty drawing, seen through the traces' view (0.125 m per pixel around
-//! (E, N) on an 800 × 600 area). Points are given as east and north
-//! differences from (E, N), as in the traces.
+//! The tools' test bench: the session over a drawing (the traces' empty one
+//! unless a test gives another), seen through the traces' view (0.125 m per
+//! pixel around (E, N) on an 800 × 600 area), with the geometry store and
+//! the selection the desktop keeps beside it. Points are given as east and
+//! north differences from (E, N), as in the traces; clicks and moves snap as
+//! the desktop snaps them (docs/adr/0029).
 #![allow(dead_code)]
 
 use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_domain::Document;
-use kentos_interaction::{Context, Draft, Level, Line, Pointer, Session, Vec2, View};
+use kentos_interaction::{
+    Context, Draft, Level, Line, Pointer, Selection, Session, Spatial, Vec2, View,
+};
 
 const EMPTY: &str = include_str!("../../../../../fixtures/interaction/v1/empty.kcad");
 pub const E: f64 = 487000.0;
@@ -30,49 +34,94 @@ pub struct Bench {
     pub session: Session,
     pub log: Vec<Line>,
     pub draft: Draft,
+    pub spatial: Spatial,
+    pub selection: Selection,
+    /// Shift held for the next pointer events.
+    pub shift: bool,
 }
 
 impl Bench {
-    /// `tool` running on the empty drawing.
+    /// `tool` running on the empty drawing, snapping off (the traces' default).
     pub fn new(tool: &str) -> Self {
-        let snapshot = DocumentSnapshotV1::from_json(EMPTY).expect("the traces' drawing reads");
-        let mut session = Session::new();
-        assert!(session.start(tool), "{tool} is a session tool");
+        let mut b = Self::on(EMPTY);
+        b.draft.snap = false;
+        b.start(tool);
+        b
+    }
+
+    /// No command running on `drawing` (a `.kcad` v1 text): the select tool has the pointer.
+    pub fn on(drawing: &str) -> Self {
+        let snapshot = DocumentSnapshotV1::from_json(drawing).expect("the drawing reads");
+        let doc = Document::from_snapshot(snapshot).expect("opens");
         Self {
-            doc: Document::from_snapshot(snapshot).expect("opens"),
-            session,
+            spatial: Spatial::of(&doc),
+            doc,
+            session: Session::new(),
             log: Vec::new(),
             draft: Draft::default(),
+            selection: Selection::new(),
+            shift: false,
         }
     }
 
+    /// Starts a tool as the desktop does: start, then activate.
+    pub fn start(&mut self, tool: &str) {
+        assert!(self.session.start(tool), "{tool} is a session tool");
+        self.run(|s, cx| s.activate(cx));
+    }
+
     pub fn run<T>(&mut self, act: impl FnOnce(&mut Session, &mut Context<'_>) -> T) -> T {
+        self.spatial.sync(&self.doc);
         let mut cx = Context {
             doc: &mut self.doc,
             view: &Camera,
             draft: self.draft,
             log: &mut self.log,
+            spatial: &self.spatial,
+            selection: &mut self.selection,
         };
         act(&mut self.session, &mut cx)
     }
 
+    /// The pointer at a point, unsnapped.
     pub fn pointer(de: f64, dn: f64) -> Pointer {
         let world = Vec2::new(E + de, N + dn);
-        Pointer {
-            world,
-            screen: Camera.to_screen(world),
-            shift: false,
-        }
+        Pointer::new(world, Camera.to_screen(world), false, None)
     }
 
+    /// The pointer at a point as the desktop gives it to the tool: snapped
+    /// when the running tool snaps and snapping is on, Shift as held.
+    pub fn snapped(&mut self, de: f64, dn: f64) -> Pointer {
+        self.spatial.sync(&self.doc);
+        let raw = Vec2::new(E + de, N + dn);
+        let snap = self.session.snap(&self.spatial, raw, &Camera, &self.draft);
+        Pointer::new(raw, Camera.to_screen(raw), self.shift, snap)
+    }
+
+    /// A click: the snap is taken again where the button goes down and up.
     pub fn click(&mut self, de: f64, dn: f64) {
-        let p = Self::pointer(de, dn);
+        let p = self.snapped(de, dn);
         self.run(|s, cx| s.pointer_down(&p, cx));
+        let p = self.snapped(de, dn);
+        self.run(|s, cx| s.pointer_up(&p, cx));
     }
 
     pub fn move_to(&mut self, de: f64, dn: f64) {
-        let p = Self::pointer(de, dn);
+        let p = self.snapped(de, dn);
         self.run(|s, cx| s.pointer_move(&p, cx));
+    }
+
+    /// A drag with the left button, from one point to another.
+    pub fn drag(&mut self, from: [f64; 2], to: [f64; 2]) {
+        let p = self.snapped(from[0], from[1]);
+        self.run(|s, cx| s.pointer_down(&p, cx));
+        let middle = [(from[0] + to[0]) / 2.0, (from[1] + to[1]) / 2.0];
+        for [de, dn] in [middle, to] {
+            let p = self.snapped(de, dn);
+            self.run(|s, cx| s.pointer_move(&p, cx));
+        }
+        let p = self.snapped(to[0], to[1]);
+        self.run(|s, cx| s.pointer_up(&p, cx));
     }
 
     pub fn type_text(&mut self, text: &str) -> bool {
@@ -117,6 +166,11 @@ impl Bench {
             .entities()
             .max_by_key(|e| e.base().id)
             .expect("an object")
+    }
+
+    /// The selected objects' slots.
+    pub fn selected(&self) -> Vec<u32> {
+        self.selection.ids().iter().map(|s| s.0).collect()
     }
 }
 

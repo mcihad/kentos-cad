@@ -18,7 +18,9 @@ pub(crate) const SAME: f64 = 1e-9;
 
 /// The effective cursor for the next point after `from`: ortho (Shift turns
 /// it over) and polar tracking, by the shared core; with the tracking ray it
-/// locked onto. The pointer's own point when there is no point yet.
+/// locked onto. The pointer's own point when there is no point yet, and an
+/// object snap's point exactly: ortho and polar never move it (the web's
+/// `constrainPoint`, docs/adr/0029).
 pub(crate) fn constrain(
     from: Option<Vec2>,
     p: &Pointer,
@@ -30,7 +32,7 @@ pub(crate) fn constrain(
     let c = constrain_cursor(
         Some(from),
         p.world,
-        false,
+        p.snap.is_some(),
         cx.draft.ortho != p.shift,
         cx.draft.polar,
         cx.view.world_length(CAPTURE_PX),
