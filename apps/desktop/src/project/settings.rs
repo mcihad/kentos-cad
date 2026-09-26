@@ -7,7 +7,7 @@
 use std::fmt;
 
 use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
-use iced::{Element, Fill, Length};
+use iced::{Element, Fill};
 use kentos_contracts::{AngleUnit, AreaUnit, DrawingFont, ProjectSettings, Workspace};
 use kentos_interaction::{Format, Level};
 use kentos_ui::theme::typography;
@@ -227,7 +227,8 @@ impl App {
                 .font(typography::ui_strong())
                 .size(typography::body()),
             label::caption(s.section.lead()),
-            container(scrollable(page).height(Length::Shrink)).max_height(560),
+            // The page scrolls; Vazgeç and Kaydet stay in view whatever the window's height.
+            scrollable(page).height(Fill),
         ]
         .spacing(10)
         .width(Fill);
@@ -244,7 +245,8 @@ impl App {
                     Some(message(ProjectEvent::Close)),
                 ))
                 .action(words::primary("Kaydet", Some(event(Event::Save))))
-                .width(900.0),
+                .width(900.0)
+                .max_height(760.0),
         )
     }
 

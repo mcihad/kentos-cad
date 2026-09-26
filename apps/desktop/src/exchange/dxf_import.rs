@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use iced::widget::{Column, column, row};
+use iced::widget::{Column, column, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::{DxfReadOptions, ImportLayer, ImportResult, LayerStyle};
 use kentos_interaction::{Format, Level};
@@ -310,11 +310,13 @@ impl App {
         let can = self.dxf_can_import(s);
         overlay::blocking(
             Dialog::new("DXF içe aktar")
-                .push(body)
+                // The body scrolls (a file with many layers); the buttons stay in view.
+                .push(scrollable(body).height(Fill))
                 .action(words::ghost("Başka dosya…", Some(event(Event::Another))))
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
-                .width(900.0),
+                .width(900.0)
+                .max_height(820.0),
         )
     }
 

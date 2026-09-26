@@ -6,8 +6,8 @@
 
 use std::fmt;
 
-use iced::widget::{Column, row};
-use iced::{Element, Task};
+use iced::widget::{Column, row, scrollable};
+use iced::{Element, Fill, Task};
 use kentos_contracts::{
     CoordDelimiter, CoordPoint, CoordWriteInput, Entity, ExportReport, TextEncoding, Vec2,
 };
@@ -330,13 +330,15 @@ impl App {
         }
         overlay::blocking(
             Dialog::new("Koordinat listesi dışa aktar")
-                .push(body)
+                // The body scrolls; the buttons stay in view whatever the window's height.
+                .push(scrollable(body).height(Fill))
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary(
                     "Dışa aktar…",
                     (!points.is_empty() && !s.writing).then(|| event(Event::Run)),
                 ))
-                .width(720.0),
+                .width(720.0)
+                .max_height(760.0),
         )
     }
 }

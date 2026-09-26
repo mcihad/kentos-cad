@@ -21,6 +21,7 @@ pub struct Dialog<'a, Message> {
     body: Vec<Element<'a, Message>>,
     actions: Vec<Element<'a, Message>>,
     width: f32,
+    max_height: Option<f32>,
 }
 
 impl<'a, Message: 'a> Dialog<'a, Message> {
@@ -31,6 +32,7 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
             body: Vec::new(),
             actions: Vec::new(),
             width: 500.0,
+            max_height: None,
         }
     }
 
@@ -54,6 +56,15 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
     /// büyür.
     pub fn width(mut self, width: f32) -> Self {
         self.width = width;
+        self
+    }
+
+    /// Kutunun en çok yüksekliği (12 piksellik gövde metnine göre). Uzun
+    /// gövdeyi `height(Fill)` bir kaydırma alanına koyun: kutu bu yükseklikte
+    /// ya da pencere daha alçaksa pencerede durur, gövde kayar, eylem
+    /// düğmeleri hep görünür kalır.
+    pub fn max_height(mut self, height: f32) -> Self {
+        self.max_height = Some(height);
         self
     }
 }
@@ -82,11 +93,15 @@ impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
             content = content.push(actions);
         }
 
-        container(content)
+        let boxed = container(content)
             .width(typography::scaled(dialog.width))
             .padding(18)
-            .style(style::container::popover)
-            .into()
+            .style(style::container::popover);
+
+        match dialog.max_height {
+            Some(height) => boxed.max_height(typography::scaled(height)).into(),
+            None => boxed.into(),
+        }
     }
 }
 

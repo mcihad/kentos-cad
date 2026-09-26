@@ -9,7 +9,7 @@ use std::fmt;
 use std::path::PathBuf;
 
 use iced::widget::{button, container, row, scrollable, space, text, text_input};
-use iced::{Center, Element, Fill, Shrink, Task};
+use iced::{Center, Element, Fill, Task};
 use serde_json::Value;
 
 use kentos_contracts::{ResolvedSetting, SettingErrorCode, SettingScope, same_value};
@@ -526,10 +526,12 @@ impl App {
                 .push(label::muted(
                     "Çizim yardımcıları, kenet türleri ve görünüm sizin tercihinizdir; grafik ayarları bu cihaza özgüdür; Orto, Kutupsal izleme ve Kenetleme bu oturum içindir.",
                 ))
-                .push(scrollable(body).height(Shrink))
+                // The body scrolls; Kaydet and Vazgeç stay in view whatever the window's height.
+                .push(scrollable(body).height(Fill))
                 .action(cancel)
                 .action(save)
-                .width(1080.0),
+                .width(1080.0)
+                .max_height(860.0),
             Message::DialogClosed,
         )
     }

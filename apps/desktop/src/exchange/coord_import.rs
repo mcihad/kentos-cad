@@ -535,11 +535,13 @@ impl App {
         let can = self.coord_can_import(s);
         overlay::blocking(
             Dialog::new("Koordinat listesi içe aktar")
-                .push(scrollable(body).height(Length::Shrink))
+                // The body scrolls; the buttons stay in view whatever the window's height.
+                .push(scrollable(body).height(Fill))
                 .action(words::ghost("Başka dosya…", Some(event(Event::Another))))
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
-                .width(860.0),
+                .width(860.0)
+                .max_height(820.0),
         )
     }
 

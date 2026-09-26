@@ -11,7 +11,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use iced::widget::{Column, column, row};
+use iced::widget::{Column, column, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::{
     AngleUnit, DxfWriteInput, DxfWriteLayer, Entity, ExportReport, LayerNodeType,
@@ -359,13 +359,15 @@ impl App {
         }
         overlay::blocking(
             Dialog::new("DXF dışa aktar")
-                .push(body)
+                // The body scrolls (a drawing with many layers); the buttons stay in view.
+                .push(scrollable(body).height(Fill))
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary(
                     "Dışa aktar…",
                     (any && !s.writing).then(|| event(Event::Run)),
                 ))
-                .width(820.0),
+                .width(820.0)
+                .max_height(780.0),
         )
     }
 

@@ -111,8 +111,8 @@ fn screens() {
     let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let picture = |app: &mut App, name: &str, width: f32| {
-        let mut snapshot = Snapshot::new(Size::new(width, 900.0)).expect("a renderer");
+    let sized = |app: &mut App, name: &str, width: f32, height: f32| {
+        let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
@@ -124,6 +124,7 @@ fn screens() {
             .expect("writes the picture");
         println!("{}", file.display());
     };
+    let picture = |app: &mut App, name: &str, width: f32| sized(app, name, width, 900.0);
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         let mut app = app_with_drawing();
         let _ = app
@@ -172,8 +173,21 @@ fn screens() {
     let _ = app.update(Message::Run("workspace.gis"));
     app.tab = "home";
     picture(&mut app, "serit-cbs-giris-1440", 1440.0);
-    // Uygulama ayarları: the same choices, in the Görünüm section.
-    let mut app = app_with_drawing();
-    let _ = app.update(Message::Run("tools.options"));
-    picture(&mut app, "ayarlar-gorunum", 1440.0);
+    // The long windows keep their buttons in view: the body scrolls (a low window too).
+    for (id, name) in [
+        ("tools.options", "ayarlar"),
+        ("file.settings", "proje-ayarlari"),
+        ("file.new", "yeni-proje"),
+    ] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            let mut app = app_with_drawing();
+            let _ = app.update(Message::Run(id));
+            sized(
+                &mut app,
+                &format!("pencere-{name}-{width}x{height}"),
+                width,
+                height,
+            );
+        }
+    }
 }
