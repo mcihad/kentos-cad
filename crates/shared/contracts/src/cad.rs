@@ -1,5 +1,5 @@
 //! Drawing commands of the product command catalog (docs/adr/0013, 0022,
-//! 0027): their names, versions and typed input and output. The web's
+//! 0027, 0029): their names, versions and typed input and output. The web's
 //! handlers are TypeScript (`apps/web/src/product`), the desktop's Rust
 //! (`crates/native/application`); both pass the shared cases in
 //! `fixtures/commands/v1`. Each command has its own input, output and plan
@@ -267,6 +267,84 @@ pub struct PolylinePlan {
     pub entity: Entity,
     /// The document revision the plan was made against. Give it as
     /// `expectedRevision` to write exactly this plan, or nothing.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Deletes objects of the open drawing, named by their persistent ids.
+pub const CAD_ENTITIES_DELETE: &str = "cad.entities.delete";
+pub const CAD_ENTITIES_DELETE_VERSION: u32 = 1;
+
+/// A persistent object id as text: lowercase, with hyphens (docs/adr/0014).
+#[cfg(feature = "schema")]
+const UID_TEXT: &str = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
+
+/// Input of `cad.entities.delete` v1: the objects to delete, named by their
+/// persistent ids (docs/adr/0014), deleted as one undo step (“Sil”). What
+/// the interface knows implicitly, the selection, is here (TODOS.md CMD-07):
+/// the erase tool (Sil, Delete) fills `uids` from the selection, or with the
+/// object it picks; the command reads no selection, so the same call deletes
+/// the same objects whatever is selected.
+///
+/// Objects on a locked layer (by themselves or through a group above them)
+/// stay, as the erase tool always left them (docs/adr/0029): with others to
+/// delete they are named in the output's `locked` with a `layer_locked`
+/// warning; when every one is locked nothing is deleted and the answer is
+/// `layer_locked`. A repeated id counts once.
+///
+/// Refusals (`CommandError.code`), checked in this order: `no_entities`,
+/// `invalid_uid` (each id in order), `invalid_revision`, `revision_conflict`
+/// (status `conflict`), `entity_not_found` (each id in order), `layer_locked`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesDelete {
+    /// The objects' persistent ids (lowercase UUID text with hyphens), at least one.
+    #[cfg_attr(feature = "schema", schemars(inner(regex(pattern = UID_TEXT))))]
+    pub uids: Vec<String>,
+    /// The document revision the input was prepared against, as decimal text
+    /// (from a plan, or the document). When given and the document is no
+    /// longer at it, nothing is deleted and the answer is `conflict`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.entities.delete` v1: what was deleted and what stayed.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesDeleted {
+    /// The ids deleted, in the input's order (a repeated one once). Undo
+    /// brings them back with the same ids, in their places.
+    pub removed: Vec<String>,
+    /// The ids left in place because their layer is locked, in the input's order.
+    pub locked: Vec<String>,
+    /// The document's revision after the delete, as decimal text. Inside an
+    /// open transaction or group the delete joins it, and the revision
+    /// changes when that ends.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// What `cad.entities.delete` would delete (plan mode); nothing is deleted.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesDeletePlan {
+    /// The ids execute would delete, in the input's order.
+    pub removed: Vec<String>,
+    /// The ids it would leave in place because their layer is locked.
+    pub locked: Vec<String>,
+    /// The document revision the plan was made against. Give it as
+    /// `expectedRevision` to delete exactly these, or nothing.
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

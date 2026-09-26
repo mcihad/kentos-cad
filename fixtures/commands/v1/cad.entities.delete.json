@@ -1,0 +1,243 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.delete",
+  "commandVersion": 1,
+  "title": "Nesneleri sil: doğrulama, plan, silme, geri alma",
+  "note": "ADR 0029. Silinecekler kalıcı kimlikleriyle verilir (captureUid ile alınıp $uid:ad ile yazılır). Denetim sırası: en az bir kimlik; her kimliğin yazımı (küçük harfli, tireli UUID, sırayla); beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması (sırayla); hepsinin kilitli katmanda olmaması. Kilitli katmandaki nesneler silinmez: başkaları varsa uyarıyla kalır, hepsi kilitliyse ret. Tekrarlanan kimlik bir kez sayılır. Silme tek geri alma adımıdır (Sil); geri alma nesneleri aynı kimlikleriyle yerlerine getirir. Kurulumdaki çizimde altı nesne var: 4 (Yapı), 9 (Pafta › Sınır), 12 (Kilitli katman), 15 (kilitli Arşiv grubunda Eski), 20 (Gizli katman), 21 (gizli Taslak grubunda Notlar).",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ürün komutu",
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "hybrid", "drawingFont": "barlow"},
+    "origin": {"x": 487000, "y": 4420000},
+    "layers": [
+      {"id": "yapi", "name": "Yapı", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "kilitli", "name": "Kilitli katman", "type": "layer", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "gizli", "name": "Gizli katman", "type": "layer", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []},
+      {"id": "pafta", "name": "Pafta", "type": "group", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "sinir", "name": "Sınır", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "arsiv", "name": "Arşiv", "type": "group", "visible": true, "locked": true, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "eski", "name": "Eski", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]},
+      {"id": "taslak", "name": "Taslak", "type": "group", "visible": false, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": [{"id": "notlar", "name": "Notlar", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}, "children": []}]}
+    ],
+    "activeLayer": "yapi",
+    "entities": [
+      {"kind": "point", "id": 4, "layerId": "yapi", "attrs": {}, "p": {"x": 487001, "y": 4420001}},
+      {"kind": "polygon", "id": 9, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [{"x": 487000, "y": 4420000}, {"x": 487040, "y": 4420000}, {"x": 487040, "y": 4420030}]},
+      {"kind": "line", "id": 12, "layerId": "kilitli", "attrs": {}, "a": {"x": 487005, "y": 4420005}, "b": {"x": 487015, "y": 4420005}},
+      {"kind": "line", "id": 15, "layerId": "eski", "attrs": {}, "a": {"x": 487005, "y": 4420010}, "b": {"x": 487015, "y": 4420010}},
+      {"kind": "line", "id": 20, "layerId": "gizli", "attrs": {}, "a": {"x": 487005, "y": 4420015}, "b": {"x": 487015, "y": 4420015}},
+      {"kind": "point", "id": 21, "layerId": "notlar", "attrs": {"Ad": "N1"}, "p": {"x": 487002, "y": 4420002}}
+    ],
+    "styles": {"items": [], "categories": []}
+  },
+  "cases": [
+    {
+      "name": "bir nesne silinir, tek adımda geri alınır, aynı kalıcı kimlikle yerine döner",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "nokta"},
+        {"op": "execute", "input": {"uids": ["$uid:nokta"]}, "result": {"status": "completed", "output": {"removed": ["$uid:nokta"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [9, 12, 15, 20, 21], "canUndo": true, "canRedo": false, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Sil", "note": "Sil aracının hep yazdığı adım adı; nesne belgedeki yerine döner.", "expect": {"ids": [4, 9, 12, 15, 20, 21], "entities": {"4": {"kind": "point", "id": 4, "layerId": "yapi", "attrs": {}, "p": {"x": 487001, "y": 4420001}}}, "uids": {"4": "nokta"}, "canUndo": false, "canRedo": true, "dirty": true, "revision": "changed"}},
+        {"op": "redo", "returns": "Sil", "expect": {"ids": [9, 12, 15, 20, 21], "canUndo": true, "canRedo": false, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "birden çok nesne tek adımda silinir; çıktı girdinin sırasıdır; geri alma hepsini yerlerine getirir",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 9, "as": "b"},
+        {"op": "captureUid", "id": 21, "as": "c"},
+        {"op": "execute", "input": {"uids": ["$uid:c", "$uid:a", "$uid:b"]}, "result": {"status": "completed", "output": {"removed": ["$uid:c", "$uid:a", "$uid:b"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [12, 15, 20], "canUndo": true, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Sil", "expect": {"ids": [4, 9, 12, 15, 20, 21], "entities": {"4": {"kind": "point", "id": 4, "layerId": "yapi", "attrs": {}, "p": {"x": 487001, "y": 4420001}}, "9": {"kind": "polygon", "id": 9, "layerId": "sinir", "attrs": {"Ada": "101"}, "pts": [{"x": 487000, "y": 4420000}, {"x": 487040, "y": 4420000}, {"x": 487040, "y": 4420030}]}}, "uids": {"4": "a", "9": "b", "21": "c"}, "canUndo": false, "canRedo": true}}
+      ]
+    },
+    {
+      "name": "gizli katmandaki ve gizli grubun katmanındaki nesne de silinir, uyarısız",
+      "note": "Gizli katmanın nesnesi seçimde kalmış olabilir; web'in Sil aracı yalnız kilide bakar.",
+      "steps": [
+        {"op": "captureUid", "id": 20, "as": "gizli"},
+        {"op": "captureUid", "id": 21, "as": "notlar"},
+        {"op": "execute", "input": {"uids": ["$uid:gizli", "$uid:notlar"]}, "result": {"status": "completed", "output": {"removed": ["$uid:gizli", "$uid:notlar"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 9, 12, 15], "canUndo": true}}
+      ]
+    },
+    {
+      "name": "kilitli katmandaki nesne tek başına silinmez: layer_locked, hiçbir şey değişmez",
+      "steps": [
+        {"op": "captureUid", "id": 12, "as": "kilitli"},
+        {"op": "execute", "input": {"uids": ["$uid:kilitli"]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kilitli grubun katmanındaki nesne de kilitlidir",
+      "steps": [
+        {"op": "captureUid", "id": 15, "as": "eski"},
+        {"op": "execute", "input": {"uids": ["$uid:eski"]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "captureUid", "id": 12, "as": "kilitli"},
+        {"op": "execute", "note": "Hepsi kilitliyse ileti kaç nesne olduğunu söyler.", "input": {"uids": ["$uid:eski", "$uid:kilitli"]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "2 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kilitli ve kilitsiz birlikte: kilitsizler silinir, kilitliler uyarıyla yerinde kalır",
+      "note": "Web'in Sil aracının 26 Eylül'deki davranışı: kilitli katmandakiler atlanır, sayısı uyarıyla söylenir, kalanlar silinir.",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 12, "as": "k"},
+        {"op": "captureUid", "id": 15, "as": "e"},
+        {"op": "captureUid", "id": 9, "as": "b"},
+        {"op": "execute", "input": {"uids": ["$uid:a", "$uid:k", "$uid:e", "$uid:b"]}, "result": {"status": "completed", "output": {"removed": ["$uid:a", "$uid:b"], "locked": ["$uid:k", "$uid:e"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "2 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [12, 15, 20, 21], "uids": {"12": "k", "15": "e"}, "canUndo": true, "dirty": true, "revision": "changed"}},
+        {"op": "undo", "returns": "Sil", "expect": {"ids": [4, 9, 12, 15, 20, 21], "uids": {"4": "a", "9": "b"}}}
+      ]
+    },
+    {
+      "name": "aynı kimlik iki kez verilirse bir kez sayılır",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 12, "as": "k"},
+        {"op": "execute", "input": {"uids": ["$uid:a", "$uid:k", "$uid:a", "$uid:k"]}, "result": {"status": "completed", "output": {"removed": ["$uid:a"], "locked": ["$uid:k"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [9, 12, 15, 20, 21], "canUndo": true}},
+        {"op": "undo", "returns": "Sil", "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false}}
+      ]
+    },
+    {
+      "name": "boş liste: silinecek nesne yok",
+      "steps": [
+        {"op": "execute", "input": {"uids": []}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Silinecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kimlik küçük harfli, tireli bir UUID yazısıdır",
+      "steps": [
+        {"op": "execute", "note": "Yuva numarası kimlik değildir.", "input": {"uids": ["12"]}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“12” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["01925F3E-7C1A-7D2B-9E4F-0A1B2C3D4E5F"]}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“01925F3E-7C1A-7D2B-9E4F-0A1B2C3D4E5F” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["01925f3e7c1a7d2b9e4f0a1b2c3d4e5f"]}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“01925f3e7c1a7d2b9e4f0a1b2c3d4e5f” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": [""]}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "ilk bozuk kimlik söylenir; yol onu gösterir",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "execute", "input": {"uids": ["$uid:a", "abc", "{x}"]}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“abc” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[1]"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "çizimde olmayan kimlik: entity_not_found",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"]}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[0]"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "silinmiş nesnenin kimliği bulunamaz; hiçbir şey silinmez",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 9, "as": "b"},
+        {"op": "execute", "input": {"uids": ["$uid:a"]}, "result": {"status": "completed", "output": {"removed": ["$uid:a"], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "note": "Eski bir seçimden hazırlanmış girdi: silinen nesne artık yok; öbürü de silinmez.", "input": {"uids": ["$uid:b", "$uid:a"]}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“$uid:a” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[1]"}}, "expect": {"ids": [9, 12, 15, 20, 21], "canUndo": true, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "bulunamayan kimlik kilitli nesneden önce söylenir",
+      "steps": [
+        {"op": "captureUid", "id": 12, "as": "k"},
+        {"op": "execute", "input": {"uids": ["$uid:k", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"]}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[1]"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "kimliklerin yazımı sürümden önce denetlenir",
+      "steps": [
+        {"op": "execute", "input": {"uids": ["x"], "expectedRevision": "012"}, "result": {"status": "failed", "error": {"code": "invalid_uid", "message": "“x” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", "path": "uids[0]"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": [], "expectedRevision": "012"}, "result": {"status": "failed", "error": {"code": "no_entities", "message": "Silinecek nesne verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "path": "uids"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm ondalık bir tamsayı yazısıdır",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "execute", "input": {"uids": ["$uid:a"], "expectedRevision": "012"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “012” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uid:a"], "expectedRevision": "-1"}, "result": {"status": "failed", "error": {"code": "invalid_revision", "message": "Beklenen sürüm “-1” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "path": "expectedRevision"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "beklenen sürüm çizimin sürümüyse silinir",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "execute", "input": {"uids": ["$uid:a"], "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"removed": ["$uid:a"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [9, 12, 15, 20, 21], "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "çizim beklenen sürümde değilse hiçbir şey silinmez: conflict",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 9, "as": "b"},
+        {"op": "captureRevision", "as": "prepared"},
+        {"op": "execute", "note": "Girdi hazırlandıktan sonra çizim değişir.", "input": {"uids": ["$uid:a"]}, "result": {"status": "completed", "output": {"removed": ["$uid:a"], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {"uids": ["$uid:b"], "expectedRevision": "$prepared"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [9, 12, 15, 20, 21], "canUndo": true, "canRedo": false, "dirty": true, "revision": "same"}},
+        {"op": "execute", "note": "Şimdiki sürümle yeniden hazırlanan girdi silinir.", "input": {"uids": ["$uid:b"], "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"removed": ["$uid:b"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [12, 15, 20, 21], "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "çakışma nesnelerden önce söylenir: silinmiş nesne de kilit de sonra gelir",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 12, "as": "k"},
+        {"op": "captureRevision", "as": "prepared"},
+        {"op": "execute", "input": {"uids": ["$uid:a"]}, "result": {"status": "completed", "output": {"removed": ["$uid:a"], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "execute", "input": {"uids": ["$uid:a", "$uid:k"], "expectedRevision": "$prepared"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"ids": [9, 12, 15, 20, 21], "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uid:k"], "expectedRevision": "99999999999999999999999"}, "result": {"status": "conflict", "error": {"code": "revision_conflict", "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.", "path": "expectedRevision", "revision": "$current"}}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "doğrulama hiçbir şey silmez; silmenin vereceği cevabı verir",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 12, "as": "k"},
+        {"op": "validate", "input": {"uids": ["$uid:a"]}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"uids": ["$uid:a", "$uid:k"]}, "result": {"status": "completed", "output": null, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"uids": ["$uid:k"]}, "result": {"status": "failed", "error": {"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "validate", "input": {"uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"]}, "result": {"status": "failed", "error": {"code": "entity_not_found", "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.", "path": "uids[0]"}}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "plan silinecekleri ve kalacakları gösterir, hiçbir şey silmez; silme planın sürümüyle planı uygular",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 12, "as": "k"},
+        {"op": "captureUid", "id": 9, "as": "b"},
+        {"op": "plan", "input": {"uids": ["$uid:k", "$uid:a", "$uid:b"]}, "result": {"status": "completed", "output": {"removed": ["$uid:a", "$uid:b"], "locked": ["$uid:k"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uid:k", "$uid:a", "$uid:b"], "expectedRevision": "$current"}, "result": {"status": "completed", "output": {"removed": ["$uid:a", "$uid:b"], "locked": ["$uid:k"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "1 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [12, 15, 20, 21], "canUndo": true, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "plan ve doğrulama geçmişe dokunmaz; yeni silme yinelenecek adımı siler",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 9, "as": "b"},
+        {"op": "execute", "input": {"uids": ["$uid:a"]}, "result": {"status": "completed", "output": {"removed": ["$uid:a"], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "undo", "returns": "Sil", "expect": {"ids": [4, 9, 12, 15, 20, 21], "canUndo": false, "canRedo": true}},
+        {"op": "plan", "input": {"uids": ["$uid:b"]}, "result": {"status": "completed", "output": {"removed": ["$uid:b"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"canUndo": false, "canRedo": true, "revision": "same"}},
+        {"op": "validate", "input": {"uids": ["$uid:b"]}, "result": {"status": "completed", "output": null, "warnings": []}, "expect": {"canRedo": true, "revision": "same"}},
+        {"op": "execute", "input": {"uids": ["$uid:b"]}, "result": {"status": "completed", "output": {"removed": ["$uid:b"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 12, 15, 20, 21], "canUndo": true, "canRedo": false, "revision": "changed"}}
+      ]
+    },
+    {
+      "name": "geri alınan silmeden dönen nesne aynı kimlikle yine silinir",
+      "steps": [
+        {"op": "captureUid", "id": 9, "as": "b"},
+        {"op": "execute", "input": {"uids": ["$uid:b"]}, "result": {"status": "completed", "output": {"removed": ["$uid:b"], "locked": [], "revision": "$current"}, "warnings": []}},
+        {"op": "undo", "returns": "Sil", "expect": {"uids": {"9": "b"}}},
+        {"op": "execute", "input": {"uids": ["$uid:b"]}, "result": {"status": "completed", "output": {"removed": ["$uid:b"], "locked": [], "revision": "$current"}, "warnings": []}, "expect": {"ids": [4, 12, 15, 20, 21]}}
+      ]
+    },
+    {
+      "name": "bütün kilitsiz nesneler silinir, kilitliler kalır",
+      "steps": [
+        {"op": "captureUid", "id": 4, "as": "a"},
+        {"op": "captureUid", "id": 9, "as": "b"},
+        {"op": "captureUid", "id": 12, "as": "k"},
+        {"op": "captureUid", "id": 15, "as": "e"},
+        {"op": "captureUid", "id": 20, "as": "g"},
+        {"op": "captureUid", "id": 21, "as": "n"},
+        {"op": "execute", "input": {"uids": ["$uid:a", "$uid:b", "$uid:k", "$uid:e", "$uid:g", "$uid:n"]}, "result": {"status": "completed", "output": {"removed": ["$uid:a", "$uid:b", "$uid:g", "$uid:n"], "locked": ["$uid:k", "$uid:e"], "revision": "$current"}, "warnings": [{"code": "layer_locked", "message": "2 nesne kilitli katmanda olduğu için silinmedi. Silmek için katmanın kilidini Katmanlar panelinden açın.", "path": "uids"}]}, "expect": {"ids": [12, 15], "canUndo": true}},
+        {"op": "undo", "returns": "Sil", "expect": {"ids": [4, 9, 12, 15, 20, 21], "uids": {"4": "a", "9": "b", "20": "g", "21": "n"}}}
+      ]
+    }
+  ]
+}

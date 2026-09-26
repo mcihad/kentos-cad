@@ -2422,6 +2422,112 @@
           }
         }
       ]
+    },
+    {
+      "id": "cad.entities.delete",
+      "version": 1,
+      "title": "Nesneleri sil",
+      "summary": "Açık çizimden kalıcı kimlikleriyle verilen nesneleri siler; tek geri alma adımıdır, geri alma onları aynı kimlikleriyle yerlerine getirir. Silinecekler girdide açıkça verilir, seçim okunmaz: Sil aracı ve Delete tuşu seçimi ya da tıklanan nesneyi buraya yazar. Kilitli katmandaki nesneler silinmez: başkaları varsa uyarıyla yerinde kalır, hepsi kilitliyse hiçbir şey silinmez. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey silinmez, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "web",
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.entities.delete` v1: the objects to delete, named by their\npersistent ids (docs/adr/0014), deleted as one undo step (“Sil”). What\nthe interface knows implicitly, the selection, is here (TODOS.md CMD-07):\nthe erase tool (Sil, Delete) fills `uids` from the selection, or with the\nobject it picks; the command reads no selection, so the same call deletes\nthe same objects whatever is selected.\n\nObjects on a locked layer (by themselves or through a group above them)\nstay, as the erase tool always left them (docs/adr/0029): with others to\ndelete they are named in the output's `locked` with a `layer_locked`\nwarning; when every one is locked nothing is deleted and the answer is\n`layer_locked`. A repeated id counts once.\n\nRefusals (`CommandError.code`), checked in this order: `no_entities`,\n`invalid_uid` (each id in order), `invalid_revision`, `revision_conflict`\n(status `conflict`), `entity_not_found` (each id in order), `layer_locked`.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text\n(from a plan, or the document). When given and the document is no\nlonger at it, nothing is deleted and the answer is `conflict`.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "The objects' persistent ids (lowercase UUID text with hyphens), at least one.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids"
+        ],
+        "title": "EntitiesDelete",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.delete` v1: what was deleted and what stayed.",
+        "properties": {
+          "locked": {
+            "description": "The ids left in place because their layer is locked, in the input's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "description": "The ids deleted, in the input's order (a repeated one once). Undo\nbrings them back with the same ids, in their places.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "The document's revision after the delete, as decimal text. Inside an\nopen transaction or group the delete joins it, and the revision\nchanges when that ends.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "removed",
+          "locked",
+          "revision"
+        ],
+        "title": "EntitiesDeleted",
+        "type": "object"
+      },
+      "examples": [
+        {
+          "title": "İki nesneyi sil",
+          "input": {
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+            ]
+          },
+          "output": {
+            "locked": [],
+            "removed": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f",
+              "01925f3e-7c1b-7a10-8c21-3b4d5e6f7081"
+            ],
+            "revision": "39"
+          }
+        },
+        {
+          "title": "Bir nesneyi yalnız planlandığı sürümde sil",
+          "input": {
+            "expectedRevision": "38",
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

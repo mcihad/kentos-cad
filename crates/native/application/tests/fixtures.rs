@@ -11,11 +11,13 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use kentos_domain::contracts::{
-    CAD_LINE_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, DocumentSnapshotV1, LineCreate,
-    PolygonCreate, PolylineCreate,
+    CAD_ENTITIES_DELETE, CAD_LINE_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE,
+    DocumentSnapshotV1, EntitiesDelete, LineCreate, PolygonCreate, PolylineCreate,
 };
 use kentos_domain::{Document, Slot, Uuid};
-use kentos_native_application::{DESKTOP_COMMANDS, ExecutionContext, line, polygon, polyline};
+use kentos_native_application::{
+    DESKTOP_COMMANDS, ExecutionContext, delete, line, polygon, polyline,
+};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -63,9 +65,12 @@ fn expect_same(got: &Value, want: &Value, what: &str, at: &str) -> Outcome<()> {
 }
 
 /// `value` with its `$…` placeholders filled in: `$current` is the
-/// document's revision now, `$name` one `captureRevision` took.
+/// document's revision now, `$name` one `captureRevision` took; `$uid:name`,
+/// anywhere in a text (an id list, a message), the persistent id
+/// `captureUid` took, lowercase with hyphens.
 fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value> {
     Ok(match value {
+        Value::String(text) if text.contains("$uid:") => Value::String(with_uids(text, state, at)?),
         Value::String(text) if text.starts_with('$') => {
             let name = &text[1..];
             let revision = if name == "current" {
@@ -93,6 +98,28 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
         ),
         other => other.clone(),
     })
+}
+
+/// `text` with every `$uid:name` replaced by the persistent id `captureUid` took as `name`.
+fn with_uids(text: &str, state: &State, at: &str) -> Outcome<String> {
+    let mut out = String::new();
+    let mut rest = text;
+    while let Some(start) = rest.find("$uid:") {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + "$uid:".len()..];
+        let end = after
+            .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_' || c == '-'))
+            .unwrap_or(after.len());
+        let name = &after[..end];
+        let uid = state
+            .uids
+            .get(name)
+            .ok_or_else(|| format!("{at}: “{name}” kimliği alınmadı"))?;
+        out.push_str(&uid.to_string());
+        rest = &after[end..];
+    }
+    out.push_str(rest);
+    Ok(out)
 }
 
 /// The number of a point list at `rest` (`pts[1].y`, after any ring prefix).
@@ -168,6 +195,13 @@ impl Input for PolylineCreate {
     }
 }
 
+impl Input for EntitiesDelete {
+    /// No number: the input is ids.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 /// Puts NaN or ±∞ into the typed input at the paths the step's `nonFinite` names.
 fn put_non_finite(input: &mut impl Input, step: &Value, at: &str) -> Outcome<()> {
     let Some(table) = step.get("nonFinite") else {
@@ -222,6 +256,7 @@ fn run_op(
         CAD_POLYGON_CREATE => run!(polygon, PolygonCreate),
         CAD_LINE_CREATE => run!(line, LineCreate),
         CAD_POLYLINE_CREATE => run!(polyline, PolylineCreate),
+        CAD_ENTITIES_DELETE => run!(delete, EntitiesDelete),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
