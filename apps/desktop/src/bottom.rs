@@ -115,7 +115,14 @@ impl App {
             command_line::height(command_line::LINES, true) - command_line::height(0, false);
         column![
             tabs,
-            container(panel).width(Fill).height(Length::Fixed(height)),
+            // On the command line's own ground, so a tab reads as part of it.
+            container(panel)
+                .width(Fill)
+                .height(Length::Fixed(height))
+                .style(|theme: &iced::Theme| container::Style {
+                    background: Some(kentos_ui::theme::Tokens::of(theme).field.into()),
+                    ..container::Style::default()
+                }),
             self.command_line_as(false, Some(0)),
         ]
         .into()
