@@ -135,7 +135,7 @@
 - **Masaüstü:** `Polygon::create` `polygon::execute`'u çağırır, iletileri aynı sırayla söyler. `slots_exhausted` bugünkü gibi `error` düzeyindedir.
 - **Değişmeyenler:** iletiler, sıraları, geri alma adı “Ekle”, tek adım, araç sonrası durum. İzler (`fixtures/interaction/v1`) değiştirilmeden iki platformda geçer.
 - **Fark (yalnız ulaşılamayan yolda):** etkin katman çizimde yoksa araç önceden sessizce hiçbir şey yazmıyordu; şimdi komutun `layer_not_found` iletisini söyler. Etkin katman iki platformda her zaman var olan bir katmandır.
-- **Doğrudan yazmaya devam edenler:** `PathTool`'un parsel (numara, tapu alanı özniteliği, seçim), çoklu çizgi ve ölçme biçimleri, öbür bütün araçlar. Her biri kendi ürün komutuyla taşınacak.
+- **Doğrudan yazmaya devam edenler:** `PathTool`'un parsel (numara, tapu alanı özniteliği, seçim), çoklu çizgi ve ölçme biçimleri, öbür bütün araçlar. Her biri kendi ürün komutuyla taşınacak. 26 Eylül: çoklu çizgi ve çizgi aracı da komuttan yazıyor ([ADR 0027](0027-line-and-polyline-commands.md)).
 - **Envanter:** araç kataloğu aracın vardığı ürün komutunu söyler (`ToolDescriptor.productCommand`); envanterde `tools[polygon].productCommand = "cad.polygon.create"` (ADR 0013'ün eşleme kuralı, `AI-01`'in ilk satırı).
 
 ### Ortak olan, ortak olmayan
@@ -169,7 +169,7 @@
 - **`needs_input`, `queued`, `cancelled`:** tipte var, bu komut üretmez.
 - **`ARCH-07`'nin kalanı:** sunucunun `ApiError`'unun bu biçime geçmesi, yeniden deneme bilgisi.
 - **`TX-02`:** okuma kümesinin sürümü; bugün tek belge sürümü karşılaştırılır.
-- Öbür araçların ürün komutları: parsel, çoklu çizgi, çizgi, nokta …
+- Öbür araçların ürün komutları: parsel, nokta … Çizgi ve çoklu çizgi 26 Eylül'de geldi (`cad.line.create`, `cad.polyline.create`; ADR 0027).
 
 ## Doğrulama (26 Eylül 2026, Linux; main `f6fb65b` üstünde)
 
