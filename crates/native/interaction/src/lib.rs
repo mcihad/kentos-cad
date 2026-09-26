@@ -16,9 +16,12 @@
 //!   cancel), the running tool and the last one for “repeat”;
 //! - [`Prompt`]: the step and its options as data, rendered to the web's
 //!   exact Turkish text (`Kapalı alan: sonraki noktayı belirtin [Yay (Y) / …]`);
-//! - the closed-area tool ([`polygon`]), which writes one object in one undo
-//!   step through the product command `cad.polygon.create`
-//!   (`kentos-native-application`, docs/adr/0022) over the native document;
+//! - the drawing tools, each writing through its product command
+//!   (`kentos-native-application`) over the native document: the closed
+//!   area and the polyline ([`path`], `cad.polygon.create` and
+//!   `cad.polyline.create`, docs/adr/0022, 0027), one object in one undo
+//!   step; the line ([`line`], `cad.line.create`), one object and one undo
+//!   step per segment of its chain;
 //! - [`Format`]: numbers as the web shows them in messages and the tag.
 //!
 //! Pure Rust: no Iced, window system, GPU or runtime (scripts/arch/deps.mjs).
@@ -32,8 +35,10 @@
 )]
 
 mod format;
+pub mod line;
 mod log;
-pub mod polygon;
+pub mod path;
+mod points;
 mod prompt;
 mod session;
 mod tool;

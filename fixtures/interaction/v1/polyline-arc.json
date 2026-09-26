@@ -1,0 +1,48 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "polyline-arc",
+  "title": "Çoklu çizgi aracı: tıkla, 12 yaz, Enter, yay parçası, Geri, düz parça, Ctrl+Z, sağ tıkla bitir, tek adımda geri alma, Uzunluk",
+  "source": "ADR 0018 (tuş ve fare anlamları, Ctrl+Z sırası); ADR 0027",
+  "covers": ["UX-01", "UX-04", "UX-06"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.polyline", "expect": { "tool": "polyline", "points": 0, "options": [] } },
+    { "click": [0, 0], "expect": { "points": 1, "options": ["Y", "U", "G"] } },
+    { "move": [20, 0] },
+    { "text": "12", "expect": { "dynamicInput": "12" } },
+    { "key": "Enter", "note": "Çizim çoklu çizgi bitene dek değişmez.", "expect": { "dynamicInput": null, "points": 2, "entities": 0, "options": ["Y", "U", "G", "Enter"] } },
+    { "key": "Y", "note": "Yay kipi: sonraki parça son doğrultuya teğet yaydır.", "expect": { "options": ["D", "A", "M", "R", "İ", "T", "G", "Enter"] } },
+    { "click": [12, 8], "note": "Doğuya giden yoldan kuzeydeki noktaya teğet yay: yarım daire.", "expect": { "points": 3 } },
+    { "key": "G", "note": "Geri son noktayı geri alır; yay kipi sürer.", "expect": { "points": 2, "options": ["D", "A", "M", "R", "İ", "T", "G", "Enter"] } },
+    { "click": [12, 8], "expect": { "points": 3 } },
+    { "key": "D", "expect": { "options": ["Y", "U", "G", "Enter"] } },
+    { "text": "@-6,0" },
+    { "key": "Enter", "expect": { "points": 4 } },
+    { "key": "Ctrl+Z", "note": "Komut çalışırken Ctrl+Z taslağın son noktasını geri alır; çizim değişmez.", "expect": { "points": 3, "entities": 0, "canUndo": false } },
+    { "text": "@-6,0" },
+    { "key": "Enter", "expect": { "points": 4 } },
+    {
+      "rightClick": [0, 10],
+      "note": "Kısa sağ tık Enter'dır: çoklu çizgi tek nesne olarak yazılır, araç açık kalır.",
+      "expect": { "tool": "polyline", "points": 0, "entities": 1, "log": "success", "canUndo": true, "newest": { "kind": "polyline", "points": [[0, 0], [12, 0], [12, 8], [6, 8]], "arcs": 1 } }
+    },
+    { "key": "Ctrl+Z", "note": "Taslak boşken Ctrl+Z çizimi geri alır: çoklu çizgi tek adımda kalkar, komut sürer.", "expect": { "tool": "polyline", "entities": 0, "canRedo": true } },
+    { "key": "Ctrl+Y", "expect": { "entities": 1, "newest": { "kind": "polyline", "points": [[0, 0], [12, 0], [12, 8], [6, 8]], "arcs": 1 } } },
+    { "click": [-20, -10], "expect": { "points": 1 } },
+    { "text": "@10,0" },
+    { "key": "Enter", "expect": { "points": 2 } },
+    { "key": "U", "note": "Uzunluk: son doğrultuda yazılan boyda devam eder.", "expect": { "options": [] } },
+    { "text": "5" },
+    { "key": "Enter", "expect": { "points": 3 } },
+    {
+      "key": "Enter",
+      "expect": { "tool": "polyline", "points": 0, "entities": 2, "log": "success", "newest": { "kind": "polyline", "points": [[-20, -10], [-10, -10], [-5, -10]], "edges": [[10, 0], [5, 0]], "arcs": 0 } }
+    },
+    { "key": "Esc", "expect": { "tool": "select", "entities": 2 } }
+  ]
+}

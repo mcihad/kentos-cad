@@ -5,11 +5,11 @@ import type { Entity } from '../model/entities';
 import { LayerStore } from '../model/layers';
 import { readSnapshot } from '../model/snapshot';
 import type { ProductCommand } from './command';
-import { findProductCommand } from './registry';
+import { findProductCommand, WEB_COMMANDS } from './registry';
 
 /**
  * The shared product command cases (fixtures/commands/v1/*.json, TODOS.md
- * CMD-04..07, docs/adr/0022) run against the web's handlers over
+ * CMD-04..07, docs/adr/0022, 0027) run against the web's handlers over
  * CadDocument. The desktop runs the same files against its own
  * (crates/native/application/tests/fixtures.rs). The format is in
  * fixtures/commands/README.md.
@@ -192,8 +192,9 @@ class Run {
 }
 
 describe('product command cases (fixtures/commands/v1)', () => {
-  it('finds the case files', () => {
-    expect(Object.keys(files).length).toBeGreaterThanOrEqual(1);
+  it('finds a case file for every command the web runs', () => {
+    const covered = Object.values(files).map((text) => (JSON.parse(text) as Fixture).command);
+    for (const c of WEB_COMMANDS) expect(covered, `${c.id}: fixtures/commands/v1'de dosyası yok`).toContain(c.id);
   });
   for (const [path, text] of Object.entries(files)) {
     const fixture = JSON.parse(text) as Fixture;

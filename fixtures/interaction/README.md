@@ -5,7 +5,7 @@ TODOS.md §5 (`UX-01`, `UX-04`, `UX-06`) ve [ADR 0018](../../docs/adr/0018-tool-
 Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komut seçmek, tıklamak, yazmak, tuşa basmak. Her adımdan sonra görülmesi gerekeni de platformdan bağımsız olarak söyler.
 
 - **Web** izleri bugün gerçek tarayıcıda oynatır: `pnpm e2e:interaction` (`make e2e-interaction`). Başsız Chrome'a gerçek fare ve klavye olayları gönderilir.
-- **Masaüstü** aynı dosyaları değiştirmeden, pencere açmadan oynatır: `cargo test -p kentos-desktop traces` (`apps/desktop/src/traces.rs`, [ADR 0021](../../docs/adr/0021-native-tool-session.md)). Tuşlar ve fare, uygulamanın kendi aboneliğinden ve çizim alanının kendi hareket kodundan geçen Iced olaylarıdır. `kentos-cad snapshot çıktı.png --iz <iz> --adim <n>` bir izi görüntüye oynatır.
+- **Masaüstü** aynı dosyaları değiştirmeden, pencere açmadan oynatır: `cargo test -p kentos-desktop traces` (`apps/desktop/src/traces/`, [ADR 0021](../../docs/adr/0021-native-tool-session.md)). Tuşlar ve fare, uygulamanın kendi aboneliğinden ve çizim alanının kendi hareket kodundan geçen Iced olaylarıdır. `kentos-cad snapshot çıktı.png --iz <iz> --adim <n>` bir izi görüntüye oynatır.
 
 İz, iki uygulamanın kullanım davranışının ortak referansıdır.
 
@@ -15,6 +15,9 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/polygon-signs.json` | Değer yazmaya `-` ya da `+` ile başlamak (`UX-04`) |
 | `v1/polygon-keys.json` | Esc, Geri (G), Ctrl+Z, sağ tık, çift tık, eksik nokta, Backspace, Tab, Boşluk, son komutu yinele, odak (`UX-06`) |
 | `v1/polygon-close.json` | İlk köşeye dönmek alanı kapatır: tıklama, yakınına tıklama, yazma, üç köşeden az, yayla kapatma |
+| `v1/line-chain.json` | Çizgi aracı ([ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md)): tıkla, `12` yaz, Enter, Geri (G), Ctrl+Z, Kapat (K), her parçanın ayrı geri alınması, sağ tık, tek noktayla onay |
+| `v1/polyline-arc.json` | Çoklu çizgi aracı (ADR 0027): tıkla, `12` yaz, Enter, yay parçası, Geri (G), düz parça, Ctrl+Z, sağ tıkla bitirme, tek adımda geri alma, Uzunluk (U) |
+| `v1/command-name.json` | Çizim alanından komut adı yazmak (ADR 0018, 6. adım): kısayolu olmayan harf komut satırını açar, Esc yazılanı siler, Enter önerilen komutu (`ka` → Kapalı alan) başlatır, klavye çizime döner |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
 
 ## Biçim (`kentos.interaction-trace`, sürüm 1)
@@ -56,7 +59,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | `dynamicInput` | İmleç yanındaki değer alanının metni; kapalıysa `null` |
 | `commandLine` | Komut satırının metni |
 | `entities` | Çizimdeki nesne sayısı |
-| `newest` | En son oluşturulan nesne: `kind`, köşeler `points`, ardışık köşe farkları `edges`, yaylı kenar sayısı `arcs` |
+| `newest` | En son oluşturulan nesne: `kind`, köşeler `points` (çizginin iki ucu: başlangıç, bitiş), ardışık köşe farkları `edges`, yaylı kenar sayısı `arcs` |
 | `canUndo`, `canRedo`, `dirty` | Geri al, yinele ve kaydedilmemiş değişiklik |
 | `log` | Son iletinin düzeyi: `success`, `info`, `warn`, `error` |
 | `metresPerPixel` | Görünümün ölçeği |
@@ -78,7 +81,7 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
   2. iki uygulamada değişiklik;
   3. izin güncellenmesi.
 - Beklenen değeri hataya göre yenilemek yasaktır (CLAUDE.md §9.4).
-- Yeni bir iz ya da alan eklenince bu belge ve iki oynatıcı birlikte güncellenir: web (`apps/web/scripts/e2e/interaction.mjs`) ve masaüstü (`apps/desktop/src/traces.rs`). Masaüstü oynatıcısı bilmediği alanda durur.
+- Yeni bir iz ya da alan eklenince bu belge ve iki oynatıcı birlikte güncellenir: web (`apps/web/scripts/e2e/interaction.mjs`) ve masaüstü (`apps/desktop/src/traces/`). Masaüstü oynatıcısı bilmediği alanda durur.
 - Yazılan değerin dilbilgisi ayrı bir dosyadadır: `fixtures/point-input/v1/cases.json`. Web'in ve masaüstünün okuyucusu onu okur.
 
 ## Varyantlar
@@ -93,7 +96,7 @@ Web oynatıcısı her izi üç varyantta oynatır. Masaüstü de aynısını yap
 
 Bir varyantı seçmek için: `pnpm e2e:interaction -- --variant=tr-q`.
 
-**Odak başka bir metin alanındayken** yazma durumu `polygon-keys`'te.
+**Odak başka bir metin alanındayken** yazma durumu `polygon-keys`'te. **Çizim alanından komut satırına** yazma ve öneri listesi `command-name`'de. Masaüstü oynatıcısı komut satırını bileşenin bir modeliyle izler: odak işlemleri (bir harf komut satırını odaklar, komut satırından başlayan araç odağı çizime geri verir) ve öneri listesi (liste açıkken Enter ve Boşluk vurgulanan öneriyi çalıştırır, Tab adını yazar). Bir test modeli gerçek bileşene tuş tuş ve işlem işlem bağlar ([ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md)).
 
 §5 kabul izinin istediği şu varyantlar henüz yok:
 - Türkçe F klavye;

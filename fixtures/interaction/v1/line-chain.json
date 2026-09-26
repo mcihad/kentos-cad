@@ -1,0 +1,50 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "line-chain",
+  "title": "Çizgi aracı: tıkla, 12 yaz, Enter, sonraki nokta, Geri, Ctrl+Z, Kapat, parça parça geri alma, sağ tık",
+  "source": "ADR 0018 (tuş ve fare anlamları, Ctrl+Z sırası); ADR 0027",
+  "covers": ["UX-01", "UX-04", "UX-06"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "run": "tool.line", "expect": { "tool": "line", "points": 0, "options": [] } },
+    { "click": [0, 0], "expect": { "points": 1, "options": ["Enter"], "entities": 0 } },
+    { "move": [20, 0], "note": "İmleç ilk noktanın doğusunda, aynı piksel satırında: yazılan uzunluk tam doğuya gider." },
+    { "text": "12", "expect": { "dynamicInput": "12" } },
+    {
+      "key": "Enter",
+      "note": "Her yeni nokta zincire bir çizgi ekler: ayrı nesne, ayrı geri alma adımı.",
+      "expect": { "dynamicInput": null, "points": 2, "entities": 1, "options": ["G", "Enter"], "newest": { "kind": "line", "points": [[0, 0], [12, 0]], "edges": [[12, 0]] }, "canUndo": true }
+    },
+    { "text": "@0,8" },
+    { "key": "Enter", "expect": { "points": 3, "entities": 2, "options": ["G", "K", "Enter"], "newest": { "kind": "line", "points": [[12, 0], [12, 8]], "edges": [[0, 8]] } } },
+    { "click": [-5, 8], "expect": { "points": 4, "entities": 3, "newest": { "kind": "line", "points": [[12, 8], [-5, 8]] } } },
+    {
+      "key": "G",
+      "note": "Geri son çizgiyi kaldırır. Çizim o zamandan beri değişmediği için bu bir geri almadır: çizgi yinelenebilir.",
+      "expect": { "tool": "line", "points": 3, "entities": 2, "canRedo": true, "newest": { "kind": "line", "points": [[12, 0], [12, 8]] } }
+    },
+    { "key": "Ctrl+Z", "note": "Komut çalışırken Ctrl+Z zincirin son çizgisini geri alır; komut sürer.", "expect": { "tool": "line", "points": 2, "entities": 1, "options": ["G", "Enter"] } },
+    { "text": "@0,8" },
+    { "key": "Enter", "note": "Yeni çizgi yinelenecek adımları siler.", "expect": { "points": 3, "entities": 2, "canRedo": false } },
+    {
+      "key": "K",
+      "note": "Kapat ilk noktaya bir çizgi daha çizer ve zinciri bitirir; araç yeni zincire hazırdır.",
+      "expect": { "tool": "line", "points": 0, "entities": 3, "log": "success", "newest": { "kind": "line", "points": [[12, 8], [0, 0]] } }
+    },
+    { "key": "Esc", "expect": { "tool": "select", "entities": 3 } },
+    { "key": "Ctrl+Z", "note": "Her parça kendi geri alma adımıdır: yalnız kapatan çizgi kalkar.", "expect": { "entities": 2, "canRedo": true } },
+    { "key": "Ctrl+Y", "expect": { "entities": 3, "canRedo": false, "newest": { "kind": "line", "points": [[12, 8], [0, 0]] } } },
+    { "key": "Enter", "note": "Komut yokken Enter son komutu yeniden başlatır.", "expect": { "tool": "line", "points": 0 } },
+    { "click": [0, -15] },
+    { "click": [10, -15], "expect": { "points": 2, "entities": 4 } },
+    { "rightClick": [10, -15], "note": "Kısa sağ tık Enter'dır: zincir biter, araç açık kalır.", "expect": { "tool": "line", "points": 0, "entities": 4, "log": "success" } },
+    { "click": [0, -20], "expect": { "points": 1 } },
+    { "key": "Enter", "note": "Tek noktayla onay hiçbir şey yazmaz; araç ilk noktaya döner.", "expect": { "tool": "line", "points": 0, "entities": 4 } },
+    { "rightClick": [0, -20], "note": "Taslak boşken sağ tık komuttan çıkar.", "expect": { "tool": "select", "entities": 4 } }
+  ]
+}

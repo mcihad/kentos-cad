@@ -77,7 +77,7 @@
       "view.theme.toggle"
     ],
     "commandsWithoutTests": 99,
-    "commandsOnDesktop": 22
+    "commandsOnDesktop": 24
   },
   "commands": [
     {
@@ -714,6 +714,9 @@
       "shortcuts": [
         "F7"
       ],
+      "shortcutsInInput": [
+        "F7"
+      ],
       "menus": [
         "Araçlar › Komut › Çizim yardımcıları"
       ],
@@ -742,6 +745,9 @@
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [
+        "F8"
+      ],
+      "shortcutsInInput": [
         "F8"
       ],
       "menus": [
@@ -775,6 +781,9 @@
       "shortcuts": [
         "F10"
       ],
+      "shortcutsInInput": [
+        "F10"
+      ],
       "menus": [
         "Araçlar › Komut › Çizim yardımcıları"
       ],
@@ -806,6 +815,9 @@
       "shortcuts": [
         "F3"
       ],
+      "shortcutsInInput": [
+        "F3"
+      ],
       "menus": [
         "Araçlar › Komut › Çizim yardımcıları"
       ],
@@ -835,6 +847,9 @@
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [
+        "Shift+F3"
+      ],
+      "shortcutsInInput": [
         "Shift+F3"
       ],
       "menus": [
@@ -1413,6 +1428,9 @@
       "shortcuts": [
         "Ctrl+Alt+N"
       ],
+      "shortcutsInInput": [
+        "Ctrl+Alt+N"
+      ],
       "menus": [
         "Dosya › Proje"
       ],
@@ -1449,6 +1467,9 @@
       "shortcuts": [
         "Ctrl+O"
       ],
+      "shortcutsInInput": [
+        "Ctrl+O"
+      ],
       "menus": [
         "Dosya › Proje"
       ],
@@ -1483,6 +1504,9 @@
       "shortcuts": [
         "Ctrl+P"
       ],
+      "shortcutsInInput": [
+        "Ctrl+P"
+      ],
       "menus": [
         "Dosya › Çıktı"
       ],
@@ -1514,6 +1538,9 @@
       ],
       "kind": "action",
       "shortcuts": [
+        "Ctrl+S"
+      ],
+      "shortcutsInInput": [
         "Ctrl+S"
       ],
       "menus": [
@@ -1552,6 +1579,9 @@
       ],
       "kind": "action",
       "shortcuts": [
+        "Ctrl+Shift+S"
+      ],
+      "shortcutsInInput": [
         "Ctrl+Shift+S"
       ],
       "menus": [
@@ -1682,6 +1712,9 @@
       ],
       "kind": "action",
       "shortcuts": [
+        "F1"
+      ],
+      "shortcutsInInput": [
         "F1"
       ],
       "menus": [
@@ -3334,11 +3367,12 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "apps/web/scripts/e2e/visual.mjs"
+        "apps/web/scripts/e2e/visual.mjs",
+        "fixtures/interaction/v1/line-chain.json"
       ]
     },
     {
@@ -3753,10 +3787,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/polyline-arc.json"
       ]
     },
     {
@@ -4470,6 +4505,9 @@
       "shortcuts": [
         "Ctrl+,"
       ],
+      "shortcutsInInput": [
+        "Ctrl+,"
+      ],
       "menus": [
         "Araçlar › Uygulama"
       ],
@@ -4507,6 +4545,9 @@
       "shortcuts": [
         "F2"
       ],
+      "shortcutsInInput": [
+        "F2"
+      ],
       "menus": [
         "Görünüm › Paneller"
       ],
@@ -4539,6 +4580,9 @@
       ],
       "kind": "action",
       "shortcuts": [
+        "Alt+Q"
+      ],
+      "shortcutsInInput": [
         "Alt+Q"
       ],
       "menus": [],
@@ -4629,6 +4673,9 @@
       ],
       "kind": "action",
       "shortcuts": [
+        "F6"
+      ],
+      "shortcutsInInput": [
         "F6"
       ],
       "menus": [
@@ -4785,6 +4832,9 @@
       "shortcuts": [
         "Ctrl+F1"
       ],
+      "shortcutsInInput": [
+        "Ctrl+F1"
+      ],
       "menus": [],
       "ribbon": [],
       "quickAccess": false,
@@ -4809,6 +4859,9 @@
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [
+        "F4"
+      ],
+      "shortcutsInInput": [
         "F4"
       ],
       "menus": [
@@ -4969,6 +5022,9 @@
       "aliases": [],
       "kind": "toggle",
       "shortcuts": [
+        "F9"
+      ],
+      "shortcutsInInput": [
         "F9"
       ],
       "menus": [
@@ -5938,6 +5994,7 @@
       "methods": [],
       "steps": 3,
       "description": "Uç uca bağlı çizgi parçaları çizer.",
+      "productCommand": "cad.line.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -5945,7 +6002,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "apps/web/scripts/e2e/visual.mjs"
+        "apps/web/scripts/e2e/visual.mjs",
+        "fixtures/interaction/v1/line-chain.json"
       ]
     },
     {
@@ -6241,13 +6299,15 @@
       "methods": [],
       "steps": 3,
       "description": "Tek parça, açık çoklu çizgi çizer; Y ile yay parçası (teğet, açı, merkez, yarıçap, ikinci nokta, doğrultu), D ile düz parça, U ile son doğrultuda uzunluk.",
+      "productCommand": "cad.polyline.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/workspaces.test.ts"
+        "apps/web/src/app/workspaces.test.ts",
+        "fixtures/interaction/v1/polyline-arc.json"
       ]
     },
     {

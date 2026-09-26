@@ -1,0 +1,25 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "command-name",
+  "title": "Çizim alanından komut adı yazmak: kısayolu olmayan harf komut satırını açar, Esc yazılanı siler, Enter önerilen komutu başlatır, klavye çizime döner",
+  "source": "ADR 0018, klavyenin yolu 6. adım ve Esc; ADR 0027",
+  "covers": ["UX-03", "UX-06", "UX-10"],
+  "document": "empty.kcad",
+  "view": { "center": [487000, 4420000], "metresPerPixel": 0.125 },
+  "draft": { "snap": false, "grid": false, "ortho": false, "polar": false, "tracking": false },
+  "prefs": { "cursorInput": true },
+  "clickTolerance": 0.125,
+  "steps": [
+    { "move": [0, 0] },
+    { "text": "k", "note": "K'nın kısayolu yok: harf komut satırını açar ve oraya bir kez yazılır.", "expect": { "tool": "select", "commandLine": "k", "dynamicInput": null } },
+    { "key": "Esc", "note": "Komut satırında ilk Esc yazılanı siler; öneriler de kapanır.", "expect": { "tool": "select", "commandLine": "" } },
+    { "text": "ka", "note": "Komut satırı hâlâ klavyededir: iki harf oraya yazılır.", "expect": { "commandLine": "ka", "tool": "select" } },
+    { "key": "Enter", "note": "Enter önerilen komutu, KA adıyla Kapalı alan'ı başlatır.", "expect": { "tool": "polygon", "points": 0, "commandLine": "" } },
+    { "click": [0, 0], "expect": { "points": 1 } },
+    { "move": [20, 0] },
+    { "text": "12", "note": "Komut başlayınca klavye çizime döner: rakam imleç yanındaki değer alanını açar.", "expect": { "dynamicInput": "12", "commandLine": "" } },
+    { "key": "Enter", "expect": { "dynamicInput": null, "points": 2 } },
+    { "key": "Esc", "expect": { "tool": "select", "entities": 0 } }
+  ]
+}

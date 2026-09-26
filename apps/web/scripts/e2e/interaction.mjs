@@ -233,6 +233,8 @@ const observe = () =>
     const field = document.querySelector('.cursor-input');
     let newest = null;
     for (const e of k.doc.all()) if (!newest || e.id > newest.id) newest = e;
+    // A path's corners; a line's two ends.
+    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : null);
     return {
       tool: k.tools.activeId.value,
       points: k.tools.active.pointCount ?? 0,
@@ -240,7 +242,7 @@ const observe = () =>
       dynamicInput: field && !field.hidden ? field.querySelector('input').value : null,
       commandLine: document.querySelector('.cmdline__input')?.value ?? null,
       entities: k.doc.size,
-      newest: newest && { kind: newest.kind, pts: newest.pts ? newest.pts.map((p) => [p.x, p.y]) : null, bulges: newest.bulges ?? [] },
+      newest: newest && { kind: newest.kind, pts: pts(newest), bulges: newest.bulges ?? [] },
       canUndo: k.doc.canUndo.value,
       canRedo: k.doc.canRedo.value,
       dirty: k.doc.dirty.value,

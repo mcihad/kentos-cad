@@ -28,7 +28,7 @@ use kentos_render_wgpu::Camera;
 
 use crate::app::{App, COMMAND_INPUT, Message};
 use crate::catalog::{Standing, catalog};
-use crate::keys::{self, GLOBAL, KeyPress};
+use crate::keys::{self, KeyPress};
 use crate::viewport;
 
 /// Zoom step of the + and − keys and the ribbon's buttons (the web's `zoomBy(1.5)`).
@@ -288,12 +288,10 @@ impl App {
         Task::none()
     }
 
-    /// Runs a chord that works in text fields too (Ctrl+S, F-keys); nothing else.
+    /// Runs a chord that works in text fields too (Ctrl+S, F-keys: the web's
+    /// `allowInInput` bindings, from the inventory); nothing else.
     fn global_chord(&mut self, press: &KeyPress) -> Task<Message> {
-        match keys::chord(press)
-            .filter(|chord| GLOBAL.contains(&chord.as_str()))
-            .and_then(|chord| self.shortcut(&chord))
-        {
+        match keys::chord(press).and_then(|chord| shortcut_in_input(&chord)) {
             Some(id) if !press.repeat => self.run(id),
             _ => Task::none(),
         }
@@ -367,6 +365,18 @@ impl App {
         }
         Some(command.id)
     }
+}
+
+/// The command a chord runs while a text field has the keyboard: one the web
+/// binds with `allowInInput` (the inventory's `shortcutsInInput`). They are
+/// all chords (Ctrl, Alt, F-keys), so they reach every command, as the
+/// drawing's shortcuts do (ADR 0017).
+fn shortcut_in_input(chord: &str) -> Option<&'static str> {
+    catalog()
+        .commands()
+        .iter()
+        .find(|c| c.shortcuts_in_input.contains(&chord))
+        .map(|c| c.id)
 }
 
 /// A task that takes the keyboard from every text box: the drawing has it

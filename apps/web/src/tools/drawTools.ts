@@ -2,6 +2,7 @@ import type { AppContext } from '../app/context';
 import { Signal } from '../core/signal';
 import type { Entity, EntityGeometry, NewEntity } from '../model/entities';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
+import { lineCreate } from '../product/lineCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { parseNumber } from './coordinateInput';
 import { drawTag, strokePath } from './preview';
@@ -170,9 +171,14 @@ export abstract class PointInputTool implements Tool {
     if (!layerId) return null;
     const color = this.ctx.settings.color.value ?? undefined;
     const e = this.ctx.doc.add({ ...geom, layerId, color, attrs: extra.attrs ?? {}, label: extra.label } as NewEntity);
-    this.made.push(e.id);
-    this.madeAt = this.ctx.doc.revision;
+    this.noteMade(e.id);
     return e;
+  }
+
+  /** Records an object written for the object being drawn, so Ctrl+Z and Geri (G) can take it back as an undo. */
+  protected noteMade(id: number): void {
+    this.made.push(id);
+    this.madeAt = this.ctx.doc.revision;
   }
 
   draw(g: CanvasRenderingContext2D, view: ViewTransform): void {
@@ -208,11 +214,31 @@ export class LineTool extends PointInputTool {
     const last = this.last;
     if (last && dist(last, p) <= 1e-9) return;
     if (last) {
-      const e = this.create({ kind: 'line', a: last, b: p });
-      if (!e) return;
-      this.created.push(e.id);
+      const id = this.createLine(last, p);
+      if (id === null) return;
+      this.created.push(id);
     }
     this.pts.push(p);
+  }
+
+  /**
+   * Each segment of the chain is written by the product command
+   * `cad.line.create` (docs/adr/0027): its own object and its own undo step,
+   * as before. What the tool knows implicitly is explicit in the input
+   * (CMD-07): the active layer and the current colour. The messages stay the
+   * tool's: the command's refusal or warning (the locked and hidden layer
+   * texts, word for word). The new line's slot, or null when refused.
+   */
+  private createLine(a: Vec2, b: Vec2): number | null {
+    const color = this.ctx.settings.color.value;
+    const result = lineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, a, b, ...(color !== null && { color }) });
+    if (result.status !== 'completed') {
+      if ('error' in result) this.ctx.log.warn(result.error.message);
+      return null;
+    }
+    for (const w of result.warnings) this.ctx.log.warn(w.message);
+    this.noteMade(result.output.id);
+    return result.output.id;
   }
 
   protected override option(key: string): boolean {

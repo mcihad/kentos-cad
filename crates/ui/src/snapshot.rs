@@ -33,8 +33,8 @@ use std::fs::File;
 use std::io::{self, BufWriter};
 use std::path::Path;
 
-use iced::advanced::clipboard;
 use iced::advanced::renderer::{self, Headless};
+use iced::advanced::{clipboard, widget};
 use iced::keyboard::{self, key};
 use iced::time::Instant;
 use iced::{Element, Event, Pixels, Point, Renderer, Size, Theme, event, mouse, window};
@@ -192,6 +192,36 @@ impl Snapshot {
 
         self.cache = ui.into_cache();
         messages
+    }
+
+    /// Bir bileşen işlemini (odaklamak, odağı bırakmak, imleci taşımak…)
+    /// arayüzde çalıştırır: uygulamanın görevlerinin taşıdığı
+    /// `widget::Operation`'ı, iced'in çalışma zamanı gibi, zincirlenen
+    /// işlemleriyle birlikte. Bileşenler değişikliği bir sonraki olayda
+    /// bildirir (ör. komut kutusunun odağı).
+    pub fn operate<'a, Message>(
+        &mut self,
+        view: Element<'a, Message>,
+        operation: Box<dyn widget::Operation>,
+    ) {
+        let mut ui = UserInterface::build(
+            view,
+            self.size,
+            std::mem::take(&mut self.cache),
+            &mut self.renderer,
+        );
+
+        let mut current = Some(operation);
+
+        while let Some(mut operation) = current.take() {
+            ui.operate(&self.renderer, operation.as_mut());
+
+            if let widget::operation::Outcome::Chain(next) = operation.finish() {
+                current = Some(next);
+            }
+        }
+
+        self.cache = ui.into_cache();
     }
 
     /// Tek bir olayı verir: ürettiği mesajlar ve bir bileşenin olayı alıp

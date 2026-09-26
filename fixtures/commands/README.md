@@ -1,12 +1,14 @@
 # Ürün komutu fixture'ları (`kentos.command-cases` v1)
 
-TODOS.md `CMD-04..07`, [ADR 0013](../../docs/adr/0013-product-command-contract.md), [ADR 0022](../../docs/adr/0022-first-product-command.md). Bir ürün komutunun doğrulama (`validate`), plan (`plan`) ve yürütme (`execute`) davranışını durum durum yazar: sonucun durumu, hata kodu, alan yolu, ileti ve uyarılar; yürütmeden sonra da belgenin hâli.
+TODOS.md `CMD-04..07`, [ADR 0013](../../docs/adr/0013-product-command-contract.md), [ADR 0022](../../docs/adr/0022-first-product-command.md), [ADR 0027](../../docs/adr/0027-line-and-polyline-commands.md). Bir ürün komutunun doğrulama (`validate`), plan (`plan`) ve yürütme (`execute`) davranışını durum durum yazar: sonucun durumu, hata kodu, alan yolu, ileti ve uyarılar; yürütmeden sonra da belgenin hâli.
 
-Aynı dosyayı iki uygulama koşar; ikisi de bütün durumları geçmelidir:
+Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts` (`CadDocument`), masaüstü `crates/native/application/tests/fixtures.rs` (`kentos_domain::Document`, `cargo test -p kentos-native-application`). İkisi de bütün durumları geçmelidir. Kayıttaki her komutun bir dosyası vardır; her dosyada en az 20 durum bulunur.
 
-| Dosya | Komut | Web (Vitest) | Masaüstü (`cargo test -p kentos-native-application`) |
-|---|---|---|---|
-| `v1/cad.polygon.create.json` | `cad.polygon.create` v1 | `apps/web/src/product/fixtures.test.ts` (`CadDocument`) | `crates/native/application/tests/fixtures.rs` (`kentos_domain::Document`) |
+| Dosya | Komut | Durum |
+|---|---|---|
+| `v1/cad.polygon.create.json` | `cad.polygon.create` v1 (ADR 0022) | 23 |
+| `v1/cad.line.create.json` | `cad.line.create` v1 (ADR 0027) | 20 |
+| `v1/cad.polyline.create.json` | `cad.polyline.create` v1 (ADR 0027) | 23 |
 
 ## Dosya
 
@@ -38,8 +40,8 @@ Aynı dosyayı iki uygulama koşar; ikisi de bütün durumları geçmelidir:
 
 Her adımda `expect` (aşağıda) ve `note` de bulunabilir. Komut adımında `result` zorunludur.
 
-- **`input`** komutun girdisidir, sözleşmenin tipiyle (`PolygonCreate`, JSON adlarıyla).
-- **`nonFinite`**: JSON NaN ve ±∞ taşıyamaz. `{ "pts[1].y": "NaN" }` gibi bir tablo, girdi okunduktan sonra o alana `NaN`, `Infinity` ya da `-Infinity` koyar. Yol, hata iletisinin `path` alanıyla aynı yazılır.
+- **`input`** komutun girdisidir, sözleşmenin tipiyle (`PolygonCreate`, `LineCreate`, `PolylineCreate`; JSON adlarıyla).
+- **`nonFinite`**: JSON NaN ve ±∞ taşıyamaz. `{ "pts[1].y": "NaN" }` ya da `{ "a.x": "Infinity" }` gibi bir tablo, girdi okunduktan sonra o alana `NaN`, `Infinity` ya da `-Infinity` koyar. Yol, hata iletisinin `path` alanıyla aynı yazılır.
 - **`result`** sonucun tamamıdır (`CommandResult`): `status` ve duruma göre `output` ve `warnings`, ya da `error`. Alan alan tam eşit olmalıdır. Sayılar sayı olarak karşılaştırılır (dosyanın `1`'i belgenin `1.0`'ıdır).
 
 ## Yer tutucular

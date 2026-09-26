@@ -77,7 +77,13 @@ export async function collectInPage() {
 
   const modes = workspaces.WORKSPACES.filter((w) => w.status === 'ready').map((w) => ({ id: w.id, filter: workspaces.workspaceFilter(w, tools) }));
   const shortcuts = {};
-  for (const b of k.keymap.all()) push(shortcuts, b.command, b.args === undefined ? b.chord : `${b.chord} ${JSON.stringify(b.args)}`);
+  // Chords bound with `allowInInput`: they work while a text field has the keyboard too.
+  const inInput = {};
+  for (const b of k.keymap.all()) {
+    const chord = b.args === undefined ? b.chord : `${b.chord} ${JSON.stringify(b.args)}`;
+    push(shortcuts, b.command, chord);
+    if (b.allowInInput) push(inInput, b.command, chord);
+  }
   const toolCommands = new Set(tools.map((t) => `tool.${t.id}`));
 
   const commands = k.commands.all().map((c) => ({
@@ -92,6 +98,8 @@ export async function collectInPage() {
     pendingNote: c.pendingNote,
     kind: typeof c.isChecked === 'function' ? 'toggle' : 'action',
     shortcuts: shortcuts[c.id] ?? [],
+    // Only on commands that have such a chord; the desktop reads it (apps/desktop/src/catalog.rs).
+    shortcutsInInput: inInput[c.id],
     menus: menuPaths[c.id] ?? [],
     ribbon: ribbonPlaces[c.id] ?? [],
     quickAccess: ribbon.QUICK_ACCESS.includes(c.id),

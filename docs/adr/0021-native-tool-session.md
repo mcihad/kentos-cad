@@ -103,7 +103,7 @@ Iced bir tuşa basışı şöyle verir: değiştiricisiz tuş, düzenin üretti�
   - Çizime tıklamak açık değer alanını uygulamadan kapatır: web'de alan odağı kaybeder.
   - Alan penceredeki yerini de bildirir; oynatıcı ve görüntü aracı onu kullanır.
 - **Shift** bir tıklamada ortho'yu tersine çevirir; değiştirici durumu abonelikten gelir.
-- **Taşınan komutlar:** `tool.polygon` (G, şerit düğmesi, `KA`/`ALAN`/`POLYGON`), `tool.confirm`, `tool.cancel`, `view.zoomIn`, `view.zoomOut`, `view.zoomExtents` (Home). Masaüstünde 19 / 163 komut çalışıyor.
+- **Taşınan komutlar:** `tool.polygon` (G, şerit düğmesi, `KA`/`ALAN`/`POLYGON`), `tool.confirm`, `tool.cancel`, `view.zoomIn`, `view.zoomOut`, `view.zoomExtents` (Home). Masaüstünde 19 / 163 komut çalışıyor. 26 Eylül: `tool.line` (L) ve `tool.polyline` (P) de, 24 / 164 ([ADR 0027](0027-line-and-polyline-commands.md)).
 - **İstem:** durum çubuğu ve komut satırı adımı ve seçenekleri düğme olarak gösterir. Web bunları çiziminin üstündeki şeritte de gösterir; masaüstünde o şerit yok.
 
 ### Önizleme nasıl çizilir
@@ -119,7 +119,7 @@ Iced bir tuşa basışı şöyle verir: değiştiricisiz tuş, düzenin üretti�
 
 ### İzlerin native oynatıcısı
 
-- `apps/desktop/src/traces.rs`, `fixtures/interaction/v1/*.json`'ı değiştirmeden okur. Bilmediği bir alan onu durdurur; yeni alan sessizce atlanamaz. Gerçek `App`'i pencere açmadan, penceresinin göndereceğiyle sürer:
+- `apps/desktop/src/traces.rs` (26 Eylül'den beri `apps/desktop/src/traces/` klasörü, ADR 0027), `fixtures/interaction/v1/*.json`'ı değiştirmeden okur. Bilmediği bir alan onu durdurur; yeni alan sessizce atlanamaz. Gerçek `App`'i pencere açmadan, penceresinin göndereceğiyle sürer:
   - **Tuşlar:** US ya da Türkçe Q klavyenin ürettiği Iced tuş olaylarıdır. Web oynatıcısının tablosu kullanılır: Türkçe Q'da `+` Shift+4, `-` Equal tuşu, `@` AltGr+Q (Ctrl+Alt). Olaylar uygulamanın kendi aboneliğinden geçer.
   - **Fare:** Iced fare olaylarıdır ve çizim alanının kendi `gesture` kodundan geçer. Konum, dünya noktasının aynı kamerayla düştüğü pencere pikselidir, ekranın aygıt pikseline yuvarlanır: 2× ekranda yarım mantıksal piksel.
     - Oynatıcının penceresinde alanın boyu tek sayıdır ve üstü yarım piksele düşer. Böylece yuvarlama gerçekten sınanır.
@@ -127,7 +127,7 @@ Iced bir tuşa basışı şöyle verir: değiştiricisiz tuş, düzenin üretti�
   - **Komut satırı:** odaktayken tuşlar bileşenin bir modeline gider. Bir test modeli gerçek bileşene tuş tuş bağlar: mesajlar ve bileşenin olayı alıp almadığı. Test, KentOS UI'ın ekransız çizicisiyle çalışır (`Snapshot::software`, `Snapshot::deliver`).
   - **`run`:** komutun mesajıdır, şerit düğmesinin gönderdiği.
   - **`saveAndReopen`:** Ctrl+S ve Ctrl+O. Dosya seçici geçici bir dosyayla yanıtlanır (`Picker::File`; web oynatıcısının `picker`'ı). Uygulamanın kayıt ve açma görevleri sonuna dek çalışır (`iced_runtime::task::into_stream`).
-  - **Odak:** görevdeki bir odak işlemi, oynatıcının izleyemediği bir değişikliktir; izi durdurur. Bu dört izde yoktur.
+  - **Odak:** görevdeki bir odak işlemi, oynatıcının izleyemediği bir değişikliktir; izi durdurur. Bu dört izde yoktur. 26 Eylül'den beri oynatıcı odak işlemlerini komut satırının bir modelinde çalıştırır ve öneri listesini izler; odağa dokunmayan bir işlem izi yine durdurur (ADR 0027).
 - **Karşılaştırma** web oynatıcısının kurallarıyladır:
   - tıklanan noktalar `clickTolerance` içinde;
   - yazılan değerlerin kenar farkları tam eşit;
@@ -166,7 +166,7 @@ Iced bir tuşa basışı şöyle verir: değiştiricisiz tuş, düzenin üretti�
 
 ## Ertelenenler
 
-- Öbür araçlar: çizgi, çoklu çizgi, `PathTool`'un ölçme ve parsel biçimleri, dikdörtgen …
+- Öbür araçlar: `PathTool`'un ölçme ve parsel biçimleri, dikdörtgen … Çizgi ve çoklu çizgi 26 Eylül'de geldi (ADR 0027).
 - Masaüstünde nesne keneti ve nesne izleme. İzlerin hepsinde kenet kapalıdır; kenet açık bir iz oynatıcıyı açık bir iletiyle durdurur.
 - Nokta hesaplayıcı ve askıdaki araç (`UX-07`).
 - IME (`UX-03`, `UX-12`) ve Türkçe F klavye varyantı.
@@ -178,7 +178,7 @@ Iced bir tuşa basışı şöyle verir: değiştiricisiz tuş, düzenin üretti�
   1. Komut satırında Ctrl+Z masaüstünde hiçbir şey yapmaz; web'de alanın kendi geri almasıdır.
   2. Değer alanı yalnız sona ekler (yukarıda).
 - Kapanan fark (25 Eylül): seçenek ya da kısayol olmayan harf artık web'de de komut satırını açar (ADR 0018, 6. adım). `pnpm e2e` denetliyor.
-  - İzlere bu adım henüz eklenmedi. Native oynatıcı, uygulamanın odak işlemlerini (`focus`, `unfocus`) ve komut satırının öneri listesini izleyemiyor; öneri listesi açıkken Enter öneriyi çalıştırır. Oynatıcı ikisini izleyince komut adı yazan bir iz eklenecek.
+  - 26 Eylül: izlerde de. Native oynatıcı odak işlemlerini (`focus`, `unfocus`) ve öneri listesini izliyor; `command-name` izi iki platformda üç varyantta geçiyor (ADR 0027).
 
 ## Doğrulama (25 Eylül 2026, Linux; main `2c659c3` üstünde)
 

@@ -14,12 +14,13 @@
 //! [`Session::last`] and routes keys by ADR 0018's order.
 
 use crate::format::Format;
-use crate::polygon::{self, Polygon};
+use crate::line::{self, Line};
+use crate::path::{self, Path};
 use crate::prompt::Prompt;
 use crate::tool::{Context, Flow, Pointer, Preview, Tool};
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
-pub const TOOLS: &[&str] = &[polygon::ID];
+pub const TOOLS: &[&str] = &[path::POLYGON_ID, line::ID, path::POLYLINE_ID];
 
 /// The running tool, if any, and the last one started.
 #[derive(Default)]
@@ -42,7 +43,9 @@ impl Session {
     /// id the session does not know; nothing changes then.
     pub fn start(&mut self, id: &str) -> bool {
         let tool: Box<dyn Tool> = match id {
-            polygon::ID => Box::new(Polygon::new()),
+            path::POLYGON_ID => Box::new(Path::polygon()),
+            path::POLYLINE_ID => Box::new(Path::polyline()),
+            line::ID => Box::new(Line::new()),
             _ => return false,
         };
         self.last = Some(tool.id());

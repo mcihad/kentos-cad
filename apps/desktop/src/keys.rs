@@ -20,29 +20,6 @@ use kentos_interaction::upper_tr;
 
 use crate::app::Message;
 
-/// Chords that still work while a text field has the keyboard: the ones the
-/// web binds with `allowInInput` (app/keybindings.ts).
-pub const GLOBAL: &[&str] = &[
-    "Ctrl+Alt+N",
-    "Ctrl+O",
-    "Ctrl+S",
-    "Ctrl+Shift+S",
-    "Ctrl+P",
-    "F1",
-    "F2",
-    "F3",
-    "F4",
-    "F6",
-    "F7",
-    "F8",
-    "F9",
-    "F10",
-    "Shift+F3",
-    "Ctrl+F1",
-    "Alt+Q",
-    "Ctrl+,",
-];
-
 /// A key press no widget took: the window's `KeyPressed`, for the app to route.
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyPress {

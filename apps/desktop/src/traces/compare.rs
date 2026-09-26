@@ -1,0 +1,146 @@
+//! What a step expects against what the app shows, by the web runner's
+//! rules: clicked points within `clickTolerance`, typed edges exactly, the
+//! scale within a relative 1e-9.
+
+use super::format::{Expect, Newest, Trace};
+use super::player::Observation;
+
+/// Differences between what a step expects and what the app shows, by the
+/// web runner's rules; empty when it matches.
+pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String> {
+    let mut bad = Vec::new();
+    let mut check = |name: &str, same: bool, have: String, want: String| {
+        if !same {
+            bad.push(format!("{name}: {have}, beklenen {want}"));
+        }
+    };
+    if let Some(want) = &expect.tool {
+        check("tool", &got.tool == want, got.tool.clone(), want.clone());
+    }
+    if let Some(want) = expect.points {
+        check(
+            "points",
+            got.points == want,
+            got.points.to_string(),
+            want.to_string(),
+        );
+    }
+    if let Some(want) = &expect.options {
+        check(
+            "options",
+            &got.options == want,
+            format!("{:?}", got.options),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.dynamic_input {
+        check(
+            "dynamicInput",
+            &got.dynamic_input == want,
+            format!("{:?}", got.dynamic_input),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.command_line {
+        check(
+            "commandLine",
+            &got.command_line == want,
+            format!("{:?}", got.command_line),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = expect.entities {
+        check(
+            "entities",
+            got.entities == want,
+            got.entities.to_string(),
+            want.to_string(),
+        );
+    }
+    if let Some(want) = expect.can_undo {
+        check(
+            "canUndo",
+            got.can_undo == want,
+            got.can_undo.to_string(),
+            want.to_string(),
+        );
+    }
+    if let Some(want) = expect.can_redo {
+        check(
+            "canRedo",
+            got.can_redo == want,
+            got.can_redo.to_string(),
+            want.to_string(),
+        );
+    }
+    if let Some(want) = expect.dirty {
+        check(
+            "dirty",
+            got.dirty == want,
+            got.dirty.to_string(),
+            want.to_string(),
+        );
+    }
+    if let Some(want) = &expect.log {
+        check(
+            "log",
+            got.log.as_ref() == Some(want),
+            format!("{:?}", got.log),
+            want.clone(),
+        );
+    }
+    if let Some(want) = expect.metres_per_pixel {
+        check(
+            "metresPerPixel",
+            (got.metres_per_pixel - want).abs() <= want * 1e-9,
+            got.metres_per_pixel.to_string(),
+            want.to_string(),
+        );
+    }
+    if let Some(want) = &expect.newest {
+        bad.extend(compare_newest(want, got, trace));
+    }
+    bad
+}
+
+fn compare_newest(want: &Newest, got: &Observation, trace: &Trace) -> Vec<String> {
+    let mut bad = Vec::new();
+    let Some((kind, pts, bulges)) = &got.newest else {
+        return vec![format!("newest: yok, beklenen {}", want.kind)];
+    };
+    if *kind != want.kind {
+        return vec![format!("newest: {kind}, beklenen {}", want.kind)];
+    }
+    let [ox, oy] = trace.view.center;
+    if let Some(points) = &want.points {
+        // Clicked points come from screen pixels: within the trace's tolerance.
+        let near = pts.len() == points.len()
+            && pts.iter().zip(points).all(|([x, y], [wx, wy])| {
+                (x - ox - wx).hypot(y - oy - wy) <= trace.click_tolerance
+            });
+        if !near {
+            let relative: Vec<[f64; 2]> = pts.iter().map(|[x, y]| [x - ox, y - oy]).collect();
+            bad.push(format!(
+                "newest.points: {relative:?}, beklenen {points:?} (±{} m)",
+                trace.click_tolerance
+            ));
+        }
+    }
+    if let Some(arcs) = want.arcs {
+        let have = bulges.iter().filter(|b| **b != 0.0).count();
+        if have != arcs {
+            bad.push(format!("newest.arcs: {have}, beklenen {arcs}"));
+        }
+    }
+    if let Some(edges) = &want.edges {
+        // Typed values are exact: consecutive corner differences, not rounded.
+        let have: Vec<[f64; 2]> = pts
+            .windows(2)
+            .map(|w| [w[1][0] - w[0][0], w[1][1] - w[0][1]])
+            .collect();
+        if have != *edges {
+            bad.push(format!("newest.edges: {have:?}, beklenen {edges:?}"));
+        }
+    }
+    bad
+}

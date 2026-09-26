@@ -2,6 +2,7 @@ import type { AppContext } from '../app/context';
 import { bearingGrad, dist, type Vec2 } from '../model/geometry';
 import { bulgeArc, bulgeOfSweep, bulgePathLength, bulgePathOutline, bulgeRingArea, bulgeThrough, hasBulges, segmentTangent, tangentBulge } from '../model/geom/bulge';
 import { polygonCreate } from '../product/polygonCreate';
+import { polylineCreate } from '../product/polylineCreate';
 import type { ViewTransform } from '../viewport/Camera';
 import { centreBulge, offsetAlong, radialPoint, radiusBulge, unitToward } from './constructions';
 import { parseNumber } from './coordinateInput';
@@ -277,8 +278,30 @@ export class PathTool extends PointInputTool {
     const geom = { kind: this.closed ? ('polygon' as const) : ('polyline' as const), pts, ...(bulges && { bulges }) };
     if (this.parcelLayer) this.createParcel(geom, this.parcelLayer);
     else if (this.closed) this.createPolygon(pts, bulges, area);
-    else if (this.create(geom)) this.ctx.log.success(`Çoklu çizgi eklendi: ${f.length(bulgePathLength(pts, bulges, false))}`);
+    else this.createPolyline(pts, () => bulgePathLength(pts, bulges, false));
     super.finish();
+  }
+
+  /**
+   * An open polyline is written by the product command
+   * `cad.polyline.create` (docs/adr/0027), as a closed area by
+   * `cad.polygon.create`: the active layer and the current colour are
+   * explicit in its input (CMD-07), and its bulges go one per drawn segment
+   * (the command stores the document's per-point form, with the 0 of the
+   * closing edge an open polyline does not have, as this tool always wrote).
+   * The messages stay the tool's: the command's refusal or warning, then
+   * the length.
+   */
+  private createPolyline(pts: Vec2[], length: () => number): void {
+    const color = this.ctx.settings.color.value;
+    const segments = hasBulges(this.bulges) ? { bulges: [...this.bulges] } : {};
+    const result = polylineCreate.execute({ doc: this.ctx.doc }, { layerId: this.ctx.doc.layers.active.value, pts, ...segments, ...(color !== null && { color }) });
+    if (result.status !== 'completed') {
+      if ('error' in result) this.ctx.log.warn(result.error.message);
+      return;
+    }
+    for (const w of result.warnings) this.ctx.log.warn(w.message);
+    this.ctx.log.success(`Çoklu çizgi eklendi: ${this.ctx.format.length(length())}`);
   }
 
   /**
@@ -287,7 +310,8 @@ export class PathTool extends PointInputTool {
    * explicit in the command's input (CMD-07): the active layer and the
    * current colour. The messages stay the tool's: the command's refusal or
    * warning (the locked and hidden layer texts, word for word), then the
-   * area. Parcels, polylines and measuring still write directly.
+   * area. Parcels still write directly (their number, deed area and
+   * selection are the parcel tool's own); measuring writes nothing.
    */
   private createPolygon(pts: Vec2[], bulges: number[] | undefined, area: () => number): void {
     const color = this.ctx.settings.color.value;
