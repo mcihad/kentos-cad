@@ -80,7 +80,7 @@ fn said(app: &App) -> Vec<String> {
     app.history
         .iter()
         .map(|e| match e {
-            Entry::Input(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t) => t.clone(),
+            Entry::Input(t) | Entry::Value(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t) => t.clone(),
         })
         .collect()
 }

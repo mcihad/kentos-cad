@@ -261,9 +261,10 @@ const observe = () =>
     // A path's corners; a line's two ends; a point's place; an arc's start and end (counter-clockwise, as stored).
     // An ellipse's axis ends (major, minor, counter-clockwise) or an elliptical arc's start and end; a
     // construction line's point and one metre along it (docs/adr/0057). A spline's fit points are its pts.
+    // A dimension's measured points, and an angle's vertex (docs/adr/0061).
     const along = (e, t) => [e.c.x + e.major.x * Math.cos(t) - e.major.y * e.ratio * Math.sin(t), e.c.y + e.major.y * Math.cos(t) + e.major.x * e.ratio * Math.sin(t)];
     const ellipse = (e) => (e.t0 === e.t1 ? [0, 1, 2, 3].map((i) => along(e, (i * Math.PI) / 2)) : [along(e, e.t0), along(e, e.t1)]);
-    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : e.kind === 'ellipse' ? ellipse(e) : e.kind === 'xline' || e.kind === 'ray' ? [[e.p.x, e.p.y], [e.p.x + e.dir.x, e.p.y + e.dir.y]] : null);
+    const pts = (e) => (e.pts ? e.pts.map((p) => [p.x, p.y]) : e.kind === 'line' ? [[e.a.x, e.a.y], [e.b.x, e.b.y]] : e.kind === 'point' ? [[e.p.x, e.p.y]] : e.kind === 'arc' ? [e.a0, e.a1].map((a) => [e.c.x + e.r * Math.cos(a), e.c.y + e.r * Math.sin(a)]) : e.kind === 'ellipse' ? ellipse(e) : e.kind === 'xline' || e.kind === 'ray' ? [[e.p.x, e.p.y], [e.p.x + e.dir.x, e.p.y + e.dir.y]] : e.kind === 'dimension' ? [e.a, e.b, ...(e.c ? [e.c] : [])].map((p) => [p.x, p.y]) : null);
     const shape = (e) => ({ kind: e.kind, pts: pts(e), bulges: e.bulges ?? [], center: e.c ? [e.c.x, e.c.y] : null, radius: e.r ?? null });
     return {
       tool: k.tools.activeId.value,

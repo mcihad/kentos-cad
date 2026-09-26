@@ -411,8 +411,9 @@ impl canvas::Program<Message> for Draft {
     }
 }
 
-/// Pictures of the round-3 drawing tools' previews (docs/adr/0057), for the
-/// owner: each trace played up to a pointer move that shows its preview.
+/// Pictures of the round-3 drawing tools' previews (docs/adr/0057) and of
+/// Ölçülendirme's (docs/adr/0061), for the owner: each trace played up to a
+/// pointer move that shows its preview.
 /// Not run by default: `cargo test -p kentos-desktop preview::screens -- --ignored --nocapture`.
 #[cfg(test)]
 #[test]
@@ -436,6 +437,10 @@ fn screens() {
         ("cizim-halka", "donut-cloud", 14),
         ("cizim-bulut", "donut-cloud", 28),
         ("cizim-bol", "spot-divide", 10),
+        ("olcu-hizali", "dimensions", 4),
+        ("olcu-dogrusal", "dimensions", 11),
+        ("olcu-aci", "dimensions", 24),
+        ("olcu-yaricap", "dimensions", 31),
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {

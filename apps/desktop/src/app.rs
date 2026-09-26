@@ -1099,6 +1099,14 @@ impl App {
         }
     }
 
+    /// A value or an option given to the running command, echoed as typed
+    /// (the web's `log.command(`› ${text}`)`): never taken for a command's
+    /// short name, as `X` for Patlat.
+    pub(crate) fn echo_value(&mut self, text: impl Into<String>) {
+        self.history.push(Entry::Value(text.into()));
+        self.last_level = Some(Level::Command);
+    }
+
     pub(crate) fn output(&mut self, text: impl Into<String>) {
         self.say(Level::Info, text);
     }
@@ -1386,6 +1394,26 @@ mod tests {
         let before = app.history.len();
         let _ = app.update(Message::CommandRun("ZE".into()));
         assert_eq!(app.history.len(), before + 1);
+    }
+
+    /// A value or an option given to the running command is echoed as typed
+    /// (the web's `› X`), never taken for a command's short name: X is also
+    /// Patlat's (docs/adr/0061).
+    #[test]
+    fn a_value_or_an_option_is_echoed_as_typed() {
+        let mut app = with_demo();
+        let _ = app.run("tool.dimension");
+        assert_eq!(app.session.tool_id(), "dimension");
+        let _ = app.prompt_option("D");
+        assert_eq!(app.history.last(), Some(&Entry::Value("D".to_owned())));
+        // The typed point, then the tool's echo of it.
+        let before = app.history.len();
+        let _ = app.submit_line("0,0");
+        assert_eq!(app.history.get(before), Some(&Entry::Value("0,0".to_owned())));
+        assert_eq!(
+            app.session.prompt().text(),
+            "Ölçü: ikinci ölçü noktasını belirtin"
+        );
     }
 
     #[test]

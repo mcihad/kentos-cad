@@ -95,6 +95,17 @@ impl Format {
         self.bearing((rad * 200.0) / std::f64::consts::PI)
     }
 
+    /// A dimension's measured value as drawn (the web's `dimensionText`): its
+    /// prefix (“R ”, “Ø ”), then a length without its unit or an angle in the
+    /// project's angle unit.
+    pub fn dimension(&self, prefix: &str, unit: &str, value: f64) -> String {
+        if unit == "angle" {
+            format!("{prefix}{}", self.angle(value))
+        } else {
+            format!("{prefix}{}", self.length_bare(value))
+        }
+    }
+
     /// `Y 487012.000  X 4420000.000`: east first (CLAUDE.md §5).
     pub fn point(&self, p: Vec2) -> String {
         format!("Y {}  X {}", self.coord(p.x), self.coord(p.y))

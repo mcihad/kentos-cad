@@ -536,12 +536,5 @@ impl App {
 /// A dimension's measured value as drawn: prefix and value in project units,
 /// a length without its unit (the web's `dimensionText`).
 pub fn dimension_text(format: &Format, prefix: &str, unit: &str, value: f64) -> String {
-    if unit == "angle" {
-        format!(
-            "{prefix}{}",
-            format.bearing(value * 200.0 / std::f64::consts::PI)
-        )
-    } else {
-        format!("{prefix}{}", format.length_bare(value))
-    }
+    format.dimension(prefix, unit, value)
 }

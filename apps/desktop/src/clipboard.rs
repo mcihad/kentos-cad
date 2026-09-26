@@ -165,7 +165,7 @@ mod tests {
 
     fn said(app: &App) -> Option<&str> {
         match app.history.last() {
-            Some(Entry::Input(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t)) => {
+            Some(Entry::Input(t) | Entry::Value(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t)) => {
                 Some(t.as_str())
             }
             None => None,

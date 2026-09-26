@@ -165,6 +165,9 @@ fn row_height() -> f32 {
 pub enum Entry {
     /// Kullanıcının yazdığı ya da çalıştırdığı komut.
     Input(String),
+    /// Çalışan komuta verilen değer ya da seçenek (`12`, `@5,0`, `X`):
+    /// yazıldığı gibi gösterilir, bir komutun kısa adı sanılmaz.
+    Value(String),
     /// Uygulamanın yanıtı.
     Output(String),
     /// Uyarı: iş yapılmadı ya da eksik yapıldı, nedeni ve çözümüyle.
@@ -706,6 +709,15 @@ fn history_line<'a, Message: 'a>(
                 content,
             )
         }
+        Entry::Value(value) => (
+            Some(mark(Icon::ChevronRight, 10.0, |t| t.accent, alpha)),
+            text(value.as_str())
+                .font(typography::mono())
+                .size(typography::body())
+                .wrapping(wrapping)
+                .style(ink(|t| t.text, alpha))
+                .into(),
+        ),
         Entry::Output(output) => (
             None,
             text(output.as_str())
@@ -775,7 +787,7 @@ fn recall(history: &[Entry]) -> Vec<&str> {
     let mut inputs: Vec<&str> = Vec::new();
 
     for entry in history.iter().rev() {
-        if let Entry::Input(input) = entry
+        if let Entry::Input(input) | Entry::Value(input) = entry
             && !inputs.iter().any(|seen| fold(seen) == fold(input))
         {
             inputs.push(input);
@@ -2270,5 +2282,16 @@ mod tests {
         ];
 
         assert_eq!(recall(&history), ["çizgi", "sorgu"]);
+    }
+
+    #[test]
+    fn a_value_is_recalled_as_typed() {
+        let history = [
+            Entry::Input("OLCU".to_owned()),
+            Entry::Value("X".to_owned()),
+            Entry::Value("12".to_owned()),
+        ];
+
+        assert_eq!(recall(&history), ["12", "X", "OLCU"]);
     }
 }

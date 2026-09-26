@@ -52,7 +52,8 @@ pub struct Seen {
 
 impl Seen {
     /// An object as a step sees it: a path's corners; a line's two ends; a
-    /// point's place; an arc's start and end (the web runner's `shape`).
+    /// point's place; an arc's start and end; a dimension's measured points
+    /// (the web runner's `shape`).
     pub fn of(e: &Entity) -> Self {
         let (pts, bulges) = match e {
             Entity::Polygon(p) | Entity::Polyline(p) => (
@@ -91,6 +92,11 @@ impl Seen {
             }
             Entity::Xline(x) | Entity::Ray(x) => (
                 vec![[x.p.x, x.p.y], [x.p.x + x.dir.x, x.p.y + x.dir.y]],
+                Vec::new(),
+            ),
+            // A dimension's measured points, and an angle's vertex (docs/adr/0061).
+            Entity::Dimension(d) => (
+                [d.a, d.b].iter().chain(&d.c).map(|v| [v.x, v.y]).collect(),
                 Vec::new(),
             ),
             _ => (Vec::new(), Vec::new()),

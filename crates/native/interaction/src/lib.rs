@@ -67,6 +67,7 @@ pub mod circle;
 pub mod clipboard;
 pub mod construction;
 pub mod corner;
+pub mod dimension;
 pub mod divide;
 pub mod donut;
 mod edge;
@@ -125,6 +126,6 @@ pub use session::Session;
 pub use spatial::{LabelSpot, Spatial, dimension_layout, measures, vertices};
 pub use tool::{Area, Label};
 pub use tool::{
-    Context, Corners, Cursor, Draft, Flow, LengthenMode, Marker, MarkerShape, Memory, Pointer,
+    Context, Corners, Cursor, DimensionMode, Draft, Flow, LengthenMode, Marker, MarkerShape, Memory, Pointer,
     Preview, Stroke, Tag, TextField, Tone, Tool, View, ViewChange, snap_kinds,
 };

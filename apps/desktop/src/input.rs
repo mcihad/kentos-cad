@@ -419,7 +419,7 @@ impl App {
         if text.is_empty() {
             return self.run("tool.confirm");
         }
-        self.say(Level::Command, text.clone());
+        self.echo_value(text.clone());
         if self.with_tool(|s, cx| s.input(&text, cx)) != Some(true) {
             self.warn(format!(
                 "“{text}” anlaşılamadı. Mesafe, Y,X, @dY,dX ya da @mesafe<açı yazın."
@@ -435,7 +435,7 @@ impl App {
             return self.run("tool.confirm");
         }
         if self.session.is_running() {
-            self.say(Level::Command, text);
+            self.echo_value(text);
             if self.with_tool(|s, cx| s.input(text, cx)) != Some(true) {
                 self.warn(format!(
                     "“{text}” anlaşılamadı. Koordinatı Y,X ya da @dY,dX biçiminde yazın."
@@ -453,7 +453,7 @@ impl App {
             "Enter" => self.run("tool.confirm"),
             "Esc" => self.run("tool.cancel"),
             _ => {
-                self.say(Level::Command, key);
+                self.echo_value(key);
                 if self.with_tool(|s, cx| s.input(key, cx)) != Some(true) {
                     self.warn(format!("“{key}” seçeneği şu adımda kullanılamıyor."));
                 }

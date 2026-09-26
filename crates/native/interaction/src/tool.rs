@@ -168,6 +168,17 @@ pub enum LengthenMode {
     Total,
 }
 
+/// Ölçülendirme's style (the web's `DimensionTool.mode`, a `DimensionStyle`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum DimensionMode {
+    #[default]
+    Aligned,
+    Linear,
+    Angular,
+    Radius,
+    Diameter,
+}
+
 /// What the web's drawing tools keep from one run to the next for as long as
 /// the page lives (their static fields; docs/adr/0032, 0047): the host keeps
 /// it for as long as the app lives. A new app starts with the web's values.
@@ -235,6 +246,12 @@ pub struct Memory {
     /// Yazı's height in paper millimetres and angle in degrees (`TextTool.heightMm`, `.angle`).
     pub text_height_mm: f64,
     pub text_angle: f64,
+    /// Ölçülendirme's style, its linear direction lock in degrees (0 ΔY, 90 ΔX;
+    /// none: from where the line is placed) and whether an angle is measured
+    /// from its vertex (`DimensionTool.mode`, `.lock`, `.byVertex`).
+    pub dimension_mode: DimensionMode,
+    pub dimension_lock: Option<f64>,
+    pub dimension_by_vertex: bool,
 }
 
 impl Default for Memory {
@@ -277,6 +294,9 @@ impl Default for Memory {
             divide_by_step: false,
             text_height_mm: 2.5,
             text_angle: 0.0,
+            dimension_mode: DimensionMode::Aligned,
+            dimension_lock: None,
+            dimension_by_vertex: false,
         }
     }
 }

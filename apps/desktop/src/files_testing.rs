@@ -99,7 +99,7 @@ pub fn app_with_drawing() -> App {
 pub fn last_said(app: &App) -> String {
     use kentos_ui::widget::command_line::Entry;
     match app.history.last() {
-        Some(Entry::Input(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t)) => t.clone(),
+        Some(Entry::Input(t) | Entry::Value(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t)) => t.clone(),
         _ => String::new(),
     }
 }
