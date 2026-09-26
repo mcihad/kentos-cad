@@ -193,3 +193,15 @@ pub fn guide(theme: &Theme) -> rule::Style {
 pub fn thin_scrollbar() -> scrollable::Direction {
     scrollable::Direction::Vertical(scrollable::Scrollbar::new().width(6).scroller_width(6))
 }
+
+/// İnce dikey kaydırma çubuğu, içeriğin yanında: içerik yalnız kayarken
+/// çubuğa yer açar, çubuk hiçbir zaman yazının ya da denetimin üstüne
+/// binmez. Pencere gövdeleri ve sağ kenarına dek dolu listeler için.
+pub fn body_scrollbar() -> scrollable::Direction {
+    scrollable::Direction::Vertical(
+        scrollable::Scrollbar::new()
+            .width(6)
+            .scroller_width(6)
+            .spacing(8),
+    )
+}

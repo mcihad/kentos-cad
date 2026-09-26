@@ -162,6 +162,11 @@ impl Snapshot {
         self
     }
 
+    /// Çizici: bir bileşeni pencere kurmadan yerleştirmek için (ör. ölçüm testleri).
+    pub fn renderer(&self) -> &Renderer {
+        &self.renderer
+    }
+
     /// Kullanılan çizicinin adı ("wgpu" ya da "tiny-skia").
     pub fn renderer_name(&self) -> String {
         self.renderer.name()

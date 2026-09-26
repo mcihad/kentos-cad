@@ -228,7 +228,9 @@ impl App {
                 .size(typography::body()),
             label::caption(s.section.lead()),
             // The page scrolls; Vazgeç and Kaydet stay in view whatever the window's height.
-            scrollable(page).height(Fill),
+            scrollable(page)
+                .direction(style::field::body_scrollbar())
+                .height(Fill),
         ]
         .spacing(10)
         .width(Fill);

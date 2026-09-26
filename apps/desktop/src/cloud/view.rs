@@ -226,13 +226,19 @@ impl App {
                 Column::new().spacing(2).padding(iced::padding::right(14)),
                 |col, k| col.push(self.kept_row(k, c)),
             );
-            scrollable(rows).height(Fill).into()
+            scrollable(rows)
+                .direction(style::field::body_scrollbar())
+                .height(Fill)
+                .into()
         } else if !device && !c.projects.is_empty() {
             let rows = c.projects.iter().fold(
                 Column::new().spacing(2).padding(iced::padding::right(14)),
                 |col, p| col.push(self.catalog_row(p, c)),
             );
-            scrollable(rows).height(Fill).into()
+            scrollable(rows)
+                .direction(style::field::body_scrollbar())
+                .height(Fill)
+                .into()
         } else {
             let empty = if c.loading() {
                 "Projeler yükleniyor…"
@@ -579,7 +585,7 @@ impl App {
                     "{} değişikliğiniz kaydedilmedi: aynı nesneleri başka biri daha önce kaydetti. Hiçbir şeyin üzerine yazılmadı; seçene kadar değişiklikleriniz yalnız bu cihazda.",
                     list.len()
                 )))
-                .push(container(scrollable(rows)).max_height(300))
+                .push(container(scrollable(rows).direction(style::field::body_scrollbar())).max_height(300))
                 .push(label::caption(
                     "“Sunucudakini al” sizin değişikliklerinizi bırakır. “Benimkini koru” başkasının değişikliğinin üzerine sizinkini yazar.",
                 ))

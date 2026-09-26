@@ -5,20 +5,22 @@
 //! ile gösterilir.
 
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{Column, button, column, container, row, space};
-use iced::{Background, Center, Element, Fill, Theme, border};
+use iced::widget::{Column, button, column, container, row, scrollable, space};
+use iced::{Background, Center, Element, Fill, Shrink, Theme, border};
 
 use crate::icon::icon;
 use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
+use crate::widget::fit::Fit;
 use crate::widget::{Severity, horizontal_divider};
 
 /// Başlık, gövde ve sağa hizalı eylem düğmelerinden oluşan kutu.
 pub struct Dialog<'a, Message> {
     title: Fragment<'a>,
     hint: Option<Fragment<'a>>,
-    body: Vec<Element<'a, Message>>,
+    /// Gövdenin parçaları; `true`: kayan parça ([`Dialog::scroll`]).
+    body: Vec<(Element<'a, Message>, bool)>,
     actions: Vec<Element<'a, Message>>,
     width: f32,
     max_height: Option<f32>,
@@ -43,7 +45,35 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
     }
 
     pub fn push(mut self, content: impl Into<Element<'a, Message>>) -> Self {
-        self.body.push(content.into());
+        self.body.push((content.into(), false));
+        self
+    }
+
+    /// Kayan gövde: kutu içeriği kadar uzar; pencereye ya da
+    /// [`max_height`](Dialog::max_height)'e sığmayınca bu parça kayar,
+    /// başlık ve eylem düğmeleri görünür kalır. Çubuk gövdenin yanında durur.
+    pub fn scroll(mut self, content: impl Into<Element<'a, Message>>) -> Self {
+        self.body.push((
+            scrollable(content)
+                .direction(style::field::body_scrollbar())
+                .height(Shrink)
+                .into(),
+            true,
+        ));
+        self
+    }
+
+    /// Kutuyu en büyük boyunda dolduran kayan gövde: sekmeli ya da içeriği
+    /// değişen kutular (ayarlar) sekme değişince boy değiştirmesin diye.
+    /// Uygulama penceresi alçaksa kutu pencerede durur, gövde kayar.
+    pub fn scroll_fill(mut self, content: impl Into<Element<'a, Message>>) -> Self {
+        self.body.push((
+            scrollable(content)
+                .direction(style::field::body_scrollbar())
+                .height(Fill)
+                .into(),
+            true,
+        ));
         self
     }
 
@@ -60,8 +90,9 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
     }
 
     /// Kutunun en çok yüksekliği (12 piksellik gövde metnine göre). Uzun
-    /// gövdeyi `height(Fill)` bir kaydırma alanına koyun: kutu bu yükseklikte
-    /// ya da pencere daha alçaksa pencerede durur, gövde kayar, eylem
+    /// gövdeyi [`scroll`](Dialog::scroll) ya da
+    /// [`scroll_fill`](Dialog::scroll_fill) ile verin: kutu en çok bu
+    /// yükseklikte, pencere daha alçaksa pencerede durur, gövde kayar, eylem
     /// düğmeleri hep görünür kalır.
     pub fn max_height(mut self, height: f32) -> Self {
         self.max_height = Some(height);
@@ -77,10 +108,18 @@ impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
             header = header.push(label::mono_caption(hint));
         }
 
-        let mut content = column![header, horizontal_divider()].spacing(12);
+        // Kayan parça, başlık ve düğmeler yerleştikten sonra kalan yeri alır.
+        let mut content = Fit::new()
+            .spacing(12.0)
+            .push(header)
+            .push(horizontal_divider());
 
-        for part in dialog.body {
-            content = content.push(part);
+        for (part, scrolls) in dialog.body {
+            content = if scrolls {
+                content.push_elastic(part)
+            } else {
+                content.push(part)
+            };
         }
 
         if !dialog.actions.is_empty() {

@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::path::PathBuf;
 
-use iced::widget::{button, container, row, scrollable, space, text, text_input};
+use iced::widget::{button, container, row, space, text, text_input};
 use iced::{Center, Element, Fill, Task};
 use serde_json::Value;
 
@@ -527,7 +527,7 @@ impl App {
                     "Çizim yardımcıları, kenet türleri ve görünüm sizin tercihinizdir; grafik ayarları bu cihaza özgüdür; Orto, Kutupsal izleme ve Kenetleme bu oturum içindir.",
                 ))
                 // The body scrolls; Kaydet and Vazgeç stay in view whatever the window's height.
-                .push(scrollable(body).height(Fill))
+                .scroll_fill(body)
                 .action(cancel)
                 .action(save)
                 .width(1080.0)

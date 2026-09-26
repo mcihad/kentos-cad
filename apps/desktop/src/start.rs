@@ -242,7 +242,9 @@ impl App {
         }
         let side = column![
             text("Son dosyalar").font(typography::ui_strong()),
-            scrollable(list).height(Length::Fixed(typography::scaled(330.0))),
+            scrollable(list)
+                .direction(style::field::body_scrollbar())
+                .height(Length::Fixed(typography::scaled(330.0))),
         ]
         .spacing(8);
 

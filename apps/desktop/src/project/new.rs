@@ -8,8 +8,8 @@
 
 use std::fmt;
 
-use iced::widget::{Column, scrollable, text_input};
-use iced::{Element, Fill, Task};
+use iced::widget::{Column, text_input};
+use iced::{Element, Task};
 use kentos_contracts::{DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, Workspace};
 use kentos_interaction::Level;
 use kentos_ui::widget::{Banner, Dialog, overlay};
@@ -279,7 +279,7 @@ impl App {
         overlay::blocking(
             Dialog::new("Yeni proje")
                 // The body scrolls; Vazgeç and Oluştur stay in view whatever the window's height.
-                .push(scrollable(body).height(Fill))
+                .scroll_fill(body)
                 .action(words::secondary(
                     "Vazgeç",
                     Some(message(ProjectEvent::Close)),

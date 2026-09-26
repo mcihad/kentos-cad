@@ -23,6 +23,7 @@ pub mod dialog;
 pub mod dock;
 pub mod docking;
 mod dropdown;
+pub mod fit;
 pub mod floating;
 pub mod form;
 pub mod inspector;
