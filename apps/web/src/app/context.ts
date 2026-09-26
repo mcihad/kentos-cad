@@ -6,6 +6,7 @@ import type { ToolManager } from '../tools/ToolManager';
 import type { ViewportController } from '../viewport/ViewportController';
 import type { Clipboard } from './clipboard';
 import type { CloudSession } from './cloud/session';
+import type { RecoveryCopies } from './recovery';
 import type { DocumentFiles } from './fileIO';
 import type { ServerStatus } from './server';
 import type { Formatter } from './format';
@@ -45,6 +46,8 @@ export interface AppContext {
   readonly styles: StyleService;
   /** Local drawing files (.kcad): save, save as, open (app/fileIO.ts). */
   readonly files: DocumentFiles;
+  /** Local recovery copies of unsaved work, offered after a crash (app/recovery.ts, docs/adr/0030). */
+  readonly recovery: RecoveryCopies;
   /** Whether the KentOS API answers (`/v1/health`); the drawing works without it (app/server.ts). */
   readonly server: ServerStatus;
   /** Signing in, the open cloud project, its autosave and live events (app/cloud/session.ts). */
