@@ -353,17 +353,20 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
   - dolu yeşil “Buluta kaydedildi”: yalnızca sunucu yanıtladıktan sonra ve bekleyen bir şey yokken;
   - boş lamba, ikincil metin “Kaydedilecek: n” / “Kaydediliyor…”;
   - amber “Çevrimdışı: n bekliyor”;
-  - kırmızı, dolu lamba “Çakışma: n” / “Kayıt hatası” / “Proje silindi” (başkası sildi; tıklamak ve `Ctrl+S` yerel dosyaya kaydettirir);
-  - üçüncül metin “Salt okunur”.
+  - kırmızı, dolu lamba “Çakışma: n” / “Kayıt hatası” / “Proje silindi” (başkası sildi) / “Erişim kaldırıldı” (paylaşım kaldırıldı); son ikisinde tıklamak ve `Ctrl+S` yerel dosyaya kaydettirir;
+  - üçüncül metin “Salt okunur” (yalnız görüntüleme yetkisi; rol açıkken düşürülmüşse değişiklikler cihazda bekler, yetki dönünce gönderilir).
 
-  Tıklamak işe yarayan sonraki adımı yapar: çakışmada çözüm penceresini açar, değilse hemen gönderir (`Ctrl+S` ile aynı). İpucu kurum › proje, son kayıt zamanı ve canlı bağlantının durumunu yazar. Sunucu hücresine tıklamak hesap menüsünü açar (giriş/çıkış, bulut projesi aç, buluta yükle, bağlantıyı denetle).
-- **Bulut pencereleri** (giriş, projeler, çakışma):
+  Tıklamak işe yarayan sonraki adımı yapar: çakışmada çözüm penceresini açar, değilse hemen gönderir (`Ctrl+S` ile aynı). İpucu kurum › proje, son kayıt zamanı ve canlı bağlantının durumunu yazar. Sunucu hücresine tıklamak hesap menüsünü açar (giriş/çıkış, bulut projesi aç, buluta yükle, paylaş, bağlantıyı denetle).
+- **Bulut pencereleri** (giriş, projeler, paylaşım, çakışma):
   - `dialog--cloud` sınıfını kullanır. Alan etiketleri üstte ve ikincil renktedir.
   - Hata satırı kırmızı ve `role="alert"`, ilerleme çubuğu amber ve 4 px'tir.
   - Proje listesinde satır seçimi ve çift tıklamayla açma vardır; seçili satır amber vurguludur.
   - Çakışma penceresinde birincil (amber) düğme güvenli seçenektir: “Sunucudakini al”. “Benimkini kaydet” ikincildir.
-  - Proje listesinin alt çubuğunda solda hayalet düğmeler: “Yeniden adlandır…” ve “Sil…”. Seçili proje yoksa ya da yetki yoksa devre dışıdır ve nedenini ipucunda söyler (ör. “proje silme yetkiniz yok (project.delete)”). İkisi de listenin üstünde açılır ve bitince listeyi yeniler.
+  - “Bulut projesi aç” penceresinin üstünde iki sekme (uygulamanın sekme biçimi): “Çalışma alanı” (seçilen kurumun ya da kişisel alanın projeleri) ve “Benimle paylaşılanlar” (başkalarının paylaştıkları; adın altında üçüncül renkte “Sahibi: … · alan”, sağda ikincil renkte rolünüz ve tarih).
+  - Proje listesinin alt çubuğunda solda hayalet düğmeler: “Paylaş…”, “Yeniden adlandır…” ve “Sil…”. Seçili proje yoksa ya da yetki yoksa devre dışıdır ve nedenini ipucunda söyler (ör. “proje silme yetkiniz yok (project.delete)”). Üçü de listenin üstünde açılır ve bitince listeyi yeniler.
   - Silme penceresi ne olacağını madde madde söyler (listeden kalkar, açık tutanların kaydı durur, nesneler saklanır ve geri getirilebilir). Amber birincil düğmesi yoktur: odak “Vazgeç”tedir, silen düğme “Projeyi sil” kırmızı yazılı, çizgili düğmedir (`btn--danger`).
+  - **Paylaşım penceresi** (`dialog--share`, 680 px): başlığın altında proje ve alanı; panel başlığı tonunda, mavi sunucu simgeli kutuda saklama biçimi (“Saklama: Yönetilen PostGIS veritabanı.”); “Kişi ekle” satırı (ad ya da e-posta alanı ve altında açılır menü gibi gölgeli öneri listesi, Rol, isteğe bağlı Bitiş, tek amber “Paylaş”), altında seçili rolün ne yaptığı ikincil renkte. “Erişimi olanlar” listesi: nötr yuvarlak baş harf rozeti, ad (500; kendinizse üçüncül “(siz)”), altında üçüncül renkte e-posta ve erişimin kaynağı (Proje sahibi, Paylaşım ve bitiş tarihi, Kurum politikası); sağda rol (değiştirilebilen paylaşımda açılır liste) ve “Kaldır” (onay penceresinde sorar) ya da değişmeyen erişimde kilit simgesi (ipucu nedenini söyler). Erişemeyen kişide rol yerine ⚠ ve “Erişemiyor”, kaynağın yerinde nedeni. Altta kurum politikası notu. Denetimler yalnız liste sunucudan geldikten sonra açılır.
+  - Açık projeye erişim kaldırılınca onay penceresi biçiminde “Projeye erişiminiz kaldırıldı” bildirimi çıkar: ne olduğunu, çizimin ve gönderilmemiş değişikliklerin cihazda kaldığını, yeniden erişim için kime başvurulacağını söyler; birincil yanıt “Yerel kopya kaydet…”, öbürü “Tamam”.
 
 ### 7.8 İpucu
 

@@ -346,6 +346,9 @@ pub struct ProjectSummary {
     pub tenant_id: String,
     pub tenant_name: String,
     pub tenant_kind: TenantKind,
+    /// The owner's name ("Benimle paylaşılanlar" says whose it is); empty
+    /// when the caller cannot see the owner (one who left the organisation).
+    pub owner_name: String,
     pub access: ProjectAccessView,
 }
 
@@ -609,16 +612,125 @@ pub struct ProjectGrant {
     pub updated_at: String,
 }
 
-/// `GET …/projects/{project}/access`: the owner and every grant (needs `project.share`).
+/// Where a cloud project keeps its content (TODOS.md §12.1, CLOUD-21).
+/// File projects (binary `.kcad` revisions) and references to an outside
+/// PostGIS come as their own kinds.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ProjectStorage {
+    /// Object by object in the server's PostGIS database (managed): every
+    /// save is one transaction and the others see it at once. Every cloud
+    /// project today.
+    Database,
+}
+
+/// Why a person listed with a project cannot use it now.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AccessBlock {
+    /// Their grant has ended (`expiresAt` passed).
+    Expired,
+    /// Not (or no longer) a member of the organisation.
+    NotMember,
+    /// Their account or their membership of the organisation is not active.
+    Inactive,
+    /// No seat is allocated to them in the organisation.
+    NoSeat,
+}
+
+/// One person with a role or a grant in a project, as the share dialog shows
+/// them: the role they work with now and where it comes from.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProjectAccessHolder {
+    pub user_id: String,
+    pub display_name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub email: Option<String>,
+    /// The role they work with now: the highest of ownership, the
+    /// organisation's policy and an unexpired grant, the same the server
+    /// works out when they open it. Absent when none lets them in now.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub role: Option<ProjectRole>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub via: Option<AccessSource>,
+    /// Why they cannot use it now (when `role` is absent).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub blocked: Option<AccessBlock>,
+    /// Their grant, also an ended one: what sharing gives, changes and takes
+    /// away (ownership and the policy are not grants).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub grant: Option<GrantRole>,
+    /// RFC 3339, when the grant ends by itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub expires_at: Option<String>,
+    /// The grant's end has passed: it no longer counts.
+    pub expired: bool,
+}
+
+/// `GET …/projects/{project}/access`: who may use the project and why
+/// (needs `project.share`). `people` holds the owner, the organisation's
+/// owners and admins its policy lets in, and every grant (ended ones
+/// included), the owner first, then by name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ProjectAccessList {
+    pub tenant_kind: TenantKind,
+    pub storage: ProjectStorage,
+    /// The organisation's owners and admins work in its projects not shared
+    /// with them (docs/adr/0015); always false in a personal space.
+    pub admins_access_all_projects: bool,
     pub owner_id: String,
     pub owner_name: String,
-    pub grants: Vec<ProjectGrant>,
+    pub people: Vec<ProjectAccessHolder>,
+}
+
+/// A person the project can be shared with.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ShareCandidate {
+    /// The account id `project.share` takes.
+    pub user_id: String,
+    pub display_name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub email: Option<String>,
+}
+
+/// `GET …/projects/{project}/access/candidates?q=`: people whose name or
+/// e-mail holds every word of `q` (Turkish letters folded), among those the
+/// caller may see and share with (needs `project.share`): an organisation
+/// project's active members, or, for a personal space's project, the active
+/// members of the caller's own organisations. The caller and the owner are
+/// left out; at most 20, by name.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ShareCandidates {
+    pub candidates: Vec<ShareCandidate>,
 }
 
 /// The result of `project.share` and `project.access.revoke`; a retry with the

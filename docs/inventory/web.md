@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 163 | 145 | 0 | 18 |
+| Komutlar | 164 | 146 | 0 | 18 |
 | Araçlar | 58 | 56 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,7 +12,7 @@
 | Ayarlar | 63 | 63 | 0 | 0 |
 | Tarayıcı depoları | 6 | 6 | 0 | 0 |
 | `.kcad` v1 alanları | 174 | 174 | 0 | 0 |
-| Pencereler ve paneller | 48 | 48 | 0 | 0 |
+| Pencereler ve paneller | 50 | 50 | 0 | 0 |
 
 ## Kısmi (0)
 
@@ -51,8 +51,8 @@ Menüde, şeritte ve araç kutusunda yoklar; kimlikleri `src/ui` altındaki hiç
 
 ## Masaüstü
 
-Masaüstü kabuğu (apps/desktop) 19 / 163 komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.
+Masaüstü kabuğu (apps/desktop) 19 / 164 komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.
 
 ## Test başvurusu
 
-99 / 163 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+99 / 164 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

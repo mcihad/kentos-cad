@@ -166,7 +166,7 @@ Yukarıdaki “Bu ADR bir izin şemasıdır” cümlesi artık geçerli değildi
   - “Projelerim”: `GET /v1/me/projects`. Kişinin sahip olduğu ve kendisiyle paylaşılan projeler, bütün alanlardan. Yalnız politika ile erişilen kurum projeleri kurumun listesindedir.
   - `kentosd member add` kişisel alana üye eklemez.
 - **Paylaşım (dilim 4, sunucu tarafı):**
-  - Ürün komutları `project.share` v1 ve `project.access.revoke` v1 (katalogda, `project.share` ister). Erişim listesi: `GET …/projects/{proje}/access`.
+  - Ürün komutları `project.share` v1 ve `project.access.revoke` v1 (katalogda, `project.share` ister). Erişim listesi: `GET …/projects/{proje}/access`; 26 Eylül'den beri kişi kişi bugünkü rol, kaynağı ya da erişememe nedeniyle (ADR 0024). Paylaşılacak kişiyi bulma: `GET …/access/candidates?q=` (ADR 0024).
   - Rol verilirken sahiplik verilmez (girdi tipi `GrantRole`). Kişi kendi erişimini değiştiremez, sahibin erişimi paylaşımla değişmez. Kurum projesi yalnız kurum üyesiyle paylaşılır.
   - Her değişiklik denetim kaydı ve nesnesiz bir `project.access` olayı yazar. Olay kim olduğunu taşımaz.
   - Açık WebSocket'ler her teslimden önce erişimi yeniden sorar: bu olayda, her commit'te ve 5 sn'lik yoklamada. Erişimi kalkana `not_found` gider ve aboneliği kapanır. Kurumdaki üyeliğin komut satırından kapatılması da en geç yoklamada yakalanır.
@@ -177,8 +177,8 @@ Yukarıdaki “Bu ADR bir izin şemasıdır” cümlesi artık geçerli değildi
   - `apps/api/src/http/tests.rs`: 404 gövdelerinin eşitliği, paylaşım ve “Projelerim” HTTP üzerinden.
   - `apps/api/src/http/ws_tests.rs`: paylaşımı kaldırılan kişinin açık aboneliği kesilir, ardından hiçbir olay gelmez.
 - **Kalanlar:**
-  - Web'de paylaşım penceresi, “Projelerim / Benimle paylaşılanlar” ekranı, açık projede erişim değişince uyarı ve salt okunura geçiş (`CLOUD-04`, `CLOUD-16`, `CLOUD-21`).
-  - Gruplar, kurum dışı misafir, davet ve kişiyi e-posta ya da giriş adıyla bulma (`CLOUD-16`, `CLOUD-17`). Bugün kişi hesap kimliğiyle (`UserView.id`) seçilir.
+  - ~~Web'de paylaşım penceresi, “Benimle paylaşılanlar”, açık projede erişim değişince uyarı ve salt okunura geçiş~~: 26 Eylül'de yapıldı, [ADR 0024](0024-project-sharing-web.md). Web'de “Projelerim” ayrı bir liste değil; kişinin projeleri çalışma alanlarının listesinde.
+  - Gruplar, kurum dışı misafir, e-postayla davet ve ortak kurumu olmayan kişiyi bulma (`CLOUD-16`, `CLOUD-17`; tasarım önerisi ADR 0024'te). Bugün paylaşım penceresi kişiyi projenin kurumunun (kişisel alanda arayanın kurumlarının) etkin üyeleri arasında adıyla ya da e-postasıyla bulur.
   - Sahiplik devri (`project.transfer`, `CLOUD-08`) ve kurumdan ayrılanın projelerini yöneticiye geçirmek.
   - `project.comment`, `project.download`, `project.history` ve `project.jobs.run` adlandırıldı ve rollere dağıtıldı; bunları isteyen uç henüz yok.
   - Kurum politikasını arayüzden değiştirmek; “bu kişi neden erişebiliyor?” açıklaması (`CLOUD-15`).

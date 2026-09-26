@@ -1,6 +1,7 @@
 import type { AppContext } from '../../app/context';
 import { ApiFailure } from '../../app/cloud/api';
 import { workspaceName } from '../../app/cloud/session';
+import { ROLE_LABEL, sharedWithMe } from '../../app/cloud/sharing';
 import type { MembershipView } from '../../contracts/generated/MembershipView';
 import type { ProjectPermission } from '../../contracts/generated/ProjectPermission';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
@@ -8,16 +9,21 @@ import { crsBySrid } from '../../geo/crs';
 import { h, replaceChildren } from '../dom';
 import { Dialog } from '../widgets/Dialog';
 import { openDeleteDialog, openRenameDialog } from './ProjectActions';
+import { openShareDialog } from './ShareDialog';
 
 /**
- * Cloud projects of a workspace (an organisation, or the personal space):
- * open one, or upload the current drawing as a new one. The list holds the
- * projects this account may see there: its own, the ones shared with it and,
- * for an organisation's admins, every one (docs/adr/0015). Opening shows its
- * progress and can be cancelled; the drawing on screen is replaced only when
- * every object has arrived. The selected project can also be renamed
- * (project.edit) or deleted (project.delete), as that project's own access
- * allows; a button the account may not use says why.
+ * Cloud projects: open one, or upload the current drawing as a new one.
+ * Opening has two lists (docs/adr/0015, TODOS.md CLOUD-04): a workspace's
+ * projects (an organisation, or the personal space), which holds the
+ * account's own, the ones shared with it there and, for an organisation's
+ * admins, every one; and “Benimle paylaşılanlar”, the projects others shared
+ * with the account from any workspace, with their owner and the account's
+ * role. Both come from the server's lists, already filtered by access.
+ * Opening shows its progress and can be cancelled; the drawing on screen is
+ * replaced only when every object has arrived. The selected project can
+ * also be shared (project.share), renamed (project.edit) or deleted
+ * (project.delete), as that project's own access allows; a button the
+ * account may not use says why.
  */
 export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pick?: { tenantId: string; projectId: string }): void {
   const cloud = ctx.cloud;
@@ -27,15 +33,22 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
     return;
   }
   let tenant: MembershipView = tenants.find((t) => t.tenantId === (pick?.tenantId ?? cloud.project.value?.tenantId)) ?? tenants[0];
+  // A project picked elsewhere outside the account's workspaces was shared with it from someone's personal space.
+  let view: 'workspace' | 'shared' = pick && !tenants.some((t) => t.tenantId === pick.tenantId) ? 'shared' : 'workspace';
   let picked: ProjectSummary | null = null;
   let abort: AbortController | null = null;
+  let loads = 0;
   const label = (t: MembershipView) => workspaceName(t.tenantKind, t.tenantName, true);
+  const placeOf = (p: ProjectSummary) => workspaceName(p.tenantKind, p.tenantName, !!cloud.membership(p.tenantId));
+  const when = (iso: string) => new Date(iso).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' });
 
   const tenantSelect = h(
     'select',
     { class: 'field', 'aria-label': 'Çalışma alanı', disabled: tenants.length < 2 },
     tenants.map((t) => h('option', { value: t.tenantId, selected: t.tenantId === tenant.tenantId }, label(t))),
   );
+  const tenantField = h('label', { class: 'cloud-field' }, h('span', null, 'Çalışma alanı'), tenantSelect);
+  const sharedHint = h('p', { class: 'cloud-hint', hidden: true }, 'Başkalarının sizinle paylaştığı projeler; sahibi ve rolünüz yanında yazar.');
   const list = h('div', { class: 'cloud-list', role: 'listbox', 'aria-label': 'Projeler' });
   const nameField = h('input', { class: 'field', value: ctx.doc.name.value, 'aria-label': 'Proje adı', spellcheck: 'false' });
   const status = h('p', { class: 'cloud-status', role: 'status' });
@@ -43,14 +56,21 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
   const progress = h('div', { class: 'cloud-progress', hidden: true }, bar);
   const primary = h('button', { class: 'btn btn--primary', type: 'button' }, mode === 'open' ? 'Aç' : 'Buluta yükle');
   const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
+  const share = h('button', { class: 'btn btn--ghost', type: 'button' }, 'Paylaş…');
   const rename = h('button', { class: 'btn btn--ghost', type: 'button' }, 'Yeniden adlandır…');
   const remove = h('button', { class: 'btn btn--ghost', type: 'button' }, 'Sil…');
+  const tab = (id: typeof view, text: string) => {
+    const b = h('button', { class: 'tab', type: 'button', role: 'tab', 'aria-selected': String(view === id), dataset: { view: id } }, text);
+    b.addEventListener('click', () => show(id));
+    return b;
+  };
+  const tabs = h('div', { class: 'cloud-tabs', role: 'tablist', 'aria-label': 'Proje listeleri' }, tab('workspace', 'Çalışma alanı'), tab('shared', 'Benimle paylaşılanlar'));
 
   const body =
     mode === 'open'
-      ? [h('label', { class: 'cloud-field' }, h('span', null, 'Çalışma alanı'), tenantSelect), list, progress, status]
+      ? [tabs, tenantField, sharedHint, list, progress, status]
       : [
-          h('label', { class: 'cloud-field' }, h('span', null, 'Çalışma alanı'), tenantSelect),
+          tenantField,
           h('label', { class: 'cloud-field' }, h('span', null, 'Proje adı'), nameField),
           h('p', { class: 'cloud-hint' }, `${ctx.doc.size} nesne, katman ağacı, proje ayarları ve proje stilleri yüklenir. Sonra her değişiklik kendiliğinden kaydedilir.`),
           progress,
@@ -58,10 +78,10 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
         ];
   const dialog = new Dialog({
     title: mode === 'open' ? 'Bulut projesi aç' : 'Buluta yükle',
-    width: 520,
+    width: 560,
     className: 'dialog--cloud',
     content: body,
-    footer: mode === 'open' ? [rename, remove, h('div', { class: 'dialog__foot-spacer' }), cancel, primary] : [h('div', { class: 'dialog__foot-spacer' }), cancel, primary],
+    footer: mode === 'open' ? [share, rename, remove, h('div', { class: 'dialog__foot-spacer' }), cancel, primary] : [h('div', { class: 'dialog__foot-spacer' }), cancel, primary],
     onClose: () => abort?.abort(),
   });
 
@@ -82,6 +102,7 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
     b.title = !picked ? 'Önce listeden bir proje seçin.' : !allowed ? `“${picked.name}” projesinde ${what} yetkiniz yok (${permission}); proje sahibine ya da yöneticisine başvurun.` : '';
   };
   const refreshButton = () => {
+    action(share, 'project.share', 'paylaşma');
     action(rename, 'project.edit', 'adlandırma');
     action(remove, 'project.delete', 'silme');
     primary.disabled = mode === 'open' ? !picked : !canCreate() || !nameField.value.trim();
@@ -89,30 +110,56 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
     else if (mode === 'upload') say('');
   };
 
+  /** A row of a workspace's list: name, coordinate system, last change. */
+  const workspaceRow = (p: ProjectSummary) =>
+    h(
+      'button',
+      { class: 'cloud-row', type: 'button', role: 'option', 'aria-selected': 'false', dataset: { id: p.id } },
+      h('span', { class: 'cloud-row__name' }, p.name),
+      h('span', { class: 'cloud-row__meta' }, crsBySrid(p.srid)?.name ?? `EPSG:${p.srid}`),
+      h('span', { class: 'cloud-row__meta' }, when(p.updatedAt)),
+    );
+  /** A row of “Benimle paylaşılanlar”: name, whose it is and where, the account's role, last change. */
+  const sharedRow = (p: ProjectSummary) =>
+    h(
+      'button',
+      { class: 'cloud-row cloud-row--shared', type: 'button', role: 'option', 'aria-selected': 'false', dataset: { id: p.id } },
+      h(
+        'span',
+        { class: 'cloud-row__main' },
+        h('span', { class: 'cloud-row__name' }, p.name),
+        h('span', { class: 'cloud-row__sub' }, `Sahibi: ${p.ownerName || 'görünmüyor'} · ${placeOf(p)}`),
+      ),
+      h('span', { class: 'cloud-row__role', title: 'Bu projedeki rolünüz' }, ROLE_LABEL[p.access.role]),
+      h('span', { class: 'cloud-row__meta' }, when(p.updatedAt)),
+    );
+
   const load = async () => {
+    const asked = ++loads;
     picked = null;
     refreshButton();
+    tenantField.hidden = view === 'shared';
+    sharedHint.hidden = view !== 'shared';
+    list.setAttribute('aria-label', view === 'shared' ? 'Benimle paylaşılan projeler' : 'Projeler');
     replaceChildren(list, h('p', { class: 'cloud-empty' }, 'Projeler yükleniyor…'));
     try {
-      const { projects } = await cloud.projects(tenant.tenantId);
+      const projects = view === 'shared' ? sharedWithMe(await cloud.myProjects()) : (await cloud.projects(tenant.tenantId)).projects;
+      // Another list was asked for meanwhile: this answer is not shown.
+      if (asked !== loads) return;
       if (!projects.length) {
         const empty =
-          tenant.tenantKind === 'personal'
-            ? 'Kişisel alanınızda henüz proje yok. Açık çizimi Dosya → Buluta yükle ile buraya gönderebilirsiniz.'
-            : 'Bu kurumda size açık bir proje yok: sizin açtıklarınız ve sizinle paylaşılanlar burada görünür. Açık çizimi Dosya → Buluta yükle ile gönderebilirsiniz.';
+          view === 'shared'
+            ? 'Sizinle paylaşılmış bir proje yok. Biri bir projeyi sizinle paylaşınca burada, sahibinin adı ve rolünüzle görünür.'
+            : tenant.tenantKind === 'personal'
+              ? 'Kişisel alanınızda henüz proje yok. Açık çizimi Dosya → Buluta yükle ile buraya gönderebilirsiniz.'
+              : 'Bu kurumda size açık bir proje yok: sizin açtıklarınız ve sizinle paylaşılanlar burada görünür. Açık çizimi Dosya → Buluta yükle ile gönderebilirsiniz.';
         replaceChildren(list, h('p', { class: 'cloud-empty' }, empty));
         return;
       }
       replaceChildren(
         list,
         projects.map((p) => {
-          const row = h(
-            'button',
-            { class: 'cloud-row', type: 'button', role: 'option', 'aria-selected': 'false', dataset: { id: p.id } },
-            h('span', { class: 'cloud-row__name' }, p.name),
-            h('span', { class: 'cloud-row__meta' }, crsBySrid(p.srid)?.name ?? `EPSG:${p.srid}`),
-            h('span', { class: 'cloud-row__meta' }, new Date(p.updatedAt).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })),
-          );
+          const row = view === 'shared' ? sharedRow(p) : workspaceRow(p);
           row.addEventListener('click', () => {
             picked = p;
             for (const r of list.querySelectorAll('.cloud-row')) r.setAttribute('aria-selected', String(r === row));
@@ -123,15 +170,25 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
         }),
       );
       // A project picked elsewhere (the application menu) is selected, ready for Aç.
-      const chosen = pick?.tenantId === tenant.tenantId ? list.querySelector<HTMLButtonElement>(`.cloud-row[data-id="${CSS.escape(pick.projectId)}"]`) : null;
+      const inView = view === 'shared' || pick?.tenantId === tenant.tenantId;
+      const chosen = pick && inView ? list.querySelector<HTMLButtonElement>(`.cloud-row[data-id="${CSS.escape(pick.projectId)}"]`) : null;
       if (chosen) {
         chosen.click();
         chosen.scrollIntoView({ block: 'nearest' });
         primary.focus();
       }
     } catch (e) {
+      if (asked !== loads) return;
       replaceChildren(list, h('p', { class: 'cloud-empty' }, e instanceof ApiFailure ? e.message : 'Projeler okunamadı.'));
     }
+  };
+
+  const show = (next: typeof view) => {
+    if (next === view || abort) return;
+    view = next;
+    for (const b of tabs.querySelectorAll('.tab')) b.setAttribute('aria-selected', String((b as HTMLElement).dataset.view === view));
+    say('');
+    void load();
   };
 
   const run = async () => {
@@ -142,7 +199,7 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
     try {
       const ok =
         mode === 'open'
-          ? await cloud.open(tenant.tenantId, picked!.id, showProgress, abort.signal)
+          ? await cloud.open(picked!.tenantId, picked!.id, showProgress, abort.signal)
           : await cloud.upload(tenant.tenantId, nameField.value.trim(), showProgress);
       if (ok) dialog.close();
     } catch (e) {
@@ -156,7 +213,11 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
     }
   };
 
-  const target = () => picked && { tenantId: tenant.tenantId, tenantName: label(tenant), projectId: picked.id, name: picked.name };
+  const target = () => picked && { tenantId: picked.tenantId, tenantName: placeOf(picked), projectId: picked.id, name: picked.name };
+  share.addEventListener('click', () => {
+    const t = target();
+    if (t) openShareDialog(ctx, t, { stack: true, done: () => void load() });
+  });
   rename.addEventListener('click', () => {
     const t = target();
     if (t) openRenameDialog(ctx, t, () => void load());
@@ -164,6 +225,12 @@ export function openProjectsDialog(ctx: AppContext, mode: 'open' | 'upload', pic
   remove.addEventListener('click', () => {
     const t = target();
     if (t) openDeleteDialog(ctx, t, () => void load());
+  });
+  tabs.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    show(view === 'workspace' ? 'shared' : 'workspace');
+    (tabs.querySelector('[aria-selected="true"]') as HTMLElement | null)?.focus();
   });
   tenantSelect.addEventListener('change', () => {
     tenant = tenants.find((t) => t.tenantId === tenantSelect.value) ?? tenant;

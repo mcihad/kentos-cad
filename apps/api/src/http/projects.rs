@@ -1,21 +1,21 @@
-//! Projects, their objects, the product commands, the access list and the
-//! event log over HTTP (docs/adr/0015). A tenant's list and creating a
-//! project start from the caller's membership of the tenant in the path; a
-//! project's own routes from the caller's access to that project
-//! (`access::project`), which answers 404 alike for a project that does not
-//! exist and one the caller has no role in. The use cases check the
-//! permissions. A deleted project answers 410 (`project_deleted`) to opening
-//! and writing, for those who had access.
+//! Projects, their objects, the product commands, the access list, the
+//! people to share with and the event log over HTTP (docs/adr/0015). A
+//! tenant's list and creating a project start from the caller's membership
+//! of the tenant in the path; a project's own routes from the caller's
+//! access to that project (`access::project`), which answers 404 alike for a
+//! project that does not exist and one the caller has no role in. The use
+//! cases check the permissions. A deleted project answers 410
+//! (`project_deleted`) to opening and writing, for those who had access.
 
 use axum::Json;
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use kentos_application::access::{self, ProjectAccess, not_found};
 use kentos_application::tenancy::{self, Access};
-use kentos_application::{AppError, commands, events, lifecycle, listing, projects, sharing};
+use kentos_application::{AppError, commands, events, lifecycle, listing, people, projects};
 use kentos_contracts::{
     CommandEnvelope, EventPage, FeaturePage, ProjectAccessList, ProjectCreate, ProjectInfo,
-    ProjectList,
+    ProjectList, ShareCandidates,
 };
 use serde::Deserialize;
 use uuid::Uuid;
@@ -191,7 +191,7 @@ pub async fn command(
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
-/// `GET …/projects/{project}/access`: the owner and the grants (needs `project.share`).
+/// `GET …/projects/{project}/access`: who may use the project and why (needs `project.share`).
 pub async fn access_list(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -200,7 +200,28 @@ pub async fn access_list(
 ) -> Result<Json<ProjectAccessList>, Failure> {
     let run = async {
         let a = project_access(&state, &caller, &tenant, &project).await?;
-        sharing::list(state.db()?, &a).await
+        people::list(state.db()?, &a).await
+    };
+    run.await.map(Json).map_err(|e| Failure::with(e, &headers))
+}
+
+#[derive(Deserialize)]
+pub struct CandidateQuery {
+    q: Option<String>,
+}
+
+/// `GET …/projects/{project}/access/candidates?q=`: people the caller may
+/// share the project with, by name or e-mail (needs `project.share`).
+pub async fn share_candidates(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+    Path((tenant, project)): Path<(String, String)>,
+    Query(q): Query<CandidateQuery>,
+) -> Result<Json<ShareCandidates>, Failure> {
+    let run = async {
+        let a = project_access(&state, &caller, &tenant, &project).await?;
+        people::candidates(state.db()?, &a, q.q.as_deref().unwrap_or("")).await
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }

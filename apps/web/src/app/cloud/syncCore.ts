@@ -14,11 +14,18 @@ import { Tracker, entityJson, metaParts, type MetaParts, type Planned } from './
  * tracker; `dirty` holds the local objects that may differ from it.
  */
 
-/** `deleted`: the project was deleted on the server; nothing more is sent, edits stay in the device draft. */
-export type SaveState = 'saved' | 'pending' | 'saving' | 'offline_pending' | 'conflict' | 'error' | 'readonly' | 'deleted';
+/**
+ * `deleted`: the project was deleted on the server; `revoked`: this account
+ * lost its access to it. Either way nothing more is sent and edits stay in
+ * the device draft. `readonly`: this account may only view (from the start,
+ * or since its role was lowered: then its edits are kept on the device too).
+ */
+export type SaveState = 'saved' | 'pending' | 'saving' | 'offline_pending' | 'conflict' | 'error' | 'readonly' | 'deleted' | 'revoked';
 
 /** Event kind of a deleted project (`PROJECT_DELETED` in crates/shared/contracts). */
 export const PROJECT_DELETED = 'project.deleted';
+/** Event kind of a changed grant (`PROJECT_ACCESS_CHANGED`): what this account may do is asked again. */
+export const PROJECT_ACCESS = 'project.access';
 
 export interface SyncConflict {
   featureId: string;
@@ -49,6 +56,10 @@ export interface SyncOptions {
   warn: (text: string) => void;
   /** The project was deleted on the server (an event or a refused command); called once. */
   onDeleted?: () => void;
+  /** This account lost its access (a command answered 404, or the session found out); called once, with the server's reason when it gave one. */
+  onRevoked?: (reason: string) => void;
+  /** A grant of the project changed, or a command was refused (403): the session asks what this account may do now. */
+  onAccessChanged?: () => void;
   newId?: () => string;
   debounceMs?: number;
   maxDelayMs?: number;
@@ -72,6 +83,8 @@ export class SyncCore {
   /** Request ids of our own commits (their events are skipped). */
   readonly own = new Set<string>();
   metaDirty = false;
+  /** Whether this account may change the project's metadata now (a manager may lower it while the project is open). */
+  canEditMeta: boolean;
   metaVersion: string;
   metaBase: MetaParts;
   inflight: Inflight | null = null;
@@ -87,6 +100,7 @@ export class SyncCore {
   constructor(o: SyncOptions) {
     this.o = o;
     this.cursor = o.cursor;
+    this.canEditMeta = o.canEditMeta;
     this.metaVersion = o.metaVersion;
     this.tracker = new Tracker(o.newId ?? uuid);
     for (const r of o.records) {
@@ -97,7 +111,7 @@ export class SyncCore {
   }
 
   sendsMeta(): boolean {
-    return this.metaDirty && this.o.canEditMeta;
+    return this.metaDirty && this.canEditMeta;
   }
 
   /** Objects and the metadata waiting to be sent. */

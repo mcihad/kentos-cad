@@ -187,6 +187,8 @@ const ICONS = {
   conflict: '<path d="M4 3.5v5.2a3 3 0 0 0 3 3h6a3 3 0 0 1 3 3v2"/><path d="M16 3.5v5.2a3 3 0 0 1-3 3H7a3 3 0 0 0-3 3v2"/><circle cx="4" cy="3.5" r="1.4" fill="currentColor" stroke="none"/><circle cx="16" cy="3.5" r="1.4" fill="currentColor" stroke="none"/>',
   signIn: '<path d="M11 3.5h4.5v13H11"/><path d="M3 10h9M9 6.8l3.2 3.2L9 13.2"/>',
   signOut: '<path d="M9 3.5H4.5v13H9"/><path d="M8 10h9M14 6.8l3.2 3.2-3.2 3.2"/>',
+  // Sharing a project: two people.
+  share: '<circle cx="7.5" cy="7" r="2.6"/><path d="M2.8 16.3c.4-2.9 2.3-4.5 4.7-4.5s4.3 1.6 4.7 4.5"/><path d="M12.6 4.6a2.5 2.5 0 0 1 0 4.8M14 11.9c1.8.4 3 1.9 3.3 4.4"/>',
   penTool: '<path d="m10 2.8 4.6 6.6-2.2 5.1H7.6L5.4 9.4z"/><path d="M10 2.8v6.1"/><circle cx="10" cy="10.2" r="1.3"/><path d="M7.6 17.2h4.8"/>',
   legend: '<rect x="3" y="3.5" width="4" height="3" rx=".5"/><rect x="3" y="8.5" width="4" height="3" rx=".5" fill="currentColor" fill-opacity=".3"/><path d="M3 15h4" stroke-dasharray="1.4 1.2"/><path d="M9.5 5h7.5M9.5 10h7.5M9.5 15h5"/>',
   symbolAssign: '<path d="m7.5 2.5 1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z"/><path d="M14.5 11v6.5M11.25 14.25h6.5"/>',

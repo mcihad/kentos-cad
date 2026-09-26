@@ -22,6 +22,7 @@ export const SAVE_TEXT: Record<SaveState, (n: number) => string> = {
   error: () => 'Kayıt hatası',
   readonly: () => 'Salt okunur',
   deleted: () => 'Proje silindi',
+  revoked: () => 'Erişim kaldırıldı',
 };
 
 export const LINK_TEXT = { none: '', connecting: 'bağlanıyor', online: 'canlı', reconnecting: 'yeniden bağlanıyor', offline: 'çevrimdışı', auth_required: 'oturum gerekli' } as const;
@@ -62,7 +63,7 @@ export function saveCell(ctx: AppContext, d: DisposableStore): HTMLElement {
   cell.addEventListener('click', () => {
     const state = ctx.cloud.sync.value?.state.value;
     if (state === 'conflict') ctx.commands.execute('cloud.conflicts');
-    // Deleted: Kaydet offers a local file, the one place the drawing can still go.
+    // Deleted, or the access taken away: Kaydet offers a local file, the one place the drawing can still go.
     else if (state !== 'readonly') ctx.commands.execute('file.save');
   });
   d.add(
@@ -77,6 +78,11 @@ export function saveCell(ctx: AppContext, d: DisposableStore): HTMLElement {
           return {
             title: 'Bulut kaydı',
             description: `${p.tenantName} › ${p.name} sunucuda silindi. Değişiklikler buluta gönderilmiyor; bu cihazda saklanıyor. Tıklayın ya da Ctrl+S: çizimi yerel bir dosyaya kaydedin.`,
+          };
+        if (sync.state.value === 'revoked')
+          return {
+            title: 'Bulut kaydı',
+            description: `${p.tenantName} › ${p.name} projesine erişiminiz kaldırıldı. Değişiklikler buluta gönderilmiyor; bu cihazda saklanıyor. Tıklayın ya da Ctrl+S: çizimi yerel bir dosyaya kaydedin. Erişim için proje sahibine başvurun.`,
           };
         const lines = [
           `${p.tenantName} › ${p.name}. Değişiklikler kendiliğinden kaydedilir; Ctrl+S hemen gönderir.`,
@@ -109,6 +115,7 @@ export function accountMenu(ctx: AppContext, anchor: HTMLElement): void {
       { kind: 'separator' },
       commandItem(ctx, 'cloud.open'),
       commandItem(ctx, 'cloud.upload'),
+      needs('cloud.share', 'project.share'),
       needs('cloud.rename', 'project.edit'),
       needs('cloud.delete', 'project.delete'),
       { kind: 'separator' },

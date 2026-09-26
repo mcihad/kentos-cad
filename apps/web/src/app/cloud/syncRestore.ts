@@ -71,7 +71,7 @@ export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restor
     }
   }
   let meta: ExternalMeta | undefined;
-  if (draft.meta && o.canEditMeta) {
+  if (draft.meta && core.canEditMeta) {
     const p: ProjectPatch = draft.meta.patch;
     const read = readIncoming(
       {

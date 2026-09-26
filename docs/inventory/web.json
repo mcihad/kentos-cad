@@ -19,8 +19,8 @@
   },
   "summary": {
     "commands": {
-      "total": 163,
-      "implemented": 145,
+      "total": 164,
+      "implemented": 146,
       "partial": 0,
       "pending": 18
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 48,
-      "implemented": 48,
+      "total": 50,
+      "implemented": 50,
       "partial": 0,
       "pending": 0
     },
@@ -432,6 +432,41 @@
         "desktop": "none"
       },
       "tests": []
+    },
+    {
+      "id": "cloud.share",
+      "title": "Bulut projesini paylaş…",
+      "short": "Paylaş",
+      "category": "Bulut",
+      "icon": "share",
+      "description": "Açık bulut projesine kimin hangi rolle erişebildiğini gösterir; kişi ekler, rolünü değiştirir ya da erişimini kaldırır (project.share yetkisi: proje sahibi ya da yöneticisi). Paylaşım alıcıya veritabanı yetkisi vermez. Başka bir projeyi Bulut projesi aç listesinden paylaşın.",
+      "aliases": [
+        "PAYLAS",
+        "SHARE"
+      ],
+      "kind": "action",
+      "shortcuts": [],
+      "menus": [
+        "Dosya › Bulut"
+      ],
+      "ribbon": [
+        "Dosya › Bulut"
+      ],
+      "quickAccess": false,
+      "toolbox": false,
+      "hiddenIn": [],
+      "uiSources": [
+        "apps/web/src/ui/appmenu/AppMenu.ts",
+        "apps/web/src/ui/statusbar/cloudCells.ts"
+      ],
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      },
+      "tests": [
+        "apps/web/scripts/e2e/cloud.mjs"
+      ]
     },
     {
       "id": "cloud.signIn",
@@ -1530,6 +1565,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
+        "apps/web/src/ui/cloud/AccessLostNotice.ts",
         "apps/web/src/ui/ribbon/Ribbon.ts"
       ],
       "status": "implemented",
@@ -4873,6 +4909,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/cloud.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -4900,6 +4937,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/cloud.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -10469,6 +10507,17 @@
       }
     },
     {
+      "id": "apps/web/src/ui/cloud/AccessLostNotice.ts#openAccessLostNotice",
+      "name": "openAccessLostNotice",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/AccessLostNotice.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "apps/web/src/ui/cloud/ConflictDialog.ts#openConflictDialog",
       "name": "openConflictDialog",
       "role": "window",
@@ -10517,6 +10566,17 @@
       "name": "openProjectsDialog",
       "role": "window",
       "source": "apps/web/src/ui/cloud/ProjectsDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/cloud/ShareDialog.ts#openShareDialog",
+      "name": "openShareDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/ShareDialog.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -10947,6 +11007,7 @@
             "items": [
               "cloud.open",
               "cloud.upload",
+              "cloud.share",
               "cloud.conflicts",
               "cloud.rename",
               "cloud.delete"
@@ -11512,6 +11573,10 @@
               {
                 "command": "cloud.upload",
                 "size": "large"
+              },
+              {
+                "command": "cloud.share",
+                "size": "small"
               },
               {
                 "command": "cloud.conflicts",

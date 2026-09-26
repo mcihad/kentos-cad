@@ -6,9 +6,12 @@ import type { EventPage } from '../../contracts/generated/EventPage';
 import type { FeatureConflict } from '../../contracts/generated/FeatureConflict';
 import type { FeaturePage } from '../../contracts/generated/FeaturePage';
 import type { Me } from '../../contracts/generated/Me';
+import type { ProjectAccessChange } from '../../contracts/generated/ProjectAccessChange';
+import type { ProjectAccessList } from '../../contracts/generated/ProjectAccessList';
 import type { ProjectCreate } from '../../contracts/generated/ProjectCreate';
 import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
 import type { ProjectList } from '../../contracts/generated/ProjectList';
+import type { ShareCandidates } from '../../contracts/generated/ShareCandidates';
 
 /**
  * The cloud API client (Faz B, docs/adr/0006–0007). The session is an
@@ -39,6 +42,14 @@ export class ApiFailure extends Error {
     return this.code === 'project_deleted';
   }
 
+  /**
+   * Not there for this account (404): it never existed, or its access was
+   * taken away. The server answers both alike (docs/adr/0015).
+   */
+  get notFound(): boolean {
+    return this.code === 'not_found';
+  }
+
   /** Worth retrying unchanged: no answer, a timeout, or the server/database briefly away. */
   get transient(): boolean {
     return this.status === 0 || this.status === 408 || this.status === 502 || this.status === 503 || this.status === 504;
@@ -52,6 +63,8 @@ export interface CloudApi {
   login(login: string, password: string): Promise<Me>;
   logout(): Promise<void>;
   projects(tenant: string): Promise<ProjectList>;
+  /** “Projelerim”: the account's own projects and the ones shared with it, in every workspace. */
+  myProjects(): Promise<ProjectList>;
   createProject(tenant: string, input: ProjectCreate, idempotencyKey: string): Promise<ProjectInfo>;
   project(tenant: string, project: string): Promise<ProjectInfo>;
   /** Deletes a project for everyone (soft: kept on the server, the operator can restore it). */
@@ -60,6 +73,12 @@ export interface CloudApi {
   featuresById(tenant: string, project: string, ids: readonly string[]): Promise<FeaturePage>;
   command(envelope: CommandEnvelope): Promise<CommitResult>;
   events(tenant: string, project: string, after: string): Promise<EventPage>;
+  /** Who may use a project and why (needs `project.share`). */
+  access(tenant: string, project: string): Promise<ProjectAccessList>;
+  /** People the project can be shared with whose name or e-mail holds every word of `query` (needs `project.share`). */
+  candidates(tenant: string, project: string, query: string, signal?: AbortSignal): Promise<ShareCandidates>;
+  /** `project.share` or `project.access.revoke`: the same command route, their own answer. */
+  accessCommand(envelope: CommandEnvelope): Promise<ProjectAccessChange>;
 }
 
 const TIMEOUT_MS = 30_000;
@@ -123,6 +142,9 @@ export class HttpCloudApi implements CloudApi {
   projects(tenant: string) {
     return this.call<ProjectList>('GET', this.base(tenant));
   }
+  myProjects() {
+    return this.call<ProjectList>('GET', '/v1/me/projects');
+  }
   createProject(tenant: string, input: ProjectCreate, idempotencyKey: string) {
     return this.call<ProjectInfo>('POST', this.base(tenant), input, { 'idempotency-key': idempotencyKey });
   }
@@ -145,5 +167,14 @@ export class HttpCloudApi implements CloudApi {
   }
   events(tenant: string, project: string, after: string) {
     return this.call<EventPage>('GET', `${this.base(tenant, project)}/events?after=${encodeURIComponent(after)}`);
+  }
+  access(tenant: string, project: string) {
+    return this.call<ProjectAccessList>('GET', `${this.base(tenant, project)}/access`);
+  }
+  candidates(tenant: string, project: string, query: string, signal?: AbortSignal) {
+    return this.call<ShareCandidates>('GET', `${this.base(tenant, project)}/access/candidates?${new URLSearchParams({ q: query })}`, undefined, {}, signal);
+  }
+  accessCommand(envelope: CommandEnvelope) {
+    return this.call<ProjectAccessChange>('POST', `${this.base(envelope.tenantId, envelope.projectId)}/commands`, envelope);
   }
 }

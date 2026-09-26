@@ -163,14 +163,243 @@
 }
 .status__save[data-state='conflict'],
 .status__save[data-state='error'],
-.status__save[data-state='deleted'] {
+.status__save[data-state='deleted'],
+.status__save[data-state='revoked'] {
   color: var(--c-danger);
 }
 .status__save[data-state='conflict'] .status__lamp,
 .status__save[data-state='error'] .status__lamp,
-.status__save[data-state='deleted'] .status__lamp {
+.status__save[data-state='deleted'] .status__lamp,
+.status__save[data-state='revoked'] .status__lamp {
   background: currentColor;
 }
 .status__save[data-state='readonly'] {
+  color: var(--c-text-3);
+}
+
+/* The open dialog's two lists: a workspace's projects, and the ones shared with the account. */
+.cloud-tabs {
+  display: flex;
+  height: calc(32px * var(--ui-scale));
+  margin: -4px 0 12px;
+  border-bottom: 1px solid var(--c-line);
+}
+.cloud-tabs .tab {
+  font-weight: 500;
+}
+.cloud-tabs .tab[aria-selected='true'] {
+  font-weight: 600;
+}
+.dialog--cloud .cloud-hint + .cloud-list {
+  margin-top: 8px;
+}
+/* “Benimle paylaşılanlar”: whose and where under the name, the account's role beside it. */
+.cloud-row--shared {
+  align-items: center;
+}
+.cloud-row__main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.cloud-row__sub {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}
+.cloud-row__role {
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+
+/* Share dialog: where the content lives, adding a person, and who has access. */
+.share-head {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.share-head > span {
+  color: var(--c-text-2);
+}
+.share-storage {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--c-panel-head);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--c-text-2);
+}
+.dialog--cloud .dialog__body > .share-storage {
+  margin: 0 0 14px;
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+.share-storage .icon {
+  flex: none;
+  margin-top: 1px;
+  color: var(--c-info);
+}
+.share-storage b {
+  font-weight: 600;
+  color: var(--c-text);
+}
+.share-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(136px * var(--ui-scale)) calc(150px * var(--ui-scale)) auto;
+  align-items: end;
+  gap: 8px;
+}
+.share-find {
+  position: relative;
+}
+.share-suggest {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  max-height: calc(240px * var(--ui-scale));
+  overflow: auto;
+  background: var(--c-popover);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+}
+.share-suggest__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 8px;
+  padding: 6px 10px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.share-suggest__item:hover {
+  background: var(--c-hover);
+}
+.share-suggest__item[aria-selected='true'] {
+  background: var(--c-accent-soft);
+}
+.share-suggest__name,
+.share-suggest__mail {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.share-suggest__mail {
+  grid-column: 1;
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}
+.share-suggest__has {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+.share-suggest__none {
+  padding: 8px 10px;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--c-text-2);
+}
+.dialog--cloud .dialog__body > .share-rolehint,
+.dialog--cloud .dialog__body > .share-policy {
+  margin: 6px 0 0;
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+.share-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 16px 0 6px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.share-count {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--c-text-3);
+}
+.share-list {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(280px * var(--ui-scale));
+  overflow: auto;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+}
+.share-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) calc(148px * var(--ui-scale)) calc(72px * var(--ui-scale));
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--c-line-soft);
+  font-size: var(--fs-sm);
+}
+.share-row:last-child {
+  border-bottom: 0;
+}
+.share-avatar {
+  display: grid;
+  place-items: center;
+  width: calc(28px * var(--ui-scale));
+  height: calc(28px * var(--ui-scale));
+  border-radius: 50%;
+  background: var(--c-panel-head);
+  border: 1px solid var(--c-line);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  color: var(--c-text-2);
+}
+.share-who {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.share-name,
+.share-sub {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.share-name {
+  font-weight: 500;
+}
+.share-you {
+  font-weight: 400;
+  color: var(--c-text-3);
+}
+.share-sub {
+  font-size: var(--fs-xs);
+  color: var(--c-text-3);
+}
+.share-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--c-text-2);
+}
+.share-role[data-blocked] {
+  color: var(--c-warn);
+}
+.share-remove,
+.share-fixed {
+  justify-self: end;
+}
+.share-fixed {
+  display: inline-flex;
+  padding: 0 8px;
   color: var(--c-text-3);
 }

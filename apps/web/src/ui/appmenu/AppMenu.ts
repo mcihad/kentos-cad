@@ -350,7 +350,7 @@ export function openAppMenu(ctx: AppContext, anchor: HTMLElement, keyboard = fal
         { class: 'appmenu__ctas' },
         action('cloud.open', 'Proje aç', 'cloud', true),
         action('cloud.upload', 'Buluta yükle', 'cloudUpload'),
-        ...(p ? [action('cloud.rename', 'Yeniden adlandır', 'edit'), action('cloud.delete', 'Sil', 'trash')] : []),
+        ...(p ? [action('cloud.share', 'Paylaş', 'share'), action('cloud.rename', 'Yeniden adlandır', 'edit'), action('cloud.delete', 'Sil', 'trash')] : []),
       ),
       h('div', { class: 'appmenu__section' }, 'Son projeler'),
       recent,

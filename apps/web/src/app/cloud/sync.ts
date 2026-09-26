@@ -6,7 +6,7 @@ import type { ExternalMeta } from '../../model/document';
 import type { Entity } from '../../model/entities';
 import { ApiFailure } from './api';
 import type { Draft } from './drafts';
-import { BATCH, PROJECT_DELETED, SyncCore, uuid, type Inflight, type SaveState, type SyncConflict, type SyncOptions } from './syncCore';
+import { BATCH, PROJECT_ACCESS, PROJECT_DELETED, SyncCore, uuid, type Inflight, type SaveState, type SyncConflict, type SyncOptions } from './syncCore';
 import { applyEvents } from './syncRemote';
 import { restoreDraft } from './syncRestore';
 import { changeOf, entityJson, metaParts, metaPatch, type Planned } from './tracker';
@@ -29,10 +29,17 @@ export type { SaveState, SyncConflict, SyncOptions } from './syncCore';
  *   object has unsent local changes, which makes it a conflict too.
  * - A device draft from an earlier session (syncRestore.ts) goes back in
  *   when the project is opened again.
- * - The project deleted on the server (its event, or a 410): nothing more is
- *   sent, and edits keep going to the device draft (a restored project
- *   brings them back when opened).
+ * - The project deleted on the server (its event, or a 410), or this
+ *   account's access taken away (a 404; docs/adr/0015, TODOS.md CLOUD-13):
+ *   nothing more is sent, and edits keep going to the device draft (a
+ *   restored project, or one shared again, brings them back when opened).
+ * - The account's role changed while the project is open (`setAccess`, after
+ *   a `project.access` event or a 403): without the right to write nothing
+ *   is sent, and edits are kept on the device until it comes back.
  */
+
+/** What a change of the account's access did to the autosave (`ProjectSync.setAccess`). */
+export type AccessOutcome = 'same' | 'held' | 'resumed' | 'reopen';
 
 const DRAFT_MS = 300;
 const RESTORE_RETRY_MS = 5000;
@@ -57,11 +64,22 @@ export class ProjectSync {
   private readonly unsubscribe: (() => void)[] = [];
   private noticeShown = false;
   private disposed = false;
-  private deleted = false;
+  /** Why nothing is sent any more: the project was deleted, or this account lost its access. */
+  private ended: 'deleted' | 'revoked' | null = null;
+  /** Whether this account may change objects now. */
+  private writable: boolean;
+  /**
+   * Whether its edits are kept on this device and sent once writing is
+   * possible: from the start for one who may write, and still after the role
+   * is lowered. A viewer's own edits never are (they were told so).
+   */
+  private keeps: boolean;
 
   constructor(o: SyncOptions) {
     this.o = o;
     this.core = new SyncCore(o);
+    this.writable = o.canWrite !== false;
+    this.keeps = this.writable;
     const doc = o.doc;
     this.unsubscribe.push(
       doc.events.on('touched', (e) => {
@@ -81,6 +99,11 @@ export class ProjectSync {
   /** The newest event cursor applied (the socket subscribes after it). */
   get cursor(): string {
     return this.core.cursor;
+  }
+
+  /** Whether this account's edits are kept on this device while they cannot be sent (not a viewer's own). */
+  get keepsEdits(): boolean {
+    return this.keeps;
   }
 
   /**
@@ -112,22 +135,22 @@ export class ProjectSync {
 
   private changed(): void {
     if (this.disposed) return;
-    if (this.o.canWrite === false) {
+    if (!this.keeps) {
       if (!this.noticeShown) {
         this.noticeShown = true;
         this.o.warn('Bu projeyi yalnız görüntüleyebilirsiniz; değişiklikleriniz buluta kaydedilmez.');
       }
-      this.state.set('readonly');
+      if (!this.ended) this.state.set('readonly');
       return;
     }
     this.pending.set(this.core.pendingCount());
-    if (this.deleted) {
-      // Nothing goes out any more; the edit is kept on this device.
+    if (this.ended || !this.writable) {
+      // Nothing goes out now; the edit is kept on this device.
       clearTimeout(this.draftTimer);
       this.draftTimer = setTimeout(() => void this.saveDraft(), DRAFT_MS) as unknown as number;
       return;
     }
-    if (this.core.metaDirty && !this.o.canEditMeta && !this.noticeShown) {
+    if (this.core.metaDirty && !this.core.canEditMeta && !this.noticeShown) {
       this.noticeShown = true;
       this.o.warn('Katman ve proje bilgisi değişiklikleriniz yalnız bu cihazda kalıyor: projede bunları değiştirme yetkiniz yok.');
     }
@@ -171,7 +194,7 @@ export class ProjectSync {
   /** Writes what is still unsent to this device now (before the project is left). A viewer's edits are never kept. */
   async keepDraft(): Promise<void> {
     clearTimeout(this.draftTimer);
-    if (this.o.canWrite === false) return;
+    if (!this.keeps) return;
     await this.saveDraft();
   }
 
@@ -209,7 +232,7 @@ export class ProjectSync {
 
   private async run(): Promise<boolean> {
     const { core } = this;
-    if (this.disposed || this.deleted || this.conflicts.value.length || this.o.canWrite === false) return false;
+    if (this.disposed || this.ended || this.conflicts.value.length || !this.writable) return false;
     const doc = this.o.doc;
     if (doc.busy) {
       this.schedule(200);
@@ -218,7 +241,8 @@ export class ProjectSync {
     clearTimeout(this.timer);
     if (core.inflight && !(await this.send(core.inflight))) return false;
     for (;;) {
-      if (this.disposed) return false;
+      // Left, ended, or the role lowered while the last batch went out: what is left stays on the device.
+      if (this.disposed || this.ended || !this.writable) return false;
       const planned: Planned[] = [];
       for (const id of [...core.dirty]) {
         const p = core.tracker.plan(doc, id);
@@ -227,7 +251,7 @@ export class ProjectSync {
         if (planned.length >= BATCH) break;
       }
       const patch = core.sendsMeta() ? metaPatch(doc, core.metaBase) : null;
-      if (!patch) core.metaDirty = core.metaDirty && !this.o.canEditMeta && metaPatch(doc, core.metaBase) !== null;
+      if (!patch) core.metaDirty = core.metaDirty && !core.canEditMeta && metaPatch(doc, core.metaBase) !== null;
       if (!planned.length && !patch) break;
       const expectedVersions: Record<string, string> = {};
       for (const p of planned) if (p.op !== 'create') expectedVersions[p.featureId] = p.expected;
@@ -288,6 +312,10 @@ export class ProjectSync {
         // Refused, not committed: its changes stay dirty and so in the device draft.
         core.inflight = null;
         this.markDeleted();
+      } else if (failure.notFound) {
+        // The project is gone for this account: its access was taken away. The command stays in the
+        // device draft with its key: shared again and opened, it goes once more and the server answers it once.
+        this.markRevoked();
       } else if (failure.transient) {
         // Same command, same key, a little later (1 s … 30 s).
         this.state.set('offline_pending');
@@ -296,9 +324,13 @@ export class ProjectSync {
       } else {
         // The server refused it for good (a locked layer, a missing right): say why and wait for the next edit.
         core.inflight = null;
-        this.state.set('error');
-        this.error.set(failure.message);
-        this.o.warn(`Bulut kaydı yapılamadı: ${failure.message}`);
+        if (this.writable) {
+          this.state.set('error');
+          this.error.set(failure.message);
+          this.o.warn(`Bulut kaydı yapılamadı: ${failure.message}`);
+        } else this.state.set('readonly');
+        // A missing right may mean the role was lowered meanwhile: the session asks again.
+        if (failure.code === 'forbidden') this.o.onAccessChanged?.();
       }
       await this.saveDraft();
       return false;
@@ -382,26 +414,67 @@ export class ProjectSync {
       }
     }
     this.conflicts.set([]);
-    this.state.set('pending');
+    this.state.set(this.writable ? 'pending' : 'readonly');
     this.pending.set(core.pendingCount());
     await this.saveDraft();
     await this.flush();
   }
 
-  // ── Deletion ───────────────────────────────────────────────────────────
+  // ── Deletion and access ────────────────────────────────────────────────
+
+  /** Stops sending for good: what was not sent, and every edit from now on, stays in the device draft. */
+  private end(why: 'deleted' | 'revoked'): boolean {
+    if (this.ended || this.disposed) return false;
+    this.ended = why;
+    clearTimeout(this.timer);
+    this.state.set(why);
+    this.pending.set(this.core.pendingCount());
+    if (this.keeps) void this.saveDraft();
+    return true;
+  }
+
+  /** The project was deleted on the server. */
+  markDeleted(): void {
+    if (this.end('deleted')) this.o.onDeleted?.();
+  }
 
   /**
-   * The project was deleted on the server: stop sending for good. What was
-   * not sent, and every edit from now on, stays in the device draft.
+   * This account lost its access to the project (a 404, or the session found
+   * out); `reason` is the server's when it said more than “not found” (a
+   * membership that may not be used now).
    */
-  markDeleted(): void {
-    if (this.deleted || this.disposed) return;
-    this.deleted = true;
-    clearTimeout(this.timer);
-    this.state.set('deleted');
+  markRevoked(reason = ''): void {
+    if (this.end('revoked')) this.o.onRevoked?.(reason);
+  }
+
+  /**
+   * What this account may do changed while the project is open (a manager
+   * changed its role). Losing the right to write stops sending: what waits,
+   * and every edit from now on, is kept on this device and goes out once
+   * writing is possible again (`held`, later `resumed`). Gaining it starts
+   * sending, unless edits made while the account could only view are on
+   * screen: those were never kept, so they are not sent now either, and
+   * opening the project again starts clean (`reopen`).
+   */
+  setAccess(canWrite: boolean, canEditMeta: boolean): AccessOutcome {
+    this.core.canEditMeta = canEditMeta;
+    if (this.ended || this.disposed || canWrite === this.writable) return 'same';
+    if (!canWrite) {
+      this.writable = false;
+      clearTimeout(this.timer);
+      this.state.set('readonly');
+      this.pending.set(this.core.pendingCount());
+      if (this.keeps) void this.saveDraft();
+      return 'held';
+    }
+    if (!this.keeps && this.core.dirty.size) return 'reopen';
+    this.writable = true;
+    this.keeps = true;
     this.pending.set(this.core.pendingCount());
-    void this.saveDraft();
-    this.o.onDeleted?.();
+    const waiting = this.pending.value > 0 || !!this.core.inflight;
+    this.state.set(waiting ? 'pending' : 'saved');
+    if (waiting) this.schedule(0);
+    return 'resumed';
   }
 
   // ── Other editors and device drafts ────────────────────────────────────
@@ -414,11 +487,13 @@ export class ProjectSync {
   receive(events: readonly EventRecord[]): Promise<void> {
     this.remoteQueue = this.remoteQueue
       .then(async () => {
-        if (this.disposed || this.deleted) return;
+        if (this.disposed || this.ended) return;
         if (events.some((e) => e.kind === PROJECT_DELETED)) {
           this.core.cursor = events[events.length - 1].seq;
           return this.markDeleted();
         }
+        // Someone changed who may do what here: the session asks what this account may do now.
+        if (events.some((e) => e.kind === PROJECT_ACCESS)) this.o.onAccessChanged?.();
         const found = await applyEvents(this.core, events);
         if (!this.disposed) this.addConflicts(found);
       })

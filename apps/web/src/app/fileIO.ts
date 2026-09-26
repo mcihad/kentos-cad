@@ -392,9 +392,11 @@ export class DocumentFiles {
     }
     if (handle === undefined) return this.download();
     if (!handle) return false;
-    // A deleted cloud project's drawing becomes this file: it leaves the project first (nothing more goes there).
+    // A deleted cloud project's drawing, or one whose access was taken away, becomes this file: it leaves
+    // the project first (nothing more goes there; its unsent edits stay in the device draft).
     const cloud = this.ctx.cloud;
-    if (cloud.project.value && cloud.sync.value?.state.value === 'deleted') cloud.detach();
+    const state = cloud.sync.value?.state.value;
+    if (cloud.project.value && (state === 'deleted' || state === 'revoked')) cloud.detach();
     this.handle = handle;
     // The drawing takes the file's name (before writing, so the file holds it).
     const name = withoutExtension(handle.name);
