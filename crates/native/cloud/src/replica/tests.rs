@@ -321,3 +321,36 @@ fn a_file_project_keeps_its_revision_and_a_save_made_offline() {
     assert_eq!(replica.kept_save().unwrap(), None);
     let _ = fs::remove_dir_all(dir);
 }
+
+#[test]
+fn a_project_the_server_ended_opens_read_only_and_says_why() {
+    let (dir, store) = store();
+    let o = opened(ProjectStorage::Database);
+    let mut replica = open(&store, &o);
+    replica.reset(&o).unwrap();
+    replica.mark_ended(Ended::Revoked).unwrap();
+    let kept = store.list("http://127.0.0.1:8787", "ayse");
+    assert_eq!(kept[0].ended, Some(Ended::Revoked));
+    let back = replica.load().unwrap().unwrap();
+    assert!(!back.can_write());
+    assert_eq!(
+        Ended::of(crate::sync::SaveState::Archived),
+        Some(Ended::Archived)
+    );
+    assert_eq!(Ended::of(crate::sync::SaveState::Offline), None);
+    // Opened from the server again (shared again, say): the mark goes.
+    replica.list_as(&o.info).unwrap();
+    assert_eq!(store.list("http://127.0.0.1:8787", "ayse")[0].ended, None);
+    assert!(replica.load().unwrap().unwrap().can_write());
+    // Removing the copy is refused while a program holds it, and frees the disk after.
+    assert!(matches!(
+        store.remove("http://127.0.0.1:8787", "ayse", o.tenant, o.project),
+        Err(ReplicaError::InUse)
+    ));
+    drop(replica);
+    store
+        .remove("http://127.0.0.1:8787", "ayse", o.tenant, o.project)
+        .unwrap();
+    assert!(store.list("http://127.0.0.1:8787", "ayse").is_empty());
+    let _ = fs::remove_dir_all(dir);
+}
