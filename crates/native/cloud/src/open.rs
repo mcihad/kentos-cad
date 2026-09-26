@@ -31,7 +31,7 @@ use crate::runtime::run;
 pub const PAGE: u32 = 2000;
 
 /// A committed revision of a file project.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Revision {
     pub number: u64,
     pub sha256: String,

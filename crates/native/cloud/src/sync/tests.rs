@@ -871,3 +871,166 @@ fn a_viewers_edits_never_go_to_a_draft() {
     viewer.document.add(point(486600.0)).unwrap();
     assert_eq!(sync.draft(&viewer.document, "dilek"), None);
 }
+
+// ── What the server has, for the local copy (base.rs) ─────────────────────
+
+#[test]
+fn every_change_of_the_servers_side_is_a_base_step() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    assert_eq!(sync.take_base_step(), None);
+    // A command answered: the created object at its version, the removed one gone.
+    let second = o.document.uid(Slot(2)).unwrap();
+    o.document.remove(&[Slot(2)]);
+    let added = o.document.add(point(486600.0)).unwrap();
+    let new_id = o.document.uid(added).unwrap();
+    o.document.rename_layer("bina", "Yapılar");
+    let env = sync.next(&o.document).unwrap();
+    sync.answered(&o.document, &committed(&env, 2));
+    let step = sync.take_base_step().unwrap();
+    assert_eq!(
+        step.put
+            .iter()
+            .map(|p| (p.id.clone(), p.version.clone()))
+            .collect::<Vec<_>>(),
+        vec![(new_id.to_string(), "2".to_string())]
+    );
+    assert_eq!(step.remove, vec![second.to_string()]);
+    let meta = step.meta.unwrap();
+    assert_eq!(meta.version, "5");
+    assert!(
+        meta.layers
+            .iter()
+            .any(|l| l.children.iter().any(|c| c.name == "Yapılar"))
+            || meta.layers.iter().any(|l| l.name == "Yapılar")
+    );
+    assert_eq!(step.cursor, None);
+    // Taken: nothing is left to take.
+    assert_eq!(sync.take_base_step(), None);
+    // Another editor's change and the cursor after it.
+    let first = o.document.uid(Slot(1)).unwrap();
+    let incoming = sync.incoming(&page(vec![event(
+        12,
+        None,
+        &[(first, FeatureOp::Update)],
+        false,
+    )]));
+    sync.take_remote(
+        &mut o.document,
+        incoming,
+        Remote {
+            records: vec![record(first, "7", point(486900.0))],
+            info: None,
+        },
+    )
+    .unwrap();
+    let step = sync.take_base_step().unwrap();
+    assert_eq!(
+        (
+            step.cursor.as_deref(),
+            step.put.len(),
+            step.put[0].version.as_str()
+        ),
+        (Some("12"), 1, "7")
+    );
+}
+
+#[test]
+fn a_version_this_device_knows_is_not_taken_again_nor_a_conflict() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let first = o.document.uid(Slot(1)).unwrap();
+    // This device's own commit, answered before the program ended: its version is known.
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    let env = sync.next(&o.document).unwrap();
+    sync.answered(&o.document, &committed(&env, 5));
+    // Edited again, unsent.
+    assert!(o.document.update(Slot(1), point(486750.0)));
+    sync.observe(&o.document);
+    // After a restart this sync no longer knows the command's request id: its event comes back as anyone's.
+    let incoming = sync.incoming(&page(vec![event(
+        13,
+        Some("desktop-onceki"),
+        &[(first, FeatureOp::Update)],
+        false,
+    )]));
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![record(first, "5", point(486700.0))],
+                info: None,
+            },
+        )
+        .unwrap();
+    // The server's version is the one known here: no conflict, and the unsent edit stays.
+    assert_eq!((taken.changed, taken.conflicts), (0, 0));
+    assert!(sync.conflicts().is_empty());
+    assert_eq!(x_of(&o.document, first), Some(486750.0));
+    let next = sync.next(&o.document).unwrap();
+    assert_eq!(
+        next.expected_versions
+            .get(&first.to_string())
+            .map(String::as_str),
+        Some("5")
+    );
+}
+
+#[test]
+fn a_removal_known_already_does_nothing() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let second = o.document.uid(Slot(2)).unwrap();
+    o.document.remove(&[Slot(2)]);
+    let env = sync.next(&o.document).unwrap();
+    sync.answered(&o.document, &committed(&env, 5));
+    let incoming = sync.incoming(&page(vec![event(
+        13,
+        None,
+        &[(second, FeatureOp::Delete)],
+        false,
+    )]));
+    let taken = sync
+        .take_remote(&mut o.document, incoming, Remote::default())
+        .unwrap();
+    assert_eq!((taken.changed, taken.conflicts), (0, 0));
+    assert_eq!(sync.state(), SaveState::Saved);
+}
+
+#[test]
+fn what_the_command_on_its_way_carries_is_in_the_drawing_at_once() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let added = o.document.add(point(486600.0)).unwrap();
+    let id = o.document.uid(added).unwrap();
+    let gone = o.document.uid(Slot(2)).unwrap();
+    o.document.remove(&[Slot(2)]);
+    let sent = sync.next(&o.document).unwrap();
+    let draft = sync.draft(&o.document, "ayse").unwrap();
+
+    // Opened again without a connection: the drawing already shows this device's work.
+    let mut again = reopened(&o);
+    let mut sync = ProjectSync::new(&again).unwrap();
+    sync.restore(&mut again.document, draft.clone()).unwrap();
+    assert_eq!(x_of(&again.document, id), Some(486600.0));
+    assert!(again.document.slot_of(gone).is_none());
+    assert_eq!(sync.pending(), 2);
+    // It goes as it went; once answered nothing else is left.
+    assert_eq!(sync.next(&again.document).unwrap(), sent);
+    sync.answered(&again.document, &committed(&sent, 2));
+    assert_eq!(sync.next(&again.document), None);
+    assert!(sync.all_sent());
+
+    // Refused instead (a rule, for good): the work stays in the drawing and still waits.
+    let mut again = reopened(&o);
+    let mut sync = ProjectSync::new(&again).unwrap();
+    sync.restore(&mut again.document, draft).unwrap();
+    sync.next(&again.document).unwrap();
+    assert_eq!(
+        sync.failed(&ApiFailure::new(403, "forbidden", "Kilitli katman.")),
+        After::Stop
+    );
+    assert_eq!(x_of(&again.document, id), Some(486600.0));
+    assert_eq!(sync.pending(), 2);
+}

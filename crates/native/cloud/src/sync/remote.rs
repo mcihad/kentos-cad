@@ -105,6 +105,7 @@ impl ProjectSync {
                 self.inflight = None;
                 self.state = SaveState::Deleted;
                 self.cursor = page.next.clone();
+                self.cursor_moved();
                 return Incoming {
                     cursor: page.next.clone(),
                     ..Incoming::default()
@@ -192,6 +193,17 @@ impl ProjectSync {
         let mut tracked = Vec::new();
         for id in incoming.fetch.iter().chain(&incoming.removed) {
             let record = records.get(id).copied();
+            // A version this device knows already (its own commit, taken in
+            // before a restart; an event read twice): nothing new.
+            if let Some(r) = record
+                && self.known.get(id).is_some_and(|t| t.version == r.version)
+            {
+                continue;
+            }
+            // Removed, and neither known here nor in the drawing: nothing to do.
+            if record.is_none() && !self.known.contains_key(id) && doc.slot_of(*id).is_none() {
+                continue;
+            }
             if self.busy_locally(doc, *id) {
                 self.conflict(Conflict {
                     id: id.to_string(),
@@ -230,18 +242,14 @@ impl ProjectSync {
         self.apply(doc, change)?;
         for (id, record) in tracked {
             match record {
-                Some(r) => {
-                    self.known.insert(
-                        id,
-                        Tracked {
-                            version: r.version.clone(),
-                            entity: r.entity.clone(),
-                        },
-                    );
-                }
-                None => {
-                    self.known.remove(&id);
-                }
+                Some(r) => self.know(
+                    id,
+                    Tracked {
+                        version: r.version.clone(),
+                        entity: r.entity.clone(),
+                    },
+                ),
+                None => self.forget(id),
             }
             self.dirty.remove(&id);
         }
@@ -249,8 +257,12 @@ impl ProjectSync {
             self.meta_version = version;
             self.meta_base = Meta::of(doc);
             self.meta_dirty = false;
+            self.meta_known();
         }
-        self.cursor = incoming.cursor;
+        if self.cursor != incoming.cursor {
+            self.cursor = incoming.cursor;
+            self.cursor_moved();
+        }
         if incoming.archived {
             self.inflight = None;
             self.state = SaveState::Archived;
@@ -301,18 +313,14 @@ impl ProjectSync {
         self.apply(doc, change)?;
         for (id, record) in tracked {
             match record {
-                Some(r) => {
-                    self.known.insert(
-                        id,
-                        Tracked {
-                            version: r.version,
-                            entity: r.entity,
-                        },
-                    );
-                }
-                None => {
-                    self.known.remove(&id);
-                }
+                Some(r) => self.know(
+                    id,
+                    Tracked {
+                        version: r.version,
+                        entity: r.entity,
+                    },
+                ),
+                None => self.forget(id),
             }
             self.dirty.remove(&id);
         }
@@ -320,6 +328,7 @@ impl ProjectSync {
             self.meta_version = version;
             self.meta_base = Meta::of(doc);
             self.meta_dirty = false;
+            self.meta_known();
         }
         self.conflicts.clear();
         self.state = if !self.can_write {
