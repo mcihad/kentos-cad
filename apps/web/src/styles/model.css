@@ -24,7 +24,7 @@
 
 .mdesign {
   display: grid;
-  grid-template-columns: calc(236px * var(--ui-scale)) minmax(0, 1fr) calc(340px * var(--ui-scale));
+  grid-template-columns: calc(248px * var(--ui-scale)) minmax(0, 1fr) calc(340px * var(--ui-scale));
   height: 100%;
 }
 
@@ -57,9 +57,9 @@
 .mpalette__input {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   height: calc(30px * var(--ui-scale));
-  padding: 0 8px;
+  padding: 0 7px;
   border: 1px solid var(--c-line);
   border-radius: var(--r-sm);
   background: var(--c-field);

@@ -119,12 +119,14 @@
 .appmenu__label {
   font-weight: 600;
 }
+/* Up to two lines: a description is read whole, not cut by the shortcut beside it. */
 .appmenu__sub {
+  display: -webkit-box;
   overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   color: var(--c-text-3);
   font-size: var(--fs-xs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .appmenu__arrow {
   display: inline-flex;
