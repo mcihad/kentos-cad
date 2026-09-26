@@ -85,7 +85,18 @@
     "tool.pan",
     "tool.zoomWindow",
     "view.zoomSelection",
-    "tool.repeat"
+    "tool.repeat",
+    "tool.ellipse",
+    "tool.spline",
+    "tool.xline",
+    "tool.ray",
+    "tool.parallel",
+    "tool.perpIn",
+    "tool.perpOut",
+    "tool.donut",
+    "tool.revcloud",
+    "tool.spot",
+    "tool.divide"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

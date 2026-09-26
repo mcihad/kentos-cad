@@ -139,6 +139,20 @@ pub const PORTED: &[&str] = &[
     "tool.zoomWindow",
     "view.zoomSelection",
     "tool.repeat",
+    // Drawing tools, round 3 (docs/adr/0057): the ellipse, spline, construction lines,
+    // parallel line, perpendiculars, donut and divide through cad.entities.create; the
+    // revision cloud through cad.polygon.create, the spot elevation through cad.point.create.
+    "tool.ellipse",
+    "tool.spline",
+    "tool.xline",
+    "tool.ray",
+    "tool.parallel",
+    "tool.perpIn",
+    "tool.perpOut",
+    "tool.donut",
+    "tool.revcloud",
+    "tool.spot",
+    "tool.divide",
 ];
 
 /// Where the desktop does more than the web, its own description: the web's
