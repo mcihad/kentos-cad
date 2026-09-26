@@ -12,15 +12,18 @@
 //! disabled button) and its tooltip says why; typed or keyed, it says so in
 //! the command line.
 
+use std::borrow::Cow;
+
 use iced::widget::{Column, Row, button, column, container, row, scrollable, stack, text};
 use iced::{Center, Color, Element, Fill};
 
 use kentos_contracts::{LayerNode, LayerNodeType};
 use kentos_interaction::Format;
+use kentos_render_wgpu::Rgba8;
 use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::theme::typography;
+use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LinePrompt};
 use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon, Stack};
 use kentos_ui::widget::status_bar::{Readout, StatusBar};
@@ -34,7 +37,10 @@ use kentos_ui::widget::{
 use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel, Then};
 use crate::catalog::{Command, Item, Standing, catalog};
 use crate::document::{Document, crs_name};
+use crate::marks::Marks;
 use crate::preview;
+use crate::selecting::Row as PropertyRow;
+use crate::viewport::mark_colors;
 
 impl App {
     pub fn view(&self) -> Element<'_, Message> {
@@ -110,12 +116,28 @@ impl App {
             // the running tool's draft and the value field over it (preview.rs).
             Some(doc) => {
                 let format = Format::of(doc.settings());
+                // The selection box and the snap marker (docs/adr/0029) under the draft.
+                let marks = Marks {
+                    camera: self.viewport.camera,
+                    snap: self.snap,
+                    select: self.session.select_box(),
+                    colors: mark_colors(self.mode),
+                };
                 let over = preview::layer(
                     &self.viewport.camera,
+                    marks,
                     self.session.preview(&format),
                     self.field.as_ref().map(|f| (f.text.as_str(), f.at)),
                 );
-                stack![self.viewport.view(doc, self.mode, self.graphics()), over].into()
+                let accent = rgba8(Tokens::of(&self.theme()).accent);
+                let area = self.viewport.view(
+                    doc,
+                    self.mode,
+                    self.graphics(),
+                    &self.selection,
+                    accent,
+                );
+                stack![area, over].into()
             }
             None => container(
                 EmptyState::new(Icon::Document, "Açık çizim yok")
@@ -150,9 +172,19 @@ impl App {
             .height(Fill)
             .into(),
             Panel::Properties => {
-                let rows = match self.selected_layer.as_deref().and_then(|id| doc.find(id)) {
-                    Some(layer) => layer_rows(doc, layer),
-                    None => project_rows(doc),
+                // The selection first, as the web's panel shows it (docs/adr/0029).
+                let borrowed = |rows: Vec<(&'static str, String)>| -> Vec<PropertyRow> {
+                    rows.into_iter()
+                        .map(|(k, v)| (Cow::Borrowed(k), v))
+                        .collect()
+                };
+                let rows = match (
+                    self.selection_rows(doc),
+                    self.selected_layer.as_deref().and_then(|id| doc.find(id)),
+                ) {
+                    (Some(rows), _) => rows,
+                    (None, Some(layer)) => borrowed(layer_rows(doc, layer)),
+                    (None, None) => borrowed(project_rows(doc)),
                 };
                 rows.into_iter()
                     .fold(
@@ -287,6 +319,18 @@ impl App {
         );
         if let Some(prompt) = self.prompt_bar() {
             bar = bar.separator().push(prompt);
+        }
+        if !self.selection.is_empty() {
+            // The web's status cell: how many are selected, in the accent (DESIGN.md, durum çubuğu).
+            let n = self.selection.len();
+            bar = bar.separator().push(
+                Readout::new(text(format!("{n} seçili")).style(|theme: &iced::Theme| {
+                    text::Style {
+                        color: Some(Tokens::of(theme).accent),
+                    }
+                }))
+                .tip("Seçili nesne sayısı; Esc seçimi kaldırır"),
+            );
         }
         if let Some(doc) = &self.document {
             let settings = doc.settings();
@@ -702,6 +746,11 @@ fn thousands(value: f64) -> String {
         out.push(c);
     }
     if value < 0.0 { format!("-{out}") } else { out }
+}
+
+/// A theme colour as the drawing pipeline takes it.
+fn rgba8(color: Color) -> Rgba8 {
+    Rgba8(color.into_rgba8())
 }
 
 /// A layer colour from the file: `#rrggbb`; theme colours (`fg` …) as grey.

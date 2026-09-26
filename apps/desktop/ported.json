@@ -23,7 +23,13 @@
     "draft.ortho",
     "draft.polar",
     "tool.line",
-    "tool.polyline"
+    "tool.polyline",
+    "tool.select",
+    "tool.erase",
+    "draft.snap",
+    "edit.deselect",
+    "edit.selectAll",
+    "edit.invertSelection"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

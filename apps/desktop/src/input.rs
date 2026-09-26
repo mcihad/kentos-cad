@@ -63,6 +63,8 @@ impl App {
         act: impl FnOnce(&mut Session, &mut Context<'_>) -> T,
     ) -> Option<T> {
         let doc = self.document.as_mut()?;
+        // The store answers for the drawing as it is now (docs/adr/0029).
+        self.spatial.sync(&doc.model);
         let mut log = Vec::new();
         let view = CameraView(&self.viewport.camera);
         let out = act(
@@ -72,6 +74,8 @@ impl App {
                 view: &view,
                 draft: self.draft,
                 log: &mut log,
+                spatial: &self.spatial,
+                selection: &mut self.selection,
             },
         );
         for line in log {
@@ -94,8 +98,18 @@ impl App {
                 .get(&format!("tool.{id}"))
                 .map_or(id, |command| command.name());
             self.say(Level::Command, name);
+            // It may act at once: the erase tool deletes a selection and leaves.
+            self.with_tool(|s, cx| s.activate(cx));
         }
         Task::none()
+    }
+
+    /// `tool.select`: back to selecting; the running command's draft is
+    /// dropped, the selection stays (the web activates its select tool).
+    pub(crate) fn leave_tool(&mut self) {
+        self.field = None;
+        self.snap = None;
+        self.session.exit();
     }
 
     /// `tool.confirm`: Enter, Space or the Onayla button. The running tool
@@ -116,9 +130,16 @@ impl App {
     }
 
     /// `tool.cancel`: Esc. The draft is dropped; nothing reaches the drawing.
+    /// With no command running, it clears the selection (the web's `ToolManager.exit`).
     pub(crate) fn cancel(&mut self) {
         self.field = None;
-        self.session.exit();
+        // The snap marker belongs to the command (the web drops it when the tool changes).
+        self.snap = None;
+        if self.session.is_running() {
+            self.session.exit();
+        } else {
+            self.selection.clear();
+        }
     }
 
     /// Ctrl+Z: the running command's newest step first, then the drawing (ADR 0018).
@@ -146,37 +167,44 @@ impl App {
         self.zoom(1.0 / ZOOM_STEP);
     }
 
-    /// What the drawing area reports: the view changes, and the tool gets the pointer.
+    /// What the drawing area reports: the view changes, and the pointer goes
+    /// to the running tool, or to the select tool while none runs (docs/adr/0029).
     pub(crate) fn pointer(&mut self, event: viewport::Event) -> Task<Message> {
         let doc = self.document.as_ref();
         self.viewport.update(event.clone(), doc);
-        let running = self.session.is_running();
         match event {
             viewport::Event::Moved(at) => {
                 let world = self.viewport.world(at);
                 if let Some(field) = &mut self.field {
                     field.at = world;
                 }
-                if running {
-                    let p = self.tool_pointer(at);
-                    self.with_tool(|s, cx| s.pointer_move(&p, cx));
-                }
+                let p = self.pointer_at(at);
+                self.with_tool(|s, cx| s.pointer_move(&p, cx));
             }
             viewport::Event::Pressed(at) => {
                 // A click on the drawing takes the keyboard from any text field:
                 // the value field closes without applying (web: it loses focus).
                 self.field = None;
                 self.line_focused = false;
-                if running {
-                    let p = self.tool_pointer(at);
-                    self.with_tool(|s, cx| s.pointer_down(&p, cx));
+                // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
+                let p = self.pointer_at(at);
+                self.with_tool(|s, cx| s.pointer_down(&p, cx));
+            }
+            viewport::Event::Released(at) => {
+                let p = self.pointer_at(at);
+                self.with_tool(|s, cx| s.pointer_up(&p, cx));
+            }
+            viewport::Event::Left => {
+                self.snap = None;
+                if !self.session.is_running() {
+                    self.selection.set_hover(None);
                 }
             }
             viewport::Event::RightClick(_) => {
                 self.field = None;
                 self.line_focused = false;
                 // Enter for a running command; the idle menu is not on the desktop yet.
-                if running {
+                if self.session.is_running() {
                     self.with_tool(|s, cx| s.confirm(cx));
                 }
             }
@@ -185,12 +213,26 @@ impl App {
         Task::none()
     }
 
-    fn tool_pointer(&self, at: iced::Point) -> Pointer {
-        Pointer {
-            world: self.viewport.world(at),
-            screen: [f64::from(at.x), f64::from(at.y)],
-            shift: self.modifiers.shift(),
-        }
+    /// The pointer at a place of the drawing area as the tools get it: the
+    /// world point under it, on the object snap when the running tool snaps
+    /// and snapping is on (the web's `updateSnap` and `pointer`). The snap is
+    /// kept for its marker.
+    fn pointer_at(&mut self, at: iced::Point) -> Pointer {
+        let raw = self.viewport.world(at);
+        self.snap = match &self.document {
+            Some(doc) => {
+                self.spatial.sync(&doc.model);
+                let view = CameraView(&self.viewport.camera);
+                self.session.snap(&self.spatial, raw, &view, &self.draft)
+            }
+            None => None,
+        };
+        Pointer::new(
+            raw,
+            [f64::from(at.x), f64::from(at.y)],
+            self.modifiers.shift(),
+            self.snap,
+        )
     }
 
     /// A key no text box captured, by ADR 0018's order (see the module).

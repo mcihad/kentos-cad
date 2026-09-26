@@ -22,15 +22,37 @@ use crate::app::{App, Message};
 use crate::settings::schema;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 8] = [
+pub const KEYS: [&str; 18] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
     "drafting.snapAperture",
+    "drafting.pickAperture",
     "drafting.cursorInput",
+    "drafting.snap",
+    "snap.endpoint",
+    "snap.midpoint",
+    "snap.center",
+    "snap.node",
+    "snap.intersection",
+    "snap.perpendicular",
+    "snap.tangent",
+    "snap.nearest",
     "graphics.msaa",
     "graphics.hiDpi",
     "appearance.theme",
+];
+
+/// The snap kinds, in the web's order (docs/adr/0029).
+const SNAP_KINDS: [&str; 8] = [
+    "snap.endpoint",
+    "snap.midpoint",
+    "snap.center",
+    "snap.node",
+    "snap.intersection",
+    "snap.perpendicular",
+    "snap.tangent",
+    "snap.nearest",
 ];
 
 const PX: &[Unit] = &[Unit::new("px", 1.0)];
@@ -328,10 +350,39 @@ impl App {
             )
             .help(help("drafting.snapAperture"))
             .field(
+                title("drafting.pickAperture"),
+                NumberInput::new(
+                    value("drafting.pickAperture").as_f64().unwrap_or(5.0),
+                    |v| {
+                        Message::Settings(Edit::Value(
+                            "drafting.pickAperture",
+                            Value::from(v.round() as i64),
+                        ))
+                    },
+                )
+                .units(PX)
+                .range(range("drafting.pickAperture"))
+                .step(1.0)
+                .decimals(0)
+                .width(120),
+            )
+            .help(help("drafting.pickAperture"))
+            .field(
                 title("drafting.cursorInput"),
                 switch("drafting.cursorInput", None),
             )
             .help(help("drafting.cursorInput"))
+            .section("Kenetleme")
+            .field(
+                title("drafting.snap"),
+                switch("drafting.snap", Some("Bu oturum")),
+            )
+            .help(help("drafting.snap"));
+        let drafting = SNAP_KINDS
+            .iter()
+            .fold(drafting, |form, &key| {
+                form.field(title(key), switch(key, None)).help(help(key))
+            })
             .section("Görünüm")
             .field(
                 title("appearance.theme"),
@@ -383,7 +434,7 @@ impl App {
             Dialog::new("Uygulama ayarları")
                 .hint("Ctrl+,")
                 .push(label::muted(
-                    "Çizim yardımcıları ve görünüm sizin tercihinizdir; grafik ayarları bu cihaza özgüdür; Orto ve Kutupsal izleme bu oturum içindir.",
+                    "Çizim yardımcıları, kenet türleri ve görünüm sizin tercihinizdir; grafik ayarları bu cihaza özgüdür; Orto, Kutupsal izleme ve Kenetleme bu oturum içindir.",
                 ))
                 .push(scrollable(body).height(Shrink))
                 .action(cancel)

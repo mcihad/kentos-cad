@@ -14,7 +14,7 @@ use iced::{Subscription, Task, Theme, event, keyboard, window};
 use serde_json::Value;
 
 use kentos_contracts::{ResolveReason, SettingConstraint};
-use kentos_interaction::{Draft, Level, Session};
+use kentos_interaction::{Draft, Level, Selection, Session, SnapHit, Spatial, snap_kinds};
 use kentos_ui::icon::Icon;
 use kentos_ui::theme::{self, Accent, Mode};
 use kentos_ui::widget::command_line::Entry;
@@ -153,6 +153,15 @@ pub struct App {
     pub viewport: Viewport,
     /// The running tool and the last one started (kentos-interaction, docs/adr/0021).
     pub session: Session,
+    /// The geometry store kept in step with the open drawing: what a click
+    /// picks, a box selects and a point snaps to (docs/adr/0029).
+    pub spatial: Spatial,
+    /// The selected objects and the hovered one (session state, not the drawing's).
+    pub selection: Selection,
+    /// The object snap under the pointer while a tool snaps: its marker.
+    pub snap: Option<SnapHit>,
+    /// The drawing (its session) and revision the store and the selection last followed.
+    followed: Option<(u64, u64)>,
     /// The value field beside the cursor, while it is open (ADR 0018).
     pub field: Option<Field>,
     /// Drafting aids for new points: ortho, polar tracking, the snap aperture
@@ -201,6 +210,10 @@ impl App {
             dialog: None,
             viewport: Viewport::new(),
             session: Session::new(),
+            spatial: Spatial::new(),
+            selection: Selection::new(),
+            snap: None,
+            followed: None,
             field: None,
             draft: Draft::default(),
             cursor_input: true,
@@ -258,6 +271,33 @@ impl App {
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
+        let task = self.handle(message);
+        self.follow_document();
+        task
+    }
+
+    /// After every message: the geometry store takes the drawing's changes
+    /// and the selection lets go of objects that are gone (an undo, a
+    /// delete; the web's `selection.retain` on `changed`), only when the
+    /// drawing changed (docs/adr/0029). The snap marker belongs to a running tool.
+    fn follow_document(&mut self) {
+        if !self.session.is_running() {
+            self.snap = None;
+        }
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let now = (doc.session, doc.model.revision());
+        if self.followed == Some(now) {
+            return;
+        }
+        self.followed = Some(now);
+        self.spatial.sync(&doc.model);
+        let model = &doc.model;
+        self.selection.retain(|slot| model.get(slot).is_some());
+    }
+
+    fn handle(&mut self, message: Message) -> Task<Message> {
         // What the drawing area's device can draw with, known after its first frame (AA-01).
         self.sync_device();
         match message {
@@ -319,10 +359,13 @@ impl App {
                     doc.entity_count(),
                     doc.layer_count()
                 ));
-                // A draft belongs to the drawing it was drawn on.
+                // A draft belongs to the drawing it was drawn on; so do the selection and the store.
                 self.cancel();
                 self.selected_layer = None;
                 self.viewport.opened(&doc);
+                self.spatial.reload(&doc.model);
+                self.selection = Selection::new();
+                self.followed = Some((doc.session, doc.model.revision()));
                 self.document = Some(*doc);
             }
             Message::Opened(Some(Err(error))) | Message::Saved(Some(Err(error))) => {
@@ -378,6 +421,9 @@ impl App {
                 .bool("drafting.polar")
                 .then(|| s.number("drafting.polarIncrement")),
             snap_aperture: s.number("drafting.snapAperture"),
+            snap: s.bool("drafting.snap"),
+            snap_kinds: snap_kinds(|key| s.bool(key)),
+            pick_aperture: s.number("drafting.pickAperture"),
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.mode = match s.effective("appearance.theme").as_str() {
@@ -518,6 +564,12 @@ impl App {
             "tools.options" => self.open_settings(),
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
             "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
+            "draft.snap" => self.toggle_session("drafting.snap", "Kenetleme"),
+            // Selecting (docs/adr/0029): the pointer selects while no command runs.
+            "tool.select" => self.leave_tool(),
+            "edit.deselect" => self.selection.clear(),
+            "edit.selectAll" => self.select_all(),
+            "edit.invertSelection" => self.invert_selection(),
             "view.ribbonCollapse" => self.ribbon_collapsed = !self.ribbon_collapsed,
             "view.zoomIn" => self.zoom_in(),
             "view.zoomOut" => self.zoom_out(),
@@ -575,6 +627,7 @@ impl App {
                     || (self.session.is_running() && self.session.point_count() > 0)
             }
             "edit.redo" => doc.is_some_and(kentos_domain::Document::can_redo),
+            "edit.deselect" => !self.selection.is_empty(),
             _ => true,
         }
     }
