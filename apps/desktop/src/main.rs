@@ -7,12 +7,17 @@
 mod app;
 mod catalog;
 mod document;
+#[cfg(test)]
+mod files_testing;
 mod icons;
 mod input;
 mod keys;
+mod opening;
 #[cfg(test)]
 mod perf;
 mod preview;
+mod recovery;
+mod saving;
 mod settings;
 mod settings_view;
 mod snapshot;
@@ -46,7 +51,17 @@ fn main() -> iced::Result {
                 .map_or_else(settings::Settings::memory, |dir| {
                     settings::Settings::open(&dir, std::time::SystemTime::now())
                 });
-            app::App::start(path.clone(), settings)
+            // Recovery copies of unsaved work (docs/adr/0030): none when the data folder cannot be used.
+            let recovery =
+                match recovery::default_root().map(|root| recovery::Recovery::open(&root)) {
+                    Some(Ok(recovery)) => recovery,
+                    Some(Err(error)) => {
+                        eprintln!("Kurtarma kopyaları tutulamıyor: {error}");
+                        recovery::Recovery::off()
+                    }
+                    None => recovery::Recovery::off(),
+                };
+            app::App::start_with(path.clone(), settings, recovery)
         },
         app::App::update,
         app::App::view,

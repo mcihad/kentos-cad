@@ -21,9 +21,12 @@ use kentos_ui::widget::command_line::Entry;
 use kentos_ui::widget::docking::{self, Docks, Side};
 
 use crate::catalog::{Standing, catalog};
-use crate::document::{self, Document};
+use crate::document::Document;
 use crate::input::{Field, release_keyboard};
 use crate::keys::{self, KeyPress};
+use crate::opening::{self, Purpose};
+use crate::recovery::{self, Recovery};
+use crate::saving;
 use crate::settings::Settings;
 use crate::settings_view::{Edit, SettingsDraft, samples_label};
 use crate::viewport::{self, Graphics, Viewport};
@@ -73,6 +76,8 @@ pub enum Dialog {
     Unsaved(Then),
     /// Uygulama ayarları (`tools.options`); its draft is `App::settings_draft`.
     Settings,
+    /// Unsaved work a crash left: the first of `App::recovery.offers` (recovery.rs).
+    Recovery,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -127,6 +132,12 @@ pub enum Message {
     Viewport(viewport::Event),
     /// The settings window: a value in its draft, a preset, Kaydet, the file actions.
     Settings(Edit),
+    /// A drawing being opened in stages (opening.rs, docs/adr/0030).
+    Opening(opening::Event),
+    /// A drawing being saved off the UI thread (saving.rs).
+    Saving(saving::Event),
+    /// Recovery copies of unsaved work (recovery.rs).
+    Recovery(recovery::Event),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -172,6 +183,14 @@ pub struct App {
     /// The level of the newest message; the traces read it (ADR 0018).
     pub last_level: Option<Level>,
     pub picker: Picker,
+    /// The open under way, if any (opening.rs).
+    pub opening: Option<opening::Opening>,
+    /// The save under way, if any (saving.rs).
+    pub saving: Option<saving::Saving>,
+    /// Where tests make the disk fail during a save (none in the app).
+    pub save_faults: saving::Faults,
+    /// Recovery copies of unsaved work; kept only when `main` opens their folder.
+    pub recovery: Recovery,
 }
 
 impl App {
@@ -184,6 +203,15 @@ impl App {
 
     /// The shell with these settings, opening `path` at once when given (`kentos-cad cizim.kcad`).
     pub fn start(path: Option<PathBuf>, settings: Settings) -> (Self, Task<Message>) {
+        Self::start_with(path, settings, Recovery::off())
+    }
+
+    /// `start`, keeping recovery copies in `recovery`: work a crash left is offered first.
+    pub fn start_with(
+        path: Option<PathBuf>,
+        settings: Settings,
+        recovery: Recovery,
+    ) -> (Self, Task<Message>) {
         let mut app = Self {
             document: None,
             tab: catalog().tabs().nth(1).or(catalog().tabs().next()).map_or("home", |tab| tab.id),
@@ -211,7 +239,14 @@ impl App {
             modifiers: keyboard::Modifiers::default(),
             last_level: None,
             picker: Picker::Dialog,
+            opening: None,
+            saving: None,
+            save_faults: saving::Faults::NONE,
+            recovery,
         };
+        if !app.recovery.offers.is_empty() {
+            app.dialog = Some(Dialog::Recovery);
+        }
         // The organisation's policy: no server sends one yet; a local file may stand in (docs/adr/0023).
         match Settings::policy_from_env() {
             Some(Ok(policy)) => {
@@ -226,10 +261,7 @@ impl App {
         app.apply_settings();
         app.report_settings_open();
         let task = match path {
-            Some(path) => Task::perform(
-                async move { Some(Document::read(&path).map(Box::new)) },
-                Message::Opened,
-            ),
+            Some(path) => app.start_opening(path, Purpose::File),
             None => Task::none(),
         };
         (app, task)
@@ -251,15 +283,26 @@ impl App {
     }
 
     pub fn subscription(&self) -> Subscription<Message> {
+        // While the drawing has unsaved changes, the app looks every few seconds whether a recovery copy is due.
+        let unsaved = self.recovery.on() && self.document.as_ref().is_some_and(Document::dirty);
         Subscription::batch([
             event::listen_with(keys::key_event),
             window::close_requests().map(Message::CloseRequested),
+            if unsaved {
+                Subscription::run(recovery::ticks)
+            } else {
+                Subscription::none()
+            },
         ])
     }
 
     pub fn update(&mut self, message: Message) -> Task<Message> {
         // What the drawing area's device can draw with, known after its first frame (AA-01).
         self.sync_device();
+        // While a drawing is being opened the app takes no command (opening.rs).
+        if let Some(task) = self.while_opening(&message) {
+            return task;
+        }
         match message {
             Message::Run(id) => return self.run(id),
             Message::RibbonTab(id) => self.tab = id,
@@ -342,23 +385,37 @@ impl App {
                         ""
                     };
                     self.output(format!("Kaydedildi: {}.{later}", written.path.display()));
+                    self.recovery_saved();
                 }
                 // Another drawing was opened meanwhile: the file is written, but it is
                 // not the open drawing's file, which keeps its path and its state.
                 _ => self.output(format!("Kaydedildi: {}.", written.path.display())),
             },
             Message::CloseRequested(window) => {
-                if self.document.as_ref().is_some_and(Document::dirty) {
+                // A save stopped by the window closing would leave no file (the previous one
+                // stays): it finishes first.
+                if let Some(s) = &self.saving {
+                    let path = s.path.display().to_string();
+                    self.warn(format!(
+                        "{path} kaydediliyor; kayıt bitince pencereyi yeniden kapatın."
+                    ));
+                } else if self.document.as_ref().is_some_and(Document::dirty) {
                     self.dialog = Some(Dialog::Unsaved(Then::Close(window)));
                 } else {
+                    self.recovery.finish();
                     return window::close(window);
                 }
             }
             Message::DialogConfirmed => {
                 if let Some(Dialog::Unsaved(then)) = self.dialog.take() {
+                    // The unsaved changes are dropped on purpose: their recovery copy goes too.
+                    self.recovery.discard();
                     return match then {
                         Then::Open => self.open(),
-                        Then::Close(window) => window::close(window),
+                        Then::Close(window) => {
+                            self.recovery.finish();
+                            window::close(window)
+                        }
                     };
                 }
             }
@@ -368,6 +425,9 @@ impl App {
             }
             Message::Viewport(event) => return self.pointer(event),
             Message::Settings(edit) => return self.settings_edit(edit),
+            Message::Opening(event) => return self.opening_event(event),
+            Message::Saving(event) => return self.saving_event(event),
+            Message::Recovery(event) => return self.recovery_event(event),
         }
         Task::none()
     }
@@ -611,13 +671,11 @@ impl App {
         }
     }
 
+    /// Asks for a drawing and opens it in stages, off the UI thread (opening.rs).
     fn open(&mut self) -> Task<Message> {
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
-            return Task::perform(
-                async move { Some(Document::read(&path).map(Box::new)) },
-                Message::Opened,
-            );
+            return self.start_opening(path, Purpose::File);
         }
         Task::perform(
             async {
@@ -626,25 +684,22 @@ impl App {
                     .add_filter("KentOS çizimi (.kcad)", &["kcad"])
                     .pick_file()
                     .await?;
-                Some(Document::read(file.path()).map(Box::new))
+                Some(file.path().to_path_buf())
             },
-            Message::Opened,
+            |path| Message::Opening(opening::Event::Picked(path)),
         )
     }
 
     /// Saves to the drawing's file as `.kcad` v2, or asks where (always, with
     /// `choose`, and for a drawing opened from a v1 file, which is never
-    /// written over by itself; docs/adr/0025). What is written is the drawing
-    /// as it is now, with its revision: a change made while the file is
+    /// written over by itself; docs/adr/0025). The drawing of this moment is
+    /// written, off the UI thread (saving.rs): a change made while the file is
     /// written stays unsaved.
     fn save(&mut self, choose: bool) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Kaydedilecek çizim yok. Önce bir çizim açın (Ctrl+O).");
             return Task::none();
         };
-        let snapshot = doc.model.to_snapshot_v2();
-        let revision = doc.model.revision();
-        let session = doc.session;
         let title = if doc.legacy && !choose {
             "Yeni biçimde kaydet (KCAD v2)"
         } else {
@@ -658,33 +713,26 @@ impl App {
                 Picker::File(path) => Some(path.clone()),
                 Picker::Dialog => None,
             });
+        if let Some(path) = known {
+            return self.start_saving(path);
+        }
+        let suggested = doc.name().trim_end_matches(".kcad").to_owned();
         Task::perform(
             async move {
-                let path = match known {
-                    Some(path) => path,
-                    None => {
-                        let suggested = snapshot.name.trim_end_matches(".kcad").to_owned();
-                        let file = rfd::AsyncFileDialog::new()
-                            .set_title(title)
-                            .add_filter("KentOS çizimi (.kcad)", &["kcad"])
-                            .set_file_name(format!("{suggested}.kcad"))
-                            .save_file()
-                            .await?;
-                        let path = file.path().to_path_buf();
-                        if path.extension().is_some_and(|e| e == "kcad") {
-                            path
-                        } else {
-                            path.with_extension("kcad")
-                        }
-                    }
-                };
-                Some(document::write(&snapshot, &path).map(|()| Written {
-                    session,
-                    path,
-                    revision,
-                }))
+                let file = rfd::AsyncFileDialog::new()
+                    .set_title(title)
+                    .add_filter("KentOS çizimi (.kcad)", &["kcad"])
+                    .set_file_name(format!("{suggested}.kcad"))
+                    .save_file()
+                    .await?;
+                let path = file.path().to_path_buf();
+                Some(if path.extension().is_some_and(|e| e == "kcad") {
+                    path
+                } else {
+                    path.with_extension("kcad")
+                })
             },
-            Message::Saved,
+            |path| Message::Saving(saving::Event::Picked(path)),
         )
     }
 

@@ -157,7 +157,10 @@ fn child() {
     let mut parts = task.splitn(3, ':');
     let (op, n, file) = (
         parts.next().unwrap_or_default(),
-        parts.next().and_then(|n| n.parse::<usize>().ok()).unwrap_or(0),
+        parts
+            .next()
+            .and_then(|n| n.parse::<usize>().ok())
+            .unwrap_or(0),
         PathBuf::from(parts.next().unwrap_or_default()),
     );
     let out = match op {

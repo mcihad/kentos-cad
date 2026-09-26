@@ -11,14 +11,12 @@
 //! web's rules: undo, the dirty flag and the saved revision.
 
 use std::collections::{BTreeMap, HashMap};
-use std::io::Write as _;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use kentos_contracts::{
     DocumentSnapshotV1, DocumentSnapshotV2, LayerNode, LayerNodeType, ProjectSettings,
 };
-use kentos_kcad::Sniff;
 
 /// A drawing and where it came from.
 #[derive(Debug, Clone)]
@@ -63,29 +61,11 @@ impl Document {
         })
     }
 
-    /// Reads a `.kcad` file, v2 or v1, whatever its name says; anything else
-    /// is refused with the reason.
+    /// Reads a `.kcad` file, v2 or v1, whatever its name says, at once (the
+    /// app opens in stages, opening.rs); anything else is refused with the reason.
     pub fn read(path: &Path) -> Result<Self, String> {
-        let at = |e: String| format!("{}: {e}", path.display());
-        let data = std::fs::read(path).map_err(|e| format!("{} okunamadı: {e}", path.display()))?;
-        match kentos_kcad::sniff(&data) {
-            Sniff::Kcad | Sniff::KcadDamaged => {
-                let snapshot = kentos_kcad::decode(&data).map_err(|e| at(e.message))?;
-                Self::from_v2(snapshot, Some(path.to_path_buf())).map_err(at)
-            }
-            Sniff::Json => {
-                let text = std::str::from_utf8(&data).map_err(|_| {
-                    at("metin UTF-8 değil; eski (v1) bir KentOS çizimi okunamadı.".to_owned())
-                })?;
-                let snapshot = DocumentSnapshotV1::from_json(text).map_err(at)?;
-                Self::new(snapshot, Some(path.to_path_buf())).map_err(at)
-            }
-            Sniff::Empty => Err(at("dosya boş; içinde çizim yok.".to_owned())),
-            Sniff::Foreign => Err(at(
-                "KentOS çizim dosyası değil. DXF ve koordinat listeleri İçe aktar ile açılır."
-                    .to_owned(),
-            )),
-        }
+        crate::opening::read(path, &AtomicBool::new(false), &mut |_| {})?
+            .ok_or_else(|| format!("{}: açılış durduruldu.", path.display()))
     }
 
     /// A save of `revision` to `path` finished: the drawing is clean unless it
@@ -153,49 +133,22 @@ impl Document {
 /// disk (`encode_verified`); they go to a new temporary file beside the
 /// target, which is flushed to the disk and read back, and only then renamed
 /// over the target in one step. A save that fails anywhere leaves the
-/// previous file as it was and removes the temporary one.
+/// previous file as it was and removes the temporary one. At once; the app
+/// saves off its UI thread with a panel and a stop (saving.rs); tests and
+/// measurements write with this.
+#[cfg(test)]
 pub fn write(snapshot: &DocumentSnapshotV2, path: &Path) -> Result<(), String> {
-    let bytes = kentos_kcad::encode_verified(snapshot).map_err(|e| e.message)?;
-    let dir = path
-        .parent()
-        .filter(|p| !p.as_os_str().is_empty())
-        .unwrap_or(Path::new("."));
-    let name = path
-        .file_name()
-        .map_or_else(|| "cizim".into(), |n| n.to_string_lossy());
-    static SAVES: AtomicU64 = AtomicU64::new(0);
-    let temporary = dir.join(format!(
-        ".{name}.{}-{}.yaziliyor",
-        std::process::id(),
-        SAVES.fetch_add(1, Ordering::Relaxed)
-    ));
-    let result = (|| -> std::io::Result<()> {
-        let mut file = std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&temporary)?;
-        file.write_all(&bytes)?;
-        file.sync_all()?;
-        drop(file);
-        if std::fs::read(&temporary)? != bytes {
-            return Err(std::io::Error::other(
-                "diskten geri okunan baytlar yazılanlarla aynı değil",
-            ));
-        }
-        std::fs::rename(&temporary, path)?;
-        // The new name itself is on the disk only when the directory is flushed (POSIX).
-        #[cfg(unix)]
-        if let Ok(d) = std::fs::File::open(dir) {
-            let _ = d.sync_all();
-        }
-        Ok(())
-    })();
-    result.map_err(|e| {
-        let _ = std::fs::remove_file(&temporary);
-        format!(
-            "{} yazılamadı: {e}. Önceki dosya olduğu gibi duruyor; başka bir yere kaydetmeyi deneyin (Farklı kaydet).",
-            path.display()
-        )
+    use crate::saving::{self, SaveError};
+    saving::write_watched(
+        snapshot,
+        path,
+        &AtomicBool::new(false),
+        &mut |_| {},
+        &saving::Faults::NONE,
+    )
+    .map_err(|e| match e {
+        SaveError::Failed(why) => why,
+        SaveError::Stopped => format!("{}: kayıt durduruldu.", path.display()),
     })
 }
 

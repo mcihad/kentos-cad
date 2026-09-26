@@ -64,10 +64,17 @@ impl App {
         .height(Fill)
         .style(style::container::window);
 
-        match self.dialog {
-            None => base.into(),
-            Some(dialog) => stack![base, self.dialog_view(dialog)].into(),
+        let mut layers: Vec<Element<'_, Message>> = vec![base.into()];
+        if let Some(dialog) = self.dialog {
+            layers.push(self.dialog_view(dialog));
         }
+        // A save's panel and an open's window (saving.rs, opening.rs), over everything else.
+        layers.extend(self.saving_view());
+        layers.extend(self.opening_view());
+        if layers.len() == 1 {
+            return layers.remove(0);
+        }
+        iced::widget::Stack::with_children(layers).into()
     }
 
     fn ribbon(&self) -> Element<'_, Message> {
@@ -424,6 +431,7 @@ impl App {
                 Message::DialogClosed,
             ),
             Asking::Settings => self.settings_dialog(),
+            Asking::Recovery => self.recovery_dialog(),
         }
     }
 }
