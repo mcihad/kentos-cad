@@ -152,8 +152,21 @@ pub async fn list(
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
+/// The start of an open-ended byte range (`Range: bytes=N-`): the only kind
+/// a download goes on with; anything else is answered with the whole file.
+fn range_start(headers: &HeaderMap) -> Option<u64> {
+    let text = headers.get(header::RANGE)?.to_str().ok()?.trim();
+    let (start, end) = text.strip_prefix("bytes=")?.split_once('-')?;
+    if !end.trim().is_empty() {
+        return None;
+    }
+    start.trim().parse().ok()
+}
+
 /// `GET …/projects/{project}/files/{revision}`: one revision's bytes
-/// (`project.download`), with its SHA-256 as the entity tag.
+/// (`project.download`), with its SHA-256 as the entity tag. A revision
+/// never changes, so a download cut short goes on from where it stopped:
+/// `Range: bytes=N-` answers the rest (206) (docs/adr/0045).
 pub async fn download(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -165,16 +178,47 @@ pub async fn download(
         let revision: i64 = revision.parse().ok().filter(|r| *r > 0).ok_or_else(|| {
             AppError::not_found(format!("“{}” projesinde böyle bir revizyon yok.", a.name))
         })?;
-        let (info, file) = files::download(state.db()?, &state.blobs, &a, revision).await?;
+        let (info, mut file) = files::download(state.db()?, &state.blobs, &a, revision).await?;
+        let size = u64::from(info.size);
+        let start = range_start(&headers).filter(|s| *s > 0);
+        if let Some(s) = start
+            && s >= size
+        {
+            let mut response = StatusCode::RANGE_NOT_SATISFIABLE.into_response();
+            if let Ok(v) = HeaderValue::from_str(&format!("bytes */{size}")) {
+                response.headers_mut().insert(header::CONTENT_RANGE, v);
+            }
+            return Ok(response);
+        }
+        if let Some(s) = start {
+            use tokio::io::AsyncSeekExt as _;
+            file.seek(std::io::SeekFrom::Start(s))
+                .await
+                .map_err(AppError::Storage)?;
+        }
         let mut response = Body::new(FileBody::new(file)).into_response();
         let h = response.headers_mut();
-        h.insert(header::CONTENT_LENGTH, HeaderValue::from(info.size));
+        h.insert(header::ACCEPT_RANGES, HeaderValue::from_static("bytes"));
+        match start {
+            Some(s) => {
+                h.insert(header::CONTENT_LENGTH, HeaderValue::from(size - s));
+                if let Ok(v) = HeaderValue::from_str(&format!("bytes {s}-{}/{size}", size - 1)) {
+                    h.insert(header::CONTENT_RANGE, v);
+                }
+            }
+            None => {
+                h.insert(header::CONTENT_LENGTH, HeaderValue::from(size));
+            }
+        }
         kcad_headers(
             h,
             &info.sha256,
             &info.revision,
             &format!("{}-r{}.kcad", a.name, info.revision),
         );
+        if start.is_some() {
+            *response.status_mut() = StatusCode::PARTIAL_CONTENT;
+        }
         Ok(response)
     };
     run.await.map_err(|e| Failure::with(e, &headers))

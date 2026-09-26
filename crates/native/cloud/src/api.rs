@@ -37,6 +37,8 @@ use crate::runtime::run;
 const TIMEOUT: Duration = Duration::from_secs(30);
 /// How long a file's bytes may take either way (the server's upload limit, docs/adr/0031).
 pub const FILE_TIMEOUT: Duration = Duration::from_secs(600);
+/// Tries of a download in a row without progress, before its failure is given back.
+pub const DOWNLOAD_TRIES: u32 = 5;
 /// What the desktop says it is (the server's `x-kentos-client`).
 pub const CLIENT: &str = "desktop";
 const CLIENT_HEADER: &str = "x-kentos-client";
@@ -260,29 +262,90 @@ impl Inner {
     }
 
     /// A `.kcad` file read in parts, checked against its entity tag (SHA-256).
-    async fn download(&self, url: Url, progress: Option<Progress>) -> Result<Download, ApiFailure> {
-        let mut res = self
-            .send(self.request(Method::GET, url, FILE_TIMEOUT), FILE_TIMEOUT)
-            .await?;
-        let text = |name: &str| {
-            res.headers()
-                .get(name)
-                .and_then(|v| v.to_str().ok())
-                .map(|v| v.trim().to_string())
-        };
-        let tag = text("etag").map(|t| t.trim_matches('"').to_string());
-        let revision = text("x-kentos-revision");
-        let event_cursor = text("x-kentos-event-cursor");
-        let total = res.content_length().unwrap_or(0);
-        let mut bytes = Vec::with_capacity(usize::try_from(total).unwrap_or(0).min(1 << 28));
-        while let Some(part) = res
-            .chunk()
-            .await
-            .map_err(|e| ApiFailure::unreachable(&e, FILE_TIMEOUT))?
-        {
-            bytes.extend_from_slice(&part);
-            if let Some(p) = &progress {
-                p(bytes.len() as u64, total);
+    /// A `.kcad` file read in parts, checked against its entity tag (SHA-256).
+    /// A download cut short is tried again, up to [`DOWNLOAD_TRIES`] times in a
+    /// row without progress; when the file never changes (`resumable`: a
+    /// revision) it goes on from where it stopped (`Range`, docs/adr/0045),
+    /// otherwise it starts over. A resumed answer that is not the rest of the
+    /// same file (another entity tag, another start) starts over too.
+    async fn download(
+        &self,
+        url: Url,
+        progress: Option<Progress>,
+        resumable: bool,
+    ) -> Result<Download, ApiFailure> {
+        let mut bytes: Vec<u8> = Vec::new();
+        let mut tag: Option<String> = None;
+        let (mut revision, mut event_cursor, mut total) = (None, None, 0u64);
+        let mut tries = 1u32;
+        loop {
+            let from = bytes.len() as u64;
+            let mut b = self.request(Method::GET, url.clone(), FILE_TIMEOUT);
+            if resumable && from > 0 {
+                b = b.header(header::RANGE, format!("bytes={from}-"));
+            }
+            let mut res = match self.send(b, FILE_TIMEOUT).await {
+                Ok(res) => res,
+                Err(f) if f.transient() && tries < DOWNLOAD_TRIES => {
+                    tokio::time::sleep(f.backoff(tries)).await;
+                    tries += 1;
+                    continue;
+                }
+                Err(f) => return Err(f),
+            };
+            let text = |name: &str| {
+                res.headers()
+                    .get(name)
+                    .and_then(|v| v.to_str().ok())
+                    .map(|v| v.trim().to_string())
+            };
+            let this_tag = text("etag").map(|t| t.trim_matches('"').to_string());
+            if res.status() == reqwest::StatusCode::PARTIAL_CONTENT {
+                let start = text("content-range").and_then(|r| {
+                    r.strip_prefix("bytes ")?
+                        .split_once('-')?
+                        .0
+                        .trim()
+                        .parse::<u64>()
+                        .ok()
+                });
+                if this_tag != tag || start != Some(from) {
+                    // Not the rest of the same file: start over.
+                    bytes.clear();
+                    tag = None;
+                    continue;
+                }
+            } else {
+                bytes.clear();
+                tag = this_tag;
+                revision = text("x-kentos-revision");
+                event_cursor = text("x-kentos-event-cursor");
+                total = res.content_length().unwrap_or(0);
+                bytes.reserve(usize::try_from(total).unwrap_or(0).min(1 << 28));
+            }
+            let cut = loop {
+                match res.chunk().await {
+                    Ok(Some(part)) => {
+                        bytes.extend_from_slice(&part);
+                        tries = 1;
+                        if let Some(p) = &progress {
+                            p(bytes.len() as u64, total);
+                        }
+                    }
+                    Ok(None) => break None,
+                    Err(e) => break Some(ApiFailure::unreachable(&e, FILE_TIMEOUT)),
+                }
+            };
+            match cut {
+                None => break,
+                Some(_) if tries < DOWNLOAD_TRIES => {
+                    tokio::time::sleep(Duration::from_millis(500 << tries.min(5))).await;
+                    tries += 1;
+                    if !resumable {
+                        bytes.clear();
+                    }
+                }
+                Some(f) => return Err(f),
             }
         }
         let sha256 = hex_sha256(&bytes);
@@ -636,7 +699,7 @@ impl Cloud {
     ) -> impl Future<Output = Result<Download, ApiFailure>> + Send + 'static {
         self.call(move |inner| async move {
             let url = inner.project_url(tenant, project, &format!("/files/{revision}"))?;
-            inner.download(url, progress).await
+            inner.download(url, progress, true).await
         })
     }
 
@@ -649,7 +712,8 @@ impl Cloud {
     ) -> impl Future<Output = Result<Download, ApiFailure>> + Send + 'static {
         self.call(move |inner| async move {
             let url = inner.project_url(tenant, project, "/snapshot")?;
-            inner.download(url, progress).await
+            // Made anew at every request: nothing to go on with.
+            inner.download(url, progress, false).await
         })
     }
 

@@ -26,6 +26,7 @@ use uuid::Uuid;
 use crate::api::{Cloud, Progress};
 use crate::failure::ApiFailure;
 use crate::runtime::run;
+use crate::saving::retrying;
 
 /// Objects asked for at once (the web's page).
 pub const PAGE: u32 = 2000;
@@ -153,9 +154,7 @@ async fn database(
         p(0, total);
     }
     loop {
-        let page = cloud
-            .features(tenant, project, after.as_deref(), PAGE)
-            .await?;
+        let page = retrying(|| cloud.features(tenant, project, after.as_deref(), PAGE)).await?;
         let more = page.next.is_some();
         if more && page.features.is_empty() {
             // A server that sends empty pages with a next one would never end.
@@ -193,7 +192,7 @@ async fn file(
     info: ProjectInfo,
     progress: Option<Progress>,
 ) -> Result<Opened, ApiFailure> {
-    let list = cloud.file_revisions(tenant, project).await?;
+    let list = retrying(|| cloud.file_revisions(tenant, project)).await?;
     let Some(current) = list.current else {
         // Nothing saved yet: the project's metadata, no objects.
         let document = build(info.name.clone(), snapshot(&info, project, Vec::new())).await?;
@@ -266,7 +265,7 @@ pub fn open(
 ) -> impl Future<Output = Result<Opened, ApiFailure>> + Send + 'static {
     let cloud = cloud.clone();
     run(async move {
-        let info = cloud.project(tenant, project).await?;
+        let info = retrying(|| cloud.project(tenant, project)).await?;
         match info.storage {
             ProjectStorage::Database => database(&cloud, tenant, project, info, progress).await,
             ProjectStorage::File => file(&cloud, tenant, project, info, progress).await,

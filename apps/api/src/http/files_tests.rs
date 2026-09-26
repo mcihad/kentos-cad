@@ -195,6 +195,30 @@ async fn a_revision_goes_up_and_comes_down_over_http() {
             .unwrap()
             .contains("filename*=UTF-8''Ada%207%20dosyas%C4%B1-r1.kcad")
     );
+    assert_eq!(headers[header::ACCEPT_RANGES].to_str().unwrap(), "bytes");
+    // A download cut short goes on from where it stopped (docs/adr/0045).
+    let ranged = |range: &str| {
+        let mut r = get(&format!("{base}/files/1"), &ayse);
+        r.headers_mut()
+            .insert(header::RANGE, range.parse().unwrap());
+        r
+    };
+    let (status, headers, body) = send(&router, ranged("bytes=10-")).await;
+    assert_eq!(status, StatusCode::PARTIAL_CONTENT);
+    assert_eq!(body, &MINIMAL[10..]);
+    assert_eq!(
+        headers[header::CONTENT_RANGE].to_str().unwrap(),
+        format!("bytes 10-{}/{}", MINIMAL.len() - 1, MINIMAL.len())
+    );
+    assert_eq!(
+        headers[header::ETAG].to_str().unwrap(),
+        format!("\"{}\"", sha(MINIMAL))
+    );
+    let (status, _, _) = send(&router, ranged(&format!("bytes={}-", MINIMAL.len()))).await;
+    assert_eq!(status, StatusCode::RANGE_NOT_SATISFIABLE);
+    // A range of another kind is answered with the whole file.
+    let (status, _, body) = send(&router, ranged("bytes=0-9")).await;
+    assert_eq!((status, body.len()), (StatusCode::OK, MINIMAL.len()));
 
     // More bytes than declared: refused, and the field is named.
     let (_, _, body) = send(

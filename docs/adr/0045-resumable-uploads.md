@@ -26,11 +26,21 @@
   - İlerleme sunucunun aldığı bayt olarak bildirilir (`save_revision_watched`).
 - Tek parça `PUT` (web'in kullandığı) aynen kalır. En büyük dosya 256 MiB'dır; doğrulama dosyayı bütün okur (ADR 0031).
 
+### İndirme ve açılış
+
+- Revizyon değişmez; kopan indirme kaldığı yerden sürer.
+  - `GET …/files/{n}` şu başlığı alır: `Range: bytes=N-`. Yanıt `206 Partial Content`, `Content-Range`, aynı varlık etiketi (SHA-256).
+  - Dosyanın sonunu aşan başlangıç `416` alır. Başka türden aralık istenirse bütün dosya gelir. Tam yanıt `Accept-Ranges: bytes` der.
+- **İstemci:**
+  - Revizyonda kopan indirme `Range` ile, veritabanı projesinin görüntüsünde (her istekte yeniden üretilir) baştan yeniden denenir. İlerleme olmadan en çok 5 kez.
+  - Gelen parça aynı dosyanın devamı değilse (başka etiket, başka başlangıç) indirme baştan başlar.
+  - Sonuç her durumda varlık etiketiyle denetlenir.
+- Açılışın sunucu adımları (proje bilgisi, nesne sayfaları, revizyon listesi) geçici hatada bekleyerek yeniden denenir. Tek bir kopuk yanıt bütün açılışı düşürmez.
+
 ## Bu dilimde olmayanlar
 
 - **Programın kapanıp açılmasından sonra aynı yüklemeye devam etmek:** bugün yeni yükleme başlar. Bekleyen kayıt cihazda durduğu için (ADR 0043) iş kaybolmaz, yalnız yeniden gönderilir.
 - **256 MiB üstü dosyalar:** akışla doğrulama gerekir.
-- **İndirmede kaldığı yerden sürme** (`Range`).
 - **Web'de parçalı yükleme:** web çevrimiçi kalır; ihtiyaç olursa aynı yol kullanılır.
 
 ## Doğrulama (26 Eylül 2026, Linux)
@@ -41,3 +51,7 @@
   - bildirilen özeti tutmayan dosyanın son parçası `sha256` ile reddedildi, hiçbir şey saklanmadı (gelen bayt 0).
 - Kasıtlı bozma: sunucu parça sırasını denetlemeyince aynı parça iki kez eklendi (2048 bayt) ve test düştü; geri alındı.
 - `pnpm rust:test` (veritabanı zorunlu, clippy, bağımlılık yönü) ve `pnpm typecheck` geçti.
+- **İndirme:**
+  - `files_tests.rs`: 10. bayttan aralık 206, doğru `Content-Range` ve baytlar verir; dosya boyunda başlangıç 416, kapalı aralık bütün dosyayı getirir.
+  - `crates/native/cloud/tests/download_resume.rs`: yerel bir sahte sunucu ilk yanıtı yarıda keser. İstemci ikinci istekte `Range: bytes=<yarı>-` sorar, parçaları birleştirir, SHA-256 tutar.
+  - Kasıtlı bozma: revizyon sürdürülemez sayılınca istemci baştan istedi, sunucu artık yanıt vermedi ve test düştü; geri alındı.
