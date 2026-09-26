@@ -20,9 +20,9 @@
   "summary": {
     "commands": {
       "total": 167,
-      "implemented": 149,
+      "implemented": 152,
       "partial": 0,
-      "pending": 18
+      "pending": 15
     },
     "tools": {
       "total": 58,
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 59,
-      "implemented": 59,
+      "total": 62,
+      "implemented": 62,
       "partial": 0,
       "pending": 0
     },
@@ -76,7 +76,7 @@
       "view.commandSearch",
       "view.theme.toggle"
     ],
-    "commandsWithoutTests": 94,
+    "commandsWithoutTests": 91,
     "commandsOnDesktop": 41
   },
   "commands": [
@@ -1268,7 +1268,12 @@
       "id": "file.export.geojson",
       "title": "GeoJSON…",
       "category": "Dosya",
-      "aliases": [],
+      "icon": "export",
+      "description": "Seçili, görünen ya da bütün nesneleri GeoJSON FeatureCollection olarak yazar; koordinatlar tam, dönüştürülmeden. WGS 84 projesi RFC 7946'ya uyar; başka sistemdeki proje kendi koordinatlarıyla ve eski crs üyesiyle yazılır. Eğriler örneklenir, yazı ve ölçüler yazılmaz.",
+      "aliases": [
+        "GEOJSONYAZ",
+        "GEOJSONVER"
+      ],
       "kind": "action",
       "shortcuts": [],
       "menus": [
@@ -1283,12 +1288,14 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
       ],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
+        "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/smoke.mjs"
+      ]
     },
     {
       "id": "file.export.ncn",
@@ -1390,7 +1397,12 @@
       "id": "file.import.geojson",
       "title": "GeoJSON…",
       "category": "Dosya",
-      "aliases": [],
+      "icon": "import",
+      "description": "GeoJSON dosyasını (RFC 7946) içe aktarır: noktalar (Z ile), çizgiler, çoklu çizgiler ve delikli alanlar; özellikler metin öznitelik olur. Dosyanın dediği koordinat sistemi gösterilir; projeninkinden başkaysa alınmaz, koordinatlar dönüştürülmez.",
+      "aliases": [
+        "GEOJSON",
+        "GEOJSONAL"
+      ],
       "kind": "action",
       "shortcuts": [],
       "menus": [
@@ -1405,12 +1417,14 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
       ],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
+        "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/smoke.mjs"
+      ]
     },
     {
       "id": "file.import.ncn",
@@ -1477,7 +1491,13 @@
       "id": "file.import.shp",
       "title": "Shapefile…",
       "category": "Dosya",
-      "aliases": [],
+      "icon": "import",
+      "description": "Shapefile katmanını içe aktarır: .shp, .shx, .dbf, .prj ve .cpg dosyaları birlikte seçilir. Noktalar (Z ile), çizgiler ve delikli alanlar; .dbf alanları metin öznitelik olur. .prj'deki sistem gösterilir; projeninkinden başkaysa alınmaz. .zip henüz açılmaz.",
+      "aliases": [
+        "SHP",
+        "SHPAL",
+        "SHAPEFILE"
+      ],
       "kind": "action",
       "shortcuts": [],
       "menus": [
@@ -1492,12 +1512,14 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts"
       ],
-      "status": "pending",
+      "status": "implemented",
       "platforms": {
-        "web": "pending",
+        "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/smoke.mjs"
+      ]
     },
     {
       "id": "file.new",
@@ -11262,6 +11284,39 @@
       "name": "openDxfImport",
       "role": "window",
       "source": "apps/web/src/ui/io/DxfImportDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/io/GeoJsonExportDialog.ts#openGeoJsonExport",
+      "name": "openGeoJsonExport",
+      "role": "window",
+      "source": "apps/web/src/ui/io/GeoJsonExportDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/io/GisImportDialog.ts#openGeoJsonImport",
+      "name": "openGeoJsonImport",
+      "role": "window",
+      "source": "apps/web/src/ui/io/GisImportDialog.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/io/GisImportDialog.ts#openShapefileImport",
+      "name": "openShapefileImport",
+      "role": "window",
+      "source": "apps/web/src/ui/io/GisImportDialog.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

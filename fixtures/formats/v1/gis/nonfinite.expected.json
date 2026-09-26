@@ -1,0 +1,143 @@
+{
+ "declaredSrid": 4326,
+ "objects": [
+  {
+   "kind": "point",
+   "layer": "nonfinite",
+   "p": [
+    30.0,
+    40.0
+   ],
+   "attrs": {
+    "ad": "coklu nokta",
+    "buyuk": "1e999"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "nonfinite",
+   "p": [
+    30.2,
+    40.2
+   ],
+   "z": 0.0,
+   "attrs": {
+    "ad": "coklu nokta",
+    "buyuk": "1e999"
+   }
+  },
+  {
+   "kind": "line",
+   "layer": "nonfinite",
+   "a": [
+    31.0,
+    40.5
+   ],
+   "b": [
+    31.1,
+    40.6
+   ],
+   "attrs": {
+    "ad": "koleksiyon"
+   }
+  },
+  {
+   "kind": "polyline",
+   "layer": "nonfinite",
+   "pts": [
+    [
+     32.2,
+     41.2
+    ],
+    [
+     32.3,
+     41.3
+    ],
+    [
+     32.4,
+     41.2
+    ]
+   ],
+   "attrs": {
+    "ad": "coklu cizgi"
+   }
+  },
+  {
+   "kind": "polygon",
+   "layer": "nonfinite",
+   "pts": [
+    [
+     34.5,
+     40.5
+    ],
+    [
+     34.7,
+     40.5
+    ],
+    [
+     34.7,
+     40.7
+    ]
+   ],
+   "attrs": {
+    "ad": "coklu cokgen"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "nonfinite",
+   "p": [
+    35.0,
+    39.5
+   ],
+   "attrs": {
+    "ad": "nokta"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "nonfinite",
+   "p": [
+    35.5,
+    39.6
+   ],
+   "z": 12.5,
+   "attrs": {
+    "ad": "dorduncu sayi"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "nonfinite",
+   "p": [
+    36.0,
+    40.0
+   ],
+   "attrs": {
+    "ad": "bozuk konumlar"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "nonfinite",
+   "p": [
+    36.4,
+    40.4
+   ],
+   "attrs": {
+    "ad": "bozuk konumlar"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "nonfinite",
+   "p": [
+    37.0,
+    41.0
+   ],
+   "attrs": {
+    "ad": "bozuk uyeler"
+   }
+  }
+ ]
+}

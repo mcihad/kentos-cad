@@ -1,0 +1,124 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1,
+      "properties": {
+        "ad": "\u00c7ankaya \u0130l\u00e7esi \u015eehit \u00d6\u011fretmen I\u015f\u0131k \u00dcst\u00fcn Soka\u011F\u0131",
+        "no": 12,
+        "oran": 1.50,
+        "bin": 1e3,
+        "sifir": -0.0,
+        "durum": "eski",
+        "aktif": true,
+        "kapali": false,
+        "bos": null,
+        "detay": { "kat": 3, "cephe": "g\u00fcney", "alan": 120.750, "isaret": "\ud83d\udccd", "ic": { "x": null, "y": [ true, false ] } },
+        "notlar": [ "ilk sat\u0131r\nikinci \"s\u00f6z\"", "a\/b\tc\u0001d\\e", 2, -1.5E-3 ],
+        "durum": "yeni"
+      },
+      "geometry": { "type": "Point", "coordinates": [32.8597, 39.9334, 938.5] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "Kad\u0131k\u00f6y", "bos_metin": "", "bos_nesne": {}, "bos_dizi": [], "eksi_sifir": -0, "buyuk": 123456789012345678901234567890, "pi": 3.14159265358979323846264338327950288 },
+      "geometry": { "type": "MultiPoint", "coordinates": [[28.9784, 41.0082, 39.25], [29.0277, 41.0422]] }
+    },
+    {"type":"Feature","properties":{"tur":"yol"},"geometry":{"type":"LineString","coordinates":[[27.1428,38.4237],[27.2,38.46]]}},
+    {
+      "geometry": { "coordinates": [[30.7133, 36.8969], [30.72, 36.9, 12.5], [30.7288, 36.8841], [30.74, 36.89]], "type": "LineString" },
+      "properties": null,
+      "type": "Feature"
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "dere" },
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [[35.4787, 38.7312], [35.49, 38.74]],
+          [[35.5, 38.75], [35.51, 38.76], [35.52, 38.755]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "park" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[32.40, 37.80], [32.60, 37.80], [32.60, 37.95], [32.40, 37.95], [32.40, 37.80]],
+          [[32.45, 37.85], [32.50, 37.90], [32.55, 37.85], [32.45, 37.85]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "ada" },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[[39.70, 40.98], [39.74, 40.98], [39.74, 41.02], [39.70, 41.02], [39.70, 40.98]]],
+          [[[41.25, 39.88], [41.30, 39.88], [41.32, 39.90], [41.30, 39.92], [41.25, 39.92]]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "koleksiyon" },
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          { "type": "Point", "coordinates": [43.3833, 38.4942] },
+          { "type": "LineString", "coordinates": [[43.38, 38.49], [43.40, 38.50], [43.42, 38.505]] }
+        ]
+      }
+    },
+    { "type": "Feature", "properties": { "ad": "geometrisiz" }, "geometry": null },
+    { "type": "Feature", "geometry": { "type": "LineString", "coordinates": [[34.0, 38.0]] } },
+    {
+      "type": "Feature",
+      "kentos": { "layer": 5, "label": null },
+      "properties": { "tur": "dort sayi" },
+      "geometry": { "type": "Point", "coordinates": [34.5, 39.1, 1100.5, 7.0] }
+    },
+    {
+      "kentos": { "layer": "Sınır", "label": "P-12" },
+      "type": "Feature",
+      "properties": { "ada": "12", "parsel": 7 },
+      "geometry": { "type": "Polygon", "coordinates": [[[33.0, 39.0], [33.1, 39.0], [33.1, 39.1], [33.0, 39.1], [33.0, 39.0]]] }
+    },
+    {
+      "type": "Feature",
+      "kentos": { "label": "K-1", "renk": "#c00" },
+      "properties": { "tur": "sadece etiket" },
+      "geometry": { "type": "LineString", "coordinates": [[36.0, 37.0], [36.1, 37.05]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "bilinmeyen" },
+      "geometry": { "type": "Circle", "coordinates": [37.0, 38.0], "radius": 50.0 }
+    },
+    {
+      "type": "Feature",
+      "properties": { "tur": "ic ice" },
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          { "type": "GeometryCollection", "geometries": [ { "type": "Point", "coordinates": [38.0, 37.5, -12.25] } ] },
+          { "type": "Circle", "coordinates": [38.1, 37.6], "radius": 5.0 }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "kentos": { "layer": "", "label": "" },
+      "properties": { "tur": "bos kentos" },
+      "geometry": { "type": "LineString", "coordinates": [[36.5, 37.5], [36.6, 37.55]] }
+    },
+    { "type": "Point", "coordinates": [37.5, 38.5] },
+    { "type": "Feature", "properties": { "tur": "geometri uyesi yok" } }
+  ],
+  "name": "ornek"
+}

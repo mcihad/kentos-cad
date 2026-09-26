@@ -688,6 +688,7 @@ pub fn read(bytes: &[u8], opts: &CoordReadOptions) -> CoordRead {
             layers: Vec::new(),
             report: report.import(),
             bounds,
+            declared_crs: None,
         }),
     }
 }

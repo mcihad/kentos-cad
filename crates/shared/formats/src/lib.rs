@@ -1,5 +1,5 @@
 //! File formats of KentOS (CLAUDE.md §9.7): coordinate lists (Netcad NCN,
-//! TXT, CSV) and ASCII DXF. Readers turn a file's bytes into the
+//! TXT, CSV), ASCII DXF, GeoJSON and Shapefile (docs/adr/0046). Readers turn a file's bytes into the
 //! app's objects (the versioned contracts, `kentos-contracts`) with a report
 //! of what was read, converted or left out; writers do the reverse. The
 //! browser runs this crate in a Web Worker (`kentos-formats-wasm`), the
@@ -23,11 +23,15 @@
 
 pub mod coords;
 pub mod dxf;
+pub mod geojson;
 pub mod geom;
+pub mod gis;
+pub mod json;
 pub mod math;
 pub mod num;
 pub mod nurbs;
 pub mod report;
+pub mod shp;
 pub mod text;
 
 pub use kentos_contracts as contracts;

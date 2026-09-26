@@ -1,0 +1,39 @@
+{
+ "declaredSrid": null,
+ "encoding": "Windows-1254",
+ "objects": [
+  {
+   "kind": "point",
+   "layer": "karisik",
+   "p": [
+    500100.0,
+    4400100.0
+   ],
+   "attrs": {
+    "AD": "Bir",
+    "NO": "1"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "karisik",
+   "p": [
+    500200.5,
+    4400200.5
+   ],
+   "attrs": {
+    "AD": "Uc",
+    "NO": "3"
+   }
+  },
+  {
+   "kind": "point",
+   "layer": "karisik",
+   "p": [
+    500300.25,
+    4400300.75
+   ],
+   "attrs": {}
+  }
+ ]
+}

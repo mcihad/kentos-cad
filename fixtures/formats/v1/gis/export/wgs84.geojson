@@ -1,0 +1,5 @@
+{"type":"FeatureCollection","name":"Ankara noktaları","features":[
+{"type":"Feature","properties":{"ad":"Kızılay"},"geometry":{"type":"Point","coordinates":[32.8541,39.9208,850.25]},"kentos":{"layer":"Noktalar","label":"K1"}},
+{"type":"Feature","properties":{},"geometry":{"type":"LineString","coordinates":[[32.85,39.92],[32.86,39.93]]},"kentos":{"layer":"Noktalar"}},
+{"type":"Feature","properties":{"ad":"Güvenpark"},"geometry":{"type":"Polygon","coordinates":[[[32.853,39.919],[32.856,39.919],[32.856,39.921],[32.853,39.921],[32.853,39.919]]]},"kentos":{"layer":"Noktalar"}}
+]}

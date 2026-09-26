@@ -1,0 +1,81 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "ad": "coklu nokta", "buyuk": 1e999 },
+      "geometry": { "type": "MultiPoint", "coordinates": [[30.0, 40.0], [1e999, 40.1], [30.2, 40.2, 1e-999]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "cizgi" },
+      "geometry": { "type": "LineString", "coordinates": [[30.0, 40.0], [30.1, -1e999], [30.2, 40.2]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "koleksiyon" },
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          { "type": "Point", "coordinates": [31.0, 40.5, 1e999] },
+          { "type": "LineString", "coordinates": [[31.0, 40.5], [31.1, 40.6]] }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "coklu cizgi" },
+      "geometry": { "type": "MultiLineString", "coordinates": [[[32.0, 41.0], [32.1, 1e999]], [[32.2, 41.2], [32.3, 41.3], [32.4, 41.2]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "cokgen" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [[33.0, 40.0], [33.2, 40.0], [33.2, 40.2], [33.0, 40.2], [33.0, 40.0]],
+          [[33.05, 40.05], [33.1, -1e999], [33.15, 40.05], [33.05, 40.05]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "coklu cokgen" },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [[[34.0, 40.0], [1e999, 40.0], [34.2, 40.2], [34.0, 40.0]]],
+          [[[34.5, 40.5], [34.7, 40.5], [34.7, 40.7], [34.5, 40.5]]]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "nokta" },
+      "geometry": { "type": "Point", "coordinates": [35.0, 39.5] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "dorduncu sayi" },
+      "geometry": { "type": "Point", "coordinates": [35.5, 39.6, 12.5, 1e999] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "bozuk konumlar" },
+      "geometry": { "type": "MultiPoint", "coordinates": [[36.0, 40.0], [true, 40.1], [36.2], [36.3, 40.3, "z"], [36.4, 40.4]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "ad": "bozuk uyeler" },
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          5,
+          { "type": "Point" },
+          { "type": "LineString", "coordinates": "x" },
+          { "type": "Point", "coordinates": [37.0, 41.0] }
+        ]
+      }
+    }
+  ]
+}

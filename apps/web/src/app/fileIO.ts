@@ -68,6 +68,8 @@ export interface FileKind {
 export interface DrawingFilePicker {
   save(suggestedName: string, kind?: FileKind): Promise<DrawingFileHandle | null | undefined>;
   open(kind?: FileKind): Promise<DrawingFileHandle | null | undefined>;
+  /** Several files at once (a Shapefile layer's); a picker without it gives the browser's file input. */
+  openMany?(kind: FileKind): Promise<DrawingFileHandle[] | null | undefined>;
 }
 
 type FsaWindow = Window & {
@@ -96,6 +98,17 @@ export const browserPicker: DrawingFilePicker = {
     try {
       const [handle] = await w.showOpenFilePicker({ types: [kind], multiple: false });
       return handle ?? null;
+    } catch (e) {
+      if ((e as DOMException).name === 'AbortError') return null;
+      throw e;
+    }
+  },
+  async openMany(kind) {
+    const w = window as FsaWindow;
+    if (!w.showOpenFilePicker) return undefined;
+    try {
+      const handles = await w.showOpenFilePicker({ types: [kind], multiple: true });
+      return handles.length ? handles : null;
     } catch (e) {
       if ((e as DOMException).name === 'AbortError') return null;
       throw e;
@@ -288,6 +301,33 @@ export class DocumentFiles {
       this.ctx.log.error(`“${handle.name}” okunamadı: ${message(e)}.`);
       return null;
     }
+  }
+
+  /**
+   * Asks for several files to import at once (a Shapefile layer's .shp,
+   * .shx, .dbf, .prj and .cpg, docs/adr/0046) and reads their bytes; null
+   * when the user cancels or one cannot be read (said in the log).
+   */
+  async pickManyForImport(kind: FileKind): Promise<PickedFile[] | null> {
+    let handles: DrawingFileHandle[] | null | undefined;
+    try {
+      handles = this.picker.openMany ? await this.picker.openMany(kind) : undefined;
+    } catch (e) {
+      this.ctx.log.error(`Açma penceresi açılamadı: ${message(e)}. Tarayıcının dosya iznini denetleyin.`);
+      return null;
+    }
+    if (handles === undefined) handles = await pickManyWithInput(Object.values(kind.accept).flat().join(','));
+    if (!handles?.length) return null;
+    const out: PickedFile[] = [];
+    for (const handle of handles) {
+      try {
+        out.push({ name: handle.name, bytes: new Uint8Array(await (await handle.getFile()).arrayBuffer()) });
+      } catch (e) {
+        this.ctx.log.error(`“${handle.name}” okunamadı: ${message(e)}.`);
+        return null;
+      }
+    }
+    return out;
   }
 
   /**
@@ -638,6 +678,30 @@ export class DocumentFiles {
 async function askAboutUnsaved(name: string, after: string): Promise<DiscardChoice> {
   const a = await askUnsaved({ name, after, verb: 'devam et' });
   return a === 'discard' ? 'drop' : a;
+}
+
+/** A chosen file as a read-only handle. */
+const inputHandle = (file: File): DrawingFileHandle => ({
+  name: file.name,
+  getFile: async () => file,
+  createWritable: async () => {
+    throw new Error('bu tarayıcıda dosyaya yazılamıyor');
+  },
+});
+
+/** Where the browser has no open dialog API: a hidden file input that takes several files. */
+function pickManyWithInput(accept: string): Promise<DrawingFileHandle[] | null> {
+  return new Promise((resolve) => {
+    const input = h('input', { type: 'file', accept, multiple: true, style: 'display:none' });
+    input.addEventListener('change', () => {
+      const files = [...(input.files ?? [])];
+      input.remove();
+      resolve(files.length ? files.map(inputHandle) : null);
+    });
+    input.addEventListener('cancel', () => (input.remove(), resolve(null)));
+    document.body.append(input);
+    input.click();
+  });
 }
 
 /** Where the browser has no open dialog API: a hidden file input. */

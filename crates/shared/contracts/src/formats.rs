@@ -20,7 +20,9 @@ use crate::layer::LineType;
 /// 4: `v1Identities`, the persistent ids of a v1 drawing's objects (`identity`, docs/adr/0014).
 /// 5: `encodeKcad`, `decodeKcad`: the binary `.kcad` v2 (docs/specs/kcad-v2.md, docs/adr/0025).
 /// 6: the drawing crosses as typed columns (`kentos_kcad::columns`) with progress, not as JSON (docs/adr/0030).
-pub const FORMATS_VERSION: u32 = 6;
+/// 7: GeoJSON read and write, Shapefile read (`readGeoJson`, `writeGeoJson`, `readShapefile`);
+///    an import says the coordinate system its file declares (`declaredCrs`, docs/adr/0046).
+pub const FORMATS_VERSION: u32 = 7;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -84,11 +86,45 @@ pub struct ImportReport {
     pub source: Vec<SourceFact>,
 }
 
+/// Where a file's statement of its coordinate system comes from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CrsSource {
+    /// A GeoJSON file without a `crs` member: RFC 7946 makes it WGS 84 longitude, latitude.
+    Rfc7946,
+    /// A GeoJSON file's legacy `crs` member (the 2008 specification).
+    GeoJsonCrs,
+    /// A Shapefile's `.prj` (WKT).
+    Prj,
+}
+
+/// The coordinate system a file declares: what the file says, never a
+/// guess (CLAUDE.md §5). The import window shows it as the answer to its
+/// question, and the user confirms or changes it; nothing is transformed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DeclaredCrs {
+    /// The EPSG code the statement names, when it names one the reader recognises.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub srid: Option<u32>,
+    /// The statement as the window shows it ("urn:ogc:def:crs:EPSG::5256", "TUREF_TM36").
+    pub text: String,
+    pub source: CrsSource,
+}
+
 /// What a reader produced. Objects have id 0 (the app numbers them when it
 /// adds them) and `layerId` holds the name of their layer in `layers`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ImportResult {
     pub entities: Vec<Entity>,
@@ -98,6 +134,10 @@ pub struct ImportResult {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub bounds: Option<Bounds>,
+    /// The coordinate system the file declares (GeoJSON, Shapefile; docs/adr/0046).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub declared_crs: Option<DeclaredCrs>,
 }
 
 // ── Coordinate lists (Netcad NCN, TXT, CSV) ─────────────────────────────
@@ -350,4 +390,60 @@ pub struct ExportReport {
     pub counts: BTreeMap<String, u32>,
     pub notes: Vec<ReportItem>,
     pub skipped: Vec<ReportItem>,
+}
+
+// ── GeoJSON (RFC 7946) and Shapefile (docs/adr/0046) ───────────────────
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GeoJsonReadOptions {
+    /// The layer of the objects the file does not place: the document's
+    /// `name` member when it has one, else this (the file's name).
+    pub layer: String,
+    /// Stop after this many objects (0: one million); the rest is counted and reported.
+    pub max_entities: u32,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ShapefileReadOptions {
+    /// The layer of the objects (the .shp file's name).
+    pub layer: String,
+    /// Stop after this many objects (0: one million); the rest is counted and reported.
+    pub max_entities: u32,
+}
+
+/// A layer the GeoJSON writer names in each feature's `kentos.layer`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GeoJsonLayer {
+    /// What the objects' `layerId` holds.
+    pub id: String,
+    pub name: String,
+}
+
+/// What `file.export.geojson` writes: a FeatureCollection. A WGS 84
+/// project (EPSG:4326) is written as RFC 7946 has it; any other in its own
+/// coordinate system with the legacy `crs` member naming it, which RFC
+/// 7946 does not allow (the export window says so). Nothing is transformed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct GeoJsonWriteInput {
+    pub entities: Vec<Entity>,
+    pub layers: Vec<GeoJsonLayer>,
+    /// The project's coordinate system (EPSG code).
+    pub srid: u32,
+    /// The collection's `name` (the drawing's).
+    pub name: String,
 }

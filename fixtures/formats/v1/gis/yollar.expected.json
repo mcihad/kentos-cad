@@ -1,0 +1,73 @@
+{
+ "declaredSrid": 2320,
+ "encoding": "UTF-8",
+ "objects": [
+  {
+   "kind": "line",
+   "layer": "yollar",
+   "a": [
+    415000.5,
+    4540000.25
+   ],
+   "b": [
+    415100.75,
+    4540050.5
+   ],
+   "attrs": {
+    "AD": "Atatürk Bulvarı",
+    "ŞERİT": "4",
+    "KAPLAMA": "Asfalt"
+   }
+  },
+  {
+   "kind": "polyline",
+   "layer": "yollar",
+   "pts": [
+    [
+     415200.0,
+     4540100.0
+    ],
+    [
+     415250.5,
+     4540180.25
+    ],
+    [
+     415330.125,
+     4540210.0
+    ],
+    [
+     415400.0,
+     4540300.5
+    ]
+   ],
+   "attrs": {
+    "AD": "Atatürk Bulvarı",
+    "ŞERİT": "4",
+    "KAPLAMA": "Asfalt"
+   }
+  },
+  {
+   "kind": "polyline",
+   "layer": "yollar",
+   "pts": [
+    [
+     415600.0,
+     4540500.0
+    ],
+    [
+     415650.25,
+     4540575.5
+    ],
+    [
+     415700.5,
+     4540600.0
+    ]
+   ],
+   "attrs": {
+    "AD": "Gökçe Ağaçlı Yolu",
+    "ŞERİT": "2",
+    "KAPLAMA": "Stabilize"
+   }
+  }
+ ]
+}

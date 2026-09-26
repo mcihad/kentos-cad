@@ -1485,6 +1485,188 @@ try {
     await b.eval(`(() => { const k = window.kentos; k.files.picker = window.__io.original; k.selection.clear(); })()`);
   }
 
+  // GeoJSON and Shapefile (docs/adr/0046), fixtures/formats/v1/gis as they are: a file whose coordinate system is the
+  // project's goes in as one undo step with its layers, attributes and exact coordinates (the objects the independent
+  // reader wrote down); an RFC 7946 file (WGS 84) in a TM project is not taken, and says there is no transformation yet;
+  // a Shapefile layer's files are chosen together; the export writes the project's coordinates with the crs member and
+  // reads back to the same objects.
+  {
+    const gisDir = new URL('../../../../fixtures/formats/v1/gis/', import.meta.url);
+    const gisRaw = (name) => readFileSync(new URL(name, gisDir)).toString('base64');
+    const gisPick = (list) =>
+      b.eval(`(() => {
+        const k = window.kentos;
+        const made = ${JSON.stringify(list.map((n) => [n, gisRaw(n)]))}.map(([name, raw]) => ({ name, getFile: async () => new Blob([Uint8Array.from(atob(raw), (c) => c.charCodeAt(0))]) }));
+        const io = (window.__io ??= { original: k.files.picker });
+        io.written = null;
+        k.files.picker = {
+          open: async () => made[0],
+          openMany: async () => made,
+          save: async (n) => ({ name: n, getFile: async () => new Blob([]), createWritable: async () => { const parts = []; return { write: async (d) => { parts.push(d); }, close: async () => { io.written = { name: n, parts }; } }; } }),
+        };
+        k.selection.clear();
+      })()`);
+    const gisThemed = async (name) => {
+      const theme0 = await b.eval('window.kentos.ui.theme.value');
+      for (const t of ['dark', 'light']) {
+        await b.eval(`window.kentos.commands.execute('view.theme.${t}')`);
+        await sleep(200);
+        await b.shot(`${name}-${t}`);
+      }
+      await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1.08')`);
+      await sleep(200);
+      await b.shot(`${name}-large`);
+      await b.eval(`document.documentElement.style.setProperty('--ui-scale', '1'); window.kentos.commands.execute(${JSON.stringify(`view.theme.${theme0}`)})`);
+      await sleep(150);
+    };
+    const gisDialog = () =>
+      b.eval(`(() => {
+        const d = document.querySelector('.dialog--io');
+        if (!d) return null;
+        const crs = d.querySelector('select[aria-label="Bu koordinatlar hangi sistemde?"]');
+        return {
+          title: d.querySelector('.dialog__title')?.textContent ?? '',
+          meta: d.querySelector('.io-file__meta')?.textContent ?? '',
+          rows: [...d.querySelectorAll('tbody tr')].map((r) => [r.children[1].textContent.trim(), r.children[2].textContent.trim(), r.children[3].textContent.trim()]),
+          crs: crs?.value ?? null,
+          crsText: crs?.closest('.io-field')?.textContent ?? '',
+          summary: d.querySelector('.io-summary')?.textContent ?? '',
+          enabled: !d.querySelector('.dialog__foot .btn--primary')?.disabled,
+        };
+      })()`);
+    /** The objects added after `last`, as the rules' canonical form (docs/adr/0046): kind, layer name, coordinates, label, attributes. */
+    const gisAdded = (last) =>
+      b.eval(`(() => {
+        const k = window.kentos;
+        const xy = (p) => [p.x, p.y];
+        return [...k.doc.all()].filter((e) => e.id > ${last}).map((e) => {
+          const o = { kind: e.kind, layer: k.doc.layers.get(e.layerId)?.name };
+          if (e.kind === 'point') { o.p = xy(e.p); if (e.z !== undefined && e.z !== null) o.z = e.z; }
+          else if (e.kind === 'line') { o.a = xy(e.a); o.b = xy(e.b); }
+          else { o.pts = e.pts.map(xy); if (e.holes?.length) o.holes = e.holes.map((h) => h.pts.map(xy)); }
+          if (e.label) o.label = e.label;
+          o.attrs = e.attrs;
+          return o;
+        });
+      })()`);
+    const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v);
+    const expected = (name) => JSON.parse(readFileSync(new URL(`${name}.expected.json`, gisDir), 'utf8'));
+    const lastId = () => b.eval(`Math.max(0, ...[...window.kentos.doc.all()].map((e) => e.id))`);
+    const srid = await b.eval('window.kentos.doc.crs.value.srid');
+    check('GIS import: the drawing is in TUREF / TM36 (EPSG:5256), the system the fixtures name', srid === 5256, String(srid));
+    const n0 = await b.eval('window.kentos.doc.size');
+
+    // tm.geojson: its crs member names EPSG:5256.
+    await gisPick(['tm.geojson']);
+    const before = await lastId();
+    await b.eval(`window.kentos.commands.execute('file.import.geojson')`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-table tbody tr')`, 20000).catch(() => {});
+    const tm = await gisDialog();
+    check(
+      'GeoJSON import: the file\'s layers with their objects; its crs member names the project\'s system, which is chosen, and the import is open',
+      tm?.title === 'GeoJSON içe aktar' && JSON.stringify(tm.rows.map((r) => [r[0], r[1]])) === '[["Parsel","1"],["Bina","2"],["tm","2"]]' && tm.crs === '5256' && /Dosyanın crs üyesi: “urn:ogc:def:crs:EPSG::5256” \(EPSG:5256\)/.test(tm.crsText) && tm.enabled,
+      JSON.stringify(tm),
+    );
+    await gisThemed('io-geojson-import');
+    await ioPress('.dialog--io .dialog__foot .btn--primary', 'İçe aktar');
+    await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
+    const tmGot = await gisAdded(before);
+    const tmWant = expected('tm').objects;
+    check('GeoJSON import: every object as the independent reader read it, coordinates bit for bit (the layers by name)', JSON.stringify(canon(tmGot)) === JSON.stringify(canon(tmWant)), JSON.stringify(tmGot).slice(0, 400));
+    await b.eval(`window.kentos.commands.execute('edit.undo')`);
+    const tmUndone = await b.eval('window.kentos.doc.size');
+    await b.eval(`window.kentos.commands.execute('edit.redo')`);
+    check('GeoJSON import is one undo step', tmUndone === n0 && (await b.eval('window.kentos.doc.size')) === n0 + 5, `${n0} → ${tmUndone}`);
+
+    // features.geojson: RFC 7946, WGS 84 longitude and latitude. Not taken in a TM project; saying the file is in TM
+    // after all is the user's choice, and the window says what that means (and that the numbers look like degrees).
+    await gisPick(['features.geojson']);
+    await b.eval(`window.kentos.commands.execute('file.import.geojson')`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-table tbody tr')`, 20000).catch(() => {});
+    const wgs = await gisDialog();
+    check(
+      'GeoJSON import: an RFC 7946 file (WGS 84) in a TM project is not taken; the window says there is no coordinate transformation yet',
+      wgs?.crs === '4326' && !wgs.enabled && /RFC 7946/.test(wgs.crsText) && /koordinat dönüşümü henüz yok/.test(wgs.crsText),
+      JSON.stringify(wgs).slice(0, 600),
+    );
+    await gisThemed('io-geojson-wgs84');
+    const chosen = await b.eval(`(() => {
+      const s = document.querySelector('.dialog--io select[aria-label="Bu koordinatlar hangi sistemde?"]');
+      s.value = '5256';
+      s.dispatchEvent(new Event('change'));
+      const d = document.querySelector('.dialog--io');
+      return { enabled: !d.querySelector('.dialog__foot .btn--primary').disabled, text: s.closest('.io-field').textContent };
+    })()`);
+    check(
+      'GeoJSON import: choosing the project\'s system over the file\'s statement is said, and numbers that look like degrees are pointed out',
+      chosen.enabled && /Dosyanın dediğinden başka bir sistem seçtiniz/.test(chosen.text) && /derece/.test(chosen.text),
+      chosen.text.slice(0, 400),
+    );
+    await ioPress('.dialog--io .dialog__foot .btn', 'Vazgeç');
+    await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
+    check('GeoJSON import: Vazgeç takes nothing', (await b.eval('window.kentos.doc.size')) === n0 + 5);
+
+    // noktalar.*: a Shapefile layer, its files chosen together (another layer's .dbf among them is not used).
+    await gisPick(['noktalar.shp', 'noktalar.shx', 'noktalar.dbf', 'noktalar.prj', 'yollar.dbf']);
+    const beforeShp = await lastId();
+    await b.eval(`window.kentos.commands.execute('file.import.shp')`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-table tbody tr')`, 20000).catch(() => {});
+    const shp = await gisDialog();
+    check(
+      'Shapefile import: the layer\'s files together, its code page and .prj said, another layer\'s file not used',
+      shp?.title === 'Shapefile içe aktar' && /^\.shp, \.shx, \.dbf, \.prj/.test(shp.meta) && /Kodlama: Windows-1254/.test(shp.meta) && JSON.stringify(shp.rows.map((r) => [r[0], r[1]])) === '[["noktalar","3"]]' && shp.crs === '5256' && /TUREF/.test(shp.crsText) && /Kullanılmayan dosyalar.*yollar\.dbf/.test(shp.summary) && shp.enabled,
+      JSON.stringify(shp).slice(0, 700),
+    );
+    await gisThemed('io-shp-import');
+    await ioPress('.dialog--io .dialog__foot .btn--primary', 'İçe aktar');
+    await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
+    const shpGot = await gisAdded(beforeShp);
+    check('Shapefile import: points with their heights and Turkish attributes exactly as the independent reader read them', JSON.stringify(canon(shpGot)) === JSON.stringify(canon(expected('noktalar').objects)), JSON.stringify(shpGot).slice(0, 400));
+    await b.eval(`window.kentos.commands.execute('edit.undo')`);
+    const shpUndone = await b.eval('window.kentos.doc.size');
+    await b.eval(`window.kentos.commands.execute('edit.redo')`);
+    check('Shapefile import is one undo step', shpUndone === n0 + 5 && (await b.eval('window.kentos.doc.size')) === n0 + 8, `${n0 + 5} → ${shpUndone}`);
+
+    // GeoJSON export of the three points: the project's coordinates, named by the crs member (the window says the file
+    // is not RFC 7946), read back onto the same layer as the same objects.
+    await b.eval(`(() => { const k = window.kentos; k.selection.set([...k.doc.all()].filter((e) => e.id > ${beforeShp}).map((e) => e.id)); })()`);
+    await b.eval(`window.kentos.commands.execute('file.export.geojson')`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-summary')`, 10000).catch(() => {});
+    const ex = await gisDialog();
+    check(
+      'GeoJSON export: the selection by layer, and that a TM project gives no RFC 7946 file (no transformation yet)',
+      ex?.title === 'GeoJSON dışa aktar' && JSON.stringify(ex.rows.map((r) => [r[0], r[1], r[2]])) === '[["noktalar.shp / noktalar","3","kentos.layer: “noktalar”"]]' && /3 nesne yazılacak/.test(ex.summary) && /RFC 7946 GeoJSON olmayacak/.test(ex.summary) && /dönüşümü henüz yok/.test(ex.summary),
+      JSON.stringify(ex).slice(0, 600),
+    );
+    await gisThemed('io-geojson-export');
+    await ioPress('.dialog--io .dialog__foot .btn--primary', 'Dışa aktar');
+    await b.waitFor(`window.__io.written`, 10000).catch(() => {});
+    const out = await ioWritten();
+    check(
+      'GeoJSON export writes a FeatureCollection with the crs member and one feature a point, heights included',
+      !!out && /\.geojson$/.test(out.name) && out.text.includes('"crs":{"type":"name","properties":{"name":"urn:ogc:def:crs:EPSG::5256"}}') && (out.text.match(/"type":"Feature"/g) ?? []).length === 3 && out.text.includes('"coordinates":[512345.678,4423456.789,105.2]'),
+      `${out?.name} ${out?.text.slice(0, 300)}`,
+    );
+    await b.eval(`(() => {
+      const k = window.kentos;
+      const parts = window.__io.written.parts;
+      k.selection.clear();
+      k.files.picker = { ...k.files.picker, open: async () => ({ name: 'geri.geojson', getFile: async () => new Blob(parts) }) };
+    })()`);
+    const beforeBack = await lastId();
+    await b.eval(`window.kentos.commands.execute('file.import.geojson')`);
+    await b.waitFor(`document.querySelector('.dialog--io .io-table tbody tr')`, 20000).catch(() => {});
+    const back = await gisDialog();
+    check('GeoJSON export → import: the file\'s layer goes back to the drawing\'s layer of the same name', back?.rows.length === 1 && back.rows[0][0] === 'noktalar' && /katmanına eklenir/.test(back.rows[0][2]) && back.enabled, JSON.stringify(back?.rows));
+    await ioPress('.dialog--io .dialog__foot .btn--primary', 'İçe aktar');
+    await b.waitFor(`!document.querySelector('.dialog--io')`, 10000).catch(() => {});
+    const again = await gisAdded(beforeBack);
+    check('GeoJSON export → import: the same objects, coordinates bit for bit, with their attributes', JSON.stringify(canon(again)) === JSON.stringify(canon(shpGot)), JSON.stringify(again).slice(0, 400));
+    for (let i = 0; i < 3; i++) await b.eval(`window.kentos.commands.execute('edit.undo')`);
+    check('GIS imports undo one step each, back to the drawing as it was', (await b.eval('window.kentos.doc.size')) === n0);
+    await b.eval(`(() => { const k = window.kentos; k.files.picker = window.__io.original; k.selection.clear(); })()`);
+  }
+
   // Local .kcad files: Ctrl+S writes KCAD v2 (dirty clears only after the write), Ctrl+O asks about unsaved changes and
   // reopens it with every persistent id. Headless Chrome has no native file dialogs, so an in-memory picker stands in.
   {

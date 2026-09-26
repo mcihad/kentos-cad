@@ -287,8 +287,8 @@ impl<'de> Deserialize<'de> for Wire {
     }
 }
 
-/// The objects of the list, each read by `Wire`.
-struct Objects(Vec<Entity>);
+/// The objects of the list, each read by `Wire` (the GeoJSON writer reads its objects with it too).
+pub(crate) struct Objects(pub(crate) Vec<Entity>);
 
 impl<'de> Deserialize<'de> for Objects {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Objects, D::Error> {

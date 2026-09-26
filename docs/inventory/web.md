@@ -4,7 +4,7 @@
 
 | Bölüm | Toplam | implemented | partial | pending |
 |---|---|---|---|---|
-| Komutlar | 167 | 149 | 0 | 18 |
+| Komutlar | 167 | 152 | 0 | 15 |
 | Araçlar | 58 | 56 | 0 | 2 |
 | İşlem araçları | 4 | 4 | 0 | 0 |
 | İşlem modelleri | 1 | 1 | 0 | 0 |
@@ -12,23 +12,20 @@
 | Ayarlar | 64 | 64 | 0 | 0 |
 | Tarayıcı depoları | 10 | 10 | 0 | 0 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 192 | 0 | 0 |
-| Pencereler ve paneller | 59 | 59 | 0 | 0 |
+| Pencereler ve paneller | 62 | 62 | 0 | 0 |
 
 ## Kısmi (0)
 
 Yok.
 
-## Bekleyen (22)
+## Bekleyen (19)
 
 - Komutlar: `analysis.slope` Eğim analizi…
 - Komutlar: `analysis.volume` Hacim hesabı…
 - Komutlar: `crs.query` Koordinat sorgula
 - Komutlar: `crs.transform` Datum dönüşümü (ED50 ↔ TUREF)…
-- Komutlar: `file.export.geojson` GeoJSON…
 - Komutlar: `file.export.pdf` PDF pafta…
-- Komutlar: `file.import.geojson` GeoJSON…
 - Komutlar: `file.import.ncz` Netcad NCZ…
-- Komutlar: `file.import.shp` Shapefile…
 - Komutlar: `file.print` Yazdır ve pafta çıktısı…
 - Komutlar: `map.contours` Eşyükselti üret…
 - Komutlar: `map.parcelReport` Parsel alan çizelgesi
@@ -55,4 +52,4 @@ Masaüstü kabuğu (apps/desktop) 41 / 167 komutu çalıştırıyor; öbürleri 
 
 ## Test başvurusu
 
-94 / 167 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.
+91 / 167 komutun kimliği hiçbir test dosyasında ya da e2e betiğinde geçmiyor. Kimliğin bir testte geçmesi davranışın sınandığını göstermez; kabul kanıtı değildir.

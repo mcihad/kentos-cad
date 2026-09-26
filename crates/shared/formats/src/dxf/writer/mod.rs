@@ -19,6 +19,7 @@ mod input;
 mod layers;
 mod template;
 
+pub(crate) use input::Objects;
 pub use input::{WriteInput, input_from_json};
 
 use std::fmt::Write as _;
