@@ -14,6 +14,7 @@ import type { NewObject } from "./NewObject";
  * Refusals (`CommandError.code`), checked in this order: `no_objects`, then
  * each object's geometry in order: `too_few_points` (a polyline),
  * `too_few_corners` (a closed area's or a hatch's ring or hole),
+ * `empty_text` (a text whose text is empty or only white space),
  * `not_finite`, `invalid_radius`; then `invalid_revision`,
  * `revision_conflict` (status `conflict`), `layer_not_found`,
  * `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.

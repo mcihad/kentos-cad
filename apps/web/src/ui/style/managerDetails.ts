@@ -4,6 +4,7 @@ import type { PreviewGeometry } from '../../render/symbolPreview';
 import { importStyles, type ConflictMode, type StyleFile } from '../../style/file';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
+import { setProperties, uidsOf } from '../properties/write';
 import { askRemove } from '../widgets/confirm';
 import { PopupMenu } from '../widgets/PopupMenu';
 import { note, segmented } from '../widgets/controls';
@@ -189,19 +190,20 @@ function actions(host: DetailsHost, item: Sourced, editable: boolean): HTMLEleme
   return h('div', { class: 'smgr__actions' }, list);
 }
 
-/** Gives the selected objects this symbol (one undo step); locked layers are skipped and counted. */
+/** Gives the selected objects this symbol (one undo step, `cad.entities.set`); locked layers are skipped and counted. */
 function applyToSelection(host: DetailsHost, item: Sourced): void {
   const { doc, selection } = host.ctx;
-  const ids = [...selection.ids.value];
   let locked = 0;
-  const patches: { id: number; symbol: string }[] = [];
-  for (const id of ids) {
+  const ids: number[] = [];
+  for (const id of selection.ids.value) {
     const e = doc.get(id);
     if (!e) continue;
     if (doc.layers.isLocked(e.layerId)) locked++;
-    else patches.push({ id, symbol: item.id });
+    else ids.push(id);
   }
-  const done = doc.updateMany(patches, `Sembol: ${item.name}`);
+  // The step keeps the symbol's name, “Sembol: …”: the command knows no library and would say “Sembol ata”.
+  const out = ids.length ? doc.transact(`Sembol: ${item.name}`, () => setProperties(host.ctx, { uids: uidsOf(host.ctx, ids), symbol: item.id, operation: 'symbol' })) : null;
+  const done = out?.changed.length ?? 0;
   host.say(`${done} nesneye “${item.name}” verildi${locked ? `; kilitli katmandaki ${locked} nesne atlandı` : ''}.`, locked && !done ? 'warn' : 'ok');
 }
 

@@ -2389,7 +2389,8 @@
         "desktop": "none"
       },
       "tests": [
-        "apps/web/src/app/ribbon.test.ts"
+        "apps/web/src/app/ribbon.test.ts",
+        "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
     {

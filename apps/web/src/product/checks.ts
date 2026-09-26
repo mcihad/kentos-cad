@@ -111,22 +111,30 @@ export function checkUids(uids: readonly string[], nothing: string): Stop | null
 }
 
 /**
- * The objects the ids name, each once, in the input's order, with their ids;
- * `entity_not_found` for the first the document lacks.
+ * The objects the ids name, each once, in the input's order, with their ids
+ * and where the input first names them (`at`: `uids[at]`); `entity_not_found`
+ * for the first the document lacks.
  */
-export function findObjects(doc: CadDocument, uids: readonly string[]): Stop | { entity: Entity; uid: string }[] {
+export function findObjects(doc: CadDocument, uids: readonly string[]): Stop | { entity: Entity; uid: string; at: number }[] {
   const seen = new Set<string>();
-  const out: { entity: Entity; uid: string }[] = [];
+  const out: { entity: Entity; uid: string; at: number }[] = [];
   for (const [i, uid] of uids.entries()) {
     if (seen.has(uid)) continue;
     seen.add(uid);
     const entity = doc.byUid(uid);
     if (!entity)
       return failed(error('entity_not_found', `“${uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.`, `uids[${i}]`));
-    out.push({ entity, uid });
+    out.push({ entity, uid, at: i });
   }
   return out;
 }
+
+/**
+ * A text that is empty or only white space, as Unicode's White_Space has it:
+ * what Rust's `char::is_whitespace` takes, so the desktop answers the same.
+ * Not `String.trim`, which also takes U+FEFF and leaves U+0085.
+ */
+export const isBlank = (text: string): boolean => /^[\t-\r \u0085\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]*$/.test(text);
 
 /** `validate`'s answer from the checks: nothing, with the warnings, or why not. */
 export const validated = (checked: Stop | CommandWarning[]): CommandResult<null> =>

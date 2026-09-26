@@ -6,6 +6,7 @@ import { layoutDimension, type DimensionLayout } from '../../model/geom/dimensio
 import type { TextInputRequest } from '../../viewport/ViewportController';
 import { Component } from '../Component';
 import { h } from '../dom';
+import { setGeometry } from '../properties/write';
 
 type Session =
   | { kind: 'edit'; id: number }
@@ -117,9 +118,10 @@ export class InlineTextEditor extends Component {
     }
     this.ctx.view.setEditing(null);
     const e = this.ctx.doc.get(session.id);
+    // Written as Öznitelikler writes it (`cad.entities.edit`, the step “Değiştir”); a cleared dimension text shows its value again.
     if (commit && e) {
-      if (e.kind === 'text' && value && value !== e.text) this.ctx.doc.update(session.id, { text: value } as Partial<Entity>);
-      if (e.kind === 'dimension' && value !== (e.text ?? '')) this.ctx.doc.update(session.id, { text: value || undefined } as Partial<Entity>);
+      if (e.kind === 'text' && value && value !== e.text) setGeometry(this.ctx, e, { text: value });
+      if (e.kind === 'dimension' && value !== (e.text ?? '')) setGeometry(this.ctx, e, { text: value || undefined });
     }
     this.ctx.view.focus();
   }

@@ -22,8 +22,9 @@ import type { EntityEdit } from "./EntityEdit";
  * Refusals (`CommandError.code`), checked in this order: `no_changes`,
  * `invalid_uid` (each change's id in order), then each geometry in order:
  * `too_few_points` (a polyline), `too_few_corners` (a closed area's or a
- * hatch's ring or hole), `not_finite`, `invalid_radius`; then
- * `invalid_revision`, `revision_conflict` (status `conflict`),
+ * hatch's ring or hole), `empty_text` (a text whose text is empty or only
+ * white space, Unicode's `White_Space`), `not_finite`, `invalid_radius`;
+ * then `invalid_revision`, `revision_conflict` (status `conflict`),
  * `entity_not_found` (each id in order), `repeated_entity` (an object
  * changed twice), `layer_locked`; on the desktop also `slots_exhausted`.
  */
@@ -31,7 +32,7 @@ export type EntitiesEdit = {
 /**
  * The modify tool the edit comes from; it names the undo step: Ötele,
  * Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
- * Köşe ekle, Köşe sil, Esnet.
+ * Köşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler.
  */
 operation: EditOperation, 
 /**
