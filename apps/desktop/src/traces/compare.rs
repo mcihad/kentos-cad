@@ -97,6 +97,38 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             want.to_string(),
         );
     }
+    if let Some(want) = &expect.selected {
+        check(
+            "selected",
+            &got.selected == want,
+            format!("{:?}", got.selected),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.hover {
+        check(
+            "hover",
+            &got.hover == want,
+            format!("{:?}", got.hover),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.snap {
+        check(
+            "snap",
+            &got.snap == want,
+            format!("{:?}", got.snap),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.ids {
+        check(
+            "ids",
+            &got.ids == want,
+            format!("{:?}", got.ids),
+            format!("{want:?}"),
+        );
+    }
     if let Some(want) = &expect.newest {
         bad.extend(compare_newest(want, got, trace));
     }

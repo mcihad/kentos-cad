@@ -312,6 +312,11 @@ export class ViewportController {
     this.schedule();
   }
 
+  /** The object snap the marker shows now, if any (the interaction traces read it; docs/adr/0029). */
+  get currentSnap(): SnapHit | null {
+    return this.snap;
+  }
+
   pick(screen: Vec2): Entity | null {
     return this.picker.hit(this.camera.screenToWorld(screen), this.ctx.prefs.pickAperture.value / this.camera.scale);
   }

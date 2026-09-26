@@ -77,6 +77,9 @@ pub(super) fn stroke_for(ch: &str, layout: Layout) -> Result<Stroke, String> {
         "Tab" => return Ok(named(Named::Tab, Code::Tab, Some("\t"))),
         "Backspace" => return Ok(named(Named::Backspace, Code::Backspace, Some("\u{8}"))),
         "Space" | " " => return Ok(named(Named::Space, Code::Space, Some(" "))),
+        "Delete" => return Ok(named(Named::Delete, Code::Delete, Some("\u{7f}"))),
+        "F3" => return Ok(named(Named::F3, Code::F3, None)),
+        "F8" => return Ok(named(Named::F8, Code::F8, None)),
         _ => {}
     }
     let plain = |base: &str, code: Code| Stroke {

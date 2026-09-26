@@ -57,6 +57,9 @@ const NAMED = {
   Tab: { key: 'Tab', code: 'Tab', vk: 9 },
   Backspace: { key: 'Backspace', code: 'Backspace', vk: 8 },
   Space: { key: ' ', code: 'Space', vk: 32, text: ' ' },
+  Delete: { key: 'Delete', code: 'Delete', vk: 46 },
+  F3: { key: 'F3', code: 'F3', vk: 114 },
+  F8: { key: 'F8', code: 'F8', vk: 119 },
 };
 const LAYOUTS = {
   us: {
@@ -140,14 +143,29 @@ async function toScreen([de, dn]) {
   return [x, y];
 }
 const mouse = (type, x, y, extra = {}) => b.send('Input.dispatchMouseEvent', { type, x, y, button: 'none', ...extra });
+/** A step's held keys as the mouse events carry them (CDP: Shift is 8). */
+const held = (step) => (step.shift ? 8 : 0);
 
-async function click(at, button = 'left', clickCount = 1) {
+async function click(at, button = 'left', clickCount = 1, modifiers = 0) {
   const [x, y] = await toScreen(at);
-  await mouse('mouseMoved', x, y);
-  await mouse('mousePressed', x, y, { button, clickCount });
+  await mouse('mouseMoved', x, y, { modifiers });
+  await mouse('mousePressed', x, y, { button, clickCount, modifiers });
   // A right press shorter than the hold that opens the command menu (RIGHT_HOLD_MS).
   if (button === 'right') await sleep(40);
-  await mouse('mouseReleased', x, y, { button, clickCount });
+  await mouse('mouseReleased', x, y, { button, clickCount, modifiers });
+  await sleep(40);
+}
+
+/** The left button down at `from`, moved through the middle to `to`, released there (a selection box). */
+async function drag([from, to], modifiers = 0) {
+  const [x1, y1] = await toScreen(from);
+  const [x2, y2] = await toScreen(to);
+  const [xm, ym] = await toScreen([(from[0] + to[0]) / 2, (from[1] + to[1]) / 2]);
+  await mouse('mouseMoved', x1, y1, { modifiers });
+  await mouse('mousePressed', x1, y1, { button: 'left', buttons: 1, clickCount: 1, modifiers });
+  await mouse('mouseMoved', xm, ym, { button: 'left', buttons: 1, modifiers });
+  await mouse('mouseMoved', x2, y2, { button: 'left', buttons: 1, modifiers });
+  await mouse('mouseReleased', x2, y2, { button: 'left', buttons: 0, clickCount: 1, modifiers });
   await sleep(40);
 }
 
@@ -208,7 +226,8 @@ async function act(step) {
     await mouse('mouseMoved', x, y);
     return sleep(30);
   }
-  if (step.click) return click(step.click);
+  if (step.click) return click(step.click, 'left', 1, held(step));
+  if (step.drag) return drag(step.drag, held(step));
   if (step.doubleClick) {
     await click(step.doubleClick, 'left', 1);
     return click(step.doubleClick, 'left', 2);
@@ -248,6 +267,10 @@ const observe = () =>
       dirty: k.doc.dirty.value,
       log: k.log.entries.value.at(-1)?.level ?? null,
       metresPerPixel: 1 / k.view.camera.scale,
+      selected: [...k.selection.ids.value],
+      hover: k.selection.hover.value,
+      snap: k.view.currentSnap?.kind ?? null,
+      ids: [...k.doc.all()].map((e) => e.id),
     };
   })()`);
 

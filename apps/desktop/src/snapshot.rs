@@ -1,6 +1,6 @@
 //! `kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik]
 //! [--ayar anahtar=değer]… [--komut <id>]… [--tumu] [--merkez Y,X]
-//! [--yakinlastir <kat>] [--iz <iz> [--adim <n>] [--varyant us|tr-q|hidpi]]`:
+//! [--yakinlastir <kat>] [--iz <iz> [--adim <n>] [--yarida] [--varyant us|tr-q|hidpi]]`:
 //! the window drawn without opening one (the KentOS UI snapshot renderer),
 //! for visual checks and documentation. Nothing is written but the image;
 //! `--ayar` chooses a typed setting in memory (`graphics.msaa=8`), never in
@@ -8,7 +8,9 @@
 //!
 //! `--iz` plays an interaction trace (fixtures/interaction/v1, traces.rs) on
 //! its own drawing, up to step `--adim` (all by default), so the image shows
-//! the app mid-drawing: the draft, the value field, the prompt.
+//! the app mid-drawing: the draft, the value field, the prompt. `--yarida`
+//! plays that last step halfway: a drag stops with the button still down,
+//! so the selection box shows (docs/adr/0029).
 //!
 //! `--komut` runs a web command id after the drawing is opened
 //! (`help.shortcuts`, `edit.undo`); what a command would start in the
@@ -35,7 +37,7 @@ use crate::viewport::Event;
 
 const USAGE: &str = "kullanım: kentos-cad snapshot çıktı.png [çizim.kcad] [--sekme <id>] [--tema acik] \
                      [--ayar anahtar=değer]… [--komut <id>]… [--tumu] [--merkez Y,X] [--yakinlastir <kat>] \
-                     [--iz <iz> [--adim <n>] [--varyant us|tr-q|hidpi]]";
+                     [--iz <iz> [--adim <n>] [--yarida] [--varyant us|tr-q|hidpi]]";
 
 /// A view option, applied in the order given once the drawing is on screen.
 enum View {
@@ -51,6 +53,7 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let mut views = Vec::new();
     let mut trace: Option<Trace> = None;
     let mut steps: Option<usize> = None;
+    let mut halfway = false;
     let mut variant = VARIANTS[0];
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -104,6 +107,7 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
                         .map_err(|_| format!("{text}: adım sayısı pozitif bir tam sayı olmalı"))?,
                 );
             }
+            "--yarida" => halfway = true,
             "--varyant" => {
                 let id = args.next().ok_or("--varyant us, tr-q ya da hidpi ister")?;
                 variant = Variant::by_id(&id)
@@ -166,7 +170,17 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
         let area = app.viewport.bounds;
         let file = traces::scratch_file(trace, variant);
         let mut player = Player::new(&mut app, trace, variant, area, file)?;
-        for problem in player.play(steps) {
+        // `--yarida`: the last step halfway (a selection box with the button still down).
+        let (whole, half) = match (steps, halfway) {
+            (Some(n), true) if n > 0 => (Some(n - 1), Some(n - 1)),
+            _ => (steps, None),
+        };
+        for problem in player.play(whole) {
+            eprintln!("Uyarı: {problem}");
+        }
+        if let Some(index) = half
+            && let Err(problem) = player.halfway(index)
+        {
             eprintln!("Uyarı: {problem}");
         }
         // The command line keeps the keyboard the trace left it with, so its suggestion list shows.

@@ -70,10 +70,14 @@ pub struct Step {
     #[serde(rename = "move")]
     pub(super) move_to: Option<[f64; 2]>,
     pub(super) click: Option<[f64; 2]>,
+    /// The left button down at the first point, moved to the second, released there.
+    pub(super) drag: Option<[[f64; 2]; 2]>,
     pub(super) double_click: Option<[f64; 2]>,
     pub(super) right_click: Option<[f64; 2]>,
     pub(super) focus: Option<String>,
     pub(super) save_and_reopen: Option<bool>,
+    /// Shift held during the step's click or drag.
+    pub(super) shift: Option<bool>,
     pub(super) expect: Option<Expect>,
     /// For the reader; not checked.
     #[allow(dead_code)]
@@ -97,6 +101,16 @@ pub struct Expect {
     pub(super) dirty: Option<bool>,
     pub(super) log: Option<String>,
     pub(super) metres_per_pixel: Option<f64>,
+    /// The selected objects' ids, in the order they were selected.
+    pub(super) selected: Option<Vec<u32>>,
+    /// The hovered object's id; `null` (none) and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) hover: Option<Option<u32>>,
+    /// The object snap's kind the marker shows (`endpoint` …); `null` (none) and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) snap: Option<Option<String>>,
+    /// Every object's id, in the drawing's order.
+    pub(super) ids: Option<Vec<u32>>,
 }
 
 #[derive(Debug, Deserialize)]

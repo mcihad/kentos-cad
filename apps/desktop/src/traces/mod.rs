@@ -117,10 +117,12 @@ mod tests {
             text: None,
             move_to: None,
             click: Some([500.0, 0.0]),
+            drag: None,
             double_click: None,
             right_click: None,
             focus: None,
             save_and_reopen: None,
+            shift: None,
             expect: None,
             note: None,
         });
