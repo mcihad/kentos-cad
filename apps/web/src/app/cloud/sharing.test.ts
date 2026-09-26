@@ -49,6 +49,15 @@ describe('the share dialog’s list', () => {
     expect(personRows(list, 'mehmet', false).some((r) => r.canChange || r.canRevoke)).toBe(false);
   });
 
+  it('a guest who accepted an invitation reads as one: its role is the invitation’s (not changed by sharing), its access can be taken away', () => {
+    const withGuest: ProjectAccessList = {
+      ...list,
+      people: [...list.people, person({ userId: 'misafir', displayName: 'Misafir Kişi', email: 'misafir@example.org', role: 'editor', via: 'grant', grant: 'editor', guest: true })],
+    };
+    const g = personRows(withGuest, 'dilek', true).find((r) => r.userId === 'misafir')!;
+    expect([g.roleLabel, g.source, g.email, g.guest, g.canChange, g.canRevoke, g.blocked]).toEqual(['Düzenleyici', 'Misafir (davetle)', 'misafir@example.org', true, false, true, false]);
+  });
+
   it('says the role now, where it comes from, or why not', () => {
     const rows = new Map(personRows(list, 'dilek', true).map((r) => [r.userId, r]));
     expect([rows.get('ayse')!.roleLabel, rows.get('ayse')!.source]).toEqual(['Sahip', 'Proje sahibi']);

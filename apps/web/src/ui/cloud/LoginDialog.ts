@@ -7,9 +7,11 @@ import { Dialog } from '../widgets/Dialog';
  * "Buluta giriş": a local account (login and password) and, when the server
  * has one, the organisation's OpenID sign-in (a full-page redirect that
  * comes back to this page). `then` runs after a successful sign-in, so a
- * command that needed one (open a cloud project) goes on by itself.
+ * command that needed one (open a cloud project) goes on by itself;
+ * `cancelled` when the window closes without one (an invitation's window
+ * comes back).
  */
-export function openLoginDialog(ctx: AppContext, then?: () => void): void {
+export function openLoginDialog(ctx: AppContext, then?: () => void, cancelled?: () => void): void {
   const cloud = ctx.cloud;
   const config = cloud.config.value;
   const login = h('input', { class: 'field', name: 'login', autocomplete: 'username', spellcheck: 'false', 'aria-label': 'Giriş adı' });
@@ -28,12 +30,14 @@ export function openLoginDialog(ctx: AppContext, then?: () => void): void {
   const oidc = config?.oidc
     ? h('button', { class: 'btn cloud-oidc', type: 'button' }, config.oidc.label)
     : null;
+  let signedIn = false;
   const dialog = new Dialog({
     title: 'Buluta giriş',
     width: 400,
     className: 'dialog--cloud',
     content: [form, oidc ? h('div', { class: 'cloud-or' }, local ? h('span', null, 'ya da') : null, oidc) : null],
     footer: [h('div', { class: 'dialog__foot-spacer' }), cancel, local ? submit : null],
+    onClose: () => signedIn || cancelled?.(),
   });
   const busy = (on: boolean) => {
     submit.disabled = on;
@@ -53,6 +57,7 @@ export function openLoginDialog(ctx: AppContext, then?: () => void): void {
     show('');
     try {
       const me = await cloud.signIn(login.value.trim(), password.value);
+      signedIn = true;
       dialog.close();
       ctx.log.success(`${me.user.displayName} olarak giriş yapıldı.`);
       then?.();

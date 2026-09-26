@@ -33,8 +33,12 @@
 // file project's revision and a database project's present state named from
 // the history tab, downloaded, restored as new projects that open (the
 // source unchanged), a revision restored, a checkpoint removed after a
-// question. Last, the other storage mode (docs/adr/0039): “PostGIS'e aktar”
-// and “Dosya projesine çevir”, each opening the new project.
+// question. The other storage mode (docs/adr/0039): “PostGIS'e aktar” and
+// “Dosya projesine çevir”, each opening the new project. Last, invitations
+// by e-mail (docs/adr/0035, 0042; cloud-invite.mjs): a link made, refused for
+// another address, accepted by a second account outside the organisation (a
+// guest) who opens the project; used, replaced and withdrawn links failing;
+// the guest in the access list, and the access taken away.
 //
 //   pnpm e2e:cloud     (needs `pnpm db:setup` once; builds kentosd first)
 //   KENTOS_E2E_DB=scratch pnpm e2e:cloud
@@ -59,6 +63,7 @@ import { readFileSync } from 'node:fs';
 import { createServer } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { OUT, launch, sleep } from './cdp.mjs';
+import { invitations } from './cloud-invite.mjs';
 
 /** The repository root: .env.local and the Cargo target directory. */
 const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
@@ -77,6 +82,8 @@ if (!env.KENTOS_DEV_PASSWORD) throw new Error('.env.local içinde KENTOS_DEV_PAS
 // helper's first line; its address is the development one's with that name. Neither address is printed.
 let scratch = null;
 let scratchUrl = null;
+/** The throwaway database's owner address (the admin CLI makes an account there); null for the development one. */
+let scratchOwnerUrl = null;
 if (process.env.KENTOS_E2E_DB === 'scratch') {
   scratch = spawn(`${SERVER}/examples/e2e_database`, [], {
     cwd: ROOT,
@@ -95,6 +102,11 @@ if (process.env.KENTOS_E2E_DB === 'scratch') {
   const url = new URL(env.KENTOS_DATABASE_URL);
   url.pathname = `/${name}`;
   scratchUrl = url.toString();
+  if (env.KENTOS_DATABASE_OWNER_URL) {
+    const owner = new URL(env.KENTOS_DATABASE_OWNER_URL);
+    owner.pathname = `/${name}`;
+    scratchOwnerUrl = owner.toString();
+  }
   console.log(`geçici veritabanı: ${name} (kentos_cad'e dokunulmuyor)`);
 }
 const SHOTS = process.env.KENTOS_E2E_SHOTS ?? OUT;
@@ -1143,6 +1155,27 @@ try {
   await b.waitFor(`window.kentos.cloud.project.value?.name === ${JSON.stringify(`E2E kimlik (yeniden) ${stamp} (dosya)`)} && window.kentos.cloud.file.value?.base.value === '1'`, 60000);
   const asFile = await b.eval(`({ storage: window.kentos.cloud.project.value.storage, uids: [...window.kentos.doc.all()].map((e) => e.uid).sort() })`);
   check('“Dosya projesine çevir” makes a database project a file project and opens it', asFile.storage === 'file' && same(asFile.uids), `${asFile.uids.length} nesne`);
+
+  // ── Invitations by e-mail (docs/adr/0035, 0042): cloud-invite.mjs ──
+  await invitations({
+    b,
+    check,
+    press,
+    themed,
+    env,
+    url,
+    ready,
+    client,
+    emptyProject,
+    tenantId: project.tenantId,
+    ayse,
+    openCatalog,
+    showList,
+    pickExact,
+    server: `${SERVER}/kentosd`,
+    root: ROOT,
+    ownerUrl: scratchOwnerUrl,
+  });
 
   const errors = b.consoleLog.filter((l) => /^(error|EXCEPTION)/.test(l));
   check('no console errors', errors.length === 0, errors.join(' | '));

@@ -14,12 +14,13 @@ import {
 } from '../../app/cloud/sharing';
 import type { GrantRole } from '../../contracts/generated/GrantRole';
 import type { ProjectAccessList } from '../../contracts/generated/ProjectAccessList';
-import type { ShareCandidate } from '../../contracts/generated/ShareCandidate';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { askRemove } from '../widgets/confirm';
 import { Dialog } from '../widgets/Dialog';
 import type { ProjectTarget } from './ProjectActions';
+import { createPersonFinder } from './shareFind';
+import { createInvitePanel } from './shareInvites';
 
 /**
  * “Projeyi paylaş” (docs/adr/0015, TODOS.md CLOUD-16, CLOUD-21): who may use
@@ -28,10 +29,12 @@ import type { ProjectTarget } from './ProjectActions';
  * admins), and where the project keeps its content. A person found by name
  * or e-mail, among those the account may share with, is added with a role
  * and an optional end; a grant's role is changed in its row, and taken away
- * after a question. The server decides each request: the controls are
- * enabled only once it has shown the list (`project.share`), and a refusal
- * is said as the server says it, with what to do. The account's own access
- * and the owner's are never changed here.
+ * after a question. Someone else is invited by e-mail on the “Davetler”
+ * tab (docs/adr/0035, 0042: shareInvites.ts); a guest who accepted is
+ * listed here, their role given by invitation. The server decides each
+ * request: the controls are enabled only once it has shown the list
+ * (`project.share`), and a refusal is said as the server says it, with what
+ * to do. The account's own access and the owner's are never changed here.
  */
 
 /** Local today as a date field's value (the earliest end a share may have). */
@@ -48,38 +51,36 @@ const initials = (name: string) =>
     .map((w) => w[0]!.toLocaleUpperCase('tr'))
     .join('') || '?';
 
-const SEARCH_MS = 250;
-let serial = 0;
+export type ShareTab = 'people' | 'invites';
 
-export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { stack?: boolean; done?: () => void } = {}): void {
+export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { stack?: boolean; done?: () => void; tab?: ShareTab } = {}): void {
   const api = ctx.cloud.api;
   const me = ctx.cloud.me.value?.user.id ?? '';
-  const suggestId = `share-suggest-${++serial}`;
   let list: ProjectAccessList | null = null;
   let mayShare = false;
-  let chosen: ShareCandidate | null = null;
-  let found: ShareCandidate[] = [];
-  let active = -1;
   let busy = false;
   let open = true;
-  let timer = 0;
-  let searching: AbortController | null = null;
+
+  const say = (text: string, kind: 'info' | 'error' = 'info') => {
+    status.textContent = text;
+    status.dataset.kind = kind;
+  };
+  const finder = createPersonFinder(ctx, target, {
+    list: () => list,
+    open: () => open,
+    say: (text, kind) => say(text, kind),
+    picked: () => refreshAdd(),
+    invite: (email) => {
+      showTab('invites');
+      invites.prefill(email);
+      invites.focus();
+    },
+    submit: () => void share(),
+  });
+  const find = finder.input;
+  const invites = createInvitePanel(ctx, target, { say: (text, kind) => say(text, kind), open: () => open });
 
   const storage = h('p', { class: 'share-storage', hidden: true });
-  const find = h('input', {
-    class: 'field',
-    type: 'text',
-    placeholder: 'Ad ya da e-posta yazın',
-    'aria-label': 'Paylaşılacak kişi',
-    role: 'combobox',
-    'aria-autocomplete': 'list',
-    'aria-expanded': 'false',
-    'aria-controls': suggestId,
-    autocomplete: 'off',
-    spellcheck: 'false',
-    disabled: true,
-  });
-  const suggest = h('ul', { class: 'share-suggest', id: suggestId, role: 'listbox', 'aria-label': 'Bulunan kişiler', hidden: true });
   const role = h(
     'select',
     { class: 'field', 'aria-label': 'Rol', disabled: true },
@@ -93,6 +94,42 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
   const policy = h('p', { class: 'cloud-hint share-policy', hidden: true });
   const status = h('p', { class: 'cloud-status', role: 'status' });
   const close = h('button', { class: 'btn', type: 'button' }, 'Kapat');
+  const peoplePanel = h(
+    'div',
+    { class: 'share-panel', role: 'tabpanel', 'aria-label': 'Kişiler' },
+    h(
+      'div',
+      { class: 'share-add' },
+      h('div', { class: 'cloud-field share-add__who' }, h('span', null, 'Kişi ekle'), finder.el),
+      h('label', { class: 'cloud-field' }, h('span', null, 'Rol'), role),
+      h('label', { class: 'cloud-field' }, h('span', null, 'Bitiş (isteğe bağlı)'), until),
+      add,
+    ),
+    roleHint,
+    h('h3', { class: 'share-title' }, h('span', null, 'Erişimi olanlar'), count),
+    people,
+    policy,
+  );
+  const tabButtons = (
+    [
+      ['people', 'Kişiler', peoplePanel],
+      ['invites', 'Davetler', invites.el],
+    ] as const
+  ).map(([id, text, panel]) => {
+    const b = h('button', { class: 'tab', type: 'button', role: 'tab', 'aria-selected': 'false', dataset: { tab: id } }, text);
+    b.addEventListener('click', () => {
+      showTab(id);
+      (id === 'people' ? find : invites).focus();
+    });
+    return { id, b, panel };
+  });
+  /** One tab shows: its form has the one amber button of the dialog. */
+  const showTab = (id: ShareTab) => {
+    for (const t of tabButtons) {
+      t.b.setAttribute('aria-selected', String(t.id === id));
+      t.panel.hidden = t.id !== id;
+    }
+  };
 
   const dialog = new Dialog({
     title: 'Projeyi paylaş',
@@ -104,115 +141,26 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
       storage,
       h(
         'div',
-        { class: 'share-add' },
-        h('div', { class: 'cloud-field share-add__who' }, h('span', null, 'Kişi ekle'), h('div', { class: 'share-find' }, find, suggest)),
-        h('label', { class: 'cloud-field' }, h('span', null, 'Rol'), role),
-        h('label', { class: 'cloud-field' }, h('span', null, 'Bitiş (isteğe bağlı)'), until),
-        add,
+        { class: 'cloud-tabs share-tabs', role: 'tablist', 'aria-label': 'Paylaşım' },
+        tabButtons.map((t) => t.b),
       ),
-      roleHint,
-      h('h3', { class: 'share-title' }, h('span', null, 'Erişimi olanlar'), count),
-      people,
-      policy,
+      peoplePanel,
+      invites.el,
       status,
     ],
     footer: [h('div', { class: 'dialog__foot-spacer' }), close],
     onClose: () => {
       open = false;
-      clearTimeout(timer);
-      searching?.abort();
+      finder.dispose();
       opts.done?.();
     },
   });
 
-  const say = (text: string, kind: 'info' | 'error' = 'info') => {
-    status.textContent = text;
-    status.dataset.kind = kind;
-  };
   const refreshAdd = () => {
     for (const c of [find, role, until]) c.disabled = !mayShare || busy;
+    const chosen = finder.chosen();
     add.disabled = !mayShare || busy || !chosen;
     add.title = !mayShare ? 'Bu projede paylaşım yetkiniz yok (project.share).' : !chosen ? 'Önce “Kişi ekle” alanında bir kişi arayıp listeden seçin.' : '';
-  };
-
-  // ── Finding a person ────────────────────────────────────────────────
-
-  const hideSuggest = () => {
-    suggest.hidden = true;
-    found = [];
-    active = -1;
-    find.setAttribute('aria-expanded', 'false');
-    find.removeAttribute('aria-activedescendant');
-    // Esc closes the dialog again.
-    delete find.dataset.escape;
-  };
-  const markActive = () => {
-    suggest.querySelectorAll('[role=option]').forEach((li, i) => li.setAttribute('aria-selected', String(i === active)));
-    if (active >= 0) find.setAttribute('aria-activedescendant', `${suggestId}-${active}`);
-    else find.removeAttribute('aria-activedescendant');
-  };
-  const pick = (c: ShareCandidate) => {
-    chosen = c;
-    find.value = c.displayName;
-    hideSuggest();
-    refreshAdd();
-    say('');
-  };
-  const showSuggest = (query: string, candidates: ShareCandidate[]) => {
-    found = candidates;
-    active = candidates.length ? 0 : -1;
-    const current = new Map(list?.people.map((p) => [p.userId, p]) ?? []);
-    const none =
-      list?.tenantKind === 'personal'
-        ? `“${query}” ile eşleşen kimse yok. Kişisel projeler şimdilik kurumlarınızdaki kişilerle paylaşılır; e-postayla davet sonraki sürümde.`
-        : `“${query}” ile eşleşen etkin bir kurum üyesi yok. Kurum projeleri yalnız kurumun üyeleriyle paylaşılır.`;
-    replaceChildren(
-      suggest,
-      candidates.length
-        ? candidates.map((c, i) => {
-            const has = current.get(c.userId);
-            const li = h(
-              'li',
-              { class: 'share-suggest__item', role: 'option', id: `${suggestId}-${i}`, 'aria-selected': String(i === active) },
-              h('span', { class: 'share-suggest__name' }, c.displayName),
-              c.email ? h('span', { class: 'share-suggest__mail' }, c.email) : null,
-              has?.role ? h('span', { class: 'share-suggest__has' }, `şu an ${ROLE_LABEL[has.role]}`) : null,
-            );
-            // The field keeps the focus: typing goes on while the mouse picks.
-            li.addEventListener('pointerdown', (e) => e.preventDefault());
-            li.addEventListener('click', () => pick(c));
-            return li;
-          })
-        : h('li', { class: 'share-suggest__none' }, none),
-    );
-    suggest.hidden = false;
-    find.setAttribute('aria-expanded', 'true');
-    // While the list is open Esc closes it, not the dialog (Dialog honours data-escape="local").
-    find.dataset.escape = 'local';
-    markActive();
-  };
-  const search = () => {
-    clearTimeout(timer);
-    searching?.abort();
-    const query = find.value.trim();
-    if (chosen && query !== chosen.displayName) {
-      chosen = null;
-      refreshAdd();
-    }
-    if (chosen || query.replace(/\s+/g, '').length < 2) return hideSuggest();
-    timer = setTimeout(() => {
-      const abort = (searching = new AbortController());
-      api.candidates(target.tenantId, target.projectId, query, abort.signal).then(
-        (r) => {
-          if (!abort.signal.aborted && open && find.value.trim() === query) showSuggest(query, r.candidates);
-        },
-        (e: unknown) => {
-          if (abort.signal.aborted || !open) return;
-          hideSuggest();
-          say(failureText(e, 'Kişi aranamadı'), 'error');
-        },
-      );
-    }, SEARCH_MS) as unknown as number;
   };
 
   // ── Sharing, changing a role, taking it away ────────────────────────
@@ -229,11 +177,12 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
       if (e instanceof ApiFailure && e.code === 'forbidden') mayShare = false;
       replaceChildren(people, h('p', { class: 'cloud-empty', role: 'alert' }, failureText(e, 'Erişim listesi okunamadı')));
     }
+    invites.setAccess(mayShare, list);
     refreshAdd();
   };
 
   const share = async () => {
-    const who = chosen;
+    const who = finder.chosen();
     if (!who || busy || !mayShare) return;
     const expiresAt = until.value ? endOfDay(until.value) : null;
     if (until.value && !expiresAt) return say('Bitiş tarihi okunamadı: takvimden bir gün seçin ya da alanı boş bırakın.', 'error');
@@ -251,8 +200,7 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
           ? `${who.displayName} artık ${ROLE_LABEL[grant]}.`
           : `${who.displayName} projeye ${ROLE_LABEL[grant]} olarak eklendi.`;
       if (r.changed) ctx.log.success(`“${target.name}”: ${text}`);
-      chosen = null;
-      find.value = '';
+      finder.clear();
       until.value = '';
       await load();
       say(text);
@@ -289,7 +237,7 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
       details: [
         'Projeyi şu anda açık tutuyorsa kaydı hemen durur; gönderilmemiş değişiklikleri kendi cihazında kalır.',
         'Daha önce indirdiği kopyalar ve ekranında gördükleri geri alınamaz.',
-        'Yeniden paylaşarak erişimini geri verebilirsiniz.',
+        row.guest ? 'Kurum dışından olduğu için erişimini yeniden davetle geri verebilirsiniz.' : 'Yeniden paylaşarak erişimini geri verebilirsiniz.',
       ],
       action: 'Erişimi kaldır',
     });
@@ -319,7 +267,8 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
       select.addEventListener('change', () => void change(r, select.value as GrantRole, select));
       roleCell = select;
     } else {
-      roleCell = h('span', { class: 'share-role', dataset: r.blocked ? { blocked: '' } : {} }, r.blocked ? icon('warning', 14) : null, r.roleLabel);
+      const why = r.guest ? 'Misafirin rolü davetle verilir. Değiştirmek için erişimini kaldırıp yeni rolle yeniden davet edin.' : null;
+      roleCell = h('span', { class: 'share-role', dataset: r.blocked ? { blocked: '' } : {}, title: why }, r.blocked ? icon('warning', 14) : null, r.roleLabel);
     }
     let action: HTMLElement;
     if (r.canRevoke) {
@@ -361,36 +310,23 @@ export function openShareDialog(ctx: AppContext, target: ProjectTarget, opts: { 
     count.textContent = `${rows.filter((r) => !r.blocked).length} kişi erişebiliyor`;
     replaceChildren(people, rows.map(personRow));
     policy.hidden = false;
+    const outside = 'Kurum dışından biri “Davetler”den e-postayla davet edilir ve misafir olur.';
     policy.textContent =
       list.tenantKind === 'personal'
-        ? 'Kişisel alanınızdaki bu proje yalnız paylaştığınız kişilere açıktır.'
+        ? 'Kişisel alanınızdaki bu proje yalnız paylaştığınız ve davet ettiğiniz kişilere açıktır.'
         : list.adminsAccessAllProjects
-          ? 'Kurumun politikası açık: kurum sahibi ve yöneticileri paylaşılmamış kurum projelerine de yönetici olarak erişir. Proje yalnız kurumun üyeleriyle paylaşılır.'
-          : 'Kurumun politikası kapalı: kurum yöneticileri de yalnız kendileriyle paylaşılan projelere erişir. Proje yalnız kurumun üyeleriyle paylaşılır.';
+          ? `Kurumun politikası açık: kurum sahibi ve yöneticileri paylaşılmamış kurum projelerine de yönetici olarak erişir. Paylaşım kurumun üyeleriyledir; ${outside}`
+          : `Kurumun politikası kapalı: kurum yöneticileri de yalnız kendileriyle paylaşılan projelere erişir. Paylaşım kurumun üyeleriyledir; ${outside}`;
   };
 
-  find.addEventListener('input', search);
-  find.addEventListener('keydown', (e) => {
-    const listOpen = !suggest.hidden && found.length > 0;
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      if (!listOpen) return;
-      e.preventDefault();
-      active = (active + (e.key === 'ArrowDown' ? 1 : found.length - 1)) % found.length;
-      markActive();
-      document.getElementById(`${suggestId}-${active}`)?.scrollIntoView({ block: 'nearest' });
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (listOpen && active >= 0) pick(found[active]);
-      else void share();
-    } else if (e.key === 'Escape' && !suggest.hidden) {
-      e.preventDefault();
-      hideSuggest();
-    }
-  });
-  find.addEventListener('blur', () => setTimeout(() => open && document.activeElement !== find && hideSuggest(), 0));
   role.addEventListener('change', () => (roleHint.textContent = ROLE_HINT[role.value as GrantRole]));
   add.addEventListener('click', () => void share());
   close.addEventListener('click', () => dialog.close());
+  showTab(opts.tab ?? 'people');
   refreshAdd();
-  void load().then(() => open && mayShare && find.focus());
+  void load().then(() => {
+    if (!open) return;
+    if (mayShare) (opts.tab === 'invites' ? invites : find).focus();
+    void invites.load();
+  });
 }

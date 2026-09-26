@@ -14,6 +14,7 @@ import { registerCoreCommands } from './commands';
 import type { AppContext } from './context';
 import { registerCloudCommands } from './cloud/commands';
 import { CloudSession } from './cloud/session';
+import { pendingInvitation } from './cloud/invitationLink';
 import { registerCalcCommands } from './calc';
 import { registerFileExchangeCommands } from './fileExchange';
 import { DocumentFiles } from './fileIO';
@@ -188,7 +189,10 @@ export async function createApp(root: HTMLElement, start: Promise<StartContent>)
 
   ctx.log.info(`${doc.name.value} açıldı: ${doc.size} nesne, ${doc.layers.leaves().length} katman.`);
   reportSettingsOpen(settingsStore, ctx.log);
-  if (startScreenOnOpen(ctx)) void openStart(ctx);
+  // A page opened from an invitation's link asks about it (docs/adr/0042), in place of the start screen.
+  const invited = !!pendingInvitation();
+  if (invited) lazy(ctx, import('../ui/cloud/InvitationDialog'), (m) => m.openInvitationDialog(ctx));
+  else if (startScreenOnOpen(ctx)) void openStart(ctx);
   // Work a crash or a closed tab left unsaved is offered once the app is up (over the start screen).
   void ctx.recovery.offer();
   return ctx;

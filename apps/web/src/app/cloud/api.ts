@@ -10,6 +10,8 @@ import type { FeaturePage } from '../../contracts/generated/FeaturePage';
 import type { FileRevisions } from '../../contracts/generated/FileRevisions';
 import type { FileUpload } from '../../contracts/generated/FileUpload';
 import type { FileUploadBegin } from '../../contracts/generated/FileUploadBegin';
+import type { InvitationAccept } from '../../contracts/generated/InvitationAccept';
+import type { InvitationAccepted } from '../../contracts/generated/InvitationAccepted';
 import type { Me } from '../../contracts/generated/Me';
 import type { ProjectAccessChange } from '../../contracts/generated/ProjectAccessChange';
 import type { ProjectAccessList } from '../../contracts/generated/ProjectAccessList';
@@ -17,6 +19,7 @@ import type { ProjectCheckpoints } from '../../contracts/generated/ProjectCheckp
 import type { ProjectCreate } from '../../contracts/generated/ProjectCreate';
 import type { ProjectDetails } from '../../contracts/generated/ProjectDetails';
 import type { ProjectInfo } from '../../contracts/generated/ProjectInfo';
+import type { ProjectInvitations } from '../../contracts/generated/ProjectInvitations';
 import type { ProjectList } from '../../contracts/generated/ProjectList';
 import type { ProjectPage } from '../../contracts/generated/ProjectPage';
 import type { ProjectType } from '../../contracts/generated/ProjectType';
@@ -161,6 +164,10 @@ export interface CloudApi {
   candidates(tenant: string, project: string, query: string, signal?: AbortSignal): Promise<ShareCandidates>;
   /** `project.share` or `project.access.revoke`: the same command route, their own answer. */
   accessCommand(envelope: CommandEnvelope): Promise<ProjectAccessChange>;
+  /** A project's invitations, newest first: the waiting ones and those of the last 30 days (`project.share`, docs/adr/0035). */
+  invitations(tenant: string, project: string, signal?: AbortSignal): Promise<ProjectInvitations>;
+  /** The signed-in account takes the invitation of a link's token (`POST /v1/invitations/accept`). */
+  acceptInvitation(token: string): Promise<InvitationAccepted>;
   /** One page of a view of the account's catalog, searched and counted on the server. */
   catalog(request: CatalogRequest, signal?: AbortSignal): Promise<ProjectPage>;
   /** A project's catalog entry with its object and layer counts and extent (410 in the trash). */
@@ -343,6 +350,13 @@ export class HttpCloudApi implements CloudApi {
   }
   accessCommand(envelope: CommandEnvelope) {
     return this.call<ProjectAccessChange>('POST', `${this.base(envelope.tenantId, envelope.projectId)}/commands`, envelope);
+  }
+  invitations(tenant: string, project: string, signal?: AbortSignal) {
+    return this.call<ProjectInvitations>('GET', `${this.base(tenant, project)}/invitations`, undefined, {}, signal);
+  }
+  acceptInvitation(token: string) {
+    const input: InvitationAccept = { token };
+    return this.call<InvitationAccepted>('POST', '/v1/invitations/accept', input);
   }
   catalog(request: CatalogRequest, signal?: AbortSignal) {
     return this.call<ProjectPage>('GET', `/v1/me/catalog?${catalogQuery(request)}`, undefined, {}, signal);

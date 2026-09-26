@@ -13,8 +13,12 @@ import './styles/svgfile.css';
 import './styles/svgedit.css';
 import './styles/cloud.css';
 import { createApp } from './app/createApp';
+import { takeInvitationLink } from './app/cloud/invitationLink';
 import { loadStartContent } from './app/startContent';
 import { initCore } from './wasm/core';
+
+// An invitation link's one-time token leaves the address before anything else is fetched (docs/adr/0042).
+takeInvitationLink();
 
 const root = document.getElementById('app')!;
 

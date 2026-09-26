@@ -80,3 +80,9 @@
 - Kasıtlı bozma, ikisi de geri alındı:
   - kabulde e-posta eşleşmesi kaldırılınca başka hesabın kabulü testi düştü;
   - `project_role`'de kurumun misafir kuralı yok sayılınca “misafir kapalı” testi düştü.
+
+## Web (26 Eylül, ADR 0042)
+
+- Paylaşım penceresinin “Davetler” sekmesi e-posta, rol (en çok Düzenleyici) ve geçerlilik (14 gün varsayılan, en çok 90) ile davet eder. Bağlantı bir kez, kopyalama düğmesiyle gösterilir; günlüğe ve tarayıcı depolarına yazılmaz. Bekleyenler “Geri al” ile geri alınır; aynı adrese yeni davet önce sorulur.
+- `?davet=` bağlantısı sayfa başlarken adresten alınır ve yalnız bu sekmede tutulur (sessionStorage, girişler boyunca). Giriş olunca bir kez kabul edilir. Sonuç (proje, alan, rol, misafir ya da üye) gösterilir, “Projeyi aç” sunulur. Her ret sunucunun kendi iletisiyle söylenir; 403'te “Başka hesapla giriş yap” vardır.
+- Misafirin rolü paylaşım penceresinde değiştirilemez (kurum yalnız üyeleriyle paylaşır); erişimi “Kaldır” ile kalkar.
