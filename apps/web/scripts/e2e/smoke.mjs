@@ -1710,6 +1710,36 @@ try {
     check('Hesap: a resection at a known point gives it back', cellsOut[1] === rs.P.x.toFixed(3) && cellsOut[2] === rs.P.y.toFixed(3), JSON.stringify({ cellsOut, want: rs.P }));
     await b.key('Escape');
     await sleep(100);
+    // Kutupsal alım names the table row the user sees and refuses a station height that is not a number;
+    // Aplikasyon refuses a target at the station.
+    const summaryText = () => b.eval(`document.querySelector('.dialog--calc .io-summary').innerText`);
+    await b.eval(`window.kentos.commands.execute('calc.polar')`);
+    await b.waitFor(`!!document.querySelector('.dialog--calc [data-key="station"]')`, 10000);
+    await typeAt('.dialog--calc [data-key="station"]', 'P.101');
+    await typeAt('.dialog--calc [data-key="back"]', 'P.102');
+    for (const [row, key, v] of [['0', 'reading', '0'], ['0', 'distance', '10'], ['2', 'reading', '100'], ['2', 'distance', '0']]) await typeAt(`.dialog--calc input[data-row="${row}"][data-key="${key}"]`, v);
+    await sleep(150);
+    const rowSaid = await summaryText();
+    await typeAt('.dialog--calc input[data-row="2"][data-key="distance"]', '5');
+    await typeAt('.dialog--calc input[aria-label="İstasyon kotu (m)"]', '12a');
+    await sleep(150);
+    const heightSaid = await summaryText();
+    await b.key('Escape');
+    await sleep(100);
+    await b.eval(`window.kentos.commands.execute('calc.stakeout')`);
+    await b.waitFor(`!!document.querySelector('.dialog--calc [data-key="station"]')`, 10000);
+    await typeAt('.dialog--calc [data-key="station"]', 'P.101');
+    await typeAt('.dialog--calc input[data-row="0"][data-key="point"]', 'P.101');
+    await typeAt('.dialog--calc input[data-row="1"][data-key="point"]', 'P.102');
+    await sleep(150);
+    const stationSaid = await summaryText();
+    await b.key('Escape');
+    await sleep(100);
+    check(
+      'Hesap: Kutupsal alım names the table row and refuses a station height that is not a number; Aplikasyon refuses a target at the station',
+      rowSaid.includes('3. noktanın uzunluğu sıfırdan büyük olmalı.') && heightSaid.includes('İstasyon kotu bir sayı değil.') && stationSaid.includes('1. satırdaki nokta durulan noktayla aynı yerde; semt tanımsız.'),
+      JSON.stringify({ rowSaid, heightSaid, stationSaid }),
+    );
   }
 
   // File exchange (src/io, crates/shared/formats): an in-memory picker hands files to the importers and takes the

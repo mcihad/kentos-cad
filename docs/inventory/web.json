@@ -196,7 +196,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "apps/web/scripts/e2e/layout.mjs"
+        "apps/web/scripts/e2e/layout.mjs",
+        "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
     {
@@ -265,7 +266,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "apps/web/scripts/e2e/layout.mjs"
+        "apps/web/scripts/e2e/layout.mjs",
+        "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
     {
