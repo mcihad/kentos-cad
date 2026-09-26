@@ -14,7 +14,7 @@ use iced::{Subscription, Task, Theme, event, keyboard, window};
 use serde_json::Value;
 
 use kentos_contracts::{ResolveReason, SettingConstraint};
-use kentos_interaction::{Draft, Level, Selection, Session, SnapHit, Spatial, snap_kinds};
+use kentos_interaction::{Draft, Level, Memory, Selection, Session, SnapHit, Spatial, snap_kinds};
 use kentos_ui::icon::Icon;
 use kentos_ui::theme::{self, Accent, Mode};
 use kentos_ui::widget::command_line::Entry;
@@ -156,6 +156,10 @@ pub struct App {
     /// The geometry store kept in step with the open drawing: what a click
     /// picks, a box selects and a point snaps to (docs/adr/0029).
     pub spatial: Spatial,
+    /// What the drawing tools remember between runs for as long as the app
+    /// lives: the last circle radius, the rectangle's rotation and corners, the
+    /// regular polygon's sides (the web's static tool fields, docs/adr/0032).
+    pub memory: Memory,
     /// The selected objects and the hovered one (session state, not the drawing's).
     pub selection: Selection,
     /// The object snap under the pointer while a tool snaps: its marker.
@@ -211,6 +215,7 @@ impl App {
             viewport: Viewport::new(),
             session: Session::new(),
             spatial: Spatial::new(),
+            memory: Memory::default(),
             selection: Selection::new(),
             snap: None,
             followed: None,

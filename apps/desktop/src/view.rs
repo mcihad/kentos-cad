@@ -260,18 +260,22 @@ impl App {
         self.session.is_running().then(|| {
             let p = self.session.prompt();
             p.options.iter().fold(
-                LinePrompt::new(p.step).command(p.tool.unwrap_or("")),
+                LinePrompt::new(p.step.clone()).command(p.tool.unwrap_or("")),
                 |prompt, o| {
-                    prompt
-                        .option(o.label, Message::PromptOption(o.key))
-                        .key(o.key)
+                    // An option's value reads after its name: `Döndür: 30°` (docs/adr/0032).
+                    let name = match &o.value {
+                        Some(value) => format!("{}: {value}", o.label),
+                        None => o.label.to_owned(),
+                    };
+                    prompt.option(name, Message::PromptOption(o.key)).key(o.key)
                 },
             )
         })
     }
 
     /// The running command in the status bar: its name, the step and the
-    /// options as buttons (the web shows them in the strip over its drawing).
+    /// options as buttons, each with its value when it has one (the web
+    /// shows them in the strip over its drawing).
     fn prompt_bar(&self) -> Option<Element<'_, Message>> {
         let p = self.session.prompt();
         let tool = p.tool?;
@@ -279,20 +283,24 @@ impl App {
             text(tool)
                 .font(typography::ui_strong())
                 .size(typography::caption()),
-            label::caption(p.step),
+            label::caption(p.step.clone()),
         ]
         .spacing(6)
         .align_y(Center);
         let options = p.options.iter().map(|o| {
-            button(
-                row![label::caption(o.label), label::mono_caption(o.key)]
-                    .spacing(4)
-                    .align_y(Center),
-            )
-            .on_press(Message::PromptOption(o.key))
-            .padding([0, 5])
-            .style(style::button::keyword)
-            .into()
+            let mut content = row![label::caption(o.label)].spacing(4).align_y(Center);
+            if let Some(value) = &o.value {
+                content = content.push(
+                    text(value.clone())
+                        .font(typography::ui_strong())
+                        .size(typography::caption()),
+                );
+            }
+            button(content.push(label::mono_caption(o.key)))
+                .on_press(Message::PromptOption(o.key))
+                .padding([0, 5])
+                .style(style::button::keyword)
+                .into()
         });
         Some(
             Row::with_children(std::iter::once(head.into()).chain(options))

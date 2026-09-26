@@ -76,6 +76,7 @@ impl App {
                 log: &mut log,
                 spatial: &self.spatial,
                 selection: &mut self.selection,
+                memory: &mut self.memory,
             },
         );
         for line in log {

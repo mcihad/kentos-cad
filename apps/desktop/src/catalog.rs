@@ -59,6 +59,14 @@ pub const PORTED: &[&str] = &[
     "edit.deselect",
     "edit.selectAll",
     "edit.invertSelection",
+    // Drawing tools, round 2 (docs/adr/0032): point, circle and arc through their own
+    // product commands; the rectangles and the regular polygon through cad.polygon.create.
+    "tool.point",
+    "tool.circle",
+    "tool.arc",
+    "tool.rectangle",
+    "tool.rectangle3",
+    "tool.regularPolygon",
 ];
 
 /// Where a command stands, from the desktop's point of view.
