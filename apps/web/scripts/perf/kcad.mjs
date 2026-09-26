@@ -23,7 +23,7 @@
 // meanwhile (docs/adr/0005); the memory limit stops a run that grows too big
 // for the machine.
 //
-//   node scripts/perf/kcad.mjs [--label latest] [--sizes 1,25000,50000,100000,200000]
+//   pnpm perf:kcad [--label latest] [--sizes 1,25000,50000,100000,200000]
 //     [--runs 3] [--out docs/perf] [--memory-limit 4500] [--allow-swiftshader]
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
