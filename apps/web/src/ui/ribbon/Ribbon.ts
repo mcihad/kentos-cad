@@ -17,7 +17,7 @@ import { LEVELS, PanelView, type Level, type PanelHost } from './panels';
 import { RibbonSearch } from './search';
 
 /** Commands offered for the quick access bar besides what the user adds from the ribbon. */
-const QUICK_ACCESS_OFFERS = ['file.new', 'file.open', 'file.saveAs', 'edit.paste', 'view.zoomExtents', 'tool.zoomWindow', 'tool.pan', 'tools.options'];
+const QUICK_ACCESS_OFFERS = ['file.new', 'file.open', 'file.saveAs', 'edit.paste', 'view.zoomExtents', 'tool.zoomWindow', 'tool.pan', 'tools.options', 'view.theme.toggle'];
 
 /** One tab's panels, built the first time the tab opens and kept until the ribbon closes. */
 class TabView {

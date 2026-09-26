@@ -40,11 +40,11 @@ Yok.
 - Çalışma modları: `disaster` Afet ve risk analizi
 - Çalışma modları: `plan3d` İmar planından 3D kent tasarımı
 
-## Arayüzde yeri görünmeyen komutlar (2)
+## Arayüzde yeri görünmeyen komutlar (0)
 
 Menüde, şeritte ve araç kutusunda yoklar; kimlikleri `src/ui` altındaki hiçbir dosyada geçmiyor. Kısayolla, komut satırından ya da başka bir yoldan çalışıyor olabilirler. Her biri fareyle bulunabilirlik açısından gözden geçirilir.
 
-`view.commandSearch`, `view.theme.toggle`
+Yok.
 
 ## Masaüstü
 

@@ -46,6 +46,9 @@ const ITEMS = [
   { id: 'viewport-idle', open: (ui) => ui.viewportRight({}) },
   { id: 'viewport-snap', open: (ui) => ui.viewportRight({ shift: true }) },
   { id: 'viewport-command', open: (ui) => ui.viewportRight({ tool: 'tool.line', hold: true }), close: (ui) => ui.escapeAll(3) },
+  { id: 'ribbon', open: (ui) => ui.shell('ribbon'), close: (ui) => ui.shell('classic') },
+  { id: 'ribbon-qat', open: async (ui) => (await ui.shell('ribbon'), await ui.click('.ribbon__qat-more')), close: async (ui) => (await ui.escapeAll(2), await ui.shell('classic')) },
+  { id: 'ribbon-help', open: async (ui) => (await ui.shell('ribbon'), await ui.click('.ribbon__icon[aria-label="Yardım"]')), close: async (ui) => (await ui.escapeAll(2), await ui.shell('classic')) },
   { id: 'shortcuts', open: (ui) => ui.run('help.shortcuts') },
   { id: 'about', open: (ui) => ui.run('help.about') },
   ...['appearance', 'snap', 'newProjects', 'engine', 'file'].map((s) => ({ id: `app-settings-${s}`, open: (ui) => ui.run('tools.options', s) })),
@@ -174,6 +177,12 @@ function helpers(b, w, h) {
   const ui = {
     eval: (expr) => b.eval(expr),
     visible: (sel) => b.eval(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); return !!el && el.getClientRects().length > 0; })()`),
+    /** The interface layout (Klasik or Şerit), as Uygulama ayarları sets it; the ribbon loads on first use. */
+    shell: async (kind) => {
+      await b.eval(`window.kentos.prefs.shell.set(${JSON.stringify(kind)})`);
+      await b.waitFor(kind === 'ribbon' ? `document.querySelector('.ribbon__strip .rpanel')` : `document.querySelector('.menubar')`, 10000).catch(() => {});
+      await sleep(400);
+    },
     run: async (id, arg) => {
       await b.eval(`window.kentos.commands.execute(${JSON.stringify(id)}${arg === undefined ? '' : `, ${JSON.stringify(arg)}`})`);
       await sleep(350);
