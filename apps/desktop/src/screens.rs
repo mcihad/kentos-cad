@@ -101,11 +101,13 @@ fn screens() {
         let _ = app.update(Message::LayerLocked(layer));
         app.save_faults = Faults {
             fail: Some((Fault::Write, std::io::ErrorKind::StorageFull)),
+            ..Faults::NONE
         };
         let task = app.update(Message::Run("file.save"));
         drive(&mut app, task);
         app.save_faults = Faults {
             fail: Some((Fault::Rename, std::io::ErrorKind::PermissionDenied)),
+            ..Faults::NONE
         };
         let task = app.update(Message::Run("file.save"));
         drive(&mut app, task);

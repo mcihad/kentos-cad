@@ -626,6 +626,27 @@ mod tests {
     }
 
     #[test]
+    fn a_copy_is_written_at_least_every_half_minute_while_the_drawing_keeps_changing() {
+        let root = scratch("recovery-longest");
+        let mut app = editing(&root);
+        let layer = app.document.as_ref().expect("a drawing").layers()[0]
+            .id
+            .clone();
+        let start = Instant::now();
+        // A change every two seconds, never three quiet ones: no copy in the first half minute…
+        for step in 0..15 {
+            let task = app.recovery_due(start + Duration::from_secs(2 * step));
+            assert_eq!(task.units(), 0, "{step}");
+            let _ = app.update(Message::LayerLocked(layer.clone()));
+        }
+        // …then the copy is written half a minute after the first change, though it just changed again.
+        let task = app.recovery_due(start + LONGEST);
+        drive(&mut app, task);
+        assert_eq!(app.recovery.files().len(), 2, "{:?}", app.recovery.files());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
     fn a_gone_kentos_copy_is_offered_and_restored_as_unsaved_work_without_a_file() {
         let root = scratch("recovery-offer");
         let mut crashed = editing(&root);

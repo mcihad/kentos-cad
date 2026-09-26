@@ -97,10 +97,27 @@ pub enum Fault {
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Faults {
     pub fail: Option<(Fault, std::io::ErrorKind)>,
+    /// The disk gives back other bytes than it was given: what is read back
+    /// from the temporary file has one byte changed.
+    pub garbled: bool,
 }
 
 impl Faults {
-    pub const NONE: Faults = Faults { fail: None };
+    pub const NONE: Faults = Faults {
+        fail: None,
+        garbled: false,
+    };
+
+    /// What the disk gives back when a test garbles it.
+    fn read_back(&self, mut back: Vec<u8>) -> Vec<u8> {
+        if self.garbled {
+            let at = back.len() / 2;
+            if let Some(b) = back.get_mut(at) {
+                *b ^= 0x40;
+            }
+        }
+        back
+    }
 
     fn check(&self, at: Fault) -> std::io::Result<()> {
         match self.fail {
@@ -201,7 +218,7 @@ pub fn write_watched(
         file.sync_all()?;
         drop(file);
         faults.check(Fault::ReadBack)?;
-        if std::fs::read(&temporary)? != bytes {
+        if faults.read_back(std::fs::read(&temporary)?) != bytes {
             return Err(std::io::Error::other(
                 "diskten geri okunan baytlar yazılanlarla aynı değil",
             ));
@@ -439,6 +456,7 @@ mod tests {
         for (fault, kind, says) in cases {
             let faults = Faults {
                 fail: Some((fault, kind)),
+                ..Faults::NONE
             };
             let e = write_watched(
                 &snapshot,
@@ -459,6 +477,30 @@ mod tests {
             );
             assert_eq!(names(&dir), ["pafta.kcad"], "{fault:?}");
         }
+        // A disk that gives back other bytes than it was given, without an error: the reading
+        // back finds it before the rename.
+        let garbled = Faults {
+            garbled: true,
+            ..Faults::NONE
+        };
+        let e = write_watched(
+            &snapshot,
+            &path,
+            &AtomicBool::new(false),
+            &mut |_| {},
+            &garbled,
+        )
+        .expect_err("fails");
+        let SaveError::Failed(why) = e else {
+            panic!("garbled: {e:?}");
+        };
+        assert!(
+            why.contains("diskten geri okunan baytlar yazılanlarla aynı değil")
+                && why.contains("Önceki dosya olduğu gibi duruyor"),
+            "{why}"
+        );
+        assert!(std::fs::read(&path).expect("still there") == good);
+        assert_eq!(names(&dir), ["pafta.kcad"]);
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -504,6 +546,7 @@ mod tests {
 
         app.save_faults = Faults {
             fail: Some((Fault::Write, std::io::ErrorKind::StorageFull)),
+            ..Faults::NONE
         };
         let task = app.update(Message::Run("file.save"));
         drive(&mut app, task);

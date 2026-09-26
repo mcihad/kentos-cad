@@ -576,11 +576,23 @@ mod tests {
         let first = saved(&dir, "birinci.kcad", 10);
         let second = saved(&dir, "ikinci.kcad", 20);
         let mut app = app_with_drawing();
-        let early = app.start_opening(first, Purpose::File);
+        let early = app.start_opening(first.clone(), Purpose::File);
         let late = app.start_opening(second.clone(), Purpose::File);
         // The later one ends first; the earlier one's answer, coming after, is dropped.
         drive(&mut app, late);
         drive(&mut app, early);
+        let doc = app.document.as_ref().expect("a drawing");
+        assert_eq!(doc.path.as_deref(), Some(second.as_path()));
+        assert_eq!(doc.entity_count(), 33);
+
+        // The earlier one's answer comes first, while the later one still runs: it is dropped
+        // and the later one goes on to open.
+        let mut app = app_with_drawing();
+        let early = app.start_opening(first, Purpose::File);
+        let late = app.start_opening(second.clone(), Purpose::File);
+        drive(&mut app, early);
+        assert!(app.opening.is_some(), "the later open still runs");
+        drive(&mut app, late);
         let doc = app.document.as_ref().expect("a drawing");
         assert_eq!(doc.path.as_deref(), Some(second.as_path()));
         assert_eq!(doc.entity_count(), 33);
