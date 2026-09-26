@@ -44,6 +44,28 @@ try {
   await b.waitFor(`window.kentos.server.state.value === 'offline'`, 8000).catch(() => {});
   check('without the API it shows “Sunucu: yok” and says why', (await serverText()) === 'Sunucu: yok' && (await b.eval('window.kentos.server.detail.value')) === 'API çalışmıyor.', await b.eval('window.kentos.server.detail.value'));
 
+  // The Uyarılar tab's badge counts the warnings logged since the tab was last on screen: opening the tab
+  // hides it, and after Geçmişi temizle (here from Komut geçmişi) it counts again from zero.
+  {
+    const was = await b.eval(`({ open: window.kentos.ui.bottomExpanded.value, tab: window.kentos.ui.bottomTab.value })`);
+    await b.eval(`window.kentos.ui.bottomExpanded.set(true)`);
+    await sleep(100);
+    const centre = (sel) => b.eval(`(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    const tab = (i) => centre(`.bottom__tabs [role=tab]:nth-child(${i})`);
+    const badgeText = () => b.eval(`(() => { const e = document.querySelector('.bottom__tabs .badge'); return e && !e.hidden ? e.textContent : ''; })()`);
+    await b.click(...(await tab(1)));
+    await b.eval(`(() => { const k = window.kentos; k.log.clear(); k.log.warn('e2e: birinci uyarı'); k.log.error('e2e: ikinci uyarı'); })()`);
+    const two = await badgeText();
+    await b.click(...(await tab(3)));
+    const opened = await badgeText();
+    await b.click(...(await tab(1)));
+    await b.click(...(await centre('[aria-label="Geçmişi temizle"]')));
+    await b.eval(`window.kentos.log.warn('e2e: temizledikten sonra')`);
+    const afterClear = await badgeText();
+    await b.eval(`(() => { const k = window.kentos; k.log.clear(); k.ui.bottomTab.set(${JSON.stringify(was.tab)}); k.ui.bottomExpanded.set(${was.open}); })()`);
+    check('the Uyarılar badge counts new warnings: opening the tab hides it; after Geçmişi temizle it counts from zero', two === '2' && opened === '' && afterClear === '1', JSON.stringify({ two, opened, afterClear }));
+  }
+
   const base = await b.eval('window.kentos.doc.size');
   const toScreen = (x, y) =>
     b.eval(`(() => { const k = window.kentos; const s = k.view.camera.worldToScreen({x:${x}, y:${y}}); const r = k.view.clientRect(); return [Math.round(s.x + r.left), Math.round(s.y + r.top)]; })()`);
