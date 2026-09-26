@@ -6,7 +6,6 @@ import type { ProjectRef } from '../../app/cloud/lifecycle';
 import type { CatalogSort } from '../../contracts/generated/CatalogSort';
 import type { CatalogView } from '../../contracts/generated/CatalogView';
 import type { ProjectDuplicated } from '../../contracts/generated/ProjectDuplicated';
-import type { ProjectStorage } from '../../contracts/generated/ProjectStorage';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
@@ -61,8 +60,8 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
   let searchTimer = 0;
   let opening: AbortController | null = null;
   let detailsTab: DetailsTab = tab ?? 'info';
-  /** A project made here (a restore, a conversion): opened once the list shows it, kept as `openAfter`. */
-  let openAfter: ProjectStorage | null = null;
+  /** A project made here (a restore, a conversion) is opened once the list shows it. */
+  let openAfter = false;
   const pager = new CatalogPager(cloud.api);
 
   const navButtons = VIEWS.map((v) => {
@@ -152,7 +151,6 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
       },
       history: history.state,
       historyActions: history.actions,
-      storage: picked ? history.storageOf(picked) : undefined,
     });
 
   /** The selected project's history while its tab shows (asked again when the project's events say so). */
@@ -178,10 +176,10 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
       say(ok ? `“${request.name}” indirildi.` : '');
     });
 
-  /** A project made here: shown in “Projelerim”, selected and opened (kept as `storage`, whatever the list says). */
-  const openMade = (made: ProjectDuplicated, storage: ProjectStorage) => {
+  /** A project made here: shown in “Projelerim”, selected and opened. */
+  const openMade = (made: ProjectDuplicated) => {
     wanted = made.project.id;
-    openAfter = storage;
+    openAfter = true;
     detailsTab = 'info';
     // Whatever was being searched: the new project is the one to show.
     search.value = '';
@@ -203,7 +201,7 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
       detailsTimer = setTimeout(() => {
         // A file project's content is its newest revision (the server counts no rows of it).
         const asked: Promise<DetailsState> =
-          history.storageOf(p) === 'file'
+          p.storage === 'file'
             ? cloud.api.fileRevisions(p.tenantId, p.id).then((r): FileDetails => {
                 const objects = r.revisions.find((x) => x.revision === r.current)?.objects;
                 return { kind: 'file', project: p, revision: r.current ?? null, ...(objects === undefined ? {} : { objects }) };
@@ -270,12 +268,12 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
     const want = wanted ? pager.projects.find((x) => x.id === wanted) : null;
     const made = openAfter;
     wanted = null;
-    openAfter = null;
+    openAfter = false;
     const keep = want ?? (picked ? pager.projects.find((x) => x.id === picked!.id) : null) ?? null;
     select(keep);
     if (want) primary.focus();
     // A project made here is opened as soon as the list shows it (only then: a later list opens nothing by itself).
-    if (want && made) void runPrimary(made);
+    if (want && made) void runPrimary();
     else if (made) say('Yeni proje oluşturuldu ama bu listede görünmüyor; “Projelerim”de arayıp açın.');
   };
 
@@ -338,14 +336,14 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
         name: p.name,
         // A database project as one file of one moment; a file project's newest revision.
         fetch: async (step, signal) => {
-          if (history.storageOf(p) !== 'file') return cloud.api.snapshot(p.tenantId, p.id, step, signal);
+          if (p.storage !== 'file') return cloud.api.snapshot(p.tenantId, p.id, step, signal);
           const revs = await cloud.api.fileRevisions(p.tenantId, p.id, signal);
           if (!revs.current) throw new Error('Projenin henüz kaydedilmiş revizyonu yok; indirilecek dosya yok.');
           return cloud.api.fileRevision(p.tenantId, p.id, revs.current, step, signal);
         },
       });
     },
-    convert: () => picked && openConvertDialog(ctx, picked, openMade, history.storageOf(picked)),
+    convert: () => picked && openConvertDialog(ctx, picked, openMade),
     archive: () => {
       const p = picked;
       if (p) void archiveProject(ctx, targetOf(ctx, p)).then((ok) => ok && after(`“${p.name}” arşivlendi; Arşivlenmişler listesinde duruyor.`));
@@ -382,7 +380,7 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
   };
 
   /** Opens the selected project (kept as `storage` when the caller knows better than the list), or restores it in the trash. */
-  const runPrimary = async (storage?: ProjectStorage) => {
+  const runPrimary = async () => {
     const p = picked;
     if (!p || primary.disabled) return;
     primary.disabled = true;
@@ -409,7 +407,6 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
           say(`${done} / ${total} nesne`);
         },
         abort.signal,
-        storage ?? history.storageOf(p),
       );
       if (ok) dialog.close();
       else if (!abort.signal.aborted) {

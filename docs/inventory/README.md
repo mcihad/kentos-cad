@@ -24,7 +24,7 @@ Bir komut, araç, işlem aracı, ayar, depo, pencere ya da `.kcad` alanı ekleni
 | `processing`, `models` | İşlem kaydı ve model kitaplığı. Taze tarayıcı profilinde yalnız hazır modeller bulunur |
 | `workspaces` | `app/workspaces.ts` |
 | `settings` | Tercihler: tipli ayarlar ([ADR 0023](../adr/0023-typed-settings.md); `localStorage kentos.settings.v1`, kapsamı `user` ya da `device`, `default`'u şemadan). Yerleşim (`kentos.ui.v1`), proje ayarları (`PROJECT_SETTINGS_DEFAULTS`, `.kcad`'e yazılır) ve oturum yardımcıları (kalıcı değil). `setting`, tipli ayarın anahtarıdır. Yerleşimde ve oturumda `default` taze profilin değeridir |
-| `storage` | Kaynak taraması: `persistedSignals('…')` localStorage anahtarları; tipli ayarların `SETTINGS_STORAGE`, `SETTINGS_BACKUP` ve eski `LEGACY_PREFS` sabitleri; `indexedDB.open` yanındaki `const DB`/`STORE` |
+| `storage` | Kaynak taraması: `persistedSignals('…')` localStorage anahtarları; tipli ayarların `SETTINGS_STORAGE`, `SETTINGS_BACKUP` ve eski `LEGACY_PREFS` sabitleri; `indexedDB.open` yanındaki `const DB`/`STORE`; sessionStorage kullanan modülün `export const …_KEY` sabitleri (sekmeye özgü depo) |
 | `fileFields` | `.kcad`: `DocumentSnapshotV1`'den (okunan v1 JSON) ve `DocumentSnapshotV2`'den (yazılan binary v2, [docs/specs/kcad-v2.md](../specs/kcad-v2.md)) erişilen bütün sözleşmeler. Rust'tan üretilen TS tiplerinden okunur, tanımlandıkları Rust dosyasıyla birlikte |
 | `screens` | Kaynak taraması (`src/ui`): `export function open…` pencereleri, `Component`/`Panel`'den türeyen paneller |
 

@@ -102,7 +102,13 @@ export interface PersonRow {
   owner: boolean;
   grant?: GrantRole;
   expiresAt?: string;
-  /** Its grant's role can be changed here: an unexpired grant of someone else, and the account may share. */
+  /** A guest's grant (docs/adr/0035): outside the organisation, its role came by invitation. */
+  guest: boolean;
+  /**
+   * Its grant's role can be changed here: an unexpired grant of someone
+   * else, and the account may share. Not a guest's: an organisation shares
+   * with its members only, so a guest's role changes by a new invitation.
+   */
   canChange: boolean;
   /** Its grant can be taken away here. */
   canRevoke: boolean;
@@ -142,8 +148,9 @@ export function personRows(list: ProjectAccessList, me: string, mayShare: boolea
       owner,
       grant: p.grant,
       expiresAt: p.expiresAt,
+      guest: p.guest,
       // Changing an ended grant's role would give it back without an end: the person is shared with again instead.
-      canChange: other && !p.expired && p.via === 'grant',
+      canChange: other && !p.expired && p.via === 'grant' && !p.guest,
       canRevoke: other,
     };
   });

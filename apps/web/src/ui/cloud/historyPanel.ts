@@ -1,7 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { changesHistory, loadHistory } from '../../app/cloud/history';
 import type { ProjectDuplicated } from '../../contracts/generated/ProjectDuplicated';
-import type { ProjectStorage } from '../../contracts/generated/ProjectStorage';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { askRemove } from '../widgets/confirm';
 import type { HistoryActions, HistoryState } from './catalogHistory';
@@ -24,7 +23,7 @@ export interface HistoryPanelOptions {
   /** Downloads a file with its progress in the window. */
   download(request: Omit<DownloadRequest, 'say'>): void;
   /** A project made from the history (a restored point): the catalog shows and opens it. */
-  opened(made: ProjectDuplicated, storage: ProjectStorage): void;
+  opened(made: ProjectDuplicated): void;
 }
 
 /** How long to wait after a burst of events before asking again. */
@@ -46,7 +45,7 @@ export class HistoryPanel {
     this.o = o;
     const target = (): HistoryTarget | null => {
       const p = this.project;
-      return p && { tenantId: p.tenantId, projectId: p.id, name: p.name, storage: this.storageOf(p) };
+      return p && { tenantId: p.tenantId, projectId: p.id, name: p.name, storage: p.storage };
     };
     this.actions = {
       retry: () => this.ask(),
@@ -73,11 +72,6 @@ export class HistoryPanel {
       },
       deleteCheckpoint: (c) => void this.remove(c.id, c.name, c.kind === 'revision'),
     };
-  }
-
-  /** The storage of `p`: the open project's as the session opened it, else what the catalog says. */
-  storageOf(p: ProjectSummary): ProjectStorage {
-    return this.ctx.cloud.openProject(p.tenantId, p.id)?.storage ?? p.storage;
   }
 
   /** Shows `p`'s history (null: none): asked now, and again whenever its events say it changed. */
@@ -118,7 +112,7 @@ export class HistoryPanel {
       this.state = 'loading';
       this.o.paint();
     }
-    loadHistory(this.ctx.cloud.api, p.tenantId, p.id, this.storageOf(p), p.access.permissions).then(
+    loadHistory(this.ctx.cloud.api, p.tenantId, p.id, p.storage, p.access.permissions).then(
       (data) => {
         if (gen !== this.gen) return;
         this.state = data;

@@ -66,7 +66,7 @@ async function openLatest(ctx: AppContext): Promise<boolean> {
   // Dropped on purpose: their recovery copy goes too (app/recovery.ts).
   if (ctx.doc.dirty.value) ctx.recovery.discard();
   try {
-    return await ctx.cloud.open(p.tenantId, p.projectId, undefined, undefined, 'file');
+    return await ctx.cloud.open(p.tenantId, p.projectId);
   } catch (e) {
     ctx.log.error(`“${p.name}” son revizyonu açılamadı: ${e instanceof Error ? e.message : String(e)}`);
     return false;

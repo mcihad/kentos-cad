@@ -55,8 +55,8 @@
       "pending": 0
     },
     "storage": {
-      "total": 9,
-      "implemented": 9,
+      "total": 10,
+      "implemented": 10,
       "partial": 0,
       "pending": 0
     },
@@ -67,8 +67,8 @@
       "pending": 0
     },
     "screens": {
-      "total": 58,
-      "implemented": 58,
+      "total": 59,
+      "implemented": 59,
       "partial": 0,
       "pending": 0
     },
@@ -8290,6 +8290,16 @@
       }
     },
     {
+      "id": "kentos.invitation",
+      "kind": "sessionStorage",
+      "source": "apps/web/src/app/cloud/invitationLink.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
       "id": "kentos.prefs.v1",
       "kind": "localStorage",
       "source": "apps/web/src/app/settings/legacy.ts",
@@ -11065,6 +11075,17 @@
       "name": "openRestoreDialog",
       "role": "window",
       "source": "apps/web/src/ui/cloud/HistoryForms.ts",
+      "status": "implemented",
+      "platforms": {
+        "web": "implemented",
+        "desktop": "none"
+      }
+    },
+    {
+      "id": "apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog",
+      "name": "openInvitationDialog",
+      "role": "window",
+      "source": "apps/web/src/ui/cloud/InvitationDialog.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

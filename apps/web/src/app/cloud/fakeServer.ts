@@ -18,6 +18,7 @@ import type { FileUploadBegin } from '../../contracts/generated/FileUploadBegin'
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import { ApiFailure, type CloudApi, type Transfer } from './api';
 import { FakeFiles } from './fakeFiles';
+import { FakeInvites } from './fakeInvites';
 
 /** Every project permission: the fake's caller owns the project unless a test lowers it. */
 const ALL: ProjectPermission[] = ['project.read', 'feature.write', 'project.edit', 'project.delete', 'project.comment', 'project.download', 'project.history', 'project.share', 'project.transfer', 'project.jobs.run'];
@@ -37,7 +38,8 @@ export const ROLE_PERMISSIONS: Record<Exclude<ProjectRole, 'owner'>, ProjectPerm
  * lifecycle commands of docs/adr/0028), the caller's role and access taken
  * away (403 and 404, docs/adr/0015), and switches for a dead network and a
  * lost answer. Its file side (uploads, file revisions, the snapshot, the
- * import and checkpoints) is `files` (fakeFiles.ts). It follows
+ * import and checkpoints) is `files` (fakeFiles.ts), its invitations
+ * `invites` (fakeInvites.ts). It follows
  * crates/server/application/src/changes.rs, lifecycle.rs and sharing.rs;
  * the real thing is tested against PostgreSQL in Rust and end to end in the
  * browser.
@@ -72,6 +74,8 @@ export class FakeServer implements CloudApi {
   replays = 0;
   /** The file side: uploads, revisions, snapshot, import, checkpoints. */
   readonly files: FakeFiles;
+  /** Invitations by e-mail and accepting their links (docs/adr/0035). */
+  readonly invites: FakeInvites;
 
   constructor(meta: FakeServer['meta']) {
     this.meta = structuredClone(meta);
@@ -103,6 +107,19 @@ export class FakeServer implements CloudApi {
       },
       hasContent: () => server.store.size > 0 || server.revision > 0,
       summary: () => server.summary(),
+    });
+    this.invites = new FakeInvites({
+      get projectName() {
+        return server.meta.name;
+      },
+      userId: 'u1',
+      permissions: () => server.permissions(),
+      guard: () => {
+        server.check();
+        server.hidden();
+        server.gone();
+      },
+      deleted: () => server.deleted,
     });
   }
 
@@ -348,6 +365,11 @@ export class FakeServer implements CloudApi {
   snapshot = (_t: string, _p: string, progress?: Transfer) => this.files.snapshot(progress);
   checkpoints = async () => this.files.listCheckpoints();
   checkpointFile = (_t: string, _p: string, id: string, progress?: Transfer) => this.files.checkpointFile(id, progress);
+  invitations = async () => this.invites.list();
+  acceptInvitation = async (token: string) => {
+    this.check();
+    return this.invites.accept(token);
+  };
 
   details = async (): Promise<ProjectDetails> => {
     this.hidden();
@@ -362,6 +384,8 @@ export class FakeServer implements CloudApi {
     this.lifecycleLog.push(envelope);
     const file = await this.files.command(envelope);
     if (file !== null) return file as T;
+    const invitation = this.invites.command(envelope);
+    if (invitation !== null) return invitation as T;
     const event = (kind: string) => {
       const e: EventRecord = { seq: String(this.history.length + 1), dataRevision: String(this.revision), kind, requestId: envelope.requestId, features: [], meta: false };
       this.history.push(e);

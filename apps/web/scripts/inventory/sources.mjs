@@ -40,6 +40,8 @@ export function scanStorage(root, src) {
     const source = relative(root, file);
     for (const m of text.matchAll(/persistedSignals(?:<[^>]*>)?\('([^']+)'/g)) out.set(m[1], { id: m[1], kind: 'localStorage', source });
     for (const m of text.matchAll(/^export const (?:SETTINGS_STORAGE|SETTINGS_BACKUP|LEGACY_PREFS) = '([^']+)'/gm)) out.set(m[1], { id: m[1], kind: 'localStorage', source });
+    // A tab's own store (an invitation link's token, docs/adr/0042): the `…_KEY` of a module that uses sessionStorage.
+    if (text.includes('sessionStorage')) for (const m of text.matchAll(/^export const \w+_KEY = '([^']+)'/gm)) out.set(m[1], { id: m[1], kind: 'sessionStorage', source });
     if (text.includes('indexedDB.open(')) {
       const db = text.match(/^const DB = '([^']+)'/m)?.[1];
       const store = text.match(/^const STORE = '([^']+)'/m)?.[1];

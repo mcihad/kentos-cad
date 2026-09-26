@@ -110,7 +110,7 @@ export type HistoryPoint = { checkpoint: Checkpoint } | { revision: FileRevision
  * kept as (a file project's point is a file project; a database
  * checkpoint, a database project).
  */
-export function openRestoreDialog(ctx: AppContext, t: HistoryTarget, point: HistoryPoint, done?: (made: ProjectDuplicated, storage: ProjectStorage) => void): void {
+export function openRestoreDialog(ctx: AppContext, t: HistoryTarget, point: HistoryPoint, done?: (made: ProjectDuplicated) => void): void {
   const places = creatableWorkspaces(ctx, t.tenantId);
   const label = 'checkpoint' in point ? point.checkpoint.name : `r${point.revision.revision}`;
   const storage: ProjectStorage = 'checkpoint' in point ? (point.checkpoint.kind === 'revision' ? 'file' : 'database') : 'file';
@@ -158,7 +158,7 @@ export function openRestoreDialog(ctx: AppContext, t: HistoryTarget, point: Hist
       const made = await ctx.cloud.lifecycle.restoreCheckpoint(t, 'checkpoint' in point ? { checkpointId: point.checkpoint.id } : { fileRevision: point.revision.revision }, { name: name.value, tenantId: place.value });
       dialog.close();
       ctx.log.success(`“${made.project.name}” oluşturuldu: ${what} geri yüklendi (${Number(made.objects).toLocaleString('tr-TR')} nesne).`);
-      done?.(made, storage);
+      done?.(made);
     } catch (e) {
       status.dataset.kind = 'error';
       status.textContent = reason(e);
