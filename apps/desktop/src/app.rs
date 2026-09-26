@@ -194,6 +194,8 @@ pub enum Message {
     AppMenu(crate::app_menu::Event),
     /// Başlangıç (start.rs).
     Start(crate::start::Event),
+    /// The interface's look from the Görünüm tab (appearance.rs).
+    Appearance(crate::appearance::Event),
 }
 
 /// A finished save: which opened drawing, where, and the revision written.
@@ -274,6 +276,10 @@ pub struct App {
     pub recent: crate::recent::RecentFiles,
     /// The recent file to open once the drawing on screen is left (start.rs).
     pub opening_recent: Option<PathBuf>,
+    /// The drawing area's background (Görünüm → Çizim zemini, appearance.rs).
+    pub backdrop: crate::appearance::Backdrop,
+    /// The interface's typefaces and text size as last applied (appearance.rs).
+    pub typography: kentos_ui::theme::typography::Typography,
 }
 
 impl App {
@@ -338,6 +344,8 @@ impl App {
             app_menu: None,
             recent: crate::recent::RecentFiles::memory(),
             opening_recent: None,
+            backdrop: crate::appearance::Backdrop::default(),
+            typography: kentos_ui::theme::typography::current(),
         };
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
@@ -583,6 +591,7 @@ impl App {
             Message::Project(event) => return self.project_event(*event),
             Message::AppMenu(event) => return self.app_menu_event(event),
             Message::Start(event) => return self.start_event(event),
+            Message::Appearance(event) => return self.appearance_event(event),
             Message::Viewport(event) => return self.pointer(event),
             Message::Settings(edit) => return self.settings_edit(edit),
             Message::Opening(event) => return self.opening_event(event),
@@ -609,10 +618,7 @@ impl App {
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
-        self.mode = match s.effective("appearance.theme").as_str() {
-            Some("light") => Mode::Light,
-            _ => Mode::Dark,
-        };
+        self.apply_appearance();
     }
 
     /// What the drawing area draws with: the effective sample count and pixel ratio.
@@ -693,11 +699,7 @@ impl App {
 
     /// The theme chosen from a command: a preference, kept.
     fn choose_theme(&mut self, mode: Mode) {
-        let theme = if mode == Mode::Light { "light" } else { "dark" };
-        let _ = self
-            .settings
-            .choose(&[("appearance.theme", Value::from(theme))]);
-        self.apply_settings();
+        let _ = self.appearance_event(crate::appearance::Event::Theme(mode));
     }
 
     /// Puts a drawing on screen: the one there before is left (its cloud
@@ -770,11 +772,8 @@ impl App {
             "file.saveAs" => return self.save(true),
             "view.theme.dark" => self.choose_theme(Mode::Dark),
             "view.theme.light" => self.choose_theme(Mode::Light),
-            "view.theme.toggle" => self.choose_theme(if self.mode == Mode::Light {
-                Mode::Dark
-            } else {
-                Mode::Light
-            }),
+            "view.theme.toggle" => self.choose_theme(self.mode.toggled()),
+            id if id.starts_with("workspace.") => self.choose_mode(id),
             "tools.options" => self.open_settings(),
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
             "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
@@ -836,6 +835,21 @@ impl App {
     /// the drawing or in the running command's draft, redo with one to take
     /// (web: `isEnabled`, `watch: [doc.canUndo, tools.prompt]`). Buttons of
     /// commands that cannot run are drawn dimmed.
+    /// A command's on or off state where it has one (the ribbon and its menus show it).
+    pub fn checked(&self, id: &str) -> Option<bool> {
+        Some(match id {
+            "draft.ortho" => self.draft.ortho,
+            "draft.polar" => self.draft.polar.is_some(),
+            "draft.snap" => self.draft.snap,
+            "view.theme.dark" => self.mode == Mode::Dark,
+            "view.theme.light" => self.mode == Mode::Light,
+            id if id.starts_with("workspace.") => {
+                crate::catalog::mode_command(self.work_mode()) == id
+            }
+            _ => return None,
+        })
+    }
+
     pub fn available(&self, id: &str) -> bool {
         let doc = self.document.as_ref().map(|doc| &doc.model);
         match id {

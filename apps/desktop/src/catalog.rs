@@ -109,6 +109,10 @@ pub const PORTED: &[&str] = &[
     "file.settings",
     // The start screen with the recent files (start.rs).
     "file.start",
+    // The work modes that can be chosen (modes.rs); the announced ones stay pending.
+    "workspace.hybrid",
+    "workspace.cad",
+    "workspace.gis",
 ];
 
 /// Where a command stands, from the desktop's point of view.
@@ -182,9 +186,9 @@ pub struct Mode {
     pub ready: bool,
 }
 
-/// The name of the mode a project works in: its own when it can be
-/// chosen, else Hibrit (the web's `effectiveWorkspace`).
-pub fn mode_of(workspace: Option<kentos_contracts::Workspace>) -> &'static str {
+/// The mode the interface shows for a project's setting: its own when it
+/// can be chosen, else Hibrit (the web's `effectiveWorkspace`).
+pub fn effective_mode(workspace: Option<kentos_contracts::Workspace>) -> &'static Mode {
     use kentos_contracts::Workspace;
     let modes = catalog().modes();
     let wanted = workspace.unwrap_or(Workspace::Hybrid);
@@ -192,7 +196,24 @@ pub fn mode_of(workspace: Option<kentos_contracts::Workspace>) -> &'static str {
         .iter()
         .find(|m| m.id == wanted && m.ready)
         .or_else(|| modes.iter().find(|m| m.id == Workspace::Hybrid))
-        .map_or("Hibrit", |m| m.label)
+        .unwrap_or(&modes[0])
+}
+
+/// The name of the mode a project works in (see [`effective_mode`]).
+pub fn mode_of(workspace: Option<kentos_contracts::Workspace>) -> &'static str {
+    effective_mode(workspace).label
+}
+
+/// A mode's command id (`workspace.cad`).
+pub fn mode_command(mode: kentos_contracts::Workspace) -> &'static str {
+    use kentos_contracts::Workspace;
+    match mode {
+        Workspace::Hybrid => "workspace.hybrid",
+        Workspace::Cad => "workspace.cad",
+        Workspace::Gis => "workspace.gis",
+        Workspace::Plan3d => "workspace.plan3d",
+        Workspace::Disaster => "workspace.disaster",
+    }
 }
 
 /// A ribbon tab and its panels, in the web's order.
@@ -208,7 +229,30 @@ pub struct Tab {
 #[derive(Debug, Clone)]
 pub struct Panel {
     pub label: &'static str,
+    /// The icon of the button the panel folds into when the window is narrow.
+    pub icon: Icon,
     pub items: Vec<Item>,
+    /// Seldom used commands: under the ▾ beside the panel's title (the web's `overflow`).
+    pub overflow: Vec<&'static str>,
+    /// Keeps its large buttons until the tab's other panels show icons only.
+    pub keep: bool,
+    /// The corner button of the title (↘): another tab, or a command.
+    pub launcher: Option<Launcher>,
+}
+
+/// A panel's launcher (the web's `RibbonLauncher`).
+#[derive(Debug, Clone)]
+pub struct Launcher {
+    pub title: &'static str,
+    pub target: LauncherTarget,
+}
+
+#[derive(Debug, Clone)]
+pub enum LauncherTarget {
+    Tab(&'static str),
+    /// A command (the web may pass it a settings section; the desktop's
+    /// settings window opens whole).
+    Command(&'static str),
 }
 
 #[derive(Debug, Clone)]
@@ -246,7 +290,12 @@ pub struct Entry {
 pub struct Catalog {
     commands: Vec<Command>,
     by_id: HashMap<&'static str, usize>,
+    /// The ribbon as Hibrit shows it: every tab.
     tabs: Vec<Tab>,
+    /// The ribbon of the other ready modes, as the web builds it with the
+    /// mode's filter (`app/workspaces.ts`): what they hide left out, their
+    /// own tab names (CAD's Harita is Ölçme).
+    mode_tabs: Vec<(kentos_contracts::Workspace, Vec<Tab>)>,
     quick: Vec<&'static str>,
     modes: Vec<Mode>,
 }
@@ -263,6 +312,17 @@ impl Catalog {
     /// Ribbon tabs, the contextual ones left out.
     pub fn tabs(&self) -> impl Iterator<Item = &Tab> {
         self.tabs.iter().filter(|tab| !tab.contextual)
+    }
+
+    /// The ribbon tabs of a work mode (Hibrit's when the mode hides nothing
+    /// or is not ready), the contextual ones left out.
+    pub fn tabs_in(&self, mode: kentos_contracts::Workspace) -> impl Iterator<Item = &Tab> {
+        self.mode_tabs
+            .iter()
+            .find(|(m, _)| *m == mode)
+            .map_or(&self.tabs, |(_, tabs)| tabs)
+            .iter()
+            .filter(|tab| !tab.contextual)
     }
 
     /// Quick access bar (Kaydet, Geri al, Yinele).
@@ -315,11 +375,18 @@ impl Catalog {
             .map(|(i, c)| (c.id, i))
             .collect();
 
-        let tabs = raw
+        let tabs = raw.layout.ribbon.into_iter().map(tab).collect();
+        let mode_tabs = raw
             .layout
-            .ribbon
+            .ribbon_by_mode
             .into_iter()
-            .map(|tab| Tab {
+            .filter_map(|(mode, tabs)| {
+                let mode = serde_json::from_value(serde_json::Value::String(mode)).ok()?;
+                Some((mode, tabs.into_iter().map(tab).collect()))
+            })
+            .collect();
+        fn tab(tab: RawTab) -> Tab {
+            Tab {
                 id: leak(tab.id),
                 label: leak(tab.label),
                 contextual: tab.contextual.is_some(),
@@ -328,11 +395,23 @@ impl Catalog {
                     .into_iter()
                     .map(|panel| Panel {
                         label: leak(panel.label),
+                        icon: icons::from_web(panel.icon.as_deref()),
                         items: panel.items.into_iter().map(item).collect(),
+                        overflow: panel.overflow.into_iter().map(leak).collect(),
+                        keep: panel.keep,
+                        launcher: panel.launcher.map(|l| Launcher {
+                            title: leak(l.title),
+                            target: match (l.tab, l.command) {
+                                (Some(tab), _) => LauncherTarget::Tab(leak(tab)),
+                                (None, command) => {
+                                    LauncherTarget::Command(leak(command.unwrap_or_default()))
+                                }
+                            },
+                        }),
                     })
                     .collect(),
-            })
-            .collect();
+            }
+        }
 
         // The web's order (the contract's): the inventory lists them by id.
         let mut modes: Vec<Mode> = raw
@@ -355,6 +434,7 @@ impl Catalog {
             commands,
             by_id,
             tabs,
+            mode_tabs,
             quick: raw.layout.quick_access.into_iter().map(leak).collect(),
             modes,
         })
@@ -468,6 +548,9 @@ struct RawCommand {
 #[serde(rename_all = "camelCase")]
 struct RawLayout {
     ribbon: Vec<RawTab>,
+    /// The other ready modes' ribbons, by mode id.
+    #[serde(default)]
+    ribbon_by_mode: std::collections::BTreeMap<String, Vec<RawTab>>,
     quick_access: Vec<String>,
 }
 
@@ -482,7 +565,22 @@ struct RawTab {
 #[derive(Deserialize)]
 struct RawPanel {
     label: String,
+    #[serde(default)]
+    icon: Option<String>,
     items: Vec<RawItem>,
+    #[serde(default)]
+    overflow: Vec<String>,
+    #[serde(default)]
+    keep: bool,
+    #[serde(default)]
+    launcher: Option<RawLauncher>,
+}
+
+#[derive(Deserialize)]
+struct RawLauncher {
+    title: String,
+    tab: Option<String>,
+    command: Option<String>,
 }
 
 #[derive(Deserialize)]

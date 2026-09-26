@@ -282,6 +282,7 @@ Menü çubuğu, araç çubuğu ve araç kutusunun sekmeli karşılığıdır; Uy
 - **Klavye:** sekmelerde ←/→, Home/End; ↓ panellere iner; panellerde oklar düğmeler arasında gezer, Esc sekmeye döner. Düğmeye fareyle tıklamak odağı almaz: Enter son komutu yinelemeye devam eder.
 - Hareket yoktur: açılma, daralma ve panel küçülmesi anlıktır (§12).
 - Şeritle birlikte araç kutusu kapalıdır (Görünüm → Araç kutusu ya da F9 ile açılır ve ayrı hatırlanır).
+- **Masaüstü** (KentOS UI, ADR 0051): aynı sığdırma kuralı ve seviyeler; genişlikler yazı ölçümünden hesaplanır. Katlanmış panel tıklayınca araçlarını menüde açar (aileler alt menü, seyrek araçlar “Diğer araçlar”). Düğmeler web'in ölçülerindedir: satır 24 px, büyük ikon 28 px ve sabit 1,55 px çizgi; ikon dinlenirken ikincil, üzerine gelince ana renk; çalışan araç dolu vurgu, açık anahtar yumuşak vurgu. Görünüm sekmesinde web panellerinden sonra arayüzün kendi grupları durur: Tema (Koyu, Aydınlık, Gece, Yüksek karşıtlık; sekiz vurgu ve özel renk), Çizim zemini (temaya uy, arduvaz, siyah, kâğıt), Yazı tipi (IBM Plex Sans, Inter, Plus Jakarta Sans), Eş aralıklı (IBM Plex Mono, JetBrains Mono) ve Yazı boyutu (11–18 px). Web'in Tema ve Çizim motoru menüleri masaüstünde yoktur.
 
 ### 7.3.2 Çalışma modları
 
@@ -291,6 +292,7 @@ Bir projenin arayüzü **çalışma moduna** göre sadeleşir (`app/workspaces.t
 - **Yakında:** seçilebilen kartların altında, kesikli bir çizgiyle ayrılmış “Yakında” başlığı ve daha alçak, kesikli çerçeveli, saydam kartlar; sağda amber çizgili hap “Yakında”. Tıklanmaz; ipucu ne olacağını söyler.
 - **Durum çubuğu:** koordinat sisteminin solunda amber mod simgesi ve modun adı (600). Tıklayınca menü: başlık “Çalışma modu”, seçilebilen modlar (radyo), ayırıcı, duyurulanlar soluk ve sağda “Yakında”. Aynı menü Görünüm → Çalışma modu'dadır.
 - Mod değişince menü çubuğu, şerit ve araç kutusu yerinde yeniden kurulur; açık sekme kalıyorsa açık kalır. CAD'de sağ dokun İşlemler sekmesi gizlenir.
+- **Masaüstü** (ADR 0052): her modun şeridi web'in kurduğu hâliyle envanterden gelir; durum çubuğunda mod işareti ve adı, tıklayınca aynı menü. Menü çubuğu ve araç kutusu masaüstünde yoktur.
 
 ### 7.4 Kayan araç kutusu
 

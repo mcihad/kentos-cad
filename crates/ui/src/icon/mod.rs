@@ -284,6 +284,7 @@ pub fn icon(icon: Icon) -> Glyph {
         icon,
         size: 16.0,
         tone: Tone::Inherit,
+        weight: None,
     }
 }
 
@@ -295,6 +296,7 @@ pub struct Glyph {
     icon: Icon,
     size: f32,
     tone: Tone,
+    weight: Option<f32>,
 }
 
 impl Glyph {
@@ -312,12 +314,19 @@ impl Glyph {
     pub fn color(self, color: Color) -> Self {
         self.tone(Tone::Custom(color))
     }
+
+    /// Çizgi kalınlığını boyuttan bağımsız, piksel olarak sabitler: büyük
+    /// ikon ağırlaşmaz (DESIGN.md §7.3.1: şeridin büyük ikonları).
+    pub fn weight(mut self, weight: f32) -> Self {
+        self.weight = Some(weight);
+        self
+    }
 }
 
 #[derive(Default)]
 struct State {
     cache: canvas::Cache,
-    drawn: Cell<Option<(Icon, Color)>>,
+    drawn: Cell<Option<(Icon, Color, Option<u32>)>>,
 }
 
 impl<Message> Widget<Message, Theme, Renderer> for Glyph {
@@ -356,13 +365,14 @@ impl<Message> Widget<Message, Theme, Renderer> for Glyph {
         let color = self.tone.resolve(theme, style.text_color);
         let state = tree.state.downcast_ref::<State>();
 
-        if state.drawn.get() != Some((self.icon, color)) {
+        let drawn = (self.icon, color, self.weight.map(f32::to_bits));
+        if state.drawn.get() != Some(drawn) {
             state.cache.clear();
-            state.drawn.set(Some((self.icon, color)));
+            state.drawn.set(Some(drawn));
         }
 
         let geometry = state.cache.draw(renderer, bounds.size(), |frame| {
-            draw::icon(frame, self.icon, color);
+            draw::icon(frame, self.icon, color, self.weight);
         });
 
         renderer.with_translation(Vector::new(bounds.x, bounds.y), |renderer| {

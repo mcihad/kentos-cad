@@ -46,6 +46,59 @@ pub fn flat(theme: &Theme, status: Status) -> Style {
     )
 }
 
+/// Şerit düğmesinin durumu (DESIGN.md §7.3.1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Ribbon {
+    #[default]
+    Idle,
+    /// Açık bir anahtar (ör. kenet): yumuşak vurgu zemini.
+    On,
+    /// Çalışan araç: dolu vurgu; vurgu yalnız onda dolu olur.
+    Running,
+}
+
+/// Şerit düğmesi: çerçevesizdir. İkon düğmenin metin rengini alır:
+/// dinlenirken ikincil, üzerine gelince ana renk; etiket kendi rengini
+/// taşır ([`ribbon_label`]). Çalışan araç dolu vurgu, açık anahtar yumuşak
+/// vurgu zeminidir; devre dışı düğme sönüktür.
+pub fn ribbon(state: Ribbon) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+        let hovered = is_hovered(status);
+
+        let (background, icon) = match (state, status) {
+            (_, Status::Disabled) => (Color::TRANSPARENT, t.disabled()),
+            (Ribbon::Running, _) if hovered => (t.accent_hover, t.on_accent),
+            (Ribbon::Running, _) => (t.accent, t.on_accent),
+            (Ribbon::On, _) => (
+                if hovered {
+                    t.accent.scale_alpha(0.3)
+                } else {
+                    t.selection()
+                },
+                t.accent_hover,
+            ),
+            (Ribbon::Idle, Status::Pressed) => (t.layer(0.14), t.text),
+            (Ribbon::Idle, Status::Hovered) => (t.layer(0.08), t.text),
+            (Ribbon::Idle, _) => (Color::TRANSPARENT, t.muted),
+        };
+
+        style(background, icon, border::rounded(RADIUS))
+    }
+}
+
+/// Şerit düğmesinin etiket rengi: vurgu zemininde vurgunun yazısı, devre
+/// dışıyken sönük, yoksa ana metin.
+pub fn ribbon_label(theme: &Theme, state: Ribbon, enabled: bool) -> Color {
+    let t = Tokens::of(theme);
+
+    match (state, enabled) {
+        (_, false) => t.disabled(),
+        (Ribbon::Running, true) => t.on_accent,
+        _ => t.text,
+    }
+}
+
 /// Birincil eylem: iletişim kutusunu onaylar, uygulamadan çıkar.
 pub fn primary(theme: &Theme, status: Status) -> Style {
     let t = Tokens::of(theme);

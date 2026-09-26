@@ -217,12 +217,72 @@ fn settings() -> Vec<SettingDescriptor> {
         choice(
             "appearance.theme",
             "dark",
-            &[("dark", "Koyu grafit"), ("light", "Açık pafta")],
+            &[
+                ("dark", "Koyu grafit"),
+                ("light", "Açık pafta"),
+                ("night", "Gece"),
+                ("highContrast", "Yüksek karşıtlık"),
+            ],
         )
         .hosts(&[Desktop])
         .text(
             "Tema",
-            "Arayüzün ve çizim alanının renkleri: koyu grafit ya da açık pafta.",
+            "Arayüzün renkleri: koyu grafit, açık pafta, karanlık odada parlamayan gece ya da siyah zeminli yüksek karşıtlık.",
+        ),
+        // The desktop's own look (KentOS UI's themes, accents and typefaces, docs/adr/0051);
+        // the web keeps its appearance settings below.
+        text("appearance.accentColor", "mavi", 16)
+            .hosts(&[Desktop])
+            .text(
+                "Vurgu rengi",
+                "Çalışan araç, seçim, odak ve seçili öğelerin rengi: mavi, turkuaz, yeşil, kehribar, turuncu, pembe, mor, gri ya da #RRGGBB. Renk temanın zemininde okunur kalacak kadar ayarlanır.",
+            ),
+        choice(
+            "appearance.typeface",
+            "plex",
+            &[
+                ("plex", "IBM Plex Sans"),
+                ("inter", "Inter"),
+                ("jakarta", "Plus Jakarta Sans"),
+            ],
+        )
+        .hosts(&[Desktop])
+        .text(
+            "Yazı tipi",
+            "Menüler, şerit, paneller ve pencerelerin yazısı; çizimdeki yazı nesneleri etkilenmez.",
+        ),
+        choice(
+            "appearance.monoTypeface",
+            "plexMono",
+            &[("plexMono", "IBM Plex Mono"), ("jetbrains", "JetBrains Mono")],
+        )
+        .hosts(&[Desktop])
+        .text(
+            "Eş aralıklı yazı",
+            "Koordinatların, ölçülerin ve komut satırının yazısı.",
+        ),
+        integer("appearance.textSize", 13)
+            .range(11.0, 18.0)
+            .unit("px")
+            .hosts(&[Desktop])
+            .text(
+                "Yazı boyutu",
+                "Arayüz metninin boyutu; şerit, paneller ve komut satırı onunla büyür. Çizim etiketleri etkilenmez.",
+            ),
+        choice(
+            "appearance.drawingBackground",
+            "theme",
+            &[
+                ("theme", "Temaya uy"),
+                ("slate", "Arduvaz"),
+                ("black", "Siyah"),
+                ("paper", "Kâğıt"),
+            ],
+        )
+        .hosts(&[Desktop])
+        .text(
+            "Çizim zemini",
+            "Çizim alanının zemini, arayüzün temasından bağımsız: temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
         ),
         choice(
             "appearance.accent",

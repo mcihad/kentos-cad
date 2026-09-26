@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::path::PathBuf;
 
-use iced::widget::{button, container, row, scrollable, text};
+use iced::widget::{button, container, row, scrollable, space, text, text_input};
 use iced::{Center, Element, Fill, Shrink, Task};
 use serde_json::Value;
 
@@ -23,7 +23,7 @@ use crate::app::{App, Message};
 use crate::settings::schema;
 
 /// The settings the window shows, in its order.
-pub const KEYS: [&str; 23] = [
+pub const KEYS: [&str; 28] = [
     "drafting.ortho",
     "drafting.polar",
     "drafting.polarIncrement",
@@ -43,6 +43,11 @@ pub const KEYS: [&str; 23] = [
     "graphics.msaa",
     "graphics.hiDpi",
     "appearance.theme",
+    "appearance.accentColor",
+    "appearance.drawingBackground",
+    "appearance.typeface",
+    "appearance.monoTypeface",
+    "appearance.textSize",
     "appearance.startScreen",
     "newProjects.srid",
     "newProjects.workspace",
@@ -267,12 +272,24 @@ impl App {
         } else if draft.reset {
             self.settings.reset();
         }
-        let changes: Vec<(&str, Value)> = draft
+        let mut changes: Vec<(&str, Value)> = draft
             .values
             .iter()
             .filter(|(key, value)| !same_value(&self.settings.requested(key), value))
             .map(|(key, value)| (*key, value.clone()))
             .collect();
+        // A colour of one's own is taken only when it reads; the one in use stays otherwise.
+        let before = changes.len();
+        changes.retain(|(key, value)| {
+            *key != "appearance.accentColor"
+                || value
+                    .as_str()
+                    .and_then(kentos_ui::theme::Accent::parse)
+                    .is_some()
+        });
+        if changes.len() != before {
+            self.warn("Vurgu rengi okunamadı; #RRGGBB biçiminde yazın (ör. #2f80ed). Önceki renk duruyor.");
+        }
         let refused = self.settings.choose(&changes);
         self.apply_settings();
         if let Some(error) = &self.settings.write_error {
@@ -397,9 +414,50 @@ impl App {
             .section("Görünüm")
             .field(
                 title("appearance.theme"),
-                choices("appearance.theme", &value("appearance.theme")),
+                listed("appearance.theme", &value("appearance.theme")),
             )
             .help(help("appearance.theme"))
+            .field(
+                title("appearance.accentColor"),
+                accent_choice(
+                    value("appearance.accentColor").as_str().unwrap_or("mavi"),
+                    self.mode,
+                ),
+            )
+            .help(help("appearance.accentColor"))
+            .field(
+                title("appearance.drawingBackground"),
+                choices(
+                    "appearance.drawingBackground",
+                    &value("appearance.drawingBackground"),
+                ),
+            )
+            .help(help("appearance.drawingBackground"))
+            .field(
+                title("appearance.typeface"),
+                listed("appearance.typeface", &value("appearance.typeface")),
+            )
+            .help(help("appearance.typeface"))
+            .field(
+                title("appearance.monoTypeface"),
+                choices("appearance.monoTypeface", &value("appearance.monoTypeface")),
+            )
+            .help(help("appearance.monoTypeface"))
+            .field(
+                title("appearance.textSize"),
+                NumberInput::new(value("appearance.textSize").as_f64().unwrap_or(13.0), |v| {
+                    Message::Settings(Edit::Value(
+                        "appearance.textSize",
+                        Value::from(v.round() as i64),
+                    ))
+                })
+                .units(PX)
+                .range(range("appearance.textSize"))
+                .step(1.0)
+                .decimals(0)
+                .width(120),
+            )
+            .help(help("appearance.textSize"))
             .field(
                 title("appearance.startScreen"),
                 switch("appearance.startScreen", None),
@@ -612,6 +670,62 @@ fn listed(key: &'static str, current: &Value) -> Element<'static, Message> {
     })
     .searchable(false)
     .into()
+}
+
+/// The accent colour: the eight presets as swatches, and a colour of one's
+/// own as `#RRGGBB` (taken when it reads; kept as typed until then).
+fn accent_choice(current: &str, mode: kentos_ui::theme::Mode) -> Element<'static, Message> {
+    use kentos_ui::theme::Accent;
+    let chosen = Accent::parse(current);
+    let chips = Accent::PRESETS
+        .into_iter()
+        .fold(row![].spacing(2), |row, accent| {
+            let color = accent.color(mode);
+            row.push(
+                button(container(space::horizontal()).width(14).height(14).style(
+                    move |_: &iced::Theme| container::Style {
+                        background: Some(color.into()),
+                        border: iced::Border {
+                            color: iced::Color::BLACK.scale_alpha(0.3),
+                            width: 1.0,
+                            radius: 7.0.into(),
+                        },
+                        ..container::Style::default()
+                    },
+                ))
+                .on_press(Message::Settings(Edit::Value(
+                    "appearance.accentColor",
+                    Value::from(accent.key()),
+                )))
+                .padding(2)
+                .style(move |theme, status| {
+                    let mut style = style::button::swatch(chosen == Some(accent))(theme, status);
+                    style.border.radius = 10.0.into();
+                    style
+                }),
+            )
+        });
+    let custom = text_input(
+        "#RRGGBB",
+        if current.starts_with('#') {
+            current
+        } else {
+            ""
+        },
+    )
+    .on_input(|text| Message::Settings(Edit::Value("appearance.accentColor", Value::from(text))))
+    .width(96)
+    .padding([3, 6]);
+    let note = match chosen {
+        None if !current.is_empty() => {
+            label::caption("Okunamadı: #RRGGBB biçiminde yazın.").style(style::text::danger)
+        }
+        _ => label::caption(""),
+    };
+    row![chips, custom, note]
+        .spacing(8)
+        .align_y(iced::Center)
+        .into()
 }
 
 /// The coordinate system new projects are offered with: the registry's list.

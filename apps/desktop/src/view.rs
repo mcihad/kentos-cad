@@ -25,7 +25,7 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::command_line::{Command as LineCommand, Prompt as LinePrompt};
-use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon, Stack};
+use kentos_ui::widget::ribbon::{AppButton, Button, Group, Ribbon};
 use kentos_ui::widget::status_bar::{Readout, StatusBar};
 use kentos_ui::widget::table::Column as TreeColumn;
 use kentos_ui::widget::tree_view::{Node, Toggle, TreeView};
@@ -35,7 +35,9 @@ use kentos_ui::widget::{
 };
 
 use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel};
-use crate::catalog::{Command, Entry, Item, Standing, catalog};
+use crate::catalog::{
+    Command, Entry, Item, Launcher, LauncherTarget, Panel as RibbonPanel, Standing, catalog,
+};
 use crate::document::{Document, crs_name};
 use crate::marks::Marks;
 use crate::preview;
@@ -114,17 +116,122 @@ impl App {
             let on_press = enabled(command).filter(|_| self.available(command.id));
             ribbon = ribbon.quick(command.icon, command.title, on_press);
         }
-        for tab in catalog.tabs() {
-            ribbon = ribbon.tab(tab.label, tab.id == self.tab, Message::RibbonTab(tab.id));
+        // The drawing's work mode decides the tabs and their panels (modes.rs).
+        let shown = self.shown_tab();
+        for tab in self.ribbon_tabs() {
+            ribbon = ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id));
         }
-        if let Some(tab) = catalog.tabs().find(|tab| tab.id == self.tab) {
+        if let Some(tab) = self.ribbon_tabs().find(|tab| tab.id == shown) {
             for panel in &tab.panels {
-                if let Some(group) = group(panel.label, &panel.items) {
+                if let Some(group) = self.ribbon_group(tab.id, panel) {
+                    ribbon = ribbon.group(group);
+                }
+            }
+            // The interface's own look after the web's panels (appearance.rs).
+            if tab.id == "view" {
+                for group in self.appearance_groups() {
                     ribbon = ribbon.group(group);
                 }
             }
         }
         ribbon.into()
+    }
+
+    /// A panel of the web's ribbon: its buttons, which the ribbon shrinks to
+    /// the window (large → small → icons → one button, DESIGN.md §7.3.1), its
+    /// seldom used tools under the title's ▾ and its launcher (↘).
+    pub(crate) fn ribbon_group(
+        &self,
+        tab: &str,
+        panel: &RibbonPanel,
+    ) -> Option<Group<'static, Message>> {
+        let mut group = Group::new(panel.label).icon(panel.icon).keep(panel.keep);
+        let mut any = false;
+        for item in &panel.items {
+            // The Görünüm tab's own groups replace the web's Tema menu; the web's
+            // drawing engine (WebGL2 or WebGPU) has no meaning on the desktop.
+            if tab == "view"
+                && matches!(
+                    item,
+                    Item::Menu {
+                        label: "Tema" | "Çizim motoru",
+                        ..
+                    }
+                )
+            {
+                continue;
+            }
+            if let Some(button) = self.ribbon_button(item) {
+                group = group.tool(button);
+                any = true;
+            }
+        }
+        if !panel.overflow.is_empty() {
+            let ids = panel.overflow.clone();
+            let checked = self.checks(&ids);
+            group = group.more(move || menu_of(&ids, &checked));
+        }
+        if let Some(launcher) = &panel.launcher
+            && let Some(message) = launch(launcher)
+        {
+            group = group.launcher(message, launcher.title);
+        }
+        any.then_some(group)
+    }
+
+    fn ribbon_button(&self, item: &Item) -> Option<Button<'static, Message>> {
+        let catalog = catalog();
+        let make = |command: &Command, large: bool| {
+            let button = if large {
+                Button::large(command.icon, command.short)
+            } else {
+                Button::small(command.icon, command.short)
+            };
+            button
+                .on_press_maybe(enabled(command).filter(|_| self.available(command.id)))
+                .tip(tip(command))
+                .on(self.checked(command.id).unwrap_or(false))
+                .active(self.running(command.id))
+        };
+        match item {
+            Item::Command { id, large } => Some(make(catalog.get(id)?, *large)),
+            Item::Split { entries, large } => {
+                let first = catalog.get(entries.first()?.id)?;
+                let ids: Vec<&'static str> = entries.iter().map(|e| e.id).collect();
+                // One of the family running lights the split's action (DESIGN.md §7.3.1).
+                let running = ids.iter().any(|id| self.running(id));
+                let button = make(first, *large).active(running);
+                let entries = entries.clone();
+                let menu = move || split_menu(&entries);
+                Some(with_family(button, &ids, first.title, menu))
+            }
+            Item::Menu { label, ids, large } => {
+                let icon = ids
+                    .first()
+                    .and_then(|id| catalog.get(id))
+                    .map_or(Icon::More, |c| c.icon);
+                let button = if *large {
+                    Button::large(icon, *label)
+                } else {
+                    Button::small(icon, *label)
+                };
+                let members = ids.clone();
+                let checked = self.checks(&members);
+                let menu = move || menu_of(&members, &checked);
+                Some(with_family(button, ids, label, menu))
+            }
+            Item::Builtin => None,
+        }
+    }
+
+    /// Whether this command is the running tool (`tool.line` while Çizgi runs).
+    fn running(&self, id: &str) -> bool {
+        self.session.is_running() && id.strip_prefix("tool.") == Some(self.session.tool_id())
+    }
+
+    /// Commands' on or off states for a menu, in its order.
+    fn checks(&self, ids: &[&'static str]) -> Vec<Option<bool>> {
+        ids.iter().map(|id| self.checked(id)).collect()
     }
 
     fn drawing_area(&self) -> Element<'_, Message> {
@@ -138,7 +245,7 @@ impl App {
                     camera: self.viewport.camera,
                     snap: self.snap,
                     select: self.session.select_box(),
-                    colors: mark_colors(self.mode),
+                    colors: mark_colors(self.canvas()),
                 };
                 let over = preview::layer(
                     &self.viewport.camera,
@@ -149,7 +256,7 @@ impl App {
                 let accent = rgba8(Tokens::of(&self.theme()).accent);
                 let area = self.viewport.view(
                     doc,
-                    self.mode,
+                    self.canvas(),
                     self.graphics(),
                     &self.selection,
                     accent,
@@ -343,6 +450,8 @@ impl App {
                         .tip("Pafta ölçeği (proje ayarı)"),
                 )
                 .separator()
+                .push(self.mode_cell())
+                .separator()
                 .push(
                     Readout::new(text(crs))
                         .icon(Icon::Globe)
@@ -473,76 +582,6 @@ impl App {
 }
 
 /// A ribbon panel: large buttons alone, small ones three to a column.
-fn group(title: &'static str, items: &[Item]) -> Option<Group<'static, Message>> {
-    let mut group = Group::new(title);
-    let mut small: Vec<Button<'static, Message>> = Vec::new();
-    let mut any = false;
-    let flush = |group: Group<'static, Message>, small: &mut Vec<Button<'static, Message>>| {
-        if small.is_empty() {
-            return group;
-        }
-        let stack = small
-            .drain(..)
-            .fold(Stack::new(), |stack, button| stack.push(button));
-        group.push(stack)
-    };
-    for item in items {
-        let Some((button, large)) = ribbon_button(item) else {
-            continue;
-        };
-        any = true;
-        if large {
-            group = flush(group, &mut small);
-            group = group.push(button);
-        } else {
-            small.push(button);
-            if small.len() == 3 {
-                group = flush(group, &mut small);
-            }
-        }
-    }
-    let group = flush(group, &mut small);
-    any.then_some(group)
-}
-
-fn ribbon_button(item: &Item) -> Option<(Button<'static, Message>, bool)> {
-    let catalog = catalog();
-    let make = |command: &Command, large: bool| {
-        let button = if large {
-            Button::large(command.icon, command.short)
-        } else {
-            Button::small(command.icon, command.short)
-        };
-        button.on_press_maybe(enabled(command)).tip(tip(command))
-    };
-    match item {
-        Item::Command { id, large } => Some((make(catalog.get(id)?, *large), *large)),
-        Item::Split { entries, large } => {
-            let first = catalog.get(entries.first()?.id)?;
-            let button = make(first, *large);
-            let ids: Vec<&'static str> = entries.iter().map(|e| e.id).collect();
-            let entries = entries.clone();
-            let menu = move || split_menu(&entries);
-            Some((with_family(button, &ids, first.title, menu), *large))
-        }
-        Item::Menu { label, ids, large } => {
-            let icon = ids
-                .first()
-                .and_then(|id| catalog.get(id))
-                .map_or(Icon::More, |c| c.icon);
-            let button = if *large {
-                Button::large(icon, *label)
-            } else {
-                Button::small(icon, *label)
-            };
-            let members = ids.clone();
-            let menu = move || menu_of(&members);
-            Some((with_family(button, ids, label, menu), *large))
-        }
-        Item::Builtin => None,
-    }
-}
-
 /// A split or drop-down button with its menu. When no member is ported the
 /// button stays a dimmed one without a menu, like any command not ported,
 /// and its tooltip names the family.
@@ -597,18 +636,34 @@ fn split_menu(entries: &[Entry]) -> Menu<Message> {
         })
 }
 
-fn menu_of(ids: &[&'static str]) -> Menu<Message> {
+/// A drop-down's commands; one with an on or off state shows it checked.
+fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
     ids.iter()
-        .filter_map(|id| catalog().get(id))
-        .fold(Menu::new(), |menu, command| {
-            let menu = menu
-                .item(command.title, enabled(command))
-                .icon(command.icon);
+        .zip(checked.iter().copied().chain(std::iter::repeat(None)))
+        .filter_map(|(id, checked)| Some((catalog().get(id)?, checked)))
+        .fold(Menu::new(), |menu, (command, checked)| {
+            let menu = match checked {
+                Some(on) => menu.check(command.title, on, enabled(command)),
+                None => menu
+                    .item(command.title, enabled(command))
+                    .icon(command.icon),
+            };
             match command.shortcuts.first() {
                 Some(keys) => menu.shortcut(*keys),
                 None => menu,
             }
         })
+}
+
+/// A launcher's message: another tab, or a command the desktop runs.
+fn launch(launcher: &Launcher) -> Option<Message> {
+    match &launcher.target {
+        LauncherTarget::Tab(tab) => catalog()
+            .tabs()
+            .any(|t| t.id == *tab)
+            .then_some(Message::RibbonTab(tab)),
+        LauncherTarget::Command(id) => catalog().get(id).and_then(enabled),
+    }
 }
 
 /// The message of a command the desktop runs; none (a dimmed button) otherwise.

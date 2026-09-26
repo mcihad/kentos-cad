@@ -69,13 +69,35 @@ export async function collectInPage() {
         : i.kind === 'menu'
           ? { menu: i.menu.label, size: i.size, blocks: menuLayout(i.menu.items) }
           : { builtin: i.name };
+  const ribbonLayout = (tabs) =>
+    tabs.map((t) => ({
+      id: t.id,
+      label: t.label,
+      contextual: t.contextual,
+      panels: t.panels.map((p) => ({
+        label: p.label,
+        icon: p.icon,
+        items: p.items.map(ribbonItem),
+        overflow: [...(p.overflow ?? [])],
+        // Shrinks after the tab's other panels (DESIGN.md §7.3.1); the corner button of its title.
+        keep: !!p.keep,
+        launcher: p.launcher ? { ...p.launcher, args: p.launcher.args === undefined ? undefined : JSON.stringify(p.launcher.args) } : undefined,
+      })),
+    }));
+  const modes = workspaces.WORKSPACES.filter((w) => w.status === 'ready').map((w) => ({ id: w.id, filter: workspaces.workspaceFilter(w, tools) }));
   const layout = {
     menus: menus.MAIN_MENU.map((m) => ({ id: m.id, label: m.label, blocks: menuLayout(m.items) })),
-    ribbon: tabs.map((t) => ({ id: t.id, label: t.label, contextual: t.contextual, panels: t.panels.map((p) => ({ label: p.label, icon: p.icon, items: p.items.map(ribbonItem), overflow: [...(p.overflow ?? [])] })) })),
+    ribbon: ribbonLayout(tabs),
+    // The ribbon of each other ready mode, built with its filter as the web builds it
+    // (ui/ribbon/Ribbon.ts): what the mode hides is left out, tabs take the mode's names.
+    ribbonByMode: Object.fromEntries(
+      modes
+        .filter((m) => m.id !== 'hybrid')
+        .map((m) => [m.id, ribbonLayout(ribbon.ribbonTabs({ tools, processing: registry.tree(), models, iconOf: () => undefined, filter: m.filter }))]),
+    ),
     quickAccess: [...ribbon.QUICK_ACCESS],
   };
 
-  const modes = workspaces.WORKSPACES.filter((w) => w.status === 'ready').map((w) => ({ id: w.id, filter: workspaces.workspaceFilter(w, tools) }));
   const shortcuts = {};
   // Chords bound with `allowInInput`: they work while a text field has the keyboard too.
   const inInput = {};

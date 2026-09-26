@@ -2,7 +2,9 @@
 //!
 //! Her ikon 16×16'lık bir ızgarada tasarlanır ve istenen boyuta ölçeklenir.
 //! Çizgi kalınlığı ölçekle birlikte büyür ama 1,2 pikselin altına inmez;
-//! böylece küçük boyutlarda da okunaklı kalır.
+//! böylece küçük boyutlarda da okunaklı kalır. Büyük ikonlar kalınlığı
+//! sabit tutabilir ([`Glyph::weight`](super::Glyph::weight)): şeridin 28
+//! piksellik ikonları ince çizgili kalır.
 
 use std::f32::consts::PI;
 
@@ -12,11 +14,12 @@ use iced::{Color, Point, Radians, Vector};
 use super::Icon;
 
 /// İkonu çerçeveye, çerçevenin boyutunu dolduracak şekilde çizer.
-pub(super) fn icon(frame: &mut Frame, icon: Icon, color: Color) {
+pub(super) fn icon(frame: &mut Frame, icon: Icon, color: Color, weight: Option<f32>) {
     let size = frame.size();
     let pen = Pen {
         unit: size.width.min(size.height) / 16.0,
         color,
+        weight,
     };
 
     pen.draw(frame, icon);
@@ -26,6 +29,8 @@ pub(super) fn icon(frame: &mut Frame, icon: Icon, color: Color) {
 struct Pen {
     unit: f32,
     color: Color,
+    /// Sabit çizgi kalınlığı (piksel); yoksa ölçekle büyür.
+    weight: Option<f32>,
 }
 
 impl Pen {
@@ -36,7 +41,7 @@ impl Pen {
     fn stroke(&self) -> Stroke<'static> {
         Stroke {
             style: Style::Solid(self.color),
-            width: (1.35 * self.unit).max(1.2),
+            width: self.weight.unwrap_or((1.35 * self.unit).max(1.2)),
             line_cap: LineCap::Round,
             line_join: LineJoin::Round,
             ..Stroke::default()

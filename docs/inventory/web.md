@@ -48,7 +48,7 @@ Menüde, şeritte ve araç kutusunda yoklar; kimlikleri `src/ui` altındaki hiç
 
 ## Masaüstü
 
-Masaüstü kabuğu (apps/desktop) 66 / 167 komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.
+Masaüstü kabuğu (apps/desktop) 69 / 167 komutu çalıştırıyor; öbürleri şeritte soluk durur ve “masaüstüne henüz taşınmadı” der (docs/adr/0017). Liste: apps/desktop/ported.json.
 
 ## Test başvurusu
 

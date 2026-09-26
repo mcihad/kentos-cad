@@ -65,7 +65,10 @@
     "file.export.ncn",
     "file.new",
     "file.settings",
-    "file.start"
+    "file.start",
+    "workspace.hybrid",
+    "workspace.cad",
+    "workspace.gis"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

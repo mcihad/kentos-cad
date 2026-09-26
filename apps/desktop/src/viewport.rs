@@ -180,7 +180,7 @@ pub struct Viewport {
 struct Cached {
     generation: u64,
     changes: u64,
-    mode: Mode,
+    canvas: Canvas,
     origin: Vec2,
     fixed: Arc<ScenePart>,
     curves: Arc<ScenePart>,
@@ -291,18 +291,19 @@ impl Viewport {
     pub fn view<'a>(
         &'a self,
         doc: &Document,
-        mode: Mode,
+        canvas: impl Into<Canvas>,
         graphics: Graphics,
         selection: &Selection,
         accent: Rgba8,
     ) -> Element<'a, Message> {
-        let palette = palette(mode);
+        let canvas = canvas.into();
+        let palette = palette(canvas);
         let settings = RenderSettings {
             samples: graphics.samples,
             hi_dpi: graphics.hi_dpi,
             ..RenderSettings::new(palette.background)
         };
-        let (origin, fixed, curves) = self.scene(doc, mode, &palette, &settings);
+        let (origin, fixed, curves) = self.scene(doc, canvas, &palette, &settings);
         let (selected, hovered) = self.highlights(doc, selection, accent, &fixed, &curves);
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
@@ -334,24 +335,25 @@ impl Viewport {
     fn scene(
         &self,
         doc: &Document,
-        mode: Mode,
+        canvas: impl Into<Canvas>,
         palette: &Palette,
         settings: &RenderSettings,
     ) -> (Vec2, Arc<ScenePart>, Arc<ScenePart>) {
+        let canvas = canvas.into();
         let needed = lod::band(self.camera.scale, settings.curve_tolerance_px);
         let band = lod::build_band(self.camera.scale, settings.curve_tolerance_px);
         let budget = settings.curve_segment_budget;
         let changes = changes(doc);
         let mut cache = self.scene.borrow_mut();
         let current = cache.as_ref().is_some_and(|c| {
-            c.generation == self.generation && c.changes == changes && c.mode == mode
+            c.generation == self.generation && c.changes == changes && c.canvas == canvas
         });
         if !current {
             let origin = scene::scene_origin(doc);
             *cache = Some(Cached {
                 generation: self.generation,
                 changes,
-                mode,
+                canvas,
                 origin,
                 fixed: Arc::new(scene::build_fixed(doc, palette, origin)),
                 curves: Arc::new(scene::build_curves(
@@ -402,21 +404,58 @@ impl Viewport {
     }
 }
 
-/// The drawing's colours for the theme: the web's canvas tokens (DESIGN.md
-/// §3.1–3.2, `apps/web/src/styles/tokens.css`). One token source for web and
-/// desktop is UI-08.
-pub fn palette(mode: Mode) -> Palette {
-    match mode {
-        Mode::Light => Palette {
+/// What the drawing area is drawn on: the theme's own background, or the
+/// one chosen in Görünüm → Çizim zemini (appearance.rs), whatever the theme.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Canvas {
+    /// The graphite model space (the dark theme's).
+    Slate,
+    /// Near-white paper (the light theme's).
+    Paper,
+    /// Very dark and dimmed, for a dark room (the night theme's).
+    Night,
+    /// Pure black, bright lines (classic AutoCAD; the high-contrast theme's).
+    Black,
+}
+
+impl From<Mode> for Canvas {
+    fn from(mode: Mode) -> Self {
+        match mode {
+            Mode::Dark => Canvas::Slate,
+            Mode::Light => Canvas::Paper,
+            Mode::Night => Canvas::Night,
+            Mode::HighContrast => Canvas::Black,
+        }
+    }
+}
+
+/// The drawing's colours on a canvas: the web's canvas tokens for slate and
+/// paper (DESIGN.md §3.1–3.2, `apps/web/src/styles/tokens.css`); night dims
+/// them, black brightens them. One token source for web and desktop is UI-08.
+pub fn palette(canvas: impl Into<Canvas>) -> Palette {
+    match canvas.into() {
+        Canvas::Paper => Palette {
             background: Rgba8::rgb(0xf8, 0xf9, 0xfa),
             fg: Rgba8::rgb(0x1e, 0x28, 0x33),
             fg_dim: Rgba8::rgb(0x5e, 0x6b, 0x78),
             ink: Rgba8::rgb(0x00, 0x00, 0x00),
         },
-        Mode::Dark | Mode::Night | Mode::HighContrast => Palette {
+        Canvas::Slate => Palette {
             background: Rgba8::rgb(0x14, 0x1a, 0x21),
             fg: Rgba8::rgb(0xe4, 0xea, 0xf0),
             fg_dim: Rgba8::rgb(0xa3, 0xaf, 0xbc),
+            ink: Rgba8::rgb(0xff, 0xff, 0xff),
+        },
+        Canvas::Night => Palette {
+            background: Rgba8::rgb(0x0b, 0x0e, 0x13),
+            fg: Rgba8::rgb(0xbc, 0xc5, 0xcf),
+            fg_dim: Rgba8::rgb(0x80, 0x8b, 0x97),
+            ink: Rgba8::rgb(0xdc, 0xe2, 0xe8),
+        },
+        Canvas::Black => Palette {
+            background: Rgba8::rgb(0x00, 0x00, 0x00),
+            fg: Rgba8::rgb(0xff, 0xff, 0xff),
+            fg_dim: Rgba8::rgb(0xcf, 0xd6, 0xdd),
             ink: Rgba8::rgb(0xff, 0xff, 0xff),
         },
     }
@@ -435,19 +474,20 @@ pub struct MarkColors {
     pub halo: iced::Color,
 }
 
-pub fn mark_colors(mode: Mode) -> MarkColors {
+pub fn mark_colors(canvas: impl Into<Canvas>) -> MarkColors {
+    let canvas = canvas.into();
     let rgb = |c: Rgba8| iced::Color::from_rgb8(c.0[0], c.0[1], c.0[2]);
     let window = iced::Color::from_rgb8(0x6d, 0xb3, 0xf2);
-    match mode {
-        Mode::Light => MarkColors {
+    match canvas {
+        Canvas::Paper => MarkColors {
             snap: iced::Color::from_rgb8(0x1a, 0x9a, 0x48),
             window,
-            halo: rgb(palette(mode).background),
+            halo: rgb(palette(canvas).background),
         },
-        Mode::Dark | Mode::Night | Mode::HighContrast => MarkColors {
+        Canvas::Slate | Canvas::Night | Canvas::Black => MarkColors {
             snap: iced::Color::from_rgb8(0x6f, 0xd0, 0x8c),
             window,
-            halo: rgb(palette(mode).background),
+            halo: rgb(palette(canvas).background),
         },
     }
 }

@@ -77,7 +77,7 @@
       "view.theme.toggle"
     ],
     "commandsWithoutTests": 82,
-    "commandsOnDesktop": 66
+    "commandsOnDesktop": 69
   },
   "commands": [
     {
@@ -5369,7 +5369,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -5426,7 +5426,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -5454,7 +5454,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -12312,7 +12312,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Kaydet",
@@ -12327,7 +12328,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Bulut",
@@ -12358,7 +12360,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Dosya alışverişi",
@@ -12406,7 +12409,8 @@
                 ]
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Çıktı",
@@ -12417,7 +12421,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Ayarlar",
@@ -12428,7 +12433,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           }
         ]
       },
@@ -12461,7 +12467,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Seçim",
@@ -12492,7 +12499,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Çizim",
@@ -12576,7 +12584,12 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": true,
+            "launcher": {
+              "tab": "draw",
+              "title": "Tüm araçlar: Çizim sekmesi"
+            }
           },
           {
             "label": "Değiştir",
@@ -12628,7 +12641,12 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": true,
+            "launcher": {
+              "tab": "modify",
+              "title": "Tüm araçlar: Değiştir sekmesi"
+            }
           },
           {
             "label": "Açıklama",
@@ -12647,7 +12665,12 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false,
+            "launcher": {
+              "tab": "draw",
+              "title": "Tüm araçlar: Çizim sekmesi"
+            }
           },
           {
             "label": "Katmanlar",
@@ -12657,7 +12680,12 @@
                 "builtin": "layers"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false,
+            "launcher": {
+              "command": "style.layerStyle",
+              "title": "Katman stili…"
+            }
           },
           {
             "label": "Özellikler",
@@ -12667,7 +12695,12 @@
                 "builtin": "properties"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false,
+            "launcher": {
+              "command": "file.settings",
+              "title": "Proje ayarları: birimler, hassasiyet ve çizim ölçeği"
+            }
           }
         ]
       },
@@ -12696,7 +12729,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Eğri",
@@ -12761,7 +12795,8 @@
             ],
             "overflow": [
               "tool.donut"
-            ]
+            ],
+            "keep": false
           },
           {
             "label": "Şekil",
@@ -12785,7 +12820,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Yardımcı",
@@ -12818,7 +12854,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Nokta",
@@ -12833,7 +12870,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Açıklama",
@@ -12854,7 +12892,8 @@
             ],
             "overflow": [
               "tool.revcloud"
-            ]
+            ],
+            "keep": false
           }
         ]
       },
@@ -12895,7 +12934,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Dizi",
@@ -12915,7 +12955,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Kenar",
@@ -12940,7 +12981,8 @@
             ],
             "overflow": [
               "tool.lengthen"
-            ]
+            ],
+            "keep": false
           },
           {
             "label": "Köşe",
@@ -12962,7 +13004,8 @@
             ],
             "overflow": [
               "tool.vertex"
-            ]
+            ],
+            "keep": false
           },
           {
             "label": "Nesne",
@@ -12981,7 +13024,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Oluştur ve çevir",
@@ -12998,7 +13042,8 @@
             ],
             "overflow": [
               "tool.toPolyline"
-            ]
+            ],
+            "keep": false
           },
           {
             "label": "Birleştir ve böl",
@@ -13021,7 +13066,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           }
         ]
       },
@@ -13050,7 +13096,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Arazi",
@@ -13073,7 +13120,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Ölçme",
@@ -13088,7 +13136,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Pafta",
@@ -13099,7 +13148,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Poligon",
@@ -13110,7 +13160,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Nokta alımı",
@@ -13125,7 +13176,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Kestirme",
@@ -13140,7 +13192,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Koordinat sistemi",
@@ -13155,7 +13208,12 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false,
+            "launcher": {
+              "command": "crs.set",
+              "title": "Proje ayarları: koordinat sistemi"
+            }
           },
           {
             "label": "Koordinatlar",
@@ -13174,7 +13232,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Arazi analizi",
@@ -13189,7 +13248,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           }
         ]
       },
@@ -13226,7 +13286,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Paneller",
@@ -13265,7 +13326,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Görünüş",
@@ -13336,7 +13398,13 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false,
+            "launcher": {
+              "command": "tools.options",
+              "args": "\"appearance\"",
+              "title": "Uygulama ayarları: görünüm"
+            }
           }
         ]
       },
@@ -13357,7 +13425,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Modeller",
@@ -13372,7 +13441,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Nokta işlemleri",
@@ -13383,7 +13453,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Yazı ve etiket",
@@ -13394,7 +13465,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Öznitelik",
@@ -13405,7 +13477,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Seçim",
@@ -13416,7 +13489,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           }
         ]
       },
@@ -13433,7 +13507,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Çizim yardımcıları",
@@ -13460,7 +13535,13 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false,
+            "launcher": {
+              "command": "tools.options",
+              "args": "\"snap\"",
+              "title": "Uygulama ayarları: kenetleme"
+            }
           },
           {
             "label": "Stil",
@@ -13491,7 +13572,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Uygulama",
@@ -13510,7 +13592,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Yardım",
@@ -13521,7 +13604,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           }
         ]
       },
@@ -13538,7 +13622,8 @@
                 "builtin": "selection"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Dönüştür",
@@ -13573,7 +13658,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Dizi",
@@ -13593,7 +13679,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Nesne",
@@ -13612,7 +13699,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Oluştur ve çevir",
@@ -13629,7 +13717,8 @@
             ],
             "overflow": [
               "tool.toPolyline"
-            ]
+            ],
+            "keep": false
           },
           {
             "label": "Birleştir ve böl",
@@ -13652,7 +13741,8 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Pano",
@@ -13675,7 +13765,8 @@
                 "size": "small"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           },
           {
             "label": "Sembol",
@@ -13690,11 +13781,2642 @@
                 "size": "large"
               }
             ],
-            "overflow": []
+            "overflow": [],
+            "keep": false
           }
         ]
       }
     ],
+    "ribbonByMode": {
+      "cad": [
+        {
+          "id": "file",
+          "label": "Dosya",
+          "panels": [
+            {
+              "label": "Proje",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "file.new",
+                  "size": "large"
+                },
+                {
+                  "command": "file.open",
+                  "size": "large"
+                },
+                {
+                  "command": "file.start",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Kaydet",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "file.save",
+                  "size": "large"
+                },
+                {
+                  "command": "file.saveAs",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Bulut",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "cloud.open",
+                  "size": "large"
+                },
+                {
+                  "command": "cloud.upload",
+                  "size": "large"
+                },
+                {
+                  "command": "cloud.share",
+                  "size": "small"
+                },
+                {
+                  "command": "cloud.conflicts",
+                  "size": "small"
+                },
+                {
+                  "command": "cloud.rename",
+                  "size": "small"
+                },
+                {
+                  "command": "cloud.delete",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Dosya alışverişi",
+              "icon": "import",
+              "items": [
+                {
+                  "menu": "İçe aktar",
+                  "size": "large",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "file.import.dxf",
+                        "file.import.ncz",
+                        "file.import.shp",
+                        "file.import.geojson"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "file.import.ncn"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "menu": "Dışa aktar",
+                  "size": "large",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "file.export.dxf",
+                        "file.export.geojson",
+                        "file.export.pdf"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "file.export.ncn"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Çıktı",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "file.print",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Ayarlar",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "file.settings",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "home",
+          "label": "Giriş",
+          "panels": [
+            {
+              "label": "Pano",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "edit.paste",
+                  "size": "large"
+                },
+                {
+                  "command": "edit.cut",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.copy",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.pasteOriginal",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.erase",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Seçim",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.select",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.zoomWindow",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.pan",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.selectAll",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.deselect",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.invertSelection",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Çizim",
+              "icon": "line",
+              "items": [
+                {
+                  "command": "tool.line",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.polyline",
+                  "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.circle",
+                      "label": "Merkez, yarıçap"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "2N",
+                      "label": "2 nokta"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "3N",
+                      "label": "3 nokta"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "TTY",
+                      "label": "Teğet, teğet, yarıçap"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "TTT",
+                      "label": "Teğet, teğet, teğet"
+                    }
+                  ],
+                  "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.arc",
+                      "label": "3 nokta"
+                    },
+                    {
+                      "command": "tool.arc",
+                      "option": "M",
+                      "label": "Merkez, başlangıç, bitiş"
+                    },
+                    {
+                      "command": "tool.arc",
+                      "option": "D",
+                      "label": "Devam"
+                    }
+                  ],
+                  "size": "large"
+                },
+                {
+                  "command": "tool.polygon",
+                  "size": "small"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.rectangle",
+                      "label": "Dikdörtgen"
+                    },
+                    {
+                      "command": "tool.rectangle3",
+                      "label": "Döndürülmüş dikdörtgen"
+                    },
+                    {
+                      "command": "tool.regularPolygon",
+                      "label": "Düzgün çokgen"
+                    }
+                  ],
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": true,
+              "launcher": {
+                "tab": "draw",
+                "title": "Tüm araçlar: Çizim sekmesi"
+              }
+            },
+            {
+              "label": "Değiştir",
+              "icon": "move",
+              "items": [
+                {
+                  "command": "tool.move",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.copy",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.rotate",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.mirror",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.scale",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.offset",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.trim",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.extend",
+                  "size": "small"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.fillet",
+                      "label": "Köşe yuvarla"
+                    },
+                    {
+                      "command": "tool.chamfer",
+                      "label": "Pah"
+                    }
+                  ],
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": true,
+              "launcher": {
+                "tab": "modify",
+                "title": "Tüm araçlar: Değiştir sekmesi"
+              }
+            },
+            {
+              "label": "Açıklama",
+              "icon": "text",
+              "items": [
+                {
+                  "command": "tool.text",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.dimension",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.hatch",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "tab": "draw",
+                "title": "Tüm araçlar: Çizim sekmesi"
+              }
+            },
+            {
+              "label": "Katmanlar",
+              "icon": "layers",
+              "items": [
+                {
+                  "builtin": "layers"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "style.layerStyle",
+                "title": "Katman stili…"
+              }
+            },
+            {
+              "label": "Özellikler",
+              "icon": "styles",
+              "items": [
+                {
+                  "builtin": "properties"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "file.settings",
+                "title": "Proje ayarları: birimler, hassasiyet ve çizim ölçeği"
+              }
+            }
+          ]
+        },
+        {
+          "id": "draw",
+          "label": "Çizim",
+          "panels": [
+            {
+              "label": "Çizgi",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.line",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.polyline",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.polygon",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.parallel",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Eğri",
+              "icon": "more",
+              "items": [
+                {
+                  "split": [
+                    {
+                      "command": "tool.circle",
+                      "label": "Merkez, yarıçap"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "2N",
+                      "label": "2 nokta"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "3N",
+                      "label": "3 nokta"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "TTY",
+                      "label": "Teğet, teğet, yarıçap"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "TTT",
+                      "label": "Teğet, teğet, teğet"
+                    }
+                  ],
+                  "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.arc",
+                      "label": "3 nokta"
+                    },
+                    {
+                      "command": "tool.arc",
+                      "option": "M",
+                      "label": "Merkez, başlangıç, bitiş"
+                    },
+                    {
+                      "command": "tool.arc",
+                      "option": "D",
+                      "label": "Devam"
+                    }
+                  ],
+                  "size": "large"
+                },
+                {
+                  "command": "tool.ellipse",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.spline",
+                  "size": "small"
+                }
+              ],
+              "overflow": [
+                "tool.donut"
+              ],
+              "keep": false
+            },
+            {
+              "label": "Şekil",
+              "icon": "more",
+              "items": [
+                {
+                  "split": [
+                    {
+                      "command": "tool.rectangle",
+                      "label": "Dikdörtgen"
+                    },
+                    {
+                      "command": "tool.rectangle3",
+                      "label": "Döndürülmüş dikdörtgen"
+                    },
+                    {
+                      "command": "tool.regularPolygon",
+                      "label": "Düzgün çokgen"
+                    }
+                  ],
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Yardımcı",
+              "icon": "more",
+              "items": [
+                {
+                  "split": [
+                    {
+                      "command": "tool.xline",
+                      "label": "Yardımcı çizgi"
+                    },
+                    {
+                      "command": "tool.ray",
+                      "label": "Işın"
+                    }
+                  ],
+                  "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.perpIn",
+                      "label": "Dik in"
+                    },
+                    {
+                      "command": "tool.perpOut",
+                      "label": "Dik çık"
+                    }
+                  ],
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Nokta",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.point",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.divide",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Açıklama",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.text",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.dimension",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.hatch",
+                  "size": "large"
+                }
+              ],
+              "overflow": [
+                "tool.revcloud"
+              ],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "modify",
+          "label": "Değiştir",
+          "panels": [
+            {
+              "label": "Dönüştür",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.move",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.copy",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.rotate",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.scale",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.mirror",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.stretch",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.align",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Dizi",
+              "icon": "more",
+              "items": [
+                {
+                  "split": [
+                    {
+                      "command": "tool.array",
+                      "label": "Dizi"
+                    },
+                    {
+                      "command": "tool.arrayPolar",
+                      "label": "Kutupsal dizi"
+                    }
+                  ],
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Kenar",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.offset",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.trim",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.extend",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.break",
+                  "size": "small"
+                }
+              ],
+              "overflow": [
+                "tool.lengthen"
+              ],
+              "keep": false
+            },
+            {
+              "label": "Köşe",
+              "icon": "more",
+              "items": [
+                {
+                  "split": [
+                    {
+                      "command": "tool.fillet",
+                      "label": "Köşe yuvarla"
+                    },
+                    {
+                      "command": "tool.chamfer",
+                      "label": "Pah"
+                    }
+                  ],
+                  "size": "large"
+                }
+              ],
+              "overflow": [
+                "tool.vertex"
+              ],
+              "keep": false
+            },
+            {
+              "label": "Nesne",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.join",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.explode",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.erase",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Oluştur ve çevir",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.boundary",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.toArea",
+                  "size": "small"
+                }
+              ],
+              "overflow": [
+                "tool.toPolyline"
+              ],
+              "keep": false
+            },
+            {
+              "label": "Birleştir ve böl",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.areaUnion",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaIntersect",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaSubtract",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaSplit",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "map",
+          "label": "Ölçme",
+          "panels": [
+            {
+              "label": "Poligon",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "calc.traverse",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Nokta alımı",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "calc.polar",
+                  "size": "large"
+                },
+                {
+                  "command": "calc.stakeout",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Kestirme",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "calc.forward",
+                  "size": "large"
+                },
+                {
+                  "command": "calc.resection",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Ölçme",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.measure",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.area",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "view",
+          "label": "Görünüm",
+          "panels": [
+            {
+              "label": "Yakınlaştır",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "view.zoomExtents",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.zoomWindow",
+                  "size": "small"
+                },
+                {
+                  "command": "view.zoomSelection",
+                  "size": "small"
+                },
+                {
+                  "command": "view.zoomIn",
+                  "size": "small"
+                },
+                {
+                  "command": "view.zoomOut",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.pan",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Paneller",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "view.toolbox",
+                  "size": "small"
+                },
+                {
+                  "command": "view.toolboxDock",
+                  "size": "small"
+                },
+                {
+                  "command": "view.rightPanel",
+                  "size": "small"
+                },
+                {
+                  "command": "view.bottomPanel",
+                  "size": "small"
+                },
+                {
+                  "command": "view.coords",
+                  "size": "small"
+                },
+                {
+                  "command": "view.ribbon",
+                  "size": "small"
+                },
+                {
+                  "command": "view.keyTips",
+                  "size": "small"
+                },
+                {
+                  "command": "view.fullscreen",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Görünüş",
+              "icon": "modeHybrid",
+              "items": [
+                {
+                  "menu": "Çalışma modu",
+                  "size": "large",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "workspace.hybrid",
+                        "workspace.cad",
+                        "workspace.gis"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "workspace.plan3d",
+                        "workspace.disaster"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "menu": "Tema",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "view.theme.dark",
+                        "view.theme.light"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "menu": "Çizim motoru",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "view.renderer.webgl2",
+                        "view.renderer.webgpu"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "menu": "Sembol boyutu",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "view.symbols.plot",
+                        "view.symbols.screen"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "command": "view.lineWeights",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "tools.options",
+                "args": "\"appearance\"",
+                "title": "Uygulama ayarları: görünüm"
+              }
+            }
+          ]
+        },
+        {
+          "id": "tools",
+          "label": "Araçlar",
+          "panels": [
+            {
+              "label": "Komut",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "commandline.focus",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Çizim yardımcıları",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "draft.snap",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.grid",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.ortho",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.polar",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.tracking",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "tools.options",
+                "args": "\"snap\"",
+                "title": "Uygulama ayarları: kenetleme"
+              }
+            },
+            {
+              "label": "Stil",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "style.manager",
+                  "size": "large"
+                },
+                {
+                  "command": "style.svgEditor",
+                  "size": "large"
+                },
+                {
+                  "command": "style.layerStyle",
+                  "size": "small"
+                },
+                {
+                  "command": "style.legend",
+                  "size": "small"
+                },
+                {
+                  "command": "style.assign",
+                  "size": "small"
+                },
+                {
+                  "command": "style.clearSymbol",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Uygulama",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "help.shortcuts",
+                  "size": "small"
+                },
+                {
+                  "command": "server.check",
+                  "size": "small"
+                },
+                {
+                  "command": "tools.options",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Yardım",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "help.about",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "selection",
+          "label": "Seçim",
+          "contextual": "selection",
+          "panels": [
+            {
+              "label": "Seçim",
+              "icon": "select",
+              "items": [
+                {
+                  "builtin": "selection"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Dönüştür",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.move",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.copy",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.rotate",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.scale",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.mirror",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.stretch",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.align",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Dizi",
+              "icon": "more",
+              "items": [
+                {
+                  "split": [
+                    {
+                      "command": "tool.array",
+                      "label": "Dizi"
+                    },
+                    {
+                      "command": "tool.arrayPolar",
+                      "label": "Kutupsal dizi"
+                    }
+                  ],
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Nesne",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.join",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.explode",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.erase",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Oluştur ve çevir",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.boundary",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.toArea",
+                  "size": "small"
+                }
+              ],
+              "overflow": [
+                "tool.toPolyline"
+              ],
+              "keep": false
+            },
+            {
+              "label": "Birleştir ve böl",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.areaUnion",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaIntersect",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaSubtract",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaSplit",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Pano",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "edit.cut",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.copy",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.paste",
+                  "size": "large"
+                },
+                {
+                  "command": "edit.pasteOriginal",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Sembol",
+              "icon": "symbolAssign",
+              "items": [
+                {
+                  "command": "style.assign",
+                  "size": "large"
+                },
+                {
+                  "command": "style.clearSymbol",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        }
+      ],
+      "gis": [
+        {
+          "id": "file",
+          "label": "Dosya",
+          "panels": [
+            {
+              "label": "Proje",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "file.new",
+                  "size": "large"
+                },
+                {
+                  "command": "file.open",
+                  "size": "large"
+                },
+                {
+                  "command": "file.start",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Kaydet",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "file.save",
+                  "size": "large"
+                },
+                {
+                  "command": "file.saveAs",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Bulut",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "cloud.open",
+                  "size": "large"
+                },
+                {
+                  "command": "cloud.upload",
+                  "size": "large"
+                },
+                {
+                  "command": "cloud.share",
+                  "size": "small"
+                },
+                {
+                  "command": "cloud.conflicts",
+                  "size": "small"
+                },
+                {
+                  "command": "cloud.rename",
+                  "size": "small"
+                },
+                {
+                  "command": "cloud.delete",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Dosya alışverişi",
+              "icon": "import",
+              "items": [
+                {
+                  "menu": "İçe aktar",
+                  "size": "large",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "file.import.dxf",
+                        "file.import.ncz",
+                        "file.import.shp",
+                        "file.import.geojson"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "file.import.ncn"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "menu": "Dışa aktar",
+                  "size": "large",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "file.export.dxf",
+                        "file.export.geojson",
+                        "file.export.pdf"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "file.export.ncn"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Çıktı",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "file.print",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Ayarlar",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "file.settings",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "home",
+          "label": "Giriş",
+          "panels": [
+            {
+              "label": "Pano",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "edit.paste",
+                  "size": "large"
+                },
+                {
+                  "command": "edit.cut",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.copy",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.pasteOriginal",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.erase",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Seçim",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.select",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.zoomWindow",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.pan",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.selectAll",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.deselect",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.invertSelection",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Çizim",
+              "icon": "line",
+              "items": [
+                {
+                  "command": "tool.line",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.polyline",
+                  "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.circle",
+                      "label": "Merkez, yarıçap"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "2N",
+                      "label": "2 nokta"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "3N",
+                      "label": "3 nokta"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "TTY",
+                      "label": "Teğet, teğet, yarıçap"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "TTT",
+                      "label": "Teğet, teğet, teğet"
+                    }
+                  ],
+                  "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.arc",
+                      "label": "3 nokta"
+                    },
+                    {
+                      "command": "tool.arc",
+                      "option": "M",
+                      "label": "Merkez, başlangıç, bitiş"
+                    },
+                    {
+                      "command": "tool.arc",
+                      "option": "D",
+                      "label": "Devam"
+                    }
+                  ],
+                  "size": "large"
+                },
+                {
+                  "command": "tool.polygon",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": true,
+              "launcher": {
+                "tab": "draw",
+                "title": "Tüm araçlar: Çizim sekmesi"
+              }
+            },
+            {
+              "label": "Değiştir",
+              "icon": "move",
+              "items": [
+                {
+                  "command": "tool.move",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.copy",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.rotate",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.mirror",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.scale",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.offset",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.trim",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.extend",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": true,
+              "launcher": {
+                "tab": "modify",
+                "title": "Tüm araçlar: Değiştir sekmesi"
+              }
+            },
+            {
+              "label": "Açıklama",
+              "icon": "text",
+              "items": [
+                {
+                  "command": "tool.text",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "tab": "draw",
+                "title": "Tüm araçlar: Çizim sekmesi"
+              }
+            },
+            {
+              "label": "Harita",
+              "icon": "parcel",
+              "items": [
+                {
+                  "command": "tool.parcel",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.boundary",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaUnion",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.measure",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.area",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "tab": "map",
+                "title": "Tüm araçlar: Harita sekmesi"
+              }
+            },
+            {
+              "label": "Katmanlar",
+              "icon": "layers",
+              "items": [
+                {
+                  "builtin": "layers"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "style.layerStyle",
+                "title": "Katman stili…"
+              }
+            },
+            {
+              "label": "Özellikler",
+              "icon": "styles",
+              "items": [
+                {
+                  "builtin": "properties"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "file.settings",
+                "title": "Proje ayarları: birimler, hassasiyet ve çizim ölçeği"
+              }
+            }
+          ]
+        },
+        {
+          "id": "draw",
+          "label": "Çizim",
+          "panels": [
+            {
+              "label": "Çizgi",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.line",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.polyline",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.polygon",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Eğri",
+              "icon": "more",
+              "items": [
+                {
+                  "split": [
+                    {
+                      "command": "tool.circle",
+                      "label": "Merkez, yarıçap"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "2N",
+                      "label": "2 nokta"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "3N",
+                      "label": "3 nokta"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "TTY",
+                      "label": "Teğet, teğet, yarıçap"
+                    },
+                    {
+                      "command": "tool.circle",
+                      "option": "TTT",
+                      "label": "Teğet, teğet, teğet"
+                    }
+                  ],
+                  "size": "large"
+                },
+                {
+                  "split": [
+                    {
+                      "command": "tool.arc",
+                      "label": "3 nokta"
+                    },
+                    {
+                      "command": "tool.arc",
+                      "option": "M",
+                      "label": "Merkez, başlangıç, bitiş"
+                    },
+                    {
+                      "command": "tool.arc",
+                      "option": "D",
+                      "label": "Devam"
+                    }
+                  ],
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Nokta",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.point",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.divide",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Açıklama",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.text",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "modify",
+          "label": "Değiştir",
+          "panels": [
+            {
+              "label": "Dönüştür",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.move",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.copy",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.rotate",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.scale",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.mirror",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.align",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Kenar",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.offset",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.trim",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.extend",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.break",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Nesne",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.join",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.explode",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.erase",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Oluştur ve çevir",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.boundary",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.toArea",
+                  "size": "small"
+                }
+              ],
+              "overflow": [
+                "tool.toPolyline"
+              ],
+              "keep": false
+            },
+            {
+              "label": "Birleştir ve böl",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.areaUnion",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaIntersect",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaSubtract",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaSplit",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "map",
+          "label": "Harita",
+          "panels": [
+            {
+              "label": "Parsel",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.parcel",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.subdivide",
+                  "size": "small"
+                },
+                {
+                  "command": "map.parcelReport",
+                  "size": "small"
+                },
+                {
+                  "command": "map.edgeLengths",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Arazi",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.stakeout",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.spot",
+                  "size": "large"
+                },
+                {
+                  "command": "map.contours",
+                  "size": "small"
+                },
+                {
+                  "command": "map.profile",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Ölçme",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.measure",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.area",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Pafta",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "map.sheet",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Poligon",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "calc.traverse",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Nokta alımı",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "calc.polar",
+                  "size": "large"
+                },
+                {
+                  "command": "calc.stakeout",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Kestirme",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "calc.forward",
+                  "size": "large"
+                },
+                {
+                  "command": "calc.resection",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Koordinat sistemi",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "crs.set",
+                  "size": "large"
+                },
+                {
+                  "command": "crs.transform",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "crs.set",
+                "title": "Proje ayarları: koordinat sistemi"
+              }
+            },
+            {
+              "label": "Koordinatlar",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "crs.query",
+                  "size": "small"
+                },
+                {
+                  "command": "crs.points",
+                  "size": "small"
+                },
+                {
+                  "command": "view.coords",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Arazi analizi",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "analysis.volume",
+                  "size": "large"
+                },
+                {
+                  "command": "analysis.slope",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "view",
+          "label": "Görünüm",
+          "panels": [
+            {
+              "label": "Yakınlaştır",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "view.zoomExtents",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.zoomWindow",
+                  "size": "small"
+                },
+                {
+                  "command": "view.zoomSelection",
+                  "size": "small"
+                },
+                {
+                  "command": "view.zoomIn",
+                  "size": "small"
+                },
+                {
+                  "command": "view.zoomOut",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.pan",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Paneller",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "view.toolbox",
+                  "size": "small"
+                },
+                {
+                  "command": "view.toolboxDock",
+                  "size": "small"
+                },
+                {
+                  "command": "view.rightPanel",
+                  "size": "small"
+                },
+                {
+                  "command": "view.bottomPanel",
+                  "size": "small"
+                },
+                {
+                  "command": "view.coords",
+                  "size": "small"
+                },
+                {
+                  "command": "view.ribbon",
+                  "size": "small"
+                },
+                {
+                  "command": "view.keyTips",
+                  "size": "small"
+                },
+                {
+                  "command": "view.fullscreen",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Görünüş",
+              "icon": "modeHybrid",
+              "items": [
+                {
+                  "menu": "Çalışma modu",
+                  "size": "large",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "workspace.hybrid",
+                        "workspace.cad",
+                        "workspace.gis"
+                      ]
+                    },
+                    {
+                      "label": "",
+                      "items": [
+                        "workspace.plan3d",
+                        "workspace.disaster"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "menu": "Tema",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "view.theme.dark",
+                        "view.theme.light"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "menu": "Çizim motoru",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "view.renderer.webgl2",
+                        "view.renderer.webgpu"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "menu": "Sembol boyutu",
+                  "size": "small",
+                  "blocks": [
+                    {
+                      "label": "",
+                      "items": [
+                        "view.symbols.plot",
+                        "view.symbols.screen"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "command": "view.lineWeights",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "tools.options",
+                "args": "\"appearance\"",
+                "title": "Uygulama ayarları: görünüm"
+              }
+            }
+          ]
+        },
+        {
+          "id": "processing",
+          "label": "İşlemler",
+          "panels": [
+            {
+              "label": "İşlemler",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "processing.toolbox",
+                  "size": "large"
+                },
+                {
+                  "command": "processing.history",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Modeller",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "processing.newModel",
+                  "size": "large"
+                },
+                {
+                  "command": "processing.model.builtin.parcelSheet",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Nokta işlemleri",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "processing.run.points.numberVertices",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Yazı ve etiket",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "processing.run.annotation.edgeLengths",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Öznitelik",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "processing.run.attributes.calculate",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Seçim",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "processing.run.selection.byExpression",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "tools",
+          "label": "Araçlar",
+          "panels": [
+            {
+              "label": "Komut",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "commandline.focus",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Çizim yardımcıları",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "draft.snap",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.grid",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.ortho",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.polar",
+                  "size": "small"
+                },
+                {
+                  "command": "draft.tracking",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false,
+              "launcher": {
+                "command": "tools.options",
+                "args": "\"snap\"",
+                "title": "Uygulama ayarları: kenetleme"
+              }
+            },
+            {
+              "label": "Stil",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "style.manager",
+                  "size": "large"
+                },
+                {
+                  "command": "style.svgEditor",
+                  "size": "large"
+                },
+                {
+                  "command": "style.layerStyle",
+                  "size": "small"
+                },
+                {
+                  "command": "style.legend",
+                  "size": "small"
+                },
+                {
+                  "command": "style.assign",
+                  "size": "small"
+                },
+                {
+                  "command": "style.clearSymbol",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Uygulama",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "help.shortcuts",
+                  "size": "small"
+                },
+                {
+                  "command": "server.check",
+                  "size": "small"
+                },
+                {
+                  "command": "tools.options",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Yardım",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "help.about",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        },
+        {
+          "id": "selection",
+          "label": "Seçim",
+          "contextual": "selection",
+          "panels": [
+            {
+              "label": "Seçim",
+              "icon": "select",
+              "items": [
+                {
+                  "builtin": "selection"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Dönüştür",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.move",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.copy",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.rotate",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.scale",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.mirror",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.align",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Nesne",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.join",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.explode",
+                  "size": "small"
+                },
+                {
+                  "command": "tool.erase",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Oluştur ve çevir",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.boundary",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.toArea",
+                  "size": "small"
+                }
+              ],
+              "overflow": [
+                "tool.toPolyline"
+              ],
+              "keep": false
+            },
+            {
+              "label": "Birleştir ve böl",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "tool.areaUnion",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaIntersect",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaSubtract",
+                  "size": "large"
+                },
+                {
+                  "command": "tool.areaSplit",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Pano",
+              "icon": "more",
+              "items": [
+                {
+                  "command": "edit.cut",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.copy",
+                  "size": "small"
+                },
+                {
+                  "command": "edit.paste",
+                  "size": "large"
+                },
+                {
+                  "command": "edit.pasteOriginal",
+                  "size": "small"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            },
+            {
+              "label": "Sembol",
+              "icon": "symbolAssign",
+              "items": [
+                {
+                  "command": "style.assign",
+                  "size": "large"
+                },
+                {
+                  "command": "style.clearSymbol",
+                  "size": "large"
+                }
+              ],
+              "overflow": [],
+              "keep": false
+            }
+          ]
+        }
+      ]
+    },
     "quickAccess": [
       "file.save",
       "edit.undo",

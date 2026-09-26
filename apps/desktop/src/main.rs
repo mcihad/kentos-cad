@@ -6,6 +6,7 @@
 
 mod app;
 mod app_menu;
+mod appearance;
 mod catalog;
 mod cloud;
 mod command_bar;
@@ -19,6 +20,7 @@ mod input;
 mod keys;
 mod layering;
 mod marks;
+mod modes;
 mod opening;
 #[cfg(test)]
 mod perf;
@@ -26,6 +28,8 @@ mod preview;
 mod project;
 mod recent;
 mod recovery;
+#[cfg(test)]
+mod ribbon_tests;
 mod saving;
 #[cfg(test)]
 mod screens;

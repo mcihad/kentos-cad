@@ -377,6 +377,14 @@
         {
           "value": "light",
           "label": "Açık pafta"
+        },
+        {
+          "value": "night",
+          "label": "Gece"
+        },
+        {
+          "value": "highContrast",
+          "label": "Yüksek karşıtlık"
         }
       ],
       "scope": "user",
@@ -386,7 +394,128 @@
       "version": 1,
       "group": "appearance",
       "title": "Tema",
-      "description": "Arayüzün ve çizim alanının renkleri: koyu grafit ya da açık pafta.",
+      "description": "Arayüzün renkleri: koyu grafit, açık pafta, karanlık odada parlamayan gece ya da siyah zeminli yüksek karşıtlık.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.accentColor",
+      "type": "text",
+      "default": "mavi",
+      "max": 16.0,
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Vurgu rengi",
+      "description": "Çalışan araç, seçim, odak ve seçili öğelerin rengi: mavi, turkuaz, yeşil, kehribar, turuncu, pembe, mor, gri ya da #RRGGBB. Renk temanın zemininde okunur kalacak kadar ayarlanır.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.typeface",
+      "type": "enum",
+      "default": "plex",
+      "choices": [
+        {
+          "value": "plex",
+          "label": "IBM Plex Sans"
+        },
+        {
+          "value": "inter",
+          "label": "Inter"
+        },
+        {
+          "value": "jakarta",
+          "label": "Plus Jakarta Sans"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Yazı tipi",
+      "description": "Menüler, şerit, paneller ve pencerelerin yazısı; çizimdeki yazı nesneleri etkilenmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.monoTypeface",
+      "type": "enum",
+      "default": "plexMono",
+      "choices": [
+        {
+          "value": "plexMono",
+          "label": "IBM Plex Mono"
+        },
+        {
+          "value": "jetbrains",
+          "label": "JetBrains Mono"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Eş aralıklı yazı",
+      "description": "Koordinatların, ölçülerin ve komut satırının yazısı.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.textSize",
+      "type": "integer",
+      "default": 13,
+      "min": 11.0,
+      "max": 18.0,
+      "unit": "px",
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Yazı boyutu",
+      "description": "Arayüz metninin boyutu; şerit, paneller ve komut satırı onunla büyür. Çizim etiketleri etkilenmez.",
+      "sensitive": false,
+      "apply": "live"
+    },
+    {
+      "key": "appearance.drawingBackground",
+      "type": "enum",
+      "default": "theme",
+      "choices": [
+        {
+          "value": "theme",
+          "label": "Temaya uy"
+        },
+        {
+          "value": "slate",
+          "label": "Arduvaz"
+        },
+        {
+          "value": "black",
+          "label": "Siyah"
+        },
+        {
+          "value": "paper",
+          "label": "Kâğıt"
+        }
+      ],
+      "scope": "user",
+      "hosts": [
+        "desktop"
+      ],
+      "version": 1,
+      "group": "appearance",
+      "title": "Çizim zemini",
+      "description": "Çizim alanının zemini, arayüzün temasından bağımsız: temaya uyar, arduvaz, siyah (klasik AutoCAD) ya da kâğıt.",
       "sensitive": false,
       "apply": "live"
     },

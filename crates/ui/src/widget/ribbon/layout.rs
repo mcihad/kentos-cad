@@ -3,54 +3,427 @@
 use std::rc::Rc;
 
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{Column, button, column, container, row, space, text};
+use iced::widget::{Column, button, column, container, row, space, text, tooltip};
 use iced::{Center, Color, Element, Fill, Length, Padding, Size, Top};
 
-use super::{ICON, ROW_GAP, caption_height, content_height, row_height};
-use crate::icon::{Icon, icon};
-use crate::label;
+use super::control::Form;
+use super::{Button, ICON, ROW_GAP, caption_height, content_height, row_height};
+use crate::icon::{Icon, Tone, icon};
 use crate::style;
 use crate::theme::typography;
 use crate::widget::color::{self, Ramp};
+use crate::widget::context_menu::{Menu, MenuButton};
 use crate::widget::dropdown::{Dropdown, Reaction};
+use crate::widget::{Tip, tip};
 
-/// Başlıklı araç grubu. Öğeler yan yana dizilir; altta ortalanmış grup
-/// adı bulunur.
+/// Başlıklı araç grubu (panel). Altta ortalanmış grup adı bulunur.
+///
+/// Düğmelerle ([`Group::tool`]) kurulan ya da kendi görünüşünü veren
+/// ([`Group::custom`]) grup şeride sığmak için küçülür: panel önce bütün
+/// düğmelerini küçük etiketliye, sonra yalnız ikona indirir, en sonda
+/// adını taşıyan tek düğmeye katlanır (DESIGN.md §7.3.1). [`Group::push`] ile
+/// verilen öğeler (alanlar, galeriler) olduğu gibi kalır.
 pub struct Group<'a, Message> {
     title: Fragment<'a>,
-    items: Vec<Element<'a, Message>>,
+    icon: Icon,
+    content: Content<'a, Message>,
+    keep: bool,
+    more: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
+    launcher: Option<(Message, String)>,
 }
 
-impl<'a, Message: 'a> Group<'a, Message> {
+enum Content<'a, Message> {
+    /// Olduğu gibi çizilen öğeler.
+    Fixed(Vec<Element<'a, Message>>),
+    /// Şeridin panelin genişliğine göre dizdiği düğmeler.
+    Tools(Vec<Button<'a, Message>>),
+    /// Kendi görünüşü (tam genişlikte) ve katlanınca açılan menüsü.
+    Custom {
+        width: f32,
+        view: Rc<dyn Fn() -> Element<'a, Message> + 'a>,
+        menu: Rc<dyn Fn() -> Menu<Message> + 'a>,
+    },
+}
+
+/// Panelin sağındaki ve solundaki iç boşluk.
+const PANEL_PAD: f32 = 5.0;
+/// Paneldeki öğeler arası.
+const ITEM_GAP: f32 = 2.0;
+/// Başlığın iki yanındaki pay.
+const FOOT_PAD: f32 = 14.0;
+
+impl<'a, Message: Clone + 'a> Group<'a, Message> {
     pub fn new(title: impl IntoFragment<'a>) -> Self {
         Self {
             title: title.into_fragment(),
-            items: Vec::new(),
+            icon: Icon::More,
+            content: Content::Tools(Vec::new()),
+            keep: false,
+            more: None,
+            launcher: None,
         }
     }
 
-    /// Büyük düğme, [`Stack`] veya [`Row`] ekler.
+    /// Büyük düğme, [`Stack`] veya [`Row`] ekler; grup olduğu gibi kalır.
     pub fn push(mut self, item: impl Into<Element<'a, Message>>) -> Self {
-        self.items.push(item.into());
+        match &mut self.content {
+            Content::Fixed(items) => items.push(item.into()),
+            Content::Tools(tools) => {
+                let mut items: Vec<Element<'a, Message>> =
+                    tools.drain(..).map(Element::from).collect();
+                items.push(item.into());
+                self.content = Content::Fixed(items);
+            }
+            Content::Custom { view, .. } => {
+                self.content = Content::Fixed(vec![view(), item.into()]);
+            }
+        }
         self
+    }
+
+    /// Düğme ekler: büyük düğmeler tek başına, küçükler sütunda üçer durur.
+    pub fn tool(mut self, button: Button<'a, Message>) -> Self {
+        match &mut self.content {
+            Content::Tools(tools) => tools.push(button),
+            Content::Fixed(items) => items.push(button.into()),
+            Content::Custom { .. } => {}
+        }
+        self
+    }
+
+    /// Kendi görünüşü olan grup (ör. tema seçimi): `width` tam genişliği,
+    /// `menu` katlanınca açılan menüdür.
+    pub fn custom(
+        mut self,
+        width: f32,
+        view: impl Fn() -> Element<'a, Message> + 'a,
+        menu: impl Fn() -> Menu<Message> + 'a,
+    ) -> Self {
+        self.content = Content::Custom {
+            width,
+            view: Rc::new(view),
+            menu: Rc::new(menu),
+        };
+        self
+    }
+
+    /// Katlanmış panelin düğmesindeki ikon.
+    pub fn icon(mut self, icon: Icon) -> Self {
+        self.icon = icon;
+        self
+    }
+
+    /// Öbür paneller yalnız ikona inene kadar büyük düğmelerini korur
+    /// (Giriş'te Çizim ve Değiştir).
+    pub fn keep(mut self, keep: bool) -> Self {
+        self.keep = keep;
+        self
+    }
+
+    /// Seyrek araçlar: başlığın yanındaki ▾ ile açılır.
+    pub fn more(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
+        self.more = Some(Rc::new(menu));
+        self
+    }
+
+    /// Başlığın sağındaki pencere açıcı (↘).
+    pub fn launcher(mut self, message: Message, title: impl Into<String>) -> Self {
+        self.launcher = Some((message, title.into()));
+        self
+    }
+
+    /// Şeridin boyutuna göre küçülebilir mi.
+    pub(crate) fn adaptive(&self) -> bool {
+        !matches!(self.content, Content::Fixed(_))
+    }
+
+    /// Öbür paneller yalnız ikona inene kadar büyük düğmelerini korur mu.
+    pub fn keeps(&self) -> bool {
+        self.keep
+    }
+
+    /// Dört seviyedeki genişlikleri (piksel): şeridin [`fit`](super::fit)'i
+    /// bunlarla seçer; uygulama sekmelerinin sığdığını sınamak için okur.
+    pub fn widths(&self) -> [f32; 4] {
+        [0, 1, 2, 3].map(|level| self.width(level))
+    }
+
+    /// Seviyedeki genişliği (piksel, sağındaki bölücü dahil).
+    pub(crate) fn width(&self, level: Level) -> f32 {
+        let body = match (&self.content, level) {
+            (_, 3) => return self.folded_width() + PANEL_PAD * 2.0 + 1.0,
+            (Content::Tools(tools), level) => tools_width(tools, level),
+            (Content::Custom { width, .. }, _) => *width,
+            (Content::Fixed(_), _) => 0.0,
+        };
+        body.max(self.foot_width()) + PANEL_PAD * 2.0 + 1.0
+    }
+
+    /// Başlık satırının genişliği.
+    fn foot_width(&self) -> f32 {
+        let title = typography::text_width(&self.title, foot_size());
+        let more = if self.more.is_some() {
+            3.0 + 10.0 + 10.0
+        } else {
+            0.0
+        };
+        let launcher = if self.launcher.is_some() { 16.0 } else { 0.0 };
+        title + more + FOOT_PAD * 2.0 + launcher
+    }
+
+    /// Tek düğmeye katlanmış hâlinin genişliği.
+    fn folded_width(&self) -> f32 {
+        let s = typography::scaled;
+        let label = typography::text_width(&self.title, typography::caption()) + 14.0;
+        label.ceil().clamp(s(50.0), s(110.0))
+    }
+
+    /// Grubu seviyede çizer: 0 tasarlandığı gibi, 1 bütün düğmeler küçük
+    /// etiketli, 2 yalnız ikon, 3 adını taşıyan tek düğme.
+    pub(crate) fn view(&self, level: Level) -> Element<'a, Message> {
+        if level >= 3 {
+            return self.folded();
+        }
+        let body: Element<'a, Message> = match &self.content {
+            Content::Tools(tools) => tools_row(tools, level),
+            Content::Custom { view, .. } => view(),
+            Content::Fixed(_) => space::horizontal().width(0).into(),
+        };
+        self.frame(body, self.width(level) - 1.0)
+    }
+
+    /// Gövde ve altında başlık satırı; genişlik sığdırmanın hesapladığıdır
+    /// (bölücü hariç), içerik ona göre ortalanır.
+    fn frame(&self, body: impl Into<Element<'a, Message>>, width: f32) -> Element<'a, Message> {
+        column![
+            container(body).height(content_height()).align_y(Top),
+            self.foot(),
+        ]
+        .width(width)
+        .padding(Padding {
+            top: super::PANEL_PADDING_TOP,
+            right: PANEL_PAD,
+            bottom: super::PANEL_PADDING_BOTTOM,
+            left: PANEL_PAD,
+        })
+        .height(Fill)
+        .align_x(Center)
+        .into()
+    }
+
+    /// Başlık satırı: ortada ad (seyrek araçlar varsa ▾ ile menü), sağda
+    /// pencere açıcı.
+    fn foot(&self) -> Element<'a, Message> {
+        let title = || {
+            text(self.title.clone())
+                .font(typography::ui())
+                .size(foot_size())
+                .wrapping(iced::widget::text::Wrapping::None)
+                .style(style::text::muted)
+        };
+        let middle: Element<'a, Message> = match &self.more {
+            Some(menu) => {
+                let menu = menu.clone();
+                tip(
+                    MenuButton::new(
+                        container(
+                            row![title(), icon(Icon::ChevronDown).size(8.0).tone(Tone::Muted)]
+                                .spacing(3)
+                                .align_y(Center),
+                        )
+                        .padding([0, 5])
+                        .center_y(caption_height()),
+                        move || menu(),
+                    ),
+                    Tip::new(format!("{}: diğer araçlar", self.title)),
+                    tooltip::Position::Bottom,
+                )
+            }
+            None => title().into(),
+        };
+        let launcher: Element<'a, Message> = match &self.launcher {
+            Some((message, name)) => tip(
+                button(icon(Icon::Maximize).size(10.0).tone(Tone::Muted))
+                    .on_press(message.clone())
+                    .padding(2)
+                    .style(style::button::ribbon(style::button::Ribbon::Idle)),
+                Tip::new(name.clone()),
+                tooltip::Position::Bottom,
+            ),
+            None => space::horizontal().width(0).into(),
+        };
+        row![
+            space::horizontal().width(Fill),
+            middle,
+            container(launcher).width(Fill).align_x(iced::Right),
+        ]
+        .height(caption_height())
+        .align_y(Center)
+        .into()
+    }
+
+    /// Adını taşıyan tek düğme; tıklayınca panelin araçları menüde açılır.
+    fn folded(&self) -> Element<'a, Message> {
+        let width = self.folded_width();
+        let menu = self.folded_menu();
+        let face = container(
+            column![
+                icon(self.icon)
+                    .size(super::LARGE_ICON)
+                    .weight(super::LARGE_WEIGHT),
+                row![
+                    text(self.title.clone())
+                        .font(typography::ui())
+                        .size(typography::caption())
+                        .wrapping(iced::widget::text::Wrapping::None),
+                    icon(Icon::ChevronDown).size(9.0).tone(Tone::Muted),
+                ]
+                .spacing(3)
+                .align_y(Center),
+            ]
+            .spacing(typography::scaled(6.0))
+            .align_x(Center),
+        )
+        .center_x(width)
+        .height(Fill)
+        .padding(Padding {
+            top: typography::scaled(10.0),
+            ..Padding::ZERO
+        });
+        container(tip(
+            MenuButton::new(face, move || menu()),
+            Tip::new(self.title.to_string()).body(
+                "Pencere dar olduğu için panel tek düğmeye katlandı; tıklayınca araçları açılır.",
+            ),
+            tooltip::Position::Bottom,
+        ))
+        .width(self.width(3) - 1.0)
+        .padding(Padding {
+            top: super::PANEL_PADDING_TOP,
+            right: PANEL_PAD,
+            bottom: super::PANEL_PADDING_BOTTOM,
+            left: PANEL_PAD,
+        })
+        .height(Fill)
+        .into()
+    }
+
+    /// Katlanmış panelin menüsü: düğmeleri (aileler alt menü) ve seyrek araçları.
+    fn folded_menu(&self) -> Rc<dyn Fn() -> Menu<Message> + 'a> {
+        let title = self.title.to_string();
+        let more = self.more.clone();
+        match &self.content {
+            Content::Custom { menu, .. } => menu.clone(),
+            Content::Tools(tools) => {
+                let tools = tools.clone();
+                Rc::new(move || {
+                    let menu = tools
+                        .iter()
+                        .fold(Menu::new().header(title.clone()), |menu, tool| {
+                            tool.menu_entry(menu)
+                        });
+                    match &more {
+                        Some(more) => menu.separator().submenu("Diğer araçlar", more()),
+                        None => menu,
+                    }
+                })
+            }
+            Content::Fixed(_) => Rc::new(Menu::new),
+        }
     }
 }
 
-impl<'a, Message: 'a> From<Group<'a, Message>> for Element<'a, Message> {
+/// Başlık satırının yazı boyutu (DESIGN.md: `--fs-2xs`).
+fn foot_size() -> f32 {
+    typography::caption() - 1.0
+}
+
+/// Panelin seviyesi: 0 tasarlandığı gibi, 1 küçük etiketli, 2 yalnız
+/// ikon, 3 tek düğme.
+pub type Level = u8;
+
+/// Düğmeleri seviyede dizer: büyükler tek başına, küçükler sütunda üçer.
+fn tools_row<'a, Message: Clone + 'a>(
+    tools: &[Button<'a, Message>],
+    level: Level,
+) -> Element<'a, Message> {
+    let mut row = iced::widget::Row::new().spacing(ITEM_GAP);
+    let mut column: Vec<Element<'a, Message>> = Vec::new();
+    let flush = |row: iced::widget::Row<'a, Message>, column: &mut Vec<Element<'a, Message>>| {
+        if column.is_empty() {
+            return row;
+        }
+        row.push(Column::with_children(column.drain(..)).spacing(ROW_GAP))
+    };
+    for tool in tools {
+        if level == 0 && tool.is_large() {
+            row = flush(row, &mut column);
+            row = row.push(tool.render(Form::Large));
+            continue;
+        }
+        column.push(tool.render(if level >= 2 { Form::Icon } else { Form::Small }));
+        if column.len() == 3 {
+            row = flush(row, &mut column);
+        }
+    }
+    flush(row, &mut column).into()
+}
+
+/// [`tools_row`]'un genişliği.
+fn tools_width<Message: Clone>(tools: &[Button<'_, Message>], level: Level) -> f32 {
+    let (mut total, mut column, mut in_column, mut items) = (0.0_f32, 0.0_f32, 0_u32, 0_u32);
+    for tool in tools {
+        if level == 0 && tool.is_large() {
+            if in_column > 0 {
+                total += column;
+                items += 1;
+                (column, in_column) = (0.0, 0);
+            }
+            total += tool.width(Form::Large);
+            items += 1;
+            continue;
+        }
+        column = column.max(tool.width(if level >= 2 { Form::Icon } else { Form::Small }));
+        in_column += 1;
+        if in_column == 3 {
+            total += column;
+            items += 1;
+            (column, in_column) = (0.0, 0);
+        }
+    }
+    if in_column > 0 {
+        total += column;
+        items += 1;
+    }
+    total + ITEM_GAP * items.saturating_sub(1) as f32
+}
+
+impl<'a, Message: Clone + 'a> From<Group<'a, Message>> for Element<'a, Message> {
     fn from(group: Group<'a, Message>) -> Self {
+        if group.adaptive() {
+            return group.view(0);
+        }
+        let Content::Fixed(items) = group.content else {
+            unreachable!("adaptive groups return above")
+        };
         column![
-            container(iced::widget::Row::with_children(group.items).spacing(2))
+            container(iced::widget::Row::with_children(items).spacing(ITEM_GAP))
                 .height(content_height())
                 .align_y(Top),
-            container(label::caption(group.title))
-                .height(caption_height())
-                .align_y(Center),
+            container(
+                text(group.title)
+                    .font(typography::ui())
+                    .size(foot_size())
+                    .style(style::text::muted)
+            )
+            .height(caption_height())
+            .align_y(Center),
         ]
         .padding(Padding {
             top: super::PANEL_PADDING_TOP,
-            right: 8.0,
+            right: PANEL_PAD + 3.0,
             bottom: super::PANEL_PADDING_BOTTOM,
-            left: 8.0,
+            left: PANEL_PAD + 3.0,
         })
         .height(Fill)
         .align_x(Center)

@@ -14,6 +14,11 @@
 //! Grup içeriği 3 satırlık bir ızgaraya oturur: küçük düğmeler ve alanlar
 //! bir satır ([`row_height`]), büyük düğmeler üç satır ([`content_height`])
 //! yüksekliğindedir.
+//!
+//! Düğmelerle kurulan gruplar pencereye sığar (DESIGN.md §7.3.1): paneller
+//! sağdan sola, her biri bir adım inerek küçülür: büyük → küçük etiketli →
+//! yalnız ikon → panelin adını taşıyan tek düğme ([`fit`]). Hiçbir düğme
+//! kesilmez; en küçük hâli de sığmayan şerit (çok dar pencere) kaydırılır.
 //! Seçili sekmenin alt çizgisi yoktur ve zemini panelle aynıdır; sekme
 //! alttaki panele akar.
 //!
@@ -30,7 +35,9 @@ pub use control::{AppButton, Button, logo_mark};
 pub use layout::{Field, Gallery, Group, Preview, Row, Stack, Tile};
 
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{Column, button, column, container, row, scrollable, space, tooltip};
+use iced::widget::{
+    Column, button, column, container, responsive, row, scrollable, space, tooltip,
+};
 use iced::{Element, Fill, Length, Padding, Right};
 
 use crate::icon::{Icon, icon};
@@ -44,18 +51,18 @@ use crate::widget::{Tip, horizontal_divider, tip, vertical_divider};
 // boyutuyla büyür (aşağıdaki fonksiyonlar). İkonlar sabit boyuttadır.
 
 /// Izgara satırının yüksekliği: küçük düğme, alan.
-pub const ROW: f32 = 22.0;
+pub const ROW: f32 = 24.0;
 /// Izgara satırları arasındaki boşluk.
 pub const ROW_GAP: f32 = 1.0;
 /// Küçük düğme ikonlarının boyutu; alanların önündeki sütun genişliği.
 pub const ICON: f32 = 16.0;
 /// Büyük düğme ikonlarının boyutu.
-pub const LARGE_ICON: f32 = 24.0;
-/// Büyük düğmelerin genişliği.
-pub const LARGE_WIDTH: f32 = 62.0;
+pub const LARGE_ICON: f32 = 28.0;
+/// Büyük ikonların çizgi kalınlığı: büyüyünce ağırlaşmaz.
+pub const LARGE_WEIGHT: f32 = 1.55;
 
 /// Grup adının satır yüksekliği.
-pub const CAPTION: f32 = 16.0;
+pub const CAPTION: f32 = 17.0;
 const PANEL_PADDING_TOP: f32 = 6.0;
 const PANEL_PADDING_BOTTOM: f32 = 2.0;
 
@@ -74,11 +81,6 @@ pub fn row_height() -> f32 {
 /// Grup içeriğinin yüksekliği: üç satır.
 pub fn content_height() -> f32 {
     row_height() * 3.0 + ROW_GAP * 2.0
-}
-
-/// Büyük düğmelerin genişliği.
-pub fn large_width() -> f32 {
-    typography::scaled(LARGE_WIDTH)
 }
 
 /// Grup adının satır yüksekliği.
@@ -355,6 +357,13 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
 
     fn panel(panel: Panel<'a, Message>) -> Element<'a, Message> {
         let content: Element<'a, Message> = match panel {
+            // Pencereye göre küçülen gruplar: seviyeler yerleşimde, o anki genişlikle seçilir.
+            Panel::Groups(groups) if groups.iter().all(Group::adaptive) => {
+                responsive(move |size| fitted(&groups, size.width))
+                    .width(Fill)
+                    .height(Fill)
+                    .into()
+            }
             Panel::Groups(groups) => {
                 let mut groups_row = iced::widget::Row::new().height(Fill);
 
@@ -417,6 +426,65 @@ impl<'a, Message: Clone + 'a> From<Ribbon<'a, Message>> for Element<'a, Message>
             .push(horizontal_divider())
             .into()
     }
+}
+
+/// Grupları genişliğe sığdırıp çizer; en küçük hâli de sığmıyorsa kaydırır.
+fn fitted<'a, Message: Clone + 'a>(
+    groups: &[Group<'a, Message>],
+    available: f32,
+) -> Element<'a, Message> {
+    let widths: Vec<[f32; 4]> = groups.iter().map(Group::widths).collect();
+    let keep: Vec<bool> = groups.iter().map(Group::keeps).collect();
+    let (levels, overflow) = fit(&widths, &keep, available);
+    let row = groups.iter().zip(levels).fold(
+        iced::widget::Row::new().height(Fill),
+        |row, (group, level)| row.push(group.view(level)).push(vertical_divider()),
+    );
+    if overflow {
+        scrollable(row)
+            .direction(scrollable::Direction::Horizontal(
+                scrollable::Scrollbar::new().width(3).scroller_width(3),
+            ))
+            .width(Fill)
+            .height(Fill)
+            .into()
+    } else {
+        row.into()
+    }
+}
+
+/// Her panelin seviyesini genişliğe göre seçer (web'in `Ribbon.fit`'i):
+/// her panel bir adım inmeden hiçbiri iki adım inmez, önce en sağdaki.
+/// `keep` paneller öbürleri yalnız ikona inene kadar büyük düğmelerini
+/// korur; yalnız tek düğmeye katlanmak onlardan önce gelir. Genişlik
+/// kazandırmayan adım atlanır. `widths[i][l]`: panelin `l` seviyesindeki
+/// genişliği. Sonuç seviyeler ve en küçük hâlin de sığmadığı.
+pub fn fit(widths: &[[f32; 4]], keep: &[bool], available: f32) -> (Vec<u8>, bool) {
+    let mut levels = vec![0u8; widths.len()];
+    let mut total: f32 = widths.iter().map(|w| w[0]).sum();
+    let next = |levels: &[u8], i: usize| -> Option<u8> {
+        let here = widths[i][usize::from(levels[i])];
+        (levels[i] + 1..=3).find(|&l| widths[i][usize::from(l)] < here - 0.5)
+    };
+    let kept = |i: usize| keep.get(i).copied().unwrap_or(false);
+    let rank = |i: usize, l: u8| f32::from(l) + if kept(i) && l < 3 { 1.5 } else { 0.0 };
+    // Tutulmayanlar önce, sağdaki önce.
+    let mut order: Vec<usize> = (0..widths.len()).collect();
+    order.sort_by_key(|&i| (kept(i), std::cmp::Reverse(i)));
+    while total > available {
+        let mut pick: Option<(usize, u8)> = None;
+        for &i in &order {
+            if let Some(l) = next(&levels, i)
+                && pick.is_none_or(|(p, to)| rank(i, l) < rank(p, to))
+            {
+                pick = Some((i, l));
+            }
+        }
+        let Some((i, l)) = pick else { break };
+        total -= widths[i][usize::from(levels[i])] - widths[i][usize::from(l)];
+        levels[i] = l;
+    }
+    (levels, total > available + 0.5)
 }
 
 /// Sekme şeridindeki bir öğe; altında şerit boyunca uzanan çizgiyle.
