@@ -230,6 +230,42 @@ impl canvas::Program<Message> for Draft {
             },
             ..Stroke::default().with_color(accent).with_width(1.0)
         };
+        // Filled areas under the lines (the web's `drawArea`): a corridor, a
+        // donut; holes left out (even-odd), outlined solid (docs/adr/0057).
+        for area in &self.preview.areas {
+            let rings: Vec<Path> = area
+                .rings
+                .iter()
+                .filter_map(|r| self.path(r, true))
+                .collect();
+            if rings.is_empty() {
+                continue;
+            }
+            let shape = Path::new(|b| {
+                for ring in &area.rings {
+                    if let Some((first, rest)) = ring.split_first() {
+                        b.move_to(self.screen(*first));
+                        for p in rest {
+                            b.line_to(self.screen(*p));
+                        }
+                        b.close();
+                    }
+                }
+            });
+            frame.fill(
+                &shape,
+                canvas::Fill {
+                    style: canvas::Style::Solid(accent.scale_alpha(area.fill)),
+                    rule: canvas::fill::Rule::EvenOdd,
+                },
+            );
+            for ring in &rings {
+                frame.stroke(
+                    ring,
+                    Stroke::default().with_color(accent).with_width(area.width),
+                );
+            }
+        }
         // The closed shape once it has three corners: dashed, lightly filled.
         if let Some(ring) = self
             .preview
@@ -266,7 +302,9 @@ impl canvas::Program<Message> for Draft {
             };
             frame.stroke(&path, stroke);
         }
-        // A corner found under the cursor, a vertex to add or remove: 2 px marks (docs/adr/0047).
+        // A corner found under the cursor, a vertex to add or remove: 2 px marks
+        // (docs/adr/0047); Böl's points to come and a perpendicular's right
+        // angle: 1 px, where the point falls (docs/adr/0057).
         for m in &self.preview.markers {
             let at = self.screen(m.at);
             let (x, y) = (at.x.round() + 0.5, at.y.round() + 0.5);
@@ -284,11 +322,44 @@ impl canvas::Program<Message> for Draft {
                     b.move_to(Point::new(x, y - h));
                     b.line_to(Point::new(x, y + h));
                 }
+                MarkerShape::Circle(r) => b.circle(at, r),
+                MarkerShape::RightAngle { along, up } => {
+                    // The web's `drawRightAngle`: 8 px along each side, on screen.
+                    let unit = |to: Vec2| {
+                        let s = self.screen(to);
+                        let (dx, dy) = (s.x - at.x, s.y - at.y);
+                        let l = dx.hypot(dy);
+                        (l >= 1e-9).then(|| (dx / l, dy / l))
+                    };
+                    if let (Some(u), Some(v)) = (unit(along), unit(up)) {
+                        let k = 8.0;
+                        b.move_to(Point::new(at.x + u.0 * k, at.y + u.1 * k));
+                        b.line_to(Point::new(at.x + (u.0 + v.0) * k, at.y + (u.1 + v.1) * k));
+                        b.line_to(Point::new(at.x + v.0 * k, at.y + v.1 * k));
+                    }
+                }
             });
+            let width = match m.shape {
+                MarkerShape::Circle(_) | MarkerShape::RightAngle { .. } => 1.0,
+                _ => 2.0,
+            };
             frame.stroke(
                 &mark,
-                Stroke::default().with_color(tone(m.tone)).with_width(2.0),
+                Stroke::default().with_color(tone(m.tone)).with_width(width),
             );
+        }
+        // Short texts beside points: a reference line's start “A” (docs/adr/0057).
+        for label in &self.preview.labels {
+            let at = self.screen(label.at);
+            frame.fill_text(canvas::Text {
+                content: label.text.clone(),
+                position: Point::new(at.x + label.offset[0], at.y + label.offset[1]),
+                color: tone(label.tone),
+                size: iced::Pixels(typography::scaled(11.0)),
+                font: typography::ui_strong(),
+                align_y: iced::alignment::Vertical::Bottom,
+                ..canvas::Text::default()
+            });
         }
         // The objects picked for a tangent circle: a 9 px square where each was clicked.
         for p in &self.preview.squares {

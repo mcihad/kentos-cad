@@ -211,8 +211,10 @@ impl Parallel {
             objects.push(line(&axis));
         }
         let made = objects.len();
+        // The web's `!(S.left > 0)`: a distance that is not above zero, NaN included.
+        let positive = |v: f64| v > 0.0;
         if made == 0 {
-            if !m.parallel_axis && !(m.parallel_left > 0.0) && !(m.parallel_right > 0.0) {
+            if !m.parallel_axis && !positive(m.parallel_left) && !positive(m.parallel_right) {
                 cx.say(
                     Level::Warn,
                     "Sol ve sağ mesafe sıfır ve eksen çizilmiyor: çizilecek bir şey yok.",
