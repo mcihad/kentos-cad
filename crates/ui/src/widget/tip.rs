@@ -5,6 +5,12 @@
 //! gezinirken). Tıklamada kapanır ve imleç öğeden çıkana dek yeniden
 //! açılmaz; öğenin kendi açılır menüsü açıkken hiç görünmez (menünün
 //! üstüne binmesin).
+//!
+//! En çok 280 px × yazı ölçeği genişliğindedir, pencereden 16 px dar; uzun
+//! başlık ve açıklama bu genişlikte, gerekirse kelime içinden satır atlar,
+//! ayrıntı satırı (kısayol, komut adı) bölünmez. İstenen yanda yer yoksa
+//! karşı yana geçer (sağ dokun satırının ipucu soluna, alttaki üstüne), sonra
+//! pencerenin kenarından 8 px içeride tutulur (web'in `tooltip.ts`'i).
 
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -12,6 +18,7 @@ use std::time::{Duration, Instant};
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::widget::{Operation, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Shell, overlay, renderer};
+use iced::widget::text::Wrapping;
 use iced::widget::tooltip::Position;
 use iced::widget::{column, container, tooltip};
 use iced::{Element, Event, Length, Padding, Point, Rectangle, Renderer, Size, Theme, Vector};
@@ -55,18 +62,23 @@ impl Tip {
 
     fn view<'a, Message: 'a>(self) -> Element<'a, Message> {
         if self.body.is_none() && self.detail.is_none() {
-            return container(label::caption(self.title).style(style::text::default))
+            let title = label::caption(self.title)
+                .style(style::text::default)
+                .wrapping(Wrapping::WordOrGlyph);
+            return container(title)
                 .padding([4, 8])
+                .max_width(typography::from_default(MAX_WIDTH))
                 .style(style::container::popover)
                 .into();
         }
 
-        let mut content = column![label::strong(self.title)]
+        // Less the padding: at most MAX_WIDTH with it.
+        let mut content = column![label::strong(self.title).wrapping(Wrapping::WordOrGlyph)]
             .spacing(3)
-            .max_width(typography::scaled(260.0));
+            .max_width(typography::from_default(MAX_WIDTH) - 20.0);
 
         if let Some(body) = self.body {
-            content = content.push(label::caption(body));
+            content = content.push(label::caption(body).wrapping(Wrapping::WordOrGlyph));
         }
 
         if let Some(detail) = self.detail {
@@ -109,9 +121,13 @@ pub fn tip<'a, Message: 'a>(
 const DELAY: Duration = Duration::from_millis(450);
 /// Bir ipucu kapandıktan sonra komşunun ipucunun hemen açıldığı süre.
 const WARM: Duration = Duration::from_millis(600);
-/// Öğe ile ipucu arasındaki boşluk ve ipucunun pencere kenarından payı.
+/// Öğe ile ipucu arasındaki boşluk (ikisinin toplamı).
 const GAP: f32 = 5.0;
 const PADDING: f32 = 5.0;
+/// İpucunun pencere kenarından payı.
+const EDGE: f32 = 8.0;
+/// İpucunun en çok genişliği, varsayılan yazı boyutunda.
+const MAX_WIDTH: f32 = 280.0;
 
 /// Son ipucunun kapandığı an (sıcak süre için).
 static CLOSED: Mutex<Option<Instant>> = Mutex::new(None);
@@ -346,6 +362,38 @@ impl<Message> Widget<Message, Theme, Renderer> for Hint<'_, Message> {
     }
 }
 
+/// Where a tip of `size` goes beside `anchor` in a window of `window`: on
+/// the side asked for; on the opposite one when that side has no room (a
+/// row of the right dock tips to its left, a bottom tip goes above); then
+/// held [`EDGE`] inside the window.
+fn place(anchor: Rectangle, size: Size, window: Size, position: Position) -> Point {
+    let a = anchor;
+    let away = GAP + PADDING;
+    let centre_x = a.x + (a.width - size.width) / 2.0;
+    let centre_y = a.y + (a.height - size.height) / 2.0;
+    let left = a.x - size.width - away;
+    let right = a.x + a.width + away;
+    let above = a.y - size.height - away;
+    let below = a.y + a.height + away;
+    let at = match position {
+        Position::Top if above < EDGE => Point::new(centre_x, below),
+        Position::Top => Point::new(centre_x, above),
+        Position::Bottom if below + size.height > window.height - EDGE => {
+            Point::new(centre_x, above)
+        }
+        Position::Bottom => Point::new(centre_x, below),
+        Position::Left if left < EDGE => Point::new(right, centre_y),
+        Position::Left => Point::new(left, centre_y),
+        Position::Right if right + size.width > window.width - EDGE => Point::new(left, centre_y),
+        Position::Right => Point::new(right, centre_y),
+        Position::FollowCursor => Point::new(a.x, a.y - size.height),
+    };
+    Point::new(
+        at.x.min(window.width - size.width - EDGE).max(EDGE),
+        at.y.min(window.height - size.height - EDGE).max(EDGE),
+    )
+}
+
 /// The open tip, laid out beside its element and kept inside the window.
 struct Bubble<'a, 'b, Message> {
     tip: &'b mut Element<'a, Message>,
@@ -356,32 +404,13 @@ struct Bubble<'a, 'b, Message> {
 
 impl<Message> overlay::Overlay<Message, Theme, Renderer> for Bubble<'_, '_, Message> {
     fn layout(&mut self, renderer: &Renderer, bounds: Size) -> layout::Node {
-        let window = Rectangle::with_size(bounds);
         let node = self.tip.as_widget_mut().layout(
             self.tree,
             renderer,
-            &layout::Limits::new(Size::ZERO, bounds).shrink(Padding::new(PADDING)),
+            &layout::Limits::new(Size::ZERO, bounds).shrink(Padding::new(EDGE)),
         );
         let size = node.size();
-        let a = self.anchor;
-        let centre_x = a.x + (a.width - size.width) / 2.0;
-        let centre_y = a.y + (a.height - size.height) / 2.0;
-        let at = match self.position {
-            Position::Top => Point::new(centre_x, a.y - size.height - GAP - PADDING),
-            Position::Bottom => Point::new(centre_x, a.y + a.height + GAP + PADDING),
-            Position::Left => Point::new(a.x - size.width - GAP - PADDING, centre_y),
-            Position::Right => Point::new(a.x + a.width + GAP + PADDING, centre_y),
-            Position::FollowCursor => Point::new(a.x, a.y - size.height),
-        };
-        let x = at.x.clamp(
-            window.x + PADDING,
-            (window.width - size.width - PADDING).max(PADDING),
-        );
-        let y = at.y.clamp(
-            window.y + PADDING,
-            (window.height - size.height - PADDING).max(PADDING),
-        );
-        node.move_to(Point::new(x, y))
+        node.move_to(place(self.anchor, size, bounds, self.position))
     }
 
     fn draw(
@@ -408,7 +437,40 @@ impl<Message> overlay::Overlay<Message, Theme, Renderer> for Bubble<'_, '_, Mess
 mod tests {
     use std::time::{Duration, Instant};
 
-    use super::{DELAY, State, step};
+    use iced::widget::tooltip::Position;
+    use iced::{Point, Rectangle, Size};
+
+    use super::{DELAY, EDGE, State, place, step};
+
+    /// A side without room gives way to the opposite one, then the tip is
+    /// held inside the window (the web's tooltip.ts).
+    #[test]
+    fn a_tip_goes_to_the_other_side_without_room_and_stays_inside() {
+        let window = Size::new(1100.0, 650.0);
+        let tip = Size::new(200.0, 40.0);
+        let row = |x: f32, y: f32| Rectangle::new(Point::new(x, y), Size::new(120.0, 24.0));
+        // Room on the right: 10 px right of the row, centred on it.
+        assert_eq!(
+            place(row(100.0, 300.0), tip, window, Position::Right),
+            Point::new(230.0, 292.0)
+        );
+        // A row of the right dock: its tip goes to its left.
+        assert_eq!(
+            place(row(960.0, 300.0), tip, window, Position::Right),
+            Point::new(750.0, 292.0)
+        );
+        // A bottom tip at the window's foot goes above; a top one at its head goes below.
+        assert_eq!(
+            place(row(400.0, 620.0), tip, window, Position::Bottom).y,
+            570.0
+        );
+        assert_eq!(place(row(400.0, 4.0), tip, window, Position::Top).y, 38.0);
+        // Centred on a row at the left edge: held inside.
+        assert_eq!(
+            place(row(0.0, 300.0), tip, window, Position::Bottom).x,
+            EDGE
+        );
+    }
 
     #[test]
     fn a_tip_waits_then_opens_and_closes_when_the_cursor_leaves() {

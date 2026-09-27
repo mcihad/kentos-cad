@@ -3,6 +3,7 @@ import { listen } from '../../core/disposable';
 import { takesTypedInput } from '../../tools/Tool';
 import { Component } from '../Component';
 import { h } from '../dom';
+import { besidePointer, type Size } from '../widgets/placeBeside';
 
 /**
  * Dynamic input: while a command runs and the mouse is over the drawing,
@@ -15,6 +16,8 @@ export class CursorInput extends Component {
   private readonly input: HTMLInputElement;
   private readonly ctx: AppContext;
   private open = false;
+  /** The field's size, measured when it opens. */
+  private size: Size = { w: 0, h: 0 };
 
   constructor(ctx: AppContext, host: HTMLElement) {
     super();
@@ -59,6 +62,7 @@ export class CursorInput extends Component {
     this.open = true;
     this.input.value = first;
     this.el.hidden = false;
+    this.size = { w: this.el.offsetWidth, h: this.el.offsetHeight };
     this.place();
     this.input.focus({ preventScroll: true });
     this.input.setSelectionRange(first.length, first.length);
@@ -67,9 +71,11 @@ export class CursorInput extends Component {
   private place(): void {
     const w = this.ctx.view.cursorWorld.value;
     if (!w) return;
-    const s = this.ctx.view.camera.worldToScreen(w);
-    // Above-right of the cursor: the tool's own measurement tag sits below-right.
-    this.el.style.transform = `translate(${Math.round(s.x + 18)}px, ${Math.round(s.y - 58)}px)`;
+    const camera = this.ctx.view.camera;
+    // Above-right of the cursor: the tool's own measurement tag sits below-right. Near the right edge it goes
+    // left of the cursor, near the top it slides down; it never leaves the drawing (placeBeside.ts).
+    const at = besidePointer(camera.worldToScreen(w), this.size, { w: camera.width, h: camera.height }, { x: 18, y: -58 });
+    this.el.style.transform = `translate(${at.x}px, ${at.y}px)`;
   }
 
   private submit(): void {

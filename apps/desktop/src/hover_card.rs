@@ -3,7 +3,14 @@
 //! (kind, layer, length or area, parcel data) without selecting it.
 //!
 //! - It waits half a second on the same object, then follows the pointer
-//!   18 px right and 20 px down.
+//!   18 px right and 20 px down. Near the drawing's right edge it goes left
+//!   of the pointer, near its bottom above it, and it stays 8 px inside the
+//!   drawing (`kentos_ui::widget::beside`, the web's `besidePointer`).
+//! - It is 160 to 280 px × the type scale wide, and 16 px narrower than the
+//!   drawing. Long names and texts wrap, inside a word when they must. The
+//!   layer goes under the kind when both do not fit on one line and wraps
+//!   there, its swatch on the first line. Row labels stay on one line; values
+//!   wrap, right-aligned (DESIGN.md §7.4.2; the web's 5c1cf5a).
 //! - It goes when the pointer leaves the object or the drawing, when a
 //!   command starts or a grip is taken, and never shows while the
 //!   preference `drafting.hoverInfo` is off.
@@ -14,21 +21,30 @@
 
 use std::time::Duration;
 
-use iced::widget::{column, container, row, space};
-use iced::{Center, Color, Element, Length, Padding, Right};
+use iced::widget::text::Wrapping;
+use iced::widget::{container, row};
+use iced::{Center, Color, Element, Padding, Point, Right, Vector};
 use kentos_contracts::Entity;
 use kentos_domain::Document as Model;
 use kentos_interaction::{Format, measures};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
-use kentos_ui::widget::{horizontal_divider, swatch};
+use kentos_ui::widget::{InfoCard, Pairs, beside, swatch};
 
 use crate::app::{App, Message};
 use crate::selecting::kind_title;
 
 /// How long the pointer rests on an object before the card shows (the web's `DELAY_MS`).
 pub(crate) const DELAY: Duration = Duration::from_millis(500);
+
+/// The card's place from the pointer where there is room: right and down.
+const GAP: Vector = Vector::new(18.0, 20.0);
+/// The card's least and most width with its padding, at the default text size.
+const MIN_WIDTH: f32 = 160.0;
+const MAX_WIDTH: f32 = 280.0;
+/// Its padding left and right.
+const PAD_X: f32 = 10.0;
 
 /// `message` after `delay`, from a thread of its own (as the recovery ticks run).
 pub(crate) fn after(delay: Duration, message: Message) -> iced::Task<Message> {
@@ -150,54 +166,57 @@ pub(crate) fn card(
     Card { title, layer, rows }
 }
 
-/// The card as the web draws it: the title and the layer over the rows,
-/// labels muted on the left, values right-aligned, on a popover. Its rows
-/// keep their own width (a row that fills would collapse in a card that
-/// shrinks to its content); 160 px at least, 280 at most, as on the web.
+/// The card as the web draws it: the title with the layer right of it or
+/// under it, then the rows, labels muted on the left, values right-aligned,
+/// on a popover (see the module comment for its widths).
 pub(crate) fn view<'a>(card: Card) -> Element<'a, Message> {
     let size = typography::caption();
-    let mut head = row![label::strong(card.title).size(size)]
-        .spacing(12)
-        .align_y(Center);
+    let title = label::strong(card.title)
+        .size(size)
+        .wrapping(Wrapping::WordOrGlyph);
+    let mut info =
+        InfoCard::new(title).min_width(typography::from_default(MIN_WIDTH) - 2.0 * PAD_X);
     if let Some((name, color)) = card.layer {
-        head = head.push(
-            row![swatch(color), label::caption(name)]
-                .spacing(5)
-                .align_y(Center),
+        // The swatch on the name's first line, however many lines it takes.
+        let first_line = (typography::caption() * 1.3).round();
+        info = info.tag(
+            row![
+                container(swatch(color)).height(first_line).align_y(Center),
+                label::caption(name).wrapping(Wrapping::WordOrGlyph),
+            ]
+            .spacing(5),
         );
     }
-    // The least width, less the padding. A space of no height would be left out.
-    let mut body = column![head, space().width(140)];
     if !card.rows.is_empty() {
-        let names = column(
-            card.rows
-                .iter()
-                .map(|(name, _, _)| label::caption(*name).into()),
-        )
-        .spacing(2);
-        let values = column(card.rows.into_iter().map(|(_, value, numeric)| {
-            let text = if numeric {
-                label::mono(value)
-            } else {
-                label::body(value)
-            };
-            text.size(size).into()
-        }))
-        .spacing(2)
-        .align_x(Right);
-        // A line between the head and the rows, 6 px from each (the web's border-top).
-        body = body
-            .push(space().height(6))
-            .push(horizontal_divider())
-            .push(space().height(6))
-            .push(row![names, values].spacing(12));
+        // The web's grid (`auto 1fr`): a long value wraps, even inside a
+        // word, and its row grows; the names stay beside their values.
+        let rows = card.rows.into_iter().fold(
+            Pairs::new()
+                .spacing_x(12.0)
+                .spacing_y(2.0)
+                .align_values(Right),
+            |rows, (name, value, numeric)| {
+                let text = if numeric {
+                    label::mono(value)
+                } else {
+                    label::body(value)
+                };
+                let text = text
+                    .size(size)
+                    .align_x(Right)
+                    .wrapping(Wrapping::WordOrGlyph);
+                rows.push(label::caption(name).wrapping(Wrapping::None), text)
+            },
+        );
+        info = info.body(rows);
     }
-    container(body.width(Length::Shrink).max_width(260))
+    container(info)
+        .max_width(typography::from_default(MAX_WIDTH))
         .padding(Padding {
             top: 7.0,
-            right: 10.0,
+            right: PAD_X,
             bottom: 8.0,
-            left: 10.0,
+            left: PAD_X,
         })
         .style(style::container::popover)
         .into()
@@ -229,7 +248,8 @@ impl App {
         }
     }
 
-    /// The card over the drawing, when one shows: beside the pointer.
+    /// The card over the drawing, when one shows: beside the pointer, on
+    /// its other side near the drawing's edges.
     pub(crate) fn hover_card_view(&self) -> Option<Element<'_, Message>> {
         let slot = self.hover_card?;
         if self.session.is_running() || self.session.grip_active() {
@@ -241,14 +261,8 @@ impl App {
         let [x, y] = self.viewport.camera.world_to_screen(at);
         let format = Format::of(doc.settings());
         let card = card(e, &doc.model, &format, |value| self.drawing_color(value));
-        Some(
-            iced::widget::pin(view(card))
-                .x(x.round() as f32 + 18.0)
-                .y(y.round() as f32 + 20.0)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .into(),
-        )
+        let pointer = Point::new(x.round() as f32, y.round() as f32);
+        Some(beside(view(card), pointer, GAP))
     }
 }
 
@@ -326,11 +340,21 @@ mod tests {
         assert_eq!(app.hover_card, None);
         app.hover_card_due(first);
         assert_eq!(app.hover_card, None);
-        // The preference off, or a command running: no card.
-        app.hover_info = false;
+        // On by default; turned off in Uygulama ayarları (Nesne bilgi kartı), no card.
+        assert!(app.hover_info);
+        let _ = app
+            .settings
+            .choose(&[("drafting.hoverInfo", serde_json::Value::from(false))]);
+        app.apply_settings();
+        assert!(!app.hover_info);
         app.hover_card_due(app.selection.hover_version());
         assert_eq!(app.hover_card, None);
-        app.hover_info = true;
+        let _ = app
+            .settings
+            .choose(&[("drafting.hoverInfo", serde_json::Value::from(true))]);
+        app.apply_settings();
+        assert!(app.hover_info);
+        // A command running: no card either.
         let _ = app.update(Message::Run("tool.line"));
         app.hover_card_due(app.selection.hover_version());
         assert_eq!(app.hover_card, None);
@@ -338,7 +362,11 @@ mod tests {
 }
 
 /// The grips of a selected parcel with one being moved, and the rollover
-/// card over it. Not run by default:
+/// card over it: as it is, with a layer named as long as the MPYY showcase's
+/// (the web's `hover-card-long`), and that card at the drawing's bottom
+/// right corner (`hover-card-corner`), the last two with large text too
+/// (`-buyuk`); and the value field beside the cursor, in the middle and at
+/// the drawing's top right corner (`deger-alani`). Not run by default:
 /// `cargo test -p kentos-desktop hover_card::screens -- --ignored --nocapture`.
 #[cfg(test)]
 #[test]
@@ -350,15 +378,29 @@ fn screens() {
 
     use crate::viewport::Event;
 
+    // Large text is set for some: no other test lays out meanwhile.
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    const LONG: &str = "Ortak gösterimler · Korunacak alanlar · Bugünkü arazi kullanımı devam ettirilerek korunacak alanlar";
+    let cases = [
+        ("tutamac", 13),
+        ("uzerine-gelme", 13),
+        ("uzerine-gelme-uzun", 13),
+        ("uzerine-gelme-kose", 13),
+        ("uzerine-gelme-uzun-buyuk", 16),
+        ("uzerine-gelme-kose-buyuk", 16),
+        ("deger-alani", 13),
+        ("deger-alani-kose", 13),
+    ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["tutamac", "uzerine-gelme"] {
+            for (name, text_size) in cases {
                 let mut app = crate::files_testing::app_with_drawing();
-                let _ = app
-                    .settings
-                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                let _ = app.settings.choose(&[
+                    ("appearance.theme", serde_json::Value::from(mode)),
+                    ("appearance.textSize", serde_json::Value::from(text_size)),
+                ]);
                 app.apply_settings();
                 let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
                 let mut update = |app: &mut App, message| {
@@ -382,7 +424,26 @@ fn screens() {
                     }
                     let to = Point::new(at.x + 40.0, at.y - 30.0);
                     let _ = app.update(Message::Viewport(Event::Moved(to)));
+                } else if name.starts_with("deger-alani") {
+                    // Çizgi running, a value typed with the pointer resting.
+                    let _ = app.update(Message::Run("tool.line"));
+                    let camera = app.viewport.camera;
+                    let (x, y) = if name == "deger-alani-kose" {
+                        (camera.width - 20.0, 24.0)
+                    } else {
+                        (camera.width / 2.0, camera.height / 2.0)
+                    };
+                    let at = Point::new(x as f32, y as f32);
+                    let _ = app.update(Message::Viewport(Event::Moved(at)));
+                    app.field = Some(crate::input::Field {
+                        text: "@25.50<45".into(),
+                        at: camera.screen_to_world(x, y),
+                    });
                 } else {
+                    if name != "uzerine-gelme" {
+                        let doc = app.document.as_mut().expect("open");
+                        doc.model.rename_layer("parsel", LONG);
+                    }
                     // The pointer resting inside the parcel.
                     let doc = app.document.as_ref().expect("open");
                     let Some(kentos_contracts::Entity::Polygon(p)) = doc.model.get(parcel) else {
@@ -392,6 +453,15 @@ fn screens() {
                         p.pts.iter().map(|q| q.x).sum::<f64>() / p.pts.len() as f64 + 6.0,
                         p.pts.iter().map(|q| q.y).sum::<f64>() / p.pts.len() as f64 + 8.0,
                     );
+                    if name.starts_with("uzerine-gelme-kose") {
+                        // The drawing moved so that point is 24 px from its bottom right corner.
+                        let camera = &mut app.viewport.camera;
+                        let (x, y) = (camera.width - 24.0, camera.height - 24.0);
+                        camera.center = kentos_interaction::Vec2::new(
+                            inside.x - (x - camera.width / 2.0) / camera.scale,
+                            inside.y + (y - camera.height / 2.0) / camera.scale,
+                        );
+                    }
                     let at = screen(&app, inside);
                     let _ = app.update(Message::Viewport(Event::Moved(at)));
                     app.hover_card_due(app.selection.hover_version());

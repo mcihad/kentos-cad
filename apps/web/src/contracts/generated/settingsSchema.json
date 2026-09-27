@@ -182,7 +182,8 @@
       "default": true,
       "scope": "user",
       "hosts": [
-        "web"
+        "web",
+        "desktop"
       ],
       "version": 1,
       "group": "drafting",

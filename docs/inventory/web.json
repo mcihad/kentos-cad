@@ -5353,6 +5353,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -8314,7 +8315,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {

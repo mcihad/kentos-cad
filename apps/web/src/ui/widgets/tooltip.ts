@@ -47,6 +47,11 @@ function show(target: HTMLElement, content: TooltipContent, placement: 'right' |
   const t = el.getBoundingClientRect();
   let x = placement === 'right' ? r.right + 8 : r.left + r.width / 2 - t.width / 2;
   let y = placement === 'right' ? r.top + r.height / 2 - t.height / 2 : placement === 'top' ? r.top - t.height - 8 : r.bottom + 8;
+  // A side that has no room gives way to the opposite one (a row of the right dock tips to its left), then the
+  // tip is held inside the window (DESIGN.md §7.8).
+  if (placement === 'right' && x + t.width > innerWidth - 8) x = r.left - 8 - t.width;
+  if (placement === 'bottom' && y + t.height > innerHeight - 8) y = r.top - t.height - 8;
+  if (placement === 'top' && y < 8) y = r.bottom + 8;
   x = Math.max(8, Math.min(x, innerWidth - t.width - 8));
   y = Math.max(8, Math.min(y, innerHeight - t.height - 8));
   el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;

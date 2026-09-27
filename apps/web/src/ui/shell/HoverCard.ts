@@ -4,6 +4,7 @@ import { ENTITY_KIND_LABEL, entityArea, entityLength, type Entity } from '../../
 import { Component } from '../Component';
 import { h, replaceChildren } from '../dom';
 import { colorSwatch } from '../layers/swatch';
+import { besidePointer, type Size } from '../widgets/placeBeside';
 
 const DELAY_MS = 500;
 
@@ -28,6 +29,8 @@ export class HoverCard extends Component {
   private readonly ctx: AppContext;
   private timer = 0;
   private shownId: number | null = null;
+  /** The card's size, measured once when shown: its content does not change while it follows the pointer. */
+  private size: Size = { w: 0, h: 0 };
 
   constructor(ctx: AppContext, host: HTMLElement) {
     super();
@@ -61,6 +64,7 @@ export class HoverCard extends Component {
     this.shownId = id;
     replaceChildren(this.el, ...this.content(e));
     this.el.hidden = false;
+    this.size = { w: this.el.offsetWidth, h: this.el.offsetHeight };
     this.place();
   }
 
@@ -69,11 +73,13 @@ export class HoverCard extends Component {
     this.el.hidden = true;
   }
 
+  /** Right of and below the pointer; left of it or above it near the drawing's edges, never outside (placeBeside.ts). */
   private place(): void {
     const w = this.ctx.view.cursorWorld.value;
     if (!w) return;
-    const s = this.ctx.view.camera.worldToScreen(w);
-    this.el.style.transform = `translate(${Math.round(s.x + 18)}px, ${Math.round(s.y + 20)}px)`;
+    const camera = this.ctx.view.camera;
+    const at = besidePointer(camera.worldToScreen(w), this.size, { w: camera.width, h: camera.height });
+    this.el.style.transform = `translate(${at.x}px, ${at.y}px)`;
   }
 
   private content(e: Entity): HTMLElement[] {
@@ -100,7 +106,9 @@ export class HoverCard extends Component {
         'div',
         { class: 'hover-card__head' },
         h('b', null, a.Parsel ? `Parsel ${a.Parsel}` : e.label ? `${ENTITY_KIND_LABEL[e.kind]} ${e.label}` : ENTITY_KIND_LABEL[e.kind]),
-        layer ? h('span', { class: 'hover-card__layer' }, h('span', { class: 'swatch', style: `--swatch:${colorSwatch(e.color ?? layer.style.color, view.palette)}` }), layer.name) : null,
+        layer
+          ? h('span', { class: 'hover-card__layer' }, h('span', { class: 'swatch', style: `--swatch:${colorSwatch(e.color ?? layer.style.color, view.palette)}` }), h('span', null, layer.name))
+          : null,
       ),
       ...(rows.length ? [h('dl', { class: 'hover-card__rows' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', { class: 'num' }, v)]))] : []),
     ];

@@ -327,8 +327,8 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 ### 7.4.2 Fare yardımcıları
 
-- **İmleç yanında değer girişi:** imlecin sağ üstünde, amber çerçeveli küçük bir kart; içinde eş aralıklı yazıyla (`--font-mono`) değer alanı ve altında kabul edilen biçimler (`mesafe · Y,X · @dY,dX · @mesafe<açı`, `--fs-2xs`, üçüncül renk). Aracın kendi ölçü etiketi imlecin sağ altında kalır; ikisi çakışmaz.
-- **Bilgi kartı:** imlecin sağ altında, panel zemininde; başlıkta tür ya da "Parsel 7" (600) ve sağda katman örneği ile adı; altında ince çizgiyle ayrılmış iki sütunlu değerler (etiket üçüncül, değer sağa yaslı). Fareyle etkileşmez (`pointer-events: none`).
+- **İmleç yanında değer girişi:** imlecin sağ üstünde, amber çerçeveli küçük bir kart; içinde eş aralıklı yazıyla (`--font-mono`) değer alanı ve altında kabul edilen biçimler (`mesafe · Y,X · @dY,dX · @mesafe<açı`, `--fs-2xs`, üçüncül renk). Aracın kendi ölçü etiketi imlecin sağ altında kalır; ikisi çakışmaz. Çizim alanının sağ kenarında imlecin soluna geçer, üst kenarda aşağı kayar; alanın dışına çıkmaz.
+- **Bilgi kartı:** imlecin sağ altında, panel zemininde; başlıkta tür ya da "Parsel 7" (600) ve sağda katman örneği ile adı; altında ince çizgiyle ayrılmış iki sütunlu değerler (etiket üçüncül, değer sağa yaslı). Fareyle etkileşmez (`pointer-events: none`). En çok 280 px × yazı ölçeği genişliğindedir, çizim alanından 16 px dar; uzun ad ve metin bu genişlikte, gerekirse kelime içinden satır atlar. Katman adı türün yanına sığmazsa altına iner ve orada satır atlar (örneği ilk satırda). Yer: imlecin 18 px sağı, 20 px altı; sağa sığmazsa aynı uzaklıkta soluna, alta sığmazsa üstüne geçer; sonra çizim alanının kenarından 8 px içeride tutulur (`ui/widgets/placeBeside.ts`).
 - **Tek seferlik kenet etiketi:** komut şeridinde yumuşak amber zeminli "Sonraki tık: Orta nokta" ve × düğmesi.
 - **Kenet simgeleri:** kenet türünün çizimdeki işareti (kare, üçgen, daire, eşkenar dörtgen, çarpı, dik açı, teğet, kum saati) düz çizgiyle, üzerinde durduğu geometri kesikli çizilir. Menülerde 16 px'tir.
 - **Nesne izleme:** alınan izleme noktaları kenet renginde (`--canvas-snap`) 10 px'lik artıdır. Kilitlenilen hiza, noktadan başlayıp ekran kenarına kadar uzanan ince kesikli (3/4 px, %85) çizgidir. İmlecin sağ üstünde kenet etiketiyle aynı yazıda "İzleme 12.500 m < 90°" ya da "İzleme: kesişim" yazar.
@@ -392,6 +392,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 ### 7.8 İpucu
 
 - Başlık (600), kısayol tuşu ve açıklama (ikincil renk). Hazır değilse amber not eklenir.
+- En çok 280 px × yazı ölçeği genişliğindedir; uzun başlık ve açıklama bu genişlikte, gerekirse kelime içinden satır atlar, kısayol tuşu bölünmez. İstenen yanda yer yoksa karşı yana geçer (sağ dokun satırı soluna, alttaki üstüne), sonra pencerenin kenarından 8 px içeride tutulur.
 - 450 ms gecikmeyle açılır; bir ipucu kapandıktan sonraki 600 ms içinde komşu öğelerde anında açılır (araç çubuğunda gezinirken).
 - Tıklamada ve basılı tutmada kapanır; öğenin açılır menüsü açıkken görünmez.
 - Masaüstünde KentOS UI'nin `tip`'i aynı kurallarla çalışır ([ADR 0054](docs/adr/0054-desktop-draws-the-web-icons.md)).
