@@ -24,6 +24,18 @@
     "tool.subdivide": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
     "workspace.disaster": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" },
     "workspace.plan3d": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" },
+    "view.ribbon": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "view.toolbox": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "view.toolboxDock": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
     "view.renderer.webgl2": {
       "desktop": "n/a",
       "reason": "Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir."
@@ -42,6 +54,38 @@
     "plan3d": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" }
   },
   "settings": {
+    "user.shell": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "layout.ribbonToolbox": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "layout.toolboxColumns": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "layout.toolboxDocked": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "layout.toolboxFolded": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "layout.toolboxVisible": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "layout.toolboxX": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "layout.toolboxY": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
     "device.rendererPreference": {
       "desktop": "n/a",
       "reason": "WebGL2 ya da WebGPU seçimi tarayıcınındır; masaüstünün arka ucunu wgpu seçer (ADR 0019)."
@@ -66,59 +110,58 @@
     "project.srid": { "desktop": "implemented", "where": "Proje ayarları ve Koordinat sistemi… (apps/desktop/src/project/settings.rs, crs.rs), .kcad'de" },
     "project.workspace": { "desktop": "implemented", "where": "Proje ayarları ve durum çubuğundaki mod (apps/desktop/src/modes.rs), .kcad'de" },
     "layout.bottomExpanded": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/bottom.rs",
-      "reason": "Alt panel F2 ile açılıp kapanır; yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/bottom.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
     "layout.bottomHeight": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/bottom.rs",
-      "reason": "Boyu sürükleyerek değişir; yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/bottom.rs, layout.rs (yerlesim.json; 96 px ile pencerenin %60'ı, ADR 0115)"
     },
     "layout.bottomTab": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/bottom.rs",
-      "reason": "Sekmeler (komut geçmişi, koordinat listesi, uyarılar) var; seçili sekme yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/bottom.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
     "layout.dockTab": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/app.rs (Docks: Katmanlar ve İşlemler sekmeleri)",
-      "reason": "Seçili sekme yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/layout.rs (Katmanlar ve İşlemler sekmeleri; yerlesim.json, ADR 0115)"
     },
     "layout.dockWidth": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/app.rs (Docks)",
-      "reason": "Genişlik sürükleyerek değişir; yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/layout.rs (240–560 px ve pencerenin yarısı; yerlesim.json, ADR 0115)"
     },
     "layout.layersFraction": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/app.rs (Docks: Katmanlar ile Özellikler bölmesi)",
-      "reason": "Bölme sürükleyerek değişir; yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/layout.rs (0,15–0,85; yerlesim.json, ADR 0115)"
     },
     "layout.processingFolded": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/processing/panel.rs",
-      "reason": "Kategoriler katlanır; yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/processing/panel.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
     "layout.processingTab": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/processing/panel.rs",
-      "reason": "Araçlar ve Geçmiş sekmeleri var; seçili sekme yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/processing/panel.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
     "layout.ribbonCollapsed": {
+      "desktop": "implemented",
+      "where": "apps/desktop/src/view.rs, layout.rs (yerlesim.json, ADR 0115)"
+    },
+    "layout.ribbonQuickAccess": {
       "desktop": "partial",
-      "where": "apps/desktop/src/view.rs (view.ribbonCollapse)",
-      "reason": "Şerit daraltılır; yeniden açılışta hatırlanmaz."
+      "where": "apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; quick_access_of taşındı, ADR 0115)",
+      "reason": "Masaüstünde hızlı erişim çubuğuna komut eklenip çıkarılamıyor; şeridin sağ tık menüsüyle gelecek."
+    },
+    "layout.ribbonSplits": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; split_current taşındı, ADR 0115)",
+      "reason": "Bölünmüş düğme son seçimi göstermiyor; şeridin kalan diliminde."
     },
     "layout.ribbonTab": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/view.rs",
-      "reason": "Seçili sekme yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/modes.rs, layout.rs (açılışta saklanan sekme, yoksa Giriş; yerlesim.json, ADR 0115)"
     },
     "layout.rightVisible": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/view_commands.rs (F4)",
-      "reason": "Paneller F4 ile gizlenir; yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "apps/desktop/src/view_commands.rs (F4), layout.rs (yerlesim.json, ADR 0115)"
     }
   },
   "storage": {
@@ -138,6 +181,18 @@
     }
   },
   "screens": {
+    "apps/web/src/ui/menu/MenuBar.ts#MenuBar": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "apps/web/src/ui/toolbar/Toolbar.ts#Toolbar": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
+    "apps/web/src/ui/toolbox/Toolbox.ts#Toolbox": {
+      "desktop": "n/a",
+      "reason": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
+    },
     "apps/web/src/ui/appmenu/AppMenu.ts#openAppMenu": { "desktop": "implemented", "where": "apps/desktop/src/app_menu/ (ADR 0050)" },
     "apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel": { "desktop": "implemented", "where": "apps/desktop/src/bottom.rs, message_log.rs, log_plan.rs (ADR 0058, 0114)" },
     "apps/web/src/ui/bottom/CommandLine.ts#CommandLine": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, input.rs, message_log.rs (KentOS UI CommandLine, tek satır; ADR 0114)" },

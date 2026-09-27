@@ -52,40 +52,51 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 144 | 0 | 6 | 15 | 2 | 167 |
+| Komutlar | 144 | 0 | 3 | 15 | 5 | 167 |
 | Araçlar | 56 | 0 | 0 | 2 | 0 | 58 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
-| Ayarlar | 42 | 12 | 10 | 0 | 1 | 65 |
+| Ayarlar | 53 | 3 | 0 | 0 | 9 | 65 |
 | Tarayıcı depoları | 8 | 0 | 1 | 0 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 50 | 3 | 9 | 0 | 1 | 63 |
+| Pencereler ve paneller | 50 | 3 | 6 | 0 | 4 | 63 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
 - `.kcad` alanları (v1 okunur, v2 yazılır), bütünüyle: implemented — Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025).
 
-### Masaüstünde anlamsız (5)
+### Masaüstünde anlamsız (19)
 
 - Komutlar: `view.renderer.webgl2` WebGL2 — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
 - Komutlar: `view.renderer.webgpu` WebGPU — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
+- Komutlar: `view.ribbon` Şerit arayüzü — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Komutlar: `view.toolbox` Araç kutusu — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Komutlar: `view.toolboxDock` Araç kutusunu kenara sabitle — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
 - Ayarlar: `device.rendererPreference`  — WebGL2 ya da WebGPU seçimi tarayıcınındır; masaüstünün arka ucunu wgpu seçer (ADR 0019).
+- Ayarlar: `layout.ribbonToolbox`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Ayarlar: `layout.toolboxColumns`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Ayarlar: `layout.toolboxDocked`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Ayarlar: `layout.toolboxFolded`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Ayarlar: `layout.toolboxVisible`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Ayarlar: `layout.toolboxX`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Ayarlar: `layout.toolboxY`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Ayarlar: `user.shell`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
 - Tarayıcı depoları: `kentos.prefs.v1`  — Web'in tipli ayarlardan önceki deposudur; masaüstünün böyle eski bir deposu olmadı, ayarları baştan ayarlar.json'dadır.
 - Pencereler ve paneller: `apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog` openInvitationDialog — Davet bağlantısı web uygulamasının adresidir: açılır ve orada kabul edilir; kabul edilen proje masaüstünün kataloğunda da görünür. Masaüstü davet eder, bağlantı açmaz.
+- Pencereler ve paneller: `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Pencereler ve paneller: `apps/web/src/ui/toolbar/Toolbar.ts#Toolbar` Toolbar — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Pencereler ve paneller: `apps/web/src/ui/toolbox/Toolbox.ts#Toolbox` Toolbox — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
 
 ### Web'de olup masaüstünde olmayanlar
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (6 / 167; ayrıca 15 iki platformda da bekliyor)
+#### Komutlar (3 / 167; ayrıca 15 iki platformda da bekliyor)
 
 - `processing.newModel` Yeni model…
 - `style.svgEditor` SVG çizim düzenleyicisi…
 - `view.keyTips` Şerit harf ipuçları
-- `view.ribbon` Şerit arayüzü
-- `view.toolbox` Araç kutusu
-- `view.toolboxDock` Araç kutusunu kenara sabitle
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.query` Koordinat sorgula (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -120,29 +131,10 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (22 / 65)
+#### Ayarlar (3 / 65)
 
-- `layout.bottomExpanded`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Alt panel F2 ile açılıp kapanır; yeniden açılışta hatırlanmaz.
-- `layout.bottomHeight`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Boyu sürükleyerek değişir; yeniden açılışta hatırlanmaz.
-- `layout.bottomTab`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Sekmeler (komut geçmişi, koordinat listesi, uyarılar) var; seçili sekme yeniden açılışta hatırlanmaz.
-- `layout.dockTab`  (kısmi) (masaüstünde: apps/desktop/src/app.rs (Docks: Katmanlar ve İşlemler sekmeleri)) — Seçili sekme yeniden açılışta hatırlanmaz.
-- `layout.dockWidth`  (kısmi) (masaüstünde: apps/desktop/src/app.rs (Docks)) — Genişlik sürükleyerek değişir; yeniden açılışta hatırlanmaz.
-- `layout.layersFraction`  (kısmi) (masaüstünde: apps/desktop/src/app.rs (Docks: Katmanlar ile Özellikler bölmesi)) — Bölme sürükleyerek değişir; yeniden açılışta hatırlanmaz.
-- `layout.processingFolded`  (kısmi) (masaüstünde: apps/desktop/src/processing/panel.rs) — Kategoriler katlanır; yeniden açılışta hatırlanmaz.
-- `layout.processingTab`  (kısmi) (masaüstünde: apps/desktop/src/processing/panel.rs) — Araçlar ve Geçmiş sekmeleri var; seçili sekme yeniden açılışta hatırlanmaz.
-- `layout.ribbonCollapsed`  (kısmi) (masaüstünde: apps/desktop/src/view.rs (view.ribbonCollapse)) — Şerit daraltılır; yeniden açılışta hatırlanmaz.
-- `layout.ribbonQuickAccess`
-- `layout.ribbonSplits`
-- `layout.ribbonTab`  (kısmi) (masaüstünde: apps/desktop/src/view.rs) — Seçili sekme yeniden açılışta hatırlanmaz.
-- `layout.ribbonToolbox`
-- `layout.rightVisible`  (kısmi) (masaüstünde: apps/desktop/src/view_commands.rs (F4)) — Paneller F4 ile gizlenir; yeniden açılışta hatırlanmaz.
-- `layout.toolboxColumns`
-- `layout.toolboxDocked`
-- `layout.toolboxFolded`
-- `layout.toolboxVisible`
-- `layout.toolboxX`
-- `layout.toolboxY`
-- `user.shell`
+- `layout.ribbonQuickAccess`  (kısmi) (masaüstünde: apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; quick_access_of taşındı, ADR 0115)) — Masaüstünde hızlı erişim çubuğuna komut eklenip çıkarılamıyor; şeridin sağ tık menüsüyle gelecek.
+- `layout.ribbonSplits`  (kısmi) (masaüstünde: apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; split_current taşındı, ADR 0115)) — Bölünmüş düğme son seçimi göstermiyor; şeridin kalan diliminde.
 - `user.uiFont`  (kısmi) (masaüstünde: ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)) — Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar.
 
 #### Tarayıcı depoları (1 / 10)
@@ -153,9 +145,8 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (12 / 63)
+#### Pencereler ve paneller (9 / 63)
 
-- `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
 - `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.
 - `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs (ADR 0058, 0080, 0113, 0114)) — Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
@@ -165,8 +156,6 @@ Yok.
 - `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog
 - `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog
 - `apps/web/src/ui/svgedit/svgTrace.ts#openTraceDialog` openTraceDialog
-- `apps/web/src/ui/toolbar/Toolbar.ts#Toolbar` Toolbar
-- `apps/web/src/ui/toolbox/Toolbox.ts#Toolbox` Toolbox
 
 ## Test başvurusu
 

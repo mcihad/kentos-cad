@@ -39,7 +39,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   sağ tık menüleri ve tek seferlik kenet vardır (ADR 0059); çizimin
   yazıları (yazı nesnesi, ölçü değeri, etiket; projenin yazı tipiyle), ölçü çizgileri ve yardımcı
   çizgiler çizilir (ADR 0055).
-  Web özellikleri envanter üzerinden adım adım masaüstüne taşınır.
+  Web özellikleri envanter üzerinden adım adım masaüstüne taşınır. Masaüstünde yalnız şerit arayüzü
+  vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir (sahibin kararı,
+  27 Eylül); envanterde masaüstü için anlamsızdır.
 - Web WebGPU/WebGL2 renderer'larını korur. Uygun WGSL kaynakları native ile
   paylaşılabilir; native Iced/application/wgpu runtime'ı web'e derlenmez.
 - Server'ın ana görevi kişisel/kurumsal proje saklama, erişim, yetkilendirme,
