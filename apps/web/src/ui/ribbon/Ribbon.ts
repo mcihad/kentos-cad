@@ -1,7 +1,7 @@
 import '../../styles/ribbon.css';
 import type { AppContext } from '../../app/context';
 import { commandItem, menuById, resolveMenu } from '../../app/menus';
-import { panelCommands, QUICK_ACCESS, ribbonTabs, type RibbonTab } from '../../app/ribbon';
+import { panelCommands, QUICK_ACCESS, quickAccessOf, ribbonTabs, startTab, type RibbonTab } from '../../app/ribbon';
 import { filterOf } from '../../app/workspaces';
 import { fullscreenButton } from '../shell/fullscreenButton';
 import { DisposableStore, listen } from '../../core/disposable';
@@ -123,7 +123,7 @@ export class Ribbon extends Component {
     this.renderQat();
     this.d.add(ui.ribbonQuickAccess.subscribe(() => this.renderQat()));
     this.d.add(() => this.qatD.dispose());
-    this.select(this.tabs.some((t) => t.id === ui.ribbonTab.value && !t.contextual) ? ui.ribbonTab.value : 'home', { focus: false });
+    this.select(startTab(ui.ribbonTab.value, this.tabs), { focus: false });
 
     // Document name, unsaved dot and the project's coordinate system, as in the menu bar.
     this.d.add(ctx.doc.name.subscribe((n) => (docName.textContent = n), true));
@@ -518,8 +518,7 @@ export class Ribbon extends Component {
   // ── Quick access bar ──────────────────────────────────────────────────
 
   private quickAccess(): string[] {
-    const extra = this.ctx.ui.ribbonQuickAccess.value.filter((id) => !!this.ctx.commands.get(id) && !QUICK_ACCESS.includes(id));
-    return [...QUICK_ACCESS, ...new Set(extra)];
+    return quickAccessOf(this.ctx.ui.ribbonQuickAccess.value, (id) => !!this.ctx.commands.get(id));
   }
 
   private renderQat(): void {

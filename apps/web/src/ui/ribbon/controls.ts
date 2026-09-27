@@ -1,6 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { commandItem, resolveMenu, type SubmenuSpec } from '../../app/menus';
-import type { SplitEntry } from '../../app/ribbon';
+import { splitChoiceKey, splitCurrent, type SplitEntry } from '../../app/ribbon';
 import { listen, type DisposableStore } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { h } from '../dom';
@@ -98,8 +98,6 @@ export function commandControl(ctx: AppContext, id: string, d: DisposableStore, 
   return { el: b, sync };
 }
 
-const choiceKey = (e: SplitEntry) => `${e.command}|${e.option ?? ''}`;
-
 /** Runs a split entry: the tool, then its method's option as if typed. */
 export function runEntry(ctx: AppContext, e: SplitEntry): boolean {
   if (!ctx.commands.execute(e.command)) return false;
@@ -117,7 +115,7 @@ export function runEntry(ctx: AppContext, e: SplitEntry): boolean {
 export function splitControl(ctx: AppContext, key: string, entries: readonly SplitEntry[], d: DisposableStore, host: ControlHost): Control {
   // The choice last made stays on top, across sessions (AutoCAD keeps the last method too).
   const splits = ctx.ui.ribbonSplits;
-  const current = () => entries.find((e) => choiceKey(e) === splits.value[key]) ?? entries[0];
+  const current = () => splitCurrent(entries, splits.value[key]);
   const main = h('button', { class: 'rsplit__main', type: 'button', dataset: { tool: '' } });
   const arrow = h('button', { class: 'rsplit__arrow', type: 'button', 'aria-haspopup': 'menu', 'aria-expanded': 'false' });
   const el = h('div', { class: 'rbtn rsplit', role: 'group', dataset: { split: key, commands: [...new Set(entries.map((e) => e.command))].join(' ') } }, main, arrow);
@@ -172,7 +170,7 @@ export function splitControl(ctx: AppContext, key: string, entries: readonly Spl
       label: e.label,
       hint: e.description,
       run: () => {
-        splits.set({ ...splits.value, [key]: choiceKey(e) });
+        splits.set({ ...splits.value, [key]: splitChoiceKey(e) });
         render();
         if (runEntry(ctx, e)) host.afterRun();
       },

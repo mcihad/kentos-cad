@@ -1,4 +1,5 @@
 import type { AppContext } from '../../app/context';
+import { BOTTOM_HEIGHT, bottomHeightOn } from '../../app/layoutPlan';
 import type { BottomTab, LogEntry } from '../../app/state';
 import { listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
@@ -63,13 +64,14 @@ export class BottomPanel extends Component {
     this.d.add(tooltip(clear, () => ({ title: BOTTOM_TEXTS.clear }), 'top'));
     this.d.add(tooltip(collapse, () => ({ title: BOTTOM_TEXTS.close, shortcut: ctx.keymap.chordFor('view.bottomPanel') }), 'top'));
 
+    // A drag starts from the height shown (the kept one may be taller than this window allows).
     let startH = 0;
     const split = splitter({
       orientation: 'horizontal',
       label: BOTTOM_TEXTS.edge,
-      onStart: () => (startH = ui.bottomHeight.value),
-      onDrag: (dy) => ui.bottomHeight.set(Math.round(Math.min(Math.max(startH - dy, 96), innerHeight * 0.6))),
-      onReset: () => ui.bottomHeight.set(190),
+      onStart: () => (startH = bottomHeightOn(ui.bottomHeight.value, innerHeight)),
+      onDrag: (dy) => ui.bottomHeight.set(bottomHeightOn(startH - dy, innerHeight)),
+      onReset: () => ui.bottomHeight.set(BOTTOM_HEIGHT.reset),
     });
     this.d.add(split.dispose);
 
@@ -96,7 +98,10 @@ export class BottomPanel extends Component {
         this.refreshBadge();
       }, true),
     );
-    this.d.add(ui.bottomHeight.subscribe((v) => this.el.style.setProperty('--bottom-h', `${v}px`), true));
+    // The kept height, within what the window allows now (app/layoutPlan.ts); a lower window does not change what is kept.
+    const height = () => this.el.style.setProperty('--bottom-h', `${bottomHeightOn(ui.bottomHeight.value, innerHeight)}px`);
+    this.d.add(ui.bottomHeight.subscribe(height, true));
+    this.d.add(listen(window, 'resize', height));
     this.d.add(
       ui.bottomTab.subscribe((t) => {
         this.tabButtons.forEach((b, id) => b.setAttribute('aria-selected', String(id === t)));

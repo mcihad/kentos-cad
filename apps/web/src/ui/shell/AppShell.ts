@@ -1,5 +1,7 @@
 import type { AppContext } from '../../app/context';
+import { DOCK_WIDTH, dockWidthOn } from '../../app/layoutPlan';
 import type { ProcessingTab, ShellKind } from '../../app/state';
+import { listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import { BottomPanel } from '../bottom/BottomPanel';
 import { Component } from '../Component';
@@ -51,13 +53,14 @@ export class AppShell extends Component {
     this.viewportHost = h('div', { class: 'viewport' });
     const left = h('div', { class: 'shell__left', 'data-empty': '' });
 
+    // A drag starts from the width shown (the kept one may be wider than this window allows).
     let startW = 0;
     const split = splitter({
       orientation: 'vertical',
       label: 'Sağ panel genişliği',
-      onStart: () => (startW = ui.dockWidth.value),
-      onDrag: (dx) => ui.dockWidth.set(Math.round(Math.min(Math.max(startW - dx, 240), Math.min(560, innerWidth * 0.5)))),
-      onReset: () => ui.dockWidth.set(312),
+      onStart: () => (startW = dockWidthOn(ui.dockWidth.value, innerWidth)),
+      onDrag: (dx) => ui.dockWidth.set(dockWidthOn(startW - dx, innerWidth)),
+      onReset: () => ui.dockWidth.set(DOCK_WIDTH.reset),
     });
     this.d.add(split.dispose);
     const right = h('div', { class: 'shell__right' }, split.el, dock.el);
@@ -78,7 +81,10 @@ export class AppShell extends Component {
     this.own(new HoverCard(ctx, this.viewportHost));
     this.bottom.commandLine.direct = this.own(new CursorInput(ctx, this.viewportHost));
 
-    this.d.add(ui.dockWidth.subscribe((w) => this.el.style.setProperty('--dock-w', `${w}px`), true));
+    // The kept width, within what the window allows now (app/layoutPlan.ts); a narrower window does not change what is kept.
+    const dockWidth = () => this.el.style.setProperty('--dock-w', `${dockWidthOn(ui.dockWidth.value, innerWidth)}px`);
+    this.d.add(ui.dockWidth.subscribe(dockWidth, true));
+    this.d.add(listen(window, 'resize', dockWidth));
     this.d.add(watchAll([ui.rightVisible], () => right.toggleAttribute('hidden', !ui.rightVisible.value)));
     right.toggleAttribute('hidden', !ui.rightVisible.value);
 

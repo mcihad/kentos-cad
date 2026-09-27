@@ -8814,7 +8814,7 @@
     {
       "id": "kentos.ui.v1",
       "kind": "localStorage",
-      "source": "apps/web/src/app/state.ts",
+      "source": "apps/web/src/app/layoutPlan.ts",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

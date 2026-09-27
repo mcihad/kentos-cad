@@ -29,8 +29,9 @@ export function scanScreens(root, src) {
 }
 
 /**
- * localStorage keys (`persistedSignals('key', …)`, and the typed settings'
- * `SETTINGS_STORAGE`, `SETTINGS_BACKUP` and the older `LEGACY_PREFS` constants)
+ * localStorage keys (`persistedSignals('key', …)`, the layout's `LAYOUT_KEY`
+ * (app/layoutPlan.ts), and the typed settings' `SETTINGS_STORAGE`,
+ * `SETTINGS_BACKUP` and the older `LEGACY_PREFS` constants)
  * and IndexedDB stores (`const DB`/`STORE` beside `indexedDB.open`).
  */
 export function scanStorage(root, src) {
@@ -39,7 +40,7 @@ export function scanStorage(root, src) {
     const text = readFileSync(file, 'utf8');
     const source = relative(root, file);
     for (const m of text.matchAll(/persistedSignals(?:<[^>]*>)?\('([^']+)'/g)) out.set(m[1], { id: m[1], kind: 'localStorage', source });
-    for (const m of text.matchAll(/^export const (?:SETTINGS_STORAGE|SETTINGS_BACKUP|LEGACY_PREFS) = '([^']+)'/gm)) out.set(m[1], { id: m[1], kind: 'localStorage', source });
+    for (const m of text.matchAll(/^export const (?:SETTINGS_STORAGE|SETTINGS_BACKUP|LEGACY_PREFS|LAYOUT_KEY) = '([^']+)'/gm)) out.set(m[1], { id: m[1], kind: 'localStorage', source });
     // A tab's own store (an invitation link's token, docs/adr/0042): the `…_KEY` of a module that uses sessionStorage.
     if (text.includes('sessionStorage')) for (const m of text.matchAll(/^export const \w+_KEY = '([^']+)'/gm)) out.set(m[1], { id: m[1], kind: 'sessionStorage', source });
     if (text.includes('indexedDB.open(')) {
