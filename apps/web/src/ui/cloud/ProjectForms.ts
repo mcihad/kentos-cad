@@ -1,9 +1,20 @@
 import type { AppContext } from '../../app/context';
 import { PROJECT_TYPES, TYPE_HINT, TYPE_LABEL, parseTags } from '../../app/cloud/catalog';
-import type { MetadataPatch } from '../../app/cloud/lifecycle';
-import { workspaceName } from '../../app/cloud/session';
+import {
+  DESCRIPTION_MAX,
+  FORM_TEXTS as T,
+  NAME_MAX,
+  convertForm,
+  convertReason,
+  convertedLine,
+  copyName,
+  creatablePlaces,
+  duplicateSavable,
+  metadataPatch,
+  metadataSavable,
+  type Place,
+} from '../../app/cloud/formsPlan';
 import type { ProjectDuplicated } from '../../contracts/generated/ProjectDuplicated';
-import type { ProjectStorage } from '../../contracts/generated/ProjectStorage';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
 import type { ProjectType } from '../../contracts/generated/ProjectType';
 import { h } from '../dom';
@@ -16,24 +27,26 @@ import { reason } from './ProjectActions';
  * tags), a copy of a project, and a new project in the other storage mode
  * (docs/adr/0039). The type is a label for finding work: the form says it
  * opens no module and claims no compliance. The server checks and
- * normalizes every value; the form only offers them.
+ * normalizes every value; the form only offers them. What the forms say and
+ * offer is formsPlan.ts's; this file draws them.
  */
 
 /** Type, description and tags as fields, shared by these forms and the upload. */
 export function catalogFields(initial: { projectType?: ProjectType; description?: string; tags?: readonly string[] } = {}) {
+  const F = T.fields;
   const type = h(
     'select',
-    { class: 'field', 'aria-label': 'Proje türü' },
+    { class: 'field', 'aria-label': F.typeLabel },
     PROJECT_TYPES.map((t) => h('option', { value: t, selected: t === (initial.projectType ?? 'cad') }, TYPE_LABEL[t])),
   );
-  const description = h('textarea', { class: 'field cloud-textarea', rows: '3', maxlength: '2000', 'aria-label': 'Açıklama', placeholder: 'İsteğe bağlı: işin konusu, yeri, dayanağı' });
+  const description = h('textarea', { class: 'field cloud-textarea', rows: '3', maxlength: String(DESCRIPTION_MAX), 'aria-label': F.description, placeholder: F.descriptionPlaceholder });
   description.value = initial.description ?? '';
-  const tags = h('input', { class: 'field', value: (initial.tags ?? []).join(', '), 'aria-label': 'Etiketler', placeholder: 'Virgülle ayırın: Kadıköy, 2026', spellcheck: 'false' });
+  const tags = h('input', { class: 'field', value: (initial.tags ?? []).join(', '), 'aria-label': F.tags, placeholder: F.tagsPlaceholder, spellcheck: 'false' });
   const elements = [
-    h('label', { class: 'cloud-field' }, h('span', null, 'Tür'), type),
+    h('label', { class: 'cloud-field' }, h('span', null, F.type), type),
     h('p', { class: 'cloud-hint cloud-hint--tight' }, TYPE_HINT),
-    h('label', { class: 'cloud-field' }, h('span', null, 'Açıklama'), description),
-    h('label', { class: 'cloud-field' }, h('span', null, 'Etiketler'), tags),
+    h('label', { class: 'cloud-field' }, h('span', null, F.description), description),
+    h('label', { class: 'cloud-field' }, h('span', null, F.tags), tags),
   ];
   return {
     elements,
@@ -45,40 +58,33 @@ export function catalogFields(initial: { projectType?: ProjectType; description?
 
 /** “Proje bilgileri”: the name, type, description and tags of a project, from the catalog version shown. */
 export function openMetadataDialog(ctx: AppContext, p: ProjectSummary, done?: () => void): void {
-  const name = h('input', { class: 'field', value: p.name, 'aria-label': 'Proje adı', spellcheck: 'false', maxlength: '200' });
+  const M = T.metadata;
+  const name = h('input', { class: 'field', value: p.name, 'aria-label': M.name, spellcheck: 'false', maxlength: String(NAME_MAX) });
   const fields = catalogFields(p);
   const status = h('p', { class: 'cloud-status', role: 'alert' });
-  const save = h('button', { class: 'btn btn--primary', type: 'button', disabled: true }, 'Kaydet');
-  const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
+  const save = h('button', { class: 'btn btn--primary', type: 'button', disabled: true }, M.save);
+  const cancel = h('button', { class: 'btn', type: 'button' }, T.cancel);
   const dialog = new Dialog({
-    title: 'Proje bilgileri',
+    title: M.title,
     width: 520,
     className: 'dialog--cloud',
     stack: true,
-    content: [h('label', { class: 'cloud-field' }, h('span', null, 'Proje adı'), name), ...fields.elements, status],
+    content: [h('label', { class: 'cloud-field' }, h('span', null, M.name), name), ...fields.elements, status],
     footer: [h('div', { class: 'dialog__spacer' }), cancel, save],
   });
-  const patch = (): MetadataPatch => {
-    const now = fields.read();
-    const out: MetadataPatch = {};
-    if (name.value.trim() !== p.name) out.name = name.value.trim();
-    if (now.projectType !== p.projectType) out.projectType = now.projectType;
-    if (now.description !== p.description) out.description = now.description;
-    if (now.tags.join('\n') !== p.tags.join('\n')) out.tags = now.tags;
-    return out;
-  };
+  const patch = () => metadataPatch(p, { name: name.value, ...fields.read() });
   const refresh = () => {
-    save.disabled = !name.value.trim() || !Object.keys(patch()).length;
+    save.disabled = !metadataSavable(name.value, patch());
   };
   const run = async () => {
     if (save.disabled) return;
     save.disabled = true;
     status.dataset.kind = 'info';
-    status.textContent = 'Kaydediliyor…';
+    status.textContent = T.saving;
     try {
       await ctx.cloud.lifecycle.updateMetadata({ tenantId: p.tenantId, projectId: p.id, name: p.name }, patch(), p.catalogVersion);
       dialog.close();
-      ctx.log.success(`“${name.value.trim()}” projesinin bilgileri kaydedildi.`);
+      ctx.log.success(M.saved(name.value.trim()));
       done?.();
     } catch (e) {
       status.dataset.kind = 'error';
@@ -97,51 +103,41 @@ export function openMetadataDialog(ctx: AppContext, p: ProjectSummary, done?: ()
 
 /** “Kopyasını oluştur”: a new project of the account's from this one, in a workspace it may open projects in. */
 export function openDuplicateDialog(ctx: AppContext, p: ProjectSummary, done?: (copy: ProjectDuplicated) => void): void {
-  const places = (ctx.cloud.me.value?.memberships ?? []).filter((m) => m.active && m.seat && m.capabilities.includes('project.create'));
+  const D = T.duplicate;
   // The source's workspace first when the account may open projects there, then the rest (the personal space last).
-  places.sort((a, b) => Number(b.tenantId === p.tenantId) - Number(a.tenantId === p.tenantId));
-  const name = h('input', { class: 'field', value: `${p.name} (kopya)`, 'aria-label': 'Kopyanın adı', spellcheck: 'false', maxlength: '200' });
-  const place = h(
-    'select',
-    { class: 'field', 'aria-label': 'Kopyanın çalışma alanı', disabled: places.length < 2 },
-    places.map((m) => h('option', { value: m.tenantId }, workspaceName(m.tenantKind, m.tenantName, true))),
-  );
+  const places = creatableWorkspaces(ctx, p.tenantId);
+  const name = h('input', { class: 'field', value: copyName(p.name), 'aria-label': D.nameLabel, spellcheck: 'false', maxlength: String(NAME_MAX) });
+  const place = placeSelect(places, D.placeLabel);
   const status = h('p', { class: 'cloud-status', role: 'alert' });
-  const make = h('button', { class: 'btn btn--primary', type: 'button', disabled: !places.length }, 'Kopyasını oluştur');
-  const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
+  const make = h('button', { class: 'btn btn--primary', type: 'button', disabled: !duplicateSavable(places.length, name.value) }, D.make);
+  const cancel = h('button', { class: 'btn', type: 'button' }, T.cancel);
   const dialog = new Dialog({
-    title: 'Projenin kopyasını oluştur',
+    title: D.title,
     width: 520,
     className: 'dialog--cloud',
     stack: true,
     content: [
-      h('p', null, `“${p.name}” yeni bir proje olarak kopyalanır.`),
-      h(
-        'ul',
-        { class: 'cloud-consequences' },
-        h('li', null, 'Katmanlar, ayarlar, stiller, açıklama, tür, etiketler ve bütün nesneler kalıcı kimlikleriyle kopyalanır.'),
-        h('li', null, 'Geçmiş (komut günlüğü, olaylar), paylaşımlar ve favoriler kopyalanmaz; arşivlenmiş proje etkin bir kopya olur.'),
-        h('li', null, 'Kopya sizin olur: siz paylaşana kadar yalnız size ve kurum politikasıyla kurum yöneticilerine görünür.'),
-      ),
-      h('label', { class: 'cloud-field' }, h('span', null, 'Kopyanın adı'), name),
-      h('label', { class: 'cloud-field' }, h('span', null, 'Çalışma alanı'), place),
+      h('p', null, D.lead(p.name)),
+      h('ul', { class: 'cloud-consequences' }, D.consequences.map((c) => h('li', null, c))),
+      h('label', { class: 'cloud-field' }, h('span', null, D.name), name),
+      h('label', { class: 'cloud-field' }, h('span', null, T.place), place),
       status,
     ],
     footer: [h('div', { class: 'dialog__spacer' }), cancel, make],
   });
   if (!places.length) {
     status.dataset.kind = 'error';
-    status.textContent = 'Proje açabileceğiniz bir çalışma alanınız yok (project.create); kurum yöneticinize başvurun.';
+    status.textContent = T.noPlace;
   }
   const run = async () => {
     if (make.disabled || !name.value.trim()) return;
     make.disabled = true;
     status.dataset.kind = 'info';
-    status.textContent = 'Kopyalanıyor…';
+    status.textContent = D.running;
     try {
       const copy = await ctx.cloud.lifecycle.duplicate({ tenantId: p.tenantId, projectId: p.id, name: p.name }, { name: name.value, tenantId: place.value });
       dialog.close();
-      ctx.log.success(`“${copy.project.name}” oluşturuldu: ${copy.objects} nesne kopyalandı.`);
+      ctx.log.success(D.done(copy.project.name, copy.objects));
       done?.(copy);
     } catch (e) {
       status.dataset.kind = 'error';
@@ -149,7 +145,7 @@ export function openDuplicateDialog(ctx: AppContext, p: ProjectSummary, done?: (
       make.disabled = false;
     }
   };
-  name.addEventListener('input', () => (make.disabled = !places.length || !name.value.trim()));
+  name.addEventListener('input', () => (make.disabled = !duplicateSavable(places.length, name.value)));
   name.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -162,10 +158,14 @@ export function openDuplicateDialog(ctx: AppContext, p: ProjectSummary, done?: (
   name.select();
 }
 
-/** The workspaces the account may open projects in, the source's first (the personal space last). */
-export function creatableWorkspaces(ctx: AppContext, first: string) {
-  const places = (ctx.cloud.me.value?.memberships ?? []).filter((m) => m.active && m.seat && m.capabilities.includes('project.create'));
-  return places.sort((a, b) => Number(b.tenantId === first) - Number(a.tenantId === first));
+/** The workspaces the account may open projects in, the source's first (the personal space last): formsPlan.ts `creatablePlaces`. */
+export function creatableWorkspaces(ctx: AppContext, first: string): Place[] {
+  return creatablePlaces(ctx.cloud.me.value?.memberships ?? [], first);
+}
+
+/** The workspace list of a form: off while it offers fewer than two. */
+export function placeSelect(places: readonly Place[], label: string): HTMLSelectElement {
+  return h('select', { class: 'field', 'aria-label': label, disabled: places.length < 2 }, places.map((m) => h('option', { value: m.tenantId }, m.label)));
 }
 
 /**
@@ -176,56 +176,41 @@ export function creatableWorkspaces(ctx: AppContext, first: string) {
  * project and the mode it is kept as.
  */
 export function openConvertDialog(ctx: AppContext, p: ProjectSummary, done?: (made: ProjectDuplicated) => void): void {
-  const to: ProjectStorage = p.storage === 'file' ? 'database' : 'file';
-  const title = to === 'database' ? "PostGIS'e aktar" : 'Dosya projesine çevir';
+  const C = T.convert;
   const places = creatableWorkspaces(ctx, p.tenantId);
-  const name = h('input', { class: 'field', value: '', placeholder: `${p.name} (${to === 'database' ? 'PostGIS' : 'dosya'})`, 'aria-label': 'Yeni projenin adı', spellcheck: 'false', maxlength: '200' });
-  const place = h(
-    'select',
-    { class: 'field', 'aria-label': 'Yeni projenin çalışma alanı', disabled: places.length < 2 },
-    places.map((m) => h('option', { value: m.tenantId }, workspaceName(m.tenantKind, m.tenantName, true))),
-  );
-  const open = ctx.cloud.openProject(p.tenantId, p.id);
+  const form = convertForm(p, !!ctx.cloud.openProject(p.tenantId, p.id) && ctx.doc.dirty.value);
+  const name = h('input', { class: 'field', value: '', placeholder: form.placeholder, 'aria-label': C.nameLabel, spellcheck: 'false', maxlength: String(NAME_MAX) });
+  const place = placeSelect(places, C.placeLabel);
   const status = h('p', { class: 'cloud-status', role: 'alert' });
-  const make = h('button', { class: 'btn btn--primary', type: 'button', disabled: !places.length }, title);
-  const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
+  const make = h('button', { class: 'btn btn--primary', type: 'button', disabled: !places.length }, form.title);
+  const cancel = h('button', { class: 'btn', type: 'button' }, T.cancel);
   const dialog = new Dialog({
-    title,
+    title: form.title,
     width: 540,
     className: 'dialog--cloud',
     stack: true,
     content: [
-      h('p', null, `“${p.name}” projesinden ${to === 'database' ? 'nesne nesne veritabanında saklanan' : 'dosya olarak (KCAD revizyonları) saklanan'} yeni bir proje oluşturulur.`),
-      h(
-        'ul',
-        { class: 'cloud-consequences' },
-        to === 'database'
-          ? h('li', null, 'Projenin en yeni revizyonu aktarılır: her nesne kalıcı kimliğiyle; ayarlar, katmanlar ve stiller dosyadan. Analitik CAD tanımları korunur, GIS çizgisine indirgenmez.')
-          : h('li', null, 'Projenin şimdiki hâli (tek anlık görüntüsü) yeni dosya projesinin 1. revizyonu olur.'),
-        h('li', null, `“${p.name}” olduğu gibi kalır: aynı çizimin iki yazılabilir sahibi olmaz, yeni proje başka bir projedir.`),
-        h('li', null, 'Yeni proje sizin olur; geçmiş, paylaşım ve favoriler gelmez. Açıklama, tür ve etiketler gelir.'),
-        to === 'database' ? h('li', null, 'Sunucunun almadığı bir nesne (±1 000 000 000 sınırını aşan değer) varsa hiçbir proje oluşturulmaz ve nesne söylenir.') : null,
-        open && to === 'database' && ctx.doc.dirty.value ? h('li', null, 'Açık çizimdeki kaydedilmemiş değişiklikler aktarılmaz: önce Kaydet ile yeni revizyon yazın.') : null,
-      ),
-      h('label', { class: 'cloud-field' }, h('span', null, 'Yeni projenin adı (isteğe bağlı)'), name),
-      h('label', { class: 'cloud-field' }, h('span', null, 'Çalışma alanı'), place),
+      h('p', null, form.lead),
+      h('ul', { class: 'cloud-consequences' }, form.consequences.map((c) => h('li', null, c))),
+      h('label', { class: 'cloud-field' }, h('span', null, C.name), name),
+      h('label', { class: 'cloud-field' }, h('span', null, T.place), place),
       status,
     ],
     footer: [h('div', { class: 'dialog__spacer' }), cancel, make],
   });
   if (!places.length) {
     status.dataset.kind = 'error';
-    status.textContent = 'Proje açabileceğiniz bir çalışma alanınız yok (project.create); kurum yöneticinize başvurun.';
+    status.textContent = T.noPlace;
   }
   const run = async () => {
     if (make.disabled) return;
     make.disabled = true;
     status.dataset.kind = 'info';
-    status.textContent = to === 'database' ? 'Veritabanına aktarılıyor…' : 'Dosya projesi oluşturuluyor…';
+    status.textContent = form.running;
     try {
-      const made = await ctx.cloud.lifecycle.convert({ tenantId: p.tenantId, projectId: p.id, name: p.name }, to, { name: name.value, tenantId: place.value });
+      const made = await ctx.cloud.lifecycle.convert({ tenantId: p.tenantId, projectId: p.id, name: p.name }, form.to, { name: name.value, tenantId: place.value });
       dialog.close();
-      ctx.log.success(`“${made.project.name}” oluşturuldu: ${Number(made.objects).toLocaleString('tr-TR')} nesne${to === 'database' ? ' veritabanına aktarıldı' : ', 1. revizyon'}.`);
+      ctx.log.success(convertedLine(made.project.name, made.objects, form.to));
       done?.(made);
     } catch (e) {
       status.dataset.kind = 'error';
@@ -242,10 +227,4 @@ export function openConvertDialog(ctx: AppContext, p: ProjectSummary, done?: (ma
   make.addEventListener('click', () => void run());
   cancel.addEventListener('click', () => dialog.close());
   name.focus();
-}
-
-/** Why a conversion was refused: an object the server did not take is named by its place in the file. */
-export function convertReason(e: unknown): string {
-  const m = e instanceof Error ? /^entities\[(\d+)\]/.exec((e as { path?: string }).path ?? '') : null;
-  return m ? `${reason(e)} (dosyanın ${Number(m[1]) + 1}. nesnesi; hiçbir proje oluşturulmadı).` : reason(e);
 }

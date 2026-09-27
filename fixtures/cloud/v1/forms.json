@@ -1,0 +1,716 @@
+{
+ "format": "kentos.forms",
+ "version": 1,
+ "texts": {
+  "cancel": "Vazgeç",
+  "saving": "Kaydediliyor…",
+  "place": "Çalışma alanı",
+  "noPlace": "Proje açabileceğiniz bir çalışma alanınız yok (project.create); kurum yöneticinize başvurun.",
+  "fields": {
+   "type": "Tür",
+   "typeLabel": "Proje türü",
+   "description": "Açıklama",
+   "descriptionPlaceholder": "İsteğe bağlı: işin konusu, yeri, dayanağı",
+   "tags": "Etiketler",
+   "tagsPlaceholder": "Virgülle ayırın: Kadıköy, 2026"
+  },
+  "metadata": {
+   "title": "Proje bilgileri",
+   "name": "Proje adı",
+   "save": "Kaydet",
+   "saved": {
+    "sample": [
+     "Ada 101"
+    ],
+    "text": "“Ada 101” projesinin bilgileri kaydedildi."
+   }
+  },
+  "rename": {
+   "title": "Bulut projesini yeniden adlandır",
+   "name": "Yeni ad",
+   "hint": "Projeye erişimi olan herkes yeni adı görür.",
+   "save": "Yeniden adlandır",
+   "saved": {
+    "sample": [
+     "Ada 101"
+    ],
+    "text": "Proje “Ada 101” olarak yeniden adlandırıldı."
+   },
+   "waiting": {
+    "sample": [
+     "Ada 101"
+    ],
+    "text": "Yeni ad (“Ada 101”) bu cihazda bekliyor; sunucuya ulaşılınca kaydedilir."
+   }
+  },
+  "duplicate": {
+   "title": "Projenin kopyasını oluştur",
+   "lead": {
+    "sample": [
+     "Ada 101"
+    ],
+    "text": "“Ada 101” yeni bir proje olarak kopyalanır."
+   },
+   "consequences": [
+    "Katmanlar, ayarlar, stiller, açıklama, tür, etiketler ve bütün nesneler kalıcı kimlikleriyle kopyalanır.",
+    "Geçmiş (komut günlüğü, olaylar), paylaşımlar ve favoriler kopyalanmaz; arşivlenmiş proje etkin bir kopya olur.",
+    "Kopya sizin olur: siz paylaşana kadar yalnız size ve kurum politikasıyla kurum yöneticilerine görünür."
+   ],
+   "name": "Kopyanın adı",
+   "nameLabel": "Kopyanın adı",
+   "placeLabel": "Kopyanın çalışma alanı",
+   "make": "Kopyasını oluştur",
+   "running": "Kopyalanıyor…",
+   "done": {
+    "sample": [
+     "Ada 101 (kopya)",
+     "1234"
+    ],
+    "text": "“Ada 101 (kopya)” oluşturuldu: 1.234 nesne kopyalandı."
+   }
+  },
+  "convert": {
+   "name": "Yeni projenin adı (isteğe bağlı)",
+   "nameLabel": "Yeni projenin adı",
+   "placeLabel": "Yeni projenin çalışma alanı"
+  }
+ },
+ "limits": {
+  "name": 200,
+  "description": 2000
+ },
+ "tags": [
+  {
+   "text": "Kadıköy, 2026",
+   "tags": [
+    "Kadıköy",
+    "2026"
+   ]
+  },
+  {
+   "text": "  a   b ,, c ",
+   "tags": [
+    "a b",
+    "c"
+   ]
+  },
+  {
+   "text": "",
+   "tags": []
+  },
+  {
+   "text": " , ",
+   "tags": []
+  },
+  {
+   "text": "tek",
+   "tags": [
+    "tek"
+   ]
+  },
+  {
+   "text": "a,a",
+   "tags": [
+    "a",
+    "a"
+   ]
+  }
+ ],
+ "copyNames": [
+  {
+   "name": "Ada 101",
+   "copy": "Ada 101 (kopya)"
+  },
+  {
+   "name": "Ada 101 (kopya)",
+   "copy": "Ada 101 (kopya) (kopya)"
+  },
+  {
+   "name": "",
+   "copy": " (kopya)"
+  }
+ ],
+ "metadata": {
+  "shown": {
+   "name": "Ada 101",
+   "projectType": "cad",
+   "description": "Kadastro çalışması",
+   "tags": [
+    "Kadıköy",
+    "2026"
+   ]
+  },
+  "cases": [
+   {
+    "title": "nothing changed",
+    "now": {
+     "name": "Ada 101",
+     "projectType": "cad",
+     "description": "Kadastro çalışması",
+     "tags": [
+      "Kadıköy",
+      "2026"
+     ]
+    },
+    "patch": {},
+    "savable": false
+   },
+   {
+    "title": "the name, with spaces around it",
+    "now": {
+     "name": "  Ada 102 ",
+     "projectType": "cad",
+     "description": "Kadastro çalışması",
+     "tags": [
+      "Kadıköy",
+      "2026"
+     ]
+    },
+    "patch": {
+     "name": "Ada 102"
+    },
+    "savable": true
+   },
+   {
+    "title": "only spaces around the same name",
+    "now": {
+     "name": " Ada 101 ",
+     "projectType": "cad",
+     "description": "Kadastro çalışması",
+     "tags": [
+      "Kadıköy",
+      "2026"
+     ]
+    },
+    "patch": {},
+    "savable": false
+   },
+   {
+    "title": "an empty name",
+    "now": {
+     "name": "   ",
+     "projectType": "gis",
+     "description": "Kadastro çalışması",
+     "tags": [
+      "Kadıköy",
+      "2026"
+     ]
+    },
+    "patch": {
+     "name": "",
+     "projectType": "gis"
+    },
+    "savable": false
+   },
+   {
+    "title": "the type and the description",
+    "now": {
+     "name": "Ada 101",
+     "projectType": "subdivision",
+     "description": "",
+     "tags": [
+      "Kadıköy",
+      "2026"
+     ]
+    },
+    "patch": {
+     "projectType": "subdivision",
+     "description": ""
+    },
+    "savable": true
+   },
+   {
+    "title": "the tags in another order",
+    "now": {
+     "name": "Ada 101",
+     "projectType": "cad",
+     "description": "Kadastro çalışması",
+     "tags": [
+      "2026",
+      "Kadıköy"
+     ]
+    },
+    "patch": {
+     "tags": [
+      "2026",
+      "Kadıköy"
+     ]
+    },
+    "savable": true
+   },
+   {
+    "title": "a tag less",
+    "now": {
+     "name": "Ada 101",
+     "projectType": "cad",
+     "description": "Kadastro çalışması",
+     "tags": [
+      "Kadıköy"
+     ]
+    },
+    "patch": {
+     "tags": [
+      "Kadıköy"
+     ]
+    },
+    "savable": true
+   }
+  ]
+ },
+ "rename": [
+  {
+   "typed": "Ada 102",
+   "current": "Ada 101",
+   "savable": true
+  },
+  {
+   "typed": "Ada 101",
+   "current": "Ada 101",
+   "savable": false
+  },
+  {
+   "typed": "  Ada 101  ",
+   "current": "Ada 101",
+   "savable": false
+  },
+  {
+   "typed": "",
+   "current": "Ada 101",
+   "savable": false
+  },
+  {
+   "typed": "   ",
+   "current": "Ada 101",
+   "savable": false
+  },
+  {
+   "typed": " Ada 102 ",
+   "current": "Ada 101",
+   "savable": true
+  }
+ ],
+ "duplicate": [
+  {
+   "places": 2,
+   "name": "Ada 101 (kopya)",
+   "savable": true
+  },
+  {
+   "places": 0,
+   "name": "Ada 101 (kopya)",
+   "savable": false
+  },
+  {
+   "places": 1,
+   "name": "  ",
+   "savable": false
+  },
+  {
+   "places": 1,
+   "name": "x",
+   "savable": true
+  }
+ ],
+ "places": {
+  "memberships": [
+   {
+    "tenantId": "t-kisisel",
+    "tenantSlug": "t-kisisel",
+    "tenantName": "Ayşe Yılmaz",
+    "tenantKind": "personal",
+    "role": "member",
+    "seat": true,
+    "active": true,
+    "capabilities": [
+     "project.create"
+    ]
+   },
+   {
+    "tenantId": "t-buro",
+    "tenantSlug": "t-buro",
+    "tenantName": "Büro",
+    "tenantKind": "organization",
+    "role": "member",
+    "seat": true,
+    "active": true,
+    "capabilities": [
+     "project.create"
+    ]
+   },
+   {
+    "tenantId": "t-belediye",
+    "tenantSlug": "t-belediye",
+    "tenantName": "Belediye",
+    "tenantKind": "organization",
+    "role": "member",
+    "seat": true,
+    "active": true,
+    "capabilities": []
+   },
+   {
+    "tenantId": "t-eski",
+    "tenantSlug": "t-eski",
+    "tenantName": "Eski Kurum",
+    "tenantKind": "organization",
+    "role": "member",
+    "seat": true,
+    "active": false,
+    "capabilities": [
+     "project.create"
+    ]
+   },
+   {
+    "tenantId": "t-koltuksuz",
+    "tenantSlug": "t-koltuksuz",
+    "tenantName": "Koltuksuz Kurum",
+    "tenantKind": "organization",
+    "role": "member",
+    "seat": false,
+    "active": true,
+    "capabilities": [
+     "project.create"
+    ]
+   },
+   {
+    "tenantId": "t-ortak",
+    "tenantSlug": "t-ortak",
+    "tenantName": "Ortak Çalışma",
+    "tenantKind": "organization",
+    "role": "member",
+    "seat": true,
+    "active": true,
+    "capabilities": [
+     "project.create"
+    ]
+   }
+  ],
+  "cases": [
+   {
+    "first": "t-buro",
+    "places": [
+     {
+      "tenantId": "t-buro",
+      "label": "Büro"
+     },
+     {
+      "tenantId": "t-kisisel",
+      "label": "Kişisel"
+     },
+     {
+      "tenantId": "t-ortak",
+      "label": "Ortak Çalışma"
+     }
+    ]
+   },
+   {
+    "first": "t-ortak",
+    "places": [
+     {
+      "tenantId": "t-ortak",
+      "label": "Ortak Çalışma"
+     },
+     {
+      "tenantId": "t-kisisel",
+      "label": "Kişisel"
+     },
+     {
+      "tenantId": "t-buro",
+      "label": "Büro"
+     }
+    ]
+   },
+   {
+    "first": "t-kisisel",
+    "places": [
+     {
+      "tenantId": "t-kisisel",
+      "label": "Kişisel"
+     },
+     {
+      "tenantId": "t-buro",
+      "label": "Büro"
+     },
+     {
+      "tenantId": "t-ortak",
+      "label": "Ortak Çalışma"
+     }
+    ]
+   },
+   {
+    "first": "t-belediye",
+    "places": [
+     {
+      "tenantId": "t-kisisel",
+      "label": "Kişisel"
+     },
+     {
+      "tenantId": "t-buro",
+      "label": "Büro"
+     },
+     {
+      "tenantId": "t-ortak",
+      "label": "Ortak Çalışma"
+     }
+    ]
+   },
+   {
+    "first": "t-yok",
+    "places": [
+     {
+      "tenantId": "t-kisisel",
+      "label": "Kişisel"
+     },
+     {
+      "tenantId": "t-buro",
+      "label": "Büro"
+     },
+     {
+      "tenantId": "t-ortak",
+      "label": "Ortak Çalışma"
+     }
+    ]
+   }
+  ]
+ },
+ "convert": [
+  {
+   "title": "a file project, not open here",
+   "project": {
+    "name": "Ada 101",
+    "storage": "file"
+   },
+   "openDirty": false,
+   "expect": {
+    "to": "database",
+    "title": "PostGIS'e aktar",
+    "lead": "“Ada 101” projesinden nesne nesne veritabanında saklanan yeni bir proje oluşturulur.",
+    "consequences": [
+     "Projenin en yeni revizyonu aktarılır: her nesne kalıcı kimliğiyle; ayarlar, katmanlar ve stiller dosyadan. Analitik CAD tanımları korunur, GIS çizgisine indirgenmez.",
+     "“Ada 101” olduğu gibi kalır: aynı çizimin iki yazılabilir sahibi olmaz, yeni proje başka bir projedir.",
+     "Yeni proje sizin olur; geçmiş, paylaşım ve favoriler gelmez. Açıklama, tür ve etiketler gelir.",
+     "Sunucunun almadığı bir nesne (±1 000 000 000 sınırını aşan değer) varsa hiçbir proje oluşturulmaz ve nesne söylenir."
+    ],
+    "placeholder": "Ada 101 (PostGIS)",
+    "running": "Veritabanına aktarılıyor…"
+   }
+  },
+  {
+   "title": "a file project open here with unsaved changes",
+   "project": {
+    "name": "Ada 101",
+    "storage": "file"
+   },
+   "openDirty": true,
+   "expect": {
+    "to": "database",
+    "title": "PostGIS'e aktar",
+    "lead": "“Ada 101” projesinden nesne nesne veritabanında saklanan yeni bir proje oluşturulur.",
+    "consequences": [
+     "Projenin en yeni revizyonu aktarılır: her nesne kalıcı kimliğiyle; ayarlar, katmanlar ve stiller dosyadan. Analitik CAD tanımları korunur, GIS çizgisine indirgenmez.",
+     "“Ada 101” olduğu gibi kalır: aynı çizimin iki yazılabilir sahibi olmaz, yeni proje başka bir projedir.",
+     "Yeni proje sizin olur; geçmiş, paylaşım ve favoriler gelmez. Açıklama, tür ve etiketler gelir.",
+     "Sunucunun almadığı bir nesne (±1 000 000 000 sınırını aşan değer) varsa hiçbir proje oluşturulmaz ve nesne söylenir.",
+     "Açık çizimdeki kaydedilmemiş değişiklikler aktarılmaz: önce Kaydet ile yeni revizyon yazın."
+    ],
+    "placeholder": "Ada 101 (PostGIS)",
+    "running": "Veritabanına aktarılıyor…"
+   }
+  },
+  {
+   "title": "a database project",
+   "project": {
+    "name": "Ada 101",
+    "storage": "database"
+   },
+   "openDirty": false,
+   "expect": {
+    "to": "file",
+    "title": "Dosya projesine çevir",
+    "lead": "“Ada 101” projesinden dosya olarak (KCAD revizyonları) saklanan yeni bir proje oluşturulur.",
+    "consequences": [
+     "Projenin şimdiki hâli (tek anlık görüntüsü) yeni dosya projesinin 1. revizyonu olur.",
+     "“Ada 101” olduğu gibi kalır: aynı çizimin iki yazılabilir sahibi olmaz, yeni proje başka bir projedir.",
+     "Yeni proje sizin olur; geçmiş, paylaşım ve favoriler gelmez. Açıklama, tür ve etiketler gelir."
+    ],
+    "placeholder": "Ada 101 (dosya)",
+    "running": "Dosya projesi oluşturuluyor…"
+   }
+  },
+  {
+   "title": "a database project, open and changed (nothing more to say)",
+   "project": {
+    "name": "Ada 101",
+    "storage": "database"
+   },
+   "openDirty": true,
+   "expect": {
+    "to": "file",
+    "title": "Dosya projesine çevir",
+    "lead": "“Ada 101” projesinden dosya olarak (KCAD revizyonları) saklanan yeni bir proje oluşturulur.",
+    "consequences": [
+     "Projenin şimdiki hâli (tek anlık görüntüsü) yeni dosya projesinin 1. revizyonu olur.",
+     "“Ada 101” olduğu gibi kalır: aynı çizimin iki yazılabilir sahibi olmaz, yeni proje başka bir projedir.",
+     "Yeni proje sizin olur; geçmiş, paylaşım ve favoriler gelmez. Açıklama, tür ve etiketler gelir."
+    ],
+    "placeholder": "Ada 101 (dosya)",
+    "running": "Dosya projesi oluşturuluyor…"
+   }
+  }
+ ],
+ "counts": [
+  {
+   "objects": "0",
+   "text": "0"
+  },
+  {
+   "objects": "7",
+   "text": "7"
+  },
+  {
+   "objects": "999",
+   "text": "999"
+  },
+  {
+   "objects": "1000",
+   "text": "1.000"
+  },
+  {
+   "objects": "1234",
+   "text": "1.234"
+  },
+  {
+   "objects": "1234567",
+   "text": "1.234.567"
+  },
+  {
+   "objects": "12345678901234567890",
+   "text": "12.345.678.901.234.567.890"
+  },
+  {
+   "objects": "",
+   "text": ""
+  },
+  {
+   "objects": "12a",
+   "text": "12a"
+  },
+  {
+   "objects": "-5",
+   "text": "-5"
+  }
+ ],
+ "convertedLines": [
+  {
+   "name": "Ada 101 (PostGIS)",
+   "objects": "1234567",
+   "to": "database",
+   "text": "“Ada 101 (PostGIS)” oluşturuldu: 1.234.567 nesne veritabanına aktarıldı."
+  },
+  {
+   "name": "Ada 101 (dosya)",
+   "objects": "42",
+   "to": "file",
+   "text": "“Ada 101 (dosya)” oluşturuldu: 42 nesne, 1. revizyon."
+  }
+ ],
+ "failures": [
+  {
+   "title": "a conflict",
+   "error": {
+    "kind": "api",
+    "status": 409,
+    "error": "conflict",
+    "message": "Sürüm değişti."
+   },
+   "text": "Proje bilgileri bu arada başka biri tarafından değiştirildi. Listeyi yenileyip yeniden deneyin."
+  },
+  {
+   "title": "no connection",
+   "error": {
+    "kind": "api",
+    "status": 0,
+    "fallback": "x"
+   },
+   "text": "Sunucuya ulaşılamadı; bağlantınızı denetleyip yeniden deneyin."
+  },
+  {
+   "title": "the server’s words",
+   "error": {
+    "kind": "api",
+    "status": 422,
+    "error": "invalid",
+    "message": "Ad boş olamaz."
+   },
+   "text": "Ad boş olamaz."
+  },
+  {
+   "title": "an error of the page",
+   "error": {
+    "kind": "error",
+    "message": "Beklenmeyen yanıt."
+   },
+   "text": "Beklenmeyen yanıt."
+  },
+  {
+   "title": "not an error at all",
+   "error": {
+    "kind": "other"
+   },
+   "text": "İşlem tamamlanamadı."
+  }
+ ],
+ "convertFailures": [
+  {
+   "title": "an object out of range",
+   "error": {
+    "kind": "api",
+    "status": 422,
+    "error": "invalid",
+    "message": "Değer ±1 000 000 000 sınırını aşıyor.",
+    "path": "entities[41].geometry"
+   },
+   "text": "Değer ±1 000 000 000 sınırını aşıyor. (dosyanın 42. nesnesi; hiçbir proje oluşturulmadı)."
+  },
+  {
+   "title": "the first object",
+   "error": {
+    "kind": "api",
+    "status": 422,
+    "error": "invalid",
+    "message": "Geçersiz nesne.",
+    "path": "entities[0]"
+   },
+   "text": "Geçersiz nesne. (dosyanın 1. nesnesi; hiçbir proje oluşturulmadı)."
+  },
+  {
+   "title": "another field",
+   "error": {
+    "kind": "api",
+    "status": 422,
+    "error": "invalid",
+    "message": "Ad boş olamaz.",
+    "path": "name"
+   },
+   "text": "Ad boş olamaz."
+  },
+  {
+   "title": "no field",
+   "error": {
+    "kind": "api",
+    "status": 422,
+    "error": "invalid",
+    "message": "Dosya okunamadı."
+   },
+   "text": "Dosya okunamadı."
+  },
+  {
+   "title": "no connection",
+   "error": {
+    "kind": "api",
+    "status": 0,
+    "fallback": "x"
+   },
+   "text": "Sunucuya ulaşılamadı; bağlantınızı denetleyip yeniden deneyin."
+  }
+ ]
+}

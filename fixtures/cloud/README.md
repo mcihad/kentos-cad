@@ -4,12 +4,14 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 
 - **Web**: `apps/web/src/app/cloud/catalogPlan.test.ts` (Vitest), `app/cloud/catalog.ts` ve `app/cloud/catalogPlan.ts`'e karşı. Pencere (`ui/cloud/CatalogDialog.ts`, `catalogRows.ts`, `catalogDetails.ts`, `ProjectActions.ts`) bu kararları yalnız çizer.
 - **Masaüstü**: katalog penceresi (`apps/desktop/src/cloud/`) aynı dosyayı okur.
+- **Proje formları**: web'de `apps/web/src/app/cloud/formsPlan.test.ts`, `app/cloud/formsPlan.ts` (ve etiketler için `catalog.ts`'in `parseTags`'i) karşısında; formlar (`ui/cloud/ProjectForms.ts`, `ProjectActions.ts`'in Yeniden adlandır'ı) yalnız çizer. Cevaplar koddan ayrı, `scripts/fixtures/forms_cases.py` ile bulunur ve yazılır (`--check` karşılaştırır).
 - **Paylaş**: web'de `apps/web/src/app/cloud/sharePlan.test.ts`, `app/cloud/sharing.ts`, `invitations.ts` ve `sharePlan.ts`'e karşı; pencere (`ui/cloud/ShareDialog.ts`, `shareFind.ts`, `shareInvites.ts`) yalnız çizer. Dosyanın cevapları koddan ayrı, `scripts/fixtures/share_cases.py` ile bulunur ve yazılır (`--check` hiçbir şey yazmadan karşılaştırır); masaüstünün Paylaş penceresi aynı dosyayı okur.
 
 | Dosya | İçerik |
 |---|---|
 | `v1/catalog.json` | Katalogun sözleri ve kuralları |
 | `v1/share.json` | Paylaş penceresinin sözleri ve kuralları |
+| `v1/forms.json` | Proje formlarının (Proje bilgileri, Yeniden adlandır, Kopyasını oluştur, öbür saklama biçimine çevirme) sözleri ve kuralları |
 
 ## Biçim (`kentos.catalog`, sürüm 1)
 
@@ -52,6 +54,25 @@ Bulut projeleri penceresinin (katalog, [ADR 0028](../../docs/adr/0028-project-ca
 | `envelopes` | Pencerenin gönderdiği ürün komutları (`project.share`, `project.access.revoke`, `project.invite`, `project.invitation.revoke`); `requestId` ve `idempotencyKey` her istekte yenidir, burada yazılmaz |
 | `failures` | Başarısız isteğin sözü: bağlantı yok, oturum bitti, proje yok, sunucu geçici olarak yanıt vermiyor, öbür durumlarda sunucunun kendi iletisi |
 | `lines` | Günlüğe ve durum satırına yazılanlar |
+
+## Biçim (`kentos.forms`, sürüm 1)
+
+| Alan | Anlamı |
+|---|---|
+| `format`, `version` | `"kentos.forms"`, `1` |
+| `texts` | Formların sözleri; değerlerden yapılan söz `{ sample: [değerler], text }`. Proje türlerinin adları ve türün notu `catalog.json`'dadır |
+| `limits` | Adın (200) ve açıklamanın (2000) en çok uzunluğu |
+| `tags` | Etiket alanının okunuşu: virgülle bölünür, her parça kırpılır ve içindeki boşluklar teke iner, boşlar düşer |
+| `copyNames` | Kopyaya önerilen ad: `<ad> (kopya)` |
+| `metadata` | Proje bilgileri: gösterilen katalog sürümü (`shown`) ve formun şimdiki değerleri (`now`) → gönderilen yama (yalnız değişenler: ad kırpılarak, tür, açıklama, etiketler sırasıyla) ve Kaydet açık mı (ad boş değil ve bir şey değişti) |
+| `rename` | Yeniden adlandır açık mı: kırpılmış ad boş değil ve şimdiki addan başka |
+| `duplicate` | Kopyasını oluştur açık mı: bir çalışma alanı var ve ad boş değil |
+| `places` | Sunulan çalışma alanları: etkin, koltuklu ve `project.create` yetkili üyelikler, kaynağın alanı başta, gerisi hesabın sırasıyla; ad kurumda kurumun adı, kişisel alanda “Kişisel”. Liste ikiden azken kapalıdır |
+| `convert` | Öbür saklama biçimine çevirme: proje (`name`, `storage`) ve açık çizimin kaydedilmemiş değişikliği (`openDirty`: bu proje burada açık ve değişmiş) → hedef, başlık, giriş, sonuçlar (veritabanına aktarırken sunucu sınırı ve varsa kaydedilmemiş değişiklik notu), ad alanının örneği, sürerken söz |
+| `counts` | Sunucunun ondalık metin olarak gönderdiği sayılar, Türkçe binlik ayırıcıyla (1.234.567; JavaScript sayısına çevrilmeden); sayı olmayan metin olduğu gibi |
+| `convertedLines` | Çevirmenin günlük satırı |
+| `failures` | Başarısız isteğin cümlesi: çakışma, bağlantı yok, sunucunun sözü, sayfanın hatası, hata olmayan şey |
+| `convertFailures` | Çevirmenin reddi: sunucunun reddettiği nesne dosyadaki yeriyle (`entities[i]` → “(dosyanın i+1. nesnesi; hiçbir proje oluşturulmadı).”) |
 
 ## Kurallar
 
