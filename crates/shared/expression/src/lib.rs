@@ -11,10 +11,21 @@
 //! "…" (a doubled quote inside is one quote). Variables start with $ (see
 //! `library.rs`). Keywords: ve/and, veya/or, değil/not, doğru/true,
 //! yanlış/false, boş/null. Operators: = != <> < <= > >= + - * / % and ||
-//! (joins text). A faithful port of the TypeScript it replaces
+//! (joins text). A faithful port of the TypeScript it replaced
 //! (`apps/web/src/model/expression/`, docs/adr/0008 “İfade dili”): the same
 //! values, the same text, the same errors at the same positions.
+//!
+//! Its own crate since docs/adr/0100 (it was `kentos_style_core::expr`, which
+//! stays as a re-export): the browser (through `kentos-geometry-wasm`), the
+//! desktop and the server share it (CLAUDE.md §14).
+#![forbid(unsafe_code)]
+// User data must never crash the core (a panic traps the WASM module).
+#![cfg_attr(
+    not(test),
+    deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
+)]
 
+pub mod js;
 pub mod lexer;
 pub mod library;
 pub mod parser;

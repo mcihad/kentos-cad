@@ -6,7 +6,7 @@ import { compileExpression, type ExprAs, type ExprValue } from './expression';
  * The frozen answers of the expression language (fixtures/expression/v1/cases.json,
  * scripts/fixtures/record-expression.test.ts) through the app's path: the
  * table the TypeScript builds, the core in WASM, the column read back.
- * The Rust core checks the same file natively (crates/shared/style-core/tests/cases.rs).
+ * The Rust core checks the same file natively (crates/shared/expression/tests/cases.rs).
  */
 
 type Num = number | '-0' | 'Infinity' | '-Infinity';

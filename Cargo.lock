@@ -2488,6 +2488,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-expression"
+version = "0.1.0"
+dependencies = [
+ "kentos-geometry-core",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-formats"
 version = "0.1.0"
 dependencies = [
@@ -2524,6 +2532,7 @@ dependencies = [
 name = "kentos-geometry-wasm"
 version = "0.1.0"
 dependencies = [
+ "kentos-expression",
  "kentos-geometry-core",
  "kentos-style-core",
  "wasm-bindgen",
@@ -2598,6 +2607,7 @@ dependencies = [
 name = "kentos-style-core"
 version = "0.1.0"
 dependencies = [
+ "kentos-expression",
  "kentos-geometry-core",
  "serde_json",
 ]

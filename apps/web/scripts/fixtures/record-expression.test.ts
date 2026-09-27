@@ -4,7 +4,7 @@
 // The committed answers were recorded after the core agreed with the
 // TypeScript it replaced on 20 000 random sources (src/model/expression/parity.test.ts,
 // since removed); rewriting them is a deliberate change of the language, to
-// be read in the diff. The Rust core (crates/shared/style-core/tests/cases.rs)
+// be read in the diff. The Rust core (crates/shared/expression/tests/cases.rs)
 // and the app's path (src/model/expression/fixture.test.ts) keep checking them.
 // Outside src/ so the app's type check does not need Node's types.
 import { writeFileSync } from 'node:fs';

@@ -6,7 +6,7 @@ import type { Vec2 } from '../geometry';
  * the value type, the layout of the geometry store's `measures` answer, and
  * the catalog of functions and variables for the expression field's menus.
  * The language itself, its values and its rules, are the Rust style core's
- * (crates/shared/style-core/src/expr, docs/adr/0008 “İfade dili”).
+ * (crates/shared/expression, docs/adr/0008 “İfade dili”, docs/adr/0100).
  */
 
 export type ExprValue = number | string | boolean | null;
