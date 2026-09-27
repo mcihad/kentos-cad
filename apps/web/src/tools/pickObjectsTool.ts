@@ -19,14 +19,25 @@ export const pickObjectsPrompt = ({ label, count }: { label: string; count: numb
 export const takesKind = (kinds: readonly EntityKind[] | undefined, kind: EntityKind): boolean => !kinds?.length || kinds.includes(kind);
 
 /**
- * The object a click picks for a field of `kinds`: the most specific one
- * under the pointer (`hit`) when the field takes its kind, else the
- * nearest edge of one it takes (`nearestEdge`): a click on a point where
- * only areas are wanted takes the parcel whose edge is there.
+ * The object a click picks for a field of `kinds`, in this order:
+ * 1. the most specific one under the pointer (`hit`), when the field takes its kind;
+ * 2. else the nearest edge of one it takes within reach (`nearestEdge`): a
+ *    click on a point where only areas are wanted takes the parcel whose edge is there;
+ * 3. else the smallest closed shape the click is inside (`enclosing`), when
+ *    the field takes its kind: a spot height inside a parcel takes the parcel.
  */
-export function pickedAt(hit: Entity | null, nearestEdge: (takes: (e: Entity) => boolean) => Entity | null, kinds: readonly EntityKind[] | undefined): Entity | null {
+export function pickedAt(
+  hit: Entity | null,
+  nearestEdge: (takes: (e: Entity) => boolean) => Entity | null,
+  enclosing: () => Entity | null,
+  kinds: readonly EntityKind[] | undefined,
+): Entity | null {
   const takes = (e: Entity) => takesKind(kinds, e.kind);
-  return hit && takes(hit) ? hit : nearestEdge(takes);
+  if (hit && takes(hit)) return hit;
+  const edge = nearestEdge(takes);
+  if (edge) return edge;
+  const inside = enclosing();
+  return inside && takes(inside) ? inside : null;
 }
 
 /** The corners' box, and whether it is a crossing: drawn right to left (the select tool's rule). */
@@ -47,7 +58,7 @@ export const pickedIn = (found: readonly number[], kindOf: (id: number) => Entit
 /**
  * Sahneden seç for a window's objects (the processing window's input,
  * docs/adr/0088; the desktop's `kentos_interaction::pick_objects`). A
- * click turns the object under it over in the selection; a drag past 4 px
+ * click turns the object it picks (`pickedAt`) over in the selection; a drag past 4 px
  * adds what its box holds, left to right a window, right to left a
  * crossing. Only the field's kinds are taken, and nothing snaps. Enter,
  * Space or a quick right click keep the selection (`done(true)`); Esc, or
@@ -97,7 +108,7 @@ export class PickObjectsTool implements Tool {
       if (this.dragging) this.ctx.view.requestOverlay();
       return;
     }
-    this.ctx.selection.hover.set(this.at(p.screen)?.id ?? null);
+    this.ctx.selection.hover.set(this.at(p)?.id ?? null);
   }
 
   pointerDown(p: ToolPointer): void {
@@ -118,7 +129,7 @@ export class PickObjectsTool implements Tool {
       const crossing = this.current.screen.x < press.screen.x;
       selection.add(pickedIn(this.ctx.view.pickRect(bounds, crossing), (id) => doc.get(id)?.kind, this.kinds));
     } else {
-      const hit = this.at(p.screen);
+      const hit = this.at(p);
       if (hit) selection.toggle(hit.id);
     }
     this.press = this.current = null;
@@ -141,9 +152,9 @@ export class PickObjectsTool implements Tool {
     if (this.dragging && this.press && this.current) drawSelectionBox(g, this.press.screen, this.current.screen, this.ctx.view.palette.snap);
   }
 
-  private at(screen: Vec2): Entity | null {
+  private at(p: ToolPointer): Entity | null {
     const view = this.ctx.view;
-    return pickedAt(view.pick(screen), (takes) => view.pickEdge(screen, takes), this.kinds);
+    return pickedAt(view.pick(p.screen), (takes) => view.pickEdge(p.screen, takes), () => view.enclosingRing(p.raw)?.entity ?? null, this.kinds);
   }
 
   private say(): void {

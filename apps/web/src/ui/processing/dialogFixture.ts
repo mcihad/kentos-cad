@@ -286,7 +286,12 @@ async function play(spec: SessionSpec, doc: CadDocument, index: PickIndex): Prom
     const picking = [say()];
     for (const act of pick.actions) {
       if ('click' in act) {
-        const hit = pickedAt(index.hit(act.click, pick.tolerance), (takes) => index.hitEdge(act.click, pick.tolerance, takes), kinds);
+        const hit = pickedAt(
+          index.hit(act.click, pick.tolerance),
+          (takes) => index.hitEdge(act.click, pick.tolerance, takes),
+          () => index.enclosing(act.click)?.entity ?? null,
+          kinds,
+        );
         if (hit) chosen.has(hit.id) ? chosen.delete(hit.id) : chosen.add(hit.id);
       } else {
         const { bounds, crossing } = boxOf(act.box.from, act.box.to);

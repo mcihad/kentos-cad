@@ -5807,7 +5807,7 @@
   },
   {
    "id": "pick-scene",
-   "title": "Sahneden seç (ADR 0088): başlangıç köşesinin yanındaki düğmeyle nokta (seçenek ve nokta birlikte) ve vazgeçilen nokta; girdi nesneleri: alınmayan türe tıklama, noktanın üstüne tıklayınca oradaki alan, alan içi, sağdan sola kutuda yalnız alınan tür, yeniden tıklayınca çıkan, Enter ile Seçili; alınmayan türe tıklayınca kenarı en yakın alan ve Esc ile önceki seçim; tür çipiyle daraltılan türler ve korunan süzgeç; hiçbir şey seçmeden Enter Esc gibi",
+   "title": "Sahneden seç (ADR 0088): başlangıç köşesinin yanındaki düğmeyle nokta (seçenek ve nokta birlikte) ve vazgeçilen nokta; girdi nesneleri: alınmayan türe tıklama, noktanın üstüne tıklayınca oradaki alan, alan içi, sağdan sola kutuda yalnız alınan tür, yeniden tıklayınca çıkan, Enter ile Seçili; alınmayan türe tıklayınca kenarı en yakın alan ve Esc ile önceki seçim; tür çipiyle daraltılan türler ve korunan süzgeç; hiçbir şey seçmeden Enter Esc gibi; erimde kenar yokken noktaya tıklayınca içinde olduğu alan",
    "open": {
     "tool": "points.numberVertices"
    },
@@ -6332,6 +6332,240 @@
      "after": {
       "selection": [
        2
+      ]
+     },
+     "expect": {}
+    },
+    {
+     "do": {
+      "pickObjects": {
+       "name": "input",
+       "tolerance": 1,
+       "actions": [
+        {
+         "click": {
+          "x": 487001.04,
+          "y": 4420028.96
+         }
+        }
+       ],
+       "end": "done"
+      }
+     },
+     "picking": [
+      {
+       "selection": [],
+       "prompt": "Alanlar: nesneleri tıklayın ya da pencereyle seçin (0 seçili) [Bitti (Enter) / Vazgeç (Esc)]"
+      },
+      {
+       "selection": [
+        1
+       ],
+       "prompt": "Alanlar: nesneleri tıklayın ya da pencereyle seçin (1 seçili) [Bitti (Enter) / Vazgeç (Esc)]"
+      }
+     ],
+     "after": {
+      "selection": [
+       1
+      ],
+      "said": "1 nesne seçildi."
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "selection",
+        "kinds": [
+         "polygon"
+        ]
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "selection",
+        "layer": null,
+        "count": {
+         "text": "1 kapalı alan; seçili nesneler",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 1,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "scope": {
+       "name": "input",
+       "scope": "all"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "all",
+        "kinds": [
+         "polygon"
+        ]
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "all",
+        "layer": null,
+        "count": {
+         "text": "4 kapalı alan; tümü (görünen katmanlar)",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 4,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          },
+          {
+           "kind": "polyline",
+           "label": "Çoklu çizgi",
+           "count": 1,
+           "pressed": false,
+           "title": "Bu türü de al"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "kind": {
+       "name": "input",
+       "kind": "polyline"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "all"
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "all",
+        "layer": null,
+        "count": {
+         "text": "5 nesne (kapalı alan, çoklu çizgi); tümü (görünen katmanlar)",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 4,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          },
+          {
+           "kind": "polyline",
+           "label": "Çoklu çizgi",
+           "count": 1,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "kind": {
+       "name": "input",
+       "kind": "polygon"
+      }
+     },
+     "expect": {
+      "values": {
+       "input": {
+        "scope": "all",
+        "kinds": [
+         "polyline"
+        ]
+       }
+      },
+      "fields": {
+       "input": {
+        "scope": "all",
+        "layer": null,
+        "count": {
+         "text": "1 çoklu çizgi; tümü (görünen katmanlar)",
+         "empty": false
+        },
+        "kinds": {
+         "chips": [
+          {
+           "kind": "polygon",
+           "label": "Kapalı alan",
+           "count": 4,
+           "pressed": false,
+           "title": "Bu türü de al"
+          },
+          {
+           "kind": "polyline",
+           "label": "Çoklu çizgi",
+           "count": 1,
+           "pressed": true,
+           "title": "Bu türü dışarıda bırak"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "do": {
+      "pickObjects": {
+       "name": "input",
+       "tolerance": 0.5,
+       "actions": [
+        {
+         "click": {
+          "x": 487032,
+          "y": 4420015
+         }
+        }
+       ],
+       "end": "done"
+      }
+     },
+     "picking": [
+      {
+       "selection": [],
+       "prompt": "Alanlar: nesneleri tıklayın ya da pencereyle seçin (0 seçili) [Bitti (Enter) / Vazgeç (Esc)]"
+      },
+      {
+       "selection": [],
+       "prompt": "Alanlar: nesneleri tıklayın ya da pencereyle seçin (0 seçili) [Bitti (Enter) / Vazgeç (Esc)]"
+      }
+     ],
+     "after": {
+      "selection": [
+       1
       ]
      },
      "expect": {}

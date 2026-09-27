@@ -184,7 +184,7 @@ const SESSIONS: SessionSpec[] = [
   {
     id: 'pick-scene',
     title:
-      'Sahneden seç (ADR 0088): başlangıç köşesinin yanındaki düğmeyle nokta (seçenek ve nokta birlikte) ve vazgeçilen nokta; girdi nesneleri: alınmayan türe tıklama, noktanın üstüne tıklayınca oradaki alan, alan içi, sağdan sola kutuda yalnız alınan tür, yeniden tıklayınca çıkan, Enter ile Seçili; alınmayan türe tıklayınca kenarı en yakın alan ve Esc ile önceki seçim; tür çipiyle daraltılan türler ve korunan süzgeç; hiçbir şey seçmeden Enter Esc gibi',
+      'Sahneden seç (ADR 0088): başlangıç köşesinin yanındaki düğmeyle nokta (seçenek ve nokta birlikte) ve vazgeçilen nokta; girdi nesneleri: alınmayan türe tıklama, noktanın üstüne tıklayınca oradaki alan, alan içi, sağdan sola kutuda yalnız alınan tür, yeniden tıklayınca çıkan, Enter ile Seçili; alınmayan türe tıklayınca kenarı en yakın alan ve Esc ile önceki seçim; tür çipiyle daraltılan türler ve korunan süzgeç; hiçbir şey seçmeden Enter Esc gibi; erimde kenar yokken noktaya tıklayınca içinde olduğu alan',
     open: { tool: 'points.numberVertices' },
     selection: [1],
     available: ['client'],
@@ -232,6 +232,14 @@ const SESSIONS: SessionSpec[] = [
       },
       { do: { scope: { name: 'input', scope: 'all' } } },
       { do: { pickObjects: { name: 'input', tolerance: 0.5, actions: [], end: 'done' } } },
+      // Inside parcel 1, 1.04 m from both its edges: point 8 on its corner is under the pointer (a point reaches 1.5 m),
+      // no edge is within the 1 m aperture, so the parcel the click is in is taken.
+      { do: { pickObjects: { name: 'input', tolerance: 1, actions: [{ click: { x: 487001.04, y: 4420028.96 } }], end: 'done' } } },
+      // Only polylines taken: a click inside parcel 2, away from its edges, takes nothing (the area it is in is not of a taken kind).
+      { do: { scope: { name: 'input', scope: 'all' } } },
+      { do: { kind: { name: 'input', kind: 'polyline' } } },
+      { do: { kind: { name: 'input', kind: 'polygon' } } },
+      { do: { pickObjects: { name: 'input', tolerance: 0.5, actions: [{ click: { x: 487032, y: 4420015 } }], end: 'done' } } },
     ],
   },
 ];
