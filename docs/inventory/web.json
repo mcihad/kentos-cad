@@ -81,8 +81,8 @@
         "implemented": 145,
         "partial": 0,
         "pending": 15,
-        "none": 5,
-        "n/a": 2
+        "none": 2,
+        "n/a": 5
       },
       "tools": {
         "total": 58,
@@ -118,16 +118,16 @@
       },
       "settings": {
         "total": 65,
-        "implemented": 42,
-        "partial": 12,
+        "implemented": 53,
+        "partial": 3,
         "pending": 0,
-        "none": 10,
-        "n/a": 1
+        "none": 0,
+        "n/a": 9
       },
       "storage": {
         "total": 10,
-        "implemented": 7,
-        "partial": 1,
+        "implemented": 8,
+        "partial": 0,
         "pending": 0,
         "none": 1,
         "n/a": 1
@@ -142,11 +142,11 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 53,
-        "partial": 5,
+        "implemented": 54,
+        "partial": 4,
         "pending": 0,
-        "none": 4,
-        "n/a": 1
+        "none": 1,
+        "n/a": 4
       }
     },
     "desktopSections": {
@@ -5159,11 +5159,12 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "n/a"
       },
       "tests": [
         "apps/web/scripts/e2e/smoke.mjs"
-      ]
+      ],
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "view.ribbonCollapse",
@@ -5390,9 +5391,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "n/a"
       },
-      "tests": []
+      "tests": [],
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "view.toolboxDock",
@@ -5416,9 +5418,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "n/a"
       },
-      "tests": []
+      "tests": [],
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "view.zoomExtents",
@@ -7847,10 +7850,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/bottom.rs",
-      "desktopNote": "Alt panel F2 ile açılıp kapanır; yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/bottom.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.bottomHeight",
@@ -7862,10 +7864,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/bottom.rs",
-      "desktopNote": "Boyu sürükleyerek değişir; yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/bottom.rs, layout.rs (yerlesim.json; 96 px ile pencerenin %60'ı, ADR 0115)"
     },
     {
       "id": "layout.bottomTab",
@@ -7877,10 +7878,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/bottom.rs",
-      "desktopNote": "Sekmeler (komut geçmişi, koordinat listesi, uyarılar) var; seçili sekme yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/bottom.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.dockTab",
@@ -7892,10 +7892,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/app.rs (Docks: Katmanlar ve İşlemler sekmeleri)",
-      "desktopNote": "Seçili sekme yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/layout.rs (Katmanlar ve İşlemler sekmeleri; yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.dockWidth",
@@ -7907,10 +7906,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/app.rs (Docks)",
-      "desktopNote": "Genişlik sürükleyerek değişir; yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/layout.rs (240–560 px ve pencerenin yarısı; yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.layersFraction",
@@ -7922,10 +7920,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/app.rs (Docks: Katmanlar ile Özellikler bölmesi)",
-      "desktopNote": "Bölme sürükleyerek değişir; yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/layout.rs (0,15–0,85; yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.processingFolded",
@@ -7937,10 +7934,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/processing/panel.rs",
-      "desktopNote": "Kategoriler katlanır; yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/processing/panel.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.processingTab",
@@ -7952,10 +7948,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/processing/panel.rs",
-      "desktopNote": "Araçlar ve Geçmiş sekmeleri var; seçili sekme yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/processing/panel.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.ribbonCollapsed",
@@ -7967,10 +7962,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/view.rs (view.ribbonCollapse)",
-      "desktopNote": "Şerit daraltılır; yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/view.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.ribbonQuickAccess",
@@ -7982,8 +7976,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; quick_access_of taşındı, ADR 0115)",
+      "desktopNote": "Masaüstünde hızlı erişim çubuğuna komut eklenip çıkarılamıyor; şeridin sağ tık menüsüyle gelecek."
     },
     {
       "id": "layout.ribbonSplits",
@@ -7995,8 +7991,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; split_current taşındı, ADR 0115)",
+      "desktopNote": "Bölünmüş düğme son seçimi göstermiyor; şeridin kalan diliminde."
     },
     {
       "id": "layout.ribbonTab",
@@ -8008,10 +8006,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/view.rs",
-      "desktopNote": "Seçili sekme yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/modes.rs, layout.rs (açılışta saklanan sekme, yoksa Giriş; yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.ribbonToolbox",
@@ -8023,8 +8020,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "layout.rightVisible",
@@ -8036,10 +8034,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/view_commands.rs (F4)",
-      "desktopNote": "Paneller F4 ile gizlenir; yeniden açılışta hatırlanmaz."
+      "desktopWhere": "apps/desktop/src/view_commands.rs (F4), layout.rs (yerlesim.json, ADR 0115)"
     },
     {
       "id": "layout.theme",
@@ -8065,8 +8062,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "layout.toolboxDocked",
@@ -8078,8 +8076,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "layout.toolboxFolded",
@@ -8091,8 +8090,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "layout.toolboxVisible",
@@ -8104,8 +8104,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "layout.toolboxX",
@@ -8117,8 +8118,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "layout.toolboxY",
@@ -8130,8 +8132,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "project.angleUnit",
@@ -8523,8 +8526,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "user.snapAperture",
@@ -8820,10 +8824,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "ayarlar.json appearance.theme",
-      "desktopNote": "Tema kalıcıdır; panellerin ve şeridin yerleşimi yeniden açılışta hatırlanmaz."
+      "desktopWhere": "~/.config/kentos-cad/yerlesim.json, web'in kurallarıyla (fixtures/shell/v1/layout.json, ADR 0115); tema ayarlar.json appearance.theme'dedir"
     }
   ],
   "fileFields": [
@@ -11422,10 +11425,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/bottom.rs (ADR 0058)",
-      "desktopNote": "Komut geçmişinin satırlarında saat yazmaz."
+      "desktopWhere": "apps/desktop/src/bottom.rs, message_log.rs, log_plan.rs (ADR 0058, 0114)"
     },
     {
       "id": "apps/web/src/ui/bottom/CommandLine.ts#CommandLine",
@@ -11437,7 +11439,7 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/view.rs, input.rs (KentOS UI CommandLine)"
+      "desktopWhere": "apps/desktop/src/view.rs, input.rs, message_log.rs (KentOS UI CommandLine, tek satır; ADR 0114)"
     },
     {
       "id": "apps/web/src/ui/calc/IntersectionDialog.ts#openIntersection",
@@ -11832,8 +11834,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "apps/web/src/ui/processing/ProcessingPanel.ts#ProcessingPanel",
@@ -12026,8 +12029,8 @@
         "web": "implemented",
         "desktop": "partial"
       },
-      "desktopWhere": "apps/desktop/src/view.rs, cloud/cells.rs (ADR 0058, 0080, 0113)",
-      "desktopNote": "Web'in son iletiyi birkaç saniye gösteren hücresi yok; iletiler alt paneldedir. Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
+      "desktopWhere": "apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs (ADR 0058, 0080, 0113, 0114)",
+      "desktopNote": "Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
     },
     {
       "id": "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle",
@@ -12147,8 +12150,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     },
     {
       "id": "apps/web/src/ui/toolbox/Toolbox.ts#Toolbox",
@@ -12158,8 +12162,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır."
     }
   ],
   "layout": {

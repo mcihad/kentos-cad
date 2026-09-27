@@ -173,7 +173,7 @@ Bütün boyutlar `--ui-scale` ile çarpılır. **Uygulama ayarları → Görün�
 ├ Durum çubuğu (28) ─ Y … X … │ mesaj │ n seçili │ ▪Kenet ▪Izgara ▫Orto ▫Kutupsal │ Ekran 1:2.470 │ TUREF / TM36 │ ● Buluta kaydedildi │ ○ Sunucu: yok │ WebGL2  ┤
 ```
 
-**Şerit düzeni** (Uygulama ayarları → Görünüm → Arayüz düzeni: Şerit): menü çubuğu, araç çubuğu ve araç kutusunun yerini tek bir şerit alır; gövde aynı kalır.
+**Şerit düzeni** (Uygulama ayarları → Görünüm → Arayüz düzeni: Şerit): menü çubuğu, araç çubuğu ve araç kutusunun yerini tek bir şerit alır; gövde aynı kalır. **Masaüstünde yalnız şerit düzeni vardır** (sahibin kararı, 27 Eylül); klasik düzen web'dedir.
 
 ```
 ┌ Sekme satırı (32) ─ K KentOS [💾 ↶ ↷ ▾] │ Dosya  Giriş  Çizim  Değiştir  Harita  Görünüm  İşlemler  Araçlar  [Seçim 3] ─ proje adı ─ [⌕ Komut ara… Alt+Q] TUREF / TM36 ? ⌃ ┐

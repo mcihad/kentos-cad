@@ -44,8 +44,10 @@ use crate::viewport::mark_colors;
 
 impl App {
     pub fn view(&self) -> Element<'_, Message> {
+        // The side panels run the body's whole height; the bottom panel and the
+        // command line sit under the drawing only (DESIGN.md §5.1, the web's shell).
         let docked = DockSpace::new(
-            self.drawing_area(),
+            column![self.drawing_area(), self.bottom()],
             &self.docks,
             Message::Dock,
             move |panel| {
@@ -69,15 +71,10 @@ impl App {
             },
         );
 
-        let base = container(column![
-            self.ribbon(),
-            docked,
-            self.bottom(),
-            self.status_bar()
-        ])
-        .width(Fill)
-        .height(Fill)
-        .style(style::container::window);
+        let base = container(column![self.ribbon(), docked, self.status_bar()])
+            .width(Fill)
+            .height(Fill)
+            .style(style::container::window);
 
         let mut layers: Vec<Element<'_, Message>> = vec![base.into()];
         // The application menu over the window, under any dialog (app_menu.rs).
@@ -565,19 +562,10 @@ impl App {
         }
     }
 
-    /// The command line as the window shows it now (the traces drive it).
-    #[cfg(test)]
+    /// The command line (the web's `CommandLine`): one row, the history is the
+    /// bottom panel's (bottom.rs); its Geçmiş button opens and closes the panel.
     pub(crate) fn command_line(&self) -> Element<'_, Message> {
-        self.command_line_as(
-            self.command_expanded && self.bottom_tab == crate::bottom::BottomTab::History,
-            None,
-        )
-    }
-
-    /// The command line; `open`: its whole history (the bottom panel's first
-    /// tab); `lines`: history lines shown while closed, when not the default.
-    pub(crate) fn command_line_as(&self, open: bool, lines: Option<usize>) -> Element<'_, Message> {
-        let line = CommandLine::new(&self.history, &self.command_input).id(COMMAND_INPUT);
+        let line = CommandLine::new(&self.typed, &self.command_input).id(COMMAND_INPUT);
         // A running command's step already says what to type; a hint (the
         // widget's own “Komut yazın” too) would repeat it and, in a narrow
         // window, be cut at the field's edge.
@@ -586,17 +574,12 @@ impl App {
         } else {
             "Komut ya da koordinat yazın; Enter ya da Boşluk onaylar"
         });
-        // Every command, so the history names them while one runs too; none is
-        // suggested then: what is typed is the running command's (line_commands).
+        // Every command; none is suggested while one runs: what is typed is
+        // the running command's (line_commands).
         let line = line
             .commands(all_line_commands())
             .suggest_commands(!self.session.is_running() && !self.session.grip_active());
-        // Open, as tall as the bottom panel was dragged (bottom.rs).
-        let line = if open {
-            line.expanded_height(self.bottom_log())
-        } else {
-            line
-        };
+        let open = self.command_expanded;
         line.prompt(self.line_prompt())
             .on_input(Message::CommandInput)
             .on_submit(Message::CommandSubmitted)
@@ -607,15 +590,9 @@ impl App {
             .escape_clears()
             .on_cancel(Message::CommandCancelled)
             .on_focus(Message::CommandFocus)
-            // Geçmiş opens the panel on its history tab, or closes the panel.
-            .expanded(open, |open| {
-                if open {
-                    Message::BottomTab(crate::bottom::BottomTab::History)
-                } else {
-                    Message::CommandHistoryToggled
-                }
-            })
-            .lines(lines.unwrap_or(kentos_ui::widget::command_line::LINES))
+            // Geçmiş opens the panel on the tab it was on, or closes it (the web's expand button).
+            .expanded(open, |_| Message::CommandHistoryToggled)
+            .lines(0)
             .into()
     }
 
@@ -663,15 +640,20 @@ impl App {
             })
     }
 
-    /// The status bar, giving way in a narrow window as the web's does
-    /// (`StatusBar.ts` STEPS, DESIGN.md §7.7): the least needed cell first:
-    /// the engine's name, the coordinate system (also in the tab row), the
-    /// screen and plot scales, the cloud cells' words (their dots stay), the
-    /// mode's name, the drafting aids' padding. Every cell keeps its tip.
+    /// The status bar, as the web's (`StatusBar.ts`, DESIGN.md §7.7): the
+    /// cursor's coordinates, the newest message for its few seconds, then at
+    /// the right the selection, the drafting aids, the screen scale, the
+    /// work mode, the coordinate system, the cloud cells and the engine. In a
+    /// narrow window the least needed cell gives way first (the web's
+    /// `STEPS`) until the message has room for a short line (15 × the type
+    /// size): the engine's name, the coordinate system (also in the tab
+    /// row), the screen scale, the cloud cells' words (their lamps stay),
+    /// the mode's name, the drafting aids' padding. Every cell keeps its tip.
     fn status_bar(&self) -> Element<'_, Message> {
         container(iced::widget::responsive(move |size| {
+            let least = 15.0 * kentos_ui::theme::typography::body();
             let fit = (0..=STATUS_STEPS)
-                .find(|&level| self.status_width(level) <= size.width)
+                .find(|&level| self.status_width(level) + least <= size.width)
                 .unwrap_or(STATUS_STEPS);
             self.status_bar_at(fit)
         }))
@@ -690,11 +672,14 @@ impl App {
             }
             _ => "Y —   X —".to_owned(),
         };
-        let mut bar = StatusBar::new().push(
-            Readout::new(label::mono(coordinates))
-                .icon(Icon::Crosshair)
-                .tip("İmleç koordinatı: Y sağa (doğu), X yukarı (kuzey)"),
-        );
+        let mut bar = StatusBar::new()
+            .push(
+                Readout::new(label::mono(coordinates))
+                    .icon(Icon::Crosshair)
+                    .tip("İmleç koordinatı: Y sağa (doğu), X yukarı (kuzey)"),
+            )
+            .separator()
+            .push(self.flash_cell());
         if !self.selection.is_empty() {
             // The web's status cell: how many are selected, in the accent (DESIGN.md, durum çubuğu).
             let n = self.selection.len();
@@ -713,51 +698,32 @@ impl App {
             bar = bar.push(self.status_aid(id, name, fit >= 6));
         }
         if let Some(doc) = &self.document {
-            let settings = doc.settings();
-            let crs = match crs_name(settings.srid) {
-                Some(name) => format!("EPSG:{} · {name}", settings.srid),
-                None => format!("EPSG:{}", settings.srid),
-            };
-            let objects = format!("{} nesne", doc.entity_count());
+            let srid = doc.settings().srid;
             if fit < 3 {
-                bar = bar
-                    .separator()
-                    .push(
-                        Readout::new(label::muted(format!(
-                            "Ekran 1:{}",
-                            thousands(self.viewport.camera.screen_scale())
-                        )))
-                        .tip(Tip::new("Ekran ölçeği").body(
-                            "Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Pafta ölçeği proje ayarıdır.",
-                        )),
-                    )
-                    .separator()
-                    .push(
-                        Readout::new(label::muted(format!("1:{}", settings.plot_scale)))
-                            .tip("Pafta ölçeği (proje ayarı)"),
-                    );
+                bar = bar.separator().push(
+                    Readout::new(label::muted(format!(
+                        "Ekran 1:{}",
+                        thousands(self.viewport.camera.screen_scale())
+                    )))
+                    .tip(Tip::new("Ekran ölçeği").body(
+                        "Görünümün 96 dpi ekrandaki yaklaşık ölçeği. Çizim ölçeği şeritten seçilir.",
+                    )),
+                );
             }
             bar = bar.separator().push(self.mode_cell(fit < 5));
             if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell).
                 bar = bar.separator().push(
-                    Readout::new(label::muted(crs))
+                    Readout::new(label::muted(crs_label(srid)))
                         .icon(crate::icons::from_web(Some("crs")))
                         .on_press(Message::Run("crs.set"))
                         .tip(Tip::new("Koordinat sistemi").body(format!(
-                            "EPSG:{}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın.",
-                            settings.srid
+                            "EPSG:{srid}. Y sağa, X yukarı değerdir. Değiştirmek için tıklayın."
                         ))),
                 );
             }
-            bar = bar.spacer().push(
-                Readout::new(label::muted(objects.clone()))
-                    .tip(Tip::new(objects).body(kinds_text(doc))),
-            );
-        } else {
-            bar = bar.spacer();
         }
-        // The cloud: the open project and its save, the account with Çıkış (docs/adr/0041).
+        // The cloud: the save cell and the server cell with its account menu (docs/adr/0113).
         for cell in self.cloud_cells(fit < 4) {
             bar = bar.separator().push(cell);
         }
@@ -798,9 +764,10 @@ impl App {
         toggle.into()
     }
 
-    /// About how wide the status bar is with `fit` of its steps taken:
-    /// from its texts at the interface's type size (the cells hold text,
-    /// an icon and their padding), as the tab row estimates its own.
+    /// About how wide the status bar's cells are with `fit` of its steps
+    /// taken, the message left out: from their texts at the interface's
+    /// type size (the cells hold text, an icon and their padding), as the
+    /// tab row estimates its own.
     fn status_width(&self, fit: u8) -> f32 {
         let size = kentos_ui::theme::typography::body();
         // The interface's face averages about half its size a letter; the
@@ -808,7 +775,8 @@ impl App {
         let text = |s: &str| s.chars().count() as f32 * size * 0.52;
         let cell = |s: &str, icon: bool| text(s) + 16.0 + if icon { 19.0 } else { 0.0 };
         const SEPARATOR: f32 = 9.0;
-        let mut width = 28.0 * size * 0.6 + 35.0;
+        // The bar's padding, the coordinates and the message's separator.
+        let mut width = 12.0 + 28.0 * size * 0.6 + 35.0 + SEPARATOR;
         if !self.selection.is_empty() {
             width += SEPARATOR + cell(&format!("{} seçili", self.selection.len()), false);
         }
@@ -820,24 +788,17 @@ impl App {
                 .map(|(_, name)| text(name) + 7.0 + pad)
                 .sum::<f32>();
         if let Some(doc) = &self.document {
-            let settings = doc.settings();
+            let srid = doc.settings().srid;
             if fit < 3 {
                 let zoom = format!("Ekran 1:{}", thousands(self.viewport.camera.screen_scale()));
-                width += 2.0 * SEPARATOR
-                    + cell(&zoom, false)
-                    + cell(&format!("1:{}", settings.plot_scale), false);
+                width += SEPARATOR + cell(&zoom, false);
             }
             let mode = crate::catalog::effective_mode(Some(self.work_mode())).label;
             // Its icon, its name and the menu's chevron.
             width += SEPARATOR + if fit < 5 { text(mode) + 50.0 } else { 51.0 };
             if fit < 2 {
-                let crs = match crs_name(settings.srid) {
-                    Some(name) => format!("EPSG:{} · {name}", settings.srid),
-                    None => format!("EPSG:{}", settings.srid),
-                };
-                width += SEPARATOR + cell(&crs, true);
+                width += SEPARATOR + cell(&crs_label(srid), true);
             }
-            width += 24.0 + cell(&format!("{} nesne", doc.entity_count()), false);
         }
         width += self.cloud_cells_width(fit < 4, size);
         width + SEPARATOR + if fit < 1 { cell("wgpu", true) } else { 35.0 }
@@ -1142,16 +1103,9 @@ pub(crate) fn kind_name(kind: &str) -> &'static str {
     }
 }
 
-fn kinds_text(doc: &Document) -> String {
-    let kinds = doc.kinds();
-    if kinds.is_empty() {
-        return "boş".to_owned();
-    }
-    kinds
-        .iter()
-        .map(|(kind, count)| format!("{count} {}", kind_name(kind)))
-        .collect::<Vec<_>>()
-        .join(", ")
+/// The coordinate system's cell: its name, as the web's (`EPSG:n` when it has none).
+fn crs_label(srid: u32) -> String {
+    crs_name(srid).map_or_else(|| format!("EPSG:{srid}"), str::to_owned)
 }
 
 /// A whole number with Turkish digit grouping (12.345), as the web's `toLocaleString('tr-TR')`.

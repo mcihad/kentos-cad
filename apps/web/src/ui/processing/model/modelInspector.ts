@@ -1,7 +1,7 @@
 import type { AppContext } from '../../../app/context';
 import { ENTITY_KIND_LABEL, type EntityKind } from '../../../model/entities';
-import { stepName, type ModelIssue, type ProcessingModel, type ValueSource } from '../../../processing/model';
-import { addInput, INPUT_TYPES, removeInput, removeStep, setSource, sourcesFor, type ModelInputType } from '../../../processing/modelEdit';
+import { stepName, type ModelIssue, type ProcessingModel } from '../../../processing/model';
+import { addOutput as addModelOutput, INPUT_TYPES, inputFromParam, inputTypeFor, removeInput, removeStep, setCaption, setSource, sourcesFor } from '../../../processing/modelEdit';
 import { defaultValue, isVisible } from '../../../processing/parameters';
 import type { FeaturesValue, ParamDef, ProcessingTool } from '../../../processing/types';
 import { h } from '../../dom';
@@ -10,7 +10,7 @@ import { segmented, textField, toggleSwitch } from '../../widgets/controls';
 import { Dropdown } from '../../widgets/Dropdown';
 import type { MenuItem } from '../../widgets/PopupMenu';
 import { paramControl, type FieldEnv } from '../paramFields';
-import type { NodeRef } from './ModelCanvas';
+import { DESIGNER_TEXTS, sourceText, type NodeRef } from './designerPlan';
 
 /**
  * Right column of the model designer: the model's name, category,
@@ -36,6 +36,7 @@ export interface InspectorHost {
 }
 
 const KIND_CHOICES: readonly EntityKind[] = ['polygon', 'polyline', 'line', 'point', 'circle', 'arc', 'text'];
+const T = DESIGNER_TEXTS.inspector;
 
 const section = (title: string | null, ...children: (Node | null)[]) => h('section', { class: 'mins__section' }, title ? h('div', { class: 'mins__title' }, title) : null, children);
 const row = (label: string, control: Node, note?: string | null) => h('div', { class: 'mins__row' }, h('div', { class: 'mins__label' }, label), control, note ? h('div', { class: 'mins__note' }, note) : null);
@@ -60,7 +61,7 @@ function modelInspector(host: InspectorHost): HTMLElement {
   const categories = registry.tree().map((n) => n.category);
   const all = [...new Map([...categories, ...(registry.category(model.category) ? [registry.category(model.category)!] : [])].map((c) => [c.id, c])).values()];
   const category = new Dropdown({
-    ariaLabel: 'Kategori',
+    ariaLabel: T.model.category,
     className: 'pfield__dropdown',
     items: () => all.map((c): MenuItem => ({ label: c.label, icon: c.icon, radio: true, checked: c.id === model.category, run: () => host.change(() => (model.category = c.id)) })),
   });
@@ -69,15 +70,15 @@ function modelInspector(host: InspectorHost): HTMLElement {
   const outputs = model.outputs.map((o) => {
     const step = model.steps.find((s) => s.id === o.from.step);
     const out = step && host.lookup(step.tool)?.outputs?.find((x) => x.name === o.from.output);
-    const remove = h('button', { class: 'ibtn', type: 'button', 'aria-label': `“${o.label}” çıktısını kaldır` }, icon('close', 14));
+    const remove = h('button', { class: 'ibtn', type: 'button', 'aria-label': T.model.removeOutput(o.label) }, icon('close', 14));
     remove.addEventListener('click', () => host.change(() => (model.outputs = model.outputs.filter((x) => x !== o))));
-    return h('div', { class: 'mins__item' }, h('span', { class: 'mins__item-main' }, h('b', null, o.label), h('span', null, step ? `${stepName(step, host.lookup)} › ${out?.label ?? o.from.output}` : 'adım yok')), remove);
+    return h('div', { class: 'mins__item' }, h('span', { class: 'mins__item-main' }, h('b', null, o.label), h('span', null, step ? T.model.output(stepName(step, host.lookup), out?.label ?? o.from.output) : T.model.noStep)), remove);
   });
   const candidates = model.steps.flatMap((s) =>
     (host.lookup(s.tool)?.outputs ?? []).filter((o) => !model.outputs.some((x) => x.from.step === s.id && x.from.output === o.name)).map((o) => ({ step: s, out: o })),
   );
   const addOutput = new Dropdown({
-    ariaLabel: 'Çıktı ekle',
+    ariaLabel: T.model.addOutput,
     className: 'pfield__dropdown',
     items: () =>
       candidates.length
@@ -85,29 +86,26 @@ function modelInspector(host: InspectorHost): HTMLElement {
             label: out.label,
             detail: stepName(step, host.lookup),
             run: () =>
-              host.change(() => {
-                const name = out.name in Object.fromEntries(model.outputs.map((x) => [x.name, 1])) ? `${out.name}${model.outputs.length + 1}` : out.name;
-                model.outputs.push({ name, label: out.label, from: { step: step.id, output: out.name } });
-              }),
+              host.change(() => void addModelOutput(model, step.id, out.name, host.lookup)),
           }))
-        : [{ label: 'Eklenebilecek çıktı yok', disabled: true }],
+        : [{ label: T.model.noOutput, disabled: true }],
   });
-  addOutput.set(h('span', { class: 'dropdown__text' }, 'Çıktı ekle'));
+  addOutput.set(h('span', { class: 'dropdown__text' }, T.model.addOutput));
 
-  const del = host.saved && !host.builtinCopy ? h('button', { class: 'btn btn--ghost mins__danger', type: 'button' }, icon('erase', 14), 'Modeli sil') : null;
+  const del = host.saved && !host.builtinCopy ? h('button', { class: 'btn btn--ghost mins__danger', type: 'button' }, icon('erase', 14), T.model.remove) : null;
   del?.addEventListener('click', () => host.deleteModel());
 
   return h(
     'div',
     { class: 'mins' },
-    h('div', { class: 'mins__head' }, h('span', { class: 'mins__icon' }, icon('processing', 18)), h('div', null, h('div', { class: 'mins__kind' }, 'Model'), h('div', { class: 'mins__lead' }, 'Adı ve açıklaması araç kutusunda ve menüde görünür.'))),
+    h('div', { class: 'mins__head' }, h('span', { class: 'mins__icon' }, icon('processing', 18)), h('div', null, h('div', { class: 'mins__kind' }, T.model.kind), h('div', { class: 'mins__lead' }, T.model.lead))),
     section(
       null,
-      row('Ad', textField({ label: 'Model adı', value: model.label, onChange: (v) => host.change(() => (model.label = v), { rerender: false, key: 'label' }) })),
-      row('Kategori', category.el),
-      row('Açıklama', textField({ label: 'Model açıklaması', value: model.description, placeholder: 'Ne yapar, tek cümle', onChange: (v) => host.change(() => (model.description = v), { rerender: false, key: 'description' }) })),
+      row(T.model.name, textField({ label: T.model.nameAria, value: model.label, onChange: (v) => host.change(() => (model.label = v), { rerender: false, key: 'label' }) })),
+      row(T.model.category, category.el),
+      row(T.model.description, textField({ label: T.model.descriptionAria, value: model.description, placeholder: T.model.descriptionHint, onChange: (v) => host.change(() => (model.description = v), { rerender: false, key: 'description' }) })),
     ),
-    section('Model çıktıları', ...outputs, addOutput.el),
+    section(T.model.outputs, ...outputs, addOutput.el),
     problemsSection(host, null),
     del ? section(null, del) : null,
   );
@@ -115,12 +113,12 @@ function modelInspector(host: InspectorHost): HTMLElement {
 
 function problemsSection(host: InspectorHost, stepId: string | null): HTMLElement | null {
   const list = host.problems.filter((p) => stepId === null || p.step === stepId);
-  if (!list.length) return stepId === null ? section(null, h('div', { class: 'mins__ok' }, icon('check', 14), host.model.steps.length ? 'Model çalışmaya hazır.' : 'Başlamak için soldan bir girdi ve bir araç ekleyin.')) : null;
+  if (!list.length) return stepId === null ? section(null, h('div', { class: 'mins__ok' }, icon('check', 14), host.model.steps.length ? T.problems.ready : T.problems.start)) : null;
   return section(
-    stepId ? 'Sorunlar' : `Sorunlar (${list.length})`,
+    stepId ? T.problems.title : T.problems.titleCount(list.length),
     ...list.map((p) => {
       const step = p.step ? host.model.steps.find((s) => s.id === p.step) : null;
-      const b = h('button', { class: 'mins__problem', type: 'button' }, icon('warning', 14), h('span', null, step && !stepId ? `${stepName(step, host.lookup)}: ${p.message}` : p.message));
+      const b = h('button', { class: 'mins__problem', type: 'button' }, icon('warning', 14), h('span', null, step && !stepId ? T.problems.ofStep(stepName(step, host.lookup), p.message) : p.message));
       if (step && !stepId) b.addEventListener('click', () => host.select({ kind: 'step', id: step.id }));
       return b;
     }),
@@ -140,13 +138,13 @@ function inputInspector(host: InspectorHost, def: ParamDef): HTMLElement {
     const dv = (d.default as FeaturesValue | undefined) ?? { scope: 'selection' };
     specific.push(
       row(
-        'Varsayılan',
+        T.input.default,
         segmented({
-          label: 'Varsayılan kapsam',
+          label: T.input.scopeAria,
           options: [
-            { value: 'selection', label: 'Seçili' },
-            { value: 'visible', label: 'Görünen' },
-            { value: 'all', label: 'Tümü' },
+            { value: 'selection', label: T.input.scopes.selection },
+            { value: 'visible', label: T.input.scopes.visible },
+            { value: 'all', label: T.input.scopes.all },
           ],
           value: dv.scope === 'selection' || dv.scope === 'visible' || dv.scope === 'all' ? dv.scope : 'selection',
           onChange: (v) => set('default', { scope: v }),
@@ -165,10 +163,10 @@ function inputInspector(host: InspectorHost, def: ParamDef): HTMLElement {
       });
       return b;
     });
-    specific.push(row('Uygun nesneler', h('div', { class: 'pfield__chips' }, chips), kinds.size ? null : 'Hiçbiri seçili değilse her tür alınır; adımlar kendi türlerini ayrıca süzer.'));
+    specific.push(row(T.input.kinds, h('div', { class: 'pfield__chips' }, chips), kinds.size ? null : T.input.kindsNote));
   } else if (def.type === 'number') {
     const num = (label: string, key: 'default' | 'min' | 'max', value: number | undefined, optional: boolean) => {
-      const input = h('input', { class: 'field pfield__num num', value: value === undefined ? '' : String(value), inputmode: 'decimal', 'aria-label': label, placeholder: optional ? 'yok' : '' });
+      const input = h('input', { class: 'field pfield__num num', value: value === undefined ? '' : String(value), inputmode: 'decimal', 'aria-label': label, placeholder: optional ? T.input.none : '' });
       input.addEventListener('input', () => {
         const t = input.value.trim().replace(',', '.');
         const n = Number(t);
@@ -178,26 +176,26 @@ function inputInspector(host: InspectorHost, def: ParamDef): HTMLElement {
       return row(label, input);
     };
     specific.push(
-      num('Varsayılan', 'default', typeof d.default === 'number' ? d.default : 0, false),
-      num('En az', 'min', def.min, true),
-      num('En çok', 'max', def.max, true),
-      row('Tam sayı', toggleSwitch({ label: 'Tam sayı', checked: !!def.integer, onChange: (v) => set('integer', v || undefined) })),
+      num(T.input.default, 'default', typeof d.default === 'number' ? d.default : 0, false),
+      num(T.input.min, 'min', def.min, true),
+      num(T.input.max, 'max', def.max, true),
+      row(T.input.integer, toggleSwitch({ label: T.input.integer, checked: !!def.integer, onChange: (v) => set('integer', v || undefined) })),
     );
   } else if (def.type === 'string') {
     specific.push(
-      row('Varsayılan', textField({ label: 'Varsayılan metin', value: String(d.default ?? ''), onChange: (v) => set('default', v, false) })),
-      row('Boş bırakılabilir', toggleSwitch({ label: 'Boş bırakılabilir', checked: !!def.allowEmpty, onChange: (v) => set('allowEmpty', v || undefined) })),
+      row(T.input.default, textField({ label: T.input.textDefault, value: String(d.default ?? ''), onChange: (v) => set('default', v, false) })),
+      row(T.input.allowEmpty, toggleSwitch({ label: T.input.allowEmpty, checked: !!def.allowEmpty, onChange: (v) => set('allowEmpty', v || undefined) })),
     );
   } else if (def.type === 'boolean') {
-    specific.push(row('Varsayılan', toggleSwitch({ label: 'Varsayılan', checked: !!d.default, onChange: (v) => set('default', v) })));
+    specific.push(row(T.input.default, toggleSwitch({ label: T.input.default, checked: !!d.default, onChange: (v) => set('default', v) })));
   } else if (def.type === 'layer') {
     const dv = d.default as { newName?: string } | undefined;
-    specific.push(row('Varsayılan yeni katman', textField({ label: 'Varsayılan yeni katman adı', value: dv?.newName ?? '', onChange: (v) => set('default', { newName: v }, false) }), 'Çalıştırırken var olan bir katman da seçilebilir.'));
+    specific.push(row(T.input.newLayer, textField({ label: T.input.newLayerAria, value: dv?.newName ?? '', onChange: (v) => set('default', { newName: v }, false) }), T.input.newLayerNote));
   } else if (def.type === 'point') {
-    specific.push(h('div', { class: 'mins__note' }, 'Çalıştırırken haritada gösterilir ya da Y,X yazılır.'));
+    specific.push(h('div', { class: 'mins__note' }, T.input.pointNote));
   }
 
-  const del = h('button', { class: 'btn btn--ghost mins__danger', type: 'button' }, icon('erase', 14), 'Girdiyi sil');
+  const del = h('button', { class: 'btn btn--ghost mins__danger', type: 'button' }, icon('erase', 14), T.input.remove);
   del.addEventListener('click', () =>
     host.change(() => {
       removeInput(host.model, def.name);
@@ -208,23 +206,23 @@ function inputInspector(host: InspectorHost, def: ParamDef): HTMLElement {
   return h(
     'div',
     { class: 'mins' },
-    h('div', { class: 'mins__head' }, h('span', { class: 'mins__icon mins__icon--input' }, icon(type?.icon ?? 'processing', 18)), h('div', null, h('div', { class: 'mins__kind' }, `Girdi: ${type?.label ?? def.type}`), h('div', { class: 'mins__lead' }, 'Model çalıştırılırken kullanıcıdan istenir.'))),
+    h('div', { class: 'mins__head' }, h('span', { class: 'mins__icon mins__icon--input' }, icon(type?.icon ?? 'processing', 18)), h('div', null, h('div', { class: 'mins__kind' }, T.input.kind(type?.label ?? def.type)), h('div', { class: 'mins__lead' }, T.input.lead))),
     section(
       null,
-      row('Etiket', textField({ label: 'Girdi etiketi', value: def.label, onChange: (v) => set('label', v, false) }), `Değişken adı: ${def.name}`),
-      row('Açıklama', textField({ label: 'Girdi açıklaması', value: d.description ?? '', placeholder: 'Pencerede etiketin altında görünür', onChange: (v) => set('description', v || undefined, false) })),
-      row('İsteğe bağlı', toggleSwitch({ label: 'İsteğe bağlı', checked: !!d.optional, onChange: (v) => set('optional', v || undefined) })),
+      row(T.input.label, textField({ label: T.input.labelAria, value: def.label, onChange: (v) => set('label', v, false) }), T.input.variable(def.name)),
+      row(T.input.description, textField({ label: T.input.descriptionAria, value: d.description ?? '', placeholder: T.input.descriptionHint, onChange: (v) => set('description', v || undefined, false) })),
+      row(T.input.optional, toggleSwitch({ label: T.input.optional, checked: !!d.optional, onChange: (v) => set('optional', v || undefined) })),
       ...specific,
     ),
     section(
-      'Kullanan adımlar',
+      T.input.users,
       ...(users.length
         ? users.map((s) => {
             const b = h('button', { class: 'mins__link', type: 'button' }, icon(host.lookup(s.tool)?.icon ?? 'processing', 14), stepName(s, host.lookup));
             b.addEventListener('click', () => host.select({ kind: 'step', id: s.id }));
             return b;
           })
-        : [h('div', { class: 'mins__note' }, 'Henüz hiçbir adım bu girdiyi kullanmıyor. Kutunun sağındaki noktadan bir adıma sürükleyin.')]),
+        : [h('div', { class: 'mins__note' }, T.input.noUsers)]),
     ),
     section(null, del),
   );
@@ -232,39 +230,12 @@ function inputInspector(host: InspectorHost, def: ParamDef): HTMLElement {
 
 // ── A step ─────────────────────────────────────────────────────────────
 
-/** The model input type a parameter can become (none for choices from a fixed list). */
-function inputTypeFor(p: ParamDef): ModelInputType | null {
-  switch (p.type) {
-    case 'features':
-    case 'number':
-    case 'string':
-    case 'boolean':
-    case 'layer':
-    case 'point':
-      return p.type;
-    case 'expression':
-    case 'field':
-      return 'string';
-    default:
-      return null;
-  }
-}
-
-function sourceText(host: InspectorHost, src: ValueSource | undefined): string {
-  if (!src) return 'Aracın varsayılanı';
-  if (src.kind === 'value') return 'Sabit değer';
-  if (src.kind === 'input') return `Girdi: ${host.model.inputs.find((i) => i.name === src.name)?.label ?? src.name}`;
-  const step = host.model.steps.find((s) => s.id === src.step);
-  const out = step && host.lookup(step.tool)?.outputs?.find((o) => o.name === src.output);
-  return `${step ? stepName(step, host.lookup) : src.step} › ${out?.label ?? src.output}`;
-}
-
 function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
   const { model, ctx } = host;
   const step = model.steps.find((s) => s.id === stepId)!;
   const tool = host.lookup(step.tool);
   if (!tool) {
-    return h('div', { class: 'mins' }, section('Bilinmeyen araç', h('div', { class: 'mins__note' }, `“${step.tool}” bu sürümde yok. Adımı silin ya da aracı sağlayan eklentiyi yükleyin.`)));
+    return h('div', { class: 'mins' }, section(T.step.unknown, h('div', { class: 'mins__note' }, T.step.unknownNote(step.tool))));
   }
   const runner = ctx.processing.runner;
   const defaults = runner.defaults();
@@ -285,13 +256,13 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
     const options = sourcesFor(model, stepId, p, host.lookup);
     const asInput = inputTypeFor(p);
     const items = (): MenuItem[] => [
-      { label: 'Aracın varsayılanı', radio: true, checked: !src, run: () => host.change(() => setSource(model, stepId, p.name, null)) },
-      { label: 'Sabit değer', radio: true, checked: src?.kind === 'value', run: () => host.change(() => setSource(model, stepId, p.name, { kind: 'value', value: src?.kind === 'value' ? src.value : defaultValue(p, defaults) })) },
+      { label: T.step.toolDefault, radio: true, checked: !src, run: () => host.change(() => setSource(model, stepId, p.name, null)) },
+      { label: T.step.fixed, radio: true, checked: src?.kind === 'value', run: () => host.change(() => setSource(model, stepId, p.name, { kind: 'value', value: src?.kind === 'value' ? src.value : defaultValue(p, defaults) })) },
       ...(options.length ? [{ kind: 'separator' } as MenuItem] : []),
       ...options.map(
         (o): MenuItem => ({
           label: o.label,
-          detail: o.group === 'Girdi' ? 'Model girdisi' : o.group,
+          detail: o.group === 'Girdi' ? T.step.modelInput : o.group,
           radio: true,
           checked: JSON.stringify(src) === JSON.stringify(o.src),
           run: () => host.change(() => setSource(model, stepId, p.name, o.src)),
@@ -301,26 +272,16 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
         ? [
             { kind: 'separator' } as MenuItem,
             {
-              label: 'Yeni model girdisi yap',
+              label: T.step.asInput,
               icon: 'modelNew',
-              detail: 'Model çalıştırılırken bu değer sorulur',
-              run: () =>
-                host.change(() => {
-                  const name = addInput(model, asInput, p.label, { x: (step.position?.x ?? 300) - 290, y: step.position?.y ?? 40 });
-                  const created = model.inputs.find((i) => i.name === name)!;
-                  const d = defaultValue(p, defaults);
-                  if (asInput === 'features' && p.type === 'features') Object.assign(created, { kinds: p.kinds ? [...p.kinds] : undefined, default: d });
-                  else if (asInput === 'number' && p.type === 'number') Object.assign(created, { default: d, min: p.min, max: p.max, integer: p.integer, unit: p.unit });
-                  else if (asInput === 'string') Object.assign(created, { default: typeof d === 'string' ? d : '', allowEmpty: p.type === 'string' ? p.allowEmpty : undefined });
-                  else if (d !== null && d !== undefined) Object.assign(created, { default: d });
-                  setSource(model, stepId, p.name, { kind: 'input', name });
-                }),
+              detail: T.step.asInputNote,
+              run: () => host.change(() => void inputFromParam(model, stepId, p, defaults)),
             } as MenuItem,
           ]
         : []),
     ];
-    const dd = new Dropdown({ ariaLabel: `${p.label}: kaynak`, className: 'pfield__dropdown mins__source', items });
-    dd.set(h('span', { class: 'dropdown__text' }, sourceText(host, src)));
+    const dd = new Dropdown({ ariaLabel: T.step.sourceAria(p.label), className: 'pfield__dropdown mins__source', items });
+    dd.set(h('span', { class: 'dropdown__text' }, sourceText(model, src, host.lookup)));
     const control =
       src?.kind === 'value'
         ? paramControl(p, src.value, (v, rebuild) => host.change(() => setSource(model, stepId, p.name, { kind: 'value', value: v }), { rerender: rebuild !== false, key: `${stepId}.${p.name}` }), env)
@@ -328,7 +289,7 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
     return h(
       'div',
       { class: 'mins__param', 'data-linked': src && src.kind !== 'value' ? '' : null },
-      h('div', { class: 'mins__label' }, p.label, p.optional ? h('span', { class: 'prow__opt' }, 'isteğe bağlı') : null),
+      h('div', { class: 'mins__label' }, p.label, p.optional ? h('span', { class: 'prow__opt' }, T.step.optional) : null),
       dd.el,
       control,
     );
@@ -337,7 +298,7 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
   const shown = tool.parameters.filter((p) => step.values[p.name] || isVisible(p, known));
   const main = shown.filter((p) => !p.advanced);
   const advanced = shown.filter((p) => p.advanced);
-  const del = h('button', { class: 'btn btn--ghost mins__danger', type: 'button' }, icon('erase', 14), 'Adımı sil');
+  const del = h('button', { class: 'btn btn--ghost mins__danger', type: 'button' }, icon('erase', 14), T.step.remove);
   del.addEventListener('click', () =>
     host.change(() => {
       removeStep(model, stepId);
@@ -349,10 +310,10 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
     'div',
     { class: 'mins' },
     h('div', { class: 'mins__head' }, h('span', { class: 'mins__icon' }, icon(tool.icon ?? 'processing', 18)), h('div', null, h('div', { class: 'mins__kind' }, tool.label), h('div', { class: 'mins__lead' }, tool.description))),
-    section(null, row('Başlık', textField({ label: 'Adım başlığı', value: step.caption ?? '', placeholder: tool.label, onChange: (v) => host.change(() => (step.caption = v.trim() || undefined), { rerender: false, key: `${stepId}.caption` }) }), 'Diyagramda ve iletilerde görünür.')),
+    section(null, row(T.step.caption, textField({ label: T.step.captionAria, value: step.caption ?? '', placeholder: tool.label, onChange: (v) => host.change(() => setCaption(model, stepId, v), { rerender: false, key: `${stepId}.caption` }) }), T.step.captionNote)),
     problemsSection(host, stepId),
-    section('Parametreler', ...main.map(paramRow)),
-    advanced.length ? h('details', { class: 'mins__advanced' }, h('summary', null, `Gelişmiş (${advanced.length})`), ...advanced.map(paramRow)) : null,
+    section(T.step.params, ...main.map(paramRow)),
+    advanced.length ? h('details', { class: 'mins__advanced' }, h('summary', null, T.step.advanced(advanced.length)), ...advanced.map(paramRow)) : null,
     section(null, del),
   );
 }

@@ -197,6 +197,14 @@ pub enum Message {
     BottomReset,
     /// Geçmişi temizle (the bottom panel's tab row).
     HistoryCleared,
+    /// A frame of the status bar's message fading, or the moment it goes (message_log.rs).
+    LogFrame,
+    /// The bottom panel's log list scrolled: whether new lines follow to its end.
+    LogScrolled(iced::widget::scrollable::Viewport),
+    /// The kept layout is due to be written (layout.rs).
+    LayoutSave,
+    /// The window's new size: the kept sizes are shown within it.
+    WindowResized(iced::Size),
     /// The layer tree's rows and their menu (layering.rs).
     Layer(crate::layering::Event),
     /// The right button's menus over the drawing and the one-shot snap (drawing_menus.rs).
@@ -327,8 +335,6 @@ pub struct App {
     pub(crate) layers_keyboard: bool,
     /// The row the tree's keys chose, kept in view.
     pub(crate) layer_reveal: Option<String>,
-    /// Warnings and errors said so far (the Uyarılar tab counts the unseen).
-    pub(crate) warnings_total: usize,
     /// The menu open over the drawing (drawing_menus.rs).
     pub(crate) drawing_menu: Option<crate::drawing_menus::Open>,
     /// The one-shot snap and the command it was chosen in.
@@ -343,15 +349,23 @@ pub struct App {
     pub(crate) props_closed: std::collections::HashSet<&'static str>,
     /// The last left press's object with no command running, and when (a double click edits a text).
     pub(crate) last_click: Option<(kentos_domain::Slot, Instant)>,
-    pub history: Vec<Entry>,
+    /// The log (message_log.rs): every line said, 500 at most, with its time
+    /// and level; the bottom panel lists it, the status bar shows its newest.
+    pub(crate) log: crate::log_plan::Log,
+    /// What was typed in the command line: its ↑ brings them back.
+    pub(crate) typed: Vec<Entry>,
+    /// What the log's views follow: the status bar's message, the list's end.
+    pub(crate) follow: crate::message_log::Follow,
+    /// The layout kept between runs (layout.rs) and the window's size it is shown in.
+    pub(crate) layout: crate::layout::Keeper,
+    pub(crate) window_size: iced::Size,
     pub command_input: String,
     pub command_expanded: bool,
-    /// The bottom panel's tab (bottom.rs), and the warnings seen on it.
+    /// The bottom panel's tab (bottom.rs).
     pub bottom_tab: crate::bottom::BottomTab,
     /// The open history's height when the panel's edge was dragged (in memory,
     /// as the docks' layout); `None`: the command line's own.
     pub bottom_log: Option<f32>,
-    pub seen_warnings: usize,
     pub dialog: Option<Dialog>,
     /// The drawing area's camera and scene cache.
     pub viewport: Viewport,
@@ -503,7 +517,6 @@ impl App {
             ribbon_flash: None,
             layers_keyboard: false,
             layer_reveal: None,
-            warnings_total: 0,
             drawing_menu: None,
             snap_once: None,
             text_field: None,
@@ -512,15 +525,23 @@ impl App {
             text_field_release: false,
             props_closed: std::collections::HashSet::new(),
             last_click: None,
-            history: vec![Entry::Output(
-                "KentOS CAD masaüstü hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler."
-                    .to_owned(),
-            )],
+            log: {
+                let mut log = crate::log_plan::Log::default();
+                log.push(
+                    Level::Info,
+                    "KentOS CAD masaüstü hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler.",
+                    crate::cloud::now_ms(),
+                );
+                log
+            },
+            typed: Vec::new(),
+            follow: crate::message_log::Follow::default(),
+            layout: crate::layout::Keeper::memory(),
+            window_size: iced::Size::new(1440.0, 900.0),
             command_input: String::new(),
             command_expanded: false,
             bottom_tab: crate::bottom::BottomTab::default(),
             bottom_log: None,
-            seen_warnings: 0,
             dialog: None,
             viewport: Viewport::new(),
             session: Session::new(),
@@ -596,6 +617,8 @@ impl App {
         }
         app.apply_settings();
         app.report_settings_open();
+        // The layout's defaults until the kept one is read (main.rs, layout.rs).
+        app.apply_layout();
         let task = match path {
             Some(path) => app.start_opening(path, Purpose::File),
             None => Task::none(),
@@ -655,6 +678,11 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // The status bar's message: when it goes, and its fades (message_log.rs).
+            self.log_subscription(Instant::now()),
+            // The kept layout, written after its last change; the window's size.
+            self.layout_subscription(),
+            window::resize_events().map(|(_, size)| Message::WindowResized(size)),
         ])
     }
 
@@ -671,7 +699,9 @@ impl App {
             self.text_field_tasks(),
             self.follow_hover(),
             self.follow_tracking(),
+            self.follow_log(Instant::now()),
         ]);
+        self.follow_layout(Instant::now());
         self.cloud_after(Instant::now());
         task
     }
@@ -730,11 +760,15 @@ impl App {
                 self.command_input.clear();
                 return self.run_typed(&name);
             }
-            Message::CommandHistoryToggled => self.command_expanded = !self.command_expanded,
+            Message::CommandHistoryToggled => self.toggle_bottom(),
             Message::BottomTab(tab) => self.show_bottom(tab),
-            Message::BottomResized(height) => self.bottom_log = Some(height),
-            Message::BottomReset => self.bottom_log = None,
+            Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
+            Message::BottomReset => self.bottom_dragged(None, Instant::now()),
             Message::HistoryCleared => self.clear_history(),
+            Message::LogFrame => self.log_frame(Instant::now()),
+            Message::LogScrolled(viewport) => self.log_scrolled(viewport),
+            Message::LayoutSave => self.layout.write(Instant::now(), false),
+            Message::WindowResized(size) => self.window_resized(size),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -751,7 +785,10 @@ impl App {
             Message::PointCalc(kind) => return self.start_point_calc(kind),
             Message::Key(press) => return self.key(press),
             Message::Modifiers(modifiers) => self.modifiers = modifiers,
-            Message::Dock(event) => self.docks.update(event),
+            Message::Dock(event) => {
+                self.docks.update(event.clone());
+                self.dock_dragged(&event, Instant::now());
+            }
             Message::LayerSelected(id) => self.layer_pressed(id),
             Message::LayerSearch(text) => self.layer_search(text),
             Message::LayerSearchDown => return self.layer_search_down(),
@@ -844,6 +881,8 @@ impl App {
                 _ => self.output(format!("Kaydedildi: {}.", written.path.display())),
             },
             Message::CloseRequested(window) => {
+                // The layout is written now, not 250 ms later.
+                self.layout.write(Instant::now(), true);
                 // A save stopped by the window closing would leave no file (the previous one
                 // stays): it finishes first.
                 if let Some(s) = &self.saving {
@@ -1242,18 +1281,11 @@ impl App {
         let found = catalog().commands().iter().find(|c| {
             c.aliases.iter().any(|a| fold(a) == folded) || fold(c.title) == folded || c.id == text
         });
-        // A tool that starts says its own name (start_tool), as on the web: the
-        // typed text is not said a second time.
-        let says_itself = self.document.is_some()
-            && found.is_some_and(|c| {
-                c.id.strip_prefix("tool.")
-                    .is_some_and(|tool| Session::tools().contains(&tool))
-            });
-        if !says_itself {
-            self.history.push(Entry::Input(text.to_owned()));
-        }
         match found {
             Some(command) => {
+                // As on the web (`CommandLine.run`): the line's ↑ brings it back; the
+                // typed name is not said, a tool says its own as it starts.
+                self.remember(text);
                 let task = self.run(command.id);
                 if command.id.starts_with("tool.") && self.session.is_running() {
                     self.line_focused = false;
@@ -1262,7 +1294,9 @@ impl App {
                 task
             }
             None => {
-                self.error(format!("Bilinmeyen komut: {text}. Komut adları için F1 ya da Yardım → Klavye kısayolları."));
+                self.error(format!(
+                    "“{text}” adında bir komut yok. Tüm komutlar ve kısayollar için F1’e basın."
+                ));
                 Task::none()
             }
         }
@@ -1332,46 +1366,6 @@ impl App {
             |path| Message::Saving(saving::Event::Picked(path)),
         )
     }
-
-    /// A message in the command line, with the web's level: commands and typed
-    /// values as input, information and success as output, warnings, errors.
-    pub(crate) fn say(&mut self, level: Level, text: impl Into<String>) {
-        let text = text.into();
-        self.history.push(match level {
-            Level::Command => Entry::Input(text),
-            Level::Info | Level::Success => Entry::Output(text),
-            Level::Warn => Entry::Warning(text),
-            Level::Error => Entry::Error(text),
-        });
-        self.last_level = Some(level);
-        if matches!(level, Level::Warn | Level::Error) {
-            self.warnings_total += 1;
-            // Said while the Uyarılar tab is on screen: seen (the web's badge).
-            if self.command_expanded && self.bottom_tab == crate::bottom::BottomTab::Messages {
-                self.seen_warnings = self.warnings_total;
-            }
-        }
-    }
-
-    /// A value or an option given to the running command, echoed as typed
-    /// (the web's `log.command(`› ${text}`)`): never taken for a command's
-    /// short name, as `X` for Patlat.
-    pub(crate) fn echo_value(&mut self, text: impl Into<String>) {
-        self.history.push(Entry::Value(text.into()));
-        self.last_level = Some(Level::Command);
-    }
-
-    pub(crate) fn output(&mut self, text: impl Into<String>) {
-        self.say(Level::Info, text);
-    }
-
-    pub(crate) fn warn(&mut self, text: impl Into<String>) {
-        self.say(Level::Warn, text);
-    }
-
-    pub(crate) fn error(&mut self, text: impl Into<String>) {
-        self.say(Level::Error, text);
-    }
 }
 
 /// Turkish-aware case folding for command names: “çizgi”, “Cizgi” and “CIZGI” match.
@@ -1401,9 +1395,7 @@ mod tests {
             let (mut app, _) = App::boot(None);
             let _ = app.run(id);
             assert!(
-                !app.history
-                    .iter()
-                    .any(|e| matches!(e, Entry::Error(text) if text.contains("işleyicisi eksik"))),
+                !app.log.said(Level::Error, "işleyicisi eksik"),
                 "{id} is listed as ported but has no handler"
             );
         }
@@ -1421,12 +1413,12 @@ mod tests {
             return;
         };
         let (mut app, _) = App::boot(None);
-        let before = app.history.len();
+        let before = app.log.len();
         let _ = app.run(id);
-        assert_eq!(app.history.len(), before + 1);
-        assert!(
-            matches!(app.history.last(), Some(Entry::Output(text)) if text.contains("masaüstüne henüz taşınmadı"))
-        );
+        assert_eq!(app.log.len(), before + 1);
+        assert!(app.log.last().is_some_and(
+            |l| l.level == Level::Info && l.text.contains("masaüstüne henüz taşınmadı")
+        ));
     }
 
     fn with_demo() -> App {
@@ -1462,22 +1454,20 @@ mod tests {
         assert_eq!(app.session.tool_id(), "arc");
         assert_eq!(app.session.prompt().text(), "Yay: yayın merkezini belirtin");
         assert!(
-            !app.history
-                .iter()
-                .any(|e| matches!(e, Entry::Warning(text) if text.contains("başlatılamadı"))),
+            !app.log.said(Level::Warn, "başlatılamadı"),
             "both methods started"
         );
 
         // With no drawing open the tool does not start; that says why, once.
         let (mut closed, _) = App::boot(None);
-        let before = closed.history.len();
+        let before = closed.log.len();
         let _ = closed.update(Message::RunMethod {
             id: "tool.circle",
             option: "2N",
             label: "2 nokta",
         });
         assert!(!closed.session.is_running());
-        assert_eq!(closed.history.len(), before + 1);
+        assert_eq!(closed.log.len(), before + 1);
         assert_eq!(
             last_output(&closed),
             "Açık çizim yok. Önce bir çizim açın (Ctrl+O)."
@@ -1485,8 +1475,8 @@ mod tests {
     }
 
     fn last_output(app: &App) -> &str {
-        match app.history.last() {
-            Some(Entry::Output(text)) => text,
+        match app.log.last() {
+            Some(line) if line.level == Level::Info || line.level == Level::Success => &line.text,
             other => panic!("expected an output line, found {other:?}"),
         }
     }
@@ -1641,22 +1631,42 @@ mod tests {
         let _ = app.update(Message::CommandRun("temayı değiştir".into()));
         assert_eq!(app.mode, Mode::Dark, "the title works as a name");
         let _ = app.update(Message::CommandRun("OLMAYAN".into()));
-        assert!(matches!(app.history.last(), Some(Entry::Error(_))));
+        assert_eq!(
+            app.log.last().map(|l| (l.level, l.text.as_str())),
+            Some((
+                Level::Error,
+                "“OLMAYAN” adında bir komut yok. Tüm komutlar ve kısayollar için F1’e basın."
+            ))
+        );
+        assert_eq!(
+            app.typed,
+            [Entry::Input("temayı değiştir".into())],
+            "an unknown name is not brought back by ↑"
+        );
     }
 
     #[test]
     fn a_typed_tool_is_said_once_by_its_own_name() {
         let mut app = with_demo();
-        let before = app.history.len();
+        let before = app.log.len();
         let _ = app.update(Message::CommandRun("çizgi".into()));
         assert_eq!(app.session.tool_id(), "line");
         // The tool's name, once (the web logs the tool, not the typed text).
-        assert_eq!(app.history.len(), before + 1);
-        assert!(matches!(app.history.last(), Some(Entry::Input(name)) if name == "L"));
-        // A command that is not a tool keeps what was typed.
-        let before = app.history.len();
+        assert_eq!(app.log.len(), before + 1);
+        assert_eq!(
+            app.log.last().map(|l| (l.level, l.text.as_str())),
+            Some((Level::Command, "Çizgi"))
+        );
+        // A command that is not a tool says nothing of what was typed (the web's
+        // CommandLine); the line's ↑ brings both back, newest first.
+        let _ = app.run("tool.cancel");
+        let before = app.log.len();
         let _ = app.update(Message::CommandRun("ZE".into()));
-        assert_eq!(app.history.len(), before + 1);
+        assert_eq!(app.log.len(), before);
+        assert_eq!(
+            app.typed,
+            [Entry::Input("çizgi".into()), Entry::Input("ZE".into())]
+        );
     }
 
     /// A value or an option given to the running command is echoed as typed
@@ -1668,14 +1678,22 @@ mod tests {
         let _ = app.run("tool.dimension");
         assert_eq!(app.session.tool_id(), "dimension");
         let _ = app.prompt_option("D");
-        assert_eq!(app.history.last(), Some(&Entry::Value("D".to_owned())));
-        // The typed point, then the tool's echo of it.
-        let before = app.history.len();
+        assert_eq!(
+            app.log.last().map(|l| (l.level, l.text.as_str())),
+            Some((Level::Command, "› D"))
+        );
+        // The typed point, then the tool's echo of it; the line's ↑ brings back
+        // what was typed there, not the option's letter.
+        let before = app.log.last_id();
         let _ = app.submit_line("0,0");
         assert_eq!(
-            app.history.get(before),
-            Some(&Entry::Value("0,0".to_owned()))
+            app.log
+                .lines()
+                .find(|l| l.id > before)
+                .map(|l| (l.level, l.text.as_str())),
+            Some((Level::Command, "› 0,0"))
         );
+        assert_eq!(app.typed, [Entry::Input("0,0".into())]);
         assert_eq!(
             app.session.prompt().text(),
             "Ölçü: ikinci ölçü noktasını belirtin"
@@ -1694,7 +1712,10 @@ mod tests {
         let mut app = with_demo();
         let _ = app.run("tool.polygon");
         assert_eq!(app.session.tool_id(), "polygon");
-        assert!(matches!(app.history.last(), Some(Entry::Input(name)) if name == "KA"));
+        assert_eq!(
+            app.log.last().map(|l| (l.level, l.text.as_str())),
+            Some((Level::Command, "Kapalı alan"))
+        );
         // Opening another drawing drops the command and its draft.
         let other = with_demo().document.expect("open");
         let _ = app.update(Message::Opened(Some(Ok(Box::new(other)))));
@@ -1758,7 +1779,9 @@ mod tests {
         assert_eq!(app.session.tool_id(), "polygon");
         assert_eq!(app.session.point_count(), 1, "the draft stays");
         assert!(
-            matches!(app.history.last(), Some(Entry::Warning(text)) if text.contains("“KA” anlaşılamadı"))
+            app.log
+                .last()
+                .is_some_and(|l| l.level == Level::Warn && l.text.contains("“KA” anlaşılamadı"))
         );
     }
 }

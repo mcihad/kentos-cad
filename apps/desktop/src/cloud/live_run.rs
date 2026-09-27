@@ -24,7 +24,6 @@ use kentos_cloud::SaveState;
 use kentos_contracts::{Entity, ProjectStorage};
 use kentos_domain::{Slot, Uuid};
 use kentos_ui::snapshot::Snapshot;
-use kentos_ui::widget::command_line::Entry;
 
 use crate::app::{App, Dialog, Message};
 use crate::cloud::{Event, TICK, msg};
@@ -197,12 +196,7 @@ impl Runner {
 }
 
 fn said(app: &App) -> Vec<String> {
-    app.history
-        .iter()
-        .map(|e| match e {
-            Entry::Input(t) | Entry::Value(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t) => t.clone(),
-        })
-        .collect()
+    app.log.lines().map(|l| l.text.clone()).collect()
 }
 
 /// The other editor (the web's HTTP): one JSON line back.

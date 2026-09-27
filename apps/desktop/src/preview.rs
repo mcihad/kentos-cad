@@ -508,7 +508,7 @@ fn screens() {
                 let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
                 snapshot.settle(&mut app, App::view, &mut update);
                 // The player opens the drawing again: its line is said once.
-                app.history.pop();
+                app.log.clear();
                 let area = app.viewport.bounds;
                 let file = scratch_file(&trace, VARIANTS[0]);
                 let mut player =

@@ -1,8 +1,8 @@
 import type { AppContext } from '../../../app/context';
 import type { Disposable } from '../../../core/disposable';
 import type { Vec2 } from '../../../model/geometry';
-import { checkModel, stepName, type ModelIssue, type ProcessingModel } from '../../../processing/model';
-import { addInput, addStep, autoLayout, copyModel, newModel, setSource, sourcesFor } from '../../../processing/modelEdit';
+import { checkModel, type ModelIssue, type ProcessingModel } from '../../../processing/model';
+import { addInput, addStep, autoLayout, copyModel, newModel, setSource } from '../../../processing/modelEdit';
 import { PickPointTool } from '../../../tools/pickPointTool';
 import { h, replaceChildren } from '../../dom';
 import { icon } from '../../icons';
@@ -10,7 +10,8 @@ import { askRemove, askUnsaved } from '../../widgets/confirm';
 import { Dialog } from '../../widgets/Dialog';
 import { PopupMenu, type MenuItem } from '../../widgets/PopupMenu';
 import { openModelDialog } from '../ToolDialog';
-import { ModelCanvas, type NodeRef } from './ModelCanvas';
+import { connectChoices, DESIGNER_HISTORY, DESIGNER_TEXTS, designerStatus, joins, savedLabel, snap, spotNear, type NodeRef } from './designerPlan';
+import { ModelCanvas } from './ModelCanvas';
 import { renderInspector, type InspectorHost } from './modelInspector';
 import { modelPalette } from './modelPalette';
 
@@ -35,7 +36,7 @@ interface DesignerState {
 export function openModelDesigner(ctx: AppContext, modelId?: string): void {
   const source = modelId ? ctx.processing.model(modelId) : undefined;
   if (modelId && !source) {
-    ctx.log.error(`Model bulunamadı: ${modelId}.`);
+    ctx.log.error(T.notFound(modelId));
     return;
   }
   const builtin = !!source && ctx.processing.isBuiltinModel(source.id);
@@ -45,9 +46,7 @@ export function openModelDesigner(ctx: AppContext, modelId?: string): void {
   new ModelDesigner(ctx, { draft, saved: source && !builtin ? json : null, baseline: json, builtinCopy: builtin, selected: null });
 }
 
-const HISTORY = 100;
-/** Typing into the same field within this time is one undo step. */
-const COALESCE_MS = 1200;
+const T = DESIGNER_TEXTS;
 
 class ModelDesigner implements InspectorHost {
   readonly ctx: AppContext;
@@ -65,7 +64,7 @@ class ModelDesigner implements InspectorHost {
 
   private readonly dialog: Dialog;
   private readonly canvas: ModelCanvas;
-  private readonly inspector = h('aside', { class: 'mdesign__inspector', 'aria-label': 'Seçilen kutunun ayarları' });
+  private readonly inspector = h('aside', { class: 'mdesign__inspector', 'aria-label': DESIGNER_TEXTS.inspector.label });
   private readonly status = h('div', { class: 'ptool__status mdesign__status', role: 'status', 'aria-live': 'polite' });
   private readonly subs: Disposable[] = [];
   /** The unsaved-changes question is open. */
@@ -103,7 +102,7 @@ class ModelDesigner implements InspectorHost {
           if (client && !at) return; // dropped outside the diagram
           this.change(() => {
             const from = this.selected ?? undefined;
-            const id = addStep(this.model, toolId, (x) => this.lookup(x), at ? { x: Math.round(at.x / 10) * 10, y: Math.round(at.y / 10) * 10 } : this.spotNear(), from);
+            const id = addStep(this.model, toolId, (x) => this.lookup(x), at ? { x: snap(at.x), y: snap(at.y) } : this.spotNear(), from);
             this.selected = { kind: 'step', id };
           });
         },
@@ -111,23 +110,23 @@ class ModelDesigner implements InspectorHost {
       this.subs,
     );
 
-    const layout = h('button', { class: 'btn btn--ghost', type: 'button', title: 'Kutuları bağlantı sırasına göre sütunlara dizer' }, icon('columns', 14), 'Düzenle');
+    const layout = h('button', { class: 'btn btn--ghost', type: 'button', title: T.footer.layoutTip }, icon('columns', 14), T.footer.layout);
     layout.addEventListener('click', () =>
       this.change(() => autoLayout(this.model), { after: () => queueMicrotask(() => this.canvas.fit()) }),
     );
-    const close = h('button', { class: 'btn', type: 'button' }, 'Kapat');
+    const close = h('button', { class: 'btn', type: 'button' }, T.footer.close);
     close.addEventListener('click', () => this.dialog.request());
-    const saveRun = h('button', { class: 'btn', type: 'button' }, icon('play', 14), 'Kaydet ve çalıştır…');
+    const saveRun = h('button', { class: 'btn', type: 'button' }, icon('play', 14), T.footer.saveRun);
     saveRun.addEventListener('click', () => {
       if (!this.save()) return;
       this.dialog.close();
       openModelDialog(ctx, this.model.id);
     });
-    const save = h('button', { class: 'btn btn--primary', type: 'button' }, 'Kaydet');
+    const save = h('button', { class: 'btn btn--primary', type: 'button' }, T.footer.save);
     save.addEventListener('click', () => this.save());
 
     this.dialog = new Dialog({
-      title: 'Model tasarımcısı',
+      title: T.title,
       width: 1400,
       className: 'dialog--designer',
       content: [h('div', { class: 'mdesign' }, palette, this.canvas.el, this.inspector)],
@@ -155,10 +154,9 @@ class ModelDesigner implements InspectorHost {
   /** Every edit goes through here: snapshot for undo, change, redraw. */
   change(fn: () => void, opts: { rerender?: boolean; key?: string; after?: () => void } = {}): void {
     const now = performance.now();
-    const joins = opts.key && this.lastKey?.key === opts.key && now - this.lastKey.at < COALESCE_MS;
-    if (!joins) {
+    if (!joins(opts.key, this.lastKey, now)) {
       this.past.push(JSON.stringify({ model: this.model, selected: this.selected }));
-      if (this.past.length > HISTORY) this.past.shift();
+      if (this.past.length > DESIGNER_HISTORY) this.past.shift();
       this.future.length = 0;
     }
     this.lastKey = opts.key ? { key: opts.key, at: now } : null;
@@ -190,7 +188,7 @@ class ModelDesigner implements InspectorHost {
         }
         new ModelDesigner(this.ctx, state);
       });
-    this.ctx.tools.run(new PickPointTool(this.ctx, def?.label ?? 'Nokta', reopen), `Model tasarımcısı: ${def?.label ?? 'nokta'}`);
+    this.ctx.tools.run(new PickPointTool(this.ctx, def?.label ?? T.pick.point, reopen), T.pick.command(def?.label ?? T.pick.unnamed));
   }
 
   pickChoice(stepId: string, param: string): void {
@@ -201,10 +199,10 @@ class ModelDesigner implements InspectorHost {
 
   deleteModel(): void {
     const label = this.model.label;
-    void askRemove({ title: 'Modeli sil', message: `“${label}” modeli silinsin mi? Bu geri alınamaz.`, action: 'Modeli sil' }).then((yes) => {
+    void askRemove({ title: T.remove.title, message: T.remove.question(label), action: T.remove.action }).then((yes) => {
       if (!yes) return;
       this.ctx.processing.removeModel(this.model.id);
-      this.ctx.log.info(`“${label}” modeli silindi.`);
+      this.ctx.log.info(T.remove.done(label));
       this.dialog.close();
     });
   }
@@ -223,18 +221,10 @@ class ModelDesigner implements InspectorHost {
 
   /** What changes while typing: the title and the status line. */
   private refresh(): void {
-    this.dialog?.el.querySelector('.dialog__title')?.replaceChildren(`Model tasarımcısı: ${this.model.label || 'adsız'}${this.dirty ? ' •' : ''}`);
-    const n = this.problems.length;
-    replaceChildren(
-      this.status,
-      n ? icon('warning', 16) : icon('success', 16),
-      h(
-        'span',
-        { class: 'ptool__status-text' },
-        n ? `${n} sorun var; model kaydedilebilir ama çalışmaz. ${this.problems[0].message}` : this.model.steps.length ? `${this.model.steps.length} adım, ${this.model.inputs.length} girdi. Model çalışmaya hazır.` : 'Soldan bir girdi ve bir araç ekleyerek başlayın.',
-      ),
-    );
-    this.status.dataset.kind = n ? 'warn' : 'ok';
+    this.dialog?.el.querySelector('.dialog__title')?.replaceChildren(T.titleOf(this.model.label, this.dirty));
+    const status = designerStatus(this.problems, this.model.steps.length, this.model.inputs.length);
+    replaceChildren(this.status, icon(status.kind === 'warn' ? 'warning' : 'success', 16), h('span', { class: 'ptool__status-text' }, status.text));
+    this.status.dataset.kind = status.kind;
   }
 
   private get dirty(): boolean {
@@ -245,13 +235,9 @@ class ModelDesigner implements InspectorHost {
     return ref.kind === 'input' ? this.model.inputs.some((i) => i.name === ref.name) : this.model.steps.some((s) => s.id === ref.id);
   }
 
-  /** Where a new box goes: to the right of the selected one, else below the others. */
+  /** Where a new box goes (designerPlan.ts `spotNear`). */
   private spotNear(): { x: number; y: number } {
-    const sel = this.selected;
-    const pos = sel?.kind === 'input' ? this.model.inputPositions?.[sel.name] : sel?.kind === 'step' ? this.model.steps.find((s) => s.id === sel.id)?.position : undefined;
-    if (pos) return { x: pos.x + 290, y: pos.y };
-    const ys = [...this.model.steps.map((s) => s.position?.y ?? 0), ...Object.values(this.model.inputPositions ?? {}).map((p) => p.y)];
-    return { x: 40, y: ys.length ? Math.max(...ys) + 100 : 40 };
+    return spotNear(this.model, this.selected);
   }
 
   private move(ref: NodeRef, at: { x: number; y: number }, done: boolean): void {
@@ -278,49 +264,31 @@ class ModelDesigner implements InspectorHost {
     this.refresh();
   }
 
-  /** A wire dropped on a step: pick which of its inputs the source feeds. */
+  /** A wire dropped on a step: pick which of its inputs the source feeds (designerPlan.ts `connectChoices`). */
   private connectMenu(from: NodeRef, toStep: string, client: { x: number; y: number }): void {
-    const step = this.model.steps.find((s) => s.id === toStep);
-    const tool = step && this.lookup(step.tool);
-    if (!step || !tool) return;
-    const sourceStep = from.kind === 'step' ? this.model.steps.find((s) => s.id === from.id) : undefined;
-    const outputs = from.kind === 'input' ? [null] : (this.lookup(sourceStep?.tool ?? '')?.outputs ?? []);
-    const items: MenuItem[] = [];
-    for (const out of outputs) {
-      for (const p of tool.parameters) {
-        const fits = sourcesFor(this.model, toStep, p, (id) => this.lookup(id)).find((o) =>
-          from.kind === 'input' ? o.src.kind === 'input' && o.src.name === from.name : o.src.kind === 'output' && o.src.step === from.id && o.src.output === out?.name,
-        );
-        if (!fits) continue;
-        const current = step.values[p.name];
-        items.push({
-          label: out ? `${out.label} → ${p.label}` : p.label,
-          detail: current && JSON.stringify(current) !== JSON.stringify(fits.src) ? 'Mevcut bağlantının yerine geçer' : undefined,
-          checked: JSON.stringify(current) === JSON.stringify(fits.src),
-          run: () =>
-            this.change(() => {
-              setSource(this.model, toStep, p.name, fits.src);
-              this.selected = { kind: 'step', id: toStep };
-            }),
-        });
-      }
-    }
-    if (!items.length) {
-      const what = from.kind === 'input' ? this.model.inputs.find((i) => i.name === from.name)?.label : sourceStep && stepName(sourceStep, (id) => this.lookup(id));
-      items.push({ label: `“${what}” bu adımın hiçbir girdisine uymuyor`, disabled: true });
-    }
-    PopupMenu.open([{ kind: 'header', label: `${stepName(step, (id) => this.lookup(id))}: hangi girdi?` }, ...items], client, { placement: 'point' });
+    const choices = connectChoices(this.model, from, toStep, (id) => this.lookup(id));
+    if (!choices) return;
+    const items: MenuItem[] = choices.items.map((c) => ({
+      label: c.label,
+      detail: c.detail,
+      checked: c.checked,
+      run: () =>
+        this.change(() => {
+          setSource(this.model, toStep, c.param, c.src);
+          this.selected = { kind: 'step', id: toStep };
+        }),
+    }));
+    if (choices.none) items.push({ label: choices.none, disabled: true });
+    PopupMenu.open([{ kind: 'header', label: choices.header }, ...items], client, { placement: 'point' });
   }
 
   // ── Saving, closing, keys ──────────────────────────────────────────────
 
   private save(): boolean {
-    if (!this.model.label.trim()) {
-      this.model.label = 'Adsız model';
-    }
+    this.model.label = savedLabel(this.model.label);
     this.ctx.processing.saveModel(this.model);
     this.savedJson = this.baseline = JSON.stringify(this.model);
-    this.ctx.log.success(`“${this.model.label}” modeli kaydedildi${this.problems.length ? `; ${this.problems.length} sorun giderilene kadar çalışmaz` : ''}.`);
+    this.ctx.log.success(T.save.saved(this.model.label, this.problems.length));
     this.render();
     return true;
   }
@@ -330,7 +298,7 @@ class ModelDesigner implements InspectorHost {
     if (!this.dirty) return true;
     if (!this.asking) {
       this.asking = true;
-      void askUnsaved({ name: this.model.label || 'Adsız model', after: 'Pencere kapanırsa bu değişiklikler kaybolur.', verb: 'kapat' }).then((a) => {
+      void askUnsaved({ name: this.model.label || T.save.unnamed, after: T.unsaved.after, verb: T.unsaved.verb }).then((a) => {
         this.asking = false;
         if (a === 'discard') this.dialog.close();
         else if (a === 'save' && this.save()) this.dialog.close();

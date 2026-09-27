@@ -1,0 +1,9379 @@
+{
+ "format": "kentos.modelDesigner",
+ "version": 1,
+ "texts": {
+  "title": "Model tasarımcısı",
+  "titleOf": {
+   "sample": [
+    "Parsel ölçü yazıları",
+    true
+   ],
+   "text": "Model tasarımcısı: Parsel ölçü yazıları •"
+  },
+  "notFound": {
+   "sample": [
+    "m-1a2b"
+   ],
+   "text": "Model bulunamadı: m-1a2b."
+  },
+  "footer": {
+   "layout": "Düzenle",
+   "layoutTip": "Kutuları bağlantı sırasına göre sütunlara dizer",
+   "close": "Kapat",
+   "saveRun": "Kaydet ve çalıştır…",
+   "save": "Kaydet"
+  },
+  "status": {
+   "problems": {
+    "sample": [
+     2,
+     "“Alan” için bir değer ya da bağlantı gerekiyor."
+    ],
+    "text": "2 sorun var; model kaydedilebilir ama çalışmaz. “Alan” için bir değer ya da bağlantı gerekiyor."
+   },
+   "ready": {
+    "sample": [
+     3,
+     2
+    ],
+    "text": "3 adım, 2 girdi. Model çalışmaya hazır."
+   },
+   "empty": "Soldan bir girdi ve bir araç ekleyerek başlayın."
+  },
+  "save": {
+   "unnamed": "Adsız model",
+   "saved": {
+    "sample": [
+     "Parsel ölçü yazıları",
+     2
+    ],
+    "text": "“Parsel ölçü yazıları” modeli kaydedildi; 2 sorun giderilene kadar çalışmaz."
+   }
+  },
+  "unsaved": {
+   "after": "Pencere kapanırsa bu değişiklikler kaybolur.",
+   "verb": "kapat"
+  },
+  "remove": {
+   "title": "Modeli sil",
+   "question": {
+    "sample": [
+     "Ada özeti"
+    ],
+    "text": "“Ada özeti” modeli silinsin mi? Bu geri alınamaz."
+   },
+   "action": "Modeli sil",
+   "done": {
+    "sample": [
+     "Ada özeti"
+    ],
+    "text": "“Ada özeti” modeli silindi."
+   }
+  },
+  "pick": {
+   "point": "Nokta",
+   "command": {
+    "sample": [
+     "Başlangıç noktası"
+    ],
+    "text": "Model tasarımcısı: Başlangıç noktası"
+   },
+   "unnamed": "nokta"
+  },
+  "connect": {
+   "header": {
+    "sample": [
+     "Kenar uzunluklarını yaz"
+    ],
+    "text": "Kenar uzunluklarını yaz: hangi girdi?"
+   },
+   "fromStep": {
+    "sample": [
+     "Köşe noktaları",
+     "Girdi nesneleri"
+    ],
+    "text": "Köşe noktaları → Girdi nesneleri"
+   },
+   "replaces": "Mevcut bağlantının yerine geçer",
+   "none": {
+    "sample": [
+     "Parseller"
+    ],
+    "text": "“Parseller” bu adımın hiçbir girdisine uymuyor"
+   }
+  },
+  "canvas": {
+   "label": "Model diyagramı",
+   "zoomOut": "Uzaklaş",
+   "zoomIn": "Yakınlaş",
+   "fit": "Tümünü göster (çift tık)",
+   "port": "Sürükleyip bir adımın üzerine bırakın",
+   "inputMeta": {
+    "sample": [
+     "Nesneler",
+     true
+    ],
+    "text": "Girdi: Nesneler, isteğe bağlı"
+   },
+   "links": {
+    "sample": [
+     2
+    ],
+    "text": "2 bağlantı"
+   },
+   "noLinks": "Bağlantı yok"
+  },
+  "palette": {
+   "label": "Model parçaları",
+   "inputs": "Girdi ekle",
+   "tools": "Araçlar",
+   "search": "Araç ara",
+   "empty": "Aramayla eşleşen araç yok.",
+   "toolNote": "Tıklayın ya da tuvale sürükleyin",
+   "tip": "Bir aracı tıklayın ya da tuvale sürükleyin. Seçili kutu varsa yeni adım ona bağlanır; bağlantıyı değiştirmek için kutunun sağındaki noktadan sürükleyin."
+  },
+  "inspector": {
+   "label": "Seçilen kutunun ayarları",
+   "model": {
+    "kind": "Model",
+    "lead": "Adı ve açıklaması araç kutusunda ve menüde görünür.",
+    "name": "Ad",
+    "nameAria": "Model adı",
+    "category": "Kategori",
+    "description": "Açıklama",
+    "descriptionAria": "Model açıklaması",
+    "descriptionHint": "Ne yapar, tek cümle",
+    "outputs": "Model çıktıları",
+    "output": {
+     "sample": [
+      "Köşe noktalarını numarala",
+      "Köşe noktaları"
+     ],
+     "text": "Köşe noktalarını numarala › Köşe noktaları"
+    },
+    "noStep": "adım yok",
+    "removeOutput": {
+     "sample": [
+      "Köşe noktaları"
+     ],
+     "text": "“Köşe noktaları” çıktısını kaldır"
+    },
+    "addOutput": "Çıktı ekle",
+    "noOutput": "Eklenebilecek çıktı yok",
+    "remove": "Modeli sil"
+   },
+   "problems": {
+    "title": "Sorunlar",
+    "titleCount": {
+     "sample": [
+      3
+     ],
+     "text": "Sorunlar (3)"
+    },
+    "ready": "Model çalışmaya hazır.",
+    "start": "Başlamak için soldan bir girdi ve bir araç ekleyin.",
+    "ofStep": {
+     "sample": [
+      "İfadeyle seç",
+      "“Koşul” için bir değer ya da bağlantı gerekiyor."
+     ],
+     "text": "İfadeyle seç: “Koşul” için bir değer ya da bağlantı gerekiyor."
+    }
+   },
+   "input": {
+    "kind": {
+     "sample": [
+      "Sayı"
+     ],
+     "text": "Girdi: Sayı"
+    },
+    "lead": "Model çalıştırılırken kullanıcıdan istenir.",
+    "label": "Etiket",
+    "labelAria": "Girdi etiketi",
+    "variable": {
+     "sample": [
+      "noktaOneki"
+     ],
+     "text": "Değişken adı: noktaOneki"
+    },
+    "description": "Açıklama",
+    "descriptionAria": "Girdi açıklaması",
+    "descriptionHint": "Pencerede etiketin altında görünür",
+    "optional": "İsteğe bağlı",
+    "default": "Varsayılan",
+    "scopeAria": "Varsayılan kapsam",
+    "scopes": {
+     "selection": "Seçili",
+     "visible": "Görünen",
+     "all": "Tümü"
+    },
+    "kinds": "Uygun nesneler",
+    "kindsNote": "Hiçbiri seçili değilse her tür alınır; adımlar kendi türlerini ayrıca süzer.",
+    "min": "En az",
+    "max": "En çok",
+    "none": "yok",
+    "integer": "Tam sayı",
+    "textDefault": "Varsayılan metin",
+    "allowEmpty": "Boş bırakılabilir",
+    "newLayer": "Varsayılan yeni katman",
+    "newLayerAria": "Varsayılan yeni katman adı",
+    "newLayerNote": "Çalıştırırken var olan bir katman da seçilebilir.",
+    "pointNote": "Çalıştırırken haritada gösterilir ya da Y,X yazılır.",
+    "users": "Kullanan adımlar",
+    "noUsers": "Henüz hiçbir adım bu girdiyi kullanmıyor. Kutunun sağındaki noktadan bir adıma sürükleyin.",
+    "remove": "Girdiyi sil"
+   },
+   "step": {
+    "unknown": "Bilinmeyen araç",
+    "unknownNote": {
+     "sample": [
+      "t.gone"
+     ],
+     "text": "“t.gone” bu sürümde yok. Adımı silin ya da aracı sağlayan eklentiyi yükleyin."
+    },
+    "caption": "Başlık",
+    "captionAria": "Adım başlığı",
+    "captionNote": "Diyagramda ve iletilerde görünür.",
+    "params": "Parametreler",
+    "advanced": {
+     "sample": [
+      1
+     ],
+     "text": "Gelişmiş (1)"
+    },
+    "optional": "isteğe bağlı",
+    "sourceAria": {
+     "sample": [
+      "Önek"
+     ],
+     "text": "Önek: kaynak"
+    },
+    "toolDefault": "Aracın varsayılanı",
+    "fixed": "Sabit değer",
+    "modelInput": "Model girdisi",
+    "asInput": "Yeni model girdisi yap",
+    "asInputNote": "Model çalıştırılırken bu değer sorulur",
+    "inputSource": {
+     "sample": [
+      "Nokta öneki"
+     ],
+     "text": "Girdi: Nokta öneki"
+    },
+    "outputSource": {
+     "sample": [
+      "Köşe noktalarını numarala",
+      "Nokta sayısı"
+     ],
+     "text": "Köşe noktalarını numarala › Nokta sayısı"
+    },
+    "remove": "Adımı sil"
+   }
+  }
+ },
+ "inputTypes": [
+  {
+   "type": "features",
+   "label": "Nesneler",
+   "icon": "select",
+   "description": "Seçili, görünen, bütün nesneler ya da bir katman"
+  },
+  {
+   "type": "number",
+   "label": "Sayı",
+   "icon": "units",
+   "description": "Mesafe, adet, ondalık basamak …"
+  },
+  {
+   "type": "string",
+   "label": "Metin",
+   "icon": "text",
+   "description": "Önek, alan adı, ifade …"
+  },
+  {
+   "type": "boolean",
+   "label": "Evet / hayır",
+   "icon": "check",
+   "description": "Açık ya da kapalı bir seçenek"
+  },
+  {
+   "type": "layer",
+   "label": "Katman",
+   "icon": "layers",
+   "description": "Sonuçların yazılacağı katman"
+  },
+  {
+   "type": "point",
+   "label": "Nokta",
+   "icon": "point",
+   "description": "Haritada gösterilen bir nokta"
+  }
+ ],
+ "canvas": {
+  "inputW": 190,
+  "inputH": 52,
+  "stepW": 240,
+  "stepH": 60,
+  "grid": 10,
+  "zoomMin": 0.35,
+  "zoomMax": 2,
+  "zoomStep": 1.25,
+  "wheel": 0.0015,
+  "fitPad": 48,
+  "empty": {
+   "x": 24,
+   "y": 24,
+   "k": 1
+  },
+  "drag": 3,
+  "paletteDrag": 5,
+  "column": 290,
+  "row": 100,
+  "bend": 40,
+  "labelGap": 8,
+  "labelRise": 6,
+  "labelRow": 13
+ },
+ "history": {
+  "depth": 100,
+  "coalesceMs": 1200
+ },
+ "tools": [
+  {
+   "id": "t.corners",
+   "label": "Köşe noktalarını numarala",
+   "icon": "numbering",
+   "parameters": [
+    {
+     "type": "features",
+     "name": "input",
+     "label": "Girdi nesneleri",
+     "kinds": [
+      "polygon",
+      "polyline"
+     ],
+     "default": {
+      "scope": "selection"
+     }
+    },
+    {
+     "type": "string",
+     "name": "prefix",
+     "label": "Önek",
+     "default": "P",
+     "allowEmpty": true
+    },
+    {
+     "type": "number",
+     "name": "start",
+     "label": "İlk numara",
+     "default": 1,
+     "min": 1,
+     "max": 99999,
+     "integer": true
+    },
+    {
+     "type": "enum",
+     "name": "from",
+     "label": "Başlangıç köşesi",
+     "options": [
+      {
+       "value": "north",
+       "label": "Kuzeybatı"
+      },
+      {
+       "value": "point",
+       "label": "Seçilen noktaya en yakın"
+      }
+     ],
+     "default": "north"
+    },
+    {
+     "type": "point",
+     "name": "startPoint",
+     "label": "Başlangıç noktası",
+     "visibleWhen": {
+      "param": "from",
+      "equals": "point"
+     }
+    },
+    {
+     "type": "layer",
+     "name": "target",
+     "label": "Nokta katmanı",
+     "default": {
+      "newName": "Köşe noktaları"
+     },
+     "advanced": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "points",
+     "label": "Köşe noktaları",
+     "type": "features"
+    },
+    {
+     "name": "count",
+     "label": "Nokta sayısı",
+     "type": "number"
+    }
+   ]
+  },
+  {
+   "id": "t.lengths",
+   "label": "Kenar uzunluklarını yaz",
+   "icon": "dimension",
+   "parameters": [
+    {
+     "type": "features",
+     "name": "input",
+     "label": "Girdi nesneleri",
+     "default": {
+      "scope": "selection"
+     }
+    },
+    {
+     "type": "number",
+     "name": "decimals",
+     "label": "Ondalık",
+     "default": 2,
+     "min": 0,
+     "max": 4,
+     "integer": true,
+     "unit": "basamak"
+    },
+    {
+     "type": "string",
+     "name": "suffix",
+     "label": "Sonek",
+     "optional": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "labels",
+     "label": "Ölçü yazıları",
+     "type": "features"
+    }
+   ]
+  },
+  {
+   "id": "t.calc",
+   "label": "Öznitelik hesapla",
+   "icon": "calculator",
+   "parameters": [
+    {
+     "type": "features",
+     "name": "input",
+     "label": "Nesneler",
+     "default": {
+      "scope": "selection"
+     }
+    },
+    {
+     "type": "field",
+     "name": "field",
+     "label": "Alan"
+    },
+    {
+     "type": "expression",
+     "name": "value",
+     "label": "Değer"
+    },
+    {
+     "type": "boolean",
+     "name": "label",
+     "label": "Etiket yap",
+     "default": false
+    },
+    {
+     "type": "string",
+     "name": "unit",
+     "label": "Birim",
+     "default": "m"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "changed",
+     "label": "Değişen nesneler",
+     "type": "features"
+    }
+   ]
+  },
+  {
+   "id": "t.select",
+   "label": "İfadeyle seç",
+   "icon": "select",
+   "parameters": [
+    {
+     "type": "features",
+     "name": "input",
+     "label": "Nesneler",
+     "default": {
+      "scope": "visible"
+     }
+    },
+    {
+     "type": "expression",
+     "name": "where",
+     "label": "Koşul"
+    },
+    {
+     "type": "string",
+     "name": "note",
+     "label": "Not"
+    },
+    {
+     "type": "expression",
+     "name": "order",
+     "label": "Sıra",
+     "default": "$id",
+     "advanced": true
+    }
+   ],
+   "outputs": [
+    {
+     "name": "selected",
+     "label": "Seçilenler",
+     "type": "features"
+    },
+    {
+     "name": "summary",
+     "label": "Özet",
+     "type": "string"
+    }
+   ]
+  }
+ ],
+ "defaults": {
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "activeLayer": "L1",
+  "drawingFont": "barlow"
+ },
+ "canFeed": [
+  {
+   "from": "features",
+   "feeds": [
+    "features"
+   ]
+  },
+  {
+   "from": "number",
+   "feeds": [
+    "number",
+    "string"
+   ]
+  },
+  {
+   "from": "string",
+   "feeds": [
+    "string",
+    "expression",
+    "field"
+   ]
+  },
+  {
+   "from": "boolean",
+   "feeds": [
+    "boolean"
+   ]
+  },
+  {
+   "from": "enum",
+   "feeds": [
+    "string",
+    "enum"
+   ]
+  },
+  {
+   "from": "layer",
+   "feeds": [
+    "layer"
+   ]
+  },
+  {
+   "from": "point",
+   "feeds": [
+    "point"
+   ]
+  },
+  {
+   "from": "expression",
+   "feeds": [
+    "expression"
+   ]
+  },
+  {
+   "from": "field",
+   "feeds": [
+    "field"
+   ]
+  }
+ ],
+ "slugs": [
+  {
+   "label": "Nokta öneki",
+   "slug": "noktaOneki"
+  },
+  {
+   "label": "Parseller",
+   "slug": "parseller"
+  },
+  {
+   "label": "Köşe noktalarını numarala",
+   "slug": "koseNoktalariniNumarala"
+  },
+  {
+   "label": "İfadeyle seç",
+   "slug": "ifadeyleSec"
+  },
+  {
+   "label": "3 nokta",
+   "slug": "g3Nokta"
+  },
+  {
+   "label": "",
+   "slug": "g"
+  },
+  {
+   "label": "  Çıktı katmanı  ",
+   "slug": "ciktiKatmani"
+  },
+  {
+   "label": "ALAN (m²)",
+   "slug": "alanM"
+  },
+  {
+   "label": "a_b-c",
+   "slug": "aBC"
+  },
+  {
+   "label": "Işık ve ıslak",
+   "slug": "isikVeIslak"
+  },
+  {
+   "label": "Kâğıt",
+   "slug": "kGit"
+  },
+  {
+   "label": "Öznitelik hesapla",
+   "slug": "oznitelikHesapla"
+  }
+ ],
+ "newModel": {
+  "label": "Yeni model",
+  "category": "points",
+  "description": "",
+  "inputs": [],
+  "steps": [],
+  "outputs": [],
+  "inputPositions": {}
+ },
+ "copyLabel": {
+  "label": "Parsel ölçü yazıları",
+  "copy": "Parsel ölçü yazıları (kopya)"
+ },
+ "sequences": [
+  {
+   "title": "a chain built from the palette, then its first step removed and the diagram laid out",
+   "steps": [
+    {
+     "op": {
+      "op": "addInput",
+      "type": "features",
+      "label": "Parseller"
+     },
+     "result": "parseller",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       }
+      ],
+      "steps": [],
+      "outputs": [],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addInput",
+      "type": "string",
+      "label": "Nokta öneki"
+     },
+     "result": "noktaOneki",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [],
+      "outputs": [],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.corners",
+      "from": {
+       "kind": "input",
+       "name": "parseller"
+      }
+     },
+     "result": "koseNoktalariniNumarala",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "parseller"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "koseNoktalariniNumarala",
+      "param": "prefix",
+      "src": {
+       "kind": "input",
+       "name": "noktaOneki"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "parseller"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "noktaOneki"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.lengths",
+      "from": {
+       "kind": "step",
+       "id": "koseNoktalariniNumarala"
+      }
+     },
+     "result": "kenarUzunluklariniYaz",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "parseller"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "noktaOneki"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "koseNoktalariniNumarala",
+          "output": "points"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addOutput",
+      "step": "koseNoktalariniNumarala",
+      "output": "points"
+     },
+     "result": "points",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "parseller"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "noktaOneki"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "koseNoktalariniNumarala",
+          "output": "points"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [
+       {
+        "name": "points",
+        "label": "Köşe noktaları",
+        "from": {
+         "step": "koseNoktalariniNumarala",
+         "output": "points"
+        }
+       }
+      ],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addOutput",
+      "step": "kenarUzunluklariniYaz",
+      "output": "labels"
+     },
+     "result": "labels",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "parseller"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "noktaOneki"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "koseNoktalariniNumarala",
+          "output": "points"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [
+       {
+        "name": "points",
+        "label": "Köşe noktaları",
+        "from": {
+         "step": "koseNoktalariniNumarala",
+         "output": "points"
+        }
+       },
+       {
+        "name": "labels",
+        "label": "Ölçü yazıları",
+        "from": {
+         "step": "kenarUzunluklariniYaz",
+         "output": "labels"
+        }
+       }
+      ],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.corners",
+      "at": {
+       "x": 300,
+       "y": 300
+      }
+     },
+     "result": "koseNoktalariniNumarala2",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "parseller"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "noktaOneki"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "koseNoktalariniNumarala",
+          "output": "points"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       },
+       {
+        "id": "koseNoktalariniNumarala2",
+        "tool": "t.corners",
+        "values": {},
+        "position": {
+         "x": 300,
+         "y": 300
+        }
+       }
+      ],
+      "outputs": [
+       {
+        "name": "points",
+        "label": "Köşe noktaları",
+        "from": {
+         "step": "koseNoktalariniNumarala",
+         "output": "points"
+        }
+       },
+       {
+        "name": "labels",
+        "label": "Ölçü yazıları",
+        "from": {
+         "step": "kenarUzunluklariniYaz",
+         "output": "labels"
+        }
+       }
+      ],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addOutput",
+      "step": "koseNoktalariniNumarala2",
+      "output": "points"
+     },
+     "result": "points3",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "parseller"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "noktaOneki"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "koseNoktalariniNumarala",
+          "output": "points"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       },
+       {
+        "id": "koseNoktalariniNumarala2",
+        "tool": "t.corners",
+        "values": {},
+        "position": {
+         "x": 300,
+         "y": 300
+        }
+       }
+      ],
+      "outputs": [
+       {
+        "name": "points",
+        "label": "Köşe noktaları",
+        "from": {
+         "step": "koseNoktalariniNumarala",
+         "output": "points"
+        }
+       },
+       {
+        "name": "labels",
+        "label": "Ölçü yazıları",
+        "from": {
+         "step": "kenarUzunluklariniYaz",
+         "output": "labels"
+        }
+       },
+       {
+        "name": "points3",
+        "label": "Köşe noktaları",
+        "from": {
+         "step": "koseNoktalariniNumarala2",
+         "output": "points"
+        }
+       }
+      ],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "kenarUzunluklariniYaz",
+      "param": "decimals"
+     },
+     "result": "ondalik",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ondalik",
+        "label": "Ondalık",
+        "default": 2,
+        "min": 0,
+        "max": 4,
+        "integer": true,
+        "unit": "basamak"
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "parseller"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "noktaOneki"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "koseNoktalariniNumarala",
+          "output": "points"
+         },
+         "decimals": {
+          "kind": "input",
+          "name": "ondalik"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       },
+       {
+        "id": "koseNoktalariniNumarala2",
+        "tool": "t.corners",
+        "values": {},
+        "position": {
+         "x": 300,
+         "y": 300
+        }
+       }
+      ],
+      "outputs": [
+       {
+        "name": "points",
+        "label": "Köşe noktaları",
+        "from": {
+         "step": "koseNoktalariniNumarala",
+         "output": "points"
+        }
+       },
+       {
+        "name": "labels",
+        "label": "Ölçü yazıları",
+        "from": {
+         "step": "kenarUzunluklariniYaz",
+         "output": "labels"
+        }
+       },
+       {
+        "name": "points3",
+        "label": "Köşe noktaları",
+        "from": {
+         "step": "koseNoktalariniNumarala2",
+         "output": "points"
+        }
+       }
+      ],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       },
+       "ondalik": {
+        "x": 290,
+        "y": 60
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "removeStep",
+      "id": "koseNoktalariniNumarala"
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ondalik",
+        "label": "Ondalık",
+        "default": 2,
+        "min": 0,
+        "max": 4,
+        "integer": true,
+        "unit": "basamak"
+       }
+      ],
+      "steps": [
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {
+         "decimals": {
+          "kind": "input",
+          "name": "ondalik"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       },
+       {
+        "id": "koseNoktalariniNumarala2",
+        "tool": "t.corners",
+        "values": {},
+        "position": {
+         "x": 300,
+         "y": 300
+        }
+       }
+      ],
+      "outputs": [
+       {
+        "name": "labels",
+        "label": "Ölçü yazıları",
+        "from": {
+         "step": "kenarUzunluklariniYaz",
+         "output": "labels"
+        }
+       },
+       {
+        "name": "points3",
+        "label": "Köşe noktaları",
+        "from": {
+         "step": "koseNoktalariniNumarala2",
+         "output": "points"
+        }
+       }
+      ],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 130
+       },
+       "ondalik": {
+        "x": 290,
+        "y": 60
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "autoLayout"
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "parseller",
+        "label": "Parseller",
+        "default": {
+         "scope": "selection"
+        }
+       },
+       {
+        "type": "string",
+        "name": "noktaOneki",
+        "label": "Nokta öneki",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ondalik",
+        "label": "Ondalık",
+        "default": 2,
+        "min": 0,
+        "max": 4,
+        "integer": true,
+        "unit": "basamak"
+       }
+      ],
+      "steps": [
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {
+         "decimals": {
+          "kind": "input",
+          "name": "ondalik"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "koseNoktalariniNumarala2",
+        "tool": "t.corners",
+        "values": {},
+        "position": {
+         "x": 330,
+         "y": 140
+        }
+       }
+      ],
+      "outputs": [
+       {
+        "name": "labels",
+        "label": "Ölçü yazıları",
+        "from": {
+         "step": "kenarUzunluklariniYaz",
+         "output": "labels"
+        }
+       },
+       {
+        "name": "points3",
+        "label": "Köşe noktaları",
+        "from": {
+         "step": "koseNoktalariniNumarala2",
+         "output": "points"
+        }
+       }
+      ],
+      "inputPositions": {
+       "parseller": {
+        "x": 40,
+        "y": 40
+       },
+       "noktaOneki": {
+        "x": 40,
+        "y": 140
+       },
+       "ondalik": {
+        "x": 40,
+        "y": 240
+       }
+      }
+     },
+     "issues": []
+    }
+   ]
+  },
+  {
+   "title": "what stops a model: missing values, a missing input, types that do not fit, a cycle, an unknown tool",
+   "steps": [
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.calc"
+     },
+     "result": "oznitelikHesapla",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {},
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.select"
+     },
+     "result": "ifadeyleSec",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {},
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {},
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Not” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "ifadeyleSec",
+      "param": "note",
+      "src": {
+       "kind": "value",
+       "value": "x"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {},
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "oznitelikHesapla",
+      "param": "field",
+      "src": {
+       "kind": "output",
+       "step": "ifadeyleSec",
+       "output": "summary"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "oznitelikHesapla",
+      "param": "value",
+      "src": {
+       "kind": "output",
+       "step": "ifadeyleSec",
+       "output": "summary"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "ifadeyleSec",
+      "param": "input",
+      "src": {
+       "kind": "output",
+       "step": "oznitelikHesapla",
+       "output": "changed"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         },
+         "input": {
+          "kind": "output",
+          "step": "oznitelikHesapla",
+          "output": "changed"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "message": "Modelde döngü var: oznitelikHesapla → ifadeyleSec birbirini bekliyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "oznitelikHesapla",
+      "param": "input",
+      "src": {
+       "kind": "input",
+       "name": "yok"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "input": {
+          "kind": "input",
+          "name": "yok"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         },
+         "input": {
+          "kind": "output",
+          "step": "oznitelikHesapla",
+          "output": "changed"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Nesneler” olmayan bir model girdisine bağlı: yok"
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "message": "Modelde döngü var: oznitelikHesapla → ifadeyleSec birbirini bekliyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "ifadeyleSec",
+      "param": "where",
+      "src": {
+       "kind": "output",
+       "step": "oznitelikHesapla",
+       "output": "changed"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "input": {
+          "kind": "input",
+          "name": "yok"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         },
+         "input": {
+          "kind": "output",
+          "step": "oznitelikHesapla",
+          "output": "changed"
+         },
+         "where": {
+          "kind": "output",
+          "step": "oznitelikHesapla",
+          "output": "changed"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Nesneler” olmayan bir model girdisine bağlı: yok"
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” “Değişen nesneler” çıktısından beslenemez: türler uymuyor."
+      },
+      {
+       "message": "Modelde döngü var: oznitelikHesapla → ifadeyleSec birbirini bekliyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "ifadeyleSec",
+      "param": "input",
+      "src": null
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "input": {
+          "kind": "input",
+          "name": "yok"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         },
+         "where": {
+          "kind": "output",
+          "step": "oznitelikHesapla",
+          "output": "changed"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Nesneler” olmayan bir model girdisine bağlı: yok"
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” “Değişen nesneler” çıktısından beslenemez: türler uymuyor."
+      },
+      {
+       "message": "Modelde döngü var: oznitelikHesapla → ifadeyleSec birbirini bekliyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.gone"
+     },
+     "result": "tGone",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "input": {
+          "kind": "input",
+          "name": "yok"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         },
+         "where": {
+          "kind": "output",
+          "step": "oznitelikHesapla",
+          "output": "changed"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       },
+       {
+        "id": "tGone",
+        "tool": "t.gone",
+        "values": {},
+        "position": {
+         "x": 860,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Nesneler” olmayan bir model girdisine bağlı: yok"
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” “Değişen nesneler” çıktısından beslenemez: türler uymuyor."
+      },
+      {
+       "step": "tGone",
+       "message": "Bilinmeyen işlem aracı: t.gone"
+      },
+      {
+       "message": "Modelde döngü var: oznitelikHesapla → ifadeyleSec birbirini bekliyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "ifadeyleSec",
+      "param": "where"
+     },
+     "result": "kosul",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "kosul",
+        "label": "Koşul",
+        "default": ""
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "input": {
+          "kind": "input",
+          "name": "yok"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         },
+         "where": {
+          "kind": "input",
+          "name": "kosul"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       },
+       {
+        "id": "tGone",
+        "tool": "t.gone",
+        "values": {},
+        "position": {
+         "x": 860,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "kosul": {
+        "x": 290,
+        "y": 60
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Nesneler” olmayan bir model girdisine bağlı: yok"
+      },
+      {
+       "step": "tGone",
+       "message": "Bilinmeyen işlem aracı: t.gone"
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "oznitelikHesapla",
+      "param": "input",
+      "src": {
+       "kind": "output",
+       "step": "ifadeyleSec",
+       "output": "nothing"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "kosul",
+        "label": "Koşul",
+        "default": ""
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "nothing"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         },
+         "where": {
+          "kind": "input",
+          "name": "kosul"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       },
+       {
+        "id": "tGone",
+        "tool": "t.gone",
+        "values": {},
+        "position": {
+         "x": 860,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "kosul": {
+        "x": 290,
+        "y": 60
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Nesneler” olmayan bir çıktıya bağlı: ifadeyleSec.nothing"
+      },
+      {
+       "step": "tGone",
+       "message": "Bilinmeyen işlem aracı: t.gone"
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "removeInput",
+      "name": "kosul"
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "nothing"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         }
+        },
+        "position": {
+         "x": 580,
+         "y": 60
+        }
+       },
+       {
+        "id": "tGone",
+        "tool": "t.gone",
+        "values": {},
+        "position": {
+         "x": 860,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Nesneler” olmayan bir çıktıya bağlı: ifadeyleSec.nothing"
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "tGone",
+       "message": "Bilinmeyen işlem aracı: t.gone"
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "autoLayout"
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "value": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "summary"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "nothing"
+         }
+        },
+        "position": {
+         "x": 620,
+         "y": 40
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "note": {
+          "kind": "value",
+          "value": "x"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "tGone",
+        "tool": "t.gone",
+        "values": {},
+        "position": {
+         "x": 330,
+         "y": 140
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Nesneler” olmayan bir çıktıya bağlı: ifadeyleSec.nothing"
+      },
+      {
+       "step": "ifadeyleSec",
+       "message": "“Koşul” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "tGone",
+       "message": "Bilinmeyen işlem aracı: t.gone"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "a parameter shown only for one choice is needed only then",
+   "steps": [
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.corners"
+     },
+     "result": "koseNoktalariniNumarala",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {},
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "koseNoktalariniNumarala",
+      "param": "from",
+      "src": {
+       "kind": "value",
+       "value": "point"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "from": {
+          "kind": "value",
+          "value": "point"
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": [
+      {
+       "step": "koseNoktalariniNumarala",
+       "message": "“Başlangıç noktası” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "koseNoktalariniNumarala",
+      "param": "startPoint",
+      "src": {
+       "kind": "value",
+       "value": {
+        "x": 412100,
+        "y": 4512100
+       }
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "from": {
+          "kind": "value",
+          "value": "point"
+         },
+         "startPoint": {
+          "kind": "value",
+          "value": {
+           "x": 412100,
+           "y": 4512100
+          }
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "koseNoktalariniNumarala",
+      "param": "from",
+      "src": null
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "startPoint": {
+          "kind": "value",
+          "value": {
+           "x": 412100,
+           "y": 4512100
+          }
+         }
+        },
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "koseNoktalariniNumarala",
+      "param": "startPoint",
+      "src": null
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {},
+        "position": {
+         "x": 300,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": []
+    }
+   ]
+  },
+  {
+   "title": "each kind of parameter made a model input",
+   "steps": [
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.corners",
+      "at": {
+       "x": 600,
+       "y": 200
+      }
+     },
+     "result": "koseNoktalariniNumarala",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {},
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {}
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "koseNoktalariniNumarala",
+      "param": "input"
+     },
+     "result": "girdiNesneleri",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "koseNoktalariniNumarala",
+      "param": "prefix"
+     },
+     "result": "onek",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "koseNoktalariniNumarala",
+      "param": "start"
+     },
+     "result": "ilkNumara",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ilkNumara",
+        "label": "İlk numara",
+        "default": 1,
+        "min": 1,
+        "max": 99999,
+        "integer": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         },
+         "start": {
+          "kind": "input",
+          "name": "ilkNumara"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       },
+       "ilkNumara": {
+        "x": 310,
+        "y": 200
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "koseNoktalariniNumarala",
+      "param": "from"
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ilkNumara",
+        "label": "İlk numara",
+        "default": 1,
+        "min": 1,
+        "max": 99999,
+        "integer": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         },
+         "start": {
+          "kind": "input",
+          "name": "ilkNumara"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       },
+       "ilkNumara": {
+        "x": 310,
+        "y": 200
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "koseNoktalariniNumarala",
+      "param": "target"
+     },
+     "result": "noktaKatmani",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ilkNumara",
+        "label": "İlk numara",
+        "default": 1,
+        "min": 1,
+        "max": 99999,
+        "integer": true
+       },
+       {
+        "type": "layer",
+        "name": "noktaKatmani",
+        "label": "Nokta katmanı",
+        "default": {
+         "newName": "Köşe noktaları"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         },
+         "start": {
+          "kind": "input",
+          "name": "ilkNumara"
+         },
+         "target": {
+          "kind": "input",
+          "name": "noktaKatmani"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       },
+       "ilkNumara": {
+        "x": 310,
+        "y": 200
+       },
+       "noktaKatmani": {
+        "x": 310,
+        "y": 200
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "koseNoktalariniNumarala",
+      "param": "startPoint"
+     },
+     "result": "baslangicNoktasi",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ilkNumara",
+        "label": "İlk numara",
+        "default": 1,
+        "min": 1,
+        "max": 99999,
+        "integer": true
+       },
+       {
+        "type": "layer",
+        "name": "noktaKatmani",
+        "label": "Nokta katmanı",
+        "default": {
+         "newName": "Köşe noktaları"
+        }
+       },
+       {
+        "type": "point",
+        "name": "baslangicNoktasi",
+        "label": "Başlangıç noktası"
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         },
+         "start": {
+          "kind": "input",
+          "name": "ilkNumara"
+         },
+         "target": {
+          "kind": "input",
+          "name": "noktaKatmani"
+         },
+         "startPoint": {
+          "kind": "input",
+          "name": "baslangicNoktasi"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       },
+       "ilkNumara": {
+        "x": 310,
+        "y": 200
+       },
+       "noktaKatmani": {
+        "x": 310,
+        "y": 200
+       },
+       "baslangicNoktasi": {
+        "x": 310,
+        "y": 200
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.calc",
+      "at": {
+       "x": 900,
+       "y": 200
+      }
+     },
+     "result": "oznitelikHesapla",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ilkNumara",
+        "label": "İlk numara",
+        "default": 1,
+        "min": 1,
+        "max": 99999,
+        "integer": true
+       },
+       {
+        "type": "layer",
+        "name": "noktaKatmani",
+        "label": "Nokta katmanı",
+        "default": {
+         "newName": "Köşe noktaları"
+        }
+       },
+       {
+        "type": "point",
+        "name": "baslangicNoktasi",
+        "label": "Başlangıç noktası"
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         },
+         "start": {
+          "kind": "input",
+          "name": "ilkNumara"
+         },
+         "target": {
+          "kind": "input",
+          "name": "noktaKatmani"
+         },
+         "startPoint": {
+          "kind": "input",
+          "name": "baslangicNoktasi"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       },
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {},
+        "position": {
+         "x": 900,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       },
+       "ilkNumara": {
+        "x": 310,
+        "y": 200
+       },
+       "noktaKatmani": {
+        "x": 310,
+        "y": 200
+       },
+       "baslangicNoktasi": {
+        "x": 310,
+        "y": 200
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "oznitelikHesapla",
+      "param": "field"
+     },
+     "result": "alan",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ilkNumara",
+        "label": "İlk numara",
+        "default": 1,
+        "min": 1,
+        "max": 99999,
+        "integer": true
+       },
+       {
+        "type": "layer",
+        "name": "noktaKatmani",
+        "label": "Nokta katmanı",
+        "default": {
+         "newName": "Köşe noktaları"
+        }
+       },
+       {
+        "type": "point",
+        "name": "baslangicNoktasi",
+        "label": "Başlangıç noktası"
+       },
+       {
+        "type": "string",
+        "name": "alan",
+        "label": "Alan",
+        "default": ""
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         },
+         "start": {
+          "kind": "input",
+          "name": "ilkNumara"
+         },
+         "target": {
+          "kind": "input",
+          "name": "noktaKatmani"
+         },
+         "startPoint": {
+          "kind": "input",
+          "name": "baslangicNoktasi"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       },
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "alan"
+         }
+        },
+        "position": {
+         "x": 900,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       },
+       "ilkNumara": {
+        "x": 310,
+        "y": 200
+       },
+       "noktaKatmani": {
+        "x": 310,
+        "y": 200
+       },
+       "baslangicNoktasi": {
+        "x": 310,
+        "y": 200
+       },
+       "alan": {
+        "x": 610,
+        "y": 200
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "oznitelikHesapla",
+      "param": "label"
+     },
+     "result": "etiketYap",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ilkNumara",
+        "label": "İlk numara",
+        "default": 1,
+        "min": 1,
+        "max": 99999,
+        "integer": true
+       },
+       {
+        "type": "layer",
+        "name": "noktaKatmani",
+        "label": "Nokta katmanı",
+        "default": {
+         "newName": "Köşe noktaları"
+        }
+       },
+       {
+        "type": "point",
+        "name": "baslangicNoktasi",
+        "label": "Başlangıç noktası"
+       },
+       {
+        "type": "string",
+        "name": "alan",
+        "label": "Alan",
+        "default": ""
+       },
+       {
+        "type": "boolean",
+        "name": "etiketYap",
+        "label": "Etiket yap",
+        "default": false
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         },
+         "start": {
+          "kind": "input",
+          "name": "ilkNumara"
+         },
+         "target": {
+          "kind": "input",
+          "name": "noktaKatmani"
+         },
+         "startPoint": {
+          "kind": "input",
+          "name": "baslangicNoktasi"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       },
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "alan"
+         },
+         "label": {
+          "kind": "input",
+          "name": "etiketYap"
+         }
+        },
+        "position": {
+         "x": 900,
+         "y": 200
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       },
+       "ilkNumara": {
+        "x": 310,
+        "y": 200
+       },
+       "noktaKatmani": {
+        "x": 310,
+        "y": 200
+       },
+       "baslangicNoktasi": {
+        "x": 310,
+        "y": 200
+       },
+       "alan": {
+        "x": 610,
+        "y": 200
+       },
+       "etiketYap": {
+        "x": 610,
+        "y": 200
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.lengths",
+      "at": {
+       "x": 900,
+       "y": 400
+      }
+     },
+     "result": "kenarUzunluklariniYaz",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ilkNumara",
+        "label": "İlk numara",
+        "default": 1,
+        "min": 1,
+        "max": 99999,
+        "integer": true
+       },
+       {
+        "type": "layer",
+        "name": "noktaKatmani",
+        "label": "Nokta katmanı",
+        "default": {
+         "newName": "Köşe noktaları"
+        }
+       },
+       {
+        "type": "point",
+        "name": "baslangicNoktasi",
+        "label": "Başlangıç noktası"
+       },
+       {
+        "type": "string",
+        "name": "alan",
+        "label": "Alan",
+        "default": ""
+       },
+       {
+        "type": "boolean",
+        "name": "etiketYap",
+        "label": "Etiket yap",
+        "default": false
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         },
+         "start": {
+          "kind": "input",
+          "name": "ilkNumara"
+         },
+         "target": {
+          "kind": "input",
+          "name": "noktaKatmani"
+         },
+         "startPoint": {
+          "kind": "input",
+          "name": "baslangicNoktasi"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       },
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "alan"
+         },
+         "label": {
+          "kind": "input",
+          "name": "etiketYap"
+         }
+        },
+        "position": {
+         "x": 900,
+         "y": 200
+        }
+       },
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {},
+        "position": {
+         "x": 900,
+         "y": 400
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       },
+       "ilkNumara": {
+        "x": 310,
+        "y": 200
+       },
+       "noktaKatmani": {
+        "x": 310,
+        "y": 200
+       },
+       "baslangicNoktasi": {
+        "x": 310,
+        "y": 200
+       },
+       "alan": {
+        "x": 610,
+        "y": 200
+       },
+       "etiketYap": {
+        "x": 610,
+        "y": 200
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "inputFromParam",
+      "step": "kenarUzunluklariniYaz",
+      "param": "suffix"
+     },
+     "result": "sonek",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "features",
+        "name": "girdiNesneleri",
+        "label": "Girdi nesneleri",
+        "default": {
+         "scope": "selection"
+        },
+        "kinds": [
+         "polygon",
+         "polyline"
+        ]
+       },
+       {
+        "type": "string",
+        "name": "onek",
+        "label": "Önek",
+        "default": "P",
+        "allowEmpty": true
+       },
+       {
+        "type": "number",
+        "name": "ilkNumara",
+        "label": "İlk numara",
+        "default": 1,
+        "min": 1,
+        "max": 99999,
+        "integer": true
+       },
+       {
+        "type": "layer",
+        "name": "noktaKatmani",
+        "label": "Nokta katmanı",
+        "default": {
+         "newName": "Köşe noktaları"
+        }
+       },
+       {
+        "type": "point",
+        "name": "baslangicNoktasi",
+        "label": "Başlangıç noktası"
+       },
+       {
+        "type": "string",
+        "name": "alan",
+        "label": "Alan",
+        "default": ""
+       },
+       {
+        "type": "boolean",
+        "name": "etiketYap",
+        "label": "Etiket yap",
+        "default": false
+       },
+       {
+        "type": "string",
+        "name": "sonek",
+        "label": "Sonek",
+        "default": ""
+       }
+      ],
+      "steps": [
+       {
+        "id": "koseNoktalariniNumarala",
+        "tool": "t.corners",
+        "values": {
+         "input": {
+          "kind": "input",
+          "name": "girdiNesneleri"
+         },
+         "prefix": {
+          "kind": "input",
+          "name": "onek"
+         },
+         "start": {
+          "kind": "input",
+          "name": "ilkNumara"
+         },
+         "target": {
+          "kind": "input",
+          "name": "noktaKatmani"
+         },
+         "startPoint": {
+          "kind": "input",
+          "name": "baslangicNoktasi"
+         }
+        },
+        "position": {
+         "x": 600,
+         "y": 200
+        }
+       },
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "alan"
+         },
+         "label": {
+          "kind": "input",
+          "name": "etiketYap"
+         }
+        },
+        "position": {
+         "x": 900,
+         "y": 200
+        }
+       },
+       {
+        "id": "kenarUzunluklariniYaz",
+        "tool": "t.lengths",
+        "values": {
+         "suffix": {
+          "kind": "input",
+          "name": "sonek"
+         }
+        },
+        "position": {
+         "x": 900,
+         "y": 400
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "girdiNesneleri": {
+        "x": 310,
+        "y": 200
+       },
+       "onek": {
+        "x": 310,
+        "y": 200
+       },
+       "ilkNumara": {
+        "x": 310,
+        "y": 200
+       },
+       "noktaKatmani": {
+        "x": 310,
+        "y": 200
+       },
+       "baslangicNoktasi": {
+        "x": 310,
+        "y": 200
+       },
+       "alan": {
+        "x": 610,
+        "y": 200
+       },
+       "etiketYap": {
+        "x": 610,
+        "y": 200
+       },
+       "sonek": {
+        "x": 610,
+        "y": 400
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "one source feeding two parameters of a step is one edge; names taken get a number",
+   "steps": [
+    {
+     "op": {
+      "op": "addInput",
+      "type": "string",
+      "label": "Metin",
+      "at": {
+       "x": 40,
+       "y": 40
+      }
+     },
+     "result": "metin",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addInput",
+      "type": "string",
+      "label": "Metin",
+      "at": {
+       "x": 40,
+       "y": 140
+      }
+     },
+     "result": "metin2",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.calc",
+      "at": {
+       "x": 330,
+       "y": 40
+      }
+     },
+     "result": "oznitelikHesapla",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {},
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "oznitelikHesapla",
+      "param": "field",
+      "src": {
+       "kind": "input",
+       "name": "metin"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "oznitelikHesapla",
+      "param": "value",
+      "src": {
+       "kind": "input",
+       "name": "metin"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": []
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.select",
+      "at": {
+       "x": 330,
+       "y": 160
+      },
+      "from": {
+       "kind": "input",
+       "name": "metin2"
+      }
+     },
+     "result": "ifadeyleSec",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "where": {
+          "kind": "input",
+          "name": "metin2"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 160
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "ifadeyleSec",
+       "message": "“Not” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "addStep",
+      "tool": "t.calc",
+      "from": {
+       "kind": "step",
+       "id": "ifadeyleSec"
+      }
+     },
+     "result": "oznitelikHesapla2",
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "where": {
+          "kind": "input",
+          "name": "metin2"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 160
+        }
+       },
+       {
+        "id": "oznitelikHesapla2",
+        "tool": "t.calc",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 610,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "ifadeyleSec",
+       "message": "“Not” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "oznitelikHesapla",
+      "param": "input",
+      "src": {
+       "kind": "output",
+       "step": "ifadeyleSec",
+       "output": "selected"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "where": {
+          "kind": "input",
+          "name": "metin2"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 160
+        }
+       },
+       {
+        "id": "oznitelikHesapla2",
+        "tool": "t.calc",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 610,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "ifadeyleSec",
+       "message": "“Not” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "caption",
+      "step": "ifadeyleSec",
+      "caption": "  Seçim  "
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "where": {
+          "kind": "input",
+          "name": "metin2"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 160
+        },
+        "caption": "Seçim"
+       },
+       {
+        "id": "oznitelikHesapla2",
+        "tool": "t.calc",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 610,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "ifadeyleSec",
+       "message": "“Not” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "setSource",
+      "step": "ifadeyleSec",
+      "param": "note",
+      "src": {
+       "kind": "value",
+       "value": "kontrol"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "where": {
+          "kind": "input",
+          "name": "metin2"
+         },
+         "note": {
+          "kind": "value",
+          "value": "kontrol"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 160
+        },
+        "caption": "Seçim"
+       },
+       {
+        "id": "oznitelikHesapla2",
+        "tool": "t.calc",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 610,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "caption",
+      "step": "oznitelikHesapla",
+      "caption": "Ada alanı"
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        },
+        "caption": "Ada alanı"
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "where": {
+          "kind": "input",
+          "name": "metin2"
+         },
+         "note": {
+          "kind": "value",
+          "value": "kontrol"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 160
+        },
+        "caption": "Seçim"
+       },
+       {
+        "id": "oznitelikHesapla2",
+        "tool": "t.calc",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 610,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "caption",
+      "step": "oznitelikHesapla",
+      "caption": "   "
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "where": {
+          "kind": "input",
+          "name": "metin2"
+         },
+         "note": {
+          "kind": "value",
+          "value": "kontrol"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 160
+        },
+        "caption": "Seçim"
+       },
+       {
+        "id": "oznitelikHesapla2",
+        "tool": "t.calc",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 610,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
+      "op": "caption",
+      "step": "oznitelikHesapla2",
+      "caption": "Hesap"
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "where": {
+          "kind": "input",
+          "name": "metin2"
+         },
+         "note": {
+          "kind": "value",
+          "value": "kontrol"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 160
+        },
+        "caption": "Seçim"
+       },
+       {
+        "id": "oznitelikHesapla2",
+        "tool": "t.calc",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 610,
+         "y": 60
+        },
+        "caption": "Hesap"
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "models": [
+  {
+   "title": "a chain built from the palette, then its first step removed and the diagram laid out",
+   "model": {
+    "id": "m-fixture",
+    "label": "Yeni model",
+    "category": "points",
+    "description": "",
+    "inputs": [
+     {
+      "type": "features",
+      "name": "parseller",
+      "label": "Parseller",
+      "default": {
+       "scope": "selection"
+      }
+     },
+     {
+      "type": "string",
+      "name": "noktaOneki",
+      "label": "Nokta öneki",
+      "default": "",
+      "allowEmpty": true
+     },
+     {
+      "type": "number",
+      "name": "ondalik",
+      "label": "Ondalık",
+      "default": 2,
+      "min": 0,
+      "max": 4,
+      "integer": true,
+      "unit": "basamak"
+     }
+    ],
+    "steps": [
+     {
+      "id": "kenarUzunluklariniYaz",
+      "tool": "t.lengths",
+      "values": {
+       "decimals": {
+        "kind": "input",
+        "name": "ondalik"
+       }
+      },
+      "position": {
+       "x": 330,
+       "y": 40
+      }
+     },
+     {
+      "id": "koseNoktalariniNumarala2",
+      "tool": "t.corners",
+      "values": {},
+      "position": {
+       "x": 330,
+       "y": 140
+      }
+     }
+    ],
+    "outputs": [
+     {
+      "name": "labels",
+      "label": "Ölçü yazıları",
+      "from": {
+       "step": "kenarUzunluklariniYaz",
+       "output": "labels"
+      }
+     },
+     {
+      "name": "points3",
+      "label": "Köşe noktaları",
+      "from": {
+       "step": "koseNoktalariniNumarala2",
+       "output": "points"
+      }
+     }
+    ],
+    "inputPositions": {
+     "parseller": {
+      "x": 40,
+      "y": 40
+     },
+     "noktaOneki": {
+      "x": 40,
+      "y": 140
+     },
+     "ondalik": {
+      "x": 40,
+      "y": 240
+     }
+    }
+   },
+   "status": {
+    "kind": "ok",
+    "text": "2 adım, 3 girdi. Model çalışmaya hazır."
+   },
+   "order": [
+    "kenarUzunluklariniYaz",
+    "koseNoktalariniNumarala2"
+   ],
+   "edges": [
+    {
+     "from": {
+      "kind": "input",
+      "name": "ondalik"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "params": [
+      "decimals"
+     ]
+    }
+   ],
+   "edgeLabels": [
+    {
+     "from": {
+      "kind": "input",
+      "name": "ondalik"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "text": "Ondalık",
+     "title": "Ondalık",
+     "at": {
+      "x": 322,
+      "y": 64.0
+     }
+    }
+   ],
+   "stepMeta": [
+    {
+     "step": "kenarUzunluklariniYaz",
+     "meta": {
+      "text": "1 bağlantı"
+     }
+    },
+    {
+     "step": "koseNoktalariniNumarala2",
+     "meta": {
+      "text": "Bağlantı yok"
+     }
+    }
+   ],
+   "sources": [
+    {
+     "step": "kenarUzunluklariniYaz",
+     "param": "input",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "parseller"
+       },
+       "label": "Parseller",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "koseNoktalariniNumarala2",
+        "output": "points"
+       },
+       "label": "Köşe noktaları",
+       "group": "Köşe noktalarını numarala"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "kenarUzunluklariniYaz",
+     "param": "decimals",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "ondalik"
+       },
+       "label": "Ondalık",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "koseNoktalariniNumarala2",
+        "output": "count"
+       },
+       "label": "Nokta sayısı",
+       "group": "Köşe noktalarını numarala"
+      }
+     ],
+     "text": "Girdi: Ondalık"
+    },
+    {
+     "step": "kenarUzunluklariniYaz",
+     "param": "suffix",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "noktaOneki"
+       },
+       "label": "Nokta öneki",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "ondalik"
+       },
+       "label": "Ondalık",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "koseNoktalariniNumarala2",
+        "output": "count"
+       },
+       "label": "Nokta sayısı",
+       "group": "Köşe noktalarını numarala"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala2",
+     "param": "input",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "parseller"
+       },
+       "label": "Parseller",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "kenarUzunluklariniYaz",
+        "output": "labels"
+       },
+       "label": "Ölçü yazıları",
+       "group": "Kenar uzunluklarını yaz"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala2",
+     "param": "prefix",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "noktaOneki"
+       },
+       "label": "Nokta öneki",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "ondalik"
+       },
+       "label": "Ondalık",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala2",
+     "param": "start",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "ondalik"
+       },
+       "label": "Ondalık",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala2",
+     "param": "from",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala2",
+     "param": "startPoint",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala2",
+     "param": "target",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    }
+   ],
+   "wires": [
+    {
+     "from": {
+      "kind": "input",
+      "name": "parseller"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Girdi nesneleri",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "parseller"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "parseller"
+     },
+     "to": "koseNoktalariniNumarala2",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Girdi nesneleri",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "parseller"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "noktaOneki"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "suffix",
+        "label": "Sonek",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "noktaOneki"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "noktaOneki"
+     },
+     "to": "koseNoktalariniNumarala2",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "prefix",
+        "label": "Önek",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "noktaOneki"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "ondalik"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "decimals",
+        "label": "Ondalık",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "ondalik"
+        }
+       },
+       {
+        "param": "suffix",
+        "label": "Sonek",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "ondalik"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "ondalik"
+     },
+     "to": "koseNoktalariniNumarala2",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "prefix",
+        "label": "Önek",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "ondalik"
+        }
+       },
+       {
+        "param": "start",
+        "label": "İlk numara",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "ondalik"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "kenarUzunluklariniYaz"
+     },
+     "to": "koseNoktalariniNumarala2",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Ölçü yazıları → Girdi nesneleri",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "kenarUzunluklariniYaz",
+         "output": "labels"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "koseNoktalariniNumarala2"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Köşe noktaları → Girdi nesneleri",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "koseNoktalariniNumarala2",
+         "output": "points"
+        }
+       },
+       {
+        "param": "decimals",
+        "label": "Nokta sayısı → Ondalık",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "koseNoktalariniNumarala2",
+         "output": "count"
+        }
+       },
+       {
+        "param": "suffix",
+        "label": "Nokta sayısı → Sonek",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "koseNoktalariniNumarala2",
+         "output": "count"
+        }
+       }
+      ],
+      "none": null
+     }
+    }
+   ],
+   "bounds": {
+    "x": 40,
+    "y": 40,
+    "w": 530,
+    "h": 252
+   }
+  },
+  {
+   "title": "what stops a model: missing values, a missing input, types that do not fit, a cycle, an unknown tool",
+   "model": {
+    "id": "m-fixture",
+    "label": "Yeni model",
+    "category": "points",
+    "description": "",
+    "inputs": [],
+    "steps": [
+     {
+      "id": "oznitelikHesapla",
+      "tool": "t.calc",
+      "values": {
+       "field": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "value": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "input": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "nothing"
+       }
+      },
+      "position": {
+       "x": 620,
+       "y": 40
+      }
+     },
+     {
+      "id": "ifadeyleSec",
+      "tool": "t.select",
+      "values": {
+       "note": {
+        "kind": "value",
+        "value": "x"
+       }
+      },
+      "position": {
+       "x": 330,
+       "y": 40
+      }
+     },
+     {
+      "id": "tGone",
+      "tool": "t.gone",
+      "values": {},
+      "position": {
+       "x": 330,
+       "y": 140
+      }
+     }
+    ],
+    "outputs": [],
+    "inputPositions": {}
+   },
+   "status": {
+    "kind": "warn",
+    "text": "3 sorun var; model kaydedilebilir ama çalışmaz. “Nesneler” olmayan bir çıktıya bağlı: ifadeyleSec.nothing"
+   },
+   "order": [
+    "ifadeyleSec",
+    "tGone",
+    "oznitelikHesapla"
+   ],
+   "edges": [
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla",
+     "params": [
+      "field",
+      "value",
+      "input"
+     ]
+    }
+   ],
+   "edgeLabels": [
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Alan +2",
+     "title": "Alan, Değer, Nesneler",
+     "at": {
+      "x": 612,
+      "y": 64.0
+     }
+    }
+   ],
+   "stepMeta": [
+    {
+     "step": "oznitelikHesapla",
+     "meta": {
+      "warn": "“Nesneler” olmayan bir çıktıya bağlı: ifadeyleSec.nothing"
+     }
+    },
+    {
+     "step": "ifadeyleSec",
+     "meta": {
+      "warn": "“Koşul” için bir değer ya da bağlantı gerekiyor."
+     }
+    },
+    {
+     "step": "tGone",
+     "meta": {
+      "warn": "Bilinmeyen işlem aracı: t.gone"
+     }
+    }
+   ],
+   "sources": [
+    {
+     "step": "oznitelikHesapla",
+     "param": "input",
+     "options": [
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "selected"
+       },
+       "label": "Seçilenler",
+       "group": "İfadeyle seç"
+      }
+     ],
+     "text": "İfadeyle seç › nothing"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "field",
+     "options": [
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "label": "Özet",
+       "group": "İfadeyle seç"
+      }
+     ],
+     "text": "İfadeyle seç › Özet"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "value",
+     "options": [
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "label": "Özet",
+       "group": "İfadeyle seç"
+      }
+     ],
+     "text": "İfadeyle seç › Özet"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "label",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "unit",
+     "options": [
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "label": "Özet",
+       "group": "İfadeyle seç"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "ifadeyleSec",
+     "param": "input",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "ifadeyleSec",
+     "param": "where",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "ifadeyleSec",
+     "param": "note",
+     "options": [],
+     "text": "Sabit değer"
+    },
+    {
+     "step": "ifadeyleSec",
+     "param": "order",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    }
+   ],
+   "wires": [
+    {
+     "from": {
+      "kind": "step",
+      "id": "oznitelikHesapla"
+     },
+     "to": "ifadeyleSec",
+     "choices": {
+      "header": "İfadeyle seç: hangi girdi?",
+      "items": [],
+      "none": "“Öznitelik hesapla” bu adımın hiçbir girdisine uymuyor"
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "oznitelikHesapla"
+     },
+     "to": "tGone",
+     "choices": null
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Seçilenler → Nesneler",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "selected"
+        }
+       },
+       {
+        "param": "field",
+        "label": "Özet → Alan",
+        "checked": true,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "summary"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Özet → Değer",
+        "checked": true,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "summary"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Özet → Birim",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "summary"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "tGone",
+     "choices": null
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "tGone"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [],
+      "none": "“t.gone” bu adımın hiçbir girdisine uymuyor"
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "tGone"
+     },
+     "to": "ifadeyleSec",
+     "choices": {
+      "header": "İfadeyle seç: hangi girdi?",
+      "items": [],
+      "none": "“t.gone” bu adımın hiçbir girdisine uymuyor"
+     }
+    }
+   ],
+   "bounds": {
+    "x": 330,
+    "y": 40,
+    "w": 530,
+    "h": 160
+   }
+  },
+  {
+   "title": "a parameter shown only for one choice is needed only then",
+   "model": {
+    "id": "m-fixture",
+    "label": "Yeni model",
+    "category": "points",
+    "description": "",
+    "inputs": [],
+    "steps": [
+     {
+      "id": "koseNoktalariniNumarala",
+      "tool": "t.corners",
+      "values": {},
+      "position": {
+       "x": 300,
+       "y": 60
+      }
+     }
+    ],
+    "outputs": [],
+    "inputPositions": {}
+   },
+   "status": {
+    "kind": "ok",
+    "text": "1 adım, 0 girdi. Model çalışmaya hazır."
+   },
+   "order": [
+    "koseNoktalariniNumarala"
+   ],
+   "edges": [],
+   "edgeLabels": [],
+   "stepMeta": [
+    {
+     "step": "koseNoktalariniNumarala",
+     "meta": {
+      "text": "Bağlantı yok"
+     }
+    }
+   ],
+   "sources": [
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "input",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "prefix",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "start",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "from",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "startPoint",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "target",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    }
+   ],
+   "wires": [],
+   "bounds": {
+    "x": 300,
+    "y": 60,
+    "w": 240,
+    "h": 60
+   }
+  },
+  {
+   "title": "each kind of parameter made a model input",
+   "model": {
+    "id": "m-fixture",
+    "label": "Yeni model",
+    "category": "points",
+    "description": "",
+    "inputs": [
+     {
+      "type": "features",
+      "name": "girdiNesneleri",
+      "label": "Girdi nesneleri",
+      "default": {
+       "scope": "selection"
+      },
+      "kinds": [
+       "polygon",
+       "polyline"
+      ]
+     },
+     {
+      "type": "string",
+      "name": "onek",
+      "label": "Önek",
+      "default": "P",
+      "allowEmpty": true
+     },
+     {
+      "type": "number",
+      "name": "ilkNumara",
+      "label": "İlk numara",
+      "default": 1,
+      "min": 1,
+      "max": 99999,
+      "integer": true
+     },
+     {
+      "type": "layer",
+      "name": "noktaKatmani",
+      "label": "Nokta katmanı",
+      "default": {
+       "newName": "Köşe noktaları"
+      }
+     },
+     {
+      "type": "point",
+      "name": "baslangicNoktasi",
+      "label": "Başlangıç noktası"
+     },
+     {
+      "type": "string",
+      "name": "alan",
+      "label": "Alan",
+      "default": ""
+     },
+     {
+      "type": "boolean",
+      "name": "etiketYap",
+      "label": "Etiket yap",
+      "default": false
+     },
+     {
+      "type": "string",
+      "name": "sonek",
+      "label": "Sonek",
+      "default": ""
+     }
+    ],
+    "steps": [
+     {
+      "id": "koseNoktalariniNumarala",
+      "tool": "t.corners",
+      "values": {
+       "input": {
+        "kind": "input",
+        "name": "girdiNesneleri"
+       },
+       "prefix": {
+        "kind": "input",
+        "name": "onek"
+       },
+       "start": {
+        "kind": "input",
+        "name": "ilkNumara"
+       },
+       "target": {
+        "kind": "input",
+        "name": "noktaKatmani"
+       },
+       "startPoint": {
+        "kind": "input",
+        "name": "baslangicNoktasi"
+       }
+      },
+      "position": {
+       "x": 600,
+       "y": 200
+      }
+     },
+     {
+      "id": "oznitelikHesapla",
+      "tool": "t.calc",
+      "values": {
+       "field": {
+        "kind": "input",
+        "name": "alan"
+       },
+       "label": {
+        "kind": "input",
+        "name": "etiketYap"
+       }
+      },
+      "position": {
+       "x": 900,
+       "y": 200
+      }
+     },
+     {
+      "id": "kenarUzunluklariniYaz",
+      "tool": "t.lengths",
+      "values": {
+       "suffix": {
+        "kind": "input",
+        "name": "sonek"
+       }
+      },
+      "position": {
+       "x": 900,
+       "y": 400
+      }
+     }
+    ],
+    "outputs": [],
+    "inputPositions": {
+     "girdiNesneleri": {
+      "x": 310,
+      "y": 200
+     },
+     "onek": {
+      "x": 310,
+      "y": 200
+     },
+     "ilkNumara": {
+      "x": 310,
+      "y": 200
+     },
+     "noktaKatmani": {
+      "x": 310,
+      "y": 200
+     },
+     "baslangicNoktasi": {
+      "x": 310,
+      "y": 200
+     },
+     "alan": {
+      "x": 610,
+      "y": 200
+     },
+     "etiketYap": {
+      "x": 610,
+      "y": 200
+     },
+     "sonek": {
+      "x": 610,
+      "y": 400
+     }
+    }
+   },
+   "status": {
+    "kind": "warn",
+    "text": "1 sorun var; model kaydedilebilir ama çalışmaz. “Değer” için bir değer ya da bağlantı gerekiyor."
+   },
+   "order": [
+    "koseNoktalariniNumarala",
+    "oznitelikHesapla",
+    "kenarUzunluklariniYaz"
+   ],
+   "edges": [
+    {
+     "from": {
+      "kind": "input",
+      "name": "girdiNesneleri"
+     },
+     "to": "koseNoktalariniNumarala",
+     "params": [
+      "input"
+     ]
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "onek"
+     },
+     "to": "koseNoktalariniNumarala",
+     "params": [
+      "prefix"
+     ]
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "ilkNumara"
+     },
+     "to": "koseNoktalariniNumarala",
+     "params": [
+      "start"
+     ]
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "noktaKatmani"
+     },
+     "to": "koseNoktalariniNumarala",
+     "params": [
+      "target"
+     ]
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "baslangicNoktasi"
+     },
+     "to": "koseNoktalariniNumarala",
+     "params": [
+      "startPoint"
+     ]
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "alan"
+     },
+     "to": "oznitelikHesapla",
+     "params": [
+      "field"
+     ]
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "etiketYap"
+     },
+     "to": "oznitelikHesapla",
+     "params": [
+      "label"
+     ]
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "sonek"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "params": [
+      "suffix"
+     ]
+    }
+   ],
+   "edgeLabels": [
+    {
+     "from": {
+      "kind": "input",
+      "name": "girdiNesneleri"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "Girdi nesneleri",
+     "title": "Girdi nesneleri",
+     "at": {
+      "x": 592,
+      "y": 224.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "onek"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "Önek",
+     "title": "Önek",
+     "at": {
+      "x": 592,
+      "y": 211.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "ilkNumara"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "İlk numara",
+     "title": "İlk numara",
+     "at": {
+      "x": 592,
+      "y": 198.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "noktaKatmani"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "Nokta katmanı",
+     "title": "Nokta katmanı",
+     "at": {
+      "x": 592,
+      "y": 185.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "baslangicNoktasi"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "Başlangıç noktası",
+     "title": "Başlangıç noktası",
+     "at": {
+      "x": 592,
+      "y": 172.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "alan"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Alan",
+     "title": "Alan",
+     "at": {
+      "x": 892,
+      "y": 224.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "etiketYap"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Etiket yap",
+     "title": "Etiket yap",
+     "at": {
+      "x": 892,
+      "y": 211.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "sonek"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "text": "Sonek",
+     "title": "Sonek",
+     "at": {
+      "x": 892,
+      "y": 424.0
+     }
+    }
+   ],
+   "stepMeta": [
+    {
+     "step": "koseNoktalariniNumarala",
+     "meta": {
+      "text": "5 bağlantı"
+     }
+    },
+    {
+     "step": "oznitelikHesapla",
+     "meta": {
+      "warn": "“Değer” için bir değer ya da bağlantı gerekiyor."
+     }
+    },
+    {
+     "step": "kenarUzunluklariniYaz",
+     "meta": {
+      "text": "1 bağlantı"
+     }
+    }
+   ],
+   "sources": [
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "input",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "girdiNesneleri"
+       },
+       "label": "Girdi nesneleri",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "oznitelikHesapla",
+        "output": "changed"
+       },
+       "label": "Değişen nesneler",
+       "group": "Öznitelik hesapla"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "kenarUzunluklariniYaz",
+        "output": "labels"
+       },
+       "label": "Ölçü yazıları",
+       "group": "Kenar uzunluklarını yaz"
+      }
+     ],
+     "text": "Girdi: Girdi nesneleri"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "prefix",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "onek"
+       },
+       "label": "Önek",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "ilkNumara"
+       },
+       "label": "İlk numara",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "alan"
+       },
+       "label": "Alan",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "sonek"
+       },
+       "label": "Sonek",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Girdi: Önek"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "start",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "ilkNumara"
+       },
+       "label": "İlk numara",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Girdi: İlk numara"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "from",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "startPoint",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "baslangicNoktasi"
+       },
+       "label": "Başlangıç noktası",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Girdi: Başlangıç noktası"
+    },
+    {
+     "step": "koseNoktalariniNumarala",
+     "param": "target",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "noktaKatmani"
+       },
+       "label": "Nokta katmanı",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Girdi: Nokta katmanı"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "input",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "girdiNesneleri"
+       },
+       "label": "Girdi nesneleri",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "koseNoktalariniNumarala",
+        "output": "points"
+       },
+       "label": "Köşe noktaları",
+       "group": "Köşe noktalarını numarala"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "kenarUzunluklariniYaz",
+        "output": "labels"
+       },
+       "label": "Ölçü yazıları",
+       "group": "Kenar uzunluklarını yaz"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "field",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "onek"
+       },
+       "label": "Önek",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "alan"
+       },
+       "label": "Alan",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "sonek"
+       },
+       "label": "Sonek",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Girdi: Alan"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "value",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "onek"
+       },
+       "label": "Önek",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "alan"
+       },
+       "label": "Alan",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "sonek"
+       },
+       "label": "Sonek",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "label",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "etiketYap"
+       },
+       "label": "Etiket yap",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Girdi: Etiket yap"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "unit",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "onek"
+       },
+       "label": "Önek",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "ilkNumara"
+       },
+       "label": "İlk numara",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "alan"
+       },
+       "label": "Alan",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "sonek"
+       },
+       "label": "Sonek",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "koseNoktalariniNumarala",
+        "output": "count"
+       },
+       "label": "Nokta sayısı",
+       "group": "Köşe noktalarını numarala"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "kenarUzunluklariniYaz",
+     "param": "input",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "girdiNesneleri"
+       },
+       "label": "Girdi nesneleri",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "koseNoktalariniNumarala",
+        "output": "points"
+       },
+       "label": "Köşe noktaları",
+       "group": "Köşe noktalarını numarala"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "oznitelikHesapla",
+        "output": "changed"
+       },
+       "label": "Değişen nesneler",
+       "group": "Öznitelik hesapla"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "kenarUzunluklariniYaz",
+     "param": "decimals",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "ilkNumara"
+       },
+       "label": "İlk numara",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "koseNoktalariniNumarala",
+        "output": "count"
+       },
+       "label": "Nokta sayısı",
+       "group": "Köşe noktalarını numarala"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "kenarUzunluklariniYaz",
+     "param": "suffix",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "onek"
+       },
+       "label": "Önek",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "ilkNumara"
+       },
+       "label": "İlk numara",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "alan"
+       },
+       "label": "Alan",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "sonek"
+       },
+       "label": "Sonek",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "koseNoktalariniNumarala",
+        "output": "count"
+       },
+       "label": "Nokta sayısı",
+       "group": "Köşe noktalarını numarala"
+      }
+     ],
+     "text": "Girdi: Sonek"
+    }
+   ],
+   "wires": [
+    {
+     "from": {
+      "kind": "input",
+      "name": "girdiNesneleri"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Girdi nesneleri",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "girdiNesneleri"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "girdiNesneleri"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Nesneler",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "girdiNesneleri"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "girdiNesneleri"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Girdi nesneleri",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "girdiNesneleri"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "onek"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "prefix",
+        "label": "Önek",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "onek"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "onek"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "field",
+        "label": "Alan",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "onek"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Değer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "onek"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Birim",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "onek"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "onek"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "suffix",
+        "label": "Sonek",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "onek"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "ilkNumara"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "prefix",
+        "label": "Önek",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "ilkNumara"
+        }
+       },
+       {
+        "param": "start",
+        "label": "İlk numara",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "ilkNumara"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "ilkNumara"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "unit",
+        "label": "Birim",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "ilkNumara"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "ilkNumara"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "decimals",
+        "label": "Ondalık",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "ilkNumara"
+        }
+       },
+       {
+        "param": "suffix",
+        "label": "Sonek",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "ilkNumara"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "noktaKatmani"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "target",
+        "label": "Nokta katmanı",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "noktaKatmani"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "noktaKatmani"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [],
+      "none": "“Nokta katmanı” bu adımın hiçbir girdisine uymuyor"
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "noktaKatmani"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [],
+      "none": "“Nokta katmanı” bu adımın hiçbir girdisine uymuyor"
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "baslangicNoktasi"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "startPoint",
+        "label": "Başlangıç noktası",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "baslangicNoktasi"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "baslangicNoktasi"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [],
+      "none": "“Başlangıç noktası” bu adımın hiçbir girdisine uymuyor"
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "baslangicNoktasi"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [],
+      "none": "“Başlangıç noktası” bu adımın hiçbir girdisine uymuyor"
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "alan"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "prefix",
+        "label": "Önek",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "alan"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "alan"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "field",
+        "label": "Alan",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "alan"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Değer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "alan"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Birim",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "alan"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "alan"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "suffix",
+        "label": "Sonek",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "alan"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "etiketYap"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [],
+      "none": "“Etiket yap” bu adımın hiçbir girdisine uymuyor"
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "etiketYap"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "label",
+        "label": "Etiket yap",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "etiketYap"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "etiketYap"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [],
+      "none": "“Etiket yap” bu adımın hiçbir girdisine uymuyor"
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "sonek"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "prefix",
+        "label": "Önek",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "sonek"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "sonek"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "field",
+        "label": "Alan",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "sonek"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Değer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "sonek"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Birim",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "sonek"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "sonek"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "suffix",
+        "label": "Sonek",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "sonek"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "koseNoktalariniNumarala"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Köşe noktaları → Nesneler",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "koseNoktalariniNumarala",
+         "output": "points"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Nokta sayısı → Birim",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "koseNoktalariniNumarala",
+         "output": "count"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "koseNoktalariniNumarala"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Köşe noktaları → Girdi nesneleri",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "koseNoktalariniNumarala",
+         "output": "points"
+        }
+       },
+       {
+        "param": "decimals",
+        "label": "Nokta sayısı → Ondalık",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "koseNoktalariniNumarala",
+         "output": "count"
+        }
+       },
+       {
+        "param": "suffix",
+        "label": "Nokta sayısı → Sonek",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "koseNoktalariniNumarala",
+         "output": "count"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "oznitelikHesapla"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Değişen nesneler → Girdi nesneleri",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "oznitelikHesapla",
+         "output": "changed"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "oznitelikHesapla"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "choices": {
+      "header": "Kenar uzunluklarını yaz: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Değişen nesneler → Girdi nesneleri",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "oznitelikHesapla",
+         "output": "changed"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "kenarUzunluklariniYaz"
+     },
+     "to": "koseNoktalariniNumarala",
+     "choices": {
+      "header": "Köşe noktalarını numarala: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Ölçü yazıları → Girdi nesneleri",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "kenarUzunluklariniYaz",
+         "output": "labels"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "kenarUzunluklariniYaz"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Ölçü yazıları → Nesneler",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "kenarUzunluklariniYaz",
+         "output": "labels"
+        }
+       }
+      ],
+      "none": null
+     }
+    }
+   ],
+   "bounds": {
+    "x": 310,
+    "y": 200,
+    "w": 830,
+    "h": 260
+   }
+  },
+  {
+   "title": "one source feeding two parameters of a step is one edge; names taken get a number",
+   "model": {
+    "id": "m-fixture",
+    "label": "Yeni model",
+    "category": "points",
+    "description": "",
+    "inputs": [
+     {
+      "type": "string",
+      "name": "metin",
+      "label": "Metin",
+      "default": "",
+      "allowEmpty": true
+     },
+     {
+      "type": "string",
+      "name": "metin2",
+      "label": "Metin",
+      "default": "",
+      "allowEmpty": true
+     }
+    ],
+    "steps": [
+     {
+      "id": "oznitelikHesapla",
+      "tool": "t.calc",
+      "values": {
+       "field": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "value": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "input": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "selected"
+       }
+      },
+      "position": {
+       "x": 330,
+       "y": 40
+      }
+     },
+     {
+      "id": "ifadeyleSec",
+      "tool": "t.select",
+      "values": {
+       "where": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "note": {
+        "kind": "value",
+        "value": "kontrol"
+       }
+      },
+      "position": {
+       "x": 330,
+       "y": 160
+      },
+      "caption": "Seçim"
+     },
+     {
+      "id": "oznitelikHesapla2",
+      "tool": "t.calc",
+      "values": {
+       "input": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "selected"
+       }
+      },
+      "position": {
+       "x": 610,
+       "y": 60
+      },
+      "caption": "Hesap"
+     }
+    ],
+    "outputs": [],
+    "inputPositions": {
+     "metin": {
+      "x": 40,
+      "y": 40
+     },
+     "metin2": {
+      "x": 40,
+      "y": 140
+     }
+    }
+   },
+   "status": {
+    "kind": "warn",
+    "text": "2 sorun var; model kaydedilebilir ama çalışmaz. “Alan” için bir değer ya da bağlantı gerekiyor."
+   },
+   "order": [
+    "ifadeyleSec",
+    "oznitelikHesapla",
+    "oznitelikHesapla2"
+   ],
+   "edges": [
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin"
+     },
+     "to": "oznitelikHesapla",
+     "params": [
+      "field",
+      "value"
+     ]
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla",
+     "params": [
+      "input"
+     ]
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin2"
+     },
+     "to": "ifadeyleSec",
+     "params": [
+      "where"
+     ]
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla2",
+     "params": [
+      "input"
+     ]
+    }
+   ],
+   "edgeLabels": [
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Alan +1",
+     "title": "Alan, Değer",
+     "at": {
+      "x": 322,
+      "y": 51.0
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Nesneler",
+     "title": "Nesneler",
+     "at": {
+      "x": 322,
+      "y": 64.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin2"
+     },
+     "to": "ifadeyleSec",
+     "text": "Koşul",
+     "title": "Koşul",
+     "at": {
+      "x": 322,
+      "y": 184.0
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla2",
+     "text": "Nesneler",
+     "title": "Nesneler",
+     "at": {
+      "x": 602,
+      "y": 84.0
+     }
+    }
+   ],
+   "stepMeta": [
+    {
+     "step": "oznitelikHesapla",
+     "meta": {
+      "text": "3 bağlantı"
+     }
+    },
+    {
+     "step": "ifadeyleSec",
+     "meta": {
+      "text": "İfadeyle seç"
+     }
+    },
+    {
+     "step": "oznitelikHesapla2",
+     "meta": {
+      "warn": "“Alan” için bir değer ya da bağlantı gerekiyor."
+     }
+    }
+   ],
+   "sources": [
+    {
+     "step": "oznitelikHesapla",
+     "param": "input",
+     "options": [
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "selected"
+       },
+       "label": "Seçilenler",
+       "group": "Seçim"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "oznitelikHesapla2",
+        "output": "changed"
+       },
+       "label": "Değişen nesneler",
+       "group": "Hesap"
+      }
+     ],
+     "text": "Seçim › Seçilenler"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "field",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "label": "Özet",
+       "group": "Seçim"
+      }
+     ],
+     "text": "Girdi: Metin"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "value",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "label": "Özet",
+       "group": "Seçim"
+      }
+     ],
+     "text": "Girdi: Metin"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "label",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "oznitelikHesapla",
+     "param": "unit",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "label": "Özet",
+       "group": "Seçim"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "ifadeyleSec",
+     "param": "input",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "ifadeyleSec",
+     "param": "where",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Girdi: Metin"
+    },
+    {
+     "step": "ifadeyleSec",
+     "param": "note",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Sabit değer"
+    },
+    {
+     "step": "ifadeyleSec",
+     "param": "order",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "oznitelikHesapla2",
+     "param": "input",
+     "options": [
+      {
+       "src": {
+        "kind": "output",
+        "step": "oznitelikHesapla",
+        "output": "changed"
+       },
+       "label": "Değişen nesneler",
+       "group": "Öznitelik hesapla"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "selected"
+       },
+       "label": "Seçilenler",
+       "group": "Seçim"
+      }
+     ],
+     "text": "Seçim › Seçilenler"
+    },
+    {
+     "step": "oznitelikHesapla2",
+     "param": "field",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "label": "Özet",
+       "group": "Seçim"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "oznitelikHesapla2",
+     "param": "value",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "label": "Özet",
+       "group": "Seçim"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "oznitelikHesapla2",
+     "param": "label",
+     "options": [],
+     "text": "Aracın varsayılanı"
+    },
+    {
+     "step": "oznitelikHesapla2",
+     "param": "unit",
+     "options": [
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "input",
+        "name": "metin2"
+       },
+       "label": "Metin",
+       "group": "Girdi"
+      },
+      {
+       "src": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "summary"
+       },
+       "label": "Özet",
+       "group": "Seçim"
+      }
+     ],
+     "text": "Aracın varsayılanı"
+    }
+   ],
+   "wires": [
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "field",
+        "label": "Alan",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "metin"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Değer",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "metin"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Birim",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin"
+     },
+     "to": "ifadeyleSec",
+     "choices": {
+      "header": "Seçim: hangi girdi?",
+      "items": [
+       {
+        "param": "where",
+        "label": "Koşul",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin"
+        }
+       },
+       {
+        "param": "note",
+        "label": "Not",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin"
+        }
+       },
+       {
+        "param": "order",
+        "label": "Sıra",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin"
+     },
+     "to": "oznitelikHesapla2",
+     "choices": {
+      "header": "Hesap: hangi girdi?",
+      "items": [
+       {
+        "param": "field",
+        "label": "Alan",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Değer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Birim",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin2"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "field",
+        "label": "Alan",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin2"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Değer",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin2"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Birim",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin2"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin2"
+     },
+     "to": "ifadeyleSec",
+     "choices": {
+      "header": "Seçim: hangi girdi?",
+      "items": [
+       {
+        "param": "where",
+        "label": "Koşul",
+        "checked": true,
+        "src": {
+         "kind": "input",
+         "name": "metin2"
+        }
+       },
+       {
+        "param": "note",
+        "label": "Not",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin2"
+        }
+       },
+       {
+        "param": "order",
+        "label": "Sıra",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin2"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin2"
+     },
+     "to": "oznitelikHesapla2",
+     "choices": {
+      "header": "Hesap: hangi girdi?",
+      "items": [
+       {
+        "param": "field",
+        "label": "Alan",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin2"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Değer",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin2"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Birim",
+        "checked": false,
+        "src": {
+         "kind": "input",
+         "name": "metin2"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "oznitelikHesapla"
+     },
+     "to": "ifadeyleSec",
+     "choices": {
+      "header": "Seçim: hangi girdi?",
+      "items": [],
+      "none": "“Öznitelik hesapla” bu adımın hiçbir girdisine uymuyor"
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "oznitelikHesapla"
+     },
+     "to": "oznitelikHesapla2",
+     "choices": {
+      "header": "Hesap: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Değişen nesneler → Nesneler",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "oznitelikHesapla",
+         "output": "changed"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Seçilenler → Nesneler",
+        "checked": true,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "selected"
+        }
+       },
+       {
+        "param": "field",
+        "label": "Özet → Alan",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "summary"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Özet → Değer",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "summary"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Özet → Birim",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "summary"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla2",
+     "choices": {
+      "header": "Hesap: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Seçilenler → Nesneler",
+        "checked": true,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "selected"
+        }
+       },
+       {
+        "param": "field",
+        "label": "Özet → Alan",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "summary"
+        }
+       },
+       {
+        "param": "value",
+        "label": "Özet → Değer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "summary"
+        }
+       },
+       {
+        "param": "unit",
+        "label": "Özet → Birim",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "ifadeyleSec",
+         "output": "summary"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "oznitelikHesapla2"
+     },
+     "to": "oznitelikHesapla",
+     "choices": {
+      "header": "Öznitelik hesapla: hangi girdi?",
+      "items": [
+       {
+        "param": "input",
+        "label": "Değişen nesneler → Nesneler",
+        "detail": "Mevcut bağlantının yerine geçer",
+        "checked": false,
+        "src": {
+         "kind": "output",
+         "step": "oznitelikHesapla2",
+         "output": "changed"
+        }
+       }
+      ],
+      "none": null
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "oznitelikHesapla2"
+     },
+     "to": "ifadeyleSec",
+     "choices": {
+      "header": "Seçim: hangi girdi?",
+      "items": [],
+      "none": "“Hesap” bu adımın hiçbir girdisine uymuyor"
+     }
+    }
+   ],
+   "bounds": {
+    "x": 40,
+    "y": 40,
+    "w": 810,
+    "h": 180
+   }
+  }
+ ],
+ "spots": [
+  {
+   "selected": null,
+   "spot": {
+    "x": 40,
+    "y": 260
+   }
+  },
+  {
+   "selected": {
+    "kind": "input",
+    "name": "metin"
+   },
+   "spot": {
+    "x": 330,
+    "y": 40
+   }
+  },
+  {
+   "selected": {
+    "kind": "step",
+    "id": "ifadeyleSec"
+   },
+   "spot": {
+    "x": 620,
+    "y": 160
+   }
+  },
+  {
+   "selected": {
+    "kind": "step",
+    "id": "yok"
+   },
+   "spot": {
+    "x": 40,
+    "y": 260
+   }
+  },
+  {
+   "selected": null,
+   "empty": true,
+   "spot": {
+    "x": 40,
+    "y": 40
+   }
+  }
+ ],
+ "titles": [
+  {
+   "label": "Parsel ölçü yazıları",
+   "dirty": false,
+   "title": "Model tasarımcısı: Parsel ölçü yazıları"
+  },
+  {
+   "label": "Parsel ölçü yazıları",
+   "dirty": true,
+   "title": "Model tasarımcısı: Parsel ölçü yazıları •"
+  },
+  {
+   "label": "",
+   "dirty": false,
+   "title": "Model tasarımcısı: adsız"
+  },
+  {
+   "label": "",
+   "dirty": true,
+   "title": "Model tasarımcısı: adsız •"
+  }
+ ],
+ "savedLabels": [
+  {
+   "label": "Model",
+   "saved": "Model"
+  },
+  {
+   "label": "   ",
+   "saved": "Adsız model"
+  },
+  {
+   "label": "",
+   "saved": "Adsız model"
+  },
+  {
+   "label": " Ada ",
+   "saved": " Ada "
+  }
+ ],
+ "joins": [
+  {
+   "key": "label",
+   "at": 0,
+   "joins": false
+  },
+  {
+   "key": "label",
+   "at": 1000,
+   "joins": true
+  },
+  {
+   "key": "label",
+   "at": 2300,
+   "joins": false
+  },
+  {
+   "key": null,
+   "at": 2400,
+   "joins": false
+  },
+  {
+   "key": "label",
+   "at": 2500,
+   "joins": false
+  },
+  {
+   "key": "description",
+   "at": 2600,
+   "joins": false
+  },
+  {
+   "key": "label",
+   "at": 2700,
+   "joins": false
+  },
+  {
+   "key": "label",
+   "at": 3899,
+   "joins": true
+  },
+  {
+   "key": "label",
+   "at": 5099,
+   "joins": false
+  }
+ ],
+ "geometry": {
+  "curves": [
+   {
+    "a": {
+     "x": 230,
+     "y": 66
+    },
+    "b": {
+     "x": 330,
+     "y": 70
+    },
+    "curve": {
+     "c1": {
+      "x": 280.0,
+      "y": 66
+     },
+     "c2": {
+      "x": 280.0,
+      "y": 70
+     }
+    }
+   },
+   {
+    "a": {
+     "x": 230,
+     "y": 66
+    },
+    "b": {
+     "x": 830,
+     "y": 190
+    },
+    "curve": {
+     "c1": {
+      "x": 530.0,
+      "y": 66
+     },
+     "c2": {
+      "x": 530.0,
+      "y": 190
+     }
+    }
+   },
+   {
+    "a": {
+     "x": 520,
+     "y": 90
+    },
+    "b": {
+     "x": 300,
+     "y": 400
+    },
+    "curve": {
+     "c1": {
+      "x": 630.0,
+      "y": 90
+     },
+     "c2": {
+      "x": 190.0,
+      "y": 400
+     }
+    }
+   },
+   {
+    "a": {
+     "x": 230,
+     "y": 66
+    },
+    "b": {
+     "x": 230,
+     "y": 66
+    },
+    "curve": {
+     "c1": {
+      "x": 270,
+      "y": 66
+     },
+     "c2": {
+      "x": 190,
+      "y": 66
+     }
+    }
+   },
+   {
+    "a": {
+     "x": 12.5,
+     "y": 7
+    },
+    "b": {
+     "x": 101.25,
+     "y": -33
+    },
+    "curve": {
+     "c1": {
+      "x": 56.875,
+      "y": 7
+     },
+     "c2": {
+      "x": 56.875,
+      "y": -33
+     }
+    }
+   }
+  ],
+  "ports": {
+   "input": {
+    "at": {
+     "x": 40,
+     "y": 130
+    },
+    "port": {
+     "x": 230,
+     "y": 156
+    }
+   },
+   "step": {
+    "at": {
+     "x": 330,
+     "y": 40
+    },
+    "port": {
+     "x": 570,
+     "y": 70
+    },
+    "entry": {
+     "x": 330,
+     "y": 70
+    }
+   }
+  },
+  "fits": [
+   {
+    "bounds": null,
+    "width": 1000,
+    "height": 600,
+    "view": {
+     "x": 24,
+     "y": 24,
+     "k": 1
+    }
+   },
+   {
+    "bounds": {
+     "x": 40,
+     "y": 40,
+     "w": 530,
+     "h": 160
+    },
+    "width": 1000,
+    "height": 600,
+    "view": {
+     "k": 1,
+     "x": 195.0,
+     "y": 180.0
+    }
+   },
+   {
+    "bounds": {
+     "x": 40,
+     "y": 40,
+     "w": 2000,
+     "h": 900
+    },
+    "width": 1000,
+    "height": 600,
+    "view": {
+     "k": 0.452,
+     "x": 29.919999999999998,
+     "y": 78.52
+    }
+   },
+   {
+    "bounds": {
+     "x": -200,
+     "y": 10,
+     "w": 900,
+     "h": 1400
+    },
+    "width": 820,
+    "height": 560,
+    "view": {
+     "k": 0.3314285714285714,
+     "x": 327.14285714285717,
+     "y": 44.68571428571431
+    }
+   },
+   {
+    "bounds": {
+     "x": 40,
+     "y": 40,
+     "w": 190,
+     "h": 52
+    },
+    "width": 0,
+    "height": 0,
+    "view": {
+     "x": 24,
+     "y": 24,
+     "k": 1
+    }
+   }
+  ],
+  "zooms": [
+   {
+    "view": {
+     "x": 0,
+     "y": 0,
+     "k": 1
+    },
+    "at": {
+     "x": 500,
+     "y": 300
+    },
+    "factor": 1.25,
+    "result": {
+     "k": 1.25,
+     "x": -125.0,
+     "y": -75.0
+    }
+   },
+   {
+    "view": {
+     "x": 24,
+     "y": 24,
+     "k": 1.9
+    },
+    "at": {
+     "x": 100,
+     "y": 100
+    },
+    "factor": 1.25,
+    "result": {
+     "k": 2,
+     "x": 20.0,
+     "y": 20.0
+    }
+   },
+   {
+    "view": {
+     "x": -30,
+     "y": 12,
+     "k": 0.4
+    },
+    "at": {
+     "x": 400,
+     "y": 250
+    },
+    "factor": 0.8,
+    "result": {
+     "k": 0.35,
+     "x": 23.75,
+     "y": 41.75
+    }
+   },
+   {
+    "view": {
+     "x": 10,
+     "y": 10,
+     "k": 1
+    },
+    "at": {
+     "x": 0,
+     "y": 0
+    },
+    "factor": 0.835270211411272,
+    "result": {
+     "k": 0.835270211411272,
+     "x": 8.35270211411272,
+     "y": 8.35270211411272
+    }
+   },
+   {
+    "view": {
+     "x": 10,
+     "y": 10,
+     "k": 1
+    },
+    "at": {
+     "x": 250,
+     "y": 125
+    },
+    "factor": 2.0544332106438876,
+    "result": {
+     "k": 2,
+     "x": -230.0,
+     "y": -105.0
+    }
+   },
+   {
+    "view": {
+     "x": 30,
+     "y": 20,
+     "k": 0.3314285714285714
+    },
+    "at": {
+     "x": 410,
+     "y": 280
+    },
+    "factor": 0.8,
+    "floor": 0.3314285714285714,
+    "result": {
+     "k": 0.3314285714285714,
+     "x": 30.0,
+     "y": 20.0
+    }
+   },
+   {
+    "view": {
+     "x": 30,
+     "y": 20,
+     "k": 0.3314285714285714
+    },
+    "at": {
+     "x": 410,
+     "y": 280
+    },
+    "factor": 1.25,
+    "floor": 0.3314285714285714,
+    "result": {
+     "k": 0.41428571428571426,
+     "x": -65.0,
+     "y": -45.0
+    }
+   },
+   {
+    "view": {
+     "x": 30,
+     "y": 20,
+     "k": 0.4
+    },
+    "at": {
+     "x": 410,
+     "y": 280
+    },
+    "factor": 0.8,
+    "floor": 0.3314285714285714,
+    "result": {
+     "k": 0.3314285714285714,
+     "x": 95.14285714285717,
+     "y": 64.57142857142858
+    }
+   },
+   {
+    "view": {
+     "x": 0,
+     "y": 0,
+     "k": 0.5
+    },
+    "at": {
+     "x": 100,
+     "y": 100
+    },
+    "factor": 0.5,
+    "floor": 0.35,
+    "result": {
+     "k": 0.35,
+     "x": 30.0,
+     "y": 30.0
+    }
+   }
+  ],
+  "floors": [
+   {
+    "fitted": 1,
+    "floor": 0.35
+   },
+   {
+    "fitted": 0.8,
+    "floor": 0.35
+   },
+   {
+    "fitted": 0.35,
+    "floor": 0.35
+   },
+   {
+    "fitted": 0.3314285714285714,
+    "floor": 0.3314285714285714
+   },
+   {
+    "fitted": 0.12,
+    "floor": 0.12
+   }
+  ],
+  "snaps": [
+   {
+    "value": 0,
+    "snapped": 0
+   },
+   {
+    "value": 4,
+    "snapped": 0
+   },
+   {
+    "value": 5,
+    "snapped": 10
+   },
+   {
+    "value": 14.99,
+    "snapped": 10
+   },
+   {
+    "value": 15,
+    "snapped": 20
+   },
+   {
+    "value": -15,
+    "snapped": -10
+   },
+   {
+    "value": -16,
+    "snapped": -20
+   },
+   {
+    "value": 123.4,
+    "snapped": 120
+   },
+   {
+    "value": 1234.5,
+    "snapped": 1230
+   }
+  ]
+ }
+}

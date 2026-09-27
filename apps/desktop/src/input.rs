@@ -124,10 +124,10 @@ impl App {
         }
         self.field = None;
         if self.session.start(id) {
-            // The web logs the tool as a command; its name shows with its title.
+            // The web logs the tool as a command, by its name (`ToolManager.activate`).
             let name = catalog()
                 .get(&format!("tool.{id}"))
-                .map_or(id, |command| command.name());
+                .map_or(id, |command| command.title);
             self.say(Level::Command, name);
             // It may act at once: the erase tool deletes a selection and leaves.
             self.with_tool(|s, cx| s.activate(cx));
@@ -557,6 +557,7 @@ impl App {
         // A value for the running command, or for a grip being moved (docs/adr/0068).
         if self.session.is_running() || self.session.grip_active() {
             self.echo_value(text);
+            self.remember(text);
             if self.with_tool(|s, cx| s.input(text, cx)) != Some(true) {
                 // Nokta hesapla by its alias while a point is expected (docs/adr/0083).
                 if let Some(def) = kentos_interaction::point_calc::CalcDef::by_alias(text)

@@ -860,8 +860,9 @@ mod tests {
         assert_eq!(app.draft.snap_aperture, 18.0);
         assert_eq!(app.draft.polar, Some(30.0));
         assert!(!app.cursor_input);
-        assert!(
-            matches!(app.history.last(), Some(kentos_ui::widget::command_line::Entry::Output(t)) if t == "Uygulama ayarları kaydedildi.")
+        assert_eq!(
+            app.log.last().map(|l| l.text.as_str()),
+            Some("Uygulama ayarları kaydedildi.")
         );
 
         // Vazgeç (or Esc) leaves everything as it was.
@@ -903,8 +904,9 @@ mod tests {
         assert!(app.draft.ortho);
         let _ = app.run("draft.polar");
         assert_eq!(app.draft.polar, Some(45.0));
-        assert!(
-            matches!(app.history.last(), Some(kentos_ui::widget::command_line::Entry::Output(t)) if t == "Kutupsal izleme açık")
+        assert_eq!(
+            app.log.last().map(|l| l.text.as_str()),
+            Some("Kutupsal izleme açık")
         );
         // Session values: not in the stored document.
         assert!(!app.settings.export_text().contains("drafting.ortho"));
@@ -955,9 +957,9 @@ mod tests {
         let _ = app.update(Message::CommandHistoryToggled);
         assert_eq!(app.graphics().samples, 1);
         let warnings = app
-            .history
-            .iter()
-            .filter(|e| matches!(e, kentos_ui::widget::command_line::Entry::Warning(t) if t.contains("kurulamadı")))
+            .log
+            .lines()
+            .filter(|l| l.level == kentos_interaction::Level::Warn && l.text.contains("kurulamadı"))
             .count();
         assert_eq!(warnings, 1);
     }

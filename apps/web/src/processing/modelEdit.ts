@@ -1,6 +1,7 @@
 import { foldTurkish } from '../core/text';
 import { canFeed, orderSteps, stepName, type ModelStep, type ProcessingModel, type ValueSource } from './model';
-import type { ParamDef, ProcessingTool } from './types';
+import { defaultValue } from './parameters';
+import type { DefaultsContext, ParamDef, ProcessingTool } from './types';
 
 /**
  * Editing a model draft (the model designer's operations), kept pure so it
@@ -107,12 +108,74 @@ export function removeStep(model: ProcessingModel, id: string): void {
   model.outputs = model.outputs.filter((o) => o.from.step !== id);
 }
 
+/** The model input type a parameter can become (“Yeni model girdisi yap”); none for a choice from a fixed list. */
+export function inputTypeFor(p: ParamDef): ModelInputType | null {
+  switch (p.type) {
+    case 'features':
+    case 'number':
+    case 'string':
+    case 'boolean':
+    case 'layer':
+    case 'point':
+      return p.type;
+    case 'expression':
+    case 'field':
+      return 'string';
+    default:
+      return null;
+  }
+}
+
+/**
+ * “Yeni model girdisi yap”: a model input made from a step's parameter, a
+ * column left of the step, and the parameter fed by it. The input takes the
+ * parameter's label and default (the step's fixed value is not carried
+ * over); a features input its kinds, a number its limits, whole-number rule
+ * and unit, a text whether it may be empty. Returns the input's name, or
+ * null when the parameter cannot become one (a choice from a list).
+ */
+export function inputFromParam(model: ProcessingModel, stepId: string, p: ParamDef, defaults: DefaultsContext): string | null {
+  const step = model.steps.find((s) => s.id === stepId);
+  const type = inputTypeFor(p);
+  if (!step || !type) return null;
+  const name = addInput(model, type, p.label, { x: (step.position?.x ?? 300) - 290, y: step.position?.y ?? 40 });
+  const created = model.inputs.find((i) => i.name === name)!;
+  const d = defaultValue(p, defaults);
+  if (type === 'features' && p.type === 'features') Object.assign(created, { kinds: p.kinds ? [...p.kinds] : undefined, default: d });
+  else if (type === 'number' && p.type === 'number') Object.assign(created, { default: d, min: p.min, max: p.max, integer: p.integer, unit: p.unit });
+  else if (type === 'string') Object.assign(created, { default: typeof d === 'string' ? d : '', allowEmpty: p.type === 'string' ? p.allowEmpty : undefined });
+  else if (d !== null && d !== undefined) Object.assign(created, { default: d });
+  setSource(model, stepId, p.name, { kind: 'input', name });
+  return name;
+}
+
+/** A step's caption as typed: trimmed; a blank one goes back to the tool's name. */
+export function setCaption(model: ProcessingModel, stepId: string, text: string): void {
+  const step = model.steps.find((s) => s.id === stepId);
+  if (step) step.caption = text.trim() || undefined;
+}
+
 /** Sets where a step parameter gets its value; null goes back to the tool's default. */
 export function setSource(model: ProcessingModel, stepId: string, param: string, src: ValueSource | null): void {
   const step = model.steps.find((s) => s.id === stepId);
   if (!step) return;
   if (src) step.values[param] = src;
   else delete step.values[param];
+}
+
+/**
+ * Makes a step's output a model output: under the output's own name, or,
+ * when a model output has that name already, the name with the count of
+ * model outputs plus one after it. Returns the name, or null when the step
+ * or its output is not there.
+ */
+export function addOutput(model: ProcessingModel, stepId: string, output: string, lookup: Lookup): string | null {
+  const step = model.steps.find((s) => s.id === stepId);
+  const out = step && lookup(step.tool)?.outputs?.find((o) => o.name === output);
+  if (!out) return null;
+  const name = model.outputs.some((o) => o.name === output) ? `${output}${model.outputs.length + 1}` : output;
+  model.outputs.push({ name, label: out.label, from: { step: stepId, output } });
+  return name;
 }
 
 export interface SourceOption {

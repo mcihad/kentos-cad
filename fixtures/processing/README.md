@@ -12,6 +12,7 @@
 | `v1/parcels.kcad` | Durumların çizimi (`.kcad` v1): Parsel katmanında yan yana üç parsel (1: 0…20, 2: 20…45, 3: 45…60 doğu; 0…30 kuzey; 1 ile 2 x = 20'yi, 2 ile 3 x = 45'i paylaşır; Ada, Parsel, Nitelik öznitelikleri, etiketleri parsel numarası), kilitli katmanda parsel 4, gizli katmanda parsel 5, Çizim'de çoklu çizgi 6 (30 m ve 15 m) ve 20 m'lik çizgi 7, Mevcut noktalar katmanında parsel 1'in üç köşesinde P00001–P00003 (8–10). Koordinatlar (487000, 4420000)'e göre verilmiştir |
 | `v1/cases.json` | Durumlar |
 | `v1/dialog.json` | İşlem penceresinin davranışı: formlar, oturumlar ve saf kuralların tabloları ([aşağıda](#pencere-kentosprocessing-dialog-sürüm-1)) |
+| `v1/designer.json` | Model tasarımcısı: modelin düzenlemeleri adım adım ve her adımdan sonraki denetim, tasarımcının bir modelden okudukları, sözleri ve diyagramın geometrisi ([aşağıda](#model-tasarımcısı-kentosmodeldesigner-sürüm-1)) |
 
 ## Biçim (`kentos.processing-cases`, sürüm 1)
 
@@ -157,3 +158,32 @@ Pencerenin öbür kuralları (görünüşte yok):
 - **Durdur** çalıştırmayı durdurur; iptal edilen çalıştırmanın satırı `error`'dur ("İşlem iptal edildi; çizim değişmedi.").
 - Oturumların çalıştırmaları `cases.json`'daki gibi gerçek çalıştırmalardır; özetleri ve seçtikleri iki platformda aynı çalıştırıcıdan gelir.
 - İfade satırlarının metinleri ve ifade hataları dilin çekirdeğindendir (`model/expression`); dil değişince bu dosya kaydediciyle yeniden yazılır ve farkı okunur.
+
+## Model tasarımcısı (`kentos.modelDesigner`, sürüm 1)
+
+`v1/designer.json`, model tasarımcısının kurallarını ve sözlerini tutar. Davranışın bütünü [docs/specs/model-designer.md](../../docs/specs/model-designer.md)'dedir. Kurallar sayfasızdır: modelin düzenlemeleri `apps/web/src/processing/modelEdit.ts`'te, tür uyumu, denetim ve sıra `processing/model.ts`'te, tasarımcının sözleri, kuralları ve diyagramın geometrisi `ui/processing/model/designerPlan.ts`'te durur. Pencere, diyagram, parçalar ve ayarlar (`ModelDesigner.ts`, `ModelCanvas.ts`, `modelPalette.ts`, `modelInspector.ts`) onlardan çizer.
+
+- **Web**: `apps/web/src/ui/processing/model/designerPlan.test.ts` oynatır.
+- **Kaydedici**: `python3 scripts/fixtures/designer_cases.py`; `--check` hiçbir şey yazmadan karşılaştırır. Sözler, tablolar ve dosyanın araçları web'den elle yazılmıştır; cevaplar koddan ayrı, betikte bulunur.
+- **Masaüstü**: tasarımcı aynı dosyayı oynatır.
+
+Dosya kendi araçlarıyla çalışır (`tools`, kimlikleri `t.` önekli). Web'in `ParamDef`'i biçimindedirler; `visibleWhen` veri olarak yazılır: `{ param, equals }`, “o parametrenin bilinen değeri buysa görünür” demektir. Böylece durumlar yerleşik araçlar değişince bozulmaz.
+
+| Alan | Anlamı |
+|---|---|
+| `format`, `version` | `"kentos.modelDesigner"`, `1` |
+| `texts` | Tasarımcının sözleri: başlık, alt çubuk, durum, kaydetme, kapatma sorusu, silme, çizimden nokta, tel menüsü, diyagram, parçalar, ayarlar. Bir değerden yapılan söz `{ sample, text }` |
+| `inputTypes` | “Girdi ekle”nin türleri sırasıyla: tür, ad, simge, ipucu |
+| `canvas` | Diyagramın sayıları: kutu boyları, ızgara (10), ölçek sınırları (0,35–2), düğmelerin katı (1,25), tekerleğin katsayısı, sığdırma payı (48), boş diyagramın görünümü, sürüklemenin başlama uzaklıkları (diyagramda 3, parçalarda 5), yeni kutunun sağa ve aşağı uzaklığı (290, 100), eğrinin en kısa kolu (40), kenar yazılarının yeri (girişin 8 px solunda biter, ilk satır 6 px üstte, her satır 13 px) |
+| `history` | Geri alma: en çok 100 adım; aynı alana 1200 ms içinde yazmak aynı adım |
+| `tools`, `defaults` | Dosyanın araçları ve varsayılanları hesaplamanın bağlamı (`DefaultsContext`) |
+| `canFeed` | Her türün besleyebildiği parametre türleri |
+| `slugs` | Bir addan türeyen kimlik: Türkçe büyük harf, Ç Ğ İ Ö Ş Ü düz harfe, küçük harf, harf ve rakam dışı ayırıcı, sonraki sözcüklerin baş harfi büyük; harfle başlamayana `g` |
+| `newModel`, `copyLabel` | Yeni modelin alanları (kimlik dışında); kopyanın adı |
+| `sequences` | Boş bir modelden (kimliği `m-fixture`) başlayan düzenleme dizileri. Her adım: işlem (`op`: `addInput`, `addStep`, `setSource`, `removeInput`, `removeStep`, `inputFromParam`, `addOutput`, `caption`, `autoLayout`), sonucu (verilen ad ya da kimlik; yoksa `null`), sonraki model (JSON'u) ve modelin sorunları (`step`, `message`) |
+| `models` | Her dizinin son modeli ve tasarımcının ondan okudukları: durum satırı, adımların sırası (ya da döngünün iletisi), kenarlar ve yazıları (sözü, ipucu ve hedef adımın yanındaki yeri), kutuların ikinci satırı, her adımın her parametresinin uygun kaynakları ve kaynak listesinin sözü, her kaynaktan her adıma çekilen telin menüsü, kutuların kapladığı alan |
+| `spots` | Yeni kutunun yeri: seçili kutunun sağı, yoksa en alttaki kutunun altı; boş modelde (40, 40) |
+| `titles`, `savedLabels` | Pencere başlığı; kaydedilen ad (boşken “Adsız model”) |
+| `joins` | Bir değişikliğin önceki geri alma adımına katılıp katılmadığı, sırayla: alanın anahtarı (yoksa `null`), zaman (ms) |
+| `geometry` | Kenarların denetim noktaları, kutuların çıkış ve giriş noktaları, sığdırma, yakınlaştırma (`floor`: en az ölçek; yoksa 0,35), sığdırmanın bıraktığı en az ölçek (`floors`: 0,35 ya da sığdırmanın ölçeği, hangisi küçükse), ızgaraya oturtma (JavaScript'in yuvarlamasıyla, yarım yukarı) |
+

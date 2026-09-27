@@ -172,11 +172,10 @@ fn layer_and_colour_are_one_step_each_and_a_hidden_layer_is_said() {
     select(&mut app, &[5]);
     event(&mut app, Event::Layer(vec![Slot(5)], "gizli".to_owned()));
     assert_eq!(entity(&app, 5).base().layer_id, "gizli");
-    assert!(matches!(
-        app.history.last(),
-        Some(kentos_ui::widget::command_line::Entry::Warning(t))
-            if t == "“Gizli katman” katmanı gizli; taşınan nesneler görünmeyecek."
-    ));
+    assert_eq!(
+        warned(&app).as_deref(),
+        Some("“Gizli katman” katmanı gizli; taşınan nesneler görünmeyecek.")
+    );
     assert_eq!(app.selection.ids(), [Slot(5)]);
 }
 
@@ -335,10 +334,10 @@ fn texts_dimensions_and_hatches_take_what_the_web_takes() {
 
 /// The last line said in the command history, when it is a warning.
 fn warned(app: &App) -> Option<String> {
-    match app.history.last() {
-        Some(kentos_ui::widget::command_line::Entry::Warning(t)) => Some(t.clone()),
-        _ => None,
-    }
+    app.log
+        .last()
+        .filter(|l| l.level == kentos_interaction::Level::Warn)
+        .map(|l| l.text.clone())
 }
 
 /// The panel writes through the product commands (docs/adr/0066): what they

@@ -790,7 +790,7 @@ mod tests {
         app.warn("Görülen uyarı.");
         let _ = app.update(Message::BottomTab(crate::bottom::BottomTab::History));
         app.warn("Görülmeyen uyarı.");
-        assert_eq!(app.warnings_total - app.seen_warnings, 1);
+        assert_eq!(app.log.unseen(), 1);
     }
 
     #[test]

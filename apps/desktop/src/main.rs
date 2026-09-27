@@ -28,8 +28,20 @@ mod keys;
 mod labels;
 mod layer_tree;
 mod layering;
+mod layout;
+mod layout_plan;
+#[cfg(test)]
+mod layout_plan_tests;
+#[cfg(test)]
+mod layout_tests;
+mod log_plan;
+#[cfg(test)]
+mod log_plan_tests;
 mod map_marks;
 mod marks;
+mod message_log;
+#[cfg(test)]
+mod message_log_tests;
 mod modes;
 mod opening;
 #[cfg(test)]
@@ -110,6 +122,11 @@ fn main() -> iced::Result {
                 && let Some(problem) = app.styles.open_user_library(&folder)
             {
                 app.warn(problem);
+            }
+            // The layout kept last time (yerlesim.json beside the settings, docs/adr/0115).
+            if let Some(dir) = settings::Settings::config_dir() {
+                app.layout = layout::Keeper::open(&dir);
+                app.apply_layout();
             }
             // Without a drawing named, the start screen (when the preference wants it).
             if path.is_none() {
