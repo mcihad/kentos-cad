@@ -611,7 +611,7 @@ fn screens() {
                         })
                         .expect("the step");
                     let caption: &'static str = Box::leak(face.into_boxed_str());
-                    let at = crate::processing::tests::find_text(&mut snapshot, &app, caption)
+                    let at = crate::files_testing::find_text(&mut snapshot, &app, caption)
                         .expect("the source list");
                     let center = at.center();
                     snapshot.step(

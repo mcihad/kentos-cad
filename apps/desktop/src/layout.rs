@@ -6,11 +6,12 @@
 //! What it keeps: whether the side panels are shown (F4), the dock's width,
 //! the layer tree's share of it, which of Katmanlar and İşlemler is in
 //! front, the bottom panel (open, its height, its tab), İşlemler's tab and
-//! folded categories, the ribbon's tab and whether it is folded. A kept size
+//! folded categories, the ribbon's tab, whether it is folded, the commands
+//! put on its quick access bar and each split button's choice. A kept size
 //! is the user's wish: the window shows it within what it allows now, and a
 //! narrower window does not change what is kept. The fields the desktop has
-//! no part for yet (the classic toolbox, the quick access bar, the split
-//! buttons' choices, the theme, a setting here) are written back as read.
+//! no part for (the classic toolbox, the theme, a setting here) are written
+//! back as read.
 //! A file that cannot be written is passed over, as the web's storage.
 
 use std::path::{Path, PathBuf};
@@ -94,6 +95,37 @@ impl Keeper {
             self.kept.insert(key.to_owned(), value);
             self.due = Some(now + Duration::from_millis(plan::SAVE_MS));
         }
+    }
+
+    /// The commands the user put on the quick access bar
+    /// (`ribbonQuickAccess`), in the order added.
+    pub(crate) fn quick_access(&self) -> Vec<String> {
+        self.texts("ribbonQuickAccess").map(str::to_owned).collect()
+    }
+
+    /// Keeps the user's quick access list.
+    pub(crate) fn keep_quick_access(&mut self, list: &[String], now: Instant) {
+        self.keep("ribbonQuickAccess", Value::from(list.to_vec()), now);
+    }
+
+    /// A split button's kept choice (`ribbonSplits`, by the button's key).
+    pub(crate) fn split_choice(&self, key: &str) -> Option<&str> {
+        self.kept
+            .get("ribbonSplits")
+            .and_then(|splits| splits.get(key))
+            .and_then(Value::as_str)
+    }
+
+    /// Keeps a split button's choice (`komut|seçenek`).
+    pub(crate) fn keep_split_choice(&mut self, key: &str, choice: String, now: Instant) {
+        let mut splits = self
+            .kept
+            .get("ribbonSplits")
+            .and_then(Value::as_object)
+            .cloned()
+            .unwrap_or_default();
+        splits.insert(key.to_owned(), Value::from(choice));
+        self.keep("ribbonSplits", Value::Object(splits), now);
     }
 
     /// When the kept layout is to be written.

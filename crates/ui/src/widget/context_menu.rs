@@ -205,6 +205,8 @@ struct Command<Message> {
     /// A colour sample before the label (a layer's, a colour's).
     swatch: Option<Color>,
     danger: bool,
+    /// A muted note at the right, before the shortcut (“sabit”, what a method does).
+    hint: Option<String>,
 }
 
 impl<Message> Item<Message> {
@@ -247,6 +249,7 @@ impl<Message> Menu<Message> {
             radio: false,
             swatch: None,
             danger: false,
+            hint: None,
         }));
         self
     }
@@ -268,6 +271,7 @@ impl<Message> Menu<Message> {
             radio: false,
             swatch: None,
             danger: false,
+            hint: None,
         }));
         self
     }
@@ -290,6 +294,7 @@ impl<Message> Menu<Message> {
             radio: true,
             swatch: None,
             danger: false,
+            hint: None,
         }));
         self
     }
@@ -352,6 +357,16 @@ impl<Message> Menu<Message> {
     pub fn detail(mut self, detail: impl Into<String>) -> Self {
         if let Some(Item::Command(command)) = self.items.last_mut() {
             command.detail = Some(detail.into());
+        }
+
+        self
+    }
+
+    /// Son eklenen komutun sağında, kısayolundan önce soluk not (ör.
+    /// “sabit”, bir yöntemin ne yaptığı; web'in `hint`'i).
+    pub fn hint(mut self, hint: impl Into<String>) -> Self {
+        if let Some(Item::Command(command)) = self.items.last_mut() {
+            command.hint = Some(hint.into());
         }
 
         self
@@ -503,6 +518,10 @@ impl<Message> Menu<Message> {
                         + command.shortcut.as_deref().map_or(0.0, |shortcut| {
                             typography::mono_width(shortcut, caption) + 24.0
                         })
+                        + command
+                            .hint
+                            .as_deref()
+                            .map_or(0.0, |hint| typography::text_width(hint, caption) + 24.0)
                 }
                 Item::Submenu { label, .. } => typography::text_width(label, body) + 24.0,
                 Item::Header(title) => typography::text_width(title, caption),
@@ -1491,6 +1510,10 @@ fn item_row<'a, Message: 'a>(
         Item::Command(command) => command.detail.clone(),
         _ => None,
     };
+    let hint = match item {
+        Item::Command(command) => command.hint.clone(),
+        _ => None,
+    };
     let (mark, text, shortcut, submenu, enabled, danger, sample) = match item {
         Item::Command(command) => (
             // A check shows its ✓ when on, a radio its dot, else its own icon
@@ -1553,6 +1576,20 @@ fn item_row<'a, Message: 'a>(
     }
     content = content.push(label::body(text).width(Fill));
 
+    if let Some(hint) = hint {
+        content = content.push(label::caption(hint).style(move |theme: &Theme| {
+            let t = Tokens::of(theme);
+
+            iced::widget::text::Style {
+                color: Some(if highlighted && enabled {
+                    t.on_accent.scale_alpha(0.75)
+                } else {
+                    t.muted
+                }),
+            }
+        }));
+    }
+
     if let Some(shortcut) = shortcut {
         content = content.push(label::mono_caption(shortcut).style(move |theme: &Theme| {
             let t = Tokens::of(theme);
@@ -1580,8 +1617,6 @@ fn item_row<'a, Message: 'a>(
         .into()
 }
 
-/// A command with a detail line (the web's `menu__label--2`): a larger icon,
-/// the label over the detail in a fixed column, the shortcut at the right.
 /// A chosen radio's mark: a small dot in the accent.
 fn dot<'a, Message: 'a>() -> Element<'a, Message> {
     container(space::horizontal())
@@ -1595,6 +1630,8 @@ fn dot<'a, Message: 'a>() -> Element<'a, Message> {
         .into()
 }
 
+/// A command with a detail line (the web's `menu__label--2`): a larger icon,
+/// the label over the detail in a fixed column, the shortcut at the right.
 fn detail_row<'a, Message: 'a>(
     mark: Mark,
     text: String,

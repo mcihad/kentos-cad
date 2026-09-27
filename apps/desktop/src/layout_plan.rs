@@ -305,15 +305,11 @@ pub(crate) fn dragged_layers_fraction(start: f64, dy: f64, height: f64) -> f64 {
 }
 
 /// Always on the quick access bar; the user may add more (and remove what they added).
-// The ribbon's slice reads it (TODOS: quick access, split buttons); its rule is played now.
-#[cfg(test)]
 pub(crate) const QUICK_ACCESS: [&str; 3] = ["file.save", "edit.undo", "edit.redo"];
 
 /// The quick access bar from the kept list (`ribbonQuickAccess`): the fixed
 /// commands, then the ones the user added that this app has, once each, in
 /// the order added.
-// The ribbon's slice reads it (TODOS: quick access, split buttons); its rule is played now.
-#[cfg(test)]
 pub(crate) fn quick_access_of(kept: &[String], exists: impl Fn(&str) -> bool) -> Vec<String> {
     let mut bar: Vec<String> = QUICK_ACCESS.iter().map(|s| (*s).to_owned()).collect();
     for id in kept {
@@ -339,16 +335,12 @@ pub(crate) fn start_tab<'a>(kept: &'a str, tabs: &[(&str, bool)]) -> &'a str {
 
 /// A split choice as the layout keeps it (`ribbonSplits`, by the button's
 /// key): its command and its method's option.
-// The ribbon's slice reads it (TODOS: quick access, split buttons); its rule is played now.
-#[cfg(test)]
 pub(crate) fn split_choice_key(command: &str, option: Option<&str>) -> String {
     format!("{command}|{}", option.unwrap_or(""))
 }
 
 /// A split button's entry on top: the one last chosen, or its first when
 /// none was or the kept one is gone.
-// The ribbon's slice reads it (TODOS: quick access, split buttons); its rule is played now.
-#[cfg(test)]
 pub(crate) fn split_current(entries: &[(&str, Option<&str>)], kept: Option<&str>) -> usize {
     entries
         .iter()

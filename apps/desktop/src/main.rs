@@ -53,7 +53,9 @@ mod project;
 mod properties;
 mod recent;
 mod recovery;
+mod ribbon_bar;
 mod ribbon_panels;
+mod ribbon_plan;
 mod ribbon_search;
 #[cfg(test)]
 mod ribbon_tests;

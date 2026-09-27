@@ -183,6 +183,19 @@ pub enum Message {
         option: &'static str,
         label: &'static str,
     },
+    /// An entry chosen from a split button's list: kept on top by the
+    /// button's key (`ribbonSplits`), then run (docs/adr/0117).
+    SplitChosen {
+        key: &'static str,
+        id: &'static str,
+        option: Option<&'static str>,
+        label: &'static str,
+    },
+    /// A command put on the quick access bar (true) or taken off (docs/adr/0117).
+    QuickAccess(String, bool),
+    /// A pointer event taken so nothing under it reacts (a right click on
+    /// Komut ara keeps the ribbon's menu away).
+    Swallowed,
     RibbonTab(&'static str),
     /// A choice in the ribbon's own panels: the current properties for new
     /// objects, the plot scale (ribbon_panels.rs).
@@ -747,7 +760,10 @@ impl App {
         }
         // A command from the ribbon or a menu keeps the text field's text first (the web's blur),
         // and takes the keyboard from the layer tree (the web's button takes the focus).
-        if matches!(message, Message::Run(_) | Message::RunMethod { .. }) {
+        if matches!(
+            message,
+            Message::Run(_) | Message::RunMethod { .. } | Message::SplitChosen { .. }
+        ) {
             self.close_text_field(true);
             self.layers_keyboard = false;
         }
@@ -756,6 +772,14 @@ impl App {
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
             }
+            Message::SplitChosen {
+                key,
+                id,
+                option,
+                label,
+            } => return self.split_chosen(key, id, option, label),
+            Message::QuickAccess(id, on) => self.quick_access_changed(&id, on),
+            Message::Swallowed => {}
             Message::RibbonTab(id) => self.choose_tab(id),
             Message::RibbonPanel(event) => self.ribbon_panel_event(event),
             Message::CommandInput(text) => self.command_input = text,

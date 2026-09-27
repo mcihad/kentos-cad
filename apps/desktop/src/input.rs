@@ -612,7 +612,7 @@ impl App {
             self.session.is_running() && id.strip_prefix("tool.") == Some(self.session.tool_id());
         if started && self.with_tool(|s, cx| s.input(option, cx)) != Some(true) {
             let title = catalog().get(id).map_or(id, |command| command.title);
-            self.warn(format!("“{title}: {label}” şu an başlatılamadı."));
+            self.warn(crate::ribbon_plan::texts::cannot_start(title, label));
         }
         task
     }

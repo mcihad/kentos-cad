@@ -284,7 +284,8 @@ fn screens() {
                     } else {
                         "Değişkenler"
                     };
-                    let at = find_text(&mut snapshot, &app, caption).expect("the menu's button");
+                    let at = crate::files_testing::find_text(&mut snapshot, &app, caption)
+                        .expect("the menu's button");
                     let center = at.center();
                     snapshot.step(
                         &mut app,
@@ -313,44 +314,6 @@ fn screens() {
             }
         }
     }
-}
-
-/// Where a text is drawn: the first widget showing exactly `caption`.
-pub(super) fn find_text(
-    snapshot: &mut kentos_ui::snapshot::Snapshot,
-    app: &App,
-    caption: &'static str,
-) -> Option<iced::Rectangle> {
-    use std::sync::{Arc, Mutex};
-
-    use iced::advanced::widget::{Id, Operation};
-
-    struct Find {
-        caption: &'static str,
-        found: Arc<Mutex<Option<iced::Rectangle>>>,
-    }
-    impl Operation for Find {
-        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
-            operate(self);
-        }
-        fn text(&mut self, _id: Option<&Id>, bounds: iced::Rectangle, text: &str) {
-            if text == self.caption
-                && let Ok(mut found) = self.found.lock()
-                && found.is_none()
-            {
-                *found = Some(bounds);
-            }
-        }
-    }
-    let found = Arc::new(Mutex::new(None));
-    snapshot.operate(
-        app.view(),
-        Box::new(Find {
-            caption,
-            found: found.clone(),
-        }),
-    );
-    found.lock().ok().and_then(|f| *f)
 }
 
 #[test]

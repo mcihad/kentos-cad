@@ -99,3 +99,41 @@ pub fn app_with_drawing() -> App {
 pub fn last_said(app: &App) -> String {
     app.log.last().map(|l| l.text.clone()).unwrap_or_default()
 }
+
+/// Where a text is drawn: the first widget showing exactly `caption`.
+pub fn find_text(
+    snapshot: &mut kentos_ui::snapshot::Snapshot,
+    app: &App,
+    caption: &str,
+) -> Option<iced::Rectangle> {
+    use std::sync::{Arc, Mutex};
+
+    use iced::advanced::widget::{Id, Operation};
+
+    struct Find {
+        caption: String,
+        found: Arc<Mutex<Option<iced::Rectangle>>>,
+    }
+    impl Operation for Find {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+        fn text(&mut self, _id: Option<&Id>, bounds: iced::Rectangle, text: &str) {
+            if text == self.caption
+                && let Ok(mut found) = self.found.lock()
+                && found.is_none()
+            {
+                *found = Some(bounds);
+            }
+        }
+    }
+    let found = Arc::new(Mutex::new(None));
+    snapshot.operate(
+        app.view(),
+        Box::new(Find {
+            caption: caption.to_owned(),
+            found: found.clone(),
+        }),
+    );
+    found.lock().ok().and_then(|f| *f)
+}
