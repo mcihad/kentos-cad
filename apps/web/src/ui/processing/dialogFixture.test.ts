@@ -6,7 +6,7 @@ import { modelAsTool } from '../../processing/modelRunner';
 import type { ValidationIssue } from '../../processing/parameters';
 import { ProcessingRunner, type TargetChoice } from '../../processing/runner';
 import type { ExecutionTarget, FeaturesValue } from '../../processing/types';
-import { applyDelta, builtinForms, fixtureTexts, loadDrawing, playSession, type SessionSpec } from './dialogFixture';
+import { applyDelta, builtinForms, fixtureTexts, loadDrawing, playSession, type PickRecord, type SessionSpec } from './dialogFixture';
 import { footerOf, startState, statusLine, targetsView, type DialogStatus, type DialogView } from './dialogPlan';
 import { SCOPE_SHORT } from './dialogTexts';
 import { fieldToken, insertText, kindsView, numberOfText, previewIcon, toggleKind } from './fieldPlan';
@@ -27,7 +27,8 @@ const file = (name: string): string => {
   return text;
 };
 
-type Session = Omit<SessionSpec, 'steps'> & { opened: DialogView; steps: { do: SessionSpec['steps'][number]['do']; expect: Record<string, unknown> }[] };
+type Step = { do: SessionSpec['steps'][number]['do']; expect: Record<string, unknown> } & Partial<PickRecord>;
+type Session = Omit<SessionSpec, 'steps'> & { opened: DialogView; steps: Step[] };
 const F = JSON.parse(file('dialog.json')) as {
   format: string;
   version: number;
@@ -67,13 +68,15 @@ describe('processing dialog (fixtures/processing/v1/dialog.json)', () => {
 
   for (const s of F.sessions)
     it(`plays the session ${s.id}`, async () => {
-      const views = await playSession(s, file(F.document));
+      const { views, picks } = await playSession(s, file(F.document));
       expect(views.length).toBe(s.steps.length + 1);
       let want = s.opened;
       expect(views[0], `${s.id}: açılış`).toEqual(want);
       s.steps.forEach((step, i) => {
         want = applyDelta(want, step.expect);
         expect(views[i + 1], `${s.id}: ${i + 1}. adım ${JSON.stringify(step.do)}`).toEqual(want);
+        // Sahneden seç: the selection and the command line while picking, and after.
+        expect(picks[i], `${s.id}: ${i + 1}. adımda çizimden seçim`).toEqual(step.picking ? { picking: step.picking, after: step.after } : null);
       });
     });
 

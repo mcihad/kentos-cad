@@ -9,6 +9,7 @@ import { colorSwatch } from '../layers/swatch';
 import { segmented, textField, toggleSwitch } from '../widgets/controls';
 import { Dropdown } from '../widgets/Dropdown';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
+import { tooltip } from '../widgets/tooltip';
 import { controlForm, enumControl } from './dialogPlan';
 import { DIALOG_TEXTS as T } from './dialogTexts';
 import {
@@ -41,6 +42,10 @@ export interface FieldEnv {
   previewExpression(name: string): string | null;
   /** Hides the dialog and asks for a point on the drawing. */
   pickPoint(name: string): void;
+  /** Sahneden seç beside a choice that picks a point (`picks`): the point, and the choice its option. None: no button. */
+  pickChoice?(name: string): void;
+  /** Sahneden seç for a features field's objects, clicked or boxed on the drawing. None: no button. */
+  pickObjects?(name: string): void;
 }
 
 /** `set(value, rebuild)`: rebuild the form when the change can alter which parameters show. */
@@ -63,14 +68,13 @@ export function paramControl(def: ParamDef, value: unknown, set: Setter, env: Fi
     case 'boolean':
       return toggleSwitch({ label: def.label, checked: !!value, onChange: (v) => set(v, true) });
     case 'enum': {
-      if (enumControl(def) === 'segmented') return segmented({ label: def.label, options: def.options.map((o) => ({ value: o.value, label: o.label, hint: o.hint })), value: String(value), onChange: (v) => set(v, true) });
-      const dd = new Dropdown({
-        ariaLabel: def.label,
-        className: 'pfield__dropdown',
-        items: () => def.options.map((o): MenuItem => ({ label: o.label, detail: o.hint, radio: true, checked: o.value === value, run: () => set(o.value, true) })),
-      });
-      dd.set(h('span', { class: 'dropdown__text' }, def.options.find((o) => o.value === value)?.label ?? ''));
-      return dd.el;
+      const control = enumField(def, value, set);
+      const picks = def.picks;
+      if (!picks || !env.pickChoice) return control;
+      // One option is a point picked on the drawing: the pick sits beside the choice, lit while that option is chosen.
+      const pick = pickButton(null, T.pick.choice, T.pick.choiceTip, () => env.pickChoice?.(def.name));
+      pick.toggleAttribute('data-on', value === picks.option);
+      return h('div', { class: 'pfield__pickrow' }, control, pick);
     }
     case 'layer':
       return layerField(def, value as LayerValue, set, env);
@@ -81,6 +85,28 @@ export function paramControl(def: ParamDef, value: unknown, set: Setter, env: Fi
     case 'expression':
       return expressionField(def, String(value ?? ''), set, env);
   }
+}
+
+function enumField(def: Extract<ParamDef, { type: 'enum' }>, value: unknown, set: Setter): HTMLElement {
+  if (enumControl(def) === 'segmented') return segmented({ label: def.label, options: def.options.map((o) => ({ value: o.value, label: o.label, hint: o.hint })), value: String(value), onChange: (v) => set(v, true) });
+  const dd = new Dropdown({
+    ariaLabel: def.label,
+    className: 'pfield__dropdown',
+    items: () => def.options.map((o): MenuItem => ({ label: o.label, detail: o.hint, radio: true, checked: o.value === value, run: () => set(o.value, true) })),
+  });
+  dd.set(h('span', { class: 'dropdown__text' }, def.options.find((o) => o.value === value)?.label ?? ''));
+  return dd.el;
+}
+
+/**
+ * Sahneden seç (docs/adr/0088): KentOS UI's pick, a target icon with the
+ * caption, or the icon alone beside a control; its tip says what it picks.
+ */
+function pickButton(caption: string | null, title: string, tip: string, run: () => void): HTMLButtonElement {
+  const b = h('button', { class: `btn pfield__pick${caption ? '' : ' pfield__pick--icon'}`, type: 'button', 'aria-label': caption ?? title }, icon('target', 14), caption);
+  tooltip(b, () => ({ title, description: tip }), 'top');
+  b.addEventListener('click', run);
+  return b;
 }
 
 function numberField(def: Extract<ParamDef, { type: 'number' }>, value: number, set: Setter): HTMLElement {
@@ -107,7 +133,8 @@ function featuresField(def: Extract<ParamDef, { type: 'features' }>, value: Feat
       if (next !== value) set(next, true);
     },
   });
-  const parts: HTMLElement[] = [seg];
+  // Sahneden seç beside the scopes: objects clicked or boxed on the drawing become the selection.
+  const parts: HTMLElement[] = [env.pickObjects ? h('div', { class: 'pfield__pickrow' }, seg, pickButton(T.pick.objects, T.pick.objects, T.pick.objectsTip, () => env.pickObjects?.(def.name))) : seg];
   if (view.layer) {
     const dd = new Dropdown({
       ariaLabel: `${def.label}: katman`,
@@ -190,7 +217,7 @@ function layerField(def: Extract<ParamDef, { type: 'layer' }>, value: LayerValue
 
 function pointField(def: Extract<ParamDef, { type: 'point' }>, value: Vec2 | null, env: FieldEnv): HTMLElement {
   const view = pointView(value, (p) => env.ctx.format.point(p));
-  const pick = h('button', { class: 'btn pfield__pick', type: 'button' }, icon('snap', 14), view.button);
+  const pick = h('button', { class: 'btn pfield__pick', type: 'button' }, icon('target', 14), view.button);
   pick.addEventListener('click', () => env.pickPoint(def.name));
   return h('div', { class: 'pfield__point' }, h('span', { class: `pfield__coord${view.shown ? ' num' : ''}` }, view.text), pick);
 }

@@ -1792,15 +1792,58 @@ try {
     await b.type('kose noktalari');
     const layerText = await b.eval(`document.querySelector('[data-param="layer"] .dropdown__text')?.textContent ?? ''`);
     check('processing: a typed layer name finds the existing layer as the run will', layerText === 'Köşe noktaları (mevcut)', layerText);
-    // Haritadan göster brings the dialog back as it was (Gelişmiş ayarlar still open, the typed name kept), with the point
+    // Sahneden seç brings the dialog back as it was (Gelişmiş ayarlar still open, the typed name kept), with the point
+    const inView = (fx, fy) => b.eval(`(() => { const r = window.kentos.view.clientRect(); return [Math.round(r.left + r.width * ${fx}), Math.round(r.top + r.height * ${fy})]; })()`);
     await press('[data-param="start"] .dropdown');
     await press('.menu__item', 'Seçilen noktaya en yakın');
     await press('.pgroup__toggle');
-    await press('.pfield__pick');
-    await b.click(...(await b.eval(`(() => { const r = window.kentos.view.clientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`)));
+    await press('[data-param="startPoint"] .pfield__pick');
+    await b.click(...(await inView(0.5, 0.5)));
     await b.waitFor(`!!document.querySelector('.dialog--ptool [data-param="startPoint"] .pfield__coord.num')`, 3000).catch(() => {});
     const back = await b.eval(`({ open: document.querySelector('.pgroup__toggle')?.getAttribute('aria-expanded'), point: document.querySelector('[data-param="startPoint"] .pfield__coord')?.textContent ?? '', layer: document.querySelector('[data-param="layer"] input')?.value ?? '' })`);
-    check('processing: Haritadan göster brings the dialog back as it was, with the point', back.open === 'true' && /^Y /.test(back.point) && back.layer === 'kose noktalari', JSON.stringify(back));
+    check('processing: Sahneden seç brings the dialog back as it was, with the point', back.open === 'true' && /^Y /.test(back.point) && back.layer === 'kose noktalari', JSON.stringify(back));
+    // The pick beside Başlangıç köşesi: one pick gives the point and chooses its option (docs/adr/0088)
+    await press('[data-param="start"] .dropdown');
+    await press('.menu__item', 'Kuzeybatı');
+    const offBefore = await b.eval(`document.querySelector('[data-param="start"] .pfield__pick')?.hasAttribute('data-on')`);
+    await press('[data-param="start"] .pfield__pick');
+    await b.click(...(await inView(0.35, 0.4)));
+    await b.waitFor(`!!document.querySelector('.dialog--ptool [data-param="startPoint"] .pfield__coord.num')`, 3000).catch(() => {});
+    const chose = await b.eval(`({ start: document.querySelector('[data-param="start"] .dropdown__text')?.textContent ?? '', point: document.querySelector('[data-param="startPoint"] .pfield__coord')?.textContent ?? '', on: document.querySelector('[data-param="start"] .pfield__pick')?.hasAttribute('data-on') })`);
+    check('processing: Sahneden seç beside the start vertex chooses its option with the point', offBefore === false && chose.start === 'Seçilen noktaya en yakın' && /^Y /.test(chose.point) && chose.point !== back.point && chose.on === true, JSON.stringify({ offBefore, chose, before: back.point }));
+    // The input picked on the drawing: the selection is put by, a click takes a parcel, Enter makes it the field's selection; Esc leaves it
+    const parcels = await b.eval(`(() => {
+      const k = window.kentos;
+      const r = k.view.clientRect();
+      const out = [];
+      for (const e of k.doc.byLayer('parsel')) {
+        if (e.kind !== 'polygon') continue;
+        const c = e.pts.reduce((a, p) => ({ x: a.x + p.x / e.pts.length, y: a.y + p.y / e.pts.length }), { x: 0, y: 0 });
+        const s = k.view.camera.worldToScreen(c);
+        if (s.x < 60 || s.y < 60 || s.x > r.width - 60 || s.y > r.height - 60 || k.view.pick(s)?.id !== e.id) continue;
+        out.push({ id: e.id, at: [Math.round(s.x + r.left), Math.round(s.y + r.top)] });
+        if (out.length === 2) break;
+      }
+      return out;
+    })()`);
+    await press('[data-param="input"] .pfield__pick');
+    const picking = await b.eval(`({ prompt: window.kentos.tools.prompt.value, selected: window.kentos.selection.size, open: !!document.querySelector('.dialog--ptool') })`);
+    await b.click(...parcels[0].at);
+    const oneSelected = await b.eval('window.kentos.tools.prompt.value');
+    await b.key('Enter');
+    await b.waitFor(`!!document.querySelector('.dialog--ptool')`, 3000).catch(() => {});
+    const kept = await b.eval(`({ count: document.querySelector('[data-param="input"] .pfield__count')?.textContent ?? '', ids: [...window.kentos.selection.ids.value], said: window.kentos.log.entries.value.at(-1)?.text ?? '' })`);
+    check(
+      'processing: Sahneden seç picks the input on the drawing: the dialog steps aside, a click takes a parcel, Enter makes it the selection',
+      parcels.length === 2 && picking.prompt.startsWith('Alanlar: nesneleri tıklayın ya da pencereyle seçin (0 seçili)') && picking.selected === 0 && !picking.open && oneSelected.includes('(1 seçili)') && kept.count.startsWith('1 kapalı alan; seçili nesneler') && kept.ids.join() === String(parcels[0].id) && kept.said === '1 nesne seçildi.',
+      JSON.stringify({ parcels, picking, oneSelected, kept }),
+    );
+    await press('[data-param="input"] .pfield__pick');
+    await b.click(...parcels[1].at);
+    await b.key('Escape');
+    await b.waitFor(`!!document.querySelector('.dialog--ptool')`, 3000).catch(() => {});
+    const left = await b.eval(`({ ids: [...window.kentos.selection.ids.value], count: document.querySelector('[data-param="input"] .pfield__count')?.textContent ?? '' })`);
+    check('processing: Esc leaves the pick: the dialog comes back and the selection is as it was', left.ids.join() === String(parcels[0].id) && left.count === kept.count, JSON.stringify(left));
     await press('.dialog__foot .btn', 'Kapat');
     await b.eval(`window.kentos.commands.execute('processing.history')`);
     await sleep(120);

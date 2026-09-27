@@ -107,7 +107,7 @@ Formdaki denetimler (`control.type` parametrenin türüdür): `features` kapsam 
 | `last` | Aracın son çalıştırmasının değerleri |
 | `choice` | Saklanan yer seçimi; yoksa Otomatik |
 | `opened` | Açılınca görünen (bütün görünüş) |
-| `steps` | Adımlar: `do` (kullanıcının işi) ve `expect` (bir önceki görünüşten değişenler) |
+| `steps` | Adımlar: `do` (kullanıcının işi) ve `expect` (bir önceki görünüşten değişenler); `pickObjects` adımında ayrıca `picking` ve `after` (aşağıda) |
 
 Kullanıcının işleri (`do`):
 
@@ -123,7 +123,16 @@ Kullanıcının işleri (`do`):
 | `reset` | Varsayılanlar |
 | `run` | Çalıştır; sorun yoksa çalıştırma bitene kadar sürer |
 | `undo` | Çalıştırmadan sonra alt satırdaki "Geri al": çizimin son adımı geri alınır |
-| `pick` `{ name, point }` | Haritadan göster: gösterilen nokta ya da `null` (vazgeçti). Pencere olduğu gibi döner; nokta bir seçim gibi yazılır |
+| `pick` `{ name, point }` | Nokta alanının Sahneden seç'i: gösterilen nokta ya da `null` (vazgeçti). Pencere olduğu gibi döner; nokta bir seçim gibi yazılır |
+| `pickChoice` `{ name, point }` | Bir seçeneği çizimdeki nokta olan seçimin (`picks`, ADR 0088) yanındaki Sahneden seç: nokta, nokta parametresine yazılır ve seçim o seçeneğe geçer; ikisine de dokunulmuş sayılır. `null` (Esc) hiçbir şeyi değiştirmez |
+| `pickObjects` `{ name, tolerance, actions, end }` | Girdi nesnelerinin Sahneden seç'i (ADR 0088), tek adımda. Pencere kenara çekilir; seçim saklanır ve boşalır. `actions` sırayla: `click` (nokta; `tolerance`, dünya biriminde seçme açıklığı: ekrandaki açıklık bölü görünümün ölçeği) ya da `box` (`from`, `to`; sağdan sola çizilen kesişim, öbürü pencere). `end`: `done` (Enter, Boşluk ya da hızlı sağ tık) ya da `cancel` (Esc). Alınan türler değerin `kinds`'i, yoksa parametreninki. Tıklama: imlecin altındaki en belirli nesne alınan türdense o, değilse alınan türlerden kenarı en yakın olan (erimde yoksa hiçbiri); seçimdeyse çıkar. Kutu: içindekilerden alınan türler eklenir. `done` ve en az bir nesne: alan `{ scope: 'selection' }` olur (tür süzgeci kalır), dokunulmuş sayılır, günlüğe "n nesne seçildi." yazılır. Yoksa (`cancel` ya da hiç nesne): pencere olduğu gibi, önceki seçim geri gelir |
+
+`pickObjects` adımının çizim tarafı:
+
+| Alan | Anlamı |
+|---|---|
+| `picking` | Seçim (kimlikler, küçükten büyüğe) ve komut satırı (`prompt`: "Alanlar: nesneleri tıklayın ya da pencereyle seçin (n seçili) [Bitti (Enter) / Vazgeç (Esc)]"): seçim başlarken, sonra her tıklama ya da kutudan sonra |
+| `after` | Pencere döndüğünde seçim; nesneler alındıysa günlüğün satırı (`said`) |
 
 Görünüş:
 

@@ -4,7 +4,8 @@ import type { Vec2 } from '../../model/geometry';
 import type { ProcessingModel } from '../../processing/model';
 import { MODEL_PREFIX, modelAsTool, runModel } from '../../processing/modelRunner';
 import type { RunOptions, RunOutcome } from '../../processing/runner';
-import type { ProcessingTool } from '../../processing/types';
+import type { FeaturesValue, ProcessingTool } from '../../processing/types';
+import { PickObjectsTool } from '../../tools/pickObjectsTool';
 import { PickPointTool } from '../../tools/pickPointTool';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
@@ -21,6 +22,8 @@ import {
   modelSteps,
   startState,
   picked,
+  pickedChoice,
+  pickedObjects,
   progressed,
   resetState,
   rowForm,
@@ -279,6 +282,8 @@ class ToolDialog {
       describe: (n) => this.env.inputs[n],
       previewExpression: (n) => runner.previewExpression(this.tool, this.state.values, n),
       pickPoint: (n) => this.pickPoint(n),
+      pickChoice: (n) => this.pickChoice(n),
+      pickObjects: (n) => this.pickObjects(n),
     };
     const control = paramControl(def, this.state.values[name], (v, rebuild) => this.set(name, v, rebuild), env);
     return h(
@@ -353,6 +358,49 @@ class ToolDialog {
     const back = (p: Vec2 | null) => queueMicrotask(() => new ToolDialog(this.ctx, this.tool, undefined, { ...this.opts, resume: picked(state, name, p) }));
     this.dialog.close();
     this.ctx.tools.run(new PickPointTool(this.ctx, def.label, back), `${this.tool.label}: ${def.label}`);
+  }
+
+  /**
+   * Sahneden seç beside a choice that picks a point (the numbering's start
+   * vertex, docs/adr/0088): the point is shown as for its own field, and
+   * the dialog comes back with the point and the choice on its option.
+   */
+  private pickChoice(name: string): void {
+    const def = this.tool.parameters.find((p) => p.name === name);
+    const picks = def?.type === 'enum' ? def.picks : undefined;
+    const pointDef = picks && this.tool.parameters.find((p) => p.name === picks.point);
+    if (!picks || !pointDef) return;
+    const state = this.state;
+    const back = (p: Vec2 | null) =>
+      queueMicrotask(() => new ToolDialog(this.ctx, this.tool, undefined, { ...this.opts, resume: pickedChoice(state, name, picks.option, picks.point, p) }));
+    this.dialog.close();
+    this.ctx.tools.run(new PickPointTool(this.ctx, pointDef.label, back), `${this.tool.label}: ${pointDef.label}`);
+  }
+
+  /**
+   * Sahneden seç for input objects (docs/adr/0088): the dialog steps aside
+   * and the selection is put by and cleared; objects of the field's kinds
+   * (the chosen kind chips, else the tool's) are clicked or boxed. Kept,
+   * the field is the selection and the log says how many; left (Esc) or
+   * with nothing picked, the selection before comes back.
+   */
+  private pickObjects(name: string): void {
+    const def = this.tool.parameters.find((p) => p.name === name);
+    if (def?.type !== 'features') return;
+    const { selection, log } = this.ctx;
+    const state = this.state;
+    const kinds = (state.values[name] as FeaturesValue | undefined)?.kinds ?? def.kinds;
+    const before = [...selection.ids.value];
+    const back = (keep: boolean) =>
+      queueMicrotask(() => {
+        const count = keep ? selection.size : 0;
+        if (count) log.info(T.pick.picked(count));
+        else selection.set(before);
+        new ToolDialog(this.ctx, this.tool, undefined, { ...this.opts, resume: pickedObjects(state, name, keep, count) });
+      });
+    this.dialog.close();
+    selection.clear();
+    this.ctx.tools.run(new PickObjectsTool(this.ctx, def.label, kinds, back), `${this.tool.label}: ${def.label}`);
   }
 
   private async run(): Promise<void> {

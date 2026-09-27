@@ -75,7 +75,8 @@ apps/web/src/ui/processing/
   dialogFixture.ts   dialog.json'un oturumlarını oynatan (denetleyici ve kaydedici; uygulama yüklemez)
   ProcessingPanel.ts Sağ doktaki araç kutusu (Modeller dalı dahil) ve geçmiş
   model/             Model tasarımcısı: ModelDesigner, ModelCanvas, modelPalette, modelInspector
-apps/web/src/tools/pickPointTool.ts    Nokta parametresi için "Haritadan göster"
+apps/web/src/tools/pickPointTool.ts    Nokta parametresinin ve noktalı seçimin "Sahneden seç"i
+apps/web/src/tools/pickObjectsTool.ts  Girdi nesnelerinin "Sahneden seç"i (ADR 0088)
 apps/web/src/styles/processing.css     Pencere ve panel stilleri
 apps/web/src/styles/model.css          Model tasarımcısı stilleri
 ```
@@ -264,7 +265,10 @@ ProcessingModel { id, label, category, description, inputs: ParamDef[], steps, o
 - **Araç kutusunda Modeller dalı** en üsttedir: her model bir satır (tıklayınca çalıştırma penceresi; kalem düğmesi tasarımcıyı açar, yerleşik modelde kopyasını) ve "Yeni model…".
 - **Komutlar:** her araç `processing.run.<id>` komutudur; takma adları komut satırından yazılabilir (`KOSENUMARA`). `processing.toolbox`, `processing.history` ve eski `map.edgeLengths` (Harita menüsü) de komuttur.
 - **Pencere** (`ui/processing/ToolDialog.ts`): solda Girdi, Ayarlar, Çıktı ve katlanır "Gelişmiş ayarlar"; sağda kategori, açıklama, yardım, canlı önizleme, çalışma yerleri ve komut satırı takma adları; altta Varsayılanlar, durum, Kapat ve Çalıştır. Hatalar dokunulan alanda anında, Çalıştır'dan sonra hepsi görünür. Enter (metin alanında) ya da Ctrl+Enter çalıştırır. Başarılı çalıştırmada "Sonuçları seç" ve "Geri al" sunulur; pencere açık kalır, değer değiştirip yeniden çalıştırılabilir. Gelişmiş ayarlar, görünen değerlerinden biri varsayılanından farklıysa (son çalıştırmadan ya da geçmişten) açık başlar; seçili olanı yeniden seçmek hiçbir şeyi değiştirmez; çalışırken Varsayılanlar kapalıdır. Kurallar `dialogPlan.ts`, `fieldPlan.ts` ve `dialogTexts.ts`'tedir; `fixtures/processing/v1/dialog.json` onları sabitler; masaüstünün penceresi aynı dosyayı oynatır ([fixtures/processing/README.md](../fixtures/processing/README.md)).
-- **Nokta parametresi:** "Haritadan göster" pencereyi kapatır, `PickPointTool` ile tek nokta ister (kenet ve `Y,X` yazımı çalışır; Esc vazgeçer) ve pencereyi olduğu gibi (dokunulan alanlar, çalıştırma denemesi, açık bölümler) noktayla geri getirir.
+- **Sahneden seç** ([ADR 0088](adr/0088-pick-from-the-scene.md)), hedef ikonlu düğme:
+  - **Nokta parametresi:** "Sahneden seç" (nokta varken "Yeniden seç"; yokken alan "Henüz seçilmedi" der) pencereyi kapatır, `PickPointTool` ile tek nokta ister (kenet ve `Y,X` yazımı çalışır; Esc vazgeçer) ve pencereyi olduğu gibi (dokunulan alanlar, çalıştırma denemesi, açık bölümler) noktayla geri getirir.
+  - **Bir seçeneği çizimdeki nokta olan seçim:** tanımda `picks: { option, point }` (numaralamanın Başlangıç köşesi: `point`, `startPoint`). Seçimin yanında ikon düğme durur, o seçenek seçiliyken vurgu rengindedir; gösterilen nokta nokta parametresine yazılır ve seçim o seçeneğe geçer. Model tasarımcısında adımın sabit değerleri için de vardır.
+  - **Girdi nesneleri:** kapsam düğmelerinin yanında "Sahneden seç". Pencere kenara çekilir, seçim saklanıp boşalır; `PickObjectsTool` alanın türlerinden (tür çipleriyle daraltıldıysa onlar) nesneleri tıklamayla (seçime girer ya da çıkar; imlecin altındaki nesne başka türdense, alınan türlerden kenarı en yakın olan) ya da kutuyla (soldan sağa pencere, sağdan sola kesişim) seçer; kenet yoktur. Enter, Boşluk ya da hızlı sağ tık: alan Seçili olur, günlüğe "n nesne seçildi." yazılır. Esc ya da hiçbir şey seçmeden bitirmek: pencere olduğu gibi, önceki seçim geri gelir.
 - **Geçmiş:** her çalıştırmanın durumu, saati, süresi ve özeti; "Yeniden aç" aynı değerlerle pencereyi açar, "n nesneyi seç" çalıştırmanın eklediği ve hâlâ var olan nesneleri seçip yakınlaştırır.
 
 ### 8.1 Durum kapsamları

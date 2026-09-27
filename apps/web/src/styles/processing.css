@@ -225,6 +225,31 @@
 .pfield__coord.num {
   color: var(--c-text);
 }
+/* Sahneden seç beside a control (docs/adr/0088): the control takes the room, the pick keeps its size. */
+.prow__control > .pfield__pickrow {
+  align-self: stretch;
+}
+.pfield__pickrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.pfield__pickrow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.pfield__pick {
+  flex: none;
+}
+.pfield__pick--icon {
+  width: calc(32px * var(--ui-scale));
+  padding: 0;
+}
+/* The choice's option that the pick gives is chosen. */
+.pfield__pick[data-on] .icon {
+  color: var(--c-accent);
+}
 
 .pfield__hint {
   color: var(--c-text-3);

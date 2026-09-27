@@ -14,6 +14,8 @@ import type { ExecutionTarget, FeaturesValue, ProcessingTool } from '../../proce
 import { handleJob } from '../../processing/worker/handleJob';
 import type { WorkerRequest } from '../../processing/worker/protocol';
 import { workerExecutor, type WorkerLike } from '../../processing/worker/workerExecutor';
+import { boxOf, pickedAt, pickedIn } from '../../tools/pickObjectsTool';
+import { PickIndex } from '../../viewport/picking';
 import {
   attempted,
   chosenTarget,
@@ -26,6 +28,8 @@ import {
   modelSteps,
   startState,
   picked,
+  pickedChoice,
+  pickedObjects,
   resetState,
   started,
   toggledAdvanced,
@@ -69,7 +73,36 @@ export type SessionAction =
   /** Geri al on the status line after a run. */
   | { undo: true }
   /** A point shown on the map (null: the user gave up); the dialog comes back as it was. */
-  | { pick: { name: string; point: Vec2 | null } };
+  | { pick: { name: string; point: Vec2 | null } }
+  /** Sahneden seç beside a choice that picks a point (`picks`): the point, or null (Esc). */
+  | { pickChoice: { name: string; point: Vec2 | null } }
+  /** Sahneden seç for a features field's objects, played at once (docs/adr/0088). */
+  | { pickObjects: PickObjectsAction };
+
+/** Objects picked on the drawing for a features field: clicks and boxes, then Enter or Esc. */
+export interface PickObjectsAction {
+  name: string;
+  /** How near a click must come to an object, in world units (the pick aperture over the view's scale). */
+  tolerance: number;
+  /** A click turns the object it picks over; a box adds, drawn right to left a crossing, else a window. */
+  actions: ({ click: Vec2 } | { box: { from: Vec2; to: Vec2 } })[];
+  /** done: Enter, Space or a quick right click; cancel: Esc. */
+  end: 'done' | 'cancel';
+}
+
+/** The drawing's side of a step that picks objects. */
+export interface PickRecord {
+  /** The selection (ids ascending) and the command line as the pick starts, then after each click or box. */
+  picking: { selection: number[]; prompt: string }[];
+  /** Back in the dialog: the selection, and the log's line when the objects were kept. */
+  after: { selection: number[]; said?: string };
+}
+
+/** What a session shows: the dialog after opening and after each step, and each step's picking (null when it picks nothing). */
+export interface Played {
+  views: DialogView[];
+  picks: (PickRecord | null)[];
+}
 
 export interface SessionSpec {
   id: string;
@@ -100,6 +133,8 @@ const TEXT_SAMPLES: Record<string, unknown> = {
   has: 3,
   chipTitle: 3,
   more: 2,
+  prompt: { label: 'Alanlar', count: 2 },
+  picked: 2,
 };
 
 /** The dialog's texts as the file writes them: a text made from a value as `{ sample, text }`. */
@@ -206,8 +241,17 @@ export function applyDelta(prev: DialogView, delta: Record<string, unknown>): Di
 }
 
 /** Plays a session on the drawing: the view when it opens, then after each step. */
-export async function playSession(spec: SessionSpec, kcad: string): Promise<DialogView[]> {
+export async function playSession(spec: SessionSpec, kcad: string): Promise<Played> {
   const doc = loadDrawing(kcad);
+  const index = new PickIndex(doc);
+  try {
+    return await play(spec, doc, index);
+  } finally {
+    index.dispose();
+  }
+}
+
+async function play(spec: SessionSpec, doc: CadDocument, index: PickIndex): Promise<Played> {
   let selection = [...(spec.selection ?? [])];
   const bounds = spec.view ? { minX: spec.view[0], minY: spec.view[1], maxX: spec.view[2], maxY: spec.view[3] } : null;
   const executors: Executor[] = spec.available.map((t) => {
@@ -231,10 +275,37 @@ export async function playSession(spec: SessionSpec, kcad: string): Promise<Dial
     return p;
   };
 
+  /** Sahneden seç for input objects, as ToolDialog and PickObjectsTool do it. */
+  const pickObjects = (pick: PickObjectsAction): PickRecord => {
+    const def = paramOf(pick.name);
+    if (def.type !== 'features') throw new Error(`${spec.id}: ${def.name} nesne almaz`);
+    const kinds = (state.values[def.name] as FeaturesValue | undefined)?.kinds ?? def.kinds;
+    const before = selection;
+    const chosen = new Set<number>();
+    const say = () => ({ selection: [...chosen].sort((x, y) => x - y), prompt: DIALOG_TEXTS.pick.prompt({ label: def.label, count: chosen.size }) });
+    const picking = [say()];
+    for (const act of pick.actions) {
+      if ('click' in act) {
+        const hit = pickedAt(index.hit(act.click, pick.tolerance), (takes) => index.hitEdge(act.click, pick.tolerance, takes), kinds);
+        if (hit) chosen.has(hit.id) ? chosen.delete(hit.id) : chosen.add(hit.id);
+      } else {
+        const { bounds, crossing } = boxOf(act.box.from, act.box.to);
+        for (const id of pickedIn(index.inRect(bounds, crossing), (id) => doc.get(id)?.kind, kinds)) chosen.add(id);
+      }
+      picking.push(say());
+    }
+    const count = pick.end === 'done' ? chosen.size : 0;
+    selection = count ? [...chosen] : before;
+    state = pickedObjects(state, def.name, pick.end === 'done', count);
+    return { picking, after: { selection: [...selection].sort((x, y) => x - y), ...(count ? { said: DIALOG_TEXTS.pick.picked(count) } : {}) } };
+  };
+
   let state = startState(tool, spec.given, spec.last, defaults(), spec.choice ?? 'auto');
   const views: DialogView[] = [plain(dialogView(tool, state, envOf(state)))];
+  const picks: (PickRecord | null)[] = [];
   for (const step of spec.steps) {
     const a = step.do;
+    let pickRecord: PickRecord | null = null;
     if ('choose' in a) state = edited(state, a.choose.name, a.choose.value);
     else if ('type' in a) {
       const p = paramOf(a.type.name);
@@ -252,6 +323,12 @@ export async function playSession(spec: SessionSpec, kcad: string): Promise<Dial
       doc.undo();
       state = undone(state);
     } else if ('pick' in a) state = picked(state, a.pick.name, a.pick.point);
+    else if ('pickChoice' in a) {
+      const def = paramOf(a.pickChoice.name);
+      const picks = def.type === 'enum' ? def.picks : undefined;
+      if (!picks) throw new Error(`${spec.id}: ${def.name} seçimi noktayla verilmez`);
+      state = pickedChoice(state, def.name, picks.option, picks.point, a.pickChoice.point);
+    } else if ('pickObjects' in a) pickRecord = pickObjects(a.pickObjects);
     else if ('run' in a) {
       const tried = attempted(state, tool, runner.validate(tool, state.values));
       state = tried.state;
@@ -264,6 +341,7 @@ export async function playSession(spec: SessionSpec, kcad: string): Promise<Dial
       }
     }
     views.push(plain(dialogView(tool, state, envOf(state))));
+    picks.push(pickRecord);
   }
-  return views;
+  return { views, picks };
 }
