@@ -227,6 +227,8 @@ pub const PORTED: &[&str] = &[
     "style.manager",
     "style.assign",
     "style.clearSymbol",
+    // Lejant, saved as a PNG on white paper (docs/adr/0093).
+    "style.legend",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

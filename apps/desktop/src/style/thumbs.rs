@@ -112,6 +112,17 @@ impl Thumbs {
         }
     }
 
+    /// Whether a picture left an image in the atlas for another frame: a
+    /// picture drawn off the screen (Lejant's) is drawn again until none did.
+    pub fn pending(&self) -> bool {
+        self.built
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .values()
+            .flatten()
+            .any(|b| b.pending.load(Ordering::Relaxed))
+    }
+
     fn built(
         &self,
         symbol: &Value,

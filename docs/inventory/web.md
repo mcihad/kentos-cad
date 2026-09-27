@@ -80,7 +80,6 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 #### Komutlar (7 / 167; ayrıca 15 iki platformda da bekliyor)
 
 - `processing.newModel` Yeni model…
-- `style.legend` Lejant…
 - `style.svgEditor` SVG çizim düzenleyicisi…
 - `view.keyTips` Şerit harf ipuçları
 - `view.ribbon` Şerit arayüzü
@@ -165,7 +164,6 @@ Yok.
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
 - `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.
 - `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)) — Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
-- `apps/web/src/ui/style/LegendDialog.ts#openLegend` openLegend
 - `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager (kısmi) (masaüstünde: apps/desktop/src/style/manager/ (ADR 0092)) — Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar; ikisi masaüstüne henüz taşınmadı, düğmeleri soluk ve nedenini söyler.
 - `apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner` openSymbolDesigner
 - `apps/web/src/ui/svgedit/SvgEditor.ts#openSvgEditor` openSvgEditor
