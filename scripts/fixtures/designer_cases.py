@@ -556,8 +556,12 @@ def fit_view(b, width, height):
     return {'k': k, 'x': (width - b['w'] * k) / 2 - b['x'] * k, 'y': (height - b['h'] * k) / 2 - b['y'] * k}
 
 
-def zoom_at(view, p, f):
-    k = min(CANVAS['zoomMax'], max(CANVAS['zoomMin'], view['k'] * f))
+def zoom_floor(fitted_k):
+    return min(CANVAS['zoomMin'], fitted_k)
+
+
+def zoom_at(view, p, f, floor=None):
+    k = min(CANVAS['zoomMax'], max(CANVAS['zoomMin'] if floor is None else floor, view['k'] * f))
     wx = (p['x'] - view['x']) / view['k']
     wy = (p['y'] - view['y']) / view['k']
     return {'k': k, 'x': p['x'] - wx * k, 'y': p['y'] - wy * k}
@@ -719,6 +723,14 @@ def model_facts(title, model):
 A = {'x': 230, 'y': 66}
 POINTS = [(A, {'x': 330, 'y': 70}), (A, {'x': 830, 'y': 190}), ({'x': 520, 'y': 90}, {'x': 300, 'y': 400}), (A, A), ({'x': 12.5, 'y': 7}, {'x': 101.25, 'y': -33})]
 FITS = [(None, 1000, 600), ({'x': 40, 'y': 40, 'w': 530, 'h': 160}, 1000, 600), ({'x': 40, 'y': 40, 'w': 2000, 'h': 900}, 1000, 600), ({'x': -200, 'y': 10, 'w': 900, 'h': 1400}, 820, 560), ({'x': 40, 'y': 40, 'w': 190, 'h': 52}, 0, 0)]
+FLOORS = [1, 0.8, 0.35, 0.3314285714285714, 0.12]
+# With the floor a fit left: a big model's fitted view zoomed out stays, zoomed in grows; above zoomMin the floor is zoomMin.
+FLOOR_ZOOMS = [
+    ({'x': 30, 'y': 20, 'k': 0.3314285714285714}, {'x': 410, 'y': 280}, 1 / 1.25, 0.3314285714285714),
+    ({'x': 30, 'y': 20, 'k': 0.3314285714285714}, {'x': 410, 'y': 280}, 1.25, 0.3314285714285714),
+    ({'x': 30, 'y': 20, 'k': 0.4}, {'x': 410, 'y': 280}, 1 / 1.25, 0.3314285714285714),
+    ({'x': 0, 'y': 0, 'k': 0.5}, {'x': 100, 'y': 100}, 0.5, 0.35),
+]
 ZOOMS = [({'x': 0, 'y': 0, 'k': 1}, {'x': 500, 'y': 300}, 1.25), ({'x': 24, 'y': 24, 'k': 1.9}, {'x': 100, 'y': 100}, 1.25), ({'x': -30, 'y': 12, 'k': 0.4}, {'x': 400, 'y': 250}, 1 / 1.25), ({'x': 10, 'y': 10, 'k': 1}, {'x': 0, 'y': 0}, math.exp(-120 * CANVAS['wheel'])), ({'x': 10, 'y': 10, 'k': 1}, {'x': 250, 'y': 125}, math.exp(480 * CANVAS['wheel']))]
 SNAPS = [0, 4, 5, 14.99, 15, -15, -16, 123.4, 1234.5]
 SLUGS = ['Nokta öneki', 'Parseller', 'Köşe noktalarını numarala', 'İfadeyle seç', '3 nokta', '', '  Çıktı katmanı  ', 'ALAN (m²)', 'a_b-c', 'Işık ve ıslak', 'Kâğıt', 'Öznitelik hesapla']
@@ -832,7 +844,9 @@ file = {
         'curves': [{'a': a, 'b': b, 'curve': curve(a, b)} for a, b in POINTS],
         'ports': {'input': {'at': {'x': 40, 'y': 130}, 'port': {'x': 230, 'y': 156}}, 'step': {'at': {'x': 330, 'y': 40}, 'port': {'x': 570, 'y': 70}, 'entry': {'x': 330, 'y': 70}}},
         'fits': [{'bounds': b, 'width': w, 'height': h, 'view': fit_view(b, w, h)} for b, w, h in FITS],
-        'zooms': [{'view': v, 'at': p, 'factor': f, 'result': zoom_at(v, p, f)} for v, p, f in ZOOMS],
+        'zooms': [{'view': v, 'at': p, 'factor': f, 'result': zoom_at(v, p, f)} for v, p, f in ZOOMS]
+        + [{'view': v, 'at': p, 'factor': f, 'floor': fl, 'result': zoom_at(v, p, f, fl)} for v, p, f, fl in FLOOR_ZOOMS],
+        'floors': [{'fitted': k, 'floor': zoom_floor(k)} for k in FLOORS],
         'snaps': [{'value': v, 'snapped': snap(v)} for v in SNAPS],
     },
 }

@@ -18,6 +18,7 @@ import {
   stepMeta,
   stepPort,
   zoomAt,
+  zoomFloor,
   type NodeRef,
   type Pt,
   type View,
@@ -55,6 +56,8 @@ export class ModelCanvas {
   private readonly events: CanvasEvents;
   private readonly lookup: (id: string) => ProcessingTool | undefined;
   private view: View = { x: 0, y: 0, k: 1 };
+  /** Zooming's lowest scale: the last fit's when that was below `zoomMin` (designerPlan.ts `zoomFloor`). */
+  private floor: number = CANVAS.zoomMin;
   private model: ProcessingModel | null = null;
   private selected: NodeRef | null = null;
   private problems = new Map<string, string>();
@@ -121,6 +124,7 @@ export class ModelCanvas {
   fit(): void {
     const r = this.el.getBoundingClientRect();
     this.view = fitView(this.model && boxesBounds(this.model), r.width, r.height);
+    this.floor = zoomFloor(this.view.k);
     this.applyView();
   }
 
@@ -131,7 +135,7 @@ export class ModelCanvas {
   }
 
   private zoomAt(p: Pt, f: number): void {
-    this.view = zoomAt(this.view, p, f);
+    this.view = zoomAt(this.view, p, f, this.floor);
     this.applyView();
   }
 

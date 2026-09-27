@@ -339,9 +339,16 @@ export function fitView(bounds: { x: number; y: number; w: number; h: number } |
   return { k, x: (width - bounds.w * k) / 2 - bounds.x * k, y: (height - bounds.h * k) / 2 - bounds.y * k };
 }
 
-/** The view zoomed by `f` about a canvas point, which stays over the same world point; the scale stays within its limits. */
-export function zoomAt(view: View, p: Pt, f: number): View {
-  const k = Math.min(CANVAS.zoomMax, Math.max(CANVAS.zoomMin, view.k * f));
+/**
+ * The lowest scale zooming reaches: `zoomMin`, or the last fit's scale when
+ * that is lower, so a model too big to see whole at `zoomMin` is seen whole
+ * after fitting and the first wheel step does not jump.
+ */
+export const zoomFloor = (fittedK: number): number => Math.min(CANVAS.zoomMin, fittedK);
+
+/** The view zoomed by `f` about a canvas point, which stays over the same world point; the scale stays between `floor` and `zoomMax`. */
+export function zoomAt(view: View, p: Pt, f: number, floor: number = CANVAS.zoomMin): View {
+  const k = Math.min(CANVAS.zoomMax, Math.max(floor, view.k * f));
   const wx = (p.x - view.x) / view.k;
   const wy = (p.y - view.y) / view.k;
   return { k, x: p.x - wx * k, y: p.y - wy * k };

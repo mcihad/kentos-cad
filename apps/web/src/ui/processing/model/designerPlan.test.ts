@@ -40,6 +40,7 @@ import {
   stepMeta,
   stepPort,
   zoomAt,
+  zoomFloor,
   type NodeRef,
   type Pt,
   type View,
@@ -101,7 +102,8 @@ const F = JSON.parse(Object.values(files)[0]) as {
     curves: { a: Pt; b: Pt; curve: unknown }[];
     ports: { input: { at: Pt; port: Pt }; step: { at: Pt; port: Pt; entry: Pt } };
     fits: { bounds: { x: number; y: number; w: number; h: number } | null; width: number; height: number; view: View }[];
-    zooms: { view: View; at: Pt; factor: number; result: View }[];
+    zooms: { view: View; at: Pt; factor: number; floor?: number; result: View }[];
+    floors: { fitted: number; floor: number }[];
     snaps: { value: number; snapped: number }[];
   };
 };
@@ -244,7 +246,8 @@ describe('the model designer (fixtures/processing/v1/designer.json)', () => {
     }
     expect([inputPort(G.ports.input.at), stepPort(G.ports.step.at), stepEntry(G.ports.step.at)]).toEqual([G.ports.input.port, G.ports.step.port, G.ports.step.entry]);
     for (const c of G.fits) expect(plain(fitView(c.bounds, c.width, c.height)), JSON.stringify(c)).toEqual(c.view);
-    for (const c of G.zooms) expect(plain(zoomAt(c.view, c.at, c.factor)), JSON.stringify(c)).toEqual(c.result);
+    for (const c of G.zooms) expect(plain(zoomAt(c.view, c.at, c.factor, c.floor)), JSON.stringify(c)).toEqual(c.result);
+    for (const c of G.floors) expect(zoomFloor(c.fitted), String(c.fitted)).toBe(c.floor);
     for (const c of G.snaps) expect(plain(snap(c.value)), String(c.value)).toBe(c.snapped);
   });
 });
