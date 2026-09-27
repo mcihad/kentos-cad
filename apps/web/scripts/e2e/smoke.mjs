@@ -2715,6 +2715,73 @@ try {
     await sleep(120);
     await click('.menu .menu__item');
     check('a right click adds a ribbon command to the quick access bar', await b.eval(`!!document.querySelector('.ribbon__qat [data-command="view.zoomExtents"]') && window.kentos.ui.ribbonQuickAccess.value.includes('view.zoomExtents')`));
+
+    // The bar's other ways (ribbonPlan.ts): a right click on an added button takes it off, on a fixed one says so and
+    // is off; anywhere else on the ribbon it offers only the fold (never the browser's menu); the ▾ menu adds at the end.
+    const rightAt = async (sel) => {
+      const p = await at(sel);
+      if (!p) throw new Error(`bulunamadı: ${sel}`);
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: p[0], y: p[1], button: 'none' });
+      await b.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: p[0], y: p[1], button: 'right', clickCount: 1 });
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: p[0], y: p[1], button: 'right', clickCount: 1 });
+      await sleep(150);
+      return b.eval(`[...document.querySelectorAll('.menu .menu__item')].map((e) => ({ text: e.querySelector('.menu__label')?.textContent ?? e.textContent, off: e.getAttribute('aria-disabled') === 'true', on: e.getAttribute('aria-checked') }))`);
+    };
+    const fixedRows = await rightAt('.ribbon__qat [data-command="file.save"]');
+    await key('Escape');
+    const tabRows = await rightAt('.ribbon__tab[data-tab="draw"]');
+    await key('Escape');
+    const addedRows = await rightAt('.ribbon__qat [data-command="view.zoomExtents"]');
+    await click('.menu .menu__item');
+    const takenOff = await b.eval(`({ bar: !document.querySelector('.ribbon__qat [data-command="view.zoomExtents"]'), kept: window.kentos.ui.ribbonQuickAccess.value.includes('view.zoomExtents') })`);
+    check(
+      'a right click takes an added button off the bar; on a fixed one it says so, off; on a tab it offers only the fold',
+      /sabit/.test(fixedRows[0]?.text ?? '') && fixedRows[0]?.off === true && tabRows.length === 1 && /Şeridi daralt/.test(tabRows[0].text) && /kaldır/.test(addedRows[0]?.text ?? '') && takenOff.bar && !takenOff.kept,
+      JSON.stringify({ fixedRows, tabRows, addedRows, takenOff }),
+    );
+    await click('.ribbon__qat-more');
+    const menuRows = await b.eval(`[...document.querySelectorAll('.menu .menu__item')].map((e) => e.textContent)`);
+    await b.click(...(await menuItem('Kaydır')));
+    await sleep(150);
+    await click('.ribbon__qat-more');
+    await b.click(...(await menuItem('Pencere yakınlaştır')));
+    await sleep(150);
+    const order = await b.eval(`[...document.querySelectorAll('.ribbon__qat [data-command]')].map((e) => e.dataset.command)`);
+    await click('.ribbon__qat-more');
+    await b.click(...(await menuItem('Kaydır')));
+    await sleep(150);
+    const afterOff = await b.eval(`window.kentos.ui.ribbonQuickAccess.value`);
+    check(
+      'the bar’s ▾ lists the bar and the offers; chosen, a command goes to the end of the bar, chosen again it leaves',
+      menuRows.length > 9 && order.join(' ') === 'file.save edit.undo edit.redo tool.pan tool.zoomWindow' && !afterOff.includes('tool.pan') && afterOff.includes('tool.zoomWindow'),
+      JSON.stringify({ order, afterOff }),
+    );
+    await b.eval(`window.kentos.ui.ribbonQuickAccess.set([])`);
+
+    // Key tips narrow as letters are typed: a first letter dims the tips it does not start, Backspace takes it back.
+    await tab('home');
+    await b.key('F6');
+    await sleep(120);
+    const tabTips = await b.eval(`[...document.querySelectorAll('.keytips__tip')].map((t) => t.textContent)`);
+    const two = tabTips.find((t) => t.length === 2) ?? '';
+    await b.key(two[0].toLowerCase());
+    await sleep(80);
+    const dimmed = await b.eval(`[...document.querySelectorAll('.keytips__tip')].filter((t) => t.hasAttribute('data-off')).length`);
+    await b.key('Backspace');
+    await sleep(80);
+    const undimmed = await b.eval(`[...document.querySelectorAll('.keytips__tip')].filter((t) => t.hasAttribute('data-off')).length`);
+    await b.key('Escape');
+    await sleep(80);
+    check(
+      'a typed first letter dims the key tips it does not start; Backspace takes it back; Esc closes',
+      !!two && dimmed > 0 && dimmed < tabTips.length && undimmed === 0 && (await b.eval(`!document.querySelector('.keytips')`)),
+      JSON.stringify({ tabTips, two, dimmed, undimmed }),
+    );
+
+    // A split button keeps the choice made from its list, and says it (ribbonSplits, the layout).
+    const kept = await b.eval(`({ circle: window.kentos.ui.ribbonSplits.value.circle, aria: document.querySelector('.ribbon__strip [data-split="circle"] .rsplit__main').getAttribute('aria-label') })`);
+    check('Daire keeps 3 nokta on top after it was chosen from its list, in the layout too', kept.circle === 'tool.circle|3N' && kept.aria === 'Daire: 3 nokta', JSON.stringify(kept));
+    await tab('view');
     await b.shot('ribbon-dark');
     await b.eval(`window.kentos.commands.execute('view.theme.light')`);
     await sleep(150);

@@ -1191,7 +1191,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/ribbon/Ribbon.ts",
+        "apps/web/src/ui/ribbon/ribbonPlan.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",
@@ -1658,7 +1658,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/ribbon/Ribbon.ts",
+        "apps/web/src/ui/ribbon/ribbonPlan.ts",
         "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/start/StartScreen.ts"
       ],
@@ -1699,7 +1699,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/ribbon/Ribbon.ts",
+        "apps/web/src/ui/ribbon/ribbonPlan.ts",
         "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/start/StartScreen.ts"
       ],
@@ -1782,7 +1782,8 @@
         "desktop": "implemented"
       },
       "tests": [
-        "apps/web/scripts/e2e/cloud.mjs"
+        "apps/web/scripts/e2e/cloud.mjs",
+        "apps/web/scripts/e2e/smoke.mjs"
       ],
       "note": "`.kcad` v1 JSON yazar; binary v2 henüz yok (ADR 0011, TODOS.md FILE-01..24)."
     },
@@ -1815,7 +1816,7 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/cloud/AccessLostNotice.ts",
-        "apps/web/src/ui/ribbon/Ribbon.ts"
+        "apps/web/src/ui/ribbon/ribbonPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -3835,7 +3836,7 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/ribbon/Ribbon.ts",
+        "apps/web/src/ui/ribbon/ribbonPlan.ts",
         "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
@@ -3845,6 +3846,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/navigation.json"
       ]
     },
@@ -4819,7 +4821,7 @@
       "toolbox": true,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/ribbon/Ribbon.ts",
+        "apps/web/src/ui/ribbon/ribbonPlan.ts",
         "apps/web/src/ui/shell/shellPlan.ts"
       ],
       "status": "implemented",
@@ -4828,6 +4830,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/navigation.json"
       ]
     },
@@ -4858,7 +4861,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/ribbon/Ribbon.ts",
+        "apps/web/src/ui/ribbon/ribbonPlan.ts",
         "apps/web/src/ui/settings/ProjectSettingsDialog.ts",
         "apps/web/src/ui/shell/viewportMenus.ts",
         "apps/web/src/ui/statusbar/StatusBar.ts"
@@ -5188,7 +5191,8 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/ribbon/Ribbon.ts"
+        "apps/web/src/ui/ribbon/Ribbon.ts",
+        "apps/web/src/ui/ribbon/ribbonPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -5354,7 +5358,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/ribbon/Ribbon.ts"
+        "apps/web/src/ui/ribbon/ribbonPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -5446,7 +5450,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/ribbon/Ribbon.ts",
+        "apps/web/src/ui/ribbon/ribbonPlan.ts",
         "apps/web/src/ui/shell/shellPlan.ts",
         "apps/web/src/ui/shell/viewportMenus.ts"
       ],
@@ -6558,6 +6562,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/navigation.json"
       ]
     },
@@ -7289,6 +7294,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/smoke.mjs",
         "fixtures/interaction/v1/navigation.json"
       ]
     }

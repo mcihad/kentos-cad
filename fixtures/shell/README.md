@@ -1,16 +1,18 @@
 # Klasik arayüzün ortak kuralları
 
-Menü çubuğu, araç çubuğu ve kayan araç kutusunun ([DESIGN.md](../../DESIGN.md) §7.1–§7.4) iki platformda aynı kuralları ve sözleri kullanması için. Bir adımın sığıp sığmadığı her platformda kendi ölçüsüyle bulunur; burada her adımın ne yaptığı, araç kutusunun yeri, sütunları ve görünmesi, bir komutun menüdeki satırı vardır. Günlüğün yazılışı (alt panelin Komut geçmişi ve Uyarılar sekmeleri, durum çubuğunun iletisi) `v1/log.json`'da, saklanan yerleşim (paneller, boyutlar, araç kutusu, dok ve şerit durumları) `v1/layout.json`'dadır.
+Menü çubuğu, araç çubuğu ve kayan araç kutusunun ([DESIGN.md](../../DESIGN.md) §7.1–§7.4) iki platformda aynı kuralları ve sözleri kullanması için. Bir adımın sığıp sığmadığı her platformda kendi ölçüsüyle bulunur; burada her adımın ne yaptığı, araç kutusunun yeri, sütunları ve görünmesi, bir komutun menüdeki satırı vardır. Günlüğün yazılışı (alt panelin Komut geçmişi ve Uyarılar sekmeleri, durum çubuğunun iletisi) `v1/log.json`'da, saklanan yerleşim (paneller, boyutlar, araç kutusu, dok ve şerit durumları) `v1/layout.json`'da, şeridin harf ipuçları, hızlı erişim çubuğunun menüsü, sağ tık menüleri ve bölünmüş düğmenin listesi `v1/ribbon.json`'dadır.
 
 - **Web**: `apps/web/src/ui/shell/shellPlan.test.ts` (Vitest), `ui/shell/shellPlan.ts`, `app/menus.ts` (`menuRowLook`) ve `ui/toolbar/fields.ts`'e karşı. `MenuBar.ts`, `Toolbar.ts` ve `Toolbox.ts` bu kuralları uygular.
-- **Masaüstü**: klasik arayüz aynı dosyayı okur.
+- **Masaüstü**: yalnız şeritle çalışır, klasik arayüzü yoktur (sahibin kararı, 27 Eylül); `v1/shell.json` yalnız web'indir. Masaüstü `v1/log.json`, `v1/layout.json` ve `v1/ribbon.json`'u oynatır.
 - **Kaydedici**: `python3 scripts/fixtures/shell_cases.py` (`--check` hiçbir şey yazmadan karşılaştırır). Tablolar ve sözler DESIGN.md'den ve web'in çubuklarından elle yazılmıştır; cevaplar koddan ayrı, betikte bulunur.
+- **Şerit**: web'de `apps/web/src/ui/ribbon/ribbonPlan.test.ts`, `ui/ribbon/ribbonPlan.ts` ve `keytips.ts`'e (`lettersOf`, `assignKeyTips`, `firstLevelTips`, `keyTipStep`) karşı; sekmelerin adları web'in her çalışma modunda kurduğu şeride karşı. `Ribbon.ts`, `controls.ts` ve `panels.ts` bu kuralları uygular. Kaydedici `python3 scripts/fixtures/ribbon_cases.py` (`--check`). Davranışın bütünü [docs/specs/ribbon.md](../../docs/specs/ribbon.md)'dedir.
 - **Yerleşim**: web'de `apps/web/src/app/layoutPlan.test.ts`, `app/layoutPlan.ts`, `app/ribbon.ts` (`quickAccessOf`, `splitCurrent`, `startTab`) ve `app/state.ts`'e (`SAVE_DELAY_MS`) karşı. `createUiState`, `AppShell.ts`, `RightDock.ts`, `BottomPanel.ts`, `Ribbon.ts` ve şeridin bölünmüş düğmeleri bu kuralları uygular. Kaydedici `python3 scripts/fixtures/layout_cases.py` (`--check`).
 - **Günlük**: web'de `apps/web/src/ui/bottom/logPlan.test.ts`, `ui/bottom/logPlan.ts`, `ui/bottom/warnings.ts` ve `app/state.ts`'in `MessageLog`'una karşı; görünüş `styles/panels.css` ve `styles/shell.css`'e karşı. `BottomPanel.ts` ve `StatusBar.ts` bu kuralları uygular. Kaydedici `python3 scripts/fixtures/log_cases.py` (`--check`); yerel saatler Python'un kendi saat dilimi veritabanıyla bulunur.
 
 | Dosya | İçerik |
 |---|---|
 | `v1/shell.json` | Klasik arayüzün kuralları ve sözleri |
+| `v1/ribbon.json` | Şerit: harf ipuçları, hızlı erişim çubuğunun menüsü ve değişmesi, sağ tık menüleri, bölünmüş düğmenin listesi ve yüzü |
 | `v1/layout.json` | Saklanan yerleşim: alanlar, varsayılanlar, saklananın okunuşu, göç, pencereye göre boyutlar, şeridin sekmesi, hızlı erişimi ve bölünmüş düğmeleri |
 | `v1/log.json` | Günlüğün yazılışı: satırın saati ve düzeyi, sekmeler, Uyarılar rozeti, saklanan satır sayısı, yazılanın yankısı, durum çubuğunun iletisi, satırların görünüşü |
 
@@ -34,6 +36,23 @@ Menü çubuğu, araç çubuğu ve kayan araç kutusunun ([DESIGN.md](../../DESIG
 | `toolbox.undock` | Kenara sabitliyken tutamaçtan sürüklenince araç kutusunun yeri: imlecin çizim alanındaki yeri eksi `undock` |
 | `toolbox.shown` | Araç kutusu görünür mü: klasik arayüzde `toolboxVisible`, şeritte `ribbonToolbox` |
 | `menuRows` | Bir komutun menü satırı: aç/kapa komutunda simge yerine onay; tema (değiştirme dışında), çizim motoru, sembol kipi ve çalışma modu radyodur ve simgesini tutar; araç eylem gibi okunur (simge, onay yok). `checked: null` komutun aç/kapa durumu olmadığı demektir |
+
+## Biçim (`kentos.ribbon`, sürüm 1)
+
+| Alan | Anlamı |
+|---|---|
+| `format`, `version` | `"kentos.ribbon"`, `1` |
+| `texts` | Şeridin sözleri: hızlı erişim, özelleştirme ve ipucu, “sabit”, ekle, kaldır, sabit, daralt ve sabitle, bölünmüş düğmenin oku, yöntem adı, panelin ▾'i, başlatılamayan yöntem. Bir değerden yapılan söz `{ sample, text }` |
+| `quickAccessFixed`, `quickAccessOffers` | Çubuğun sabit üç komutu; ▾ menüsünün önerdikleri, sırasıyla |
+| `tabs` | Web'in her hazır çalışma modunda (`hybrid`, `cad`, `gis`) sekmeleri sırasıyla: kimlik, ad, bağlamsal mı (Seçim) |
+| `keyTips.letters` | Bir addan harfler: Türkçe küçük harf, ç ğ ı i ö ş ü â î û düz büyük harfe, A–Z ve 0–9 dışı düşer |
+| `keyTips.assign` | Adlar ve ayrılmış ipuçları → ipuçları: ilk harfi yalnız kendinin olan ad o harfi, kalanlar iki harf (baş harfler, ilk harf ve öbür harfleri, ilk harf ve alfabe); hiçbir ipucu tek harflik bir ipucuyla başlamaz; harfi olmayan ad `X` ile |
+| `keyTips.firstLevel` | Birinci düzey: çubuğun kullanılabilen düğme sayısı ve görünen sekmelerin adları → ilk dokuz düğmeye 1…9, sekmelere harfler (rakamlar ayrılmış) |
+| `keyTips.steps` | Harf ipuçları açıkken bir tuş: düzey (`tabs`, `controls`), yazılan, ipuçları, tuş (`ctrl`: Ctrl ile) → `run` (tamamlanan ipucu), `typed` (yazılanın yeni hâli; öbürleri soluk), `back` (Esc, ikinci düzeyden birinciye), `hide`, `ignore` |
+| `quickAccessMenus` | Çubuğun ▾ menüsü: çubuk (sabit üç dahil) ve uygulamadaki komutlar → satırlar: başlık, her komut (`quick`: işaretli mi, sabitse kapalı ve “sabit”, değilse seçilince ne olur: `set`), ayırıcı, daraltma komutunun kendi satırı (`command`) |
+| `toggles` | Saklı liste, komut, eklenecek mi → yeni liste (eklenen sona, çıkarılan silinir) |
+| `commandMenus`, `ribbonMenu` | Sağ tık: bir komut düğmesinde (sabit, eklenmiş ya da çubukta olmayan) ve şeridin başka bir yerinde |
+| `splitMenus`, `splitFaces` | Bölünmüş düğmenin listesi (yöntemlerde aracın adıyla başlık, ailede başlıksız; satırlar komut, seçenek, ad, ipucu) ve üstünün yazısı ve erişilebilir adı |
 
 ## Biçim (`kentos.layout`, sürüm 1)
 

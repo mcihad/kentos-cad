@@ -1,0 +1,1757 @@
+{
+ "format": "kentos.ribbon",
+ "version": 1,
+ "texts": {
+  "quickAccess": "Hızlı erişim",
+  "customize": "Hızlı erişimi özelleştir",
+  "customizeTip": "Şeritteki bir düğmeye sağ tıklayarak da ekleyebilirsiniz.",
+  "fixedHint": "sabit",
+  "add": "Hızlı erişime ekle",
+  "remove": "Hızlı erişimden kaldır",
+  "fixed": "Hızlı erişimde (sabit)",
+  "fold": "Şeridi daralt",
+  "pin": "Şeridi sabitle",
+  "foldTip": "Daraltılmış şerit bir sekmeye tıklayınca çizimin üstünde açılır.",
+  "others": {
+   "sample": [
+    "Daire"
+   ],
+   "text": "Daire: diğer seçenekler"
+  },
+  "method": {
+   "sample": [
+    "Daire",
+    "3 nokta"
+   ],
+   "text": "Daire: 3 nokta"
+  },
+  "panelMore": {
+   "sample": [
+    "Eğri"
+   ],
+   "text": "Eğri: diğer araçlar"
+  },
+  "cannotStart": {
+   "sample": [
+    "Daire",
+    "3 nokta"
+   ],
+   "text": "“Daire: 3 nokta” şu an başlatılamadı."
+  }
+ },
+ "quickAccessFixed": [
+  "file.save",
+  "edit.undo",
+  "edit.redo"
+ ],
+ "quickAccessOffers": [
+  "file.new",
+  "file.open",
+  "file.saveAs",
+  "edit.paste",
+  "view.zoomExtents",
+  "tool.zoomWindow",
+  "tool.pan",
+  "tools.options",
+  "view.theme.toggle"
+ ],
+ "tabs": {
+  "hybrid": [
+   {
+    "id": "file",
+    "label": "Dosya"
+   },
+   {
+    "id": "home",
+    "label": "Giriş"
+   },
+   {
+    "id": "draw",
+    "label": "Çizim"
+   },
+   {
+    "id": "modify",
+    "label": "Değiştir"
+   },
+   {
+    "id": "map",
+    "label": "Harita"
+   },
+   {
+    "id": "view",
+    "label": "Görünüm"
+   },
+   {
+    "id": "processing",
+    "label": "İşlemler"
+   },
+   {
+    "id": "tools",
+    "label": "Araçlar"
+   },
+   {
+    "id": "selection",
+    "label": "Seçim",
+    "contextual": true
+   }
+  ],
+  "cad": [
+   {
+    "id": "file",
+    "label": "Dosya"
+   },
+   {
+    "id": "home",
+    "label": "Giriş"
+   },
+   {
+    "id": "draw",
+    "label": "Çizim"
+   },
+   {
+    "id": "modify",
+    "label": "Değiştir"
+   },
+   {
+    "id": "map",
+    "label": "Ölçme"
+   },
+   {
+    "id": "view",
+    "label": "Görünüm"
+   },
+   {
+    "id": "tools",
+    "label": "Araçlar"
+   },
+   {
+    "id": "selection",
+    "label": "Seçim",
+    "contextual": true
+   }
+  ],
+  "gis": [
+   {
+    "id": "file",
+    "label": "Dosya"
+   },
+   {
+    "id": "home",
+    "label": "Giriş"
+   },
+   {
+    "id": "draw",
+    "label": "Çizim"
+   },
+   {
+    "id": "modify",
+    "label": "Değiştir"
+   },
+   {
+    "id": "map",
+    "label": "Harita"
+   },
+   {
+    "id": "view",
+    "label": "Görünüm"
+   },
+   {
+    "id": "processing",
+    "label": "İşlemler"
+   },
+   {
+    "id": "tools",
+    "label": "Araçlar"
+   },
+   {
+    "id": "selection",
+    "label": "Seçim",
+    "contextual": true
+   }
+  ]
+ },
+ "keyTips": {
+  "letters": [
+   {
+    "label": "Çizim",
+    "letters": "CIZIM"
+   },
+   {
+    "label": "İşlemler",
+    "letters": "ISLEMLER"
+   },
+   {
+    "label": "Görünüm: ölçü",
+    "letters": "GORUNUMOLCU"
+   },
+   {
+    "label": "Değiştir",
+    "letters": "DEGISTIR"
+   },
+   {
+    "label": "Kâğıt",
+    "letters": "KAGIT"
+   },
+   {
+    "label": "ışık",
+    "letters": "ISIK"
+   },
+   {
+    "label": "I/O 2",
+    "letters": "IO2"
+   },
+   {
+    "label": "Yeni proje",
+    "letters": "YENIPROJE"
+   },
+   {
+    "label": "Kaydet…",
+    "letters": "KAYDET"
+   },
+   {
+    "label": "3 nokta",
+    "letters": "3NOKTA"
+   },
+   {
+    "label": "Aç–kapat",
+    "letters": "ACKAPAT"
+   }
+  ],
+  "assign": [
+   {
+    "title": "the tabs of the hybrid mode",
+    "labels": [
+     "Dosya",
+     "Giriş",
+     "Çizim",
+     "Değiştir",
+     "Harita",
+     "Görünüm",
+     "İşlemler",
+     "Araçlar"
+    ],
+    "reserved": [],
+    "tips": [
+     "DO",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A"
+    ]
+   },
+   {
+    "title": "one first letter each",
+    "labels": [
+     "Dosya",
+     "Giriş",
+     "Harita"
+    ],
+    "reserved": [],
+    "tips": [
+     "D",
+     "G",
+     "H"
+    ]
+   },
+   {
+    "title": "shared first letters get two, from the initials first",
+    "labels": [
+     "Yeni proje",
+     "Yapıştır",
+     "Yakınlaştır",
+     "Yay"
+    ],
+    "reserved": [],
+    "tips": [
+     "YP",
+     "YA",
+     "YK",
+     "YY"
+    ]
+   },
+   {
+    "title": "a reserved tip is never given",
+    "labels": [
+     "1. adım",
+     "Kaydet",
+     "Kes"
+    ],
+    "reserved": [
+     "1",
+     "2"
+    ],
+    "tips": [
+     "1A",
+     "KA",
+     "KE"
+    ]
+   },
+   {
+    "title": "many look-alike labels all get two letters",
+    "labels": [
+     "Komut 0",
+     "Komut 1",
+     "Komut 2",
+     "Komut 3",
+     "Komut 4",
+     "Komut 5",
+     "Komut 6",
+     "Komut 7",
+     "Komut 8",
+     "Komut 9",
+     "Komut 10",
+     "Komut 11",
+     "Komut 12",
+     "Komut 13",
+     "Komut 14",
+     "Komut 15",
+     "Komut 16",
+     "Komut 17",
+     "Komut 18",
+     "Komut 19",
+     "Komut 20",
+     "Komut 21",
+     "Komut 22",
+     "Komut 23",
+     "Komut 24",
+     "Komut 25",
+     "Komut 26",
+     "Komut 27",
+     "Komut 28",
+     "Komut 29"
+    ],
+    "reserved": [
+     "1",
+     "2"
+    ],
+    "tips": [
+     "K0",
+     "K1",
+     "K2",
+     "K3",
+     "K4",
+     "K5",
+     "K6",
+     "K7",
+     "K8",
+     "K9",
+     "KO",
+     "KM",
+     "KU",
+     "KT",
+     "KA",
+     "KB",
+     "KC",
+     "KD",
+     "KE",
+     "KF",
+     "KG",
+     "KH",
+     "KI",
+     "KJ",
+     "KK",
+     "KL",
+     "KN",
+     "KP",
+     "KQ",
+     "KR"
+    ]
+   },
+   {
+    "title": "a label without letters",
+    "labels": [
+     "…",
+     "—",
+     "Dosya"
+    ],
+    "reserved": [],
+    "tips": [
+     "XA",
+     "XB",
+     "D"
+    ]
+   },
+   {
+    "title": "the controls of a panel",
+    "labels": [
+     "Yapıştır",
+     "Kes",
+     "Panoya kopyala",
+     "Özgün koordinatlara yapıştır",
+     "Seç",
+     "Pencere yakınlaştır",
+     "Kaydır",
+     "Çizgi",
+     "Çoklu çizgi",
+     "Daire: Merkez, yarıçap",
+     "Daire: diğer seçenekler",
+     "Yay: 3 nokta",
+     "Yay: diğer seçenekler",
+     "Kapalı alan"
+    ],
+    "reserved": [],
+    "tips": [
+     "YA",
+     "KE",
+     "PK",
+     "O",
+     "S",
+     "PY",
+     "KA",
+     "CI",
+     "CC",
+     "DM",
+     "DD",
+     "Y3",
+     "YD",
+     "KP"
+    ]
+   }
+  ],
+  "firstLevel": [
+   {
+    "mode": "hybrid",
+    "selection": false,
+    "quickAccess": 3,
+    "tabLabels": [
+     "Dosya",
+     "Giriş",
+     "Çizim",
+     "Değiştir",
+     "Harita",
+     "Görünüm",
+     "İşlemler",
+     "Araçlar"
+    ],
+    "tips": {
+     "quickAccess": [
+      "1",
+      "2",
+      "3"
+     ],
+     "tabs": [
+      "DO",
+      "GI",
+      "C",
+      "DE",
+      "H",
+      "GO",
+      "I",
+      "A"
+     ]
+    }
+   },
+   {
+    "mode": "hybrid",
+    "selection": true,
+    "quickAccess": 5,
+    "tabLabels": [
+     "Dosya",
+     "Giriş",
+     "Çizim",
+     "Değiştir",
+     "Harita",
+     "Görünüm",
+     "İşlemler",
+     "Araçlar",
+     "Seçim"
+    ],
+    "tips": {
+     "quickAccess": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "tabs": [
+      "DO",
+      "GI",
+      "C",
+      "DE",
+      "H",
+      "GO",
+      "I",
+      "A",
+      "S"
+     ]
+    }
+   },
+   {
+    "mode": "cad",
+    "selection": false,
+    "quickAccess": 3,
+    "tabLabels": [
+     "Dosya",
+     "Giriş",
+     "Çizim",
+     "Değiştir",
+     "Ölçme",
+     "Görünüm",
+     "Araçlar"
+    ],
+    "tips": {
+     "quickAccess": [
+      "1",
+      "2",
+      "3"
+     ],
+     "tabs": [
+      "DO",
+      "GI",
+      "C",
+      "DE",
+      "O",
+      "GO",
+      "A"
+     ]
+    }
+   },
+   {
+    "mode": "gis",
+    "selection": false,
+    "quickAccess": 3,
+    "tabLabels": [
+     "Dosya",
+     "Giriş",
+     "Çizim",
+     "Değiştir",
+     "Harita",
+     "Görünüm",
+     "İşlemler",
+     "Araçlar"
+    ],
+    "tips": {
+     "quickAccess": [
+      "1",
+      "2",
+      "3"
+     ],
+     "tabs": [
+      "DO",
+      "GI",
+      "C",
+      "DE",
+      "H",
+      "GO",
+      "I",
+      "A"
+     ]
+    }
+   },
+   {
+    "mode": "hybrid",
+    "selection": false,
+    "quickAccess": 12,
+    "tabLabels": [
+     "Dosya",
+     "Giriş",
+     "Çizim",
+     "Değiştir",
+     "Harita",
+     "Görünüm",
+     "İşlemler",
+     "Araçlar"
+    ],
+    "tips": {
+     "quickAccess": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+     ],
+     "tabs": [
+      "DO",
+      "GI",
+      "C",
+      "DE",
+      "H",
+      "GO",
+      "I",
+      "A"
+     ]
+    }
+   },
+   {
+    "mode": "cad",
+    "selection": true,
+    "quickAccess": 0,
+    "tabLabels": [
+     "Dosya",
+     "Giriş",
+     "Çizim",
+     "Değiştir",
+     "Ölçme",
+     "Görünüm",
+     "Araçlar",
+     "Seçim"
+    ],
+    "tips": {
+     "quickAccess": [],
+     "tabs": [
+      "DO",
+      "GI",
+      "C",
+      "DE",
+      "O",
+      "GO",
+      "A",
+      "S"
+     ]
+    }
+   }
+  ],
+  "steps": [
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "d",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "run",
+     "tip": "D"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "D",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "run",
+     "tip": "D"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "g",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "typed",
+     "typed": "G"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "G",
+    "key": "i",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "run",
+     "tip": "GI"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "G",
+    "key": "ı",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "run",
+     "tip": "GI"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "G",
+    "key": "x",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "ignore"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "z",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "ignore"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "1",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "run",
+     "tip": "1"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "ç",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "run",
+     "tip": "C"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "G",
+    "key": "Backspace",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "typed",
+     "typed": ""
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "Backspace",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "hide"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "G",
+    "key": "Escape",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "typed",
+     "typed": ""
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "Escape",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "hide"
+    }
+   },
+   {
+    "level": "controls",
+    "typed": "",
+    "key": "Escape",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "back"
+    }
+   },
+   {
+    "level": "controls",
+    "typed": "G",
+    "key": "Escape",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "typed",
+     "typed": ""
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "Alt",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "ignore"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "Shift",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "ignore"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "Enter",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "hide"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "ArrowDown",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "hide"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": " ",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "hide"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "d",
+    "ctrl": true,
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "hide"
+    }
+   },
+   {
+    "level": "tabs",
+    "typed": "",
+    "key": "Tab",
+    "tips": [
+     "1",
+     "2",
+     "3",
+     "D",
+     "GI",
+     "C",
+     "DE",
+     "H",
+     "GO",
+     "I",
+     "A",
+     "S"
+    ],
+    "step": {
+     "kind": "hide"
+    }
+   }
+  ]
+ },
+ "quickAccessMenus": [
+  {
+   "title": "the fixed three only",
+   "bar": [
+    "file.save",
+    "edit.undo",
+    "edit.redo"
+   ],
+   "exists": [
+    "edit.paste",
+    "edit.redo",
+    "edit.undo",
+    "file.new",
+    "file.open",
+    "file.save",
+    "file.saveAs",
+    "tool.pan",
+    "tool.zoomWindow",
+    "tools.options",
+    "view.theme.toggle",
+    "view.zoomExtents"
+   ],
+   "rows": [
+    {
+     "kind": "header",
+     "label": "Hızlı erişim"
+    },
+    {
+     "kind": "quick",
+     "command": "file.save",
+     "checked": true,
+     "disabled": true,
+     "hint": "sabit"
+    },
+    {
+     "kind": "quick",
+     "command": "edit.undo",
+     "checked": true,
+     "disabled": true,
+     "hint": "sabit"
+    },
+    {
+     "kind": "quick",
+     "command": "edit.redo",
+     "checked": true,
+     "disabled": true,
+     "hint": "sabit"
+    },
+    {
+     "kind": "quick",
+     "command": "file.new",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "file.open",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "file.saveAs",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "edit.paste",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "view.zoomExtents",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "tool.zoomWindow",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "tool.pan",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "tools.options",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "view.theme.toggle",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "kind": "command",
+     "command": "view.ribbonCollapse"
+    }
+   ]
+  },
+  {
+   "title": "two added, one of them an offer",
+   "bar": [
+    "file.save",
+    "edit.undo",
+    "edit.redo",
+    "view.zoomExtents",
+    "tool.line"
+   ],
+   "exists": [
+    "edit.paste",
+    "edit.redo",
+    "edit.undo",
+    "file.new",
+    "file.open",
+    "file.save",
+    "file.saveAs",
+    "tool.line",
+    "tool.pan",
+    "tool.zoomWindow",
+    "tools.options",
+    "view.theme.toggle",
+    "view.zoomExtents"
+   ],
+   "rows": [
+    {
+     "kind": "header",
+     "label": "Hızlı erişim"
+    },
+    {
+     "kind": "quick",
+     "command": "file.save",
+     "checked": true,
+     "disabled": true,
+     "hint": "sabit"
+    },
+    {
+     "kind": "quick",
+     "command": "edit.undo",
+     "checked": true,
+     "disabled": true,
+     "hint": "sabit"
+    },
+    {
+     "kind": "quick",
+     "command": "edit.redo",
+     "checked": true,
+     "disabled": true,
+     "hint": "sabit"
+    },
+    {
+     "kind": "quick",
+     "command": "view.zoomExtents",
+     "checked": true,
+     "set": false
+    },
+    {
+     "kind": "quick",
+     "command": "tool.line",
+     "checked": true,
+     "set": false
+    },
+    {
+     "kind": "quick",
+     "command": "file.new",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "file.open",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "file.saveAs",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "edit.paste",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "tool.zoomWindow",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "tool.pan",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "tools.options",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "view.theme.toggle",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "kind": "command",
+     "command": "view.ribbonCollapse"
+    }
+   ]
+  },
+  {
+   "title": "an offer this app does not have is not listed",
+   "bar": [
+    "file.save",
+    "edit.undo",
+    "edit.redo",
+    "tool.pan"
+   ],
+   "exists": [
+    "edit.paste",
+    "edit.redo",
+    "edit.undo",
+    "file.new",
+    "file.open",
+    "file.save",
+    "tool.pan",
+    "tool.zoomWindow",
+    "tools.options",
+    "view.theme.toggle",
+    "view.zoomExtents"
+   ],
+   "rows": [
+    {
+     "kind": "header",
+     "label": "Hızlı erişim"
+    },
+    {
+     "kind": "quick",
+     "command": "file.save",
+     "checked": true,
+     "disabled": true,
+     "hint": "sabit"
+    },
+    {
+     "kind": "quick",
+     "command": "edit.undo",
+     "checked": true,
+     "disabled": true,
+     "hint": "sabit"
+    },
+    {
+     "kind": "quick",
+     "command": "edit.redo",
+     "checked": true,
+     "disabled": true,
+     "hint": "sabit"
+    },
+    {
+     "kind": "quick",
+     "command": "tool.pan",
+     "checked": true,
+     "set": false
+    },
+    {
+     "kind": "quick",
+     "command": "file.new",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "file.open",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "edit.paste",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "view.zoomExtents",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "tool.zoomWindow",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "tools.options",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "quick",
+     "command": "view.theme.toggle",
+     "checked": false,
+     "set": true
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "kind": "command",
+     "command": "view.ribbonCollapse"
+    }
+   ]
+  }
+ ],
+ "toggles": [
+  {
+   "kept": [],
+   "command": "view.zoomExtents",
+   "on": true,
+   "result": [
+    "view.zoomExtents"
+   ]
+  },
+  {
+   "kept": [
+    "view.zoomExtents"
+   ],
+   "command": "tool.line",
+   "on": true,
+   "result": [
+    "view.zoomExtents",
+    "tool.line"
+   ]
+  },
+  {
+   "kept": [
+    "view.zoomExtents",
+    "tool.line"
+   ],
+   "command": "view.zoomExtents",
+   "on": false,
+   "result": [
+    "tool.line"
+   ]
+  },
+  {
+   "kept": [
+    "tool.line"
+   ],
+   "command": "tool.line",
+   "on": true,
+   "result": [
+    "tool.line"
+   ]
+  },
+  {
+   "kept": [
+    "tool.line"
+   ],
+   "command": "tool.arc",
+   "on": false,
+   "result": [
+    "tool.line"
+   ]
+  }
+ ],
+ "commandMenus": [
+  {
+   "command": "file.save",
+   "bar": [
+    "file.save",
+    "edit.undo",
+    "edit.redo"
+   ],
+   "rows": [
+    {
+     "kind": "quick",
+     "command": "file.save",
+     "label": "Hızlı erişimde (sabit)",
+     "icon": "pin",
+     "disabled": true
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "kind": "command",
+     "command": "view.ribbonCollapse"
+    }
+   ]
+  },
+  {
+   "command": "edit.redo",
+   "bar": [
+    "file.save",
+    "edit.undo",
+    "edit.redo"
+   ],
+   "rows": [
+    {
+     "kind": "quick",
+     "command": "edit.redo",
+     "label": "Hızlı erişimde (sabit)",
+     "icon": "pin",
+     "disabled": true
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "kind": "command",
+     "command": "view.ribbonCollapse"
+    }
+   ]
+  },
+  {
+   "command": "view.zoomExtents",
+   "bar": [
+    "file.save",
+    "edit.undo",
+    "edit.redo"
+   ],
+   "rows": [
+    {
+     "kind": "quick",
+     "command": "view.zoomExtents",
+     "label": "Hızlı erişime ekle",
+     "icon": "pin",
+     "set": true
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "kind": "command",
+     "command": "view.ribbonCollapse"
+    }
+   ]
+  },
+  {
+   "command": "view.zoomExtents",
+   "bar": [
+    "file.save",
+    "edit.undo",
+    "edit.redo",
+    "view.zoomExtents"
+   ],
+   "rows": [
+    {
+     "kind": "quick",
+     "command": "view.zoomExtents",
+     "label": "Hızlı erişimden kaldır",
+     "icon": "close",
+     "set": false
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "kind": "command",
+     "command": "view.ribbonCollapse"
+    }
+   ]
+  },
+  {
+   "command": "tool.circle",
+   "bar": [
+    "file.save",
+    "edit.undo",
+    "edit.redo",
+    "tool.line"
+   ],
+   "rows": [
+    {
+     "kind": "quick",
+     "command": "tool.circle",
+     "label": "Hızlı erişime ekle",
+     "icon": "pin",
+     "set": true
+    },
+    {
+     "kind": "separator"
+    },
+    {
+     "kind": "command",
+     "command": "view.ribbonCollapse"
+    }
+   ]
+  }
+ ],
+ "ribbonMenu": [
+  {
+   "kind": "command",
+   "command": "view.ribbonCollapse"
+  }
+ ],
+ "splitMenus": [
+  {
+   "entries": [
+    {
+     "command": "tool.circle",
+     "title": "Daire",
+     "label": "Merkez, yarıçap"
+    },
+    {
+     "command": "tool.circle",
+     "option": "2N",
+     "title": "Daire",
+     "label": "2 nokta",
+     "description": "Çapın iki ucundan"
+    },
+    {
+     "command": "tool.circle",
+     "option": "3N",
+     "title": "Daire",
+     "label": "3 nokta",
+     "description": "Çember üzerindeki üç noktadan"
+    }
+   ],
+   "menu": {
+    "header": "Daire",
+    "rows": [
+     {
+      "command": "tool.circle",
+      "label": "Merkez, yarıçap"
+     },
+     {
+      "command": "tool.circle",
+      "option": "2N",
+      "label": "2 nokta",
+      "hint": "Çapın iki ucundan"
+     },
+     {
+      "command": "tool.circle",
+      "option": "3N",
+      "label": "3 nokta",
+      "hint": "Çember üzerindeki üç noktadan"
+     }
+    ]
+   }
+  },
+  {
+   "entries": [
+    {
+     "command": "tool.rectangle",
+     "title": "Dikdörtgen",
+     "label": "Dikdörtgen"
+    },
+    {
+     "command": "tool.rectangle3",
+     "title": "Döndürülmüş dikdörtgen",
+     "label": "Döndürülmüş dikdörtgen"
+    },
+    {
+     "command": "tool.regularPolygon",
+     "title": "Düzgün çokgen",
+     "label": "Düzgün çokgen"
+    }
+   ],
+   "menu": {
+    "header": null,
+    "rows": [
+     {
+      "command": "tool.rectangle",
+      "label": "Dikdörtgen"
+     },
+     {
+      "command": "tool.rectangle3",
+      "label": "Döndürülmüş dikdörtgen"
+     },
+     {
+      "command": "tool.regularPolygon",
+      "label": "Düzgün çokgen"
+     }
+    ]
+   }
+  }
+ ],
+ "splitFaces": [
+  {
+   "entry": {
+    "command": "tool.circle",
+    "title": "Daire",
+    "label": "Merkez, yarıçap"
+   },
+   "face": {
+    "label": "Daire",
+    "aria": "Daire: Merkez, yarıçap"
+   }
+  },
+  {
+   "entry": {
+    "command": "tool.circle",
+    "option": "3N",
+    "title": "Daire",
+    "label": "3 nokta",
+    "description": "Çember üzerindeki üç noktadan"
+   },
+   "face": {
+    "label": "Daire",
+    "aria": "Daire: 3 nokta"
+   }
+  },
+  {
+   "entry": {
+    "command": "tool.rectangle3",
+    "title": "Döndürülmüş dikdörtgen",
+    "label": "Döndürülmüş dikdörtgen"
+   },
+   "face": {
+    "label": "Döndürülmüş dikdörtgen",
+    "aria": "Döndürülmüş dikdörtgen"
+   }
+  },
+  {
+   "entry": {
+    "command": "tool.hatch",
+    "title": "Tarama…",
+    "label": "Tarama…"
+   },
+   "face": {
+    "label": "Tarama",
+    "aria": "Tarama…"
+   }
+  }
+ ]
+}
