@@ -9,7 +9,7 @@ import { DRAFT_VERSION, keptDraftKey, readDraft, type Draft } from './drafts';
 import { BATCH, PROJECT_ACCESS, PROJECT_ARCHIVED, PROJECT_DELETED, SyncCore, uuid, type Inflight, type SaveState, type SyncConflict, type SyncOptions } from './syncCore';
 import { applyEvents } from './syncRemote';
 import { restoreDraft } from './syncRestore';
-import { keepUnsentLayers, keptText, treeText } from './keptLayers';
+import { givenBackText, keepUnsentLayers, keptText, treeIds, treeText, withNodesFrom } from './keptLayers';
 import { fetchArrived, waitingTexts } from './waiting';
 import { changeOf, entityJson, leavingObjects, metaParts, metaPatch, type Planned } from './tracker';
 
@@ -336,7 +336,11 @@ export class ProjectSync {
       const failure = e instanceof ApiFailure ? e : new ApiFailure(0, {}, String(e));
       if (failure.code === 'conflict') {
         core.inflight = null;
-        this.enterConflicts(failure.conflicts);
+        const rest = await this.giveBackUsedLayers(failure.conflicts);
+        if (this.disposed) return false;
+        if (rest.length) this.enterConflicts(rest);
+        // The guard's refusal alone, answered by giving the layers back: what is left goes again.
+        else this.again = true;
       } else if (failure.deleted) {
         // Refused, not committed: its changes stay dirty and so in the device draft.
         core.inflight = null;
@@ -372,6 +376,49 @@ export class ProjectSync {
   }
 
   // ── Conflicts ──────────────────────────────────────────────────────────
+
+  /**
+   * The server refused our tree because a layer it drops still holds
+   * objects (its guard, docs/adr/0072): someone else drew on it before our
+   * removal went. Data wins over the removal. The events we missed come first
+   * (their objects wait for their layer, waiting.ts). Then each layer our tree
+   * drops that the server's tree still has, and on which such objects wait,
+   * goes back into our tree from the server's, at its place there. The rest
+   * of our tree stays ours (renames, styles, other removals), and a layer we
+   * dropped that held only our objects still goes. Our deletes are still
+   * pending and go with the next command. When nothing but the guard refused
+   * (see below), its conflict is answered here; otherwise the conflicts are
+   * asked as before, our tree already holding the layers given back. Returns
+   * the conflicts left to ask.
+   */
+  private async giveBackUsedLayers(list: readonly FeatureConflict[]): Promise<readonly FeatureConflict[]> {
+    const { core } = this;
+    const doc = this.o.doc;
+    const project = list.find((c) => c.id === '@project');
+    const pending = metaPatch(doc, core.metaBase);
+    if (!project || !pending?.layers) return list;
+    try {
+      const page = await this.o.api.events(this.o.tenantId, this.o.projectId, core.cursor);
+      if (page.events.length) await this.receive(page.events);
+      const server = await core.serverMeta();
+      if (this.disposed || !server?.meta.layers) return list;
+      const ours = treeIds(doc.layers.tree);
+      const back = [...treeIds(server.meta.layers)].filter((id) => !ours.has(id) && core.waiting.has(id));
+      if (!back.length) return list;
+      await core.whenIdle();
+      if (this.disposed) return list;
+      doc.applyExternal({ meta: { layers: withNodesFrom(doc.layers.tree, server.meta.layers, back) } });
+      for (const id of back) this.o.warn(givenBackText(doc.layers.get(id)?.name ?? id));
+      await fetchArrived(core);
+    } catch (e) {
+      this.o.warn(`Katman ağacı sunucununkiyle karşılaştırılamadı: ${(e as Error).message}`);
+      return list;
+    }
+    // The guard answers with the metadata version it has (`actual`) and the one we expected: when the two are the
+    // same, no one else changed the metadata meanwhile, so the guard alone refused and nothing is left to ask.
+    const guardOnly = project.expected !== undefined && project.expected === project.actual;
+    return guardOnly ? list.filter((c) => c !== project) : list;
+  }
 
   private enterConflicts(list: readonly FeatureConflict[]): void {
     this.addConflicts(list.map((c): SyncConflict => ({ featureId: c.id, reason: c.reason, server: c.current ?? null, actual: c.actual ?? null })));

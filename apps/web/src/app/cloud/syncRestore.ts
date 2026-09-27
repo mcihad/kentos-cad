@@ -4,6 +4,7 @@ import type { Entity } from '../../model/entities';
 import { ApiFailure } from './api';
 import type { Draft } from './drafts';
 import { readIncoming } from './incoming';
+import { givenBackText, treeIds, withNodesFrom } from './keptLayers';
 import type { SyncConflict, SyncCore } from './syncCore';
 import { metaParts } from './tracker';
 
@@ -94,6 +95,20 @@ export async function restoreDraft(core: SyncCore, draft: Draft): Promise<Restor
   // The draft is local work: it goes in without history, then counts as unsent.
   await core.whenIdle();
   if (core.closed) return { waiting: false, conflicts: [], changed: false };
+  // A layer the draft's tree drops that still holds the server's objects (ones the draft neither deletes nor
+  // moves): someone else drew on it before the removal went. Data wins: it stays, from the server's tree.
+  if (meta?.layers) {
+    const kept = treeIds(meta.layers);
+    const stays = (id: string) => {
+      const change = draft.changes[id];
+      return !change || (change.entity !== null && (change.entity as { layerId?: string } | undefined)?.layerId === doc.byUid(id)?.layerId);
+    };
+    const back = doc.layers.leaves().filter((l) => !kept.has(l.id) && doc.byLayer(l.id).some((e) => stays(doc.uidOf(e.id) ?? '')));
+    if (back.length) {
+      meta = { ...meta, layers: withNodesFrom(meta.layers, doc.layers.tree, back.map((l) => l.id)) };
+      for (const l of back) o.warn(givenBackText(l.name));
+    }
+  }
   if (meta) doc.applyExternal({ meta });
   // Checked against the layers the drawing has now (the draft's own tree included).
   const good = core.checked(

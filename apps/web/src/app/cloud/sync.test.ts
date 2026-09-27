@@ -58,6 +58,60 @@ describe('cloud autosave', () => {
     expect(warnings.at(-1)).toBe('“Parsel” katmanı bu çizimde olmadığı için başka birinin 2 nesnesi burada gösterilmedi; proje yeniden açılınca görünür.');
   });
 
+  it('the guard refuses our removal because someone drew on the layer: the layer is given back, said once, our deletes go', async () => {
+    const { doc, server, sync, warnings } = setup();
+    const ours = doc.add(pt(5, 'parsel'));
+    await sync.flush();
+    // Someone draws on it; we remove it before hearing that.
+    const theirs = crypto.randomUUID();
+    server.commitAs('baska', [{ op: 'create', id: theirs, entity: wire({ ...pt(7, 'parsel'), id: 0 } as Entity) }]);
+    doc.removeLayer('parsel');
+    expect(await sync.flush()).toBe(false);
+    // Nothing is left to ask: the guard alone refused (its conflict's expected and actual versions are the same).
+    expect(sync.conflicts.value).toEqual([]);
+    expect(await sync.flush()).toBe(true);
+    expect(warnings.filter((w) => w.includes('başkasının nesnesi'))).toEqual(['“Parsel” katmanında başkasının nesnesi olduğu için katman silinmedi; sizin nesneleriniz silindi.']);
+    expect([server.meta.layers.map((n) => n.id), server.store.has(ours.uid), server.store.has(theirs)]).toEqual([['cizim', 'parsel'], false, true]);
+    expect([doc.layers.get('parsel')?.id, doc.byUid(theirs)?.layerId, doc.byUid(ours.uid)]).toEqual(['parsel', 'parsel', undefined]);
+  });
+
+  it('given back, the rest of our tree stays ours: a rename sent with the removal goes through', async () => {
+    const { doc, server, sync } = setup();
+    await sync.flush();
+    server.commitAs('baska', [{ op: 'create', id: crypto.randomUUID(), entity: wire({ ...pt(7, 'parsel'), id: 0 } as Entity) }]);
+    doc.layers.rename('cizim', 'Çizim 2');
+    doc.removeLayer('parsel');
+    await sync.flush();
+    expect(await sync.flush()).toBe(true);
+    expect(server.meta.layers.map((n) => [n.id, n.name])).toEqual([['cizim', 'Çizim 2'], ['parsel', 'Parsel']]);
+  });
+
+  it('when someone else changed the metadata too, the conflict is asked, the layer already given back; keeping mine goes through', async () => {
+    const { doc, server, sync } = setup();
+    await sync.flush();
+    const theirs = crypto.randomUUID();
+    server.commitAs('baska', [{ op: 'create', id: theirs, entity: wire({ ...pt(7, 'parsel'), id: 0 } as Entity) }]);
+    server.commitAs('baska2', [], { name: 'Ada 102' });
+    doc.removeLayer('parsel');
+    expect(await sync.flush()).toBe(false);
+    expect(sync.conflicts.value.map((c) => c.featureId)).toEqual(['@project']);
+    expect(doc.layers.get('parsel')).toBeDefined();
+    await sync.resolve('mine');
+    await vi.waitFor(() => expect(sync.state.value).toBe('saved'));
+    expect([server.meta.layers.map((n) => n.id), server.store.has(theirs)]).toEqual([['cizim', 'parsel'], true]);
+  });
+
+  it('a layer dropped while it held only our objects still goes', async () => {
+    const { doc, server, sync, warnings } = setup();
+    doc.add(pt(5, 'parsel'));
+    await sync.flush();
+    // Someone draws elsewhere meanwhile: no guard, the removal goes as it is.
+    server.commitAs('baska', [{ op: 'create', id: crypto.randomUUID(), entity: wire({ ...pt(7), id: 0 } as Entity) }]);
+    doc.removeLayer('parsel');
+    expect(await sync.flush()).toBe(true);
+    expect([server.meta.layers.map((n) => n.id), warnings.some((w) => w.includes('başkasının nesnesi'))]).toEqual([['cizim'], false]);
+  });
+
   it('another editor’s tree drops a layer holding this device’s unsent object: the layer stays, said, and goes back to the server with it', async () => {
     const { doc, server, sync, warnings } = setup();
     await sync.flush();
@@ -306,6 +360,28 @@ describe('cloud autosave', () => {
     // The same two objects, under the ids they had before the reload.
     expect([...first.server.store.keys()].sort()).toEqual([a.uid, b.uid].sort());
     expect([doc.size, xOf(doc.byUid(b.uid))]).toEqual([2, 6]);
+  });
+
+  it('a device draft whose tree drops a layer someone drew on since: the layer stays, said once; the draft’s deletes go', async () => {
+    const drafts = new MemoryDraftStore();
+    const first = setup({ drafts });
+    const ours = first.doc.add(pt(1, 'parsel'));
+    await first.sync.flush();
+    first.server.offline = true;
+    first.doc.removeLayer('parsel');
+    await first.sync.flush();
+    first.sync.dispose();
+    first.server.offline = false;
+    // Someone draws on the layer before this device comes back.
+    const theirs = crypto.randomUUID();
+    first.server.commitAs('baska', [{ op: 'create', id: theirs, entity: wire({ ...pt(7, 'parsel'), id: 0 } as Entity) }]);
+    const { doc, records } = await reopen(first.server);
+    const again = setup({ drafts, doc, server: first.server, records });
+    await again.sync.restore(await drafts.get('u1/t/p'));
+    expect([doc.layers.get('parsel')?.id, doc.byUid(theirs)?.layerId, doc.byUid(ours.uid)]).toEqual(['parsel', 'parsel', undefined]);
+    expect(again.warnings.filter((w) => w.includes('başkasının nesnesi'))).toEqual(['“Parsel” katmanında başkasının nesnesi olduğu için katman silinmedi; sizin nesneleriniz silindi.']);
+    expect(await again.sync.flush()).toBe(true);
+    expect([first.server.meta.layers.map((n) => n.id), first.server.store.has(ours.uid), first.server.store.has(theirs)]).toEqual([['cizim', 'parsel'], false, true]);
   });
 
   it('an edit made after reopening wins over an older device draft', async () => {

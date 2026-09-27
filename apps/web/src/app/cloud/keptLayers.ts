@@ -39,6 +39,38 @@ function find(nodes: LayerInit[], id: string): LayerInit | undefined {
   return undefined;
 }
 
+/** A node of a tree with its parent group's id (null at the top) and its place there. */
+function locate(nodes: Tree, id: string, parent: string | null = null): { node: LayerInit; parent: string | null; index: number } | undefined {
+  for (const [index, n] of nodes.entries()) {
+    if (n.id === id) return { node: n, parent, index };
+    const inner = locate(n.children ?? [], id, n.id ?? null);
+    if (inner) return inner;
+  }
+  return undefined;
+}
+
+/**
+ * `into` with the nodes `ids` of `from` put in, as copies: each into its
+ * parent group in `from` when `into` has that group, else at the top; at its
+ * place there when it fits. `into` itself is not changed.
+ */
+export function withNodesFrom(into: Tree, from: Tree, ids: readonly string[]): LayerInit[] {
+  const out = structuredClone(into) as LayerInit[];
+  for (const id of ids) {
+    const at = locate(from, id);
+    if (!at) continue;
+    const group = at.parent === null ? undefined : find(out, at.parent);
+    const list = group && group.type !== 'layer' ? (group.children ??= []) : out;
+    list.splice(Math.min(at.index, list.length), 0, structuredClone(at.node));
+  }
+  return out;
+}
+
+/** The ids of every node of a tree. */
+export function treeIds(nodes: Tree): Set<string> {
+  return ids(nodes);
+}
+
 /**
  * `incoming` with the layers of this drawing it drops that hold objects with
  * unsent changes (`unsent(uid)`) put back: each into its group when the
@@ -57,21 +89,16 @@ export function keepUnsentLayers(doc: CadDocument, incoming: Tree, unsent: (uid:
     if (count) kept.push({ id: leaf.id, name: leaf.name, unsent: count });
   }
   if (!kept.length) return null;
-  const layers = structuredClone(incoming) as LayerInit[];
-  for (const k of kept) {
-    const node = structuredClone(doc.layers.get(k.id)!) as LayerInit;
-    const place = doc.layers.placeOf(k.id)!;
-    const group = place.parent === null ? undefined : find(layers, place.parent);
-    const list = group && group.type !== 'layer' ? (group.children ??= []) : layers;
-    list.splice(Math.min(place.index, list.length), 0, node);
-  }
-  return { layers, kept };
+  return { layers: withNodesFrom(incoming, doc.layers.tree, kept.map((k) => k.id)), kept };
 }
 
 /** A tree as the drawing writes it (`metaParts`), for comparing with the drawing's own. */
 export function treeText(layers: Tree): string {
   return JSON.stringify(new LayerStore([...layers], '').tree);
 }
+
+/** What the user hears for a layer given back because someone else's objects are still on it. */
+export const givenBackText = (name: string): string => `“${name}” katmanında başkasının nesnesi olduğu için katman silinmedi; sizin nesneleriniz silindi.`;
 
 /** What the user hears for a kept layer. */
 export const keptText = (k: KeptLayer): string =>
