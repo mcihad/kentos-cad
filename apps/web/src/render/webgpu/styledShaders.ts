@@ -12,8 +12,8 @@ import stroke from '../../../../../shaders/wgsl/styled/stroke.wgsl?raw';
  * the native renderer (shaders/wgsl/styled, its contract
  * styled.layout.json): joined here in the contract's order, each under a
  * `// ── path ──` line, the way scripts/wgsl/browser-check.mjs joins them.
- * Group 0 is the frame (shared with the plain pipelines), group 1 the batch
- * style, group 2 the atlas. The atlas has one level (images are drawn at
+ * Group 0 is the frame with the atlas beside it (the styled pipelines' own
+ * group; contract version 2), group 1 the batch style. The atlas has one level (images are drawn at
  * their shown size), so it is sampled with textureSampleLevel, which needs
  * no uniform control flow.
  */

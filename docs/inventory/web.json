@@ -73,8 +73,8 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 52,
-    "commandsOnDesktop": 137
+    "commandsWithoutTests": 51,
+    "commandsOnDesktop": 138
   },
   "commands": [
     {
@@ -430,6 +430,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/cloud-shots.mjs",
         "apps/web/scripts/e2e/cloud.mjs"
       ],
       "note": "Kurum (tenant) projelerini açar. Kişisel çalışma alanı, proje düzeyinde yetki ve paylaşım henüz yok (ADR 0012, TODOS.md §12)."
@@ -491,7 +492,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/cloud-shots.mjs"
+      ]
     },
     {
       "id": "cloud.share",
@@ -555,6 +558,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/cloud-shots.mjs",
         "apps/web/scripts/e2e/layout.mjs"
       ]
     },
@@ -585,6 +589,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/cloud-shots.mjs",
         "apps/web/scripts/e2e/cloud.mjs"
       ]
     },
@@ -1695,6 +1700,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/cloud-shots.mjs",
         "apps/web/scripts/e2e/cloud.mjs"
       ],
       "note": "`.kcad` v1 JSON yazar; binary v2 henüz yok (ADR 0011, TODOS.md FILE-01..24)."
@@ -2463,7 +2469,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/layout.mjs",
@@ -5210,6 +5216,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/cloud-shots.mjs",
         "apps/web/scripts/e2e/cloud.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]

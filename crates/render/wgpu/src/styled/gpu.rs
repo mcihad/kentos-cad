@@ -243,8 +243,8 @@ impl StyledGpu {
             },
             count: None,
         };
-        // Group 0: the frame and, moved there from the contract's group 2, the atlas
-        // (Iced's device takes two groups; shader::ATLAS_REMAP). Group 1: the batch's style.
+        // Group 0: the frame and the atlas, as the contract's version 2 binds them
+        // (Iced's device takes two groups). Group 1: the batch's style.
         let frame_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("kentos.styled.frame"),
             entries: &[
