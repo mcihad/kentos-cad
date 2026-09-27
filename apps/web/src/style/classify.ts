@@ -148,8 +148,15 @@ export const CLASS_COUNT = { default: 5, min: 1, max: 20 } as const;
 /** The ramp a graduated style starts with. */
 export const DEFAULT_RAMP = 'sariKirmizi';
 
-/** The class count typed in the field: a whole number from 1 to 20; anything else is the default. */
-export const classCount = (typed: string): number => Math.min(CLASS_COUNT.max, Math.max(CLASS_COUNT.min, Math.round(Number(typed)) || CLASS_COUNT.default));
+/**
+ * The class count typed in the field, rounded and kept from 1 to 20 (0 and negatives are 1, too big is
+ * 20). An empty field or text that is not a number is the default.
+ */
+export function classCount(typed: string): number {
+  const n = Math.round(Number(typed));
+  if (!typed.trim() || Number.isNaN(n)) return CLASS_COUNT.default;
+  return Math.min(CLASS_COUNT.max, Math.max(CLASS_COUNT.min, n));
+}
 
 /** What the classify controls say. */
 export const CLASSIFY_TEXTS = {
