@@ -23,7 +23,7 @@ export const calculateField = defineTool({
   aliases: ['OZHESAP', 'ALANHESAP'],
   targets: ['client', 'worker'],
   parameters: [
-    { name: 'input', label: 'Nesneler', type: 'features', default: { scope: 'selection' }, description: 'Özniteliği yazılacak nesneler.' },
+    { name: 'input', label: 'Nesneler', type: 'features', default: { scope: 'selection' }, writes: true, description: 'Özniteliği yazılacak nesneler; kilitli katmandakiler alınmaz.' },
     { name: 'field', label: 'Yazılacak alan', type: 'field', of: 'input', allowNew: true, default: 'Hesap alanı', description: 'Listeden var olan bir alanı seçin ya da yeni bir ad yazın.' },
     {
       name: 'value',

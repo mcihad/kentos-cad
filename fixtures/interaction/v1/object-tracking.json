@@ -1,0 +1,48 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "object-tracking",
+  "title": "Nesne izleme, Nokta aracında: kenette durarak nokta alma, bir hizaya kilitlenme, iki hizanın kesişimi, hizada yazılan mesafe, alınmış noktayı bırakma, Shift+F3 izlemeyi kapatır ama noktaları tutar, en çok üç nokta, araçtan çıkınca noktalar gider",
+  "source": "viewport/ViewportController.ts (izleme), viewport/objectTracking.ts; TODOS UX-07",
+  "covers": ["UX-07"],
+  "document": "objects.kcad",
+  "view": {"center": [487000, 4420000], "metresPerPixel": 0.125},
+  "draft": {"snap": true, "grid": false, "ortho": false, "polar": false, "tracking": true},
+  "prefs": {"cursorInput": true},
+  "clickTolerance": 0.125,
+  "steps": [
+    {"run": "tool.point", "expect": {"tool": "point", "trackPoints": []}},
+    {"rest": [-8, -12], "note": "1'in ucunda durmak onu izleme noktası yapar.", "expect": {"snap": "endpoint", "trackPoints": [[-8, -12]], "track": null}},
+    {
+      "move": [4, -11.7],
+      "note": "İmleç noktanın yatay hizasına kilitlenir.",
+      "expect": {"snap": null, "track": {"point": [4, -12], "lines": [{"origin": [-8, -12], "angle": 0}]}}
+    },
+    {"click": [4, -11.7], "expect": {"entities": 8, "newest": {"kind": "point", "points": [[4, -12]]}}},
+    {"move": [-2, -11.7], "expect": {"track": {"point": [-2, -12], "lines": [{"origin": [-8, -12], "angle": 0}]}}},
+    {"text": "10", "expect": {"dynamicInput": "10"}},
+    {
+      "key": "Enter",
+      "note": "Hizadayken yazılan sayı izleme noktasından hiza boyunca mesafedir.",
+      "expect": {"entities": 9, "newest": {"kind": "point", "points": [[2, -12]]}}
+    },
+    {"rest": [0, 16], "expect": {"trackPoints": [[-8, -12], [0, 16]]}},
+    {
+      "move": [-7.8, 15.8],
+      "note": "İki noktanın hizalarının kesiştiği yer: birinin düşeyi, öbürünün yatayı.",
+      "expect": {"snap": null, "track": {"point": [-8, 16], "lines": [{"origin": [-8, -12], "angle": 90}, {"origin": [0, 16], "angle": 180}]}}
+    },
+    {"click": [-7.8, 15.8], "expect": {"entities": 10, "newest": {"kind": "point", "points": [[-8, 16]]}}},
+    {"rest": [-8, -12], "note": "Alınmış noktada yeniden durmak onu bırakır.", "expect": {"trackPoints": [[0, 16]]}},
+    {"key": "Shift+F3", "note": "Nesne izleme kapanır; alınan noktalar kalır."},
+    {"move": [10, 16.3], "expect": {"track": null, "trackPoints": [[0, 16]]}},
+    {"click": [10, 16.3], "expect": {"entities": 11, "newest": {"kind": "point", "points": [[10, 16.3]]}}},
+    {"key": "Shift+F3", "note": "Yeniden açılınca kalan nokta yine hiza verir."},
+    {"move": [14, 16.3], "expect": {"track": {"point": [14, 16], "lines": [{"origin": [0, 16], "angle": 0}]}}},
+    {"click": [14, 16.3], "expect": {"entities": 12, "newest": {"kind": "point", "points": [[14, 16]]}}},
+    {"rest": [24, 16]},
+    {"rest": [16, 4]},
+    {"rest": [20, -8], "note": "En çok üç nokta: dördüncüsü en eskisini düşürür.", "expect": {"snap": "node", "trackPoints": [[24, 16], [16, 4], [20, -8]]}},
+    {"key": "Esc", "note": "Noktalar komutundur: araçtan çıkınca gider.", "expect": {"tool": "select", "trackPoints": []}}
+  ]
+}

@@ -40,6 +40,8 @@ export interface ViewDef {
   sorts: readonly CatalogSort[];
   /** What an empty list says (without a search). */
   empty: string;
+  /** What the list says above its rows, besides its name. */
+  note?: string;
 }
 
 /** The lists, in the order the interface shows them. */
@@ -57,6 +59,7 @@ export const VIEWS: readonly ViewDef[] = [
     icon: 'star',
     sorts: ['updated', 'name', 'created'],
     empty: 'Favori projeniz yok. Bir projeyi yıldızına tıklayarak buraya ekleyin; favorileriniz yalnız size görünür.',
+    note: 'Favorileriniz yalnız size görünür.',
   },
   {
     id: 'mine',
@@ -78,6 +81,7 @@ export const VIEWS: readonly ViewDef[] = [
     icon: 'share',
     sorts: ['updated', 'name', 'created'],
     empty: 'Sizinle paylaşılmış bir proje yok. Biri bir projeyi sizinle paylaşınca burada, sahibinin adı ve rolünüzle görünür.',
+    note: 'Başkalarının sizinle paylaştığı projeler; sahibi ve rolünüz yanında yazar.',
   },
   {
     id: 'archived',
@@ -85,6 +89,7 @@ export const VIEWS: readonly ViewDef[] = [
     icon: 'archive',
     sorts: ['updated', 'name', 'created'],
     empty: 'Arşivlenmiş bir proje yok. Arşivlenen proje salt okunur olur ve burada durur.',
+    note: 'Arşivlenmiş projeler salt okunurdur: açılır, kopyalanır; arşivden çıkarmak proje sahibinin ya da yöneticisinindir.',
   },
   {
     id: 'trash',

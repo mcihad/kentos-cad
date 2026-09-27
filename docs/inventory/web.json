@@ -3928,6 +3928,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "fixtures/interaction/v1/object-tracking.json",
         "fixtures/interaction/v1/point-series.json"
       ]
     },
@@ -6591,6 +6592,7 @@
         "desktop": "none"
       },
       "tests": [
+        "fixtures/interaction/v1/object-tracking.json",
         "fixtures/interaction/v1/point-series.json"
       ]
     },

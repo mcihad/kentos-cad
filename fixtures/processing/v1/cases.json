@@ -1,0 +1,647 @@
+{
+  "format": "kentos.processing-cases",
+  "version": 1,
+  "tolerance": 1e-09,
+  "documents": {
+    "parcels.kcad": {
+      "defaults": {"lengthDecimals": 3, "areaDecimals": 2, "angleUnit": "grad", "plotScale": 1000, "drawingFont": "barlow", "activeLayer": "cizim"},
+      "tools": {
+        "points.numberVertices": {
+          "input": {"scope": "selection"},
+          "direction": "cw",
+          "start": "northwest",
+          "startPoint": null,
+          "prefix": "P",
+          "length": 6,
+          "pad": "0",
+          "first": 1,
+          "step": 1,
+          "shared": true,
+          "tolerance": 0.001,
+          "output": "points",
+          "textHeight": 2,
+          "layer": {"newName": "Köşe noktaları"}
+        },
+        "annotation.edgeLengths": {
+          "input": {"scope": "selection"},
+          "decimals": 3,
+          "side": "outside",
+          "textHeight": 2,
+          "prefix": "",
+          "suffix": "",
+          "minLength": 0,
+          "shared": true,
+          "layer": {"newName": "Kenar ölçüleri"}
+        },
+        "attributes.calculate": {"input": {"scope": "selection"}, "field": "Hesap alanı", "value": "metin($alan, 2)", "where": "", "empty": "keep", "label": true},
+        "selection.byExpression": {"input": {"scope": "all"}, "condition": "$alan > 500", "mode": "new"},
+        "builtin.parcelSheet": {"parcels": {"scope": "selection"}, "prefix": "P"}
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "number-vertices",
+      "title": "Köşe noktalarını numarala, varsayılanlarla: iki komşu parsel, saat yönünde kuzeybatıdan; ortak köşeler tek numara, yeni katman",
+      "document": "parcels.kcad",
+      "selection": [1, 2],
+      "run": {"tool": "points.numberVertices"},
+      "values": {},
+      "expect": {
+        "status": "ok",
+        "summary": "2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı.",
+        "undo": "Köşe noktalarını numarala",
+        "layers": [
+          {
+            "id": "islem-kose-noktalari",
+            "name": "Köşe noktaları",
+            "style": {
+              "color": "#E5C07B",
+              "lineType": "continuous",
+              "lineWeight": 0.18,
+              "point": {"symbol": "cross", "size": 7},
+              "label": {"placement": "beside", "size": 10.5}
+            }
+          }
+        ],
+        "added": [
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487000, "y": 4420030},
+            "label": "P00001",
+            "attrs": {"Nokta": "P00001", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487020, "y": 4420030},
+            "label": "P00002",
+            "attrs": {"Nokta": "P00002", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487020, "y": 4420000},
+            "label": "P00003",
+            "attrs": {"Nokta": "P00003", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487000, "y": 4420000},
+            "label": "P00004",
+            "attrs": {"Nokta": "P00004", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487045, "y": 4420030},
+            "label": "P00005",
+            "attrs": {"Nokta": "P00005", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487045, "y": 4420000},
+            "label": "P00006",
+            "attrs": {"Nokta": "P00006", "Tür": "Köşe noktası"}
+          }
+        ],
+        "outputs": {"count": 6}
+      }
+    },
+    {
+      "id": "number-vertices-continue",
+      "title": "Köşe noktalarını numarala, numaralı noktaları olan katmana: mevcut numaralar korunur, numara kaldığı yerden sürer",
+      "document": "parcels.kcad",
+      "selection": [1],
+      "run": {"tool": "points.numberVertices"},
+      "values": {"layer": {"layerId": "mevcut"}},
+      "expect": {
+        "status": "ok",
+        "summary": "1 nesnede 1 köşe numaralandı: P00004 – P00004; 3 köşe mevcut numarasını korudu.",
+        "undo": "Köşe noktalarını numarala",
+        "added": [{"kind": "point", "layerId": "mevcut", "p": {"x": 487000, "y": 4420000}, "label": "P00004", "attrs": {"Nokta": "P00004", "Tür": "Köşe noktası"}}],
+        "outputs": {"count": 1}
+      }
+    },
+    {
+      "id": "calculate-area",
+      "title": "Öznitelik hesapla, varsayılanlarla: hesaplanan alan projenin alan ondalığıyla yeni alana",
+      "document": "parcels.kcad",
+      "selection": [1, 2, 3],
+      "run": {"tool": "attributes.calculate"},
+      "values": {},
+      "expect": {
+        "status": "ok",
+        "summary": "3 nesnede “Hesap alanı” yazıldı.",
+        "undo": "Öznitelik hesapla",
+        "updated": [
+          {"id": 1, "attrs": {"Ada": "101", "Parsel": "1", "Nitelik": "Arsa", "Hesap alanı": "600.00"}, "label": "1"},
+          {"id": 2, "attrs": {"Ada": "101", "Parsel": "2", "Nitelik": "Arsa", "Hesap alanı": "750.00"}, "label": "2"},
+          {"id": 3, "attrs": {"Ada": "101", "Parsel": "3", "Nitelik": "Tarla", "Hesap alanı": "450.00"}, "label": "3"}
+        ],
+        "outputs": {"count": 3, "changed": [1, 2, 3]}
+      }
+    },
+    {
+      "id": "calculate-where",
+      "title": "Öznitelik hesapla, koşulla: yalnız Arsa nitelikli parsellere, ondalıksız sayı",
+      "document": "parcels.kcad",
+      "selection": [1, 2, 3],
+      "run": {"tool": "attributes.calculate"},
+      "values": {"field": "Alan", "value": "$alan", "where": "Nitelik = 'Arsa'"},
+      "expect": {
+        "status": "ok",
+        "summary": "2 nesnede “Alan” yazıldı; 1 nesne koşulu sağlamadı.",
+        "undo": "Öznitelik hesapla",
+        "updated": [
+          {"id": 1, "attrs": {"Ada": "101", "Parsel": "1", "Nitelik": "Arsa", "Alan": "600"}, "label": "1"},
+          {"id": 2, "attrs": {"Ada": "101", "Parsel": "2", "Nitelik": "Arsa", "Alan": "750"}, "label": "2"}
+        ],
+        "outputs": {"count": 2}
+      }
+    },
+    {
+      "id": "calculate-label",
+      "title": "Öznitelik hesapla, etiketin gösterdiği alana: etiket yeni değeri gösterir",
+      "document": "parcels.kcad",
+      "selection": [1, 2],
+      "run": {"tool": "attributes.calculate"},
+      "values": {"field": "Parsel", "value": "'P-' || Parsel"},
+      "expect": {
+        "status": "ok",
+        "summary": "2 nesnede “Parsel” yazıldı.",
+        "undo": "Öznitelik hesapla",
+        "updated": [
+          {"id": 1, "attrs": {"Ada": "101", "Parsel": "P-1", "Nitelik": "Arsa"}, "label": "P-1"},
+          {"id": 2, "attrs": {"Ada": "101", "Parsel": "P-2", "Nitelik": "Arsa"}, "label": "P-2"}
+        ]
+      }
+    },
+    {
+      "id": "calculate-locked",
+      "title": "Öznitelik hesapla, kilitli katmandaki parsel de seçiliyken: o parsel işleme alınmaz ve söylenir; özet ve çıktılar yalnız yazılanı sayar",
+      "document": "parcels.kcad",
+      "selection": [1, 4],
+      "run": {"tool": "attributes.calculate"},
+      "values": {},
+      "expect": {
+        "status": "ok",
+        "summary": "1 nesnede “Hesap alanı” yazıldı.",
+        "log": [{"level": "warn", "text": "“Nesneler”: 1 nesne kilitli katmanda olduğu için işleme alınmadı."}],
+        "undo": "Öznitelik hesapla",
+        "updated": [{"id": 1, "attrs": {"Ada": "101", "Parsel": "1", "Nitelik": "Arsa", "Hesap alanı": "600.00"}, "label": "1"}],
+        "outputs": {"count": 1, "changed": [1]}
+      }
+    },
+    {
+      "id": "select-new",
+      "title": "İfadeyle seç, varsayılanlarla: görünen katmanlardaki bütün nesnelerde $alan > 500, yeni seçim; çizim değişmez",
+      "document": "parcels.kcad",
+      "selection": [3],
+      "run": {"tool": "selection.byExpression"},
+      "values": {},
+      "expect": {
+        "status": "ok",
+        "summary": "2 / 9 nesne koşulu sağladı; seçimde 2 nesne var.",
+        "undo": null,
+        "selection": [1, 2],
+        "outputs": {"count": 2, "matched": [1, 2]}
+      }
+    },
+    {
+      "id": "select-within",
+      "title": "İfadeyle seç, seçim içinde: seçili olanlardan yalnız koşulu sağlayanlar kalır",
+      "document": "parcels.kcad",
+      "selection": [2, 3, 6],
+      "run": {"tool": "selection.byExpression"},
+      "values": {"condition": "Nitelik = 'Arsa'", "mode": "within"},
+      "expect": {
+        "status": "ok",
+        "summary": "3 / 9 nesne koşulu sağladı; seçimde 1 nesne var.",
+        "undo": null,
+        "selection": [2],
+        "outputs": {"count": 3, "matched": [1, 2, 4]}
+      }
+    },
+    {
+      "id": "select-visible",
+      "title": "İfadeyle seç, görünen alanda: kutuyla örtüşen nesneler denenir",
+      "document": "parcels.kcad",
+      "selection": [],
+      "view": [487040, 4419990, 487070, 4420035],
+      "run": {"tool": "selection.byExpression"},
+      "values": {"input": {"scope": "visible"}},
+      "expect": {"status": "ok", "summary": "1 / 2 nesne koşulu sağladı; seçimde 1 nesne var.", "undo": null, "selection": [2]}
+    },
+    {
+      "id": "number-vertices-both",
+      "title": "Köşe noktalarını numarala: saat yönünün tersine, doldurmasız K önekiyle, nokta ve yazı; yazının yeri çekirdekten",
+      "document": "parcels.kcad",
+      "selection": [3],
+      "run": {"tool": "points.numberVertices"},
+      "values": {"direction": "ccw", "prefix": "K", "length": 4, "pad": "", "output": "both", "textHeight": 2.5, "layer": {"newName": "Numaralar"}},
+      "expect": {
+        "status": "ok",
+        "summary": "1 nesnede 4 köşe numaralandı: K1 – K4.",
+        "undo": "Köşe noktalarını numarala",
+        "layers": [
+          {
+            "id": "islem-numaralar",
+            "name": "Numaralar",
+            "style": {
+              "color": "#E5C07B",
+              "lineType": "continuous",
+              "lineWeight": 0.18,
+              "point": {"symbol": "cross", "size": 7},
+              "label": {"placement": "beside", "size": 10.5}
+            }
+          }
+        ],
+        "added": [
+          {"kind": "point", "layerId": "islem-numaralar", "p": {"x": 487045, "y": 4420030}, "label": "K1", "attrs": {"Nokta": "K1", "Tür": "Köşe noktası"}},
+          {
+            "kind": "text",
+            "layerId": "islem-numaralar",
+            "p": {"x": 487040.45867965644, "y": 4420032.121320344},
+            "text": "K1",
+            "height": 2.5,
+            "rotation": 0,
+            "attrs": {"Nokta": "K1", "Tür": "Köşe noktası"}
+          },
+          {"kind": "point", "layerId": "islem-numaralar", "p": {"x": 487045, "y": 4420000}, "label": "K2", "attrs": {"Nokta": "K2", "Tür": "Köşe noktası"}},
+          {
+            "kind": "text",
+            "layerId": "islem-numaralar",
+            "p": {"x": 487039.9786796564, "y": 4419995.378679656},
+            "text": "K2",
+            "height": 2.5,
+            "rotation": 0,
+            "attrs": {"Nokta": "K2", "Tür": "Köşe noktası"}
+          },
+          {"kind": "point", "layerId": "islem-numaralar", "p": {"x": 487060, "y": 4420000}, "label": "K3", "attrs": {"Nokta": "K3", "Tür": "Köşe noktası"}},
+          {
+            "kind": "text",
+            "layerId": "islem-numaralar",
+            "p": {"x": 487062.1213203436, "y": 4419995.378679656},
+            "text": "K3",
+            "height": 2.5,
+            "rotation": 0,
+            "attrs": {"Nokta": "K3", "Tür": "Köşe noktası"}
+          },
+          {"kind": "point", "layerId": "islem-numaralar", "p": {"x": 487060, "y": 4420030}, "label": "K4", "attrs": {"Nokta": "K4", "Tür": "Köşe noktası"}},
+          {
+            "kind": "text",
+            "layerId": "islem-numaralar",
+            "p": {"x": 487062.1213203436, "y": 4420032.121320344},
+            "text": "K4",
+            "height": 2.5,
+            "rotation": 0,
+            "attrs": {"Nokta": "K4", "Tür": "Köşe noktası"}
+          }
+        ],
+        "outputs": {"count": 4}
+      }
+    },
+    {
+      "id": "edge-lengths",
+      "title": "Kenar uzunluklarını yaz, varsayılanlarla: iki komşu parsel ve bir çizgi, projenin ondalığıyla dışa; ortak kenar bir kez",
+      "document": "parcels.kcad",
+      "selection": [1, 2, 7],
+      "run": {"tool": "annotation.edgeLengths"},
+      "values": {},
+      "expect": {
+        "status": "ok",
+        "summary": "3 nesneye 8 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı.",
+        "undo": "Kenar uzunluklarını yaz",
+        "layers": [{"id": "islem-kenar-olculeri", "name": "Kenar ölçüleri", "style": {"color": "fg-dim", "lineType": "continuous", "lineWeight": 0.18}}],
+        "added": [
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487010, "y": 4419997.2},
+            "text": "20.000",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "20.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487022.8, "y": 4420015},
+            "text": "30.000",
+            "height": 2,
+            "rotation": 90,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "30.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487010, "y": 4420030.8},
+            "text": "20.000",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "20.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 486999.2, "y": 4420015},
+            "text": "30.000",
+            "height": 2,
+            "rotation": 90,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "30.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487032.5, "y": 4419997.2},
+            "text": "25.000",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "25.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487047.8, "y": 4420015},
+            "text": "30.000",
+            "height": 2,
+            "rotation": 90,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "30.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487032.5, "y": 4420030.8},
+            "text": "25.000",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "25.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487050, "y": 4420040.8},
+            "text": "20.000",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "20.000"}
+          }
+        ],
+        "outputs": {"count": 8}
+      }
+    },
+    {
+      "id": "edge-lengths-inside",
+      "title": "Kenar uzunluklarını yaz: çoklu çizginin sağına, bir ondalıkla, önek ve sonekle; en kısa kenar süzgeci",
+      "document": "parcels.kcad",
+      "selection": [6],
+      "run": {"tool": "annotation.edgeLengths"},
+      "values": {"side": "inside", "decimals": 1, "prefix": "L=", "suffix": " m", "minLength": 16},
+      "expect": {
+        "status": "ok",
+        "summary": "1 nesneye 1 kenar uzunluğu yazıldı.",
+        "undo": "Kenar uzunluklarını yaz",
+        "layers": [{"id": "islem-kenar-olculeri", "name": "Kenar ölçüleri", "style": {"color": "fg-dim", "lineType": "continuous", "lineWeight": 0.18}}],
+        "added": [
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487015, "y": 4420037.2},
+            "text": "L=30.0 m",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "30.000"}
+          }
+        ],
+        "outputs": {"count": 1}
+      }
+    },
+    {
+      "id": "model-parcel-sheet",
+      "title": "Parsel ölçü yazıları modeli: köşe numaraları, kenar uzunlukları ve hesap alanı tek geri alma adımında",
+      "document": "parcels.kcad",
+      "selection": [1, 2],
+      "run": {"model": "builtin.parcelSheet"},
+      "values": {},
+      "expect": {
+        "status": "ok",
+        "summary": "3 adım çalıştı. 2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı. 2 nesneye 7 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı. 2 nesnede “Hesap alanı” yazıldı.",
+        "undo": "Parsel ölçü yazıları",
+        "layers": [
+          {
+            "id": "islem-kose-noktalari",
+            "name": "Köşe noktaları",
+            "style": {
+              "color": "#E5C07B",
+              "lineType": "continuous",
+              "lineWeight": 0.18,
+              "point": {"symbol": "cross", "size": 7},
+              "label": {"placement": "beside", "size": 10.5}
+            }
+          },
+          {"id": "islem-kenar-olculeri", "name": "Kenar ölçüleri", "style": {"color": "fg-dim", "lineType": "continuous", "lineWeight": 0.18}}
+        ],
+        "added": [
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487000, "y": 4420030},
+            "label": "P00001",
+            "attrs": {"Nokta": "P00001", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487020, "y": 4420030},
+            "label": "P00002",
+            "attrs": {"Nokta": "P00002", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487020, "y": 4420000},
+            "label": "P00003",
+            "attrs": {"Nokta": "P00003", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487000, "y": 4420000},
+            "label": "P00004",
+            "attrs": {"Nokta": "P00004", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487045, "y": 4420030},
+            "label": "P00005",
+            "attrs": {"Nokta": "P00005", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "point",
+            "layerId": "islem-kose-noktalari",
+            "p": {"x": 487045, "y": 4420000},
+            "label": "P00006",
+            "attrs": {"Nokta": "P00006", "Tür": "Köşe noktası"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487010, "y": 4419997.2},
+            "text": "20.000",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "20.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487022.8, "y": 4420015},
+            "text": "30.000",
+            "height": 2,
+            "rotation": 90,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "30.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487010, "y": 4420030.8},
+            "text": "20.000",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "20.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 486999.2, "y": 4420015},
+            "text": "30.000",
+            "height": 2,
+            "rotation": 90,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "30.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487032.5, "y": 4419997.2},
+            "text": "25.000",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "25.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487047.8, "y": 4420015},
+            "text": "30.000",
+            "height": 2,
+            "rotation": 90,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "30.000"}
+          },
+          {
+            "kind": "text",
+            "layerId": "islem-kenar-olculeri",
+            "p": {"x": 487032.5, "y": 4420030.8},
+            "text": "25.000",
+            "height": 2,
+            "rotation": 0,
+            "attrs": {"Tür": "Kenar ölçüsü", "Uzunluk (m)": "25.000"}
+          }
+        ],
+        "updated": [
+          {"id": 1, "attrs": {"Ada": "101", "Parsel": "1", "Nitelik": "Arsa", "Hesap alanı": "600.00"}, "label": "1"},
+          {"id": 2, "attrs": {"Ada": "101", "Parsel": "2", "Nitelik": "Arsa", "Hesap alanı": "750.00"}, "label": "2"}
+        ],
+        "outputs": {"points": [11, 12, 13, 14, 15, 16]}
+      }
+    },
+    {
+      "id": "refuse-expression",
+      "title": "Yarım kalmış ifade: ifadenin kendi hatasıyla",
+      "document": "parcels.kcad",
+      "selection": [1],
+      "run": {"tool": "attributes.calculate"},
+      "values": {"value": "metin($alan,"},
+      "expect": {"status": "invalid", "issues": [{"param": "value", "message": "“Değer”: 13. karakterde: İfade yarım kalmış: sonunda bir değer eksik."}]}
+    },
+    {
+      "id": "refuse-nothing-selected",
+      "title": "Seçim yokken: alanın altında yönlendiren ileti, çizim değişmez",
+      "document": "parcels.kcad",
+      "selection": [],
+      "run": {"tool": "points.numberVertices"},
+      "values": {},
+      "expect": {
+        "status": "invalid",
+        "issues": [{"param": "input", "message": "“Alanlar”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."}]
+      }
+    },
+    {
+      "id": "refuse-locked-target",
+      "title": "Kilitli hedef katman seçilemez",
+      "document": "parcels.kcad",
+      "selection": [1],
+      "run": {"tool": "points.numberVertices"},
+      "values": {"layer": {"layerId": "kilitli"}},
+      "expect": {
+        "status": "invalid",
+        "issues": [{"param": "layer", "message": "“Hedef katman”: katman kilitli. Kilidi Katmanlar panelinden açın ya da yeni katman seçin."}]
+      }
+    },
+    {
+      "id": "refuse-range",
+      "title": "Sınırın dışındaki sayı",
+      "document": "parcels.kcad",
+      "selection": [1],
+      "run": {"tool": "points.numberVertices"},
+      "values": {"length": 31},
+      "expect": {"status": "invalid", "issues": [{"param": "length", "message": "“Toplam uzunluk” en çok 30 olmalı."}]}
+    },
+    {
+      "id": "refuse-tool-rule",
+      "title": "Aracın kendi kuralı: önek toplam uzunluğu doldurunca doldurma yapılamaz",
+      "document": "parcels.kcad",
+      "selection": [1],
+      "run": {"tool": "points.numberVertices"},
+      "values": {"prefix": "PARSEL"},
+      "expect": {"status": "invalid", "issues": [{"message": "Toplam uzunluk önekten uzun olmalı; yoksa doldurma yapılamaz."}]}
+    },
+    {
+      "id": "refuse-all-locked-selection",
+      "title": "Değiştiren araç, seçili nesnelerin hepsi kilitli katmandayken",
+      "document": "parcels.kcad",
+      "selection": [4],
+      "run": {"tool": "attributes.calculate"},
+      "values": {},
+      "expect": {
+        "status": "invalid",
+        "issues": [{"param": "input", "message": "“Nesneler”: seçili nesnelerin hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın."}]
+      }
+    },
+    {
+      "id": "refuse-all-locked-layer",
+      "title": "Değiştiren araç, kilitli katmanın nesneleriyle",
+      "document": "parcels.kcad",
+      "selection": [],
+      "run": {"tool": "attributes.calculate"},
+      "values": {"input": {"scope": "layer", "layerId": "kilitli"}},
+      "expect": {
+        "status": "invalid",
+        "issues": [{"param": "input", "message": "“Nesneler”: bu katmandaki nesnelerin hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın."}]
+      }
+    },
+    {
+      "id": "refuse-missing-layer",
+      "title": "Olmayan katmanın nesneleri",
+      "document": "parcels.kcad",
+      "selection": [],
+      "run": {"tool": "selection.byExpression"},
+      "values": {"input": {"scope": "layer", "layerId": "yok"}},
+      "expect": {"status": "invalid", "issues": [{"param": "input", "message": "“Aranacak nesneler”: seçilen katman artık yok."}]}
+    }
+  ]
+}

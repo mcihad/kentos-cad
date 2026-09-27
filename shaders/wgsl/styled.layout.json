@@ -1,0 +1,164 @@
+{
+  "format": "kentos.wgsl-layout",
+  "version": 1,
+  "module": "styled",
+  "description": "KentOS styled drawing (docs/STYLE.md §6): the style engine's batches (render/types.ts StyledBatch) as strokes, fills with a per-pixel paint and markers. The web's WebGPU backend joins these sources in this order (apps/web/src/render/webgpu/styledShaders.ts) and scripts/wgsl/browser-check.mjs compiles them in a browser's WebGPU and builds these pipelines; the native renderer is to be checked against the same file. The WebGL2 twin is apps/web/src/render/webgl2/styledShaders.ts. Any change to a struct, attribute, binding or packing raises the version.",
+  "sources": [
+    "styled/common.wgsl",
+    "styled/shapes.wgsl",
+    "styled/stroke.wgsl",
+    "styled/fill.wgsl",
+    "styled/marker.wgsl"
+  ],
+  "bindGroups": [
+    {
+      "group": 0,
+      "bindings": [
+        { "binding": 0, "name": "frame", "type": "uniform", "struct": "Frame", "visibility": ["vertex", "fragment"] }
+      ]
+    },
+    {
+      "group": 1,
+      "bindings": [
+        { "binding": 0, "name": "st", "type": "uniform", "struct": "SStyle", "visibility": ["vertex", "fragment"] }
+      ]
+    },
+    {
+      "group": 2,
+      "bindings": [
+        { "binding": 0, "name": "atlasTex", "type": "texture", "sampleType": "float", "visibility": ["fragment"] },
+        { "binding": 1, "name": "atlasSmp", "type": "sampler", "samplerType": "filtering", "visibility": ["fragment"] }
+      ]
+    }
+  ],
+  "structs": {
+    "Frame": {
+      "size": 32,
+      "align": 8,
+      "fields": [
+        { "name": "offset", "type": "vec2<f32>", "offset": 0 },
+        { "name": "scale", "type": "vec2<f32>", "offset": 8 },
+        { "name": "pxPerM", "type": "f32", "offset": 16 },
+        { "name": "dpr", "type": "f32", "offset": 20 },
+        { "name": "viewport", "type": "vec2<f32>", "offset": 24 }
+      ]
+    },
+    "SStyle": {
+      "size": 144,
+      "align": 16,
+      "fields": [
+        { "name": "color", "type": "vec4<f32>", "offset": 0 },
+        { "name": "stroke", "type": "vec4<f32>", "offset": 16 },
+        { "name": "dash0", "type": "vec4<f32>", "offset": 32 },
+        { "name": "dash1", "type": "vec4<f32>", "offset": 48 },
+        { "name": "rect", "type": "vec4<f32>", "offset": 64 },
+        { "name": "a", "type": "vec4<f32>", "offset": 80 },
+        { "name": "b", "type": "vec4<f32>", "offset": 96 },
+        { "name": "c", "type": "vec4<f32>", "offset": 112 },
+        { "name": "flags", "type": "vec4<u32>", "offset": 128 }
+      ]
+    }
+  },
+  "pipelines": [
+    {
+      "name": "stroke",
+      "vertex": "strokeVs",
+      "fragment": "strokeFs",
+      "topology": "triangle-list",
+      "vertexCount": 6,
+      "blend": "alpha",
+      "buffers": [
+        {
+          "stepMode": "instance",
+          "arrayStride": 24,
+          "attributes": [
+            { "location": 0, "name": "seg", "format": "float32x4", "offset": 0 },
+            { "location": 1, "name": "mt", "format": "float32x2", "offset": 16 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "solid",
+      "vertex": "areaVs",
+      "fragment": "solidFs",
+      "topology": "triangle-list",
+      "blend": "alpha",
+      "buffers": [
+        { "stepMode": "vertex", "arrayStride": 8, "attributes": [{ "location": 0, "name": "p", "format": "float32x2", "offset": 0 }] }
+      ]
+    },
+    {
+      "name": "hatch",
+      "vertex": "areaVs",
+      "fragment": "hatchFs",
+      "topology": "triangle-list",
+      "blend": "alpha",
+      "buffers": [
+        { "stepMode": "vertex", "arrayStride": 8, "attributes": [{ "location": 0, "name": "p", "format": "float32x2", "offset": 0 }] }
+      ]
+    },
+    {
+      "name": "pattern",
+      "vertex": "areaVs",
+      "fragment": "patternFs",
+      "topology": "triangle-list",
+      "blend": "premultiplied",
+      "buffers": [
+        { "stepMode": "vertex", "arrayStride": 8, "attributes": [{ "location": 0, "name": "p", "format": "float32x2", "offset": 0 }] }
+      ]
+    },
+    {
+      "name": "tile",
+      "vertex": "areaVs",
+      "fragment": "tileFs",
+      "topology": "triangle-list",
+      "blend": "premultiplied",
+      "buffers": [
+        { "stepMode": "vertex", "arrayStride": 8, "attributes": [{ "location": 0, "name": "p", "format": "float32x2", "offset": 0 }] }
+      ]
+    },
+    {
+      "name": "marker",
+      "vertex": "markerVs",
+      "fragment": "markerFs",
+      "topology": "triangle-list",
+      "vertexCount": 6,
+      "blend": "premultiplied",
+      "buffers": [
+        {
+          "stepMode": "instance",
+          "arrayStride": 20,
+          "attributes": [
+            { "location": 0, "name": "i0", "format": "float32x4", "offset": 0 },
+            { "location": 1, "name": "i1", "format": "float32", "offset": 16 }
+          ]
+        }
+      ]
+    }
+  ],
+  "blends": {
+    "alpha": {
+      "color": { "srcFactor": "src-alpha", "dstFactor": "one-minus-src-alpha", "operation": "add" },
+      "alpha": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" }
+    },
+    "premultiplied": {
+      "color": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" },
+      "alpha": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" }
+    }
+  },
+  "values": {
+    "geometry": "origin-relative float32 metres (render/types.ts): never absolute coordinates on the GPU",
+    "Frame": "shared with the plain pipelines: offset = camera centre, origin-relative metres; scale = (2 × px per metre / width, 2 × px per metre / height) in logical px (clip units per metre, unused here); pxPerM = logical px per metre × dpr; dpr = device pixel ratio; viewport = device px",
+    "color": "0..1 RGBA of the sRGB-encoded colour as written (no linearisation), straight alpha, resolved from the theme palette on the page",
+    "unit": "flags.x: 0 world (metres, paper mm × plot scale / 1000), 1 px (logical, times dpr)",
+    "dash": "dash0, dash1: up to 8 on/off lengths in the batch's unit (an odd list repeated once to be even); with a.y = total and a.z = the on share (stroke), b.y and b.z (hatch)",
+    "stroke": "seg = ax, ay, bx, by; mt = distance along the path at a (metres), end flags (1: a is a path end, 2: b is; other ends join round); a = (width, dashTotal, dashOn, dashOffset), b.x = blur, flags = (unit, cap: 0 butt, 1 round, 2 square)",
+    "hatch": "a = (cos angle, sin angle, spacing, width), b = (offset, dashTotal, dashOn, dashOffset), flags.x = unit",
+    "pattern": "color = fill, stroke = stroke, dash0 = (cell w, cell h, cos angle, sin angle), dash1 = (offset x, y, jitter x, y), rect = (half w, h, mark offset x, y), a = (cos, sin of the mark's rotation, coverage, seed), b = (stroke width, tint, opacity, 0), c = shape params, flags = (unit, stagger, shape, reach: 1 when neighbour cells must be looked at)",
+    "tile": "rect = the atlas image's uv (x, y, w, h), written each frame; a = (tile w, h, cos angle, sin angle), b = (shift x, y, opacity, 0), flags.x = unit",
+    "marker": "i0 = (x, y, angle radians, width), i1 = height; color = fill, stroke = stroke, rect = atlas uv (images), a = (offset x, y, anchor x, y), b = (aspect, stroke width, opacity, 0), c = shape params, flags = (unit, kind: 0 shape 1 image, shape, fit: 1 width 2 height)",
+    "shape": "0 circle, 1 ring, 2 square, 3 rectangle, 4 diamond, 5 triangle, 6 pentagon, 7 hexagon, 8 octagon, 9 star, 10 cross, 11 x, 12 line, 13 arrow, 14 arrowhead, 15 chevron, 16 semicircle, 17 quartercircle, 18 gear, 19 arc",
+    "atlas": "one rgba8unorm 2048 × 2048 page, premultiplied, one level, sampled linearly with clamp-to-edge (tileFs insets by half a texel of 2048)"
+  }
+}

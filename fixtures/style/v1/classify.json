@@ -1,0 +1,2770 @@
+{
+ "format": "kentos.style-classify",
+ "version": 1,
+ "note": "Katman stili penceresinin sınıfları (style/classify.ts): bir ifadenin farklı değerleri (sayılar değerine, yazılar Türkçe sırasına göre) ve onlardan yapılan kategoriler (QUALITATIVE renkleri sırayla; var olan kategori etiketini ve sembollerini korur), eşit aralık ya da eşit sayıyla sayısal sınıflar (eşit sınırlar birleşir) ve renk rampası boyunca renkleri, her sınıfın aldığı nesne (alt sınır dahil, üst sınır hariç; son sınıf üstü de alır), rampaların renkleri (iki renk arası doğrusal, kanal başına Math.round), bir sınıfın başladığı düz semboller (katmanda olan geometri sınıfları; hiçbiri yoksa üçü de), sınıf etiketleri (Math.round: yarım +∞ yönüne; sayı en kısa yazılışıyla), sınıf sayısı alanı (1–20, geçersizse 5) ve pencerenin sözleri. $alan geometri deposundan gelir. Yanıtlar web’indir ve kaydedilirken okunmuştur.",
+ "layerName": "Kadastro",
+ "origin": {
+  "x": 487000,
+  "y": 4420000
+ },
+ "entities": [
+  {
+   "kind": "polygon",
+   "layerId": "k",
+   "attrs": {
+    "Nitelik": "Tarla",
+    "Kat": "3"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420000
+    },
+    {
+     "x": 487010,
+     "y": 4420000
+    },
+    {
+     "x": 487010,
+     "y": 4420010
+    },
+    {
+     "x": 487000,
+     "y": 4420010
+    }
+   ],
+   "id": 1,
+   "uid": "01a0e1c5-e950-7663-81be-1a5820fe4ffb"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "k",
+   "attrs": {
+    "Nitelik": "Arsa",
+    "Kat": "12"
+   },
+   "pts": [
+    {
+     "x": 487020,
+     "y": 4420000
+    },
+    {
+     "x": 487040,
+     "y": 4420000
+    },
+    {
+     "x": 487040,
+     "y": 4420010
+    },
+    {
+     "x": 487020,
+     "y": 4420010
+    }
+   ],
+   "id": 2,
+   "uid": "01a0e1c5-e952-7175-b0eb-a2debc02f294"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "k",
+   "attrs": {
+    "Nitelik": "Bahçe",
+    "Kat": "2"
+   },
+   "pts": [
+    {
+     "x": 487050,
+     "y": 4420000
+    },
+    {
+     "x": 487080,
+     "y": 4420000
+    },
+    {
+     "x": 487080,
+     "y": 4420010
+    },
+    {
+     "x": 487050,
+     "y": 4420010
+    }
+   ],
+   "id": 3,
+   "uid": "01a0e1c5-e952-7176-bc1d-f495989c39b9"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "k",
+   "attrs": {
+    "Nitelik": "Arsa",
+    "Kat": "2"
+   },
+   "pts": [
+    {
+     "x": 487090,
+     "y": 4420000
+    },
+    {
+     "x": 487130,
+     "y": 4420000
+    },
+    {
+     "x": 487130,
+     "y": 4420010
+    },
+    {
+     "x": 487090,
+     "y": 4420010
+    }
+   ],
+   "id": 4,
+   "uid": "01a0e1c5-e952-7177-a460-0fddd9caf2fc"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "k",
+   "attrs": {
+    "Nitelik": "",
+    "Kat": "x"
+   },
+   "pts": [
+    {
+     "x": 487140,
+     "y": 4420000
+    },
+    {
+     "x": 487190,
+     "y": 4420000
+    },
+    {
+     "x": 487190,
+     "y": 4420010
+    },
+    {
+     "x": 487140,
+     "y": 4420010
+    }
+   ],
+   "id": 5,
+   "uid": "01a0e1c5-e952-7178-9a1c-e91ebf807b0f"
+  },
+  {
+   "kind": "polygon",
+   "layerId": "k",
+   "attrs": {
+    "Kat": "4"
+   },
+   "pts": [
+    {
+     "x": 487200,
+     "y": 4420000
+    },
+    {
+     "x": 487260,
+     "y": 4420000
+    },
+    {
+     "x": 487260,
+     "y": 4420010
+    },
+    {
+     "x": 487200,
+     "y": 4420010
+    }
+   ],
+   "id": 6,
+   "uid": "01a0e1c5-e952-7179-bb56-7c41e9d0181c"
+  },
+  {
+   "kind": "polyline",
+   "layerId": "k",
+   "attrs": {
+    "Nitelik": "Çayır"
+   },
+   "pts": [
+    {
+     "x": 487000,
+     "y": 4420020
+    },
+    {
+     "x": 487025,
+     "y": 4420020
+    }
+   ],
+   "id": 7,
+   "uid": "01a0e1c5-e952-717a-b1c9-a25ed944e141"
+  },
+  {
+   "kind": "point",
+   "layerId": "k",
+   "attrs": {
+    "Nitelik": "arsa"
+   },
+   "p": {
+    "x": 487030,
+    "y": 4420020
+   },
+   "id": 8,
+   "uid": "01a0e1c5-e952-717b-a1d2-f066fcb46452"
+  },
+  {
+   "kind": "text",
+   "layerId": "k",
+   "attrs": {
+    "Nitelik": "İmar"
+   },
+   "p": {
+    "x": 487040,
+    "y": 4420020
+   },
+   "text": "İmar",
+   "height": 2,
+   "rotation": 0,
+   "id": 9,
+   "uid": "01a0e1c5-e952-717c-8ee6-90c7d388a96e"
+  }
+ ],
+ "present": {
+  "fill": 6,
+  "line": 1,
+  "marker": 1
+ },
+ "qualitative": [
+  "#E15759",
+  "#4E79A7",
+  "#F28E2B",
+  "#76B7B2",
+  "#59A14F",
+  "#EDC948",
+  "#B07AA1",
+  "#FF9DA7",
+  "#9C755F",
+  "#BAB0AC",
+  "#8CD17D",
+  "#86BCB6"
+ ],
+ "ramps": {
+  "sariKirmizi": {
+   "label": "Sarıdan kırmızıya",
+   "stops": [
+    "#FFF5B8",
+    "#FDB863",
+    "#E66101",
+    "#A50F15"
+   ]
+  },
+  "maviler": {
+   "label": "Maviler",
+   "stops": [
+    "#E3EEF9",
+    "#9ECAE1",
+    "#4292C6",
+    "#08306B"
+   ]
+  },
+  "yesiller": {
+   "label": "Yeşiller",
+   "stops": [
+    "#E5F5E0",
+    "#A1D99B",
+    "#41AB5D",
+    "#005A32"
+   ]
+  },
+  "griler": {
+   "label": "Griler",
+   "stops": [
+    "#F0F0F0",
+    "#BDBDBD",
+    "#737373",
+    "#252525"
+   ]
+  },
+  "spektral": {
+   "label": "Spektral",
+   "stops": [
+    "#2B83BA",
+    "#ABDDA4",
+    "#FFFFBF",
+    "#FDAE61",
+    "#D7191C"
+   ]
+  }
+ },
+ "defaults": {
+  "classCount": {
+   "default": 5,
+   "min": 1,
+   "max": 20
+  },
+  "ramp": "sariKirmizi",
+  "method": "interval",
+  "otherColor": "#BAB0AC"
+ },
+ "texts": {
+  "noValues": "Bu ifade nesnelerde değer vermiyor.",
+  "found": {
+   "n": 7,
+   "text": "7 değer bulundu."
+  },
+  "noNumbers": "Bu ifade nesnelerde sayı vermiyor.",
+  "classified": {
+   "classes": 5,
+   "values": 6,
+   "text": "5 sınıf, 6 sayısal değerden."
+  },
+  "newCategory": "Yeni kategori",
+  "other": "Diğer değerler",
+  "categoriesHelp": "Bir alan adı yazıp “Değerlerden sınıfla”ya basın: her farklı değer bir kategori olur.",
+  "classesHelp": "Bir değer alt sınıra eşitse o sınıfa girer; son sınıf üst sınırını da içerir.",
+  "classesEmptyHelp": "Sayı veren bir ifade yazıp “Sınıfla”ya basın."
+ },
+ "values": [
+  {
+   "expr": "Nitelik",
+   "values": [
+    "Tarla",
+    "Arsa",
+    "Bahçe",
+    "Arsa",
+    "",
+    null,
+    "Çayır",
+    "arsa",
+    "İmar"
+   ],
+   "unique": [
+    {
+     "value": "arsa",
+     "count": 1
+    },
+    {
+     "value": "Arsa",
+     "count": 2
+    },
+    {
+     "value": "Bahçe",
+     "count": 1
+    },
+    {
+     "value": "Çayır",
+     "count": 1
+    },
+    {
+     "value": "İmar",
+     "count": 1
+    },
+    {
+     "value": "Tarla",
+     "count": 1
+    }
+   ],
+   "error": null
+  },
+  {
+   "expr": "Kat",
+   "values": [
+    "3",
+    "12",
+    "2",
+    "2",
+    "x",
+    "4",
+    null,
+    null,
+    null
+   ],
+   "unique": [
+    {
+     "value": "2",
+     "count": 2
+    },
+    {
+     "value": "3",
+     "count": 1
+    },
+    {
+     "value": "4",
+     "count": 1
+    },
+    {
+     "value": "12",
+     "count": 1
+    },
+    {
+     "value": "x",
+     "count": 1
+    }
+   ],
+   "error": null
+  },
+  {
+   "expr": "$alan",
+   "values": [
+    "100",
+    "200",
+    "300",
+    "400",
+    "500",
+    "600",
+    null,
+    null,
+    null
+   ],
+   "unique": [
+    {
+     "value": "100",
+     "count": 1
+    },
+    {
+     "value": "200",
+     "count": 1
+    },
+    {
+     "value": "300",
+     "count": 1
+    },
+    {
+     "value": "400",
+     "count": 1
+    },
+    {
+     "value": "500",
+     "count": 1
+    },
+    {
+     "value": "600",
+     "count": 1
+    }
+   ],
+   "error": null
+  },
+  {
+   "expr": "Nitelik || '-' || Kat",
+   "values": [
+    "Tarla-3",
+    "Arsa-12",
+    "Bahçe-2",
+    "Arsa-2",
+    "-x",
+    "-4",
+    "Çayır-",
+    "arsa-",
+    "İmar-"
+   ],
+   "unique": [
+    {
+     "value": "-4",
+     "count": 1
+    },
+    {
+     "value": "-x",
+     "count": 1
+    },
+    {
+     "value": "arsa-",
+     "count": 1
+    },
+    {
+     "value": "Arsa-2",
+     "count": 1
+    },
+    {
+     "value": "Arsa-12",
+     "count": 1
+    },
+    {
+     "value": "Bahçe-2",
+     "count": 1
+    },
+    {
+     "value": "Çayır-",
+     "count": 1
+    },
+    {
+     "value": "İmar-",
+     "count": 1
+    },
+    {
+     "value": "Tarla-3",
+     "count": 1
+    }
+   ],
+   "error": null
+  },
+  {
+   "expr": "$katman",
+   "values": [
+    "Kadastro",
+    "Kadastro",
+    "Kadastro",
+    "Kadastro",
+    "Kadastro",
+    "Kadastro",
+    "Kadastro",
+    "Kadastro",
+    "Kadastro"
+   ],
+   "unique": [
+    {
+     "value": "Kadastro",
+     "count": 9
+    }
+   ],
+   "error": null
+  },
+  {
+   "expr": "Nitelik =",
+   "values": [],
+   "unique": [],
+   "error": "İfade yarım kalmış: sonunda bir değer eksik."
+  }
+ ],
+ "categories": [
+  {
+   "id": "from-values",
+   "expr": "Nitelik",
+   "old": [],
+   "expect": {
+    "categories": [
+     {
+      "value": "arsa",
+      "label": "arsa",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#E15759"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#E15759",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#E15759",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "value": "Arsa",
+      "label": "Arsa",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#4E79A7"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#4E79A7",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#4E79A7",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "value": "Bahçe",
+      "label": "Bahçe",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#F28E2B"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#F28E2B",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "value": "Çayır",
+      "label": "Çayır",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#76B7B2"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#76B7B2",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#76B7B2",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "value": "İmar",
+      "label": "İmar",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#59A14F"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#59A14F",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#59A14F",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "value": "Tarla",
+      "label": "Tarla",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#EDC948"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#EDC948",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#EDC948",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "counts": {
+     "counts": [
+      1,
+      2,
+      1,
+      1,
+      1,
+      1
+     ],
+     "rest": 2
+    }
+   }
+  },
+  {
+   "id": "keeps-existing",
+   "expr": "Nitelik",
+   "old": [
+    {
+     "value": "Arsa",
+     "label": "ARSA",
+     "symbols": {
+      "fill": {
+       "type": "fill",
+       "layers": [
+        {
+         "id": "0",
+         "type": "simpleFill",
+         "color": "#000000"
+        },
+        {
+         "id": "1",
+         "type": "simpleLine",
+         "color": "ink",
+         "width": 0.18
+        }
+       ]
+      },
+      "line": {
+       "type": "line",
+       "layers": [
+        {
+         "id": "0",
+         "type": "simpleLine",
+         "color": "#000000",
+         "width": 0.35
+        }
+       ]
+      },
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 2.4,
+         "fill": "#000000",
+         "stroke": "ink",
+         "strokeWidth": 0.18
+        }
+       ]
+      }
+     },
+     "enabled": false
+    }
+   ],
+   "expect": {
+    "categories": [
+     {
+      "value": "arsa",
+      "label": "arsa",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#E15759"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#E15759",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#E15759",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "value": "Arsa",
+      "label": "ARSA",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#000000"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#000000",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#000000",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      },
+      "enabled": false
+     },
+     {
+      "value": "Bahçe",
+      "label": "Bahçe",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#F28E2B"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#F28E2B",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#F28E2B",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "value": "Çayır",
+      "label": "Çayır",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#76B7B2"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#76B7B2",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#76B7B2",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "value": "İmar",
+      "label": "İmar",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#59A14F"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#59A14F",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#59A14F",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "value": "Tarla",
+      "label": "Tarla",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#EDC948"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#EDC948",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#EDC948",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "counts": {
+     "counts": [
+      1,
+      2,
+      1,
+      1,
+      1,
+      1
+     ],
+     "rest": 2
+    }
+   }
+  }
+ ],
+ "newCategory": [
+  {
+   "count": 0,
+   "category": {
+    "value": "",
+    "label": "Yeni kategori",
+    "symbols": {
+     "fill": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#E15759"
+       },
+       {
+        "id": "1",
+        "type": "simpleLine",
+        "color": "ink",
+        "width": 0.18
+       }
+      ]
+     },
+     "line": {
+      "type": "line",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleLine",
+        "color": "#E15759",
+        "width": 0.35
+       }
+      ]
+     },
+     "marker": {
+      "type": "marker",
+      "layers": [
+       {
+        "id": "0",
+        "type": "shape",
+        "shape": "circle",
+        "size": 2.4,
+        "fill": "#E15759",
+        "stroke": "ink",
+        "strokeWidth": 0.18
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "count": 1,
+   "category": {
+    "value": "",
+    "label": "Yeni kategori",
+    "symbols": {
+     "fill": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A7"
+       },
+       {
+        "id": "1",
+        "type": "simpleLine",
+        "color": "ink",
+        "width": 0.18
+       }
+      ]
+     },
+     "line": {
+      "type": "line",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleLine",
+        "color": "#4E79A7",
+        "width": 0.35
+       }
+      ]
+     },
+     "marker": {
+      "type": "marker",
+      "layers": [
+       {
+        "id": "0",
+        "type": "shape",
+        "shape": "circle",
+        "size": 2.4,
+        "fill": "#4E79A7",
+        "stroke": "ink",
+        "strokeWidth": 0.18
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "count": 12,
+   "category": {
+    "value": "",
+    "label": "Yeni kategori",
+    "symbols": {
+     "fill": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#E15759"
+       },
+       {
+        "id": "1",
+        "type": "simpleLine",
+        "color": "ink",
+        "width": 0.18
+       }
+      ]
+     },
+     "line": {
+      "type": "line",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleLine",
+        "color": "#E15759",
+        "width": 0.35
+       }
+      ]
+     },
+     "marker": {
+      "type": "marker",
+      "layers": [
+       {
+        "id": "0",
+        "type": "shape",
+        "shape": "circle",
+        "size": 2.4,
+        "fill": "#E15759",
+        "stroke": "ink",
+        "strokeWidth": 0.18
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "count": 13,
+   "category": {
+    "value": "",
+    "label": "Yeni kategori",
+    "symbols": {
+     "fill": {
+      "type": "fill",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleFill",
+        "color": "#4E79A7"
+       },
+       {
+        "id": "1",
+        "type": "simpleLine",
+        "color": "ink",
+        "width": 0.18
+       }
+      ]
+     },
+     "line": {
+      "type": "line",
+      "layers": [
+       {
+        "id": "0",
+        "type": "simpleLine",
+        "color": "#4E79A7",
+        "width": 0.35
+       }
+      ]
+     },
+     "marker": {
+      "type": "marker",
+      "layers": [
+       {
+        "id": "0",
+        "type": "shape",
+        "shape": "circle",
+        "size": 2.4,
+        "fill": "#4E79A7",
+        "stroke": "ink",
+        "strokeWidth": 0.18
+       }
+      ]
+     }
+    }
+   }
+  }
+ ],
+ "graduated": [
+  {
+   "expr": "Kat",
+   "method": "interval",
+   "n": 5,
+   "ramp": "sariKirmizi",
+   "expect": {
+    "numbers": [
+     3,
+     12,
+     2,
+     2,
+     4
+    ],
+    "classes": [
+     {
+      "min": 2,
+      "max": 4,
+      "label": "2 – 4",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#FFF5B8"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#FFF5B8",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#FFF5B8",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 4,
+      "max": 6,
+      "label": "4 – 6",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#FEC778"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#FEC778",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#FEC778",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 6,
+      "max": 8,
+      "label": "6 – 8",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#F28D32"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#F28D32",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#F28D32",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 8,
+      "max": 10,
+      "label": "8 – 10",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#D64D06"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#D64D06",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#D64D06",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 10,
+      "max": 12,
+      "label": "10 – 12",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#A50F15"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#A50F15",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#A50F15",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "counts": [
+     3,
+     1,
+     0,
+     0,
+     1
+    ]
+   }
+  },
+  {
+   "expr": "Kat",
+   "method": "count",
+   "n": 3,
+   "ramp": "maviler",
+   "expect": {
+    "numbers": [
+     3,
+     12,
+     2,
+     2,
+     4
+    ],
+    "classes": [
+     {
+      "min": 2,
+      "max": 3,
+      "label": "2 – 3",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#E3EEF9"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#E3EEF9",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#E3EEF9",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 3,
+      "max": 4,
+      "label": "3 – 4",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#70AED4"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#70AED4",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#70AED4",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 4,
+      "max": 12,
+      "label": "4 – 12",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#08306B"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#08306B",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#08306B",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "counts": [
+     2,
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "expr": "$alan",
+   "method": "interval",
+   "n": 4,
+   "ramp": "yesiller",
+   "expect": {
+    "numbers": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600
+    ],
+    "classes": [
+     {
+      "min": 100,
+      "max": 225,
+      "label": "100 – 225",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#E5F5E0"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#E5F5E0",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#E5F5E0",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 225,
+      "max": 350,
+      "label": "225 – 350",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#A1D99B"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#A1D99B",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#A1D99B",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 350,
+      "max": 475,
+      "label": "350 – 475",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#41AB5D"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#41AB5D",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#41AB5D",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 475,
+      "max": 600,
+      "label": "475 – 600",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#005A32"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#005A32",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#005A32",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "counts": [
+     2,
+     1,
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "expr": "$alan",
+   "method": "count",
+   "n": 4,
+   "ramp": "spektral",
+   "expect": {
+    "numbers": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600
+    ],
+    "classes": [
+     {
+      "min": 100,
+      "max": 300,
+      "label": "100 – 300",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#2B83BA"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#2B83BA",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#2B83BA",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 300,
+      "max": 400,
+      "label": "300 – 400",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#FFFFBF"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#FFFFBF",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#FFFFBF",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     },
+     {
+      "min": 400,
+      "max": 600,
+      "label": "400 – 600",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#D7191C"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#D7191C",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#D7191C",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "counts": [
+     2,
+     1,
+     3
+    ]
+   }
+  },
+  {
+   "expr": "$alan",
+   "method": "count",
+   "n": 1,
+   "ramp": "griler",
+   "expect": {
+    "numbers": [
+     100,
+     200,
+     300,
+     400,
+     500,
+     600
+    ],
+    "classes": [
+     {
+      "min": 100,
+      "max": 600,
+      "label": "100 – 600",
+      "symbols": {
+       "fill": {
+        "type": "fill",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleFill",
+          "color": "#252525"
+         },
+         {
+          "id": "1",
+          "type": "simpleLine",
+          "color": "ink",
+          "width": 0.18
+         }
+        ]
+       },
+       "line": {
+        "type": "line",
+        "layers": [
+         {
+          "id": "0",
+          "type": "simpleLine",
+          "color": "#252525",
+          "width": 0.35
+         }
+        ]
+       },
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 2.4,
+          "fill": "#252525",
+          "stroke": "ink",
+          "strokeWidth": 0.18
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "counts": [
+     6
+    ]
+   }
+  },
+  {
+   "expr": "Nitelik",
+   "method": "interval",
+   "n": 5,
+   "ramp": "sariKirmizi",
+   "expect": {
+    "numbers": [],
+    "classes": [],
+    "counts": []
+   }
+  }
+ ],
+ "rampColors": [
+  {
+   "ramp": "sariKirmizi",
+   "n": 1,
+   "colors": [
+    "#A50F15"
+   ]
+  },
+  {
+   "ramp": "sariKirmizi",
+   "n": 2,
+   "colors": [
+    "#FFF5B8",
+    "#A50F15"
+   ]
+  },
+  {
+   "ramp": "sariKirmizi",
+   "n": 3,
+   "colors": [
+    "#FFF5B8",
+    "#F28D32",
+    "#A50F15"
+   ]
+  },
+  {
+   "ramp": "sariKirmizi",
+   "n": 5,
+   "colors": [
+    "#FFF5B8",
+    "#FEC778",
+    "#F28D32",
+    "#D64D06",
+    "#A50F15"
+   ]
+  },
+  {
+   "ramp": "sariKirmizi",
+   "n": 7,
+   "colors": [
+    "#FFF5B8",
+    "#FED78E",
+    "#FDB863",
+    "#F28D32",
+    "#E66101",
+    "#C6380B",
+    "#A50F15"
+   ]
+  },
+  {
+   "ramp": "maviler",
+   "n": 1,
+   "colors": [
+    "#08306B"
+   ]
+  },
+  {
+   "ramp": "maviler",
+   "n": 2,
+   "colors": [
+    "#E3EEF9",
+    "#08306B"
+   ]
+  },
+  {
+   "ramp": "maviler",
+   "n": 3,
+   "colors": [
+    "#E3EEF9",
+    "#70AED4",
+    "#08306B"
+   ]
+  },
+  {
+   "ramp": "maviler",
+   "n": 5,
+   "colors": [
+    "#E3EEF9",
+    "#AFD3E7",
+    "#70AED4",
+    "#347AAF",
+    "#08306B"
+   ]
+  },
+  {
+   "ramp": "maviler",
+   "n": 7,
+   "colors": [
+    "#E3EEF9",
+    "#C1DCED",
+    "#9ECAE1",
+    "#70AED4",
+    "#4292C6",
+    "#256199",
+    "#08306B"
+   ]
+  },
+  {
+   "ramp": "yesiller",
+   "n": 1,
+   "colors": [
+    "#005A32"
+   ]
+  },
+  {
+   "ramp": "yesiller",
+   "n": 2,
+   "colors": [
+    "#E5F5E0",
+    "#005A32"
+   ]
+  },
+  {
+   "ramp": "yesiller",
+   "n": 3,
+   "colors": [
+    "#E5F5E0",
+    "#71C27C",
+    "#005A32"
+   ]
+  },
+  {
+   "ramp": "yesiller",
+   "n": 5,
+   "colors": [
+    "#E5F5E0",
+    "#B2E0AC",
+    "#71C27C",
+    "#319752",
+    "#005A32"
+   ]
+  },
+  {
+   "ramp": "yesiller",
+   "n": 7,
+   "colors": [
+    "#E5F5E0",
+    "#C3E7BE",
+    "#A1D99B",
+    "#71C27C",
+    "#41AB5D",
+    "#218348",
+    "#005A32"
+   ]
+  },
+  {
+   "ramp": "griler",
+   "n": 1,
+   "colors": [
+    "#252525"
+   ]
+  },
+  {
+   "ramp": "griler",
+   "n": 2,
+   "colors": [
+    "#F0F0F0",
+    "#252525"
+   ]
+  },
+  {
+   "ramp": "griler",
+   "n": 3,
+   "colors": [
+    "#F0F0F0",
+    "#989898",
+    "#252525"
+   ]
+  },
+  {
+   "ramp": "griler",
+   "n": 5,
+   "colors": [
+    "#F0F0F0",
+    "#CACACA",
+    "#989898",
+    "#606060",
+    "#252525"
+   ]
+  },
+  {
+   "ramp": "griler",
+   "n": 7,
+   "colors": [
+    "#F0F0F0",
+    "#D7D7D7",
+    "#BDBDBD",
+    "#989898",
+    "#737373",
+    "#4C4C4C",
+    "#252525"
+   ]
+  },
+  {
+   "ramp": "spektral",
+   "n": 1,
+   "colors": [
+    "#D7191C"
+   ]
+  },
+  {
+   "ramp": "spektral",
+   "n": 2,
+   "colors": [
+    "#2B83BA",
+    "#D7191C"
+   ]
+  },
+  {
+   "ramp": "spektral",
+   "n": 3,
+   "colors": [
+    "#2B83BA",
+    "#FFFFBF",
+    "#D7191C"
+   ]
+  },
+  {
+   "ramp": "spektral",
+   "n": 5,
+   "colors": [
+    "#2B83BA",
+    "#ABDDA4",
+    "#FFFFBF",
+    "#FDAE61",
+    "#D7191C"
+   ]
+  },
+  {
+   "ramp": "spektral",
+   "n": 7,
+   "colors": [
+    "#2B83BA",
+    "#80BFAB",
+    "#C7E8AD",
+    "#FFFFBF",
+    "#FEC980",
+    "#F07C4A",
+    "#D7191C"
+   ]
+  }
+ ],
+ "plain": [
+  {
+   "present": {
+    "fill": 1,
+    "line": 0,
+    "marker": 0
+   },
+   "color": "#E15759",
+   "symbols": {
+    "fill": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#E15759"
+      },
+      {
+       "id": "1",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.18
+      }
+     ]
+    }
+   }
+  },
+  {
+   "present": {
+    "fill": 0,
+    "line": 1,
+    "marker": 0
+   },
+   "color": "#E15759",
+   "symbols": {
+    "line": {
+     "type": "line",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleLine",
+       "color": "#E15759",
+       "width": 0.35
+      }
+     ]
+    }
+   }
+  },
+  {
+   "present": {
+    "fill": 0,
+    "line": 0,
+    "marker": 1
+   },
+   "color": "#E15759",
+   "symbols": {
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 2.4,
+       "fill": "#E15759",
+       "stroke": "ink",
+       "strokeWidth": 0.18
+      }
+     ]
+    }
+   }
+  },
+  {
+   "present": {
+    "fill": 2,
+    "line": 1,
+    "marker": 1
+   },
+   "color": "#E15759",
+   "symbols": {
+    "fill": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#E15759"
+      },
+      {
+       "id": "1",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.18
+      }
+     ]
+    },
+    "line": {
+     "type": "line",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleLine",
+       "color": "#E15759",
+       "width": 0.35
+      }
+     ]
+    },
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 2.4,
+       "fill": "#E15759",
+       "stroke": "ink",
+       "strokeWidth": 0.18
+      }
+     ]
+    }
+   }
+  },
+  {
+   "present": {
+    "fill": 0,
+    "line": 0,
+    "marker": 0
+   },
+   "color": "#E15759",
+   "symbols": {
+    "fill": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#E15759"
+      },
+      {
+       "id": "1",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.18
+      }
+     ]
+    },
+    "line": {
+     "type": "line",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleLine",
+       "color": "#E15759",
+       "width": 0.35
+      }
+     ]
+    },
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 2.4,
+       "fill": "#E15759",
+       "stroke": "ink",
+       "strokeWidth": 0.18
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "labels": [
+  {
+   "min": 1.005,
+   "max": 30,
+   "label": "1 – 30"
+  },
+  {
+   "min": 0.125,
+   "max": 0.6666666666666666,
+   "label": "0.13 – 0.67"
+  },
+  {
+   "min": -1.2345,
+   "max": -0.5,
+   "label": "-1.23 – -0.5"
+  },
+  {
+   "min": -0.125,
+   "max": 0.125,
+   "label": "-0.12 – 0.13"
+  },
+  {
+   "min": 1234567.891,
+   "max": 20000000,
+   "label": "1234567.89 – 20000000"
+  },
+  {
+   "min": 2.5,
+   "max": 7.25,
+   "digits": 0,
+   "label": "3 – 7"
+  },
+  {
+   "min": 0.123456,
+   "max": 0.5,
+   "digits": 4,
+   "label": "0.1235 – 0.5"
+  }
+ ],
+ "classCount": [
+  {
+   "typed": "7",
+   "count": 7
+  },
+  {
+   "typed": "0",
+   "count": 5
+  },
+  {
+   "typed": "-3",
+   "count": 1
+  },
+  {
+   "typed": "25",
+   "count": 20
+  },
+  {
+   "typed": "abc",
+   "count": 5
+  },
+  {
+   "typed": "2.5",
+   "count": 3
+  },
+  {
+   "typed": "",
+   "count": 5
+  },
+  {
+   "typed": "20",
+   "count": 20
+  },
+  {
+   "typed": "1",
+   "count": 1
+  }
+ ]
+}

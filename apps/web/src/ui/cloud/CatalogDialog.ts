@@ -2,6 +2,7 @@ import '../../styles/catalog.css';
 import type { AppContext } from '../../app/context';
 import { ApiFailure } from '../../app/cloud/api';
 import { CatalogPager, PROJECT_TYPES, SORT_LABEL, TYPE_LABEL, VIEWS, viewDef } from '../../app/cloud/catalog';
+import { CATALOG_LINES, EMPTY_SEARCH, NO_ORGANIZATION, primaryPlan } from '../../app/cloud/catalogPlan';
 import type { ProjectRef } from '../../app/cloud/lifecycle';
 import type { CatalogSort } from '../../contracts/generated/CatalogSort';
 import type { CatalogView } from '../../contracts/generated/CatalogView';
@@ -38,13 +39,6 @@ let lastView: CatalogView = 'mine';
 const PAGE = 50;
 const SEARCH_MS = 250;
 const DETAILS_MS = 120;
-
-/** What each list says above it, besides its name. */
-const NOTE: Partial<Record<CatalogView, string>> = {
-  shared: 'Başkalarının sizinle paylaştığı projeler; sahibi ve rolünüz yanında yazar.',
-  archived: 'Arşivlenmiş projeler salt okunurdur: açılır, kopyalanır; arşivden çıkarmak proje sahibinin ya da yöneticisinindir.',
-  favorites: 'Favorileriniz yalnız size görünür.',
-};
 
 export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectId: string }, tab?: DetailsTab): void {
   const cloud = ctx.cloud;
@@ -130,16 +124,10 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
   const ref = (p: ProjectSummary): ProjectRef => ({ tenantId: p.tenantId, projectId: p.id, name: p.name });
 
   const refreshPrimary = () => {
-    if (view === 'trash') {
-      primary.textContent = 'Geri yükle';
-      const may = !!picked?.access.permissions.includes('project.delete');
-      primary.disabled = !may;
-      primary.title = !picked ? 'Önce listeden bir proje seçin.' : may ? '' : `“${picked.name}” projesini geri yükleme yetkiniz yok (project.delete).`;
-    } else {
-      primary.textContent = 'Aç';
-      primary.disabled = !picked;
-      primary.title = picked ? (picked.state === 'archived' ? 'Arşivlenmiş proje salt okunur açılır.' : '') : 'Önce listeden bir proje seçin.';
-    }
+    const plan = primaryPlan(view, picked);
+    primary.textContent = plan.label;
+    primary.disabled = !plan.enabled;
+    primary.title = plan.why;
   };
 
   const paintDetails = () =>
@@ -173,7 +161,7 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
       },
     }).then((ok) => {
       progress.hidden = true;
-      say(ok ? `“${request.name}” indirildi.` : '');
+      say(ok ? CATALOG_LINES.downloaded(request.name) : '');
     });
 
   /** A project made here: shown in “Projelerim”, selected and opened. */
@@ -242,11 +230,7 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
     const def = viewDef(view);
     const filtered = !!search.value.trim() || !!typeSelect.value;
     if (!pager.projects.length) {
-      const empty = filtered
-        ? 'Aramanıza uyan proje yok. Başka sözcüklerle ya da tür süzgeci olmadan deneyin.'
-        : view === 'organization' && !orgs.length
-          ? 'Etkin üyeliğiniz olan bir kurum yok; kurum projeleri burada görünür.'
-          : def.empty;
+      const empty = filtered ? EMPTY_SEARCH : view === 'organization' && !orgs.length ? NO_ORGANIZATION : def.empty;
       replaceChildren(list, h('p', { class: 'cloud-empty' }, empty));
     } else {
       replaceChildren(
@@ -304,7 +288,7 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
     sort = def.sorts[0];
     sortSelect.value = sort;
     orgField.hidden = view !== 'organization' || !orgs.length;
-    note.textContent = NOTE[view] ?? '';
+    note.textContent = viewDef(view).note ?? '';
     picked = null;
     details = 'none';
     history.hide();
@@ -346,23 +330,23 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
     convert: () => picked && openConvertDialog(ctx, picked, openMade),
     archive: () => {
       const p = picked;
-      if (p) void archiveProject(ctx, targetOf(ctx, p)).then((ok) => ok && after(`“${p.name}” arşivlendi; Arşivlenmişler listesinde duruyor.`));
+      if (p) void archiveProject(ctx, targetOf(ctx, p)).then((ok) => ok && after(CATALOG_LINES.archivedStatus(p.name)));
     },
     unarchive: () => {
       const p = picked;
       if (!p) return;
       cloud.lifecycle.unarchive(ref(p)).then(() => {
-        ctx.log.success(`“${p.name}” arşivden çıkarıldı.`);
-        after(`“${p.name}” arşivden çıkarıldı; yeniden düzenlenebilir.`);
+        ctx.log.success(CATALOG_LINES.unarchived(p.name));
+        after(CATALOG_LINES.unarchivedStatus(p.name));
       }, fail);
     },
     trash: () => {
       const p = picked;
-      if (p) void trashProject(ctx, targetOf(ctx, p), pager.retentionDays || undefined).then((ok) => ok && after(`“${p.name}” çöp kutusuna taşındı.`));
+      if (p) void trashProject(ctx, targetOf(ctx, p), pager.retentionDays || undefined).then((ok) => ok && after(CATALOG_LINES.trashedStatus(p.name)));
     },
     purge: () => {
       const p = picked;
-      if (p) void purgeProject(ctx, targetOf(ctx, p)).then((ok) => ok && after(`“${p.name}” kalıcı olarak silindi.`));
+      if (p) void purgeProject(ctx, targetOf(ctx, p)).then((ok) => ok && after(CATALOG_LINES.purgedStatus(p.name)));
     },
     favorite: () => {
       const p = picked;
@@ -370,11 +354,11 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
       cloud.lifecycle.setFavorite(ref(p), !p.favorite).then((r) => {
         const at = pager.projects.findIndex((x) => x.id === p.id);
         // Taken out of “Favoriler”, it leaves the list; anywhere else its row changes in place.
-        if (view === 'favorites' && !r.project.favorite) return after(`“${p.name}” favorilerden çıkarıldı.`);
+        if (view === 'favorites' && !r.project.favorite) return after(CATALOG_LINES.favoriteRemoved(p.name));
         if (at >= 0) pager.projects[at] = r.project;
         picked = r.project;
         paintList();
-        say(r.project.favorite ? `“${p.name}” favorilere eklendi.` : `“${p.name}” favorilerden çıkarıldı.`);
+        say(r.project.favorite ? CATALOG_LINES.favoriteAdded(p.name) : CATALOG_LINES.favoriteRemoved(p.name));
       }, fail);
     },
   };
@@ -387,8 +371,8 @@ export function openCatalog(ctx: AppContext, pick?: { tenantId: string; projectI
     if (view === 'trash') {
       try {
         await cloud.lifecycle.restore(ref(p));
-        ctx.log.success(`“${p.name}” çöp kutusundan geri yüklendi.`);
-        after(`“${p.name}” geri yüklendi; listelerinde yeniden görünür.`);
+        ctx.log.success(CATALOG_LINES.restored(p.name));
+        after(CATALOG_LINES.restoredStatus(p.name));
       } catch (e) {
         fail(e);
         refreshPrimary();

@@ -1,7 +1,6 @@
 import type { AppContext } from '../../app/context';
-import { STATE_LABEL, TYPE_LABEL, day, when } from '../../app/cloud/catalog';
+import { rowPlan } from '../../app/cloud/catalogPlan';
 import { workspaceName } from '../../app/cloud/session';
-import { ROLE_LABEL } from '../../app/cloud/sharing';
 import type { CatalogSort } from '../../contracts/generated/CatalogSort';
 import type { CatalogView } from '../../contracts/generated/CatalogView';
 import type { ProjectSummary } from '../../contracts/generated/ProjectSummary';
@@ -21,36 +20,22 @@ export function placeOf(ctx: AppContext, p: ProjectSummary): string {
   return workspaceName(p.tenantKind, p.tenantName, !!ctx.cloud.membership(p.tenantId));
 }
 
-/** The time a row shows: the one its list is ordered by. */
-function timeOf(p: ProjectSummary, sort: CatalogSort): string {
-  switch (sort) {
-    case 'opened':
-      return p.openedAt ? when(p.openedAt) : '';
-    case 'created':
-      return when(p.createdAt);
-    case 'trashed':
-      return p.trashedAt ? `Silinme: ${day(p.trashedAt)}` : '';
-    default:
-      return when(p.updatedAt);
-  }
-}
-
 export function catalogRow(ctx: AppContext, p: ProjectSummary, view: CatalogView, sort: CatalogSort): HTMLElement {
   const open = ctx.cloud.project.value?.projectId === p.id;
-  const marks = [
-    p.favorite ? h('span', { class: 'catalog-row__fav', title: 'Favorilerinizde' }, icon('starOn', 14)) : null,
-    open ? h('span', { class: 'catalog-chip catalog-chip--open' }, 'Açık') : null,
-    p.state === 'archived' && view !== 'archived' ? h('span', { class: 'catalog-chip' }, STATE_LABEL.archived) : null,
-  ];
-  const whose = view === 'organization' || view === 'shared' ? `Sahibi: ${p.ownerName || 'görünmüyor'}` : placeOf(ctx, p);
+  // The texts come from the plan (app/cloud/catalogPlan.ts, pinned by fixtures/cloud/v1/catalog.json); here they are drawn.
+  const plan = rowPlan(p, view, sort, open, placeOf(ctx, p));
+  const marks = plan.marks.map((m) =>
+    m === 'Favorilerinizde' ? h('span', { class: 'catalog-row__fav', title: m }, icon('starOn', 14)) : h('span', { class: `catalog-chip${m === 'Açık' ? ' catalog-chip--open' : ''}` }, m),
+  );
   const sub =
     view === 'trash'
-      ? [h('span', null, p.trashedByName ? `Çöpe taşıyan: ${p.trashedByName}` : placeOf(ctx, p))]
-      : [h('span', { class: 'catalog-chip catalog-chip--type' }, TYPE_LABEL[p.projectType]), h('span', { class: 'catalog-row__place' }, whose)];
+      ? [h('span', null, plan.sub[0])]
+      : [h('span', { class: 'catalog-chip catalog-chip--type' }, plan.sub[0]), h('span', { class: 'catalog-row__place' }, plan.sub[1])];
+  const time = plan.side.at(-1)!;
   const side = [
-    view === 'shared' ? h('span', { class: 'catalog-row__role', title: 'Bu projedeki rolünüz' }, ROLE_LABEL[p.access.role]) : null,
-    view === 'trash' && p.purgeAfter ? h('span', { class: 'catalog-row__when catalog-row__when--warn' }, `${day(p.purgeAfter)} tarihinde silinir`) : null,
-    h('span', { class: 'catalog-row__when' }, timeOf(p, sort)),
+    view === 'shared' ? h('span', { class: 'catalog-row__role', title: 'Bu projedeki rolünüz' }, plan.side[0]) : null,
+    view === 'trash' && plan.side.length > 1 ? h('span', { class: 'catalog-row__when catalog-row__when--warn' }, plan.side[0]) : null,
+    h('span', { class: 'catalog-row__when' }, time),
   ];
   return h(
     'div',

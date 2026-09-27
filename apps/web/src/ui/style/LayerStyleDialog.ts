@@ -1,7 +1,24 @@
 import type { AppContext } from '../../app/context';
 import type { Entity } from '../../model/entities';
 import type { LayerRenderer, Rule, SymbolSet } from '../../model/style';
-import { classesPresent, classLabel, equalCount, equalInterval, numbersOf, plainSymbols, QUALITATIVE, RAMPS, rampColors, uniqueValues, valuesOf } from '../../style/classify';
+import {
+  categoriesOf,
+  categoryCounts,
+  classCount,
+  classesPresent,
+  CLASSIFY_TEXTS,
+  countIn,
+  DEFAULT_RAMP,
+  CLASS_COUNT,
+  graduatedOf,
+  newCategory,
+  numbersOf,
+  OTHER_COLOR,
+  plainSymbols,
+  RAMPS,
+  uniqueValues,
+  valuesOf,
+} from '../../style/classify';
 import { symbolsOfLayerStyle } from '../../style/fromLayer';
 import type { GeometryClass } from '../../style/geometry';
 import { h, replaceChildren, type Child } from '../dom';
@@ -57,8 +74,8 @@ class LayerStyleDialog {
   private graduated: Graduated;
   private rules: Rule[];
   private gradMethod: 'interval' | 'count' = 'interval';
-  private gradCount = 5;
-  private ramp = 'sariKirmizi';
+  private gradCount: number = CLASS_COUNT.default;
+  private ramp = DEFAULT_RAMP;
   private applied: string;
 
   constructor(ctx: AppContext, layerId: string) {
@@ -193,20 +210,18 @@ class LayerStyleDialog {
       this.render();
     };
     const { values, error } = c.expr ? valuesOf(this.entities, c.expr, this.exprScope) : { values: [] as (string | null)[], error: undefined };
-    const counts = new Map(uniqueValues(values).map((v) => [v.value, v.count]));
-    const matched = c.categories.reduce((s, k) => s + (counts.get(k.value) ?? 0), 0);
+    const tally = categoryCounts(values, c.categories);
     const expr = this.exprField(c.expr, (v) => set({ expr: v }), 'Alan adı ya da ifade: Nitelik');
     if (error) expr.error.textContent = error;
     const classify = h('button', { class: 'btn btn--small', type: 'button', disabled: !c.expr || !!error }, 'Değerlerden sınıfla');
     classify.addEventListener('click', () => {
       const found = uniqueValues(values);
-      if (!found.length) return this.say('Bu ifade nesnelerde değer vermiyor.', 'warn');
-      const old = new Map(c.categories.map((k) => [k.value, k]));
-      set({ categories: found.map((v, i) => old.get(v.value) ?? { value: v.value, label: v.value, symbols: plainSymbols(QUALITATIVE[i % QUALITATIVE.length], this.present) }) });
-      this.say(`${found.length} değer bulundu.`);
+      if (!found.length) return this.say(CLASSIFY_TEXTS.noValues, 'warn');
+      set({ categories: categoriesOf(found, this.present, c.categories) });
+      this.say(CLASSIFY_TEXTS.found(found.length));
     });
     const add = h('button', { class: 'btn btn--small', type: 'button' }, icon('plus', 14), 'Kategori ekle');
-    add.addEventListener('click', () => set({ categories: [...c.categories, { value: '', label: 'Yeni kategori', symbols: plainSymbols(QUALITATIVE[c.categories.length % QUALITATIVE.length], this.present) }] }));
+    add.addEventListener('click', () => set({ categories: [...c.categories, newCategory(c.categories.length, this.present)] }));
     const clear = h('button', { class: 'btn btn--small btn--ghost', type: 'button', disabled: !c.categories.length }, 'Hepsini sil');
     clear.addEventListener('click', () => set({ categories: [] }));
     const rows = c.categories.map((k, i) => {
@@ -219,11 +234,11 @@ class LayerStyleDialog {
       label.addEventListener('change', () => upd({ label: label.value }));
       const del = h('button', { class: 'ibtn', type: 'button', 'aria-label': 'Kategoriyi sil' }, icon('trash', 15));
       del.addEventListener('click', () => set({ categories: c.categories.filter((_, j) => j !== i) }));
-      return h('tr', null, h('td', null, on), h('td', null, symbolSetSlots(this.ctx, k.symbols, this.classes, (s) => upd({ symbols: s }), k.label || k.value)), h('td', null, value), h('td', null, label), h('td', { class: 'num' }, String(counts.get(k.value) ?? 0)), h('td', null, del));
+      return h('tr', null, h('td', null, on), h('td', null, symbolSetSlots(this.ctx, k.symbols, this.classes, (s) => upd({ symbols: s }), k.label || k.value)), h('td', null, value), h('td', null, label), h('td', { class: 'num' }, String(tally.counts[i] ?? 0)), h('td', null, del));
     });
     const otherOn = h('input', { type: 'checkbox', checked: !!c.other, 'aria-label': 'Diğer değerler çizilsin' });
-    otherOn.addEventListener('change', () => set({ other: otherOn.checked ? plainSymbols('#BAB0AC', this.present) : undefined }));
-    const rest = this.entities.length - matched;
+    otherOn.addEventListener('change', () => set({ other: otherOn.checked ? plainSymbols(OTHER_COLOR, this.present) : undefined }));
+    const rest = tally.rest;
     return h(
       'div',
       { class: 'lsty__panel' },
@@ -237,10 +252,10 @@ class LayerStyleDialog {
           'tbody',
           null,
           rows,
-          h('tr', { class: 'lsty__other' }, h('td', null, otherOn), h('td', null, c.other ? symbolSetSlots(this.ctx, c.other, this.classes, (s) => set({ other: s }), 'Diğer değerler') : h('span', { class: 'lsty__muted' }, 'çizilmez')), h('td', { colspan: '2' }, 'Diğer değerler'), h('td', { class: 'num' }, String(rest)), h('td', null, '')),
+          h('tr', { class: 'lsty__other' }, h('td', null, otherOn), h('td', null, c.other ? symbolSetSlots(this.ctx, c.other, this.classes, (s) => set({ other: s }), CLASSIFY_TEXTS.other) : h('span', { class: 'lsty__muted' }, 'çizilmez')), h('td', { colspan: '2' }, CLASSIFY_TEXTS.other), h('td', { class: 'num' }, String(rest)), h('td', null, '')),
         ),
       ),
-      c.categories.length ? null : h('p', { class: 'lsty__help' }, 'Bir alan adı yazıp “Değerlerden sınıfla”ya basın: her farklı değer bir kategori olur.'),
+      c.categories.length ? null : h('p', { class: 'lsty__help' }, CLASSIFY_TEXTS.categoriesHelp),
       h('div', { class: 'lsty__tools' }, add, clear),
     );
   }
@@ -252,22 +267,20 @@ class LayerStyleDialog {
       this.render();
     };
     const { values: nums, error } = g.expr ? numbersOf(this.entities, g.expr, this.exprScope) : { values: [] as number[], error: undefined };
-    const countIn = (min: number, max: number, last: boolean) => nums.filter((v) => v >= min && (v < max || (last && v <= max))).length;
     const expr = this.exprField(g.expr, (v) => set({ expr: v }), 'Sayı veren ifade: $alan, "Kat"');
     if (error) expr.error.textContent = error;
-    else if (g.expr && !nums.length) expr.error.textContent = 'Bu ifade nesnelerde sayı vermiyor.';
+    else if (g.expr && !nums.length) expr.error.textContent = CLASSIFY_TEXTS.noNumbers;
     const method = h('select', { class: 'field', 'aria-label': 'Yöntem' }, h('option', { value: 'interval', selected: this.gradMethod === 'interval' }, 'Eşit aralık'), h('option', { value: 'count', selected: this.gradMethod === 'count' }, 'Eşit sayı (dilimler)'));
     method.addEventListener('change', () => (this.gradMethod = method.value as 'interval' | 'count'));
     const n = h('input', { class: 'field num lsty__n', value: String(this.gradCount), inputmode: 'numeric', 'aria-label': 'Sınıf sayısı' });
-    n.addEventListener('change', () => (this.gradCount = Math.min(20, Math.max(1, Math.round(Number(n.value)) || 5))));
+    n.addEventListener('change', () => (this.gradCount = classCount(n.value)));
     const ramp = h('select', { class: 'field', 'aria-label': 'Renk rampası' }, Object.entries(RAMPS).map(([k, r]) => h('option', { value: k, selected: k === this.ramp }, r.label)));
     ramp.addEventListener('change', () => (this.ramp = ramp.value));
     const classify = h('button', { class: 'btn btn--small', type: 'button', disabled: !nums.length }, 'Sınıfla');
     classify.addEventListener('click', () => {
-      const cls = this.gradMethod === 'interval' ? equalInterval(nums, this.gradCount) : equalCount(nums, this.gradCount);
-      const colors = rampColors(RAMPS[this.ramp].stops, cls.length);
-      set({ classes: cls.map((c, i) => ({ ...c, label: classLabel(c), symbols: plainSymbols(colors[i], this.present) })) });
-      this.say(`${cls.length} sınıf, ${nums.length} sayısal değerden.`);
+      const classes = graduatedOf(nums, this.gradMethod, this.gradCount, this.ramp, this.present);
+      set({ classes });
+      this.say(CLASSIFY_TEXTS.classified(classes.length, nums.length));
     });
     const rows = g.classes.map((c, i) => {
       const upd = (patch: Partial<Graduated['classes'][number]>) => set({ classes: g.classes.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
@@ -283,7 +296,7 @@ class LayerStyleDialog {
       label.addEventListener('change', () => upd({ label: label.value }));
       const del = h('button', { class: 'ibtn', type: 'button', 'aria-label': 'Sınıfı sil' }, icon('trash', 15));
       del.addEventListener('click', () => set({ classes: g.classes.filter((_, j) => j !== i) }));
-      return h('tr', null, h('td', null, symbolSetSlots(this.ctx, c.symbols, this.classes, (s) => upd({ symbols: s }), c.label)), h('td', null, numIn(c.min, 'min')), h('td', null, numIn(c.max, 'max')), h('td', null, label), h('td', { class: 'num' }, String(countIn(c.min, c.max, i === g.classes.length - 1))), h('td', null, del));
+      return h('tr', null, h('td', null, symbolSetSlots(this.ctx, c.symbols, this.classes, (s) => upd({ symbols: s }), c.label)), h('td', null, numIn(c.min, 'min')), h('td', null, numIn(c.max, 'max')), h('td', null, label), h('td', { class: 'num' }, String(countIn(nums, c.min, c.max, i === g.classes.length - 1))), h('td', null, del));
     });
     return h(
       'div',
@@ -297,7 +310,7 @@ class LayerStyleDialog {
         h('thead', null, h('tr', null, h('th', null, 'Sembol'), h('th', null, 'Alt (dahil)'), h('th', null, 'Üst'), h('th', null, 'Etiket'), h('th', { class: 'num' }, 'Nesne'), h('th', null, ''))),
         h('tbody', null, rows),
       ),
-      g.classes.length ? h('p', { class: 'lsty__help' }, 'Bir değer alt sınıra eşitse o sınıfa girer; son sınıf üst sınırını da içerir.') : h('p', { class: 'lsty__help' }, 'Sayı veren bir ifade yazıp “Sınıfla”ya basın.'),
+      g.classes.length ? h('p', { class: 'lsty__help' }, CLASSIFY_TEXTS.classesHelp) : h('p', { class: 'lsty__help' }, CLASSIFY_TEXTS.classesEmptyHelp),
     );
   }
 }

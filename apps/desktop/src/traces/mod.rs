@@ -103,8 +103,25 @@ mod tests {
                 }
             }
         }
+        for (id, why) in format::PENDING {
+            report.push(format!("– {id}: atlandı, geçmedi: {why}"));
+        }
         println!("{}", report.join("\n"));
         assert_eq!(failed, 0, "\n{}", report.join("\n"));
+    }
+
+    /// A pending trace is still there and still cannot be read: once the
+    /// desktop plays its feature, its entry must go and the trace be played.
+    #[test]
+    fn pending_traces_are_still_pending() {
+        for (id, why) in format::PENDING {
+            let path = folder().join(format!("{id}.json"));
+            assert!(path.exists(), "{id}: izi yok, bekleyenlerden çıkarın");
+            assert!(
+                Trace::read(&path).is_err(),
+                "{id} artık okunuyor; bekleyenlerden çıkarıp oynatın ({why})"
+            );
+        }
     }
 
     #[test]

@@ -47,6 +47,7 @@ apps/web/src/processing/
   modelRunner.ts     Modeli çalıştırma (tek geri alma adımı, hata ve Durdur'da geri alma), modelAsTool
   modelEdit.ts       Model taslağını düzenleme (tasarımcının işlemleri, saf)
   processing.test.ts Birim testleri
+  cases.test.ts      İki platformun ortak durumları (fixtures/processing/v1): sayfada ve işçinin yolundan
   (ifade dili model/expression/ altındadır: stil motoru da kullanır)
   worker/
     protocol.ts      Sayfa ↔ worker mesajları
@@ -112,7 +113,7 @@ export const vertexNumbering = defineTool({
 
 | Tür | Pencerede değer (`ParamValues`) | `run`'da değer (`ResolvedValues`) | Seçenekler |
 |---|---|---|---|
-| `features` | `{ scope: 'selection' \| 'visible' \| 'all' }`, `{ scope: 'layer', layerId }`, `{ scope: 'ids', ids }` | `FeatureSet { entities, description }` | `kinds` (uygun nesne türleri), `scopes` (sunulan kapsamlar) |
+| `features` | `{ scope: 'selection' \| 'visible' \| 'all' }`, `{ scope: 'layer', layerId }`, `{ scope: 'ids', ids }` | `FeatureSet { entities, description }` | `kinds` (uygun nesne türleri), `scopes` (sunulan kapsamlar), `writes` (araç bu nesneleri değiştirir) |
 | `number` | `number` | aynı | `min`, `max`, `integer`, `unit` |
 | `string` | `string` | aynı | `placeholder`, `maxLength`, `allowEmpty` |
 | `boolean` | `boolean` | aynı | — |
@@ -131,6 +132,7 @@ sağlanınca gösterilir ve denetlenir), `default` (sabit ya da
 - **Nesne türü süzgeci:** `features` değeri isteğe bağlı `kinds` taşır. Kapsamda aracın alabildiği iki ya da daha çok tür varsa pencere her tür için sayılı bir düğme gösterir ("Kapalı alan 118"); kullanıcı bu çalıştırmada yalnızca bazı türleri alabilir (örneğin yalnızca kapalı alanların kenarlarını yazmak). Hiç tür kalmazsa araç çalışmaz.
 - **Kapsamlar:** "Seçili" seçimdeki nesneler; "Görünen" kutusu ekrandaki görünür alanla kesişen, görünür katmanlardaki nesneler (yardımcı çizgiler hariç; kutu testini görünümün geometri deposu yapar); "Tümü" görünür katmanlardaki bütün nesneler; "Katman" bir katman ya da grubun altındaki bütün katmanlar (gizli olsa bile); "ids" modellerde önceki adımın çıktısıdır ve pencerede sunulmaz. `kinds` dışındaki nesneler sessizce elenir; pencere ne kadar nesne okunacağını canlı gösterir.
 - **Boş girdi:** zorunlu bir `features` parametresi hiç nesneye çözülmezse çalıştırıcı aracı çalıştırmaz ve alanın altına yönlendiren bir mesaj yazar ("Önce nesneleri seçin ya da kapsamı değiştirin"). Model içinde (`ids`) boş çıktı hata değildir.
+- **Değiştirilen girdi (`writes`):** araç girdisinin nesnelerini değiştiriyorsa (Öznitelik hesapla) kilitli katmandaki nesneler girdiye alınmaz ve çalıştırma başında söylenir: "“Nesneler”: 1 nesne kilitli katmanda olduğu için işleme alınmadı." Özet, çıktılar ve modelin sonraki adımı yalnız yazılanı sayar. Nesnelerin hepsi kilitliyse araç çalışmaz: "“Nesneler”: seçili nesnelerin hepsi kilitli katmanda. Kilidi Katmanlar panelinden açın." (kapsamın sözüyle: görünen alandaki, görünen katmanlardaki, bu katmandaki). Uygulamadaki kilitli katman atlaması güvenlik ağı olarak kalır.
 - **Hedef katman:** `{ newName }` aynı adlı bir katman varsa onu kullanır (araç ikinci kez çalışınca aynı "Köşe noktaları" katmanına yazar); yoksa katman yalnızca araç gerçekten ona yazarsa oluşturulur. Kilitli katman seçilemez; kilitli katmana düşen değişiklikler atlanır ve sayısı bildirilir.
 
 ### 4.3 Çalışma bağlamı ve değişiklik kümesi
@@ -275,7 +277,7 @@ değişmiş, katman silinmiş) değerler varsayılana döner.
 2. `processing/builtin/<ad>.ts` içinde `defineTool({...})` ile tanımı yazın: kimlik, etiket, kategori, simge, açıklama, yardım, anahtar kelimeler, takma adlar, `targets`, `parameters` (`as const`), `outputs`, gerekirse `validate` ve `preview`, `run`.
 3. `processing/builtin/index.ts` içindeki `BUILTIN_TOOLS` listesine ekleyin. Kategori yoksa `categories.ts`'e ekleyin.
 4. Simge yoksa `ui/icons.ts`'e çizin (DESIGN.md §6).
-5. `processing.test.ts`'e (ya da aracın yanına `*.test.ts`) saf çekirdek ve `ProcessingRunner` üzerinde belgeyle bir test ekleyin: değişiklik, tek geri alma adımı, sınır durumları.
+5. `processing.test.ts`'e (ya da aracın yanına `*.test.ts`) saf çekirdek ve `ProcessingRunner` üzerinde belgeyle bir test ekleyin: değişiklik, tek geri alma adımı, sınır durumları. Yerleşik araç ve model `fixtures/processing/v1/cases.json`'a en az bir başarılı ve bir ret durumuyla girer; masaüstü (`kentos-processing`) aynı durumları oynatır ([fixtures/processing/README.md](../fixtures/processing/README.md)).
 6. Yeni bir kullanıcı akışıysa `apps/web/scripts/e2e/smoke.mjs`'e bir kontrol ekleyin.
 
 Pencere, araç kutusu satırı, menü öğesi, komut ve takma adlar kendiliğinden

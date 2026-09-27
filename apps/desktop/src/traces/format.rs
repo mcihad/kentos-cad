@@ -147,6 +147,15 @@ where
     T::deserialize(d).map(Some)
 }
 
+/// Traces of web features the desktop does not have yet, by id, with why.
+/// They are left out of [`Trace::all`] and said as skipped, never passed;
+/// the entry goes with the port (a test fails once one would play).
+#[cfg(test)]
+pub const PENDING: &[(&str, &str)] = &[(
+    "object-tracking",
+    "Nesne izleme masaüstünde henüz yok (TODOS.md UX-01); iz, izleme noktaları ve `rest` adımı onunla gelir",
+)];
+
 impl Trace {
     pub fn read(path: &Path) -> Result<Self, String> {
         let text = std::fs::read_to_string(path)
@@ -159,7 +168,7 @@ impl Trace {
         Ok(trace)
     }
 
-    /// Every trace of the folder, by file name.
+    /// Every trace of the folder, by file name, but the [`PENDING`] ones.
     #[cfg(test)]
     pub fn all() -> Result<Vec<Self>, String> {
         let dir = folder();
@@ -167,6 +176,11 @@ impl Trace {
             .map_err(|e| format!("{} okunamadı: {e}", dir.display()))?
             .filter_map(|entry| entry.ok().map(|e| e.path()))
             .filter(|p| p.extension().is_some_and(|e| e == "json"))
+            .filter(|p| {
+                !PENDING
+                    .iter()
+                    .any(|(id, _)| p.file_stem().is_some_and(|s| s == *id))
+            })
             .collect();
         paths.sort();
         paths.iter().map(|p| Self::read(p)).collect()

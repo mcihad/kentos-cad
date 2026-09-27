@@ -47,6 +47,7 @@ Bir iz, kullanıcının çizim alanında yaptıklarını adım adım yazar: komu
 | `v1/measure-parcel.json` | Mesafe ölç, Alan hesapla ve Parsel oluştur ([ADR 0067](../../docs/adr/0067-desktop-measure-and-parcel.md)): yolun noktaları, Uzunluk (U) beklerken Ctrl+Z, Geri (G) gibi, noktayı alır ve beklemeyi bitirir, Enter ile toplam uzunluk (hiçbir şey yazılmaz); dört köşe ve ilk köşeye tıklayarak kapanan alanın alanı ve çevresi; parsel katmanına numarasıyla yazılan, seçilen ve tek adımda geri alınan parsel (`areas.kcad` üstünde) |
 | `v1/grips.json` | Tutamaçlar ([ADR 0068](../../docs/adr/0068-desktop-grips-and-hover-card.md)): seçili çizginin ucunu sürükleyerek taşıma ve tek adımda geri alma; sürüklenmeden tıklanan tutamaç sıcak kalır, sonraki tık yerleştirir; Esc tutamacı bırakır (seçim kalır), Enter imlecin olduğu yere koyar; kapalı alanın kenar ortası yeni köşe olur; kilitli katmandaki nesnenin tutamacı alınmaz, basmak seçim kutusudur (`objects.kcad` üstünde) |
 | `v1/point-calc.json` | Nokta hesapla, çalışan Çizgi'nin içinde (`UX-07`): nokta beklenirken komut satırına yazılan takma ad (`YAN`, `KKES`, `DKES`, `HAT`, `AM`, `ORTA`) hesaplayıcıyı açar, Çizgi askıda kalır; referanslar kenetlenir (kilitli katmandaki çizgi de); hesaplanan nokta Çizgi'ye tıklanmış gibi gider ve iletisi projenin ondalıklarıyla yazılır; iki çözümden tıklanan, paralel doğruların uyarısı, `1/4` oranı, grad açı; okuyamadığı yazıyı hesaplayıcı her adımda kendi sözüyle reddeder (referans çizimde gösterilir; değer türünün biçimiyle, açı projenin biriminde; iki çözümden biri tıklanır), adım kalır; Esc askıdaki komuta hiçbir şey eklemeden döner; Ctrl+Z hesaplayıcının son referansını geri alır, çizimi geri almaz (`objects.kcad` üstünde) |
+| `v1/object-tracking.json` | Nesne izleme (`UX-07`), Nokta aracında: kenette durarak (`rest`) izleme noktası alma, noktanın yatay hizasına kilitlenme ve tıklananın hizaya oturması, hizadayken yazılan mesafe (noktadan hiza boyunca), iki noktanın hizalarının kesişimi, alınmış noktada yeniden durarak bırakma, Shift+F3 izlemeyi kapatır ama noktaları tutar, yeniden açınca kalan nokta hiza verir, en çok üç nokta (dördüncüsü en eskisini düşürür), araçtan çıkınca noktalar gider (`objects.kcad` üstünde) |
 | `v1/empty.kcad` | İzlerin başladığı boş çizim (`.kcad` v1) |
 | `v1/objects.kcad` | Seçim, kenet ve nokta hesabı izlerinin çizimi: çizgiler (1–3; 2 ile 3 (9,6; 8,8)'de kesişir), kapalı alan (4), nokta (5), kilitli katmanda çizgi (6), gizli katmanda çizgi (7) |
 | `v1/edits.kcad` | Değiştirme izlerinin çizimi (ADR 0047): (−20, 12)'de kesişen 1 ve 2, x = −4'te sınır 3, köşesi (0, 4)'te L biçimli çoklu çizgi 4, (14, 4)'te birleşen 5 ve 6, kırılacak 7, (8, −4)'te uç uca gelen 8 ve 9, kapalı alan 10, 10 m'lik 11, 12, 9'un ucundan devam eden, kilitli katmandaki 13 |
@@ -75,9 +76,10 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | Eylem | Anlamı |
 |---|---|
 | `run` | Komutu kimliğiyle çalıştırır; şeritten, menüden ya da komut satırından seçmekle aynıdır (`tool.polygon`) |
-| `key` | Tek tuş: `Enter`, `Esc`, `Tab`, `Backspace`, `Space`, `Delete`, `F3` (kenet), `F8` (orto), bir harf (`G`), `-`, `+` ya da `Ctrl+`, `Shift+`, `Ctrl+Shift+` akoru (`Ctrl+Z`, `Shift+H`, `Ctrl+Shift+V`). Shift'le basılan harf, klavyenin yaptığı gibi büyük gelir |
+| `key` | Tek tuş: `Enter`, `Esc`, `Tab`, `Backspace`, `Space`, `Delete`, `F3` (kenet), `F8` (orto), bir harf (`G`), `-`, `+` ya da `Ctrl+`, `Shift+`, `Ctrl+Shift+` akoru (`Ctrl+Z`, `Shift+H`, `Ctrl+Shift+V`, `Shift+F3` nesne izleme). Shift'le basılan harf, klavyenin yaptığı gibi büyük gelir |
 | `text` | Karakterler tek tek yazılır. Klavyenin ürettiği metin sayılır, fiziksel tuş konumu değil |
 | `move` | İmleç çizimde bu noktaya gelir |
+| `rest` | İmleç bu noktaya gelir ve nesne izlemesinin noktayı alacağı (ya da bırakacağı) kadar durur: web'de 350 ms'lik bekleme süresinden uzun (500 ms). Masaüstü oynatıcısı kendi saatini bu süreden öteye ilerletir |
 | `click`, `doubleClick` | Sol tuşla tıklama ya da çift tıklama |
 | `drag` | `[[doğu, kuzey], [doğu, kuzey]]`: sol tuş ilk noktada basılır, imleç ortadan ikinci noktaya gider, orada bırakılır (seçim kutusu) |
 | `rightClick` | Sağ tuşa kısa basıp bırakma; menüyü açan basılı tutmadan kısa |
@@ -106,6 +108,8 @@ Adımlardaki koordinatlar, `view.center`'a göre doğu ve kuzey farklarıdır, m
 | `selected` | Seçili nesnelerin kimlikleri, seçildikleri sırayla (`[1, 4]`) |
 | `hover` | İmlecin altında vurgulanan nesnenin kimliği; yoksa `null` |
 | `snap` | Kenet işaretinin türü (`endpoint`, `midpoint`, `center`, `node`, `quadrant`, `intersection`, `perpendicular`, `tangent`, `nearest`); yoksa `null` |
+| `trackPoints` | Nesne izlemesinin aldığı noktalar, alınma sırasıyla, `view.center`'a göre `[doğu, kuzey]` (`clickTolerance` içinde) |
+| `track` | İmlecin nesne izlemesiyle kilitlendiği hiza: `null` ya da `{ point, lines: [{ origin, angle }] }`. `point` kilitlenilen yer (`clickTolerance` içinde), `lines` bir hiza ya da kesişen iki hiza, çekirdeğin sırasıyla; `origin` hizanın alınmış noktası, `angle` doğudan saat yönünün tersine derece (tam). Kenet varken izleme yoktur |
 | `ids` | Çizimdeki nesnelerin kimlikleri, belge sırasıyla: geri alınan silmenin nesneleri yerlerine döner |
 | `objects` | Kimliğiyle verilen nesneler, her biri `newest` gibi (`id`, `kind`, `points` …): yerinde taşınan, döndürülen ya da aynalanan nesne (ADR 0037) |
 
