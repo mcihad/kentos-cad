@@ -928,6 +928,39 @@ try {
     JSON.stringify(virtualTree),
   );
 
+  // The layer tree keeps the keyboard: a click on a row gives it the keys, a click on a row's eye or colour
+  // swatch leaves them there (row buttons take no focus), the swatch's menu closed with Escape too, and the
+  // keys still reach it after the rows in view were built anew.
+  {
+    const treeHasKeys = () => b.eval(`document.activeElement === document.querySelector('.panel--layers .tree')`);
+    const chosenRow = () => b.eval(`document.querySelector('.panel--layers .tree__row[aria-selected="true"]')?.dataset.id ?? null`);
+    const centre = (sel) => b.eval(`(() => { const r = document.querySelector(${JSON.stringify(sel)}); if (!r) return null; r.scrollIntoView({ block: 'nearest' }); const box = r.getBoundingClientRect(); return [Math.round(box.left + box.width / 2), Math.round(box.top + box.height / 2)]; })()`);
+    await b.click(...(await centre('.panel--layers .tree__row .tree__name')));
+    const afterRow = await treeHasKeys();
+    const eye = await centre('.panel--layers .tree__row .ibtn--row');
+    await b.click(...eye);
+    await b.click(...eye);
+    const afterEye = await treeHasKeys();
+    const swatch = await centre('.panel--layers .tree__row .swatch--btn');
+    await b.click(...swatch);
+    await sleep(120);
+    const menuOpened = await b.eval(`!!document.querySelector('.menu')`);
+    await b.key('Escape');
+    await sleep(120);
+    const afterMenu = await treeHasKeys();
+    const from = await chosenRow();
+    for (let i = 0; i < 40; i++) await b.key('ArrowDown');
+    await sleep(150);
+    const moved = { from, to: await chosenRow(), keys: await treeHasKeys() };
+    await b.key('Home');
+    await b.eval('window.kentos.view.focus()');
+    check(
+      'the layer tree keeps the keyboard after clicks on a row, its eye and its colour menu, and after 40 ↓ that build other rows',
+      afterRow && afterEye && menuOpened && afterMenu && moved.keys && !!moved.to && moved.to !== moved.from,
+      JSON.stringify({ afterRow, afterEye, menuOpened, afterMenu, moved }),
+    );
+  }
+
   // Yeni katman is one undo step “Katman ekle”: undo takes the layer away and gives the active layer back.
   {
     const layerState = () => b.eval(`({ active: window.kentos.doc.layers.active.value, count: window.kentos.doc.layers.leaves().length, said: window.kentos.log.entries.value.at(-1)?.text ?? '' })`);

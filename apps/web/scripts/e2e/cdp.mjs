@@ -146,6 +146,13 @@ export async function launch(url, { width = 1600, height = 900, args = [] } = {}
         Alt: [18, 'AltLeft'],
         F3: [114, 'F3'],
         F8: [119, 'F8'],
+        F2: [113, 'F2'],
+        ArrowUp: [38, 'ArrowUp'],
+        ArrowDown: [40, 'ArrowDown'],
+        ArrowLeft: [37, 'ArrowLeft'],
+        ArrowRight: [39, 'ArrowRight'],
+        Home: [36, 'Home'],
+        End: [35, 'End'],
         // Printable keys whose char code is not their virtual key (46 would be Delete).
         '.': [190, 'Period', '.'],
         ',': [188, 'Comma', ','],
