@@ -167,8 +167,10 @@ fn g_while_a_length_is_waited_for_takes_the_point_back_and_ends_the_wait() {
     b.type_text("U");
     assert_eq!(
         b.session.prompt().text(),
-        "Mesafe ölç: son doğrultuda devam edilecek uzunluğu yazın"
+        "Mesafe ölç: son doğrultuda devam edilecek uzunluğu yazın [Geri (G)]"
     );
+    // G is the prompt's own option now, not Kapalı alan's shortcut (docs/adr/0069).
+    assert_eq!(b.options(), ["G"]);
     b.type_text("G");
     assert_eq!(b.points(), 1);
     assert_eq!(b.options(), ["Y", "U", "G"]);

@@ -174,6 +174,36 @@ impl Spatial {
         self.store.snap(at, tol, kinds, from)
     }
 
+    /// The grips of these objects, unknown ones left out, in the given order
+    /// (`PickIndex.grips`, the store's `entityGrips`): the order `move_grip`
+    /// reads an index in.
+    pub fn grips(&self, slots: &[Slot]) -> Vec<GripSet> {
+        let ids: Vec<f64> = slots.iter().map(|s| f64::from(s.0)).collect();
+        let f = self.store.grips(&ids);
+        let mut out = Vec::new();
+        let mut i = 0;
+        while i + 2 < f.len() {
+            let (id, count, vertices) = (f[i], f[i + 1] as usize, f[i + 2] as usize);
+            i += 3;
+            let records = f.get(i..i + 3 * count).unwrap_or_default();
+            i += 3 * count;
+            let Some(slot) = slot(id) else { continue };
+            out.push(GripSet {
+                slot,
+                points: records
+                    .chunks_exact(3)
+                    .map(|r| Vec2::new(r[0], r[1]))
+                    .collect(),
+                segments: records
+                    .chunks_exact(3)
+                    .map(|r| (r[2] >= 0.0).then_some(r[2] as usize))
+                    .collect(),
+                vertices,
+            });
+        }
+        out
+    }
+
     /// The box around every object, as zoom to extents takes it (`PickIndex.extent`).
     pub fn extent(&self) -> Option<Bounds> {
         self.store.extent(None)
@@ -319,6 +349,39 @@ pub fn dimension_layout(
 }
 
 /// A store id back to the document's slot (ids are the slots, exactly).
+/// An object's grips as the store lists them (the web's `GripSet`,
+/// `viewport/storeRecords.ts`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct GripSet {
+    pub slot: Slot,
+    /// In the order `move_grip` reads an index in: a path's vertices, then a
+    /// mid grip per segment, then its holes' vertices.
+    pub points: Vec<Vec2>,
+    /// The segment a mid grip splits or bends; none for the other grips.
+    pub segments: Vec<Option<usize>>,
+    /// A path's vertex count; 0 for the other kinds.
+    pub vertices: usize,
+}
+
+impl GripSet {
+    /// Whether grip `index` is shown and can be taken: a mid grip only while
+    /// its segment is at least 28 px long on the area, to tell it from the
+    /// vertices (the web's `midGripVisible`).
+    pub fn shown(&self, index: usize, view: &dyn crate::tool::View) -> bool {
+        let Some(Some(segment)) = self.segments.get(index) else {
+            return true;
+        };
+        let (Some(&a), Some(&b)) = (
+            self.points.get(*segment),
+            self.points.get((segment + 1) % self.vertices.max(1)),
+        ) else {
+            return true;
+        };
+        let (a, b) = (view.to_screen(a), view.to_screen(b));
+        kentos_geometry_core::jsmath::js_hypot(b[0] - a[0], b[1] - a[1]) >= 28.0
+    }
+}
+
 pub(crate) fn slot(id: f64) -> Option<Slot> {
     (id >= 0.0 && id <= f64::from(u32::MAX) && id.fract() == 0.0).then_some(Slot(id as u32))
 }

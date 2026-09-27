@@ -101,6 +101,8 @@ pub fn label(operation: Option<CreateOperation>) -> &'static str {
         Some(CreateOperation::PerpendicularOut) => "Dik çık",
         Some(CreateOperation::Divide) => "Böl",
         Some(CreateOperation::Hatch) => "Tarama",
+        // İçine tıklayarak alan (docs/adr/0065, 0069).
+        Some(CreateOperation::Boundary) => "Alan oluştur",
     }
 }
 

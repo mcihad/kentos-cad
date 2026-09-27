@@ -17,14 +17,14 @@
 //! - Çizgiye çevir: an area becomes closed polylines, its holes ones of
 //!   their own.
 //!
-//! Each writes one undo step named after the tool, into the document as the
-//! web's do (no product command yet). The area algebra is the shared core's
-//! (exact: arcs stay arcs, input corners keep their coordinates).
+//! Each writes one undo step named after the tool through the product
+//! command `cad.entities.edit`, the objects by persistent id and the core's
+//! geometry in its input, as the web's do (docs/adr/0069). Objects on locked
+//! layers are left out before the command. The area algebra is the shared
+//! core's (exact: arcs stay arcs, input corners keep their coordinates).
 
-use std::collections::BTreeMap;
-
-use kentos_contracts::{Entity, EntityBase};
-use kentos_domain::{Document, Slot, SlotsExhausted};
+use kentos_contracts::{EditOperation, EntitiesEdited, Entity, EntityEdit};
+use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, polygon_ring};
 use kentos_geometry_core::geom::arrangement::{Area, Source};
 use kentos_geometry_core::geom::intersect::Edge;
@@ -36,7 +36,7 @@ use kentos_geometry_core::ops::areas::{
     area_of_entity, line_source, polygon_of_area, polylines_of_polygon,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::geometry::{edit_geometry, entity_of, shape};
+use kentos_native_application::geometry::{edit_geometry, shape};
 
 use crate::Vec2;
 use crate::edge::{self, Outline};
@@ -84,39 +84,56 @@ fn total_area(list: &[Area]) -> f64 {
     list.iter().map(net_area).sum()
 }
 
-/// A polygon for `a` on the layer of `from`, with its colour and, when
-/// `keep_data`, its attributes and label (the web's `areaEntity`).
-fn area_entity(a: &Area, from: &Entity, keep_data: bool) -> Option<Entity> {
-    let geometry = edit_geometry(polygon_of_area(a).shape)?;
-    let base = from.base();
-    Some(entity_of(
-        &geometry,
-        EntityBase {
-            id: 0,
-            layer_id: base.layer_id.clone(),
-            color: base.color.clone(),
-            attrs: if keep_data {
-                base.attrs.clone()
-            } else {
-                BTreeMap::new()
-            },
-            label: if keep_data { base.label.clone() } else { None },
-            symbol: None,
-        },
-    ))
-}
-
-/// Adds polygons for `areas` (the web's `addAreas`).
-fn add_areas(
-    doc: &mut Document,
-    areas: &[Area],
-    from: &Entity,
-    keep_data: bool,
-) -> Result<Vec<Slot>, SlotsExhausted> {
+/// New areas made from the object `from` names (`add`): its layer and
+/// colour, and with `keep_data` its attributes and label; never its symbol
+/// (the web's `addAreas`).
+fn add_areas(areas: &[Area], from: &str, keep_data: bool) -> Vec<EntityEdit> {
     areas
         .iter()
-        .filter_map(|a| area_entity(a, from, keep_data))
-        .map(|e| doc.add(e))
+        .filter_map(|a| edit_geometry(polygon_of_area(a).shape))
+        .map(|geometry| EntityEdit::Add {
+            from: from.to_owned(),
+            geometry,
+            keep_data: Some(keep_data),
+        })
+        .collect()
+}
+
+/// The object at `slot` goes (`remove`).
+fn removal(slot: Slot, doc: &Document) -> EntityEdit {
+    EntityEdit::Remove {
+        uid: edge::uid(doc, slot),
+    }
+}
+
+/// The object at `slot` becomes the area `a` in its place, keeping its
+/// data (`replace` with keepData).
+fn replacement(slot: Slot, a: &Area, doc: &Document) -> Option<EntityEdit> {
+    Some(EntityEdit::Replace {
+        uid: edge::uid(doc, slot),
+        geometry: edit_geometry(polygon_of_area(a).shape)?,
+        keep_data: Some(true),
+    })
+}
+
+/// Each object followed by the `n` new ones made from it, in order: what a
+/// split or a polygon's holes select (the web's `flatMap` over `made`).
+fn interleaved(each: &[(Slot, usize)], made: &[Slot]) -> Vec<Slot> {
+    let mut out = Vec::with_capacity(each.len() + made.len());
+    let mut rest = made.iter();
+    for &(slot, n) in each {
+        out.push(slot);
+        out.extend(rest.by_ref().take(n));
+    }
+    out
+}
+
+/// The slots of the objects an edit made, in its order (the web's `createdIds`).
+fn created(out: &EntitiesEdited, doc: &Document) -> Vec<Slot> {
+    out.created
+        .iter()
+        .filter_map(|uid| Uuid::parse_str(uid).ok())
+        .filter_map(|uid| doc.slot_of(uid))
         .collect()
 }
 
@@ -148,17 +165,6 @@ fn path_source(pts: &[Vec2]) -> Source {
             .collect(),
         points: Some(pts.to_vec()),
         cut: Some(true),
-    }
-}
-
-/// Says a failed write: the drawing has no ids left.
-fn said(result: Result<Vec<Slot>, SlotsExhausted>, cx: &mut Context<'_>) -> Option<Vec<Slot>> {
-    match result {
-        Ok(slots) => Some(slots),
-        Err(e) => {
-            cx.say(Level::Error, e.to_string());
-            None
-        }
     }
 }
 
@@ -233,15 +239,15 @@ impl AreaAction {
             return;
         }
         let result = union_areas(&list.iter().map(|x| x.a.clone()).collect::<Vec<_>>());
-        let written = cx.doc.transact("Alan birleştir", |doc| {
-            doc.remove(&list.iter().map(|x| x.slot).collect::<Vec<_>>());
-            // The first picked area lends its layer, colour and data (tevhit: the parcel kept).
-            add_areas(doc, &result, &list[0].e, true)
-        });
-        let Some(created) = said(written, cx) else {
+        // The first picked area lends its layer, colour and data (tevhit: the parcel kept).
+        let doc = &*cx.doc;
+        let mut changes: Vec<EntityEdit> = list.iter().map(|x| removal(x.slot, doc)).collect();
+        changes.extend(add_areas(&result, &edge::uid(doc, list[0].slot), true));
+        let Some(out) = edge::write(EditOperation::AreaUnion, changes, cx) else {
             return;
         };
-        cx.selection.set(created);
+        let made = created(&out, cx.doc);
+        cx.selection.set(made);
         let parts = if result.len() == 1 {
             "tek alan".to_owned()
         } else {
@@ -275,17 +281,19 @@ impl AreaAction {
             return;
         }
         let erase = cx.memory.area_intersect_erase;
-        let written = cx.doc.transact("Alan kesiştir", |doc| {
-            if erase {
-                doc.remove(&list.iter().map(|x| x.slot).collect::<Vec<_>>());
-            }
-            // Kept sources keep their data; the overlap is a new, blank area.
-            add_areas(doc, &result, &list[0].e, erase)
-        });
-        let Some(created) = said(written, cx) else {
+        // Kept sources keep their data; the overlap is a new, blank area. Erased, it takes the first one's data.
+        let doc = &*cx.doc;
+        let mut changes: Vec<EntityEdit> = if erase {
+            list.iter().map(|x| removal(x.slot, doc)).collect()
+        } else {
+            Vec::new()
+        };
+        changes.extend(add_areas(&result, &edge::uid(doc, list[0].slot), erase));
+        let Some(out) = edge::write(EditOperation::AreaIntersect, changes, cx) else {
             return;
         };
-        cx.selection.set(created);
+        let made = created(&out, cx.doc);
+        cx.selection.set(made);
         let pieces = if result.len() > 1 {
             format!(" ({} parça)", result.len())
         } else {
@@ -345,27 +353,23 @@ impl AreaAction {
             );
             return;
         }
-        let written = cx.doc.transact("Alana çevir", |doc| {
-            let mut created = Vec::new();
-            for x in &closed {
-                // The object itself becomes an area: it keeps its slot and persistent id (docs/adr/0014).
-                if let Some(e) = area_entity(&x.a, &x.e, true) {
-                    doc.update(x.slot, e);
-                    created.push(x.slot);
-                }
-            }
-            // Line work stays; the regions it closes become new areas on its layer.
-            if let Some((_, first)) = lines.first()
-                && !faces.is_empty()
-            {
-                created.extend(add_areas(doc, &faces, first, false)?);
-            }
-            Ok(created)
-        });
-        let Some(created) = said(written, cx) else {
+        // The object itself becomes an area: it keeps its slot and persistent id (docs/adr/0014).
+        // Line work stays; the regions it closes become new, blank areas on its layer.
+        let mut changes: Vec<EntityEdit> = closed
+            .iter()
+            .filter_map(|x| replacement(x.slot, &x.a, doc))
+            .collect();
+        if let Some((first, _)) = lines.first()
+            && !faces.is_empty()
+        {
+            changes.extend(add_areas(&faces, &edge::uid(doc, *first), false));
+        }
+        let Some(out) = edge::write(EditOperation::ToArea, changes, cx) else {
             return;
         };
-        cx.selection.set(created);
+        let mut made: Vec<Slot> = closed.iter().map(|x| x.slot).collect();
+        made.extend(created(&out, cx.doc));
+        cx.selection.set(made);
         let mut parts = Vec::new();
         if !closed.is_empty() {
             parts.push(format!("{} nesne alana çevrildi", closed.len()));
@@ -392,49 +396,44 @@ impl AreaAction {
             cx.say(Level::Warn, "Çizgiye çevrilecek bir kapalı alan seçin.");
             return;
         }
-        let written = cx.doc.transact("Çizgiye çevir", |doc| {
-            let mut created = Vec::new();
-            for (slot, e) in &polys {
-                let Ok(rings) = polylines_of_polygon(&shape(e)) else {
+        // The outer ring is the area itself, now a polyline (its slot, persistent id and
+        // data kept, docs/adr/0014); holes become new, blank polylines from it.
+        let doc = &*cx.doc;
+        let mut changes = Vec::new();
+        let mut holes = Vec::new();
+        for (slot, e) in &polys {
+            let Ok(rings) = polylines_of_polygon(&shape(e)) else {
+                continue;
+            };
+            let uid = edge::uid(doc, *slot);
+            let mut more = 0;
+            for (i, ring) in rings.into_iter().enumerate() {
+                let Some(geometry) = edit_geometry(ring.shape) else {
                     continue;
                 };
-                for (i, ring) in rings.into_iter().enumerate() {
-                    let Some(geometry) = edit_geometry(ring.shape) else {
-                        continue;
-                    };
-                    let base = e.base();
-                    let init = entity_of(
-                        &geometry,
-                        EntityBase {
-                            id: 0,
-                            layer_id: base.layer_id.clone(),
-                            color: base.color.clone(),
-                            attrs: if i == 0 {
-                                base.attrs.clone()
-                            } else {
-                                BTreeMap::new()
-                            },
-                            label: if i == 0 { base.label.clone() } else { None },
-                            symbol: None,
-                        },
-                    );
-                    // The outer ring is the area itself, now a polyline (its slot and
-                    // persistent id kept, docs/adr/0014); holes become new objects.
-                    if i == 0 {
-                        doc.update(*slot, init);
-                        created.push(*slot);
-                    } else {
-                        created.push(doc.add(init)?);
-                    }
+                if i == 0 {
+                    changes.push(EntityEdit::Replace {
+                        uid: uid.clone(),
+                        geometry,
+                        keep_data: Some(true),
+                    });
+                } else {
+                    changes.push(EntityEdit::Add {
+                        from: uid.clone(),
+                        geometry,
+                        keep_data: Some(false),
+                    });
+                    more += 1;
                 }
             }
-            Ok(created)
-        });
-        let Some(created) = said(written, cx) else {
+            holes.push((*slot, more));
+        }
+        let Some(out) = edge::write(EditOperation::ToPolyline, changes, cx) else {
             return;
         };
-        let count = created.len();
-        cx.selection.set(created);
+        let made = interleaved(&holes, &created(&out, cx.doc));
+        let count = made.len();
+        cx.selection.set(made);
         cx.say(
             Level::Success,
             format!(
@@ -548,40 +547,23 @@ impl AreaSubtract {
     fn apply(&self, from: &[Picked], cutters: &[Picked], cx: &mut Context<'_>) {
         let cut: Vec<Area> = cutters.iter().map(|x| x.a.clone()).collect();
         let erase = cx.memory.area_subtract_erase;
-        let written = cx.doc.transact("Alan çıkar", |doc| {
-            let mut created = Vec::new();
-            let (mut changed, mut gone) = (0usize, 0usize);
-            for t in from {
-                let rest = subtract_areas(std::slice::from_ref(&t.a), &cut);
-                // Untouched areas stay as they are (a circle is not turned into a polygon for nothing).
-                let size = net_area(&t.a);
-                if rest.len() == 1 && (total_area(&rest) - size).abs() <= 1e-9 * size.max(1.0) {
-                    continue;
-                }
-                doc.remove(&[t.slot]);
-                created.extend(add_areas(doc, &rest, &t.e, true)?);
-                changed += 1;
-                if rest.is_empty() {
-                    gone += 1;
-                }
+        let doc = &*cx.doc;
+        let mut changes = Vec::new();
+        let (mut changed, mut gone) = (0usize, 0usize);
+        for t in from {
+            let rest = subtract_areas(std::slice::from_ref(&t.a), &cut);
+            // Untouched areas stay as they are (a circle is not turned into a polygon for nothing).
+            let size = net_area(&t.a);
+            if rest.len() == 1 && (total_area(&rest) - size).abs() <= 1e-9 * size.max(1.0) {
+                continue;
             }
-            if erase && changed > 0 {
-                let unlocked: Vec<Slot> = cutters
-                    .iter()
-                    .filter(|x| !doc.layers().is_locked(&x.e.base().layer_id))
-                    .map(|x| x.slot)
-                    .collect();
-                doc.remove(&unlocked);
+            changes.push(removal(t.slot, doc));
+            changes.extend(add_areas(&rest, &edge::uid(doc, t.slot), true));
+            changed += 1;
+            if rest.is_empty() {
+                gone += 1;
             }
-            Ok::<_, SlotsExhausted>((created, changed, gone))
-        });
-        let (created, changed, gone) = match written {
-            Ok(done) => done,
-            Err(e) => {
-                cx.say(Level::Error, e.to_string());
-                return;
-            }
-        };
+        }
         if changed == 0 {
             cx.say(
                 Level::Warn,
@@ -589,6 +571,19 @@ impl AreaSubtract {
             );
             return;
         }
+        // The cutters go too when asked, but not those on a locked layer: they are left out here.
+        if erase {
+            changes.extend(
+                cutters
+                    .iter()
+                    .filter(|x| !doc.layers().is_locked(&x.e.base().layer_id))
+                    .map(|x| removal(x.slot, doc)),
+            );
+        }
+        let Some(out) = edge::write(EditOperation::AreaSubtract, changes, cx) else {
+            return;
+        };
+        let created = created(&out, cx.doc);
         let left: Vec<Area> = created
             .iter()
             .filter_map(|&s| cx.doc.get(s).and_then(|e| area_of_entity(&shape(e))))
@@ -753,36 +748,30 @@ impl AreaSplit {
 
     /// The pieces the line cuts from the areas, with the area of each (the web's `split`).
     fn split(&mut self, cut: &Source, cutter: Option<Slot>, cx: &mut Context<'_>) -> Flow {
-        let list = self.list.clone();
-        let written = cx.doc.transact("Alan böl", |doc| {
-            let (mut created, mut sizes, mut changed) = (Vec::new(), Vec::new(), 0usize);
-            for t in &list {
-                if Some(t.slot) == cutter {
-                    continue;
-                }
-                let pieces = split_area(&t.a, cut);
-                if pieces.len() < 2 {
-                    continue;
-                }
-                // The first piece is the area itself, split: it keeps its slot and
-                // persistent id; the rest are new (docs/adr/0014).
-                if let Some(e) = area_entity(&pieces[0], &t.e, true) {
-                    doc.update(t.slot, e);
-                }
-                created.push(t.slot);
-                created.extend(add_areas(doc, &pieces[1..], &t.e, true)?);
-                sizes.extend(pieces.iter().map(net_area));
-                changed += 1;
+        let doc = &*cx.doc;
+        let mut changes = Vec::new();
+        // Each split area and how many new pieces come from it, in order.
+        let mut split: Vec<(Slot, usize)> = Vec::new();
+        let mut sizes = Vec::new();
+        for t in &self.list {
+            if Some(t.slot) == cutter {
+                continue;
             }
-            Ok::<_, SlotsExhausted>((created, sizes, changed))
-        });
-        let (created, sizes, changed) = match written {
-            Ok(done) => done,
-            Err(e) => {
-                cx.say(Level::Error, e.to_string());
-                return Flow::Stay;
+            let pieces = split_area(&t.a, cut);
+            if pieces.len() < 2 {
+                continue;
             }
-        };
+            // The first piece is the area itself, split: it keeps its slot and
+            // persistent id; the rest are new (docs/adr/0014).
+            let Some(first) = replacement(t.slot, &pieces[0], doc) else {
+                continue;
+            };
+            changes.push(first);
+            changes.extend(add_areas(&pieces[1..], &edge::uid(doc, t.slot), true));
+            split.push((t.slot, pieces.len() - 1));
+            sizes.extend(pieces.iter().map(net_area));
+        }
+        let changed = split.len();
         if changed == 0 {
             self.pts.clear();
             cx.say(
@@ -791,6 +780,10 @@ impl AreaSplit {
             );
             return Flow::Stay;
         }
+        let Some(out) = edge::write(EditOperation::AreaSplit, changes, cx) else {
+            return Flow::Stay;
+        };
+        let created = interleaved(&split, &created(&out, cx.doc));
         let count = created.len();
         cx.selection.set(created);
         let format = cx.format();

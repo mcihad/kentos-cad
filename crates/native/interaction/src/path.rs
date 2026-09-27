@@ -620,8 +620,10 @@ impl Tool for Path {
             return Prompt::new(label, "ilk noktayı belirtin");
         }
         let done = n >= self.shape.min();
+        // G takes the point back from here too, rather than start Kapalı alan (docs/adr/0069).
         if self.ask_length {
-            return Prompt::new(label, "son doğrultuda devam edilecek uzunluğu yazın");
+            return Prompt::new(label, "son doğrultuda devam edilecek uzunluğu yazın")
+                .option("Geri", "G");
         }
         if !self.arc_mode {
             let prompt = Prompt::new(label, "sonraki noktayı belirtin")

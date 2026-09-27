@@ -169,6 +169,8 @@ pub enum Message {
     TextField(crate::text_field::Event),
     /// Öznitelikler: an edit or a section toggled (properties/).
     Properties(crate::properties::Event),
+    /// The rollover card's wait is over, for this hover (hover_card.rs).
+    HoverCard(u64),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -301,6 +303,12 @@ pub struct App {
     pub cursor_input: bool,
     /// The strip over the drawing while a command runs (`drafting.commandBar`, command_bar.rs).
     pub command_bar: bool,
+    /// The rollover card shows (`drafting.hoverInfo`, hover_card.rs).
+    pub hover_info: bool,
+    /// The object whose rollover card shows (hover_card.rs).
+    pub hover_card: Option<kentos_domain::Slot>,
+    /// The hover the card's wait was started for (`Selection::hover_version`).
+    pub hover_seen: u64,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
     pub settings: Settings,
     /// The settings window's draft while it is open.
@@ -410,6 +418,9 @@ impl App {
             draft: Draft::default(),
             cursor_input: true,
             command_bar: false,
+            hover_info: true,
+            hover_card: None,
+            hover_seen: 0,
             settings,
             settings_draft: None,
             reported_failure: None,
@@ -514,7 +525,7 @@ impl App {
         let task = self.handle(message);
         self.follow_document();
         self.follow_selection_layers();
-        let task = Task::batch([task, self.text_field_tasks()]);
+        let task = Task::batch([task, self.text_field_tasks(), self.follow_hover()]);
         self.cloud_after(Instant::now());
         task
     }
@@ -594,6 +605,7 @@ impl App {
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
             Message::TextField(event) => self.text_field_event(event),
             Message::Properties(event) => self.properties_event(event),
+            Message::HoverCard(version) => self.hover_card_due(version),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -717,6 +729,7 @@ impl App {
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
+        self.hover_info = s.bool("drafting.hoverInfo");
         self.apply_appearance();
     }
 

@@ -3,24 +3,24 @@
 //! work closes makes it an area on the active layer (AutoCAD's BOUNDARY,
 //! Netcad's “alan oluştur”); closed groups inside it are holes unless Adalar
 //! is off. The boundary set is every visible layer, or one picked by an
-//! object of it (Sınır katmanı, K). One undo step, “Alan oluştur”, written
-//! into the document as the web's is.
+//! object of it (Sınır katmanı, K). One undo step, “Alan oluştur”, through
+//! `cad.entities.create` on the active layer (docs/adr/0069): the command's
+//! refusals and warnings are the tool's.
 
-use std::collections::BTreeMap;
-
-use kentos_contracts::EntityBase;
+use kentos_contracts::CreateOperation;
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::polygon_ring;
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::region::net_area;
 use kentos_geometry_core::ops::areas::polygon_of_area;
 use kentos_geometry_core::tools::point_text::js_trim;
-use kentos_native_application::geometry::{edit_geometry, entity_of};
+use kentos_native_application::geometry::edit_geometry;
 
 use crate::Vec2;
 use crate::faces;
 use crate::format::Format;
 use crate::log::Level;
+use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{self, Context, Flow, Memory, Pointer, Preview, Tag, Tone, Tool};
 
@@ -39,30 +39,6 @@ pub struct Boundary {
     /// Where the cursor is and the region around it.
     hover: Option<(Vec2, Option<Area>)>,
     memory: Memory,
-}
-
-/// The layer new objects go to, said as the web's `writableLayer` says it:
-/// none when it is locked; a hidden one with a warning.
-fn writable_layer(cx: &mut Context<'_>) -> Option<String> {
-    let layers = cx.doc.layers();
-    let id = layers.active().to_owned();
-    let name = layers.get(&id)?.name.clone();
-    if layers.is_locked(&id) {
-        cx.say(
-            Level::Warn,
-            format!(
-                "“{name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin."
-            ),
-        );
-        return None;
-    }
-    if !layers.is_visible(&id) {
-        cx.say(
-            Level::Warn,
-            format!("“{name}” katmanı gizli; çizilen nesne görünmeyecek."),
-        );
-    }
-    Some(id)
 }
 
 impl Boundary {
@@ -100,33 +76,14 @@ impl Boundary {
             );
             return;
         };
-        let Some(layer_id) = writable_layer(cx) else {
-            return;
-        };
         let Some(geometry) = edit_geometry(polygon_of_area(&area).shape) else {
             return;
         };
-        let e = entity_of(
-            &geometry,
-            EntityBase {
-                id: 0,
-                layer_id,
-                color: None,
-                attrs: BTreeMap::new(),
-                label: None,
-                symbol: None,
-            },
-        );
-        let written = cx
-            .doc
-            .transact("Alan oluştur", |doc| doc.add(e).map(|slot| vec![slot]));
-        let slots: Vec<Slot> = match written {
-            Ok(slots) => slots,
-            Err(e) => {
-                cx.say(Level::Error, e.to_string());
-                return;
-            }
+        let Some(out) = points::write_objects(vec![geometry], Some(CreateOperation::Boundary), cx)
+        else {
+            return;
         };
+        let slots: Vec<Slot> = out.ids.iter().map(|&id| Slot(id)).collect();
         cx.selection.set(slots);
         let holes = if area.holes.is_empty() {
             String::new()

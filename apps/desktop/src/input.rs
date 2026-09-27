@@ -45,7 +45,7 @@ pub struct Field {
 }
 
 /// The drawing area's camera as the session sees it.
-struct CameraView<'a>(&'a Camera);
+pub(crate) struct CameraView<'a>(pub(crate) &'a Camera);
 
 impl View for CameraView<'_> {
     fn to_screen(&self, p: Vec2) -> [f64; 2] {
@@ -155,9 +155,12 @@ impl App {
     }
 
     /// Whether Esc has something to cancel: a value being typed, a running
-    /// command, a selection.
+    /// command, a grip being moved, a selection.
     pub(crate) fn cancellable(&self) -> bool {
-        self.field.is_some() || self.session.is_running() || !self.selection.is_empty()
+        self.field.is_some()
+            || self.session.is_running()
+            || self.session.grip_active()
+            || !self.selection.is_empty()
     }
 
     /// `tool.cancel`: Esc. The running tool steps back when it can (an edge
@@ -172,6 +175,9 @@ impl App {
             if self.with_tool(|s, cx| s.cancel(cx)) != Some(true) {
                 self.session.exit();
             }
+        } else if self.session.grip_active() {
+            // A grip being moved stays where it was; the selection stays (docs/adr/0068).
+            self.with_tool(|s, cx| s.cancel(cx));
         } else {
             self.selection.clear();
         }
@@ -234,11 +240,13 @@ impl App {
                 // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
                 let p = self.pointer_at(at);
                 let running = self.session.is_running();
+                let gripping = self.session.grip_active();
                 self.with_tool(|s, cx| s.pointer_down(&p, cx));
                 // A one-shot snap was for this press (the web drops it on a left press).
                 self.snap_once = None;
-                // No command: a second press on a text or a dimension edits it (text_field.rs).
-                if !running {
+                // No command: a second press on a text or a dimension edits it
+                // (text_field.rs), unless the press took or placed a grip.
+                if !running && !gripping && !self.session.grip_active() {
                     self.maybe_edit_text(self.viewport.world(at));
                 }
             }
@@ -365,7 +373,9 @@ impl App {
     /// Where the value field opens: beside the pointer, when it is on the
     /// drawing, a command runs and the preference is on (the web's `CursorInput.accepts`).
     fn field_place(&self) -> Option<Vec2> {
-        (self.cursor_input && self.session.is_running())
+        // A grip waiting for its new place takes one too (docs/adr/0068, 0069).
+        let takes = self.session.is_running() || self.session.grip_active();
+        (self.cursor_input && takes)
             .then_some(self.viewport.cursor)
             .flatten()
     }
@@ -434,7 +444,8 @@ impl App {
         if text.is_empty() {
             return self.run("tool.confirm");
         }
-        if self.session.is_running() {
+        // A value for the running command, or for a grip being moved (docs/adr/0068).
+        if self.session.is_running() || self.session.grip_active() {
             self.echo_value(text);
             if self.with_tool(|s, cx| s.input(text, cx)) != Some(true) {
                 self.warn(format!(
@@ -493,7 +504,8 @@ impl App {
         if !keys::is_chorded(chord) && command.standing != Standing::Ported {
             return None;
         }
-        if self.session.is_running() && matches!(command.id, "view.zoomIn" | "view.zoomOut") {
+        let takes = self.session.is_running() || self.session.grip_active();
+        if takes && matches!(command.id, "view.zoomIn" | "view.zoomOut") {
             return None;
         }
         Some(command.id)
