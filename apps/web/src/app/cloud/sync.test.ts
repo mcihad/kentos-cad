@@ -58,6 +58,65 @@ describe('cloud autosave', () => {
     expect(warnings.at(-1)).toBe('“Parsel” katmanı bu çizimde olmadığı için başka birinin 2 nesnesi burada gösterilmedi; proje yeniden açılınca görünür.');
   });
 
+  it('a waiting object another editor moves onto a layer here is put and waits no more', async () => {
+    const { doc, server, sync, warnings } = setup();
+    await sync.flush();
+    doc.removeLayer('parsel');
+    const theirs = crypto.randomUUID();
+    await sync.receive([server.commitAs('baska', [{ op: 'create', id: theirs, entity: wire({ ...pt(7, 'parsel'), id: 0 } as Entity) }])]);
+    expect(doc.byUid(theirs)).toBeUndefined();
+    await sync.receive([server.commitAs('baska2', [{ op: 'update', id: theirs, entity: wire({ ...pt(8), id: 0 } as Entity) }])]);
+    expect(doc.byUid(theirs)?.layerId).toBe('cizim');
+    // Nothing waits: leaving says nothing about “Parsel”.
+    const said = warnings.length;
+    sync.dispose();
+    expect(warnings.length).toBe(said);
+  });
+
+  it('taking the server’s copy that sits on a layer this drawing lacks: the copy here goes, unsaid, waits for its layer and is not sent as mine', async () => {
+    const { doc, server, sync, warnings } = setup();
+    const e = doc.add(pt(10));
+    await sync.flush();
+    const id = e.uid;
+    // Another editor makes a layer and moves the object onto it; we move it too, without having seen either.
+    const yeni = { id: 'yeni', name: 'Yeni', type: 'layer' as const, visible: true, locked: false, expanded: true, style: { color: 'fg', lineType: 'continuous' as const, lineWeight: 0.18 }, children: [] };
+    const theirs = server.commitAs('baska', [{ op: 'update', id, entity: wire({ ...e, layerId: 'yeni', p: { x: 20, y: 4420210 } } as Entity) }], {
+      layers: [...server.meta.layers, yeni],
+      activeLayer: 'cizim',
+    });
+    doc.update(e.id, { p: { x: 30, y: 4420210 } });
+    expect(await sync.flush()).toBe(false);
+    expect(sync.conflicts.value.map((c) => c.featureId)).toEqual([id]);
+    const said = warnings.length;
+    await sync.resolve('server');
+    expect([doc.byUid(id), warnings.length]).toEqual([undefined, said]);
+    expect(await sync.flush()).toBe(true);
+    expect(server.store.get(id)).toMatchObject({ version: 2, entity: { layerId: 'yeni', p: { x: 20 } } });
+    // The tree that brings the layer: the server's copy comes with it.
+    await sync.receive([theirs]);
+    expect(doc.byUid(id)?.layerId).toBe('yeni');
+    expect(xOf(doc.byUid(id))).toBe(20);
+    expect(sync.versionOf(id)).toBe('2');
+  });
+
+  it('taking the server’s copy with the server’s tree: a copy on a layer that tree brings comes at once', async () => {
+    const { doc, server, sync, warnings } = setup();
+    const e = doc.add(pt(10));
+    await sync.flush();
+    const id = e.uid;
+    const yeni = { id: 'yeni', name: 'Yeni', type: 'layer' as const, visible: true, locked: false, expanded: true, style: { color: 'fg', lineType: 'continuous' as const, lineWeight: 0.18 }, children: [] };
+    server.commitAs('baska', [{ op: 'update', id, entity: wire({ ...e, layerId: 'yeni', p: { x: 20, y: 4420210 } } as Entity) }], { layers: [...server.meta.layers, yeni], activeLayer: 'cizim' });
+    // Unsent metadata here as well: the other tree is a conflict too.
+    doc.name.set('Ada 102');
+    doc.update(e.id, { p: { x: 30, y: 4420210 } });
+    expect(await sync.flush()).toBe(false);
+    expect(sync.conflicts.value.map((c) => c.featureId)).toEqual(expect.arrayContaining([id, '@project']));
+    const said = warnings.length;
+    await sync.resolve('server');
+    await vi.waitFor(() => expect(doc.byUid(id)?.layerId).toBe('yeni'));
+    expect([xOf(doc.byUid(id)), sync.versionOf(id), warnings.length]).toEqual([20, '2', said]);
+  });
+
   it('the guard refuses our removal because someone drew on the layer: the layer is given back, said once, our deletes go', async () => {
     const { doc, server, sync, warnings } = setup();
     const ours = doc.add(pt(5, 'parsel'));

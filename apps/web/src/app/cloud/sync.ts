@@ -10,7 +10,7 @@ import { BATCH, PROJECT_ACCESS, PROJECT_ARCHIVED, PROJECT_DELETED, SyncCore, uui
 import { applyEvents } from './syncRemote';
 import { restoreDraft } from './syncRestore';
 import { givenBackText, keepUnsentLayers, keptText, treeIds, treeText, withNodesFrom } from './keptLayers';
-import { fetchArrived, waitingTexts } from './waiting';
+import { fetchArrived, forget, setAside, waitingTexts } from './waiting';
 import { changeOf, entityJson, leavingObjects, metaParts, metaPatch, type Planned } from './tracker';
 
 export type { SaveState, SyncConflict, SyncOptions } from './syncCore';
@@ -455,7 +455,10 @@ export class ProjectSync {
         }
       }
       const objects = list.filter((c) => c.reason !== 'project');
-      const good = core.checked(objects.flatMap((c) => (c.server ? [{ key: c.featureId, entity: c.server.entity }] : [])));
+      const records = new Map(objects.flatMap((c) => (c.server ? [[c.featureId, c.server] as const] : [])));
+      // A server copy on a layer this drawing lacks waits for it (waiting.ts), checked against the tree it comes with.
+      const aside = setAside(core, records);
+      const good = core.checked([...records].map(([key, r]) => ({ key, entity: r.entity })));
       // Decided once no edit is open, and applied at once: no edit slips in between.
       await core.whenIdle();
       if (this.disposed) return;
@@ -464,7 +467,12 @@ export class ProjectSync {
       for (const c of objects) {
         const slot = doc.slotOf(c.featureId);
         const incoming = good.get(c.featureId);
-        if (c.server && incoming) {
+        if (aside.has(c.featureId)) {
+          // The copy here goes, as when another editor moves an object there; it comes with its layer.
+          if (slot !== undefined) remove.push(slot);
+          core.tracker.set(c.featureId, null);
+          core.dirty.delete(c.featureId);
+        } else if (c.server && incoming) {
           put.push({ ...incoming, id: slot ?? doc.allocateId(), uid: c.featureId } as Entity);
           core.tracker.set(c.featureId, { version: c.server.version, json: entityJson(incoming) });
           core.dirty.delete(c.featureId);
@@ -472,6 +480,7 @@ export class ProjectSync {
           if (slot !== undefined) remove.push(slot);
           core.tracker.set(c.featureId, null);
           core.dirty.delete(c.featureId);
+          forget(core, c.featureId);
         }
       }
       // The server's tree, but a layer it drops that still holds this device's unsent objects stays (keptLayers.ts).

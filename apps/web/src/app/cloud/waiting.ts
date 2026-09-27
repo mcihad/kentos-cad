@@ -22,13 +22,18 @@ export function forget(core: SyncCore, id: string): void {
 
 /**
  * Takes the records on a layer this drawing lacks out of `records` and puts
- * them on the waiting list. Returns them, by id.
+ * them on the waiting list. Returns them, by id. The others leave the list:
+ * their layer is here, so they are put now (moved there by another editor
+ * while waiting) or become a conflict.
  */
 export function setAside(core: SyncCore, records: Map<string, FeatureRecord>): Map<string, FeatureRecord> {
   const aside = new Map<string, FeatureRecord>();
   for (const [id, record] of records) {
     const layerId = (record.entity as { layerId?: unknown }).layerId;
-    if (typeof layerId !== 'string' || hasLayer(core, layerId)) continue;
+    if (typeof layerId !== 'string' || hasLayer(core, layerId)) {
+      forget(core, id);
+      continue;
+    }
     records.delete(id);
     forget(core, id);
     let set = core.waiting.get(layerId);

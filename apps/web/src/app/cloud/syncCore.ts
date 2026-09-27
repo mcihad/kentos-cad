@@ -229,6 +229,7 @@ export class SyncCore {
       } else if (!rec) {
         if (!keep && slot !== undefined) remove.push(slot);
         this.tracker.set(id, null);
+        forget(this, id);
       }
     }
     doc.applyExternal({ put, remove });
