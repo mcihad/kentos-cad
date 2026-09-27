@@ -60,7 +60,9 @@ pub fn default_values(tool: &Tool, d: &Defaults) -> Values {
 
 /// Whether the parameter is shown (and checked) for these values.
 pub fn is_visible(def: &ParamDef, values: &Values) -> bool {
-    def.visible_when.is_none_or(|when| when(values))
+    def.visible_when
+        .as_ref()
+        .is_none_or(|when| when.holds(values))
 }
 
 /// Whether a stored value still fits the parameter (so it can be restored).

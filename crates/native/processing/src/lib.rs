@@ -29,10 +29,12 @@
 
 pub mod builtin;
 pub mod categories;
+pub mod designer;
 pub mod expression;
 pub mod features;
 pub mod geometry;
 pub mod model;
+pub mod model_edit;
 pub mod model_runner;
 pub mod parameters;
 pub mod registry;
@@ -40,17 +42,18 @@ pub mod runner;
 pub mod text;
 pub mod types;
 pub mod values;
+pub mod web_param;
 
 pub use features::{Host, InputSummary, Scene};
 pub use kentos_geometry_core::geometry::Bounds;
 pub use kentos_geometry_core::store::Store;
-pub use model::{Model, ModelStep, ValueSource};
+pub use model::{Model, ModelInput, ModelStep, ValueSource};
 pub use parameters::Issue;
 pub use registry::Registry;
 pub use runner::{Level, LogLine, Outcome, RunRecord, Runner, Status};
 pub use types::{
     ChangeSet, DefaultValue, Defaults, EnumOption, FeatureSet, Feedback, OutputDef, OutputKind,
-    ParamDef, ParamKind, Patch, Resolved, Returns, RunContext, RunResult, ScopeKind, Target,
-    TargetLayer, Tool, Values,
+    ParamDef, ParamKind, Patch, Resolved, Returns, RunContext, RunResult, ScopeKind, ShownWhen,
+    Target, TargetLayer, Tool, Values,
 };
 pub use values::{FeaturesValue, LayerValue, Scope};

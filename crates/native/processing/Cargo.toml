@@ -17,5 +17,7 @@ kentos-domain = { path = "../domain" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-native-application = { path = "../application" }
 kentos-style-core = { path = "../../shared/style-core" }
-# Parameter values are JSON, as the web's dialog, history and models hold them.
+# Parameter values are JSON, as the web's dialog, history and models hold them;
+# a model's steps keep their values in the order written (serde's map visitor).
+serde = { workspace = true }
 serde_json = { workspace = true }

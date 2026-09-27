@@ -189,6 +189,25 @@ pub enum ParamKind {
     },
 }
 
+/// When a parameter is shown (the web's `visibleWhen`).
+#[derive(Clone)]
+pub enum ShownWhen {
+    /// A rule in code (the built-in tools).
+    Rule(fn(&Values) -> bool),
+    /// While another parameter has this value: a rule written as data
+    /// (`{ param, equals }`), as a model's or the shared cases' tools write it.
+    Equals { param: String, value: Value },
+}
+
+impl ShownWhen {
+    pub fn holds(&self, values: &Values) -> bool {
+        match self {
+            ShownWhen::Rule(rule) => rule(values),
+            ShownWhen::Equals { param, value } => values.get(param) == Some(value),
+        }
+    }
+}
+
 /// A parameter: its name (the key in the values), what the dialog shows and
 /// how its value is checked.
 #[derive(Clone)]
@@ -201,7 +220,7 @@ pub struct ParamDef {
     /// Folded under "Gelişmiş ayarlar" in the dialog.
     pub advanced: bool,
     /// Shown, and checked, only when this holds.
-    pub visible_when: Option<fn(&Values) -> bool>,
+    pub visible_when: Option<ShownWhen>,
     pub default: Option<DefaultValue>,
     pub kind: ParamKind,
     /// A choice one of whose options is a point picked on the drawing (the
@@ -247,7 +266,7 @@ impl ParamDef {
     }
 
     pub fn shown_when(mut self, when: fn(&Values) -> bool) -> Self {
-        self.visible_when = Some(when);
+        self.visible_when = Some(ShownWhen::Rule(when));
         self
     }
 
