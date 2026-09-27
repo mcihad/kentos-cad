@@ -96,6 +96,24 @@ export class LayersPanel extends Panel {
         this.tree.setFilter(filter.value);
       }),
     );
+    // ↓ takes the keys into the tree, at its first listed row. Esc clears the search; on an empty box it
+    // gives the keys back to the drawing.
+    this.d.add(
+      listen<KeyboardEvent>(filter, 'keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          this.tree.enterFirst();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          if (filter.value) {
+            filter.value = '';
+            this.rows.clear();
+            this.tree.setFilter('');
+          } else ctx.view.focus();
+        }
+      }),
+    );
 
     this.d.add(layers.events.on('structure', () => this.scheduleRebuild()));
     this.d.add(layers.events.on('expanded', () => this.scheduleRebuild()));
