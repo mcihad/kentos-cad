@@ -1,15 +1,11 @@
 //! Functions and variables of the expression language (the TypeScript's
 //! `EXPR_FUNCTIONS` and `EXPR_VARIABLES`). Names are matched
 //! Turkish-insensitively (yuvarla = YUVARLA, $çevre = $cevre); every
-//! function also answers to its English (QGIS) name.
+//! function also answers to its English (QGIS) name. The menus, the help
+//! and the field's completion read these tables; what a function computes
+//! is `scalar::call`.
 
-use kentos_geometry_core::jsmath::{js_max, js_max_all, js_min, js_min_all, js_round, js_sign};
-
-use std::borrow::Cow;
-use std::mem;
-
-use super::value::{Value, into_text, is_empty, to_number, to_text, truthy};
-use crate::js::{number, text};
+use crate::js::text;
 
 /// A variable: what it reads of the object.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -104,7 +100,7 @@ pub static VARIABLES: &[VarDef] = &[
     },
 ];
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Func {
     Round,
     Text,
@@ -328,206 +324,49 @@ pub fn find_variable(name: &str) -> Option<&'static VarDef> {
     })
 }
 
-/// What JavaScript would throw at (a string past V8's longest): the whole
-/// expression is then empty, as the TypeScript's `evaluate` caught it.
-#[derive(Debug)]
-pub struct Thrown;
-
-const POW10: [f64; 13] = [
-    1.0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12,
-];
-
-/// `Math.max(0, Math.min(12, Math.round(d)))` as an index (d from `to_number`: never NaN).
-fn digits(d: f64) -> usize {
-    js_max(0.0, js_min(12.0, js_round(d))) as usize
-}
-
-/// A position or length for `slice` and `padStart`: ∞ and anything past the text clamp.
-fn units(x: f64, cap: usize) -> usize {
-    if x >= cap as f64 { cap } else { x as usize }
-}
-
-/// Numeric function: empty in, empty out; a non-finite result is empty.
-fn numeric(args: &[Value], f: impl Fn(&mut dyn Iterator<Item = f64>) -> f64) -> Value<'static> {
-    if args.iter().any(|a| to_number(a).is_none()) {
-        return Value::Null;
-    }
-    let r = f(&mut args.iter().filter_map(to_number));
-    if r.is_finite() {
-        Value::Num(r)
-    } else {
-        Value::Null
-    }
-}
-
-fn fold(v: &Value) -> String {
-    text::fold_turkish(&to_text(v))
-}
-
-fn owned(s: String) -> Value<'static> {
-    Value::Text(Cow::Owned(s))
-}
-
-/// Calls a function on evaluated arguments (`args.len()` is within its
-/// arity). A result that is one of the arguments, or a part of one, is
-/// moved out of `args` and keeps borrowing what it borrowed.
-pub fn call<'a>(f: Func, args: &mut [Value<'a>]) -> Result<Value<'a>, Thrown> {
-    let take =
-        |args: &mut [Value<'a>], i: usize| args.get_mut(i).map(mem::take).unwrap_or_default();
-    let num = |args: &[Value], i: usize| args.get(i).and_then(to_number);
-    let null = Value::Null;
-    let is_null = |args: &[Value], i: usize| matches!(args.get(i), Some(Value::Null) | None);
-    Ok(match f {
-        Func::Round => {
-            let d = if args.len() > 1 {
-                num(args, 1)
-            } else {
-                Some(0.0)
-            };
-            let (Some(v), Some(d)) = (num(args, 0), d) else {
-                return Ok(null);
-            };
-            let f = POW10[digits(d)];
-            Value::Num(js_round((v + js_sign(v) * f64::EPSILON * v.abs()) * f) / f)
-        }
-        Func::Text => {
-            if args.len() < 2 {
-                return Ok(Value::Text(into_text(take(args, 0))));
-            }
-            let (Some(v), Some(d)) = (num(args, 0), num(args, 1)) else {
-                return Ok(null);
-            };
-            owned(number::to_fixed(v, digits(d) as u32))
-        }
-        Func::Number => num(args, 0).map_or(null, Value::Num),
-        Func::Int => numeric(args, |n| n.next().unwrap_or(f64::NAN).trunc()),
-        Func::Abs => numeric(args, |n| n.next().unwrap_or(f64::NAN).abs()),
-        Func::Min => numeric(args, |n| js_min_all(n)),
-        Func::Max => numeric(args, |n| js_max_all(n)),
-        Func::Upper | Func::Lower if is_null(args, 0) => null,
-        Func::Upper => owned(text::upper_tr(&to_text(&args[0]))),
-        Func::Lower => owned(text::lower_tr(&to_text(&args[0]))),
-        Func::Trim if is_null(args, 0) => null,
-        Func::Trim => match into_text(take(args, 0)) {
-            Cow::Borrowed(b) => Value::Text(Cow::Borrowed(text::trim(b))),
-            Cow::Owned(o) => owned(text::trim(&o).to_string()),
-        },
-        Func::Length if is_null(args, 0) => null,
-        Func::Length => Value::Num(text::utf16_len(&to_text(&args[0])) as f64),
-        Func::Substr => {
-            let len = if args.len() > 2 {
-                num(args, 2)
-            } else {
-                Some(f64::INFINITY)
-            };
-            let (Some(from), Some(len)) = (num(args, 1), len) else {
-                return Ok(null);
-            };
-            if args[0] == Value::Null {
-                return Ok(null);
-            }
-            let t = to_text(&args[0]);
-            let total = text::utf16_len(&t);
-            let start = js_max(0.0, js_round(from) - 1.0);
-            let end = if len == f64::INFINITY {
-                None
-            } else {
-                Some(units(start + js_max(0.0, js_round(len)), total))
-            };
-            owned(text::slice(&t, units(start, total), end))
-        }
-        Func::Pad => {
-            let Some(len) = num(args, 1) else {
-                return Ok(null);
-            };
-            if args[0] == Value::Null {
-                return Ok(null);
-            }
-            let fill = match args.get(2) {
-                None => u16::from(b'0'),
-                Some(c) => text::first_unit(&to_text(c)).unwrap_or(u16::from(b'0')),
-            };
-            let t = into_text(take(args, 0));
-            let target = js_max(0.0, js_round(len));
-            if target <= text::utf16_len(&t) as f64 {
-                return Ok(Value::Text(t));
-            }
-            if target > text::MAX_STRING_UNITS as f64 {
-                return Err(Thrown);
-            }
-            let padded = match t {
-                Cow::Owned(o) => text::pad_start_owned(o, target as usize, fill),
-                Cow::Borrowed(b) => text::pad_start(b, target as usize, fill),
-            };
-            owned(padded.ok_or(Thrown)?)
-        }
-        Func::Replace if is_null(args, 0) => null,
-        Func::Replace => owned(
-            text::split_join(&to_text(&args[0]), &to_text(&args[1]), &to_text(&args[2]))
-                .ok_or(Thrown)?,
-        ),
-        Func::Contains | Func::Starts | Func::Ends if is_null(args, 0) => Value::Bool(false),
-        Func::Contains | Func::Starts | Func::Ends => {
-            let (s, t) = (fold(&args[0]), fold(&args[1]));
-            Value::Bool(match f {
-                Func::Contains => s.contains(&t),
-                Func::Starts => s.starts_with(&t),
-                _ => s.ends_with(&t),
-            })
-        }
-        Func::If => {
-            let pick = if truthy(&args[0]) { 1 } else { 2 };
-            take(args, pick)
-        }
-        Func::Empty => Value::Bool(is_empty(&args[0])),
-        Func::Coalesce => args
-            .iter_mut()
-            .find(|a| !is_empty(a))
-            .map(mem::take)
-            .unwrap_or_default(),
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::functions::call;
+    use crate::scalar::{R, Scratch, V};
 
-    fn t(s: &'static str) -> Value<'static> {
-        Value::text(s)
+    /// A function's value on some arguments, text made or borrowed alike.
+    fn c(f: Func, args: &[V]) -> String {
+        let mut out = String::new();
+        match call(f, args, &mut out, &mut Scratch::default()) {
+            R::V(V::Text(t)) => format!("t:{t}"),
+            R::V(v) => format!("{v:?}"),
+            R::Made => format!("t:{out}"),
+            R::Thrown => "thrown".into(),
+        }
     }
 
     #[test]
     fn functions_behave_as_the_typescript_did() {
-        let n = Value::Num;
-        let c = |f, mut a: Vec<Value<'static>>| call(f, &mut a).unwrap_or(Value::text("thrown"));
-        assert_eq!(c(Func::Round, vec![n(12.345), n(2.0)]), n(12.35));
-        assert_eq!(c(Func::Round, vec![n(1.005), n(2.0)]), n(1.01));
-        assert_eq!(c(Func::Text, vec![n(452.1), n(2.0)]), t("452.10"));
-        assert_eq!(c(Func::Pad, vec![n(12.0), n(5.0)]), t("00012"));
-        assert_eq!(c(Func::Pad, vec![t("12"), n(4.0), t("_")]), t("__12"));
-        assert_eq!(c(Func::Substr, vec![t("P00012"), n(2.0), n(3.0)]), t("000"));
-        assert_eq!(c(Func::Upper, vec![t("kadıköy")]), t("KADIKÖY"));
-        assert_eq!(c(Func::Lower, vec![t("IŞIK")]), t("ışık"));
+        let (n, t) = (V::Num, V::Text);
+        assert_eq!(c(Func::Round, &[n(12.345), n(2.0)]), "Num(12.35)");
+        assert_eq!(c(Func::Round, &[n(1.005), n(2.0)]), "Num(1.01)");
+        assert_eq!(c(Func::Text, &[n(452.1), n(2.0)]), "t:452.10");
+        assert_eq!(c(Func::Pad, &[n(12.0), n(5.0)]), "t:00012");
+        assert_eq!(c(Func::Pad, &[t("12"), n(4.0), t("_")]), "t:__12");
+        assert_eq!(c(Func::Substr, &[t("P00012"), n(2.0), n(3.0)]), "t:000");
+        assert_eq!(c(Func::Upper, &[t("kadıköy")]), "t:KADIKÖY");
+        assert_eq!(c(Func::Lower, &[t("IŞIK")]), "t:ışık");
+        assert_eq!(c(Func::Contains, &[t("Arsa"), t("ARS")]), "Bool(true)");
+        assert_eq!(c(Func::Starts, &[t("Çınar"), t("cin")]), "Bool(true)");
+        assert_eq!(c(Func::Starts, &[t("Arsa"), t("rs")]), "Bool(false)");
+        assert_eq!(c(Func::Ends, &[t("Arsa"), t("rs")]), "Bool(false)");
+        assert_eq!(c(Func::Ends, &[t("ARSA"), t("sa")]), "Bool(true)");
+        assert_eq!(c(Func::Contains, &[t("Arsa"), t("rs")]), "Bool(true)");
+        assert_eq!(c(Func::Max, &[n(1.0), t("12"), n(3.0)]), "Num(12.0)");
+        assert_eq!(c(Func::Int, &[n(-2.7)]), "Num(-2.0)");
         assert_eq!(
-            c(Func::Contains, vec![t("Arsa"), t("ARS")]),
-            Value::Bool(true)
+            c(Func::Replace, &[t("1245/12"), t("/"), t("-")]),
+            "t:1245-12"
         );
-        assert_eq!(
-            c(Func::Starts, vec![t("Çınar"), t("cin")]),
-            Value::Bool(true)
-        );
-        assert_eq!(c(Func::Max, vec![n(1.0), t("12"), n(3.0)]), n(12.0));
-        assert_eq!(c(Func::Int, vec![n(-2.7)]), n(-2.0));
-        assert_eq!(
-            c(Func::Replace, vec![t("1245/12"), t("/"), t("-")]),
-            t("1245-12")
-        );
-        assert_eq!(c(Func::Number, vec![t("abc")]), Value::Null);
-        assert_eq!(
-            c(Func::Coalesce, vec![Value::Null, t(""), t("yok")]),
-            t("yok")
-        );
-        assert_eq!(c(Func::Pad, vec![t("x"), n(1e12)]), t("thrown"));
+        assert_eq!(c(Func::Number, &[t("abc")]), "Null");
+        assert_eq!(c(Func::Coalesce, &[V::Null, t(""), t("yok")]), "t:yok");
+        assert_eq!(c(Func::Pad, &[t("x"), n(1e12)]), "thrown");
         assert!(find_function("YUVARLA").is_some() && find_function("en_çok").is_some());
         assert!(find_variable("CEVRE").is_some() && find_variable("nope").is_none());
     }
