@@ -17,10 +17,12 @@ struct SStyle {
   c: vec4f,
   flags: vec4u,      // unit, cap | kind, shape, fit
 };
+// Two groups (contract version 2): the frame and the atlas together, then the batch's style. A native wgpu
+// device may offer only two bind groups (Iced's does), so the atlas sits beside the frame.
 @group(0) @binding(0) var<uniform> frame: Frame;
+@group(0) @binding(1) var atlasTex: texture_2d<f32>;
+@group(0) @binding(2) var atlasSmp: sampler;
 @group(1) @binding(0) var<uniform> st: SStyle;
-@group(2) @binding(0) var atlasTex: texture_2d<f32>;
-@group(2) @binding(1) var atlasSmp: sampler;
 
 fn toPx(p: vec2f) -> vec2f { return (p - frame.offset) * frame.pxPerM; }
 fn pxToClip(px: vec2f) -> vec4f { return vec4f(px / (0.5 * frame.viewport), 0.0, 1.0); }
