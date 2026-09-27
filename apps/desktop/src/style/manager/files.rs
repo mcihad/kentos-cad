@@ -206,7 +206,7 @@ impl App {
     }
 
     /// A .kstil text read and checked: the import panel, or why it cannot be taken in.
-    pub(super) fn offer_import(&mut self, name: &str, text: &str, clipboard: bool) {
+    pub(crate) fn offer_import(&mut self, name: &str, text: &str, clipboard: bool) {
         let Some(m) = &mut self.styles.manager else {
             return;
         };

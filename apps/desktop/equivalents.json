@@ -124,6 +124,7 @@
     "kentos.processing.v1": { "desktop": "implemented", "where": "$XDG_STATE_HOME/kentos-cad/islemler.json (ADR 0084)" },
     "kentos.settings.v1": { "desktop": "implemented", "where": "~/.config/kentos-cad/ayarlar.json (ADR 0023)" },
     "kentos.settings.v1.backup": { "desktop": "implemented", "where": "~/.config/kentos-cad/ayarlar-yedek-<zaman>.json (apps/desktop/src/settings.rs)" },
+    "kentos.styles.v1": { "desktop": "implemented", "where": "$XDG_DATA_HOME/kentos-cad/kitaplik.kstil, okunamayan kitaplik-okunamadi-<zaman>.kstil olarak ayrılır (ADR 0092)" },
     "kentos.prefs.v1": {
       "desktop": "n/a",
       "reason": "Web'in tipli ayarlardan önceki deposudur; masaüstünün böyle eski bir deposu olmadı, ayarları baştan ayarlar.json'dadır."
@@ -190,6 +191,11 @@
       "where": "apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)",
       "reason": "Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
     },
-    "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" }
+    "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" },
+    "apps/web/src/ui/style/StyleManager.ts#openStyleManager": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/style/manager/ (ADR 0092)",
+      "reason": "Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar; ikisi masaüstüne henüz taşınmadı, düğmeleri soluk ve nedenini söyler."
+    }
   }
 }

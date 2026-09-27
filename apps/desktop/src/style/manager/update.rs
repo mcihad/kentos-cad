@@ -188,7 +188,7 @@ impl App {
         }
     }
 
-    /// After Kategori's Enter: the list goes with the item to its new category
+    /// After Kategori's Enter or a copy: the list goes with the item to its category
     /// (the web's stays where it was, and the item leaves it).
     fn follow_item(&mut self, id: &str) {
         let Some((item, source)) = self.styles.library.get(id) else {
@@ -501,7 +501,11 @@ impl App {
                     };
                     m.say(format!("“{name}” {whose} kitaplığına kopyalandı."), false);
                     m.choose_item(lib, Some(copy.id().to_owned()));
+                    // The list goes to the copy, so the chosen card is in view
+                    // (the web's stayed where it was).
+                    m.query.clear();
                 }
+                self.follow_item(copy.id());
             }
             Err(e) => self.manager_say(e, true),
         }

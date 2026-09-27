@@ -10,7 +10,7 @@ import { PopupMenu } from '../widgets/PopupMenu';
 import { segmented } from '../widgets/controls';
 import { TreeView } from '../widgets/TreeView';
 import { hideTooltip, tooltip } from '../widgets/tooltip';
-import { renderDetails, renderImport, type DetailsHost } from './managerDetails';
+import { askDelete, renderDetails, renderImport, type DetailsHost } from './managerDetails';
 import { downloadStyles, pickStyleFile } from './styleFiles';
 import { symbolOfItem, Thumbs } from './thumbs';
 
@@ -76,6 +76,7 @@ class StyleManager implements DetailsHost {
   private readonly status: HTMLElement;
   private readonly count: HTMLElement;
   private readonly kindHost: HTMLElement;
+  private readonly search: HTMLInputElement;
   private readonly pickBtn: HTMLButtonElement | null;
   private readonly expanded = new Set<string>(['s:system', 's:user', 's:project']);
   private roots: Node[] = [];
@@ -99,6 +100,7 @@ class StyleManager implements DetailsHost {
     } else if (lib.items('user').length) this.at = { source: 'user', path: [] };
 
     const search = h('input', { class: 'field smgr__search', type: 'search', placeholder: 'Sembol ara: konut, sınır, tarama…', 'aria-label': 'Sembol ara', spellcheck: 'false' });
+    this.search = search;
     search.addEventListener('input', () => {
       this.query = search.value.trim();
       this.refreshGrid();
@@ -160,7 +162,7 @@ class StyleManager implements DetailsHost {
         },
         onContextMenu: (n, e) => this.categoryMenu(n, e),
         onRename: (n) => {
-          if (n.source !== 'system' && n.path.length) this.renameInline(n.key, n.label, (to) => this.ctx.styles.library.renameCategory(n.source as 'user' | 'project', n.path, to));
+          if (n.source !== 'system' && n.path.length) this.renameInline(n.key, n.label, (to) => this.renameCategory(n.source as 'user' | 'project', n.path, to));
         },
         empty: () => 'Kitaplık boş.',
         clickToggles: true,
@@ -174,6 +176,14 @@ class StyleManager implements DetailsHost {
       'Sembol kategorileri',
     );
     this.grid = h('div', { class: 'smgr__grid', role: 'listbox', 'aria-label': 'Semboller' });
+    // Delete on a card asks to delete the chosen item, as Sil does (the user's and the project's only).
+    this.grid.addEventListener('keydown', (e) => {
+      if (e.key !== 'Delete' || !this.selected || !lib.canEdit(this.selected)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const item = lib.get(this.selected);
+      if (item) askDelete(this, item);
+    });
     this.thumbs = new Thumbs(ctx, this.grid);
     this.details = h('aside', { class: 'smgr__details' });
     this.count = h('span', { class: 'smgr__listcount' });
@@ -290,6 +300,33 @@ class StyleManager implements DetailsHost {
     this.selected = id;
     for (const c of this.grid.querySelectorAll<HTMLElement>('.scard')) c.setAttribute('aria-selected', String(c.dataset.id === id));
     this.refreshDetails();
+  }
+
+  /** Shows an item where it lives (a copy just made): its source and category open, the search cleared, its card chosen. */
+  reveal(id: string): void {
+    const item = this.ctx.styles.library.get(id);
+    if (!item) return;
+    this.at = { source: item.source, path: [...item.path] };
+    this.query = '';
+    this.search.value = '';
+    this.expanded.add(`s:${item.source}`);
+    item.path.forEach((_, i) => this.expanded.add(keyOf(item.source, item.path.slice(0, i + 1))));
+    this.selected = id;
+    this.refreshAll();
+  }
+
+  /** Renames a category; the list and the open nodes follow it to its new name (they stayed on the old one). */
+  private renameCategory(source: 'user' | 'project', path: readonly string[], to: string): void {
+    const renamed = [...path.slice(0, -1), to];
+    if (this.at.source === source && path.every((p, i) => this.at.path[i] === p)) this.at = { source, path: [...renamed, ...this.at.path.slice(path.length)] };
+    const old = keyOf(source, path);
+    const now = keyOf(source, renamed);
+    for (const k of [...this.expanded]) {
+      if (k !== old && !k.startsWith(`${old}\u0001`)) continue;
+      this.expanded.delete(k);
+      this.expanded.add(now + k.slice(old.length));
+    }
+    this.ctx.styles.library.renameCategory(source, path, to);
   }
 
   say(text: string, kind: 'ok' | 'warn' = 'ok'): void {
@@ -419,14 +456,14 @@ class StyleManager implements DetailsHost {
             lib.addCategory(src, { path: [...n.path, name] });
             this.expanded.add(n.key);
             this.renderTree();
-            this.renameInline(keyOf(n.source, [...n.path, name]), name, (to) => lib.renameCategory(src, [...n.path, name], to));
+            this.renameInline(keyOf(n.source, [...n.path, name]), name, (to) => this.renameCategory(src, [...n.path, name], to));
           },
         },
         {
           label: 'Yeniden adlandır',
           shortcut: 'F2',
           disabled: !editable || !n.path.length,
-          run: () => this.renameInline(n.key, n.label, (to) => lib.renameCategory(n.source as 'user' | 'project', n.path, to)),
+          run: () => this.renameInline(n.key, n.label, (to) => this.renameCategory(n.source as 'user' | 'project', n.path, to)),
         },
         { kind: 'separator' },
         { label: `Dışa aktar (${ids.length})`, icon: 'export', disabled: !ids.length, run: () => this.say(`${downloadStyles(this.ctx, ids, n.label)} öğe dışa aktarıldı.`) },

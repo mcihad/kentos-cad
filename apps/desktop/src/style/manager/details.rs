@@ -18,7 +18,7 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Menu, MenuButton, Segmented, Tip, tip};
+use kentos_ui::widget::{Menu, MenuButton, RadioGroup, Segmented, Tip, tip};
 use serde_json::{Value, json};
 
 use super::{Event, Field, ImportDraft, Manager, ev};
@@ -142,16 +142,18 @@ fn notes_keys(press: KeyPress) -> Option<Binding<Message>> {
 }
 
 /// The details of the chosen item, or the import panel, or what to do.
+/// `open`: how many objects the drawing has selected, and whether a drawing
+/// is open (the project's library needs one); `preview`: the picture's size.
 pub fn details<'a>(
     m: &'a Manager,
     lib: &'a StyleLibrary,
     thumbs: &Thumbs,
     look: &Look<'_>,
-    selected_objects: usize,
-    project_open: bool,
+    (selected_objects, project_open): (usize, bool),
+    preview: (f32, f32),
 ) -> Element<'a, Message> {
     if let Some(draft) = &m.import {
-        return import_panel(draft, lib, project_open);
+        return import_panel(draft, lib, project_open, preview.0);
     }
     let Some((item, source)) = m.selected.as_deref().and_then(|id| lib.get(id)) else {
         return container(
@@ -184,7 +186,8 @@ pub fn details<'a>(
         .get(kind)
         .copied()
         .or_else(|| options.first().map(|s| s.0));
-    let picture = thumbs.picture(&symbol, geometry, (300.0, 172.0), Some(3.2), look);
+    // The web's 300 × 172 at 3.2 pixels a millimetre; narrower when the column is.
+    let picture = thumbs.picture(&symbol, geometry, preview, Some(3.2), look);
     let mut preview = Column::new().spacing(8).align_x(Center).push(picture);
     if options.len() > 1 {
         let kind_key: &'static str = match kind {
@@ -372,22 +375,21 @@ pub fn details<'a>(
         .padding([4, 9])
         .style(style::container::field_box),
         move || {
-            let menu = Menu::new()
+            Menu::new()
                 .item(
                     "Kitaplığıma",
                     ev(Event::Copy(copy_id.clone(), Source::User)),
                 )
-                .shortcut("bu bilgisayarda")
+                .detail("Bu bilgisayarda, bütün çizimlerde")
                 .item(
                     "Projeye",
                     project_open.then(|| ev(Event::Copy(copy_id.clone(), Source::Project))),
                 )
-                .shortcut("proje dosyasında");
-            if project_open {
-                menu
-            } else {
-                menu.detail("Açık çizim yok.")
-            }
+                .detail(if project_open {
+                    "Proje dosyasında; projeyi açan herkes görür"
+                } else {
+                    "Açık çizim yok."
+                })
         },
     ));
     second = second.push(small_button(
@@ -430,11 +432,13 @@ impl<T: Copy + PartialEq> std::fmt::Display for Choice<T> {
     }
 }
 
-/// The import panel: what the file holds, where it goes, what an id the library has does (`renderImport`).
+/// The import panel: what the file holds, where it goes, what an id the
+/// library has does (`renderImport`); `width`: the column's room.
 fn import_panel<'a>(
     draft: &ImportDraft,
     lib: &StyleLibrary,
     project_open: bool,
+    width: f32,
 ) -> Element<'a, Message> {
     let symbols = draft
         .file
@@ -489,12 +493,30 @@ fn import_panel<'a>(
             .copied()
             .find(|c| c.0 == draft.mode)
             .unwrap_or(modes[0]);
+        // The web's segmented choice; one under the other when the column is too narrow for it.
+        let body = typography::body();
+        let needed: f32 = modes
+            .iter()
+            .map(|c| typography::text_width(c.1, body) + 25.0)
+            .sum::<f32>()
+            + 2.0;
+        let choice: Element<'a, Message> = if needed <= width {
+            Segmented::new(modes, mode, |c| ev(Event::ImportMode(c.0))).into()
+        } else {
+            modes
+                .iter()
+                .fold(
+                    RadioGroup::new(draft.mode, |m| ev(Event::ImportMode(m))),
+                    |group, c| group.option(c.0, c.1, ""),
+                )
+                .into()
+        };
         out = out
             .push(
                 label::caption(format!("{clashes} öğe kitaplıkta zaten var"))
                     .style(style::text::muted),
             )
-            .push(Segmented::new(modes, mode, |c| ev(Event::ImportMode(c.0))));
+            .push(choice);
         if draft.mode == ConflictMode::Replace {
             // As `importStyles` does (fixtures/style/v1/kstil.json); the web's note said
             // they came as copies.

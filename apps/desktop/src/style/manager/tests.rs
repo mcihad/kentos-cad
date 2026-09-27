@@ -145,6 +145,15 @@ fn a_system_symbol_is_copied_to_kitapligim_and_kept_in_its_file() {
     let file = user_file(&dir);
     assert_eq!(file["format"], "kentos-style");
     assert_eq!(file["items"][0]["id"], json!(copy));
+    // The list went to the copy's category, so its card is in view.
+    let place = vec!["Temel".to_owned(), "Çizgi tipleri".to_owned()];
+    assert_eq!(manager(&app).at, (Source::User, place.clone()));
+    assert_eq!(listed(&app), vec![copy.clone()]);
+    assert!(
+        manager(&app)
+            .expanded
+            .contains(&node_key(Source::User, &place[..1]))
+    );
 
     // Opened again, the window starts at Kitaplığım.
     app.close_dialog();

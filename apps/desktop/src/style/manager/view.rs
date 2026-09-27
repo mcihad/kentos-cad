@@ -28,18 +28,35 @@ use super::{Event, KINDS, Manager, PickTarget, SEARCH, ev, ids_under, node_key};
 use crate::app::{App, Message};
 use crate::style::thumbs::{Look, Thumbs};
 
-/// The window's size, the web's pixels at the default text size.
-const WIDTH: f32 = 1240.0;
+/// The window's size, the web's pixels at the default text size: its body
+/// is as wide as the web's (whose columns reach the window's edges; here
+/// the window keeps its margin around them).
+const WIDTH: f32 = 1240.0 + 2.0 * MARGIN;
 const HEIGHT: f32 = 860.0;
+const MARGIN: f32 = 18.0;
+/// The tree's and the details' widths; on a narrow window they give way to the list.
 const TREE: f32 = 300.0;
 const DETAILS: f32 = 340.0;
-/// A card: its picture, its narrowest width and its height (with a second
-/// line for the source in a search), and the gap between cards.
+/// A card: its picture, its narrowest width, and the gap between cards.
 const PICTURE: (f32, f32) = (116.0, 66.0);
 const CARD_MIN: f32 = 132.0;
-const CARD_H: f32 = 112.0;
-const CARD_SOURCE: f32 = 18.0;
 const GAP: f32 = 8.0;
+
+/// A card's height: its padding, the picture, the name on two lines and, in
+/// a search, the source's badge under it (the web's `.scard`).
+fn card_height(searching: bool) -> f32 {
+    let name = name_height();
+    let mut h = 7.0 + PICTURE.1 + 6.0 + name + 8.0 + 2.0;
+    if searching {
+        h += 6.0 + typography::caption() + 3.0;
+    }
+    h.ceil()
+}
+
+/// Two lines of a card's name.
+fn name_height() -> f32 {
+    (typography::caption() * 1.3 * 2.0).ceil() + 2.0
+}
 
 impl App {
     /// Stil yöneticisi over the drawing (and over Katman stili when it picks for it).
@@ -117,17 +134,22 @@ impl App {
             library: lib,
             images: &self.styles.images,
         };
+        // A narrow window (or large text) takes from the side columns before the list.
+        let tree_w = typography::from_default(TREE).min(width * 0.25).floor();
+        let details_w = typography::from_default(DETAILS).min(width * 0.31).floor();
+        // The preview fits the column, beside its padding and scroll bar.
+        let preview_w = (details_w - 32.0 - 12.0).min(300.0);
         let details = details::details(
             m,
             lib,
             &self.styles.thumbs,
             &look,
-            self.selection.ids().len(),
-            project_open,
+            (self.selection.ids().len(), project_open),
+            (preview_w, (preview_w * 172.0 / 300.0).round()),
         );
         let cols = row![
             container(tree_of(m, lib, project_open))
-                .width(Length::Fixed(typography::from_default(TREE)))
+                .width(Length::Fixed(tree_w))
                 .height(Fill)
                 .padding([8, 6])
                 .style(style::container::header),
@@ -139,14 +161,14 @@ impl App {
                     .direction(style::field::body_scrollbar())
                     .height(Fill)
             )
-            .width(Length::Fixed(typography::from_default(DETAILS)))
+            .width(Length::Fixed(details_w))
             .height(Fill)
             .style(style::container::header),
         ]
         .height(Fill);
         let frame = container(cols).height(Fill).clip(true).style(frame);
         Dialog::new(title)
-            .push(bar(m))
+            .push(bar(m, width - 2.0 * MARGIN))
             .push(frame)
             .push(footer(m, lib))
             .width(typography::unscaled(width))
@@ -195,10 +217,7 @@ impl App {
                 let gap = typography::from_default(GAP);
                 let per_row = (((inner + gap) / (min + gap)).floor() as usize).max(1);
                 let card_w = ((inner - gap * (per_row - 1) as f32) / per_row as f32).floor();
-                let mut card_h = typography::from_default(CARD_H);
-                if searching {
-                    card_h += typography::from_default(CARD_SOURCE);
-                }
+                let card_h = card_height(searching);
                 let rows = listed.len().div_ceil(per_row);
                 let listed = listed.clone();
                 let selected = selected.clone();
@@ -266,7 +285,30 @@ fn frame(theme: &Theme) -> container::Style {
 }
 
 /// The bar: search, kinds, and the Yeni sembol, İçe aktar and Dışa aktar menus.
-fn bar<'a>(m: &Manager) -> Element<'a, Message> {
+/// The search field's width in a bar `width` wide: the web's 300 pixels at
+/// most; on a narrow window (or with large text) it gives way before the
+/// kinds and the buttons, whose widths are measured from their texts.
+fn search_width(width: f32) -> f32 {
+    let body = typography::body();
+    let text = |s: &str| typography::text_width(s, body);
+    let kinds: f32 = KINDS
+        .iter()
+        .map(|k| text(&k.to_string()) + 24.0 + 1.0)
+        .sum::<f32>()
+        + 2.0;
+    let face = |s: &str, chevron: bool| {
+        20.0 + 13.0 + 5.0 + text(s) + if chevron { 5.0 + 12.0 } else { 0.0 }
+    };
+    let buttons = face("Yeni sembol", false) + face("İçe aktar", true) + face("Dışa aktar", true);
+    let room = width - kinds - buttons - 5.0 * 8.0 - 16.0;
+    room.clamp(
+        typography::from_default(120.0),
+        typography::from_default(300.0),
+    )
+    .floor()
+}
+
+fn bar<'a>(m: &Manager, width: f32) -> Element<'a, Message> {
     let search = row![
         icon(Icon::Search).size(14.0).tone(Tone::Muted),
         text_input("Sembol ara: konut, sınır, tarama…", &m.query)
@@ -281,7 +323,7 @@ fn bar<'a>(m: &Manager) -> Element<'a, Message> {
     .align_y(Center);
     let search = container(search)
         .padding([0, 8])
-        .width(Length::Fixed(typography::from_default(300.0)))
+        .width(Length::Fixed(search_width(width)))
         .style(style::container::field_box);
     let new_menu = MenuButton::new(menu_face("plus", "Yeni sembol", false), || {
         Menu::new()
@@ -300,9 +342,9 @@ fn bar<'a>(m: &Manager) -> Element<'a, Message> {
         MenuButton::new(menu_face("import", "İçe aktar", true), || {
             Menu::new()
                 .item("Dosyadan…", ev(Event::ImportFile))
-                .shortcut(".kstil, PNG, JPEG")
+                .detail(".kstil, PNG ya da JPEG")
                 .item("Panodan yapıştır", ev(Event::ImportClipboard))
-                .shortcut("paylaşılan metin")
+                .detail("Paylaşılan stil metni")
         }),
         Tip::new("Sembolleri kitaplığa ya da projeye alır"),
         Position::Bottom,
@@ -311,8 +353,9 @@ fn bar<'a>(m: &Manager) -> Element<'a, Message> {
         MenuButton::new(menu_face("export", "Dışa aktar", true), || {
             Menu::new()
                 .item("Dosyaya (.kstil)", ev(Event::ExportListed))
+                .detail("Kullandıkları çizimlerle birlikte")
                 .item("Panoya kopyala", ev(Event::ExportClipboard))
-                .shortcut("paylaşmak için")
+                .detail("Bir iletiye yapıştırıp paylaşmak için")
         }),
         Tip::new("Listedeki sembolleri kullandıkları çizimlerle birlikte verir"),
         Position::Bottom,
@@ -420,7 +463,7 @@ fn card<'a>(
     };
     let symbol = symbol_of_item(item);
     // The name on two lines at most (the web's line clamp), cut when longer.
-    let name_h = (typography::caption() * 1.3 * 2.0).ceil() + 1.0;
+    let name_h = name_height();
     let mut body = Column::new()
         .spacing(6)
         .align_x(Center)
