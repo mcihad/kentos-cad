@@ -141,7 +141,8 @@
     "style.layerStyle",
     "style.manager",
     "style.assign",
-    "style.clearSymbol"
+    "style.clearSymbol",
+    "style.legend"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

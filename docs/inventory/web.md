@@ -52,7 +52,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Anlamsız | Toplam |
 |---|---|---|---|---|---|
-| Komutlar | 142 | 0 | 23 | 2 | 167 |
+| Komutlar | 143 | 0 | 22 | 2 | 167 |
 | Araçlar | 56 | 0 | 2 | 0 | 58 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 1 |
@@ -60,7 +60,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 41 | 12 | 11 | 1 | 65 |
 | Tarayıcı depoları | 7 | 1 | 1 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 42 | 4 | 17 | 0 | 63 |
+| Pencereler ve paneller | 43 | 4 | 16 | 0 | 63 |
 
 - `.kcad` alanları (v1 okunur, v2 yazılır), bütünüyle: implemented — Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025).
 
@@ -75,7 +75,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (23 / 167)
+#### Komutlar (22 / 167)
 
 - `analysis.slope` Eğim analizi… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -90,7 +90,6 @@ Kısmi olanlar notlarıyla; bölüm bölüm.
 - `map.profile` Boy kesit al… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `map.sheet` Pafta bölümlemesi… (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `processing.newModel` Yeni model…
-- `style.legend` Lejant…
 - `style.svgEditor` SVG çizim düzenleyicisi…
 - `tool.stakeout` Aplikasyon (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `tool.subdivide` İfraz (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -154,7 +153,7 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (21 / 63)
+#### Pencereler ve paneller (20 / 63)
 
 - `apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel` BottomPanel (kısmi) (masaüstünde: apps/desktop/src/bottom.rs (ADR 0058)) — Komut geçmişinin satırlarında saat yazmaz.
 - `apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog` openInvitationDialog
@@ -167,7 +166,6 @@ Yok.
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
 - `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.
 - `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)) — Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
-- `apps/web/src/ui/style/LegendDialog.ts#openLegend` openLegend
 - `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager (kısmi) (masaüstünde: apps/desktop/src/style/manager/ (ADR 0092)) — Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar; ikisi masaüstüne henüz taşınmadı, düğmeleri soluk ve nedenini söyler.
 - `apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner` openSymbolDesigner
 - `apps/web/src/ui/svgedit/SvgEditor.ts#openSvgEditor` openSvgEditor

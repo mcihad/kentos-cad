@@ -195,6 +195,7 @@
       "reason": "Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
     },
     "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" },
+    "apps/web/src/ui/style/LegendDialog.ts#openLegend": { "desktop": "implemented", "where": "apps/desktop/src/style/legend/ (ADR 0093)" },
     "apps/web/src/ui/style/StyleManager.ts#openStyleManager": {
       "desktop": "partial",
       "where": "apps/desktop/src/style/manager/ (ADR 0092)",
