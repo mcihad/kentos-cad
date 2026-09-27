@@ -47,7 +47,12 @@ const PARSE: { id: string; text: string }[] = [
   { id: 'not-json', text: '{ "format": "kentos-style", ' },
   { id: 'not-kstil', text: JSON.stringify({ format: 'kentos.document', version: 1 }) },
   { id: 'newer', text: JSON.stringify({ format: STYLE_FORMAT, version: 2, items: [] }) },
+  { id: 'no-version', text: JSON.stringify({ format: STYLE_FORMAT, items: [] }) },
+  { id: 'version-not-whole', text: JSON.stringify({ format: STYLE_FORMAT, version: 1.5, items: [] }) },
   { id: 'no-items', text: JSON.stringify({ format: STYLE_FORMAT, version: 1 }) },
+  { id: 'categories-not-a-list', text: file([], { categories: 5 }) },
+  { id: 'bad-categories', text: file([], { categories: ['A', { path: 'A' }, { path: ['A', 7], order: 'ilk', description: 3 }, { path: ['B'], order: 2, description: 'Açıklama' }] }) },
+  { id: 'categories-kept-to-what-they-are', text: file([], { categories: [{ path: ['A', 'B'], order: 1, description: 'Açıklama', source: 'system', renk: '#000000' }, { path: [] }] }) },
   { id: 'empty', text: file([]) },
   {
     id: 'bad-items',

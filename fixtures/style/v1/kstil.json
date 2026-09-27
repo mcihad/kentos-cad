@@ -33,11 +33,72 @@
    }
   },
   {
+   "id": "no-version",
+   "text": "{\"format\":\"kentos-style\",\"items\":[]}",
+   "expect": {
+    "issues": [
+     "Dosyada sürüm yok; dosya bozuk olabilir."
+    ]
+   }
+  },
+  {
+   "id": "version-not-whole",
+   "text": "{\"format\":\"kentos-style\",\"version\":1.5,\"items\":[]}",
+   "expect": {
+    "issues": [
+     "Dosyada sürüm yok; dosya bozuk olabilir."
+    ]
+   }
+  },
+  {
    "id": "no-items",
    "text": "{\"format\":\"kentos-style\",\"version\":1}",
    "expect": {
     "issues": [
      "Dosyada öğe listesi yok."
+    ]
+   }
+  },
+  {
+   "id": "categories-not-a-list",
+   "text": "{\"format\":\"kentos-style\",\"version\":1,\"exported\":\"2026-09-27T08:00:00.000Z\",\"items\":[],\"categories\":5}",
+   "expect": {
+    "issues": [
+     "Dosyadaki kategoriler bir liste değil."
+    ]
+   }
+  },
+  {
+   "id": "bad-categories",
+   "text": "{\"format\":\"kentos-style\",\"version\":1,\"exported\":\"2026-09-27T08:00:00.000Z\",\"items\":[],\"categories\":[\"A\",{\"path\":\"A\"},{\"path\":[\"A\",7],\"order\":\"ilk\",\"description\":3},{\"path\":[\"B\"],\"order\":2,\"description\":\"Açıklama\"}]}",
+   "expect": {
+    "issues": [
+     "kategori 1: nesne değil",
+     "kategori 2: yol metin listesi olmalı",
+     "kategori 3: yol metin listesi olmalı",
+     "kategori 3: sıra bir sayı olmalı",
+     "kategori 3: açıklama metin olmalı"
+    ]
+   }
+  },
+  {
+   "id": "categories-kept-to-what-they-are",
+   "text": "{\"format\":\"kentos-style\",\"version\":1,\"exported\":\"2026-09-27T08:00:00.000Z\",\"items\":[],\"categories\":[{\"path\":[\"A\",\"B\"],\"order\":1,\"description\":\"Açıklama\",\"source\":\"system\",\"renk\":\"#000000\"},{\"path\":[]}]}",
+   "expect": {
+    "issues": [],
+    "items": [],
+    "categories": [
+     {
+      "path": [
+       "A",
+       "B"
+      ],
+      "order": 1,
+      "description": "Açıklama"
+     },
+     {
+      "path": []
+     }
     ]
    }
   },
