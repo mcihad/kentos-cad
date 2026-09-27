@@ -27,7 +27,7 @@ use crate::edge::{self, Hover, Outline};
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Flow, LengthenMode, Memory, Pointer, Preview, Tag, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, LengthenMode, Memory, Pointer, Preview, Tag, Tone, Tool};
 use crate::{Vec2, js_trim};
 
 /// The lengthen tool's id: its command is `tool.lengthen`.
@@ -161,6 +161,11 @@ impl Lengthen {
 }
 
 impl Tool for Lengthen {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

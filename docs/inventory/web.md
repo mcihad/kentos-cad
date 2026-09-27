@@ -57,7 +57,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
-| Ayarlar | 41 | 12 | 11 | 0 | 1 | 65 |
+| Ayarlar | 42 | 12 | 10 | 0 | 1 | 65 |
 | Tarayıcı depoları | 7 | 1 | 1 | 0 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
 | Pencereler ve paneller | 43 | 4 | 16 | 0 | 0 | 63 |
@@ -121,7 +121,7 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (23 / 65)
+#### Ayarlar (22 / 65)
 
 - `layout.bottomExpanded`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Alt panel F2 ile açılıp kapanır; yeniden açılışta hatırlanmaz.
 - `layout.bottomHeight`  (kısmi) (masaüstünde: apps/desktop/src/bottom.rs) — Boyu sürükleyerek değişir; yeniden açılışta hatırlanmaz.
@@ -143,7 +143,6 @@ Yok.
 - `layout.toolboxVisible`
 - `layout.toolboxX`
 - `layout.toolboxY`
-- `user.crosshair`
 - `user.shell`
 - `user.uiFont`  (kısmi) (masaüstünde: ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)) — Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar.
 

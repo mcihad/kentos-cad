@@ -28,6 +28,7 @@ mod keys;
 mod labels;
 mod layer_tree;
 mod layering;
+mod map_marks;
 mod marks;
 mod modes;
 mod opening;

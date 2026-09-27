@@ -23,7 +23,7 @@ use crate::edge::{self, Outline};
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::Prompt;
-use crate::tool::{Context, Flow, Pointer, Preview, Tone, Tool};
+use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tone, Tool};
 
 /// The break tool's id: its command is `tool.break`.
 pub const ID: &str = "break";
@@ -88,6 +88,11 @@ impl Break {
 }
 
 impl Tool for Break {
+    /// An object is picked (the web's `cursor = 'pick'`).
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+
     fn id(&self) -> &'static str {
         ID
     }

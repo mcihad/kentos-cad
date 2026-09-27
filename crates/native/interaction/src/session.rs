@@ -392,9 +392,10 @@ impl Session {
         self.select.active_grip()
     }
 
-    /// The pointer's look over the drawing: the running tool's, else the crosshair.
+    /// The pointer's look over the drawing: the running tool's, else the
+    /// select tool's pick (the web's `SelectTool.cursor`).
     pub fn cursor(&self) -> Cursor {
-        self.tool.as_ref().map_or(Cursor::Cross, |t| t.cursor())
+        self.tool.as_ref().map_or(Cursor::Pick, |t| t.cursor())
     }
 
     pub fn prompt(&self) -> Prompt {

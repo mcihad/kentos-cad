@@ -398,6 +398,7 @@ impl App {
                     grips,
                     hot: self.session.active_grip(),
                     tracking: self.tracking_marks(&format),
+                    crosshair: self.crosshair_mark(),
                     colors: mark_colors(self.canvas()),
                 };
                 let over = preview::layer(

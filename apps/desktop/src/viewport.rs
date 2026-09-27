@@ -914,7 +914,9 @@ impl shader::Program<Message> for Program {
             mouse::Interaction::Grabbing
         } else if cursor.is_over(bounds) {
             match self.cursor {
-                Cursor::Cross => mouse::Interaction::Crosshair,
+                // The crosshair is drawn over the drawing (marks.rs), as the
+                // web hides its pointer on the canvas (`drawCrosshair`).
+                Cursor::Cross | Cursor::Pick => mouse::Interaction::Hidden,
                 // Kaydır: the open hand, as the web's `grab` (docs/adr/0056).
                 Cursor::Grab => mouse::Interaction::Grab,
             }

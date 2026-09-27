@@ -376,6 +376,10 @@ pub struct App {
     pub command_bar: bool,
     /// The rollover card shows (`drafting.hoverInfo`, hover_card.rs).
     pub hover_info: bool,
+    /// The crosshair's arms (`appearance.crosshair`, marks.rs).
+    pub crosshair: crate::marks::CrosshairSize,
+    /// The middle button pans the drawing: no crosshair meanwhile (input.rs).
+    pub panning: bool,
     /// The object whose rollover card shows (hover_card.rs).
     pub hover_card: Option<kentos_domain::Slot>,
     /// The hover the card's wait was started for (`Selection::hover_version`).
@@ -517,6 +521,8 @@ impl App {
             cursor_input: true,
             command_bar: false,
             hover_info: true,
+            crosshair: crate::marks::CrosshairSize::default(),
+            panning: false,
             hover_card: None,
             hover_seen: 0,
             calc: crate::calc::Calc::default(),
@@ -875,6 +881,7 @@ impl App {
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
         self.hover_info = s.bool("drafting.hoverInfo");
+        self.crosshair = crate::marks::CrosshairSize::parse(&s.text("appearance.crosshair"));
         self.viewport.grid_shown = s.bool("drafting.grid");
         self.apply_appearance();
     }
