@@ -151,6 +151,18 @@ i5-11300H, 15 GB, Ubuntu 26.04.1; native `--release`, web Node 24 ve `--profile 
 - **Tek nesne yolu** (`Expr::evaluate`, 10⁵ nesne) eskiyle aynı ya da hızlıdır (1,0–1,4×).
 - **Web'de kalan süre sınırdadır:** tabloyu kurmak, ölçü yanıtını (10⁶ nesnede 48 MB) WASM'a kopyalamak, sonucu okumak. Dilim 3'te değerlendirme deponun içinde, geometri değerleri sınırdan geçmeden yapılır.
 
+**Dilim 3** (`docs/perf/expression-{native,web}-tipli-2026-09-27.md`, cdbb36f; p50):
+
+| | Native, 10⁶ nesne | Web, 10⁵ nesne |
+|---|---|---|
+| `Kat * 2 + 1`: tipli sayı alanı / metin özniteliği | 4,3 / 22,2 ms (5,2×) | — |
+| `$alan > 500`: şekillerden / ölçü kaydıyla | 16,8 / 62,8 ms (3,7×) | 19,2 / 28,1 ms (1,5×) |
+| `yuvarla($alan, 2)`: şekillerden / ölçü kaydıyla | 21,0 / 66,5 ms (3,2×) | 17,3 / 24,9 ms (1,4×) |
+| `$merkez_y` / `$genişlik * $yükseklik` | 29,1 / 29,6 ms | 19,8 / 21,7 ms |
+
+- Şekillerden okuma alan ve merkez hesabını kapsar. Ölçü kaydı yolu kaydın hesabını ve tabloyu kapsar.
+- Web'de 10⁵ nesnede kalan süre sayfanın dizileri ve okumasıdır.
+
 ## Sonuçlar
 
 - İfade dili tek yerdedir ve stil çekirdeğinden bağımsız gelişir. Stil çekirdeği ona bağımlıdır, tersi değil.

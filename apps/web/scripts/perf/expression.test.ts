@@ -121,7 +121,9 @@ function measureStore(n: number): number[] {
 
 it.runIf(!!process.env.EXPRESSION_BENCH)(`measures expressions on ${SIZES.join(', ')} objects`, () => {
   const results = SIZES.map(measure);
-  const inStore = SIZES.map(measureStore);
+  // The store takes its objects as JSON here: up to 200 000 (a million squares would be 160 MB of text).
+  const STORE_SIZES = SIZES.filter((n) => n <= 200_000);
+  const inStore = STORE_SIZES.map(measureStore);
   const dir = process.env.EXPRESSION_PERF_OUT;
   if (!dir) return;
   const label = process.env.EXPRESSION_PERF_LABEL ?? 'olcum';
@@ -141,8 +143,8 @@ ${rows.join('\n')}
 
 Geometri deposundaki kareler (10 × 10 … 13 × 13 m; ADR 0100 §3), p50 ms: “depoda” ifade deponun içinde değerlendirilir ve geometri değerlerini şekillerden okur (\`CoreStore.evaluateExpression\`); “ölçü kaydıyla” deponun \`measures\` yanıtı alınır ve \`exprEvaluate\`'e verilir (sayfanın bugünkü yolu, iki kopya dahil).
 
-| İfade | Yol |${SIZES.map((n) => ` ${n} nesne |`).join('')}
-|---|---|${SIZES.map(() => '---|').join('')}
+| İfade | Yol |${STORE_SIZES.map((n) => ` ${n} nesne |`).join('')}
+|---|---|${STORE_SIZES.map(() => '---|').join('')}
 ${STORE_CASES.map(([source, path], k) => `| \`${source}\` | ${path === 'geometry' ? 'depoda' : 'ölçü kaydıyla'} |${inStore.map((r) => ` ${r[k].toFixed(1)} |`).join('')}`).join('\n')}
 `;
   const path = new URL(`${dir}/expression-web-${label}-${day}.md`, ROOT);
