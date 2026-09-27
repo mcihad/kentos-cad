@@ -17,6 +17,9 @@
 //! web's builder asks through WASM (fixtures/expression/v2/builder.json).
 
 mod editor;
+mod flow;
+mod flow_canvas;
+mod flow_view;
 mod highlight;
 mod objects;
 #[cfg(test)]
@@ -25,6 +28,7 @@ mod view;
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use iced::Task;
@@ -42,6 +46,8 @@ use kentos_processing::values::FeaturesValue;
 use serde_json::{Value, json};
 
 use crate::app::{App, Dialog, Message};
+pub(crate) use flow::FlowEvent;
+use flow::FlowState;
 use highlight::{Lines, Paint};
 pub(crate) use objects::Objects;
 
@@ -55,6 +61,18 @@ const DOUBLE: Duration = Duration::from_millis(450);
 
 /// Values listed at most in the help; the rest are counted.
 const SHOWN: usize = 2000;
+
+/// The builder's two views of one text (docs/adr/0101).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ViewMode {
+    /// The editor.
+    Text,
+    /// The same expression as nodes.
+    Flow,
+}
+
+/// Whether the builder opened in Akış last (for as long as the program runs).
+static FLOW_LAST: AtomicBool = AtomicBool::new(false);
 
 /// Where the builder's text goes back.
 #[derive(Clone, Debug, PartialEq)]
@@ -111,6 +129,9 @@ pub(crate) struct Builder {
     room: Option<(f32, f32)>,
     /// The dialog under the builder while an object is picked on the drawing.
     picking: Option<Picking>,
+    /// Metin or Akış, and the flow's own state.
+    pub view_mode: ViewMode,
+    pub flow: FlowState,
 }
 
 /// What the preview shows.
@@ -149,8 +170,14 @@ pub(crate) enum Event {
     Room(f32, f32),
     /// Esc with the list open.
     CloseList,
-    /// An operator button: what it inserts and how it stands.
-    Operator(&'static str, Kind),
+    /// An operator button: its label, what it inserts and how it stands.
+    Operator(&'static str, &'static str, Kind),
+    /// Metin or Akış.
+    Mode(ViewMode),
+    /// Something of the flow (docs/adr/0101).
+    Flow(FlowEvent),
+    /// A tree row carried out of the tree (Akış): its entry, by its place in the tree.
+    Carry(usize),
     /// The tree's search.
     Query(String),
     /// Enter in the search (or with the tree's entry chosen by the keys):
@@ -191,6 +218,29 @@ fn attribute_fields(fields: &[(String, usize)]) -> Schema {
             })
             .collect(),
     }
+}
+
+/// The values Akış' palette offers besides the tree's entries: a number and a text to write.
+pub(crate) fn values_section(query: &str) -> Vec<Item> {
+    let q = kentos_expression::js::text::fold_turkish(query.trim());
+    [
+        ("Sayı", "Yazılacak bir sayı: 0", "lit:number"),
+        ("Metin", "Yazılacak bir metin: ''", "lit:text"),
+    ]
+    .into_iter()
+    .filter(|(label, _, _)| {
+        q.is_empty() || kentos_expression::js::text::fold_turkish(label).contains(&q)
+    })
+    .map(|(label, detail, key)| Item {
+        kind: Kind::Operator,
+        label: label.to_owned(),
+        detail: detail.to_owned(),
+        insert: String::new(),
+        caret: 0,
+        key: key.to_owned(),
+        alias: None,
+    })
+    .collect()
 }
 
 /// The name characters that open (or keep) the list as they are typed.
@@ -235,14 +285,43 @@ impl Builder {
             scroll: (0.0, 0.0),
             room: None,
             picking: None,
+            view_mode: ViewMode::Text,
+            flow: FlowState::default(),
         };
         b.read();
         b.moved(true);
+        if FLOW_LAST.load(Ordering::Relaxed) {
+            b.set_mode(ViewMode::Flow);
+        }
         b
     }
 
+    /// Shows the text or the flow of the same expression.
+    pub(crate) fn set_mode(&mut self, mode: ViewMode) {
+        self.view_mode = mode;
+        FLOW_LAST.store(mode == ViewMode::Flow, Ordering::Relaxed);
+        self.completion = None;
+        self.help = None;
+        self.chosen = None;
+        if mode == ViewMode::Flow {
+            self.flow.fitted = false;
+            self.refresh_flow();
+        }
+    }
+
+    /// The tree's entries in Akış' order, with the values to write first:
+    /// what a carried row's place in the tree names.
+    pub(crate) fn palette(&self) -> Vec<String> {
+        let mut keys: Vec<String> = Vec::new();
+        if self.view_mode == ViewMode::Flow {
+            keys.extend(values_section(&self.query).into_iter().map(|i| i.key));
+        }
+        keys.extend(self.shown().into_iter().map(|i| i.key));
+        keys
+    }
+
     /// The text changed: its tokens, problems and colours again.
-    fn read(&mut self) {
+    pub(crate) fn read(&mut self) {
         self.source = self.content.text();
         self.check = core::check(&self.source, &self.schema);
         self.bracket = None;
@@ -285,7 +364,7 @@ impl Builder {
 
     /// The cursor moved (or the text under it changed): the signature, the
     /// parentheses and, while one writes, the help of what is under it.
-    fn moved(&mut self, help: bool) {
+    pub(crate) fn moved(&mut self, help: bool) {
         let (head, anchor) = self.cursor_units();
         self.cursor = head;
         self.signature = core::signature(&self.source, head);
@@ -374,7 +453,7 @@ impl Builder {
         }
     }
 
-    fn help_of(&mut self, key: &str) {
+    pub(crate) fn help_of(&mut self, key: &str) {
         if let Some(h) = core::help(key, &self.schema) {
             self.show_help(h);
         }
@@ -426,6 +505,9 @@ impl Builder {
         if let (Some(doc), Some(last)) = (doc, n.checked_sub(1)) {
             self.index = self.index.min(last);
             self.described = self.objects.describe(self.index, doc);
+        }
+        if self.view_mode == ViewMode::Flow {
+            self.flow_values(doc, store);
         }
         self.preview = match doc {
             _ if n == 0 => Preview::Note("Önizleme için nesne yok.".into()),
@@ -611,9 +693,28 @@ impl App {
                 b.close_list();
                 return Task::none();
             }
-            Event::Operator(insert, kind) => {
-                b.place(kind, insert, insert.encode_utf16().count());
-                focus = true;
+            Event::Operator(face, insert, kind) => {
+                if b.view_mode == ViewMode::Flow {
+                    b.flow_add(&format!("op:{face}"));
+                } else {
+                    b.place(kind, insert, insert.encode_utf16().count());
+                    focus = true;
+                }
+            }
+            Event::Mode(mode) => {
+                b.set_mode(mode);
+                focus = mode == ViewMode::Text;
+            }
+            Event::Flow(e) => return self.flow_event(e),
+            Event::Carry(i) => {
+                if b.view_mode == ViewMode::Flow
+                    && let Some(key) = b.palette().get(i).cloned()
+                {
+                    b.chosen = Some(key.clone());
+                    b.help_of(&key);
+                    b.flow.carrying = Some(key);
+                }
+                return Task::none();
             }
             Event::Query(q) => {
                 b.query = q;
@@ -628,8 +729,12 @@ impl App {
                     .or_else(|| shown.first())
                     .cloned();
                 if let Some(item) = chosen {
-                    b.place(item.kind, &item.insert, item.caret);
-                    focus = true;
+                    if b.view_mode == ViewMode::Flow {
+                        b.flow_add(&item.key);
+                    } else {
+                        b.place(item.kind, &item.insert, item.caret);
+                        focus = true;
+                    }
                 }
             }
             Event::TreeStep(by) => {
@@ -673,7 +778,9 @@ impl App {
                     return Task::none();
                 }
                 b.last_press = None;
-                if let Some(item) = b.entry(&key) {
+                if b.view_mode == ViewMode::Flow {
+                    b.flow_add(&key);
+                } else if let Some(item) = b.entry(&key) {
                     b.place(item.kind, &item.insert, item.caret);
                     focus = true;
                 }
@@ -712,9 +819,13 @@ impl App {
                 b.last_value = None;
                 if let Some(v) = listed.items.get(i) {
                     let insert = v.insert.clone();
-                    let n = insert.encode_utf16().count();
-                    b.place(Kind::Field, &insert, n);
-                    focus = true;
+                    if b.view_mode == ViewMode::Flow {
+                        b.flow_add_text(&insert);
+                    } else {
+                        let n = insert.encode_utf16().count();
+                        b.place(Kind::Field, &insert, n);
+                        focus = true;
+                    }
                 }
             }
             Event::Object(by) => {
@@ -738,7 +849,12 @@ impl App {
             b.preview_on(doc, store);
             tasks.extend(b.follow());
         }
-        if focus {
+        if focus
+            && self
+                .builder
+                .as_ref()
+                .is_some_and(|b| b.view_mode == ViewMode::Text)
+        {
             tasks.push(iced::widget::operation::focus(EDITOR));
         }
         Task::batch(tasks)
@@ -827,6 +943,28 @@ impl App {
             return None;
         }
         use iced::keyboard::key::Named;
+        // Akış: Delete removes the selected node, Ctrl+Z and Ctrl+Y undo and redo, Esc lets the node go.
+        if b.view_mode == ViewMode::Flow {
+            let selected = b.flow.selected.clone();
+            let ctrl = press.modifiers.control();
+            let letter = match &press.key {
+                iced::keyboard::Key::Character(c) => Some(c.to_lowercase()),
+                _ => None,
+            };
+            let flow = match (press.named(), letter.as_deref()) {
+                (Some(Named::Delete | Named::Backspace), _) => {
+                    selected.filter(|s| s != "r").map(FlowEvent::Remove)
+                }
+                (Some(Named::Escape), _) if selected.is_some() => Some(FlowEvent::Select(None)),
+                (_, Some("z")) if ctrl && press.modifiers.shift() => Some(FlowEvent::Redo),
+                (_, Some("z")) if ctrl => Some(FlowEvent::Undo),
+                (_, Some("y")) if ctrl => Some(FlowEvent::Redo),
+                _ => None,
+            };
+            if let Some(e) = flow {
+                return Some(self.flow_event(e));
+            }
+        }
         Some(match press.named() {
             Some(Named::Escape) => self.builder_event(Event::Cancel),
             Some(Named::Enter) if press.modifiers.control() => self.builder_event(Event::Ok),

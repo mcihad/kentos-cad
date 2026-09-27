@@ -75,6 +75,8 @@ class ExpressionBuilder {
   private readonly flow: FlowMode;
   private readonly tabs: HTMLButtonElement[];
   private readonly parens: HTMLButtonElement[] = [];
+  /** The keys note at the foot: the text's or the flow's. */
+  private readonly hint = h('span', { class: 'exprb__hint' });
   private mode: 'text' | 'flow' = 'text';
   private index = 0;
   private error = false;
@@ -170,7 +172,7 @@ class ExpressionBuilder {
       className: 'dialog--exprb',
       stack: true,
       content: [h('div', { class: 'exprb' }, main, this.tree.el, h('div', { class: 'exprb__side' }, this.flow.inspector.el, this.help.el))],
-      footer: [h('span', { class: 'exprb__hint' }, 'Ctrl+Boşluk: öneriler · Ctrl+Enter: Tamam'), h('div', { class: 'dialog__spacer' }), cancel, this.ok],
+      footer: [this.hint, h('div', { class: 'dialog__spacer' }), cancel, this.ok],
       onClose: () => this.dispose(),
     });
     this.changed(this.editor.checked);
@@ -197,8 +199,10 @@ class ExpressionBuilder {
     this.editor.el.hidden = mode !== 'text';
     this.flow.view.el.hidden = mode !== 'flow';
     this.parens.forEach((b) => (b.disabled = mode === 'flow'));
+    this.hint.textContent = mode === 'flow' ? 'Sürükle: bağla · Delete: düğümü sil · Ctrl+Z: geri al · Ctrl+Enter: Tamam' : 'Ctrl+Boşluk: öneriler · Ctrl+Enter: Tamam';
     this.flow.inspector.el.hidden = true;
     this.tree.refresh();
+    this.help.flow = mode === 'flow';
     this.help.show(null);
     if (mode === 'flow') {
       this.flow.view.refit();

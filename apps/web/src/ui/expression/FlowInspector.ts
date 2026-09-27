@@ -98,7 +98,10 @@ export class FlowInspector {
       const number = n.kind === 'number';
       const input = h('input', { class: 'field xfi__input', type: 'text', value: number ? n.title : unquote(n.title), spellcheck: 'false', 'aria-label': number ? 'Sayı' : 'Metin' });
       const msg = h('div', { class: 'xfi__msg', 'aria-live': 'polite' });
+      // Enter and the field's change (on leaving it) both write: once.
+      let written = false;
       const commit = () => {
+        if (written) return;
         if (number) {
           const v = Number(input.value.trim());
           if (input.value.trim() === '' || !Number.isFinite(v)) {
@@ -106,8 +109,12 @@ export class FlowInspector {
             msg.textContent = 'Bir sayı yazın; ondalık ayırıcı noktadır (12.5).';
             return;
           }
-          if (v !== Number(n.title)) edit({ op: 'setNumber', node: n.id, value: v });
+          if (v !== Number(n.title)) {
+            written = true;
+            edit({ op: 'setNumber', node: n.id, value: v });
+          }
         } else if (input.value !== unquote(n.title)) {
+          written = true;
           edit({ op: 'setText', node: n.id, value: input.value });
         }
       };

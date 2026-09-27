@@ -28,6 +28,8 @@ export class HelpPane {
   private readonly opts: HelpPaneOptions;
   private readonly d = new DisposableStore();
   private shown: string | null = null;
+  /** The builder's view: Akış' first words say how the flow is used. */
+  flow = false;
 
   constructor(opts: HelpPaneOptions) {
     this.opts = opts;
@@ -43,6 +45,21 @@ export class HelpPane {
   show(help: ExprHelp | null): void {
     if (help && help.key === this.shown) return;
     this.shown = help?.key ?? null;
+    if (!help && this.flow) {
+      this.el.replaceChildren(
+        h('h3', { class: 'xhelp__title' }, 'Akış'),
+        h('p', { class: 'xhelp__desc' }, 'İfadenin düğümleri: değer bir düğümün çıkışından (sağ) ötekinin girişine (sol) gider; sonuç sağdadır.'),
+        h(
+          'ul',
+          { class: 'xhelp__keys' },
+          h('li', null, 'Ağaçtan bir öğeyi sürükleyin ya da çift tıklayın: düğüm olur'),
+          h('li', null, 'Çıkışı bir girişe sürükleyin: bağlanır; girişin noktasını çekin: ayrılır'),
+          h('li', null, 'Düğüme tıklayın: burada düzenlenir; ', h('kbd', null, 'Delete'), ' siler, ', h('kbd', null, 'Ctrl+Z'), ' geri alır'),
+          h('li', null, 'Tekerlek yakınlaştırır; arka plana çift tık hepsini gösterir'),
+        ),
+      );
+      return;
+    }
     if (!help) {
       this.el.replaceChildren(
         h('h3', { class: 'xhelp__title' }, 'Yardım'),

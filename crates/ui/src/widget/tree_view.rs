@@ -39,6 +39,9 @@
 //!   sürüklenir; bırakılınca [`TreeView::on_move`] kaynağı, hedefi ve yeri
 //!   ([`Place`]: önüne, ardına, içine) bildirir. Bir düğüm kendi altına
 //!   taşınamaz. Esc sürüklemeyi bırakır.
+//! - **Dışarı götürme.** [`TreeView::on_carry`] ile kimlikli bir satır
+//!   basılı tutulup ağacın dışına çıkarılınca kimliği bildirilir (ör. bir
+//!   paletten tuvale öğe bırakmak); bırakıldığı yeri tuval bilir.
 //! - **Yerinde adlandırma.** [`Node::editor`] adın yerine düzenleyiciyi
 //!   koyar (ör. F2'ye basınca [`rename`] ile kurulan metin kutusu). Enter
 //!   ve kutunun dışına tıklamak adı kaydeder, Esc vazgeçer; düzenlenen
@@ -312,6 +315,9 @@ pub enum Place {
 /// Düğümü taşıma mesajı: kaynağın ve hedefin kimliği, yer.
 type OnMove<'a, Message> = Box<dyn Fn(usize, usize, Place) -> Message + 'a>;
 
+/// Satırı ağacın dışına götürme mesajı: götürülen düğümün kimliği.
+type OnCarry<'a, Message> = Box<dyn Fn(usize) -> Message + 'a>;
+
 /// Sanal ağacın satırı: derinliği ve düğümü (çocukları yok sayılır).
 type LazyRow<'a, Message> = Box<dyn Fn(usize) -> (usize, Node<'a, Message>) + 'a>;
 
@@ -323,6 +329,7 @@ pub struct TreeView<'a, Message> {
     height: Option<Length>,
     empty: Option<Fragment<'a>>,
     on_move: Option<OnMove<'a, Message>>,
+    on_carry: Option<OnCarry<'a, Message>>,
     lazy: Option<(usize, LazyRow<'a, Message>, Option<usize>)>,
 }
 
@@ -336,6 +343,7 @@ impl<'a, Message: Clone + 'a> TreeView<'a, Message> {
             height: None,
             empty: None,
             on_move: None,
+            on_carry: None,
             lazy: None,
         }
     }
@@ -345,6 +353,14 @@ impl<'a, Message: Clone + 'a> TreeView<'a, Message> {
     /// (ör. grupsuz katmanı başka türden gruba).
     pub fn on_move(mut self, on_move: impl Fn(usize, usize, Place) -> Message + 'a) -> Self {
         self.on_move = Some(Box::new(on_move));
+        self
+    }
+
+    /// Kimlikli bir satır basılı tutulup ağacın görünen alanının dışına
+    /// çıkarılınca kimliği bildirilir; satır tıklanmış sayılmaz. Nereye
+    /// bırakıldığını bırakılan yer (ör. bir tuval) bilir.
+    pub fn on_carry(mut self, on_carry: impl Fn(usize) -> Message + 'a) -> Self {
+        self.on_carry = Some(Box::new(on_carry));
         self
     }
 
@@ -520,11 +536,7 @@ fn node_row<'a, Message: Clone + 'a>(
                 border: iced::border::rounded(1),
                 ..container::Style::default()
             });
-        iced::widget::stack![
-            content,
-            container(bar).height(row_height()).align_y(Center)
-        ]
-        .into()
+        iced::widget::stack![content, container(bar).height(row_height()).align_y(Center)].into()
     } else {
         content.into()
     };
@@ -812,14 +824,16 @@ impl<'a, Message: Clone + 'a> From<TreeView<'a, Message>> for Element<'a, Messag
             _ => {
                 let rows = Rows::with_children(rows).width(Fill);
 
-                match tree.on_move {
-                    Some(on_move) => Reorder {
+                if tree.on_move.is_some() || tree.on_carry.is_some() {
+                    Reorder {
                         content: rows.into(),
                         slots,
-                        on_move,
+                        on_move: tree.on_move,
+                        on_carry: tree.on_carry,
                     }
-                    .into(),
-                    None => rows.into(),
+                    .into()
+                } else {
+                    rows.into()
                 }
             }
         };
@@ -846,12 +860,13 @@ impl<'a, Message: Clone + 'a> From<TreeView<'a, Message>> for Element<'a, Messag
 /// Sürüklemenin başladığı uzaklık.
 const DRAG: f32 = 4.0;
 
-/// Sürükleyerek taşınabilen satırlar: satırların sütunu, her satırın
-/// bilgisi ve taşıma mesajı.
+/// Sürükleyerek taşınabilen (ya da dışarı götürülebilen) satırlar:
+/// satırların sütunu, her satırın bilgisi, taşıma ve götürme mesajları.
 struct Reorder<'a, Message> {
     content: Element<'a, Message>,
     slots: Vec<Slot>,
-    on_move: OnMove<'a, Message>,
+    on_move: Option<OnMove<'a, Message>>,
+    on_carry: Option<OnCarry<'a, Message>>,
 }
 
 /// Sürüklenen `source` satırı, satır yüksekliği `height` olan listede `y`
@@ -972,7 +987,20 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
                 }
             }
             Event::Mouse(mouse::Event::CursorMoved { position }) => {
+                // Out of the tree's visible part: the row goes along (once).
+                if let (Some(on_carry), Some((row, _))) = (&self.on_carry, state.press)
+                    && state.dragging.is_none()
+                    && !bounds
+                        .intersection(viewport)
+                        .is_some_and(|seen| seen.contains(*position))
+                    && let Some(id) = self.slots.get(row).and_then(|slot| slot.id)
+                {
+                    state.press = None;
+                    shell.publish(on_carry(id));
+                    return;
+                }
                 if let Some((row, origin)) = state.press
+                    && self.on_move.is_some()
                     && state.dragging.is_none()
                     && position.distance(origin) > DRAG
                 {
@@ -993,8 +1021,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
                     if let (Some((row, place)), Some(from)) =
                         (state.target.take(), self.slots[source].id)
                         && let Some(to) = self.slots[row].id
+                        && let Some(on_move) = &self.on_move
                     {
-                        shell.publish((self.on_move)(from, to, place));
+                        shell.publish(on_move(from, to, place));
                     }
 
                     // Satır düğmeleri basılı kalmasın; tıklama sayılmaz.
@@ -1316,6 +1345,35 @@ mod interaction {
             ])
             .on_move(|from, to, place| (from, to, place))
             .into()
+    }
+
+    #[test]
+    fn a_row_held_and_taken_out_of_the_tree_is_carried() {
+        fn palette(_: &Vec<usize>) -> Element<'_, usize> {
+            TreeView::new([Column::new("Ad").width(Fill)])
+                .header(false)
+                .extend([Node::new("yuvarla").id(0), Node::new("$alan").id(1)])
+                .on_carry(|id| id)
+                .into()
+        }
+        let mut snapshot = Snapshot::new(Size::new(300.0, 200.0)).expect("çizici kurulamadı");
+        let mut carried: Vec<usize> = Vec::new();
+        let mut update = |carried: &mut Vec<usize>, id| carried.push(id);
+        let mut input =
+            |carried: &mut Vec<usize>, input| snapshot.input(carried, palette, &mut update, input);
+        let row = row_height();
+
+        // Within the tree nothing goes; out of it, the pressed row does, once.
+        input(
+            &mut carried,
+            Input::Drag(Point::new(120.0, row * 1.5), Point::new(160.0, row * 0.5)),
+        );
+        assert!(carried.is_empty());
+        input(
+            &mut carried,
+            Input::Drag(Point::new(120.0, row * 1.5), Point::new(120.0, row * 6.0)),
+        );
+        assert_eq!(carried, [1]);
     }
 
     #[test]

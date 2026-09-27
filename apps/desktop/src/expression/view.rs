@@ -1,7 +1,9 @@
 //! The builder's window (DESIGN.md §7.16), as the web's: the operators, the
 //! editor, the call's signature, the error or warning and the preview on the
 //! left; the searchable tree in the middle; the help on the right; Vazgeç
-//! and Tamam under them.
+//! and Tamam under them. Metin | Akış over the operators: in Akış the flow
+//! of the same text stands in the editor's place, the tree is its palette
+//! and the selected node's inspector stands over the help (docs/adr/0101).
 
 use iced::widget::tooltip::Position as Beside;
 use iced::widget::{
@@ -14,16 +16,20 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Mode, typography};
+use kentos_ui::widget::tabs::{Tab, Tabs};
 use kentos_ui::widget::tree_view::{Column as TreeColumn, Node, TreeView};
 use kentos_ui::widget::{Dialog, Tip, horizontal_divider, overlay, tip};
 
 use super::highlight::Syntax;
-use super::{Builder, Event, Preview, editor, ev};
+use super::{Builder, Event, Preview, ViewMode, editor, ev, flow_view, values_section};
 use crate::app::{App, Message};
 
 /// The window's width and highest height (at 12 px text; KentOS UI scales them).
 const WIDTH: f32 = 980.0;
 const HEIGHT: f32 = 700.0;
+/// In Akış the window takes more of the screen: a flow is wider than a line of text.
+const FLOW_WIDTH: f32 = 1240.0;
+const FLOW_HEIGHT: f32 = 800.0;
 /// The tree's and the help's columns.
 const TREE: f32 = 220.0;
 const HELP: f32 = 270.0;
@@ -51,20 +57,34 @@ impl App {
     /// The builder over the window that opened it, while it is open and not picking.
     pub(crate) fn builder_view(&self) -> Option<Element<'_, Message>> {
         let b = self.builder.as_ref().filter(|b| !b.is_picking())?;
+        let flow = b.view_mode == ViewMode::Flow;
+        let help_column: Element<'_, Message> =
+            match flow_view::inspector(b, self.mode).filter(|_| flow) {
+                Some(inspector) => column![
+                    container(scrollable(inspector).direction(style::field::body_scrollbar()))
+                        .max_height(typography::scaled(360.0)),
+                    horizontal_divider(),
+                    scrollable(help(b, self.mode))
+                        .direction(style::field::body_scrollbar())
+                        .height(Fill),
+                ]
+                .height(Fill)
+                .into(),
+                None => scrollable(help(b, self.mode))
+                    .direction(style::field::body_scrollbar())
+                    .height(Fill)
+                    .into(),
+            };
         let body = row![
             main(b, self.mode),
             container(tree(b, self.mode))
                 .width(Length::Fixed(typography::scaled(TREE)))
                 .height(Fill)
                 .style(style::container::header),
-            container(
-                scrollable(help(b, self.mode))
-                    .direction(style::field::body_scrollbar())
-                    .height(Fill)
-            )
-            .width(Length::Fixed(typography::scaled(HELP)))
-            .height(Fill)
-            .style(style::container::header),
+            container(help_column)
+                .width(Length::Fixed(typography::scaled(HELP)))
+                .height(Fill)
+                .style(style::container::header),
         ]
         .spacing(12)
         .height(Fill);
@@ -78,16 +98,36 @@ impl App {
                 .push(body)
                 .push(horizontal_divider())
                 .push(footer(b))
-                .width(WIDTH)
-                .max_height(HEIGHT),
+                .width(if flow { FLOW_WIDTH } else { WIDTH })
+                .max_height(if flow { FLOW_HEIGHT } else { HEIGHT }),
             ev(Event::Cancel),
         ))
     }
 }
 
-/// The left column: operators, editor, signature, status and preview.
+/// The left column: Metin | Akış, operators, editor (or the flow),
+/// signature, status and preview.
 fn main(b: &Builder, mode: Mode) -> Element<'_, Message> {
     let syntax = Syntax::of(mode);
+    let flow = b.view_mode == ViewMode::Flow;
+    let tabs = Tabs::new(
+        [
+            Tab::new("Metin")
+                .icon(crate::icons::from_web(Some("expression")))
+                .closable(false),
+            Tab::new("Akış")
+                .icon(crate::icons::from_web(Some("modelNew")))
+                .closable(false),
+        ],
+        usize::from(flow),
+        |i| {
+            ev(Event::Mode(if i == 0 {
+                ViewMode::Text
+            } else {
+                ViewMode::Flow
+            }))
+        },
+    );
     let ops = OPERATORS
         .iter()
         .fold(Row::new().spacing(3), |ops, &(face, insert, kind)| {
@@ -107,7 +147,11 @@ fn main(b: &Builder, mode: Mode) -> Element<'_, Message> {
                 )
                 .padding([2, 7])
                 .style(style::button::secondary)
-                .on_press(ev(Event::Operator(insert, kind))),
+                // The parentheses are the text's: the flow draws its own.
+                .on_press_maybe(
+                    (!flow || face != "(" && face != ")")
+                        .then(|| ev(Event::Operator(face, insert, kind))),
+                ),
                 Tip::new(tip_text),
                 Beside::Bottom,
             ))
@@ -116,9 +160,14 @@ fn main(b: &Builder, mode: Mode) -> Element<'_, Message> {
         .spacing(8)
         .width(Fill)
         .height(Fill)
-        .push(ops.wrap())
-        .push(container(editor::view(b, mode)).height(Fill))
-        .push(signature(b));
+        .push(tabs)
+        .push(ops.wrap());
+    out = if flow {
+        out.push(container(flow_view::area(b, mode)).height(Fill))
+    } else {
+        out.push(container(editor::view(b, mode)).height(Fill))
+            .push(signature(b))
+    };
     out = out.push(status(b));
     out.push(preview(b)).into()
 }
@@ -169,8 +218,23 @@ fn signature(b: &Builder) -> Element<'_, Message> {
     .into()
 }
 
-/// The error (red, with its place) or the first warning.
+/// The error (red, with its place) or the first warning; in Akış a change
+/// the core refused, until the next change.
 fn status(b: &Builder) -> Element<'_, Message> {
+    if let Some(failed) = b
+        .flow
+        .failed
+        .as_ref()
+        .filter(|_| b.view_mode == ViewMode::Flow)
+    {
+        return row![
+            icon(Icon::Error).size(14.0).tone(Tone::Danger),
+            label::caption(failed.clone())
+        ]
+        .spacing(6)
+        .align_y(Alignment::Start)
+        .into();
+    }
     let line = |glyph: Icon, tone: Tone, words: String| -> Element<'_, Message> {
         row![icon(glyph).size(14.0).tone(tone), label::caption(words)]
             .spacing(6)
@@ -248,6 +312,12 @@ fn preview(b: &Builder) -> Element<'_, Message> {
         .into()
 }
 
+/// A group of the tree as it is drawn: its title and entries.
+struct Shown {
+    title: String,
+    items: Vec<core::Item>,
+}
+
 /// The tree: the search and the groups with their entries.
 fn tree(b: &Builder, mode: Mode) -> Element<'_, Message> {
     let syntax = Syntax::of(mode);
@@ -268,11 +338,27 @@ fn tree(b: &Builder, mode: Mode) -> Element<'_, Message> {
     .padding([0, 8])
     .style(style::container::field_box);
     let searching = !b.query.trim().is_empty();
+    let flow = b.view_mode == ViewMode::Flow;
+    // Akış' palette: the values to write first; rows carry their place in the
+    // palette (`Builder::palette`), so one can be carried out onto the flow.
+    let mut groups: Vec<(String, String, Vec<core::Item>)> = Vec::new();
+    if flow {
+        let values = values_section(&b.query);
+        if !values.is_empty() {
+            groups.push(("values".to_owned(), "Sabit değerler".to_owned(), values));
+        }
+    }
     let sections: Vec<Section> = core::catalog(&b.schema, &b.query);
-    let roots = sections.into_iter().map(|s| {
-        let id = s.group.id().to_owned();
-        let open = searching || b.open.contains(&id);
-        let count = s.items.len();
+    groups.extend(
+        sections
+            .into_iter()
+            .map(|s| (s.group.id().to_owned(), s.title.to_owned(), s.items)),
+    );
+    let mut place = 0usize;
+    let roots = groups.into_iter().map(|(id, title, items)| {
+        let open = searching || id == "values" || b.open.contains(&id);
+        let count = items.len();
+        let s = Shown { title, items };
         let mut node = Node::new(s.title)
             .folder()
             .cells([label::mono_caption(count.to_string())
@@ -303,8 +389,19 @@ fn tree(b: &Builder, mode: Mode) -> Element<'_, Message> {
                     _ => space().into(),
                 };
                 let selected = b.chosen.as_deref() == Some(item.key.as_str());
+                let color = match item.key.as_str() {
+                    "lit:number" => syntax.literal,
+                    "lit:text" => syntax.text,
+                    _ => color,
+                };
+                let glyph = match item.key.as_str() {
+                    "lit:number" => "#",
+                    "lit:text" => "'",
+                    _ => glyph,
+                };
                 node = node.push(
                     Node::new(item.label.clone())
+                        .id(place)
                         .icon(
                             text(glyph)
                                 .font(typography::mono())
@@ -315,19 +412,23 @@ fn tree(b: &Builder, mode: Mode) -> Element<'_, Message> {
                         .selected(selected)
                         .on_press(ev(Event::Row(item.key.clone()))),
                 );
+                place += 1;
             }
         }
         node
     });
     let empty = format!("“{}” için öğe yok.", b.query.trim());
-    let list = TreeView::new([
+    let mut list = TreeView::new([
         TreeColumn::new("Ad").width(Fill),
         TreeColumn::new("Tür").width(56).align_right(),
     ])
     .header(false)
-    .extend(roots)
+    .extend(roots.collect::<Vec<_>>())
     .empty(empty)
     .height(Fill);
+    if flow {
+        list = list.on_carry(|place| ev(Event::Carry(place)));
+    }
     let room = iced::Padding {
         top: 10.0,
         right: 8.0,
@@ -343,6 +444,17 @@ fn tree(b: &Builder, mode: Mode) -> Element<'_, Message> {
 /// The help of what is chosen, highlighted or under the cursor; a field's values.
 fn help(b: &Builder, mode: Mode) -> Element<'_, Message> {
     let Some(h) = &b.help else {
+        if b.view_mode == ViewMode::Flow {
+            return column![
+                label::strong("Akış"),
+                label::body("İfadenin düğümleri: değer bir düğümün çıkışından (sağ) ötekinin girişine (sol) gider; sonuç sağdadır."),
+                label::caption("Ağaçtan bir öğeyi sürükleyin ya da çift tıklayın: düğüm olur. Çıkışı bir girişe sürükleyin: bağlanır; girişin noktasını çekin: ayrılır. Düğüme tıklayın: burada düzenlenir; Delete siler, Ctrl+Z geri alır. Tekerlek yakınlaştırır.")
+                    .style(style::text::muted),
+            ]
+            .spacing(8)
+            .padding(14)
+            .into();
+        }
         return column![
             label::strong("Yardım"),
             label::body("Ağaçtan bir öğe seçin ya da yazmaya başlayın: imlecin üstündeki adın yardımı burada görünür."),
@@ -542,10 +654,13 @@ fn values(b: &Builder) -> Element<'_, Message> {
 /// The keys note, Vazgeç and Tamam (off while the text has an error).
 fn footer(b: &Builder) -> Element<'_, Message> {
     let blocked = b.check.error.is_some() && !b.source.trim().is_empty();
+    let keys = if b.view_mode == ViewMode::Flow {
+        "Sürükle: bağla · Delete: düğümü sil · Ctrl+Z: geri al · Ctrl+Enter: Tamam"
+    } else {
+        "Ctrl+Boşluk: öneriler · Ctrl+Enter: Tamam"
+    };
     row![
-        label::caption("Ctrl+Boşluk: öneriler · Ctrl+Enter: Tamam")
-            .style(style::text::muted)
-            .width(Fill),
+        label::caption(keys).style(style::text::muted).width(Fill),
         button(label::body("Vazgeç"))
             .padding([5, 14])
             .style(style::button::secondary)
