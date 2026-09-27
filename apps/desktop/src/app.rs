@@ -196,8 +196,15 @@ pub enum Message {
     Modifiers(keyboard::Modifiers),
     Dock(docking::Event<Panel>),
     LayerSelected(String),
-    /// Katman ara typed in.
+    /// Katman ara typed in; ↓ in it.
     LayerSearch(String),
+    LayerSearchDown,
+    /// Komut ara typed in; a found command run or its ribbon place shown;
+    /// the outline's moment over (ribbon_search.rs).
+    RibbonSearch(String),
+    RibbonSearchRun(usize),
+    RibbonSearchReveal(usize),
+    RibbonFlashEnd(&'static str),
     LayerVisible(String),
     LayerLocked(String),
     LayerExpanded(String),
@@ -265,6 +272,10 @@ pub struct App {
     pub(crate) last_layer_press: Option<(String, Instant)>,
     /// Katman ara's text (layer_tree.rs).
     pub(crate) layer_query: String,
+    /// Komut ara's text, and the command whose ribbon place is outlined
+    /// for a moment (ribbon_search.rs).
+    pub(crate) ribbon_search: String,
+    pub(crate) ribbon_flash: Option<&'static str>,
     /// The layer tree has the keyboard: a row was pressed and nothing else
     /// took the keyboard since (layer_tree.rs).
     pub(crate) layers_keyboard: bool,
@@ -414,6 +425,8 @@ impl App {
             renaming: None,
             last_layer_press: None,
             layer_query: String::new(),
+            ribbon_search: String::new(),
+            ribbon_flash: None,
             layers_keyboard: false,
             layer_reveal: None,
             warnings_total: 0,
@@ -636,6 +649,11 @@ impl App {
             Message::Dock(event) => self.docks.update(event),
             Message::LayerSelected(id) => self.layer_pressed(id),
             Message::LayerSearch(text) => self.layer_search(text),
+            Message::LayerSearchDown => return self.layer_search_down(),
+            Message::RibbonSearch(text) => self.search_typed(text),
+            Message::RibbonSearchRun(index) => return self.search_run(index),
+            Message::RibbonSearchReveal(index) => return self.search_reveal(index),
+            Message::RibbonFlashEnd(id) => self.search_flash_end(id),
             Message::Layer(event) => return self.layer_event(event),
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
             Message::TextField(event) => self.text_field_event(event),

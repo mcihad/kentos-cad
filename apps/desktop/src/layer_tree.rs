@@ -20,16 +20,17 @@
 //!   keys work as anywhere (shortcuts, typing into the command line).
 
 use iced::keyboard::key::Named;
-use iced::widget::{container, stack, text_input};
-use iced::{Element, Fill, Padding, Task};
+use iced::widget::container;
+use iced::{Element, Fill, Task};
 use kentos_contracts::{LayerNode, LayerNodeType};
-use kentos_ui::icon::{Icon, Tone, icon};
-use kentos_ui::style;
-use kentos_ui::theme::typography;
+use kentos_ui::widget::SearchBox;
 
 use crate::app::{App, Message};
 use crate::keys::KeyPress;
 use crate::layering::Event;
+
+/// Katman ara's field.
+const LAYER_SEARCH: &str = "layer-search";
 
 /// A row of the tree as shown: its depth, its node and whether the groups
 /// above it are shown.
@@ -41,12 +42,16 @@ pub(crate) struct OpenRow<'a> {
 
 /// The tree's rows as shown, depth first: the nodes the search keeps
 /// (`query` as [`query`] makes it; empty keeps every node) and the children
-/// of the open groups. While it searches every group it keeps is open (the
-/// web's `render`).
+/// of the open groups. The search keeps a match with everything under it (a
+/// matching group shows its layers) and the groups above it; while it
+/// searches every group it keeps is open (the web's `render`, since c63cd77).
 pub(crate) fn open_rows<'a>(nodes: &'a [LayerNode], query: &str) -> Vec<OpenRow<'a>> {
+    fn matches(node: &LayerNode, query: &str) -> bool {
+        !query.is_empty() && lower_tr(&node.name).contains(query)
+    }
     fn keep(node: &LayerNode, query: &str) -> bool {
         query.is_empty()
-            || lower_tr(&node.name).contains(query)
+            || matches(node, query)
             || node.children.iter().any(|child| keep(child, query))
     }
     fn walk<'a>(
@@ -54,27 +59,30 @@ pub(crate) fn open_rows<'a>(nodes: &'a [LayerNode], query: &str) -> Vec<OpenRow<
         query: &str,
         depth: usize,
         visible: bool,
+        under: bool,
         rows: &mut Vec<OpenRow<'a>>,
     ) {
-        for node in nodes.iter().filter(|node| keep(node, query)) {
+        for node in nodes.iter().filter(|node| under || keep(node, query)) {
             rows.push(OpenRow {
                 depth,
                 node,
                 parent_visible: visible,
             });
             if open(node, query) {
+                let under = under || matches(node, query);
                 walk(
                     &node.children,
                     query,
                     depth + 1,
                     visible && node.visible,
+                    under,
                     rows,
                 );
             }
         }
     }
     let mut rows = Vec::new();
-    walk(nodes, query, 0, true, &mut rows);
+    walk(nodes, query, 0, true, false, &mut rows);
     rows
 }
 
@@ -113,23 +121,27 @@ fn lower_tr(text: &str) -> String {
 
 impl App {
     /// The search box over the tree (the web's `panel__toolbar`): a field the
-    /// panel's width, its magnifier inside on the left.
+    /// panel's width, its magnifier inside on the left. ↓ takes the keyboard
+    /// into the tree at its first row; Esc clears the text, and on an empty
+    /// box gives the keyboard back to the drawing (the web's since c63cd77).
     pub(crate) fn layer_search_view(&self) -> Element<'_, Message> {
-        let field = text_input("Katman ara", &self.layer_query)
-            .on_input(Message::LayerSearch)
-            .padding(Padding::from([4, 8]).left(26.0))
-            .size(typography::body())
-            .font(typography::ui())
-            .width(Fill)
-            .style(style::field::input);
-        let magnifier = container(icon(Icon::Search).size(14.0).tone(Tone::Muted))
-            .padding(Padding::ZERO.left(8.0))
-            .height(Fill)
-            .center_y(Fill);
-        container(stack![field, magnifier])
-            .padding([6, 8])
-            .width(Fill)
-            .into()
+        let field = SearchBox::new(self.layer_query.clone(), "Katman ara", Message::LayerSearch)
+            .id(LAYER_SEARCH)
+            .fill()
+            .height(28.0)
+            .on_down(Message::LayerSearchDown);
+        container(field).padding([6, 8]).width(Fill).into()
+    }
+
+    /// ↓ in Katman ara: the tree has the keyboard, its first row chosen
+    /// (the web's `enterFirst`); the box lets go of the keys.
+    pub(crate) fn layer_search_down(&mut self) -> Task<Message> {
+        let Some(first) = self.tree_lines().first().map(|(id, ..)| id.clone()) else {
+            return Task::none();
+        };
+        self.layers_keyboard = true;
+        self.choose_row(first);
+        crate::input::release_keyboard()
     }
 
     /// Katman ara: the tree shows what the text finds.
@@ -302,8 +314,9 @@ mod tests {
     }
 
     /// The sample's tree: Kadastro (`layer-g`) with Parsel and Bina, then
-    /// Çizim. The search keeps the matching nodes and the groups above them,
-    /// open; a group's name alone keeps no child; the Turkish I's fold.
+    /// Çizim. The search keeps the matching nodes with what is under them
+    /// and the groups above them, open; the Turkish I's fold. ↓ in the box
+    /// gives the tree the keyboard at its first row.
     #[test]
     fn the_search_keeps_what_it_finds_and_the_groups_above() {
         let mut app = app_with_drawing();
@@ -314,8 +327,9 @@ mod tests {
         let doc = app.document.as_mut().expect("open");
         doc.model.set_layer_expanded("layer-g", false);
         assert_eq!(ids(&app), ["layer-g", "bina"]);
+        // A matching group keeps its layers (the web's since c63cd77).
         let _ = app.update(Message::LayerSearch("kadastro".into()));
-        assert_eq!(ids(&app), ["layer-g"]);
+        assert_eq!(ids(&app), ["layer-g", "parsel", "bina"]);
         let _ = app.update(Message::LayerSearch("yok".into()));
         assert!(ids(&app).is_empty());
         let _ = app.update(Message::LayerSearch(String::new()));
@@ -326,6 +340,11 @@ mod tests {
         );
         assert_eq!(query("  İMAR "), "imar");
         assert_eq!(query("IŞIK"), "ışık");
+
+        let _ = app.update(Message::LayerSearch("bina".into()));
+        let _ = app.update(Message::LayerSearchDown);
+        assert!(app.layers_keyboard);
+        assert_eq!(chosen(&app), Some("layer-g"), "the first listed row");
     }
 
     /// A pressed row gives the tree the keyboard: ↑ ↓ Home End walk the

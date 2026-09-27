@@ -26,7 +26,11 @@ export interface TreeAdapter<T> {
   /** Delete (the owner removes the node); without it the key is left to others. */
   onDelete?(node: T): void;
   onContextMenu?(node: T, e: MouseEvent): void;
-  /** Keep a node while filtering (ancestors of matches are kept automatically). */
+  /**
+   * Keep a node while filtering. Ancestors of matches are kept
+   * automatically, and a match keeps everything under it (a matching group
+   * shows its layers).
+   */
   matches?(node: T, query: string): boolean;
   /** Text when nothing is listed (default speaks of layers). */
   empty?(filtered: boolean): string;
@@ -138,19 +142,21 @@ export class TreeView<T> {
     this.emptyEl?.remove();
     this.emptyEl = null;
     const q = this.query;
-    const keep = (n: T): boolean => !q || !!a.matches?.(n, q) || a.children(n).some(keep);
+    const match = (n: T): boolean => !!q && !!a.matches?.(n, q);
+    const keep = (n: T): boolean => !q || match(n) || a.children(n).some(keep);
     const lines: Line<T>[] = [];
-    const walk = (nodes: readonly T[], depth: number) => {
-      const listed = nodes.filter(keep);
+    // Under a match everything is listed: a matching group shows all its layers.
+    const walk = (nodes: readonly T[], depth: number, under: boolean) => {
+      const listed = under ? nodes : nodes.filter(keep);
       listed.forEach((n, i) => {
         const kids = a.children(n);
         const hasKids = kids.length > 0;
         const expanded = hasKids && (a.isExpanded(n) || !!q);
         lines.push({ node: n, id: a.id(n), depth, hasKids, expanded, pos: i + 1, size: listed.length });
-        if (expanded) walk(kids, depth + 1);
+        if (expanded) walk(kids, depth + 1, under || match(n));
       });
     };
-    walk(roots, 0);
+    walk(roots, 0, false);
     this.lines = lines;
     this.at = new Map(lines.map((l, i) => [l.id, i]));
     if (!lines.length) {
@@ -162,6 +168,15 @@ export class TreeView<T> {
     this.below.style.height = `${lines.length * this.rowHeight()}px`;
     this.el.scrollTop = scroll;
     this.paint();
+  }
+
+  /** Gives the tree the keyboard at its first listed row (the search box's ↓); false when it lists none. */
+  enterFirst(): boolean {
+    const first = this.lines[0];
+    if (!first) return false;
+    this.el.focus();
+    this.focus(first.id);
+    return true;
   }
 
   focus(id: string, moveDom = true): void {

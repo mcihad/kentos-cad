@@ -30,6 +30,9 @@ pub struct Group<'a, Message> {
     keep: bool,
     more: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
     launcher: Option<(Message, String)>,
+    /// A command shown by the search is under the ▾, or in the folded panel.
+    flash_more: bool,
+    flash_folded: bool,
 }
 
 enum Content<'a, Message> {
@@ -61,6 +64,8 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
             keep: false,
             more: None,
             launcher: None,
+            flash_more: false,
+            flash_folded: false,
         }
     }
 
@@ -123,6 +128,20 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
     /// Seyrek araçlar: başlığın yanındaki ▾ ile açılır.
     pub fn more(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
         self.more = Some(Rc::new(menu));
+        self
+    }
+
+    /// Yeri gösterilen komut seyrek araçlarda: ▾ kısa süre vurgu
+    /// çerçevesiyle çizilir.
+    pub fn flash_more(mut self, flash: bool) -> Self {
+        self.flash_more = flash;
+        self
+    }
+
+    /// Yeri gösterilen komut bu panelde: panel tek düğmeye katlanmışsa o
+    /// düğme kısa süre vurgu çerçevesiyle çizilir.
+    pub fn flash_folded(mut self, flash: bool) -> Self {
+        self.flash_folded = flash;
         self
     }
 
@@ -224,7 +243,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         let middle: Element<'a, Message> = match &self.more {
             Some(menu) => {
                 let menu = menu.clone();
-                tip(
+                let more = tip(
                     MenuButton::new(
                         container(
                             row![title(), icon(Icon::ChevronDown).size(8.0).tone(Tone::Muted)]
@@ -237,7 +256,8 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
                     ),
                     Tip::new(format!("{}: diğer araçlar", self.title)),
                     tooltip::Position::Bottom,
-                )
+                );
+                super::flashed(more, self.flash_more)
             }
             None => title().into(),
         };
@@ -290,12 +310,15 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
             top: typography::scaled(10.0),
             ..Padding::ZERO
         });
-        container(tip(
-            MenuButton::new(face, move || menu()),
-            Tip::new(self.title.to_string()).body(
-                "Pencere dar olduğu için panel tek düğmeye katlandı; tıklayınca araçları açılır.",
+        container(super::flashed(
+            tip(
+                MenuButton::new(face, move || menu()),
+                Tip::new(self.title.to_string()).body(
+                    "Pencere dar olduğu için panel tek düğmeye katlandı; tıklayınca araçları açılır.",
+                ),
+                tooltip::Position::Bottom,
             ),
-            tooltip::Position::Bottom,
+            self.flash_folded,
         ))
         .width(self.width(3) - 1.0)
         .padding(Padding {

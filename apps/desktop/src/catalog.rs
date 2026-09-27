@@ -252,6 +252,9 @@ pub struct Command {
     pub standing: Standing,
     /// Why the web itself does not run it yet (e.g. “Yakında”).
     pub pending_note: Option<&'static str>,
+    /// The web's category (“Dosya”, “Çizim”): Komut ara says it of a command
+    /// the ribbon does not have.
+    pub category: &'static str,
 }
 
 impl Command {
@@ -495,6 +498,7 @@ impl Catalog {
                     icon: icons::from_web(c.icon.as_deref()),
                     standing,
                     pending_note,
+                    category: leak(c.category.unwrap_or_default()),
                 }
             })
             .collect();
@@ -705,6 +709,7 @@ struct RawCommand {
     shortcuts_in_input: Vec<String>,
     status: String,
     pending_note: Option<String>,
+    category: Option<String>,
 }
 
 #[derive(Deserialize)]

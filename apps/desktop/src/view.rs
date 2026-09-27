@@ -153,6 +153,9 @@ impl App {
                     .fold(menu.separator(), |menu, id| self.command_item(menu, id))
             });
         let full = self.fullscreen;
+        // Komut ara between the name and the coordinate system (ribbon_search.rs).
+        let query = self.ribbon_search.clone();
+        let found = self.search_rows();
         iced::widget::responsive(move |size| {
             let name = title
                 .as_ref()
@@ -175,13 +178,47 @@ impl App {
             } else {
                 0.0
             };
-            let needed = text(&name) + 12.0 + crs_icon + crs_name_width + buttons;
-            let crs_named = needed <= size.width;
+            let base = text(&name) + 12.0 + crs_icon + buttons;
+            let search_width = kentos_ui::theme::typography::scaled(206.0) + 4.0;
+            // The web's steps (`Ribbon.fitBar`): the search's key hint goes
+            // first, then the coordinate system's name, then the search folds
+            // to its magnifier; the drawing's name is cut last. Hiding the
+            // hint frees no width, so the first two go together.
+            let roomy = base + crs_name_width + search_width <= size.width;
+            let crs_named = roomy;
+            let compact = base + search_width > size.width;
+            // Focused in a tight row, the box takes the name's room, never the buttons'.
+            let named_crs = if crs_named { crs_name_width } else { 0.0 };
+            let room = size.width - crs_icon - named_crs - buttons - 8.0;
+            let search = kentos_ui::widget::SearchBox::new(
+                query.clone(),
+                "Komut ara…",
+                Message::RibbonSearch,
+            )
+            .id(crate::ribbon_search::SEARCH_INPUT)
+            .results(found.clone())
+            .empty(format!(
+                "“{}” ile eşleşen komut yok. Komut satırındaki takma adlar da aranır (ör. L, CIZGI).",
+                query.trim()
+            ))
+            .on_run(Message::RibbonSearchRun)
+            .on_reveal(Message::RibbonSearchReveal)
+            .compact(compact)
+            .room(room);
+            let search = if roomy { search.hint("Alt+Q") } else { search };
+            let search = kentos_ui::widget::tip(
+                search,
+                Tip::new("Komut ara").detail("Alt+Q").body(
+                    "Bir komutu adıyla ya da komut satırı takma adıyla (ör. L, CIZGI) bulun; Enter çalıştırır, Alt+Enter şeritteki yerini gösterir.",
+                ),
+                iced::widget::tooltip::Position::Bottom,
+            );
             let mut row = row![
                 container(document_title(&name, title.as_ref().is_some_and(|t| t.1)))
                     .width(Fill)
                     .align_x(iced::alignment::Horizontal::Right)
-                    .clip(true)
+                    .clip(true),
+                search,
             ]
             .width(Fill)
             .spacing(4)
@@ -209,7 +246,13 @@ impl App {
         tab: &str,
         panel: &RibbonPanel,
     ) -> Option<Group<'static, Message>> {
-        let mut group = Group::new(panel.label).icon(panel.icon).keep(panel.keep);
+        // A command Komut ara shows: its panel's ▾, or the folded panel (ribbon_search.rs).
+        let (flash_here, flash_more) = self.flash_in(panel);
+        let mut group = Group::new(panel.label)
+            .icon(panel.icon)
+            .keep(panel.keep)
+            .flash_more(flash_more)
+            .flash_folded(flash_here);
         let mut any = false;
         for item in &panel.items {
             // The Görünüm tab's own groups replace the web's Tema menu; the web's
@@ -256,15 +299,18 @@ impl App {
                 .tip(tip(command))
                 .on(self.checked(command.id).unwrap_or(false))
                 .active(self.running(command.id))
+                .flash(self.ribbon_flash == Some(command.id))
         };
         match item {
             Item::Command { id, large } => Some(make(catalog.get(id)?, *large)),
             Item::Split { entries, large } => {
                 let first = catalog.get(entries.first()?.id)?;
                 let ids: Vec<&'static str> = entries.iter().map(|e| e.id).collect();
-                // One of the family running lights the split's action (DESIGN.md §7.3.1).
+                // One of the family running lights the split's action (DESIGN.md §7.3.1);
+                // one of it shown by Komut ara outlines the split.
                 let running = ids.iter().any(|id| self.running(id));
-                let button = make(first, *large).active(running);
+                let flash = self.ribbon_flash.is_some_and(|id| ids.contains(&id));
+                let button = make(first, *large).active(running).flash(flash);
                 let entries = entries.clone();
                 let menu = move || split_menu(&entries);
                 Some(with_family(button, &ids, first.title, menu))
@@ -278,7 +324,8 @@ impl App {
                     Button::large(icon, *label)
                 } else {
                     Button::small(icon, *label)
-                };
+                }
+                .flash(self.ribbon_flash.is_some_and(|id| ids.contains(&id)));
                 let members = ids.clone();
                 let checked = self.checks(&members);
                 let menu = move || menu_of(&members, &checked);

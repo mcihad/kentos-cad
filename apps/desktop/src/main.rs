@@ -37,6 +37,7 @@ mod project;
 mod properties;
 mod recent;
 mod recovery;
+mod ribbon_search;
 #[cfg(test)]
 mod ribbon_tests;
 mod saving;

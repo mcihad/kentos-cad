@@ -67,3 +67,7 @@
   - klavyeyi geri alanlar: çizim, komut satırı, şeritten komut, arama.
 - `calc::grid::tests::the_arrows_find_the_cell_and_the_row_above`.
 - Görüntüler (`cargo test -p kentos-desktop layer_tree::screens -- --ignored --nocapture`): `.run/shots/katman-ara-*`, `katman-ara-yok-*`, `katman-klavye-*`; koyu ve açık, 1440×900 ve 1100×650.
+
+## Sonra
+
+- 27 Eylül: web ajanının `c63cd77`'siyle eşleşen grup bütün katmanlarıyla görünür. “Katman ara” kutusunda ↓ klavyeyi ağacın ilk satırına verir; Esc yazıyı siler, boş kutuda klavyeyi çizime bırakır. Masaüstünde ikisi [ADR 0077](0077-desktop-command-search.md)'de.

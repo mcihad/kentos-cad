@@ -8,10 +8,9 @@ use iced::window;
 use kentos_cloud::Cloud;
 use kentos_contracts::{CONTRACTS_VERSION, Health};
 use kentos_interaction::Level;
-use kentos_ui::widget::command_line;
 use kentos_ui::widget::docking::Side;
 
-use crate::app::{App, COMMAND_INPUT, Message, Panel};
+use crate::app::{App, Message, Panel};
 
 /// The web command ids this module runs.
 pub const COMMANDS: [&str; 4] = [
@@ -29,12 +28,8 @@ impl App {
         match id {
             "view.rightPanel" => self.toggle_right_panel(),
             "view.fullscreen" => return self.toggle_fullscreen(),
-            // The ribbon has no search box yet: the command line lists every
-            // command and finds one by its name or alias (the web's classic way).
-            "view.commandSearch" => {
-                self.command_input.clear();
-                return command_line::show_commands(COMMAND_INPUT);
-            }
+            // Komut ara in the tab row takes the keyboard (ribbon_search.rs).
+            "view.commandSearch" => return self.search_focus(),
             "server.check" => return self.check_server(),
             _ => {}
         }

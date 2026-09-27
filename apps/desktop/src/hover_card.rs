@@ -31,7 +31,7 @@ use crate::selecting::kind_title;
 pub(crate) const DELAY: Duration = Duration::from_millis(500);
 
 /// `message` after `delay`, from a thread of its own (as the recovery ticks run).
-fn after(delay: Duration, message: Message) -> iced::Task<Message> {
+pub(crate) fn after(delay: Duration, message: Message) -> iced::Task<Message> {
     let (done, wait) = iced::futures::channel::oneshot::channel();
     std::thread::spawn(move || {
         std::thread::sleep(delay);

@@ -65,6 +65,7 @@ pub struct Button<'a, Message> {
     state: State,
     tip: Option<Tip>,
     menu: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
+    flash: bool,
 }
 
 impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
@@ -77,6 +78,7 @@ impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
             state: self.state,
             tip: self.tip.clone(),
             menu: self.menu.clone(),
+            flash: self.flash,
         }
     }
 }
@@ -101,6 +103,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             state: State::Idle,
             tip: None,
             menu: None,
+            flash: false,
         }
     }
 
@@ -142,6 +145,13 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
 
     pub fn tip(mut self, tip: Tip) -> Self {
         self.tip = Some(tip);
+        self
+    }
+
+    /// Yeri gösterilen düğme (komut aramasının "Şeritte göster"i): kısa
+    /// süre vurgu çerçevesiyle çizilir.
+    pub fn flash(mut self, flash: bool) -> Self {
+        self.flash = flash;
         self
     }
 
@@ -204,6 +214,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             (Some(menu), None) => self.dropdown(form, menu.clone()),
             (None, _) => self.plain(form),
         };
+        let content = super::flashed(content, self.flash);
 
         match &self.tip {
             Some(button_tip) => tip(content, button_tip.clone(), tooltip::Position::Bottom),
