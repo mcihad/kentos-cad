@@ -108,7 +108,8 @@ export function lineTypeItems(ctx: AppContext): MenuItem[] {
   ];
 }
 
-const weightText = (w: number) => `${w.toFixed(2)} mm`;
+/** A line weight as the lists write it: “0.25 mm”. */
+export const weightText = (w: number) => `${w.toFixed(2)} mm`;
 
 /** The current line weight for new objects, or “Katmana göre”. */
 export function currentWeight(ctx: AppContext): string {

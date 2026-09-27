@@ -1,0 +1,675 @@
+{
+ "format": "kentos.shell",
+ "version": 1,
+ "menubar": {
+  "folds": [
+   {
+    "brandWord": true,
+    "crsName": true,
+    "menuPadding": 9
+   },
+   {
+    "brandWord": false,
+    "crsName": true,
+    "menuPadding": 9
+   },
+   {
+    "brandWord": false,
+    "crsName": false,
+    "menuPadding": 9
+   },
+   {
+    "brandWord": false,
+    "crsName": false,
+    "menuPadding": 6
+   }
+  ],
+  "texts": {
+   "label": "Ana menü",
+   "dirty": "Kaydedilmemiş değişiklikler var",
+   "crs": "Koordinat sistemi",
+   "crsTip": {
+    "sample": 5256,
+    "text": "EPSG:5256. Değiştirmek için tıklayın."
+   }
+  }
+ },
+ "toolbar": {
+  "groups": [
+   {
+    "label": "Dosya",
+    "commands": [
+     "file.new",
+     "file.open",
+     "file.save"
+    ]
+   },
+   {
+    "label": "Geçmiş",
+    "commands": [
+     "edit.undo",
+     "edit.redo"
+    ]
+   },
+   {
+    "label": "Görünüm",
+    "commands": [
+     "view.zoomExtents",
+     "tool.zoomWindow",
+     "view.zoomSelection",
+     "view.zoomIn",
+     "view.zoomOut",
+     "tool.pan"
+    ]
+   },
+   {
+    "label": "Geçerli özellikler",
+    "fields": true
+   },
+   {
+    "label": "Çizim ölçeği",
+    "scale": true
+   },
+   {
+    "label": "Paneller",
+    "commands": [
+     "view.toolbox",
+     "view.bottomPanel",
+     "view.rightPanel"
+    ]
+   }
+  ],
+  "viewMore": [
+   "view.zoomIn",
+   "view.zoomOut",
+   "tool.pan"
+  ],
+  "widths": {
+   "layer": [
+    196,
+    150
+   ],
+   "color": [
+    150,
+    124
+   ],
+   "lineType": [
+    150,
+    124
+   ],
+   "weight": [
+    160,
+    132
+   ]
+  },
+  "folds": [
+   {
+    "layerNarrow": false,
+    "propsNarrow": false,
+    "viewMore": false,
+    "propsFolded": false
+   },
+   {
+    "layerNarrow": true,
+    "propsNarrow": true,
+    "viewMore": false,
+    "propsFolded": false
+   },
+   {
+    "layerNarrow": true,
+    "propsNarrow": true,
+    "viewMore": true,
+    "propsFolded": false
+   },
+   {
+    "layerNarrow": false,
+    "propsNarrow": true,
+    "viewMore": true,
+    "propsFolded": true
+   },
+   {
+    "layerNarrow": true,
+    "propsNarrow": true,
+    "viewMore": true,
+    "propsFolded": true
+   }
+  ],
+  "texts": {
+   "label": "Araç çubuğu",
+   "more": "Diğer görünüm komutları",
+   "moreTip": "Yakınlaştır, Uzaklaştır ve Kaydır: pencere daralınca buraya girer."
+  }
+ },
+ "fields": {
+  "byLayer": "Katmana göre",
+  "colors": [
+   {
+    "name": "Siyah",
+    "value": "ink"
+   },
+   {
+    "name": "Kırmızı",
+    "value": "#E5484D"
+   },
+   {
+    "name": "Sarı",
+    "value": "#F2C94C"
+   },
+   {
+    "name": "Yeşil",
+    "value": "#5FBF77"
+   },
+   {
+    "name": "Camgöbeği",
+    "value": "#4CC3D9"
+   },
+   {
+    "name": "Mavi",
+    "value": "#4F8EF7"
+   },
+   {
+    "name": "Eflatun",
+    "value": "#C86DD7"
+   },
+   {
+    "name": "Gri",
+    "value": "#8C9AAA"
+   }
+  ],
+  "lineTypes": {
+   "continuous": "Sürekli",
+   "dashed": "Kesikli",
+   "dashdot": "Noktalı kesik",
+   "dotted": "Noktalı"
+  },
+  "weights": [
+   {
+    "mm": 0.13,
+    "text": "0.13 mm"
+   },
+   {
+    "mm": 0.18,
+    "text": "0.18 mm"
+   },
+   {
+    "mm": 0.25,
+    "text": "0.25 mm"
+   },
+   {
+    "mm": 0.35,
+    "text": "0.35 mm"
+   },
+   {
+    "mm": 0.5,
+    "text": "0.50 mm"
+   },
+   {
+    "mm": 0.7,
+    "text": "0.70 mm"
+   }
+  ],
+  "scales": [
+   {
+    "denominator": 500,
+    "text": "1:500"
+   },
+   {
+    "denominator": 1000,
+    "text": "1:1000"
+   },
+   {
+    "denominator": 2000,
+    "text": "1:2000"
+   },
+   {
+    "denominator": 5000,
+    "text": "1:5000"
+   },
+   {
+    "denominator": 25000,
+    "text": "1:25000"
+   }
+  ]
+ },
+ "toolbox": {
+  "groups": [
+   {
+    "id": "select",
+    "label": "Seçim"
+   },
+   {
+    "id": "draw",
+    "label": "Çizim"
+   },
+   {
+    "id": "annotate",
+    "label": "Açıklama"
+   },
+   {
+    "id": "transform",
+    "label": "Dönüştür"
+   },
+   {
+    "id": "modify",
+    "label": "Düzenle"
+   },
+   {
+    "id": "area",
+    "label": "Alan"
+   },
+   {
+    "id": "map",
+    "label": "Harita"
+   }
+  ],
+  "constants": {
+   "margin": 8,
+   "snap": 14,
+   "maxColumns": 6,
+   "undock": {
+    "x": 20,
+    "y": 10
+   }
+  },
+  "texts": {
+   "label": "Çizim araçları",
+   "grip": "Taşımak için sürükleyin",
+   "columns": "Sütun sayısını değiştir",
+   "twoColumns": "İki sütun",
+   "threeColumns": "Üç sütun",
+   "dock": "Kenara sabitle",
+   "undock": "Serbest bırak",
+   "fold": {
+    "sample": "Çizim",
+    "text": "Çizim grubunu katla"
+   },
+   "unfold": {
+    "sample": "Çizim",
+    "text": "Çizim grubunu aç"
+   },
+   "notReady": "Geliştirme aşamasında"
+  },
+  "columns": [
+   {
+    "stored": 3,
+    "columns": 3
+   },
+   {
+    "stored": 2,
+    "columns": 2
+   },
+   {
+    "stored": 1,
+    "columns": 2
+   },
+   {
+    "stored": 4,
+    "columns": 2
+   },
+   {
+    "stored": 0,
+    "columns": 2
+   }
+  ],
+  "fit": [
+   {
+    "base": 3,
+    "fitsFrom": 3,
+    "columns": 3
+   },
+   {
+    "base": 3,
+    "fitsFrom": 5,
+    "columns": 5
+   },
+   {
+    "base": 2,
+    "fitsFrom": 2,
+    "columns": 2
+   },
+   {
+    "base": 2,
+    "fitsFrom": 4,
+    "columns": 4
+   },
+   {
+    "base": 3,
+    "fitsFrom": null,
+    "columns": 6
+   },
+   {
+    "base": 3,
+    "fitsFrom": 2,
+    "columns": 3
+   },
+   {
+    "base": 2,
+    "fitsFrom": 6,
+    "columns": 6
+   },
+   {
+    "base": 2,
+    "fitsFrom": 7,
+    "columns": 6
+   }
+  ],
+  "place": [
+   {
+    "title": "near the top-left corner: onto the margin",
+    "x": 12,
+    "y": 12,
+    "w": 120,
+    "h": 400,
+    "hostW": 1000,
+    "hostH": 700,
+    "expect": {
+     "x": 8,
+     "y": 8
+    }
+   },
+   {
+    "title": "free",
+    "x": 300,
+    "y": 100,
+    "w": 120,
+    "h": 400,
+    "hostW": 1000,
+    "hostH": 700,
+    "expect": {
+     "x": 300,
+     "y": 100
+    }
+   },
+   {
+    "title": "outside, top-left: clamped",
+    "x": -50,
+    "y": -50,
+    "w": 120,
+    "h": 400,
+    "hostW": 1000,
+    "hostH": 700,
+    "expect": {
+     "x": 8,
+     "y": 8
+    }
+   },
+   {
+    "title": "outside, bottom-right: clamped",
+    "x": 2000,
+    "y": 2000,
+    "w": 120,
+    "h": 400,
+    "hostW": 1000,
+    "hostH": 700,
+    "expect": {
+     "x": 872,
+     "y": 292
+    }
+   },
+   {
+    "title": "near the bottom-right corner: onto the margin",
+    "x": 860,
+    "y": 280,
+    "w": 120,
+    "h": 400,
+    "hostW": 1000,
+    "hostH": 700,
+    "expect": {
+     "x": 872,
+     "y": 292
+    }
+   },
+   {
+    "title": "13 px from the margin: snaps",
+    "x": 21,
+    "y": 21,
+    "w": 120,
+    "h": 400,
+    "hostW": 1000,
+    "hostH": 700,
+    "expect": {
+     "x": 8,
+     "y": 8
+    }
+   },
+   {
+    "title": "14 px from the margin: stays",
+    "x": 22,
+    "y": 22,
+    "w": 120,
+    "h": 400,
+    "hostW": 1000,
+    "hostH": 700,
+    "expect": {
+     "x": 22,
+     "y": 22
+    }
+   },
+   {
+    "title": "14 px from the far margins: stays",
+    "x": 858,
+    "y": 278,
+    "w": 120,
+    "h": 400,
+    "hostW": 1000,
+    "hostH": 700,
+    "expect": {
+     "x": 858,
+     "y": 278
+    }
+   },
+   {
+    "title": "a host smaller than the toolbox: the margin",
+    "x": 50,
+    "y": 50,
+    "w": 120,
+    "h": 400,
+    "hostW": 100,
+    "hostH": 300,
+    "expect": {
+     "x": 8,
+     "y": 8
+    }
+   },
+   {
+    "title": "fractions stay",
+    "x": 100.5,
+    "y": 50.25,
+    "w": 120,
+    "h": 400,
+    "hostW": 1000,
+    "hostH": 700,
+    "expect": {
+     "x": 100.5,
+     "y": 50.25
+    }
+   }
+  ],
+  "undock": [
+   {
+    "x": 300,
+    "y": 200,
+    "expect": {
+     "x": 280,
+     "y": 190
+    }
+   },
+   {
+    "x": 10,
+    "y": 5,
+    "expect": {
+     "x": -10,
+     "y": -5
+    }
+   },
+   {
+    "x": 20.5,
+    "y": 10.5,
+    "expect": {
+     "x": 0.5,
+     "y": 0.5
+    }
+   }
+  ],
+  "shown": [
+   {
+    "shell": "classic",
+    "visible": true,
+    "ribbonToolbox": true,
+    "shown": true
+   },
+   {
+    "shell": "classic",
+    "visible": true,
+    "ribbonToolbox": false,
+    "shown": true
+   },
+   {
+    "shell": "classic",
+    "visible": false,
+    "ribbonToolbox": true,
+    "shown": false
+   },
+   {
+    "shell": "classic",
+    "visible": false,
+    "ribbonToolbox": false,
+    "shown": false
+   },
+   {
+    "shell": "ribbon",
+    "visible": true,
+    "ribbonToolbox": true,
+    "shown": true
+   },
+   {
+    "shell": "ribbon",
+    "visible": true,
+    "ribbonToolbox": false,
+    "shown": false
+   },
+   {
+    "shell": "ribbon",
+    "visible": false,
+    "ribbonToolbox": true,
+    "shown": true
+   },
+   {
+    "shell": "ribbon",
+    "visible": false,
+    "ribbonToolbox": false,
+    "shown": false
+   }
+  ]
+ },
+ "menuRows": [
+  {
+   "id": "file.save",
+   "checked": null,
+   "expect": {
+    "icon": true,
+    "checked": null,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.rightPanel",
+   "checked": true,
+   "expect": {
+    "icon": false,
+    "checked": true,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.rightPanel",
+   "checked": false,
+   "expect": {
+    "icon": false,
+    "checked": false,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.theme.dark",
+   "checked": true,
+   "expect": {
+    "icon": true,
+    "checked": true,
+    "radio": true
+   }
+  },
+  {
+   "id": "view.theme.light",
+   "checked": false,
+   "expect": {
+    "icon": true,
+    "checked": false,
+    "radio": true
+   }
+  },
+  {
+   "id": "view.theme.toggle",
+   "checked": null,
+   "expect": {
+    "icon": true,
+    "checked": null,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.renderer.webgpu",
+   "checked": false,
+   "expect": {
+    "icon": true,
+    "checked": false,
+    "radio": true
+   }
+  },
+  {
+   "id": "view.symbols.plain",
+   "checked": true,
+   "expect": {
+    "icon": true,
+    "checked": true,
+    "radio": true
+   }
+  },
+  {
+   "id": "workspace.cad",
+   "checked": true,
+   "expect": {
+    "icon": true,
+    "checked": true,
+    "radio": true
+   }
+  },
+  {
+   "id": "tool.line",
+   "checked": true,
+   "expect": {
+    "icon": true,
+    "checked": null,
+    "radio": false
+   }
+  },
+  {
+   "id": "tool.select",
+   "checked": false,
+   "expect": {
+    "icon": true,
+    "checked": null,
+    "radio": false
+   }
+  },
+  {
+   "id": "view.ribbon",
+   "checked": false,
+   "expect": {
+    "icon": false,
+    "checked": false,
+    "radio": false
+   }
+  }
+ ]
+}

@@ -1257,7 +1257,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -1317,7 +1317,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/processing/ToolDialog.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -1659,8 +1659,8 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/ribbon/Ribbon.ts",
-        "apps/web/src/ui/start/StartScreen.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts",
+        "apps/web/src/ui/start/StartScreen.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -1700,8 +1700,8 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/ribbon/Ribbon.ts",
-        "apps/web/src/ui/start/StartScreen.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts",
+        "apps/web/src/ui/start/StartScreen.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -1773,8 +1773,8 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts",
+        "apps/web/src/ui/statusbar/cloudCells.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -3835,8 +3835,8 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/Ribbon.ts",
-        "apps/web/src/ui/shell/viewportMenus.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts",
+        "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -4819,7 +4819,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/Ribbon.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -4898,7 +4898,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/bottom/BottomPanel.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -5220,7 +5220,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/panels.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -5384,7 +5384,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -5443,8 +5443,8 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/Ribbon.ts",
-        "apps/web/src/ui/shell/viewportMenus.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts",
+        "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -5476,7 +5476,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -5505,7 +5505,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -5535,8 +5535,8 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/ribbon/panels.ts",
-        "apps/web/src/ui/shell/viewportMenus.ts",
-        "apps/web/src/ui/toolbar/Toolbar.ts"
+        "apps/web/src/ui/shell/shellPlan.ts",
+        "apps/web/src/ui/shell/viewportMenus.ts"
       ],
       "status": "implemented",
       "platforms": {
