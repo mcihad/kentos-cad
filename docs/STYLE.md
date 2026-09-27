@@ -195,7 +195,7 @@ Hesabın hepsi `crates/shared/style-core/src/style/`'dadır (ADR 0008 “Stil de
 - **Ortak WGSL:** stilli çizimin WGSL kaynakları ve sözleşmesi (bağlama grupları, uniform düzeni, köşe tamponları, karıştırma, alanların anlamı) `shaders/wgsl/styled` ve `styled.layout.json`'dadır. Web'in WebGPU arka ucu kaynakları sözleşmenin sırasıyla birleştirir; masaüstünün wgpu çizimi aynı kaynakları kullanır. `node scripts/wgsl/browser-check.mjs` modülü tarayıcıda derler ve her boru hattını sözleşmeden kurar.
 - **Masaüstü** ([ADR 0090](adr/0090-desktop-styled-drawing.md)): gösterilen her katmanı aynı yoldan çizer.
   - Sayfanın payı `crates/native/style`'dadır: kitaplık, sistem kitaplığının `.kstil` kopyası, düz görünüş, katmanın programı ve tablosu, toplulukların renkleri ve görüntüleri. `batches.json`'ı geçer.
-  - GPU tarafı `crates/render/wgpu/src/styled`'dadır: ortak WGSL; Iced'in aygıtı iki bağlama grubu aldığı için atlas çerçevenin grubundadır.
+  - GPU tarafı `crates/render/wgpu/src/styled`'dadır: ortak WGSL. Iced'in aygıtı iki bağlama grubu aldığı için atlas çerçevenin grubundadır (sözleşmenin 2. sürümü; web'in WebGPU'su da böyle bağlar).
   - Atlasın resimleri tiny-skia ile çizilir. SVG roxmltree ve SVG çekirdeğinin okuyucularıyla okunur (`apps/desktop/src/style`); yazılar harf ana hatlarıyla.
   - Katmanlar yan yana kurulur. Değişen katman yalnız kendisidir.
 - **Performans:** katman yalnız kirlenince yeniden kurulur (öznitelik değişince yalnız işleyicisi olan katmanlar); çizim ölçeği ya da kitaplık değişince bütün katmanlar kurulur. Vurgu katmanları (`__sel`, `__hover`) eski ince çizgi hattını kullanır.

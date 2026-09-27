@@ -44,27 +44,38 @@ export class WebGPUStyledRenderer {
   private readonly module: GPUShaderModule;
   private readonly layout: GPUPipelineLayout;
   private readonly styleLayout: GPUBindGroupLayout;
-  private readonly atlasBind: GPUBindGroup;
+  /** Group 0 of the styled pipelines: the frame uniform with the atlas beside it (contract version 2). */
+  private readonly frameBind: GPUBindGroup;
   private readonly texture: GPUTexture;
   /** Pipelines by sample count (the backend's multisampled passes need their own). */
   private readonly pipes = new Map<number, StyledPipes>();
   private atlas: AtlasSource | null = null;
 
-  constructor(device: GPUDevice, format: GPUTextureFormat, frameLayout: GPUBindGroupLayout) {
+  /** `frame`: the backend's frame uniform, which the styled pipelines read beside their atlas. */
+  constructor(device: GPUDevice, format: GPUTextureFormat, frame: GPUBuffer) {
     this.device = device;
     this.format = format;
     this.module = device.createShaderModule({ code: STYLED_WGSL });
     this.styleLayout = device.createBindGroupLayout({ entries: [{ binding: 0, visibility: STAGE.VERTEX | STAGE.FRAGMENT, buffer: { type: 'uniform' } }] });
-    const atlasLayout = device.createBindGroupLayout({
+    // shaders/wgsl/styled.layout.json v2: group 0 is the frame, the atlas texture and its sampler; group 1 the batch's style.
+    const frameLayout = device.createBindGroupLayout({
       entries: [
-        { binding: 0, visibility: STAGE.FRAGMENT, texture: { sampleType: 'float' } },
-        { binding: 1, visibility: STAGE.FRAGMENT, sampler: { type: 'filtering' } },
+        { binding: 0, visibility: STAGE.VERTEX | STAGE.FRAGMENT, buffer: { type: 'uniform' } },
+        { binding: 1, visibility: STAGE.FRAGMENT, texture: { sampleType: 'float' } },
+        { binding: 2, visibility: STAGE.FRAGMENT, sampler: { type: 'filtering' } },
       ],
     });
     this.texture = device.createTexture({ size: [2048, 2048], format: 'rgba8unorm', usage: TEXTURE.COPY_DST | TEXTURE.TEXTURE_BINDING | TEXTURE.RENDER_ATTACHMENT });
     const sampler = device.createSampler({ magFilter: 'linear', minFilter: 'linear', addressModeU: 'clamp-to-edge', addressModeV: 'clamp-to-edge' });
-    this.atlasBind = device.createBindGroup({ layout: atlasLayout, entries: [{ binding: 0, resource: this.texture.createView() }, { binding: 1, resource: sampler }] });
-    this.layout = device.createPipelineLayout({ bindGroupLayouts: [frameLayout, this.styleLayout, atlasLayout] });
+    this.frameBind = device.createBindGroup({
+      layout: frameLayout,
+      entries: [
+        { binding: 0, resource: { buffer: frame } },
+        { binding: 1, resource: this.texture.createView() },
+        { binding: 2, resource: sampler },
+      ],
+    });
+    this.layout = device.createPipelineLayout({ bindGroupLayouts: [frameLayout, this.styleLayout] });
   }
 
   /** The pipelines for `samples` per pixel, made the first time that count draws. */
@@ -256,11 +267,15 @@ export class WebGPUStyledRenderer {
     }
   }
 
-  /** Draws a layer's visible batches into a pass of `samples` per pixel. */
-  draw(pass: GPURenderPassEncoder, layer: GpuStyledLayer, samples: number): void {
-    if (!layer.list.length) return;
+  /**
+   * Draws a layer's visible batches into a pass of `samples` per pixel.
+   * True when it set its own group 0 (the frame with the atlas): the
+   * plain pipelines drawn after it need theirs set again.
+   */
+  draw(pass: GPURenderPassEncoder, layer: GpuStyledLayer, samples: number): boolean {
+    if (!layer.list.some((s) => s.visible)) return false;
     const pipes = this.pipelinesFor(samples);
-    pass.setBindGroup(2, this.atlasBind);
+    pass.setBindGroup(0, this.frameBind);
     let current: GPURenderPipeline | null = null;
     for (const s of layer.list) {
       if (!s.visible) continue;
@@ -275,6 +290,7 @@ export class WebGPUStyledRenderer {
       if (b.kind === 'fill') pass.draw(s.count);
       else pass.draw(6, s.count);
     }
+    return true;
   }
 
   dispose(): void {
