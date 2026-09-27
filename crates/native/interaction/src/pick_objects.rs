@@ -4,7 +4,8 @@
 //! turns the object under it over in the selection and a drag past 4 px adds
 //! what its box holds (left to right a window, right to left a crossing),
 //! only objects of the field's kinds (a click on a point where only areas
-//! are wanted takes the nearest area's edge instead). Enter, Space or a
+//! are wanted takes the nearest area's edge instead, and away from any
+//! edge the area it falls in). Enter, Space or a
 //! quick right click keep what is selected; Esc leaves it. Either way the
 //! host hears [`ViewChange::PickedObjects`]. The tool is not in the catalog
 //! and is not repeated ([`crate::Session::run`]).
@@ -67,12 +68,17 @@ impl PickObjects {
     }
 
     /// The object of the field's kinds under the pointer: the most specific
-    /// one, else the nearest edge of one it takes.
+    /// one, else the nearest edge of one it takes, else the smallest closed
+    /// shape the click falls in when the field takes its kind (a spot height
+    /// inside a parcel gives the parcel; the web's `pickedAt`, docs/adr/0088).
     fn hit(&self, at: Vec2, cx: &Context<'_>) -> Option<Slot> {
         let tol = cx.pick_tolerance();
         match cx.spatial.pick(at, tol) {
             Some(hit) if self.takes(hit, cx) => Some(hit),
-            _ => cx.spatial.pick_edge(at, tol, |s| self.takes(s, cx)),
+            _ => cx
+                .spatial
+                .pick_edge(at, tol, |s| self.takes(s, cx))
+                .or_else(|| cx.spatial.enclosing(at).filter(|s| self.takes(*s, cx))),
         }
     }
 
