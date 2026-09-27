@@ -294,6 +294,17 @@ describe('library', () => {
     expect(lib.get(c.id)).toBeUndefined();
     expect(changes).toEqual(['user', 'user', 'user']);
   });
+  it('removes a field cleared as undefined (Kaynak, Açıklama) and keeps the others, in the item and in its file', () => {
+    const lib = make();
+    const c = lib.copy('mpyy.koy', 'user');
+    lib.update(c.id, { reference: 'EK-1d s.19', description: 'Kalın sınır' });
+    lib.update(c.id, { reference: undefined });
+    expect(lib.get(c.id)).toMatchObject({ description: 'Kalın sınır' });
+    expect(lib.get(c.id)).not.toHaveProperty('reference');
+    expect(lib.dump('user').items.find((i) => i.id === c.id)).not.toHaveProperty('reference');
+    lib.update(c.id, { description: undefined });
+    expect(lib.get(c.id)).not.toHaveProperty('description');
+  });
   it('builds an ordered category tree of any depth, with empty categories and search', () => {
     const lib = make();
     const tree = lib.tree();
