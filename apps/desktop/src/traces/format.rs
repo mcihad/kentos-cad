@@ -69,6 +69,9 @@ pub struct Step {
     pub(super) text: Option<String>,
     #[serde(rename = "move")]
     pub(super) move_to: Option<[f64; 2]>,
+    /// The pointer comes to the point and rests past object tracking's
+    /// dwell (docs/adr/0085): the player moves there, then lets the wait end.
+    pub(super) rest: Option<[f64; 2]>,
     pub(super) click: Option<[f64; 2]>,
     /// The left button down at the first point, moved to the second, released there.
     pub(super) drag: Option<[[f64; 2]; 2]>,
@@ -119,8 +122,30 @@ pub struct Expect {
     pub(super) snap: Option<Option<String>>,
     /// Every object's id, in the drawing's order.
     pub(super) ids: Option<Vec<u32>>,
+    /// Object tracking's acquired points, oldest first, east and north of
+    /// `view.center`, within `clickTolerance` (docs/adr/0085).
+    pub(super) track_points: Option<Vec<[f64; 2]>>,
+    /// The alignment the cursor is locked to; `null` (none) and absent differ.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) track: Option<Option<TrackExpect>>,
     /// Objects by their ids, each as `newest` is read (docs/adr/0037): a moved one in place.
     pub(super) objects: Option<Vec<Newest>>,
+}
+
+/// The expected lock: its point (within `clickTolerance`) and its lines in
+/// the core's order, each with its acquired point and its angle (exact).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TrackExpect {
+    pub(super) point: [f64; 2],
+    pub(super) lines: Vec<TrackLineExpect>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TrackLineExpect {
+    pub(super) origin: [f64; 2],
+    pub(super) angle: f64,
 }
 
 /// An object's expected shape: the newest one, or one of `objects` by its `id`.
@@ -151,10 +176,7 @@ where
 /// They are left out of [`Trace::all`] and said as skipped, never passed;
 /// the entry goes with the port (a test fails once one would play).
 #[cfg(test)]
-pub const PENDING: &[(&str, &str)] = &[(
-    "object-tracking",
-    "Nesne izleme masaüstünde henüz yok (TODOS.md UX-01); iz, izleme noktaları ve `rest` adımı onunla gelir",
-)];
+pub const PENDING: &[(&str, &str)] = &[];
 
 impl Trace {
     pub fn read(path: &Path) -> Result<Self, String> {

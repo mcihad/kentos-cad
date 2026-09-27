@@ -8,6 +8,7 @@
 
 use kentos_contracts::{DocumentSnapshotV1, Entity};
 use kentos_domain::Document;
+use kentos_interaction::object_tracking::ObjectTracking;
 use kentos_interaction::{
     Context, Draft, Level, Line, Memory, Pointer, Selection, Session, Spatial, Vec2, View,
     ViewChange,
@@ -52,6 +53,8 @@ pub struct Bench {
     pub shift: bool,
     /// The view changes the tools asked for, oldest first (the desktop applies them).
     pub views: Vec<ViewChange>,
+    /// Object tracking (docs/adr/0085): off in these tests unless one acquires a point.
+    pub tracking: ObjectTracking,
 }
 
 impl Bench {
@@ -77,6 +80,7 @@ impl Bench {
             memory: Memory::default(),
             shift: false,
             views: Vec::new(),
+            tracking: ObjectTracking::new(),
         }
     }
 
@@ -97,6 +101,7 @@ impl Bench {
             selection: &mut self.selection,
             memory: &mut self.memory,
             view_changes: &mut self.views,
+            tracking: &self.tracking,
         };
         act(&mut self.session, &mut cx)
     }

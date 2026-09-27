@@ -408,6 +408,20 @@ impl Session {
     /// point among the drafting kinds within the aperture, perpendicular and
     /// tangent from the tool's last point. None otherwise: the erase tool
     /// does not snap, the select tool only while a grip moves (from where it was).
+    /// Whether object tracking follows the cursor: a command runs and snaps
+    /// (the web's: not the select tool, not a tool that takes no snap).
+    pub fn tracks(&self) -> bool {
+        self.tool.as_ref().is_some_and(|t| t.snaps())
+    }
+
+    /// The running command's last point, for object tracking's crossings.
+    pub fn snap_from(&self) -> Option<Vec2> {
+        self.tool
+            .as_ref()
+            .filter(|t| t.snaps())
+            .and_then(|t| t.snap_from())
+    }
+
     pub fn snap(
         &self,
         spatial: &Spatial,

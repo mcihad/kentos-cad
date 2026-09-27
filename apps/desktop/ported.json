@@ -132,7 +132,8 @@
     "processing.model.builtin.parcelSheet",
     "map.edgeLengths",
     "processing.toolbox",
-    "processing.history"
+    "processing.history",
+    "draft.tracking"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

@@ -11,6 +11,7 @@ use kentos_geometry_core::tools::point_input::Tracking;
 use crate::Vec2;
 use crate::format::Format;
 use crate::log::{Level, Line};
+use crate::object_tracking::ObjectTracking;
 use crate::prompt::Prompt;
 use crate::select::SelectBox;
 use crate::selection::Selection;
@@ -31,6 +32,9 @@ pub struct Pointer {
     /// The object snap `world` came from. A snapped point is exact: ortho and
     /// polar tracking never move it (the web's `constrainPoint`).
     pub snap: Option<SnapHit>,
+    /// `world` is where object tracking locked the cursor (no snap under it):
+    /// exact as a snap is (docs/adr/0085).
+    pub tracked: bool,
 }
 
 impl Pointer {
@@ -42,7 +46,18 @@ impl Pointer {
             screen,
             shift,
             snap,
+            tracked: false,
         }
+    }
+
+    /// On the point object tracking locked the cursor to, when there is no
+    /// snap (the web's `pointer`: the snap, else the lock, else the cursor).
+    pub fn tracked(mut self, lock: Option<Vec2>) -> Self {
+        if let (None, Some(p)) = (self.snap, lock) {
+            self.world = p;
+            self.tracked = true;
+        }
+        self
     }
 }
 
@@ -109,6 +124,8 @@ pub struct Draft {
     pub snap_kinds: u32,
     /// How near a click must be to an object to pick it (`drafting.pickAperture`), logical pixels.
     pub pick_aperture: f64,
+    /// Object tracking is on (Shift+F3, `drafting.tracking`, docs/adr/0085).
+    pub tracking: bool,
 }
 
 impl Default for Draft {
@@ -123,6 +140,7 @@ impl Default for Draft {
             snap: true,
             snap_kinds: snap_kinds(|key| key != "snap.nearest"),
             pick_aperture: 5.0,
+            tracking: true,
         }
     }
 }
@@ -340,11 +358,21 @@ pub struct Context<'a> {
     /// Changes of the view the tool asks for (Kaydır, Pencere yakınlaştır):
     /// the host applies them after the call.
     pub view_changes: &'a mut Vec<ViewChange>,
+    /// Object tracking's points and lock (docs/adr/0085): a typed distance
+    /// goes along the line the cursor is locked to.
+    pub tracking: &'a ObjectTracking,
 }
 
 impl Context<'_> {
     pub fn format(&self) -> Format {
         Format::of(self.doc.settings())
+    }
+
+    /// The point `distance` along the tracking line the cursor is locked to
+    /// (a typed distance while tracking, the web's `trackAlong`); none when
+    /// the cursor is on no single line.
+    pub fn track_along(&self, distance: f64) -> Option<Vec2> {
+        self.tracking.along(distance)
     }
 
     pub(crate) fn say(&mut self, level: Level, text: impl Into<String>) {

@@ -131,7 +131,8 @@ impl Tool for Paste {
 
     /// A typed point: `@dY,dX` and a distance are measured from the base point.
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let Some(at) = point_from_text(text, Some(self.base), self.hover, |_| None) else {
+        let Some(at) = point_from_text(text, Some(self.base), self.hover, |d| cx.track_along(d))
+        else {
             return false;
         };
         self.place(at, cx);

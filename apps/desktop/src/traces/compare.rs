@@ -126,6 +126,47 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{:?} (±{} m)", [wx, wy], trace.click_tolerance),
         );
     }
+    // Object tracking (docs/adr/0085): points within the click tolerance, angles exact.
+    let rel = |p: [f64; 2]| [p[0] - trace.view.center[0], p[1] - trace.view.center[1]];
+    let near = |a: [f64; 2], b: [f64; 2]| (a[0] - b[0]).hypot(a[1] - b[1]) <= trace.click_tolerance;
+    if let Some(want) = &expect.track_points {
+        let have: Vec<[f64; 2]> = got.track_points.iter().map(|&p| rel(p)).collect();
+        check(
+            "trackPoints",
+            have.len() == want.len() && have.iter().zip(want).all(|(a, b)| near(*a, *b)),
+            format!("{have:?}"),
+            format!("{want:?}"),
+        );
+    }
+    if let Some(want) = &expect.track {
+        let have = got.track.as_ref().map(|t| {
+            (
+                rel(t.point),
+                t.lines.iter().map(|(o, a)| (rel(*o), *a)).collect::<Vec<_>>(),
+            )
+        });
+        let same = match (want, &have) {
+            (None, None) => true,
+            (Some(w), Some((point, lines))) => {
+                near(*point, w.point)
+                    && lines.len() == w.lines.len()
+                    && lines
+                        .iter()
+                        .zip(&w.lines)
+                        .all(|((o, a), l)| near(*o, l.origin) && *a == l.angle)
+            }
+            _ => false,
+        };
+        let want_text = want.as_ref().map(|w| {
+            let lines: Vec<String> = w
+                .lines
+                .iter()
+                .map(|l| format!("{:?} {}°", l.origin, l.angle))
+                .collect();
+            format!("{:?} [{}]", w.point, lines.join(", "))
+        });
+        check("track", same, format!("{have:?}"), format!("{want_text:?}"));
+    }
     if let Some(want) = &expect.selected {
         check(
             "selected",

@@ -249,7 +249,7 @@ impl Tool for Xline {
         let done = if self.option(&upper_tr(js_trim(text))) {
             true
         } else {
-            match point_from_text(text, self.d.last(), self.d.hover, |_| None) {
+            match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
                 Some(p) => {
                     self.accept(p, cx);
                     true
@@ -392,7 +392,7 @@ impl Tool for Ray {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        match point_from_text(text, self.d.last(), self.d.hover, |_| None) {
+        match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
             Some(p) => {
                 self.accept(p, cx);
                 true

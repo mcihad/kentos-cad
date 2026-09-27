@@ -148,6 +148,17 @@ pub struct Observation {
     pub ids: Vec<u32>,
     /// Every object by its id (the `objects` expectation, docs/adr/0037).
     pub objects: BTreeMap<u32, Seen>,
+    /// Object tracking's acquired points, absolute (docs/adr/0085).
+    pub track_points: Vec<[f64; 2]>,
+    /// The lock, absolute.
+    pub track: Option<TrackSeen>,
+}
+
+/// Object tracking's lock as a step sees it: the point and each line's origin and angle.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TrackSeen {
+    pub point: [f64; 2],
+    pub lines: Vec<([f64; 2], f64)>,
 }
 
 /// Plays a trace on an app.
@@ -176,12 +187,6 @@ impl<'a> Player<'a> {
         file: PathBuf,
     ) -> Result<Self, String> {
         let d = &trace.draft;
-        if d.tracking {
-            return Err(format!(
-                "{}: nesne izleme masaüstünde henüz yok; iz oynatılamaz",
-                trace.id
-            ));
-        }
         let text = std::fs::read_to_string(folder().join(&trace.document))
             .map_err(|e| format!("{}: {e}", trace.document))?;
         let snapshot =
@@ -200,6 +205,9 @@ impl<'a> Player<'a> {
             file,
         };
         player.app.picker = Picker::File(player.file.clone());
+        // Object tracking's dwell passes on the player's clock (`rest`), never
+        // on a thread's: a move that crosses a snap acquires nothing (docs/adr/0085).
+        player.app.dwell_on_time = false;
         // Through the settings, as the web runner sets its signals: a toggle
         // later (F3, F8) starts from these, and the other drafting values
         // (snap kinds, apertures, polar step) are the settings' defaults.
@@ -208,6 +216,7 @@ impl<'a> Player<'a> {
             ("drafting.ortho", d.ortho.into()),
             ("drafting.polar", d.polar.into()),
             ("drafting.snap", d.snap.into()),
+            ("drafting.tracking", d.tracking.into()),
             (
                 "drafting.cursorInput",
                 trace.prefs.cursor_input.unwrap_or(true).into(),
@@ -281,6 +290,16 @@ impl<'a> Player<'a> {
         if let Some(at) = step.move_to {
             let position = self.window_point(at)?;
             return self.cursor_to(position);
+        }
+        if let Some(at) = step.rest {
+            // The web waits 500 ms, past the 350 ms dwell: the wait ends as its timer would.
+            let position = self.window_point(at)?;
+            self.cursor_to(position)?;
+            self.clock += Duration::from_millis(500);
+            if let Some(number) = self.app.tracking.dwell() {
+                self.apply(Message::TrackDwell(number))?;
+            }
+            return Ok(());
         }
         if let Some(at) = step.click {
             return self.holding(step, |player| player.click(at, mouse::Button::Left));
@@ -565,6 +584,20 @@ impl<'a> Player<'a> {
                 d.model.entities().map(|e| e.base().id).collect()
             }),
             objects,
+            track_points: app.tracking.acquired().iter().map(|p| [p.x, p.y]).collect(),
+            // The web reads the lock only while no snap wins over it.
+            track: app
+                .tracking
+                .track()
+                .filter(|_| app.snap.is_none())
+                .map(|t| TrackSeen {
+                    point: [t.point.x, t.point.y],
+                    lines: t
+                        .lines
+                        .iter()
+                        .map(|l| ([l.origin.x, l.origin.y], l.angle))
+                        .collect(),
+                }),
         }
     }
 }
@@ -586,6 +619,8 @@ fn describe(step: &Step) -> String {
         format!("text {text:?}")
     } else if let Some(at) = step.move_to {
         format!("move {}", pair(at))
+    } else if let Some(at) = step.rest {
+        format!("rest {}", pair(at))
     } else if let Some(at) = step.click {
         let held = if step.shift == Some(true) {
             "Shift+"

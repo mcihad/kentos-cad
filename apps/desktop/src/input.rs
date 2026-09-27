@@ -87,6 +87,7 @@ impl App {
                 selection: &mut self.selection,
                 memory: &mut self.memory,
                 view_changes: &mut changes,
+                tracking: &self.tracking,
             },
         );
         for change in changes {
@@ -301,12 +302,23 @@ impl App {
             }
             None => None,
         };
+        // Nesne izleme (tracking.rs): a rest on a snap, and with no snap the lock.
+        let view = CameraView(&self.viewport.camera);
+        self.tracking.update(
+            self.draft.tracking && self.session.tracks(),
+            self.snap.as_ref(),
+            raw,
+            self.session.snap_from(),
+            self.draft.polar,
+            view.world_length(kentos_interaction::object_tracking::TRACK_PX),
+        );
         Pointer::new(
             raw,
             [f64::from(at.x), f64::from(at.y)],
             self.modifiers.shift(),
             self.snap,
         )
+        .tracked(self.tracking.track().map(|t| t.point))
     }
 
     /// A key no text box captured, by ADR 0018's order (see the module).
