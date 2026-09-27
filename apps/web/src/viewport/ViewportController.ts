@@ -324,6 +324,11 @@ export class ViewportController {
     return this.snap;
   }
 
+  /** The alignment the cursor is locked to by object tracking now, if any (the interaction traces read it). A snap wins over it. */
+  get currentTrack(): TrackHit | null {
+    return this.snap ? null : this.track;
+  }
+
   pick(screen: Vec2): Entity | null {
     return this.picker.hit(this.camera.screenToWorld(screen), this.ctx.prefs.pickAperture.value / this.camera.scale);
   }

@@ -122,7 +122,8 @@ async function press(chord) {
     const capital = spec.key.toLocaleUpperCase(layout === LAYOUTS['tr-q'] ? 'tr-TR' : 'en-US');
     spec = { ...spec, key: capital, text: capital, shift: true };
   }
-  const modifiers = (alt ? 1 : 0) | (ctrl ? 2 : 0) | (spec.shift ? 8 : 0);
+  // Shift held with a named key (Shift+F3) as well as the layout's own Shift (Turkish Q's + is Shift+4).
+  const modifiers = (alt ? 1 : 0) | (ctrl ? 2 : 0) | (spec.shift || parts.includes('Shift') ? 8 : 0);
   // A chord types nothing; AltGr types its character.
   const text = (ctrl || alt) && !altGr ? undefined : spec.text;
   const base = { key: spec.key, code: spec.code, windowsVirtualKeyCode: spec.vk, modifiers };
@@ -234,6 +235,12 @@ async function act(step) {
     await mouse('mouseMoved', x, y);
     return sleep(30);
   }
+  if (step.rest) {
+    // Resting on a snap past the tracking dwell (350 ms, TRACK_DWELL_MS) acquires or releases it.
+    const [x, y] = await toScreen(step.rest);
+    await mouse('mouseMoved', x, y);
+    return sleep(500);
+  }
   if (step.click) return click(step.click, 'left', 1, held(step));
   if (step.drag) return drag(step.drag, held(step));
   if (step.doubleClick) {
@@ -290,6 +297,12 @@ const observe = (mark) =>
       selected: [...k.selection.ids.value],
       hover: k.selection.hover.value,
       snap: k.view.currentSnap?.kind ?? null,
+      // Object tracking: the acquired points, and the alignment the cursor is locked to.
+      trackPoints: k.view.trackPoints.map((p) => [p.x, p.y]),
+      track: (() => {
+        const t = k.view.currentTrack;
+        return t && { point: [t.point.x, t.point.y], lines: t.lines.map((l) => ({ origin: [l.origin.x, l.origin.y], angle: l.angle })) };
+      })(),
       ids: [...k.doc.all()].map((e) => e.id),
     };
   })()`);
@@ -325,6 +338,19 @@ function compareShape(name, have, want, t) {
   return bad;
 }
 
+/** Differences between the tracking lock and the expected one: the point and the lines' origins within the click tolerance, angles exact. */
+function compareTrack(have, want, t) {
+  const rel = (p) => [p[0] - origin.x, p[1] - origin.y];
+  const seen = have && { point: rel(have.point), lines: have.lines.map((l) => ({ origin: rel(l.origin), angle: l.angle })) };
+  if (!want || !seen) return !want === !seen ? [] : [`track: ${JSON.stringify(seen)}, beklenen ${JSON.stringify(want)}`];
+  const near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) <= t.clickTolerance;
+  const ok =
+    near(seen.point, want.point) &&
+    seen.lines.length === want.lines.length &&
+    seen.lines.every((l, i) => near(l.origin, want.lines[i].origin) && l.angle === want.lines[i].angle);
+  return ok ? [] : [`track: ${JSON.stringify(seen)}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`];
+}
+
 /** Differences between what a step expects and what the app shows; empty when it matches. */
 function compare(expect, got, t) {
   const bad = [];
@@ -339,6 +365,11 @@ function compare(expect, got, t) {
         bad.push(`${key}: ${JSON.stringify(c)}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
     } else if (key === 'newest') bad.push(...compareShape('newest', have, want, t));
     else if (key === 'objects') for (const w of want) bad.push(...compareShape(`objects[${w.id}]`, have[w.id] ?? null, w, t));
+    else if (key === 'trackPoints') {
+      const pts = have.map(([x, y]) => [x - origin.x, y - origin.y]);
+      const near = pts.length === want.length && pts.every(([x, y], i) => Math.hypot(x - want[i][0], y - want[i][1]) <= t.clickTolerance);
+      if (!near) bad.push(`trackPoints: ${JSON.stringify(pts)}, beklenen ${JSON.stringify(want)} (±${t.clickTolerance} m)`);
+    } else if (key === 'track') bad.push(...compareTrack(have, want, t));
     else if (key === 'logged') {
       // Each text, whole, in this order among the step's messages; others may come between.
       let n = 0;
