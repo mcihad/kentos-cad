@@ -196,6 +196,8 @@ pub enum Message {
     Modifiers(keyboard::Modifiers),
     Dock(docking::Event<Panel>),
     LayerSelected(String),
+    /// Katman ara typed in.
+    LayerSearch(String),
     LayerVisible(String),
     LayerLocked(String),
     LayerExpanded(String),
@@ -261,6 +263,13 @@ pub struct App {
     pub(crate) renaming: Option<(String, String)>,
     /// The tree's last row press and when: a second one soon is a double click.
     pub(crate) last_layer_press: Option<(String, Instant)>,
+    /// Katman ara's text (layer_tree.rs).
+    pub(crate) layer_query: String,
+    /// The layer tree has the keyboard: a row was pressed and nothing else
+    /// took the keyboard since (layer_tree.rs).
+    pub(crate) layers_keyboard: bool,
+    /// The row the tree's keys chose, kept in view.
+    pub(crate) layer_reveal: Option<String>,
     /// Warnings and errors said so far (the Uyarılar tab counts the unseen).
     pub(crate) warnings_total: usize,
     /// The menu open over the drawing (drawing_menus.rs).
@@ -404,6 +413,9 @@ impl App {
             followed_selection: 0,
             renaming: None,
             last_layer_press: None,
+            layer_query: String::new(),
+            layers_keyboard: false,
+            layer_reveal: None,
             warnings_total: 0,
             drawing_menu: None,
             snap_once: None,
@@ -580,9 +592,11 @@ impl App {
         if let Some(task) = self.while_opening(&message) {
             return task;
         }
-        // A command from the ribbon or a menu keeps the text field's text first (the web's blur).
+        // A command from the ribbon or a menu keeps the text field's text first (the web's blur),
+        // and takes the keyboard from the layer tree (the web's button takes the focus).
         if matches!(message, Message::Run(_) | Message::RunMethod { .. }) {
             self.close_text_field(true);
+            self.layers_keyboard = false;
         }
         match message {
             Message::Run(id) => return self.run(id),
@@ -610,9 +624,10 @@ impl App {
             }
             Message::CommandFocus(focused) => {
                 self.line_focused = focused;
-                // The value field loses the keyboard to the command line (web: its blur).
+                // The value field and the layer tree lose the keyboard to the command line (web: their blur).
                 if focused {
                     self.field = None;
+                    self.layers_keyboard = false;
                 }
             }
             Message::PromptOption(key) => return self.prompt_option(key),
@@ -620,6 +635,7 @@ impl App {
             Message::Modifiers(modifiers) => self.modifiers = modifiers,
             Message::Dock(event) => self.docks.update(event),
             Message::LayerSelected(id) => self.layer_pressed(id),
+            Message::LayerSearch(text) => self.layer_search(text),
             Message::Layer(event) => return self.layer_event(event),
             Message::DrawingMenu(event) => self.drawing_menu_event(event),
             Message::TextField(event) => self.text_field_event(event),

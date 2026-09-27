@@ -112,9 +112,10 @@ impl App {
         }
     }
 
-    /// A row pressed: it is chosen (the web's focused row). A second press
-    /// soon after is a double click: a layer becomes the active one, a group
-    /// opens or closes (the web's `onActivate`).
+    /// A row pressed: it is chosen (the web's focused row), and the tree has
+    /// the keyboard (layer_tree.rs). A second press soon after is a double
+    /// click: a layer becomes the active one, a group opens or closes (the
+    /// web's `onActivate`).
     pub(crate) fn layer_pressed(&mut self, id: String) {
         let now = Instant::now();
         let double = self
@@ -125,18 +126,11 @@ impl App {
         self.selected_layer = Some(id.clone());
         // A click in the tree chooses its rows until the selection changes again.
         self.layers_follow = false;
-        if !double {
-            return;
-        }
-        let Some(doc) = &mut self.document else {
-            return;
-        };
-        match doc.model.layers().get(&id).map(|n| (n.kind, n.expanded)) {
-            Some((LayerNodeType::Layer, _)) => {
-                doc.model.set_active_layer(&id);
-            }
-            Some((LayerNodeType::Group, expanded)) => doc.model.set_layer_expanded(&id, !expanded),
-            None => {}
+        self.layers_keyboard = true;
+        // The pressed row is in view already.
+        self.layer_reveal = None;
+        if double {
+            self.activate_row(&id);
         }
     }
 

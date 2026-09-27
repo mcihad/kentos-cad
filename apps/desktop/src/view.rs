@@ -385,15 +385,27 @@ impl App {
             Panel::Layers => {
                 // The open tree as flat rows, built only as they scroll into view
                 // (the web's VirtualRows): a DXF can bring hundreds of layers.
-                let rows = open_rows(doc.layers());
-                // The selection's one layer is brought into view (layering.rs).
-                let reveal = match self.selection_layers.as_slice() {
-                    [layer] if self.layers_follow => {
-                        rows.iter().position(|row| row.node.id == *layer)
+                // Katman ara keeps what it finds (layer_tree.rs).
+                let query = crate::layer_tree::query(&self.layer_query);
+                let rows = crate::layer_tree::open_rows(doc.layers(), &query);
+                // The selection's one layer is brought into view (layering.rs);
+                // else the row the tree's keys chose (layer_tree.rs).
+                let reveal = if self.layers_follow {
+                    match self.selection_layers.as_slice() {
+                        [layer] => rows.iter().position(|row| row.node.id == *layer),
+                        _ => None,
                     }
-                    _ => None,
+                } else {
+                    self.layer_reveal
+                        .as_ref()
+                        .and_then(|id| rows.iter().position(|row| row.node.id == *id))
                 };
-                TreeView::new([
+                let empty = if query.is_empty() {
+                    "Katman yok."
+                } else {
+                    "Aramayla eşleşen katman yok."
+                };
+                let tree = TreeView::new([
                     TreeColumn::new("Ad").width(Fill),
                     TreeColumn::new("Öğe").width(44).align_right(),
                 ])
@@ -405,8 +417,9 @@ impl App {
                     )
                 })
                 .reveal(reveal)
-                .height(Fill)
-                .into()
+                .empty(empty)
+                .height(Fill);
+                column![self.layer_search_view(), tree].into()
             }
             // Öznitelikler, editable as the web's (properties/, docs/adr/0063).
             Panel::Properties => self.properties_view(doc),
@@ -417,7 +430,7 @@ impl App {
     /// group's folder or a layer's colour (a click opens its colours), the
     /// name (a text box while renamed), the eye and the lock, the object
     /// count; the active layer's accent bar; the row's menu. Its children are
-    /// rows of their own (open_rows).
+    /// rows of their own (layer_tree::open_rows).
     fn layer_node<'a>(
         &'a self,
         doc: &'a Document,
@@ -820,34 +833,6 @@ fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
                 None => menu,
             }
         })
-}
-
-/// A row of the open layer tree: its depth, its node and whether the groups
-/// above it are shown.
-struct OpenRow<'a> {
-    depth: usize,
-    node: &'a LayerNode,
-    parent_visible: bool,
-}
-
-/// The layer tree's rows as shown: every node, and the children of the open
-/// groups, depth first.
-fn open_rows(nodes: &[LayerNode]) -> Vec<OpenRow<'_>> {
-    fn walk<'a>(nodes: &'a [LayerNode], depth: usize, visible: bool, rows: &mut Vec<OpenRow<'a>>) {
-        for node in nodes {
-            rows.push(OpenRow {
-                depth,
-                node,
-                parent_visible: visible,
-            });
-            if node.kind == LayerNodeType::Group && node.expanded {
-                walk(&node.children, depth + 1, visible && node.visible, rows);
-            }
-        }
-    }
-    let mut rows = Vec::new();
-    walk(nodes, 0, true, &mut rows);
-    rows
 }
 
 /// A launcher's message: another tab, or a command the desktop runs.

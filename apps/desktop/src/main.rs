@@ -25,6 +25,7 @@ mod icons;
 mod input;
 mod keys;
 mod labels;
+mod layer_tree;
 mod layering;
 mod marks;
 mod modes;

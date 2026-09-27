@@ -235,10 +235,12 @@ impl App {
                 self.with_tool(|s, cx| s.pointer_move(&p, cx));
             }
             viewport::Event::Pressed(at) => {
-                // A click on the drawing takes the keyboard from any text field:
-                // the value field closes without applying (web: it loses focus).
+                // A click on the drawing takes the keyboard from any text field
+                // and the layer tree: the value field closes without applying
+                // (web: it loses focus).
                 self.field = None;
                 self.line_focused = false;
+                self.layers_keyboard = false;
                 // The snap is taken again here, never from the last move (CLAUDE.md §4.7).
                 let p = self.pointer_at(at);
                 let running = self.session.is_running();
@@ -311,9 +313,16 @@ impl App {
         }
         // 1. A dialog: Esc closes it; its own buttons do the rest.
         if self.dialog.is_some() {
-            if press.named() == Some(Named::Escape) {
+            match press.named() {
                 // What the window held goes with it (a password, a request).
-                self.close_dialog();
+                Some(Named::Escape) => self.close_dialog(),
+                // ↑ ↓ in a Hesap window's table go to the row above or below (calc/grid.rs).
+                Some(key @ (Named::ArrowUp | Named::ArrowDown))
+                    if self.dialog == Some(crate::app::Dialog::Calc) =>
+                {
+                    return crate::calc::arrow(key == Named::ArrowUp);
+                }
+                _ => {}
             }
             return Task::none();
         }
@@ -333,6 +342,12 @@ impl App {
         // text box (Tab, chords); only the global chords work there.
         if self.line_focused {
             return self.global_chord(&press);
+        }
+        // 1. The layer tree has the keyboard: its keys are its own (layer_tree.rs).
+        if self.layers_keyboard
+            && let Some(task) = self.layer_key(&press)
+        {
+            return task;
         }
         // 3. An option letter of the running command beats the shortcuts.
         if self.session.is_running()
