@@ -72,7 +72,8 @@ Masaüstünün elle tuttuğu dosyadır (`kentos.desktop-equivalents`, sürüm 1)
 - Anahtarlar envanterin bölümleri (`commands`, `tools`, `processing`, `models`, `workspaces`, `settings`, `storage`, `fileFields`, `screens`) ve `sections`'dır; öğe anahtarları `web.json`'daki `id`'lerdir.
 - Bir öğe: `desktop` (yukarıdaki sözler), `where` (masaüstündeki yeri: modül, dosya, ayar anahtarı), `reason` (Türkçe neden; `n/a`'da zorunlu, `partial`'da beklenir). Başka alan yazılmaz.
 - Envanterde olmayan bir bölüm ya da kimlik, bilinmeyen bir söz ya da alan, nedeni yazılmamış `n/a` betiği durdurur: tablo fark edilmeden eskimez.
-- `summary.desktop` her bölümde masaüstünde olan, kısmi, olmayan ve anlamsız öğeleri sayar; `summary.desktopSections` tablonun bütün bölümler için dediğidir. `web.md` bunları bölüm bölüm yazar ve web'de olup masaüstünde olmayanları sıralar.
+- `summary.desktop` her bölümde masaüstünde olan, kısmi, olmayan, bekleyen ve anlamsız öğeleri sayar; `summary.desktopSections` tablonun bütün bölümler için dediğidir. `web.md` bunları bölüm bölüm yazar ve web'de olup masaüstünde olmayanları sıralar.
+- `pending` (Bekliyor) web'de de yapılmamış öğedir: masaüstü onu web'in notuyla soluk gösterir. `web.md` onu olmayanlardan ayrı sayar ve listede “(iki platformda da bekliyor)” diye yazar.
 
 ## Notlar
 
