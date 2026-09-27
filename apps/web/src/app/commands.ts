@@ -2,6 +2,7 @@ import type { Command } from '../core/commands';
 import type { BackendKind } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
 import type { Entity } from '../model/entities';
+import { entitiesDelete } from '../product/entitiesDelete';
 import { pasteEntities, PasteTool } from '../tools/editTools';
 import { Signal } from '../core/signal';
 import { TOOL_GROUP_LABEL } from '../tools/Tool';
@@ -270,8 +271,15 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
         const editable = ents.filter((e) => !doc.layers.isLocked(e.layerId));
         if (editable.length < ents.length) log.warn(`${ents.length - editable.length} nesne kilitli katmanda olduğu için kesilmedi.`);
         if (!editable.length) return;
-        ctx.clipboard.set(editable, ctx.view.extent(editable.map((e) => e.id)));
-        doc.transact('Kes', () => doc.remove(editable.map((e) => e.id)));
+        const extent = ctx.view.extent(editable.map((e) => e.id));
+        // Deleted through cad.entities.delete (docs/adr/0029), as Sil deletes; the step keeps the name “Kes”.
+        const uids = editable.map((e) => doc.uidOf(e.id)).filter((uid): uid is string => uid !== undefined);
+        const result = doc.transact('Kes', () => entitiesDelete.execute({ doc }, { uids }));
+        if (result.status !== 'completed') {
+          if ('error' in result) log.warn(result.error.message);
+          return;
+        }
+        ctx.clipboard.set(editable, extent);
         selection.retain((id) => !!doc.get(id));
         log.success(`${editable.length} nesne panoya kesildi.`);
       },

@@ -180,6 +180,14 @@ export abstract class PointInputTool implements Tool {
   }
 
   /**
+   * What was written so far can no longer be taken back as an undo: a step
+   * that is not the tool's (a deletion) now sits above it in the history.
+   */
+  protected forgetMade(): void {
+    this.made = [];
+  }
+
+  /**
    * A product command's answer, as the drawing tools report it (docs/adr/0027,
    * 0032): a refusal's message (the locked and hidden layer texts are the
    * tools' own words, kept by the commands), else the warnings of the write;
@@ -278,9 +286,11 @@ export class LineTool extends PointInputTool {
 
   protected override option(key: string): boolean {
     if (key === 'G' && this.created.length) {
-      const id = this.created.pop()!;
-      // Taken back as an undo when nothing changed since, so a later Ctrl+Z cannot bring the line back.
-      if (!this.undoLastMade()) this.ctx.doc.remove([id]);
+      const id = this.created.at(-1)!;
+      // Taken back as an undo when nothing changed since, so a later Ctrl+Z cannot bring the line back;
+      // else deleted. A line it may not delete (on a layer locked since) stays, and so does the chain.
+      if (!this.undoLastMade() && !this.eraseLine(id)) return true;
+      this.created.pop();
       this.pts.pop();
       this.refreshPrompt();
       this.ctx.view.requestOverlay();
@@ -289,6 +299,27 @@ export class LineTool extends PointInputTool {
     if (key !== 'K' || this.pts.length < 3) return false;
     this.onPoint(this.pts[0]);
     this.finish();
+    return true;
+  }
+
+  /**
+   * A line of the chain deleted through the product command
+   * `cad.entities.delete` (docs/adr/0029), as the erase tool deletes: one undo
+   * step, “Sil”. Its lock rule holds: a line on a locked layer is not deleted
+   * and the refusal is said. A line already gone counts as deleted. Whether
+   * it is gone.
+   */
+  private eraseLine(id: number): boolean {
+    const { doc, log } = this.ctx;
+    const uid = doc.uidOf(id);
+    if (uid === undefined) return true;
+    const result = entitiesDelete.execute({ doc }, { uids: [uid] });
+    if (result.status !== 'completed') {
+      if ('error' in result) log.warn(result.error.message);
+      return false;
+    }
+    // The deletion is the newest step now: what the chain wrote before it can only be deleted too.
+    this.forgetMade();
     return true;
   }
 
