@@ -31,7 +31,7 @@ use serde_json::json;
 use crate::app::{App, Dialog, Message, Then};
 use crate::cloud::copy::Link;
 use crate::cloud::view::{primary, secondary};
-use crate::cloud::{Event, words};
+use crate::cloud::{Event, forms_plan as forms, words};
 
 fn cloud(event: Event) -> Message {
     crate::cloud::msg(event)
@@ -59,10 +59,9 @@ impl Rename {
         self.id
     }
 
-    /// The web's button: a name, not empty, not the same.
+    /// The web's button: a name, not empty, not the same (forms_plan.rs).
     fn can_save(&self) -> bool {
-        let name = js_trim(&self.text);
-        !self.busy && !name.is_empty() && name != self.was
+        !self.busy && forms::rename_savable(&self.text, &self.was)
     }
 }
 
@@ -91,6 +90,22 @@ pub enum Settle {
         Box<(
             kentos_contracts::ProjectSummary,
             kentos_contracts::CheckpointCreate,
+        )>,
+    ),
+    /// Proje bilgileri's new name of the open database project; the rest of
+    /// the patch goes once it went (catalog_forms.rs).
+    Metadata(
+        Box<(
+            kentos_contracts::ProjectSummary,
+            kentos_contracts::ProjectMetadataUpdate,
+            String,
+        )>,
+    ),
+    /// The open project in the other storage mode, once its edits went (catalog_forms.rs).
+    Convert(
+        Box<(
+            kentos_contracts::ProjectSummary,
+            kentos_contracts::ProjectConvert,
         )>,
     ),
 }
@@ -225,14 +240,14 @@ impl App {
         };
         let name = js_trim(&r.text).to_owned();
         // The field takes 200 at most on the web (its maxlength), in UTF-16 units.
-        if name.encode_utf16().count() > 200 {
+        if name.encode_utf16().count() > forms::NAME_MAX {
             r.status = Some(Status::Error(
                 "Proje adı boş olamaz ve en çok 200 karakter olabilir.".to_owned(),
             ));
             return Task::none();
         }
         r.busy = true;
-        r.status = Some(Status::Info("Kaydediliyor…".to_owned()));
+        r.status = Some(Status::Info(forms::SAVING.to_owned()));
         let id = r.id;
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
@@ -297,7 +312,7 @@ impl App {
                 }
                 self.cloud.rename = None;
                 self.dialog = None;
-                self.say_success(format!("Proje “{name}” olarak yeniden adlandırıldı."));
+                self.say_success(forms::rename::saved(&name));
             }
             Err(failure) => {
                 r.busy = false;
@@ -351,11 +366,9 @@ impl App {
                     self.dialog = None;
                 }
                 if sent {
-                    self.say_success(format!("Proje “{name}” olarak yeniden adlandırıldı."));
+                    self.say_success(forms::rename::saved(&name));
                 } else {
-                    self.warn(format!(
-                        "Yeni ad (“{name}”) bu cihazda bekliyor; sunucuya ulaşılınca kaydedilir."
-                    ));
+                    self.warn(forms::rename::waiting(&name));
                 }
                 Task::none()
             }
@@ -364,6 +377,11 @@ impl App {
             Some(Settle::Checkpoint(what)) => {
                 let (p, input) = *what;
                 self.checkpoint_send(&p, input)
+            }
+            Some(Settle::Metadata(what)) => self.metadata_renamed(*what, sent),
+            Some(Settle::Convert(what)) => {
+                let (p, input) = *what;
+                self.convert_send(&p, input)
             }
             None => Task::none(),
         }
@@ -457,21 +475,19 @@ impl App {
             .style(style::field::input);
         let mut form = Form::new()
             .label_width(80.0)
-            .field("Yeni ad", field)
-            .row(label::caption(
-                "Projeye erişimi olan herkes yeni adı görür.",
-            ));
+            .field(forms::rename::NAME, field)
+            .row(label::caption(forms::rename::HINT));
         match &r.status {
             Some(Status::Info(t)) => form = form.row(label::caption(t.clone())),
             Some(Status::Error(t)) => form = form.row(Banner::error(t.clone())),
             None => {}
         }
         overlay::modal(
-            Window::new("Bulut projesini yeniden adlandır")
+            Window::new(forms::rename::TITLE)
                 .push(form)
-                .action(secondary("Vazgeç", Some(cloud(Event::Close))))
+                .action(secondary(forms::CANCEL, Some(cloud(Event::Close))))
                 .action(primary(
-                    "Yeniden adlandır",
+                    forms::rename::SAVE,
                     r.can_save().then(|| cloud(Event::RenameSubmit)),
                 ))
                 .width(460.0),

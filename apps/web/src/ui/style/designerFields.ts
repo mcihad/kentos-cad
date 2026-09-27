@@ -22,7 +22,9 @@ export function row(label: string, control: Child, hint?: string): HTMLElement {
 /** Two controls side by side (X/Y offsets, width/height). */
 export const pair = (a: Child, b: Child) => h('div', { class: 'sdf__pair' }, a, b);
 
+/** A number as typed: a comma for the point; a blank field is none yet (Number("") wrote 0 while it was being cleared). */
 const parseNum = (s: string) => {
+  if (!s.trim()) return null;
   const v = Number(s.replace(',', '.'));
   return Number.isFinite(v) ? v : null;
 };

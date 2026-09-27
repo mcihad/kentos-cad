@@ -53,9 +53,16 @@ pub struct Built {
 }
 
 /// The pictures built so far.
-#[derive(Default)]
 pub struct Thumbs {
     built: Mutex<HashMap<Key, Option<Arc<Built>>>>,
+    /// More built pictures than this and the cache starts again.
+    keep: usize,
+}
+
+impl Default for Thumbs {
+    fn default() -> Self {
+        Thumbs::with_limit(KEEP)
+    }
 }
 
 impl fmt::Debug for Thumbs {
@@ -72,6 +79,15 @@ pub struct Look<'a> {
 }
 
 impl Thumbs {
+    /// Pictures kept up to `keep`: the symbol designer's preview makes one
+    /// per edit and keeps only the last few.
+    pub fn with_limit(keep: usize) -> Thumbs {
+        Thumbs {
+            built: Mutex::new(HashMap::new()),
+            keep: keep.max(1),
+        }
+    }
+
     /// The picture of `symbol` (a library reference is drawn as its symbol),
     /// `size` logical pixels; `px_per_mm` fixes the scale (a legend's), else
     /// the symbol is fitted. Paper-coloured and empty when there is nothing to draw.
@@ -145,7 +161,7 @@ impl Thumbs {
         if let Some(hit) = built.get(&key) {
             return hit.clone();
         }
-        if built.len() >= KEEP {
+        if built.len() >= self.keep {
             built.clear();
         }
         let made = preview(

@@ -119,6 +119,8 @@ pub enum Dialog {
     StyleManager,
     /// Lejant (style/legend/); the window is `App::styles.legend`.
     Legend,
+    /// Sembol tasarımcısı (style/designer/); the window is `App::styles.designer`.
+    SymbolDesigner,
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
@@ -217,6 +219,8 @@ pub enum Message {
     StyleManager(Box<crate::style::manager::Event>),
     /// Lejant (style/legend/).
     Legend(crate::style::legend::Event),
+    /// Sembol tasarımcısı (style/designer/).
+    Designer(Box<crate::style::designer::Event>),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -756,6 +760,7 @@ impl App {
             Message::LayerStyle(event) => return self.layer_style_event(event),
             Message::StyleManager(event) => return self.style_manager_event(*event),
             Message::Legend(event) => return self.legend_event(event),
+            Message::Designer(event) => return self.designer_event(*event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {

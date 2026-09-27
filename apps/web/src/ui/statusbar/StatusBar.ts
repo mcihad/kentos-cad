@@ -11,12 +11,12 @@ import { webgpuSupported } from '../../render/webgpu/support';
 import { fitBar } from '../widgets/fit';
 import { PopupMenu } from '../widgets/PopupMenu';
 import { hideTooltip, tooltip } from '../widgets/tooltip';
+import { SERVER_TEXT, serverTip } from './cellsPlan';
 import { accountMenu, saveCell } from './cloudCells';
 
 /** Screen metres per CSS pixel → map-like scale at 96 dpi. */
 const screenScale = (pxPerMetre: number) => Math.round(1 / pxPerMetre / 0.00026458);
 const fmtScale = (n: number) => n.toLocaleString('tr-TR');
-const SERVER_TEXT = { checking: 'Sunucu…', online: 'Sunucu: bağlı', offline: 'Sunucu: yok', incompatible: 'Sunucu: uyumsuz' } as const;
 
 export class StatusBar extends Component {
   readonly el: HTMLElement;
@@ -166,16 +166,7 @@ export class StatusBar extends Component {
         hideTooltip(server);
       }, true),
     );
-    this.d.add(
-      tooltip(server, () => {
-        const s = ctx.server;
-        const hl = s.health.value;
-        const about = hl ? `${hl.service} ${hl.version}${hl.commit ? ` (${hl.commit.slice(0, 8)})` : ''}, sözleşme sürümü ${hl.contracts}.` : '';
-        const offline = `${s.detail.value} Çizim sunucusuz çalışır; kayıt yerel .kcad dosyasına yapılır.${import.meta.env.DEV ? ' Geliştirmede sunucuyu “pnpm api” ile başlatın.' : ''}`;
-        const text = s.state.value === 'online' ? about : s.state.value === 'incompatible' ? `${about} ${s.detail.value}` : s.state.value === 'checking' ? 'Sunucuya soruluyor…' : offline;
-        return { title: 'KentOS sunucusu', description: `${text} Hesap, bulut projeleri ve bağlantı denetimi için tıklayın.` };
-      }, 'top'),
-    );
+    this.d.add(tooltip(server, () => serverTip({ state: ctx.server.state.value, health: ctx.server.health.value, detail: ctx.server.detail.value, dev: import.meta.env.DEV }), 'top'));
     this.d.add(
       ctx.selection.ids.subscribe((ids) => {
         selCount.hidden = ids.size === 0;

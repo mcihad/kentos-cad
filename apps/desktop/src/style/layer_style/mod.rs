@@ -155,6 +155,10 @@ pub enum Event {
     Pick(SetAt, GeometryClass, String, Option<String>),
     /// A slot's “Kitaplığıma kaydet”: its own symbol goes to Kitaplığım (its title, the symbol).
     Keep(SetAt, GeometryClass, String, Value),
+    /// A slot's “Düzenle…” (“Kopyasını burada düzenle…” for a library symbol):
+    /// Sembol tasarımcısı edits the symbol (its title, the symbol to start from)
+    /// and Uygula writes it into the style.
+    Design(SetAt, GeometryClass, String, Value),
 }
 
 /// What each rule takes, by its path.
@@ -620,7 +624,8 @@ impl LayerStyleWindow {
             | Event::Discard
             | Event::Stay
             | Event::Pick(..)
-            | Event::Keep(..) => {}
+            | Event::Keep(..)
+            | Event::Design(..) => {}
         }
     }
 
@@ -668,6 +673,13 @@ impl LayerStyleWindow {
             }
         }
         self.typed.insert(bound_key(i, min), text);
+    }
+
+    /// A slot's symbol, from the symbol designer's Uygula.
+    pub(crate) fn put_symbol(&mut self, at: &SetAt, class: GeometryClass, symbol: Option<Value>) {
+        if let Some(set) = self.set_mut(at) {
+            set.set(class, symbol);
+        }
     }
 
     fn set_mut(&mut self, at: &SetAt) -> Option<&mut SymbolSet> {
@@ -870,6 +882,11 @@ impl App {
             }
             Event::Keep(at, class, title, symbol) => {
                 self.keep_slot_symbol(at, class, &title, symbol);
+                return Task::none();
+            }
+            // Sembol tasarımcısı over the window (style/designer/).
+            Event::Design(at, class, title, symbol) => {
+                self.open_slot_designer(at, class, title, symbol);
                 return Task::none();
             }
             other => other,

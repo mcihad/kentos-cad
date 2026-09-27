@@ -155,9 +155,13 @@
     "apps/web/src/ui/cloud/ConflictDialog.ts#openConflictDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/view.rs, follow.rs" },
     "apps/web/src/ui/cloud/HistoryForms.ts#openCheckpointDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/catalog_history_view.rs (ADR 0087)" },
     "apps/web/src/ui/cloud/HistoryForms.ts#openRestoreDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/catalog_history_view.rs (ADR 0087)" },
+    "apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog": { "desktop": "n/a", "where": "apps/desktop/src/cloud/share*.rs (ADR 0111)", "reason": "Davet bağlantısı web uygulamasının adresidir: açılır ve orada kabul edilir; kabul edilen proje masaüstünün kataloğunda da görünür. Masaüstü davet eder, bağlantı açmaz." },
     "apps/web/src/ui/cloud/LoginDialog.ts#openLoginDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/account.rs, view.rs (ADR 0041)" },
     "apps/web/src/ui/cloud/ProjectActions.ts#openDeleteDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/actions.rs (ADR 0073)" },
     "apps/web/src/ui/cloud/ProjectActions.ts#openRenameDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/actions.rs (ADR 0073)" },
+    "apps/web/src/ui/cloud/ProjectForms.ts#openConvertDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/catalog_forms*.rs (ADR 0112)" },
+    "apps/web/src/ui/cloud/ProjectForms.ts#openDuplicateDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/catalog_forms*.rs (ADR 0112)" },
+    "apps/web/src/ui/cloud/ProjectForms.ts#openMetadataDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/catalog_forms*.rs (ADR 0112)" },
     "apps/web/src/ui/cloud/ProjectsDialog.ts#openProjectsDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/mod.rs (cloud.open, cloud.upload, cloud.uploadFile)" },
     "apps/web/src/ui/cloud/ShareDialog.ts#openShareDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/share*.rs (ADR 0111)" },
     "apps/web/src/ui/cloud/UploadDialog.ts#openUploadDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/upload.rs (ADR 0041, 0073)" },
@@ -201,7 +205,8 @@
     "apps/web/src/ui/style/StyleManager.ts#openStyleManager": {
       "desktop": "partial",
       "where": "apps/desktop/src/style/manager/ (ADR 0092)",
-      "reason": "Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar; ikisi masaüstüne henüz taşınmadı, düğmeleri soluk ve nedenini söyler."
-    }
+      "reason": "SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094)."
+    },
+    "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner": { "desktop": "implemented", "where": "apps/desktop/src/style/designer/ (ADR 0094)" }
   }
 }

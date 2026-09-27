@@ -75,7 +75,7 @@ describe.skipIf(!formatsBuilt)('file projects in the cloud session (docs/adr/003
     await new Promise((r) => setTimeout(r, 150));
     const file = session.file.value!;
     expect([file.newer.value, file.base.value, file.state.value, doc.size, doc.revision]).toEqual([{ revision: '2', by: 'Mehmet Demir' }, '1', 'outdated', before.size, before.revision]);
-    expect(messages.filter((m) => m.includes('başka bir yerde kaydedildi'))).toEqual([expect.stringMatching(/revizyon 2 \(Mehmet Demir\)\. Açık çizim revizyon 1'e dayanıyor; .*Kendiliğinden yeniden yüklenmez\.$/)]);
+    expect(messages.filter((m) => m.includes('başka bir yerde kaydedildi'))).toEqual([expect.stringMatching(/revizyon 2 \(Mehmet Demir\)\. Açık çizimin dayandığı revizyon: 1; .*Kendiliğinden yeniden yüklenmez\.$/)]);
   });
 
   it('a download that changed on the way never becomes the drawing', async () => {

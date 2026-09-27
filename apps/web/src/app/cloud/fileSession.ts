@@ -22,7 +22,7 @@ export type { FileStage } from './uploading';
 
 /** Someone else saved a newer revision of the open file project: said, never loaded by itself. */
 export function newerText(name: string, newer: NewerRevision, base: string): string {
-  return `“${name}” başka bir yerde kaydedildi: revizyon ${newer.revision}${newer.by ? ` (${newer.by})` : ''}. Açık çizim revizyon ${base}'e dayanıyor; yeni revizyonu açmak için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez.`;
+  return `“${name}” başka bir yerde kaydedildi: revizyon ${newer.revision}${newer.by ? ` (${newer.by})` : ''}. Açık çizimin dayandığı revizyon: ${base}; yeni revizyonu açmak için durum çubuğundaki kayıt durumuna tıklayın. Kendiliğinden yeniden yüklenmez.`;
 }
 
 /** The notice of a newer revision for the project `info` (the log; the status bar offers to open it). */

@@ -142,11 +142,11 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 45,
+        "implemented": 49,
         "partial": 4,
         "pending": 0,
-        "none": 14,
-        "n/a": 0
+        "none": 9,
+        "n/a": 1
       }
     },
     "desktopSections": {
@@ -407,7 +407,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -441,7 +441,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -470,7 +470,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -504,7 +504,7 @@
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/cloud/ProjectsDialog.ts",
         "apps/web/src/ui/start/StartScreen.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -531,7 +531,7 @@
       "toolbox": false,
       "hiddenIn": [],
       "uiSources": [
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -566,7 +566,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -599,7 +599,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -629,7 +629,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -659,7 +659,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -694,7 +694,7 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/cloud/ProjectsDialog.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -725,7 +725,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/cloud/ProjectsDialog.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -1774,7 +1774,7 @@
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
         "apps/web/src/ui/shell/shellPlan.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -2449,7 +2449,7 @@
       "hiddenIn": [],
       "uiSources": [
         "apps/web/src/ui/appmenu/AppMenu.ts",
-        "apps/web/src/ui/statusbar/cloudCells.ts"
+        "apps/web/src/ui/statusbar/cellsPlan.ts"
       ],
       "status": "implemented",
       "platforms": {
@@ -11555,8 +11555,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/share*.rs (ADR 0111)",
+      "desktopNote": "Davet bağlantısı web uygulamasının adresidir: açılır ve orada kabul edilir; kabul edilen proje masaüstünün kataloğunda da görünür. Masaüstü davet eder, bağlantı açmaz."
     },
     {
       "id": "apps/web/src/ui/cloud/LoginDialog.ts#openLoginDialog",
@@ -11602,8 +11604,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/catalog_forms*.rs (ADR 0112)"
     },
     {
       "id": "apps/web/src/ui/cloud/ProjectForms.ts#openDuplicateDialog",
@@ -11613,8 +11616,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/catalog_forms*.rs (ADR 0112)"
     },
     {
       "id": "apps/web/src/ui/cloud/ProjectForms.ts#openMetadataDialog",
@@ -11624,8 +11628,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/cloud/catalog_forms*.rs (ADR 0112)"
     },
     {
       "id": "apps/web/src/ui/cloud/ProjectsDialog.ts#openProjectsDialog",
@@ -12059,7 +12064,7 @@
         "desktop": "partial"
       },
       "desktopWhere": "apps/desktop/src/style/manager/ (ADR 0092)",
-      "desktopNote": "Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar; ikisi masaüstüne henüz taşınmadı, düğmeleri soluk ve nedenini söyler."
+      "desktopNote": "SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094)."
     },
     {
       "id": "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner",
@@ -12069,8 +12074,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/style/designer/ (ADR 0094)"
     },
     {
       "id": "apps/web/src/ui/svgedit/SvgEditor.ts#openSvgEditor",
