@@ -1,6 +1,7 @@
 import type { EventRecord } from '../../contracts/generated/EventRecord';
 import type { FeatureRecord } from '../../contracts/generated/FeatureRecord';
 import type { Entity } from '../../model/entities';
+import { keepUnsentLayers, keptText, treeText } from './keptLayers';
 import { BATCH, type SyncConflict, type SyncCore } from './syncCore';
 import { entityJson, metaParts } from './tracker';
 
@@ -40,8 +41,15 @@ export async function applyEvents(core: SyncCore, events: readonly EventRecord[]
       core.metaVersion = m.version;
       await core.whenIdle();
       if (core.closed) return [];
-      o.doc.applyExternal({ meta: m.meta });
+      // A layer the tree drops that still holds this device's unsent objects stays here, and goes back to the server.
+      const keep = m.meta.layers ? keepUnsentLayers(o.doc, m.meta.layers, (uid) => core.busyLocally(uid)) : null;
+      o.doc.applyExternal({ meta: keep ? { ...m.meta, layers: keep.layers } : m.meta });
       core.metaBase = metaParts(o.doc);
+      if (keep && m.meta.layers) {
+        core.metaBase = { ...core.metaBase, layers: treeText(m.meta.layers) };
+        core.metaDirty = true;
+        for (const k of keep.kept) o.warn(keptText(k));
+      }
     }
   }
   const good = core.checked([...fetched.values()].map((f) => ({ key: f.id, entity: f.entity })));

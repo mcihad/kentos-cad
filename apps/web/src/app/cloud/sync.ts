@@ -9,6 +9,7 @@ import { DRAFT_VERSION, keptDraftKey, readDraft, type Draft } from './drafts';
 import { BATCH, PROJECT_ACCESS, PROJECT_ARCHIVED, PROJECT_DELETED, SyncCore, uuid, type Inflight, type SaveState, type SyncConflict, type SyncOptions } from './syncCore';
 import { applyEvents } from './syncRemote';
 import { restoreDraft } from './syncRestore';
+import { keepUnsentLayers, keptText, treeText } from './keptLayers';
 import { changeOf, entityJson, leavingObjects, metaParts, metaPatch, type Planned } from './tracker';
 
 export type { SaveState, SyncConflict, SyncOptions } from './syncCore';
@@ -420,10 +421,17 @@ export class ProjectSync {
           core.dirty.delete(c.featureId);
         }
       }
-      doc.applyExternal({ put, remove, meta });
+      // The server's tree, but a layer it drops that still holds this device's unsent objects stays (keptLayers.ts).
+      const keep = meta?.layers ? keepUnsentLayers(doc, meta.layers, (uid) => core.busyLocally(uid)) : null;
+      doc.applyExternal({ put, remove, meta: keep && meta ? { ...meta, layers: keep.layers } : meta });
       if (meta) {
         core.metaBase = metaParts(doc);
         core.metaDirty = false;
+      }
+      if (keep && meta?.layers) {
+        core.metaBase = { ...core.metaBase, layers: treeText(meta.layers) };
+        core.metaDirty = true;
+        for (const k of keep.kept) this.o.warn(keptText(k));
       }
     } else {
       for (const c of list) {
@@ -546,6 +554,8 @@ export class ProjectSync {
         if (events.some((e) => e.kind === PROJECT_ACCESS)) this.o.onAccessChanged?.();
         const found = await applyEvents(this.core, events);
         if (!this.disposed) this.addConflicts(found);
+        // A layer kept from another editor's tree (keptLayers.ts) goes back to the server.
+        if (!this.disposed && this.core.metaDirty && !this.conflicts.value.length) this.changed();
       })
       .catch((e) => this.o.warn(`Başka kullanıcıların değişiklikleri alınamadı: ${(e as Error).message}`));
     return this.remoteQueue;

@@ -249,6 +249,10 @@ impl App {
                 "Başkasının bir değişikliği çizime alınamadı: {why}."
             ));
         }
+        // A layer another editor removed stays for this device's unsent objects (docs/adr/0079).
+        for kept in &taken.kept {
+            self.warn(kept.text());
+        }
     }
 
     /// What waited for an open edit to end, now that it has.
@@ -279,13 +283,16 @@ impl App {
                 live.theirs = Some(info);
                 Task::none()
             }
-            Ok(()) => {
+            Ok(kept) => {
                 if live.sync.all_sent() {
                     let revision = doc.model.revision();
                     doc.model.mark_saved(revision);
                 }
                 self.close_conflicts();
                 self.output("Sunucudaki hâller alındı.");
+                for layer in &kept {
+                    self.warn(layer.text());
+                }
                 self.after_server_step()
             }
         }

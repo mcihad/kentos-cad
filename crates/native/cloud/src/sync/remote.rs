@@ -10,6 +10,10 @@
 //!   overwritten: it becomes a conflict;
 //! - new metadata comes first, since new objects may sit on a layer it
 //!   brings; with unsent metadata here it is a conflict too;
+//! - a layer the new tree drops that still holds this device's unsent
+//!   objects stays in the drawing and goes back to the server with them
+//!   (the web's `keepUnsentLayers`, 88ca558): losing the user's objects is
+//!   worse than bringing back a layer someone removed;
 //! - a deletion of the project ends the sync; an archiving ends it after
 //!   the events before it came in.
 
@@ -19,7 +23,7 @@ use kentos_contracts::{
     ConflictReason, EventPage, FeatureOp, FeatureRecord, LayerNode, LayerNodeType,
     PROJECT_ACCESS_CHANGED, PROJECT_ARCHIVED, PROJECT_DELETED, ProjectInfo,
 };
-use kentos_domain::{Document, External, ExternalMeta};
+use kentos_domain::{Document, External, ExternalMeta, Slot};
 use uuid::Uuid;
 
 use super::{Conflict, Meta, PROJECT_KEY, ProjectSync, SaveState, Tracked};
@@ -66,6 +70,52 @@ pub struct Taken {
     pub conflicts: usize,
     /// Objects the drawing could not take, with the reason, in Turkish.
     pub skipped: Vec<String>,
+    /// Layers the new tree dropped that stay for their unsent objects.
+    pub kept: Vec<KeptLayer>,
+}
+
+/// A layer another editor removed that stays in this drawing: it holds
+/// objects with changes the server does not have yet, and goes back to the
+/// server with them.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KeptLayer {
+    pub id: String,
+    pub name: String,
+    /// How many objects on it have unsent changes.
+    pub unsent: usize,
+}
+
+impl KeptLayer {
+    /// What the user hears (the web's `keptText`).
+    pub fn text(&self) -> String {
+        format!(
+            "“{}” katmanını başka biri sildi; üzerinde gönderilmemiş {} nesneniz olduğu için katman bu çizimde kaldı ve yeniden kaydedilecek.",
+            self.name, self.unsent
+        )
+    }
+}
+
+/// The node with this id in a tree.
+fn find<'a>(nodes: &'a [LayerNode], id: &str) -> Option<&'a LayerNode> {
+    nodes.iter().find_map(|n| {
+        if n.id == id {
+            Some(n)
+        } else {
+            find(&n.children, id)
+        }
+    })
+}
+
+fn find_mut<'a>(nodes: &'a mut [LayerNode], id: &str) -> Option<&'a mut LayerNode> {
+    for node in nodes {
+        if node.id == id {
+            return Some(node);
+        }
+        if let Some(found) = find_mut(&mut node.children, id) {
+            return Some(found);
+        }
+    }
+    None
 }
 
 /// Whether `id` is a layer (not a group) of this tree.
@@ -162,6 +212,8 @@ impl ProjectSync {
         let mut taken = Taken::default();
         let mut change = External::default();
         let mut new_meta = None;
+        // The server's tree, when the drawing takes one with a layer kept (below).
+        let mut server_tree = None;
         if incoming.meta
             && let Some(info) = &remote.info
         {
@@ -174,7 +226,13 @@ impl ProjectSync {
                 });
                 taken.conflicts += 1;
             } else {
-                change.meta = Some(meta_of(info));
+                let mut meta = meta_of(info);
+                if let Some((layers, kept)) = self.keep_unsent(doc, &info.layers) {
+                    meta.layers = Some(layers);
+                    taken.kept = kept;
+                    server_tree = Some(info.layers.clone());
+                }
+                change.meta = Some(meta);
                 new_meta = Some(info.meta_version.clone());
             }
         }
@@ -254,10 +312,7 @@ impl ProjectSync {
             self.dirty.remove(&id);
         }
         if let Some(version) = new_meta {
-            self.meta_version = version;
-            self.meta_base = Meta::of(doc);
-            self.meta_dirty = false;
-            self.meta_known();
+            self.took_meta(doc, version, server_tree);
         }
         if self.cursor != incoming.cursor {
             self.cursor = incoming.cursor;
@@ -278,7 +333,7 @@ impl ProjectSync {
         &mut self,
         doc: &mut Document,
         info: Option<&ProjectInfo>,
-    ) -> Result<(), String> {
+    ) -> Result<Vec<KeptLayer>, String> {
         if doc.is_busy() {
             return Err(BUSY.to_owned());
         }
@@ -286,12 +341,12 @@ impl ProjectSync {
         let mut change = External::default();
         let mut new_meta = None;
         let mut tracked = Vec::new();
+        let project = self
+            .conflicts
+            .iter()
+            .any(|c| c.reason == ConflictReason::Project);
         for c in &self.conflicts {
             if c.reason == ConflictReason::Project {
-                if let Some(info) = info {
-                    change.meta = Some(meta_of(info));
-                    new_meta = Some(info.meta_version.clone());
-                }
                 continue;
             }
             let Ok(id) = Uuid::parse_str(&c.id) else {
@@ -310,6 +365,8 @@ impl ProjectSync {
                 }
             }
         }
+        // The objects' conflicts end first, so they no longer count as unsent
+        // when the server's tree comes (a layer kept, as in take_remote).
         self.apply(doc, change)?;
         for (id, record) in tracked {
             match record {
@@ -324,11 +381,27 @@ impl ProjectSync {
             }
             self.dirty.remove(&id);
         }
-        if let Some(version) = new_meta {
-            self.meta_version = version;
-            self.meta_base = Meta::of(doc);
-            self.meta_dirty = false;
-            self.meta_known();
+        let mut kept = Vec::new();
+        if project && let Some(info) = info {
+            self.observe(doc);
+            let mut meta = meta_of(info);
+            let mut server_tree = None;
+            if let Some((layers, k)) = self.keep_unsent(doc, &info.layers) {
+                meta.layers = Some(layers);
+                kept = k;
+                server_tree = Some(info.layers.clone());
+            }
+            self.apply(
+                doc,
+                External {
+                    meta: Some(meta),
+                    ..External::default()
+                },
+            )?;
+            new_meta = Some((info.meta_version.clone(), server_tree));
+        }
+        if let Some((version, server_tree)) = new_meta {
+            self.took_meta(doc, version, server_tree);
         }
         self.conflicts.clear();
         self.state = if !self.can_write {
@@ -338,7 +411,78 @@ impl ProjectSync {
         } else {
             SaveState::Saved
         };
-        Ok(())
+        Ok(kept)
+    }
+
+    /// The server's metadata is the drawing's now, at `version`. With a
+    /// layer kept (`server_tree`: the server's tree without it), the base is
+    /// the server's and the drawing's tree differs from it: the kept layer
+    /// goes back with the next command.
+    fn took_meta(&mut self, doc: &Document, version: String, server_tree: Option<Vec<LayerNode>>) {
+        self.meta_version = version;
+        self.meta_base = Meta::of(doc);
+        if let Some(tree) = server_tree {
+            self.meta_base.layers = tree;
+        }
+        self.meta_dirty = self.meta_base.patch(doc).is_some();
+        self.meta_known();
+    }
+
+    /// `incoming` with the layers of this drawing it drops that hold objects
+    /// with changes the server does not have (unsent, or on their way) put
+    /// back, each a copy of this drawing's node: into its group when the
+    /// incoming tree has that group, else at the top, at its place there when
+    /// it fits (the web's `keepUnsentLayers`). None when it drops none of those.
+    fn keep_unsent(
+        &self,
+        doc: &Document,
+        incoming: &[LayerNode],
+    ) -> Option<(Vec<LayerNode>, Vec<KeptLayer>)> {
+        let mut kept = Vec::new();
+        for leaf in doc.layers().leaves() {
+            if find(incoming, &leaf.id).is_some() {
+                continue;
+            }
+            let unsent = doc
+                .by_layer(&leaf.id)
+                .filter(|e| {
+                    doc.uid(Slot(e.base().id))
+                        .is_some_and(|id| self.busy_locally(doc, id))
+                })
+                .count();
+            if unsent > 0 {
+                kept.push(KeptLayer {
+                    id: leaf.id.clone(),
+                    name: leaf.name.clone(),
+                    unsent,
+                });
+            }
+        }
+        if kept.is_empty() {
+            return None;
+        }
+        let mut layers = incoming.to_vec();
+        for k in &kept {
+            let (Some(node), Some((parent, index))) = (
+                doc.layers().get(&k.id).cloned(),
+                doc.layers().place_of(&k.id),
+            ) else {
+                continue;
+            };
+            let group =
+                parent.filter(|p| find(&layers, p).is_some_and(|g| g.kind == LayerNodeType::Group));
+            match group.and_then(|p| find_mut(&mut layers, &p)) {
+                Some(group) => {
+                    let at = index.min(group.children.len());
+                    group.children.insert(at, node);
+                }
+                None => {
+                    let at = index.min(layers.len());
+                    layers.insert(at, node);
+                }
+            }
+        }
+        Some((layers, kept))
     }
 
     /// A conflict, replacing an earlier one of the same object; sending stops.
