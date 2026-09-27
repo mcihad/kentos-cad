@@ -48,7 +48,7 @@ pub fn model_as_tool(model: &Model, lookup: &dyn Fn(&str) -> Option<Tool>) -> To
         keywords: Vec::new(),
         aliases: Vec::new(),
         icon: Some("processing".into()),
-        parameters: model.inputs.clone(),
+        parameters: model.inputs.iter().filter_map(|i| i.def()).collect(),
         outputs: Vec::new(),
         targets: vec![Target::Client],
         validate: None,

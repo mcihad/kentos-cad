@@ -15,7 +15,7 @@ Tarih: 25 Eylül 2026, `27f771d`. Politika CLAUDE.md §3'tedir. Bu kayıt TODOS.
 
 | Crate | Sürüm ve özellikler | Lisans | Hedef | Kullanan | Karar |
 |---|---|---|---|---|---|
-| serde | 1.0.229, `derive` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api, kcad | ADR 0001 |
+| serde | 1.0.229, `derive` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api, kcad; processing (bir modelin adımlarındaki değerler yazıldığı sırayla okunur; kilide yeni paket girmedi, ADR 0116) | ADR 0001 |
 | serde_json | 1.0.151, `float_roundtrip` | MIT OR Apache-2.0 | native, wasm32 | contracts, formats, formats-wasm, application, api; processing (işlem araçlarının değerleri, ADR 0084); test (domain, native-application dahil), kcad | ADR 0001, 0008 |
 | libm | 0.2.16 | MIT | native, wasm32 | geometry-core, formats | ADR 0008 |
 | rust_decimal | 1.43.0, yalnız `std` | MIT | native, wasm32 | geometry-core | ADR 0001, 0004 |

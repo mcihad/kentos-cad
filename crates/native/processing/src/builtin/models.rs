@@ -4,10 +4,9 @@
 
 use std::collections::BTreeMap;
 
-use serde_json::json;
+use serde_json::{Value, json};
 
-use crate::model::{Model, ModelOutput, ModelStep, ValueSource};
-use crate::types::{ParamDef, ParamKind};
+use crate::model::{Model, ModelInput, ModelOutput, ModelStep, ValueSource};
 
 fn input(name: &str) -> ValueSource {
     ValueSource::Input(name.into())
@@ -20,30 +19,32 @@ pub fn parcel_sheet() -> Model {
         label: "Parsel ölçü yazıları".into(),
         category: "cadastre".into(),
         description: "Parsellerin köşelerini numaralar, kenar uzunluklarını yazar ve hesaplanan alanı özniteliğe yazar; hepsi tek adımda geri alınır.".into(),
-        inputs: vec![
-            ParamDef::new(
-                "parcels",
-                "Parseller",
-                ParamKind::Features {
-                    kinds: Some(vec!["polygon".into()]),
-                    scopes: None,
-                    writes: false,
-                },
-            )
-            .default_value(json!({ "scope": "selection" }))
-            .describe("Ölçü yazıları hazırlanacak parseller."),
-            ParamDef::new(
-                "prefix",
-                "Nokta öneki",
-                ParamKind::Text {
-                    placeholder: None,
-                    max_length: Some(12),
-                    allow_empty: true,
-                },
-            )
-            .default_value(json!("P"))
-            .describe("Köşe numaralarının başındaki yazı: P00001."),
-        ],
+        // The web's definitions, as its model keeps them.
+        inputs: [
+            json!({
+                "type": "features",
+                "name": "parcels",
+                "label": "Parseller",
+                "description": "Ölçü yazıları hazırlanacak parseller.",
+                "kinds": ["polygon"],
+                "default": { "scope": "selection" },
+            }),
+            json!({
+                "type": "string",
+                "name": "prefix",
+                "label": "Nokta öneki",
+                "description": "Köşe numaralarının başındaki yazı: P00001.",
+                "default": "P",
+                "allowEmpty": true,
+                "maxLength": 12,
+            }),
+        ]
+        .into_iter()
+        .filter_map(|v| match v {
+            Value::Object(map) => Some(ModelInput(map)),
+            _ => None,
+        })
+        .collect(),
         steps: vec![
             ModelStep {
                 id: "corners".into(),
