@@ -346,6 +346,13 @@ impl App {
         }
         // 1. A dialog: Esc closes it; its own buttons do the rest.
         if self.dialog.is_some() {
+            // Sembol tasarımcısı's undo and ↑ ↓ (style/designer/).
+            if self.dialog == Some(crate::app::Dialog::SymbolDesigner)
+                && press.named() != Some(Named::Escape)
+                && let Some(task) = self.designer_key(&press)
+            {
+                return task;
+            }
             match press.named() {
                 // What the window held goes with it (a password, a request).
                 Some(Named::Escape) => self.close_dialog(),

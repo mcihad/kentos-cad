@@ -3,8 +3,9 @@
 //! styled layers for the drawing area (`scene.rs`), the pictures the GPU
 //! atlas draws its images from (`images.rs`, `svg.rs`), symbol pictures for
 //! the windows (`thumbs.rs`), the Katman stili window (`layer_style/`,
-//! docs/adr/0091), Stil yöneticisi (`manager/`, docs/adr/0092) and Lejant
-//! (`legend/`, docs/adr/0093).
+//! docs/adr/0091), Stil yöneticisi (`manager/`, docs/adr/0092), Lejant
+//! (`legend/`, docs/adr/0093) and Sembol tasarımcısı (`designer/`, its form
+//! controls in `fields.rs`, docs/adr/0094).
 //!
 //! The library holds the system symbols that ship with KentOS, the user's
 //! own (Kitaplığım, kept in a .kstil file of the user's data folder,
@@ -12,6 +13,8 @@
 //! drawing, so everyone who opens the project sees them). The web keeps the
 //! same three sources (`style/library.ts`).
 
+pub mod designer;
+pub mod fields;
 pub mod images;
 pub mod layer_style;
 pub mod legend;
@@ -44,6 +47,8 @@ pub struct Styles {
     pub manager: Option<manager::Manager>,
     /// The open Lejant window.
     pub legend: Option<legend::LegendWindow>,
+    /// The open Sembol tasarımcısı.
+    pub designer: Option<designer::Designer>,
     /// Where Kitaplığım is kept (nowhere until the program names its folder, and in tests).
     user_file: user_library::UserLibrary,
     /// The project styles last loaded, so an unchanged drawing is not read again.
@@ -74,6 +79,7 @@ impl Styles {
             layer_style: None,
             manager: None,
             legend: None,
+            designer: None,
             user_file: user_library::UserLibrary::default(),
             project: None,
         }

@@ -327,12 +327,9 @@ fn bar<'a>(m: &Manager, width: f32) -> Element<'a, Message> {
         .style(style::container::field_box);
     let new_menu = MenuButton::new(menu_face("plus", "Yeni sembol", false), || {
         Menu::new()
-            .item("Alan sembolü", None)
-            .detail(details::NOT_YET)
-            .item("Çizgi sembolü", None)
-            .detail(details::NOT_YET)
-            .item("İşaret sembolü", None)
-            .detail(details::NOT_YET)
+            .item("Alan sembolü", ev(Event::NewSymbol("fill")))
+            .item("Çizgi sembolü", ev(Event::NewSymbol("line")))
+            .item("İşaret sembolü", ev(Event::NewSymbol("marker")))
             .separator()
             .item("SVG çizimi (düzenleyicide)…", None)
             .icon(crate::icons::from_web(Some("edit")))

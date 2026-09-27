@@ -62,7 +62,7 @@ impl App {
     }
 
     /// After an edit of the library: Kitaplığım to its file, the project's part into the drawing.
-    pub(super) fn library_changed(&mut self, source: Source) {
+    pub(in crate::style) fn library_changed(&mut self, source: Source) {
         let doc = self.document.as_mut().map(|d| &mut d.model);
         if let Some(problem) = self.styles.changed(source, doc) {
             self.warn(problem);
@@ -70,7 +70,7 @@ impl App {
     }
 
     /// Whether `source` can be written now: the project's only with a drawing open.
-    pub(super) fn writable(&self, source: Source) -> bool {
+    pub(in crate::style) fn writable(&self, source: Source) -> bool {
         match source {
             Source::System => false,
             Source::User => true,
@@ -205,18 +205,91 @@ impl App {
         }
     }
 
-    /// A double click outside pick mode: the item opens in its editor (`edit`).
+    /// Düzenle, or a double click outside pick mode: the item opens in its
+    /// editor (`edit`). A system symbol is copied into Kitaplığım first
+    /// (under Sembollerim and its own category) and the copy opens.
     fn edit_item(&mut self, id: &str) {
-        let Some((item, _)) = self.styles.library.get(id) else {
+        let Some((item, source)) = self.styles.library.get(id) else {
             return;
         };
-        let why = match item.kind() {
-            ItemKind::Symbol => details::NOT_YET,
-            ItemKind::Asset if item.format() == Some("svg") => details::SVG_NOT_YET,
+        match item.kind() {
+            ItemKind::Symbol => {}
+            ItemKind::Asset if item.format() == Some("svg") => {
+                self.manager_say(details::SVG_NOT_YET, true);
+                return;
+            }
             // A picture has nothing to edit, as on the web.
             ItemKind::Asset => return,
+        }
+        if source.editable() {
+            self.open_designer(crate::style::designer::Opening {
+                id: Some(id.to_owned()),
+                kind: "fill",
+                path: None,
+                source,
+            });
+            return;
+        }
+        let name = item.name().to_owned();
+        let mut path = vec!["Sembollerim".to_owned()];
+        path.extend(item.path().last().map(|p| (*p).to_owned()));
+        match self.styles.library.copy(id, Source::User, None, Some(&path)) {
+            Ok(copy) => {
+                self.library_changed(Source::User);
+                let copy = copy.id().to_owned();
+                self.reveal_in_manager(&copy);
+                self.manager_say(
+                    format!("“{name}” sistem sembolü; kopyası Kitaplığım'a alındı ve açıldı."),
+                    false,
+                );
+                self.open_designer(crate::style::designer::Opening {
+                    id: Some(copy),
+                    kind: "fill",
+                    path: None,
+                    source: Source::User,
+                });
+            }
+            Err(e) => self.manager_say(e, true),
+        }
+    }
+
+    /// Yeni sembol: a new symbol of `kind` in the designer, in the category
+    /// the list shows when it is the user's or the project's (and no search
+    /// is on), else in Kitaplığım's Sembollerim (`design`).
+    fn new_symbol(&mut self, kind: &'static str) {
+        let Some(m) = &self.styles.manager else {
+            return;
         };
-        self.manager_say(why, true);
+        let editable = m.at.0.editable() && m.query.is_empty() && self.writable(m.at.0);
+        let (source, path) = if editable {
+            (
+                m.at.0,
+                (!m.at.1.is_empty()).then(|| m.at.1.clone()),
+            )
+        } else {
+            (Source::User, None)
+        };
+        self.open_designer(crate::style::designer::Opening {
+            id: None,
+            kind,
+            path,
+            source,
+        });
+    }
+
+    /// Shows an item where it lives (a copy just made, a symbol just saved):
+    /// its source and category open, the search cleared, its card chosen (`reveal`).
+    pub(in crate::style) fn reveal_in_manager(&mut self, id: &str) {
+        if self.styles.manager.is_none() {
+            return;
+        }
+        self.commit_fields();
+        let lib = &self.styles.library;
+        if let Some(m) = &mut self.styles.manager {
+            m.query.clear();
+            m.choose_item(lib, Some(id.to_owned()));
+        }
+        self.follow_item(id);
     }
 
     /// F2, Delete and Enter with no field holding the keyboard: rename the
@@ -377,6 +450,14 @@ impl App {
                 }
             }
             Event::DeleteConfirmed => self.delete_item(),
+            Event::Edit(id) => {
+                self.commit_fields();
+                self.edit_item(&id);
+            }
+            Event::NewSymbol(kind) => {
+                self.commit_fields();
+                self.new_symbol(kind);
+            }
             Event::Apply(id) => {
                 self.commit_fields();
                 let text = self.assign_symbol(Some(&id));
