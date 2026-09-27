@@ -127,7 +127,7 @@
     },
     {
       "id": "active-editor",
-      "project": {"access": {"role": "editor", "via": "share", "permissions": ["project.read", "feature.write", "project.comment", "project.download", "project.history"]}},
+      "project": {"access": {"role": "editor", "via": "grant", "permissions": ["project.read", "feature.write", "project.comment", "project.download", "project.history"]}},
       "open": false,
       "expect": {
         "favorite": "Favorilere ekle",
@@ -171,7 +171,7 @@
     },
     {
       "id": "active-viewer",
-      "project": {"access": {"role": "viewer", "via": "share", "permissions": ["project.read", "project.download", "project.history"]}},
+      "project": {"access": {"role": "viewer", "via": "grant", "permissions": ["project.read", "project.download", "project.history"]}},
       "open": false,
       "expect": {
         "favorite": "Favorilere ekle",
@@ -313,7 +313,7 @@
       "project": {
         "state": "archived",
         "archivedAt": "2026-09-24T07:15:00Z",
-        "access": {"role": "viewer", "via": "share", "permissions": ["project.read", "project.download", "project.history"]}
+        "access": {"role": "viewer", "via": "grant", "permissions": ["project.read", "project.download", "project.history"]}
       },
       "open": false,
       "expect": {
@@ -394,7 +394,7 @@
         "trashedAt": "2026-09-25T13:00:00Z",
         "trashedByName": "Mehmet Kaya",
         "purgeAfter": "2026-10-25T13:00:00Z",
-        "access": {"role": "viewer", "via": "share", "permissions": ["project.read", "project.download", "project.history"]}
+        "access": {"role": "viewer", "via": "grant", "permissions": ["project.read", "project.download", "project.history"]}
       },
       "open": false,
       "expect": {
@@ -495,7 +495,7 @@
         "trashedAt": "2026-09-25T13:00:00Z",
         "trashedByName": "Mehmet Kaya",
         "purgeAfter": "2026-10-25T13:00:00Z",
-        "access": {"role": "viewer", "via": "share", "permissions": ["project.read", "project.download", "project.history"]}
+        "access": {"role": "viewer", "via": "grant", "permissions": ["project.read", "project.download", "project.history"]}
       },
       "expect": {"label": "Geri yükle", "enabled": false, "why": "“Ada 101” projesini geri yükleme yetkiniz yok (project.delete)."}
     }
@@ -516,7 +516,7 @@
       "sort": "updated",
       "open": false,
       "place": "Büro",
-      "project": {"access": {"role": "editor", "via": "share", "permissions": ["project.read", "feature.write", "project.comment", "project.download", "project.history"]}},
+      "project": {"access": {"role": "editor", "via": "grant", "permissions": ["project.read", "feature.write", "project.comment", "project.download", "project.history"]}},
       "expect": {"marks": [], "sub": ["Genel CAD", "Sahibi: Ayşe Yılmaz"], "side": ["Düzenleyici", "26.09.2026 14:05"]}
     },
     {

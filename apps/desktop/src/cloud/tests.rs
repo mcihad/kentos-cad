@@ -72,11 +72,11 @@ pub(crate) fn signed_in() -> App {
     app
 }
 
-fn cloud(app: &mut App, event: Event) {
+pub(crate) fn cloud(app: &mut App, event: Event) {
     let _ = app.update(crate::cloud::msg(event));
 }
 
-fn said(app: &App) -> Vec<String> {
+pub(crate) fn said(app: &App) -> Vec<String> {
     app.history
         .iter()
         .map(|e| match e {
@@ -85,7 +85,7 @@ fn said(app: &App) -> Vec<String> {
         .collect()
 }
 
-fn last_said(app: &App) -> String {
+pub(crate) fn last_said(app: &App) -> String {
     said(app).pop().unwrap_or_default()
 }
 
@@ -197,7 +197,7 @@ fn answer_open(app: &mut App, id: u64, info: ProjectInfo) {
     drive(app, task);
 }
 
-fn database(app: &mut App) {
+pub(crate) fn database(app: &mut App) {
     open(
         app,
         info(ProjectStorage::Database, true, ProjectState::Active),
@@ -575,16 +575,22 @@ fn the_search_goes_to_the_server_once_typing_rests() {
 }
 
 #[test]
-fn each_organisation_has_its_list() {
+fn kurum_projeleri_lists_the_chosen_organisation() {
     let mut app = signed_in();
     let orgs = app.organizations();
     assert_eq!(orgs, [(TENANT.to_owned(), "Harita Bürosu".to_owned())]);
     let _ = app.run("cloud.open");
+    let c = app.cloud.catalog.as_ref().expect("open");
+    assert_eq!(c.org.as_deref(), Some(TENANT), "the first organisation");
     cloud(
         &mut app,
-        Event::CatalogView(List::Organization(TENANT.into())),
+        Event::CatalogView(List::View(CatalogView::Organization)),
     );
     assert!(app.cloud.catalog.as_ref().is_some_and(|c| c.loading()));
+    // Without an organisation the list says so and asks nothing.
+    app.cloud.catalog.as_mut().expect("open").org = None;
+    cloud(&mut app, Event::CatalogRetry);
+    assert!(app.cloud.catalog.as_ref().is_some_and(|c| !c.loading()));
 }
 
 // ── Opening ─────────────────────────────────────────────────────────────

@@ -17,7 +17,10 @@
 //! | File | What it holds |
 //! |---|---|
 //! | `account.rs` | the sign-in window, signing out |
-//! | `catalog.rs` | “Bulut projesi aç”: the lists, search, pages |
+//! | `catalog.rs` | “Bulut projeleri”: the lists, search, filters, pages, the selection |
+//! | `catalog_view.rs` | the catalog window: its lists, the chosen list's rows, the questions |
+//! | `catalog_pane.rs` | the catalog's selected project: facts, tabs, actions |
+//! | `catalog_actions.rs` | the selected project's actions: favourite, archive, trash, restore, purge, download |
 //! | `opening.rs` | a project opened into the drawing, its progress |
 //! | `leaving.rs` | leaving a project: its draft first, or the question |
 //! | `copy.rs` | the project's local copy, work without a connection |
@@ -26,21 +29,30 @@
 //! | `file.rs` | a file project's save and its conflict |
 //! | `upload.rs` | “Buluta yükle” |
 //! | `view.rs` | the windows and the status bar cells |
+//! | `plan.rs` | what the catalog shows and offers: rows, the selected project, questions, lines |
+//! | `local_time.rs` | the device's local time for the lists' dates |
 //! | `words.rs` | the interface's words: roles, lists, states, times |
 
 mod account;
 mod actions;
-mod catalog;
+pub mod catalog;
+mod catalog_actions;
+mod catalog_pane;
+mod catalog_view;
 pub mod copy;
 mod file;
 mod follow;
 mod leaving;
 mod live;
+pub mod local_time;
 mod opening;
+pub mod plan;
 mod upload;
 mod view;
 pub mod words;
 
+#[cfg(test)]
+mod catalog_tests;
 #[cfg(test)]
 pub(crate) mod tests;
 // Against a real server (apps/desktop/scripts/cloud-live.sh), ignored otherwise.
@@ -133,6 +145,36 @@ pub enum Event {
         id: u64,
         more: bool,
         result: Result<kentos_contracts::ProjectPage, ApiFailure>,
+    },
+    /// The type filter (none: “Tüm türler”), the order, “Kurum projeleri”'s organisation.
+    CatalogKind(Option<kentos_contracts::ProjectType>),
+    CatalogSort(kentos_contracts::CatalogSort),
+    CatalogOrg(String),
+    /// ↑ ↓ Home End in the list.
+    CatalogStep(catalog::Step),
+    CatalogTab(catalog::Tab),
+    /// The row under the pointer.
+    CatalogHover(Option<String>),
+    CatalogDetails {
+        id: u64,
+        result: Result<catalog::Details, ApiFailure>,
+    },
+    /// An action on the selected project (catalog_actions.rs), its question answered, its answer.
+    CatalogAct(catalog_actions::Act),
+    CatalogAnswer(bool),
+    CatalogActed {
+        id: u64,
+        result: Result<catalog_actions::Acted, ApiFailure>,
+    },
+    /// Where a download goes (none: the save window was closed), and how far it is.
+    CatalogDownloadTo {
+        id: u64,
+        path: Option<std::path::PathBuf>,
+    },
+    CatalogDownloadProgress {
+        id: u64,
+        done: u64,
+        total: u64,
     },
     // ── Opening ─────────────────────────────────────────────────────────
     OpenProgress {
@@ -283,6 +325,11 @@ pub struct CloudState {
     pub settling: Option<actions::Settle>,
     /// The trash request on its way.
     pub trashing: Option<u64>,
+    /// The next open is the open project again after it was unarchived in the
+    /// catalog, which stays on screen (catalog_actions.rs).
+    pub reopen_keeps_catalog: bool,
+    /// The open project was archived from this window: its end is not announced again.
+    pub archived_by_me: bool,
     next: u64,
 }
 
@@ -307,7 +354,10 @@ impl CloudState {
         self.live.is_some()
             || self.held.is_some()
             || (self.link == copy::Link::Offline && self.me.is_some())
-            || self.catalog.as_ref().is_some_and(|c| c.search_at.is_some())
+            || self
+                .catalog
+                .as_ref()
+                .is_some_and(|c| c.search_at.is_some() || c.details_at.is_some())
     }
 
     /// The connection, when signed in.
@@ -382,7 +432,22 @@ impl App {
             | Event::CatalogRetry
             | Event::CatalogRemove
             | Event::RemoveConfirmed
-            | Event::CatalogPage { .. } => self.catalog_event(event),
+            | Event::CatalogPage { .. }
+            | Event::CatalogKind(_)
+            | Event::CatalogSort(_)
+            | Event::CatalogOrg(_)
+            | Event::CatalogStep(_)
+            | Event::CatalogTab(_)
+            | Event::CatalogHover(_)
+            | Event::CatalogDetails { .. } => self.catalog_event(event),
+            Event::CatalogAct(act) => self.catalog_act(act),
+            Event::CatalogAnswer(yes) => self.catalog_answer(yes),
+            Event::CatalogActed { id, result } => self.catalog_acted(id, result),
+            Event::CatalogDownloadTo { id, path } => self.catalog_download_to(id, path),
+            Event::CatalogDownloadProgress { id, done, total } => {
+                self.catalog_download_progress(id, done, total);
+                Task::none()
+            }
             Event::OpenProgress { .. }
             | Event::Opened { .. }
             | Event::OpenCancel
@@ -527,7 +592,8 @@ impl App {
         } else {
             Task::none()
         };
-        Task::batch([search, self.live_tick(now), self.probe_tick(now)])
+        let details = self.catalog_details_tick(now);
+        Task::batch([search, details, self.live_tick(now), self.probe_tick(now)])
     }
 
     /// After every message: the open database project takes in the drawing's
@@ -567,8 +633,15 @@ impl App {
         match self.dialog.take() {
             Some(Dialog::SignIn) => self.cloud.sign_in = None,
             Some(Dialog::Catalog) => {
-                // An open under way is stopped by its own Vazgeç; the window stays until then.
-                if self.cloud.opening.is_some() {
+                // A question over the window goes first (its Vazgeç); an open
+                // under way is stopped by its own Vazgeç, the window stays until then.
+                let asking = self
+                    .cloud
+                    .catalog
+                    .as_mut()
+                    .and_then(|c| c.asking.take())
+                    .is_some();
+                if asking || self.cloud.opening.is_some() {
                     self.dialog = Some(Dialog::Catalog);
                     return;
                 }

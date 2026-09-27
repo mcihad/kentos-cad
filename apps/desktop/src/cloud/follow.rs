@@ -527,6 +527,9 @@ impl App {
             return Task::none();
         }
         live.told.ended = true;
+        // Archived from this window: already said, without the notice (catalog_actions.rs).
+        let by_me = live.sync.state() == SaveState::Archived
+            && std::mem::take(&mut self.cloud.archived_by_me);
         // The copy says so too: it opens read-only from now on (docs/adr/0043).
         if let (Some(held), Some(ended)) = (
             self.cloud.held.as_ref(),
@@ -545,11 +548,13 @@ impl App {
                 "“{name}” projesine erişiminiz kaldırıldı. Değişiklikleriniz artık buluta kaydedilmiyor; gönderilmemiş olanlar bu cihazda saklanıyor. Çizimi saklamak için Farklı kaydet ile yerel bir dosyaya kaydedin."
             ),
         };
-        self.warn(text);
-        // The web's notice (AccessLostNotice.ts): what happened, what stays, and
-        // a local copy offered, unless another window is up.
-        if self.dialog.is_none() {
-            self.dialog = Some(Dialog::Ended);
+        if !by_me {
+            self.warn(text);
+            // The web's notice (AccessLostNotice.ts): what happened, what stays, and
+            // a local copy offered, unless another window is up.
+            if self.dialog.is_none() {
+                self.dialog = Some(Dialog::Ended);
+            }
         }
         self.write_draft(false)
     }
