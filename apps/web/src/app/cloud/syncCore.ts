@@ -6,6 +6,7 @@ import type { CloudApi } from './api';
 import type { DraftChange, DraftStore } from './drafts';
 import { readEntities, readIncoming } from './incoming';
 import { Tracker, entityJson, metaParts, type MetaParts, type Planned } from './tracker';
+import { forget, setAside } from './waiting';
 
 /**
  * The state one open cloud project's sync shares between its parts: sending
@@ -101,6 +102,8 @@ export class SyncCore {
   readonly held = new Map<string, DraftChange>();
   /** Request ids of our own commits (their events are skipped). */
   readonly own = new Set<string>();
+  /** Other editors' objects on a layer this drawing lacks, by that layer's id (waiting.ts). */
+  readonly waiting = new Map<string, Set<string>>();
   metaDirty = false;
   /** Whether this account may change the project's metadata now (a manager may lower it while the project is open). */
   canEditMeta: boolean;
@@ -197,7 +200,9 @@ export class SyncCore {
     const fresh = await this.o.api.featuresById(this.o.tenantId, this.o.projectId, ids);
     if (this.closed) return;
     const byId = new Map(fresh.features.map((f) => [f.id, f]));
-    const good = this.checked(fresh.features.map((f) => ({ key: f.id, entity: f.entity })));
+    // On a layer this drawing lacks: they wait for it (waiting.ts).
+    const aside = setAside(this, byId);
+    const good = this.checked([...byId.values()].map((f) => ({ key: f.id, entity: f.entity })));
     await this.whenIdle();
     if (this.closed) return;
     const doc = this.o.doc;
@@ -205,10 +210,20 @@ export class SyncCore {
     const remove: number[] = [];
     for (const id of ids) {
       const slot = doc.slotOf(id);
+      const waits = aside.get(id);
       const rec = byId.get(id);
       const incoming = good.get(id);
       const keep = this.dirty.has(id);
-      if (rec && incoming) {
+      if (waits) {
+        // An edit here goes over the server's version; otherwise the copy here goes until its layer comes.
+        if (keep) {
+          forget(this, id);
+          this.tracker.set(id, { version: waits.version, json: entityJson(waits.entity as Entity) });
+        } else {
+          if (slot !== undefined) remove.push(slot);
+          this.tracker.set(id, null);
+        }
+      } else if (rec && incoming) {
         if (!keep) put.push({ ...incoming, id: slot ?? doc.allocateId(), uid: id } as Entity);
         this.tracker.set(id, { version: rec.version, json: entityJson(incoming) });
       } else if (!rec) {

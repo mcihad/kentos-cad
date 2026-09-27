@@ -177,6 +177,7 @@ impl App {
                 let _ = held.replica.compact(&live.sync.base(&doc.model));
             }
         }
+        self.say_waiting();
         self.cloud.live = None;
         self.cloud.held = None;
     }

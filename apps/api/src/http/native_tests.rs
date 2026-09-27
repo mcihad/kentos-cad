@@ -11,8 +11,8 @@ use kentos_cloud::api::hex_sha256;
 use kentos_cloud::follow;
 use kentos_cloud::saving::envelope;
 use kentos_cloud::{
-    After, ApiFailure, CatalogQuery, Cloud, Opened, ProjectSync, SaveState, Source, Uploaded,
-    conflicting_revision, open, project_create, save_revision, upload_new,
+    After, ApiFailure, CatalogQuery, Cloud, GivenBack, Incoming, Opened, ProjectSync, SaveState,
+    Source, Uploaded, conflicting_revision, open, project_create, save_revision, upload_new,
 };
 use kentos_contracts::{
     AuthConfig, CatalogView, CommitResult, DocumentSnapshotV1, DocumentSnapshotV2, Entity,
@@ -572,10 +572,8 @@ async fn other_editors_changes_come_in_by_following_the_events() {
         .await
         .unwrap();
     let taken = sd.take_remote(&mut d.document, incoming, remote).unwrap();
-    assert_eq!(
-        (taken.changed, taken.conflicts, taken.skipped.len()),
-        (3, 0, 0)
-    );
+    assert_eq!((taken.changed, taken.conflicts), (3, 0));
+    assert!(!sd.is_waiting(), "every object's layer is in the drawing");
     assert_eq!(
         by_uid(&d.document.to_snapshot_v2()),
         by_uid(&a.document.to_snapshot_v2())
@@ -614,6 +612,111 @@ async fn other_editors_changes_come_in_by_following_the_events() {
         .await
         .unwrap_err();
     assert!(far.resync(), "{far:?}");
+    db.close().await;
+}
+
+/// The server's guard refuses Ayşe's tree without “Çizim”: Dilek drew on
+/// the layer before the removal went (docs/adr/0072, 0081). The refusal is
+/// the metadata's conflict at the version Ayşe expected; once her missed
+/// events are in, the layer comes back from the server's tree, the guard's
+/// conflict ends, her deletions go, and Dilek's object comes to her too.
+#[tokio::test]
+async fn a_layer_someone_drew_on_is_given_back_when_its_removal_is_refused() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    let tenant = office(&db).await;
+    let base = serve(&db).await;
+    let ayse = signed_in(&base, "ayse").await;
+    let drawing = sample();
+    let (info, _) = upload_new(
+        &ayse,
+        tenant,
+        project_create(&drawing, "Ada 105", ProjectStorage::Database),
+        kcad(&drawing),
+        Uuid::new_v4(),
+    )
+    .await
+    .unwrap();
+    let project = Uuid::parse_str(&info.id).unwrap();
+    ayse.command::<ProjectAccessChange>(envelope(
+        tenant,
+        project,
+        "project.share",
+        1,
+        Uuid::new_v4(),
+        BTreeMap::new(),
+        json!({ "userId": admin::user_id(&db.owner, "dilek").await.unwrap().to_string(), "role": GrantRole::Editor }),
+    ))
+    .await
+    .unwrap();
+    let dilek = signed_in(&base, "dilek").await;
+    let mut a = open(&ayse, tenant, project, None).await.unwrap();
+    let mut d = open(&dilek, tenant, project, None).await.unwrap();
+    let mut sa = ProjectSync::new(&a).unwrap();
+    let mut sd = ProjectSync::new(&d).unwrap();
+
+    // Dilek draws on “Çizim”; Ayşe removes the layer before she hears of it.
+    let drawn = d.document.add(point(486610.0)).unwrap();
+    let theirs = d.document.uid(drawn).unwrap();
+    send_all(&dilek, &mut sd, &d.document).await.unwrap();
+    assert_eq!(a.document.remove_layer("cizim"), Ok(9));
+    let refused = send_all(&ayse, &mut sa, &a.document).await.unwrap_err();
+    assert!(refused.conflict(), "{refused:?}");
+    assert!(sa.may_give_back(&a.document));
+
+    // Her missed events: Dilek's object waits for its layer.
+    let page = follow::events(&ayse, tenant, project, sa.cursor())
+        .await
+        .unwrap();
+    let incoming = sa.incoming(&page);
+    let remote = follow::fetch(&ayse, tenant, project, &incoming)
+        .await
+        .unwrap();
+    sa.take_remote(&mut a.document, incoming, remote).unwrap();
+    assert!(a.document.slot_of(theirs).is_none() && sa.is_waiting());
+
+    // The server's tree: the layer comes back; the guard alone refused.
+    let server = ayse.project(tenant, project).await.unwrap();
+    let given = sa.give_back(&mut a.document, &server).unwrap();
+    assert_eq!(
+        given,
+        GivenBack {
+            names: vec!["Çizim".into()],
+            guard_only: true,
+        }
+    );
+    assert_eq!(sa.state(), SaveState::Pending);
+    send_all(&ayse, &mut sa, &a.document).await.unwrap();
+    assert!(sa.all_sent());
+    let now = ayse.project(tenant, project).await.unwrap();
+    assert!(now.layers.iter().any(|n| n.id == "cizim"), "the layer stays");
+
+    // Dilek's object comes to Ayşe with its layer; Ayşe's deletions reach Dilek.
+    let incoming = Incoming {
+        fetch: sa.arrived(&a.document),
+        cursor: sa.cursor().to_owned(),
+        ..Incoming::default()
+    };
+    assert_eq!(incoming.fetch, [theirs]);
+    let remote = follow::fetch(&ayse, tenant, project, &incoming)
+        .await
+        .unwrap();
+    sa.take_remote(&mut a.document, incoming, remote).unwrap();
+    assert!(a.document.slot_of(theirs).is_some() && !sa.is_waiting());
+    let page = follow::events(&dilek, tenant, project, sd.cursor())
+        .await
+        .unwrap();
+    let incoming = sd.incoming(&page);
+    let remote = follow::fetch(&dilek, tenant, project, &incoming)
+        .await
+        .unwrap();
+    sd.take_remote(&mut d.document, incoming, remote).unwrap();
+    assert_eq!(d.document.by_layer("cizim").count(), 1, "only Dilek's is left");
+    assert_eq!(
+        by_uid(&a.document.to_snapshot_v2()),
+        by_uid(&d.document.to_snapshot_v2())
+    );
     db.close().await;
 }
 

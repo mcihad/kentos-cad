@@ -84,6 +84,8 @@ pub struct Conflict {
     pub reason: ConflictReason,
     /// The server's copy now (none when it was deleted, and for the metadata).
     pub server: Option<FeatureRecord>,
+    /// The version the refused change was based on, when known.
+    pub expected: Option<String>,
     /// The server's version now (none when it was deleted).
     pub actual: Option<String>,
 }
@@ -245,6 +247,11 @@ pub struct ProjectSync {
     held: BTreeMap<Uuid, DraftChange>,
     /// What the server's side changed since the local copy last took it (base.rs).
     gathered: base::Gathered,
+    /// Other editors' objects on a layer this drawing lacks, by that layer's
+    /// id: fetched once the drawing has it (remote.rs `arrived`; the web's
+    /// waiting.ts). Kept only while the project is open: opened again, the
+    /// project comes whole from the server.
+    waiting: BTreeMap<String, BTreeSet<Uuid>>,
     tries: u32,
 }
 
@@ -298,6 +305,7 @@ impl ProjectSync {
             own: HashSet::new(),
             held: BTreeMap::new(),
             gathered: base::Gathered::default(),
+            waiting: BTreeMap::new(),
             tries: 0,
         })
     }
@@ -605,6 +613,7 @@ impl ProjectSync {
                 id: c.id.clone(),
                 reason: c.reason,
                 server: c.current.clone(),
+                expected: c.expected.clone(),
                 actual: c.actual.clone(),
             });
             for c in found {
@@ -708,4 +717,4 @@ mod tests;
 pub(crate) use base::objects_by_id;
 pub use base::{BaseMeta, BaseObject, BaseSnapshot, BaseStep};
 pub use draft::{DRAFT_VERSION, Draft, DraftChange, DraftMeta, Restored};
-pub use remote::{Incoming, KeptLayer, Remote, Taken};
+pub use remote::{GivenBack, Incoming, KeptLayer, Remote, Taken, given_back_text};

@@ -9,15 +9,23 @@
 //! the project again. After others' changes the server's side goes to the
 //! local copy first, then the draft is written (docs/adr/0043). The
 //! conflict window's two choices end here too: keep mine, or take theirs.
+//!
+//! An object on a layer the drawing lacks waits for it (docs/adr/0081): once
+//! a tree brings the layer, or an undo here, it is fetched and taken in
+//! (`fetch_arrived`). When the server refuses our tree because a layer it
+//! drops still holds objects, the missed events come in at once
+//! (`catch_up`), then the server's tree, and the layers others drew on are
+//! given back (`give_back_to`).
 
 use std::time::Instant;
 
 use iced::Task;
 use kentos_cloud::follow::{self, EVENTS_PAGE};
-use kentos_cloud::{ApiFailure, Incoming, Remote, SaveState, Taken};
+use kentos_cloud::{ApiFailure, Incoming, Remote, SaveState, Taken, given_back_text};
 use kentos_contracts::{ConflictReason, EventPage, ProjectInfo};
 
 use crate::app::{App, Dialog, Message, Then};
+use crate::cloud::live::conflict_text;
 use crate::cloud::{Event, access_of};
 
 impl App {
@@ -37,7 +45,69 @@ impl App {
         )
         .abortable();
         live.polling = Some(handle.abort_on_drop());
+        live.long_poll = true;
         task
+    }
+
+    /// The events after the cursor at once, without waiting on the server:
+    /// a refused tree waits for them (docs/adr/0081). The long poll gives
+    /// way; a fetch already on its way is taken in first and does the same.
+    pub(crate) fn catch_up(&mut self) -> Task<Message> {
+        let client = self.cloud.signed_in().cloned();
+        let (Some(client), Some(live)) = (client, self.cloud.live.as_mut()) else {
+            return Task::none();
+        };
+        if live.taking.is_some() || (live.polling.is_some() && !live.long_poll) {
+            return Task::none();
+        }
+        let session = live.session;
+        let (task, handle) = Task::perform(
+            follow::events(&client, live.tenant, live.project, live.sync.cursor()),
+            move |result| crate::cloud::msg(Event::Events { session, result }),
+        )
+        .abortable();
+        live.polling = Some(handle.abort_on_drop());
+        live.long_poll = false;
+        task
+    }
+
+    /// Others' objects that waited for their layer, now that the drawing has
+    /// it (docs/adr/0081): fetched at their current versions and taken in as
+    /// others' changes. The long poll gives way and starts again after; a
+    /// fetch already on its way looks again once it is taken in. None when
+    /// nothing arrived.
+    pub(crate) fn fetch_arrived(&mut self) -> Option<Task<Message>> {
+        let client = self.cloud.signed_in().cloned()?;
+        let (live, doc) = (self.cloud.live.as_mut()?, self.document.as_ref()?);
+        if live.taking.is_some()
+            || live.sync.state().ended()
+            || (live.polling.is_some() && !live.long_poll)
+        {
+            return None;
+        }
+        let fetch = live.sync.arrived(&doc.model);
+        if fetch.is_empty() {
+            return None;
+        }
+        let incoming = Incoming {
+            fetch,
+            cursor: live.sync.cursor().to_owned(),
+            ..Incoming::default()
+        };
+        let session = live.session;
+        let request = follow::fetch(&client, live.tenant, live.project, &incoming);
+        let (task, handle) = Task::perform(request, move |result| {
+            crate::cloud::msg(Event::Fetched {
+                session,
+                incoming,
+                full: false,
+                result,
+            })
+        })
+        .abortable();
+        live.polling = Some(handle.abort_on_drop());
+        live.long_poll = false;
+        Some(task)
     }
 
     pub(crate) fn follow_event(&mut self, event: Event) -> Task<Message> {
@@ -63,10 +133,14 @@ impl App {
                 };
             }
             Event::Access { session, result } => return self.access(session, result),
+            Event::ServerTree { session, result } => return self.server_tree_came(session, result),
             Event::KeepMine => {
                 let Some(live) = self.cloud.live.as_mut() else {
                     return Task::none();
                 };
+                // The user chose: a give-back on its way has nothing left to answer.
+                live.give_back = false;
+                live.giving = None;
                 live.sync.keep_mine();
                 live.send_soon();
                 self.close_conflicts();
@@ -75,9 +149,11 @@ impl App {
             }
             Event::TakeTheirs => {
                 let client = self.cloud.signed_in().cloned();
-                let Some(live) = self.cloud.live.as_ref() else {
+                let Some(live) = self.cloud.live.as_mut() else {
                     return Task::none();
                 };
+                live.give_back = false;
+                live.giving = None;
                 let meta = live
                     .sync
                     .conflicts()
@@ -131,6 +207,7 @@ impl App {
         live.poll_tries = 0;
         let full = page.events.len() >= EVENTS_PAGE;
         let incoming = live.sync.incoming(&page);
+        live.long_poll = false;
         let mut tasks = vec![self.heard(None)];
         let Some(live) = self.cloud.live.as_mut() else {
             return Task::batch(tasks);
@@ -222,11 +299,26 @@ impl App {
             }
             Ok(taken) => {
                 live.poll_at = Instant::now();
+                // A refused tree waited for these events (docs/adr/0081).
+                let give_back = std::mem::take(&mut live.give_back);
+                let asks = give_back && live.sync.may_give_back(&doc.model);
+                let conflict = (give_back && !asks && live.sync.state() == SaveState::Conflict)
+                    .then(|| conflict_text(&live.sync));
                 self.report(&taken);
+                if let Some(text) = conflict {
+                    self.warn(text);
+                }
                 let ended = if archived { self.ended() } else { Task::none() };
-                // The server's side to the copy, then the draft; then the next wait.
+                // The server's side to the copy, then the draft; then the
+                // server's tree for a refused one, or the objects that waited
+                // for a layer these events brought, or the next wait.
                 let step = self.after_server_step();
-                Task::batch([ended, step, self.poll()])
+                let next = if asks {
+                    self.server_tree()
+                } else {
+                    self.fetch_arrived().unwrap_or_else(|| self.poll())
+                };
+                Task::batch([ended, step, next])
             }
         }
     }
@@ -244,11 +336,6 @@ impl App {
                 taken.conflicts
             ));
         }
-        for why in &taken.skipped {
-            self.warn(format!(
-                "Başkasının bir değişikliği çizime alınamadı: {why}."
-            ));
-        }
         // A layer another editor removed stays for this device's unsent objects (docs/adr/0079).
         for kept in &taken.kept {
             self.warn(kept.text());
@@ -263,6 +350,9 @@ impl App {
         };
         if busy {
             return Task::none();
+        }
+        if let Some(info) = live.giving.take() {
+            return self.give_back_to(info);
         }
         if let Some(info) = live.theirs.take() {
             return self.take_theirs(info);
@@ -293,8 +383,106 @@ impl App {
                 for layer in &kept {
                     self.warn(layer.text());
                 }
-                self.after_server_step()
+                // The server's tree may bring the layer objects waited for.
+                let arrived = self.fetch_arrived().unwrap_or_else(Task::none);
+                Task::batch([self.after_server_step(), arrived])
             }
+        }
+    }
+
+    /// The missed events are in after a refused tree: the server's tree now
+    /// (docs/adr/0081). Following goes on meanwhile.
+    fn server_tree(&mut self) -> Task<Message> {
+        let client = self.cloud.signed_in().cloned();
+        let Some(live) = self.cloud.live.as_ref() else {
+            return Task::none();
+        };
+        let Some(client) = client else {
+            let text = conflict_text(&live.sync);
+            self.warn(text);
+            return Task::none();
+        };
+        let session = live.session;
+        let ask = Task::perform(client.project(live.tenant, live.project), move |result| {
+            crate::cloud::msg(Event::ServerTree { session, result })
+        });
+        Task::batch([ask, self.poll()])
+    }
+
+    fn server_tree_came(
+        &mut self,
+        session: u64,
+        result: Result<ProjectInfo, ApiFailure>,
+    ) -> Task<Message> {
+        let Some(live) = self.cloud.live.as_ref().filter(|l| l.session == session) else {
+            return Task::none();
+        };
+        match result {
+            Ok(info) => self.give_back_to(info),
+            Err(failure) => {
+                let conflict =
+                    (live.sync.state() == SaveState::Conflict).then(|| conflict_text(&live.sync));
+                self.warn(format!(
+                    "Katman ağacı sunucununkiyle karşılaştırılamadı: {}",
+                    failure.message
+                ));
+                if let Some(text) = conflict {
+                    self.warn(text);
+                }
+                Task::none()
+            }
+        }
+    }
+
+    /// The layers the refused tree dropped that others drew on come back
+    /// from the server's tree (`ProjectSync::give_back`), each said once.
+    /// When the server's guard alone refused, what is left goes at once;
+    /// otherwise the conflict is said, the layers already back. Then the
+    /// objects that waited for them are fetched.
+    fn give_back_to(&mut self, info: ProjectInfo) -> Task<Message> {
+        let (Some(live), Some(doc)) = (self.cloud.live.as_mut(), self.document.as_mut()) else {
+            return Task::none();
+        };
+        let given = match live.sync.give_back(&mut doc.model, &info) {
+            Ok(given) => given,
+            Err(_) => {
+                // An edit is open: once it ends.
+                live.giving = Some(info);
+                return Task::none();
+            }
+        };
+        if given.guard_only {
+            live.send_soon();
+        }
+        let conflict =
+            (live.sync.state() == SaveState::Conflict).then(|| conflict_text(&live.sync));
+        for name in &given.names {
+            self.warn(given_back_text(name));
+        }
+        if let Some(text) = conflict {
+            self.warn(text);
+        }
+        let draft = self.write_draft(false);
+        let arrived = self.fetch_arrived().unwrap_or_else(Task::none);
+        let send = if given.guard_only {
+            self.live_tick(Instant::now())
+        } else {
+            Task::none()
+        };
+        Task::batch([draft, arrived, send])
+    }
+
+    /// Others' objects still waiting for a layer when the project is left:
+    /// said once, by layer (docs/adr/0081).
+    pub(crate) fn say_waiting(&mut self) {
+        let texts = self
+            .cloud
+            .live
+            .as_ref()
+            .map(|l| l.sync.waiting_texts())
+            .unwrap_or_default();
+        for text in texts {
+            self.warn(text);
         }
     }
 

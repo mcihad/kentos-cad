@@ -19,7 +19,9 @@ use iced::Task;
 use iced::futures::channel::mpsc;
 use iced::futures::stream;
 use iced::task::Handle;
-use kentos_cloud::{Loaded, Opened, ProjectSync, Replica, Revision, Source as Kept};
+use kentos_cloud::{
+    Loaded, Opened, ProjectSync, Replica, Revision, Source as Kept, given_back_text,
+};
 use kentos_contracts::ProjectStorage;
 use kentos_domain::Uuid;
 
@@ -473,6 +475,10 @@ impl App {
                             true,
                             format!("Taslaktaki bir değişiklik çizime konamadı: {held}."),
                         ));
+                    }
+                    // A layer the draft dropped that others drew on since stays (docs/adr/0081).
+                    for name in &restored.given_back {
+                        said.push((true, given_back_text(name)));
                     }
                     if restored.conflicts > 0 {
                         said.push((true, format!(

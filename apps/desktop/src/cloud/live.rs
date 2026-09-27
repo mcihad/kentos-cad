@@ -76,6 +76,15 @@ pub struct Live {
     pub(super) taking: Option<(kentos_cloud::Incoming, kentos_cloud::Remote, bool)>,
     /// The server's copies chosen while an edit was open: taken once it ends.
     pub(super) theirs: Option<Option<kentos_contracts::ProjectInfo>>,
+    /// `polling` holds the long poll, not a fetch: a request that must not
+    /// wait for the next commit may take its place (docs/adr/0081).
+    pub(super) long_poll: bool,
+    /// The server refused our tree for a layer that may hold others'
+    /// objects: once the missed events are in, its tree is asked for and
+    /// those layers are given back (follow.rs, docs/adr/0081).
+    pub(super) give_back: bool,
+    /// The server's tree for that, come while an edit was open: used once it ends.
+    pub(super) giving: Option<kentos_contracts::ProjectInfo>,
     pub told: Told,
 }
 
@@ -111,6 +120,9 @@ impl Live {
             poll_tries: 0,
             taking: None,
             theirs: None,
+            long_poll: false,
+            give_back: false,
+            giving: None,
             told: Told::default(),
         }
     }
@@ -209,12 +221,18 @@ impl App {
             && live.taking.is_none()
             && !live.sync.state().ended()
             && now >= live.poll_at;
+        // Others' objects waiting for a layer the drawing has again (an undo
+        // brought it back): fetched now (docs/adr/0081).
+        let arrive = self.cloud.me.is_some() && live.sync.is_waiting() && now >= live.poll_at;
         let mut tasks = vec![self.retry_waiting()];
         if draft {
             tasks.push(self.write_draft(false));
         }
         if send {
             tasks.push(self.send_next());
+        }
+        if arrive && let Some(task) = self.fetch_arrived() {
+            tasks.push(task);
         }
         if poll {
             tasks.push(self.poll());
@@ -390,6 +408,7 @@ impl App {
         live.sending = None;
         let mut say: Vec<(bool, String)> = Vec::new();
         let mut ended = false;
+        let mut give_back = false;
         let answered = result.is_ok();
         let heard = result.as_ref().err().cloned();
         match result {
@@ -411,7 +430,14 @@ impl App {
                         live.sent = None;
                     }
                     ended = live.sync.state().ended();
-                    if !ended {
+                    // The server's guard may have refused our tree for a layer
+                    // someone drew on meanwhile: the missed events come first,
+                    // then those layers are given back (follow.rs, docs/adr/0081);
+                    // the conflict is said then, if it stays.
+                    give_back = !ended && live.sync.may_give_back(&doc.model);
+                    if give_back {
+                        live.give_back = true;
+                    } else if !ended {
                         say.push(stopped(&live.sync, &failure));
                     }
                     if failure.signed_out() {
@@ -441,7 +467,12 @@ impl App {
         } else {
             self.write_draft(false)
         };
-        Task::batch([link, settle, next])
+        let catch_up = if give_back {
+            self.catch_up()
+        } else {
+            Task::none()
+        };
+        Task::batch([link, settle, next, catch_up])
     }
 }
 
@@ -449,10 +480,7 @@ impl App {
 /// ended project is said by `ended` (follow.rs).
 fn stopped(sync: &ProjectSync, failure: &ApiFailure) -> (bool, String) {
     let text = match sync.state() {
-        SaveState::Conflict => format!(
-            "Kayıt çakışması: {} nesneyi başka biri daha önce kaydetti. Hiçbir şeyin üzerine yazılmadı; seçene kadar değişiklikleriniz yalnız bu cihazda. Durum çubuğundaki Çakışma'ya tıklayın.",
-            sync.conflicts().len()
-        ),
+        SaveState::Conflict => conflict_text(sync),
         _ if failure.signed_out() => format!(
             "Bulut oturumunuz sona erdi ({}); değişiklikleriniz bu cihazda bekliyor. Yeniden giriş yapınca gönderilir.",
             failure.message
@@ -460,4 +488,12 @@ fn stopped(sync: &ProjectSync, failure: &ApiFailure) -> (bool, String) {
         _ => format!("Bulut kaydı yapılamadı: {}", failure.message),
     };
     (true, text)
+}
+
+/// What the command line says of a conflict that stops sending.
+pub(super) fn conflict_text(sync: &ProjectSync) -> String {
+    format!(
+        "Kayıt çakışması: {} nesneyi başka biri daha önce kaydetti. Hiçbir şeyin üzerine yazılmadı; seçene kadar değişiklikleriniz yalnız bu cihazda. Durum çubuğundaki Çakışma'ya tıklayın.",
+        sync.conflicts().len()
+    )
 }

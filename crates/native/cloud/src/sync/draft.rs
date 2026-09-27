@@ -19,7 +19,10 @@
 //!   conflict (the drawing shows the local copy until the user chooses), and
 //!   a deletion the server has too is done;
 //! - a change the drawing cannot take (its layer is gone) stays in the next
-//!   draft, unsent, and the user is told.
+//!   draft, unsent, and the user is told;
+//! - a layer the draft's tree drops that still holds the server's objects
+//!   (someone drew on it before the removal went) stays, and the user is
+//!   told (the web's `restoreDraft`, 36d87de; docs/adr/0081).
 
 use std::collections::{BTreeMap, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -28,11 +31,11 @@ use kentos_contracts::{
     CommandEnvelope, ConflictReason, Entity, FeatureChange, FeatureRecord, ProjectChanges,
     ProjectPatch,
 };
-use kentos_domain::{Document, External, ExternalMeta};
+use kentos_domain::{Document, External, ExternalMeta, Slot};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::remote::is_layer;
+use super::remote::{is_layer, tree_ids, with_nodes_from};
 use super::{Conflict, Inflight, Meta, PROJECT_KEY, Planned, ProjectSync, SaveState};
 
 /// The draft format this code writes (the web's `DRAFT_VERSION`).
@@ -82,6 +85,9 @@ pub struct Restored {
     pub resends: bool,
     /// Changes kept aside, unsent (the drawing could not take them), with the reason, in Turkish.
     pub held: Vec<String>,
+    /// Layers the draft's tree drops that stay for the server's objects on
+    /// them, by name (said with `given_back_text`).
+    pub given_back: Vec<String>,
 }
 
 fn now_ms() -> u64 {
@@ -224,7 +230,37 @@ impl ProjectSync {
         if let Some(m) = &draft.meta
             && self.can_edit_meta
         {
-            let after = self.meta_base.patched(&m.patch);
+            let mut after = self.meta_base.patched(&m.patch);
+            // A layer the draft's tree drops that still holds the server's
+            // objects (ones the draft neither deletes nor moves off it):
+            // someone else drew on it before the removal went. Data wins: it
+            // stays, from the tree just opened.
+            let kept = tree_ids(&after.layers);
+            let stays = |id: Option<Uuid>, layer: &str| {
+                id.is_some_and(|id| match draft.changes.get(&id.to_string()) {
+                    None => true,
+                    Some(c) => c
+                        .entity
+                        .as_ref()
+                        .is_some_and(|e| e.base().layer_id == layer),
+                })
+            };
+            let back: Vec<(String, String)> = doc
+                .layers()
+                .leaves()
+                .into_iter()
+                .filter(|l| !kept.contains(l.id.as_str()))
+                .filter(|l| {
+                    doc.by_layer(&l.id)
+                        .any(|e| stays(doc.uid(Slot(e.base().id)), &l.id))
+                })
+                .map(|l| (l.id.clone(), l.name.clone()))
+                .collect();
+            if !back.is_empty() {
+                let ids: Vec<String> = back.iter().map(|(id, _)| id.clone()).collect();
+                after.layers = with_nodes_from(&after.layers, doc.layers().nodes(), &ids);
+                restored.given_back = back.into_iter().map(|(_, name)| name).collect();
+            }
             change.meta = Some(ExternalMeta {
                 name: Some(after.name),
                 settings: Some(after.settings),
@@ -232,7 +268,7 @@ impl ProjectSync {
                 styles: Some(after.styles),
             });
             if m.base != self.meta_version {
-                meta_conflict = Some(self.meta_version.clone());
+                meta_conflict = Some((m.base.clone(), self.meta_version.clone()));
             }
         }
         let layers = match &change.meta {
@@ -286,6 +322,7 @@ impl ProjectSync {
                         version: t.version.clone(),
                         entity: t.entity.clone(),
                     }),
+                    expected: c.base.clone(),
                     actual: server.map(|t| t.version.clone()),
                 });
             }
@@ -307,11 +344,12 @@ impl ProjectSync {
         if meta_back {
             self.meta_dirty = true;
         }
-        if let Some(actual) = meta_conflict {
+        if let Some((expected, actual)) = meta_conflict {
             conflicts.push(Conflict {
                 id: PROJECT_KEY.to_owned(),
                 reason: ConflictReason::Project,
                 server: None,
+                expected: Some(expected),
                 actual: Some(actual),
             });
         }
