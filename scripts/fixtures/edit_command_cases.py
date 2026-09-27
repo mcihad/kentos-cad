@@ -145,6 +145,12 @@ def locked_message(name):
     return f"“{name}” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın."
 
 
+# A closed area's ring may have 2 corners when one of its two edges is an arc (a circle made an area, a lens,
+# a circular segment); a hatch's ring may not.
+RING_TOO_FEW = "Kapalı alanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin."
+HOLE_TOO_FEW = "{}. deliğin en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın."
+
+
 def not_finite_message(n):
     return f"{n}. değişikliğin geometrisinde sonlu olmayan bir değer var (NaN ya da sonsuz). Geometriyi sonlu sayılarla verin."
 
@@ -362,9 +368,9 @@ cases.append({
         {"op": "execute", "input": {"operation": "vertexRemove", "changes": [{"kind": "update", "uid": uid(2), "geometry": {"kind": "polyline", "pts": [P(487000, 4420010)]}}]},
          "result": failed("too_few_points", "Çoklu çizginin en az 2 noktası olmalı; 1 nokta verildi. Eksik noktaları ekleyin.", "changes[0].geometry.pts"), "expect": NOTHING},
         {"op": "execute", "input": {"operation": "vertexRemove", "changes": [{"kind": "update", "uid": uid(3), "geometry": {"kind": "polygon", "pts": [P(487030, 4420000), P(487050, 4420000)]}}]},
-         "result": failed("too_few_corners", "Kapalı alanın en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin.", "changes[0].geometry.pts"), "expect": NOTHING},
+         "result": failed("too_few_corners", RING_TOO_FEW.format(2), "changes[0].geometry.pts"), "expect": NOTHING},
         {"op": "execute", "input": {"operation": "fillet", "changes": [{"kind": "update", "uid": uid(3), "geometry": {"kind": "polygon", "pts": rounded["pts"], "holes": [HOLE, {"pts": [P(487032, 4420015), P(487034, 4420015)]}]}}]},
-         "result": failed("too_few_corners", "2. deliğin en az 3 köşesi olmalı; 2 köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.", "changes[0].geometry.holes[1].pts"), "expect": NOTHING},
+         "result": failed("too_few_corners", HOLE_TOO_FEW.format(2, 2), "changes[0].geometry.holes[1].pts"), "expect": NOTHING},
     ],
 })
 
@@ -586,6 +592,109 @@ cases.append({
     ],
 })
 
+# ── Alan işlemleri (docs/adr/0065): the steps are the tools' names ──────
+
+# The circle (8) as an area, as the region core writes it: two corners, two half-circle arcs.
+CIRCLE_AREA = {"kind": "polygon", "pts": [P(487073, 4420010), P(487067, 4420010)], "bulges": [1, 1]}
+UNION = {"kind": "polygon", "pts": [P(487030, 4420000), P(487050, 4420000), P(487067, 4420007), P(487073, 4420013), P(487050, 4420020), P(487030, 4420020)], "holes": [HOLE]}
+LENS = {"kind": "polygon", "pts": [P(487067, 4420008), P(487067, 4420012)], "bulges": [0.5, 0.5]}
+LEFT_PIECE = {"kind": "polygon", "pts": [P(487030, 4420000), P(487040, 4420000), P(487040, 4420020), P(487030, 4420020)]}
+RIGHT_PIECE = {"kind": "polygon", "pts": [P(487040, 4420000), P(487050, 4420000), P(487050, 4420020), P(487040, 4420020)]}
+HALF_DISC = {"kind": "polygon", "pts": [P(487070, 4420013), P(487070, 4420007)], "bulges": [1, 0]}
+OTHER_HALF = {"kind": "polygon", "pts": [P(487070, 4420007), P(487070, 4420013)], "bulges": [1, 0]}
+FACE = {"kind": "polygon", "pts": [P(487000, 4420000), P(487020, 4420000), P(487010, 4420008)]}
+OUTER_RING = {"kind": "polyline", "pts": [P(487030, 4420000), P(487050, 4420000), P(487050, 4420020), P(487030, 4420020), P(487030, 4420000)]}
+HOLE_RING = {"kind": "polyline", "pts": HOLE["pts"] + [HOLE["pts"][0]]}
+
+cases.append({
+    "name": "Alan birleştir: kaynaklar silinir, birleşim ilkinden eklenir (katmanı, rengi, verisi); tek adım “Alan birleştir”",
+    "steps": [
+        {"op": "captureUid", "id": 3, "as": "alan"},
+        {"op": "captureUid", "id": 8, "as": "daire"},
+        {"op": "execute", "input": {"operation": "areaUnion", "changes": [{"kind": "remove", "uid": uid(3)}, {"kind": "remove", "uid": uid(8)}, {"kind": "add", "from": uid(3), "geometry": UNION, "keepData": True}]},
+         "result": done(created=[uid(9)], removed=["$uid:alan", "$uid:daire"]),
+         "expect": {"ids": ids_after(removed=[3, 8], added=[9]), "entities": {"9": inherited(3, UNION, True, 9)}, "uids": {"9": "new"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Alan birleştir", "expect": {"ids": IDS, "entities": {"3": E(3), "8": E(8)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Alan kesiştir: ortak parça yeni, boş bir alandır, kaynaklar kalır; silinirlerse parça ilkinin verisini alır; iki köşeli mercek yazılır",
+    "steps": [
+        {"op": "captureUid", "id": 3, "as": "alan"},
+        {"op": "captureUid", "id": 8, "as": "daire"},
+        {"op": "execute", "input": {"operation": "areaIntersect", "changes": [{"kind": "add", "from": uid(3), "geometry": LENS, "keepData": False}]},
+         "result": done(created=[uid(9)]), "expect": {"ids": ids_after(added=[9]), "entities": {"3": E(3), "8": E(8), "9": inherited(3, LENS, False, 9)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Alan kesiştir", "expect": {"ids": IDS, "canUndo": False}},
+        {"op": "execute", "input": {"operation": "areaIntersect", "changes": [{"kind": "remove", "uid": uid(3)}, {"kind": "remove", "uid": uid(8)}, {"kind": "add", "from": uid(3), "geometry": LENS, "keepData": True}]},
+         "result": done(created=[uid(10)], removed=["$uid:alan", "$uid:daire"]), "note": "Geri alınan yeni nesnenin yuvası yeniden verilmez: yeni parça 10'dadır.",
+         "expect": {"ids": ids_after(removed=[3, 8], added=[10]), "entities": {"10": inherited(3, LENS, True, 10)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Alan kesiştir", "expect": {"ids": IDS, "entities": {"3": E(3), "8": E(8)}}},
+    ],
+})
+
+cases.append({
+    "name": "Alan çıkar: kesilen alan silinir, kalan parçaları ondan eklenir (verisiyle); çıkarılan da silinebilir; tek adım “Alan çıkar”",
+    "steps": [
+        {"op": "captureUid", "id": 3, "as": "alan"},
+        {"op": "captureUid", "id": 8, "as": "daire"},
+        {"op": "execute", "input": {"operation": "areaSubtract", "changes": [{"kind": "remove", "uid": uid(3)}, {"kind": "add", "from": uid(3), "geometry": LEFT_PIECE, "keepData": True},
+                                                                             {"kind": "add", "from": uid(3), "geometry": RIGHT_PIECE, "keepData": True}, {"kind": "remove", "uid": uid(8)}]},
+         "result": done(created=[uid(9), uid(10)], removed=["$uid:alan", "$uid:daire"]),
+         "expect": {"ids": ids_after(removed=[3, 8], added=[9, 10]), "entities": {"9": inherited(3, LEFT_PIECE, True, 9), "10": inherited(3, RIGHT_PIECE, True, 10)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Alan çıkar", "expect": {"ids": IDS, "entities": {"3": E(3), "8": E(8)}, "canUndo": False}},
+    ],
+})
+
+cases.append({
+    "name": "Alan böl: ilk parça alanın kendisidir (yuvası, kalıcı kimliği, verisi), öbürleri ondan yeni; daire iki yarım daireye bölünür (iki köşe, biri yay)",
+    "steps": [
+        {"op": "captureUid", "id": 3, "as": "alan"},
+        {"op": "captureUid", "id": 8, "as": "daire"},
+        {"op": "execute", "input": {"operation": "areaSplit", "changes": [{"kind": "replace", "uid": uid(3), "geometry": LEFT_PIECE, "keepData": True}, {"kind": "add", "from": uid(3), "geometry": RIGHT_PIECE, "keepData": True},
+                                                                          {"kind": "replace", "uid": uid(8), "geometry": HALF_DISC, "keepData": True}, {"kind": "add", "from": uid(8), "geometry": OTHER_HALF, "keepData": True}]},
+         "result": done(changed=[uid(3), uid(8)], created=[uid(9), uid(10)]),
+         "expect": {"ids": ids_after(added=[9, 10]), "entities": {"3": inherited(3, LEFT_PIECE, True, 3), "9": inherited(3, RIGHT_PIECE, True, 9), "8": inherited(8, HALF_DISC, True, 8), "10": inherited(8, OTHER_HALF, True, 10)},
+                    "uids": {"3": "alan", "8": "daire"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Alan böl", "expect": {"ids": IDS, "entities": {"3": E(3), "8": E(8)}, "uids": {"3": "alan", "8": "daire"}}},
+    ],
+})
+
+cases.append({
+    "name": "Alana çevir: kapalı nesne yerinde alan olur (daire iki köşeli, yaylı halka; verisi kalır); çizgilerin kapadığı bölge ilk çizgiden yeni, boş alandır",
+    "steps": [
+        {"op": "captureUid", "id": 8, "as": "daire"},
+        {"op": "execute", "input": {"operation": "toArea", "changes": [{"kind": "replace", "uid": uid(8), "geometry": CIRCLE_AREA, "keepData": True}, {"kind": "add", "from": uid(1), "geometry": FACE, "keepData": False}]},
+         "result": done(changed=[uid(8)], created=[uid(9)]),
+         "expect": {"ids": ids_after(added=[9]), "entities": {"8": inherited(8, CIRCLE_AREA, True, 8), "9": inherited(1, FACE, False, 9), "1": E(1)}, "uids": {"8": "daire"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Alana çevir", "expect": {"ids": IDS, "entities": {"8": E(8)}}},
+    ],
+})
+
+cases.append({
+    "name": "Çizgiye çevir: dış halka alanın kendisidir, kapalı çoklu çizgi olur (verisi kalır, simgesi gelmez); delik ondan yeni, boş çoklu çizgidir",
+    "steps": [
+        {"op": "captureUid", "id": 3, "as": "alan"},
+        {"op": "execute", "input": {"operation": "toPolyline", "changes": [{"kind": "replace", "uid": uid(3), "geometry": OUTER_RING, "keepData": True}, {"kind": "add", "from": uid(3), "geometry": HOLE_RING, "keepData": False}]},
+         "result": done(changed=[uid(3)], created=[uid(9)]),
+         "expect": {"ids": ids_after(added=[9]), "entities": {"3": inherited(3, OUTER_RING, True, 3), "9": inherited(3, HOLE_RING, False, 9)}, "uids": {"3": "alan"}, "revision": "changed"}},
+        {"op": "undo", "returns": "Çizgiye çevir", "expect": {"ids": IDS, "entities": {"3": E(3)}}},
+    ],
+})
+
+cases.append({
+    "name": "kapalı alanın halkası 2 köşeli olabilir, iki kenarından biri yaysa; iki kenarı da düzse (yay değeri yok ya da 0) reddedilir; delik de öyle",
+    "steps": [
+        {"op": "execute", "input": {"operation": "vertexRemove", "changes": [{"kind": "update", "uid": uid(3), "geometry": {"kind": "polygon", "pts": CIRCLE_AREA["pts"], "bulges": [0, 0]}}]},
+         "result": failed("too_few_corners", RING_TOO_FEW.format(2), "changes[0].geometry.pts"), "note": "Yay değerleri 0: iki kenar da düz.", "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "fillet", "changes": [{"kind": "update", "uid": uid(3), "geometry": {"kind": "polygon", "pts": rounded["pts"], "holes": [{"pts": [P(487038, 4420010), P(487042, 4420010)]}]}}]},
+         "result": failed("too_few_corners", HOLE_TOO_FEW.format(1, 2), "changes[0].geometry.holes[0].pts"), "note": "Yay değeri verilmemiş delik düzdür.", "expect": NOTHING},
+        {"op": "execute", "input": {"operation": "fillet", "changes": [{"kind": "update", "uid": uid(3), "geometry": {"kind": "polygon", "pts": rounded["pts"], "holes": [{"pts": [P(487038, 4420010), P(487042, 4420010)], "bulges": [0, 1]}]}}]},
+         "result": done(changed=[uid(3)]), "note": "Yarım daire delik: iki köşe, bir kenarı yay.",
+         "expect": {"entities": {"3": updated(3, {"kind": "polygon", "pts": rounded["pts"], "holes": [{"pts": [P(487038, 4420010), P(487042, 4420010)], "bulges": [0, 1]}]})}, "revision": "changed"}},
+    ],
+})
+
 
 # White space other than the plain space, escaped so a reader sees it (the empty text cases).
 INVISIBLE = "\u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"
@@ -653,7 +762,7 @@ def write(command, title, note, cases):
 write(
     "cad.entities.edit",
     "Nesneleri düzenle: doğrulama, plan, yazma, geri alma",
-    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+    "ADR 0047. Denetim sırası: en az bir değişiklik; her değişikliğin kimliğinin yazımı (add'de from); her geometrinin nokta sayısı, yazının boş olmayan metni, sonlu sayıları ve yarıçapı; beklenen sürümün yazımı, sonra çizimin sürümü; her kimliğin çizimde olması; bir nesnenin tek değişiklikle değişmesi; hiçbir nesnenin kilitli katmanda olmaması (düzenleme bütün yazılır ya da hiç). update yalnız geometriyi değiştirir; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır, simgesi gelmez; add bir nesneden yeni nesne yapar, onun katmanını ve rengini alır. Adım işlemin adıdır: Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle, Köşe sil, Esnet; Öznitelikler'in (properties) adımı Değiştir; alan araçlarınınki Alan birleştir, Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir. Kapalı alanın halkası (dış halka ya da delik) en az 3 köşelidir; iki kenarından biri yaysa (yay değeri 0 değil; verilmeyen 0 sayılır) 2 köşeli olabilir. Taramanın halkası en az 3 köşelidir. Kurulumdaki en büyük kimlik 8; yeni nesneler 9'dan başlar; properties durumlarının kendi kurulumu vardır. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
     cases,
 )
 print(f"{len(cases)} cases" + (" match" if "--check" in sys.argv[1:] else " written"))

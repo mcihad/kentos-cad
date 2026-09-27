@@ -68,7 +68,8 @@ export class PathTool extends PointInputTool {
     if (n === 0) return 'ilk noktayı belirtin';
     const min = this.closed ? 3 : 2;
     const done = n < min ? '' : ' / Bitir (Enter)';
-    if (this.askLength) return 'son doğrultuda devam edilecek uzunluğu yazın';
+    // G is an option here too, so its key reaches the tool (and not Kapalı alan's shortcut).
+    if (this.askLength) return 'son doğrultuda devam edilecek uzunluğu yazın [Geri (G)]';
     if (!this.arcMode) return `sonraki noktayı belirtin [Yay (Y) / Uzunluk (U) / Geri (G)${done}]`;
     const arcOpts = `Düz (D) / Açı (A) / Merkez (M) / Yarıçap (R) / İkinci nokta (İ) / Doğrultu (T) / Geri (G)${done}`;
     const s = this.spec;

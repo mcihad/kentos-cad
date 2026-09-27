@@ -55,7 +55,7 @@ fn prompts_are_the_web_s_text_and_options() {
     assert!(b.type_text("U"));
     assert_eq!(
         b.session.prompt().text(),
-        "Kapalı alan: son doğrultuda devam edilecek uzunluğu yazın"
+        "Kapalı alan: son doğrultuda devam edilecek uzunluğu yazın [Geri (G)]"
     );
     assert!(!b.type_text("K"), "no such option");
 }

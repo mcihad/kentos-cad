@@ -1,6 +1,5 @@
 import type { AppContext } from '../../app/context';
-import { surveyPolar, type PolarPoint } from '../../model/geom/surveyCalc';
-import type { Vec2 } from '../../model/geometry';
+import type { PolarPoint } from '../../model/geom/surveyCalc';
 import { h, replaceChildren } from '../dom';
 import { textField } from '../widgets/controls';
 import { Dialog } from '../widgets/Dialog';
@@ -22,6 +21,7 @@ import {
   type Picker,
   type Row,
 } from './common';
+import { readPolar } from './read';
 
 /**
  * Kutupsal alım (takeometri): points surveyed from a known station. The
@@ -126,55 +126,13 @@ class PolarDialog implements Picker {
     this.recompute();
   }
 
+  /** The fields read and computed (read.ts); the result, or the errors shown. */
   private recompute(): void {
     const { ctx } = this;
-    this.result = null;
-    const errors: string[] = [];
-    const known = (text: string, label: string): Vec2 | null => {
-      const r = resolvePoint(ctx, text);
-      if (!r) errors.push(`${label} verilmedi.`);
-      else if ('error' in r) errors.push(`${label}: ${r.error}`);
-      else return r.p;
-      return null;
-    };
-    const station = known(state.station.text, 'Durulan nokta');
-    const back = known(state.back.text, 'Bakılan nokta');
-    const backReading = readNumber(state.backReading) ?? 0;
-    const stationZ = readNumber(state.stationZ);
-    const ih = readNumber(state.instrumentHeight);
-    if (Number.isNaN(backReading)) errors.push('Bakılan noktanın okuması bir sayı değil.');
-    const rows = state.rows.map((r, i) => ({ r, i })).filter(({ r }) => Object.values(r).some((v) => v?.trim()));
-    if (!rows.length) errors.push('Tabloya en az bir nokta yazın.');
-    const shots = rows.map(({ r, i }) => {
-      const reading = readNumber(r.reading);
-      const distance = readNumber(r.distance);
-      const zenith = readNumber(r.zenith);
-      const target = readNumber(r.target);
-      if (reading === null) errors.push(`${i + 1}. satırda yatay açı okuması yok.`);
-      else if (Number.isNaN(reading)) errors.push(`${i + 1}. satırda yatay açı okuması bir sayı değil.`);
-      if (distance === null) errors.push(`${i + 1}. satırda uzunluk yok.`);
-      else if (Number.isNaN(distance)) errors.push(`${i + 1}. satırda uzunluk bir sayı değil.`);
-      if (Number.isNaN(zenith ?? 0) || Number.isNaN(target ?? 0)) errors.push(`${i + 1}. satırda bir değer sayı değil.`);
-      return { reading: reading ?? Number.NaN, distance: distance ?? Number.NaN, zenith, targetHeight: target };
-    });
-    const names = rows.map(({ r, i }) => r.name?.trim() || `${i + 1}`);
-    if (!errors.length && station && back) {
-      try {
-        const points = surveyPolar({
-          unit: ctx.doc.settings.angleUnit.value,
-          station,
-          back,
-          backReading,
-          stationZ: stationZ !== null && !Number.isNaN(stationZ) ? stationZ : null,
-          instrumentHeight: ih !== null && !Number.isNaN(ih) ? ih : null,
-          shots,
-        });
-        this.result = { points, names };
-      } catch (e) {
-        errors.push((e as Error).message);
-      }
-    }
-    this.show(errors);
+    const form = { station: state.station.text, back: state.back.text, backReading: state.backReading, stationZ: state.stationZ, instrumentHeight: state.instrumentHeight, rows: state.rows };
+    const read = readPolar(form, (text) => resolvePoint(ctx, text), ctx.doc.settings.angleUnit.value);
+    this.result = read.points ? { points: read.points, names: read.names } : null;
+    this.show(read.errors);
   }
 
   private show(errors: string[]): void {

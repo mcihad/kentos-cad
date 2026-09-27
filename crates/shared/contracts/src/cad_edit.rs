@@ -5,8 +5,9 @@
 //! Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil and Esnet write through
 //! `cad.entities.edit` on the web (`apps/web/src/product`) and on the
 //! desktop (`crates/native/application`); so do Öznitelikler's geometry rows
-//! and the in-place text editor (operation `properties`). Both pass the
-//! shared cases in `fixtures/commands/v1`.
+//! and the in-place text editor (operation `properties`) and the area tools
+//! (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir; docs/adr/0065).
+//! Both pass the shared cases in `fixtures/commands/v1`.
 //!
 //! The geometry is given, not computed here: the tools compute it with the
 //! shared geometry core, from what they picked and what the view shows (the
@@ -63,6 +64,18 @@ pub enum EditOperation {
     /// and text; a hatch's pattern, angle and spacing), or a text or a
     /// dimension's text edited in place. The step is “Değiştir”.
     Properties,
+    /// Alan birleştir: the areas go, their union comes from the first.
+    AreaUnion,
+    /// Alan kesiştir: the areas' overlap, a new area (the areas go with it when erased).
+    AreaIntersect,
+    /// Alan çıkar: areas with others cut out of them; the pieces left come from each.
+    AreaSubtract,
+    /// Alan böl: areas split along a line; the first piece is the area itself.
+    AreaSplit,
+    /// Alana çevir: closed objects become areas in their places; the regions line work closes are new areas.
+    ToArea,
+    /// Çizgiye çevir: an area's outer ring becomes a closed polyline in its place; its holes are new polylines.
+    ToPolyline,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -241,9 +254,11 @@ pub enum EntityEdit {
 ///
 /// Refusals (`CommandError.code`), checked in this order: `no_changes`,
 /// `invalid_uid` (each change's id in order), then each geometry in order:
-/// `too_few_points` (a polyline), `too_few_corners` (a closed area's or a
-/// hatch's ring or hole), `empty_text` (a text whose text is empty or only
-/// white space, Unicode's `White_Space`), `not_finite`, `invalid_radius`;
+/// `too_few_points` (a polyline), `too_few_corners` (a closed area's ring or
+/// hole with fewer than 3 corners, or 2 whose two edges are both straight, a
+/// bulge absent or 0; a hatch's ring or hole with fewer than 3), `empty_text`
+/// (a text whose text is empty or only white space, Unicode's `White_Space`),
+/// `not_finite`, `invalid_radius`;
 /// then `invalid_revision`, `revision_conflict` (status `conflict`),
 /// `entity_not_found` (each id in order), `repeated_entity` (an object
 /// changed twice), `layer_locked`; on the desktop also `slots_exhausted`.
@@ -255,7 +270,8 @@ pub enum EntityEdit {
 pub struct EntitiesEdit {
     /// The modify tool the edit comes from; it names the undo step: Ötele,
     /// Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
-    /// Köşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler.
+    /// Köşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,
+    /// Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir.
     pub operation: EditOperation,
     /// What changes, at least one.
     pub changes: Vec<EntityEdit>,

@@ -196,7 +196,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "apps/web/scripts/e2e/layout.mjs"
+        "apps/web/scripts/e2e/layout.mjs",
+        "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
     {
@@ -265,7 +266,8 @@
       },
       "tests": [
         "apps/web/src/app/workspaces.test.ts",
-        "apps/web/scripts/e2e/layout.mjs"
+        "apps/web/scripts/e2e/layout.mjs",
+        "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
     {
@@ -5683,6 +5685,7 @@
       "methods": [],
       "steps": 3,
       "description": "Seçili alanların ortak parçasını yeni bir alan olarak çıkarır; kaynaklar yerinde kalır.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -5706,6 +5709,7 @@
       "methods": [],
       "steps": 3,
       "description": "Alanı çizilen ya da gösterilen çizgi boyunca parçalara ayırır; parçalar ve alanları canlı görünür.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -5732,6 +5736,7 @@
       "methods": [],
       "steps": 3,
       "description": "Alanlardan başka alanları çıkarır; tamamen içte kalan alan ada (delik) olur.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -5759,6 +5764,7 @@
       "methods": [],
       "steps": 2,
       "description": "Seçili alanları tek alanda birleştirir (tevhit): ortak sınırlar kalkar, köşe koordinatları aynen korunur.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -5845,6 +5851,7 @@
       "methods": [],
       "steps": 3,
       "description": "Çizgilerle çevrili bölgenin içine tıklayınca o bölge alan olur; içteki kapalı şekiller ada (delik) olur.",
+      "productCommand": "cad.entities.create",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -7028,6 +7035,7 @@
       "methods": [],
       "steps": 2,
       "description": "Kapalı çoklu çizgi, daire, elips ve kapalı eğriyi alana çevirir; kapalı bölge oluşturan çizgilerden alan üretir.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",
@@ -7050,6 +7058,7 @@
       "methods": [],
       "steps": 2,
       "description": "Alanı kapalı çoklu çizgiye çevirir; delikler ayrı çizgi olur.",
+      "productCommand": "cad.entities.edit",
       "status": "implemented",
       "platforms": {
         "web": "implemented",

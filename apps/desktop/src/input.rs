@@ -373,7 +373,9 @@ impl App {
     /// Where the value field opens: beside the pointer, when it is on the
     /// drawing, a command runs and the preference is on (the web's `CursorInput.accepts`).
     fn field_place(&self) -> Option<Vec2> {
-        (self.cursor_input && self.session.is_running())
+        // A grip waiting for its new place takes one too (docs/adr/0068, 0069).
+        let takes = self.session.is_running() || self.session.grip_active();
+        (self.cursor_input && takes)
             .then_some(self.viewport.cursor)
             .flatten()
     }
@@ -502,7 +504,8 @@ impl App {
         if !keys::is_chorded(chord) && command.standing != Standing::Ported {
             return None;
         }
-        if self.session.is_running() && matches!(command.id, "view.zoomIn" | "view.zoomOut") {
+        let takes = self.session.is_running() || self.session.grip_active();
+        if takes && matches!(command.id, "view.zoomIn" | "view.zoomOut") {
             return None;
         }
         Some(command.id)

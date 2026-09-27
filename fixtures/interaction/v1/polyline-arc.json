@@ -36,7 +36,7 @@
     { "click": [-20, -10], "expect": { "points": 1 } },
     { "text": "@10,0" },
     { "key": "Enter", "expect": { "points": 2 } },
-    { "key": "U", "note": "Uzunluk: son doğrultuda yazılan boyda devam eder.", "expect": { "options": [] } },
+    { "key": "U", "note": "Uzunluk: son doğrultuda yazılan boyda devam eder.", "expect": { "options": ["G"] } },
     { "text": "5" },
     { "key": "Enter", "expect": { "points": 3 } },
     {

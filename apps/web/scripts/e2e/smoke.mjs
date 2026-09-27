@@ -662,6 +662,38 @@ try {
   check('grip menu deletes a vertex', (await b.eval(`window.kentos.doc.get(${box2.id})`)).pts.length === gripBefore - 1);
   await b.eval('window.kentos.selection.clear()');
 
+  // A clicked grip waits for its new place and its prompt asks for a coordinate: typed text reaches it, beside
+  // the cursor or on the command line, instead of naming a command.
+  {
+    const grip = async () => {
+      await b.eval(`window.kentos.selection.set([${typedLine.id}])`);
+      await sleep(60);
+      const end = await b.eval(`window.kentos.doc.get(${typedLine.id}).b`);
+      await b.click(...(await toScreen(end.x, end.y)));
+      return end;
+    };
+    const from = await grip();
+    await b.key('@');
+    await b.type('0,4');
+    await b.key('Enter');
+    const beside = await b.eval(`window.kentos.doc.get(${typedLine.id}).b`);
+    const stepBeside = await b.eval('window.kentos.doc.undo()');
+    await grip();
+    await b.click(...(await b.eval(`(() => { const r = document.querySelector('.cmdline__input').getBoundingClientRect(); return [Math.round(r.left + 20), Math.round(r.top + r.height / 2)]; })()`)));
+    await b.type('@0,-3');
+    await b.key('Enter');
+    const typed = await b.eval(`window.kentos.doc.get(${typedLine.id}).b`);
+    const said = await b.eval(`window.kentos.log.entries.value.slice(-3).map((e) => e.text)`);
+    const stepTyped = await b.eval('window.kentos.doc.undo()');
+    await b.eval('window.kentos.selection.clear()');
+    check(
+      'a clicked grip takes a typed “@0,4” beside the cursor and “@0,-3” on the command line; each one step “Tutamaçla düzenle”',
+      Math.abs(beside.x - from.x) < 1e-9 && Math.abs(beside.y - from.y - 4) < 1e-9 && Math.abs(typed.y - from.y + 3) < 1e-9 && stepBeside === 'Tutamaçla düzenle' && stepTyped === 'Tutamaçla düzenle' &&
+        !said.some((t) => t.includes('adında bir komut yok')),
+      JSON.stringify({ from, beside, typed, stepBeside, stepTyped, said }),
+    );
+  }
+
   // Object tracking: rest on a corner, then the point locks exactly level with it.
   await key('l');
   await b.move(...(await toScreen(X + 130, N - 30)));
@@ -1678,6 +1710,36 @@ try {
     check('Hesap: a resection at a known point gives it back', cellsOut[1] === rs.P.x.toFixed(3) && cellsOut[2] === rs.P.y.toFixed(3), JSON.stringify({ cellsOut, want: rs.P }));
     await b.key('Escape');
     await sleep(100);
+    // Kutupsal alım names the table row the user sees and refuses a station height that is not a number;
+    // Aplikasyon refuses a target at the station.
+    const summaryText = () => b.eval(`document.querySelector('.dialog--calc .io-summary').innerText`);
+    await b.eval(`window.kentos.commands.execute('calc.polar')`);
+    await b.waitFor(`!!document.querySelector('.dialog--calc [data-key="station"]')`, 10000);
+    await typeAt('.dialog--calc [data-key="station"]', 'P.101');
+    await typeAt('.dialog--calc [data-key="back"]', 'P.102');
+    for (const [row, key, v] of [['0', 'reading', '0'], ['0', 'distance', '10'], ['2', 'reading', '100'], ['2', 'distance', '0']]) await typeAt(`.dialog--calc input[data-row="${row}"][data-key="${key}"]`, v);
+    await sleep(150);
+    const rowSaid = await summaryText();
+    await typeAt('.dialog--calc input[data-row="2"][data-key="distance"]', '5');
+    await typeAt('.dialog--calc input[aria-label="İstasyon kotu (m)"]', '12a');
+    await sleep(150);
+    const heightSaid = await summaryText();
+    await b.key('Escape');
+    await sleep(100);
+    await b.eval(`window.kentos.commands.execute('calc.stakeout')`);
+    await b.waitFor(`!!document.querySelector('.dialog--calc [data-key="station"]')`, 10000);
+    await typeAt('.dialog--calc [data-key="station"]', 'P.101');
+    await typeAt('.dialog--calc input[data-row="0"][data-key="point"]', 'P.101');
+    await typeAt('.dialog--calc input[data-row="1"][data-key="point"]', 'P.102');
+    await sleep(150);
+    const stationSaid = await summaryText();
+    await b.key('Escape');
+    await sleep(100);
+    check(
+      'Hesap: Kutupsal alım names the table row and refuses a station height that is not a number; Aplikasyon refuses a target at the station',
+      rowSaid.includes('3. noktanın uzunluğu sıfırdan büyük olmalı.') && heightSaid.includes('İstasyon kotu bir sayı değil.') && stationSaid.includes('1. satırdaki nokta durulan noktayla aynı yerde; semt tanımsız.'),
+      JSON.stringify({ rowSaid, heightSaid, stationSaid }),
+    );
   }
 
   // File exchange (src/io, crates/shared/formats): an in-memory picker hands files to the importers and takes the

@@ -6,6 +6,7 @@ import { PickPointTool } from '../../tools/pickPointTool';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
 import { field, select, summaryLine } from '../io/common';
+import { readNumber, resolvePointIn, type Known, type Row } from './read';
 
 /**
  * Parts the Hesap windows share (poligon, kutupsal alım, aplikasyon,
@@ -18,23 +19,11 @@ import { field, select, summaryLine } from '../io/common';
  * as it was left.
  */
 
-/** A known point as typed: a point's name in the drawing, or "Y,X". */
-export type Known = { p: Vec2; name: string } | { error: string } | null;
+export { readNumber, type Known, type Row };
 
-const COORDS = /^\s*(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*$/;
-
-/** Reads a known point: "Y,X" (Y east first, as on the command line) or the name of a point object. */
+/** Reads a known point: "Y,X" (Y east first, as on the command line) or the name of a point object (read.ts). */
 export function resolvePoint(ctx: AppContext, text: string): Known {
-  const t = text.trim();
-  if (!t) return null;
-  const m = COORDS.exec(t);
-  if (m) return { p: { x: Number(m[1]), y: Number(m[2]) }, name: '' };
-  const key = t.toLocaleUpperCase('tr-TR');
-  const found = [...ctx.doc.all()].filter((e) => e.kind === 'point' && (e.label ?? e.attrs.Ad ?? '').toLocaleUpperCase('tr-TR') === key);
-  if (!found.length) return { error: `“${t}” adlı nokta çizimde yok. Adını denetleyin ya da Y,X yazın.` };
-  const e = found[0];
-  if (e.kind !== 'point') return null;
-  return { p: e.p, name: e.label ?? t };
+  return resolvePointIn(ctx.doc, text);
 }
 
 /** The name a point object at exactly `p` has, if any (a picked point snapped to a named point). */
@@ -43,12 +32,6 @@ function nameAt(ctx: AppContext, p: Vec2): string | null {
   return null;
 }
 
-/** A number as typed: a decimal comma is taken for a point. Empty: null; not a number: NaN. */
-export function readNumber(text: string | undefined): number | null {
-  const t = (text ?? '').trim().replace(',', '.');
-  if (!t) return null;
-  return /^[-+]?(\d+(\.\d*)?|\.\d+)(e[-+]?\d+)?$/i.test(t) ? Number(t) : Number.NaN;
-}
 
 /** What a window needs to let the user show a point on the drawing and come back. */
 export interface Picker {
@@ -101,7 +84,6 @@ export interface GridColumn {
   placeholder?: (row: number) => string;
 }
 
-export type Row = Record<string, string>;
 
 /** The rows a table shows and what may be done to them. */
 export interface GridModel {

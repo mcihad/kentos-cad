@@ -1166,9 +1166,9 @@ pub fn catalog() -> CommandCatalog {
             title: "Nesneleri düzenle".into(),
             summary: "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. \
                       Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; \
-                      Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir) bu komutla yazar. \
+                      Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. \
                       update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; \
-                      add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz. \
+                      add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. \
                       Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
@@ -1301,9 +1301,9 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_ENTITIES_CREATE.into(),
             version: crate::CAD_ENTITIES_CREATE_VERSION,
             title: "Nesneleri ekle".into(),
-            summary: "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın adı (Paralel çizgi, Dik in, Dik çık, Böl). \
+            summary: "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın adı (Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur). \
                       Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. \
-                      Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar. \
+                      Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. \
                       Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."

@@ -1,14 +1,16 @@
 import type { AppContext } from '../app/context';
+import type { EntityEdit } from '../contracts/generated/EntityEdit';
 import { Signal } from '../core/signal';
-import { entityGeometry, type Entity, type NewEntity } from '../model/entities';
+import { entityGeometry, type Entity } from '../model/entities';
 import { dist, type Vec2 } from '../model/geometry';
 import { entityFaceIndex, intersectAreas, netArea, splitArea, subtractAreas, unionAreas, type Area, type Source } from '../model/geom/region';
 import { areaOfEntity, lineSource, polygonOfArea, polylinesOfPolygon } from '../model/ops/areas';
 import type { ViewTransform } from '../viewport/Camera';
+import { writeObjects } from './createCommand';
+import { createdIds, editGeometry, uidOf, writeEdit } from './editCommand';
 import { SelectionActionTool } from './editTools';
 import { SelectionFirstTool } from './modifyTools';
 import { drawArea, drawTag, strokeGeometry, strokePath, tint } from './preview';
-import { writableLayer } from './targetLayer';
 import type { Tool, ToolPointer } from './Tool';
 import { drawTracking } from './tracking';
 import { VisibleFaces } from './visibleFaces';
@@ -18,8 +20,10 @@ import { VisibleFaces } from './visibleFaces';
  * difference and splitting, closed objects to areas, an area by clicking
  * inside line work, and areas back to lines. The geometry is exact and
  * lives in model/geom/region (arcs stay arcs, holes are kept, input
- * corners keep their coordinates); these tools pick, preview and record
- * one undo step.
+ * corners keep their coordinates); these tools pick, preview and write it
+ * through the product commands, one undo step named after the tool: the
+ * changes of `cad.entities.edit`, İçine tıklayarak alan `cad.entities.create`
+ * (docs/adr/0065). Objects on locked layers are left out before the command.
  */
 
 const AREA_KINDS = 'kapalı alan, daire, elips ya da kapalı eğri';
@@ -48,15 +52,17 @@ function facesOf(lines: readonly Entity[]): Area[] {
   }
 }
 
-/** A polygon for `a` on the layer of `from`, with its colour and (when `keepData`) its data and label. */
-function areaEntity(a: Area, from: Entity, keepData = true): NewEntity {
-  return { ...polygonOfArea(a), layerId: from.layerId, color: from.color, attrs: keepData ? { ...from.attrs } : {}, label: keepData ? from.label : undefined } as NewEntity;
+/**
+ * New areas made from `from` (`add`): its layer and colour, and with
+ * `keepData` its attributes and label; never its symbol.
+ */
+function addAreas(ctx: AppContext, areas: readonly Area[], from: Entity, keepData = true): EntityEdit[] {
+  const uid = uidOf(ctx, from);
+  return areas.map((a): EntityEdit => ({ kind: 'add', from: uid, geometry: editGeometry(polygonOfArea(a)), keepData }));
 }
 
-/** Adds polygons for `areas` (`areaEntity`). */
-function addAreas(ctx: AppContext, areas: readonly Area[], from: Entity, keepData = true): number[] {
-  return areas.map((a) => ctx.doc.add(areaEntity(a, from, keepData)).id);
-}
+/** `e` goes (`remove`). */
+const removal = (ctx: AppContext, e: Entity): EntityEdit => ({ kind: 'remove', uid: uidOf(ctx, e) });
 
 /** Straight cut line through the clicked points. */
 function pathSource(pts: readonly Vec2[]): Source {
@@ -71,17 +77,14 @@ export class AreaUnionTool extends SelectionActionTool {
   protected readonly label = 'Alan birleştir';
 
   protected run(targets: Entity[]): void {
-    const { doc, log, selection, format } = this.ctx;
+    const { log, selection, format } = this.ctx;
     const list = areasOf(targets);
     if (list.length < 2) return log.warn(`Birleştirmek için en az iki alan seçin (${AREA_KINDS}).`);
     const result = unionAreas(list.map((x) => x.a));
-    let created: number[] = [];
-    doc.transact(this.label, () => {
-      doc.remove(list.map((x) => x.e.id));
-      // The first picked area lends its layer, colour and data (tevhit: the parcel kept).
-      created = addAreas(this.ctx, result, list[0].e);
-    });
-    selection.set(created);
+    // The first picked area lends its layer, colour and data (tevhit: the parcel kept).
+    const out = writeEdit(this.ctx, 'areaUnion', [...list.map((x) => removal(this.ctx, x.e)), ...addAreas(this.ctx, result, list[0].e)]);
+    if (!out) return;
+    selection.set(createdIds(this.ctx, out));
     const parts = result.length === 1 ? 'tek alan' : `${result.length} ayrı alan (birbirine değmeyenler ayrı kalır)`;
     log.success(`${list.length} alan birleştirildi: ${parts}, toplam ${format.area(totalArea(result))}.`);
   }
@@ -106,19 +109,16 @@ export class AreaIntersectTool extends SelectionActionTool {
   }
 
   protected run(targets: Entity[]): void {
-    const { doc, log, selection, format } = this.ctx;
+    const { log, selection, format } = this.ctx;
     const list = areasOf(targets);
     if (list.length < 2) return log.warn(`Kesiştirmek için en az iki alan seçin (${AREA_KINDS}).`);
     const result = intersectAreas(list.map((x) => x.a));
     if (!result.length) return log.warn('Seçili alanların ortak bir parçası yok.');
     const erase = AreaIntersectTool.erase;
-    let created: number[] = [];
-    doc.transact(this.label, () => {
-      if (erase) doc.remove(list.map((x) => x.e.id));
-      // Kept sources keep their data; the overlap is a new, blank area.
-      created = addAreas(this.ctx, result, list[0].e, erase);
-    });
-    selection.set(created);
+    // Kept sources keep their data; the overlap is a new, blank area. Erased, it takes the first one's data.
+    const out = writeEdit(this.ctx, 'areaIntersect', [...(erase ? list.map((x) => removal(this.ctx, x.e)) : []), ...addAreas(this.ctx, result, list[0].e, erase)]);
+    if (!out) return;
+    selection.set(createdIds(this.ctx, out));
     log.success(`Ortak alan: ${format.area(totalArea(result))}${result.length > 1 ? ` (${result.length} parça)` : ''}${erase ? '; kaynaklar silindi' : ''}.`);
   }
 }
@@ -167,23 +167,24 @@ export class AreaSubtractTool extends SelectionFirstTool {
   private apply(from: Picked[], cutters: Picked[]): void {
     const { doc, log, selection, format } = this.ctx;
     const cut = cutters.map((x) => x.a);
-    const created: number[] = [];
+    const changes: EntityEdit[] = [];
     let changed = 0;
     let gone = 0;
     const erase = AreaSubtractTool.eraseCutters;
-    doc.transact(this.label, () => {
-      for (const t of from) {
-        const rest = subtractAreas([t.a], cut);
-        // Untouched areas stay as they are (a circle is not turned into a polygon for nothing).
-        if (rest.length === 1 && Math.abs(totalArea(rest) - netArea(t.a)) <= 1e-9 * Math.max(1, netArea(t.a))) continue;
-        doc.remove([t.e.id]);
-        created.push(...addAreas(this.ctx, rest, t.e));
-        changed++;
-        if (!rest.length) gone++;
-      }
-      if (erase && changed) doc.remove(cutters.filter((x) => !doc.layers.isLocked(x.e.layerId)).map((x) => x.e.id));
-    });
+    for (const t of from) {
+      const rest = subtractAreas([t.a], cut);
+      // Untouched areas stay as they are (a circle is not turned into a polygon for nothing).
+      if (rest.length === 1 && Math.abs(totalArea(rest) - netArea(t.a)) <= 1e-9 * Math.max(1, netArea(t.a))) continue;
+      changes.push(removal(this.ctx, t.e), ...addAreas(this.ctx, rest, t.e));
+      changed++;
+      if (!rest.length) gone++;
+    }
     if (!changed) return log.warn('Çıkarılan alanlar kesilecek alanlarla örtüşmüyor; hiçbir alan değişmedi.');
+    // The cutters go too when asked, but not those on a locked layer: they are left out here, before the command.
+    if (erase) changes.push(...cutters.filter((x) => !doc.layers.isLocked(x.e.layerId)).map((x) => removal(this.ctx, x.e)));
+    const out = writeEdit(this.ctx, 'areaSubtract', changes);
+    if (!out) return;
+    const created = createdIds(this.ctx, out);
     selection.set(created);
     const left = format.area(totalArea(created.map((id) => areaOfEntity(doc.get(id)!)!)));
     log.success(`${changed} alandan çıkarıldı; kalan ${left}${gone ? `, ${gone} alan tamamen silindi` : ''}${erase ? '; çıkarılan alanlar silindi' : ''}.`);
@@ -301,27 +302,31 @@ export class AreaSplitTool extends SelectionFirstTool {
   }
 
   private split(cut: Source, cutterId?: number): void {
-    const { doc, log, selection, format } = this.ctx;
-    const created: number[] = [];
+    const { log, selection, format } = this.ctx;
+    const changes: EntityEdit[] = [];
+    /** Each split area and how many new pieces come from it, in order. */
+    const split: { e: Entity; more: number }[] = [];
     const sizes: number[] = [];
-    let changed = 0;
-    doc.transact(this.label, () => {
-      for (const t of this.list) {
-        if (t.e.id === cutterId) continue;
-        const pieces = splitArea(t.a, cut);
-        if (pieces.length < 2) continue;
-        // The first piece is the area itself, split: it keeps its slot and persistent id; the rest are new (ADR 0014).
-        doc.replace(t.e.id, areaEntity(pieces[0], t.e));
-        created.push(t.e.id, ...addAreas(this.ctx, pieces.slice(1), t.e));
-        sizes.push(...pieces.map(netArea));
-        changed++;
-      }
-    });
+    for (const t of this.list) {
+      if (t.e.id === cutterId) continue;
+      const pieces = splitArea(t.a, cut);
+      if (pieces.length < 2) continue;
+      // The first piece is the area itself, split: it keeps its slot and persistent id; the rest are new (ADR 0014).
+      changes.push({ kind: 'replace', uid: uidOf(this.ctx, t.e), geometry: editGeometry(polygonOfArea(pieces[0])), keepData: true }, ...addAreas(this.ctx, pieces.slice(1), t.e));
+      split.push({ e: t.e, more: pieces.length - 1 });
+      sizes.push(...pieces.map(netArea));
+    }
+    const changed = split.length;
     if (!changed) {
       this.pts = [];
       this.refresh();
       return log.warn('Kesme çizgisi alanı baştan başa geçmiyor; çizgi alanın sınırını iki yerden kesmeli.');
     }
+    const out = writeEdit(this.ctx, 'areaSplit', changes);
+    if (!out) return;
+    const made = createdIds(this.ctx, out);
+    let k = 0;
+    const created = split.flatMap((s) => [s.e.id, ...made.slice(k, (k += s.more))]);
     selection.set(created);
     const list = sizes.length <= 4 ? `: ${sizes.map((s) => format.area(s)).join(', ')}` : '';
     log.success(`${changed} alan ${created.length} parçaya bölündü${list}. Parçalar özgün alanın özniteliklerini taşır; parsel numaralarını güncelleyin.`);
@@ -359,7 +364,7 @@ export class ToAreaTool extends SelectionActionTool {
   protected readonly label = 'Alana çevir';
 
   protected run(targets: Entity[]): void {
-    const { doc, log, selection, format } = this.ctx;
+    const { log, selection, format } = this.ctx;
     const closed = areasOf(targets.filter((e) => e.kind !== 'polygon'));
     const lines = targets.filter((e) => !areaOfEntity(e) && (e.kind === 'line' || e.kind === 'arc' || e.kind === 'polyline' || e.kind === 'spline' || e.kind === 'ellipse'));
     const faces = lines.length ? facesOf(lines) : [];
@@ -367,17 +372,14 @@ export class ToAreaTool extends SelectionActionTool {
       const already = targets.some((e) => e.kind === 'polygon');
       return log.warn(already ? 'Seçili nesneler zaten alan.' : 'Alana çevrilecek kapalı nesne ya da kapalı bölge oluşturan çizgi bulunamadı. Çizgilerin uçları birleşmeli ya da kesişmeli.');
     }
-    const created: number[] = [];
-    doc.transact(this.label, () => {
-      for (const x of closed) {
-        // The object itself becomes an area: it keeps its slot and persistent id (docs/adr/0014).
-        doc.replace(x.e.id, areaEntity(x.a, x.e, true));
-        created.push(x.e.id);
-      }
-      // Line work stays; the regions it closes become new areas on its layer.
-      if (faces.length) created.push(...addAreas(this.ctx, faces, lines[0], false));
-    });
-    selection.set(created);
+    // The object itself becomes an area: it keeps its slot and persistent id (docs/adr/0014).
+    // Line work stays; the regions it closes become new areas on its layer.
+    const out = writeEdit(this.ctx, 'toArea', [
+      ...closed.map((x): EntityEdit => ({ kind: 'replace', uid: uidOf(this.ctx, x.e), geometry: editGeometry(polygonOfArea(x.a)), keepData: true })),
+      ...(faces.length ? addAreas(this.ctx, faces, lines[0], false) : []),
+    ]);
+    if (!out) return;
+    selection.set([...closed.map((x) => x.e.id), ...createdIds(this.ctx, out)]);
     const parts = [closed.length ? `${closed.length} nesne alana çevrildi` : '', faces.length ? `çizgilerden ${faces.length} alan oluştu (${format.area(totalArea(faces))})` : ''].filter(Boolean);
     log.success(`${parts.join('; ')}.`);
   }
@@ -389,23 +391,27 @@ export class ToPolylineTool extends SelectionActionTool {
   protected readonly label = 'Çizgiye çevir';
 
   protected run(targets: Entity[]): void {
-    const { doc, log, selection } = this.ctx;
+    const { log, selection } = this.ctx;
     const polys = targets.filter((e) => e.kind === 'polygon');
     if (!polys.length) return log.warn('Çizgiye çevrilecek bir kapalı alan seçin.');
-    const created: number[] = [];
-    doc.transact(this.label, () => {
-      for (const e of polys) {
-        if (e.kind !== 'polygon') continue;
-        polylinesOfPolygon(e).forEach((g, i) => {
-          const init = { ...g, layerId: e.layerId, color: e.color, attrs: i === 0 ? { ...e.attrs } : {}, label: i === 0 ? e.label : undefined } as NewEntity;
-          // The outer ring is the area itself, now a polyline (it keeps its slot and persistent id, docs/adr/0014); holes become new objects.
-          if (i === 0) {
-            doc.replace(e.id, init);
-            created.push(e.id);
-          } else created.push(doc.add(init).id);
-        });
-      }
-    });
+    // The outer ring is the area itself, now a polyline (it keeps its slot, persistent id and data, docs/adr/0014);
+    // holes become new, blank polylines from it.
+    const changes: EntityEdit[] = [];
+    const holes: number[] = [];
+    for (const e of polys) {
+      if (e.kind !== 'polygon') continue;
+      const uid = uidOf(this.ctx, e);
+      const rings = polylinesOfPolygon(e);
+      rings.forEach((g, i) =>
+        changes.push(i === 0 ? { kind: 'replace', uid, geometry: editGeometry(g), keepData: true } : { kind: 'add', from: uid, geometry: editGeometry(g), keepData: false }),
+      );
+      holes.push(rings.length - 1);
+    }
+    const out = writeEdit(this.ctx, 'toPolyline', changes);
+    if (!out) return;
+    const made = createdIds(this.ctx, out);
+    let k = 0;
+    const created = polys.flatMap((e, i) => [e.id, ...made.slice(k, (k += holes[i]))]);
     selection.set(created);
     log.success(`${polys.length} alan kapalı çoklu çizgiye çevrildi (${created.length} çizgi).`);
   }
@@ -480,13 +486,10 @@ export class BoundaryTool implements Tool {
     }
     const area = this.faces.at(p.raw, BoundaryTool.islands);
     if (!area) return ctx.log.warn('Tıklanan yer kapalı bir bölgenin içinde değil. Bölgeyi saran çizgiler birleşmeli ya da kesişmeli; görünüm dışındaki çizgiler sayılmaz.');
-    const layerId = writableLayer(ctx);
-    if (!layerId) return;
-    let id = 0;
-    ctx.doc.transact('Alan oluştur', () => {
-      id = ctx.doc.add({ ...polygonOfArea(area), layerId, color: ctx.settings.color.value ?? undefined, attrs: {} } as NewEntity).id;
-    });
-    ctx.selection.set([id]);
+    // On the active layer in the current colour, one step “Alan oluştur”; a locked or hidden layer is said by the command.
+    const out = writeObjects(ctx, [polygonOfArea(area)], 'boundary');
+    if (!out) return;
+    ctx.selection.set([out.ids[0]]);
     ctx.log.success(`Alan oluşturuldu: ${ctx.format.area(netArea(area))}${area.holes.length ? `, ${area.holes.length} ada (delik)` : ''}.`);
   }
 

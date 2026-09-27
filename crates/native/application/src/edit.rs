@@ -136,6 +136,13 @@ pub fn label(operation: EditOperation) -> &'static str {
         EditOperation::Stretch => "Esnet",
         // Öznitelikler and the text field over the drawing: the document's own “Değiştir” (docs/adr/0066).
         EditOperation::Properties => "Değiştir",
+        // The area tools (docs/adr/0065, 0069).
+        EditOperation::AreaUnion => "Alan birleştir",
+        EditOperation::AreaIntersect => "Alan kesiştir",
+        EditOperation::AreaSubtract => "Alan çıkar",
+        EditOperation::AreaSplit => "Alan böl",
+        EditOperation::ToArea => "Alana çevir",
+        EditOperation::ToPolyline => "Çizgiye çevir",
     }
 }
 
@@ -311,6 +318,15 @@ fn inherited(base: &EntityBase, id: u32, keep_data: bool) -> EntityBase {
     }
 }
 
+/// Whether a closed area's ring (or hole) encloses anything: 3 corners, or 2
+/// when one of its two edges is an arc (a circle made an area, a lens, a
+/// half-disc; docs/adr/0069). −0 is straight; NaN is an arc here and is
+/// refused as not finite next.
+fn ring_closes(corners: usize, bulges: Option<&[f64]>) -> bool {
+    let bulge = |i: usize| bulges.and_then(|b| b.get(i)).copied().unwrap_or(0.0);
+    corners >= 3 || (corners == 2 && (bulge(0) != 0.0 || bulge(1) != 0.0))
+}
+
 /// The `i`-th geometry of the input's `list` (`changes`; `objects` of
 /// `cad.entities.create`): enough points for its kind, a text that is not
 /// empty or only white space, every number finite, a positive radius.
@@ -333,23 +349,23 @@ pub(crate) fn check_geometry(
                 at(".pts"),
             )));
         }
-        EntityGeometry::Polygon { pts, holes, .. } => {
-            if pts.len() < 3 {
+        EntityGeometry::Polygon { pts, bulges, holes } => {
+            if !ring_closes(pts.len(), bulges.as_deref()) {
                 return Err(Stop::Failed(error(
                     codes::TOO_FEW_CORNERS,
                     format!(
-                        "Kapalı alanın en az 3 köşesi olmalı; {} köşe verildi. Eksik köşeleri ekleyin.",
+                        "Kapalı alanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin.",
                         pts.len()
                     ),
                     at(".pts"),
                 )));
             }
             for (h, ring) in holes.iter().flatten().enumerate() {
-                if ring.pts.len() < 3 {
+                if !ring_closes(ring.pts.len(), ring.bulges.as_deref()) {
                     return Err(Stop::Failed(error(
                         codes::TOO_FEW_CORNERS,
                         format!(
-                            "{}. deliğin en az 3 köşesi olmalı; {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.",
+                            "{}. deliğin en az 3 köşesi olmalı (kenarlarından biri yaysa 2); {} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.",
                             h + 1,
                             ring.pts.len()
                         ),

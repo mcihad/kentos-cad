@@ -1,6 +1,5 @@
 import type { AppContext } from '../../app/context';
-import { surveyStakeout, type Stake } from '../../model/geom/surveyCalc';
-import type { Vec2 } from '../../model/geometry';
+import type { Stake } from '../../model/geom/surveyCalc';
 import { h, replaceChildren } from '../dom';
 import { icon } from '../icons';
 import { Dialog } from '../widgets/Dialog';
@@ -17,6 +16,7 @@ import {
   type Picker,
   type Row,
 } from './common';
+import { readStakeout } from './read';
 
 /**
  * Aplikasyon: the values to set out known points from a station: bearing
@@ -107,46 +107,22 @@ class StakeoutDialog implements Picker {
     this.recompute();
   }
 
+  /** The fields read and computed (read.ts); the values, or the errors shown. */
   private recompute(): void {
     const { ctx } = this;
-    this.result = null;
-    const errors: string[] = [];
-    const st = resolvePoint(ctx, state.station.text);
-    const bk = resolvePoint(ctx, state.back.text);
-    if (!st) errors.push('Durulan nokta verilmedi.');
-    else if ('error' in st) errors.push(`Durulan nokta: ${st.error}`);
-    if (bk && 'error' in bk) errors.push(`Bakılan nokta: ${bk.error}`);
-    const targets: Vec2[] = [];
-    const names: string[] = [];
-    state.rows.forEach((r, i) => {
-      const t = resolvePoint(ctx, r.point ?? '');
-      if (!t) return;
-      if ('error' in t) errors.push(`${i + 1}. satır: ${t.error}`);
-      else {
-        targets.push(t.p);
-        names.push(t.name || (r.point ?? '').trim());
-      }
-    });
-    if (!targets.length && !errors.length) errors.push('Tabloya aplike edilecek en az bir nokta yazın.');
-    if (!errors.length && st && 'p' in st) {
-      try {
-        const stakes = surveyStakeout({ unit: ctx.doc.settings.angleUnit.value, station: st.p, back: bk && 'p' in bk ? bk.p : null, targets });
-        this.result = { stakes, names };
-      } catch (e) {
-        errors.push((e as Error).message);
-      }
-    }
+    const read = readStakeout({ station: state.station.text, back: state.back.text, rows: state.rows }, (text) => resolvePoint(ctx, text), ctx.doc.settings.angleUnit.value);
+    this.result = read.stakes ? { stakes: read.stakes, names: read.names } : null;
     const res = this.result;
     this.copy.disabled = !res;
     if (!res) {
-      summary(this.summaryBox, errors.slice(0, 6).map((e) => summaryLine('warn', e)));
+      summary(this.summaryBox, read.errors.slice(0, 6).map((e) => summaryLine('warn', e)));
       replaceChildren(this.results);
       return;
     }
     const f = ctx.format;
     summary(this.summaryBox, [
       summaryLine('ok', `${res.stakes.length} nokta için semt ve uzunluk hesaplandı.`),
-      bk ? null : summaryLine('info', 'Bakılan nokta verilmedi: dönülecek açılar yok, aleti semte göre yöneltin.'),
+      read.back ? null : summaryLine('info', 'Bakılan nokta verilmedi: dönülecek açılar yok, aleti semte göre yöneltin.'),
     ]);
     const rows = res.stakes.map((s, i) => [res.names[i], angleText(ctx, s.bearing), f.length(s.distance, false), s.angle != null ? angleText(ctx, s.angle) : '—']);
     replaceChildren(

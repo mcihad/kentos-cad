@@ -24,7 +24,8 @@ import type { ProductCommand } from './command';
  * Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil) and Esnet compute the
  * geometry with the shared core and write it here (TODOS.md CMD-07);
  * nothing is computed in this module. Öznitelikler's geometry rows and the
- * in-place text editor write the value typed (operation `properties`).
+ * in-place text editor write the value typed (operation `properties`); the
+ * area tools write what the shared region core made (docs/adr/0065).
  *
  * The checks, in order (the first that fails answers): at least one change,
  * each change's id lowercase UUID text with hyphens; every geometry, in
@@ -49,6 +50,12 @@ export const EDIT_LABEL: Record<EditOperation, string> = {
   vertexRemove: 'Köşe sil',
   stretch: 'Esnet',
   properties: 'Değiştir',
+  areaUnion: 'Alan birleştir',
+  areaIntersect: 'Alan kesiştir',
+  areaSubtract: 'Alan çıkar',
+  areaSplit: 'Alan böl',
+  toArea: 'Alana çevir',
+  toPolyline: 'Çizgiye çevir',
 };
 
 /** The contract's geometry fields by kind (`EntityGeometry`): what the command writes of a geometry. */
@@ -117,20 +124,37 @@ function inherited(e: Entity, g: EntityGeometry, keepData: boolean): NewEntity {
 }
 
 /**
+ * A closed area's ring (its outline or a hole) encloses something: 3 corners
+ * or more, or 2 when one of its two edges is an arc (a bulge not 0; absent
+ * counts as 0). A circle made an area, a lens and a circular segment are
+ * such 2-corner rings (the region core writes them so), and the document
+ * holds them.
+ */
+const ringCloses = (pts: readonly unknown[], bulges: readonly number[] | undefined): boolean =>
+  pts.length >= 3 || (pts.length === 2 && ((bulges?.[0] ?? 0) !== 0 || (bulges?.[1] ?? 0) !== 0));
+
+/**
  * The `i`-th geometry of the input's `list` (`changes`; `objects` of
- * `cad.entities.create`): enough points for its kind, a text that is not
- * empty or only white space, every number finite, a positive radius.
- * `whose` names it in a message: “değişikliğin”.
+ * `cad.entities.create`): enough points for its kind (a closed area's ring by
+ * `ringCloses`), a text that is not empty or only white space, every number
+ * finite, a positive radius. `whose` names it in a message: “değişikliğin”.
  */
 export function checkGeometry(g: EntityGeometry, i: number, list = 'changes', whose = 'değişikliğin'): Stop | null {
   const at = (field: string) => `${list}[${i}].geometry${field}`;
   if (g.kind === 'polyline' && g.pts.length < 2)
     return failed(error('too_few_points', `Çoklu çizginin en az 2 noktası olmalı; ${g.pts.length} nokta verildi. Eksik noktaları ekleyin.`, at('.pts')));
   if (g.kind === 'polygon') {
-    if (g.pts.length < 3) return failed(error('too_few_corners', `Kapalı alanın en az 3 köşesi olmalı; ${g.pts.length} köşe verildi. Eksik köşeleri ekleyin.`, at('.pts')));
+    if (!ringCloses(g.pts, g.bulges))
+      return failed(error('too_few_corners', `Kapalı alanın en az 3 köşesi olmalı (kenarlarından biri yaysa 2); ${g.pts.length} köşe verildi. Eksik köşeleri ekleyin.`, at('.pts')));
     for (const [h, ring] of (g.holes ?? []).entries())
-      if (ring.pts.length < 3)
-        return failed(error('too_few_corners', `${h + 1}. deliğin en az 3 köşesi olmalı; ${ring.pts.length} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.`, at(`.holes[${h}].pts`)));
+      if (!ringCloses(ring.pts, ring.bulges))
+        return failed(
+          error(
+            'too_few_corners',
+            `${h + 1}. deliğin en az 3 köşesi olmalı (kenarlarından biri yaysa 2); ${ring.pts.length} köşe verildi. Eksik köşeleri ekleyin ya da deliği çıkarın.`,
+            at(`.holes[${h}].pts`),
+          ),
+        );
   }
   if (g.kind === 'hatch') {
     if (g.ring.length < 3) return failed(error('too_few_corners', `Taramanın en az 3 köşesi olmalı; ${g.ring.length} köşe verildi. Eksik köşeleri ekleyin.`, at('.ring')));
