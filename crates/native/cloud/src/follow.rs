@@ -12,7 +12,7 @@
 
 use std::future::Future;
 
-use kentos_contracts::{EventPage, FeatureRecord};
+use kentos_contracts::{EventPage, FeatureRecord, FileRevisions, ProjectInfo};
 use uuid::Uuid;
 
 use crate::api::Cloud;
@@ -49,6 +49,29 @@ pub fn wait(
     after: &str,
 ) -> impl Future<Output = Result<EventPage, ApiFailure>> + Send + 'static {
     cloud.events_waiting(tenant, project, after, WAIT)
+}
+
+/// The project as the server has it now, passing failures tried again
+/// first: a file project's resync asks it when the events it missed cannot
+/// be replayed (docs/specs/file-revisions.md §2.4).
+pub fn project_now(
+    cloud: &Cloud,
+    tenant: Uuid,
+    project: Uuid,
+) -> impl Future<Output = Result<ProjectInfo, ApiFailure>> + Send + 'static {
+    let cloud = cloud.clone();
+    run(async move { retrying(|| cloud.project(tenant, project)).await })
+}
+
+/// A file project's revisions as the server has them now, passing failures
+/// tried again first: who saved the newest and when.
+pub fn file_revisions_now(
+    cloud: &Cloud,
+    tenant: Uuid,
+    project: Uuid,
+) -> impl Future<Output = Result<FileRevisions, ApiFailure>> + Send + 'static {
+    let cloud = cloud.clone();
+    run(async move { retrying(|| cloud.file_revisions(tenant, project)).await })
 }
 
 /// What the server has now of what `incoming` names: the objects others

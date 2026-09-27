@@ -125,6 +125,29 @@ pub fn danger(theme: &Theme, status: Status) -> Style {
     style(background, text, border::rounded(RADIUS))
 }
 
+/// Bir şeyi bırakan ya da silen, birincil olmayan eylem (web'in
+/// `.btn--danger`'ı): ikincil düğme gibi kenarlı, yazısı tehlike renginde;
+/// üzerine gelince kenarı da. Hiçbir zaman vurgu renginde değildir.
+pub fn danger_outline(theme: &Theme, status: Status) -> Style {
+    let t = Tokens::of(theme);
+
+    let (background, text, edge) = match status {
+        Status::Active => (t.surface_alt, t.danger, t.border),
+        Status::Hovered | Status::Pressed => (t.surface_hover, t.danger, t.danger),
+        Status::Disabled => (t.surface_alt, t.disabled(), t.border),
+    };
+
+    style(
+        background,
+        text,
+        Border {
+            color: edge,
+            width: 1.0,
+            radius: RADIUS.into(),
+        },
+    )
+}
+
 /// Özellikler penceresinin solundaki bölüm listesi: seçili bölüm seçim
 /// zemininde; üzerine gelince hafif bir katman.
 pub fn navigation(selected: bool) -> impl Fn(&Theme, Status) -> Style {

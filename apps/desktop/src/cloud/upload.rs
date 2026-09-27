@@ -8,9 +8,10 @@
 //! is the cloud project. A drawing that changed on its way (other people's
 //! changes to an open database project) is not replaced: the project holds
 //! it as it went up, the window closes and the log says so (the web's
-//! f7616e4). A refusal names the object and selects it. A retry of the same
-//! upload keeps its idempotency key: the server answers with the same
-//! project instead of making a second one.
+//! f7616e4). A refusal names the object and selects it. A retry of an
+//! upload that got no answer keeps its idempotency key: the server answers
+//! with the same project instead of making a second one. A refusal for good
+//! trashed the empty project, so the next try is a new upload with a new key.
 
 use iced::Task;
 use iced::futures::channel::mpsc;
@@ -267,6 +268,12 @@ impl App {
                 let place = refused_place(&failure);
                 let named = place.and_then(|i| self.name_object(i, drawing));
                 if let Some(u) = self.cloud.upload.as_mut() {
+                    // Refused for good, the empty project went to the trash
+                    // (kentos-cloud's upload_new): the next try is a new upload.
+                    // Without an answer the project stays, and the same key finds it.
+                    if !failure.transient() {
+                        u.key = Uuid::new_v4();
+                    }
                     u.error = Some(match named {
                         Some(what) => format!(
                             "{} Reddedilen nesne: {what}; çizimde seçildi.",

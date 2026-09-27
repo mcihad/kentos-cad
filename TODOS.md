@@ -274,7 +274,16 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
 - [ ] `UX-12` Klavye ile tam kullanım, odak halkası, metin seçimi, yüksek kontrast, ekran okuyucu etiketleri, Türkçe fontlar ve IME testlerini desktop/web eşdeğerlik listesine ekle.
 - [ ] `UX-13` Masaüstünde web'den eksik kalanları bitir. Güncel liste `docs/inventory/web.md`'nin “Web'de olup masaüstünde olmayanlar” bölümündedir. Sahibin kararı (27 Eylül): eksik ya bitirilir ya not edilir; iş kalmayınca masaüstünün performansına geçilir. 28 Eylül'deki durum:
   - **Şerit:** 28 Eylül'de bitti: hızlı erişim, sağ tık ve bölünmüş düğmenin seçimi ([ADR 0117](docs/adr/0117-desktop-ribbon-bar-and-menus.md)); harf ipuçları ve daraltılmış şeridin çizimin üstünde açılması ([ADR 0118](docs/adr/0118-desktop-ribbon-key-tips-and-peek.md)). Kalan küçük fark: şeridin kendi panellerinin denetimleri harf almaz.
-  - **Bulut:** dosya projesinde başkasının yeni revizyonu (durum çubuğunun “Yeni revizyon”u).
+  - **Bulut:** 28 Eylül'de bitti: dosya projesinde başkasının yeni revizyonu (durum çubuğunun “Yeni revizyon”u), Kaydet'in yüklemeden sorması, dört cevaplı çakışma sorusu, Geçmiş'in “Açık çizim” işareti ([ADR 0119](docs/adr/0119-desktop-file-revisions.md)).
+  - **Eşitlik denetimi** (28 Eylül, [docs/inventory/parity-audit.md](docs/inventory/parity-audit.md)): ortak planı ya da fixture'ı olan ekranlarda web'den ayrılan davranış yok. Farklar, önem sırasıyla:
+    - ~~dosya projesinde başkasının revizyonu, Kaydet'in yüklemeden sorması, dört cevaplı çakışma sorusu (“Yerel dosyaya kaydet” dahil), Geçmiş'in “Açık çizim” işareti (B1–B4)~~: 28 Eylül'de bitti (ADR 0119);
+    - Yeni proje notu, kaydedilmeyen veritabanı projesi üstünde “gönderilir” diyor (N1; yanlış sonuç);
+    - görünüş tercihleri (tema, vurgu, yazı tipi, yazı boyu) iki platformda başka anahtarlarda, ayar dosyası öbür platforma taşımıyor (A1, A6; yanlış sonuç);
+    - ~~reddedilen yüklemeden sonra aynı istek anahtarı~~: 28 Eylül'de düzeldi; kalıcı retten sonra yeni anahtar, yanıt gelmeyince aynısı (ADR 0119);
+    - Buluta yükle'de proje türü, açıklama ve etiketler (Y1); sözler ve yüzdeli ilerleme (Y2–Y4);
+    - ayar pencerelerinde bölüm bölüm varsayılana döndürme (A2, P1), birbirine yol veren düğmeler (A3, P2), kaydedince varsayılanların açık projeyi değiştirmediği notu (A4), Uygulama ayarları'nın bölümlü düzeni (A5);
+    - Fare ve klavye kısayolları penceresi: arama, fare tablosu, kategoriler, takma adlar, Türkçe klavye notu (H1, H2);
+    - küçük sözler ve ipuçları: veritabanı çakışması (Ç1), Katmanlar'da adın yolu ve menüdeki tuşlar (K1, K2), İşlemler (İ1–İ4), Başlangıç'ta ×'in ipucu (S1), Nokta hesabı çipinin ipucu, Koordinat listesi al'da virgülün ipucu.
   - **İşlemler:** kullanıcının modelleri şeritte ve komut satırında (araç kutusunda var, ADR 0116).
   - **Görünüş:** arayüz yazı tiplerinden Source Sans 3, Noto Sans, Roboto ve “Sistem yazı tipi” (`user.uiFont`; masaüstünde üç yüz var).
   - İki platformda da bekleyenler (`pending`) ve yalnız web'e ait klasik arayüz bu listeye girmez.

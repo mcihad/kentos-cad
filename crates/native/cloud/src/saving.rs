@@ -227,8 +227,9 @@ async fn commit(
     project: Uuid,
     upload: &FileUpload,
     based_on: u64,
+    request: &str,
 ) -> Result<FileCommitted, ApiFailure> {
-    let command = envelope(
+    let mut command = envelope(
         tenant,
         project,
         PROJECT_FILE_COMMIT,
@@ -237,7 +238,22 @@ async fn commit(
         [(FILE_KEY.to_string(), based_on.to_string())].into(),
         json!({ "uploadId": upload.id }),
     );
+    request.clone_into(&mut command.request_id);
     retrying(|| cloud.command::<FileCommitted>(command.clone())).await
+}
+
+/// A new request id of this program (`desktop-…`): its commit's event carries it.
+pub fn request_id() -> String {
+    format!("desktop-{}", Uuid::new_v4())
+}
+
+/// How a revision goes up: the size of its parts, who hears how far it came,
+/// and the request id its commit carries (the project's `project.file` event
+/// names it, so the caller knows its own save when it hears it).
+pub struct Sending {
+    pub part: usize,
+    pub progress: Option<Progress>,
+    pub request: String,
 }
 
 /// The file revision `based_on` was replaced meanwhile: the revision the server has now.
@@ -277,6 +293,23 @@ pub fn save_revision_watched(
     part: usize,
     progress: Option<Progress>,
 ) -> impl Future<Output = Result<FileCommitted, ApiFailure>> + Send + 'static {
+    let sending = Sending {
+        part,
+        progress,
+        request: request_id(),
+    };
+    save_revision_sent(cloud, tenant, project, bytes, based_on, sending)
+}
+
+/// `save_revision`, as `sending` says: in parts, heard, under its request id.
+pub fn save_revision_sent(
+    cloud: &Cloud,
+    tenant: Uuid,
+    project: Uuid,
+    bytes: Vec<u8>,
+    based_on: u64,
+    sending: Sending,
+) -> impl Future<Output = Result<FileCommitted, ApiFailure>> + Send + 'static {
     let cloud = cloud.clone();
     run(async move {
         let sent = upload_parted(
@@ -284,11 +317,11 @@ pub fn save_revision_watched(
             tenant,
             project,
             Bytes::from(bytes),
-            part.max(1),
-            progress.as_ref(),
+            sending.part.max(1),
+            sending.progress.as_ref(),
         )
         .await?;
-        commit(&cloud, tenant, project, &sent, based_on).await
+        commit(&cloud, tenant, project, &sent, based_on, &sending.request).await
     })
 }
 
@@ -392,7 +425,7 @@ async fn fill(
             }
             let sent = upload(cloud, tenant, project, bytes).await?;
             Ok(Uploaded::File(
-                commit(cloud, tenant, project, &sent, 0).await?,
+                commit(cloud, tenant, project, &sent, 0, &request_id()).await?,
             ))
         }
         ProjectStorage::Database => {

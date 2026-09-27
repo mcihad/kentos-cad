@@ -385,6 +385,19 @@ impl App {
                 Some(Named::Escape) if self.cloud.share.is_some() => return self.share_escape(),
                 // What the window held goes with it (a password, a request).
                 Some(Named::Escape) => self.close_dialog(),
+                // A question about the file project's revisions: Enter is its
+                // amber answer, or, without one, the answer that changes nothing.
+                Some(Named::Enter) if self.dialog == Some(crate::app::Dialog::Revision) => {
+                    let answer = self.cloud.question.as_ref().map(|q| {
+                        q.answers
+                            .iter()
+                            .find(|a| a.kind == Some(crate::cloud::revisions::AnswerKind::Primary))
+                            .map_or(q.cancel, |a| a.value)
+                    });
+                    if let Some(answer) = answer {
+                        return self.cloud_event(crate::cloud::Event::RevisionAnswer(answer));
+                    }
+                }
                 // Ctrl+Enter runs a processing tool from anywhere in its window (the web's).
                 Some(Named::Enter)
                     if press.modifiers.control()

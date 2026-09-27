@@ -7,6 +7,9 @@
 
 use kentos_contracts::{Health, ProjectPermission};
 
+use super::local_time::Zone;
+use super::revisions::{NewerRevision, newer_tip};
+
 /// A database project's save state (the web's `SaveState`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum DatabaseState {
@@ -66,9 +69,7 @@ pub(crate) enum FileState {
     Uploading,
     Verifying,
     Conflict,
-    /// A newer revision on the server: the desktop does not follow a file
-    /// project's events yet (docs/adr/0113); the fixture holds the web's case.
-    #[allow(dead_code)]
+    /// A newer revision on the server (docs/specs/file-revisions.md).
     Outdated,
     Error,
     ReadOnly,
@@ -108,6 +109,8 @@ pub(crate) struct FileSave {
     pub conflict_actual: Option<String>,
     /// A newer revision on the server the drawing is not based on.
     pub newer_revision: Option<String>,
+    /// The drawing has unsaved changes (what a newer revision says over them).
+    pub dirty: bool,
 }
 
 /// What the save cell shows: nothing without a cloud project.
@@ -141,7 +144,12 @@ pub(crate) fn file_save_text(f: &FileSave) -> String {
         FileState::Uploading => format!("Yükleniyor %{}", js_round(f.progress * 100.0)),
         FileState::Verifying => "Sunucu doğruluyor…".to_owned(),
         FileState::Conflict => format!("Çakışma: r{} kaydedilmiş", unknown(&f.conflict_actual)),
-        FileState::Outdated => format!("Yeni revizyon: r{}", unknown(&f.newer_revision)),
+        // Over unsaved work too: Kaydet cannot write over it (docs/specs/file-revisions.md).
+        FileState::Outdated => format!(
+            "Yeni revizyon: r{}{}",
+            unknown(&f.newer_revision),
+            if f.dirty { " · kaydedilmedi" } else { "" }
+        ),
         FileState::Error => "Kayıt hatası".to_owned(),
         FileState::ReadOnly => "Salt okunur".to_owned(),
         FileState::Deleted => "Proje silindi".to_owned(),
@@ -316,8 +324,10 @@ pub(crate) struct FileTip<'a> {
     /// This window's last save: its revision and when.
     pub last_saved: Option<(&'a str, i64)>,
     pub now: i64,
-    /// A newer revision on the server, and who saved it.
-    pub newer: Option<(&'a str, &'a str)>,
+    /// A newer revision on the server: who saved it and when, as far as known.
+    pub newer: Option<&'a NewerRevision>,
+    /// The device's zone, for when it was saved.
+    pub zone: &'a Zone,
     pub error: &'a str,
     pub link: LinkState,
     /// The drawing has unsaved changes (kept here as a recovery copy too).
@@ -346,14 +356,8 @@ pub(crate) fn file_tip(t: &FileTip<'_>) -> CellTip {
                 ago(Some(at), t.now)
             )
         }),
-        t.newer.map_or(String::new(), |(revision, by)| {
-            let by = if by.is_empty() {
-                String::new()
-            } else {
-                format!(" ({by})")
-            };
-            format!("Sunucuda daha yeni revizyon var: {revision}{by}; açmak için tıklayın.")
-        }),
+        t.newer
+            .map_or(String::new(), |n| newer_tip(n, t.dirty, t.zone)),
         t.error.to_owned(),
         if link.is_empty() {
             String::new()

@@ -571,22 +571,34 @@ fn cloud_live() {
     r.shot("18-dosya-kaydedildi");
     let (tenant, project) = ids(&r.app);
     web(&server, &["save-file", "mehmet", &tenant, &project]);
-    move_point(&mut r, uid, 4.0);
-    r.send(Message::Run("file.save"));
-    r.until("dosya çakışması", Duration::from_secs(30), |a| {
-        a.cloud.file_conflict.is_some()
+    // The other editor's revision is heard, said once and offered, never
+    // loaded by itself (docs/specs/file-revisions.md).
+    r.until("başkasının revizyonu", Duration::from_secs(30), |a| {
+        a.cloud.file.as_ref().is_some_and(|f| f.newer.is_some())
     });
-    assert_eq!(r.app.dialog, Some(Dialog::FileConflict));
+    let cell = |a: &App| a.save_cell().map(|c| c.view.text).unwrap_or_default();
+    assert_eq!(cell(&r.app), "Yeni revizyon: r3");
+    assert!(
+        said(&r.app)
+            .iter()
+            .any(|t| t.contains("başka bir yerde kaydedildi: revizyon 3 (Mehmet")),
+        "{:?}",
+        said(&r.app)
+    );
+    r.shot("19a-yeni-revizyon");
+    move_point(&mut r, uid, 4.0);
+    assert_eq!(cell(&r.app), "Yeni revizyon: r3 · kaydedilmedi");
+    // Kaydet uploads nothing over it: the question comes at once.
+    r.send(Message::Run("file.save"));
+    assert!(r.app.saving.is_none(), "nothing encoded or uploaded");
+    assert!(r.app.cloud.file_conflict.is_some());
+    assert_eq!(r.app.dialog, Some(Dialog::Revision));
     r.shot("19-dosya-cakismasi");
 
     // 13. The conflict's Son revizyonu aç: the other editor's revision 3, the move dropped.
-    r.cloud(Event::OpenLatest);
-    assert!(
-        matches!(r.app.dialog, Some(Dialog::Unsaved(_))),
-        "{:?}",
-        r.app.dialog
-    );
-    r.send(Message::DialogConfirmed);
+    r.cloud(Event::RevisionAnswer(
+        crate::cloud::revisions::Answer::Latest,
+    ));
     let reopened = |a: &App| {
         a.cloud.opening.is_none()
             && a.cloud.file_conflict.is_none()
@@ -597,9 +609,14 @@ fn cloud_live() {
     // Son revizyonu aç over a new unsaved move: the web's question, then revision 3 again.
     move_point(&mut r, uid, 4.0);
     r.send(Message::Run("cloud.openNewest"));
-    assert_eq!(r.app.dialog, Some(Dialog::OpenNewestUnsaved));
+    assert_eq!(
+        r.app.cloud.question.as_ref().map(|q| q.id),
+        Some(crate::cloud::revisions::QuestionId::Unsaved)
+    );
     r.shot("20-son-revizyon");
-    r.cloud(Event::NewestOpen);
+    r.cloud(Event::RevisionAnswer(
+        crate::cloud::revisions::Answer::Discard,
+    ));
     r.until("son revizyon yeniden", Duration::from_secs(30), reopened);
 
     // 14. Yeniden adlandır: the catalog's project.rename; the drawing takes the name quietly.

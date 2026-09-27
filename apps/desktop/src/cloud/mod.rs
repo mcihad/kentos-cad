@@ -32,6 +32,8 @@
 //! | `live.rs` | a database project's autosave and device draft |
 //! | `follow.rs` | others' changes followed, access, conflicts resolved |
 //! | `file.rs` | a file project's save and its conflict |
+//! | `file_follow.rs` | a file project's events followed: another's revision, its end, a resync; the questions and answers |
+//! | `revisions.rs` | what a file project knows of its revisions and what that means (fixtures/cloud/v1/file-revisions.json) |
 //! | `upload.rs` | “Buluta yükle” |
 //! | `view.rs` | the windows |
 //! | `cells.rs` | the status bar's save and server cells, the account menu |
@@ -62,6 +64,9 @@ mod cells_plan_tests;
 mod cells_tests;
 pub mod copy;
 mod file;
+mod file_follow;
+#[cfg(test)]
+mod file_follow_tests;
 mod follow;
 pub mod forms_plan;
 #[cfg(test)]
@@ -72,6 +77,9 @@ mod live;
 pub mod local_time;
 mod opening;
 pub mod plan;
+pub mod revisions;
+#[cfg(test)]
+mod revisions_tests;
 pub mod share;
 pub mod share_plan;
 #[cfg(test)]
@@ -103,7 +111,7 @@ use iced::futures::channel::mpsc;
 use iced::futures::{SinkExt as _, Stream};
 use kentos_cloud::{ApiFailure, Cloud as Client, DraftStore};
 use kentos_contracts::{
-    Me, MembershipView, ProjectInfo, ProjectPermission, ProjectState, ProjectStorage,
+    EventPage, Me, MembershipView, ProjectInfo, ProjectPermission, ProjectState, ProjectStorage,
 };
 use kentos_domain::Uuid;
 
@@ -298,7 +306,26 @@ pub enum Event {
         id: u64,
         result: Result<kentos_contracts::FileCommitted, ApiFailure>,
     },
-    OpenLatest,
+    /// The open file project's events (file_follow.rs), the newest revision
+    /// asked for, its access, and the project asked in a resync.
+    FileEvents {
+        session: u64,
+        result: Result<EventPage, ApiFailure>,
+    },
+    FileNewest {
+        session: u64,
+        result: Result<kentos_contracts::FileRevisions, ApiFailure>,
+    },
+    FileAccess {
+        session: u64,
+        result: Result<ProjectInfo, ApiFailure>,
+    },
+    FileResync {
+        session: u64,
+        result: Result<ProjectInfo, ApiFailure>,
+    },
+    /// An answer to a question about the file project's revisions (revisions.rs).
+    RevisionAnswer(revisions::Answer),
     /// A save kept on this device went to the server (the connection returned).
     KeptSent {
         session: u64,
@@ -307,7 +334,6 @@ pub enum Event {
     },
     /// While offline: the account asked for, to learn whether the server answers.
     Probed(Result<Me, ApiFailure>),
-    SaveCopy,
     // ── Buluta yükle ────────────────────────────────────────────────────
     UploadTenant(usize),
     UploadName(String),
@@ -339,8 +365,6 @@ pub enum Event {
         id: u64,
         result: Result<kentos_contracts::ProjectCatalogChange, ApiFailure>,
     },
-    /// Son revizyonu aç, answered yes.
-    NewestOpen,
     /// A window's Vazgeç or ×.
     Close,
     /// “Yerel kopya kaydet…” on an ended project's notice: Farklı kaydet.
@@ -369,6 +393,13 @@ pub struct CloudState {
     /// The open database project's autosave, draft and following.
     pub live: Option<Live>,
     pub file_conflict: Option<FileConflict>,
+    /// The open file project followed: its events, a newer revision (file_follow.rs).
+    pub file: Option<file_follow::FileFollow>,
+    /// The question about the file project's revisions on screen (revisions.rs).
+    pub question: Option<revisions::RevisionQuestion>,
+    /// “Yerel dosyaya kaydet” chose Farklı kaydet for this drawing: once
+    /// written, the log says it left the project (its name).
+    pub detaching: Option<(u64, String)>,
     /// Where this device keeps its copies of cloud projects (docs/adr/0043);
     /// none in tests, snapshots and the trace player.
     pub replicas: Option<kentos_cloud::ReplicaStore>,
@@ -396,6 +427,8 @@ pub struct CloudState {
     /// The next open is the open project again after it was unarchived in the
     /// catalog, which stays on screen (catalog_actions.rs).
     pub reopen_keeps_catalog: bool,
+    /// The next open is the open file project's newest revision (opening.rs `reopen_newest`).
+    pub open_newest: bool,
     /// The open project was archived from this window: its end is not announced again.
     pub archived_by_me: bool,
     /// Projeyi paylaş, over the catalog or alone (share.rs).
@@ -427,6 +460,7 @@ impl CloudState {
     /// Whether anything waits on the timers.
     pub fn wants_ticks(&self) -> bool {
         self.live.is_some()
+            || self.file.is_some()
             || self.held.is_some()
             || (self.link == copy::Link::Offline && self.me.is_some())
             || self.catalog.as_ref().is_some_and(|c| {
@@ -558,10 +592,12 @@ impl App {
             | Event::TakeTheirs
             | Event::TheirInfo { .. }
             | Event::ServerTree { .. } => self.follow_event(event),
-            Event::FileSaved { .. }
-            | Event::OpenLatest
-            | Event::SaveCopy
-            | Event::KeptSent { .. } => self.file_event(event),
+            Event::FileSaved { .. } | Event::KeptSent { .. } => self.file_event(event),
+            Event::FileEvents { .. }
+            | Event::FileNewest { .. }
+            | Event::FileAccess { .. }
+            | Event::FileResync { .. }
+            | Event::RevisionAnswer(_) => self.file_follow_event(event),
             Event::UploadTenant(_)
             | Event::UploadName(_)
             | Event::UploadStorage(_)
@@ -573,8 +609,7 @@ impl App {
             | Event::RenameSubmit
             | Event::Renamed { .. }
             | Event::TrashConfirm
-            | Event::Trashed { .. }
-            | Event::NewestOpen => self.actions_event(event),
+            | Event::Trashed { .. } => self.actions_event(event),
             Event::Share(event) => self.share_event(event),
             Event::Form(event) => self.project_form_event(event),
             Event::Left { leave, result } => self.left(leave, result),
@@ -715,6 +750,7 @@ impl App {
             history,
             self.share_tick(now),
             self.live_tick(now),
+            self.file_tick(now),
             self.probe_tick(now),
         ])
     }
@@ -736,6 +772,20 @@ impl App {
             .is_some_and(|h| Some(h.session) != session || !cloud)
         {
             self.cloud.held = None;
+        }
+        // A file project followed: its drawing left, or saved as a local file.
+        let file = self.document.as_ref().is_some_and(|d| {
+            d.cloud_source()
+                .is_some_and(|s| s.storage() == ProjectStorage::File)
+        });
+        if self
+            .cloud
+            .file
+            .as_ref()
+            .is_some_and(|f| Some(f.session) != session || !file)
+        {
+            self.cloud.file = None;
+            self.cloud.question = None;
         }
         let follows = match (&self.cloud.live, &self.document) {
             (Some(live), Some(doc)) => live.session == doc.session && doc.is_database(),
@@ -822,6 +872,8 @@ impl App {
                 }
             }
             Some(Dialog::Unsaved(then)) => self.unsaved_declined(then),
+            // The answer that changes nothing (revisions.rs `cancel`).
+            Some(Dialog::Revision) => self.cloud.question = None,
             Some(Dialog::Exchange) => self.exchange = None,
             Some(Dialog::Project) => self.project = None,
             Some(Dialog::Processing) => self.processing.dialog = None,

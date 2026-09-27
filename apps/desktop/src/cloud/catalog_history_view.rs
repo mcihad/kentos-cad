@@ -26,6 +26,7 @@ use crate::cloud::history::{
     kind_label, point_text, why_not_create, why_not_delete, why_not_download, why_not_take,
 };
 use crate::cloud::local_time::{Zone, when};
+use crate::cloud::revisions;
 use crate::cloud::view::{primary, secondary};
 use crate::cloud::{Event, words};
 
@@ -165,12 +166,25 @@ impl App {
                         "Henüz kaydedilmiş revizyon yok: ilk Kaydet 1. revizyonu yazar.",
                     ));
                 } else {
+                    // The revision the open drawing is based on, when this project is open here.
+                    let open_base = self
+                        .document
+                        .as_ref()
+                        .and_then(|d| d.cloud_source())
+                        .filter(|s| {
+                            s.storage() == ProjectStorage::File && s.project.to_string() == p.id
+                        })
+                        .map(|s| s.revision.as_ref().map_or(0, |r| r.number).to_string());
                     out.push(
                         revs.revisions
                             .iter()
                             .fold(Column::new().spacing(6), |col, r| {
-                                let newest = revs.current.as_ref() == Some(&r.revision);
-                                col.push(revision_row(r, newest, perms, held))
+                                let marks = revisions::revision_marks(
+                                    &r.revision,
+                                    revs.current.as_deref(),
+                                    open_base.as_deref(),
+                                );
+                                col.push(revision_row(r, &marks, perms, held))
                             })
                             .into(),
                     );
@@ -465,7 +479,7 @@ impl App {
 /// A file project's revision (the web's `revisionRow`).
 fn revision_row<'a>(
     r: &'a FileRevision,
-    newest: bool,
+    marks: &[&'static str],
     perms: &[kentos_contracts::ProjectPermission],
     held: bool,
 ) -> Element<'a, Message> {
@@ -478,8 +492,9 @@ fn revision_row<'a>(
         .spacing(6)
         .align_y(Center)
         .push(label::caption(format!("Revizyon {}", r.revision)).font(typography::ui_strong()));
-    if newest {
-        title = title.push(chip("En yeni", Chip::Open));
+    // “En yeni”, “Açık çizim” (revisions.rs `revision_marks`).
+    for mark in marks {
+        title = title.push(chip(*mark, Chip::Open));
     }
     let by = if r.created_by_name.is_empty() {
         "görünmüyor"

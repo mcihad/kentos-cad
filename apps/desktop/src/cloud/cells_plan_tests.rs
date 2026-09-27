@@ -9,6 +9,8 @@ use serde_json::Value;
 use super::cells_plan::{
     self as plan, AccountRow, DatabaseState, FileSave, FileState, LinkState, SaveInput, ServerState,
 };
+use super::local_time::Zone;
+use super::revisions::NewerRevision;
 
 fn fixture() -> Value {
     serde_json::from_str(include_str!("../../../../fixtures/cloud/v1/cells.json"))
@@ -93,6 +95,7 @@ fn input(v: &Value) -> SaveInput {
             progress: v["progress"].as_f64().expect("progress"),
             conflict_actual: v["conflictActual"].as_str().map(str::to_owned),
             newer_revision: v["newerRevision"].as_str().map(str::to_owned),
+            dirty: v["dirty"].as_bool().unwrap_or(false),
         }),
     }
 }
@@ -157,18 +160,18 @@ fn the_tips_are_the_webs() {
                 l["at"].as_i64().expect("at"),
             )
         });
-        let newer = i["newer"].as_object().map(|n| {
-            (
-                n["revision"].as_str().expect("revision"),
-                n["by"].as_str().expect("by"),
-            )
+        let newer = i["newer"].as_object().map(|n| NewerRevision {
+            revision: n["revision"].as_str().expect("revision").to_owned(),
+            by: n["by"].as_str().expect("by").to_owned(),
+            at: n.get("at").and_then(Value::as_str).map(str::to_owned),
         });
         let tip = plan::file_tip(&plan::FileTip {
             place: text(&i["where"]),
             base: text(&i["base"]),
             last_saved: last,
             now: i["now"].as_i64().expect("now"),
-            newer,
+            newer: newer.as_ref(),
+            zone: &Zone::fixed(3 * 3600),
             error: text(&i["error"]),
             link: link(&i["link"]),
             dirty: i["dirty"].as_bool().expect("dirty"),

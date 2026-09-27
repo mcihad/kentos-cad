@@ -21,6 +21,8 @@ pub struct Dialog<'a, Message> {
     hint: Option<Fragment<'a>>,
     /// Gövdenin parçaları; `true`: kayan parça ([`Dialog::scroll`]).
     body: Vec<(Element<'a, Message>, bool)>,
+    /// Düğme çubuğunun solunda, öbürlerinden ayrı duran eylemler.
+    aside: Vec<Element<'a, Message>>,
     actions: Vec<Element<'a, Message>>,
     width: f32,
     max_height: Option<f32>,
@@ -32,6 +34,7 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
             title: title.into_fragment(),
             hint: None,
             body: Vec::new(),
+            aside: Vec::new(),
             actions: Vec::new(),
             width: 500.0,
             max_height: None,
@@ -82,6 +85,13 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
         self
     }
 
+    /// Düğme çubuğunun soluna, öbür eylemlerden ayrı konan eylem (ör. bir
+    /// işi bırakan cevap; web'in `aside`'ı).
+    pub fn aside(mut self, action: impl Into<Element<'a, Message>>) -> Self {
+        self.aside.push(action.into());
+        self
+    }
+
     /// Kutunun genişliği, 12 piksellik gövde metnine göre; yazı boyutuyla
     /// büyür.
     pub fn width(mut self, width: f32) -> Self {
@@ -122,8 +132,14 @@ impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
             };
         }
 
-        if !dialog.actions.is_empty() {
-            let mut actions = row![space::horizontal()].spacing(6);
+        if !dialog.actions.is_empty() || !dialog.aside.is_empty() {
+            let mut actions = iced::widget::Row::new().spacing(6);
+
+            for action in dialog.aside {
+                actions = actions.push(action);
+            }
+
+            actions = actions.push(space::horizontal());
 
             for action in dialog.actions {
                 actions = actions.push(action);

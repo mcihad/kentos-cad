@@ -48,6 +48,10 @@ pub struct Opening {
     /// The catalog stays on screen once it is open (the open project again,
     /// unarchived in the catalog).
     keep_catalog: bool,
+    /// A file project's newest revision, chosen over the drawing on screen:
+    /// never this device's copy instead (it is not the newest), and its
+    /// failure says so (revisions.rs `texts::open_failed`).
+    pub newest: bool,
     _request: Option<Handle>,
 }
 
@@ -163,6 +167,7 @@ impl App {
             was,
             replica,
             keep_catalog: std::mem::take(&mut self.cloud.reopen_keeps_catalog),
+            newest: std::mem::take(&mut self.cloud.open_newest),
             _request: None,
         };
         let task = match self.cloud.signed_in().cloned() {
@@ -193,6 +198,15 @@ impl App {
                 opening._request = Some(handle.abort_on_drop());
                 task
             }
+            // The newest revision is the server's: this device's copy is not it.
+            None if opening.newest => {
+                self.give_back(opening.replica.take());
+                self.newest_failed(
+                    &opening.name,
+                    "bulut oturumu açık değil; önce giriş yapın (Buluta giriş).",
+                );
+                return Task::none();
+            }
             None => match opening.replica.take() {
                 Some(replica) => {
                     opening.offline = true;
@@ -215,6 +229,17 @@ impl App {
         task
     }
 
+    /// The open file project's newest revision, chosen over the drawing on
+    /// screen (file_follow.rs): read from the server, never from this
+    /// device's copy; a failure leaves the drawing as it is.
+    pub(crate) fn reopen_newest(&mut self) -> Task<Message> {
+        self.cloud.open_newest = true;
+        let task = self.reopen();
+        // Nothing opened (no project, or no session): the flag waits for no one.
+        self.cloud.open_newest = false;
+        task
+    }
+
     /// The drawing's own cloud project again (a file project's newest
     /// revision; a database project whose missed events are gone).
     pub(crate) fn reopen(&mut self) -> Task<Message> {
@@ -223,8 +248,17 @@ impl App {
         };
         let (tenant, project) = (source.tenant, source.project);
         self.cloud.open_hint = Some((source.info.name.clone(), source.storage()));
-        self.cloud.file_conflict = None;
+        // A conflict stands until the project is read again (take_opened):
+        // an open stopped or refused leaves everything as it was.
         self.start_cloud_open(tenant, project)
+    }
+
+    /// The newest revision could not be opened: the drawing stays as it is.
+    fn newest_failed(&mut self, name: &str, why: &str) {
+        self.say(
+            kentos_interaction::Level::Error,
+            crate::cloud::revisions::texts::open_failed(name, why),
+        );
     }
 
     fn open_failed(&mut self, name: &str, why: String) {
@@ -274,6 +308,17 @@ impl App {
                         let replica = o.replica.take();
                         let online = self.came_online();
                         return Task::batch([online, reset_task(id, opened, replica)]);
+                    }
+                    // The newest revision: never this device's copy instead.
+                    Err(failure) if o.newest => {
+                        let o = self.cloud.opening.take();
+                        let (name, replica) =
+                            o.map_or((String::new(), None), |o| (o.name, o.replica));
+                        self.give_back(replica);
+                        if failure.status == 0 && failure.transient() {
+                            self.went_offline();
+                        }
+                        self.newest_failed(&name, &failure.message);
                     }
                     // No answer: the project opens from this device's copy, when there is one.
                     Err(failure) if failure.status == 0 && failure.transient() => {
@@ -326,7 +371,11 @@ impl App {
                     Err(failed) => {
                         let (why, replica) = failed.take().unwrap_or_default();
                         self.give_back(replica);
-                        self.open_failed(&o.name, why);
+                        if o.newest {
+                            self.newest_failed(&o.name, &why);
+                        } else {
+                            self.open_failed(&o.name, why);
+                        }
                         Task::none()
                     }
                 };
@@ -386,6 +435,8 @@ impl App {
         let archived = opened.archived();
         let name = opened.info.name.clone();
         let storage = opened.info.storage;
+        // A file project's events are followed from the cursor it was read at (file_follow.rs).
+        let follows = (storage == ProjectStorage::File).then(|| opened.info.clone());
         // A file project's save kept on this device is the drawing: it is this user's work.
         let kept_based_on = kept.as_ref().map(|(_, b)| *b);
         let model = match kept {
@@ -405,6 +456,10 @@ impl App {
         let session = doc.session;
         let task = self.update(Message::Opened(Some(Ok(Box::new(doc)))));
         self.cloud.file_conflict = None;
+        self.cloud.question = None;
+        if let Some(info) = follows {
+            self.follow_file(session, &info);
+        }
         if let Some(note) = note {
             self.warn(note);
         }

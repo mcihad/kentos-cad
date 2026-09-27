@@ -1557,67 +1557,6 @@ fn a_file_project_saves_its_next_revision() {
     assert_eq!(cell_text(&app), "Buluta kaydedildi · r4");
 }
 
-#[test]
-fn a_file_conflict_offers_the_newest_revision_or_a_separate_project() {
-    let mut app = signed_in();
-    file_project(&mut app);
-    edit(&mut app, 1.0);
-    let id = save_file(&mut app);
-    let failure = ApiFailure::new(409, "conflict", "Başka biri daha önce kaydetti.")
-        .with_conflicts(vec![FeatureConflict {
-            id: "@file".into(),
-            reason: ConflictReason::Changed,
-            expected: Some("3".into()),
-            actual: Some("5".into()),
-            current: None,
-        }]);
-    cloud(
-        &mut app,
-        Event::FileSaved {
-            id,
-            result: Err(failure),
-        },
-    );
-    assert_eq!(app.dialog, Some(Dialog::FileConflict));
-    let c = app.cloud.file_conflict.clone().expect("a conflict");
-    assert_eq!((c.server, c.based_on), (5, 3));
-    assert_eq!(cell_text(&app), "Çakışma: r5 kaydedilmiş");
-    assert!(
-        app.document.as_ref().expect("open").dirty(),
-        "nothing was written"
-    );
-
-    // Sunucudaki son revizyonu aç asks first: the changes here are dropped.
-    cloud(&mut app, Event::OpenLatest);
-    assert_eq!(app.dialog, Some(Dialog::Unsaved(Then::Reopen)));
-    assert_eq!(
-        app.unsaved_question(Then::Reopen).confirm,
-        "Değişiklikleri bırak ve aç"
-    );
-    app.close_dialog();
-    assert_eq!(app.dialog, Some(Dialog::FileConflict), "Vazgeç goes back");
-    cloud(&mut app, Event::OpenLatest);
-    let _ = app.update(Message::DialogConfirmed);
-    assert!(
-        app.cloud
-            .opening
-            .as_ref()
-            .is_some_and(|o| o.name == "Ada 101")
-    );
-    cloud(&mut app, Event::OpenCancel);
-
-    // Ayrı proje olarak kaydet: a new file project “… (kopya)” in the same workspace.
-    app.cloud.file_conflict = Some(c);
-    cloud(&mut app, Event::SaveCopy);
-    let u = app.cloud.upload.as_ref().expect("the upload");
-    assert_eq!(
-        (u.name.as_str(), u.storage),
-        ("Ada 101 (kopya)", ProjectStorage::File)
-    );
-    assert_eq!(u.tenants[u.tenant].tenant_id, TENANT);
-    assert!(u.working(), "straight up");
-}
-
 // ── Buluta yükle ────────────────────────────────────────────────────────
 
 #[test]
@@ -1697,7 +1636,8 @@ fn a_refused_upload_names_the_object_and_a_good_one_opens_the_project() {
     assert_eq!(app.selection.len(), 1, "selected in the drawing");
     assert!(!u.working());
 
-    // Tried again unchanged: the same key, so the server finds the same project.
+    // Refused for good, the empty project went to the trash: the next try is
+    // a new upload, which a trashed project must not answer.
     cloud(&mut app, Event::UploadSubmit);
     let (id, again) = app
         .cloud
@@ -1705,7 +1645,30 @@ fn a_refused_upload_names_the_object_and_a_good_one_opens_the_project() {
         .as_ref()
         .and_then(|u| u.request())
         .expect("working");
-    assert_eq!(again, key);
+    assert_ne!(again, key, "a new key after a refusal for good");
+    // No answer: the project stays, and the same key finds it again.
+    cloud(
+        &mut app,
+        Event::UploadEncoded {
+            id,
+            result: Ok(Once::new(vec![1, 2, 3])),
+        },
+    );
+    cloud(
+        &mut app,
+        Event::Uploaded {
+            id,
+            result: Err(ApiFailure::new(0, "network", "Sunucuya ulaşılamadı.")),
+        },
+    );
+    cloud(&mut app, Event::UploadSubmit);
+    let (id, third) = app
+        .cloud
+        .upload
+        .as_ref()
+        .and_then(|u| u.request())
+        .expect("working");
+    assert_eq!(third, again, "the same key after no answer");
     cloud(
         &mut app,
         Event::UploadEncoded {
@@ -2042,7 +2005,11 @@ fn a_kept_save_that_meets_a_newer_revision_keeps_both_until_the_choice() {
             result: Err(clash),
         },
     );
-    assert_eq!(app.dialog, Some(Dialog::FileConflict));
+    assert_eq!(app.dialog, Some(Dialog::Revision));
+    assert_eq!(
+        app.cloud.question.as_ref().map(|q| q.id),
+        Some(crate::cloud::revisions::QuestionId::Conflict)
+    );
     assert!(
         app.cloud.held.as_ref().is_some_and(|h| h.kept_save),
         "never dropped without the choice"
@@ -2415,17 +2382,29 @@ fn the_open_project_goes_to_the_trash_and_the_drawing_stays() {
 /// database project has no such command.
 #[test]
 fn son_revizyonu_ac_asks_first() {
+    use crate::cloud::revisions::{Answer, QuestionId};
     let mut app = signed_in();
     file_project(&mut app);
     assert!(app.cloud_available("cloud.openNewest"));
     let _ = app.run("cloud.openNewest");
-    assert_eq!(app.dialog, Some(Dialog::OpenNewest));
+    assert_eq!(app.dialog, Some(Dialog::Revision));
+    assert_eq!(
+        app.cloud.question.as_ref().map(|q| q.id),
+        Some(QuestionId::Newest)
+    );
     cloud(&mut app, Event::Close);
+    assert!(app.cloud.question.is_none(), "Vazgeç leaves nothing");
     edit(&mut app, 1.0);
     let _ = app.run("cloud.openNewest");
-    assert_eq!(app.dialog, Some(Dialog::OpenNewestUnsaved));
-    cloud(&mut app, Event::NewestOpen);
-    assert!(app.cloud.opening.is_some(), "the newest revision opens");
+    assert_eq!(
+        app.cloud.question.as_ref().map(|q| q.id),
+        Some(QuestionId::Unsaved)
+    );
+    cloud(&mut app, Event::RevisionAnswer(Answer::Discard));
+    assert!(
+        app.cloud.opening.as_ref().is_some_and(|o| o.newest),
+        "the newest revision opens from the server"
+    );
 
     let mut db = signed_in();
     database(&mut db);

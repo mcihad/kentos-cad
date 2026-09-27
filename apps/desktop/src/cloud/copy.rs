@@ -280,8 +280,23 @@ impl App {
         };
         let session = held.session;
         let (tenant, project) = (source.tenant, source.project);
+        // Its commit's event is this window's own, not another's revision.
+        let request = kentos_cloud::saving::request_id();
+        if let Some(f) = self.cloud.file.as_mut().filter(|f| f.session == session) {
+            f.expect(request.clone());
+        }
+        let sending = kentos_cloud::saving::Sending {
+            part: kentos_cloud::saving::PART,
+            progress: None,
+            request,
+        };
+        let Some(held) = self.cloud.held.as_mut() else {
+            return Task::none();
+        };
         let (task, handle) = Task::perform(
-            kentos_cloud::save_revision(&client, tenant, project, bytes, based_on),
+            kentos_cloud::saving::save_revision_sent(
+                &client, tenant, project, bytes, based_on, sending,
+            ),
             move |result| {
                 crate::cloud::msg(Event::KeptSent {
                     session,

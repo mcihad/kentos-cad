@@ -28,7 +28,7 @@ use kentos_ui::widget::{Banner, Dialog as Window, Form, overlay};
 use kentos_ui::{label, style};
 use serde_json::json;
 
-use crate::app::{App, Dialog, Message, Then};
+use crate::app::{App, Dialog, Message};
 use crate::cloud::copy::Link;
 use crate::cloud::view::{primary, secondary};
 use crate::cloud::{Event, forms_plan as forms, words};
@@ -184,27 +184,13 @@ impl App {
         }
     }
 
-    /// `cloud.openNewest` (the web's `offerNewest`): a refused Kaydet's
-    /// question when there is one; over unsaved work the question before the
-    /// drawing is left; else asked plainly.
+    /// `cloud.openNewest` (the web's `offerNewest`, revisions.rs `offer`):
+    /// a line while a Kaydet is on its way or where the project cannot be
+    /// read any more; over unsaved work the conflict's question when a newer
+    /// revision is known, else the unsaved question; over a clean drawing a
+    /// plain question.
     pub(crate) fn offer_newest(&mut self) -> Task<Message> {
-        let Some(doc) = &self.document else {
-            return Task::none();
-        };
-        if doc.cloud_source().is_none() {
-            return Task::none();
-        }
-        if self.cloud.file_conflict.is_some() {
-            self.show_conflicts();
-            return Task::none();
-        }
-        // Over unsaved work the question before it is dropped (the web's 4b393ae):
-        // saving first would only reopen this save.
-        self.dialog = Some(if doc.dirty() {
-            Dialog::OpenNewestUnsaved
-        } else {
-            Dialog::OpenNewest
-        });
+        self.ask_file(crate::cloud::revisions::Via::Newest);
         Task::none()
     }
 
@@ -223,13 +209,6 @@ impl App {
                 self.trash_open_project()
             }
             Event::Trashed { id, result } => self.trashed(id, result),
-            Event::NewestOpen => {
-                // The unsaved changes are dropped on purpose: their recovery copy goes too.
-                if self.dialog.take() == Some(Dialog::OpenNewestUnsaved) {
-                    self.recovery.discard();
-                }
-                self.proceed(Then::Reopen)
-            }
             _ => Task::none(),
         }
     }
@@ -522,41 +501,5 @@ impl App {
             .destructive(),
             cloud(Event::Close),
         )
-    }
-
-    /// Son revizyonu aç (the web's `offerNewest`): asked plainly over a
-    /// clean drawing; over unsaved work, the web's `askUnsaved` without
-    /// “Kaydet ve aç”.
-    pub(crate) fn newest_view(&self, unsaved: bool) -> Element<'_, Message> {
-        let Some(source) = self.document.as_ref().and_then(|d| d.cloud_source()) else {
-            return text("").into();
-        };
-        let base = source.revision.as_ref().map_or(0, |r| r.number);
-        let name = &source.info.name;
-        let question = if unsaved {
-            kentos_ui::widget::Confirm::new(
-                "Kaydedilmemiş değişiklikler",
-                cloud(Event::NewestOpen),
-                cloud(Event::Close),
-            )
-            .message(format!(
-                "“{name}” içinde kaydedilmemiş değişiklikler var. Sunucudaki en yeni revizyon açılırsa bu değişiklikler atılır (açık çizim revizyon {base}). Saklamak için önce Kaydet ile kaydedin."
-            ))
-            .confirm("Kaydetmeden aç")
-            .destructive()
-        } else {
-            kentos_ui::widget::Confirm::new(
-                "Son revizyonu aç",
-                cloud(Event::NewestOpen),
-                cloud(Event::Close),
-            )
-            .message(format!(
-                "“{name}” projesinin sunucudaki en yeni revizyonu açılsın mı? Açık çizim revizyon {base}; kaydedilmemiş değişikliği yok."
-            ))
-            .severity(kentos_ui::widget::Severity::Info)
-            .confirm("Son revizyonu aç")
-            .cancel("Sonra")
-        };
-        overlay::modal(question, cloud(Event::Close))
     }
 }

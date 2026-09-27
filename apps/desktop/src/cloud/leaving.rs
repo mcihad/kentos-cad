@@ -130,7 +130,7 @@ impl App {
                 self.dialog = Some(Dialog::Catalog);
             }
             Then::Reopen if self.cloud.file_conflict.is_some() => {
-                self.dialog = Some(Dialog::FileConflict);
+                self.ask_file(crate::cloud::revisions::Via::Conflict);
             }
             Then::NewProject => self.new_project_declined(),
             Then::OpenRecent => self.opening_recent = None,

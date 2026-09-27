@@ -10,6 +10,7 @@ use kentos_ui::widget::{Banner, Dialog, Form, RadioGroup, overlay, progress};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
+use crate::cloud::revisions::AnswerKind;
 use crate::cloud::{Event, words};
 
 fn cloud(event: Event) -> Message {
@@ -276,31 +277,37 @@ impl App {
         )
     }
 
-    /// The conflict window of a file project's save.
-    pub(crate) fn file_conflict_view(&self) -> Element<'_, Message> {
-        let (Some(c), Some(doc)) = (&self.cloud.file_conflict, &self.document) else {
+    /// A question about the open file project's revisions (revisions.rs,
+    /// the web's FileConflict.ts): what happened, what each answer does, and
+    /// the answers in the bar's order; one that drops work stands apart on
+    /// the left. Esc, × and the backdrop change nothing.
+    pub(crate) fn revision_view(&self) -> Element<'_, Message> {
+        let Some(q) = &self.cloud.question else {
             return text("").into();
         };
-        let name = doc.name();
-        let base = if c.based_on == 0 {
-            "çiziminiz projenin ilk kaydından önceki hâline dayanıyor".to_owned()
-        } else {
-            format!("çiziminiz revizyon {} üzerine kurulu", c.based_on)
-        };
-        overlay::blocking(
-            Dialog::new("Kayıt çakışması")
-                .push(label::body(format!(
-                    "“{name}” projesini siz açtıktan sonra başka biri kaydetti: sunucudaki son revizyon {}, {base}. Hiçbir şeyin üzerine yazılmadı; değişiklikleriniz yalnız bu cihazda.",
-                    c.server
-                )))
-                .push(label::caption(format!(
-                    "“Sunucudaki son revizyonu aç” sizin değişikliklerinizi bırakır (önce sorulur). “Ayrı proje olarak kaydet” çiziminizi aynı çalışma alanında “{name} (kopya)” adıyla yeni bir dosya projesi yapar."
-                )))
-                .action(secondary("Vazgeç", Some(cloud(Event::Close))))
-                .action(secondary("Sunucudaki son revizyonu aç", Some(cloud(Event::OpenLatest))))
-                .action(primary("Ayrı proje olarak kaydet", Some(cloud(Event::SaveCopy))))
-                .width(600.0),
-        )
+        let mut dialog = Dialog::new(q.title).push(label::body(q.message.clone()));
+        if !q.details.is_empty() {
+            let points = q.details.iter().fold(Column::new().spacing(4), |col, d| {
+                col.push(row![label::body("•"), label::body(d.clone()).width(Fill)].spacing(6))
+            });
+            dialog = dialog.push(points);
+        }
+        for a in &q.answers {
+            let answer = button(label::body(a.label))
+                .on_press(cloud(Event::RevisionAnswer(a.value)))
+                .padding([5, 16])
+                .style(match a.kind {
+                    Some(AnswerKind::Primary) => style::button::primary,
+                    Some(AnswerKind::Danger) => style::button::danger_outline,
+                    None => style::button::secondary,
+                });
+            dialog = if a.aside {
+                dialog.aside(answer)
+            } else {
+                dialog.action(answer)
+            };
+        }
+        overlay::modal(dialog.width(600.0), cloud(Event::RevisionAnswer(q.cancel)))
     }
 }
 
@@ -330,4 +337,3 @@ pub(super) fn describe(
         .unwrap_or_default();
     format!("{} · {layer}{label}", words::kind(entity.kind()))
 }
-

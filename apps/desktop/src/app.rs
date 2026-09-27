@@ -97,8 +97,10 @@ pub enum Dialog {
     Upload,
     /// A database project's save conflicts (cloud/follow.rs).
     Conflicts,
-    /// A file project's revision refused: someone saved first (cloud/file.rs).
-    FileConflict,
+    /// A question about the open file project's revisions (cloud/file_follow.rs):
+    /// a refused or known-to-be-refused Kaydet, the newest revision offered
+    /// over unsaved work or a clean drawing; the question is `App::cloud.question`.
+    Revision,
     /// A copy to remove from this device whose draft holds unsent work (cloud/catalog.rs).
     RemoveCopy,
     /// The open cloud project ended for this account (deleted, archived, access taken away).
@@ -129,11 +131,9 @@ pub enum Dialog {
     /// node is `App::removing_layer`.
     RemoveLayer,
     /// The open cloud project's actions (cloud/actions.rs): Yeniden adlandır,
-    /// Çöp kutusuna taşı, Son revizyonu aç over a clean drawing and over unsaved work.
+    /// Çöp kutusuna taşı.
     CloudRename,
     CloudTrash,
-    OpenNewest,
-    OpenNewestUnsaved,
     /// Projeyi paylaş for the open project (cloud/share.rs); over the
     /// catalog the window is the catalog's.
     Share,
@@ -934,6 +934,27 @@ impl App {
             }
             Message::Saved(Some(Ok(written))) => match &mut self.document {
                 Some(doc) if doc.session == written.session => {
+                    // “Yerel dosyaya kaydet” (cloud/file_follow.rs): the work is in the
+                    // file now, so a save of it kept for the project goes, and the
+                    // drawing leaves the project, which stays as it is.
+                    let detached = self
+                        .cloud
+                        .detaching
+                        .take()
+                        .filter(|(session, _)| {
+                            *session == doc.session && doc.cloud_source().is_some()
+                        })
+                        .map(|(_, name)| name);
+                    if detached.is_some()
+                        && let Some(held) = self
+                            .cloud
+                            .held
+                            .as_mut()
+                            .filter(|h| h.session == doc.session && h.kept_save)
+                        && held.replica.clear_save().is_ok()
+                    {
+                        held.kept_save = false;
+                    }
                     doc.saved(written.path.clone(), written.revision);
                     let later = if doc.dirty() {
                         " Kayıt sürerken yapılan değişiklikler kaydedilmedi."
@@ -941,6 +962,10 @@ impl App {
                         ""
                     };
                     self.output(format!("Kaydedildi: {}.{later}", written.path.display()));
+                    if let Some(name) = detached {
+                        self.cloud.file_conflict = None;
+                        self.output(crate::cloud::revisions::texts::detached(&name));
+                    }
                     self.recovery_saved();
                     self.remember_file();
                 }

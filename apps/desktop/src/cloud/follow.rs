@@ -561,8 +561,10 @@ impl App {
 
     /// The notice of an ended project: its words by how it ended.
     pub(crate) fn ended_notice(&self) -> Option<(&'static str, String, String)> {
-        let live = self.cloud.live.as_ref()?;
         let name = self.document.as_ref().map_or("", |d| d.name());
+        let Some(live) = self.cloud.live.as_ref() else {
+            return self.file_ended_notice(name);
+        };
         let unsent = live.sync.pending();
         let kept = if unsent > 0 {
             format!(
@@ -599,10 +601,46 @@ impl App {
         ))
     }
 
+    /// A file project's notice (file_follow.rs): the drawing and its unsaved
+    /// changes stay on screen, and a local file keeps them.
+    fn file_ended_notice(&self, name: &str) -> Option<(&'static str, String, String)> {
+        let ended = self.cloud.file.as_ref()?.ended?;
+        let kept = if self.document.as_ref().is_some_and(|d| d.dirty()) {
+            "Çizim ekranda kalıyor; kaydedilmemiş değişiklikler bu cihazda kurtarma kopyası olarak da saklanıyor."
+        } else {
+            "Çizim ekranda kalıyor."
+        };
+        let (title, message) = match ended {
+            crate::cloud::revisions::Ended::Deleted => (
+                "Proje çöp kutusuna taşındı",
+                format!(
+                    "“{name}” projesi çöp kutusuna taşındı; çizim bundan sonra buluta kaydedilmez."
+                ),
+            ),
+            crate::cloud::revisions::Ended::Archived => (
+                "Proje arşivlendi",
+                format!(
+                    "“{name}” projesi arşivlendi: salt okunurdur, çizim buluta kaydedilmez. Arşivden çıkarılınca yeniden açılabilir."
+                ),
+            ),
+            crate::cloud::revisions::Ended::Revoked => (
+                "Projeye erişiminiz kaldırıldı",
+                format!(
+                    "“{name}” projesine artık erişemiyorsunuz; çizim bundan sonra buluta kaydedilmez."
+                ),
+            ),
+        };
+        Some((
+            title,
+            message,
+            format!("{kept} Saklamak için yerel bir .kcad dosyasına kaydedin."),
+        ))
+    }
+
     /// Opens the conflict window, if there is a conflict to choose on.
     pub(crate) fn show_conflicts(&mut self) {
         if self.cloud.file_conflict.is_some() {
-            self.dialog = Some(Dialog::FileConflict);
+            self.ask_file(crate::cloud::revisions::Via::Conflict);
         } else if self
             .cloud
             .live

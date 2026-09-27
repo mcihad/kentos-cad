@@ -15,6 +15,10 @@ Sonra uygulama menüsü, Klavye kısayolları, KentOS CAD hakkında, durum çubu
 
 Denetim yalnız okur; masaüstünün kodu değişmedi. Masaüstünün resimleri `.run/shots`'tadır.
 
+**Sonradan kapananlar** (güncel liste TODOS.md UX-13'tedir):
+
+- 28 Eylül: 1., 2. madde ve B1–B4 ([ADR 0119](../adr/0119-desktop-file-revisions.md)); reddedilen yüklemeden sonra istek anahtarı.
+
 ## Yöntem
 
 - Her ekranın web kodu okundu. Her davranış (düğme, menü öğesi, tuş, soru, ileti, durum) masaüstünün kodunda arandı ve okunarak doğrulandı.

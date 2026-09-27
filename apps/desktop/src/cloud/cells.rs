@@ -13,7 +13,7 @@
 use iced::widget::text::Wrapping;
 use iced::widget::{Space, container, row};
 use iced::{Background, Border, Center, Color, Element, Theme};
-use kentos_contracts::{CONTRACTS_VERSION, ProjectPermission, ProjectStorage};
+use kentos_contracts::{CONTRACTS_VERSION, ProjectPermission};
 use kentos_ui::widget::Menu;
 use kentos_ui::widget::Tip;
 use kentos_ui::widget::status_bar::Readout;
@@ -25,6 +25,8 @@ use crate::cloud::cells_plan::{
     SaveView, ServerState,
 };
 use crate::cloud::copy::Link;
+use crate::cloud::local_time::Zone;
+use crate::cloud::revisions::{self, RevisionState};
 use crate::saving::Stage;
 
 /// How a cell's words and lamp look (the web's `data-state` colours).
@@ -101,26 +103,7 @@ impl App {
             .as_ref()
             .and_then(|d| d.cloud_source().map(|s| (d, s)))?;
         let place = format!("{} › {}", source.workspace, doc.name());
-        let base = source
-            .revision
-            .as_ref()
-            .map_or_else(|| "0".to_owned(), |r| r.number.to_string());
         let now = crate::cloud::now_ms();
-        let drawing = (doc.session, doc.dirty());
-        // A file project's save that another's revision refused.
-        if let Some(c) = &self.cloud.file_conflict {
-            return Some(self.file_cell(
-                &place,
-                drawing,
-                FileSave {
-                    state: FileState::Conflict,
-                    base,
-                    progress: 0.0,
-                    conflict_actual: Some(c.server.to_string()),
-                    newer_revision: None,
-                },
-            ));
-        }
         if let Some(live) = &self.cloud.live {
             let state = live.sync.state();
             let mut db = database_state(state);
@@ -161,90 +144,62 @@ impl App {
                 lamp,
             });
         }
-        if source.storage() != ProjectStorage::File {
-            return None;
-        }
-        // A file project's Kaydet (docs/adr/0038).
-        let saving = self
+        // A file project (docs/adr/0038, docs/specs/file-revisions.md): its
+        // state is the plan's (revisions.rs `cell_state`).
+        let state = self.file_revisions()?;
+        let cell_state = revisions::cell_state(&state);
+        let progress = match self
             .saving
             .as_ref()
-            .filter(|s| matches!(s.target, crate::saving::Target::Cloud { .. }));
-        // The last save's failure, until the next Kaydet (the web's `error`, `deleted`, `revoked`).
-        let failed = self
+            .filter(|s| s.session == doc.session)
+            .and_then(|s| s.step.as_ref())
+        {
+            #[allow(clippy::cast_precision_loss)]
+            Some(Stage::Uploading { done, total }) if done < total => *done as f64 / *total as f64,
+            Some(Stage::Uploading { .. }) => 1.0,
+            _ => 0.0,
+        };
+        let why = self
             .cloud
             .file_failed
             .as_ref()
-            .filter(|(session, ..)| *session == doc.session && saving.is_none());
-        if let Some((_, state, why)) = failed {
-            let mut cell = self.file_cell(
-                &place,
-                drawing,
-                FileSave {
-                    state: *state,
-                    base: base.clone(),
-                    progress: 0.0,
-                    conflict_actual: None,
-                    newer_revision: None,
-                },
-            );
-            if *state == FileState::Error {
-                cell.tip.description.push(' ');
-                cell.tip.description.push_str(why);
-            }
-            return Some(cell);
-        }
-        let (state, progress) = match saving.and_then(|s| s.step.as_ref()) {
-            Some(Stage::Uploading { done, total }) if done >= total => (FileState::Verifying, 1.0),
-            #[allow(clippy::cast_precision_loss)]
-            Some(Stage::Uploading { done, total }) => {
-                (FileState::Uploading, *done as f64 / *total as f64)
-            }
-            _ if saving.is_some() => (FileState::Encoding, 0.0),
-            _ if source.archived() => (FileState::Archived, 0.0),
-            _ if !source.can_write() => (FileState::ReadOnly, 0.0),
-            _ if doc.dirty() => (FileState::Pending, 0.0),
-            _ => (FileState::Saved, 0.0),
+            .filter(|(session, ..)| *session == doc.session)
+            .map_or("", |(_, _, why)| why.as_str());
+        let save = FileSave {
+            state: cell_state,
+            base: state.base.clone(),
+            progress,
+            conflict_actual: state.conflict.as_ref().map(|c| c.actual.clone()),
+            newer_revision: state.newer.as_ref().map(|n| n.revision.clone()),
+            dirty: state.dirty,
         };
+        let mut cell = self.file_cell(&place, doc.session, &state, save);
+        if cell_state == FileState::Error {
+            cell.tip.description.push(' ');
+            cell.tip.description.push_str(why);
+        }
         // A save kept on this device goes when the connection returns (docs/adr/0043).
         let kept = self
             .cloud
             .held
             .as_ref()
             .is_some_and(|h| h.kept_save && h.session == doc.session);
-        if kept && state == FileState::Saved {
-            let mut cell = self.file_cell(
-                &place,
-                drawing,
-                FileSave {
-                    state,
-                    base,
-                    progress,
-                    conflict_actual: None,
-                    newer_revision: None,
-                },
-            );
+        if kept && cell_state == FileState::Pending && !doc.dirty() {
             cell.view.text = "Kaydedildi (bu cihazda) · gönderilecek".to_owned();
             cell.view.state = Some("offline_pending");
             (cell.shade, cell.lamp) = shade_of("offline_pending");
-            return Some(cell);
         }
-        Some(self.file_cell(
-            &place,
-            drawing,
-            FileSave {
-                state,
-                base,
-                progress,
-                conflict_actual: None,
-                newer_revision: None,
-            },
-        ))
+        Some(cell)
     }
 
-    /// A file project's cell from its Kaydet's state; `drawing`: the open
-    /// drawing's session and whether it has unsaved changes.
-    fn file_cell(&self, place: &str, drawing: (u64, bool), save: FileSave) -> SaveCell {
-        let (session, dirty) = drawing;
+    /// A file project's cell from its Kaydet's state and what is known of its revisions.
+    fn file_cell(
+        &self,
+        place: &str,
+        session: u64,
+        state: &RevisionState,
+        save: FileSave,
+    ) -> SaveCell {
         let last = self
             .cloud
             .file_saved
@@ -252,8 +207,8 @@ impl App {
             .filter(|(s, ..)| *s == session)
             .map(|(_, revision, at)| (revision.as_str(), *at));
         let link = match self.link_state() {
-            // A file project has no live link on the desktop; only its absence is said.
-            LinkState::Online => LinkState::None,
+            // Its events are followed; the tip says whether they come.
+            LinkState::Online if self.cloud.file.is_none() => LinkState::None,
             other => other,
         };
         let tip = plan::file_tip(&plan::FileTip {
@@ -261,10 +216,11 @@ impl App {
             base: &save.base,
             last_saved: last,
             now: crate::cloud::now_ms(),
-            newer: None,
+            newer: state.newer.as_ref(),
+            zone: Zone::system(),
             error: "",
             link,
-            dirty,
+            dirty: state.dirty,
         });
         let input = SaveInput::File(save);
         let view = plan::save_cell_view(&input);

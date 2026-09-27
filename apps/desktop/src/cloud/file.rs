@@ -7,11 +7,12 @@
 //!   (“Kaydedildi (bu cihazda) · gönderilecek”) and goes when the
 //!   connection returns; a save the server does not answer is kept the same
 //!   way. After a save reaches the server the copy holds the new revision.
-//! - When someone else saved meanwhile nothing is written, and a window
-//!   offers the choices: open the server's newest revision (after a
-//!   question: the changes here are dropped), save the drawing as a
-//!   separate file project “… (kopya)”, or leave it for now. A save kept on
-//!   this device is never dropped without that choice.
+//! - When someone else saved meanwhile nothing is written, and a question
+//!   offers the choices (revisions.rs, file_follow.rs): a separate file
+//!   project “… (kopya)”, a local file, the server's newest revision (the
+//!   changes here dropped), or nothing for now. A newer revision already
+//!   known asks the same before anything is written or uploaded. A save
+//!   kept on this device is never dropped without that choice.
 
 use std::sync::Arc;
 
@@ -21,8 +22,9 @@ use iced::futures::stream;
 use kentos_cloud::{ApiFailure, Opened, Revision, Source as Kept, conflicting_revision};
 use kentos_contracts::{FileCommitted, ProjectStorage};
 
-use crate::app::{App, Dialog, Message, Then};
+use crate::app::{App, Message};
 use crate::cloud::cells_plan::FileState;
+use crate::cloud::revisions::{RevisionInput, SaveStep, Via, save_step};
 use crate::cloud::{Event, Once};
 use crate::saving::{self, Stage, Target};
 
@@ -50,27 +52,70 @@ impl App {
             return self.send_now();
         }
         let name = source.info.name.clone();
-        if !source.can_write() {
-            let text = if source.archived() {
-                format!(
-                    "“{name}” arşivlenmiş: salt okunurdur, buluta kaydedilmez. Çizimi saklamak için Farklı kaydet ile yerel bir dosyaya kaydedin."
-                )
-            } else {
-                format!(
-                    "“{name}” projesinde kaydetme yetkiniz yok (feature.write). Çizimi saklamak için Farklı kaydet ile yerel bir dosyaya kaydedin."
-                )
-            };
-            self.warn(text);
+        let Some(state) = self.file_revisions() else {
             return Task::none();
+        };
+        // What Kaydet does first (revisions.rs `save_step`).
+        match save_step(&state) {
+            SaveStep::Ended => {
+                let text = match state.ended {
+                    Some(crate::cloud::revisions::Ended::Deleted) => format!(
+                        "“{name}” bulut projesi silindi; çizim buluta kaydedilemez. Farklı kaydet ile yerel bir dosyaya kaydedin."
+                    ),
+                    Some(crate::cloud::revisions::Ended::Revoked) => format!(
+                        "“{name}” projesine erişiminiz kaldırıldı; çizim buluta kaydedilemez. Farklı kaydet ile yerel bir dosyaya kaydedin."
+                    ),
+                    _ => format!(
+                        "“{name}” arşivlenmiş: salt okunurdur, buluta kaydedilmez. Çizimi saklamak için Farklı kaydet ile yerel bir dosyaya kaydedin."
+                    ),
+                };
+                self.warn(text);
+                return Task::none();
+            }
+            SaveStep::ReadOnly => {
+                self.warn(format!(
+                    "“{name}” projesinde kaydetme yetkiniz yok (feature.write). Çizimi saklamak için Farklı kaydet ile yerel bir dosyaya kaydedin."
+                ));
+                return Task::none();
+            }
+            // The question again: a save now would meet the same revision.
+            SaveStep::Conflict => {
+                self.ask_file(Via::Conflict);
+                return Task::none();
+            }
+            SaveStep::Unchanged => {
+                // The last failure is forgotten.
+                if self
+                    .cloud
+                    .file_failed
+                    .as_ref()
+                    .is_some_and(|(s, st, _)| *s == doc.session && *st == FileState::Error)
+                {
+                    self.cloud.file_failed = None;
+                }
+                self.output(format!(
+                    "“{name}” zaten kaydedilmiş (revizyon {}); kaydedilecek değişiklik yok.",
+                    state.base
+                ));
+                return Task::none();
+            }
+            // A newer revision is known: the server would refuse this one, so
+            // nothing is encoded or uploaded; the user chooses at once.
+            SaveStep::Behind => {
+                let server = state
+                    .newer
+                    .as_ref()
+                    .and_then(|n| n.revision.parse().ok())
+                    .unwrap_or(0);
+                let based_on = state.base.parse().unwrap_or(0);
+                self.file_refused(doc.session, server, based_on);
+                self.ask_file(Via::Conflict);
+                return Task::none();
+            }
+            SaveStep::Save => {}
         }
         if self.cloud.signed_in().is_none() && self.cloud.held.is_none() {
             self.warn("Bulut oturumu açık değil; kaydetmek için önce giriş yapın (Buluta giriş).");
-            return Task::none();
-        }
-        if !doc.dirty() && source.revision.is_some() {
-            self.output(format!(
-                "“{name}” buluta kaydedildi; kaydedilecek değişiklik yok."
-            ));
             return Task::none();
         }
         let target = Target::Cloud {
@@ -121,15 +166,27 @@ impl App {
             let stage = Stage::Uploading { done, total };
             let _ = tell.unbounded_send(Message::Saving(saving::Event::Progress { id, stage }));
         });
-        let save = kentos_cloud::saving::save_revision_watched(
+        // Its commit's event is this window's own, not another's revision.
+        let request = kentos_cloud::saving::request_id();
+        let session = s.session;
+        if let Some(f) = self.cloud.file.as_mut().filter(|f| f.session == session) {
+            f.expect(request.clone());
+        }
+        let save = kentos_cloud::saving::save_revision_sent(
             &client,
             tenant,
             project,
             bytes,
             based_on,
-            kentos_cloud::saving::PART,
-            Some(progress),
+            kentos_cloud::saving::Sending {
+                part: kentos_cloud::saving::PART,
+                progress: Some(progress),
+                request,
+            },
         );
+        let Some(s) = self.saving.as_mut().filter(|s| s.id == id) else {
+            return Task::none();
+        };
         let done = stream::once(async move {
             crate::cloud::msg(Event::FileSaved {
                 id,
@@ -190,18 +247,6 @@ impl App {
                 based_on,
                 result,
             } => return self.kept_sent(session, based_on, result),
-            Event::OpenLatest => {
-                // The changes here are dropped: asked first (leaving.rs).
-                self.dialog = None;
-                return self.leave(Then::Reopen);
-            }
-            Event::SaveCopy => {
-                let Some(c) = self.cloud.file_conflict.clone() else {
-                    return Task::none();
-                };
-                self.dialog = None;
-                return self.save_copy(c);
-            }
             _ => {}
         }
         Task::none()
@@ -265,6 +310,14 @@ impl App {
                 }
                 self.cloud.file_conflict = None;
                 self.cloud.file_failed = None;
+                if same {
+                    // A newer revision known stays only when it is newer than this one.
+                    let dirty = self.document.as_ref().is_some_and(|d| d.dirty());
+                    self.file_step(&RevisionInput::Committed {
+                        revision: committed.revision.clone(),
+                        dirty,
+                    });
+                }
                 self.say(
                     kentos_interaction::Level::Success,
                     format!("“{name}” buluta kaydedildi: revizyon {number}.{later}"),
@@ -278,17 +331,21 @@ impl App {
             }
             Err(failure) => {
                 if let Some(server) = conflicting_revision(&failure) {
-                    self.cloud.file_conflict = Some(FileConflict {
-                        session: s.session,
-                        server,
-                        based_on: *based_on,
-                    });
+                    let (session, based_on, name) = (s.session, *based_on, name.clone());
                     self.warn(format!(
                         "“{name}” kaydedilmedi: siz açtıktan sonra başka biri revizyon {server} olarak kaydetti. Hiçbir şeyin üzerine yazılmadı."
                     ));
                     if same {
-                        self.dialog = Some(Dialog::FileConflict);
+                        self.file_refused(session, server, based_on);
+                        self.ask_file(Via::Conflict);
+                        // The refusal names only the number: who saved it and when are asked.
+                        return self.file_ask_newest();
                     }
+                    self.cloud.file_conflict = Some(FileConflict {
+                        session,
+                        server,
+                        based_on,
+                    });
                 } else {
                     // The save cell says it until the next Kaydet (the web's `error`, `deleted`, `revoked`).
                     let state = if failure.deleted() {
@@ -345,6 +402,11 @@ impl App {
                         sha256: committed.sha256.clone(),
                     });
                 }
+                let dirty = self.document.as_ref().is_some_and(|d| d.dirty());
+                self.file_step(&RevisionInput::Committed {
+                    revision: committed.revision.clone(),
+                    dirty,
+                });
                 self.say(
                     kentos_interaction::Level::Success,
                     format!(
@@ -361,15 +423,12 @@ impl App {
             Err(failure) => {
                 if let Some(server) = conflicting_revision(&failure) {
                     // Both are kept: the server's newest stays, the save here waits for the choice.
-                    self.cloud.file_conflict = Some(FileConflict {
-                        session,
-                        server,
-                        based_on,
-                    });
                     self.warn(format!(
                         "“{name}” için bu cihazda bekleyen kayıt gönderilmedi: arada başka biri revizyon {server} olarak kaydetti. İki iş de duruyor; seçin."
                     ));
-                    self.dialog = Some(Dialog::FileConflict);
+                    self.file_refused(session, server, based_on);
+                    self.ask_file(Via::Conflict);
+                    return self.file_ask_newest();
                 } else if failure.status == 0 && failure.transient() {
                     self.went_offline();
                 } else {
@@ -413,15 +472,10 @@ impl App {
         }
     }
 
-    /// “Ayrı proje olarak kaydet”: the drawing as a new file project “… (kopya)”
+    /// “Ayrı kopya olarak kaydet”: the drawing as a new file project “… (kopya)”
     /// in the same workspace; the upload window shows its progress (upload.rs).
-    fn save_copy(&mut self, conflict: FileConflict) -> Task<Message> {
-        let Some(source) = self
-            .document
-            .as_ref()
-            .filter(|d| d.session == conflict.session)
-            .and_then(|d| d.cloud_source())
-        else {
+    pub(crate) fn save_copy(&mut self) -> Task<Message> {
+        let Some(source) = self.document.as_ref().and_then(|d| d.cloud_source()) else {
             return Task::none();
         };
         let tenant = source.info.tenant_id.clone();

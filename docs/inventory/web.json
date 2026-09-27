@@ -142,8 +142,8 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 56,
-        "partial": 3,
+        "implemented": 57,
+        "partial": 2,
         "pending": 0,
         "none": 0,
         "n/a": 4
@@ -12032,10 +12032,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs (ADR 0058, 0080, 0113, 0114)",
-      "desktopNote": "Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
+      "desktopWhere": "apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs, cloud/file_follow.rs (ADR 0058, 0080, 0113, 0114, 0119)",
+      "desktopNote": "Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
     },
     {
       "id": "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle",

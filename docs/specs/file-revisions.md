@@ -22,6 +22,18 @@ Kesin kurallar ve sözler `fixtures/cloud/v1/file-revisions.json`'dadır. Biçim
 | `ui/statusbar/cellsPlan.ts`, `cloudCells.ts` | Kayıt hücresi ve ipucu. |
 | `ui/cloud/catalogHistory.ts`, `historyPanel.ts` | Geçmiş sekmesinin işaretleri. |
 
+Masaüstünde ([ADR 0119](../adr/0119-desktop-file-revisions.md)) kaynaklar şunlardır:
+
+| Dosya | İçinde |
+|---|---|
+| `apps/desktop/src/cloud/revisions.rs` | Planın karşılığı: bilinenler, `step`, `cell_state`, `save_step`, `read_events`, `newest_of`, `resync_step`, `offer` ve sözler. Saftır; `revisions_tests.rs` bu dosyayı oynatır. |
+| `cloud/file_follow.rs` | Olayların uzun sorguyla izlenmesi, en yeni revizyonun ve erişimin sorulması, yeniden eşitleme, bitiş; soruların sorulması ve cevapların yapılması. |
+| `cloud/file.rs` | Kaydet'in ilk adımı, yükleme, kendi kaydının istek kimliği, ret ve yazılma. |
+| `cloud/cells.rs`, `cloud/cells_plan.rs` | Kayıt hücresi ve ipucu. |
+| `cloud/catalog_history_view.rs` | Geçmiş sekmesinin işaretleri. |
+
+Masaüstünün resimleri `cargo test -p kentos-desktop cloud::file_follow_tests::revision_screens -- --ignored --nocapture` ile `.run/shots/bulut-revizyon-*`'a çekilir.
+
 Resimler `node apps/web/scripts/e2e/cloud-shots.mjs --only revision-…` ile çekilir. Gerçek `kentosd` geçici bir veritabanında çalışır. Her sahne 1440×900 ve 1100×650'de, koyu ve açık temada `apps/web/scripts/e2e/out/shots/cloud/` altına yazılır:
 
 | Sahne | Gösterdiği |
