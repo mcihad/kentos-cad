@@ -182,6 +182,11 @@ pub enum Event {
         session: u64,
         result: Result<ProjectInfo, ApiFailure>,
     },
+    /// The server's tree after it refused ours (docs/adr/0081).
+    ServerTree {
+        session: u64,
+        result: Result<ProjectInfo, ApiFailure>,
+    },
     // ── A file project ──────────────────────────────────────────────────
     FileSaved {
         id: u64,
@@ -388,7 +393,8 @@ impl App {
             | Event::Access { .. }
             | Event::KeepMine
             | Event::TakeTheirs
-            | Event::TheirInfo { .. } => self.follow_event(event),
+            | Event::TheirInfo { .. }
+            | Event::ServerTree { .. } => self.follow_event(event),
             Event::FileSaved { .. }
             | Event::OpenLatest
             | Event::SaveCopy
@@ -548,6 +554,7 @@ impl App {
             (None, _) => return,
         };
         if !follows {
+            self.say_waiting();
             self.cloud.live = None;
             return;
         }

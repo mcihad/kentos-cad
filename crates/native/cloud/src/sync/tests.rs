@@ -575,7 +575,7 @@ fn new_metadata_comes_first_so_objects_on_its_new_layer_come_in() {
         e
     };
     let (a, b) = (Uuid::now_v7(), Uuid::now_v7());
-    // Without the metadata the object's layer is not in the drawing: skipped and named.
+    // Without the metadata the object's layer is not in the drawing: it waits for it, unsaid.
     let incoming = sync.incoming(&page(vec![event(
         10,
         None,
@@ -592,9 +592,9 @@ fn new_metadata_comes_first_so_objects_on_its_new_layer_come_in() {
             },
         )
         .unwrap();
-    assert_eq!(taken.skipped.len(), 1);
-    assert!(taken.skipped[0].contains("yeni"));
+    assert_eq!(taken, Taken::default());
     assert!(o.document.slot_of(a).is_none());
+    assert!(sync.is_waiting() && sync.arrived(&o.document).is_empty());
     // With it, the layer comes first and the object with it; not an edit to send back.
     let incoming = sync.incoming(&page(vec![event(
         11,
@@ -607,13 +607,17 @@ fn new_metadata_comes_first_so_objects_on_its_new_layer_come_in() {
         &mut o.document,
         incoming,
         Remote {
-            records: vec![record(b, "3", on_new)],
+            records: vec![record(b, "3", on_new.clone())],
             info: Some(info),
         },
     )
     .unwrap();
     assert!(o.document.layers().get("yeni").is_some());
     assert!(o.document.slot_of(b).is_some());
+    // The one that waited: its layer came, so it is fetched and taken in.
+    assert_eq!(sync.arrived(&o.document), [a]);
+    take_arrived(&mut sync, &mut o.document, vec![record(a, "2", on_new)]);
+    assert!(o.document.slot_of(a).is_some() && !sync.is_waiting());
     assert_eq!(sync.next(&o.document), None);
     // The next metadata change here goes over the version that came in.
     o.document.rename_layer("yeni", "Yeni katman 2");
@@ -1243,5 +1247,390 @@ fn taking_the_servers_metadata_keeps_a_layer_with_unsent_objects() {
     assert_eq!(
         env.expected_versions.get(PROJECT_KEY).map(String::as_str),
         Some("7")
+    );
+}
+
+// ── Objects waiting for their layer, layers given back (docs/adr/0081) ──
+
+/// Removes the hidden “Çizim” layer here with its objects, unsent (in the
+/// sample “Parsel” is the active layer and “Bina” is locked).
+fn remove_cizim(o: &mut Opened) -> usize {
+    o.document.remove_layer("cizim").unwrap()
+}
+
+/// A point on `layer`, as another editor made it.
+fn on_layer(layer: &str, x: f64) -> Entity {
+    let mut e = point(x);
+    e.base_mut().layer_id = layer.into();
+    e
+}
+
+/// Another editor's commit of `features`, fetched as `records`, taken in.
+fn take_commit(
+    sync: &mut ProjectSync,
+    doc: &mut Document,
+    seq: u64,
+    features: &[(Uuid, FeatureOp)],
+    records: Vec<FeatureRecord>,
+) -> Taken {
+    let incoming = sync.incoming(&page(vec![event(seq, None, features, false)]));
+    sync.take_remote(
+        doc,
+        incoming,
+        Remote {
+            records,
+            info: None,
+        },
+    )
+    .unwrap()
+}
+
+/// The waiting objects whose layer the drawing has now, fetched as
+/// `records` and taken in (the desktop's `fetch_arrived`).
+fn take_arrived(sync: &mut ProjectSync, doc: &mut Document, records: Vec<FeatureRecord>) -> Taken {
+    let incoming = Incoming {
+        fetch: sync.arrived(doc),
+        cursor: sync.cursor().to_owned(),
+        ..Incoming::default()
+    };
+    sync.take_remote(
+        doc,
+        incoming,
+        Remote {
+            records,
+            info: None,
+        },
+    )
+    .unwrap()
+}
+
+/// The server's guard refusing a tree that drops a layer still holding
+/// objects (docs/adr/0072): the metadata's conflict at `expected`, `actual`.
+fn guard(expected: &str, actual: &str) -> ApiFailure {
+    ApiFailure::new(
+        409,
+        "conflict",
+        "“Çizim” katmanında hâlâ nesne var (başka biri eklemiş ya da taşımış olabilir); katman silinmedi. Sunucudaki hâli ile sizinkini karşılaştırın.",
+    )
+    .with_conflicts(vec![FeatureConflict {
+        id: PROJECT_KEY.into(),
+        reason: ConflictReason::Project,
+        expected: Some(expected.into()),
+        actual: Some(actual.into()),
+        current: None,
+    }])
+}
+
+/// Another editor's object on a layer removed here, the removal not sent
+/// yet, waits for it, unsaid; an undo brings the layer and the object comes
+/// at its version (the web's b3c022f).
+#[test]
+fn an_object_on_a_layer_removed_here_waits_and_comes_with_the_layer() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    remove_cizim(&mut o);
+    sync.observe(&o.document);
+    let theirs = Uuid::now_v7();
+    let taken = take_commit(
+        &mut sync,
+        &mut o.document,
+        10,
+        &[(theirs, FeatureOp::Create)],
+        vec![record(theirs, "5", on_layer("cizim", 486610.0))],
+    );
+    assert_eq!(taken, Taken::default(), "nothing taken, nothing said");
+    assert!(o.document.slot_of(theirs).is_none());
+    assert!(sync.is_waiting() && sync.arrived(&o.document).is_empty());
+    o.document.undo().unwrap();
+    assert_eq!(sync.arrived(&o.document), [theirs]);
+    let taken = take_arrived(
+        &mut sync,
+        &mut o.document,
+        vec![record(theirs, "5", on_layer("cizim", 486610.0))],
+    );
+    assert_eq!(taken.changed, 1);
+    assert_eq!(x_of(&o.document, theirs), Some(486610.0));
+    assert_eq!(sync.version_of(theirs), Some("5"));
+    assert!(!sync.is_waiting());
+    assert_eq!(sync.next(&o.document), None, "not this user's to send");
+}
+
+/// A copy another editor moved onto a layer this drawing lacks leaves until
+/// the layer comes; one deleted meanwhile waits no more, and nothing is
+/// left to say when the project is left.
+#[test]
+fn a_copy_moved_onto_a_missing_layer_leaves_until_the_layer_comes() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let a = o.document.add(on_layer("parsel", 486620.0)).unwrap();
+    let b = o.document.add(on_layer("parsel", 486630.0)).unwrap();
+    let (moved, gone) = (o.document.uid(a).unwrap(), o.document.uid(b).unwrap());
+    let env = sync.next(&o.document).unwrap();
+    sync.answered(&o.document, &committed(&env, 2));
+    remove_cizim(&mut o);
+    sync.observe(&o.document);
+    let taken = take_commit(
+        &mut sync,
+        &mut o.document,
+        10,
+        &[(moved, FeatureOp::Update), (gone, FeatureOp::Update)],
+        vec![
+            record(moved, "3", on_layer("cizim", 486620.0)),
+            record(gone, "3", on_layer("cizim", 486630.0)),
+        ],
+    );
+    assert_eq!(taken.changed, 2, "the copies here leave");
+    assert!(o.document.slot_of(moved).is_none() && o.document.slot_of(gone).is_none());
+    take_commit(
+        &mut sync,
+        &mut o.document,
+        11,
+        &[(gone, FeatureOp::Delete)],
+        vec![],
+    );
+    o.document.undo().unwrap();
+    assert_eq!(sync.arrived(&o.document), [moved]);
+    take_arrived(
+        &mut sync,
+        &mut o.document,
+        vec![record(moved, "3", on_layer("cizim", 486620.0))],
+    );
+    let slot = o.document.slot_of(moved).unwrap();
+    assert_eq!(o.document.get(slot).unwrap().base().layer_id, "cizim");
+    assert!(o.document.slot_of(gone).is_none());
+    assert!(sync.waiting_texts().is_empty());
+    assert_eq!(sync.next(&o.document), None);
+}
+
+/// Objects still waiting when the project is left are said once per layer,
+/// by the name the server's tree gives it, with their count.
+#[test]
+fn objects_still_waiting_are_said_by_layer() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    remove_cizim(&mut o);
+    sync.observe(&o.document);
+    let (x, y) = (Uuid::now_v7(), Uuid::now_v7());
+    take_commit(
+        &mut sync,
+        &mut o.document,
+        10,
+        &[(x, FeatureOp::Create), (y, FeatureOp::Create)],
+        vec![
+            record(x, "5", on_layer("cizim", 1.0)),
+            record(y, "5", on_layer("cizim", 2.0)),
+        ],
+    );
+    assert_eq!(
+        sync.waiting_texts(),
+        [
+            "“Çizim” katmanı bu çizimde olmadığı için başka birinin 2 nesnesi burada gösterilmedi; proje yeniden açılınca görünür."
+        ]
+    );
+}
+
+/// The server's guard refused our tree without “Çizim”: someone drew on it
+/// before the removal went (the web's 36d87de). Once the missed events are
+/// in, the layer comes back from the server's tree, said once; the guard
+/// alone refused, so its conflict ends, our deletions go and theirs comes.
+#[test]
+fn the_guard_refusing_our_removal_gives_the_layer_back_and_our_deletions_go() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let tree = o.document.layers().nodes().to_vec();
+    let removed = remove_cizim(&mut o);
+    let env = sync.next(&o.document).unwrap();
+    assert!(input(&env).project.is_some_and(|p| p.layers.is_some()));
+    assert_eq!(sync.failed(&guard("4", "4")), After::Stop);
+    assert!(sync.may_give_back(&o.document));
+    let theirs = Uuid::now_v7();
+    take_commit(
+        &mut sync,
+        &mut o.document,
+        10,
+        &[(theirs, FeatureOp::Create)],
+        vec![record(theirs, "5", on_layer("cizim", 486610.0))],
+    );
+    let given = sync.give_back(&mut o.document, &o.info).unwrap();
+    assert_eq!(
+        given,
+        GivenBack {
+            names: vec!["Çizim".into()],
+            guard_only: true,
+        }
+    );
+    assert_eq!(
+        given_back_text(&given.names[0]),
+        "“Çizim” katmanında başkasının nesnesi olduğu için katman silinmedi; sizin nesneleriniz silindi."
+    );
+    assert!(sync.conflicts().is_empty());
+    assert_eq!(sync.state(), SaveState::Pending);
+    assert_eq!(
+        o.document.layers().nodes(),
+        tree.as_slice(),
+        "the server's tree again"
+    );
+    // Our deletions go, with no tree left to send.
+    let env = sync.next(&o.document).unwrap();
+    let c = input(&env);
+    assert!(c.project.is_none());
+    assert_eq!(c.features.len(), removed);
+    assert!(
+        c.features
+            .iter()
+            .all(|f| matches!(f, FeatureChange::Delete { .. }))
+    );
+    // And theirs comes with the layer.
+    take_arrived(
+        &mut sync,
+        &mut o.document,
+        vec![record(theirs, "5", on_layer("cizim", 486610.0))],
+    );
+    assert_eq!(x_of(&o.document, theirs), Some(486610.0));
+    assert!(!sync.is_waiting());
+}
+
+/// Given back, the rest of our tree stays ours: a rename sent with the
+/// removal goes again, with the layer.
+#[test]
+fn a_layer_given_back_leaves_the_rest_of_our_tree_ours() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    o.document.rename_layer("parsel", "Parseller");
+    remove_cizim(&mut o);
+    sync.next(&o.document).unwrap();
+    sync.failed(&guard("4", "4"));
+    let theirs = Uuid::now_v7();
+    take_commit(
+        &mut sync,
+        &mut o.document,
+        10,
+        &[(theirs, FeatureOp::Create)],
+        vec![record(theirs, "5", on_layer("cizim", 1.0))],
+    );
+    assert!(sync.give_back(&mut o.document, &o.info).unwrap().guard_only);
+    let env = sync.next(&o.document).unwrap();
+    let layers = input(&env)
+        .project
+        .and_then(|p| p.layers)
+        .expect("the tree goes");
+    assert!(remote::is_layer(&layers, "cizim"));
+    let parsel = layers
+        .iter()
+        .flat_map(|n| n.children.iter())
+        .find(|n| n.id == "parsel")
+        .unwrap();
+    assert_eq!(parsel.name, "Parseller");
+    assert_eq!(
+        env.expected_versions.get(PROJECT_KEY).map(String::as_str),
+        Some("4")
+    );
+}
+
+/// When someone else changed the metadata too, the conflict stays for the
+/// user, the layer already given back; keeping mine goes over their version.
+#[test]
+fn with_their_metadata_changed_too_the_conflict_stays_with_the_layer_back() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let removed = remove_cizim(&mut o);
+    sync.next(&o.document).unwrap();
+    assert_eq!(sync.failed(&guard("4", "5")), After::Stop);
+    let theirs = Uuid::now_v7();
+    take_commit(
+        &mut sync,
+        &mut o.document,
+        10,
+        &[(theirs, FeatureOp::Create)],
+        vec![record(theirs, "5", on_layer("cizim", 1.0))],
+    );
+    let mut info = o.info.clone();
+    info.name = "Ada 102".into();
+    info.meta_version = "5".into();
+    let given = sync.give_back(&mut o.document, &info).unwrap();
+    assert_eq!(
+        given,
+        GivenBack {
+            names: vec!["Çizim".into()],
+            guard_only: false,
+        }
+    );
+    let open: Vec<&str> = sync.conflicts().iter().map(|c| c.id.as_str()).collect();
+    assert_eq!(open, [PROJECT_KEY]);
+    assert_eq!(sync.state(), SaveState::Conflict);
+    assert!(o.document.layers().get("cizim").is_some());
+    sync.keep_mine();
+    let env = sync.next(&o.document).unwrap();
+    let c = input(&env);
+    assert!(c.project.is_none(), "our tree is the server's again");
+    assert_eq!(c.features.len(), removed);
+}
+
+/// Without a refusal of the metadata nothing is given back, and a layer
+/// that held only our objects goes as it is.
+#[test]
+fn without_a_refused_tree_nothing_is_given_back() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    remove_cizim(&mut o);
+    sync.observe(&o.document);
+    assert!(!sync.may_give_back(&o.document));
+    assert_eq!(
+        sync.give_back(&mut o.document, &o.info).unwrap(),
+        GivenBack::default()
+    );
+    assert!(o.document.layers().get("cizim").is_none());
+    // The deletions and the tree without the layer go together.
+    let env = sync.next(&o.document).unwrap();
+    let layers = input(&env)
+        .project
+        .and_then(|p| p.layers)
+        .expect("the tree goes");
+    assert!(!remote::is_layer(&layers, "cizim"));
+    sync.answered(&o.document, &committed(&env, 2));
+    assert!(sync.all_sent());
+}
+
+/// A device draft whose tree drops a layer someone drew on since it was
+/// written: the layer stays, said once, and the draft's deletions go (the
+/// web's `restoreDraft`, 36d87de).
+#[test]
+fn a_draft_dropping_a_layer_someone_drew_on_since_keeps_it() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let removed = remove_cizim(&mut o);
+    let draft = sync.draft(&o.document, "ayse").unwrap();
+    assert!(
+        draft
+            .meta
+            .as_ref()
+            .is_some_and(|m| m.patch.layers.is_some())
+    );
+    // Before this device comes back, someone draws on the layer.
+    let mut again = reopened(&o);
+    let slot = again.document.add(on_layer("cizim", 486610.0)).unwrap();
+    let theirs = again.document.uid(slot).unwrap();
+    match &mut again.source {
+        Source::Database { versions } => versions.push((theirs, "5".into())),
+        other => panic!("{other:?}"),
+    }
+    let mut sync = ProjectSync::new(&again).unwrap();
+    let restored = sync.restore(&mut again.document, draft).unwrap();
+    assert_eq!(restored.given_back, ["Çizim"]);
+    assert!(again.document.layers().get("cizim").is_some());
+    assert_eq!(x_of(&again.document, theirs), Some(486610.0));
+    assert_eq!(
+        again.document.by_layer("cizim").count(),
+        1,
+        "ours deleted, theirs kept"
+    );
+    let env = sync.next(&again.document).unwrap();
+    let c = input(&env);
+    assert!(c.project.is_none(), "the tree is the server's");
+    assert_eq!(c.features.len(), removed);
+    assert!(
+        c.features
+            .iter()
+            .all(|f| matches!(f, FeatureChange::Delete { .. }))
     );
 }

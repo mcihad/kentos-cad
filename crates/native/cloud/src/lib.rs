@@ -45,5 +45,5 @@ pub use saving::{
 };
 pub use sync::{
     After, BaseMeta, BaseObject, BaseSnapshot, BaseStep, Conflict, Draft, DraftChange, DraftMeta,
-    Incoming, ProjectSync, Remote, Restored, SaveState, Taken,
+    GivenBack, Incoming, ProjectSync, Remote, Restored, SaveState, Taken, given_back_text,
 };

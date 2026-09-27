@@ -1080,6 +1080,214 @@ fn others_changes_are_waited_for_and_asked_for_again_at_once() {
     assert_eq!(app.link_cell().0, "Çevrimdışı");
 }
 
+/// A point of the sample on the hidden “Çizim” layer at `x`, as another editor made it.
+fn on_cizim(x: f64) -> Entity {
+    let mut e = server_drawing().get(Slot(1)).expect("a point").clone();
+    assert_eq!(e.base().layer_id, "cizim");
+    if let Entity::Point(PointEntity { p, .. }) = &mut e {
+        p.x = x;
+    }
+    e
+}
+
+/// What the server had of `ids` when asked, all on “Çizim”, handed over.
+fn fetched(app: &mut App, ids: &[Uuid], cursor: &str) {
+    let session = session(app);
+    cloud(
+        app,
+        Event::Fetched {
+            session,
+            incoming: kentos_cloud::Incoming {
+                fetch: ids.to_vec(),
+                cursor: cursor.into(),
+                ..Default::default()
+            },
+            full: false,
+            result: Ok(kentos_cloud::Remote {
+                records: ids
+                    .iter()
+                    .map(|id| FeatureRecord {
+                        id: id.to_string(),
+                        version: "5".into(),
+                        entity: on_cizim(486610.0),
+                    })
+                    .collect(),
+                info: None,
+            }),
+        },
+    );
+}
+
+/// Another editor's object on a layer removed here waits for it, unsaid;
+/// when an undo brings the layer back the next tick fetches it; one still
+/// waiting when the project is left is said, by layer (docs/adr/0081).
+#[test]
+fn others_objects_wait_for_their_layer_and_come_when_it_does() {
+    let mut app = signed_in();
+    database(&mut app);
+    let removed = |app: &mut App| {
+        let doc = app.document.as_mut().expect("open");
+        doc.model.remove_layer("cizim").expect("removed");
+        app.cloud_after(Instant::now());
+    };
+    removed(&mut app);
+    let theirs = Uuid::now_v7();
+    let before = said(&app).len();
+    fetched(&mut app, &[theirs], "10");
+    assert!(
+        app.document
+            .as_ref()
+            .expect("open")
+            .model
+            .slot_of(theirs)
+            .is_none()
+    );
+    assert_eq!(said(&app).len(), before, "unsaid while it waits");
+    let live = app.cloud.live.as_ref().expect("live");
+    assert!(live.polling.is_some() && live.long_poll, "the next wait");
+
+    app.document
+        .as_mut()
+        .expect("open")
+        .model
+        .undo()
+        .expect("undone");
+    app.cloud_after(Instant::now());
+    let _ = app.cloud_tick(Instant::now());
+    let live = app.cloud.live.as_ref().expect("live");
+    assert!(
+        live.polling.is_some() && !live.long_poll,
+        "a fetch in the wait's place"
+    );
+    fetched(&mut app, &[theirs], "10");
+    let doc = app.document.as_ref().expect("open");
+    let slot = doc.model.slot_of(theirs).expect("it came with its layer");
+    assert_eq!(doc.model.get(slot).expect("there").base().layer_id, "cizim");
+
+    removed(&mut app);
+    fetched(&mut app, &[Uuid::now_v7()], "11");
+    app.close_cloud_project();
+    assert_eq!(
+        last_said(&app),
+        "“Çizim” katmanı bu çizimde olmadığı için başka birinin 1 nesnesi burada gösterilmedi; proje yeniden açılınca görünür."
+    );
+}
+
+/// The server's guard refuses our tree without “Çizim”: someone drew on it
+/// meanwhile. The missed events are asked for at once, then the server's
+/// tree; the layer comes back, said once, no conflict is said, and our
+/// deletions go at once; their object comes with the layer (docs/adr/0081).
+#[test]
+fn a_refused_tree_gives_back_the_layer_someone_drew_on() {
+    let mut app = signed_in();
+    database(&mut app);
+    let removed = {
+        let doc = app.document.as_mut().expect("open");
+        doc.model.remove_layer("cizim").expect("removed")
+    };
+    app.cloud_after(Instant::now());
+    let _ = app.run("file.save");
+    assert!(
+        app.cloud
+            .live
+            .as_ref()
+            .and_then(|l| l.sent.as_ref())
+            .is_some()
+    );
+    let guard = ApiFailure::new(
+        409,
+        "conflict",
+        "“Çizim” katmanında hâlâ nesne var (başka biri eklemiş ya da taşımış olabilir); katman silinmedi. Sunucudaki hâli ile sizinkini karşılaştırın.",
+    )
+    .with_conflicts(vec![FeatureConflict {
+        id: "@project".into(),
+        reason: ConflictReason::Project,
+        expected: Some("4".into()),
+        actual: Some("4".into()),
+        current: None,
+    }]);
+    commit(&mut app, Err(guard));
+    assert_eq!(state(&app), SaveState::Conflict);
+    let live = app.cloud.live.as_ref().expect("live");
+    assert!(
+        live.polling.is_some() && !live.long_poll,
+        "the missed events at once"
+    );
+
+    let theirs = Uuid::now_v7();
+    events(
+        &mut app,
+        Ok(EventPage {
+            events: vec![event(
+                "10",
+                "web-başkası",
+                vec![EventFeature {
+                    id: theirs.to_string(),
+                    op: FeatureOp::Create,
+                    version: Some("5".into()),
+                }],
+            )],
+            next: "10".into(),
+        }),
+    );
+    fetched(&mut app, &[theirs], "10");
+    assert!(
+        app.document
+            .as_ref()
+            .expect("open")
+            .model
+            .slot_of(theirs)
+            .is_none()
+    );
+    let session = session(&app);
+    cloud(
+        &mut app,
+        Event::ServerTree {
+            session,
+            result: Ok(info(ProjectStorage::Database, true, ProjectState::Active)),
+        },
+    );
+    let given: Vec<String> = said(&app)
+        .into_iter()
+        .filter(|t| t.contains("başkasının nesnesi"))
+        .collect();
+    assert_eq!(
+        given,
+        [
+            "“Çizim” katmanında başkasının nesnesi olduğu için katman silinmedi; sizin nesneleriniz silindi."
+        ]
+    );
+    assert!(!said(&app).iter().any(|t| t.starts_with("Kayıt çakışması")));
+    assert!(
+        app.document
+            .as_ref()
+            .expect("open")
+            .model
+            .layers()
+            .get("cizim")
+            .is_some()
+    );
+    let live = app.cloud.live.as_ref().expect("live");
+    assert!(live.sync.conflicts().is_empty());
+    let sent = live.sent.clone().expect("our deletions go at once");
+    let input: ProjectChanges = serde_json::from_value(sent.input).expect("its input");
+    assert!(input.project.is_none(), "the tree is the server's again");
+    assert_eq!(input.features.len(), removed);
+    assert!(
+        live.polling.is_some() && !live.long_poll,
+        "their object is fetched"
+    );
+    fetched(&mut app, &[theirs], "10");
+    assert!(
+        app.document
+            .as_ref()
+            .expect("open")
+            .model
+            .slot_of(theirs)
+            .is_some()
+    );
+}
+
 #[test]
 fn a_cursor_the_server_no_longer_continues_opens_the_project_again() {
     let mut app = signed_in();
