@@ -85,4 +85,67 @@ describe('catalog words and rules (fixtures/cloud/v1/catalog.json)', () => {
   it('writes the actions’ lines', () => {
     for (const l of F.lines) expect((CATALOG_LINES[l.line] as (...a: (string | null)[]) => string)(...l.args), l.line).toBe(l.text);
   });
+
+  // The desktop reads the file's projects into the contract's own types, strictly: a value the contract does not
+  // have ("via": "share") must fail here too, not only there.
+  it('holds every project of the file, the base and each case’s over it, to the generated contract', () => {
+    const projects: [string, ProjectSummary][] = [
+      ['project', F.project],
+      ...F.details.map((c): [string, ProjectSummary] => [`details: ${c.id}`, project(c.project)]),
+      ...F.primary.flatMap((c): [string, ProjectSummary][] => (c.project ? [[`primary: ${c.id}`, project(c.project)]] : [])),
+      ...F.rows.map((c): [string, ProjectSummary] => [`rows: ${c.id}`, project(c.project)]),
+    ];
+    const summary = fieldsOf('ProjectSummary');
+    const access = fieldsOf('ProjectAccessView');
+    const allowed = (type: string) => new Set(membersOf(type));
+    const enums: [string, (p: ProjectSummary) => unknown, Set<string>][] = [
+      ['tenantKind', (p) => p.tenantKind, allowed('TenantKind')],
+      ['projectType', (p) => p.projectType, allowed('ProjectType')],
+      ['state', (p) => p.state, allowed('ProjectState')],
+      ['storage', (p) => p.storage, allowed('ProjectStorage')],
+      ['areaUnit', (p) => p.areaUnit, allowed('AreaUnit')],
+      ['access.role', (p) => p.access.role, allowed('ProjectRole')],
+      ['access.via', (p) => p.access.via, allowed('AccessSource')],
+    ];
+    const permissions = allowed('ProjectPermission');
+    for (const [where, p] of projects) {
+      const keys = (o: object, of: Map<string, boolean>, what: string) => {
+        for (const k of Object.keys(o)) expect(of.has(k), `${where}: ${what} has no field “${k}”`).toBe(true);
+        for (const [k, optional] of of) if (!optional) expect(k in o, `${where}: ${what} needs “${k}”`).toBe(true);
+      };
+      keys(p, summary, 'ProjectSummary');
+      keys(p.access, access, 'ProjectAccessView');
+      for (const [field, get, values] of enums) expect(values.has(get(p) as string), `${where}: ${field} “${String(get(p))}” is not in the contract (${[...values].join(', ')})`).toBe(true);
+      for (const x of p.access.permissions) expect(permissions.has(x), `${where}: permission “${x}”`).toBe(true);
+    }
+  });
 });
+
+// The contract as ts-rs writes it from the Rust types (crates/shared/contracts): read as text, so the values
+// allowed here are the Rust ones, not a copy.
+const CONTRACT = import.meta.glob<string>('../../contracts/generated/{AccessSource,AreaUnit,ProjectAccessView,ProjectPermission,ProjectRole,ProjectState,ProjectStorage,ProjectSummary,ProjectType,TenantKind}.ts', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
+const contractText = (type: string): string => {
+  const text = CONTRACT[`../../contracts/generated/${type}.ts`];
+  if (text === undefined) throw new Error(`contracts/generated/${type}.ts okunamadı`);
+  // Doc comments carry words, not fields.
+  return text.replace(/\/\*\*[\s\S]*?\*\//g, '');
+};
+/** A string union's members: `export type X = "a" | "b";`. */
+function membersOf(type: string): string[] {
+  const body = /export type \w+ = ([^;]+);/.exec(contractText(type))?.[1] ?? '';
+  const out = [...body.matchAll(/"([^"]*)"/g)].map((m) => m[1]);
+  if (!out.length) throw new Error(`${type} bir metin birleşimi değil`);
+  return out;
+}
+/** An object type's fields, name → optional: `export type X = { a: …, b?: … };`. */
+function fieldsOf(type: string): Map<string, boolean> {
+  const text = contractText(type);
+  const body = text.slice(text.indexOf('= {') + 3, text.lastIndexOf('}'));
+  const out = new Map([...body.matchAll(/(?:^|[,{\s])(\w+)(\?)?\s*:/g)].map((m) => [m[1], m[2] === '?']));
+  if (!out.size) throw new Error(`${type} bir nesne türü değil`);
+  return out;
+}
