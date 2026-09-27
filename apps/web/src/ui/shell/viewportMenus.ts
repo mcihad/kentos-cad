@@ -1,10 +1,14 @@
 import { commandItem, resolveMenu } from '../../app/menus';
 import type { AppContext } from '../../app/context';
+import type { EditOperation } from '../../contracts/generated/EditOperation';
+import type { EntityGeometry as EditGeometry } from '../../contracts/generated/EntityGeometry';
 import type { Disposable } from '../../core/disposable';
-import type { Entity, EntityGeometry, PolylineEntity } from '../../model/entities';
+import type { EntityGeometry, PolylineEntity } from '../../model/entities';
 import { bulgeAt, bulgeRingArea, isArcBulge, segmentMid } from '../../model/geom/bulge';
 import { holeGrip, midGripSegment } from '../../model/ops/grips';
 import { insertVertex, removeVertex } from '../../model/ops/vertex';
+import { EDIT_LABEL, geometryOf } from '../../product/entitiesEdit';
+import { uidOf, writeEdit } from '../../tools/editCommand';
 import { SNAP_LABEL, type SnapKind } from '../../viewport/picking';
 import type { Vec2 } from '../../model/geometry';
 import { canCalcPoint } from '../../tools/pointCalc';
@@ -110,15 +114,17 @@ function gripItems(ctx: AppContext, screen: Vec2): MenuItem[] {
   // Hole vertices only move by dragging; editing a hole's shape needs Patlat.
   if (!hit || !e || (e.kind !== 'polyline' && e.kind !== 'polygon') || holeGrip(e, hit.index)) return [];
   const seg = midGripSegment(e, hit.index);
-  const apply = (label: string, r: { geometry: EntityGeometry } | { error: string }) => {
+  // Through the product command cad.entities.edit, the step named after the operation. The object's geometry
+  // is kept but for what the edit gives (a hole stays); its bulges only when the edit gives them.
+  const apply = (operation: EditOperation, r: { geometry: EntityGeometry } | { error: string }) => {
     if ('error' in r) return ctx.log.warn(r.error);
-    ctx.doc.transact(label, () => ctx.doc.update(e.id, { bulges: undefined, ...r.geometry } as Partial<Entity>));
-    ctx.log.success(`${label}: tamam.`);
+    const geometry = { ...geometryOf(e as unknown as EditGeometry), bulges: undefined, ...r.geometry } as unknown as EditGeometry;
+    if (writeEdit(ctx, operation, [{ kind: 'update', uid: uidOf(ctx, e), geometry }])) ctx.log.success(`${EDIT_LABEL[operation]}: tamam.`);
   };
   if (seg === null) {
     return [
       { kind: 'header', label: `Köşe ${hit.index + 1}` },
-      { label: 'Köşeyi sil', icon: 'erase', run: () => apply('Köşeyi sil', removeVertex(e, hit.index)) },
+      { label: 'Köşeyi sil', icon: 'erase', run: () => apply('vertexRemove', removeVertex(e, hit.index)) },
       { kind: 'separator' },
     ];
   }
@@ -128,10 +134,10 @@ function gripItems(ctx: AppContext, screen: Vec2): MenuItem[] {
   const arc = isArcBulge(bulgeAt(e.bulges, seg));
   return [
     { kind: 'header', label: `Kenar ${seg + 1}` },
-    { label: 'Ortasına köşe ekle', icon: 'vertex', run: () => apply('Köşe ekle', insertVertex(e, seg, segmentMid(a, b, bulgeAt(e.bulges, seg)))) },
+    { label: 'Ortasına köşe ekle', icon: 'vertex', run: () => apply('vertexAdd', insertVertex(e, seg, segmentMid(a, b, bulgeAt(e.bulges, seg)))) },
     arc
-      ? { label: 'Düz kenar yap', icon: 'line', run: () => apply('Düz kenar yap', withBulge(e, seg, 0)) }
-      : { label: 'Yaya dönüştür', icon: 'arc', run: () => apply('Yaya dönüştür', withBulge(e, seg, outwardBulge(e))) },
+      ? { label: 'Düz kenar yap', icon: 'line', run: () => apply('straightEdge', withBulge(e, seg, 0)) }
+      : { label: 'Yaya dönüştür', icon: 'arc', run: () => apply('arcEdge', withBulge(e, seg, outwardBulge(e))) },
     { kind: 'separator' },
   ];
 }

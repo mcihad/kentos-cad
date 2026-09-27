@@ -428,9 +428,11 @@ impl App {
             }
         }
         let link = self.heard(heard.as_ref());
+        // A new name or a trash waiting for everything to go (actions.rs).
+        let settle = self.settling_step(!answered);
         if ended {
             // Said once; the draft keeps what is left (follow.rs).
-            return Task::batch([link, self.ended()]);
+            return Task::batch([link, settle, self.ended()]);
         }
         // After an answer the server's side goes to the copy first; then, after
         // every answer or failure, the draft says what is left (docs/adr/0043).
@@ -439,7 +441,7 @@ impl App {
         } else {
             self.write_draft(false)
         };
-        Task::batch([link, next])
+        Task::batch([link, settle, next])
     }
 }
 

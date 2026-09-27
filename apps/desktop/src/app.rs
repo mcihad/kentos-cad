@@ -107,6 +107,12 @@ pub enum Dialog {
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
+    /// The open cloud project's actions (cloud/actions.rs): Yeniden adlandır,
+    /// Çöp kutusuna taşı, Son revizyonu aç over a clean drawing and over unsaved work.
+    CloudRename,
+    CloudTrash,
+    OpenNewest,
+    OpenNewestUnsaved,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -122,8 +128,8 @@ pub enum Then {
         tenant: kentos_domain::Uuid,
         project: kentos_domain::Uuid,
     },
-    /// Buluta yükle.
-    Upload,
+    /// Buluta yükle, on the storage it starts with.
+    Upload(kentos_contracts::ProjectStorage),
     /// The drawing's own cloud project again, from the server.
     Reopen,
     /// The new project the Yeni proje window built (project/new.rs).

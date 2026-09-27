@@ -112,8 +112,8 @@ impl App {
             }
             Then::SignOut => self.sign_out(),
             Then::OpenCloud { tenant, project } => self.start_cloud_open(tenant, project),
-            Then::Upload => {
-                self.open_upload();
+            Then::Upload(storage) => {
+                self.open_upload(storage);
                 Task::none()
             }
             Then::Reopen => self.reopen(),
@@ -144,7 +144,7 @@ impl App {
         let action = match then {
             Then::Close(_) => "çıkarsanız",
             Then::SignOut => "oturumu kapatırsanız",
-            Then::Upload => "yüklerseniz bu projeye",
+            Then::Upload(_) => "yüklerseniz bu projeye",
             Then::NewProject => "yeni proje açarsanız",
             _ => "başka bir çizim açarsanız",
         };
@@ -179,7 +179,7 @@ impl App {
                 confirm: match then {
                     Then::Close(_) => "Göndermeden çık",
                     Then::SignOut => "Göndermeden oturumu kapat",
-                    Then::Upload => "Göndermeden yükle",
+                    Then::Upload(_) => "Göndermeden yükle",
                     Then::Reopen => "Göndermeden yeniden aç",
                     Then::Open | Then::OpenCloud { .. } | Then::OpenRecent => "Göndermeden aç",
                     Then::NewProject => "Göndermeden yeni proje aç",

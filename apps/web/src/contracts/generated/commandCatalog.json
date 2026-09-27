@@ -9852,7 +9852,7 @@
       "id": "cad.entities.edit",
       "version": 1,
       "title": "Nesneleri düzenle",
-      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Kalıcı kimlikleriyle verilen nesnelere yeni geometri verir, onları parçalarla değiştirir, onlardan yeni nesneler yapar ya da onları siler; hepsi tek geri alma adımında, işlemin adıyla. Ötele, Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt, Köşe ekle/sil ve Esnet araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Öznitelikler panelinin geometri satırları ve yerinde yazı düzenleyicisi de properties işlemiyle (adımı Değiştir), alan araçları da (Alan birleştir, kesiştir, çıkar, böl, Alana çevir, Çizgiye çevir) kendi adlarıyla bu komutla yazar. Seçili nesnenin tutamacı sürüklenince grip işlemiyle (adımı Tutamaçla düzenle), tutamacın menüsü Ortasına köşe ekle ve Köşeyi sil için vertexAdd ve vertexRemove, Düz kenar yap ve Yaya dönüştür için straightEdge ve arcEdge işlemleriyle yazar. update nesnenin geometrisini değiştirir, öbür alanları kalır; replace nesneyi yerinde ve kimliğiyle başka bir nesne yapar, katmanı ve rengi kalır, öznitelikleri ve etiketi keepData ile kalır; add bir nesneden yeni nesne yapar, katmanını ve rengini alır; remove nesneyi siler. Bir nesne tek bir değişiklikle değişir. Yazının metni boş olamaz; kapalı alanın halkası en az 3 köşelidir, kenarlarından biri yaysa 2. Kilitli katmandaki nesne değişmez, ondan nesne yapılmaz: böyle bir nesne verilirse hiçbir şey yazılmaz. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -9974,6 +9974,21 @@
               {
                 "const": "toPolyline",
                 "description": "Çizgiye çevir: an area's outer ring becomes a closed polyline in its place; its holes are new polylines.",
+                "type": "string"
+              },
+              {
+                "const": "grip",
+                "description": "Tutamaçla düzenle: a selected object's grip moved (a vertex, an end,\na centre, a radius, an edge's middle), the object updated in its place.",
+                "type": "string"
+              },
+              {
+                "const": "straightEdge",
+                "description": "Düz kenar yap: an arc edge of a polyline or an area made straight\n(its bulge 0), from the grip menu of the edge's middle.",
+                "type": "string"
+              },
+              {
+                "const": "arcEdge",
+                "description": "Yaya dönüştür: a straight edge of a polyline or an area made an arc,\nfrom the grip menu of the edge's middle.",
                 "type": "string"
               }
             ]
@@ -10578,7 +10593,7 @@
           },
           "operation": {
             "$ref": "#/$defs/EditOperation",
-            "description": "The modify tool the edit comes from; it names the undo step: Ötele,\nBuda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,\nKöşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,\nAlan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir."
+            "description": "The modify tool the edit comes from; it names the undo step: Ötele,\nBuda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,\nKöşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,\nAlan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir;\nTutamaçla düzenle, Düz kenar yap, Yaya dönüştür for the grips."
           }
         },
         "required": [

@@ -73,8 +73,8 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 55,
-    "commandsOnDesktop": 120
+    "commandsWithoutTests": 54,
+    "commandsOnDesktop": 124
   },
   "commands": [
     {
@@ -364,7 +364,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -454,9 +454,11 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/cloud.mjs"
+      ]
     },
     {
       "id": "cloud.rename",
@@ -487,7 +489,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -646,7 +648,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/cloud.mjs"

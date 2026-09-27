@@ -1,8 +1,10 @@
 import type { AppContext } from '../app/context';
+import type { EntityGeometry as EditGeometry } from '../contracts/generated/EntityGeometry';
 import { Signal } from '../core/signal';
 import { dist, type Vec2 } from '../model/geometry';
-import type { Entity } from '../model/entities';
 import { entityGrips, moveGrip } from '../model/ops/grips';
+import { geometryOf } from '../product/entitiesEdit';
+import { writeEdit } from './editCommand';
 import type { ViewTransform } from '../viewport/Camera';
 import { drawSelectionBox, drawTag, strokeGeometry, strokePath } from './preview';
 import type { Tool, ToolPointer } from './Tool';
@@ -12,6 +14,8 @@ const DRAG_THRESHOLD = 4;
 
 interface GripEdit {
   id: number;
+  /** The object's persistent id: the command names it by that. */
+  uid: string;
   index: number;
   origin: Vec2;
   downScreen: Vec2;
@@ -87,13 +91,20 @@ export class SelectTool implements Tool {
     this.ctx.view.requestOverlay();
   }
 
+  /**
+   * Writes the moved grip through the product command `cad.entities.edit`,
+   * operation `grip` (step “Tutamaçla düzenle”): the object by its persistent
+   * id, its whole new geometry explicit (TODOS.md CMD-07). The command's
+   * refusal is said, as a layer locked while the grip waited.
+   */
   private commitGrip(p: Vec2): void {
     const g = this.grip!;
     const { doc, log } = this.ctx;
-    const e = doc.get(g.id);
+    const e = doc.byUid(g.uid);
     const moved = e ? moveGrip(e, g.index, p) : null;
-    if (!moved) log.warn('Bu konum geçersiz bir şekil oluşturuyor; tutamaç yerinde bırakıldı.');
-    else if (dist(g.origin, p) > 1e-9) doc.transact('Tutamaçla düzenle', () => doc.update(g.id, moved as Partial<Entity>));
+    if (!e) log.warn('Tutamacın nesnesi artık çizimde yok (silinmiş ya da geri alınmış); tutamaç bırakıldı.');
+    else if (!moved) log.warn('Bu konum geçersiz bir şekil oluşturuyor; tutamaç yerinde bırakıldı.');
+    else if (dist(g.origin, p) > 1e-9) writeEdit(this.ctx, 'grip', [{ kind: 'update', uid: g.uid, geometry: geometryOf(moved as unknown as EditGeometry) as unknown as EditGeometry }]);
     this.endGrip();
   }
 
@@ -103,7 +114,7 @@ export class SelectTool implements Tool {
     const hit = this.ctx.view.gripAt(p.screen);
     if (hit) {
       const e = this.ctx.doc.get(hit.id)!;
-      this.grip = { ...hit, origin: entityGrips(e)[hit.index], downScreen: p.screen, hot: false };
+      this.grip = { ...hit, uid: this.ctx.doc.uidOf(hit.id) ?? '', origin: entityGrips(e)[hit.index], downScreen: p.screen, hot: false };
       this.gripPoint = this.grip.origin;
       this.ctx.selection.hover.set(null);
       this.prompt.set('Tutamaç: yeni konumu belirtin ya da koordinat yazın (Esc: vazgeç)');

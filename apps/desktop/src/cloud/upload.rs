@@ -82,8 +82,9 @@ fn refused_place(failure: &ApiFailure) -> Option<usize> {
 }
 
 impl App {
-    /// Opens the window on the drawing on screen.
-    pub(crate) fn open_upload(&mut self) {
+    /// Opens the window on the drawing on screen, starting on `storage`
+    /// (Buluta dosya olarak kaydet: file).
+    pub(crate) fn open_upload(&mut self, storage: ProjectStorage) {
         let Some(doc) = &self.document else {
             return;
         };
@@ -105,7 +106,7 @@ impl App {
             tenants,
             tenant,
             name: doc.name().to_owned(),
-            storage: ProjectStorage::Database,
+            storage,
             key: Uuid::new_v4(),
             stage: None,
             error: None,

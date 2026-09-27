@@ -35,7 +35,8 @@ export type EntitiesEdit = {
  * The modify tool the edit comes from; it names the undo step: Ötele,
  * Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
  * Köşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,
- * Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir.
+ * Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir;
+ * Tutamaçla düzenle, Düz kenar yap, Yaya dönüştür for the grips.
  */
 operation: EditOperation, 
 /**

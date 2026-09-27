@@ -260,6 +260,11 @@ pub fn ago_from(text: &str, now: i64) -> String {
     }
 }
 
+/// A server's time as a date (the web's `day`: 26.09.2026); none for anything else.
+pub fn day(text: &str) -> Option<String> {
+    epoch(text).map(date)
+}
+
 /// The date of a time, as the lists write it (26.09.2026; the server's day, UTC).
 fn date(seconds: i64) -> String {
     let days = seconds.div_euclid(86_400);

@@ -76,6 +76,15 @@ pub enum EditOperation {
     ToArea,
     /// Çizgiye çevir: an area's outer ring becomes a closed polyline in its place; its holes are new polylines.
     ToPolyline,
+    /// Tutamaçla düzenle: a selected object's grip moved (a vertex, an end,
+    /// a centre, a radius, an edge's middle), the object updated in its place.
+    Grip,
+    /// Düz kenar yap: an arc edge of a polyline or an area made straight
+    /// (its bulge 0), from the grip menu of the edge's middle.
+    StraightEdge,
+    /// Yaya dönüştür: a straight edge of a polyline or an area made an arc,
+    /// from the grip menu of the edge's middle.
+    ArcEdge,
 }
 
 /// A drawing object's geometry alone: its kind and the fields that place and
@@ -271,7 +280,8 @@ pub struct EntitiesEdit {
     /// The modify tool the edit comes from; it names the undo step: Ötele,
     /// Buda, Uzat, Köşe yuvarla, Pah, Kır, Birleştir, Patlat, Uzat-kısalt,
     /// Köşe ekle, Köşe sil, Esnet; Değiştir for Öznitelikler; Alan birleştir,
-    /// Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir.
+    /// Alan kesiştir, Alan çıkar, Alan böl, Alana çevir, Çizgiye çevir;
+    /// Tutamaçla düzenle, Düz kenar yap, Yaya dönüştür for the grips.
     pub operation: EditOperation,
     /// What changes, at least one.
     pub changes: Vec<EntityEdit>,

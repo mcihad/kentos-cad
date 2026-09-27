@@ -727,6 +727,10 @@ impl App {
                 )
             }
             Asking::RemoveLayer => self.remove_layer_question(),
+            Asking::CloudRename => self.rename_view(),
+            Asking::CloudTrash => self.trash_view(),
+            Asking::OpenNewest => self.newest_view(false),
+            Asking::OpenNewestUnsaved => self.newest_view(true),
             Asking::Settings => self.settings_dialog(),
             Asking::Recovery => self.recovery_dialog(),
             Asking::SignIn => self.sign_in_view(),

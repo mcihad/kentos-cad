@@ -93,6 +93,12 @@ pub const PORTED: &[&str] = &[
     "cloud.open",
     "cloud.upload",
     "cloud.conflicts",
+    // The open project's own actions, Buluta dosya olarak kaydet and Son
+    // revizyonu aç (cloud/actions.rs, docs/adr/0073).
+    "cloud.uploadFile",
+    "cloud.openNewest",
+    "cloud.rename",
+    "cloud.delete",
     // New layers and groups (layering.rs): edits that are not undone, as on the web.
     "layer.new",
     "layer.newGroup",

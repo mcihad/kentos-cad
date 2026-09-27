@@ -1,5 +1,5 @@
 import type { AppContext } from '../../app/context';
-import { confirmDialog } from '../widgets/confirm';
+import { askUnsaved, confirmDialog } from '../widgets/confirm';
 import { openUploadDialog } from './UploadDialog';
 
 /**
@@ -76,13 +76,24 @@ async function openLatest(ctx: AppContext): Promise<boolean> {
 /**
  * Someone else saved a newer revision while the project is open: offered.
  * Over unsaved work it is the conflict's question (the work needs a place
- * first); over a clean drawing, a plain question.
+ * first); over unsaved work with no newer revision known, the unsaved
+ * question (the newest may be the revision the drawing started from, and
+ * opening it drops the work); over a clean drawing, a plain question.
  */
 export async function offerNewest(ctx: AppContext): Promise<boolean> {
   const file = ctx.cloud.file.value;
   const p = ctx.cloud.project.value;
   if (!file || !p) return false;
-  if (ctx.doc.dirty.value || file.conflict.value) return resolveFileConflict(ctx);
+  if (file.conflict.value || (ctx.doc.dirty.value && file.newer.value)) return resolveFileConflict(ctx);
+  if (ctx.doc.dirty.value) {
+    const answer = await askUnsaved({
+      name: p.name,
+      after: `Sunucudaki en yeni revizyon açılırsa bu değişiklikler atılır (açık çizim revizyon ${file.base.value}). Saklamak için önce Kaydet ile kaydedin.`,
+      verb: 'aç',
+      canSave: false,
+    });
+    return answer === 'discard' ? openLatest(ctx) : false;
+  }
   const newer = file.newer.value;
   const answer = await confirmDialog<'open' | 'later'>({
     title: 'Son revizyonu aç',
