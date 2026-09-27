@@ -21,6 +21,7 @@ import { Camera } from './Camera';
 import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, midGripVisible } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
 import { symbolScaleOf } from './symbolScale';
+import type { ExprColumnData } from '../wasm/core';
 import { PickIndex, type SnapHit, type SnapKind } from './picking';
 
 /** Right-button menus the UI draws: idle selection, a running command, or snap overrides. */
@@ -367,6 +368,11 @@ export class ViewportController {
   /** Geometry values of these objects for expressions, one record each (`measuredAt`): processing previews and the layer style window. */
   measures(ids: readonly number[]): Float64Array {
     return this.picker.measures(ids);
+  }
+
+  /** An expression over these objects in the drawing's store, their geometry values read there: processing's previews. */
+  evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData {
+    return this.picker.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
   }
 
   /** Trim `target` at `at` against the chosen boundaries, or every visible edge in view. */

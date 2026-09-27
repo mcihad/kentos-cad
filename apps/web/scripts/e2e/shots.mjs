@@ -11,7 +11,8 @@
 // (Lejant: its options, a layer left out, a categorized layer); symboldesigner (Sembol tasarımcısı: every layer type's
 // form, the add menus, a child marker, ƒ on, the preview geometry, the unsaved question, inline and library symbols);
 // svgedit (SVG düzenleyicisi: a new and a library drawing, shapes, the tabs, the menus, a polyline in progress, text,
-// node editing, measuring, the XML source, document properties, export, the unsaved question).
+// node editing, measuring, the XML source, document properties, export, the unsaved question);
+// shell (the classic shell: the bars, and the toolbox docked, in two columns, folded, widened, its tip, a snapping drag).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -599,6 +600,39 @@ SCENES.symboldesigner = [
     close: async (ui) => (await closeDesigner(ui), await ui.eval(REMOVE_MINE)),
   },
 ];
+
+// The classic shell (ui/shell/shellPlan.ts, fixtures/shell/v1/shell.json): the bars at rest, and the toolbox docked, in
+// two columns, with a folded group, widened to fit the height (1100×650), a tool's tip with its steps, and snapping to
+// an edge in the middle of a drag.
+const TOOLBOX_RESET = `(() => { const u = window.kentos.ui; u.toolboxDocked.set(false); u.toolboxColumns.set(3); u.toolboxFolded.set([]); u.toolboxX.set(12); u.toolboxY.set(12); u.toolboxVisible.set(true); })()`;
+const centreOf = (sel) => `(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`;
+SCENES.shell = [
+  { id: 'classic', open: async (ui) => (await ui.eval(TOOLBOX_RESET), await ui.sleep(400)) },
+  { id: 'toolbox-docked', open: async (ui) => (await ui.eval(`window.kentos.commands.execute('view.toolboxDock')`), await ui.sleep(400)) },
+  { id: 'toolbox-two-columns', open: async (ui) => (await ui.eval(`window.kentos.ui.toolboxColumns.set(2)`), await ui.sleep(400)) },
+  { id: 'toolbox-folded-group', open: async (ui) => (await ui.eval(`window.kentos.ui.toolboxFolded.set(['draw', 'annotate'])`), await ui.sleep(400)) },
+  {
+    id: 'toolbox-tip',
+    open: async (ui) => {
+      await ui.move(...(await ui.eval(centreOf('.toolbox__tool[data-tool="line"]'))));
+      await ui.waitFor(`!!document.querySelector('.tooltip[data-open]')`);
+      await ui.sleep(300);
+    },
+  },
+  {
+    id: 'toolbox-snap-drag',
+    open: async (ui) => {
+      // Held by the grip and dragged towards the drawing's right edge: within 14 px it sits on the margin.
+      const [x, y] = await ui.eval(centreOf('.toolbox__grip'));
+      const right = await ui.eval(`(() => { const r = window.kentos.view.clientRect(); const t = document.querySelector('.toolbox').getBoundingClientRect(); return Math.round(r.right - t.width / 2 - 12); })()`);
+      await ui.move(x, y);
+      await ui.pressAt(x, y);
+      for (let i = 1; i <= 8; i++) await ui.moveHeld(x + ((right - x) * i) / 8, y + 60 * (i / 8));
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await ui.releaseAt(2, 2), await ui.eval(TOOLBOX_RESET)),
+  },
+].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(TOOLBOX_RESET)), ...s }));
 
 SCENES.svgedit = [
   { id: 'new', open: (ui) => openSvg(ui) },

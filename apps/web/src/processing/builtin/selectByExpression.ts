@@ -43,8 +43,8 @@ export const selectByExpression = defineTool({
   run: async (v, ctx, feedback) => {
     const list = v.input.entities;
     feedback.progress(0, 'Koşul deneniyor');
-    // One call to the core for every object; $alan, $uzunluk, $y, $x from the geometry store when the condition asks.
-    const met = v.condition.evaluateAll({ entities: list, layerName: ctx.layerName, measures: () => ctx.geometry.measures(list.map((e) => e.id)) }, 'bool');
+    // One call to the run's geometry store for every object: the geometry values ($alan, $merkez_y, $genişlik …) are read there.
+    const met = v.condition.evaluateAll({ entities: list, layerName: ctx.layerName, geometry: ctx.geometry }, 'bool');
     const hits: number[] = [];
     for (let i = 0; i < list.length; i++) if (met.value(i) === true) hits.push(list[i].id);
     const current = ctx.selection;

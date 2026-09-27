@@ -129,7 +129,8 @@
 
 .menubar__item {
   height: calc(26px * var(--ui-scale));
-  padding: 0 9px;
+  /* The bar's fold step sets it (MenuBar.ts, shellPlan.ts MENUBAR_FOLD). */
+  padding: 0 var(--menubar-item-pad, 9px);
   border-radius: var(--r-sm);
   color: var(--c-text);
   white-space: nowrap;
@@ -182,17 +183,6 @@
 .menubar__crs:hover {
   background: var(--c-hover);
   color: var(--c-text);
-}
-/* Every menu stays in view (MenuBar.ts, DESIGN.md §7.1): the bar makes room in steps at a narrow window. */
-.menubar[data-tight='1'] .brand__word,
-.menubar[data-tight='2'] .brand__word,
-.menubar[data-tight='3'] .brand__word,
-.menubar[data-tight='2'] .menubar__crs-name,
-.menubar[data-tight='3'] .menubar__crs-name {
-  display: none;
-}
-.menubar[data-tight='3'] .menubar__item {
-  padding: 0 6px;
 }
 .menubar__icon {
   display: grid;

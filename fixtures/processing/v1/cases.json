@@ -199,6 +199,25 @@
       }
     },
     {
+      "id": "calculate-geometry-values",
+      "title": "Öznitelik hesapla, sınır kutusunun geometri değerleriyle ($genişlik Y yönünde, $yükseklik X yönünde): değerler çalıştırmanın geometri deposunda şekillerden okunur, sayfada ve işçide aynı",
+      "document": "parcels.kcad",
+      "selection": [1, 2, 3],
+      "run": {"tool": "attributes.calculate"},
+      "values": {"field": "Boyut", "value": "$genişlik || ' x ' || $yükseklik"},
+      "expect": {
+        "status": "ok",
+        "summary": "3 nesnede “Boyut” yazıldı.",
+        "undo": "Öznitelik hesapla",
+        "updated": [
+          {"id": 1, "attrs": {"Ada": "101", "Parsel": "1", "Nitelik": "Arsa", "Boyut": "20 x 30"}, "label": "1"},
+          {"id": 2, "attrs": {"Ada": "101", "Parsel": "2", "Nitelik": "Arsa", "Boyut": "25 x 30"}, "label": "2"},
+          {"id": 3, "attrs": {"Ada": "101", "Parsel": "3", "Nitelik": "Tarla", "Boyut": "15 x 30"}, "label": "3"}
+        ],
+        "outputs": {"count": 3, "changed": [1, 2, 3]}
+      }
+    },
+    {
       "id": "calculate-locked",
       "title": "Öznitelik hesapla, kilitli katmandaki parsel de seçiliyken: o parsel işleme alınmaz ve söylenir; özet ve çıktılar yalnız yazılanı sayar",
       "document": "parcels.kcad",
@@ -253,6 +272,15 @@
       "run": {"tool": "selection.byExpression"},
       "values": {"input": {"scope": "visible"}},
       "expect": {"status": "ok", "summary": "1 / 2 nesne koşulu sağladı; seçimde 1 nesne var.", "undo": null, "selection": [2]}
+    },
+    {
+      "id": "select-centroid",
+      "title": "İfadeyle seç, ağırlık merkezinin Y'siyle ($merkez_y, sağa): görünen katmanlardaki kapalı alanlardan merkezi 487030'un doğusunda olanlar; kilitli katmandaki alan da okunur, gizli katmandaki okunmaz",
+      "document": "parcels.kcad",
+      "selection": [1],
+      "run": {"tool": "selection.byExpression"},
+      "values": {"input": {"scope": "all", "kinds": ["polygon"]}, "condition": "$merkez_y > 487030"},
+      "expect": {"status": "ok", "summary": "2 / 4 nesne koşulu sağladı; seçimde 2 nesne var.", "undo": null, "selection": [2, 3], "outputs": {"count": 2, "matched": [2, 3]}}
     },
     {
       "id": "number-vertices-both",

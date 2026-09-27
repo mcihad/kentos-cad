@@ -1,7 +1,6 @@
 import type { AppContext } from '../../app/context';
 import { when } from '../../app/cloud/catalog';
 import { pointText } from '../../app/cloud/history';
-import { workspaceName } from '../../app/cloud/session';
 import type { Checkpoint } from '../../contracts/generated/Checkpoint';
 import type { FileRevision } from '../../contracts/generated/FileRevision';
 import type { FileRevisions } from '../../contracts/generated/FileRevisions';
@@ -119,7 +118,7 @@ export function openRestoreDialog(ctx: AppContext, t: HistoryTarget, point: Hist
   const place = h(
     'select',
     { class: 'field', 'aria-label': 'Yeni projenin çalışma alanı', disabled: places.length < 2 },
-    places.map((m) => h('option', { value: m.tenantId }, workspaceName(m.tenantKind, m.tenantName, true))),
+    places.map((m) => h('option', { value: m.tenantId }, m.label)),
   );
   const status = h('p', { class: 'cloud-status', role: 'alert' });
   const make = h('button', { class: 'btn btn--primary', type: 'button', disabled: !places.length }, 'Yeni proje olarak geri yükle');
