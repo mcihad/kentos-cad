@@ -814,6 +814,8 @@ impl App {
             Some(Dialog::Legend) => self.styles.legend = None,
             // Changes are asked about first; the window under it comes back (style/designer/).
             Some(Dialog::SymbolDesigner) => self.designer_close_request(),
+            // A window over it, a question, then unsaved changes are asked about (style/svgedit/).
+            Some(Dialog::SvgEditor) => self.svgedit_close_request(),
             _ => {}
         }
     }

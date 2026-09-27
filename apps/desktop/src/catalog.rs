@@ -229,6 +229,8 @@ pub const PORTED: &[&str] = &[
     "style.clearSymbol",
     // Lejant, saved as a PNG on white paper (docs/adr/0093).
     "style.legend",
+    // SVG çizim düzenleyicisi, its import, export, document properties and tracing (docs/adr/0095).
+    "style.svgEditor",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the

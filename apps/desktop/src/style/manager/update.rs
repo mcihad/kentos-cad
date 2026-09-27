@@ -14,7 +14,7 @@ use serde_json::{Map, Value, json};
 
 use super::files::import_said;
 use super::{
-    DOUBLE_CLICK, Event, Field, Manager, PickTarget, SEARCH, details, find_node, node_key,
+    DOUBLE_CLICK, Event, Field, Manager, PickTarget, SEARCH, find_node, node_key,
 };
 use crate::app::{App, Dialog, Message};
 
@@ -215,7 +215,12 @@ impl App {
         match item.kind() {
             ItemKind::Symbol => {}
             ItemKind::Asset if item.format() == Some("svg") => {
-                self.manager_say(details::SVG_NOT_YET, true);
+                // The SVG editor (a system drawing is saved as the user's copy there).
+                self.open_svg_editor(crate::style::svgedit::Opening {
+                    id: Some(id.to_owned()),
+                    path: None,
+                    after: crate::style::svgedit::After::Manager,
+                });
                 return;
             }
             // A picture has nothing to edit, as on the web.
@@ -274,6 +279,18 @@ impl App {
             kind,
             path,
             source,
+        });
+    }
+
+    /// SVG çizimi (düzenleyicide)…: a new drawing, in the category open when it is the user's.
+    fn new_drawing(&mut self) {
+        let path = self.styles.manager.as_ref().and_then(|m| {
+            (m.at.0 == Source::User && m.query.is_empty() && !m.at.1.is_empty()).then(|| m.at.1.clone())
+        });
+        self.open_svg_editor(crate::style::svgedit::Opening {
+            id: None,
+            path,
+            after: crate::style::svgedit::After::Manager,
         });
     }
 
@@ -457,6 +474,10 @@ impl App {
             Event::NewSymbol(kind) => {
                 self.commit_fields();
                 self.new_symbol(kind);
+            }
+            Event::NewDrawing => {
+                self.commit_fields();
+                self.new_drawing();
             }
             Event::Apply(id) => {
                 self.commit_fields();

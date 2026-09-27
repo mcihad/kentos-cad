@@ -121,6 +121,8 @@ pub enum Dialog {
     Legend,
     /// Sembol tasarımcısı (style/designer/); the window is `App::styles.designer`.
     SymbolDesigner,
+    /// SVG çizim düzenleyicisi (style/svgedit/); the window is `App::styles.svg_editor`.
+    SvgEditor,
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
@@ -221,6 +223,8 @@ pub enum Message {
     Legend(crate::style::legend::Event),
     /// Sembol tasarımcısı (style/designer/).
     Designer(Box<crate::style::designer::Event>),
+    /// SVG çizim düzenleyicisi (style/svgedit/).
+    SvgEdit(Box<crate::style::svgedit::Event>),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -636,6 +640,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // A file dropped on the window goes to the SVG editor while it is open (style/svgedit/).
+            if self.styles.svg_editor.is_some() {
+                event::listen_with(crate::style::svgedit::dropped)
+            } else {
+                Subscription::none()
+            },
             // The cloud's timers: autosave, the draft, following, the catalog's search.
             if self.cloud.wants_ticks() {
                 Subscription::run(cloud::ticks)
@@ -761,6 +771,7 @@ impl App {
             Message::StyleManager(event) => return self.style_manager_event(*event),
             Message::Legend(event) => return self.legend_event(event),
             Message::Designer(event) => return self.designer_event(*event),
+            Message::SvgEdit(event) => return self.svgedit_event(*event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -1077,6 +1088,11 @@ impl App {
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
             "style.legend" => self.open_legend(),
+            "style.svgEditor" => self.open_svg_editor(crate::style::svgedit::Opening {
+                id: None,
+                path: None,
+                after: crate::style::svgedit::After::Nothing,
+            }),
             "style.assign" => return self.pick_for_selection(),
             "style.clearSymbol" => {
                 let said = self.assign_symbol(None);
@@ -1394,7 +1410,7 @@ mod tests {
     fn a_command_not_ported_says_so_and_changes_nothing() {
         let (mut app, _) = App::boot(None);
         let before = app.history.len();
-        let _ = app.run("style.svgEditor");
+        let _ = app.run("analysis.volume");
         assert_eq!(app.history.len(), before + 1);
         assert!(
             matches!(app.history.last(), Some(Entry::Output(text)) if text.contains("masaüstüne henüz taşınmadı"))

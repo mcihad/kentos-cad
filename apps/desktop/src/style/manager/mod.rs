@@ -17,7 +17,7 @@
 //! clipboard, `view.rs` and `details.rs` how it looks.
 
 mod assign;
-mod details;
+pub(crate) mod details;
 pub(crate) mod files;
 #[cfg(test)]
 mod tests;
@@ -175,6 +175,8 @@ pub enum Event {
     Edit(String),
     /// Yeni sembol: a new symbol of a kind (fill, line, marker) in the designer.
     NewSymbol(&'static str),
+    /// SVG çizimi (düzenleyicide)…: a new drawing in the SVG editor.
+    NewDrawing,
     ImportFile,
     ImportClipboard,
     Picked(Option<(String, Vec<u8>)>),

@@ -411,9 +411,6 @@ pub(super) fn dash_row<'a>(env: &Env<'_>, hint: &str) -> Element<'a, Message> {
 
 // ── Pictures and drawings ──────────────────────────────────────────────
 
-/// Why the SVG editor's buttons wait.
-const SVG_NOT_YET: &str = "SVG çizim düzenleyicisi web'de var; masaüstüne henüz taşınmadı.";
-
 /// A small button with its tip.
 fn small<'a>(text: &str, tip_text: &str, press: Option<Message>) -> Element<'a, Message> {
     tip(
@@ -442,15 +439,15 @@ pub(super) fn asset_row<'a>(env: &Env<'_>, key: &'static str) -> Element<'a, Mes
     let current_svg = env.assets.iter().any(|(id, _, svg)| id == value && *svg);
     let mut buttons = row![small(
         "Yeni çizim…",
-        &format!("SVG çizim düzenleyicisinde yeni bir çizim yapar. {SVG_NOT_YET}"),
-        None
+        "SVG çizim düzenleyicisinde yeni bir çizim yapar",
+        Some(ev(Event::DrawSvg(key.to_owned(), None)))
     )]
     .spacing(6);
     if current_svg {
         buttons = buttons.push(small(
             "Düzenle…",
-            &format!("Seçili çizimi düzenleyicide açar (sistem çiziminin kopyası). {SVG_NOT_YET}"),
-            None,
+            "Seçili çizimi düzenleyicide açar (sistem çiziminin kopyası)",
+            Some(ev(Event::DrawSvg(key.to_owned(), Some(value.to_owned())))),
         ));
     }
     buttons = buttons.push(small(

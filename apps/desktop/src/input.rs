@@ -347,6 +347,12 @@ impl App {
         // 1. A dialog: Esc closes it; its own buttons do the rest.
         if self.dialog.is_some() {
             // Sembol tasarımcısı's undo and ↑ ↓ (style/designer/).
+            // SVG çizim düzenleyicisi takes every key, Esc too: it gives up what is half done first (style/svgedit/).
+            if self.dialog == Some(crate::app::Dialog::SvgEditor)
+                && let Some(task) = self.svgedit_key(&press)
+            {
+                return task;
+            }
             if self.dialog == Some(crate::app::Dialog::SymbolDesigner)
                 && press.named() != Some(Named::Escape)
                 && let Some(task) = self.designer_key(&press)
