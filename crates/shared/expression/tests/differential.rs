@@ -337,12 +337,29 @@ fn expr(g: &mut Gen, depth: u32) -> String {
     }
     if g.chance(0.08) {
         // A number function of an object's number with constant digits (the engine's direct paths).
-        let f = *g.pick(&["yuvarla({}, 2)", "round({}, 0)", "yuvarla({}, 12)", "yuvarla({})", "tamsayı({})", "mutlak({})", "min({}, 3)", "max({}, 1, 2)", "sayı({})"]);
+        let f = *g.pick(&[
+            "yuvarla({}, 2)",
+            "round({}, 0)",
+            "yuvarla({}, 12)",
+            "yuvarla({})",
+            "tamsayı({})",
+            "mutlak({})",
+            "min({}, 3)",
+            "max({}, 1, 2)",
+            "sayı({})",
+        ]);
         return f.replace("{}", g.pick(&NUMERIC_ATOMS));
     }
     if g.chance(0.08) {
         // A text function whose value is part of its argument's text (borrowed where it was).
-        let f = *g.pick(&["kırp({})", "doldur({}, 2)", "eğer(doğru, {}, 'y')", "varsayılan({}, 'y')", "metin({})", "parça({}, 2)"]);
+        let f = *g.pick(&[
+            "kırp({})",
+            "doldur({}, 2)",
+            "eğer(doğru, {}, 'y')",
+            "varsayılan({}, 'y')",
+            "metin({})",
+            "parça({}, 2)",
+        ]);
         let arg = match g.int(0, 2) {
             0 => g.pick(&WORDS).to_string(),
             1 => format!("[{}]", g.pick(&BRACKETED)),

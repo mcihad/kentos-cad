@@ -1,4 +1,5 @@
 import { exprEvaluate, op, type ExprColumnData } from '../../wasm/core';
+export type { ExprColumnData };
 import { ENTITY_KIND_LABEL, entityAnchor, entityArea, entityLength, type Entity } from '../entities';
 import { MEASURE_STRIDE, type ExprValue } from './expressionLib';
 
@@ -22,6 +23,7 @@ export type { ExprValue };
 
 /** The variables an expression reads, so only those are computed. */
 export interface ExprNeeds {
+  /** `$alan`, `$uzunluk`, `$y`, `$x`: the geometry store's `measures`. */
   readonly measured: boolean;
   readonly vertices: boolean;
   readonly kind: boolean;
@@ -30,6 +32,15 @@ export interface ExprNeeds {
   readonly index: boolean;
   readonly id: boolean;
   readonly scale: boolean;
+  /** `$merkez_y`, `$merkez_x`: only through a geometry store (`ExprObjects.geometry`). */
+  readonly centroid: boolean;
+  /** `$min_y` … `$genişlik`, `$yükseklik`: only through a geometry store. */
+  readonly bounds: boolean;
+}
+
+/** A geometry store the objects are in (`CoreStore`): the geometry values are read there. */
+export interface ExprGeometry {
+  evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData;
 }
 
 /** What an expression is evaluated on: objects in run order ($sıra is the position + 1). */
@@ -40,6 +51,12 @@ export interface ExprObjects {
   readonly plotScale?: number;
   /** The geometry store's `measures` answer for these objects (six numbers each); computed per object when absent. */
   readonly measures?: () => Float64Array;
+  /**
+   * The geometry store the objects are in: the expression is evaluated there
+   * and reads the geometry values from the shapes (no `measures` crosses the
+   * boundary; `$merkez_y`, `$genişlik` … need it). Preferred over `measures`.
+   */
+  readonly geometry?: ExprGeometry;
 }
 
 /**
@@ -166,6 +183,10 @@ export function exprTable(fields: readonly string[], needs: ExprNeeds, list: rea
 function evaluateAll(source: string, fields: readonly string[], needs: ExprNeeds, o: ExprObjects, as: ExprAs): ExprColumn {
   const list = o.entities;
   const { texts, lens, numbers } = exprTable(fields, needs, list, o.layerName);
+  if (o.geometry) {
+    const ids = Float64Array.from(list, (e) => e.id);
+    return column(o.geometry.evaluateExpression(source, ids, texts, lens, numbers, o.plotScale ?? NaN, WANT[as]));
+  }
   const measures = needs.measured ? (o.measures?.() ?? measuresOf(list)) : NO_NUMBERS;
   return column(exprEvaluate(source, list.length, texts, lens, numbers, measures, o.plotScale ?? NaN, WANT[as]));
 }

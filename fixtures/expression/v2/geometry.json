@@ -1,0 +1,427 @@
+{
+ "format": "kentos.expression-geometry",
+ "version": 2,
+ "note": "İfadelerin nesneden doğrudan okuduğu geometri değerleri, motordan bağımsız hesaplanmış: düz halkaların alanı ve ağırlık merkezi kesirli sayılarla (delikler düşülür), yarım daire kenar yarım dairenin kendi formülleriyle, daire πr² ve merkezi, kutular köşelerden. Y sağa (kodda x), X yukarı (kodda y). Değer null: nesnenin öyle bir değeri yok. Üretici scripts/fixtures/expression_geometry.py.",
+ "cases": [
+  {
+   "name": "kare, projeksiyon koordinatlarında",
+   "entity": {
+    "id": 1,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420030.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420030.75
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 100.0,
+    "alan": 600.0,
+    "merkez_y": 487010.25,
+    "merkez_x": 4420015.75,
+    "min_y": 487000.25,
+    "max_y": 487020.25,
+    "min_x": 4420000.75,
+    "max_x": 4420030.75,
+    "genişlik": 20.0,
+    "yükseklik": 30.0,
+    "köşe": 4
+   }
+  },
+  {
+   "name": "L biçimli, saat yönünde",
+   "entity": {
+    "id": 2,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487010.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487010.25,
+      "y": 4420010.75
+     },
+     {
+      "x": 487030.25,
+      "y": 4420010.75
+     },
+     {
+      "x": 487030.25,
+      "y": 4420000.75
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 140.0,
+    "alan": 600.0,
+    "merkez_y": 487010.25,
+    "merkez_x": 4420015.75,
+    "min_y": 487000.25,
+    "max_y": 487030.25,
+    "min_x": 4420000.75,
+    "max_x": 4420040.75,
+    "genişlik": 30.0,
+    "yükseklik": 40.0,
+    "köşe": 6
+   }
+  },
+  {
+   "name": "delikli (delik ters yönde)",
+   "entity": {
+    "id": 3,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487050.25,
+      "y": 4420040.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420040.75
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487010.25,
+        "y": 4420010.75
+       },
+       {
+        "x": 487010.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420020.75
+       },
+       {
+        "x": 487025.25,
+        "y": 4420010.75
+       }
+      ]
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 230.0,
+    "alan": 1850.0,
+    "merkez_y": 487025.8581081081,
+    "merkez_x": 4420021.155405405,
+    "min_y": 487000.25,
+    "max_y": 487050.25,
+    "min_x": 4420000.75,
+    "max_x": 4420040.75,
+    "genişlik": 50.0,
+    "yükseklik": 40.0,
+    "köşe": 8
+   }
+  },
+  {
+   "name": "bir kenarı yarım daire (bulge 1)",
+   "entity": {
+    "id": 4,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 487000.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420000.75
+     },
+     {
+      "x": 487020.25,
+      "y": 4420010.75
+     },
+     {
+      "x": 487000.25,
+      "y": 4420010.75
+     }
+    ],
+    "bulges": [
+     0,
+     0,
+     1,
+     0
+    ]
+   },
+   "values": {
+    "uzunluk": 71.41592653589794,
+    "alan": 357.0796326794897,
+    "merkez_y": 487010.25,
+    "merkez_x": 4420009.816501411,
+    "min_y": 487000.25,
+    "max_y": 487020.25,
+    "min_x": 4420000.75,
+    "max_x": 4420020.75,
+    "genişlik": 20.0,
+    "yükseklik": 20.0,
+    "köşe": 4
+   }
+  },
+  {
+   "name": "tarama, delikli",
+   "entity": {
+    "id": 5,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "hatch",
+    "ring": [
+     {
+      "x": 0,
+      "y": 0
+     },
+     {
+      "x": 8,
+      "y": 0
+     },
+     {
+      "x": 8,
+      "y": 6
+     },
+     {
+      "x": 0,
+      "y": 6
+     }
+    ],
+    "holes": [
+     [
+      {
+       "x": 2,
+       "y": 2
+      },
+      {
+       "x": 4,
+       "y": 2
+      },
+      {
+       "x": 4,
+       "y": 4
+      },
+      {
+       "x": 2,
+       "y": 4
+      }
+     ]
+    ],
+    "pattern": {
+     "type": "solid",
+     "angle": 0,
+     "spacing": 1
+    }
+   },
+   "values": {
+    "uzunluk": null,
+    "alan": 44.0,
+    "merkez_y": 4.090909090909091,
+    "merkez_x": 3.0,
+    "min_y": 0,
+    "max_y": 8,
+    "min_x": 0,
+    "max_x": 6,
+    "genişlik": 8,
+    "yükseklik": 6,
+    "köşe": null
+   }
+  },
+  {
+   "name": "daire",
+   "entity": {
+    "id": 6,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "circle",
+    "c": {
+     "x": 487005.25,
+     "y": 4420007.75
+    },
+    "r": 3.0
+   },
+   "values": {
+    "uzunluk": 18.84955592153876,
+    "alan": 28.274333882308138,
+    "merkez_y": 487005.25,
+    "merkez_x": 4420007.75,
+    "min_y": 487002.25,
+    "max_y": 487008.25,
+    "min_x": 4420004.75,
+    "max_x": 4420010.75,
+    "genişlik": 6.0,
+    "yükseklik": 6.0,
+    "köşe": null
+   }
+  },
+  {
+   "name": "çizgi",
+   "entity": {
+    "id": 7,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "line",
+    "a": {
+     "x": 3.0,
+     "y": 4.0
+    },
+    "b": {
+     "x": 9.0,
+     "y": 12.0
+    }
+   },
+   "values": {
+    "uzunluk": 10.0,
+    "alan": null,
+    "merkez_y": 6.0,
+    "merkez_x": 8.0,
+    "min_y": 3.0,
+    "max_y": 9.0,
+    "min_x": 4.0,
+    "max_x": 12.0,
+    "genişlik": 6.0,
+    "yükseklik": 8.0,
+    "köşe": 2
+   }
+  },
+  {
+   "name": "çoklu çizgi",
+   "entity": {
+    "id": 8,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 3.0,
+      "y": 4.0
+     },
+     {
+      "x": 3.0,
+      "y": 10.0
+     },
+     {
+      "x": 9.0,
+      "y": 10.0
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 17.0,
+    "alan": null,
+    "merkez_y": 3.0,
+    "merkez_x": 10.0,
+    "min_y": 0.0,
+    "max_y": 9.0,
+    "min_x": 0.0,
+    "max_x": 10.0,
+    "genişlik": 9.0,
+    "yükseklik": 10.0,
+    "köşe": 4
+   }
+  },
+  {
+   "name": "nokta",
+   "entity": {
+    "id": 9,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "point",
+    "p": {
+     "x": 487001.75,
+     "y": 4419998.25
+    }
+   },
+   "values": {
+    "uzunluk": null,
+    "alan": null,
+    "merkez_y": 487001.75,
+    "merkez_x": 4419998.25,
+    "min_y": 487001.75,
+    "max_y": 487001.75,
+    "min_x": 4419998.25,
+    "max_x": 4419998.25,
+    "genişlik": 0.0,
+    "yükseklik": 0.0,
+    "köşe": 1
+   }
+  },
+  {
+   "name": "alansız kapalı alan (doğrusal köşeler)",
+   "entity": {
+    "id": 10,
+    "layerId": "a",
+    "attrs": {},
+    "kind": "polygon",
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 2.0,
+      "y": 0.0
+     },
+     {
+      "x": 6.0,
+      "y": 0.0
+     }
+    ]
+   },
+   "values": {
+    "uzunluk": 12.0,
+    "alan": 0.0,
+    "merkez_y": 2.6666666666666665,
+    "merkez_x": 0.0,
+    "min_y": 0.0,
+    "max_y": 6.0,
+    "min_x": 0.0,
+    "max_x": 0.0,
+    "genişlik": 6.0,
+    "yükseklik": 0.0,
+    "köşe": 3
+   }
+  }
+ ]
+}

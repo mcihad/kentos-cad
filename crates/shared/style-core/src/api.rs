@@ -20,8 +20,10 @@ struct NeedsJson {
     index: bool,
     id: bool,
     scale: bool,
+    centroid: bool,
+    bounds: bool,
 }
-json_struct!(out NeedsJson { measured, vertices, kind, layer, label, index, id, scale });
+json_struct!(out NeedsJson { measured, vertices, kind, layer, label, index, id, scale, centroid, bounds });
 
 impl From<Needs> for NeedsJson {
     fn from(n: Needs) -> NeedsJson {
@@ -34,6 +36,8 @@ impl From<Needs> for NeedsJson {
             index: n.index,
             id: n.id,
             scale: n.scale,
+            centroid: n.centroid,
+            bounds: n.bounds,
         }
     }
 }

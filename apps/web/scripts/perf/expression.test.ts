@@ -13,6 +13,7 @@ import { writeFileSync } from 'node:fs';
 import { cpus, release, totalmem } from 'node:os';
 import { it } from 'vitest';
 import type { Entity } from '../../src/model/entities';
+import { CoreStore } from '../../src/wasm/core';
 import { compileExpression, type ExprAs } from '../../src/model/expression/expression';
 import { MEASURE_STRIDE } from '../../src/model/expression/expressionLib';
 
@@ -76,8 +77,51 @@ function measure(n: number): [number, number][] {
   return out;
 }
 
+/** Geometry expressions on squares in a geometry store: read there from the shapes, or through its measures answer. */
+const STORE_CASES: [string, 'geometry' | 'measures'][] = [
+  ['$alan > 500', 'geometry'],
+  ['$alan > 500', 'measures'],
+  ['yuvarla($alan, 2)', 'geometry'],
+  ['yuvarla($alan, 2)', 'measures'],
+  ['$merkez_y', 'geometry'],
+  ['$genişlik * $yükseklik', 'geometry'],
+];
+
+function measureStore(n: number): number[] {
+  const entities: Entity[] = Array.from({ length: n }, (_, i) => {
+    const x = 487000 + (i % 1000) * 20;
+    const y = 4420000 + Math.floor(i / 1000) * 20;
+    const s = 10 + (i % 4);
+    return { id: i + 1, kind: 'polygon', layerId: 'a', attrs: {}, pts: [{ x, y }, { x: x + s, y }, { x: x + s, y: y + s }, { x, y: y + s }] };
+  });
+  const store = new CoreStore();
+  store.put(JSON.stringify(entities));
+  const out: number[] = [];
+  console.log(`\n${n} kare deponun içinde, değerler okunarak`);
+  for (const [source, path] of STORE_CASES) {
+    const r = compileExpression(source);
+    if (!r.ok) throw new Error(r.error);
+    const objects = path === 'geometry' ? { entities, layerName: (id: string) => id, geometry: store } : { entities, layerName: (id: string) => id, measures: () => store.measures(Float64Array.from(entities, (e) => e.id)) };
+    const ms: number[] = [];
+    for (let run = 0; run < WARM + RUNS; run++) {
+      const t = performance.now();
+      const c = r.expr.evaluateAll(objects, 'value');
+      let filled = 0;
+      for (let i = 0; i < n; i++) if (c.value(i) !== null) filled++;
+      if (run >= WARM) ms.push(performance.now() - t);
+      if (filled !== n) throw new Error(`${source}: ${n - filled} boş`);
+    }
+    const [p50] = quantiles(ms);
+    console.log(`${source.padEnd(28)} ${path.padEnd(9)} p50 ${p50.toFixed(1).padStart(7)} ms`);
+    out.push(p50);
+  }
+  store.dispose();
+  return out;
+}
+
 it.runIf(!!process.env.EXPRESSION_BENCH)(`measures expressions on ${SIZES.join(', ')} objects`, () => {
   const results = SIZES.map(measure);
+  const inStore = SIZES.map(measureStore);
   const dir = process.env.EXPRESSION_PERF_OUT;
   if (!dir) return;
   const label = process.env.EXPRESSION_PERF_LABEL ?? 'olcum';
@@ -94,6 +138,12 @@ Test \`apps/web/scripts/perf/expression.test.ts\`: nokta nesneleri (Parsel 1…n
 
 ${head}
 ${rows.join('\n')}
+
+Geometri deposundaki kareler (10 × 10 … 13 × 13 m; ADR 0100 §3), p50 ms: “depoda” ifade deponun içinde değerlendirilir ve geometri değerlerini şekillerden okur (\`CoreStore.evaluateExpression\`); “ölçü kaydıyla” deponun \`measures\` yanıtı alınır ve \`exprEvaluate\`'e verilir (sayfanın bugünkü yolu, iki kopya dahil).
+
+| İfade | Yol |${SIZES.map((n) => ` ${n} nesne |`).join('')}
+|---|---|${SIZES.map(() => '---|').join('')}
+${STORE_CASES.map(([source, path], k) => `| \`${source}\` | ${path === 'geometry' ? 'depoda' : 'ölçü kaydıyla'} |${inStore.map((r) => ` ${r[k].toFixed(1)} |`).join('')}`).join('\n')}
 `;
   const path = new URL(`${dir}/expression-web-${label}-${day}.md`, ROOT);
   writeFileSync(path, md);

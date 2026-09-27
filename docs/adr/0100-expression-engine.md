@@ -66,16 +66,47 @@
   - `fixtures/expression/v1` iki platformda değişmeden geçer. Stil motorunun dondurulmuş katmanları ve İşlemler'in ortak durumları da yeni motorla geçer.
 - **WASM:** başlangıç WASM'ı 1 207 133 → 1 252 250 bayt, gzip 421 397 → 437 961 (+16,5 KB). Nedeni derleyici, komut döngüleri, tek nesne yürüyüşü ve arabelleğe yazan metin işlevleridir.
 
-### 3. Şema ve tipli sütunlar (plan, dilim 3)
+### 3. Şema, tipli sütunlar ve geometri değerleri (uygulandı)
 
-- **Adların çözümü derlemede:** çağıranın verdiği şemaya göre, bu sırayla:
-  - yerleşik değerler: geometri, tür, katman, etiket, numara;
-  - kullanıcının tanımladığı tipli alanlar: sayı, metin, doğru/yanlış, tarih;
-  - bugünkü metin öznitelikleri.
-- **Bilinmeyen ad:** bugünkü gibi metin özniteliğidir, yoksa boştur; `fixtures/expression/v1` değişmez.
-- **Sütunlar:** değerlendirme, çağıranın uyguladığı bir arayüzden sütunları parti parti ister. Sayı alanı `&[f64]`'tir ve sıcak yolda metinden okunmaz.
-- **Geometri değerleri** yalnız okunduğunda ve nesne başına en çok bir kez hesaplanır: uzunluk, alan, çevre, köşe sayısı, yer noktası, ağırlık merkezi, sınırlar, genişlik ve yükseklik. Hesap çağırandan ya da geometri çekirdeğinin `Shape`'i üstünde bir yardımcıdan gelir.
-- **Kapsam dışı:** öznitelik şemasının kendisi (veri modeli, `.kcad`, bulut) ayrı karardır (TODOS.md `DOM-09`–`DOM-11`). Bu crate yalnız arayüzü ve tipli sütunları olan bir test ev sahibini verir.
+- **Bir ad üç şeyden biridir** (`host.rs`):
+  - `$` ile yazılan yerleşik değer: geometri değerleri, tür, katman, etiket, numara, sıra;
+  - çağıranın şemasında (`Schema`) tanımlı, tipli bir kullanıcı alanı: sayı, metin, doğru/yanlış, tarih;
+  - yoksa bugünkü metin özniteliği, nesnede yoksa boş.
+- **Adlar derlemede çözülür:** `compile_with(kaynak, &şema)` her alanın türünü ve kaynağını `Expr::types`'a yazar. `compile` şemasızdır: bütün adlar metin özniteliğidir, `fixtures/expression/v1` değişmez.
+- **Sütunlar çağırandan gelir** (`Objects`):
+  - Motor okuduğu her şeyi parti parti ister: `field(ad, tür, …)`, `geometry(…)`, `builtin(…)`.
+  - Sayı alanı sayı olarak yazılır, sıcak yolda metinden okunmaz. Doğru/yanlış alanı doğru/yanlıştır. Tarih ISO metnidir (YYYY-AA-GG): metin olarak karşılaştırılır ve yazılır; tarih hesabı ayrı bir işlev kümesidir.
+  - `Expr::evaluate_objects(&nesneler, biçim)` bir sütun (`rows::Column`) döndürür. Nesnenin verisi çağıranın `Objects` yapısından uzun yaşar.
+  - Programın sabit metinleri artık yazmacın kendi arabelleğine kopyalanır, yani program nesnelerin verisinden uzun yaşamak zorunda değildir.
+- **Geometri değerleri doğrudan geometriden** (`geometry.rs`):
+  - Yeni değişkenler:
+    - `$merkez_y`, `$merkez_x`: ağırlık merkezi;
+    - `$min_y`, `$max_y`, `$min_x`, `$max_x`: sınır kutusu (Y sağa, X yukarı, `$y`/`$x` gibi);
+    - `$genişlik`/`width`, `$yükseklik`/`height`.
+  - Eksen adları için İngilizce takma ad yoktur: QGIS'in x'i bizim Y'mizdir.
+  - `$uzunluk` (`$çevre`), `$alan`, `$y`/`$x`, `$köşe` eskisi gibidir.
+  - `Shapes`, geometri çekirdeğinin `Shape`'lerinden bu değerleri yalnız okunanlar için hesaplar. Bir nesnenin kutusu, merkezi ve yer noktası, kaç değeri okunursa okunsun partide bir kez hesaplanır (bir testte şekil okumaları sayıldı).
+  - Uzunluk, alan ve yer noktası çekirdeğindir (`entity_length`, `entity_area`, `entity_anchor`: web'in `measures`'ı ile aynı). Kutu çekirdeğin `entity_bounds`'udur.
+  - **Ağırlık merkezi:**
+    - kapalı alan ve taramada halkaların birinci momentleri ilk köşeye göre toplanır, çünkü TM koordinatlarının (milyonlarca metre) çarpımları ondalıkları yok ederdi;
+    - bulge'lı kenarın daire parçası tam formülüyle girer; delikler düşülür;
+    - daire ve tam elipste merkezdir;
+    - öbür nesnelerde ve alanı sıfır olan kapalı alanda yer noktasıdır.
+  - Tek nesne yolu (`Scope`) değerleri `Scope::geometry`'den okur. Varsayılanı `measured` ve `vertices`'tir; nesnenin şeklini tutan bir kapsam yeni değerleri de verir (`geometry::value`).
+- **Web** (`GeometryStore.evaluateExpression`, `CoreStore.evaluateExpression`, `ExprObjects.geometry`):
+  - İfade deponun içinde değerlendirilir; geometri değerleri deponun şekillerinden okunur. Ölçü kaydı sınırdan hiç geçmez.
+  - Yeni geometri değişkenleri web'de yalnız bu yolla dolar. `exprEvaluate`'in tablosu yalnız uzunluk, alan ve yer noktası taşır; öbürleri orada boştur.
+  - Çağıranların (İşlemler, stil pencereleri) bu yola geçmesi web ajanıyla konuşulur.
+- **Doğrulama:**
+  - `fixtures/expression/v2/geometry.json` motordan bağımsız hesaplanmış değerleri tutar (`scripts/fixtures/expression_geometry.py`, `--check` ile denetlenir):
+    - düz halkaların alanı ve ağırlık merkezi kesirli sayılarla (delikler düşülür, TM koordinatlarında);
+    - yarım daire kenar yarım dairenin kendi formülleriyle; daire; kutular; çizgi, çoklu çizgi, nokta; alansız kapalı alan.
+  - `tests/typed.rs`:
+    - bu değerleri parti ve tek nesne yollarından 0,1 µm içinde karşılaştırır;
+    - tipli alanları 300 nesnede (bir parti ve bir parça) denetler: sayı alanıyla aritmetik, doğru/yanlış, metin birleştirme, ISO tarih karşılaştırması, şemadaki öznitelik;
+    - aynı rakamlar metin özniteliği olarak geldiğinde de aynı yanıtları bekler;
+    - şekil okumalarını sayar.
+  - Web'de `expression.test.ts` gerçek bir depoda denetler: ölçü kaydı yoluyla aynı değerler, yeni değişkenler.
 
 ### 4. Dil ekleri (plan, dilim 4)
 
