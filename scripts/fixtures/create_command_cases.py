@@ -271,6 +271,46 @@ cases.append({
     ],
 })
 
+# The Hesap windows' “Çizime ekle”: named points, the name as their label and in their attributes (Ad, Tür, and
+# Z (m) when the window found an elevation), one step named after the window.
+def survey_point(x, y, name, kind, z=None):
+    geometry = {"kind": "point", "p": P(x, y), **({"z": z} if z is not None else {})}
+    attrs = {"Ad": name, "Tür": kind, **({"Z (m)": f"{z:.3f}"} if z is not None else {})}
+    return O(geometry, attrs=attrs, label=name)
+
+
+TRAVERSE = [survey_point(487012.304, 4420021.268, "P1", "Poligon noktası"), survey_point(487048.119, 4420040.442, "P2", "Poligon noktası")]
+POLAR = [survey_point(487030.5, 4420060.25, "101", "Alım noktası", 12.345)]
+FORWARD = [survey_point(487070.125, 4420015.5, "K1", "Kestirme noktası")]
+RESECTION = [survey_point(487080.75, 4420035.125, "S1", "Kestirme noktası")]
+
+cases.append({
+    "name": "Hesap pencereleri: Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme noktalarını adlarıyla yazar; her biri tek adımdır, adı hesabın adıdır",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "traverse", "objects": TRAVERSE}, "result": done([3, 4]),
+         "expect": {"ids": IDS + [3, 4], "entities": {"3": made(TRAVERSE[0], 3), "4": made(TRAVERSE[1], 4)}, "uids": {"3": "new", "4": "new"}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "polarSurvey", "objects": POLAR}, "result": done([5]),
+         "note": "Kotu bulunan nokta: z geometride, “Z (m)” öznitelikte.", "expect": {"entities": {"5": made(POLAR[0], 5)}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "forwardIntersection", "objects": FORWARD}, "result": done([6]),
+         "expect": {"entities": {"6": made(FORWARD[0], 6)}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "operation": "resection", "objects": RESECTION}, "result": done([7]),
+         "expect": {"ids": IDS + [3, 4, 5, 6, 7], "entities": {"7": made(RESECTION[0], 7)}, "revision": "changed"}},
+        {"op": "undo", "returns": "Geriden kestirme", "expect": {"ids": IDS + [3, 4, 5, 6]}},
+        {"op": "undo", "returns": "Önden kestirme", "expect": {"ids": IDS + [3, 4, 5]}},
+        {"op": "undo", "returns": "Kutupsal alım", "expect": {"ids": IDS + [3, 4]}},
+        {"op": "undo", "returns": "Poligon hesabı", "expect": {"ids": IDS, "canUndo": False, "canRedo": True}},
+        {"op": "redo", "returns": "Poligon hesabı", "expect": {"ids": IDS + [3, 4]}},
+    ],
+})
+
+cases.append({
+    "name": "Hesap penceresi gizli katmana da yazar, uyarıyla",
+    "steps": [
+        {"op": "execute", "input": {"layerId": "gizli", "operation": "polarSurvey", "objects": POLAR}, "result": done([3], [hidden("Gizli katman")]),
+         "expect": {"entities": {"3": made(POLAR[0], 3, "gizli")}, "revision": "changed"}},
+    ],
+})
+
 marked = [
     O({"kind": "point", "p": P(487060, 4420010), "z": 12.5}, color="#E5484D", attrs={"Tür": "Kot noktası", "Z (m)": "12.500"}, label="12.50"),
     O(FOOT),

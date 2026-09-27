@@ -188,7 +188,7 @@ class IntersectionDialog implements Picker {
   private addToDrawing(): void {
     const res = this.result;
     if (!res || !state.layer) return;
-    const n = addPoints(this.ctx, state.layer, [{ name: res.name, p: res.p }], 'Kestirme noktası', this.title);
+    const n = addPoints(this.ctx, state.layer, [{ name: res.name, p: res.p }], 'Kestirme noktası', state.kind === 'forward' ? 'forwardIntersection' : 'resection');
     if (n === null) return;
     this.ctx.log.success(`${this.title}: ${res.name} noktası çizime eklendi (Ctrl+Z geri alır).`);
     this.dialog.close();

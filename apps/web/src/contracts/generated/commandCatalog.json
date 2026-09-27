@@ -10932,7 +10932,7 @@
       "id": "cad.entities.create",
       "version": 1,
       "title": "Nesneleri ekle",
-      "summary": "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın adı (Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın ya da hesabın adı (Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden kestirme). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama; renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -10949,7 +10949,7 @@
       "input": {
         "$defs": {
           "CreateOperation": {
-            "description": "The drawing tool whose step has its own name; without one the step is\n“Ekle”, as for every object a drawing tool adds.",
+            "description": "The drawing tool or Hesap window whose step has its own name; without\none the step is “Ekle”, as for every object a drawing tool adds.",
             "oneOf": [
               {
                 "const": "parallel",
@@ -10979,6 +10979,26 @@
               {
                 "const": "boundary",
                 "description": "İçine tıklayarak alan: the region clicked inside, as an area. The step is “Alan oluştur”.",
+                "type": "string"
+              },
+              {
+                "const": "traverse",
+                "description": "Poligon hesabı: the traverse's new points (Hesap menu).",
+                "type": "string"
+              },
+              {
+                "const": "polarSurvey",
+                "description": "Kutupsal alım: the points measured from a station (Hesap menu).",
+                "type": "string"
+              },
+              {
+                "const": "forwardIntersection",
+                "description": "Önden kestirme: the point found from two known points (Hesap menu).",
+                "type": "string"
+              },
+              {
+                "const": "resection",
+                "description": "Geriden kestirme: the station found from three known points (Hesap menu).",
                 "type": "string"
               }
             ]
@@ -11538,7 +11558,7 @@
                 "type": "null"
               }
             ],
-            "description": "The drawing tool the objects come from, when its step has its own\nname: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur. Absent: “Ekle”."
+            "description": "The drawing tool or Hesap window the objects come from, when its step\nhas its own name: Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan\noluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden\nkestirme. Absent: “Ekle”."
           }
         },
         "required": [
@@ -11669,6 +11689,43 @@
               }
             ],
             "operation": "parallel"
+          }
+        },
+        {
+          "title": "Poligon hesabının iki yeni noktası: adları etiket ve öznitelik olarak, tek adımda “Poligon hesabı”",
+          "input": {
+            "layerId": "poligon",
+            "objects": [
+              {
+                "attrs": {
+                  "Ad": "P1",
+                  "Tür": "Poligon noktası"
+                },
+                "geometry": {
+                  "kind": "point",
+                  "p": {
+                    "x": 423512.304,
+                    "y": 4512291.268
+                  }
+                },
+                "label": "P1"
+              },
+              {
+                "attrs": {
+                  "Ad": "P2",
+                  "Tür": "Poligon noktası"
+                },
+                "geometry": {
+                  "kind": "point",
+                  "p": {
+                    "x": 423548.119,
+                    "y": 4512310.442
+                  }
+                },
+                "label": "P2"
+              }
+            ],
+            "operation": "traverse"
           }
         }
       ]

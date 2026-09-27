@@ -1,7 +1,9 @@
 import '../../styles/calc.css';
 import type { AppContext } from '../../app/context';
+import type { CreateOperation } from '../../contracts/generated/CreateOperation';
+import type { NewObject } from '../../contracts/generated/NewObject';
 import type { Vec2 } from '../../model/geometry';
-import type { NewEntity } from '../../model/entities';
+import { entitiesCreate } from '../../product/entitiesCreate';
 import { PickPointTool } from '../../tools/pickPointTool';
 import { h, replaceChildren, type Child } from '../dom';
 import { icon } from '../icons';
@@ -287,11 +289,15 @@ export function layerChoice(ctx: AppContext, state: { layer: string | null }, pr
 }
 
 /**
- * Adds the points to the layer as one undo step, with their names as labels
- * and attributes (Ad, Tür, Z). Returns how many were added, or null with a
- * message when the layer cannot take them.
+ * Adds the points to the layer through the product command
+ * `cad.entities.create` (docs/adr/0057): one undo step named after the
+ * window (`operation`: Poligon hesabı, Kutupsal alım, Önden or Geriden
+ * kestirme), with their names as labels and attributes (Ad, Tür, Z). The
+ * window says a locked or hidden layer in its own words (it has a layer
+ * picker). Returns how many were added, or null with a message when the
+ * layer cannot take them.
  */
-export function addPoints(ctx: AppContext, layerId: string, points: readonly NewPoint[], kind: string, label: string): number | null {
+export function addPoints(ctx: AppContext, layerId: string, points: readonly NewPoint[], kind: string, operation: CreateOperation): number | null {
   const layers = ctx.doc.layers;
   const node = layers.get(layerId);
   if (!node) return null;
@@ -299,18 +305,20 @@ export function addPoints(ctx: AppContext, layerId: string, points: readonly New
     ctx.log.warn(`“${node.name}” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katman seçin.`);
     return null;
   }
-  const entities: NewEntity[] = points.map((pt) => ({
-    kind: 'point',
-    layerId,
-    p: pt.p,
-    ...(pt.z != null ? { z: pt.z } : {}),
+  const objects: NewObject[] = points.map((pt) => ({
+    geometry: { kind: 'point', p: pt.p, ...(pt.z != null ? { z: pt.z } : {}) },
     label: pt.name,
     attrs: { Ad: pt.name, Tür: kind, ...(pt.z != null ? { 'Z (m)': pt.z.toFixed(3) } : {}) },
   }));
-  const added = ctx.doc.transact(label, () => ctx.doc.addMany(entities, label));
-  ctx.selection.set(added.map((e) => e.id));
+  const result = entitiesCreate.execute({ doc: ctx.doc }, { layerId, objects, operation });
+  if (result.status !== 'completed') {
+    if ('error' in result) ctx.log.warn(result.error.message);
+    return null;
+  }
+  for (const w of result.warnings) if (w.code !== 'layer_hidden') ctx.log.warn(w.message);
+  ctx.selection.set(result.output.ids);
   if (!layers.isVisible(layerId)) ctx.log.warn(`“${node.name}” katmanı gizli; eklenen noktalar görünmüyor.`);
-  return added.length;
+  return result.output.ids.length;
 }
 
 /** Copies a report (tab-separated lines, pastes into a spreadsheet) and says so. */
