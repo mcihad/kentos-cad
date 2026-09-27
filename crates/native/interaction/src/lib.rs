@@ -82,6 +82,7 @@ pub mod ellipse;
 pub mod erase;
 mod faces;
 mod format;
+pub mod grip_menu;
 pub mod hatch;
 pub mod lengthen;
 pub mod line;

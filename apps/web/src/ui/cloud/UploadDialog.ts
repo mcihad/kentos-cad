@@ -190,9 +190,11 @@ export function openUploadDialog(ctx: AppContext, preset: UploadPreset = {}): vo
       say(storage === 'file' || done > 1e4 ? `Yükleniyor: %${total ? Math.round((done / total) * 100) : 100} (${sizeText(done)} / ${sizeText(total)})` : `${done} / ${total} nesne`);
     };
     try {
-      const ok = storage === 'file' ? await cloud.uploadFile(tenant.tenantId, name, onProgress, fields.read(), stageSay) : await cloud.upload(tenant.tenantId, name, onProgress, fields.read(), stageSay);
-      if (ok) dialog.close();
-      else lock(false);
+      // False: the project was made and holds the drawing as it went up, but the drawing changed on its way and
+      // stays local (the log says so). The window closes either way: another press would make a second project.
+      if (storage === 'file') await cloud.uploadFile(tenant.tenantId, name, onProgress, fields.read(), stageSay);
+      else await cloud.upload(tenant.tenantId, name, onProgress, fields.read(), stageSay);
+      dialog.close();
     } catch (e) {
       lock(false);
       progress.hidden = true;

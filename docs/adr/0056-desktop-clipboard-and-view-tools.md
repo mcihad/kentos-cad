@@ -119,3 +119,4 @@ Her bozma çalıştırıldıktan sonra geri alındı (`.run/breaks-0056.log`):
 ## Sonra
 
 - 27 Eylül: Kes iki platformda `cad.entities.delete` ile siler (web `f860b5f`). Silme “Kes” adlı işlemin içindedir; adım adı, kilit uyarısı, ileti ve pano aynı kalır. Çizgi'nin Geri (G) yedeği de, çizim değiştikten sonra, çizgiyi aynı komutla siler. Sonradan kilitlenen katmandaki çizgi kalır ve komutun reddi söylenir; silinen çizgi sonraki G'lerle geri gelmez (`crates/native/interaction/tests/line.rs`).
+- 27 Eylül: Yapıştır iki platformda `cad.entities.create` ve semboller için `cad.entities.set` ile, tek adımda “Yapıştır” yazar (web `7a5ca22`, masaüstü [ADR 0074](0074-grips-menu-and-paste-through-commands.md)). Grup kimliği taşıyan nesne etkin katmana gider; gizli hedef katman bir kez söylenir; komutların reddi hepsini geri alır ve söylenir.

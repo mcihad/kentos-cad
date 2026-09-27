@@ -54,7 +54,7 @@
 
 ## Bu dilimde olmayanlar
 
-- Web'in tutamaç öğeleri: imlecin altındaki köşeyi silmek, kenarın ortasına köşe eklemek, kenarı yaya ya da düze çevirmek. Masaüstünde tutamaçlar henüz yok.
+- Web'in tutamaç öğeleri: imlecin altındaki köşeyi silmek, kenarın ortasına köşe eklemek, kenarı yaya ya da düze çevirmek. Masaüstünde tutamaçlar henüz yok. (27 Eylül: tutamaçlar [ADR 0068](0068-desktop-grips-and-hover-card.md)'de, öğeleri [ADR 0074](0074-grips-menu-and-paste-through-commands.md)'te geldi.)
 - Komut menüsünde Nokta hesapla ▸: masaüstünde nokta hesaplayıcı yok (`UX-07`).
 - Çizimin üstündeki komut şeridinde (`drafting.commandBar`, varsayılan kapalı) tek seferlik kenet çipi.
 

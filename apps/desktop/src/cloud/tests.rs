@@ -1535,6 +1535,62 @@ fn a_refused_upload_names_the_object_and_a_good_one_opens_the_project() {
     );
 }
 
+/// The drawing changed while it went up (the web's f7616e4): the project
+/// holds it as it went up, the window closes, nothing opens over the change.
+#[test]
+fn a_drawing_changed_while_it_went_up_stays_as_it_is() {
+    let mut app = signed_in();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(
+        crate::files_testing::drawing(0),
+    )))));
+    let _ = app.run("cloud.upload");
+    cloud(&mut app, Event::UploadStorage(ProjectStorage::Database));
+    cloud(&mut app, Event::UploadName("Pafta 12".into()));
+    let _ = app.update(crate::cloud::msg(Event::UploadSubmit));
+    let (id, _) = app
+        .cloud
+        .upload
+        .as_ref()
+        .and_then(|u| u.request())
+        .expect("working");
+    cloud(
+        &mut app,
+        Event::UploadEncoded {
+            id,
+            result: Ok(Once::new(vec![1, 2, 3])),
+        },
+    );
+    let doc = app.document.as_mut().expect("open");
+    doc.model.remove(&[Slot(4)]);
+    let revision = doc.model.revision();
+    let mut made = info(ProjectStorage::Database, true, ProjectState::Active);
+    made.name = "Pafta 12".into();
+    cloud(
+        &mut app,
+        Event::Uploaded {
+            id,
+            result: Ok((
+                made,
+                kentos_cloud::Uploaded::Database(kentos_contracts::ProjectImported {
+                    objects: "13".into(),
+                    data_revision: "1".into(),
+                    meta_version: "1".into(),
+                    replayed: false,
+                }),
+            )),
+        },
+    );
+    assert_eq!(app.dialog, None);
+    assert!(app.cloud.upload.is_none());
+    assert!(app.cloud.opening.is_none(), "nothing opens over the change");
+    let doc = app.document.as_ref().expect("open");
+    assert!(doc.cloud_source().is_none() && doc.model.revision() == revision);
+    assert_eq!(
+        last_said(&app),
+        "“Pafta 12” bulut projesi oluşturuldu ve çizim içe aktarıldı (13 nesne), ama çizim yükleme sürerken değişti; ekrandaki çizim projeye bağlanmadı ve değişiklikleri yerinde duruyor. Projeyi Bulut projesi aç ile açın."
+    );
+}
+
 #[test]
 fn the_status_bar_offers_sign_in_or_says_who_and_where() {
     let (mut app, _) = App::boot(None);

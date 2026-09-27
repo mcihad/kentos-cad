@@ -5,9 +5,12 @@
 //! into verified `.kcad` v2 bytes off the UI thread, kentos-cloud creates the
 //! project and fills it (a refused drawing leaves no project behind), and
 //! the new project is then opened from the server, so the drawing on screen
-//! is the cloud project. A refusal names the object and selects it. A retry
-//! of the same upload keeps its idempotency key: the server answers with the
-//! same project instead of making a second one.
+//! is the cloud project. A drawing that changed on its way (other people's
+//! changes to an open database project) is not replaced: the project holds
+//! it as it went up, the window closes and the log says so (the web's
+//! f7616e4). A refusal names the object and selects it. A retry of the same
+//! upload keeps its idempotency key: the server answers with the same
+//! project instead of making a second one.
 
 use iced::Task;
 use iced::futures::channel::mpsc;
@@ -258,9 +261,9 @@ impl App {
         };
         u.work = None;
         u.stage = None;
+        let drawing = u.drawing;
         match result {
             Err(failure) => {
-                let drawing = u.drawing;
                 let place = refused_place(&failure);
                 let named = place.and_then(|i| self.name_object(i, drawing));
                 if let Some(u) = self.cloud.upload.as_mut() {
@@ -284,6 +287,24 @@ impl App {
                 };
                 let own = self.cloud.membership(&info.tenant_id).is_some();
                 let place = words::workspace(info.tenant_kind, &info.tenant_name, own);
+                // Changed on its way: opening the project would replace the
+                // change, so the drawing stays local, with it (and a conflict's
+                // kept save stays too: the project does not hold the newest).
+                let now = self
+                    .document
+                    .as_ref()
+                    .map(|d| (d.session, d.model.revision()));
+                if now != drawing {
+                    self.cloud.upload = None;
+                    if self.dialog == Some(Dialog::Upload) {
+                        self.dialog = None;
+                    }
+                    self.warn(format!(
+                        "“{}” bulut projesi oluşturuldu ve çizim içe aktarıldı ({objects} nesne), ama çizim yükleme sürerken değişti; ekrandaki çizim projeye bağlanmadı ve değişiklikleri yerinde duruyor. Projeyi Bulut projesi aç ile açın.",
+                        info.name
+                    ));
+                    return Task::none();
+                }
                 // Both works are kept: the old project's newest stays, this one is up now.
                 if self.cloud.upload.as_ref().is_some_and(|u| u.from_conflict)
                     && let Some(held) = self.cloud.held.as_mut()

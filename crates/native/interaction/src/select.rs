@@ -13,20 +13,25 @@
 //!   dragged, it goes where the button comes up; clicked, it is hot and the
 //!   next click places it; a typed point places it too, Enter where the
 //!   pointer is, Esc leaves it. Snaps, ortho and polar tracking apply from
-//!   where the grip was. One undo step, “Tutamaçla düzenle”.
+//!   where the grip was. It writes through `cad.entities.edit`, operation
+//!   `grip`, one undo step “Tutamaçla düzenle”: a layer locked while the grip
+//!   waited is refused in the command's words, and an object gone meanwhile
+//!   is said (the web's dd39864).
 //!
 //! Hidden layers' objects are never picked; locked layers' are, as on the
 //! web (the erase tool leaves them in place), but their grips are not
 //! taken. Ctrl does nothing here, as on the web.
 
-use kentos_domain::Slot;
+use kentos_contracts::{EditOperation, EntitiesEdit, EntityEdit};
+use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::js_hypot;
 use kentos_geometry_core::ops::grips::move_grip;
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::point_text::point_from_text;
-use kentos_native_application::geometry::{shape, with_shape};
+use kentos_native_application::geometry::{edit_geometry, shape, with_shape};
+use kentos_native_application::{ExecutionContext, edit};
 
 use crate::Vec2;
 use crate::edge::Outline;
@@ -79,6 +84,8 @@ impl SelectBox {
 #[derive(Clone, Debug, PartialEq)]
 struct GripEdit {
     slot: Slot,
+    /// The object's persistent id: the command names it by that.
+    uid: Option<Uuid>,
     index: usize,
     /// Where the grip was.
     origin: Vec2,
@@ -117,6 +124,7 @@ impl Select {
         if let Some((slot, index, origin)) = grip_at(p.screen, cx) {
             self.grip = Some(GripEdit {
                 slot,
+                uid: cx.doc.uid(slot),
                 index,
                 origin,
                 down: p.screen,
@@ -284,15 +292,25 @@ impl Select {
         self.moved = None;
     }
 
-    /// The object with its grip at `at`, written as one undo step, “Tutamaçla
-    /// düzenle”, as the web writes it; a shape it cannot take is said and
-    /// nothing changes (the web's `commitGrip`).
+    /// The object with its grip at `at`, written through `cad.entities.edit`,
+    /// operation `grip` (the step “Tutamaçla düzenle”): the object by its
+    /// persistent id, its whole new geometry explicit (TODOS.md CMD-07). An
+    /// object gone meanwhile, a shape it cannot take and the command's
+    /// refusal are said; nothing changes then (the web's `commitGrip`).
     fn commit(&mut self, at: Vec2, cx: &mut Context<'_>) {
         let Some(g) = self.grip.take() else {
             return;
         };
         self.end_grip();
-        let Some(e) = cx.doc.get(g.slot).cloned() else {
+        let found = g
+            .uid
+            .and_then(|uid| Some((uid, cx.doc.slot_of(uid)?)))
+            .and_then(|(uid, slot)| Some((uid, cx.doc.get(slot)?.clone())));
+        let Some((uid, e)) = found else {
+            cx.say(
+                Level::Warn,
+                "Tutamacın nesnesi artık çizimde yok (silinmiş ya da geri alınmış); tutamaç bırakıldı.",
+            );
             return;
         };
         let moved = move_grip(&CoreEntity::new(shape(&e)), g.index, at)
@@ -303,7 +321,19 @@ impl Select {
                 "Bu konum geçersiz bir şekil oluşturuyor; tutamaç yerinde bırakıldı.",
             ),
             Some(m) if dist(g.origin, at) > 1e-9 => {
-                cx.doc.update_many(vec![(g.slot, m)], "Tutamaçla düzenle");
+                let Some(geometry) = edit_geometry(shape(&m)) else {
+                    return;
+                };
+                let input = EntitiesEdit {
+                    operation: EditOperation::Grip,
+                    changes: vec![EntityEdit::Update {
+                        uid: uid.to_string(),
+                        geometry,
+                    }],
+                    expected_revision: None,
+                };
+                let result = edit::execute(&mut ExecutionContext::new(cx.doc), input);
+                let _ = points::written(result, cx);
             }
             Some(_) => {}
         }
@@ -333,7 +363,7 @@ impl Select {
 /// The grip under the pointer of a selected object not on a locked layer,
 /// the nearest within reach (the web's `gripAt`): the object, the grip's
 /// index and where it is.
-fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<(Slot, usize, Vec2)> {
+pub(crate) fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<(Slot, usize, Vec2)> {
     let ids = cx.selection.ids();
     if ids.len() > GRIP_LIMIT {
         return None;

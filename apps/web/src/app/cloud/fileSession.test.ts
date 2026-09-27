@@ -138,6 +138,15 @@ describe.skipIf(!formatsBuilt)('a new database project filled by one import (doc
     expect([server.store.size, session.project.value, doc.dirty.value, doc.name.value]).toEqual([0, null, true, 'Örnek pafta.kcad']);
   });
 
+  it('a drawing changed while it goes up: the project holds it as it went; the drawing stays local, unattached, and says so', async () => {
+    const { session, server, doc, messages } = setup();
+    const sent = doc.size;
+    const made = await session.upload('t', 'Ada 101', undefined, {}, (s) => s === 'importing' && void doc.add(point(486502)));
+    expect(made).toBe(false);
+    expect([server.store.size, session.project.value, session.sync.value, doc.size, doc.dirty.value]).toEqual([sent, null, null, sent + 1, true]);
+    expect(messages.some((m) => /çizim yükleme sürerken değişti; ekrandaki çizim projeye bağlanmadı/.test(m))).toBe(true);
+  });
+
   it('a server without the import gets the objects in batches, then the layer tree', async () => {
     const { session, server, doc, messages } = setup();
     server.files.noImport = true;

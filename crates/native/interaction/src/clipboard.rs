@@ -10,21 +10,27 @@
 //!   were selected, and a base point: the lower left corner of their box.
 //! - Kes deletes through the product command `cad.entities.delete`
 //!   (docs/adr/0029) inside one undo step “Kes”, as the web's command does
-//!   since f860b5f; Yapıştır writes through the document (no product command
-//!   has it yet), one undo step “Yapıştır”. Objects on locked layers are not
-//!   cut. Pasted objects are new ones with new persistent ids
-//!   (docs/adr/0014), however often they are pasted; each keeps its layer
-//!   when the drawing has it unlocked, else goes to the active layer.
+//!   since f860b5f. Yapıştır writes through `cad.entities.create` and
+//!   `cad.entities.set` (for the symbols) in one undo step “Yapıştır”, as
+//!   the web's since 7a5ca22; what either refuses takes all of it back and
+//!   is said. Objects on locked layers are not cut. Pasted objects are new
+//!   ones with new persistent ids (docs/adr/0014), however often they are
+//!   pasted; each keeps its layer when the drawing has it (a layer, not a
+//!   group) unlocked, else goes to the active layer; a hidden layer that
+//!   takes some is said once.
 
 use std::convert::Infallible;
 
-use kentos_contracts::{EntitiesDelete, Entity};
+use kentos_contracts::{
+    CommandResult, EntitiesCreate, EntitiesDelete, EntitiesSetProperties, Entity, EntityGeometry,
+    LayerNodeType, NewObject, PropertiesOperation,
+};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::translation;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::transform::transform_shape;
-use kentos_native_application::geometry::{shape, with_shape};
-use kentos_native_application::{ExecutionContext, delete};
+use kentos_native_application::geometry::{edit_geometry, shape, with_shape};
+use kentos_native_application::{ExecutionContext, codes, create, delete, set};
 
 use crate::Vec2;
 use crate::log::Level;
@@ -185,7 +191,13 @@ pub fn paste_in_place(clipboard: &Clipboard, cx: &mut Context<'_>) -> Vec<Slot> 
 pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Slot> {
     let layers = cx.doc.layers();
     let active = layers.active().to_owned();
-    let usable = |id: &str| layers.get(id).is_some() && !layers.is_locked(id);
+    // A layer (not a group) that is not locked (the web's since 7a5ca22).
+    let usable = |id: &str| {
+        layers
+            .get(id)
+            .is_some_and(|node| node.kind == LayerNodeType::Layer)
+            && !layers.is_locked(id)
+    };
     if layers.is_locked(&active) && items.iter().any(|e| !usable(&e.base().layer_id)) {
         let name = layers.get(&active).map_or("", |node| node.name.as_str());
         let line = format!("“{name}” katmanı kilitli; yapıştırılamadı.");
@@ -193,27 +205,114 @@ pub fn paste(items: &[Entity], dx: f64, dy: f64, cx: &mut Context<'_>) -> Vec<Sl
         return Vec::new();
     }
     let m = translation(dx, dy);
-    let moved: Vec<Entity> = items
+    // Each copy with its geometry as the commands take it.
+    let moved: Vec<(Entity, EntityGeometry)> = items
         .iter()
         .filter_map(|e| {
             let mut copy = with_shape(e, transform_shape(&shape(e), &m))?;
             if !usable(&e.base().layer_id) {
                 copy.base_mut().layer_id = active.clone();
             }
-            Some(copy)
+            let geometry = edit_geometry(shape(&copy))?;
+            Some((copy, geometry))
         })
         .collect();
-    match cx.doc.add_many(moved, PASTE_LABEL) {
+    let mut hidden: Vec<String> = Vec::new();
+    let written = cx.doc.transact(PASTE_LABEL, |doc| {
+        let mut out: Vec<Slot> = Vec::with_capacity(moved.len());
+        // One create for each run of objects going to the same layer, in
+        // their order, so their slots are in it too.
+        for run in moved.chunk_by(|(a, _), (b, _)| a.base().layer_id == b.base().layer_id) {
+            let layer = run[0].0.base().layer_id.clone();
+            let objects = run
+                .iter()
+                .map(|(e, geometry)| NewObject {
+                    geometry: geometry.clone(),
+                    color: e.base().color.clone(),
+                    attrs: Some(e.base().attrs.clone()),
+                    label: e.base().label.clone(),
+                })
+                .collect();
+            let input = EntitiesCreate {
+                layer_id: layer.clone(),
+                objects,
+                operation: None,
+                expected_revision: None,
+            };
+            match create::execute(&mut ExecutionContext::new(doc), input) {
+                CommandResult::Completed { output, warnings } => {
+                    if warnings.iter().any(|w| w.code == codes::LAYER_HIDDEN)
+                        && !hidden.contains(&layer)
+                    {
+                        hidden.push(layer);
+                    }
+                    out.extend(output.ids.into_iter().map(Slot));
+                }
+                other => return Err(refusal(other)),
+            }
+        }
+        // A new object carries no symbol: one set for each symbol, in the order they come.
+        let mut symbols: Vec<(String, Vec<String>)> = Vec::new();
+        for ((e, _), &slot) in moved.iter().zip(&out) {
+            let (Some(symbol), Some(uid)) = (e.base().symbol.as_ref(), doc.uid(slot)) else {
+                continue;
+            };
+            match symbols.iter_mut().find(|(s, _)| s == symbol) {
+                Some((_, uids)) => uids.push(uid.to_string()),
+                None => symbols.push((symbol.clone(), vec![uid.to_string()])),
+            }
+        }
+        for (symbol, uids) in symbols {
+            let input = EntitiesSetProperties {
+                uids,
+                layer_id: None,
+                color: None,
+                symbol: Some(Some(symbol)),
+                attrs: None,
+                label: None,
+                operation: PropertiesOperation::Symbol,
+                expected_revision: None,
+            };
+            if let refused @ (CommandResult::Failed { .. }
+            | CommandResult::Conflict { .. }
+            | CommandResult::NeedsInput { .. }) =
+                set::execute(&mut ExecutionContext::new(doc), input)
+            {
+                return Err(refusal(refused));
+            }
+        }
+        Ok(out)
+    });
+    match written {
         Ok(slots) => {
+            for id in &hidden {
+                let name = cx
+                    .doc
+                    .layers()
+                    .get(id)
+                    .map_or(id.as_str(), |n| n.name.as_str());
+                let line = format!("“{name}” katmanı gizli; yapıştırılan nesneler görünmeyecek.");
+                cx.say(Level::Warn, line);
+            }
             cx.say(
                 Level::Success,
                 format!("{} nesne yapıştırıldı.", slots.len()),
             );
             slots
         }
-        Err(full) => {
-            cx.say(Level::Error, full.to_string());
+        Err(message) => {
+            cx.say(Level::Warn, message);
             Vec::new()
         }
+    }
+}
+
+/// A command's refusal as the paste says it.
+fn refusal<T>(result: CommandResult<T>) -> String {
+    match result {
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => error.message,
+        _ => "Yapıştırılamadı.".to_owned(),
     }
 }
