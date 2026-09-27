@@ -19,6 +19,27 @@ EXPRESSION_BENCH=1 EXPRESSION_N=100000,1000000 EXPRESSION_PERF_OUT=docs/perf EXP
 
 Ölçüm sırasında makinede başka ağır süreç (Vite, e2e, cargo) çalışmaz.
 
+## İfade motoru: tipli alanlar ve şekillerden geometri (2026-09-27, `cdbb36f`)
+
+- **Kaynak:** [expression-native-tipli-2026-09-27.md](expression-native-tipli-2026-09-27.md), [expression-web-tipli-2026-09-27.md](expression-web-tipli-2026-09-27.md). Karar [ADR 0100](../adr/0100-expression-engine.md) §3'tedir.
+- **Ortam:** öncekilerle aynı makine ve ayarlar.
+- **Native:**
+  - `Kat` bir kez sayı sütunu (kullanıcı alanı), bir kez metin özniteliğidir.
+  - `$alan` bir kez şekillerden okunur, alan hesabı dahil (`geometry::Shapes`). Bir kez de deponun ölçü kaydıyla hesaplanır, kaydın hesabı ve tablo dahil (web'in bugünkü yolu).
+  - Nesneler 10 × 10 … 13 × 13 m karelerdir.
+- **Web:** kareler geometri deposundadır. “Depoda”: ifade deponun içinde değerlendirilir (`CoreStore.evaluateExpression`). “Ölçü kaydıyla”: deponun `measures` yanıtı alınır ve `exprEvaluate`'e verilir; iki kopya dahildir. Depoya JSON'la konduğu için 10⁵ nesnede ölçüldü.
+
+| p50 | Native, 10⁶ nesne | Web, 10⁵ nesne |
+|---|---|---|
+| `Kat * 2 + 1`: sayı alanı / metin özniteliği | 4,3 / 22,2 ms (5,2×) | — |
+| `$alan > 500`: şekillerden / ölçü kaydıyla | 16,8 / 62,8 ms (3,7×) | 19,2 / 28,1 ms (1,5×) |
+| `yuvarla($alan, 2)`: şekillerden / ölçü kaydıyla | 21,0 / 66,5 ms (3,2×) | 17,3 / 24,9 ms (1,4×) |
+| `$merkez_y` (yalnız şekillerden) | 29,1 ms | 19,8 ms |
+| `$genişlik * $yükseklik` (yalnız şekillerden) | 29,6 ms | 21,7 ms |
+
+- **Tipli sayı alanı:** nesne başına 4 ns. Eski motorun metinden okuduğu aynı ifade 57 ms'ydi (13×).
+- **Web'de kalan süre sayfadadır:** kimliklerin dizisi, tablonun kurulması (alan okunmasa da nesne başına bir tur) ve değerlerin okunması. Depoda nesnenin kimlikle bulunması da buna eklenir.
+
 ## İfade motoru: sütun motoru (2026-09-27, `23cc8f7` → `4d2060a`)
 
 - **Kaynak:** [expression-native-yeni-2026-09-27.md](expression-native-yeni-2026-09-27.md), [expression-web-yeni-2026-09-27.md](expression-web-yeni-2026-09-27.md); taban aşağıda. Karar [ADR 0100](../adr/0100-expression-engine.md) §2'dedir.

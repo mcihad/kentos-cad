@@ -21,6 +21,14 @@ pub enum Var {
     Index,
     Id,
     Scale,
+    CentroidY,
+    CentroidX,
+    MinY,
+    MaxY,
+    MinX,
+    MaxX,
+    Width,
+    Height,
 }
 
 pub struct VarDef {
@@ -79,6 +87,54 @@ pub static VARIABLES: &[VarDef] = &[
         name: "x",
         aliases: &[],
         description: "X (yukarı): nesnenin yer noktası",
+    },
+    VarDef {
+        var: Var::CentroidY,
+        name: "merkez_y",
+        aliases: &[],
+        description: "Ağırlık merkezinin Y'si (sağa): kapalı alanda, taramada, dairede ve tam elipste alanın merkezi (delikler düşülür); öbür nesnelerde yer noktası",
+    },
+    VarDef {
+        var: Var::CentroidX,
+        name: "merkez_x",
+        aliases: &[],
+        description: "Ağırlık merkezinin X'i (yukarı): kapalı alanda, taramada, dairede ve tam elipste alanın merkezi (delikler düşülür); öbür nesnelerde yer noktası",
+    },
+    VarDef {
+        var: Var::MinY,
+        name: "min_y",
+        aliases: &[],
+        description: "Sınır kutusunun en küçük Y'si (sağa)",
+    },
+    VarDef {
+        var: Var::MaxY,
+        name: "max_y",
+        aliases: &[],
+        description: "Sınır kutusunun en büyük Y'si (sağa)",
+    },
+    VarDef {
+        var: Var::MinX,
+        name: "min_x",
+        aliases: &[],
+        description: "Sınır kutusunun en küçük X'i (yukarı)",
+    },
+    VarDef {
+        var: Var::MaxX,
+        name: "max_x",
+        aliases: &[],
+        description: "Sınır kutusunun en büyük X'i (yukarı)",
+    },
+    VarDef {
+        var: Var::Width,
+        name: "genişlik",
+        aliases: &["width"],
+        description: "Sınır kutusunun genişliği, Y yönünde (m)",
+    },
+    VarDef {
+        var: Var::Height,
+        name: "yükseklik",
+        aliases: &["height"],
+        description: "Sınır kutusunun yüksekliği, X yönünde (m)",
     },
     VarDef {
         var: Var::Index,

@@ -15,10 +15,18 @@ use std::fmt::Write as _;
 use std::process::Command;
 use std::time::Instant;
 
+use kentos_expression::exec::Slot;
+use kentos_expression::geometry::Shapes;
 use kentos_expression::rows::{
     As, Column, EMPTY, Layout, MEASURE_STRIDE, RowsInput, Table, evaluate_rows,
 };
-use kentos_expression::{Value, compile};
+use kentos_expression::{
+    Builtin, FieldDef, FieldSource, FieldType, Geometry, Objects as Host, Schema, Value, compile,
+    compile_with,
+};
+use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::store::draw::measure_record;
+use kentos_geometry_core::vec2::Vec2;
 
 /// A condition, a numbering, an area as text, a rounded number, a geometry condition, arithmetic on an attribute.
 const CASES: [(&str, As); 6] = [
@@ -247,6 +255,7 @@ fn measures_expressions_on_many_objects() {
         );
         single.push((a, b));
     }
+    let typed = typed_and_shapes(&sizes, runs, warm);
     let Ok(out) = std::env::var("EXPRESSION_PERF_OUT") else {
         return;
     };
@@ -288,6 +297,26 @@ fn measures_expressions_on_many_objects() {
             a50 / b50
         );
     }
+    md.push_str(
+        "\nTipli alan ve şekillerden geometri (ADR 0100 §3; yeni motor, p50 ms). `Kat` bir kez sayı sütunu (kullanıcı alanı), bir kez metin \
+         özniteliği; `$alan` bir kez şekillerden (`geometry::Shapes`, hesap dahil), bir kez deponun ölçü kaydıyla (kaydın hesabı dahil). \
+         Nesneler 10 × 10 … 13 × 13 m kareler.\n\n| İfade | Yol |",
+    );
+    for n in &sizes {
+        let _ = write!(md, " {n} nesne |");
+    }
+    md.push_str("\n|---|---|");
+    for _ in &sizes {
+        md.push_str("---|");
+    }
+    md.push('\n');
+    for (label, path, times) in &typed {
+        let _ = write!(md, "| `{}` | {path} |", label.replace('|', "\\|"));
+        for t in times {
+            let _ = write!(md, " {t:.2} |");
+        }
+        md.push('\n');
+    }
     md.push_str("\np95 (eski / yeni):\n\n");
     for (k, (source, _)) in CASES.iter().enumerate() {
         let _ = write!(md, "- `{}`:", source.replace('|', "\\|"));
@@ -299,4 +328,164 @@ fn measures_expressions_on_many_objects() {
     let path = format!("{out}/expression-native-{label}-{date}.md");
     std::fs::write(&path, md).unwrap_or_else(|e| panic!("{path}: {e}"));
     println!("\n{path} yazıldı.");
+}
+
+/// A layer with a typed number field and squares (docs/adr/0100 §3).
+struct Squares<'d> {
+    kat: &'d [f64],
+    kat_text: &'d [String],
+    shapes: Shapes<'d, Box<dyn Fn(usize) -> Option<&'d Shape> + 'd>>,
+}
+
+impl<'d> Host<'d> for Squares<'d> {
+    fn len(&self) -> usize {
+        self.kat.len()
+    }
+
+    fn field(&self, _name: &str, ty: FieldType, start: usize, mut slot: Slot<'_, 'd>) {
+        let (kat, text) = (self.kat, self.kat_text);
+        match ty {
+            FieldType::Number => slot.numbers(|i| (true, kat[start + i])),
+            _ => {
+                for i in 0..slot.len() {
+                    slot.text(i, Some(text[start + i].as_str()));
+                }
+            }
+        }
+    }
+
+    fn geometry(&self, what: Geometry, start: usize, slot: Slot<'_, 'd>) {
+        self.shapes.fill(what, start, slot);
+    }
+
+    fn builtin(&self, _what: Builtin, _start: usize, mut slot: Slot<'_, 'd>) {
+        for i in 0..slot.len() {
+            slot.number(i, None);
+        }
+    }
+}
+
+/// Typed number field against text, geometry from shapes against the
+/// measures record: (expression, path, p50 per size).
+fn typed_and_shapes(sizes: &[usize], runs: usize, warm: usize) -> Vec<(String, String, Vec<f64>)> {
+    let mut rows: Vec<(String, String, Vec<f64>)> = Vec::new();
+    fn add(rows: &mut Vec<(String, String, Vec<f64>)>, label: &str, path: &str, t: f64) {
+        match rows.iter_mut().find(|r| r.0 == label && r.1 == path) {
+            Some(r) => r.2.push(t),
+            None => rows.push((label.into(), path.into(), vec![t])),
+        }
+    }
+    let schema = Schema {
+        fields: vec![FieldDef {
+            name: "Kat".into(),
+            ty: FieldType::Number,
+            source: FieldSource::User,
+            description: String::new(),
+        }],
+    };
+    for &n in sizes {
+        let kat: Vec<f64> = (0..n).map(|i| (i % 12) as f64).collect();
+        let kat_text: Vec<String> = kat.iter().map(|k| k.to_string()).collect();
+        let shapes: Vec<Shape> = (0..n)
+            .map(|i| {
+                let (x, y, s) = (
+                    487000.0 + (i % 1000) as f64 * 20.0,
+                    4420000.0 + (i / 1000) as f64 * 20.0,
+                    10.0 + (i % 4) as f64,
+                );
+                Shape::Polygon {
+                    pts: vec![
+                        Vec2::new(x, y),
+                        Vec2::new(x + s, y),
+                        Vec2::new(x + s, y + s),
+                        Vec2::new(x, y + s),
+                    ],
+                    bulges: None,
+                    holes: None,
+                }
+            })
+            .collect();
+        let sq = &shapes;
+        let layer = || Squares {
+            kat: &kat,
+            kat_text: &kat_text,
+            shapes: Shapes::new(Box::new(move |i| sq.get(i))),
+        };
+        let time = |f: &dyn Fn() -> usize| {
+            let mut ms = Vec::with_capacity(runs);
+            for run in 0..warm + runs {
+                let t = Instant::now();
+                let filled = f();
+                let elapsed = t.elapsed().as_secs_f64() * 1000.0;
+                assert_eq!(filled, n);
+                if run >= warm {
+                    ms.push(elapsed);
+                }
+            }
+            quantiles(&mut ms).0
+        };
+        let filled = |c: &Column| c.kinds.iter().filter(|&&k| k != EMPTY).count();
+        let typed = compile_with("Kat * 2 + 1", &schema).unwrap_or_else(|e| panic!("{}", e.text()));
+        let text = compile("Kat * 2 + 1").unwrap_or_else(|e| panic!("{}", e.text()));
+        let l = layer();
+        add(
+            &mut rows,
+            "Kat * 2 + 1",
+            "sayı alanı",
+            time(&|| filled(&typed.evaluate_objects(&l, As::Number))),
+        );
+        add(
+            &mut rows,
+            "Kat * 2 + 1",
+            "metin özniteliği",
+            time(&|| filled(&text.evaluate_objects(&l, As::Number))),
+        );
+        for src in ["$alan > 500", "yuvarla($alan, 2)"] {
+            let e = compile(src).unwrap_or_else(|e| panic!("{}", e.text()));
+            add(
+                &mut rows,
+                src,
+                "şekillerden",
+                time(&|| filled(&e.evaluate_objects(&layer(), As::Value))),
+            );
+            // The web's path: the store's measures record, then the table.
+            add(
+                &mut rows,
+                src,
+                "ölçü kaydıyla",
+                time(&|| {
+                    let mut measures = Vec::with_capacity(n * MEASURE_STRIDE);
+                    for s in &shapes {
+                        measure_record(Some(s), &mut measures);
+                    }
+                    let input = RowsInput {
+                        n,
+                        texts: "",
+                        text_lens: &[],
+                        numbers: &[],
+                        measures: &measures,
+                        scale: f64::NAN,
+                    };
+                    filled(&evaluate_rows(&e, &input, As::Value).unwrap_or_else(|m| panic!("{m}")))
+                }),
+            );
+        }
+        for src in ["$merkez_y", "$genişlik * $yükseklik"] {
+            let e = compile(src).unwrap_or_else(|e| panic!("{}", e.text()));
+            add(
+                &mut rows,
+                src,
+                "şekillerden",
+                time(&|| filled(&e.evaluate_objects(&layer(), As::Value))),
+            );
+        }
+        println!("\n{n} nesne, tipli alan ve şekillerden geometri (yeni motor)");
+        for (label, path, t) in &rows {
+            println!(
+                "{label:<32} {path:<18} p50 {:7.2} ms",
+                t.last().copied().unwrap_or(f64::NAN)
+            );
+        }
+    }
+    rows
 }

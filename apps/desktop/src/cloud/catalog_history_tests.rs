@@ -403,3 +403,47 @@ fn history_downloads_are_named_and_checked_against_the_list() {
     cloud(&mut app, Event::HistoryDownloadRevision(revision("5")));
     assert!(catalog(&app).acting.is_none());
 }
+
+#[test]
+fn the_history_command_opens_the_open_projects_history_in_the_catalog() {
+    use crate::app::Dialog;
+    use crate::cloud::tests::database;
+
+    let mut app = signed_in();
+    database(&mut app);
+    assert!(
+        !app.cloud_available("cloud.history"),
+        "without project.history it is off"
+    );
+    app.document
+        .as_mut()
+        .and_then(|d| d.cloud_source_mut())
+        .expect("a cloud project")
+        .info
+        .access
+        .permissions
+        .push(ProjectPermission::History);
+    assert!(app.cloud_available("cloud.history"));
+    let _ = app.run("cloud.history");
+    assert_eq!(app.dialog, Some(Dialog::Catalog));
+    let c = catalog(&app);
+    assert_eq!(
+        (c.list.clone(), c.tab),
+        (List::View(CatalogView::Recent), Tab::History)
+    );
+    let id = c.request().expect("the list asked");
+    cloud(
+        &mut app,
+        Event::CatalogPage {
+            id,
+            more: false,
+            result: Ok(page(vec![owned(PROJECT, "Ada 101")], 1, None)),
+        },
+    );
+    assert_eq!(catalog(&app).picked.as_deref(), Some(PROJECT));
+    assert!(
+        catalog(&app).history.request().is_some(),
+        "its history asked"
+    );
+    assert!(app.cloud.opening.is_none(), "shown, not opened again");
+}

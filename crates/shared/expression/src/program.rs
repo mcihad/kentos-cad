@@ -33,6 +33,16 @@ pub enum Load {
     Id,
     /// Denominator of the plot scale while drawing a symbol.
     Scale,
+    /// The area's centroid (the anchor for other objects), Y east and X north.
+    CentroidY,
+    CentroidX,
+    /// The bounding box and its extents.
+    MinY,
+    MaxY,
+    MinX,
+    MaxX,
+    Width,
+    Height,
 }
 
 impl Load {
@@ -49,6 +59,14 @@ impl Load {
             Var::Index => Load::Index,
             Var::Id => Load::Id,
             Var::Scale => Load::Scale,
+            Var::CentroidY => Load::CentroidY,
+            Var::CentroidX => Load::CentroidX,
+            Var::MinY => Load::MinY,
+            Var::MaxY => Load::MaxY,
+            Var::MinX => Load::MinX,
+            Var::MaxX => Load::MaxX,
+            Var::Width => Load::Width,
+            Var::Height => Load::Height,
         }
     }
 }

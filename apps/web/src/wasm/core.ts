@@ -538,6 +538,23 @@ export class CoreStore {
   }
 
   /**
+   * One expression's values for these objects (docs/adr/0100 §3): the table
+   * of what it reads of their attributes and names as `exprEvaluate` takes it,
+   * without `measures`; the geometry values (`$alan`, `$merkez_y`, `$genişlik` …)
+   * are read here from the store's shapes, only those the expression reads.
+   */
+  evaluateExpression(source: string, ids: Float64Array, texts: string, textLens: Int32Array, numbers: Float64Array, scale: number, want: number): ExprColumnData {
+    return typed(() => {
+      const c = this.raw.evaluateExpression(source, ids, texts, textLens, numbers, scale, want);
+      try {
+        return { kinds: c.kinds, numbers: c.numbers, texts: c.texts, textLengths: c.textLengths };
+      } finally {
+        c.free();
+      }
+    });
+  }
+
+  /**
    * A layer through the style engine (crates/shared/style-core/src/style/build.rs):
    * `objects` four numbers per id (how it is drawn, its set or symbol, the set
    * of its simple look, its colour), the program's table of values, the box

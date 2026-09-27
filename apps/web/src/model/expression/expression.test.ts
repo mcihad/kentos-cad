@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Entity } from '../entities';
+import { CoreStore } from '../../wasm/core';
 import { compileExpression, expressionError, previewExpression, type ExprValue } from './expression';
 
 const parcel: Entity = {
@@ -114,5 +115,33 @@ describe('expressions', () => {
     expect(previewExpression(r.expr, [parcel, line], 'condition', layerName)).toBe('0 / 2 nesne koşulu sağlıyor. “Kat” alanı bu nesnelerde yok.');
     const v = compileExpression('yuvarla($alan, 1)');
     expect(v.ok && previewExpression(v.expr, [parcel, line], 'value', layerName)).toBe('İlk nesnede (12): “600”. 1 nesnede sonuç boş.');
+  });
+  it('reads geometry values from the geometry store the objects are in', () => {
+    const store = new CoreStore();
+    try {
+      store.put(JSON.stringify([parcel, line]));
+      const inStore = (src: string, entities: readonly Entity[] = [parcel, line]) => {
+        const r = compileExpression(src);
+        if (!r.ok) throw new Error(expressionError(r));
+        const c = r.expr.evaluateAll({ entities, layerName, geometry: store });
+        return entities.map((_, i) => c.value(i));
+      };
+      // The same values as through the measures answer…
+      for (const src of ["Nitelik = 'Arsa' ve $alan > 500", 'yuvarla($alan / 7, 2)', '$uzunluk || " m"', '$y + $x', "'P' || doldur($sıra, 5)"]) {
+        const r = compileExpression(src);
+        if (!r.ok) throw new Error(expressionError(r));
+        const measured = r.expr.evaluateAll({ entities: [parcel, line], layerName, measures: () => store.measures(Float64Array.from([7, 8])) });
+        expect(inStore(src), src).toEqual([measured.value(0), measured.value(1)]);
+      }
+      // …and the ones only the shapes have: the centroid and the box.
+      expect(inStore('$merkez_y')).toEqual([10, 1.5]);
+      expect(inStore('$merkez_x')).toEqual([15, 2]);
+      expect(inStore('$genişlik || "×" || $yükseklik')).toEqual(['20×30', '3×4']);
+      expect(inStore('$min_y + $max_y + $min_x + $max_x')).toEqual([50, 7]);
+      const needs = compileExpression('$merkez_y + $max_x');
+      expect(needs.ok && needs.expr.needs).toMatchObject({ measured: false, centroid: true, bounds: true });
+    } finally {
+      store.dispose();
+    }
   });
 });

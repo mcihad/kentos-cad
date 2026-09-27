@@ -12,7 +12,7 @@ use crate::library::Var;
 use crate::parser::{BinOp, Node};
 use crate::scalar::{self, R, Scratch, V};
 use crate::value::Value;
-use crate::{Measured, Scope};
+use crate::{Geometry, Measured, Scope};
 
 /// What JavaScript would have thrown at: the whole expression is empty.
 pub struct Thrown;
@@ -39,6 +39,14 @@ fn variable(v: Var, s: &dyn Scope) -> Value<'_> {
         Var::Index => Value::Num(s.index()),
         Var::Id => Value::Num(s.id()),
         Var::Scale => opt(s.scale()),
+        Var::CentroidY => opt(s.geometry(Geometry::CentroidY)),
+        Var::CentroidX => opt(s.geometry(Geometry::CentroidX)),
+        Var::MinY => opt(s.geometry(Geometry::MinY)),
+        Var::MaxY => opt(s.geometry(Geometry::MaxY)),
+        Var::MinX => opt(s.geometry(Geometry::MinX)),
+        Var::MaxX => opt(s.geometry(Geometry::MaxX)),
+        Var::Width => opt(s.geometry(Geometry::Width)),
+        Var::Height => opt(s.geometry(Geometry::Height)),
     }
 }
 

@@ -555,6 +555,43 @@ impl GeometryStore {
         self.inner.measures(ids)
     }
 
+    /// One expression's values for these objects (docs/adr/0100 §3): what it
+    /// reads of their attributes and names crosses as the expression table
+    /// (`kentos_expression::rows`, without `measures`); the geometry values
+    /// (`$alan`, `$merkez_y`, `$genişlik` …) are read here from the store's
+    /// shapes, only those the expression reads. `want` as `exprEvaluate`'s.
+    #[allow(clippy::too_many_arguments)]
+    #[wasm_bindgen(js_name = evaluateExpression)]
+    pub fn evaluate_expression(
+        &self,
+        source: &str,
+        ids: &[f64],
+        texts: &str,
+        text_lens: &[i32],
+        numbers: &[f64],
+        scale: f64,
+        want: u8,
+    ) -> Result<crate::ExprColumn, JsError> {
+        use kentos_expression::{compile, rows};
+        let e = compile(source).map_err(|e| JsError::new(&e.text()))?;
+        let input = rows::RowsInput {
+            n: ids.len(),
+            texts,
+            text_lens,
+            numbers,
+            measures: &[],
+            scale,
+        };
+        let shape = |i: usize| {
+            ids.get(i)
+                .and_then(|&id| self.inner.get(id))
+                .map(|it| &it.shape)
+        };
+        let c = rows::evaluate_rows_on(&e, &input, rows::As::from_code(want), shape)
+            .map_err(|e| JsError::new(&e))?;
+        Ok(crate::ExprColumn::from(c))
+    }
+
     /// A layer through the style engine (`kentos_style_core::style::build`):
     /// `objects` four numbers per id (how it is drawn, its set or symbol, the
     /// set of its simple look, its colour), the program's table of values

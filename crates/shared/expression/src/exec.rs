@@ -79,6 +79,18 @@ impl<'a> Slot<'_, 'a> {
         }
     }
 
+    /// Object `i`'s value: true/false, or empty.
+    #[inline]
+    pub fn truth(&mut self, i: usize, b: Option<bool>) {
+        match b {
+            Some(b) => {
+                self.kinds[i] = BOOL;
+                self.nums[i] = bit(b);
+            }
+            None => self.kinds[i] = NULL,
+        }
+    }
+
     /// Object `i`'s value: text, or empty.
     #[inline]
     pub fn text(&mut self, i: usize, t: Option<&'a str>) {
@@ -228,14 +240,29 @@ impl Out<'_, '_> {
 
 /// Writes the program's constants into their registers for `rows` objects;
 /// they stay for every batch of the run.
-pub fn prepare<'a>(p: &'a Program, regs: &mut Regs<'_, 'a>, rows: usize) {
+pub fn prepare(p: &Program, regs: &mut Regs<'_, '_>, rows: usize) {
     for (c, value) in p.consts.iter().enumerate() {
         let at = c * regs.stride;
         let (k, x, t) = match value {
             Const::Null => (NULL, 0.0, Txt::default()),
             Const::Num(x) => (NUM, *x, Txt::default()),
             Const::Bool(b) => (BOOL, bit(*b), Txt::default()),
-            Const::Text(s) => (TEXT, 0.0, Txt::Ref(s)),
+            Const::Text(s) => {
+                // Copied into the register's buffer, so the registers borrow
+                // only the objects: the program need not outlive their data.
+                if let Some(made) = regs.made.get_mut(c) {
+                    made.clear();
+                    made.push_str(s);
+                }
+                (
+                    TEXT,
+                    0.0,
+                    Txt::Own {
+                        start: 0,
+                        len: s.len(),
+                    },
+                )
+            }
             Const::Thrown => (THROWN, 0.0, Txt::default()),
         };
         regs.kinds[at..at + rows].fill(k);

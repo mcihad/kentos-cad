@@ -622,14 +622,18 @@ pub const CLASS_COUNT_MAX: usize = 20;
 /// The ramp a graduated style starts with.
 pub const DEFAULT_RAMP: &str = "sariKirmizi";
 
-/// The class count typed in the field: a whole number from 1 to 20; anything else is the default (`classCount`).
+/// The class count typed in the field (`classCount`): an empty field or
+/// text that is not a number is the default; any number is rounded and kept
+/// from 1 to 20 (0 and -0.4 are 1 class, as a negative one is).
 pub fn class_count(typed: &str) -> usize {
+    // JavaScript's trim: its white space, line terminators and the byte order mark.
+    let blank = typed
+        .trim_matches(|c: char| c.is_whitespace() || c == '\u{FEFF}')
+        .is_empty();
     let r = js_round(js_number(typed));
-    let r = if r == 0.0 || r.is_nan() {
-        CLASS_COUNT_DEFAULT as f64
-    } else {
-        r
-    };
+    if blank || r.is_nan() {
+        return CLASS_COUNT_DEFAULT;
+    }
     r.max(CLASS_COUNT_MIN as f64).min(CLASS_COUNT_MAX as f64) as usize
 }
 
@@ -754,7 +758,11 @@ mod tests {
         assert!(js_number("-0x10").is_nan());
         assert_eq!(js_number("-Infinity"), f64::NEG_INFINITY);
         assert_eq!(class_count("Infinity"), 20);
-        assert_eq!(class_count("-0.4"), 5);
+        // The web's 4df48f3: any number is kept from 1 to 20; only blank or not a number is 5.
+        assert_eq!(class_count("-0.4"), 1);
+        assert_eq!(class_count("0"), 1);
+        assert_eq!(class_count(" "), 5);
+        assert_eq!(class_count("beş"), 5);
     }
 
     #[test]

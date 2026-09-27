@@ -1,0 +1,195 @@
+{
+  "format": "kentos.desktop-equivalents",
+  "version": 1,
+  "$comment": "What the desktop has of the web's inventory beyond ported.json (docs/inventory/README.md). An item says implemented, partial, pending or n/a, where the desktop has it and, for partial and n/a, why. Keep it with the change that makes it true.",
+  "sections": {
+    "fileFields": {
+      "desktop": "implemented",
+      "reason": "Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025)."
+    }
+  },
+  "commands": {
+    "analysis.slope": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "analysis.volume": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "crs.query": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "crs.transform": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "file.export.pdf": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "file.import.ncz": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "file.print": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "map.contours": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "map.parcelReport": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "map.profile": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "map.sheet": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "tool.stakeout": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "tool.subdivide": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "workspace.disaster": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" },
+    "workspace.plan3d": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" },
+    "view.renderer.webgl2": {
+      "desktop": "n/a",
+      "reason": "Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir."
+    },
+    "view.renderer.webgpu": {
+      "desktop": "n/a",
+      "reason": "Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir."
+    }
+  },
+  "tools": {
+    "stakeout": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" },
+    "subdivide": { "desktop": "pending", "where": "apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk)" }
+  },
+  "workspaces": {
+    "disaster": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" },
+    "plan3d": { "desktop": "pending", "where": "apps/desktop/src/modes.rs (menüde “Yakında”)" }
+  },
+  "settings": {
+    "device.rendererPreference": {
+      "desktop": "n/a",
+      "reason": "WebGL2 ya da WebGPU seçimi tarayıcınındır; masaüstünün arka ucunu wgpu seçer (ADR 0019)."
+    },
+    "layout.theme": { "desktop": "implemented", "where": "ayarlar.json appearance.theme (Görünüm sekmesi, ADR 0051)" },
+    "user.accent": { "desktop": "implemented", "where": "ayarlar.json appearance.accentColor (Görünüm sekmesi, ADR 0051)" },
+    "user.uiScale": { "desktop": "implemented", "where": "ayarlar.json appearance.textSize (Görünüm sekmesi, ADR 0051)" },
+    "user.uiFont": {
+      "desktop": "partial",
+      "where": "ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)",
+      "reason": "Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar."
+    },
+    "project.angleUnit": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },
+    "project.areaDecimals": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },
+    "project.areaUnit": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },
+    "project.drawingFont": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },
+    "project.lengthDecimals": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },
+    "project.plotScale": { "desktop": "implemented", "where": "Proje ayarları (apps/desktop/src/project/settings.rs), .kcad'de" },
+    "project.srid": { "desktop": "implemented", "where": "Proje ayarları ve Koordinat sistemi… (apps/desktop/src/project/settings.rs, crs.rs), .kcad'de" },
+    "project.workspace": { "desktop": "implemented", "where": "Proje ayarları ve durum çubuğundaki mod (apps/desktop/src/modes.rs), .kcad'de" },
+    "layout.bottomExpanded": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/bottom.rs",
+      "reason": "Alt panel F2 ile açılıp kapanır; yeniden açılışta hatırlanmaz."
+    },
+    "layout.bottomHeight": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/bottom.rs",
+      "reason": "Boyu sürükleyerek değişir; yeniden açılışta hatırlanmaz."
+    },
+    "layout.bottomTab": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/bottom.rs",
+      "reason": "Sekmeler (komut geçmişi, koordinat listesi, uyarılar) var; seçili sekme yeniden açılışta hatırlanmaz."
+    },
+    "layout.dockTab": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/app.rs (Docks: Katmanlar ve İşlemler sekmeleri)",
+      "reason": "Seçili sekme yeniden açılışta hatırlanmaz."
+    },
+    "layout.dockWidth": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/app.rs (Docks)",
+      "reason": "Genişlik sürükleyerek değişir; yeniden açılışta hatırlanmaz."
+    },
+    "layout.layersFraction": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/app.rs (Docks: Katmanlar ile Özellikler bölmesi)",
+      "reason": "Bölme sürükleyerek değişir; yeniden açılışta hatırlanmaz."
+    },
+    "layout.processingFolded": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/processing/panel.rs",
+      "reason": "Kategoriler katlanır; yeniden açılışta hatırlanmaz."
+    },
+    "layout.processingTab": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/processing/panel.rs",
+      "reason": "Araçlar ve Geçmiş sekmeleri var; seçili sekme yeniden açılışta hatırlanmaz."
+    },
+    "layout.ribbonCollapsed": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/view.rs (view.ribbonCollapse)",
+      "reason": "Şerit daraltılır; yeniden açılışta hatırlanmaz."
+    },
+    "layout.ribbonTab": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/view.rs",
+      "reason": "Seçili sekme yeniden açılışta hatırlanmaz."
+    },
+    "layout.rightVisible": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/view_commands.rs (F4)",
+      "reason": "Paneller F4 ile gizlenir; yeniden açılışta hatırlanmaz."
+    }
+  },
+  "storage": {
+    "kentos.cloud/drafts": { "desktop": "implemented", "where": "$XDG_DATA_HOME/kentos-cad/bulut-taslak (ADR 0040, 0043)" },
+    "kentos.files/recent": { "desktop": "implemented", "where": "$XDG_STATE_HOME/kentos-cad/son-dosyalar.json (ADR 0050)" },
+    "kentos.processing.v1": { "desktop": "implemented", "where": "$XDG_STATE_HOME/kentos-cad/islemler.json (ADR 0084)" },
+    "kentos.settings.v1": { "desktop": "implemented", "where": "~/.config/kentos-cad/ayarlar.json (ADR 0023)" },
+    "kentos.settings.v1.backup": { "desktop": "implemented", "where": "~/.config/kentos-cad/ayarlar-yedek-<zaman>.json (apps/desktop/src/settings.rs)" },
+    "kentos.prefs.v1": {
+      "desktop": "n/a",
+      "reason": "Web'in tipli ayarlardan önceki deposudur; masaüstünün böyle eski bir deposu olmadı, ayarları baştan ayarlar.json'dadır."
+    },
+    "kentos.ui.v1": {
+      "desktop": "partial",
+      "where": "ayarlar.json appearance.theme",
+      "reason": "Tema kalıcıdır; panellerin ve şeridin yerleşimi yeniden açılışta hatırlanmaz."
+    }
+  },
+  "screens": {
+    "apps/web/src/ui/appmenu/AppMenu.ts#openAppMenu": { "desktop": "implemented", "where": "apps/desktop/src/app_menu/ (ADR 0050)" },
+    "apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/bottom.rs (ADR 0058)",
+      "reason": "Komut geçmişinin satırlarında saat yazmaz."
+    },
+    "apps/web/src/ui/bottom/CommandLine.ts#CommandLine": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, input.rs (KentOS UI CommandLine)" },
+    "apps/web/src/ui/calc/IntersectionDialog.ts#openIntersection": { "desktop": "implemented", "where": "apps/desktop/src/calc/intersection.rs (ADR 0071)" },
+    "apps/web/src/ui/calc/PolarDialog.ts#openPolar": { "desktop": "implemented", "where": "apps/desktop/src/calc/polar.rs (ADR 0071)" },
+    "apps/web/src/ui/calc/StakeoutDialog.ts#openStakeout": { "desktop": "implemented", "where": "apps/desktop/src/calc/stakeout.rs (ADR 0071)" },
+    "apps/web/src/ui/calc/TraverseDialog.ts#openTraverse": { "desktop": "implemented", "where": "apps/desktop/src/calc/traverse.rs (ADR 0070)" },
+    "apps/web/src/ui/cloud/AccessLostNotice.ts#openAccessLostNotice": { "desktop": "implemented", "where": "apps/desktop/src/cloud/follow.rs" },
+    "apps/web/src/ui/cloud/CatalogDialog.ts#openCatalog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/catalog*.rs (ADR 0086)" },
+    "apps/web/src/ui/cloud/ConflictDialog.ts#openConflictDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/view.rs, follow.rs" },
+    "apps/web/src/ui/cloud/HistoryForms.ts#openCheckpointDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/catalog_history_view.rs (ADR 0087)" },
+    "apps/web/src/ui/cloud/HistoryForms.ts#openRestoreDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/catalog_history_view.rs (ADR 0087)" },
+    "apps/web/src/ui/cloud/LoginDialog.ts#openLoginDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/account.rs, view.rs (ADR 0041)" },
+    "apps/web/src/ui/cloud/ProjectActions.ts#openDeleteDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/actions.rs (ADR 0073)" },
+    "apps/web/src/ui/cloud/ProjectActions.ts#openRenameDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/actions.rs (ADR 0073)" },
+    "apps/web/src/ui/cloud/ProjectsDialog.ts#openProjectsDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/mod.rs (cloud.open, cloud.upload, cloud.uploadFile)" },
+    "apps/web/src/ui/cloud/UploadDialog.ts#openUploadDialog": { "desktop": "implemented", "where": "apps/desktop/src/cloud/upload.rs (ADR 0041, 0073)" },
+    "apps/web/src/ui/dialogs.ts#openAboutDialog": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (Dialog::About)" },
+    "apps/web/src/ui/dialogs.ts#openShortcutsDialog": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (Dialog::Shortcuts)" },
+    "apps/web/src/ui/dock/RightDock.ts#RightDock": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, app.rs (KentOS UI DockSpace)" },
+    "apps/web/src/ui/io/CoordExportDialog.ts#openCoordExport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/coord_export.rs (ADR 0048)" },
+    "apps/web/src/ui/io/CoordImportDialog.ts#openCoordImport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/coord_import.rs (ADR 0048)" },
+    "apps/web/src/ui/io/DxfExportDialog.ts#openDxfExport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/dxf_export.rs (ADR 0048)" },
+    "apps/web/src/ui/io/DxfImportDialog.ts#openDxfImport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/dxf_import.rs (ADR 0048)" },
+    "apps/web/src/ui/io/GeoJsonExportDialog.ts#openGeoJsonExport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/geojson_export.rs (ADR 0053)" },
+    "apps/web/src/ui/io/GisImportDialog.ts#openGeoJsonImport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/gis_import.rs (ADR 0053)" },
+    "apps/web/src/ui/io/GisImportDialog.ts#openShapefileImport": { "desktop": "implemented", "where": "apps/desktop/src/exchange/gis_import.rs (ADR 0053)" },
+    "apps/web/src/ui/layers/LayersPanel.ts#LayersPanel": { "desktop": "implemented", "where": "apps/desktop/src/layer_tree.rs (ADR 0072, 0075)" },
+    "apps/web/src/ui/processing/ProcessingPanel.ts#ProcessingPanel": { "desktop": "implemented", "where": "apps/desktop/src/processing/panel.rs (ADR 0084)" },
+    "apps/web/src/ui/processing/ToolDialog.ts#openModelDialog": { "desktop": "implemented", "where": "apps/desktop/src/processing/window.rs (ADR 0084)" },
+    "apps/web/src/ui/processing/ToolDialog.ts#openToolDialog": { "desktop": "implemented", "where": "apps/desktop/src/processing/window.rs (ADR 0084, 0088)" },
+    "apps/web/src/ui/properties/PropertiesPanel.ts#PropertiesPanel": { "desktop": "implemented", "where": "apps/desktop/src/properties/ (ADR 0063, 0066)" },
+    "apps/web/src/ui/ribbon/Ribbon.ts#Ribbon": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/view.rs, catalog.rs (ADR 0017, 0051)",
+      "reason": "Giriş'in Katmanlar ve Özellikler panelleri ile Seçim sekmesinin paneli yok (etkin katman, yeni nesnelerin rengi, çizgi tipi ve kalınlığı, çizim ölçeği, seçimin özeti); yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme ve harf ipuçları yok."
+    },
+    "apps/web/src/ui/settings/AppSettingsDialog.ts#openAppSettings": { "desktop": "implemented", "where": "apps/desktop/src/settings_view.rs (ADR 0023)" },
+    "apps/web/src/ui/settings/NewProjectDialog.ts#openNewProjectDialog": { "desktop": "implemented", "where": "apps/desktop/src/project/new.rs (ADR 0049)" },
+    "apps/web/src/ui/settings/ProjectSettingsDialog.ts#openProjectSettings": { "desktop": "implemented", "where": "apps/desktop/src/project/settings.rs (ADR 0049)" },
+    "apps/web/src/ui/shell/AppShell.ts#AppShell": { "desktop": "implemented", "where": "apps/desktop/src/view.rs (ADR 0017)" },
+    "apps/web/src/ui/shell/CommandBar.ts#CommandBar": { "desktop": "implemented", "where": "apps/desktop/src/command_bar.rs" },
+    "apps/web/src/ui/shell/CursorInput.ts#CursorInput": { "desktop": "implemented", "where": "apps/desktop/src/preview.rs, input.rs (değer alanı)" },
+    "apps/web/src/ui/shell/HoverCard.ts#HoverCard": { "desktop": "implemented", "where": "apps/desktop/src/hover_card.rs (ADR 0068, 0082)" },
+    "apps/web/src/ui/shell/InlineTextEditor.ts#InlineTextEditor": { "desktop": "implemented", "where": "apps/desktop/src/text_field.rs (ADR 0060)" },
+    "apps/web/src/ui/start/StartScreen.ts#openStartScreen": { "desktop": "implemented", "where": "apps/desktop/src/start.rs (ADR 0050)" },
+    "apps/web/src/ui/statusbar/StatusBar.ts#StatusBar": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)",
+      "reason": "Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
+    },
+    "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" }
+  }
+}

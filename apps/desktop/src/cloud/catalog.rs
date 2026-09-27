@@ -245,8 +245,17 @@ impl App {
     /// Opens the window on the last list (on this device's copies without a
     /// session) and asks for its first page.
     pub(crate) fn open_catalog(&mut self) -> Task<Message> {
+        self.open_catalog_at(None)
+    }
+
+    /// Opens the window; with `pick`, on “Son kullanılanlar” with that
+    /// project selected and that tab shown (the web's `openCatalog(ctx, pick, tab)`:
+    /// Proje geçmişi… opens the open project's Geçmiş).
+    pub(crate) fn open_catalog_at(&mut self, pick: Option<(String, Tab)>) -> Task<Message> {
         let list = if self.cloud.me.is_none() {
             List::Device
+        } else if pick.is_some() {
+            List::View(CatalogView::Recent)
         } else {
             LAST.lock()
                 .ok()
@@ -288,12 +297,12 @@ impl App {
             details: Details::None,
             details_at: None,
             details_asked: None,
-            tab: Tab::Info,
+            tab: pick.as_ref().map_or(Tab::Info, |(_, tab)| *tab),
             status: None,
             asking: None,
             acting: None,
             history: History::default(),
-            wanted: None,
+            wanted: pick.map(|(id, _)| (id, false)),
         });
         self.dialog = Some(Dialog::Catalog);
         self.catalog_load(false)
