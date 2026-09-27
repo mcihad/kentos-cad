@@ -257,12 +257,12 @@ ProcessingModel { id, label, category, description, inputs: ParamDef[], steps, o
 
 ### 7.1 Model tasarımcısı
 
-`ui/processing/model/`: `ModelDesigner` (pencere, taslak, kendi geri alma yığını, kaydetme), `ModelCanvas` (diyagram), `modelPalette` (sol), `modelInspector` (sağ).
+`ui/processing/model/`: `ModelDesigner` (pencere, taslak, kendi geri alma yığını, kaydetme), `ModelCanvas` (diyagram), `modelPalette` (sol), `modelInspector` (sağ). Sözler, kurallar ve diyagramın geometrisi `designerPlan.ts`'te, modelin düzenlemeleri `processing/modelEdit.ts`'tedir; `fixtures/processing/v1/designer.json` ikisini sabitler. Davranışın ayrıntısı, web kodunu görmemiş okuyucu için: [specs/model-designer.md](specs/model-designer.md).
 
 - **Sol:** "Girdi ekle" (Nesneler, Sayı, Metin, Evet/hayır, Katman, Nokta) ve aranabilir araç listesi. Bir araca tıklamak seçili kutunun sağına ekler ve ilk uygun girdisini seçili kutuya bağlar; tuvale sürüklemek bırakılan yere koyar.
 - **Orta:** girdiler (mavi kenarlı) ve adımlar kutu, bağlantılar eğridir; eğri ortasında hangi parametreyi beslediği yazar. Kutular sürüklenir (10 px ızgaraya), boş alan sürüklenince tuval kayar, tekerlek yakınlaştırır, çift tık hepsini gösterir. Bir kutunun sağındaki noktadan sürükleyip bir adımın üstüne bırakmak, o adımın uygun girdilerini (ve adımın çıktılarını) bir menüde sorar. Sorunlu adım kesik turuncu kenarla ve ilk sorunuyla görünür.
 - **Sağ:** hiçbir şey seçili değilken modelin adı, kategorisi, açıklaması, çıktıları ve sorunları; girdi seçiliyken etiketi, açıklaması, isteğe bağlılığı ve türüne göre varsayılanı; adım seçiliyken başlığı ve her parametre için **kaynak** (aracın varsayılanı, sabit değer, girdi, önceki adımın çıktısı ya da "Yeni model girdisi yap"). Sabit değer, araç penceresindeki denetimin aynısıyla girilir.
-- **Alt:** "Düzenle" (sütunlara diz), durum (sorun sayısı ve ilki ya da "Model çalışmaya hazır"), Kapat, "Kaydet ve çalıştır…", Kaydet. Kaydedilmemiş değişiklikle kapatmak alt çubukta sorar. Ctrl+Z / Ctrl+Y taslakta geri alır, Ctrl+S kaydeder, Delete seçili kutuyu siler. Sorunlu model kaydedilebilir ama çalışmaz.
+- **Alt:** "Düzenle" (sütunlara diz), durum (sorun sayısı ve ilki ya da "Model çalışmaya hazır"), Kapat, "Kaydet ve çalıştır…", Kaydet. Kaydedilmemiş değişiklikle kapatmak pencerenin üstünde sorar (Kaydetmeden kapat, Vazgeç, Kaydet ve kapat). Ctrl+Z / Ctrl+Y taslakta geri alır, Ctrl+S kaydeder, Delete seçili kutuyu siler. Sorunlu model kaydedilebilir ama çalışmaz.
 
 ## 8. Arayüz
 
