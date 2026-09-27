@@ -22,6 +22,8 @@
 //! The rows are data (`rows`), drawn by KentOS UI's `PropertySheet`.
 
 mod rows;
+
+pub(crate) use rows::layer_path;
 #[cfg(test)]
 mod tests;
 

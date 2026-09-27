@@ -81,8 +81,8 @@ pub(crate) fn wire(p: Vec2) -> kentos_contracts::Vec2 {
 
 /// A closed shape a tool built (a rectangle, a regular polygon) written
 /// through the product command `cad.polygon.create` (docs/adr/0032): the
-/// active layer explicit in its input (CMD-07); the desktop has no current
-/// colour. Whether it was written; the object is noted on the draft for Ctrl+Z.
+/// active layer and the current colour explicit in its input (CMD-07).
+/// Whether it was written; the object is noted on the draft for Ctrl+Z.
 pub(crate) fn write_ring(
     d: &mut Taken,
     pts: &[Vec2],
@@ -95,7 +95,7 @@ pub(crate) fn write_ring(
         pts: pts.iter().map(|p| wire(*p)).collect(),
         bulges,
         holes: None,
-        color: None,
+        color: cx.draft.color.map(str::to_owned),
         attrs: None,
         expected_revision: None,
     };
@@ -111,9 +111,9 @@ pub(crate) fn write_ring(
 
 /// Objects a tool built (an ellipse, a spline, a perpendicular …) written
 /// through the product command `cad.entities.create` (docs/adr/0057): the
-/// active layer explicit in its input (CMD-07); the desktop has no current
-/// colour. One undo step, “Ekle” or the tool's `operation`. The command's
-/// answer, or `None` when it refused (its reason said).
+/// active layer and the current colour explicit in its input (CMD-07; the
+/// web's `writeObjects`). One undo step, “Ekle” or the tool's `operation`.
+/// The command's answer, or `None` when it refused (its reason said).
 pub(crate) fn write_objects(
     geometries: Vec<kentos_contracts::EntityGeometry>,
     operation: Option<kentos_contracts::CreateOperation>,
@@ -126,7 +126,7 @@ pub(crate) fn write_objects(
             .into_iter()
             .map(|geometry| kentos_contracts::NewObject {
                 geometry,
-                color: None,
+                color: cx.draft.color.map(str::to_owned),
                 attrs: None,
                 label: None,
             })

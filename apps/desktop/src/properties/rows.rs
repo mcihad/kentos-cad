@@ -19,16 +19,7 @@ use crate::document::{Document, crs_name};
 use crate::selecting::kind_title;
 
 /// The colours the panel offers (the web's `DRAW_COLORS`, fields.ts).
-pub(crate) const DRAW_COLORS: [(&str, &str); 8] = [
-    ("Siyah", "ink"),
-    ("Kırmızı", "#E5484D"),
-    ("Sarı", "#F2C94C"),
-    ("Yeşil", "#5FBF77"),
-    ("Camgöbeği", "#4CC3D9"),
-    ("Mavi", "#4F8EF7"),
-    ("Eflatun", "#C86DD7"),
-    ("Gri", "#8C9AAA"),
-];
+use crate::ribbon_panels::DRAW_COLORS;
 
 /// A hatch pattern's name (the web's `HATCH_PATTERN_LABEL`), in its order.
 const PATTERNS: [(HatchPatternType, &str); 3] = [

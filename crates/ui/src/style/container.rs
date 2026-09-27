@@ -221,6 +221,22 @@ pub fn badge(theme: &Theme) -> Style {
     }
 }
 
+/// Sayı rozeti (ör. bağlamsal sekmenin seçili nesne sayısı): yumuşak vurgu
+/// zemini, yuvarlak (web'in `ribbon__count`'u).
+pub fn count(theme: &Theme) -> Style {
+    let t = Tokens::of(theme);
+
+    Style {
+        text_color: Some(t.accent_hover),
+        background: Some(Background::Color(t.accent.scale_alpha(0.18))),
+        border: Border {
+            radius: 8.0.into(),
+            ..Border::default()
+        },
+        ..Style::default()
+    }
+}
+
 /// Kalıcı iletişim kutusunun arkasındaki karartma.
 pub fn scrim(theme: &Theme) -> Style {
     fill(Tokens::of(theme).scrim())

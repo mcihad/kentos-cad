@@ -281,6 +281,7 @@ class ToolDialog {
       ctx: this.ctx,
       describe: (n) => this.env.inputs[n],
       previewExpression: (n) => runner.previewExpression(this.tool, this.state.values, n),
+      builderObjects: (n) => runner.builderObjects(this.tool, this.state.values, n),
       pickPoint: (n) => this.pickPoint(n),
       pickChoice: (n) => this.pickChoice(n),
       pickObjects: (n) => this.pickObjects(n),

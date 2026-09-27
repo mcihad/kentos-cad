@@ -1,0 +1,562 @@
+/* ── Expression builder (DESIGN.md §7.16) ───────────────────────────
+ * Editor | tree | help, as QGIS's expression dialog. The editor is a
+ * working surface (field tone) whose text is painted under a transparent
+ * text area in the syntax colours (--c-syn-*); the tree and the help are
+ * side columns in the panel-head tone. Loaded with the builder, not at start.
+ */
+.dialog--exprb {
+  width: min(calc(1180px * var(--ui-scale)), 100%);
+  height: min(calc(720px * var(--ui-scale)), 100%);
+  max-height: none;
+}
+.dialog--exprb .dialog__head {
+  padding: 14px 12px 12px 20px;
+  border-bottom: 1px solid var(--c-line);
+}
+.dialog--exprb .dialog__body {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.exprb {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(248px * var(--ui-scale)) calc(300px * var(--ui-scale));
+  height: 100%;
+}
+.exprb__main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 14px 14px;
+}
+.exprb__hint {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* Operators over the editor */
+.exprb__ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.exprb__op {
+  min-width: calc(26px * var(--ui-scale));
+  height: calc(26px * var(--ui-scale));
+  padding: 0 6px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  background: var(--c-field);
+  color: var(--c-syn-operator);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+.exprb__op--word {
+  color: var(--c-syn-keyword);
+}
+.exprb__op:hover {
+  border-color: var(--c-line-strong);
+  background: var(--c-hover);
+}
+
+/* The editor: the painted text under a transparent text area of the same metrics. */
+.xed {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.xed__box {
+  position: relative;
+  flex: 1;
+  min-height: calc(110px * var(--ui-scale));
+}
+.xed__paint,
+.xed__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-variant-ligatures: none;
+  line-height: 1.6;
+  letter-spacing: normal;
+  tab-size: 2;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  /* Both keep room for the scroll bar, so their lines break at the same place. */
+  scrollbar-gutter: stable;
+}
+.xed__paint {
+  overflow: hidden;
+  background: var(--c-field);
+  border-color: var(--c-line);
+  color: var(--c-text);
+}
+.xed__input {
+  overflow: auto;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--c-text);
+  outline: none;
+}
+.xed__input::selection {
+  background: var(--c-accent-soft);
+  color: transparent;
+}
+.xed__box:hover .xed__paint {
+  border-color: var(--c-line-strong);
+}
+.xed__box:focus-within .xed__paint {
+  border-color: var(--c-accent-line);
+}
+
+/* Syntax colours (also the help's examples and the lists' names). */
+.x-field {
+  color: var(--c-syn-field);
+}
+.x-variable {
+  color: var(--c-syn-variable);
+}
+.x-function {
+  color: var(--c-syn-function);
+}
+.x-keyword {
+  color: var(--c-syn-keyword);
+}
+.x-literal {
+  color: var(--c-syn-literal);
+}
+.x-text {
+  color: var(--c-syn-text);
+}
+.x-operator {
+  color: var(--c-syn-operator);
+}
+.x-unknown {
+  color: var(--c-danger);
+}
+.x-err,
+.x-warn {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-thickness: 1px;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+.x-err {
+  text-decoration-color: var(--c-danger);
+}
+.x-warn {
+  text-decoration-color: var(--c-warn);
+}
+/* The parenthesis beside the cursor and its pair; a lone one in the danger tone. */
+.x-match {
+  border-radius: 2px;
+  background: var(--c-press);
+  box-shadow: 0 0 0 1px var(--c-line-strong);
+}
+.x-unmatched {
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--c-danger);
+}
+
+/* The call's signature under the editor, the argument being written in 600. */
+.xed__sig {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: calc(22px * var(--ui-scale));
+  padding: 5px 2px 0;
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.xed__sigcode {
+  flex: none;
+  font-family: var(--font-mono);
+  color: var(--c-text-2);
+}
+.xed__sigcode b {
+  color: var(--c-text);
+  font-weight: 600;
+}
+.xed__sigdesc {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--c-text-3);
+}
+
+/* Completion list: over everything, under the word being written. */
+.xed__list {
+  position: fixed;
+  min-width: calc(280px * var(--ui-scale));
+  max-width: min(calc(480px * var(--ui-scale)), 100vw - 16px);
+  max-height: calc(8 * var(--row-h) + 10px);
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--c-popover);
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-pop);
+  font-size: var(--fs-sm);
+}
+.xed__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--row-h);
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+  cursor: default;
+}
+.xed__item[aria-selected='true'] {
+  background: var(--c-accent-soft);
+}
+.xed__label {
+  flex: none;
+  font-family: var(--font-mono);
+}
+.xed__alias {
+  flex: none;
+  padding: 0 5px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xs);
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+.xed__detail {
+  min-width: 0;
+  margin-left: auto;
+  padding-left: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* Error or warning under the editor. */
+.exprb__status {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: calc(18px * var(--ui-scale));
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+.exprb__status .icon {
+  flex: none;
+  margin-top: 1px;
+}
+.exprb__status--error {
+  color: var(--c-danger);
+}
+.exprb__status--warn {
+  color: var(--c-text-2);
+}
+.exprb__status--warn .icon {
+  color: var(--c-warn);
+}
+
+/* Preview on one object, and the object stepper. */
+.exprb__preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: calc(40px * var(--ui-scale));
+  padding: 6px 8px 6px 12px;
+  border: 1px dashed var(--c-line-strong);
+  border-radius: var(--r-md);
+}
+.exprb__plabel,
+.exprb__steplabel {
+  flex: none;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.exprb__pvalue {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+.exprb__pvalue--dim {
+  color: var(--c-text-3);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+}
+.exprb__step {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  max-width: 55%;
+  font-size: var(--fs-xs);
+  color: var(--c-text-2);
+}
+.exprb__steplabel {
+  margin-right: 4px;
+}
+.exprb__prev .icon {
+  transform: scaleX(-1);
+}
+.exprb__stepn {
+  min-width: 8ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.exprb__who {
+  min-width: 0;
+  margin-left: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-text-3);
+}
+
+/* The tree */
+.xtree {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--c-panel-head);
+  border-left: 1px solid var(--c-line);
+  border-right: 1px solid var(--c-line);
+}
+.xtree__search {
+  flex: none;
+  margin: 12px 10px 8px;
+  width: auto;
+}
+.xtree__rows {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 6px 10px;
+  outline: none;
+}
+.xtree__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--row-h);
+  padding: 0 8px 0 4px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  cursor: default;
+}
+.xtree__row:hover {
+  background: var(--c-hover);
+}
+.xtree__row[aria-selected='true'] {
+  background: var(--c-accent-soft);
+}
+.xtree__rows:focus-visible .xtree__row[aria-selected='true'] {
+  box-shadow: inset 0 0 0 1px var(--c-accent-line);
+}
+.xtree__group {
+  font-weight: 600;
+}
+.xtree__chev {
+  display: inline-flex;
+  flex: none;
+  color: var(--c-text-3);
+  transition: transform var(--dur);
+}
+.xtree__chev[data-open] {
+  transform: rotate(90deg);
+}
+.xtree__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.xtree__count {
+  margin-left: auto;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.xtree__item {
+  padding-left: 26px;
+}
+.xtree__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+}
+.xtree__detail {
+  flex: none;
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--c-text-3);
+  font-size: var(--fs-2xs);
+}
+.xtree__empty {
+  padding: 10px 8px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+
+/* The help */
+.xhelp {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+  background: var(--c-panel-head);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.xhelp__group {
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.xhelp__title {
+  margin: 2px 0 8px;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.xhelp__sig {
+  display: block;
+  padding: 6px 8px;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+.xhelp__desc {
+  margin: 8px 0 0;
+  color: var(--c-text);
+}
+.xhelp__type {
+  margin: 6px 0 0;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.xhelp__h {
+  margin: 14px 0 5px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.xhelp__args {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 10px;
+  margin: 0;
+  font-size: var(--fs-xs);
+}
+.xhelp__args dt {
+  font-family: var(--font-mono);
+  color: var(--c-text);
+  white-space: nowrap;
+}
+.xhelp__args dd {
+  margin: 0;
+  color: var(--c-text-2);
+}
+.xhelp__opt {
+  display: block;
+  color: var(--c-text-3);
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+}
+.xhelp__ex {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-xs);
+}
+.xhelp__ex code {
+  display: block;
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.xhelp__res {
+  color: var(--c-text-3);
+}
+.xhelp__aliases {
+  margin: 14px 0 0;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+.xhelp__keys {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--c-text-2);
+  font-size: var(--fs-xs);
+}
+.xhelp__keys li + li {
+  margin-top: 4px;
+}
+.xhelp kbd {
+  padding: 0 4px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-xs);
+  font-family: var(--font-ui);
+  font-size: var(--fs-2xs);
+}
+.xhelp__vbtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.xhelp__vlist {
+  max-height: calc(8 * var(--row-h));
+  margin-top: 8px;
+  overflow-y: auto;
+  padding: 2px;
+  background: var(--c-field);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  outline: none;
+}
+.xhelp__vlist:focus-visible {
+  border-color: var(--c-accent-line);
+}
+.xhelp__value {
+  height: calc(24px * var(--ui-scale));
+  padding: 0 8px;
+  overflow: hidden;
+  border-radius: var(--r-xs);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: calc(24px * var(--ui-scale));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+.xhelp__value:hover {
+  background: var(--c-hover);
+}
+.xhelp__value[aria-selected='true'] {
+  background: var(--c-accent-soft);
+}
+.xhelp__vnote {
+  margin-top: 6px;
+  color: var(--c-text-3);
+  font-size: var(--fs-xs);
+}
+

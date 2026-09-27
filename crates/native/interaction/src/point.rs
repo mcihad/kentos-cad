@@ -73,8 +73,8 @@ impl Point {
 
     /// Writes one point through the product command `cad.point.create`
     /// (docs/adr/0032): the active layer, or the spot elevations' with its
-    /// elevation, text and attributes, explicit in its input (CMD-07); the
-    /// desktop has no current colour, so the layer's applies.
+    /// elevation, text and attributes, and the current colour explicit in its
+    /// input (CMD-07; the web's `writePoint`).
     fn write(&mut self, p: Vec2, z: Option<f64>, cx: &mut Context<'_>) {
         // Another active layer would not help: the spot layer's lock is said in the tool's own words (docs/adr/0067).
         let layers = cx.doc.layers();
@@ -98,7 +98,7 @@ impl Point {
             p: wire(p),
             z,
             label: z.map(|z| fixed(z, 2)),
-            color: None,
+            color: cx.draft.color.map(str::to_owned),
             attrs: z.map(|z| {
                 BTreeMap::from([
                     ("Tür".to_owned(), "Kot noktası".to_owned()),

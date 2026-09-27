@@ -357,6 +357,16 @@
   background: var(--c-hover);
 }
 
+/* The expression field and the builder's ε button beside it. */
+.pfield__exprrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pfield__exprrow > .pfield__expr {
+  flex: 1;
+  min-width: 0;
+}
 /* Expression: typed like the command line, so it is set in mono. */
 .pfield__expr {
   width: 100%;

@@ -39,8 +39,9 @@ pub enum Node {
     Bin(BinOp, Box<Node>, Box<Node>),
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Keyword {
+/// The language's words (in either language); the builder colours and completes them too.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Keyword {
     And,
     Or,
     Not,
@@ -53,6 +54,11 @@ fn keyword(tok: &Token) -> Option<Keyword> {
     let Tok::Word(w) = &tok.t else {
         return None;
     };
+    keyword_of(w)
+}
+
+/// The keyword a word is, if it is one.
+pub(crate) fn keyword_of(w: &str) -> Option<Keyword> {
     Some(match fold_turkish(w).as_str() {
         "VE" | "AND" => Keyword::And,
         "VEYA" | "OR" => Keyword::Or,
