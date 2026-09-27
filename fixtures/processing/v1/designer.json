@@ -328,7 +328,10 @@
   "paletteDrag": 5,
   "column": 290,
   "row": 100,
-  "bend": 40
+  "bend": 40,
+  "labelGap": 8,
+  "labelRise": 6,
+  "labelRow": 13
  },
  "history": {
   "depth": 100,
@@ -4714,6 +4717,120 @@
     },
     {
      "op": {
+      "op": "setSource",
+      "step": "oznitelikHesapla",
+      "param": "input",
+      "src": {
+       "kind": "output",
+       "step": "ifadeyleSec",
+       "output": "selected"
+      }
+     },
+     "result": null,
+     "model": {
+      "id": "m-fixture",
+      "label": "Yeni model",
+      "category": "points",
+      "description": "",
+      "inputs": [
+       {
+        "type": "string",
+        "name": "metin",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       },
+       {
+        "type": "string",
+        "name": "metin2",
+        "label": "Metin",
+        "default": "",
+        "allowEmpty": true
+       }
+      ],
+      "steps": [
+       {
+        "id": "oznitelikHesapla",
+        "tool": "t.calc",
+        "values": {
+         "field": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "value": {
+          "kind": "input",
+          "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 40
+        }
+       },
+       {
+        "id": "ifadeyleSec",
+        "tool": "t.select",
+        "values": {
+         "where": {
+          "kind": "input",
+          "name": "metin2"
+         }
+        },
+        "position": {
+         "x": 330,
+         "y": 160
+        }
+       },
+       {
+        "id": "oznitelikHesapla2",
+        "tool": "t.calc",
+        "values": {
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
+         }
+        },
+        "position": {
+         "x": 610,
+         "y": 60
+        }
+       }
+      ],
+      "outputs": [],
+      "inputPositions": {
+       "metin": {
+        "x": 40,
+        "y": 40
+       },
+       "metin2": {
+        "x": 40,
+        "y": 140
+       }
+      }
+     },
+     "issues": [
+      {
+       "step": "ifadeyleSec",
+       "message": "“Not” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Alan” için bir değer ya da bağlantı gerekiyor."
+      },
+      {
+       "step": "oznitelikHesapla2",
+       "message": "“Değer” için bir değer ya da bağlantı gerekiyor."
+      }
+     ]
+    },
+    {
+     "op": {
       "op": "caption",
       "step": "ifadeyleSec",
       "caption": "  Seçim  "
@@ -4752,6 +4869,11 @@
          "value": {
           "kind": "input",
           "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
          }
         },
         "position": {
@@ -4861,6 +4983,11 @@
          "value": {
           "kind": "input",
           "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
          }
         },
         "position": {
@@ -4966,6 +5093,11 @@
          "value": {
           "kind": "input",
           "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
          }
         },
         "position": {
@@ -5072,6 +5204,11 @@
          "value": {
           "kind": "input",
           "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
          }
         },
         "position": {
@@ -5177,6 +5314,11 @@
          "value": {
           "kind": "input",
           "name": "metin"
+         },
+         "input": {
+          "kind": "output",
+          "step": "ifadeyleSec",
+          "output": "selected"
          }
         },
         "position": {
@@ -5360,7 +5502,19 @@
     }
    ],
    "edgeLabels": [
-    "Ondalık"
+    {
+     "from": {
+      "kind": "input",
+      "name": "ondalik"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "text": "Ondalık",
+     "title": "Ondalık",
+     "at": {
+      "x": 322,
+      "y": 64.0
+     }
+    }
    ],
    "stepMeta": [
     {
@@ -5849,7 +6003,19 @@
     }
    ],
    "edgeLabels": [
-    "Alan +2"
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Alan +2",
+     "title": "Alan, Değer, Nesneler",
+     "at": {
+      "x": 612,
+      "y": 64.0
+     }
+    }
    ],
    "stepMeta": [
     {
@@ -6427,14 +6593,110 @@
     }
    ],
    "edgeLabels": [
-    "Girdi nesneleri",
-    "Önek",
-    "İlk numara",
-    "Nokta katmanı",
-    "Başlangıç noktası",
-    "Alan",
-    "Etiket yap",
-    "Sonek"
+    {
+     "from": {
+      "kind": "input",
+      "name": "girdiNesneleri"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "Girdi nesneleri",
+     "title": "Girdi nesneleri",
+     "at": {
+      "x": 592,
+      "y": 224.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "onek"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "Önek",
+     "title": "Önek",
+     "at": {
+      "x": 592,
+      "y": 211.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "ilkNumara"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "İlk numara",
+     "title": "İlk numara",
+     "at": {
+      "x": 592,
+      "y": 198.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "noktaKatmani"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "Nokta katmanı",
+     "title": "Nokta katmanı",
+     "at": {
+      "x": 592,
+      "y": 185.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "baslangicNoktasi"
+     },
+     "to": "koseNoktalariniNumarala",
+     "text": "Başlangıç noktası",
+     "title": "Başlangıç noktası",
+     "at": {
+      "x": 592,
+      "y": 172.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "alan"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Alan",
+     "title": "Alan",
+     "at": {
+      "x": 892,
+      "y": 224.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "etiketYap"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Etiket yap",
+     "title": "Etiket yap",
+     "at": {
+      "x": 892,
+      "y": 211.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "sonek"
+     },
+     "to": "kenarUzunluklariniYaz",
+     "text": "Sonek",
+     "title": "Sonek",
+     "at": {
+      "x": 892,
+      "y": 424.0
+     }
+    }
    ],
    "stepMeta": [
     {
@@ -7607,6 +7869,11 @@
        "value": {
         "kind": "input",
         "name": "metin"
+       },
+       "input": {
+        "kind": "output",
+        "step": "ifadeyleSec",
+        "output": "selected"
        }
       },
       "position": {
@@ -7667,8 +7934,8 @@
     "text": "2 sorun var; model kaydedilebilir ama çalışmaz. “Alan” için bir değer ya da bağlantı gerekiyor."
    },
    "order": [
-    "oznitelikHesapla",
     "ifadeyleSec",
+    "oznitelikHesapla",
     "oznitelikHesapla2"
    ],
    "edges": [
@@ -7681,6 +7948,16 @@
      "params": [
       "field",
       "value"
+     ]
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla",
+     "params": [
+      "input"
      ]
     },
     {
@@ -7705,15 +7982,64 @@
     }
    ],
    "edgeLabels": [
-    "Alan +1",
-    "Koşul",
-    "Nesneler"
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Alan +1",
+     "title": "Alan, Değer",
+     "at": {
+      "x": 322,
+      "y": 51.0
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla",
+     "text": "Nesneler",
+     "title": "Nesneler",
+     "at": {
+      "x": 322,
+      "y": 64.0
+     }
+    },
+    {
+     "from": {
+      "kind": "input",
+      "name": "metin2"
+     },
+     "to": "ifadeyleSec",
+     "text": "Koşul",
+     "title": "Koşul",
+     "at": {
+      "x": 322,
+      "y": 184.0
+     }
+    },
+    {
+     "from": {
+      "kind": "step",
+      "id": "ifadeyleSec"
+     },
+     "to": "oznitelikHesapla2",
+     "text": "Nesneler",
+     "title": "Nesneler",
+     "at": {
+      "x": 602,
+      "y": 84.0
+     }
+    }
    ],
    "stepMeta": [
     {
      "step": "oznitelikHesapla",
      "meta": {
-      "text": "2 bağlantı"
+      "text": "3 bağlantı"
      }
     },
     {
@@ -7753,7 +8079,7 @@
        "group": "Hesap"
       }
      ],
-     "text": "Aracın varsayılanı"
+     "text": "Seçim › Seçilenler"
     },
     {
      "step": "oznitelikHesapla",
@@ -7860,17 +8186,7 @@
     {
      "step": "ifadeyleSec",
      "param": "input",
-     "options": [
-      {
-       "src": {
-        "kind": "output",
-        "step": "oznitelikHesapla",
-        "output": "changed"
-       },
-       "label": "Değişen nesneler",
-       "group": "Öznitelik hesapla"
-      }
-     ],
+     "options": [],
      "text": "Aracın varsayılanı"
     },
     {
@@ -8324,19 +8640,8 @@
      "to": "ifadeyleSec",
      "choices": {
       "header": "Seçim: hangi girdi?",
-      "items": [
-       {
-        "param": "input",
-        "label": "Değişen nesneler → Nesneler",
-        "checked": false,
-        "src": {
-         "kind": "output",
-         "step": "oznitelikHesapla",
-         "output": "changed"
-        }
-       }
-      ],
-      "none": null
+      "items": [],
+      "none": "“Öznitelik hesapla” bu adımın hiçbir girdisine uymuyor"
      }
     },
     {
@@ -8375,7 +8680,7 @@
        {
         "param": "input",
         "label": "Seçilenler → Nesneler",
-        "checked": false,
+        "checked": true,
         "src": {
          "kind": "output",
          "step": "ifadeyleSec",
@@ -8483,6 +8788,7 @@
        {
         "param": "input",
         "label": "Değişen nesneler → Nesneler",
+        "detail": "Mevcut bağlantının yerine geçer",
         "checked": false,
         "src": {
          "kind": "output",
@@ -8669,10 +8975,6 @@
       "x": 280.0,
       "y": 70
      }
-    },
-    "mid": {
-     "x": 280.0,
-     "y": 68.0
     }
    },
    {
@@ -8693,10 +8995,6 @@
       "x": 530.0,
       "y": 190
      }
-    },
-    "mid": {
-     "x": 530.0,
-     "y": 128.0
     }
    },
    {
@@ -8717,10 +9015,6 @@
       "x": 190.0,
       "y": 400
      }
-    },
-    "mid": {
-     "x": 410.0,
-     "y": 245.0
     }
    },
    {
@@ -8741,10 +9035,6 @@
       "x": 190,
       "y": 66
      }
-    },
-    "mid": {
-     "x": 230.0,
-     "y": 66.0
     }
    },
    {
@@ -8765,10 +9055,6 @@
       "x": 56.875,
       "y": -33
      }
-    },
-    "mid": {
-     "x": 56.875,
-     "y": -13.0
     }
    }
   ],
