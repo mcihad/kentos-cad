@@ -188,6 +188,7 @@ pub struct Node<'a, Message> {
     editor: Option<Element<'a, Message>>,
     toggles: Vec<Toggle<Message>>,
     heading: bool,
+    tip: Option<crate::widget::Tip>,
 }
 
 impl<'a, Message: 'a> Node<'a, Message> {
@@ -209,7 +210,15 @@ impl<'a, Message: 'a> Node<'a, Message> {
             editor: None,
             toggles: Vec::new(),
             heading: false,
+            tip: None,
         }
+    }
+
+    /// Adın üzerine gelince görünen ipucu (ör. katmanın ağaçtaki yolu, bir
+    /// aracın açıklaması).
+    pub fn tip(mut self, tip: crate::widget::Tip) -> Self {
+        self.tip = Some(tip);
+        self
     }
 
     /// Grup başlığı: küçük, kalın ve soluk ad (ör. bir paletin kategorisi,
@@ -498,6 +507,7 @@ fn node_row<'a, Message: Clone + 'a>(
         editor,
         toggles,
         heading,
+        tip: name_tip,
     } = node;
 
     let mut tree = Row::with_children((0..depth).map(|_| guide()))
@@ -533,8 +543,12 @@ fn node_row<'a, Message: Clone + 'a>(
             } else {
                 name
             };
+            let name: Element<'a, Message> = container(name).width(Fill).clip(true).into();
 
-            tree.push(container(name).width(Fill).clip(true))
+            tree.push(match name_tip {
+                Some(tip) => crate::widget::tip(name, tip, iced::widget::tooltip::Position::Bottom),
+                None => name,
+            })
         }
     };
 

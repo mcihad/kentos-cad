@@ -305,10 +305,14 @@ pub(crate) fn recent_row(
     .padding([6, 8])
     .width(Fill)
     .style(style::button::list_item(current));
-    let forget = button(icon(Icon::Close).size(12.0).tone(Tone::Muted))
-        .on_press(forget)
-        .padding(6)
-        .style(style::button::ghost);
+    let forget = kentos_ui::widget::tip(
+        button(icon(Icon::Close).size(12.0).tone(Tone::Muted))
+            .on_press(forget)
+            .padding(6)
+            .style(style::button::ghost),
+        kentos_ui::widget::Tip::new("Listeden kaldır"),
+        iced::widget::tooltip::Position::Left,
+    );
     row![face, forget].spacing(2).align_y(Center).into()
 }
 

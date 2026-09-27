@@ -241,7 +241,11 @@ impl App {
     /// last ones (the web's `openToolDialog`).
     pub(crate) fn open_processing(&mut self, id: &str, values: Option<Values>) {
         let Some(tool) = self.processing.registry.get(id) else {
-            self.error(format!("İşlem aracı bulunamadı: {id}"));
+            // The web's words: a model gone is likely deleted (ToolDialog.ts).
+            self.error(match id.strip_prefix(MODEL_PREFIX) {
+                Some(model) => format!("Model bulunamadı: {model}. Silinmiş olabilir."),
+                None => format!("İşlem aracı bulunamadı: {id}"),
+            });
             return;
         };
         let Some(doc) = &self.document else {

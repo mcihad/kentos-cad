@@ -62,6 +62,10 @@ pub struct Choice {
     color: Option<Color>,
     icon: Option<Icon>,
     disabled: bool,
+    /// Seçilemeyen, altındaki seçenekleri adlandıran başlık.
+    header: bool,
+    /// Seçiliyken kapalı kutuda adın yerine yazılan söz.
+    shown: Option<String>,
 }
 
 impl Choice {
@@ -72,7 +76,26 @@ impl Choice {
             color: None,
             icon: None,
             disabled: false,
+            header: false,
+            shown: None,
         }
+    }
+
+    /// Altındaki seçenekleri adlandıran başlık (ör. “Mevcut katmanlar”):
+    /// seçilemez, aranırken gizlenir. Listede yeri vardır: seçimin sırası
+    /// onu da sayar.
+    pub fn header(label: impl Into<String>) -> Self {
+        Self {
+            header: true,
+            ..Self::new(label)
+        }
+    }
+
+    /// Seçiliyken kapalı kutuda adın yerine yazılan söz (ör. listede
+    /// “Yeni: Numaralar”, kutuda “Numaralar (yeni)”).
+    pub fn shown(mut self, shown: impl Into<String>) -> Self {
+        self.shown = Some(shown.into());
+        self
     }
 
     /// Sağda sönük yazılan ayrıntı (ör. "#12"); aramada da kullanılır.
@@ -109,6 +132,9 @@ impl Choice {
     }
 
     fn matches(&self, search: &str) -> bool {
+        if self.header {
+            return search.is_empty();
+        }
         search.is_empty()
             || text::contains(&self.label, search)
             || self
@@ -219,7 +245,9 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
 
         let choices = Rc::new(choices);
         let actions = Rc::new(actions);
-        let searchable = searchable.unwrap_or(choices.len() >= SEARCH_FROM);
+        // Headers are not choices: they do not bring the search box.
+        let searchable =
+            searchable.unwrap_or(choices.iter().filter(|c| !c.header).count() >= SEARCH_FROM);
         let search_id = widget::Id::unique();
 
         let current = selected.and_then(|index| choices.get(index));
@@ -231,9 +259,8 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
                     shown = shown.push(swatch(color));
                 }
 
-                shown
-                    .push(label::body(choice.label.clone()).width(Fill))
-                    .into()
+                let text = choice.shown.clone().unwrap_or_else(|| choice.label.clone());
+                shown.push(label::body(text).width(Fill)).into()
             }
             None => label::muted(placeholder).width(Fill).into(),
         };
@@ -340,6 +367,19 @@ fn panel<'a>(
     }
 
     let rows = Column::with_children(matches.iter().map(|&(index, choice)| {
+        // A header names the choices under it; it cannot be chosen.
+        if choice.header {
+            return container(
+                label::caption(choice.label.clone())
+                    .font(typography::ui_strong())
+                    .style(style::text::muted),
+            )
+            .width(Fill)
+            .height(typography::scaled(ROW_HEIGHT))
+            .padding([0, 6])
+            .align_y(Center)
+            .into();
+        }
         let is_selected = selected == Some(index);
 
         let mut line = row![
@@ -372,7 +412,8 @@ fn panel<'a>(
             line = line.push(label::mono_caption(detail.clone()));
         }
 
-        button(line)
+        // The row's content in the middle of its height, not at its top.
+        button(container(line).height(Fill).align_y(Center))
             .on_press_maybe((!choice.disabled).then_some(Event::Pick(index)))
             .width(Fill)
             .height(typography::scaled(ROW_HEIGHT))

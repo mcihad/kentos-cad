@@ -283,7 +283,7 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
     - Buluta yükle'de proje türü, açıklama ve etiketler (Y1); sözler ve yüzdeli ilerleme (Y2–Y4);
     - ayar pencerelerinde bölüm bölüm varsayılana döndürme (A2, P1), birbirine yol veren düğmeler (A3, P2), kaydedince varsayılanların açık projeyi değiştirmediği notu (A4), Uygulama ayarları'nın bölümlü düzeni (A5);
     - Fare ve klavye kısayolları penceresi: arama, fare tablosu, kategoriler, takma adlar, Türkçe klavye notu (H1, H2);
-    - küçük sözler ve ipuçları: veritabanı çakışması (Ç1), Katmanlar'da adın yolu ve menüdeki tuşlar (K1, K2), İşlemler (İ1–İ4), Başlangıç'ta ×'in ipucu (S1), Nokta hesabı çipinin ipucu, Koordinat listesi al'da virgülün ipucu.
+    - ~~küçük sözler ve ipuçları: veritabanı çakışması (Ç1), Katmanlar'da adın yolu ve menüdeki tuşlar (K1, K2), İşlemler (İ1–İ4), Başlangıç'ta ×'in ipucu (S1), Nokta hesabı çipinin ipucu, Koordinat listesi al'da virgülün ipucu~~ ve kaydedince varsayılanların notu (A4): 28 Eylül'de bitti.
   - **İşlemler:** kullanıcının modelleri şeritte ve komut satırında (araç kutusunda var, ADR 0116).
   - **Görünüş:** arayüz yazı tiplerinden Source Sans 3, Noto Sans, Roboto ve “Sistem yazı tipi” (`user.uiFont`; masaüstünde üç yüz var). Bununla birlikte iki platformun görünüş anahtarları birleşmeli: web `appearance.accent`, `uiFont`, `uiScale` (beş adım) ve temayı yerleşimde tutar; masaüstü `appearance.theme`, `accentColor`, `typeface`, `monoTypeface`, `textSize` (piksel). Ayar dosyası o zaman görünüşü de taşır (parity-audit A1, A6).
   - İki platformda da bekleyenler (`pending`) ve yalnız web'e ait klasik arayüz bu listeye girmez.

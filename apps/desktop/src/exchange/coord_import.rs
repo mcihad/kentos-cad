@@ -564,12 +564,23 @@ impl App {
         .searchable(false);
         let resolved = r.map_or(DecimalMark::Point, |r| r.decimal);
         let comma_delimited = r.is_some_and(|r| r.delimiter == CoordDelimiter::Comma);
-        let decimal = Segmented::new_with(
+        let decimal: Element<'_, Message> = Segmented::new_with(
             [Mark(DecimalMark::Point), Mark(DecimalMark::Comma)],
             Mark(resolved),
             |m| event(Event::Decimal(m.0)),
             move |m| !(m.0 == DecimalMark::Comma && comma_delimited),
-        );
+        )
+        .into();
+        // Why Virgül is off (the web's hint on it).
+        let decimal = if comma_delimited {
+            kentos_ui::widget::tip(
+                decimal,
+                kentos_ui::widget::Tip::new("Virgül ayırıcı olduğunda ondalık virgül okunamaz."),
+                iced::widget::tooltip::Position::Top,
+            )
+        } else {
+            decimal
+        };
         let header = words::check(
             r.is_some_and(|r| r.header),
             "Başlık (sütun adları)",

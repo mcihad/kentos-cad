@@ -126,9 +126,11 @@ impl App {
                         ..container::Style::default()
                     }
                 });
-            options.push(
-                kentos_ui::widget::MenuButton::new(face, crate::point_calc::calc_menu).into(),
-            );
+            options.push(kentos_ui::widget::tip(
+                kentos_ui::widget::MenuButton::new(face, crate::point_calc::calc_menu),
+                kentos_ui::widget::Tip::new(crate::point_calc::CHIP_TIP),
+                iced::widget::tooltip::Position::Bottom,
+            ));
         }
         let main = Row::new()
             .push(name)

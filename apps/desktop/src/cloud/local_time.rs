@@ -307,6 +307,19 @@ pub fn when(text: &str, zone: &Zone) -> String {
     )
 }
 
+/// A moment (milliseconds since 1970) as the time of day in the device's
+/// zone, tr-TR: “14:05:09” (the web's `toLocaleTimeString`).
+pub fn clock(ms: u64, zone: &Zone) -> String {
+    let t = i64::try_from(ms / 1000).unwrap_or(0);
+    let (_, _, _, secs) = civil(t + i64::from(zone.offset_at(t)));
+    format!(
+        "{:02}:{:02}:{:02}",
+        secs / 3600,
+        secs % 3600 / 60,
+        secs % 60
+    )
+}
+
 /// Seconds since 1970 of a day's midnight, the day read as if in UTC (a
 /// local time before [`from_local`] takes the zone off).
 pub fn seconds_of(year: i64, month: i64, day: i64) -> i64 {
@@ -357,6 +370,8 @@ mod tests {
     fn turkey_is_three_hours_east_and_a_daylight_rule_turns() {
         let istanbul = Zone::fixed(3 * 3600);
         assert_eq!(when("2026-09-26T11:05:00Z", &istanbul), "26.09.2026 14:05");
+        // 2026-09-26T11:05:09.5Z: the time of day, as the processing history writes it.
+        assert_eq!(clock(1_790_420_709_500, &istanbul), "14:05:09");
         assert_eq!(
             day("2026-10-25T21:30:00Z", &istanbul).as_deref(),
             Some("26.10.2026")

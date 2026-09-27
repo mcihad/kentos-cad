@@ -860,10 +860,10 @@ fn a_refusal_for_good_shows_the_server_s_message() {
 #[test]
 fn the_status_words_are_the_brief_s() {
     let reasons = [
-        (ConflictReason::Changed, "Başkası değiştirdi"),
-        (ConflictReason::Deleted, "Başkası sildi"),
-        (ConflictReason::Exists, "Kimlik başka nesnede"),
-        (ConflictReason::Project, "Proje bilgileri değişti"),
+        (ConflictReason::Changed, "başkası değiştirdi"),
+        (ConflictReason::Deleted, "başkası sildi"),
+        (ConflictReason::Exists, "sunucuda zaten var"),
+        (ConflictReason::Project, "proje bilgileri değişti"),
     ];
     for (reason, text) in reasons {
         assert_eq!(words::reason(reason), text);
@@ -919,7 +919,7 @@ fn a_conflict_stops_sending_and_the_window_offers_both_choices() {
         "Nokta · Çizim · P1"
     );
 
-    // Benimkini koru: mine goes over the server's version, at once.
+    // Benimkini kaydet: mine goes over the server's version, at once.
     cloud(&mut app, Event::KeepMine);
     assert_eq!(app.dialog, None);
     assert_eq!(state(&app), SaveState::Saving);

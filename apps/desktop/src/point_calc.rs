@@ -19,6 +19,8 @@ use crate::app::{App, Message};
 
 /// The chip's and the strip button's name (the web's).
 pub const CHIP: &str = "Nokta hesabı";
+/// Its tip (the web's `cmdbar__calc` title).
+pub const CHIP_TIP: &str = "Ölçüyle nokta hesapla (yan nokta, kesişim, açı-mesafe…)";
 
 /// The calculator's rows (the web's `calcMenuItems`): its heading, then each
 /// construction with its icon, what it computes and its alias.

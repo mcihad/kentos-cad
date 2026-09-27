@@ -268,10 +268,10 @@ impl App {
                 )))
                 .push(container(scrollable(rows).direction(style::field::body_scrollbar())).max_height(300))
                 .push(label::caption(
-                    "“Sunucudakini al” sizin değişikliklerinizi bırakır. “Benimkini koru” başkasının değişikliğinin üzerine sizinkini yazar.",
+                    "“Sunucudakini al” sizin değişikliklerinizi bırakır. “Benimkini kaydet” başkasının değişikliğinin üzerine sizinkini yazar.",
                 ))
-                .action(secondary("Sonra", Some(cloud(Event::Close))))
-                .action(secondary("Benimkini koru", Some(cloud(Event::KeepMine))))
+                .aside(secondary("Sonra", Some(cloud(Event::Close))))
+                .action(secondary("Benimkini kaydet", Some(cloud(Event::KeepMine))))
                 .action(primary("Sunucudakini al", Some(cloud(Event::TakeTheirs))))
                 .width(600.0),
         )

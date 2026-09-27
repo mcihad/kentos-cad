@@ -371,21 +371,29 @@ fn layer<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
         _ => suggested,
     };
     let leaves = layers.leaves();
-    let exists = leaves
+    let trimmed = kentos_processing::text::js_trim(&new_name);
+    // A new name an existing layer has writes to that layer (the runner's rule): “(mevcut)”.
+    let same = leaves
         .iter()
-        .any(|l| tr_lower(&l.name) == tr_lower(kentos_processing::text::js_trim(&new_name)));
+        .find(|l| tr_lower(kentos_processing::text::js_trim(&l.name)) == tr_lower(trimmed));
+    let shown = match same {
+        Some(l) => format!("{} (mevcut)", l.name),
+        None if trimmed.is_empty() => "(yeni)".to_owned(),
+        None => format!("{trimmed} (yeni)"),
+    };
+    // The web's plan (fieldPlan.ts `layerFieldView`): the new layer, then the
+    // existing ones by their place in the tree; locked ones cannot be chosen.
     let mut choices = vec![
-        Choice::new(format!(
-            "{new_name} ({})",
-            if exists { "mevcut" } else { "yeni" }
-        ))
-        .icon(Icon::Plus)
-        .detail("yeni katman"),
+        Choice::header("Yeni katman"),
+        Choice::new(format!("Yeni: {trimmed}"))
+            .icon(crate::icons::from_web(Some("layerAdd")))
+            .shown(shown),
+        Choice::header("Mevcut katmanlar"),
     ];
-    let mut ids = vec![String::new()];
+    let mut ids = vec![String::new(); 3];
     for l in &leaves {
         let locked = layers.is_locked(&l.id);
-        let mut c = Choice::new(l.name.clone()).color((env.color)(&l.style.color));
+        let mut c = Choice::new(layers.path(&l.id)).color((env.color)(&l.style.color));
         if locked {
             c = c.detail("kilitli").disabled();
         }
@@ -393,13 +401,13 @@ fn layer<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
         ids.push(l.id.clone());
     }
     let selected = match &value {
-        Some(LayerValue::New(_)) | None => Some(0),
-        Some(LayerValue::Existing(id)) => ids.iter().position(|x| x == id),
+        Some(LayerValue::New(_)) | None => Some(1),
+        Some(LayerValue::Existing(id)) => ids.iter().position(|x| !x.is_empty() && x == id),
     };
     let name = def.name.clone();
     let fresh = new_name.clone();
     let list = Select::new(choices, selected, move |i| match i {
-        0 => ev(Event::Value(name.clone(), json!({ "newName": fresh }))),
+        1 => ev(Event::Value(name.clone(), json!({ "newName": fresh }))),
         i => ev(Event::Value(
             name.clone(),
             json!({ "layerId": ids.get(i).cloned().unwrap_or_default() }),

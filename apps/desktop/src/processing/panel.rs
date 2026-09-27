@@ -149,8 +149,14 @@ impl App {
             })
             .collect();
         if !models.is_empty() || query.is_empty() {
-            let mut branch =
-                category_row("Modeller", "processing", models.len(), open(MODELS), MODELS);
+            let mut branch = category_row(
+                "Modeller",
+                "processing",
+                "Araçları birbirine bağlayan akışlar; her biri tek adımda geri alınır",
+                models.len(),
+                open(MODELS),
+                MODELS,
+            );
             for m in &models {
                 let command = catalog()
                     .get(&format!("processing.model.{}", m.id))
@@ -168,8 +174,22 @@ impl App {
                     Tip::new(words),
                     iced::widget::tooltip::Position::Left,
                 );
+                // The web's row tooltip: what it does and how many steps.
+                let mut about = Tip::new(m.label.clone()).detail(format!(
+                    "{} adım{}",
+                    m.steps.len(),
+                    if registry.is_builtin_model(&m.id) {
+                        "; hazır model"
+                    } else {
+                        ""
+                    }
+                ));
+                if !m.description.is_empty() {
+                    about = about.body(m.description.clone());
+                }
                 let mut node = Node::new(m.label.as_str())
                     .icon(icon(crate::icons::from_web(Some("processing"))).size(15.0))
+                    .tip(about)
                     .cells([edit]);
                 node = match command {
                     Some(id) => node.on_press(Message::Run(id)),
@@ -238,31 +258,41 @@ impl App {
         };
         let alive = self.alive(r).len();
         let known = self.processing.registry.get(&r.tool_id).is_some();
+        // A decimal point, as every number the app writes (the web's `toFixed(1)`).
         let took = if r.ms < 1000 {
             format!("{} ms", r.ms)
         } else {
-            format!("{:.1} sn", r.ms as f64 / 1000.0).replace('.', ",")
+            format!("{:.1} sn", r.ms as f64 / 1000.0)
         };
         let mut actions = row![].spacing(6).align_y(Center);
         if alive > 0 {
-            actions = actions.push(
+            actions = actions.push(tip(
                 button(label::caption(format!("{alive} nesneyi seç")))
                     .padding([3, 8])
                     .style(style::button::ghost)
                     .on_press(ev(Event::SelectRun(r.seq))),
-            );
+                Tip::new("Bu çalıştırmanın eklediği nesneleri seçer"),
+                iced::widget::tooltip::Position::Top,
+            ));
         }
-        actions = actions.push(
+        actions = actions.push(tip(
             button(label::caption("Yeniden aç"))
                 .padding([3, 8])
                 .style(style::button::secondary)
                 .on_press_maybe(known.then_some(ev(Event::Reopen(r.seq)))),
-        );
+            Tip::new("Aynı değerlerle pencereyi açar"),
+            iced::widget::tooltip::Position::Top,
+        ));
+        // The time of day it ran (the web's `toLocaleTimeString`).
         let head = row![
             label::body(r.label.clone())
                 .font(typography::ui_strong())
                 .width(Fill),
-            label::caption(crate::cloud::words::ago_ms(r.started)).style(style::text::muted),
+            label::mono_caption(crate::cloud::local_time::clock(
+                r.started,
+                crate::cloud::local_time::Zone::system()
+            ))
+            .style(style::text::muted),
         ]
         .spacing(8)
         .align_y(Center);
@@ -356,12 +386,17 @@ impl App {
 fn category_row<'a>(
     label: &'a str,
     glyph: &'a str,
+    description: &str,
     count: usize,
     open: bool,
     id: &str,
 ) -> Node<'a, Message> {
-    Node::new(label)
-        .folder()
+    let mut row = Node::new(label);
+    // The web's tooltip: the category and what is in it.
+    if !description.is_empty() {
+        row = row.tip(Tip::new(label).body(description));
+    }
+    row.folder()
         .icon(icon(crate::icons::from_web(Some(glyph))).size(15.0))
         .cells([label::caption(count.to_string())
             .style(style::text::muted)
@@ -373,7 +408,7 @@ fn category_row<'a>(
 fn category_node<'a>(node: CategoryNode, open: &dyn Fn(&str) -> bool) -> Node<'a, Message> {
     let count = count_tools(&node);
     let c = node.category;
-    let mut branch = category_row(c.label, c.icon, count, open(c.id), c.id);
+    let mut branch = category_row(c.label, c.icon, c.description, count, open(c.id), c.id);
     for child in node.children {
         branch = branch.push(category_node(child, open));
     }
@@ -381,8 +416,14 @@ fn category_node<'a>(node: CategoryNode, open: &dyn Fn(&str) -> bool) -> Node<'a
         let command = catalog()
             .get(&format!("processing.run.{}", tool.id))
             .map(|c| c.id);
+        // The web's tooltip: what it does and its command line names.
+        let mut about = Tip::new(tool.label.clone()).body(tool.description.clone());
+        if !tool.aliases.is_empty() {
+            about = about.detail(format!("Komut satırı: {}", tool.aliases.join(", ")));
+        }
         let mut row = Node::new(tool.label.clone())
-            .icon(icon(crate::icons::from_web(tool.icon.as_deref())).size(15.0));
+            .icon(icon(crate::icons::from_web(tool.icon.as_deref())).size(15.0))
+            .tip(about);
         if let Some(id) = command {
             row = row.on_press(Message::Run(id));
         }

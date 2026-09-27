@@ -122,6 +122,19 @@ impl LayerTree {
         node(&self.roots, path.get(..path.len().checked_sub(1)?)?)
     }
 
+    /// A node's names from the top of the tree down (the web's `path`):
+    /// “Kadastro / Parsel”; empty for an unknown id.
+    pub fn path(&self, id: &str) -> String {
+        let Some(path) = self.paths.get(id) else {
+            return String::new();
+        };
+        (1..=path.len())
+            .filter_map(|n| node(&self.roots, &path[..n]))
+            .map(|n| n.name.as_str())
+            .collect::<Vec<_>>()
+            .join(" / ")
+    }
+
     /// Layers (not groups) in tree order.
     pub fn leaves(&self) -> Vec<&LayerNode> {
         let mut out = Vec::new();

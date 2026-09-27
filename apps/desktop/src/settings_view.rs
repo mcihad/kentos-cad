@@ -318,6 +318,38 @@ impl App {
         if let Some(error) = &self.settings.write_error {
             self.warn(format!("Ayarlar dosyaya yazılamadı ({error}); bu oturumda geçerli. Klasörün yazma iznini denetleyin."));
         }
+        // New projects' defaults leave the open project as it is: said (the web's, CLAUDE.md §4.4).
+        let taken = changes
+            .iter()
+            .filter(|(key, _)| !refused.iter().any(|(r, _)| r == key));
+        let defaults: Vec<String> = taken
+            .filter_map(|(key, value)| match *key {
+                "newProjects.srid" => value
+                    .as_u64()
+                    .and_then(|srid| u32::try_from(srid).ok())
+                    .and_then(crate::crs::system)
+                    .map(|c| {
+                        format!(
+                            "Yeni projeler {} (EPSG:{}) ile oluşturulacak. Açık projenin sistemi değişmedi.",
+                            c.name, c.srid
+                        )
+                    }),
+                "newProjects.workspace" => {
+                    serde_json::from_value::<kentos_contracts::Workspace>(value.clone())
+                        .ok()
+                        .map(|w| {
+                            format!(
+                                "Yeni projeler “{}” çalışma moduyla önerilecek. Açık projenin modu değişmedi.",
+                                crate::catalog::mode_of(Some(w))
+                            )
+                        })
+                }
+                _ => None,
+            })
+            .collect();
+        for line in defaults {
+            self.output(line);
+        }
         if refused.is_empty() {
             self.say(
                 kentos_interaction::Level::Success,
@@ -893,6 +925,33 @@ mod tests {
         let _ = app.update(Message::DialogClosed);
         assert_eq!(app.draft.snap_aperture, 18.0);
         assert_eq!(app.settings.requested("drafting.snapAperture"), 18);
+    }
+
+    /// New projects' defaults: saving says the open project stays as it is
+    /// (the web's AppSettingsDialog, parity-audit A4).
+    #[test]
+    fn saving_new_projects_defaults_says_the_open_project_stays() {
+        let (mut app, _) = App::boot(None);
+        let _ = app.run("tools.options");
+        edit(&mut app, Edit::Value("newProjects.srid", Value::from(5254)));
+        edit(
+            &mut app,
+            Edit::Value("newProjects.workspace", Value::from("cad")),
+        );
+        edit(&mut app, Edit::Save);
+        let said: Vec<&str> = app.log.lines().map(|l| l.text.as_str()).collect();
+        assert!(
+            said.iter().any(|t| t.starts_with("Yeni projeler ")
+                && t.ends_with("(EPSG:5254) ile oluşturulacak. Açık projenin sistemi değişmedi.")),
+            "{said:?}"
+        );
+        assert!(
+            said.contains(
+                &"Yeni projeler “CAD” çalışma moduyla önerilecek. Açık projenin modu değişmedi."
+            ),
+            "{said:?}"
+        );
+        assert_eq!(said.last(), Some(&"Uygulama ayarları kaydedildi."));
     }
 
     /// A web settings file: its values the desktop has are taken; its own

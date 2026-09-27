@@ -272,6 +272,7 @@ struct MenuChip<'a, Message> {
     label: Fragment<'a>,
     icon: Option<Icon>,
     menu: crate::widget::Menu<Message>,
+    tip: Option<String>,
 }
 
 struct Keyword<'a, Message> {
@@ -305,7 +306,16 @@ impl<'a, Message> Prompt<'a, Message> {
             label: label.into_fragment(),
             icon,
             menu,
+            tip: None,
         });
+        self
+    }
+
+    /// Son eklenen menü çipinin ipucu (ne işe yaradığı).
+    pub fn menu_tip(mut self, tip: impl Into<String>) -> Self {
+        if let Some(chip) = self.menus.last_mut() {
+            chip.tip = Some(tip.into());
+        }
         self
     }
 
@@ -916,7 +926,16 @@ fn input_row<'a, Message: Clone + 'a>(
                 }
             });
             let menu = chip.menu;
-            ask = ask.push(crate::widget::MenuButton::new(face, move || menu.clone()));
+            let button: Element<'a, Message> =
+                crate::widget::MenuButton::new(face, move || menu.clone()).into();
+            ask = ask.push(match chip.tip {
+                Some(text) => crate::widget::tip(
+                    button,
+                    crate::widget::Tip::new(text),
+                    iced::widget::tooltip::Position::Top,
+                ),
+                None => button,
+            });
         }
 
         content = content.push(ask);

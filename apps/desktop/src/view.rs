@@ -632,6 +632,8 @@ impl App {
     ) -> Node<'a, Message> {
         let active = doc.model.layers().active() == node.id;
         let mut row = Node::new(node.name.as_str())
+            // Its place in the tree (the web's name title).
+            .tip(kentos_ui::widget::Tip::new(doc.model.layers().path(&node.id)))
             .cells([label::caption(doc.count_below(node).to_string()).into()])
             .on_press(Message::LayerSelected(node.id.clone()))
             .selected(self.layer_row_selected(&node.id))
@@ -730,11 +732,13 @@ impl App {
             // Nokta hesabı while the command waits for a point and the strip is off (the web's stripParts).
             .map(|prompt| {
                 if !self.command_bar && self.session.can_calc_point() {
-                    prompt.menu(
-                        crate::point_calc::CHIP,
-                        Some(crate::icons::from_web(Some("calc"))),
-                        crate::point_calc::calc_menu(),
-                    )
+                    prompt
+                        .menu(
+                            crate::point_calc::CHIP,
+                            Some(crate::icons::from_web(Some("calc"))),
+                            crate::point_calc::calc_menu(),
+                        )
+                        .menu_tip(crate::point_calc::CHIP_TIP)
                 } else {
                     prompt
                 }

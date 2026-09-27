@@ -335,6 +335,7 @@ impl App {
             } else {
                 Icon::Eye
             })
+            .shortcut("Boşluk")
             .item(
                 if node.locked { "Kilidi aç" } else { "Kilitle" },
                 Message::LayerLocked(id.clone()),
@@ -382,6 +383,7 @@ impl App {
                 .separator();
         }
         menu.item("Yeniden adlandır", event(Event::Rename(id.clone())))
+            .shortcut("F2")
             .item(
                 if is_layer {
                     "Yanına yeni katman"
@@ -395,6 +397,8 @@ impl App {
             // Always offered: what cannot go says why (the web's).
             .item("Sil", event(Event::Remove(id)))
             .icon(crate::icons::from_web(Some("trash")))
+            // The web's `formatChord`: Delete is “Del”, Space “Boşluk”.
+            .shortcut("Del")
     }
 
     /// The layer's colour menu, from its swatch (the web's `colorItems`): the ink colours,

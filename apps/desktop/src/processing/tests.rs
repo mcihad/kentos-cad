@@ -240,7 +240,7 @@ fn screens() {
 
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let views: [(&str, &'static str); 9] = [
+    let views: [(&str, &'static str); 10] = [
         ("kenar", "processing.run.annotation.edgeLengths"),
         ("numara", "processing.run.points.numberVertices"),
         ("oznitelik", "processing.run.attributes.calculate"),
@@ -251,6 +251,8 @@ fn screens() {
         // The expression field's menus, opened by a click: long ones scroll.
         ("ifade-islevler", "processing.run.selection.byExpression"),
         ("ifade-degiskenler", "processing.run.selection.byExpression"),
+        // The output layer's list: the new layer, then the existing ones by their place.
+        ("katman-listesi", "processing.run.annotation.edgeLengths"),
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -278,12 +280,13 @@ fn screens() {
                     _ => {}
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
-                if let Some(menu) = name.strip_prefix("ifade-") {
-                    let caption = if menu == "islevler" {
-                        "İşlevler"
-                    } else {
-                        "Değişkenler"
-                    };
+                let opens = match name {
+                    "ifade-islevler" => Some("İşlevler"),
+                    "ifade-degiskenler" => Some("Değişkenler"),
+                    "katman-listesi" => Some("Kenar ölçüleri (yeni)"),
+                    _ => None,
+                };
+                if let Some(caption) = opens {
                     let at = crate::files_testing::find_text(&mut snapshot, &app, caption)
                         .expect("the menu's button");
                     let center = at.center();

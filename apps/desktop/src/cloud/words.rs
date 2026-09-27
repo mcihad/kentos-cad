@@ -192,13 +192,15 @@ pub fn size_text(bytes: usize) -> String {
     }
 }
 
-/// Why an object could not be saved.
+/// Why an object could not be saved (the web's ConflictDialog.ts `REASON`).
 pub fn reason(reason: ConflictReason) -> &'static str {
     match reason {
-        ConflictReason::Changed => "Başkası değiştirdi",
-        ConflictReason::Deleted => "Başkası sildi",
-        ConflictReason::Exists => "Kimlik başka nesnede",
-        ConflictReason::Project => "Proje bilgileri değişti",
+        ConflictReason::Changed => "başkası değiştirdi",
+        ConflictReason::Deleted => "başkası sildi",
+        // The same object (the same persistent id) is on the server already:
+        // someone else brought it back first.
+        ConflictReason::Exists => "sunucuda zaten var",
+        ConflictReason::Project => "proje bilgileri değişti",
     }
 }
 
