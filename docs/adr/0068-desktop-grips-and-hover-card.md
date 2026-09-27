@@ -61,7 +61,7 @@
   - Yanında katmanın renk örneği ve adı.
 - **Satırlar, web'in sırasıyla:**
   - Ada, Mahalle, Nitelik;
-  - tapu alanı ("Tapu alanı (m²)" özniteliği, `parseFloat` gibi okunur) ve yanında "Hesaplanan alan"; tapu alanı yoksa "Alan";
+  - tapu alanı ("Tapu alanı (m²)" özniteliği) ve yanında "Hesaplanan alan"; tapu alanı yoksa "Alan". Tapu alanı yazıldığı gibi gösterilir: ayrıştırılmaz, yuvarlanmaz, birimi değiştirilmez (CLAUDE.md §7, §23.1). Düz bir ondalık sayıysa (nokta ya da virgülle) sonuna "m²" eklenir. Web'de `7b5d07f`, masaüstünde aynı birleştirmede;
   - "Ada (delik)";
   - Çevre (kapalı alan, daire) ya da Uzunluk;
   - Yarıçap;
@@ -105,7 +105,7 @@
   - şekli bozan konum;
   - kenet.
 - `apps/desktop/src/hover_card.rs`:
-  - satırların web'in sırasıyla oluşu (tapu alanı `parseFloat` gibi);
+  - satırların web'in sırasıyla oluşu, tapu alanının yazıldığı gibi gösterilişi;
   - bekleme, eskiyen bekleme, ayar ve çalışan komut.
 - İz `grips`: web `pnpm e2e:interaction` ve masaüstü `cargo test -p kentos-desktop traces`.
 - `pnpm rust:test`, `pnpm rust:test:desktop`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm e2e`, `pnpm inventory:check`.

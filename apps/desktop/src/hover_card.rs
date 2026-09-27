@@ -8,9 +8,9 @@
 //!   command starts or a grip is taken, and never shows while the
 //!   preference `drafting.hoverInfo` is off.
 //! - Its rows are the web's, in its order: Ada, Mahalle, Nitelik; the deed
-//!   area beside the computed one (“Hesaplanan alan”), since their
-//!   difference is what a surveyor checks; holes; perimeter or length;
-//!   radius; a text's text; a point's elevation.
+//!   area as the deed says it beside the computed one (“Hesaplanan alan”),
+//!   since their difference is what a surveyor checks; holes; perimeter or
+//!   length; radius; a text's text; a point's elevation.
 
 use std::time::Duration;
 
@@ -25,7 +25,6 @@ use kentos_ui::theme::typography;
 use kentos_ui::widget::{horizontal_divider, swatch};
 
 use crate::app::{App, Message};
-use crate::properties::js_parse_float;
 use crate::selecting::kind_title;
 
 /// How long the pointer rests on an object before the card shows (the web's `DELAY_MS`).
@@ -39,6 +38,35 @@ fn after(delay: Duration, message: Message) -> iced::Task<Message> {
         let _ = done.send(message);
     });
     iced::Task::perform(wait, |message| message.ok()).and_then(iced::Task::done)
+}
+
+/// The registered (tapu) area as the card shows it (the web's
+/// `deedAreaText`): the attribute as written, not parsed, rounded or
+/// converted, since it is the deed's value (CLAUDE.md §7, §23.1), with “m²”
+/// after a plain decimal number (a point or a comma); none when empty.
+pub(crate) fn deed_area_text(text: Option<&str>) -> Option<(String, bool)> {
+    let text = kentos_interaction::js_trim(text.unwrap_or(""));
+    if text.is_empty() {
+        return None;
+    }
+    let plain = plain_decimal(text);
+    Some((
+        if plain {
+            format!("{text} m²")
+        } else {
+            text.to_owned()
+        },
+        plain,
+    ))
+}
+
+/// Digits, then at most one point or comma and more digits (the web's `^\d+([.,]\d+)?$`).
+fn plain_decimal(text: &str) -> bool {
+    let digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    match text.split_once(['.', ',']) {
+        Some((whole, fraction)) => digits(whole) && digits(fraction),
+        None => digits(text),
+    }
 }
 
 /// What a card shows: its title, the object's layer and colour, its rows
@@ -80,15 +108,15 @@ pub(crate) fn card(
             rows.push((key, value.to_owned(), false));
         }
     }
-    // The registered (deed) area beside the computed one, as parseFloat reads it.
-    let deed = js_parse_float(base.attrs.get("Tapu alanı (m²)").map_or("", String::as_str));
-    let deed = deed.is_finite().then_some(deed);
-    if let Some(deed) = deed {
-        rows.push(("Tapu alanı", format.area(deed), true));
+    // The registered (deed) area as written, beside the computed one.
+    let deed = deed_area_text(base.attrs.get("Tapu alanı (m²)").map(String::as_str));
+    let has_deed = deed.is_some();
+    if let Some((text, plain)) = deed {
+        rows.push(("Tapu alanı", text, plain));
     }
     let (area, length) = measures(e);
     if let Some(area) = area {
-        let name = if deed.is_some() {
+        let name = if has_deed {
             "Hesaplanan alan"
         } else {
             "Alan"
@@ -250,11 +278,11 @@ mod tests {
         let names: Vec<&str> = c.rows.iter().map(|r| r.0).collect();
         assert_eq!(names, ["Ada", "Alan", "Ada (delik)", "Çevre"]);
         assert_eq!(c.rows[0].1, "101");
-        // The deed area as parseFloat reads it (“118,5” is 118), beside the computed one.
+        // The deed area as the deed says it (“118,5”, a decimal comma kept), beside the computed one.
         let mut deed = parcel.clone();
         deed.base_mut()
             .attrs
-            .insert("Tapu alanı (m²)".into(), "118,5".into());
+            .insert("Tapu alanı (m²)".into(), " 118,5 ".into());
         let c = card(&deed, &doc.model, &format, black);
         let rows: Vec<(&str, &str)> = c
             .rows
@@ -262,8 +290,16 @@ mod tests {
             .map(|r| (r.0, r.1.as_str()))
             .take(3)
             .collect();
-        assert_eq!(rows[1], ("Tapu alanı", "118.00 m²"));
+        assert_eq!(rows[1], ("Tapu alanı", "118,5 m²"));
         assert_eq!(rows[2].0, "Hesaplanan alan");
+        // Text that is not a plain number is shown as it is.
+        assert_eq!(
+            super::deed_area_text(Some("tapuda yok")),
+            Some(("tapuda yok".to_owned(), false))
+        );
+        assert_eq!(super::deed_area_text(Some("723.525")), Some(("723.525 m²".to_owned(), true)));
+        assert_eq!(super::deed_area_text(Some("723abc")), Some(("723abc".to_owned(), false)));
+        assert_eq!(super::deed_area_text(Some("  ")), None);
         let circle = doc.model.get(Slot(5)).expect("the circle");
         let c = card(circle, &doc.model, &format, black);
         assert_eq!(c.title, "Daire");
