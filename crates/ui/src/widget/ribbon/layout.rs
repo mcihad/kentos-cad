@@ -40,10 +40,11 @@ enum Content<'a, Message> {
     Fixed(Vec<Element<'a, Message>>),
     /// Şeridin panelin genişliğine göre dizdiği düğmeler.
     Tools(Vec<Button<'a, Message>>),
-    /// Kendi görünüşü (tam genişlikte) ve katlanınca açılan menüsü.
+    /// Kendi görünüşü (0, 1 ve 2. seviyelerdeki genişliği ve çizimi) ve
+    /// katlanınca açılan menüsü.
     Custom {
-        width: f32,
-        view: Rc<dyn Fn() -> Element<'a, Message> + 'a>,
+        widths: [f32; 3],
+        view: Rc<dyn Fn(Level) -> Element<'a, Message> + 'a>,
         menu: Rc<dyn Fn() -> Menu<Message> + 'a>,
     },
 }
@@ -80,7 +81,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
                 self.content = Content::Fixed(items);
             }
             Content::Custom { view, .. } => {
-                self.content = Content::Fixed(vec![view(), item.into()]);
+                self.content = Content::Fixed(vec![view(0), item.into()]);
             }
         }
         self
@@ -99,13 +100,27 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
     /// Kendi görünüşü olan grup (ör. tema seçimi): `width` tam genişliği,
     /// `menu` katlanınca açılan menüdür.
     pub fn custom(
-        mut self,
+        self,
         width: f32,
         view: impl Fn() -> Element<'a, Message> + 'a,
         menu: impl Fn() -> Menu<Message> + 'a,
     ) -> Self {
+        self.stepped([width; 3], move |_| view(), menu)
+    }
+
+    /// Kendi görünüşü seviyeyle daralan grup (ör. etkin katman ve yeni
+    /// nesnelerin özellikleri: alanlar kısalır, düğmeler yalnız ikona iner):
+    /// `widths` 0, 1 ve 2. seviyelerin tam genişlikleri, `view` seviyedeki
+    /// çizimi, `menu` 3. seviyede tek düğmeye katlanınca açılan menüdür.
+    /// Genişlik kazandırmayan seviye atlanır (bkz. [`fit`](super::fit)).
+    pub fn stepped(
+        mut self,
+        widths: [f32; 3],
+        view: impl Fn(Level) -> Element<'a, Message> + 'a,
+        menu: impl Fn() -> Menu<Message> + 'a,
+    ) -> Self {
         self.content = Content::Custom {
-            width,
+            widths,
             view: Rc::new(view),
             menu: Rc::new(menu),
         };
@@ -172,7 +187,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         let body = match (&self.content, level) {
             (_, 3) => return self.folded_width() + PANEL_PAD * 2.0 + 1.0,
             (Content::Tools(tools), level) => tools_width(tools, level),
-            (Content::Custom { width, .. }, _) => *width,
+            (Content::Custom { widths, .. }, level) => widths[usize::from(level.min(2))],
             (Content::Fixed(_), _) => 0.0,
         };
         body.max(self.foot_width()) + PANEL_PAD * 2.0 + 1.0
@@ -205,7 +220,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         }
         let body: Element<'a, Message> = match &self.content {
             Content::Tools(tools) => tools_row(tools, level),
-            Content::Custom { view, .. } => view(),
+            Content::Custom { view, .. } => view(level),
             Content::Fixed(_) => space::horizontal().width(0).into(),
         };
         self.frame(body, self.width(level) - 1.0)
@@ -564,6 +579,108 @@ impl<'a, Message: 'a> From<Field<'a, Message>> for Element<'a, Message> {
         .height(row_height())
         .align_y(Center)
         .into()
+    }
+}
+
+/// Şeritte açılır alan (web'in şerit `Dropdown`'u): önde soluk adı (ör.
+/// “Renk”), isteğe bağlı renk örneği, değeri ve açılır ok; tıklayınca menüsü
+/// açılır. Genişliği verilir; sığmayan değer “…” ile kısalır.
+pub struct Choice<'a, Message> {
+    label: Option<String>,
+    swatch: Option<Color>,
+    value: String,
+    width: f32,
+    menu: Rc<dyn Fn() -> Menu<Message> + 'a>,
+    tip: Option<Tip>,
+}
+
+impl<'a, Message: Clone + 'a> Choice<'a, Message> {
+    /// `value` gösterilen seçim, `menu` tıklayınca açılan seçenekler.
+    pub fn new(value: impl Into<String>, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
+        Self {
+            label: None,
+            swatch: None,
+            value: value.into(),
+            width: 150.0,
+            menu: Rc::new(menu),
+            tip: None,
+        }
+    }
+
+    /// Değerden önceki soluk ad (ör. “Renk”, “Ölçek”).
+    pub fn label(mut self, label: impl Into<String>) -> Self {
+        self.label = Some(label.into());
+        self
+    }
+
+    /// Değerden önce renk örneği (katmanın ya da rengin).
+    pub fn swatch(mut self, color: Option<Color>) -> Self {
+        self.swatch = color;
+        self
+    }
+
+    /// Tam genişlik (piksel, yazı ölçeğiyle büyütülmüş).
+    pub fn width(mut self, width: f32) -> Self {
+        self.width = width;
+        self
+    }
+
+    pub fn tip(mut self, tip: Tip) -> Self {
+        self.tip = Some(tip);
+        self
+    }
+}
+
+impl<'a, Message: Clone + 'a> From<Choice<'a, Message>> for Element<'a, Message> {
+    fn from(choice: Choice<'a, Message>) -> Self {
+        const PAD: f32 = 6.0;
+        const GAP: f32 = 5.0;
+        let size = typography::caption();
+        let mut room = choice.width - PAD * 2.0 - 2.0 - GAP - 9.0;
+        let mut face = row![].spacing(GAP).align_y(Center);
+        if let Some(label) = &choice.label {
+            room -= typography::text_width(label, size) + GAP;
+            face = face.push(
+                text(label.clone())
+                    .font(typography::ui())
+                    .size(size)
+                    .wrapping(iced::widget::text::Wrapping::None)
+                    .style(style::text::muted),
+            );
+        }
+        if let Some(color) = choice.swatch {
+            room -= 10.0 + GAP;
+            face = face.push(crate::widget::swatch(color));
+        }
+        let value = typography::elide(&choice.value, size, room.max(0.0)).into_owned();
+        face = face
+            .push(
+                container(
+                    text(value)
+                        .font(typography::ui())
+                        .size(size)
+                        .wrapping(iced::widget::text::Wrapping::None),
+                )
+                .width(Fill)
+                .clip(true),
+            )
+            .push(icon(Icon::ChevronDown).size(9.0).tone(Tone::Muted));
+        let menu = choice.menu.clone();
+        let field: Element<'a, Message> = MenuButton::new(
+            container(face)
+                .padding([0.0, PAD])
+                .width(choice.width)
+                .height(row_height() - 2.0)
+                .align_y(Center)
+                .style(style::container::field_box),
+            move || menu(),
+        )
+        .into();
+        let field = match choice.tip {
+            Some(t) => tip(field, t, tooltip::Position::Bottom),
+            None => field,
+        };
+        container(field).height(row_height()).align_y(Center).into()
     }
 }
 

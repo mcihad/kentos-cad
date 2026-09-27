@@ -71,7 +71,7 @@ fn panel_commands(panel: &Panel) -> Vec<&'static str> {
             Item::Command { id, .. } => ids.push(*id),
             Item::Split { entries, .. } => ids.extend(entries.iter().map(|e| e.id)),
             Item::Menu { ids: menu, .. } => ids.extend(menu.iter().copied()),
-            Item::Builtin => {}
+            Item::Builtin(_) => {}
         }
     }
     ids.extend(panel.overflow.iter().copied());
@@ -156,7 +156,9 @@ impl App {
             return Task::none();
         };
         self.ribbon_search.clear();
+        // Its own tab, never the contextual one (the web's `homeOf`).
         self.tab = tab;
+        self.ribbon_context = false;
         // The desktop's folded ribbon has no peek over the drawing: it opens.
         self.ribbon_collapsed = false;
         self.ribbon_flash = Some(command.id);

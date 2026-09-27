@@ -90,15 +90,15 @@ impl Line {
 
     /// Writes one segment through the product command `cad.line.create`
     /// (docs/adr/0027): its own object and undo step. What the web's tool
-    /// knows implicitly is explicit in its input (CMD-07): the active layer;
-    /// the desktop has no current colour, so the layer's colour applies. The
-    /// new line's slot, or `None` with the command's message when it refused.
+    /// knows implicitly is explicit in its input (CMD-07): the active layer
+    /// and the current colour. The new line's slot, or `None` with the
+    /// command's message when it refused.
     fn create(&mut self, a: Vec2, b: Vec2, cx: &mut Context<'_>) -> Option<Slot> {
         let input = LineCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             a: wire(a),
             b: wire(b),
-            color: None,
+            color: cx.draft.color.map(str::to_owned),
             attrs: None,
             expected_revision: None,
         };

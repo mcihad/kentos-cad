@@ -66,6 +66,8 @@ pub struct Button<'a, Message> {
     tip: Option<Tip>,
     menu: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
     flash: bool,
+    /// A small button drawn with its icon only (a narrow custom panel).
+    icon_only: bool,
 }
 
 impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
@@ -79,6 +81,7 @@ impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
             tip: self.tip.clone(),
             menu: self.menu.clone(),
             flash: self.flash,
+            icon_only: self.icon_only,
         }
     }
 }
@@ -104,6 +107,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             tip: None,
             menu: None,
             flash: false,
+            icon_only: false,
         }
     }
 
@@ -155,13 +159,37 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
         self
     }
 
+    /// Küçük düğme yalnız ikonuyla çizilir; etiketi ipucunda kalır. Kendi
+    /// görünüşü olan panel ([`Group::stepped`](super::Group::stepped))
+    /// daralınca düğmelerini böyle çizer, şeridin kendi dizdikleri gibi.
+    pub fn icon_only(mut self, on: bool) -> Self {
+        self.icon_only = on;
+        self
+    }
+
+    /// Çizileceği biçimdeki genişliği (piksel): kendi görünüşü olan panel
+    /// seviyelerinin genişliğini bununla hesaplar.
+    pub fn measure(&self) -> f32 {
+        self.width(self.form())
+    }
+
+    /// Çizileceği biçim: tasarlandığı boyut, küçükse ve istendiyse yalnız ikon.
+    fn form(&self) -> Form {
+        match self.size {
+            Size::Large => Form::Large,
+            Size::Small if self.icon_only => Form::Icon,
+            Size::Small => Form::Small,
+        }
+    }
+
     /// Tasarlandığı boyut büyük mü.
     pub(crate) fn is_large(&self) -> bool {
         self.size == Size::Large
     }
 
-    /// Katlanmış panelin menüsündeki satırı: menülü düğme alt menü, öbürü komut.
-    pub(crate) fn menu_entry(&self, menu: Menu<Message>) -> Menu<Message> {
+    /// Katlanmış panelin menüsündeki satırı: menülü düğme alt menü, öbürü
+    /// komut. Kendi görünüşü olan panel katlanınca menüsünü bununla kurar.
+    pub fn menu_entry(&self, menu: Menu<Message>) -> Menu<Message> {
         let label = self.label.to_string().replace('\n', " ");
         match &self.menu {
             Some(submenu) => menu.submenu(label, submenu()).icon(self.icon),
@@ -427,11 +455,7 @@ fn large_width(label: f32) -> f32 {
 
 impl<'a, Message: Clone + 'a> From<Button<'a, Message>> for Element<'a, Message> {
     fn from(ribbon_button: Button<'a, Message>) -> Self {
-        let form = match ribbon_button.size {
-            Size::Large => Form::Large,
-            Size::Small => Form::Small,
-        };
-        ribbon_button.render(form)
+        ribbon_button.render(ribbon_button.form())
     }
 }
 

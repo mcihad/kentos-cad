@@ -47,6 +47,9 @@
       "reason": "WebGL2 ya da WebGPU seçimi tarayıcınındır; masaüstünün arka ucunu wgpu seçer (ADR 0019)."
     },
     "layout.theme": { "desktop": "implemented", "where": "ayarlar.json appearance.theme (Görünüm sekmesi, ADR 0051)" },
+    "session.color": { "desktop": "implemented", "where": "Şerit › Giriş › Özellikler: Renk; araçların Draft::color'ı (ribbon_panels.rs, ADR 0089)" },
+    "session.lineType": { "desktop": "implemented", "where": "Şerit › Giriş › Özellikler: Tip (ribbon_panels.rs, ADR 0089)" },
+    "session.lineWeight": { "desktop": "implemented", "where": "Şerit › Giriş › Özellikler: Kalınlık (ribbon_panels.rs, ADR 0089)" },
     "user.accent": { "desktop": "implemented", "where": "ayarlar.json appearance.accentColor (Görünüm sekmesi, ADR 0051)" },
     "user.uiScale": { "desktop": "implemented", "where": "ayarlar.json appearance.textSize (Görünüm sekmesi, ADR 0051)" },
     "user.uiFont": {
@@ -174,8 +177,8 @@
     "apps/web/src/ui/properties/PropertiesPanel.ts#PropertiesPanel": { "desktop": "implemented", "where": "apps/desktop/src/properties/ (ADR 0063, 0066)" },
     "apps/web/src/ui/ribbon/Ribbon.ts#Ribbon": {
       "desktop": "partial",
-      "where": "apps/desktop/src/view.rs, catalog.rs (ADR 0017, 0051)",
-      "reason": "Giriş'in Katmanlar ve Özellikler panelleri ile Seçim sekmesinin paneli yok (etkin katman, yeni nesnelerin rengi, çizgi tipi ve kalınlığı, çizim ölçeği, seçimin özeti); yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme ve harf ipuçları yok."
+      "where": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)",
+      "reason": "Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok."
     },
     "apps/web/src/ui/settings/AppSettingsDialog.ts#openAppSettings": { "desktop": "implemented", "where": "apps/desktop/src/settings_view.rs (ADR 0023)" },
     "apps/web/src/ui/settings/NewProjectDialog.ts#openNewProjectDialog": { "desktop": "implemented", "where": "apps/desktop/src/project/new.rs (ADR 0049)" },

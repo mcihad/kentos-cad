@@ -241,14 +241,14 @@ impl Circle {
         self.d.pts.clear();
     }
 
-    /// One circle through the product command: the active layer explicit in
-    /// its input (CMD-07); the desktop has no current colour.
+    /// One circle through the product command: the active layer and the
+    /// current colour explicit in its input (CMD-07).
     fn write(&mut self, c: Vec2, r: f64, cx: &mut Context<'_>) -> bool {
         let input = CircleCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             c: wire(c),
             r,
-            color: None,
+            color: cx.draft.color.map(str::to_owned),
             attrs: None,
             expected_revision: None,
         };

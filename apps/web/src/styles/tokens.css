@@ -97,6 +97,19 @@
   --canvas-accent: #f2b632;
   --canvas-snap: #6fd08c;
 
+  /*
+   * Expression syntax (the expression builder, DESIGN.md §7.16): calm
+   * tones apart from the accent and the status colours; an unknown name is
+   * --c-danger. The desktop's builder uses the same values.
+   */
+  --c-syn-field: #7fb6ee;
+  --c-syn-variable: #5fcfc0;
+  --c-syn-function: #c3a0f2;
+  --c-syn-keyword: #ee8fb2;
+  --c-syn-literal: #f0a37c;
+  --c-syn-text: #9ed48f;
+  --c-syn-operator: #a9b4c1;
+
   --shadow-float: 0 12px 32px rgba(3, 6, 10, 0.5), 0 2px 6px rgba(3, 6, 10, 0.35);
   --shadow-pop: 0 14px 36px rgba(3, 6, 10, 0.55), 0 2px 8px rgba(3, 6, 10, 0.4);
   /* The ribbon's shadow on the drawing (only there: the docked panels stay flush). */
@@ -154,6 +167,14 @@
   --canvas-label: #36414d;
   --canvas-accent: #d08600;
   --canvas-snap: #1a9a48;
+
+  --c-syn-field: #1d5ea6;
+  --c-syn-variable: #0b776b;
+  --c-syn-function: #6d3fb5;
+  --c-syn-keyword: #a8356a;
+  --c-syn-literal: #b0521b;
+  --c-syn-text: #2c7a2f;
+  --c-syn-operator: #4d5966;
 
   --shadow-float: 0 10px 28px rgba(20, 30, 42, 0.16), 0 1px 4px rgba(20, 30, 42, 0.12);
   --shadow-pop: 0 12px 32px rgba(20, 30, 42, 0.18), 0 1px 4px rgba(20, 30, 42, 0.14);

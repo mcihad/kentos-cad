@@ -1,9 +1,11 @@
 import type { AppContext } from '../../app/context';
 import type { Vec2 } from '../../model/geometry';
+import { attributeFields, type BuilderObjects } from '../../model/expression/builderObjects';
 import { exprCatalog } from '../../model/expression/expressionLib';
 import type { InputSummary } from '../../processing/runner';
 import type { FeaturesValue, LayerValue, ParamDef } from '../../processing/types';
 import { h } from '../dom';
+import { builderButton } from '../expression/builderApi';
 import { icon } from '../icons';
 import { colorSwatch } from '../layers/swatch';
 import { segmented, textField, toggleSwitch } from '../widgets/controls';
@@ -39,6 +41,8 @@ export interface FieldEnv {
   describe(name: string): InputSummary | undefined;
   /** How an expression parameter works out on its objects now; null when it cannot be run. */
   previewExpression(name: string): string | null;
+  /** The objects an expression parameter runs on, for the expression builder. */
+  builderObjects(name: string): BuilderObjects | undefined;
   /** Hides the dialog and asks for a point on the drawing. */
   pickPoint(name: string): void;
 }
@@ -287,6 +291,18 @@ function expressionField(def: Extract<ParamDef, { type: 'expression' }>, value: 
       menuButton(T.expression.functions, () => exprCatalog().functions.map((f) => ({ label: f.signature, detail: f.description, run: () => insert(`${f.name}(`) }))),
     ),
   );
+  // The expression builder (ε) edits the same text; Tamam writes it back here.
+  const open = builderButton({
+    get: () => input.value,
+    set: (v) => {
+      input.value = v;
+      input.dispatchEvent(new Event('input'));
+    },
+    fields: () => attributeFields(def.of ? (env.describe(def.of)?.fields ?? []) : []),
+    objects: () => env.builderObjects(def.name),
+    context: def.label,
+    fail: (message) => env.ctx.log.error(message),
+  });
   refresh();
-  return h('div', { class: 'pfield__stack' }, input, tools, preview);
+  return h('div', { class: 'pfield__stack' }, h('div', { class: 'pfield__exprrow' }, input, open), tools, preview);
 }

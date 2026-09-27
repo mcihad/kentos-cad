@@ -102,7 +102,7 @@ pub(crate) fn query(text: &str) -> String {
 /// `toLocaleLowerCase('tr-TR')`: I is ı and İ is i, I with a combining dot
 /// above is i; everything else as Unicode says (kentos-style-core's
 /// `lower_tr`, which the desktop does not depend on).
-fn lower_tr(text: &str) -> String {
+pub(crate) fn lower_tr(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut chars = text.chars().peekable();
     while let Some(c) = chars.next() {

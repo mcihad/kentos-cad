@@ -173,6 +173,9 @@ pub enum Message {
         label: &'static str,
     },
     RibbonTab(&'static str),
+    /// A choice in the ribbon's own panels: the current properties for new
+    /// objects, the plot scale (ribbon_panels.rs).
+    RibbonPanel(crate::ribbon_panels::Event),
     CommandInput(String),
     CommandSubmitted,
     CommandRun(String),
@@ -276,6 +279,9 @@ pub struct Written {
 pub struct App {
     pub document: Option<Document>,
     pub tab: &'static str,
+    /// The contextual Seçim tab is the one shown, while something is
+    /// selected; an empty selection gives the ribbon back to `tab` (the web's).
+    pub ribbon_context: bool,
     pub ribbon_collapsed: bool,
     pub mode: Mode,
     pub accent: Accent,
@@ -355,8 +361,13 @@ pub struct App {
     /// The value field beside the cursor, while it is open (ADR 0018).
     pub field: Option<Field>,
     /// Drafting aids for new points: ortho, polar tracking, the snap aperture
-    /// (the typed settings' `drafting.*`, applied by `apply_settings`).
+    /// (the typed settings' `drafting.*`, applied by `apply_settings`), and
+    /// the colour new objects take (the ribbon's Renk, ribbon_panels.rs).
     pub draft: Draft,
+    /// The line type and weight new objects take, `None` by layer (the
+    /// ribbon's Tip and Kalınlık): the session's, which no tool reads yet (web).
+    pub new_line_type: Option<kentos_contracts::LineType>,
+    pub new_line_weight: Option<f64>,
     /// Typed values open beside the cursor (`drafting.cursorInput`).
     pub cursor_input: bool,
     /// The strip over the drawing while a command runs (`drafting.commandBar`, command_bar.rs).
@@ -451,6 +462,7 @@ impl App {
         let mut app = Self {
             document: None,
             tab: catalog().tabs().nth(1).or(catalog().tabs().next()).map_or("home", |tab| tab.id),
+            ribbon_context: false,
             ribbon_collapsed: false,
             mode: Mode::Dark,
             accent: Accent::default(),
@@ -496,6 +508,8 @@ impl App {
             followed: None,
             field: None,
             draft: Draft::default(),
+            new_line_type: None,
+            new_line_weight: None,
             cursor_input: true,
             command_bar: false,
             hover_info: true,
@@ -613,6 +627,10 @@ impl App {
         let task = self.handle(message);
         self.follow_document();
         self.follow_selection_layers();
+        // The contextual Seçim tab goes with the selection (the web's `updateContextual`).
+        if self.selection.is_empty() {
+            self.ribbon_context = false;
+        }
         let task = Task::batch([
             task,
             self.text_field_tasks(),
@@ -666,7 +684,8 @@ impl App {
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
             }
-            Message::RibbonTab(id) => self.tab = id,
+            Message::RibbonTab(id) => self.choose_tab(id),
+            Message::RibbonPanel(event) => self.ribbon_panel_event(event),
             Message::CommandInput(text) => self.command_input = text,
             Message::CommandSubmitted => {
                 let text = std::mem::take(&mut self.command_input);
@@ -844,6 +863,8 @@ impl App {
             snap_kinds: snap_kinds(|key| s.bool(key)),
             pick_aperture: s.number("drafting.pickAperture"),
             tracking: s.bool("drafting.tracking"),
+            // The session's, not a setting: kept through a settings change.
+            color: self.draft.color,
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");

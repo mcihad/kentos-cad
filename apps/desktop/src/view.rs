@@ -118,7 +118,22 @@ impl App {
         for tab in self.ribbon_tabs() {
             ribbon = ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id));
         }
-        if let Some(tab) = self.ribbon_tabs().find(|tab| tab.id == shown) {
+        // Seçim, with the count, while something is selected (the web's contextual tab).
+        if !self.selection.is_empty() {
+            for tab in self.contextual_tabs() {
+                ribbon = ribbon.contextual_tab(
+                    tab.label,
+                    self.selection.len().to_string(),
+                    tab.id == shown,
+                    Message::RibbonTab(tab.id),
+                );
+            }
+        }
+        if let Some(tab) = self
+            .ribbon_tabs()
+            .chain(self.contextual_tabs())
+            .find(|tab| tab.id == shown)
+        {
             for panel in &tab.panels {
                 if let Some(group) = self.ribbon_group(tab.id, panel) {
                     ribbon = ribbon.group(group);
@@ -250,6 +265,13 @@ impl App {
         tab: &str,
         panel: &RibbonPanel,
     ) -> Option<Group<'static, Message>> {
+        // A panel the web draws itself (ribbon_panels.rs, docs/adr/0089).
+        if let Some(name) = panel.items.iter().find_map(|item| match item {
+            Item::Builtin(name) => Some(*name),
+            _ => None,
+        }) {
+            return self.builtin_group(name, panel);
+        }
         // A command Komut ara shows: its panel's ▾, or the folded panel (ribbon_search.rs).
         let (flash_here, flash_more) = self.flash_in(panel);
         let mut group = Group::new(panel.label)
@@ -290,7 +312,7 @@ impl App {
         any.then_some(group)
     }
 
-    fn ribbon_button(&self, item: &Item) -> Option<Button<'static, Message>> {
+    pub(crate) fn ribbon_button(&self, item: &Item) -> Option<Button<'static, Message>> {
         let catalog = catalog();
         let make = |command: &Command, large: bool| {
             let button = if large {
@@ -340,7 +362,7 @@ impl App {
                 let menu = move || menu_of(&members, &checked);
                 Some(with_family(button, ids, label, menu))
             }
-            Item::Builtin => None,
+            Item::Builtin(_) => None,
         }
     }
 
@@ -1037,7 +1059,7 @@ const STATUS_AIDS: [(&str, &str); 6] = [
 const STATUS_STEPS: u8 = 6;
 
 /// A launcher's message: another tab, or a command the desktop runs.
-fn launch(launcher: &Launcher) -> Option<Message> {
+pub(crate) fn launch(launcher: &Launcher) -> Option<Message> {
     match &launcher.target {
         LauncherTarget::Tab(tab) => catalog()
             .tabs()

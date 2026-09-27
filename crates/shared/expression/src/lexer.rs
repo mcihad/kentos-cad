@@ -39,7 +39,7 @@ impl Token {
     }
 }
 
-const OPS: [&str; 17] = [
+pub(crate) const OPS: [&str; 17] = [
     "<=", ">=", "!=", "<>", "==", "||", "=", "<", ">", "+", "-", "*", "/", "%", "(", ")", ",",
 ];
 
@@ -51,7 +51,7 @@ fn err(message: impl Into<String>, at: usize) -> CompileError {
 }
 
 /// The code point at `i` and its length in units (a lone surrogate reads as U+FFFD).
-fn code_point(u: &[u16], i: usize) -> Option<(char, usize)> {
+pub(crate) fn code_point(u: &[u16], i: usize) -> Option<(char, usize)> {
     let a = *u.get(i)?;
     if (0xd800..0xdc00).contains(&a)
         && let Some(&b) = u.get(i + 1)
@@ -64,7 +64,7 @@ fn code_point(u: &[u16], i: usize) -> Option<(char, usize)> {
 }
 
 /// `[\p{L}_][\p{L}\p{N}_]*` at `i`: its length in units (0: no name there).
-fn word(u: &[u16], i: usize) -> usize {
+pub(crate) fn word(u: &[u16], i: usize) -> usize {
     let mut j = i;
     while let Some((c, n)) = code_point(u, j) {
         let ok = c == '_' || c.is_alphabetic() || (j > i && c.is_numeric());
@@ -76,13 +76,47 @@ fn word(u: &[u16], i: usize) -> usize {
     j - i
 }
 
-fn is_digit(u: &[u16], i: usize) -> bool {
+pub(crate) fn is_digit(u: &[u16], i: usize) -> bool {
     u.get(i)
         .is_some_and(|&c| (u16::from(b'0')..=u16::from(b'9')).contains(&c))
 }
 
 fn unit_is(u: &[u16], i: usize, c: u8) -> bool {
     u.get(i) == Some(&u16::from(c))
+}
+
+/// Whether a number starts at `i`: a digit, or a point before one.
+pub(crate) fn starts_number(u: &[u16], i: usize) -> bool {
+    is_digit(u, i) || (unit_is(u, i, b'.') && is_digit(u, i + 1))
+}
+
+/// Where the number starting at `i` ends, as /\d*\.?\d+(?:[eE][+-]?\d+)?/
+/// reads it: digits, a fraction only with digits after the point, an
+/// exponent only with digits.
+pub(crate) fn number_end(u: &[u16], i: usize) -> usize {
+    let mut j = i;
+    while is_digit(u, j) {
+        j += 1;
+    }
+    if unit_is(u, j, b'.') && is_digit(u, j + 1) {
+        j += 1;
+        while is_digit(u, j) {
+            j += 1;
+        }
+    }
+    if unit_is(u, j, b'e') || unit_is(u, j, b'E') {
+        let mut k = j + 1;
+        if unit_is(u, k, b'+') || unit_is(u, k, b'-') {
+            k += 1;
+        }
+        if is_digit(u, k) {
+            while is_digit(u, k) {
+                k += 1;
+            }
+            j = k;
+        }
+    }
+    j
 }
 
 /// One code unit as the error message shows it.
@@ -101,31 +135,8 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>, CompileError> {
             continue;
         }
         let at = i + 1;
-        if is_digit(&u, i) || (unit_is(&u, i, b'.') && is_digit(&u, i + 1)) {
-            // /\d*\.?\d+(?:[eE][+-]?\d+)?/: digits, a fraction only with digits after the
-            // point, an exponent only with digits.
-            let mut j = i;
-            while is_digit(&u, j) {
-                j += 1;
-            }
-            if unit_is(&u, j, b'.') && is_digit(&u, j + 1) {
-                j += 1;
-                while is_digit(&u, j) {
-                    j += 1;
-                }
-            }
-            if unit_is(&u, j, b'e') || unit_is(&u, j, b'E') {
-                let mut k = j + 1;
-                if unit_is(&u, k, b'+') || unit_is(&u, k, b'-') {
-                    k += 1;
-                }
-                if is_digit(&u, k) {
-                    while is_digit(&u, k) {
-                        k += 1;
-                    }
-                    j = k;
-                }
-            }
+        if starts_number(&u, i) {
+            let j = number_end(&u, i);
             let s = String::from_utf16_lossy(&u[i..j]);
             out.push(Token {
                 t: Tok::Num(s.parse().unwrap_or(f64::NAN)),
