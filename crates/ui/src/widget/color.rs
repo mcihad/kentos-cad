@@ -195,6 +195,7 @@ pub struct ColorPicker<'a, Message> {
     palette: Vec<Color>,
     recent: Vec<Color>,
     width: Length,
+    anchor: Option<Element<'a, Message>>,
 }
 
 impl<'a, Message: 'a> ColorPicker<'a, Message> {
@@ -206,6 +207,7 @@ impl<'a, Message: 'a> ColorPicker<'a, Message> {
             palette: PALETTE.iter().map(|value| rgb(*value)).collect(),
             recent: Vec::new(),
             width: Length::Fixed(typography::scaled(132.0)),
+            anchor: None,
         }
     }
 
@@ -229,6 +231,14 @@ impl<'a, Message: 'a> ColorPicker<'a, Message> {
 
     pub fn width(mut self, width: impl Into<Length>) -> Self {
         self.width = width.into();
+        self
+    }
+
+    /// Alanın yerine verilen öğe (ör. yalnızca renk kutusu); tıklanınca
+    /// panel açılır. Genişlik ([`width`](ColorPicker::width)) bu öğeye
+    /// uygulanmaz.
+    pub fn anchor(mut self, anchor: impl Into<Element<'a, Message>>) -> Self {
+        self.anchor = Some(anchor.into());
         self
     }
 }
@@ -361,21 +371,25 @@ impl<'a, Message: 'a> From<ColorPicker<'a, Message>> for Element<'a, Message> {
             }
         };
 
-        let anchor = container(
-            row![
-                container(space::horizontal())
-                    .width(typography::scaled(SWATCH))
-                    .height(typography::scaled(SWATCH))
-                    .style(style::container::swatch(color)),
-                label::mono(to_hex(color)).width(Fill),
-                icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
-            ]
-            .spacing(8)
-            .align_y(Center),
-        )
-        .padding([3, 6])
-        .width(picker.width)
-        .style(style::container::field_box);
+        let anchor: Element<'a, Message> = match picker.anchor {
+            Some(anchor) => anchor,
+            None => container(
+                row![
+                    container(space::horizontal())
+                        .width(typography::scaled(SWATCH))
+                        .height(typography::scaled(SWATCH))
+                        .style(style::container::swatch(color)),
+                    label::mono(to_hex(color)).width(Fill),
+                    icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+                ]
+                .spacing(8)
+                .align_y(Center),
+            )
+            .padding([3, 6])
+            .width(picker.width)
+            .style(style::container::field_box)
+            .into(),
+        };
 
         Dropdown::new(
             anchor,

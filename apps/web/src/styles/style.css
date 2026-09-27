@@ -353,6 +353,10 @@
   padding-top: 8px;
   border-top: 1px solid var(--c-line);
 }
+/* Geri al and Yinele stand apart on the right of the list's tools. */
+.sdes__lgap {
+  flex: 1;
+}
 .sdes__note {
   margin: 8px 0 0;
   color: var(--c-text-3);
@@ -367,10 +371,18 @@
 }
 .sdes__pbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--c-line-soft);
+}
+/* The scale's buttons keep to the right; on a narrow middle they go under the samples. */
+.sdes__zoombar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
 }
 .sdes__zoom {
   min-width: 96px;

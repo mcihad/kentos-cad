@@ -1,0 +1,4650 @@
+{
+ "format": "kentos.style-designer",
+ "version": 1,
+ "labels": {
+  "simpleFill": "Dolgu",
+  "hatchFill": "Tarama",
+  "patternFill": "Desen",
+  "imageFill": "Görüntü dolgusu",
+  "centroidMarker": "İç noktada işaret",
+  "simpleLine": "Çizgi",
+  "markerLine": "Çizgi boyunca işaret",
+  "shape": "Şekil",
+  "svg": "SVG çizimi",
+  "text": "Yazı",
+  "raster": "Görüntü"
+ },
+ "layerTypes": {
+  "fill": [
+   "simpleFill",
+   "hatchFill",
+   "patternFill",
+   "imageFill",
+   "simpleLine",
+   "markerLine",
+   "centroidMarker"
+  ],
+  "line": [
+   "simpleLine",
+   "markerLine"
+  ],
+  "marker": [
+   "shape",
+   "text",
+   "svg",
+   "raster"
+  ]
+ },
+ "kindTitles": {
+  "fill": "Alan sembolü",
+  "line": "Çizgi sembolü",
+  "marker": "İşaret sembolü"
+ },
+ "geometries": {
+  "fill": [
+   {
+    "value": "area",
+    "label": "Alan"
+   },
+   {
+    "value": "hole",
+    "label": "Adalı alan"
+   }
+  ],
+  "line": [
+   {
+    "value": "line",
+    "label": "Düz"
+   },
+   {
+    "value": "bent",
+    "label": "Kırık"
+   },
+   {
+    "value": "area",
+    "label": "Alan kenarı"
+   }
+  ],
+  "marker": [
+   {
+    "value": "point",
+    "label": "Nokta"
+   }
+  ]
+ },
+ "options": {
+  "units": [
+   {
+    "value": "mm",
+    "label": "Kâğıt mm"
+   },
+   {
+    "value": "px",
+    "label": "Ekran px"
+   },
+   {
+    "value": "m",
+    "label": "Harita m"
+   }
+  ],
+  "shapes": [
+   {
+    "value": "circle",
+    "label": "Daire"
+   },
+   {
+    "value": "ring",
+    "label": "Halka (noktalı)"
+   },
+   {
+    "value": "square",
+    "label": "Kare"
+   },
+   {
+    "value": "rectangle",
+    "label": "Dikdörtgen"
+   },
+   {
+    "value": "diamond",
+    "label": "Baklava"
+   },
+   {
+    "value": "triangle",
+    "label": "Üçgen"
+   },
+   {
+    "value": "pentagon",
+    "label": "Beşgen"
+   },
+   {
+    "value": "hexagon",
+    "label": "Altıgen"
+   },
+   {
+    "value": "octagon",
+    "label": "Sekizgen"
+   },
+   {
+    "value": "star",
+    "label": "Yıldız"
+   },
+   {
+    "value": "cross",
+    "label": "Artı"
+   },
+   {
+    "value": "x",
+    "label": "Çarpı"
+   },
+   {
+    "value": "line",
+    "label": "Çizgi"
+   },
+   {
+    "value": "arrow",
+    "label": "Ok"
+   },
+   {
+    "value": "arrowhead",
+    "label": "Ok ucu"
+   },
+   {
+    "value": "chevron",
+    "label": "Açık ok ucu (V)"
+   },
+   {
+    "value": "semicircle",
+    "label": "Yarım daire"
+   },
+   {
+    "value": "quartercircle",
+    "label": "Çeyrek daire"
+   },
+   {
+    "value": "gear",
+    "label": "Dişli"
+   },
+   {
+    "value": "arc",
+    "label": "Yay (açık)"
+   }
+  ],
+  "openShapes": [
+   "cross",
+   "x",
+   "line",
+   "arrow",
+   "chevron",
+   "arc"
+  ],
+  "placements": [
+   {
+    "value": "interval",
+    "label": "Aralıklı"
+   },
+   {
+    "value": "vertex",
+    "label": "Her köşede"
+   },
+   {
+    "value": "innerVertex",
+    "label": "İç köşelerde"
+   },
+   {
+    "value": "first",
+    "label": "Başta"
+   },
+   {
+    "value": "last",
+    "label": "Sonda"
+   },
+   {
+    "value": "center",
+    "label": "Ortada"
+   },
+   {
+    "value": "segmentCenter",
+    "label": "Kenar ortalarında"
+   }
+  ],
+  "anchors": [
+   {
+    "value": "center",
+    "label": "Orta"
+   },
+   {
+    "value": "top",
+    "label": "Üst"
+   },
+   {
+    "value": "bottom",
+    "label": "Alt"
+   },
+   {
+    "value": "left",
+    "label": "Sol"
+   },
+   {
+    "value": "right",
+    "label": "Sağ"
+   },
+   {
+    "value": "top-left",
+    "label": "Sol üst"
+   },
+   {
+    "value": "top-right",
+    "label": "Sağ üst"
+   },
+   {
+    "value": "bottom-left",
+    "label": "Sol alt"
+   },
+   {
+    "value": "bottom-right",
+    "label": "Sağ alt"
+   }
+  ],
+  "fonts": [
+   {
+    "value": "sans",
+    "label": "Arial"
+   },
+   {
+    "value": "narrow",
+    "label": "Arial Narrow"
+   },
+   {
+    "value": "serif",
+    "label": "Times"
+   },
+   {
+    "value": "ui",
+    "label": "Arayüz yazısı"
+   },
+   {
+    "value": "mono",
+    "label": "Eş aralıklı"
+   }
+  ],
+  "weights": [
+   {
+    "value": "400",
+    "label": "Normal"
+   },
+   {
+    "value": "500",
+    "label": "Orta"
+   },
+   {
+    "value": "600",
+    "label": "Yarı kalın"
+   },
+   {
+    "value": "700",
+    "label": "Kalın"
+   },
+   {
+    "value": "900",
+    "label": "Siyah (Arial Black)"
+   }
+  ],
+  "caps": [
+   {
+    "value": "butt",
+    "label": "Düz"
+   },
+   {
+    "value": "round",
+    "label": "Yuvarlak"
+   },
+   {
+    "value": "square",
+    "label": "Kare"
+   }
+  ],
+  "rings": [
+   {
+    "value": "all",
+    "label": "Hepsi"
+   },
+   {
+    "value": "exterior",
+    "label": "Yalnızca dış sınır"
+   },
+   {
+    "value": "interior",
+    "label": "Yalnızca adalar"
+   }
+  ],
+  "waves": [
+   {
+    "value": "none",
+    "label": "Düz çizgi"
+   },
+   {
+    "value": "sine",
+    "label": "Dalga (sinüs)"
+   },
+   {
+    "value": "zigzag",
+    "label": "Zikzak"
+   },
+   {
+    "value": "square",
+    "label": "Kare dalga"
+   }
+  ],
+  "positions": [
+   {
+    "value": "pointOnSurface",
+    "label": "Alanın içinde (her zaman)"
+   },
+   {
+    "value": "centroid",
+    "label": "Ağırlık merkezi"
+   }
+  ]
+ },
+ "newLayers": [
+  {
+   "type": "simpleFill",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "simpleFill",
+    "color": "#C9D6E3"
+   }
+  },
+  {
+   "type": "hatchFill",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "hatchFill",
+    "angle": 45,
+    "spacing": 2,
+    "width": 0.2,
+    "color": "ink"
+   }
+  },
+  {
+   "type": "patternFill",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1,
+       "fill": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "imageFill",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "imageFill",
+    "asset": "",
+    "tileSize": 5
+   }
+  },
+  {
+   "type": "centroidMarker",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "centroidMarker",
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "text",
+       "text": {
+        "expr": "etiket",
+        "fallback": "A"
+       },
+       "size": 3,
+       "font": "sans",
+       "weight": 700,
+       "color": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "simpleLine",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.25
+   }
+  },
+  {
+   "type": "markerLine",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "offsetAlong": 3,
+    "rotate": true,
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1,
+       "fill": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "shape",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3,
+    "fill": "ink",
+    "stroke": null,
+    "strokeWidth": 0.2
+   }
+  },
+  {
+   "type": "svg",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "svg",
+    "asset": "",
+    "size": 5,
+    "fill": "ink"
+   }
+  },
+  {
+   "type": "text",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "font": "sans",
+    "weight": 700,
+    "color": "ink"
+   }
+  },
+  {
+   "type": "raster",
+   "id": "3",
+   "context": "fill",
+   "layer": {
+    "id": "3",
+    "type": "raster",
+    "asset": "",
+    "size": 5
+   }
+  },
+  {
+   "type": "simpleFill",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "simpleFill",
+    "color": "#C9D6E3"
+   }
+  },
+  {
+   "type": "hatchFill",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "hatchFill",
+    "angle": 45,
+    "spacing": 2,
+    "width": 0.2,
+    "color": "ink"
+   }
+  },
+  {
+   "type": "patternFill",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1,
+       "fill": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "imageFill",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "imageFill",
+    "asset": "",
+    "tileSize": 5
+   }
+  },
+  {
+   "type": "centroidMarker",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "centroidMarker",
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "text",
+       "text": {
+        "expr": "etiket",
+        "fallback": "A"
+       },
+       "size": 3,
+       "font": "sans",
+       "weight": 700,
+       "color": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "simpleLine",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   }
+  },
+  {
+   "type": "markerLine",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "offsetAlong": 3,
+    "rotate": true,
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1,
+       "fill": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "shape",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3,
+    "fill": "ink",
+    "stroke": null,
+    "strokeWidth": 0.2
+   }
+  },
+  {
+   "type": "svg",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "svg",
+    "asset": "",
+    "size": 5,
+    "fill": "ink"
+   }
+  },
+  {
+   "type": "text",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "font": "sans",
+    "weight": 700,
+    "color": "ink"
+   }
+  },
+  {
+   "type": "raster",
+   "id": "3",
+   "context": "line",
+   "layer": {
+    "id": "3",
+    "type": "raster",
+    "asset": "",
+    "size": 5
+   }
+  },
+  {
+   "type": "simpleFill",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "simpleFill",
+    "color": "#C9D6E3"
+   }
+  },
+  {
+   "type": "hatchFill",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "hatchFill",
+    "angle": 45,
+    "spacing": 2,
+    "width": 0.2,
+    "color": "ink"
+   }
+  },
+  {
+   "type": "patternFill",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1,
+       "fill": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "imageFill",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "imageFill",
+    "asset": "",
+    "tileSize": 5
+   }
+  },
+  {
+   "type": "centroidMarker",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "centroidMarker",
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "text",
+       "text": {
+        "expr": "etiket",
+        "fallback": "A"
+       },
+       "size": 3,
+       "font": "sans",
+       "weight": 700,
+       "color": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "simpleLine",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   }
+  },
+  {
+   "type": "markerLine",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "offsetAlong": 3,
+    "rotate": true,
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1,
+       "fill": "ink"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "type": "shape",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3,
+    "fill": "ink",
+    "stroke": null,
+    "strokeWidth": 0.2
+   }
+  },
+  {
+   "type": "svg",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "svg",
+    "asset": "",
+    "size": 5,
+    "fill": "ink"
+   }
+  },
+  {
+   "type": "text",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "font": "sans",
+    "weight": 700,
+    "color": "ink"
+   }
+  },
+  {
+   "type": "raster",
+   "id": "3",
+   "context": "marker",
+   "layer": {
+    "id": "3",
+    "type": "raster",
+    "asset": "",
+    "size": 5
+   }
+  }
+ ],
+ "summaries": [
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#C9D6E3"
+   },
+   "summary": "#C9D6E3"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": {
+     "expr": "Renk",
+     "fallback": "#FF0000"
+    }
+   },
+   "summary": "ifadeden renk"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "hatchFill",
+    "angle": 45,
+    "spacing": 2,
+    "width": 0.2,
+    "color": "ink"
+   },
+   "summary": "45° · 2 mm aralık"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "hatchFill",
+    "angle": 22.5,
+    "spacing": 1.255,
+    "width": 0.2,
+    "color": "ink",
+    "unit": "px"
+   },
+   "summary": "22.5° · 1.25 px aralık"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3.333,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "3 × 3.33 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "stagger": true,
+    "jitter": 0.4,
+    "unit": "m",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "3 × 3 m, şaşırtmalı, dağınık"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "stagger": false,
+    "jitter": 0,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "3 × 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "imageFill",
+    "asset": "",
+    "tileSize": 5
+   },
+   "summary": "çizim seçilmedi"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "imageFill",
+    "asset": "a-1",
+    "tileSize": 7.5
+   },
+   "summary": "7.5 mm döşeme"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "centroidMarker",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "alanın içinde"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "centroidMarker",
+    "position": "centroid",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "ağırlık merkezinde"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   },
+   "summary": "0.35 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": {
+     "expr": "[Genişlik] / 2"
+    },
+    "dash": [
+     4,
+     1.5
+    ],
+    "offset": 0.5,
+    "wave": {
+     "shape": "sine",
+     "length": 5,
+     "amplitude": 0.8
+    }
+   },
+   "summary": "ƒ mm, kesikli, 0.5 mm kaydırılmış, dalgalı"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.25,
+    "dash": [],
+    "offset": {
+     "expr": "[Genişlik] / 2",
+     "fallback": 1
+    },
+    "unit": "m"
+   },
+   "summary": "0.25 m, ifadeyle kaydırılmış"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.25,
+    "offset": 0
+   },
+   "summary": "0.25 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "her 6 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "her ƒ mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 4,
+    "group": {
+     "count": 1,
+     "spacing": 1
+    },
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "her 4 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 4,
+    "group": {
+     "count": 2,
+     "spacing": 1
+    },
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "her 4 mm, 2'li"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 4,
+    "group": {
+     "count": 3,
+     "spacing": 1
+    },
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "her 4 mm, 3'lü"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 4,
+    "group": {
+     "count": 6,
+     "spacing": 1
+    },
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "her 4 mm, 6'lı"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 4,
+    "group": {
+     "count": 9,
+     "spacing": 1
+    },
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "her 4 mm, 9'lu"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 4,
+    "group": {
+     "count": 10,
+     "spacing": 1
+    },
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "her 4 mm, 10'lu"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "vertex",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "Her köşede"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "innerVertex",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "İç köşelerde"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "first",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "Başta"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "last",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "Sonda"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "center",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "Ortada"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "segmentCenter",
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "summary": "Kenar ortalarında"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3
+   },
+   "summary": "Daire · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "ring",
+    "size": 3
+   },
+   "summary": "Halka (noktalı) · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "square",
+    "size": 3
+   },
+   "summary": "Kare · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "rectangle",
+    "size": 3
+   },
+   "summary": "Dikdörtgen · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "diamond",
+    "size": 3
+   },
+   "summary": "Baklava · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "triangle",
+    "size": 3
+   },
+   "summary": "Üçgen · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "pentagon",
+    "size": 3
+   },
+   "summary": "Beşgen · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "hexagon",
+    "size": 3
+   },
+   "summary": "Altıgen · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "octagon",
+    "size": 3
+   },
+   "summary": "Sekizgen · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "star",
+    "size": 3
+   },
+   "summary": "Yıldız · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "cross",
+    "size": 3
+   },
+   "summary": "Artı · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "x",
+    "size": 3
+   },
+   "summary": "Çarpı · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "line",
+    "size": 3
+   },
+   "summary": "Çizgi · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "arrow",
+    "size": 3
+   },
+   "summary": "Ok · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "arrowhead",
+    "size": 3
+   },
+   "summary": "Ok ucu · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "chevron",
+    "size": 3
+   },
+   "summary": "Açık ok ucu (V) · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "semicircle",
+    "size": 3
+   },
+   "summary": "Yarım daire · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "quartercircle",
+    "size": 3
+   },
+   "summary": "Çeyrek daire · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "gear",
+    "size": 3
+   },
+   "summary": "Dişli · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "arc",
+    "size": 3
+   },
+   "summary": "Yay (açık) · 3 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": {
+     "expr": "Boy",
+     "fallback": 3
+    },
+    "unit": "px"
+   },
+   "summary": "Daire · ƒ px"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "svg",
+    "asset": "",
+    "size": 5
+   },
+   "summary": "çizim seçilmedi"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "svg",
+    "asset": "a-1",
+    "size": 4.25
+   },
+   "summary": "4.25 mm"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "raster",
+    "asset": "",
+    "size": 5
+   },
+   "summary": "çizim seçilmedi"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "raster",
+    "asset": "a-2",
+    "size": 12,
+    "unit": "m"
+   },
+   "summary": "12 m"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3
+   },
+   "summary": "“A”"
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "text",
+    "text": {
+     "expr": "etiket",
+     "fallback": "A"
+    },
+    "size": 3
+   },
+   "summary": "öznitelikten"
+  }
+ ],
+ "countSuffixes": [
+  [
+   1,
+   "li"
+  ],
+  [
+   2,
+   "li"
+  ],
+  [
+   3,
+   "lü"
+  ],
+  [
+   4,
+   "lü"
+  ],
+  [
+   5,
+   "li"
+  ],
+  [
+   6,
+   "lı"
+  ],
+  [
+   7,
+   "li"
+  ],
+  [
+   8,
+   "li"
+  ],
+  [
+   9,
+   "lu"
+  ],
+  [
+   10,
+   "lu"
+  ],
+  [
+   11,
+   "li"
+  ],
+  [
+   12,
+   "li"
+  ],
+  [
+   13,
+   "lü"
+  ],
+  [
+   14,
+   "lü"
+  ],
+  [
+   15,
+   "li"
+  ],
+  [
+   16,
+   "lı"
+  ],
+  [
+   17,
+   "li"
+  ],
+  [
+   18,
+   "li"
+  ],
+  [
+   19,
+   "lu"
+  ],
+  [
+   20,
+   "li"
+  ],
+  [
+   30,
+   "lu"
+  ],
+  [
+   40,
+   "lı"
+  ],
+  [
+   50,
+   "li"
+  ],
+  [
+   60,
+   "lı"
+  ],
+  [
+   70,
+   "li"
+  ],
+  [
+   80,
+   "li"
+  ],
+  [
+   90,
+   "lı"
+  ],
+  [
+   100,
+   "lü"
+  ],
+  [
+   1000,
+   "li"
+  ],
+  [
+   1100,
+   "lü"
+  ],
+  [
+   2000,
+   "li"
+  ]
+ ],
+ "patches": [
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   },
+   "patch": {
+    "width": 0.5
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.5
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   },
+   "patch": {
+    "shiftX": 0.4
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35,
+    "shift": [
+     0.4,
+     0
+    ]
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35,
+    "shift": [
+     0.4,
+     -0.2
+    ]
+   },
+   "patch": {
+    "shiftY": 0.1
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35,
+    "shift": [
+     0.4,
+     0.1
+    ]
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35,
+    "shift": [
+     0.4,
+     0
+    ]
+   },
+   "patch": {
+    "shiftX": 0
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35,
+    "dash": [
+     4,
+     1
+    ]
+   },
+   "patch": {
+    "dash": null
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   },
+   "patch": {
+    "dash": [
+     4,
+     1.5,
+     0.5,
+     1.5
+    ]
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35,
+    "dash": [
+     4,
+     1.5,
+     0.5,
+     1.5
+    ]
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   },
+   "patch": {
+    "wave": {
+     "shape": "zigzag",
+     "length": 5,
+     "amplitude": 0.8,
+     "connect": true
+    }
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35,
+    "wave": {
+     "shape": "zigzag",
+     "length": 5,
+     "amplitude": 0.8,
+     "connect": true
+    }
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35,
+    "wave": {
+     "shape": "sine",
+     "length": 5,
+     "amplitude": 0.8
+    }
+   },
+   "patch": {},
+   "unset": [
+    "wave"
+   ],
+   "result": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   },
+   "patch": {
+    "offset": {
+     "expr": "[Genişlik] / 2",
+     "fallback": 0
+    }
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35,
+    "offset": {
+     "expr": "[Genişlik] / 2",
+     "fallback": 0
+    }
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3
+   },
+   "patch": {
+    "offsetX": 1.5
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3,
+    "offset": [
+     1.5,
+     0
+    ]
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3,
+    "offset": [
+     1,
+     2
+    ]
+   },
+   "patch": {
+    "offsetY": -0.5
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3,
+    "offset": [
+     1,
+     -0.5
+    ]
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "gear",
+    "size": 3
+   },
+   "patch": {
+    "holePct": 35
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "shape",
+    "shape": "gear",
+    "size": 3,
+    "hole": 0.35
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "gear",
+    "size": 3
+   },
+   "patch": {
+    "teethDepthPct": 25
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "shape",
+    "shape": "gear",
+    "size": 3,
+    "teethDepth": 0.25
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3,
+    "fill": "ink"
+   },
+   "patch": {
+    "fill": null
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 3,
+    "fill": null
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "patch": {
+    "jitterPct": 40
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    },
+    "jitter": 0.4
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "patch": {
+    "coveragePct": 55
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    },
+    "coverage": 0.55
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "offset": [
+     0.5,
+     0.25
+    ],
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "patch": {
+    "offsetX": 1
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "offset": [
+     1,
+     0.25
+    ],
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "patch": {
+    "groupCount": 3
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    },
+    "group": {
+     "count": 3,
+     "spacing": 1
+    }
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "group": {
+     "count": 3,
+     "spacing": 1
+    },
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "patch": {
+    "groupSpacing": 0.75
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "group": {
+     "count": 3,
+     "spacing": 0.75
+    },
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "group": {
+     "count": 3,
+     "spacing": 1
+    },
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "patch": {
+    "groupCount": 1
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    }
+   },
+   "patch": {
+    "groupCount": 2.5
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "markerLine",
+    "placement": "interval",
+    "interval": 6,
+    "marker": {
+     "type": "marker",
+     "layers": []
+    },
+    "group": {
+     "count": 3,
+     "spacing": 1
+    }
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "halo": {
+     "color": "#FFFFFF",
+     "width": 0.3
+    }
+   },
+   "patch": {
+    "haloWidth": 0.5
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "halo": {
+     "color": "#FFFFFF",
+     "width": 0.5
+    }
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "halo": null
+   },
+   "patch": {
+    "haloWidth": 0.5
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "halo": null
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3
+   },
+   "patch": {
+    "haloWidth": 0.5
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3
+   },
+   "patch": {
+    "halo": {
+     "color": "#FFFFFF",
+     "width": 0.3
+    }
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "halo": {
+     "color": "#FFFFFF",
+     "width": 0.3
+    }
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "italic": true
+   },
+   "patch": {
+    "italic": false,
+    "weight": 900
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "text",
+    "text": "A",
+    "size": 3,
+    "italic": false,
+    "weight": 900
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "hatchFill",
+    "angle": 45,
+    "spacing": 2,
+    "width": 0.2,
+    "color": "ink",
+    "dash": [
+     1,
+     1
+    ]
+   },
+   "patch": {
+    "dash": null,
+    "dashOffset": 0.5
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "hatchFill",
+    "angle": 45,
+    "spacing": 2,
+    "width": 0.2,
+    "color": "ink",
+    "dashOffset": 0.5
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#C9D6E3",
+    "opacity": 0.5
+   },
+   "patch": {
+    "opacity": 1,
+    "unit": "px"
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#C9D6E3",
+    "opacity": 1,
+    "unit": "px"
+   }
+  },
+  {
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#C9D6E3",
+    "enabled": false
+   },
+   "patch": {
+    "enabled": {
+     "expr": "[Nitelik] = 'Arsa'",
+     "fallback": true
+    }
+   },
+   "unset": [],
+   "result": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#C9D6E3",
+    "enabled": {
+     "expr": "[Nitelik] = 'Arsa'",
+     "fallback": true
+    }
+   }
+  }
+ ],
+ "uids": [
+  {
+   "ids": [],
+   "uid": "0"
+  },
+  {
+   "ids": [
+    "0"
+   ],
+   "uid": "1"
+  },
+  {
+   "ids": [
+    "1"
+   ],
+   "uid": "2"
+  },
+  {
+   "ids": [
+    "0",
+    "1"
+   ],
+   "uid": "2"
+  },
+  {
+   "ids": [
+    "0",
+    "2"
+   ],
+   "uid": "3"
+  },
+  {
+   "ids": [
+    "1",
+    "2",
+    "3"
+   ],
+   "uid": "4"
+  }
+ ],
+ "edits": [
+  {
+   "name": "a layer added to the symbol",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#C9D6E3"
+   },
+   "addParent": null,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "add",
+    "type": "hatchFill",
+    "parent": null
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      },
+      {
+       "id": "3",
+       "type": "hatchFill",
+       "angle": 45,
+       "spacing": 2,
+       "width": 0.2,
+       "color": "ink"
+      }
+     ]
+    },
+    "selected": [
+     3
+    ]
+   }
+  },
+  {
+   "name": "a layer added to a marker",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    1
+   ],
+   "layer": {
+    "id": "1",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1,
+       "fill": "ink"
+      },
+      {
+       "id": "1",
+       "type": "text",
+       "text": "A",
+       "size": 3
+      }
+     ]
+    }
+   },
+   "addParent": 1,
+   "canMoveUp": true,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "add",
+    "type": "raster",
+    "parent": 1
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         },
+         {
+          "id": "2",
+          "type": "raster",
+          "asset": "",
+          "size": 5
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      }
+     ]
+    },
+    "selected": [
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "name": "a line layer of an area takes the area’s width",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    2
+   ],
+   "layer": {
+    "id": "2",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.25,
+    "enabled": false
+   },
+   "addParent": null,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "add",
+    "type": "simpleLine",
+    "parent": null
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      },
+      {
+       "id": "3",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25
+      }
+     ]
+    },
+    "selected": [
+     3
+    ]
+   }
+  },
+  {
+   "name": "a line symbol’s own line",
+   "symbol": {
+    "type": "line",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.35
+     }
+    ]
+   },
+   "selected": [
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   },
+   "addParent": null,
+   "canMoveUp": false,
+   "canMoveDown": false,
+   "canRemove": false,
+   "op": {
+    "op": "add",
+    "type": "simpleLine",
+    "parent": null
+   },
+   "result": {
+    "symbol": {
+     "type": "line",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.35
+      },
+      {
+       "id": "1",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.35
+      }
+     ]
+    },
+    "selected": [
+     1
+    ]
+   }
+  },
+  {
+   "name": "an id past the gaps",
+   "symbol": {
+    "type": "marker",
+    "layers": [
+     {
+      "id": "0",
+      "type": "shape",
+      "shape": "circle",
+      "size": 1,
+      "fill": "ink"
+     },
+     {
+      "id": "2",
+      "type": "text",
+      "text": "B",
+      "size": 2
+     }
+    ]
+   },
+   "selected": [
+    1
+   ],
+   "layer": {
+    "id": "2",
+    "type": "text",
+    "text": "B",
+    "size": 2
+   },
+   "addParent": null,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "add",
+    "type": "shape",
+    "parent": null
+   },
+   "result": {
+    "symbol": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1,
+       "fill": "ink"
+      },
+      {
+       "id": "2",
+       "type": "text",
+       "text": "B",
+       "size": 2
+      },
+      {
+       "id": "3",
+       "type": "shape",
+       "shape": "circle",
+       "size": 3,
+       "fill": "ink",
+       "stroke": null,
+       "strokeWidth": 0.2
+      }
+     ]
+    },
+    "selected": [
+     2
+    ]
+   }
+  },
+  {
+   "name": "moved up",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    2
+   ],
+   "layer": {
+    "id": "2",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.25,
+    "enabled": false
+   },
+   "addParent": null,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "move",
+    "delta": -1
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "selected": [
+     1
+    ]
+   }
+  },
+  {
+   "name": "moved down",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#C9D6E3"
+   },
+   "addParent": null,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "move",
+    "delta": 1
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      },
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      }
+     ]
+    },
+    "selected": [
+     1
+    ]
+   }
+  },
+  {
+   "name": "not above the top",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#C9D6E3"
+   },
+   "addParent": null,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "move",
+    "delta": -1
+   },
+   "result": null
+  },
+  {
+   "name": "not below the bottom",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    2
+   ],
+   "layer": {
+    "id": "2",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.25,
+    "enabled": false
+   },
+   "addParent": null,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "move",
+    "delta": 1
+   },
+   "result": null
+  },
+  {
+   "name": "a marker’s layer moved down",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    1,
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 1,
+    "fill": "ink"
+   },
+   "addParent": 1,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "move",
+    "delta": 1
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         },
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      }
+     ]
+    },
+    "selected": [
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "name": "duplicated",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "simpleFill",
+    "color": "#C9D6E3"
+   },
+   "addParent": null,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "duplicate"
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "3",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      }
+     ]
+    },
+    "selected": [
+     1
+    ]
+   }
+  },
+  {
+   "name": "a marker’s layer duplicated",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    1,
+    1
+   ],
+   "layer": {
+    "id": "1",
+    "type": "text",
+    "text": "A",
+    "size": 3
+   },
+   "addParent": 1,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "duplicate"
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         },
+         {
+          "id": "2",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      }
+     ]
+    },
+    "selected": [
+     1,
+     2
+    ]
+   }
+  },
+  {
+   "name": "removed, the next one chosen",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    1
+   ],
+   "layer": {
+    "id": "1",
+    "type": "patternFill",
+    "spacingX": 3,
+    "spacingY": 3,
+    "marker": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 1,
+       "fill": "ink"
+      },
+      {
+       "id": "1",
+       "type": "text",
+       "text": "A",
+       "size": 3
+      }
+     ]
+    }
+   },
+   "addParent": 1,
+   "canMoveUp": true,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "remove"
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      }
+     ]
+    },
+    "selected": [
+     1
+    ]
+   }
+  },
+  {
+   "name": "the last removed, the one before chosen",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    2
+   ],
+   "layer": {
+    "id": "2",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.25,
+    "enabled": false
+   },
+   "addParent": null,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "remove"
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      }
+     ]
+    },
+    "selected": [
+     1
+    ]
+   }
+  },
+  {
+   "name": "a symbol keeps one layer",
+   "symbol": {
+    "type": "line",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.35
+     }
+    ]
+   },
+   "selected": [
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.35
+   },
+   "addParent": null,
+   "canMoveUp": false,
+   "canMoveDown": false,
+   "canRemove": false,
+   "op": {
+    "op": "remove"
+   },
+   "result": null
+  },
+  {
+   "name": "a marker’s layer removed",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    1,
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 1,
+    "fill": "ink"
+   },
+   "addParent": 1,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "remove"
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      }
+     ]
+    },
+    "selected": [
+     1,
+     0
+    ]
+   }
+  },
+  {
+   "name": "a marker’s only layer removed, its parent chosen",
+   "symbol": {
+    "type": "line",
+    "layers": [
+     {
+      "id": "0",
+      "type": "markerLine",
+      "placement": "first",
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "7",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "selected": [
+    0,
+    0
+   ],
+   "layer": {
+    "id": "7",
+    "type": "shape",
+    "shape": "circle",
+    "size": 1,
+    "fill": "ink"
+   },
+   "addParent": 0,
+   "canMoveUp": false,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "remove"
+   },
+   "result": {
+    "symbol": {
+     "type": "line",
+     "layers": [
+      {
+       "id": "0",
+       "type": "markerLine",
+       "placement": "first",
+       "marker": {
+        "type": "marker",
+        "layers": []
+       }
+      }
+     ]
+    },
+    "selected": [
+     0
+    ]
+   }
+  },
+  {
+   "name": "switched on",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    2
+   ],
+   "layer": {
+    "id": "2",
+    "type": "simpleLine",
+    "color": "ink",
+    "width": 0.25,
+    "enabled": false
+   },
+   "addParent": null,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "enable",
+    "at": [
+     2
+    ],
+    "on": true
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25
+      }
+     ]
+    },
+    "selected": [
+     2
+    ]
+   }
+  },
+  {
+   "name": "a marker’s layer switched off",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    1,
+    1
+   ],
+   "layer": {
+    "id": "1",
+    "type": "text",
+    "text": "A",
+    "size": 3
+   },
+   "addParent": 1,
+   "canMoveUp": true,
+   "canMoveDown": false,
+   "canRemove": true,
+   "op": {
+    "op": "enable",
+    "at": [
+     1,
+     1
+    ],
+    "on": false
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "circle",
+          "size": 1,
+          "fill": "ink"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3,
+          "enabled": false
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      }
+     ]
+    },
+    "selected": [
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "name": "a marker’s layer replaced",
+   "symbol": {
+    "type": "fill",
+    "layers": [
+     {
+      "id": "0",
+      "type": "simpleFill",
+      "color": "#C9D6E3"
+     },
+     {
+      "id": "1",
+      "type": "patternFill",
+      "spacingX": 3,
+      "spacingY": 3,
+      "marker": {
+       "type": "marker",
+       "layers": [
+        {
+         "id": "0",
+         "type": "shape",
+         "shape": "circle",
+         "size": 1,
+         "fill": "ink"
+        },
+        {
+         "id": "1",
+         "type": "text",
+         "text": "A",
+         "size": 3
+        }
+       ]
+      }
+     },
+     {
+      "id": "2",
+      "type": "simpleLine",
+      "color": "ink",
+      "width": 0.25,
+      "enabled": false
+     }
+    ]
+   },
+   "selected": [
+    1,
+    0
+   ],
+   "layer": {
+    "id": "0",
+    "type": "shape",
+    "shape": "circle",
+    "size": 1,
+    "fill": "ink"
+   },
+   "addParent": 1,
+   "canMoveUp": false,
+   "canMoveDown": true,
+   "canRemove": true,
+   "op": {
+    "op": "put",
+    "at": [
+     1,
+     0
+    ],
+    "layer": {
+     "id": "0",
+     "type": "shape",
+     "shape": "star",
+     "size": 2,
+     "fill": "#E15759"
+    }
+   },
+   "result": {
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      },
+      {
+       "id": "1",
+       "type": "patternFill",
+       "spacingX": 3,
+       "spacingY": 3,
+       "marker": {
+        "type": "marker",
+        "layers": [
+         {
+          "id": "0",
+          "type": "shape",
+          "shape": "star",
+          "size": 2,
+          "fill": "#E15759"
+         },
+         {
+          "id": "1",
+          "type": "text",
+          "text": "A",
+          "size": 3
+         }
+        ]
+       }
+      },
+      {
+       "id": "2",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.25,
+       "enabled": false
+      }
+     ]
+    },
+    "selected": [
+     1,
+     0
+    ]
+   }
+  }
+ ],
+ "drafts": [
+  {
+   "kind": "fill",
+   "path": null,
+   "draft": {
+    "name": "Yeni alan sembolü",
+    "path": [
+     "Sembollerim"
+    ],
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "line",
+   "path": null,
+   "draft": {
+    "name": "Yeni çizgi sembolü",
+    "path": [
+     "Sembollerim"
+    ],
+    "symbol": {
+     "type": "line",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleLine",
+       "color": "ink",
+       "width": 0.35
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "marker",
+   "path": null,
+   "draft": {
+    "name": "Yeni işaret sembolü",
+    "path": [
+     "Sembollerim"
+    ],
+    "symbol": {
+     "type": "marker",
+     "layers": [
+      {
+       "id": "0",
+       "type": "shape",
+       "shape": "circle",
+       "size": 3,
+       "fill": "ink",
+       "stroke": null,
+       "strokeWidth": 0.2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "kind": "fill",
+   "path": [
+    "Proje",
+    "Alanlar"
+   ],
+   "draft": {
+    "name": "Yeni alan sembolü",
+    "path": [
+     "Proje",
+     "Alanlar"
+    ],
+    "symbol": {
+     "type": "fill",
+     "layers": [
+      {
+       "id": "0",
+       "type": "simpleFill",
+       "color": "#C9D6E3"
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "defaults": {
+  "fill": {
+   "type": "fill",
+   "layers": [
+    {
+     "id": "0",
+     "type": "simpleFill",
+     "color": "#C9D6E3"
+    },
+    {
+     "id": "1",
+     "type": "simpleLine",
+     "color": "ink",
+     "width": 0.2
+    }
+   ]
+  },
+  "line": {
+   "type": "line",
+   "layers": [
+    {
+     "id": "0",
+     "type": "simpleLine",
+     "color": "ink",
+     "width": 0.35
+    }
+   ]
+  },
+  "marker": {
+   "type": "marker",
+   "layers": [
+    {
+     "id": "0",
+     "type": "shape",
+     "shape": "circle",
+     "size": 2.4,
+     "fill": "ink"
+    }
+   ]
+  }
+ },
+ "titles": [
+  {
+   "kind": "fill",
+   "inline": null,
+   "dirty": false,
+   "title": "Alan sembolü tasarımcısı"
+  },
+  {
+   "kind": "fill",
+   "inline": null,
+   "dirty": true,
+   "title": "Alan sembolü tasarımcısı •"
+  },
+  {
+   "kind": "fill",
+   "inline": "Tek sembol (alan)",
+   "dirty": false,
+   "title": "Tek sembol (alan): alan sembolü"
+  },
+  {
+   "kind": "fill",
+   "inline": "Konut (nokta)",
+   "dirty": true,
+   "title": "Konut (nokta): alan sembolü •"
+  },
+  {
+   "kind": "line",
+   "inline": null,
+   "dirty": false,
+   "title": "Çizgi sembolü tasarımcısı"
+  },
+  {
+   "kind": "line",
+   "inline": null,
+   "dirty": true,
+   "title": "Çizgi sembolü tasarımcısı •"
+  },
+  {
+   "kind": "line",
+   "inline": "Tek sembol (alan)",
+   "dirty": false,
+   "title": "Tek sembol (alan): çizgi sembolü"
+  },
+  {
+   "kind": "line",
+   "inline": "Konut (nokta)",
+   "dirty": true,
+   "title": "Konut (nokta): çizgi sembolü •"
+  },
+  {
+   "kind": "marker",
+   "inline": null,
+   "dirty": false,
+   "title": "İşaret sembolü tasarımcısı"
+  },
+  {
+   "kind": "marker",
+   "inline": null,
+   "dirty": true,
+   "title": "İşaret sembolü tasarımcısı •"
+  },
+  {
+   "kind": "marker",
+   "inline": "Tek sembol (alan)",
+   "dirty": false,
+   "title": "Tek sembol (alan): işaret sembolü"
+  },
+  {
+   "kind": "marker",
+   "inline": "Konut (nokta)",
+   "dirty": true,
+   "title": "Konut (nokta): işaret sembolü •"
+  }
+ ],
+ "saved": [
+  {
+   "name": "Bahçe alanı",
+   "path": [
+    "Sembollerim",
+    "Alanlar"
+   ],
+   "as": {
+    "name": "Bahçe alanı",
+    "path": [
+     "Sembollerim",
+     "Alanlar"
+    ]
+   }
+  },
+  {
+   "name": "  ",
+   "path": [],
+   "as": {
+    "name": "Adsız sembol",
+    "path": [
+     "Sembollerim"
+    ]
+   }
+  },
+  {
+   "name": "  Yol ",
+   "path": [
+    "Ulaşım"
+   ],
+   "as": {
+    "name": "Yol",
+    "path": [
+     "Ulaşım"
+    ]
+   }
+  }
+ ],
+ "paths": [
+  {
+   "text": "Sembollerim",
+   "path": [
+    "Sembollerim"
+   ]
+  },
+  {
+   "text": " Ana / Alt ",
+   "path": [
+    "Ana",
+    "Alt"
+   ]
+  },
+  {
+   "text": "Ana//Alt/",
+   "path": [
+    "Ana",
+    "Alt"
+   ]
+  },
+  {
+   "text": "",
+   "path": []
+  },
+  {
+   "text": " / ",
+   "path": []
+  }
+ ],
+ "zoom": {
+  "min": 1,
+  "max": 40,
+  "step": 1.25,
+  "start": 4,
+  "real": 3.7795275590551185,
+  "steps": [
+   {
+    "px": 4,
+    "factor": 1.25,
+    "result": 5
+   },
+   {
+    "px": 4,
+    "factor": 0.8,
+    "result": 3.2
+   },
+   {
+    "px": 39,
+    "factor": 1.25,
+    "result": 40
+   },
+   {
+    "px": 1.1,
+    "factor": 0.8,
+    "result": 1
+   },
+   {
+    "px": 3.7795275590551185,
+    "factor": 1.25,
+    "result": 4.724409448818898
+   }
+  ],
+  "texts": [
+   {
+    "px": 4,
+    "text": "1 mm = 4.0 px"
+   },
+   {
+    "px": 3.7795275590551185,
+    "text": "1 mm = 3.8 px"
+   },
+   {
+    "px": 1,
+    "text": "1 mm = 1.0 px"
+   },
+   {
+    "px": 40,
+    "text": "1 mm = 40.0 px"
+   },
+   {
+    "px": 12.2070312,
+    "text": "1 mm = 12.2 px"
+   },
+   {
+    "px": 3.2768,
+    "text": "1 mm = 3.3 px"
+   }
+  ]
+ },
+ "texts": {
+  "layers": "Katmanlar",
+  "add": "Katman ekle",
+  "intoSymbol": "Sembole",
+  "intoMarker": {
+   "parent": "Desen",
+   "text": "“Desen” işaretine"
+  },
+  "order": "Listede üstteki katman önce, alttaki en son (en üstte) çizilir.",
+  "lastLayer": "Sembolün en az bir katmanı olmalı.",
+  "onePoint": "Örnek: tek nokta",
+  "pickLayer": "Bir katman seçin.",
+  "inline": "Bu sembol katman stilinin içindedir; kitaplığa yazılmaz.",
+  "inMarker": {
+   "parent": "Çizgi boyunca işaret",
+   "text": "Çizgi boyunca işaret işaretinde"
+  },
+  "notSaved": [
+   {
+    "first": "sembol › katman 1: renk geçerli bir renk değil",
+    "more": 0,
+    "text": "Kaydedilemedi: sembol › katman 1: renk geçerli bir renk değil"
+   },
+   {
+    "first": "sembol › katman 2: kimlik yok",
+    "more": 2,
+    "text": "Kaydedilemedi: sembol › katman 2: kimlik yok (ve 2 sorun daha)"
+   }
+  ],
+  "saved": {
+   "name": "Bahçe alanı",
+   "text": "“Bahçe alanı” kaydedildi."
+  },
+  "cannotEdit": "Bu sembol düzenlenemez: sistem sembollerinin kopyası düzenlenir."
+ }
+}

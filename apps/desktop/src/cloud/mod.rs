@@ -812,6 +812,8 @@ impl App {
             // A question or a rename closes first; picking for Katman stili goes back to it.
             Some(Dialog::StyleManager) => self.style_manager_close_request(),
             Some(Dialog::Legend) => self.styles.legend = None,
+            // Changes are asked about first; the window under it comes back (style/designer/).
+            Some(Dialog::SymbolDesigner) => self.designer_close_request(),
             _ => {}
         }
     }

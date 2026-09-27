@@ -39,9 +39,6 @@ pub(super) struct Env<'a> {
     pub name_of: &'a dyn Fn(&str) -> Option<String>,
 }
 
-/// Why editing a slot's symbol is off for now.
-const NOT_YET: &str = "Sembol tasarımcısı web'de var; masaüstüne henüz taşınmadı.";
-
 /// A symbol in a style: its picture (a class without one shows the layer's
 /// simple look it falls back to) and its name; the menu picks another, edits
 /// it, keeps it in the user's library or goes back to the simple look.
@@ -102,6 +99,15 @@ fn slot<'a>(
     let own = symbol.filter(|s| ref_id(s).is_none()).cloned();
     let has = symbol.is_some();
     let title_owned = title.to_owned();
+    // What Düzenle starts from: the slot's own symbol, a copy of the library
+    // symbol, or what the slot shows (the web's started from a default when
+    // the slot had none); none when the library symbol is gone.
+    let design = crate::style::designer::slot_symbol(
+        env.look.library,
+        symbol,
+        env.simple.get(class),
+        class,
+    );
     let menu = move || {
         Menu::new()
             .item(
@@ -120,10 +126,11 @@ fn slot<'a>(
                 } else {
                     "Düzenle…"
                 },
-                None,
+                design
+                    .clone()
+                    .map(|s| ev(Event::Design(at.clone(), class, title_owned.clone(), s))),
             )
             .icon(crate::icons::from_web(Some("edit")))
-            .detail(NOT_YET)
             .item(
                 "Kitaplığıma kaydet",
                 own.clone()

@@ -1,5 +1,5 @@
 import type { AppContext } from '../../app/context';
-import type { LibrarySymbol, MarkerLayer, Symbol } from '../../model/style';
+import type { LibrarySymbol, Symbol } from '../../model/style';
 import type { PreviewGeometry } from '../../render/symbolPreview';
 import { sanitizeSvg, svgAsset, validateSymbol } from '../../style/file';
 import { newItemId } from '../../style/library';
@@ -9,16 +9,50 @@ import { askUnsaved } from '../widgets/confirm';
 import { Dialog } from '../widgets/Dialog';
 import { PopupMenu } from '../widgets/PopupMenu';
 import { segmented } from '../widgets/controls';
-import { applyPatch, hasMarker, LAYER_LABEL, LAYER_TYPES, layerForm, newLayer, summary, type AnyLayer, type FormEnv, type LayerType } from './layerForms';
+import {
+  addLayer,
+  addParent,
+  applyPatch,
+  canMove,
+  canRemove,
+  DESIGNER_TEXTS as T,
+  designerTitle,
+  duplicateLayer,
+  GEOMETRIES,
+  hasMarker,
+  LAYER_LABEL,
+  LAYER_TYPES,
+  layerAt,
+  moveLayer,
+  newDraft,
+  pathOf,
+  putLayer,
+  removeLayer,
+  savedAs,
+  setEnabled,
+  summary,
+  ZOOM,
+  zoomed,
+  zoomText,
+  type AnyLayer,
+  type Draft,
+  type Edited,
+  type LayerPath,
+  type LayerType,
+} from './designerModel';
+import { layerForm, type FormEnv } from './layerForms';
 import { rasterAsset } from './styleFiles';
 import { drawNow } from './thumbs';
 
 /**
- * Sembol tasarımcısı (docs/STYLE.md §7): a symbol is a stack of layers.
- * The stack is on the left (a layer that places markers shows the marker's
- * own layers under it), the live preview on sample geometry in the middle,
- * the chosen layer's properties on the right. The designer edits a draft
- * with its own undo (Ctrl+Z / Ctrl+Y); Kaydet writes it to the library.
+ * Sembol tasarımcısı (docs/STYLE.md §7, docs/adr/0094): a symbol is a stack
+ * of layers. The stack is on the left (a layer that places markers shows the
+ * marker's own layers under it), the live preview on sample geometry in the
+ * middle, the chosen layer's properties on the right. The designer edits a
+ * draft with its own undo (Ctrl+Z / Ctrl+Y and the list's buttons); Kaydet
+ * writes it to the library. The model (layer types, new layers, summaries,
+ * patches, the list's edits) is designerModel.ts, held with the desktop's to
+ * fixtures/style/v1/designer.json.
  */
 
 export interface DesignerOptions {
@@ -36,43 +70,21 @@ export interface DesignerOptions {
   inline?: { symbol: Symbol; title: string; onDone(symbol: Symbol): void };
 }
 
-/** Where a layer is: [i] a symbol layer, [i, j] layer j of the marker of layer i. */
-type LayerPath = readonly [number] | readonly [number, number];
-
-interface Draft {
-  name: string;
-  path: string[];
-  symbol: Symbol;
-}
-
-const KIND_TITLE: Record<Symbol['type'], string> = { fill: 'Alan sembolü', line: 'Çizgi sembolü', marker: 'İşaret sembolü' };
-const GEOMETRIES: Record<Symbol['type'], { value: PreviewGeometry; label: string }[]> = {
-  fill: [
-    { value: 'area', label: 'Alan' },
-    { value: 'hole', label: 'Adalı alan' },
-  ],
-  line: [
-    { value: 'line', label: 'Düz' },
-    { value: 'bent', label: 'Kırık' },
-    { value: 'area', label: 'Alan kenarı' },
-  ],
-  marker: [{ value: 'point', label: 'Nokta' }],
-};
 const HISTORY = 100;
 
 export function openSymbolDesigner(ctx: AppContext, opts: DesignerOptions): void {
   const lib = ctx.styles.library;
   const item = opts.id ? lib.get(opts.id) : undefined;
   if (opts.id && (!item || item.kind !== 'symbol' || !lib.canEdit(opts.id))) {
-    ctx.log.error('Bu sembol düzenlenemez: sistem sembollerinin kopyası düzenlenir.');
+    ctx.log.error(T.cannotEdit);
     return;
   }
   const kind = item?.kind === 'symbol' ? item.symbol.type : (opts.inline?.symbol.type ?? opts.newKind ?? 'fill');
   const draft: Draft = opts.inline
     ? { name: opts.inline.title, path: [], symbol: structuredClone(opts.inline.symbol) }
     : item?.kind === 'symbol'
-    ? { name: item.name, path: [...item.path], symbol: structuredClone(item.symbol) }
-    : { name: `Yeni ${KIND_TITLE[kind].toLocaleLowerCase('tr')}`, path: [...(opts.path ?? ['Sembollerim'])], symbol: { type: kind, layers: [newLayer(LAYER_TYPES[kind][0], '0', kind)] } as Symbol };
+      ? { name: item.name, path: [...item.path], symbol: structuredClone(item.symbol) }
+      : newDraft(kind, opts.path);
   new SymbolDesigner(ctx, draft, item?.kind === 'symbol' ? item : null, opts);
 }
 
@@ -89,9 +101,11 @@ class SymbolDesigner {
   private readonly status: HTMLElement;
   private readonly nameInput: HTMLInputElement;
   private readonly pathInput: HTMLInputElement;
+  /** The list's tools, enabled as the chosen layer and the history allow. */
+  private readonly tools: Record<'up' | 'down' | 'dup' | 'remove' | 'undo' | 'redo', HTMLButtonElement>;
   private selected: LayerPath = [0];
   private geometry: PreviewGeometry;
-  private pxPerMm = 4;
+  private pxPerMm: number = ZOOM.start;
   /** The draft as saved, or as opened (a new symbol: the starting one): what `dirty` compares with. */
   private savedJson: string;
   /** The unsaved-changes question is open. */
@@ -110,20 +124,28 @@ class SymbolDesigner {
     this.savedJson = JSON.stringify(draft);
     this.list = h('div', { class: 'sdes__layers', role: 'listbox', 'aria-label': 'Sembol katmanları' });
     this.props = h('div', { class: 'sdes__props' });
-    this.canvas = h('canvas', { class: 'sdes__canvas' });
+    this.canvas = h('canvas', { class: 'sdes__canvas', title: 'Tekerlekle yakınlaşıp uzaklaşır' });
     this.previewBar = h('div', { class: 'sdes__pbar' });
     this.status = h('div', { class: 'sdes__status', role: 'status' });
     this.nameInput = h('input', { class: 'field', value: draft.name, 'aria-label': 'Sembol adı', spellcheck: 'false' });
     this.pathInput = h('input', { class: 'field', value: draft.path.join(' / '), 'aria-label': 'Kategori', placeholder: 'Ana / Alt', spellcheck: 'false' });
-    this.nameInput.addEventListener('input', () => ((this.draft.name = this.nameInput.value), this.touched('name')));
-    this.pathInput.addEventListener('input', () => ((this.draft.path = this.pathInput.value.split('/').map((s) => s.trim()).filter(Boolean)), this.touched('path')));
+    this.nameInput.addEventListener('input', () => (this.snapshot('name'), (this.draft.name = this.nameInput.value), this.renderTitle(), this.renderTools()));
+    this.pathInput.addEventListener('input', () => (this.snapshot('path'), (this.draft.path = pathOf(this.pathInput.value)), this.renderTitle(), this.renderTools()));
 
-    const addBtn = h('button', { class: 'btn btn--small', type: 'button' }, icon('plus', 14), 'Katman ekle');
+    const addBtn = h('button', { class: 'btn btn--small', type: 'button' }, icon('plus', 14), T.add);
     addBtn.addEventListener('click', () => this.addMenu(addBtn));
     const tool = (name: string, label: string, run: () => void) => {
       const b = h('button', { class: 'ibtn', type: 'button', 'aria-label': label, title: label }, icon(name, 16));
       b.addEventListener('click', run);
       return b;
+    };
+    this.tools = {
+      up: tool('chevronUp', 'Yukarı taşı (önce çizilir)', () => this.move(-1)),
+      down: tool('chevronDown', 'Aşağı taşı (sonra çizilir)', () => this.move(1)),
+      dup: tool('copy', 'Çoğalt', () => this.duplicate()),
+      remove: tool('trash', 'Sil', () => this.remove()),
+      undo: tool('undo', 'Geri al (Ctrl+Z)', () => this.undo()),
+      redo: tool('redo', 'Yinele (Ctrl+Y)', () => this.redo()),
     };
     const cancel = h('button', { class: 'btn', type: 'button' }, 'Vazgeç');
     cancel.addEventListener('click', () => this.dialog.request());
@@ -131,27 +153,27 @@ class SymbolDesigner {
     save.addEventListener('click', () => this.save(false));
 
     this.dialog = new Dialog({
-      title: opts.inline ? `${opts.inline.title}: ${KIND_TITLE[draft.symbol.type].toLocaleLowerCase('tr')}` : `${KIND_TITLE[draft.symbol.type]} tasarımcısı`,
+      title: designerTitle(draft.symbol.type, opts.inline?.title ?? null, false),
       width: 1320,
       className: 'dialog--sdesign',
       content: [
         h(
-        'div',
-        { class: 'sdes' },
-        h(
-          'aside',
-          { class: 'sdes__left' },
-          h('div', { class: 'sdes__lhead' }, h('span', { class: 'sdes__title' }, 'Katmanlar'), addBtn),
-          this.list,
-          h('div', { class: 'sdes__ltools' }, tool('chevronUp', 'Yukarı taşı (önce çizilir)', () => this.move(-1)), tool('chevronDown', 'Aşağı taşı (sonra çizilir)', () => this.move(1)), tool('copy', 'Çoğalt', () => this.duplicate()), tool('trash', 'Sil', () => this.remove())),
-          h('p', { class: 'sdes__note' }, 'Listede üstteki katman önce, alttaki en son (en üstte) çizilir.'),
-        ),
-        h('section', { class: 'sdes__center' }, this.previewBar, h('div', { class: 'sdes__stage' }, this.canvas)),
-        h('aside', { class: 'sdes__right' }, this.props),
+          'div',
+          { class: 'sdes' },
+          h(
+            'aside',
+            { class: 'sdes__left' },
+            h('div', { class: 'sdes__lhead' }, h('span', { class: 'sdes__title' }, T.layers), addBtn),
+            this.list,
+            h('div', { class: 'sdes__ltools' }, this.tools.up, this.tools.down, this.tools.dup, this.tools.remove, h('span', { class: 'sdes__lgap' }), this.tools.undo, this.tools.redo),
+            h('p', { class: 'sdes__note' }, T.order),
+          ),
+          h('section', { class: 'sdes__center' }, this.previewBar, h('div', { class: 'sdes__stage' }, this.canvas)),
+          h('aside', { class: 'sdes__right' }, this.props),
         ),
       ],
       footer: [
-        opts.inline ? h('span', { class: 'sdes__note' }, 'Bu sembol katman stilinin içindedir; kitaplığa yazılmaz.') : null,
+        opts.inline ? h('span', { class: 'sdes__note' }, T.inline) : null,
         opts.inline ? null : h('label', { class: 'sdes__flabel' }, 'Ad', this.nameInput),
         opts.inline ? null : h('label', { class: 'sdes__flabel sdes__flabel--path' }, 'Kategori', this.pathInput),
         this.status,
@@ -167,109 +189,87 @@ class SymbolDesigner {
       if (e.key.toLowerCase() === 'z' && !e.shiftKey) (e.preventDefault(), this.undo());
       else if (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey)) (e.preventDefault(), this.redo());
     });
+    // ↑ ↓ in the list choose the row above or below.
+    this.list.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      e.preventDefault();
+      const rows = this.rows();
+      const i = rows.findIndex((p) => same(p, this.selected));
+      const next = rows[Math.min(rows.length - 1, Math.max(0, i + (e.key === 'ArrowUp' ? -1 : 1)))];
+      if (!next || same(next, this.selected)) return;
+      this.selected = next;
+      this.renderList();
+      this.renderProps();
+      this.renderTools();
+      (this.list.querySelector('[aria-selected="true"]') as HTMLElement | null)?.focus();
+    });
+    // The wheel over the preview changes its scale, a step a notch.
+    this.canvas.addEventListener(
+      'wheel',
+      (e) => {
+        if (!e.deltaY) return;
+        e.preventDefault();
+        this.zoom(e.deltaY < 0 ? ZOOM.step : 1 / ZOOM.step);
+      },
+      { passive: false },
+    );
     new ResizeObserver(() => this.redraw()).observe(this.canvas);
     this.renderAll();
   }
 
   // ── Layers ───────────────────────────────────────────────────────────
 
-  private get layers(): AnyLayer[] {
-    return this.draft.symbol.layers as AnyLayer[];
+  private get symbol(): Symbol {
+    return this.draft.symbol;
   }
 
-  private layerAt(p: LayerPath): AnyLayer | undefined {
-    const top = this.layers[p[0]];
-    if (p.length === 1 || !top) return top;
-    return hasMarker(top) ? (top.marker.layers[p[1]] as AnyLayer | undefined) : undefined;
-  }
-
-  /** Replaces the layer at `p` (the marker of its parent for child rows). */
-  private putLayer(p: LayerPath, l: AnyLayer): void {
-    if (p.length === 1) {
-      this.draft.symbol = { ...this.draft.symbol, layers: this.layers.map((x, i) => (i === p[0] ? l : x)) } as Symbol;
-      return;
-    }
-    const parent = this.layers[p[0]];
-    if (!hasMarker(parent)) return;
-    const marker = { ...parent.marker, layers: parent.marker.layers.map((x, j) => (j === p[1] ? (l as MarkerLayer) : x)) };
-    this.putLayer([p[0]], { ...parent, marker } as AnyLayer);
-  }
-
-  /** The list a layer lives in, and the setter for it. */
-  private siblings(p: LayerPath): { list: AnyLayer[]; set: (list: AnyLayer[]) => void; index: number } {
-    if (p.length === 1) return { list: [...this.layers], set: (list) => (this.draft.symbol = { ...this.draft.symbol, layers: list } as Symbol), index: p[0] };
-    const parent = this.layers[p[0]];
-    const list = hasMarker(parent) ? [...(parent.marker.layers as AnyLayer[])] : [];
-    return { list, set: (l) => hasMarker(parent) && this.putLayer([p[0]], { ...parent, marker: { type: 'marker', layers: l as MarkerLayer[] } } as AnyLayer), index: p[1] };
-  }
-
-  private uid(list: readonly AnyLayer[]): string {
-    const used = new Set(list.map((l) => l.id));
-    let i = list.length;
-    while (used.has(String(i))) i++;
-    return String(i);
+  /** The list's rows in order: each layer, and under a layer that places markers its marker's layers. */
+  private rows(): LayerPath[] {
+    const out: LayerPath[] = [];
+    (this.symbol.layers as readonly AnyLayer[]).forEach((l, i) => {
+      out.push([i]);
+      if (hasMarker(l)) l.marker.layers.forEach((_, j) => out.push([i, j]));
+    });
+    return out;
   }
 
   private addMenu(anchor: HTMLElement): void {
     const r = anchor.getBoundingClientRect();
-    const kind = this.draft.symbol.type;
-    const sel = this.layerAt(this.selected);
-    const parentIndex = this.selected.length === 2 ? this.selected[0] : sel && hasMarker(sel) ? this.selected[0] : null;
+    const kind = this.symbol.type;
+    const parent = addParent(this.symbol, this.selected);
     const items = LAYER_TYPES[kind].map((t) => ({ label: LAYER_LABEL[t], run: () => this.add(t, null) }));
     const nested =
-      parentIndex !== null
-        ? [{ kind: 'header' as const, label: `“${LAYER_LABEL[this.layers[parentIndex].type]}” işaretine` }, ...LAYER_TYPES.marker.map((t) => ({ label: LAYER_LABEL[t], run: () => this.add(t, parentIndex) }))]
+      parent !== null
+        ? [{ kind: 'header' as const, label: T.intoMarker(LAYER_LABEL[(this.symbol.layers as readonly AnyLayer[])[parent].type]) }, ...LAYER_TYPES.marker.map((t) => ({ label: LAYER_LABEL[t], run: () => this.add(t, parent) }))]
         : [];
-    PopupMenu.open([{ kind: 'header', label: 'Sembole' }, ...items, ...(nested.length ? [{ kind: 'separator' as const }, ...nested] : [])], { x: r.left, y: r.bottom + 4 });
+    PopupMenu.open([{ kind: 'header', label: T.intoSymbol }, ...items, ...(nested.length ? [{ kind: 'separator' as const }, ...nested] : [])], { x: r.left, y: r.bottom + 4 });
+  }
+
+  /** A list edit: recorded as its own undo step, done, the chosen row moved. */
+  private listEdit(key: string, edit: (s: Symbol) => Edited | null): void {
+    const done = edit(this.symbol);
+    if (!done) return;
+    this.snapshot(key, false);
+    this.draft.symbol = done.symbol;
+    this.selected = done.selected;
+    this.renderAll();
   }
 
   private add(type: LayerType, parent: number | null): void {
-    this.snapshot('add');
-    if (parent === null) {
-      const layer = newLayer(type, this.uid(this.layers), this.draft.symbol.type);
-      this.draft.symbol = { ...this.draft.symbol, layers: [...this.layers, layer] } as Symbol;
-      this.selected = [this.layers.length - 1];
-    } else {
-      const { list, set } = this.siblings([parent, 0]);
-      const layer = newLayer(type, this.uid(list), 'marker');
-      set([...list, layer]);
-      this.selected = [parent, list.length];
-    }
-    this.renderAll();
+    this.listEdit('add', (s) => addLayer(s, type, parent));
   }
 
   private move(delta: number): void {
-    const { list, set, index } = this.siblings(this.selected);
-    const to = index + delta;
-    if (to < 0 || to >= list.length) return;
-    this.snapshot('move');
-    [list[index], list[to]] = [list[to], list[index]];
-    set(list);
-    this.selected = this.selected.length === 1 ? [to] : [this.selected[0], to];
-    this.renderAll();
+    this.listEdit('move', (s) => moveLayer(s, this.selected, delta));
   }
 
   private duplicate(): void {
-    const { list, set, index } = this.siblings(this.selected);
-    if (!list[index]) return;
-    this.snapshot('dup');
-    const copy = { ...structuredClone(list[index]), id: this.uid(list) };
-    list.splice(index + 1, 0, copy);
-    set(list);
-    this.selected = this.selected.length === 1 ? [index + 1] : [this.selected[0], index + 1];
-    this.renderAll();
+    this.listEdit('dup', (s) => duplicateLayer(s, this.selected));
   }
 
   private remove(): void {
-    const { list, set, index } = this.siblings(this.selected);
-    if (!list[index]) return;
-    if (this.selected.length === 1 && list.length === 1) return this.say('Sembolün en az bir katmanı olmalı.', 'warn');
-    this.snapshot('remove');
-    list.splice(index, 1);
-    set(list);
-    const next = Math.min(index, list.length - 1);
-    this.selected = this.selected.length === 1 ? [Math.max(0, next)] : next < 0 ? [this.selected[0]] : [this.selected[0], next];
-    this.renderAll();
+    if (!canRemove(this.symbol, this.selected)) return this.say(T.lastLayer, 'warn');
+    this.listEdit('remove', (s) => removeLayer(s, this.selected));
   }
 
   // ── Rendering ────────────────────────────────────────────────────────
@@ -278,21 +278,30 @@ class SymbolDesigner {
     this.renderList();
     this.renderProps();
     this.renderPreviewBar();
+    this.renderTools();
     this.redraw();
     if (this.dialog) this.renderTitle();
   }
 
   private renderList(): void {
-    const rows: HTMLElement[] = [];
-    const rowOf = (l: AnyLayer, p: LayerPath) => {
-      const on = h('input', { type: 'checkbox', checked: l.enabled !== false, 'aria-label': 'Çizilsin', title: typeof l.enabled === 'object' ? 'Koşula bağlı' : 'Çizilsin' });
-      on.addEventListener('click', (e) => e.stopPropagation());
-      on.addEventListener('change', () => {
-        this.snapshot('enabled');
-        this.putLayer(p, { ...l, enabled: on.checked ? undefined : false } as AnyLayer);
-        this.renderAll();
+    const rows = this.rows().map((p) => {
+      const l = layerAt(this.symbol, p);
+      if (!l) return null;
+      const conditional = typeof l.enabled === 'object' && l.enabled !== null;
+      const on = h('input', { type: 'checkbox', checked: l.enabled !== false, 'aria-label': 'Çizilsin', title: conditional ? 'Koşula bağlı: Görünür alanındaki ifade her nesnede karar verir' : 'Çizilsin' });
+      // A condition shows as neither on nor off; a click chooses the row, where Görünür edits it.
+      on.indeterminate = conditional;
+      on.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!conditional) return;
+        e.preventDefault();
+        this.choose(p);
       });
-      const selected = p.length === this.selected.length && p.every((v, i) => v === this.selected[i]);
+      on.addEventListener('change', () => {
+        if (conditional) return;
+        this.listEdit('enabled', (s) => ({ symbol: setEnabled(s, p, on.checked), selected: this.selected }));
+      });
+      const selected = same(p, this.selected);
       const r = h(
         'div',
         { class: `sdes__row${p.length === 2 ? ' sdes__row--child' : ''}`, role: 'option', 'aria-selected': String(selected), tabindex: selected ? '0' : '-1' },
@@ -300,23 +309,38 @@ class SymbolDesigner {
         h('span', { class: 'sdes__rlabel' }, LAYER_LABEL[l.type]),
         h('span', { class: 'sdes__rsum' }, summary(l)),
       );
-      r.addEventListener('click', () => {
-        this.selected = p;
-        this.renderList();
-        this.renderProps();
-      });
-      rows.push(r);
-    };
-    this.layers.forEach((l, i) => {
-      rowOf(l, [i]);
-      if (hasMarker(l)) l.marker.layers.forEach((m, j) => rowOf(m as AnyLayer, [i, j]));
+      r.addEventListener('click', () => this.choose(p));
+      return r;
     });
     replaceChildren(this.list, rows);
   }
 
+  private choose(p: LayerPath): void {
+    this.selected = p;
+    this.renderList();
+    this.renderProps();
+    this.renderTools();
+  }
+
+  /** The list's tools: each enabled when it can act, and saying why not. */
+  private renderTools(): void {
+    const s = this.symbol;
+    const exists = !!layerAt(s, this.selected);
+    const set = (b: HTMLButtonElement, on: boolean, why?: string) => {
+      b.disabled = !on;
+      if (why !== undefined) b.title = why;
+    };
+    set(this.tools.up, canMove(s, this.selected, -1));
+    set(this.tools.down, canMove(s, this.selected, 1));
+    set(this.tools.dup, exists);
+    set(this.tools.remove, canRemove(s, this.selected), canRemove(s, this.selected) || !exists ? 'Sil' : `Sil: ${T.lastLayer.toLocaleLowerCase('tr')}`);
+    set(this.tools.undo, this.past.length > 0);
+    set(this.tools.redo, this.future.length > 0);
+  }
+
   private renderProps(): void {
-    const l = this.layerAt(this.selected);
-    if (!l) return replaceChildren(this.props, h('p', { class: 'sdes__note' }, 'Bir katman seçin.'));
+    const l = layerAt(this.symbol, this.selected);
+    if (!l) return replaceChildren(this.props, h('p', { class: 'sdes__note' }, T.pickLayer));
     const lib = this.ctx.styles.library;
     const env: FormEnv = {
       palette: this.ctx.view.palette,
@@ -326,25 +350,27 @@ class SymbolDesigner {
         new Promise((resolve) => {
           void import('../svgedit/SvgEditor').then((m) => m.openSvgEditor(this.ctx, { id, onSaved: (saved) => resolve(saved) }));
         }),
-      context: this.selected.length === 2 ? 'marker' : this.draft.symbol.type,
+      context: this.selected.length === 2 ? 'marker' : this.symbol.type,
     };
     const p = this.selected;
     const form = layerForm(
       l,
       (patch) => {
-        const cur = this.layerAt(p);
+        const cur = layerAt(this.symbol, p);
         if (!cur) return;
         this.snapshot(`${p.join('.')}:${Object.keys(patch).join(',')}`);
-        this.putLayer(p, applyPatch(cur, patch));
+        this.draft.symbol = putLayer(this.symbol, p, applyPatch(cur, patch));
         // The form stays (focus is kept); list summaries and the preview follow.
         this.renderList();
+        this.renderTools();
         this.redraw();
         this.renderTitle();
         if ('type' in patch || 'placement' in patch || 'shape' in patch || 'dash' in patch || 'halo' in patch) queueMicrotask(() => this.keepFocus(() => this.renderProps()));
       },
       env,
     );
-    const title = h('div', { class: 'sdes__ptitle' }, h('span', null, LAYER_LABEL[l.type]), p.length === 2 ? h('span', { class: 'sdes__pctx' }, `${LAYER_LABEL[this.layers[p[0]].type]} işaretinde`) : null);
+    const parent = p.length === 2 ? (this.symbol.layers as readonly AnyLayer[])[p[0]] : null;
+    const title = h('div', { class: 'sdes__ptitle' }, h('span', null, LAYER_LABEL[l.type]), parent ? h('span', { class: 'sdes__pctx' }, T.inMarker(LAYER_LABEL[parent.type])) : null);
     replaceChildren(this.props, title, form);
   }
 
@@ -355,37 +381,40 @@ class SymbolDesigner {
     if (label) (this.props.querySelector(`[aria-label="${CSS.escape(label)}"]`) as HTMLElement | null)?.focus();
   }
 
+  private zoom(factor: number): void {
+    this.pxPerMm = zoomed(this.pxPerMm, factor);
+    this.renderPreviewBar();
+    this.redraw();
+  }
+
   private renderPreviewBar(): void {
-    const zoom = (f: number) => {
-      this.pxPerMm = Math.min(40, Math.max(1, this.pxPerMm * f));
-      this.renderPreviewBar();
-      this.redraw();
-    };
-    const b = (label: string, text: string, run: () => void) => {
-      const el = h('button', { class: 'ibtn', type: 'button', 'aria-label': label, title: label }, text);
+    const b = (label: string, text: string, run: () => void, enabled = true) => {
+      const el = h('button', { class: 'ibtn', type: 'button', 'aria-label': label, title: label, disabled: !enabled }, text);
       el.addEventListener('click', run);
       return el;
     };
-    const options = GEOMETRIES[this.draft.symbol.type];
+    const options = GEOMETRIES[this.symbol.type];
     replaceChildren(
       this.previewBar,
-      options.length > 1 ? segmented({ label: 'Örnek geometri', options, value: this.geometry, onChange: (v) => ((this.geometry = v), this.renderPreviewBar(), this.redraw()) }) : h('span', { class: 'sdes__note' }, 'Örnek: tek nokta'),
-      h('div', { class: 'dialog__foot-spacer' }),
-      b('Uzaklaş', '−', () => zoom(1 / 1.25)),
-      h('span', { class: 'sdes__zoom num', title: 'Kâğıt milimetresinin ekrandaki boyu' }, `1 mm = ${this.pxPerMm.toFixed(1)} px`),
-      b('Yakınlaş', '+', () => zoom(1.25)),
-      b('Gerçek boyut (96 dpi)', '1:1', () => ((this.pxPerMm = 96 / 25.4), this.renderPreviewBar(), this.redraw())),
+      options.length > 1 ? segmented({ label: 'Örnek geometri', options, value: this.geometry, onChange: (v) => ((this.geometry = v), this.renderPreviewBar(), this.redraw()) }) : h('span', { class: 'sdes__note' }, T.onePoint),
+      h(
+        'div',
+        { class: 'sdes__zoombar' },
+        b('Uzaklaş (tekerlek aşağı)', '−', () => this.zoom(1 / ZOOM.step), this.pxPerMm > ZOOM.min),
+        h('span', { class: 'sdes__zoom num', title: 'Kâğıt milimetresinin ekrandaki boyu' }, zoomText(this.pxPerMm)),
+        b('Yakınlaş (tekerlek yukarı)', '+', () => this.zoom(ZOOM.step), this.pxPerMm < ZOOM.max),
+        b('Gerçek boyut (96 dpi)', '1:1', () => ((this.pxPerMm = ZOOM.real), this.renderPreviewBar(), this.redraw())),
+      ),
     );
   }
 
   private redraw(): void {
     cancelAnimationFrame(this.frame);
-    this.frame = requestAnimationFrame(() => drawNow(this.ctx, this.canvas, this.draft.symbol, this.geometry, this.pxPerMm));
+    this.frame = requestAnimationFrame(() => drawNow(this.ctx, this.canvas, this.symbol, this.geometry, this.pxPerMm));
   }
 
   private renderTitle(): void {
-    const base = this.opts.inline ? `${this.opts.inline.title}: ${KIND_TITLE[this.draft.symbol.type].toLocaleLowerCase('tr')}` : `${KIND_TITLE[this.draft.symbol.type]} tasarımcısı`;
-    this.dialog.el.querySelector('.dialog__title')?.replaceChildren(`${base}${this.dirty ? ' •' : ''}`);
+    this.dialog.el.querySelector('.dialog__title')?.replaceChildren(designerTitle(this.symbol.type, this.opts.inline?.title ?? null, this.dirty));
   }
 
   private say(text: string, kind: 'ok' | 'warn' = 'ok'): void {
@@ -399,10 +428,13 @@ class SymbolDesigner {
     return JSON.stringify(this.draft) !== this.savedJson;
   }
 
-  /** Records the draft before a change; typing into one field within a second is one step. */
-  private snapshot(key: string): void {
+  /**
+   * Records the draft before a change. Typing into one field within a second
+   * is one step (`merge`); the list's edits are a step each.
+   */
+  private snapshot(key: string, merge = true): void {
     const now = performance.now();
-    if (key === this.lastEdit.key && now - this.lastEdit.at < 1000) {
+    if (merge && key === this.lastEdit.key && now - this.lastEdit.at < 1000) {
       this.lastEdit.at = now;
       return;
     }
@@ -412,11 +444,6 @@ class SymbolDesigner {
     this.future.length = 0;
   }
 
-  private touched(key: string): void {
-    this.snapshot(key);
-    this.renderTitle();
-  }
-
   private restore(json: string): void {
     const d = JSON.parse(json) as Draft;
     this.draft.name = d.name;
@@ -424,7 +451,7 @@ class SymbolDesigner {
     this.draft.symbol = d.symbol;
     this.nameInput.value = d.name;
     this.pathInput.value = d.path.join(' / ');
-    if (!this.layerAt(this.selected)) this.selected = [0];
+    if (!layerAt(this.symbol, this.selected)) this.selected = [0];
     this.lastEdit = { key: '', at: 0 };
     this.renderAll();
   }
@@ -446,32 +473,31 @@ class SymbolDesigner {
   // ── Saving ───────────────────────────────────────────────────────────
 
   private save(thenClose: boolean): boolean {
-    const issues = validateSymbol(this.draft.symbol);
+    const issues = validateSymbol(this.symbol);
     if (issues.length) {
-      this.say(`Kaydedilemedi: ${issues[0]}${issues.length > 1 ? ` (ve ${issues.length - 1} sorun daha)` : ''}`, 'warn');
+      this.say(T.notSaved(issues[0], issues.length - 1), 'warn');
       return false;
     }
     if (this.opts.inline) {
       this.savedJson = JSON.stringify(this.draft);
-      this.opts.inline.onDone(structuredClone(this.draft.symbol));
+      this.opts.inline.onDone(structuredClone(this.symbol));
       this.dialog.close();
       return true;
     }
     const lib = this.ctx.styles.library;
-    const name = this.draft.name.trim() || 'Adsız sembol';
-    const path = this.draft.path.length ? this.draft.path : ['Sembollerim'];
+    const { name, path } = savedAs(this.draft);
     let id: string;
     if (this.original) {
-      lib.update(this.original.id, { name, path, symbol: this.draft.symbol });
+      lib.update(this.original.id, { name, path, symbol: this.symbol });
       id = this.original.id;
     } else {
       id = newItemId(this.opts.source === 'project' ? 'p' : 'u');
-      lib.add(this.opts.source ?? 'user', { kind: 'symbol', id, name, path, symbol: this.draft.symbol });
+      lib.add(this.opts.source ?? 'user', { kind: 'symbol', id, name, path, symbol: this.symbol });
       this.original = lib.get(id) as LibrarySymbol;
     }
     this.savedJson = JSON.stringify(this.draft);
     this.renderTitle();
-    this.say(`“${name}” kaydedildi.`);
+    this.say(T.saved(name));
     this.opts.onSaved?.(id);
     if (thenClose) this.dialog.close();
     return true;
@@ -482,7 +508,7 @@ class SymbolDesigner {
     if (!this.dirty) return true;
     if (!this.asking) {
       this.asking = true;
-      const name = this.opts.inline ? this.opts.inline.title : this.draft.name.trim() || 'Adsız sembol';
+      const name = this.opts.inline ? this.opts.inline.title : savedAs(this.draft).name;
       void askUnsaved({ name, after: 'Pencere kapanırsa bu değişiklikler kaybolur.', verb: 'kapat', apply: !!this.opts.inline }).then((a) => {
         this.asking = false;
         if (a === 'discard') this.dialog.close();
@@ -524,3 +550,5 @@ class SymbolDesigner {
     });
   }
 }
+
+const same = (a: LayerPath, b: LayerPath) => a.length === b.length && a.every((v, i) => v === b[i]);

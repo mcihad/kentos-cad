@@ -346,6 +346,13 @@ impl App {
         }
         // 1. A dialog: Esc closes it; its own buttons do the rest.
         if self.dialog.is_some() {
+            // Sembol tasarımcısı's undo and ↑ ↓ (style/designer/).
+            if self.dialog == Some(crate::app::Dialog::SymbolDesigner)
+                && press.named() != Some(Named::Escape)
+                && let Some(task) = self.designer_key(&press)
+            {
+                return task;
+            }
             match press.named() {
                 // Projeyi paylaş: its question first, then the window; over
                 // the catalog, the catalog stays and reads its list again.

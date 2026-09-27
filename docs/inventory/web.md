@@ -60,7 +60,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 42 | 12 | 10 | 0 | 1 | 65 |
 | Tarayıcı depoları | 7 | 1 | 1 | 0 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 48 | 4 | 10 | 0 | 1 | 63 |
+| Pencereler ve paneller | 49 | 4 | 9 | 0 | 1 | 63 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -154,15 +154,14 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (14 / 63)
+#### Pencereler ve paneller (13 / 63)
 
 - `apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel` BottomPanel (kısmi) (masaüstünde: apps/desktop/src/bottom.rs (ADR 0058)) — Komut geçmişinin satırlarında saat yazmaz.
 - `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
 - `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.
 - `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, cloud/view.rs (ADR 0058, 0080)) — Web'in sunucu hücresi ve onun hesap menüsü yok; masaüstünde hesabın adı ve Çıkış ayrı hücrelerdir (ADR 0041). Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
-- `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager (kısmi) (masaüstünde: apps/desktop/src/style/manager/ (ADR 0092)) — Düzenle ve Yeni sembol sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar; ikisi masaüstüne henüz taşınmadı, düğmeleri soluk ve nedenini söyler.
-- `apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner` openSymbolDesigner
+- `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager (kısmi) (masaüstünde: apps/desktop/src/style/manager/ (ADR 0092)) — SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094).
 - `apps/web/src/ui/svgedit/SvgEditor.ts#openSvgEditor` openSvgEditor
 - `apps/web/src/ui/svgedit/svgDocProps.ts#openDocProps` openDocProps
 - `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog
