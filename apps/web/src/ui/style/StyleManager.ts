@@ -356,9 +356,12 @@ class StyleManager implements DetailsHost {
   /** Opens the SVG editor on a drawing of the library (a system one is saved as a copy) or a new one. */
   drawSvg(id?: string): void {
     const lib = this.ctx.styles.library;
+    // A new drawing goes to the Kitaplığım category open (else Çizimlerim).
+    const path = !id && this.at.source === 'user' && !this.query && this.at.path.length ? [...this.at.path] : undefined;
     void import('../svgedit/SvgEditor').then((m) =>
       m.openSvgEditor(this.ctx, {
         id,
+        path,
         onSaved: (saved) => {
           this.at = { source: lib.get(saved)?.source ?? 'user', path: lib.get(saved)?.path ?? [] };
           this.select(saved);

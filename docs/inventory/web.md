@@ -52,21 +52,21 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 144 | 0 | 3 | 15 | 5 | 167 |
+| Komutlar | 146 | 0 | 1 | 15 | 5 | 167 |
 | Araçlar | 56 | 0 | 0 | 2 | 0 | 58 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
-| Ayarlar | 53 | 3 | 0 | 0 | 9 | 65 |
-| Tarayıcı depoları | 8 | 0 | 1 | 0 | 1 | 10 |
+| Ayarlar | 55 | 1 | 0 | 0 | 9 | 65 |
+| Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 50 | 3 | 6 | 0 | 4 | 63 |
+| Pencereler ve paneller | 55 | 4 | 0 | 0 | 4 | 63 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
 - `.kcad` alanları (v1 okunur, v2 yazılır), bütünüyle: implemented — Masaüstü .kcad'i web'le aynı Rust kodeğiyle (crates/shared/kcad) okur ve yazar: v2 yazılır, v1 okunur; belge (kentos-domain) göçü web'in örnek dosyasıyla aynı çıkarır (crates/native/domain/tests/snapshot_v2.rs, ADR 0025).
 
-### Masaüstünde anlamsız (19)
+### Masaüstünde anlamsız (20)
 
 - Komutlar: `view.renderer.webgl2` WebGL2 — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
 - Komutlar: `view.renderer.webgpu` WebGPU — Masaüstü çizimi wgpu ile yapar; arka ucu (Vulkan, Metal, DirectX 12, OpenGL) wgpu seçer (ADR 0019). WebGL2 ile WebGPU tarayıcının seçenekleridir.
@@ -82,6 +82,7 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 - Ayarlar: `layout.toolboxX`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
 - Ayarlar: `layout.toolboxY`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
 - Ayarlar: `user.shell`  — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
+- Tarayıcı depoları: `kentos.invitation`  — Davet bağlantısı web uygulamasının adresidir; belirteci yalnız o tarayıcı sekmesinde tutulur (ADR 0042). Masaüstü davet eder, bağlantıyı açmaz; kabul edilen proje masaüstünün kataloğunda da görünür.
 - Tarayıcı depoları: `kentos.prefs.v1`  — Web'in tipli ayarlardan önceki deposudur; masaüstünün böyle eski bir deposu olmadı, ayarları baştan ayarlar.json'dadır.
 - Pencereler ve paneller: `apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog` openInvitationDialog — Davet bağlantısı web uygulamasının adresidir: açılır ve orada kabul edilir; kabul edilen proje masaüstünün kataloğunda da görünür. Masaüstü davet eder, bağlantı açmaz.
 - Pencereler ve paneller: `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar — Sahibin kararı (27 Eylül): masaüstünde yalnız şerit arayüzü vardır; klasik arayüz (menü çubuğu, araç çubuğu, kayan araç kutusu) yalnız web'dedir. Şerit her aracı ve komutu taşır.
@@ -92,10 +93,8 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (3 / 167; ayrıca 15 iki platformda da bekliyor)
+#### Komutlar (1 / 167; ayrıca 15 iki platformda da bekliyor)
 
-- `processing.newModel` Yeni model…
-- `style.svgEditor` SVG çizim düzenleyicisi…
 - `view.keyTips` Şerit harf ipuçları
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -131,31 +130,24 @@ Yok.
 - `disaster` Afet ve risk analizi (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 - `plan3d` İmar planından 3D kent tasarımı (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/modes.rs (menüde “Yakında”))
 
-#### Ayarlar (3 / 65)
+#### Ayarlar (1 / 65)
 
-- `layout.ribbonQuickAccess`  (kısmi) (masaüstünde: apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; quick_access_of taşındı, ADR 0115)) — Masaüstünde hızlı erişim çubuğuna komut eklenip çıkarılamıyor; şeridin sağ tık menüsüyle gelecek.
-- `layout.ribbonSplits`  (kısmi) (masaüstünde: apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; split_current taşındı, ADR 0115)) — Bölünmüş düğme son seçimi göstermiyor; şeridin kalan diliminde.
 - `user.uiFont`  (kısmi) (masaüstünde: ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)) — Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar.
 
-#### Tarayıcı depoları (1 / 10)
+#### Tarayıcı depoları (0 / 10)
 
-- `kentos.invitation`
+Yok.
 
 #### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 192)
 
 Yok.
 
-#### Pencereler ve paneller (9 / 63)
+#### Pencereler ve paneller (4 / 63)
 
-- `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
-- `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.
+- `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs, ribbon_bar.rs (ADR 0017, 0051, 0089, 0117)) — Harf ipuçları (F6, Alt) masaüstünde henüz yok; hızlı erişim çubuğu, sağ tık menüleri ve bölünmüş düğmenin son seçimi var (ADR 0117).
 - `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs (ADR 0058, 0080, 0113, 0114)) — Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
-- `apps/web/src/ui/style/StyleManager.ts#openStyleManager` openStyleManager (kısmi) (masaüstünde: apps/desktop/src/style/manager/ (ADR 0092)) — SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094).
-- `apps/web/src/ui/svgedit/SvgEditor.ts#openSvgEditor` openSvgEditor
-- `apps/web/src/ui/svgedit/svgDocProps.ts#openDocProps` openDocProps
-- `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog
-- `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog
-- `apps/web/src/ui/svgedit/svgTrace.ts#openTraceDialog` openTraceDialog
+- `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)) — PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır.
+- `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)) — Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır.
 
 ## Test başvurusu
 

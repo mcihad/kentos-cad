@@ -55,12 +55,7 @@ export interface FileHost {
   saveDrawing(): boolean;
 }
 
-export const fileSlug = (s: string) =>
-  s
-    .toLocaleLowerCase('tr')
-    .replace(/[çğıöşü]/g, (c) => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' })[c] ?? c)
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') || 'cizim';
+export { fileSlug } from './svgEditModel';
 
 export function download(blob: Blob, name: string): void {
   const url = URL.createObjectURL(blob);

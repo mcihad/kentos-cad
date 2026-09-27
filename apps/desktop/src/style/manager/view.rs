@@ -331,9 +331,8 @@ fn bar<'a>(m: &Manager, width: f32) -> Element<'a, Message> {
             .item("Çizgi sembolü", ev(Event::NewSymbol("line")))
             .item("İşaret sembolü", ev(Event::NewSymbol("marker")))
             .separator()
-            .item("SVG çizimi (düzenleyicide)…", None)
+            .item("SVG çizimi (düzenleyicide)…", ev(Event::NewDrawing))
             .icon(crate::icons::from_web(Some("edit")))
-            .detail(details::SVG_NOT_YET)
     });
     let import_menu = tip(
         MenuButton::new(menu_face("import", "İçe aktar", true), || {

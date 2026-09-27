@@ -210,6 +210,7 @@ pub const PORTED: &[&str] = &[
     "processing.run.attributes.calculate",
     "processing.run.selection.byExpression",
     "processing.model.builtin.parcelSheet",
+    "processing.newModel",
     "map.edgeLengths",
     // The dock's İşlemler tab: the toolbox and this session's runs (docs/adr/0084, part 2).
     "processing.toolbox",
@@ -229,6 +230,8 @@ pub const PORTED: &[&str] = &[
     "style.clearSymbol",
     // Lejant, saved as a PNG on white paper (docs/adr/0093).
     "style.legend",
+    // SVG çizim düzenleyicisi, its import, export, document properties and tracing (docs/adr/0095).
+    "style.svgEditor",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the
@@ -401,8 +404,13 @@ pub enum Item {
     /// A command button, large or small.
     Command { id: &'static str, large: bool },
     /// A family of tools behind one button (Dikdörtgen ▾), or one tool's
-    /// methods (Daire ▾: 2 nokta, 3 nokta …): the first is shown.
-    Split { entries: Vec<Entry>, large: bool },
+    /// methods (Daire ▾: 2 nokta, 3 nokta …): the last chosen is shown
+    /// (the layout's `ribbonSplits`, by `key`: the family or the tool).
+    Split {
+        key: &'static str,
+        entries: Vec<Entry>,
+        large: bool,
+    },
     /// A drop-down button with a submenu of commands.
     Menu {
         label: &'static str,
@@ -419,12 +427,16 @@ pub enum Item {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
     pub id: &'static str,
+    /// The button's text: the tool's name (a method does not rename it).
+    pub title: &'static str,
     /// Its name in the menu: a family's tool by its title (`Düzgün çokgen`),
     /// a method by its own (`2 nokta`).
     pub label: &'static str,
     /// What a method gives the tool once it runs, as if typed (`2N`); none
     /// for a tool's default method and for a family's tools.
     pub option: Option<&'static str>,
+    /// What it does (the method's hint).
+    pub description: Option<&'static str>,
 }
 
 /// The catalog: commands by id and the ribbon.
@@ -650,15 +662,21 @@ fn item(raw: RawItem) -> Item {
             id: leak(command),
             large: large(&size),
         },
-        RawItem::Split { split, size } => Item::Split {
+        RawItem::Split { split, key, size } => Item::Split {
             entries: split
                 .into_iter()
-                .map(|s| Entry {
-                    id: leak(s.command),
-                    label: leak(s.label),
-                    option: s.option.map(leak),
+                .map(|s| {
+                    let label = leak(s.label);
+                    Entry {
+                        id: leak(s.command),
+                        title: s.title.map_or(label, leak),
+                        label,
+                        option: s.option.map(leak),
+                        description: s.description.map(leak),
+                    }
                 })
                 .collect(),
+            key: leak(key),
             large: large(&size),
         },
         RawItem::Menu { menu, size, blocks } => Item::Menu {
@@ -813,6 +831,9 @@ enum RawItem {
     },
     Split {
         split: Vec<RawSplit>,
+        /// The button's key: the tools' family, or the tool with methods.
+        #[serde(default)]
+        key: String,
         size: String,
     },
     Menu {
@@ -830,7 +851,11 @@ struct RawSplit {
     command: String,
     label: String,
     #[serde(default)]
+    title: Option<String>,
+    #[serde(default)]
     option: Option<String>,
+    #[serde(default)]
+    description: Option<String>,
 }
 
 #[derive(Deserialize)]

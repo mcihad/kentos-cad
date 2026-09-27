@@ -190,6 +190,38 @@ fn draw_picture(pixmap: &mut Pixmap, picture: &Picture, at: Transform, w: f32, h
     }
 }
 
+/// A picture drawn filling `width` × `height` pixels, on `background` or
+/// transparent, as straight-alpha RGBA: the SVG editor's PNG export and the
+/// pixels it traces (no side limit but the one the caller keeps).
+pub fn picture_pixels(
+    picture: &Picture,
+    width: u32,
+    height: u32,
+    background: Option<[u8; 4]>,
+) -> Option<Vec<u8>> {
+    let mut p = Pixmap::new(width.max(1), height.max(1))?;
+    if let Some([r, g, b, a]) = background {
+        p.fill(tiny_skia::Color::from_rgba8(r, g, b, a));
+    }
+    draw_picture(
+        &mut p,
+        picture,
+        Transform::identity(),
+        width.max(1) as f32,
+        height.max(1) as f32,
+    );
+    let mut out = p.take();
+    for px in out.chunks_exact_mut(4) {
+        let a = u32::from(px[3]);
+        if a > 0 && a < 255 {
+            for c in &mut px[..3] {
+                *c = ((u32::from(*c) * 255 + a / 2) / a).min(255) as u8;
+            }
+        }
+    }
+    Some(out)
+}
+
 fn padded(w: u32, h: u32) -> Option<Pixmap> {
     Pixmap::new(w + 2 * PAD, h + 2 * PAD)
 }

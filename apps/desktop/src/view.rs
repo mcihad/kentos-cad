@@ -35,11 +35,13 @@ use kentos_ui::widget::{
 
 use crate::app::{App, COMMAND_INPUT, Dialog as Asking, Message, Panel};
 use crate::catalog::{
-    Command, Entry, Item, Launcher, LauncherTarget, Panel as RibbonPanel, Standing, catalog,
+    Command, Item, Launcher, LauncherTarget, Panel as RibbonPanel, Standing, catalog,
 };
 use crate::document::{Document, crs_name};
 use crate::marks::Marks;
 use crate::preview;
+use crate::ribbon_bar::rows_menu;
+use crate::ribbon_plan;
 use crate::viewport::mark_colors;
 
 impl App {
@@ -107,11 +109,27 @@ impl App {
             // dot before it while unsaved), the coordinate system, Tam ekran
             // and Yardım (docs/adr/0064).
             .trailing(self.tab_row_end());
-        for command in catalog.quick().iter().filter_map(|id| catalog.get(id)) {
+        // The quick access bar: the fixed three and what the user added
+        // (ribbon_bar.rs, docs/adr/0117); a right click on a button takes it
+        // off, the ▾ lists the bar and the offers.
+        let bar = self.quick_bar();
+        let folded = self.ribbon_collapsed;
+        for command in bar.iter().filter_map(|id| catalog.get(id)) {
             // Undo and redo are dimmed with no step to take (web: isEnabled).
             let on_press = enabled(command).filter(|_| self.available(command.id));
-            ribbon = ribbon.quick(command.icon, command.title, on_press);
+            let menu = ribbon_plan::command_menu(command.id, &bar);
+            ribbon = ribbon.quick_with_menu(command.icon, command.title, on_press, move || {
+                rows_menu(&menu, folded)
+            });
         }
+        let offers = ribbon_plan::quick_access_menu(&bar, |id| catalog.get(id).is_some());
+        ribbon = ribbon
+            .quick_menu(move || rows_menu(&offers, folded))
+            .quick_menu_tip(
+                Tip::new(ribbon_plan::texts::CUSTOMIZE).body(ribbon_plan::texts::CUSTOMIZE_TIP),
+            )
+            // Anywhere else on the ribbon: the fold (a tab, a panel's title, empty space).
+            .context_menu(move || rows_menu(&ribbon_plan::ribbon_menu(), folded));
         // The drawing's work mode decides the tabs and their panels (modes.rs).
         let shown = self.shown_tab();
         for tab in self.ribbon_tabs() {
@@ -231,6 +249,8 @@ impl App {
                 ),
                 iced::widget::tooltip::Position::Bottom,
             );
+            // A text field keeps the ribbon's menu away (docs/specs/ribbon.md §3).
+            let search = iced::widget::mouse_area(search).on_right_press(Message::Swallowed);
             let mut row = row![
                 container(document_title(&name, title.as_ref().is_some_and(|t| t.1)))
                     .width(Fill)
@@ -313,6 +333,13 @@ impl App {
 
     pub(crate) fn ribbon_button(&self, item: &Item) -> Option<Button<'static, Message>> {
         let catalog = catalog();
+        let bar = self.quick_bar();
+        let folded = self.ribbon_collapsed;
+        // A right click on a command: the quick access bar, then the fold (docs/adr/0117).
+        let context = |id: &'static str| {
+            let menu = ribbon_plan::command_menu(id, &bar);
+            move || rows_menu(&menu, folded)
+        };
         let make = |command: &Command, large: bool| {
             let button = if large {
                 Button::large(command.icon, command.short)
@@ -332,18 +359,69 @@ impl App {
                 .flash(self.ribbon_flash == Some(command.id))
         };
         match item {
-            Item::Command { id, large } => Some(make(catalog.get(id)?, *large)),
-            Item::Split { entries, large } => {
-                let first = catalog.get(entries.first()?.id)?;
+            Item::Command { id, large } => {
+                let command = catalog.get(id)?;
+                Some(make(command, *large).context(context(command.id)))
+            }
+            Item::Split {
+                key,
+                entries,
+                large,
+            } => {
+                // The entry last chosen from the list is on top (ribbonSplits, docs/adr/0117).
+                let top = self.split_on_top(key, entries)?;
+                let command = catalog.get(top.id)?;
                 let ids: Vec<&'static str> = entries.iter().map(|e| e.id).collect();
                 // One of the family running lights the split's action (DESIGN.md §7.3.1);
                 // one of it shown by Komut ara outlines the split.
                 let running = ids.iter().any(|id| self.running(id));
                 let flash = self.ribbon_flash.is_some_and(|id| ids.contains(&id));
-                let button = make(first, *large).active(running).flash(flash);
+                let (label, aria) = ribbon_plan::split_face(&crate::ribbon_bar::split_entry(top));
+                let face = if *large {
+                    Button::large(command.icon, label)
+                } else {
+                    Button::small(command.icon, label)
+                };
+                // Pressing the top runs its entry and keeps the choice as it is.
+                let run = enabled(command)
+                    .filter(|_| self.available(command.id))
+                    .map(|run| match top.option {
+                        Some(option) => Message::RunMethod {
+                            id: command.id,
+                            option,
+                            label: top.label,
+                        },
+                        None => run,
+                    });
+                let names: Vec<&str> = entries.iter().map(|e| e.label).collect();
+                let tip_of = match self.why_disabled(command.id) {
+                    Some(why) => Tip::new(aria).body(why),
+                    None => {
+                        let what = top
+                            .description
+                            .map_or_else(|| command.note(), str::to_owned);
+                        let tip = Tip::new(aria).body(format!(
+                            "{what}\n\n{}: {}",
+                            ribbon_plan::texts::others(top.title.trim_end_matches('…')),
+                            names.join(" · ")
+                        ));
+                        match command.shortcuts.first() {
+                            Some(keys) => tip.detail(*keys),
+                            None => tip,
+                        }
+                    }
+                };
+                let button = face
+                    .on_press_maybe(run)
+                    .tip(tip_of)
+                    .on(self.checked(command.id).unwrap_or(false))
+                    .active(running)
+                    .flash(flash)
+                    .context(context(command.id));
+                let key = *key;
                 let entries = entries.clone();
-                let menu = move || split_menu(&entries);
-                Some(with_family(button, &ids, first.title, menu))
+                let menu = move || crate::ribbon_bar::split_list(key, &entries);
+                Some(with_family(button, &ids, command.title, menu))
             }
             Item::Menu { label, ids, large } => {
                 let icon = ids
@@ -934,6 +1012,8 @@ impl App {
             Asking::StyleManager => self.style_manager_view(),
             Asking::Legend => self.legend_view(),
             Asking::SymbolDesigner => self.designer_view(),
+            Asking::ModelDesigner => self.model_designer_view(),
+            Asking::SvgEditor => self.svgedit_view(),
         }
     }
 }
@@ -961,36 +1041,6 @@ fn with_family(
             "{}.\n\nWeb'de var; masaüstüne henüz taşınmadı.",
             names.join(", ")
         )))
-}
-
-/// A split button's menu as the web's `splitControl` lists it (docs/adr/0032):
-/// a family's tools by their titles; one tool's methods under the tool's
-/// name (Daire: Merkez, yarıçap / 2 nokta / …), each starting the tool with
-/// its option.
-fn split_menu(entries: &[Entry]) -> Menu<Message> {
-    let methods = entries.windows(2).all(|pair| pair[0].id == pair[1].id);
-    let head = match entries.first().and_then(|e| catalog().get(e.id)) {
-        Some(tool) if methods => Menu::new().header(tool.title),
-        _ => Menu::new(),
-    };
-    entries
-        .iter()
-        .filter_map(|entry| Some((entry, catalog().get(entry.id)?)))
-        .fold(head, |menu, (entry, command)| {
-            let run = enabled(command).map(|run| match entry.option {
-                Some(option) => Message::RunMethod {
-                    id: command.id,
-                    option,
-                    label: entry.label,
-                },
-                None => run,
-            });
-            let menu = menu.item(entry.label, run).icon(command.icon);
-            match command.shortcuts.first() {
-                Some(keys) => menu.shortcut(*keys),
-                None => menu,
-            }
-        })
 }
 
 /// A drop-down's commands; one with an on or off state shows it checked.

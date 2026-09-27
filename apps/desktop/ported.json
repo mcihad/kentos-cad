@@ -132,6 +132,7 @@
     "processing.run.attributes.calculate",
     "processing.run.selection.byExpression",
     "processing.model.builtin.parcelSheet",
+    "processing.newModel",
     "map.edgeLengths",
     "processing.toolbox",
     "processing.history",
@@ -143,7 +144,8 @@
     "style.manager",
     "style.assign",
     "style.clearSymbol",
-    "style.legend"
+    "style.legend",
+    "style.svgEditor"
   ],
   "format": "kentos.desktop-ported",
   "version": 1

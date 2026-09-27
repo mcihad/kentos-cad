@@ -289,6 +289,16 @@ pub fn svg_elements(markup: &str) -> usize {
     svg::parse(markup).len()
 }
 
+/// Bir ikonu tuval çerçevesinde `at` dikdörtgenine çizer (kendi resmini
+/// tuvalde çizen bileşenler için, ör. bir diyagramın kutuları). Iced'in
+/// `with_clip`'i koordinatları kaydırmadığı için yer burada verilir.
+pub fn draw(frame: &mut canvas::Frame, icon: Icon, color: Color, at: iced::Rectangle) {
+    frame.with_save(|f| {
+        f.translate(iced::Vector::new(at.x, at.y));
+        draw::icon_sized(f, icon, color, None, at.size());
+    });
+}
+
 /// Varsayılan (16 piksel, miras renkli) bir ikon oluşturur.
 pub fn icon(icon: Icon) -> Glyph {
     Glyph {

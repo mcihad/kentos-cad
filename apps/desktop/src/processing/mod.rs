@@ -14,6 +14,7 @@
 //! - Each tool's last values outlive the program in `islemler.json`
 //!   ([`memory`]).
 
+pub(crate) mod designer;
 pub mod dialog;
 mod fields;
 pub mod memory;
@@ -41,7 +42,7 @@ pub fn answers(id: &str) -> bool {
         || id.starts_with("processing.model.")
         || matches!(
             id,
-            "map.edgeLengths" | "processing.toolbox" | "processing.history"
+            "map.edgeLengths" | "processing.toolbox" | "processing.history" | "processing.newModel"
         )
 }
 
@@ -53,7 +54,9 @@ pub struct Processing {
     /// The open window.
     pub dialog: Option<ToolDialog>,
     /// The window put away while its field is picked on the drawing (Sahneden seç).
-    picking: Option<Picking>,
+    pub(crate) picking: Option<Picking>,
+    /// Model tasarımcısı (designer/, docs/adr/0116).
+    pub(crate) designer: Option<Box<designer::Designer>>,
     /// The dock's İşlemler tab.
     pub panel: panel::PanelState,
 }
@@ -66,13 +69,21 @@ impl Default for Processing {
             memory: memory::Memory::temporary(),
             dialog: None,
             picking: None,
+            designer: None,
             panel: panel::PanelState::default(),
         }
     }
 }
 
 /// A field picked on the drawing while its window steps aside (docs/adr/0088).
-enum Picking {
+pub(crate) enum Picking {
+    /// A point for a model designer's step, its draft kept aside.
+    Designer {
+        designer: Box<designer::Designer>,
+        step: String,
+        name: String,
+        then: Option<(String, String)>,
+    },
     /// A point parameter's point; `then`: the choice and option it also chooses.
     Point {
         window: ToolDialog,
@@ -207,6 +218,10 @@ impl App {
                 crate::app::Panel::Processing,
                 kentos_ui::widget::docking::Side::Right,
             );
+            return Task::none();
+        }
+        if id == "processing.newModel" {
+            self.open_model_designer(None);
             return Task::none();
         }
         let tool = if id == "map.edgeLengths" {
@@ -479,12 +494,24 @@ impl App {
     /// The point shown, or none (Esc): the window opens again as it was.
     /// Returns false when no processing window was waiting for it.
     pub(crate) fn processing_picked(&mut self, p: Option<Vec2>) -> bool {
+        let picking = self.processing.picking.take();
+        if let Some(Picking::Designer {
+            designer,
+            step,
+            name,
+            then,
+        }) = picking
+        {
+            self.designer_picked(designer, step, name, then, p);
+            return true;
+        }
         let Some(Picking::Point {
             mut window,
             name,
             then,
-        }) = self.processing.picking.take()
+        }) = picking
         else {
+            self.processing.picking = picking;
             return false;
         };
         if let Some(p) = p {

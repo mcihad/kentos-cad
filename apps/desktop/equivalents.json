@@ -145,16 +145,8 @@
       "desktop": "implemented",
       "where": "apps/desktop/src/view.rs, layout.rs (yerlesim.json, ADR 0115)"
     },
-    "layout.ribbonQuickAccess": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; quick_access_of taşındı, ADR 0115)",
-      "reason": "Masaüstünde hızlı erişim çubuğuna komut eklenip çıkarılamıyor; şeridin sağ tık menüsüyle gelecek."
-    },
-    "layout.ribbonSplits": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; split_current taşındı, ADR 0115)",
-      "reason": "Bölünmüş düğme son seçimi göstermiyor; şeridin kalan diliminde."
-    },
+    "layout.ribbonQuickAccess": { "desktop": "implemented", "where": "apps/desktop/src/ribbon_bar.rs, layout.rs (çubuğun ▾ menüsü ve sağ tıkla ekleme ya da çıkarma, yerlesim.json'da; ADR 0117)" },
+    "layout.ribbonSplits": { "desktop": "implemented", "where": "apps/desktop/src/ribbon_bar.rs, layout.rs (bölünmüş düğmenin üstünde son seçilen girdi, yerlesim.json'da; ADR 0117)" },
     "layout.ribbonTab": {
       "desktop": "implemented",
       "where": "apps/desktop/src/modes.rs, layout.rs (açılışta saklanan sekme, yoksa Giriş; yerlesim.json, ADR 0115)"
@@ -168,6 +160,7 @@
     "kentos.cloud/drafts": { "desktop": "implemented", "where": "$XDG_DATA_HOME/kentos-cad/bulut-taslak (ADR 0040, 0043)" },
     "kentos.files/recent": { "desktop": "implemented", "where": "$XDG_STATE_HOME/kentos-cad/son-dosyalar.json (ADR 0050)" },
     "kentos.processing.v1": { "desktop": "implemented", "where": "$XDG_STATE_HOME/kentos-cad/islemler.json (ADR 0084)" },
+    "kentos.invitation": { "desktop": "n/a", "reason": "Davet bağlantısı web uygulamasının adresidir; belirteci yalnız o tarayıcı sekmesinde tutulur (ADR 0042). Masaüstü davet eder, bağlantıyı açmaz; kabul edilen proje masaüstünün kataloğunda da görünür." },
     "kentos.settings.v1": { "desktop": "implemented", "where": "~/.config/kentos-cad/ayarlar.json (ADR 0023)" },
     "kentos.settings.v1.backup": { "desktop": "implemented", "where": "~/.config/kentos-cad/ayarlar-yedek-<zaman>.json (apps/desktop/src/settings.rs)" },
     "kentos.styles.v1": { "desktop": "implemented", "where": "$XDG_DATA_HOME/kentos-cad/kitaplik.kstil, okunamayan kitaplik-okunamadi-<zaman>.kstil olarak ayrılır (ADR 0092)" },
@@ -230,11 +223,12 @@
     "apps/web/src/ui/processing/ProcessingPanel.ts#ProcessingPanel": { "desktop": "implemented", "where": "apps/desktop/src/processing/panel.rs (ADR 0084)" },
     "apps/web/src/ui/processing/ToolDialog.ts#openModelDialog": { "desktop": "implemented", "where": "apps/desktop/src/processing/window.rs (ADR 0084)" },
     "apps/web/src/ui/processing/ToolDialog.ts#openToolDialog": { "desktop": "implemented", "where": "apps/desktop/src/processing/window.rs (ADR 0084, 0088)" },
+    "apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner": { "desktop": "implemented", "where": "apps/desktop/src/processing/designer/ (ADR 0116)" },
     "apps/web/src/ui/properties/PropertiesPanel.ts#PropertiesPanel": { "desktop": "implemented", "where": "apps/desktop/src/properties/ (ADR 0063, 0066)" },
     "apps/web/src/ui/ribbon/Ribbon.ts#Ribbon": {
       "desktop": "partial",
-      "where": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)",
-      "reason": "Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok."
+      "where": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs, ribbon_bar.rs (ADR 0017, 0051, 0089, 0117)",
+      "reason": "Harf ipuçları (F6, Alt) masaüstünde henüz yok; hızlı erişim çubuğu, sağ tık menüleri ve bölünmüş düğmenin son seçimi var (ADR 0117)."
     },
     "apps/web/src/ui/settings/AppSettingsDialog.ts#openAppSettings": { "desktop": "implemented", "where": "apps/desktop/src/settings_view.rs (ADR 0023)" },
     "apps/web/src/ui/settings/NewProjectDialog.ts#openNewProjectDialog": { "desktop": "implemented", "where": "apps/desktop/src/project/new.rs (ADR 0049)" },
@@ -248,11 +242,20 @@
     "apps/web/src/ui/statusbar/StatusBar.ts#StatusBar": { "desktop": "partial", "where": "apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs (ADR 0058, 0080, 0113, 0114)", "reason": "Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)." },
     "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle": { "desktop": "implemented", "where": "apps/desktop/src/style/layer_style/ (ADR 0091)" },
     "apps/web/src/ui/style/LegendDialog.ts#openLegend": { "desktop": "implemented", "where": "apps/desktop/src/style/legend/ (ADR 0093)" },
-    "apps/web/src/ui/style/StyleManager.ts#openStyleManager": {
+    "apps/web/src/ui/style/StyleManager.ts#openStyleManager": { "desktop": "implemented", "where": "apps/desktop/src/style/manager/ (ADR 0092; Düzenle ve Yeni sembol Sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar, ADR 0094, 0095)" },
+    "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner": { "desktop": "implemented", "where": "apps/desktop/src/style/designer/ (ADR 0094)" },
+    "apps/web/src/ui/svgedit/SvgEditor.ts#openSvgEditor": { "desktop": "implemented", "where": "apps/desktop/src/style/svgedit/ (ADR 0095)" },
+    "apps/web/src/ui/svgedit/svgDocProps.ts#openDocProps": { "desktop": "implemented", "where": "apps/desktop/src/style/svgedit/files/docprops.rs (ADR 0095)" },
+    "apps/web/src/ui/svgedit/svgExport.ts#openExportDialog": {
       "desktop": "partial",
-      "where": "apps/desktop/src/style/manager/ (ADR 0092)",
-      "reason": "SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094)."
+      "where": "apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)",
+      "reason": "PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır."
     },
-    "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner": { "desktop": "implemented", "where": "apps/desktop/src/style/designer/ (ADR 0094)" }
+    "apps/web/src/ui/svgedit/svgImport.ts#openImportDialog": {
+      "desktop": "partial",
+      "where": "apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)",
+      "reason": "Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır."
+    },
+    "apps/web/src/ui/svgedit/svgTrace.ts#openTraceDialog": { "desktop": "implemented", "where": "apps/desktop/src/style/svgedit/files/trace.rs (ADR 0095)" }
   }
 }

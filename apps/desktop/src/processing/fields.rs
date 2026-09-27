@@ -28,13 +28,16 @@ use super::Event;
 use super::dialog::ToolDialog;
 use crate::app::Message;
 
-fn ev(e: Event) -> Message {
-    Message::Processing(e)
-}
-
 /// What a control reads besides its own parameter.
 pub(super) struct Env<'a, 'b> {
     pub window: &'a ToolDialog,
+    /// Where the control's events go: the tool's window, or the model
+    /// designer's fixed value (processing/designer).
+    pub send: fn(Event) -> Message,
+    /// Sahneden seç beside a features field (the web's designer offers none).
+    pub pick_objects: bool,
+    /// İfade oluşturucu beside an expression field.
+    pub builder: bool,
     pub doc: &'a kentos_domain::Document,
     pub format: &'b Format,
     /// A layer style's colour on the screen (hex or a theme token).
@@ -74,6 +77,7 @@ impl fmt::Display for Option_<'_> {
 
 /// The control of a parameter.
 pub(super) fn control<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
+    let ev = env.send;
     match &def.kind {
         ParamKind::Features { kinds, scopes, .. } => {
             features(def, kinds.as_deref(), scopes.as_deref(), env)
@@ -125,6 +129,7 @@ fn input<'a>(
     placeholder: &str,
     value: &str,
     invalid: bool,
+    ev: fn(Event) -> Message,
 ) -> iced::widget::TextInput<'a, Message> {
     text_input(placeholder, value)
         .padding([5, 8])
@@ -140,6 +145,7 @@ fn features<'a>(
     scopes: Option<&'a [ScopeKind]>,
     env: &Env<'a, '_>,
 ) -> Element<'a, Message> {
+    let ev = env.send;
     let value = FeaturesValue::read(env.value(&def.name))
         .unwrap_or_else(|| FeaturesValue::scope(Scope::Selection));
     let offered = scopes_of(scopes);
@@ -152,25 +158,30 @@ fn features<'a>(
     };
     let name = def.name.clone();
     let mut parts = Column::new().spacing(8).width(Fill);
-    parts = parts.push(
-        row![
-            Segmented::new(
-                offered.iter().copied().map(ScopeButton),
-                ScopeButton(chosen),
-                move |s| ev(Event::Scope(name.clone(), s.0.id().into())),
-            )
-            .width(Fill),
-            tip(
-                pick_button(Some("Sahneden seç"), ev(Event::PickObjects(def.name.clone())), false),
-                Tip::new("Sahneden seç").body(
-                    "Nesneleri çizimde tıklayarak ya da pencereyle seçin; Enter bitirir, Esc vazgeçer.",
-                ),
-                iced::widget::tooltip::Position::Top,
+    let mut scope_row = row![
+        Segmented::new(
+            offered.iter().copied().map(ScopeButton),
+            ScopeButton(chosen),
+            move |s| ev(Event::Scope(name.clone(), s.0.id().into())),
+        )
+        .width(Fill),
+    ]
+    .spacing(6)
+    .align_y(Center);
+    if env.pick_objects {
+        scope_row = scope_row.push(tip(
+            pick_button(
+                Some("Sahneden seç"),
+                ev(Event::PickObjects(def.name.clone())),
+                false,
             ),
-        ]
-        .spacing(6)
-        .align_y(Center),
-    );
+            Tip::new("Sahneden seç").body(
+                "Nesneleri çizimde tıklayarak ya da pencereyle seçin; Enter bitirir, Esc vazgeçer.",
+            ),
+            iced::widget::tooltip::Position::Top,
+        ));
+    }
+    parts = parts.push(scope_row);
     if let Scope::Layer(id) = &value.scope {
         let leaves = env.doc.layers().leaves();
         let ids: Vec<String> = leaves.iter().map(|l| l.id.clone()).collect();
@@ -249,12 +260,13 @@ fn features<'a>(
 }
 
 fn number<'a>(def: &'a ParamDef, unit: &'a str, env: &Env<'a, '_>) -> Element<'a, Message> {
+    let ev = env.send;
     let v = env.value(&def.name);
     let typed = env.window.numbers.get(&def.name).cloned();
     let shown = typed.unwrap_or_else(|| v.as_f64().map(js_number).unwrap_or_default());
     let invalid = v.as_f64().is_none_or(|n| !n.is_finite());
     let name = def.name.clone();
-    let field = input("", &shown, invalid)
+    let field = input("", &shown, invalid, ev)
         .on_input(move |t| ev(Event::Number(name.clone(), t)))
         .font(typography::mono())
         .align_x(Alignment::End)
@@ -272,10 +284,11 @@ fn text<'a>(
     max_length: Option<usize>,
     env: &Env<'a, '_>,
 ) -> Element<'a, Message> {
+    let ev = env.send;
     let value = env.value(&def.name).as_str().unwrap_or("");
     let invalid = env.window.issue_of(&def.name).is_some();
     let name = def.name.clone();
-    let field = input(placeholder.unwrap_or(""), value, invalid)
+    let field = input(placeholder.unwrap_or(""), value, invalid, ev)
         .on_input(move |t| ev(Event::Text(name.clone(), t)));
     // A one or two letter field is short and centred (the web's `pfield__text--short`).
     if max_length.is_some_and(|m| m <= 2) {
@@ -294,6 +307,7 @@ fn choice<'a>(
     options: &'a [EnumOption],
     env: &Env<'a, '_>,
 ) -> Element<'a, Message> {
+    let ev = env.send;
     let value = env.value(&def.name).as_str().unwrap_or("");
     let chosen = options.iter().position(|o| o.value == value);
     let name = def.name.clone();
@@ -341,6 +355,7 @@ fn choice<'a>(
 
 /// The target layer: a new one (named below) or an existing, unlocked one.
 fn layer<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
+    let ev = env.send;
     let layers = env.doc.layers();
     let value = LayerValue::read(env.value(&def.name));
     let suggested = match &def.default {
@@ -394,13 +409,14 @@ fn layer<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
         return list.into();
     }
     let name = def.name.clone();
-    let field = input("Yeni katmanın adı", &new_name, false)
+    let field = input("Yeni katmanın adı", &new_name, false, ev)
         .on_input(move |t| ev(Event::LayerName(name.clone(), t)))
         .width(Fill);
     column![list, field].spacing(8).width(Fill).into()
 }
 
 fn point_field<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
+    let ev = env.send;
     let p = point(env.value(&def.name));
     let coord = match p {
         Some(p) => label::mono(env.format.point(kentos_interaction::Vec2::new(p.x, p.y))),
@@ -450,6 +466,7 @@ fn field<'a>(
     allow_new: bool,
     env: &Env<'a, '_>,
 ) -> Element<'a, Message> {
+    let ev = env.send;
     let value = env.value(&def.name).as_str().unwrap_or("").to_owned();
     let fields: Vec<(String, usize)> = env
         .window
@@ -494,7 +511,7 @@ fn field<'a>(
     let combo: Element<'a, Message> = if allow_new {
         let name = def.name.clone();
         row![
-            input("Alan adı", &value, invalid)
+            input("Alan adı", &value, invalid, ev)
                 .on_input(move |t| ev(Event::Text(name.clone(), t)))
                 .width(Fill),
             open
@@ -555,25 +572,28 @@ fn expression<'a>(
     placeholder: Option<&'a str>,
     env: &Env<'a, '_>,
 ) -> Element<'a, Message> {
+    let ev = env.send;
     let value = env.value(&def.name).as_str().unwrap_or("");
     let invalid = env.window.issue_of(&def.name).is_some();
     let name = def.name.clone();
-    let line = input(placeholder.unwrap_or(""), value, invalid)
+    let line = input(placeholder.unwrap_or(""), value, invalid, ev)
         .on_input(move |t| ev(Event::Text(name.clone(), t)))
         .font(typography::mono())
         .width(Fill);
     // İfade oluşturucu on this field's text (expression/, DESIGN.md §7.16).
-    let open = tip(
-        button(icon(crate::icons::from_web(Some("expression"))).size(16.0))
-            .padding([4, 6])
-            .style(style::button::secondary)
-            .on_press(Message::Builder(crate::expression::Event::OpenProcessing(
-                def.name.clone(),
-            ))),
-        Tip::new("İfade oluşturucu…"),
-        iced::widget::tooltip::Position::Top,
-    );
-    let line = row![line, open].spacing(6).align_y(Center);
+    let mut line = row![line].spacing(6).align_y(Center);
+    if env.builder {
+        line = line.push(tip(
+            button(icon(crate::icons::from_web(Some("expression"))).size(16.0))
+                .padding([4, 6])
+                .style(style::button::secondary)
+                .on_press(Message::Builder(crate::expression::Event::OpenProcessing(
+                    def.name.clone(),
+                ))),
+            Tip::new("İfade oluşturucu…"),
+            iced::widget::tooltip::Position::Top,
+        ));
+    }
     let fields: Vec<(String, usize)> = of
         .and_then(|of| env.window.inputs.get(of))
         .map(|s| s.fields.clone())

@@ -248,6 +248,13 @@ impl App {
                 None => {}
             },
             Event::ImportAsset(key) => return pick_asset_file(key),
+            Event::DrawSvg(key, id) => {
+                self.open_svg_editor(crate::style::svgedit::Opening {
+                    id,
+                    path: None,
+                    after: crate::style::svgedit::After::Designer(key),
+                });
+            }
             Event::AssetPicked(_, None) => {}
             Event::AssetPicked(key, Some((name, bytes))) => self.take_asset(&key, &name, &bytes),
         }
@@ -392,7 +399,7 @@ fn pick_asset_file(key: String) -> Task<Message> {
 
 /// Finds the field holding the keyboard: its id when it has one, and
 /// whether any does (a field without an id still keeps ↑ ↓ from the list).
-fn focused() -> impl Operation<Focus> {
+pub(crate) fn focused() -> impl Operation<Focus> {
     use iced::Rectangle;
 
     struct Find(Focus);

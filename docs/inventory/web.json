@@ -74,14 +74,14 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 144,
+    "commandsOnDesktop": 146,
     "desktop": {
       "commands": {
         "total": 167,
-        "implemented": 144,
+        "implemented": 146,
         "partial": 0,
         "pending": 15,
-        "none": 3,
+        "none": 1,
         "n/a": 5
       },
       "tools": {
@@ -118,8 +118,8 @@
       },
       "settings": {
         "total": 65,
-        "implemented": 53,
-        "partial": 3,
+        "implemented": 55,
+        "partial": 1,
         "pending": 0,
         "none": 0,
         "n/a": 9
@@ -129,8 +129,8 @@
         "implemented": 8,
         "partial": 0,
         "pending": 0,
-        "none": 1,
-        "n/a": 1
+        "none": 0,
+        "n/a": 2
       },
       "fileFields": {
         "total": 192,
@@ -142,10 +142,10 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 50,
-        "partial": 3,
+        "implemented": 55,
+        "partial": 4,
         "pending": 0,
-        "none": 6,
+        "none": 0,
         "n/a": 4
       }
     },
@@ -2264,7 +2264,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/src/app/menus.test.ts",
@@ -2658,7 +2658,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/layout.mjs",
@@ -7982,10 +7982,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; quick_access_of taşındı, ADR 0115)",
-      "desktopNote": "Masaüstünde hızlı erişim çubuğuna komut eklenip çıkarılamıyor; şeridin sağ tık menüsüyle gelecek."
+      "desktopWhere": "apps/desktop/src/ribbon_bar.rs, layout.rs (çubuğun ▾ menüsü ve sağ tıkla ekleme ya da çıkarma, yerlesim.json'da; ADR 0117)"
     },
     {
       "id": "layout.ribbonSplits",
@@ -7997,10 +7996,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/layout.rs (yerlesim.json'da okunduğu gibi tutulur; split_current taşındı, ADR 0115)",
-      "desktopNote": "Bölünmüş düğme son seçimi göstermiyor; şeridin kalan diliminde."
+      "desktopWhere": "apps/desktop/src/ribbon_bar.rs, layout.rs (bölünmüş düğmenin üstünde son seçilen girdi, yerlesim.json'da; ADR 0117)"
     },
     {
       "id": "layout.ribbonTab",
@@ -8752,8 +8750,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "n/a"
+      },
+      "desktopNote": "Davet bağlantısı web uygulamasının adresidir; belirteci yalnız o tarayıcı sekmesinde tutulur (ADR 0042). Masaüstü davet eder, bağlantıyı açmaz; kabul edilen proje masaüstünün kataloğunda da görünür."
     },
     {
       "id": "kentos.prefs.v1",
@@ -11888,8 +11887,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/processing/designer/ (ADR 0116)"
     },
     {
       "id": "apps/web/src/ui/properties/PropertiesPanel.ts#PropertiesPanel",
@@ -11914,8 +11914,8 @@
         "web": "implemented",
         "desktop": "partial"
       },
-      "desktopWhere": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)",
-      "desktopNote": "Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok."
+      "desktopWhere": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs, ribbon_bar.rs (ADR 0017, 0051, 0089, 0117)",
+      "desktopNote": "Harf ipuçları (F6, Alt) masaüstünde henüz yok; hızlı erişim çubuğu, sağ tık menüleri ve bölünmüş düğmenin son seçimi var (ADR 0117)."
     },
     {
       "id": "apps/web/src/ui/settings/AppSettingsDialog.ts#openAppSettings",
@@ -12070,10 +12070,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/style/manager/ (ADR 0092)",
-      "desktopNote": "SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094)."
+      "desktopWhere": "apps/desktop/src/style/manager/ (ADR 0092; Düzenle ve Yeni sembol Sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar, ADR 0094, 0095)"
     },
     {
       "id": "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner",
@@ -12095,8 +12094,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/ (ADR 0095)"
     },
     {
       "id": "apps/web/src/ui/svgedit/svgDocProps.ts#openDocProps",
@@ -12106,8 +12106,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/files/docprops.rs (ADR 0095)"
     },
     {
       "id": "apps/web/src/ui/svgedit/svgExport.ts#openExportDialog",
@@ -12117,8 +12118,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)",
+      "desktopNote": "PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır."
     },
     {
       "id": "apps/web/src/ui/svgedit/svgImport.ts#openImportDialog",
@@ -12128,8 +12131,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)",
+      "desktopNote": "Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır."
     },
     {
       "id": "apps/web/src/ui/svgedit/svgTrace.ts#openTraceDialog",
@@ -12139,8 +12144,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/files/trace.rs (ADR 0095)"
     },
     {
       "id": "apps/web/src/ui/toolbar/Toolbar.ts#Toolbar",
@@ -12938,48 +12944,64 @@
                 "split": [
                   {
                     "command": "tool.circle",
+                    "title": "Daire",
                     "label": "Merkez, yarıçap"
                   },
                   {
                     "command": "tool.circle",
                     "option": "2N",
-                    "label": "2 nokta"
+                    "title": "Daire",
+                    "label": "2 nokta",
+                    "description": "Çapın iki ucundan"
                   },
                   {
                     "command": "tool.circle",
                     "option": "3N",
-                    "label": "3 nokta"
+                    "title": "Daire",
+                    "label": "3 nokta",
+                    "description": "Çember üzerindeki üç noktadan"
                   },
                   {
                     "command": "tool.circle",
                     "option": "TTY",
-                    "label": "Teğet, teğet, yarıçap"
+                    "title": "Daire",
+                    "label": "Teğet, teğet, yarıçap",
+                    "description": "İki nesneye teğet, yarıçap yazılır"
                   },
                   {
                     "command": "tool.circle",
                     "option": "TTT",
-                    "label": "Teğet, teğet, teğet"
+                    "title": "Daire",
+                    "label": "Teğet, teğet, teğet",
+                    "description": "Üç nesneye teğet"
                   }
                 ],
+                "key": "circle",
                 "size": "large"
               },
               {
                 "split": [
                   {
                     "command": "tool.arc",
+                    "title": "Yay",
                     "label": "3 nokta"
                   },
                   {
                     "command": "tool.arc",
                     "option": "M",
-                    "label": "Merkez, başlangıç, bitiş"
+                    "title": "Yay",
+                    "label": "Merkez, başlangıç, bitiş",
+                    "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
                   },
                   {
                     "command": "tool.arc",
                     "option": "D",
-                    "label": "Devam"
+                    "title": "Yay",
+                    "label": "Devam",
+                    "description": "Son çizilen nesneye teğet devam eder"
                   }
                 ],
+                "key": "arc",
                 "size": "large"
               },
               {
@@ -12990,17 +13012,21 @@
                 "split": [
                   {
                     "command": "tool.rectangle",
+                    "title": "Dikdörtgen",
                     "label": "Dikdörtgen"
                   },
                   {
                     "command": "tool.rectangle3",
+                    "title": "Döndürülmüş dikdörtgen",
                     "label": "Döndürülmüş dikdörtgen"
                   },
                   {
                     "command": "tool.regularPolygon",
+                    "title": "Düzgün çokgen",
                     "label": "Düzgün çokgen"
                   }
                 ],
+                "key": "rectangle",
                 "size": "small"
               }
             ],
@@ -13051,13 +13077,16 @@
                 "split": [
                   {
                     "command": "tool.fillet",
+                    "title": "Köşe yuvarla",
                     "label": "Köşe yuvarla"
                   },
                   {
                     "command": "tool.chamfer",
+                    "title": "Pah",
                     "label": "Pah"
                   }
                 ],
+                "key": "corner",
                 "size": "small"
               }
             ],
@@ -13160,48 +13189,64 @@
                 "split": [
                   {
                     "command": "tool.circle",
+                    "title": "Daire",
                     "label": "Merkez, yarıçap"
                   },
                   {
                     "command": "tool.circle",
                     "option": "2N",
-                    "label": "2 nokta"
+                    "title": "Daire",
+                    "label": "2 nokta",
+                    "description": "Çapın iki ucundan"
                   },
                   {
                     "command": "tool.circle",
                     "option": "3N",
-                    "label": "3 nokta"
+                    "title": "Daire",
+                    "label": "3 nokta",
+                    "description": "Çember üzerindeki üç noktadan"
                   },
                   {
                     "command": "tool.circle",
                     "option": "TTY",
-                    "label": "Teğet, teğet, yarıçap"
+                    "title": "Daire",
+                    "label": "Teğet, teğet, yarıçap",
+                    "description": "İki nesneye teğet, yarıçap yazılır"
                   },
                   {
                     "command": "tool.circle",
                     "option": "TTT",
-                    "label": "Teğet, teğet, teğet"
+                    "title": "Daire",
+                    "label": "Teğet, teğet, teğet",
+                    "description": "Üç nesneye teğet"
                   }
                 ],
+                "key": "circle",
                 "size": "large"
               },
               {
                 "split": [
                   {
                     "command": "tool.arc",
+                    "title": "Yay",
                     "label": "3 nokta"
                   },
                   {
                     "command": "tool.arc",
                     "option": "M",
-                    "label": "Merkez, başlangıç, bitiş"
+                    "title": "Yay",
+                    "label": "Merkez, başlangıç, bitiş",
+                    "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
                   },
                   {
                     "command": "tool.arc",
                     "option": "D",
-                    "label": "Devam"
+                    "title": "Yay",
+                    "label": "Devam",
+                    "description": "Son çizilen nesneye teğet devam eder"
                   }
                 ],
+                "key": "arc",
                 "size": "large"
               },
               {
@@ -13226,17 +13271,21 @@
                 "split": [
                   {
                     "command": "tool.rectangle",
+                    "title": "Dikdörtgen",
                     "label": "Dikdörtgen"
                   },
                   {
                     "command": "tool.rectangle3",
+                    "title": "Döndürülmüş dikdörtgen",
                     "label": "Döndürülmüş dikdörtgen"
                   },
                   {
                     "command": "tool.regularPolygon",
+                    "title": "Düzgün çokgen",
                     "label": "Düzgün çokgen"
                   }
                 ],
+                "key": "rectangle",
                 "size": "large"
               }
             ],
@@ -13251,26 +13300,32 @@
                 "split": [
                   {
                     "command": "tool.xline",
+                    "title": "Yardımcı çizgi",
                     "label": "Yardımcı çizgi"
                   },
                   {
                     "command": "tool.ray",
+                    "title": "Işın",
                     "label": "Işın"
                   }
                 ],
+                "key": "construction",
                 "size": "large"
               },
               {
                 "split": [
                   {
                     "command": "tool.perpIn",
+                    "title": "Dik in",
                     "label": "Dik in"
                   },
                   {
                     "command": "tool.perpOut",
+                    "title": "Dik çık",
                     "label": "Dik çık"
                   }
                 ],
+                "key": "perpendicular",
                 "size": "large"
               }
             ],
@@ -13365,13 +13420,16 @@
                 "split": [
                   {
                     "command": "tool.array",
+                    "title": "Dizi",
                     "label": "Dizi"
                   },
                   {
                     "command": "tool.arrayPolar",
+                    "title": "Kutupsal dizi",
                     "label": "Kutupsal dizi"
                   }
                 ],
+                "key": "array",
                 "size": "large"
               }
             ],
@@ -13412,13 +13470,16 @@
                 "split": [
                   {
                     "command": "tool.fillet",
+                    "title": "Köşe yuvarla",
                     "label": "Köşe yuvarla"
                   },
                   {
                     "command": "tool.chamfer",
+                    "title": "Pah",
                     "label": "Pah"
                   }
                 ],
+                "key": "corner",
                 "size": "large"
               }
             ],
@@ -14093,13 +14154,16 @@
                 "split": [
                   {
                     "command": "tool.array",
+                    "title": "Dizi",
                     "label": "Dizi"
                   },
                   {
                     "command": "tool.arrayPolar",
+                    "title": "Kutupsal dizi",
                     "label": "Kutupsal dizi"
                   }
                 ],
+                "key": "array",
                 "size": "large"
               }
             ],
@@ -14440,48 +14504,64 @@
                   "split": [
                     {
                       "command": "tool.circle",
+                      "title": "Daire",
                       "label": "Merkez, yarıçap"
                     },
                     {
                       "command": "tool.circle",
                       "option": "2N",
-                      "label": "2 nokta"
+                      "title": "Daire",
+                      "label": "2 nokta",
+                      "description": "Çapın iki ucundan"
                     },
                     {
                       "command": "tool.circle",
                       "option": "3N",
-                      "label": "3 nokta"
+                      "title": "Daire",
+                      "label": "3 nokta",
+                      "description": "Çember üzerindeki üç noktadan"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTY",
-                      "label": "Teğet, teğet, yarıçap"
+                      "title": "Daire",
+                      "label": "Teğet, teğet, yarıçap",
+                      "description": "İki nesneye teğet, yarıçap yazılır"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTT",
-                      "label": "Teğet, teğet, teğet"
+                      "title": "Daire",
+                      "label": "Teğet, teğet, teğet",
+                      "description": "Üç nesneye teğet"
                     }
                   ],
+                  "key": "circle",
                   "size": "large"
                 },
                 {
                   "split": [
                     {
                       "command": "tool.arc",
+                      "title": "Yay",
                       "label": "3 nokta"
                     },
                     {
                       "command": "tool.arc",
                       "option": "M",
-                      "label": "Merkez, başlangıç, bitiş"
+                      "title": "Yay",
+                      "label": "Merkez, başlangıç, bitiş",
+                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
                     },
                     {
                       "command": "tool.arc",
                       "option": "D",
-                      "label": "Devam"
+                      "title": "Yay",
+                      "label": "Devam",
+                      "description": "Son çizilen nesneye teğet devam eder"
                     }
                   ],
+                  "key": "arc",
                   "size": "large"
                 },
                 {
@@ -14492,17 +14572,21 @@
                   "split": [
                     {
                       "command": "tool.rectangle",
+                      "title": "Dikdörtgen",
                       "label": "Dikdörtgen"
                     },
                     {
                       "command": "tool.rectangle3",
+                      "title": "Döndürülmüş dikdörtgen",
                       "label": "Döndürülmüş dikdörtgen"
                     },
                     {
                       "command": "tool.regularPolygon",
+                      "title": "Düzgün çokgen",
                       "label": "Düzgün çokgen"
                     }
                   ],
+                  "key": "rectangle",
                   "size": "small"
                 }
               ],
@@ -14553,13 +14637,16 @@
                   "split": [
                     {
                       "command": "tool.fillet",
+                      "title": "Köşe yuvarla",
                       "label": "Köşe yuvarla"
                     },
                     {
                       "command": "tool.chamfer",
+                      "title": "Pah",
                       "label": "Pah"
                     }
                   ],
+                  "key": "corner",
                   "size": "small"
                 }
               ],
@@ -14662,48 +14749,64 @@
                   "split": [
                     {
                       "command": "tool.circle",
+                      "title": "Daire",
                       "label": "Merkez, yarıçap"
                     },
                     {
                       "command": "tool.circle",
                       "option": "2N",
-                      "label": "2 nokta"
+                      "title": "Daire",
+                      "label": "2 nokta",
+                      "description": "Çapın iki ucundan"
                     },
                     {
                       "command": "tool.circle",
                       "option": "3N",
-                      "label": "3 nokta"
+                      "title": "Daire",
+                      "label": "3 nokta",
+                      "description": "Çember üzerindeki üç noktadan"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTY",
-                      "label": "Teğet, teğet, yarıçap"
+                      "title": "Daire",
+                      "label": "Teğet, teğet, yarıçap",
+                      "description": "İki nesneye teğet, yarıçap yazılır"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTT",
-                      "label": "Teğet, teğet, teğet"
+                      "title": "Daire",
+                      "label": "Teğet, teğet, teğet",
+                      "description": "Üç nesneye teğet"
                     }
                   ],
+                  "key": "circle",
                   "size": "large"
                 },
                 {
                   "split": [
                     {
                       "command": "tool.arc",
+                      "title": "Yay",
                       "label": "3 nokta"
                     },
                     {
                       "command": "tool.arc",
                       "option": "M",
-                      "label": "Merkez, başlangıç, bitiş"
+                      "title": "Yay",
+                      "label": "Merkez, başlangıç, bitiş",
+                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
                     },
                     {
                       "command": "tool.arc",
                       "option": "D",
-                      "label": "Devam"
+                      "title": "Yay",
+                      "label": "Devam",
+                      "description": "Son çizilen nesneye teğet devam eder"
                     }
                   ],
+                  "key": "arc",
                   "size": "large"
                 },
                 {
@@ -14728,17 +14831,21 @@
                   "split": [
                     {
                       "command": "tool.rectangle",
+                      "title": "Dikdörtgen",
                       "label": "Dikdörtgen"
                     },
                     {
                       "command": "tool.rectangle3",
+                      "title": "Döndürülmüş dikdörtgen",
                       "label": "Döndürülmüş dikdörtgen"
                     },
                     {
                       "command": "tool.regularPolygon",
+                      "title": "Düzgün çokgen",
                       "label": "Düzgün çokgen"
                     }
                   ],
+                  "key": "rectangle",
                   "size": "large"
                 }
               ],
@@ -14753,26 +14860,32 @@
                   "split": [
                     {
                       "command": "tool.xline",
+                      "title": "Yardımcı çizgi",
                       "label": "Yardımcı çizgi"
                     },
                     {
                       "command": "tool.ray",
+                      "title": "Işın",
                       "label": "Işın"
                     }
                   ],
+                  "key": "construction",
                   "size": "large"
                 },
                 {
                   "split": [
                     {
                       "command": "tool.perpIn",
+                      "title": "Dik in",
                       "label": "Dik in"
                     },
                     {
                       "command": "tool.perpOut",
+                      "title": "Dik çık",
                       "label": "Dik çık"
                     }
                   ],
+                  "key": "perpendicular",
                   "size": "large"
                 }
               ],
@@ -14867,13 +14980,16 @@
                   "split": [
                     {
                       "command": "tool.array",
+                      "title": "Dizi",
                       "label": "Dizi"
                     },
                     {
                       "command": "tool.arrayPolar",
+                      "title": "Kutupsal dizi",
                       "label": "Kutupsal dizi"
                     }
                   ],
+                  "key": "array",
                   "size": "large"
                 }
               ],
@@ -14914,13 +15030,16 @@
                   "split": [
                     {
                       "command": "tool.fillet",
+                      "title": "Köşe yuvarla",
                       "label": "Köşe yuvarla"
                     },
                     {
                       "command": "tool.chamfer",
+                      "title": "Pah",
                       "label": "Pah"
                     }
                   ],
+                  "key": "corner",
                   "size": "large"
                 }
               ],
@@ -15393,13 +15512,16 @@
                   "split": [
                     {
                       "command": "tool.array",
+                      "title": "Dizi",
                       "label": "Dizi"
                     },
                     {
                       "command": "tool.arrayPolar",
+                      "title": "Kutupsal dizi",
                       "label": "Kutupsal dizi"
                     }
                   ],
+                  "key": "array",
                   "size": "large"
                 }
               ],
@@ -15739,48 +15861,64 @@
                   "split": [
                     {
                       "command": "tool.circle",
+                      "title": "Daire",
                       "label": "Merkez, yarıçap"
                     },
                     {
                       "command": "tool.circle",
                       "option": "2N",
-                      "label": "2 nokta"
+                      "title": "Daire",
+                      "label": "2 nokta",
+                      "description": "Çapın iki ucundan"
                     },
                     {
                       "command": "tool.circle",
                       "option": "3N",
-                      "label": "3 nokta"
+                      "title": "Daire",
+                      "label": "3 nokta",
+                      "description": "Çember üzerindeki üç noktadan"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTY",
-                      "label": "Teğet, teğet, yarıçap"
+                      "title": "Daire",
+                      "label": "Teğet, teğet, yarıçap",
+                      "description": "İki nesneye teğet, yarıçap yazılır"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTT",
-                      "label": "Teğet, teğet, teğet"
+                      "title": "Daire",
+                      "label": "Teğet, teğet, teğet",
+                      "description": "Üç nesneye teğet"
                     }
                   ],
+                  "key": "circle",
                   "size": "large"
                 },
                 {
                   "split": [
                     {
                       "command": "tool.arc",
+                      "title": "Yay",
                       "label": "3 nokta"
                     },
                     {
                       "command": "tool.arc",
                       "option": "M",
-                      "label": "Merkez, başlangıç, bitiş"
+                      "title": "Yay",
+                      "label": "Merkez, başlangıç, bitiş",
+                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
                     },
                     {
                       "command": "tool.arc",
                       "option": "D",
-                      "label": "Devam"
+                      "title": "Yay",
+                      "label": "Devam",
+                      "description": "Son çizilen nesneye teğet devam eder"
                     }
                   ],
+                  "key": "arc",
                   "size": "large"
                 },
                 {
@@ -15951,48 +16089,64 @@
                   "split": [
                     {
                       "command": "tool.circle",
+                      "title": "Daire",
                       "label": "Merkez, yarıçap"
                     },
                     {
                       "command": "tool.circle",
                       "option": "2N",
-                      "label": "2 nokta"
+                      "title": "Daire",
+                      "label": "2 nokta",
+                      "description": "Çapın iki ucundan"
                     },
                     {
                       "command": "tool.circle",
                       "option": "3N",
-                      "label": "3 nokta"
+                      "title": "Daire",
+                      "label": "3 nokta",
+                      "description": "Çember üzerindeki üç noktadan"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTY",
-                      "label": "Teğet, teğet, yarıçap"
+                      "title": "Daire",
+                      "label": "Teğet, teğet, yarıçap",
+                      "description": "İki nesneye teğet, yarıçap yazılır"
                     },
                     {
                       "command": "tool.circle",
                       "option": "TTT",
-                      "label": "Teğet, teğet, teğet"
+                      "title": "Daire",
+                      "label": "Teğet, teğet, teğet",
+                      "description": "Üç nesneye teğet"
                     }
                   ],
+                  "key": "circle",
                   "size": "large"
                 },
                 {
                   "split": [
                     {
                       "command": "tool.arc",
+                      "title": "Yay",
                       "label": "3 nokta"
                     },
                     {
                       "command": "tool.arc",
                       "option": "M",
-                      "label": "Merkez, başlangıç, bitiş"
+                      "title": "Yay",
+                      "label": "Merkez, başlangıç, bitiş",
+                      "description": "Önce merkez, sonra başlangıç ve bitiş ya da açı veya kiriş"
                     },
                     {
                       "command": "tool.arc",
                       "option": "D",
-                      "label": "Devam"
+                      "title": "Yay",
+                      "label": "Devam",
+                      "description": "Son çizilen nesneye teğet devam eder"
                     }
                   ],
+                  "key": "arc",
                   "size": "large"
                 }
               ],

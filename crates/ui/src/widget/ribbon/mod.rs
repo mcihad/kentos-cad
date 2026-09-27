@@ -44,7 +44,7 @@ use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
 use crate::theme::typography;
-use crate::widget::context_menu::{Menu, MenuButton};
+use crate::widget::context_menu::{ContextMenu, Menu, MenuButton};
 use crate::widget::{Tip, horizontal_divider, tip, vertical_divider};
 
 // Ölçüler 12 piksellik gövde metninde tasarlandı; metni taşıyanlar yazı
@@ -115,8 +115,11 @@ pub struct Ribbon<'a, Message> {
     /// Hızlı erişim düğmeleri ve menüsü.
     quick: Vec<Element<'a, Message>>,
     quick_menu: Option<Box<dyn Fn() -> Menu<Message> + 'a>>,
+    quick_tip: Option<Tip>,
     /// Daraltılmış mı ve daraltma düğmesinin mesajı.
     collapse: Option<(bool, Message)>,
+    /// Şeridin düğmelerin almadığı bir yerinde sağ tık (sekme, panel adı, boş yer).
+    context: Option<Box<dyn Fn() -> Menu<Message> + 'a>>,
 }
 
 struct Tab<'a, Message> {
@@ -141,7 +144,9 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             panel: Panel::Groups(Vec::new()),
             quick: Vec::new(),
             quick_menu: None,
+            quick_tip: None,
             collapse: None,
+            context: None,
         }
     }
 
@@ -165,10 +170,45 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         self
     }
 
+    /// Sağ tıklanınca menü açan hızlı erişim düğmesi (ör. çubuktan
+    /// kaldırmak için); menü düğme kapalıyken de açılır.
+    pub fn quick_with_menu(
+        mut self,
+        glyph: Icon,
+        description: impl Into<String>,
+        on_press: Option<Message>,
+        menu: impl Fn() -> Menu<Message> + 'a,
+    ) -> Self {
+        let face = tip(
+            button(icon(glyph).size(14.0))
+                .on_press_maybe(on_press)
+                .padding([4, 5])
+                .style(style::button::flat),
+            Tip::new(description.into()),
+            tooltip::Position::Bottom,
+        );
+        self.quick
+            .push(ContextMenu::new(face, move |_| menu()).into());
+        self
+    }
+
     /// Hızlı erişim düğmelerinin sonundaki ⌄ menüsü (ör. düğmeleri gösterip
     /// gizlemek için).
     pub fn quick_menu(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
         self.quick_menu = Some(Box::new(menu));
+        self
+    }
+
+    /// ⌄ menüsünün ipucu (ör. “Hızlı erişimi özelleştir”).
+    pub fn quick_menu_tip(mut self, quick_tip: Tip) -> Self {
+        self.quick_tip = Some(quick_tip);
+        self
+    }
+
+    /// Şeridin düğmelerin almadığı bir yerinde (sekme, panel adı, boş yer)
+    /// sağ tıklanınca açılan menü. Kendi menüsü olan düğme önce gelir.
+    pub fn context_menu(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
+        self.context = Some(Box::new(menu));
         self
     }
 
@@ -257,6 +297,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         trailing: Option<Element<'a, Message>>,
         quick: Vec<Element<'a, Message>>,
         quick_menu: Option<Box<dyn Fn() -> Menu<Message> + 'a>>,
+        quick_tip: Option<Tip>,
         collapse: Option<(bool, Message)>,
     ) -> Element<'a, Message> {
         let mut strip = iced::widget::Row::new().height(tab_height() + 1.0);
@@ -277,10 +318,15 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
                 .align_y(iced::Center);
 
             if let Some(menu) = quick_menu {
-                buttons = buttons.push(MenuButton::new(
+                let more: Element<'a, Message> = MenuButton::new(
                     container(icon(Icon::ChevronDown).size(9.0)).padding([6, 4]),
                     menu,
-                ));
+                )
+                .into();
+                buttons = buttons.push(match quick_tip {
+                    Some(quick_tip) => tip(more, quick_tip, tooltip::Position::Bottom),
+                    None => more,
+                });
             }
 
             strip = strip.push(underlined(
@@ -437,20 +483,34 @@ impl<'a, Message: Clone + 'a> From<Ribbon<'a, Message>> for Element<'a, Message>
             panel,
             quick,
             quick_menu,
+            quick_tip,
             collapse,
+            context,
         } = ribbon;
         let collapsed = collapse.as_ref().is_some_and(|(collapsed, _)| *collapsed);
-        let strip = Ribbon::strip(application, tabs, trailing, quick, quick_menu, collapse);
+        let strip = Ribbon::strip(
+            application,
+            tabs,
+            trailing,
+            quick,
+            quick_menu,
+            quick_tip,
+            collapse,
+        );
 
-        if collapsed {
-            return strip;
+        let whole: Element<'a, Message> = if collapsed {
+            strip
+        } else {
+            Column::new()
+                .push(strip)
+                .push(Ribbon::panel(panel))
+                .push(horizontal_divider())
+                .into()
+        };
+        match context {
+            Some(menu) => ContextMenu::new(whole, move |_| menu()).into(),
+            None => whole,
         }
-
-        Column::new()
-            .push(strip)
-            .push(Ribbon::panel(panel))
-            .push(horizontal_divider())
-            .into()
     }
 }
 

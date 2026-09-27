@@ -10,7 +10,7 @@ import { arrayTab } from './svgArray';
 import type { SvgCanvas } from './svgCanvas';
 import { svgIcon } from './svgIcons';
 import { nodeBox } from './svgNodeProps';
-import { boxFields, strokeStyle } from './svgStyleProps';
+import { boxFields, refreshBox, strokeStyle } from './svgStyleProps';
 import { transformTab } from './svgTransform';
 import type { CanvasOptions, ToolId } from './svgView';
 
@@ -140,9 +140,17 @@ function selectionProps(host: PropsHost, sel: SvgShape[]): HTMLElement {
       row('Saydamlık', numberInput(Math.round((1 - (same(sel.map((s) => s.opacity ?? 1)) ?? 1)) * 100), (v) => set('op', (s) => ({ ...s, opacity: v > 0 ? 1 - Math.min(100, v) / 100 : undefined })), { label: 'Saydamlık', unit: '%', min: 0, max: 100, step: 5 })),
     ),
     strokeStyle(host, sel),
-    boxFields(host, sel),
   ];
-  if (sel.length === 1) parts.push(geometry(sel[0], (key, s) => host.change(key, () => (host.doc.shapes = host.doc.shapes.map((x) => (x.id === s.id ? s : x))))));
+  const box = boxFields(host, sel);
+  parts.push(box);
+  // A geometry field (a text's words, its size) moves the box: its fields follow.
+  if (sel.length === 1)
+    parts.push(
+      geometry(sel[0], (key, s) => {
+        host.change(key, () => (host.doc.shapes = host.doc.shapes.map((x) => (x.id === s.id ? s : x))));
+        refreshBox(box);
+      }),
+    );
   parts.push(pathGroup(host, sel), orderGroup(host), pickGroup(host));
   if (sel.length === 1 && sel[0].kind === 'path' && !host.nodeEdit) {
     const edit = h('button', { class: 'btn btn--small', type: 'button' }, icon('vertex', 14), 'Düğümleri düzenle');

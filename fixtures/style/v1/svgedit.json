@@ -1,0 +1,1147 @@
+{
+  "about": "The SVG editor rules (ui/svgedit/svgEditModel.ts): recorded by scripts/fixtures/record-svgedit.test.ts; the desktop editor (apps/desktop/src/style/svgedit/fixture.rs) is held to the same answers.",
+  "drags": [
+    {
+      "spec": {
+        "tool": "rect",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        10,
+        10
+      ],
+      "p1": [
+        45,
+        40
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "rect",
+        "x": 10,
+        "y": 10,
+        "w": 35,
+        "h": 30
+      }
+    },
+    {
+      "spec": {
+        "tool": "rect",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        45,
+        40
+      ],
+      "p1": [
+        10,
+        10
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "rect",
+        "x": 10,
+        "y": 10,
+        "w": 35,
+        "h": 30
+      }
+    },
+    {
+      "spec": {
+        "tool": "rect",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": true,
+        "fromCentre": false
+      },
+      "p0": [
+        10,
+        10
+      ],
+      "p1": [
+        45,
+        30
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "rect",
+        "x": 10,
+        "y": 10,
+        "w": 35,
+        "h": 35
+      }
+    },
+    {
+      "spec": {
+        "tool": "rect",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": true,
+        "fromCentre": false
+      },
+      "p0": [
+        50,
+        50
+      ],
+      "p1": [
+        30,
+        20
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "rect",
+        "x": 20,
+        "y": 20,
+        "w": 30,
+        "h": 30
+      }
+    },
+    {
+      "spec": {
+        "tool": "rect",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": false,
+        "fromCentre": true
+      },
+      "p0": [
+        50,
+        50
+      ],
+      "p1": [
+        60,
+        45
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "rect",
+        "x": 40,
+        "y": 45,
+        "w": 20,
+        "h": 10
+      }
+    },
+    {
+      "spec": {
+        "tool": "rect",
+        "width": 64,
+        "height": 32,
+        "sides": 6,
+        "star": false,
+        "shift": true,
+        "fromCentre": true
+      },
+      "p0": [
+        32,
+        16
+      ],
+      "p1": [
+        40,
+        18
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 1.28,
+        "kind": "rect",
+        "x": 24,
+        "y": 8,
+        "w": 16,
+        "h": 16
+      }
+    },
+    {
+      "spec": {
+        "tool": "ellipse",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        55,
+        10
+      ],
+      "p1": [
+        90,
+        40
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "ellipse",
+        "cx": 72.5,
+        "cy": 25,
+        "rx": 17.5,
+        "ry": 15
+      }
+    },
+    {
+      "spec": {
+        "tool": "ellipse",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": true,
+        "fromCentre": false
+      },
+      "p0": [
+        20,
+        20
+      ],
+      "p1": [
+        30,
+        60
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "ellipse",
+        "cx": 40,
+        "cy": 40,
+        "rx": 20,
+        "ry": 20
+      }
+    },
+    {
+      "spec": {
+        "tool": "ellipse",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": false,
+        "fromCentre": true
+      },
+      "p0": [
+        50,
+        50
+      ],
+      "p1": [
+        70,
+        35
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "ellipse",
+        "cx": 50,
+        "cy": 50,
+        "rx": 20,
+        "ry": 15
+      }
+    },
+    {
+      "spec": {
+        "tool": "ellipse",
+        "width": 24,
+        "height": 24,
+        "sides": 6,
+        "star": false,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        2,
+        2
+      ],
+      "p1": [
+        2.3,
+        2.3
+      ],
+      "shape": null
+    },
+    {
+      "spec": {
+        "tool": "polygon",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        50,
+        72
+      ],
+      "p1": [
+        50,
+        50
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "path",
+        "subs": [
+          {
+            "closed": true,
+            "nodes": [
+              {
+                "x": 50,
+                "y": 50
+              },
+              {
+                "x": 69.05255888325765,
+                "y": 61
+              },
+              {
+                "x": 69.05255888325766,
+                "y": 83
+              },
+              {
+                "x": 50,
+                "y": 94
+              },
+              {
+                "x": 30.947441116742354,
+                "y": 83
+              },
+              {
+                "x": 30.94744111674235,
+                "y": 61
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "spec": {
+        "tool": "polygon",
+        "width": 100,
+        "height": 100,
+        "sides": 5,
+        "star": false,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        50,
+        50
+      ],
+      "p1": [
+        80,
+        60
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "path",
+        "subs": [
+          {
+            "closed": true,
+            "nodes": [
+              {
+                "x": 80,
+                "y": 60
+              },
+              {
+                "x": 49.75994466829688,
+                "y": 81.62186543260408
+              },
+              {
+                "x": 19.85163764582684,
+                "y": 59.54338762502473
+              },
+              {
+                "x": 31.60734269167631,
+                "y": 24.276272487476337
+              },
+              {
+                "x": 68.78107499419994,
+                "y": 24.558474454894856
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "spec": {
+        "tool": "polygon",
+        "width": 100,
+        "height": 100,
+        "sides": 5,
+        "star": true,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        50,
+        50
+      ],
+      "p1": [
+        50,
+        20
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "path",
+        "subs": [
+          {
+            "closed": true,
+            "nodes": [
+              {
+                "x": 50,
+                "y": 20
+              },
+              {
+                "x": 57.93510090594839,
+                "y": 39.078270575938205
+              },
+              {
+                "x": 78.53169548885461,
+                "y": 40.72949016875158
+              },
+              {
+                "x": 62.839262969984574,
+                "y": 54.17172942406179
+              },
+              {
+                "x": 67.6335575687742,
+                "y": 74.27050983124843
+              },
+              {
+                "x": 50,
+                "y": 63.5
+              },
+              {
+                "x": 32.366442431225806,
+                "y": 74.27050983124843
+              },
+              {
+                "x": 37.160737030015426,
+                "y": 54.171729424061795
+              },
+              {
+                "x": 21.46830451114539,
+                "y": 40.72949016875158
+              },
+              {
+                "x": 42.06489909405161,
+                "y": 39.07827057593821
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "spec": {
+        "tool": "polygon",
+        "width": 100,
+        "height": 100,
+        "sides": 2,
+        "star": false,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        10,
+        10
+      ],
+      "p1": [
+        20,
+        10
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "path",
+        "subs": [
+          {
+            "closed": true,
+            "nodes": [
+              {
+                "x": 20,
+                "y": 10
+              },
+              {
+                "x": 5.0000000000000036,
+                "y": 18.66025403784439
+              },
+              {
+                "x": 4.9999999999999964,
+                "y": 1.3397459621556147
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "spec": {
+        "tool": "text",
+        "width": 100,
+        "height": 100,
+        "sides": 6,
+        "star": false,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        15,
+        55
+      ],
+      "p1": [
+        15,
+        55
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 2,
+        "kind": "text",
+        "x": 15,
+        "y": 55,
+        "text": "Aa",
+        "size": 20,
+        "weight": 700,
+        "font": "sans",
+        "anchor": "start"
+      }
+    },
+    {
+      "spec": {
+        "tool": "text",
+        "width": 400,
+        "height": 250,
+        "sides": 6,
+        "star": false,
+        "shift": false,
+        "fromCentre": false
+      },
+      "p0": [
+        3.5,
+        7.25
+      ],
+      "p1": [
+        90,
+        90
+      ],
+      "shape": {
+        "id": "id",
+        "fill": "fill",
+        "stroke": "none",
+        "strokeWidth": 8,
+        "kind": "text",
+        "x": 3.5,
+        "y": 7.25,
+        "text": "Aa",
+        "size": 50,
+        "weight": 700,
+        "font": "sans",
+        "anchor": "start"
+      }
+    }
+  ],
+  "scaled": [
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 0,
+      "q": [
+        60,
+        70
+      ],
+      "shift": false,
+      "out": {
+        "minX": 60,
+        "minY": 70,
+        "maxX": 50,
+        "maxY": 40
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 1,
+      "q": [
+        60,
+        70
+      ],
+      "shift": false,
+      "out": {
+        "minX": 10,
+        "minY": 70,
+        "maxX": 50,
+        "maxY": 40
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 2,
+      "q": [
+        60,
+        70
+      ],
+      "shift": false,
+      "out": {
+        "minX": 10,
+        "minY": 70,
+        "maxX": 60,
+        "maxY": 40
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 3,
+      "q": [
+        60,
+        70
+      ],
+      "shift": false,
+      "out": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 60,
+        "maxY": 40
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 4,
+      "q": [
+        60,
+        70
+      ],
+      "shift": false,
+      "out": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 60,
+        "maxY": 70
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 5,
+      "q": [
+        60,
+        70
+      ],
+      "shift": false,
+      "out": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 70
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 6,
+      "q": [
+        60,
+        70
+      ],
+      "shift": false,
+      "out": {
+        "minX": 60,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 70
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 7,
+      "q": [
+        60,
+        70
+      ],
+      "shift": false,
+      "out": {
+        "minX": 60,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 0,
+      "q": [
+        0,
+        50
+      ],
+      "shift": true,
+      "out": {
+        "minX": 0,
+        "minY": 15,
+        "maxX": 50,
+        "maxY": 40
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 2,
+      "q": [
+        0,
+        50
+      ],
+      "shift": true,
+      "out": {
+        "minX": 10,
+        "minY": 45,
+        "maxX": 0,
+        "maxY": 40
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 4,
+      "q": [
+        0,
+        50
+      ],
+      "shift": true,
+      "out": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 70,
+        "maxY": 50
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 6,
+      "q": [
+        0,
+        50
+      ],
+      "shift": true,
+      "out": {
+        "minX": -10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 50
+      }
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 4,
+      "q": [
+        10,
+        60
+      ],
+      "shift": false,
+      "out": null
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "handle": 3,
+      "q": [
+        10.0000001,
+        30
+      ],
+      "shift": false,
+      "out": null
+    }
+  ],
+  "turns": [
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "p0": [
+        30,
+        4
+      ],
+      "p": [
+        60,
+        30
+      ],
+      "shift": false,
+      "deg": 90
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "p0": [
+        30,
+        4
+      ],
+      "p": [
+        60,
+        30
+      ],
+      "shift": true,
+      "deg": 90
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "p0": [
+        30,
+        4
+      ],
+      "p": [
+        0,
+        25
+      ],
+      "shift": true,
+      "deg": -75
+    },
+    {
+      "box": {
+        "minX": 10,
+        "minY": 20,
+        "maxX": 50,
+        "maxY": 40
+      },
+      "p0": [
+        30,
+        4
+      ],
+      "p": [
+        31,
+        60
+      ],
+      "shift": false,
+      "deg": 178.09084756700364
+    }
+  ],
+  "measures": [
+    {
+      "a": [
+        0,
+        0
+      ],
+      "b": [
+        30,
+        -40
+      ],
+      "width": 100,
+      "sizeMm": 24,
+      "main": "50 birim · 12 mm · açı -53.13°",
+      "more": "ΔX 30, ΔY -40"
+    },
+    {
+      "a": [
+        0,
+        0
+      ],
+      "b": [
+        0,
+        10
+      ],
+      "width": 100,
+      "main": "10 birim · açı 90°",
+      "more": "ΔX 0, ΔY 10"
+    },
+    {
+      "a": [
+        10,
+        40
+      ],
+      "b": [
+        90,
+        10
+      ],
+      "width": 100,
+      "main": "85.44 birim · açı -20.56°",
+      "more": "ΔX 80, ΔY -30"
+    },
+    {
+      "a": [
+        5,
+        5
+      ],
+      "b": [
+        -5,
+        5
+      ],
+      "width": 64,
+      "sizeMm": 5,
+      "main": "10 birim · 0.78 mm · açı 180°",
+      "more": "ΔX -10, ΔY 0"
+    },
+    {
+      "a": [
+        1.23456,
+        2
+      ],
+      "b": [
+        1.23456,
+        2
+      ],
+      "width": 10,
+      "sizeMm": 3,
+      "main": "0 birim · 0 mm · açı 0°",
+      "more": "ΔX 0, ΔY 0"
+    }
+  ],
+  "niceStep": [
+    [
+      0.37,
+      0.5
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      1.5,
+      2
+    ],
+    [
+      3.2,
+      5
+    ],
+    [
+      6,
+      10
+    ],
+    [
+      11.2,
+      20
+    ],
+    [
+      14,
+      20
+    ],
+    [
+      0.09655172413793103,
+      0.1
+    ],
+    [
+      280,
+      500
+    ],
+    [
+      1000,
+      1000
+    ]
+  ],
+  "niceRound": [
+    [
+      2.37,
+      0.5,
+      2.5
+    ],
+    [
+      2.37,
+      0.03,
+      2.38
+    ],
+    [
+      13.33,
+      3,
+      14
+    ],
+    [
+      0.0442,
+      0.007,
+      0.045
+    ],
+    [
+      7.5,
+      1,
+      8
+    ]
+  ],
+  "slugs": [
+    [
+      "Yeni çizim",
+      "yeni-cizim"
+    ],
+    [
+      "Şişli İğne Ölçüsü",
+      "sisli-igne-olcusu"
+    ],
+    [
+      "  Ağaç (kopya) ",
+      "agac-kopya"
+    ],
+    [
+      "!!!",
+      "cizim"
+    ],
+    [
+      "ISPARTA ılık",
+      "isparta-ilik"
+    ]
+  ],
+  "defaults": [
+    {
+      "width": 100,
+      "grid": 5,
+      "unit": 2,
+      "shapeStroke": 2,
+      "lineStroke": 4
+    },
+    {
+      "width": 64,
+      "grid": 3,
+      "unit": 1.28,
+      "shapeStroke": 1.28,
+      "lineStroke": 2.56
+    },
+    {
+      "width": 24,
+      "grid": 1,
+      "unit": 0.48,
+      "shapeStroke": 1,
+      "lineStroke": 1
+    },
+    {
+      "width": 12,
+      "grid": 1,
+      "unit": 0.24,
+      "shapeStroke": 1,
+      "lineStroke": 1
+    },
+    {
+      "width": 7,
+      "grid": 1,
+      "unit": 0.14,
+      "shapeStroke": 1,
+      "lineStroke": 1
+    },
+    {
+      "width": 400,
+      "grid": 20,
+      "unit": 8,
+      "shapeStroke": 8,
+      "lineStroke": 16
+    },
+    {
+      "width": 0.5,
+      "grid": 1,
+      "unit": 0.1,
+      "shapeStroke": 1,
+      "lineStroke": 1
+    }
+  ]
+}

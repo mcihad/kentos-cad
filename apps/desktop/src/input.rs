@@ -346,7 +346,20 @@ impl App {
         }
         // 1. A dialog: Esc closes it; its own buttons do the rest.
         if self.dialog.is_some() {
+            // Model tasarımcısı: Ctrl+S, its undo and Delete (processing/designer/).
+            if self.dialog == Some(crate::app::Dialog::ModelDesigner)
+                && press.named() != Some(Named::Escape)
+                && let Some(task) = self.model_designer_key(&press)
+            {
+                return task;
+            }
             // Sembol tasarımcısı's undo and ↑ ↓ (style/designer/).
+            // SVG çizim düzenleyicisi takes every key, Esc too: it gives up what is half done first (style/svgedit/).
+            if self.dialog == Some(crate::app::Dialog::SvgEditor)
+                && let Some(task) = self.svgedit_key(&press)
+            {
+                return task;
+            }
             if self.dialog == Some(crate::app::Dialog::SymbolDesigner)
                 && press.named() != Some(Named::Escape)
                 && let Some(task) = self.designer_key(&press)
@@ -599,7 +612,7 @@ impl App {
             self.session.is_running() && id.strip_prefix("tool.") == Some(self.session.tool_id());
         if started && self.with_tool(|s, cx| s.input(option, cx)) != Some(true) {
             let title = catalog().get(id).map_or(id, |command| command.title);
-            self.warn(format!("“{title}: {label}” şu an başlatılamadı."));
+            self.warn(crate::ribbon_plan::texts::cannot_start(title, label));
         }
         task
     }

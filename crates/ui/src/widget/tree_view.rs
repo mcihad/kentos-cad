@@ -187,6 +187,7 @@ pub struct Node<'a, Message> {
     folder: bool,
     editor: Option<Element<'a, Message>>,
     toggles: Vec<Toggle<Message>>,
+    heading: bool,
 }
 
 impl<'a, Message: 'a> Node<'a, Message> {
@@ -207,7 +208,15 @@ impl<'a, Message: 'a> Node<'a, Message> {
             folder: false,
             editor: None,
             toggles: Vec::new(),
+            heading: false,
         }
+    }
+
+    /// Grup başlığı: küçük, kalın ve soluk ad (ör. bir paletin kategorisi,
+    /// altındaki satırlar onun öğeleri).
+    pub fn heading(mut self) -> Self {
+        self.heading = true;
+        self
     }
 
     /// Klasör: sürüklenen düğümler içine bırakılabilir ([`Place::Into`]).
@@ -331,6 +340,7 @@ pub struct TreeView<'a, Message> {
     on_move: Option<OnMove<'a, Message>>,
     on_carry: Option<OnCarry<'a, Message>>,
     lazy: Option<(usize, LazyRow<'a, Message>, Option<usize>)>,
+    flat: bool,
 }
 
 impl<'a, Message: Clone + 'a> TreeView<'a, Message> {
@@ -345,7 +355,15 @@ impl<'a, Message: Clone + 'a> TreeView<'a, Message> {
             on_move: None,
             on_carry: None,
             lazy: None,
+            flat: false,
         }
+    }
+
+    /// Düz liste: açılıp kapanmayan satırlar için ok sütunu ayrılmaz (ör.
+    /// başlıklarla gruplanmış bir palet).
+    pub fn flat(mut self, flat: bool) -> Self {
+        self.flat = flat;
+        self
     }
 
     /// Kimlikli düğümler sürüklenerek taşınır; bırakılınca kaynağın ve
@@ -432,6 +450,7 @@ fn flatten<'a, Message: Clone + 'a>(
     nodes: Vec<Node<'a, Message>>,
     depth: usize,
     layout: &[(Length, Horizontal)],
+    flat: bool,
     rows: &mut Vec<Element<'a, Message>>,
     slots: &mut Vec<Slot>,
 ) {
@@ -446,10 +465,10 @@ fn flatten<'a, Message: Clone + 'a>(
             open,
             editing: node.editor.is_some(),
         });
-        rows.push(node_row(node, depth, layout));
+        rows.push(node_row(node, depth, layout, flat));
 
         if open {
-            flatten(children, depth + 1, layout, rows, slots);
+            flatten(children, depth + 1, layout, flat, rows, slots);
         }
     }
 }
@@ -460,6 +479,7 @@ fn node_row<'a, Message: Clone + 'a>(
     node: Node<'a, Message>,
     depth: usize,
     layout: &[(Length, Horizontal)],
+    flat: bool,
 ) -> Element<'a, Message> {
     let Node {
         label: name,
@@ -477,12 +497,15 @@ fn node_row<'a, Message: Clone + 'a>(
         folder: _,
         editor,
         toggles,
+        heading,
     } = node;
 
     let mut tree = Row::with_children((0..depth).map(|_| guide()))
-        .push(toggle(expanded))
         .height(row_height())
         .align_y(Center);
+    if !(flat && expanded.is_none()) {
+        tree = tree.push(toggle(expanded));
+    }
 
     if let Some((check, on_toggle)) = check {
         tree = tree
@@ -497,13 +520,15 @@ fn node_row<'a, Message: Clone + 'a>(
     tree = match editor {
         Some(editor) => tree.push(container(editor).width(Fill)),
         None => {
-            let name = if active {
+            let name = if heading {
+                label::caption(name).font(typography::ui_strong())
+            } else if active {
                 label::strong(name)
             } else {
                 label::body(name)
             }
             .wrapping(Wrapping::None);
-            let name = if muted {
+            let name = if muted || heading {
                 name.style(style::text::muted)
             } else {
                 name
@@ -789,6 +814,7 @@ impl<'a, Message: Clone + 'a> From<TreeView<'a, Message>> for Element<'a, Messag
         // Sanal ağaç: yalnızca görünen satırlar kurulur, liste kendisi kayar.
         if let Some((count, view, reveal)) = tree.lazy {
             let row_layout = layout.clone();
+            let flat = tree.flat;
             let body: Element<'a, Message> = match (count, tree.empty) {
                 (0, Some(message)) => container(label::muted(message))
                     .padding([8.0, table::PADDING_X])
@@ -796,7 +822,7 @@ impl<'a, Message: Clone + 'a> From<TreeView<'a, Message>> for Element<'a, Messag
                     .into(),
                 _ => VirtualList::new(count, row_height(), move |index| {
                     let (depth, node) = view(index);
-                    node_row(node, depth, &row_layout)
+                    node_row(node, depth, &row_layout, flat)
                 })
                 .reveal(reveal)
                 .height(tree.height.unwrap_or(Length::Fill))
@@ -814,7 +840,7 @@ impl<'a, Message: Clone + 'a> From<TreeView<'a, Message>> for Element<'a, Messag
 
         let mut rows = Vec::new();
         let mut slots = Vec::new();
-        flatten(tree.nodes, 0, &layout, &mut rows, &mut slots);
+        flatten(tree.nodes, 0, &layout, tree.flat, &mut rows, &mut slots);
 
         let body: Element<'a, Message> = match (rows.is_empty(), tree.empty) {
             (true, Some(message)) => container(label::muted(message))
@@ -1272,7 +1298,7 @@ mod tests {
 
         let mut rows = Vec::new();
         let mut slots = Vec::new();
-        flatten(tree, 0, &layout, &mut rows, &mut slots);
+        flatten(tree, 0, &layout, false, &mut rows, &mut slots);
 
         assert_eq!(rows.len(), 5);
         assert_eq!(

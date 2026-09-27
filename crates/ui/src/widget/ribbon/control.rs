@@ -12,7 +12,7 @@ use crate::label;
 use crate::style;
 use crate::style::button::Ribbon as State;
 use crate::theme::{Tokens, typography};
-use crate::widget::context_menu::{Menu, MenuButton};
+use crate::widget::context_menu::{ContextMenu, Menu, MenuButton};
 use crate::widget::{Tip, tip};
 
 /// Şerit düğmesinin tasarlandığı boyut.
@@ -65,6 +65,8 @@ pub struct Button<'a, Message> {
     state: State,
     tip: Option<Tip>,
     menu: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
+    /// Sağ tıklanınca açılan menü (ör. hızlı erişime ekleme).
+    context: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
     flash: bool,
     /// A small button drawn with its icon only (a narrow custom panel).
     icon_only: bool,
@@ -80,6 +82,7 @@ impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
             state: self.state,
             tip: self.tip.clone(),
             menu: self.menu.clone(),
+            context: self.context.clone(),
             flash: self.flash,
             icon_only: self.icon_only,
         }
@@ -106,6 +109,7 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             state: State::Idle,
             tip: None,
             menu: None,
+            context: None,
             flash: false,
             icon_only: false,
         }
@@ -116,6 +120,13 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     /// yapar, ok menüyü açar. Verilmemişse düğmenin tamamı menüyü açar.
     pub fn menu(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
         self.menu = Some(Rc::new(menu));
+        self
+    }
+
+    /// Sağ tıklanınca açılan menü: düğmenin tamamında, bölünmüş düğmenin
+    /// iki parçasında da; düğme kapalıyken de açılır (web'in şeridi gibi).
+    pub fn context(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
+        self.context = Some(Rc::new(menu));
         self
     }
 
@@ -244,8 +255,15 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
         };
         let content = super::flashed(content, self.flash);
 
-        match &self.tip {
+        let content = match &self.tip {
             Some(button_tip) => tip(content, button_tip.clone(), tooltip::Position::Bottom),
+            None => content,
+        };
+        match &self.context {
+            Some(menu) => {
+                let menu = menu.clone();
+                ContextMenu::new(content, move |_| menu()).into()
+            }
             None => content,
         }
     }

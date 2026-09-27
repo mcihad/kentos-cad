@@ -28,7 +28,6 @@ mod view;
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use iced::Task;
@@ -70,9 +69,6 @@ pub(crate) enum ViewMode {
     /// The same expression as nodes.
     Flow,
 }
-
-/// Whether the builder opened in Akış last (for as long as the program runs).
-static FLOW_LAST: AtomicBool = AtomicBool::new(false);
 
 /// Where the builder's text goes back.
 #[derive(Clone, Debug, PartialEq)]
@@ -290,16 +286,12 @@ impl Builder {
         };
         b.read();
         b.moved(true);
-        if FLOW_LAST.load(Ordering::Relaxed) {
-            b.set_mode(ViewMode::Flow);
-        }
         b
     }
 
     /// Shows the text or the flow of the same expression.
     pub(crate) fn set_mode(&mut self, mode: ViewMode) {
         self.view_mode = mode;
-        FLOW_LAST.store(mode == ViewMode::Flow, Ordering::Relaxed);
         self.completion = None;
         self.help = None;
         self.chosen = None;
@@ -615,6 +607,10 @@ impl App {
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
+        // It opens in the view it was left in last (Metin or Akış).
+        if self.builder_flow {
+            builder.set_mode(ViewMode::Flow);
+        }
         self.builder = Some(builder);
         iced::widget::operation::focus(EDITOR)
     }
@@ -622,6 +618,9 @@ impl App {
     pub(crate) fn builder_event(&mut self, e: Event) -> Task<Message> {
         if let Event::OpenProcessing(name) = &e {
             return self.open_builder_for_processing(name);
+        }
+        if let Event::Mode(mode) = &e {
+            self.builder_flow = *mode == ViewMode::Flow;
         }
         let Some(b) = self.builder.as_mut() else {
             return Task::none();

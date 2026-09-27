@@ -9,17 +9,28 @@
 use std::f32::consts::PI;
 
 use iced::widget::canvas::{self, Frame, LineCap, LineJoin, Path, Stroke, Style, path};
-use iced::{Color, Point, Radians, Vector};
+use iced::{Color, Point, Radians, Size, Vector};
 
 use super::Icon;
 
 /// İkonu çerçeveye, çerçevenin boyutunu dolduracak şekilde çizer.
 pub(super) fn icon(frame: &mut Frame, icon: Icon, color: Color, weight: Option<f32>) {
+    let size = frame.size();
+    icon_sized(frame, icon, color, weight, size);
+}
+
+/// Draws `icon` in a `size` box at the frame's origin (the frame may be larger).
+pub(super) fn icon_sized(
+    frame: &mut Frame,
+    icon: Icon,
+    color: Color,
+    weight: Option<f32>,
+    size: Size,
+) {
     if let Icon::Svg(markup) = icon {
-        super::svg::draw(frame, markup, color, weight);
+        super::svg::draw(frame, markup, color, weight, size);
         return;
     }
-    let size = frame.size();
     let pen = Pen {
         unit: size.width.min(size.height) / 16.0,
         color,

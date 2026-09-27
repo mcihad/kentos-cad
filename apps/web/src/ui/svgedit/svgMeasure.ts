@@ -1,14 +1,16 @@
 import { bez, segmentCount, segmentCubic, segmentLength } from '../../style/svg/bezier';
 import type { Pt } from '../../style/svg/pathData';
 import { toPath } from '../../style/svg/svgModel';
+import { measureReadout, mmOf } from './svgEditModel';
 import { el, fmtNum, tag, type CanvasView } from './svgView';
 
 /**
  * The measure tool (M) of the SVG editor: between two snapped points
  * (drag, or click and click) it shows the distance and the angle, in
  * drawing units and in millimetres at the symbol's size (the document's
- * "1 birim = … mm"). With nothing being measured, the path under the
- * pointer shows the length of each of its segments.
+ * "1 birim = … mm"). The angle grows clockwise, as ΔY and a shape's
+ * Döndürme (svgEditModel.ts). With nothing being measured, the path under
+ * the pointer shows the length of each of its segments.
  */
 
 type State = 'idle' | 'placing' | 'done';
@@ -74,22 +76,14 @@ export class Measure {
   private text(): { main: string; more: string } | null {
     const { a, b } = this;
     if (!a || !b) return null;
-    const dx = b[0] - a[0];
-    const dy = b[1] - a[1];
-    const d = Math.hypot(dx, dy);
-    // Angle as on paper: counter-clockwise from the right (the drawing's y runs down).
-    const ang = ((Math.atan2(-dy, dx) * 180) / Math.PI + 360) % 360;
-    const mm = this.mm(d);
-    return {
-      main: `${fmtNum(d)} birim${mm ? ` · ${mm}` : ''} · ${fmtNum(ang, 2)}°`,
-      more: `ΔX ${fmtNum(dx)}, ΔY ${fmtNum(dy)}`,
-    };
+    const doc = this.view.host.doc;
+    return measureReadout(a, b, doc.width, doc.sizeMm);
   }
 
   /** A length at the symbol's size, or nothing when the drawing has no size in mm. */
   private mm(units: number): string {
     const doc = this.view.host.doc;
-    return doc.sizeMm ? `${fmtNum((units * doc.sizeMm) / doc.width, 2)} mm` : '';
+    return mmOf(units, doc.width, doc.sizeMm);
   }
 
   private report(): void {
@@ -116,7 +110,7 @@ export class Measure {
         const mx = (x1 + x2) / 2 + 10;
         const my = (y1 + y2) / 2 - 10;
         g.append(tag(mx, my, txt.main, 'svge__tag svge__tag--measure'));
-        g.append(tag(mx, my + 15, txt.more, 'svge__tag svge__tag--measure'));
+        g.append(tag(mx, my, txt.more, 'svge__tag svge__tag--measure', true));
       }
       return;
     }

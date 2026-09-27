@@ -121,6 +121,10 @@ pub enum Dialog {
     Legend,
     /// Sembol tasarımcısı (style/designer/); the window is `App::styles.designer`.
     SymbolDesigner,
+    /// Model tasarımcısı (processing/designer/); the window is `App::processing.designer`.
+    ModelDesigner,
+    /// SVG çizim düzenleyicisi (style/svgedit/); the window is `App::styles.svg_editor`.
+    SvgEditor,
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
@@ -179,6 +183,19 @@ pub enum Message {
         option: &'static str,
         label: &'static str,
     },
+    /// An entry chosen from a split button's list: kept on top by the
+    /// button's key (`ribbonSplits`), then run (docs/adr/0117).
+    SplitChosen {
+        key: &'static str,
+        id: &'static str,
+        option: Option<&'static str>,
+        label: &'static str,
+    },
+    /// A command put on the quick access bar (true) or taken off (docs/adr/0117).
+    QuickAccess(String, bool),
+    /// A pointer event taken so nothing under it reacts (a right click on
+    /// Komut ara keeps the ribbon's menu away).
+    Swallowed,
     RibbonTab(&'static str),
     /// A choice in the ribbon's own panels: the current properties for new
     /// objects, the plot scale (ribbon_panels.rs).
@@ -219,6 +236,8 @@ pub enum Message {
     Calc(crate::calc::Event),
     /// A processing tool's window (processing/).
     Processing(crate::processing::Event),
+    /// Model tasarımcısı (processing/designer/).
+    ModelDesigner(crate::processing::designer::Event),
     /// Katman stili (style/layer_style/).
     LayerStyle(crate::style::layer_style::Event),
     /// İfade oluşturucu over an expression field's window (expression/).
@@ -229,6 +248,8 @@ pub enum Message {
     Legend(crate::style::legend::Event),
     /// Sembol tasarımcısı (style/designer/).
     Designer(Box<crate::style::designer::Event>),
+    /// SVG çizim düzenleyicisi (style/svgedit/).
+    SvgEdit(Box<crate::style::svgedit::Event>),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -422,6 +443,8 @@ pub struct App {
     pub processing: crate::processing::Processing,
     /// İfade oluşturucu, while it is open over the window that asked for it (expression/).
     pub(crate) builder: Option<crate::expression::Builder>,
+    /// Whether İfade oluşturucu was left in Akış (for as long as the program runs).
+    pub(crate) builder_flow: bool,
     /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
     pub removing_layer: Option<String>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
@@ -566,6 +589,7 @@ impl App {
             dwell_on_time: true,
             processing: crate::processing::Processing::default(),
             builder: None,
+            builder_flow: false,
             removing_layer: None,
             settings,
             settings_draft: None,
@@ -662,6 +686,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // A file dropped on the window goes to the SVG editor while it is open (style/svgedit/).
+            if self.styles.svg_editor.is_some() {
+                event::listen_with(crate::style::svgedit::dropped)
+            } else {
+                Subscription::none()
+            },
             // The cloud's timers: autosave, the draft, following, the catalog's search.
             if self.cloud.wants_ticks() {
                 Subscription::run(cloud::ticks)
@@ -730,7 +760,10 @@ impl App {
         }
         // A command from the ribbon or a menu keeps the text field's text first (the web's blur),
         // and takes the keyboard from the layer tree (the web's button takes the focus).
-        if matches!(message, Message::Run(_) | Message::RunMethod { .. }) {
+        if matches!(
+            message,
+            Message::Run(_) | Message::RunMethod { .. } | Message::SplitChosen { .. }
+        ) {
             self.close_text_field(true);
             self.layers_keyboard = false;
         }
@@ -739,6 +772,14 @@ impl App {
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
             }
+            Message::SplitChosen {
+                key,
+                id,
+                option,
+                label,
+            } => return self.split_chosen(key, id, option, label),
+            Message::QuickAccess(id, on) => self.quick_access_changed(&id, on),
+            Message::Swallowed => {}
             Message::RibbonTab(id) => self.choose_tab(id),
             Message::RibbonPanel(event) => self.ribbon_panel_event(event),
             Message::CommandInput(text) => self.command_input = text,
@@ -796,11 +837,13 @@ impl App {
             }
             Message::Calc(event) => return self.calc_event(event),
             Message::Processing(event) => return self.processing_event(event),
+            Message::ModelDesigner(event) => return self.model_designer_event(event),
             Message::Builder(event) => return self.builder_event(event),
             Message::LayerStyle(event) => return self.layer_style_event(event),
             Message::StyleManager(event) => return self.style_manager_event(*event),
             Message::Legend(event) => return self.legend_event(event),
             Message::Designer(event) => return self.designer_event(*event),
+            Message::SvgEdit(event) => return self.svgedit_event(*event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -1119,6 +1162,11 @@ impl App {
             // The style library (style/manager/, docs/adr/0092).
             "style.manager" => return self.open_style_manager(None, None),
             "style.legend" => self.open_legend(),
+            "style.svgEditor" => self.open_svg_editor(crate::style::svgedit::Opening {
+                id: None,
+                path: None,
+                after: crate::style::svgedit::After::Nothing,
+            }),
             "style.assign" => return self.pick_for_selection(),
             "style.clearSymbol" => {
                 let said = self.assign_symbol(None);
@@ -1387,9 +1435,18 @@ mod tests {
 
     #[test]
     fn a_command_not_ported_says_so_and_changes_nothing() {
+        // One the web runs and the desktop not yet, whichever is left as they are ported.
+        let Some(id) = catalog()
+            .commands()
+            .iter()
+            .find(|c| c.standing == Standing::OnTheWeb)
+            .map(|c| c.id)
+        else {
+            return;
+        };
         let (mut app, _) = App::boot(None);
         let before = app.log.len();
-        let _ = app.run("style.svgEditor");
+        let _ = app.run(id);
         assert_eq!(app.log.len(), before + 1);
         assert!(app.log.last().is_some_and(
             |l| l.level == Level::Info && l.text.contains("masaüstüne henüz taşınmadı")

@@ -5,6 +5,7 @@ import { Measure } from './svgMeasure';
 import { NodeTool } from './svgNodeTool';
 import { RULER, Rulers } from './svgRulers';
 import { Snapper } from './svgSnap';
+import { knobTurn, scaledBox } from './svgEditModel';
 import { el, type CanvasHost, type CanvasView, type SnapOptions } from './svgView';
 
 export type { CanvasHost, CanvasOptions, ToolId } from './svgView';
@@ -410,23 +411,9 @@ export class SvgCanvas implements CanvasView {
       case 'scale': {
         if (!this.travelled(op, p)) return;
         const q = this.snap(p, { exclude: new Set(op.orig.keys()) });
-        const b = { ...op.box };
-        const h = op.handle;
-        if (h === 0 || h === 6 || h === 7) b.minX = q[0];
-        if (h === 2 || h === 3 || h === 4) b.maxX = q[0];
-        if (h === 0 || h === 1 || h === 2) b.minY = q[1];
-        if (h === 4 || h === 5 || h === 6) b.maxY = q[1];
-        if (e.shiftKey && h % 2 === 0) {
-          // Corners keep the proportions.
-          const k = Math.max((b.maxX - b.minX) / (op.box.maxX - op.box.minX), (b.maxY - b.minY) / (op.box.maxY - op.box.minY));
-          const w = (op.box.maxX - op.box.minX) * k;
-          const hh = (op.box.maxY - op.box.minY) * k;
-          if (h === 0 || h === 6) b.minX = b.maxX - w;
-          else b.maxX = b.minX + w;
-          if (h === 0 || h === 2) b.minY = b.maxY - hh;
-          else b.maxY = b.minY + hh;
-        }
-        if (Math.abs(b.maxX - b.minX) < 1e-6 || Math.abs(b.maxY - b.minY) < 1e-6) return;
+        // Corners keep the proportions with Shift (svgEditModel.ts).
+        const b = scaledBox(op.box, op.handle, q, e.shiftKey);
+        if (!b) return;
         const m = boxToBox(op.box, b);
         this.replace(op.orig, (s) => transformShape(s, m));
         return;
@@ -435,8 +422,7 @@ export class SvgCanvas implements CanvasView {
         if (!this.travelled(op, p)) return;
         const cx = (op.box.minX + op.box.maxX) / 2;
         const cy = (op.box.minY + op.box.maxY) / 2;
-        let deg = ((Math.atan2(p[1] - cy, p[0] - cx) - Math.atan2(op.p0[1] - cy, op.p0[0] - cx)) * 180) / Math.PI;
-        if (e.shiftKey) deg = Math.round(deg / 15) * 15;
+        const deg = knobTurn(op.box, op.p0, p, e.shiftKey);
         this.replace(op.orig, (s) => transformShape(s, rotation(deg, cx, cy)));
         host.status(`Döndürme: ${Math.round(deg)}°`);
         return;
@@ -597,8 +583,23 @@ export class SvgCanvas implements CanvasView {
     this.drawing.finish(closed);
   }
 
-  /** Esc on the canvas: whatever is half done goes first. */
+  /** Esc on the canvas: whatever is half done goes first; a move, scale or turn puts the shapes back. */
   cancel(): boolean {
+    const op = this.op;
+    if (op && (op.kind === 'move' || op.kind === 'scale' || op.kind === 'rotate')) {
+      this.op = null;
+      this.replace(op.orig, (s) => s);
+      this.host.commit('');
+      this.host.status('');
+      this.snapper.hit = null;
+      this.render();
+      return true;
+    }
+    if (op) {
+      this.op = null;
+      this.render();
+      return true;
+    }
     if (this.picking) {
       this.picking = null;
       this.host.status('Nokta seçmekten vazgeçildi.');

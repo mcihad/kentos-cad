@@ -2,6 +2,7 @@ import { nearestOnCubic, segmentCount, segmentCubic, splitCubic } from '../../st
 import { cornerAt, cornerNodes, filletRadius, nodeTypeOf, moveNodes, refKey, refreshAuto, type Corner, type NodeRef } from '../../style/svg/nodeOps';
 import type { PathNode, Pt, SubPath } from '../../style/svg/pathData';
 import type { SvgShape } from '../../style/svg/svgModel';
+import { niceRound } from './svgEditModel';
 import { el, fmtNum, tag, type CanvasView } from './svgView';
 
 /**
@@ -453,13 +454,6 @@ function dragHandle(orig: readonly SubPath[], ref: NodeRef, part: 'in' | 'out', 
   const len = type === 'symmetric' ? l : Math.hypot(oh[0] - n.x, oh[1] - n.y);
   n[other] = [n.x - (dx / l) * len, n.y - (dy / l) * len];
   return refreshAuto(subs);
-}
-
-/** A size rounded to a 1-2-5 step near `unit` (what a pixel is worth), so dragging gives tidy values. */
-function niceRound(v: number, unit: number): number {
-  const e = 10 ** Math.floor(Math.log10(unit));
-  const step = unit / e < 2 ? e : unit / e < 5 ? 2 * e : 5 * e;
-  return Math.round(v / step) * step;
 }
 
 /** Sub-paths as path data in screen space (previews). */
