@@ -110,18 +110,30 @@ pub(crate) fn function_item(f: &FuncDef, call: bool) -> Item {
 /// An operator or a word of the language; `spaced` (the tree) puts a space
 /// either side, as one writes them between values (`place` drops a space
 /// already there); completion replaces the word being written with it bare.
-pub(crate) fn operator_item(o: &OpDef, spaced: bool) -> Item {
-    let word = o.symbol.chars().all(char::is_alphabetic);
-    let insert = if spaced {
-        format!(" {} ", o.symbol)
-    } else {
-        o.symbol.to_string()
+/// With `template`, a word that takes more (`içinde (…)`, `durum eğer …
+/// son`) is written whole, the cursor where the first value goes.
+pub(crate) fn operator_item(o: &OpDef, spaced: bool, template: bool) -> Item {
+    let word = o.symbol.chars().all(|c| c.is_alphabetic() || c == ' ');
+    let (insert, caret) = match o.template.filter(|_| template) {
+        Some((before, after)) => {
+            let head = format!("{}{before}", if spaced { " " } else { "" });
+            (format!("{head}{after}"), utf16_len(&head))
+        }
+        None => {
+            let insert = if spaced {
+                format!(" {} ", o.symbol)
+            } else {
+                o.symbol.to_string()
+            };
+            let caret = utf16_len(&insert);
+            (insert, caret)
+        }
     };
     Item {
         kind: if word { Kind::Keyword } else { Kind::Operator },
         label: o.symbol.to_string(),
         detail: short(o.description).to_string(),
-        caret: utf16_len(&insert),
+        caret,
         insert,
         key: format!("op:{}", o.symbol),
         alias: None,
@@ -168,7 +180,8 @@ pub fn catalog(schema: &Schema, query: &str) -> Vec<Section> {
                     items.extend(
                         OPERATORS
                             .iter()
-                            .map(|o| (operator_item(o, true), o.aliases))
+                            .filter(|o| o.group == group)
+                            .map(|o| (operator_item(o, true, true), o.aliases))
                             .filter(|(i, a)| found(i, a, &q))
                             .map(|(i, _)| i),
                     );
@@ -184,6 +197,12 @@ pub fn catalog(schema: &Schema, query: &str) -> Vec<Section> {
                                     .iter()
                                     .filter(|f| f.group == group)
                                     .map(|f| (function_item(f, true), f.aliases)),
+                            )
+                            .chain(
+                                OPERATORS
+                                    .iter()
+                                    .filter(|o| o.group == group)
+                                    .map(|o| (operator_item(o, true, true), o.aliases)),
                             )
                             .filter(|(i, a)| found(i, a, &q))
                             .map(|(i, _)| i),
@@ -292,12 +311,12 @@ fn variable_help(v: &VarDef) -> Help {
 }
 
 fn operator_help(o: &OpDef) -> Help {
-    let item = operator_item(o, true);
+    let item = operator_item(o, true, true);
     Help {
         key: item.key,
         kind: item.kind,
         title: o.symbol.to_string(),
-        group: Group::Operators.title(),
+        group: o.group.title(),
         signature: o.signature.to_string(),
         description: o.description.to_string(),
         args: Vec::new(),
@@ -406,6 +425,12 @@ pub fn help_at(src: &str, cursor: usize, schema: &Schema) -> Option<Help> {
     let own = at.and_then(|i| {
         let p = &pieces[i];
         match &p.lex {
+            // A word of an operator where the grammar reads it so: the
+            // operator's help (`ise` explains `durum`, `IS` `boş`).
+            Lex::Word { .. } if p.phrase.is_some() => OPERATORS
+                .iter()
+                .find(|o| Some(o.symbol) == p.phrase)
+                .map(operator_help),
             Lex::Word { name } if called(&pieces, i) => find_function(name).map(function_help),
             Lex::Word { name } => match keyword_of(name) {
                 Some(_) => OPERATORS

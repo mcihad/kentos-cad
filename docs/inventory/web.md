@@ -52,7 +52,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 143 | 0 | 7 | 15 | 2 | 167 |
+| Komutlar | 144 | 0 | 6 | 15 | 2 | 167 |
 | Araçlar | 56 | 0 | 0 | 2 | 0 | 58 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -60,7 +60,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 42 | 12 | 10 | 0 | 1 | 65 |
 | Tarayıcı depoları | 7 | 1 | 1 | 0 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 44 | 4 | 15 | 0 | 0 | 63 |
+| Pencereler ve paneller | 45 | 4 | 14 | 0 | 0 | 63 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -77,9 +77,8 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (7 / 167; ayrıca 15 iki platformda da bekliyor)
+#### Komutlar (6 / 167; ayrıca 15 iki platformda da bekliyor)
 
-- `cloud.share` Bulut projesini paylaş…
 - `processing.newModel` Yeni model…
 - `style.svgEditor` SVG çizim düzenleyicisi…
 - `view.keyTips` Şerit harf ipuçları
@@ -154,14 +153,13 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (19 / 63)
+#### Pencereler ve paneller (18 / 63)
 
 - `apps/web/src/ui/bottom/BottomPanel.ts#BottomPanel` BottomPanel (kısmi) (masaüstünde: apps/desktop/src/bottom.rs (ADR 0058)) — Komut geçmişinin satırlarında saat yazmaz.
 - `apps/web/src/ui/cloud/InvitationDialog.ts#openInvitationDialog` openInvitationDialog
 - `apps/web/src/ui/cloud/ProjectForms.ts#openConvertDialog` openConvertDialog
 - `apps/web/src/ui/cloud/ProjectForms.ts#openDuplicateDialog` openDuplicateDialog
 - `apps/web/src/ui/cloud/ProjectForms.ts#openMetadataDialog` openMetadataDialog
-- `apps/web/src/ui/cloud/ShareDialog.ts#openShareDialog` openShareDialog
 - `apps/web/src/ui/menu/MenuBar.ts#MenuBar` MenuBar
 - `apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner` openModelDesigner
 - `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs (ADR 0017, 0051, 0089)) — Yöntem düğmesi son seçimi göstermez; hızlı erişime ekleme, şeridin sağ tık menüsü ve harf ipuçları yok.

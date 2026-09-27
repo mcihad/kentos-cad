@@ -119,6 +119,8 @@ pub async fn config(State(state): State<AppState>) -> Json<AuthConfig> {
             label: o.label.clone(),
             start_url: "/v1/auth/oidc/start".into(),
         }),
+        // The web app's own address, as its pages see it (`origin + pathname`).
+        public_url: Some(format!("{}/", state.config.public_url)),
     })
 }
 

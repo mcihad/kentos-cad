@@ -227,16 +227,25 @@ function column(c: ExprColumnData): ExprColumn {
 
 /**
  * One line for the dialog: how the expression works out on the objects it
- * will read. `measures`: the geometry store's values of objects, asked once
- * for all the previewed objects when the expression needs `$alan`,
- * `$uzunluk`, `$y` or `$x`.
+ * will read. `geometry`: the geometry store the objects are in, where the
+ * expression is evaluated with their geometry values (`$alan`, `$merkez_y`,
+ * `$genişlik` …); preferred. `measures`: else the store's values of objects,
+ * asked once for all the previewed objects when the expression needs
+ * `$alan`, `$uzunluk`, `$y` or `$x`.
  */
-export function previewExpression(expr: CompiledExpression, entities: readonly Entity[], kind: 'condition' | 'value', layerName: (id: string) => string, measures?: (entities: readonly Entity[]) => Float64Array): string {
+export function previewExpression(
+  expr: CompiledExpression,
+  entities: readonly Entity[],
+  kind: 'condition' | 'value',
+  layerName: (id: string) => string,
+  measures?: (entities: readonly Entity[]) => Float64Array,
+  geometry?: ExprGeometry,
+): string {
   if (!entities.length) return 'Önizleme için uygun nesne yok.';
   const missing = expr.fields.filter((f) => !entities.some((e) => Object.hasOwn(e.attrs, f)));
   const note = missing.length ? ` ${missing.map((f) => `“${f}”`).join(', ')} alanı bu nesnelerde yok.` : '';
   const list = entities.slice(0, 20000);
-  const objects: ExprObjects = { entities: list, layerName, measures: measures && (() => measures(list)) };
+  const objects: ExprObjects = { entities: list, layerName, geometry, measures: measures && (() => measures(list)) };
   if (kind === 'condition') {
     const c = expr.evaluateAll(objects, 'bool');
     const hits = list.filter((_, i) => c.value(i) === true).length;

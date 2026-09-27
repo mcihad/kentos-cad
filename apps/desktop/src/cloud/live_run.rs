@@ -152,9 +152,10 @@ impl Runner {
             }
             assert!(
                 Instant::now() < end,
-                "{what}: {} s içinde olmadı. Son iletiler: {:?}",
+                "{what}: {} s içinde olmadı. Son iletiler: {:?}; kataloğun satırı: {:?}",
                 limit.as_secs(),
-                said(&self.app).iter().rev().take(6).collect::<Vec<_>>()
+                said(&self.app).iter().rev().take(6).collect::<Vec<_>>(),
+                self.app.cloud.catalog.as_ref().and_then(|c| c.status.clone())
             );
             if let Ok(message) = self.rx.recv_timeout(Duration::from_millis(20)) {
                 self.send(message);
@@ -639,8 +640,121 @@ fn cloud_live() {
         "{:?}",
         said(&r.app).last()
     );
-    catalog_live(&mut r, &dir, &project, &db_project, stamp);
+    catalog_live(&mut r, &dir, &project, &db_project, stamp, &mehmet);
     println!("{}", said(&r.app).join("\n"));
+}
+
+/// Projeyi paylaş on the real server (docs/adr/0111), over the catalog's
+/// selected database project: mehmet's grant changed to Görüntüleyici and
+/// taken away after the question, then found by the finder and shared
+/// again; an invitation with its one-time link, withdrawn.
+fn share_live(r: &mut Runner, mehmet: &str, stamp: &str) {
+    use crate::cloud::share::{Event as Share, FIND_FIELD, Listed, Tab};
+    use iced::advanced::widget::operation::{focusable, text_input};
+    use kentos_contracts::{GrantRole, InvitationState};
+
+    r.cloud(Event::Share(Share::Open));
+    r.until("erişimi olanlar", Duration::from_secs(15), |a| {
+        a.cloud
+            .share
+            .as_ref()
+            .is_some_and(|s| s.access.is_some() && matches!(s.invitations, Listed::Ready(_)))
+    });
+    assert!(
+        r.app.share_rows().iter().any(|p| p.user_id == mehmet && p.can_change),
+        "mehmet's grant, from the run's start"
+    );
+    r.shot("30-paylas");
+    r.cloud(Event::Share(Share::Change {
+        user: mehmet.into(),
+        role: GrantRole::Viewer,
+    }));
+    r.until("rol değişikliği", Duration::from_secs(15), |a| {
+        last(a).ends_with("artık Görüntüleyici.")
+    });
+    r.cloud(Event::Share(Share::Revoke(mehmet.into())));
+    r.shot("31-paylas-kaldir");
+    r.cloud(Event::Share(Share::Answer(true)));
+    r.until("erişimi kaldırma", Duration::from_secs(15), |a| {
+        last(a).ends_with("artık projeye erişemiyor.")
+    });
+    // Found again by the finder, and shared as Düzenleyici.
+    r.cloud(Event::Share(Share::Query("meh".into())));
+    let found = |a: &App| {
+        a.cloud
+            .share
+            .as_ref()
+            .and_then(|s| s.found.as_ref())
+            .and_then(|(_, f)| f.iter().position(|c| c.user_id == mehmet))
+    };
+    r.until("kişi arama", Duration::from_secs(15), |a| found(a).is_some());
+    let field = iced::widget::Id::new(FIND_FIELD);
+    r.snapshot
+        .operate(r.app.view(), Box::new(focusable::focus(field.clone())));
+    r.snapshot
+        .operate(r.app.view(), Box::new(text_input::move_cursor_to_end(field)));
+    r.shot("32-paylas-bul");
+    let index = found(&r.app).expect("found");
+    r.cloud(Event::Share(Share::Pick(index)));
+    r.cloud(Event::Share(Share::Submit));
+    r.until("paylaşma", Duration::from_secs(15), |a| {
+        last(a).ends_with("projeye Düzenleyici olarak eklendi.")
+    });
+    // An invitation: its link once, never in the log; then withdrawn.
+    let address = format!(
+        "canli-{}@ornek.example",
+        stamp.chars().filter(char::is_ascii_digit).collect::<String>()
+    );
+    r.cloud(Event::Share(Share::Tab(Tab::Invites)));
+    r.cloud(Event::Share(Share::Email(address.clone())));
+    r.cloud(Event::Share(Share::Invite));
+    r.until("davet", Duration::from_secs(15), |a| {
+        a.cloud.share.as_ref().is_some_and(|s| s.invited.is_some())
+    });
+    let link = r
+        .app
+        .cloud
+        .share
+        .as_ref()
+        .and_then(|s| s.invited.as_ref())
+        .and_then(|(_, link)| link.clone())
+        .expect("the one-time link");
+    let token = link.split("?davet=").nth(1).expect("the token");
+    assert_eq!(token.len(), 64, "{link}");
+    assert!(
+        said(&r.app).iter().all(|line| !line.contains(token)),
+        "the link is kept nowhere else"
+    );
+    r.until("davetler", Duration::from_secs(15), |a| {
+        a.cloud.share.as_ref().is_some_and(|s| {
+            s.invitation_list()
+                .iter()
+                .any(|i| i.email == address && i.state == InvitationState::Pending)
+        })
+    });
+    r.shot("33-paylas-davet");
+    let invitation = r
+        .app
+        .cloud
+        .share
+        .as_ref()
+        .and_then(|s| s.invitation_list().iter().find(|i| i.email == address))
+        .map(|i| i.id.clone())
+        .expect("the invitation");
+    r.cloud(Event::Share(Share::InvitationRevoke(invitation)));
+    r.cloud(Event::Share(Share::Answer(true)));
+    r.until("davet geri alma", Duration::from_secs(15), |a| {
+        last(a).ends_with("için davet geri alındı.")
+    });
+    r.cloud(Event::Share(Share::Close));
+    assert!(r.app.cloud.share.is_none());
+    // Closed over the catalog, its list is read again (the web's `done`).
+    r.until("paylaşımdan sonra liste", Duration::from_secs(15), |a| {
+        a.cloud
+            .catalog
+            .as_ref()
+            .is_some_and(|c| !c.loading() && c.picked().is_some())
+    });
 }
 
 /// The last line said.
@@ -652,7 +766,14 @@ fn last(app: &App) -> String {
 /// Geri yükle, a project's details, the favourite, a `.kcad` download, the
 /// history with a checkpoint named and restored as a new project that
 /// opens; then what this run made goes: to the trash and removed for good.
-fn catalog_live(r: &mut Runner, dir: &Path, file_project: &str, db_project: &str, stamp: &str) {
+fn catalog_live(
+    r: &mut Runner,
+    dir: &Path,
+    file_project: &str,
+    db_project: &str,
+    stamp: &str,
+    mehmet: &str,
+) {
     use crate::cloud::catalog::{Details, List, Tab};
     use crate::cloud::catalog_actions::Act;
     use crate::cloud::catalog_history::{HistoryState, Point};
@@ -696,6 +817,7 @@ fn catalog_live(r: &mut Runner, dir: &Path, file_project: &str, db_project: &str
             .is_some_and(|c| matches!(&c.details, Details::Database(d) if d.feature_count == "13"))
     });
     r.shot("24-katalog-bilgiler");
+    share_live(r, mehmet, stamp);
 
     // 18. The favourite, on and off.
     r.cloud(Event::CatalogAct(Act::Favorite));

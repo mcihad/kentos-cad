@@ -1,7 +1,15 @@
 //! The expression grammar (the TypeScript's `Parser`): precedence climbing
-//! over or, and, comparisons, + − ||, * / %; unary not and minus; literals,
-//! fields, variables, calls and parentheses. Errors say what is wrong and
-//! where, as the dialog shows them.
+//! over or, and, comparisons, + − ||, * / %; unary not and minus; the power
+//! `^`; literals, fields, variables, calls and parentheses. Errors say what
+//! is wrong and where, as the dialog shows them.
+//!
+//! Since docs/adr/0100 §4, at the comparisons' level: `x içinde (a, b)`
+//! (IN), `x arasında a ve b` (BETWEEN), `x gibi 'A%'` (LIKE), `x benzer
+//! 'a%'` (ILIKE), each with `değil` (NOT) before it, and `x boş` / `x boş
+//! değil` (IS [NOT] NULL); and as a value `durum eğer c ise v … yoksa e son`
+//! (CASE WHEN … THEN … ELSE … END). These words are keywords only where
+//! they can be one: a field called Durum, Son or Gibi is still read as a
+//! field, and an expression that did not compile before gives the same error.
 
 use super::CompileError;
 use super::lexer::{Tok, Token};
@@ -25,6 +33,8 @@ pub enum BinOp {
     Mul,
     Div,
     Rem,
+    /// `^`: the power.
+    Pow,
 }
 
 #[derive(Clone, Debug)]
@@ -37,6 +47,17 @@ pub enum Node {
     Not(Box<Node>),
     Neg(Box<Node>),
     Bin(BinOp, Box<Node>, Box<Node>),
+    /// `durum eğer c ise v … [yoksa e] son`: the conditions in order and the else.
+    Case(Vec<(Node, Node)>, Option<Box<Node>>),
+    /// `x [değil] içinde (a, b, …)`: negated when the flag is set.
+    In(Box<Node>, Vec<Node>, bool),
+    /// `x [değil] arasında a ve b`.
+    Between(Box<Node>, Box<Node>, Box<Node>, bool),
+    /// `x [değil] gibi p` and `benzer` (case ignored): the pattern, ignoring
+    /// case, negated.
+    Like(Box<Node>, Box<Node>, bool, bool),
+    /// `x boş` / `x boş değil` (IS [NOT] NULL): negated.
+    IsNull(Box<Node>, bool),
 }
 
 /// The language's words (in either language); the builder colours and completes them too.
@@ -70,6 +91,40 @@ pub(crate) fn keyword_of(w: &str) -> Option<Keyword> {
     })
 }
 
+/// Words that are keywords only where one can stand (a field may be called so).
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Word {
+    Case,
+    When,
+    Then,
+    Else,
+    End,
+    In,
+    Between,
+    Like,
+    Ilike,
+    Is,
+}
+
+fn word(tok: &Token) -> Option<Word> {
+    let Tok::Word(w) = &tok.t else {
+        return None;
+    };
+    Some(match fold_turkish(w).as_str() {
+        "DURUM" | "CASE" => Word::Case,
+        "EGER" | "WHEN" => Word::When,
+        "ISE" | "THEN" => Word::Then,
+        "YOKSA" | "ELSE" => Word::Else,
+        "SON" | "END" => Word::End,
+        "ICINDE" | "IN" => Word::In,
+        "ARASINDA" | "BETWEEN" => Word::Between,
+        "GIBI" | "LIKE" => Word::Like,
+        "BENZER" | "ILIKE" => Word::Ilike,
+        "IS" => Word::Is,
+        _ => return None,
+    })
+}
+
 /// Binary operators by precedence, loosest first.
 const LEVELS: [&[(&str, BinOp)]; 5] = [
     &[("or", BinOp::Or)],
@@ -87,6 +142,9 @@ const LEVELS: [&[(&str, BinOp)]; 5] = [
     &[("+", BinOp::Add), ("-", BinOp::Sub), ("||", BinOp::Join)],
     &[("*", BinOp::Mul), ("/", BinOp::Div), ("%", BinOp::Rem)],
 ];
+
+/// The level of the comparisons, where `içinde`, `arasında`, `gibi`, `benzer` and `boş` stand.
+const COMPARISONS: usize = 2;
 
 pub struct Parser {
     toks: Vec<Token>,
@@ -168,15 +226,128 @@ impl Parser {
             return self.unary();
         }
         let mut a = self.binary(level + 1)?;
-        while let Some(op) = self
-            .op_at()
-            .and_then(|o| LEVELS[level].iter().find(|(s, _)| *s == o))
-        {
-            self.next();
-            let b = self.binary(level + 1)?;
-            a = Node::Bin(op.1, Box::new(a), Box::new(b));
+        loop {
+            if let Some(op) = self
+                .op_at()
+                .and_then(|o| LEVELS[level].iter().find(|(s, _)| *s == o))
+            {
+                self.next();
+                let b = self.binary(level + 1)?;
+                a = Node::Bin(op.1, Box::new(a), Box::new(b));
+                continue;
+            }
+            if level == COMPARISONS {
+                let (with, rest) = self.predicate(a)?;
+                a = with;
+                if rest {
+                    continue;
+                }
+            }
+            break;
         }
         Ok(a)
+    }
+
+    /// The token after the cursor.
+    fn peek2(&self) -> &Token {
+        &self.toks[(self.i + 1).min(self.toks.len() - 1)]
+    }
+
+    /// `içinde`, `arasında`, `gibi`, `benzer` (each after an optional
+    /// `değil`) and `boş [değil]` / `IS [NOT] NULL` after `a`, at the
+    /// comparisons' level; whether one was there.
+    fn predicate(&mut self, a: Node) -> Result<(Node, bool), CompileError> {
+        let tok = self.peek().clone();
+        // `x boş`, `x boş değil`; `x IS NULL`, `x IS NOT NULL`.
+        if keyword(&tok) == Some(Keyword::Null) {
+            self.next();
+            let negated = keyword(self.peek()) == Some(Keyword::Not);
+            if negated {
+                self.next();
+            }
+            return Ok((Node::IsNull(Box::new(a), negated), true));
+        }
+        if word(&tok) == Some(Word::Is) {
+            self.next();
+            let negated = keyword(self.peek()) == Some(Keyword::Not);
+            if negated {
+                self.next();
+            }
+            if keyword(self.peek()) != Some(Keyword::Null) {
+                return Err(err(
+                    "“IS” yalnız NULL ya da NOT NULL ile kullanılır: Ad IS NULL (Türkçesi: Ad boş).",
+                    self.peek().at,
+                ));
+            }
+            self.next();
+            return Ok((Node::IsNull(Box::new(a), negated), true));
+        }
+        // `değil` counts only before one of the words it can negate: otherwise
+        // the tokens stay, and the expression fails where it did before.
+        let negated = keyword(&tok) == Some(Keyword::Not)
+            && matches!(
+                word(self.peek2()),
+                Some(Word::In | Word::Between | Word::Like | Word::Ilike)
+            );
+        let at = if negated { self.peek2().clone() } else { tok };
+        let Some(w @ (Word::In | Word::Between | Word::Like | Word::Ilike)) = word(&at) else {
+            return Ok((a, false));
+        };
+        if negated {
+            self.next();
+        }
+        self.next();
+        let a = Box::new(a);
+        Ok((
+            match w {
+                Word::In => Node::In(a, self.list(&at)?, negated),
+                Word::Between => {
+                    let low = self.binary(COMPARISONS + 1)?;
+                    if keyword(self.peek()) != Some(Keyword::And) {
+                        return Err(err(
+                            format!(
+                                "{} iki değer bekler, aralarında “ve” ile: Kat arasında 3 ve 5.",
+                                at.describe()
+                            ),
+                            self.peek().at,
+                        ));
+                    }
+                    self.next();
+                    let high = self.binary(COMPARISONS + 1)?;
+                    Node::Between(a, Box::new(low), Box::new(high), negated)
+                }
+                _ => {
+                    let pattern = self.binary(COMPARISONS + 1)?;
+                    Node::Like(a, Box::new(pattern), w == Word::Ilike, negated)
+                }
+            },
+            true,
+        ))
+    }
+
+    /// `(a, b, …)` after `içinde`.
+    fn list(&mut self, at: &Token) -> Result<Vec<Node>, CompileError> {
+        let usage = || {
+            format!(
+                "{} parantez içinde bir liste bekler: Nitelik içinde ('Arsa', 'Tarla').",
+                at.describe()
+            )
+        };
+        if self.peek().t != Tok::Op("(") || self.peek2().t == Tok::Op(")") {
+            return Err(err(usage(), self.peek().at));
+        }
+        self.next();
+        let mut items = Vec::new();
+        loop {
+            items.push(self.binary(0)?);
+            if self.peek().t == Tok::Op(",") {
+                self.next();
+                continue;
+            }
+            break;
+        }
+        self.expect_close("Liste kapanmamış: “)” bekleniyordu.")?;
+        Ok(items)
     }
 
     fn unary(&mut self) -> Result<Node, CompileError> {
@@ -190,7 +361,52 @@ impl Parser {
             let a = self.unary()?;
             return Ok(if o == "-" { Node::Neg(Box::new(a)) } else { a });
         }
-        self.primary()
+        self.power()
+    }
+
+    /// `a ^ b`: tighter than the sign before it (−2 ^ 2 is −4), and from the
+    /// right (2 ^ 3 ^ 2 is 2 ^ 9).
+    fn power(&mut self) -> Result<Node, CompileError> {
+        let base = self.primary()?;
+        if self.peek().t != Tok::Op("^") {
+            return Ok(base);
+        }
+        self.next();
+        let exponent = self.unary()?;
+        Ok(Node::Bin(BinOp::Pow, Box::new(base), Box::new(exponent)))
+    }
+
+    /// `durum eğer c ise v … [yoksa e] son` (the cursor on `durum`).
+    fn case(&mut self) -> Result<Node, CompileError> {
+        self.next();
+        let mut whens = Vec::new();
+        while word(self.peek()) == Some(Word::When) {
+            self.next();
+            let condition = self.binary(0)?;
+            if word(self.peek()) != Some(Word::Then) {
+                return Err(err(
+                    "“ise” bekleniyordu: durumda her koşulun ardından “ise” ve değeri gelir (durum eğer $alan > 500 ise 'büyük' yoksa 'küçük' son).",
+                    self.peek().at,
+                ));
+            }
+            self.next();
+            let value = self.binary(0)?;
+            whens.push((condition, value));
+        }
+        let otherwise = if word(self.peek()) == Some(Word::Else) {
+            self.next();
+            Some(Box::new(self.binary(0)?))
+        } else {
+            None
+        };
+        if word(self.peek()) != Some(Word::End) {
+            return Err(err(
+                "“durum” kapanmamış: “son” bekleniyordu (ya da bir “eğer … ise …”, “yoksa …”).",
+                self.peek().at,
+            ));
+        }
+        self.next();
+        Ok(Node::Case(whens, otherwise))
     }
 
     fn primary(&mut self) -> Result<Node, CompileError> {
@@ -206,6 +422,11 @@ impl Parser {
             Tok::Word(name) => {
                 if self.peek().t == Tok::Op("(") {
                     return self.call(name, tok.at);
+                }
+                // `durum eğer …`: a case, only when a condition follows (a field may be called Durum).
+                if word(&tok) == Some(Word::Case) && word(self.peek()) == Some(Word::When) {
+                    self.i -= 1;
+                    return self.case();
                 }
                 match keyword(&tok) {
                     Some(Keyword::True) => Ok(Node::Lit(Value::Bool(true))),

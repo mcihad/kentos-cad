@@ -282,19 +282,28 @@ function processingMenu(ctx: AppContext, nodes: CategoryNode[]): MenuItem[] {
   }));
 }
 
+/**
+ * How a command's row looks in a menu (DESIGN.md §7.2): a toggle shows its
+ * check instead of its icon; a choice among several (theme, renderer,
+ * symbol mode, work mode) is a radio that keeps its icon; a tool reads as an
+ * action (its icon, never checked) though it reports being active.
+ */
+export function menuRowLook(id: string, checked: boolean | undefined): { icon: boolean; checked: boolean | undefined; radio: boolean } {
+  const radio = (id.startsWith('view.theme.') && id !== 'view.theme.toggle') || id.startsWith('view.renderer.') || id.startsWith('view.symbols.') || id.startsWith('workspace.');
+  const tool = id.startsWith('tool.');
+  return { icon: checked === undefined || radio || tool, checked: tool ? undefined : checked, radio };
+}
+
 export function commandItem(ctx: AppContext, id: string, overrides: Partial<MenuItem> = {}): MenuItem {
   const cmd = ctx.commands.get(id);
   if (!cmd) return { label: id, disabled: true };
-  const checked = cmd.isChecked?.();
-  const isRadio = (id.startsWith('view.theme.') && id !== 'view.theme.toggle') || id.startsWith('view.renderer.') || id.startsWith('view.symbols.') || id.startsWith('workspace.');
-  // Tools report "active" via isChecked, but in menus they read as actions.
-  const isTool = id.startsWith('tool.');
+  const look = menuRowLook(id, cmd.isChecked?.());
   return {
     label: cmd.title,
-    icon: checked === undefined || isRadio || isTool ? cmd.icon : undefined,
+    icon: look.icon ? cmd.icon : undefined,
     shortcut: ctx.keymap.chordFor(id),
-    checked: isTool ? undefined : checked,
-    radio: isRadio,
+    checked: look.checked,
+    radio: look.radio,
     disabled: !ctx.commands.isEnabled(id),
     hint: cmd.pendingNote,
     run: () => ctx.commands.execute(id),

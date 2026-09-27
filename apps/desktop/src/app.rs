@@ -130,6 +130,9 @@ pub enum Dialog {
     CloudTrash,
     OpenNewest,
     OpenNewestUnsaved,
+    /// Projeyi paylaş for the open project (cloud/share.rs); over the
+    /// catalog the window is the catalog's.
+    Share,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).

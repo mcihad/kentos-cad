@@ -8,7 +8,7 @@
 //! values are text, arithmetic reads numbers out of text, an empty value is
 //! empty, and no operation looks at another object.
 
-use kentos_geometry_core::jsmath::js_max;
+use kentos_geometry_core::jsmath::{js_max, pow};
 
 use crate::js::collate;
 use crate::js::text::{self, MAX_STRING_UNITS, utf16_len};
@@ -203,7 +203,7 @@ pub fn binary<'a>(op: BinOp, a: V<'a>, b: V<'a>, out: &mut String, s: &mut Scrat
                 _ => return join(a, b, out, s),
             }
         }
-        BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Rem => {
+        BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Rem | BinOp::Pow => {
             let (Some(na), Some(nb)) = (to_number(a), to_number(b)) else {
                 return R::V(V::Null);
             };
@@ -214,8 +214,194 @@ pub fn binary<'a>(op: BinOp, a: V<'a>, b: V<'a>, out: &mut String, s: &mut Scrat
                 BinOp::Sub => na - nb,
                 BinOp::Mul => na * nb,
                 BinOp::Div => na / nb,
+                BinOp::Pow => pow(na, nb),
                 _ => na % nb,
             })
         }
     })
+}
+
+// ── Since docs/adr/0100 §4: CASE, IN, BETWEEN, LIKE ─────────────────
+
+/// `durum eğer c ise v … [yoksa e] son`: the value of the first condition
+/// that holds; `parts` alternate conditions and values, the else last when
+/// `otherwise`. None is an operand that threw. What is not reached does not
+/// count: a condition after the one that holds, a value not chosen.
+pub fn case<'a>(parts: &[Option<V<'a>>], otherwise: bool) -> R<'a> {
+    let (pairs, rest) = parts.split_at(parts.len() - usize::from(otherwise));
+    for pair in pairs.chunks_exact(2) {
+        match pair[0] {
+            None => return R::Thrown,
+            Some(c) if truthy(c) => return pair[1].map_or(R::Thrown, R::V),
+            Some(_) => {}
+        }
+    }
+    match rest.first() {
+        Some(Some(v)) => R::V(*v),
+        Some(None) => R::Thrown,
+        None => R::V(V::Null),
+    }
+}
+
+/// `x içinde (a, b, …)`: whether x equals one of them, as `=` compares.
+pub fn within(x: V, items: &[V], s: &mut Scratch) -> bool {
+    items.iter().any(|&i| equals(x, i, s))
+}
+
+/// `x arasında a ve b`: a ≤ x ≤ b, in the order `<` uses; false with an empty value.
+pub fn between(x: V, low: V, high: V, s: &mut Scratch) -> bool {
+    matches!(compare(x, low, s), Some(c) if c >= 0.0)
+        && matches!(compare(x, high, s), Some(c) if c <= 0.0)
+}
+
+/// A pattern's next part at byte `p`: `%`, `_`, or one character (`\`
+/// takes the next character as it is), and where the part ends.
+fn part(pattern: &str, p: usize) -> Option<(Part, usize)> {
+    let mut chars = pattern.get(p..)?.chars();
+    let c = chars.next()?;
+    Some(match c {
+        '%' => (Part::Any, p + 1),
+        '_' => (Part::One, p + 1),
+        '\\' => match chars.next() {
+            Some(e) => (Part::Char(e), p + 1 + e.len_utf8()),
+            None => (Part::Char('\\'), p + 1),
+        },
+        c => (Part::Char(c), p + c.len_utf8()),
+    })
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Part {
+    Any,
+    One,
+    Char(char),
+}
+
+/// Whether `text` fits `pattern` (`%` any text, `_` one character): the
+/// greedy match with one step back to the last `%`, over byte positions.
+fn fits(text: &str, pattern: &str) -> bool {
+    let (mut t, mut p) = (0, 0);
+    // The last `%` seen: the pattern after it, and where the text stood.
+    let mut back: Option<(usize, usize)> = None;
+    loop {
+        let next = text.get(t..).and_then(|r| r.chars().next());
+        match (part(pattern, p), next) {
+            (Some((Part::Any, after)), _) => {
+                back = Some((after, t));
+                p = after;
+            }
+            (Some((Part::One, after)), Some(c)) => {
+                t += c.len_utf8();
+                p = after;
+            }
+            (Some((Part::Char(e), after)), Some(c)) if e == c => {
+                t += c.len_utf8();
+                p = after;
+            }
+            (None, None) => return true,
+            _ => {
+                // A mismatch (or the pattern ended first): the last `%` takes one character more.
+                let Some((after, from)) = back else {
+                    return false;
+                };
+                let Some(c) = text.get(from..).and_then(|r| r.chars().next()) else {
+                    return false;
+                };
+                back = Some((after, from + c.len_utf8()));
+                t = from + c.len_utf8();
+                p = after;
+            }
+        }
+    }
+}
+
+/// `x gibi p` (LIKE): `%` any text, `_` one character, `\` the next
+/// character as it is; `fold` (`benzer`, ILIKE) ignores case and the Turkish
+/// letters' marks as `içerir` does, but keeps the spaces at either end.
+/// False with an empty value or pattern.
+pub fn like(x: V, p: V, fold: bool, s: &mut Scratch) -> bool {
+    if is_empty(x) || p == V::Null {
+        return false;
+    }
+    let Scratch { a, b, c } = s;
+    if fold {
+        let (mut fx, mut fp) = (std::mem::take(a), std::mem::take(b));
+        fx.clear();
+        text::push_fold(&mut fx, as_text(x, c));
+        fp.clear();
+        text::push_fold(&mut fp, as_text(p, c));
+        let fit = fits(&fx, &fp);
+        (*a, *b) = (fx, fp);
+        return fit;
+    }
+    fits(as_text(x, a), as_text(p, b))
+}
+
+#[cfg(test)]
+mod language {
+    use super::*;
+
+    #[test]
+    fn like_takes_percent_underscore_and_escapes() {
+        let s = &mut Scratch::default();
+        let t = |x: &str, p: &str| like(V::Text(x), V::Text(p), false, &mut Scratch::default());
+        assert!(t("1245", "12%") && t("1245", "%45") && t("1245", "%2%") && t("1245", "1_4_"));
+        assert!(!t("1245", "12") && !t("1245", "_2%5_") && !t("", "%"));
+        assert!(t("a%b", "a\\%b") && !t("axb", "a\\%b") && t("a_", "a\\_"));
+        assert!(t("aXbXc", "a%b%c") && t("abcabc", "%abc") && !t("abcab", "%abc"));
+        assert!(t("Çınar", "Ç_nar") && t("😀x", "_x"));
+        assert!(like(V::Text("Çınar"), V::Text("CIN%"), true, s));
+        assert!(!like(V::Text("Çınar"), V::Text("CIN%"), false, s));
+        assert!(like(V::Num(12.5), V::Text("12._"), false, s));
+        // benzer keeps the spaces: ' a' does not end in a space.
+        assert!(
+            !like(V::Text("a"), V::Text("% "), true, s)
+                && like(V::Text("a "), V::Text("A "), true, s)
+        );
+    }
+
+    #[test]
+    fn case_in_and_between_read_what_they_must() {
+        let s = &mut Scratch::default();
+        let n = |x| Some(V::Num(x));
+        assert_eq!(
+            case(
+                &[Some(V::Bool(false)), n(1.0), Some(V::Bool(true)), n(2.0)],
+                false
+            ),
+            R::V(V::Num(2.0))
+        );
+        // A value not chosen, or a condition not reached, may have thrown.
+        assert_eq!(
+            case(&[Some(V::Bool(true)), n(1.0), None, None], false),
+            R::V(V::Num(1.0))
+        );
+        assert_eq!(
+            case(&[None, n(1.0), Some(V::Bool(true)), n(2.0)], false),
+            R::Thrown
+        );
+        assert_eq!(
+            case(&[Some(V::Bool(false)), n(1.0), n(9.0)], true),
+            R::V(V::Num(9.0))
+        );
+        assert_eq!(case(&[Some(V::Null), n(1.0)], false), R::V(V::Null));
+        assert!(within(V::Text("12.0"), &[V::Num(3.0), V::Num(12.0)], s));
+        assert!(!within(V::Null, &[V::Num(1.0)], s) && within(V::Null, &[V::Text("")], s));
+        assert!(between(V::Num(5.0), V::Num(5.0), V::Num(9.0), s));
+        assert!(!between(V::Null, V::Num(1.0), V::Num(9.0), s));
+        assert!(between(V::Text("Çınar"), V::Text("Çam"), V::Text("Dut"), s));
+        assert!(
+            !between(V::Text("Ceviz"), V::Text("Çam"), V::Text("Dut"), s),
+            "C comes before Ç"
+        );
+        let mut out = String::new();
+        assert_eq!(
+            binary(BinOp::Pow, V::Num(2.0), V::Text("10"), &mut out, s),
+            R::V(V::Num(1024.0))
+        );
+        assert_eq!(
+            binary(BinOp::Pow, V::Num(2.0), V::Null, &mut out, s),
+            R::V(V::Null)
+        );
+    }
 }

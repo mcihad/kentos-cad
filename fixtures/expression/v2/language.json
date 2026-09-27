@@ -1,0 +1,2586 @@
+{
+ "format": "kentos.expression-language",
+ "version": 1,
+ "note": "Dilin §4 ekleri (durum … son, içinde, arasında, gibi, benzer, boş / boş değil, ^, yeni işlevler), motordan bağımsız hesaplanmış: her kaynağın her nesnedeki değeri ya da derlenmediği. Değer: null boş, [\"n\", x] sayı (\"-0\" eksi sıfır), [\"t\", s] metin, [\"b\", b] doğru/yanlış. \"ulp\": 1 olan durumda sayı tam olmayan üslü bir kuvvetten gelir: motorunki (libm) doğru yuvarlanmış değerin en çok bir son basamak birimi yanındadır. Üretici scripts/fixtures/expression_language.py (--check yalnız karşılaştırır).",
+ "objects": [
+  {
+   "Ada": "1245",
+   "Parsel": "12",
+   "Nitelik": "Arsa",
+   "Kat": "3",
+   "Ad": "Çınar",
+   "Kod": "P00012",
+   "Durum": "açık",
+   "Son": "5",
+   "Gibi": "x",
+   "Not": "",
+   "Oran": "0.5"
+  },
+  {
+   "Ada": "1246",
+   "Parsel": "7",
+   "Nitelik": "Tarla",
+   "Kat": "5",
+   "Ad": "çam",
+   "Kod": "a%b",
+   "Durum": "kapalı",
+   "Son": "",
+   "Gibi": "",
+   "Not": "iyi",
+   "Oran": "2"
+  },
+  {
+   "Ada": "",
+   "Parsel": "12.0",
+   "Nitelik": "Yol",
+   "Kat": "x",
+   "Ad": "Işık",
+   "Kod": "a😀b",
+   "Durum": "",
+   "Oran": "-8"
+  },
+  {},
+  {
+   "Ada": " 12 ",
+   "Parsel": "1e3",
+   "Nitelik": "arsa",
+   "Kat": "-2.5",
+   "Ad": "İzmir",
+   "Kod": "12_4",
+   "Durum": "açık",
+   "Son": "-3",
+   "Gibi": "Gibi",
+   "Not": " ",
+   "Oran": "16"
+  },
+  {
+   "Ada": "12",
+   "Parsel": "0",
+   "Nitelik": "ARSA ",
+   "Kat": "4",
+   "Ad": "Ceviz",
+   "Kod": "\\x",
+   "Durum": "AÇIK",
+   "Oran": "1e308"
+  }
+ ],
+ "cases": [
+  {
+   "source": "durum eğer Kat > 4 ise 'yüksek' eğer Kat > 2 ise 'orta' yoksa 'alçak' son",
+   "values": [
+    [
+     "t",
+     "orta"
+    ],
+    [
+     "t",
+     "yüksek"
+    ],
+    [
+     "t",
+     "yüksek"
+    ],
+    [
+     "t",
+     "alçak"
+    ],
+    [
+     "t",
+     "alçak"
+    ],
+    [
+     "t",
+     "orta"
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer Kat > 4 ise 'yüksek' son",
+   "values": [
+    null,
+    [
+     "t",
+     "yüksek"
+    ],
+    [
+     "t",
+     "yüksek"
+    ],
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "CASE WHEN Nitelik = 'Arsa' THEN 1 WHEN Nitelik = 'Tarla' THEN 2 ELSE 0 END",
+   "values": [
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer Ada ise Ada yoksa 'adasız' son",
+   "values": [
+    [
+     "t",
+     "1245"
+    ],
+    [
+     "t",
+     "1246"
+    ],
+    [
+     "t",
+     "adasız"
+    ],
+    [
+     "t",
+     "adasız"
+    ],
+    [
+     "t",
+     " 12 "
+    ],
+    [
+     "t",
+     "12"
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer [Not] ise 'var' yoksa 'yok' son",
+   "values": [
+    [
+     "t",
+     "yok"
+    ],
+    [
+     "t",
+     "var"
+    ],
+    [
+     "t",
+     "yok"
+    ],
+    [
+     "t",
+     "yok"
+    ],
+    [
+     "t",
+     "var"
+    ],
+    [
+     "t",
+     "yok"
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer Oran ise Oran * 2 son",
+   "values": [
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     -16.0
+    ],
+    null,
+    [
+     "n",
+     32.0
+    ],
+    null
+   ]
+  },
+  {
+   "source": "durum eğer Kat arasında 3 ve 5 ise 'bina' son || '!'",
+   "values": [
+    [
+     "t",
+     "bina!"
+    ],
+    [
+     "t",
+     "bina!"
+    ],
+    [
+     "t",
+     "!"
+    ],
+    [
+     "t",
+     "!"
+    ],
+    [
+     "t",
+     "!"
+    ],
+    [
+     "t",
+     "bina!"
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer doğru ise 1 yoksa doldur('x', 1e12) son",
+   "values": [
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer Kat > 4 ise doldur('x', 1e12) yoksa 'kısa' son",
+   "values": [
+    [
+     "t",
+     "kısa"
+    ],
+    null,
+    null,
+    [
+     "t",
+     "kısa"
+    ],
+    [
+     "t",
+     "kısa"
+    ],
+    [
+     "t",
+     "kısa"
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer yanlış ise 1 son = boş",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer Kat = 3 ise durum eğer Ada = '1245' ise 'iç' son son",
+   "values": [
+    [
+     "t",
+     "iç"
+    ],
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "Nitelik içinde ('Arsa', 'Tarla')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Nitelik değil içinde ('Arsa', 'Tarla')",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Parsel içinde (12, 7)",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Kat IN (3, '5', 4)",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Ada içinde ('', 'x')",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Ada NOT IN (1245)",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Durum içinde ('açık')",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "1 içinde (1, doldur('x', 1e12))",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "Kat arasında 3 ve 5",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Kat değil arasında 3 ve 5",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Parsel BETWEEN 7 AND 12",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Ad arasında 'Çal' ve 'Dut'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Ad arasında 'c' ve 'd'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Ada arasında 1000 ve 2000",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Kat arasında Son ve 10",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Ada gibi '12%'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Kod gibi 'P___12'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Kod gibi 'a\\%b'",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Kod gibi '%\\_%'",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Kod gibi 'a_b'",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Kod gibi '\\\\x'",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Ad gibi 'ç%'",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Ad benzer 'ç%'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Ad ILIKE 'CIN%'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Nitelik benzer 'arsa'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Nitelik benzer 'arsa%'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Nitelik değil gibi 'Arsa'",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Ad LIKE '%'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Parsel gibi 12",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "[Not] benzer ' '",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Ada boş",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Ada boş değil",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "[Not] IS NULL",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "Son is not null",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Ada boş = doğru",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer Kat boş ise 'yok' yoksa Kat son",
+   "values": [
+    [
+     "t",
+     "3"
+    ],
+    [
+     "t",
+     "5"
+    ],
+    [
+     "t",
+     "x"
+    ],
+    [
+     "t",
+     "yok"
+    ],
+    [
+     "t",
+     "-2.5"
+    ],
+    [
+     "t",
+     "4"
+    ]
+   ]
+  },
+  {
+   "source": "2 ^ 10",
+   "values": [
+    [
+     "n",
+     1024.0
+    ],
+    [
+     "n",
+     1024.0
+    ],
+    [
+     "n",
+     1024.0
+    ],
+    [
+     "n",
+     1024.0
+    ],
+    [
+     "n",
+     1024.0
+    ],
+    [
+     "n",
+     1024.0
+    ]
+   ]
+  },
+  {
+   "source": "-2 ^ 2",
+   "values": [
+    [
+     "n",
+     -4.0
+    ],
+    [
+     "n",
+     -4.0
+    ],
+    [
+     "n",
+     -4.0
+    ],
+    [
+     "n",
+     -4.0
+    ],
+    [
+     "n",
+     -4.0
+    ],
+    [
+     "n",
+     -4.0
+    ]
+   ]
+  },
+  {
+   "source": "(-2) ^ 2",
+   "values": [
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     4.0
+    ]
+   ]
+  },
+  {
+   "source": "2 ^ 3 ^ 2",
+   "values": [
+    [
+     "n",
+     512.0
+    ],
+    [
+     "n",
+     512.0
+    ],
+    [
+     "n",
+     512.0
+    ],
+    [
+     "n",
+     512.0
+    ],
+    [
+     "n",
+     512.0
+    ],
+    [
+     "n",
+     512.0
+    ]
+   ]
+  },
+  {
+   "source": "2 ^ -1",
+   "values": [
+    [
+     "n",
+     0.5
+    ],
+    [
+     "n",
+     0.5
+    ],
+    [
+     "n",
+     0.5
+    ],
+    [
+     "n",
+     0.5
+    ],
+    [
+     "n",
+     0.5
+    ],
+    [
+     "n",
+     0.5
+    ]
+   ]
+  },
+  {
+   "source": "Kat ^ 2",
+   "values": [
+    [
+     "n",
+     9.0
+    ],
+    [
+     "n",
+     25.0
+    ],
+    null,
+    null,
+    [
+     "n",
+     6.25
+    ],
+    [
+     "n",
+     16.0
+    ]
+   ]
+  },
+  {
+   "source": "Oran ^ 0.5",
+   "values": [
+    [
+     "n",
+     0.7071067811865476
+    ],
+    [
+     "n",
+     1.4142135623730951
+    ],
+    null,
+    null,
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     1e+154
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "Oran ^ 2",
+   "values": [
+    [
+     "n",
+     0.25
+    ],
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     64.0
+    ],
+    null,
+    [
+     "n",
+     256.0
+    ],
+    null
+   ]
+  },
+  {
+   "source": "10 ^ -2",
+   "values": [
+    [
+     "n",
+     0.01
+    ],
+    [
+     "n",
+     0.01
+    ],
+    [
+     "n",
+     0.01
+    ],
+    [
+     "n",
+     0.01
+    ],
+    [
+     "n",
+     0.01
+    ],
+    [
+     "n",
+     0.01
+    ]
+   ]
+  },
+  {
+   "source": "0 ^ -1",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "1.5 ^ 3 * 2",
+   "values": [
+    [
+     "n",
+     6.75
+    ],
+    [
+     "n",
+     6.75
+    ],
+    [
+     "n",
+     6.75
+    ],
+    [
+     "n",
+     6.75
+    ],
+    [
+     "n",
+     6.75
+    ],
+    [
+     "n",
+     6.75
+    ]
+   ]
+  },
+  {
+   "source": "Oran ^ (1 / 3)",
+   "values": [
+    [
+     "n",
+     0.7937005259840998
+    ],
+    [
+     "n",
+     1.2599210498948732
+    ],
+    null,
+    null,
+    [
+     "n",
+     2.5198420997897464
+    ],
+    [
+     "n",
+     4.641588833612718e+102
+    ]
+   ],
+   "ulp": 1
+  },
+  {
+   "source": "(-8) ^ (1 / 3)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "kök(Oran)",
+   "values": [
+    [
+     "n",
+     0.7071067811865476
+    ],
+    [
+     "n",
+     1.4142135623730951
+    ],
+    null,
+    null,
+    [
+     "n",
+     4.0
+    ],
+    [
+     "n",
+     1e+154
+    ]
+   ]
+  },
+  {
+   "source": "sqrt(2)",
+   "values": [
+    [
+     "n",
+     1.4142135623730951
+    ],
+    [
+     "n",
+     1.4142135623730951
+    ],
+    [
+     "n",
+     1.4142135623730951
+    ],
+    [
+     "n",
+     1.4142135623730951
+    ],
+    [
+     "n",
+     1.4142135623730951
+    ],
+    [
+     "n",
+     1.4142135623730951
+    ]
+   ]
+  },
+  {
+   "source": "tavan(Kat)",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    null,
+    null,
+    [
+     "n",
+     -2.0
+    ],
+    [
+     "n",
+     4.0
+    ]
+   ]
+  },
+  {
+   "source": "taban(Kat)",
+   "values": [
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     5.0
+    ],
+    null,
+    null,
+    [
+     "n",
+     -3.0
+    ],
+    [
+     "n",
+     4.0
+    ]
+   ]
+  },
+  {
+   "source": "floor(-0.5) = 0",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "tavan(-0.5)",
+   "values": [
+    [
+     "n",
+     "-0"
+    ],
+    [
+     "n",
+     "-0"
+    ],
+    [
+     "n",
+     "-0"
+    ],
+    [
+     "n",
+     "-0"
+    ],
+    [
+     "n",
+     "-0"
+    ],
+    [
+     "n",
+     "-0"
+    ]
+   ]
+  },
+  {
+   "source": "tavan('x')",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "yuvarla(pi(), 4)",
+   "values": [
+    [
+     "n",
+     3.1416
+    ],
+    [
+     "n",
+     3.1416
+    ],
+    [
+     "n",
+     3.1416
+    ],
+    [
+     "n",
+     3.1416
+    ],
+    [
+     "n",
+     3.1416
+    ],
+    [
+     "n",
+     3.1416
+    ]
+   ]
+  },
+  {
+   "source": "pi() * 10 ^ 2",
+   "values": [
+    [
+     "n",
+     314.1592653589793
+    ],
+    [
+     "n",
+     314.1592653589793
+    ],
+    [
+     "n",
+     314.1592653589793
+    ],
+    [
+     "n",
+     314.1592653589793
+    ],
+    [
+     "n",
+     314.1592653589793
+    ],
+    [
+     "n",
+     314.1592653589793
+    ]
+   ]
+  },
+  {
+   "source": "sol(Kod, 3)",
+   "values": [
+    [
+     "t",
+     "P00"
+    ],
+    [
+     "t",
+     "a%b"
+    ],
+    [
+     "t",
+     "a😀"
+    ],
+    null,
+    [
+     "t",
+     "12_"
+    ],
+    [
+     "t",
+     "\\x"
+    ]
+   ]
+  },
+  {
+   "source": "sağ(Kod, 2)",
+   "values": [
+    [
+     "t",
+     "12"
+    ],
+    [
+     "t",
+     "%b"
+    ],
+    [
+     "t",
+     "�b"
+    ],
+    null,
+    [
+     "t",
+     "_4"
+    ],
+    [
+     "t",
+     "\\x"
+    ]
+   ]
+  },
+  {
+   "source": "LEFT(Kod, 2)",
+   "values": [
+    [
+     "t",
+     "P0"
+    ],
+    [
+     "t",
+     "a%"
+    ],
+    [
+     "t",
+     "a�"
+    ],
+    null,
+    [
+     "t",
+     "12"
+    ],
+    [
+     "t",
+     "\\x"
+    ]
+   ]
+  },
+  {
+   "source": "right(Ad, 10)",
+   "values": [
+    [
+     "t",
+     "Çınar"
+    ],
+    [
+     "t",
+     "çam"
+    ],
+    [
+     "t",
+     "Işık"
+    ],
+    null,
+    [
+     "t",
+     "İzmir"
+    ],
+    [
+     "t",
+     "Ceviz"
+    ]
+   ]
+  },
+  {
+   "source": "sol(Ada, 0) = ''",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     true
+    ]
+   ]
+  },
+  {
+   "source": "sol(Kod, -1)",
+   "values": [
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     ""
+    ],
+    null,
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     ""
+    ]
+   ]
+  },
+  {
+   "source": "sol(12.5, 3)",
+   "values": [
+    [
+     "t",
+     "12."
+    ],
+    [
+     "t",
+     "12."
+    ],
+    [
+     "t",
+     "12."
+    ],
+    [
+     "t",
+     "12."
+    ],
+    [
+     "t",
+     "12."
+    ],
+    [
+     "t",
+     "12."
+    ]
+   ]
+  },
+  {
+   "source": "bul(Kod, '0')",
+   "values": [
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    null,
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ]
+  },
+  {
+   "source": "bul(Ad, 'ı')",
+   "values": [
+    [
+     "n",
+     2.0
+    ],
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    null,
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ]
+  },
+  {
+   "source": "strpos(Kod, 'b')",
+   "values": [
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     3.0
+    ],
+    [
+     "n",
+     4.0
+    ],
+    null,
+    [
+     "n",
+     0.0
+    ],
+    [
+     "n",
+     0.0
+    ]
+   ]
+  },
+  {
+   "source": "bul(Kod, '')",
+   "values": [
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ],
+    null,
+    [
+     "n",
+     1.0
+    ],
+    [
+     "n",
+     1.0
+    ]
+   ]
+  },
+  {
+   "source": "bul(Ada, boş)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "birleştir('Ada ', Ada, ' Parsel ', Parsel)",
+   "values": [
+    [
+     "t",
+     "Ada 1245 Parsel 12"
+    ],
+    [
+     "t",
+     "Ada 1246 Parsel 7"
+    ],
+    [
+     "t",
+     "Ada  Parsel 12.0"
+    ],
+    [
+     "t",
+     "Ada  Parsel "
+    ],
+    [
+     "t",
+     "Ada  12  Parsel 1e3"
+    ],
+    [
+     "t",
+     "Ada 12 Parsel 0"
+    ]
+   ]
+  },
+  {
+   "source": "concat(Kat, boş, doğru)",
+   "values": [
+    [
+     "t",
+     "3doğru"
+    ],
+    [
+     "t",
+     "5doğru"
+    ],
+    [
+     "t",
+     "xdoğru"
+    ],
+    [
+     "t",
+     "doğru"
+    ],
+    [
+     "t",
+     "-2.5doğru"
+    ],
+    [
+     "t",
+     "4doğru"
+    ]
+   ]
+  },
+  {
+   "source": "birleştir(Ada)",
+   "values": [
+    [
+     "t",
+     "1245"
+    ],
+    [
+     "t",
+     "1246"
+    ],
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     " 12 "
+    ],
+    [
+     "t",
+     "12"
+    ]
+   ]
+  },
+  {
+   "source": "sağdoldur(Parsel, 5, '_')",
+   "values": [
+    [
+     "t",
+     "12___"
+    ],
+    [
+     "t",
+     "7____"
+    ],
+    [
+     "t",
+     "12.0_"
+    ],
+    null,
+    [
+     "t",
+     "1e3__"
+    ],
+    [
+     "t",
+     "0____"
+    ]
+   ]
+  },
+  {
+   "source": "sağdoldur(Kod, 4)",
+   "values": [
+    [
+     "t",
+     "P00012"
+    ],
+    [
+     "t",
+     "a%b "
+    ],
+    [
+     "t",
+     "a😀b"
+    ],
+    null,
+    [
+     "t",
+     "12_4"
+    ],
+    [
+     "t",
+     "\\x  "
+    ]
+   ]
+  },
+  {
+   "source": "rpad(Ada, 2, 'xyz')",
+   "values": [
+    [
+     "t",
+     "1245"
+    ],
+    [
+     "t",
+     "1246"
+    ],
+    [
+     "t",
+     "xx"
+    ],
+    null,
+    [
+     "t",
+     " 12 "
+    ],
+    [
+     "t",
+     "12"
+    ]
+   ]
+  },
+  {
+   "source": "sağdoldur(Ada, 3, '')",
+   "values": [
+    [
+     "t",
+     "1245"
+    ],
+    [
+     "t",
+     "1246"
+    ],
+    [
+     "t",
+     "   "
+    ],
+    null,
+    [
+     "t",
+     " 12 "
+    ],
+    [
+     "t",
+     "12 "
+    ]
+   ]
+  },
+  {
+   "source": "sağdoldur(Ada, 1e12)",
+   "values": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "source": "Durum = 'açık'",
+   "values": [
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "Son || Gibi",
+   "values": [
+    [
+     "t",
+     "5x"
+    ],
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     ""
+    ],
+    [
+     "t",
+     "-3Gibi"
+    ],
+    [
+     "t",
+     ""
+    ]
+   ]
+  },
+  {
+   "source": "Gibi gibi 'G%'",
+   "values": [
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     false
+    ],
+    [
+     "b",
+     true
+    ],
+    [
+     "b",
+     false
+    ]
+   ]
+  },
+  {
+   "source": "durum eğer Durum ise Durum son",
+   "values": [
+    [
+     "t",
+     "açık"
+    ],
+    [
+     "t",
+     "kapalı"
+    ],
+    null,
+    null,
+    [
+     "t",
+     "açık"
+    ],
+    [
+     "t",
+     "AÇIK"
+    ]
+   ]
+  },
+  {
+   "source": "Kat arasında 3",
+   "compiles": false
+  },
+  {
+   "source": "Kat arasında 3 ve",
+   "compiles": false
+  },
+  {
+   "source": "Nitelik içinde 'Arsa'",
+   "compiles": false
+  },
+  {
+   "source": "Nitelik içinde ()",
+   "compiles": false
+  },
+  {
+   "source": "durum eğer Kat > 3 'x' son",
+   "compiles": false
+  },
+  {
+   "source": "durum eğer Kat > 3 ise 'x'",
+   "compiles": false
+  },
+  {
+   "source": "durum son",
+   "compiles": false
+  },
+  {
+   "source": "Ada IS 3",
+   "compiles": false
+  },
+  {
+   "source": "Ada boş / 2",
+   "compiles": false
+  },
+  {
+   "source": "pi(1)",
+   "compiles": false
+  },
+  {
+   "source": "kök()",
+   "compiles": false
+  },
+  {
+   "source": "sol('a')",
+   "compiles": false
+  },
+  {
+   "source": "2 ^",
+   "compiles": false
+  }
+ ]
+}

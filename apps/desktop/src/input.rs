@@ -354,6 +354,9 @@ impl App {
                 return task;
             }
             match press.named() {
+                // Projeyi paylaş: its question first, then the window; over
+                // the catalog, the catalog stays and reads its list again.
+                Some(Named::Escape) if self.cloud.share.is_some() => return self.share_escape(),
                 // What the window held goes with it (a password, a request).
                 Some(Named::Escape) => self.close_dialog(),
                 // Ctrl+Enter runs a processing tool from anywhere in its window (the web's).
@@ -366,7 +369,8 @@ impl App {
                 // The catalog's list keys (the web's): ↑ ↓ Home End move the
                 // selection, Enter does the main action; not under its question.
                 Some(key @ (Named::ArrowUp | Named::ArrowDown | Named::Home | Named::End))
-                    if self.dialog == Some(crate::app::Dialog::Catalog) =>
+                    if self.dialog == Some(crate::app::Dialog::Catalog)
+                        && self.cloud.share.is_none() =>
                 {
                     use crate::cloud::catalog::Step;
                     let step = match key {
@@ -379,6 +383,7 @@ impl App {
                 }
                 Some(Named::Enter)
                     if self.dialog == Some(crate::app::Dialog::Catalog)
+                        && self.cloud.share.is_none()
                         && !self.cloud.catalog.as_ref().is_some_and(|c| c.busy()) =>
                 {
                     return self.cloud_event(crate::cloud::Event::CatalogOpen);

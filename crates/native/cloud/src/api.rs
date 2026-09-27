@@ -20,8 +20,9 @@ use std::time::Duration;
 
 use kentos_contracts::{
     ApiError, AuthConfig, CatalogSort, CatalogView, CommandEnvelope, EventPage, FeaturePage,
-    FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me, ProjectCheckpoints,
-    ProjectCreate, ProjectDetails, ProjectInfo, ProjectPage, ProjectType,
+    FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me, ProjectAccessList,
+    ProjectCheckpoints, ProjectCreate, ProjectDetails, ProjectInfo, ProjectInvitations,
+    ProjectPage, ProjectType, ShareCandidates,
 };
 use reqwest::header::{self, HeaderMap};
 use reqwest::{Method, RequestBuilder, Response, Url};
@@ -567,6 +568,45 @@ impl Cloud {
         project: Uuid,
     ) -> impl Future<Output = Result<ProjectDetails, ApiFailure>> + Send + 'static {
         self.get(self.inner.project_url(tenant, project, "/details"))
+    }
+
+    /// Who can use a project, with the role each has and where it comes from
+    /// (`GET …/projects/{project}/access`, `project.share`; docs/adr/0015).
+    pub fn access(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+    ) -> impl Future<Output = Result<ProjectAccessList, ApiFailure>> + Send + 'static {
+        self.get(self.inner.project_url(tenant, project, "/access"))
+    }
+
+    /// The people a project can be shared with whose name or e-mail matches
+    /// `query`, among those the account may share with
+    /// (`GET …/projects/{project}/access/candidates?q=`, docs/adr/0024).
+    pub fn candidates(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        query: &str,
+    ) -> impl Future<Output = Result<ShareCandidates, ApiFailure>> + Send + 'static {
+        let url = self
+            .inner
+            .project_url(tenant, project, "/access/candidates")
+            .map(|mut url| {
+                url.query_pairs_mut().append_pair("q", query);
+                url
+            });
+        self.get(url)
+    }
+
+    /// A project's invitations: the waiting ones and those of the last 30
+    /// days (`GET …/projects/{project}/invitations`, docs/adr/0035).
+    pub fn invitations(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+    ) -> impl Future<Output = Result<ProjectInvitations, ApiFailure>> + Send + 'static {
+        self.get(self.inner.project_url(tenant, project, "/invitations"))
     }
 
     /// What opening a project needs before its objects (`GET …/projects/{project}`).

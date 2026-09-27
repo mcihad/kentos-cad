@@ -10,6 +10,9 @@ import { icon } from '../icons';
 import { fitBar, type BarFit } from '../widgets/fit';
 import { PopupMenu } from '../widgets/PopupMenu';
 import { tooltip } from '../widgets/tooltip';
+import { MENUBAR_FOLD, SHELL_TEXTS } from '../shell/shellPlan';
+
+const T = SHELL_TEXTS.menubar;
 
 /**
  * Classic desktop menu bar: click opens, hovering switches while open,
@@ -31,25 +34,34 @@ export class MenuBar extends Component {
     this.ctx = ctx;
     this.menus = menus;
     const docName = h('span', { class: 'menubar__doc-name' });
-    const dirty = h('span', { class: 'menubar__dirty', title: 'Kaydedilmemiş değişiklikler var' });
-    const crs = h('button', { class: 'menubar__crs', type: 'button' }, icon('crs', 14), h('span', { class: 'menubar__crs-name' }));
+    const dirty = h('span', { class: 'menubar__dirty', title: T.dirty });
+    const crsName = h('span', { class: 'menubar__crs-name' });
+    const crs = h('button', { class: 'menubar__crs', type: 'button' }, icon('crs', 14), crsName);
+    const brand = brandButton(ctx, this.d, 'menubar__brand');
+    const brandWord = brand.querySelector<HTMLElement>('.brand__word');
     this.nav = h('nav', { class: 'menubar__menus' });
     this.el = h(
       'header',
-      { class: 'menubar', role: 'menubar', 'aria-label': 'Ana menü' },
-      brandButton(ctx, this.d, 'menubar__brand'),
+      { class: 'menubar', role: 'menubar', 'aria-label': T.label },
+      brand,
       this.nav,
       h('div', { class: 'menubar__doc' }, dirty, docName),
       h('div', { class: 'menubar__right' }, crs, fullscreenButton(ctx, this.d, 'menubar__icon')),
     );
 
     // Every menu stays in view (DESIGN.md §7.1): at a narrow window and a large type scale the bar makes
-    // room in steps, as the ribbon's tab row does: the “KentOS” word, then the CRS's name (its button and
-    // tooltip stay), then the menus' padding. The document's name shrinks first by itself.
+    // room in steps, as the ribbon's tab row does (shellPlan.ts MENUBAR_FOLD: the “KentOS” word, then the CRS's
+    // name, its button and tooltip staying, then the menus' padding). The document's name shrinks first by itself.
     const fit = (this.fit = fitBar(
       this.el,
-      3,
-      (level) => (this.el.dataset.tight = String(level)),
+      MENUBAR_FOLD.length - 1,
+      (level) => {
+        const f = MENUBAR_FOLD[level];
+        this.el.dataset.tight = String(level);
+        brandWord?.toggleAttribute('hidden', !f.brandWord);
+        crsName.toggleAttribute('hidden', !f.crsName);
+        this.nav.style.setProperty('--menubar-item-pad', `${f.menuPadding}px`);
+      },
       () => this.nav.scrollWidth <= this.nav.clientWidth,
     ));
     this.d.add(fit.dispose);
@@ -62,12 +74,12 @@ export class MenuBar extends Component {
     this.d.add(ctx.doc.dirty.subscribe((v) => dirty.toggleAttribute('hidden', !v), true));
     this.d.add(
       ctx.doc.crs.subscribe((c) => {
-        crs.querySelector('.menubar__crs-name')!.textContent = c.name;
+        crsName.textContent = c.name;
         this.fit?.refit();
       }, true),
     );
     this.d.add(listen(crs, 'click', () => ctx.commands.execute('crs.set')));
-    this.d.add(tooltip(crs, () => ({ title: 'Koordinat sistemi', description: `EPSG:${ctx.doc.crs.value.srid}. Değiştirmek için tıklayın.` })));
+    this.d.add(tooltip(crs, () => ({ title: T.crs, description: T.crsTip(ctx.doc.crs.value.srid) })));
   }
 
   private renderMenus(): void {

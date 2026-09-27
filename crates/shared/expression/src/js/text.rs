@@ -219,7 +219,13 @@ pub fn push_lower_tr(out: &mut String, s: &str) {
 
 /// `fold_turkish` written at the end of `out`.
 pub fn push_fold_turkish(out: &mut String, s: &str) {
-    for c in trim(s).chars() {
+    push_fold(out, trim(s));
+}
+
+/// `fold_turkish`'s letters without its trimming, at the end of `out`: a
+/// `benzer` (ILIKE) pattern keeps its spaces (docs/adr/0100 §4).
+pub fn push_fold(out: &mut String, s: &str) {
+    for c in s.chars() {
         for u in if c == 'i' { 'İ' } else { c }.to_uppercase() {
             out.push(match u {
                 'Ç' => 'C',
