@@ -136,7 +136,11 @@ fn a_shapefile_is_its_files_chosen_together() {
     let points = s.result.as_ref().map_or(0, |r| r.entities.len());
     import(&mut app);
     assert_eq!(count(&app) - before, points);
-    assert!(said(&app, "“noktalar.shp”:"), "{:?}", app.history);
+    assert!(
+        said(&app, "“noktalar.shp”:"),
+        "{:?}",
+        app.log.lines().collect::<Vec<_>>()
+    );
 }
 
 #[test]
@@ -212,7 +216,11 @@ fn a_geojson_export_writes_what_the_reader_takes_back() {
     );
     send(&mut app, Event::GeoJsonExport(geojson_export::Event::Run));
     assert_eq!(app.dialog, None, "{:?}", app.exchange);
-    assert!(said(&app, "“cizim.geojson” yazıldı:"), "{:?}", app.history);
+    assert!(
+        said(&app, "“cizim.geojson” yazıldı:"),
+        "{:?}",
+        app.log.lines().collect::<Vec<_>>()
+    );
     let bytes = std::fs::read(&path).expect("written");
     let back = kentos_formats::geojson::read(
         &bytes,

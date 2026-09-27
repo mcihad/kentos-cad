@@ -10,7 +10,7 @@
 //! and the other way round. Every change goes through the document, with the
 //! web's rules: undo, the dirty flag and the saved revision.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
@@ -196,15 +196,6 @@ impl Document {
             LayerNodeType::Layer => self.count(&node.id),
             LayerNodeType::Group => node.children.iter().map(|c| self.count_below(c)).sum(),
         }
-    }
-
-    /// Object count per kind (`polygon`, `text` …), sorted by kind.
-    pub fn kinds(&self) -> BTreeMap<&'static str, usize> {
-        let mut kinds = BTreeMap::new();
-        for entity in self.model.entities() {
-            *kinds.entry(entity.kind()).or_insert(0) += 1;
-        }
-        kinds
     }
 
     pub fn layer_count(&self) -> usize {
@@ -446,7 +437,6 @@ mod tests {
         let doc = Document::read(&old).expect("the web's v1 file reads");
         assert!(doc.legacy, "a v1 file is not written over");
         assert!(doc.layer_count() > 0);
-        assert_eq!(doc.kinds().values().sum::<usize>(), doc.entity_count());
         assert_eq!(doc.entity_count(), 13);
 
         // Saved as v2: exactly the bytes the independent writer made of the same file

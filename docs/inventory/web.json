@@ -142,8 +142,8 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 49,
-        "partial": 4,
+        "implemented": 50,
+        "partial": 3,
         "pending": 0,
         "none": 9,
         "n/a": 1
@@ -11422,10 +11422,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/bottom.rs (ADR 0058)",
-      "desktopNote": "Komut geçmişinin satırlarında saat yazmaz."
+      "desktopWhere": "apps/desktop/src/bottom.rs, message_log.rs, log_plan.rs (ADR 0058, 0114)"
     },
     {
       "id": "apps/web/src/ui/bottom/CommandLine.ts#CommandLine",
@@ -11437,7 +11436,7 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/view.rs, input.rs (KentOS UI CommandLine)"
+      "desktopWhere": "apps/desktop/src/view.rs, input.rs, message_log.rs (KentOS UI CommandLine, tek satır; ADR 0114)"
     },
     {
       "id": "apps/web/src/ui/calc/IntersectionDialog.ts#openIntersection",
@@ -12026,8 +12025,8 @@
         "web": "implemented",
         "desktop": "partial"
       },
-      "desktopWhere": "apps/desktop/src/view.rs, cloud/cells.rs (ADR 0058, 0080, 0113)",
-      "desktopNote": "Web'in son iletiyi birkaç saniye gösteren hücresi yok; iletiler alt paneldedir. Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
+      "desktopWhere": "apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs (ADR 0058, 0080, 0113, 0114)",
+      "desktopNote": "Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu)."
     },
     {
       "id": "apps/web/src/ui/style/LayerStyleDialog.ts#openLayerStyle",

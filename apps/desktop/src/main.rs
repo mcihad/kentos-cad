@@ -28,8 +28,14 @@ mod keys;
 mod labels;
 mod layer_tree;
 mod layering;
+mod log_plan;
+#[cfg(test)]
+mod log_plan_tests;
 mod map_marks;
 mod marks;
+mod message_log;
+#[cfg(test)]
+mod message_log_tests;
 mod modes;
 mod opening;
 #[cfg(test)]

@@ -297,10 +297,8 @@ mod tests {
 
         /// A click on the text box.
         fn click_line(&mut self) {
-            let height = kentos_ui::widget::command_line::height(
-                kentos_ui::widget::command_line::LINES,
-                false,
-            );
+            // The command line is one row: its history is the bottom panel's.
+            let height = kentos_ui::widget::command_line::height(0, false);
             let input = Point::new(1200.0, height - 16.0);
             let want = self.model.click();
             let _ = self.ui.deliver(
@@ -394,10 +392,7 @@ mod tests {
         )
         .expect("opens");
         let _ = player.apply(Message::Run("tool.polygon"));
-        let size = IcedSize::new(
-            1600.0,
-            kentos_ui::widget::command_line::height(kentos_ui::widget::command_line::LINES, false),
-        );
+        let size = IcedSize::new(1600.0, kentos_ui::widget::command_line::height(0, false));
         let mut twin = Twin {
             app: &mut *player.app,
             ui: Snapshot::software(size).expect("the software renderer"),

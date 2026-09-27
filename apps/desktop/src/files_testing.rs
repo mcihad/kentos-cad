@@ -97,9 +97,5 @@ pub fn app_with_drawing() -> App {
 
 /// What the command line said last.
 pub fn last_said(app: &App) -> String {
-    use kentos_ui::widget::command_line::Entry;
-    match app.history.last() {
-        Some(Entry::Input(t) | Entry::Value(t) | Entry::Output(t) | Entry::Warning(t) | Entry::Error(t)) => t.clone(),
-        _ => String::new(),
-    }
+    app.log.last().map(|l| l.text.clone()).unwrap_or_default()
 }

@@ -41,6 +41,7 @@ use iced::{
 
 use crate::icon::{Icon, icon};
 use crate::label;
+use crate::style;
 use crate::theme::accent::mix;
 use crate::theme::{Tokens, typography};
 use crate::widget::context_menu::{Menu, MenuButton};
@@ -79,6 +80,7 @@ pub struct Tab<'a> {
     icon: Option<Icon>,
     dirty: bool,
     closable: bool,
+    badge: usize,
 }
 
 impl<'a> Tab<'a> {
@@ -88,7 +90,15 @@ impl<'a> Tab<'a> {
             icon: None,
             dirty: false,
             closable: true,
+            badge: 0,
         }
+    }
+
+    /// Başlığın yanında sayı rozeti (ör. görülmemiş uyarılar): amber zeminde
+    /// kalın, küçük rakamlar (web'in `.badge`'i); 0 ise rozet yoktur.
+    pub fn badge(mut self, count: usize) -> Self {
+        self.badge = count;
+        self
     }
 
     pub fn icon(mut self, icon: Icon) -> Self {
@@ -164,6 +174,27 @@ pub(crate) fn room(tab: Rectangle, trail: f32) -> Rectangle {
     }
 }
 
+/// Sekmenin sayı rozeti: 16 piksel yüksek, en az 16 piksel geniş hap.
+fn badge<'a, Message: 'a>(count: usize) -> Element<'a, Message> {
+    let digits = count.to_string();
+    let wide = digits.len() > 1;
+    let pill = container(
+        iced::widget::text(digits)
+            .font(typography::ui_strong())
+            .size(typography::caption() - 1.0)
+            .line_height(1.0),
+    )
+    .height(16)
+    .align_y(Center)
+    .style(style::container::warning_count);
+
+    if wide {
+        pill.padding([0, 4]).into()
+    } else {
+        pill.center_x(16).into()
+    }
+}
+
 impl<'a, Message: Clone + 'a> Tabs<'a, Message> {
     pub fn new(
         tabs: impl IntoIterator<Item = Tab<'a>>,
@@ -200,15 +231,16 @@ impl<'a, Message: Clone + 'a> Tabs<'a, Message> {
                     heading = heading.push(icon(glyph).size(14.0));
                 }
 
+                heading = heading.push(label::text(tab.title).wrapping(Wrapping::None));
+
+                if tab.badge > 0 {
+                    heading = heading.push(badge(tab.badge));
+                }
+
                 Entry {
                     closable: tab.closable,
                     dirty: tab.dirty,
-                    parts: [
-                        heading
-                            .push(label::text(tab.title).wrapping(Wrapping::None))
-                            .into(),
-                        icon(Icon::Close).size(GLYPH).into(),
-                    ],
+                    parts: [heading.into(), icon(Icon::Close).size(GLYPH).into()],
                 }
             })
             .collect();
