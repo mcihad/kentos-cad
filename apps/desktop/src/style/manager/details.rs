@@ -25,9 +25,6 @@ use super::{Event, Field, ImportDraft, Manager, ev};
 use crate::app::Message;
 use crate::style::thumbs::{Look, Thumbs};
 
-/// Why an edit that needs the SVG editor waits.
-pub const SVG_NOT_YET: &str = "SVG çizim düzenleyicisi web'de var; masaüstüne henüz taşınmadı.";
-
 /// The picture of an item: a symbol, or a drawing as a marker of itself (`symbolOfItem`).
 pub fn symbol_of_item(item: &Item) -> Value {
     match item.kind() {
@@ -335,7 +332,10 @@ pub fn details<'a>(
             },
             Some(ev(Event::Edit(id.clone()))),
         )),
-        ItemKind::Asset if item.format() == Some("svg") => Some((SVG_NOT_YET, None)),
+        ItemKind::Asset if item.format() == Some("svg") => Some((
+            "SVG çizim düzenleyicisinde açar",
+            Some(ev(Event::Edit(id.clone()))),
+        )),
         ItemKind::Asset => None,
     };
     if let Some((note, press)) = editor {

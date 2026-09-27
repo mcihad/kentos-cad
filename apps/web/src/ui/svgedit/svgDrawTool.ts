@@ -1,5 +1,6 @@
 import type { PathNode, Pt } from '../../style/svg/pathData';
-import { regularPolygon, rotation, shapeId, transformShape, type Paint, type SvgShape } from '../../style/svg/svgModel';
+import { shapeId, type SvgShape } from '../../style/svg/svgModel';
+import { lineStrokeWidth, shapeFromDrag } from './svgEditModel';
 import { screenPath } from './svgNodeTool';
 import { el, type CanvasView } from './svgView';
 
@@ -73,7 +74,7 @@ export class DrawTool {
     this.draft = [];
     this.cursor = null;
     if (nodes.length >= 2) {
-      const shape: SvgShape = { id: shapeId(), kind: 'path', subs: [{ closed, nodes }], fill: closed ? 'fill' : 'none', stroke: closed ? 'none' : 'fill', strokeWidth: Math.max(1, host.doc.width / 25) };
+      const shape: SvgShape = { id: shapeId(), kind: 'path', subs: [{ closed, nodes }], fill: closed ? 'fill' : 'none', stroke: closed ? 'none' : 'fill', strokeWidth: lineStrokeWidth(host.doc.width) };
       host.begin();
       host.doc.shapes.push(shape);
       host.commit(host.tool === 'pen' ? 'Kalem' : 'Çizgi');
@@ -90,33 +91,13 @@ export class DrawTool {
     return true;
   }
 
-  /** The shape a drag from p0 to p1 makes with the current tool (Alt: from the centre). */
+  /** The shape a drag from p0 to p1 makes with the current tool (Alt: from the centre; svgEditModel.ts). */
   shapeFromDrag(p0: Pt, p1: Pt, fromCentre: boolean): SvgShape | null {
     const host = this.view.host;
     const tool = host.tool;
-    const base = { id: shapeId(), fill: 'fill' as Paint, stroke: 'none' as Paint, strokeWidth: Math.max(1, host.doc.width / 50) };
-    if (tool === 'text') return { ...base, kind: 'text', x: p0[0], y: p0[1], text: 'Aa', size: host.doc.height / 5, weight: 700, font: 'sans', anchor: 'start' };
-    let dx = p1[0] - p0[0];
-    let dy = p1[1] - p0[1];
-    if (Math.hypot(dx, dy) < 0.5) return null;
-    if (tool === 'polygon') {
-      const r = Math.hypot(dx, dy);
-      const sp = regularPolygon(p0[0], p0[1], r, Math.max(3, host.options.sides), host.options.star ? r * 0.45 : undefined);
-      // The first corner points at the pointer.
-      const turn = Math.atan2(dy, dx) + Math.PI / 2;
-      return transformShape({ ...base, kind: 'path', subs: [sp] }, rotation((turn * 180) / Math.PI, p0[0], p0[1]));
-    }
-    if (this.shift) {
-      const k = Math.max(Math.abs(dx), Math.abs(dy));
-      dx = Math.sign(dx || 1) * k;
-      dy = Math.sign(dy || 1) * k;
-    }
-    const x0 = fromCentre ? p0[0] - Math.abs(dx) : Math.min(p0[0], p0[0] + dx);
-    const y0 = fromCentre ? p0[1] - Math.abs(dy) : Math.min(p0[1], p0[1] + dy);
-    const w = fromCentre ? 2 * Math.abs(dx) : Math.abs(dx);
-    const h = fromCentre ? 2 * Math.abs(dy) : Math.abs(dy);
-    if (tool === 'rect') return { ...base, kind: 'rect', x: x0, y: y0, w, h };
-    return { ...base, kind: 'ellipse', cx: x0 + w / 2, cy: y0 + h / 2, rx: w / 2, ry: h / 2 };
+    if (tool !== 'rect' && tool !== 'ellipse' && tool !== 'polygon' && tool !== 'text') return null;
+    const { width, height } = host.doc;
+    return shapeFromDrag({ tool, width, height, sides: host.options.sides, star: host.options.star, shift: this.shift, fromCentre }, p0, p1, shapeId());
   }
 
   /** A finished drag: the shape goes in as one undo step and is chosen (back to Seç, except for text). */

@@ -10,7 +10,8 @@ import { scaleStroke, type SvgFiles } from './svgFile';
  * (viewBox: move it, crop or grow it, fit it to the content), a unit
  * scale for drawing and canvas together, the symbol's intended width in
  * mm ("1 birim = … mm", written into the file and used by exports), and
- * the preview's paper colour. One undo step.
+ * the preview's paper colour. One undo step; the guides move with the
+ * drawing.
  */
 
 const n = (v: number) => String(Math.round(v * 1000) / 1000);
@@ -69,7 +70,11 @@ export function openDocProps(files: SvgFiles): void {
     const moves = st.x !== 0 || st.y !== 0 || s !== 1;
     host.change('docprops', () => {
       const d = host.doc;
-      if (moves) d.shapes = d.shapes.map((sh) => scaleStroke(transformShape(sh, m), s));
+      if (moves) {
+        d.shapes = d.shapes.map((sh) => scaleStroke(transformShape(sh, m), s));
+        // The guides stay where they were on the drawing.
+        if (d.guides) d.guides = d.guides.map((g) => ({ ...g, x: (g.x - st.x) * s, y: (g.y - st.y) * s }));
+      }
       d.width = Math.max(0.01, st.w * s);
       d.height = Math.max(0.01, st.h * s);
       d.sizeMm = st.mm > 0 ? st.mm : undefined;

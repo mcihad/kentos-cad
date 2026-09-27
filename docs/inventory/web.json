@@ -74,14 +74,14 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 145,
+    "commandsOnDesktop": 146,
     "desktop": {
       "commands": {
         "total": 167,
-        "implemented": 145,
+        "implemented": 146,
         "partial": 0,
         "pending": 15,
-        "none": 2,
+        "none": 1,
         "n/a": 5
       },
       "tools": {
@@ -142,10 +142,10 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 51,
-        "partial": 3,
+        "implemented": 55,
+        "partial": 4,
         "pending": 0,
-        "none": 5,
+        "none": 0,
         "n/a": 4
       }
     },
@@ -2657,7 +2657,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": [
         "apps/web/scripts/e2e/layout.mjs",
@@ -12065,10 +12065,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/style/manager/ (ADR 0092)",
-      "desktopNote": "SVG çizimi SVG düzenleyicisini açar; masaüstüne henüz taşınmadı, düğmesi soluk ve nedenini söyler. Düzenle ve Yeni sembol Sembol tasarımcısını açar (ADR 0094)."
+      "desktopWhere": "apps/desktop/src/style/manager/ (ADR 0092; Düzenle ve Yeni sembol Sembol tasarımcısını, SVG çizimi SVG düzenleyicisini açar, ADR 0094, 0095)"
     },
     {
       "id": "apps/web/src/ui/style/SymbolDesigner.ts#openSymbolDesigner",
@@ -12090,8 +12089,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/ (ADR 0095)"
     },
     {
       "id": "apps/web/src/ui/svgedit/svgDocProps.ts#openDocProps",
@@ -12101,8 +12101,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/files/docprops.rs (ADR 0095)"
     },
     {
       "id": "apps/web/src/ui/svgedit/svgExport.ts#openExportDialog",
@@ -12112,8 +12113,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)",
+      "desktopNote": "PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır."
     },
     {
       "id": "apps/web/src/ui/svgedit/svgImport.ts#openImportDialog",
@@ -12123,8 +12126,10 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "partial"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)",
+      "desktopNote": "Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır."
     },
     {
       "id": "apps/web/src/ui/svgedit/svgTrace.ts#openTraceDialog",
@@ -12134,8 +12139,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/style/svgedit/files/trace.rs (ADR 0095)"
     },
     {
       "id": "apps/web/src/ui/toolbar/Toolbar.ts#Toolbar",

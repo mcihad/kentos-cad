@@ -839,6 +839,8 @@ impl App {
                 self.dialog = Some(Dialog::ModelDesigner);
                 self.designer_close();
             }
+            // A window over it, a question, then unsaved changes are asked about (style/svgedit/).
+            Some(Dialog::SvgEditor) => self.svgedit_close_request(),
             _ => {}
         }
     }

@@ -117,6 +117,13 @@ export function strokeStyle(host: StyleHost, sel: SvgShape[]): HTMLElement {
   return h('div', { class: 'svgp__group' }, parts);
 }
 
+/** The box's fields shown again from the selection (a text typed elsewhere in the panel moved it). */
+const BOX_REFRESH = new WeakMap<HTMLElement, () => void>();
+
+export function refreshBox(el: HTMLElement | null): void {
+  if (el) BOX_REFRESH.get(el)?.();
+}
+
 /** X, Y, width and height of the selection's box, and a rotation by a typed angle. */
 export function boxFields(host: StyleHost, sel: SvgShape[]): HTMLElement {
   const b0 = shapesBox(sel)!;
@@ -172,12 +179,25 @@ export function boxFields(host: StyleHost, sel: SvgShape[]): HTMLElement {
     b.addEventListener('click', () => turn(ccw));
     return b;
   };
-  return h(
+  const el = h(
     'div',
-    { class: 'svgp__group' },
+    { class: 'svgp__group', 'data-box': '' },
     h('div', { class: 'sdf__grouptitle' }, 'Kutu'),
     pair(row('X', xw), row('Y', yw)),
     h('div', { class: 'svgp__wh' }, row('Genişlik', ww), lockBtn, row('Yükseklik', hw)),
     row('Döndür', h('div', { class: 'svgp__rot' }, rot, turnBtn(true), turnBtn(false))),
   );
+  BOX_REFRESH.set(el, () => {
+    const b = shapesBox(host.doc.shapes.filter((s) => host.selection.has(s.id)));
+    if (!b) return;
+    Object.assign(cur, { x: b.minX, y: b.minY, w: b.maxX - b.minX, h: b.maxY - b.minY });
+    for (const [w, v] of [
+      [xw, cur.x],
+      [yw, cur.y],
+      [ww, cur.w],
+      [hw, cur.h],
+    ] as const)
+      if (document.activeElement !== inputOf(w)) inputOf(w).value = fmtNum(v, 6);
+  });
+  return el;
 }

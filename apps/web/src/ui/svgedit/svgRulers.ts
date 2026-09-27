@@ -1,6 +1,7 @@
 import type { Pt } from '../../style/svg/pathData';
 import { shapeId, type Guide } from '../../style/svg/svgModel';
 import { h } from '../dom';
+import { niceStep } from './svgEditModel';
 import { el, fmtNum, type CanvasView } from './svgView';
 
 /**
@@ -241,9 +242,4 @@ const textAt = (x: number, y: number, s: string) => {
   return t;
 };
 
-/** The smallest 1-2-5 step not below `v`. */
-export function niceStep(v: number): number {
-  const e = 10 ** Math.floor(Math.log10(v));
-  const m = v / e;
-  return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * e;
-}
+export { niceStep };

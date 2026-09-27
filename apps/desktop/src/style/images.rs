@@ -144,7 +144,7 @@ fn outline(content: &str, font: Font) -> Option<TextOutline> {
 }
 
 /// `data:image/png;base64,…` → the file's bytes.
-fn data_url(url: &str) -> Option<(&str, Vec<u8>)> {
+pub(crate) fn data_url(url: &str) -> Option<(&str, Vec<u8>)> {
     let rest = url.strip_prefix("data:")?;
     let (head, body) = rest.split_once(',')?;
     let mime = head.split(';').next().unwrap_or("");
@@ -209,7 +209,7 @@ pub(crate) fn jpeg(bytes: &[u8]) -> Option<Picture> {
 }
 
 /// A PNG's pixels as straight-alpha RGBA.
-fn png(bytes: &[u8]) -> Option<Picture> {
+pub(crate) fn png(bytes: &[u8]) -> Option<Picture> {
     let mut decoder = png::Decoder::new(Cursor::new(bytes));
     decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
     let mut reader = decoder.read_info().ok()?;

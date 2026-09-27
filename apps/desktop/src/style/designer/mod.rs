@@ -15,7 +15,7 @@
 mod foot;
 mod form;
 mod list;
-mod numbers;
+pub(crate) mod numbers;
 mod parts;
 #[cfg(test)]
 mod screens;
@@ -40,7 +40,7 @@ use crate::app::{Dialog, Message};
 use crate::style::layer_style::SetAt;
 use crate::style::thumbs::Thumbs;
 
-pub(crate) use update::Opening;
+pub(crate) use update::{Opening, focused};
 
 /// Steps the designer's undo keeps.
 const HISTORY: usize = 100;
@@ -130,6 +130,8 @@ pub enum Event {
     },
     /// Dosya al… for an image field: an SVG, PNG or JPEG into Kitaplığım.
     ImportAsset(String),
+    /// Yeni çizim… and Düzenle… for an image field: the SVG editor, whose Kaydet gives the field its drawing.
+    DrawSvg(String, Option<String>),
     AssetPicked(String, Option<(String, Vec<u8>)>),
 }
 
@@ -290,7 +292,7 @@ impl Designer {
     }
 
     /// A form's change on its layer.
-    fn edit(&mut self, e: Edit) {
+    pub(crate) fn edit(&mut self, e: Edit) {
         if let Some(text) = e.text {
             self.typed.insert(e.key.clone(), text);
         }
