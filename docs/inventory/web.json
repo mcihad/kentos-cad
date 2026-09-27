@@ -74,14 +74,14 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 143,
+    "commandsOnDesktop": 144,
     "desktop": {
       "commands": {
         "total": 167,
-        "implemented": 143,
+        "implemented": 144,
         "partial": 0,
         "pending": 15,
-        "none": 7,
+        "none": 6,
         "n/a": 2
       },
       "tools": {
@@ -142,10 +142,10 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 44,
+        "implemented": 45,
         "partial": 4,
         "pending": 0,
-        "none": 15,
+        "none": 14,
         "n/a": 0
       }
     },
