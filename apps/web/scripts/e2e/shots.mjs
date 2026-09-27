@@ -9,7 +9,9 @@
 // stili: each renderer, its classes, the symbol slot, errors, applied); stylemanager (Stil yöneticisi: the tree, a
 // search, the kinds, system and own items, the menus, a delete question, applying to a selection, pick mode); legend
 // (Lejant: its options, a layer left out, a categorized layer); symboldesigner (Sembol tasarımcısı: every layer type's
-// form, the add menus, a child marker, ƒ on, the preview geometry, the unsaved question, inline and library symbols).
+// form, the add menus, a child marker, ƒ on, the preview geometry, the unsaved question, inline and library symbols);
+// svgedit (SVG düzenleyicisi: a new and a library drawing, shapes, the tabs, the menus, a polyline in progress, text,
+// node editing, measuring, the XML source, document properties, export, the unsaved question).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -515,6 +517,161 @@ SCENES.symboldesigner = [
   },
 ];
 
+SCENES.svgedit = [
+  { id: 'new', open: (ui) => openSvg(ui) },
+  { id: 'library-drawing', open: (ui) => openSvg(ui, 'mpyy.svg.akaryakit') },
+  { id: 'rect-drawn', open: async (ui) => (await openSvg(ui), await drawShape(ui, 'r', [0.15, 0.15], [0.5, 0.42])) },
+  { id: 'shapes-all-selected', open: async (ui) => (await openSvg(ui), await drawThree(ui), await ui.key('v'), await ui.key('a', { ctrl: true }), await ui.sleep(400)) },
+  ...[
+    ['Hizala', 'tab-align'],
+    ['Dönüştür', 'tab-transform'],
+    ['Dizi', 'tab-array'],
+  ].map(([tab, id]) => ({
+    id,
+    open: async (ui) => {
+      await openSvg(ui);
+      await drawThree(ui);
+      await ui.key('v');
+      await ui.key('a', { ctrl: true });
+      await ui.clickText('.dialog--svge .svgp__tab', tab);
+      await ui.sleep(500);
+    },
+  })),
+  ...[
+    ['Dosya', 'menu-file'],
+    ['Yol', 'menu-path'],
+    ['Nesne', 'menu-object'],
+    ['Seç', 'menu-select'],
+  ].map(([menu, id]) => ({
+    id,
+    open: async (ui) => {
+      await openSvg(ui);
+      await drawThree(ui);
+      await ui.key('v');
+      await ui.key('a', { ctrl: true });
+      await ui.clickText('.dialog--svge .svge__pbar .btn', menu);
+      await ui.sleep(400);
+    },
+  })),
+  { id: 'menu-snap-kinds', open: async (ui) => (await openSvg(ui), await ui.clickSel('.dialog--svge button[aria-label="Kenet türleri"]'), await ui.sleep(400)) },
+  {
+    id: 'polyline-in-progress',
+    open: async (ui) => {
+      await openSvg(ui);
+      await ui.key('l');
+      for (const at of [[0.15, 0.7], [0.4, 0.3], [0.65, 0.7]]) await ui.clickAt(...(await paperAt(ui, ...at)));
+      await ui.move(...(await paperAt(ui, 0.85, 0.35)));
+      await ui.sleep(400);
+    },
+  },
+  {
+    id: 'text-object',
+    open: async (ui) => {
+      await openSvg(ui);
+      await ui.key('t');
+      await ui.clickAt(...(await paperAt(ui, 0.3, 0.5)));
+      await ui.sleep(300);
+      // The tool's hint: click, then write the text on the right.
+      await ui.clickSel('.dialog--svge input[aria-label="Metin"]');
+      await ui.key('a', { ctrl: true });
+      await ui.type('KentOS');
+      await ui.sleep(400);
+    },
+  },
+  {
+    id: 'node-editing',
+    open: async (ui) => {
+      await openSvg(ui);
+      await drawShape(ui, 'e', [0.25, 0.25], [0.75, 0.7]);
+      await ui.key('c', { ctrl: true, shift: true });
+      await ui.sleep(200);
+      await ui.key('a');
+      await ui.sleep(300);
+      await ui.clickAt(...(await paperAt(ui, 0.75, 0.475)));
+      await ui.sleep(400);
+    },
+  },
+  {
+    id: 'measure',
+    open: async (ui) => {
+      await openSvg(ui);
+      await drawShape(ui, 'r', [0.15, 0.15], [0.5, 0.42]);
+      await ui.key('m');
+      await ui.drag(...(await paperAt(ui, 0.15, 0.15)), ...(await paperAt(ui, 0.5, 0.42)));
+      await ui.sleep(400);
+    },
+  },
+  { id: 'xml-source', open: async (ui) => (await openSvg(ui), await drawThree(ui), await ui.clickText('.dialog--svge .svge__pbar .btn', 'Kaynak'), await ui.sleep(500)) },
+  {
+    id: 'document-properties',
+    open: async (ui) => {
+      await openSvg(ui);
+      await ui.clickText('.dialog--svge .svge__pbar .btn', 'Dosya');
+      await ui.clickText('.menu .menu__item', 'Belge özellikleri');
+      await ui.waitFor(`document.querySelectorAll('.dialog').length >= 2`);
+      await ui.sleep(400);
+    },
+    close: closeSvg,
+  },
+  {
+    id: 'export-dialog',
+    open: async (ui) => {
+      await openSvg(ui);
+      await drawThree(ui);
+      await ui.clickText('.dialog--svge .svge__pbar .btn', 'Dışa aktar');
+      await ui.waitFor(`document.querySelectorAll('.dialog').length >= 2`);
+      await ui.sleep(500);
+    },
+    close: closeSvg,
+  },
+  {
+    id: 'unsaved-close-question',
+    open: async (ui) => {
+      await openSvg(ui);
+      await drawShape(ui, 'r', [0.15, 0.15], [0.5, 0.42]);
+      // Esc steps back (the draft, the selection) until the editor asks about the unsaved drawing.
+      for (let i = 0; i < 4 && (await ui.eval(`document.querySelectorAll('.dialog').length < 2`)); i++) {
+        await ui.key('Escape');
+        await ui.sleep(250);
+      }
+      await ui.waitFor(`document.querySelectorAll('.dialog').length >= 2`);
+      await ui.sleep(400);
+    },
+    close: closeSvg,
+  },
+].map((s) => ({ close: closeSvg, ...s }));
+
+/** The SVG editor: a new drawing, or a library drawing by its id. */
+async function openSvg(ui, id) {
+  await ui.eval(`import('/src/ui/svgedit/SvgEditor.ts').then((m) => m.openSvgEditor(window.kentos, ${id ? `{ id: ${JSON.stringify(id)} }` : '{}'}))`);
+  await ui.waitFor(`!!document.querySelector('.dialog--svge .svge__paper')`);
+  await ui.sleep(600);
+}
+/** A point of the paper, as fractions of its box, on the screen. */
+const paperAt = (ui, fx, fy) =>
+  ui.eval(`(() => { const r = document.querySelector('.dialog--svge .svge__paper').getBoundingClientRect(); return [Math.round(r.left + r.width * ${fx}), Math.round(r.top + r.height * ${fy})]; })()`);
+/** A shape drawn with its tool's key from one paper point to another. */
+async function drawShape(ui, key, from, to) {
+  await ui.key(key);
+  await ui.drag(...(await paperAt(ui, ...from)), ...(await paperAt(ui, ...to)));
+  await ui.sleep(300);
+}
+/** A rectangle, an ellipse and a polygon. */
+async function drawThree(ui) {
+  await drawShape(ui, 'r', [0.1, 0.12], [0.45, 0.4]);
+  await drawShape(ui, 'e', [0.55, 0.12], [0.9, 0.4]);
+  await drawShape(ui, 'p', [0.5, 0.72], [0.62, 0.88]);
+}
+/** The editor closed without saving: Esc until it asks, then its "don't save". */
+async function closeSvg(ui) {
+  for (let i = 0; i < 6 && (await ui.eval(`!!document.querySelector('.dialog')`)); i++) {
+    const asked = await ui.eval(`[...document.querySelectorAll('.dialog .btn')].find((b) => /Kaydetmeden|Uygulamadan/.test(b.textContent))`);
+    if (asked) await ui.eval(`[...document.querySelectorAll('.dialog .btn')].find((b) => /Kaydetmeden|Uygulamadan/.test(b.textContent)).click()`);
+    else await ui.escapeAll(1);
+    await ui.sleep(250);
+  }
+}
+
 async function openLegend(ui) {
   await ui.eval(`window.kentos.commands.execute('style.legend')`);
   await ui.waitFor(`!!document.querySelector('.dialog--legend')`);
@@ -645,6 +802,10 @@ function helpers(b) {
       await b.move(...at);
       await sleep(500);
     },
+    key: (k, mods) => b.key(k, mods),
+    drag: (...at) => b.drag(...at),
+    clickAt: (x, y, opts) => b.click(x, y, opts),
+    move: (x, y) => b.move(x, y),
     /** A right click (a context menu). */
     contextClick: async (x, y) => {
       await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
