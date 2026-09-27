@@ -34,6 +34,12 @@ export interface SymbolPreviewOptions {
   attrs?: Record<string, string>;
   /** Called when an SVG or raster the drawing needs has loaded (draw again). */
   onLoad?: () => void;
+  /**
+   * Device pixels per CSS px; the window's by default. A picture drawn for a
+   * sheet at a scale of its own (the legend's PNG at 2×) passes that scale,
+   * so it is sharp on a screen of any density.
+   */
+  pixelRatio?: number;
 }
 
 /** Sample values for the attributes MPYY's parametric symbols read. */
@@ -135,11 +141,12 @@ function hash3(x: number, y: number): [number, number, number] {
 }
 
 /**
- * Draws `symbol` into `canvas` (its CSS size × devicePixelRatio). Returns
- * false when a referenced symbol is missing (nothing drawn).
+ * Draws `symbol` into `canvas` (its CSS size × the pixel ratio: `pixelRatio`,
+ * else devicePixelRatio). Returns false when a referenced symbol is missing
+ * (nothing drawn).
  */
 export function drawSymbolPreview(canvas: HTMLCanvasElement, symbol: Symbol, opts: SymbolPreviewOptions): boolean {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = opts.pixelRatio ?? (window.devicePixelRatio || 1);
   const cssW = canvas.clientWidth || Number(canvas.getAttribute('width')) || 64;
   const cssH = canvas.clientHeight || Number(canvas.getAttribute('height')) || 40;
   if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
