@@ -246,13 +246,15 @@ impl Tool for Text {
                     true
                 }
                 (Stage::Angle, None) => false,
-                _ => match point_from_text(text, self.last(), self.d.hover, |_| None) {
-                    Some(p) => {
-                        self.accept(p, cx);
-                        true
+                _ => {
+                    match point_from_text(text, self.last(), self.d.hover, |d| cx.track_along(d)) {
+                        Some(p) => {
+                            self.accept(p, cx);
+                            true
+                        }
+                        None => false,
                     }
-                    None => false,
-                },
+                }
             }
         };
         self.see(cx);

@@ -20,7 +20,8 @@ use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Pixels, Point, Rectangle, Renderer, Size, Theme, Vector, mouse};
 
 use kentos_domain::Slot;
-use kentos_interaction::{GripSet, SelectBox, SnapHit, SnapKind};
+use kentos_interaction::object_tracking::TrackHit;
+use kentos_interaction::{GripSet, SelectBox, SnapHit, SnapKind, Vec2};
 use kentos_render_wgpu::Camera;
 use kentos_ui::theme::{Tokens, typography};
 
@@ -66,12 +67,26 @@ pub struct Marks {
     pub grips: Vec<GripSet>,
     /// The grip being moved.
     pub hot: Option<(Slot, usize)>,
+    /// Nesne izleme's points and the alignment the cursor is locked to (tracking.rs).
+    pub tracking: Option<TrackingMarks>,
     pub colors: MarkColors,
+}
+
+/// What object tracking shows (the web's `drawObjectTracking`).
+pub struct TrackingMarks {
+    pub acquired: Vec<Vec2>,
+    /// The lock, when no snap wins over it.
+    pub track: Option<TrackHit>,
+    /// “İzleme 12.500 m < 0°” or “İzleme: kesişim”.
+    pub label: Option<String>,
 }
 
 impl Marks {
     pub fn is_empty(&self) -> bool {
-        self.snap.is_none() && self.select.is_none() && self.grips.is_empty()
+        self.snap.is_none()
+            && self.select.is_none()
+            && self.grips.is_empty()
+            && self.tracking.is_none()
     }
 }
 
@@ -91,6 +106,9 @@ impl<Message> canvas::Program<Message> for Marks {
         grips(&mut frame, &self.grips, self.hot, &self.camera, &self.colors, accent);
         if let Some(b) = self.select {
             select_box(&mut frame, b, &self.colors);
+        }
+        if let Some(t) = &self.tracking {
+            tracking(&mut frame, t, &self.camera, &self.colors);
         }
         if let Some(hit) = self.snap {
             let [x, y] = self.camera.world_to_screen(hit.point);
@@ -190,6 +208,90 @@ fn select_box(frame: &mut canvas::Frame, b: SelectBox, colors: &MarkColors) {
 }
 
 /// The web's `drawSnap`: the kind's glyph and its name above-right.
+/// The web's `drawObjectTracking`: a 10 px cross on every acquired point
+/// (1.5 px, the snap colour); the lock's lines dashed 3/4 from their points
+/// across the area, at 85 %; and its label above-right of the cursor's
+/// point with the area's colour as a halo.
+fn tracking(frame: &mut canvas::Frame, t: &TrackingMarks, camera: &Camera, colors: &MarkColors) {
+    let cross = Stroke::default().with_color(colors.snap).with_width(1.5);
+    for &p in &t.acquired {
+        let [x, y] = camera.world_to_screen(p);
+        let (x, y) = (x.round() as f32 + 0.5, y.round() as f32 + 0.5);
+        frame.stroke(
+            &Path::new(|b| {
+                b.move_to(Point::new(x - 5.0, y));
+                b.line_to(Point::new(x + 5.0, y));
+                b.move_to(Point::new(x, y - 5.0));
+                b.line_to(Point::new(x, y + 5.0));
+            }),
+            cross,
+        );
+    }
+    let Some(track) = &t.track else {
+        return;
+    };
+    let dashed = Stroke {
+        line_dash: LineDash {
+            segments: &[3.0, 4.0],
+            offset: 0,
+        },
+        ..Stroke::default()
+            .with_color(iced::Color {
+                a: colors.snap.a * 0.85,
+                ..colors.snap
+            })
+            .with_width(1.0)
+    };
+    for line in &track.lines {
+        let [ox, oy] = camera.world_to_screen(line.origin);
+        let r = line.angle.to_radians();
+        frame.stroke(
+            &Path::line(
+                Point::new(ox as f32, oy as f32),
+                Point::new((ox + r.cos() * 1e4) as f32, (oy - r.sin() * 1e4) as f32),
+            ),
+            dashed,
+        );
+    }
+    if let Some(text) = &t.label {
+        let [x, y] = camera.world_to_screen(track.point);
+        let at = Point::new(x.round() as f32, y.round() as f32);
+        halo_label(frame, text, at, colors);
+    }
+}
+
+/// A label above-right of `at` (bottom at y − 7), the snap colour on a halo of the area's.
+fn halo_label(frame: &mut canvas::Frame, content: &str, at: Point, colors: &MarkColors) {
+    let label = Text {
+        content: content.to_owned(),
+        position: at + Vector::new(9.0, -7.0),
+        color: colors.halo,
+        size: Pixels(typography::scaled(10.5)),
+        font: typography::ui_strong(),
+        align_y: iced::alignment::Vertical::Bottom,
+        ..Text::default()
+    };
+    for (dx, dy) in [
+        (-1.0, 0.0),
+        (1.0, 0.0),
+        (0.0, -1.0),
+        (0.0, 1.0),
+        (-1.0, -1.0),
+        (1.0, 1.0),
+        (-1.0, 1.0),
+        (1.0, -1.0),
+    ] {
+        frame.fill_text(Text {
+            position: label.position + Vector::new(dx, dy),
+            ..label.clone()
+        });
+    }
+    frame.fill_text(Text {
+        color: colors.snap,
+        ..label
+    });
+}
+
 fn snap_marker(frame: &mut canvas::Frame, kind: SnapKind, at: Point, colors: &MarkColors) {
     let (x, y) = (at.x, at.y);
     let p = |dx: f32, dy: f32| Point::new(x + dx, y + dy);

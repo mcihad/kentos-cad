@@ -191,6 +191,8 @@ pub enum Message {
     Properties(crate::properties::Event),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
     HoverCard(u64),
+    /// The pointer rested on a snap past the tracking dwell (tracking.rs).
+    TrackDwell(u64),
     /// The Hesap windows (calc/).
     Calc(crate::calc::Event),
     /// A processing tool's window (processing/).
@@ -357,6 +359,13 @@ pub struct App {
     pub hover_seen: u64,
     /// The Hesap windows' fields, kept while the app runs (calc/).
     pub calc: crate::calc::Calc,
+    /// Nesne izleme: the points acquired by resting on a snap and the cursor's lock (tracking.rs, docs/adr/0085).
+    pub tracking: kentos_interaction::object_tracking::ObjectTracking,
+    /// The command the tracking points belong to, and the last rest whose wait began.
+    pub(crate) tracking_tool: &'static str,
+    pub(crate) tracking_waited: u64,
+    /// Whether a rest's dwell passes on real time; the trace player passes it by hand (traces/).
+    pub(crate) dwell_on_time: bool,
     /// İşlemler: the processing tools and models, their window and history (processing/).
     pub processing: crate::processing::Processing,
     /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
@@ -482,6 +491,10 @@ impl App {
             hover_card: None,
             hover_seen: 0,
             calc: crate::calc::Calc::default(),
+            tracking: kentos_interaction::object_tracking::ObjectTracking::new(),
+            tracking_tool: "",
+            tracking_waited: 0,
+            dwell_on_time: true,
             processing: crate::processing::Processing::default(),
             removing_layer: None,
             settings,
@@ -589,7 +602,12 @@ impl App {
         let task = self.handle(message);
         self.follow_document();
         self.follow_selection_layers();
-        let task = Task::batch([task, self.text_field_tasks(), self.follow_hover()]);
+        let task = Task::batch([
+            task,
+            self.text_field_tasks(),
+            self.follow_hover(),
+            self.follow_tracking(),
+        ]);
         self.cloud_after(Instant::now());
         task
     }
@@ -680,6 +698,9 @@ impl App {
             Message::TextField(event) => self.text_field_event(event),
             Message::Properties(event) => self.properties_event(event),
             Message::HoverCard(version) => self.hover_card_due(version),
+            Message::TrackDwell(number) => {
+                self.tracking.dwell_due(number);
+            }
             Message::Calc(event) => return self.calc_event(event),
             Message::Processing(event) => return self.processing_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
@@ -808,6 +829,7 @@ impl App {
             snap: s.bool("drafting.snap"),
             snap_kinds: snap_kinds(|key| s.bool(key)),
             pick_aperture: s.number("drafting.pickAperture"),
+            tracking: s.bool("drafting.tracking"),
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
@@ -984,6 +1006,7 @@ impl App {
             "tools.options" => self.open_settings(),
             "draft.ortho" => self.toggle_session("drafting.ortho", "Orto"),
             "draft.polar" => self.toggle_session("drafting.polar", "Kutupsal izleme"),
+            "draft.tracking" => self.toggle_session("drafting.tracking", "Nesne izleme"),
             "draft.snap" => self.toggle_session("drafting.snap", "Kenetleme"),
             "draft.grid" => self.toggle_session("drafting.grid", "Izgara"),
             // Selecting (docs/adr/0029): the pointer selects while no command runs.
@@ -1058,6 +1081,7 @@ impl App {
             "draft.ortho" => self.draft.ortho,
             "draft.polar" => self.draft.polar.is_some(),
             "draft.snap" => self.draft.snap,
+            "draft.tracking" => self.draft.tracking,
             "draft.grid" => self.settings.bool("drafting.grid"),
             "view.theme.dark" => self.mode == Mode::Dark,
             "view.theme.light" => self.mode == Mode::Light,

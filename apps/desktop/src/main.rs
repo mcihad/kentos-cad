@@ -52,6 +52,7 @@ mod snapshot;
 mod start;
 mod text_field;
 mod traces;
+mod tracking;
 mod view;
 mod view_commands;
 mod viewport;

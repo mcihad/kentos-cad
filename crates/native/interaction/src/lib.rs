@@ -92,6 +92,7 @@ pub mod modify;
 pub mod move_copy;
 pub mod navigate;
 pub mod object;
+pub mod object_tracking;
 pub mod offset;
 mod outlines;
 pub mod parallel;

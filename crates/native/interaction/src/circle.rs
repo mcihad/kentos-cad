@@ -383,7 +383,7 @@ impl Tool for Circle {
         } else if self.option(&upper_tr(js_trim(text))) {
             true
         } else {
-            match point_from_text(text, self.d.last(), self.d.hover, |_| None) {
+            match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
                 Some(p) => {
                     self.accept(p, cx);
                     true

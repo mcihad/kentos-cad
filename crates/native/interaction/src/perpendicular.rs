@@ -381,7 +381,7 @@ impl Tool for Perpendicular {
         if self.reference.is_none() {
             return false;
         }
-        match point_from_text(text, None, self.hover, |_| None) {
+        match point_from_text(text, None, self.hover, |d| cx.track_along(d)) {
             Some(p) => {
                 self.point(p, cx);
                 true

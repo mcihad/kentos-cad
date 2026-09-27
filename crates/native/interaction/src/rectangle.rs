@@ -397,7 +397,7 @@ impl Rectangle {
                 }
                 _ => false,
             },
-            _ => match point_from_text(text, self.d.last(), self.d.hover, |_| None) {
+            _ => match point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d)) {
                 Some(p) => {
                     self.accept(p, cx);
                     true

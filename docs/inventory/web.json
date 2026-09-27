@@ -74,7 +74,7 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 133
+    "commandsOnDesktop": 134
   },
   "commands": [
     {
@@ -962,7 +962,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -8207,7 +8207,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       }
     },
     {

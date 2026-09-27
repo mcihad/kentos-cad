@@ -356,7 +356,9 @@ impl<S: Stages> Tool for Modify<S> {
         if !self.stages.typed_points() {
             return false;
         }
-        let Some(p) = point_from_text(text, self.stages.anchor(), self.hover, |_| None) else {
+        let Some(p) = point_from_text(text, self.stages.anchor(), self.hover, |d| {
+            cx.track_along(d)
+        }) else {
             return false;
         };
         let flow = self.stages.point(p, cx);

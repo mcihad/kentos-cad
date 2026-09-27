@@ -725,7 +725,7 @@ impl Tool for Path {
             }
         }
         // Object tracking has no line on the desktop yet: a bare number follows the cursor.
-        match point_from_text(text, self.last(), self.hover, |_| None) {
+        match point_from_text(text, self.last(), self.hover, |d| cx.track_along(d)) {
             Some(p) => {
                 self.accept(p, cx);
                 true

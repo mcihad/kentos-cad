@@ -373,6 +373,7 @@ impl App {
                     select: self.session.select_box(),
                     grips,
                     hot: self.session.active_grip(),
+                    tracking: self.tracking_marks(&format),
                     colors: mark_colors(self.canvas()),
                 };
                 let over = preview::layer(

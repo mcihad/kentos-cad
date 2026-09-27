@@ -32,7 +32,7 @@ pub(crate) fn constrain(
     let c = constrain_cursor(
         Some(from),
         p.world,
-        p.snap.is_some(),
+        p.snap.is_some() || p.tracked,
         cx.draft.ortho != p.shift,
         cx.draft.polar,
         cx.view.world_length(CAPTURE_PX),

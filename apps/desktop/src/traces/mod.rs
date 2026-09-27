@@ -133,6 +133,7 @@ mod tests {
             key: None,
             text: None,
             move_to: None,
+            rest: None,
             click: Some([500.0, 0.0]),
             drag: None,
             double_click: None,

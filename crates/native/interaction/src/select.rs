@@ -260,7 +260,8 @@ impl Select {
         let Some(g) = &self.grip else {
             return false;
         };
-        let Some(p) = point_from_text(text, Some(g.origin), self.grip_point, |_| None) else {
+        let Some(p) = point_from_text(text, Some(g.origin), self.grip_point, |d| cx.track_along(d))
+        else {
             return false;
         };
         self.commit(p, cx);

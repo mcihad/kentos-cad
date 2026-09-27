@@ -304,7 +304,7 @@ impl Tool for Stretch {
         } else {
             None
         };
-        let Some(p) = point_from_text(text, from, self.hover, |_| None) else {
+        let Some(p) = point_from_text(text, from, self.hover, |d| cx.track_along(d)) else {
             return false;
         };
         self.point(p, cx);

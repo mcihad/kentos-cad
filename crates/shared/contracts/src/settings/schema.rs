@@ -162,7 +162,7 @@ fn settings() -> Vec<SettingDescriptor> {
             .text("Izgara", "Çizim alanında ızgarayı gösterir (F7)."),
         boolean("drafting.tracking", true)
             .scope(SettingScope::Session)
-            .hosts(&[Web])
+            .hosts(&[Web, Desktop])
             .text(
                 "Nesne izleme",
                 "Bir kenet noktasının üzerinde kısa süre beklenince o noktadan yatay ve dikey kılavuzlar çıkar (Shift+F3).",

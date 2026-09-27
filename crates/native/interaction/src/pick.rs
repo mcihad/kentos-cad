@@ -92,7 +92,7 @@ impl Tool for PickPoint {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
-        let Some(p) = point_from_text(text, None, self.hover, |_| None) else {
+        let Some(p) = point_from_text(text, None, self.hover, |d| cx.track_along(d)) else {
             return false;
         };
         self.finish(Some(p), cx);

@@ -489,7 +489,9 @@ impl Tool for Dimension {
             true
         } else if self.picks_edge() {
             false
-        } else if let Some(p) = point_from_text(text, self.d.last(), self.d.hover, |_| None) {
+        } else if let Some(p) =
+            point_from_text(text, self.d.last(), self.d.hover, |d| cx.track_along(d))
+        {
             self.accept(p, cx);
             true
         } else {

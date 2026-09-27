@@ -210,6 +210,8 @@ pub const PORTED: &[&str] = &[
     // The dock's İşlemler tab: the toolbox and this session's runs (docs/adr/0084, part 2).
     "processing.toolbox",
     "processing.history",
+    // Nesne izleme, Shift+F3 (docs/adr/0085).
+    "draft.tracking",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the
