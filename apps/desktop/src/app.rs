@@ -388,6 +388,9 @@ pub struct App {
     pub(crate) hidden_docks: Option<Docks<Panel>>,
     /// A server check is on its way (`server.check` waits for it).
     pub server_checking: bool,
+    /// The last server check's answer: its health, or why there was none
+    /// (KentOS CAD hakkında names the server by it).
+    pub(crate) server_health: Option<Result<kentos_contracts::Health, String>>,
 }
 
 impl App {
@@ -487,6 +490,7 @@ impl App {
             fullscreen: false,
             hidden_docks: None,
             server_checking: false,
+            server_health: None,
         };
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);

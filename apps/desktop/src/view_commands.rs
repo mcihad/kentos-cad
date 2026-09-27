@@ -84,6 +84,7 @@ impl App {
         match Cloud::new(&server) {
             Ok(client) => {
                 self.server_checking = true;
+                self.server_health = None;
                 self.output(format!("Sunucuya soruluyor: {server}…"));
                 // Asked when the task runs, not when it is made.
                 Task::perform(async move { client.health().await }, |answer| {
@@ -103,6 +104,7 @@ impl App {
     /// What the server answered, in the web's words.
     pub(crate) fn server_checked(&mut self, answer: Result<Health, String>) {
         self.server_checking = false;
+        self.server_health = Some(answer.clone());
         match answer {
             Ok(h) if h.status != "ok" => self.say(
                 Level::Info,
@@ -120,6 +122,31 @@ impl App {
                 Level::Info,
                 format!("Sunucu yok. {why} Çizim sunucusuz çalışmaya devam ediyor."),
             ),
+        }
+    }
+}
+
+impl App {
+    /// The server as KentOS CAD hakkında names it (the web's `serverText`):
+    /// its service, version and commit from the last check, or why there is
+    /// none.
+    pub(crate) fn server_text(&self) -> String {
+        if self.server_checking {
+            return "soruluyor…".to_owned();
+        }
+        match &self.server_health {
+            Some(Ok(h)) => {
+                let commit = h.commit.as_deref().map_or(String::new(), |c| {
+                    format!(" ({})", c.chars().take(8).collect::<String>())
+                });
+                let name = format!("{} {}{commit}", h.service, h.version);
+                if h.status == "ok" && h.contracts == CONTRACTS_VERSION {
+                    name
+                } else {
+                    format!("{name}, uyumsuz")
+                }
+            }
+            _ => "bağlı değil".to_owned(),
         }
     }
 }
@@ -217,12 +244,17 @@ mod tests {
             commit: None,
             contracts,
         };
+        assert_eq!(app.server_text(), "bağlı değil", "not asked yet");
         app.server_checked(Ok(health(CONTRACTS_VERSION)));
         assert_eq!(last_said(&app), "Sunucu bağlı: kentosd 0.1.0.");
+        // KentOS CAD hakkında names it as the web's `serverText`.
+        assert_eq!(app.server_text(), "kentosd 0.1.0");
         app.server_checked(Ok(health(CONTRACTS_VERSION + 1)));
         assert!(last_said(&app).starts_with("Sunucu uyumsuz."), "{}", last_said(&app));
+        assert_eq!(app.server_text(), "kentosd 0.1.0, uyumsuz");
         app.server_checked(Err("Sunucuya ulaşılamadı.".into()));
         assert!(last_said(&app).ends_with("Çizim sunucusuz çalışmaya devam ediyor."));
+        assert_eq!(app.server_text(), "bağlı değil");
     }
 }
 
@@ -239,7 +271,14 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["odak", "komut-ara", "koordinat-sistemi", "sunucu", "yardim"] {
+            for name in [
+                "odak",
+                "komut-ara",
+                "koordinat-sistemi",
+                "sunucu",
+                "yardim",
+                "hakkinda",
+            ] {
                 let mut app = crate::files_testing::app_with_drawing();
                 let _ = app
                     .settings
@@ -260,6 +299,17 @@ fn screens() {
                     }
                     "komut-ara" => app.update(Message::Run("view.commandSearch")),
                     "koordinat-sistemi" => app.update(Message::Run("crs.set")),
+                    // KentOS CAD hakkında, the server having answered.
+                    "hakkinda" => {
+                        app.server_checked(Ok(Health {
+                            status: "ok".into(),
+                            service: "kentosd".into(),
+                            version: "0.1.0".into(),
+                            commit: Some("0123456789abcdef".into()),
+                            contracts: CONTRACTS_VERSION,
+                        }));
+                        app.update(Message::Run("help.about"))
+                    }
                     // An unsaved change (the accent dot before the name), and Yardım open.
                     "yardim" => {
                         let _ = app.update(Message::Properties(crate::properties::Event::Color(

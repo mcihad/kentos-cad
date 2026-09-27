@@ -838,23 +838,40 @@ impl App {
                 .style(style::button::secondary)
         };
         match dialog {
-            Asking::About => overlay::modal(
-                Dialog::new("KentOS CAD hakkında")
-                    .push(label::body(
-                        "Harita mühendisliği, kadastro ve imar için CAD/CBS. Bu masaüstü uygulaması web \
-                         uygulamasıyla aynı Rust hesap çekirdeğini ve sözleşmelerini kullanır; komutları web'den \
-                         adım adım taşınır.",
-                    ))
-                    .push(label::caption(format!(
-                        "Sürüm {} · masaüstüne taşınan komut: {} / {}",
-                        env!("CARGO_PKG_VERSION"),
-                        catalog().commands().iter().filter(|c| c.standing == Standing::Ported).count(),
-                        catalog().commands().len()
-                    )))
-                    .action(close())
-                    .width(460.0),
-                Message::DialogClosed,
-            ),
+            // The web's rows (dialogs.ts, 653b550): the version, the engine, the
+            // project's coordinate system and the server, then how far the port is.
+            Asking::About => {
+                let crs = self.document.as_ref().map_or_else(
+                    || "Açık çizim yok".to_owned(),
+                    |doc| {
+                        let srid = doc.settings().srid;
+                        format!(
+                            "{} (EPSG:{srid})",
+                            crs_name(srid).unwrap_or("Bilinmeyen sistem")
+                        )
+                    },
+                );
+                let rows = kentos_ui::widget::PropertySheet::new()
+                    .row("Sürüm", label::body(env!("CARGO_PKG_VERSION")))
+                    .row("Çizim motoru", label::body("KentOS'un wgpu hattı"))
+                    .row("Koordinat sistemi", label::body(crs))
+                    .row("Sunucu", label::body(self.server_text()));
+                overlay::modal(
+                    Dialog::new("KentOS CAD")
+                        .push(label::body(
+                            "Harita, kadastro ve imar için CAD/CBS masaüstü uygulaması.",
+                        ))
+                        .push(rows)
+                        .push(label::caption(format!(
+                            "Masaüstüne taşınan komut: {} / {}. Web uygulamasıyla aynı Rust hesap çekirdeğini ve sözleşmelerini kullanır.",
+                            catalog().commands().iter().filter(|c| c.standing == Standing::Ported).count(),
+                            catalog().commands().len()
+                        )))
+                        .action(close())
+                        .width(440.0),
+                    Message::DialogClosed,
+                )
+            }
             Asking::Shortcuts => {
                 let list = catalog()
                     .commands()
