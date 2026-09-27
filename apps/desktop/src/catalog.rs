@@ -29,6 +29,7 @@ pub const PORTED: &[&str] = &[
     "view.theme.light",
     "view.theme.toggle",
     "view.ribbonCollapse",
+    "view.keyTips",
     "commandline.focus",
     "help.about",
     "help.shortcuts",

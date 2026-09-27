@@ -196,6 +196,11 @@ pub enum Message {
     /// A pointer event taken so nothing under it reacts (a right click on
     /// Komut ara keeps the ribbon's menu away).
     Swallowed,
+    /// A mouse press anywhere or the window losing the focus while the key
+    /// tips show: they go (ribbon_keys.rs, docs/adr/0118).
+    KeyTipsAway,
+    /// A press outside the folded ribbon open over the drawing: it closes.
+    RibbonPeekAway,
     RibbonTab(&'static str),
     /// A choice in the ribbon's own panels: the current properties for new
     /// objects, the plot scale (ribbon_panels.rs).
@@ -445,6 +450,12 @@ pub struct App {
     pub(crate) builder: Option<crate::expression::Builder>,
     /// Whether İfade oluşturucu was left in Akış (for as long as the program runs).
     pub(crate) builder_flow: bool,
+    /// The ribbon's key tips while they show (ribbon_keys.rs, docs/adr/0118).
+    pub(crate) key_tips: Option<crate::ribbon_keys::KeyTips>,
+    /// Alt is down alone: letting it go shows the key tips.
+    pub(crate) alt_armed: bool,
+    /// The folded ribbon's tab open over the drawing.
+    pub(crate) ribbon_peek: bool,
     /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
     pub removing_layer: Option<String>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
@@ -590,6 +601,9 @@ impl App {
             processing: crate::processing::Processing::default(),
             builder: None,
             builder_flow: false,
+            key_tips: None,
+            alt_armed: false,
+            ribbon_peek: false,
             removing_layer: None,
             settings,
             settings_draft: None,
@@ -703,6 +717,13 @@ impl App {
             // The kept layout, written after its last change; the window's size.
             self.layout_subscription(),
             window::resize_events().map(|(_, size)| Message::WindowResized(size)),
+            // While the key tips show (or Alt is down alone): a click or the
+            // window losing the focus sends them away (ribbon_keys.rs).
+            if self.key_tips.is_some() || self.alt_armed {
+                event::listen_with(crate::ribbon_keys::away_events)
+            } else {
+                Subscription::none()
+            },
         ])
     }
 
@@ -714,6 +735,8 @@ impl App {
         if self.selection.is_empty() {
             self.ribbon_context = false;
         }
+        // The key tips follow what the ribbon shows now (ribbon_keys.rs).
+        self.refresh_key_tips();
         let task = Task::batch([
             task,
             self.text_field_tasks(),
@@ -764,6 +787,10 @@ impl App {
             message,
             Message::Run(_) | Message::RunMethod { .. } | Message::SplitChosen { .. }
         ) {
+            // A command closes the folded ribbon open over the drawing (the web's).
+            if !matches!(message, Message::Run("view.keyTips")) {
+                self.ribbon_peek = false;
+            }
             self.close_text_field(true);
             self.layers_keyboard = false;
         }
@@ -780,7 +807,12 @@ impl App {
             } => return self.split_chosen(key, id, option, label),
             Message::QuickAccess(id, on) => self.quick_access_changed(&id, on),
             Message::Swallowed => {}
-            Message::RibbonTab(id) => self.choose_tab(id),
+            Message::KeyTipsAway => {
+                self.key_tips = None;
+                self.alt_armed = false;
+            }
+            Message::RibbonPeekAway => self.ribbon_peek = false,
+            Message::RibbonTab(id) => self.tab_clicked(id),
             Message::RibbonPanel(event) => self.ribbon_panel_event(event),
             Message::CommandInput(text) => self.command_input = text,
             Message::CommandSubmitted => {
@@ -815,7 +847,11 @@ impl App {
             Message::PromptOption(key) => return self.prompt_option(key),
             Message::PointCalc(kind) => return self.start_point_calc(kind),
             Message::Key(press) => return self.key(press),
-            Message::Modifiers(modifiers) => self.modifiers = modifiers,
+            Message::Modifiers(modifiers) => {
+                self.modifiers = modifiers;
+                // Alt let go after a tap alone: the ribbon's key tips (ribbon_keys.rs).
+                return self.alt_released(modifiers);
+            }
             Message::Dock(event) => {
                 self.docks.update(event.clone());
                 self.dock_dragged(&event, Instant::now());
@@ -1178,7 +1214,12 @@ impl App {
             "edit.deselect" => self.selection.clear(),
             "edit.selectAll" => self.select_all(),
             "edit.invertSelection" => self.invert_selection(),
-            "view.ribbonCollapse" => self.ribbon_collapsed = !self.ribbon_collapsed,
+            "view.ribbonCollapse" => {
+                self.ribbon_collapsed = !self.ribbon_collapsed;
+                self.ribbon_peek = false;
+            }
+            // Şerit harf ipuçları (F6; Alt tapped alone too, ribbon_keys.rs).
+            "view.keyTips" => return self.toggle_key_tips(),
             // The bottom panel (bottom.rs): F2, and the coordinate list.
             "view.bottomPanel" => self.toggle_bottom(),
             "view.coords" => self.show_bottom(crate::bottom::BottomTab::Coords),

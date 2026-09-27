@@ -2,6 +2,7 @@
 
 use std::rc::Rc;
 
+use iced::advanced::widget;
 use iced::widget::text::{Fragment, IntoFragment};
 use iced::widget::{Column, button, column, container, row, space, text, tooltip};
 use iced::{Center, Color, Element, Fill, Length, Padding, Size, Top};
@@ -14,6 +15,7 @@ use crate::theme::typography;
 use crate::widget::color::{self, Ramp};
 use crate::widget::context_menu::{Menu, MenuButton};
 use crate::widget::dropdown::{Dropdown, Reaction};
+use crate::widget::key_tip::{KeyTip, Place, key_tip};
 use crate::widget::{Tip, tip};
 
 /// Başlıklı araç grubu (panel). Altta ortalanmış grup adı bulunur.
@@ -33,6 +35,10 @@ pub struct Group<'a, Message> {
     /// A command shown by the search is under the ▾, or in the folded panel.
     flash_more: bool,
     flash_folded: bool,
+    /// Harf ipuçları: tek düğmeye katlanmışken, ▾'in ve pencere açıcının.
+    key_tips: [Option<KeyTip>; 3],
+    /// ▾'in ve tek düğmeye katlanmış hâlin menüsünün kimliği (klavyeyle açılır).
+    menu_ids: Option<(widget::Id, widget::Id)>,
 }
 
 enum Content<'a, Message> {
@@ -67,6 +73,8 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
             launcher: None,
             flash_more: false,
             flash_folded: false,
+            key_tips: [None, None, None],
+            menu_ids: None,
         }
     }
 
@@ -161,6 +169,25 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
     }
 
     /// Başlığın sağındaki pencere açıcı (↘).
+    /// Harf ipuçları: `folded` tek düğmeye katlanmış hâlin, `more` ▾'in,
+    /// `launcher` pencere açıcının.
+    pub fn key_tips(
+        mut self,
+        folded: Option<KeyTip>,
+        more: Option<KeyTip>,
+        launcher: Option<KeyTip>,
+    ) -> Self {
+        self.key_tips = [folded, more, launcher];
+        self
+    }
+
+    /// ▾'in (`more`) ve tek düğmeye katlanmış hâlin (`folded`) menülerinin
+    /// kimlikleri: klavyeyle açılırlar ([`open_menu`](crate::widget::context_menu::open_menu)).
+    pub fn menu_ids(mut self, more: impl Into<widget::Id>, folded: impl Into<widget::Id>) -> Self {
+        self.menu_ids = Some((more.into(), folded.into()));
+        self
+    }
+
     pub fn launcher(mut self, message: Message, title: impl Into<String>) -> Self {
         self.launcher = Some((message, title.into()));
         self
@@ -258,32 +285,46 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         let middle: Element<'a, Message> = match &self.more {
             Some(menu) => {
                 let menu = menu.clone();
-                let more = tip(
-                    MenuButton::new(
-                        container(
-                            row![title(), icon(Icon::ChevronDown).size(8.0).tone(Tone::Muted)]
-                                .spacing(3)
-                                .align_y(Center),
-                        )
-                        .padding([0, 5])
-                        .center_y(caption_height()),
-                        move || menu(),
+                let mut button = MenuButton::new(
+                    container(
+                        row![title(), icon(Icon::ChevronDown).size(8.0).tone(Tone::Muted)]
+                            .spacing(3)
+                            .align_y(Center),
+                    )
+                    .padding([0, 5])
+                    .center_y(caption_height()),
+                    move || menu(),
+                );
+                if let Some((more, _)) = &self.menu_ids {
+                    button = button.id(more.clone());
+                }
+                // The tip over the ▾, as the web's (the chevron is its icon).
+                let chevron = 5.0 + typography::text_width(&self.title, foot_size()) + 3.0 + 4.0;
+                let more = key_tip(
+                    tip(
+                        button,
+                        Tip::new(format!("{}: diğer araçlar", self.title)),
+                        tooltip::Position::Bottom,
                     ),
-                    Tip::new(format!("{}: diğer araçlar", self.title)),
-                    tooltip::Position::Bottom,
+                    self.key_tips[1].clone(),
+                    Place::Icon(chevron),
                 );
                 super::flashed(more, self.flash_more)
             }
             None => title().into(),
         };
         let launcher: Element<'a, Message> = match &self.launcher {
-            Some((message, name)) => tip(
-                button(icon(Icon::Maximize).size(10.0).tone(Tone::Muted))
-                    .on_press(message.clone())
-                    .padding(2)
-                    .style(style::button::ribbon(style::button::Ribbon::Idle)),
-                Tip::new(name.clone()),
-                tooltip::Position::Bottom,
+            Some((message, name)) => key_tip(
+                tip(
+                    button(icon(Icon::Maximize).size(10.0).tone(Tone::Muted))
+                        .on_press(message.clone())
+                        .padding(2)
+                        .style(style::button::ribbon(style::button::Ribbon::Idle)),
+                    Tip::new(name.clone()),
+                    tooltip::Position::Bottom,
+                ),
+                self.key_tips[2].clone(),
+                Place::Icon(7.0),
             ),
             None => space::horizontal().width(0).into(),
         };
@@ -325,13 +366,21 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
             top: typography::scaled(10.0),
             ..Padding::ZERO
         });
+        let mut folded = MenuButton::new(face, move || menu());
+        if let Some((_, id)) = &self.menu_ids {
+            folded = folded.id(id.clone());
+        }
         container(super::flashed(
-            tip(
-                MenuButton::new(face, move || menu()),
-                Tip::new(self.title.to_string()).body(
-                    "Pencere dar olduğu için panel tek düğmeye katlandı; tıklayınca araçları açılır.",
+            key_tip(
+                tip(
+                    folded,
+                    Tip::new(self.title.to_string()).body(
+                        "Pencere dar olduğu için panel tek düğmeye katlandı; tıklayınca araçları açılır.",
+                    ),
+                    tooltip::Position::Bottom,
                 ),
-                tooltip::Position::Bottom,
+                self.key_tips[0].clone(),
+                Place::Bottom,
             ),
             self.flash_folded,
         ))

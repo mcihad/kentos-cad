@@ -273,7 +273,7 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
 - [ ] `UX-11` Ribbon/menu/context menu, kısayol, command palette ve toolbar etkinlik durumlarını aynı komut capability'sinden üret; çalışmayan özellikler açık `pending` kalsın.
 - [ ] `UX-12` Klavye ile tam kullanım, odak halkası, metin seçimi, yüksek kontrast, ekran okuyucu etiketleri, Türkçe fontlar ve IME testlerini desktop/web eşdeğerlik listesine ekle.
 - [ ] `UX-13` Masaüstünde web'den eksik kalanları bitir. Güncel liste `docs/inventory/web.md`'nin “Web'de olup masaüstünde olmayanlar” bölümündedir. Sahibin kararı (27 Eylül): eksik ya bitirilir ya not edilir; iş kalmayınca masaüstünün performansına geçilir. 28 Eylül'deki durum:
-  - **Şerit:** harf ipuçları (F6, Alt); hızlı erişim çubuğunun ▾ menüsü ve sağ tıkla ekleme ya da çıkarma; bölünmüş düğmenin son seçimi (`docs/specs/ribbon.md`, `fixtures/shell/v1/ribbon.json`).
+  - **Şerit:** 28 Eylül'de bitti: hızlı erişim, sağ tık ve bölünmüş düğmenin seçimi ([ADR 0117](docs/adr/0117-desktop-ribbon-bar-and-menus.md)); harf ipuçları ve daraltılmış şeridin çizimin üstünde açılması ([ADR 0118](docs/adr/0118-desktop-ribbon-key-tips-and-peek.md)). Kalan küçük fark: şeridin kendi panellerinin denetimleri harf almaz.
   - **Bulut:** dosya projesinde başkasının yeni revizyonu (durum çubuğunun “Yeni revizyon”u).
   - **İşlemler:** kullanıcının modelleri şeritte ve komut satırında (araç kutusunda var, ADR 0116).
   - **Görünüş:** arayüz yazı tiplerinden Source Sans 3, Noto Sans, Roboto ve “Sistem yazı tipi” (`user.uiFont`; masaüstünde üç yüz var).

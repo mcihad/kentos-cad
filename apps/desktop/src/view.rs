@@ -73,12 +73,22 @@ impl App {
             },
         );
 
-        let base = container(column![self.ribbon(), docked, self.status_bar()])
+        let base = container(column![self.ribbon(false), docked, self.status_bar()])
             .width(Fill)
             .height(Fill)
             .style(style::container::window);
 
         let mut layers: Vec<Element<'_, Message>> = vec![base.into()];
+        // The folded ribbon's tab open over the drawing (the web's peek,
+        // ribbon_keys.rs): a press outside it closes it.
+        if self.ribbon_collapsed && self.ribbon_peek {
+            layers.push(
+                iced::widget::mouse_area(container(iced::widget::space()).width(Fill).height(Fill))
+                    .on_press(Message::RibbonPeekAway)
+                    .into(),
+            );
+            layers.push(container(self.ribbon(true)).width(Fill).into());
+        }
         // The application menu over the window, under any dialog (app_menu.rs).
         layers.extend(self.app_menu_view());
         if let Some(dialog) = self.dialog {
@@ -96,7 +106,9 @@ impl App {
         iced::widget::Stack::with_children(layers).into()
     }
 
-    fn ribbon(&self) -> Element<'_, Message> {
+    /// The ribbon; `peek`: the folded ribbon with its tab open (drawn over the drawing).
+    fn ribbon(&self, peek: bool) -> Element<'_, Message> {
+        use crate::ribbon_keys::TipKey;
         let catalog = catalog();
         let mut ribbon = Ribbon::new()
             .application(
@@ -105,6 +117,7 @@ impl App {
                     .on_press(Message::AppMenu(crate::app_menu::Event::Toggle)),
             )
             .collapsible(self.ribbon_collapsed, Message::Run("view.ribbonCollapse"))
+            .peek(peek)
             // The web's tab row, after the tabs: the drawing's name (an accent
             // dot before it while unsaved), the coordinate system, Tam ekran
             // and Yardım (docs/adr/0064).
@@ -114,7 +127,9 @@ impl App {
         // off, the ▾ lists the bar and the offers.
         let bar = self.quick_bar();
         let folded = self.ribbon_collapsed;
+        let mut quick_tips = Vec::new();
         for command in bar.iter().filter_map(|id| catalog.get(id)) {
+            quick_tips.push(self.key_tip(&TipKey::Quick(command.id)));
             // Undo and redo are dimmed with no step to take (web: isEnabled).
             let on_press = enabled(command).filter(|_| self.available(command.id));
             let menu = ribbon_plan::command_menu(command.id, &bar);
@@ -132,12 +147,15 @@ impl App {
             .context_menu(move || rows_menu(&ribbon_plan::ribbon_menu(), folded));
         // The drawing's work mode decides the tabs and their panels (modes.rs).
         let shown = self.shown_tab();
+        let mut tab_tips = Vec::new();
         for tab in self.ribbon_tabs() {
+            tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
             ribbon = ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id));
         }
         // Seçim, with the count, while something is selected (the web's contextual tab).
         if !self.selection.is_empty() {
             for tab in self.contextual_tabs() {
+                tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
                 ribbon = ribbon.contextual_tab(
                     tab.label,
                     self.selection.len().to_string(),
@@ -146,21 +164,16 @@ impl App {
                 );
             }
         }
+        // The key tips on the tabs and the bar while they show (ribbon_keys.rs).
+        ribbon = ribbon.key_tips(tab_tips, quick_tips);
         if let Some(tab) = self
             .ribbon_tabs()
             .chain(self.contextual_tabs())
             .find(|tab| tab.id == shown)
         {
-            for panel in &tab.panels {
-                if let Some(group) = self.ribbon_group(tab.id, panel) {
-                    ribbon = ribbon.group(group);
-                }
-            }
-            // The interface's own look after the web's panels (appearance.rs).
-            if tab.id == "view" {
-                for group in self.appearance_groups() {
-                    ribbon = ribbon.group(group);
-                }
+            // The web's panels, then the interface's own look on Görünüm (appearance.rs).
+            for (_, group) in self.tab_groups(tab) {
+                ribbon = ribbon.group(group);
             }
         }
         ribbon.into()
@@ -293,11 +306,19 @@ impl App {
         }
         // A command Komut ara shows: its panel's ▾, or the folded panel (ribbon_search.rs).
         let (flash_here, flash_more) = self.flash_in(panel);
+        use crate::ribbon_keys::{TipKey, folded_id, more_id};
         let mut group = Group::new(panel.label)
             .icon(panel.icon)
             .keep(panel.keep)
             .flash_more(flash_more)
-            .flash_folded(flash_here);
+            .flash_folded(flash_here)
+            // The ▾'s and the folded button's menus open from the key tips (ribbon_keys.rs).
+            .menu_ids(more_id(panel.label), folded_id(panel.label))
+            .key_tips(
+                self.key_tip(&TipKey::Folded(panel.label)),
+                self.key_tip(&TipKey::More(panel.label)),
+                self.key_tip(&TipKey::Launcher(panel.label)),
+            );
         let mut any = false;
         for item in &panel.items {
             // The Görünüm tab's own groups replace the web's Tema menu; the web's
@@ -332,6 +353,7 @@ impl App {
     }
 
     pub(crate) fn ribbon_button(&self, item: &Item) -> Option<Button<'static, Message>> {
+        use crate::ribbon_keys::TipKey;
         let catalog = catalog();
         let bar = self.quick_bar();
         let folded = self.ribbon_collapsed;
@@ -361,7 +383,11 @@ impl App {
         match item {
             Item::Command { id, large } => {
                 let command = catalog.get(id)?;
-                Some(make(command, *large).context(context(command.id)))
+                Some(
+                    make(command, *large)
+                        .context(context(command.id))
+                        .key_tips(self.key_tip(&TipKey::Command(command.id)), None),
+                )
             }
             Item::Split {
                 key,
@@ -417,7 +443,12 @@ impl App {
                     .on(self.checked(command.id).unwrap_or(false))
                     .active(running)
                     .flash(flash)
-                    .context(context(command.id));
+                    .context(context(command.id))
+                    .menu_id(crate::ribbon_keys::split_menu_id(key))
+                    .key_tips(
+                        self.key_tip(&TipKey::SplitTop(key)),
+                        self.key_tip(&TipKey::SplitArrow(key)),
+                    );
                 let key = *key;
                 let entries = entries.clone();
                 let menu = move || crate::ribbon_bar::split_list(key, &entries);
@@ -433,7 +464,9 @@ impl App {
                 } else {
                     Button::small(icon, *label)
                 }
-                .flash(self.ribbon_flash.is_some_and(|id| ids.contains(&id)));
+                .flash(self.ribbon_flash.is_some_and(|id| ids.contains(&id)))
+                .menu_id(crate::ribbon_keys::menu_id(label))
+                .key_tips(self.key_tip(&TipKey::Menu(label)), None);
                 let members = ids.clone();
                 let checked = self.checks(&members);
                 let menu = move || menu_of(&members, &checked);

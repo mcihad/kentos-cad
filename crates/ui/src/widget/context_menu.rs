@@ -549,6 +549,8 @@ pub struct ContextMenu<'a, Message> {
     /// Uygulamanın açıp kapattığı menü: nerede (içerikteki nokta; `None`
     /// kapalı) ve kapanınca gönderilen mesaj.
     controlled: Option<(Option<Point>, Message)>,
+    /// Klavyeyle açılabilmesi için kimliği ([`open_menu`]).
+    id: Option<widget::Id>,
 }
 
 /// Menüyü açan tıklama ve menünün yeri.
@@ -580,6 +582,7 @@ impl<'a, Message: Clone + 'a> ContextMenu<'a, Message> {
             trigger: Trigger::Secondary,
             open: None,
             controlled: None,
+            id: None,
         }
     }
 
@@ -638,6 +641,49 @@ impl<'a, Message: Clone + 'a> MenuButton<'a, Message> {
             ..ContextMenu::new(content, move |_| menu())
         })
     }
+
+    /// Kimlik: menü [`open_menu`] ile klavyeden açılabilir (ör. şeridin
+    /// harf ipucu).
+    pub fn id(mut self, id: impl Into<widget::Id>) -> Self {
+        self.0.id = Some(id.into());
+        self
+    }
+}
+
+/// Kimliği `id` olan menü düğmesinin menüsünü açar, ilk seçilebilir satırı
+/// vurgulu (klavyeyle açılmış gibi; oklar, Enter ve Esc çalışır).
+pub fn open_menu<T: Send + 'static>(id: impl Into<widget::Id>) -> iced::Task<T> {
+    iced::advanced::widget::operate(OpenMenu { target: id.into() }).discard()
+}
+
+/// [`open_menu`]'nün işlemi.
+struct OpenMenu {
+    target: widget::Id,
+}
+
+impl widget::Operation for OpenMenu {
+    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn widget::Operation)) {
+        operate(self);
+    }
+
+    fn custom(
+        &mut self,
+        id: Option<&widget::Id>,
+        _bounds: Rectangle,
+        state: &mut dyn std::any::Any,
+    ) {
+        if id == Some(&self.target)
+            && let Some(state) = state.downcast_mut::<State>()
+        {
+            *state = State {
+                anchor: Some(Vector::ZERO),
+                over: state.over,
+                modifiers: state.modifiers,
+                from_keyboard: true,
+                ..State::default()
+            };
+        }
+    }
 }
 
 impl<'a, Message: Clone + 'a> From<MenuButton<'a, Message>> for Element<'a, Message> {
@@ -666,6 +712,8 @@ struct State {
     over: bool,
     /// Basılı değiştirici tuşlar; macOS'ta Control + tık sağ tıktır.
     modifiers: keyboard::Modifiers,
+    /// Klavyeyle açıldı ([`open_menu`]): ilk seçilebilir satır vurgulanır.
+    from_keyboard: bool,
     /// Ana menünün kaydırılan miktarı (pencereye sığmayan menüde).
     scroll: f32,
     /// Sol düğme menünün içinde basıldı: bırakılınca komut çalışır.
@@ -882,6 +930,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
         renderer: &Renderer,
         operation: &mut dyn widget::Operation,
     ) {
+        let state: &mut dyn std::any::Any = tree.state.downcast_mut::<State>();
+        operation.custom(self.id.as_ref(), layout.bounds(), state);
         self.content
             .as_widget_mut()
             .operate(&mut tree.children[0], layout, renderer, operation);
@@ -1182,6 +1232,16 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
 
 impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, '_, Message> {
     fn layout(&mut self, renderer: &Renderer, bounds: Size) -> layout::Node {
+        // Opened from the keyboard: its first command is lit, as the web's.
+        if self.state.from_keyboard {
+            self.state.from_keyboard = false;
+            self.state.hovered = self
+                .menu
+                .items
+                .iter()
+                .position(Item::is_selectable)
+                .map(Target::Main);
+        }
         // The panel as tall as its rows: a menu taller than the window scrolls.
         let limits = layout::Limits::new(Size::ZERO, Size::new(bounds.width, f32::INFINITY));
 

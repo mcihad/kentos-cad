@@ -45,6 +45,7 @@ use crate::label;
 use crate::style;
 use crate::theme::typography;
 use crate::widget::context_menu::{ContextMenu, Menu, MenuButton};
+use crate::widget::key_tip::{KeyTip, Place, key_tip};
 use crate::widget::{Tip, horizontal_divider, tip, vertical_divider};
 
 // Ölçüler 12 piksellik gövde metninde tasarlandı; metni taşıyanlar yazı
@@ -120,6 +121,10 @@ pub struct Ribbon<'a, Message> {
     collapse: Option<(bool, Message)>,
     /// Şeridin düğmelerin almadığı bir yerinde sağ tık (sekme, panel adı, boş yer).
     context: Option<Box<dyn Fn() -> Menu<Message> + 'a>>,
+    /// Harf ipuçları: sekmelerin ve hızlı erişim düğmelerinin, sırasıyla.
+    key_tips: (Vec<Option<KeyTip>>, Vec<Option<KeyTip>>),
+    /// Daraltılmış şeridin seçili sekmesi açık (çizimin üstünde gösterilir).
+    peek: bool,
 }
 
 struct Tab<'a, Message> {
@@ -147,6 +152,8 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             quick_tip: None,
             collapse: None,
             context: None,
+            key_tips: (Vec::new(), Vec::new()),
+            peek: false,
         }
     }
 
@@ -205,10 +212,24 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         self
     }
 
+    /// Harf ipuçları (web'in KeyTips'i): sekmelerin ve hızlı erişim
+    /// düğmelerinin, eklendikleri sırayla; yoksa `None`.
+    pub fn key_tips(mut self, tabs: Vec<Option<KeyTip>>, quick: Vec<Option<KeyTip>>) -> Self {
+        self.key_tips = (tabs, quick);
+        self
+    }
+
     /// Şeridin düğmelerin almadığı bir yerinde (sekme, panel adı, boş yer)
     /// sağ tıklanınca açılan menü. Kendi menüsü olan düğme önce gelir.
     pub fn context_menu(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
         self.context = Some(Box::new(menu));
+        self
+    }
+
+    /// Daraltılmış şeridin seçili sekmesi açık: panel de çizilir (uygulama
+    /// onu çizimin üstündeki katmanda gösterir, çizim yerinden oynamaz).
+    pub fn peek(mut self, peek: bool) -> Self {
+        self.peek = peek;
         self
     }
 
@@ -291,17 +312,35 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         self
     }
 
-    fn strip(
-        application: Option<AppButton<'a, Message>>,
-        tabs: Vec<Tab<'a, Message>>,
-        trailing: Option<Element<'a, Message>>,
-        quick: Vec<Element<'a, Message>>,
-        quick_menu: Option<Box<dyn Fn() -> Menu<Message> + 'a>>,
-        quick_tip: Option<Tip>,
-        collapse: Option<(bool, Message)>,
-    ) -> Element<'a, Message> {
+    /// The tab strip, from the ribbon whose panel and menu were taken out.
+    fn strip(self) -> Element<'a, Message> {
+        let Ribbon {
+            application,
+            tabs,
+            trailing,
+            quick,
+            quick_menu,
+            quick_tip,
+            collapse,
+            key_tips,
+            peek,
+            ..
+        } = self;
+        let (tab_tips, quick_tips) = key_tips;
+        let quick: Vec<Element<'a, Message>> = quick
+            .into_iter()
+            .enumerate()
+            .map(|(i, button)| {
+                key_tip(
+                    button,
+                    quick_tips.get(i).cloned().flatten(),
+                    Place::Icon(12.0),
+                )
+            })
+            .collect();
         let mut strip = iced::widget::Row::new().height(tab_height() + 1.0);
-        let collapsed = collapse.as_ref().is_some_and(|(collapsed, _)| *collapsed);
+        // Open over the drawing, the folded ribbon's selected tab flows into its panel.
+        let collapsed = collapse.as_ref().is_some_and(|(collapsed, _)| *collapsed) && !peek;
 
         strip = match application {
             Some(application) => strip.push(underlined(
@@ -348,7 +387,8 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             ));
         }
 
-        for tab in tabs {
+        for (i, tab) in tabs.into_iter().enumerate() {
+            let tab_tip = tab_tips.get(i).cloned().flatten();
             let contextual = tab.count.is_some();
             let face = tab_face(tab.label, tab.selected, tab.count);
             // Daraltılmış şeritte seçili sekme panele akmaz; kalın yazıyla
@@ -365,6 +405,8 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
                     Length::Shrink,
                 )
             };
+            // The tab's key tip under its middle (the web's KeyTips).
+            let tab_button = key_tip(tab_button, tab_tip, Place::Under);
             // A contextual tab stands a little apart, a thin accent line over it (web).
             strip = strip.push(if contextual {
                 let line = !tab.selected || collapsed;
@@ -475,30 +517,18 @@ impl<'a, Message: Clone + 'a> Default for Ribbon<'a, Message> {
 }
 
 impl<'a, Message: Clone + 'a> From<Ribbon<'a, Message>> for Element<'a, Message> {
-    fn from(ribbon: Ribbon<'a, Message>) -> Self {
-        let Ribbon {
-            application,
-            tabs,
-            trailing,
-            panel,
-            quick,
-            quick_menu,
-            quick_tip,
-            collapse,
-            context,
-        } = ribbon;
-        let collapsed = collapse.as_ref().is_some_and(|(collapsed, _)| *collapsed);
-        let strip = Ribbon::strip(
-            application,
-            tabs,
-            trailing,
-            quick,
-            quick_menu,
-            quick_tip,
-            collapse,
-        );
+    fn from(mut ribbon: Ribbon<'a, Message>) -> Self {
+        let panel = std::mem::replace(&mut ribbon.panel, Panel::Groups(Vec::new()));
+        let context = ribbon.context.take();
+        let collapsed = ribbon
+            .collapse
+            .as_ref()
+            .is_some_and(|(collapsed, _)| *collapsed);
+        // Open over the drawing, the folded ribbon's tab flows into its panel.
+        let shows_panel = !collapsed || ribbon.peek;
+        let strip = ribbon.strip();
 
-        let whole: Element<'a, Message> = if collapsed {
+        let whole: Element<'a, Message> = if !shows_panel {
             strip
         } else {
             Column::new()

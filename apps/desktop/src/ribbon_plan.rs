@@ -38,7 +38,6 @@ pub(crate) mod texts {
     }
 
     /// A panel's ▾.
-    #[cfg(test)]
     pub(crate) fn panel_more(panel: &str) -> String {
         format!("{panel}: diğer araçlar")
     }

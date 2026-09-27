@@ -254,6 +254,8 @@ impl App {
     pub(crate) fn window_resized(&mut self, size: Size) {
         self.window_size = size;
         self.apply_sizes();
+        // The key tips go when the window changes size (the web's).
+        self.key_tips = None;
     }
 
     /// The dock's edge was dragged: the width is shown by the web's rule and kept so.

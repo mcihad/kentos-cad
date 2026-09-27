@@ -225,11 +225,7 @@
     "apps/web/src/ui/processing/ToolDialog.ts#openToolDialog": { "desktop": "implemented", "where": "apps/desktop/src/processing/window.rs (ADR 0084, 0088)" },
     "apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner": { "desktop": "implemented", "where": "apps/desktop/src/processing/designer/ (ADR 0116)" },
     "apps/web/src/ui/properties/PropertiesPanel.ts#PropertiesPanel": { "desktop": "implemented", "where": "apps/desktop/src/properties/ (ADR 0063, 0066)" },
-    "apps/web/src/ui/ribbon/Ribbon.ts#Ribbon": {
-      "desktop": "partial",
-      "where": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs, ribbon_bar.rs (ADR 0017, 0051, 0089, 0117)",
-      "reason": "Harf ipuçları (F6, Alt) masaüstünde henüz yok; hızlı erişim çubuğu, sağ tık menüleri ve bölünmüş düğmenin son seçimi var (ADR 0117)."
-    },
+    "apps/web/src/ui/ribbon/Ribbon.ts#Ribbon": { "desktop": "implemented", "where": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs, ribbon_bar.rs, ribbon_keys.rs (ADR 0017, 0051, 0089, 0117, 0118)" },
     "apps/web/src/ui/settings/AppSettingsDialog.ts#openAppSettings": { "desktop": "implemented", "where": "apps/desktop/src/settings_view.rs (ADR 0023)" },
     "apps/web/src/ui/settings/NewProjectDialog.ts#openNewProjectDialog": { "desktop": "implemented", "where": "apps/desktop/src/project/new.rs (ADR 0049)" },
     "apps/web/src/ui/settings/ProjectSettingsDialog.ts#openProjectSettings": { "desktop": "implemented", "where": "apps/desktop/src/project/settings.rs (ADR 0049)" },

@@ -2,6 +2,7 @@
 
 use std::rc::Rc;
 
+use iced::advanced::widget;
 use iced::widget::text::{Fragment, IntoFragment, Wrapping};
 use iced::widget::{button, column, container, row, space, text, tooltip};
 use iced::{Center, Element, Fill, Padding, Right, Top};
@@ -13,6 +14,7 @@ use crate::style;
 use crate::style::button::Ribbon as State;
 use crate::theme::{Tokens, typography};
 use crate::widget::context_menu::{ContextMenu, Menu, MenuButton};
+use crate::widget::key_tip::{KeyTip, Place, key_tip};
 use crate::widget::{Tip, tip};
 
 /// Şerit düğmesinin tasarlandığı boyut.
@@ -67,6 +69,10 @@ pub struct Button<'a, Message> {
     menu: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
     /// Sağ tıklanınca açılan menü (ör. hızlı erişime ekleme).
     context: Option<Rc<dyn Fn() -> Menu<Message> + 'a>>,
+    /// Harf ipuçları: düğmenin (bölünmüşte üst parçanın) ve okun.
+    key_tips: (Option<KeyTip>, Option<KeyTip>),
+    /// Menüsünün kimliği: klavyeyle açılabilir ([`open_menu`](crate::widget::context_menu::open_menu)).
+    menu_id: Option<widget::Id>,
     flash: bool,
     /// A small button drawn with its icon only (a narrow custom panel).
     icon_only: bool,
@@ -83,6 +89,8 @@ impl<'a, Message: Clone + 'a> Clone for Button<'a, Message> {
             tip: self.tip.clone(),
             menu: self.menu.clone(),
             context: self.context.clone(),
+            key_tips: self.key_tips.clone(),
+            menu_id: self.menu_id.clone(),
             flash: self.flash,
             icon_only: self.icon_only,
         }
@@ -110,6 +118,8 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
             tip: None,
             menu: None,
             context: None,
+            key_tips: (None, None),
+            menu_id: None,
             flash: false,
             icon_only: false,
         }
@@ -120,6 +130,19 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     /// yapar, ok menüyü açar. Verilmemişse düğmenin tamamı menüyü açar.
     pub fn menu(mut self, menu: impl Fn() -> Menu<Message> + 'a) -> Self {
         self.menu = Some(Rc::new(menu));
+        self
+    }
+
+    /// Harf ipuçları: `face` düğmenin (bölünmüş düğmede üst parçanın, yalnız
+    /// menü açanda bütün düğmenin), `arrow` bölünmüş düğmenin okunun.
+    pub fn key_tips(mut self, face: Option<KeyTip>, arrow: Option<KeyTip>) -> Self {
+        self.key_tips = (face, arrow);
+        self
+    }
+
+    /// Menüsünün kimliği: menü klavyeyle açılabilir (ör. harf ipucuyla).
+    pub fn menu_id(mut self, id: impl Into<widget::Id>) -> Self {
+        self.menu_id = Some(id.into());
         self
     }
 
@@ -248,10 +271,15 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
 
     /// Düğmeyi verilen biçimde çizer.
     pub(crate) fn render(&self, form: Form) -> Element<'a, Message> {
+        let face_tip = self.key_tips.0.clone();
         let content = match (&self.menu, &self.on_press) {
             (Some(menu), Some(message)) => self.split(form, message.clone(), menu.clone()),
-            (Some(menu), None) => self.dropdown(form, menu.clone()),
-            (None, _) => self.plain(form),
+            (Some(menu), None) => key_tip(
+                self.dropdown(form, menu.clone()),
+                face_tip,
+                self.place(form),
+            ),
+            (None, _) => key_tip(self.plain(form), face_tip, self.place(form)),
         };
         let content = super::flashed(content, self.flash);
 
@@ -265,6 +293,16 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
                 ContextMenu::new(content, move |_| menu()).into()
             }
             None => content,
+        }
+    }
+
+    /// Where a key tip sits on the button (the web's `KeyTips.badge`): a
+    /// large one's bottom, a small one's icon.
+    fn place(&self, form: Form) -> Place {
+        match form {
+            Form::Large => Place::Bottom,
+            Form::Small => Place::Icon(SMALL_LEFT + ICON / 2.0),
+            Form::Icon => Place::Icon(self.width(form) / 2.0),
         }
     }
 
@@ -347,36 +385,49 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
     ) -> Element<'a, Message> {
         let chevron = || icon(Icon::ChevronDown).size(CHEVRON).tone(Tone::Muted);
         let open = move || menu();
+        let (face_tip, arrow_tip) = self.key_tips.clone();
+        let with_id = |menu: MenuButton<'a, Message>| match &self.menu_id {
+            Some(id) => menu.id(id.clone()),
+            None => menu,
+        };
         match form {
             Form::Large => {
                 let width = self.width(form);
                 let top = (content_height() * 0.54).round();
                 column![
-                    button(container(self.glyph(form)).center_x(Fill).padding(Padding {
-                        top: typography::scaled(6.0),
-                        ..Padding::ZERO
-                    }))
-                    .on_press(message)
-                    .width(width)
-                    .height(top)
-                    .padding(0)
-                    .style(style::button::ribbon(self.state)),
+                    key_tip(
+                        button(container(self.glyph(form)).center_x(Fill).padding(Padding {
+                            top: typography::scaled(6.0),
+                            ..Padding::ZERO
+                        }))
+                        .on_press(message)
+                        .width(width)
+                        .height(top)
+                        .padding(0)
+                        .style(style::button::ribbon(self.state)),
+                        face_tip,
+                        Place::Icon(width / 2.0),
+                    ),
                     // The label stands under the lit part, on the ribbon's own
                     // ground: its colour stays the idle one while the tool runs,
                     // as on the web (`.rsplit[data-active]` fills `.rsplit__main` only).
-                    MenuButton::new(
-                        container(
-                            column![self.caption_in(true, State::Idle), chevron()]
-                                .spacing(1)
-                                .align_x(Center)
-                        )
-                        .center_x(width)
-                        .height(content_height() - top)
-                        .padding(Padding {
-                            top: 1.0,
-                            ..Padding::ZERO
-                        }),
-                        open,
+                    key_tip(
+                        with_id(MenuButton::new(
+                            container(
+                                column![self.caption_in(true, State::Idle), chevron()]
+                                    .spacing(1)
+                                    .align_x(Center)
+                            )
+                            .center_x(width)
+                            .height(content_height() - top)
+                            .padding(Padding {
+                                top: 1.0,
+                                ..Padding::ZERO
+                            }),
+                            open,
+                        )),
+                        arrow_tip,
+                        Place::Icon(width / 2.0),
                     ),
                 ]
                 .width(width)
@@ -406,13 +457,22 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
                 } else {
                     main.into()
                 };
+                let main_place = if form == Form::Icon {
+                    Place::Icon(typography::scaled(ICON_ONLY - 2.0) / 2.0)
+                } else {
+                    Place::Icon(SMALL_LEFT + ICON / 2.0)
+                };
                 row![
-                    main,
-                    MenuButton::new(
-                        container(chevron())
-                            .center_y(row_height())
-                            .padding([0.0, ARROW_PAD]),
-                        open,
+                    key_tip(main, face_tip, main_place),
+                    key_tip(
+                        with_id(MenuButton::new(
+                            container(chevron())
+                                .center_y(row_height())
+                                .padding([0.0, ARROW_PAD]),
+                            open,
+                        )),
+                        arrow_tip,
+                        Place::Icon(ARROW_PAD + CHEVRON / 2.0),
                     ),
                 ]
                 .into()
@@ -458,7 +518,11 @@ impl<'a, Message: Clone + 'a> Button<'a, Message> {
                 .padding([0.0, SMALL_LEFT])
                 .into(),
         };
-        MenuButton::new(content, open).into()
+        let menu = MenuButton::new(content, open);
+        match &self.menu_id {
+            Some(id) => menu.id(id.clone()).into(),
+            None => menu.into(),
+        }
     }
 }
 

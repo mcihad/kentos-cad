@@ -336,6 +336,19 @@ impl App {
 
     /// A key no text box captured, by ADR 0018's order (see the module).
     pub(crate) fn key(&mut self, press: KeyPress) -> Task<Message> {
+        // The ribbon's key tips take every key while they show; Alt pressed
+        // alone arms them, shown when it is let go (ribbon_keys.rs).
+        if let Some(task) = self.key_tips_key(&press) {
+            return task;
+        }
+        if self.alt_tap(&press) {
+            return Task::none();
+        }
+        // Esc closes the folded ribbon open over the drawing first (the web's).
+        if self.ribbon_peek && press.named() == Some(Named::Escape) {
+            self.ribbon_peek = false;
+            return Task::none();
+        }
         // 0. İfade oluşturucu takes the keys its editor leaves (expression/).
         if let Some(task) = self.builder_key(&press) {
             return task;

@@ -52,7 +52,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 
 | Bölüm | Masaüstünde | Kısmi | Yok | Bekliyor | Anlamsız | Toplam |
 |---|---|---|---|---|---|---|
-| Komutlar | 146 | 0 | 1 | 15 | 5 | 167 |
+| Komutlar | 147 | 0 | 0 | 15 | 5 | 167 |
 | Araçlar | 56 | 0 | 0 | 2 | 0 | 58 |
 | İşlem araçları | 4 | 0 | 0 | 0 | 0 | 4 |
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
@@ -60,7 +60,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | Ayarlar | 55 | 1 | 0 | 0 | 9 | 65 |
 | Tarayıcı depoları | 8 | 0 | 0 | 0 | 2 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
-| Pencereler ve paneller | 55 | 4 | 0 | 0 | 4 | 63 |
+| Pencereler ve paneller | 56 | 3 | 0 | 0 | 4 | 63 |
 
 Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla soluk gösterir, web gibi.
 
@@ -93,9 +93,8 @@ Bekliyor: web'de de yapılmamış (`pending`); masaüstü onları web'in notuyla
 
 Kısmi olanlar notlarıyla; bölüm bölüm.
 
-#### Komutlar (1 / 167; ayrıca 15 iki platformda da bekliyor)
+#### Komutlar (0 / 167; ayrıca 15 iki platformda da bekliyor)
 
-- `view.keyTips` Şerit harf ipuçları
 - `analysis.slope` Eğim analizi… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `analysis.volume` Hacim hesabı… (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
 - `crs.query` Koordinat sorgula (iki platformda da bekliyor) (masaüstünde: apps/desktop/src/catalog.rs (Standing::Pending: web'in notuyla soluk))
@@ -142,9 +141,8 @@ Yok.
 
 Yok.
 
-#### Pencereler ve paneller (4 / 63)
+#### Pencereler ve paneller (3 / 63)
 
-- `apps/web/src/ui/ribbon/Ribbon.ts#Ribbon` Ribbon (kısmi) (masaüstünde: apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs, ribbon_bar.rs (ADR 0017, 0051, 0089, 0117)) — Harf ipuçları (F6, Alt) masaüstünde henüz yok; hızlı erişim çubuğu, sağ tık menüleri ve bölünmüş düğmenin son seçimi var (ADR 0117).
 - `apps/web/src/ui/statusbar/StatusBar.ts#StatusBar` StatusBar (kısmi) (masaüstünde: apps/desktop/src/view.rs, message_log.rs, cloud/cells.rs (ADR 0058, 0080, 0113, 0114)) — Dosya projesinde başkasının yeni revizyonu henüz izlenmediği için “Yeni revizyon” durumu gösterilmez. Çizim motoru hücresi masaüstünde anlamsızdır (wgpu).
 - `apps/web/src/ui/svgedit/svgExport.ts#openExportDialog` openExportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/export.rs (ADR 0095)) — PNG panoya kopyalanamaz: masaüstünün panosu yalnız metin tutar (SVG kopyalanır). PNG dosyaya yazılır.
 - `apps/web/src/ui/svgedit/svgImport.ts#openImportDialog` openImportDialog (kısmi) (masaüstünde: apps/desktop/src/style/svgedit/files/import.rs, read.rs (ADR 0095)) — Katı XML olarak okunamayan ve onarılamayan dosya ayrıştırıcının nedeniyle (satır, sütun) reddedilir; web'in son çaresi tarayıcının hoşgörülü HTML ayrıştırıcısıdır.

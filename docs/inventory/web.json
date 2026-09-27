@@ -74,14 +74,14 @@
     },
     "commandsWithoutPlace": [],
     "commandsWithoutTests": 52,
-    "commandsOnDesktop": 146,
+    "commandsOnDesktop": 147,
     "desktop": {
       "commands": {
         "total": 167,
-        "implemented": 146,
+        "implemented": 147,
         "partial": 0,
         "pending": 15,
-        "none": 1,
+        "none": 0,
         "n/a": 5
       },
       "tools": {
@@ -142,8 +142,8 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 55,
-        "partial": 4,
+        "implemented": 56,
+        "partial": 3,
         "pending": 0,
         "none": 0,
         "n/a": 4
@@ -5038,7 +5038,7 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
+        "desktop": "implemented"
       },
       "tests": []
     },
@@ -11912,10 +11912,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs, ribbon_bar.rs (ADR 0017, 0051, 0089, 0117)",
-      "desktopNote": "Harf ipuçları (F6, Alt) masaüstünde henüz yok; hızlı erişim çubuğu, sağ tık menüleri ve bölünmüş düğmenin son seçimi var (ADR 0117)."
+      "desktopWhere": "apps/desktop/src/view.rs, catalog.rs, ribbon_panels.rs, ribbon_bar.rs, ribbon_keys.rs (ADR 0017, 0051, 0089, 0117, 0118)"
     },
     {
       "id": "apps/web/src/ui/settings/AppSettingsDialog.ts#openAppSettings",
