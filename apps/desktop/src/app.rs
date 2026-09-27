@@ -121,6 +121,8 @@ pub enum Dialog {
     Legend,
     /// Sembol tasarımcısı (style/designer/); the window is `App::styles.designer`.
     SymbolDesigner,
+    /// Model tasarımcısı (processing/designer/); the window is `App::processing.designer`.
+    ModelDesigner,
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
@@ -219,6 +221,8 @@ pub enum Message {
     Calc(crate::calc::Event),
     /// A processing tool's window (processing/).
     Processing(crate::processing::Event),
+    /// Model tasarımcısı (processing/designer/).
+    ModelDesigner(crate::processing::designer::Event),
     /// Katman stili (style/layer_style/).
     LayerStyle(crate::style::layer_style::Event),
     /// İfade oluşturucu over an expression field's window (expression/).
@@ -796,6 +800,7 @@ impl App {
             }
             Message::Calc(event) => return self.calc_event(event),
             Message::Processing(event) => return self.processing_event(event),
+            Message::ModelDesigner(event) => return self.model_designer_event(event),
             Message::Builder(event) => return self.builder_event(event),
             Message::LayerStyle(event) => return self.layer_style_event(event),
             Message::StyleManager(event) => return self.style_manager_event(*event),

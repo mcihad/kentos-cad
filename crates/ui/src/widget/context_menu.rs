@@ -1538,15 +1538,7 @@ fn item_row<'a, Message: 'a>(
 
     let slot: Element<'a, Message> = match mark {
         Mark::Icon(glyph) => icon(glyph).size(14.0).into(),
-        Mark::Dot => container(space::horizontal())
-            .width(6)
-            .height(6)
-            .style(move |theme: &Theme| container::Style {
-                background: Some(Tokens::of(theme).accent.into()),
-                border: iced::border::rounded(3),
-                ..container::Style::default()
-            })
-            .into(),
+        Mark::Dot => dot(),
         Mark::None => space::horizontal().width(14).into(),
     };
 
@@ -1590,6 +1582,19 @@ fn item_row<'a, Message: 'a>(
 
 /// A command with a detail line (the web's `menu__label--2`): a larger icon,
 /// the label over the detail in a fixed column, the shortcut at the right.
+/// A chosen radio's mark: a small dot in the accent.
+fn dot<'a, Message: 'a>() -> Element<'a, Message> {
+    container(space::horizontal())
+        .width(6)
+        .height(6)
+        .style(move |theme: &Theme| container::Style {
+            background: Some(Tokens::of(theme).accent.into()),
+            border: iced::border::rounded(3),
+            ..container::Style::default()
+        })
+        .into()
+}
+
 fn detail_row<'a, Message: 'a>(
     mark: Mark,
     text: String,
@@ -1601,7 +1606,13 @@ fn detail_row<'a, Message: 'a>(
 ) -> Element<'a, Message> {
     let slot: Element<'a, Message> = match mark {
         Mark::Icon(glyph) => icon(glyph).size(DETAIL_ICON).into(),
-        _ => space::horizontal().width(DETAIL_ICON).into(),
+        // A chosen radio's dot, beside the first line (the web's).
+        Mark::Dot => container(dot())
+            .center_x(DETAIL_ICON)
+            .height(typography::body() * 1.3)
+            .align_y(Center)
+            .into(),
+        Mark::None => space::horizontal().width(DETAIL_ICON).into(),
     };
     let quiet = move |theme: &Theme| {
         let t = Tokens::of(theme);

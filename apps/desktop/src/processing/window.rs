@@ -58,6 +58,9 @@ impl App {
         };
         let env = Env {
             window,
+            send: Message::Processing,
+            pick_objects: true,
+            builder: true,
             doc: &doc.model,
             format: &format,
             color: &color,
@@ -310,7 +313,7 @@ fn side<'a>(window: &'a ToolDialog, processing: &'a Processing) -> Element<'a, M
                 );
             }
         }
-        // The designer is still on the web: its command says so (the web's button, same words).
+        // Model tasarımcısı on the model, or on a copy of a built-in one (the web's button, same words).
         let edit = button(
             row![
                 icon(crate::icons::from_web(Some("edit"))).size(14.0),
@@ -325,7 +328,9 @@ fn side<'a>(window: &'a ToolDialog, processing: &'a Processing) -> Element<'a, M
         )
         .padding([4, 10])
         .style(style::button::secondary)
-        .on_press(Message::Run("processing.newModel"));
+        .on_press(ev(Event::Panel(super::panel::Event::EditModel(
+            model.id.clone(),
+        ))));
         out = out.push(column![steps, edit].spacing(10));
     }
     if tool.preview.is_some() {

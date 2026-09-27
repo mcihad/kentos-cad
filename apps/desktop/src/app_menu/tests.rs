@@ -79,9 +79,9 @@ fn what_the_desktop_does_not_run_yet_is_dimmed_and_says_why() {
     let app = app_with_drawing();
     assert!(!app.menu_runs("file.print"));
     assert_eq!(app.menu_why("file.print"), Some("Geliştirme aşamasında"));
-    assert!(!app.menu_runs("processing.newModel"));
+    assert!(!app.menu_runs("view.keyTips"));
     assert_eq!(
-        app.menu_why("processing.newModel"),
+        app.menu_why("view.keyTips"),
         Some("Web'de var; masaüstüne henüz taşınmadı")
     );
     for id in ["file.import.dxf", "file.import.shp", "file.import.geojson"] {

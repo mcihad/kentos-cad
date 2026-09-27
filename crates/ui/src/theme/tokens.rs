@@ -50,6 +50,9 @@ pub struct Tokens {
     pub success: Color,
     pub warning: Color,
     pub danger: Color,
+    /// Bilgi mavisi (web'in `--c-info`'su): sorulan şeyler, ör. model
+    /// tasarımcısında girdi kutularının kenarı ve simgesi.
+    pub info: Color,
 }
 
 impl Tokens {
@@ -77,6 +80,7 @@ impl Tokens {
         success: hex(0x5cbf62),
         warning: hex(0xf2c53d),
         danger: hex(0xe5584f),
+        info: hex(0x6db3f2),
     };
 
     pub const LIGHT: Self = Self {
@@ -103,6 +107,7 @@ impl Tokens {
         success: hex(0x2f9437),
         warning: hex(0xb58500),
         danger: hex(0xcc3a31),
+        info: hex(0x1f6fc4),
     };
 
     /// Gece çalışması için: mavimsi, çok koyu yüzeyler ve daha az parlak
@@ -131,6 +136,7 @@ impl Tokens {
         success: hex(0x4fae5a),
         warning: hex(0xd6ae3a),
         danger: hex(0xd4544b),
+        info: hex(0x6db3f2),
     };
 
     /// Yüksek karşıtlık: siyah zemin, beyaz yazı, parlak kenarlar. Bölgeler
@@ -160,6 +166,7 @@ impl Tokens {
         success: hex(0x6ee07a),
         warning: hex(0xffd84a),
         danger: hex(0xff6b61),
+        info: hex(0x8fd0ff),
     };
 
     /// Temanın vurgusuz, sabit belirteçleri.

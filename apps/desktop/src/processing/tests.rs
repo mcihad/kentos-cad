@@ -316,7 +316,7 @@ fn screens() {
 }
 
 /// Where a text is drawn: the first widget showing exactly `caption`.
-fn find_text(
+pub(super) fn find_text(
     snapshot: &mut kentos_ui::snapshot::Snapshot,
     app: &App,
     caption: &'static str,

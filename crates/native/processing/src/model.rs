@@ -7,8 +7,9 @@
 use std::collections::{BTreeMap, HashSet};
 use std::fmt;
 
-use serde::Deserialize;
 use serde::de::{MapAccess, Visitor};
+use serde::ser::SerializeMap;
+use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{Map, Value, json};
 
 use crate::parameters::is_visible;
@@ -320,6 +321,50 @@ impl<'de> Deserialize<'de> for Model {
                 .filter_map(|(k, v)| Some((k.clone(), point_of(v)?)))
                 .collect(),
         })
+    }
+}
+
+/// The web's JSON as JavaScript writes it: `Model::to_json`'s shape, each
+/// step's values in the order they were set (a serde_json value would sort
+/// them). What the user's library is kept as.
+impl Serialize for Model {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        let whole = self.to_json();
+        let mut m = s.serialize_map(None)?;
+        for key in ["id", "label", "category", "description", "inputs"] {
+            m.serialize_entry(key, &whole[key])?;
+        }
+        m.serialize_entry("steps", &self.steps)?;
+        for key in ["outputs", "inputPositions"] {
+            m.serialize_entry(key, &whole[key])?;
+        }
+        m.end()
+    }
+}
+
+impl Serialize for ModelStep {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        struct InOrder<'a>(&'a [(String, ValueSource)]);
+        impl Serialize for InOrder<'_> {
+            fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+                let mut m = s.serialize_map(Some(self.0.len()))?;
+                for (name, src) in self.0 {
+                    m.serialize_entry(name, &src.to_json())?;
+                }
+                m.end()
+            }
+        }
+        let mut m = s.serialize_map(None)?;
+        m.serialize_entry("id", &self.id)?;
+        m.serialize_entry("tool", &self.tool)?;
+        m.serialize_entry("values", &InOrder(&self.values))?;
+        if let Some(at) = self.position {
+            m.serialize_entry("position", &point_json(at))?;
+        }
+        if let Some(caption) = &self.caption {
+            m.serialize_entry("caption", caption)?;
+        }
+        m.end()
     }
 }
 

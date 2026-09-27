@@ -934,6 +934,7 @@ impl App {
             Asking::StyleManager => self.style_manager_view(),
             Asking::Legend => self.legend_view(),
             Asking::SymbolDesigner => self.designer_view(),
+            Asking::ModelDesigner => self.model_designer_view(),
         }
     }
 }

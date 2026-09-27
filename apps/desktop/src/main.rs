@@ -116,6 +116,9 @@ fn main() -> iced::Result {
                 app.recent = recent::RecentFiles::open(&folder);
                 // Each processing tool's last values (islemler.json), beside them.
                 app.processing.memory = processing::memory::Memory::open(&folder);
+                // The user's models (the designer's Kaydet) beside the built-in ones.
+                let models = app.processing.memory.models().to_vec();
+                app.processing.registry.set_user_models(models);
             }
             // Kitaplığım, the user's own symbols (kitaplik.kstil, docs/adr/0092).
             if let Some(folder) = style::user_library::default_folder()

@@ -230,6 +230,7 @@
     "apps/web/src/ui/processing/ProcessingPanel.ts#ProcessingPanel": { "desktop": "implemented", "where": "apps/desktop/src/processing/panel.rs (ADR 0084)" },
     "apps/web/src/ui/processing/ToolDialog.ts#openModelDialog": { "desktop": "implemented", "where": "apps/desktop/src/processing/window.rs (ADR 0084)" },
     "apps/web/src/ui/processing/ToolDialog.ts#openToolDialog": { "desktop": "implemented", "where": "apps/desktop/src/processing/window.rs (ADR 0084, 0088)" },
+    "apps/web/src/ui/processing/model/ModelDesigner.ts#openModelDesigner": { "desktop": "implemented", "where": "apps/desktop/src/processing/designer/ (ADR 0116)" },
     "apps/web/src/ui/properties/PropertiesPanel.ts#PropertiesPanel": { "desktop": "implemented", "where": "apps/desktop/src/properties/ (ADR 0063, 0066)" },
     "apps/web/src/ui/ribbon/Ribbon.ts#Ribbon": {
       "desktop": "partial",

@@ -1,6 +1,6 @@
 # ADR 0116: Masaüstünde Model tasarımcısı
 
-- **Durum:** çekirdek kabul edildi (2026-09-27); pencere sürüyor.
+- **Durum:** kabul edildi (2026-09-27): çekirdek ve pencere.
 - **Tarih:** 2026-09-27
 - **Bağlam belgesi:** docs/specs/model-designer.md; PROCESSING.md §7; ADR 0084 (İşlemler), 0088 (Sahneden seç).
 - **Kaynak:** web'in `processing/model.ts`, `processing/modelEdit.ts`, `ui/processing/model/designerPlan.ts`; ortak durumlar `fixtures/processing/v1/designer.json`.
@@ -39,7 +39,40 @@ Masaüstünün modeli bu iş için yetmiyordu:
   - yeni kutunun yeri, geri almanın birleşmesi;
   - diyagramın geometrisi: eğri, noktalar, hedefteki kenar yazıları, sığdırma, yakınlaştırma ve tabanı, ızgara.
 
-Pencere (tuval, parçalar, ayarlar, taslak ve geri alma, kaydetme ve kapatma sorusu, Sahneden seç) bu ADR'nin ikinci dilimidir.
+### Pencere
+
+Masaüstünün penceresi `apps/desktop/src/processing/designer/`'dadır, web'in `ModelDesigner`'ı gibidir:
+
+- **`mod.rs`:** taslak, kaydedilen ve karşılaştırılan hâli, seçim ve pencerenin kendi geri alması. Geri alma 60 adım tutar; aynı alana 1,2 saniye içinde yazılanlar tek adımdır. Diyagramın görünümü, taşınan araç, telin menüsü ve sorular da buradadır.
+- **`update.rs`:** her değişiklik tek yoldan geçer: geri alma adımı, değişiklik, denetim.
+  - Kaydet (Ctrl+S) modeli Kitaplığa ve `islemler.json`'a yazar; boş ad “Adsız model” olur.
+  - Kapat, × ve Esc kaydedilmemiş değişikliği sorar; Modeli sil de sorar.
+  - Sahneden seç: tasarımcı çekilir, nokta çizimde gösterilir, pencere aynı taslakla geri gelir (ADR 0088).
+- **`canvas.rs`:** diyagram Iced tuvalinde çizilir:
+  - noktalı zemin, eğri bağlantılar ve hedefteki yazıları;
+  - kutular: ikon, ad, ikinci satır; sorunlu kutunun kenarı kesikli, seçilinin vurgulu;
+  - kutu 10 piksellik ızgarada taşınır; porttan tel çekilir;
+  - zemin sürüklenerek kaydırılır, tekerlekle yakınlaştırılır; çift tık da çalışır;
+  - araç kutusundan getirilen araç buraya bırakılır.
+- **`palette.rs`:** Girdi ekle ve araçlar: arama ve kategoriler; araç tıklanır ya da tuvale sürüklenir.
+- **`inspector.rs`:** modelin, girdinin ve adımın ayarları.
+  - Her parametrenin kaynağı listeden seçilir: Aracın varsayılanı, Sabit değer, model girdileri, önceki adımların çıktıları ya da Yeni model girdisi yap.
+  - Sabit değer, aracın penceresinin kendi denetimiyle girilir (`fields.rs`).
+- **`view.rs`:** pencere en çok 1400 × 880'dir, pencerenin %92'sini geçmez. Alt çubukta Düzenle, durum, Kapat, Kaydet ve çalıştır… ve Kaydet vardır; sorular pencerenin üstünde açılır.
+- **Açıldığı yerler:**
+  - İşlemler sekmesinde Yeni model… ve modelin satırındaki düzenle düğmesi;
+  - modelin penceresinde Modeli düzenle ya da Kopyasını düzenle;
+  - `processing.newModel` komutu.
+  Hazır model kopyası olarak açılır. Kullanıcının modelleri araç kutusundan çalışır.
+
+Kitaplıkta modelin `Serialize`'ı adımların değerlerini sırasıyla yazar. `islemler.json`, web'in `kentos.processing.v1`'i gibidir.
+
+KentOS UI'a eklenenler:
+
+- `TreeView::flat` ve `Node::heading`: ok sütunu olmayan, başlıklı liste (palet).
+- `icon::draw(frame, icon, color, at)`: tuvale, yeri verilerek çizilen ikon. Iced'in `with_clip`'i koordinatları kaydırmaz; ikon bu yüzden yerini kendisi alır.
+- Menünün iki satırlı öğesinde seçili radyo noktası.
+- `Tokens::info`: girdilerin mavisi.
 
 ## Sonuçlar
 
@@ -56,10 +89,25 @@ Pencere (tuval, parçalar, ayarlar, taslak ve geri alma, kaydetme ve kapatma sor
 - Aynı dosyayı web de oynatır.
 - Hazır model girdilerini web'in tanımıyla tutar.
 - Çalıştırıcı parametreleri modelin girdilerinden üretir.
+- Masaüstünde model kurulur, kaydedilir, yeniden açılır ve silinir.
+- Farklar:
+  - Web'in taşınan araç hayaleti sayfanın her yerinde görünür; masaüstünde yalnız tuvalin üstünde.
+  - Kullanıcının modelleri şeritte ve komut satırında henüz yoktur; araç kutusundan çalışır.
 
 ## Doğrulama
 
 - **`cargo test -p kentos-processing`:** `designer` durumları 6 grup, süreçlerin ortak durumları (`cases`) değişmeden geçer.
 - **Dikilen hatalar yakalanıyor:** yeni adımın yeri ve sütunlara dizmenin satırı birer piksel kaydırılınca `designer` düşer.
-- **`cargo test -p kentos-desktop processing`:** masaüstünün İşlemler'i, hazır modelin penceresi ve çalışması.
+- **`cargo test -p kentos-desktop processing`:** masaüstünün İşlemler'i, hazır modelin penceresi ve çalışması. Tasarımcının 11 testi:
+  - modeli parçalardan kurup kaydetmek ve yeniden açmak;
+  - yazının tek geri alma adımı olması; Ctrl+Z ve Ctrl+Y;
+  - kaydedilmemiş değişiklik sorusu (Vazgeç, Kaydetmeden kapat, Kaydet ve kapat);
+  - hazır modelin kopyası olarak açılması;
+  - telin menüsü;
+  - sabit değerin aracın denetimiyle girilmesi;
+  - başlangıç noktasının çizimden gösterilmesi;
+  - tuşlar ve Modeli sil;
+  - sayı girdisinde yazılanın korunması.
+  `processing::memory` testi, kaydedilen modelin değer sırasıyla geri okunduğunu doğrular.
+- **Resimler:** `cargo test -p kentos-desktop processing::designer::tests::screens -- --ignored --nocapture`. Web'in 13 sahnesi, iki boyut ve iki temayla `.run/shots/model-*`'a yazılır ve web'in resimleriyle karşılaştırılmıştır.
 - **Temiz denetimler:** `cargo clippy -p kentos-processing -p kentos-desktop --all-targets -- -D warnings`; `pnpm arch:deps`.

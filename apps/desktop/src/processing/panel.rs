@@ -17,8 +17,8 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
-use kentos_ui::widget::Segmented;
 use kentos_ui::widget::tree_view::{Column as TreeColumn, Node, TreeView};
+use kentos_ui::widget::{Segmented, Tip, tip};
 
 use crate::app::{App, Message};
 use crate::catalog::catalog;
@@ -51,6 +51,10 @@ pub enum Event {
     Reopen(u64),
     /// n nesneyi seç: what a run made, while it is there.
     SelectRun(u64),
+    /// Modeli düzenle (a user's model) or Kopyasını düzenle (a built-in one).
+    EditModel(String),
+    /// A user's model opened to run (it has no command of the catalog's).
+    RunModel(String),
 }
 
 /// The switch's buttons: Araçlar, and Geçmiş with how many runs there are.
@@ -151,11 +155,26 @@ impl App {
                 let command = catalog()
                     .get(&format!("processing.model.{}", m.id))
                     .map(|c| c.id);
+                let words = if registry.is_builtin_model(&m.id) {
+                    "Kopyasını düzenle"
+                } else {
+                    "Modeli düzenle"
+                };
+                let edit = tip(
+                    button(icon(crate::icons::from_web(Some("edit"))).size(14.0))
+                        .padding(3)
+                        .style(style::button::ghost)
+                        .on_press(ev(Event::EditModel(m.id.clone()))),
+                    Tip::new(words),
+                    iced::widget::tooltip::Position::Left,
+                );
                 let mut node = Node::new(m.label.as_str())
-                    .icon(icon(crate::icons::from_web(Some("processing"))).size(15.0));
-                if let Some(id) = command {
-                    node = node.on_press(Message::Run(id));
-                }
+                    .icon(icon(crate::icons::from_web(Some("processing"))).size(15.0))
+                    .cells([edit]);
+                node = match command {
+                    Some(id) => node.on_press(Message::Run(id)),
+                    None => node.on_press(ev(Event::RunModel(m.id.clone()))),
+                };
                 branch = branch.push(node);
             }
             if query.is_empty() {
@@ -318,6 +337,17 @@ impl App {
                     self.selection.set(ids);
                     self.zoom_selection();
                 }
+            }
+            Event::EditModel(id) => {
+                // The model's own window steps aside for the designer (the web's).
+                if self.dialog == Some(crate::app::Dialog::Processing) {
+                    self.processing.dialog = None;
+                    self.dialog = None;
+                }
+                self.open_model_designer(Some(&id));
+            }
+            Event::RunModel(id) => {
+                let _ = self.processing_command(&format!("processing.model.{id}"));
             }
         }
     }

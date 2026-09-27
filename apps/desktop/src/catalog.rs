@@ -210,6 +210,7 @@ pub const PORTED: &[&str] = &[
     "processing.run.attributes.calculate",
     "processing.run.selection.byExpression",
     "processing.model.builtin.parcelSheet",
+    "processing.newModel",
     "map.edgeLengths",
     // The dock's İşlemler tab: the toolbox and this session's runs (docs/adr/0084, part 2).
     "processing.toolbox",

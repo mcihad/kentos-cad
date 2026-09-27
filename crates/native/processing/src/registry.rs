@@ -78,6 +78,45 @@ impl Registry {
             .any(|m| m.id == id)
     }
 
+    /// The user's models (the web's `kentos.processing.v1` → `models`).
+    pub fn user_models(&self) -> &[Model] {
+        &self.models[self.builtin_models..]
+    }
+
+    /// The user's models as kept; one with a built-in model's id is left out.
+    pub fn set_user_models(&mut self, models: Vec<Model>) {
+        self.models.truncate(self.builtin_models);
+        for m in models {
+            if !self.is_builtin_model(&m.id) && self.model(&m.id).is_none() {
+                self.models.push(m);
+            }
+        }
+    }
+
+    /// Keeps a user's model (the designer's Kaydet): a known one in its
+    /// place, a new one after the others. A built-in model cannot be
+    /// changed: its copy is saved instead (the web's words).
+    pub fn save_model(&mut self, model: Model) -> Result<(), String> {
+        if self.is_builtin_model(&model.id) {
+            return Err("Hazır modeller değiştirilemez; kopyasını kaydedin.".into());
+        }
+        match self.models.iter_mut().find(|m| m.id == model.id) {
+            Some(slot) => *slot = model,
+            None => self.models.push(model),
+        }
+        Ok(())
+    }
+
+    /// Removes a user's model; a built-in one stays. Whether it was there.
+    pub fn remove_model(&mut self, id: &str) -> bool {
+        if self.is_builtin_model(id) {
+            return false;
+        }
+        let before = self.models.len();
+        self.models.retain(|m| m.id != id);
+        self.models.len() != before
+    }
+
     pub fn category(&self, id: &str) -> Option<&'static Category> {
         CATEGORIES.iter().find(|c| c.id == id)
     }
