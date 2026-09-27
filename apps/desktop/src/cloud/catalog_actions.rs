@@ -62,12 +62,32 @@ impl Act {
     }
 }
 
+/// What a download fetches: the project itself (a database project's
+/// snapshot, a file project's newest revision), a file project's revision,
+/// or a checkpoint's file.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Fetch {
+    Project,
+    Revision(String),
+    Checkpoint(String),
+}
+
+/// A download: what it fetches, its name (the save window's and the
+/// lines'), and the SHA-256 a list gave for it, checked besides the server's.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Download {
+    pub fetch: Fetch,
+    pub name: String,
+    pub listed: Option<String>,
+}
+
 /// The action on its way: which, on what, and its request.
 pub struct Acting {
     pub id: u64,
     pub act: Act,
     pub project: ProjectSummary,
-    /// How far a download is, in words and 0–1.
+    /// A download's: what it fetches, and how far it is, in words and 0–1.
+    pub download: Option<Download>,
     pub progress: Option<(String, f32)>,
     _request: Option<Handle>,
 }
@@ -124,7 +144,17 @@ impl App {
                 c.asking = Some((act, p));
                 Task::none()
             }
-            Act::Download => self.catalog_download(p),
+            Act::Download => {
+                let name = p.name.clone();
+                self.catalog_download(
+                    p,
+                    Download {
+                        fetch: Fetch::Project,
+                        name,
+                        listed: None,
+                    },
+                )
+            }
             _ => self.catalog_send(act, p),
         }
     }
@@ -247,6 +277,7 @@ impl App {
                 id,
                 act,
                 project: p,
+                download: None,
                 progress: None,
                 _request: Some(handle.abort_on_drop()),
             });
@@ -267,15 +298,19 @@ impl App {
             return Task::none();
         }
         let Some(Acting {
-            act, project: p, ..
+            act,
+            project: p,
+            download,
+            ..
         }) = c.acting.take()
         else {
             return Task::none();
         };
         let name = p.name.clone();
+        let download_name = download.map(|d| d.name);
         let open = self.is_open_project(&p.id);
         let failure = match result {
-            Ok(done) => return self.catalog_done(act, p, done, open),
+            Ok(done) => return self.catalog_done(act, p, done, open, download_name),
             Err(failure) => failure,
         };
         let why = reason(&failure);
@@ -288,7 +323,7 @@ impl App {
             Act::Download => {
                 self.error(format!(
                     "“{}.kcad” indirilemedi: {}",
-                    safe_name(&name),
+                    safe_name(&download_name.unwrap_or(name)),
                     failure.message
                 ));
                 if let Some(c) = self.cloud.catalog.as_mut() {
@@ -310,6 +345,7 @@ impl App {
         p: ProjectSummary,
         done: Acted,
         open: bool,
+        download_name: Option<String>,
     ) -> Task<Message> {
         let zone = Zone::system();
         let name = p.name.clone();
@@ -411,7 +447,7 @@ impl App {
                     Level::Success,
                     format!("“{file}” indirildi: {}{revision}.", words::size_text(size)),
                 );
-                say(self, lines::downloaded(&name));
+                say(self, lines::downloaded(&download_name.unwrap_or(name)));
                 Task::none()
             }
             _ => Task::none(),
@@ -420,18 +456,23 @@ impl App {
 
     /// “.kcad olarak indir”: where first, then the bytes with their progress,
     /// checked against the server's SHA-256, then written (the web's `downloadKcad`).
-    fn catalog_download(&mut self, p: ProjectSummary) -> Task<Message> {
+    pub(crate) fn catalog_download(&mut self, p: ProjectSummary, d: Download) -> Task<Message> {
         let id = self.cloud.next_id();
-        let file = format!("{}.kcad", safe_name(&p.name));
-        if let Some(c) = self.cloud.catalog.as_mut() {
-            c.acting = Some(Acting {
-                id,
-                act: Act::Download,
-                project: p,
-                progress: None,
-                _request: None,
-            });
+        let file = format!("{}.kcad", safe_name(&d.name));
+        let Some(c) = self.cloud.catalog.as_mut() else {
+            return Task::none();
+        };
+        if c.acting.is_some() {
+            return Task::none();
         }
+        c.acting = Some(Acting {
+            id,
+            act: Act::Download,
+            project: p,
+            download: Some(d),
+            progress: None,
+            _request: None,
+        });
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
             return Task::done(crate::cloud::msg(Event::CatalogDownloadTo {
@@ -483,8 +524,29 @@ impl App {
             let _ = sender.unbounded_send((done, total));
         });
         let storage = a.project.storage;
+        let (what, listed) = a.download.as_ref().map_or((Fetch::Project, None), |d| {
+            (d.fetch.clone(), d.listed.clone())
+        });
         let fetch = async move {
-            let got = if storage == ProjectStorage::File {
+            let got = if let Fetch::Revision(revision) = &what {
+                let Ok(revision) = revision.parse::<u64>() else {
+                    return Err(ApiFailure::new(0, "local", "Revizyon numarası okunamadı."));
+                };
+                client
+                    .download_revision(tenant, project, revision, Some(progress))
+                    .await?
+            } else if let Fetch::Checkpoint(checkpoint) = &what {
+                let Some(checkpoint) = uuid(checkpoint) else {
+                    return Err(ApiFailure::new(
+                        0,
+                        "local",
+                        "Kontrol noktasının kimliği okunamadı.",
+                    ));
+                };
+                client
+                    .checkpoint_file(tenant, project, checkpoint, Some(progress))
+                    .await?
+            } else if storage == ProjectStorage::File {
                 // A file project's newest revision.
                 let revs = client.file_revisions(tenant, project).await?;
                 let Some(current) = revs.current.as_deref().and_then(|r| r.parse::<u64>().ok())
@@ -502,6 +564,14 @@ impl App {
                 // A database project as one file of one moment.
                 client.snapshot(tenant, project, Some(progress)).await?
             };
+            // The list's SHA-256 too, besides the server's (the web's `verifyDownload`).
+            if listed.as_ref().is_some_and(|want| *want != got.sha256) {
+                return Err(ApiFailure::new(
+                    0,
+                    "local",
+                    "İndirilen dosya sunucudakiyle aynı değil (SHA-256 tutmuyor); dosya kullanılmadı. Bağlantınızı denetleyip yeniden deneyin.",
+                ));
+            }
             let size = got.bytes.len();
             write_file(&path, &got.bytes).map_err(|e| {
                 ApiFailure::new(0, "local", format!(

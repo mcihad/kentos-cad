@@ -20,8 +20,8 @@ use std::time::Duration;
 
 use kentos_contracts::{
     ApiError, AuthConfig, CatalogSort, CatalogView, CommandEnvelope, EventPage, FeaturePage,
-    FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me, ProjectCreate,
-    ProjectDetails, ProjectInfo, ProjectPage, ProjectType,
+    FileRevisions, FileUpload, FileUploadBegin, Health, LoginRequest, Me, ProjectCheckpoints,
+    ProjectCreate, ProjectDetails, ProjectInfo, ProjectPage, ProjectType,
 };
 use reqwest::header::{self, HeaderMap};
 use reqwest::{Method, RequestBuilder, Response, Url};
@@ -736,6 +736,29 @@ impl Cloud {
             let url = inner.project_url(tenant, project, "/snapshot")?;
             // Made anew at every request: nothing to go on with.
             inner.download(url, progress, false).await
+        })
+    }
+
+    /// A project's named checkpoints, newest first (`GET …/checkpoints`, docs/adr/0034).
+    pub fn checkpoints(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+    ) -> impl Future<Output = Result<ProjectCheckpoints, ApiFailure>> + Send + 'static {
+        self.get(self.inner.project_url(tenant, project, "/checkpoints"))
+    }
+
+    /// A checkpoint's `.kcad` (`GET …/checkpoints/{checkpoint}`), checked against its SHA-256.
+    pub fn checkpoint_file(
+        &self,
+        tenant: Uuid,
+        project: Uuid,
+        checkpoint: Uuid,
+        progress: Option<Progress>,
+    ) -> impl Future<Output = Result<Download, ApiFailure>> + Send + 'static {
+        self.call(move |inner| async move {
+            let url = inner.project_url(tenant, project, &format!("/checkpoints/{checkpoint}"))?;
+            inner.download(url, progress, true).await
         })
     }
 

@@ -164,7 +164,7 @@ fn screens() {
 
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let views: [(&str, &'static str); 7] = [
+    let views: [(&str, &'static str); 9] = [
         ("kenar", "processing.run.annotation.edgeLengths"),
         ("numara", "processing.run.points.numberVertices"),
         ("oznitelik", "processing.run.attributes.calculate"),
@@ -172,6 +172,9 @@ fn screens() {
         ("model", "processing.model.builtin.parcelSheet"),
         ("sonuc", "processing.run.points.numberVertices"),
         ("gecersiz", "processing.run.points.numberVertices"),
+        // The expression field's menus, opened by a click: long ones scroll.
+        ("ifade-islevler", "processing.run.selection.byExpression"),
+        ("ifade-degiskenler", "processing.run.selection.byExpression"),
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -199,6 +202,32 @@ fn screens() {
                     _ => {}
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
+                if let Some(menu) = name.strip_prefix("ifade-") {
+                    let caption = if menu == "islevler" {
+                        "İşlevler"
+                    } else {
+                        "Değişkenler"
+                    };
+                    let at = find_text(&mut snapshot, &app, caption).expect("the menu's button");
+                    let center = at.center();
+                    snapshot.step(
+                        &mut app,
+                        App::view,
+                        &mut update,
+                        &[
+                            iced::Event::Mouse(iced::mouse::Event::CursorMoved {
+                                position: center,
+                            }),
+                            iced::Event::Mouse(iced::mouse::Event::ButtonPressed(
+                                iced::mouse::Button::Left,
+                            )),
+                            iced::Event::Mouse(iced::mouse::Event::ButtonReleased(
+                                iced::mouse::Button::Left,
+                            )),
+                        ],
+                    );
+                    snapshot.settle(&mut app, App::view, &mut update);
+                }
                 let file = out.join(format!("islem-{name}-{width}x{height}{suffix}.png"));
                 snapshot
                     .render(app.view(), &app.theme())
@@ -208,6 +237,44 @@ fn screens() {
             }
         }
     }
+}
+
+/// Where a text is drawn: the first widget showing exactly `caption`.
+fn find_text(
+    snapshot: &mut kentos_ui::snapshot::Snapshot,
+    app: &App,
+    caption: &'static str,
+) -> Option<iced::Rectangle> {
+    use std::sync::{Arc, Mutex};
+
+    use iced::advanced::widget::{Id, Operation};
+
+    struct Find {
+        caption: &'static str,
+        found: Arc<Mutex<Option<iced::Rectangle>>>,
+    }
+    impl Operation for Find {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+        fn text(&mut self, _id: Option<&Id>, bounds: iced::Rectangle, text: &str) {
+            if text == self.caption
+                && let Ok(mut found) = self.found.lock()
+                && found.is_none()
+            {
+                *found = Some(bounds);
+            }
+        }
+    }
+    let found = Arc::new(Mutex::new(None));
+    snapshot.operate(
+        app.view(),
+        Box::new(Find {
+            caption,
+            found: found.clone(),
+        }),
+    );
+    found.lock().ok().and_then(|f| *f)
 }
 
 #[test]
