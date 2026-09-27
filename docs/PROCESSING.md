@@ -47,6 +47,7 @@ apps/web/src/processing/
   modelRunner.ts     Modeli çalıştırma (tek geri alma adımı, hata ve Durdur'da geri alma), modelAsTool
   modelEdit.ts       Model taslağını düzenleme (tasarımcının işlemleri, saf)
   processing.test.ts Birim testleri
+  cases.test.ts      İki platformun ortak durumları (fixtures/processing/v1): sayfada ve işçinin yolundan
   (ifade dili model/expression/ altındadır: stil motoru da kullanır)
   worker/
     protocol.ts      Sayfa ↔ worker mesajları
@@ -275,7 +276,7 @@ değişmiş, katman silinmiş) değerler varsayılana döner.
 2. `processing/builtin/<ad>.ts` içinde `defineTool({...})` ile tanımı yazın: kimlik, etiket, kategori, simge, açıklama, yardım, anahtar kelimeler, takma adlar, `targets`, `parameters` (`as const`), `outputs`, gerekirse `validate` ve `preview`, `run`.
 3. `processing/builtin/index.ts` içindeki `BUILTIN_TOOLS` listesine ekleyin. Kategori yoksa `categories.ts`'e ekleyin.
 4. Simge yoksa `ui/icons.ts`'e çizin (DESIGN.md §6).
-5. `processing.test.ts`'e (ya da aracın yanına `*.test.ts`) saf çekirdek ve `ProcessingRunner` üzerinde belgeyle bir test ekleyin: değişiklik, tek geri alma adımı, sınır durumları.
+5. `processing.test.ts`'e (ya da aracın yanına `*.test.ts`) saf çekirdek ve `ProcessingRunner` üzerinde belgeyle bir test ekleyin: değişiklik, tek geri alma adımı, sınır durumları. Yerleşik araç ve model `fixtures/processing/v1/cases.json`'a en az bir başarılı ve bir ret durumuyla girer; masaüstü (`kentos-processing`) aynı durumları oynatır ([fixtures/processing/README.md](../fixtures/processing/README.md)).
 6. Yeni bir kullanıcı akışıysa `apps/web/scripts/e2e/smoke.mjs`'e bir kontrol ekleyin.
 
 Pencere, araç kutusu satırı, menü öğesi, komut ve takma adlar kendiliğinden
