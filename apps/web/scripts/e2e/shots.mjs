@@ -24,6 +24,42 @@ const only = opt('only');
 const sizes = (opt('sizes') ?? ['1440x900', '1100x650']).map((s) => s.split('x').map(Number));
 const themes = opt('themes') ?? ['dark', 'light'];
 
+/** A point of the drawing area, as fractions of its box, on the screen. */
+const inView = (ui, fx, fy) => ui.eval(`(() => { const r = window.kentos.view.clientRect(); return [Math.round(r.left + r.width * ${fx}), Math.round(r.top + r.height * ${fy})]; })()`);
+
+/**
+ * The numbering dialog on two selected parcels, its input's Sahneden seç pressed; the screen points of two
+ * other parcels to click, where the drawing is not under a floating panel.
+ */
+async function pickParcels(ui) {
+  await ui.eval(SELECT_PARCELS);
+  await ui.eval(openTool('points.numberVertices'));
+  await ui.sleep(400);
+  await ui.clickSel('[data-param="input"] .pfield__pick');
+  await ui.sleep(300);
+  const at = await ui.eval(`(() => {
+    const k = window.kentos;
+    const r = k.view.clientRect();
+    const out = [];
+    for (const e of k.doc.all()) {
+      if (e.kind !== 'polygon' || !k.doc.layers.isVisible(e.layerId)) continue;
+      const c = e.pts.reduce((a, p) => ({ x: a.x + p.x / e.pts.length, y: a.y + p.y / e.pts.length }), { x: 0, y: 0 });
+      const s = k.view.camera.worldToScreen(c);
+      const x = Math.round(s.x + r.left);
+      const y = Math.round(s.y + r.top);
+      if (s.x < 120 || s.y < 120 || s.x > r.width - 160 || s.y > r.height - 120) continue;
+      // The parcel itself answers around the click (no spot height or label point on it), on the drawing's own canvas.
+      const around = [[0, 0], [-4, 0], [4, 0], [0, -4], [0, 4]].every(([dx, dy]) => k.view.pick({ x: x - r.left + dx, y: y - r.top + dy })?.id === e.id);
+      if (!around || document.elementFromPoint(x, y)?.tagName !== 'CANVAS') continue;
+      out.push([x, y]);
+      if (out.length === 2) break;
+    }
+    return out;
+  })()`);
+  if (at.length < 2) throw new Error('ekranda iki parsel yok');
+  return at;
+}
+
 /** Two parcels of the demo drawing selected: the tools' default input (Seçili) then has something to read. */
 const SELECT_PARCELS = `(() => {
   const k = window.kentos;
@@ -113,6 +149,53 @@ const SCENES = {
         await ui.sleep(400);
         await ui.clickSel('.ptool__run');
         await ui.sleep(400);
+      },
+    },
+    // Sahneden seç (docs/adr/0088): the start vertex picked beside its choice, input objects picked on the drawing.
+    {
+      id: 'dialog-numbering-picked-start',
+      open: async (ui) => {
+        await ui.eval(SELECT_PARCELS);
+        await ui.eval(openTool('points.numberVertices'));
+        await ui.sleep(400);
+        await ui.clickSel('[data-param="start"] .pfield__pick');
+        await ui.clickAt(...(await inView(ui, 0.4, 0.45)));
+        await ui.waitFor(`!!document.querySelector('.dialog--ptool [data-param="startPoint"] .pfield__coord.num')`);
+        await ui.sleep(400);
+      },
+    },
+    {
+      id: 'pick-objects-running',
+      open: async (ui) => {
+        const at = await pickParcels(ui);
+        await ui.clickAt(...at[0]);
+        await ui.move(...at[1]);
+        await ui.sleep(400);
+      },
+    },
+    {
+      id: 'pick-objects-box',
+      open: async (ui) => {
+        const at = await pickParcels(ui);
+        await ui.clickAt(...at[0]);
+        // A crossing box, right to left, held while the picture is taken.
+        const [x, y] = at[1];
+        await ui.move(x + 80, y - 50);
+        await ui.pressAt(x + 80, y - 50);
+        for (let i = 1; i <= 6; i++) await ui.moveHeld(x + 80 - (i * 160) / 6, y - 50 + (i * 100) / 6);
+        await ui.sleep(300);
+      },
+      close: async (ui) => (await ui.releaseAt(2, 2), await ui.escapeAll(3)),
+    },
+    {
+      id: 'pick-objects-back',
+      open: async (ui) => {
+        const at = await pickParcels(ui);
+        await ui.clickAt(...at[0]);
+        await ui.clickAt(...at[1]);
+        await ui.key('Enter');
+        await ui.waitFor(`!!document.querySelector('.dialog--ptool')`);
+        await ui.sleep(500);
       },
     },
     {
@@ -806,6 +889,10 @@ function helpers(b) {
     drag: (...at) => b.drag(...at),
     clickAt: (x, y, opts) => b.click(x, y, opts),
     move: (x, y) => b.move(x, y),
+    /** The left button held down, moved and let go: a drag the picture is taken in the middle of. */
+    pressAt: (x, y) => b.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 }),
+    moveHeld: (x, y) => b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, button: 'left', buttons: 1 }),
+    releaseAt: (x, y) => b.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 }),
     /** A right click (a context menu). */
     contextClick: async (x, y) => {
       await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });

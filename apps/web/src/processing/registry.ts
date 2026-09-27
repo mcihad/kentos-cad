@@ -27,6 +27,12 @@ export class ProcessingRegistry {
     for (const p of tool.parameters) {
       if (names.has(p.name)) throw new Error(`${tool.id}: “${p.name}” parametresi iki kez tanımlı`);
       names.add(p.name);
+      const picks = p.type === 'enum' ? p.picks : undefined;
+      if (p.type === 'enum' && picks) {
+        const point = tool.parameters.find((q) => q.name === picks.point);
+        if (!p.options.some((o) => o.value === picks.option) || point?.type !== 'point')
+          throw new Error(`${tool.id}: “${p.name}” seçiminin Sahneden seç'i (picks) seçeneklerinden birini ve bir nokta parametresini göstermeli`);
+      }
     }
     this.tools.set(tool.id, tool);
     this.bump();
