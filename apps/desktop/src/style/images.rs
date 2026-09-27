@@ -1,5 +1,5 @@
 //! Where the styled atlas gets its pictures (docs/adr/0090): library SVG
-//! drawings read into vector pictures (`svg.rs`), PNG images decoded, and
+//! drawings read into vector pictures (`svg.rs`), PNG and JPEG images decoded, and
 //! texts as glyph outlines from Iced's text system, in the faces the web's
 //! font stacks name (Arial and Times are Liberation Sans and Serif on Linux,
 //! as the browser's fontconfig aliases them; Arimo, which ships with KentOS,
@@ -186,6 +186,28 @@ fn base64(text: &str) -> Option<Vec<u8>> {
     Some(out)
 }
 
+/// A JPEG's pixels as opaque RGBA (zune-jpeg; docs/adr/0092). The decoder's
+/// own limits (16 384 pixels a side) keep a hostile file from asking for
+/// unbounded memory; a broken file is no picture.
+pub(crate) fn jpeg(bytes: &[u8]) -> Option<Picture> {
+    use zune_jpeg::JpegDecoder;
+    use zune_jpeg::zune_core::bytestream::ZCursor;
+    use zune_jpeg::zune_core::colorspace::ColorSpace;
+    use zune_jpeg::zune_core::options::DecoderOptions;
+    let options = DecoderOptions::default().jpeg_set_out_colorspace(ColorSpace::RGBA);
+    let mut decoder = JpegDecoder::new_with_options(ZCursor::new(bytes), options);
+    decoder.decode_headers().ok()?;
+    let (w, h) = decoder.dimensions()?;
+    let mut rgba = vec![0; decoder.output_buffer_size()?];
+    decoder.decode_into(&mut rgba).ok()?;
+    let (width, height) = (u32::try_from(w).ok()?, u32::try_from(h).ok()?);
+    (rgba.len() == w * h * 4).then_some(Picture::Bitmap {
+        width,
+        height,
+        rgba,
+    })
+}
+
 /// A PNG's pixels as straight-alpha RGBA.
 fn png(bytes: &[u8]) -> Option<Picture> {
     let mut decoder = png::Decoder::new(Cursor::new(bytes));
@@ -270,7 +292,11 @@ impl Images {
             return p.clone();
         }
         let read = data_url(url)
-            .and_then(|(mime, bytes)| (mime == "image/png").then(|| png(&bytes)).flatten())
+            .and_then(|(mime, bytes)| match mime {
+                "image/png" => png(&bytes),
+                "image/jpeg" => jpeg(&bytes),
+                _ => None,
+            })
             .map(Arc::new);
         self.pictures
             .lock()
@@ -326,6 +352,21 @@ impl ImageSource for Images {
     }
 }
 
+/// A 16 × 8 JPEG for the tests: the left half #E15759, the right #4E79A7
+/// (quality 95, no chroma subsampling; written with Pillow).
+#[cfg(test)]
+pub(crate) const TEST_JPEG: &str = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAIBAQEBAQIBAQECAgICAgQDAgICAgUEBAMEBgUGBgYFBgYGBwkIBgcJBwYGCAsI\
+CQoKCgoKBggLDAsKDAkKCgr/2wBDAQICAgICAgUDAwUKBwYHCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoK\
+CgoKCgoKCgoKCgoKCgr/wAARCAAIABADAREAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAA\
+AAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAACQcI/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AJORRBtoC\
+Hf/Z";
+
+/// [`TEST_JPEG`]'s bytes.
+#[cfg(test)]
+pub(crate) fn test_jpeg() -> Vec<u8> {
+    base64(TEST_JPEG).unwrap_or_default()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -361,6 +402,33 @@ mod tests {
             "Arimo"
         );
         assert_eq!(face_of("\"Times New Roman\", Times, serif", &bare), "Arimo");
+    }
+
+    #[test]
+    fn reads_a_jpeg() {
+        let bytes = test_jpeg();
+        let Some(Picture::Bitmap {
+            width,
+            height,
+            rgba,
+        }) = jpeg(&bytes)
+        else {
+            panic!("a bitmap");
+        };
+        assert_eq!((width, height), (16, 8));
+        let px = |x: usize, y: usize| &rgba[(y * 16 + x) * 4..][..4];
+        // Lossy, so near the colours; opaque.
+        let near = |p: &[u8], c: [u8; 3]| {
+            p[..3].iter().zip(c).all(|(a, b)| a.abs_diff(b) <= 12) && p[3] == 255
+        };
+        assert!(near(px(2, 4), [0xE1, 0x57, 0x59]), "{:?}", px(2, 4));
+        assert!(near(px(13, 4), [0x4E, 0x79, 0xA7]), "{:?}", px(13, 4));
+        // The atlas reads it from the library's data address.
+        let url = format!("data:image/jpeg;base64,{TEST_JPEG}");
+        assert!(Images::new().raster("foto", &url).is_some());
+        // A cut file is no picture, and no panic.
+        assert!(jpeg(&bytes[..60]).is_none());
+        assert!(jpeg(b"\xFF\xD8").is_none());
     }
 
     #[test]

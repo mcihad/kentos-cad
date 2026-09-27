@@ -139,6 +139,10 @@ tiny-skia = { version = "=0.11.4", default-features = false, features = ["std", 
 # SVG text read into the SVG core's element tree on the desktop (docs/adr/0090; the owner's
 # approval, 2026-09-27); the web lets the browser parse it. Locked already through fontdb.
 roxmltree = { version = "=0.20.0" }
+# JPEG images of the style library on the desktop (docs/adr/0092; the owner's approval,
+# 2026-09-27); the web lets the browser decode them. Pure Rust, the image crate's JPEG decoder;
+# without its SIMD paths (`x86`, `neon`): a picture is decoded once and kept.
+zune-jpeg = { version = "=0.5.15", default-features = false, features = ["std"] }
 # Tests only: the naga wgpu uses validates the shared WGSL (shaders/wgsl, REN-05).
 naga = { version = "=27.0.3", features = ["wgsl-in"] }
 # Tests only: waits on wgpu's futures in the renderer's GPU test (locked through rfd).
