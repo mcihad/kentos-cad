@@ -95,6 +95,19 @@ const ITEMS = [
   { id: 'legend', open: (ui) => ui.run('style.legend') },
   { id: 'svg-editor', open: (ui) => ui.run('style.svgEditor') },
   { id: 'processing-tool', open: (ui) => ui.run('map.edgeLengths') },
+  // The expression builder (DESIGN.md §7.16) over İfadeyle seç: a call being written (its signature and help),
+  // the completion list as a name is typed, and an error with a field's values listed.
+  { id: 'expression-builder', open: (ui) => ui.builder("Nitelik = 'Arsa' ve yuvarla($alan, "), ready: '.dialog--exprb .xed__sigcode' },
+  { id: 'expression-builder-complete', open: (ui) => ui.builder("Nitelik = 'Arsa' ve yu"), must: '.xed__list:not([hidden])' },
+  {
+    id: 'expression-builder-error',
+    open: async (ui) => {
+      await ui.builder('eğer(Nitelik = , 1, 2)');
+      await ui.click('.xtree__row.xtree__item');
+      await ui.clickText('.xhelp__vbtns .btn', 'Örnek değerler');
+    },
+    ready: '.xhelp__value',
+  },
   { id: 'model-designer', open: (ui) => ui.run('processing.newModel') },
   { id: 'cloud-login', open: (ui) => ui.run('cloud.signIn') },
   { id: 'question-layer-remove', open: async (ui) => (await ui.rightClick('.panel--layers .tree__row[data-id="parsel"] .tree__name'), await ui.clickText('.menu__item', 'Sil')), ready: '.dialog--confirm' },
@@ -311,6 +324,18 @@ function helpers(b, w, h) {
       }
       await b.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: at[0] + 20, y: at[1] + 10, button: 'right', clickCount: 1, modifiers });
       await sleep(250);
+    },
+    /** İfadeyle seç, its expression field's builder (ε), and `text` typed in place of the expression. */
+    builder: async (text) => {
+      await ui.run('processing.run.selection.byExpression');
+      await b.waitFor(`document.querySelector('.exprb-open')`, 8000);
+      await ui.click('.exprb-open');
+      await b.waitFor(`document.querySelector('.dialog--exprb .xed__input')`, 8000);
+      await sleep(300);
+      await ui.click('.dialog--exprb .xed__input');
+      await b.eval(`document.querySelector('.dialog--exprb .xed__input').select()`);
+      await b.type(text);
+      await sleep(200);
     },
     /** Files the next open or import is handed, as [name, base64] pairs. */
     pick: (files) =>

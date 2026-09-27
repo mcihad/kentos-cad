@@ -313,14 +313,21 @@ fn field_help(name: &str, def: Option<&FieldDef>, doubted: bool) -> Help {
     let (ty, source) = def.map_or((FieldType::Text, FieldSource::Attribute), |f| {
         (f.ty, f.source)
     });
+    const ATTRIBUTE: &str =
+        "Nesnelerin özniteliği: değeri metindir, hesapta sayıya çevrilir; olmayan nesnede boştur.";
+    // A user field is described by whoever defined it; an attribute's note (how many objects
+    // have it) follows what an attribute is.
     let description = match def {
-        Some(f) if !f.description.is_empty() => f.description.clone(),
+        Some(f) if f.source == FieldSource::User && !f.description.is_empty() => {
+            f.description.clone()
+        }
         Some(f) if f.source == FieldSource::User => format!(
             "Kullanıcının tanımladığı alan; değerleri {} olarak okunur.",
             type_name(f.ty)
         ),
+        Some(f) if !f.description.is_empty() => format!("{ATTRIBUTE} {}", f.description),
         _ if doubted => format!("Bu nesnelerde “{name}” alanı yok; değeri boş okunur."),
-        _ => "Nesnelerin özniteliği: değeri metindir, hesapta sayıya çevrilir; olmayan nesnede boştur.".to_string(),
+        _ => ATTRIBUTE.to_string(),
     };
     let examples = match ty {
         FieldType::Number => vec![

@@ -4071,6 +4071,35 @@
     },
     {
       "args": [
+        "field:Parsel",
+        "@fields"
+      ],
+      "op": "exprHelp",
+      "result": {
+        "aliases": [],
+        "args": [],
+        "description": "Nesnelerin özniteliği: değeri metindir, hesapta sayıya çevrilir; olmayan nesnede boştur. 12 nesnede var.",
+        "examples": [
+          {
+            "expression": "boş(Parsel)",
+            "result": "değeri olmayanlar için doğru"
+          },
+          {
+            "expression": "büyük(Parsel)",
+            "result": "değeri büyük harflerle"
+          }
+        ],
+        "group": "Alanlar ve değerler",
+        "key": "field:Parsel",
+        "kind": "field",
+        "signature": "Parsel",
+        "source": "attribute",
+        "title": "Parsel",
+        "type": "text"
+      }
+    },
+    {
+      "args": [
         "field:Onaylı",
         "@fields"
       ],
@@ -5962,6 +5991,7 @@
       "type": "text"
     },
     {
+      "description": "12 nesnede var.",
       "name": "Parsel",
       "source": "attribute",
       "type": "text"

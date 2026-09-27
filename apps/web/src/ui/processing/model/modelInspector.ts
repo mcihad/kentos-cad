@@ -273,6 +273,7 @@ function stepInspector(host: InspectorHost, stepId: string): HTMLElement {
     ctx,
     describe: (name) => runner.describeInputs(tool, fixed())[name],
     previewExpression: (name) => runner.previewExpression(tool, fixed(), name),
+    builderObjects: (name) => runner.builderObjects(tool, fixed(), name),
     pickPoint: (name) => host.pickPoint(stepId, name),
   };
 
