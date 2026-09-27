@@ -46,6 +46,9 @@ const GROUPS = [
   // window system or GPU (the desktop feeds it input and draws its preview), no runtime, no
   // browser. Listed before `native`, whose path contains it.
   { name: 'interaction', path: 'crates/native/interaction/', targets: [HOST], uses: ['shared', 'domain', 'application'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // The native processing tools (İşlemler, docs/PROCESSING.md): declared tools and models over
+  // the document, run by the desktop; the web keeps its TypeScript tools. Listed before `native`.
+  { name: 'processing', path: 'crates/native/processing/', targets: [HOST], uses: ['shared', 'domain', 'application'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'native', path: 'crates/native/', targets: [HOST], uses: ['shared', 'domain', 'native'], forbid: ['sqlx*', 'axum*', ...BROWSER, ...DESKTOP, 'pyo3*'] },
   { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
@@ -55,7 +58,7 @@ const GROUPS = [
   // No Iced or window system (the desktop app plugs it into Iced), no runtime, no browser.
   { name: 'render', path: 'crates/render/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, 'iced*', 'winit', 'pyo3*'] },
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render'], forbid: ['axum*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'native', 'ui', 'render'], forbid: ['axum*', ...BROWSER] },
   { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render'], forbid: ['axum*', ...BROWSER] },
 ];
 

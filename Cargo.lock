@@ -2470,6 +2470,7 @@ dependencies = [
  "kentos-formats",
  "kentos-interaction",
  "kentos-kcad",
+ "kentos-processing",
  "kentos-render-wgpu",
  "kentos-ui",
  "rfd",
@@ -2565,6 +2566,18 @@ dependencies = [
  "sqlx",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "kentos-processing"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-domain",
+ "kentos-geometry-core",
+ "kentos-native-application",
+ "kentos-style-core",
+ "serde_json",
 ]
 
 [[package]]

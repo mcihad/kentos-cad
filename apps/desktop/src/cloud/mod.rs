@@ -590,6 +590,7 @@ impl App {
             Some(Dialog::Unsaved(then)) => self.unsaved_declined(then),
             Some(Dialog::Exchange) => self.exchange = None,
             Some(Dialog::Project) => self.project = None,
+            Some(Dialog::Processing) => self.processing.dialog = None,
             _ => {}
         }
     }

@@ -1,0 +1,21 @@
+[package]
+name = "kentos-processing"
+description = "The desktop's processing tools (İşlemler, docs/PROCESSING.md): declared tools and models, their parameters and the runner over the native document, held to the web's by shared cases (fixtures/processing/v1)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust, native only (scripts/arch/deps.mjs, group `processing`): no Iced,
+# no GPU, no runtime. The web keeps its own TypeScript tools
+# (apps/web/src/processing). Corner numbering, edge lengths and the
+# expressions' measures come from the shared geometry core, the expression
+# language from the style core: the same code the web reaches through WASM.
+[dependencies]
+kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-domain = { path = "../domain" }
+kentos-geometry-core = { path = "../../shared/geometry-core" }
+kentos-native-application = { path = "../application" }
+kentos-style-core = { path = "../../shared/style-core" }
+# Parameter values are JSON, as the web's dialog, history and models hold them.
+serde_json = { workspace = true }

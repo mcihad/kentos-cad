@@ -23,6 +23,9 @@ members = [
     "crates/native/domain",
     "crates/native/application",
     "crates/native/interaction",
+    # The desktop's processing tools (İşlemler, docs/PROCESSING.md): the web's tools and
+    # models over the native document, held to fixtures/processing/v1.
+    "crates/native/processing",
     # The desktop's cloud client (docs/adr/0040): the web's protocol through a native adapter.
     "crates/native/cloud",
     # Server-only libraries: PostgreSQL/PostGIS and the use cases.
@@ -52,6 +55,7 @@ default-members = [
     "crates/native/domain",
     "crates/native/application",
     "crates/native/interaction",
+    "crates/native/processing",
     "crates/native/cloud",
     "crates/server/postgres",
     "crates/server/application",

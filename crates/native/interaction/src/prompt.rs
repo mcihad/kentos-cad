@@ -55,6 +55,15 @@ impl Prompt {
         }
     }
 
+    /// A prompt without a tool's name: a value another window asks for
+    /// (a processing tool's point: `Başlangıç noktası: haritada …`).
+    pub fn untitled(step: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            step: step.into(),
+            ..Self::idle()
+        }
+    }
+
     pub fn new(tool: &'static str, step: impl Into<Cow<'static, str>>) -> Self {
         Self {
             tool: Some(tool),

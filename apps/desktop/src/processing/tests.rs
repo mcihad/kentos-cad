@@ -1,0 +1,211 @@
+//! İşlemler on the desktop: the window over a drawing, a run and its undo
+//! step, what shows when nothing is selected, the point shown on the
+//! drawing, and a tool's alias on the command line. The drawing is the
+//! shared cases' (fixtures/processing/v1/parcels.kcad), whose answers
+//! `kentos-processing` holds to the web's.
+
+use kentos_contracts::DocumentSnapshotV1;
+use kentos_domain::Slot;
+use serde_json::json;
+
+use super::{Event, RunStatus};
+use crate::app::{App, Dialog, Message};
+use crate::document::Document;
+use crate::files_testing::last_said;
+
+const PARCELS: &str = include_str!("../../../../fixtures/processing/v1/parcels.kcad");
+
+/// The app with the parcels open.
+pub(crate) fn app_with_parcels() -> App {
+    let (mut app, _) = App::boot(None);
+    let snapshot = DocumentSnapshotV1::from_json(PARCELS).expect("the parcels read");
+    let doc = Document::new(snapshot, None).expect("the parcels open");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+fn event(app: &mut App, e: Event) {
+    let _ = app.update(Message::Processing(e));
+}
+
+fn status(app: &App) -> RunStatus {
+    app.processing
+        .dialog
+        .as_ref()
+        .map_or(RunStatus::Idle, |w| w.status.clone())
+}
+
+#[test]
+fn a_run_writes_one_undo_step_named_after_the_tool_and_the_window_stays() {
+    let mut app = app_with_parcels();
+    app.selection.set([Slot(1), Slot(2), Slot(7)]);
+    let _ = app.update(Message::Run("processing.run.annotation.edgeLengths"));
+    assert_eq!(app.dialog, Some(Dialog::Processing));
+    let before = app.document.as_ref().map_or(0, |d| d.model.len());
+    event(&mut app, Event::Run);
+    let summary = "3 nesneye 8 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı.";
+    assert_eq!(
+        status(&app),
+        RunStatus::Ok {
+            text: summary.into(),
+            pick: (11..=18).map(Slot).collect(),
+            selected: false,
+            undo: true,
+        }
+    );
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Processing),
+        "the window stays open"
+    );
+    assert_eq!(
+        last_said(&app),
+        format!("Kenar uzunluklarını yaz: {summary}")
+    );
+    let doc = &app.document.as_ref().expect("open").model;
+    assert_eq!(doc.len(), before + 8);
+    assert!(doc.layers().get("islem-kenar-olculeri").is_some());
+    // Geri al takes the whole run back, the new layer too.
+    event(&mut app, Event::Undo);
+    let doc = &app.document.as_ref().expect("open").model;
+    assert_eq!(doc.len(), before);
+    assert!(doc.layers().get("islem-kenar-olculeri").is_none());
+    assert_eq!(status(&app), RunStatus::Idle);
+}
+
+#[test]
+fn with_nothing_selected_the_problem_shows_under_the_field() {
+    let mut app = app_with_parcels();
+    let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    let window = app.processing.dialog.as_ref().expect("open");
+    assert!(
+        window.issue_of("input").is_none(),
+        "nothing shows before Çalıştır"
+    );
+    event(&mut app, Event::Run);
+    let window = app.processing.dialog.as_ref().expect("still open");
+    assert_eq!(
+        window.issue_of("input").map(|i| i.message.as_str()),
+        Some(
+            "“Alanlar”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."
+        )
+    );
+    assert_eq!(
+        window.warning().as_deref(),
+        Some("Çalıştırmadan önce 1 alanı düzeltin.")
+    );
+    // A change clears the run's problem; a number out of range shows while typing.
+    event(&mut app, Event::Number("length".into(), "31".into()));
+    let window = app.processing.dialog.as_ref().expect("open");
+    assert!(window.issue_of("input").is_none());
+    assert_eq!(
+        window.issue_of("length").map(|i| i.message.as_str()),
+        Some("“Toplam uzunluk” en çok 30 olmalı.")
+    );
+    assert_eq!(
+        window.preview().as_deref(),
+        Some("Önizleme için alanları düzeltin.")
+    );
+}
+
+#[test]
+fn a_start_point_is_shown_on_the_drawing_and_the_window_comes_back_with_it() {
+    let mut app = app_with_parcels();
+    app.selection.set([Slot(1)]);
+    let _ = app.update(Message::Run("processing.run.points.numberVertices"));
+    event(&mut app, Event::Value("start".into(), json!("point")));
+    event(&mut app, Event::Pick("startPoint".into()));
+    assert_eq!(app.dialog, None, "the window steps aside");
+    assert_eq!(
+        app.session.prompt().text(),
+        "Başlangıç noktası: haritada bir nokta gösterin ya da Y,X yazın [Vazgeç (Esc)]"
+    );
+    let _ = app.submit_line("487010,4420010");
+    assert_eq!(app.dialog, Some(Dialog::Processing));
+    let window = app.processing.dialog.as_ref().expect("back");
+    assert_eq!(
+        window.values.get("startPoint"),
+        Some(&json!({ "x": 487010.0, "y": 4420010.0 }))
+    );
+    assert_eq!(
+        window.values.get("start"),
+        Some(&json!("point")),
+        "as it was"
+    );
+}
+
+#[test]
+fn an_alias_on_the_command_line_opens_the_tool_and_last_values_come_back() {
+    let mut app = app_with_parcels();
+    let _ = app.submit_line("kenaryaz");
+    assert_eq!(app.dialog, Some(Dialog::Processing));
+    let window = app.processing.dialog.as_ref().expect("open");
+    assert_eq!(window.tool.id, "annotation.edgeLengths");
+    // What ran last is what the window opens with next time.
+    app.selection.set([Slot(6)]);
+    event(&mut app, Event::Text("suffix".into(), " m".into()));
+    event(&mut app, Event::Run);
+    event(&mut app, Event::Close);
+    let _ = app.update(Message::Run("map.edgeLengths"));
+    let window = app.processing.dialog.as_ref().expect("open again");
+    assert_eq!(window.values.get("suffix"), Some(&json!(" m")));
+}
+
+/// The processing window for the owner, on the parcels: Kenar uzunluklarını
+/// yaz, the numbering with Gelişmiş ayarlar and a start point, Öznitelik
+/// hesapla, İfadeyle seç, the Parsel ölçü yazıları model, a finished run
+/// and a refused one. Not run by default:
+/// `cargo test -p kentos-desktop processing::tests::screens -- --ignored --nocapture`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let views: [(&str, &'static str); 7] = [
+        ("kenar", "processing.run.annotation.edgeLengths"),
+        ("numara", "processing.run.points.numberVertices"),
+        ("oznitelik", "processing.run.attributes.calculate"),
+        ("ifade", "processing.run.selection.byExpression"),
+        ("model", "processing.model.builtin.parcelSheet"),
+        ("sonuc", "processing.run.points.numberVertices"),
+        ("gecersiz", "processing.run.points.numberVertices"),
+    ];
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            for (name, command) in views {
+                let mut app = app_with_parcels();
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                if name != "gecersiz" {
+                    app.selection.set([Slot(1), Slot(2), Slot(7)]);
+                }
+                let _ = app.update(Message::Run(command));
+                match name {
+                    "numara" => {
+                        event(&mut app, Event::Value("start".into(), json!("point")));
+                        event(&mut app, Event::Advanced);
+                    }
+                    "sonuc" | "gecersiz" => event(&mut app, Event::Run),
+                    _ => {}
+                }
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("islem-{name}-{width}x{height}{suffix}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
+    }
+}

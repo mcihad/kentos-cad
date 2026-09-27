@@ -934,6 +934,7 @@ impl App {
             Asking::Project => self.project_view(),
             Asking::Start => self.start_view(),
             Asking::Calc => self.calc_view(),
+            Asking::Processing => self.processing_view(),
         }
     }
 }
