@@ -254,7 +254,8 @@ fn traverse_input_is_checked() {
         .unwrap_err()
         .contains("birimi")
     );
-    assert!(
+    // The two known points of an end named as the window names its fields.
+    assert_eq!(
         traverse(&TraverseInput {
             unit: "grad".into(),
             start: TM,
@@ -264,8 +265,13 @@ fn traverse_input_is_checked() {
             angles: vec![1.0],
             distances: vec![1.0]
         })
-        .unwrap_err()
-        .contains("aynı yerde")
+        .unwrap_err(),
+        "Başlangıç noktası ile başlangıçta bakılan nokta aynı yerde; doğrultu tanımsız."
+    );
+    let end = Vec2::new(TM.x + 50.0, TM.y);
+    assert_eq!(
+        t(vec![100.0, 100.0], vec![50.0], Some(end), Some(end)).unwrap_err(),
+        "Bitiş noktası ile bitişte bakılan nokta aynı yerde; doğrultu tanımsız."
     );
 }
 

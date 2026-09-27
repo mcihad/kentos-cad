@@ -105,10 +105,10 @@ pub fn traverse(input: &TraverseInput) -> Result<TraverseResult, String> {
     distinct(
         input.start,
         input.back,
-        "Başlangıç noktası ile yöneltme noktası",
+        "Başlangıç noktası ile başlangıçta bakılan nokta",
     )?;
     if let (Some(e), Some(f)) = (input.end, input.fore) {
-        distinct(e, f, "Bitiş noktası ile bitiş yöneltme noktası")?;
+        distinct(e, f, "Bitiş noktası ile bitişte bakılan nokta")?;
     }
     for (i, &s) in input.distances.iter().enumerate() {
         if !(finite(s, &format!("{}. kenar", i + 1))? > 0.0) {
