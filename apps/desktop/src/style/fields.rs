@@ -46,7 +46,10 @@ pub fn labelled<'a, M: 'a>(
 }
 
 /// Two controls side by side, sharing the width (`pair`).
-pub fn pair<'a, M: 'a>(a: impl Into<Element<'a, M>>, b: impl Into<Element<'a, M>>) -> Element<'a, M> {
+pub fn pair<'a, M: 'a>(
+    a: impl Into<Element<'a, M>>,
+    b: impl Into<Element<'a, M>>,
+) -> Element<'a, M> {
     row![
         container(a.into()).width(Fill),
         container(b.into()).width(Fill)
@@ -175,9 +178,12 @@ pub fn check<'a, M: Clone + 'a>(
     words: impl Into<String>,
     on_toggle: Option<M>,
 ) -> Element<'a, M> {
-    let face = row![check_box(state, on_toggle.clone()), label::body(words.into())]
-        .spacing(8)
-        .align_y(Center);
+    let face = row![
+        check_box(state, on_toggle.clone()),
+        label::body(words.into())
+    ]
+    .spacing(8)
+    .align_y(Center);
     button(face)
         .on_press_maybe(on_toggle)
         .padding([3, 0])
@@ -207,10 +213,7 @@ pub fn fx<'a, M: Clone + 'a>(on: bool, press: M) -> Element<'a, M> {
             .padding(0)
             .style(move |t: &Theme, status| {
                 let tokens = Tokens::of(t);
-                let hovered = matches!(
-                    status,
-                    button::Status::Hovered | button::Status::Pressed
-                );
+                let hovered = matches!(status, button::Status::Hovered | button::Status::Pressed);
                 button::Style {
                     background: Some(iced::Background::Color(if on {
                         tokens.accent.scale_alpha(0.14)
@@ -302,18 +305,22 @@ pub fn color<'a, M: Clone + 'a>(
                 ..container::Style::default()
             })
             .into(),
-        None => container(icon(Icon::Svg(NONE_MARK)).size(size - 4.0).tone(Tone::Danger))
-            .center_x(size)
-            .center_y(size)
-            .style(|t: &Theme| container::Style {
-                border: Border {
-                    color: Tokens::of(t).muted,
-                    width: 1.0,
-                    radius: 3.0.into(),
-                },
-                ..container::Style::default()
-            })
-            .into(),
+        None => container(
+            icon(Icon::Svg(NONE_MARK))
+                .size(size - 4.0)
+                .tone(Tone::Danger),
+        )
+        .center_x(size)
+        .center_y(size)
+        .style(|t: &Theme| container::Style {
+            border: Border {
+                color: Tokens::of(t).muted,
+                width: 1.0,
+                radius: 3.0.into(),
+            },
+            ..container::Style::default()
+        })
+        .into(),
     };
     // The picker keeps an alpha only when one is chosen (#RRGGBBAA).
     let pick = on_change.clone();

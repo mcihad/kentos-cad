@@ -37,7 +37,9 @@ fn de(app: &mut App, e: Event) {
 /// A new symbol of a kind from Stil yöneticisi, with layers added.
 fn new(app: &mut App, kind: &'static str, add: &[&'static str]) {
     let _ = app.update(Message::Run("style.manager"));
-    let _ = app.update(Message::StyleManager(Box::new(ManagerEvent::NewSymbol(kind))));
+    let _ = app.update(Message::StyleManager(Box::new(ManagerEvent::NewSymbol(
+        kind,
+    ))));
     for t in add {
         de(app, Event::Add(t, None));
     }
@@ -88,7 +90,11 @@ fn screens() {
             name: "dalga",
             setup: |app| {
                 new(app, "line", &[]);
-                let at = app.styles.designer.as_ref().map_or(LayerPath::Top(0), |d| d.selected);
+                let at = app
+                    .styles
+                    .designer
+                    .as_ref()
+                    .map_or(LayerPath::Top(0), |d| d.selected);
                 de(
                     app,
                     Event::Edit(Edit {
@@ -152,17 +158,18 @@ fn screens() {
             name: "ifade",
             setup: |app| {
                 new(app, "fill", &[]);
-                let at = app.styles.designer.as_ref().map_or(LayerPath::Top(0), |d| d.selected);
+                let at = app
+                    .styles
+                    .designer
+                    .as_ref()
+                    .map_or(LayerPath::Top(0), |d| d.selected);
                 de(
                     app,
                     Event::Edit(Edit {
                         at,
                         key: "color".into(),
                         text: None,
-                        patch: Some(set(
-                            "color",
-                            json!({ "expr": "", "fallback": "#C9D6E3" }),
-                        )),
+                        patch: Some(set("color", json!({ "expr": "", "fallback": "#C9D6E3" }))),
                         focus: Some("color:expr".into()),
                     }),
                 );
@@ -256,7 +263,7 @@ fn screens() {
                     .into_iter()
                     .filter(|(t, _)| t == label)
                     .map(|(_, at)| at)
-                    .last()
+                    .next_back()
                     .unwrap_or_else(|| panic!("“{label}” is not shown"));
                 snapshot.input(&mut app, App::view, &mut update, Input::Click(at.center()));
             }

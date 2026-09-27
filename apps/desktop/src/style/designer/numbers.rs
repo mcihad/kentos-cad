@@ -30,7 +30,14 @@ pub struct Spec {
 
 const INF: f64 = f64::INFINITY;
 
-const fn spec(label: &'static str, unit: Unit, step: f64, min: f64, max: f64, default: f64) -> Spec {
+const fn spec(
+    label: &'static str,
+    unit: Unit,
+    step: f64,
+    min: f64,
+    max: f64,
+    default: f64,
+) -> Spec {
     Spec {
         label,
         unit,
@@ -72,9 +79,7 @@ pub fn spec_of(layer: &Value, key: &str) -> Option<Spec> {
         ("patternFill", "offsetX") => length("Kaydırma Y", 0.0),
         ("patternFill", "offsetY") => length("Kaydırma X", 0.0),
         ("patternFill", "jitterPct") => spec("Dağınıklık", Unit::Fixed("%"), 5.0, 0.0, 100.0, 0.0),
-        ("patternFill", "coveragePct") => {
-            spec("Doluluk", Unit::Fixed("%"), 5.0, 0.0, 100.0, 100.0)
-        }
+        ("patternFill", "coveragePct") => spec("Doluluk", Unit::Fixed("%"), 5.0, 0.0, 100.0, 100.0),
         ("patternFill", "seed") => spec("Rastgele tohum", Unit::None, 1.0, -INF, INF, 0.0),
         ("imageFill", "tileSize") => size("Döşeme genişliği", 0.01, 0.0),
         ("simpleLine", "width") => size("Kalınlık", 0.0, 0.25),
@@ -97,9 +102,7 @@ pub fn spec_of(layer: &Value, key: &str) -> Option<Spec> {
         ("shape", "height") => size("Yükseklik", 0.0, 3.0),
         ("shape", "strokeWidth") => size("Çizgi kalınlığı", 0.0, 0.2),
         ("shape", "teeth") => spec("Diş sayısı", Unit::Fixed("adet"), 1.0, 3.0, 64.0, 12.0),
-        ("shape", "teethDepthPct") => {
-            spec("Diş derinliği", Unit::Fixed("%"), 1.0, 2.0, 60.0, 20.0)
-        }
+        ("shape", "teethDepthPct") => spec("Diş derinliği", Unit::Fixed("%"), 1.0, 2.0, 60.0, 20.0),
         ("shape", "sweep") => spec("Açıklık", Unit::Fixed("°"), 5.0, 1.0, 360.0, 180.0),
         ("shape", "holePct") => spec("Delik", Unit::Fixed("%"), 5.0, 0.0, 95.0, 0.0),
         ("svg" | "raster", "size") => size("Genişlik", 0.0, 5.0),
@@ -179,7 +182,9 @@ pub fn read(layer: &Value, key: &str) -> Option<f64> {
         "groupCount" => g("group").and_then(|gr| number(gr.get("count"))),
         "groupSpacing" => g("group").and_then(|gr| number(gr.get("spacing"))),
         "haloWidth" => g("halo").and_then(|h| number(h.get("width"))),
-        "wave.spacing" => g("wave").and_then(|w| number(w.get("spacing")).or(number(w.get("length")))),
+        "wave.spacing" => {
+            g("wave").and_then(|w| number(w.get("spacing")).or(number(w.get("length"))))
+        }
         k if k.starts_with("wave.") => g("wave").and_then(|w| number(w.get(&k[5..]))),
         // A rectangle's height follows its width until it is given.
         "height" => number(g("height")).or(number(g("size"))),

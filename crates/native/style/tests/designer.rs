@@ -136,7 +136,9 @@ fn edits() {
             "{name}: the layer"
         );
         assert_eq!(
-            add_parent(symbol, selected).map(|i| json!(i)).unwrap_or(Value::Null),
+            add_parent(symbol, selected)
+                .map(|i| json!(i))
+                .unwrap_or(Value::Null),
             e["addParent"],
             "{name}: where Katman ekle may add"
         );
@@ -176,9 +178,10 @@ fn edits() {
             }
             other => panic!("{name}: unknown edit {other}"),
         };
-        let got = chosen.map_or(Value::Null, |p| {
-            json!({ "symbol": out, "selected": p.to_value() })
-        });
+        let got = chosen.map_or(
+            Value::Null,
+            |p| json!({ "symbol": out, "selected": p.to_value() }),
+        );
         assert_eq!(got, e["result"], "{name}");
     }
 }
@@ -276,10 +279,7 @@ fn zoom_and_words() {
             s(&c["text"])
         );
     }
-    assert_eq!(
-        texts::saved(s(&t["saved"]["name"])),
-        s(&t["saved"]["text"])
-    );
+    assert_eq!(texts::saved(s(&t["saved"]["name"])), s(&t["saved"]["text"]));
     // Every string the web's texts hold is checked above.
     let strings = t
         .as_object()

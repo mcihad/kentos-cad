@@ -274,10 +274,7 @@ fn wave<'a>(env: &Env<'_>) -> Element<'a, Message> {
                     at,
                     "wave.phase",
                     None,
-                    Some(with(
-                        "offsetAlong",
-                        (!from_start).then(|| js_value(0.0)),
-                    )),
+                    Some(with("offsetAlong", (!from_start).then(|| js_value(0.0)))),
                 )),
             ),
             None,
@@ -349,10 +346,10 @@ fn text<'a>(env: &Env<'_>, own: &mut Vec<Element<'a, Message>>) {
         "ƒ ile öznitelikten: ör. 'E=' || [Emsal]",
     ));
     own.push(dd_number(env, "size", 3.0));
-    let weight = l
-        .get("weight")
-        .and_then(Value::as_f64)
-        .map_or_else(|| "400".to_owned(), kentos_expression::js::number::to_string);
+    let weight = l.get("weight").and_then(Value::as_f64).map_or_else(
+        || "400".to_owned(),
+        kentos_expression::js::number::to_string,
+    );
     own.push(fields::pair(
         select_row(env, "font", "Yazı tipi", &FONTS, "ui", None),
         fields::labelled(

@@ -115,7 +115,10 @@ fn a_new_symbol_is_made_saved_and_shown_in_the_manager() {
     let (item, _) = app.styles.library.get(&id).expect("in the library");
     assert_eq!(item.name(), "Bahçe alanı");
     assert_eq!(item.path(), ["Sembollerim", "Alanlar"]);
-    assert_eq!(item.symbol().expect("a symbol")["layers"][1]["type"], "hatchFill");
+    assert_eq!(
+        item.symbol().expect("a symbol")["layers"][1]["type"],
+        "hatchFill"
+    );
     // Kept in Kitaplığım's file at once.
     let text = std::fs::read_to_string(dir.join(crate::style::user_library::FILE))
         .expect("Kitaplığım's file");
@@ -202,7 +205,10 @@ fn the_list_s_edits_and_their_undo() {
         Event::Arrow {
             up: false,
             shift: false,
-            focus: Focus { id: None, any: true },
+            focus: Focus {
+                id: None,
+                any: true,
+            },
         },
     );
     assert_eq!(designer(&app).selected, LayerPath::Child(0, 0));
@@ -216,10 +222,13 @@ fn fields_as_typed() {
     // A comma is the point; the text stays as typed.
     typed(&mut app, "width", "0,5", Some(set("width", json!(0.5))));
     assert_eq!(width(&app), json!(0.5));
-    assert_eq!(designer(&app).typed.get("width").map(String::as_str), Some("0,5"));
+    assert_eq!(
+        designer(&app).typed.get("width").map(String::as_str),
+        Some("0,5")
+    );
     // Enter gives the value's own text back.
     de(&mut app, Event::Settle("width".into()));
-    assert!(designer(&app).typed.get("width").is_none());
+    assert!(!designer(&app).typed.contains_key("width"));
     // ↑ with the field holding the keyboard: a tenth up, ten with Shift.
     de(
         &mut app,
@@ -349,13 +358,8 @@ fn a_layer_style_s_symbol_is_handed_back_with_uygula() {
     let mut app = app_with_drawing();
     let _ = app.update(Message::LayerStyle(LayerEvent::Open(Some("parsel".into()))));
     let _ = app.update(Message::LayerStyle(LayerEvent::Kind(Kind::Single)));
-    let start = super::slot_symbol(
-        &app.styles.library,
-        None,
-        None,
-        GeometryClass::Fill,
-    )
-    .expect("the default");
+    let start = super::slot_symbol(&app.styles.library, None, None, GeometryClass::Fill)
+        .expect("the default");
     let _ = app.update(Message::LayerStyle(LayerEvent::Design(
         SetAt::Single,
         GeometryClass::Fill,
@@ -410,10 +414,7 @@ fn a_picture_comes_in_for_an_image_field() {
     let svg = br#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><script>x()</script><circle cx="5" cy="5" r="4"/></svg>"#;
     de(
         &mut app,
-        Event::AssetPicked(
-            "asset".into(),
-            Some(("agac.svg".into(), svg.to_vec())),
-        ),
+        Event::AssetPicked("asset".into(), Some(("agac.svg".into(), svg.to_vec()))),
     );
     assert_eq!(said(&app), "“agac” Kitaplığım'a eklendi.");
     let asset = layers(&app)[1]["asset"].as_str().unwrap_or("").to_owned();
@@ -451,7 +452,17 @@ fn the_preview_s_scale() {
 fn every_layer_type_s_form_builds() {
     let (mut app, _dir) = with_manager("formlar");
     for (kind, types) in [
-        ("fill", &["hatchFill", "patternFill", "imageFill", "simpleLine", "markerLine", "centroidMarker"][..]),
+        (
+            "fill",
+            &[
+                "hatchFill",
+                "patternFill",
+                "imageFill",
+                "simpleLine",
+                "markerLine",
+                "centroidMarker",
+            ][..],
+        ),
         ("marker", &["shape", "text", "svg", "raster"][..]),
     ] {
         sm(&mut app, ManagerEvent::NewSymbol(kind));
@@ -485,7 +496,10 @@ fn every_layer_type_s_form_builds() {
             at,
             key: "wave".into(),
             text: None,
-            patch: Some(set("wave", json!({ "shape": "sine", "length": 5, "amplitude": 0.8, "offsetAlong": 0 }))),
+            patch: Some(set(
+                "wave",
+                json!({ "shape": "sine", "length": 5, "amplitude": 0.8, "offsetAlong": 0 }),
+            )),
             focus: None,
         }),
     );
@@ -506,7 +520,12 @@ fn every_layer_type_s_form_builds() {
 }
 
 /// A key press as the window gives it.
-fn press(app: &mut App, key: iced::keyboard::Key, modifiers: iced::keyboard::Modifiers, text: Option<&str>) {
+fn press(
+    app: &mut App,
+    key: iced::keyboard::Key,
+    modifiers: iced::keyboard::Modifiers,
+    text: Option<&str>,
+) {
     use iced::keyboard::key::{NativeCode, Physical};
     let _ = app.update(Message::Key(crate::keys::KeyPress {
         key,
@@ -524,15 +543,39 @@ fn ctrl_z_and_ctrl_y_undo_and_redo_in_the_designer() {
     sm(&mut app, ManagerEvent::NewSymbol("fill"));
     de(&mut app, Event::Add("hatchFill", None));
     assert_eq!(types(&app), ["simpleFill", "hatchFill"]);
-    press(&mut app, Key::Character("z".into()), Modifiers::CTRL, Some("\u{1a}"));
+    press(
+        &mut app,
+        Key::Character("z".into()),
+        Modifiers::CTRL,
+        Some("\u{1a}"),
+    );
     assert_eq!(types(&app), ["simpleFill"]);
-    press(&mut app, Key::Character("y".into()), Modifiers::CTRL, Some("\u{19}"));
+    press(
+        &mut app,
+        Key::Character("y".into()),
+        Modifiers::CTRL,
+        Some("\u{19}"),
+    );
     assert_eq!(types(&app), ["simpleFill", "hatchFill"]);
-    press(&mut app, Key::Character("Z".into()), Modifiers::CTRL | Modifiers::SHIFT, Some("\u{1a}"));
-    assert_eq!(types(&app), ["simpleFill", "hatchFill"], "nothing more to redo");
+    press(
+        &mut app,
+        Key::Character("Z".into()),
+        Modifiers::CTRL | Modifiers::SHIFT,
+        Some("\u{1a}"),
+    );
+    assert_eq!(
+        types(&app),
+        ["simpleFill", "hatchFill"],
+        "nothing more to redo"
+    );
     // The drawing's own undo is not reached.
     assert_eq!(app.dialog, Some(Dialog::SymbolDesigner));
     // Esc asks about the changes rather than closing.
-    press(&mut app, Key::Named(iced::keyboard::key::Named::Escape), Modifiers::default(), None);
+    press(
+        &mut app,
+        Key::Named(iced::keyboard::key::Named::Escape),
+        Modifiers::default(),
+        None,
+    );
     assert!(designer(&app).asking);
 }

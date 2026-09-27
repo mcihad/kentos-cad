@@ -8,8 +8,8 @@ use std::collections::HashMap;
 use iced::widget::tooltip::Position;
 use iced::widget::{button, column, row};
 use iced::{Center, Element, Fill};
-use kentos_native_style::designer::{Choice, LayerPath, Patch, js_value, set};
 use kentos_expression::js::number;
+use kentos_native_style::designer::{Choice, LayerPath, Patch, js_value, set};
 use kentos_ui::icon::icon;
 use kentos_ui::label;
 use kentos_ui::style;
@@ -36,7 +36,12 @@ pub(super) struct Env<'a> {
 }
 
 /// A change of the chosen layer.
-pub(super) fn edit(at: LayerPath, key: &str, text: Option<String>, patch: Option<Patch>) -> Message {
+pub(super) fn edit(
+    at: LayerPath,
+    key: &str,
+    text: Option<String>,
+    patch: Option<Patch>,
+) -> Message {
     ev(Event::Edit(Edit {
         at,
         key: key.to_owned(),
@@ -69,12 +74,11 @@ pub(super) fn number_control<'a>(env: &Env<'_>, key: &'static str) -> Element<'a
         return iced::widget::space().into();
     };
     let typed = env.typed.get(key);
-    let text = typed.cloned().unwrap_or_else(|| {
-        numbers::text_of(numbers::shown(env.layer, key))
-    });
-    let invalid = typed.is_some_and(|t| {
-        numbers::parse(t).is_none_or(|v| v < spec.min || v > spec.max)
-    });
+    let text = typed
+        .cloned()
+        .unwrap_or_else(|| numbers::text_of(numbers::shown(env.layer, key)));
+    let invalid =
+        typed.is_some_and(|t| numbers::parse(t).is_none_or(|v| v < spec.min || v > spec.max));
     let unit = match spec.unit {
         Unit::Layer => Some(unit_of(env.layer)),
         Unit::Fixed(u) => Some(u),
@@ -87,8 +91,8 @@ pub(super) fn number_control<'a>(env: &Env<'_>, key: &'static str) -> Element<'a
         unit,
         invalid,
         move |t| {
-            let patch = numbers::parse(&t)
-                .map(|v| numbers::write(&layer, key, numbers::clamp(&spec, v)));
+            let patch =
+                numbers::parse(&t).map(|v| numbers::write(&layer, key, numbers::clamp(&spec, v)));
             edit(at, key, Some(t), patch)
         },
         ev(Event::Settle(key.to_owned())),
@@ -126,9 +130,12 @@ fn expression<'a>(env: &Env<'_>, key: &'static str, plain: Value) -> Element<'a,
         },
     );
     column![
-        row![line, fields::fx(true, edit(at, key, None, Some(set(key, back))))]
-            .spacing(6)
-            .align_y(Center),
+        row![
+            line,
+            fields::fx(true, edit(at, key, None, Some(set(key, back))))
+        ]
+        .spacing(6)
+        .align_y(Center),
         fields::hint("İfade boş sonuç verirse sabit değer kullanılır.")
     ]
     .spacing(4)
@@ -151,7 +158,11 @@ fn fx_on<'a>(env: &Env<'_>, key: &'static str, current: Value) -> Element<'a, Me
 }
 
 /// A number that may come from each object's data (`ddNum`).
-pub(super) fn dd_number<'a>(env: &Env<'_>, key: &'static str, fallback: f64) -> Element<'a, Message> {
+pub(super) fn dd_number<'a>(
+    env: &Env<'_>,
+    key: &'static str,
+    fallback: f64,
+) -> Element<'a, Message> {
     let label = numbers::spec_of(env.layer, key).map_or("", |s| s.label);
     let v = env.layer.get(key);
     let control = if expr_of(v).is_some() {
@@ -219,14 +230,25 @@ pub(super) fn dd_color<'a>(
     none: bool,
 ) -> Element<'a, Message> {
     let v = env.layer.get(key);
-    let plain = if none { Value::Null } else { Value::from("ink") };
+    let plain = if none {
+        Value::Null
+    } else {
+        Value::from("ink")
+    };
     let control = if expr_of(v).is_some() {
         expression(env, key, plain)
     } else {
         let current = v.cloned().unwrap_or(Value::Null);
         let value = v.and_then(Value::as_str);
         row![
-            color_control(env, key, label, none, move |t| color_patch(key, t, none), value),
+            color_control(
+                env,
+                key,
+                label,
+                none,
+                move |t| color_patch(key, t, none),
+                value
+            ),
             fx_on(env, key, current)
         ]
         .spacing(6)
@@ -237,7 +259,12 @@ pub(super) fn dd_color<'a>(
 }
 
 /// A text that may come from each object's data (Metin).
-pub(super) fn dd_text<'a>(env: &Env<'_>, key: &'static str, label: &str, hint: &str) -> Element<'a, Message> {
+pub(super) fn dd_text<'a>(
+    env: &Env<'_>,
+    key: &'static str,
+    label: &str,
+    hint: &str,
+) -> Element<'a, Message> {
     let v = env.layer.get(key);
     let control = if expr_of(v).is_some() {
         expression(env, key, Value::from(""))
@@ -348,26 +375,37 @@ pub(super) fn dash_row<'a>(env: &Env<'_>, hint: &str) -> Element<'a, Message> {
         .unwrap_or_default();
     let text = env.typed.get(KEY).cloned().unwrap_or(shown);
     let at = env.at;
-    let field = fields::input(Some(field_id(KEY)), "sürekli (ör. 4 1.5)", &text, true, false)
-        .on_input(move |t| {
-            let parts: Vec<Option<f64>> = t
-                .split(|c: char| c.is_whitespace() || c == ';')
-                .filter(|s| !s.is_empty())
-                .map(numbers::parse)
+    let field = fields::input(
+        Some(field_id(KEY)),
+        "sürekli (ör. 4 1.5)",
+        &text,
+        true,
+        false,
+    )
+    .on_input(move |t| {
+        let parts: Vec<Option<f64>> = t
+            .split(|c: char| c.is_whitespace() || c == ';')
+            .filter(|s| !s.is_empty())
+            .map(numbers::parse)
+            .collect();
+        let patch = if parts.is_empty() {
+            Some(set(KEY, Value::Null))
+        } else if parts.iter().all(|p| p.is_some_and(|v| v >= 0.0))
+            && parts.iter().any(|p| p.is_some_and(|v| v > 0.0))
+        {
+            let lengths: Vec<Value> = parts
+                .iter()
+                .flatten()
+                .take(8)
+                .map(|v| js_value(*v))
                 .collect();
-            let patch = if parts.is_empty() {
-                Some(set(KEY, Value::Null))
-            } else if parts.iter().all(|p| p.is_some_and(|v| v >= 0.0))
-                && parts.iter().any(|p| p.is_some_and(|v| v > 0.0))
-            {
-                let lengths: Vec<Value> = parts.iter().flatten().take(8).map(|v| js_value(*v)).collect();
-                Some(set(KEY, Value::Array(lengths)))
-            } else {
-                None
-            };
-            edit(at, KEY, Some(t), patch)
-        })
-        .on_submit(ev(Event::Settle(KEY.to_owned())));
+            Some(set(KEY, Value::Array(lengths)))
+        } else {
+            None
+        };
+        edit(at, KEY, Some(t), patch)
+    })
+    .on_submit(ev(Event::Settle(KEY.to_owned())));
     fields::labelled("Kesik", field, Some(hint))
 }
 
@@ -392,7 +430,11 @@ fn small<'a>(text: &str, tip_text: &str, press: Option<Message>) -> Element<'a, 
 pub(super) fn asset_row<'a>(env: &Env<'_>, key: &'static str) -> Element<'a, Message> {
     let value = env.layer.get(key).and_then(Value::as_str).unwrap_or("");
     let mut choices: Vec<(String, String)> = vec![(String::new(), "Çizim seçin…".to_owned())];
-    choices.extend(env.assets.iter().map(|(id, name, _)| (id.clone(), name.clone())));
+    choices.extend(
+        env.assets
+            .iter()
+            .map(|(id, name, _)| (id.clone(), name.clone())),
+    );
     let at = env.at;
     let select = fields::select_owned(choices, value, move |id| {
         edit(at, key, None, Some(set(key, Value::from(id))))
@@ -426,7 +468,9 @@ pub(super) fn placement_rows<'a>(env: &Env<'_>) -> Vec<Element<'a, Message>> {
             let rotation = dd_number(env, "rotation", 0.0);
             column![
                 rotation,
-                fields::hint("Saat yönünün tersine; çizgi boyunca işaretlerde çizginin yönüne eklenir.")
+                fields::hint(
+                    "Saat yönünün tersine; çizgi boyunca işaretlerde çizginin yönüne eklenir."
+                )
             ]
             .spacing(4)
             .into()
