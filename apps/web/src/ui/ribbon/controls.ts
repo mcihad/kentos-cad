@@ -50,7 +50,7 @@ export function commandTip(ctx: AppContext, id: string): TooltipContent {
     title: cmd?.title ?? id,
     shortcut: ctx.keymap.chordFor(id),
     description: cmd?.description,
-    note: cmd?.pending ? (cmd.pendingNote ?? 'Geliştirme aşamasında') : cmd ? undefined : 'Bu komut bu oturumda yok.',
+    note: cmd?.pending ? (cmd.pendingNote ?? 'Geliştirme aşamasında') : cmd ? (cmd.whyDisabled?.() ?? undefined) : 'Bu komut bu oturumda yok.',
   };
 }
 

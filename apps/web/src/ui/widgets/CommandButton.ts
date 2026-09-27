@@ -33,7 +33,7 @@ export function commandButton(
   d.add(
     tooltip(
       btn,
-      () => ({ title: cmd?.title ?? id, shortcut: ctx.keymap.chordFor(id), description: cmd?.description }),
+      () => ({ title: cmd?.title ?? id, shortcut: ctx.keymap.chordFor(id), description: cmd?.description, note: cmd?.whyDisabled?.() ?? undefined }),
       opts.placement ?? 'bottom',
     ),
   );

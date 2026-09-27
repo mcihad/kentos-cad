@@ -1055,7 +1055,17 @@ impl App {
             id if crate::clipboard::COMMANDS.contains(&id) => self.clipboard_available(id),
             "server.check" => !self.server_checking,
             id if id.starts_with("cloud.") => self.cloud_available(id),
+            "layer.new" | "layer.newGroup" => self.tree_locked().is_none(),
             _ => true,
+        }
+    }
+
+    /// Why a command is off, when it says (the web's `whyDisabled`): its tip
+    /// shows it.
+    pub fn why_disabled(&self, id: &str) -> Option<&'static str> {
+        match id {
+            "layer.new" | "layer.newGroup" => self.tree_locked(),
+            _ => None,
         }
     }
 

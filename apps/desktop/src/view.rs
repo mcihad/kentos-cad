@@ -294,9 +294,14 @@ impl App {
             } else {
                 Button::small(command.icon, command.short)
             };
+            // An off command that says why has the reason in its tip (the web's `whyDisabled`).
+            let tip_of = match self.why_disabled(command.id) {
+                Some(why) => Tip::new(command.title).body(why),
+                None => tip(command),
+            };
             button
                 .on_press_maybe(enabled(command).filter(|_| self.available(command.id)))
-                .tip(tip(command))
+                .tip(tip_of)
                 .on(self.checked(command.id).unwrap_or(false))
                 .active(self.running(command.id))
                 .flash(self.ribbon_flash == Some(command.id))

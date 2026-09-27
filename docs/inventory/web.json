@@ -73,7 +73,7 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 53,
+    "commandsWithoutTests": 52,
     "commandsOnDesktop": 124
   },
   "commands": [
@@ -1898,6 +1898,7 @@
         "desktop": "implemented"
       },
       "tests": [
+        "apps/web/scripts/e2e/layout.mjs",
         "apps/web/scripts/e2e/smoke.mjs"
       ]
     },
@@ -1923,7 +1924,9 @@
         "web": "implemented",
         "desktop": "implemented"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/smoke.mjs"
+      ]
     },
     {
       "id": "layer.showAll",

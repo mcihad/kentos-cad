@@ -6,6 +6,13 @@
 //! layer before active again (kentos-domain `add_layer`,
 //! fixtures/document-ops/v1/layer-add.json, docs/adr/0076).
 //!
+//! In a cloud database project this account may not edit (a project
+//! Editor: objects, not the tree), a new, renamed or removed layer could not
+//! be saved, and an object drawn on a new one would never reach the server:
+//! those changes are refused where they start, in the web's words
+//! ([`TREE_LOCKED`], the web's b19ed6f, docs/adr/0078). The eye, the lock,
+//! the fold, the active layer and the style stay the user's own.
+//!
 //! The tree follows the drawing's selection (the owner's request, 26
 //! September): the rows of the selected objects' layers show selected, their
 //! groups open, and one such layer is scrolled into view. The active layer,
@@ -24,6 +31,9 @@ use kentos_ui::widget::{Menu, Tip, tip};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
+
+/// Why the layer tree may not change here (the web's `TREE_LOCKED`).
+pub const TREE_LOCKED: &str = "Bu projede katman ağacını değiştirme yetkiniz yok (project.edit); proje sahibinden ya da yöneticisinden isteyin.";
 
 /// Two presses on one row closer than this are a double click (KentOS UI's sash's).
 const DOUBLE_CLICK: Duration = Duration::from_millis(400);
@@ -113,6 +123,17 @@ impl App {
         }
     }
 
+    /// Why the layer tree may not change in the open drawing: a cloud
+    /// database project where this account lacks `project.edit` (the web's
+    /// `treeLocked`). A file project and a local drawing save the tree with
+    /// the file.
+    pub(crate) fn tree_locked(&self) -> Option<&'static str> {
+        let doc = self.document.as_ref()?;
+        let source = doc.cloud_source()?;
+        let (_, may_edit) = crate::cloud::access_of(&source.info);
+        (doc.is_database() && !may_edit).then_some(TREE_LOCKED)
+    }
+
     /// A row pressed: it is chosen (the web's focused row), and the tree has
     /// the keyboard (layer_tree.rs). A second press soon after is a double
     /// click: a layer becomes the active one, a group opens or closes (the
@@ -136,6 +157,15 @@ impl App {
     }
 
     pub(crate) fn layer_event(&mut self, event: Event) -> Task<Message> {
+        // The tree's own changes are refused where it may not change (b19ed6f).
+        if matches!(
+            event,
+            Event::Remove(_) | Event::Rename(_) | Event::AddBeside(_)
+        ) && let Some(why) = self.tree_locked()
+        {
+            self.warn(why);
+            return Task::none();
+        }
         if let Event::Remove(id) = event {
             self.ask_remove_layer(id);
             return Task::none();
@@ -430,6 +460,10 @@ impl App {
     /// `layer.new`: “Yeni katman” (“Yeni katman 2” when taken) next to the
     /// active layer, made active.
     pub(crate) fn new_layer(&mut self) {
+        if let Some(why) = self.tree_locked() {
+            self.warn(why);
+            return;
+        }
         let Some(doc) = &mut self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -450,6 +484,10 @@ impl App {
 
     /// `layer.newGroup`: “Yeni grup” at the top of the tree.
     pub(crate) fn new_group(&mut self) {
+        if let Some(why) = self.tree_locked() {
+            self.warn(why);
+            return;
+        }
         let Some(doc) = &mut self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -466,13 +504,19 @@ impl App {
 
     /// The Katmanlar panel's header: the layer count and the two buttons.
     pub(crate) fn layers_actions(&self, count: usize) -> Element<'_, Message> {
+        // Off, with the reason in their tips, where the tree may not change.
+        let locked = self.tree_locked();
         let add = |glyph: Icon, title: &'static str, id: &'static str| {
+            let tip_of = match locked {
+                Some(why) => Tip::new(title).body(why),
+                None => Tip::new(title),
+            };
             tip(
                 button(icon(glyph).size(14.0))
-                    .on_press(Message::Run(id))
+                    .on_press_maybe(locked.is_none().then_some(Message::Run(id)))
                     .padding([2, 4])
                     .style(style::button::ghost),
-                Tip::new(title),
+                tip_of,
                 tooltip::Position::Bottom,
             )
         };
