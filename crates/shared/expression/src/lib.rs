@@ -28,6 +28,8 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod api;
+pub mod editor;
 pub mod exec;
 pub mod functions;
 pub mod geometry;

@@ -24,13 +24,15 @@ fn points(xy: &[f64]) -> Vec<Vec2> {
 
 /// The id of a core operation by its TypeScript name (`apps/web/src/wasm/core.ts`
 /// asks once per operation), or −1 when this build has no such operation. The
-/// style core's operations come after the geometry core's.
+/// style core's operations come after the geometry core's, the expression
+/// builder's (`kentos_expression::api`, docs/adr/0100 §5) after those.
 #[wasm_bindgen(js_name = opId)]
 pub fn op_id(name: &str) -> i32 {
+    let geometry = kentos_geometry_core::api::all().len();
+    let style = kentos_style_core::api::OPS.len();
     kentos_geometry_core::api::find(name)
-        .or_else(|| {
-            kentos_style_core::api::find(name).map(|i| kentos_geometry_core::api::all().len() + i)
-        })
+        .or_else(|| kentos_style_core::api::find(name).map(|i| geometry + i))
+        .or_else(|| kentos_expression::api::find(name).map(|i| geometry + style + i))
         .map_or(-1, |i| i as i32)
 }
 
@@ -39,11 +41,14 @@ pub fn op_id(name: &str) -> i32 {
 #[wasm_bindgen(js_name = callOp)]
 pub fn call_op(id: u32, args: &str) -> Result<String, JsError> {
     let geometry = kentos_geometry_core::api::all().len();
+    let style = kentos_style_core::api::OPS.len();
     let id = id as usize;
     if id < geometry {
         kentos_geometry_core::api::run(id, args)
-    } else {
+    } else if id < geometry + style {
         kentos_style_core::api::run(id - geometry, args)
+    } else {
+        kentos_expression::api::run(id - geometry - style, args)
     }
     .map_err(|e| JsError::new(&e))
 }
