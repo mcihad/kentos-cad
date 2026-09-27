@@ -49,7 +49,13 @@
 //! böylece iç içe menülerde en içteki açılır, düğmeler de basılmış sayılmaz.
 //!
 //! [`MenuButton`] aynı menüyü sol tıkla, öğenin altına (sığmazsa üstüne)
-//! hizalı açar; durum çubuğundaki göstergeler böyle çalışır:
+//! hizalı açar; durum çubuğundaki göstergeler böyle çalışır.
+//!
+//! Pencereye sığmayan uzun menü pencerenin kenarlarından biraz içeride
+//! durur ve kaydırılır: tekerlekle, sağdaki çubukla gösterilir, oklarla
+//! gezinirken vurgulu komut görünür kalır. Bir komut ancak menünün içinde
+//! başlayan tıklamayla çalışır: menüyü açan tıklamanın bırakılışı, menü
+//! düğmenin üstüne binse de bir komutu seçmez.
 //!
 //! ```ignore
 //! MenuButton::new(label::mono(scale), || {
@@ -59,6 +65,7 @@
 //! })
 //! ```
 
+use iced::advanced::Renderer as _;
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::widget::{self, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Shell, overlay, renderer};
@@ -103,6 +110,11 @@ const SUBMENU_OVERLAP: f32 = 2.0;
 const CURSOR_GAP: f32 = 2.0;
 /// Menü düğmesinin menüsüyle düğme arasındaki boşluk.
 const BUTTON_GAP: f32 = 3.0;
+/// Pencereye sığmayan menünün pencere kenarlarına uzaklığı.
+const MARGIN: f32 = 6.0;
+/// Kaydırılan menünün sağındaki çubuğun genişliği ve kenara uzaklığı.
+const SCROLLBAR: f32 = 3.0;
+const SCROLLBAR_INSET: f32 = 3.0;
 
 fn item_height() -> f32 {
     typography::scaled(ITEM_HEIGHT)
@@ -635,6 +647,10 @@ struct State {
     over: bool,
     /// Basılı değiştirici tuşlar; macOS'ta Control + tık sağ tıktır.
     modifiers: keyboard::Modifiers,
+    /// Ana menünün kaydırılan miktarı (pencereye sığmayan menüde).
+    scroll: f32,
+    /// Sol düğme menünün içinde basıldı: bırakılınca komut çalışır.
+    pressed_inside: bool,
 }
 
 impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'a, Message> {
@@ -1016,9 +1032,39 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
         }
 
         main.contains(position)
-            .then(|| row_at(layout.children().next()?, position))
+            .then(|| row_at(layout.children().next()?.children().next()?, position))
             .flatten()
             .map(Target::Main)
+    }
+
+    /// The highlighted command of a scrolled menu stays in view (the arrows).
+    fn keep_in_view(&mut self, layout: Layout<'_>, shell: &mut Shell<'_, Message>) {
+        let Some(Target::Main(index)) = self.state.hovered else {
+            return;
+        };
+        let Some(visible) = layout.children().next() else {
+            return;
+        };
+        let window = visible.bounds();
+        let Some(row) = visible
+            .children()
+            .next()
+            .and_then(|panel| panel.children().next())
+            .and_then(|column| column.children().nth(index))
+            .map(|row| row.bounds())
+        else {
+            return;
+        };
+        let before = self.state.scroll;
+        if row.y < window.y {
+            self.state.scroll -= window.y - row.y;
+        } else if row.y + row.height > window.y + window.height {
+            self.state.scroll += row.y + row.height - (window.y + window.height);
+        }
+        if self.state.scroll != before {
+            shell.invalidate_layout();
+            shell.request_redraw();
+        }
     }
 
     fn is_over(&self, layout: Layout<'_>, cursor: mouse::Cursor) -> bool {
@@ -1117,15 +1163,19 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
 
 impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, '_, Message> {
     fn layout(&mut self, renderer: &Renderer, bounds: Size) -> layout::Node {
-        let limits = layout::Limits::new(Size::ZERO, bounds);
+        // The panel as tall as its rows: a menu taller than the window scrolls.
+        let limits = layout::Limits::new(Size::ZERO, Size::new(bounds.width, f32::INFINITY));
 
         let main = self
             .main
             .as_widget_mut()
             .layout(self.main_tree, renderer, &limits);
         let size = main.size();
+        let room = (bounds.height - 2.0 * MARGIN).max(0.0);
+        let height = size.height.min(room);
 
-        // Sağa ya da aşağı sığmazsa alanın soluna ya da üstüne açılır.
+        // Sağa ya da aşağı sığmazsa alanın soluna ya da üstüne açılır;
+        // hiçbir yana sığmayan menü pencerenin boyunca kaydırılır.
         let anchor = self.anchor;
         let x = if anchor.x + self.gap.x + size.width <= bounds.width {
             anchor.x + self.gap.x
@@ -1133,18 +1183,32 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             anchor.x + anchor.width - size.width
         };
         let below = anchor.y + anchor.height + self.gap.y;
-        let y = if below + size.height <= bounds.height {
+        let y = if size.height > room {
+            MARGIN
+        } else if below + size.height <= bounds.height {
             below
         } else {
             anchor.y - self.gap.y - size.height
         };
+        // Off the window's edges where there is room for it.
+        let low = (bounds.height - height - MARGIN).max(0.0);
         let origin = Point::new(
             x.clamp(0.0, (bounds.width - size.width).max(0.0)),
-            y.clamp(0.0, (bounds.height - size.height).max(0.0)),
+            y.clamp(MARGIN.min(low), low),
         );
 
+        let scroll = self
+            .state
+            .scroll
+            .clamp(0.0, (size.height - height).max(0.0));
+        self.state.scroll = scroll;
         let main_node = main.clone();
-        let mut children = vec![main.move_to(origin)];
+        // The window onto the panel, and in it the panel moved up by the scroll.
+        let visible = layout::Node::with_children(
+            Size::new(size.width, height),
+            vec![main.move_to(Point::new(0.0, -scroll))],
+        );
+        let mut children = vec![visible.move_to(origin)];
 
         if let (Some(sub), Some(index)) = (self.sub.as_mut(), self.state.submenu) {
             let node = sub.as_widget_mut().layout(self.sub_tree, renderer, &limits);
@@ -1161,7 +1225,7 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             // The row's own top in the panel as laid out (rows with a detail
             // line are as tall as their text).
             let top = row_top(&main_node, index).unwrap_or_else(|| self.menu.offset(index));
-            let y = (origin.y + top - PADDING)
+            let y = (origin.y + top - PADDING - scroll)
                 .min(bounds.height - sub_size.height)
                 .max(0.0);
 
@@ -1182,16 +1246,58 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
         let viewport = layout.bounds();
         let mut layouts = layout.children();
 
-        if let Some(main) = layouts.next() {
-            self.main.as_widget().draw(
-                self.main_tree,
-                renderer,
-                theme,
-                style,
-                main,
-                cursor,
-                &viewport,
-            );
+        if let Some(visible) = layouts.next()
+            && let Some(main) = visible.children().next()
+        {
+            let window = visible.bounds();
+            let content = main.bounds();
+            let clipped = content.height > window.height + 0.5;
+            renderer.with_layer(window, |renderer| {
+                self.main.as_widget().draw(
+                    self.main_tree,
+                    renderer,
+                    theme,
+                    style,
+                    main,
+                    cursor,
+                    &window,
+                );
+            });
+            if clipped {
+                let t = Tokens::of(theme);
+                // The box closed where the panel is cut, and where the window is on it.
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds: window,
+                        border: iced::Border {
+                            color: t.border,
+                            width: 1.0,
+                            radius: style::button::RADIUS.into(),
+                        },
+                        ..renderer::Quad::default()
+                    },
+                    Background::Color(Color::TRANSPARENT),
+                );
+                let track = window.height - 2.0 * SCROLLBAR_INSET;
+                let thumb = (track * window.height / content.height)
+                    .max(24.0)
+                    .min(track);
+                let travel = (content.height - window.height).max(1.0);
+                let offset = (window.y - content.y) / travel;
+                renderer.fill_quad(
+                    renderer::Quad {
+                        bounds: Rectangle {
+                            x: window.x + window.width - SCROLLBAR - SCROLLBAR_INSET,
+                            y: window.y + SCROLLBAR_INSET + (track - thumb) * offset,
+                            width: SCROLLBAR,
+                            height: thumb,
+                        },
+                        border: border::rounded(SCROLLBAR / 2.0),
+                        ..renderer::Quad::default()
+                    },
+                    Background::Color(t.muted.scale_alpha(0.55)),
+                );
+            }
         }
 
         if let (Some(sub), Some(layout)) = (self.sub.as_ref(), layouts.next()) {
@@ -1242,6 +1348,9 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             }
             Event::Mouse(mouse::Event::ButtonPressed(button)) => {
                 if over {
+                    if *button == mouse::Button::Left {
+                        self.state.pressed_inside = true;
+                    }
                     shell.capture_event();
                 } else {
                     let secondary = *button == mouse::Button::Right
@@ -1258,10 +1367,13 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
                 }
             }
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
+                // Only a click begun in the menu runs a command: the release
+                // of the press that opened it may fall on a row.
+                let pressed = std::mem::take(&mut self.state.pressed_inside);
                 if over {
                     shell.capture_event();
 
-                    if let Some(target) = target {
+                    if let (true, Some(target)) = (pressed, target) {
                         self.activate(target, shell);
                     }
                 }
@@ -1270,10 +1382,28 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             // (harita yakınlaşmaz): macOS'ta iki parmakla tıklamanın ardından
             // izleme yüzeyi hemen küçük kaydırma olayları üretir; bunlar
             // menüyü açılır açılmaz kapatıyordu. Yerel menüler de böyledir.
-            Event::Mouse(mouse::Event::WheelScrolled { .. }) => shell.capture_event(),
+            Event::Mouse(mouse::Event::WheelScrolled { delta }) => {
+                // A menu taller than the window scrolls under the pointer.
+                if let Some(visible) = layout.children().next()
+                    && cursor.is_over(visible.bounds())
+                {
+                    let dy = match delta {
+                        mouse::ScrollDelta::Lines { y, .. } => y * item_height(),
+                        mouse::ScrollDelta::Pixels { y, .. } => *y,
+                    };
+                    let before = self.state.scroll;
+                    self.state.scroll = (before - dy).max(0.0);
+                    if self.state.scroll != before {
+                        shell.invalidate_layout();
+                        shell.request_redraw();
+                    }
+                }
+                shell.capture_event();
+            }
             Event::Keyboard(keyboard::Event::KeyPressed { key, .. }) => {
                 if self.key(key.as_ref(), shell) {
                     shell.capture_event();
+                    self.keep_in_view(layout, shell);
                 }
             }
             Event::Window(window::Event::Unfocused) => self.close(shell),
@@ -1610,6 +1740,63 @@ mod tests {
         assert!(!control_click(&left, keyboard::Modifiers::LOGO, true));
         // Sağ tık zaten sağ tıktır; çevrilmez.
         assert!(!control_click(&right, control, true));
+    }
+
+    #[cfg(feature = "snapshot")]
+    /// A menu taller than the window (the expression field's İşlevler):
+    /// the release of the click that opened it picks nothing though the
+    /// menu covers the button, a click begun in it picks the row under
+    /// it, and the wheel brings later rows up.
+    #[test]
+    fn a_long_menu_scrolls_and_the_opening_click_picks_nothing() {
+        use crate::snapshot::Snapshot;
+
+        let mut snapshot = Snapshot::new(Size::new(400.0, 300.0)).expect("a renderer");
+        let mut picked: Vec<u8> = Vec::new();
+        fn view(_: &Vec<u8>) -> Element<'_, u8> {
+            container(MenuButton::new(label::body("İşlevler"), || {
+                (0..60_u8).fold(Menu::new(), |m, i| m.item(format!("işlev{i}()"), i))
+            }))
+            .padding(iced::Padding {
+                top: 120.0,
+                left: 20.0,
+                ..iced::Padding::default()
+            })
+            .into()
+        }
+        let mut update = |p: &mut Vec<u8>, m: u8| p.push(m);
+        let moved = |x: f32, y: f32| {
+            Event::Mouse(mouse::Event::CursorMoved {
+                position: Point::new(x, y),
+            })
+        };
+        let press = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left));
+        let release = Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left));
+        let click = |x, y| [moved(x, y), press.clone(), release.clone()];
+
+        // Opened on the button: the menu covers it, and its release picks nothing.
+        snapshot.step(&mut picked, view, &mut update, &click(40.0, 128.0));
+        assert!(picked.is_empty(), "{picked:?}");
+        // A click begun in the menu picks the row under it.
+        snapshot.step(&mut picked, view, &mut update, &click(60.0, 40.0));
+        assert_eq!(picked.len(), 1, "{picked:?}");
+        let first = picked[0];
+        // Opened again and scrolled: the same place is a later row.
+        snapshot.step(&mut picked, view, &mut update, &click(40.0, 128.0));
+        snapshot.step(
+            &mut picked,
+            view,
+            &mut update,
+            &[
+                moved(60.0, 40.0),
+                Event::Mouse(mouse::Event::WheelScrolled {
+                    delta: mouse::ScrollDelta::Lines { x: 0.0, y: -5.0 },
+                }),
+            ],
+        );
+        snapshot.step(&mut picked, view, &mut update, &click(60.0, 40.0));
+        assert_eq!(picked.len(), 2, "{picked:?}");
+        assert!(picked[1] > first, "{picked:?}");
     }
 
     #[test]
