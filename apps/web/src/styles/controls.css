@@ -267,7 +267,8 @@
   left: 0;
   /* Above dialogs opened after the tooltip element was made (same overlay root). */
   z-index: 10;
-  max-width: 280px;
+  /* Long titles and descriptions wrap at this width, even inside a word (DESIGN.md §7.8). */
+  max-width: min(calc(280px * var(--ui-scale)), calc(100vw - 16px));
   padding: 7px 9px 8px;
   background: var(--c-tooltip);
   color: var(--c-tooltip-text);
@@ -277,6 +278,7 @@
   opacity: 0;
   pointer-events: none !important;
   transition: opacity 80ms;
+  overflow-wrap: anywhere;
 }
 .tooltip[data-open] {
   opacity: 1;
@@ -288,9 +290,11 @@
   gap: 14px;
 }
 .tooltip__title {
+  min-width: 0;
   font-weight: 600;
 }
 .tooltip .kbd {
+  flex: none;
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--c-tooltip-line);
   color: var(--c-tooltip-text-2);

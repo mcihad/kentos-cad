@@ -2,8 +2,10 @@
 // narrowest size (1100×650) and at 1440×900, in both themes, and checks each for what a user would see
 // as broken (DESIGN.md §5.1, §7): a window or menu reaching past the screen, a window body or footer
 // wider than the window (a horizontal scrollbar), a footer button pushed out, a button or menu row whose
-// words are cut, the shell's bars overflowing. A picture of each goes to scripts/e2e/out/layout/ for a
-// person to read what a script cannot judge: scrollbars over content, text cut inside fields, balance.
+// words are cut, the shell's bars overflowing, the information card over a drawing object leaving the
+// drawing or letting its text out (the demo's MPYY names), a tooltip leaving the window. A picture of each
+// goes to scripts/e2e/out/layout/ for a person to read what a script cannot judge: scrollbars over content,
+// text cut inside fields, balance.
 // Exits 1 when a check fails.
 //
 //   node scripts/e2e/layout.mjs [--only id,id] [--sizes 1100x650,1440x900] [--themes dark,light] [--scale large|xxlarge]
@@ -29,7 +31,29 @@ const gis = new URL('../../../../fixtures/formats/v1/gis/', import.meta.url);
 const formats = new URL('../../../../fixtures/formats/v1/', import.meta.url);
 const raw = (url) => readFileSync(url).toString('base64');
 
-/** What each item opens, and how. `b` is the page; `ui` the helpers below. */
+/**
+ * Objects of the demo drawing to rest the pointer on, found in the page: the object and the world point to
+ * rest on. The showcase symbol whose layer has the longest name (the point inside its sample area), and the
+ * longest title text.
+ */
+const LONGEST_LAYER = `(k) => {
+  let best = null;
+  for (const e of k.doc.all()) {
+    if (!e.symbol || e.kind !== 'polygon') continue;
+    const n = (k.doc.layers.get(e.layerId)?.name ?? '').length;
+    if (!best || n > best.n) best = { e, n };
+  }
+  if (!best) return null;
+  const pts = best.e.pts;
+  return { x: pts.reduce((s, q) => s + q.x, 0) / pts.length, y: pts.reduce((s, q) => s + q.y, 0) / pts.length };
+}`;
+const LONGEST_TEXT = `(k) => {
+  let best = null;
+  for (const e of k.doc.all()) if (e.kind === 'text' && (!best || e.text.length > best.text.length)) best = e;
+  return best && { x: best.p.x + 2, y: best.p.y + best.height * 0.4 };
+}`;
+
+/** What each item opens, and how. `b` is the page; `ui` the helpers below. `must`: what has to be showing. */
 const ITEMS = [
   // The shell itself: the bars at this width.
   { id: 'shell', open: async () => {} },
@@ -96,6 +120,21 @@ const ITEMS = [
       ),
     ready: '.dialog--confirm',
   },
+  // The information card over a drawing object (HoverCard, DESIGN.md §7.4.2): the demo's MPYY showcase names its
+  // sections in full, so a symbol's layer name runs to a hundred characters. In the middle of the drawing, in its
+  // bottom-right corner (the card goes left of and above the pointer), and over a long title near the right edge.
+  ...[
+    ['hover-card-long', LONGEST_LAYER, 0.5, 0.5],
+    ['hover-card-corner', LONGEST_LAYER, 0.97, 0.95],
+    ['hover-card-text', LONGEST_TEXT, 0.97, 0.5],
+  ].map(([id, pick, fx, fy]) => ({ id, open: (ui) => ui.hoverObject(pick, fx, fy), must: '.hover-card:not([hidden])', close: (ui) => ui.leaveDrawing() })),
+  // A tooltip at the window's right edge: the ribbon's last button, and a row of the processing tree in the right dock.
+  {
+    id: 'tooltip-ribbon-edge',
+    open: async (ui) => (await ui.shell('ribbon'), await ui.hoverRightmost('.ribbon__strip button')),
+    must: '.tooltip[data-open]',
+    close: async (ui) => (await ui.escapeAll(2), await ui.shell('classic')),
+  },
   // Last: it leaves the drawing unsaved.
   { id: 'question-unsaved', open: async (ui) => (await ui.eval(`window.kentos.doc.name.set('Soru')`), await ui.run('file.new'), await ui.clickText('.dialog__foot .btn--primary', 'Oluştur')), ready: '.dialog--confirm' },
 ];
@@ -129,6 +168,23 @@ const FAULTS = `(() => {
     for (const el of card.querySelectorAll('*')) {
       if (el.children.length || !seen(el) || !cut(el) || getComputedStyle(el).textOverflow !== 'ellipsis') continue;
       if (!el.closest('[title]') && !el.closest('.dropdown')) out.push('yazı kesik: ' + words(el));
+    }
+  }
+  // Cards beside the pointer or a control: the information card stays in the drawing area, a tooltip in the
+  // window, and neither lets its text out of its box.
+  const drawing = document.querySelector('.viewport')?.getBoundingClientRect();
+  for (const card of document.querySelectorAll('.hover-card:not([hidden]), .tooltip[data-open]')) {
+    const hover = card.classList.contains('hover-card');
+    const r = rect(card);
+    const box = hover && drawing ? drawing : { left: 0, top: 0, right: W, bottom: H };
+    if (r.left < box.left - 0.5 || r.top < box.top - 0.5 || r.right > box.right + 0.5 || r.bottom > box.bottom + 0.5)
+      out.push((hover ? 'bilgi kartı çizim alanından' : 'ipucu ekrandan') + ' taşıyor');
+    for (const el of card.querySelectorAll('*')) {
+      const e = rect(el);
+      if (e.width && (e.right > r.right + 0.5 || e.left < r.left - 0.5)) {
+        out.push('yazı kartın dışına taşıyor: ' + words(el));
+        break;
+      }
     }
   }
   for (const m of document.querySelectorAll('.menu')) {
@@ -171,6 +227,7 @@ for (const [w, hgt] of sizes) {
           if (item.ready) await b.waitFor(`document.querySelector(${JSON.stringify(item.ready)})`, 8000).catch(() => {});
           await sleep(450);
           faults = await b.eval(FAULTS);
+          if (item.must && !(await b.eval(`!!document.querySelector(${JSON.stringify(item.must)})`))) faults.push(`görünmedi: ${item.must}`);
           await b.shot(name, undefined, DIR);
         } catch (e) {
           faults = [`açılamadı: ${String(e.message ?? e).slice(0, 160)}`];
@@ -269,6 +326,49 @@ function helpers(b, w, h) {
       if (!at) throw new Error(`yok: ${sel}`);
       await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: at[0], y: at[1], button: 'none' });
       await sleep(900);
+    },
+    /**
+     * The pointer resting on a drawing object: `pick` (a page function of window.kentos) gives the world
+     * point, which the view puts at (fx, fy) of the drawing area at 4 px/m before the pointer goes there.
+     */
+    hoverObject: async (pick, fx, fy) => {
+      const at = await b.eval(`(() => {
+        const k = window.kentos;
+        const p = (${pick})(k);
+        if (!p) return null;
+        k.tools.activate('select');
+        const c = k.view.camera;
+        c.scale = 4;
+        c.center = { x: p.x - (${fx} - 0.5) * c.width / c.scale, y: p.y + (${fy} - 0.5) * c.height / c.scale };
+        c.panBy(0, 0);
+        const r = k.view.clientRect();
+        return [Math.round(r.left + ${fx} * c.width), Math.round(r.top + ${fy} * c.height)];
+      })()`);
+      if (!at) throw new Error('çizimde uygun nesne yok');
+      await sleep(250);
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: at[0] - 4, y: at[1] - 3, button: 'none' });
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: at[0], y: at[1], button: 'none' });
+      await sleep(900);
+    },
+    /** The pointer over the rightmost of the visible elements `sel` matches, long enough for its tooltip. */
+    hoverRightmost: async (sel) => {
+      const at = await b.eval(`(() => {
+        let best = null;
+        for (const el of document.querySelectorAll(${JSON.stringify(sel)})) {
+          const r = el.getBoundingClientRect();
+          if (r.width && r.height && (!best || r.right > best.right)) best = r;
+        }
+        return best && [Math.round(best.left + best.width / 2), Math.round(best.top + best.height / 2)];
+      })()`);
+      if (!at) throw new Error(`yok: ${sel}`);
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: at[0], y: at[1], button: 'none' });
+      await sleep(900);
+    },
+    /** The pointer off the drawing (the card goes), and the drawing back to its extent. */
+    leaveDrawing: async () => {
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 2, y: 2, button: 'none' });
+      await b.eval(`window.kentos.commands.execute('view.zoomExtents')`);
+      await ui.escapeAll(1);
     },
     escapeAll: async (times) => {
       // A held right button is let go first; then Esc closes what is open (a question asks, Vazgeç answers).

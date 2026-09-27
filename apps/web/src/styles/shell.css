@@ -685,26 +685,34 @@
   white-space: nowrap;
 }
 .hover-card {
-  min-width: 160px;
-  max-width: 280px;
+  /* Long names and texts wrap at this width, even inside a word; the card is never wider than the drawing
+     (DESIGN.md §7.4.2). Where it goes near the drawing's edges: placeBeside.ts. */
+  min-width: calc(160px * var(--ui-scale));
+  max-width: min(calc(280px * var(--ui-scale)), calc(100% - 16px));
   padding: 7px 10px 8px;
   pointer-events: none;
   font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
 }
+/* The layer goes under the kind when both do not fit on one line, and its name wraps there. */
 .hover-card__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: 2px 12px;
   color: var(--c-text);
+}
+.hover-card__head > b {
+  min-width: 0;
 }
 .hover-card__layer {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 5px;
+  min-width: 0;
   color: var(--c-text-3);
   font-size: var(--fs-xs);
-  white-space: nowrap;
 }
 .hover-card__rows {
   display: grid;
@@ -716,8 +724,10 @@
 }
 .hover-card__rows dt {
   color: var(--c-text-3);
+  white-space: nowrap;
 }
 .hover-card__rows dd {
+  min-width: 0;
   margin: 0;
   color: var(--c-text);
   text-align: right;
