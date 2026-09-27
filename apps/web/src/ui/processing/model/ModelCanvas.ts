@@ -5,6 +5,24 @@ import { edgesOf, INPUT_TYPES } from '../../../processing/modelEdit';
 import type { ProcessingTool } from '../../../processing/types';
 import { h } from '../../dom';
 import { icon } from '../../icons';
+import {
+  boxesBounds,
+  CANVAS,
+  curve as edgeCurve,
+  curveMid,
+  DESIGNER_TEXTS,
+  edgeLabel,
+  fitView,
+  inputPort,
+  snap,
+  stepEntry,
+  stepMeta,
+  stepPort,
+  zoomAt,
+  type NodeRef,
+  type Pt,
+  type View,
+} from './designerPlan';
 
 /**
  * The flow diagram of the model designer. Boxes are HTML (text, icons and
@@ -14,14 +32,9 @@ import { icon } from '../../icons';
  * the model and calls `render` again.
  */
 
-export type NodeRef = { kind: 'input'; name: string } | { kind: 'step'; id: string };
-type Pt = { x: number; y: number };
-
-export const INPUT_W = 190;
-export const INPUT_H = 52;
-export const STEP_W = 240;
-export const STEP_H = 60;
-const GRID = 10;
+export type { NodeRef };
+const C = DESIGNER_TEXTS.canvas;
+const { inputW: INPUT_W, inputH: INPUT_H, stepW: STEP_W, stepH: STEP_H, grid: GRID } = CANVAS;
 
 export interface CanvasEvents {
   select(ref: NodeRef | null): void;
@@ -42,7 +55,7 @@ export class ModelCanvas {
   private readonly edges: SVGSVGElement;
   private readonly events: CanvasEvents;
   private readonly lookup: (id: string) => ProcessingTool | undefined;
-  private view = { x: 0, y: 0, k: 1 };
+  private view: View = { x: 0, y: 0, k: 1 };
   private model: ProcessingModel | null = null;
   private selected: NodeRef | null = null;
   private problems = new Map<string, string>();
@@ -62,11 +75,11 @@ export class ModelCanvas {
     const tools = h(
       'div',
       { class: 'mcanvas__tools' },
-      this.toolButton('zoomOut', 'Uzaklaş', () => zoom(1 / 1.25)),
-      this.toolButton('zoomIn', 'Yakınlaş', () => zoom(1.25)),
-      this.toolButton('zoomExtents', 'Tümünü göster (çift tık)', () => this.fit()),
+      this.toolButton('zoomOut', C.zoomOut, () => zoom(1 / CANVAS.zoomStep)),
+      this.toolButton('zoomIn', C.zoomIn, () => zoom(CANVAS.zoomStep)),
+      this.toolButton('zoomExtents', C.fit, () => this.fit()),
     );
-    this.el = h('div', { class: 'mcanvas', tabindex: '0', 'aria-label': 'Model diyagramı' }, this.world, tools);
+    this.el = h('div', { class: 'mcanvas', tabindex: '0', 'aria-label': C.label }, this.world, tools);
     this.subs.push(
       listen<PointerEvent>(this.el, 'pointerdown', (e) => this.onDown(e)),
       listen<WheelEvent>(this.el, 'wheel', (e) => this.onWheel(e), { passive: false }),
@@ -107,25 +120,9 @@ export class ModelCanvas {
 
   /** Frames every box; zooms out only (never above 1:1). */
   fit(): void {
-    const b = this.bounds();
     const r = this.el.getBoundingClientRect();
-    if (!b || !r.width) {
-      this.view = { x: 24, y: 24, k: 1 };
-      return this.applyView();
-    }
-    const pad = 48;
-    const k = Math.min(1, (r.width - pad * 2) / Math.max(1, b.w), (r.height - pad * 2) / Math.max(1, b.h));
-    this.view = { k, x: (r.width - b.w * k) / 2 - b.x * k, y: (r.height - b.h * k) / 2 - b.y * k };
+    this.view = fitView(this.model && boxesBounds(this.model), r.width, r.height);
     this.applyView();
-  }
-
-  private bounds(): { x: number; y: number; w: number; h: number } | null {
-    const m = this.model;
-    if (!m || (!m.inputs.length && !m.steps.length)) return null;
-    const boxes = [...m.inputs.map((i) => ({ ...this.inputPos(i.name), w: INPUT_W, h: INPUT_H })), ...m.steps.map((s) => ({ ...(s.position ?? { x: 0, y: 0 }), w: STEP_W, h: STEP_H }))];
-    const x = Math.min(...boxes.map((b) => b.x));
-    const y = Math.min(...boxes.map((b) => b.y));
-    return { x, y, w: Math.max(...boxes.map((b) => b.x + b.w)) - x, h: Math.max(...boxes.map((b) => b.y + b.h)) - y };
   }
 
   private applyView(): void {
@@ -135,10 +132,7 @@ export class ModelCanvas {
   }
 
   private zoomAt(p: Pt, f: number): void {
-    const k = Math.min(2, Math.max(0.35, this.view.k * f));
-    const wx = (p.x - this.view.x) / this.view.k;
-    const wy = (p.y - this.view.y) / this.view.k;
-    this.view = { k, x: p.x - wx * k, y: p.y - wy * k };
+    this.view = zoomAt(this.view, p, f);
     this.applyView();
   }
 
@@ -162,8 +156,8 @@ export class ModelCanvas {
         tabindex: '-1',
       },
       h('span', { class: 'mnode__icon' }, icon(type?.icon ?? 'processing', 16)),
-      h('span', { class: 'mnode__text' }, h('span', { class: 'mnode__name' }, def.label), h('span', { class: 'mnode__meta' }, `Girdi: ${type?.label ?? def.type}${def.optional ? ', isteğe bağlı' : ''}`)),
-      h('span', { class: 'mnode__port', title: 'Sürükleyip bir adımın üzerine bırakın' }),
+      h('span', { class: 'mnode__text' }, h('span', { class: 'mnode__name' }, def.label), h('span', { class: 'mnode__meta' }, C.inputMeta(type?.label ?? def.type, !!def.optional))),
+      h('span', { class: 'mnode__port', title: C.port }),
     );
   }
 
@@ -173,7 +167,7 @@ export class ModelCanvas {
     const p = s.position ?? { x: 0, y: 0 };
     const ref: NodeRef = { kind: 'step', id };
     const problem = this.problems.get(id);
-    const links = Object.values(s.values).filter((v) => v.kind !== 'value').length;
+    const meta = stepMeta(s, tool, problem);
     return h(
       'div',
       {
@@ -192,20 +186,17 @@ export class ModelCanvas {
         'span',
         { class: 'mnode__text' },
         h('span', { class: 'mnode__name' }, stepName(s, this.lookup)),
-        h('span', { class: 'mnode__meta' }, problem ? h('span', { class: 'mnode__warn' }, icon('warning', 12), problem) : s.caption && tool ? tool.label : links ? `${links} bağlantı` : 'Bağlantı yok'),
+        h('span', { class: 'mnode__meta' }, 'warn' in meta ? h('span', { class: 'mnode__warn' }, icon('warning', 12), meta.warn) : meta.text),
       ),
-      tool?.outputs?.length ? h('span', { class: 'mnode__port', title: 'Sürükleyip bir adımın üzerine bırakın' }) : null,
+      tool?.outputs?.length ? h('span', { class: 'mnode__port', title: C.port }) : null,
     );
   }
 
   /** Where an edge starts (a box's port) and ends (a step's left side), in world units. */
   private portOf(ref: NodeRef): Pt | null {
-    if (ref.kind === 'input') {
-      const p = this.inputPos(ref.name);
-      return { x: p.x + INPUT_W, y: p.y + INPUT_H / 2 };
-    }
+    if (ref.kind === 'input') return inputPort(this.inputPos(ref.name));
     const s = this.model!.steps.find((x) => x.id === ref.id);
-    return s ? { x: (s.position?.x ?? 0) + STEP_W, y: (s.position?.y ?? 0) + STEP_H / 2 } : null;
+    return s ? stepPort(s.position ?? { x: 0, y: 0 }) : null;
   }
 
   private drawEdges(): void {
@@ -215,7 +206,7 @@ export class ModelCanvas {
       const a = this.portOf(e.from);
       const target = m.steps.find((s) => s.id === e.to);
       if (!a || !target) continue;
-      const b = { x: target.position?.x ?? 0, y: (target.position?.y ?? 0) + STEP_H / 2 };
+      const b = stepEntry(target.position ?? { x: 0, y: 0 });
       const path = document.createElementNS(SVG, 'path');
       path.setAttribute('d', curve(a, b));
       path.classList.add('medge');
@@ -232,7 +223,7 @@ export class ModelCanvas {
       text.setAttribute('x', String(mid.x));
       text.setAttribute('y', String(mid.y - 6));
       text.setAttribute('text-anchor', 'middle');
-      text.textContent = labels.length > 1 ? `${labels[0]} +${labels.length - 1}` : labels[0];
+      text.textContent = edgeLabel(labels);
       this.edges.append(path, text);
     }
   }
@@ -244,7 +235,7 @@ export class ModelCanvas {
   private onWheel(e: WheelEvent): void {
     e.preventDefault();
     const r = this.el.getBoundingClientRect();
-    this.zoomAt({ x: e.clientX - r.left, y: e.clientY - r.top }, Math.exp(-e.deltaY * 0.0015));
+    this.zoomAt({ x: e.clientX - r.left, y: e.clientY - r.top }, Math.exp(-e.deltaY * CANVAS.wheel));
   }
 
   private onDown(e: PointerEvent): void {
@@ -258,7 +249,7 @@ export class ModelCanvas {
       const move = (ev: PointerEvent) => {
         const dx = ev.clientX - start.x;
         const dy = ev.clientY - start.y;
-        if (!moved && Math.hypot(dx, dy) < 3) return;
+        if (!moved && Math.hypot(dx, dy) < CANVAS.drag) return;
         moved = true;
         onMove(dx, dy, ev);
       };
@@ -304,7 +295,7 @@ export class ModelCanvas {
       const ref = this.refOf(node);
       if (!sameRef(ref, this.selected)) this.events.select(ref);
       const origin = ref.kind === 'input' ? this.inputPos(ref.name) : (this.model!.steps.find((s) => s.id === ref.id)?.position ?? { x: 0, y: 0 });
-      const at = (dx: number, dy: number) => ({ x: Math.round((origin.x + dx / this.view.k) / GRID) * GRID, y: Math.round((origin.y + dy / this.view.k) / GRID) * GRID });
+      const at = (dx: number, dy: number) => ({ x: snap(origin.x + dx / this.view.k), y: snap(origin.y + dy / this.view.k) });
       let last = origin;
       track(
         (dx, dy) => {
@@ -334,15 +325,8 @@ export class ModelCanvas {
   }
 }
 
-const bend = (a: Pt, b: Pt) => Math.max(40, Math.abs(b.x - a.x) / 2);
-
+/** An edge as an SVG path (designerPlan.ts `curve`). */
 function curve(a: Pt, b: Pt): string {
-  const dx = bend(a, b);
-  return `M ${a.x} ${a.y} C ${a.x + dx} ${a.y}, ${b.x - dx} ${b.y}, ${b.x} ${b.y}`;
-}
-
-/** The point halfway along the curve (t = 0.5 of the cubic). */
-function curveMid(a: Pt, b: Pt): Pt {
-  const dx = bend(a, b);
-  return { x: 0.125 * a.x + 0.375 * (a.x + dx) + 0.375 * (b.x - dx) + 0.125 * b.x, y: 0.5 * a.y + 0.5 * b.y };
+  const { c1, c2 } = edgeCurve(a, b);
+  return `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`;
 }

@@ -15,7 +15,9 @@
 // shell (the classic shell: the bars, and the toolbox docked, in two columns, folded, widened, its tip, a snapping drag);
 // log (the bottom panel's lines with their times and levels, Uyarılar with its badge, a warning in the status bar, the
 // empty history); layout (panels, sizes and toolbox as kept, sizes kept larger than the window shown within it, the
-// ribbon's kept tab, quick access and split choices, folded).
+// ribbon's kept tab, quick access and split choices, folded); modeldesigner (Model tasarımcısı: a new model, the
+// built-in model's copy, an input, a step and a source list, a wire dragged and its menu, a step with problems, a chain,
+// a number input, the tools searched and one carried, the unsaved question).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -768,6 +770,149 @@ SCENES.layout = [
     close: async (ui) => (await shellTo(ui, 'classic'), await ui.eval(LAYOUT_BACK)),
   },
 ].map((s) => ({ close: async (ui) => (await ui.escapeAll(1), await ui.eval(LAYOUT_BACK), await ui.sleep(300)), ...s }));
+
+// The model designer (ui/processing/model, docs/specs/model-designer.md): a new model; the built-in model's copy with
+// an input, a step and a source list; a wire in the middle of its drag and the menu it opens; a step with problems; a
+// chain built by clicking tools; a number input; the tools searched and one carried out of the palette; the unsaved
+// question. Every scene closes the designer without saving.
+/** The designer on a model (a built-in one opens as its copy) or on a new one. */
+async function openDesigner2(ui, id) {
+  await ui.eval(`window.kentos.commands.execute('processing.newModel'${id ? `, ${JSON.stringify(id)}` : ''})`);
+  await ui.waitFor(`!!document.querySelector('.dialog--designer .mcanvas')`, 15000);
+  await ui.sleep(700);
+}
+/** The designer closed without saving: Esc, and the unsaved question's “Kaydetmeden kapat” when it asks. */
+async function closeModelDesigner(ui) {
+  for (let i = 0; i < 6 && (await ui.eval(`!!document.querySelector('.dialog')`)); i++) {
+    const asked = await ui.eval(`!![...document.querySelectorAll('.dialog .btn')].find((b) => /Kaydetmeden/.test(b.textContent))`);
+    if (asked) await ui.eval(`[...document.querySelectorAll('.dialog .btn')].find((b) => /Kaydetmeden/.test(b.textContent)).click()`);
+    else await ui.escapeAll(1);
+    await ui.sleep(250);
+  }
+}
+/** A palette entry clicked: an input kind, or a tool by its name. */
+const paletteInput = (ui, label) => ui.clickText('.dialog--designer .mpalette__input', label);
+const paletteTool = (ui, label) => ui.clickText('.dialog--designer .mpalette__tool', label);
+/** A box of the diagram by its reference (an input's name, a step's id). */
+const box = (kind, ref) => `.dialog--designer .mnode--${kind}[data-ref="${ref}"]`;
+/** A wire from an input's port held over a step, released there when `drop`. */
+async function wire(ui, fromRef, toRef, drop) {
+  const [x, y] = await ui.eval(centreOf(`${box('input', fromRef)} .mnode__port`));
+  const [tx, ty] = await ui.eval(centreOf(box('step', toRef)));
+  await ui.move(x, y);
+  await ui.pressAt(x, y);
+  for (let i = 1; i <= 10; i++) await ui.moveHeld(x + ((tx - x) * i) / 10, y + ((ty - y) * i) / 10);
+  await ui.sleep(250);
+  if (drop) {
+    await ui.releaseAt(tx, ty);
+    await ui.waitFor(`!!document.querySelector('.menu')`);
+    await ui.sleep(300);
+  }
+}
+/** A model saved with two problems: a start point asked for and not given, and a step reading an input that is gone. */
+const PROBLEM_MODEL = {
+  id: 'm-shot-problems',
+  label: 'Sorunlu model',
+  category: 'points',
+  description: 'Resim için: iki sorunlu adım.',
+  inputs: [{ type: 'features', name: 'parseller', label: 'Parseller', kinds: ['polygon'], default: { scope: 'selection' } }],
+  steps: [
+    { id: 'numara', tool: 'points.numberVertices', values: { input: { kind: 'input', name: 'parseller' }, start: { kind: 'value', value: 'point' } }, position: { x: 330, y: 40 } },
+    { id: 'kenar', tool: 'annotation.edgeLengths', values: { input: { kind: 'input', name: 'yok' } }, position: { x: 330, y: 160 } },
+  ],
+  outputs: [],
+  inputPositions: { parseller: { x: 40, y: 40 } },
+};
+SCENES.modeldesigner = [
+  { id: 'new', open: (ui) => openDesigner2(ui) },
+  { id: 'builtin-copy', open: (ui) => openDesigner2(ui, 'builtin.parcelSheet') },
+  { id: 'input-selected', open: async (ui) => (await openDesigner2(ui, 'builtin.parcelSheet'), await ui.clickSel(box('input', 'parcels')), await ui.sleep(300)) },
+  { id: 'step-selected', open: async (ui) => (await openDesigner2(ui, 'builtin.parcelSheet'), await ui.clickSel(box('step', 'area')), await ui.sleep(300)) },
+  {
+    id: 'source-menu',
+    open: async (ui) => {
+      await openDesigner2(ui, 'builtin.parcelSheet');
+      await ui.clickSel(box('step', 'corners'));
+      await ui.sleep(300);
+      await ui.clickSel('.dialog--designer .mins__param .mins__source');
+      await ui.waitFor(`!!document.querySelector('.menu')`);
+      await ui.sleep(300);
+    },
+  },
+  {
+    id: 'wire-drag',
+    open: async (ui) => (await openDesigner2(ui, 'builtin.parcelSheet'), await wire(ui, 'prefix', 'area', false)),
+    close: async (ui) => (await ui.releaseAt(2, 2), await closeModelDesigner(ui)),
+  },
+  { id: 'wire-menu', open: async (ui) => (await openDesigner2(ui, 'builtin.parcelSheet'), await wire(ui, 'prefix', 'area', true)) },
+  {
+    id: 'problems',
+    open: async (ui) => (await ui.eval(`window.kentos.processing.saveModel(${JSON.stringify(PROBLEM_MODEL)})`), await openDesigner2(ui, PROBLEM_MODEL.id)),
+    close: async (ui) => (await closeModelDesigner(ui), await ui.eval(`window.kentos.processing.removeModel('${PROBLEM_MODEL.id}')`)),
+  },
+  {
+    id: 'problem-step',
+    open: async (ui) => {
+      await ui.eval(`window.kentos.processing.saveModel(${JSON.stringify(PROBLEM_MODEL)})`);
+      await openDesigner2(ui, PROBLEM_MODEL.id);
+      await ui.clickSel(box('step', 'numara'));
+      await ui.sleep(300);
+    },
+    close: async (ui) => (await closeModelDesigner(ui), await ui.eval(`window.kentos.processing.removeModel('${PROBLEM_MODEL.id}')`)),
+  },
+  {
+    id: 'new-step',
+    open: async (ui) => {
+      await openDesigner2(ui);
+      await paletteTool(ui, 'Öznitelik hesapla');
+      await ui.sleep(400);
+    },
+  },
+  {
+    id: 'chain',
+    open: async (ui) => {
+      await openDesigner2(ui);
+      await paletteInput(ui, 'Nesneler');
+      await paletteTool(ui, 'Köşe noktalarını numarala');
+      await paletteTool(ui, 'Kenar uzunluklarını yaz');
+      await ui.clickSel('.dialog--designer .dialog__foot .btn[title]');
+      await ui.sleep(500);
+    },
+  },
+  { id: 'number-input', open: async (ui) => (await openDesigner2(ui), await paletteInput(ui, 'Sayı'), await ui.sleep(300)) },
+  {
+    id: 'palette-search',
+    open: async (ui) => {
+      await openDesigner2(ui);
+      await ui.clickSel('.dialog--designer .mpalette input[type="search"]');
+      await ui.type('kenar');
+      await ui.sleep(300);
+    },
+  },
+  {
+    id: 'palette-carry',
+    open: async (ui) => {
+      await openDesigner2(ui);
+      const [x, y] = await ui.eval(centreOf('.dialog--designer .mpalette__tool'));
+      const [tx, ty] = await ui.eval(centreOf('.dialog--designer .mcanvas'));
+      await ui.move(x, y);
+      await ui.pressAt(x, y);
+      for (let i = 1; i <= 10; i++) await ui.moveHeld(x + ((tx - x) * i) / 10, y + ((ty - y) * i) / 10);
+      await ui.sleep(250);
+    },
+    close: async (ui) => (await ui.releaseAt(2, 2), await closeModelDesigner(ui)),
+  },
+  {
+    id: 'unsaved',
+    open: async (ui) => {
+      await openDesigner2(ui);
+      await paletteInput(ui, 'Metin');
+      await ui.clickText('.dialog--designer .dialog__foot .btn', 'Kapat');
+      await ui.waitFor(`!![...document.querySelectorAll('.dialog .btn')].find((b) => /Kaydetmeden/.test(b.textContent))`);
+      await ui.sleep(300);
+    },
+  },
+].map((s) => ({ close: (ui) => closeModelDesigner(ui), ...s }));
 
 SCENES.svgedit = [
   { id: 'new', open: (ui) => openSvg(ui) },
