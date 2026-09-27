@@ -1,5 +1,7 @@
 import type { AppContext } from '../app/context';
 import type { EntityEdit } from '../contracts/generated/EntityEdit';
+import type { EntityGeometry as EditGeometry } from '../contracts/generated/EntityGeometry';
+import type { NewObject } from '../contracts/generated/NewObject';
 import { Signal } from '../core/signal';
 import { ENTITY_KIND_LABEL, type Entity, type NewEntity } from '../model/entities';
 import { dist, type Bounds, type Vec2 } from '../model/geometry';
@@ -9,6 +11,9 @@ import { explodeEntity } from '../model/ops/explode';
 import { joinEntities } from '../model/ops/join';
 import { stretchEntity } from '../model/ops/stretch';
 import { transformedFrom } from '../model/ops/transform';
+import { entitiesCreate } from '../product/entitiesCreate';
+import { geometryOf } from '../product/entitiesEdit';
+import { entitiesSet } from '../product/entitiesSet';
 import type { ViewTransform } from '../viewport/Camera';
 import { CoreStore } from '../wasm/core';
 import { packEntities } from '../wasm/pack';
@@ -360,11 +365,20 @@ function storeOf(items: readonly NewEntity[]): CoreStore {
   return store;
 }
 
+/** A paste the product commands refused: its message, said once everything written was taken back. */
+class PasteRefused extends Error {}
+
 /**
- * Adds copies of `items` moved by (dx, dy) in one undo step. Entities keep
- * their layer when it exists and is unlocked, otherwise they go to the
- * active layer. `store` holds the items as 1…n (the paste tool's); without
- * it one is made for the call. Returns the new ids.
+ * Adds copies of `items` moved by (dx, dy) in one undo step, “Yapıştır”.
+ * Entities keep their layer when it exists (a layer, not a group) and is
+ * unlocked, otherwise they go to the active layer. They are written through
+ * the product commands (TODOS.md CMD-07): `cad.entities.create` for each run
+ * of objects going to the same layer, in the items' order (so their slots
+ * are too), and `cad.entities.set` for their symbols, which a new object of
+ * the create command does not carry. A refusal takes back all of it and is
+ * said; a hidden layer is said once. `store` holds the items as 1…n (the
+ * paste tool's); without it one is made for the call. Returns the new ids,
+ * in the items' order.
  */
 export function pasteEntities(ctx: AppContext, items: readonly NewEntity[], dx: number, dy: number, store?: CoreStore): number[] {
   const { doc, log } = ctx;
@@ -383,12 +397,45 @@ export function pasteEntities(ctx: AppContext, items: readonly NewEntity[], dx: 
   } finally {
     if (!store) own.dispose();
   }
-  const ids = doc
-    .addMany(
-      moved.map((e) => ({ ...e, layerId: doc.layers.get(e.layerId) && !doc.layers.isLocked(e.layerId) ? e.layerId : active }) as NewEntity),
-      'Yapıştır',
-    )
-    .map((e) => e.id);
+  const layerOf = (e: NewEntity) => (doc.layers.get(e.layerId)?.type === 'layer' && !doc.layers.isLocked(e.layerId) ? e.layerId : active);
+  const objectOf = (e: NewEntity): NewObject => ({
+    geometry: geometryOf(e as unknown as EditGeometry) as unknown as EditGeometry,
+    ...(e.color !== undefined && { color: e.color }),
+    attrs: { ...e.attrs },
+    ...(e.label !== undefined && { label: e.label }),
+  });
+  const hidden = new Set<string>();
+  let ids: number[];
+  try {
+    ids = doc.transact('Yapıştır', () => {
+      const out: number[] = [];
+      for (let i = 0; i < moved.length; ) {
+        const layerId = layerOf(moved[i]);
+        let j = i + 1;
+        while (j < moved.length && layerOf(moved[j]) === layerId) j++;
+        const r = entitiesCreate.execute({ doc }, { layerId, objects: moved.slice(i, j).map(objectOf) });
+        if (r.status !== 'completed') throw new PasteRefused('error' in r ? r.error.message : 'Yapıştırılamadı.');
+        if (r.warnings.some((w) => w.code === 'layer_hidden')) hidden.add(layerId);
+        out.push(...r.output.ids);
+        i = j;
+      }
+      const bySymbol = new Map<string, string[]>();
+      moved.forEach((e, k) => {
+        const uid = e.symbol ? doc.uidOf(out[k]) : undefined;
+        if (e.symbol && uid) bySymbol.set(e.symbol, [...(bySymbol.get(e.symbol) ?? []), uid]);
+      });
+      for (const [symbol, uids] of bySymbol) {
+        const r = entitiesSet.execute({ doc }, { uids, symbol, operation: 'symbol' });
+        if (r.status !== 'completed') throw new PasteRefused('error' in r ? r.error.message : 'Yapıştırılamadı.');
+      }
+      return out;
+    });
+  } catch (e) {
+    if (!(e instanceof PasteRefused)) throw e;
+    log.warn(e.message);
+    return [];
+  }
+  for (const id of hidden) log.warn(`“${doc.layers.get(id)?.name ?? id}” katmanı gizli; yapıştırılan nesneler görünmeyecek.`);
   log.success(`${ids.length} nesne yapıştırıldı.`);
   return ids;
 }
