@@ -58,7 +58,7 @@ Masaüstü sütunu şuralardan gelir, her biri öncekinin üstüne: `apps/deskto
 | İşlem modelleri | 1 | 0 | 0 | 0 | 0 | 1 |
 | Çalışma modları | 3 | 0 | 0 | 2 | 0 | 5 |
 | Ayarlar | 42 | 12 | 10 | 0 | 1 | 65 |
-| Tarayıcı depoları | 7 | 1 | 1 | 0 | 1 | 10 |
+| Tarayıcı depoları | 8 | 0 | 1 | 0 | 1 | 10 |
 | `.kcad` alanları (v1 okunur, v2 yazılır) | 192 | 0 | 0 | 0 | 0 | 192 |
 | Pencereler ve paneller | 50 | 3 | 9 | 0 | 1 | 63 |
 
@@ -145,10 +145,9 @@ Yok.
 - `user.shell`
 - `user.uiFont`  (kısmi) (masaüstünde: ayarlar.json appearance.typeface (Görünüm sekmesi, ADR 0051)) — Masaüstünde KentOS UI'ın üç yazı tipi var (IBM Plex Sans, Inter, Plus Jakarta Sans); web yedi seçenek sunar.
 
-#### Tarayıcı depoları (2 / 10)
+#### Tarayıcı depoları (1 / 10)
 
 - `kentos.invitation`
-- `kentos.ui.v1`  (kısmi) (masaüstünde: ayarlar.json appearance.theme) — Tema kalıcıdır; panellerin ve şeridin yerleşimi yeniden açılışta hatırlanmaz.
 
 #### `.kcad` alanları (v1 okunur, v2 yazılır) (0 / 192)
 

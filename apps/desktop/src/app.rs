@@ -199,6 +199,10 @@ pub enum Message {
     LogFrame,
     /// The bottom panel's log list scrolled: whether new lines follow to its end.
     LogScrolled(iced::widget::scrollable::Viewport),
+    /// The kept layout is due to be written (layout.rs).
+    LayoutSave,
+    /// The window's new size: the kept sizes are shown within it.
+    WindowResized(iced::Size),
     /// The layer tree's rows and their menu (layering.rs).
     Layer(crate::layering::Event),
     /// The right button's menus over the drawing and the one-shot snap (drawing_menus.rs).
@@ -348,6 +352,9 @@ pub struct App {
     pub(crate) typed: Vec<Entry>,
     /// What the log's views follow: the status bar's message, the list's end.
     pub(crate) follow: crate::message_log::Follow,
+    /// The layout kept between runs (layout.rs) and the window's size it is shown in.
+    pub(crate) layout: crate::layout::Keeper,
+    pub(crate) window_size: iced::Size,
     pub command_input: String,
     pub command_expanded: bool,
     /// The bottom panel's tab (bottom.rs).
@@ -525,6 +532,8 @@ impl App {
             },
             typed: Vec::new(),
             follow: crate::message_log::Follow::default(),
+            layout: crate::layout::Keeper::memory(),
+            window_size: iced::Size::new(1440.0, 900.0),
             command_input: String::new(),
             command_expanded: false,
             bottom_tab: crate::bottom::BottomTab::default(),
@@ -604,6 +613,8 @@ impl App {
         }
         app.apply_settings();
         app.report_settings_open();
+        // The layout's defaults until the kept one is read (main.rs, layout.rs).
+        app.apply_layout();
         let task = match path {
             Some(path) => app.start_opening(path, Purpose::File),
             None => Task::none(),
@@ -659,6 +670,9 @@ impl App {
             },
             // The status bar's message: when it goes, and its fades (message_log.rs).
             self.log_subscription(Instant::now()),
+            // The kept layout, written after its last change; the window's size.
+            self.layout_subscription(),
+            window::resize_events().map(|(_, size)| Message::WindowResized(size)),
         ])
     }
 
@@ -677,6 +691,7 @@ impl App {
             self.follow_tracking(),
             self.follow_log(Instant::now()),
         ]);
+        self.follow_layout(Instant::now());
         self.cloud_after(Instant::now());
         task
     }
@@ -737,11 +752,13 @@ impl App {
             }
             Message::CommandHistoryToggled => self.toggle_bottom(),
             Message::BottomTab(tab) => self.show_bottom(tab),
-            Message::BottomResized(height) => self.bottom_log = Some(height),
-            Message::BottomReset => self.bottom_log = None,
+            Message::BottomResized(height) => self.bottom_dragged(Some(height), Instant::now()),
+            Message::BottomReset => self.bottom_dragged(None, Instant::now()),
             Message::HistoryCleared => self.clear_history(),
             Message::LogFrame => self.log_frame(Instant::now()),
             Message::LogScrolled(viewport) => self.log_scrolled(viewport),
+            Message::LayoutSave => self.layout.write(Instant::now(), false),
+            Message::WindowResized(size) => self.window_resized(size),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -758,7 +775,10 @@ impl App {
             Message::PointCalc(kind) => return self.start_point_calc(kind),
             Message::Key(press) => return self.key(press),
             Message::Modifiers(modifiers) => self.modifiers = modifiers,
-            Message::Dock(event) => self.docks.update(event),
+            Message::Dock(event) => {
+                self.docks.update(event.clone());
+                self.dock_dragged(&event, Instant::now());
+            }
             Message::LayerSelected(id) => self.layer_pressed(id),
             Message::LayerSearch(text) => self.layer_search(text),
             Message::LayerSearchDown => return self.layer_search_down(),
@@ -850,6 +870,8 @@ impl App {
                 _ => self.output(format!("Kaydedildi: {}.", written.path.display())),
             },
             Message::CloseRequested(window) => {
+                // The layout is written now, not 250 ms later.
+                self.layout.write(Instant::now(), true);
                 // A save stopped by the window closing would leave no file (the previous one
                 // stays): it finishes first.
                 if let Some(s) = &self.saving {

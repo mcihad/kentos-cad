@@ -44,8 +44,10 @@ use crate::viewport::mark_colors;
 
 impl App {
     pub fn view(&self) -> Element<'_, Message> {
+        // The side panels run the body's whole height; the bottom panel and the
+        // command line sit under the drawing only (DESIGN.md §5.1, the web's shell).
         let docked = DockSpace::new(
-            self.drawing_area(),
+            column![self.drawing_area(), self.bottom()],
             &self.docks,
             Message::Dock,
             move |panel| {
@@ -69,15 +71,10 @@ impl App {
             },
         );
 
-        let base = container(column![
-            self.ribbon(),
-            docked,
-            self.bottom(),
-            self.status_bar()
-        ])
-        .width(Fill)
-        .height(Fill)
-        .style(style::container::window);
+        let base = container(column![self.ribbon(), docked, self.status_bar()])
+            .width(Fill)
+            .height(Fill)
+            .style(style::container::window);
 
         let mut layers: Vec<Element<'_, Message>> = vec![base.into()];
         // The application menu over the window, under any dialog (app_menu.rs).

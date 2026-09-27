@@ -133,9 +133,8 @@
       "reason": "Web'in tipli ayarlardan önceki deposudur; masaüstünün böyle eski bir deposu olmadı, ayarları baştan ayarlar.json'dadır."
     },
     "kentos.ui.v1": {
-      "desktop": "partial",
-      "where": "ayarlar.json appearance.theme",
-      "reason": "Tema kalıcıdır; panellerin ve şeridin yerleşimi yeniden açılışta hatırlanmaz."
+      "desktop": "implemented",
+      "where": "~/.config/kentos-cad/yerlesim.json, web'in kurallarıyla (fixtures/shell/v1/layout.json, ADR 0115); tema ayarlar.json appearance.theme'dedir"
     }
   },
   "screens": {

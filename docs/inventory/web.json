@@ -126,8 +126,8 @@
       },
       "storage": {
         "total": 10,
-        "implemented": 7,
-        "partial": 1,
+        "implemented": 8,
+        "partial": 0,
         "pending": 0,
         "none": 1,
         "n/a": 1
@@ -8820,10 +8820,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "partial"
+        "desktop": "implemented"
       },
-      "desktopWhere": "ayarlar.json appearance.theme",
-      "desktopNote": "Tema kalıcıdır; panellerin ve şeridin yerleşimi yeniden açılışta hatırlanmaz."
+      "desktopWhere": "~/.config/kentos-cad/yerlesim.json, web'in kurallarıyla (fixtures/shell/v1/layout.json, ADR 0115); tema ayarlar.json appearance.theme'dedir"
     }
   ],
   "fileFields": [

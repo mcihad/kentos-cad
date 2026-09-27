@@ -39,7 +39,7 @@ impl App {
     /// `view.rightPanel` (F4): the layers and properties panels go away
     /// together and come back as they were: their sides, tabs, sizes and
     /// floating windows (the web hides its right panel whole).
-    fn toggle_right_panel(&mut self) {
+    pub(crate) fn toggle_right_panel(&mut self) {
         if self.right_panel_shown() {
             self.hidden_docks = Some(self.docks.clone());
             for panel in SIDE_PANELS {

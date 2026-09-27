@@ -45,13 +45,8 @@ impl BottomTab {
     const ALL: [BottomTab; 3] = [BottomTab::History, BottomTab::Coords, BottomTab::Messages];
 }
 
-/// The open history's least height: five lines.
-const LEAST_LOG: f32 = 98.0;
 /// The tab row's two buttons (Geçmişi temizle, Paneli kapat) and their margins.
 const ACTIONS_WIDTH: f32 = 60.0;
-/// What the panel leaves above it at least, whatever it is dragged to: the
-/// ribbon, some of the drawing, the tab row, the command input and the status bar.
-const KEEP: f32 = 360.0;
 
 /// What the coordinate list shows (built from the selection, kept small:
 /// the rows are formatted as they scroll into view).
@@ -121,11 +116,13 @@ impl App {
             |i| Message::BottomTab(BottomTab::ALL[i]),
         );
         let log = self.bottom_log();
-        // The top edge sizes the panel; the drawing gives or takes the room.
+        // The top edge sizes the panel within the web's limits (at least 96 px,
+        // at most 0.6 of the window, the tab row counted; layout.rs); the
+        // drawing gives or takes the room.
+        let (least, most) = self.bottom_log_range();
         let sash = Sash::horizontal(log, Message::BottomResized)
             .reverse()
-            .range(LEAST_LOG..=f32::INFINITY)
-            .keep(KEEP)
+            .range(least..=most.max(least))
             .on_double_click(Message::BottomReset);
         let bar = row![container(tabs).width(Fill), self.bottom_actions()].width(Fill);
         let panel = match self.bottom_tab {
@@ -149,11 +146,11 @@ impl App {
         .into()
     }
 
-    /// The open history's height: dragged, or the command line's own.
+    /// The panel's lists' height: the kept panel height as the window shows
+    /// it, less the tab row (layout.rs).
     pub(crate) fn bottom_log(&self) -> f32 {
         self.bottom_log
             .unwrap_or_else(command_line::default_log_height)
-            .max(LEAST_LOG)
     }
 
     /// The tab row's end, as on the web: Geçmişi temizle and Paneli kapat, on
@@ -503,12 +500,17 @@ mod tests {
     #[test]
     fn the_panel_is_sized_by_its_edge_and_a_double_click_puts_it_back() {
         let mut app = app_with_drawing();
+        let bar = kentos_ui::widget::tabs::height();
         let first = app.bottom_log();
+        // The web's 190 px, its tab row counted.
+        assert_eq!(first, 190.0 - bar);
         let _ = app.update(Message::BottomResized(320.0));
         assert_eq!(app.bottom_log(), 320.0);
-        // Never shorter than five lines.
+        // Never shorter than 96 px, nor taller than 0.6 of the window.
         let _ = app.update(Message::BottomResized(20.0));
-        assert_eq!(app.bottom_log(), super::LEAST_LOG);
+        assert_eq!(app.bottom_log(), 96.0 - bar);
+        let _ = app.update(Message::BottomResized(2000.0));
+        assert_eq!(app.bottom_log(), 540.0 - bar);
         let _ = app.update(Message::BottomReset);
         assert_eq!(app.bottom_log(), first);
     }

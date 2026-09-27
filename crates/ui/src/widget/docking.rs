@@ -180,6 +180,10 @@ pub enum Event<K> {
     Moved(K, Target),
     /// Alanın kenarı sürüklendi; boyut 12 piksellik gövde metnine göre.
     Resized(Side, f32),
+    /// Alanın kenarına çift tıklandı: alan ilk boyutuna döner (uygulama
+    /// kendi ilk boyutunu verebilir). Yığınlar arasındaki tutamağa çift
+    /// tıklamak payları eşitler ([`Event::Shared`]).
+    Reset(Side),
     /// Alandaki yığınların payları değişti (yığınlar arasındaki tutamak).
     Shared(Side, Vec<f32>),
     /// Yığın başlığına daraltıldı ya da açıldı.
@@ -427,6 +431,7 @@ impl<K: Copy + PartialEq> Docks<K> {
             }
             Event::Moved(key, target) => self.move_to(key, target),
             Event::Resized(side, size) => self.set_size(side, size),
+            Event::Reset(side) => self.set_size(side, SIZES[side.index()]),
             Event::Shared(side, weights) => {
                 for (stack, weight) in self.areas[side.index()].stacks.iter_mut().zip(weights) {
                     if weight.is_finite() {
@@ -3202,6 +3207,39 @@ where
                         Some(true)
                     }
                     Hit::Line(line) => {
+                        // A double click puts the edge back: the area's first size, or
+                        // the stacks' equal shares.
+                        let now = Instant::now();
+                        let double = state.last_press.is_some_and(|(last, time)| {
+                            last == hit && now.duration_since(time) <= DOUBLE_CLICK
+                        });
+                        if double {
+                            state.last_press = None;
+                            state.gesture = None;
+                            match state.plan.lines.get(line).and_then(|line| line.sash) {
+                                Some(Sash::Area(side)) => {
+                                    shell.publish((self.on_event)(Event::Reset(side)));
+                                }
+                                Some(Sash::Between(side, _)) => {
+                                    let count = self
+                                        .stacks
+                                        .iter()
+                                        .filter(|entry| {
+                                            matches!(entry.slot, Slot::Docked(other, _) if other == side)
+                                        })
+                                        .count();
+                                    if count > 0 {
+                                        shell.publish((self.on_event)(Event::Shared(
+                                            side,
+                                            vec![1.0 / count as f32; count],
+                                        )));
+                                    }
+                                }
+                                None => {}
+                            }
+                            return Some(true);
+                        }
+                        state.last_press = Some((hit, now));
                         let sizes = self.sash_sizes(state, line);
 
                         state.gesture = Some(Gesture::Sash {
