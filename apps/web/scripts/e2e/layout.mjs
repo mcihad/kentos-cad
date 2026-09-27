@@ -74,6 +74,18 @@ const ITEMS = [
   { id: 'model-designer', open: (ui) => ui.run('processing.newModel') },
   { id: 'cloud-login', open: (ui) => ui.run('cloud.signIn') },
   { id: 'question-layer-remove', open: async (ui) => (await ui.rightClick('.panel--layers .tree__row[data-id="parsel"] .tree__name'), await ui.clickText('.menu__item', 'Sil')), ready: '.dialog--confirm' },
+  // A project Editor in a cloud database project: Yeni katman is off, its tooltip says why (ui/layers/treeRights.ts).
+  {
+    id: 'tooltip-tree-locked',
+    open: async (ui) => {
+      await ui.eval(
+        `window.kentos.cloud.project.set({ tenantId: 't', tenantName: 'Büro', tenantKind: 'organization', projectId: 'p', name: 'Ada 101', role: 'editor', state: 'active', storage: 'database', permissions: ['project.read', 'feature.write'], canWrite: true, canEditMeta: false })`,
+      );
+      await ui.hover('.panel--layers [data-command="layer.new"]');
+    },
+    ready: '.tooltip__note',
+    close: async (ui) => (await ui.eval('window.kentos.cloud.project.set(null)'), await ui.escapeAll(3)),
+  },
   // Son revizyonu aç over unsaved work (ui/cloud/FileConflict.ts offerNewest) needs a file project: the same question
   // with its texts, from the widget.
   {
@@ -251,6 +263,13 @@ function helpers(b, w, h) {
         window.__pickerOriginal ??= k.files.picker;
         k.files.picker = { ...window.__pickerOriginal, open: async () => made[0], openMany: async () => made };
       })()`),
+    /** The pointer over an element, long enough for its tooltip. */
+    hover: async (sel) => {
+      const at = await centre(sel);
+      if (!at) throw new Error(`yok: ${sel}`);
+      await b.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: at[0], y: at[1], button: 'none' });
+      await sleep(900);
+    },
     escapeAll: async (times) => {
       // A held right button is let go first; then Esc closes what is open (a question asks, Vazgeç answers).
       await b.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 2, y: 2, button: 'right', clickCount: 1 }).catch(() => {});

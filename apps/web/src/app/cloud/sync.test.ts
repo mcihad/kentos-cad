@@ -6,6 +6,16 @@ import { disposeAll, layers, pt, reopen, setup, storedDraft, wire, xOf } from '.
 afterEach(disposeAll);
 
 describe('cloud autosave', () => {
+  it('without project.edit a new layer stays on the device, and the server refuses objects drawn on it: why the interface refuses the tree', async () => {
+    const { doc, server, sync, warnings } = setup({ canEditMeta: false });
+    doc.addLayer({ id: 'yeni', name: 'Yeni' }, null);
+    doc.add(pt(1, 'yeni'));
+    expect(await sync.flush()).toBe(false);
+    expect([sync.state.value, server.store.size, server.meta.layers.map((n) => n.id)]).toEqual(['error', 0, ['cizim', 'parsel']]);
+    expect(sync.error.value).toBe('“yeni” katmanı projede yok.');
+    expect(warnings.at(-1)).toBe('Bulut kaydı yapılamadı: “yeni” katmanı projede yok.');
+  });
+
   it('a layer added with objects in one step (an import) goes as the tree with the creates; its undo as the deletes and the tree without it', async () => {
     const { doc, server, sync } = setup();
     doc.transact('İçe aktar', () => {

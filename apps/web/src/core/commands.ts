@@ -23,6 +23,8 @@ export interface Command {
   pendingNote?: string;
   run(args?: unknown): void;
   isEnabled?(): boolean;
+  /** Why it cannot run now, when that is something to tell the user (said in its tooltip); null when it can. */
+  whyDisabled?(): string | null;
   isChecked?(): boolean;
   /** Signals whose change may alter enabled/checked state. */
   watch?: readonly ReadonlySignal<unknown>[];

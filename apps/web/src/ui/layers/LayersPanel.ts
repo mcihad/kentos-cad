@@ -11,6 +11,7 @@ import { askRemove } from '../widgets/confirm';
 import { PopupMenu, type MenuItem } from '../widgets/PopupMenu';
 import { TreeView } from '../widgets/TreeView';
 import { colorSwatch, layerSwatch } from './swatch';
+import { treeLocked } from './treeRights';
 
 /**
  * A row on screen: the cells that edits and layer state change, and what
@@ -331,6 +332,8 @@ export class LayersPanel extends Panel {
         icon: 'layerAdd',
         // As Yeni katman: one undo step, “Katman ekle”, the new layer made active.
         run: () => {
+          const locked = treeLocked(this.ctx);
+          if (locked) return this.ctx.log.warn(locked);
           const node = this.ctx.doc.addLayer({ name: layers.uniqueName('Yeni katman') }, n.id, { activate: true });
           this.ctx.log.success(`“${node.name}” katmanı eklendi ve etkin yapıldı.`);
         },
@@ -349,6 +352,8 @@ export class LayersPanel extends Panel {
    */
   private async remove(n: LayerNode): Promise<void> {
     const { doc, log } = this.ctx;
+    const locked = treeLocked(this.ctx);
+    if (locked) return log.warn(locked);
     const refused = doc.layerRemovalRefused(n.id);
     if (refused) return log.warn(refused);
     const group = n.type === 'group';
@@ -373,6 +378,8 @@ export class LayersPanel extends Panel {
   }
 
   private rename(n: LayerNode): void {
+    const locked = treeLocked(this.ctx);
+    if (locked) return this.ctx.log.warn(locked);
     // Scrolled into view first: a row out of view is not built.
     this.tree.rowOf(n.id);
     const nameEl = this.rows.get(n.id)?.name;

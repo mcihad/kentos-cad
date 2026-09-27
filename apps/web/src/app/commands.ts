@@ -3,6 +3,7 @@ import type { BackendKind } from '../render/types';
 import { webgpuSupported } from '../render/webgpu/support';
 import type { Entity } from '../model/entities';
 import { entitiesDelete } from '../product/entitiesDelete';
+import { treeLocked } from '../ui/layers/treeRights';
 import { pasteEntities, PasteTool } from '../tools/editTools';
 import { Signal } from '../core/signal';
 import { TOOL_GROUP_LABEL } from '../tools/Tool';
@@ -517,9 +518,14 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       icon: 'layerAdd',
       // One undo step, “Katman ekle”: undo takes the layer away and makes the one before active again.
       run: () => {
+        const locked = treeLocked(ctx);
+        if (locked) return log.warn(locked);
         const node = doc.addLayer({ name: doc.layers.uniqueName('Yeni katman') }, doc.layers.active.value, { activate: true });
         log.success(`“${node.name}” katmanı eklendi ve etkin yapıldı.`);
       },
+      isEnabled: () => !treeLocked(ctx),
+      whyDisabled: () => treeLocked(ctx),
+      watch: [ctx.cloud.project],
     },
     {
       id: 'layer.newGroup',
@@ -528,9 +534,14 @@ export function registerCoreCommands(ctx: AppContext, hooks: CommandHooks): void
       icon: 'folderAdd',
       // One undo step, “Grup ekle”.
       run: () => {
+        const locked = treeLocked(ctx);
+        if (locked) return log.warn(locked);
         const node = doc.addLayer({ name: doc.layers.uniqueName('Yeni grup'), type: 'group', children: [] }, null);
         log.success(`“${node.name}” grubu eklendi.`);
       },
+      isEnabled: () => !treeLocked(ctx),
+      whyDisabled: () => treeLocked(ctx),
+      watch: [ctx.cloud.project],
     },
     { id: 'layer.showAll', title: 'Tüm katmanları göster', short: 'Katmanları göster', category: 'Katman', icon: 'eye', run: () => doc.layers.showAll() },
 

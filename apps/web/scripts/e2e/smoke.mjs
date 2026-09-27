@@ -989,6 +989,46 @@ try {
     );
   }
 
+  // A project Editor in a cloud database project (no project.edit) may not change the layer tree: Yeni katman
+  // and Yeni grup are off with the reason in their tooltip; Delete, F2 and the row menu say it; the eye still works.
+  {
+    const TEXT = 'Bu projede katman ağacını değiştirme yetkiniz yok (project.edit); proje sahibinden ya da yöneticisinden isteyin.';
+    await b.eval(
+      `window.kentos.cloud.project.set({ tenantId: 't', tenantName: 'Büro', tenantKind: 'organization', projectId: 'p', name: 'Ada 101', role: 'editor', state: 'active', storage: 'database', permissions: ['project.read', 'feature.write'], canWrite: true, canEditMeta: false })`,
+    );
+    await sleep(100);
+    const buttons = await b.eval(`['layer.new', 'layer.newGroup'].map((id) => document.querySelector('.panel--layers [data-command="' + id + '"]')?.disabled ?? null)`);
+    const newAt = await b.eval(`(() => { const r = document.querySelector('.panel--layers [data-command="layer.new"]').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await b.move(...newAt);
+    await sleep(900);
+    const tip = await b.eval(`document.querySelector('.tooltip__note')?.textContent ?? ''`);
+    await b.move(newAt[0] - 300, newAt[1] + 200);
+    const said = () => b.eval(`window.kentos.log.entries.value.at(-1)?.text ?? ''`);
+    const count = () => b.eval('window.kentos.doc.layers.leaves().length');
+    const before = await count();
+    const rowAt = await b.eval(`(() => { const r = document.querySelector('.panel--layers .tree__row[data-id="parsel"] .tree__name'); r.scrollIntoView({ block: 'nearest' }); const q = r.getBoundingClientRect(); return [Math.round(q.left + 20), Math.round(q.top + q.height / 2)]; })()`);
+    await b.click(...rowAt);
+    await b.key('Delete');
+    await sleep(100);
+    const onDelete = await said();
+    await b.key('F2');
+    await sleep(100);
+    const onRename = { said: await said(), input: await b.eval(`!!document.querySelector('.panel--layers .tree input')`) };
+    const eye = await b.eval(`(() => { const r = document.querySelector('.panel--layers .tree__row[data-id="parsel"] .ibtn--row').getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; })()`);
+    await b.click(...eye);
+    const eyeWorks = await b.eval(`!window.kentos.doc.layers.get('parsel').visible`);
+    await b.click(...eye);
+    const after = await count();
+    await b.eval(`(() => { window.kentos.cloud.project.set(null); window.kentos.view.focus(); })()`);
+    await sleep(100);
+    const freed = await b.eval(`document.querySelector('.panel--layers [data-command="layer.new"]')?.disabled ?? null`);
+    check(
+      'without project.edit in a cloud database project the layer tree is refused: Yeni katman/grup off with the reason, Delete and F2 say it; the eye still works',
+      buttons.join() === 'true,true' && tip === TEXT && onDelete === TEXT && onRename.said === TEXT && !onRename.input && eyeWorks && after === before && freed === false,
+      JSON.stringify({ buttons, tip, onDelete, onRename, eyeWorks, before, after, freed }),
+    );
+  }
+
   // Yeni katman is one undo step “Katman ekle”: undo takes the layer away and gives the active layer back.
   {
     const layerState = () => b.eval(`({ active: window.kentos.doc.layers.active.value, count: window.kentos.doc.layers.leaves().length, said: window.kentos.log.entries.value.at(-1)?.text ?? '' })`);
