@@ -11,6 +11,7 @@ import { webgpuSupported } from '../../render/webgpu/support';
 import { fitBar } from '../widgets/fit';
 import { PopupMenu } from '../widgets/PopupMenu';
 import { hideTooltip, tooltip } from '../widgets/tooltip';
+import { ICON_SIZE, flashOf } from '../bottom/logPlan';
 import { SERVER_TEXT, serverTip } from './cellsPlan';
 import { accountMenu, saveCell } from './cloudCells';
 
@@ -177,7 +178,7 @@ export class StatusBar extends Component {
     this.d.add(
       ctx.log.entries.subscribe((list) => {
         const last = list.at(-1);
-        if (last && last.level !== 'command' && !last.text.startsWith('  ')) this.flash(flash, last);
+        if (last) this.flash(flash, last);
       }),
     );
   }
@@ -193,12 +194,14 @@ export class StatusBar extends Component {
     return b;
   }
 
+  /** The newest line in the message cell, if the status bar shows it (logPlan.ts `flashOf`), for as long as it says. */
   private flash(el: HTMLElement, e: LogEntry): void {
+    const shown = flashOf(e.level, e.text);
+    if (!shown) return;
     clearTimeout(this.flashTimer);
-    const ic = e.level === 'warn' ? 'warning' : e.level === 'error' ? 'error' : e.level === 'success' ? 'success' : 'info';
-    replaceChildren(el, icon(ic, 14), h('span', null, e.text));
+    replaceChildren(el, icon(shown.icon, ICON_SIZE), h('span', null, e.text));
     el.dataset.level = e.level;
     el.dataset.show = '';
-    this.flashTimer = window.setTimeout(() => delete el.dataset.show, e.level === 'error' || e.level === 'warn' ? 9000 : 5000);
+    this.flashTimer = window.setTimeout(() => delete el.dataset.show, shown.ms);
   }
 }

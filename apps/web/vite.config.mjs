@@ -145,7 +145,8 @@ export default defineConfig({
     fsModuleCache: true,
     setupFiles: ['src/wasm/testSetup.ts', 'src/style/svg/testSetup.ts'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/.claude/**'],
-    // Vitest empties stylesheets; these two are read as text by app/appearance.test.ts.
-    css: { include: [/styles\/(accents|fonts)\.css/] },
+    // Vitest empties stylesheets; these are read as text: accents and fonts by app/appearance.test.ts, panels and
+    // shell by ui/bottom/logPlan.test.ts (the log's look, fixtures/shell/v1/log.json).
+    css: { include: [/styles\/(accents|fonts|panels|shell)\.css/] },
   },
 });

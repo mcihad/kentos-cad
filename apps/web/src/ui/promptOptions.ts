@@ -1,4 +1,5 @@
 import type { AppContext } from '../app/context';
+import { echo } from './bottom/logPlan';
 import { h } from './dom';
 
 /**
@@ -66,7 +67,7 @@ export function runPromptOption(ctx: AppContext, key: string): void {
   if (key === 'Enter') ctx.commands.execute('tool.confirm');
   else if (key === 'Esc') ctx.commands.execute('tool.cancel');
   else {
-    ctx.log.command(`› ${key}`);
+    ctx.log.command(echo(key));
     if (!ctx.tools.active.input?.(key)) ctx.log.warn(`“${key}” seçeneği şu adımda kullanılamıyor.`);
   }
   ctx.view.focus();

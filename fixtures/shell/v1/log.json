@@ -1,0 +1,453 @@
+{
+ "format": "kentos.log",
+ "version": 1,
+ "timeZone": "Europe/Istanbul",
+ "tabs": [
+  {
+   "id": "history",
+   "label": "Komut geçmişi",
+   "icon": "history"
+  },
+  {
+   "id": "coords",
+   "label": "Koordinat listesi",
+   "icon": "table"
+  },
+  {
+   "id": "messages",
+   "label": "Uyarılar",
+   "icon": "warning"
+  }
+ ],
+ "texts": {
+  "tabs": "Alt panel",
+  "clear": "Geçmişi temizle",
+  "close": "Paneli kapat",
+  "open": "Komut geçmişini aç",
+  "edge": "Alt panel yüksekliği",
+  "empty": {
+   "history": "Henüz komut çalıştırılmadı. Bir araç seçin ya da komut satırına yazın.",
+   "messages": "Uyarı yok."
+  }
+ },
+ "limit": 500,
+ "followWithin": 24,
+ "levels": [
+  {
+   "level": "command",
+   "icon": null,
+   "listedIn": [
+    "history"
+   ]
+  },
+  {
+   "level": "info",
+   "icon": null,
+   "listedIn": [
+    "history"
+   ]
+  },
+  {
+   "level": "success",
+   "icon": "success",
+   "listedIn": [
+    "history"
+   ]
+  },
+  {
+   "level": "warn",
+   "icon": "warning",
+   "listedIn": [
+    "history",
+    "messages"
+   ]
+  },
+  {
+   "level": "error",
+   "icon": "error",
+   "listedIn": [
+    "history",
+    "messages"
+   ]
+  }
+ ],
+ "look": {
+  "list": {
+   "font": "mono",
+   "size": "xs",
+   "weight": 400,
+   "lineHeight": 1.5,
+   "padding": [
+    6,
+    0
+   ]
+  },
+  "row": {
+   "columns": [
+    64,
+    18
+   ],
+   "padding": [
+    1,
+    12
+   ],
+   "hover": "hover"
+  },
+  "time": "text-3",
+  "iconTop": 2,
+  "iconSize": 14,
+  "text": {
+   "tone": "text-2",
+   "wrap": "pre-wrap"
+  },
+  "levels": {
+   "command": {
+    "icon": null,
+    "text": "text",
+    "weight": 500
+   },
+   "info": {
+    "icon": null,
+    "text": "text-2",
+    "weight": 400
+   },
+   "success": {
+    "icon": "ok",
+    "text": "text-2",
+    "weight": 400
+   },
+   "warn": {
+    "icon": "warn",
+    "text": "warn",
+    "weight": 400
+   },
+   "error": {
+    "icon": "danger",
+    "text": "danger",
+    "weight": 400
+   }
+  },
+  "flash": {
+   "gap": 6,
+   "padding": [
+    0,
+    12
+   ],
+   "fadeMs": 160,
+   "icon": {
+    "info": null,
+    "success": "ok",
+    "warn": "warn",
+    "error": "danger"
+   }
+  }
+ },
+ "times": [
+  {
+   "title": "in the day",
+   "iso": "2026-09-27T09:05:07.000Z",
+   "at": 1790499907000,
+   "text": "12:05:07"
+  },
+  {
+   "title": "the second the clock shows, not rounded up",
+   "iso": "2026-09-27T20:59:59.999Z",
+   "at": 1790542799999,
+   "text": "23:59:59"
+  },
+  {
+   "title": "local midnight is 00, not 24",
+   "iso": "2026-09-27T21:00:00.000Z",
+   "at": 1790542800000,
+   "text": "00:00:00"
+  },
+  {
+   "title": "just after UTC midnight",
+   "iso": "2026-09-27T00:00:09.000Z",
+   "at": 1790467209000,
+   "text": "03:00:09"
+  },
+  {
+   "title": "in winter: Istanbul keeps +03:00 all year",
+   "iso": "2026-01-15T06:00:00.500Z",
+   "at": 1768456800500,
+   "text": "09:00:00"
+  },
+  {
+   "title": "the next day and year, locally",
+   "iso": "2026-12-31T22:59:30.000Z",
+   "at": 1798757970000,
+   "text": "01:59:30"
+  }
+ ],
+ "echo": [
+  {
+   "typed": "10,20",
+   "text": "› 10,20"
+  },
+  {
+   "typed": "@5<45",
+   "text": "› @5<45"
+  },
+  {
+   "typed": "K",
+   "text": "› K"
+  },
+  {
+   "typed": "çizgi",
+   "text": "› çizgi"
+  }
+ ],
+ "flash": [
+  {
+   "level": "command",
+   "text": "Çizgi",
+   "shown": null
+  },
+  {
+   "level": "command",
+   "text": "› 10,20",
+   "shown": null
+  },
+  {
+   "level": "info",
+   "text": "Çizim kaydedildi.",
+   "shown": {
+    "icon": "info",
+    "ms": 5000
+   }
+  },
+  {
+   "level": "info",
+   "text": "  Y 412345.120  X 4512345.670",
+   "shown": null
+  },
+  {
+   "level": "info",
+   "text": " Tek boşlukla başlayan satır",
+   "shown": {
+    "icon": "info",
+    "ms": 5000
+   }
+  },
+  {
+   "level": "success",
+   "text": "3 nesne silindi.",
+   "shown": {
+    "icon": "success",
+    "ms": 5000
+   }
+  },
+  {
+   "level": "warn",
+   "text": "“KA” anlaşılamadı. Koordinatı Y,X ya da @dY,dX biçiminde yazın.",
+   "shown": {
+    "icon": "warning",
+    "ms": 9000
+   }
+  },
+  {
+   "level": "warn",
+   "text": "  Girintili uyarı",
+   "shown": null
+  },
+  {
+   "level": "error",
+   "text": "“XYZ” adında bir komut yok. Tüm komutlar ve kısayollar için F1’e basın.",
+   "shown": {
+    "icon": "error",
+    "ms": 9000
+   }
+  }
+ ],
+ "kept": [
+  {
+   "pushed": 3,
+   "length": 3,
+   "first": 1,
+   "last": 3
+  },
+  {
+   "pushed": 500,
+   "length": 500,
+   "first": 1,
+   "last": 500
+  },
+  {
+   "pushed": 501,
+   "length": 500,
+   "first": 2,
+   "last": 501
+  },
+  {
+   "pushed": 1200,
+   "length": 500,
+   "first": 701,
+   "last": 1200
+  }
+ ],
+ "badge": [
+  {
+   "title": "warnings and errors count until the tab is on screen",
+   "steps": [
+    {
+     "step": "warn",
+     "count": 1,
+     "lines": 1
+    },
+    {
+     "step": "info",
+     "count": 1,
+     "lines": 2
+    },
+    {
+     "step": "error",
+     "count": 2,
+     "lines": 3
+    },
+    {
+     "step": "command",
+     "count": 2,
+     "lines": 4
+    },
+    {
+     "step": "look",
+     "count": 0,
+     "lines": 4
+    },
+    {
+     "step": "success",
+     "count": 0,
+     "lines": 5
+    },
+    {
+     "step": "warn",
+     "count": 1,
+     "lines": 6
+    },
+    {
+     "step": "look",
+     "count": 0,
+     "lines": 6
+    }
+   ]
+  },
+  {
+   "title": "a clear starts the count again, and ids go on after it",
+   "steps": [
+    {
+     "step": {
+      "push": "warn",
+      "times": 5
+     },
+     "count": 5,
+     "lines": 5
+    },
+    {
+     "step": "look",
+     "count": 0,
+     "lines": 5
+    },
+    {
+     "step": "clear",
+     "count": 0,
+     "lines": 0
+    },
+    {
+     "step": "warn",
+     "count": 1,
+     "lines": 1
+    },
+    {
+     "step": "clear",
+     "count": 0,
+     "lines": 0
+    },
+    {
+     "step": "error",
+     "count": 1,
+     "lines": 1
+    }
+   ]
+  },
+  {
+   "title": "a clear from another tab: the new warning still counts",
+   "steps": [
+    {
+     "step": {
+      "push": "warn",
+      "times": 3
+     },
+     "count": 3,
+     "lines": 3
+    },
+    {
+     "step": "clear",
+     "count": 0,
+     "lines": 0
+    },
+    {
+     "step": "warn",
+     "count": 1,
+     "lines": 1
+    }
+   ]
+  },
+  {
+   "title": "a warning seen and then dropped (500 kept) is not counted again; a new one is",
+   "steps": [
+    {
+     "step": {
+      "push": "warn",
+      "times": 10
+     },
+     "count": 10,
+     "lines": 10
+    },
+    {
+     "step": "look",
+     "count": 0,
+     "lines": 10
+    },
+    {
+     "step": {
+      "push": "info",
+      "times": 500
+     },
+     "count": 0,
+     "lines": 500
+    },
+    {
+     "step": "warn",
+     "count": 1,
+     "lines": 500
+    }
+   ]
+  },
+  {
+   "title": "the tab on screen over an empty log sees nothing",
+   "steps": [
+    {
+     "step": "look",
+     "count": 0,
+     "lines": 0
+    },
+    {
+     "step": "warn",
+     "count": 1,
+     "lines": 1
+    },
+    {
+     "step": "look",
+     "count": 0,
+     "lines": 1
+    },
+    {
+     "step": "error",
+     "count": 1,
+     "lines": 2
+    }
+   ]
+  }
+ ]
+}
