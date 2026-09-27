@@ -336,7 +336,7 @@ export class FakeFiles {
         409,
         {
           error: 'conflict',
-          message: `Dosya siz kaydederken başka biri tarafından kaydedildi (şimdiki revizyon ${current}, sizinki ${expected}'e dayanıyor); hiçbir şey yazılmadı.`,
+          message: `Dosya siz kaydederken başka biri tarafından kaydedildi (şimdiki revizyon ${current}; kaydınızın dayandığı revizyon ${expected}); hiçbir şey yazılmadı. Son revizyonu açıp değişikliklerinizi yeniden uygulayın ya da dosyanızı ayrı bir kopya olarak saklayın.`,
           conflicts: [{ id: FILE_KEY, reason: 'project', expected, actual: current }],
           revision: current,
         },

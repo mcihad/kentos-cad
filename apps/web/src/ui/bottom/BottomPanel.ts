@@ -1,5 +1,5 @@
 import type { AppContext } from '../../app/context';
-import type { BottomTab, LogEntry, LogLevel } from '../../app/state';
+import type { BottomTab, LogEntry } from '../../app/state';
 import { listen } from '../../core/disposable';
 import { watchAll } from '../../core/signal';
 import type { Entity } from '../../model/entities';
@@ -12,16 +12,8 @@ import { tooltip } from '../widgets/tooltip';
 import { tableSpacer, VirtualRows } from '../widgets/VirtualRows';
 import { CommandLine } from './CommandLine';
 import { vertexListing } from './coordinates';
-import { unseenWarnings } from './warnings';
-
-const TABS: { id: BottomTab; label: string; icon: string }[] = [
-  { id: 'history', label: 'Komut geçmişi', icon: 'history' },
-  { id: 'coords', label: 'Koordinat listesi', icon: 'table' },
-  { id: 'messages', label: 'Uyarılar', icon: 'warning' },
-];
-
-const LEVEL_ICON: Record<LogLevel, string | null> = { command: null, info: null, success: 'success', warn: 'warning', error: 'error' };
-const time = (d: Date) => d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+import { BOTTOM_TABS, BOTTOM_TEXTS, FOLLOW_WITHIN, ICON_SIZE, LEVEL_ICON, listedIn, logTime } from './logPlan';
+import { seenNow, unseenWarnings } from './warnings';
 
 /**
  * Bottom region: the command line is always there; the tabbed panel above it
@@ -50,8 +42,8 @@ export class BottomPanel extends Component {
 
     const tabs = h(
       'div',
-      { class: 'bottom__tabs', role: 'tablist', 'aria-label': 'Alt panel' },
-      TABS.map((t) => {
+      { class: 'bottom__tabs', role: 'tablist', 'aria-label': BOTTOM_TEXTS.tabs },
+      BOTTOM_TABS.map((t) => {
         const b = h(
           'button',
           { class: 'tab', type: 'button', role: 'tab', 'aria-selected': 'false' },
@@ -64,26 +56,26 @@ export class BottomPanel extends Component {
         return b;
       }),
     );
-    const clear = h('button', { class: 'ibtn', type: 'button', 'aria-label': 'Geçmişi temizle' }, icon('clear', 16));
-    const collapse = h('button', { class: 'ibtn', type: 'button', 'aria-label': 'Paneli kapat' }, icon('chevronDown', 16));
+    const clear = h('button', { class: 'ibtn', type: 'button', 'aria-label': BOTTOM_TEXTS.clear }, icon('clear', 16));
+    const collapse = h('button', { class: 'ibtn', type: 'button', 'aria-label': BOTTOM_TEXTS.close }, icon('chevronDown', 16));
     this.d.add(listen(clear, 'click', () => ctx.log.clear()));
     this.d.add(listen(collapse, 'click', () => ui.bottomExpanded.set(false)));
-    this.d.add(tooltip(clear, () => ({ title: 'Geçmişi temizle' }), 'top'));
-    this.d.add(tooltip(collapse, () => ({ title: 'Paneli kapat', shortcut: ctx.keymap.chordFor('view.bottomPanel') }), 'top'));
+    this.d.add(tooltip(clear, () => ({ title: BOTTOM_TEXTS.clear }), 'top'));
+    this.d.add(tooltip(collapse, () => ({ title: BOTTOM_TEXTS.close, shortcut: ctx.keymap.chordFor('view.bottomPanel') }), 'top'));
 
     let startH = 0;
     const split = splitter({
       orientation: 'horizontal',
-      label: 'Alt panel yüksekliği',
+      label: BOTTOM_TEXTS.edge,
       onStart: () => (startH = ui.bottomHeight.value),
       onDrag: (dy) => ui.bottomHeight.set(Math.round(Math.min(Math.max(startH - dy, 96), innerHeight * 0.6))),
       onReset: () => ui.bottomHeight.set(190),
     });
     this.d.add(split.dispose);
 
-    const expandBtn = h('button', { class: 'ibtn cmdline__expand', type: 'button', 'aria-label': 'Komut geçmişini aç' }, icon('chevronUp', 16));
+    const expandBtn = h('button', { class: 'ibtn cmdline__expand', type: 'button', 'aria-label': BOTTOM_TEXTS.open }, icon('chevronUp', 16));
     this.d.add(listen(expandBtn, 'click', () => ui.bottomExpanded.set(!ui.bottomExpanded.value)));
-    this.d.add(tooltip(expandBtn, () => ({ title: ui.bottomExpanded.value ? 'Paneli kapat' : 'Komut geçmişini aç', shortcut: ctx.keymap.chordFor('view.bottomPanel') }), 'top'));
+    this.d.add(tooltip(expandBtn, () => ({ title: ui.bottomExpanded.value ? BOTTOM_TEXTS.close : BOTTOM_TEXTS.open, shortcut: ctx.keymap.chordFor('view.bottomPanel') }), 'top'));
     this.commandLine.el.append(expandBtn);
 
     const panel = h(
@@ -125,7 +117,7 @@ export class BottomPanel extends Component {
   private refreshBadge(): void {
     const { ui, log } = this.ctx;
     const entries = log.entries.value;
-    if (ui.bottomExpanded.value && ui.bottomTab.value === 'messages') this.seenUpTo = entries.at(-1)?.id ?? this.seenUpTo;
+    this.seenUpTo = seenNow(entries, this.seenUpTo, ui.bottomExpanded.value && ui.bottomTab.value === 'messages');
     const n = unseenWarnings(entries, this.seenUpTo);
     this.badge.hidden = n === 0;
     this.badge.textContent = String(n);
@@ -137,8 +129,8 @@ export class BottomPanel extends Component {
     if ((tab === 'history' || tab === 'messages') && !this.appendLog(tab)) this.renderContent();
   }
 
-  private entriesOf(tab: BottomTab): LogEntry[] {
-    return this.ctx.log.entries.value.filter((e) => tab === 'history' || e.level === 'warn' || e.level === 'error');
+  private entriesOf(tab: 'history' | 'messages'): LogEntry[] {
+    return this.ctx.log.entries.value.filter((e) => listedIn(tab, e.level));
   }
 
   /**
@@ -146,7 +138,7 @@ export class BottomPanel extends Component {
    * dropped ones removed, instead of the whole list being built again at every message. False when the
    * list on screen cannot follow that way (another tab, cleared), and it is built again.
    */
-  private appendLog(tab: BottomTab): boolean {
+  private appendLog(tab: 'history' | 'messages'): boolean {
     const log = this.log;
     if (!this.ctx.ui.bottomExpanded.value || !log || log.tab !== tab || !log.list.isConnected) return false;
     const entries = this.entriesOf(tab);
@@ -155,7 +147,7 @@ export class BottomPanel extends Component {
     const last = log.shown.at(-1);
     const at = last ? entries.findIndex((e) => e.id === last.id) : -1;
     if (last && at < 0) return false;
-    const follow = log.list.parentElement ? this.content.scrollHeight - this.content.scrollTop - this.content.clientHeight < 24 : true;
+    const follow = log.list.parentElement ? this.content.scrollHeight - this.content.scrollTop - this.content.clientHeight < FOLLOW_WITHIN : true;
     for (let i = 0; i < firstKept; i++) log.list.firstElementChild?.remove();
     const added = entries.slice(at + 1);
     if (added.length) log.list.append(...added.map((e) => this.logRow(e)));
@@ -175,7 +167,7 @@ export class BottomPanel extends Component {
     if (!entries.length) {
       return replaceChildren(
         this.content,
-        h('div', { class: 'empty empty--inline' }, tab === 'history' ? 'Henüz komut çalıştırılmadı. Bir araç seçin ya da komut satırına yazın.' : 'Uyarı yok.'),
+        h('div', { class: 'empty empty--inline' }, BOTTOM_TEXTS.empty[tab]),
       );
     }
     const list = h('ol', { class: 'log' }, entries.map((e) => this.logRow(e)));
@@ -189,8 +181,8 @@ export class BottomPanel extends Component {
     return h(
       'li',
       { class: `log__row log__row--${e.level}` },
-      h('time', { class: 'log__time num' }, time(e.time)),
-      h('span', { class: 'log__icon' }, ic ? icon(ic, 14) : null),
+      h('time', { class: 'log__time num' }, logTime(e.time)),
+      h('span', { class: 'log__icon' }, ic ? icon(ic, ICON_SIZE) : null),
       h('span', { class: 'log__text' }, e.text),
     );
   }

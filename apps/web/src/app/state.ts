@@ -34,13 +34,17 @@ export interface LogEntry {
   text: string;
 }
 
+/** The log keeps this many lines; the oldest go first (fixtures/shell/v1/log.json). */
+export const LOG_LIMIT = 500;
+
 export class MessageLog {
   readonly entries = new Signal<readonly LogEntry[]>([]);
+  /** Ids only grow, across Geçmişi temizle too (the Uyarılar badge counts from them, ui/bottom/warnings.ts). */
   private seq = 0;
 
   push(level: LogLevel, text: string): void {
     const next = [...this.entries.value, { id: ++this.seq, time: new Date(), level, text }];
-    this.entries.set(next.length > 500 ? next.slice(-500) : next);
+    this.entries.set(next.length > LOG_LIMIT ? next.slice(-LOG_LIMIT) : next);
   }
 
   command = (t: string) => this.push('command', t);
