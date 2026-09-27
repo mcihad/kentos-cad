@@ -73,7 +73,7 @@
       "pending": 0
     },
     "commandsWithoutPlace": [],
-    "commandsWithoutTests": 55,
+    "commandsWithoutTests": 54,
     "commandsOnDesktop": 115
   },
   "commands": [
@@ -456,7 +456,9 @@
         "web": "implemented",
         "desktop": "none"
       },
-      "tests": []
+      "tests": [
+        "apps/web/scripts/e2e/cloud.mjs"
+      ]
     },
     {
       "id": "cloud.rename",
