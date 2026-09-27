@@ -32,7 +32,7 @@ mod control;
 mod layout;
 
 pub use control::{AppButton, Button, logo_mark};
-pub use layout::{Field, Gallery, Group, Preview, Row, Stack, Tile};
+pub use layout::{Choice, Field, Gallery, Group, Level, Preview, Row, Stack, Tile};
 
 use iced::widget::text::{Fragment, IntoFragment};
 use iced::widget::{
@@ -123,6 +123,8 @@ struct Tab<'a, Message> {
     label: Fragment<'a>,
     selected: bool,
     on_press: Message,
+    /// Bağlamsal sekmenin sayısı (ör. seçili nesneler); varsa sekme bağlamsaldır.
+    count: Option<String>,
 }
 
 enum Panel<'a, Message> {
@@ -189,6 +191,26 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             label: label.into_fragment(),
             selected,
             on_press,
+            count: None,
+        });
+        self
+    }
+
+    /// Bağlamsal sekme ekler (web'in `ribbon__tab--context`'i; ör. nesne
+    /// seçiliyken Seçim): adı vurgu renginde, üstünde ince vurgu çizgisi ve
+    /// yanında sayı rozeti (`count`).
+    pub fn contextual_tab(
+        mut self,
+        label: impl IntoFragment<'a>,
+        count: impl Into<String>,
+        selected: bool,
+        on_press: Message,
+    ) -> Self {
+        self.tabs.push(Tab {
+            label: label.into_fragment(),
+            selected,
+            on_press,
+            count: Some(count.into()),
         });
         self
     }
@@ -281,36 +303,40 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         }
 
         for tab in tabs {
+            let contextual = tab.count.is_some();
+            let face = tab_face(tab.label, tab.selected, tab.count);
             // Daraltılmış şeritte seçili sekme panele akmaz; kalın yazıyla
             // ayrılır.
-            strip = strip.push(if tab.selected && !collapsed {
-                selected_tab(tab.label)
-            } else if tab.selected {
+            let tab_button = if tab.selected && !collapsed {
+                selected_tab(face)
+            } else {
                 underlined(
-                    button(
-                        container(label::strong(tab.label))
-                            .height(Fill)
-                            .align_y(iced::Center),
-                    )
-                    .on_press(tab.on_press)
-                    .height(tab_height())
-                    .padding([0, 14])
-                    .style(style::button::tab),
+                    button(container(face).height(Fill).align_y(iced::Center))
+                        .on_press(tab.on_press)
+                        .height(tab_height())
+                        .padding([0, 14])
+                        .style(style::button::tab),
+                    Length::Shrink,
+                )
+            };
+            // A contextual tab stands a little apart, a thin accent line over it (web).
+            strip = strip.push(if contextual {
+                let line = !tab.selected || collapsed;
+                underlined(
+                    row![
+                        space::horizontal().width(4),
+                        iced::widget::stack![
+                            tab_button,
+                            container(space::horizontal())
+                                .width(Fill)
+                                .height(if line { TAB_ACCENT } else { 0.0 })
+                                .style(style::container::accent),
+                        ]
+                    ],
                     Length::Shrink,
                 )
             } else {
-                underlined(
-                    button(
-                        container(label::body(tab.label))
-                            .height(Fill)
-                            .align_y(iced::Center),
-                    )
-                    .on_press(tab.on_press)
-                    .height(tab_height())
-                    .padding([0, 14])
-                    .style(style::button::tab),
-                    Length::Shrink,
-                )
+                tab_button
             });
         }
 
@@ -499,7 +525,47 @@ fn underlined<'a, Message: 'a>(
 
 /// Seçili sekme: üstte vurgu çizgisi, yanlarda kenar çizgisi; altta çizgi
 /// yoktur ve gövdesi panelle aynı renktedir.
-fn selected_tab<'a, Message: 'a>(label: Fragment<'a>) -> Element<'a, Message> {
+/// Sekmenin yazısı: seçiliyse kalın; bağlamsal sekmede vurgu renginde ve
+/// yanında sayı rozeti.
+fn tab_face<'a, Message: 'a>(
+    title: Fragment<'a>,
+    selected: bool,
+    count: Option<String>,
+) -> Element<'a, Message> {
+    let Some(count) = count else {
+        return if selected {
+            label::strong(title).into()
+        } else {
+            label::body(title).into()
+        };
+    };
+    let accent_text = |theme: &iced::Theme| iced::widget::text::Style {
+        color: Some(crate::theme::Tokens::of(theme).accent_hover),
+    };
+    let name = if selected {
+        label::strong(title)
+    } else {
+        label::body(title)
+    };
+    row![
+        name.style(accent_text),
+        container(
+            iced::widget::text(count)
+                .font(typography::mono())
+                .size(typography::caption() - 1.0)
+                .style(accent_text),
+        )
+        .padding([0.0, 5.0])
+        .height(typography::scaled(16.0))
+        .center_y(typography::scaled(16.0))
+        .style(style::container::count),
+    ]
+    .spacing(6)
+    .align_y(iced::Center)
+    .into()
+}
+
+fn selected_tab<'a, Message: 'a>(face: Element<'a, Message>) -> Element<'a, Message> {
     row![
         vertical_divider(),
         column![
@@ -509,7 +575,7 @@ fn selected_tab<'a, Message: 'a>(label: Fragment<'a>) -> Element<'a, Message> {
                 .style(style::container::accent),
             // Alt boşluk vurgu çizgisini dengeler; yazı diğer sekmelerle aynı
             // taban çizgisinde kalır.
-            container(label::strong(label))
+            container(face)
                 .height(Fill)
                 .padding(Padding {
                     top: 0.0,

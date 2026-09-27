@@ -377,6 +377,13 @@ impl App {
                         key == Named::ArrowRight,
                     ));
                 }
+                // Stil yöneticisi: F2 renames the category, Delete asks to delete
+                // the item, Enter answers the question or picks (style/manager/).
+                Some(key @ (Named::F2 | Named::Delete | Named::Enter))
+                    if self.dialog == Some(crate::app::Dialog::StyleManager) =>
+                {
+                    return self.style_manager_key(key);
+                }
                 // ↑ ↓ in a Hesap window's table go to the row above or below (calc/grid.rs).
                 Some(key @ (Named::ArrowUp | Named::ArrowDown))
                     if self.dialog == Some(crate::app::Dialog::Calc) =>

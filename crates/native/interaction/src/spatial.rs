@@ -151,6 +151,13 @@ impl Spatial {
             .find(|s| accept(*s))
     }
 
+    /// The smallest visible closed shape around `at` (a polygon, circle,
+    /// full ellipse or closed spline; `PickIndex.enclosing`), whatever its
+    /// kind: what a click inside an area away from its edges falls in.
+    pub fn enclosing(&self, at: Vec2) -> Option<Slot> {
+        self.store.enclosing(at).and_then(|(id, _)| slot(id))
+    }
+
     /// The visible objects inside the box from `a` to `b` (window), or
     /// touching it too (crossing), in the document's order (`PickIndex.inRect`).
     pub fn in_rect(&self, a: Vec2, b: Vec2, crossing: bool) -> Vec<Slot> {

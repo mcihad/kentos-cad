@@ -232,8 +232,7 @@ impl Arc {
     }
 
     /// One arc through the product command `cad.arc.create` (docs/adr/0032):
-    /// the active layer explicit in its input (CMD-07); the desktop has no
-    /// current colour.
+    /// the active layer and the current colour explicit in its input (CMD-07).
     fn write(&mut self, g: &ArcGeom, cx: &mut Context<'_>) -> bool {
         let input = ArcCreate {
             layer_id: cx.doc.layers().active().to_owned(),
@@ -241,7 +240,7 @@ impl Arc {
             r: g.r,
             a0: g.a0,
             a1: g.a1,
-            color: None,
+            color: cx.draft.color.map(str::to_owned),
             attrs: None,
             expected_revision: None,
         };

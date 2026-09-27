@@ -38,29 +38,10 @@ pub const TREE_LOCKED: &str = "Bu projede katman ağacını değiştirme yetkini
 /// Two presses on one row closer than this are a double click (KentOS UI's sash's).
 const DOUBLE_CLICK: Duration = Duration::from_millis(400);
 
-/// The colours of the layer's colour menu, as on the web (`DRAW_COLORS`,
-/// apps/web/src/ui/toolbar/fields.ts), after the theme's two inks.
-const COLORS: [(&str, &str); 8] = [
-    ("Siyah", "ink"),
-    ("Kırmızı", "#E5484D"),
-    ("Sarı", "#F2C94C"),
-    ("Yeşil", "#5FBF77"),
-    ("Camgöbeği", "#4CC3D9"),
-    ("Mavi", "#4F8EF7"),
-    ("Eflatun", "#C86DD7"),
-    ("Gri", "#8C9AAA"),
-];
-
-/// Line types with the web's names (`LINE_TYPE_LABEL`, model/layers.ts).
-const LINE_TYPES: [(LineType, &str); 4] = [
-    (LineType::Continuous, "Sürekli"),
-    (LineType::Dashed, "Kesikli"),
-    (LineType::Dashdot, "Noktalı kesik"),
-    (LineType::Dotted, "Noktalı"),
-];
-
-/// Plot line weights in mm (the web's `LINE_WEIGHTS`).
-const LINE_WEIGHTS: [f64; 6] = [0.13, 0.18, 0.25, 0.35, 0.5, 0.7];
+// The colours of the layer's colour menu after the theme's two inks, the line
+// types and weights: the web's `DRAW_COLORS`, `LINE_TYPE_LABEL` and
+// `LINE_WEIGHTS`, kept once for the desktop (ribbon_panels.rs).
+use crate::ribbon_panels::{DRAW_COLORS as COLORS, LINE_TYPES, LINE_WEIGHTS, weight_text};
 
 /// What the layer tree's rows and their menu ask (the web's LayersPanel).
 #[derive(Debug, Clone)]
@@ -380,7 +361,7 @@ impl App {
             });
             let weights = LINE_WEIGHTS.iter().fold(Menu::new(), |menu, w| {
                 menu.radio(
-                    format!("{w:.2} mm"),
+                    weight_text(*w),
                     (style.line_weight - w).abs() < 1e-9,
                     event(Event::LineWeight(id.clone(), *w)),
                 )

@@ -115,6 +115,8 @@ pub enum Dialog {
     Processing,
     /// Katman stili (style/layer_style/); the window is `App::styles.layer_style`.
     LayerStyle,
+    /// Stil yöneticisi (style/manager/); the window is `App::styles.manager`.
+    StyleManager,
     /// Katmanlar → Sil on a layer or group with objects (layering.rs); the
     /// node is `App::removing_layer`.
     RemoveLayer,
@@ -171,6 +173,9 @@ pub enum Message {
         label: &'static str,
     },
     RibbonTab(&'static str),
+    /// A choice in the ribbon's own panels: the current properties for new
+    /// objects, the plot scale (ribbon_panels.rs).
+    RibbonPanel(crate::ribbon_panels::Event),
     CommandInput(String),
     CommandSubmitted,
     CommandRun(String),
@@ -203,6 +208,8 @@ pub enum Message {
     LayerStyle(crate::style::layer_style::Event),
     /// İfade oluşturucu over an expression field's window (expression/).
     Builder(crate::expression::Event),
+    /// Stil yöneticisi (style/manager/).
+    StyleManager(Box<crate::style::manager::Event>),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -274,6 +281,9 @@ pub struct Written {
 pub struct App {
     pub document: Option<Document>,
     pub tab: &'static str,
+    /// The contextual Seçim tab is the one shown, while something is
+    /// selected; an empty selection gives the ribbon back to `tab` (the web's).
+    pub ribbon_context: bool,
     pub ribbon_collapsed: bool,
     pub mode: Mode,
     pub accent: Accent,
@@ -353,8 +363,13 @@ pub struct App {
     /// The value field beside the cursor, while it is open (ADR 0018).
     pub field: Option<Field>,
     /// Drafting aids for new points: ortho, polar tracking, the snap aperture
-    /// (the typed settings' `drafting.*`, applied by `apply_settings`).
+    /// (the typed settings' `drafting.*`, applied by `apply_settings`), and
+    /// the colour new objects take (the ribbon's Renk, ribbon_panels.rs).
     pub draft: Draft,
+    /// The line type and weight new objects take, `None` by layer (the
+    /// ribbon's Tip and Kalınlık): the session's, which no tool reads yet (web).
+    pub new_line_type: Option<kentos_contracts::LineType>,
+    pub new_line_weight: Option<f64>,
     /// Typed values open beside the cursor (`drafting.cursorInput`).
     pub cursor_input: bool,
     /// The strip over the drawing while a command runs (`drafting.commandBar`, command_bar.rs).
@@ -451,6 +466,7 @@ impl App {
         let mut app = Self {
             document: None,
             tab: catalog().tabs().nth(1).or(catalog().tabs().next()).map_or("home", |tab| tab.id),
+            ribbon_context: false,
             ribbon_collapsed: false,
             mode: Mode::Dark,
             accent: Accent::default(),
@@ -496,6 +512,8 @@ impl App {
             followed: None,
             field: None,
             draft: Draft::default(),
+            new_line_type: None,
+            new_line_weight: None,
             cursor_input: true,
             command_bar: false,
             hover_info: true,
@@ -614,6 +632,10 @@ impl App {
         let task = self.handle(message);
         self.follow_document();
         self.follow_selection_layers();
+        // The contextual Seçim tab goes with the selection (the web's `updateContextual`).
+        if self.selection.is_empty() {
+            self.ribbon_context = false;
+        }
         let task = Task::batch([
             task,
             self.text_field_tasks(),
@@ -667,7 +689,8 @@ impl App {
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
             }
-            Message::RibbonTab(id) => self.tab = id,
+            Message::RibbonTab(id) => self.choose_tab(id),
+            Message::RibbonPanel(event) => self.ribbon_panel_event(event),
             Message::CommandInput(text) => self.command_input = text,
             Message::CommandSubmitted => {
                 let text = std::mem::take(&mut self.command_input);
@@ -718,6 +741,7 @@ impl App {
             Message::Processing(event) => return self.processing_event(event),
             Message::Builder(event) => return self.builder_event(event),
             Message::LayerStyle(event) => return self.layer_style_event(event),
+            Message::StyleManager(event) => return self.style_manager_event(*event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -845,6 +869,8 @@ impl App {
             snap_kinds: snap_kinds(|key| s.bool(key)),
             pick_aperture: s.number("drafting.pickAperture"),
             tracking: s.bool("drafting.tracking"),
+            // The session's, not a setting: kept through a settings change.
+            color: self.draft.color,
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
@@ -1028,6 +1054,13 @@ impl App {
             // The styled drawing's view choices (style/, docs/adr/0090).
             "view.lineWeights" => self.toggle_session("graphics.lineWeights", "Çizgi kalınlığı"),
             "style.layerStyle" => self.open_layer_style(None),
+            // The style library (style/manager/, docs/adr/0092).
+            "style.manager" => return self.open_style_manager(None, None),
+            "style.assign" => return self.pick_for_selection(),
+            "style.clearSymbol" => {
+                let said = self.assign_symbol(None);
+                self.output(said);
+            }
             "view.symbols.plot" | "view.symbols.screen" => self.choose_symbol_size(id),
             // Selecting (docs/adr/0029): the pointer selects while no command runs.
             "tool.select" => self.leave_tool(),
@@ -1136,6 +1169,14 @@ impl App {
                 d.layers()
                     .get(d.layers().active())
                     .is_some_and(|n| n.kind == kentos_contracts::LayerNodeType::Layer)
+            }),
+            // Symbols for the selected objects; taking them away when one has its own.
+            "style.assign" => doc.is_some() && !self.selection.is_empty(),
+            "style.clearSymbol" => doc.is_some_and(|d| {
+                self.selection
+                    .ids()
+                    .iter()
+                    .any(|&s| d.get(s).is_some_and(|e| e.base().symbol.is_some()))
             }),
             _ => true,
         }
@@ -1331,7 +1372,7 @@ mod tests {
     fn a_command_not_ported_says_so_and_changes_nothing() {
         let (mut app, _) = App::boot(None);
         let before = app.history.len();
-        let _ = app.run("style.manager");
+        let _ = app.run("style.svgEditor");
         assert_eq!(app.history.len(), before + 1);
         assert!(
             matches!(app.history.last(), Some(Entry::Output(text)) if text.contains("masaüstüne henüz taşınmadı"))

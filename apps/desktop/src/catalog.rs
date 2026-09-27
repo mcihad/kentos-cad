@@ -221,6 +221,10 @@ pub const PORTED: &[&str] = &[
     "view.symbols.screen",
     // Katman stili: the active layer's renderer (docs/adr/0091).
     "style.layerStyle",
+    // Stil yöneticisi, and symbols given to the selected objects or taken away (docs/adr/0092).
+    "style.manager",
+    "style.assign",
+    "style.clearSymbol",
 ];
 
 /// Where the desktop does otherwise than the web, its own description: the
@@ -353,7 +357,8 @@ pub fn mode_command(mode: kentos_contracts::Workspace) -> &'static str {
 pub struct Tab {
     pub id: &'static str,
     pub label: &'static str,
-    /// Shown only in a context (the web's selection tab); left out here.
+    /// Shown only in a context (the web's Seçim tab, while something is
+    /// selected; `contextual_in`), left out of `tabs` and `tabs_in`.
     pub contextual: bool,
     pub panels: Vec<Panel>,
 }
@@ -400,9 +405,10 @@ pub enum Item {
         ids: Vec<&'static str>,
         large: bool,
     },
-    /// A panel the web draws itself (layer picker, properties, selection);
-    /// the desktop has these as docked panels.
-    Builtin,
+    /// A panel the web draws itself, by its name: `layers` (the active
+    /// layer), `properties` (the current properties, the plot scale),
+    /// `selection` (the selection's summary); ribbon_panels.rs draws them.
+    Builtin(&'static str),
 }
 
 /// One entry of a split button's menu (the web's `SplitEntry`, docs/adr/0032).
@@ -465,6 +471,17 @@ impl Catalog {
             .map_or(&self.tabs, |(_, tabs)| tabs)
             .iter()
             .filter(|tab| !tab.contextual)
+    }
+
+    /// The contextual ribbon tabs of a work mode (the web's Seçim, shown
+    /// while something is selected).
+    pub fn contextual_in(&self, mode: kentos_contracts::Workspace) -> impl Iterator<Item = &Tab> {
+        self.mode_tabs
+            .iter()
+            .find(|(m, _)| *m == mode)
+            .map_or(&self.tabs, |(_, tabs)| tabs)
+            .iter()
+            .filter(|tab| tab.contextual)
     }
 
     /// Quick access bar (Kaydet, Geri al, Yinele).
@@ -645,7 +662,7 @@ fn item(raw: RawItem) -> Item {
             ids: flatten(blocks),
             large: large(&size),
         },
-        RawItem::Builtin {} => Item::Builtin,
+        RawItem::Builtin { builtin } => Item::Builtin(leak(builtin)),
     }
 }
 
@@ -799,7 +816,9 @@ enum RawItem {
         size: String,
         blocks: Vec<RawBlock>,
     },
-    Builtin {},
+    Builtin {
+        builtin: String,
+    },
 }
 
 #[derive(Deserialize)]
@@ -842,7 +861,7 @@ mod tests {
                         Item::Command { id, .. } => vec![*id],
                         Item::Split { entries, .. } => entries.iter().map(|e| e.id).collect(),
                         Item::Menu { ids, .. } => ids.clone(),
-                        Item::Builtin => vec![],
+                        Item::Builtin(_) => vec![],
                     };
                     for id in ids {
                         assert!(

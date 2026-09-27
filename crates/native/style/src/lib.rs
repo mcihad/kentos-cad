@@ -15,6 +15,7 @@
 //!   the core reads, the objects' values for its expressions ([`table`]).
 //! - [`batches`]: the core's batches with their colours from the theme, their
 //!   atlas images and how far they reach: what the renderer draws.
+//! - [`file`]: the .kstil style file (read, checked, cleaned, exported, taken in).
 //! - [`preview`]: a symbol on a sample object, built as a styled layer for its picture.
 //! - [`renderer`]: a layer's renderer as the layer style window edits it,
 //!   [`classify`]: the classes the window makes of the objects' values, and
@@ -32,6 +33,7 @@
 pub mod batches;
 pub mod classify;
 pub mod color;
+pub mod file;
 pub mod library;
 pub mod preview;
 pub mod program;
