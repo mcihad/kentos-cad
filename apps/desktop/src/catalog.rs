@@ -177,6 +177,11 @@ pub const PORTED: &[&str] = &[
     "tool.measure",
     "tool.area",
     "tool.parcel",
+    // Hesap: Önden and Geriden kestirme, Aplikasyon; Çizimden picks a point
+    // with the pick tool (calc/, docs/adr/0070).
+    "calc.forward",
+    "calc.resection",
+    "calc.stakeout",
     "tool.areaUnion",
     "tool.areaIntersect",
     "tool.areaSubtract",

@@ -93,6 +93,8 @@ impl App {
             match change {
                 // Yazı's field opens over the drawing (text_field.rs).
                 ViewChange::Text(field) => self.open_text_field(field),
+                // Çizimden: the point goes to the window that asked, which opens again (calc/).
+                ViewChange::Picked(p) => self.calc_picked(p),
                 change => self.viewport.change(change),
             }
         }

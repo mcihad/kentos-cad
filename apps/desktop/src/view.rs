@@ -738,6 +738,7 @@ impl App {
             Asking::Exchange => self.exchange_view(),
             Asking::Project => self.project_view(),
             Asking::Start => self.start_view(),
+            Asking::Calc => self.calc_view(),
         }
     }
 }

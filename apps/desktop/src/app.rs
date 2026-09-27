@@ -102,6 +102,8 @@ pub enum Dialog {
     Project,
     /// Başlangıç (start.rs).
     Start,
+    /// A Hesap window (calc/): Kestirme, Aplikasyon.
+    Calc,
 }
 
 /// Where the app goes once the drawing on screen is left (cloud/leaving.rs).
@@ -171,6 +173,8 @@ pub enum Message {
     Properties(crate::properties::Event),
     /// The rollover card's wait is over, for this hover (hover_card.rs).
     HoverCard(u64),
+    /// The Hesap windows (calc/).
+    Calc(crate::calc::Event),
     /// Esc in the empty command line: the running command ends.
     CommandCancelled,
     /// The command line's text box took or let go of the keyboard.
@@ -309,6 +313,8 @@ pub struct App {
     pub hover_card: Option<kentos_domain::Slot>,
     /// The hover the card's wait was started for (`Selection::hover_version`).
     pub hover_seen: u64,
+    /// The Hesap windows' fields, kept while the app runs (calc/).
+    pub calc: crate::calc::Calc,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
     pub settings: Settings,
     /// The settings window's draft while it is open.
@@ -421,6 +427,7 @@ impl App {
             hover_info: true,
             hover_card: None,
             hover_seen: 0,
+            calc: crate::calc::Calc::default(),
             settings,
             settings_draft: None,
             reported_failure: None,
@@ -606,6 +613,7 @@ impl App {
             Message::TextField(event) => self.text_field_event(event),
             Message::Properties(event) => self.properties_event(event),
             Message::HoverCard(version) => self.hover_card_due(version),
+            Message::Calc(event) => return self.calc_event(event),
             // The layer tree's changes go through the document, as on the web: visibility
             // and lock are edits (unsaved) but not undo steps.
             Message::LayerVisible(id) => {
@@ -866,6 +874,9 @@ impl App {
         }
         if crate::project::COMMANDS.contains(&id) {
             return self.project_command(id);
+        }
+        if crate::calc::COMMANDS.contains(&id) {
+            return self.calc_command(id);
         }
         if crate::clipboard::COMMANDS.contains(&id) {
             return self.clipboard_command(id);
@@ -1177,7 +1188,7 @@ mod tests {
     fn a_command_not_ported_says_so_and_changes_nothing() {
         let (mut app, _) = App::boot(None);
         let before = app.history.len();
-        let _ = app.run("calc.forward");
+        let _ = app.run("style.manager");
         assert_eq!(app.history.len(), before + 1);
         assert!(
             matches!(app.history.last(), Some(Entry::Output(text)) if text.contains("masaüstüne henüz taşınmadı"))

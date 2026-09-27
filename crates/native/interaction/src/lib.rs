@@ -45,6 +45,7 @@
 //!   koordinatlara yapıştır ([`clipboard`]) and the paste tool ([`paste`]),
 //!   writing through the document as the web's do; Kaydır and Pencere
 //!   yakınlaştır ([`navigate`]), which ask the host for view changes;
+//! - Çizimden ([`pick`], docs/adr/0070): one point for a window, handed to the host;
 //! - Öznitelikler's writes ([`properties`], docs/adr/0066): the layer, colour,
 //!   symbol, attributes and label through `cad.entities.set`, a geometry
 //!   value through `cad.entities.edit`;
@@ -95,6 +96,7 @@ pub mod parallel;
 pub mod paste;
 pub mod path;
 pub mod perpendicular;
+pub mod pick;
 pub mod point;
 mod points;
 pub mod polar;
@@ -120,6 +122,8 @@ pub mod vertex;
 pub use clipboard::Clipboard;
 pub use format::{Format, fixed};
 pub use kentos_geometry_core::Vec2;
+/// The surveying computations the Hesap windows call (docs/adr/0070).
+pub use kentos_geometry_core::survey;
 /// Measures of a vertex list, from the shared core (the coordinate list's).
 pub use kentos_geometry_core::geometry::{angle_deg, bearing_grad, dist, path_length, signed_area};
 pub use kentos_geometry_core::store::snap::{SnapHit, SnapKind};
