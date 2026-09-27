@@ -8,6 +8,9 @@
 //   2. every pipeline of the contract is built from the JSON alone (bind
 //      group, vertex buffers, blend) inside a validation error scope: the
 //      browser holds the entry points to the contract's layouts;
+//   The styled drawing's module (styled.layout.json, the web's WebGPU
+//   styled pipelines) goes through 1 and 2 as well: compiled, and every
+//   pipeline built with its three bind groups (frame, style, atlas).
 //   3. a frame is drawn at Turkish TM coordinates (E 487 000, N 4 420 000)
 //      from buffers written at the JSON's offsets, with float64 split into
 //      float32 high/low parts in JavaScript, and read back: the background,
@@ -27,8 +30,14 @@ import { WEBGPU_ARGS, launch } from '../../apps/web/scripts/e2e/cdp.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const WGSL = join(ROOT, 'shaders/wgsl');
-const layout = JSON.parse(readFileSync(join(WGSL, 'cad2d.layout.json'), 'utf8'));
-const source = layout.sources.map((path) => `// ── ${path} ──\n${readFileSync(join(WGSL, path), 'utf8')}\n`).join('');
+/** A module's contract and its sources joined as the contract lists them (each under a `// ── path ──` line). */
+const read = (name) => {
+  const contract = JSON.parse(readFileSync(join(WGSL, `${name}.layout.json`), 'utf8'));
+  return { layout: contract, source: contract.sources.map((path) => `// ── ${path} ──\n${readFileSync(join(WGSL, path), 'utf8')}\n`).join('') };
+};
+const { layout, source } = read('cad2d');
+// The styled drawing (docs/STYLE.md §6): the web's WebGPU backend joins it the same way (render/webgpu/styledShaders.ts).
+const styled = read('styled');
 
 const PAGE = `<!doctype html><meta charset="utf-8"><title>KentOS WGSL</title>
 <style>body{margin:0;background:#222}canvas{width:640px;height:400px;image-rendering:pixelated}</style>
@@ -202,6 +211,53 @@ async function check(source, layout) {
   return result;
 }
 
+/**
+ * Runs in the page: compiles a module and builds every pipeline of its
+ * contract from the JSON alone (bind groups of uniforms, textures and
+ * samplers; vertex buffers; blends) inside a validation error scope.
+ */
+async function checkPipelines(source, layout) {
+  const result = { messages: [], pipelineError: null, fatal: null };
+  const adapter = await navigator.gpu?.requestAdapter();
+  if (!adapter) return { ...result, fatal: 'WebGPU bağdaştırıcısı bulunamadı' };
+  const device = await adapter.requestDevice();
+  const module = device.createShaderModule({ label: layout.module, code: source });
+  const compiled = await module.getCompilationInfo();
+  result.messages = compiled.messages.map((m) => ({ type: m.type, text: m.message, line: m.lineNum, column: m.linePos }));
+  if (result.messages.some((m) => m.type === 'error')) return result;
+  const format = navigator.gpu.getPreferredCanvasFormat();
+  const stage = (names) => (names.includes('vertex') ? GPUShaderStage.VERTEX : 0) | (names.includes('fragment') ? GPUShaderStage.FRAGMENT : 0);
+  const entry = (b) => {
+    const at = { binding: b.binding, visibility: stage(b.visibility) };
+    if (b.type === 'texture') return { ...at, texture: { sampleType: b.sampleType } };
+    if (b.type === 'sampler') return { ...at, sampler: { type: b.samplerType } };
+    return { ...at, buffer: { type: b.type, minBindingSize: layout.structs[b.struct].size } };
+  };
+  device.pushErrorScope('validation');
+  const groups = layout.bindGroups.map((g) => device.createBindGroupLayout({ entries: g.bindings.map(entry) }));
+  const pipelineLayout = device.createPipelineLayout({ bindGroupLayouts: groups });
+  for (const p of layout.pipelines) {
+    device.createRenderPipeline({
+      label: p.name,
+      layout: pipelineLayout,
+      vertex: {
+        module,
+        entryPoint: p.vertex,
+        buffers: p.buffers.map((b) => ({
+          arrayStride: b.arrayStride,
+          stepMode: b.stepMode,
+          attributes: b.attributes.map((a) => ({ shaderLocation: a.location, offset: a.offset, format: a.format })),
+        })),
+      },
+      fragment: { module, entryPoint: p.fragment, targets: [{ format, blend: layout.blends[p.blend] ?? undefined }] },
+      primitive: { topology: p.topology },
+    });
+  }
+  const invalid = await device.popErrorScope();
+  if (invalid) result.pipelineError = invalid.message;
+  return result;
+}
+
 const server = createServer((req, res) => {
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
   res.end(PAGE);
@@ -229,6 +285,12 @@ try {
     const file = await browser.shot('viewport-browser-wgsl', { x: 0, y: 0, width: 640, height: 400 }, join(ROOT, '.run'));
     console.log(`  görüntü: ${file}`);
   }
+  const s = await browser.eval(`(${checkPipelines.toString()})(${JSON.stringify(styled.source)}, ${JSON.stringify(styled.layout)})`);
+  console.log(`${styled.layout.module} v${styled.layout.version}, ${styled.layout.sources.length} dosya, ${styled.source.split('\n').length} satır, ${styled.layout.pipelines.length} boru hattı`);
+  for (const m of s.messages) console.log(`  ${m.type}: ${m.text} (satır ${m.line}:${m.column})`);
+  if (s.fatal) failed.push(`${styled.layout.module}: ${s.fatal}`);
+  if (s.messages.some((m) => m.type === 'error')) failed.push(`${styled.layout.module}: WGSL derlenmedi (getCompilationInfo hataları yukarıda)`);
+  if (s.pipelineError) failed.push(`${styled.layout.module}: sözleşmedeki boru hatları kurulamadı: ${s.pipelineError}`);
   for (const line of browser.consoleLog) if (/error|warn/i.test(line)) console.log(`  konsol: ${line}`);
 } catch (error) {
   failed.push(String(error));
@@ -240,4 +302,4 @@ if (failed.length) {
   console.error(`WGSL tarayıcı denetimi düştü:\n${failed.map((f) => `  ${f}`).join('\n')}`);
   process.exit(1);
 }
-console.log('WGSL tarayıcıda derlendi, sözleşmedeki boru hatları kuruldu, kare doğru çizildi.');
+console.log('WGSL tarayıcıda derlendi, sözleşmelerdeki boru hatları kuruldu, kare doğru çizildi.');
