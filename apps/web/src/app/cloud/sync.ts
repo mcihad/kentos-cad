@@ -10,6 +10,7 @@ import { BATCH, PROJECT_ACCESS, PROJECT_ARCHIVED, PROJECT_DELETED, SyncCore, uui
 import { applyEvents } from './syncRemote';
 import { restoreDraft } from './syncRestore';
 import { keepUnsentLayers, keptText, treeText } from './keptLayers';
+import { fetchArrived, waitingTexts } from './waiting';
 import { changeOf, entityJson, leavingObjects, metaParts, metaPatch, type Planned } from './tracker';
 
 export type { SaveState, SyncConflict, SyncOptions } from './syncCore';
@@ -100,6 +101,10 @@ export class ProjectSync {
       doc.settings.changed.subscribe(() => this.metaChanged()),
       doc.styles.subscribe(() => this.metaChanged()),
       doc.layers.events.on('structure', () => this.metaChanged()),
+      // A layer back (an undo, another editor's tree): objects waiting for it come (waiting.ts).
+      doc.layers.events.on('structure', () => {
+        if (!this.disposed && this.core.waiting.size) void fetchArrived(this.core).catch((e: Error) => this.o.warn(`Başka kullanıcıların nesneleri alınamadı: ${e.message}`));
+      }),
       doc.layers.events.on('state', () => this.metaChanged()),
     );
   }
@@ -121,6 +126,7 @@ export class ProjectSync {
    * its idempotency key for the next time this project opens.
    */
   dispose(): void {
+    if (!this.disposed) for (const text of waitingTexts(this.core)) this.o.warn(text);
     this.disposed = true;
     this.core.closed = true;
     clearTimeout(this.timer);
@@ -433,6 +439,9 @@ export class ProjectSync {
         core.metaDirty = true;
         for (const k of keep.kept) this.o.warn(keptText(k));
       }
+      // The server's tree may hold the layer objects were waiting for (waiting.ts).
+      if (meta) await fetchArrived(core);
+      if (this.disposed) return;
     } else {
       for (const c of list) {
         if (c.reason === 'project') {

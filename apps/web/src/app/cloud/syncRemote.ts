@@ -2,6 +2,7 @@ import type { EventRecord } from '../../contracts/generated/EventRecord';
 import type { FeatureRecord } from '../../contracts/generated/FeatureRecord';
 import type { Entity } from '../../model/entities';
 import { keepUnsentLayers, keptText, treeText } from './keptLayers';
+import { fetchArrived, forget, setAside } from './waiting';
 import { BATCH, type SyncConflict, type SyncCore } from './syncCore';
 import { entityJson, metaParts } from './tracker';
 
@@ -52,6 +53,8 @@ export async function applyEvents(core: SyncCore, events: readonly EventRecord[]
       }
     }
   }
+  // On a layer this drawing lacks (after the new tree): they wait for it (waiting.ts).
+  const aside = setAside(core, fetched);
   const good = core.checked([...fetched.values()].map((f) => ({ key: f.id, entity: f.entity })));
   // Decided once no edit is open, and applied at once: no edit slips in between.
   await core.whenIdle();
@@ -61,9 +64,17 @@ export async function applyEvents(core: SyncCore, events: readonly EventRecord[]
   const remove: number[] = [];
   for (const [featureId] of ops) {
     const slot = doc.slotOf(featureId);
-    const record = fetched.get(featureId) ?? null;
+    const record = fetched.get(featureId) ?? aside.get(featureId) ?? null;
     if (core.busyLocally(featureId)) {
+      // The conflict decides it; it does not wait as well.
+      forget(core, featureId);
       conflicts.push({ featureId, reason: record ? 'remote' : 'deleted', server: record, actual: record?.version ?? null });
+      continue;
+    }
+    if (aside.has(featureId)) {
+      // Moved onto (or made on) a layer this drawing lacks: the copy here goes until its layer comes.
+      if (slot !== undefined) remove.push(slot);
+      tracker.set(featureId, null);
       continue;
     }
     if (record) {
@@ -74,9 +85,12 @@ export async function applyEvents(core: SyncCore, events: readonly EventRecord[]
     } else {
       if (slot !== undefined) remove.push(slot);
       tracker.set(featureId, null);
+      forget(core, featureId);
     }
   }
   if (put.length || remove.length) doc.applyExternal({ put, remove });
   core.cursor = last;
+  // A tree these events brought may hold the layer objects were waiting for.
+  await fetchArrived(core);
   return conflicts;
 }
