@@ -54,8 +54,13 @@ export interface NumericClass {
 /** `n` classes of equal width between the smallest and largest value. */
 export function equalInterval(values: readonly number[], n: number): NumericClass[] {
   if (!values.length || n < 1) return [];
-  const lo = Math.min(...values);
-  const hi = Math.max(...values);
+  // A loop, not Math.min(...values): a spread of a big layer's values (about 150 000) overflows the call stack.
+  let lo = values[0];
+  let hi = values[0];
+  for (const v of values) {
+    lo = Math.min(lo, v);
+    hi = Math.max(hi, v);
+  }
   if (hi === lo) return [{ min: lo, max: hi }];
   const step = (hi - lo) / n;
   return Array.from({ length: n }, (_, i) => ({ min: lo + i * step, max: i === n - 1 ? hi : lo + (i + 1) * step }));
