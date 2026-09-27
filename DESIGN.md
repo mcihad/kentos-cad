@@ -514,6 +514,7 @@ Uygulama bir şeyi yapmadan önce sorduğunda **tek yol budur** (`ui/widgets/con
 - **Yardım:** grup (üçüncül), ad (600), alan tonunda kutuda sözdizimi renkli imza, açıklama; “Argümanlar” (ad mono, isteğe bağlı olanın altında üçüncül “isteğe bağlı”), “Örnekler” (renkli ifade ve altında “→ sonuç”), “Öbür adları”. Alanın yardımı türünü ve kaynağını söyler, altında “Değerler”: küçük düğmeler “Örnek değerler (10)” ve “Tüm değerler”; liste alan tonunda, mono, Türkçe sıralı (hepsi sayıysa sayı sırasıyla); çift tık ya da Enter değeri dilin yazdığı gibi ekler (metin tırnakla). Hiçbir şey seçili değilken kısa bir kullanım notu ve tuşlar.
 - **Alt çubuk:** solda üçüncül tuş notu “Ctrl+Boşluk: öneriler · Ctrl+Enter: Tamam”, sağda Vazgeç ve birincil Tamam. Tamam metni alana yazar; Vazgeç, Esc, × ve arka plan alanı değiştirmez (form penceresi, sormaz).
 - **1100×650'de** aynı düzen: işleç düğmeleri tek sıraya sığar, kesilen yazıların tamamı ipucundadır.
+- **Masaüstünde** (KentOS UI) aynı üç sütun ve alt çubuk; pencere 980 px (yazı ölçeğiyle). Satır kırılmaz: uzun satırda düzenleyici QGIS'teki gibi yatay kayar ve imleç görünür tutulur. Ağaç satırlarının başında türün işareti sözdizimi renginde (alan ▦, değişken $, işlev ƒ, işleç ≡). Önizlemenin nesne adımlayıcısının yanında hedef ikonlu **Sahneden seç** (ADR 0088): pencereler kenara çekilir, çizimde bir nesne tıklanınca önizleme ona geçer; ifadenin nesnelerinden değilse komut satırı söyler, Esc vazgeçer.
 
 ### 7.13 Kontroller (genel)
 

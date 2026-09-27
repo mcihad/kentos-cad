@@ -142,10 +142,10 @@
       },
       "screens": {
         "total": 63,
-        "implemented": 42,
+        "implemented": 43,
         "partial": 4,
         "pending": 0,
-        "none": 17,
+        "none": 16,
         "n/a": 0
       }
     },
@@ -11704,8 +11704,9 @@
       "status": "implemented",
       "platforms": {
         "web": "implemented",
-        "desktop": "none"
-      }
+        "desktop": "implemented"
+      },
+      "desktopWhere": "apps/desktop/src/expression/ (ADR 0100 §5; İşlemler'in ifade alanındaki ε)"
     },
     {
       "id": "apps/web/src/ui/io/CoordExportDialog.ts#openCoordExport",
