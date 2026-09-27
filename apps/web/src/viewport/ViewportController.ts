@@ -20,6 +20,7 @@ import type { ToolPointer } from '../tools/Tool';
 import { Camera } from './Camera';
 import { drawCrosshair, drawGrips, drawLabels, drawNorthArrow, drawObjectTracking, drawScaleBar, drawSnap, midGripVisible } from './overlay';
 import { alongTrack, trackAngles, trackPoint, type TrackHit } from './objectTracking';
+import { symbolScaleOf } from './symbolScale';
 import { PickIndex, type SnapHit, type SnapKind } from './picking';
 
 /** Right-button menus the UI draws: idle selection, a running command, or snap overrides. */
@@ -905,9 +906,7 @@ export class ViewportController {
    * octave steps so a zoom does not rebuild every layer at every wheel tick.
    */
   private symbolScale(): number {
-    if (this.ctx.prefs.symbolSize.value !== 'screen') return this.ctx.doc.settings.plotScale.value;
-    const denominator = 1 / (this.camera.scale * 0.00026458);
-    return 2 ** (Math.round(Math.log2(Math.max(denominator, 1)) * 4) / 4);
+    return symbolScaleOf(this.ctx.prefs.symbolSize.value, this.ctx.doc.settings.plotScale.value, this.camera.scale);
   }
 
   private syncLayers(): void {
