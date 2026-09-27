@@ -6,6 +6,45 @@ import { disposeAll, layers, pt, reopen, setup, storedDraft, wire, xOf } from '.
 afterEach(disposeAll);
 
 describe('cloud autosave', () => {
+  it('another editor’s tree drops a layer holding this device’s unsent object: the layer stays, said, and goes back to the server with it', async () => {
+    const { doc, server, sync, warnings } = setup();
+    await sync.flush();
+    const mine = doc.add(pt(5, 'parsel'));
+    // Removed elsewhere before this object went: the server had nothing on it, so its guard let it go.
+    await sync.receive([server.commitAs('baska', [], { layers: [server.meta.layers[0]], activeLayer: 'cizim' })]);
+    expect(doc.layers.get('parsel')).toBeDefined();
+    expect(doc.get(mine.id)?.layerId).toBe('parsel');
+    expect(warnings.at(-1)).toBe('“Parsel” katmanını başka biri sildi; üzerinde gönderilmemiş 1 nesneniz olduğu için katman bu çizimde kaldı ve yeniden kaydedilecek.');
+    expect(await sync.flush()).toBe(true);
+    expect([server.meta.layers.map((n) => n.id), server.store.has(mine.uid), sync.conflicts.value]).toEqual([['cizim', 'parsel'], true, []]);
+  });
+
+  it('a layer whose objects are all on the server leaves with them, as the other editor wants', async () => {
+    const { doc, server, sync, warnings } = setup();
+    const theirs = doc.add(pt(5, 'parsel'));
+    await sync.flush();
+    const said = warnings.length;
+    await sync.receive([server.commitAs('baska', [{ op: 'delete', id: theirs.uid }], { layers: [server.meta.layers[0]], activeLayer: 'cizim' })]);
+    expect([doc.layers.get('parsel'), doc.get(theirs.id), warnings.length]).toEqual([undefined, undefined, said]);
+    expect(await sync.flush()).toBe(true);
+    expect(server.meta.layers.map((n) => n.id)).toEqual(['cizim']);
+  });
+
+  it('taking the server’s metadata in a conflict keeps a dropped layer that holds unsent objects too', async () => {
+    const { doc, server, sync, warnings } = setup();
+    await sync.flush();
+    // Unsent metadata here as well: the other tree is a conflict to resolve.
+    doc.name.set('Ada 102');
+    const mine = doc.add(pt(5, 'parsel'));
+    await sync.receive([server.commitAs('baska', [], { layers: [server.meta.layers[0]], activeLayer: 'cizim' })]);
+    expect(sync.conflicts.value.map((c) => c.featureId)).toEqual(['@project']);
+    await sync.resolve('server');
+    expect([doc.name.value, doc.layers.get('parsel')?.id, doc.get(mine.id)?.layerId]).toEqual(['Ada 101', 'parsel', 'parsel']);
+    expect(warnings).toContain('“Parsel” katmanını başka biri sildi; üzerinde gönderilmemiş 1 nesneniz olduğu için katman bu çizimde kaldı ve yeniden kaydedilecek.');
+    expect(await sync.flush()).toBe(true);
+    expect([server.meta.layers.map((n) => n.id), server.store.has(mine.uid)]).toEqual([['cizim', 'parsel'], true]);
+  });
+
   it('without project.edit a new layer stays on the device, and the server refuses objects drawn on it: why the interface refuses the tree', async () => {
     const { doc, server, sync, warnings } = setup({ canEditMeta: false });
     doc.addLayer({ id: 'yeni', name: 'Yeni' }, null);
