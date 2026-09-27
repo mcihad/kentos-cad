@@ -59,6 +59,7 @@
     "cloud.conflicts",
     "cloud.uploadFile",
     "cloud.openNewest",
+    "cloud.history",
     "cloud.rename",
     "cloud.delete",
     "layer.new",

@@ -594,6 +594,18 @@ impl App {
                 Task::none()
             }
             "cloud.openNewest" => self.offer_newest(),
+            // Proje geçmişi…: the catalog on the open project's Geçmiş tab (the web's).
+            "cloud.history" => {
+                let Some(id) = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| d.cloud_source())
+                    .map(|s| s.info.id.clone())
+                else {
+                    return Task::none();
+                };
+                self.open_catalog_at(Some((id, catalog::Tab::History)))
+            }
             "cloud.conflicts" => {
                 self.show_conflicts();
                 Task::none()
@@ -610,6 +622,7 @@ impl App {
             // The open project's own actions (the web's `openMay`).
             "cloud.rename" => self.open_may(ProjectPermission::Edit, true),
             "cloud.delete" => self.open_may(ProjectPermission::Delete, false),
+            "cloud.history" => self.open_may(ProjectPermission::History, false),
             "cloud.openNewest" => {
                 self.document
                     .as_ref()
