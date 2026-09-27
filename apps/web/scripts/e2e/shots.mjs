@@ -5,7 +5,8 @@
 //
 //   node scripts/e2e/shots.mjs <group> [--only a,b] [--sizes 1440x900,1100x650] [--themes dark,light]
 //
-// Groups: processing (İşlemler: the dock, the menu, the tool and model dialogs and their states).
+// Groups: processing (İşlemler: the dock, the menu, the tool and model dialogs and their states); layerstyle (Katman
+// stili: each renderer, its classes, the symbol slot, errors, applied).
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createServer } from 'vite';
@@ -121,7 +122,148 @@ const SCENES = {
       },
     },
   ],
+  // Katman stili (ui/style/LayerStyleDialog.ts): each kind of renderer, its classes made from the data, the symbol
+  // slot's menu and what it opens, errors, applied; on parcels (areas), building footprints, roads and points.
+  layerstyle: [
+    { id: 'simple', open: (ui) => openStyled(ui, 'parsel', 'Basit') },
+    { id: 'single', open: (ui) => openStyled(ui, 'parsel', 'Tek sembol') },
+    {
+      id: 'single-slot-menu',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Tek sembol');
+        await ui.clickSel('.dialog--lstyle .slot');
+        await ui.waitFor(`!!document.querySelector('.menu .menu__item')`);
+        await ui.sleep(300);
+      },
+    },
+    {
+      id: 'single-pick-from-library',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Tek sembol');
+        await ui.clickSel('.dialog--lstyle .slot');
+        await ui.clickText('.menu .menu__item', 'Kitaplıktan seç');
+        await ui.waitFor(`document.querySelectorAll('.dialog').length >= 2`);
+        await ui.sleep(800);
+      },
+      close: (ui) => ui.escapeAll(3),
+    },
+    {
+      id: 'single-edit-symbol',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Tek sembol');
+        await ui.clickSel('.dialog--lstyle .slot');
+        await ui.clickText('.menu .menu__item', 'Düzenle');
+        await ui.waitFor(`document.querySelectorAll('.dialog').length >= 2`);
+        await ui.sleep(800);
+      },
+      close: (ui) => ui.escapeAll(3),
+    },
+    { id: 'categorized-empty', open: (ui) => openStyled(ui, 'parsel', 'Kategorili') },
+    {
+      id: 'categorized',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Kategorili');
+        await ui.eval(setStyleExpr('Nitelik'));
+        await ui.clickText('.dialog--lstyle .btn', 'Değerlerden sınıfla');
+        await ui.sleep(500);
+      },
+    },
+    {
+      id: 'categorized-other-drawn',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Kategorili');
+        await ui.eval(setStyleExpr('Nitelik'));
+        await ui.clickText('.dialog--lstyle .btn', 'Değerlerden sınıfla');
+        await ui.eval(`document.querySelector('.dialog--lstyle input[aria-label="Diğer değerler çizilsin"]').click()`);
+        await ui.sleep(500);
+      },
+    },
+    {
+      id: 'categorized-expression-error',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Kategorili');
+        await ui.eval(setStyleExpr('Nitelik ='));
+        await ui.sleep(500);
+      },
+    },
+    {
+      id: 'categorized-lines',
+      open: async (ui) => {
+        await openStyled(ui, 'yol-ekseni', 'Kategorili');
+        await ui.eval(setStyleExpr('Ad'));
+        await ui.clickText('.dialog--lstyle .btn', 'Değerlerden sınıfla');
+        await ui.sleep(500);
+      },
+    },
+    { id: 'graduated-empty', open: (ui) => openStyled(ui, 'parsel', 'Aralıklı') },
+    {
+      id: 'graduated',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Aralıklı');
+        await ui.clickText('.dialog--lstyle .btn', 'Sınıfla');
+        await ui.sleep(500);
+      },
+    },
+    {
+      id: 'graduated-count-buildings',
+      open: async (ui) => {
+        await openStyled(ui, 'yapi', 'Aralıklı');
+        await ui.eval(setStyleExpr('[Kat adedi]'));
+        await ui.eval(`(() => { const d = document.querySelector('.dialog--lstyle'); const m = d.querySelector('select[aria-label="Yöntem"]'); m.value = 'count'; m.dispatchEvent(new Event('change')); const n = d.querySelector('input[aria-label="Sınıf sayısı"]'); n.value = '4'; n.dispatchEvent(new Event('change')); })()`);
+        await ui.clickText('.dialog--lstyle .btn', 'Sınıfla');
+        await ui.sleep(500);
+      },
+    },
+    { id: 'rules-start', open: (ui) => openStyled(ui, 'parsel', 'Kurallar') },
+    {
+      id: 'rules',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Kurallar');
+        await ui.clickText('.dialog--lstyle .btn', 'Kural ekle');
+        await ui.eval(setRuleFilter(1, "Nitelik = 'Arsa'"));
+        await ui.eval(`document.querySelectorAll('.dialog--lstyle .rule')[1].querySelector('.ibtn[aria-label="Alt kural ekle"]').click()`);
+        await ui.sleep(300);
+        await ui.eval(setRuleFilter(2, '$alan > 500'));
+        await ui.clickText('.dialog--lstyle .btn', 'Değilse kuralı ekle');
+        await ui.sleep(500);
+      },
+    },
+    {
+      id: 'rules-filter-error',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Kurallar');
+        await ui.clickText('.dialog--lstyle .btn', 'Kural ekle');
+        await ui.eval(setRuleFilter(1, 'Nitelik ='));
+        await ui.sleep(500);
+      },
+    },
+    { id: 'points-single', open: (ui) => openStyled(ui, 'poligon', 'Tek sembol') },
+    {
+      id: 'categorized-applied',
+      open: async (ui) => {
+        await openStyled(ui, 'parsel', 'Kategorili');
+        await ui.eval(setStyleExpr('Nitelik'));
+        await ui.clickText('.dialog--lstyle .btn', 'Değerlerden sınıfla');
+        await ui.clickText('.dialog--lstyle .btn', 'Uygula');
+        await ui.sleep(900);
+      },
+      close: async (ui) => (await ui.escapeAll(2), await ui.eval(`(() => { const d = window.kentos.doc; while (d.canUndo.value) d.undo(); })()`)),
+    },
+  ],
 };
+
+/** Katman stili on a layer of the demo drawing, on one kind of renderer. */
+async function openStyled(ui, layerId, kind) {
+  await ui.eval(`import('/src/ui/style/LayerStyleDialog.ts').then((m) => m.openLayerStyle(window.kentos, ${JSON.stringify(layerId)}))`);
+  await ui.waitFor(`!!document.querySelector('.dialog--lstyle .lsty__top')`);
+  await ui.clickText('.dialog--lstyle .seg__opt', kind);
+  await ui.sleep(400);
+}
+/** The value expression, typed and left (its change event). */
+const setStyleExpr = (text) => `(() => { const i = document.querySelector('.dialog--lstyle .lsty__expr'); i.value = ${JSON.stringify(text)}; i.dispatchEvent(new Event('change')); })()`;
+/** The n-th rule's condition (0 is the first), typed and left. */
+const setRuleFilter = (n, text) =>
+  `(() => { const i = document.querySelectorAll('.dialog--lstyle .rule input[aria-label="Koşul"]')[${n}]; i.value = ${JSON.stringify(text)}; i.dispatchEvent(new Event('change')); })()`;
 
 if (!group || !SCENES[group]) {
   console.error(`Grup verin: ${Object.keys(SCENES).join(', ')}`);
